@@ -1,33 +1,93 @@
 From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: [PATCH v7 03/14] ARM: davinci: add a clock lookup entry for the SATA clock
-Date: Mon, 30 Jan 2017 11:02:00 +0100
-Message-ID: <1485770531-6772-4-git-send-email-bgolaszewski@baylibre.com>
+Subject: [PATCH v7 10/14] sata: ahci-da850: add a workaround for controller instability
+Date: Mon, 30 Jan 2017 11:02:07 +0100
+Message-ID: <1485770531-6772-11-git-send-email-bgolaszewski@baylibre.com>
 References: <1485770531-6772-1-git-send-email-bgolaszewski@baylibre.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:37813 "EHLO
+        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752066AbdA3KCc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2017 05:02:32 -0500
+Received: by mail-wm0-f51.google.com with SMTP id v77so39995214wmv.0
+        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2017 02:02:27 -0800 (PST)
 In-Reply-To: <1485770531-6772-1-git-send-email-bgolaszewski@baylibre.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>, David Lechner <david@lechnology.com>
 Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>
-List-Id: linux-ide@vger.kernel.org
 
-This entry is needed for the ahci driver to get a functional clock.
+We have a use case with the da850 SATA controller where at PLL0
+frequency of 456MHz (needed to properly service the LCD controller)
+the chip becomes unstable and the hardreset operation is ignored the
+first time 50% of times.
+
+The sata core driver already retries to resume the link because some
+controllers ignore writes to the SControl register, but just retrying
+the resume operation doesn't work - we need to issue he phy/wake reset
+again to make it work.
+
+Reimplement ahci_hardreset() in the driver and poke the controller a
+couple times before really giving up.
 
 Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+Acked-by: Tejun Heo <tj@kernel.org>
 ---
- arch/arm/mach-davinci/da8xx-dt.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/ata/ahci_da850.c | 28 +++++++++++++++++++++++++++-
+ 1 file changed, 27 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arm/mach-davinci/da8xx-dt.c b/arch/arm/mach-davinci/da8xx-dt.c
-index 9ee44da..b83e5d1 100644
---- a/arch/arm/mach-davinci/da8xx-dt.c
-+++ b/arch/arm/mach-davinci/da8xx-dt.c
-@@ -42,6 +42,7 @@ static struct of_dev_auxdata da850_auxdata_lookup[] __initdata = {
- 	OF_DEV_AUXDATA("ti,da830-ohci", 0x01e25000, "ohci-da8xx", NULL),
- 	OF_DEV_AUXDATA("ti,da830-musb", 0x01e00000, "musb-da8xx", NULL),
- 	OF_DEV_AUXDATA("ti,da830-usb-phy", 0x01c1417c, "da8xx-usb-phy", NULL),
-+	OF_DEV_AUXDATA("ti,da850-ahci", 0x01e18000, "ahci_da850", NULL),
- 	{}
+diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
+index 84c7805..d65088a 100644
+--- a/drivers/ata/ahci_da850.c
++++ b/drivers/ata/ahci_da850.c
+@@ -16,7 +16,8 @@
+ #include <linux/ahci_platform.h>
+ #include "ahci.h"
+ 
+-#define DRV_NAME "ahci_da850"
++#define DRV_NAME		"ahci_da850"
++#define HARDRESET_RETRIES	5
+ 
+ /* SATA PHY Control Register offset from AHCI base */
+ #define SATA_P0PHYCR_REG	0x178
+@@ -76,6 +77,29 @@ static int ahci_da850_softreset(struct ata_link *link,
+ 	return ret;
+ }
+ 
++static int ahci_da850_hardreset(struct ata_link *link,
++				unsigned int *class, unsigned long deadline)
++{
++	int ret, retry = HARDRESET_RETRIES;
++	bool online;
++
++	/*
++	 * In order to correctly service the LCD controller of the da850 SoC,
++	 * we increased the PLL0 frequency to 456MHz from the default 300MHz.
++	 *
++	 * This made the SATA controller unstable and the hardreset operation
++	 * does not always succeed the first time. Before really giving up to
++	 * bring up the link, retry the reset a couple times.
++	 */
++	do {
++		ret = ahci_do_hardreset(link, class, deadline, &online);
++		if (online)
++			return ret;
++	} while (retry--);
++
++	return ret;
++}
++
+ static struct ata_port_operations ahci_da850_port_ops = {
+ 	.inherits = &ahci_platform_ops,
+ 	.softreset = ahci_da850_softreset,
+@@ -83,6 +107,8 @@ static struct ata_port_operations ahci_da850_port_ops = {
+ 	 * No need to override .pmp_softreset - it's only used for actual
+ 	 * PMP-enabled ports.
+ 	 */
++	.hardreset = ahci_da850_hardreset,
++	.pmp_hardreset = ahci_da850_hardreset,
  };
  
+ static const struct ata_port_info ahci_da850_port_info = {
 -- 
 2.9.3
+
