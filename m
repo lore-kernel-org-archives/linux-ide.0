@@ -1,42 +1,43 @@
-From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: [PATCH v7 12/14] ARM: davinci: remove BUG_ON() from da850_register_sata()
-Date: Mon, 30 Jan 2017 11:02:09 +0100
-Message-ID: <1485770531-6772-13-git-send-email-bgolaszewski@baylibre.com>
+From: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
+Subject: [PATCH v7 13/14] ARM: dts: da850: add the SATA node
+Date: Mon, 30 Jan 2017 11:02:10 +0100
+Message-ID: <1485770531-6772-14-git-send-email-bgolaszewski@baylibre.com>
 References: <1485770531-6772-1-git-send-email-bgolaszewski@baylibre.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:37840 "EHLO
-        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751688AbdA3KCa (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2017 05:02:30 -0500
-Received: by mail-wm0-f52.google.com with SMTP id v77so39996463wmv.0
-        for <linux-ide@vger.kernel.org>; Mon, 30 Jan 2017 02:02:29 -0800 (PST)
-In-Reply-To: <1485770531-6772-1-git-send-email-bgolaszewski@baylibre.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1485770531-6772-1-git-send-email-bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Kevin Hilman <khilman-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sekhar Nori <nsekhar-l0cyMroinI0@public.gmane.org>, Patrick Titiano <ptitiano-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Michael Turquette <mturquette-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Russell King <linux-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>, David Lechner <david-nq/r/kbU++upp/zk7JDF2g@public.gmane.org>
+Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>, David Lechner <david@lechnology.com>
-Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>
 
-The ahci driver now supports other refclk clock rates.
+Add the SATA node to the da850 device tree.
 
-Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+Signed-off-by: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
 ---
- arch/arm/mach-davinci/devices-da8xx.c | 3 ---
- 1 file changed, 3 deletions(-)
+ arch/arm/boot/dts/da850.dtsi | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/arch/arm/mach-davinci/devices-da8xx.c b/arch/arm/mach-davinci/devices-da8xx.c
-index cfceb32..7cf529f 100644
---- a/arch/arm/mach-davinci/devices-da8xx.c
-+++ b/arch/arm/mach-davinci/devices-da8xx.c
-@@ -1080,9 +1080,6 @@ int __init da850_register_sata(unsigned long refclkpn)
- {
- 	int ret;
- 
--	/* please see comment in drivers/ata/ahci_da850.c */
--	BUG_ON(refclkpn != 100 * 1000 * 1000);
--
- 	ret = da850_register_sata_refclk(refclkpn);
- 	if (ret)
- 		return ret;
+diff --git a/arch/arm/boot/dts/da850.dtsi b/arch/arm/boot/dts/da850.dtsi
+index 104155d..3b5fd41e 100644
+--- a/arch/arm/boot/dts/da850.dtsi
++++ b/arch/arm/boot/dts/da850.dtsi
+@@ -403,6 +403,12 @@
+ 			phy-names = "usb-phy";
+ 			status = "disabled";
+ 		};
++		sata: sata@218000 {
++			compatible = "ti,da850-ahci";
++			reg = <0x218000 0x2000>, <0x22c018 0x4>;
++			interrupts = <67>;
++			status = "disabled";
++		};
+ 		mdio: mdio@224000 {
+ 			compatible = "ti,davinci_mdio";
+ 			#address-cells = <1>;
 -- 
 2.9.3
 
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
