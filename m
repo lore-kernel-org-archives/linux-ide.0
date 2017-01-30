@@ -1,7 +1,7 @@
 From: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v7 13/14] ARM: dts: da850: add the SATA node
-Date: Mon, 30 Jan 2017 11:02:10 +0100
-Message-ID: <1485770531-6772-14-git-send-email-bgolaszewski@baylibre.com>
+Subject: [PATCH v7 04/14] sata: ahci-da850: get the sata clock using a connection id
+Date: Mon, 30 Jan 2017 11:02:01 +0100
+Message-ID: <1485770531-6772-5-git-send-email-bgolaszewski@baylibre.com>
 References: <1485770531-6772-1-git-send-email-bgolaszewski@baylibre.com>
 Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1485770531-6772-1-git-send-email-bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
@@ -10,30 +10,50 @@ To: Kevin Hilman <khilman-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sekhar Nori 
 Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-Add the SATA node to the da850 device tree.
+In preparation for using two clocks in the driver (the sysclk2-based
+clock and the external REFCLK), check if we got the functional clock
+after calling ahci_platform_get_resources(). If not, retry calling
+clk_get() with con_id specified.
 
 Signed-off-by: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
+Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- arch/arm/boot/dts/da850.dtsi | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/ata/ahci_da850.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/arch/arm/boot/dts/da850.dtsi b/arch/arm/boot/dts/da850.dtsi
-index 104155d..3b5fd41e 100644
---- a/arch/arm/boot/dts/da850.dtsi
-+++ b/arch/arm/boot/dts/da850.dtsi
-@@ -403,6 +403,12 @@
- 			phy-names = "usb-phy";
- 			status = "disabled";
- 		};
-+		sata: sata@218000 {
-+			compatible = "ti,da850-ahci";
-+			reg = <0x218000 0x2000>, <0x22c018 0x4>;
-+			interrupts = <67>;
-+			status = "disabled";
-+		};
- 		mdio: mdio@224000 {
- 			compatible = "ti,davinci_mdio";
- 			#address-cells = <1>;
+diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
+index 267a3d3..e397bab 100644
+--- a/drivers/ata/ahci_da850.c
++++ b/drivers/ata/ahci_da850.c
+@@ -71,12 +71,28 @@ static int ahci_da850_probe(struct platform_device *pdev)
+ 	struct ahci_host_priv *hpriv;
+ 	struct resource *res;
+ 	void __iomem *pwrdn_reg;
++	struct clk *clk;
+ 	int rc;
+ 
+ 	hpriv = ahci_platform_get_resources(pdev);
+ 	if (IS_ERR(hpriv))
+ 		return PTR_ERR(hpriv);
+ 
++	/*
++	 * Internally ahci_platform_get_resources() calls clk_get(dev, NULL)
++	 * when trying to obtain the functional clock. This SATA controller
++	 * uses two clocks for which we specify two connection ids. If we don't
++	 * have the functional clock at this point - call clk_get() again with
++	 * con_id = "fck".
++	 */
++	if (!hpriv->clks[0]) {
++		clk = clk_get(dev, "fck");
++		if (IS_ERR(clk))
++			return PTR_ERR(clk);
++
++		hpriv->clks[0] = clk;
++	}
++
+ 	rc = ahci_platform_enable_resources(hpriv);
+ 	if (rc)
+ 		return rc;
 -- 
 2.9.3
 
