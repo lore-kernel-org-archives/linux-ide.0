@@ -1,7 +1,7 @@
 From: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v7 11/14] sata: ahci-da850: un-hardcode the MPY bits
-Date: Mon, 30 Jan 2017 11:02:08 +0100
-Message-ID: <1485770531-6772-12-git-send-email-bgolaszewski@baylibre.com>
+Subject: [PATCH v7 09/14] sata: ahci: export ahci_do_hardreset() locally
+Date: Mon, 30 Jan 2017 11:02:06 +0100
+Message-ID: <1485770531-6772-10-git-send-email-bgolaszewski@baylibre.com>
 References: <1485770531-6772-1-git-send-email-bgolaszewski@baylibre.com>
 Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1485770531-6772-1-git-send-email-bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
@@ -10,153 +10,91 @@ To: Kevin Hilman <khilman-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sekhar Nori 
 Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-All platforms using this driver now register the SATA refclk. Remove
-the hardcoded default value from the driver and instead read the rate
-of the external clock and calculate the required MPY value from it.
+We need a way to retrieve the information about the online state of
+the link in the ahci-da850 driver.
+
+Create a new function: ahci_do_hardreset() which is called from
+ahci_hardreset() for backwards compatibility, but has an additional
+argument: 'online' - which can be used to check if the link is online
+after this function returns.
+
+The new routine will be used in the ahci-da850 driver to avoid code
+duplication when implementing a workaround for tha da850 SATA
+controller quirk/instability.
 
 Signed-off-by: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
 Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- drivers/ata/ahci_da850.c | 91 ++++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 76 insertions(+), 15 deletions(-)
+ drivers/ata/ahci.h    |  3 +++
+ drivers/ata/libahci.c | 18 +++++++++++++-----
+ 2 files changed, 16 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
-index d65088a..44bb795 100644
---- a/drivers/ata/ahci_da850.c
-+++ b/drivers/ata/ahci_da850.c
-@@ -29,17 +29,8 @@
- #define SATA_PHY_TXSWING(x)	((x) << 19)
- #define SATA_PHY_ENPLL(x)	((x) << 31)
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 0cc08f8..5db6ab2 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -398,6 +398,9 @@ int ahci_do_softreset(struct ata_link *link, unsigned int *class,
+ 		      int pmp, unsigned long deadline,
+ 		      int (*check_ready)(struct ata_link *link));
  
--/*
-- * The multiplier needed for 1.5GHz PLL output.
-- *
-- * NOTE: This is currently hardcoded to be suitable for 100MHz crystal
-- * frequency (which is used by DA850 EVM board) and may need to be changed
-- * if you would like to use this driver on some other board.
-- */
--#define DA850_SATA_CLK_MULTIPLIER	7
--
- static void da850_sata_init(struct device *dev, void __iomem *pwrdn_reg,
--			    void __iomem *ahci_base)
-+			    void __iomem *ahci_base, u32 mpy)
- {
- 	unsigned int val;
- 
-@@ -48,13 +39,61 @@ static void da850_sata_init(struct device *dev, void __iomem *pwrdn_reg,
- 	val &= ~BIT(0);
- 	writel(val, pwrdn_reg);
- 
--	val = SATA_PHY_MPY(DA850_SATA_CLK_MULTIPLIER + 1) | SATA_PHY_LOS(1) |
--	      SATA_PHY_RXCDR(4) | SATA_PHY_RXEQ(1) | SATA_PHY_TXSWING(3) |
--	      SATA_PHY_ENPLL(1);
-+	val = SATA_PHY_MPY(mpy) | SATA_PHY_LOS(1) | SATA_PHY_RXCDR(4) |
-+	      SATA_PHY_RXEQ(1) | SATA_PHY_TXSWING(3) | SATA_PHY_ENPLL(1);
- 
- 	writel(val, ahci_base + SATA_P0PHYCR_REG);
++int ahci_do_hardreset(struct ata_link *link, unsigned int *class,
++		      unsigned long deadline, bool *online);
++
+ unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
+ int ahci_stop_engine(struct ata_port *ap);
+ void ahci_start_fis_rx(struct ata_port *ap);
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index ee7db31..3159f9e 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1519,8 +1519,8 @@ static int ahci_pmp_retry_softreset(struct ata_link *link, unsigned int *class,
+ 	return rc;
  }
  
-+static u32 ahci_da850_calculate_mpy(unsigned long refclk_rate)
-+{
-+	u32 pll_output = 1500000000, needed;
-+
-+	/*
-+	 * We need to determine the value of the multiplier (MPY) bits.
-+	 * In order to include the 12.5 multiplier we need to first divide
-+	 * the refclk rate by ten.
-+	 *
-+	 * __div64_32() turned out to be unreliable, sometimes returning
-+	 * false results.
-+	 */
-+	WARN((refclk_rate % 10) != 0, "refclk must be divisible by 10");
-+	needed = pll_output / (refclk_rate / 10);
-+
-+	/*
-+	 * What we have now is (multiplier * 10).
-+	 *
-+	 * Let's determine the actual register value we need to write.
-+	 */
-+
-+	switch (needed) {
-+	case 50:
-+		return 0x1;
-+	case 60:
-+		return 0x2;
-+	case 80:
-+		return 0x4;
-+	case 100:
-+		return 0x5;
-+	case 120:
-+		return 0x6;
-+	case 125:
-+		return 0x7;
-+	case 150:
-+		return 0x8;
-+	case 200:
-+		return 0x9;
-+	case 250:
-+		return 0xa;
-+	default:
-+		/*
-+		 * We should have divided evenly - if not, return an invalid
-+		 * value.
-+		 */
-+		return 0;
-+	}
-+}
-+
- static int ahci_da850_softreset(struct ata_link *link,
- 				unsigned int *class, unsigned long deadline)
+-static int ahci_hardreset(struct ata_link *link, unsigned int *class,
+-			  unsigned long deadline)
++int ahci_do_hardreset(struct ata_link *link, unsigned int *class,
++		      unsigned long deadline, bool *online)
  {
-@@ -126,9 +165,10 @@ static int ahci_da850_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
- 	struct ahci_host_priv *hpriv;
--	struct resource *res;
- 	void __iomem *pwrdn_reg;
-+	struct resource *res;
- 	struct clk *clk;
-+	u32 mpy;
+ 	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
+ 	struct ata_port *ap = link->ap;
+@@ -1528,7 +1528,6 @@ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
+ 	struct ahci_host_priv *hpriv = ap->host->private_data;
+ 	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
+ 	struct ata_taskfile tf;
+-	bool online;
  	int rc;
  
- 	hpriv = ahci_platform_get_resources(pdev);
-@@ -150,6 +190,27 @@ static int ahci_da850_probe(struct platform_device *pdev)
- 		hpriv->clks[0] = clk;
- 	}
+ 	DPRINTK("ENTER\n");
+@@ -1540,17 +1539,26 @@ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
+ 	tf.command = ATA_BUSY;
+ 	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
  
-+	/*
-+	 * The second clock used by ahci-da850 is the external REFCLK. If we
-+	 * didn't get it from ahci_platform_get_resources(), let's try to
-+	 * specify the con_id in clk_get().
-+	 */
-+	if (!hpriv->clks[1]) {
-+		clk = clk_get(dev, "refclk");
-+		if (IS_ERR(clk)) {
-+			dev_err(dev, "unable to obtain the reference clock");
-+			return -ENODEV;
-+		} else {
-+			hpriv->clks[1] = clk;
-+		}
-+	}
+-	rc = sata_link_hardreset(link, timing, deadline, &online,
++	rc = sata_link_hardreset(link, timing, deadline, online,
+ 				 ahci_check_ready);
+ 
+ 	hpriv->start_engine(ap);
+ 
+-	if (online)
++	if (*online)
+ 		*class = ahci_dev_classify(ap);
+ 
+ 	DPRINTK("EXIT, rc=%d, class=%u\n", rc, *class);
+ 	return rc;
+ }
++EXPORT_SYMBOL_GPL(ahci_do_hardreset);
 +
-+	mpy = ahci_da850_calculate_mpy(clk_get_rate(hpriv->clks[1]));
-+	if (mpy == 0) {
-+		dev_err(dev, "invalid REFCLK multiplier value: 0x%x", mpy);
-+		return -EINVAL;
-+	}
++static int ahci_hardreset(struct ata_link *link, unsigned int *class,
++			  unsigned long deadline)
++{
++	bool online;
 +
- 	rc = ahci_platform_enable_resources(hpriv);
- 	if (rc)
- 		return rc;
-@@ -162,7 +223,7 @@ static int ahci_da850_probe(struct platform_device *pdev)
- 	if (!pwrdn_reg)
- 		goto disable_resources;
++	return ahci_do_hardreset(link, class, deadline, &online);
++}
  
--	da850_sata_init(dev, pwrdn_reg, hpriv->mmio);
-+	da850_sata_init(dev, pwrdn_reg, hpriv->mmio, mpy);
- 
- 	rc = ahci_platform_init_host(pdev, hpriv, &ahci_da850_port_info,
- 				     &ahci_platform_sht);
+ static void ahci_postreset(struct ata_link *link, unsigned int *class)
+ {
 -- 
 2.9.3
 
