@@ -1,34 +1,57 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: for-4.10-fixes branch
-Date: Tue, 31 Jan 2017 11:47:36 +0900
-Message-ID: <ccee6286-f349-5f2e-0e6e-39496bc3f986@wdc.com>
+From: Sekhar Nori <nsekhar@ti.com>
+Subject: Re: [PATCH v7 03/14] ARM: davinci: add a clock lookup entry for the
+ SATA clock
+Date: Tue, 31 Jan 2017 20:39:24 +0530
+Message-ID: <91e96c08-c762-8022-8a34-31ec1f4106d8@ti.com>
+References: <1485770531-6772-1-git-send-email-bgolaszewski@baylibre.com>
+ <1485770531-6772-4-git-send-email-bgolaszewski@baylibre.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:23904 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751301AbdAaCsH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jan 2017 21:48:07 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1485770531-6772-4-git-send-email-bgolaszewski@baylibre.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Bartosz Golaszewski <bgolaszewski@baylibre.com>, Kevin Hilman <khilman@kernel.org>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>, David Lechner <david@lechnology.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-Tejun,
+On Monday 30 January 2017 03:32 PM, Bartosz Golaszewski wrote:
+> This entry is needed for the ahci driver to get a functional clock.
+> 
+> Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+> ---
 
-Some commits in your for-4.10-fixes branch have not yet been pulled in
-Linus 4.10 tree. Is this normal ? Can we expect the fixes to go in rc7 ?
-I am concerned about the request sense fix I sent. That bug is breaking
-applications and still exists in rc6. Those commits really need to go in.
+This patch is not adding a clock lookup entry, but AUXDATA. I fixed the
+subject line to:
 
-Best regards.
+ARM: davinci: da8xx-dt: add OF_DEV_AUXDATA entry for SATA
 
--- 
-Damien Le Moal, Ph.D.
-Sr. Manager, System Software Research Group,
-Western Digital Corporation
-Damien.LeMoal@wdc.com
-(+81) 0466-98-3593 (ext. 513593)
-1 kirihara-cho, Fujisawa,
-Kanagawa, 252-0888 Japan
-www.wdc.com, www.hgst.com
+while applying.
+
+Thanks,
+Sekhar
+
+>  arch/arm/mach-davinci/da8xx-dt.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/arch/arm/mach-davinci/da8xx-dt.c b/arch/arm/mach-davinci/da8xx-dt.c
+> index 9ee44da..b83e5d1 100644
+> --- a/arch/arm/mach-davinci/da8xx-dt.c
+> +++ b/arch/arm/mach-davinci/da8xx-dt.c
+> @@ -42,6 +42,7 @@ static struct of_dev_auxdata da850_auxdata_lookup[] __initdata = {
+>  	OF_DEV_AUXDATA("ti,da830-ohci", 0x01e25000, "ohci-da8xx", NULL),
+>  	OF_DEV_AUXDATA("ti,da830-musb", 0x01e00000, "musb-da8xx", NULL),
+>  	OF_DEV_AUXDATA("ti,da830-usb-phy", 0x01c1417c, "da8xx-usb-phy", NULL),
+> +	OF_DEV_AUXDATA("ti,da850-ahci", 0x01e18000, "ahci_da850", NULL),
+>  	{}
+>  };
+>  
+> 
