@@ -1,25 +1,38 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: remove the cmd_type field from struct request
-Date: Tue, 31 Jan 2017 10:02:50 -0800
-Message-ID: <bbe16fc1-5652-bbc2-03a5-0298c3f16645@kernel.dk>
-References: <1485878251-6107-1-git-send-email-hch@lst.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: for-4.10-fixes branch
+Date: Tue, 31 Jan 2017 11:35:39 -0500
+Message-ID: <20170131163539.GA23970@htj.duckdns.org>
+References: <ccee6286-f349-5f2e-0e6e-39496bc3f986@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1485878251-6107-1-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pf0-f179.google.com ([209.85.192.179]:33762 "EHLO
+        mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751514AbdAaSix (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jan 2017 13:38:53 -0500
+Received: by mail-pf0-f179.google.com with SMTP id y143so109659790pfb.0
+        for <linux-ide@vger.kernel.org>; Tue, 31 Jan 2017 10:38:53 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <ccee6286-f349-5f2e-0e6e-39496bc3f986@wdc.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: linux-ide@vger.kernel.org
 
-On 01/31/2017 07:57 AM, Christoph Hellwig wrote:
-> [1] which were a pain in the ass to untangle and debug during development,
-> it's really time for it to die..
+Hello,
 
-Outside of the patch series in question, how to we expedite the
-euthanasia of IDE? What explicit features/support are we missing through
-libata that would need to be added, before we can git rm drivers/ide/ ?
+On Tue, Jan 31, 2017 at 11:47:36AM +0900, Damien Le Moal wrote:
+> Tejun,
+> 
+> Some commits in your for-4.10-fixes branch have not yet been pulled in
+> Linus 4.10 tree. Is this normal ? Can we expect the fixes to go in rc7 ?
+> I am concerned about the request sense fix I sent. That bug is breaking
+> applications and still exists in rc6. Those commits really need to go in.
+
+That's me waiting for more fixes combined with procrastinating.  Will
+send the trees out right away.
+
+Thanks for the poking.
 
 -- 
-Jens Axboe
+tejun
