@@ -1,42 +1,27 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: remove the cmd_type field from struct request
-Date: Wed, 1 Feb 2017 07:53:26 +0100
-Message-ID: <c61b9b98-8e4a-ac23-bf0c-002d112d5468@suse.de>
-References: <1485878251-6107-1-git-send-email-hch@lst.de>
- <bbe16fc1-5652-bbc2-03a5-0298c3f16645@kernel.dk>
+From: Miss Marbell <spdr3re9@friend.ocn.ne.jp>
+Subject: =?utf-8?Q?Bitte_kontaktieren_Sie_mich_f=C3=BCr_weitere_Details!?=
+Date: Wed, 1 Feb 2017 17:14:13 +0900 (JST)
+Message-ID: <196860446.132172340.1485936853591.JavaMail.root@friend.ocn.ne.jp>
+Reply-To: Miss Marbell <brownson.m221@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <bbe16fc1-5652-bbc2-03a5-0298c3f16645@kernel.dk>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mbkd0208.ocn.ad.jp ([153.149.233.9]:56360 "EHLO
+        mbkd0208.ocn.ad.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751080AbdBAIUH (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 1 Feb 2017 03:20:07 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 01/31/2017 07:02 PM, Jens Axboe wrote:
-> On 01/31/2017 07:57 AM, Christoph Hellwig wrote:
->> [1] which were a pain in the ass to untangle and debug during development,
->> it's really time for it to die..
->
-> Outside of the patch series in question, how to we expedite the
-> euthanasia of IDE? What explicit features/support are we missing through
-> libata that would need to be added, before we can git rm drivers/ide/ ?
->
-There is only a single driver (sgi_ide) which hasn't been moved over to 
-libata. But this is for an old Itanium-based server only, and even SGI 
-didn't press us to have this ported.
-(And we have disabled the IDE drivers since SLES11, where we still 
-support Itanium.)
-So they can be safely assumed defunct at this time.
+Sehr geehrte Damen und Herren,
 
-I'm all for removing them.
+Ich brauche Ihre Unterstützung in Ihrem Land zu verlagern und zu investieren.Ich bitte Sie um Hilfe, weil ich nicht das Wissen über
+Geschäft und die Regeln, die Ihr Land für eine sichere Investition führen.
 
-Cheers,
+Werden Sie versprechen, mit mir aufrichtig zu sein?
 
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N�rnberg
-GF: J. Hawn, J. Guild, F. Imend�rffer, HRB 16746 (AG N�rnberg)
+Bitte kontaktieren Sie mich für weitere Details!
+
+Mit freundlichen Grüßen,
+Fräulein Marbell.
