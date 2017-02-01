@@ -1,28 +1,47 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: remove the cmd_type field from struct request
-Date: Tue, 31 Jan 2017 21:58:09 -0500
-Message-ID: <yq1shnyzkfy.fsf@oracle.com>
-References: <1485878251-6107-1-git-send-email-hch@lst.de>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: Re: for-4.10-fixes branch
+Date: Wed, 1 Feb 2017 12:00:41 +0900
+Message-ID: <dcc460cb-84ca-2e83-b779-ee26a9e28274@wdc.com>
+References: <ccee6286-f349-5f2e-0e6e-39496bc3f986@wdc.com>
+ <20170131163539.GA23970@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1485878251-6107-1-git-send-email-hch@lst.de> (Christoph
-        Hellwig's message of "Tue, 31 Jan 2017 16:57:21 +0100")
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:63597 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750970AbdBADAw (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 31 Jan 2017 22:00:52 -0500
+In-Reply-To: <20170131163539.GA23970@htj.duckdns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
->>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+Tejun,
 
-Christoph> this series gets rid of the cmd_type field in struct
-Christoph> request and instead folds it into the REQ_OP* space.  This
-Christoph> reduces the size of struct request, and leads to a single op
-Christoph> namespace that drivers can easily switch on.
+On 2/1/17 01:35, Tejun Heo wrote:
+> Hello,
+> 
+> On Tue, Jan 31, 2017 at 11:47:36AM +0900, Damien Le Moal wrote:
+>> Tejun,
+>>
+>> Some commits in your for-4.10-fixes branch have not yet been pulled in
+>> Linus 4.10 tree. Is this normal ? Can we expect the fixes to go in rc7 ?
+>> I am concerned about the request sense fix I sent. That bug is breaking
+>> applications and still exists in rc6. Those commits really need to go in.
+> 
+> That's me waiting for more fixes combined with procrastinating.  Will
+> send the trees out right away.
 
-Very nice cleanup!
-
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Thanks !
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Damien Le Moal, Ph.D.
+Sr. Manager, System Software Research Group,
+Western Digital Corporation
+Damien.LeMoal@wdc.com
+(+81) 0466-98-3593 (ext. 513593)
+1 kirihara-cho, Fujisawa,
+Kanagawa, 252-0888 Japan
+www.wdc.com, www.hgst.com
