@@ -1,40 +1,75 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] pata_legacy: Allow disabling of legacy PATA device
- probes on non-PCI systems
-Date: Fri, 10 Feb 2017 08:19:18 -0500
-Message-ID: <20170210131918.GA11963@mtj.duckdns.org>
-References: <20170120191946.GA9280@mtj.duckdns.org>
- <20170120193828.GB9280@mtj.duckdns.org>
- <CAMHSBOVS+ehZkHG7nnUS9qQoDXKmsiBUEhBbPb=3qA2-ZaQ2Ow@mail.gmail.com>
- <CAP8WD_aya3junhovXtc=iUaaX43=Y1s8-eya_LvN_BQjXGLbew@mail.gmail.com>
- <20170124161937.GE12281@htj.duckdns.org>
- <CAP8WD_b2PXXXQgTQ_-a=8Z7ppNMa5xGuhsEvJGDT_WvT1EFwog@mail.gmail.com>
- <CAMHSBOUAMxTj7u5Jg4_VkxHmG5BUCr-AhDHY2UT+VMchn8daLQ@mail.gmail.com>
- <20170208194330.GB25826@htj.duckdns.org>
- <CAMHSBOU0tNyPzNuNyQkW2m+PpaoevZaZA4VTqRWO3jJB955qTw@mail.gmail.com>
- <CAP8WD_aQQ6gNLoiWZbFWR6y2A8gtV42J6ePvRm+9aHQLQhvMzA@mail.gmail.com>
+From: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH] PCI:MSI Return -ENOSPC when requested vectors is not
+ enough
+Date: Fri, 10 Feb 2017 16:16:17 -0600
+Message-ID: <20170210221617.GT29169@bhelgaas-glaptop.roam.corp.google.com>
+References: <1480558504-18691-1-git-send-email-dennis.chen@arm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yb0-f195.google.com ([209.85.213.195]:35561 "EHLO
-        mail-yb0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751452AbdBJN21 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Feb 2017 08:28:27 -0500
-Received: by mail-yb0-f195.google.com with SMTP id j82so1348015ybg.2
-        for <linux-ide@vger.kernel.org>; Fri, 10 Feb 2017 05:28:10 -0800 (PST)
+Received: from mail.kernel.org ([198.145.29.136]:57176 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751928AbdBJWQX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 10 Feb 2017 17:16:23 -0500
 Content-Disposition: inline
-In-Reply-To: <CAP8WD_aQQ6gNLoiWZbFWR6y2A8gtV42J6ePvRm+9aHQLQhvMzA@mail.gmail.com>
+In-Reply-To: <1480558504-18691-1-git-send-email-dennis.chen@arm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: whiteheadm@acm.org, Gwendal Grignou <gwendal@google.com>
-Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Dennis Chen <dennis.chen@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Steve Capper <steve.capper@arm.com>, Marc Zyngier <marc.zyngier@arm.com>, Tom Long Nguyen <tom.l.nguyen@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, nd@arm.com, Christoph Hellwig <hch@lst.de>, linux-arm-kernel@lists.infradead.org
 
-On Thu, Feb 09, 2017 at 07:36:59PM -0500, tedheadster wrote:
-> I just tested this patch and it is working for me.
+On Thu, Dec 01, 2016 at 10:15:04AM +0800, Dennis Chen wrote:
+> The __pci_enable_msi_range() should return -ENOSPC instead of -EINVAL
+> when the device doesn't have enough vectors as required, just as the 
+> MSI-X vector allocator does in __pci_enable_msix_range(). Otherwise, 
+> some drivers depending on that return value will probably fallback to
+> the legacy interrupt directly, for example, in commit 17a51f12cfbd2814
+> ("ahci: only try to use multi-MSI mode if there is more than 1 port"), the
+> ahci driver will fallback to single MSI mode only when the return value
+> is -ENOSPC in case of required vectors is not enough, else the driver will
+> use legacy interrupt which has been observed on a x86 box with 6-port SATA
+> controller.
+> 
+> With this patch, when a MSI-capable device doesn't have enough MSI
+> vectors as requested, it will fallback to single MSI mode while not
+> legacy interrupt.
+> 
+> Signed-off-by: Dennis Chen <dennis.chen@arm.com>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Tom Long Nguyen <tom.l.nguyen@intel.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: Marc Zyngier <marc.zyngier@arm.com>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Steve Capper <steve.capper@arm.com>
+> Cc: linux-ide@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
 
-Awesome, Gwendal, care to write up the path description?
+Applied to pci/msi for v4.11, thanks, Dennis!
 
-Thanks.
-
--- 
-tejun
+> ---
+>  drivers/pci/msi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index ad70507..da37113 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -1084,7 +1084,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+>  	if (nvec < 0)
+>  		return nvec;
+>  	if (nvec < minvec)
+> -		return -EINVAL;
+> +		return -ENOSPC;
+>  
+>  	if (nvec > maxvec)
+>  		nvec = maxvec;
+> -- 
+> 2.7.4
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
