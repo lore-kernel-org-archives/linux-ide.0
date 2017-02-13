@@ -1,75 +1,46 @@
-From: Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [PATCH] PCI:MSI Return -ENOSPC when requested vectors is not
- enough
-Date: Fri, 10 Feb 2017 16:16:17 -0600
-Message-ID: <20170210221617.GT29169@bhelgaas-glaptop.roam.corp.google.com>
-References: <1480558504-18691-1-git-send-email-dennis.chen@arm.com>
+From: Guillermo Amaral <g@maral.me>
+Subject: DMA issue caused by vmapped stacks
+Date: Mon, 13 Feb 2017 00:47:45 -0800
+Message-ID: <CAPeEpDroE2bYQ_viz7qExspordpR6gLYHjVxaJ53px3utz+PrA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:57176 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751928AbdBJWQX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 10 Feb 2017 17:16:23 -0500
-Content-Disposition: inline
-In-Reply-To: <1480558504-18691-1-git-send-email-dennis.chen@arm.com>
+Received: from mail-it0-f51.google.com ([209.85.214.51]:38358 "EHLO
+        mail-it0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750975AbdBMIrq (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Feb 2017 03:47:46 -0500
+Received: by mail-it0-f51.google.com with SMTP id c7so70263048itd.1
+        for <linux-ide@vger.kernel.org>; Mon, 13 Feb 2017 00:47:46 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dennis Chen <dennis.chen@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Steve Capper <steve.capper@arm.com>, Marc Zyngier <marc.zyngier@arm.com>, Tom Long Nguyen <tom.l.nguyen@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, nd@arm.com, Christoph Hellwig <hch@lst.de>, linux-arm-kernel@lists.infradead.org
+To: linux-ide@vger.kernel.org
 
-On Thu, Dec 01, 2016 at 10:15:04AM +0800, Dennis Chen wrote:
-> The __pci_enable_msi_range() should return -ENOSPC instead of -EINVAL
-> when the device doesn't have enough vectors as required, just as the 
-> MSI-X vector allocator does in __pci_enable_msix_range(). Otherwise, 
-> some drivers depending on that return value will probably fallback to
-> the legacy interrupt directly, for example, in commit 17a51f12cfbd2814
-> ("ahci: only try to use multi-MSI mode if there is more than 1 port"), the
-> ahci driver will fallback to single MSI mode only when the return value
-> is -ENOSPC in case of required vectors is not enough, else the driver will
-> use legacy interrupt which has been observed on a x86 box with 6-port SATA
-> controller.
-> 
-> With this patch, when a MSI-capable device doesn't have enough MSI
-> vectors as requested, it will fallback to single MSI mode while not
-> legacy interrupt.
-> 
-> Signed-off-by: Dennis Chen <dennis.chen@arm.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Tom Long Nguyen <tom.l.nguyen@intel.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: Marc Zyngier <marc.zyngier@arm.com>
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Steve Capper <steve.capper@arm.com>
-> Cc: linux-ide@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
+Howdy,
 
-Applied to pci/msi for v4.11, thanks, Dennis!
+I recently had some off-time and decided to look into why some of my
+drives where completely failing to show up after v4.8-rc3, some with
+odd DMA errors.
 
-> ---
->  drivers/pci/msi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index ad70507..da37113 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -1084,7 +1084,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
->  	if (nvec < 0)
->  		return nvec;
->  	if (nvec < minvec)
-> -		return -EINVAL;
-> +		return -ENOSPC;
->  
->  	if (nvec > maxvec)
->  		nvec = maxvec;
-> -- 
-> 2.7.4
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Turned out to be vmapped stacks!
+
+Once CONFIG_VMAP_STACK got enabled by default in x86_64 (by commit
+e37e43a), to be more precise.
+I turned it off, and everything is back in working order.
+
+I don't have a standard setup, so probably nobody else has run into
+the same issue yet -- but if you want to replicate it: Get (or make)
+an ATA locked drive, boot with or hot-swap said locked drive on a v4.9
+kernel with CONFIG_VMAP_STACK set to Y.
+
+On my systems (tested on two systems), the drive fails to get sensed
+correctly and no SCSI nodes get created. This means no way to unlock
+drives with hdparm (or in my case, via the kernel).
+
+I will try to dig into this issue a bit more next weekend, I just
+wanted to bring it up in case it hasn't been already.
+
+Cheers,
+G
+
+-- 
+gamaral
