@@ -1,26 +1,58 @@
-From: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Subject: =?utf-8?Q?=D0=9A=D0=9B=D0=98=D0=95=D0=9D=D0=A1=D0=9A=D0?=
-        =?utf-8?Q?=98=D0=95_=D0=91=D0=90=D0=97=D0=AB_=D1=82=D0=B5?=
-        =?utf-8?Q?=D0=BB_+79139230330_Skype=3A_prodawez390_Email?=
-        =?utf-8?Q?=3A_prodawez393=40gmail=2Ecom_Viber=5Cwhatsapp?=
-        =?utf-8?Q?=5Ctelegram_+79139230330_=D0=A3=D0=B7=D0=BD=D0?=
-        =?utf-8?Q?=B0=D0=B9=D1=82=D0=B5_=D0=BF=D0=BE=D0=B4=D1=80?=
-        =?utf-8?Q?=D0=BE=D0=B1=D0=BD=D0=B5=D0=B5!!!?=
-Date: Tue, 14 Feb 2017 21:37:47 +0300
-Message-ID: <768C099030E4CA79A5A0E954B0965018@vger.kernel.org>
-Reply-To: "linux-ide@vger.kernel.org" <prodawez393@gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 0/3] ata: add m68k/Atari Falcon PATA support
+Date: Wed, 15 Feb 2017 09:45:53 +0100
+Message-ID: <CAMuHMdWX-PT_8a==rqAvc5Hx_1PNWPwvLGPeERUXvsMcEarziQ@mail.gmail.com>
+References: <CGME20161230140139epcas5p160eda5a6a77be084e21f12002c85cc2a@epcas5p1.samsung.com>
+ <1483106478-1382-1-git-send-email-b.zolnierkie@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8";
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 177-55-158-19.n4telecom.com.br ([177.55.158.19]:39141 "EHLO
-        frwsilcar.localdomain" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751000AbdBNXLY (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Feb 2017 18:11:24 -0500
-Received: from 177.55.158.19 (localhost [IPv6:::1])
-        by frwsilcar.localdomain (Postfix) with SMTP id 0AAF8214A6D
-        for <linux-ide@vger.kernel.org>; Tue, 14 Feb 2017 12:37:57 -0200 (BRST)
+Received: from mail-it0-f65.google.com ([209.85.214.65]:34176 "EHLO
+        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750806AbdBOIpz (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Feb 2017 03:45:55 -0500
+In-Reply-To: <1483106478-1382-1-git-send-email-b.zolnierkie@samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Tejun Heo <tj@kernel.org>, Michael Schmitz <schmitzmic@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-m68k <linux-m68k@lists.linux-m68k.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@fb.com>
 
+On Fri, Dec 30, 2016 at 3:01 PM, Bartlomiej Zolnierkiewicz
+<b.zolnierkie@samsung.com> wrote:
+> This patchset adds m68k/Atari Falcon PATA support to libata.
+> The major difference in the new libata's pata_falcon host
+> driver when compared to legacy IDE's falconide host driver is
+> that we are using polled PIO mode and thus avoiding the need
+> for STDMA locking magic altogether.
+>
+> Tested under ARAnyM emulator.
+>
+> Best regards,
+> --
+> Bartlomiej Zolnierkiewicz
+> Samsung R&D Institute Poland
+> Samsung Electronics
+>
+>
+> Bartlomiej Zolnierkiewicz (3):
+>   ata: allow subsystem to be used on m68k arch
+>   ata: pass queued command to ->sff_data_xfer method
+>   ata: add Atari Falcon PATA controller driver
+
+drivers/ata/pata_falcon.c:57:18: error: 'struct request' has no member
+named 'cmd_type'
+drivers/ata/pata_falcon.c:57:32: error: 'REQ_TYPE_FS' undeclared
+(first use in this function)
+
+http://kisskb.ellerman.id.au/kisskb/buildresult/12936876/
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
