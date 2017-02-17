@@ -1,48 +1,30 @@
-From: Boris Brezillon <boris.brezillon@free-electrons.com>
-Subject: Re: [PATCH] pata: remove the at91 driver
-Date: Fri, 17 Feb 2017 14:42:35 +0100
-Message-ID: <20170217144235.1fd12c80@bbrezillon>
-References: <CGME20170217093732epcas5p463c32b21e7c71000d01d15c54333c1f6@epcas5p4.samsung.com>
-        <1487324200-17517-1-git-send-email-boris.brezillon@free-electrons.com>
-        <1599704.hbkP4KrUDJ@amdc3058>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 18/35] drivers/ide: Convert remaining uses of
+ pr_warning to pr_warn
+Date: Fri, 17 Feb 2017 10:20:36 -0500 (EST)
+Message-ID: <20170217.102036.2065698824076906227.davem@davemloft.net>
+References: <cover.1487314666.git.joe@perches.com>
+        <94a040b80eec22d9d2b5cf929fe06880ab0bc31a.1487314667.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([62.4.15.54]:40550 "EHLO
-        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933545AbdBQNmu (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Feb 2017 08:42:50 -0500
-In-Reply-To: <1599704.hbkP4KrUDJ@amdc3058>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <94a040b80eec22d9d2b5cf929fe06880ab0bc31a.1487314667.git.joe@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: joe@perches.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Nicolas Ferre <nicolas.ferre@atmel.com>, Alexandre Belloni <alexandre.belloni@free-electrons.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 
-On Fri, 17 Feb 2017 13:36:08 +0100
-Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com> wrote:
+From: Joe Perches <joe@perches.com>
+Date: Thu, 16 Feb 2017 23:11:31 -0800
 
-> Hi,
+> To enable eventual removal of pr_warning
 > 
-> On Friday, February 17, 2017 10:36:40 AM Boris Brezillon wrote:
-> > This driver is orphan since commit 2e591e7b3ac2 ("ARM: at91: remove
-> > at91sam9261/at91sam9g10 legacy board support"). Given that nobody cared
-> > adding DT support to it, it probably means it's no longer used and is
-> > thus a good candidate for removal.  
+> This makes pr_warn use consistent for drivers/ide
 > 
-> The exact commit which removed PATA support for AT91SAM9260 seems to
-> be b2026f708e09 ("ARM: at91: remove at91sam9260/at91sam9g20 legacy
-> board support").
-
-Indeed. I'll fix the commit message and send a new version.
-
+> Prior to this patch, there were 2 uses of pr_warning and
+> 0 uses of pr_warn in drivers/ide
 > 
-> > Signed-off-by: Boris Brezillon <boris.brezillon@free-electrons.com>  
-> 
-> Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-Thanks,
-
-Boris
-
-
+Acked-by: David S. Miller <davem@davemloft.net>
