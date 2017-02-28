@@ -1,43 +1,33 @@
 From: David Miller <davem@davemloft.net>
-Subject: [GIT] IDE
-Date: Mon, 27 Feb 2017 20:50:45 -0500 (EST)
-Message-ID: <20170227.205045.1881831523761993209.davem@davemloft.net>
+Subject: Re: [PATCH] ide: palm_bk3710: add __initdata to
+ palm_bk3710_port_info
+Date: Mon, 27 Feb 2017 20:45:20 -0500 (EST)
+Message-ID: <20170227.204520.476923849195276799.davem@davemloft.net>
+References: <1483089602-6016-1-git-send-email-bhumirks@gmail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([184.105.139.130]:52388 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751586AbdB1CD3 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 27 Feb 2017 21:03:29 -0500
+In-Reply-To: <1483089602-6016-1-git-send-email-bhumirks@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: bhumirks@gmail.com
+Cc: julia.lawall@lip6.fr, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+From: Bhumika Goyal <bhumirks@gmail.com>
+Date: Fri, 30 Dec 2016 14:50:02 +0530
 
-Just one actual change here this time around, adding some init data
-annotations.  The other change was bogus and got reverted.
+> The object palm_bk3710_port_info of type ide_port_info is never
+> referenced anywhere after initialization by palm_bk3710_probe. It is
+> also passed as a parameter to ide_host_add which is called from the init
+> function but this call doesn't store the object reference anywhere, and
+> it only dereferences the values of the fields. Therefore add __initdata
+> to its declaration.
+> 
+> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 
-Please pull, thanks!
-
-The following changes since commit 7ce7d89f48834cefece7804d38fc5d85382edf77:
-
-  Linux 4.10-rc1 (2016-12-25 16:13:08 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git 
-
-for you to fetch changes up to 96297aee8bce237961b0e1b99e22913c5726af12:
-
-  ide: palm_bk3710: add __initdata to palm_bk3710_port_info (2017-02-27 20:43:26 -0500)
-
-----------------------------------------------------------------
-Bhumika Goyal (1):
-      ide: palm_bk3710: add __initdata to palm_bk3710_port_info
-
-David S. Miller (1):
-      Revert "ide: Fix interface autodetection in legacy IDE driver (trial #2)"
-
-lramos.prof@yahoo.com.br (1):
-      ide: Fix interface autodetection in legacy IDE driver (trial #2)
-
- drivers/ide/palm_bk3710.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Applied, thanks.
