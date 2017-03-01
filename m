@@ -1,32 +1,35 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: ata: WARNING in ata_sff_qc_issue
-Date: Tue, 28 Feb 2017 14:23:05 -0500
-Message-ID: <20170228192305.GI15287@htj.duckdns.org>
-References: <CACT4Y+bXkvevNZU8uP6X0QVqsj6wNoUA_1exfTSOzc+SmUtMOA@mail.gmail.com>
+From: Ms Safi Kabore <mrssafi.kabore2@gmail.com>
+Subject: PLEASE YOUR CO-OPERATION FROM MS SAFI KABORE
+Date: Wed, 1 Mar 2017 04:10:40 +0000 (UTC)
+Message-ID: <1243900486.5264576.1488341440898@mail.yahoo.com>
+References: <1243900486.5264576.1488341440898.ref@mail.yahoo.com>
+Reply-To: Ms Safi Kabore <safi.kabore22@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CACT4Y+bXkvevNZU8uP6X0QVqsj6wNoUA_1exfTSOzc+SmUtMOA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, syzkaller <syzkaller@googlegroups.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nm10-vm7.bullet.mail.ir2.yahoo.com ([212.82.96.159]:34613 "EHLO
+        nm10-vm7.bullet.mail.ir2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751037AbdCAELY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Feb 2017 23:11:24 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello,
 
-On Tue, Feb 28, 2017 at 03:33:48PM +0100, Dmitry Vyukov wrote:
-> If the WARNING is merely to inform user about invalid protocol, please
-> issue a single line pr_err without the stack trace (invalid protocol
-> value may be more interesting).
 
-Yeah, the warning is harmless.  The code was written before
-passthrough support and just assumed that nobody higher up in the
-stack should be issuing unsupported protocols and warned on such cases
-as a precaution.  I'm just gonna drop the WARN.  The error code to sg
-command should be enough to indicate the failure.
+Dear Friend,
+
+I need your help to stand for  claim of (US$1.5M DOLLARS) abandon fund in t=
+he bank with my advice I have every enquiries=E2=80=99 details to make the =
+bank believed you and release the fund in within 6 banking working days wit=
+h your full co-operation with me for success.
+Send the below requirement to enable me details on how to apply to the Bank=
+ for the claim.
+1)Full names.
+2)country of origin.
+3)Your Mobile No.
+4)Your Age.
+5)occupation.
 
 Thanks.
-
--- 
-tejun
+Ms Safi kabore
