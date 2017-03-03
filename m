@@ -1,99 +1,98 @@
-From: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH] ata: constify of_device_id structures
-Date: Thu,  2 Mar 2017 01:03:28 +0530
-Message-ID: <1488396808-12332-1-git-send-email-bhumirks@gmail.com>
+From: Gwendal Grignou <gwendal@chromium.org>
+Subject: [PATCH] libata: transport: Remove circular dependency at free time
+Date: Fri,  3 Mar 2017 09:00:09 -0800
+Message-ID: <20170303170009.36744-1-gwendal@chromium.org>
+References: <CAP8WD_ZJ9EgssJgTu8EOtKodtnfxO8tqhN6iAnuMHq2VQ7MoaQ@mail.gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:33998 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751995AbdCATeO (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 1 Mar 2017 14:34:14 -0500
+Received: from mail-pg0-f46.google.com ([74.125.83.46]:33353 "EHLO
+        mail-pg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751733AbdCCRB2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 3 Mar 2017 12:01:28 -0500
+Received: by mail-pg0-f46.google.com with SMTP id 25so45820630pgy.0
+        for <linux-ide@vger.kernel.org>; Fri, 03 Mar 2017 09:00:37 -0800 (PST)
+In-Reply-To: <CAP8WD_ZJ9EgssJgTu8EOtKodtnfxO8tqhN6iAnuMHq2VQ7MoaQ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: julia.lawall@lip6.fr, b.zolnierkie@samsung.com, tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
+To: tj@kernel.org, gregkh@linuxfoundation.org, sergei.shtylyov@cogentembedded.com, linux-ide@vger.kernel.org, htejun@gmail.com
 
-Declare of_device_id structures as const as they are either passed to
-the macro MODULE_DEVICE_TABLE or stored in the of_match_table field of a
-device_driver structure. This field is of type const, so of_device_id
-structures having this property can be made const too.
+From: Tejun Heo <tj@kernel.org>
 
-Cross compiled the files drivers/ata/pata_macio.c and
-drivers/ata/pata_mpc52xx.c for powerpc architecture.
+Without this patch, failed probe would not free resources like irq.
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+ata port tdev object currently hold a reference to the ata port object.
+Therefore the ata port object release function will not get called until
+the ata_tport_release is called. But that would never happen, releasing
+the last reference of ata port dev is done by scsi_host_release, which
+is called by ata_host_release when the ata port object is released.
+
+The ata tranport device objects actually do not need to explicitly hold
+a reference to their real counterpart, given the transport objects are
+the children of these objects and device_add() is call for each child.
+We know the parent will not be deleted until we call the child
+device_del().
+
+Reported-by: Matthew Whitehead <tedheadster@gmail.com>
+Tested-by: Matthew Whitehead <tedheadster@gmail.com>
+Signed-off-by: Gwendal Grignou <gwendal@chromium.org>
 ---
- drivers/ata/pata_macio.c       | 2 +-
- drivers/ata/pata_mpc52xx.c     | 2 +-
- drivers/ata/pata_of_platform.c | 2 +-
- drivers/ata/sata_fsl.c         | 2 +-
- drivers/ata/sata_mv.c          | 2 +-
- 5 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/ata/libata-transport.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-index e347e7a..0adcb40 100644
---- a/drivers/ata/pata_macio.c
-+++ b/drivers/ata/pata_macio.c
-@@ -1328,7 +1328,7 @@ static int pata_macio_pci_resume(struct pci_dev *pdev)
- }
- #endif /* CONFIG_PM_SLEEP */
+diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
+index 46698232e6bf..19e6e539a061 100644
+--- a/drivers/ata/libata-transport.c
++++ b/drivers/ata/libata-transport.c
+@@ -224,7 +224,6 @@ static DECLARE_TRANSPORT_CLASS(ata_port_class,
  
--static struct of_device_id pata_macio_match[] =
-+static const struct of_device_id pata_macio_match[] =
+ static void ata_tport_release(struct device *dev)
  {
- 	{
- 	.name 		= "IDE",
-diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
-index 252ba27..9730125 100644
---- a/drivers/ata/pata_mpc52xx.c
-+++ b/drivers/ata/pata_mpc52xx.c
-@@ -847,7 +847,7 @@ static int mpc52xx_ata_probe(struct platform_device *op)
- }
- #endif
- 
--static struct of_device_id mpc52xx_ata_of_match[] = {
-+static const struct of_device_id mpc52xx_ata_of_match[] = {
- 	{ .compatible = "fsl,mpc5200-ata", },
- 	{ .compatible = "mpc5200-ata", },
- 	{},
-diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
-index 201a32d..01161c1 100644
---- a/drivers/ata/pata_of_platform.c
-+++ b/drivers/ata/pata_of_platform.c
-@@ -67,7 +67,7 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
- 				     reg_shift, pio_mask, &pata_platform_sht);
+-	put_device(dev->parent);
  }
  
--static struct of_device_id pata_of_platform_match[] = {
-+static const struct of_device_id pata_of_platform_match[] = {
- 	{ .compatible = "ata-generic", },
- 	{ },
- };
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index a723ae9..01734d5 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -1612,7 +1612,7 @@ static int sata_fsl_resume(struct platform_device *op)
+ /**
+@@ -284,7 +283,7 @@ int ata_tport_add(struct device *parent,
+ 	device_initialize(dev);
+ 	dev->type = &ata_port_type;
+ 
+-	dev->parent = get_device(parent);
++	dev->parent = parent;
+ 	dev->release = ata_tport_release;
+ 	dev_set_name(dev, "ata%d", ap->print_id);
+ 	transport_setup_device(dev);
+@@ -348,7 +347,6 @@ static DECLARE_TRANSPORT_CLASS(ata_link_class,
+ 
+ static void ata_tlink_release(struct device *dev)
+ {
+-	put_device(dev->parent);
  }
- #endif
  
--static struct of_device_id fsl_sata_match[] = {
-+static const struct of_device_id fsl_sata_match[] = {
- 	{
- 		.compatible = "fsl,pq-sata",
- 	},
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 00ce26d..b66bcda 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -4286,7 +4286,7 @@ static int mv_platform_resume(struct platform_device *pdev)
- #endif
+ /**
+@@ -410,7 +408,7 @@ int ata_tlink_add(struct ata_link *link)
+ 	int error;
  
- #ifdef CONFIG_OF
--static struct of_device_id mv_sata_dt_ids[] = {
-+static const struct of_device_id mv_sata_dt_ids[] = {
- 	{ .compatible = "marvell,armada-370-sata", },
- 	{ .compatible = "marvell,orion-sata", },
- 	{},
+ 	device_initialize(dev);
+-	dev->parent = get_device(&ap->tdev);
++	dev->parent = &ap->tdev;
+ 	dev->release = ata_tlink_release;
+ 	if (ata_is_host_link(link))
+ 		dev_set_name(dev, "link%d", ap->print_id);
+@@ -589,7 +587,6 @@ static DECLARE_TRANSPORT_CLASS(ata_dev_class,
+ 
+ static void ata_tdev_release(struct device *dev)
+ {
+-	put_device(dev->parent);
+ }
+ 
+ /**
+@@ -662,7 +659,7 @@ static int ata_tdev_add(struct ata_device *ata_dev)
+ 	int error;
+ 
+ 	device_initialize(dev);
+-	dev->parent = get_device(&link->tdev);
++	dev->parent = &link->tdev;
+ 	dev->release = ata_tdev_release;
+ 	if (ata_is_host_link(link))
+ 		dev_set_name(dev, "dev%d.%d", ap->print_id,ata_dev->devno);
 -- 
-1.9.1
+2.12.0.rc1.440.g5b76565f74-goog
 
