@@ -1,28 +1,44 @@
-From: "Lin" <aa@a.bmgrn.com>
-Subject: =?Big5?B?UmU6W7P4u/ldpea0q6ahuXG3vbjfu/k=?= 12V 3A
- =?Big5?B?NDBLs/i7+Q==?=
-Date: Tue, 7 Mar 2017 16:09:01 +0800
-Message-ID: <201703071609017915666@a.bmgrn.com>
-Reply-To: gme.power@msa.hinet.net
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: [PATCH] ata: allow subsystem to be used on m32r and s390 archs
+Date: Tue, 07 Mar 2017 14:56:40 +0100
+Message-ID: <2339253.11Ms71o855@amdc3058>
+References: <CGME20170307135643epcas1p257e7a1e1410a498343b8a6b425df65f2@epcas1p2.samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Big5"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [202.74.232.152] ([202.74.232.152]:38662 "EHLO a.bmgrn.com"
-        rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-        id S1754904AbdCGJAK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 7 Mar 2017 04:00:10 -0500
-Received: from llmopq (211-20-236-199.HINET-IP.hinet.net [211.20.236.199])
-        by a.bmgrn.com (Postfix) with ESMTPA id 833E14294F
-        for <linux-ide@vger.kernel.org>; Tue,  7 Mar 2017 16:09:02 +0800 (CST)
+Received: from mailout1.samsung.com ([203.254.224.24]:39405 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755257AbdCGN77 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 7 Mar 2017 08:59:59 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide <gme.power@msa.hinet.net>
+To: Tejun Heo <tj@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-ide@vger.kernel.org, linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org
 
-pqyo7KdBqrqmXsLQpEahQQ0KscTByqdBpm6hRw0KDQqr3LCqv7OxcUIyQrr0r7ikV7Fvqr6nQaq6
-q0iup6FBDQqkRrjRp0Glv6ZitE2n5KF1uXG3vbtzs3mhdqq6qNHAs7DToUENCqfarcykvaVxprOo
-9LZWqrqs47Vvuc62pKTOu3OzeaXNsqOsebV7oUENCqjDpUKmYqXNsqOl5rSrpqG5cbe9qNHAs765
-oUJVU0KlUrlxvrmhQlBPRajRuXGqurhnxeerRLFgwte0SaFBDQrFd6rvu1Cn2sFwtbihQcHCwcIN
-Cg0Kpk6xS6zsp94NCqpMumGpdg0KKzg4Ni00LTIyNTg3OTk2IKTAvvczMTAxDQpnbWUucG93ZXJA
-bXNhLmhpbmV0Lm5ldA0KDQqmcLFIv/m90MLgpeahQcHCwcI=
+Both archs should work just fine with libata subsystem nowadays.
+
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+---
+Cross compile tested.
+
+ drivers/ata/Kconfig | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 70b57d2..7e0fc98 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -14,7 +14,6 @@ menuconfig ATA
+ 	tristate "Serial ATA and Parallel ATA drivers (libata)"
+ 	depends on HAS_IOMEM
+ 	depends on BLOCK
+-	depends on !(M32R || S390) || BROKEN
+ 	select SCSI
+ 	select GLOB
+ 	---help---
+-- 
+1.9.1
+
+
