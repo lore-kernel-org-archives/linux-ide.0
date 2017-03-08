@@ -1,80 +1,58 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [RFT PATCH] mips: workpad_defconfig: convert to use libata PATA
- drivers
-Date: Wed, 08 Mar 2017 17:04:35 +0100
-Message-ID: <1693758.UBeBuiPSKd@amdc3058>
-References: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
- <1442245918-27631-17-git-send-email-b.zolnierkie@samsung.com>
- <CGME20170308160437epcas5p40c3197b4fde85ccf984a362917a7c5a7@epcas5p4.samsung.com>
+Subject: [PATCH] sh: cayman: IDE support fix
+Date: Wed, 08 Mar 2017 17:46:43 +0100
+Message-ID: <1990884.yFoE6lSB9G@amdc3058>
+References: <CGME20170308164645epcas5p12a4884b620557266609e1b941f7ba938@epcas5p1.samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:43988 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751843AbdCHQEm (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Mar 2017 11:04:42 -0500
-In-reply-to: <1442245918-27631-17-git-send-email-b.zolnierkie@samsung.com>
+Received: from mailout4.samsung.com ([203.254.224.34]:34387 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751906AbdCHQ7F (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Mar 2017 11:59:05 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ralf Baechle <ralf@linux-mips.org>
-Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Yoshinori Sato <ysato@users.sourceforge.jp>, Rich Felker <dalias@libc.org>, linux-sh@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Remove incorrect CONFIG_IDE ifdef (CONFIG_IDE config option
+is for internal drivers/ide/ use) and make IDE hardware
+interface always initialized (not only when IDE subsystem
+is built-in).
 
-Hi Ralf,
+This patch allows Cayman board to work with modular IDE
+subsystem support and removes the requirement of having
+the whole core IDE subsystem built-in when using libata
+PATA support.
 
-When patches converting MIPS defconfigs to libata PATA were
-applied this one got lost somehow. Please consider merging
-(it applies fine to v4.11-rc1).
+Cc: Yoshinori Sato <ysato@users.sourceforge.jp>
+Cc: Rich Felker <dalias@libc.org>
+Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+---
+Untested.
 
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+ arch/sh/boards/mach-cayman/setup.c |    2 --
+ 1 file changed, 2 deletions(-)
 
-On Monday, September 14, 2015 05:51:58 PM Bartlomiej Zolnierkiewicz wrote:
-> IDE subsystem has been deprecated since 2009 and the majority
-> (if not all) of Linux distributions have switched to use
-> libata for ATA support exclusively.  However there are still
-> some users (mostly old or/and embedded non-x86 systems) that
-> have not converted from using IDE subsystem to libata PATA
-> drivers.  This doesn't seem to be good thing in the long-term
-> for Linux as while there is less and less PATA systems left
-> in use:
-> 
-> * testing efforts are divided between two subsystems
-> 
-> * having duplicate drivers for same hardware confuses users
-> 
-> This patch converts workpad_defconfig to use libata PATA
-> drivers.
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-> ---
-> Build tested only.
-> If you have affected hardware please test.  Thank you.
-> 
->  arch/mips/configs/workpad_defconfig | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/arch/mips/configs/workpad_defconfig b/arch/mips/configs/workpad_defconfig
-> index ee4b2be..1b556cd 100644
-> --- a/arch/mips/configs/workpad_defconfig
-> +++ b/arch/mips/configs/workpad_defconfig
-> @@ -28,10 +28,10 @@ CONFIG_IP_MULTICAST=y
->  # CONFIG_IPV6 is not set
->  CONFIG_NETWORK_SECMARK=y
->  CONFIG_BLK_DEV_RAM=m
-> -# CONFIG_MISC_DEVICES is not set
-> -CONFIG_IDE=y
-> -CONFIG_BLK_DEV_IDECS=m
-> -CONFIG_IDE_GENERIC=y
-> +CONFIG_BLK_DEV_SD=y
-> +CONFIG_ATA=y
-> +CONFIG_PATA_PCMCIA=m
-> +CONFIG_PATA_LEGACY=y
->  CONFIG_NETDEVICES=y
->  # CONFIG_NETDEV_1000 is not set
->  # CONFIG_NETDEV_10000 is not set
+Index: b/arch/sh/boards/mach-cayman/setup.c
+===================================================================
+--- a/arch/sh/boards/mach-cayman/setup.c	2017-03-08 17:42:01.641323406 +0100
++++ b/arch/sh/boards/mach-cayman/setup.c	2017-03-08 17:42:01.637323406 +0100
+@@ -128,7 +128,6 @@ static int __init smsc_superio_setup(voi
+ 	SMSC_SUPERIO_WRITE_INDEXED(1, SMSC_PRIMARY_INT_INDEX);
+ 	SMSC_SUPERIO_WRITE_INDEXED(12, SMSC_SECONDARY_INT_INDEX);
+ 
+-#ifdef CONFIG_IDE
+ 	/*
+ 	 * Only IDE1 exists on the Cayman
+ 	 */
+@@ -158,7 +157,6 @@ static int __init smsc_superio_setup(voi
+ 	SMSC_SUPERIO_WRITE_INDEXED(0x01, 0xc5); /* GP45 = IDE1_IRQ */
+ 	SMSC_SUPERIO_WRITE_INDEXED(0x00, 0xc6); /* GP46 = nIOROP */
+ 	SMSC_SUPERIO_WRITE_INDEXED(0x00, 0xc7); /* GP47 = nIOWOP */
+-#endif
+ 
+ 	/* Exit the configuration state */
+ 	outb(SMSC_EXIT_CONFIG_KEY, SMSC_CONFIG_PORT_ADDR);
 
