@@ -1,50 +1,64 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [RESEND PATCH] arm: assabet_defconfig: disable IDE subsystem
-Date: Thu, 9 Mar 2017 15:24:56 +0300
-Message-ID: <a8eab3b1-8867-00dd-08e4-bcece23010a6@cogentembedded.com>
-References: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com>
- <CGME20161212135537epcas5p440bbb93d40f0c41b3754635733b09879@epcas5p4.samsung.com>
- <8ea5971a-338d-e8b9-6be8-8fe2658fc04d@ti.com> <1709119.SQyio4Ct6n@amdc3058>
- <1fd840c5-b0bb-726b-6357-669977c4ae5f@ti.com>
- <a3161cfc-56f7-4577-c37f-3798cdb03713@ti.com>
- <ab44a3c1-f078-4476-4583-de92ee68632c@cogentembedded.com>
- <98031160-f7b4-3cff-043a-1f2ee62c8a01@ti.com>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: [PATCH 0/3] ATA/ARM: convert ARM/DaVinci to use libata PATA drivers
+Date: Thu, 09 Mar 2017 14:01:33 +0100
+Message-ID: <1489064496-6270-1-git-send-email-b.zolnierkie@samsung.com>
+References: <CGME20170309130212epcas5p28ee9f513f932008f0222f9e95cfc4e57@epcas5p2.samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <98031160-f7b4-3cff-043a-1f2ee62c8a01@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sekhar Nori <nsekhar@ti.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Kevin Hilman <khilman@baylibre.com>, Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org, Russell King <linux@arm.linux.org.uk>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Olof Johansson <olof@lixom.net>
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Russell King <linux@arm.linux.org.uk>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Arnd Bergmann <arnd@arndb.de>, b.zolnierkie@samsung.com, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, Kevin Hilman <khilman@baylibre.com>, Sekhar Nori <nsekhar@ti.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-On 03/09/2017 03:20 PM, Sekhar Nori wrote:
+Hi,
 
-> [...]
+This patchset adds Palmchip BK3710 IDE controller driver to
+libata and switches ARM/DaVinci to use it instead of the old
+IDE driver.
 
->>> diff --git a/arch/arm/mach-davinci/board-dm644x-evm.c
->>> b/arch/arm/mach-davinci/board-dm644x-evm.c
->>> index 023480b75244..60a1f23890cd 100644
->>> --- a/arch/arm/mach-davinci/board-dm644x-evm.c
->>> +++ b/arch/arm/mach-davinci/board-dm644x-evm.c
->>> @@ -744,7 +744,7 @@ static int davinci_phy_fixup(struct phy_device
->>> *phydev)
->>>      return 0;
->>>  }
->>>
->>> -#define HAS_ATA        IS_ENABLED(CONFIG_BLK_DEV_PALMCHIP_BK3710)
->>> +#define HAS_ATA        IS_ENABLED(CONFIG_PATA_BK3710)
->>
->>    I think it would be more correct to check for both libata and IDE
->> drivers here...
->
-> As I understand, the plan is to remove the IDE driver soon.
+Sekhar, please check that it still works after changes, thanks.
 
-    I'm not sure DaveM would support any removals in drivers/ide/. He has 
-explicitly expressed his will to maintain the IDE driuver forever.
+Changes since v0.1 draft patch version
+(https://www.spinics.net/lists/arm-kernel/msg566932.html):
+- fixed cycle_time build warning
+- added platform support fixes from Sekhar
+- added defconfig changes from Sekhar
+- preserved platform support for the old IDE driver
+- split it on 3 patches
 
-> Thanks,
-> Sekhar
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
 
-MBR, Sergei
+
+Bartlomiej Zolnierkiewicz (1):
+  ata: add Palmchip BK3710 PATA controller driver
+
+Sekhar Nori (2):
+  ARM: davinci: add pata_bk3710 libata driver support
+  ARM: davinci_all_defconfig: convert to use libata PATA
+
+ arch/arm/configs/davinci_all_defconfig    |   4 +-
+ arch/arm/mach-davinci/board-dm644x-evm.c  |   3 +-
+ arch/arm/mach-davinci/board-dm646x-evm.c  |   3 +-
+ arch/arm/mach-davinci/board-neuros-osd2.c |   3 +-
+ drivers/ata/Kconfig                       |   9 +
+ drivers/ata/Makefile                      |   1 +
+ drivers/ata/pata_bk3710.c                 | 395 ++++++++++++++++++++++++++++++
+ 7 files changed, 412 insertions(+), 6 deletions(-)
+ create mode 100644 drivers/ata/pata_bk3710.c
+
+-- 
+1.9.1
