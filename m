@@ -1,63 +1,95 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [PATCH 3/3] ARM: davinci_all_defconfig: convert to use libata PATA
-Date: Thu, 09 Mar 2017 14:01:36 +0100
-Message-ID: <1489064496-6270-4-git-send-email-b.zolnierkie@samsung.com>
-References: <1489064496-6270-1-git-send-email-b.zolnierkie@samsung.com>
- <CGME20170309130223epcas5p21264a08eab66d1d95561d6c79829afc1@epcas5p2.samsung.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:45632 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754624AbdCINEZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Mar 2017 08:04:25 -0500
-In-reply-to: <1489064496-6270-1-git-send-email-b.zolnierkie@samsung.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+Subject: Re: [RESEND PATCH] arm: assabet_defconfig: disable IDE subsystem
+Date: Thu, 9 Mar 2017 13:57:15 +0000
+Message-ID: <20170309135714.GJ21222@n2100.armlinux.org.uk>
+References: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com>
+ <CGME20161212135537epcas5p440bbb93d40f0c41b3754635733b09879@epcas5p4.samsung.com>
+ <8ea5971a-338d-e8b9-6be8-8fe2658fc04d@ti.com>
+ <1709119.SQyio4Ct6n@amdc3058>
+ <1fd840c5-b0bb-726b-6357-669977c4ae5f@ti.com>
+ <a3161cfc-56f7-4577-c37f-3798cdb03713@ti.com>
+ <ab44a3c1-f078-4476-4583-de92ee68632c@cogentembedded.com>
+ <98031160-f7b4-3cff-043a-1f2ee62c8a01@ti.com>
+ <a8eab3b1-8867-00dd-08e4-bcece23010a6@cogentembedded.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline
+In-Reply-To: <a8eab3b1-8867-00dd-08e4-bcece23010a6@cogentembedded.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, Kevin Hilman <khilman@baylibre.com>, Sekhar Nori <nsekhar@ti.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Olof Johansson <olof@lixom.net>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Sekhar Nori <nsekhar@ti.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Kevin Hilman <khilman@baylibre.com>, Arnd Bergmann <arnd@arndb.de>, Russell King <linux@arm.linux.org.uk>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com
 
-From: Sekhar Nori <nsekhar@ti.com>
+On Thu, Mar 09, 2017 at 03:24:56PM +0300, Sergei Shtylyov wrote:
+> On 03/09/2017 03:20 PM, Sekhar Nori wrote:
+> 
+> >[...]
+> 
+> >>>diff --git a/arch/arm/mach-davinci/board-dm644x-evm.c
+> >>>b/arch/arm/mach-davinci/board-dm644x-evm.c
+> >>>index 023480b75244..60a1f23890cd 100644
+> >>>--- a/arch/arm/mach-davinci/board-dm644x-evm.c
+> >>>+++ b/arch/arm/mach-davinci/board-dm644x-evm.c
+> >>>@@ -744,7 +744,7 @@ static int davinci_phy_fixup(struct phy_device
+> >>>*phydev)
+> >>>     return 0;
+> >>> }
+> >>>
+> >>>-#define HAS_ATA        IS_ENABLED(CONFIG_BLK_DEV_PALMCHIP_BK3710)
+> >>>+#define HAS_ATA        IS_ENABLED(CONFIG_PATA_BK3710)
+> >>
+> >>   I think it would be more correct to check for both libata and IDE
+> >>drivers here...
+> >
+> >As I understand, the plan is to remove the IDE driver soon.
+> 
+>    I'm not sure DaveM would support any removals in drivers/ide/. He has
+> explicitly expressed his will to maintain the IDE driuver forever.
 
-IDE subsystem has been deprecated since 2009 and the majority
-(if not all) of Linux distributions have switched to use
-libata for ATA support exclusively.  However there are still
-some users (mostly old or/and embedded non-x86 systems) that
-have not converted from using IDE subsystem to libata PATA
-drivers.  This doesn't seem to be good thing in the long-term
-for Linux as while there is less and less PATA systems left
-in use:
+As I keep saying, there are ARM machines where the IDE driver works but
+the PATA driver doesn't.  EBSA110's PCMCIA slots for instance.
 
-* testing efforts are divided between two subsystems
+Yes, it's very obscure - but what it comes down to is the silly way the
+"ISA" IO is handled on the platform (which depends whether it's an 8-bit
+or 16-bit ISA-style peripheral.)  The old IDE CS driver _could_ be bent
+to work via a patch like this:
 
-* having duplicate drivers for same hardware confuses users
+ARM: EBSA110: Enable 16-bit IO type for ide-iops
 
-This patch converts davinci_all_defconfig to use libata PATA
-drivers.
+diff --git a/arch/arm/Makefile b/arch/arm/Makefile
+index 047a20780fc1..2eb501d6b5fe 100644
+--- a/arch/arm/Makefile
++++ b/arch/arm/Makefile
+@@ -217,7 +217,8 @@ ifeq ($(CONFIG_ARCH_EBSA110),y)
+ # This is what happens if you forget the IOCS16 line.
+ # PCMCIA cards stop working.
+ CFLAGS_3c589_cs.o :=-DISA_SIXTEEN_BIT_PERIPHERAL
+-export CFLAGS_3c589_cs.o
++CFLAGS_ide-io-std.o :=-DISA_SIXTEEN_BIT_PERIPHERAL
++export CFLAGS_3c589_cs.o CFLAGS_ide-io-std.o
+ endif
 
-Signed-off-by: Sekhar Nori <nsekhar@ti.com>
-[b.zolnierkie: split from bigger patch + added patch description]
-Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
----
- arch/arm/configs/davinci_all_defconfig | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ # The byte offset of the kernel image in RAM from the start of RAM.
 
-diff --git a/arch/arm/configs/davinci_all_defconfig b/arch/arm/configs/davinci_all_defconfig
-index c8663ea..93aab3d 100644
---- a/arch/arm/configs/davinci_all_defconfig
-+++ b/arch/arm/configs/davinci_all_defconfig
-@@ -74,12 +74,10 @@ CONFIG_BLK_DEV_RAM=y
- CONFIG_BLK_DEV_RAM_COUNT=1
- CONFIG_BLK_DEV_RAM_SIZE=32768
- CONFIG_EEPROM_AT24=y
--CONFIG_IDE=m
--CONFIG_BLK_DEV_PALMCHIP_BK3710=m
--CONFIG_SCSI=m
- CONFIG_BLK_DEV_SD=m
- CONFIG_ATA=m
- CONFIG_AHCI_DA850=m
-+CONFIG_PATA_BK3710=m
- CONFIG_NETDEVICES=y
- CONFIG_NETCONSOLE=y
- CONFIG_TUN=m
+but the PATA driver is much harder.
+
+That said, the EBSA110 is now a prime museum piece, and towards the
+end of the time I was using it, the kernel was becoming more and more
+inefficient on the hardware - as in, it appeared it could route
+network packets _or_ run userspace, but not both, even with drivers
+converted to NAPI.
+
 -- 
-1.9.1
-
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
