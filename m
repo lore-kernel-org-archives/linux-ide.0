@@ -1,56 +1,64 @@
-From: Yuantian Tang <andy.tang@nxp.com>
-Subject: [PATCH] ahci: qoriq: correct the sata ecc setting error
-Date: Thu, 9 Mar 2017 17:13:29 +0800
-Message-ID: <1489050809-15265-1-git-send-email-andy.tang@nxp.com>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [RESEND PATCH] arm: assabet_defconfig: disable IDE subsystem
+Date: Thu, 09 Mar 2017 12:47:53 +0100
+Message-ID: <1821488.fi4Ak6Xj0W@amdc3058>
+References: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com>
+ <1fd840c5-b0bb-726b-6357-669977c4ae5f@ti.com>
+ <a3161cfc-56f7-4577-c37f-3798cdb03713@ti.com>
+ <CGME20170309114756epcas5p3761bce85d5a8e3a095cb3a876c484ea6@epcas5p3.samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, Yuantian Tang <andy.tang@nxp.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout3.samsung.com ([203.254.224.33]:45927 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932065AbdCILsA (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Mar 2017 06:48:00 -0500
+In-reply-to: <a3161cfc-56f7-4577-c37f-3798cdb03713@ti.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sekhar Nori <nsekhar@ti.com>
+Cc: Kevin Hilman <khilman@baylibre.com>, Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org, Russell King <linux@arm.linux.org.uk>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>
 
-Sata ecc is controlled by only 1 bit which is 24bit in big-endian
-in ecc register. So only setting 24bit to disable sata ecc prevents
-other bits from being overwritten in ecc register.
 
-Signed-off-by: Tang Yuantian <andy.tang@nxp.com>
----
- drivers/ata/ahci_qoriq.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Hi Sekhar,
 
-diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
-index 85d8332..4c96f3a 100644
---- a/drivers/ata/ahci_qoriq.c
-+++ b/drivers/ata/ahci_qoriq.c
-@@ -177,7 +177,8 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 	case AHCI_LS1043A:
- 		if (!qpriv->ecc_addr)
- 			return -EINVAL;
--		writel(ECC_DIS_ARMV8_CH2, qpriv->ecc_addr);
-+		writel(readl(qpriv->ecc_addr) | ECC_DIS_ARMV8_CH2,
-+				qpriv->ecc_addr);
- 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
- 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
- 		if (qpriv->is_dmacoherent)
-@@ -194,7 +195,8 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 	case AHCI_LS1046A:
- 		if (!qpriv->ecc_addr)
- 			return -EINVAL;
--		writel(ECC_DIS_ARMV8_CH2, qpriv->ecc_addr);
-+		writel(readl(qpriv->ecc_addr) | ECC_DIS_ARMV8_CH2,
-+				qpriv->ecc_addr);
- 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
- 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
- 		if (qpriv->is_dmacoherent)
--- 
-2.1.0.27.g96db324
+On Thursday, March 09, 2017 02:09:30 PM Sekhar Nori wrote:
+> Hi Bartlomiej,
+> 
+> On Wednesday 08 March 2017 08:30 PM, Sekhar Nori wrote:
+> 
+> >> It took a while to get to it but here is the draft driver patch
+> >> against v4.11-rc1.  Please test.
+> > 
+> > I tested this on DM6446 EVM. I was able to mount existing partitions on 
+> > the hard disk and see that the directory listing looks good[1]. I will do 
+> > more tests (including comparing performance with old driver) tomorrow. I 
+> 
+> I completed the tests I wanted to, including some read/write/data 
+> integrity tests. Performance is same as before too.
+> 
+> Tested-by: Sekhar Nori <nsekhar@ti.com>
+
+Thanks for testing!
+
+> Here are the additional changes I did. These changes do not clash with 
+
+I'll split the draft patch on ATA & platform changes and make a proper
+submission.  I'll also include your changes (can I have your Signed-by
+for them?).
+
+> what I have already queued for v4.12. That said, its probably better if 
+> I carry the platform pieces through my tree. Let me know how you want 
+> to proceed.
+
+I think that it would be the best to ask Tejun to make a separate branch
+with a pata_bk3710 driver so it can be pulled into your tree to preserve
+bisectability.
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
+
