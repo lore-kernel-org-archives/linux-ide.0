@@ -1,42 +1,59 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH] libata: make ata_sg_clean static over again
-Date: Fri, 10 Mar 2017 10:05:40 +0800
-Message-ID: <1489111540-22046-1-git-send-email-yanaijie@huawei.com>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [RESEND PATCH] arm: assabet_defconfig: disable IDE subsystem
+Date: Fri, 10 Mar 2017 18:11:50 +0100
+Message-ID: <1717246.ZXLvBCRMKf@amdc3058>
+References: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com>
+ <98031160-f7b4-3cff-043a-1f2ee62c8a01@ti.com>
+ <a8eab3b1-8867-00dd-08e4-bcece23010a6@cogentembedded.com>
+ <CGME20170310171153epcas5p259bf9353fd1194dd131350fc59c3423a@epcas5p2.samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([45.249.212.189]:3961 "EHLO
-        dggrg03-dlp.huawei.com" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751383AbdCJCEd (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Mar 2017 21:04:33 -0500
+Received: from mailout2.samsung.com ([203.254.224.25]:43156 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932997AbdCJRL5 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Mar 2017 12:11:57 -0500
+In-reply-to: <a8eab3b1-8867-00dd-08e4-bcece23010a6@cogentembedded.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, tj@kernel.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc: miaoxie@huawei.com, Jason Yan <yanaijie@huawei.com>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Sekhar Nori <nsekhar@ti.com>, Kevin Hilman <khilman@baylibre.com>, Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org, Russell King <linux@arm.linux.org.uk>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Olof Johansson <olof@lixom.net>
 
-Fixes the following sparse warning:
+On Thursday, March 09, 2017 03:24:56 PM Sergei Shtylyov wrote:
+> On 03/09/2017 03:20 PM, Sekhar Nori wrote:
+> 
+> > [...]
+> 
+> >>> diff --git a/arch/arm/mach-davinci/board-dm644x-evm.c
+> >>> b/arch/arm/mach-davinci/board-dm644x-evm.c
+> >>> index 023480b75244..60a1f23890cd 100644
+> >>> --- a/arch/arm/mach-davinci/board-dm644x-evm.c
+> >>> +++ b/arch/arm/mach-davinci/board-dm644x-evm.c
+> >>> @@ -744,7 +744,7 @@ static int davinci_phy_fixup(struct phy_device
+> >>> *phydev)
+> >>>      return 0;
+> >>>  }
+> >>>
+> >>> -#define HAS_ATA        IS_ENABLED(CONFIG_BLK_DEV_PALMCHIP_BK3710)
+> >>> +#define HAS_ATA        IS_ENABLED(CONFIG_PATA_BK3710)
+> >>
+> >>    I think it would be more correct to check for both libata and IDE
+> >> drivers here...
+> >
+> > As I understand, the plan is to remove the IDE driver soon.
+> 
+>     I'm not sure DaveM would support any removals in drivers/ide/. He has 
+> explicitly expressed his will to maintain the IDE driuver forever.
 
-drivers/ata/libata-core.c:4913:6: warning: symbol 'ata_sg_clean' was not
-declared. Should it be static?
+Well, he can always change his opinion. :-)
 
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
----
- drivers/ata/libata-core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Especially if the request for removal is for platform specific code only
+and it is agreed with the maintainers of the given platform..
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index ca75823..5d33699 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4910,7 +4910,7 @@ void ata_sg_init(struct ata_queued_cmd *qc, struct scatterlist *sg,
-  *	LOCKING:
-  *	spin_lock_irqsave(host lock)
-  */
--void ata_sg_clean(struct ata_queued_cmd *qc)
-+static void ata_sg_clean(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
- 	struct scatterlist *sg = qc->sg;
--- 
-2.5.0
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
 
