@@ -1,59 +1,65 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [RESEND PATCH] arm: assabet_defconfig: disable IDE subsystem
-Date: Fri, 10 Mar 2017 18:11:50 +0100
-Message-ID: <1717246.ZXLvBCRMKf@amdc3058>
-References: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com>
- <98031160-f7b4-3cff-043a-1f2ee62c8a01@ti.com>
- <a8eab3b1-8867-00dd-08e4-bcece23010a6@cogentembedded.com>
- <CGME20170310171153epcas5p259bf9353fd1194dd131350fc59c3423a@epcas5p2.samsung.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [LFS/MM TOPIC][LFS/MM ATTEND]: - Storage Stack and Driver
+ Testing methodology.
+Date: Fri, 10 Mar 2017 19:37:58 +0000
+Message-ID: <1489174661.2548.5.camel@sandisk.com>
+References: <CO2PR04MB218427BF42159B20FB26F74186670@CO2PR04MB2184.namprd04.prod.outlook.com>
+         <CO2PR04MB2184DB653C04FB620B41435486670@CO2PR04MB2184.namprd04.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:43156 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932997AbdCJRL5 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Mar 2017 12:11:57 -0500
-In-reply-to: <a8eab3b1-8867-00dd-08e4-bcece23010a6@cogentembedded.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <CO2PR04MB2184DB653C04FB620B41435486670@CO2PR04MB2184.namprd04.prod.outlook.com>
+Content-Language: en-US
+Content-ID: <2DADA320DF156E4BB34336358E8539A8@sandisk.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: Sekhar Nori <nsekhar@ti.com>, Kevin Hilman <khilman@baylibre.com>, Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org, Russell King <linux@arm.linux.org.uk>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Olof Johansson <olof@lixom.net>
 
-On Thursday, March 09, 2017 03:24:56 PM Sergei Shtylyov wrote:
-> On 03/09/2017 03:20 PM, Sekhar Nori wrote:
-> 
-> > [...]
-> 
-> >>> diff --git a/arch/arm/mach-davinci/board-dm644x-evm.c
-> >>> b/arch/arm/mach-davinci/board-dm644x-evm.c
-> >>> index 023480b75244..60a1f23890cd 100644
-> >>> --- a/arch/arm/mach-davinci/board-dm644x-evm.c
-> >>> +++ b/arch/arm/mach-davinci/board-dm644x-evm.c
-> >>> @@ -744,7 +744,7 @@ static int davinci_phy_fixup(struct phy_device
-> >>> *phydev)
-> >>>      return 0;
-> >>>  }
-> >>>
-> >>> -#define HAS_ATA        IS_ENABLED(CONFIG_BLK_DEV_PALMCHIP_BK3710)
-> >>> +#define HAS_ATA        IS_ENABLED(CONFIG_PATA_BK3710)
-> >>
-> >>    I think it would be more correct to check for both libata and IDE
-> >> drivers here...
-> >
-> > As I understand, the plan is to remove the IDE driver soon.
-> 
->     I'm not sure DaveM would support any removals in drivers/ide/. He has 
-> explicitly expressed his will to maintain the IDE driuver forever.
+On Tue, 2017-01-10 at 22:40 +0000, Chaitanya Kulkarni wrote:
+> Participants:-
+> ------------------
+> I'd like to invite developers from different subsystems to discuss an app=
+roach towards=A0
+> a unified testing methodology for storage stack and device drivers belong=
+s to=A0
+> different subsystems.
+>=20
+> Topics for Discussion:-
+> ------------------------------
+> As a part of discussion following are some of the key points which we can=
+ focus on:-
+> 1. What are the common components of the kernel used by the various subsy=
+stems?
+> 2. What are the potential target drivers which can benefit from this appr=
+oach?=A0
+> =A0 (e.g. NVMe, NVMe Over Fabric, Open Channel Solid State Drives etc.)
+> 3. What are the desired features that can be implemented in this Framewor=
+k?
+> =A0 (code coverage, unit tests, stress testings, regression, generating C=
+occinelle reports etc.)=A0
+> 4. Desirable Report generation mechanism?
+> 5. Basic performance validation?
+> 6. Whether QEMU can be used to emulate some of the H/W functionality to c=
+reate a test=A0
+> =A0 platform? (Optional subsystem specific)
 
-Well, he can always change his opinion. :-)
+Regarding existing test software: the SRP test software is a thorough test =
+of
+the Linux block layer, SCSI core, dm-mpath driver, dm core, SRP initiator a=
+nd
+target drivers and also of the asynchronous I/O subsystem. This test suite
+includes experimental support for the NVMeOF drivers. This test suite suppo=
+rts
+the rdma_rxe driver which means that an Ethernet adapter is sufficient to r=
+un
+these tests.
 
-Especially if the request for removal is for platform specific code only
-and it is agreed with the maintainers of the given platform..
+Note: the focus of this test suite is the regular I/O path and device remov=
+al.
+This test suite neither replaces the libiscsi tests nor xfstests.
 
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+See also https://github.com/bvanassche/srp-test.
 
+Bart.=
