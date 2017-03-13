@@ -1,268 +1,153 @@
 From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: [PATCH 2/2] ata: ahci: add support for DaVinci DM816 SATA controller
-Date: Mon, 13 Mar 2017 17:36:22 +0100
-Message-ID: <1489422982-3461-3-git-send-email-bgolaszewski@baylibre.com>
-References: <1489422982-3461-1-git-send-email-bgolaszewski@baylibre.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1489422982-3461-1-git-send-email-bgolaszewski@baylibre.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Neil Armstrong <narmstrong@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Kevin Hilman <khilman@baylibre.com>, Patrick Titiano <ptitiano@baylibre.com>
-Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>
+Subject: [PATCH 1/4] ARM: OMAP2+: dm81xx: Add clkdm and hwmod for SATA
+Date: Mon, 13 Mar 2017 17:43:16 +0100
+Message-ID: <1489423399-3824-2-git-send-email-bgolaszewski@baylibre.com>
+References: <1489423399-3824-1-git-send-email-bgolaszewski@baylibre.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1489423399-3824-1-git-send-email-bgolaszewski@baylibre.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Neil Armstrong <narmstrong@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Kevin Hilman <khilman@baylibre.com>, Patrick Titiano <ptitiano@baylibre.com>, Tony Lindgren <tony@atomide.com>, Paul Walmsley <paul@pwsan.com>
+Cc: devicetree@vger.kernel.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-This SATA controller is quite similar to the one present on the DA850
-SoC, but the PHY configuration is different and it supports two HBA
-ports.
+From: Kevin Hilman <khilman@baylibre.com>
 
-The IP suffers from the same PMP issue the DA850 does - if we enable
-PMP but don't use it - softreset fails. Appropriate workaround was
-implemented in this driver as well.
+Add the SATA clockdomain (part of CM_DEFAULT) and a hwmod for the SATA
+block on dm81xx.
 
+Tested on DM8168 EVM.
+
+Signed-off-by: Kevin Hilman <khilman@baylibre.com>
 Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
 ---
- drivers/ata/Kconfig      |   9 +++
- drivers/ata/Makefile     |   1 +
- drivers/ata/ahci_dm816.c | 200 +++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 210 insertions(+)
- create mode 100644 drivers/ata/ahci_dm816.c
+ arch/arm/mach-omap2/clockdomains81xx_data.c | 10 +++++++++
+ arch/arm/mach-omap2/cm81xx.h                |  2 ++
+ arch/arm/mach-omap2/omap_hwmod_81xx_data.c  | 34 +++++++++++++++++++++++++++++
+ 3 files changed, 46 insertions(+)
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 70b57d2..7f59a7a 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -118,6 +118,15 @@ config AHCI_DA850
+diff --git a/arch/arm/mach-omap2/clockdomains81xx_data.c b/arch/arm/mach-omap2/clockdomains81xx_data.c
+index 3b5fb05..65fbd13 100644
+--- a/arch/arm/mach-omap2/clockdomains81xx_data.c
++++ b/arch/arm/mach-omap2/clockdomains81xx_data.c
+@@ -91,6 +91,14 @@ static struct clockdomain default_l3_slow_81xx_clkdm = {
+ 	.flags		= CLKDM_CAN_SWSUP,
+ };
  
- 	  If unsure, say N.
++static struct clockdomain default_sata_81xx_clkdm = {
++	.name		= "default_clkdm",
++	.pwrdm		= { .name = "default_pwrdm" },
++	.cm_inst	= TI81XX_CM_DEFAULT_MOD,
++	.clkdm_offs	= TI816X_CM_DEFAULT_SATA_CLKDM,
++	.flags		= CLKDM_CAN_SWSUP,
++};
++
+ /* 816x only */
  
-+config AHCI_DM816
-+	tristate "DaVinci DM816 AHCI SATA support"
-+	depends on ARCH_OMAP2PLUS
-+	help
-+	  This option enables support for the DaVinci DM816 SoC's
-+	  onboard AHCI SATA controller.
-+
-+	  If unsure, say N.
-+
- config AHCI_ST
- 	tristate "ST AHCI SATA support"
- 	depends on ARCH_STI
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index 89a0a19..3052c0a 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -14,6 +14,7 @@ obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
- obj-$(CONFIG_AHCI_BRCM)		+= ahci_brcm.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_CEVA)		+= ahci_ceva.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_DA850)	+= ahci_da850.o libahci.o libahci_platform.o
-+obj-$(CONFIG_AHCI_DM816)	+= ahci_dm816.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_IMX)		+= ahci_imx.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_MVEBU)	+= ahci_mvebu.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_OCTEON)	+= ahci_octeon.o
-diff --git a/drivers/ata/ahci_dm816.c b/drivers/ata/ahci_dm816.c
-new file mode 100644
-index 0000000..fbd827c
---- /dev/null
-+++ b/drivers/ata/ahci_dm816.c
-@@ -0,0 +1,200 @@
-+/*
-+ * DaVinci DM816 AHCI SATA platform driver
-+ *
-+ * Copyright (C) 2017 BayLibre SAS
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2, or (at your option)
-+ * any later version.
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/device.h>
-+#include <linux/pm.h>
-+#include <linux/platform_device.h>
-+#include <linux/libata.h>
-+#include <linux/ahci_platform.h>
-+
-+#include "ahci.h"
-+
-+#define AHCI_DM816_DRV_NAME		"ahci-dm816"
-+
-+#define AHCI_DM816_PHY_ENPLL(x)		((x) << 0)
-+#define AHCI_DM816_PHY_MPY(x)		((x) << 1)
-+#define AHCI_DM816_PHY_LOS(x)		((x) << 12)
-+#define AHCI_DM816_PHY_RXCDR(x)		((x) << 13)
-+#define AHCI_DM816_PHY_RXEQ(x)		((x) << 16)
-+#define AHCI_DM816_PHY_TXSWING(x)	((x) << 23)
-+
-+#define AHCI_DM816_P0PHYCR_REG		0x178
-+#define AHCI_DM816_P1PHYCR_REG		0x1f8
-+
-+#define AHCI_DM816_PLL_OUT		1500000000LU
-+
-+static const unsigned long pll_mpy_table[] = {
-+	  400,  500,  600,  800,  825, 1000, 1200,
-+	 1250, 1500, 1600, 1650, 2000, 2200, 2500
+ static struct clockdomain alwon_mpu_816x_clkdm = {
+@@ -173,6 +181,7 @@ static struct clockdomain *clockdomains_ti814x[] __initdata = {
+ 	&mmu_81xx_clkdm,
+ 	&mmu_cfg_81xx_clkdm,
+ 	&default_l3_slow_81xx_clkdm,
++	&default_sata_81xx_clkdm,
+ 	NULL,
+ };
+ 
+@@ -200,6 +209,7 @@ static struct clockdomain *clockdomains_ti816x[] __initdata = {
+ 	&default_ducati_816x_clkdm,
+ 	&default_pci_816x_clkdm,
+ 	&default_l3_slow_81xx_clkdm,
++	&default_sata_81xx_clkdm,
+ 	NULL,
+ };
+ 
+diff --git a/arch/arm/mach-omap2/cm81xx.h b/arch/arm/mach-omap2/cm81xx.h
+index 3a0ccf0..44ca275 100644
+--- a/arch/arm/mach-omap2/cm81xx.h
++++ b/arch/arm/mach-omap2/cm81xx.h
+@@ -35,6 +35,7 @@
+ #define TI81XX_CM_MMU_CLKDM			0x000C
+ #define TI81XX_CM_MMUCFG_CLKDM			0x0010
+ #define TI81XX_CM_ALWON_MPU_CLKDM		0x001C
++#define TI81XX_CM_ALWON_SYSCLK5_CLKDM		0x0024
+ #define TI81XX_CM_ALWON_L3_FAST_CLKDM		0x0030
+ 
+ /* ACTIVE */
+@@ -57,5 +58,6 @@
+ #define TI816X_CM_DEFAULT_PCI_CLKDM		0x0010
+ #define TI816X_CM_DEFAULT_L3_SLOW_CLKDM		0x0014
+ #define TI816X_CM_DEFAULT_DUCATI_CLKDM		0x0018
++#define TI816X_CM_DEFAULT_SATA_CLKDM		0x0060
+ 
+ #endif
+diff --git a/arch/arm/mach-omap2/omap_hwmod_81xx_data.c b/arch/arm/mach-omap2/omap_hwmod_81xx_data.c
+index b82b77c..310afe4 100644
+--- a/arch/arm/mach-omap2/omap_hwmod_81xx_data.c
++++ b/arch/arm/mach-omap2/omap_hwmod_81xx_data.c
+@@ -106,6 +106,7 @@
+  */
+ #define DM81XX_CM_DEFAULT_OFFSET	0x500
+ #define DM81XX_CM_DEFAULT_USB_CLKCTRL	(0x558 - DM81XX_CM_DEFAULT_OFFSET)
++#define DM81XX_CM_DEFAULT_SATA_CLKCTRL	(0x560 - DM81XX_CM_DEFAULT_OFFSET)
+ 
+ /* L3 Interconnect entries clocked at 125, 250 and 500MHz */
+ static struct omap_hwmod dm81xx_alwon_l3_slow_hwmod = {
+@@ -973,6 +974,38 @@ static struct omap_hwmod_ocp_if dm816x_l4_hs__emac1 = {
+ 	.user		= OCP_USER_MPU,
+ };
+ 
++static struct omap_hwmod_class_sysconfig dm81xx_sata_sysc = {
++	.sysc_offs	= 0x1100,
++	.sysc_flags	= SYSC_HAS_SIDLEMODE,
++	.idlemodes	= SIDLE_FORCE,
++	.sysc_fields	= &omap_hwmod_sysc_type3,
 +};
 +
-+static int ahci_dm816_get_mpy_bits(unsigned long refclk_rate)
-+{
-+	unsigned long pll_multiplier;
-+	int i;
-+
-+	/*
-+	 * We need to determine the value of the multiplier (MPY) bits.
-+	 * In order to include the 8.25 multiplier we need to first divide
-+	 * the refclk rate by 100.
-+	 */
-+	pll_multiplier = AHCI_DM816_PLL_OUT / (refclk_rate / 100);
-+
-+	for (i = 0; i < ARRAY_SIZE(pll_mpy_table); i++) {
-+		if (pll_mpy_table[i] == pll_multiplier)
-+			return i;
-+	}
-+
-+	/*
-+	 * We should have divided evenly - if not, return an invalid
-+	 * value.
-+	 */
-+	return -1;
-+}
-+
-+static int ahci_dm816_phy_init(struct ahci_host_priv *hpriv, struct device *dev)
-+{
-+	unsigned long refclk_rate;
-+	int mpy;
-+	u32 val;
-+
-+	/*
-+	 * We should have been supplied two clocks: the functional and
-+	 * keep-alive clock and the external reference clock. We need the
-+	 * rate of the latter to calculate the correct value of MPY bits.
-+	 */
-+	if (!hpriv->clks[1]) {
-+		dev_err(dev, "reference clock not supplied\n");
-+		return -EINVAL;
-+	}
-+
-+	refclk_rate = clk_get_rate(hpriv->clks[1]);
-+	if ((refclk_rate % 100) != 0) {
-+		dev_err(dev, "reference clock rate must be divisible by 100\n");
-+		return -EINVAL;
-+	}
-+
-+	mpy = ahci_dm816_get_mpy_bits(refclk_rate);
-+	if (mpy < 0) {
-+		dev_err(dev, "can't calculate the MPY bits value\n");
-+		return -EINVAL;
-+	}
-+
-+	/* Enable the PHY and configure the first HBA port. */
-+	val = AHCI_DM816_PHY_MPY(mpy) | AHCI_DM816_PHY_LOS(1) |
-+	      AHCI_DM816_PHY_RXCDR(4) | AHCI_DM816_PHY_RXEQ(1) |
-+	      AHCI_DM816_PHY_TXSWING(3) | AHCI_DM816_PHY_ENPLL(1);
-+	writel(val, hpriv->mmio + AHCI_DM816_P0PHYCR_REG);
-+
-+	/* Configure the second HBA port. */
-+	val = AHCI_DM816_PHY_LOS(1) | AHCI_DM816_PHY_RXCDR(4) |
-+	      AHCI_DM816_PHY_RXEQ(1) | AHCI_DM816_PHY_TXSWING(3);
-+	writel(val, hpriv->mmio + AHCI_DM816_P1PHYCR_REG);
-+
-+	return 0;
-+}
-+
-+static int ahci_dm816_softreset(struct ata_link *link,
-+				unsigned int *class, unsigned long deadline)
-+{
-+	int pmp, ret;
-+
-+	pmp = sata_srst_pmp(link);
-+
-+	/*
-+	 * There's an issue with the SATA controller on DM816 SoC: if we
-+	 * enable Port Multiplier support, but the drive is connected directly
-+	 * to the board, it can't be detected. As a workaround: if PMP is
-+	 * enabled, we first call ahci_do_softreset() and pass it the result of
-+	 * sata_srst_pmp(). If this call fails, we retry with pmp = 0.
-+	 */
-+	ret = ahci_do_softreset(link, class, pmp, deadline, ahci_check_ready);
-+	if (pmp && ret == -EBUSY)
-+		return ahci_do_softreset(link, class, 0,
-+					 deadline, ahci_check_ready);
-+
-+	return ret;
-+}
-+
-+static struct ata_port_operations ahci_dm816_port_ops = {
-+	.inherits = &ahci_platform_ops,
-+	.softreset = ahci_dm816_softreset,
++static struct omap_hwmod_class dm81xx_sata_hwmod_class = {
++	.name	= "sata",
++	.sysc	= &dm81xx_sata_sysc,
 +};
 +
-+static const struct ata_port_info ahci_dm816_port_info = {
-+	.flags		= AHCI_FLAG_COMMON,
-+	.pio_mask	= ATA_PIO4,
-+	.udma_mask	= ATA_UDMA6,
-+	.port_ops	= &ahci_dm816_port_ops,
-+};
-+
-+static struct scsi_host_template ahci_dm816_platform_sht = {
-+	AHCI_SHT(AHCI_DM816_DRV_NAME),
-+};
-+
-+static int ahci_dm816_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct ahci_host_priv *hpriv;
-+	int rc;
-+
-+	hpriv = ahci_platform_get_resources(pdev);
-+	if (IS_ERR(hpriv))
-+		return PTR_ERR(hpriv);
-+
-+	rc = ahci_platform_enable_resources(hpriv);
-+	if (rc)
-+		return rc;
-+
-+	rc = ahci_dm816_phy_init(hpriv, dev);
-+	if (rc)
-+		goto disable_resources;
-+
-+	rc = ahci_platform_init_host(pdev, hpriv,
-+				     &ahci_dm816_port_info,
-+				     &ahci_dm816_platform_sht);
-+	if (rc)
-+		goto disable_resources;
-+
-+	return 0;
-+
-+disable_resources:
-+	ahci_platform_disable_resources(hpriv);
-+
-+	return rc;
-+}
-+
-+static SIMPLE_DEV_PM_OPS(ahci_dm816_pm_ops,
-+			 ahci_platform_suspend,
-+			 ahci_platform_resume);
-+
-+static const struct of_device_id ahci_dm816_of_match[] = {
-+	{ .compatible = "ti,dm816-ahci", },
-+	{ },
-+};
-+MODULE_DEVICE_TABLE(of, ahci_dm816_of_match);
-+
-+static struct platform_driver ahci_dm816_driver = {
-+	.probe = ahci_dm816_probe,
-+	.remove = ata_platform_remove_one,
-+	.driver = {
-+		.name = AHCI_DM816_DRV_NAME,
-+		.of_match_table = ahci_dm816_of_match,
-+		.pm = &ahci_dm816_pm_ops,
++static struct omap_hwmod dm81xx_sata_hwmod = {
++	.name		= "sata",
++	.clkdm_name	= "default_sata_clkdm",
++	.flags		= HWMOD_NO_IDLEST,
++	.prcm = {
++		.omap4 = {
++			.clkctrl_offs = DM81XX_CM_DEFAULT_SATA_CLKCTRL,
++			.modulemode   = MODULEMODE_SWCTRL,
++		},
 +	},
++	.class		= &dm81xx_sata_hwmod_class,
 +};
-+module_platform_driver(ahci_dm816_driver);
 +
-+MODULE_DESCRIPTION("DaVinci DM816 AHCI SATA platform driver");
-+MODULE_AUTHOR("Bartosz Golaszewski <bgolaszewski@baylibre.com>");
-+MODULE_LICENSE("GPL");
++static struct omap_hwmod_ocp_if dm81xx_l4_hs__sata = {
++	.master		= &dm81xx_l4_hs_hwmod,
++	.slave		= &dm81xx_sata_hwmod,
++	.clk		= "sysclk5_ck",
++	.user		= OCP_USER_MPU,
++};
++
+ static struct omap_hwmod_class_sysconfig dm81xx_mmc_sysc = {
+ 	.rev_offs	= 0x0,
+ 	.sysc_offs	= 0x110,
+@@ -1474,6 +1507,7 @@ static struct omap_hwmod_ocp_if *dm816x_hwmod_ocp_ifs[] __initdata = {
+ 	&dm81xx_l4_hs__emac0,
+ 	&dm81xx_emac0__mdio,
+ 	&dm816x_l4_hs__emac1,
++	&dm81xx_l4_hs__sata,
+ 	&dm81xx_alwon_l3_fast__tpcc,
+ 	&dm81xx_alwon_l3_fast__tptc0,
+ 	&dm81xx_alwon_l3_fast__tptc1,
 -- 
 2.9.3
