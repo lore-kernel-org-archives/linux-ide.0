@@ -1,66 +1,31 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 1/3] ata: add Palmchip BK3710 PATA controller driver
-Date: Sun, 12 Mar 2017 20:53:57 +0300
-Message-ID: <5aa862b6-d029-bbb5-c5a2-a1c9f87e7f0b@cogentembedded.com>
-References: <1489064496-6270-1-git-send-email-b.zolnierkie@samsung.com>
- <CGME20170309130216epcas5p276d211cfa5ed9f87b11a73ebe6fcdc7c@epcas5p2.samsung.com>
- <1489064496-6270-2-git-send-email-b.zolnierkie@samsung.com>
- <c30eeadf-c4f3-3d35-9b2f-abc9eed3e4e8@cogentembedded.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lf0-f51.google.com ([209.85.215.51]:36768 "EHLO
-        mail-lf0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935024AbdCLRyC (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 12 Mar 2017 13:54:02 -0400
-Received: by mail-lf0-f51.google.com with SMTP id y193so56062517lfd.3
-        for <linux-ide@vger.kernel.org>; Sun, 12 Mar 2017 10:54:01 -0700 (PDT)
-In-Reply-To: <c30eeadf-c4f3-3d35-9b2f-abc9eed3e4e8@cogentembedded.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+Subject: [PATCH 0/2] ata: ahci-dm816: new driver
+Date: Mon, 13 Mar 2017 17:36:20 +0100
+Message-ID: <1489422982-3461-1-git-send-email-bgolaszewski@baylibre.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Neil Armstrong <narmstrong@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Kevin Hilman <khilman@baylibre.com>, Patrick Titiano <ptitiano@baylibre.com>
+Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>
-Cc: Sekhar Nori <nsekhar@ti.com>, Kevin Hilman <khilman@baylibre.com>, Arnd Bergmann <arnd@arndb.de>, Russell King <linux@arm.linux.org.uk>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 
-On 03/12/2017 08:28 PM, Sergei Shtylyov wrote:
+Add support for the on-board SATA controller present on TI DM816 SoCs.
 
->> +static void pata_bk3710_set_piomode(struct ata_port *ap,
->> +                    struct ata_device *adev)
->> +{
->> +    void __iomem *base = (void __iomem *)ap->ioaddr.bmdma_addr;
->> +    struct ata_device *pair = ata_dev_pair(adev);
->> +    const struct ata_timing *t = ata_timing_find_mode(adev->pio_mode);
->> +    const u16 *id = adev->id;
->> +    unsigned int cycle_time;
->> +    int is_slave = adev->devno;
->> +    const u8 pio = adev->pio_mode - XFER_PIO_0;
->> +
->> +    if (id[ATA_ID_FIELD_VALID] & 2) {
->> +        if (ata_id_has_iordy(id))
->> +            cycle_time = id[ATA_ID_EIDE_PIO_IORDY];
->> +        else
->> +            cycle_time = id[ATA_ID_EIDE_PIO];
->> +
->> +        /* conservative "downgrade" for all pre-ATA2 drives */
->> +        if (pio < 3 && cycle_time < t->cycle)
->> +            cycle_time = 0; /* use standard timing */
->> +    }
->> +
->> +    if (!cycle_time)
->> +        cycle_time = t->cycle;
->
->    This seems like a helper needed by libata in general but OK...
+This IP suffers from the same issue DA850 does, that is: if we enable
+PMP, but connect the drive directly to the board, the disk cannot be
+detected. A workaround similar to the one implemented in ahci-da850 is
+included in this driver as well.
 
-    No, the build bot had already reported the problem with 'cycle_time' here, 
-I just forgot about it.
+Bartosz Golaszewski (2):
+  dt-bindings: ata: add DT bindings for ahci-dm816 SATA controller
+  ata: ahci: add support for DaVinci DM816 SATA controller
 
-[...]
->
->    Well, no serious issues found, so you can stamp:
->
-> Acked-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+ .../devicetree/bindings/ata/ahci-dm816.txt         |  20 +++
+ drivers/ata/Kconfig                                |   9 +
+ drivers/ata/Makefile                               |   1 +
+ drivers/ata/ahci_dm816.c                           | 200 +++++++++++++++++++++
+ 4 files changed, 230 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ata/ahci-dm816.txt
+ create mode 100644 drivers/ata/ahci_dm816.c
 
-    Too early, it seems... :-)
-
-MBR, Sergei
-
+-- 
+2.9.3
