@@ -1,63 +1,70 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [PATCH v2 3/3] ARM: davinci_all_defconfig: convert to use libata PATA
-Date: Tue, 14 Mar 2017 17:36:54 +0100
-Message-ID: <1489509414-11491-4-git-send-email-b.zolnierkie@samsung.com>
-References: <1489509414-11491-1-git-send-email-b.zolnierkie@samsung.com>
- <CGME20170314163749epcas5p35c246bab0e37dbc23117dc0e0ed33878@epcas5p3.samsung.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:32881 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751777AbdCNQiI (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Mar 2017 12:38:08 -0400
-In-reply-to: <1489509414-11491-1-git-send-email-b.zolnierkie@samsung.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Kevin Hilman <khilman@baylibre.com>
+Subject: Re: [PATCH 2/2] ata: ahci: add support for DaVinci DM816 SATA controller
+Date: Tue, 14 Mar 2017 10:03:35 -0700
+Message-ID: <m2wpbraizc.fsf@baylibre.com>
+References: <1489422982-3461-1-git-send-email-bgolaszewski@baylibre.com>
+        <1489422982-3461-3-git-send-email-bgolaszewski@baylibre.com>
+        <db5d21c2-b0e2-c9ec-1f15-460973fd23e3@cogentembedded.com>
+        <7ab4b440-f9d0-22fa-f463-f4c5542e21e7@baylibre.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <7ab4b440-f9d0-22fa-f463-f4c5542e21e7@baylibre.com> (Neil
+        Armstrong's message of "Tue, 14 Mar 2017 10:00:07 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Neil Armstrong <narmstrong@baylibre.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Bartosz Golaszewski <bgolaszewski@baylibre.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Michael Turquette <mturquette@baylibre.com>, Patrick Titiano <ptitiano@baylibre.com>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Sekhar Nori <nsekhar@ti.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Kevin Hilman <khilman@baylibre.com>, Arnd Bergmann <arnd@arndb.de>, Russell King <linux@arm.linux.org.uk>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com
 
-From: Sekhar Nori <nsekhar@ti.com>
+Neil Armstrong <narmstrong@baylibre.com> writes:
 
-IDE subsystem has been deprecated since 2009 and the majority
-(if not all) of Linux distributions have switched to use
-libata for ATA support exclusively.  However there are still
-some users (mostly old or/and embedded non-x86 systems) that
-have not converted from using IDE subsystem to libata PATA
-drivers.  This doesn't seem to be good thing in the long-term
-for Linux as while there is less and less PATA systems left
-in use:
+> On 03/14/2017 09:57 AM, Sergei Shtylyov wrote:
+>> Hello!
+>> 
+>> On 3/13/2017 7:36 PM, Bartosz Golaszewski wrote:
+>> 
+>>> This SATA controller is quite similar to the one present on the DA850
+>>> SoC, but the PHY configuration is different and it supports two HBA
+>>> ports.
+>>>
+>>> The IP suffers from the same PMP issue the DA850 does - if we enable
+>>> PMP but don't use it - softreset fails. Appropriate workaround was
+>>> implemented in this driver as well.
+>>>
+>>> Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+>>> ---
+>>>  drivers/ata/Kconfig      |   9 +++
+>>>  drivers/ata/Makefile     |   1 +
+>>>  drivers/ata/ahci_dm816.c | 200 +++++++++++++++++++++++++++++++++++++++++++++++
+>>>  3 files changed, 210 insertions(+)
+>>>  create mode 100644 drivers/ata/ahci_dm816.c
+>>>
+>>> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+>>> index 70b57d2..7f59a7a 100644
+>>> --- a/drivers/ata/Kconfig
+>>> +++ b/drivers/ata/Kconfig
+>>> @@ -118,6 +118,15 @@ config AHCI_DA850
+>>>
+>>>        If unsure, say N.
+>>>
+>>> +config AHCI_DM816
+>>> +    tristate "DaVinci DM816 AHCI SATA support"
+>> 
+>>    Is it really DaVinci?
+>> 
+>>> +    depends on ARCH_OMAP2PLUS
+>> 
+>>    Especially if it depends on OMAP...
+>
+> Hi Sergei,
+>
+> Yes it's a DaVinci family SoC, but shares a lot of IPs with the OMAP family.
+>
 
-* testing efforts are divided between two subsystems
+Actually, this is more of an OMAP family, which shares some IP from
+DaVinci family
 
-* having duplicate drivers for same hardware confuses users
+I think in other parts of the kernel, we refer to this as TI 816x
+instead of using either DaVinci or OMAP.
 
-This patch converts davinci_all_defconfig to use libata PATA
-drivers.
-
-Signed-off-by: Sekhar Nori <nsekhar@ti.com>
-[b.zolnierkie: split from bigger patch + added patch description]
-Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
----
- arch/arm/configs/davinci_all_defconfig | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/arch/arm/configs/davinci_all_defconfig b/arch/arm/configs/davinci_all_defconfig
-index c8663ea..93aab3d 100644
---- a/arch/arm/configs/davinci_all_defconfig
-+++ b/arch/arm/configs/davinci_all_defconfig
-@@ -74,12 +74,10 @@ CONFIG_BLK_DEV_RAM=y
- CONFIG_BLK_DEV_RAM_COUNT=1
- CONFIG_BLK_DEV_RAM_SIZE=32768
- CONFIG_EEPROM_AT24=y
--CONFIG_IDE=m
--CONFIG_BLK_DEV_PALMCHIP_BK3710=m
--CONFIG_SCSI=m
- CONFIG_BLK_DEV_SD=m
- CONFIG_ATA=m
- CONFIG_AHCI_DA850=m
-+CONFIG_PATA_BK3710=m
- CONFIG_NETDEVICES=y
- CONFIG_NETCONSOLE=y
- CONFIG_TUN=m
--- 
-1.9.1
-
+Kevin
