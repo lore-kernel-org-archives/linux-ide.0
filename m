@@ -1,135 +1,121 @@
-From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: [PATCH v2 1/4] ARM: OMAP2+: dm81xx: Add clkdm and hwmod for SATA
-Date: Tue, 14 Mar 2017 12:14:12 +0100
-Message-ID: <1489490055-2318-2-git-send-email-bgolaszewski@baylibre.com>
-References: <1489490055-2318-1-git-send-email-bgolaszewski@baylibre.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1489490055-2318-1-git-send-email-bgolaszewski@baylibre.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Neil Armstrong <narmstrong@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Kevin Hilman <khilman@baylibre.com>, Patrick Titiano <ptitiano@baylibre.com>, Tony Lindgren <tony@atomide.com>, Paul Walmsley <paul@pwsan.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-omap@vger.kernel.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>
+From: Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>
+Subject: [RFC PATCH] drivers: ata: Add [save|restore]_initial_config override functions
+Date: Tue, 14 Mar 2017 17:29:21 +0530
+Message-ID: <1489492761-815-1-git-send-email-anuragku@xilinx.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0068.outbound.protection.outlook.com ([104.47.36.68]:61982
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750771AbdCNL7h (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 14 Mar 2017 07:59:37 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>
+Cc: anirudh@xilinx.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Anurag Kumar Vulisha <anuragku@xilinx.com>
 
-From: Kevin Hilman <khilman@baylibre.com>
+Since there are SATA controllers that configure vendor specific registers
+for AXI bus, OOB timing, threshold related settings. These settings may get
+reset to the default values on resetting the SATA controller.
+So this patch adds the support for adding [save|restore]_initial_config
+override functions for saving and restoring controller values from the driver
+instead of doing it in AHCI stack
 
-Add the SATA clockdomain (part of CM_DEFAULT) and a hwmod for the SATA
-block on dm81xx.
-
-Tested on DM8168 EVM.
-
-Signed-off-by: Kevin Hilman <khilman@baylibre.com>
-[Bartosz: removed an unused define]
-Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+Signed-off-by: Anurag Kumar Vulisha <anuragku@xilinx.com>
 ---
- arch/arm/mach-omap2/clockdomains81xx_data.c | 10 +++++++++
- arch/arm/mach-omap2/cm81xx.h                |  1 +
- arch/arm/mach-omap2/omap_hwmod_81xx_data.c  | 34 +++++++++++++++++++++++++++++
- 3 files changed, 45 insertions(+)
+ drivers/ata/ahci.c             | 5 ++++-
+ drivers/ata/ahci.h             | 9 +++++++++
+ drivers/ata/libahci.c          | 5 ++++-
+ drivers/ata/libahci_platform.c | 5 ++++-
+ drivers/ata/sata_highbank.c    | 6 ++++--
+ 5 files changed, 25 insertions(+), 5 deletions(-)
 
-diff --git a/arch/arm/mach-omap2/clockdomains81xx_data.c b/arch/arm/mach-omap2/clockdomains81xx_data.c
-index 3b5fb05..65fbd13 100644
---- a/arch/arm/mach-omap2/clockdomains81xx_data.c
-+++ b/arch/arm/mach-omap2/clockdomains81xx_data.c
-@@ -91,6 +91,14 @@ static struct clockdomain default_l3_slow_81xx_clkdm = {
- 	.flags		= CLKDM_CAN_SWSUP,
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 2fc5240..ed76c9e 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -613,7 +613,10 @@ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
+ 			  "Disabling your PATA port. Use the boot option 'ahci.marvell_enable=0' to avoid this.\n");
+ 	}
+ 
+-	ahci_save_initial_config(&pdev->dev, hpriv);
++	if (hpriv->save_initial_config == NULL)
++		ahci_save_initial_config(dev, hpriv);
++	else
++		hpriv->save_initial_config(dev, hpriv);
+ }
+ 
+ static int ahci_pci_reset_controller(struct ata_host *host)
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 5db6ab2..2929e27 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -363,6 +363,15 @@ struct ahci_host_priv {
+ 	/* only required for per-port MSI(-X) support */
+ 	int			(*get_irq_vector)(struct ata_host *host,
+ 						  int port);
++
++	/*
++	 * Optional ahci_save_initial_config & ahci_restore_initial_config
++	 * override, if not set then default ahci_save_initial_config and
++	 * ahci_restore_initial_config in libahci.c will be used
++	 */
++	void (*save_initial_config)(struct device *dev,
++				struct ahci_host_priv *hpriv);
++	void (*restore_initial_config)(struct ata_host *host);
  };
  
-+static struct clockdomain default_sata_81xx_clkdm = {
-+	.name		= "default_clkdm",
-+	.pwrdm		= { .name = "default_pwrdm" },
-+	.cm_inst	= TI81XX_CM_DEFAULT_MOD,
-+	.clkdm_offs	= TI816X_CM_DEFAULT_SATA_CLKDM,
-+	.flags		= CLKDM_CAN_SWSUP,
-+};
-+
- /* 816x only */
+ extern int ahci_ignore_sss;
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 3159f9e..fb57525 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -940,7 +940,10 @@ int ahci_reset_controller(struct ata_host *host)
+ 		/* Some registers might be cleared on reset.  Restore
+ 		 * initial values.
+ 		 */
+-		ahci_restore_initial_config(host);
++		if (hpriv->restore_initial_config == NULL)
++			ahci_restore_initial_config(host);
++		else
++			hpriv->restore_initial_config(host);
+ 	} else
+ 		dev_info(host->dev, "skipping global host reset\n");
  
- static struct clockdomain alwon_mpu_816x_clkdm = {
-@@ -173,6 +181,7 @@ static struct clockdomain *clockdomains_ti814x[] __initdata = {
- 	&mmu_81xx_clkdm,
- 	&mmu_cfg_81xx_clkdm,
- 	&default_l3_slow_81xx_clkdm,
-+	&default_sata_81xx_clkdm,
- 	NULL,
- };
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index aaa761b..15ba5f8 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -523,7 +523,10 @@ int ahci_platform_init_host(struct platform_device *pdev,
+ 	/* prepare host */
+ 	pi.private_data = (void *)(unsigned long)hpriv->flags;
  
-@@ -200,6 +209,7 @@ static struct clockdomain *clockdomains_ti816x[] __initdata = {
- 	&default_ducati_816x_clkdm,
- 	&default_pci_816x_clkdm,
- 	&default_l3_slow_81xx_clkdm,
-+	&default_sata_81xx_clkdm,
- 	NULL,
- };
+-	ahci_save_initial_config(dev, hpriv);
++	if (hpriv->save_initial_config == NULL)
++		ahci_save_initial_config(dev, hpriv);
++	else
++		hpriv->save_initial_config(dev, hpriv);
  
-diff --git a/arch/arm/mach-omap2/cm81xx.h b/arch/arm/mach-omap2/cm81xx.h
-index 3a0ccf0..5d73a10 100644
---- a/arch/arm/mach-omap2/cm81xx.h
-+++ b/arch/arm/mach-omap2/cm81xx.h
-@@ -57,5 +57,6 @@
- #define TI816X_CM_DEFAULT_PCI_CLKDM		0x0010
- #define TI816X_CM_DEFAULT_L3_SLOW_CLKDM		0x0014
- #define TI816X_CM_DEFAULT_DUCATI_CLKDM		0x0018
-+#define TI816X_CM_DEFAULT_SATA_CLKDM		0x0060
+ 	if (hpriv->cap & HOST_CAP_NCQ)
+ 		pi.flags |= ATA_FLAG_NCQ;
+diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
+index aafb8cc..61af3c6 100644
+--- a/drivers/ata/sata_highbank.c
++++ b/drivers/ata/sata_highbank.c
+@@ -512,8 +512,10 @@ static int ahci_highbank_probe(struct platform_device *pdev)
+ 	if (rc)
+ 		return rc;
  
- #endif
-diff --git a/arch/arm/mach-omap2/omap_hwmod_81xx_data.c b/arch/arm/mach-omap2/omap_hwmod_81xx_data.c
-index b82b77c..310afe4 100644
---- a/arch/arm/mach-omap2/omap_hwmod_81xx_data.c
-+++ b/arch/arm/mach-omap2/omap_hwmod_81xx_data.c
-@@ -106,6 +106,7 @@
-  */
- #define DM81XX_CM_DEFAULT_OFFSET	0x500
- #define DM81XX_CM_DEFAULT_USB_CLKCTRL	(0x558 - DM81XX_CM_DEFAULT_OFFSET)
-+#define DM81XX_CM_DEFAULT_SATA_CLKCTRL	(0x560 - DM81XX_CM_DEFAULT_OFFSET)
+-
+-	ahci_save_initial_config(dev, hpriv);
++	if (hpriv->save_initial_config == NULL)
++		ahci_save_initial_config(dev, hpriv);
++	else
++		hpriv->save_initial_config(dev, hpriv);
  
- /* L3 Interconnect entries clocked at 125, 250 and 500MHz */
- static struct omap_hwmod dm81xx_alwon_l3_slow_hwmod = {
-@@ -973,6 +974,38 @@ static struct omap_hwmod_ocp_if dm816x_l4_hs__emac1 = {
- 	.user		= OCP_USER_MPU,
- };
- 
-+static struct omap_hwmod_class_sysconfig dm81xx_sata_sysc = {
-+	.sysc_offs	= 0x1100,
-+	.sysc_flags	= SYSC_HAS_SIDLEMODE,
-+	.idlemodes	= SIDLE_FORCE,
-+	.sysc_fields	= &omap_hwmod_sysc_type3,
-+};
-+
-+static struct omap_hwmod_class dm81xx_sata_hwmod_class = {
-+	.name	= "sata",
-+	.sysc	= &dm81xx_sata_sysc,
-+};
-+
-+static struct omap_hwmod dm81xx_sata_hwmod = {
-+	.name		= "sata",
-+	.clkdm_name	= "default_sata_clkdm",
-+	.flags		= HWMOD_NO_IDLEST,
-+	.prcm = {
-+		.omap4 = {
-+			.clkctrl_offs = DM81XX_CM_DEFAULT_SATA_CLKCTRL,
-+			.modulemode   = MODULEMODE_SWCTRL,
-+		},
-+	},
-+	.class		= &dm81xx_sata_hwmod_class,
-+};
-+
-+static struct omap_hwmod_ocp_if dm81xx_l4_hs__sata = {
-+	.master		= &dm81xx_l4_hs_hwmod,
-+	.slave		= &dm81xx_sata_hwmod,
-+	.clk		= "sysclk5_ck",
-+	.user		= OCP_USER_MPU,
-+};
-+
- static struct omap_hwmod_class_sysconfig dm81xx_mmc_sysc = {
- 	.rev_offs	= 0x0,
- 	.sysc_offs	= 0x110,
-@@ -1474,6 +1507,7 @@ static struct omap_hwmod_ocp_if *dm816x_hwmod_ocp_ifs[] __initdata = {
- 	&dm81xx_l4_hs__emac0,
- 	&dm81xx_emac0__mdio,
- 	&dm816x_l4_hs__emac1,
-+	&dm81xx_l4_hs__sata,
- 	&dm81xx_alwon_l3_fast__tpcc,
- 	&dm81xx_alwon_l3_fast__tptc0,
- 	&dm81xx_alwon_l3_fast__tptc1,
+ 	/* prepare host */
+ 	if (hpriv->cap & HOST_CAP_NCQ)
 -- 
-2.9.3
+2.1.1
+
