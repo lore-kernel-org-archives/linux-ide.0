@@ -1,100 +1,587 @@
-From: <beautyink@live.nl>
-Subject: (unknown)
-Date: Wed, 15 Mar 2017 03:58:48 -0000
-Message-ID: <148955032878.13099.13094199157984983107@codetel.net.do>
-Reply-To: <beautyink@live.nl>
+From: Boris Brezillon <boris.brezillon@free-electrons.com>
+Subject: [PATCH v2] pata: remove the at91 driver
+Date: Wed, 15 Mar 2017 14:39:11 +0100
+Message-ID: <1489585151-16415-1-git-send-email-boris.brezillon@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_2088089_linux-ide.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from static.vnpt.vn ([14.177.134.68]:42074 "HELO codetel.net.do"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1751015AbdCOD64 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 14 Mar 2017 23:58:56 -0400
-Content-Disposition: attachment
-Subject: 
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org
+Cc: Alexandre Belloni <alexandre.belloni@free-electrons.com>, Nicolas Ferre <nicolas.ferre@atmel.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Boris Brezillon <boris.brezillon@free-electrons.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide <linux-ide@vger.kernel.org>
 
-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
-AAEAUgAAAHURAAAAAA==
+This driver is orphan since commit b2026f708e09 ("ARM: at91: remove
+at91sam9260/at91sam9g20 legacy board support"). Given that nobody cared
+adding DT support to it, it probably means it's no longer used and is
+thus a good candidate for removal.
+
+Signed-off-by: Boris Brezillon <boris.brezillon@free-electrons.com>
+Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Acked-by: Nicolas Ferre <nicolas.ferre@microchip.com>
+---
+Note that I'm removing this driver because I plan to rework the macro
+definitions in atmel-smc.h, and some of them are used in this driver.
+Since I can't test it, and this drivers is not used anymore, it's probably
+better to remove it.
+
+Changes since v1:
+- add Bartlomiej's and Nicolas' ack
+- fix the commit id/message that made the pata_at91 driver orphan
+---
+ drivers/ata/Kconfig     |   8 -
+ drivers/ata/Makefile    |   1 -
+ drivers/ata/pata_at91.c | 503 ------------------------------------------------
+ 3 files changed, 512 deletions(-)
+ delete mode 100644 drivers/ata/pata_at91.c
+
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 70b57d2229d6..3c878d64449c 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -885,14 +885,6 @@ config PATA_AT32
+ 
+ 	  If unsure, say N.
+ 
+-config PATA_AT91
+-	tristate "PATA support for AT91SAM9260"
+-	depends on ARM && SOC_AT91SAM9
+-	help
+-	  This option enables support for IDE devices on the Atmel AT91SAM9260 SoC.
+-
+-	  If unsure, say N.
+-
+ config PATA_CMD640_PCI
+ 	tristate "CMD640 PCI PATA support (Experimental)"
+ 	depends on PCI
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index 89a0a1915d36..e29feb16bda1 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -91,7 +91,6 @@ obj-$(CONFIG_PATA_WINBOND)	+= pata_sl82c105.o
+ 
+ # SFF PIO only
+ obj-$(CONFIG_PATA_AT32)		+= pata_at32.o
+-obj-$(CONFIG_PATA_AT91)		+= pata_at91.o
+ obj-$(CONFIG_PATA_CMD640_PCI)	+= pata_cmd640.o
+ obj-$(CONFIG_PATA_FALCON)	+= pata_falcon.o
+ obj-$(CONFIG_PATA_ISAPNP)	+= pata_isapnp.o
+diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
+deleted file mode 100644
+index fd5b34f0d007..000000000000
+--- a/drivers/ata/pata_at91.c
++++ /dev/null
+@@ -1,503 +0,0 @@
+-/*
+- * PATA driver for AT91SAM9260 Static Memory Controller
+- * with CompactFlash interface in True IDE mode
+- *
+- * Copyright (C) 2009 Matyukevich Sergey
+- *               2011 Igor Plyatov
+- *
+- * Based on:
+- *      * generic platform driver by Paul Mundt: drivers/ata/pata_platform.c
+- *      * pata_at32 driver by Kristoffer Nyborg Gregertsen
+- *      * at91_ide driver by Stanislaw Gruszka
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License version 2
+- * as published by the Free Software Foundation.
+- *
+- */
+-
+-#include <linux/kernel.h>
+-#include <linux/module.h>
+-#include <linux/blkdev.h>
+-#include <linux/gfp.h>
+-#include <scsi/scsi_host.h>
+-#include <linux/ata.h>
+-#include <linux/clk.h>
+-#include <linux/libata.h>
+-#include <linux/mfd/syscon.h>
+-#include <linux/mfd/syscon/atmel-smc.h>
+-#include <linux/platform_device.h>
+-#include <linux/ata_platform.h>
+-#include <linux/platform_data/atmel.h>
+-#include <linux/regmap.h>
+-#include <linux/gpio.h>
+-
+-#define DRV_NAME		"pata_at91"
+-#define DRV_VERSION		"0.3"
+-
+-#define CF_IDE_OFFSET		0x00c00000
+-#define CF_ALT_IDE_OFFSET	0x00e00000
+-#define CF_IDE_RES_SIZE		0x08
+-#define CS_PULSE_MAXIMUM	319
+-#define ER_SMC_CALC		1
+-#define ER_SMC_RECALC		2
+-
+-struct at91_ide_info {
+-	unsigned long mode;
+-	unsigned int cs;
+-	struct clk *mck;
+-	void __iomem *ide_addr;
+-	void __iomem *alt_addr;
+-};
+-
+-/**
+- * struct smc_range - range of valid values for SMC register.
+- */
+-struct smc_range {
+-	int min;
+-	int max;
+-};
+-
+-struct regmap *smc;
+-
+-struct at91sam9_smc_generic_fields {
+-	struct regmap_field *setup;
+-	struct regmap_field *pulse;
+-	struct regmap_field *cycle;
+-	struct regmap_field *mode;
+-} fields;
+-
+-/**
+- * adjust_smc_value - adjust value for one of SMC registers.
+- * @value: adjusted value
+- * @range: array of SMC ranges with valid values
+- * @size: SMC ranges array size
+- *
+- * This returns the difference between input and output value or negative
+- * in case of invalid input value.
+- * If negative returned, then output value = maximal possible from ranges.
+- */
+-static int adjust_smc_value(int *value, struct smc_range *range, int size)
+-{
+-	int maximum = (range + size - 1)->max;
+-	int remainder;
+-
+-	do {
+-		if (*value < range->min) {
+-			remainder = range->min - *value;
+-			*value = range->min; /* nearest valid value */
+-			return remainder;
+-		} else if ((range->min <= *value) && (*value <= range->max))
+-			return 0;
+-
+-		range++;
+-	} while (--size);
+-	*value = maximum;
+-
+-	return -1; /* invalid value */
+-}
+-
+-/**
+- * calc_smc_vals - calculate SMC register values
+- * @dev: ATA device
+- * @setup: SMC_SETUP register value
+- * @pulse: SMC_PULSE register value
+- * @cycle: SMC_CYCLE register value
+- *
+- * This returns negative in case of invalid values for SMC registers:
+- * -ER_SMC_RECALC - recalculation required for SMC values,
+- * -ER_SMC_CALC - calculation failed (invalid input values).
+- *
+- * SMC use special coding scheme, see "Coding and Range of Timing
+- * Parameters" table from AT91SAM9 datasheets.
+- *
+- *	SMC_SETUP = 128*setup[5] + setup[4:0]
+- *	SMC_PULSE = 256*pulse[6] + pulse[5:0]
+- *	SMC_CYCLE = 256*cycle[8:7] + cycle[6:0]
+- */
+-static int calc_smc_vals(struct device *dev,
+-		int *setup, int *pulse, int *cycle, int *cs_pulse)
+-{
+-	int ret_val;
+-	int err = 0;
+-	struct smc_range range_setup[] = {	/* SMC_SETUP valid values */
+-		{.min = 0,	.max = 31},	/* first  range */
+-		{.min = 128,	.max = 159}	/* second range */
+-	};
+-	struct smc_range range_pulse[] = {	/* SMC_PULSE valid values */
+-		{.min = 0,	.max = 63},	/* first  range */
+-		{.min = 256,	.max = 319}	/* second range */
+-	};
+-	struct smc_range range_cycle[] = {	/* SMC_CYCLE valid values */
+-		{.min = 0,	.max = 127},	/* first  range */
+-		{.min = 256,	.max = 383},	/* second range */
+-		{.min = 512,	.max = 639},	/* third  range */
+-		{.min = 768,	.max = 895}	/* fourth range */
+-	};
+-
+-	ret_val = adjust_smc_value(setup, range_setup, ARRAY_SIZE(range_setup));
+-	if (ret_val < 0)
+-		dev_warn(dev, "maximal SMC Setup value\n");
+-	else
+-		*cycle += ret_val;
+-
+-	ret_val = adjust_smc_value(pulse, range_pulse, ARRAY_SIZE(range_pulse));
+-	if (ret_val < 0)
+-		dev_warn(dev, "maximal SMC Pulse value\n");
+-	else
+-		*cycle += ret_val;
+-
+-	ret_val = adjust_smc_value(cycle, range_cycle, ARRAY_SIZE(range_cycle));
+-	if (ret_val < 0)
+-		dev_warn(dev, "maximal SMC Cycle value\n");
+-
+-	*cs_pulse = *cycle;
+-	if (*cs_pulse > CS_PULSE_MAXIMUM) {
+-		dev_err(dev, "unable to calculate valid SMC settings\n");
+-		return -ER_SMC_CALC;
+-	}
+-
+-	ret_val = adjust_smc_value(cs_pulse, range_pulse,
+-					ARRAY_SIZE(range_pulse));
+-	if (ret_val < 0) {
+-		dev_warn(dev, "maximal SMC CS Pulse value\n");
+-	} else if (ret_val != 0) {
+-		*cycle = *cs_pulse;
+-		dev_warn(dev, "SMC Cycle extended\n");
+-		err = -ER_SMC_RECALC;
+-	}
+-
+-	return err;
+-}
+-
+-/**
+- * to_smc_format - convert values into SMC format
+- * @setup: SETUP value of SMC Setup Register
+- * @pulse: PULSE value of SMC Pulse Register
+- * @cycle: CYCLE value of SMC Cycle Register
+- * @cs_pulse: NCS_PULSE value of SMC Pulse Register
+- */
+-static void to_smc_format(int *setup, int *pulse, int *cycle, int *cs_pulse)
+-{
+-	*setup = (*setup & 0x1f) | ((*setup & 0x80) >> 2);
+-	*pulse = (*pulse & 0x3f) | ((*pulse & 0x100) >> 2);
+-	*cycle = (*cycle & 0x7f) | ((*cycle & 0x300) >> 1);
+-	*cs_pulse = (*cs_pulse & 0x3f) | ((*cs_pulse & 0x100) >> 2);
+-}
+-
+-static unsigned long calc_mck_cycles(unsigned long ns, unsigned long mck_hz)
+-{
+-	unsigned long mul;
+-
+-	/*
+-	* cycles = x [nsec] * f [Hz] / 10^9 [ns in sec] =
+-	*     x * (f / 1_000_000_000) =
+-	*     x * ((f * 65536) / 1_000_000_000) / 65536 =
+-	*     x * (((f / 10_000) * 65536) / 100_000) / 65536 =
+-	*/
+-
+-	mul = (mck_hz / 10000) << 16;
+-	mul /= 100000;
+-
+-	return (ns * mul + 65536) >> 16;    /* rounding */
+-}
+-
+-/**
+- * set_smc_timing - SMC timings setup.
+- * @dev: device
+- * @info: AT91 IDE info
+- * @ata: ATA timings
+- *
+- * Its assumed that write timings are same as read timings,
+- * cs_setup = 0 and cs_pulse = cycle.
+- */
+-static void set_smc_timing(struct device *dev, struct ata_device *adev,
+-		struct at91_ide_info *info, const struct ata_timing *ata)
+-{
+-	int ret = 0;
+-	int use_iordy;
+-	unsigned int t6z;         /* data tristate time in ns */
+-	unsigned int cycle;       /* SMC Cycle width in MCK ticks */
+-	unsigned int setup;       /* SMC Setup width in MCK ticks */
+-	unsigned int pulse;       /* CFIOR and CFIOW pulse width in MCK ticks */
+-	unsigned int cs_pulse;    /* CS4 or CS5 pulse width in MCK ticks*/
+-	unsigned int tdf_cycles;  /* SMC TDF MCK ticks */
+-	unsigned long mck_hz;     /* MCK frequency in Hz */
+-
+-	t6z = (ata->mode < XFER_PIO_5) ? 30 : 20;
+-	mck_hz = clk_get_rate(info->mck);
+-	cycle = calc_mck_cycles(ata->cyc8b, mck_hz);
+-	setup = calc_mck_cycles(ata->setup, mck_hz);
+-	pulse = calc_mck_cycles(ata->act8b, mck_hz);
+-	tdf_cycles = calc_mck_cycles(t6z, mck_hz);
+-
+-	do {
+-		ret = calc_smc_vals(dev, &setup, &pulse, &cycle, &cs_pulse);
+-	} while (ret == -ER_SMC_RECALC);
+-
+-	if (ret == -ER_SMC_CALC)
+-		dev_err(dev, "Interface may not operate correctly\n");
+-
+-	dev_dbg(dev, "SMC Setup=%u, Pulse=%u, Cycle=%u, CS Pulse=%u\n",
+-		setup, pulse, cycle, cs_pulse);
+-	to_smc_format(&setup, &pulse, &cycle, &cs_pulse);
+-	/* disable or enable waiting for IORDY signal */
+-	use_iordy = ata_pio_need_iordy(adev);
+-	if (use_iordy)
+-		info->mode |= AT91_SMC_EXNWMODE_READY;
+-
+-	if (tdf_cycles > 15) {
+-		tdf_cycles = 15;
+-		dev_warn(dev, "maximal SMC TDF Cycles value\n");
+-	}
+-
+-	dev_dbg(dev, "Use IORDY=%u, TDF Cycles=%u\n", use_iordy, tdf_cycles);
+-
+-	regmap_fields_write(fields.setup, info->cs,
+-			    AT91SAM9_SMC_NRDSETUP(setup) |
+-			    AT91SAM9_SMC_NWESETUP(setup) |
+-			    AT91SAM9_SMC_NCS_NRDSETUP(0) |
+-			    AT91SAM9_SMC_NCS_WRSETUP(0));
+-	regmap_fields_write(fields.pulse, info->cs,
+-			    AT91SAM9_SMC_NRDPULSE(pulse) |
+-			    AT91SAM9_SMC_NWEPULSE(pulse) |
+-			    AT91SAM9_SMC_NCS_NRDPULSE(cs_pulse) |
+-			    AT91SAM9_SMC_NCS_WRPULSE(cs_pulse));
+-	regmap_fields_write(fields.cycle, info->cs,
+-			    AT91SAM9_SMC_NRDCYCLE(cycle) |
+-			    AT91SAM9_SMC_NWECYCLE(cycle));
+-	regmap_fields_write(fields.mode, info->cs, info->mode |
+-			    AT91_SMC_TDF_(tdf_cycles));
+-}
+-
+-static void pata_at91_set_piomode(struct ata_port *ap, struct ata_device *adev)
+-{
+-	struct at91_ide_info *info = ap->host->private_data;
+-	struct ata_timing timing;
+-	int ret;
+-
+-	/* Compute ATA timing and set it to SMC */
+-	ret = ata_timing_compute(adev, adev->pio_mode, &timing, 1000, 0);
+-	if (ret) {
+-		dev_warn(ap->dev, "Failed to compute ATA timing %d, "
+-			 "set PIO_0 timing\n", ret);
+-		timing = *ata_timing_find_mode(XFER_PIO_0);
+-	}
+-	set_smc_timing(ap->dev, adev, info, &timing);
+-}
+-
+-static unsigned int pata_at91_data_xfer_noirq(struct ata_queued_cmd *qc,
+-		unsigned char *buf, unsigned int buflen, int rw)
+-{
+-	struct at91_ide_info *info = qc->dev->link->ap->host->private_data;
+-	unsigned int consumed;
+-	unsigned int mode;
+-	unsigned long flags;
+-
+-	local_irq_save(flags);
+-	regmap_fields_read(fields.mode, info->cs, &mode);
+-
+-	/* set 16bit mode before writing data */
+-	regmap_fields_write(fields.mode, info->cs, (mode & ~AT91_SMC_DBW) |
+-			    AT91_SMC_DBW_16);
+-
+-	consumed = ata_sff_data_xfer(qc, buf, buflen, rw);
+-
+-	/* restore 8bit mode after data is written */
+-	regmap_fields_write(fields.mode, info->cs, (mode & ~AT91_SMC_DBW) |
+-			    AT91_SMC_DBW_8);
+-
+-	local_irq_restore(flags);
+-	return consumed;
+-}
+-
+-static struct scsi_host_template pata_at91_sht = {
+-	ATA_PIO_SHT(DRV_NAME),
+-};
+-
+-static struct ata_port_operations pata_at91_port_ops = {
+-	.inherits	= &ata_sff_port_ops,
+-
+-	.sff_data_xfer	= pata_at91_data_xfer_noirq,
+-	.set_piomode	= pata_at91_set_piomode,
+-	.cable_detect	= ata_cable_40wire,
+-};
+-
+-static int at91sam9_smc_fields_init(struct device *dev)
+-{
+-	struct reg_field field = REG_FIELD(0, 0, 31);
+-
+-	field.id_size = 8;
+-	field.id_offset = AT91SAM9_SMC_GENERIC_BLK_SZ;
+-
+-	field.reg = AT91SAM9_SMC_SETUP(AT91SAM9_SMC_GENERIC);
+-	fields.setup = devm_regmap_field_alloc(dev, smc, field);
+-	if (IS_ERR(fields.setup))
+-		return PTR_ERR(fields.setup);
+-
+-	field.reg = AT91SAM9_SMC_PULSE(AT91SAM9_SMC_GENERIC);
+-	fields.pulse = devm_regmap_field_alloc(dev, smc, field);
+-	if (IS_ERR(fields.pulse))
+-		return PTR_ERR(fields.pulse);
+-
+-	field.reg = AT91SAM9_SMC_CYCLE(AT91SAM9_SMC_GENERIC);
+-	fields.cycle = devm_regmap_field_alloc(dev, smc, field);
+-	if (IS_ERR(fields.cycle))
+-		return PTR_ERR(fields.cycle);
+-
+-	field.reg = AT91SAM9_SMC_MODE(AT91SAM9_SMC_GENERIC);
+-	fields.mode = devm_regmap_field_alloc(dev, smc, field);
+-
+-	return PTR_ERR_OR_ZERO(fields.mode);
+-}
+-
+-static int pata_at91_probe(struct platform_device *pdev)
+-{
+-	struct at91_cf_data *board = dev_get_platdata(&pdev->dev);
+-	struct device *dev = &pdev->dev;
+-	struct at91_ide_info *info;
+-	struct resource *mem_res;
+-	struct ata_host *host;
+-	struct ata_port *ap;
+-
+-	int irq_flags = 0;
+-	int irq = 0;
+-	int ret;
+-
+-	/*  get platform resources: IO/CTL memories and irq/rst pins */
+-
+-	if (pdev->num_resources != 1) {
+-		dev_err(&pdev->dev, "invalid number of resources\n");
+-		return -EINVAL;
+-	}
+-
+-	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-
+-	if (!mem_res) {
+-		dev_err(dev, "failed to get mem resource\n");
+-		return -EINVAL;
+-	}
+-
+-	irq = board->irq_pin;
+-
+-	smc = syscon_regmap_lookup_by_phandle(pdev->dev.of_node, "atmel,smc");
+-	if (IS_ERR(smc))
+-		return PTR_ERR(smc);
+-
+-	ret = at91sam9_smc_fields_init(dev);
+-	if (ret < 0)
+-		return ret;
+-
+-	/* init ata host */
+-
+-	host = ata_host_alloc(dev, 1);
+-
+-	if (!host)
+-		return -ENOMEM;
+-
+-	ap = host->ports[0];
+-	ap->ops = &pata_at91_port_ops;
+-	ap->flags |= ATA_FLAG_SLAVE_POSS;
+-	ap->pio_mask = ATA_PIO4;
+-
+-	if (!gpio_is_valid(irq)) {
+-		ap->flags |= ATA_FLAG_PIO_POLLING;
+-		ata_port_desc(ap, "no IRQ, using PIO polling");
+-	}
+-
+-	info = devm_kzalloc(dev, sizeof(*info), GFP_KERNEL);
+-
+-	if (!info) {
+-		dev_err(dev, "failed to allocate memory for private data\n");
+-		return -ENOMEM;
+-	}
+-
+-	info->mck = clk_get(NULL, "mck");
+-
+-	if (IS_ERR(info->mck)) {
+-		dev_err(dev, "failed to get access to mck clock\n");
+-		return -ENODEV;
+-	}
+-
+-	info->cs    = board->chipselect;
+-	info->mode  = AT91_SMC_READMODE | AT91_SMC_WRITEMODE |
+-		AT91_SMC_EXNWMODE_READY | AT91_SMC_BAT_SELECT |
+-		AT91_SMC_DBW_8 | AT91_SMC_TDF_(0);
+-
+-	info->ide_addr = devm_ioremap(dev,
+-			mem_res->start + CF_IDE_OFFSET, CF_IDE_RES_SIZE);
+-
+-	if (!info->ide_addr) {
+-		dev_err(dev, "failed to map IO base\n");
+-		ret = -ENOMEM;
+-		goto err_put;
+-	}
+-
+-	info->alt_addr = devm_ioremap(dev,
+-			mem_res->start + CF_ALT_IDE_OFFSET, CF_IDE_RES_SIZE);
+-
+-	if (!info->alt_addr) {
+-		dev_err(dev, "failed to map CTL base\n");
+-		ret = -ENOMEM;
+-		goto err_put;
+-	}
+-
+-	ap->ioaddr.cmd_addr = info->ide_addr;
+-	ap->ioaddr.ctl_addr = info->alt_addr + 0x06;
+-	ap->ioaddr.altstatus_addr = ap->ioaddr.ctl_addr;
+-
+-	ata_sff_std_ports(&ap->ioaddr);
+-
+-	ata_port_desc(ap, "mmio cmd 0x%llx ctl 0x%llx",
+-			(unsigned long long)mem_res->start + CF_IDE_OFFSET,
+-			(unsigned long long)mem_res->start + CF_ALT_IDE_OFFSET);
+-
+-	host->private_data = info;
+-
+-	ret = ata_host_activate(host, gpio_is_valid(irq) ? gpio_to_irq(irq) : 0,
+-				gpio_is_valid(irq) ? ata_sff_interrupt : NULL,
+-				irq_flags, &pata_at91_sht);
+-	if (ret)
+-		goto err_put;
+-
+-	return 0;
+-
+-err_put:
+-	clk_put(info->mck);
+-	return ret;
+-}
+-
+-static int pata_at91_remove(struct platform_device *pdev)
+-{
+-	struct ata_host *host = platform_get_drvdata(pdev);
+-	struct at91_ide_info *info;
+-
+-	if (!host)
+-		return 0;
+-	info = host->private_data;
+-
+-	ata_host_detach(host);
+-
+-	if (!info)
+-		return 0;
+-
+-	clk_put(info->mck);
+-
+-	return 0;
+-}
+-
+-static struct platform_driver pata_at91_driver = {
+-	.probe		= pata_at91_probe,
+-	.remove		= pata_at91_remove,
+-	.driver		= {
+-		.name		= DRV_NAME,
+-	},
+-};
+-
+-module_platform_driver(pata_at91_driver);
+-
+-MODULE_LICENSE("GPL");
+-MODULE_DESCRIPTION("Driver for CF in True IDE mode on AT91SAM9260 SoC");
+-MODULE_AUTHOR("Matyukevich Sergey");
+-MODULE_VERSION(DRV_VERSION);
+-
+-- 
+2.7.4
