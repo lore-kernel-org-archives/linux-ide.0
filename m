@@ -1,20 +1,43 @@
-From: United Bank For Africa <umehololo4@gmail.com>
-Subject: Could you please let me know if you receive my last email,
- introducing myself to you, on a ( Business Opportunity)? I urgently wish to
- know if we can work together.
-Date: Fri, 17 Mar 2017 12:39:08 +0100
-Message-ID: <CAMhpBksLp__T7yEoO-=gSKrVgCNzQs-1vrqU3tPB6ysOTd0uMA@mail.gmail.com>
-Reply-To: uba.togo@email.com
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] pata_pcmcia: add EBSA110's PCMCIA slot support
+Date: Fri, 17 Mar 2017 09:39:00 -0400
+Message-ID: <20170317133900.GA5078@htj.duckdns.org>
+References: <CGME20170314175046epcas1p43f98daad14a2bac7f314e7d39e120232@epcas1p4.samsung.com>
+ <3458240.9SL7iGif3L@amdc3058>
+ <20170316212654.GD1480@htj.duckdns.org>
+ <1533391.BtkrkgvqUW@amdc3058>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:35656 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750999AbdCQMCt (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Mar 2017 08:02:49 -0400
-Received: by mail-wr0-f193.google.com with SMTP id u108so9319445wrb.2
-        for <linux-ide@vger.kernel.org>; Fri, 17 Mar 2017 05:02:34 -0700 (PDT)
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline
+In-Reply-To: <1533391.BtkrkgvqUW@amdc3058>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Arnd Bergmann <arnd@arndb.de>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, Kevin Hilman <khilman@baylibre.com>, Sekhar Nori <nsekhar@ti.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Russell King <rmk+kernel@armlinux.org.uk>, Olof Johansson <olof@lixom.net>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
+Hello,
 
+On Fri, Mar 17, 2017 at 12:59:56PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> There is no support for this device in the upstream ide driver but
+> Russell has a hacky patch to make it work by redefining inb()/outb()
+> operations globally for the whole ide subsystem, please see:
+> 
+> https://www.spinics.net/lists/arm-kernel/msg567454.html
+
+Well, that mail says that the hardware is a museum piece.  What's the
+point here?  This can't even be tested, can it?
+
+Thanks.
+
+-- 
+tejun
