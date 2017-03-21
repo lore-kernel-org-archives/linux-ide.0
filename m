@@ -1,35 +1,70 @@
-From: Sekhar Nori <nsekhar@ti.com>
-Subject: Re: [PATCH v2 0/3] ATA/ARM: convert ARM/DaVinci to use libata PATA
- drivers
-Date: Tue, 21 Mar 2017 14:09:54 +0530
-Message-ID: <969837fd-a5a6-5583-f463-60cf924a4372@ti.com>
-References: <CGME20170314163738epcas5p3db719229d59550476c918a15d8c16d63@epcas5p3.samsung.com>
- <1489509414-11491-1-git-send-email-b.zolnierkie@samsung.com>
+From: <robert.berry@minneapolismn.gov>
+Subject: 51519 linux-ide
+Date: Tue, 21 Mar 2017 13:42:53 -0000
+Message-ID: <149010377371.4955.17516914186486111031@hinet.net>
+Reply-To: <robert.berry@minneapolismn.gov>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: application/zip; name="76130338818.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:60509 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756786AbdCUIkr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2017 04:40:47 -0400
-In-Reply-To: <1489509414-11491-1-git-send-email-b.zolnierkie@samsung.com>
+Received: from 1-165-13-64.dynamic.hinet.net ([1.165.13.64]:51576 "HELO
+        hinet.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+        id S1757172AbdCUNnB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 21 Mar 2017 09:43:01 -0400
+Content-Disposition: attachment
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Kevin Hilman <khilman@baylibre.com>, Arnd Bergmann <arnd@arndb.de>, Russell King <linux@arm.linux.org.uk>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+To: linux-ide <linux-ide@vger.kernel.org>
 
-On Tuesday 14 March 2017 10:06 PM, Bartlomiej Zolnierkiewicz wrote:
-> Hi,
-> 
-> This patchset adds Palmchip BK3710 IDE controller driver to
-> libata and switches ARM/DaVinci to use it (instead of the old
-> IDE driver).
-> 
-> Sekhar, please check that it still works after changes, thanks.
-
-It looks like there are some comments pending. I would like to test
-again after those are dispositioned. Hope thats fine.
-
-Thanks,
-Sekhar
+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
