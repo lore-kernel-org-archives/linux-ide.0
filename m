@@ -1,57 +1,35 @@
 From: Sekhar Nori <nsekhar@ti.com>
 Subject: Re: [PATCH v2 0/3] ATA/ARM: convert ARM/DaVinci to use libata PATA
  drivers
-Date: Tue, 21 Mar 2017 14:08:26 +0530
-Message-ID: <3c115ec1-2d11-695e-eca7-25a75f71b96f@ti.com>
+Date: Tue, 21 Mar 2017 14:09:54 +0530
+Message-ID: <969837fd-a5a6-5583-f463-60cf924a4372@ti.com>
 References: <CGME20170314163738epcas5p3db719229d59550476c918a15d8c16d63@epcas5p3.samsung.com>
  <1489509414-11491-1-git-send-email-b.zolnierkie@samsung.com>
- <20170316213255.GF1480@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20170316213255.GF1480@htj.duckdns.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Russell King <linux@arm.linux.org.uk>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Arnd Bergmann <arnd@arndb.de>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, Kevin Hilman <khilman@baylibre.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:60509 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756786AbdCUIkr (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 21 Mar 2017 04:40:47 -0400
+In-Reply-To: <1489509414-11491-1-git-send-email-b.zolnierkie@samsung.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Kevin Hilman <khilman@baylibre.com>, Arnd Bergmann <arnd@arndb.de>, Russell King <linux@arm.linux.org.uk>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 
-On Friday 17 March 2017 03:02 AM, Tejun Heo wrote:
-> On Tue, Mar 14, 2017 at 05:36:51PM +0100, Bartlomiej Zolnierkiewicz wrote:
->> Hi,
->>
->> This patchset adds Palmchip BK3710 IDE controller driver to
->> libata and switches ARM/DaVinci to use it (instead of the old
->> IDE driver).
->>
->> Sekhar, please check that it still works after changes, thanks.
->>
->> Changes since v1
->> (https://www.spinics.net/lists/arm-kernel/msg567442.html):
->> - addressed review comments from Sergei Shtylyov
->> - fixed cycle_time unitialized variable issue
->>
->> Changes since v0.1 draft patch version
->> (https://www.spinics.net/lists/arm-kernel/msg566932.html):
->> - fixed cycle_time build warning
->> - added platform support fixes from Sekhar
->> - added defconfig changes from Sekhar
->> - preserved platform support for the old IDE driver
->> - split it on 3 patches
+On Tuesday 14 March 2017 10:06 PM, Bartlomiej Zolnierkiewicz wrote:
+> Hi,
 > 
-> Looks fine to me from libata side.  Once it gets tested, how should
-> the patches be routed?  I don't think it'd make sense to route them
-> separately.
+> This patchset adds Palmchip BK3710 IDE controller driver to
+> libata and switches ARM/DaVinci to use it (instead of the old
+> IDE driver).
+> 
+> Sekhar, please check that it still works after changes, thanks.
 
-Hi Tejun, I can take the series through ARM-SoC tree with your ack.
+It looks like there are some comments pending. I would like to test
+again after those are dispositioned. Hope thats fine.
 
 Thanks,
 Sekhar
