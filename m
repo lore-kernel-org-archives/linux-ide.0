@@ -1,45 +1,40 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 0/3] ATA/ARM: convert ARM/DaVinci to use libata PATA
- drivers
-Date: Tue, 21 Mar 2017 12:56:50 -0400
-Message-ID: <20170321165650.GA3706@htj.duckdns.org>
-References: <CGME20170314163738epcas5p3db719229d59550476c918a15d8c16d63@epcas5p3.samsung.com>
- <1489509414-11491-1-git-send-email-b.zolnierkie@samsung.com>
- <20170316213255.GF1480@htj.duckdns.org>
- <3c115ec1-2d11-695e-eca7-25a75f71b96f@ti.com>
+Subject: Re: support ranges TRIM for libata
+Date: Tue, 21 Mar 2017 14:59:01 -0400
+Message-ID: <20170321185901.GB3706@htj.duckdns.org>
+References: <20170320204319.12628-1-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <3c115ec1-2d11-695e-eca7-25a75f71b96f@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Sekhar Nori <nsekhar@ti.com>
-Cc: Russell King <linux@arm.linux.org.uk>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Arnd Bergmann <arnd@arndb.de>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, Kevin Hilman <khilman@baylibre.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+In-Reply-To: <20170320204319.12628-1-hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: martin.petersen@oracle.com, axboe@kernel.dk, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 Hello,
 
-On Tue, Mar 21, 2017 at 02:08:26PM +0530, Sekhar Nori wrote:
-> > Looks fine to me from libata side.  Once it gets tested, how should
-> > the patches be routed?  I don't think it'd make sense to route them
-> > separately.
+On Mon, Mar 20, 2017 at 04:43:12PM -0400, Christoph Hellwig wrote:
+> This series implements rangeѕ discard for ATA SSDs.  Compared to the
+> initial NVMe support there are two things that complicate the ATA
+> support:
 > 
-> Hi Tejun, I can take the series through ARM-SoC tree with your ack.
+>  - ATA only suports 16-bit long ranges
+>  - the whole mess of generating a SCSI command first and then
+>    translating it to an ATA one.
+> 
+> This series adds support for limited range size to the block layer,
+> and stops translating discard commands - instead we add a new
+> Vendor Specific SCSI command that contains the TRIM payload when
+> the device asks for it.
 
-Once the review points are addressed, please feel free to add
-
- Acked-by: Tejun Heo <tj@kernel.org>
-
-and route through the arm tree.
+I do like the fact that this is a lot simpler than the previous
+implementation but am not quite sure we want to deviate significantly
+from what we do for other commands (command translation).  Is it
+because fixing the existing implementation would involve invaisve
+changes including memory allocations?
 
 Thanks.
 
