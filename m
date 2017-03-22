@@ -1,42 +1,44 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: support ranges TRIM for libata
-Date: Tue, 21 Mar 2017 14:59:01 -0400
-Message-ID: <20170321185901.GB3706@htj.duckdns.org>
-References: <20170320204319.12628-1-hch@lst.de>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH v2 1/3] ata: add Palmchip BK3710 PATA controller driver
+Date: Wed, 22 Mar 2017 18:49:12 +0100
+Message-ID: <1819267.Nm9hpTOhuY@amdc3058>
+References: <1489509414-11491-1-git-send-email-b.zolnierkie@samsung.com>
+ <1489509414-11491-2-git-send-email-b.zolnierkie@samsung.com>
+ <8fc9171f-15b7-2c6a-d0b5-3af21cc88405@ti.com>
+ <CGME20170322174917epcas1p1a4ba3e4da231ee3b7784cb0c669611ed@epcas1p1.samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170320204319.12628-1-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: martin.petersen@oracle.com, axboe@kernel.dk, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-reply-to: <8fc9171f-15b7-2c6a-d0b5-3af21cc88405@ti.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sekhar Nori <nsekhar@ti.com>
+Cc: Tejun Heo <tj@kernel.org>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Kevin Hilman <khilman@baylibre.com>, Arnd Bergmann <arnd@arndb.de>, Russell King <linux@arm.linux.org.uk>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello,
 
-On Mon, Mar 20, 2017 at 04:43:12PM -0400, Christoph Hellwig wrote:
-> This series implements rangeѕ discard for ATA SSDs.  Compared to the
-> initial NVMe support there are two things that complicate the ATA
-> support:
+Hi,
+
+On Tuesday, March 21, 2017 02:04:38 PM Sekhar Nori wrote:
+> Hi,
 > 
->  - ATA only suports 16-bit long ranges
->  - the whole mess of generating a SCSI command first and then
->    translating it to an ATA one.
+> On Tuesday 14 March 2017 10:06 PM, Bartlomiej Zolnierkiewicz wrote:
+> > Add Palmchip BK3710 PATA controller driver.
+> > 
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 > 
-> This series adds support for limited range size to the block layer,
-> and stops translating discard commands - instead we add a new
-> Vendor Specific SCSI command that contains the TRIM payload when
-> the device asks for it.
+> There are some checkpatch suggestions that are worth fixing, I think.
+> 
+> [PATCH v2 1_3] ata: add Palmchip BK3710 PATA controller driver - Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com> - 2017-03-14 2206.eml:277: CHECK: Alignment should match open parenthesis
+> [PATCH v2 1_3] ata: add Palmchip BK3710 PATA controller driver - Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com> - 2017-03-14 2206.eml:320: CHECK: Alignment should match open parenthesis
+> [PATCH v2 1_3] ata: add Palmchip BK3710 PATA controller driver - Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com> - 2017-03-14 2206.eml:489: CHECK: Comparison to NULL could be written "!mem"
 
-I do like the fact that this is a lot simpler than the previous
-implementation but am not quite sure we want to deviate significantly
-from what we do for other commands (command translation).  Is it
-because fixing the existing implementation would involve invaisve
-changes including memory allocations?
+Will be fixed in v3, thanks.
 
-Thanks.
+[ My scripts didn't run checkpatch with --strict so I haven't noticed them. ]
 
--- 
-tejun
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
