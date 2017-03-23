@@ -1,61 +1,56 @@
-From: Dmitry Vyukov <dvyukov@google.com>
-Subject: ata: WARNING in ata_qc_issue
-Date: Thu, 23 Mar 2017 14:25:02 +0100
-Message-ID: <CACT4Y+YJznO4fj5zuEELE9DTf6jL2tx5EkGLdQff09iYMsmTZQ@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: support ranges TRIM for libata
+Date: Thu, 23 Mar 2017 09:47:41 -0400
+Message-ID: <1490276861.2202.8.camel@HansenPartnership.com>
+References: <20170320204319.12628-1-hch@lst.de>
+         <20170321185901.GB3706@htj.duckdns.org> <20170322181947.GA4733@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vk0-f52.google.com ([209.85.213.52]:34172 "EHLO
-        mail-vk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932209AbdCWNZY (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 23 Mar 2017 09:25:24 -0400
-Received: by mail-vk0-f52.google.com with SMTP id z204so89577886vkd.1
-        for <linux-ide@vger.kernel.org>; Thu, 23 Mar 2017 06:25:23 -0700 (PDT)
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50838 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754946AbdCWNrv (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 23 Mar 2017 09:47:51 -0400
+In-Reply-To: <20170322181947.GA4733@lst.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Cc: syzkaller <syzkaller@googlegroups.com>
+To: Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>
+Cc: martin.petersen@oracle.com, axboe@kernel.dk, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 
-Hello,
+On Wed, 2017-03-22 at 19:19 +0100, Christoph Hellwig wrote:
+> On Tue, Mar 21, 2017 at 02:59:01PM -0400, Tejun Heo wrote:
+> > I do like the fact that this is a lot simpler than the previous
+> > implementation but am not quite sure we want to deviate 
+> > significantly from what we do for other commands (command 
+> > translation).  Is it because fixing the existing implementation 
+> > would involve invaisve changes including memory allocations?
+> 
+> The current implementation already has the issue of that it does
+> corrupt user data reliably if the using SG_IO for WRITE SAME
+> commands.
 
-The following program triggers WARNING in ata_qc_issue:
-https://gist.githubusercontent.com/dvyukov/3503afce181b7d48dabb421e10e70b00/raw/d049bd2128a8b1089497beb6104ba48c5550b4a8/gistfile1.txt
+That does need fixing.
 
-------------[ cut here ]------------
-WARNING: CPU: 3 PID: 2956 at drivers/ata/libata-core.c:5317
-ata_qc_issue+0xd14/0x1040 drivers/ata/libata-core.c:5316
-CPU: 3 PID: 2956 Comm: a.out Not tainted 4.11.0-rc3+ #365
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
-Call Trace:
- __dump_stack lib/dump_stack.c:16 [inline]
- dump_stack+0x1b8/0x28d lib/dump_stack.c:52
- panic+0x20c/0x423 kernel/panic.c:180
- __warn+0x1c4/0x1e0 kernel/panic.c:541
- warn_slowpath_null+0x2c/0x40 kernel/panic.c:584
- ata_qc_issue+0xd14/0x1040 drivers/ata/libata-core.c:5316
- ata_scsi_translate+0x34a/0x5e0 drivers/ata/libata-scsi.c:2021
- __ata_scsi_queuecmd drivers/ata/libata-scsi.c:4249 [inline]
- ata_scsi_queuecmd+0x2ae/0x660 drivers/ata/libata-scsi.c:4298
- scsi_dispatch_cmd+0x43e/0xb70 drivers/scsi/scsi_lib.c:1665
- scsi_request_fn+0x13dc/0x1ec0 drivers/scsi/scsi_lib.c:1800
- __blk_run_queue_uncond block/blk-core.c:305 [inline]
- __blk_run_queue+0xe3/0x150 block/blk-core.c:323
- __elv_add_request+0x494/0xce0 block/elevator.c:677
- blk_execute_rq_nowait+0x214/0x370 block/blk-exec.c:78
- blk_execute_rq+0x1ca/0x280 block/blk-exec.c:103
- sg_scsi_ioctl+0x3d0/0x7f0 block/scsi_ioctl.c:510
- sg_ioctl+0x1fdd/0x2f00 drivers/scsi/sg.c:1075
- vfs_ioctl fs/ioctl.c:45 [inline]
- do_vfs_ioctl+0x1af/0x16d0 fs/ioctl.c:685
- SYSC_ioctl fs/ioctl.c:700 [inline]
- SyS_ioctl+0x8f/0xc0 fs/ioctl.c:691
- entry_SYSCALL_64_fastpath+0x1f/0xc2
-RIP: 0033:0x434cd9
-RSP: 002b:00007ffc5cd86308 EFLAGS: 00000286 ORIG_RAX: 0000000000000010
-RAX: ffffffffffffffda RBX: 00000000004002b0 RCX: 0000000000434cd9
-RDX: 0000000020001000 RSI: 0000000000000001 RDI: 0000000000000003
-RBP: 0000000000000086 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000286 R12: 0000000000000000
-R13: 0000000000401a30 R14: 0000000000401ac0 R15: 0000000000000000
+> Doing ranges using translation would turn into a nightmare because
+> ATA TRIM ranges are 16 bits long while SCSI UNAMP ranges are 32-bit,
+> so we effectively can't translated them without introducing a
+> non-standard hook between libata and scsi to communicate that
+> limit.
 
-On commit 093b995e3b55a0ae0670226ddfcb05bfbf0099ae
+Why can't we do what the t10 sat document recommends: if the ATA device
+doesn't support the XL version (32 bit ranges) then translate unmap to
+multiple non-XL commands?
+
+I don't necessarily object to the vendor specific 1<->1 approach, it's
+just it won't fix the problem you cited above (SG_IO WRITE SAME), its
+just that now we error the command, which may cause some surprise.  I
+also wonder if we couldn't simply do an ATA_16 TRIM if we're already
+going to all the trouble of recognising ATA devices in the sd discard
+path?
+
+James
+
+>   And once we're down that path we might as well just do the
+> right thing directly.
+
