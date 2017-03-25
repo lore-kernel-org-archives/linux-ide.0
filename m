@@ -1,64 +1,66 @@
-From: <mgriffit@genome.wustl.edu>
-Subject: 24836 linux-ide
-Date: Fri, 24 Mar 2017 17:03:56 -0000
-Message-ID: <149037503666.16099.6408615413618974564@net11.com.br>
-Reply-To: <mgriffit@genome.wustl.edu>
+From: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCH v2 1/2] dt-bindings: ata: add DT bindings for ahci-dm816
+ SATA controller
+Date: Sat, 25 Mar 2017 19:05:32 +0100
+Message-ID: <CAMpxmJUyfksZs+Lx+iMVPPziKdxWXLoKVDX-iFNhMgkmnY=_+g@mail.gmail.com>
+References: <1489489491-14195-1-git-send-email-bgolaszewski@baylibre.com> <1489489491-14195-2-git-send-email-bgolaszewski@baylibre.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="1638.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 109-230-56-110.dynamic.orange.sk ([109.230.56.110]:48813 "HELO
-        net11.com.br" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-        id S936478AbdCXREA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 24 Mar 2017 13:04:00 -0400
-Content-Disposition: attachment
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1489489491-14195-2-git-send-email-bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, linux-devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Sergei Shtylyov <sergei.shtylyov-M4DtvfQ/ZS1MRgGoP+s0PdBPR1lH4CV8@public.gmane.org>, Patrick Titiano <ptitiano-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Tony Lindgren <tony-4v6yS6AI5VpBDgjK7y7TUQ@public.gmane.org>, Kevin Hilman <khilman-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Michael Turquette <mturquette-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Neil Armstrong <narmstrong-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide <linux-ide@vger.kernel.org>
 
-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
+2017-03-14 12:04 GMT+01:00 Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>:
+> Add DT bindings for the onboard SATA controller present on the DM816x
+> SoCs.
+>
+> Signed-off-by: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
+> ---
+>  .../devicetree/bindings/ata/ahci-dm816.txt          | 21 +++++++++++++++++++++
+>  1 file changed, 21 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ata/ahci-dm816.txt
+>
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-dm816.txt b/Documentation/devicetree/bindings/ata/ahci-dm816.txt
+> new file mode 100644
+> index 0000000..f8c535f
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/ahci-dm816.txt
+> @@ -0,0 +1,21 @@
+> +Device tree binding for the TI DM816 AHCI SATA Controller
+> +---------------------------------------------------------
+> +
+> +Required properties:
+> +  - compatible: must be "ti,dm816-ahci"
+> +  - reg: physical base address and size of the register region used by
+> +         the controller (as defined by the AHCI 1.1 standard)
+> +  - interrupts: interrupt specifier (refer to the interrupt binding)
+> +  - clocks: list of phandle and clock specifier pairs (or only
+> +            phandles for clock providers with '0' defined for
+> +            #clock-cells); two clocks must be specified: the functional
+> +            clock and an external reference clock
+> +
+> +Example:
+> +
+> +       sata: sata@4a140000 {
+> +               compatible = "ti,dm816-ahci";
+> +               reg = <0x4a140000 0x10000>;
+> +               interrupts = <16>;
+> +               clocks = <&sysclk5_ck>, <&sata_refclk>;
+> +       };
+> --
+> 2.9.3
+>
+
+Hi Tejun,
+
+can you pick this one up for your tree as well?
+
+Thanks,
+Bartosz
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
