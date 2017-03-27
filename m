@@ -1,33 +1,29 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 1/2] dt-bindings: ata: add DT bindings for ahci-dm816
- SATA controller
-Date: Mon, 27 Mar 2017 14:06:10 -0400
-Message-ID: <20170327180610.GE13353@htj.duckdns.org>
-References: <1489489491-14195-1-git-send-email-bgolaszewski@baylibre.com>
- <1489489491-14195-2-git-send-email-bgolaszewski@baylibre.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: =?iso-8859-5?Q?Re:_[PATCH_1/7]_=F5d:_split_sd=5Fsetup=5Fdiscard=5Fcmnd?=
+Date: Mon, 27 Mar 2017 22:24:47 +0000
+Message-ID: <1490653474.7897.13.camel@sandisk.com>
+References: <20170320204319.12628-1-hch@lst.de>
+         <20170320204319.12628-2-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f194.google.com ([209.85.161.194]:34395 "EHLO
-        mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751716AbdC0SGt (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 27 Mar 2017 14:06:49 -0400
-Content-Disposition: inline
-In-Reply-To: <1489489491-14195-2-git-send-email-bgolaszewski@baylibre.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-5"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20170320204319.12628-2-hch@lst.de>
+Content-Language: en-US
+Content-ID: <7C6B7B6D4194D04D947A7D62FD63CB86@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "hch@lst.de" <hch@lst.de>, "tj@kernel.org" <tj@kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Neil Armstrong <narmstrong@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Kevin Hilman <khilman@baylibre.com>, Patrick Titiano <ptitiano@baylibre.com>, Tony Lindgren <tony@atomide.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Mar 14, 2017 at 12:04:50PM +0100, Bartosz Golaszewski wrote:
-> Add DT bindings for the onboard SATA controller present on the DM816x
-> SoCs.
-> 
-> Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+On Mon, 2017-03-20 at 16:43 -0400, Christoph Hellwig wrote:
+> +	u64 sector =3D blk_rq_pos(rq) >> (ilog2(sdp->sector_size) - 9);
+> +	u32 nr_sectors =3D blk_rq_sectors(rq) >> (ilog2(sdp->sector_size) - 9);
 
-Applied to libata/for-4.12.
+Although I know this is an issue in the existing code and not something
+introduced by you: please consider using logical_to_sectors() instead of
+open-coding this function. Otherwise this patch looks fine to me.
 
-Thanks.
+Thanks,
 
--- 
-tejun
+Bart.
