@@ -1,29 +1,31 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: ata: WARNING in ata_bmdma_qc_issue
-Date: Mon, 27 Mar 2017 14:03:32 -0400
-Message-ID: <20170327180332.GD13353@htj.duckdns.org>
-References: <CACT4Y+b+t9TPkVhZPdoeSGfe3rujUdv267HW8yPqoTbKtLUScA@mail.gmail.com>
+Subject: Re: [PATCH v2 1/2] dt-bindings: ata: add DT bindings for ahci-dm816
+ SATA controller
+Date: Mon, 27 Mar 2017 14:06:10 -0400
+Message-ID: <20170327180610.GE13353@htj.duckdns.org>
+References: <1489489491-14195-1-git-send-email-bgolaszewski@baylibre.com>
+ <1489489491-14195-2-git-send-email-bgolaszewski@baylibre.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f171.google.com ([209.85.161.171]:35412 "EHLO
-        mail-yw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751845AbdC0SEN (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 27 Mar 2017 14:04:13 -0400
+Received: from mail-yw0-f194.google.com ([209.85.161.194]:34395 "EHLO
+        mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751716AbdC0SGt (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 27 Mar 2017 14:06:49 -0400
 Content-Disposition: inline
-In-Reply-To: <CACT4Y+b+t9TPkVhZPdoeSGfe3rujUdv267HW8yPqoTbKtLUScA@mail.gmail.com>
+In-Reply-To: <1489489491-14195-2-git-send-email-bgolaszewski@baylibre.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, syzkaller <syzkaller@googlegroups.com>
+To: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+Cc: Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Neil Armstrong <narmstrong@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Kevin Hilman <khilman@baylibre.com>, Patrick Titiano <ptitiano@baylibre.com>, Tony Lindgren <tony@atomide.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Mar 24, 2017 at 03:14:14PM +0100, Dmitry Vyukov wrote:
-> Hello,
+On Tue, Mar 14, 2017 at 12:04:50PM +0100, Bartosz Golaszewski wrote:
+> Add DT bindings for the onboard SATA controller present on the DM816x
+> SoCs.
 > 
-> The following program triggers WARNING in ata_bmdma_qc_issue:
-> https://gist.githubusercontent.com/dvyukov/7497a05853e58598b74a2c48030c41f4/raw/38885f75eb05f72bb47fff9c9de657728f529927/gistfile1.txt
+> Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
 
-Fix is already queued in libata/for-4.11-fixes.  Will be pushed out soon.
+Applied to libata/for-4.12.
 
 Thanks.
 
