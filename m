@@ -1,53 +1,33 @@
-From: Markku Pesonen <tourula@gmail.com>
-Subject: Re: pata_atiixp regression in 4.11-rc1
-Date: Tue, 28 Mar 2017 12:57:42 +0300
-Message-ID: <d9c9cb23-e67f-779d-240d-e02f7d87e405@gmail.com>
-References: <22571b6e-a8f3-05bc-d68b-a728f595af1d@gmail.com>
- <20170327175550.GB13353@htj.duckdns.org>
- <49cdecb0846.6a8a0888@auth.smtp.1and1.co.uk>
+From: "axboe@kernel.dk" <axboe@kernel.dk>
+Subject: Re: [PATCH 1/7] =?utf-8?B?0ZVk?= =?utf-8?Q?=3A?= split
+ sd_setup_discard_cmnd
+Date: Tue, 28 Mar 2017 08:05:09 -0600
+Message-ID: <20170328140509.GA27578@kernel.dk>
+References: <20170320204319.12628-1-hch@lst.de>
+ <20170320204319.12628-2-hch@lst.de>
+ <1490653474.7897.13.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wr0-f195.google.com ([209.85.128.195]:35975 "EHLO
-        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754846AbdC1J6A (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Mar 2017 05:58:00 -0400
-Received: by mail-wr0-f195.google.com with SMTP id u1so21106780wra.3
-        for <linux-ide@vger.kernel.org>; Tue, 28 Mar 2017 02:57:54 -0700 (PDT)
-In-Reply-To: <49cdecb0846.6a8a0888@auth.smtp.1and1.co.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1490653474.7897.13.camel@sandisk.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: "hch@lst.de" <hch@lst.de>, "tj@kernel.org" <tj@kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Darren Stevens <darren@stevens-zone.net>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-On 28.03.2017 11:24, Darren Stevens wrote:
-> Hello Tejun
->
-> On 27/03/2017, Tejun Heo wrote:
->> From a431ecd2d459da3c91a612061f09eb422ffe78e2 Mon Sep 17 00:00:00 2001
->> From: Tejun Heo <tj@kernel.org>
->> Date: Mon, 27 Mar 2017 13:52:00 -0400
->> Subject: [PATCH] Revert "pata_atiixp: Don't use unconnected secondary
->>  port on SB600/SB700"
->>
->> This reverts commit 5946fdaee4ba449e8fbb5d403e1ed69437f916e8.
->>
->> The original commit's assumption that the secondary port is
->> unconnected turns out to be false.
->
-> Not entirely. I based my patch on information in AMD's document
-> 43366_sb7xx_bdg_pub_1.00.p
+On Mon, Mar 27 2017, Bart Van Assche wrote:
+> On Mon, 2017-03-20 at 16:43 -0400, Christoph Hellwig wrote:
+> > +	u64 sector = blk_rq_pos(rq) >> (ilog2(sdp->sector_size) - 9);
+> > +	u32 nr_sectors = blk_rq_sectors(rq) >> (ilog2(sdp->sector_size) - 9);
+> 
+> Although I know this is an issue in the existing code and not something
+> introduced by you: please consider using logical_to_sectors() instead of
+> open-coding this function. Otherwise this patch looks fine to me.
 
-I found this in the AMD SB710 Databook, rev 1.60, p. 56:
-"The integrated parallel ATA controller contains a single channel but
-can be configured as primary or secondary channel."
+The downside of doing that is that we still call ilog2() twice, which
+sucks. Would be faster to cache ilog2(sector_size) and use that in the
+shift calculation.
 
-The IDE connector on my Asrock 980DE3/U3S3 motherboard is configured as
-the secondary channel. The primary channel is used by the optional
-SATA-IDE emulation mode.
-
-I don't know much about kernel programming, southbridges, or ata 
-controllers, but I hope this bit of information helps.
-
-
+-- 
+Jens Axboe
