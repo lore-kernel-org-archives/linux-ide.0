@@ -1,83 +1,53 @@
-From: Matthias Peter Walther <m_walt11@uni-muenster.de>
-Subject: Delock 89384 Sata Controller Causes Lockups Under Heavy Load
-Date: Tue, 28 Mar 2017 11:33:32 +0200
-Message-ID: <0650ae19-22b0-5e17-20b4-336b89c0f013@uni-muenster.de>
-Reply-To: m.wa@wwu.de
+From: Markku Pesonen <tourula@gmail.com>
+Subject: Re: pata_atiixp regression in 4.11-rc1
+Date: Tue, 28 Mar 2017 12:57:42 +0300
+Message-ID: <d9c9cb23-e67f-779d-240d-e02f7d87e405@gmail.com>
+References: <22571b6e-a8f3-05bc-d68b-a728f595af1d@gmail.com>
+ <20170327175550.GB13353@htj.duckdns.org>
+ <49cdecb0846.6a8a0888@auth.smtp.1and1.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ZIVM-WWU3-1.UNI-MUENSTER.DE ([128.176.192.17]:4941 "EHLO
-        zivm-wwu3.uni-muenster.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754231AbdC1JoF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Mar 2017 05:44:05 -0400
-Received: from [192.168.178.114] (dslb-178-006-169-206.178.006.pools.vodafone-ip.de [178.6.169.206])
-        by SECMAIL.UNI-MUENSTER.DE (Postfix) with ESMTP id 3A0F2BF403
-        for <linux-ide@vger.kernel.org>; Tue, 28 Mar 2017 11:33:33 +0200 (CEST)
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:35975 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754846AbdC1J6A (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Mar 2017 05:58:00 -0400
+Received: by mail-wr0-f195.google.com with SMTP id u1so21106780wra.3
+        for <linux-ide@vger.kernel.org>; Tue, 28 Mar 2017 02:57:54 -0700 (PDT)
+In-Reply-To: <49cdecb0846.6a8a0888@auth.smtp.1and1.co.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Darren Stevens <darren@stevens-zone.net>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-Hello,
+On 28.03.2017 11:24, Darren Stevens wrote:
+> Hello Tejun
+>
+> On 27/03/2017, Tejun Heo wrote:
+>> From a431ecd2d459da3c91a612061f09eb422ffe78e2 Mon Sep 17 00:00:00 2001
+>> From: Tejun Heo <tj@kernel.org>
+>> Date: Mon, 27 Mar 2017 13:52:00 -0400
+>> Subject: [PATCH] Revert "pata_atiixp: Don't use unconnected secondary
+>>  port on SB600/SB700"
+>>
+>> This reverts commit 5946fdaee4ba449e8fbb5d403e1ed69437f916e8.
+>>
+>> The original commit's assumption that the secondary port is
+>> unconnected turns out to be false.
+>
+> Not entirely. I based my patch on information in AMD's document
+> 43366_sb7xx_bdg_pub_1.00.p
 
-I'm new to this list and I signed up, because I found an instability
-with the following sata controller:
+I found this in the AMD SB710 Databook, rev 1.60, p. 56:
+"The integrated parallel ATA controller contains a single channel but
+can be configured as primary or secondary channel."
 
-Product name: Delock 89384 10 Port PCIe 2.0 x2 Low Profile retail
-Identifies as: 03:00.0 SATA controller: ASMedia Technology Inc. Device
-0625 (rev 01)
-(PCIe to 10x sata controller card)
+The IDE connector on my Asrock 980DE3/U3S3 motherboard is configured as
+the secondary channel. The primary channel is used by the optional
+SATA-IDE emulation mode.
 
-Problem description: The controller works and recognizes all my drives.
-But under heavy load, e. g. a mdadm raid-6 resync or just a dd to a
-file, it keeps causing lockups and random device link resettings on
-multiple devices.
-
-I spend the last two weeks on replacing components in this server, the
-controller is definitely the problem. Everything works fine with a
-Marvell 9215 controller and I tried the controller with three different
-mainboards and kernel versions 3.2, 4.4 and 4.10. The controller or its
-kernel driver definitely cause these lock ups. I made sure, that all
-drives were properly connected. [Syslog attached at the bottom of this
-mail.]
-
-Syslog of one of these resets: If the level of stress is high enough,
-they happen on all connected devices (seemingly random) from different
-manufacturers (WesternDigital and Seagate) and different types of
-models. So this is probably not a bug in the firmware of one of the drives.
-
-Log:
-Mar 24 09:01:43 Server1 kernel: [ 1807.338347] ata3.00: exception Emask
-0x0 SAct 0x0 SErr 0x0 action
-0x6 frozen
-Mar 24 09:01:43 Server1 kernel: [ 1807.340701] ata3.00: failed command:
-FLUSH CACHE EXT
-Mar 24 09:01:43 Server1 kernel: [ 1807.343078] ata3.00: cmd
-ea/00:00:00:00:00/00:00:00:00:00/a0 tag 0
-Mar 24 09:01:43 Server1 kernel: [ 1807.343078]          res
-40/00:00:00:00:00/00:00:00:00:00/00 Emask
- 0x4 (timeout)
-Mar 24 09:01:43 Server1 kernel: [ 1807.349717] ata3.00: status: { DRDY }
-Mar 24 09:01:43 Server1 kernel: [ 1807.353029] ata3: hard resetting link
-Mar 24 09:01:43 Server1 kernel: [ 1807.665533] ata3: SATA link up 6.0
-Gbps (SStatus 133 SControl 300)
-Mar 24 09:01:43 Server1 kernel: [ 1807.667000] ata3.00: configured for
-UDMA/133
-Mar 24 09:01:43 Server1 kernel: [ 1807.667007] ata3.00: retrying FLUSH
-0xea Emask 0x4
-Mar 24 09:01:43 Server1 kernel: [ 1807.667164] ata3.00: device reported
-invalid CHS sector 0
-Mar 24 09:01:43 Server1 kernel: [ 1807.667183] ata3: EH complete
-
-Whenever such a lock up happens, the whole partition is not read- or
-writeable for at least 90 seconds and sometimes several minutes. But the
-system never crashed. I tried to google the controller card, didn't find
-much about it.
-
-Any advice would be much appreciated .
-
-Greetings,
-Matthias
-
+I don't know much about kernel programming, southbridges, or ata 
+controllers, but I hope this bit of information helps.
 
 
