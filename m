@@ -1,55 +1,66 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 0/5] ATA/ARM: convert ARM/DaVinci to use libata PATA
- drivers
-Date: Wed, 29 Mar 2017 11:35:52 -0400
-Message-ID: <20170329153552.GC30385@htj.duckdns.org>
-References: <CGME20170322182127epcas1p267b13e8c92205223458863783bdea476@epcas1p2.samsung.com>
- <1490206862-26065-1-git-send-email-b.zolnierkie@samsung.com>
- <aaf669ba-4439-9af7-7943-c9163bd99020@ti.com>
- <7423344.GzQhW9fIvG@amdc3058>
+From: <beautyink@live.nl>
+Subject: 63786 linux-ide
+Date: Wed, 29 Mar 2017 22:22:38 -0000
+Message-ID: <149082615856.16100.7133941631503053856@vnpt.vn>
+Reply-To: <beautyink@live.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-Content-Disposition: inline
-In-Reply-To: <7423344.GzQhW9fIvG@amdc3058>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Russell King <linux@arm.linux.org.uk>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Arnd Bergmann <arnd@arndb.de>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, Kevin Hilman <khilman@baylibre.com>, Sekhar Nori <nsekhar@ti.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: application/zip; name="0845.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from static.vnpt.vn ([14.230.56.254]:43851 "HELO vnpt.vn"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1753971AbdC2WWo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 29 Mar 2017 18:22:44 -0400
+Content-Disposition: attachment
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide <linux-ide@vger.kernel.org>
 
-On Fri, Mar 24, 2017 at 04:38:24PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> On Thursday, March 23, 2017 07:27:05 PM Sekhar Nori wrote:
-> > On Wednesday 22 March 2017 11:50 PM, Bartlomiej Zolnierkiewicz wrote:
-> > > Hi,
-> > > 
-> > > This patchset adds Palmchip BK3710 IDE controller driver to
-> > > libata and switches ARM/DaVinci to use it (instead of the old
-> > > IDE driver).
-> > > 
-> > > Sekhar, please check that it still works after changes, thanks.
-> > 
-> > Did some basic mount/read/write tests, it passed.
-> 
-> Thanks for checking.
-> 
-> I guess that you can merge the patchset now to your tree
-> (with Tejun's ACK for the whole patches and Sergei's ACK
-> for ATA changes).
-
-Acked-by: Tejun Heo <tj@kernel.org>
-
-Yeah, please feel free to route the series as you see fit.
-
-Thanks.
-
--- 
-tejun
+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
