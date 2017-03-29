@@ -1,47 +1,55 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH] pata_atiixp: Fix IDE detection on SB7xx
-Date: Wed, 29 Mar 2017 13:34:15 +0300
-Message-ID: <e3812d46-bfc4-57a1-882d-751e03968433@cogentembedded.com>
-References: <49ce56dc322.70129c23@auth.smtp.1and1.co.uk>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3 0/5] ATA/ARM: convert ARM/DaVinci to use libata PATA
+ drivers
+Date: Wed, 29 Mar 2017 11:35:52 -0400
+Message-ID: <20170329153552.GC30385@htj.duckdns.org>
+References: <CGME20170322182127epcas1p267b13e8c92205223458863783bdea476@epcas1p2.samsung.com>
+ <1490206862-26065-1-git-send-email-b.zolnierkie@samsung.com>
+ <aaf669ba-4439-9af7-7943-c9163bd99020@ti.com>
+ <7423344.GzQhW9fIvG@amdc3058>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lf0-f54.google.com ([209.85.215.54]:34886 "EHLO
-        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755527AbdC2KeS (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 29 Mar 2017 06:34:18 -0400
-Received: by mail-lf0-f54.google.com with SMTP id j90so5418249lfk.2
-        for <linux-ide@vger.kernel.org>; Wed, 29 Mar 2017 03:34:17 -0700 (PDT)
-In-Reply-To: <49ce56dc322.70129c23@auth.smtp.1and1.co.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline
+In-Reply-To: <7423344.GzQhW9fIvG@amdc3058>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Russell King <linux@arm.linux.org.uk>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Arnd Bergmann <arnd@arndb.de>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, Kevin Hilman <khilman@baylibre.com>, Sekhar Nori <nsekhar@ti.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: Darren Stevens <darren@stevens-zone.net>, tj@kernel.org
-Cc: tourula@gmail.com, linux-ide@vger.kernel.org
 
-Hello!
+On Fri, Mar 24, 2017 at 04:38:24PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> On Thursday, March 23, 2017 07:27:05 PM Sekhar Nori wrote:
+> > On Wednesday 22 March 2017 11:50 PM, Bartlomiej Zolnierkiewicz wrote:
+> > > Hi,
+> > > 
+> > > This patchset adds Palmchip BK3710 IDE controller driver to
+> > > libata and switches ARM/DaVinci to use it (instead of the old
+> > > IDE driver).
+> > > 
+> > > Sekhar, please check that it still works after changes, thanks.
+> > 
+> > Did some basic mount/read/write tests, it passed.
+> 
+> Thanks for checking.
+> 
+> I guess that you can merge the patchset now to your tree
+> (with Tejun's ACK for the whole patches and Sergei's ACK
+> for ATA changes).
 
-On 3/28/2017 6:57 PM, Darren Stevens wrote:
+Acked-by: Tejun Heo <tj@kernel.org>
 
-> Commit: 5946fdaee4ba(pata_atiixp: Don't use unconnected secondary port on
+Yeah, please feel free to route the series as you see fit.
 
-    Need space before the 1st paren, and summary enclosed in (""), not just ().
+Thanks.
 
-> SB600/SB700) disabled the check for secondary ports on AMD SB700/710/750
->
-> While these chips have only 1 IDE port, it can be reconfigured on SB7xx
-> to appear as a secondary channel, especially when 'Legacy IDE emulation'
-> is enabled, breaking IDE detection on some boards with this chipset.
->
-> Fix by removing the check for SB7xx.
->
-> Fixes: 5946fdaee4ba(pata_atiixp: Don't use unconnected secondary port
-> on SB600/SB700)
-
-    Required the same standardized format as described above.
-
-> Signed-off-by: Darren Stevens <Darren@stevens-zone.net>
-[...]
-
-MBR, Sergei
-
+-- 
+tejun
