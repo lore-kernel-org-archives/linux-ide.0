@@ -1,59 +1,51 @@
-From: Darren Stevens <darren@stevens-zone.net>
-Subject: Re: pata_atiixp: Fix IDE detection on SB7xx
-Date: Thu, 30 Mar 2017 10:08:52 +0100 (BST)
-Message-ID: <49d09a00a4e.6d8687b5@auth.smtp.1and1.co.uk>
-References: <49ce56dc322.70129c23@auth.smtp.1and1.co.uk>
- <20170328170048.GD28157@htj.duckdns.org>
+From: Sekhar Nori <nsekhar@ti.com>
+Subject: Re: [PATCH v3 0/5] ATA/ARM: convert ARM/DaVinci to use libata PATA
+ drivers
+Date: Thu, 30 Mar 2017 17:23:38 +0530
+Message-ID: <f5ee9343-8af2-e264-0439-c7935064d095@ti.com>
+References: <CGME20170322182127epcas1p267b13e8c92205223458863783bdea476@epcas1p2.samsung.com>
+ <1490206862-26065-1-git-send-email-b.zolnierkie@samsung.com>
+ <aaf669ba-4439-9af7-7943-c9163bd99020@ti.com> <7423344.GzQhW9fIvG@amdc3058>
+ <20170329153552.GC30385@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.133]:52844 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932191AbdC3KJD (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 30 Mar 2017 06:09:03 -0400
-In-Reply-To: <20170328170048.GD28157@htj.duckdns.org>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:50757 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750995AbdC3Ly1 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 30 Mar 2017 07:54:27 -0400
+In-Reply-To: <20170329153552.GC30385@htj.duckdns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: tourula@gmail.com, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Kevin Hilman <khilman@baylibre.com>, Arnd Bergmann <arnd@arndb.de>, Russell King <linux@arm.linux.org.uk>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 
-Hello Tejun
+On Wednesday 29 March 2017 09:05 PM, Tejun Heo wrote:
+> On Fri, Mar 24, 2017 at 04:38:24PM +0100, Bartlomiej Zolnierkiewicz wrote:
+>> On Thursday, March 23, 2017 07:27:05 PM Sekhar Nori wrote:
+>>> On Wednesday 22 March 2017 11:50 PM, Bartlomiej Zolnierkiewicz wrote:
+>>>> Hi,
+>>>>
+>>>> This patchset adds Palmchip BK3710 IDE controller driver to
+>>>> libata and switches ARM/DaVinci to use it (instead of the old
+>>>> IDE driver).
+>>>>
+>>>> Sekhar, please check that it still works after changes, thanks.
+>>>
+>>> Did some basic mount/read/write tests, it passed.
+>>
+>> Thanks for checking.
+>>
+>> I guess that you can merge the patchset now to your tree
+>> (with Tejun's ACK for the whole patches and Sergei's ACK
+>> for ATA changes).
+> 
+> Acked-by: Tejun Heo <tj@kernel.org>
+> 
+> Yeah, please feel free to route the series as you see fit.
 
-On 28/03/2017, Tejun Heo wrote:
-> Hello,
->
-> On Tue, Mar 28, 2017 at 04:57:16PM +0100, Darren Stevens wrote:
->> Commit: 5946fdaee4ba(pata_atiixp: Don't use unconnected secondary port
->> on SB600/SB700) disabled the check for secondary ports on AMD
->> SB700/710/750
->
->> While these chips have only 1 IDE port, it can be reconfigured on SB7xx
->> to appear as a secondary channel, especially when 'Legacy IDE emulation'
->> is enabled, breaking IDE detection on some boards with this chipset.
->> 
->> Fix by removing the check for SB7xx.
->> 
->> Fixes: 5946fdaee4ba(pata_atiixp: Don't use unconnected secondary port
->> on SB600/SB700)
->> Signed-off-by: Darren Stevens <Darren@stevens-zone.net>
->
-> Hmmm... I can replace the revert with this but can you please explain
-> why we want this in the commit message?  Also, it'd be nice to cc
-> Markku and link to his report.
+Series applied to my tree for v4.12 with Tejun and Sergei's acks added.
 
-What would you prefer the commit message to say? I was only explaining why the
-patch was needed.
-
-I need to fix formatting anyway, as Sergei has pointed out, so either I rework
-this or you revert as originally planned and I'll resubmit the original patch
-for the SB600 only, whichever works best for you, I'm aware time is an issue
-here.
-
-I didn't include Markku as I'm not sure I should be adding people to the
-Commit without their express permission.
-
-I'm still quite new at this so sorry for causing all this trouble.
-
-Regards
-Darren
-
+Thanks,
+Sekhar
