@@ -1,59 +1,89 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: pata_atiixp: Fix IDE detection on SB7xx
-Date: Thu, 30 Mar 2017 11:51:57 -0400
-Message-ID: <20170330155157.GA22780@htj.duckdns.org>
-References: <49ce56dc322.70129c23@auth.smtp.1and1.co.uk>
- <20170328170048.GD28157@htj.duckdns.org>
- <49d09a00a4e.6d8687b5@auth.smtp.1and1.co.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: [PATCH] sata_via: Enable hotplug only on VT6421
+Date: Fri, 31 Mar 2017 20:35:42 +0200
+Message-ID: <1490985342-16800-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.161.176]:36378 "EHLO
-        mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933356AbdC3PwA (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 30 Mar 2017 11:52:00 -0400
-Received: by mail-yw0-f176.google.com with SMTP id i203so26343035ywc.3
-        for <linux-ide@vger.kernel.org>; Thu, 30 Mar 2017 08:51:59 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <49d09a00a4e.6d8687b5@auth.smtp.1and1.co.uk>
+Received: from smtp-1b.atlantis.sk ([80.94.52.26]:55360 "EHLO
+        smtp-1b.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752472AbdCaSon (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 31 Mar 2017 14:44:43 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Darren Stevens <darren@stevens-zone.net>
-Cc: tourula@gmail.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>
 
-Hello,
+Commit 57e5568fda27 ("sata_via: Implement hotplug for VT6421") adds
+hotplug IRQ handler for VT6421 but enables hotplug on all chips. This
+is a bug because it causes "irq xx: nobody cared" error on VT6420 when
+hot-(un)plugging a drive:
 
-On Thu, Mar 30, 2017 at 10:08:52AM +0100, Darren Stevens wrote:
-> What would you prefer the commit message to say? I was only explaining why the
-> patch was needed.
+[  381.839948] irq 20: nobody cared (try booting with the "irqpoll" option)
+[  381.840014] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.10.0-rc5+ #148
+[  381.840066] Hardware name:          P4VM800/P4VM800, BIOS P1.60 05/29/2006
+[  381.840117] Call Trace:
+[  381.840167]  <IRQ>
+[  381.840225]  ? dump_stack+0x44/0x58
+[  381.840278]  ? __report_bad_irq+0x14/0x97
+[  381.840327]  ? handle_edge_irq+0xa5/0xa5
+[  381.840376]  ? note_interrupt+0x155/0x1cf
+[  381.840426]  ? handle_edge_irq+0xa5/0xa5
+[  381.840474]  ? handle_irq_event_percpu+0x32/0x38
+[  381.840524]  ? handle_irq_event+0x1f/0x38
+[  381.840573]  ? handle_fasteoi_irq+0x69/0xb8
+[  381.840625]  ? handle_irq+0x4f/0x5d
+[  381.840672]  </IRQ>
+[  381.840726]  ? do_IRQ+0x2e/0x8b
+[  381.840782]  ? common_interrupt+0x2c/0x34
+[  381.840836]  ? mwait_idle+0x60/0x82
+[  381.840892]  ? arch_cpu_idle+0x6/0x7
+[  381.840949]  ? do_idle+0x96/0x18e
+[  381.841002]  ? cpu_startup_entry+0x16/0x1a
+[  381.841057]  ? start_kernel+0x319/0x31c
+[  381.841111]  ? startup_32_smp+0x166/0x168
+[  381.841165] handlers:
+[  381.841219] [<c12a7263>] ata_bmdma_interrupt
+[  381.841274] Disabling IRQ #20
 
-Oh, I want it to explain why it matters to mark the unused port dummy.
-It does reduce the probing time, right?
+Seems that VT6420 can do hotplug too (there's no documentation) but the
+comments say that SCR register access (required for detecting hotplug
+events) can cause problems on these chips.
 
-> I need to fix formatting anyway, as Sergei has pointed out, so either I rework
-> this or you revert as originally planned and I'll resubmit the original patch
-> for the SB600 only, whichever works best for you, I'm aware time is an issue
-> here.
+For now, just keep hotplug disabled on anything other than VT6421.
 
-Can you please generate the patch on top of the following branch?
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+---
+ drivers/ata/sata_via.c |   18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.11-fixes
-
-The revert was days ago, so I don't wanna replace it at this point.
-Let's just do an incremnetal patch on top.
-
-> I didn't include Markku as I'm not sure I should be adding people to the
-> Commit without their express permission.
-
-I see.  I sometimes try to get permission if the person only wrote off
-list but once things are on the mailing list I don't think there's
-anything to worry about.  Just cc them.
-
-> I'm still quite new at this so sorry for causing all this trouble.
-
-No worries.  You're doing great. :)
-
-Thanks.
-
+diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+index 0636d84..f3f538e 100644
+--- a/drivers/ata/sata_via.c
++++ b/drivers/ata/sata_via.c
+@@ -644,14 +644,16 @@ static void svia_configure(struct pci_dev *pdev, int board_id,
+ 		pci_write_config_byte(pdev, SATA_NATIVE_MODE, tmp8);
+ 	}
+ 
+-	/* enable IRQ on hotplug */
+-	pci_read_config_byte(pdev, SVIA_MISC_3, &tmp8);
+-	if ((tmp8 & SATA_HOTPLUG) != SATA_HOTPLUG) {
+-		dev_dbg(&pdev->dev,
+-			"enabling SATA hotplug (0x%x)\n",
+-			(int) tmp8);
+-		tmp8 |= SATA_HOTPLUG;
+-		pci_write_config_byte(pdev, SVIA_MISC_3, tmp8);
++	if (board_id == vt6421) {
++		/* enable IRQ on hotplug */
++		pci_read_config_byte(pdev, SVIA_MISC_3, &tmp8);
++		if ((tmp8 & SATA_HOTPLUG) != SATA_HOTPLUG) {
++			dev_dbg(&pdev->dev,
++				"enabling SATA hotplug (0x%x)\n",
++				(int) tmp8);
++			tmp8 |= SATA_HOTPLUG;
++			pci_write_config_byte(pdev, SVIA_MISC_3, tmp8);
++		}
+ 	}
+ 
+ 	/*
 -- 
-tejun
+Ondrej Zary
+
