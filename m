@@ -1,87 +1,95 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: Race to power off harming SATA SSDs
-Date: Tue, 11 Apr 2017 11:31:29 -0300
-Message-ID: <20170411143129.GA28632@khazad-dum.debian.net>
-References: <20170410232118.GA4816@khazad-dum.debian.net>
- <20170410235206.GA28603@wtj.duckdns.org>
- <3231980.BbEtxjAFS5@merkaba>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] libata fixes for v4.11-rc6
+Date: Wed, 12 Apr 2017 08:19:19 +0900
+Message-ID: <20170411231919.GA3573@wtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from out1-smtp.messagingengine.com ([66.111.4.25]:48633 "EHLO
-        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752765AbdDKObj (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2017 10:31:39 -0400
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:34673 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752010AbdDKXTX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 11 Apr 2017 19:19:23 -0400
 Content-Disposition: inline
-In-Reply-To: <3231980.BbEtxjAFS5@merkaba>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Martin Steigerwald <martin@lichtvoll.de>
-Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tue, 11 Apr 2017, Martin Steigerwald wrote:
-> I do have a Crucial M500 and I do have an increase of that counter:
-> 
-> martin@merkaba:~[…]/Crucial-M500> grep "^174" smartctl-a-201*   
-> smartctl-a-2014-03-05.txt:174 Unexpect_Power_Loss_Ct  0x0032   100   100   000    
-> Old_age   Always       -       1
-> smartctl-a-2014-10-11-nach-prüfsummenfehlern.txt:174 Unexpect_Power_Loss_Ct  
-> 0x0032   100   100   000    Old_age   Always       -       67
-> smartctl-a-2015-05-01.txt:174 Unexpect_Power_Loss_Ct  0x0032   100   100   000    
-> Old_age   Always       -       105
-> smartctl-a-2016-02-06.txt:174 Unexpect_Power_Loss_Ct  0x0032   100   100   000    
-> Old_age   Always       -       148
-> smartctl-a-2016-07-08-unreadable-sector.txt:174 Unexpect_Power_Loss_Ct  0x0032   
-> 100   100   000    Old_age   Always       -       201
-> smartctl-a-2017-04-11.txt:174 Unexpect_Power_Loss_Ct  0x0032   100   100   000    
-> Old_age   Always       -       272
-> 
-> 
-> I mostly didn´t notice anything, except for one time where I indeed had a 
-> BTRFS checksum error, luckily within a BTRFS RAID 1 with an Intel SSD (which 
-> also has an attribute for unclean shutdown which raises).
+Hello, Linus.
 
-The Crucial M500 has something called "RAIN" which it got unmodified
-from its Micron datacenter siblings of the time, along with a large
-amount of flash overprovisioning.  Too bad it lost the overprovisioned
-supercapacitor bank present on the Microns.
+Two libata fixes.  One to disable hotplug on VT6420 which never worked
+properly.  The other reverts an earlier patch which disabled the
+second port on SB600/700.  There were some confusions due to earlier
+datasheets which incorrectly indicated that the second port is not
+implemented on both SB600 and 700.
 
-RAIN does block-level N+1 RAID5-like parity across the flash chips on
-top of the usual block-based ECC, and the SSD has a background scrubber
-task that repairs and blocks that fail ECC correction using the RAIN
-parity information.
+Thanks.
 
-On such an SSD, you really need multi-chip flash corruption beyond what
-ECC can fix to even get the operating system/filesystem to notice any
-damage, unless you are paying attention to its SMART attributes (it
-counts the number of blocks that required RAIN recovery -- which implies
-ECC failed to correct that block in the first place), etc.
+The following changes since commit 6022c5cadf1a43ca30f431f128daa6163909ad60:
 
-Unfortunately, I do not have correlation data to know whether there is
-an increase on RAIN-corrected or ECC-corrected blocks during the 24h
-after an unclean poweroff right after STANDBY IMMEDIATE on a Crucial
-M500 SSD.
+  ahci: qoriq: correct the sata ecc setting error (2017-03-09 11:55:23 -0500)
 
-> The write-up Henrique gave me the idea, that maybe it wasn´t an user triggered 
-> unclean shutdown that caused the issue, but an unclean shutdown triggered by 
-> the Linux kernel SSD shutdown procedure implementation.
+are available in the git repository at:
 
-Maybe.  But that corruption could easily having been caused by something
-else.  There is no shortage of possible culprits.
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.11-fixes
 
-I expect most damage caused by unclean SSD power-offs to be hidden from
-the user/operating system/filesystem by the extensive recovery
-facilities present on most SSDs.
+for you to fetch changes up to 3cf864520e877505158f09075794a08abab11bbe:
 
-Note that the fact that data was transparently (and sucessfully)
-recovered doesn't mean damage did not happen, or that the unit was not
-harmed by it: it likely got some extra flash wear at the very least.
+  sata_via: Enable hotplug only on VT6421 (2017-04-11 09:12:18 +0900)
 
-BTW, for the record, Windows 7 also appears to have had (and maybe still
-have) this issue as far as I can tell.  Almost every user report of
-excessive unclean power off alerts (and also of SSD bricking) to be
-found on SSD vendor forums come from Windows users.
+----------------------------------------------------------------
+Ondrej Zary (1):
+      sata_via: Enable hotplug only on VT6421
 
--- 
-  Henrique Holschuh
+Tejun Heo (1):
+      Revert "pata_atiixp: Don't use unconnected secondary port on SB600/SB700"
+
+ drivers/ata/pata_atiixp.c |  5 -----
+ drivers/ata/sata_via.c    | 18 ++++++++++--------
+ 2 files changed, 10 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
+index 6c9aa95..49d705c 100644
+--- a/drivers/ata/pata_atiixp.c
++++ b/drivers/ata/pata_atiixp.c
+@@ -278,11 +278,6 @@ static int atiixp_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	};
+ 	const struct ata_port_info *ppi[] = { &info, &info };
+ 
+-	/* SB600/700 don't have secondary port wired */
+-	if ((pdev->device == PCI_DEVICE_ID_ATI_IXP600_IDE) ||
+-		(pdev->device == PCI_DEVICE_ID_ATI_IXP700_IDE))
+-		ppi[1] = &ata_dummy_port_info;
+-
+ 	return ata_pci_bmdma_init_one(pdev, ppi, &atiixp_sht, NULL,
+ 				      ATA_HOST_PARALLEL_SCAN);
+ }
+diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+index 0636d84..f3f538e 100644
+--- a/drivers/ata/sata_via.c
++++ b/drivers/ata/sata_via.c
+@@ -644,14 +644,16 @@ static void svia_configure(struct pci_dev *pdev, int board_id,
+ 		pci_write_config_byte(pdev, SATA_NATIVE_MODE, tmp8);
+ 	}
+ 
+-	/* enable IRQ on hotplug */
+-	pci_read_config_byte(pdev, SVIA_MISC_3, &tmp8);
+-	if ((tmp8 & SATA_HOTPLUG) != SATA_HOTPLUG) {
+-		dev_dbg(&pdev->dev,
+-			"enabling SATA hotplug (0x%x)\n",
+-			(int) tmp8);
+-		tmp8 |= SATA_HOTPLUG;
+-		pci_write_config_byte(pdev, SVIA_MISC_3, tmp8);
++	if (board_id == vt6421) {
++		/* enable IRQ on hotplug */
++		pci_read_config_byte(pdev, SVIA_MISC_3, &tmp8);
++		if ((tmp8 & SATA_HOTPLUG) != SATA_HOTPLUG) {
++			dev_dbg(&pdev->dev,
++				"enabling SATA hotplug (0x%x)\n",
++				(int) tmp8);
++			tmp8 |= SATA_HOTPLUG;
++			pci_write_config_byte(pdev, SVIA_MISC_3, tmp8);
++		}
+ 	}
+ 
+ 	/*
