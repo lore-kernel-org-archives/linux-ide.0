@@ -1,49 +1,115 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+From: Martin Steigerwald <martin@lichtvoll.de>
 Subject: Re: Race to power off harming SATA SSDs
-Date: Mon, 10 Apr 2017 23:02:35 -0300
-Message-ID: <20170411020235.GD10185@khazad-dum.debian.net>
-References: <20170410232118.GA4816@khazad-dum.debian.net>
- <20170410235206.GA28603@wtj.duckdns.org>
- <1491868675.2473.22.camel@HansenPartnership.com>
+Date: Tue, 11 Apr 2017 12:37:43 +0200
+Message-ID: <3231980.BbEtxjAFS5@merkaba>
+References: <20170410232118.GA4816@khazad-dum.debian.net> <20170410235206.GA28603@wtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1491868675.2473.22.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20170410235206.GA28603@wtj.duckdns.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, 10 Apr 2017, James Bottomley wrote:
-> On Tue, 2017-04-11 at 08:52 +0900, Tejun Heo wrote:
-> [...]
-> > > Any comments?  Any clues on how to make the delay "smarter" to 
-> > > trigger only once during platform shutdown, but still trigger per
-> > > -device when doing per-device hotswapping ?
+Am Dienstag, 11. April 2017, 08:52:06 CEST schrieb Tejun Heo:
+> > Evidently, how often the SSD will lose the race depends on a platform
+> > and SSD combination, and also on how often the system is powered off.
+> > A sluggish firmware that takes its time to cut power can save the day...
 > > 
-> > So, if this is actually an issue, sure, we can try to work around;
-> > however, can we first confirm that this has any other consequences
-> > than a SMART counter being bumped up?  I'm not sure how meaningful
-> > that is in itself.
+> > 
+> > Observing the effects:
+> > 
+> > An unclean SSD power-off will be signaled by the SSD device through an
+> > increase on a specific S.M.A.R.T attribute.  These SMART attributes can
+> > be read using the smartmontools package from www.smartmontools.org,
+> > which should be available in just about every Linux distro.
+> > 
+> > smartctl -A /dev/sd#
+> > 
+> > The SMART attribute related to unclean power-off is vendor-specific, so
+> > one might have to track down the SSD datasheet to know which attribute a
+> > particular SSD uses.  The naming of the attribute also varies.
+> > 
+> > For a Crucial M500 SSD with up-to-date firmware, this would be attribute
+> > 174 "Unexpect_Power_Loss_Ct", for example.
+> > 
+> > NOTE: unclean SSD power-offs are dangerous and may brick the device in
+> > the worst case, or otherwise harm it (reduce longevity, damage flash
+> > blocks).  It is also not impossible to get data corruption.
 > 
-> Seconded; especially as the proposed patch is way too invasive: we run
+> I get that the incrementing counters might not be pretty but I'm a bit
+> skeptical about this being an actual issue.  Because if that were
+> true, the device would be bricking itself from any sort of power
+> losses be that an actual power loss, battery rundown or hard power off
+> after crash.
 
-It is a proof of concept thing.  It even says so in the patch commit
-log, and in the cover text.
+The write-up by Henrique has been a very informative and interesting read for 
+me. I wondered about the same question tough.
 
-I don't want an one second delay per device.  I never proposed that,
-either.  In fact, I *specifically* asked for something else in the
-paragraph you quoted.
+I do have a Crucial M500 and I do have an increase of that counter:
 
-I would much prefer an one- or two-seconds delay per platform *power
-off*.  And that's for platforms that do ACPI-like heavy-duty S3/S4/S5
-like x86/x86-64.  Opportunistic high-frequency suspend on mobile likely
-requires no such handling.
+martin@merkaba:~[…]/Crucial-M500> grep "^174" smartctl-a-201*   
+smartctl-a-2014-03-05.txt:174 Unexpect_Power_Loss_Ct  0x0032   100   100   000    
+Old_age   Always       -       1
+smartctl-a-2014-10-11-nach-prüfsummenfehlern.txt:174 Unexpect_Power_Loss_Ct  
+0x0032   100   100   000    Old_age   Always       -       67
+smartctl-a-2015-05-01.txt:174 Unexpect_Power_Loss_Ct  0x0032   100   100   000    
+Old_age   Always       -       105
+smartctl-a-2016-02-06.txt:174 Unexpect_Power_Loss_Ct  0x0032   100   100   000    
+Old_age   Always       -       148
+smartctl-a-2016-07-08-unreadable-sector.txt:174 Unexpect_Power_Loss_Ct  0x0032   
+100   100   000    Old_age   Always       -       201
+smartctl-a-2017-04-11.txt:174 Unexpect_Power_Loss_Ct  0x0032   100   100   000    
+Old_age   Always       -       272
 
-The per-device delay would be needed only for hotplug removal (device
-delete), and that's just because some hardware powers down bays (like
-older thinkpads with ATA-compatible bays, and some industrial systems).
 
+I mostly didn´t notice anything, except for one time where I indeed had a 
+BTRFS checksum error, luckily within a BTRFS RAID 1 with an Intel SSD (which 
+also has an attribute for unclean shutdown which raises).
+
+I blogged about this in german language quite some time ago:
+
+https://blog.teamix.de/2015/01/19/btrfs-raid-1-selbstheilung-in-aktion/
+
+(I think its easy enough to get the point of the blog post even when not 
+understanding german)
+
+Result of scrub:
+
+   scrub started at Thu Oct  9 15:52:00 2014 and finished after 564 seconds
+        total bytes scrubbed: 268.36GiB with 60 errors
+        error details: csum=60
+        corrected errors: 60, uncorrectable errors: 0, unverified errors: 0
+
+Device errors were on:
+
+merkaba:~> btrfs device stats /home
+[/dev/mapper/msata-home].write_io_errs   0
+[/dev/mapper/msata-home].read_io_errs    0
+[/dev/mapper/msata-home].flush_io_errs   0
+[/dev/mapper/msata-home].corruption_errs 60
+[/dev/mapper/msata-home].generation_errs 0
+[…]
+
+(thats the Crucial m500)
+
+
+I didn´t have any explaination of this, but I suspected some unclean shutdown, 
+even tough I remembered no unclean shutdown. I take good care to always has a 
+battery in this ThinkPad T520, due to unclean shutdown issues with Intel SSD 
+320 (bricked device which reports 8 MiB as capacity, probably fixed by the 
+firmware update I applied back then).
+
+The write-up Henrique gave me the idea, that maybe it wasn´t an user triggered 
+unclean shutdown that caused the issue, but an unclean shutdown triggered by 
+the Linux kernel SSD shutdown procedure implementation.
+
+Of course, I don´t know whether this is the case and I think there is no way 
+to proof or falsify it years after this happened. I never had this happen 
+again.
+
+Thanks,
 -- 
-  Henrique Holschuh
+Martin
