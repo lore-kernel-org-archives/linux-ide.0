@@ -1,54 +1,56 @@
-From: <lucia.germino@unibas.it>
-Subject: (unknown)
-Date: Mon, 17 Apr 2017 07:56:05 -0000
-Message-ID: <149241576542.20709.1836070069590505444@yota.com.ni>
-Mime-Version: 1.0
-Content-Type: application/zip; name="SHOP-36997868037949-linux-ide.zip"
-Content-Transfer-Encoding: base64
+From: Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH/RFT] sata: rcar_sata: Reset SATA PHY on resume
+Date: Tue, 18 Apr 2017 16:02:53 +0900
+Message-ID: <1492498973-2969-1-git-send-email-horms+renesas@verge.net.au>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from WiMax184-21.yota.com.ni ([190.181.184.21]:46394 "HELO
-        yota.com.ni" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S932413AbdDQH4J (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 17 Apr 2017 03:56:09 -0400
-Subject: 
-Content-Disposition: attachment
+Received: from kirsty.vergenet.net ([202.4.237.240]:38557 "EHLO
+        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751641AbdDRHDX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Apr 2017 03:03:23 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide <linux-ide@vger.kernel.org>
+To: linux-renesas-soc@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, Magnus Damm <magnus.damm@gmail.com>, linux-ide@vger.kernel.org, Simon Horman <horms+renesas@verge.net.au>, Khiem Nguyen <khiem.nguyen.xt@rvc.renesas.com>
 
-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
+In the case where power is cut on suspend the SATA PHY state needs to be
+suspended on resume.
+
+This is the case on the Salvator-X board with the r8a7795 or r8a7796 SoC.
+In that environment it has been observed that SATA partitions cannot not be
+accessed on resume.
+
+Based on work by Khiem Nguyen.
+
+Cc: Khiem Nguyen <khiem.nguyen.xt@rvc.renesas.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+* Compile and boot tested only
+---
+ drivers/ata/sata_rcar.c | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
+
+diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+index 5d38245a7a73..4f4f7788a6cf 100644
+--- a/drivers/ata/sata_rcar.c
++++ b/drivers/ata/sata_rcar.c
+@@ -969,16 +969,9 @@ static int sata_rcar_resume(struct device *dev)
+ {
+ 	struct ata_host *host = dev_get_drvdata(dev);
+ 	struct sata_rcar_priv *priv = host->private_data;
+-	void __iomem *base = priv->base;
+ 
+ 	clk_prepare_enable(priv->clk);
+-
+-	/* ack and mask */
+-	iowrite32(0, base + SATAINTSTAT_REG);
+-	iowrite32(0x7ff, base + SATAINTMASK_REG);
+-	/* enable interrupts */
+-	iowrite32(ATAPI_INT_ENABLE_SATAINT, base + ATAPI_INT_ENABLE_REG);
+-
++	sata_rcar_init_controller(host);
+ 	ata_host_resume(host);
+ 
+ 	return 0;
+-- 
+2.7.0.rc3.207.g0ac5344
+
