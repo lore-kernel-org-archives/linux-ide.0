@@ -1,49 +1,36 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH/RFT] sata: rcar_sata: Reset SATA PHY on resume
-Date: Tue, 18 Apr 2017 12:20:20 +0300
-Message-ID: <308de569-b3a7-8909-c07c-6d39cab5b287@cogentembedded.com>
-References: <1492498973-2969-1-git-send-email-horms+renesas@verge.net.au>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH] ide: don't call memcpy with the same source and destination
+Date: Tue, 18 Apr 2017 12:58:27 +0200
+Message-ID: <3967489.2j6es1sVNT@amdc3058>
+References: <alpine.LRH.2.02.1704141433280.10706@file01.intranet.prod.int.rdu2.redhat.com>
+ <CGME20170418105834epcas1p1b000622da41db1214d1a9a1b888f7896@epcas1p1.samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1492498973-2969-1-git-send-email-horms+renesas@verge.net.au>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Simon Horman <horms+renesas@verge.net.au>, linux-renesas-soc@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>, Khiem Nguyen <khiem.nguyen.xt@rvc.renesas.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-parisc-owner@vger.kernel.org>
+In-reply-to: <alpine.LRH.2.02.1704141433280.10706@file01.intranet.prod.int.rdu2.redhat.com>
+Sender: linux-parisc-owner@vger.kernel.org
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <jejb@parisc-linux.org>, Helge Deller <deller@gmx.de>, John David Anglin <dave.anglin@bell.net>, linux-parisc@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello.
 
-On 4/18/2017 10:02 AM, Simon Horman wrote:
+On Friday, April 14, 2017 02:35:33 PM Mikulas Patocka wrote:
+> The parisc architecture recently reimplemented the memcpy function and
+> their reimplementation crashed when source and destination overlapped.
+> 
+> The crash happened in the function ide_complete_cmd where memcpy is called
+> with the same source and destination pointer. According to the C
+> specification, memcpy behavior is undefined if the source and destination
+> range overlaps. This patches fixes the undefined behavior.
+> 
+> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
 
-> In the case where power is cut on suspend the SATA PHY state needs to be
-> suspended on resume.
->
-> This is the case on the Salvator-X board with the r8a7795 or r8a7796 SoC.
-> In that environment it has been observed that SATA partitions cannot not be
-> accessed on resume.
->
-> Based on work by Khiem Nguyen.
->
-> Cc: Khiem Nguyen <khiem.nguyen.xt@rvc.renesas.com>
-> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-> ---
-> * Compile and boot tested only
-> ---
->  drivers/ata/sata_rcar.c | 9 +--------
->  1 file changed, 1 insertion(+), 8 deletions(-)
+Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-    Why the scope prefix in the subject is not just "sata_rcar: "? :-)
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
 
-[...]
-
-MBR, Sergei
