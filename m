@@ -1,45 +1,37 @@
-From: <obsexitos@gmail.com>
-Subject: 12875 linux-ide
-Date: Mon, 24 Apr 2017 00:16:41 -0000
-Message-ID: <149299300185.15557.14222116394079110657@dtctelecom.com.br>
+From: "Ms. Katherine" <ulia@distral.ro>
+Subject: EXTREMELY IMPORTANT
+Date: Mon, 24 Apr 2017 19:52:12 +0100
+Message-ID: <20170424185219.079DA51B334E__19282.2890276604$1493062610$gmane$org@mail.distral.ro>
+Reply-To: kathrynnmison@gmail.com
 Mime-Version: 1.0
-Content-Type: application/zip; name="0245892297.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 177-10-46-32.rev.dtctelecom.com.br ([177.10.46.32]:36088 "HELO
-        dtctelecom.com.br" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with SMTP id S932843AbdDXAQs (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 23 Apr 2017 20:16:48 -0400
-Content-Disposition: attachment
+Received: from mail.distral.ro ([5.2.192.160]:34086 "EHLO mail.distral.ro"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S972076AbdDXTgo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 24 Apr 2017 15:36:44 -0400
+Content-Description: Mail message body
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Recipients <ulia@distral.ro>
 
-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
-AVBLBQYAAAAAAQABAFsAAACpBQAAAAA=
+Dear Beloved, Sorry for the inconvenience, I am getting in touch with you regarding an extremely important and urgent matter, Please I need your urgent assistance and idea to finish up a project (Orphanage Home) Due to my health condition, Everything is available to finish up the project, All I need is your idea and trust.
+
+Sehr geehrte Geliebte, traurig für die Unannehmlichkeiten, ich bin in Kontakt mit Ihnen über eine äußerst wichtige und dringende Angelegenheit, Bitte brauche ich Ihre dringende Hilfe und Idee, um ein Projekt zu beenden (Orphanage Home) Wegen meines Gesundheitszustandes ist alles verfügbar Beenden Sie das Projekt, Alles was ich brauche ist Ihre Idee und Vertrauen.
+
+Please contact me for more details.
+Contact Email: kathrynnmison@gmail.com
+
+Thanks
+
+---
+This email has been checked for viruses by Avast antivirus software.
+https://www.avast.com/antivirus
+
+
+-- 
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
+
