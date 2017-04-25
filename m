@@ -1,37 +1,43 @@
-From: "Ms. Katherine" <ulia@distral.ro>
-Subject: EXTREMELY IMPORTANT
-Date: Tue, 25 Apr 2017 02:09:51 +0100
-Message-ID: <20170425010957.B9E2F51C4C94__46025.4633021124$1493094384$gmane$org@mail.distral.ro>
-Reply-To: kathrynnmison@gmail.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.distral.ro ([5.2.192.160]:57755 "EHLO mail.distral.ro"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S940971AbdDYE0T (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 25 Apr 2017 00:26:19 -0400
-Content-Description: Mail message body
-Sender: linux-ide-owner@vger.kernel.org
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] libata: reject passthrough WRITE SAME requests
+Date: Tue, 25 Apr 2017 13:39:54 +0200
+Message-ID: <20170425113954.23121-1-hch@lst.de>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Recipients <ulia@distral.ro>
 
-Dear Beloved, Sorry for the inconvenience, I am getting in touch with you regarding an extremely important and urgent matter, Please I need your urgent assistance and idea to finish up a project (Orphanage Home) Due to my health condition, Everything is available to finish up the project, All I need is your idea and trust.............
+The WRITE SAME to TRIM translation rewrites the DATA OUT buffer.  While
+the SCSI code accomodates for this by passing a read-writable buffer
+userspace applications don't cater for this behavior.  In fact it can
+be used to rewrite e.g. a readonly file through mmap and should be
+considered as a security fix.
 
-Kjære elskede, Beklager ulempen, jeg kommer i kontakt med deg angående en ekstremt viktig og presserende sak. Vennligst jeg trenger din akutte hjelp og ide å fullføre et prosjekt (barnehjem) På grunn av min helsetilstand er alt tilgjengelig for Fullfør prosjektet, alt jeg trenger er din ide og tillit.
-
-Please contact me for more details.
-Contact Email: kathrynnmison@gmail.com
-
-Thanks
-
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Cc: stable@vger.kernel.org
 ---
-This email has been checked for viruses by Avast antivirus software.
-https://www.avast.com/antivirus
+ drivers/ata/libata-scsi.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 1ac70744ae7b..50f56d066936 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3462,6 +3462,14 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
+ 	if (unlikely(!dev->dma_mode))
+ 		goto invalid_opcode;
+ 
++	/*
++	 * We only allow sending this command through the block layer,
++	 * as it modifies the DATA OUT buffer, which would corrupt user
++	 * memory for SG_IO commands.
++	 */
++	if (unlikely(blk_rq_is_passthrough(scmd->request)))
++		goto invalid_opcode;
++
+ 	if (unlikely(scmd->cmd_len < 16)) {
+ 		fp = 15;
+ 		goto invalid_fld;
 -- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
-
+2.11.0
