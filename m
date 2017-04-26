@@ -1,30 +1,14 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] libata: remove SCT WRITE SAME support
-Date: Tue, 25 Apr 2017 12:33:55 -0400
-Message-ID: <yq1inlsfnv0.fsf@oracle.com>
-References: <20170425122652.31763-1-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:22354 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1176488AbdDYQeL (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 25 Apr 2017 12:34:11 -0400
-In-Reply-To: <20170425122652.31763-1-hch@lst.de> (Christoph Hellwig's message
-        of "Tue, 25 Apr 2017 14:26:52 +0200")
-Sender: linux-ide-owner@vger.kernel.org
+From: Christoph Hellwig <hch@lst.de>
+Subject: three little req->errors follow ups
+Date: Wed, 26 Apr 2017 09:34:19 +0200
+Message-ID: <20170426073422.14511-1-hch@lst.de>
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: axboe@kernel.dk
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: tj@kernel.org, linux-ide@vger.kernel.org
 
-
-Christoph,
-
-> This was already disabled a while ago because it caused I/O errors,
-> and it's severly getting into the way of the discard / write zeroes
-> rework.
-
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+While moving forward with the block error work I noticed three more
+places that pass non-errno values to the end_request variants, and
+never actually check those return values.  This little series fixes
+those up to always pass 0.
