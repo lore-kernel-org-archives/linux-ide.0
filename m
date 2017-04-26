@@ -1,33 +1,32 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 3/3] ide-pm: always pass 0 error to ide_complete_rq in ide_do_devset
-Date: Wed, 26 Apr 2017 09:34:22 +0200
-Message-ID: <20170426073422.14511-4-hch@lst.de>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH 2/3] ide-pm: always pass 0 error to
+ __blk_end_request_all
+Date: Wed, 26 Apr 2017 12:32:49 +0200
+Message-ID: <1767347.L1Lf3WVO5M@amdc3058>
 References: <20170426073422.14511-1-hch@lst.de>
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170426073422.14511-1-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: axboe@kernel.dk
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+        <20170426073422.14511-3-hch@lst.de>
+        <CGME20170426103252epcas5p3bc9c0b51b48b89310bb456cd5f6dd390@epcas5p3.samsung.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-reply-to: <20170426073422.14511-3-hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: axboe@kernel.dk, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-The caller only looks at the scsi_request result field anyway.
+On Wednesday, April 26, 2017 09:34:21 AM Christoph Hellwig wrote:
+> ide_pm_execute_rq exectures a PM request synchronously, and in the failure
+> case where it calls __blk_end_request_all it never checks the error field
+> passed to the end_io callback, so don't bother setting it.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/ide/ide-devsets.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-diff --git a/drivers/ide/ide-devsets.c b/drivers/ide/ide-devsets.c
-index b1223234037d..9b69c32ee560 100644
---- a/drivers/ide/ide-devsets.c
-+++ b/drivers/ide/ide-devsets.c
-@@ -187,6 +187,6 @@ ide_startstop_t ide_do_devset(ide_drive_t *drive, struct request *rq)
- 	err = setfunc(drive, *(int *)&scsi_req(rq)->cmd[1]);
- 	if (err)
- 		scsi_req(rq)->result = err;
--	ide_complete_rq(drive, err, blk_rq_bytes(rq));
-+	ide_complete_rq(drive, 0, blk_rq_bytes(rq));
- 	return ide_stopped;
- }
--- 
-2.11.0
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
