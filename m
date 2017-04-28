@@ -1,68 +1,89 @@
-From: <mitch_128@hotmail.com>
-Subject: 56151 linux-ide
-Date: Fri, 28 Apr 2017 10:09:12 -0000
-Message-ID: <149337415270.22262.11384937648877665357@host142.200-45-184.telecom.net.ar>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: PROBLEM: sil24: transfer errors causing data corruption or very
+ low performance
+Date: Fri, 28 Apr 2017 17:36:17 -0400
+Message-ID: <20170428213617.GF22354@htj.duckdns.org>
+References: <1605874.IPVSbxyx3P@c21>
 Mime-Version: 1.0
-Content-Type: application/zip; name="29159603466.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from host142.200-45-184.telecom.net.ar ([200.45.184.142]:50064 "HELO
-        host142.200-45-184.telecom.net.ar" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with SMTP id S968413AbdD1KJR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 28 Apr 2017 06:09:17 -0400
-Content-Disposition: attachment
+Received: from mail-yw0-f169.google.com ([209.85.161.169]:35635 "EHLO
+        mail-yw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S939025AbdD1VgT (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 28 Apr 2017 17:36:19 -0400
+Received: by mail-yw0-f169.google.com with SMTP id u70so37054897ywe.2
+        for <linux-ide@vger.kernel.org>; Fri, 28 Apr 2017 14:36:19 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1605874.IPVSbxyx3P@c21>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: mtths@nurfuerspam.de
+Cc: linux-ide@vger.kernel.org
 
-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
-QMDSAVBLBQYAAAAAAQABAFsAAADLCgAAAAA=
+Hello,
+
+On Sat, Apr 22, 2017 at 05:33:56PM +0200, mtths@nurfuerspam.de wrote:
+> A SATA PCI-controller card using the kernel module sata_sil24 has problems 
+> transferring big files.
+> 
+> 
+> First of all a description of the situation:
+> 
+> -- Hardware:
+> - mainboard Gigabyte GA-MA69GM-S2H; chipset AMD 690G / SB600; 2 PCI slots
+>   (32 bit); 1 PCIe 4x slot; 1 PCIe 16 x slot; 8 GiB RAM; AMD Phenom(tm) II X4
+>   955 Processor
+> - SATA controller card Dawicontrol DC-3410 RAID, 32 bit PCI; chipset
+>   SiI3124ACBHU; BIOS message: running at 32 bit / 33 MHz
+> - with hard disks: HDS721616PLA380 (twice), ST3000DM001-9YN166 (temporary)
+> - q.v. attachment lspci; (dmidecode (v 3.0) finds no SMBIOS nor DMI entry
+>   point)
+...
+> 1st test setting:
+> Reading from the disks to /dev/null with
+> 		dd if=/dev/sde of=/dev/null bs=4k count=2304k
+> one after the other. (Disk ST3000DM001 was temporarily directly connected to 
+> the card's external SATA port.)
+> Result: After some MB, but before 470 MiB errors occurred:
+> 	failed command: READ FPDMA QUEUED
+> 		[cf. attachment dmesg]
+> 	failed command: READ DMA
+> 		[cf. attachment dmesg_tmpHD]
+> The errors were reproducible - however, they started after different amounts 
+> of data.
+> 
+> 2nd test setting:
+> Using Debian's kernel and patching the driver to not use 64 bit DMA [cf. 
+> attachment sata_sil24.c.diff].
+> Doing the same tests as above.
+> Result: Repeatedly no errors occurred.
+> 
+> 
+> N.B.: 1) There is a Windows Vista (32 bit) installation that uses two of the 
+> ports of the controller card as a fake RAID 1: There are no problems with the 
+> internal directly connected drives nor with an external drive.
+> 2) Prior to this controller card there was a PCI Express card using SiI 3132, 
+> that - if I remember rightly - also had such problems, but they started after 
+> a greater amount of data. (At that time a Windows XP x64 installation had no 
+> problems, too.)
+
+That's interesting, so you're seeing similar host bus errors whether
+the controller is attached to PCI or PCIe.
+
+The controller itself is known to be okay with 64bit addressing and
+restricting it to 32bit addressing means that you'd be bouncing pages
+(DMA to low pages and then copy using CPU), which slows down things a
+bit.  It could be that the slowing down in timing is what's helping,
+not necessarily forcing 32bit DMA.
+
+I don't know.  Host bus errors are rarely reported and the controller
+is definitely known to be okay with 64bit DMAs.  Given this didn't get
+reported at all in the haydays of SB600, it could actually be faulty
+hardware.
+
+I'm not sure what we can do at the moment.
+
+Thanks.
+
+-- 
+tejun
