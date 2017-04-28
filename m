@@ -1,29 +1,33 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 0/3] SATA: Fine-tuning for two function implementations
-Date: Fri, 28 Apr 2017 17:53:34 -0400
-Message-ID: <20170428215334.GH22354@htj.duckdns.org>
-References: <df754c7a-2100-7169-0d40-b981ccd952a1@users.sourceforge.net>
+Subject: Re: [PATCH] libata: reject passthrough WRITE SAME requests
+Date: Fri, 28 Apr 2017 18:09:31 -0400
+Message-ID: <20170428220931.GK22354@htj.duckdns.org>
+References: <20170425113954.23121-1-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-janitors-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yw0-f194.google.com ([209.85.161.194]:33797 "EHLO
+        mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1032217AbdD1WJd (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 28 Apr 2017 18:09:33 -0400
 Content-Disposition: inline
-In-Reply-To: <df754c7a-2100-7169-0d40-b981ccd952a1@users.sourceforge.net>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
+In-Reply-To: <20170425113954.23121-1-hch@lst.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-ide@vger.kernel.org, stable@vger.kernel.org
 
-Hello,
-
-On Tue, Apr 18, 2017 at 10:00:37PM +0200, SF Markus Elfring wrote:
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Tue, 18 Apr 2017 21:54:32 +0200
+On Tue, Apr 25, 2017 at 01:39:54PM +0200, Christoph Hellwig wrote:
+> The WRITE SAME to TRIM translation rewrites the DATA OUT buffer.  While
+> the SCSI code accomodates for this by passing a read-writable buffer
+> userspace applications don't cater for this behavior.  In fact it can
+> be used to rewrite e.g. a readonly file through mmap and should be
+> considered as a security fix.
 > 
-> A few update suggestions were taken into account
-> from static source code analysis.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Cc: stable@vger.kernel.org
 
-Hmmm, allocs -> callocs.  Are these actually beneficial?  If so, why?
-Because one multiplication is rolled into the call?
+Applied to libata/for-4.12, assuming we aren't doing rc9.
 
 Thanks.
 
