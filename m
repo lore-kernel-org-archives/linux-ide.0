@@ -1,85 +1,124 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata changes for v4.12-rc1
-Date: Mon, 1 May 2017 15:50:08 -0400
-Message-ID: <20170501195008.GG8921@htj.duckdns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Tycho Andersen <tycho@docker.com>
+Subject: [PATCH] ata-sff: always map page before data transfer
+Date: Tue,  2 May 2017 10:29:32 -0600
+Message-ID: <20170502162932.12578-1-tycho@docker.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f196.google.com ([209.85.161.196]:34085 "EHLO
-        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750839AbdEATuL (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 1 May 2017 15:50:11 -0400
-Content-Disposition: inline
+Received: from mail-io0-f181.google.com ([209.85.223.181]:35331 "EHLO
+        mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750769AbdEBQbc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 2 May 2017 12:31:32 -0400
+Received: by mail-io0-f181.google.com with SMTP id r16so165794023ioi.2
+        for <linux-ide@vger.kernel.org>; Tue, 02 May 2017 09:31:32 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+To: Tejun Heo <tj@kernel.org>, Juerg Haefliger <juerg.haefliger@hpe.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-hardening@lists.openwall.com, Tycho Andersen <tycho@docker.com>
 
-Hello, Linus.
+The XPFO [1] patchset may unmap pages from physmap if they happened to be
+destined for userspace. If such a page is unmapped, it needs to be
+remapped. Rather than test if a page is in the highmem/xpfo unmapped state,
+Christoph suggested [2] that we simply always map the page.
 
-The biggest core change is removal of SCT WRITE SAME support, which
-never worked properly.  Other than that, trivial updates in core code
-and specific embedded driver updates.
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Tycho Andersen <tycho@docker.com>
+CC: Juerg Haefliger <juerg.haefliger@hpe.com>
+CC: Tejun Heo <tj@kernel.org>
 
-Thanks.
+[1]: https://lkml.org/lkml/2016/11/4/245
+[2]: https://lkml.org/lkml/2016/11/4/253
+---
+I don't understand all the factors at play here, so thoughts are definitely
+welcome.
+---
+ drivers/ata/libata-sff.c | 50 +++++++++++++++++-------------------------------
+ 1 file changed, 18 insertions(+), 32 deletions(-)
 
-The following changes since commit c1ae3cfa0e89fa1a7ecc4c99031f5e9ae99d9201:
-
-  Linux 4.11-rc1 (2017-03-05 12:59:56 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.12
-
-for you to fetch changes up to 63ccc191649eb0f14a761074291551d0d2f85389:
-
-  libata: remove SCT WRITE SAME support (2017-04-28 18:09:59 -0400)
-
-----------------------------------------------------------------
-Bartlomiej Zolnierkiewicz (1):
-      ata: allow subsystem to be used on m32r and s390 archs
-
-Bartosz Golaszewski (2):
-      ata: ahci: add support for DaVinci DM816 SATA controller
-      dt-bindings: ata: add DT bindings for ahci-dm816 SATA controller
-
-Belen Sarabia (1):
-      Delete redundant return value check of platform_get_resource()
-
-Bhumika Goyal (1):
-      ata: constify of_device_id structures
-
-Boris Brezillon (1):
-      pata: remove the at91 driver
-
-Christoph Hellwig (2):
-      libata: reject passthrough WRITE SAME requests
-      libata: remove SCT WRITE SAME support
-
-Geliang Tang (1):
-      libata: use setup_deferrable_timer
-
-Jason Yan (1):
-      libata: make ata_sg_clean static over again
-
- .../devicetree/bindings/ata/ahci-dm816.txt         |  21 +
- drivers/ata/Kconfig                                |  18 +-
- drivers/ata/Makefile                               |   2 +-
- drivers/ata/ahci_dm816.c                           | 200 ++++++++
- drivers/ata/ahci_octeon.c                          |   5 -
- drivers/ata/libata-core.c                          |   8 +-
- drivers/ata/libata-scsi.c                          | 140 ++----
- drivers/ata/pata_at91.c                            | 503 ---------------------
- drivers/ata/pata_macio.c                           |   2 +-
- drivers/ata/pata_mpc52xx.c                         |   2 +-
- drivers/ata/pata_of_platform.c                     |   2 +-
- drivers/ata/sata_fsl.c                             |   2 +-
- drivers/ata/sata_mv.c                              |   2 +-
- include/linux/ata.h                                |   5 -
- 14 files changed, 277 insertions(+), 635 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ata/ahci-dm816.txt
- create mode 100644 drivers/ata/ahci_dm816.c
- delete mode 100644 drivers/ata/pata_at91.c
-
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 2bd92dc..8da2572 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -703,6 +703,7 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
+ 	struct page *page;
+ 	unsigned int offset;
+ 	unsigned char *buf;
++	unsigned long flags;
+ 
+ 	if (qc->curbytes == qc->nbytes - qc->sect_size)
+ 		ap->hsm_task_state = HSM_ST_LAST;
+@@ -716,24 +717,16 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
+ 
+ 	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
+ 
+-	if (PageHighMem(page)) {
+-		unsigned long flags;
+-
+-		/* FIXME: use a bounce buffer */
+-		local_irq_save(flags);
+-		buf = kmap_atomic(page);
++	/* FIXME: use a bounce buffer */
++	local_irq_save(flags);
++	buf = kmap_atomic(page);
+ 
+-		/* do the actual data transfer */
+-		ap->ops->sff_data_xfer(qc, buf + offset, qc->sect_size,
+-				       do_write);
++	/* do the actual data transfer */
++	ap->ops->sff_data_xfer(qc, buf + offset, qc->sect_size,
++			       do_write);
+ 
+-		kunmap_atomic(buf);
+-		local_irq_restore(flags);
+-	} else {
+-		buf = page_address(page);
+-		ap->ops->sff_data_xfer(qc, buf + offset, qc->sect_size,
+-				       do_write);
+-	}
++	kunmap_atomic(buf);
++	local_irq_restore(flags);
+ 
+ 	if (!do_write && !PageSlab(page))
+ 		flush_dcache_page(page);
+@@ -836,6 +829,7 @@ static int __atapi_pio_bytes(struct ata_queued_cmd *qc, unsigned int bytes)
+ 	struct page *page;
+ 	unsigned char *buf;
+ 	unsigned int offset, count, consumed;
++	unsigned long flags;
+ 
+ next_sg:
+ 	sg = qc->cursg;
+@@ -861,24 +855,16 @@ static int __atapi_pio_bytes(struct ata_queued_cmd *qc, unsigned int bytes)
+ 
+ 	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
+ 
+-	if (PageHighMem(page)) {
+-		unsigned long flags;
+-
+-		/* FIXME: use bounce buffer */
+-		local_irq_save(flags);
+-		buf = kmap_atomic(page);
++	/* FIXME: use bounce buffer */
++	local_irq_save(flags);
++	buf = kmap_atomic(page);
+ 
+-		/* do the actual data transfer */
+-		consumed = ap->ops->sff_data_xfer(qc, buf + offset,
+-								count, rw);
++	/* do the actual data transfer */
++	consumed = ap->ops->sff_data_xfer(qc, buf + offset,
++							count, rw);
+ 
+-		kunmap_atomic(buf);
+-		local_irq_restore(flags);
+-	} else {
+-		buf = page_address(page);
+-		consumed = ap->ops->sff_data_xfer(qc, buf + offset,
+-								count, rw);
+-	}
++	kunmap_atomic(buf);
++	local_irq_restore(flags);
+ 
+ 	bytes -= min(bytes, consumed);
+ 	qc->curbytes += count;
 -- 
-tejun
+2.9.3
+
