@@ -1,31 +1,56 @@
-From: "H.A" <mioara@viata-libera.ro>
-Subject: Re:
-Date: Wed, 03 May 2017 07:23:13 +0100
-Message-ID: <20170503062332.70F9C84AB6@mail.viata-libera.ro>
-Reply-To: helenaroberts99@gmail.com
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] ata-sff: always map page before data transfer
+Date: Thu, 4 May 2017 02:51:34 -0700
+Message-ID: <20170504095134.GA14372@infradead.org>
+References: <20170502162932.12578-1-tycho@docker.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.viata-libera.ro ([81.12.239.110]:36854 "EHLO
-        mail.viata-libera.ro" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751715AbdECGdg (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 3 May 2017 02:33:36 -0400
-Content-Description: Mail message body
+Received: from bombadil.infradead.org ([65.50.211.133]:36768 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751811AbdEDJvi (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 4 May 2017 05:51:38 -0400
+Content-Disposition: inline
+In-Reply-To: <20170502162932.12578-1-tycho@docker.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Recipients <mioara@viata-libera.ro>
+To: Tycho Andersen <tycho@docker.com>
+Cc: Tejun Heo <tj@kernel.org>, Juerg Haefliger <juerg.haefliger@hpe.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-hardening@lists.openwall.com
 
-With profound love in my heart, I Kindly Oblige your interest to very important proposal.. It is Truly Divine and require your utmost attention..........
+> I don't understand all the factors at play here, so thoughts are definitely
+> welcome.
 
-S hlubokou láskou v mém srdci, Laskave jsem prinutit svuj zájem k návrhu .. Je velmi duležité, skutecne Divine a vyžadují vaši nejvyšší pozornost.
+I don't fully understand the old code either.  One thing that is weird
+is the "use a bounce buffer comment" which doesn't make any sense.
 
-  Kontaktujte me prímo pres: helenaroberts99@gmail.com pro úplné podrobnosti.complete.
+The other is the local_irq_save, which isn't really needed for
+kmap_atomic to start with, but maybe that's the reason why the original
+author didn't want to do it unconditionally?
 
+So based on that:
 
-HELINA .A ROBERTS
+> +	/* FIXME: use a bounce buffer */
 
----
-This email has been checked for viruses by Avast antivirus software.
-https://www.avast.com/antivirus
+drop this comment..
 
+> +	local_irq_save(flags);
+
+.. remove the local_irq_save/local_irq_restore ..
+
+> +	/* do the actual data transfer */
+> +	ap->ops->sff_data_xfer(qc, buf + offset, qc->sect_size,
+> +			       do_write);
+
+.. and a nice alittle cleanup move the do_write onto the previous line.
+
+> +	/* FIXME: use bounce buffer */
+> +	local_irq_save(flags);
+> +	buf = kmap_atomic(page);
+>  
+> +	/* do the actual data transfer */
+> +	consumed = ap->ops->sff_data_xfer(qc, buf + offset,
+> +							count, rw);
+
+And same here.
+
+And we should be fine.
