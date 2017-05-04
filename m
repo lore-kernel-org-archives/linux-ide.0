@@ -1,30 +1,103 @@
-From: "Mayrhofer Family" <info@charity.net>
-Subject: RE: Donation Award
-Date: Thu, 04 May 2017 19:16:34 +0800
-Message-ID: <20170504112017.22DAD40DA25@mx.ufrnet.br>
-Reply-To: tmason9w4r@gmail.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
+From: Tycho Andersen <tycho@docker.com>
+Subject: [PATCH v2] ata-sff: always map page before data transfer
+Date: Thu,  4 May 2017 16:15:51 -0600
+Message-ID: <20170504221551.6458-1-tycho@docker.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx.ufrnet.br ([177.20.144.208]:45510 "EHLO mx.ufrnet.br"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751337AbdEDMr0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 4 May 2017 08:47:26 -0400
-Content-Description: Mail message body
+Received: from mail-it0-f51.google.com ([209.85.214.51]:34576 "EHLO
+        mail-it0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751473AbdEDWRF (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 4 May 2017 18:17:05 -0400
+Received: by mail-it0-f51.google.com with SMTP id 131so1998594itz.1
+        for <linux-ide@vger.kernel.org>; Thu, 04 May 2017 15:17:05 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Recipients <info@charity.net>
+To: Tejun Heo <tj@kernel.org>, Juerg Haefliger <juerg.haefliger@hpe.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-hardening@lists.openwall.com, Tycho Andersen <tycho@docker.com>
 
-Good Day,
+The XPFO [1] patchset may unmap pages from physmap if they happened to be
+destined for userspace. If such a page is unmapped, it needs to be
+remapped. Rather than test if a page is in the highmem/xpfo unmapped state,
+Christoph suggested [2] that we simply always map the page.
 
-My wife and I have awarded you with a donation of $ 1,000,000.00 Dollars from part of our Jackpot Lottery of 50 Million Dollars, respond with your details for claims.
+v2: * drop comment about bounce buffer
+    * don't save IRQs before kmap/unmap
+    * formatting
 
-We await your earliest response and God Bless you.
+Suggested-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Tycho Andersen <tycho@docker.com>
+CC: Juerg Haefliger <juerg.haefliger@hpe.com>
+CC: Tejun Heo <tj@kernel.org>
 
-Friedrich And Annand Mayrhofer.
-
+[1]: https://lkml.org/lkml/2016/11/4/245
+[2]: https://lkml.org/lkml/2016/11/4/253
 ---
-This email has been checked for viruses by Avast antivirus software.
-https://www.avast.com/antivirus
+v1: https://lkml.org/lkml/2017/5/2/404
+---
+ drivers/ata/libata-sff.c | 44 ++++++++------------------------------------
+ 1 file changed, 8 insertions(+), 36 deletions(-)
+
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 2bd92dca3e62..01cf07c919bc 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -716,24 +716,10 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
+ 
+ 	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
+ 
+-	if (PageHighMem(page)) {
+-		unsigned long flags;
+-
+-		/* FIXME: use a bounce buffer */
+-		local_irq_save(flags);
+-		buf = kmap_atomic(page);
+-
+-		/* do the actual data transfer */
+-		ap->ops->sff_data_xfer(qc, buf + offset, qc->sect_size,
+-				       do_write);
+-
+-		kunmap_atomic(buf);
+-		local_irq_restore(flags);
+-	} else {
+-		buf = page_address(page);
+-		ap->ops->sff_data_xfer(qc, buf + offset, qc->sect_size,
+-				       do_write);
+-	}
++	/* do the actual data transfer */
++	buf = kmap_atomic(page);
++	ap->ops->sff_data_xfer(qc, buf + offset, qc->sect_size, do_write);
++	kunmap_atomic(buf);
+ 
+ 	if (!do_write && !PageSlab(page))
+ 		flush_dcache_page(page);
+@@ -861,24 +847,10 @@ static int __atapi_pio_bytes(struct ata_queued_cmd *qc, unsigned int bytes)
+ 
+ 	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
+ 
+-	if (PageHighMem(page)) {
+-		unsigned long flags;
+-
+-		/* FIXME: use bounce buffer */
+-		local_irq_save(flags);
+-		buf = kmap_atomic(page);
+-
+-		/* do the actual data transfer */
+-		consumed = ap->ops->sff_data_xfer(qc, buf + offset,
+-								count, rw);
+-
+-		kunmap_atomic(buf);
+-		local_irq_restore(flags);
+-	} else {
+-		buf = page_address(page);
+-		consumed = ap->ops->sff_data_xfer(qc, buf + offset,
+-								count, rw);
+-	}
++	/* do the actual data transfer */
++	buf = kmap_atomic(page);
++	consumed = ap->ops->sff_data_xfer(qc, buf + offset, count, rw);
++	kunmap_atomic(buf);
+ 
+ 	bytes -= min(bytes, consumed);
+ 	qc->curbytes += count;
+-- 
+2.11.0
 
