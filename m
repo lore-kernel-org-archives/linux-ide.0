@@ -1,105 +1,58 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH 2/4] ata: Add DT bindings for the Gemini SATA bridge
-Date: Mon, 08 May 2017 12:49:03 +0200
-Message-ID: <3791456.ZibJefW5cI@amdc3058>
-References: <20170506121053.11554-1-linus.walleij@linaro.org>
-        <CGME20170506121119epcas5p437ea69e802ba94bd7df83d0bbac1b0bc@epcas5p4.samsung.com>
-        <20170506121053.11554-2-linus.walleij@linaro.org>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: Race to power off harming SATA SSDs
+Date: Mon, 8 May 2017 12:49:53 +0200
+Message-ID: <20170508104953.GA17773@amd>
+References: <20170410232118.GA4816@khazad-dum.debian.net>
+ <20170410235206.GA28603@wtj.duckdns.org>
+ <20170507204007.GA25628@atrey.karlin.mff.cuni.cz>
+ <1494228094.6528.14.camel@infradead.org>
+ <20170508092846.GA11029@amd>
+ <1494236048.6528.32.camel@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:11479 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754077AbdEHKtI (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 8 May 2017 06:49:08 -0400
-In-reply-to: <20170506121053.11554-2-linus.walleij@linaro.org>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:57628 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752625AbdEHKuB (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 8 May 2017 06:50:01 -0400
+Content-Disposition: inline
+In-Reply-To: <1494236048.6528.32.camel@infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Janos Laube <janos.dev@gmail.com>, Paulius Zaleckas <paulius.zaleckas@gmail.com>, openwrt-devel@openwrt.org, linux-arm-kernel@lists.infradead.org, Hans Ulli Kroll <ulli.kroll@googlemail.com>, Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org, John Feng-Hsin Chiang <john453@faraday-tech.com>, Greentime Hu <green.hu@gmail.com>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: Tejun Heo <tj@kernel.org>, Henrique de Moraes Holschuh <hmh@hmh.eng.br>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, boris.brezillon@free-electrons.com, linux-mtd@lists.infradead.org
 
-On Saturday, May 06, 2017 02:10:51 PM Linus Walleij wrote:
-> This adds device tree bindings for the Cortina Systems Gemini
-> PATA to SATA bridge.
+On Mon 2017-05-08 10:34:08, David Woodhouse wrote:
+> On Mon, 2017-05-08 at 11:28 +0200, Pavel Machek wrote:
+> > 
+> > Are you sure you have it right in JFFS2? Do you journal block erases?
+> > Apparently, that was pretty much non-issue on older flashes.
 > 
-> Cc: devicetree@vger.kernel.org
-> Cc: John Feng-Hsin Chiang <john453@faraday-tech.com>
-> Cc: Greentime Hu <green.hu@gmail.com>
-> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
-> ---
->  .../bindings/ata/cortina,gemini-sata-bridge.txt    | 55 ++++++++++++++++++++++
->  1 file changed, 55 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ata/cortina,gemini-sata-bridge.txt
+> It isn't necessary in JFFS2. It is a *purely* log-structured file
+> system (which is why it doesn't scale well past the 1GiB or so that we
+> made it handle for OLPC).
 > 
-> diff --git a/Documentation/devicetree/bindings/ata/cortina,gemini-sata-bridge.txt b/Documentation/devicetree/bindings/ata/cortina,gemini-sata-bridge.txt
-> new file mode 100644
-> index 000000000000..9fe92818b2fb
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/cortina,gemini-sata-bridge.txt
-> @@ -0,0 +1,55 @@
-> +* Cortina Systems Gemini SATA Bridge
-> +
-> +The Gemini SATA bridge in a SoC-internal PATA to SATA bridge that
-> +takes two Faraday Technology FTIDE010 PATA controllers and bridges
-> +them in different configurations to two SATA ports.
-> +
-> +Required properties:
-> +- compatible: should be
-> +  "cortina,gemini-sata-bridge"
-> +- reg: registers and size for the block
-> +- resets: phandles to the reset lines for both SATA bridges
-> +- reset-names: must be "sata0", "sata1"
-> +- clocks: phandles to the compulsory peripheral clocks
-> +- clock-names: must be "SATA0_PCLK", "SATA1_PCLK"
-> +- syscon: a phandle to the global Gemini system controller
-> +- cortina,gemini-ata-muxmode: tell the desired multiplexing mode for
-> +  the ATA controller and SATA bridges. Values 0..3:
-> +  Mode 0: ata0 master <-> sata0
-> +          ata1 master <-> sata1
-> +          ata0 slave interface brought out on IDE pads
-> +  Mode 1: ata0 master <-> sata0
-> +          ata1 master <-> sata1
-> +          ata1 slave interface brought out on IDE pads
-> +  Mode 2: ata1 master <-> sata1
-> +          ata1 slave  <-> sata0
-> +          ata0 master and slave interfaces brought out
-> +               on IDE pads
-> +  Mode 3: ata0 master <-> sata0
-> +          ata1 slave  <-> sata1
+> So we don't erase a block until all its contents are obsolete. And if
+> we fail to complete the erase... well the contents are either going to
+> fail a CRC check, or... still be obsoleted by later entries elsewhere.
+> 
+> And even if it *looks* like an erase has completed and the block is all
+> 0xFF, we erase it again and write a 'clean marker' to it to indicate
+> that the erase was completed successfully. Because otherwise it can't
+> be trusted.
 
-ata0 slave?
+Aha, nice, so it looks like ubifs is a step back here.
 
-> +          ata1 master and slave interfaces brought out
-> +               on IDE pads
-> +
-> +Optional boolean properties:
-> +- cortina,gemini-enable-ide-pins: enables the PATA to IDE connection.
-> +  The muxmode setting decides whether ATA0 or ATA1 is brought out,
-> +  and whether master, slave or both interfaces get brought out.
-> +- cortina,gemini-enable-sata-bridge: enables the PATA to SATA bridge
-> +  inside the Gemnini SoC. The Muxmode decides what PATA blocks will
-> +  be muxed out and how.
-> +
-> +Example:
-> +
-> +sata: sata@46000000 {
-> +	compatible = "cortina,gemini-sata-bridge";
-> +	reg = <0x46000000 0x100>;
-> +	resets = <&rcon 26>, <&rcon 27>;
-> +	reset-names = "sata0", "sata1";
-> +	clocks = <&gcc GEMINI_CLK_GATE_SATA0>,
-> +		 <&gcc GEMINI_CLK_GATE_SATA1>;
-> +	clock-names = "SATA0_PCLK", "SATA1_PCLK";
-> +	syscon = <&syscon>;
-> +	cortina,gemini-ata-muxmode = <3>;
-> +	cortina,gemini-enable-ide-pins;
-> +	cortina,gemini-enable-sata-bridge;
-> +};
+'clean marker' is a good idea... empty pages have plenty of space.
+
+How do you handle the issue during regular write? Always ignore last
+successfully written block?
+
+Do you handle "paired pages" problem on MLC?
 
 Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+									Pavel
 
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
