@@ -1,60 +1,34 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: Race to power off harming SATA SSDs
-Date: Mon, 8 May 2017 23:36:05 +0200
-Message-ID: <20170508213605.GA12687@amd>
-References: <1494228094.6528.14.camel@infradead.org>
- <alpine.DEB.2.11.1705080930150.6882@lnxricardw1>
- <1494231215.6528.22.camel@infradead.org>
- <alpine.DEB.2.11.1705081034420.6882@lnxricardw1>
- <1494233673.6528.28.camel@infradead.org>
- <alpine.DEB.2.11.1705081059580.6882@lnxricardw1>
- <7ee84982-cfad-94d7-4e22-4edbeb852b32@redhat.com>
- <1494238390.6528.42.camel@infradead.org>
- <20170508135005.0b9b200b@bbrezillon>
- <1494258011.5407.18.camel@infradead.org>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] ide: don't call memcpy with the same source and
+ destination
+Date: Mon, 08 May 2017 17:37:21 -0400 (EDT)
+Message-ID: <20170508.173721.1587256787895455007.davem@davemloft.net>
+References: <alpine.LRH.2.02.1704141433280.10706@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:47537 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751216AbdEHVgH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 8 May 2017 17:36:07 -0400
-Content-Disposition: inline
-In-Reply-To: <1494258011.5407.18.camel@infradead.org>
+Received: from shards.monkeyblade.net ([184.105.139.130]:41622 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751061AbdEHVhX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 8 May 2017 17:37:23 -0400
+In-Reply-To: <alpine.LRH.2.02.1704141433280.10706@file01.intranet.prod.int.rdu2.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: Boris Brezillon <boris.brezillon@free-electrons.com>, Hans de Goede <hdegoede@redhat.com>, Ricard Wanderlof <ricard.wanderlof@axis.com>, Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org, Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: mpatocka@redhat.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, jejb@parisc-linux.org, deller@gmx.de, dave.anglin@bell.net, linux-parisc@vger.kernel.org
 
-On Mon 2017-05-08 16:40:11, David Woodhouse wrote:
-> On Mon, 2017-05-08 at 13:50 +0200, Boris Brezillon wrote:
-> > On Mon, 08 May 2017 11:13:10 +0100
-> > David Woodhouse <dwmw2@infradead.org> wrote:
-> > 
-> > > 
-> > > On Mon, 2017-05-08 at 11:09 +0200, Hans de Goede wrote:
-> > > > 
-> > > > You're forgetting that the SSD itself (this thread is about SSDs) also has
-> > > > a major software component which is doing housekeeping all the time, so even
-> > > > if the main CPU gets reset the SSD's controller may still happily be erasing
-> > > > blocks.  
-> > > We're not really talking about SSDs at all any more; we're talking
-> > > about real flash with real maintainable software.
-> >
-> > It's probably a good sign that this new discussion should take place in
-> > a different thread :-).
+From: Mikulas Patocka <mpatocka@redhat.com>
+Date: Fri, 14 Apr 2017 14:35:33 -0400 (EDT)
+
+> The parisc architecture recently reimplemented the memcpy function and
+> their reimplementation crashed when source and destination overlapped.
 > 
-> Well, maybe. But it was a silly thread in the first place. SATA SSDs
-> aren't *expected* to be reliable.
+> The crash happened in the function ide_complete_cmd where memcpy is called
+> with the same source and destination pointer. According to the C
+> specification, memcpy behavior is undefined if the source and destination
+> range overlaps. This patches fixes the undefined behavior.
+> 
+> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
 
-Citation needed?
-
-I'm pretty sure SATA SSDs are expected to be reliable, up to maximum
-amount of gigabytes written (specified by manufacturer), as long as
-you don't cut power without warning.
-
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Applied.
