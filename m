@@ -1,61 +1,38 @@
-From: Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/4] ata: Add DT bindings for Faraday Technology FTIDE010
-Date: Mon, 8 May 2017 22:26:49 +0200
-Message-ID: <CACRpkdbmOsrxKX8=a7bvcF+c=Q2tfwYQVt0=cz+_jhDyadwa2A@mail.gmail.com>
-References: <CGME20170506121118epcas2p1b2a2d1a8005a37582a73c0e7be4b1a1b@epcas2p1.samsung.com>
- <20170506121053.11554-1-linus.walleij@linaro.org> <1678111.DmiVNKW3dQ@amdc3058>
+From: Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: [PATCH 2/4] ata: Add DT bindings for the Gemini SATA bridge
+Date: Mon, 8 May 2017 22:33:15 +0200
+Message-ID: <CACRpkdYz9Oka0SGJDTr=y4EN-VfggbuKY2s5X43oXg1dgjh1nw@mail.gmail.com>
+References: <20170506121053.11554-1-linus.walleij@linaro.org>
+ <CGME20170506121119epcas5p437ea69e802ba94bd7df83d0bbac1b0bc@epcas5p4.samsung.com>
+ <20170506121053.11554-2-linus.walleij@linaro.org> <3791456.ZibJefW5cI@amdc3058>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1678111.DmiVNKW3dQ@amdc3058>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Janos Laube <janos.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Paulius Zaleckas <paulius.zaleckas-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, openwrt-devel-p3rKhJxN3npAfugRpC6u6w@public.gmane.org, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Hans Ulli Kroll <ulli.kroll-gM/Ye1E23mwN+BqQ9rBEUg@public.gmane.org>, Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, John Feng-Hsin Chiang <john453-w0jeGXs5+AWXmMXjJBpWqg@public.gmane.org>, Greentime Hu <green.hu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-io0-f177.google.com ([209.85.223.177]:35405 "EHLO
+        mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753543AbdEHUdR (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 8 May 2017 16:33:17 -0400
+Received: by mail-io0-f177.google.com with SMTP id f102so57481875ioi.2
+        for <linux-ide@vger.kernel.org>; Mon, 08 May 2017 13:33:17 -0700 (PDT)
+In-Reply-To: <3791456.ZibJefW5cI@amdc3058>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Janos Laube <janos.dev@gmail.com>, Paulius Zaleckas <paulius.zaleckas@gmail.com>, openwrt-devel@openwrt.org, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Hans Ulli Kroll <ulli.kroll@googlemail.com>, Florian Fainelli <f.fainelli@gmail.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, John Feng-Hsin Chiang <john453@faraday-tech.com>, Greentime Hu <green.hu@gmail.com>
 
-On Mon, May 8, 2017 at 12:47 PM, Bartlomiej Zolnierkiewicz
-<b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org> wrote:
+On Mon, May 8, 2017 at 12:49 PM, Bartlomiej Zolnierkiewicz
+<b.zolnierkie@samsung.com> wrote:
+> On Saturday, May 06, 2017 02:10:51 PM Linus Walleij wrote:
 
-> Also for all current drivers we just put timing values (or a logic
-> to calculate them from the standard ATA timings) into the driver
-> itself and not device tree (as they are based on values are dictated
-> by ATA standard and should not change for a given controller type).
+>> +  Mode 3: ata0 master <-> sata0
+>> +          ata1 slave  <-> sata1
+>
+> ata0 slave?
+>
+>> +          ata1 master and slave interfaces brought out
+>> +               on IDE pads
 
-I had it like that at first (and I can of course switch it back). But I
-came to think this is better.
-
-I was looking at these values from the point that it depends a bit
-on the silicon where it is synthesized. So the vendor tree has
-things like this:
-
-#ifndef SL2312_FPGA_IDE
-static unsigned char PIO_TIMING[5] = { 0xaa, 0xa3, 0xa1, 0x33, 0x31 };
-static unsigned char TIMING_MDMA_50M[3] = { 0x66, 0x22, 0x21 };
-static unsigned char TIMING_MDMA_66M[3] = { 0x88, 0x32, 0x31 };
-static unsigned char TIMING_UDMA_50M[6] = { 0x33, 0x31, 0x21, 0x21,
-0x11, 0x91 };
-static unsigned char TIMING_UDMA_66M[7] = { 0x44, 0x42, 0x31, 0x21,
-0x11, 0x91,  0x91};
-#else
-static unsigned char PIO_TIMING[5] = { 0x88, 0x82, 0x81, 0x32, 0x21 };
-static unsigned char TIMING_MDMA_50M[3] = { 0x33, 0x11, 0x11 };
-static unsigned char TIMING_MDMA_66M[3] = { 0x33, 0x11, 0x11 };
-static unsigned char TIMING_UDMA_50M[6] = { 0x22, 0x11, 0x11, 0x11 };
-static unsigned char TIMING_UDMA_66M[7] = { 0x22, 0x11, 0x11, 0x11 };
-#endif
-
-(From D-Link DIR-685 source release from Storlink/Cortina board support.)
-
-So depending on whether they use an FPGA or an ASIC the values are
-different, no matter what frequency (50 or 66 MHz) is used. So it is not
-derived from frequency.
-
-So I think it makes most sense to have it in the device tree as we don't
-know what designs are out there.
+Of course. Thanks for reading close, much appreciated!
 
 Yours,
 Linus Walleij
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
