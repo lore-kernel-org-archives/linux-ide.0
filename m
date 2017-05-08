@@ -1,51 +1,61 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Race to power off harming SATA SSDs
-Date: Mon, 8 May 2017 15:04:11 -0400
-Message-ID: <20170508190411.GB12079@htj.duckdns.org>
-References: <1494231215.6528.22.camel@infradead.org>
- <alpine.DEB.2.11.1705081034420.6882@lnxricardw1>
- <1494233673.6528.28.camel@infradead.org>
- <alpine.DEB.2.11.1705081059580.6882@lnxricardw1>
- <7ee84982-cfad-94d7-4e22-4edbeb852b32@redhat.com>
- <1494238390.6528.42.camel@infradead.org>
- <20170508135005.0b9b200b@bbrezillon>
- <20170508164322.GA9781@amd>
- <20170508174303.GA12079@htj.duckdns.org>
- <20170508185615.GA16268@amd>
+From: Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 1/4] ata: Add DT bindings for Faraday Technology FTIDE010
+Date: Mon, 8 May 2017 22:26:49 +0200
+Message-ID: <CACRpkdbmOsrxKX8=a7bvcF+c=Q2tfwYQVt0=cz+_jhDyadwa2A@mail.gmail.com>
+References: <CGME20170506121118epcas2p1b2a2d1a8005a37582a73c0e7be4b1a1b@epcas2p1.samsung.com>
+ <20170506121053.11554-1-linus.walleij@linaro.org> <1678111.DmiVNKW3dQ@amdc3058>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170508185615.GA16268@amd>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Boris Brezillon <boris.brezillon@free-electrons.com>, David Woodhouse <dwmw2@infradead.org>, Hans de Goede <hdegoede@redhat.com>, Ricard Wanderlof <ricard.wanderlof@axis.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org, Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1678111.DmiVNKW3dQ@amdc3058>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Janos Laube <janos.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Paulius Zaleckas <paulius.zaleckas-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, openwrt-devel-p3rKhJxN3npAfugRpC6u6w@public.gmane.org, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Hans Ulli Kroll <ulli.kroll-gM/Ye1E23mwN+BqQ9rBEUg@public.gmane.org>, Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, John Feng-Hsin Chiang <john453-w0jeGXs5+AWXmMXjJBpWqg@public.gmane.org>, Greentime Hu <green.hu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-Hello,
+On Mon, May 8, 2017 at 12:47 PM, Bartlomiej Zolnierkiewicz
+<b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org> wrote:
 
-On Mon, May 08, 2017 at 08:56:15PM +0200, Pavel Machek wrote:
-> Well... the SMART counter tells us that the device was not shut down
-> correctly. Do we have reason to believe that it is _not_ telling us
-> truth? It is more than one device.
+> Also for all current drivers we just put timing values (or a logic
+> to calculate them from the standard ATA timings) into the driver
+> itself and not device tree (as they are based on values are dictated
+> by ATA standard and should not change for a given controller type).
 
-It also finished power off command successfully.
+I had it like that at first (and I can of course switch it back). But I
+came to think this is better.
 
-> SSDs die when you power them without warning:
-> http://lkcl.net/reports/ssd_analysis.html
-> 
-> What kind of data would you like to see? "I have been using linux and
-> my SSD died"? We have had such reports. "I have killed 10 SSDs in a
-> week then I added one second delay, and this SSD survived 6 months"?
+I was looking at these values from the point that it depends a bit
+on the silicon where it is synthesized. So the vendor tree has
+things like this:
 
-Repeating shutdown cycles and showing that the device actually is in
-trouble would be great.  It doesn't have to reach full-on device
-failure.  Showing some sign of corruption would be enough - increase
-in CRC failure counts, bad block counts (a lot of devices report
-remaining reserve or lifetime in one way or the other) and so on.
-Right now, it might as well be just the SMART counter being funky.
+#ifndef SL2312_FPGA_IDE
+static unsigned char PIO_TIMING[5] = { 0xaa, 0xa3, 0xa1, 0x33, 0x31 };
+static unsigned char TIMING_MDMA_50M[3] = { 0x66, 0x22, 0x21 };
+static unsigned char TIMING_MDMA_66M[3] = { 0x88, 0x32, 0x31 };
+static unsigned char TIMING_UDMA_50M[6] = { 0x33, 0x31, 0x21, 0x21,
+0x11, 0x91 };
+static unsigned char TIMING_UDMA_66M[7] = { 0x44, 0x42, 0x31, 0x21,
+0x11, 0x91,  0x91};
+#else
+static unsigned char PIO_TIMING[5] = { 0x88, 0x82, 0x81, 0x32, 0x21 };
+static unsigned char TIMING_MDMA_50M[3] = { 0x33, 0x11, 0x11 };
+static unsigned char TIMING_MDMA_66M[3] = { 0x33, 0x11, 0x11 };
+static unsigned char TIMING_UDMA_50M[6] = { 0x22, 0x11, 0x11, 0x11 };
+static unsigned char TIMING_UDMA_66M[7] = { 0x22, 0x11, 0x11, 0x11 };
+#endif
 
-Thanks.
+(From D-Link DIR-685 source release from Storlink/Cortina board support.)
 
--- 
-tejun
+So depending on whether they use an FPGA or an ASIC the values are
+different, no matter what frequency (50 or 66 MHz) is used. So it is not
+derived from frequency.
+
+So I think it makes most sense to have it in the device tree as we don't
+know what designs are out there.
+
+Yours,
+Linus Walleij
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
