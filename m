@@ -1,113 +1,60 @@
-From: Tom Psyborg <pozega.tomislav@gmail.com>
-Subject: Re: [PATCH 2/4] ata: Add DT bindings for the Gemini
- SATA bridge
-Date: Mon, 8 May 2017 23:16:57 +0200
-Message-ID: <CAKR_QVJTbLMzqsUTEZJOquZ9T5aQ1_=73WAoRWrm+QK9wFhngA@mail.gmail.com>
-References: <20170506121053.11554-1-linus.walleij@linaro.org>
- <CGME20170506121119epcas5p437ea69e802ba94bd7df83d0bbac1b0bc@epcas5p4.samsung.com>
- <20170506121053.11554-2-linus.walleij@linaro.org>
- <3791456.ZibJefW5cI@amdc3058>
- <CACRpkdYz9Oka0SGJDTr=y4EN-VfggbuKY2s5X43oXg1dgjh1nw@mail.gmail.com>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: Race to power off harming SATA SSDs
+Date: Mon, 8 May 2017 23:36:05 +0200
+Message-ID: <20170508213605.GA12687@amd>
+References: <1494228094.6528.14.camel@infradead.org>
+ <alpine.DEB.2.11.1705080930150.6882@lnxricardw1>
+ <1494231215.6528.22.camel@infradead.org>
+ <alpine.DEB.2.11.1705081034420.6882@lnxricardw1>
+ <1494233673.6528.28.camel@infradead.org>
+ <alpine.DEB.2.11.1705081059580.6882@lnxricardw1>
+ <7ee84982-cfad-94d7-4e22-4edbeb852b32@redhat.com>
+ <1494238390.6528.42.camel@infradead.org>
+ <20170508135005.0b9b200b@bbrezillon>
+ <1494258011.5407.18.camel@infradead.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============8725780709618989982=="
-Return-path: <openwrt-devel-bounces@lists.openwrt.org>
-In-Reply-To: <CACRpkdYz9Oka0SGJDTr=y4EN-VfggbuKY2s5X43oXg1dgjh1nw@mail.gmail.com>
-List-Unsubscribe: <https://lists.openwrt.org/cgi-bin/mailman/options/openwrt-devel>,
- <mailto:openwrt-devel-request@lists.openwrt.org?subject=unsubscribe>
-List-Archive: <http://lists.openwrt.org/pipermail/openwrt-devel/>
-List-Post: <mailto:openwrt-devel@lists.openwrt.org>
-List-Help: <mailto:openwrt-devel-request@lists.openwrt.org?subject=help>
-List-Subscribe: <https://lists.openwrt.org/cgi-bin/mailman/listinfo/openwrt-devel>,
- <mailto:openwrt-devel-request@lists.openwrt.org?subject=subscribe>
-Errors-To: openwrt-devel-bounces@lists.openwrt.org
-Sender: "openwrt-devel" <openwrt-devel-bounces@lists.openwrt.org>
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: openwrt-devel@openwrt.org, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, John Feng-Hsin Chiang <john453@faraday-tech.com>, Paulius Zaleckas <paulius.zaleckas@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, Greentime Hu <green.hu@gmail.com>, Tejun Heo <tj@kernel.org>, Janos Laube <janos.dev@gmail.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-List-Id: linux-ide@vger.kernel.org
-
---===============8725780709618989982==
-Content-Type: multipart/alternative; boundary=94eb2c047d0a5b94ef054f09c256
-
---94eb2c047d0a5b94ef054f09c256
-Content-Type: text/plain; charset=UTF-8
-
-Is it ever going to be added so this endless spam can end?
-
-
-On 8 May 2017 at 22:33, Linus Walleij <linus.walleij@linaro.org> wrote:
-
-> On Mon, May 8, 2017 at 12:49 PM, Bartlomiej Zolnierkiewicz
-> <b.zolnierkie@samsung.com> wrote:
-> > On Saturday, May 06, 2017 02:10:51 PM Linus Walleij wrote:
->
-> >> +  Mode 3: ata0 master <-> sata0
-> >> +          ata1 slave  <-> sata1
-> >
-> > ata0 slave?
-> >
-> >> +          ata1 master and slave interfaces brought out
-> >> +               on IDE pads
->
-> Of course. Thanks for reading close, much appreciated!
->
-> Yours,
-> Linus Walleij
-> _______________________________________________
-> openwrt-devel mailing list
-> openwrt-devel@lists.openwrt.org
-> https://lists.openwrt.org/cgi-bin/mailman/listinfo/openwrt-devel
->
-
---94eb2c047d0a5b94ef054f09c256
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"ltr">Is it ever going to be added so this endless spam can end?=
-<br><div><br></div></div><div class=3D"gmail_extra"><br><div class=3D"gmail=
-_quote">On 8 May 2017 at 22:33, Linus Walleij <span dir=3D"ltr">&lt;<a href=
-=3D"mailto:linus.walleij@linaro.org" target=3D"_blank">linus.walleij@linaro=
-.org</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" style=3D"ma=
-rgin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">On Mon, May 8,=
- 2017 at 12:49 PM, Bartlomiej Zolnierkiewicz<br>
-&lt;<a href=3D"mailto:b.zolnierkie@samsung.com">b.zolnierkie@samsung.com</a=
->&gt; wrote:<br>
-&gt; On Saturday, May 06, 2017 02:10:51 PM Linus Walleij wrote:<br>
-<br>
-&gt;&gt; +=C2=A0 Mode 3: ata0 master &lt;-&gt; sata0<br>
-&gt;&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ata1 slave=C2=A0 &lt;-&gt; sat=
-a1<br>
-&gt;<br>
-&gt; ata0 slave?<br>
-&gt;<br>
-&gt;&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 ata1 master and slave interfac=
-es brought out<br>
-&gt;&gt; +=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0on IDE pad=
-s<br>
-<br>
-Of course. Thanks for reading close, much appreciated!<br>
-<br>
-Yours,<br>
-Linus Walleij<br>
-______________________________<wbr>_________________<br>
-openwrt-devel mailing list<br>
-<a href=3D"mailto:openwrt-devel@lists.openwrt.org">openwrt-devel@lists.open=
-wrt.<wbr>org</a><br>
-<a href=3D"https://lists.openwrt.org/cgi-bin/mailman/listinfo/openwrt-devel=
-" rel=3D"noreferrer" target=3D"_blank">https://lists.openwrt.org/cgi-<wbr>b=
-in/mailman/listinfo/openwrt-<wbr>devel</a><br>
-</blockquote></div><br></div>
-
---94eb2c047d0a5b94ef054f09c256--
-
---===============8725780709618989982==
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:47537 "EHLO
+        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751216AbdEHVgH (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 8 May 2017 17:36:07 -0400
 Content-Disposition: inline
+In-Reply-To: <1494258011.5407.18.camel@infradead.org>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: Boris Brezillon <boris.brezillon@free-electrons.com>, Hans de Goede <hdegoede@redhat.com>, Ricard Wanderlof <ricard.wanderlof@axis.com>, Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org, Henrique de Moraes Holschuh <hmh@hmh.eng.br>
 
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18Kb3BlbndydC1k
-ZXZlbCBtYWlsaW5nIGxpc3QKb3BlbndydC1kZXZlbEBsaXN0cy5vcGVud3J0Lm9yZwpodHRwczov
-L2xpc3RzLm9wZW53cnQub3JnL2NnaS1iaW4vbWFpbG1hbi9saXN0aW5mby9vcGVud3J0LWRldmVs
-Cg==
+On Mon 2017-05-08 16:40:11, David Woodhouse wrote:
+> On Mon, 2017-05-08 at 13:50 +0200, Boris Brezillon wrote:
+> > On Mon, 08 May 2017 11:13:10 +0100
+> > David Woodhouse <dwmw2@infradead.org> wrote:
+> > 
+> > > 
+> > > On Mon, 2017-05-08 at 11:09 +0200, Hans de Goede wrote:
+> > > > 
+> > > > You're forgetting that the SSD itself (this thread is about SSDs) also has
+> > > > a major software component which is doing housekeeping all the time, so even
+> > > > if the main CPU gets reset the SSD's controller may still happily be erasing
+> > > > blocks.  
+> > > We're not really talking about SSDs at all any more; we're talking
+> > > about real flash with real maintainable software.
+> >
+> > It's probably a good sign that this new discussion should take place in
+> > a different thread :-).
+> 
+> Well, maybe. But it was a silly thread in the first place. SATA SSDs
+> aren't *expected* to be reliable.
 
---===============8725780709618989982==--
+Citation needed?
+
+I'm pretty sure SATA SSDs are expected to be reliable, up to maximum
+amount of gigabytes written (specified by manufacturer), as long as
+you don't cut power without warning.
+
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
