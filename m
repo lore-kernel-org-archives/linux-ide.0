@@ -1,32 +1,45 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v1] ata: sata_rcar: Handle return value of
- clk_prepare_enable
-Date: Tue, 9 May 2017 10:31:18 -0400
-Message-ID: <20170509143118.GC8609@htj.duckdns.org>
-References: <1494325828-2725-1-git-send-email-arvind.yadav.cs@gmail.com>
+From: David Miller <davem@davemloft.net>
+Subject: [GIT] IDE
+Date: Tue, 09 May 2017 16:04:42 -0400 (EDT)
+Message-ID: <20170509.160442.1780305209253599723.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yb0-f175.google.com ([209.85.213.175]:35797 "EHLO
-        mail-yb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751660AbdEIObV (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 9 May 2017 10:31:21 -0400
-Content-Disposition: inline
-In-Reply-To: <1494325828-2725-1-git-send-email-arvind.yadav.cs@gmail.com>
+Received: from shards.monkeyblade.net ([184.105.139.130]:60982 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753909AbdEIUEo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 9 May 2017 16:04:44 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, May 09, 2017 at 04:00:28PM +0530, Arvind Yadav wrote:
-> Here, Clock enable can failed. So adding an error check for
-> clk_prepare_enable.
-> 
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 
-Applied to libata/for-4.12-fixes w/ a couple trivial changes.
+Please pull in these two small cleanups in the IDE
+layer.
 
-Thanks.
+Thanks!
 
--- 
-tejun
+The following changes since commit 2d3e4866dea96b0506395b47bfefb234f2088dac:
+
+  Merge tag 'for-linus' of git://git.kernel.org/pub/scm/virt/kvm/kvm (2017-05-08 12:37:56 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git 
+
+for you to fetch changes up to acfead32f3f938e456d7d5e1a82c743d30b8b886:
+
+  ide: don't call memcpy with the same source and destination (2017-05-08 17:36:39 -0400)
+
+----------------------------------------------------------------
+Geliang Tang (1):
+      ide: use setup_timer
+
+Mikulas Patocka (1):
+      ide: don't call memcpy with the same source and destination
+
+ drivers/ide/ide-io.c    | 2 +-
+ drivers/ide/ide-probe.c | 4 +---
+ 2 files changed, 2 insertions(+), 4 deletions(-)
