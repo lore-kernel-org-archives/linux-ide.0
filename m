@@ -1,65 +1,36 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] ide: avoid warning for timings calculation
-Date: Thu, 11 May 2017 14:52:05 +0200
-Message-ID: <20170511125214.278638-1-arnd@arndb.de>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:56199 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754977AbdEKMwZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 11 May 2017 08:52:25 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ata: avoid gcc-7 warning in ata_timing_quantize
+Date: Thu, 11 May 2017 10:50:09 -0400
+Message-ID: <20170511145009.GB30473@htj.duckdns.org>
+References: <20170511125145.265782-1-arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170511125145.265782-1-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Adam Manzanares <adam.manzanares@wdc.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-gcc-7 warns about the result of a constant multiplication used as
-a boolean:
+Hello, Arnd.
 
-drivers/ide/ide-timings.c: In function 'ide_timing_quantize':
-drivers/ide/ide-timings.c:112:24: error: '*' in boolean context, suggest '&&' instead [-Werror=int-in-bool-context]
-  q->setup   = EZ(t->setup   * 1000,  T);
+On Thu, May 11, 2017 at 02:51:25PM +0200, Arnd Bergmann wrote:
+> gcc-7 warns about the result of a constant multiplication used as
+> a boolean:
+> 
+> drivers/ata/libata-core.c: In function 'ata_timing_quantize':
+> drivers/ata/libata-core.c:3164:30: warning: '*' in boolean context, suggest '&&' instead [-Wint-in-bool-context]
+> 
+> This slightly rearranges the macro to simplify the code and avoid
+> the warning at the same time.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-This slightly rearranges the macro to simplify the code and avoid
-the warning at the same time.
+Heh, that's an interesting new warning.  Appied to
+libata/for-4.12-fixes.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/ide/ide-timings.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+Thanks.
 
-diff --git a/drivers/ide/ide-timings.c b/drivers/ide/ide-timings.c
-index 0e05f75934c9..9da64c1de85c 100644
---- a/drivers/ide/ide-timings.c
-+++ b/drivers/ide/ide-timings.c
-@@ -104,19 +104,19 @@ u16 ide_pio_cycle_time(ide_drive_t *drive, u8 pio)
- EXPORT_SYMBOL_GPL(ide_pio_cycle_time);
- 
- #define ENOUGH(v, unit)		(((v) - 1) / (unit) + 1)
--#define EZ(v, unit)		((v) ? ENOUGH(v, unit) : 0)
-+#define EZ(v, unit)		((v) ? ENOUGH(v * 1000, unit) : 0)
- 
- static void ide_timing_quantize(struct ide_timing *t, struct ide_timing *q,
- 				int T, int UT)
- {
--	q->setup   = EZ(t->setup   * 1000,  T);
--	q->act8b   = EZ(t->act8b   * 1000,  T);
--	q->rec8b   = EZ(t->rec8b   * 1000,  T);
--	q->cyc8b   = EZ(t->cyc8b   * 1000,  T);
--	q->active  = EZ(t->active  * 1000,  T);
--	q->recover = EZ(t->recover * 1000,  T);
--	q->cycle   = EZ(t->cycle   * 1000,  T);
--	q->udma    = EZ(t->udma    * 1000, UT);
-+	q->setup   = EZ(t->setup,   T);
-+	q->act8b   = EZ(t->act8b,   T);
-+	q->rec8b   = EZ(t->rec8b,   T);
-+	q->cyc8b   = EZ(t->cyc8b,   T);
-+	q->active  = EZ(t->active,  T);
-+	q->recover = EZ(t->recover, T);
-+	q->cycle   = EZ(t->cycle,   T);
-+	q->udma    = EZ(t->udma,    UT);
- }
- 
- void ide_timing_merge(struct ide_timing *a, struct ide_timing *b,
 -- 
-2.9.0
-
+tejun
