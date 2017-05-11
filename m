@@ -1,40 +1,65 @@
-From: Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/4] ata: Add DT bindings for Faraday Technology FTIDE010
-Date: Wed, 10 May 2017 17:48:30 +0200
-Message-ID: <CACRpkdbyPcC5FiqQ0khkNh4OvXeft_p4uwwH_yvpiiePkHcRhw@mail.gmail.com>
-References: <CGME20170506121118epcas2p1b2a2d1a8005a37582a73c0e7be4b1a1b@epcas2p1.samsung.com>
- <1678111.DmiVNKW3dQ@amdc3058> <CACRpkdbmOsrxKX8=a7bvcF+c=Q2tfwYQVt0=cz+_jhDyadwa2A@mail.gmail.com>
- <6650456.qCJGCGKGLl@amdc3058>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <6650456.qCJGCGKGLl@amdc3058>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Janos Laube <janos.dev-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Paulius Zaleckas <paulius.zaleckas-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, openwrt-devel-p3rKhJxN3npAfugRpC6u6w@public.gmane.org, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Hans Ulli Kroll <ulli.kroll-gM/Ye1E23mwN+BqQ9rBEUg@public.gmane.org>, Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, John Feng-Hsin Chiang <john453-w0jeGXs5+AWXmMXjJBpWqg@public.gmane.org>, Greentime Hu <green.hu-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] ata: avoid gcc-7 warning in ata_timing_quantize
+Date: Thu, 11 May 2017 14:51:25 +0200
+Message-ID: <20170511125145.265782-1-arnd@arndb.de>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([217.72.192.74]:63891 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932181AbdEKMvz (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 11 May 2017 08:51:55 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Adam Manzanares <adam.manzanares@wdc.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, May 10, 2017 at 3:59 PM, Bartlomiej Zolnierkiewicz
-<b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org> wrote:
-> On Monday, May 08, 2017 10:26:49 PM Linus Walleij wrote:
->> On Mon, May 8, 2017 at 12:47 PM, Bartlomiej Zolnierkiewicz
->> <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org> wrote:
+gcc-7 warns about the result of a constant multiplication used as
+a boolean:
 
->> So depending on whether they use an FPGA or an ASIC the values are
->> different, no matter what frequency (50 or 66 MHz) is used. So it is not
->> derived from frequency.
->>
->> So I think it makes most sense to have it in the device tree as we don't
->> know what designs are out there.
->
-> I still would prefer to keep timing values private to the driver and just
-> select the controller type (FPGA/ASIC) using the device tree.
+drivers/ata/libata-core.c: In function 'ata_timing_quantize':
+drivers/ata/libata-core.c:3164:30: warning: '*' in boolean context, suggest '&&' instead [-Wint-in-bool-context]
 
-OK I'll revert to static timings in the driver, no problem.
+This slightly rearranges the macro to simplify the code and avoid
+the warning at the same time.
 
-Yours,
-Linus Walleij
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/ata/libata-core.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 2d83b8c75965..3fc4c35425f6 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3157,19 +3157,19 @@ static const struct ata_timing ata_timing[] = {
+ };
+ 
+ #define ENOUGH(v, unit)		(((v)-1)/(unit)+1)
+-#define EZ(v, unit)		((v)?ENOUGH(v, unit):0)
++#define EZ(v, unit)		((v)?ENOUGH((v * 1000), unit):0)
+ 
+ static void ata_timing_quantize(const struct ata_timing *t, struct ata_timing *q, int T, int UT)
+ {
+-	q->setup	= EZ(t->setup      * 1000,  T);
+-	q->act8b	= EZ(t->act8b      * 1000,  T);
+-	q->rec8b	= EZ(t->rec8b      * 1000,  T);
+-	q->cyc8b	= EZ(t->cyc8b      * 1000,  T);
+-	q->active	= EZ(t->active     * 1000,  T);
+-	q->recover	= EZ(t->recover    * 1000,  T);
+-	q->dmack_hold	= EZ(t->dmack_hold * 1000,  T);
+-	q->cycle	= EZ(t->cycle      * 1000,  T);
+-	q->udma		= EZ(t->udma       * 1000, UT);
++	q->setup	= EZ(t->setup,       T);
++	q->act8b	= EZ(t->act8b,       T);
++	q->rec8b	= EZ(t->rec8b,       T);
++	q->cyc8b	= EZ(t->cyc8b,       T);
++	q->active	= EZ(t->active,      T);
++	q->recover	= EZ(t->recover,     T);
++	q->dmack_hold	= EZ(t->dmack_hold,  T);
++	q->cycle	= EZ(t->cycle,       T);
++	q->udma		= EZ(t->udma,       UT);
+ }
+ 
+ void ata_timing_merge(const struct ata_timing *a, const struct ata_timing *b,
+-- 
+2.9.0
+
