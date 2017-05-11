@@ -1,36 +1,45 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: avoid gcc-7 warning in ata_timing_quantize
-Date: Thu, 11 May 2017 10:50:09 -0400
-Message-ID: <20170511145009.GB30473@htj.duckdns.org>
-References: <20170511125145.265782-1-arnd@arndb.de>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH 0/3] SATA: Fine-tuning for two function implementations
+Date: Thu, 11 May 2017 17:01:34 +0200
+Message-ID: <3428511.iH6kg31xz3@amdc3058>
+References: <df754c7a-2100-7169-0d40-b981ccd952a1@users.sourceforge.net>
+ <20170428215334.GH22354@htj.duckdns.org>
+ <CGME20170511150136epcas5p4549f5ae51303ef506c0f7f91b5dd1317@epcas5p4.samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170511125145.265782-1-arnd@arndb.de>
+In-reply-to: <20170428215334.GH22354@htj.duckdns.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Adam Manzanares <adam.manzanares@wdc.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: SF Markus Elfring <elfring@users.sourceforge.net>, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello, Arnd.
 
-On Thu, May 11, 2017 at 02:51:25PM +0200, Arnd Bergmann wrote:
-> gcc-7 warns about the result of a constant multiplication used as
-> a boolean:
+Hi,
+
+On Friday, April 28, 2017 05:53:34 PM Tejun Heo wrote:
+> Hello,
 > 
-> drivers/ata/libata-core.c: In function 'ata_timing_quantize':
-> drivers/ata/libata-core.c:3164:30: warning: '*' in boolean context, suggest '&&' instead [-Wint-in-bool-context]
+> On Tue, Apr 18, 2017 at 10:00:37PM +0200, SF Markus Elfring wrote:
+> > From: Markus Elfring <elfring@users.sourceforge.net>
+> > Date: Tue, 18 Apr 2017 21:54:32 +0200
+> > 
+> > A few update suggestions were taken into account
+> > from static source code analysis.
 > 
-> This slightly rearranges the macro to simplify the code and avoid
-> the warning at the same time.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Hmmm, allocs -> callocs.  Are these actually beneficial?  If so, why?
+> Because one multiplication is rolled into the call?
 
-Heh, that's an interesting new warning.  Appied to
-libata/for-4.12-fixes.
+Each conversion (i.e. I tried the one from patch #1) seems to add
+an extra 24 bytes to the resulting code size (using gcc 4.8.4 for
+ARM32 cross-compilation) so I don't see much point in the automatic
+conversions. Only instances containing size calculations with
+real possibility for integer overflows should be converted and
+the patchset under discussion contains no such instances.
 
-Thanks.
-
--- 
-tejun
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
