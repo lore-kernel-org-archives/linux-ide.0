@@ -1,33 +1,44 @@
-From: "Thomas Credit Firm" <miorellana@salud.gob.sv>
-Subject: APPLY FOR YOUR URGENT LOAN AT 2%
-Date: Fri, 12 May 2017 11:53:44 +0100
-Message-ID: <20170512105359.D476F48074B1__36161.4533038393$1494587118$gmane$org@mail.salud.gob.sv>
-Reply-To: thomascreditfirm@gmail.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.salud.gob.sv ([190.5.143.2]:60796 "EHLO mail.salud.gob.sv"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756730AbdELLFC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 12 May 2017 07:05:02 -0400
-Content-Description: Mail message body
-Sender: linux-ide-owner@vger.kernel.org
+From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+Subject: [PATCH 27/36] libata: fix identation on a kernel-doc markup
+Date: Fri, 12 May 2017 11:00:10 -0300
+Message-ID: <b1edb460b944327b6fddac16e209659a6836385f.1494596071.git.mchehab@s-opensource.com>
+References: <cover.1494596071.git.mchehab@s-opensource.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1494596071.git.mchehab@s-opensource.com>
+In-Reply-To: <cover.1494596071.git.mchehab@s-opensource.com>
+References: <cover.1494596071.git.mchehab@s-opensource.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, Linux Doc Mailing List <linux-doc@vger.kernel.org>
+Cc: Mauro Carvalho Chehab <mchehab@s-opensource.com>, Mauro Carvalho Chehab <mchehab@infradead.org>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: receipt <miorellana@salud.gob.sv>
 
-* Do you need an urgent loan? We offer all kinds of loan
-* Very fast and urgent transfer to your bank account. 
-* Payment begins (6) months after you get the money in your bank account 
-* Low interest rates 2% 
-* Payment of long-term (1-30 years) duration 
-For more information and loan application form through the Contact now 
+Sphinx got confused with the markup identation:
+	./drivers/ata/libata-scsi.c:3402: ERROR: Unexpected indentation.
 
-E-mail:  Thomascreditfirm@gmail.com 
-Thomas B. Dawson 
-THOMAS CREDIT FIRM
+No functional changes.
 
+Signed-off-by: Mauro Carvalho Chehab <mchehab@s-opensource.com>
 ---
-This email has been checked for viruses by Avast antivirus software.
-https://www.avast.com/antivirus
+ drivers/ata/libata-scsi.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 49ba9834c715..dcd38d9e9804 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3398,9 +3398,10 @@ static size_t ata_format_dsm_trim_descr(struct scsi_cmnd *cmd, u32 trmax,
+  *
+  * Translate a SCSI WRITE SAME command to be either a DSM TRIM command or
+  * an SCT Write Same command.
+- * Based on WRITE SAME has the UNMAP flag
+- *   When set translate to DSM TRIM
+- *   When clear translate to SCT Write Same
++ * Based on WRITE SAME has the UNMAP flag:
++ *
++ *   - When set translate to DSM TRIM
++ *   - When clear translate to SCT Write Same
+  */
+ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
+ {
+-- 
+2.9.3
