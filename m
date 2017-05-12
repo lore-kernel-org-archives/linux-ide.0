@@ -1,45 +1,35 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH 0/3] SATA: Fine-tuning for two function implementations
-Date: Thu, 11 May 2017 17:01:34 +0200
-Message-ID: <3428511.iH6kg31xz3@amdc3058>
-References: <df754c7a-2100-7169-0d40-b981ccd952a1@users.sourceforge.net>
- <20170428215334.GH22354@htj.duckdns.org>
- <CGME20170511150136epcas5p4549f5ae51303ef506c0f7f91b5dd1317@epcas5p4.samsung.com>
+From: Preetham Chandru Ramchandra <pchandru@nvidia.com>
+Subject: [PATCH V3 0/3] ADD AHCI support for tegra210
+Date: Fri, 12 May 2017 15:04:07 +0530
+Message-ID: <1494581650-11115-1-git-send-email-pchandru@nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <20170428215334.GH22354@htj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: SF Markus Elfring <elfring@users.sourceforge.net>, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nat-hk.nvidia.com ([203.18.50.4]:40812 "EHLO nat-hk.nvidia.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756312AbdELJfK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 12 May 2017 05:35:10 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: thierry.reding@gmail.com, tj@kernel.org
+Cc: tegra@vger.kernel.org, linux-ide@vger.kernel.org, ldewangan@nvidia.com, preetham260@gmail.com, vbyravarasu@nvidia.com, pkunapuli@nvidia.com, Preetham Chandru R <pchandru@nvidia.com>
 
+From: Preetham Chandru R <pchandru@nvidia.com>
 
-Hi,
+1. ADD AHCI support for tegra210
+2. Extend the tegra AHCI controller device tree binding with tegra210
+---
+Preetham Chandru R (3):
+  ata: ahci_tegra: Add AHCI support for tegra210
+  dt-bindings: tegra: Add tegra210 AHCI
+  arm64: tegra: Enable SATA on Tegra210
 
-On Friday, April 28, 2017 05:53:34 PM Tejun Heo wrote:
-> Hello,
-> 
-> On Tue, Apr 18, 2017 at 10:00:37PM +0200, SF Markus Elfring wrote:
-> > From: Markus Elfring <elfring@users.sourceforge.net>
-> > Date: Tue, 18 Apr 2017 21:54:32 +0200
-> > 
-> > A few update suggestions were taken into account
-> > from static source code analysis.
-> 
-> Hmmm, allocs -> callocs.  Are these actually beneficial?  If so, why?
-> Because one multiplication is rolled into the call?
+ .../bindings/ata/nvidia,tegra124-ahci.txt          |  45 ++-
+ arch/arm64/boot/dts/nvidia/tegra210-p2597.dtsi     |   6 +
+ arch/arm64/boot/dts/nvidia/tegra210.dtsi           |  16 +
+ drivers/ata/ahci_tegra.c                           | 377 ++++++++++++++++-----
+ 4 files changed, 346 insertions(+), 98 deletions(-)
 
-Each conversion (i.e. I tried the one from patch #1) seems to add
-an extra 24 bytes to the resulting code size (using gcc 4.8.4 for
-ARM32 cross-compilation) so I don't see much point in the automatic
-conversions. Only instances containing size calculations with
-real possibility for integer overflows should be converted and
-the patchset under discussion contains no such instances.
+-- 
+2.1.4
 
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
