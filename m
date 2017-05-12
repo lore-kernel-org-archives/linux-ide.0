@@ -1,43 +1,39 @@
-From: Preetham Chandru <pchandru@nvidia.com>
+From: Preetham Chandru <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 Subject: RE: [PATCH V3 1/3] ata: ahci_tegra: Add AHCI support for tegra210
-Date: Fri, 12 May 2017 09:45:14 +0000
-Message-ID: <3cba7d85603744f9addfa71d70fb9c75@bgmail103.nvidia.com>
+Date: Fri, 12 May 2017 09:55:30 +0000
+Message-ID: <c3457c8e12b0402293bdea825883277f@bgmail103.nvidia.com>
 References: <1494581650-11115-1-git-send-email-pchandru@nvidia.com>
  <1494581650-11115-2-git-send-email-pchandru@nvidia.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:18365 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932315AbdELJpV (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 12 May 2017 05:45:21 -0400
-In-Reply-To: <1494581650-11115-2-git-send-email-pchandru@nvidia.com>
+Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1494581650-11115-2-git-send-email-pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Laxman Dewangan <ldewangan-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Venu Byravarasu <vbyravarasu-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Pavan Kunapuli <pkunapuli-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: "thierry.reding@gmail.com" <thierry.reding@gmail.com>, "tj@kernel.org" <tj@kernel.org>
-Cc: "tegra@vger.kernel.org" <tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Laxman Dewangan <ldewangan@nvidia.com>, "preetham260@gmail.com" <preetham260@gmail.com>, Venu Byravarasu <vbyravarasu@nvidia.com>, Pavan Kunapuli <pkunapuli@nvidia.com>
 
-+CC linux-tegra@vger.kernel.org
++CC linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
 >-----Original Message-----
 >From: Preetham Chandru
 >Sent: Friday, May 12, 2017 3:04 PM
->To: thierry.reding@gmail.com; tj@kernel.org
->Cc: tegra@vger.kernel.org; linux-ide@vger.kernel.org; Laxman Dewangan
-><ldewangan@nvidia.com>; preetham260@gmail.com; Venu Byravarasu
-><vbyravarasu@nvidia.com>; Pavan Kunapuli <pkunapuli@nvidia.com>; Preetham
->Chandru <pchandru@nvidia.com>
+>To: thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org; tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+>Cc: tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; Laxman Dewangan
+><ldewangan-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>; preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org; Venu Byravarasu
+><vbyravarasu-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>; Pavan Kunapuli <pkunapuli-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>; Preetham
+>Chandru <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 >Subject: [PATCH V3 1/3] ata: ahci_tegra: Add AHCI support for tegra210
 >
->From: Preetham Chandru R <pchandru@nvidia.com>
+>From: Preetham Chandru R <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 >
 >1. Move tegra124 specifics to tegra124_ahci_init.
 >2. Separate the regulators needed for tegra124 and tegra210.
 >3. Disable DIPM and Devslp for t210 and t124 as there are known issues
 >
->Signed-off-by: Preetham Chandru R <pchandru@nvidia.com>
+>Signed-off-by: Preetham Chandru R <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 >---
 >v3:
 >* Remove inline functions for read/write and modify to
@@ -596,10 +592,9 @@ Cc: "tegra@vger.kernel.org" <tegra@vger.kernel.org>, "linux-ide@vger.kernel.org"
 >+594,5 @@ static struct platform_driver tegra_ahci_driver = {
 >module_platform_driver(tegra_ahci_driver);
 >
-> MODULE_AUTHOR("Mikko Perttunen <mperttunen@nvidia.com>");
+> MODULE_AUTHOR("Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>");
 >-MODULE_DESCRIPTION("Tegra124 AHCI SATA driver");
 >+MODULE_DESCRIPTION("Tegra AHCI SATA driver");
 > MODULE_LICENSE("GPL v2");
 >--
 >2.1.4
-
