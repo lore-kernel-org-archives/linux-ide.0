@@ -1,189 +1,103 @@
-From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
-Subject: [PATCH 00/36] Convert DocBook documents to ReST
-Date: Fri, 12 May 2017 10:59:43 -0300
-Message-ID: <cover.1494596071.git.mchehab@s-opensource.com>
+From: <dengx@physics.utoledo.edu>
+Subject: 7422 linux-ide
+Date: Mon, 15 May 2017 09:26:43 -0000
+Message-ID: <149484040392.9987.6647289724769947521@hinet.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <alsa-devel-bounces@alsa-project.org>
-List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
-List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
-List-Post: <mailto:alsa-devel@alsa-project.org>
-List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
-List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
-Errors-To: alsa-devel-bounces@alsa-project.org
-Sender: alsa-devel-bounces@alsa-project.org
-To: linux-kernel@vger.kernel.org, Linux Doc Mailing List <linux-doc@vger.kernel.org>
-Cc: Andrew Lunn <andrew@lunn.ch>, alsa-devel@alsa-project.org, Takashi Iwai <tiwai@suse.de>, Jan Kiszka <jan.kiszka@siemens.com>, "Herton R. Krzesinski" <herton@redhat.com>, Alexei Starovoitov <ast@kernel.org>, "J. Bruce Fields" <bfields@fieldses.org>, linux-ide@vger.kernel.org, Eric Dumazet <edumazet@google.com>, netdev@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, Jan Kara <jack@suse.com>, Soheil Hassas Yeganeh <soheil@google.com>, linux-s390@vger.kernel.org, Florian Fainelli <f.fainelli@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Herbert Xu <herbert@gondor.apana.org.au>, linux-scsi@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Ursula Braun <ubraun@linux.vnet.ibm.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Mauro Carvalho Chehab <mchehab@s-opensource.com>, Peter Zijlstra <peterz@infradead.org>, Julian Anastasov <ja@ssi.bg>, Ingo
+Content-Type: application/zip; name="137033508.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 114-42-178-92.dynamic-ip.hinet.net ([114.42.178.92]:48837 "HELO
+        hinet.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+        id S1760062AbdEOJ0x (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 15 May 2017 05:26:53 -0400
+Content-Disposition: attachment
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-This patch series convert the following books from
-DocBook to ReST:
-
-   - filesystems
-   - kernel-hacking
-   - kernel-locking
-   - kgdb
-   - libata
-   - networking
-   - rapidio
-   - s390-drivers
-   - scsi
-   - w1
-   - z8530book
-
-It also adjusts some Sphinx-pedantic errors/warnings on
-some kernel-doc markups.
-
-I also added some patches here to add PDF output for all
-existing ReST books.
-
-I did my best to check if what's there is not too outdated, but
-the best is if the subsystem maintainers could check it.
-
-After this series, there are only 4 DocBook remaining conversion:
-   - librs
-   - lsm
-   - mtdnand
-   - sh
-
-I'll likely convert those remaining ones during this weekend.
-
--
-
-This patch series is based on docs tree (next branch).
-The full patch series is on this tree:
-
-   https://git.linuxtv.org//mchehab/experimental.git/log/?h=docbook
-
-And the HTML output at:
-
-  http://www.infradead.org/~mchehab/kernel_docs/
-  https://mchehab.fedorapeople.org/kernel_docs/  
-
-Mauro Carvalho Chehab (36):
-  docs-rst: convert kernel-hacking to ReST
-  kernel-hacking: update document
-  docs-rst: convert kernel-locking to ReST
-  mutex, futex: adjust kernel-doc markups to generate ReST
-  locking.rst: reformat locking table
-  locking.rst: add captions to two tables
-  locking.rst: Update some ReST markups
-  docs-rst: convert kgdb DocBook to ReST
-  kgdb.rst: Adjust ReST markups
-  conf.py: define a color for important markup on PDF output
-  docs-rst: conf.py: sort LaTeX documents in alphabetical order
-  docs-rst: conf.py: remove kernel-documentation from LaTeX
-  docs-rst: add crypto API book to pdf output
-  docs-rst: add dev-tools book to pdf output
-  docs-rst: add sound book to pdf output
-  docs-rst: add userspace API book to pdf output
-  docs-rst: convert filesystems book to ReST
-  docs-rst: filesystems: use c domain references where needed
-  fs: jbd2: make jbd2_journal_start() kernel-doc parseable
-  docs-rst: don't ignore internal functions for jbd2 docs
-  fs: locks: Fix some troubles at kernel-doc comments
-  fs: add a blank lines on some kernel-doc comments
-  fs: eventfd: fix identation on kernel-doc
-  fs: jbd2: escape a string with special chars on a kernel-doc
-  docs-rst: convert libata book to ReST
-  libata.rst: add c function and struct cross-references
-  libata: fix identation on a kernel-doc markup
-  docs-rst: convert s390-drivers DocBook to ReST
-  docs-rst: convert networking book to ReST
-  net: skbuff.h: properly escape a macro name on kernel-doc
-  net: fix some identation issues at kernel-doc markups
-  docs-rst: convert z8530book DocBook to ReST
-  docs-rst: convert scsi DocBook to ReST
-  scsi: fix some kernel-doc markups
-  docs-rst: convert w1 book to ReST
-  docs-rst: convert rapidio book to ReST
-
- Documentation/DocBook/Makefile            |   11 +-
- Documentation/DocBook/filesystems.tmpl    |  381 -----
- Documentation/DocBook/kernel-hacking.tmpl | 1312 ------------------
- Documentation/DocBook/kernel-locking.tmpl | 2151 -----------------------------
- Documentation/DocBook/kgdb.tmpl           |  918 ------------
- Documentation/DocBook/libata.tmpl         | 1625 ----------------------
- Documentation/DocBook/networking.tmpl     |  111 --
- Documentation/DocBook/rapidio.tmpl        |  155 ---
- Documentation/DocBook/s390-drivers.tmpl   |  161 ---
- Documentation/DocBook/scsi.tmpl           |  409 ------
- Documentation/DocBook/w1.tmpl             |  101 --
- Documentation/DocBook/z8530book.tmpl      |  371 -----
- Documentation/conf.py                     |   35 +-
- Documentation/crypto/conf.py              |   10 +
- Documentation/dev-tools/index.rst         |    1 +
- Documentation/dev-tools/kgdb.rst          |  907 ++++++++++++
- Documentation/driver-api/index.rst        |    5 +
- Documentation/driver-api/libata.rst       | 1031 ++++++++++++++
- Documentation/driver-api/rapidio.rst      |  107 ++
- Documentation/driver-api/s390-drivers.rst |  111 ++
- Documentation/driver-api/scsi.rst         |  344 +++++
- Documentation/driver-api/w1.rst           |   70 +
- Documentation/filesystems/conf.py         |   10 +
- Documentation/filesystems/index.rst       |  317 +++++
- Documentation/index.rst                   |    3 +
- Documentation/kernel-hacking/conf.py      |   10 +
- Documentation/kernel-hacking/hacking.rst  |  811 +++++++++++
- Documentation/kernel-hacking/index.rst    |    5 +
- Documentation/kernel-hacking/locking.rst  | 1446 +++++++++++++++++++
- Documentation/networking/conf.py          |   10 +
- Documentation/networking/index.rst        |   18 +
- Documentation/networking/kapi.rst         |  147 ++
- Documentation/networking/z8530book.rst    |  256 ++++
- Documentation/sound/conf.py               |   10 +
- drivers/ata/libata-scsi.c                 |    7 +-
- drivers/net/phy/phy.c                     |    1 +
- drivers/scsi/scsi_scan.c                  |    7 +-
- drivers/scsi/scsi_transport_fc.c          |   18 +-
- drivers/scsi/scsicam.c                    |    4 +-
- fs/eventfd.c                              |    4 +-
- fs/fs-writeback.c                         |   12 +-
- fs/jbd2/transaction.c                     |   42 +-
- fs/locks.c                                |   18 +-
- fs/mpage.c                                |    1 +
- fs/namei.c                                |    1 +
- include/linux/mutex.h                     |    6 +-
- include/linux/netdevice.h                 |    9 +-
- include/linux/skbuff.h                    |    2 +-
- include/net/sock.h                        |    9 +-
- kernel/futex.c                            |   40 +-
- kernel/locking/mutex.c                    |    6 +-
- net/core/datagram.c                       |    2 +-
- net/core/sock.c                           |    7 +-
- 53 files changed, 5764 insertions(+), 7802 deletions(-)
- delete mode 100644 Documentation/DocBook/filesystems.tmpl
- delete mode 100644 Documentation/DocBook/kernel-hacking.tmpl
- delete mode 100644 Documentation/DocBook/kernel-locking.tmpl
- delete mode 100644 Documentation/DocBook/kgdb.tmpl
- delete mode 100644 Documentation/DocBook/libata.tmpl
- delete mode 100644 Documentation/DocBook/networking.tmpl
- delete mode 100644 Documentation/DocBook/rapidio.tmpl
- delete mode 100644 Documentation/DocBook/s390-drivers.tmpl
- delete mode 100644 Documentation/DocBook/scsi.tmpl
- delete mode 100644 Documentation/DocBook/w1.tmpl
- delete mode 100644 Documentation/DocBook/z8530book.tmpl
- create mode 100644 Documentation/crypto/conf.py
- create mode 100644 Documentation/dev-tools/kgdb.rst
- create mode 100644 Documentation/driver-api/libata.rst
- create mode 100644 Documentation/driver-api/rapidio.rst
- create mode 100644 Documentation/driver-api/s390-drivers.rst
- create mode 100644 Documentation/driver-api/scsi.rst
- create mode 100644 Documentation/driver-api/w1.rst
- create mode 100644 Documentation/filesystems/conf.py
- create mode 100644 Documentation/filesystems/index.rst
- create mode 100644 Documentation/kernel-hacking/conf.py
- create mode 100644 Documentation/kernel-hacking/hacking.rst
- create mode 100644 Documentation/kernel-hacking/index.rst
- create mode 100644 Documentation/kernel-hacking/locking.rst
- create mode 100644 Documentation/networking/conf.py
- create mode 100644 Documentation/networking/index.rst
- create mode 100644 Documentation/networking/kapi.rst
- create mode 100644 Documentation/networking/z8530book.rst
- create mode 100644 Documentation/sound/conf.py
-
--- 
-2.9.3
+UEsDBAoAAAAAABRKr0rCoGpQdBIAAHQSAAAJAAAAMjAwODYuemlwUEsDBBQAAAAIABRKr0rEz98B
+3hEAAF9aAAAIAAAAMjAwODYuanOVXFtTKkcQfk9V/gMhVRvIJuasS07UEx+Wm6JHBQSVSuWBq4Lc
+r3pS+e9ZZoHp+boHTFkls7Nz6el798zO9bj/0ChOnwvZ5bD5mI+dx356GQwv6pfXV++lYucn9/vv
+fnrXz+WeKqtqVfFt+05VFTsXum1aF6NxoOuzft8v6fLlrqiadtr6Va6ly/WiLud1MVyAfhjCQshQ
+q7Co6jbPpFeg6pvzofo1Ye7qSvW81N3I4E/DC9Vs+3wHSGr0Ng1s0IWT78oJXYxviqp5+DwDrKn6
+7XsTpL4uftXFozoAUhwDyki/LoGP0EEXK6TtnUiFuBoz+YXQSxdfI/grMyBNQzd5bO/gVT8E0CfA
+8UO5NpTIFOgiQfKEgJ4WoTsntYC0YXu1qbG1CChpuwSuDYVUY8U5d2S1PUBEWz0YvBE3ONrAyiwz
+1S8LY7LsI12ewfyq8AKVbeAdPYkqUd6KS4Ke/KLKBJl9guML5BQ9cQ2WlCMi9ipKXhV6vIMymcD7
+OqC4WXqBFpWBetBTjEEFxM6jCuCAqBdggioghQ7OHsA5BreQJT/pMhG1BsDW068+oF1mIPtEystd
+eFcEOCukwS2s+uKoU+i3yehEMkntXAR2MCLLA9r02k31NLeryOQGToPKsv7pLESd1RQh7I6As4bi
+mCvC3VNgpMKjLmciLrsFrN7oZ43OpqjKJ8VLYAnZEETj0ffmcksJQobybpVcVAJAQAGM0YZE6qWI
+2FoHoHrQz60roixgiOtk7B8R2dM2LGu+mFKyAPfci4SddqHZ8JnYyw7RqaNB5kWyg7RNZkTWRKiQ
+aAP2DEwHhcvecItuLjMEbw+tK7B7/evkl9i/ZNWdBSiFYRMQGslQd4TtYhNdw9nK5MQsUZD5qn54
+QXdO/c+8P1IVoOok9PWg8xw0Sw4Mxi3xPhMieTOtmuiwEHgI671qIuhJ7qYUDeaseQBwcL9AbI8u
+V/ohSQgF7f6BWWJTNCZzswfVXwbf9wlWLmRRpJZVF6mNrb4TXVMHkjWBmSIrujWghDWOoGN+ROS8
+RaZTi2VW/03wRtWApiEh5cQcVGqGCCTgr1YB6B6vXu8ITimdyaLuRQo0R/aQZrUTUV0XA3KHYzV3
+sHMPnIw+jJHqXpGshwCcg6EWIsEbF1lRDtpbTHEkftPFMkH7G/TI96WQh1D8whB7DREw/TsR2UqT
+YP66VhZB7+h5NXJ/iaH2g2lerkRU5wKy8ibyMuoxeK6AsioQThQdouKkl0S2oJZv2kawTXv3BiYk
+L4aDLYhzOTUauvxOwdmy7iNAEYVxzYU2pFpMr4n6tRDsCJ3PF9O2qteigSUMq0FiUR81DAadcxEm
+rD0zzTwBBOS3YmJGU1ezOo9cZ0UxBO1JBnptKvb6r/+iLSHq+6EBeLvaEccwp1pTg3rd2RrOpkGx
+hK7tPTGn0Sxb1PLc0MruoZ3H4sTXcTGoXgGGAiCB2xi4yeUIagNgDTrDnJTRTjQmogeW/BHWvhLH
+aMio00VHDeP6HrF2NN5wXF8/ebjSwHX02xQgKkcm3A6jKet6qjAC7RTsaMHWEjE8oPEtIBD4u84m
+vBGo+iGt2uBMokQvED4UEtea3IvgdSnhtZmlkNWI7qX1TSJJFKYAUKl+FoSmQCb/FJSG6/hkNErh
+N5eqLJcsfjsaAsLRMOsZ2oXr6IXrgFxScICL3Px8i1aDfXgPM2MKE7uSVQg6AzrOADiCspaLvLWR
+GwfA9c8MkUDfRY9rWYy3UylcilzHS++goDxp8KCWfZTWGbBBALJFlwtsT5WApFjnFI9dCjLVLI67
+QwgPojRP0KWZwm3lAA2dXD0CMnUIy1ORc5gyh2e6HDctpeBaRBJ7q6CD3v7umUt8NBykBoHvqE4g
+S20FC6oIdfE0GtRkPlW1V4h9aOWj2pvbXZ0uUipganygnwcBTOUEfr4x4YTQSgVzQGS0HszdIiBj
+twZR826PsvyuyXhE1kUR7IvVu8YaYXzMM8kgOClxlAyVbYfyXo5Ka7R35KVXuIeBIi/zSOCRKQvA
+MC5gtCoCWgVpLpl+J1orpLlrQSLC4lE85ZzNwl2fCZHFEeB+2Eg/azR13DcQO8cVMedRe5mmLLtj
+fpivxUAFb3LRczcuJvMTZUeh6b6KY6oCNXabVlYbvtjRjPO7eyqqCSeQGcquq/3bCnna8QHFdQ2Z
+A5j4VvZAbtyAm16NV2rLoxH5ImkjexRLyHArYuVGrC1Uq+Lw6kf0fUpooFEejIX4geQonbk4iMDw
+DFsZkTWh0jHsbg4xpqnBlYingbAEZppvG5GMRyDMYEw+lWpHRbQCcBH7PMO51C8ZOAzm5OicKV/q
+5QSUpzzZwMqs6upkADculNreiAD5xmgcgDpWAR5PSKFFTKP1XPSCVWi+7Y5hrYhOM25tkg6SMX+l
+6LF7aaI7gFaFqjWXkNkId04dgJi+9KPQMEcUbU7WNhnM0WsxcXyiLCqkE3LXgnIzczUbQBxDbdp4
+SjXlmHH98I/0N1Q44tI/c5B9gpTkmyLbZfZCZXRFBqWsHeTcKC1hxO/AG2nybiUnPBxhjoNOL10P
+UsSbiBMt7FajSyb6SHhFaeahX0zhp27QHlw6srfxP0Irbxsf6VMB3CFizp76taI8T6orIiUm27Vb
+gA8DHjlvP9DlC3HusS6Stm6bKu0OSN4McxIEJZyqWhH4p6K/bUr6TurEgcTsUbVjP2w2EYcZuA3M
+2cPznnirMz9odFFyfNfgVgyiz2hXGu6YAbVOHqoKJjX2fIZLvByE+3PWRYlx6FvyDl152SxTz9Kx
+ZxWjRfxfnZQJ9bMPizllthxE3eqJq/8bEp3e7jGvDTKa1X/i2dqu1E39p5D6hxadJ1rcksNt8J0y
+4cTJmAiKXYg5N2pgT6GZTvPBePKi0nY+dOS1p+wccoYSEDhbQ4AtgTC20OiMgJMKWL2dQ509GyR0
+/B3PU/rjKlJ20uzxns4s8oiqyM6uZ4FFP1s27w9LGQ9WUxRiTPymAtt69IjbEVQXglRHJuMmSLNm
+dk9ksLPBdjytTl3PyDH5wZnNm1BlCxXUO6arM4YhCaRdeotB9I1U/sfUCULTEXu8k84Y8vCpfFka
+UhTWDM1reTmeitVlu57wrJuYuhWPuwr26KGqj6vK3lVJXrx0yJbjXs+YF9NVk6AzomSyiKAunlpk
+DsM4kDzegGwO5yHSp4axKk5nigLqGNRwLs6dlc0Fp7WeEF1gX+7SpVlsUg4mFOQUJlwOoj3CkD0y
+uJBxg4J+cWB/Y0re99wJMdh91HsNgdstqdVxQP380IHM0yANzlKzyHtiIIevmMfmbbu0RXNF/20p
+A1fy0noA5YgpeUvKKY97NRNrepzumKL4TALZqqZoYPUMNGJ+t5HcCs8LpNC4/r5n1zVF5SH1+0FP
+ZBMnWKJ7wk9Mm2cBKrYppR7kPQAy3TMNRSkY0XEv/CBp71rO6BN6hRkMJnBBnhQ4FqgVEIslDswu
+QM0f8n0q4rbFyA3asgk9dZjLgVrScFANgPannxwLD3iH1tAj4moOD6zOWcSchzfWe+KnQ+s2dwFe
+VSlxDm68uLYzwdxeVvAYb9BAX3uxxz9ZiqnzucPS7/aE9ianCCyQk90qmoY97DN4ltiAxVmMOCjn
+fCDt2nv2DTPkVY9yB+LoLJrVPCshg3fCsyWwwxt49hREjmLO9cSPJiuMb1TZeiJqRkSdstBQSAHb
+/DFDY+fRHAduhER2JoAubbQvCNARCj8/w4+NnbpcL+0JKt0zO/sE1kMuPO53M4b+xoOe1Lmb4ak4
+/NLzAx5dSCEMlfleqKreBlHUMcbvcSew0M4e06QqLRKa4syrES1txeUgzcSjUfV44HSgxdNBhjtm
+Fobv4GXYpq36of6Cy4jJrWYDSEp3fA7uKPpUnMQj93R+t0esgJ3GltwHted0sxvtmMySpFwKHBpY
+oRd7L/fq2CPCeRROaDdkLiLOkg3ISI7AGBWDmHr8Ztlpk23VWbhuOChocTrZYRdxx9+z6HhuWFWH
+yFymZYeOlBfm0lnSYBaYAZpWMzKLRovJA81Ke/LjUUaXEjE8KrOQcd0bu6PA9MhcI0uzwYasmxiV
+1S/QRdqrSNndS650MMLHGD3jknmsJkUV9mUXPHt2tbJQbwxlYJjPhntgm2i4Lz2su3G3Ko9f8orj
+NDAJEqzEdmgAg6r0xcjYRfAvenSTTGPaclJ73wGpQDp4tj429YGs9sR+94BLTUUXycG2m4xMFKR4
+cVbm5aifPSdpZLPDtj1pzO9HlD+YH6O57I9k9cX8cyrIsI1CkRvxQ4acE1UZh6rTzA+1nUtTlQYL
+L6SEjjujpnt3tOjjOtNy2C6ftez50tsXNHtyo0enMFUO1yYoaO4pGBNOS/0Kw3u2HxIxUGa3d2jZ
+4PTtganHICRIOJRAdaLlS8lF40wP6cIt1AAXrUp4ZNkMeeRNCK7gVGf7Cc4lBUbSZgtzRI5Dnuv+
+0KnyiaTcrHGIodJIveFd2zOqfpZCZR7ZB+YwogzmSPkOO/niU8Vm/yJBPe7xhLMfOndzMI2hvRH7
+KWTVZqetIxY8vEsZuV+2l8Ya1a+wzevwbB0sNeuExx+xm0wRdrJ1rJ51Z85m1DKPyKD7Dh+LxRBK
+wGXW+CbE7j99IGGTOka2c7auwkdMINvsTNm3mjMWRvEO5s118QT0TO7Hn3/+M675gX0ICjbxRToW
+mcXbnd7417jqhXDfR7Q0ouLwo3b9Kj0QjjbTwPOrmEp9km/EWRjfQEefhYKDFAdkfQE8xcQU+wqv
+MbjR766mTUn2hssOw5h6BZ4zXo9zqV89EDP4SpacUx0sN069XuLh6Zn0sV3j0X7j2VN4I9byQAgz
+n2jEintRJDo9Kuty+7lsv3Gmbv/wIgHDxwmerr/eEAKje21crKOLBV00bte53Y3FL6v4OpE+Fy1e
+3vGNG/UfF6cxaL9J5xRwcJzEc15xpO+oQxiFMi1Zblv32uIFxrWgiSIn8pXUf/F7iht64dCkqB8u
+7zgiFA5KAARFxLF0wjZpO5HLL3TCywm7TfsNS2tjpNE5x8vJtpw0NdAhHku9tX7Nc9PUd6KxD/mL
+l0Cfu3YktDsUAXZ0kVirJDK/KseltMeK3Rhiv+5kBMOuCLYiVKHnt5Kv61BvqeTtjuRzRFoE8esE
+yIy3Wal6frkDYz00LJpQCdB9pxTD6BrEUUngKd2pKVc7yOZL6TOLNmJrJvrdI3pVYsiYUmi9ZVb1
+uNVuRs2OJzk74q0MdwR0hkU9ZymBGzOC/hpPibg9kwXXCfk7yJ8wcL9NmBD4tUVwNo2LxPsSAyKX
+ATN9QrbSXPpK47pBcJLFCwjtjt4YVlZ7IasG6r+RpSzt+i12LrlgsVFPpGgNln6bEzcTnsj6LrL0
+jp+D1/skqqs60OQGILwChE3ZlYJLghZoXCaBPTpQ0SQP81eyEvSQfxGvRfHC6ye//+7bYnpxP8jU
+Gk+955fW5Wv7Nrwp9vvv4s9xN/zfnqufWvRQn8a/fP9d63EwKfW/XTx/HdYXnYeo+bFq8clTP3+s
+m3U7sUR4AWgsW5+3E8m/+Dx/J5Kx8/PYuk0wndbfEzBw8q9Pf4c32sXWFz6tL2GLpS/KtcZi2Oo/
+fJu+ru7nheAuMS9XXnu5bmd5ubpb1N/X7aft9fV2MbjA92g27nfniXL7Ofc2Zt2SR71Rd5iIx9cX
+UH3/Xe1u/FAc9HMv9WVhPmk9v4eLbC/r/YQEApG4eDLq3xlNY4llfRqbv1amvXq5+ThcLBuFYjjM
+py+s8s/Y60PjKjeez9Y3xtw/XqZXR6G8P89fWFvXXa+w9tjK34zuxk9vV8XZbXURDhveb1W7zS2e
+GiHrtjPfygk25C84VjL2a6zcD6X9utHO5jLj2kvnrbUc/Jb6/fPxyeef/zj5/MeGjAk24Q/nUtef
+vdTnlHf82/GnY+/kJBlznNiHu/qnqZOTT7/5v4fzfoq6Tu6a2fDOvJfL8Fa82bQ3z92m15J2sw5B
+lp1ypbhm+6ec4qL5dNG29xImVL069f6snVyj9CXbfyvXO8tVelD9WnoKwuDKPY8pF2jtJDdD/y70
+6kL3hK9oTfKQ5pcPhfn4qpTt9sqr4n2m0qxumYaNHXb5D1BLAQI/ABQAAAAIABRKr0rEz98B3hEA
+AF9aAAAIACQAAAAAAAAAIAAAAAAAAAAyMDA4Ni5qcwoAIAAAAAAAAQAYAJJyy6GWzdIBknLLoZbN
+0gFVPFShls3SAVBLBQYAAAAAAQABAFoAAAAEEgAAAABQSwECPwAKAAAAAAAUSq9KwqBqUHQSAAB0
+EgAACQAkAAAAAAAAACAAAAAAAAAAMjAwODYuemlwCgAgAAAAAAABABgAVzfQoZbN0gFR1M2hls3S
+AVufVqGWzdIBUEsFBgAAAAABAAEAWwAAAJsSAAAAAA==
