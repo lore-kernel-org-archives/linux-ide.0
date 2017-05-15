@@ -1,103 +1,50 @@
-From: <dengx@physics.utoledo.edu>
-Subject: 7422 linux-ide
-Date: Mon, 15 May 2017 09:26:43 -0000
-Message-ID: <149484040392.9987.6647289724769947521@hinet.net>
+From: mustapha ali <amsonprabin@gmail.com>
+Subject: GOOD DAY FROM MR.MUSTAPHA ALI.
+Date: Mon, 15 May 2017 03:02:42 -0700
+Message-ID: <CAL7DNQ29KtjdgOfBbokax3KRDgFsSbva-Fp9P05X7bv6jnQ2dw@mail.gmail.com>
+Reply-To: mustaphaali399@yahoo.com
 Mime-Version: 1.0
-Content-Type: application/zip; name="137033508.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 114-42-178-92.dynamic-ip.hinet.net ([114.42.178.92]:48837 "HELO
-        hinet.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-        id S1760062AbdEOJ0x (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 15 May 2017 05:26:53 -0400
-Content-Disposition: attachment
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:34809 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759073AbdEOKCn (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 15 May 2017 06:02:43 -0400
+Received: by mail-qt0-f195.google.com with SMTP id l39so14559518qtb.1
+        for <linux-ide@vger.kernel.org>; Mon, 15 May 2017 03:02:43 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-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
+Good Day To You,
+
+
+ My Name is Mustapha Ali, I am a banker by profession. I am from
+Ouagadougou, Burkina Faso, West Africa. My reason for contacting you
+is to transfer an abandoned fund $5M US Dollars to your account if
+ you agree with me.
+
+The owner of this fund died since 2003 with his Next Of Kin. I want to
+present you to the bank as the Next of Kin/beneficiary of this fund.
+
+Please indicate your interest and willingness by sending the below
+information for more clarification and confident  to enable me feed
+you with more details concerning the business deal.
+
+(1) YOUR FULL NAME...............................
+(2) YOUR AGE AND SEX............................
+(3) YOUR CONTACT ADDRESS..................
+(4) YOUR PRIVATE PHONE N0..........
+(5) FAX NUMBER..............
+(6) YOUR COUNTRY OF ORIGIN..................
+(7) YOUR OCCUPATION.........................=E2=80=99
+(8)YOUR PHOTO=E2=80=A6=E2=80=A6=E2=80=A6=E2=80=A6=E2=80=A6=E2=80=A6=E2=80=
+=A6=E2=80=A6=E2=80=A6=E2=80=A6=E2=80=A6=E2=80=A6..
+
+Further details of the transaction shall be forward to you as soon as
+I receive your response indicating your interest in handling this
+transaction.
+
+ Have a Great Day,
+
+Mustapha Ali.
