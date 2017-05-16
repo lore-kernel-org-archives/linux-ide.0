@@ -1,27 +1,26 @@
-From: Hans de Goede <hdegoede@redhat.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH] ata: libahci: properly propagate return value of
  platform_get_irq()
-Date: Tue, 16 May 2017 14:59:35 +0200
-Message-ID: <5e7eb353-b017-46b2-a9a1-f68465a028cc@redhat.com>
+Date: Tue, 16 May 2017 11:20:22 -0400
+Message-ID: <20170516152022.GA6389@htj.duckdns.org>
 References: <1494936372-27209-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50708 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752596AbdEPM7n (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 16 May 2017 08:59:43 -0400
+Received: from mail-yw0-f172.google.com ([209.85.161.172]:36726 "EHLO
+        mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750950AbdEPPUZ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2017 11:20:25 -0400
+Received: by mail-yw0-f172.google.com with SMTP id b68so54548169ywe.3
+        for <linux-ide@vger.kernel.org>; Tue, 16 May 2017 08:20:24 -0700 (PDT)
+Content-Disposition: inline
 In-Reply-To: <1494936372-27209-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>
 
-Hi,
-
-On 16-05-17 14:06, Thomas Petazzoni wrote:
+On Tue, May 16, 2017 at 02:06:12PM +0200, Thomas Petazzoni wrote:
 > When platform_get_irq() fails, it returns an error code, which
 > libahci_platform and replaces it by -EINVAL. This commit fixes that by
 > propagating the error code. It fixes the situation where
@@ -36,33 +35,9 @@ On 16-05-17 14:06, Thomas Petazzoni wrote:
 > 
 > Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
-Looks good to me:
+Applied to libata/for-4.12-fixes.
 
-Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+Thanks.
 
-Regards,
-
-Hans
-
-
-> ---
->   drivers/ata/libahci_platform.c | 5 +++--
->   1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-> index aaa761b..cd2eab6 100644
-> --- a/drivers/ata/libahci_platform.c
-> +++ b/drivers/ata/libahci_platform.c
-> @@ -514,8 +514,9 @@ int ahci_platform_init_host(struct platform_device *pdev,
->   
->   	irq = platform_get_irq(pdev, 0);
->   	if (irq <= 0) {
-> -		dev_err(dev, "no irq\n");
-> -		return -EINVAL;
-> +		if (irq != -EPROBE_DEFER)
-> +			dev_err(dev, "no irq\n");
-> +		return irq;
->   	}
->   
->   	hpriv->irq = irq;
-> 
+-- 
+tejun
