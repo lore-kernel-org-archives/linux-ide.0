@@ -1,38 +1,68 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH v2 45/53] ata: update references for libata
- documentation
-Date: Tue, 16 May 2017 14:47:51 +0200
-Message-ID: <2992478.O7ZHJjDqaE@amdc3058>
-References: <cover.1494935649.git.mchehab@s-opensource.com>
-        <CGME20170516121724epcas5p40afce73e9edb60110f5a188c6c62d04a@epcas5p4.samsung.com>
-        <19285f3c4669c8b0cea8fb6c452c83db9e6386be.1494935649.git.mchehab@s-opensource.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH] ata: libahci: properly propagate return value of
+ platform_get_irq()
+Date: Tue, 16 May 2017 14:59:35 +0200
+Message-ID: <5e7eb353-b017-46b2-a9a1-f68465a028cc@redhat.com>
+References: <1494936372-27209-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:57739 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750970AbdEPMr4 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 16 May 2017 08:47:56 -0400
-In-reply-to: <19285f3c4669c8b0cea8fb6c452c83db9e6386be.1494935649.git.mchehab@s-opensource.com>
+Received: from mx1.redhat.com ([209.132.183.28]:50708 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752596AbdEPM7n (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 16 May 2017 08:59:43 -0400
+In-Reply-To: <1494936372-27209-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mauro Carvalho Chehab <mchehab@s-opensource.com>
-Cc: Linux Doc Mailing List <linux-doc@vger.kernel.org>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, Marek Vasut <marek.vasut@gmail.com>, Richard Weinberger <richard@nod.at>, Cyrille Pitchen <cyrille.pitchen@atmel.com>, linux-mtd@lists.infradead.org, Tejun Heo <tj@kernel.org>, Mikael Pettersson <mikpelinux@gmail.com>, linux-ide@vger.kernel.org
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>
 
-On Tuesday, May 16, 2017 09:16:37 AM Mauro Carvalho Chehab wrote:
-> The libata documentation is now using ReST. Update references
-> to it to point to the new place.
+Hi,
+
+On 16-05-17 14:06, Thomas Petazzoni wrote:
+> When platform_get_irq() fails, it returns an error code, which
+> libahci_platform and replaces it by -EINVAL. This commit fixes that by
+> propagating the error code. It fixes the situation where
+> platform_get_irq() returns -EPROBE_DEFER because the interrupt
+> controller is not available yet, and generally looks like the right
+> thing to do.
 > 
-> Signed-off-by: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+> We pay attention to not show the "no irq" message when we are in an
+> EPROBE_DEFER situation, because the driver probing will be retried
+> later on, once the interrupt controller becomes available to provide
+> the interrupt.
+> 
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
-For PATA parts:
+Looks good to me:
 
-Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
 
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+Regards,
 
+Hans
+
+
+> ---
+>   drivers/ata/libahci_platform.c | 5 +++--
+>   1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> index aaa761b..cd2eab6 100644
+> --- a/drivers/ata/libahci_platform.c
+> +++ b/drivers/ata/libahci_platform.c
+> @@ -514,8 +514,9 @@ int ahci_platform_init_host(struct platform_device *pdev,
+>   
+>   	irq = platform_get_irq(pdev, 0);
+>   	if (irq <= 0) {
+> -		dev_err(dev, "no irq\n");
+> -		return -EINVAL;
+> +		if (irq != -EPROBE_DEFER)
+> +			dev_err(dev, "no irq\n");
+> +		return irq;
+>   	}
+>   
+>   	hpriv->irq = irq;
+> 
