@@ -1,85 +1,68 @@
-From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
-Subject: Re: [PATCH 00/36] Convert DocBook documents to ReST
-Date: Mon, 15 May 2017 14:41:03 -0300
-Message-ID: <20170515144103.306189d6@vento.lan>
-References: <cover.1494596071.git.mchehab@s-opensource.com>
- <20170515111141.0fcd5ee6@lwn.net>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH] ata: libahci: properly propagate return value of
+ platform_get_irq()
+Date: Wed, 17 May 2017 12:11:45 +0300
+Message-ID: <a44ed587-6e2e-373f-8c2c-1d1d451762f9@cogentembedded.com>
+References: <1494936372-27209-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <alsa-devel-bounces@alsa-project.org>
-In-Reply-To: <20170515111141.0fcd5ee6@lwn.net>
-List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
-List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
-List-Post: <mailto:alsa-devel@alsa-project.org>
-List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
-List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
-Errors-To: alsa-devel-bounces@alsa-project.org
-Sender: alsa-devel-bounces@alsa-project.org
-To: Jonathan Corbet <corbet@lwn.net>
-Cc: Andrew Lunn <andrew@lunn.ch>, alsa-devel@alsa-project.org, Linux Doc Mailing List <linux-doc@vger.kernel.org>, Takashi Iwai <tiwai@suse.de>, Jan Kiszka <jan.kiszka@siemens.com>, "Herton R.
- Krzesinski" <herton@redhat.com>, Alexei Starovoitov <ast@kernel.org>, Takashi Iwai <tiwai@suse.com>, "J. Bruce
- Fields" <bfields@fieldses.org>, linux-ide@vger.kernel.org, Eric Dumazet <edumazet@google.com>, netdev@vger.kernel.org, Jeff Layton <jlayton@poochiereds.net>, Jan Kara <jack@suse.com>, Soheil Hassas Yeganeh <soheil@google.com>, linux-s390@vger.kernel.org, Florian Fainelli <f.fainelli@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Herbert Xu <herbert@gondor.apana.org.au>, linux-scsi@vger.kernel.org, Ursula Braun <ubraun@linux.vnet.ibm.com>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Peter Zijlstra <peterz@infradead.org>, Julian Anastasov <ja@ssi.bg>, Ingo
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:35725 "EHLO
+        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753010AbdEQJLr (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 17 May 2017 05:11:47 -0400
+Received: by mail-wm0-f49.google.com with SMTP id b84so157065684wmh.0
+        for <linux-ide@vger.kernel.org>; Wed, 17 May 2017 02:11:47 -0700 (PDT)
+In-Reply-To: <1494936372-27209-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>
 
-Em Mon, 15 May 2017 11:11:41 -0600
-Jonathan Corbet <corbet@lwn.net> escreveu:
+Hello!
 
-> On Fri, 12 May 2017 10:59:43 -0300
-> Mauro Carvalho Chehab <mchehab@s-opensource.com> wrote:
-> 
-> > This patch series convert the following books from
-> > DocBook to ReST:
-> > 
-> >    - filesystems
-> >    - kernel-hacking
-> >    - kernel-locking
-> >    - kgdb
-> >    - libata
-> >    - networking
-> >    - rapidio
-> >    - s390-drivers
-> >    - scsi
-> >    - w1
-> >    - z8530book
-> > 
-> > It also adjusts some Sphinx-pedantic errors/warnings on
-> > some kernel-doc markups.
-> > 
-> > I also added some patches here to add PDF output for all
-> > existing ReST books.  
-> 
-> So I've been through the series (including digging out the parts that
-> weren't sent to me).  
-> 
-> > I did my best to check if what's there is not too outdated, but
-> > the best is if the subsystem maintainers could check it.  
-> 
-> That has been my real concern with those remaining books; many of them
-> have not been touched in any significant way in at least ten years. Just
-> shoveling a bunch of stuff into RST doesn't really solve the problem that
-> Documentation/ is an unorganized jumble of sometimes highly outdated
-> documentation.
+On 5/16/2017 3:06 PM, Thomas Petazzoni wrote:
 
-True. Yet, on the checks I did, on the books that have API descriptions,
-the C domain references still exist. On the books that just have
-kernel-doc tags, I wouldn't expect any changes there, as the API
-changes should be, instead, at the C code.
+> When platform_get_irq() fails, it returns an error code, which
+> libahci_platform and replaces it by -EINVAL.
 
-So, I guess that it is not that bad, and, by having them in ReST will
-make them easier to be updated, as ReST is basically ascii with benefits.
+    Couldn't parse this sentence...
 
-> But, then, I guess there's value in having a disorganized jumble that
-> depends on only one fragile toolchain rather than two :)  So maybe we
-> should just do this.
-> 
-> I only had one real comment with the series beyond the general stuff
-> here.  I see Markus had a few.  When the tweaks are done, can you send me
-> a series for the stuff I can apply, and I'll do it?
+> This commit fixes that by
+> propagating the error code. It fixes the situation where
+> platform_get_irq() returns -EPROBE_DEFER because the interrupt
+> controller is not available yet, and generally looks like the right
+> thing to do.
+>
+> We pay attention to not show the "no irq" message when we are in an
+> EPROBE_DEFER situation, because the driver probing will be retried
+> later on, once the interrupt controller becomes available to provide
+> the interrupt.
+>
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> ---
+>  drivers/ata/libahci_platform.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> index aaa761b..cd2eab6 100644
+> --- a/drivers/ata/libahci_platform.c
+> +++ b/drivers/ata/libahci_platform.c
+> @@ -514,8 +514,9 @@ int ahci_platform_init_host(struct platform_device *pdev,
+>
+>  	irq = platform_get_irq(pdev, 0);
+>  	if (irq <= 0) {
+> -		dev_err(dev, "no irq\n");
+> -		return -EINVAL;
+> +		if (irq != -EPROBE_DEFER)
+> +			dev_err(dev, "no irq\n");
+> +		return irq;
 
-Sure, I'm addressing the comments and will send you a new series.
+    Iff 'irq' is 0, you'll return 0 here, indicating success.
+    Actually, I've fixed platform_get_irq() not to return 0 on error.
 
-Thanks,
-Mauro
+[...]
+
+MBR, Sergei
+
