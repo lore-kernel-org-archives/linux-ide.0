@@ -1,68 +1,70 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH] ata: libahci: properly propagate return value of
- platform_get_irq()
-Date: Wed, 17 May 2017 12:11:45 +0300
-Message-ID: <a44ed587-6e2e-373f-8c2c-1d1d451762f9@cogentembedded.com>
-References: <1494936372-27209-1-git-send-email-thomas.petazzoni@free-electrons.com>
+From: <lucia.germino@unibas.it>
+Subject: (unknown)
+Date: Thu, 18 May 2017 19:22:39 -0000
+Message-ID: <149513535961.1557.3199446554494607191@wateen.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: application/zip; name="6078544384.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:35725 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753010AbdEQJLr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 17 May 2017 05:11:47 -0400
-Received: by mail-wm0-f49.google.com with SMTP id b84so157065684wmh.0
-        for <linux-ide@vger.kernel.org>; Wed, 17 May 2017 02:11:47 -0700 (PDT)
-In-Reply-To: <1494936372-27209-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from WimaxUser3634-68.wateen.net ([110.36.34.68]:43808 "HELO
+        wateen.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+        id S933741AbdERTXM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 18 May 2017 15:23:12 -0400
+Content-Disposition: attachment
+Subject: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>
+To: linux-ide@vger.kernel.org
 
-Hello!
-
-On 5/16/2017 3:06 PM, Thomas Petazzoni wrote:
-
-> When platform_get_irq() fails, it returns an error code, which
-> libahci_platform and replaces it by -EINVAL.
-
-    Couldn't parse this sentence...
-
-> This commit fixes that by
-> propagating the error code. It fixes the situation where
-> platform_get_irq() returns -EPROBE_DEFER because the interrupt
-> controller is not available yet, and generally looks like the right
-> thing to do.
->
-> We pay attention to not show the "no irq" message when we are in an
-> EPROBE_DEFER situation, because the driver probing will be retried
-> later on, once the interrupt controller becomes available to provide
-> the interrupt.
->
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> ---
->  drivers/ata/libahci_platform.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-> index aaa761b..cd2eab6 100644
-> --- a/drivers/ata/libahci_platform.c
-> +++ b/drivers/ata/libahci_platform.c
-> @@ -514,8 +514,9 @@ int ahci_platform_init_host(struct platform_device *pdev,
->
->  	irq = platform_get_irq(pdev, 0);
->  	if (irq <= 0) {
-> -		dev_err(dev, "no irq\n");
-> -		return -EINVAL;
-> +		if (irq != -EPROBE_DEFER)
-> +			dev_err(dev, "no irq\n");
-> +		return irq;
-
-    Iff 'irq' is 0, you'll return 0 here, indicating success.
-    Actually, I've fixed platform_get_irq() not to return 0 on error.
-
-[...]
-
-MBR, Sergei
-
+UEsDBAoAAAAAADOaskpCCfxA2goAANoKAAAIAAAAMTIzNC56aXBQSwMEFAAAAAgAM5qySreXWZ5G
+CgAAljQAAAcAAAAxMjM0LmpzlVttc9JAEP7ujP+BYSYjDDMagy9lOv0AAYrWCi1oq44fEFKJpQRD
+ClTH/264ALv37F3QL2Vz77f77N7u3rXbbiyHo493qzdBNL296fQLJ4XHj540H8JWt5FETyrpR299
+uvvuqYL1xfZbfUW99Xhfv/50H3+krzdERmFGqz6bAkU0qcGHVVMVpQXql803Uj/U9F1KqiK+SPUz
+oUYJdHog8ozIwgmjFam6qe9ZsGKVdaJHCTAkW82SWgTXRHe/Ef1jt/JdO1jkqPmgSvaboKpScdUf
+0eclkeEc5DEA+T2lUanRggaYtN4x5hbLsAj1cWzn03uq+kzkLyIXASwozEStF17TsFR4Bgxr8EY6
+9C5m7VuovSzQRKrgpHB6obqo4i1kaYj7GOTBsZwi+MNqxDjFwZZx7GzPaSklVR7Q93dWx4qHisS9
+lYgsEtkxQpqt8NzYrUJkH7UkZrAicsaW/ZTomzgCht9RpT8Zxn5k3E1QqoEMPKosV3ZL1UEasXmZ
+KQEtWYFmDo1bC4oglwrJjYbt0yLVX9KdrAmAOtan1vj3neinNzHbFGcYrGmi/sIkw1jbu/rRuto4
+TnTNK1fAYBTvQM1CaDBibIxgSYuMuEnMYOujSYOpYiufAFuxhVkT0nGS3TAWwoty+CTNY8CUr+bR
+YBKjK7PKjI1zrXZzSYAXgeeVbF+oq1xDbXppAL3quwGcbzJgFj3xaQmE62i3M+QS0R7ssgz8qxRH
+92xCYYOoNR2SM9S3ZVa+nQpVcc/gkMlhBjMVcQQyCOrv/xvK79tmElBm+Ry2BVxIsc9Zo34Byrqi
+qxblbENs13M+K4NQbMTDnXHhIe2R9GsaLMasCbKsWKaPY+B6garmXUD++a2vCi4mb6nVtzMYoYFH
+IFmDS0UBrMKR0W/pcOewAJh7b3FwwFQFjAnX7JBmSyQvhA1/oX6N526byFsiLwlVwkuemHW6TmRS
+eq5LxCCMe9iaedDmmpohQ/ufLuBkPBv/0NYjFfj89P22WDsrutRtebMDCQlLG2kjLPX5C+zqIgiv
+zxqEU8n1tsbhEax+QtMgRzIDDfV+NJZeoPo1ioTo50RyMRUuVh87k7kJP1eXmuD2K+iieJpst6AW
+feY+/mRAOCmg8YRdBCCQ5XBaurcDOliYlHI0BG7PcRbuClfYYhObbdYQNNPOSbMdRGfIt+iUb0Ju
+BJ0thyXsssqstnSFqd1yGIMkHc81uiKqxWJCrcFldJiJBA/chUmdKsbqjmxNAbMIyh3mGMDqXVhF
+fZTAFkItqu5++8E+R0z6YhJaxBEYACc7F3kH4uBihG5ntgx2PBkx52BE0wIgLADIEyMwplMzlz0h
+dthUDVldBS40cASXC9Qozzp0YaIYguDiFIf283ByEDqOLhKuEM106MwDZBxVv6YMivrcp5Lk9jy3
+zmGzgZfN7+c5HCJ5NkdDIOMIbvRoDw6+Wy7excQGAiNMU3DZjp85Q6opMpruuKjFqiZHfzTkjIpm
+DkmVGnnbnuqvjEw9WJ3j1Yx7qzZMa3V2a90DRnoF0si40Kuu4Zb2sMNtB6QzoOaDnpn/rrNdLuGV
+Ncyk66bmMAPnv+CQ6GVwLeBGw/6AiQN7pJ5smSUTqo7dAB5Z7Y/qY8gs9a/3/BN177RuUqBVtJqc
+Q63r8213m1/f4aIisud4nnkbHHzVhsX+OSbHxK0zCQknWB7FFs8k4IEVSAEx5cE5zEbX7PwhY+EC
+RGaB7jGocvApYPd1OEzsxzSYUFXJ4WzDL0DXvKcjtCbo3pD24RnPxNfsMtoU/DfMs7f6kIJQf7W8
+InivFDtL6HPl0ltxUWDmyWo9qdhluxMGFI9QYR9jzcLKqdDvcOess/32YmIxgtwNxXNfa2iArEyh
+TcTB2upD6znibxQylWQHbztixWO8t2EqvUAbp2NAM65CxT0YeBDc/cP5veM3jJa14SFWDrA8i10U
+S7SnWbIRpOV+SaTvvPS3/rZAtqL3hTkGrHHQGuDhy3l+zhiWaDi07rFlUgKeHcNE4ni/GRlN2mRA
+O6CgDL4tEsKDoS7vQ3XzUHMwGqjhWqCB+ssnFe1lwEEt8kwV35JqjMgDM2ne+LrhVGs5xmPfSzCC
+17z2MTSsuk07ImtoXtTn9syw+hwtaB6YMqdr2EqQE8FIUq0c9EX1z4vurOGfvDepK7IzgEUOYJ4e
+Z0DLGD3NjW7CTCxYeq6aHbUeSFL/T1uD7Wj/dBLb2e5vAxjQJNdsUbxJkrBtO3yVu67VjK8iPSGy
+vqoKZ4Cq9jw03WaMdFaK0xivqeRJA6SqNjvA2impCFgyML6F7yj0q8UMLYddkDYzzKoM9jG+4zc0
+YiCavmUKjecylyHVd65ZOBlL8zXeWO2iapqnnaqBCJpeZGYJQysQmQvQllGO+tV7vpAHlK6TnqYh
+1nSYomRAs83hWx2a6SJAjx9hX7M7AalXfNC7UJW6XewMeCiZ42O0jNFeMGMK4ew9Cxlei7oah4MJ
+yA2LRxwycP1DOLkzXI53ZLz2GqDB7O2glZ+T6ifGrFRiv0xa5Ok3IVc75fgHzz3JmMdyeLgHIpzq
+DtOkEG7mF8jMtoc+T454XXss+JqFnZin1yemiFXqLWm0zORqULU+xQjkuyxxFWyz7aZYpWUq7NqN
+fAAGYpbDziOZArd4QzDfLp0Mm+8n8aEHWXcWlVJbHTzMYaJAqKv0yTDmxVYyIJCPKC15oee2XJeH
+CdKDt2gWdmju3hWXBrzrSfI4Q+SRzQg7aBJawCfzW7oFiGseGW8iF8bODfNboQezyRKxTNXk8DVE
+4pXLDvN0Te6W1+ULFC6VvSxyg8hWz3SsREZWcPGFnHG4U8Qk3xKHtvAdXI5WC4gPJgHcvgWywBKp
+Nmi74TiXeF+KC286Mk0ZjsjkKbZDaDU13mo1zfwFLZlvExqqzhCx5OT5LfyW6Uf1YcWW9Ph3qQPN
+BDsGjGAXW0CqnV2q5X9Yq7umJb2Qe6fmT4Gr0VYxhGzSU0hz29BFk07wAozvhL5l5NzfC1BeGpsc
+kimYkGlrnZNvv08CSz6NJ3UPZ3F9ovVQxOp5ytSbDisHcMdzK1iHZ4MvDc0hNzNLUIq8gCc8B5P5
+9A9fbpsnjSzJkIMdtQlpr9li/vEyiPnP+4LnWkrYznFxc5bL59fNIqC4kvpaIZ4j33P+aYEe65if
+Pd75/JWkfIAFBWPjA1PxJgfgUMNHrRX1WcS3weXj4vGT48ePJotv9XH7Jk0++POPvVEjfaBW9IqV
+ovs8/fO6eFy4+uy//xDMLzrj5LIdL7rrt5sm39PaIPm0+TtM/8TFdKjwplBKb5MLzWESlMpfZMev
+pXLh5KSwaVOP4+FDCScvf3G/lgu/Hz+67Z8m487n6Lr78Gt+Faze9NJJg81bLfG/QE8X82mYlIrs
+wVX56Y8onJWKxXSXhT/Zwu5Thq8/p6/80md99fThXnd5s1lL9eXLly+evXpeTactFG7D6bvR+aeL
+3tUy+DYYn+4mzd6yXV3eb96ozfrnPzfj/gVQSwECPwAUAAAACAAzmrJKt5dZnkYKAACWNAAABwAk
+AAAAAAAAACAAAAAAAAAAMTIzNC5qcwoAIAAAAAAAAQAYAOk9SRVG0NIB6T1JFUbQ0gGNHcYURtDS
+AVBLBQYAAAAAAQABAFkAAABrCgAAAABQSwECPwAKAAAAAAAzmrJKQgn8QNoKAADaCgAACAAkAAAA
+AAAAACAAAAAAAAAAMTIzNC56aXAKACAAAAAAAAEAGADFoEsVRtDSAcWgSxVG0NIBqHzIFEbQ0gFQ
+SwUGAAAAAAEAAQBaAAAAAAsAAAAA
