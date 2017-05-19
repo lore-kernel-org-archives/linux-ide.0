@@ -1,14 +1,14 @@
 From: Linus Walleij <linus.walleij@linaro.org>
-Subject: [PATCH 1/4] ata: Add DT bindings for Faraday Technology FTIDE010
-Date: Sat, 20 May 2017 01:05:06 +0200
-Message-ID: <20170519230509.16655-1-linus.walleij@linaro.org>
+Subject: [PATCH 1/4 v2] ata: Add DT bindings for Faraday Technology FTIDE010
+Date: Sat, 20 May 2017 01:05:57 +0200
+Message-ID: <20170519230600.16782-1-linus.walleij@linaro.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lf0-f48.google.com ([209.85.215.48]:36739 "EHLO
+Received: from mail-lf0-f48.google.com ([209.85.215.48]:33361 "EHLO
         mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757139AbdESXF0 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 19 May 2017 19:05:26 -0400
-Received: by mail-lf0-f48.google.com with SMTP id h4so7968834lfj.3
-        for <linux-ide@vger.kernel.org>; Fri, 19 May 2017 16:05:25 -0700 (PDT)
+        with ESMTP id S1757174AbdESXGH (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 19 May 2017 19:06:07 -0400
+Received: by mail-lf0-f48.google.com with SMTP id m18so7972134lfj.0
+        for <linux-ide@vger.kernel.org>; Fri, 19 May 2017 16:06:06 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org
