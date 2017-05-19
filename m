@@ -1,70 +1,82 @@
-From: <lucia.germino@unibas.it>
-Subject: (unknown)
-Date: Thu, 18 May 2017 19:22:39 -0000
-Message-ID: <149513535961.1557.3199446554494607191@wateen.net>
-Mime-Version: 1.0
-Content-Type: application/zip; name="6078544384.zip"
-Content-Transfer-Encoding: base64
+From: Linus Walleij <linus.walleij@linaro.org>
+Subject: [PATCH] libata: Fix devres handling
+Date: Sat, 20 May 2017 01:03:14 +0200
+Message-ID: <20170519230314.15718-1-linus.walleij@linaro.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from WimaxUser3634-68.wateen.net ([110.36.34.68]:43808 "HELO
-        wateen.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-        id S933741AbdERTXM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 18 May 2017 15:23:12 -0400
-Content-Disposition: attachment
-Subject: 
+Received: from mail-lf0-f42.google.com ([209.85.215.42]:34129 "EHLO
+        mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752414AbdESXD2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 19 May 2017 19:03:28 -0400
+Received: by mail-lf0-f42.google.com with SMTP id 99so7938456lfu.1
+        for <linux-ide@vger.kernel.org>; Fri, 19 May 2017 16:03:27 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org
+Cc: Linus Walleij <linus.walleij@linaro.org>, stable@vger.kernel.org
 
-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
-SwUGAAAAAAEAAQBaAAAAAAsAAAAA
+The ATA hosts are allocated using devres with:
+host = devres_alloc(ata_host_release, sz, GFP_KERNEL);
+However in the ata_host_release() function the host is retrieved
+using dev_get_drvdata() which is not what other devres handlers
+do, instead we should probably use the passed resource.
+
+Before this my kernel crashes badly when I fail to start a host
+in ata_host_start() and need to bail out, because dev_get_drvdata()
+gets the wrong-but-almost-correct pointer (so on some systems it
+may by chance be the right pointer what do I know).
+
+On ARMv4 Gemini it is not:
+
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 1 at ../lib/refcount.c:184 refcount_sub_and_test+0x9c/0xac
+refcount_t: underflow; use-after-free.
+CPU: 0 PID: 1 Comm: swapper Not tainted 4.12.0-rc1+ #657
+Hardware name: Gemini (Device Tree)
+[<c0010f10>] (unwind_backtrace) from [<c000d8a4>] (show_stack+0x10/0x14)
+[<c000d8a4>] (show_stack) from [<c0018720>] (__warn+0xcc/0xf4)
+[<c0018720>] (__warn) from [<c0018780>] (warn_slowpath_fmt+0x38/0x48)
+[<c0018780>] (warn_slowpath_fmt) from [<c01fffcc>] (refcount_sub_and_test+0x9c/0xac)
+[<c01fffcc>] (refcount_sub_and_test) from [<c01e8a5c>] (kobject_put+0x28/0xe0)
+[<c01e8a5c>] (kobject_put) from [<c029b294>] (ata_host_release+0xb0/0x144)
+[<c029b294>] (ata_host_release) from [<c027326c>] (release_nodes+0x178/0x1fc)
+[<c027326c>] (release_nodes) from [<c02707e4>] (driver_probe_device+0xd0/0x2dc)
+[<c02707e4>] (driver_probe_device) from [<c0270aac>] (__driver_attach+0xbc/0xc0)
+[<c0270aac>] (__driver_attach) from [<c026eeac>] (bus_for_each_dev+0x70/0xa0)
+[<c026eeac>] (bus_for_each_dev) from [<c026f824>] (bus_add_driver+0x178/0x200)
+[<c026f824>] (bus_add_driver) from [<c0271184>] (driver_register+0x78/0xf8)
+[<c0271184>] (driver_register) from [<c05b2d90>] (do_one_initcall+0xac/0x174)
+[<c05b2d90>] (do_one_initcall) from [<c05b2f6c>] (kernel_init_freeable+0x114/0x1cc)
+[<c05b2f6c>] (kernel_init_freeable) from [<c04beeb4>] (kernel_init+0x8/0xf4)
+[<c04beeb4>] (kernel_init) from [<c000a270>] (ret_from_fork+0x14/0x24)
+---[ end trace 0a4570446a019085 ]---
+
+Then there is a second (worse) crash when it tries to iterate
+to the next port. But it is all because the host pointer is
+wrong.
+
+In this case, the host should be 0xc7a3f3d0 as it was when it got
+allocated but instead what dev_get_drvdata() returns is 0xc7a3f370.
+Using the passed resource gives the right pointer.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+---
+ drivers/ata/libata-core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 2d83b8c75965..5487c4a29bc3 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5921,7 +5921,7 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+ 
+ static void ata_host_release(struct device *gendev, void *res)
+ {
+-	struct ata_host *host = dev_get_drvdata(gendev);
++	struct ata_host *host = res;
+ 	int i;
+ 
+ 	for (i = 0; i < host->n_ports; i++) {
+-- 
+2.9.4
+
