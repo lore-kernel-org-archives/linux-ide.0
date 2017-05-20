@@ -1,49 +1,69 @@
-From: Linus Walleij <linus.walleij@linaro.org>
-Subject: Re: [PATCH 4/4 v2] ARM: dts: add Gemini PATA/SATA support
-Date: Sat, 20 May 2017 10:27:41 +0200
-Message-ID: <CACRpkdbubStWj+K0eORLXRfZCWAVHs4aC5yDaUzPCPkWLcenoA@mail.gmail.com>
-References: <20170519230600.16782-1-linus.walleij@linaro.org> <20170519230600.16782-4-linus.walleij@linaro.org>
+From: <mgriffit@genome.wustl.edu>
+Subject: (unknown)
+Date: Sat, 20 May 2017 09:40:47 -0000
+Message-ID: <149527324744.1559.4673701661985447845@segumas.com.pe>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: application/zip; name="64749729775761.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-io0-f181.google.com ([209.85.223.181]:35004 "EHLO
-        mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750831AbdETI1n (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 20 May 2017 04:27:43 -0400
-Received: by mail-io0-f181.google.com with SMTP id f102so58649989ioi.2
-        for <linux-ide@vger.kernel.org>; Sat, 20 May 2017 01:27:43 -0700 (PDT)
-In-Reply-To: <20170519230600.16782-4-linus.walleij@linaro.org>
+Received: from mail.segumas.com.pe ([200.60.36.82]:35384 "HELO segumas.com.pe"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1750709AbdETJlG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sat, 20 May 2017 05:41:06 -0400
+Subject: 
+Content-Disposition: attachment
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org
-Cc: Janos Laube <janos.dev@gmail.com>, Paulius Zaleckas <paulius.zaleckas@gmail.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Hans Ulli Kroll <ulli.kroll@googlemail.com>, Florian Fainelli <f.fainelli@gmail.com>, Linus Walleij <linus.walleij@linaro.org>, John Feng-Hsin Chiang <john453@faraday-tech.com>, Greentime Hu <green.hu@gmail.com>
+To: linux-ide@vger.kernel.org
 
-On Sat, May 20, 2017 at 1:06 AM, Linus Walleij <linus.walleij@linaro.org> wrote:
-
-> The NAS4229B and SQ201 Gemini systems have a PATA controller
-> which is linked to a SATA bridge in the SoC. Enable both
-> platforms to use the PATA/SATA devices.
->
-> Cc: John Feng-Hsin Chiang <john453@faraday-tech.com>
-> Cc: Greentime Hu <green.hu@gmail.com>
-> Acked-by: Hans Ulli Kroll <ulli.kroll@googlemail.com>
-> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
-> ---
-> ChangeLog v1->v2:
-> - Cut the timings
-
-(...)
-
-> +               ata@63400000 {
-(...)
-> +                       /* PIO timings assume 33 MHz bus speed */
-> +                       faraday,pio-active-time = <10>, <10>, <10>, <3>, <3>;
-> +                       faraday,pio-recovery-time = <10>, <3>, <1>, <3>, <1>;
-(...)
-
-OK I forgot to cut the timings on the second instance, sorry.
-I have removed them now so they are not there when I send this
-to the ARM SoC tree.
-
-Yours,
-Linus Walleij
+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
+AAAAAAEAAQBbAAAAwwoAAAAA
