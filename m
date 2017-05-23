@@ -1,35 +1,68 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: Fix devres handling
-Date: Tue, 23 May 2017 17:27:36 -0400
-Message-ID: <20170523212736.GL13222@htj.duckdns.org>
-References: <20170519230314.15718-1-linus.walleij@linaro.org>
- <20170523211608.GJ13222@htj.duckdns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170523211608.GJ13222@htj.duckdns.org>
-Sender: stable-owner@vger.kernel.org
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, stable@vger.kernel.org
+From: Andrew Lunn <andrew@lunn.ch>
+Subject: [PATCH] Revert "ata: sata_mv: Convert to devm_ioremap_resource()"
+Date: Wed, 24 May 2017 01:39:35 +0200
+Message-ID: <1495582775-3717-1-git-send-email-andrew@lunn.ch>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from vps0.lunn.ch ([178.209.37.122]:42293 "EHLO vps0.lunn.ch"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753927AbdEWXkD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 23 May 2017 19:40:03 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Gregory Clement <gregory.clement@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, linux-ide@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>
 
-Hello, again.
+This reverts commit 368e5fbdfc60732643f34f538823ed4bc8829827.
 
-On Tue, May 23, 2017 at 05:16:08PM -0400, Tejun Heo wrote:
-> That's 96 bytes of difference, which seems too big for devres_node,
-> especially on 32bit machines.  Can you check what gdb says on "print
-> ((struct devres *)0)->data" or "print sizeof(struct devres_node)"?
-> 
-> There gotta be something else going on.  devres_alloc() returns the
-> data pointer which is the same one which gets passed into the release
-> function.
+devm_ioremap_resource() enforces that there are no overlapping
+resources, where as devm_ioremap() does not. The sata phy driver needs
+a subset of the sata IO address space, so maps some of the sata
+address space. As a result, sata_mv now fails to probe, reporting it
+cannot get its resources, and so we don't have any SATA disks.
 
-Also, can you please add throw in some printks and see what's being
-returned from devres_alloc() and getting set on driver data?  This is
-really weird.  I can't think of a reason why they'd differ.
+Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+---
+ drivers/ata/sata_mv.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-Thanks.
-
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index b66bcda88320..3b2246dded74 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -4067,7 +4067,6 @@ static int mv_platform_probe(struct platform_device *pdev)
+ 	struct ata_host *host;
+ 	struct mv_host_priv *hpriv;
+ 	struct resource *res;
+-	void __iomem *mmio;
+ 	int n_ports = 0, irq = 0;
+ 	int rc;
+ 	int port;
+@@ -4086,9 +4085,8 @@ static int mv_platform_probe(struct platform_device *pdev)
+ 	 * Get the register base first
+ 	 */
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	mmio = devm_ioremap_resource(&pdev->dev, res);
+-	if (IS_ERR(mmio))
+-		return PTR_ERR(mmio);
++	if (res == NULL)
++		return -EINVAL;
+ 
+ 	/* allocate host */
+ 	if (pdev->dev.of_node) {
+@@ -4132,7 +4130,12 @@ static int mv_platform_probe(struct platform_device *pdev)
+ 	hpriv->board_idx = chip_soc;
+ 
+ 	host->iomap = NULL;
+-	hpriv->base = mmio - SATAHC0_REG_BASE;
++	hpriv->base = devm_ioremap(&pdev->dev, res->start,
++				   resource_size(res));
++	if (!hpriv->base)
++		return -ENOMEM;
++
++	hpriv->base -= SATAHC0_REG_BASE;
+ 
+ 	hpriv->clk = clk_get(&pdev->dev, NULL);
+ 	if (IS_ERR(hpriv->clk))
 -- 
-tejun
+2.11.0
+
