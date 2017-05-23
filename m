@@ -1,75 +1,69 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: Fix devres handling
-Date: Tue, 23 May 2017 17:16:08 -0400
-Message-ID: <20170523211608.GJ13222@htj.duckdns.org>
-References: <20170519230314.15718-1-linus.walleij@linaro.org>
+Subject: Re: [PATCH 3/4 v2] ata: Add driver for Faraday Technology FTIDE010
+Date: Tue, 23 May 2017 17:25:56 -0400
+Message-ID: <20170523212556.GK13222@htj.duckdns.org>
+References: <20170519230600.16782-1-linus.walleij@linaro.org>
+ <20170519230600.16782-3-linus.walleij@linaro.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yw0-f195.google.com ([209.85.161.195]:32991 "EHLO
+        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1034108AbdEWVZ7 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 23 May 2017 17:25:59 -0400
+Received: by mail-yw0-f195.google.com with SMTP id y64so10275727ywe.0
+        for <linux-ide@vger.kernel.org>; Tue, 23 May 2017 14:25:59 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20170519230314.15718-1-linus.walleij@linaro.org>
-Sender: stable-owner@vger.kernel.org
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, stable@vger.kernel.org
+In-Reply-To: <20170519230600.16782-3-linus.walleij@linaro.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linus Walleij <linus.walleij@linaro.org>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, Janos Laube <janos.dev@gmail.com>, Paulius Zaleckas <paulius.zaleckas@gmail.com>, linux-arm-kernel@lists.infradead.org, Hans Ulli Kroll <ulli.kroll@googlemail.com>, Florian Fainelli <f.fainelli@gmail.com>, John Feng-Hsin Chiang <john453@faraday-tech.com>, Greentime Hu <green.hu@gmail.com>
 
-Hello, Linus.
+Hello,
 
-On Sat, May 20, 2017 at 01:03:14AM +0200, Linus Walleij wrote:
-> The ATA hosts are allocated using devres with:
-> host = devres_alloc(ata_host_release, sz, GFP_KERNEL);
-> However in the ata_host_release() function the host is retrieved
-> using dev_get_drvdata() which is not what other devres handlers
-> do, instead we should probably use the passed resource.
->
-> Before this my kernel crashes badly when I fail to start a host
-> in ata_host_start() and need to bail out, because dev_get_drvdata()
-> gets the wrong-but-almost-correct pointer (so on some systems it
-> may by chance be the right pointer what do I know).
+On Sat, May 20, 2017 at 01:05:59AM +0200, Linus Walleij wrote:
+> This adds a driver for the Faraday Technology FTIDE010
+> PATA IP block.
 > 
-> On ARMv4 Gemini it is not:
+> When used with the Storlink/Storm/Cortina Systems Gemini
+> SoC, the PATA interface is accompanied by a PATA<->SATA
+> bridge, so while the device appear as a PATA controller,
+> it attaches physically to SATA disks, and also has a
+> designated memory area with registers to set up the bridge.
 > 
-> ------------[ cut here ]------------
-> WARNING: CPU: 0 PID: 1 at ../lib/refcount.c:184 refcount_sub_and_test+0x9c/0xac
-> refcount_t: underflow; use-after-free.
-> CPU: 0 PID: 1 Comm: swapper Not tainted 4.12.0-rc1+ #657
-> Hardware name: Gemini (Device Tree)
-> [<c0010f10>] (unwind_backtrace) from [<c000d8a4>] (show_stack+0x10/0x14)
-> [<c000d8a4>] (show_stack) from [<c0018720>] (__warn+0xcc/0xf4)
-> [<c0018720>] (__warn) from [<c0018780>] (warn_slowpath_fmt+0x38/0x48)
-> [<c0018780>] (warn_slowpath_fmt) from [<c01fffcc>] (refcount_sub_and_test+0x9c/0xac)
-> [<c01fffcc>] (refcount_sub_and_test) from [<c01e8a5c>] (kobject_put+0x28/0xe0)
-> [<c01e8a5c>] (kobject_put) from [<c029b294>] (ata_host_release+0xb0/0x144)
-> [<c029b294>] (ata_host_release) from [<c027326c>] (release_nodes+0x178/0x1fc)
-> [<c027326c>] (release_nodes) from [<c02707e4>] (driver_probe_device+0xd0/0x2dc)
-> [<c02707e4>] (driver_probe_device) from [<c0270aac>] (__driver_attach+0xbc/0xc0)
-> [<c0270aac>] (__driver_attach) from [<c026eeac>] (bus_for_each_dev+0x70/0xa0)
-> [<c026eeac>] (bus_for_each_dev) from [<c026f824>] (bus_add_driver+0x178/0x200)
-> [<c026f824>] (bus_add_driver) from [<c0271184>] (driver_register+0x78/0xf8)
-> [<c0271184>] (driver_register) from [<c05b2d90>] (do_one_initcall+0xac/0x174)
-> [<c05b2d90>] (do_one_initcall) from [<c05b2f6c>] (kernel_init_freeable+0x114/0x1cc)
-> [<c05b2f6c>] (kernel_init_freeable) from [<c04beeb4>] (kernel_init+0x8/0xf4)
-> [<c04beeb4>] (kernel_init) from [<c000a270>] (ret_from_fork+0x14/0x24)
-> ---[ end trace 0a4570446a019085 ]---
+> The Gemini SATA bridge is separated into its own driver
+> file to make things modular and make it possible to reuse
+> the PATA driver as stand-alone on other systems than the
+> Gemini.
 > 
-> Then there is a second (worse) crash when it tries to iterate
-> to the next port. But it is all because the host pointer is
-> wrong.
+> dmesg excerpt from the D-Link DIR-685 storage router:
+> gemini-sata-bridge 46000000.sata: SATA ID 00000e00, PHY ID: 01000100
+> gemini-sata-bridge 46000000.sata: set up the Gemini IDE/SATA nexus
+> ftide010 63000000.ata: set up Gemini PATA0
+> ftide010 63000000.ata: device ID 00000500, irq 26, io base 0x63000000
+> ftide010 63000000.ata: SATA0 (master) start
+> gemini-sata-bridge 46000000.sata: SATA0 PHY ready
+> scsi host0: pata-ftide010
+> ata1: PATA max UDMA/133 irq 26
+> ata1.00: ATA-8: INTEL SSDSA2CW120G3, 4PC10302, max UDMA/133
+> ata1.00: 234441648 sectors, multi 1: LBA48 NCQ (depth 0/32)
+> ata1.00: configured for UDMA/133
+> scsi 0:0:0:0: Direct-Access     ATA      INTEL SSDSA2CW12 0302 PQ: 0 ANSI: 5
+> ata1.00: Enabling discard_zeroes_data
+> sd 0:0:0:0: [sda] 234441648 512-byte logical blocks: (120 GB/112 GiB)
+> sd 0:0:0:0: [sda] Write Protect is off
+> sd 0:0:0:0: [sda] Write cache: enabled, read cache:
+>                   enabled, doesn't support DPO or FUA
+> ata1.00: Enabling discard_zeroes_data
+> ata1.00: Enabling discard_zeroes_data
+> sd 0:0:0:0: [sda] Attached SCSI disk
+> 
+> After this I can flawlessly mount and read/write copy etc files
+> from /dev/sda[n].
 
-This is really weird.  The two can't be different, well, at least
-shouldn't.
-
-> In this case, the host should be 0xc7a3f3d0 as it was when it got
-> allocated but instead what dev_get_drvdata() returns is 0xc7a3f370.
-> Using the passed resource gives the right pointer.
-
-That's 96 bytes of difference, which seems too big for devres_node,
-especially on 32bit machines.  Can you check what gdb says on "print
-((struct devres *)0)->data" or "print sizeof(struct devres_node)"?
-
-There gotta be something else going on.  devres_alloc() returns the
-data pointer which is the same one which gets passed into the release
-function.
+Heh, that's a lot of driver.  Looks okay to me but, Bart, can you
+please review and ack this one?
 
 Thanks.
 
