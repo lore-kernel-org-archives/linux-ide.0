@@ -1,31 +1,103 @@
-From: Mikko Perttunen <cyndis-/1wQRMveznE@public.gmane.org>
-Subject: Re: [PATCH V3 1/3] ata: ahci_tegra: Add AHCI support for tegra210
-Date: Wed, 24 May 2017 10:15:57 +0300
-Message-ID: <e7a2cbef-71c7-cffb-58d5-aac998c8e156@kapsi.fi>
-References: <1494581650-11115-1-git-send-email-pchandru@nvidia.com>
- <1494581650-11115-2-git-send-email-pchandru@nvidia.com>
- <c3457c8e12b0402293bdea825883277f@bgmail103.nvidia.com>
- <3dfdc451-794a-832e-4985-ac56d7e1843e@kapsi.fi>
- <db35147839414c609a5dc2cde44dd998@BGMAIL104.nvidia.com>
- <6a39df12-c51d-d5b5-c126-1f264bb00ad0@kapsi.fi>
+From: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Subject: Re: [PATCH] Revert "ata: sata_mv: Convert to devm_ioremap_resource()"
+Date: Wed, 24 May 2017 15:01:20 +0200
+Message-ID: <87d1aywgrj.fsf@free-electrons.com>
+References: <1495582775-3717-1-git-send-email-andrew@lunn.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <6a39df12-c51d-d5b5-c126-1f264bb00ad0-/1wQRMveznE@public.gmane.org>
-Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Preetham Chandru <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Laxman Dewangan <ldewangan-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Venu Byravarasu <vbyravarasu-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Pavan Kunapuli <pkunapuli-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.free-electrons.com ([62.4.15.54]:39707 "EHLO
+        mail.free-electrons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1035433AbdEXNBX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 24 May 2017 09:01:23 -0400
+In-Reply-To: <1495582775-3717-1-git-send-email-andrew@lunn.ch> (Andrew Lunn's
+        message of "Wed, 24 May 2017 01:39:35 +0200")
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: Tejun Heo <tj@kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Jason Cooper <jason@lakedaemon.net>, linux-ide@vger.kernel.org
 
-Also Vagrant Cascadian mentioned on IRC that the call to 
-tegra_ahci_handle_quirks is currently before the definition of the 
-function which causes warnings or compilation errors. So please add a 
-declaration of the function before the call.
+Hi Andrew,
+ 
+ On mer., mai 24 2017, Andrew Lunn <andrew@lunn.ch> wrote:
 
-Cheers,
-Mikko.
+> This reverts commit 368e5fbdfc60732643f34f538823ed4bc8829827.
+>
+> devm_ioremap_resource() enforces that there are no overlapping
+> resources, where as devm_ioremap() does not. The sata phy driver needs
+> a subset of the sata IO address space, so maps some of the sata
+> address space. As a result, sata_mv now fails to probe, reporting it
+> cannot get its resources, and so we don't have any SATA disks.
+>
+> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+For this patch as it fixes a regresssion:
 
-On 24.05.2017 10:14, Mikko Perttunen wrote:
-> On 24.05.2017 08:44, Preetham Chandru wrote:
->> ...
+Acked-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
+
+However, as the same set of register are accessed by two drivers, is
+there a risk for a race condition ?
+
+In this case we may consider to use a regmap.
+
+Or maybe they never aces the same register ?
+
+In this case it is safe to let the driver as is, but adding a comment
+could be useful.
+
+Thanks,
+
+Gregory
+
+
+
+> ---
+>  drivers/ata/sata_mv.c | 13 ++++++++-----
+>  1 file changed, 8 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> index b66bcda88320..3b2246dded74 100644
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+> @@ -4067,7 +4067,6 @@ static int mv_platform_probe(struct platform_device *pdev)
+>  	struct ata_host *host;
+>  	struct mv_host_priv *hpriv;
+>  	struct resource *res;
+> -	void __iomem *mmio;
+>  	int n_ports = 0, irq = 0;
+>  	int rc;
+>  	int port;
+> @@ -4086,9 +4085,8 @@ static int mv_platform_probe(struct platform_device *pdev)
+>  	 * Get the register base first
+>  	 */
+>  	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> -	mmio = devm_ioremap_resource(&pdev->dev, res);
+> -	if (IS_ERR(mmio))
+> -		return PTR_ERR(mmio);
+> +	if (res == NULL)
+> +		return -EINVAL;
+>  
+>  	/* allocate host */
+>  	if (pdev->dev.of_node) {
+> @@ -4132,7 +4130,12 @@ static int mv_platform_probe(struct platform_device *pdev)
+>  	hpriv->board_idx = chip_soc;
+>  
+>  	host->iomap = NULL;
+> -	hpriv->base = mmio - SATAHC0_REG_BASE;
+> +	hpriv->base = devm_ioremap(&pdev->dev, res->start,
+> +				   resource_size(res));
+> +	if (!hpriv->base)
+> +		return -ENOMEM;
+> +
+> +	hpriv->base -= SATAHC0_REG_BASE;
+>  
+>  	hpriv->clk = clk_get(&pdev->dev, NULL);
+>  	if (IS_ERR(hpriv->clk))
+> -- 
+> 2.11.0
+>
+
+-- 
+Gregory Clement, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
