@@ -1,38 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] Revert "ata: sata_mv: Convert to devm_ioremap_resource()"
-Date: Wed, 24 May 2017 11:07:21 -0400
-Message-ID: <20170524150721.GB24798@htj.duckdns.org>
-References: <1495582775-3717-1-git-send-email-andrew@lunn.ch>
+From: Preetham Chandru <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: RE: [PATCH V3 1/3] ata: ahci_tegra: Add AHCI support for tegra210
+Date: Thu, 25 May 2017 11:11:45 +0000
+Message-ID: <3759eceaaf5d452e9d09563bb94503ee@bgmail103.nvidia.com>
+References: <1494581650-11115-1-git-send-email-pchandru@nvidia.com>
+ <1494581650-11115-2-git-send-email-pchandru@nvidia.com>
+ <c3457c8e12b0402293bdea825883277f@bgmail103.nvidia.com>
+ <3dfdc451-794a-832e-4985-ac56d7e1843e@kapsi.fi>
+ <db35147839414c609a5dc2cde44dd998@BGMAIL104.nvidia.com>
+ <6a39df12-c51d-d5b5-c126-1f264bb00ad0@kapsi.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yb0-f171.google.com ([209.85.213.171]:35571 "EHLO
-        mail-yb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S968341AbdEXPHZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 24 May 2017 11:07:25 -0400
-Received: by mail-yb0-f171.google.com with SMTP id p143so46149880yba.2
-        for <linux-ide@vger.kernel.org>; Wed, 24 May 2017 08:07:25 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1495582775-3717-1-git-send-email-andrew@lunn.ch>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <6a39df12-c51d-d5b5-c126-1f264bb00ad0-/1wQRMveznE@public.gmane.org>
+Content-Language: en-US
+Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Mikko Perttunen <cyndis-/1wQRMveznE@public.gmane.org>, "thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Laxman Dewangan <ldewangan-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Venu Byravarasu <vbyravarasu-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Pavan Kunapuli <pkunapuli-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Gregory Clement <gregory.clement@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, linux-ide@vger.kernel.org
 
-On Wed, May 24, 2017 at 01:39:35AM +0200, Andrew Lunn wrote:
-> This reverts commit 368e5fbdfc60732643f34f538823ed4bc8829827.
-> 
-> devm_ioremap_resource() enforces that there are no overlapping
-> resources, where as devm_ioremap() does not. The sata phy driver needs
-> a subset of the sata IO address space, so maps some of the sata
-> address space. As a result, sata_mv now fails to probe, reporting it
-> cannot get its resources, and so we don't have any SATA disks.
-> 
-> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+>>>>> +		ahci_tegra_port_info.flags |= ATA_FLAG_NO_DIPM;
+>>>
+>>> Looking at the downstream device trees, it looks like DIPM and DEVSLP
+>>> are still disabled for Tegra186 - so why don't we just hardcode these
+>>> quirks, by always writing the MISC_CNTL_1_0 register and just adding
+>>> ATA_FLAG_NO_DIPM to ahci_tegra_port_info's static definition.
+>>>
+>>
+>> For Tegra186 the devslp pin is shared with PCIE clk req pin.
+>> In downstream PCIe driver by default assumes that CLKREQ is present and it
+>owns it.
+>> So by default devslp is disabled. We verify devslp by making sure that
+>> pcie does not own this pin. This issue will be fixed in future chips.
+>
+>Ok. How about DIPM, can we hardcode that? If not, or if it is fixed in Xavier, I
+>think it would be cleaner to have two static port_info structs and select between
+>then based on the quirk, so that we don't need to mutate the static data.
+>
 
-Applied to libata/v4.12-fixes.
-
-Thanks.
-
--- 
-tejun
+No, DIPM is not fixed in that chip as well. I will hardcode it now and in future when it gets fixed we can have two port_info structs as suggested.
