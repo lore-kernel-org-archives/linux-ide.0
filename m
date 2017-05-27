@@ -1,53 +1,39 @@
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: Re: [PATCH] Revert "ata: sata_mv: Convert to
- devm_ioremap_resource()"
-Date: Thu, 25 May 2017 16:34:26 +0300
-Message-ID: <1495719266.6967.120.camel@linux.intel.com>
-References: <1495582775-3717-1-git-send-email-andrew@lunn.ch>
-         <87d1aywgrj.fsf@free-electrons.com>
-         <1495632972.6967.104.camel@linux.intel.com>
-         <20170524134127.GB26577@lunn.ch>
-         <1495634404.6967.109.camel@linux.intel.com>
-         <20170524142956.GE26577@lunn.ch>
-         <1495716820.6967.111.camel@linux.intel.com> <20170525132639.GK1788@lunn.ch>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH] ide: avoid warning for timings calculation
+Date: Sat, 27 May 2017 23:22:55 +0300
+Message-ID: <CAHp75VdWrBDN-Pb_WOLjim6ZhyN6dxwEzi_ekBNbzQ-tJuAeoQ@mail.gmail.com>
+References: <20170511125214.278638-1-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:46626 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1424225AbdEYNeb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 25 May 2017 09:34:31 -0400
-In-Reply-To: <20170525132639.GK1788@lunn.ch>
+Received: from mail-qt0-f182.google.com ([209.85.216.182]:35598 "EHLO
+        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750750AbdE0UW5 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2017 16:22:57 -0400
+In-Reply-To: <20170511125214.278638-1-arnd@arndb.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: Gregory CLEMENT <gregory.clement@free-electrons.com>, Tejun Heo <tj@kernel.org>, Jason Cooper <jason@lakedaemon.net>, linux-ide@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Thu, 2017-05-25 at 15:26 +0200, Andrew Lunn wrote:
-> > > What issue? You are allowed to have overlapping memory resources.
-> > 
-> > Exactly, and then the question why did you do a revert?
-> 
-> Because we are at -rc2.
+On Thu, May 11, 2017 at 3:52 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> gcc-7 warns about the result of a constant multiplication used as
+> a boolean:
+>
+> drivers/ide/ide-timings.c: In function 'ide_timing_quantize':
+> drivers/ide/ide-timings.c:112:24: error: '*' in boolean context, suggest '&&' instead [-Werror=int-in-bool-context]
+>   q->setup   = EZ(t->setup   * 1000,  T);
+>
+> This slightly rearranges the macro to simplify the code and avoid
+> the warning at the same time.
 
-No, my point is that (repeating myself) revert just *hides* the actual
-issue. 
+>  #define ENOUGH(v, unit)                (((v) - 1) / (unit) + 1)
+> -#define EZ(v, unit)            ((v) ? ENOUGH(v, unit) : 0)
+> +#define EZ(v, unit)            ((v) ? ENOUGH(v * 1000, unit) : 0)
 
-Yes, I understand that it's a quick fix, and it should not be considered
-as best solution.
-
->  We need a quick fix now, so that my NAS box
-> disks start spinning again. You can then spend some time to consider a
-> better fix, and get it merged in the 4.13 merge window.
-> 
-
-> Please feel free to Cc: me and the other Marvell maintainers on
-> patches, so we can test them.
-
-I'm not going to do that since I have no such issue, no possibility to
-test and actually choose best strategy with your hardware.
+Perhaps
+v -> (v) in the multiplication.
 
 -- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+With Best Regards,
+Andy Shevchenko
