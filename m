@@ -1,39 +1,77 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH] ide: avoid warning for timings calculation
-Date: Sat, 27 May 2017 23:22:55 +0300
-Message-ID: <CAHp75VdWrBDN-Pb_WOLjim6ZhyN6dxwEzi_ekBNbzQ-tJuAeoQ@mail.gmail.com>
-References: <20170511125214.278638-1-arnd@arndb.de>
+From: Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: [PATCH] libata: Fix devres handling
+Date: Tue, 30 May 2017 11:21:24 +0200
+Message-ID: <CACRpkdY696hTcdDwoCg6GPi_VG7Q=iC8yt8iJQMQ5FYQ_S3fqw@mail.gmail.com>
+References: <20170519230314.15718-1-linus.walleij@linaro.org> <20170523211608.GJ13222@htj.duckdns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f182.google.com ([209.85.216.182]:35598 "EHLO
-        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750750AbdE0UW5 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 27 May 2017 16:22:57 -0400
-In-Reply-To: <20170511125214.278638-1-arnd@arndb.de>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20170523211608.GJ13222@htj.duckdns.org>
+Sender: stable-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, stable <stable@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Thu, May 11, 2017 at 3:52 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> gcc-7 warns about the result of a constant multiplication used as
-> a boolean:
->
-> drivers/ide/ide-timings.c: In function 'ide_timing_quantize':
-> drivers/ide/ide-timings.c:112:24: error: '*' in boolean context, suggest '&&' instead [-Werror=int-in-bool-context]
->   q->setup   = EZ(t->setup   * 1000,  T);
->
-> This slightly rearranges the macro to simplify the code and avoid
-> the warning at the same time.
+On Tue, May 23, 2017 at 11:16 PM, Tejun Heo <tj@kernel.org> wrote:
 
->  #define ENOUGH(v, unit)                (((v) - 1) / (unit) + 1)
-> -#define EZ(v, unit)            ((v) ? ENOUGH(v, unit) : 0)
-> +#define EZ(v, unit)            ((v) ? ENOUGH(v * 1000, unit) : 0)
+>> The ATA hosts are allocated using devres with:
+>> host = devres_alloc(ata_host_release, sz, GFP_KERNEL);
+>> However in the ata_host_release() function the host is retrieved
+>> using dev_get_drvdata() which is not what other devres handlers
+>> do, instead we should probably use the passed resource.
+>>
+>> Before this my kernel crashes badly when I fail to start a host
+>> in ata_host_start() and need to bail out, because dev_get_drvdata()
+>> gets the wrong-but-almost-correct pointer (so on some systems it
+>> may by chance be the right pointer what do I know).
+>>
+>> On ARMv4 Gemini it is not:
+(...)
+> This is really weird.  The two can't be different, well, at least
+> shouldn't.
 
-Perhaps
-v -> (v) in the multiplication.
+I found the problem.
 
--- 
-With Best Regards,
-Andy Shevchenko
+This is because my driver issues platform_set_drvdata(pdev)
+on the same struct device * overwriting the data with
+its own. That function is just an alias for dev_set_drvdata().
+
+Amazingly, libata survives this until release.
+
+Maybe we should print a warning if dev_get_drvdata()
+and res differ? It's a sign that something is wrong because
+someone screwed with the drvdata behind the back of
+libata.
+
+It appears further that I am in bad company: there are a few
+drivers in drivers/ata that have broken errorpath because
+they do exactly this or variants of this. So it turns up in my
+driver too because of copypaste.
+
+Device drivers assume that they "own" drvdata inside the
+device, but with libata they do not, as shown above.
+It is used more as a rule than an exception to pass a
+state container from probe() over to remove().
+
+It is a common pattern to overwrite drvdata, the following
+drivers now have this bug in one way or another:
+
+pata_bf54x.c: platform_set_drvdata(pdev, host);
+pata_ep93xx.c: platform_set_drvdata(pdev, drv_data);
+sata_dwc_460ex.c: dev_set_drvdata(&ofdev->dev, host);
+
+These drivers:
+
+pata_rb532_cf.c: platform_set_drvdata(pdev, ah);
+pata_samsung_cf.c: platform_set_drvdata(pdev, host);
+sata_fsl.c: platform_set_drvdata(ofdev, host);
+
+They set the ATA host as drvdata, essentially overwriting
+the drvdata pointer with the same value.
+
+I guess I will simply make a cleanup series for these,
+making sure they use host->private_data instead and do not
+double-write the drvdata.
+
+Yours,
+Linus Walleij
