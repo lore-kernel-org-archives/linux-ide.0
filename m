@@ -1,33 +1,48 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/6] ata: bf54x: cut drvdata assignment
-Date: Tue, 30 May 2017 11:55:45 -0400
-Message-ID: <20170530155545.GA15858@htj.duckdns.org>
-References: <20170530094644.15566-1-linus.walleij@linaro.org>
+Subject: Re: [PATCH] libata: Fix devres handling
+Date: Tue, 30 May 2017 13:59:09 -0400
+Message-ID: <20170530175909.GA15169@htj.duckdns.org>
+References: <20170519230314.15718-1-linus.walleij@linaro.org>
+ <20170523211608.GJ13222@htj.duckdns.org>
+ <CACRpkdY696hTcdDwoCg6GPi_VG7Q=iC8yt8iJQMQ5FYQ_S3fqw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yb0-f180.google.com ([209.85.213.180]:36456 "EHLO
-        mail-yb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750841AbdE3Pzr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 30 May 2017 11:55:47 -0400
-Received: by mail-yb0-f180.google.com with SMTP id 130so21547095ybl.3
-        for <linux-ide@vger.kernel.org>; Tue, 30 May 2017 08:55:47 -0700 (PDT)
+Return-path: <stable-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170530094644.15566-1-linus.walleij@linaro.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+In-Reply-To: <CACRpkdY696hTcdDwoCg6GPi_VG7Q=iC8yt8iJQMQ5FYQ_S3fqw@mail.gmail.com>
+Sender: stable-owner@vger.kernel.org
 To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, stable <stable@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-On Tue, May 30, 2017 at 11:46:39AM +0200, Linus Walleij wrote:
-> ata_host_alloc_pinfo() assigns the host pointer to the
-> struct device * drvdata, do not assign it a second time.
-> 
-> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+Hello, Linus.
 
-Applied 1-6 to libata/for-4.13.
+On Tue, May 30, 2017 at 11:21:24AM +0200, Linus Walleij wrote:
+> This is because my driver issues platform_set_drvdata(pdev)
+> on the same struct device * overwriting the data with
+> its own. That function is just an alias for dev_set_drvdata().
 
-Thanks.
+I see.
+
+> Amazingly, libata survives this until release.
+
+That is surprising given that libata does depend on that drvdata quite
+a bit.
+
+> Maybe we should print a warning if dev_get_drvdata()
+> and res differ? It's a sign that something is wrong because
+> someone screwed with the drvdata behind the back of
+> libata.
+
+Please feel free to submit a patch to add WARN_ON there.
+
+> I guess I will simply make a cleanup series for these,
+> making sure they use host->private_data instead and do not
+> double-write the drvdata.
+
+Great.
+
+Thanks for working on this!
 
 -- 
 tejun
