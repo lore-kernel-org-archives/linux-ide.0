@@ -1,38 +1,27 @@
-From: Linus Walleij <linus.walleij@linaro.org>
-Subject: Re: [PATCH] Revert "ata: sata_mv: Convert to devm_ioremap_resource()"
-Date: Wed, 31 May 2017 01:53:29 +0200
-Message-ID: <CACRpkdY0eJE5EdrahNbSucM2ERQJBwfP5q01LDaYUR9CJaiZsg@mail.gmail.com>
-References: <20170530135256.9966-1-linus.walleij@linaro.org> <1496152548.28981.25.camel@linux.intel.com>
+From: Petru Mihancea <petrum@gmail.com>
+Subject: "Redirecting" a bug report to the relevant list
+Date: Wed, 31 May 2017 14:07:30 +0300
+Message-ID: <CAKHFTdOvzO7W_NsDhqHVTN=FQCpuT61zXFjNRQ8y0YfTx1CY6Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1496152548.28981.25.camel@linux.intel.com>
-Sender: stable-owner@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, stable <stable@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yb0-f170.google.com ([209.85.213.170]:35527 "EHLO
+        mail-yb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750996AbdEaLHb (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 31 May 2017 07:07:31 -0400
+Received: by mail-yb0-f170.google.com with SMTP id r66so2783530yba.2
+        for <linux-ide@vger.kernel.org>; Wed, 31 May 2017 04:07:31 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Tue, May 30, 2017 at 3:55 PM, Andy Shevchenko
-<andriy.shevchenko@linux.intel.com> wrote:
-> On Tue, 2017-05-30 at 15:52 +0200, Linus Walleij wrote:
->> This reverts commit 368e5fbdfc60732643f34f538823ed4bc8829827.
->>
->> My NAS stopped to mount root when I went from some v4.10-rc1
->> to v4.12-rc3. Investigation of the bootlog yields this:
->>
->> sata_mv f1080000.sata: can't request region for resource [mem
->> 0xf1080000-0xf1084fff]
->> sata_mv: probe of f1080000.sata failed with error -16
->>
->> Reverting this offending patch makes the sata_mv probe and
->> my SATA drive can mount root again, hooray!
->
-> It's already in upstream (ata tree).
+Hi,
 
-OK!
+I misclassified the bug report at the following link. Since I do not
+want to introduce duplications,  I thought it might be better to send
+an email to the list that looks relevant.
 
-Only two patches for the same issue? Today for the GPIO
-tree I got four (4!) patches fixing the same issue :D
+https://bugzilla.kernel.org/show_bug.cgi?id=195785
 
-Yours,
-Linus Walleij
+Thank you,
+Petru Mihancea
