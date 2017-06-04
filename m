@@ -1,108 +1,100 @@
 From: Linus Walleij <linus.walleij@linaro.org>
-Subject: Re: [PATCH 3/4 v3] ata: Add driver for Faraday Technology FTIDE010
-Date: Sun, 4 Jun 2017 10:39:07 +0200
-Message-ID: <CACRpkdb1WNDk-zavUfLZvDMXFsnyqZOuzCsqM1C1S7DOL0kQKA@mail.gmail.com>
-References: <20170530113402.20450-1-linus.walleij@linaro.org>
- <CGME20170530113419epcas3p262d14182b61d8a3853ef0f962f6a1fb2@epcas3p2.samsung.com>
- <20170530113402.20450-3-linus.walleij@linaro.org> <1937268.BD9NpZS46X@amdc3058>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Subject: [PATCH 1/4 v4] ata: Add DT bindings for Faraday Technology FTIDE010
+Date: Sun,  4 Jun 2017 10:50:06 +0200
+Message-ID: <20170604085009.11902-1-linus.walleij@linaro.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-it0-f46.google.com ([209.85.214.46]:37186 "EHLO
-        mail-it0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750847AbdFDIjK (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 4 Jun 2017 04:39:10 -0400
-Received: by mail-it0-f46.google.com with SMTP id m47so51700678iti.0
-        for <linux-ide@vger.kernel.org>; Sun, 04 Jun 2017 01:39:10 -0700 (PDT)
-In-Reply-To: <1937268.BD9NpZS46X@amdc3058>
+Received: from mail-lf0-f48.google.com ([209.85.215.48]:34876 "EHLO
+        mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750847AbdFDIuZ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 4 Jun 2017 04:50:25 -0400
+Received: by mail-lf0-f48.google.com with SMTP id c184so54519876lfe.2
+        for <linux-ide@vger.kernel.org>; Sun, 04 Jun 2017 01:50:24 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Janos Laube <janos.dev@gmail.com>, Paulius Zaleckas <paulius.zaleckas@gmail.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Hans Ulli Kroll <ulli.kroll@googlemail.com>, Florian Fainelli <f.fainelli@gmail.com>, John Feng-Hsin Chiang <john453@faraday-tech.com>, Greentime Hu <green.hu@gmail.com>
+To: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org
+Cc: Janos Laube <janos.dev@gmail.com>, Paulius Zaleckas <paulius.zaleckas@gmail.com>, linux-arm-kernel@lists.infradead.org, Hans Ulli Kroll <ulli.kroll@googlemail.com>, Florian Fainelli <f.fainelli@gmail.com>, Linus Walleij <linus.walleij@linaro.org>, devicetree@vger.kernel.org, John Feng-Hsin Chiang <john453@faraday-tech.com>, Greentime Hu <green.hu@gmail.com>
 
-Hi Barlomiej,
+This adds device tree bindings for the Faraday Technology
+FTIDE010 found in the Storlink/Storm/Cortina Systems Gemini SoC.
 
-thanks a *lot* for detailed review and for showing me some really
-tricky corners of ATA support!
+I am not 100% sure that this part is from Faraday Technology but
+a lot points in that direction:
 
-Most things I just fixed, will send v4 soon.
+- A later IDE interface called FTIDE020 exist and share some
+  properties.
 
-On Tue, May 30, 2017 at 4:31 PM, Bartlomiej Zolnierkiewicz
-<b.zolnierkie@samsung.com> wrote:
+- The SATA bridge has the same Built In Self Test (BIST) that the
+  Faraday FTSATA100 seems to have, and it has version number 0100
+  in the device ID register, so this is very likely a FTSATA100
+  bundled with the FTIDE010.
 
->> +static const bool set_mdma_66_mhz[] = { true, true, true, true };
->
-> 50 MHz MWDMA timings are never used by the driver and can be removed..
+Cc: devicetree@vger.kernel.org
+Cc: John Feng-Hsin Chiang <john453@faraday-tech.com>
+Cc: Greentime Hu <green.hu@gmail.com>
+Acked-by: Hans Ulli Kroll <ulli.kroll@googlemail.com>
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+---
+ChangeLog v3->v4:
+- No changes, just resending to keep the patch set together.
+ChangeLog v2->v3:
+- No changes, just resending to keep the patch set together.
+ChangeLog v1->v2:
+- Cut the timings defintions from the device tree. Hard-code
+  it in the driver instead, keeping the nice layout and
+  configurability by making it easy to tweak the timings
+  in the code.
+- Fix up some confused references to 50 MHz in 66 MHz
+  properties.
+---
+ .../devicetree/bindings/ata/faraday,ftide010.txt   | 38 ++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ata/faraday,ftide010.txt
 
-I think it's nice to keep around as documentation really, and someone may want
-to patch it in and experiment with 50MHz mode if things are not
-working for them.
+diff --git a/Documentation/devicetree/bindings/ata/faraday,ftide010.txt b/Documentation/devicetree/bindings/ata/faraday,ftide010.txt
+new file mode 100644
+index 000000000000..a0c64a29104d
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/faraday,ftide010.txt
+@@ -0,0 +1,38 @@
++* Faraday Technology FTIDE010 PATA controller
++
++This controller is the first Faraday IDE interface block, used in the
++StorLink SL2312 and SL3516, later known as the Cortina Systems Gemini
++platform. The controller can do PIO modes 0 through 4, Multi-word DMA
++(MWDM)modes 0 through 2 and Ultra DMA modes 0 through 6.
++
++On the Gemini platform, this PATA block is accompanied by a PATA to
++SATA bridge in order to support SATA. This is why a phandle to that
++controller is compulsory on that platform.
++
++The timing properties are unique per-SoC, not per-board.
++
++Required properties:
++- compatible: should be one of
++  "cortina,gemini-pata", "faraday,ftide010"
++  "faraday,ftide010"
++- interrupts: interrupt for the block
++- reg: registers and size for the block
++
++Optional properties:
++- clocks: a SoC clock running the peripheral.
++- clock-names: should be set to "PCLK" for the peripheral clock.
++
++Required properties for "cortina,gemini-pata" compatible:
++- sata: a phande to the Gemini PATA to SATA bridge, see
++  cortina,gemini-sata-bridge.txt for details.
++
++Example:
++
++ata@63000000 {
++	compatible = "cortina,gemini-pata", "faraday,ftide010";
++	reg = <0x63000000 0x100>;
++	interrupts = <4 IRQ_TYPE_EDGE_RISING>;
++	clocks = <&gcc GEMINI_CLK_GATE_IDE>;
++	clock-names = "PCLK";
++	sata = <&sata>;
++};
+-- 
+2.9.4
 
-> CLK_MOD_REG is shared between master and slave so the driver needs to
-> make sure that right clock is used if master and slave devices require
-> different clocks (i.e. master is using UDMA5 and slave is using UDMA6).
-(...)
-> Moreover MWDMA_TIMING_REG is also shared between devices.
-(...)
-> ->qc_issue method can be used to program the right tuning values, i.e.
-
-Wow thanks a lot for clearing this up!
-
-I was a bit confused about how to deal with this. Now it makes a
-lot more sense!
-
-> static unsigned int ftide010_qc_issue(struct ata_queued_cmd *qc)
-> {
->         struct ata_port *ap = qc->ap;
->         struct ata_device *adev = qc->dev;
->
->         if (adev != ap->private_data && ata_dma_enabled(adev))
->                 ftide010_set_dmamode(ap, adev);
->
->         return ata_bmdma_qc_issue(qc);
-> }
->
-> [ set ap->private_data to adev at the end of ftide010_set_dmamode() ]
-
-I implemented this exactly as above, with some extra comments
-so it's clear what is going on.
-
->> +static int pata_ftide010_gemini_cable_detect(struct ata_port *ap)
->> +{
->> +     struct ftide010 *ftide = ap->host->private_data;
->> +
->> +     /*
->> +      * Return the master cable, I have no clue how to return a different
->> +      * cable for the slave than for the master.
->> +      */
->
-> Seems like ->cable_detect needs to operate on ata_device * now?
->
-> Tejun?
-
-Yeah... it looks like something libata is not really made to handle.
-
-This platform has one IRQ for each port bridge anyways.
-
->> +             case GEMINI_MUXMODE_3:
->> +                     ftide->master_cbl = ATA_CBL_PATA40;
->> +                     ftide->slave_cbl = ATA_CBL_PATA40;
->> +                     break;
->> +             }
->
-> It seems that for PATA devices 80-wires cable will be never
-> used, is this correct?
-
-That is a simplification. I haven't seen any systems using the
-PATA interface at all.
-
-I have put in some comments that we assume the
-40-wire interface, and if something else like 80-wire is in use
-then that needs to be specified in the device tree since the
-SoC and driver cannot detect it without special hardware.
-
-I guess I could add DT properties for it but it seems a bit
-speculative since I can't test it.
-
-Yours,
-Linus Walleij
