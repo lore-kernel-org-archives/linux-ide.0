@@ -1,61 +1,33 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 4/6] libata: factor out a ata_identify_page_supported
- helper
-Date: Mon, 5 Jun 2017 15:46:42 +0300
-Message-ID: <950a1c26-c691-9bce-eaa4-873165d7a98b@cogentembedded.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: TCG Opal support for libata
+Date: Mon, 5 Jun 2017 15:30:08 -0400
+Message-ID: <20170605193008.GA9399@htj.duckdns.org>
 References: <20170604124225.27032-1-hch@lst.de>
- <20170604124225.27032-5-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20170604124225.27032-5-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>
-Cc: Scott Bauer <scott.bauer@intel.com>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yw0-f170.google.com ([209.85.161.170]:36205 "EHLO
+        mail-yw0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751077AbdFETaR (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jun 2017 15:30:17 -0400
+Content-Disposition: inline
+In-Reply-To: <20170604124225.27032-1-hch@lst.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Scott Bauer <scott.bauer@intel.com>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-Hello!
+On Sun, Jun 04, 2017 at 02:42:19PM +0200, Christoph Hellwig wrote:
+> Hi all,
+> 
+> this series adds support for using our new generic TCG OPAL code with
+> SATA disks, and as side effect for SCSI disks (although so far it doesn't
+> seem like none of those actually exist).
 
-On 06/04/2017 03:42 PM, Christoph Hellwig wrote:
+Applied 1-5 to libata/for-4.13.  Updated 4 for line continuation style
+consistency as pointed out by Sergei.
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/ata/libata-core.c | 59 +++++++++++++++++++++++++----------------------
->  1 file changed, 32 insertions(+), 27 deletions(-)
->
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 445e7050637b..f57131115594 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -2120,6 +2120,37 @@ static bool ata_log_supported(struct ata_device *dev, u8 log)
->  	return get_unaligned_le16(&ap->sector_buf[log * 2]) ? true : false;
->  }
->
-> +static bool ata_identify_page_supported(struct ata_device *dev, u8 page)
-> +{
-> +	struct ata_port *ap = dev->link->ap;
-> +	unsigned int err, i;
-> +
-> +	if (!ata_log_supported(dev, ATA_LOG_IDENTIFY_DEVICE)) {
-> +		ata_dev_warn(dev, "ATA Identify Device Log not supported\n");
-> +		return false;
-> +	}
-> +
-> +	/*
-> +	 * Read IDENTIFY DEVICE data log, page 0, to figure out if the page is
-> +	 * supported.
-> +	 */
-> +	err = ata_read_log_page(dev, ATA_LOG_IDENTIFY_DEVICE, 0, ap->sector_buf,
-> +			1);
-> +	if (err) {
-> +		ata_dev_info(dev,
-> +			     "failed to get Device Identify Log Emask 0x%x\n",
-> +			     err);
+Thanks.
 
-    Your line continuation style is spomewhat inconsistent: 2 tabs above and 
-tabs/spaces here...
-
-[...]
-
-MBR, Sergei
+-- 
+tejun
