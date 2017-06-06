@@ -1,50 +1,38 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 6/6] sd: add support for TCG OPAL self encrypting disks
-Date: Mon, 05 Jun 2017 20:48:00 -0400
-Message-ID: <yq1lgp6djr3.fsf@oracle.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/6] libata: move ata_read_log_page to libata-core.c
+Date: Tue, 6 Jun 2017 08:27:21 +0200
+Message-ID: <7bda2948-1e81-da25-9fef-9b5519dc8545@suse.de>
 References: <20170604124225.27032-1-hch@lst.de>
-        <20170604124225.27032-7-hch@lst.de>
+ <20170604124225.27032-2-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170604124225.27032-7-hch@lst.de> (Christoph Hellwig's message
-        of "Sun, 4 Jun 2017 14:42:25 +0200")
+In-Reply-To: <20170604124225.27032-2-hch@lst.de>
+Content-Language: en-US
 Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Tejun Heo <tj@kernel.org>, Scott Bauer <scott.bauer@intel.com>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>
+Cc: Scott Bauer <scott.bauer@intel.com>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
+On 06/04/2017 02:42 PM, Christoph Hellwig wrote:
+> It is core functionality, and only one of the users is in the EH code.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/ata/libata-core.c | 64 +++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/ata/libata-eh.c   | 64 -----------------------------------------------
+>  drivers/ata/libata.h      |  4 +--
+>  3 files changed, 66 insertions(+), 66 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Christoph,
+Cheers,
 
-> +static void sd_read_security(struct scsi_disk *sdkp, unsigned char *buffer)
-> +{
-> +	struct scsi_device *sdev = sdkp->device;
-> +
-> +	if (scsi_report_opcode(sdev, buffer, SD_BUF_SIZE,
-> +			SECURITY_PROTOCOL_IN) == 1 &&
-> +	    scsi_report_opcode(sdev, buffer, SD_BUF_SIZE,
-> +			SECURITY_PROTOCOL_OUT) == 1)
-> +		sdkp->security = 1;
-> +}
-> +
->  /**
->   *	sd_revalidate_disk - called the first time a new disk is seen,
->   *	performs disk spin up, read_capacity, etc.
-> @@ -3067,6 +3102,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
->  		sd_read_cache_type(sdkp, buffer);
->  		sd_read_app_tag_own(sdkp, buffer);
->  		sd_read_write_same(sdkp, buffer);
-> +		sd_read_security(sdkp, buffer);
->  	}
-
-For WRITE SAME, scsi_report_opcode() is gated not only by
-sdev->no_report_opcodes but by sdev->no_write_same.
-
-I'm concerned about firing off REPORT OPCODES to random devices without
-a sufficiently good heuristic. Doesn't look like SAT has anything to
-offer in this department, though. Maybe it's time to consider a
-vendor-specific Linux VPD page...
-
+Hannes
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
