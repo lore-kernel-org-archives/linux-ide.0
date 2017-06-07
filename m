@@ -1,38 +1,43 @@
 From: Yuantian Tang <andy.tang@nxp.com>
-Subject: [PATCH 1/2] dt-bindings: ahci-fsl-qoriq: add ls1088a chip name to the list
-Date: Wed, 7 Jun 2017 14:32:47 +0800
-Message-ID: <1496817168-26567-1-git-send-email-andy.tang@nxp.com>
+Subject: [PATCH 2/2 v2] arm64: dts: ls1088a: update sata node
+Date: Wed, 7 Jun 2017 14:32:48 +0800
+Message-ID: <1496817168-26567-2-git-send-email-andy.tang@nxp.com>
+References: <1496817168-26567-1-git-send-email-andy.tang@nxp.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0085.outbound.protection.outlook.com ([104.47.37.85]:61504
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750730AbdFGGsd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 7 Jun 2017 02:48:33 -0400
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1496817168-26567-1-git-send-email-andy.tang@nxp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: shawnguo@kernel.org
 Cc: tj@kernel.org, robh+dt@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com, will.deacon@arm.com, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Yuantian Tang <andy.tang@nxp.com>
+List-Id: linux-ide@vger.kernel.org
+
+1. Remove ls1043a compatible string from node
+2. Fix the sata ecc register address error
 
 Signed-off-by: Tang Yuantian <andy.tang@nxp.com>
 ---
- Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+v2:
+	- no change, resend it with binding update
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
-index fc33ca0..7c3ca0e 100644
---- a/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
-@@ -3,7 +3,7 @@ Binding for Freescale QorIQ AHCI SATA Controller
- Required properties:
-   - reg: Physical base address and size of the controller's register area.
-   - compatible: Compatibility string. Must be 'fsl,<chip>-ahci', where
--    chip could be ls1021a, ls1043a, ls1046a, ls2080a etc.
-+    chip could be ls1021a, ls1043a, ls1046a, ls1088a, ls2080a etc.
-   - clocks: Input clock specifier. Refer to common clock bindings.
-   - interrupts: Interrupt specifier. Refer to interrupt binding.
+ arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi
+index df16284..c144d06 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi
+@@ -360,9 +360,9 @@
+ 		};
  
+ 		sata: sata@3200000 {
+-			compatible = "fsl,ls1088a-ahci", "fsl,ls1043a-ahci";
++			compatible = "fsl,ls1088a-ahci";
+ 			reg = <0x0 0x3200000 0x0 0x10000>,
+-				<0x0 0x20140520 0x0 0x4>;
++				<0x7 0x100520 0x0 0x4>;
+ 			reg-names = "ahci", "sata-ecc";
+ 			interrupts = <0 133 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&clockgen 4 3>;
 -- 
 2.1.0.27.g96db324
-
