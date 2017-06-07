@@ -1,102 +1,38 @@
-From: <lucia.germino@unibas.it>
-Subject: (unknown)
-Date: Wed, 07 Jun 2017 03:19:34 -0000
-Message-ID: <149680557452.19456.1627356041680142208@iol.cz>
+From: Yuantian Tang <andy.tang@nxp.com>
+Subject: [PATCH 1/2] dt-bindings: ahci-fsl-qoriq: add ls1088a chip name to the list
+Date: Wed, 7 Jun 2017 14:32:47 +0800
+Message-ID: <1496817168-26567-1-git-send-email-andy.tang@nxp.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="6949818.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 64.213.broadband10.iol.cz ([90.177.213.64]:37626 "HELO iol.cz"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-        id S1751602AbdFGDTq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 6 Jun 2017 23:19:46 -0400
-Content-Disposition: attachment
-Subject: 
+Received: from mail-cys01nam02on0085.outbound.protection.outlook.com ([104.47.37.85]:61504
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750730AbdFGGsd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 7 Jun 2017 02:48:33 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: shawnguo@kernel.org
+Cc: tj@kernel.org, robh+dt@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com, will.deacon@arm.com, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Yuantian Tang <andy.tang@nxp.com>
 
-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
+Signed-off-by: Tang Yuantian <andy.tang@nxp.com>
+---
+ Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
+index fc33ca0..7c3ca0e 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
+@@ -3,7 +3,7 @@ Binding for Freescale QorIQ AHCI SATA Controller
+ Required properties:
+   - reg: Physical base address and size of the controller's register area.
+   - compatible: Compatibility string. Must be 'fsl,<chip>-ahci', where
+-    chip could be ls1021a, ls1043a, ls1046a, ls2080a etc.
++    chip could be ls1021a, ls1043a, ls1046a, ls1088a, ls2080a etc.
+   - clocks: Input clock specifier. Refer to common clock bindings.
+   - interrupts: Interrupt specifier. Refer to interrupt binding.
+ 
+-- 
+2.1.0.27.g96db324
+
