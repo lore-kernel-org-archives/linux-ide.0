@@ -1,43 +1,42 @@
-From: Yuantian Tang <andy.tang@nxp.com>
-Subject: [PATCH 2/2 v2] arm64: dts: ls1088a: update sata node
-Date: Wed, 7 Jun 2017 14:32:48 +0800
-Message-ID: <1496817168-26567-2-git-send-email-andy.tang@nxp.com>
-References: <1496817168-26567-1-git-send-email-andy.tang@nxp.com>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: ZBC_IN command translation
+Date: Wed, 7 Jun 2017 18:03:52 +0900
+Message-ID: <4b12630e-1add-6a4e-51ab-52417e60d4b2@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1496817168-26567-1-git-send-email-andy.tang@nxp.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: shawnguo@kernel.org
-Cc: tj@kernel.org, robh+dt@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com, will.deacon@arm.com, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Yuantian Tang <andy.tang@nxp.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:5798 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750739AbdFGJEJ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 7 Jun 2017 05:04:09 -0400
+Content-Language: en-US
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>
 
-1. Remove ls1043a compatible string from node
-2. Fix the sata ecc register address error
+Tejun, Hannes,
 
-Signed-off-by: Tang Yuantian <andy.tang@nxp.com>
----
-v2:
-	- no change, resend it with binding update
+Currently, in libata-scsi.c, the function ata_scsi_zbc_in_xlat
+translating ZBC REPORT ZONES into the ZAC version returns an error if
+the scsi command buffer length is not aligned on 512. This is possible
+since the ZBC version allows report zones buffer as a multiple of 64B,
+while the ZAC version of the same command requires 512B size alignment
+of the command buffer.
 
- arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+However, SAT-4, in section 9.13.3 says:
 
-diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi
-index df16284..c144d06 100644
---- a/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-ls1088a.dtsi
-@@ -360,9 +360,9 @@
- 		};
- 
- 		sata: sata@3200000 {
--			compatible = "fsl,ls1088a-ahci", "fsl,ls1043a-ahci";
-+			compatible = "fsl,ls1088a-ahci";
- 			reg = <0x0 0x3200000 0x0 0x10000>,
--				<0x0 0x20140520 0x0 0x4>;
-+				<0x7 0x100520 0x0 0x4>;
- 			reg-names = "ahci", "sata-ecc";
- 			interrupts = <0 133 IRQ_TYPE_LEVEL_HIGH>;
- 			clocks = <&clockgen 4 3>;
+"The SATL shall send the ATA REPORT ZONES EXT command with the ATA
+RETURN PAGE COUNT field set to INT((ALLOCATION LENGTH + 511)/512)."
+
+So clearly, instead of returning an error, we need to bounce the scsi
+command buffer to a bigger 512B size aligned temporary buffer for the
+ZAC report zones. I do not see any code ready to use to do so easily,
+but I may be missing it. Is there something that can be used to do so or
+do I need to cook something ?
+
+Best regards.
+
 -- 
-2.1.0.27.g96db324
+Damien Le Moal,
+Western Digital
