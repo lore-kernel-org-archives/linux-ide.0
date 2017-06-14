@@ -1,36 +1,27 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 6/6] sd: add support for TCG OPAL self encrypting disks
-Date: Tue, 13 Jun 2017 11:19:20 -0400
-Message-ID: <yq17f0fykxz.fsf@oracle.com>
-References: <20170604124225.27032-1-hch@lst.de>
-        <20170604124225.27032-7-hch@lst.de> <yq1lgp6djr3.fsf@oracle.com>
-        <20170606095802.GA20590@lst.de> <20170613064018.GA31330@lst.de>
+From: Shawn Guo <shawnguo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 1/2] dt-bindings: ahci-fsl-qoriq: add ls1088a chip name
+ to the list
+Date: Wed, 14 Jun 2017 22:43:32 +0800
+Message-ID: <20170614144330.GA30112@dragon>
+References: <1496817168-26567-1-git-send-email-andy.tang@nxp.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170613064018.GA31330@lst.de> (Christoph Hellwig's message of
-        "Tue, 13 Jun 2017 08:40:18 +0200")
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, Scott Bauer <scott.bauer@intel.com>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1496817168-26567-1-git-send-email-andy.tang-3arQi8VN3Tc@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yuantian Tang <andy.tang-3arQi8VN3Tc@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will.deacon-5wv7dgnIgG8@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
+On Wed, Jun 07, 2017 at 02:32:47PM +0800, Yuantian Tang wrote:
+> Signed-off-by: Tang Yuantian <andy.tang-3arQi8VN3Tc@public.gmane.org>
+> ---
+>  Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Christoph,
-
->> But as we already set no_report_opcodes for all usb-storage and
->> quirked uas devices I think the worst offenders are already covered
->> anyway.
->
-> Martin, how do we want to move ahead on this patch?
-
-I was suggesting the VPD because that may be easier for the SAS HBA
-vendors to accommodate for SATA passthrough. But we can cross that
-bridge when we get to it.
-
-For libata I'm fine with keying off a supports_opal:1 flag in
-scsi_device or something to that effect. I'd just like to reduce the
-risk of introducing more RSOC regressions.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Applied both, thanks.
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
