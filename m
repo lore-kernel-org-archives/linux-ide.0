@@ -1,61 +1,224 @@
 From: Minwoo Im <dn3108@gmail.com>
-Subject: [PATCH] libata: do not initialise statics to 0 ERROR fix.
-Date: Sat, 17 Jun 2017 16:03:04 +0900
-Message-ID: <1497682984-5554-1-git-send-email-dn3108@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:33201 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750988AbdFQHDP (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 17 Jun 2017 03:03:15 -0400
-Received: by mail-pf0-f193.google.com with SMTP id w12so9555001pfk.0
-        for <linux-ide@vger.kernel.org>; Sat, 17 Jun 2017 00:03:14 -0700 (PDT)
-Sender: linux-ide-owner@vger.kernel.org
+Subject: [PATCH] scsi/libata: Support variable-length cdb of ata pass-thru(32).
+Date: Sat, 17 Jun 2017 20:00:43 +0900
+Message-ID: <1497697243-3724-1-git-send-email-dn3108@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Minwoo Im <dn3108@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Minwoo Im <dn3108@gmail.com>
 
-ERROR: do not initialise statics to 0 in four lines in libata-core.c.
+Proposal Background:
+SAT-4 supports ATA PASS-THROUGH(32) SCSI command to translate
+SCSI commands to further ATA command format(e.g. auxiliary field).
+To support any command translation from SCSI command to ATA,
+This patch would be great for it.
+
+Patch Description:
+ATA PASS-THROUGH(32) command defines 7Fh as a opcode which means
+a variable length command. It could be in any size from 12 to 260.
+However, first to support ATA PASS-THROUGH(32), ATA Device max CDB
+length has been modified to 32(It used to be 16).
+Additionally, SCSI command max length has been modified to 260 to support
+variable-length cdbs in kernel.
+
+ata_get_xlat_func() adds a condition for variable length command.
+ata_scsi_var_len_cdb_xlat() checks the ATA PASS-THROUGH(32) service action.
+After checking, it will call ata_scsi_pass_thru() just like
+ATA PASS-THROUGH(12) and (16).
+
+ata_scsi_pass_thru() adds some code lines to support (32) pass-thru.
+pass-thru(32) has a different CDB contents from 12, or 16.
+
+Please refer below patch and fill free to give any opinions.
+
+Thanks,
+
+Minwoo.
+
 Signed-off-by: Minwoo Im <dn3108@gmail.com>
 ---
- drivers/ata/libata-core.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/ata/libata-core.c |    2 +-
+ drivers/ata/libata-scsi.c |   95 ++++++++++++++++++++++++++++++++++++++++++---
+ include/scsi/scsi_proto.h |    1 +
+ 3 files changed, 91 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 2191d23..8ed5bf3 100644
+index e157a0e..f1d3ba4 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -135,7 +135,7 @@ struct ata_force_ent {
- module_param(atapi_enabled, int, 0444);
- MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices (0=off, 1=on [default])");
+@@ -2587,7 +2587,7 @@ int ata_dev_configure(struct ata_device *dev)
+ 		}
+ 		ata_dev_config_sense_reporting(dev);
+ 		ata_dev_config_zac(dev);
+-		dev->cdb_len = 16;
++		dev->cdb_len = 32;
+ 	}
  
--static int atapi_dmadir = 0;
-+static int atapi_dmadir;
- module_param(atapi_dmadir, int, 0444);
- MODULE_PARM_DESC(atapi_dmadir, "Enable ATAPI DMADIR bridge support (0=off [default], 1=on)");
+ 	/* ATAPI-specific feature tests */
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 49ba983..b6e32d9 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3127,7 +3127,7 @@ static struct ata_device *__ata_scsi_find_dev(struct ata_port *ap,
+  *	ata_scsi_pass_thru - convert ATA pass-thru CDB to taskfile
+  *	@qc: command structure to be initialized
+  *
+- *	Handles either 12 or 16-byte versions of the CDB.
++ *	Handles either 12, 16, or 32-byte versions of the CDB.
+  *
+  *	RETURNS:
+  *	Zero on success, non-zero on failure.
+@@ -3140,13 +3140,36 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 	const u8 *cdb = scmd->cmnd;
+ 	u16 fp;
  
-@@ -143,7 +143,7 @@ struct ata_force_ent {
- module_param(atapi_passthru16, int, 0444);
- MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI devices (0=off, 1=on [default])");
+-	if ((tf->protocol = ata_scsi_map_proto(cdb[1])) == ATA_PROT_UNKNOWN) {
++	/*
++	 * if SCSI operation code in cdb[0] is ATA_12 or ATA_16,
++	 * then cdb[1] will contain protocol of ATA PASS-THROUGH.
++	 * otherwise, Its operation code shall be ATA_32(7Fh).
++	 * in this case, cdb[10] will contain protocol of it.
++	 * we call this command as a variable-length cdb.
++	 */
++	if (cdb[0] == ATA_12 || cdb[0] == ATA_16)
++		tf->protocol = ata_scsi_map_proto(cdb[1]);
++	else
++		tf->protocol = ata_scsi_map_proto(cdb[10]);
++
++	if (tf->protocol == ATA_PROT_UNKNOWN) {
+ 		fp = 1;
+ 		goto invalid_fld;
+ 	}
  
--int libata_fua = 0;
-+int libata_fua;
- module_param_named(fua, libata_fua, int, 0444);
- MODULE_PARM_DESC(fua, "FUA support (0=off [default], 1=on)");
+-	if (ata_is_ncq(tf->protocol) && (cdb[2] & 0x3) == 0)
+-		tf->protocol = ATA_PROT_NCQ_NODATA;
++	/*
++	 * if protocol has a NCQ property and transfer length is 0,
++	 * then the protocol will be marked as a NCQ_NODATA.
++	 * in case of ATA_12 and ATA_16, cdb[2] has a t_length field.
++	 * otherwise, cdb[11] will have a t_length field.
++	 */
++	if (cdb[0] == ATA_12 || cdb[0] == ATA_16) {
++		if (ata_is_ncq(tf->protocol) && (cdb[2] & 0x3) == 0)
++			tf->protocol = ATA_PROT_NCQ_NODATA;
++	} else {
++		if (ata_is_ncq(tf->protocol) && (cdb[11] & 0x3) == 0)
++			tf->protocol = ATA_PROT_NCQ_NODATA;
++	}
  
-@@ -159,11 +159,11 @@ struct ata_force_ent {
- module_param(ata_probe_timeout, int, 0444);
- MODULE_PARM_DESC(ata_probe_timeout, "Set ATA probing timeout (seconds)");
+ 	/* enable LBA */
+ 	tf->flags |= ATA_TFLAG_LBA;
+@@ -3181,7 +3204,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 		tf->lbah = cdb[12];
+ 		tf->device = cdb[13];
+ 		tf->command = cdb[14];
+-	} else {
++	} else if (cdb[0] == ATA_12) {
+ 		/*
+ 		 * 12-byte CDB - incapable of extended commands.
+ 		 */
+@@ -3194,6 +3217,31 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 		tf->lbah = cdb[7];
+ 		tf->device = cdb[8];
+ 		tf->command = cdb[9];
++	} else {
++		/*
++		 * 32-byte CDB - may contain extended command fields.
++		 *
++		 * If that is the case, copy the upper byte register values.
++		 */
++		if (cdb[10] & 0x01) {
++			tf->hob_feature = cdb[20];
++			tf->hob_nsect = cdb[22];
++			tf->hob_lbal = cdb[16];
++			tf->hob_lbam = cdb[15];
++			tf->hob_lbah = cdb[14];
++			tf->flags |= ATA_TFLAG_LBA48;
++		} else
++			tf->flags &= ~ATA_TFLAG_LBA48;
++
++		tf->feature = cdb[21];
++		tf->nsect = cdb[23];
++		tf->lbal = cdb[19];
++		tf->lbam = cdb[18];
++		tf->lbah = cdb[17];
++		tf->device = cdb[24];
++		tf->command = cdb[25];
++		tf->auxiliary = (cdb[28] << 24) | (cdb[29] << 16)
++			| (cdb[30] << 8) | cdb[31];
+ 	}
  
--int libata_noacpi = 0;
-+int libata_noacpi;
- module_param_named(noacpi, libata_noacpi, int, 0444);
- MODULE_PARM_DESC(noacpi, "Disable the use of ACPI in probe/suspend/resume (0=off [default], 1=on)");
+ 	/* For NCQ commands copy the tag value */
+@@ -4068,6 +4116,33 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
+ }
  
--int libata_allow_tpm = 0;
-+int libata_allow_tpm;
- module_param_named(allow_tpm, libata_allow_tpm, int, 0444);
- MODULE_PARM_DESC(allow_tpm, "Permit the use of TPM commands (0=off [default], 1=on)");
+ /**
++ *	ata_scsi_var_len_cdb_xlat - SATL Variable Length CDB to Handler
++ *	@qc: Command to be translated
++ *
++ *	Translate a SCSI variable length CDB to specified commands.
++ *	It checks a service action value in CDB to call corresponding handler.
++ *
++ *	RETURNS:
++ *	Zero on success, non-zero on failure
++ */
++
++static unsigned int ata_scsi_var_len_cdb_xlat(struct ata_queued_cmd *qc)
++{
++	struct scsi_cmnd *scmd = qc->scsicmd;
++	const u8 *cdb = scmd->cmnd;
++	const u16 sa = (cdb[8] >> 8) | cdb[9];	/* service action */
++
++	// if service action represents a ata pass-thru(32) command,
++	// then pass it to ata_scsi_pass_thru handler.
++	if (sa == ATA_32)
++		return ata_scsi_pass_thru(qc);
++
++unspprt_sa:
++	/* unsupported service action */
++	return 1;
++}
++
++/**
+  *	ata_get_xlat_func - check if SCSI to ATA translation is possible
+  *	@dev: ATA device
+  *	@cmd: SCSI command opcode to consider
+@@ -4107,6 +4182,9 @@ static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
+ 	case ATA_16:
+ 		return ata_scsi_pass_thru;
+ 
++	case VARIABLE_LENGTH_CMD:
++		return ata_scsi_var_len_cdb_xlat;
++
+ 	case MODE_SELECT:
+ 	case MODE_SELECT_10:
+ 		return ata_scsi_mode_select_xlat;
+@@ -4385,7 +4463,12 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
+ 		shost->max_id = 16;
+ 		shost->max_lun = 1;
+ 		shost->max_channel = 1;
+-		shost->max_cmd_len = 16;
++		/*
++		 * SPC-3, SPC-4: Definition of CDB
++		 * A CDB may have a fixed length of up to 16 bytes or
++		 * variable length of between 12 and 260 bytes.
++		 */
++		shost->max_cmd_len = 260;
+ 
+ 		/* Schedule policy is determined by ->qc_defer()
+ 		 * callback and it needs to see every deferred qc.
+diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
+index ce78ec8..8545e34 100644
+--- a/include/scsi/scsi_proto.h
++++ b/include/scsi/scsi_proto.h
+@@ -164,6 +164,7 @@
+ #define WRITE_SAME_32	      0x0d
+ 
+ /* Values for T10/04-262r7 */
++#define	ATA_32		      0x1ff0	/* 32-byte pass-thru, service action */
+ #define	ATA_16		      0x85	/* 16-byte pass-thru */
+ #define	ATA_12		      0xa1	/* 12-byte pass-thru */
  
 -- 
 1.7.9.5
-
