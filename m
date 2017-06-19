@@ -1,194 +1,203 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] sd: add support for TCG OPAL self encrypting disks
-Date: Mon, 19 Jun 2017 14:26:46 +0200
-Message-ID: <20170619122646.32666-2-hch@lst.de>
-References: <20170619122646.32666-1-hch@lst.de>
+From: Minwoo Im <dn3108@gmail.com>
+Subject: [PATCH] scsi/libata: Support variable-length cdb of ata pass-thru(32)-bug fixed.
+Date: Mon, 19 Jun 2017 22:22:26 +0900
+Message-ID: <1497878546-4346-1-git-send-email-dn3108@gmail.com>
+References: <1497697243-3724-1-git-send-email-dn3108@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20170619122646.32666-1-hch@lst.de>
+In-Reply-To: <1497697243-3724-1-git-send-email-dn3108@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Scott Bauer <scott.bauer@intel.com>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Minwoo Im <dn3108@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-Just wire up the generic TCG OPAL infrastructure to the SCSI disk driver
-and the Security In/Out commands.
+Bug fixed in libata-scsi.c from previous patch.
+Bit shifting of service action value in ata_scsi_var_len_cdb_xlat() was reversed.
+I have tested a ata pass-thru(32) command with sg_io and it worked well.
+I'm sorry for making a confusion.
 
-Note that I don't know of any actual SCSI disks that do support TCG OPAL,
-but this is required to support ATA disks through libata.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Minwoo Im <dn3108@gmail.com>
 ---
- drivers/ata/libata-scsi.c  |  3 +++
- drivers/scsi/sd.c          | 53 +++++++++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/sd.h          |  2 ++
- include/scsi/scsi_device.h |  1 +
- 4 files changed, 58 insertions(+), 1 deletion(-)
+ drivers/ata/libata-core.c |    2 +-
+ drivers/ata/libata-scsi.c |   95 ++++++++++++++++++++++++++++++++++++++++++---
+ include/scsi/scsi_proto.h |    1 +
+ 3 files changed, 91 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 0f788ad6f2f6..3e5ca2e894a4 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1321,6 +1321,9 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
- 
- 	blk_queue_flush_queueable(q, false);
- 
-+	if (dev->flags & ATA_DFLAG_TRUSTED)
-+		sdev->security_supported = 1;
-+
- 	dev->sdev = sdev;
- 	return 0;
- }
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index f9d1432d7cc5..5d32fd7d3a3e 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -50,6 +50,7 @@
- #include <linux/string_helpers.h>
- #include <linux/async.h>
- #include <linux/slab.h>
-+#include <linux/sed-opal.h>
- #include <linux/pm_runtime.h>
- #include <linux/pr.h>
- #include <linux/t10-pi.h>
-@@ -643,6 +644,26 @@ static void scsi_disk_put(struct scsi_disk *sdkp)
- 	mutex_unlock(&sd_ref_mutex);
- }
- 
-+#ifdef CONFIG_BLK_SED_OPAL
-+static int sd_sec_submit(void *data, u16 spsp, u8 secp, void *buffer,
-+		size_t len, bool send)
-+{
-+	struct scsi_device *sdev = data;
-+	u8 cdb[12] = { 0, };
-+	int ret;
-+
-+	cdb[0] = send ? SECURITY_PROTOCOL_OUT : SECURITY_PROTOCOL_IN;
-+	cdb[1] = secp;
-+	put_unaligned_be16(spsp, &cdb[2]);
-+	put_unaligned_be32(len, &cdb[6]);
-+
-+	ret = scsi_execute_req(sdev, cdb,
-+			send ? DMA_TO_DEVICE : DMA_FROM_DEVICE,
-+			buffer, len, NULL, SD_TIMEOUT, SD_MAX_RETRIES, NULL);
-+	return ret <= 0 ? ret : -EIO;
-+}
-+#endif /* CONFIG_BLK_SED_OPAL */
-+
- static unsigned char sd_setup_protect_cmnd(struct scsi_cmnd *scmd,
- 					   unsigned int dix, unsigned int dif)
- {
-@@ -1439,6 +1460,9 @@ static int sd_ioctl(struct block_device *bdev, fmode_t mode,
- 	if (error)
- 		goto out;
- 
-+	if (is_sed_ioctl(cmd))
-+		return sed_ioctl(sdkp->opal_dev, cmd, p);
-+
- 	/*
- 	 * Send SCSI addressing ioctls directly to mid level, send other
- 	 * ioctls to block level and then onto mid level if they can't be
-@@ -2994,6 +3018,20 @@ static void sd_read_write_same(struct scsi_disk *sdkp, unsigned char *buffer)
- 		sdkp->ws10 = 1;
- }
- 
-+static void sd_read_security(struct scsi_disk *sdkp, unsigned char *buffer)
-+{
-+	struct scsi_device *sdev = sdkp->device;
-+
-+	if (!sdev->security_supported)
-+		return;
-+
-+	if (scsi_report_opcode(sdev, buffer, SD_BUF_SIZE,
-+			SECURITY_PROTOCOL_IN) == 1 &&
-+	    scsi_report_opcode(sdev, buffer, SD_BUF_SIZE,
-+			SECURITY_PROTOCOL_OUT) == 1)
-+		sdkp->security = 1;
-+}
-+
- /**
-  *	sd_revalidate_disk - called the first time a new disk is seen,
-  *	performs disk spin up, read_capacity, etc.
-@@ -3047,6 +3085,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 		sd_read_cache_type(sdkp, buffer);
- 		sd_read_app_tag_own(sdkp, buffer);
- 		sd_read_write_same(sdkp, buffer);
-+		sd_read_security(sdkp, buffer);
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index e157a0e..f1d3ba4 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2587,7 +2587,7 @@ int ata_dev_configure(struct ata_device *dev)
+ 		}
+ 		ata_dev_config_sense_reporting(dev);
+ 		ata_dev_config_zac(dev);
+-		dev->cdb_len = 16;
++		dev->cdb_len = 32;
  	}
  
- 	sdkp->first_scan = 0;
-@@ -3207,6 +3246,12 @@ static void sd_probe_async(void *data, async_cookie_t cookie)
+ 	/* ATAPI-specific feature tests */
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 49ba983..39f23e0 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3127,7 +3127,7 @@ static struct ata_device *__ata_scsi_find_dev(struct ata_port *ap,
+  *	ata_scsi_pass_thru - convert ATA pass-thru CDB to taskfile
+  *	@qc: command structure to be initialized
+  *
+- *	Handles either 12 or 16-byte versions of the CDB.
++ *	Handles either 12, 16, or 32-byte versions of the CDB.
+  *
+  *	RETURNS:
+  *	Zero on success, non-zero on failure.
+@@ -3140,13 +3140,36 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 	const u8 *cdb = scmd->cmnd;
+ 	u16 fp;
  
- 	sd_revalidate_disk(gd);
+-	if ((tf->protocol = ata_scsi_map_proto(cdb[1])) == ATA_PROT_UNKNOWN) {
++	/*
++	 * if SCSI operation code in cdb[0] is ATA_12 or ATA_16,
++	 * then cdb[1] will contain protocol of ATA PASS-THROUGH.
++	 * otherwise, Its operation code shall be ATA_32(7Fh).
++	 * in this case, cdb[10] will contain protocol of it.
++	 * we call this command as a variable-length cdb.
++	 */
++	if (cdb[0] == ATA_12 || cdb[0] == ATA_16)
++		tf->protocol = ata_scsi_map_proto(cdb[1]);
++	else
++		tf->protocol = ata_scsi_map_proto(cdb[10]);
++
++	if (tf->protocol == ATA_PROT_UNKNOWN) {
+ 		fp = 1;
+ 		goto invalid_fld;
+ 	}
  
-+	if (sdkp->security) {
-+		sdkp->opal_dev = init_opal_dev(sdp, &sd_sec_submit);
-+		if (sdkp->opal_dev)
-+			sd_printk(KERN_NOTICE, sdkp, "supports TCG Opal\n");
+-	if (ata_is_ncq(tf->protocol) && (cdb[2] & 0x3) == 0)
+-		tf->protocol = ATA_PROT_NCQ_NODATA;
++	/*
++	 * if protocol has a NCQ property and transfer length is 0,
++	 * then the protocol will be marked as a NCQ_NODATA.
++	 * in case of ATA_12 and ATA_16, cdb[2] has a t_length field.
++	 * otherwise, cdb[11] will have a t_length field.
++	 */
++	if (cdb[0] == ATA_12 || cdb[0] == ATA_16) {
++		if (ata_is_ncq(tf->protocol) && (cdb[2] & 0x3) == 0)
++			tf->protocol = ATA_PROT_NCQ_NODATA;
++	} else {
++		if (ata_is_ncq(tf->protocol) && (cdb[11] & 0x3) == 0)
++			tf->protocol = ATA_PROT_NCQ_NODATA;
 +	}
+ 
+ 	/* enable LBA */
+ 	tf->flags |= ATA_TFLAG_LBA;
+@@ -3181,7 +3204,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 		tf->lbah = cdb[12];
+ 		tf->device = cdb[13];
+ 		tf->command = cdb[14];
+-	} else {
++	} else if (cdb[0] == ATA_12) {
+ 		/*
+ 		 * 12-byte CDB - incapable of extended commands.
+ 		 */
+@@ -3194,6 +3217,31 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 		tf->lbah = cdb[7];
+ 		tf->device = cdb[8];
+ 		tf->command = cdb[9];
++	} else {
++		/*
++		 * 32-byte CDB - may contain extended command fields.
++		 *
++		 * If that is the case, copy the upper byte register values.
++		 */
++		if (cdb[10] & 0x01) {
++			tf->hob_feature = cdb[20];
++			tf->hob_nsect = cdb[22];
++			tf->hob_lbal = cdb[16];
++			tf->hob_lbam = cdb[15];
++			tf->hob_lbah = cdb[14];
++			tf->flags |= ATA_TFLAG_LBA48;
++		} else
++			tf->flags &= ~ATA_TFLAG_LBA48;
 +
- 	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
- 		  sdp->removable ? "removable " : "");
- 	scsi_autopm_put_device(sdp);
-@@ -3356,6 +3401,8 @@ static int sd_remove(struct device *dev)
++		tf->feature = cdb[21];
++		tf->nsect = cdb[23];
++		tf->lbal = cdb[19];
++		tf->lbam = cdb[18];
++		tf->lbah = cdb[17];
++		tf->device = cdb[24];
++		tf->command = cdb[25];
++		tf->auxiliary = (cdb[28] << 24) | (cdb[29] << 16)
++			| (cdb[30] << 8) | cdb[31];
+ 	}
  
- 	sd_zbc_remove(sdkp);
- 
-+	free_opal_dev(sdkp->opal_dev);
-+
- 	blk_register_region(devt, SD_MINORS, NULL,
- 			    sd_default_probe, NULL, NULL);
- 
-@@ -3497,6 +3544,7 @@ static int sd_suspend_runtime(struct device *dev)
- static int sd_resume(struct device *dev)
- {
- 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
-+	int ret;
- 
- 	if (!sdkp)	/* E.g.: runtime resume at the start of sd_probe() */
- 		return 0;
-@@ -3505,7 +3553,10 @@ static int sd_resume(struct device *dev)
- 		return 0;
- 
- 	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
--	return sd_start_stop_device(sdkp, 1);
-+	ret = sd_start_stop_device(sdkp, 1);
-+	if (!ret)
-+		opal_unlock_from_suspend(sdkp->opal_dev);
-+	return ret;
+ 	/* For NCQ commands copy the tag value */
+@@ -4068,6 +4116,33 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
  }
  
  /**
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 61d02efd366c..99c4dde9b6bf 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -71,6 +71,7 @@ struct scsi_disk {
- 	struct scsi_device *device;
- 	struct device	dev;
- 	struct gendisk	*disk;
-+	struct opal_dev *opal_dev;
- #ifdef CONFIG_BLK_DEV_ZONED
- 	unsigned int	nr_zones;
- 	unsigned int	zone_blocks;
-@@ -114,6 +115,7 @@ struct scsi_disk {
- 	unsigned	rc_basis: 2;
- 	unsigned	zoned: 2;
- 	unsigned	urswrz : 1;
-+	unsigned	security : 1;
- 	unsigned	ignore_medium_access_errors : 1;
- };
- #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 05641aebd181..310c86a892e9 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -176,6 +176,7 @@ struct scsi_device {
- 	unsigned no_read_disc_info:1;	/* Avoid READ_DISC_INFO cmds */
- 	unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
- 	unsigned try_rc_10_first:1;	/* Try READ_CAPACACITY_10 first */
-+	unsigned security_supported:1;	/* Supports Security Protocols */
- 	unsigned is_visible:1;	/* is the device visible in sysfs */
- 	unsigned wce_default_on:1;	/* Cache is ON by default */
- 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
++ *	ata_scsi_var_len_cdb_xlat - SATL Variable Length CDB to Handler
++ *	@qc: Command to be translated
++ *
++ *	Translate a SCSI variable length CDB to specified commands.
++ *	It checks a service action value in CDB to call corresponding handler.
++ *
++ *	RETURNS:
++ *	Zero on success, non-zero on failure
++ */
++
++static unsigned int ata_scsi_var_len_cdb_xlat(struct ata_queued_cmd *qc)
++{
++	struct scsi_cmnd *scmd = qc->scsicmd;
++	const u8 *cdb = scmd->cmnd;
++	const u16 sa = (cdb[8] << 8) | cdb[9];	/* service action */
++
++	// if service action represents a ata pass-thru(32) command,
++	// then pass it to ata_scsi_pass_thru handler.
++	if (sa == ATA_32)
++		return ata_scsi_pass_thru(qc);
++
++unspprt_sa:
++	/* unsupported service action */
++	return 1;
++}
++
++/**
+  *	ata_get_xlat_func - check if SCSI to ATA translation is possible
+  *	@dev: ATA device
+  *	@cmd: SCSI command opcode to consider
+@@ -4107,6 +4182,9 @@ static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
+ 	case ATA_16:
+ 		return ata_scsi_pass_thru;
+ 
++	case VARIABLE_LENGTH_CMD:
++		return ata_scsi_var_len_cdb_xlat;
++
+ 	case MODE_SELECT:
+ 	case MODE_SELECT_10:
+ 		return ata_scsi_mode_select_xlat;
+@@ -4385,7 +4463,12 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
+ 		shost->max_id = 16;
+ 		shost->max_lun = 1;
+ 		shost->max_channel = 1;
+-		shost->max_cmd_len = 16;
++		/*
++		 * SPC-3, SPC-4: Definition of CDB
++		 * A CDB may have a fixed length of up to 16 bytes or
++		 * variable length of between 12 and 260 bytes.
++		 */
++		shost->max_cmd_len = 260;
+ 
+ 		/* Schedule policy is determined by ->qc_defer()
+ 		 * callback and it needs to see every deferred qc.
+diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
+index ce78ec8..8545e34 100644
+--- a/include/scsi/scsi_proto.h
++++ b/include/scsi/scsi_proto.h
+@@ -164,6 +164,7 @@
+ #define WRITE_SAME_32	      0x0d
+ 
+ /* Values for T10/04-262r7 */
++#define	ATA_32		      0x1ff0	/* 32-byte pass-thru, service action */
+ #define	ATA_16		      0x85	/* 16-byte pass-thru */
+ #define	ATA_12		      0xa1	/* 12-byte pass-thru */
+ 
 -- 
-2.11.0
+1.7.9.5
