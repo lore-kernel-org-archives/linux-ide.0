@@ -1,36 +1,38 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: sata_rcar: make of_device_ids const.
-Date: Mon, 19 Jun 2017 14:05:11 -0400
-Message-ID: <20170619180511.GD12062@htj.duckdns.org>
-References: <474047fe3280ca103275247df6aa67288220a9d4.1497614383.git.arvind.yadav.cs@gmail.com>
+From: INFO <mguerrero@huv.gov.co>
+Subject: Re: Reply Urgent
+Date: Mon, 19 Jun 2017 14:39:18 -0500
+Message-ID: <20170619143918.2132176qvnaamicm__6339.77011680162$1497917350$gmane$org@correo.huv.gov.co>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from correo.huv.gov.co ([190.6.160.84]:4695 "EHLO correo.huv.gov.co"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753205AbdFTAIX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 19 Jun 2017 20:08:23 -0400
 Content-Disposition: inline
-In-Reply-To: <474047fe3280ca103275247df6aa67288220a9d4.1497614383.git.arvind.yadav.cs@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Cc: b.zolnierkie@samsung.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Fri, Jun 16, 2017 at 05:32:21PM +0530, Arvind Yadav wrote:
-> of_device_ids are not supposed to change at runtime. All functions
-> working with of_device_ids provided by <linux/of.h> work with const
-> of_device_ids. So mark the non-const structs as const.
-> 
-> File size before:
->    text	   data	    bss	    dec	    hex	filename
->    3946	   2296	      0	   6242	   1862	drivers/ata/sata_rcar.o
-> 
-> File size after constify sata_rcar_match.
->    text	   data	    bss	    dec	    hex	filename
->    5554	    696	      0	   6250	   186a	drivers/ata/sata_rcar.o
-> 
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Hello,
 
-Applied to libata/for-4.13.
+How are you doing? I have been sent to inform you that, We have an  
+inheritance of a deceased client with your surname. Contact Mr Andrew  
+Bailey Reply Email To: myinfand@gmail.com with your "Full Names" for  
+more info.  Thanks for your understanding.
 
-Thanks.
+Reply ASAP thank you.
 
--- 
-tejun
+Melissa.
+----------------------------------
+Correo Corporativo Hospital Universitario del Valle E.S.E
+*******************************************************************************
+
+"Estamos re-dimensionandonos para crecer!"
+
+******************************************************************************
+
+
