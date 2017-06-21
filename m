@@ -1,7 +1,7 @@
 From: Doug Berger <opendmb@gmail.com>
-Subject: [PATCH 3/3] ata: ahci_brcm: Avoid writing to read-only registers
-Date: Wed, 21 Jun 2017 16:20:14 -0700
-Message-ID: <20170621232014.27790-4-opendmb@gmail.com>
+Subject: [PATCH 2/3] libata: Add the AHCI_HFLAG_NO_WRITE_TO_RO flag
+Date: Wed, 21 Jun 2017 16:20:13 -0700
+Message-ID: <20170621232014.27790-3-opendmb@gmail.com>
 References: <20170621232014.27790-1-opendmb@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20170621232014.27790-1-opendmb@gmail.com>
@@ -10,57 +10,45 @@ To: tj@kernel.org
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Doug Berger <opendmb@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-This commit makes use of the AHCI_HFLAG_YES_ALPM flag to prevent
-the driver from writing to the read-only Host Capability register.
+While most hardware will simply ignore a write to a read-only register,
+some hardware will signal an abort if this occurs.
 
-It also sets the AHCI_HFLAG_NO_WRITE_TO_RO flag to prevent the AHCI
-library from writing to read-only registers.
+This commit introduces the flag AHCI_HFLAG_NO_WRITE_TO_RO to prevent the
+AHCI library from attempting to write to the HOST_CAP, HOST_CAP2, and
+HOST_PORTS_IMPL registers which may be read-only.
 
 Signed-off-by: Doug Berger <opendmb@gmail.com>
 ---
- drivers/ata/ahci_brcm.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+ drivers/ata/ahci.h    | 2 ++
+ drivers/ata/libahci.c | 3 ++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
-index 6f8a7341fa08..5936d1679bf3 100644
---- a/drivers/ata/ahci_brcm.c
-+++ b/drivers/ata/ahci_brcm.c
-@@ -39,7 +39,6 @@
-  #define PIODATA_ENDIAN_SHIFT				6
-   #define ENDIAN_SWAP_NONE				0
-   #define ENDIAN_SWAP_FULL				2
-- #define OVERRIDE_HWINIT				BIT(16)
- #define SATA_TOP_CTRL_TP_CTRL				0x8
- #define SATA_TOP_CTRL_PHY_CTRL				0xc
-  #define SATA_TOP_CTRL_PHY_CTRL_1			0x0
-@@ -126,17 +125,13 @@ static inline void brcm_sata_writereg(u32 val, void __iomem *addr)
- static void brcm_sata_alpm_init(struct ahci_host_priv *hpriv)
- {
- 	struct brcm_ahci_priv *priv = hpriv->plat_data;
--	u32 bus_ctrl, port_ctrl, host_caps;
-+	u32 port_ctrl, host_caps;
- 	int i;
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index ee176e4af97a..8b61123d2c3c 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -249,6 +249,8 @@ enum {
+ #endif
+ 	AHCI_HFLAG_WAKE_BEFORE_STOP	= (1 << 22), /* wake before DMA stop */
+ 	AHCI_HFLAG_YES_ALPM		= (1 << 23), /* force ALPM cap on */
++	AHCI_HFLAG_NO_WRITE_TO_RO	= (1 << 24), /* don't write to read
++							only registers */
  
- 	/* Enable support for ALPM */
--	bus_ctrl = brcm_sata_readreg(priv->top_ctrl +
--				     SATA_TOP_CTRL_BUS_CTRL);
--	brcm_sata_writereg(bus_ctrl | OVERRIDE_HWINIT,
--			   priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL);
- 	host_caps = readl(hpriv->mmio + HOST_CAP);
--	writel(host_caps | HOST_CAP_ALPM, hpriv->mmio);
--	brcm_sata_writereg(bus_ctrl, priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL);
-+	if (!(host_caps & HOST_CAP_ALPM))
-+		hpriv->flags |= AHCI_HFLAG_YES_ALPM;
+ 	/* ap->flags bits */
  
- 	/*
- 	 * Adjust timeout to allow PLL sufficient time to lock while waking
-@@ -360,6 +355,7 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 4462f8a8cf2c..3e286d86ab42 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -945,7 +945,8 @@ int ahci_reset_controller(struct ata_host *host)
+ 		/* Some registers might be cleared on reset.  Restore
+ 		 * initial values.
+ 		 */
+-		ahci_restore_initial_config(host);
++		if (!(hpriv->flags & AHCI_HFLAG_NO_WRITE_TO_RO))
++			ahci_restore_initial_config(host);
+ 	} else
+ 		dev_info(host->dev, "skipping global host reset\n");
  
- 	if (priv->quirks & BRCM_AHCI_QUIRK_NO_NCQ)
- 		hpriv->flags |= AHCI_HFLAG_NO_NCQ;
-+	hpriv->flags |= AHCI_HFLAG_NO_WRITE_TO_RO;
- 
- 	ret = ahci_platform_init_host(pdev, hpriv, &ahci_brcm_port_info,
- 				      &ahci_platform_sht);
 -- 
 2.13.0
