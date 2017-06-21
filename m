@@ -1,23 +1,45 @@
-From: =?utf-8?q?Bernhard_St=C3=B6ckl?= <sunrisefundingltd@gmail.com>
-Subject: =?utf-8?q?AW=3A?=  Wir geben =?utf-8?q?j=C3=A4hrlich?= Darlehen
- =?utf-8?q?f=C3=BCr?= 2% Zinsen aus
-Date: Thu, 22 Jun 2017 00:51:41 +0200
-Message-ID: <1b2-594af880-a9-75f20f80__25978.8566305817$1498086164$gmane$org@186293666>
-Reply-To: sunrisefunding@yahoo.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8BIT
+From: Doug Berger <opendmb@gmail.com>
+Subject: [PATCH 0/3] libata: prevent writes to read-only registers
+Date: Wed, 21 Jun 2017 16:20:11 -0700
+Message-ID: <20170621232014.27790-1-opendmb@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from purin.rz.uni-konstanz.de ([134.34.240.45]:55636 "EHLO
-        purin.rz.uni-konstanz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751940AbdFUXCX (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 21 Jun 2017 19:02:23 -0400
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:32962 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750936AbdFUXUf (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 21 Jun 2017 19:20:35 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Doug Berger <opendmb@gmail.com>
 
+Recent Broadcom SoCs allow for the trapping of write accesses to
+read-only registers. This is only useful if such accesses are
+exceptional, so it is desirable to prevent such accesses in normal
+operation. To that end, this set of commits proposes adding two
+flags to the libata core.
 
-Wir vergeben Kredite mit einem Zinssatz von jährlich 2%.
+The first allows for a quirk that exists in some Broadcom devices
+that are capable of supporting Aggresive Link Power Management even
+though it is not reported by their read-only capability register.
+This removes a need for the Broadcom driver to write to it's
+read-only capability register.
 
-Die Bearbeitung des Antrags erfolgt rasch, wir verlangen keine Gebühren, was sie beantragen werden wir annehmen. Wir bewilligen Kredite von bis zu 40 Millionen Euro und von mindestens 15.000 Euro. Sie können einen geschäftlichen oder privaten Kredit beantrage, wobei Sie bei Geschäftskrediten eine Zahlungsfrist von einem Jahr erhalten.
+The second is a notification to the libata-core that it should not
+write to any standard registers that are defined to be read-only.
 
-Anfragen bitte per Mail an: sunrisefunding01@hotmail.com 
+The Broadcom driver is then modified to use these two general 
+purpose flags.
+
+Doug Berger (3):
+  libata: Add the AHCI_HFLAG_YES_ALPM flag
+  libata: Add the AHCI_HFLAG_NO_WRITE_TO_RO flag
+  ata: ahci_brcm: Avoid writing to read-only registers
+
+ drivers/ata/ahci.h      |  3 +++
+ drivers/ata/ahci_brcm.c | 12 ++++--------
+ drivers/ata/libahci.c   |  8 +++++++-
+ 3 files changed, 14 insertions(+), 9 deletions(-)
+
+-- 
+2.13.0
+
