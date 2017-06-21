@@ -1,60 +1,66 @@
 From: Doug Berger <opendmb@gmail.com>
-Subject: [PATCH 1/3] libata: Add the AHCI_HFLAG_YES_ALPM flag
-Date: Wed, 21 Jun 2017 16:20:12 -0700
-Message-ID: <20170621232014.27790-2-opendmb@gmail.com>
+Subject: [PATCH 3/3] ata: ahci_brcm: Avoid writing to read-only registers
+Date: Wed, 21 Jun 2017 16:20:14 -0700
+Message-ID: <20170621232014.27790-4-opendmb@gmail.com>
 References: <20170621232014.27790-1-opendmb@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:34998 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752392AbdFUXUi (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 21 Jun 2017 19:20:38 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20170621232014.27790-1-opendmb@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: tj@kernel.org
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Doug Berger <opendmb@gmail.com>
+List-Id: linux-ide@vger.kernel.org
 
-Some hardware is capable of supporting Aggresive Link Power Management
-even though it is not indicated by the Host Capability register.
+This commit makes use of the AHCI_HFLAG_YES_ALPM flag to prevent
+the driver from writing to the read-only Host Capability register.
 
-This commit adds the AHCI_HFLAG_YES_ALPM flag to the AHCI library to
-allow indication of this quirk when the Host Capability register is
-Read Only and therefore cannot be changed.
+It also sets the AHCI_HFLAG_NO_WRITE_TO_RO flag to prevent the AHCI
+library from writing to read-only registers.
 
 Signed-off-by: Doug Berger <opendmb@gmail.com>
 ---
- drivers/ata/ahci.h    | 1 +
- drivers/ata/libahci.c | 5 +++++
- 2 files changed, 6 insertions(+)
+ drivers/ata/ahci_brcm.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 30f67a1a4f54..ee176e4af97a 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -248,6 +248,7 @@ enum {
- 	AHCI_HFLAG_MULTI_MSI		= 0,
- #endif
- 	AHCI_HFLAG_WAKE_BEFORE_STOP	= (1 << 22), /* wake before DMA stop */
-+	AHCI_HFLAG_YES_ALPM		= (1 << 23), /* force ALPM cap on */
+diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+index 6f8a7341fa08..5936d1679bf3 100644
+--- a/drivers/ata/ahci_brcm.c
++++ b/drivers/ata/ahci_brcm.c
+@@ -39,7 +39,6 @@
+  #define PIODATA_ENDIAN_SHIFT				6
+   #define ENDIAN_SWAP_NONE				0
+   #define ENDIAN_SWAP_FULL				2
+- #define OVERRIDE_HWINIT				BIT(16)
+ #define SATA_TOP_CTRL_TP_CTRL				0x8
+ #define SATA_TOP_CTRL_PHY_CTRL				0xc
+  #define SATA_TOP_CTRL_PHY_CTRL_1			0x0
+@@ -126,17 +125,13 @@ static inline void brcm_sata_writereg(u32 val, void __iomem *addr)
+ static void brcm_sata_alpm_init(struct ahci_host_priv *hpriv)
+ {
+ 	struct brcm_ahci_priv *priv = hpriv->plat_data;
+-	u32 bus_ctrl, port_ctrl, host_caps;
++	u32 port_ctrl, host_caps;
+ 	int i;
  
- 	/* ap->flags bits */
+ 	/* Enable support for ALPM */
+-	bus_ctrl = brcm_sata_readreg(priv->top_ctrl +
+-				     SATA_TOP_CTRL_BUS_CTRL);
+-	brcm_sata_writereg(bus_ctrl | OVERRIDE_HWINIT,
+-			   priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL);
+ 	host_caps = readl(hpriv->mmio + HOST_CAP);
+-	writel(host_caps | HOST_CAP_ALPM, hpriv->mmio);
+-	brcm_sata_writereg(bus_ctrl, priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL);
++	if (!(host_caps & HOST_CAP_ALPM))
++		hpriv->flags |= AHCI_HFLAG_YES_ALPM;
  
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index b3a685ad9b87..4462f8a8cf2c 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -504,6 +504,11 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
- 		cap &= ~HOST_CAP_FBS;
- 	}
+ 	/*
+ 	 * Adjust timeout to allow PLL sufficient time to lock while waking
+@@ -360,6 +355,7 @@ static int brcm_ahci_probe(struct platform_device *pdev)
  
-+	if (!(cap & HOST_CAP_ALPM) && (hpriv->flags & AHCI_HFLAG_YES_ALPM)) {
-+		dev_info(dev, "controller can do ALPM, turning on CAP_ALPM\n");
-+		cap |= HOST_CAP_ALPM;
-+	}
-+
- 	if (hpriv->force_port_map && port_map != hpriv->force_port_map) {
- 		dev_info(dev, "forcing port_map 0x%x -> 0x%x\n",
- 			 port_map, hpriv->force_port_map);
+ 	if (priv->quirks & BRCM_AHCI_QUIRK_NO_NCQ)
+ 		hpriv->flags |= AHCI_HFLAG_NO_NCQ;
++	hpriv->flags |= AHCI_HFLAG_NO_WRITE_TO_RO;
+ 
+ 	ret = ahci_platform_init_host(pdev, hpriv, &ahci_brcm_port_info,
+ 				      &ahci_platform_sht);
 -- 
 2.13.0
-
