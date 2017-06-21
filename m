@@ -1,33 +1,23 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: ftide010: fix resource printing
-Date: Wed, 21 Jun 2017 18:06:47 -0400
-Message-ID: <20170621220647.GC18600@htj.duckdns.org>
-References: <20170621220115.4100076-1-arnd@arndb.de>
+From: =?utf-8?q?Bernhard_St=C3=B6ckl?= <sunrisefundingltd@gmail.com>
+Subject: =?utf-8?q?AW=3A?=  Wir geben =?utf-8?q?j=C3=A4hrlich?= Darlehen
+ =?utf-8?q?f=C3=BCr?= 2% Zinsen aus
+Date: Thu, 22 Jun 2017 00:51:41 +0200
+Message-ID: <1b2-594af880-a9-75f20f80__25978.8566305817$1498086164$gmane$org@186293666>
+Reply-To: sunrisefunding@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170621220115.4100076-1-arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Linus Walleij <linus.walleij@linaro.org>, Hans Ulli Kroll <ulli.kroll@googlemail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from purin.rz.uni-konstanz.de ([134.34.240.45]:55636 "EHLO
+        purin.rz.uni-konstanz.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751940AbdFUXCX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 21 Jun 2017 19:02:23 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Jun 22, 2017 at 12:00:55AM +0200, Arnd Bergmann wrote:
-> The new driver uses an incorrect format string for resource_size_t:
-> 
-> drivers/ata/pata_ftide010.c: In function 'pata_ftide010_probe':
-> drivers/ata/pata_ftide010.c:520:17: warning: format '%x' expects argument of type 'unsigned int', but argument 5 has type 'resource_size_t {aka long long unsigned int}' [-Wformat=]
-> 
-> The nicest way to print the address is to pretty-print the resource
-> using %pR.
-> 
-> Fixes: be4e456ed3a5 ("ata: Add driver for Faraday Technology FTIDE010")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Applied to libata/for-4.13.
+Wir vergeben Kredite mit einem Zinssatz von jährlich 2%.
 
-Thanks.
+Die Bearbeitung des Antrags erfolgt rasch, wir verlangen keine Gebühren, was sie beantragen werden wir annehmen. Wir bewilligen Kredite von bis zu 40 Millionen Euro und von mindestens 15.000 Euro. Sie können einen geschäftlichen oder privaten Kredit beantrage, wobei Sie bei Geschäftskrediten eine Zahlungsfrist von einem Jahr erhalten.
 
--- 
-Tejun
+Anfragen bitte per Mail an: sunrisefunding01@hotmail.com 
