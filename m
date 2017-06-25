@@ -1,184 +1,79 @@
-From: Minwoo Im <dn3108@gmail.com>
-Subject: [PATCH] libata: Support for an ATA PASS-THROUGH(32) command.
-Date: Sat, 24 Jun 2017 03:41:10 +0900
-Message-ID: <1498243270-21730-1-git-send-email-dn3108@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:36814 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754327AbdFWSlY (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 23 Jun 2017 14:41:24 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: [PATCH] sata_via: Enable optional hotplug on VT6420
+Date: Sun, 25 Jun 2017 22:25:36 +0200
+Message-ID: <20170625202536.14925-1-linux@rainbow-software.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Minwoo Im <dn3108@gmail.com>
 
-SAT-4(SCSI/ATA Translation) supports for an ata pass-thru(32).
-This patch will allow to translate an ata pass-thru(32) SCSI cmd
-to an ATA cmd.
+VT6420 seems to have the same hotplug capability as VT6421.
 
-Signed-off-by: Minwoo Im <dn3108@gmail.com>
-Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
+However, enabling hotplug needs to expose SCR registers which can cause
+problems. It works for me but might break elsewhere. So add a module
+parameter vt6420_hotplug to enable this feature.
+
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/ata/libata-core.c |    2 +-
- drivers/ata/libata-scsi.c |   72 +++++++++++++++++++++++++++++++++++++++++----
- include/scsi/scsi_proto.h |    1 +
- 3 files changed, 69 insertions(+), 6 deletions(-)
+ drivers/ata/sata_via.c | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 2d83b8c..4777e76 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2587,7 +2587,7 @@ int ata_dev_configure(struct ata_device *dev)
- 		}
- 		ata_dev_config_sense_reporting(dev);
- 		ata_dev_config_zac(dev);
--		dev->cdb_len = 16;
-+		dev->cdb_len = 32;
- 	}
+diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+index f3f538eec7b3..50d1c1b1131c 100644
+--- a/drivers/ata/sata_via.c
++++ b/drivers/ata/sata_via.c
+@@ -80,6 +80,10 @@ struct svia_priv {
+ 	bool			wd_workaround;
+ };
  
- 	/* ATAPI-specific feature tests */
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 49ba983..dc59860 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3127,7 +3127,7 @@ static struct ata_device *__ata_scsi_find_dev(struct ata_port *ap,
-  *	ata_scsi_pass_thru - convert ATA pass-thru CDB to taskfile
-  *	@qc: command structure to be initialized
-  *
-- *	Handles either 12 or 16-byte versions of the CDB.
-+ *	Handles either 12, 16, or 32-byte versions of the CDB.
-  *
-  *	RETURNS:
-  *	Zero on success, non-zero on failure.
-@@ -3139,13 +3139,19 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- 	struct ata_device *dev = qc->dev;
- 	const u8 *cdb = scmd->cmnd;
- 	u16 fp;
-+	u16 cdb_offset = 0;
- 
--	if ((tf->protocol = ata_scsi_map_proto(cdb[1])) == ATA_PROT_UNKNOWN) {
-+	/* 7Fh variable length cmd means a ata pass-thru(32) */
-+	if (cdb[0] == VARIABLE_LENGTH_CMD)
-+		cdb_offset = 9;
++static int vt6420_hotplug;
++module_param_named(vt6420_hotplug, vt6420_hotplug, int, 0644);
++MODULE_PARM_DESC(vt6420_hotplug, "Enable hot-plug support for VT6420 (0=Don't support, 1=support)");
 +
-+	tf->protocol = ata_scsi_map_proto(cdb[1 + cdb_offset]);
-+	if (tf->protocol == ATA_PROT_UNKNOWN) {
- 		fp = 1;
- 		goto invalid_fld;
- 	}
+ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+ #ifdef CONFIG_PM_SLEEP
+ static int svia_pci_device_resume(struct pci_dev *pdev);
+@@ -473,6 +477,11 @@ static int vt6420_prepare_host(struct pci_dev *pdev, struct ata_host **r_host)
+ 	struct ata_host *host;
+ 	int rc;
  
--	if (ata_is_ncq(tf->protocol) && (cdb[2] & 0x3) == 0)
-+	if (ata_is_ncq(tf->protocol) && (cdb[2 + cdb_offset] & 0x3) == 0)
- 		tf->protocol = ATA_PROT_NCQ_NODATA;
- 
- 	/* enable LBA */
-@@ -3181,7 +3187,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- 		tf->lbah = cdb[12];
- 		tf->device = cdb[13];
- 		tf->command = cdb[14];
--	} else {
-+	} else if (cdb[0] == ATA_12) {
- 		/*
- 		 * 12-byte CDB - incapable of extended commands.
- 		 */
-@@ -3194,6 +3200,30 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- 		tf->lbah = cdb[7];
- 		tf->device = cdb[8];
- 		tf->command = cdb[9];
-+	} else {
-+		/*
-+		 * 32-byte CDB - may contain extended command fields.
-+		 *
-+		 * If that is the case, copy the upper byte register values.
-+		 */
-+		if (cdb[10] & 0x01) {
-+			tf->hob_feature = cdb[20];
-+			tf->hob_nsect = cdb[22];
-+			tf->hob_lbal = cdb[16];
-+			tf->hob_lbam = cdb[15];
-+			tf->hob_lbah = cdb[14];
-+			tf->flags |= ATA_TFLAG_LBA48;
-+		} else
-+			tf->flags &= ~ATA_TFLAG_LBA48;
++	if (vt6420_hotplug) {
++		ppi[0]->port_ops->scr_read = svia_scr_read;
++		ppi[0]->port_ops->scr_write = svia_scr_write;
++	}
 +
-+		tf->feature = cdb[21];
-+		tf->nsect = cdb[23];
-+		tf->lbal = cdb[19];
-+		tf->lbam = cdb[18];
-+		tf->lbah = cdb[17];
-+		tf->device = cdb[24];
-+		tf->command = cdb[25];
-+		tf->auxiliary = get_unaligned_be32(&cdb[28]);
- 	}
- 
- 	/* For NCQ commands copy the tag value */
-@@ -4068,6 +4098,35 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
+ 	rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
+ 	if (rc)
+ 		return rc;
+@@ -556,7 +565,7 @@ static void svia_wd_fix(struct pci_dev *pdev)
+ 	pci_write_config_byte(pdev, 0x52, tmp8 | BIT(2));
  }
  
- /**
-+ *	ata_scsi_var_len_cdb_xlat - SATL variable length CDB to Handler
-+ *	@qc: Command to be translated
-+ *
-+ *	Translate a SCSI variable length CDB to specified commands.
-+ *	It checks a service action value in CDB to call corresponding handler.
-+ *
-+ *	RETURNS:
-+ *	Zero on success, non-zero on failure
-+ *
-+ */
-+static unsigned int ata_scsi_var_len_cdb_xlat(struct ata_queued_cmd *qc)
-+{
-+	struct scsi_cmnd *scmd = qc->scsicmd;
-+	const u8 *cdb = scmd->cmnd;
-+	const u16 sa = get_unaligned_be16(&cdb[8]);
-+
-+	/*
-+	 * if service action represents a ata pass-thru(32) command,
-+	 * then pass it to ata_scsi_pass_thru handler.
-+	 */
-+	if (sa == ATA_32)
-+		return ata_scsi_pass_thru(qc);
-+
-+unspprt_sa:
-+	/* unsupported service action */
-+	return 1;
-+}
-+
-+/**
-  *	ata_get_xlat_func - check if SCSI to ATA translation is possible
-  *	@dev: ATA device
-  *	@cmd: SCSI command opcode to consider
-@@ -4107,6 +4166,9 @@ static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
- 	case ATA_16:
- 		return ata_scsi_pass_thru;
+-static irqreturn_t vt6421_interrupt(int irq, void *dev_instance)
++static irqreturn_t vt642x_interrupt(int irq, void *dev_instance)
+ {
+ 	struct ata_host *host = dev_instance;
+ 	irqreturn_t rc = ata_bmdma_interrupt(irq, dev_instance);
+@@ -644,7 +653,7 @@ static void svia_configure(struct pci_dev *pdev, int board_id,
+ 		pci_write_config_byte(pdev, SATA_NATIVE_MODE, tmp8);
+ 	}
  
-+	case VARIABLE_LENGTH_CMD:
-+		return ata_scsi_var_len_cdb_xlat;
-+
- 	case MODE_SELECT:
- 	case MODE_SELECT_10:
- 		return ata_scsi_mode_select_xlat;
-@@ -4385,7 +4447,7 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
- 		shost->max_id = 16;
- 		shost->max_lun = 1;
- 		shost->max_channel = 1;
--		shost->max_cmd_len = 16;
-+		shost->max_cmd_len = 32;
+-	if (board_id == vt6421) {
++	if ((board_id == vt6420 && vt6420_hotplug) || board_id == vt6421) {
+ 		/* enable IRQ on hotplug */
+ 		pci_read_config_byte(pdev, SVIA_MISC_3, &tmp8);
+ 		if ((tmp8 & SATA_HOTPLUG) != SATA_HOTPLUG) {
+@@ -744,8 +753,8 @@ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	svia_configure(pdev, board_id, hpriv);
  
- 		/* Schedule policy is determined by ->qc_defer()
- 		 * callback and it needs to see every deferred qc.
-diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
-index ce78ec8..06076b8 100644
---- a/include/scsi/scsi_proto.h
-+++ b/include/scsi/scsi_proto.h
-@@ -162,6 +162,7 @@
- #define VERIFY_32	      0x0a
- #define WRITE_32	      0x0b
- #define WRITE_SAME_32	      0x0d
-+#define ATA_32		      0x1ff0
- 
- /* Values for T10/04-262r7 */
- #define	ATA_16		      0x85	/* 16-byte pass-thru */
+ 	pci_set_master(pdev);
+-	if (board_id == vt6421)
+-		return ata_host_activate(host, pdev->irq, vt6421_interrupt,
++	if ((board_id == vt6420 && vt6420_hotplug) || board_id == vt6421)
++		return ata_host_activate(host, pdev->irq, vt642x_interrupt,
+ 					 IRQF_SHARED, &svia_sht);
+ 	else
+ 		return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
 -- 
-1.7.9.5
-
+Ondrej Zary
