@@ -1,80 +1,201 @@
-From: <beautyink@live.nl>
-Subject: (unknown)
-Date: Mon, 26 Jun 2017 09:15:23 -0000
-Message-ID: <149846852392.29695.8920474009490817034@telenet.ru>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] sd: add support for TCG OPAL self encrypting disks
+Date: Mon, 26 Jun 2017 13:10:47 +0200
+Message-ID: <20170626111047.GA16273@lst.de>
+References: <20170619122646.32666-1-hch@lst.de> <20170619122646.32666-2-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_2026126106_linux-ide.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 132.197-31-94.telenet.ru ([94.31.197.132]:36115 "HELO
-        telenet.ru" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-        id S1751353AbdFZJP1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 26 Jun 2017 05:15:27 -0400
-Content-Disposition: attachment
-Subject: 
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170619122646.32666-2-hch@lst.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Scott Bauer <scott.bauer@intel.com>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-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
+ping?
+
+On Mon, Jun 19, 2017 at 02:26:46PM +0200, Christoph Hellwig wrote:
+> Just wire up the generic TCG OPAL infrastructure to the SCSI disk driver
+> and the Security In/Out commands.
+> 
+> Note that I don't know of any actual SCSI disks that do support TCG OPAL,
+> but this is required to support ATA disks through libata.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/ata/libata-scsi.c  |  3 +++
+>  drivers/scsi/sd.c          | 53 +++++++++++++++++++++++++++++++++++++++++++++-
+>  drivers/scsi/sd.h          |  2 ++
+>  include/scsi/scsi_device.h |  1 +
+>  4 files changed, 58 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 0f788ad6f2f6..3e5ca2e894a4 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1321,6 +1321,9 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
+>  
+>  	blk_queue_flush_queueable(q, false);
+>  
+> +	if (dev->flags & ATA_DFLAG_TRUSTED)
+> +		sdev->security_supported = 1;
+> +
+>  	dev->sdev = sdev;
+>  	return 0;
+>  }
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index f9d1432d7cc5..5d32fd7d3a3e 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -50,6 +50,7 @@
+>  #include <linux/string_helpers.h>
+>  #include <linux/async.h>
+>  #include <linux/slab.h>
+> +#include <linux/sed-opal.h>
+>  #include <linux/pm_runtime.h>
+>  #include <linux/pr.h>
+>  #include <linux/t10-pi.h>
+> @@ -643,6 +644,26 @@ static void scsi_disk_put(struct scsi_disk *sdkp)
+>  	mutex_unlock(&sd_ref_mutex);
+>  }
+>  
+> +#ifdef CONFIG_BLK_SED_OPAL
+> +static int sd_sec_submit(void *data, u16 spsp, u8 secp, void *buffer,
+> +		size_t len, bool send)
+> +{
+> +	struct scsi_device *sdev = data;
+> +	u8 cdb[12] = { 0, };
+> +	int ret;
+> +
+> +	cdb[0] = send ? SECURITY_PROTOCOL_OUT : SECURITY_PROTOCOL_IN;
+> +	cdb[1] = secp;
+> +	put_unaligned_be16(spsp, &cdb[2]);
+> +	put_unaligned_be32(len, &cdb[6]);
+> +
+> +	ret = scsi_execute_req(sdev, cdb,
+> +			send ? DMA_TO_DEVICE : DMA_FROM_DEVICE,
+> +			buffer, len, NULL, SD_TIMEOUT, SD_MAX_RETRIES, NULL);
+> +	return ret <= 0 ? ret : -EIO;
+> +}
+> +#endif /* CONFIG_BLK_SED_OPAL */
+> +
+>  static unsigned char sd_setup_protect_cmnd(struct scsi_cmnd *scmd,
+>  					   unsigned int dix, unsigned int dif)
+>  {
+> @@ -1439,6 +1460,9 @@ static int sd_ioctl(struct block_device *bdev, fmode_t mode,
+>  	if (error)
+>  		goto out;
+>  
+> +	if (is_sed_ioctl(cmd))
+> +		return sed_ioctl(sdkp->opal_dev, cmd, p);
+> +
+>  	/*
+>  	 * Send SCSI addressing ioctls directly to mid level, send other
+>  	 * ioctls to block level and then onto mid level if they can't be
+> @@ -2994,6 +3018,20 @@ static void sd_read_write_same(struct scsi_disk *sdkp, unsigned char *buffer)
+>  		sdkp->ws10 = 1;
+>  }
+>  
+> +static void sd_read_security(struct scsi_disk *sdkp, unsigned char *buffer)
+> +{
+> +	struct scsi_device *sdev = sdkp->device;
+> +
+> +	if (!sdev->security_supported)
+> +		return;
+> +
+> +	if (scsi_report_opcode(sdev, buffer, SD_BUF_SIZE,
+> +			SECURITY_PROTOCOL_IN) == 1 &&
+> +	    scsi_report_opcode(sdev, buffer, SD_BUF_SIZE,
+> +			SECURITY_PROTOCOL_OUT) == 1)
+> +		sdkp->security = 1;
+> +}
+> +
+>  /**
+>   *	sd_revalidate_disk - called the first time a new disk is seen,
+>   *	performs disk spin up, read_capacity, etc.
+> @@ -3047,6 +3085,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+>  		sd_read_cache_type(sdkp, buffer);
+>  		sd_read_app_tag_own(sdkp, buffer);
+>  		sd_read_write_same(sdkp, buffer);
+> +		sd_read_security(sdkp, buffer);
+>  	}
+>  
+>  	sdkp->first_scan = 0;
+> @@ -3207,6 +3246,12 @@ static void sd_probe_async(void *data, async_cookie_t cookie)
+>  
+>  	sd_revalidate_disk(gd);
+>  
+> +	if (sdkp->security) {
+> +		sdkp->opal_dev = init_opal_dev(sdp, &sd_sec_submit);
+> +		if (sdkp->opal_dev)
+> +			sd_printk(KERN_NOTICE, sdkp, "supports TCG Opal\n");
+> +	}
+> +
+>  	sd_printk(KERN_NOTICE, sdkp, "Attached SCSI %sdisk\n",
+>  		  sdp->removable ? "removable " : "");
+>  	scsi_autopm_put_device(sdp);
+> @@ -3356,6 +3401,8 @@ static int sd_remove(struct device *dev)
+>  
+>  	sd_zbc_remove(sdkp);
+>  
+> +	free_opal_dev(sdkp->opal_dev);
+> +
+>  	blk_register_region(devt, SD_MINORS, NULL,
+>  			    sd_default_probe, NULL, NULL);
+>  
+> @@ -3497,6 +3544,7 @@ static int sd_suspend_runtime(struct device *dev)
+>  static int sd_resume(struct device *dev)
+>  {
+>  	struct scsi_disk *sdkp = dev_get_drvdata(dev);
+> +	int ret;
+>  
+>  	if (!sdkp)	/* E.g.: runtime resume at the start of sd_probe() */
+>  		return 0;
+> @@ -3505,7 +3553,10 @@ static int sd_resume(struct device *dev)
+>  		return 0;
+>  
+>  	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
+> -	return sd_start_stop_device(sdkp, 1);
+> +	ret = sd_start_stop_device(sdkp, 1);
+> +	if (!ret)
+> +		opal_unlock_from_suspend(sdkp->opal_dev);
+> +	return ret;
+>  }
+>  
+>  /**
+> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+> index 61d02efd366c..99c4dde9b6bf 100644
+> --- a/drivers/scsi/sd.h
+> +++ b/drivers/scsi/sd.h
+> @@ -71,6 +71,7 @@ struct scsi_disk {
+>  	struct scsi_device *device;
+>  	struct device	dev;
+>  	struct gendisk	*disk;
+> +	struct opal_dev *opal_dev;
+>  #ifdef CONFIG_BLK_DEV_ZONED
+>  	unsigned int	nr_zones;
+>  	unsigned int	zone_blocks;
+> @@ -114,6 +115,7 @@ struct scsi_disk {
+>  	unsigned	rc_basis: 2;
+>  	unsigned	zoned: 2;
+>  	unsigned	urswrz : 1;
+> +	unsigned	security : 1;
+>  	unsigned	ignore_medium_access_errors : 1;
+>  };
+>  #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 05641aebd181..310c86a892e9 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -176,6 +176,7 @@ struct scsi_device {
+>  	unsigned no_read_disc_info:1;	/* Avoid READ_DISC_INFO cmds */
+>  	unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
+>  	unsigned try_rc_10_first:1;	/* Try READ_CAPACACITY_10 first */
+> +	unsigned security_supported:1;	/* Supports Security Protocols */
+>  	unsigned is_visible:1;	/* is the device visible in sysfs */
+>  	unsigned wce_default_on:1;	/* Cache is ON by default */
+>  	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
+> -- 
+> 2.11.0
+---end quoted text---
