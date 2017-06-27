@@ -1,28 +1,29 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ahci: Add Device ID for ASMedia 1061R and 1062R
-Date: Tue, 27 Jun 2017 11:23:03 -0400
-Message-ID: <20170627152303.GB2289@htj.duckdns.org>
-References: <1498535594-138680-1-git-send-email-shawn.lin@rock-chips.com>
+Subject: Re: [PATCH] libata: Support for an ATA PASS-THROUGH(32) command.
+Date: Tue, 27 Jun 2017 11:27:26 -0400
+Message-ID: <20170627152726.GC2289@htj.duckdns.org>
+References: <1498243270-21730-1-git-send-email-dn3108@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f171.google.com ([209.85.161.171]:32986 "EHLO
-        mail-yw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752803AbdF0PXG (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 27 Jun 2017 11:23:06 -0400
-Received: by mail-yw0-f171.google.com with SMTP id 63so13348318ywr.0
-        for <linux-ide@vger.kernel.org>; Tue, 27 Jun 2017 08:23:06 -0700 (PDT)
+Received: from mail-yb0-f179.google.com ([209.85.213.179]:33756 "EHLO
+        mail-yb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751808AbdF0P1f (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 27 Jun 2017 11:27:35 -0400
 Content-Disposition: inline
-In-Reply-To: <1498535594-138680-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1498243270-21730-1-git-send-email-dn3108@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: linux-ide@vger.kernel.org
+To: Minwoo Im <dn3108@gmail.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Jun 27, 2017 at 11:53:14AM +0800, Shawn Lin wrote:
-> Adding ASMedia 1061R and 1062R platform device IDs for SATA.
+On Sat, Jun 24, 2017 at 03:41:10AM +0900, Minwoo Im wrote:
+> SAT-4(SCSI/ATA Translation) supports for an ata pass-thru(32).
+> This patch will allow to translate an ata pass-thru(32) SCSI cmd
+> to an ATA cmd.
 > 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Signed-off-by: Minwoo Im <dn3108@gmail.com>
+> Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
 
 Applied to libata/for-4.13.
 
