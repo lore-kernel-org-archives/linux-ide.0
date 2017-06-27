@@ -1,39 +1,32 @@
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH] ahci: Add Device ID for ASMedia 1061R and 1062R
-Date: Tue, 27 Jun 2017 11:53:14 +0800
-Message-ID: <1498535594-138680-1-git-send-email-shawn.lin@rock-chips.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ahci: Add Device ID for ASMedia 1061R and 1062R
+Date: Tue, 27 Jun 2017 11:23:03 -0400
+Message-ID: <20170627152303.GB2289@htj.duckdns.org>
+References: <1498535594-138680-1-git-send-email-shawn.lin@rock-chips.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.132]:34707 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751473AbdF0D4C (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 26 Jun 2017 23:56:02 -0400
+Received: from mail-yw0-f171.google.com ([209.85.161.171]:32986 "EHLO
+        mail-yw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752803AbdF0PXG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 27 Jun 2017 11:23:06 -0400
+Received: by mail-yw0-f171.google.com with SMTP id 63so13348318ywr.0
+        for <linux-ide@vger.kernel.org>; Tue, 27 Jun 2017 08:23:06 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1498535594-138680-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: linux-ide@vger.kernel.org
 
-Adding ASMedia 1061R and 1062R platform device IDs for SATA.
+On Tue, Jun 27, 2017 at 11:53:14AM +0800, Shawn Lin wrote:
+> Adding ASMedia 1061R and 1062R platform device IDs for SATA.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+Applied to libata/for-4.13.
 
- drivers/ata/ahci.c | 2 ++
- 1 file changed, 2 insertions(+)
+Thanks.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 1e1c355..5a5fd0b 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -548,6 +548,8 @@ static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
- 	{ PCI_VDEVICE(ASMEDIA, 0x0602), board_ahci },	/* ASM1060 */
- 	{ PCI_VDEVICE(ASMEDIA, 0x0611), board_ahci },	/* ASM1061 */
- 	{ PCI_VDEVICE(ASMEDIA, 0x0612), board_ahci },	/* ASM1062 */
-+	{ PCI_VDEVICE(ASMEDIA, 0x0621), board_ahci },   /* ASM1061R */
-+	{ PCI_VDEVICE(ASMEDIA, 0x0622), board_ahci },   /* ASM1062R */
- 
- 	/*
- 	 * Samsung SSDs found on some macbooks.  NCQ times out if MSI is
 -- 
-1.9.1
-
-
+tejun
