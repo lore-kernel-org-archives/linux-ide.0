@@ -1,31 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] sd: add support for TCG OPAL self encrypting disks
-Date: Wed, 28 Jun 2017 14:33:55 -0400
-Message-ID: <20170628183355.GA27833@htj.duckdns.org>
-References: <20170619122646.32666-1-hch@lst.de>
- <20170619122646.32666-2-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170619122646.32666-2-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Scott Bauer <scott.bauer@intel.com>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] libata: fix build warning in ata_scsi_var_len_cdb_xlat
+Date: Wed, 28 Jun 2017 22:04:03 +0200
+Message-ID: <20170628200421.3047383-1-arnd@arndb.de>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.131]:62746 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751533AbdF1UEm (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 28 Jun 2017 16:04:42 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Bart Van Assche <bart.vanassche@wdc.com>, Arnd Bergmann <arnd@arndb.de>, Tom Yan <tom.ty89@gmail.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>, Adam Manzanares <adam.manzanares@wdc.com>, Minwoo Im <dn3108@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Jun 19, 2017 at 02:26:46PM +0200, Christoph Hellwig wrote:
-> Just wire up the generic TCG OPAL infrastructure to the SCSI disk driver
-> and the Security In/Out commands.
-> 
-> Note that I don't know of any actual SCSI disks that do support TCG OPAL,
-> but this is required to support ATA disks through libata.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+This new harmless warning just showed up:
 
-Applied to libata/for-4.13 w/ Martin's ack added.
+drivers/ata/libata-scsi.c: In function 'ata_scsi_var_len_cdb_xlat':
+drivers/ata/libata-scsi.c:4194:1: error: label 'unspprt_sa' defined but not used [-Werror=unused-label]
 
-Thanks.
+The label is obviously unused and can be removed.
 
+Fixes: b1ffbf854e08 ("libata: Support for an ATA PASS-THROUGH(32) command.")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/ata/libata-scsi.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 815c6e240aea..9d1b66b4ce7b 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -4191,7 +4191,6 @@ static unsigned int ata_scsi_var_len_cdb_xlat(struct ata_queued_cmd *qc)
+ 	if (sa == ATA_32)
+ 		return ata_scsi_pass_thru(qc);
+ 
+-unspprt_sa:
+ 	/* unsupported service action */
+ 	return 1;
+ }
 -- 
-tejun
+2.9.0
+
