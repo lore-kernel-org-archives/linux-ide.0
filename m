@@ -1,33 +1,36 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: Support for an ATA PASS-THROUGH(32) command.
-Date: Tue, 27 Jun 2017 11:27:26 -0400
-Message-ID: <20170627152726.GC2289@htj.duckdns.org>
-References: <1498243270-21730-1-git-send-email-dn3108@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] sd: add support for TCG OPAL self encrypting disks
+Date: Tue, 27 Jun 2017 21:02:17 -0400
+Message-ID: <yq1wp7wzzza.fsf@oracle.com>
+References: <20170619122646.32666-1-hch@lst.de>
+        <20170619122646.32666-2-hch@lst.de> <20170626111047.GA16273@lst.de>
+        <yq1tw327l8w.fsf@oracle.com> <20170626205220.GA27428@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yb0-f179.google.com ([209.85.213.179]:33756 "EHLO
-        mail-yb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751808AbdF0P1f (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 27 Jun 2017 11:27:35 -0400
-Content-Disposition: inline
-In-Reply-To: <1498243270-21730-1-git-send-email-dn3108@gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:51102 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752764AbdF1BCe (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 27 Jun 2017 21:02:34 -0400
+In-Reply-To: <20170626205220.GA27428@htj.duckdns.org> (Tejun Heo's message of
+        "Mon, 26 Jun 2017 16:52:20 -0400")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Minwoo Im <dn3108@gmail.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Scott Bauer <scott.bauer@intel.com>, Jonathan Derrick <jonathan.derrick@intel.com>, Rafael Antognolli <rafael.antognolli@intel.com>, Robert Elliott <elliott@hpe.com>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sat, Jun 24, 2017 at 03:41:10AM +0900, Minwoo Im wrote:
-> SAT-4(SCSI/ATA Translation) supports for an ata pass-thru(32).
-> This patch will allow to translate an ata pass-thru(32) SCSI cmd
-> to an ATA cmd.
-> 
-> Signed-off-by: Minwoo Im <dn3108@gmail.com>
-> Reviewed-by: Bart Van Assche <bart.vanassche@wdc.com>
 
-Applied to libata/for-4.13.
+Tejun,
 
-Thanks.
+>> Looks good to me. I'll queue it up for 4.13 as soon as Linus has pulled
+>> in the ata bits.
+>
+> I can route it through libata tree w/ your ack if that's more convenient.
+
+I don't think it will cause any headaches. I'm just a bit cautious since
+I already have a ton of conflicts in linux-next for this merge window.
+
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
-tejun
+Martin K. Petersen	Oracle Linux Engineering
