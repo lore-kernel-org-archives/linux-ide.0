@@ -1,63 +1,81 @@
-From: Tejun Heo <tj@kernel.org>
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
 Subject: Re: spin_unlock_wait() in ata_scsi_cmd_error_handler()?
-Date: Thu, 29 Jun 2017 16:17:54 -0400
-Message-ID: <20170629201754.GC9745@htj.duckdns.org>
+Date: Thu, 29 Jun 2017 13:48:00 -0700
+Message-ID: <20170629204800.GF2393@linux.vnet.ibm.com>
 References: <20170629181057.GA5228@linux.vnet.ibm.com>
  <20170629195322.GB9745@htj.duckdns.org>
  <20170629201443.GD2393@linux.vnet.ibm.com>
+ <20170629201754.GC9745@htj.duckdns.org>
+Reply-To: paulmck@linux.vnet.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:36666 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751532AbdF2UsD (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 29 Jun 2017 16:48:03 -0400
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v5TKhk1a081064
+        for <linux-ide@vger.kernel.org>; Thu, 29 Jun 2017 16:48:02 -0400
+Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2bd282u3tg-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-ide@vger.kernel.org>; Thu, 29 Jun 2017 16:48:02 -0400
+Received: from localhost
+        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-ide@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
+        Thu, 29 Jun 2017 16:48:01 -0400
 Content-Disposition: inline
-In-Reply-To: <20170629201443.GD2393@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20170629201754.GC9745@htj.duckdns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello,
-
-On Thu, Jun 29, 2017 at 01:14:43PM -0700, Paul E. McKenney wrote:
-> On Thu, Jun 29, 2017 at 03:53:22PM -0400, Tejun Heo wrote:
-> > Hello, Paul.
+On Thu, Jun 29, 2017 at 04:17:54PM -0400, Tejun Heo wrote:
+> Hello,
+> 
+> On Thu, Jun 29, 2017 at 01:14:43PM -0700, Paul E. McKenney wrote:
+> > On Thu, Jun 29, 2017 at 03:53:22PM -0400, Tejun Heo wrote:
+> > > Hello, Paul.
+> > > 
+> > > On Thu, Jun 29, 2017 at 11:10:57AM -0700, Paul E. McKenney wrote:
+> > > > If this code fragment doesn't deadlock, then CPU 0's spin_unlock_wait()
+> > > > must have executed before CPU 1's spin_lock().  However, even on x86,
+> > > > CPU 0's prior writes can be reordered with its subsequent reads, which
+> > > > means that r1 == 0 is possible, which means that the above condition
+> > > > could hold, even on x86.
+> > > 
+> > > I see.  Ah, that's a mind bender.
 > > 
-> > On Thu, Jun 29, 2017 at 11:10:57AM -0700, Paul E. McKenney wrote:
-> > > If this code fragment doesn't deadlock, then CPU 0's spin_unlock_wait()
-> > > must have executed before CPU 1's spin_lock().  However, even on x86,
-> > > CPU 0's prior writes can be reordered with its subsequent reads, which
-> > > means that r1 == 0 is possible, which means that the above condition
-> > > could hold, even on x86.
+> > It has indeed been providing at least its share of entertainment over
+> > the past little while.  ;-)
+> 
+> lol :)
+> 
+> > > That part of the code should be dead now.  I don't think we no longer
+> > > have any driver which doesn't have error handler set.  I should rip
+> > > out that if/else.  Also, ACQUIRE semantics should be enough there.
+> > > Nothing changes from the EH side there.
 > > 
-> > I see.  Ah, that's a mind bender.
+> > It looks like we actually might get rid of spin_unlock_wait entirely.
+> > But how about if I just pull the spin_lock_irqsave() before the "if"
+> > and the spin_lock_irqrestore() after the "if"?  Same effect, only
+> > difference is that the "if" and the "ap->eh_tries = ATA_EH_MAX_TRIES"
+> > end up under the lock, and I bet that you won't be able to measure
+> > the difference.  (Please see below.)
+> > 
+> > I will do this because I just now happened to be editing that file on
+> > my "eradicate spin_unlock_wait()" quest, but can easily rework the
+> > patch as desired.  If you want something different, just let me know!
 > 
-> It has indeed been providing at least its share of entertainment over
-> the past little while.  ;-)
-
-lol :)
-
-> > That part of the code should be dead now.  I don't think we no longer
-> > have any driver which doesn't have error handler set.  I should rip
-> > out that if/else.  Also, ACQUIRE semantics should be enough there.
-> > Nothing changes from the EH side there.
+> Sounds good to me.  That path isn't hot at all.  No change made at
+> this level is gonna have any actual impact.  Please go for whatever is
+> the simplest.  For moving out the lock/unlock outside if/else,
 > 
-> It looks like we actually might get rid of spin_unlock_wait entirely.
-> But how about if I just pull the spin_lock_irqsave() before the "if"
-> and the spin_lock_irqrestore() after the "if"?  Same effect, only
-> difference is that the "if" and the "ap->eh_tries = ATA_EH_MAX_TRIES"
-> end up under the lock, and I bet that you won't be able to measure
-> the difference.  (Please see below.)
-> 
-> I will do this because I just now happened to be editing that file on
-> my "eradicate spin_unlock_wait()" quest, but can easily rework the
-> patch as desired.  If you want something different, just let me know!
+>  Acked-by: Tejun Heo <tj@kernel.org>
 
-Sounds good to me.  That path isn't hot at all.  No change made at
-this level is gonna have any actual impact.  Please go for whatever is
-the simplest.  For moving out the lock/unlock outside if/else,
+Applied, and thank you!
 
- Acked-by: Tejun Heo <tj@kernel.org>
+							Thanx, Paul
 
-Thanks.
-
--- 
-tejun
