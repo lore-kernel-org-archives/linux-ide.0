@@ -1,7 +1,7 @@
 From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Subject: [PATCH] sata_highbank: fix error return code in ahci_highbank_probe()
-Date: Fri, 30 Jun 2017 00:03:06 -0500
-Message-ID: <20170630050306.GA17486@embeddedgus>
+Subject: [PATCH] pata_imx: print error message on platform_get_irq failure
+Date: Fri, 30 Jun 2017 00:29:05 -0500
+Message-ID: <20170630052905.GA30465@embeddedgus>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -11,28 +11,28 @@ To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <garsilva@embeddedor.com>
 List-Id: linux-ide@vger.kernel.org
 
-Propagate the return value of platform_get_irq on failure.
+Print error message on platform_get_irq failure before return.
 
 Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
 ---
- drivers/ata/sata_highbank.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/ata/pata_imx.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
-index aafb8cc..2fc451c 100644
---- a/drivers/ata/sata_highbank.c
-+++ b/drivers/ata/sata_highbank.c
-@@ -483,9 +483,9 @@ static int ahci_highbank_probe(struct platform_device *pdev)
- 	}
+diff --git a/drivers/ata/pata_imx.c b/drivers/ata/pata_imx.c
+index d4caa23..65bbf36 100644
+--- a/drivers/ata/pata_imx.c
++++ b/drivers/ata/pata_imx.c
+@@ -132,8 +132,10 @@ static int pata_imx_probe(struct platform_device *pdev)
+ 	int ret;
  
  	irq = platform_get_irq(pdev, 0);
--	if (irq <= 0) {
+-	if (irq < 0)
 +	if (irq < 0) {
- 		dev_err(dev, "no irq\n");
--		return -EINVAL;
-+		return irq;
- 	}
++		dev_err(&pdev->dev, "failed to get IRQ\n");
+ 		return irq;
++	}
  
- 	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
+ 	priv = devm_kzalloc(&pdev->dev,
+ 				sizeof(struct pata_imx_priv), GFP_KERNEL);
 -- 
 2.5.0
