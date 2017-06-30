@@ -1,81 +1,67 @@
 From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Subject: Re: spin_unlock_wait() in ata_scsi_cmd_error_handler()?
-Date: Thu, 29 Jun 2017 13:48:00 -0700
-Message-ID: <20170629204800.GF2393@linux.vnet.ibm.com>
-References: <20170629181057.GA5228@linux.vnet.ibm.com>
- <20170629195322.GB9745@htj.duckdns.org>
- <20170629201443.GD2393@linux.vnet.ibm.com>
- <20170629201754.GC9745@htj.duckdns.org>
-Reply-To: paulmck@linux.vnet.ibm.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:36666 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751532AbdF2UsD (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 29 Jun 2017 16:48:03 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v5TKhk1a081064
-        for <linux-ide@vger.kernel.org>; Thu, 29 Jun 2017 16:48:02 -0400
-Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2bd282u3tg-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-ide@vger.kernel.org>; Thu, 29 Jun 2017 16:48:02 -0400
-Received: from localhost
-        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-ide@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
-        Thu, 29 Jun 2017 16:48:01 -0400
-Content-Disposition: inline
-In-Reply-To: <20170629201754.GC9745@htj.duckdns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Subject: [PATCH RFC 07/26] drivers/ata: Replace spin_unlock_wait() with lock/unlock pair
+Date: Thu, 29 Jun 2017 17:01:15 -0700
+Message-ID: <1498780894-8253-7-git-send-email-paulmck@linux.vnet.ibm.com>
+References: <20170629235918.GA6445@linux.vnet.ibm.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170629235918.GA6445@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: netfilter-devel@vger.kernel.org, netdev@vger.kernel.org, oleg@redhat.com, akpm@linux-foundation.org, mingo@redhat.com, dave@stgolabs.net, manfred@colorfullife.com, tj@kernel.org, arnd@arndb.de, linux-arch@vger.kernel.org, will.deacon@arm.com, peterz@infradead.org, stern@rowland.harvard.edu, parri.andrea@gmail.com, torvalds@linux-foundation.org, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Jun 29, 2017 at 04:17:54PM -0400, Tejun Heo wrote:
-> Hello,
-> 
-> On Thu, Jun 29, 2017 at 01:14:43PM -0700, Paul E. McKenney wrote:
-> > On Thu, Jun 29, 2017 at 03:53:22PM -0400, Tejun Heo wrote:
-> > > Hello, Paul.
-> > > 
-> > > On Thu, Jun 29, 2017 at 11:10:57AM -0700, Paul E. McKenney wrote:
-> > > > If this code fragment doesn't deadlock, then CPU 0's spin_unlock_wait()
-> > > > must have executed before CPU 1's spin_lock().  However, even on x86,
-> > > > CPU 0's prior writes can be reordered with its subsequent reads, which
-> > > > means that r1 == 0 is possible, which means that the above condition
-> > > > could hold, even on x86.
-> > > 
-> > > I see.  Ah, that's a mind bender.
-> > 
-> > It has indeed been providing at least its share of entertainment over
-> > the past little while.  ;-)
-> 
-> lol :)
-> 
-> > > That part of the code should be dead now.  I don't think we no longer
-> > > have any driver which doesn't have error handler set.  I should rip
-> > > out that if/else.  Also, ACQUIRE semantics should be enough there.
-> > > Nothing changes from the EH side there.
-> > 
-> > It looks like we actually might get rid of spin_unlock_wait entirely.
-> > But how about if I just pull the spin_lock_irqsave() before the "if"
-> > and the spin_lock_irqrestore() after the "if"?  Same effect, only
-> > difference is that the "if" and the "ap->eh_tries = ATA_EH_MAX_TRIES"
-> > end up under the lock, and I bet that you won't be able to measure
-> > the difference.  (Please see below.)
-> > 
-> > I will do this because I just now happened to be editing that file on
-> > my "eradicate spin_unlock_wait()" quest, but can easily rework the
-> > patch as desired.  If you want something different, just let me know!
-> 
-> Sounds good to me.  That path isn't hot at all.  No change made at
-> this level is gonna have any actual impact.  Please go for whatever is
-> the simplest.  For moving out the lock/unlock outside if/else,
-> 
->  Acked-by: Tejun Heo <tj@kernel.org>
+There is no agreed-upon definition of spin_unlock_wait()'s semantics,
+and it appears that all callers could do just as well with a lock/unlock
+pair.  This commit therefore eliminates the spin_unlock_wait() call and
+associated else-clause and hoists the then-clause's lock and unlock out of
+the "if" statement.  This should be safe from a performance perspective
+because according to Tejun there should be few if any drivers that don't
+set their own error handler.
 
-Applied, and thank you!
+Signed-off-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+Cc: <linux-ide@vger.kernel.org>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Cc: Andrea Parri <parri.andrea@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+---
+ drivers/ata/libata-eh.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-							Thanx, Paul
-
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index ef68232b5222..779f6f18c1f4 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -645,12 +645,11 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
+ 	 * completions are honored.  A scmd is determined to have
+ 	 * timed out iff its associated qc is active and not failed.
+ 	 */
++	spin_lock_irqsave(ap->lock, flags);
+ 	if (ap->ops->error_handler) {
+ 		struct scsi_cmnd *scmd, *tmp;
+ 		int nr_timedout = 0;
+ 
+-		spin_lock_irqsave(ap->lock, flags);
+-
+ 		/* This must occur under the ap->lock as we don't want
+ 		   a polled recovery to race the real interrupt handler
+ 
+@@ -700,12 +699,11 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
+ 		if (nr_timedout)
+ 			__ata_port_freeze(ap);
+ 
+-		spin_unlock_irqrestore(ap->lock, flags);
+ 
+ 		/* initialize eh_tries */
+ 		ap->eh_tries = ATA_EH_MAX_TRIES;
+-	} else
+-		spin_unlock_wait(ap->lock);
++	}
++	spin_unlock_irqrestore(ap->lock, flags);
+ 
+ }
+ EXPORT_SYMBOL(ata_scsi_cmd_error_handler);
+-- 
+2.5.2
