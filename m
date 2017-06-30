@@ -1,78 +1,97 @@
-From: Preetham Chandru Ramchandra <pchandru@nvidia.com>
-Subject: [PATCH V5 2/3] arm64: tegra: Enable AHCI on Tegra210
-Date: Fri, 30 Jun 2017 19:26:32 +0530
-Message-ID: <1498830993-24666-3-git-send-email-pchandru@nvidia.com>
+From: Preetham Chandru Ramchandra <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH V5 3/3] dt-bindings: tegra: add binding documentation
+Date: Fri, 30 Jun 2017 19:26:33 +0530
+Message-ID: <1498830993-24666-4-git-send-email-pchandru@nvidia.com>
 References: <1498830993-24666-1-git-send-email-pchandru@nvidia.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nat-hk.nvidia.com ([203.18.50.4]:3409 "EHLO nat-hk.nvidia.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751649AbdF3N56 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 30 Jun 2017 09:57:58 -0400
-In-Reply-To: <1498830993-24666-1-git-send-email-pchandru@nvidia.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1498830993-24666-1-git-send-email-pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cyndis-/1wQRMveznE@public.gmane.org
+Cc: preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vbyravarasu-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, pkunapuli-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, Preetham Chandru R <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: thierry.reding@gmail.com, tj@kernel.org, cyndis@kapsi.fi
-Cc: preetham260@gmail.com, linux-tegra@vger.kernel.org, linux-ide@vger.kernel.org, vbyravarasu@nvidia.com, pkunapuli@nvidia.com, Preetham Chandru R <pchandru@nvidia.com>
 
-From: Preetham Chandru R <pchandru@nvidia.com>
+From: Preetham Chandru R <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 
-Enable AHCI on Tegra210 systems.
+This adds bindings documentation for the
+AHCI controller on Tegra210
 
-Signed-off-by: Preetham Chandru R <pchandru@nvidia.com>
+Signed-off-by: Preetham Chandru R <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 ---
 v4:
-* Fixed missing space after 'AUX'
+* changed the commit message
+* changed 'sata-cold' reset to mandatory for t210 and t124
+* Removed the regulators for T210 since these regulators
+  will be enabled in phy driver.
+v3:
+* Add AUX register.
+v2:
+* change cml1, pll_e and phy regulators as optional
+  for T210.
 ---
- arch/arm64/boot/dts/nvidia/tegra210-p2597.dtsi |  6 ++++++
- arch/arm64/boot/dts/nvidia/tegra210.dtsi       | 16 ++++++++++++++++
- 2 files changed, 22 insertions(+)
+ .../bindings/ata/nvidia,tegra124-ahci.txt          | 38 ++++++++++++++--------
+ 1 file changed, 25 insertions(+), 13 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/nvidia/tegra210-p2597.dtsi b/arch/arm64/boot/dts/nvidia/tegra210-p2597.dtsi
-index e5fc67b..58c28b9 100644
---- a/arch/arm64/boot/dts/nvidia/tegra210-p2597.dtsi
-+++ b/arch/arm64/boot/dts/nvidia/tegra210-p2597.dtsi
-@@ -1324,6 +1324,12 @@
- 		status = "okay";
- 	};
+diff --git a/Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt b/Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt
+index 66c83c3..df4dc2c 100644
+--- a/Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt
++++ b/Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt
+@@ -1,20 +1,19 @@
+-Tegra124 SoC SATA AHCI controller
++Tegra SoC SATA AHCI controller
  
-+	sata@70020000 {
-+		status = "okay";
-+		phys = <&{/padctl@7009f000/pads/sata/lanes/sata-0}>;
-+		phy-names = "sata-0";
-+	};
+ Required properties :
+-- compatible : For Tegra124, must contain "nvidia,tegra124-ahci".  Otherwise,
+-  must contain '"nvidia,<chip>-ahci", "nvidia,tegra124-ahci"', where <chip>
+-  is tegra132.
+-- reg : Should contain 2 entries:
++- compatible : Must be one of:
++  - Tegra124 : "nvidia,tegra124-ahci"
++  - Tegra210 : "nvidia,tegra210-ahci"
++- reg : Should contain 3 entries:
+   - AHCI register set (SATA BAR5)
+   - SATA register set
++  - Tegra210 : AUX register set
+ - interrupts : Defines the interrupt used by SATA
+ - clocks : Must contain an entry for each entry in clock-names.
+   See ../clocks/clock-bindings.txt for details.
+ - clock-names : Must include the following entries:
+   - sata
+   - sata-oob
+-  - cml1
+-  - pll_e
+ - resets : Must contain an entry for each entry in reset-names.
+   See ../reset/reset.txt for details.
+ - reset-names : Must include the following entries:
+@@ -24,9 +23,22 @@ Required properties :
+ - phys : Must contain an entry for each entry in phy-names.
+   See ../phy/phy-bindings.txt for details.
+ - phy-names : Must include the following entries:
+-  - sata-phy : XUSB PADCTL SATA PHY
+-- hvdd-supply : Defines the SATA HVDD regulator
+-- vddio-supply : Defines the SATA VDDIO regulator
+-- avdd-supply : Defines the SATA AVDD regulator
+-- target-5v-supply : Defines the SATA 5V power regulator
+-- target-12v-supply : Defines the SATA 12V power regulator
++  - For T124:
++    - sata-phy : XUSB PADCTL SATA PHY
++  - For T210:
++    - sata-0
++- For T124:
++  - hvdd-supply : Defines the SATA HVDD regulator
++  - vddio-supply : Defines the SATA VDDIO regulator
++  - avdd-supply : Defines the SATA AVDD regulator
++  - target-5v-supply : Defines the SATA 5V power regulator
++  - target-12v-supply : Defines the SATA 12V power regulator
 +
- 	padctl@7009f000 {
- 		status = "okay";
- 
-diff --git a/arch/arm64/boot/dts/nvidia/tegra210.dtsi b/arch/arm64/boot/dts/nvidia/tegra210.dtsi
-index 29f471e..d767972 100644
---- a/arch/arm64/boot/dts/nvidia/tegra210.dtsi
-+++ b/arch/arm64/boot/dts/nvidia/tegra210.dtsi
-@@ -797,6 +797,22 @@
- 		#iommu-cells = <1>;
- 	};
- 
-+	sata@70020000 {
-+		compatible = "nvidia,tegra210-ahci";
-+		reg = <0x0 0x70027000 0x0 0x2000>, /* AHCI */
-+		      <0x0 0x70020000 0x0 0x7000>, /* SATA */
-+		      <0x0 0x70001100 0x0 0x1000>; /* SATA AUX */
-+		interrupts = <GIC_SPI 23 IRQ_TYPE_LEVEL_HIGH>;
-+		clocks = <&tegra_car TEGRA210_CLK_SATA>,
-+			<&tegra_car TEGRA210_CLK_SATA_OOB>;
-+		clock-names = "sata", "sata-oob";
-+		resets = <&tegra_car 124>,
-+			 <&tegra_car 123>,
-+			 <&tegra_car 129>;
-+		reset-names = "sata", "sata-oob", "sata-cold";
-+		status = "disabled";
-+	};
-+
- 	hda@70030000 {
- 		compatible = "nvidia,tegra210-hda", "nvidia,tegra30-hda";
- 		reg = <0x0 0x70030000 0x0 0x10000>;
++Optional properties:
++- clock-names :
++  - cml1 :
++    cml1 clock is required by phy so it is optional to define
++    here as phy driver will be enabling this clock.
++  - pll_e :
++    pll_e is the parent of cml1 clock so it is optional to define
++    here as phy driver will be enabling this clock.
 -- 
 2.1.4
-
