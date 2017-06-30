@@ -1,28 +1,30 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH] sata_rcar: fix error return code in sata_rcar_probe()
-Date: Fri, 30 Jun 2017 15:35:57 +0300
-Message-ID: <3273ba2f-ea32-0ed6-5d84-39a80e627be6@cogentembedded.com>
-References: <20170630052210.GA19186@embeddedgus>
- <e71b065e-554e-4dee-06cc-b1cea6b3de53@cogentembedded.com>
+From: Preetham Chandru Ramchandra <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH V5 0/3] ADD AHCI support for tegra210
+Date: Fri, 30 Jun 2017 19:26:30 +0530
+Message-ID: <1498830993-24666-1-git-send-email-pchandru@nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <e71b065e-554e-4dee-06cc-b1cea6b3de53@cogentembedded.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>, Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cyndis-/1wQRMveznE@public.gmane.org
+Cc: preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vbyravarasu-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, pkunapuli-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, Preetham Chandru R <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-On 06/30/2017 12:42 PM, Sergei Shtylyov wrote:
+From: Preetham Chandru R <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 
->> Print error message and propagate the return value of
->> platform_get_irq on failure.
->
->    You should have probably mentioned that this function no longer returns 0
-> on error.
+1. ADD AHCI support for tegra210
+2. Extend the tegra AHCI controller device tree binding with tegra210
+---
+Preetham Chandru R (3):
+  ata: ahci_tegra: Add AHCI support for tegra210
+  arm64: tegra: Enable AHCI on Tegra210
+  dt-bindings: tegra: add binding documentation
 
-    It's prolly also worth mentioning that enforcing the error # on return 
-from probe defeats the deferred probing.
+ .../bindings/ata/nvidia,tegra124-ahci.txt          |  38 ++-
+ arch/arm64/boot/dts/nvidia/tegra210-p2597.dtsi     |   6 +
+ arch/arm64/boot/dts/nvidia/tegra210.dtsi           |  16 +
+ drivers/ata/ahci_tegra.c                           | 379 ++++++++++++++++-----
+ 4 files changed, 343 insertions(+), 96 deletions(-)
 
-MBR, Sergei
+-- 
+2.1.4
