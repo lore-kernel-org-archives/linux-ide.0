@@ -1,33 +1,34 @@
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Subject: Re: [PATCH] sata_rcar: fix error return code in sata_rcar_probe()
-Date: Fri, 30 Jun 2017 14:54:48 -0500
-Message-ID: <20170630145448.Horde.UwmUU7eGbQI-QPoebHrhBsT@gator4166.hostgator.com>
+Date: Fri, 30 Jun 2017 23:03:05 +0300
+Message-ID: <e7f03776-d0d7-d007-57c9-df75822e73be@cogentembedded.com>
 References: <20170630052210.GA19186@embeddedgus>
  <e71b065e-554e-4dee-06cc-b1cea6b3de53@cogentembedded.com>
  <20170630120106.GB16820@htj.duckdns.org>
  <20170630143645.Horde.FKDELy036LbmnxownuGOszF@gator4166.hostgator.com>
- <3944946f-5737-df9f-e8f4-61648f6e0d89@cogentembedded.com>
+ <20170630144633.Horde.7_6XB0hRnIIuucUlRN2ico3@gator4166.hostgator.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <3944946f-5737-df9f-e8f4-61648f6e0d89@cogentembedded.com>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-lf0-f54.google.com ([209.85.215.54]:34761 "EHLO
+        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752633AbdF3UDP (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 30 Jun 2017 16:03:15 -0400
+Received: by mail-lf0-f54.google.com with SMTP id l13so76046858lfl.1
+        for <linux-ide@vger.kernel.org>; Fri, 30 Jun 2017 13:03:14 -0700 (PDT)
+In-Reply-To: <20170630144633.Horde.7_6XB0hRnIIuucUlRN2ico3@gator4166.hostgator.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>, Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Sergei,
+On 06/30/2017 10:46 PM, Gustavo A. R. Silva wrote:
 
-Quoting Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>:
-
-> On 06/30/2017 10:36 PM, Gustavo A. R. Silva wrote:
->
 >>>>> Print error message and propagate the return value of
 >>>>> platform_get_irq on failure.
 >>>>
->>>>   You should have probably mentioned that this function no longer  
->>>> returns 0
+>>>>   You should have probably mentioned that this function no longer returns 0
 >>>> on error.
 >>>
 >>> Yeah, the patches looks good to me but I'd really appreciate more
@@ -41,33 +42,26 @@ Quoting Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>:
 >>
 >> platform_get_irq() returns an error code, but the sata_rcar driver
 >> ignores it and always returns -EINVAL. This is not correct, and
->
->    This *was* correct, because it prevented returning 0 on error.
->
-
-Yeah, I got it.
-
 >> prevents -EPROBE_DEFER from being propagated properly.
->
->    Yes, this is a real problem.
->
+>>
 >> Print error message and propagate the return value of platform_get_irq
 >> on failure. Also, with this change function sata_rcar_probe() no longer
 >> returns 0 on error.
+>>
 >
->    It never did -- I was talking about platform_get_irq() which  
-> might return 0 on error until I fixed it:
+> Errata, this would be final the chagelog:
 >
-
-Yep, I sent a new email immediately after I realized this was  
-incorrect. Please,
-check it out.
-
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=e330b9a6bb35dc7097a4f02cb1ae7b6f96df92af
+> platform_get_irq() returns an error code, but the sata_rcar driver
+> ignores it and always returns -EINVAL. This is not correct, and
+> prevents -EPROBE_DEFER from being propagated properly. Also,
+> notice that platform_get_irq() no longer returns 0 on error.
 >
+> Print error message and propagate the return value of platform_get_irq
+> on failure.
 
-Great work!
+    Now I'm OK with that.
 
-Thank you
---
-Gustavo A. R. Silva
+> Thanks
+
+MBR, Sergei
+
