@@ -1,74 +1,74 @@
-From: <mitch_128@hotmail.com>
-Subject: (unknown)
-Date: Mon, 03 Jul 2017 12:43:19 -0000
-Message-ID: <149908579967.29697.7478270705523452933@zaural.ru>
-Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_94858129_linux-ide.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ws212.zone31-163-133.zaural.ru ([31.163.133.212]:36776 "HELO
-        zaural.ru" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1751734AbdGCMnY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 3 Jul 2017 08:43:24 -0400
-Content-Disposition: attachment
-Subject: 
-Sender: linux-ide-owner@vger.kernel.org
+From: Nate Watterson <nwatters@codeaurora.org>
+Subject: [PATCH 1/2] libata: Introduce ata_platform_shutdown_one()
+Date: Mon,  3 Jul 2017 14:02:41 -0400
+Message-ID: <1499104962-17498-1-git-send-email-nwatters@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Nate Watterson <nwatters@codeaurora.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-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
+In similar fashion to how ata_platform_remove_one() is used, this
+newly introduced method can be used by platform ata drivers to get
+basic shutdown functionality (stopping host DMA and interrupts).
+
+Signed-off-by: Nate Watterson <nwatters@codeaurora.org>
+---
+ drivers/ata/libata-core.c | 20 ++++++++++++++++++++
+ include/linux/libata.h    |  1 +
+ 2 files changed, 21 insertions(+)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index e157a0e..537932e 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6702,6 +6702,25 @@ int ata_platform_remove_one(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++/**
++ *	ata_platform_shutdown_one - Platform layer callback for device shutdown
++ *	@pdev: Platform device being shutdown
++ *
++ *	Platform layer indicates to libata via this hook that shutdown is
++ *	in progress and the input device should be quiesced. Functionally this
++ *	is equivalent to ata_platform_remove_one(), however devres_release_all()
++ *	is not called on the shutdown path as it is for remove so releasing the
++ *	resources associated with the device must instead be initiated directly.
++ */
++void ata_platform_shutdown_one(struct platform_device *pdev)
++{
++	struct ata_host *host = platform_get_drvdata(pdev);
++
++	ata_host_detach(host);
++	devres_release(&pdev->dev, ata_host_stop, NULL, NULL);
++	devres_release(&pdev->dev, ata_host_release, NULL, NULL);
++}
++
+ static int __init ata_parse_force_one(char **cur,
+ 				      struct ata_force_ent *force_ent,
+ 				      const char **reason)
+@@ -7222,6 +7241,7 @@ void ata_print_version(const struct device *dev, const char *version)
+ #endif /* CONFIG_PCI */
+ 
+ EXPORT_SYMBOL_GPL(ata_platform_remove_one);
++EXPORT_SYMBOL_GPL(ata_platform_shutdown_one);
+ 
+ EXPORT_SYMBOL_GPL(__ata_ehi_push_desc);
+ EXPORT_SYMBOL_GPL(ata_ehi_push_desc);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index c9a69fc..6c01f23f 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1240,6 +1240,7 @@ struct pci_bits {
+ struct platform_device;
+ 
+ extern int ata_platform_remove_one(struct platform_device *pdev);
++extern void ata_platform_shutdown_one(struct platform_device *pdev);
+ 
+ /*
+  * ACPI - drivers/ata/libata-acpi.c
+-- 
+Qualcomm Datacenter Technologies, Inc. on behalf of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux
+Foundation Collaborative Project.
