@@ -1,60 +1,74 @@
-From: Vladimir Zapolskiy <vz@mleia.com>
-Subject: Re: [PATCH v2] pata_imx: print error message on platform_get_irq
- failure
-Date: Sat, 1 Jul 2017 12:00:06 +0300
-Message-ID: <ed8aba46-7cfc-a4e0-7eba-630519e788ad@mleia.com>
-References: <20170630213056.GA12695@embeddedgus>
+From: <beautyink@live.nl>
+Subject: (unknown)
+Date: Mon, 03 Jul 2017 04:44:09 -0000
+Message-ID: <149905704908.29697.8867561986791261515@telenet.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: application/zip; name="EMAIL_27450398_linux-ide.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mleia.com ([178.79.152.223]:48216 "EHLO mail.mleia.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751400AbdGAJJc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sat, 1 Jul 2017 05:09:32 -0400
-In-Reply-To: <20170630213056.GA12695@embeddedgus>
+Received: from 164.129-31-94.telenet.ru ([94.31.129.164]:43541 "HELO
+        telenet.ru" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+        id S1750776AbdGCEoM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 3 Jul 2017 00:44:12 -0400
+Subject: 
+Content-Disposition: attachment
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Gustavo A. R. Silva" <garsilva@embeddedor.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello Gustavo,
-
-On 07/01/2017 12:30 AM, Gustavo A. R. Silva wrote:
-> Print error message on platform_get_irq failure before return.
-> 
-> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
-> ---
-> Changes in v2:
->  Print the return value of platform_get_irq on failure.
-> 
->  drivers/ata/pata_imx.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/pata_imx.c b/drivers/ata/pata_imx.c
-> index d4caa23..66fb1ab 100644
-> --- a/drivers/ata/pata_imx.c
-> +++ b/drivers/ata/pata_imx.c
-> @@ -132,9 +132,10 @@ static int pata_imx_probe(struct platform_device *pdev)
->  	int ret;
->  
->  	irq = platform_get_irq(pdev, 0);
-> -	if (irq < 0)
-> +	if (irq < 0) {
-> +		dev_err(&pdev->dev, "failed to get IRQ: %d\n", irq);
->  		return irq;
-> -
-> +	}
->  	priv = devm_kzalloc(&pdev->dev,
->  				sizeof(struct pata_imx_priv), GFP_KERNEL);
->  	if (!priv)
-> 
-
-this patch is wrong, I've explained why at https://lkml.org/lkml/2017/6/30/144
-
-Please handle -EPROBE_DEFER case, when your change adds the second (redundant)
-error level message printed to the kernel log.
-
---
-With best wishes,
-Vladimir
+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
+AFBLBQYAAAAAAQABAE8AAADxCwAAAAA=
