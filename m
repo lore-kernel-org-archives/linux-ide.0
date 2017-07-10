@@ -1,54 +1,59 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] libata: Cleanup ata_read_log_page()
-Date: Mon, 10 Jul 2017 09:10:19 +0200
-Message-ID: <28f1969c-7422-ce34-fdfb-b00691eea055@suse.de>
-References: <20170710054520.24213-1-damien.lemoal@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] ata: fix gemini Kconfig dependencies
+Date: Mon, 10 Jul 2017 10:51:02 +0200
+Message-ID: <20170710085120.1984293-1-arnd@arndb.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48996 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751124AbdGJHKV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 10 Jul 2017 03:10:21 -0400
-In-Reply-To: <20170710054520.24213-1-damien.lemoal@wdc.com>
-Content-Language: en-US
+Received: from mout.kundenserver.de ([212.227.17.24]:56541 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752454AbdGJIvo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 10 Jul 2017 04:51:44 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Geert Uytterhoeven <geert@linux-m68k.org>, Linus Walleij <linus.walleij@linaro.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 07/10/2017 07:45 AM, Damien Le Moal wrote:
-> The warning message "READ LOG DMA EXT failed, trying unqueued" in
-> ata_read_log_page() as well as the macro name ATA_HORKAGE_NO_NCQ_LOG
-> are confusing: the command READ LOG DMA EXT is not an queued NCQ command
-> unless it is encapsulated in a RECEIVE FPDMA QUEUED command.
-> From ACS-4 READ LOG DMA EXT description:
-> 
-> "The device processes the READ LOG DMA EXT command in the NCQ feature
-> set environment (see 4.13.6) if the READ LOG DMA EXT command is
-> encapsulated in a RECEIVE FPDMA QUEUED command (see 7.30) with the
-> inputs encapsulated as shown in 7.23.6."
-> 
-> To avoid confusion, fix the warning messsage to mention switching to PIO and
-> not "unqueued" and rename the macro ATA_HORKAGE_NO_NCQ_LOG to
-> ATA_HORKAGE_NO_DMA_LOG.
-> 
-> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-> ---
->  drivers/ata/libata-eh.c | 6 +++---
->  include/linux/libata.h  | 2 +-
->  2 files changed, 4 insertions(+), 4 deletions(-)
-> 
-You are correct.
+We cannot build the new ftide010 code without also building the faraday
+sata bridge driver:
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+drivers/ata/pata_ftide010.o: In function `pata_ftide010_probe':
+pata_ftide010.c:(.text+0x2b8): undefined reference to `gemini_sata_bridge_get'
+pata_ftide010.c:(.text+0x32c): undefined reference to `gemini_sata_get_muxmode'
+pata_ftide010.c:(.text+0x358): undefined reference to `gemini_sata_bridge_enabled'
+drivers/ata/pata_ftide010.o: In function `pata_ftide010_gemini_port_stop':
+pata_ftide010.c:(.text+0x520): undefined reference to `gemini_sata_stop_bridge'
+drivers/ata/pata_ftide010.o: In function `pata_ftide010_gemini_port_start':
+pata_ftide010.c:(.text+0x5bc): undefined reference to `gemini_sata_start_bridge'
 
-Cheers,
+This adjusts the Kconfig dependencies accordingly.
 
-Hannes
+Fixes: be4e456ed3a5 ("ata: Add driver for Faraday Technology FTIDE010")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/ata/Kconfig | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 948fc86980a1..363fc5330c21 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -215,7 +215,7 @@ config SATA_FSL
+ 
+ config SATA_GEMINI
+ 	tristate "Gemini SATA bridge support"
+-	depends on PATA_FTIDE010
++	depends on ARCH_GEMINI || COMPILE_TEST
+ 	default ARCH_GEMINI
+ 	help
+ 	  This enabled support for the FTIDE010 to SATA bridge
+@@ -613,7 +613,7 @@ config PATA_FTIDE010
+ 	tristate "Faraday Technology FTIDE010 PATA support"
+ 	depends on OF
+ 	depends on ARM
+-	default ARCH_GEMINI
++	depends on SATA_GEMINI
+ 	help
+ 	  This option enables support for the Faraday FTIDE010
+ 	  PATA controller found in the Cortina Gemini SoCs.
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+2.9.0
+
