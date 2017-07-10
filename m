@@ -1,43 +1,39 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: Cleanup ata_read_log_page()
-Date: Mon, 10 Jul 2017 13:38:19 -0400
-Message-ID: <20170710173818.GB1305447@devbig577.frc2.facebook.com>
-References: <20170710054520.24213-1-damien.lemoal@wdc.com>
+Subject: Re: [PATCH] ata: fix gemini Kconfig dependencies
+Date: Mon, 10 Jul 2017 13:43:22 -0400
+Message-ID: <20170710174321.GC1305447@devbig577.frc2.facebook.com>
+References: <20170710085120.1984293-1-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f174.google.com ([209.85.220.174]:35246 "EHLO
-        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754602AbdGJRif (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 10 Jul 2017 13:38:35 -0400
-Received: by mail-qk0-f174.google.com with SMTP id 16so80069739qkg.2
-        for <linux-ide@vger.kernel.org>; Mon, 10 Jul 2017 10:38:35 -0700 (PDT)
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:36610 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754632AbdGJRn0 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 10 Jul 2017 13:43:26 -0400
 Content-Disposition: inline
-In-Reply-To: <20170710054520.24213-1-damien.lemoal@wdc.com>
+In-Reply-To: <20170710085120.1984293-1-arnd@arndb.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Geert Uytterhoeven <geert@linux-m68k.org>, Linus Walleij <linus.walleij@linaro.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello,
-
-On Mon, Jul 10, 2017 at 02:45:20PM +0900, Damien Le Moal wrote:
-> The warning message "READ LOG DMA EXT failed, trying unqueued" in
-> ata_read_log_page() as well as the macro name ATA_HORKAGE_NO_NCQ_LOG
-> are confusing: the command READ LOG DMA EXT is not an queued NCQ command
-> unless it is encapsulated in a RECEIVE FPDMA QUEUED command.
-> From ACS-4 READ LOG DMA EXT description:
+On Mon, Jul 10, 2017 at 10:51:02AM +0200, Arnd Bergmann wrote:
+> We cannot build the new ftide010 code without also building the faraday
+> sata bridge driver:
 > 
-> "The device processes the READ LOG DMA EXT command in the NCQ feature
-> set environment (see 4.13.6) if the READ LOG DMA EXT command is
-> encapsulated in a RECEIVE FPDMA QUEUED command (see 7.30) with the
-> inputs encapsulated as shown in 7.23.6."
+> drivers/ata/pata_ftide010.o: In function `pata_ftide010_probe':
+> pata_ftide010.c:(.text+0x2b8): undefined reference to `gemini_sata_bridge_get'
+> pata_ftide010.c:(.text+0x32c): undefined reference to `gemini_sata_get_muxmode'
+> pata_ftide010.c:(.text+0x358): undefined reference to `gemini_sata_bridge_enabled'
+> drivers/ata/pata_ftide010.o: In function `pata_ftide010_gemini_port_stop':
+> pata_ftide010.c:(.text+0x520): undefined reference to `gemini_sata_stop_bridge'
+> drivers/ata/pata_ftide010.o: In function `pata_ftide010_gemini_port_start':
+> pata_ftide010.c:(.text+0x5bc): undefined reference to `gemini_sata_start_bridge'
 > 
-> To avoid confusion, fix the warning messsage to mention switching to PIO and
-> not "unqueued" and rename the macro ATA_HORKAGE_NO_NCQ_LOG to
-> ATA_HORKAGE_NO_DMA_LOG.
+> This adjusts the Kconfig dependencies accordingly.
 > 
-> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+> Fixes: be4e456ed3a5 ("ata: Add driver for Faraday Technology FTIDE010")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
 Applied to libata/for-4.13-fixes.
 
