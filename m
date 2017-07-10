@@ -1,81 +1,47 @@
-From: <lucia.germino@unibas.it>
-Subject: (unknown)
-Date: Mon, 10 Jul 2017 12:51:58 -0000
-Message-ID: <149969111823.19501.4619606639488158361@telenet.ru>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata: Cleanup ata_read_log_page()
+Date: Mon, 10 Jul 2017 13:38:19 -0400
+Message-ID: <20170710173818.GB1305447@devbig577.frc2.facebook.com>
+References: <20170710054520.24213-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="192119470.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 40.48-142-213.telenet.ru ([213.142.48.40]:39676 "HELO
-        telenet.ru" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-        id S1753245AbdGJMwB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 10 Jul 2017 08:52:01 -0400
-Content-Disposition: attachment
-Subject: 
+Received: from mail-qk0-f174.google.com ([209.85.220.174]:35246 "EHLO
+        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754602AbdGJRif (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 10 Jul 2017 13:38:35 -0400
+Received: by mail-qk0-f174.google.com with SMTP id 16so80069739qkg.2
+        for <linux-ide@vger.kernel.org>; Mon, 10 Jul 2017 10:38:35 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20170710054520.24213-1-damien.lemoal@wdc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-UEsDBBQDAAAIADtF6kqw5ludPg0AAEINAAALAAAAMzM4MjMyMS56aXB1V1c0HAgAXJbohNV7LJIQ
-RK/RnU4IUaN3q4fodvXe6yoRJbjoq/eyWWWtfuqpEXI60Va99nfv3czHvHkzb/7ntSYQjxoIABAC
-pFV2Nd7z2/9aQgoAhDIBAGQAAMDfMUBHwvQXTV11fhefQhOM9zflx7IChjfkEQLZJiqcTAv4A/rf
-kX6hYsi4Qkg6PrltAESXw5k6aetW/tmheQCAlnyWVULPXGJTfEP9KvAXOb/GF9TWXmbCr+5ufDVd
-5jurawSEZLUc5Hhbdu6wBGZ3UIwF4oVdyRI9cTa3zHSDhn6/BeQI8cTxVT9wTm9kn24cjpiPA4yI
-XOGOgMcLLBCLzv7VTAmRwrJZiLUohz2NYaexolpZ+7287LRJ+EFsJtF+JLCItFxtARVJAItFXV3b
-YYEok7EMA25IpZXbKAHH4x5SlUxGtKkNp0iFBwt/Bs59ijm3Ykv/IEyN6rBfbeRW2btgKFBVS4XD
-zoa8Lvi23zY2JioOuiEuY/1pFg7p/ib6lC4LTY0FKWQmlgkEyPsRntZJIKKOFAC0cxpXxiqsrjFl
-jllJmZFwLq+0kdzEE0NjVkgVhNkTI5Yt6z9qemte/rs9Xd7LawOUFZ7mb6lgxneWx2qbZvHKmFC7
-TZ6sqX26jGeiOWKgqMIXcOoi2ZNdirWAK53ukUY1cklakoT4Spss8pDxtN82Z1XtKkwjgXwK0ROf
-sqtVe+bbxyOU26GESHYoRZrN3QurQWYWhBGUoIQe9lSnmL7nxFgdX1fkWyhPBUpEu4eZl4YqMHBU
-jkAtkDnXkyFFn8mZjyr2o3cGLlP0bFlbfvlisdpxDBsHMEE25CpS29DKgOkJOCtSLTbhnXK49tek
-E2wN1/rqh0By7xrSMSsDxu3NbyON6CJ+4DYbHx1D4bgFTsbCkCGyYiudGSdvqxCtj5NoUg87NVa2
-4usfaN42ScU9gdVxXJycCg22Rwbf/LB1CujquqWHEU+/ECTqHtYaRe7TnS7Ga+fycMHDqX2icsDl
-XGepZTXVbZAnzM8j9VPoiUZziSZ2hRLsi/XVvn6NIcxJRBRrzclzKUX5FWvWboQra7NNFhgZ9NvH
-c47ZwVWnoSl7XRJtNrB41GSKsgOzNFGWWMWxtr9TFDv0w80Eanr0TQtDJYywXQcGPThwyznAdQA9
-iW4i82hR3nTEIa+qXnI5FKhxr3fnMLQrmOIAM+V4+9QwObrwlEzrCSXDn5iY06NCZKHvaL9CEjkd
-ZZ4oNzfX4QI/D+J9Zkym4znCDD9X2E36ZD8MLHH0YQHJU7kwZnLZBV18aVzS5zXcOhfOMqA2bvvA
-ZBwV9BOLM66PpCH82E2u/VbosSLLiGjqaCdMG7MvKkUyyjWNMHpDmcqXaaFeH6GiJInXbWRYltmB
-i82+jJJPcuzdNbiu1GXAKnCDNZ75puRmjHfJgKB627Ty0hc0pnGxk2VVbooT7y+WKsee3VMjupxO
-zwg7mjBD1JrhGfpKyQWK4Re5IMKmlccJRTuiu66QTBWoHHF9t1dgYHtnj5yXWJuE28cix515/vxH
-SXVsA/2uwY3PT0+E/hiaWBT2C+RQve7o3BGpt6Z9hRTwdsk/GISjt+0T/YtVbGu2Zn6QJLdng7e3
-XJ/rwgYcJyoPmRKbnjBW3hFyb8m8yidpqI0m0ffA71mRpLRXWB84JH3RSrFYM/EmbID5vViWyOoA
-yVxMK0VCsYHF5hjQ++H0K8pPeCl+mbCfzpLNg/WdavfeuNUD6K3rR538++/a+p2+dGK7HztDLpF3
-v6/4snVa3LuhXyHDbs6X6+aqrarYG6gevo4aWXBx7izK9OyyvTo67ycK1R2CaRV2mHlYWWoFrM/G
-7bVrLC/f690ochR9ZzjSUrermDMGBtUKLS4CVTn5TWYqpqX/IB+fJC2UJEK6gu0X5rcjEL/JkKSY
-zYi4s0qefD+fikbXzk94SOVLx7611xWTCC3NNkX85lYTFNKXE9P8y8pWels3P05Vh0xXMj5ndSbJ
-UJxWlKGJ1wEv38gLT/6chJDfM8kNVR8NjGj7LH7bHfuluGlY1ESAjJS2C5J0OW+2Y0RQuDIw8iVj
-NU7KpXC1KtEc54xCbNwdubhdbPipi5i04TBuz4si0SNunXFQndl3VXQsUg6VfCO75LDbfBfnvfu0
-v6FyJ7E1i6Q8JGo6qHmgJxR4WShk5VEJv3E8zNGhaVt12MFadwW9/0E6/zSjVgx3e0nLLf3zydOj
-3iOSM6yw4IU+TW/vJllA/L2empf/pc2+UG/YEin8qTdcz8NfnjKk1RQ8kqX0Nl/SOOB+Pdvc5YVd
-iwaIaPiNs0/etTiTY75N74efm5gFPqGpj7Hs8npZBB59ljenaMagyKHm95t5BAeTzn3S7Czi7o7n
-6oMziwCKdHL3aDbxPpOf45teNdRUYq3w+W7S9O394+uG4pjzNOJojqnxUSEdxTVm/4QI4+udZEcl
-G+PtiJOSsCbZpIizctAZR+jvbofxyeh0Xqy3/4wB5YaHoHLojH2OEZFceJ6vbpPllVGJe+JzCb9n
-fpaXUzg3vmWPZwm05UGviXgUbCfpRfC1d+bAk4TvSaUeHUD95IGTAAMo8aTrpOtrsl8VlCZTt8o5
-p76sMeZryOlyTr+T6j9H14SEUOuLP4wKbbIe5R7GSouav/QPAqxpWgiMnyEXFRQfhz1eS0dSOatD
-1Dvq6U2Exi+ng1sRfdTGHPI8LPPZP263cDUJ9Qn4935zWdGdoj88i5qGuUTcMlsgK759OXD48jD2
-aCfBkImoF/vLD6PbpALMDfNE/KwtXfGbkMvjTJCnpYRvuOShkS/7vE3FEm7o2HiwcO36zm2YM0W8
-qadyhL4JccVqlJsZgSGCJ20TohqSs3gtyDLzvvDXou1D0uxmqYBTm431u9LPmcPww8UiWlyC6jXD
-FdohD0wjtgtzIzSlP68gsThhOoOIm4nzk94pzSnt9snZePPObRWSov7Ol1f2sKWl0pytIR5LyYqL
-iZ5Hc1RItb213M+mK9y5bQxAfPDkLHw7dITaC6Wbpot6aHUw+eMLp8JyeEfoXuBOsS9t88NUXdjP
-4A2HplYa94Nm8kueqM/Va1uzJcsB4TZn3stAdOEKuqWH6NQhnQ7EVHTkW5U365Nac9Q0d6k6O+9C
-IL0smpqTYRHm7ekpcq7U0cVWe63YtpvUGQPxzVax8Q21dhcrla9CmrQddTm2vArkiiawbPDosW4e
-+aM/tN5HdLYb3i7bwzhL/Kl1qzQAIk2yHtvdr/vhpLk6J9yWXHmBf6Ch5TGnmOyRy8+zAraB5ZoQ
-xaCXa64YquEKSNSPUlWytyyffsFCLJYZW8YQU60Lp8f8XLUd4HizbmvRKctaZ3tM09HuvYO+pGX1
-cgxmVR3erBW483CPE8HVmwYZbZyV7ENUCwpQlD3BAkUYIvk6bV916gk6TsSz1+Sde2ewxKxUx/4W
-rLa86wmnEeSjyOcN+jEF9rFXtCsPbmlM7DUkCbxocVK+I9+poW3duIrp/bWA58L8tIYMvULg0kng
-fSSJhOROEBPZM0fHMzphVZe5nVy/21Cq31rXxWKWIoQATbZ3/KdvIEtzGpYL3/FaBbbpAfDrIeiJ
-cRHa/yLwWXsh98zyVV490CyQ6xKY5THTBgSSJvNs85NxV/jLf8NZRSlptdm9vBFltC14KV5iIPI0
-jRIlRhkdbkqWG+6f+MihF+UP6op0SWEhFi4rZnG6JqsTJ+aKAPXIB0yz4o3dQ+vldUCwE1pGwqTG
-Ynra4bQzzO+bdUc9Q3LC08VYXgx/5hw9wio87TRyjLof74IOjHDf4GGOaQUzpH1t6FueLsiCvxZG
-4hEOko/JaPjsP1c/2vVmd2ZP4vJOG9TRMnNa6IHJvJ6wZeIhPdGZmNPNudbmtspj2ZU3hVSsQDWz
-+WNh7VIFoIv5D3K5XPYV6y8/hF5Zt8SI4JUBcmHJqVUMYYP4dux4lHZ3k8kW+8EqX2ToY7htrlSn
-wuscaN9aD2qhnajzVZ5rK9HYTKGQGDs6JUG4oJfQ049GazgJLUpq8ngU5w6sCc6GAN/jZ8ycDv6V
-VIlQdrXvpVKfVM8y8PnByOsKT/k+aFrAXKLRxj4NShuF+AQD9wz4uCeTOevd5HEvJwg6y6pOf38t
-XtTNiI5l8gvN7t9bTBGrM6UtDdzjDi+RfEffp5jMbCfkRXRsFaEFCvCiAdv/brN0m2v9Wqs3ITEt
-YQzPPzTJYVXkmSFqfZFNxHA+lnKkgDATaAcfWZdI8PSUtYwEL6EflQnlDX6Oz8a9dRCOIeQbkuEE
-g7ZI7F4GlXupTczz1gIesDIdAc6/4iXHvSRfd9TzZa5vHWHVz8qfklEZ82d4XqxG3On2ebJLqx86
-IzE73k4iQbkNYsxbqqT+aZIYkvO57ZxyFW7feLg1l6iq4rQ7QC51QKEs4kSKzMKRvjuOMJS+Gmtm
-WBut7TOg6cU/HjzuxXmtiYMrB/y/O8MJ+Bfs0DIY4L/nhhjA/k+IA6AHQEPlfgRgp3H+o3/N4z/6
-p/MXLf9SDOnf7k9QSwECPwMUAwAACAA7RepKsOZbnT4NAABCDQAACwAkAAAAAAAAACCApIEAAAAA
-MzM4MjMyMS56aXAKACAAAAAAAAEAGAAAFdjoefnSAQAV2Oh5+dIBABXY6Hn50gFQSwUGAAAAAAEA
-AQBdAAAAZw0AAAAA
+Hello,
+
+On Mon, Jul 10, 2017 at 02:45:20PM +0900, Damien Le Moal wrote:
+> The warning message "READ LOG DMA EXT failed, trying unqueued" in
+> ata_read_log_page() as well as the macro name ATA_HORKAGE_NO_NCQ_LOG
+> are confusing: the command READ LOG DMA EXT is not an queued NCQ command
+> unless it is encapsulated in a RECEIVE FPDMA QUEUED command.
+> From ACS-4 READ LOG DMA EXT description:
+> 
+> "The device processes the READ LOG DMA EXT command in the NCQ feature
+> set environment (see 4.13.6) if the READ LOG DMA EXT command is
+> encapsulated in a RECEIVE FPDMA QUEUED command (see 7.30) with the
+> inputs encapsulated as shown in 7.23.6."
+> 
+> To avoid confusion, fix the warning messsage to mention switching to PIO and
+> not "unqueued" and rename the macro ATA_HORKAGE_NO_NCQ_LOG to
+> ATA_HORKAGE_NO_DMA_LOG.
+> 
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+
+Applied to libata/for-4.13-fixes.
+
+Thanks.
+
+-- 
+tejun
