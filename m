@@ -1,83 +1,75 @@
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Subject: [PATCH v3 7/9] drivers/ata: Replace spin_unlock_wait() with lock/unlock pair
-Date: Fri,  7 Jul 2017 12:28:24 -0700
-Message-ID: <1499455706-9398-7-git-send-email-paulmck@linux.vnet.ibm.com>
-References: <20170707192704.GA6144@linux.vnet.ibm.com>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH] libata: Cleanup ata_read_log_page()
+Date: Mon, 10 Jul 2017 14:45:20 +0900
+Message-ID: <20170710054520.24213-1-damien.lemoal@wdc.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:57929 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751812AbdGGT2f (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jul 2017 15:28:35 -0400
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v67JSVvp090436
-        for <linux-ide@vger.kernel.org>; Fri, 7 Jul 2017 15:28:35 -0400
-Received: from e11.ny.us.ibm.com (e11.ny.us.ibm.com [129.33.205.201])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2bjaqanwx4-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-ide@vger.kernel.org>; Fri, 07 Jul 2017 15:28:35 -0400
-Received: from localhost
-        by e11.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-ide@vger.kernel.org> from <paulmck@linux.vnet.ibm.com>;
-        Fri, 7 Jul 2017 15:28:34 -0400
-In-Reply-To: <20170707192704.GA6144@linux.vnet.ibm.com>
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:59889 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753350AbdGJFpY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 10 Jul 2017 01:45:24 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: netfilter-devel@vger.kernel.org, netdev@vger.kernel.org, oleg@redhat.com, akpm@linux-foundation.org, mingo@redhat.com, dave@stgolabs.net, manfred@colorfullife.com, tj@kernel.org, arnd@arndb.de, linux-arch@vger.kernel.org, will.deacon@arm.com, peterz@infradead.org, stern@rowland.harvard.edu, parri.andrea@gmail.com, torvalds@linux-foundation.org, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Cc: Hannes Reinecke <hare@suse.de>
 
-There is no agreed-upon definition of spin_unlock_wait()'s semantics,
-and it appears that all callers could do just as well with a lock/unlock
-pair.  This commit therefore eliminates the spin_unlock_wait() call and
-associated else-clause and hoists the then-clause's lock and unlock out of
-the "if" statement.  This should be safe from a performance perspective
-because according to Tejun there should be few if any drivers that don't
-set their own error handler.
+The warning message "READ LOG DMA EXT failed, trying unqueued" in
+ata_read_log_page() as well as the macro name ATA_HORKAGE_NO_NCQ_LOG
+are confusing: the command READ LOG DMA EXT is not an queued NCQ command
+unless it is encapsulated in a RECEIVE FPDMA QUEUED command.
+>From ACS-4 READ LOG DMA EXT description:
 
-Signed-off-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
-Acked-by: Tejun Heo <tj@kernel.org>
-Cc: <linux-ide@vger.kernel.org>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>
-Cc: Andrea Parri <parri.andrea@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>
+"The device processes the READ LOG DMA EXT command in the NCQ feature
+set environment (see 4.13.6) if the READ LOG DMA EXT command is
+encapsulated in a RECEIVE FPDMA QUEUED command (see 7.30) with the
+inputs encapsulated as shown in 7.23.6."
+
+To avoid confusion, fix the warning messsage to mention switching to PIO and
+not "unqueued" and rename the macro ATA_HORKAGE_NO_NCQ_LOG to
+ATA_HORKAGE_NO_DMA_LOG.
+
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- drivers/ata/libata-eh.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ drivers/ata/libata-eh.c | 6 +++---
+ include/linux/libata.h  | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index ef68232b5222..779f6f18c1f4 100644
+index ef68232..f3f5125 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -645,12 +645,11 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
- 	 * completions are honored.  A scmd is determined to have
- 	 * timed out iff its associated qc is active and not failed.
- 	 */
-+	spin_lock_irqsave(ap->lock, flags);
- 	if (ap->ops->error_handler) {
- 		struct scsi_cmnd *scmd, *tmp;
- 		int nr_timedout = 0;
+@@ -1523,7 +1523,7 @@ unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
+ retry:
+ 	ata_tf_init(dev, &tf);
+ 	if (dev->dma_mode && ata_id_has_read_log_dma_ext(dev->id) &&
+-	    !(dev->horkage & ATA_HORKAGE_NO_NCQ_LOG)) {
++	    !(dev->horkage & ATA_HORKAGE_NO_DMA_LOG)) {
+ 		tf.command = ATA_CMD_READ_LOG_DMA_EXT;
+ 		tf.protocol = ATA_PROT_DMA;
+ 		dma = true;
+@@ -1542,8 +1542,8 @@ unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
+ 				     buf, sectors * ATA_SECT_SIZE, 0);
  
--		spin_lock_irqsave(ap->lock, flags);
--
- 		/* This must occur under the ap->lock as we don't want
- 		   a polled recovery to race the real interrupt handler
+ 	if (err_mask && dma) {
+-		dev->horkage |= ATA_HORKAGE_NO_NCQ_LOG;
+-		ata_dev_warn(dev, "READ LOG DMA EXT failed, trying unqueued\n");
++		dev->horkage |= ATA_HORKAGE_NO_DMA_LOG;
++		ata_dev_warn(dev, "READ LOG DMA EXT failed, trying PIO\n");
+ 		goto retry;
+ 	}
  
-@@ -700,12 +699,11 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
- 		if (nr_timedout)
- 			__ata_port_freeze(ap);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index c9a69fc..4718e85 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -434,7 +434,7 @@ enum {
+ 	ATA_HORKAGE_NOLPM	= (1 << 20),	/* don't use LPM */
+ 	ATA_HORKAGE_WD_BROKEN_LPM = (1 << 21),	/* some WDs have broken LPM */
+ 	ATA_HORKAGE_ZERO_AFTER_TRIM = (1 << 22),/* guarantees zero after trim */
+-	ATA_HORKAGE_NO_NCQ_LOG	= (1 << 23),	/* don't use NCQ for log read */
++	ATA_HORKAGE_NO_DMA_LOG	= (1 << 23),	/* don't use DMA for log read */
+ 	ATA_HORKAGE_NOTRIM	= (1 << 24),	/* don't use TRIM */
+ 	ATA_HORKAGE_MAX_SEC_1024 = (1 << 25),	/* Limit max sects to 1024 */
  
--		spin_unlock_irqrestore(ap->lock, flags);
- 
- 		/* initialize eh_tries */
- 		ap->eh_tries = ATA_EH_MAX_TRIES;
--	} else
--		spin_unlock_wait(ap->lock);
-+	}
-+	spin_unlock_irqrestore(ap->lock, flags);
- 
- }
- EXPORT_SYMBOL(ata_scsi_cmd_error_handler);
 -- 
-2.5.2
+2.9.4
 
