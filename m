@@ -1,48 +1,40 @@
-From: Linus Walleij <linus.walleij@linaro.org>
-Subject: Re: [PATCH] ata: fix gemini Kconfig dependencies
-Date: Tue, 11 Jul 2017 16:29:19 +0200
-Message-ID: <CACRpkdb4b6WDtHeA7AwtopwH29cCx3c_ae7eUUBF3Zh57nyQNA@mail.gmail.com>
-References: <20170710085120.1984293-1-arnd@arndb.de>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH] ata: sata_rcar: add gen[23] fallback compatibility
+ strings
+Date: Tue, 11 Jul 2017 19:23:40 +0300
+Message-ID: <85f13b7a-0bf4-e2fa-b57c-08d002caf892@cogentembedded.com>
+References: <1499773460-8930-1-git-send-email-horms+renesas@verge.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-it0-f52.google.com ([209.85.214.52]:35152 "EHLO
-        mail-it0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932653AbdGKO3V (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 11 Jul 2017 10:29:21 -0400
-Received: by mail-it0-f52.google.com with SMTP id v202so64825466itb.0
-        for <linux-ide@vger.kernel.org>; Tue, 11 Jul 2017 07:29:21 -0700 (PDT)
-In-Reply-To: <20170710085120.1984293-1-arnd@arndb.de>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-renesas-soc-owner@vger.kernel.org>
+In-Reply-To: <1499773460-8930-1-git-send-email-horms+renesas@verge.net.au>
+Sender: linux-renesas-soc-owner@vger.kernel.org
+To: Simon Horman <horms+renesas@verge.net.au>, Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-renesas-soc@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>, Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org, Geert Uytterhoeven <geert+renesas@glider.be>
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Mon, Jul 10, 2017 at 10:51 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+On 07/11/2017 02:44 PM, Simon Horman wrote:
 
-> We cannot build the new ftide010 code without also building the faraday
-> sata bridge driver:
+> Add fallback compatibility string for R-Car Gen 2 and 3.
 >
-> drivers/ata/pata_ftide010.o: In function `pata_ftide010_probe':
-> pata_ftide010.c:(.text+0x2b8): undefined reference to `gemini_sata_bridge_get'
-> pata_ftide010.c:(.text+0x32c): undefined reference to `gemini_sata_get_muxmode'
-> pata_ftide010.c:(.text+0x358): undefined reference to `gemini_sata_bridge_enabled'
-> drivers/ata/pata_ftide010.o: In function `pata_ftide010_gemini_port_stop':
-> pata_ftide010.c:(.text+0x520): undefined reference to `gemini_sata_stop_bridge'
-> drivers/ata/pata_ftide010.o: In function `pata_ftide010_gemini_port_start':
-> pata_ftide010.c:(.text+0x5bc): undefined reference to `gemini_sata_start_bridge'
+> In the case of Renesas R-Car hardware we know that there are generations of
+> SoCs, e.g. Gen 1 and 2. But beyond that its not clear what the relationship
+> between IP blocks might be. For example, I believe that r8a7790 is older
+> than r8a7791 but that doesn't imply that the latter is a descendant of the
+> former or vice versa.
 >
-> This adjusts the Kconfig dependencies accordingly.
+> We can, however, by examining the documentation and behaviour of the
+> hardware at run-time observe that the current driver implementation appears
+> to be compatible with the IP blocks on SoCs within a given generation.
 >
-> Fixes: be4e456ed3a5 ("ata: Add driver for Faraday Technology FTIDE010")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> For the above reasons and convenience when enabling new SoCs a
+> per-generation fallback compatibility string scheme being adopted for
+> drivers for Renesas SoCs.
+>
+> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+[...]
 
-Acked-by: Linus Walleij <linus.walleij@linaro.org>
+Acked-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-My intention was definately to have the bridge driver as a separate add-on
-as I suspect some systems use the PATA driver without the SATA bridge.
-
-But we can definately deal with that when those users appear.
-
-Yours,
-Linus Walleij
+MBR, Sergei
