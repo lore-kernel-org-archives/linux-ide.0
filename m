@@ -1,98 +1,48 @@
-From: Simon Horman <horms+renesas-/R6kz+dDXgpPR4JQBCEnsQ@public.gmane.org>
-Subject: [PATCH] ata: sata_rcar: add gen[23] fallback compatibility strings
-Date: Tue, 11 Jul 2017 13:44:20 +0200
-Message-ID: <1499773460-8930-1-git-send-email-horms+renesas@verge.net.au>
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-renesas-soc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Magnus Damm <magnus.damm-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Geert Uytterhoeven <geert+renesas-gXvu3+zWzMSzQB+pC5nmwQ@public.gmane.org>, Simon Horman <horms+renesas-/R6kz+dDXgpPR4JQBCEnsQ@public.gmane.org>
+From: Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: [PATCH] ata: fix gemini Kconfig dependencies
+Date: Tue, 11 Jul 2017 16:29:19 +0200
+Message-ID: <CACRpkdb4b6WDtHeA7AwtopwH29cCx3c_ae7eUUBF3Zh57nyQNA@mail.gmail.com>
+References: <20170710085120.1984293-1-arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-it0-f52.google.com ([209.85.214.52]:35152 "EHLO
+        mail-it0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932653AbdGKO3V (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 11 Jul 2017 10:29:21 -0400
+Received: by mail-it0-f52.google.com with SMTP id v202so64825466itb.0
+        for <linux-ide@vger.kernel.org>; Tue, 11 Jul 2017 07:29:21 -0700 (PDT)
+In-Reply-To: <20170710085120.1984293-1-arnd@arndb.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Add fallback compatibility string for R-Car Gen 2 and 3.
+On Mon, Jul 10, 2017 at 10:51 AM, Arnd Bergmann <arnd@arndb.de> wrote:
 
-In the case of Renesas R-Car hardware we know that there are generations of
-SoCs, e.g. Gen 1 and 2. But beyond that its not clear what the relationship
-between IP blocks might be. For example, I believe that r8a7790 is older
-than r8a7791 but that doesn't imply that the latter is a descendant of the
-former or vice versa.
+> We cannot build the new ftide010 code without also building the faraday
+> sata bridge driver:
+>
+> drivers/ata/pata_ftide010.o: In function `pata_ftide010_probe':
+> pata_ftide010.c:(.text+0x2b8): undefined reference to `gemini_sata_bridge_get'
+> pata_ftide010.c:(.text+0x32c): undefined reference to `gemini_sata_get_muxmode'
+> pata_ftide010.c:(.text+0x358): undefined reference to `gemini_sata_bridge_enabled'
+> drivers/ata/pata_ftide010.o: In function `pata_ftide010_gemini_port_stop':
+> pata_ftide010.c:(.text+0x520): undefined reference to `gemini_sata_stop_bridge'
+> drivers/ata/pata_ftide010.o: In function `pata_ftide010_gemini_port_start':
+> pata_ftide010.c:(.text+0x5bc): undefined reference to `gemini_sata_start_bridge'
+>
+> This adjusts the Kconfig dependencies accordingly.
+>
+> Fixes: be4e456ed3a5 ("ata: Add driver for Faraday Technology FTIDE010")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-We can, however, by examining the documentation and behaviour of the
-hardware at run-time observe that the current driver implementation appears
-to be compatible with the IP blocks on SoCs within a given generation.
+Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
-For the above reasons and convenience when enabling new SoCs a
-per-generation fallback compatibility string scheme being adopted for
-drivers for Renesas SoCs.
+My intention was definately to have the bridge driver as a separate add-on
+as I suspect some systems use the PATA driver without the SATA bridge.
 
-Signed-off-by: Simon Horman <horms+renesas-/R6kz+dDXgpPR4JQBCEnsQ@public.gmane.org>
----
-Based on libata/for-next
----
- Documentation/devicetree/bindings/ata/sata_rcar.txt | 14 +++++++++++---
- drivers/ata/sata_rcar.c                             |  8 ++++++++
- 2 files changed, 19 insertions(+), 3 deletions(-)
+But we can definately deal with that when those users appear.
 
-diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt b/Documentation/devicetree/bindings/ata/sata_rcar.txt
-index 0764f9ab63dc..e20eac7a3087 100644
---- a/Documentation/devicetree/bindings/ata/sata_rcar.txt
-+++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
-@@ -1,14 +1,22 @@
- * Renesas R-Car SATA
- 
- Required properties:
--- compatible		: should contain one of the following:
-+- compatible		: should contain one or more of the following:
- 			  - "renesas,sata-r8a7779" for R-Car H1
--			    ("renesas,rcar-sata" is deprecated)
- 			  - "renesas,sata-r8a7790-es1" for R-Car H2 ES1
- 			  - "renesas,sata-r8a7790" for R-Car H2 other than ES1
- 			  - "renesas,sata-r8a7791" for R-Car M2-W
- 			  - "renesas,sata-r8a7793" for R-Car M2-N
- 			  - "renesas,sata-r8a7795" for R-Car H3
-+			  - "renesas,rcar-gen2-sata" for a generic R-Car Gen2 compatible device
-+			  - "renesas,rcar-gen3-sata" for a generic R-Car Gen3 compatible device
-+			  - "renesas,rcar-sata" is deprecated
-+
-+			  When compatible with the generic version nodes
-+			  must list the SoC-specific version corresponding
-+			  to the platform first followed by the generic
-+			  version.
-+
- - reg			: address and length of the SATA registers;
- - interrupts		: must consist of one interrupt specifier.
- - clocks		: must contain a reference to the functional clock.
-@@ -16,7 +24,7 @@ Required properties:
- Example:
- 
- sata0: sata@ee300000 {
--	compatible = "renesas,sata-r8a7791";
-+	compatible = "renesas,sata-r8a7791", "renesas,rcar-gen2-sata";
- 	reg = <0 0xee300000 0 0x2000>;
- 	interrupt-parent = <&gic>;
- 	interrupts = <0 105 IRQ_TYPE_LEVEL_HIGH>;
-diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
-index ee9844758736..537d11869069 100644
---- a/drivers/ata/sata_rcar.c
-+++ b/drivers/ata/sata_rcar.c
-@@ -858,6 +858,14 @@ static const struct of_device_id sata_rcar_match[] = {
- 		.compatible = "renesas,sata-r8a7795",
- 		.data = (void *)RCAR_GEN2_SATA
- 	},
-+	{
-+		.compatible = "renesas,rcar-gen2-sata",
-+		.data = (void *)RCAR_GEN2_SATA
-+	},
-+	{
-+		.compatible = "renesas,rcar-gen3-sata",
-+		.data = (void *)RCAR_GEN2_SATA
-+	},
- 	{ },
- };
- MODULE_DEVICE_TABLE(of, sata_rcar_match);
--- 
-2.1.4
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Yours,
+Linus Walleij
