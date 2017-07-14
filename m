@@ -1,51 +1,68 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 14/14] [media] fix warning on v4l2_subdev_call() result
- interpreted as bool
-Date: Fri, 14 Jul 2017 14:27:19 +0200
-Message-ID: <CAK8P3a0f84OPcCK1r3P9inGYDJC2KaAO4mjE2vn+vCws-oo_bw@mail.gmail.com>
-References: <20170714092540.1217397-1-arnd@arndb.de>
- <20170714093938.1469319-1-arnd@arndb.de>
- <20170714120512.ioe67nnloqivtbr7@mwanda>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH 07/14] proc/kcore: hide a harmless warning
+Date: Fri, 14 Jul 2017 13:28:10 +0100
+Message-ID: <CAKv+Gu9+0H9w8z8_Zedd-RxXt89Y7sJ=57_ZTThfDpFe4H0uXg@mail.gmail.com>
+References: <20170714092540.1217397-1-arnd@arndb.de> <20170714092540.1217397-8-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <20170714120512.ioe67nnloqivtbr7@mwanda>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: devel@driverdev.osuosl.org, Linux-Renesas <linux-renesas-soc@vger.kernel.org>, Linux Media Mailing List <linux-media@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Daeseok Youn <daeseok.youn@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, dri-devel <dri-devel@lists.freedesktop.org>, adi-buildroot-devel@lists.sourceforge.net, Hans Verkuil <hverkuil@xs4all.nl>, IDE-ML <linux-ide@vger.kernel.org>, Guenter Roeck <linux@roeck-us.net>, =?UTF-8?Q?Niklas_S=C3=B6derlund?= <niklas.soderlund@ragnatech.se>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Mauro Carvalho Chehab <mchehab@kernel.org>, Robert Jarzmik <robert.jarzmik@free.fr>, Linux ARM <linux-arm-kernel@lists.infradead.org>, Alan Cox <alan@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-media-owner@vger.kernel.org>
+In-Reply-To: <20170714092540.1217397-8-arnd@arndb.de>
+Sender: linux-media-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jiri Olsa <jolsa@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Guenter Roeck <linux@roeck-us.net>, linux-ide@vger.kernel.org, linux-media@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, dri-devel@lists.freedesktop.org, Kees Cook <keescook@chromium.org>, Ingo Molnar <mingo@kernel.org>, Laura Abbott <labbott@redhat.com>, Pratyush Anand <panand@redhat.com>
 List-Id: linux-ide@vger.kernel.org
 
-T24gRnJpLCBKdWwgMTQsIDIwMTcgYXQgMjowNSBQTSwgRGFuIENhcnBlbnRlciA8ZGFuLmNhcnBl
-bnRlckBvcmFjbGUuY29tPiB3cm90ZToKPiBDaGFuZ2luZzoKPgo+IC0gaWYgKCFmcm9iKCkpIHsK
-PiArIGlmIChmcm9iKCkgPT0gMCkgewo+Cj4gaXMgYSB0b3RhbGx5IHBvaW50bGVzcyBjaGFuZ2Uu
-ICBUaGV5J3JlIGJvdGggYmFkLCBiZWNhdXNlIHRoZXkncmUgZG9pbmcKPiBzdWNjZXNzIHRlc3Rp
-bmcgaW5zdGVhZCBvZiBmYWlsdXJlIHRlc3RpbmcsIGJ1dCBwcm9iYWJseSB0aGUgc2Vjb25kIG9u
-ZQo+IGlzIHNsaWdodGx5IHdvcnNlLgo+Cj4gVGhpcyB3YXJuaW5nIHNlZW1zIGR1bWIuICBJIGNh
-bid0IGltYWdpbmUgaXQgaGFzIGV2ZW4gYSAxMCUgc3VjY2VzcyByYXRlCj4gYXQgZmluZGluZyBy
-ZWFsIGJ1Z3MuICBKdXN0IGRpc2FibGUgaXQuCj4KPiBDaGFuZ2luZyB0aGUgY29kZSB0byBwcm9w
-YWdhdGUgZXJyb3IgY29kZXMsIGlzIHRoZSByaWdodCB0aGluZyBvZiBjb3Vyc2UKPiBzbyBsb25n
-IGFzIGl0IGRvZXNuJ3QgaW50cm9kdWNlIGJ1Z3MuCgpJdCBmb3VuZCBhIHR3byBvZiBidWdzIHRo
-YXQgSSBmaXhlZCBlYXJsaWVyOgoKZjBlOGZhYTdhNWU4ICgiQVJNOiB1eDUwMDogZml4IHByY211
-X2lzX2NwdV9pbl93ZmkoKSBjYWxjdWxhdGlvbiIpCmFmMTU3NjlmZmFiMSAoInNjc2k6IG12c2Fz
-OiBmaXggY29tbWFuZF9hY3RpdmUgdHlwbyIpCgpwbHVzIHRocmVlIHBhdGNoZXMgZnJvbSB0aGlz
-IHNlcmllczoKCjEuIHN0YWdpbmc6aWlvOnJlc29sdmVyOmFkMnMxMjEwIGZpeCBuZWdhdGl2ZSBJ
-SU9fQU5HTF9WRUwgcmVhZAoyLiBpc2RuOiBpc2RubG9vcDogc3VwcHJlc3MgYSBnY2MtNyB3YXJu
-aW5nIChteSBwYXRjaCBpcyB3cm9uZywKICAgYXMgSm9lIHBvaW50ZWQgb3V0IHRoZXJlIGlzIGEg
-cmVhbCBidWcpCjMuIGRybS92bXdnZng6IGF2b2lkIGdjYy03IHBhcmVudGhlc2VzIChoZXJlLCBM
-aW51cyBoYWQgYSBiZXR0ZXIKICAgYW5hbHlzaXMgb2YgdGhlIHByb2JsZW0sIHNvIHdlIHNob3Vs
-ZCBjb25zaWRlciB0aGF0IGEgYnVnIGFzIHdlbGwpCgpJIHdvdWxkIGVzdGltYXRlIGFyb3VuZCAy
-NSUgc3VjY2VzcyByYXRlIGhlcmUsIHdoaWNoIGlzbid0IHRoYXQKYmFkIGZvciBhIG5ldyB3YXJu
-aW5nLgoKSSBhZ3JlZSB0aGF0IG1vc3Qgb2YgdGhlIGZhbHNlIHBvc2l0aXZlcyBhcmUgcmVhbGx5
-IGR1bWIgdGhvdWdoLgoKICAgICAgIEFybmQKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX18KZHJpLWRldmVsIG1haWxpbmcgbGlzdApkcmktZGV2ZWxAbGlzdHMu
-ZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlz
-dGluZm8vZHJpLWRldmVsCg==
+On 14 July 2017 at 10:25, Arnd Bergmann <arnd@arndb.de> wrote:
+> gcc warns when MODULES_VADDR/END is defined to the same value as
+> VMALLOC_START/VMALLOC_END, e.g. on x86-32:
+>
+> fs/proc/kcore.c: In function =E2=80=98add_modules_range=E2=80=99:
+> fs/proc/kcore.c:622:161: error: self-comparison always evaluates to false=
+ [-Werror=3Dtautological-compare]
+>   if (/*MODULES_VADDR !=3D VMALLOC_START && */MODULES_END !=3D VMALLOC_EN=
+D) {
+>
+
+Does it occur for subtraction as well? Or only for comparison?
+
+> The code is correct as it is required for most other configurations.
+> The best workaround I found for shutting up that warning is to make
+> it a little more complex by adding a temporary variable. The compiler
+> will still optimize away the code as it finds the two to be identical,
+> but it no longer warns because it doesn't condider the comparison
+> "tautological" any more.
+>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  fs/proc/kcore.c | 10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
+>
+> diff --git a/fs/proc/kcore.c b/fs/proc/kcore.c
+> index 45629f4b5402..c503ad657c46 100644
+> --- a/fs/proc/kcore.c
+> +++ b/fs/proc/kcore.c
+> @@ -620,12 +620,14 @@ static void __init proc_kcore_text_init(void)
+>  /*
+>   * MODULES_VADDR has no intersection with VMALLOC_ADDR.
+>   */
+> -struct kcore_list kcore_modules;
+> +static struct kcore_list kcore_modules;
+>  static void __init add_modules_range(void)
+>  {
+> -       if (MODULES_VADDR !=3D VMALLOC_START && MODULES_END !=3D VMALLOC_=
+END) {
+> -               kclist_add(&kcore_modules, (void *)MODULES_VADDR,
+> -                       MODULES_END - MODULES_VADDR, KCORE_VMALLOC);
+> +       void *start =3D (void *)MODULES_VADDR;
+> +       size_t len =3D MODULES_END - MODULES_VADDR;
+> +
+> +       if (start !=3D (void *)VMALLOC_START && len !=3D VMALLOC_END - VM=
+ALLOC_START) {
+> +               kclist_add(&kcore_modules, start, len, KCORE_VMALLOC);
+>         }
+>  }
+>  #else
+> --
+> 2.9.0
+>
