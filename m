@@ -1,65 +1,43 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 05/14] isdn: isdnloop: suppress a gcc-7 warning
-Date: Fri, 14 Jul 2017 12:37:05 +0200
-Message-ID: <CAK8P3a2fYr11L-0sg-veKx5F5dGH5btQAhSZtFbNXxVtcHd8dg@mail.gmail.com>
-References: <20170714092540.1217397-1-arnd@arndb.de> <20170714092540.1217397-6-arnd@arndb.de>
- <1500026936.4457.68.camel@perches.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH 14/14] [media] fix warning on v4l2_subdev_call() result
+ interpreted as bool
+Date: Fri, 14 Jul 2017 15:05:12 +0300
+Message-ID: <20170714120512.ioe67nnloqivtbr7@mwanda>
+References: <20170714092540.1217397-1-arnd@arndb.de>
+ <20170714093938.1469319-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1500026936.4457.68.camel@perches.com>
-Sender: netdev-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Karsten Keil <isdn@linux-pingi.de>, "David S. Miller" <davem@davemloft.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Guenter Roeck <linux@roeck-us.net>, IDE-ML <linux-ide@vger.kernel.org>, Linux Media Mailing List <linux-media@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, dri-devel <dri-devel@lists.freedesktop.org>, Networking <netdev@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Disposition: inline
+In-Reply-To: <20170714093938.1469319-1-arnd@arndb.de>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: devel@driverdev.osuosl.org, linux-renesas-soc@vger.kernel.org, linux-media@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Daeseok Youn <daeseok.youn@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, adi-buildroot-devel@lists.sourceforge.net, Hans Verkuil <hverkuil@xs4all.nl>, linux-ide@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>, Niklas =?iso-8859-1?Q?S=F6derlund?= <niklas.soderlund@ragnatech.se>, Tejun Heo <tj@kernel.org>, akpm@linux-foundation.org, Mauro Carvalho Chehab <mchehab@kernel.org>, Robert Jarzmik <robert.jarzmik@free.fr>, linux-arm-kernel@lists.infradead.org, Alan Cox <alan@linux.intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Fri, Jul 14, 2017 at 12:08 PM, Joe Perches <joe@perches.com> wrote:
-> On Fri, 2017-07-14 at 11:25 +0200, Arnd Bergmann wrote:
->> We test whether a bit is set in a mask here, which is correct
->> but gcc warns about it as it thinks it might be confusing:
->>
->> drivers/isdn/isdnloop/isdnloop.c:412:37: error: ?: using integer constants in boolean context, the expression will always evaluate to 'true' [-Werror=int-in-bool-context]
->>
->> This replaces the negation of an integer with an equivalent
->> comparison to zero, which gets rid of the warning.
-> []
->> diff --git a/drivers/isdn/isdnloop/isdnloop.c b/drivers/isdn/isdnloop/isdnloop.c
-> []
->> @@ -409,7 +409,7 @@ isdnloop_sendbuf(int channel, struct sk_buff *skb, isdnloop_card *card)
->>               return -EINVAL;
->>       }
->>       if (len) {
->> -             if (!(card->flags & (channel) ? ISDNLOOP_FLAGS_B2ACTIVE : ISDNLOOP_FLAGS_B1ACTIVE))
->> +             if ((card->flags & (channel) ? ISDNLOOP_FLAGS_B2ACTIVE : ISDNLOOP_FLAGS_B1ACTIVE) == 0)
->>                       return 0;
->>               if (card->sndcount[channel] > ISDNLOOP_MAX_SQUEUE)
->>                       return 0;
->
-> The if as written can not be zero.
->
-> drivers/isdn/isdnloop/isdnloop.h:#define ISDNLOOP_FLAGS_B1ACTIVE 1      /* B-Channel-1 is open           */
-> drivers/isdn/isdnloop/isdnloop.h:#define ISDNLOOP_FLAGS_B2ACTIVE 2      /* B-Channel-2 is open           */
->
-> Perhaps this is a logic defect and should be:
->
->                 if (!(card->flags & ((channel) ? ISDNLOOP_FLAGS_B2ACTIVE : ISDNLOOP_FLAGS_B1ACTIVE)))
+Changing:
 
-Yes, good catch. I had thought about it for a bit whether that would be
-the answer, but come to the wrong conclusion on my own.
+- if (!frob()) {
++ if (frob() == 0) {
 
-Note that the version you suggested will still have the warning, so I think
-it needs to be
+is a totally pointless change.  They're both bad, because they're doing
+success testing instead of failure testing, but probably the second one
+is slightly worse.
 
-                 if (card->flags &
-                    ((channel) ? ISDNLOOP_FLAGS_B2ACTIVE :
-ISDNLOOP_FLAGS_B1ACTIVE)
-                     == 0)
+This warning seems dumb.  I can't imagine it has even a 10% success rate
+at finding real bugs.  Just disable it.
 
-or something like that, probably having a temporary flag variable would be best:
+Changing the code to propagate error codes, is the right thing of course
+so long as it doesn't introduce bugs.
 
-          int flag =  channel ? ISDNLOOP_FLAGS_B2ACTIVE :
-ISDNLOOP_FLAGS_B1ACTIVE;
-          if ((card->flags & flag) == 0)
-                       return 0;
-
-         Arnd
+regards,
+dan carpenter
