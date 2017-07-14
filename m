@@ -1,34 +1,53 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 13/14] iopoll: avoid -Wint-in-bool-context warning
-Date: Fri, 14 Jul 2017 12:22:00 +0200
-Message-ID: <CAK8P3a0sZToC-7XTio8u6gWey0QVp3D7JHbHSCXgDEg3YQ-XFA@mail.gmail.com>
-References: <20170714092540.1217397-1-arnd@arndb.de> <20170714093129.1366900-4-arnd@arndb.de>
- <1500026123.4457.66.camel@perches.com>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 00/14] gcc-7 warnings
+Date: Fri, 14 Jul 2017 12:29:35 +0200
+Message-ID: <20170714102935.GB15467@kroah.com>
+References: <20170714092540.1217397-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1500026123.4457.66.camel@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mark Brown <broonie@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Guenter Roeck <linux@roeck-us.net>, IDE-ML <linux-ide@vger.kernel.org>, Linux Media Mailing List <linux-media@vger.kernel.org>, dri-devel <dri-devel@lists.freedesktop.org>, Masahiro Yamada <yamada.masahiro@socionext.com>, Charles Keepax <ckeepax@opensource.wolfsonmicro.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+Content-Disposition: inline
+In-Reply-To: <20170714092540.1217397-1-arnd@arndb.de>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, akpm@linux-foundation.org, Linus Torvalds <torvalds@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, linux-media@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Fri, Jul 14, 2017 at 11:55 AM, Joe Perches <joe@perches.com> wrote:
-> On Fri, 2017-07-14 at 11:31 +0200, Arnd Bergmann wrote:
->> When we pass the result of a multiplication as the timeout, we
->> can get a warning:
->>
->> drivers/mmc/host/bcm2835.c:596:149: error: '*' in boolean context, suggest '&&' instead [-Werror=int-in-bool-context]
->> drivers/mfd/arizona-core.c:247:195: error: '*' in boolean context, suggest '&&' instead [-Werror=int-in-bool-context]
->>
->> This is easy to avoid by comparing the timeout to zero instead,
->> making it a boolean expression.
->
-> Perhaps this is better as != 0 if the multiply is signed.
-
-I thought about that, but decided that as a negative timeout_us already
-gives us rather random behavior (ktime_add_us() takes an unsigned
-argument), the '>' comparison gives a more well-defined result by
-ignoring the timeout.
-
-         Arnd
+T24gRnJpLCBKdWwgMTQsIDIwMTcgYXQgMTE6MjU6MTJBTSArMDIwMCwgQXJuZCBCZXJnbWFubiB3
+cm90ZToKPiBUaGlzIHNlcmllcyBzaG91bGQgc2h1dCB1cCBhbGwgd2FybmluZ3MgaW50cm9kdWNl
+ZCBieSBnY2MtNiBvciBnY2MtNyBvbgo+IHRvZGF5J3MgbGludXgtbmV4dCwgYXMgb2JzZXJ2ZWQg
+aW4gImFsbG1vZGNvbmZpZyIgYnVpbGRzIG9uIHg4NiwKPiBhcm0gYW5kIGFybTY0Lgo+IAo+IEkg
+aGF2ZSBzZW50IHNvbWUgb2YgdGhlc2UgYmVmb3JlLCBidXQgc29tZSBvdGhlcnMgYXJlIG5ldywg
+YXMgSSBoYWQKPiBhdCBzb21lIHBvaW50IGRpc2FibGVkIHRoZSAtV2ludC1pbi1ib29sLWNvbnRl
+eHQgd2FybmluZyBpbiBteQo+IHJhbmRjb25maWcgdGVzdGluZyBhbmQgZGlkIG5vdCBub3RpY2Ug
+dGhlIG90aGVyIHdhcm5pbmdzLgo+IAo+IEkgaGF2ZSBhbm90aGVyIHNlcmllcyB0byBhZGRyZXNz
+IGFsbCAtV2Zvcm1hdC1vdmVyZmxvdyB3YXJuaW5ncywKPiBhbmQgb25lIG1vcmUgcGF0Y2ggdG8g
+dHVybiBvZmYgdGhlIC1XZm9ybWF0LXRydW5jYXRpb24gd2FybmluZ3MKPiB1bmxlc3Mgd2UgYnVp
+bGQgd2l0aCAibWFrZSBXPTEiLiBJJ2xsIHNlbmQgdGhhdCBzZXBhcmF0ZWx5Lgo+IAo+IE1vc3Qg
+b2YgdGhlc2UgYXJlIGNvbnNpc3Qgb2YgdHJpdmlhbCByZWZhY3RvcmluZyBvZiB0aGUgY29kZSB0
+bwo+IHNodXQgdXAgZmFsc2UtcG9zaXRpdmUgd2FybmluZ3MsIHRoZSBvbmUgZXhjZXB0aW9uIGJl
+aW5nCj4gInN0YWdpbmc6aWlvOnJlc29sdmVyOmFkMnMxMjEwIGZpeCBuZWdhdGl2ZSBJSU9fQU5H
+TF9WRUwgcmVhZCIsCj4gd2hpY2ggZml4ZXMgYSByZWdyZXNzaW9uIGFnYWluc3QgbGludXgtMy4x
+IHRoYXQgaGFzIGdvbmUKPiB1bm5vdGljZWQgc2luY2UgdGhlbi4gU3RpbGwsIHJldmlldyBmcm9t
+IHN1YnN5c3RlbSBtYWludGFpbmVycwo+IHdvdWxkIGJlIGFwcHJlY2lhdGVkLgo+IAo+IEkgd291
+bGQgc3VnZ2VzdCB0aGF0IEFuZHJldyBNb3J0b24gY2FuIHBpY2sgdGhlc2UgdXAgaW50byBsaW51
+eC1tbQo+IHNvIHdlIGNhbiBtYWtlIHN1cmUgdGhleSBhbGwgbWFrZSBpdCBpbnRvIHRoZSByZWxl
+YXNlLiBBbHRlcm5hdGl2ZWx5Cj4gTGludXMgbWlnaHQgZmVlbCBsaWtlIHBpY2tpbmcgdGhlbSBh
+bGwgdXAgaGltc2VsZi4KPiAKPiBXaGlsZSBJIGRpZCBub3QgbWFyayB0aGUgaGFybWxlc3Mgb25l
+cyBmb3Igc3RhYmxlIGJhY2twb3J0cywKPiBHcmVnIG1heSBhbHNvIHdhbnQgdG8gcGljayB0aGVt
+IHVwIG9uY2UgdGhleSBnbyB1cHN0cmVhbSwgdG8KPiBoZWxwIGJ1aWxkLXRlc3QgdGhlIHN0YWJs
+ZSBrZXJuZWxzIHdpdGggZ2NjLTcuCgpUaGFua3MgZm9yIHRoZXNlLCBJJ2xsIGtlZXAgYW4gZXll
+IG91dCBmb3IgdGhlbSB0byBnZXQgaW50byB0aGUgc3RhYmxlCnRyZWVzLCBzbyBJIGNhbiBldmVu
+dHVhbGx5IHVwZGF0ZSBteSB0ZXN0LWJ1aWxkIGJveCB0byBnY2MtNy4KCnRoYW5rcywKCmdyZWcg
+ay1oCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRyaS1k
+ZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczov
+L2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbAo=
