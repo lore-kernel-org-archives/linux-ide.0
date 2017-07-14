@@ -1,53 +1,65 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 00/14] gcc-7 warnings
-Date: Fri, 14 Jul 2017 12:29:35 +0200
-Message-ID: <20170714102935.GB15467@kroah.com>
-References: <20170714092540.1217397-1-arnd@arndb.de>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 05/14] isdn: isdnloop: suppress a gcc-7 warning
+Date: Fri, 14 Jul 2017 12:37:05 +0200
+Message-ID: <CAK8P3a2fYr11L-0sg-veKx5F5dGH5btQAhSZtFbNXxVtcHd8dg@mail.gmail.com>
+References: <20170714092540.1217397-1-arnd@arndb.de> <20170714092540.1217397-6-arnd@arndb.de>
+ <1500026936.4457.68.camel@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-Content-Disposition: inline
-In-Reply-To: <20170714092540.1217397-1-arnd@arndb.de>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, akpm@linux-foundation.org, Linus Torvalds <torvalds@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, linux-media@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1500026936.4457.68.camel@perches.com>
+Sender: netdev-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Karsten Keil <isdn@linux-pingi.de>, "David S. Miller" <davem@davemloft.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Guenter Roeck <linux@roeck-us.net>, IDE-ML <linux-ide@vger.kernel.org>, Linux Media Mailing List <linux-media@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, dri-devel <dri-devel@lists.freedesktop.org>, Networking <netdev@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-T24gRnJpLCBKdWwgMTQsIDIwMTcgYXQgMTE6MjU6MTJBTSArMDIwMCwgQXJuZCBCZXJnbWFubiB3
-cm90ZToKPiBUaGlzIHNlcmllcyBzaG91bGQgc2h1dCB1cCBhbGwgd2FybmluZ3MgaW50cm9kdWNl
-ZCBieSBnY2MtNiBvciBnY2MtNyBvbgo+IHRvZGF5J3MgbGludXgtbmV4dCwgYXMgb2JzZXJ2ZWQg
-aW4gImFsbG1vZGNvbmZpZyIgYnVpbGRzIG9uIHg4NiwKPiBhcm0gYW5kIGFybTY0Lgo+IAo+IEkg
-aGF2ZSBzZW50IHNvbWUgb2YgdGhlc2UgYmVmb3JlLCBidXQgc29tZSBvdGhlcnMgYXJlIG5ldywg
-YXMgSSBoYWQKPiBhdCBzb21lIHBvaW50IGRpc2FibGVkIHRoZSAtV2ludC1pbi1ib29sLWNvbnRl
-eHQgd2FybmluZyBpbiBteQo+IHJhbmRjb25maWcgdGVzdGluZyBhbmQgZGlkIG5vdCBub3RpY2Ug
-dGhlIG90aGVyIHdhcm5pbmdzLgo+IAo+IEkgaGF2ZSBhbm90aGVyIHNlcmllcyB0byBhZGRyZXNz
-IGFsbCAtV2Zvcm1hdC1vdmVyZmxvdyB3YXJuaW5ncywKPiBhbmQgb25lIG1vcmUgcGF0Y2ggdG8g
-dHVybiBvZmYgdGhlIC1XZm9ybWF0LXRydW5jYXRpb24gd2FybmluZ3MKPiB1bmxlc3Mgd2UgYnVp
-bGQgd2l0aCAibWFrZSBXPTEiLiBJJ2xsIHNlbmQgdGhhdCBzZXBhcmF0ZWx5Lgo+IAo+IE1vc3Qg
-b2YgdGhlc2UgYXJlIGNvbnNpc3Qgb2YgdHJpdmlhbCByZWZhY3RvcmluZyBvZiB0aGUgY29kZSB0
-bwo+IHNodXQgdXAgZmFsc2UtcG9zaXRpdmUgd2FybmluZ3MsIHRoZSBvbmUgZXhjZXB0aW9uIGJl
-aW5nCj4gInN0YWdpbmc6aWlvOnJlc29sdmVyOmFkMnMxMjEwIGZpeCBuZWdhdGl2ZSBJSU9fQU5H
-TF9WRUwgcmVhZCIsCj4gd2hpY2ggZml4ZXMgYSByZWdyZXNzaW9uIGFnYWluc3QgbGludXgtMy4x
-IHRoYXQgaGFzIGdvbmUKPiB1bm5vdGljZWQgc2luY2UgdGhlbi4gU3RpbGwsIHJldmlldyBmcm9t
-IHN1YnN5c3RlbSBtYWludGFpbmVycwo+IHdvdWxkIGJlIGFwcHJlY2lhdGVkLgo+IAo+IEkgd291
-bGQgc3VnZ2VzdCB0aGF0IEFuZHJldyBNb3J0b24gY2FuIHBpY2sgdGhlc2UgdXAgaW50byBsaW51
-eC1tbQo+IHNvIHdlIGNhbiBtYWtlIHN1cmUgdGhleSBhbGwgbWFrZSBpdCBpbnRvIHRoZSByZWxl
-YXNlLiBBbHRlcm5hdGl2ZWx5Cj4gTGludXMgbWlnaHQgZmVlbCBsaWtlIHBpY2tpbmcgdGhlbSBh
-bGwgdXAgaGltc2VsZi4KPiAKPiBXaGlsZSBJIGRpZCBub3QgbWFyayB0aGUgaGFybWxlc3Mgb25l
-cyBmb3Igc3RhYmxlIGJhY2twb3J0cywKPiBHcmVnIG1heSBhbHNvIHdhbnQgdG8gcGljayB0aGVt
-IHVwIG9uY2UgdGhleSBnbyB1cHN0cmVhbSwgdG8KPiBoZWxwIGJ1aWxkLXRlc3QgdGhlIHN0YWJs
-ZSBrZXJuZWxzIHdpdGggZ2NjLTcuCgpUaGFua3MgZm9yIHRoZXNlLCBJJ2xsIGtlZXAgYW4gZXll
-IG91dCBmb3IgdGhlbSB0byBnZXQgaW50byB0aGUgc3RhYmxlCnRyZWVzLCBzbyBJIGNhbiBldmVu
-dHVhbGx5IHVwZGF0ZSBteSB0ZXN0LWJ1aWxkIGJveCB0byBnY2MtNy4KCnRoYW5rcywKCmdyZWcg
-ay1oCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRyaS1k
-ZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczov
-L2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbAo=
+On Fri, Jul 14, 2017 at 12:08 PM, Joe Perches <joe@perches.com> wrote:
+> On Fri, 2017-07-14 at 11:25 +0200, Arnd Bergmann wrote:
+>> We test whether a bit is set in a mask here, which is correct
+>> but gcc warns about it as it thinks it might be confusing:
+>>
+>> drivers/isdn/isdnloop/isdnloop.c:412:37: error: ?: using integer constants in boolean context, the expression will always evaluate to 'true' [-Werror=int-in-bool-context]
+>>
+>> This replaces the negation of an integer with an equivalent
+>> comparison to zero, which gets rid of the warning.
+> []
+>> diff --git a/drivers/isdn/isdnloop/isdnloop.c b/drivers/isdn/isdnloop/isdnloop.c
+> []
+>> @@ -409,7 +409,7 @@ isdnloop_sendbuf(int channel, struct sk_buff *skb, isdnloop_card *card)
+>>               return -EINVAL;
+>>       }
+>>       if (len) {
+>> -             if (!(card->flags & (channel) ? ISDNLOOP_FLAGS_B2ACTIVE : ISDNLOOP_FLAGS_B1ACTIVE))
+>> +             if ((card->flags & (channel) ? ISDNLOOP_FLAGS_B2ACTIVE : ISDNLOOP_FLAGS_B1ACTIVE) == 0)
+>>                       return 0;
+>>               if (card->sndcount[channel] > ISDNLOOP_MAX_SQUEUE)
+>>                       return 0;
+>
+> The if as written can not be zero.
+>
+> drivers/isdn/isdnloop/isdnloop.h:#define ISDNLOOP_FLAGS_B1ACTIVE 1      /* B-Channel-1 is open           */
+> drivers/isdn/isdnloop/isdnloop.h:#define ISDNLOOP_FLAGS_B2ACTIVE 2      /* B-Channel-2 is open           */
+>
+> Perhaps this is a logic defect and should be:
+>
+>                 if (!(card->flags & ((channel) ? ISDNLOOP_FLAGS_B2ACTIVE : ISDNLOOP_FLAGS_B1ACTIVE)))
+
+Yes, good catch. I had thought about it for a bit whether that would be
+the answer, but come to the wrong conclusion on my own.
+
+Note that the version you suggested will still have the warning, so I think
+it needs to be
+
+                 if (card->flags &
+                    ((channel) ? ISDNLOOP_FLAGS_B2ACTIVE :
+ISDNLOOP_FLAGS_B1ACTIVE)
+                     == 0)
+
+or something like that, probably having a temporary flag variable would be best:
+
+          int flag =  channel ? ISDNLOOP_FLAGS_B2ACTIVE :
+ISDNLOOP_FLAGS_B1ACTIVE;
+          if ((card->flags & flag) == 0)
+                       return 0;
+
+         Arnd
