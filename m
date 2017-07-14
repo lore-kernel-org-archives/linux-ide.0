@@ -1,68 +1,64 @@
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH 07/14] proc/kcore: hide a harmless warning
-Date: Fri, 14 Jul 2017 13:28:10 +0100
-Message-ID: <CAKv+Gu9+0H9w8z8_Zedd-RxXt89Y7sJ=57_ZTThfDpFe4H0uXg@mail.gmail.com>
-References: <20170714092540.1217397-1-arnd@arndb.de> <20170714092540.1217397-8-arnd@arndb.de>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: [PATCH 14/14] [media] fix warning on v4l2_subdev_call() result
+ interpreted as bool
+Date: Fri, 14 Jul 2017 15:41:32 +0300
+Message-ID: <20170714124132.u3fzpetbh3b7gj7f@mwanda>
+References: <20170714092540.1217397-1-arnd@arndb.de>
+ <20170714093938.1469319-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-media-owner@vger.kernel.org>
-In-Reply-To: <20170714092540.1217397-8-arnd@arndb.de>
-Sender: linux-media-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+Content-Disposition: inline
+In-Reply-To: <20170714093938.1469319-1-arnd@arndb.de>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
 To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jiri Olsa <jolsa@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Guenter Roeck <linux@roeck-us.net>, linux-ide@vger.kernel.org, linux-media@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, dri-devel@lists.freedesktop.org, Kees Cook <keescook@chromium.org>, Ingo Molnar <mingo@kernel.org>, Laura Abbott <labbott@redhat.com>, Pratyush Anand <panand@redhat.com>
+Cc: devel@driverdev.osuosl.org, linux-renesas-soc@vger.kernel.org, linux-media@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Daeseok Youn <daeseok.youn@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, adi-buildroot-devel@lists.sourceforge.net, Hans Verkuil <hverkuil@xs4all.nl>, linux-ide@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>, Niklas =?iso-8859-1?Q?S=F6derlund?= <niklas.soderlund@ragnatech.se>, Tejun Heo <tj@kernel.org>, akpm@linux-foundation.org, Mauro Carvalho Chehab <mchehab@kernel.org>, Robert Jarzmik <robert.jarzmik@free.fr>, linux-arm-kernel@lists.infradead.org, Alan Cox <alan@linux.intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-On 14 July 2017 at 10:25, Arnd Bergmann <arnd@arndb.de> wrote:
-> gcc warns when MODULES_VADDR/END is defined to the same value as
-> VMALLOC_START/VMALLOC_END, e.g. on x86-32:
->
-> fs/proc/kcore.c: In function =E2=80=98add_modules_range=E2=80=99:
-> fs/proc/kcore.c:622:161: error: self-comparison always evaluates to false=
- [-Werror=3Dtautological-compare]
->   if (/*MODULES_VADDR !=3D VMALLOC_START && */MODULES_END !=3D VMALLOC_EN=
-D) {
->
-
-Does it occur for subtraction as well? Or only for comparison?
-
-> The code is correct as it is required for most other configurations.
-> The best workaround I found for shutting up that warning is to make
-> it a little more complex by adding a temporary variable. The compiler
-> will still optimize away the code as it finds the two to be identical,
-> but it no longer warns because it doesn't condider the comparison
-> "tautological" any more.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  fs/proc/kcore.c | 10 ++++++----
->  1 file changed, 6 insertions(+), 4 deletions(-)
->
-> diff --git a/fs/proc/kcore.c b/fs/proc/kcore.c
-> index 45629f4b5402..c503ad657c46 100644
-> --- a/fs/proc/kcore.c
-> +++ b/fs/proc/kcore.c
-> @@ -620,12 +620,14 @@ static void __init proc_kcore_text_init(void)
->  /*
->   * MODULES_VADDR has no intersection with VMALLOC_ADDR.
->   */
-> -struct kcore_list kcore_modules;
-> +static struct kcore_list kcore_modules;
->  static void __init add_modules_range(void)
->  {
-> -       if (MODULES_VADDR !=3D VMALLOC_START && MODULES_END !=3D VMALLOC_=
-END) {
-> -               kclist_add(&kcore_modules, (void *)MODULES_VADDR,
-> -                       MODULES_END - MODULES_VADDR, KCORE_VMALLOC);
-> +       void *start =3D (void *)MODULES_VADDR;
-> +       size_t len =3D MODULES_END - MODULES_VADDR;
-> +
-> +       if (start !=3D (void *)VMALLOC_START && len !=3D VMALLOC_END - VM=
-ALLOC_START) {
-> +               kclist_add(&kcore_modules, start, len, KCORE_VMALLOC);
->         }
->  }
->  #else
-> --
-> 2.9.0
->
+T24gRnJpLCBKdWwgMTQsIDIwMTcgYXQgMTE6MzY6NTZBTSArMDIwMCwgQXJuZCBCZXJnbWFubiB3
+cm90ZToKPiBAQCAtMTE1OCw3ICsxMTU4LDggQEAgc3RhdGljIHZvaWQgY2NkY19jb25maWd1cmUo
+c3RydWN0IGlzcF9jY2RjX2RldmljZSAqY2NkYykKPiAgCSAqLwo+ICAJZm10X3NyYy5wYWQgPSBw
+YWQtPmluZGV4Owo+ICAJZm10X3NyYy53aGljaCA9IFY0TDJfU1VCREVWX0ZPUk1BVF9BQ1RJVkU7
+Cj4gLQlpZiAoIXY0bDJfc3ViZGV2X2NhbGwoc2Vuc29yLCBwYWQsIGdldF9mbXQsIE5VTEwsICZm
+bXRfc3JjKSkgewo+ICsJcmV0ID0gdjRsMl9zdWJkZXZfY2FsbChzZW5zb3IsIHBhZCwgZ2V0X2Zt
+dCwgTlVMTCwgJmZtdF9zcmMpOwo+ICsJaWYgKCFyZXQpIHsKPiAgCQlmbXRfaW5mbyA9IG9tYXAz
+aXNwX3ZpZGVvX2Zvcm1hdF9pbmZvKGZtdF9zcmMuZm9ybWF0LmNvZGUpOwo+ICAJCWRlcHRoX2lu
+ID0gZm10X2luZm8tPndpZHRoOwo+ICAJfQoKSXMgdGhlIG9yaWdpbmFsIGNvZGUgYnVnZ3k/Cgpt
+ZWRpYS9wbGF0Zm9ybS9vbWFwM2lzcC9pc3BjY2RjLmMKICAxMTU2ICAgICAgICAgIC8qIENvbXB1
+dGUgdGhlIGxhbmUgc2hpZnRlciBzaGlmdCB2YWx1ZSBhbmQgZW5hYmxlIHRoZSBicmlkZ2Ugd2hl
+biB0aGUKICAxMTU3ICAgICAgICAgICAqIGlucHV0IGZvcm1hdCBpcyBhIG5vbi1CVC42NTYgWVVW
+IHZhcmlhbnQuCiAgMTE1OCAgICAgICAgICAgKi8KICAxMTU5ICAgICAgICAgIGZtdF9zcmMucGFk
+ID0gcGFkLT5pbmRleDsKICAxMTYwICAgICAgICAgIGZtdF9zcmMud2hpY2ggPSBWNEwyX1NVQkRF
+Vl9GT1JNQVRfQUNUSVZFOwogIDExNjEgICAgICAgICAgaWYgKCF2NGwyX3N1YmRldl9jYWxsKHNl
+bnNvciwgcGFkLCBnZXRfZm10LCBOVUxMLCAmZm10X3NyYykpIHsKICAxMTYyICAgICAgICAgICAg
+ICAgICAgZm10X2luZm8gPSBvbWFwM2lzcF92aWRlb19mb3JtYXRfaW5mbyhmbXRfc3JjLmZvcm1h
+dC5jb2RlKTsKICAxMTYzICAgICAgICAgICAgICAgICAgZGVwdGhfaW4gPSBmbXRfaW5mby0+d2lk
+dGg7CiAgMTE2NCAgICAgICAgICB9CgpJZiB2NGwyX3N1YmRldl9jYWxsKCkgdGhlbiBkZXB0aF9p
+biBpcyB6ZXJvLgoKICAxMTY1ICAKICAxMTY2ICAgICAgICAgIGZtdF9pbmZvID0gb21hcDNpc3Bf
+dmlkZW9fZm9ybWF0X2luZm8oZm9ybWF0LT5jb2RlKTsKICAxMTY3ICAgICAgICAgIGRlcHRoX291
+dCA9IGZtdF9pbmZvLT53aWR0aDsKICAxMTY4ICAgICAgICAgIHNoaWZ0ID0gZGVwdGhfaW4gLSBk
+ZXB0aF9vdXQ7CiAgICAgICAgICAgICAgICBeXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eCgpI
+b3cgZG8gd2Uga25vdyB0aGF0IHRoaXMgc3VidHJhY3Rpb24gZG9lc24ndCBzZXQgInNoaWZ0IiB0
+byBhIHZlcnkgaGlnaApwb3NpdGl2ZT8KCiAgMTE2OSAgCiAgMTE3MCAgICAgICAgICBpZiAoY2Nk
+Yy0+YnQ2NTYpCiAgMTE3MSAgICAgICAgICAgICAgICAgIGJyaWRnZSA9IElTUENUUkxfUEFSX0JS
+SURHRV9ESVNBQkxFOwogIDExNzIgICAgICAgICAgZWxzZSBpZiAoZm10X2luZm8tPmNvZGUgPT0g
+TUVESUFfQlVTX0ZNVF9ZVVlWOF8yWDgpCiAgMTE3MyAgICAgICAgICAgICAgICAgIGJyaWRnZSA9
+IElTUENUUkxfUEFSX0JSSURHRV9MRU5ESUFOOwogIDExNzQgICAgICAgICAgZWxzZSBpZiAoZm10
+X2luZm8tPmNvZGUgPT0gTUVESUFfQlVTX0ZNVF9VWVZZOF8yWDgpCiAgMTE3NSAgICAgICAgICAg
+ICAgICAgIGJyaWRnZSA9IElTUENUUkxfUEFSX0JSSURHRV9CRU5ESUFOOwogIDExNzYgICAgICAg
+ICAgZWxzZQogIDExNzcgICAgICAgICAgICAgICAgICBicmlkZ2UgPSBJU1BDVFJMX1BBUl9CUklE
+R0VfRElTQUJMRTsKICAxMTc4ICAKICAxMTc5ICAgICAgICAgIG9tYXAzaXNwX2NvbmZpZ3VyZV9i
+cmlkZ2UoaXNwLCBjY2RjLT5pbnB1dCwgcGFyY2ZnLCBzaGlmdCwgYnJpZGdlKTsKCnJlZ2FyZHMs
+CmRhbiBjYXJwZW50ZXIKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9w
+Lm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1k
+ZXZlbAo=
