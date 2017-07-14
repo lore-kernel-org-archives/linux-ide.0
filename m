@@ -1,47 +1,66 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH, RESEND 03/14] drm/vmwgfx: avoid gcc-7 parentheses warning
-Date: Fri, 14 Jul 2017 22:28:29 +0200
-Message-ID: <CAK8P3a2QEOuQXy51q-EqzTh3STKTDHy2V-twi5nFPbuzOSEDkQ@mail.gmail.com>
-References: <20170714092540.1217397-1-arnd@arndb.de> <20170714092540.1217397-4-arnd@arndb.de>
- <CA+55aFw9xE_+qnx1=6FbU8HJ23+Go1iS5bxDLOHefETgn5Wx6w@mail.gmail.com> <CA+55aFw+DTc_czppqfbqY+7kq6Uej=Nf1Wxf1HutRw4tRxC85Q@mail.gmail.com>
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: Re: [PATCH 08/14] Input: adxl34x - fix gcc-7 -Wint-in-bool-context
+ warning
+Date: Fri, 14 Jul 2017 14:40:41 -0700
+Message-ID: <20170714214041.GA33582@dtor-ws>
+References: <20170714092540.1217397-1-arnd@arndb.de>
+ <20170714092540.1217397-9-arnd@arndb.de>
+ <CA+55aFw076kkn_NS1K+nSHDLoajhviHUsnCOmJOpz5YajpEtFw@mail.gmail.com>
+ <CAK8P3a0nZsqWtFX84FTHmm=aVFevrU5ZATnaLVSA39PZeG=6UQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-media-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFw+DTc_czppqfbqY+7kq6Uej=Nf1Wxf1HutRw4tRxC85Q@mail.gmail.com>
-Sender: linux-media-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, VMware Graphics <linux-graphics-maintainer@vmware.com>, Sinclair Yeh <syeh@vmware.com>, Thomas Hellstrom <thellstrom@vmware.com>, David Airlie <airlied@linux.ie>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Guenter Roeck <linux@roeck-us.net>, IDE-ML <linux-ide@vger.kernel.org>, Linux Media Mailing List <linux-media@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, DRI <dri-devel@lists.freedesktop.org>, Brian Paul <brianp@vmware.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAK8P3a0nZsqWtFX84FTHmm=aVFevrU5ZATnaLVSA39PZeG=6UQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Michael Hennerich <michael.hennerich@analog.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Guenter Roeck <linux@roeck-us.net>, IDE-ML <linux-ide@vger.kernel.org>, Linux Media Mailing List <linux-media@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, DRI <dri-devel@lists.freedesktop.org>, "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Fri, Jul 14, 2017 at 9:23 PM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Fri, Jul 14, 2017 at 12:21 PM, Linus Torvalds
+On Fri, Jul 14, 2017 at 10:17:10PM +0200, Arnd Bergmann wrote:
+> On Fri, Jul 14, 2017 at 9:24 PM, Linus Torvalds
 > <torvalds@linux-foundation.org> wrote:
->>
->> NAK. This takes unintentionally insane code and turns it intentionally
->> insane. Any non-zero return is considered an error.
->>
->> The right fix is almost certainly to just return -EINVAL unconditionally.
->
-> Btw, this is why I hate compiler warning fix patch series. Even when
-> they don't actually break the code (and sometimes they do that too),
-> they can actually end up making the code worse.
+> > On Fri, Jul 14, 2017 at 2:25 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> >> FIFO_MODE is an macro expression with a '<<' operator, which
+> >> gcc points out could be misread as a '<':
+> >
+> > Yeah, no, NAK again.
+> >
+> > We don't make the code look worse just because gcc is being a f*cking
+> > moron about things.
+> >
+> > This warning is clearly pure garbage.
+> >
+> 
+> I looked at this one again and found a better approach, matching the
+> check that is done a few lines later. Unless you find something wrong
+> with that one, I'd resubmit it with the fixup below.
+> 
+>       Arnd
+> 
+> --- a/drivers/input/misc/adxl34x.c
+> +++ b/drivers/input/misc/adxl34x.c
+> @@ -789,21 +789,21 @@ struct adxl34x *adxl34x_probe(struct device *dev, int irq,
+>                 __set_bit(pdata->ev_code_ff, input_dev->keybit);
+>         }
+> 
+>         if (pdata->ev_code_act_inactivity)
+>                 __set_bit(pdata->ev_code_act_inactivity, input_dev->keybit);
+> 
+>         ac->int_mask |= ACTIVITY | INACTIVITY;
+> 
+>         if (pdata->watermark) {
+>                 ac->int_mask |= WATERMARK;
+> -               if (FIFO_MODE(pdata->fifo_mode) == 0)
+> +               if (FIFO_MODE(pdata->fifo_mode) == FIFO_BYPASS)
 
-I generally agree, and this is also why I held up sending patches for the
--Wformat warnings until you brought those up. I also frequently send
-patches for recently introduced warnings, which tend to have a better
-chance of getting reviewed by the person that just introduced the code,
-to catch this kind of mistake in my patches.
+This is better, not because of GCC, but it makes sense logically; 0 is
+not a special value here.
 
-I also regularly run into cases where I send a correct patch and find
-that another broken patch has been applied the following day ;-)
+Still, I am not sure that GCC is being that helpful here. Checking
+result of shift for 0/non 0 with "!" is very common pattern.
 
-> The *intent* of that code was to return zero for the CAP_SYS_ADMIN.
-> But the code has never done that in its lifetime and nobody ever
-> noticed, so clearly the code shouldn't even have tried.
+Thanks.
 
-Makes sense, yes. In this case, the review process has failed as
-well, as one of the maintainers even gave an Ack on the wrong patch,
-and then the patch got dropped without any feedback.
-
-        Arnd
+-- 
+Dmitry
