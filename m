@@ -1,64 +1,36 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
 Subject: Re: [PATCH 14/14] [media] fix warning on v4l2_subdev_call() result
  interpreted as bool
-Date: Fri, 14 Jul 2017 15:41:32 +0300
-Message-ID: <20170714124132.u3fzpetbh3b7gj7f@mwanda>
+Date: Fri, 14 Jul 2017 15:55:26 +0300
+Message-ID: <20170714125525.kjemhcn4poon6r3i@mwanda>
 References: <20170714092540.1217397-1-arnd@arndb.de>
  <20170714093938.1469319-1-arnd@arndb.de>
+ <20170714120512.ioe67nnloqivtbr7@mwanda>
+ <CAK8P3a0f84OPcCK1r3P9inGYDJC2KaAO4mjE2vn+vCws-oo_bw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
 Content-Disposition: inline
-In-Reply-To: <20170714093938.1469319-1-arnd@arndb.de>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <CAK8P3a0f84OPcCK1r3P9inGYDJC2KaAO4mjE2vn+vCws-oo_bw@mail.gmail.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
 To: Arnd Bergmann <arnd@arndb.de>
-Cc: devel@driverdev.osuosl.org, linux-renesas-soc@vger.kernel.org, linux-media@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Daeseok Youn <daeseok.youn@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, adi-buildroot-devel@lists.sourceforge.net, Hans Verkuil <hverkuil@xs4all.nl>, linux-ide@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>, Niklas =?iso-8859-1?Q?S=F6derlund?= <niklas.soderlund@ragnatech.se>, Tejun Heo <tj@kernel.org>, akpm@linux-foundation.org, Mauro Carvalho Chehab <mchehab@kernel.org>, Robert Jarzmik <robert.jarzmik@free.fr>, linux-arm-kernel@lists.infradead.org, Alan Cox <alan@linux.intel.com>
+Cc: devel@driverdev.osuosl.org, Hans Verkuil <hverkuil@xs4all.nl>, Alan Cox <alan@linux.intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Daeseok Youn <daeseok.youn@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, dri-devel <dri-devel@lists.freedesktop.org>, adi-buildroot-devel@lists.sourceforge.net, Linux-Renesas <linux-renesas-soc@vger.kernel.org>, IDE-ML <linux-ide@vger.kernel.org>, Robert Jarzmik <robert.jarzmik@free.fr>, Linux ARM <linux-arm-kernel@lists.infradead.org>, Niklas =?iso-8859-1?Q?S=F6derlund?= <niklas.soderlund@ragnatech.se>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Mauro Carvalho Chehab <mchehab@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, Linux Media Mailing List <linux-media@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-T24gRnJpLCBKdWwgMTQsIDIwMTcgYXQgMTE6MzY6NTZBTSArMDIwMCwgQXJuZCBCZXJnbWFubiB3
-cm90ZToKPiBAQCAtMTE1OCw3ICsxMTU4LDggQEAgc3RhdGljIHZvaWQgY2NkY19jb25maWd1cmUo
-c3RydWN0IGlzcF9jY2RjX2RldmljZSAqY2NkYykKPiAgCSAqLwo+ICAJZm10X3NyYy5wYWQgPSBw
-YWQtPmluZGV4Owo+ICAJZm10X3NyYy53aGljaCA9IFY0TDJfU1VCREVWX0ZPUk1BVF9BQ1RJVkU7
-Cj4gLQlpZiAoIXY0bDJfc3ViZGV2X2NhbGwoc2Vuc29yLCBwYWQsIGdldF9mbXQsIE5VTEwsICZm
-bXRfc3JjKSkgewo+ICsJcmV0ID0gdjRsMl9zdWJkZXZfY2FsbChzZW5zb3IsIHBhZCwgZ2V0X2Zt
-dCwgTlVMTCwgJmZtdF9zcmMpOwo+ICsJaWYgKCFyZXQpIHsKPiAgCQlmbXRfaW5mbyA9IG9tYXAz
-aXNwX3ZpZGVvX2Zvcm1hdF9pbmZvKGZtdF9zcmMuZm9ybWF0LmNvZGUpOwo+ICAJCWRlcHRoX2lu
-ID0gZm10X2luZm8tPndpZHRoOwo+ICAJfQoKSXMgdGhlIG9yaWdpbmFsIGNvZGUgYnVnZ3k/Cgpt
-ZWRpYS9wbGF0Zm9ybS9vbWFwM2lzcC9pc3BjY2RjLmMKICAxMTU2ICAgICAgICAgIC8qIENvbXB1
-dGUgdGhlIGxhbmUgc2hpZnRlciBzaGlmdCB2YWx1ZSBhbmQgZW5hYmxlIHRoZSBicmlkZ2Ugd2hl
-biB0aGUKICAxMTU3ICAgICAgICAgICAqIGlucHV0IGZvcm1hdCBpcyBhIG5vbi1CVC42NTYgWVVW
-IHZhcmlhbnQuCiAgMTE1OCAgICAgICAgICAgKi8KICAxMTU5ICAgICAgICAgIGZtdF9zcmMucGFk
-ID0gcGFkLT5pbmRleDsKICAxMTYwICAgICAgICAgIGZtdF9zcmMud2hpY2ggPSBWNEwyX1NVQkRF
-Vl9GT1JNQVRfQUNUSVZFOwogIDExNjEgICAgICAgICAgaWYgKCF2NGwyX3N1YmRldl9jYWxsKHNl
-bnNvciwgcGFkLCBnZXRfZm10LCBOVUxMLCAmZm10X3NyYykpIHsKICAxMTYyICAgICAgICAgICAg
-ICAgICAgZm10X2luZm8gPSBvbWFwM2lzcF92aWRlb19mb3JtYXRfaW5mbyhmbXRfc3JjLmZvcm1h
-dC5jb2RlKTsKICAxMTYzICAgICAgICAgICAgICAgICAgZGVwdGhfaW4gPSBmbXRfaW5mby0+d2lk
-dGg7CiAgMTE2NCAgICAgICAgICB9CgpJZiB2NGwyX3N1YmRldl9jYWxsKCkgdGhlbiBkZXB0aF9p
-biBpcyB6ZXJvLgoKICAxMTY1ICAKICAxMTY2ICAgICAgICAgIGZtdF9pbmZvID0gb21hcDNpc3Bf
-dmlkZW9fZm9ybWF0X2luZm8oZm9ybWF0LT5jb2RlKTsKICAxMTY3ICAgICAgICAgIGRlcHRoX291
-dCA9IGZtdF9pbmZvLT53aWR0aDsKICAxMTY4ICAgICAgICAgIHNoaWZ0ID0gZGVwdGhfaW4gLSBk
-ZXB0aF9vdXQ7CiAgICAgICAgICAgICAgICBeXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eXl5eCgpI
-b3cgZG8gd2Uga25vdyB0aGF0IHRoaXMgc3VidHJhY3Rpb24gZG9lc24ndCBzZXQgInNoaWZ0IiB0
-byBhIHZlcnkgaGlnaApwb3NpdGl2ZT8KCiAgMTE2OSAgCiAgMTE3MCAgICAgICAgICBpZiAoY2Nk
-Yy0+YnQ2NTYpCiAgMTE3MSAgICAgICAgICAgICAgICAgIGJyaWRnZSA9IElTUENUUkxfUEFSX0JS
-SURHRV9ESVNBQkxFOwogIDExNzIgICAgICAgICAgZWxzZSBpZiAoZm10X2luZm8tPmNvZGUgPT0g
-TUVESUFfQlVTX0ZNVF9ZVVlWOF8yWDgpCiAgMTE3MyAgICAgICAgICAgICAgICAgIGJyaWRnZSA9
-IElTUENUUkxfUEFSX0JSSURHRV9MRU5ESUFOOwogIDExNzQgICAgICAgICAgZWxzZSBpZiAoZm10
-X2luZm8tPmNvZGUgPT0gTUVESUFfQlVTX0ZNVF9VWVZZOF8yWDgpCiAgMTE3NSAgICAgICAgICAg
-ICAgICAgIGJyaWRnZSA9IElTUENUUkxfUEFSX0JSSURHRV9CRU5ESUFOOwogIDExNzYgICAgICAg
-ICAgZWxzZQogIDExNzcgICAgICAgICAgICAgICAgICBicmlkZ2UgPSBJU1BDVFJMX1BBUl9CUklE
-R0VfRElTQUJMRTsKICAxMTc4ICAKICAxMTc5ICAgICAgICAgIG9tYXAzaXNwX2NvbmZpZ3VyZV9i
-cmlkZ2UoaXNwLCBjY2RjLT5pbnB1dCwgcGFyY2ZnLCBzaGlmdCwgYnJpZGdlKTsKCnJlZ2FyZHMs
-CmRhbiBjYXJwZW50ZXIKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9w
-Lm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1k
-ZXZlbAo=
+Ah...  I see why it's complaining about these ones in particular...
+
+I don't agree with it as a static analysis dev, and I don't like the
+changes too much.  But since it's only generating a hand full of
+warnings then I don't care.
+
+regards,
+dan carpenter
