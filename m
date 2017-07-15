@@ -1,41 +1,59 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: sata_rcar: add gen[23] fallback compatibility
- strings
-Date: Sat, 15 Jul 2017 07:09:10 -0400
-Message-ID: <20170715110909.GF2969123@devbig577.frc2.facebook.com>
-References: <1499773460-8930-1-git-send-email-horms+renesas@verge.net.au>
+From: Jonathan Cameron <jic23@kernel.org>
+Subject: Re: [PATCH 10/14] staging:iio:resolver:ad2s1210 fix negative
+ IIO_ANGL_VEL read
+Date: Sat, 15 Jul 2017 12:42:04 +0100
+Message-ID: <20170715124204.0508d7f2@kernel.org>
+References: <20170714092540.1217397-1-arnd@arndb.de>
+        <20170714093129.1366900-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-renesas-soc-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1499773460-8930-1-git-send-email-horms+renesas@verge.net.au>
-Sender: linux-renesas-soc-owner@vger.kernel.org
-To: Simon Horman <horms+renesas@verge.net.au>
-Cc: linux-ide@vger.kernel.org, linux-renesas-soc@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>, Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org, Geert Uytterhoeven <geert+renesas@glider.be>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:52250 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751172AbdGOLmI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sat, 15 Jul 2017 07:42:08 -0400
+In-Reply-To: <20170714093129.1366900-1-arnd@arndb.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-kernel@vger.kernel.org, Lars-Peter Clausen <lars@metafoo.de>, Michael Hennerich <Michael.Hennerich@analog.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Guenter Roeck <linux@roeck-us.net>, linux-ide@vger.kernel.org, linux-media@vger.kernel.org, akpm@linux-foundation.org, dri-devel@lists.freedesktop.org, stable@vger.kernel.org, Hartmut Knaack <knaack.h@gmx.de>, Peter Meerwald-Stadler <pmeerw@pmeerw.net>, linux-iio@vger.kernel.org, devel@driverdev.osuosl.org
 
-On Tue, Jul 11, 2017 at 01:44:20PM +0200, Simon Horman wrote:
-> Add fallback compatibility string for R-Car Gen 2 and 3.
-> 
-> In the case of Renesas R-Car hardware we know that there are generations of
-> SoCs, e.g. Gen 1 and 2. But beyond that its not clear what the relationship
-> between IP blocks might be. For example, I believe that r8a7790 is older
-> than r8a7791 but that doesn't imply that the latter is a descendant of the
-> former or vice versa.
-> 
-> We can, however, by examining the documentation and behaviour of the
-> hardware at run-time observe that the current driver implementation appears
-> to be compatible with the IP blocks on SoCs within a given generation.
-> 
-> For the above reasons and convenience when enabling new SoCs a
-> per-generation fallback compatibility string scheme being adopted for
-> drivers for Renesas SoCs.
-> 
-> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+On Fri, 14 Jul 2017 11:31:03 +0200
+Arnd Bergmann <arnd@arndb.de> wrote:
 
-Applied to libata/for-4.13-fixes.
+> gcc-7 points out an older regression:
+> 
+> drivers/staging/iio/resolver/ad2s1210.c: In function 'ad2s1210_read_raw':
+> drivers/staging/iio/resolver/ad2s1210.c:515:42: error: '<<' in boolean context, did you mean '<' ? [-Werror=int-in-bool-context]
+> 
+> The original code had 'unsigned short' here, but incorrectly got
+> converted to 'bool'. This reverts the regression and uses a normal
+> type instead.
+> 
+> Fixes: 29148543c521 ("staging:iio:resolver:ad2s1210 minimal chan spec conversion.")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Thanks Arnd,
 
-Thanks.
+Applied to the fixes-togreg branch of iio.git.
 
--- 
-tejun
+Jonathan
+> ---
+>  drivers/staging/iio/resolver/ad2s1210.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/staging/iio/resolver/ad2s1210.c b/drivers/staging/iio/resolver/ad2s1210.c
+> index a6a8393d6664..3e00df74b18c 100644
+> --- a/drivers/staging/iio/resolver/ad2s1210.c
+> +++ b/drivers/staging/iio/resolver/ad2s1210.c
+> @@ -472,7 +472,7 @@ static int ad2s1210_read_raw(struct iio_dev *indio_dev,
+>  			     long m)
+>  {
+>  	struct ad2s1210_state *st = iio_priv(indio_dev);
+> -	bool negative;
+> +	u16 negative;
+>  	int ret = 0;
+>  	u16 pos;
+>  	s16 vel;
+
