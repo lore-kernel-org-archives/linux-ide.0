@@ -1,59 +1,61 @@
-From: Jonathan Cameron <jic23@kernel.org>
-Subject: Re: [PATCH 10/14] staging:iio:resolver:ad2s1210 fix negative
- IIO_ANGL_VEL read
-Date: Sat, 15 Jul 2017 12:42:04 +0100
-Message-ID: <20170715124204.0508d7f2@kernel.org>
-References: <20170714092540.1217397-1-arnd@arndb.de>
-        <20170714093129.1366900-1-arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52250 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751172AbdGOLmI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sat, 15 Jul 2017 07:42:08 -0400
-In-Reply-To: <20170714093129.1366900-1-arnd@arndb.de>
-Sender: linux-ide-owner@vger.kernel.org
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+Subject: [PATCH 08/11] ata: Drop unnecessary static
+Date: Sat, 15 Jul 2017 22:07:43 +0200
+Message-ID: <1500149266-32357-9-git-send-email-Julia.Lawall@lip6.fr>
+References: <1500149266-32357-1-git-send-email-Julia.Lawall@lip6.fr>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1500149266-32357-1-git-send-email-Julia.Lawall@lip6.fr>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Walleij <linus.walleij@linaro.org>
+Cc: keescook@chromium.org, kernel-janitors@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-kernel@vger.kernel.org, Lars-Peter Clausen <lars@metafoo.de>, Michael Hennerich <Michael.Hennerich@analog.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Guenter Roeck <linux@roeck-us.net>, linux-ide@vger.kernel.org, linux-media@vger.kernel.org, akpm@linux-foundation.org, dri-devel@lists.freedesktop.org, stable@vger.kernel.org, Hartmut Knaack <knaack.h@gmx.de>, Peter Meerwald-Stadler <pmeerw@pmeerw.net>, linux-iio@vger.kernel.org, devel@driverdev.osuosl.org
 
-On Fri, 14 Jul 2017 11:31:03 +0200
-Arnd Bergmann <arnd@arndb.de> wrote:
+Drop static on a local variable, when the variable is initialized before
+any possible use.  Thus, the static has no benefit.
 
-> gcc-7 points out an older regression:
-> 
-> drivers/staging/iio/resolver/ad2s1210.c: In function 'ad2s1210_read_raw':
-> drivers/staging/iio/resolver/ad2s1210.c:515:42: error: '<<' in boolean context, did you mean '<' ? [-Werror=int-in-bool-context]
-> 
-> The original code had 'unsigned short' here, but incorrectly got
-> converted to 'bool'. This reverts the regression and uses a normal
-> type instead.
-> 
-> Fixes: 29148543c521 ("staging:iio:resolver:ad2s1210 minimal chan spec conversion.")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Thanks Arnd,
+The semantic patch that fixes this problem is as follows:
+(http://coccinelle.lip6.fr/)
 
-Applied to the fixes-togreg branch of iio.git.
+// <smpl>
+@bad exists@
+position p;
+identifier x;
+type T;
+@@
+static T x@p;
+...
+x = <+...x...+>
 
-Jonathan
-> ---
->  drivers/staging/iio/resolver/ad2s1210.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/staging/iio/resolver/ad2s1210.c b/drivers/staging/iio/resolver/ad2s1210.c
-> index a6a8393d6664..3e00df74b18c 100644
-> --- a/drivers/staging/iio/resolver/ad2s1210.c
-> +++ b/drivers/staging/iio/resolver/ad2s1210.c
-> @@ -472,7 +472,7 @@ static int ad2s1210_read_raw(struct iio_dev *indio_dev,
->  			     long m)
->  {
->  	struct ad2s1210_state *st = iio_priv(indio_dev);
-> -	bool negative;
-> +	u16 negative;
->  	int ret = 0;
->  	u16 pos;
->  	s16 vel;
+@@
+identifier x;
+expression e;
+type T;
+position p != bad.p;
+@@
+-static
+ T x@p;
+ ... when != x
+     when strict
+?x = e;
+// </smpl>
 
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
+---
+These patches are all independent of each other.
+
+ drivers/ata/sata_gemini.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff -u -p a/drivers/ata/sata_gemini.c b/drivers/ata/sata_gemini.c
+--- a/drivers/ata/sata_gemini.c
++++ b/drivers/ata/sata_gemini.c
+@@ -305,7 +305,7 @@ static int gemini_sata_probe(struct plat
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = dev->of_node;
+ 	struct sata_gemini *sg;
+-	static struct regmap *map;
++	struct regmap *map;
+ 	struct resource *res;
+ 	enum gemini_muxmode muxmode;
+ 	u32 gmode;
