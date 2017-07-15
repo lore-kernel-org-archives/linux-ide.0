@@ -1,41 +1,52 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH, RESEND 02/14] ata: avoid gcc-7 warning in
- ata_timing_quantize
-Date: Sat, 15 Jul 2017 06:56:01 -0400
-Message-ID: <20170715105601.GC2969123@devbig577.frc2.facebook.com>
-References: <20170714092540.1217397-1-arnd@arndb.de>
- <20170714092540.1217397-3-arnd@arndb.de>
+Subject: Re: Lots of new warnings with gcc-7.1.1
+Date: Sat, 15 Jul 2017 07:03:16 -0400
+Message-ID: <20170715110316.GD2969123@devbig577.frc2.facebook.com>
+References: <CA+55aFzXz-PxKSJP=hfHD+mfCX4M6+HMacWMkDz7KB8-3y55qw@mail.gmail.com>
+ <848b3f21-9516-8a66-e4b3-9056ce38d6f6@roeck-us.net>
+ <CA+55aFyKpezj3oHwtBShyf9x-DJNAGQhrq55iVGM42eWKQtP3w@mail.gmail.com>
+ <CA+55aFx5mCk+nzDG+gGzDUqE4gzJVERL_oO+PN-PA6oKaUhCpg@mail.gmail.com>
+ <CAK8P3a2itguODKUNtw8m-7RReUkyEqk8fHYRLa-ZjJYjwwhYdg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-media-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170714092540.1217397-3-arnd@arndb.de>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <CAK8P3a2itguODKUNtw8m-7RReUkyEqk8fHYRLa-ZjJYjwwhYdg@mail.gmail.com>
+Sender: linux-media-owner@vger.kernel.org
 To: Arnd Bergmann <arnd@arndb.de>
-Cc: Damien Le Moal <damien.lemoal@wdc.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, Hannes Reinecke <hare@suse.de>, Adam Manzanares <adam.manzanares@wdc.com>, akpm@linux-foundation.org, Mauro Carvalho Chehab <mchehab@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, linux-media@vger.kernel.org
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, Jean Delvare <jdelvare@suse.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Sathya Prakash <sathya.prakash@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, the arch/x86 maintainers <x86@kernel.org>, xen-devel <xen-devel@lists.xenproject.org>, linux-block <linux-block@vger.kernel.org>, Linux Media Mailing List <linux-media@vger.kernel.org>, IDE-ML <linux-ide@vger.kernel.org>, "linux-fbdev@vger.kernel.org" <linux-fbdev@vger.kernel.org>, Network Development <netdev@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-T24gRnJpLCBKdWwgMTQsIDIwMTcgYXQgMTE6MjU6MTRBTSArMDIwMCwgQXJuZCBCZXJnbWFubiB3
-cm90ZToKPiBnY2MtNyB3YXJucyBhYm91dCB0aGUgcmVzdWx0IG9mIGEgY29uc3RhbnQgbXVsdGlw
-bGljYXRpb24gdXNlZCBhcwo+IGEgYm9vbGVhbjoKPiAKPiBkcml2ZXJzL2F0YS9saWJhdGEtY29y
-ZS5jOiBJbiBmdW5jdGlvbiAnYXRhX3RpbWluZ19xdWFudGl6ZSc6Cj4gZHJpdmVycy9hdGEvbGli
-YXRhLWNvcmUuYzozMTY0OjMwOiB3YXJuaW5nOiAnKicgaW4gYm9vbGVhbiBjb250ZXh0LCBzdWdn
-ZXN0ICcmJicgaW5zdGVhZCBbLVdpbnQtaW4tYm9vbC1jb250ZXh0XQo+IAo+IFRoaXMgc2xpZ2h0
-bHkgcmVhcnJhbmdlcyB0aGUgbWFjcm8gdG8gc2ltcGxpZnkgdGhlIGNvZGUgYW5kIGF2b2lkCj4g
-dGhlIHdhcm5pbmcgYXQgdGhlIHNhbWUgdGltZS4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBBcm5kIEJl
-cmdtYW5uIDxhcm5kQGFybmRiLmRlPgoKSWYgdGhlIHdob2xlIHNlcmllcyB3aWxsIGJlIHJvdXRl
-ZCB0b2dldGhlciwKCiBBY2tlZC1ieTogVGVqdW4gSGVvIDx0akBrZXJuZWwub3JnPgoKSWYgbm90
-LCBwbGVhc2UgbGV0IG1lIGtub3cuICBJJ2xsIHB1c2ggaXQgdGhyb3VnaApsaWJhdGEvZm9yLTQu
-MTMtZml4ZXMuCgpUaGFua3MhCgotLSAKdGVqdW4KX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX18KZHJpLWRldmVsIG1haWxpbmcgbGlzdApkcmktZGV2ZWxAbGlz
-dHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4v
-bGlzdGluZm8vZHJpLWRldmVsCg==
+Hello,
+
+On Wed, Jul 12, 2017 at 03:31:02PM +0200, Arnd Bergmann wrote:
+> > We also have about a bazillion
+> >
+> >     warning: ‘*’ in boolean context, suggest ‘&&’ instead
+> >
+> > warnings in drivers/ata/libata-core.c, all due to a single macro that
+> > uses a pattern that gcc-7.1.1 doesn't like. The warning looks a bit
+> > debatable, but I suspect the macro could easily be changed too.
+> >
+> > Tejun, would you hate just moving the "multiply by 1000" part _into_
+> > that EZ() macro? Something like the attached (UNTESTED!) patch?
+> 
+> Tejun applied an almost identical patch of mine a while ago, but it seems to
+> have gotten lost in the meantime in some rebase:
+
+Yeah, I was scratching my head remembering your patch.  Sorry about
+that.  It should have been routed through for-4.12-fixes.
+
+> https://patchwork.kernel.org/patch/9721397/
+> https://patchwork.kernel.org/patch/9721399/
+> 
+> I guess I should have resubmitted the second patch with the suggested
+> improvement.
+
+The new one looks good to me.
+
+Thanks.
+
+-- 
+tejun
