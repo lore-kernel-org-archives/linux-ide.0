@@ -1,64 +1,135 @@
-From: Sinclair Yeh <syeh@vmware.com>
-Subject: Re: [PATCH, RESEND 03/14] drm/vmwgfx: avoid gcc-7 parentheses warning
-Date: Mon, 17 Jul 2017 15:15:49 +0200
-Message-ID: <20170717131548.GA15306@pc24.home>
+From: Hans Verkuil <hverkuil@xs4all.nl>
+Subject: Re: [PATCH 14/14] [media] fix warning on v4l2_subdev_call() result
+ interpreted as bool
+Date: Mon, 17 Jul 2017 15:45:08 +0200
+Message-ID: <f57e08d9-0984-b67c-c64b-c7e0542d0361@xs4all.nl>
 References: <20170714092540.1217397-1-arnd@arndb.de>
- <20170714092540.1217397-4-arnd@arndb.de>
- <CA+55aFw9xE_+qnx1=6FbU8HJ23+Go1iS5bxDLOHefETgn5Wx6w@mail.gmail.com>
- <CA+55aFw+DTc_czppqfbqY+7kq6Uej=Nf1Wxf1HutRw4tRxC85Q@mail.gmail.com>
- <CAK8P3a2QEOuQXy51q-EqzTh3STKTDHy2V-twi5nFPbuzOSEDkQ@mail.gmail.com>
+ <20170714093938.1469319-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-Content-Disposition: inline
-In-Reply-To: <CAK8P3a2QEOuQXy51q-EqzTh3STKTDHy2V-twi5nFPbuzOSEDkQ@mail.gmail.com>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Thomas Hellstrom <thellstrom@vmware.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>, IDE-ML <linux-ide@vger.kernel.org>, VMware Graphics <linux-graphics-maintainer@vmware.com>, Tejun Heo <tj@kernel.org>, Brian Paul <brianp@vmware.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, Linux Media Mailing List <linux-media@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from lb3-smtp-cloud2.xs4all.net ([194.109.24.29]:50137 "EHLO
+        lb3-smtp-cloud2.xs4all.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751311AbdGQNpO (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 17 Jul 2017 09:45:14 -0400
+In-Reply-To: <20170714093938.1469319-1-arnd@arndb.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, Mauro Carvalho Chehab <mchehab@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Guenter Roeck <linux@roeck-us.net>, linux-ide@vger.kernel.org, linux-media@vger.kernel.org, akpm@linux-foundation.org, dri-devel@lists.freedesktop.org, =?UTF-8?Q?Niklas_S=c3=b6derlund?= <niklas.soderlund@ragnatech.se>, Robert Jarzmik <robert.jarzmik@free.fr>, Daeseok Youn <daeseok.youn@gmail.com>, Alan Cox <alan@linux.intel.com>, adi-buildroot-devel@lists.sourceforge.net, linux-renesas-soc@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devel@driverdev.osuosl.org
 
-T24gRnJpLCBKdWwgMTQsIDIwMTcgYXQgMTA6Mjg6MjlQTSArMDIwMCwgQXJuZCBCZXJnbWFubiB3
-cm90ZToKPiBPbiBGcmksIEp1bCAxNCwgMjAxNyBhdCA5OjIzIFBNLCBMaW51cyBUb3J2YWxkcwo+
-IDx0b3J2YWxkc0BsaW51eC1mb3VuZGF0aW9uLm9yZz4gd3JvdGU6Cj4gPiBPbiBGcmksIEp1bCAx
-NCwgMjAxNyBhdCAxMjoyMSBQTSwgTGludXMgVG9ydmFsZHMKPiA+IDx0b3J2YWxkc0BsaW51eC1m
-b3VuZGF0aW9uLm9yZz4gd3JvdGU6Cj4gPj4KPiA+PiBOQUsuIFRoaXMgdGFrZXMgdW5pbnRlbnRp
-b25hbGx5IGluc2FuZSBjb2RlIGFuZCB0dXJucyBpdCBpbnRlbnRpb25hbGx5Cj4gPj4gaW5zYW5l
-LiBBbnkgbm9uLXplcm8gcmV0dXJuIGlzIGNvbnNpZGVyZWQgYW4gZXJyb3IuCj4gPj4KPiA+PiBU
-aGUgcmlnaHQgZml4IGlzIGFsbW9zdCBjZXJ0YWlubHkgdG8ganVzdCByZXR1cm4gLUVJTlZBTCB1
-bmNvbmRpdGlvbmFsbHkuCgpDb3JyZWN0LiAgSSdsbCBmaXggdGhpcy4KCj4gPgo+ID4gQnR3LCB0
-aGlzIGlzIHdoeSBJIGhhdGUgY29tcGlsZXIgd2FybmluZyBmaXggcGF0Y2ggc2VyaWVzLiBFdmVu
-IHdoZW4KPiA+IHRoZXkgZG9uJ3QgYWN0dWFsbHkgYnJlYWsgdGhlIGNvZGUgKGFuZCBzb21ldGlt
-ZXMgdGhleSBkbyB0aGF0IHRvbyksCj4gPiB0aGV5IGNhbiBhY3R1YWxseSBlbmQgdXAgbWFraW5n
-IHRoZSBjb2RlIHdvcnNlLgo+IAo+IEkgZ2VuZXJhbGx5IGFncmVlLCBhbmQgdGhpcyBpcyBhbHNv
-IHdoeSBJIGhlbGQgdXAgc2VuZGluZyBwYXRjaGVzIGZvciB0aGUKPiAtV2Zvcm1hdCB3YXJuaW5n
-cyB1bnRpbCB5b3UgYnJvdWdodCB0aG9zZSB1cC4gSSBhbHNvIGZyZXF1ZW50bHkgc2VuZAo+IHBh
-dGNoZXMgZm9yIHJlY2VudGx5IGludHJvZHVjZWQgd2FybmluZ3MsIHdoaWNoIHRlbmQgdG8gaGF2
-ZSBhIGJldHRlcgo+IGNoYW5jZSBvZiBnZXR0aW5nIHJldmlld2VkIGJ5IHRoZSBwZXJzb24gdGhh
-dCBqdXN0IGludHJvZHVjZWQgdGhlIGNvZGUsCj4gdG8gY2F0Y2ggdGhpcyBraW5kIG9mIG1pc3Rh
-a2UgaW4gbXkgcGF0Y2hlcy4KPiAKPiBJIGFsc28gcmVndWxhcmx5IHJ1biBpbnRvIGNhc2VzIHdo
-ZXJlIEkgc2VuZCBhIGNvcnJlY3QgcGF0Y2ggYW5kIGZpbmQKPiB0aGF0IGFub3RoZXIgYnJva2Vu
-IHBhdGNoIGhhcyBiZWVuIGFwcGxpZWQgdGhlIGZvbGxvd2luZyBkYXkgOy0pCj4gCj4gPiBUaGUg
-KmludGVudCogb2YgdGhhdCBjb2RlIHdhcyB0byByZXR1cm4gemVybyBmb3IgdGhlIENBUF9TWVNf
-QURNSU4uCj4gPiBCdXQgdGhlIGNvZGUgaGFzIG5ldmVyIGRvbmUgdGhhdCBpbiBpdHMgbGlmZXRp
-bWUgYW5kIG5vYm9keSBldmVyCj4gPiBub3RpY2VkLCBzbyBjbGVhcmx5IHRoZSBjb2RlIHNob3Vs
-ZG4ndCBldmVuIGhhdmUgdHJpZWQuCj4gCj4gTWFrZXMgc2Vuc2UsIHllcy4gSW4gdGhpcyBjYXNl
-LCB0aGUgcmV2aWV3IHByb2Nlc3MgaGFzIGZhaWxlZCBhcwo+IHdlbGwsIGFzIG9uZSBvZiB0aGUg
-bWFpbnRhaW5lcnMgZXZlbiBnYXZlIGFuIEFjayBvbiB0aGUgd3JvbmcgcGF0Y2gsCj4gYW5kIHRo
-ZW4gdGhlIHBhdGNoIGdvdCBkcm9wcGVkIHdpdGhvdXQgYW55IGZlZWRiYWNrLgoKSSd2ZSBkb25l
-IHNvbWUgZGlnZ2luZyBhbmQgbm90aWNlZCB0aGF0IG15IC1maXhlcyBwdWxsIHJlcXVlc3QKZGlk
-bid0IGdldCBwaWNrZWQgdXAgbGFzdCBEZWNlbWJlci4gIEl0J3MgbW9zdCBsaWtlbHkgYmVjYXVz
-ZSBJCmluaXRpYWxseSBtYWRlIGFuIGFkZHJlc3MgdHlwbyBpbiB0aGUgb3JpZ2luYWwgcmVxdWVz
-dCwgYW5kIHRoZW4KZm9sbG93ZWQgaXQgdXAgd2l0aCBhIGRpcmVjdCBlbWFpbCB3aXRoIHRoZSBj
-b3JyZWN0IGFkZHJlc3MuCgpTaW5jbGFpcgoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3Rz
-LmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xp
-c3RpbmZvL2RyaS1kZXZlbAo=
+On 14/07/17 11:36, Arnd Bergmann wrote:
+> v4l2_subdev_call is a macro returning whatever the callback return
+> type is, usually 'int'. With gcc-7 and ccache, this can lead to
+> many wanings like:
+> 
+> media/platform/pxa_camera.c: In function 'pxa_mbus_build_fmts_xlate':
+> media/platform/pxa_camera.c:766:27: error: ?: using integer constants in boolean context [-Werror=int-in-bool-context]
+>   while (!v4l2_subdev_call(subdev, pad, enum_mbus_code, NULL, &code)) {
+> media/atomisp/pci/atomisp2/atomisp_cmd.c: In function 'atomisp_s_ae_window':
+> media/atomisp/pci/atomisp2/atomisp_cmd.c:6414:52: error: ?: using integer constants in boolean context [-Werror=int-in-bool-context]
+>   if (v4l2_subdev_call(isp->inputs[asd->input_curr].camera,
+> 
+> The best workaround I could come up with is to change all the
+> callers that use the return code from v4l2_subdev_call() in an
+> 'if' or 'while' condition.
+> 
+> In case of simple 'if' checks, adding a temporary variable is
+> usually ok, and sometimes this can be used to propagate or
+> print an error code, so I do that.
+> 
+> For the 'while' loops, I ended up adding an otherwise useless
+> comparison with zero, which unfortunately makes the code a little
+> uglied.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/media/pci/cx18/cx18-ioctl.c                      |  6 ++++--
+>  drivers/media/pci/saa7146/mxb.c                          |  5 +++--
+>  drivers/media/platform/atmel/atmel-isc.c                 |  4 ++--
+>  drivers/media/platform/atmel/atmel-isi.c                 |  4 ++--
+>  drivers/media/platform/blackfin/bfin_capture.c           |  4 ++--
+>  drivers/media/platform/omap3isp/ispccdc.c                |  5 +++--
+>  drivers/media/platform/pxa_camera.c                      |  3 ++-
+>  drivers/media/platform/rcar-vin/rcar-core.c              |  2 +-
+>  drivers/media/platform/rcar-vin/rcar-dma.c               |  4 +++-
+>  drivers/media/platform/soc_camera/soc_camera.c           |  4 ++--
+>  drivers/media/platform/stm32/stm32-dcmi.c                |  4 ++--
+>  drivers/media/platform/ti-vpe/cal.c                      |  6 ++++--
+>  drivers/staging/media/atomisp/pci/atomisp2/atomisp_cmd.c | 13 +++++++------
+>  13 files changed, 37 insertions(+), 27 deletions(-)
+> 
+> diff --git a/drivers/media/pci/cx18/cx18-ioctl.c b/drivers/media/pci/cx18/cx18-ioctl.c
+> index 80b902b12a78..1803f28fc501 100644
+> --- a/drivers/media/pci/cx18/cx18-ioctl.c
+> +++ b/drivers/media/pci/cx18/cx18-ioctl.c
+> @@ -188,6 +188,7 @@ static int cx18_g_fmt_sliced_vbi_cap(struct file *file, void *fh,
+>  {
+>  	struct cx18 *cx = fh2id(fh)->cx;
+>  	struct v4l2_sliced_vbi_format *vbifmt = &fmt->fmt.sliced;
+> +	int ret;
+>  
+>  	/* sane, V4L2 spec compliant, defaults */
+>  	vbifmt->reserved[0] = 0;
+> @@ -201,8 +202,9 @@ static int cx18_g_fmt_sliced_vbi_cap(struct file *file, void *fh,
+>  	 * digitizer/slicer.  Note, cx18_av_vbi() wipes the passed in
+>  	 * fmt->fmt.sliced under valid calling conditions
+>  	 */
+> -	if (v4l2_subdev_call(cx->sd_av, vbi, g_sliced_fmt, &fmt->fmt.sliced))
+> -		return -EINVAL;
+> +	ret = v4l2_subdev_call(cx->sd_av, vbi, g_sliced_fmt, &fmt->fmt.sliced);
+> +	if (ret)
+> +		return ret;
+
+Please keep the -EINVAL here. I can't be 100% certain that returning 'ret' wouldn't
+break something.
+
+>  
+>  	vbifmt->service_set = cx18_get_service_set(vbifmt);
+>  	return 0;
+
+<snip>
+
+> diff --git a/drivers/staging/media/atomisp/pci/atomisp2/atomisp_cmd.c b/drivers/staging/media/atomisp/pci/atomisp2/atomisp_cmd.c
+> index 97093baf28ac..fe56a037f065 100644
+> --- a/drivers/staging/media/atomisp/pci/atomisp2/atomisp_cmd.c
+> +++ b/drivers/staging/media/atomisp/pci/atomisp2/atomisp_cmd.c
+> @@ -6405,19 +6405,20 @@ int atomisp_s_ae_window(struct atomisp_sub_device *asd,
+>  	struct atomisp_device *isp = asd->isp;
+>  	/* Coverity CID 298071 - initialzize struct */
+>  	struct v4l2_subdev_selection sel = { 0 };
+> +	int ret;
+>  
+>  	sel.r.left = arg->x_left;
+>  	sel.r.top = arg->y_top;
+>  	sel.r.width = arg->x_right - arg->x_left + 1;
+>  	sel.r.height = arg->y_bottom - arg->y_top + 1;
+>  
+> -	if (v4l2_subdev_call(isp->inputs[asd->input_curr].camera,
+> -			     pad, set_selection, NULL, &sel)) {
+> -		dev_err(isp->dev, "failed to call sensor set_selection.\n");
+> -		return -EINVAL;
+> -	}
+> +	ret = v4l2_subdev_call(isp->inputs[asd->input_curr].camera,
+> +			       pad, set_selection, NULL, &sel);
+> +	if (ret)
+> +		dev_err(isp->dev, "failed to call sensor set_selection: %d\n",
+> +			ret);
+
+Same here: just keep the 'return -EINVAL'.
+
+>  
+> -	return 0;
+> +	return ret;
+>  }
+>  
+>  int atomisp_flash_enable(struct atomisp_sub_device *asd, int num_frames)
+> 
+
+This is all very hackish, though. I'm not terribly keen on this patch. It's not
+clear to me *why* these warnings appear in your setup.
+
+Regards,
+
+	Hans
