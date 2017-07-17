@@ -1,8 +1,8 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
+From: Hans Verkuil <hverkuil@xs4all.nl>
 Subject: Re: [PATCH 14/14] [media] fix warning on v4l2_subdev_call() result
  interpreted as bool
-Date: Mon, 17 Jul 2017 17:28:17 +0300
-Message-ID: <20170717142817.gq7xnmj3ajkvpqhe@mwanda>
+Date: Mon, 17 Jul 2017 16:32:18 +0200
+Message-ID: <9624c37a-1118-7d4f-888e-f0de196e4c15@xs4all.nl>
 References: <20170714092540.1217397-1-arnd@arndb.de>
  <20170714093938.1469319-1-arnd@arndb.de>
  <f57e08d9-0984-b67c-c64b-c7e0542d0361@xs4all.nl>
@@ -11,7 +11,6 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
 In-Reply-To: <CAK8P3a1zBW_QuPtRFNwuVyE_ziySoV9_ebz4sD7Bya3eRoo8SA@mail.gmail.com>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
@@ -23,32 +22,84 @@ List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driver
 Errors-To: driverdev-devel-bounces@linuxdriverproject.org
 Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
 To: Arnd Bergmann <arnd@arndb.de>
-Cc: devel@driverdev.osuosl.org, Linux-Renesas <linux-renesas-soc@vger.kernel.org>, Linux Media Mailing List <linux-media@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Daeseok Youn <daeseok.youn@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, dri-devel <dri-devel@lists.freedesktop.org>, adi-buildroot-devel@lists.sourceforge.net, Hans Verkuil <hverkuil@xs4all.nl>, IDE-ML <linux-ide@vger.kernel.org>, Guenter Roeck <linux@roeck-us.net>, Niklas =?iso-8859-1?Q?S=F6derlund?= <niklas.soderlund@ragnatech.se>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Mauro Carvalho Chehab <mchehab@kernel.org>, Robert Jarzmik <robert.jarzmik@free.fr>, Linux ARM <linux-arm-kernel@lists.infradead.org>, Alan Cox <alan@linux.intel.com>
+Cc: devel@driverdev.osuosl.org, =?UTF-8?Q?Niklas_S=c3=b6derlund?= <niklas.soderlund@ragnatech.se>, Alan Cox <alan@linux.intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Robert Jarzmik <robert.jarzmik@free.fr>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, dri-devel <dri-devel@lists.freedesktop.org>, adi-buildroot-devel@lists.sourceforge.net, Linux-Renesas <linux-renesas-soc@vger.kernel.org>, IDE-ML <linux-ide@vger.kernel.org>, Linux ARM <linux-arm-kernel@lists.infradead.org>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Mauro Carvalho Chehab <mchehab@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Daeseok Youn <daeseok.youn@gmail.com>, Guenter Roeck <linux@roeck-us.net>, Linux Media Mailing List <linux-media@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Jul 17, 2017 at 04:26:23PM +0200, Arnd Bergmann wrote:
+On 17/07/17 16:26, Arnd Bergmann wrote:
 > On Mon, Jul 17, 2017 at 3:45 PM, Hans Verkuil <hverkuil@xs4all.nl> wrote:
-> > On 14/07/17 11:36, Arnd Bergmann wrote:
-> >> @@ -201,8 +202,9 @@ static int cx18_g_fmt_sliced_vbi_cap(struct file *file, void *fh,
-> >>        * digitizer/slicer.  Note, cx18_av_vbi() wipes the passed in
-> >>        * fmt->fmt.sliced under valid calling conditions
-> >>        */
-> >> -     if (v4l2_subdev_call(cx->sd_av, vbi, g_sliced_fmt, &fmt->fmt.sliced))
-> >> -             return -EINVAL;
-> >> +     ret = v4l2_subdev_call(cx->sd_av, vbi, g_sliced_fmt, &fmt->fmt.sliced);
-> >> +     if (ret)
-> >> +             return ret;
-> >
-> > Please keep the -EINVAL here. I can't be 100% certain that returning 'ret' wouldn't
-> > break something.
+>> On 14/07/17 11:36, Arnd Bergmann wrote:
+>>> @@ -201,8 +202,9 @@ static int cx18_g_fmt_sliced_vbi_cap(struct file *file, void *fh,
+>>>        * digitizer/slicer.  Note, cx18_av_vbi() wipes the passed in
+>>>        * fmt->fmt.sliced under valid calling conditions
+>>>        */
+>>> -     if (v4l2_subdev_call(cx->sd_av, vbi, g_sliced_fmt, &fmt->fmt.sliced))
+>>> -             return -EINVAL;
+>>> +     ret = v4l2_subdev_call(cx->sd_av, vbi, g_sliced_fmt, &fmt->fmt.sliced);
+>>> +     if (ret)
+>>> +             return ret;
+>>
+>> Please keep the -EINVAL here. I can't be 100% certain that returning 'ret' wouldn't
+>> break something.
 > 
 > I think Dan was recommending the opposite here, if I understood you
 > both correctly:
 > he said we should propagate the error code unless we know it's wrong, while you
 > want to keep the current behavior to avoid introducing changes ;-)
 > 
+> I guess in either case, looking at the callers more carefully would be
+> a good idea.
 
-I don't know the subsystem rules at all, so don't listen to me.
+The subtle problem here is that v4l2_subdev_call will return -ENOIOCTLCMD if
+ops->vbi->g_sliced_fmt == NULL, which typically is not returned to userspace
+but either ignored or replaced by another error. It indicates that the
+sub device doesn't implement this operation, and it depends on the context
+and the operation whether or not that is to be considered an error.
 
-regards,
-dan carpenter
+I have no clue what is expected here, without digging deep in the code.
+
+Better to keep it as-is. It really isn't important to waste time on this.
+
+> 
+>>> -     return 0;
+>>> +     return ret;
+>>>  }
+>>>
+>>>  int atomisp_flash_enable(struct atomisp_sub_device *asd, int num_frames)
+>>>
+>>
+>> This is all very hackish, though. I'm not terribly keen on this patch. It's not
+>> clear to me *why* these warnings appear in your setup.
+> 
+> it's possible that this only happened with 'ccache', which first preprocesses
+> the source and the passes it with v4l2_subdev_call expanded into the
+> compiler. This means the line looks like
+> 
+>         if ((!(cx->sd_av) ? -ENODEV :
+>             (((cx->sd_av)->ops->vbi && (cx->sd_av)->ops->vbi->g_sliced_fmt) ?
+>                (cx->sd_av)->ops->vbi->g_sliced_fmt(cx->sd_av)),
+> &fmt->fmt.sliced) :
+>                -ENOIOCTLCMD))
+> 
+> The compiler now complains about the sub-expression that it sees for
+> cx->sd_av==NULL:
+> 
+>    if (-ENODEV)
+> 
+> which it considers nonsense because it is always true and the value gets
+> ignored.
+> 
+> Let me try again without ccache for now and see what warnings remain.
+> We can find a solution for those first, and then decide how to deal with
+> ccache.
+
+Sounds good.
+
+I'm OK with applying this if there is no other way to prevent these warnings.
+
+Regards,
+
+	Hans
+
+> 
+>         Arnd
+> 
