@@ -1,29 +1,64 @@
-From: Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH 00/11] Drop unnecessary static
-Date: Sat, 15 Jul 2017 23:00:36 +0200 (CEST)
-Message-ID: <alpine.DEB.2.20.1707152300030.5105@hadrien>
-References: <1500149266-32357-1-git-send-email-Julia.Lawall@lip6.fr> <1500151079.4457.80.camel@perches.com>
+From: Sinclair Yeh <syeh@vmware.com>
+Subject: Re: [PATCH, RESEND 03/14] drm/vmwgfx: avoid gcc-7 parentheses warning
+Date: Mon, 17 Jul 2017 15:15:49 +0200
+Message-ID: <20170717131548.GA15306@pc24.home>
+References: <20170714092540.1217397-1-arnd@arndb.de>
+ <20170714092540.1217397-4-arnd@arndb.de>
+ <CA+55aFw9xE_+qnx1=6FbU8HJ23+Go1iS5bxDLOHefETgn5Wx6w@mail.gmail.com>
+ <CA+55aFw+DTc_czppqfbqY+7kq6Uej=Nf1Wxf1HutRw4tRxC85Q@mail.gmail.com>
+ <CAK8P3a2QEOuQXy51q-EqzTh3STKTDHy2V-twi5nFPbuzOSEDkQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <linux-clk-owner@vger.kernel.org>
-In-Reply-To: <1500151079.4457.80.camel@perches.com>
-Sender: linux-clk-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: Julia Lawall <Julia.Lawall@lip6.fr>, linux-arm-kernel@lists.infradead.org, keescook@chromium.org, kernel-janitors@vger.kernel.org, linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org, linux-kernel@vger.kernel.org, linux-clk@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-omap@vger.kernel.org, Hartmut Knaack <knaack.h@gmx.de>, Lars-Peter Clausen <lars@metafoo.de>, Peter Meerwald-Stadler <pmeerw@pmeerw.net>, linux-input@vger.kernel.org, linux-iio@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+Content-Disposition: inline
+In-Reply-To: <CAK8P3a2QEOuQXy51q-EqzTh3STKTDHy2V-twi5nFPbuzOSEDkQ@mail.gmail.com>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Thomas Hellstrom <thellstrom@vmware.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>, IDE-ML <linux-ide@vger.kernel.org>, VMware Graphics <linux-graphics-maintainer@vmware.com>, Tejun Heo <tj@kernel.org>, Brian Paul <brianp@vmware.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, Linux Media Mailing List <linux-media@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-
-
-On Sat, 15 Jul 2017, Joe Perches wrote:
-
-> On Sat, 2017-07-15 at 22:07 +0200, Julia Lawall wrote:
-> > These patches fix cases where there is a static on a local variable, but
-> > the variable is initialized before any possible use.  Thus, the static has
-> > no benefit.
->
-> Nice one.
-
-Thanks.  It was suggested by Kees Cook a while ago.  There seem to be many
-opportunities.
-
-julia
+T24gRnJpLCBKdWwgMTQsIDIwMTcgYXQgMTA6Mjg6MjlQTSArMDIwMCwgQXJuZCBCZXJnbWFubiB3
+cm90ZToKPiBPbiBGcmksIEp1bCAxNCwgMjAxNyBhdCA5OjIzIFBNLCBMaW51cyBUb3J2YWxkcwo+
+IDx0b3J2YWxkc0BsaW51eC1mb3VuZGF0aW9uLm9yZz4gd3JvdGU6Cj4gPiBPbiBGcmksIEp1bCAx
+NCwgMjAxNyBhdCAxMjoyMSBQTSwgTGludXMgVG9ydmFsZHMKPiA+IDx0b3J2YWxkc0BsaW51eC1m
+b3VuZGF0aW9uLm9yZz4gd3JvdGU6Cj4gPj4KPiA+PiBOQUsuIFRoaXMgdGFrZXMgdW5pbnRlbnRp
+b25hbGx5IGluc2FuZSBjb2RlIGFuZCB0dXJucyBpdCBpbnRlbnRpb25hbGx5Cj4gPj4gaW5zYW5l
+LiBBbnkgbm9uLXplcm8gcmV0dXJuIGlzIGNvbnNpZGVyZWQgYW4gZXJyb3IuCj4gPj4KPiA+PiBU
+aGUgcmlnaHQgZml4IGlzIGFsbW9zdCBjZXJ0YWlubHkgdG8ganVzdCByZXR1cm4gLUVJTlZBTCB1
+bmNvbmRpdGlvbmFsbHkuCgpDb3JyZWN0LiAgSSdsbCBmaXggdGhpcy4KCj4gPgo+ID4gQnR3LCB0
+aGlzIGlzIHdoeSBJIGhhdGUgY29tcGlsZXIgd2FybmluZyBmaXggcGF0Y2ggc2VyaWVzLiBFdmVu
+IHdoZW4KPiA+IHRoZXkgZG9uJ3QgYWN0dWFsbHkgYnJlYWsgdGhlIGNvZGUgKGFuZCBzb21ldGlt
+ZXMgdGhleSBkbyB0aGF0IHRvbyksCj4gPiB0aGV5IGNhbiBhY3R1YWxseSBlbmQgdXAgbWFraW5n
+IHRoZSBjb2RlIHdvcnNlLgo+IAo+IEkgZ2VuZXJhbGx5IGFncmVlLCBhbmQgdGhpcyBpcyBhbHNv
+IHdoeSBJIGhlbGQgdXAgc2VuZGluZyBwYXRjaGVzIGZvciB0aGUKPiAtV2Zvcm1hdCB3YXJuaW5n
+cyB1bnRpbCB5b3UgYnJvdWdodCB0aG9zZSB1cC4gSSBhbHNvIGZyZXF1ZW50bHkgc2VuZAo+IHBh
+dGNoZXMgZm9yIHJlY2VudGx5IGludHJvZHVjZWQgd2FybmluZ3MsIHdoaWNoIHRlbmQgdG8gaGF2
+ZSBhIGJldHRlcgo+IGNoYW5jZSBvZiBnZXR0aW5nIHJldmlld2VkIGJ5IHRoZSBwZXJzb24gdGhh
+dCBqdXN0IGludHJvZHVjZWQgdGhlIGNvZGUsCj4gdG8gY2F0Y2ggdGhpcyBraW5kIG9mIG1pc3Rh
+a2UgaW4gbXkgcGF0Y2hlcy4KPiAKPiBJIGFsc28gcmVndWxhcmx5IHJ1biBpbnRvIGNhc2VzIHdo
+ZXJlIEkgc2VuZCBhIGNvcnJlY3QgcGF0Y2ggYW5kIGZpbmQKPiB0aGF0IGFub3RoZXIgYnJva2Vu
+IHBhdGNoIGhhcyBiZWVuIGFwcGxpZWQgdGhlIGZvbGxvd2luZyBkYXkgOy0pCj4gCj4gPiBUaGUg
+KmludGVudCogb2YgdGhhdCBjb2RlIHdhcyB0byByZXR1cm4gemVybyBmb3IgdGhlIENBUF9TWVNf
+QURNSU4uCj4gPiBCdXQgdGhlIGNvZGUgaGFzIG5ldmVyIGRvbmUgdGhhdCBpbiBpdHMgbGlmZXRp
+bWUgYW5kIG5vYm9keSBldmVyCj4gPiBub3RpY2VkLCBzbyBjbGVhcmx5IHRoZSBjb2RlIHNob3Vs
+ZG4ndCBldmVuIGhhdmUgdHJpZWQuCj4gCj4gTWFrZXMgc2Vuc2UsIHllcy4gSW4gdGhpcyBjYXNl
+LCB0aGUgcmV2aWV3IHByb2Nlc3MgaGFzIGZhaWxlZCBhcwo+IHdlbGwsIGFzIG9uZSBvZiB0aGUg
+bWFpbnRhaW5lcnMgZXZlbiBnYXZlIGFuIEFjayBvbiB0aGUgd3JvbmcgcGF0Y2gsCj4gYW5kIHRo
+ZW4gdGhlIHBhdGNoIGdvdCBkcm9wcGVkIHdpdGhvdXQgYW55IGZlZWRiYWNrLgoKSSd2ZSBkb25l
+IHNvbWUgZGlnZ2luZyBhbmQgbm90aWNlZCB0aGF0IG15IC1maXhlcyBwdWxsIHJlcXVlc3QKZGlk
+bid0IGdldCBwaWNrZWQgdXAgbGFzdCBEZWNlbWJlci4gIEl0J3MgbW9zdCBsaWtlbHkgYmVjYXVz
+ZSBJCmluaXRpYWxseSBtYWRlIGFuIGFkZHJlc3MgdHlwbyBpbiB0aGUgb3JpZ2luYWwgcmVxdWVz
+dCwgYW5kIHRoZW4KZm9sbG93ZWQgaXQgdXAgd2l0aCBhIGRpcmVjdCBlbWFpbCB3aXRoIHRoZSBj
+b3JyZWN0IGFkZHJlc3MuCgpTaW5jbGFpcgoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3Rz
+LmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xp
+c3RpbmZvL2RyaS1kZXZlbAo=
