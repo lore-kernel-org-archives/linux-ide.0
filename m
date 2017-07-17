@@ -1,114 +1,39 @@
-From: Mikko Perttunen <cyndis-/1wQRMveznE@public.gmane.org>
-Subject: Re: [PATCH V5 3/3] dt-bindings: tegra: add binding documentation
-Date: Mon, 17 Jul 2017 18:08:18 +0300
-Message-ID: <3a334423-9a47-595c-3782-d474d6a960ab@kapsi.fi>
-References: <1498830993-24666-1-git-send-email-pchandru@nvidia.com>
- <1498830993-24666-4-git-send-email-pchandru@nvidia.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 14/14] [media] fix warning on v4l2_subdev_call() result
+ interpreted as bool
+Date: Mon, 17 Jul 2017 23:23:11 +0200
+Message-ID: <CAK8P3a3rc-7mXsPosXG7jWBDf9D31816eRpTP266cC94B5jfWw@mail.gmail.com>
+References: <20170714092540.1217397-1-arnd@arndb.de> <20170714093938.1469319-1-arnd@arndb.de>
+ <f57e08d9-0984-b67c-c64b-c7e0542d0361@xs4all.nl> <CAK8P3a1zBW_QuPtRFNwuVyE_ziySoV9_ebz4sD7Bya3eRoo8SA@mail.gmail.com>
+ <3a927e60-332a-f01d-f1af-98649e9f51b5@xs4all.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1498830993-24666-4-git-send-email-pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Preetham Chandru Ramchandra <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vbyravarasu-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, pkunapuli-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-oi0-f48.google.com ([209.85.218.48]:34045 "EHLO
+        mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751503AbdGQVXM (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 17 Jul 2017 17:23:12 -0400
+In-Reply-To: <3a927e60-332a-f01d-f1af-98649e9f51b5@xs4all.nl>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Hans Verkuil <hverkuil@xs4all.nl>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mauro Carvalho Chehab <mchehab@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Guenter Roeck <linux@roeck-us.net>, IDE-ML <linux-ide@vger.kernel.org>, Linux Media Mailing List <linux-media@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, dri-devel <dri-devel@lists.freedesktop.org>, =?UTF-8?Q?Niklas_S=C3=B6derlund?= <niklas.soderlund@ragnatech.se>, Robert Jarzmik <robert.jarzmik@free.fr>, Daeseok Youn <daeseok.youn@gmail.com>, Alan Cox <alan@linux.intel.com>, adi-buildroot-devel@lists.sourceforge.net, Linux-Renesas <linux-renesas-soc@vger.kernel.org>, Linux ARM <linux-arm-kernel@lists.infradead.org>de
 
-On 30.06.2017 16:56, Preetham Chandru Ramchandra wrote:
-> From: Preetham Chandru R <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+On Mon, Jul 17, 2017 at 4:35 PM, Hans Verkuil <hverkuil@xs4all.nl> wrote:
+> On 17/07/17 16:26, Arnd Bergmann wrote:
+
+>> Let me try again without ccache for now and see what warnings remain.
+>> We can find a solution for those first, and then decide how to deal with
+>> ccache.
 >
-> This adds bindings documentation for the
-> AHCI controller on Tegra210
+> Sounds good.
 >
-> Signed-off-by: Preetham Chandru R <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-> ---
-> v4:
-> * changed the commit message
-> * changed 'sata-cold' reset to mandatory for t210 and t124
-> * Removed the regulators for T210 since these regulators
->   will be enabled in phy driver.
-> v3:
-> * Add AUX register.
-> v2:
-> * change cml1, pll_e and phy regulators as optional
->   for T210.
-> ---
->  .../bindings/ata/nvidia,tegra124-ahci.txt          | 38 ++++++++++++++--------
->  1 file changed, 25 insertions(+), 13 deletions(-)
->
-> diff --git a/Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt b/Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt
-> index 66c83c3..df4dc2c 100644
-> --- a/Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt
-> +++ b/Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt
-> @@ -1,20 +1,19 @@
-> -Tegra124 SoC SATA AHCI controller
-> +Tegra SoC SATA AHCI controller
->
->  Required properties :
-> -- compatible : For Tegra124, must contain "nvidia,tegra124-ahci".  Otherwise,
-> -  must contain '"nvidia,<chip>-ahci", "nvidia,tegra124-ahci"', where <chip>
-> -  is tegra132.
-> -- reg : Should contain 2 entries:
-> +- compatible : Must be one of:
-> +  - Tegra124 : "nvidia,tegra124-ahci"
-> +  - Tegra210 : "nvidia,tegra210-ahci"
-> +- reg : Should contain 3 entries:
->    - AHCI register set (SATA BAR5)
->    - SATA register set
-> +  - Tegra210 : AUX register set
+> I'm OK with applying this if there is no other way to prevent these warnings.
 
-Perhaps just drop the Tegra210 since this register set also works on 
-Tegra124, even if it is optional.
+Small update: I noticed that having ccache being the default compiler
+even with CCACHE_DISABLE=1 causes a lot of these warnings. Completely
+taking ccache out of the picture however seems to have eliminated the
+warnings about v4l2_subdev_call() and other silly warnings, but not
+the interesting ones in the -Wint-in-bool-context category.
 
->  - interrupts : Defines the interrupt used by SATA
->  - clocks : Must contain an entry for each entry in clock-names.
->    See ../clocks/clock-bindings.txt for details.
->  - clock-names : Must include the following entries:
->    - sata
->    - sata-oob
-> -  - cml1
-> -  - pll_e
->  - resets : Must contain an entry for each entry in reset-names.
->    See ../reset/reset.txt for details.
->  - reset-names : Must include the following entries:
-> @@ -24,9 +23,22 @@ Required properties :
->  - phys : Must contain an entry for each entry in phy-names.
->    See ../phy/phy-bindings.txt for details.
->  - phy-names : Must include the following entries:
-> -  - sata-phy : XUSB PADCTL SATA PHY
-> -- hvdd-supply : Defines the SATA HVDD regulator
-> -- vddio-supply : Defines the SATA VDDIO regulator
-> -- avdd-supply : Defines the SATA AVDD regulator
-> -- target-5v-supply : Defines the SATA 5V power regulator
-> -- target-12v-supply : Defines the SATA 12V power regulator
-> +  - For T124:
-> +    - sata-phy : XUSB PADCTL SATA PHY
-> +  - For T210:
-> +    - sata-0
-> +- For T124:
-> +  - hvdd-supply : Defines the SATA HVDD regulator
-> +  - vddio-supply : Defines the SATA VDDIO regulator
-> +  - avdd-supply : Defines the SATA AVDD regulator
-> +  - target-5v-supply : Defines the SATA 5V power regulator
-> +  - target-12v-supply : Defines the SATA 12V power regulator
-> +
-> +Optional properties:
-> +- clock-names :
-> +  - cml1 :
-> +    cml1 clock is required by phy so it is optional to define
-> +    here as phy driver will be enabling this clock.
-> +  - pll_e :
-> +    pll_e is the parent of cml1 clock so it is optional to define
-> +    here as phy driver will be enabling this clock.
-
-Perhaps something like "These clocks should be defined here if the PHY 
-driver doesn't manage them. If it does, they should not be."
-
-Also for next round, please also add robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org and 
-mark.rutland-5wv7dgnIgG8@public.gmane.org to To field and devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org to Cc 
-field. They should review the binding documentation. (Sorry for not 
-mentioning this earlier but I have been a bit fuzzy on the proper 
-procedure myself.)
-
-Cheers,
-Mikko
+       Arnd
