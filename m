@@ -1,39 +1,77 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 14/14] [media] fix warning on v4l2_subdev_call() result
- interpreted as bool
-Date: Mon, 17 Jul 2017 23:23:11 +0200
-Message-ID: <CAK8P3a3rc-7mXsPosXG7jWBDf9D31816eRpTP266cC94B5jfWw@mail.gmail.com>
-References: <20170714092540.1217397-1-arnd@arndb.de> <20170714093938.1469319-1-arnd@arndb.de>
- <f57e08d9-0984-b67c-c64b-c7e0542d0361@xs4all.nl> <CAK8P3a1zBW_QuPtRFNwuVyE_ziySoV9_ebz4sD7Bya3eRoo8SA@mail.gmail.com>
- <3a927e60-332a-f01d-f1af-98649e9f51b5@xs4all.nl>
+From: <mitch_128@hotmail.com>
+Subject: (unknown)
+Date: Tue, 18 Jul 2017 12:45:40 -0000
+Message-ID: <150038194027.2697.10630611657963631123@hinet.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: application/zip; name="EMAIL_2297760905018_linux-ide.zip
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:34045 "EHLO
-        mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751503AbdGQVXM (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 17 Jul 2017 17:23:12 -0400
-In-Reply-To: <3a927e60-332a-f01d-f1af-98649e9f51b5@xs4all.nl>
+Received: from 36-225-230-212.dynamic-ip.hinet.net ([36.225.230.212]:34045
+        "HELO hinet.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with SMTP id S1751371AbdGRMp7 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jul 2017 08:45:59 -0400
+Content-Disposition: attachment
+Subject: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hans Verkuil <hverkuil@xs4all.nl>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mauro Carvalho Chehab <mchehab@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Guenter Roeck <linux@roeck-us.net>, IDE-ML <linux-ide@vger.kernel.org>, Linux Media Mailing List <linux-media@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, dri-devel <dri-devel@lists.freedesktop.org>, =?UTF-8?Q?Niklas_S=C3=B6derlund?= <niklas.soderlund@ragnatech.se>, Robert Jarzmik <robert.jarzmik@free.fr>, Daeseok Youn <daeseok.youn@gmail.com>, Alan Cox <alan@linux.intel.com>, adi-buildroot-devel@lists.sourceforge.net, Linux-Renesas <linux-renesas-soc@vger.kernel.org>, Linux ARM <linux-arm-kernel@lists.infradead.org>de
+To: linux-ide@vger.kernel.org
 
-On Mon, Jul 17, 2017 at 4:35 PM, Hans Verkuil <hverkuil@xs4all.nl> wrote:
-> On 17/07/17 16:26, Arnd Bergmann wrote:
-
->> Let me try again without ccache for now and see what warnings remain.
->> We can find a solution for those first, and then decide how to deal with
->> ccache.
->
-> Sounds good.
->
-> I'm OK with applying this if there is no other way to prevent these warnings.
-
-Small update: I noticed that having ccache being the default compiler
-even with CCACHE_DISABLE=1 causes a lot of these warnings. Completely
-taking ccache out of the picture however seems to have eliminated the
-warnings about v4l2_subdev_call() and other silly warnings, but not
-the interesting ones in the -Wint-in-bool-context category.
-
-       Arnd
+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
+fgwAAAAA
