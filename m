@@ -1,71 +1,100 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 07/14] proc/kcore: hide a harmless warning
-Date: Tue, 18 Jul 2017 22:21:37 +0200
-Message-ID: <CAK8P3a3dC-ZUKMB=V3N67A9xzpLJj7YG9+Oy0OXkfALAwrPiXQ@mail.gmail.com>
-References: <20170714092540.1217397-1-arnd@arndb.de> <20170714092540.1217397-8-arnd@arndb.de>
- <CAKv+Gu9+0H9w8z8_Zedd-RxXt89Y7sJ=57_ZTThfDpFe4H0uXg@mail.gmail.com>
- <CAK8P3a3qrkZLkL=PuUHkaq9p021-Y+odTj5UrdM=dZw8L=oM8g@mail.gmail.com>
- <CAKv+Gu_OYCNK2qvyDb0+7MqyG4rTEhsf57i6m9SJU80CE7Yt+g@mail.gmail.com>
- <CAK8P3a0549U8zt7MPRJ5a6+pSZ-faqYiDTG3tNQGmvAbrZZfqw@mail.gmail.com> <CAKv+Gu8XZa6twiqheZ1JCCwKEmqvqeECAq7MyG_4WwO_WQMMQg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35050 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751693AbdGRUVi (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jul 2017 16:21:38 -0400
-In-Reply-To: <CAKv+Gu8XZa6twiqheZ1JCCwKEmqvqeECAq7MyG_4WwO_WQMMQg@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Rob Herring <robh@kernel.org>
+Subject: [PATCH] ide: pmac: Convert to using %pOF instead of full_name
+Date: Tue, 18 Jul 2017 16:43:07 -0500
+Message-ID: <20170718214339.7774-27-robh@kernel.org>
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: "David S. Miller" <davem@davemloft.net>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>
+Cc: devicetree@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jiri Olsa <jolsa@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Tejun Heo <tj@kernel.org>, Guenter Roeck <linux@roeck-us.net>, IDE-ML <linux-ide@vger.kernel.org>, Linux Media Mailing List <linux-media@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, dri-devel <dri-devel@lists.freedesktop.org>, Kees Cook <keescook@chromium.org>, Ingo Molnar <mingo@kernel.org>, Laura Abbott <labbott@redhat.com>, Pratyush Anand <panand@redhat.com>
 
-On Tue, Jul 18, 2017 at 10:07 PM, Ard Biesheuvel
-<ard.biesheuvel@linaro.org> wrote:
-> On 18 July 2017 at 21:01, Arnd Bergmann <arnd@arndb.de> wrote:
->> On Tue, Jul 18, 2017 at 9:55 PM, Ard Biesheuvel
->
-> Ah, now it makes sense. I was a bit surprised that
-> -Wtautological-compare complains about symbolic constants that resolve
-> to the same expression, but apparently it doesn't.
->
-> I see how ccache needs to preprocess first: that is how it notices
-> changes, by hashing the preprocessed input and comparing it to the
-> stored hash. I'd still expect it to go back to letting the compiler
-> preprocess for the actual build, but apparently it doesn't.
+Now that we have a custom printf format specifier, convert users of
+full_name to use %pOF instead. This is preparation to remove storing
+of the full path string for each node.
 
-When I tried to figure this out, I saw that ccache has two modes, "direct"
-and "preprocessed". It usually tries to use direct mode unless something
-prevents that.
+Signed-off-by: Rob Herring <robh@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: linux-ide@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org
+---
+ drivers/ide/pmac.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-In "direct" mode, it hashes the source file and the included headers
-instead of the preprocessed source file, however it still calls the compiler
-for the preprocessed source file, I guess since it has to preprocess the
-file the first time it is seen so it can record which headers are included.
+diff --git a/drivers/ide/pmac.c b/drivers/ide/pmac.c
+index 0c5d3a99468e..c5b902b86b44 100644
+--- a/drivers/ide/pmac.c
++++ b/drivers/ide/pmac.c
+@@ -1145,8 +1145,8 @@ static int pmac_ide_macio_attach(struct macio_dev *mdev,
+ 		return -ENOMEM;
 
-> A quick google search didn't produce anything useful, but I'd expect
-> other ccache users to run into the same issue.
+ 	if (macio_resource_count(mdev) == 0) {
+-		printk(KERN_WARNING "ide-pmac: no address for %s\n",
+-				    mdev->ofdev.dev.of_node->full_name);
++		printk(KERN_WARNING "ide-pmac: no address for %pOF\n",
++				    mdev->ofdev.dev.of_node);
+ 		rc = -ENXIO;
+ 		goto out_free_pmif;
+ 	}
+@@ -1154,7 +1154,7 @@ static int pmac_ide_macio_attach(struct macio_dev *mdev,
+ 	/* Request memory resource for IO ports */
+ 	if (macio_request_resource(mdev, 0, "ide-pmac (ports)")) {
+ 		printk(KERN_ERR "ide-pmac: can't request MMIO resource for "
+-				"%s!\n", mdev->ofdev.dev.of_node->full_name);
++				"%pOF!\n", mdev->ofdev.dev.of_node);
+ 		rc = -EBUSY;
+ 		goto out_free_pmif;
+ 	}
+@@ -1165,8 +1165,8 @@ static int pmac_ide_macio_attach(struct macio_dev *mdev,
+ 	 * where that happens though...
+ 	 */
+ 	if (macio_irq_count(mdev) == 0) {
+-		printk(KERN_WARNING "ide-pmac: no intrs for device %s, using "
+-				    "13\n", mdev->ofdev.dev.of_node->full_name);
++		printk(KERN_WARNING "ide-pmac: no intrs for device %pOF, using "
++				    "13\n", mdev->ofdev.dev.of_node);
+ 		irq = irq_create_mapping(NULL, 13);
+ 	} else
+ 		irq = macio_irq(mdev, 0);
+@@ -1183,8 +1183,8 @@ static int pmac_ide_macio_attach(struct macio_dev *mdev,
+ 	if (macio_resource_count(mdev) >= 2) {
+ 		if (macio_request_resource(mdev, 1, "ide-pmac (dma)"))
+ 			printk(KERN_WARNING "ide-pmac: can't request DMA "
+-					    "resource for %s!\n",
+-					    mdev->ofdev.dev.of_node->full_name);
++					    "resource for %pOF!\n",
++					    mdev->ofdev.dev.of_node);
+ 		else
+ 			pmif->dma_regs = ioremap(macio_resource_start(mdev, 1), 0x1000);
+ 	} else
+@@ -1274,7 +1274,7 @@ static int pmac_ide_pci_attach(struct pci_dev *pdev,
 
-I suspect gcc-7 is still too new for most people to have noticed this.
-The kernel is a very large codebase, and we only got a handful
-of -Wtautological-compare warnings at all, most of them happen
-wtihout ccache, too.
+ 	if (pci_enable_device(pdev)) {
+ 		printk(KERN_WARNING "ide-pmac: Can't enable PCI device for "
+-				    "%s\n", np->full_name);
++				    "%pOF\n", np);
+ 		rc = -ENXIO;
+ 		goto out_free_pmif;
+ 	}
+@@ -1282,7 +1282,7 @@ static int pmac_ide_pci_attach(struct pci_dev *pdev,
 
-Among the four patches, three are for -Wtautological-compare, and one
- is for -Wint-in-bool-context:
-
-         if (v4l2_subdev_call(cx->sd_av, vbi, g_sliced_fmt, &fmt->fmt.sliced))
-
-v4l2_subdev_call() in this case is a function-like macro that may return
--ENODEV if its first argument is NULL. The other -Wint-in-bool-context
-I found all happen with or without ccache, most commonly there is
-an constant integer expression passed into a macro and then checked
-like
-
-#define macro(arg) \
-       do { \
-            if (arg) \
-               do_something(arg);  \
-       } while (0)
-
-         Arnd
+ 	if (pci_request_regions(pdev, "Kauai ATA")) {
+ 		printk(KERN_ERR "ide-pmac: Cannot obtain PCI resources for "
+-				"%s\n", np->full_name);
++				"%pOF\n", np);
+ 		rc = -ENXIO;
+ 		goto out_free_pmif;
+ 	}
+--
+2.11.0
