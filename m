@@ -1,49 +1,57 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH V5 1/3] ata: ahci_tegra: Add AHCI support for tegra210
-Date: Tue, 18 Jul 2017 18:16:25 +0200
-Message-ID: <2330130.R7nNpdRms5@amdc3058>
-References: <1498830993-24666-1-git-send-email-pchandru@nvidia.com>
-        <1498830993-24666-2-git-send-email-pchandru@nvidia.com>
-        <CGME20170718161627epcas5p16d97b0c718cc9ba1fa7483a727f6c2a3@epcas5p1.samsung.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 07/14] proc/kcore: hide a harmless warning
+Date: Tue, 18 Jul 2017 21:53:40 +0200
+Message-ID: <CAK8P3a3qrkZLkL=PuUHkaq9p021-Y+odTj5UrdM=dZw8L=oM8g@mail.gmail.com>
+References: <20170714092540.1217397-1-arnd@arndb.de>
+ <20170714092540.1217397-8-arnd@arndb.de>
+ <CAKv+Gu9+0H9w8z8_Zedd-RxXt89Y7sJ=57_ZTThfDpFe4H0uXg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:36484 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751338AbdGRQQa (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Jul 2017 12:16:30 -0400
-In-reply-to: <1498830993-24666-2-git-send-email-pchandru@nvidia.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <CAKv+Gu9+0H9w8z8_Zedd-RxXt89Y7sJ=57_ZTThfDpFe4H0uXg@mail.gmail.com>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Pratyush Anand <panand@redhat.com>, Kees Cook <keescook@chromium.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, dri-devel <dri-devel@lists.freedesktop.org>, IDE-ML <linux-ide@vger.kernel.org>, Jiri Olsa <jolsa@kernel.org>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@kernel.org>, Guenter Roeck <linux@roeck-us.net>, Linux Media Mailing List <linux-media@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Preetham Chandru Ramchandra <pchandru@nvidia.com>
-Cc: thierry.reding@gmail.com, tj@kernel.org, cyndis@kapsi.fi, preetham260@gmail.com, linux-tegra@vger.kernel.org, linux-ide@vger.kernel.org, vbyravarasu@nvidia.com, pkunapuli@nvidia.com
 
-
-Hi,
-
-On Friday, June 30, 2017 07:26:31 PM Preetham Chandru Ramchandra wrote:
-> From: Preetham Chandru R <pchandru@nvidia.com>
-> 
-> 1. Move tegra124 specifics to tegra124_ahci_init.
-> 2. Separate the regulators needed for tegra124 and tegra210.
-> 3. Disable DIPM for t210 and t124 as there are known issues.
-> 4. Disable Devslp for t210 since devslp pin is shared with
-> pcie clkreq.
-> 
-> Signed-off-by: Preetham Chandru R <pchandru@nvidia.com>
-
-Please consider splitting this combined patch on smaller logical
-parts (adding new initialization code used on both chipsets to
-tegra_ahci_controller_init() should be done in preparatory
-patch before adding T210 support, same for addition of NO_DIPM
-flag) to ease the review, potential handling of regressions and
-backporting of fixes to older kernels.  The code changes itself
-look good to me.
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
-
+T24gRnJpLCBKdWwgMTQsIDIwMTcgYXQgMjoyOCBQTSwgQXJkIEJpZXNoZXV2ZWwKPGFyZC5iaWVz
+aGV1dmVsQGxpbmFyby5vcmc+IHdyb3RlOgo+IE9uIDE0IEp1bHkgMjAxNyBhdCAxMDoyNSwgQXJu
+ZCBCZXJnbWFubiA8YXJuZEBhcm5kYi5kZT4gd3JvdGU6Cj4+IGdjYyB3YXJucyB3aGVuIE1PRFVM
+RVNfVkFERFIvRU5EIGlzIGRlZmluZWQgdG8gdGhlIHNhbWUgdmFsdWUgYXMKPj4gVk1BTExPQ19T
+VEFSVC9WTUFMTE9DX0VORCwgZS5nLiBvbiB4ODYtMzI6Cj4+Cj4+IGZzL3Byb2Mva2NvcmUuYzog
+SW4gZnVuY3Rpb24g4oCYYWRkX21vZHVsZXNfcmFuZ2XigJk6Cj4+IGZzL3Byb2Mva2NvcmUuYzo2
+MjI6MTYxOiBlcnJvcjogc2VsZi1jb21wYXJpc29uIGFsd2F5cyBldmFsdWF0ZXMgdG8gZmFsc2Ug
+Wy1XZXJyb3I9dGF1dG9sb2dpY2FsLWNvbXBhcmVdCj4+ICAgaWYgKC8qTU9EVUxFU19WQUREUiAh
+PSBWTUFMTE9DX1NUQVJUICYmICovTU9EVUxFU19FTkQgIT0gVk1BTExPQ19FTkQpIHsKPj4KPgo+
+IERvZXMgaXQgb2NjdXIgZm9yIHN1YnRyYWN0aW9uIGFzIHdlbGw/IE9yIG9ubHkgZm9yIGNvbXBh
+cmlzb24/CgpUaGlzIHJlcGxhY2VtZW50IHBhdGNoIHdvdWxkIGFsc28gYWRkcmVzcyB0aGUgd2Fy
+bmluZzoKCmRpZmYgLS1naXQgYS9mcy9wcm9jL2tjb3JlLmMgYi9mcy9wcm9jL2tjb3JlLmMKaW5k
+ZXggNDU2MjlmNGI1NDAyLi4zNTgyNGU5ODZjMmMgMTAwNjQ0Ci0tLSBhL2ZzL3Byb2Mva2NvcmUu
+YworKysgYi9mcy9wcm9jL2tjb3JlLmMKQEAgLTYyMyw3ICs2MjMsNyBAQCBzdGF0aWMgdm9pZCBf
+X2luaXQgcHJvY19rY29yZV90ZXh0X2luaXQodm9pZCkKIHN0cnVjdCBrY29yZV9saXN0IGtjb3Jl
+X21vZHVsZXM7CiBzdGF0aWMgdm9pZCBfX2luaXQgYWRkX21vZHVsZXNfcmFuZ2Uodm9pZCkKIHsK
+LSAgICAgICBpZiAoTU9EVUxFU19WQUREUiAhPSBWTUFMTE9DX1NUQVJUICYmIE1PRFVMRVNfRU5E
+ICE9IFZNQUxMT0NfRU5EKSB7CisgICAgICAgaWYgKE1PRFVMRVNfVkFERFIgLSBWTUFMTE9DX1NU
+QVJUICYmIE1PRFVMRVNfRU5EIC0gVk1BTExPQ19FTkQpIHsKICAgICAgICAgICAgICAgIGtjbGlz
+dF9hZGQoJmtjb3JlX21vZHVsZXMsICh2b2lkICopTU9EVUxFU19WQUREUiwKICAgICAgICAgICAg
+ICAgICAgICAgICAgTU9EVUxFU19FTkQgLSBNT0RVTEVTX1ZBRERSLCBLQ09SRV9WTUFMTE9DKTsK
+ICAgICAgICB9CgpJIGhhdmUgYWxzbyB2ZXJpZmllZCB0aGF0IGZvdXIgb2YgdGhlIDE0IHBhdGNo
+ZXMgYXJlIG5vdCBuZWVkZWQgd2hlbiBidWlsZGluZwp3aXRob3V0IGNjYWNoZSwgdGhpcyBpcyBv
+bmUgb2YgdGhlbToKCiBhY3BpOiB0aGVybWFsOiBmaXggZ2NjLTYvY2NhY2hlIHdhcm5pbmcKIHBy
+b2Mva2NvcmU6IGhpZGUgYSBoYXJtbGVzcyB3YXJuaW5nCiBTRkk6IGZpeCB0YXV0b2xvZ2ljYWwt
+Y29tcGFyZSB3YXJuaW5nCiBbbWVkaWFdIGZpeCB3YXJuaW5nIG9uIHY0bDJfc3ViZGV2X2NhbGwo
+KSByZXN1bHQgaW50ZXJwcmV0ZWQgYXMgYm9vbAoKTm90IHN1cmUgd2hhdCB0byBkbyB3aXRoIHRo
+b3NlLCB3ZSBjb3VsZCBlaXRoZXIgaWdub3JlIHRoZW0gYWxsIGFuZApub3QgY2FyZSBhYm91dCBj
+Y2FjaGUsIG9yIHdlIHRyeSB0byBhZGRyZXNzIHRoZW0gYWxsIGluIHNvbWUgd2F5LgoKICAgICAg
+ICBBcm5kCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRy
+aS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRw
+czovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbAo=
