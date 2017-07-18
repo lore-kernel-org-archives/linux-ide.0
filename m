@@ -1,25 +1,41 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] ide: pmac: Convert to using %pOF instead of full_name
-Date: Tue, 18 Jul 2017 14:58:45 -0700 (PDT)
-Message-ID: <20170718.145845.166511048239196997.davem@davemloft.net>
-References: <20170718214339.7774-27-robh@kernel.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170718214339.7774-27-robh@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: robh@kernel.org
-Cc: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+From: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [PATCH] ata: Convert to using %pOF instead of full_name
+Date: Tue, 18 Jul 2017 16:42:48 -0500
+Message-ID: <20170718214339.7774-8-robh@kernel.org>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-From: Rob Herring <robh@kernel.org>
-Date: Tue, 18 Jul 2017 16:43:07 -0500
+Now that we have a custom printf format specifier, convert users of
+full_name to use %pOF instead. This is preparation to remove storing
+of the full path string for each node.
 
-> Now that we have a custom printf format specifier, convert users of
-> full_name to use %pOF instead. This is preparation to remove storing
-> of the full path string for each node.
-> 
-> Signed-off-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+---
+ drivers/ata/sata_svw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Acked-by: David S. Miller <davem@davemloft.net>
+diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
+index 0fd6ac7e57ba..a9d692c6c182 100644
+--- a/drivers/ata/sata_svw.c
++++ b/drivers/ata/sata_svw.c
+@@ -339,7 +339,7 @@ static int k2_sata_show_info(struct seq_file *m, struct Scsi_Host *shost)
+ 		if (!reg)
+ 			continue;
+ 		if (index == *reg) {
+-			seq_printf(m, "devspec: %s\n", np->full_name);
++			seq_printf(m, "devspec: %pOF\n", np);
+ 			break;
+ 		}
+ 	}
+--
+2.11.0
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
