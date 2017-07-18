@@ -1,40 +1,33 @@
-From: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: [PATCH] ata: Convert to using %pOF instead of full_name
-Date: Tue, 18 Jul 2017 16:42:48 -0500
-Message-ID: <20170718214339.7774-8-robh@kernel.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] ata: Convert to using %pOF instead of full_name
+Date: Tue, 18 Jul 2017 18:03:33 -0400
+Message-ID: <20170718220333.GH3365493@devbig577.frc2.facebook.com>
+References: <20170718214339.7774-8-robh@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20170718214339.7774-8-robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+To: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-Now that we have a custom printf format specifier, convert users of
-full_name to use %pOF instead. This is preparation to remove storing
-of the full path string for each node.
+On Tue, Jul 18, 2017 at 04:42:48PM -0500, Rob Herring wrote:
+> Now that we have a custom printf format specifier, convert users of
+> full_name to use %pOF instead. This is preparation to remove storing
+> of the full path string for each node.
+> 
+> Signed-off-by: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 
-Signed-off-by: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
----
- drivers/ata/sata_svw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Applied to libata/for-4.14.
 
-diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
-index 0fd6ac7e57ba..a9d692c6c182 100644
---- a/drivers/ata/sata_svw.c
-+++ b/drivers/ata/sata_svw.c
-@@ -339,7 +339,7 @@ static int k2_sata_show_info(struct seq_file *m, struct Scsi_Host *shost)
- 		if (!reg)
- 			continue;
- 		if (index == *reg) {
--			seq_printf(m, "devspec: %s\n", np->full_name);
-+			seq_printf(m, "devspec: %pOF\n", np);
- 			break;
- 		}
- 	}
---
-2.11.0
+Thanks.
 
+-- 
+tejun
 --
 To unsubscribe from this list: send the line "unsubscribe devicetree" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
