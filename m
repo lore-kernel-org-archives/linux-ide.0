@@ -1,38 +1,57 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: array underflow in ata_find_dev()
-Date: Wed, 19 Jul 2017 10:34:08 -0400
-Message-ID: <20170719143407.GK3365493@devbig577.frc2.facebook.com>
-References: <20170719100641.7ste3wo6ap2g2djv@mwanda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170719100641.7ste3wo6ap2g2djv@mwanda>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-ide@vger.kernel.org, kernel-janitors@vger.kernel.org
+From: Philipp Zabel <p.zabel@pengutronix.de>
+Subject: [PATCH 004/102] ahci: st: explicitly request exclusive reset control
+Date: Wed, 19 Jul 2017 17:25:08 +0200
+Message-ID: <20170719152646.25903-5-p.zabel@pengutronix.de>
+References: <20170719152646.25903-1-p.zabel@pengutronix.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170719152646.25903-1-p.zabel@pengutronix.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Philipp Zabel <p.zabel@pengutronix.de>, Patrice Chotard <patrice.chotard@st.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello,
+Commit a53e35db70d1 ("reset: Ensure drivers are explicit when requesting
+reset lines") started to transition the reset control request API calls
+to explicitly state whether the driver needs exclusive or shared reset
+control behavior. Convert all drivers requesting exclusive resets to the
+explicit API call so the temporary transition helpers can be removed.
 
-On Wed, Jul 19, 2017 at 01:06:41PM +0300, Dan Carpenter wrote:
-> My static checker complains that "devno" can be negative, meaning that
-> we read before the start of the loop.  I've looked at the code, and I
-> think the warning is right.  This come from /proc so it's root only or
-> it would be quite a quite a serious bug.  The call tree looks like this:
-> 
-> proc_scsi_write() <- gets id and channel from simple_strtoul()
-> -> scsi_add_single_device() <- calls shost->transportt->user_scan()
->    -> ata_scsi_user_scan()
->       -> ata_find_dev()
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+No functional changes.
 
-I'm impressed that the static checker caught this.  Thanks a lot for
-the fix, and lol at the code. :) Applied to libata/for-4.13-fixes w/
-stable cc'd.
+Cc: Patrice Chotard <patrice.chotard@st.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
+Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
+---
+ drivers/ata/ahci_st.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Thanks!
-
+diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
+index bc345f2495553..8a26e917dae90 100644
+--- a/drivers/ata/ahci_st.c
++++ b/drivers/ata/ahci_st.c
+@@ -108,19 +108,19 @@ static int st_ahci_probe_resets(struct ahci_host_priv *hpriv,
+ {
+ 	struct st_ahci_drv_data *drv_data = hpriv->plat_data;
+ 
+-	drv_data->pwr = devm_reset_control_get(dev, "pwr-dwn");
++	drv_data->pwr = devm_reset_control_get_exclusive(dev, "pwr-dwn");
+ 	if (IS_ERR(drv_data->pwr)) {
+ 		dev_info(dev, "power reset control not defined\n");
+ 		drv_data->pwr = NULL;
+ 	}
+ 
+-	drv_data->sw_rst = devm_reset_control_get(dev, "sw-rst");
++	drv_data->sw_rst = devm_reset_control_get_exclusive(dev, "sw-rst");
+ 	if (IS_ERR(drv_data->sw_rst)) {
+ 		dev_info(dev, "soft reset control not defined\n");
+ 		drv_data->sw_rst = NULL;
+ 	}
+ 
+-	drv_data->pwr_rst = devm_reset_control_get(dev, "pwr-rst");
++	drv_data->pwr_rst = devm_reset_control_get_exclusive(dev, "pwr-rst");
+ 	if (IS_ERR(drv_data->pwr_rst)) {
+ 		dev_dbg(dev, "power soft reset control not defined\n");
+ 		drv_data->pwr_rst = NULL;
 -- 
-tejun
+2.11.0
