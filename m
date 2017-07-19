@@ -1,13 +1,13 @@
 From: Philipp Zabel <p.zabel@pengutronix.de>
-Subject: [PATCH 004/102] ahci: st: explicitly request exclusive reset control
-Date: Wed, 19 Jul 2017 17:25:08 +0200
-Message-ID: <20170719152646.25903-5-p.zabel@pengutronix.de>
+Subject: [PATCH 005/102] ata: sata_gemini: explicitly request exclusive reset control
+Date: Wed, 19 Jul 2017 17:25:09 +0200
+Message-ID: <20170719152646.25903-6-p.zabel@pengutronix.de>
 References: <20170719152646.25903-1-p.zabel@pengutronix.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20170719152646.25903-1-p.zabel@pengutronix.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: Philipp Zabel <p.zabel@pengutronix.de>, Patrice Chotard <patrice.chotard@st.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+Cc: Philipp Zabel <p.zabel@pengutronix.de>, Linus Walleij <linus.walleij@linaro.org>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 Commit a53e35db70d1 ("reset: Ensure drivers are explicit when requesting
@@ -18,40 +18,34 @@ explicit API call so the temporary transition helpers can be removed.
 
 No functional changes.
 
-Cc: Patrice Chotard <patrice.chotard@st.com>
+Cc: Linus Walleij <linus.walleij@linaro.org>
 Cc: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org
 Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
 ---
- drivers/ata/ahci_st.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/ata/sata_gemini.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
-index bc345f2495553..8a26e917dae90 100644
---- a/drivers/ata/ahci_st.c
-+++ b/drivers/ata/ahci_st.c
-@@ -108,19 +108,19 @@ static int st_ahci_probe_resets(struct ahci_host_priv *hpriv,
- {
- 	struct st_ahci_drv_data *drv_data = hpriv->plat_data;
- 
--	drv_data->pwr = devm_reset_control_get(dev, "pwr-dwn");
-+	drv_data->pwr = devm_reset_control_get_exclusive(dev, "pwr-dwn");
- 	if (IS_ERR(drv_data->pwr)) {
- 		dev_info(dev, "power reset control not defined\n");
- 		drv_data->pwr = NULL;
+diff --git a/drivers/ata/sata_gemini.c b/drivers/ata/sata_gemini.c
+index 8c704523bae7d..7ae713a33e11a 100644
+--- a/drivers/ata/sata_gemini.c
++++ b/drivers/ata/sata_gemini.c
+@@ -274,14 +274,14 @@ static int gemini_sata_bridge_init(struct sata_gemini *sg)
+ 		return ret;
  	}
  
--	drv_data->sw_rst = devm_reset_control_get(dev, "sw-rst");
-+	drv_data->sw_rst = devm_reset_control_get_exclusive(dev, "sw-rst");
- 	if (IS_ERR(drv_data->sw_rst)) {
- 		dev_info(dev, "soft reset control not defined\n");
- 		drv_data->sw_rst = NULL;
+-	sg->sata0_reset = devm_reset_control_get(dev, "sata0");
++	sg->sata0_reset = devm_reset_control_get_exclusive(dev, "sata0");
+ 	if (IS_ERR(sg->sata0_reset)) {
+ 		dev_err(dev, "no SATA0 reset controller\n");
+ 		clk_disable_unprepare(sg->sata1_pclk);
+ 		clk_disable_unprepare(sg->sata0_pclk);
+ 		return PTR_ERR(sg->sata0_reset);
  	}
- 
--	drv_data->pwr_rst = devm_reset_control_get(dev, "pwr-rst");
-+	drv_data->pwr_rst = devm_reset_control_get_exclusive(dev, "pwr-rst");
- 	if (IS_ERR(drv_data->pwr_rst)) {
- 		dev_dbg(dev, "power soft reset control not defined\n");
- 		drv_data->pwr_rst = NULL;
+-	sg->sata1_reset = devm_reset_control_get(dev, "sata1");
++	sg->sata1_reset = devm_reset_control_get_exclusive(dev, "sata1");
+ 	if (IS_ERR(sg->sata1_reset)) {
+ 		dev_err(dev, "no SATA1 reset controller\n");
+ 		clk_disable_unprepare(sg->sata1_pclk);
 -- 
 2.11.0
