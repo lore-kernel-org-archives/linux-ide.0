@@ -1,34 +1,48 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] ata: Convert to using %pOF instead of full_name
-Date: Tue, 18 Jul 2017 18:03:33 -0400
-Message-ID: <20170718220333.GH3365493@devbig577.frc2.facebook.com>
-References: <20170718214339.7774-8-robh@kernel.org>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [PATCH] libata: array underflow in ata_find_dev()
+Date: Wed, 19 Jul 2017 13:06:41 +0300
+Message-ID: <20170719100641.7ste3wo6ap2g2djv@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25699 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753281AbdGSKGw (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jul 2017 06:06:52 -0400
 Content-Disposition: inline
-In-Reply-To: <20170718214339.7774-8-robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Tue, Jul 18, 2017 at 04:42:48PM -0500, Rob Herring wrote:
-> Now that we have a custom printf format specifier, convert users of
-> full_name to use %pOF instead. This is preparation to remove storing
-> of the full path string for each node.
-> 
-> Signed-off-by: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+My static checker complains that "devno" can be negative, meaning that
+we read before the start of the loop.  I've looked at the code, and I
+think the warning is right.  This come from /proc so it's root only or
+it would be quite a quite a serious bug.  The call tree looks like this:
 
-Applied to libata/for-4.14.
+proc_scsi_write() <- gets id and channel from simple_strtoul()
+-> scsi_add_single_device() <- calls shost->transportt->user_scan()
+   -> ata_scsi_user_scan()
+      -> ata_find_dev()
 
-Thanks.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
--- 
-tejun
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index d462c5a3a7ef..44ba292f2cd7 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3030,10 +3030,12 @@ static unsigned int atapi_xlat(struct ata_queued_cmd *qc)
+ static struct ata_device *ata_find_dev(struct ata_port *ap, int devno)
+ {
+ 	if (!sata_pmp_attached(ap)) {
+-		if (likely(devno < ata_link_max_devices(&ap->link)))
++		if (likely(devno >= 0 &&
++			   devno < ata_link_max_devices(&ap->link)))
+ 			return &ap->link.device[devno];
+ 	} else {
+-		if (likely(devno < ap->nr_pmp_links))
++		if (likely(devno >= 0 &&
++			   devno < ap->nr_pmp_links))
+ 			return &ap->pmp_link[devno].device[0];
+ 	}
+ 
