@@ -1,101 +1,36 @@
-From: Nate Watterson <nwatters@codeaurora.org>
-Subject: [PATCH] ata: ahci_platform: Add shutdown handler
-Date: Thu, 20 Jul 2017 15:26:24 -0400
-Message-ID: <1500578784-15407-1-git-send-email-nwatters@codeaurora.org>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50834 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934079AbdGTTb6 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 20 Jul 2017 15:31:58 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Heiko Stuebner <heiko-4mtYJXux2i+zQB+pC5nmwQ@public.gmane.org>
+Subject: Re: [PATCH 000/102] Convert drivers to explicit reset API
+Date: Thu, 20 Jul 2017 22:32:49 +0200
+Message-ID: <1687646.TMvigZNUOP__40287.1742415757$1500583024$gmane$org@phil>
+References: <20170719152646.25903-1-p.zabel@pengutronix.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+In-Reply-To: <20170719152646.25903-1-p.zabel-bIcnvbaLZ9MEGnE8C9+IrQ@public.gmane.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
+List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
+Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: Philipp Zabel <p.zabel-bIcnvbaLZ9MEGnE8C9+IrQ@public.gmane.org>
+Cc: Andrew Lunn <andrew-g2DYL2Zd6BY@public.gmane.org>, Prashant Gaikwad <pgaikwad-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Peter Chen <Peter.Chen-3arQi8VN3Tc@public.gmane.org>, Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, Marc Dietrich <marvin24-Mmb7MZpHnFY@public.gmane.org>, Rakesh Iyer <riyer-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Peter Meerwald-Stadler <pmeerw-jW+XmwGofnusTnJN9+BGXg@public.gmane.org>, linux-clk-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Wim Van Sebroeck <wim-IQzOog9fTRqzQB+pC5nmwQ@public.gmane.org>, Wolfram Sang <wsa-z923LK4zBo2bacvFa/9K2g@public.gmane.org>, Xinliang Liu <z.liuxinliang-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>, Chanwoo Choi <cw00.choi-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Jiri Slaby <jslaby-IBi9RG/b67k@public.gmane.org>, Michael Turquette <mturquette-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Guenter Roeck <linux-0h96xk9xTtrk1uMJSBkQmQ@public.gmane.org>, Ohad Ben-Cohen <ohad-Ix1uc/W3ht7QT0dZR+AlfA@public.gmane.org>, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Gleixner <tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>, Vincent Abriou <vincent.abriou-qxv4g6HH51o@public.gmane.org>, Bin Liu <b-liu-l0cyMroinI0@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Nate Watterson <nwatters@codeaurora.org>
 
-The newly introduced ahci_platform_shutdown() method is called during
-system shutdown to disable host controller DMA and interrupts in order
-to avoid potentially corrupting or otherwise interfering with a new
-kernel being started with kexec.
+Hi,
 
-Signed-off-by: Nate Watterson <nwatters@codeaurora.org>
----
- drivers/ata/ahci_platform.c    |  1 +
- drivers/ata/libahci_platform.c | 34 ++++++++++++++++++++++++++++++++++
- include/linux/ahci_platform.h  |  2 ++
- 3 files changed, 37 insertions(+)
+>   crypto: rockchip: explicitly request exclusive reset control
+>   iio: adc: rockchip_saradc: explicitly request exclusive reset control
+>   PCI: rockchip: explicitly request exclusive reset control
+>   phy: rockchip-pcie: explicitly request exclusive reset control
+>   phy: rockchip-typec: explicitly request exclusive reset control
+>   phy: rockchip-usb: explicitly request exclusive reset control
+>   thermal: rockchip: explicitly request exclusive reset control
 
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 62a04c8..99f9a89 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -93,6 +93,7 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_suspend,
- static struct platform_driver ahci_driver = {
- 	.probe = ahci_probe,
- 	.remove = ata_platform_remove_one,
-+	.shutdown = ahci_platform_shutdown,
- 	.driver = {
- 		.name = DRV_NAME,
- 		.of_match_table = ahci_of_match,
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index cd2eab6..a270a11 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -602,6 +602,40 @@ static void ahci_host_stop(struct ata_host *host)
- 	ahci_platform_disable_resources(hpriv);
- }
- 
-+/**
-+ * ahci_platform_shutdown - Disable interrupts and stop DMA for host ports
-+ * @dev: platform device pointer for the host
-+ *
-+ * This function is called during system shutdown and performs the minimal
-+ * deconfiguration required to ensure that an ahci_platform host cannot
-+ * corrupt or otherwise interfere with a new kernel being started with kexec.
-+ */
-+void ahci_platform_shutdown(struct platform_device *pdev)
-+{
-+	struct ata_host *host = platform_get_drvdata(pdev);
-+	struct ahci_host_priv *hpriv = host->private_data;
-+	void __iomem *mmio = hpriv->mmio;
-+	int i;
-+
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap = host->ports[i];
-+
-+		/* Disable port interrupts */
-+		if (ap->ops->freeze)
-+			ap->ops->freeze(ap);
-+
-+		/* Stop the port DMA engines */
-+		if (ap->ops->port_stop)
-+			ap->ops->port_stop(ap);
-+	}
-+
-+	/* Disable and clear host interrupts */
-+	writel(readl(mmio + HOST_CTL) & ~HOST_IRQ_EN, mmio + HOST_CTL);
-+	readl(mmio + HOST_CTL); /* flush */
-+	writel(GENMASK(host->n_ports, 0), mmio + HOST_IRQ_STAT);
-+}
-+EXPORT_SYMBOL_GPL(ahci_platform_shutdown);
-+
- #ifdef CONFIG_PM_SLEEP
- /**
-  * ahci_platform_suspend_host - Suspend an ahci-platform host
-diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
-index a270f25e..1b0a17b 100644
---- a/include/linux/ahci_platform.h
-+++ b/include/linux/ahci_platform.h
-@@ -36,6 +36,8 @@ int ahci_platform_init_host(struct platform_device *pdev,
- 			    const struct ata_port_info *pi_template,
- 			    struct scsi_host_template *sht);
- 
-+void ahci_platform_shutdown(struct platform_device *pdev);
-+
- int ahci_platform_suspend_host(struct device *dev);
- int ahci_platform_resume_host(struct device *dev);
- int ahci_platform_suspend(struct device *dev);
--- 
-Qualcomm Datacenter Technologies, Inc. on behalf of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux
-Foundation Collaborative Project.
+for the driver-related Rockchip changes
 
+Acked-by: Heiko Stuebner <heiko-4mtYJXux2i+zQB+pC5nmwQ@public.gmane.org>
