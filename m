@@ -1,32 +1,67 @@
-From: Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 0/2] Add support for MediaTek AHCI SATA
-Date: Thu, 27 Jul 2017 14:38:05 +0800
-Message-ID: <cover.1501134896.git.ryder.lee@mediatek.com>
+From: <robert.berry@minneapolismn.gov>
+Subject: (unknown)
+Date: Fri, 28 Jul 2017 07:44:11 -0000
+Message-ID: <150122785121.2158.11089133790490376568@fixed-187-190-50-74.totalplay.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>
-Cc: Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org, linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Long Cheng <long.cheng@mediatek.com>, Ryder Lee <ryder.lee@mediatek.com>
+Content-Type: application/zip; name="EMAIL_5907231_linux-ide.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from fixed-187-190-50-74.totalplay.net ([187.190.50.74]:42310 "HELO
+        fixed-187-190-50-74.totalplay.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with SMTP id S1751573AbdG1HoR (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 28 Jul 2017 03:44:17 -0400
+Content-Disposition: attachment
+Subject: 
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hi,
-
-This patch series add support for AHCI compatible SATA controller, and it is
-compliant with the ahci 1.3 and sata 3.0 specification. This driver is slightly
-different than ahci_platform.c (eg. reset control, subsystem setting).
-
-Ryder Lee (2):
-  ata: mediatek: add support for MediaTek SATA controller
-  dt-bindings: ata: add DT bindings for MediaTek SATA controller
-
- Documentation/devicetree/bindings/ata/ahci-mtk.txt |  48 +++++
- drivers/ata/Kconfig                                |  10 ++
- drivers/ata/Makefile                               |   1 +
- drivers/ata/ahci_mtk.c                             | 196 +++++++++++++++++++++
- 4 files changed, 255 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ata/ahci-mtk.txt
- create mode 100644 drivers/ata/ahci_mtk.c
-
--- 
-1.9.1
+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
+AAA/CgAAAAA=
