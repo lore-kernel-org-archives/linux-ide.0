@@ -1,64 +1,67 @@
-From: <robert.berry@minneapolismn.gov>
-Subject: (unknown)
-Date: Mon, 31 Jul 2017 18:00:34 -0000
-Message-ID: <150152403462.2158.1630608700443286218@wateen.net>
-Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_19786452607897_linux-ide.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from WimaxUser3633-255.wateen.net ([110.36.33.255]:50269 "HELO
-        wateen.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-        id S1751352AbdGaSAp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 31 Jul 2017 14:00:45 -0400
-Content-Disposition: attachment
-Subject: 
-Sender: linux-ide-owner@vger.kernel.org
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Subject: [PATCH v2 tip/core/rcu 08/10] drivers/ata: Replace spin_unlock_wait() with lock/unlock pair
+Date: Mon, 31 Jul 2017 15:58:15 -0700
+Message-ID: <1501541897-5225-8-git-send-email-paulmck@linux.vnet.ibm.com>
+References: <20170731225754.GB2674@linux.vnet.ibm.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170731225754.GB2674@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: mingo@kernel.org, jiangshanlai@gmail.com, dipankar@in.ibm.com, akpm@linux-foundation.org, mathieu.desnoyers@efficios.com, josh@joshtriplett.org, tglx@linutronix.de, peterz@infradead.org, rostedt@goodmis.org, dhowells@redhat.com, edumazet@google.com, fweisbec@gmail.com, oleg@redhat.com, "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, linux-ide@vger.kernel.org, Will Deacon <will.deacon@arm.com>, Alan Stern <stern@rowland.harvard.edu>, Andrea Parri <parri.andrea@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-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
+There is no agreed-upon definition of spin_unlock_wait()'s semantics,
+and it appears that all callers could do just as well with a lock/unlock
+pair.  This commit therefore eliminates the spin_unlock_wait() call and
+associated else-clause and hoists the then-clause's lock and unlock out of
+the "if" statement.  This should be safe from a performance perspective
+because according to Tejun there should be few if any drivers that don't
+set their own error handler.
+
+Signed-off-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+Cc: <linux-ide@vger.kernel.org>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Cc: Andrea Parri <parri.andrea@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+---
+ drivers/ata/libata-eh.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index b70bcf6d2914..b325db27eb8c 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -645,12 +645,11 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
+ 	 * completions are honored.  A scmd is determined to have
+ 	 * timed out iff its associated qc is active and not failed.
+ 	 */
++	spin_lock_irqsave(ap->lock, flags);
+ 	if (ap->ops->error_handler) {
+ 		struct scsi_cmnd *scmd, *tmp;
+ 		int nr_timedout = 0;
+ 
+-		spin_lock_irqsave(ap->lock, flags);
+-
+ 		/* This must occur under the ap->lock as we don't want
+ 		   a polled recovery to race the real interrupt handler
+ 
+@@ -700,12 +699,11 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
+ 		if (nr_timedout)
+ 			__ata_port_freeze(ap);
+ 
+-		spin_unlock_irqrestore(ap->lock, flags);
+ 
+ 		/* initialize eh_tries */
+ 		ap->eh_tries = ATA_EH_MAX_TRIES;
+-	} else
+-		spin_unlock_wait(ap->lock);
++	}
++	spin_unlock_irqrestore(ap->lock, flags);
+ 
+ }
+ EXPORT_SYMBOL(ata_scsi_cmd_error_handler);
+-- 
+2.5.2
