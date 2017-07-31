@@ -1,62 +1,64 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata fixes for v4.13-rc3
-Date: Mon, 31 Jul 2017 08:21:52 -0700
-Message-ID: <20170731152152.GB447614@devbig577.frc2.facebook.com>
+From: <robert.berry@minneapolismn.gov>
+Subject: (unknown)
+Date: Mon, 31 Jul 2017 18:00:34 -0000
+Message-ID: <150152403462.2158.1630608700443286218@wateen.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: application/zip; name="EMAIL_19786452607897_linux-ide.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from WimaxUser3633-255.wateen.net ([110.36.33.255]:50269 "HELO
+        wateen.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+        id S1751352AbdGaSAp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 31 Jul 2017 14:00:45 -0400
+Content-Disposition: attachment
+Subject: 
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello, Linus.
-
-libata fixes for v4.13-rc3.  Dan found a really old bug where libata
-hotplug code wasn't sanitizing index value from userland and may end
-up indexing with a negative number.  It is scary but fortunately can
-only be triggered by root.  Other than that, minor fixes.
-
-The following changes since commit af3c8d98508d37541d4bf57f13a984a7f73a328c:
-
-  Merge tag 'drm-for-v4.13' of git://people.freedesktop.org/~airlied/linux (2017-07-09 18:48:37 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.13-fixes
-
-for you to fetch changes up to 2f60e1ab2f0e148e82cb53c539ad003ffc9b9bd0:
-
-  libata: fix a couple of doc build warnings (2017-07-31 08:03:06 -0700)
-
-----------------------------------------------------------------
-Arnd Bergmann (1):
-      ata: fix gemini Kconfig dependencies
-
-Damien Le Moal (1):
-      libata: Cleanup ata_read_log_page()
-
-Dan Carpenter (1):
-      libata: array underflow in ata_find_dev()
-
-Jonathan Corbet (1):
-      libata: fix a couple of doc build warnings
-
-Kefeng Wang (1):
-      libata: remove unused rc in ata_eh_handle_port_resume
-
-Simon Horman (1):
-      ata: sata_rcar: add gen[23] fallback compatibility strings
-
- Documentation/devicetree/bindings/ata/sata_rcar.txt | 14 +++++++++++---
- drivers/ata/Kconfig                                 |  4 ++--
- drivers/ata/libata-core.c                           |  6 +++---
- drivers/ata/libata-eh.c                             |  7 +++----
- drivers/ata/libata-scsi.c                           |  6 ++++--
- drivers/ata/sata_rcar.c                             |  8 ++++++++
- include/linux/libata.h                              |  2 +-
- 7 files changed, 32 insertions(+), 15 deletions(-)
-
--- 
-tejun
+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
