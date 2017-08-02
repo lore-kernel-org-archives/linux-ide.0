@@ -1,49 +1,32 @@
 From: Linus Walleij <linus.walleij@linaro.org>
-Subject: Re: [PATCH 08/11] ata: Drop unnecessary static
-Date: Wed, 2 Aug 2017 10:23:00 +0200
-Message-ID: <CACRpkdanCp5nWL4cQQ0m-3myfVtzveJTP7f160v207ATGXTL=g@mail.gmail.com>
-References: <1500149266-32357-1-git-send-email-Julia.Lawall@lip6.fr> <1500149266-32357-9-git-send-email-Julia.Lawall@lip6.fr>
+Subject: Re: [PATCH 005/102] ata: sata_gemini: explicitly request exclusive
+ reset control
+Date: Wed, 2 Aug 2017 11:39:08 +0200
+Message-ID: <CACRpkdb+fUYdjdUtSJFVHqwL4DhJS6fNB9zBvaARgGb02Ksy6A@mail.gmail.com>
+References: <20170719152646.25903-1-p.zabel@pengutronix.de> <20170719152646.25903-6-p.zabel@pengutronix.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <1500149266-32357-9-git-send-email-Julia.Lawall@lip6.fr>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: Kees Cook <keescook@chromium.org>, kernel-janitors@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170719152646.25903-6-p.zabel@pengutronix.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Philipp Zabel <p.zabel@pengutronix.de>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Sat, Jul 15, 2017 at 10:07 PM, Julia Lawall <Julia.Lawall@lip6.fr> wrote:
+On Wed, Jul 19, 2017 at 5:25 PM, Philipp Zabel <p.zabel@pengutronix.de> wrote:
 
-> Drop static on a local variable, when the variable is initialized before
-> any possible use.  Thus, the static has no benefit.
+> Commit a53e35db70d1 ("reset: Ensure drivers are explicit when requesting
+> reset lines") started to transition the reset control request API calls
+> to explicitly state whether the driver needs exclusive or shared reset
+> control behavior. Convert all drivers requesting exclusive resets to the
+> explicit API call so the temporary transition helpers can be removed.
 >
-> The semantic patch that fixes this problem is as follows:
-> (http://coccinelle.lip6.fr/)
+> No functional changes.
 >
-> // <smpl>
-> @bad exists@
-> position p;
-> identifier x;
-> type T;
-> @@
-> static T x@p;
-> ...
-> x = <+...x...+>
->
-> @@
-> identifier x;
-> expression e;
-> type T;
-> position p != bad.p;
-> @@
-> -static
->  T x@p;
->  ... when != x
->      when strict
-> ?x = e;
-> // </smpl>
->
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+> Cc: Linus Walleij <linus.walleij@linaro.org>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: linux-ide@vger.kernel.org
+> Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
 
 Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
