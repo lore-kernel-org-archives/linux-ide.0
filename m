@@ -1,7 +1,7 @@
 From: Michal Simek <michal.simek@xilinx.com>
-Subject: [PATCH 9/9] ata: ceva: Add SMMU support for SATA IP
-Date: Fri,  4 Aug 2017 15:18:18 +0200
-Message-ID: <d2e94d9d3b378e5d3579a70fb9782f6088356294.1501852693.git.michal.simek@xilinx.com>
+Subject: [PATCH 8/9] ata: ceva: Correct the suspend and resume logic for SATA
+Date: Fri,  4 Aug 2017 15:18:17 +0200
+Message-ID: <8eed38d9029410035e49b6a5e846923d8eebbbd0.1501852693.git.michal.simek@xilinx.com>
 References: <cover.1501852693.git.michal.simek@xilinx.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1501852693.git.michal.simek@xilinx.com>
@@ -14,68 +14,69 @@ List-Id: linux-ide@vger.kernel.org
 
 From: Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>
 
-AXI master interface in CEVA AHCI controller requires two unique
-Write/Read ID tags per port. This is because, ahci controller uses
-different AXI ID[3:0] bits for identifying non-data transfers(like
-reading descriptors, updating PRD tables, etc) and data transfers
-(like sending/receiving FIS).To make SMMU work with SATA we need to
-add correct SMMU stream id for SATA. SMMU stream id for SATA is
-determined based on the AXI ID[1:0] as shown below
+The present suspend code disables the port interrupts
+and stops the HBA. On resume it enables the interrupts and HBA.
+This works fine until the FPD power domain is not off.
+If FPD is off then the ceva vendor specific configurations like
+OOB, AXI settings are lost, they need to be re-programmed and
+also since SERDES is also in FPD , SATA lane phy init needs to
+be called again (which is not happening in the present sequence)
+Because of this incorrect sequence SATA fails to work on resume.
 
-	SATA SMMU ID =  <TBU number>, 0011, 00, 00, AXI ID[1:0]
-	Note: SATA in  ZynqMp uses TBU1 so TBU number = 0x1, so
-	      SMMU ID = 001, 0011, 00, 00, AXI ID[1:0]
-
-Since we have four different AXI ID[3:0] (2 for port0 & 2 for port1
-as said above) we get four different SMMU stream id's combinations
-for SATA. These AXI ID can be configured using PAXIC register.
-In this patch we assumed the below AXI ID values
-
- Read ID/ Write ID for Non-Data Port0 transfers = 0
- Read ID/ Write ID for Data Port0 transfers = 1
- Read ID/ Write ID for Non-Data Port1 transfers = 2
- Read ID/ Write ID for Data Port1 transfers = 3
-
-Based on the above values,SMMU stream ID's for SATA will be 0x4c0 &
-0x4c1 for PORT0, 0x4c2 & 0x4c3 for PORT1. These values needed to be
-added to iommus dts property. This patch does the same.
+This patch corrects the code to make Suspend & Resume work in normal
+and FPD off cases.
 
 Signed-off-by: Anurag Kumar Vulisha <anuragku@xilinx.com>
+Reviewed-by: Shubhrajyoti Datta <shubhraj@xilinx.com>
 Signed-off-by: Michal Simek <michal.simek@xilinx.com>
 ---
 
- drivers/ata/ahci_ceva.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/ata/ahci_ceva.c | 29 +++++++++++++++++++++++++++--
+ 1 file changed, 27 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
-index c0742cbe4faa..5ecc9d46cb54 100644
+index 113c1f617da9..c0742cbe4faa 100644
 --- a/drivers/ata/ahci_ceva.c
 +++ b/drivers/ata/ahci_ceva.c
-@@ -38,8 +38,10 @@
+@@ -298,12 +298,37 @@ static int ceva_ahci_probe(struct platform_device *pdev)
  
- /* Vendor Specific Register bit definitions */
- #define PAXIC_ADBW_BW64 0x1
--#define PAXIC_MAWIDD	(1 << 8)
--#define PAXIC_MARIDD	(1 << 16)
-+#define PAXIC_MAWID(i)	(((i) * 2) << 4)
-+#define PAXIC_MARID(i)	(((i) * 2) << 12)
-+#define PAXIC_MARIDD(i)	((((i) * 2) + 1) << 16)
-+#define PAXIC_MAWIDD(i)	((((i) * 2) + 1) << 8)
- #define PAXIC_OTL	(0x4 << 20)
+ static int __maybe_unused ceva_ahci_suspend(struct device *dev)
+ {
+-	return ahci_platform_suspend_host(dev);
++	return ahci_platform_suspend(dev);
+ }
  
- /* Register bit definitions for cache control */
-@@ -147,9 +149,11 @@ static void ahci_ceva_setup(struct ahci_host_priv *hpriv)
- 		/*
- 		 * AXI Data bus width to 64
- 		 * Set Mem Addr Read, Write ID for data transfers
-+		 * Set Mem Addr Read ID, Write ID for non-data transfers
- 		 * Transfer limit to 72 DWord
- 		 */
--		tmp = PAXIC_ADBW_BW64 | PAXIC_MAWIDD | PAXIC_MARIDD | PAXIC_OTL;
-+		tmp = PAXIC_ADBW_BW64 | PAXIC_MAWIDD(i) | PAXIC_MARIDD(i) |
-+			PAXIC_MAWID(i) | PAXIC_MARID(i) | PAXIC_OTL;
- 		writel(tmp, mmio + AHCI_VEND_PAXIC);
+ static int __maybe_unused ceva_ahci_resume(struct device *dev)
+ {
+-	return ahci_platform_resume_host(dev);
++	struct ata_host *host = dev_get_drvdata(dev);
++	struct ahci_host_priv *hpriv = host->private_data;
++	int rc;
++
++	rc = ahci_platform_enable_resources(hpriv);
++	if (rc)
++		return rc;
++
++	/* Configure CEVA specific config before resuming HBA */
++	ahci_ceva_setup(hpriv);
++
++	rc = ahci_platform_resume_host(dev);
++	if (rc)
++		goto disable_resources;
++
++	/* We resumed so update PM runtime state */
++	pm_runtime_disable(dev);
++	pm_runtime_set_active(dev);
++	pm_runtime_enable(dev);
++
++	return 0;
++
++disable_resources:
++	ahci_platform_disable_resources(hpriv);
++
++	return rc;
+ }
  
- 		/* Set AXI cache control register if CCi is enabled */
+ static SIMPLE_DEV_PM_OPS(ahci_ceva_pm_ops, ceva_ahci_suspend, ceva_ahci_resume);
 -- 
 1.9.1
