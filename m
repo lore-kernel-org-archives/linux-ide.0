@@ -1,7 +1,7 @@
 From: Michal Simek <michal.simek@xilinx.com>
-Subject: [PATCH 5/9] ata: ceva: Make RxWaterMark value as module parameter
-Date: Fri,  4 Aug 2017 15:18:14 +0200
-Message-ID: <1fae8fe46887c6d8986c6362be4bf83ed3752331.1501852693.git.michal.simek@xilinx.com>
+Subject: [PATCH 3/9] ata: ceva: Add gen 3 mode support in driver
+Date: Fri,  4 Aug 2017 15:18:12 +0200
+Message-ID: <6b1cf2b64b79857504c178e26c07b2b7e7282059.1501852693.git.michal.simek@xilinx.com>
 References: <cover.1501852693.git.michal.simek@xilinx.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1501852693.git.michal.simek@xilinx.com>
@@ -14,39 +14,37 @@ List-Id: linux-ide@vger.kernel.org
 
 From: Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>
 
-This patch updates the driver to make Rx Fifo water mark value
-as a module parameter.
+This patch sets gen 3 mode as default mode in ahci_ceva driver.
 
 Signed-off-by: Anurag Kumar Vulisha <anuragku@xilinx.com>
 Signed-off-by: Michal Simek <michal.simek@xilinx.com>
 ---
 
- drivers/ata/ahci_ceva.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/ata/ahci_ceva.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
-index b63fab2507fa..eff40ec86065 100644
+index 59de2ca1885c..aa32c8a0f083 100644
 --- a/drivers/ata/ahci_ceva.c
 +++ b/drivers/ata/ahci_ceva.c
-@@ -71,6 +71,10 @@
- #define DRV_NAME	"ahci-ceva"
- #define CEVA_FLAG_BROKEN_GEN2	1
+@@ -60,6 +60,7 @@
+ #define PORT1_BASE	0x180
  
-+static unsigned int rx_watermark = PTC_RX_WM_VAL;
-+module_param(rx_watermark, uint, 0644);
-+MODULE_PARM_DESC(rx_watermark, "RxWaterMark value (0 - 0x80)");
-+
- struct ceva_ahci_priv {
- 	struct platform_device *ahci_pdev;
- 	/* Port Phy2Cfg Register */
-@@ -152,7 +156,7 @@ static void ahci_ceva_setup(struct ahci_host_priv *hpriv)
- 		writel(cevapriv->pp5c[i], mmio + AHCI_VEND_PP5C);
- 
- 		/* Rx Watermark setting  */
--		tmp = PTC_RX_WM_VAL | PTC_RSVD;
-+		tmp = rx_watermark | PTC_RSVD;
+ /* Port Control Register Bit Definitions */
++#define PORT_SCTL_SPD_GEN3	(0x3 << 4)
+ #define PORT_SCTL_SPD_GEN2	(0x2 << 4)
+ #define PORT_SCTL_SPD_GEN1	(0x1 << 4)
+ #define PORT_SCTL_IPM		(0x3 << 8)
+@@ -136,8 +137,8 @@ static void ahci_ceva_setup(struct ahci_host_priv *hpriv)
+ 		tmp = PTC_RX_WM_VAL | PTC_RSVD;
  		writel(tmp, mmio + AHCI_VEND_PTC);
  
- 		/* Default to Gen 3 Speed and Gen 1 if Gen2 is broken */
+-		/* Default to Gen 2 Speed and Gen 1 if Gen2 is broken */
+-		tmp = PORT_SCTL_SPD_GEN2 | PORT_SCTL_IPM;
++		/* Default to Gen 3 Speed and Gen 1 if Gen2 is broken */
++		tmp = PORT_SCTL_SPD_GEN3 | PORT_SCTL_IPM;
+ 		if (cevapriv->flags & CEVA_FLAG_BROKEN_GEN2)
+ 			tmp = PORT_SCTL_SPD_GEN1 | PORT_SCTL_IPM;
+ 		writel(tmp, mmio + PORT_SCR_CTL + PORT_BASE + PORT_OFFSET * i);
 -- 
 1.9.1
