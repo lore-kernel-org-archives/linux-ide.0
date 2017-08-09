@@ -1,89 +1,80 @@
-From: Linus Walleij <linus.walleij@linaro.org>
-Subject: [PATCH 2/2] ata: sata_gemini: Introduce explicit IDE pin control
-Date: Tue,  8 Aug 2017 21:07:14 +0200
-Message-ID: <20170808190714.11623-1-linus.walleij@linaro.org>
+From: Andrey Korolyov <andrey@xdel.ru>
+Subject: [PATCH] cs5536: add support for IDE controller variant
+Date: Wed,  9 Aug 2017 21:19:26 +0300
+Message-ID: <20170809181926.20015-1-andrey@xdel.ru>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lf0-f52.google.com ([209.85.215.52]:33696 "EHLO
-        mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752070AbdHHTHT (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Aug 2017 15:07:19 -0400
-Received: by mail-lf0-f52.google.com with SMTP id d17so19000388lfe.0
-        for <linux-ide@vger.kernel.org>; Tue, 08 Aug 2017 12:07:19 -0700 (PDT)
+Received: from ns2.flops.ru ([91.239.27.205]:49522 "EHLO mail.adserve.ru"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752947AbdHISZB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 9 Aug 2017 14:25:01 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org
-Cc: Janos Laube <janos.dev@gmail.com>, Paulius Zaleckas <paulius.zaleckas@gmail.com>, linux-arm-kernel@lists.infradead.org, Hans Ulli Kroll <ulli.kroll@googlemail.com>, Florian Fainelli <f.fainelli@gmail.com>, Linus Walleij <linus.walleij@linaro.org>
+To: linux-ide@vger.kernel.org
+Cc: andrey@xdel.ru
 
-The IDE pins are managed by the pin controller, if we want to
-use these, we need to ask the pin controller to explicitly enable
-them as by default, these pins are used for other business and
-most users just rely on the SATA bridge.
+Several legacy devices such as Geode-based Cisco ASA appliances
+and DB800 development board do possess CS5536 IDE controller
+with different PCI id than existing one. Using pata_generic is
+not always feasible as at least DB800 requires MSR quirk from
+pata_cs5536 to be used with vendor firmware.
 
-Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+Signed-off-by: Andrey Korolyov <andrey@xdel.ru>
+CC: stable@vger.kernel.org
 ---
- drivers/ata/sata_gemini.c | 35 +++++++++++++++++++++++++++++++++++
- 1 file changed, 35 insertions(+)
+ drivers/ata/pata_amd.c    | 1 +
+ drivers/ata/pata_cs5536.c | 1 +
+ drivers/ide/cs5536.c      | 1 +
+ include/linux/pci_ids.h   | 1 +
+ 4 files changed, 4 insertions(+)
 
-diff --git a/drivers/ata/sata_gemini.c b/drivers/ata/sata_gemini.c
-index 4990dd496598..0f0fc82bc6c8 100644
---- a/drivers/ata/sata_gemini.c
-+++ b/drivers/ata/sata_gemini.c
-@@ -15,6 +15,7 @@
- #include <linux/of_device.h>
- #include <linux/clk.h>
- #include <linux/io.h>
-+#include <linux/pinctrl/consumer.h>
- #include "sata_gemini.h"
+diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
+index 8d4d959..8706533 100644
+--- a/drivers/ata/pata_amd.c
++++ b/drivers/ata/pata_amd.c
+@@ -616,6 +616,7 @@ static const struct pci_device_id amd[] = {
+ 	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP73_IDE),	8 },
+ 	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP77_IDE),	8 },
+ 	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_CS5536_IDE),		9 },
++	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_CS5536_DEV_IDE),	9 },
  
- #define DRV_NAME "gemini_sata_bridge"
-@@ -287,6 +288,29 @@ static int gemini_sata_bridge_init(struct sata_gemini *sg)
- 	return 0;
- }
+ 	{ },
+ };
+diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
+index 6c15a55..dc12552 100644
+--- a/drivers/ata/pata_cs5536.c
++++ b/drivers/ata/pata_cs5536.c
+@@ -289,6 +289,7 @@ static int cs5536_init_one(struct pci_dev *dev, const struct pci_device_id *id)
  
-+static int gemini_setup_ide_pins(struct device *dev)
-+{
-+	struct pinctrl *p;
-+	struct pinctrl_state *ide_state;
-+	int ret;
-+
-+	p = devm_pinctrl_get(dev);
-+	if (IS_ERR(p))
-+		return PTR_ERR(p);
-+
-+	ide_state = pinctrl_lookup_state(p, "ide");
-+	if (IS_ERR(ide_state))
-+		return PTR_ERR(ide_state);
-+
-+	ret = pinctrl_select_state(p, ide_state);
-+	if (ret) {
-+		dev_err(dev, "could not select IDE state\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
- static int gemini_sata_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-@@ -355,6 +379,17 @@ static int gemini_sata_probe(struct platform_device *pdev)
- 		goto out_unprep_clk;
- 	}
+ static const struct pci_device_id cs5536[] = {
+ 	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_CS5536_IDE), },
++	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_CS5536_DEV_IDE), },
+ 	{ },
+ };
  
-+	/*
-+	 * Route out the IDE pins if desired.
-+	 * This is done by looking up a special pin control state called
-+	 * "ide" that will route out the IDE pins.
-+	 */
-+	if (sg->ide_pins) {
-+		ret = gemini_setup_ide_pins(dev);
-+		if (ret)
-+			return ret;
-+	}
-+
- 	dev_info(dev, "set up the Gemini IDE/SATA nexus\n");
- 	platform_set_drvdata(pdev, sg);
- 	sg_singleton = sg;
+diff --git a/drivers/ide/cs5536.c b/drivers/ide/cs5536.c
+index de9185d..01c250f 100644
+--- a/drivers/ide/cs5536.c
++++ b/drivers/ide/cs5536.c
+@@ -283,6 +283,7 @@ static int cs5536_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 
+ static const struct pci_device_id cs5536_pci_tbl[] = {
+ 	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_CS5536_IDE), },
++	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_CS5536_DEV_IDE), },
+ 	{ },
+ };
+ 
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index c71e532..4adf616 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -576,6 +576,7 @@
+ #define PCI_DEVICE_ID_AMD_CS5536_EHC    0x2095
+ #define PCI_DEVICE_ID_AMD_CS5536_UDC    0x2096
+ #define PCI_DEVICE_ID_AMD_CS5536_UOC    0x2097
++#define PCI_DEVICE_ID_AMD_CS5536_DEV_IDE    0x2092
+ #define PCI_DEVICE_ID_AMD_CS5536_IDE    0x209A
+ #define PCI_DEVICE_ID_AMD_LX_VIDEO  0x2081
+ #define PCI_DEVICE_ID_AMD_LX_AES    0x2082
 -- 
-2.9.4
+2.10.2
 
