@@ -1,67 +1,92 @@
-From: Andrey Korolyov <andrey@xdel.ru>
-Subject: [PATCH v2] cs5536: add support for IDE controller variant
-Date: Thu, 10 Aug 2017 13:21:14 +0300
-Message-ID: <20170810102114.22332-1-andrey@xdel.ru>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns2.flops.ru ([91.239.27.205]:51313 "EHLO mail.adserve.ru"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750735AbdHJKVQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 10 Aug 2017 06:21:16 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH 1/9] devicetree: bindings: Add sata port phy config
+ parameters in ahci-ceva
+Date: Thu, 10 Aug 2017 14:07:20 -0500
+Message-ID: <20170810190720.yqeu4qzztylu5slb@rob-hp-laptop>
+References: <cover.1501852693.git.michal.simek@xilinx.com>
+ <b7692739885fe200a4ea5a4e3828349a406e2247.1501852693.git.michal.simek@xilinx.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <b7692739885fe200a4ea5a4e3828349a406e2247.1501852693.git.michal.simek@xilinx.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michal Simek <michal.simek@xilinx.com>
+Cc: linux-kernel@vger.kernel.org, monstr@monstr.eu, Alexander Graf <agraf@suse.de>, Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>, Tejun Heo <tj@kernel.org>, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: andrey@xdel.ru, hch@infradead.org
 
-Several legacy devices such as Geode-based Cisco ASA appliances
-and DB800 development board do possess CS5536 IDE controller
-with different PCI id than existing one. Using pata_generic is
-not always feasible as at least DB800 requires MSR quirk from
-pata_cs5536 to be used with vendor firmware.
+On Fri, Aug 04, 2017 at 03:18:10PM +0200, Michal Simek wrote:
+> From: Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>
+> 
+> This patch adds device tree bindings for sata port phy parameters
+> in the ahci-ceva.txt file.
+> 
+> Signed-off-by: Anurag Kumar Vulisha <anuragku@xilinx.com>
+> Signed-off-by: Michal Simek <michal.simek@xilinx.com>
+> ---
+> 
+>  .../devicetree/bindings/ata/ahci-ceva.txt          | 39 ++++++++++++++++++++++
+>  1 file changed, 39 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-ceva.txt b/Documentation/devicetree/bindings/ata/ahci-ceva.txt
+> index 7ca8b976c13a..f97546f61444 100644
+> --- a/Documentation/devicetree/bindings/ata/ahci-ceva.txt
+> +++ b/Documentation/devicetree/bindings/ata/ahci-ceva.txt
+> @@ -5,6 +5,36 @@ Required properties:
+>    - compatible: Compatibility string. Must be 'ceva,ahci-1v84'.
+>    - clocks: Input clock specifier. Refer to common clock bindings.
+>    - interrupts: Interrupt specifier. Refer to interrupt binding.
+> +  - ceva,p0-cominit-params: OOB timing value for COMINIT parameter for port 0.
+> +  - ceva,p1-cominit-params: OOB timing value for COMINIT parameter for port 1.
+> +			The fields for the above parameter must be as shown below:
+> +			ceva,phy-cominit-params = /bits/ 8 <CIBGMN CIBGMX CIBGN CINMP>;
 
-Signed-off-by: Andrey Korolyov <andrey@xdel.ru>
-CC: stable@vger.kernel.org
----
- drivers/ata/pata_amd.c    | 1 +
- drivers/ata/pata_cs5536.c | 1 +
- include/linux/pci_ids.h   | 1 +
- 3 files changed, 3 insertions(+)
+phy? Should be pN?
 
-diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
-index 8d4d959..8706533 100644
---- a/drivers/ata/pata_amd.c
-+++ b/drivers/ata/pata_amd.c
-@@ -616,6 +616,7 @@ static const struct pci_device_id amd[] = {
- 	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP73_IDE),	8 },
- 	{ PCI_VDEVICE(NVIDIA,	PCI_DEVICE_ID_NVIDIA_NFORCE_MCP77_IDE),	8 },
- 	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_CS5536_IDE),		9 },
-+	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_CS5536_DEV_IDE),	9 },
- 
- 	{ },
- };
-diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
-index 6c15a55..dc12552 100644
---- a/drivers/ata/pata_cs5536.c
-+++ b/drivers/ata/pata_cs5536.c
-@@ -289,6 +289,7 @@ static int cs5536_init_one(struct pci_dev *dev, const struct pci_device_id *id)
- 
- static const struct pci_device_id cs5536[] = {
- 	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_CS5536_IDE), },
-+	{ PCI_VDEVICE(AMD,	PCI_DEVICE_ID_AMD_CS5536_DEV_IDE), },
- 	{ },
- };
- 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index c71e532..4adf616 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -576,6 +576,7 @@
- #define PCI_DEVICE_ID_AMD_CS5536_EHC    0x2095
- #define PCI_DEVICE_ID_AMD_CS5536_UDC    0x2096
- #define PCI_DEVICE_ID_AMD_CS5536_UOC    0x2097
-+#define PCI_DEVICE_ID_AMD_CS5536_DEV_IDE    0x2092
- #define PCI_DEVICE_ID_AMD_CS5536_IDE    0x209A
- #define PCI_DEVICE_ID_AMD_LX_VIDEO  0x2081
- #define PCI_DEVICE_ID_AMD_LX_AES    0x2082
--- 
-2.10.2
-
+> +			CINMP : COMINIT Negate Minimum Period.
+> +			CIBGN : COMINIT Burst Gap Nominal.
+> +			CIBGMX: COMINIT Burst Gap Maximum.
+> +			CIBGMN: COMINIT Burst Gap Minimum.
+> +  - ceva,p0-comwake-params: OOB timing value for COMWAKE parameter for port 0.
+> +  - ceva,p1-comwake-params: OOB timing value for COMWAKE parameter for port 1.
+> +			The fields for the above parameter must be as shown below:
+> +			ceva,phy-comwake-params = /bits/ 8 <CWBGMN CWBGMX CWBGN CWNMP>;
+> +			CWBGMN: COMWAKE Burst Gap Minimum.
+> +			CWBGMX: COMWAKE Burst Gap Maximum.
+> +			CWBGN: COMWAKE Burst Gap Nominal.
+> +			CWNMP: COMWAKE Negate Minimum Period.
+> +  - ceva,p0-burst-params: Burst timing value for COM parameter for port 0.
+> +  - ceva,p1-burst-params: Burst timing value for COM parameter for port 1.
+> +			The fields for the above parameter must be as shown below:
+> +			ceva,phy-burst-params = /bits/ 8 <BMX BNM SFD PTST>;
+> +			BMX: COM Burst Maximum.
+> +			BNM: COM Burst Nominal.
+> +			SFD: Signal Failure Detection value.
+> +			PTST: Partial to Slumber timer value.
+> +  - ceva,p0-retry-params: Retry interval timing value for port 0.
+> +  - ceva,p1-retry-params: Retry interval timing value for port 1.
+> +			The fields for the above parameter must be as shown below:
+> +			ceva,phy-retry-params = /bits/ 16 <RIT RCT>;
+> +			RIT:  Retry Interval Timer.
+> +			RCT:  Rate Change Timer.
+>  
+>  Optional properties:
+>    - ceva,broken-gen2: limit to gen1 speed instead of gen2.
+> @@ -16,5 +46,14 @@ Examples:
+>  		interrupt-parent = <&gic>;
+>  		interrupts = <0 133 4>;
+>  		clocks = <&clkc SATA_CLK_ID>;
+> +		ceva,p0-cominit-params = /bits/ 8 <0x0F 0x25 0x18 0x29>;
+> +		ceva,p0-comwake-params = /bits/ 8 <0x04 0x0B 0x08 0x0F>;
+> +		ceva,p0-burst-params = /bits/ 8 <0x0A 0x08 0x4A 0x06>;
+> +		ceva,p0-retry-params = /bits/ 16 <0x0216 0x7F06>;
+> +
+> +		ceva,p1-cominit-params = /bits/ 8 <0x0F 0x25 0x18 0x29>;
+> +		ceva,p1-comwake-params = /bits/ 8 <0x04 0x0B 0x08 0x0F>;
+> +		ceva,p1-burst-params = /bits/ 8 <0x0A 0x08 0x4A 0x06>;
+> +		ceva,p1-retry-params = /bits/ 16 <0x0216 0x7F06>;
+>  		ceva,broken-gen2;
+>  	};
+> -- 
+> 1.9.1
+> 
