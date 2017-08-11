@@ -1,115 +1,67 @@
 From: Ryder Lee <ryder.lee@mediatek.com>
 Subject: Re: [PATCH v2 2/2] dt-bindings: ata: add DT bindings for MediaTek
  SATA controller
-Date: Fri, 11 Aug 2017 10:25:56 +0800
-Message-ID: <1502418356.18608.10.camel@mtkswgap22>
+Date: Fri, 11 Aug 2017 11:57:36 +0800
+Message-ID: <1502423856.32524.17.camel@mtkswgap22>
 References: <cover.1502098458.git.ryder.lee@mediatek.com>
          <a7ceb4ed8cc3542169ae8d2d995bdd4707f504e1.1502098458.git.ryder.lee@mediatek.com>
          <20170810205149.lkphpv7krhdaa23y@rob-hp-laptop>
+         <1502418356.18608.10.camel@mtkswgap22>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailgw01.mediatek.com ([218.249.47.110]:42907 "EHLO
+Received: from mailgw01.mediatek.com ([218.249.47.110]:60568 "EHLO
         mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752469AbdHKC0I (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2017 22:26:08 -0400
-In-Reply-To: <20170810205149.lkphpv7krhdaa23y@rob-hp-laptop>
+        with ESMTP id S1751691AbdHKD54 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2017 23:57:56 -0400
+In-Reply-To: <1502418356.18608.10.camel@mtkswgap22>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Rob Herring <robh@kernel.org>
 Cc: Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>, devicetree@vger.kernel.org, linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Long Cheng <long.cheng@mediatek.com>
 
-On Thu, 2017-08-10 at 15:51 -0500, Rob Herring wrote:
-> On Mon, Aug 07, 2017 at 05:52:21PM +0800, Ryder Lee wrote:
-> > Add DT bindings for the onboard SATA controller present on the MediaTek
-> > SoCs.
+Hi Rob,
+
+Sorry for the noise letter.
+
+On Fri, 2017-08-11 at 10:25 +0800, Ryder Lee wrote:
+> > > +Required properties:
+> > > + - compatible	   : Must be "mediatek,ahci".
 > > 
-> > Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-> > ---
-> >  Documentation/devicetree/bindings/ata/ahci-mtk.txt | 50 ++++++++++++++++++++++
-> >  1 file changed, 50 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/ata/ahci-mtk.txt
-> > 
-> > diff --git a/Documentation/devicetree/bindings/ata/ahci-mtk.txt b/Documentation/devicetree/bindings/ata/ahci-mtk.txt
-> > new file mode 100644
-> > index 0000000..ed04dfc
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/ata/ahci-mtk.txt
-> > @@ -0,0 +1,50 @@
-> > +MediaTek Seria ATA controller
+> > SoC specific compatible strings please.
 > 
-> s/Seria/Serial/
+> Okay.
 
-Okay.
-> > +
-> > +Required properties:
-> > + - compatible	   : Must be "mediatek,ahci".
-> 
-> SoC specific compatible strings please.
+I took a look at ./ahci-platform.txt. Could we just add a generic
+compatible string as below:
 
-Okay.
+compatible: Must be "mediatek,soc-model-ahci", "mediatek,mtk-ahci"
 
-> > + - reg		   : Physical base addresses and length of register sets.
-> > + - interrupts	   : Interrupt associated with the SATA device.
-> > + - interrupt-names : Associated name must be: "hostc".
-> > + - clocks	   : A list of phandle and clock specifier pairs, one for each
-> > +		     entry in clock-names.
-> > + - clock-names	   : Associated names must be: "ahb", "axi", "asic", "rbc", "pm".
-> > + - phys		   : A phandle and PHY specifier pair for the PHY port.
-> > + - phy-names	   : Associated name must be: "sata-phy".
-> > + - ports-implemented : Mask that indicates which ports that the HBA supports
-> > +		       are available for software to use. Useful if PORTS_IMPL
-> > +		       is not programmed by the BIOS, which is true with some
-> > +		       embedded SOC's.
-> 
-> Do you have a variable number of ports and need this in DT? Because it 
-> looks like you only define having a single phy.
+In doing so, we can avoid having an endless list of compatibles for
+those MTK SoCs with the same IP block.
 
-We use this property to set PORTS_IMPL register value to 0x1, or there
-is no available port for use.
+> > > +
+> > > +Optional properties:
+> > > + - power-domains   : A phandle and power domain specifier pair to the power
+> > > +		     domain which is responsible for collapsing and restoring
+> > > +		     power to the peripheral.
+> > > + - resets	   : Must contain an entry for each entry in reset-names.
+> > > +		     See ../reset/reset.txt for details.
+> > > + - reset-names	   : Associated names must be: "axi", "sw", "reg".
+> > > + - mediatek,phy-mode : A phandle to the system controller, used to enable
+> > > +		       SATA function.
+> > > +
+> > > +Example:
+> > > +
+> > > +	sata: sata@1a200000 {
+> > > +		compatible = "mediatek,ahci";
 
-> But this is a standard prop, so you can just say "see 
-> ./ahci-platform.txt"
+MT7622 should be:
+               compatible = "mediatek,mt7622-ahci",
+                            "mediatek,mtk-ahci";
 
-Okay.
 
-> > +
-> > +Optional properties:
-> > + - power-domains   : A phandle and power domain specifier pair to the power
-> > +		     domain which is responsible for collapsing and restoring
-> > +		     power to the peripheral.
-> > + - resets	   : Must contain an entry for each entry in reset-names.
-> > +		     See ../reset/reset.txt for details.
-> > + - reset-names	   : Associated names must be: "axi", "sw", "reg".
-> > + - mediatek,phy-mode : A phandle to the system controller, used to enable
-> > +		       SATA function.
-> > +
-> > +Example:
-> > +
-> > +	sata: sata@1a200000 {
-> > +		compatible = "mediatek,ahci";
-> > +		reg = <0 0x1a200000 0 0x1100>;
-> > +		interrupts = <GIC_SPI 233 IRQ_TYPE_LEVEL_HIGH>;
-> > +		interrupt-names = "hostc";
-> > +		clocks = <&pciesys CLK_SATA_AHB_EN>,
-> > +			 <&pciesys CLK_SATA_AXI_EN>,
-> > +			 <&pciesys CLK_SATA_ASIC_EN>,
-> > +			 <&pciesys CLK_SATA_RBC_EN>,
-> > +			 <&pciesys CLK_SATA_PM_EN>;
-> > +		clock-names = "ahb", "axi", "asic", "rbc", "pm";
-> > +		phys = <&u3port1 PHY_TYPE_SATA>;
-> > +		phy-names = "sata-phy";
-> > +		ports-implemented = <0x1>;
-> > +		power-domains = <&scpsys MT7622_POWER_DOMAIN_HIF0>;
-> > +		resets = <&pciesys MT7622_SATA_AXI_BUS_RST>,
-> > +			 <&pciesys MT7622_SATA_PHY_SW_RST>,
-> > +			 <&pciesys MT7622_SATA_PHY_REG_RST>;
-> > +		reset-names = "axi", "sw", "reg";
-> > +		mediatek,phy-mode = <&pciesys>;
-> > +	};
-> > -- 
-> > 1.9.1
-> > 
+Ryder
 
 
