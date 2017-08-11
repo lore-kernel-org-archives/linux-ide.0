@@ -1,67 +1,52 @@
-From: Ryder Lee <ryder.lee@mediatek.com>
-Subject: Re: [PATCH v2 2/2] dt-bindings: ata: add DT bindings for MediaTek
- SATA controller
-Date: Fri, 11 Aug 2017 11:57:36 +0800
-Message-ID: <1502423856.32524.17.camel@mtkswgap22>
-References: <cover.1502098458.git.ryder.lee@mediatek.com>
-         <a7ceb4ed8cc3542169ae8d2d995bdd4707f504e1.1502098458.git.ryder.lee@mediatek.com>
-         <20170810205149.lkphpv7krhdaa23y@rob-hp-laptop>
-         <1502418356.18608.10.camel@mtkswgap22>
+From: Michal Simek <michal.simek@xilinx.com>
+Subject: Re: [PATCH 1/9] devicetree: bindings: Add sata port phy config
+ parameters in ahci-ceva
+Date: Fri, 11 Aug 2017 14:36:37 +0200
+Message-ID: <b9f44a24-f78b-fd42-f89b-13c04dca04ed@xilinx.com>
+References: <cover.1501852693.git.michal.simek@xilinx.com>
+ <b7692739885fe200a4ea5a4e3828349a406e2247.1501852693.git.michal.simek@xilinx.com>
+ <20170810190720.yqeu4qzztylu5slb@rob-hp-laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailgw01.mediatek.com ([218.249.47.110]:60568 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751691AbdHKD54 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 10 Aug 2017 23:57:56 -0400
-In-Reply-To: <1502418356.18608.10.camel@mtkswgap22>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170810190720.yqeu4qzztylu5slb@rob-hp-laptop>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rob Herring <robh@kernel.org>, Michal Simek <michal.simek@xilinx.com>, Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>
+Cc: linux-kernel@vger.kernel.org, monstr@monstr.eu, Alexander Graf <agraf@suse.de>, Tejun Heo <tj@kernel.org>, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>
 List-Id: linux-ide@vger.kernel.org
-To: Rob Herring <robh@kernel.org>
-Cc: Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>, devicetree@vger.kernel.org, linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Long Cheng <long.cheng@mediatek.com>
 
-Hi Rob,
-
-Sorry for the noise letter.
-
-On Fri, 2017-08-11 at 10:25 +0800, Ryder Lee wrote:
-> > > +Required properties:
-> > > + - compatible	   : Must be "mediatek,ahci".
-> > 
-> > SoC specific compatible strings please.
+On 10.8.2017 21:07, Rob Herring wrote:
+> On Fri, Aug 04, 2017 at 03:18:10PM +0200, Michal Simek wrote:
+>> From: Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>
+>>
+>> This patch adds device tree bindings for sata port phy parameters
+>> in the ahci-ceva.txt file.
+>>
+>> Signed-off-by: Anurag Kumar Vulisha <anuragku@xilinx.com>
+>> Signed-off-by: Michal Simek <michal.simek@xilinx.com>
+>> ---
+>>
+>>  .../devicetree/bindings/ata/ahci-ceva.txt          | 39 ++++++++++++++++++++++
+>>  1 file changed, 39 insertions(+)
+>>
+>> diff --git a/Documentation/devicetree/bindings/ata/ahci-ceva.txt b/Documentation/devicetree/bindings/ata/ahci-ceva.txt
+>> index 7ca8b976c13a..f97546f61444 100644
+>> --- a/Documentation/devicetree/bindings/ata/ahci-ceva.txt
+>> +++ b/Documentation/devicetree/bindings/ata/ahci-ceva.txt
+>> @@ -5,6 +5,36 @@ Required properties:
+>>    - compatible: Compatibility string. Must be 'ceva,ahci-1v84'.
+>>    - clocks: Input clock specifier. Refer to common clock bindings.
+>>    - interrupts: Interrupt specifier. Refer to interrupt binding.
+>> +  - ceva,p0-cominit-params: OOB timing value for COMINIT parameter for port 0.
+>> +  - ceva,p1-cominit-params: OOB timing value for COMINIT parameter for port 1.
+>> +			The fields for the above parameter must be as shown below:
+>> +			ceva,phy-cominit-params = /bits/ 8 <CIBGMN CIBGMX CIBGN CINMP>;
 > 
-> Okay.
+> phy? Should be pN?
 
-I took a look at ./ahci-platform.txt. Could we just add a generic
-compatible string as below:
+pN will be in v2.
 
-compatible: Must be "mediatek,soc-model-ahci", "mediatek,mtk-ahci"
-
-In doing so, we can avoid having an endless list of compatibles for
-those MTK SoCs with the same IP block.
-
-> > > +
-> > > +Optional properties:
-> > > + - power-domains   : A phandle and power domain specifier pair to the power
-> > > +		     domain which is responsible for collapsing and restoring
-> > > +		     power to the peripheral.
-> > > + - resets	   : Must contain an entry for each entry in reset-names.
-> > > +		     See ../reset/reset.txt for details.
-> > > + - reset-names	   : Associated names must be: "axi", "sw", "reg".
-> > > + - mediatek,phy-mode : A phandle to the system controller, used to enable
-> > > +		       SATA function.
-> > > +
-> > > +Example:
-> > > +
-> > > +	sata: sata@1a200000 {
-> > > +		compatible = "mediatek,ahci";
-
-MT7622 should be:
-               compatible = "mediatek,mt7622-ahci",
-                            "mediatek,mtk-ahci";
-
-
-Ryder
-
-
+Thanks,
+Michal
