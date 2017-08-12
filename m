@@ -1,37 +1,48 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] cs5536: add support for IDE controller variant
-Date: Fri, 11 Aug 2017 10:35:22 -0700
-Message-ID: <20170811173522.GF3005423@devbig577.frc2.facebook.com>
-References: <20170810102114.22332-1-andrey@xdel.ru>
+From: Ryder Lee <ryder.lee-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
+Subject: [PATCH v3 0/2] Add support for MediaTek AHCI SATA
+Date: Sat, 12 Aug 2017 09:31:02 +0800
+Message-ID: <cover.1502501342.git.ryder.lee@mediatek.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f178.google.com ([209.85.216.178]:35061 "EHLO
-        mail-qt0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753517AbdHKRf1 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Aug 2017 13:35:27 -0400
-Received: by mail-qt0-f178.google.com with SMTP id p3so24912627qtg.2
-        for <linux-ide@vger.kernel.org>; Fri, 11 Aug 2017 10:35:26 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20170810102114.22332-1-andrey@xdel.ru>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Long Cheng <long.cheng-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>, Ryder Lee <ryder.lee-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Andrey Korolyov <andrey@xdel.ru>
-Cc: linux-ide@vger.kernel.org, hch@infradead.org
 
-On Thu, Aug 10, 2017 at 01:21:14PM +0300, Andrey Korolyov wrote:
-> Several legacy devices such as Geode-based Cisco ASA appliances
-> and DB800 development board do possess CS5536 IDE controller
-> with different PCI id than existing one. Using pata_generic is
-> not always feasible as at least DB800 requires MSR quirk from
-> pata_cs5536 to be used with vendor firmware.
-> 
-> Signed-off-by: Andrey Korolyov <andrey@xdel.ru>
-> CC: stable@vger.kernel.org
+Hi,
 
-Applied to libata/for-4.14.
+This patch series add support for AHCI compatible SATA controller, and it is
+compliant with the ahci 1.3 and sata 3.0 specification. This driver is slightly
+different than ahci_platform.c (e.g., reset control, subsystem setting).
 
-Thanks.
+changes since v3:
+- update binding text: fix a typo and modify compatible strings.
+
+changes since v2:
+- according to Commit a53e35db70d1 ("reset: Ensure drivers are explicit when requesting reset lines").
+  replace devm_reset_control_get_optional() by devm_reset_control_get_optional_exclusive().
+
+changes since v1:
+- update binding text: add missing "specifier pairs" descriptions.
+- fix kbuild test warning: fix the error handling.
+
+Ryder Lee (2):
+  ata: mediatek: add support for MediaTek SATA controller
+  dt-bindings: ata: add DT bindings for MediaTek SATA controller
+
+ Documentation/devicetree/bindings/ata/ahci-mtk.txt |  51 ++++++
+ drivers/ata/Kconfig                                |  10 ++
+ drivers/ata/Makefile                               |   1 +
+ drivers/ata/ahci_mtk.c                             | 196 +++++++++++++++++++++
+ 4 files changed, 258 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ata/ahci-mtk.txt
+ create mode 100644 drivers/ata/ahci_mtk.c
 
 -- 
-tejun
+1.9.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
