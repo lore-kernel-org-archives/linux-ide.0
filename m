@@ -1,39 +1,49 @@
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH] PNP: ide: constify pnp_device_id
-Date: Wed, 16 Aug 2017 10:24:32 +0530
-Message-ID: <60c34272432b3411cd5d55728c62481e133f32a6.1502859040.git.arvind.yadav.cs@gmail.com>
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] sata: ahci-da850: Fix some error handling paths in 'ahci_da850_probe()'
+Date: Wed, 16 Aug 2017 07:31:03 +0200
+Message-ID: <20170816053103.19773-1-christophe.jaillet@wanadoo.fr>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:38215 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750827AbdHPEyq (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 16 Aug 2017 00:54:46 -0400
+Received: from smtp10.smtpout.orange.fr ([80.12.242.132]:38939 "EHLO
+        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751601AbdHPFbJ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 16 Aug 2017 01:31:09 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: davem@davemloft.net
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 
-pnp_device_id are not supposed to change at runtime. All functions
-working with pnp_device_id provided by <linux/pnp.h> work with
-const pnp_device_id. So mark the non-const structs as const.
+'rc' is known to be 0 at this point.
+If 'platform_get_resource()' or 'devm_ioremap()' fail, return -ENOMEM
+instead of 0 which means success.
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 ---
- drivers/ide/ide-pnp.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ata/ahci_da850.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ide/ide-pnp.c b/drivers/ide/ide-pnp.c
-index f5f2b62..859ddab 100644
---- a/drivers/ide/ide-pnp.c
-+++ b/drivers/ide/ide-pnp.c
-@@ -22,7 +22,7 @@
- #define DRV_NAME "ide-pnp"
+diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
+index 1a50cd3b4233..eb46cad4d514 100644
+--- a/drivers/ata/ahci_da850.c
++++ b/drivers/ata/ahci_da850.c
+@@ -216,12 +216,16 @@ static int ahci_da850_probe(struct platform_device *pdev)
+ 		return rc;
  
- /* Add your devices here :)) */
--static struct pnp_device_id idepnp_devices[] = {
-+static const struct pnp_device_id idepnp_devices[] = {
- 	/* Generic ESDI/IDE/ATA compatible hard disk controller */
- 	{.id = "PNP0600", .driver_data = 0},
- 	{.id = ""}
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+-	if (!res)
++	if (!res) {
++		rc = -ENOMEM;
+ 		goto disable_resources;
++	}
+ 
+ 	pwrdn_reg = devm_ioremap(dev, res->start, resource_size(res));
+-	if (!pwrdn_reg)
++	if (!pwrdn_reg) {
++		rc = -ENOMEM;
+ 		goto disable_resources;
++	}
+ 
+ 	da850_sata_init(dev, pwrdn_reg, hpriv->mmio, mpy);
+ 
 -- 
-2.7.4
+2.11.0
 
