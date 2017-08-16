@@ -1,31 +1,25 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] sata: ahci-da850: Fix some error handling paths in
- 'ahci_da850_probe()'
-Date: Wed, 16 Aug 2017 07:40:32 -0700
-Message-ID: <20170816144032.GE4087514@devbig577.frc2.facebook.com>
-References: <20170816053103.19773-1-christophe.jaillet@wanadoo.fr>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] PNP: ide: constify pnp_device_id
+Date: Wed, 16 Aug 2017 11:10:41 -0700 (PDT)
+Message-ID: <20170816.111041.525900390371271349.davem@davemloft.net>
+References: <60c34272432b3411cd5d55728c62481e133f32a6.1502859040.git.arvind.yadav.cs@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170816053103.19773-1-christophe.jaillet@wanadoo.fr>
+In-Reply-To: <60c34272432b3411cd5d55728c62481e133f32a6.1502859040.git.arvind.yadav.cs@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+To: arvind.yadav.cs@gmail.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello,
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Date: Wed, 16 Aug 2017 10:24:32 +0530
 
-On Wed, Aug 16, 2017 at 07:31:03AM +0200, Christophe JAILLET wrote:
-> 'rc' is known to be 0 at this point.
-> If 'platform_get_resource()' or 'devm_ioremap()' fail, return -ENOMEM
-> instead of 0 which means success.
+> pnp_device_id are not supposed to change at runtime. All functions
+> working with pnp_device_id provided by <linux/pnp.h> work with
+> const pnp_device_id. So mark the non-const structs as const.
 > 
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 
-Applied to libata/for-4.13-fixes w/ Sergei's suggestion applied.
-
-Thanks.
-
--- 
-tejun
+Applied.
