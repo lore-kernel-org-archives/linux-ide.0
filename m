@@ -1,53 +1,66 @@
-From: Gionatan Danti <g.danti@assyoma.it>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: No I/O errors reported after SATA link hard reset
-Date: Thu, 17 Aug 2017 16:23:59 +0200
-Message-ID: <b3f6735d333aeee62410d5cfea852fd4@assyoma.it>
+Date: Thu, 17 Aug 2017 07:46:57 -0700
+Message-ID: <20170817144657.GF3238792@devbig577.frc2.facebook.com>
 References: <fe5cc200a4cba71cb9e5e6a980699805@assyoma.it>
  <13561110-4e59-303a-8e3d-dd60c1bafba8@fastmail.fm>
  <20170817124821.GA3238792@devbig577.frc2.facebook.com>
- <559dc5fe-c162-41e6-7f14-0f3837b64585@fastmail.fm>
+ <4debd4d8dea1d534ef555ceae4429435@assyoma.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <559dc5fe-c162-41e6-7f14-0f3837b64585@fastmail.fm>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Bernd Schubert <"Bernd Schubert"@fastmail.fm>
-Cc: Tejun Heo <tj@kernel.org>, Bernd Schubert <bernd.schubert@fastmail.fm>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qk0-f170.google.com ([209.85.220.170]:36648 "EHLO
+        mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751574AbdHQOrB (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Aug 2017 10:47:01 -0400
+Content-Disposition: inline
+In-Reply-To: <4debd4d8dea1d534ef555ceae4429435@assyoma.it>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Gionatan Danti <g.danti@assyoma.it>
+Cc: Bernd Schubert <bernd.schubert@fastmail.fm>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi Bernd,
+Hello,
 
-Il 17-08-2017 15:18 Bernd Schubert ha scritto:
+On Thu, Aug 17, 2017 at 04:15:35PM +0200, Gionatan Danti wrote:
+> Ok, so *this* is the root cause of the problem: libata not
+> identifying spurious link renegotiations vs brief powerloss/powerup
+> events. Out of curiosity: is this a SATA-specific problem (ie: in
+> the SATA specification), or even SAS disks are affected?
+
+No idea about SAS.  They're identical at the link layer tho.
+
+> >Because we don't wanna be ditching disks on temporary link glitches,
+> >which do happen once in a while.
 > 
-> So for Gionatan the root cause was an instable power supply, but in my
-> case there wasn't any power loss, there were just failed sata commands.
+> Any chances to report I/O errors to the upper layers *without*
+> offlining the device? In this manner, upper layers (ie: MDRAID) can
+> act in a more informate way. For example: single disk device will
+> simple retry the failed operation, while MDRAID can take the
+> "badblocks" code path to deal with the error.
 
-I tried many times to replicate the error by briefly 
-disconnecting/reconnecting the SATA cable, but I had *no* corruption in 
-this case. Sure, this was my experience, but a bad-behaving disk 
-firmware can do all sort of bad things with the volatile cache, 
-especially when renegotiating the host link.
+Upper layer can request to avoid retrying on errors but it won't help
+too much.  It doesn't have much to do with specific commands.  A power
+event can take place without any command in flight and lose the
+buffered data.  Unless upper layer is tracking all that's being
+written, there isn't much it can do outside doing full scan.  This is
+a condition which should be handled from the driver side.
 
-I my case, I did *not* change the power supply, rather the SATA power 
-cable: my theory is that, as the previous cable was shared between the 
-two disks, somewhat low-voltage spiked find their ways and the second 
-disk simply "rebooted". The new cable is dedicated to the SATA disk wich 
-was previously failing.
+> >So, the right way to deal with the problem probably is making use of
+> >the SMART counter which indicates power loss events and verify that
+> >the counter hasn't increased over link issues.  If it changed, the
+> >device should be detached and re-probed, which will make it come back
+> >as a different block device.  Unfortunately, I haven't had the chance
+> >to actually implement that.
+> 
+> This is a very good idea, maybe I can implement it in userspace with
+> a simple, fast polling scheme (for example, each 60 seconds). Such a
+> polling would not prevent all corruption scenarios, but will at
+> least timely inform the user.
 
-What concern my is that, reading the linux-raid mailing list, many user 
-have historycally reported high mismatch count in RAID1 arrays. These 
-mismatches were generally discarded saying "RAID1 is prone to false 
-positives" but, in my experience, these "false mismatches" are quite 
-rare. What it means is that many users *are probably suffering* from my 
-(and your) problem, without never realizing that...
+Yeah, looking into getting it implemented on the kernel side.
 
-Regards.
+Thanks.
 
 -- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+tejun
