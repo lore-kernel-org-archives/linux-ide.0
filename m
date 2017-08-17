@@ -1,55 +1,44 @@
-From: Gionatan Danti <g.danti@assyoma.it>
-Subject: Re: No I/O errors reported after SATA link hard reset
-Date: Thu, 17 Aug 2017 17:01:36 +0200
-Message-ID: <5546b954a6f291189a7d949ba8ced69a@assyoma.it>
-References: <fe5cc200a4cba71cb9e5e6a980699805@assyoma.it>
- <13561110-4e59-303a-8e3d-dd60c1bafba8@fastmail.fm>
- <20170817124821.GA3238792@devbig577.frc2.facebook.com>
- <4debd4d8dea1d534ef555ceae4429435@assyoma.it>
- <20170817144657.GF3238792@devbig577.frc2.facebook.com>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v3 2/2] dt-bindings: ata: add DT bindings for MediaTek
+ SATA controller
+Date: Thu, 17 Aug 2017 15:29:57 -0500
+Message-ID: <20170817202957.u3roxjzmmtwgraef@rob-hp-laptop>
+References: <cover.1502501342.git.ryder.lee@mediatek.com>
+ <1efe9aad6d81d88ef315c993b7f1aed25be109f5.1502501342.git.ryder.lee@mediatek.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20170817144657.GF3238792@devbig577.frc2.facebook.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1efe9aad6d81d88ef315c993b7f1aed25be109f5.1502501342.git.ryder.lee@mediatek.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ryder Lee <ryder.lee@mediatek.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>, devicetree@vger.kernel.org, linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Long Cheng <long.cheng@mediatek.com>
 List-Id: linux-ide@vger.kernel.org
 
-Il 17-08-2017 16:46 Tejun Heo ha scritto:
-> Upper layer can request to avoid retrying on errors but it won't help
-> too much.  It doesn't have much to do with specific commands.  A power
-> event can take place without any command in flight and lose the
-> buffered data.  Unless upper layer is tracking all that's being
-> written, there isn't much it can do outside doing full scan.  This is
-> a condition which should be handled from the driver side.
+On Sat, Aug 12, 2017 at 09:31:04AM +0800, Ryder Lee wrote:
+> Add DT bindings for the onboard SATA controller present on the MediaTek
+> SoCs.
+> 
+> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> ---
+>  Documentation/devicetree/bindings/ata/ahci-mtk.txt | 51 ++++++++++++++++++++++
+>  1 file changed, 51 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ata/ahci-mtk.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-mtk.txt b/Documentation/devicetree/bindings/ata/ahci-mtk.txt
+> new file mode 100644
+> index 0000000..96c8d22
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/ahci-mtk.txt
+> @@ -0,0 +1,51 @@
+> +MediaTek Serial ATA controller
+> +
+> +Required properties:
+> + - compatible	   : Must be "mediatek,soc-model-ahci", "mediatek,mtk-ahci".
 
-True, I was not thinking about buffered (delayed) writes. However, for 
-synchronized writes it should be possible: after all, for sync() writes 
-the application is waiting for its completion. This means that if a 
-powerloss/link renegotiation is detected between *the two FLUSH_CACHE 
-commands*, and I/O error can be reported to the calling application.
+Instead of "soc-model", pick something checkpatch.pl understands. IIRC, 
+"<chip>" is one.
 
-What about disk supporting FUAs? Are they unaffected by this problem? If 
-my understand it properly, torn writes remain a potential, but 
-inevitable, problem when facing powerloss conditions.
+With that,
 
-By the way, when speaking about a "full scan" your are referring to full 
-bus scanning/enumeration? Will it change devices name when 
-re-discovering them?
-
-> Yeah, looking into getting it implemented on the kernel side.
-
-Great! Are your thinking about a polling approach or an event-driven 
-one?
-
-Regards.
-
--- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+Acked-by: Rob Herring <robh@kernel.org>
