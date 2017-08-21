@@ -1,52 +1,87 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 08/12] ide-floppy: Use blk_rq_is_scsi()
-Date: Fri, 18 Aug 2017 09:39:30 +0200
-Message-ID: <e9a0027d-84bd-f189-acf2-efb871ec6b55@suse.de>
-References: <20170817232311.25948-1-bart.vanassche@wdc.com>
- <20170817232311.25948-9-bart.vanassche@wdc.com>
+From: "tip-bot for Paul E. McKenney" <tipbot@zytor.com>
+Subject: [tip:core/rcu] drivers/ata: Replace spin_unlock_wait() with
+ lock/unlock pair
+Date: Mon, 21 Aug 2017 02:14:28 -0700
+Message-ID: <tip-a4f08141d0b876407ca4e4b0ae1b2dec35851532@git.kernel.org>
+Reply-To: will.deacon@arm.com, peterz@infradead.org,
+          parri.andrea@gmail.com, tj@kernel.org,
+          linux-kernel@vger.kernel.org, paulmck@linux.vnet.ibm.com,
+          stern@rowland.harvard.edu, linux-ide@vger.kernel.org,
+          tglx@linutronix.de, torvalds@linux-foundation.org,
+          mingo@kernel.org, hpa@zytor.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170817232311.25948-9-bart.vanassche@wdc.com>
-Content-Language: en-US
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@wdc.com>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "David S . Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from terminus.zytor.com ([65.50.211.136]:47265 "EHLO
+        terminus.zytor.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752116AbdHUJTI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 21 Aug 2017 05:19:08 -0400
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-tip-commits@vger.kernel.org
+Cc: paulmck@linux.vnet.ibm.com, peterz@infradead.org, parri.andrea@gmail.com, tj@kernel.org, will.deacon@arm.com, mingo@kernel.org, hpa@zytor.com, torvalds@linux-foundation.org, tglx@linutronix.de, stern@rowland.harvard.edu, linux-ide@vger.kernel.org
 
-On 08/18/2017 01:23 AM, Bart Van Assche wrote:
-> This patch does not change any functionality.
-> 
-> Signed-off-by: Bart Van Assche <bart.vanassche@wdc.com>
-> Cc: David S. Miller <davem@davemloft.net>
-> Cc: linux-ide@vger.kernel.org
-> ---
->  drivers/ide/ide-floppy.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-> index 627b1f62a749..3ddd88219906 100644
-> --- a/drivers/ide/ide-floppy.c
-> +++ b/drivers/ide/ide-floppy.c
-> @@ -72,7 +72,7 @@ static int ide_floppy_callback(ide_drive_t *drive, int dsc)
->  		drive->failed_pc = NULL;
->  
->  	if (pc->c[0] == GPCMD_READ_10 || pc->c[0] == GPCMD_WRITE_10 ||
-> -	    (req_op(rq) == REQ_OP_SCSI_IN || req_op(rq) == REQ_OP_SCSI_OUT))
-> +	    blk_rq_is_scsi(rq))
->  		uptodate = 1; /* FIXME */
->  	else if (pc->c[0] == GPCMD_REQUEST_SENSE) {
->  
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Commit-ID:  a4f08141d0b876407ca4e4b0ae1b2dec35851532
+Gitweb:     http://git.kernel.org/tip/a4f08141d0b876407ca4e4b0ae1b2dec35851532
+Author:     Paul E. McKenney <paulmck@linux.vnet.ibm.com>
+AuthorDate: Thu, 29 Jun 2017 13:10:47 -0700
+Committer:  Paul E. McKenney <paulmck@linux.vnet.ibm.com>
+CommitDate: Thu, 17 Aug 2017 08:08:58 -0700
 
-Cheers,
+drivers/ata: Replace spin_unlock_wait() with lock/unlock pair
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+There is no agreed-upon definition of spin_unlock_wait()'s semantics,
+and it appears that all callers could do just as well with a lock/unlock
+pair.  This commit therefore eliminates the spin_unlock_wait() call and
+associated else-clause and hoists the then-clause's lock and unlock out of
+the "if" statement.  This should be safe from a performance perspective
+because according to Tejun there should be few if any drivers that don't
+set their own error handler.
+
+Signed-off-by: Paul E. McKenney <paulmck@linux.vnet.ibm.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+Cc: <linux-ide@vger.kernel.org>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Cc: Andrea Parri <parri.andrea@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+---
+ drivers/ata/libata-eh.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index b70bcf6..b325db2 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -645,12 +645,11 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
+ 	 * completions are honored.  A scmd is determined to have
+ 	 * timed out iff its associated qc is active and not failed.
+ 	 */
++	spin_lock_irqsave(ap->lock, flags);
+ 	if (ap->ops->error_handler) {
+ 		struct scsi_cmnd *scmd, *tmp;
+ 		int nr_timedout = 0;
+ 
+-		spin_lock_irqsave(ap->lock, flags);
+-
+ 		/* This must occur under the ap->lock as we don't want
+ 		   a polled recovery to race the real interrupt handler
+ 
+@@ -700,12 +699,11 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
+ 		if (nr_timedout)
+ 			__ata_port_freeze(ap);
+ 
+-		spin_unlock_irqrestore(ap->lock, flags);
+ 
+ 		/* initialize eh_tries */
+ 		ap->eh_tries = ATA_EH_MAX_TRIES;
+-	} else
+-		spin_unlock_wait(ap->lock);
++	}
++	spin_unlock_irqrestore(ap->lock, flags);
+ 
+ }
+ EXPORT_SYMBOL(ata_scsi_cmd_error_handler);
