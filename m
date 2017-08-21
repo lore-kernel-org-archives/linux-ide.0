@@ -1,45 +1,159 @@
 From: Michal Simek <michal.simek@xilinx.com>
-Subject: [PATCH v2 0/9] Ata ceva patches
-Date: Mon, 21 Aug 2017 13:17:15 +0200
-Message-ID: <cover.1503314240.git.michal.simek@xilinx.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:35647 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752234AbdHULRa (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 21 Aug 2017 07:17:30 -0400
-Received: by mail-wr0-f194.google.com with SMTP id p8so14449971wrf.2
-        for <linux-ide@vger.kernel.org>; Mon, 21 Aug 2017 04:17:30 -0700 (PDT)
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Subject: [PATCH v2 2/9] ata: ceva: Move sata port phy oob settings to device-tree
+Date: Mon, 21 Aug 2017 13:17:17 +0200
+Message-ID: <b9b0e17612ef2d1e842f178bbc47ae6bd36258dd.1503314240.git.michal.simek@xilinx.com>
+References: <cover.1503314240.git.michal.simek@xilinx.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1503314240.git.michal.simek@xilinx.com>
+In-Reply-To: <cover.1503314240.git.michal.simek@xilinx.com>
+References: <cover.1503314240.git.michal.simek@xilinx.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, monstr@monstr.eu
-Cc: Alexander Graf <agraf@suse.de>, Rob Herring <robh@kernel.org>, Tejun Heo <tj@kernel.org>, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>
+Cc: Alexander Graf <agraf@suse.de>, Rob Herring <robh@kernel.org>, Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-Hi,
+From: Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>
 
-this patchset contains the latest changes which are available in Xilinx tree.
+In SATA Speed negotiation happens with  OOB(Out of Band) signals. These OOB
+signal timing values are configured through vendor specific registers in the
+SATA controller. These OOB timings depends on the generator and detector clock
+frequency, which varies from board to board (ex: ep108 and zc1751 has different
+clock frequencies).
+To avoid maintaing these OOB settings in the driver, it is better to move these
+settings to the device-tree node and read from the device-tree.
 
-Thanks,
-Michal
+This patch does the same.
 
-Changes in v2:
-- DT fix naming in parameters description use pN instead of phy
-  reported by Rob
+Signed-off-by: Anurag Kumar Vulisha <anuragku@xilinx.com>
+Signed-off-by: Michal Simek <michal.simek@xilinx.com>
+---
 
-Anurag Kumar Vulisha (9):
-  devicetree: bindings: Add sata port phy config parameters in ahci-ceva
-  ata: ceva: Move sata port phy oob settings to device-tree
-  ata: ceva: Add gen 3 mode support in driver
-  ata: ceva: Disable Device Sleep capability
-  ata: ceva: Make RxWaterMark value as module parameter
-  ata: ceva: Add CCI support for SATA if CCI is enabled
-  ata: ceva: Correct the AXI bus configuration for SATA ports
-  ata: ceva: Correct the suspend and resume logic for SATA
-  ata: ceva: Add SMMU support for SATA IP
+Changes in v2: None
 
- .../devicetree/bindings/ata/ahci-ceva.txt          |  39 ++++
- drivers/ata/ahci_ceva.c                            | 197 +++++++++++++++++----
- 2 files changed, 198 insertions(+), 38 deletions(-)
+ drivers/ata/ahci_ceva.c | 84 +++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 61 insertions(+), 23 deletions(-)
 
+diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
+index 207649d323c5..59de2ca1885c 100644
+--- a/drivers/ata/ahci_ceva.c
++++ b/drivers/ata/ahci_ceva.c
+@@ -50,21 +50,6 @@
+ #define PPCFG_PSS_EN	(1 << 29)
+ #define PPCFG_ESDF_EN	(1 << 31)
+ 
+-#define PP2C_CIBGMN	0x0F
+-#define PP2C_CIBGMX	(0x25 << 8)
+-#define PP2C_CIBGN	(0x18 << 16)
+-#define PP2C_CINMP	(0x29 << 24)
+-
+-#define PP3C_CWBGMN	0x04
+-#define PP3C_CWBGMX	(0x0B << 8)
+-#define PP3C_CWBGN	(0x08 << 16)
+-#define PP3C_CWNMP	(0x0F << 24)
+-
+-#define PP4C_BMX	0x0a
+-#define PP4C_BNM	(0x08 << 8)
+-#define PP4C_SFD	(0x4a << 16)
+-#define PP4C_PTST	(0x06 << 24)
+-
+ #define PP5C_RIT	0x60216
+ #define PP5C_RCT	(0x7f0 << 20)
+ 
+@@ -87,6 +72,11 @@
+ 
+ struct ceva_ahci_priv {
+ 	struct platform_device *ahci_pdev;
++	/* Port Phy2Cfg Register */
++	u32 pp2c[NR_PORTS];
++	u32 pp3c[NR_PORTS];
++	u32 pp4c[NR_PORTS];
++	u32 pp5c[NR_PORTS];
+ 	int flags;
+ };
+ 
+@@ -131,20 +121,16 @@ static void ahci_ceva_setup(struct ahci_host_priv *hpriv)
+ 		writel(tmp, mmio + AHCI_VEND_PPCFG);
+ 
+ 		/* Phy Control OOB timing parameters COMINIT */
+-		tmp = PP2C_CIBGMN | PP2C_CIBGMX | PP2C_CIBGN | PP2C_CINMP;
+-		writel(tmp, mmio + AHCI_VEND_PP2C);
++		writel(cevapriv->pp2c[i], mmio + AHCI_VEND_PP2C);
+ 
+ 		/* Phy Control OOB timing parameters COMWAKE */
+-		tmp = PP3C_CWBGMN | PP3C_CWBGMX | PP3C_CWBGN | PP3C_CWNMP;
+-		writel(tmp, mmio + AHCI_VEND_PP3C);
++		writel(cevapriv->pp3c[i], mmio + AHCI_VEND_PP3C);
+ 
+ 		/* Phy Control Burst timing setting */
+-		tmp = PP4C_BMX | PP4C_BNM | PP4C_SFD | PP4C_PTST;
+-		writel(tmp, mmio + AHCI_VEND_PP4C);
++		writel(cevapriv->pp4c[i], mmio + AHCI_VEND_PP4C);
+ 
+ 		/* Rate Change Timer and Retry Interval Timer setting */
+-		tmp = PP5C_RIT | PP5C_RCT;
+-		writel(tmp, mmio + AHCI_VEND_PP5C);
++		writel(cevapriv->pp5c[i], mmio + AHCI_VEND_PP5C);
+ 
+ 		/* Rx Watermark setting  */
+ 		tmp = PTC_RX_WM_VAL | PTC_RSVD;
+@@ -187,6 +173,58 @@ static int ceva_ahci_probe(struct platform_device *pdev)
+ 	if (of_property_read_bool(np, "ceva,broken-gen2"))
+ 		cevapriv->flags = CEVA_FLAG_BROKEN_GEN2;
+ 
++	/* Read OOB timing value for COMINIT from device-tree */
++	if (of_property_read_u8_array(np, "ceva,p0-cominit-params",
++					(u8 *)&cevapriv->pp2c[0], 4) < 0) {
++		dev_warn(dev, "ceva,p0-cominit-params property not defined\n");
++		return -EINVAL;
++	}
++
++	if (of_property_read_u8_array(np, "ceva,p1-cominit-params",
++					(u8 *)&cevapriv->pp2c[1], 4) < 0) {
++		dev_warn(dev, "ceva,p1-cominit-params property not defined\n");
++		return -EINVAL;
++	}
++
++	/* Read OOB timing value for COMWAKE from device-tree*/
++	if (of_property_read_u8_array(np, "ceva,p0-comwake-params",
++					(u8 *)&cevapriv->pp3c[0], 4) < 0) {
++		dev_warn(dev, "ceva,p0-comwake-params property not defined\n");
++		return -EINVAL;
++	}
++
++	if (of_property_read_u8_array(np, "ceva,p1-comwake-params",
++					(u8 *)&cevapriv->pp3c[1], 4) < 0) {
++		dev_warn(dev, "ceva,p1-comwake-params property not defined\n");
++		return -EINVAL;
++	}
++
++	/* Read phy BURST timing value from device-tree */
++	if (of_property_read_u8_array(np, "ceva,p0-burst-params",
++					(u8 *)&cevapriv->pp4c[0], 4) < 0) {
++		dev_warn(dev, "ceva,p0-burst-params property not defined\n");
++		return -EINVAL;
++	}
++
++	if (of_property_read_u8_array(np, "ceva,p1-burst-params",
++					(u8 *)&cevapriv->pp4c[1], 4) < 0) {
++		dev_warn(dev, "ceva,p1-burst-params property not defined\n");
++		return -EINVAL;
++	}
++
++	/* Read phy RETRY interval timing value from device-tree */
++	if (of_property_read_u16_array(np, "ceva,p0-retry-params",
++					(u16 *)&cevapriv->pp5c[0], 2) < 0) {
++		dev_warn(dev, "ceva,p0-retry-params property not defined\n");
++		return -EINVAL;
++	}
++
++	if (of_property_read_u16_array(np, "ceva,p1-retry-params",
++					(u16 *)&cevapriv->pp5c[1], 2) < 0) {
++		dev_warn(dev, "ceva,p1-retry-params property not defined\n");
++		return -EINVAL;
++	}
++
+ 	hpriv->plat_data = cevapriv;
+ 
+ 	/* CEVA specific initialization */
 -- 
 1.9.1
-
