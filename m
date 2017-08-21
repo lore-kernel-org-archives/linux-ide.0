@@ -1,7 +1,7 @@
 From: Michal Simek <michal.simek@xilinx.com>
-Subject: [PATCH v2 9/9] ata: ceva: Add SMMU support for SATA IP
-Date: Mon, 21 Aug 2017 13:17:24 +0200
-Message-ID: <ae5e3905ace2ad5b73841a8a7ccfaf5277bf365b.1503314240.git.michal.simek@xilinx.com>
+Subject: [PATCH v2 7/9] ata: ceva: Correct the AXI bus configuration for SATA ports
+Date: Mon, 21 Aug 2017 13:17:22 +0200
+Message-ID: <069945209dd6ee0f22bd3a1ccf9484e737d56f8e.1503314240.git.michal.simek@xilinx.com>
 References: <cover.1503314240.git.michal.simek@xilinx.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1503314240.git.michal.simek@xilinx.com>
@@ -14,31 +14,13 @@ List-Id: linux-ide@vger.kernel.org
 
 From: Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>
 
-AXI master interface in CEVA AHCI controller requires two unique
-Write/Read ID tags per port. This is because, ahci controller uses
-different AXI ID[3:0] bits for identifying non-data transfers(like
-reading descriptors, updating PRD tables, etc) and data transfers
-(like sending/receiving FIS).To make SMMU work with SATA we need to
-add correct SMMU stream id for SATA. SMMU stream id for SATA is
-determined based on the AXI ID[1:0] as shown below
-
-	SATA SMMU ID =  <TBU number>, 0011, 00, 00, AXI ID[1:0]
-	Note: SATA in  ZynqMp uses TBU1 so TBU number = 0x1, so
-	      SMMU ID = 001, 0011, 00, 00, AXI ID[1:0]
-
-Since we have four different AXI ID[3:0] (2 for port0 & 2 for port1
-as said above) we get four different SMMU stream id's combinations
-for SATA. These AXI ID can be configured using PAXIC register.
-In this patch we assumed the below AXI ID values
-
- Read ID/ Write ID for Non-Data Port0 transfers = 0
- Read ID/ Write ID for Data Port0 transfers = 1
- Read ID/ Write ID for Non-Data Port1 transfers = 2
- Read ID/ Write ID for Data Port1 transfers = 3
-
-Based on the above values,SMMU stream ID's for SATA will be 0x4c0 &
-0x4c1 for PORT0, 0x4c2 & 0x4c3 for PORT1. These values needed to be
-added to iommus dts property. This patch does the same.
+Previously PAXIC register was programmed before configuring PCFG
+register. PCFG should be programmed with the address of the port
+for which PAXIC should be configured for.
+This was not happening before, so only one port PAXIC was written
+correctly and the other port was having wrong value.
+This patch moves the PXAIC register write after configuring PCFG,
+doing so will correct the axi bus settings for sata port0 & port1.
 
 Signed-off-by: Anurag Kumar Vulisha <anuragku@xilinx.com>
 Signed-off-by: Michal Simek <michal.simek@xilinx.com>
@@ -46,38 +28,42 @@ Signed-off-by: Michal Simek <michal.simek@xilinx.com>
 
 Changes in v2: None
 
- drivers/ata/ahci_ceva.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/ata/ahci_ceva.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
-index c0742cbe4faa..5ecc9d46cb54 100644
+index ec9cfb52c6f6..113c1f617da9 100644
 --- a/drivers/ata/ahci_ceva.c
 +++ b/drivers/ata/ahci_ceva.c
-@@ -38,8 +38,10 @@
+@@ -134,14 +134,6 @@ static void ahci_ceva_setup(struct ahci_host_priv *hpriv)
+ 	u32 tmp;
+ 	int i;
  
- /* Vendor Specific Register bit definitions */
- #define PAXIC_ADBW_BW64 0x1
--#define PAXIC_MAWIDD	(1 << 8)
--#define PAXIC_MARIDD	(1 << 16)
-+#define PAXIC_MAWID(i)	(((i) * 2) << 4)
-+#define PAXIC_MARID(i)	(((i) * 2) << 12)
-+#define PAXIC_MARIDD(i)	((((i) * 2) + 1) << 16)
-+#define PAXIC_MAWIDD(i)	((((i) * 2) + 1) << 8)
- #define PAXIC_OTL	(0x4 << 20)
+-	/*
+-	 * AXI Data bus width to 64
+-	 * Set Mem Addr Read, Write ID for data transfers
+-	 * Transfer limit to 72 DWord
+-	 */
+-	tmp = PAXIC_ADBW_BW64 | PAXIC_MAWIDD | PAXIC_MARIDD | PAXIC_OTL;
+-	writel(tmp, mmio + AHCI_VEND_PAXIC);
+-
+ 	/* Set AHCI Enable */
+ 	tmp = readl(mmio + HOST_CTL);
+ 	tmp |= HOST_AHCI_EN;
+@@ -152,6 +144,14 @@ static void ahci_ceva_setup(struct ahci_host_priv *hpriv)
+ 		tmp = PCFG_TPSS_VAL | PCFG_TPRS_VAL | (PCFG_PAD_VAL + i);
+ 		writel(tmp, mmio + AHCI_VEND_PCFG);
  
- /* Register bit definitions for cache control */
-@@ -147,9 +149,11 @@ static void ahci_ceva_setup(struct ahci_host_priv *hpriv)
- 		/*
- 		 * AXI Data bus width to 64
- 		 * Set Mem Addr Read, Write ID for data transfers
-+		 * Set Mem Addr Read ID, Write ID for non-data transfers
- 		 * Transfer limit to 72 DWord
- 		 */
--		tmp = PAXIC_ADBW_BW64 | PAXIC_MAWIDD | PAXIC_MARIDD | PAXIC_OTL;
-+		tmp = PAXIC_ADBW_BW64 | PAXIC_MAWIDD(i) | PAXIC_MARIDD(i) |
-+			PAXIC_MAWID(i) | PAXIC_MARID(i) | PAXIC_OTL;
- 		writel(tmp, mmio + AHCI_VEND_PAXIC);
- 
++		/*
++		 * AXI Data bus width to 64
++		 * Set Mem Addr Read, Write ID for data transfers
++		 * Transfer limit to 72 DWord
++		 */
++		tmp = PAXIC_ADBW_BW64 | PAXIC_MAWIDD | PAXIC_MARIDD | PAXIC_OTL;
++		writel(tmp, mmio + AHCI_VEND_PAXIC);
++
  		/* Set AXI cache control register if CCi is enabled */
+ 		if (cevapriv->is_cci_enabled) {
+ 			tmp = readl(mmio + AHCI_VEND_AXICC);
 -- 
 1.9.1
