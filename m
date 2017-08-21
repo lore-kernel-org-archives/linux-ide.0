@@ -1,7 +1,7 @@
 From: Michal Simek <michal.simek@xilinx.com>
-Subject: [PATCH v2 8/9] ata: ceva: Correct the suspend and resume logic for SATA
-Date: Mon, 21 Aug 2017 13:17:23 +0200
-Message-ID: <6f40597aea1b16581d3ef13a35aa2318188b2d4d.1503314240.git.michal.simek@xilinx.com>
+Subject: [PATCH v2 4/9] ata: ceva: Disable Device Sleep capability
+Date: Mon, 21 Aug 2017 13:17:19 +0200
+Message-ID: <bf8012cc273f448a9e9bff7e1b7c770adfa329b2.1503314240.git.michal.simek@xilinx.com>
 References: <cover.1503314240.git.michal.simek@xilinx.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1503314240.git.michal.simek@xilinx.com>
@@ -14,71 +14,49 @@ List-Id: linux-ide@vger.kernel.org
 
 From: Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>
 
-The present suspend code disables the port interrupts
-and stops the HBA. On resume it enables the interrupts and HBA.
-This works fine until the FPD power domain is not off.
-If FPD is off then the ceva vendor specific configurations like
-OOB, AXI settings are lost, they need to be re-programmed and
-also since SERDES is also in FPD , SATA lane phy init needs to
-be called again (which is not happening in the present sequence)
-Because of this incorrect sequence SATA fails to work on resume.
-
-This patch corrects the code to make Suspend & Resume work in normal
-and FPD off cases.
+Since CEVA controller does not support Device Sleep capability,
+we need to clear that feature by clearing the DEVSLP bit in word78
+of IDENTIFY DEVICE data. This patch does the same.
 
 Signed-off-by: Anurag Kumar Vulisha <anuragku@xilinx.com>
-Reviewed-by: Shubhrajyoti Datta <shubhraj@xilinx.com>
 Signed-off-by: Michal Simek <michal.simek@xilinx.com>
 ---
 
 Changes in v2: None
 
- drivers/ata/ahci_ceva.c | 29 +++++++++++++++++++++++++++--
- 1 file changed, 27 insertions(+), 2 deletions(-)
+ drivers/ata/ahci_ceva.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
 diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
-index 113c1f617da9..c0742cbe4faa 100644
+index aa32c8a0f083..b63fab2507fa 100644
 --- a/drivers/ata/ahci_ceva.c
 +++ b/drivers/ata/ahci_ceva.c
-@@ -298,12 +298,37 @@ static int ceva_ahci_probe(struct platform_device *pdev)
+@@ -81,8 +81,26 @@ struct ceva_ahci_priv {
+ 	int flags;
+ };
  
- static int __maybe_unused ceva_ahci_suspend(struct device *dev)
- {
--	return ahci_platform_suspend_host(dev);
-+	return ahci_platform_suspend(dev);
- }
- 
- static int __maybe_unused ceva_ahci_resume(struct device *dev)
- {
--	return ahci_platform_resume_host(dev);
-+	struct ata_host *host = dev_get_drvdata(dev);
-+	struct ahci_host_priv *hpriv = host->private_data;
-+	int rc;
++static unsigned int ceva_ahci_read_id(struct ata_device *dev,
++					struct ata_taskfile *tf, u16 *id)
++{
++	u32 err_mask;
 +
-+	rc = ahci_platform_enable_resources(hpriv);
-+	if (rc)
-+		return rc;
-+
-+	/* Configure CEVA specific config before resuming HBA */
-+	ahci_ceva_setup(hpriv);
-+
-+	rc = ahci_platform_resume_host(dev);
-+	if (rc)
-+		goto disable_resources;
-+
-+	/* We resumed so update PM runtime state */
-+	pm_runtime_disable(dev);
-+	pm_runtime_set_active(dev);
-+	pm_runtime_enable(dev);
++	err_mask = ata_do_dev_read_id(dev, tf, id);
++	if (err_mask)
++		return err_mask;
++	/*
++	 * Since CEVA controller does not support device sleep feature, we
++	 * need to clear DEVSLP (bit 8) in word78 of the IDENTIFY DEVICE data.
++	 */
++	id[ATA_ID_FEATURE_SUPP] &= cpu_to_le16(~(1 << 8));
 +
 +	return 0;
++}
 +
-+disable_resources:
-+	ahci_platform_disable_resources(hpriv);
-+
-+	return rc;
- }
+ static struct ata_port_operations ahci_ceva_ops = {
+ 	.inherits = &ahci_platform_ops,
++	.read_id = ceva_ahci_read_id,
+ };
  
- static SIMPLE_DEV_PM_OPS(ahci_ceva_pm_ops, ceva_ahci_suspend, ceva_ahci_resume);
+ static const struct ata_port_info ahci_ceva_port_info = {
 -- 
 1.9.1
