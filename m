@@ -1,27 +1,22 @@
 From: Michal Simek <michal.simek@xilinx.com>
-Subject: [PATCH v2 5/9] ata: ceva: Make RxWaterMark value as module parameter
-Date: Mon, 21 Aug 2017 13:17:20 +0200
-Message-ID: <4f99d8aded415dc3c2eec77c9fc52b92a12fd7a6.1503314240.git.michal.simek@xilinx.com>
+Subject: [PATCH v2 6/9] ata: ceva: Add CCI support for SATA if CCI is enabled
+Date: Mon, 21 Aug 2017 13:17:21 +0200
+Message-ID: <0b8f0288c4cac7eddbf65db8e8472ff0958814bf.1503314240.git.michal.simek@xilinx.com>
 References: <cover.1503314240.git.michal.simek@xilinx.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wr0-f196.google.com ([209.85.128.196]:37432 "EHLO
-        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753152AbdHULRi (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 21 Aug 2017 07:17:38 -0400
-Received: by mail-wr0-f196.google.com with SMTP id z91so17343203wrc.4
-        for <linux-ide@vger.kernel.org>; Mon, 21 Aug 2017 04:17:38 -0700 (PDT)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1503314240.git.michal.simek@xilinx.com>
 In-Reply-To: <cover.1503314240.git.michal.simek@xilinx.com>
 References: <cover.1503314240.git.michal.simek@xilinx.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, monstr@monstr.eu
 Cc: Alexander Graf <agraf@suse.de>, Rob Herring <robh@kernel.org>, Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 From: Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>
 
-This patch updates the driver to make Rx Fifo water mark value
-as a module parameter.
+This patch adds support for CCI in SATA controller if CCI is
+enabled in design. This patch will add CCI settings for SATA
+if "dma-coherent" dts property is added.
 
 Signed-off-by: Anurag Kumar Vulisha <anuragku@xilinx.com>
 Signed-off-by: Michal Simek <michal.simek@xilinx.com>
@@ -29,33 +24,85 @@ Signed-off-by: Michal Simek <michal.simek@xilinx.com>
 
 Changes in v2: None
 
- drivers/ata/ahci_ceva.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/ata/ahci_ceva.c | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
 
 diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
-index b63fab2507fa..eff40ec86065 100644
+index eff40ec86065..ec9cfb52c6f6 100644
 --- a/drivers/ata/ahci_ceva.c
 +++ b/drivers/ata/ahci_ceva.c
-@@ -71,6 +71,10 @@
- #define DRV_NAME	"ahci-ceva"
- #define CEVA_FLAG_BROKEN_GEN2	1
+@@ -32,6 +32,7 @@
+ #define AHCI_VEND_PP3C  0xB0
+ #define AHCI_VEND_PP4C  0xB4
+ #define AHCI_VEND_PP5C  0xB8
++#define AHCI_VEND_AXICC 0xBC
+ #define AHCI_VEND_PAXIC 0xC0
+ #define AHCI_VEND_PTC   0xC8
  
-+static unsigned int rx_watermark = PTC_RX_WM_VAL;
-+module_param(rx_watermark, uint, 0644);
-+MODULE_PARM_DESC(rx_watermark, "RxWaterMark value (0 - 0x80)");
+@@ -41,6 +42,15 @@
+ #define PAXIC_MARIDD	(1 << 16)
+ #define PAXIC_OTL	(0x4 << 20)
+ 
++/* Register bit definitions for cache control */
++#define AXICC_ARCA_VAL  (0xF << 0)
++#define AXICC_ARCF_VAL  (0xF << 4)
++#define AXICC_ARCH_VAL  (0xF << 8)
++#define AXICC_ARCP_VAL  (0xF << 12)
++#define AXICC_AWCFD_VAL (0xF << 16)
++#define AXICC_AWCD_VAL  (0xF << 20)
++#define AXICC_AWCF_VAL  (0xF << 24)
 +
- struct ceva_ahci_priv {
- 	struct platform_device *ahci_pdev;
- 	/* Port Phy2Cfg Register */
-@@ -152,7 +156,7 @@ static void ahci_ceva_setup(struct ahci_host_priv *hpriv)
- 		writel(cevapriv->pp5c[i], mmio + AHCI_VEND_PP5C);
+ #define PCFG_TPSS_VAL	(0x32 << 16)
+ #define PCFG_TPRS_VAL	(0x2 << 12)
+ #define PCFG_PAD_VAL	0x2
+@@ -82,6 +92,9 @@ struct ceva_ahci_priv {
+ 	u32 pp3c[NR_PORTS];
+ 	u32 pp4c[NR_PORTS];
+ 	u32 pp5c[NR_PORTS];
++	/* Axi Cache Control Register */
++	u32 axicc;
++	bool is_cci_enabled;
+ 	int flags;
+ };
  
- 		/* Rx Watermark setting  */
--		tmp = PTC_RX_WM_VAL | PTC_RSVD;
-+		tmp = rx_watermark | PTC_RSVD;
- 		writel(tmp, mmio + AHCI_VEND_PTC);
+@@ -139,6 +152,16 @@ static void ahci_ceva_setup(struct ahci_host_priv *hpriv)
+ 		tmp = PCFG_TPSS_VAL | PCFG_TPRS_VAL | (PCFG_PAD_VAL + i);
+ 		writel(tmp, mmio + AHCI_VEND_PCFG);
  
- 		/* Default to Gen 3 Speed and Gen 1 if Gen2 is broken */
++		/* Set AXI cache control register if CCi is enabled */
++		if (cevapriv->is_cci_enabled) {
++			tmp = readl(mmio + AHCI_VEND_AXICC);
++			tmp |= AXICC_ARCA_VAL | AXICC_ARCF_VAL |
++				AXICC_ARCH_VAL | AXICC_ARCP_VAL |
++				AXICC_AWCFD_VAL | AXICC_AWCD_VAL |
++				AXICC_AWCF_VAL;
++			writel(tmp, mmio + AHCI_VEND_AXICC);
++		}
++
+ 		/* Port Phy Cfg register enables */
+ 		tmp = PPCFG_TTA | PPCFG_PSS_EN | PPCFG_ESDF_EN;
+ 		writel(tmp, mmio + AHCI_VEND_PPCFG);
+@@ -177,6 +200,7 @@ static int ceva_ahci_probe(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_host_priv *hpriv;
+ 	struct ceva_ahci_priv *cevapriv;
++	enum dev_dma_attr attr;
+ 	int rc;
+ 
+ 	cevapriv = devm_kzalloc(dev, sizeof(*cevapriv), GFP_KERNEL);
+@@ -248,6 +272,13 @@ static int ceva_ahci_probe(struct platform_device *pdev)
+ 		return -EINVAL;
+ 	}
+ 
++	/*
++	 * Check if CCI is enabled for SATA. The DEV_DMA_COHERENT is returned
++	 * if CCI is enabled, so check for DEV_DMA_COHERENT.
++	 */
++	attr = device_get_dma_attr(dev);
++	cevapriv->is_cci_enabled = (attr == DEV_DMA_COHERENT);
++
+ 	hpriv->plat_data = cevapriv;
+ 
+ 	/* CEVA specific initialization */
 -- 
 1.9.1
-
