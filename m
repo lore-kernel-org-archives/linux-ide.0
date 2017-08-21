@@ -1,7 +1,7 @@
 From: Michal Simek <michal.simek@xilinx.com>
-Subject: [PATCH v2 7/9] ata: ceva: Correct the AXI bus configuration for SATA ports
-Date: Mon, 21 Aug 2017 13:17:22 +0200
-Message-ID: <069945209dd6ee0f22bd3a1ccf9484e737d56f8e.1503314240.git.michal.simek@xilinx.com>
+Subject: [PATCH v2 8/9] ata: ceva: Correct the suspend and resume logic for SATA
+Date: Mon, 21 Aug 2017 13:17:23 +0200
+Message-ID: <6f40597aea1b16581d3ef13a35aa2318188b2d4d.1503314240.git.michal.simek@xilinx.com>
 References: <cover.1503314240.git.michal.simek@xilinx.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1503314240.git.michal.simek@xilinx.com>
@@ -14,56 +14,71 @@ List-Id: linux-ide@vger.kernel.org
 
 From: Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>
 
-Previously PAXIC register was programmed before configuring PCFG
-register. PCFG should be programmed with the address of the port
-for which PAXIC should be configured for.
-This was not happening before, so only one port PAXIC was written
-correctly and the other port was having wrong value.
-This patch moves the PXAIC register write after configuring PCFG,
-doing so will correct the axi bus settings for sata port0 & port1.
+The present suspend code disables the port interrupts
+and stops the HBA. On resume it enables the interrupts and HBA.
+This works fine until the FPD power domain is not off.
+If FPD is off then the ceva vendor specific configurations like
+OOB, AXI settings are lost, they need to be re-programmed and
+also since SERDES is also in FPD , SATA lane phy init needs to
+be called again (which is not happening in the present sequence)
+Because of this incorrect sequence SATA fails to work on resume.
+
+This patch corrects the code to make Suspend & Resume work in normal
+and FPD off cases.
 
 Signed-off-by: Anurag Kumar Vulisha <anuragku@xilinx.com>
+Reviewed-by: Shubhrajyoti Datta <shubhraj@xilinx.com>
 Signed-off-by: Michal Simek <michal.simek@xilinx.com>
 ---
 
 Changes in v2: None
 
- drivers/ata/ahci_ceva.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ drivers/ata/ahci_ceva.c | 29 +++++++++++++++++++++++++++--
+ 1 file changed, 27 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
-index ec9cfb52c6f6..113c1f617da9 100644
+index 113c1f617da9..c0742cbe4faa 100644
 --- a/drivers/ata/ahci_ceva.c
 +++ b/drivers/ata/ahci_ceva.c
-@@ -134,14 +134,6 @@ static void ahci_ceva_setup(struct ahci_host_priv *hpriv)
- 	u32 tmp;
- 	int i;
+@@ -298,12 +298,37 @@ static int ceva_ahci_probe(struct platform_device *pdev)
  
--	/*
--	 * AXI Data bus width to 64
--	 * Set Mem Addr Read, Write ID for data transfers
--	 * Transfer limit to 72 DWord
--	 */
--	tmp = PAXIC_ADBW_BW64 | PAXIC_MAWIDD | PAXIC_MARIDD | PAXIC_OTL;
--	writel(tmp, mmio + AHCI_VEND_PAXIC);
--
- 	/* Set AHCI Enable */
- 	tmp = readl(mmio + HOST_CTL);
- 	tmp |= HOST_AHCI_EN;
-@@ -152,6 +144,14 @@ static void ahci_ceva_setup(struct ahci_host_priv *hpriv)
- 		tmp = PCFG_TPSS_VAL | PCFG_TPRS_VAL | (PCFG_PAD_VAL + i);
- 		writel(tmp, mmio + AHCI_VEND_PCFG);
+ static int __maybe_unused ceva_ahci_suspend(struct device *dev)
+ {
+-	return ahci_platform_suspend_host(dev);
++	return ahci_platform_suspend(dev);
+ }
  
-+		/*
-+		 * AXI Data bus width to 64
-+		 * Set Mem Addr Read, Write ID for data transfers
-+		 * Transfer limit to 72 DWord
-+		 */
-+		tmp = PAXIC_ADBW_BW64 | PAXIC_MAWIDD | PAXIC_MARIDD | PAXIC_OTL;
-+		writel(tmp, mmio + AHCI_VEND_PAXIC);
+ static int __maybe_unused ceva_ahci_resume(struct device *dev)
+ {
+-	return ahci_platform_resume_host(dev);
++	struct ata_host *host = dev_get_drvdata(dev);
++	struct ahci_host_priv *hpriv = host->private_data;
++	int rc;
 +
- 		/* Set AXI cache control register if CCi is enabled */
- 		if (cevapriv->is_cci_enabled) {
- 			tmp = readl(mmio + AHCI_VEND_AXICC);
++	rc = ahci_platform_enable_resources(hpriv);
++	if (rc)
++		return rc;
++
++	/* Configure CEVA specific config before resuming HBA */
++	ahci_ceva_setup(hpriv);
++
++	rc = ahci_platform_resume_host(dev);
++	if (rc)
++		goto disable_resources;
++
++	/* We resumed so update PM runtime state */
++	pm_runtime_disable(dev);
++	pm_runtime_set_active(dev);
++	pm_runtime_enable(dev);
++
++	return 0;
++
++disable_resources:
++	ahci_platform_disable_resources(hpriv);
++
++	return rc;
+ }
+ 
+ static SIMPLE_DEV_PM_OPS(ahci_ceva_pm_ops, ceva_ahci_suspend, ceva_ahci_resume);
 -- 
 1.9.1
