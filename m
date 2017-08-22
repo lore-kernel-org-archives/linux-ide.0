@@ -1,95 +1,54 @@
-From: Michal Simek <michal.simek@xilinx.com>
-Subject: [PATCH v2 1/9] devicetree: bindings: Add sata port phy config parameters in ahci-ceva
-Date: Mon, 21 Aug 2017 13:17:16 +0200
-Message-ID: <ad403e69fd5f17255db7d5190993f55ceb72c5a0.1503314240.git.michal.simek@xilinx.com>
-References: <cover.1503314240.git.michal.simek@xilinx.com>
+From: "Mr. Hassan Alwan Ali" <gregjoe807@gmail.com>
+Subject: Dear Friend
+Date: Tue, 22 Aug 2017 10:29:02 +0200
+Message-ID: <CAMVBco0y8An73xv1ZfjaoSdxnPm6RhmMgrE+U3j80uTgKnz68A@mail.gmail.com>
+Reply-To: hassan_alwanali01@yahoo.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:36113 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752709AbdHULRc (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 21 Aug 2017 07:17:32 -0400
-Received: by mail-wr0-f194.google.com with SMTP id f8so11981519wrf.3
-        for <linux-ide@vger.kernel.org>; Mon, 21 Aug 2017 04:17:31 -0700 (PDT)
-In-Reply-To: <cover.1503314240.git.michal.simek@xilinx.com>
-In-Reply-To: <cover.1503314240.git.michal.simek@xilinx.com>
-References: <cover.1503314240.git.michal.simek@xilinx.com>
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:33487 "EHLO
+        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932148AbdHVI3E (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 22 Aug 2017 04:29:04 -0400
+Received: by mail-lf0-f65.google.com with SMTP id f7so6846183lfg.0
+        for <linux-ide@vger.kernel.org>; Tue, 22 Aug 2017 01:29:03 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, monstr@monstr.eu
-Cc: Alexander Graf <agraf@suse.de>, Rob Herring <robh@kernel.org>, Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>, Tejun Heo <tj@kernel.org>, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>
 
-From: Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>
+Dear Friend,
 
-This patch adds device tree bindings for sata port phy parameters
-in the ahci-ceva.txt file.
+I know that this mail will come to you as a surprise since we have not
+known or met before now, but please, I would like you to treat it like
+blood brother affair and with the urgency and secrecy it requires. I
+am Mr. Hassan Alwan Ali, an Audit staff of (C.B.N) Central Bank of
+Nigeria.
 
-Signed-off-by: Anurag Kumar Vulisha <anuragku@xilinx.com>
-Signed-off-by: Michal Simek <michal.simek@xilinx.com>
----
 
-Changes in v2:
-- DT fix naming in parameters description use pN instead of phy
-  reported by Rob
+An investor (name with-held) died without naming any next of kin to
+his fund he deposited in my bank. The amount is $10.5M (Ten Million
+Five hundred Thousand Dollars) and banking regulation/legislation in
+Nigeria demands that I should notify the fiscal authorities after
+three years.
 
- .../devicetree/bindings/ata/ahci-ceva.txt          | 39 ++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+The above set of facts underscores my reason to seek your permission
+to have you stand in as the next of kin to the deceased.
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-ceva.txt b/Documentation/devicetree/bindings/ata/ahci-ceva.txt
-index 7ca8b976c13a..7561cc4de371 100644
---- a/Documentation/devicetree/bindings/ata/ahci-ceva.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-ceva.txt
-@@ -5,6 +5,36 @@ Required properties:
-   - compatible: Compatibility string. Must be 'ceva,ahci-1v84'.
-   - clocks: Input clock specifier. Refer to common clock bindings.
-   - interrupts: Interrupt specifier. Refer to interrupt binding.
-+  - ceva,p0-cominit-params: OOB timing value for COMINIT parameter for port 0.
-+  - ceva,p1-cominit-params: OOB timing value for COMINIT parameter for port 1.
-+			The fields for the above parameter must be as shown below:
-+			ceva,pN-cominit-params = /bits/ 8 <CIBGMN CIBGMX CIBGN CINMP>;
-+			CINMP : COMINIT Negate Minimum Period.
-+			CIBGN : COMINIT Burst Gap Nominal.
-+			CIBGMX: COMINIT Burst Gap Maximum.
-+			CIBGMN: COMINIT Burst Gap Minimum.
-+  - ceva,p0-comwake-params: OOB timing value for COMWAKE parameter for port 0.
-+  - ceva,p1-comwake-params: OOB timing value for COMWAKE parameter for port 1.
-+			The fields for the above parameter must be as shown below:
-+			ceva,pN-comwake-params = /bits/ 8 <CWBGMN CWBGMX CWBGN CWNMP>;
-+			CWBGMN: COMWAKE Burst Gap Minimum.
-+			CWBGMX: COMWAKE Burst Gap Maximum.
-+			CWBGN: COMWAKE Burst Gap Nominal.
-+			CWNMP: COMWAKE Negate Minimum Period.
-+  - ceva,p0-burst-params: Burst timing value for COM parameter for port 0.
-+  - ceva,p1-burst-params: Burst timing value for COM parameter for port 1.
-+			The fields for the above parameter must be as shown below:
-+			ceva,pN-burst-params = /bits/ 8 <BMX BNM SFD PTST>;
-+			BMX: COM Burst Maximum.
-+			BNM: COM Burst Nominal.
-+			SFD: Signal Failure Detection value.
-+			PTST: Partial to Slumber timer value.
-+  - ceva,p0-retry-params: Retry interval timing value for port 0.
-+  - ceva,p1-retry-params: Retry interval timing value for port 1.
-+			The fields for the above parameter must be as shown below:
-+			ceva,pN-retry-params = /bits/ 16 <RIT RCT>;
-+			RIT:  Retry Interval Timer.
-+			RCT:  Rate Change Timer.
- 
- Optional properties:
-   - ceva,broken-gen2: limit to gen1 speed instead of gen2.
-@@ -16,5 +46,14 @@ Examples:
- 		interrupt-parent = <&gic>;
- 		interrupts = <0 133 4>;
- 		clocks = <&clkc SATA_CLK_ID>;
-+		ceva,p0-cominit-params = /bits/ 8 <0x0F 0x25 0x18 0x29>;
-+		ceva,p0-comwake-params = /bits/ 8 <0x04 0x0B 0x08 0x0F>;
-+		ceva,p0-burst-params = /bits/ 8 <0x0A 0x08 0x4A 0x06>;
-+		ceva,p0-retry-params = /bits/ 16 <0x0216 0x7F06>;
-+
-+		ceva,p1-cominit-params = /bits/ 8 <0x0F 0x25 0x18 0x29>;
-+		ceva,p1-comwake-params = /bits/ 8 <0x04 0x0B 0x08 0x0F>;
-+		ceva,p1-burst-params = /bits/ 8 <0x0A 0x08 0x4A 0x06>;
-+		ceva,p1-retry-params = /bits/ 16 <0x0216 0x7F06>;
- 		ceva,broken-gen2;
- 	};
--- 
-1.9.1
+This fund will be approved and released in your favour as the next of
+kin if only you will adhere to my instruction and cooperate with me in
+one accord.
 
+I have all the legal and banking details of the deceased client that
+will facilitate our putting you forward as the claimant/beneficiary of
+the funds and ultimately transfer of the $10.5M plus interest to any
+bank account nominated by you.
+
+I am prepared to compensate you with a 35% share of the total funds
+for your efforts. The final details will be given upon receipt an
+affirmation of your desire to participate.
+
+Please contact me immediately on (  hassan_alwanali01@yahoo.com  ) if
+you are interest in my proposal to enable me not to start scouting for
+another foreign partner.
+
+Thanks,
+Mr. Hassan Alwan Ali.
