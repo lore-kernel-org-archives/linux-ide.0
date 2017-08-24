@@ -1,27 +1,37 @@
-From: Linus Walleij <linus.walleij@linaro.org>
-Subject: Re: [PATCH 1/3] ata: ftide010: constify ata_port_info
-Date: Thu, 24 Aug 2017 21:46:12 +0200
-Message-ID: <CACRpkdZt5-VojnYtqZ669-CjrUDbDYPU1L9Lit+ZR9Yo19x01w@mail.gmail.com>
-References: <1503568201-9991-1-git-send-email-arvind.yadav.cs@gmail.com> <1503568201-9991-2-git-send-email-arvind.yadav.cs@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1503568201-9991-2-git-send-email-arvind.yadav.cs@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org
+From: Himanshu Jha <himanshujha199640@gmail.com>
+Subject: [PATCH] ata: add a blank line after declaration
+Date: Fri, 25 Aug 2017 02:49:00 +0530
+Message-ID: <1503609540-27217-1-git-send-email-himanshujha199640@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:34418 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753217AbdHXVTe (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 24 Aug 2017 17:19:34 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Himanshu Jha <himanshujha199640@gmail.com>
 
-On Thu, Aug 24, 2017 at 11:49 AM, Arvind Yadav
-<arvind.yadav.cs@gmail.com> wrote:
+Added a blank line after declaration conforming to the coding style.
+Issue found using checkpatch.pl
 
-> ata_port_info are not supposed to change at runtime. All functions
-> working with ata_port_info provided by <linux/libata.h> work with
-> const ata_port_info. So mark the non-const structs as const.
->
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
+---
+ drivers/ata/acard-ahci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Acked-by: Linus Walleij <linus.walleij@linaro.org>
+diff --git a/drivers/ata/acard-ahci.c b/drivers/ata/acard-ahci.c
+index 940ddbc..a45886b 100644
+--- a/drivers/ata/acard-ahci.c
++++ b/drivers/ata/acard-ahci.c
+@@ -338,6 +338,7 @@ static int acard_ahci_port_start(struct ata_port *ap)
+ 	if ((hpriv->cap & HOST_CAP_FBS) && sata_pmp_supported(ap)) {
+ 		void __iomem *port_mmio = ahci_port_base(ap);
+ 		u32 cmd = readl(port_mmio + PORT_CMD);
++
+ 		if (cmd & PORT_CMD_FBSCP)
+ 			pp->fbs_supported = true;
+ 		else if (hpriv->flags & AHCI_HFLAG_YES_FBS) {
+-- 
+2.7.4
 
-Yours,
-Linus Walleij
