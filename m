@@ -1,66 +1,62 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: [PATCH] pata_octeon_cf: use of_property_read_{bool|u32}()
-Date: Sun, 27 Aug 2017 22:55:09 +0300
-Message-ID: <20170827195613.904715064@cogentembedded.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] libata: quirk read log on no-name M.2 SSD
+Date: Mon, 28 Aug 2017 08:28:08 +0200
+Message-ID: <20170828062808.20717-1-hch@lst.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lf0-f53.google.com ([209.85.215.53]:34164 "EHLO
-        mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751294AbdH0T4T (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 27 Aug 2017 15:56:19 -0400
-Received: by mail-lf0-f53.google.com with SMTP id d17so15181433lfe.1
-        for <linux-ide@vger.kernel.org>; Sun, 27 Aug 2017 12:56:18 -0700 (PDT)
-Content-Disposition: inline; filename=pata_octeon_cf-use-of_property_read_-bool-u32.patch
+Received: from bombadil.infradead.org ([65.50.211.133]:50037 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750830AbdH1G2Q (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Aug 2017 02:28:16 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, "\"open list:LIBATA PATA DRIVERS\"" <linux-ide@vger.kernel.org>
-Cc: linux-mips@linux-mips.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+To: tj@kernel.org
+Cc: idosch@mellanox.com, linux-ide@vger.kernel.org
 
-The Octeon CF driver basically  open-codes of_property_read_{bool|u32}()
-using  of_{find|get}_property() calls in its  probe() method.  Using the
-modern DT APIs saves 2 LoCs and 16 bytes of object code (MIPS gcc 3.4.3).
+Ivo reported that reading the log page on his systems fails,
+so quirk it as it won't support ZBC or security protocols.
 
-Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reported-by: Ido Schimmel <idosch@mellanox.com>
+Tested-by: Ido Schimmel <idosch@mellanox.com>
 ---
- drivers/ata/pata_octeon_cf.c |   10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+ drivers/ata/libata-core.c | 4 ++++
+ include/linux/libata.h    | 1 +
+ 2 files changed, 5 insertions(+)
 
-Index: libata/drivers/ata/pata_octeon_cf.c
-===================================================================
---- libata.orig/drivers/ata/pata_octeon_cf.c
-+++ libata/drivers/ata/pata_octeon_cf.c
-@@ -840,7 +840,6 @@ static int octeon_cf_probe(struct platfo
- 	struct property *reg_prop;
- 	int n_addr, n_size, reg_len;
- 	struct device_node *node;
--	const void *prop;
- 	void __iomem *cs0;
- 	void __iomem *cs1 = NULL;
- 	struct ata_host *host;
-@@ -850,7 +849,7 @@ static int octeon_cf_probe(struct platfo
- 	void __iomem *base;
- 	struct octeon_cf_port *cf_port;
- 	int rv = -ENOMEM;
--
-+	u32 bus_width;
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index fa7dd4394c02..697f5f896b19 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2079,6 +2079,8 @@ unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
+ 	 */
+ 	if (ap_flags & ATA_FLAG_NO_LOG_PAGE)
+ 		return AC_ERR_DEV;
++	if (dev->horkage & ATA_HORKAGE_NO_LOG_PAGE)
++		return AC_ERR_DEV;
  
- 	node = pdev->dev.of_node;
- 	if (node == NULL)
-@@ -860,11 +859,10 @@ static int octeon_cf_probe(struct platfo
- 	if (!cf_port)
- 		return -ENOMEM;
+ retry:
+ 	ata_tf_init(dev, &tf);
+@@ -4578,6 +4580,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "WDC WD3000JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
+ 	{ "WDC WD3200JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
  
--	cf_port->is_true_ide = (of_find_property(node, "cavium,true-ide", NULL) != NULL);
-+	cf_port->is_true_ide = of_property_read_bool(node, "cavium,true-ide");
++
++	{ "M.2 (S42) 3ME3",		NULL,	ATA_HORKAGE_NO_LOG_PAGE },
+ 	/* End Marker */
+ 	{ }
+ };
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 931c32f1f18d..9e927ae7fced 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -438,6 +438,7 @@ enum {
+ 	ATA_HORKAGE_NO_DMA_LOG	= (1 << 23),	/* don't use DMA for log read */
+ 	ATA_HORKAGE_NOTRIM	= (1 << 24),	/* don't use TRIM */
+ 	ATA_HORKAGE_MAX_SEC_1024 = (1 << 25),	/* Limit max sects to 1024 */
++	ATA_HORKAGE_NO_LOG_PAGE = (1 << 26),	/* Doesn't like Get Log Page */
  
--	prop = of_get_property(node, "cavium,bus-width", NULL);
--	if (prop)
--		is_16bit = (be32_to_cpup(prop) == 16);
-+	if (of_property_read_u32(node, "cavium,bus-width", &bus_width) == 0)
-+		is_16bit = (bus_width == 16);
- 	else
- 		is_16bit = false;
- 
+ 	 /* DMA mask for user DMA control: User visible values; DO NOT
+ 	    renumber */
+-- 
+2.11.0
 
