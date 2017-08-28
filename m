@@ -1,36 +1,44 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: quirk read log on no-name M.2 SSD
-Date: Mon, 28 Aug 2017 10:28:34 -0700
-Message-ID: <20170828172834.GW491396@devbig577.frc2.facebook.com>
-References: <20170828062808.20717-1-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Christoph Hellwig <hch@lst.de>
+Subject: ALPSS: reminder and submission deadline
+Date: Mon, 28 Aug 2017 19:37:45 +0200
+Message-ID: <20170828173745.25801-1-hch@lst.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f181.google.com ([209.85.220.181]:36912 "EHLO
-        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751241AbdH1R2i (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Aug 2017 13:28:38 -0400
-Received: by mail-qk0-f181.google.com with SMTP id k126so5215529qkb.4
-        for <linux-ide@vger.kernel.org>; Mon, 28 Aug 2017 10:28:38 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20170828062808.20717-1-hch@lst.de>
+Received: from bombadil.infradead.org ([65.50.211.133]:38401 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751161AbdH1Rhs (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Aug 2017 13:37:48 -0400
+Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1dmNyt-0006F2-CW
+        for linux-ide@vger.kernel.org; Mon, 28 Aug 2017 17:37:47 +0000
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: idosch@mellanox.com, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Mon, Aug 28, 2017 at 08:28:08AM +0200, Christoph Hellwig wrote:
-> Ivo reported that reading the log page on his systems fails,
-> so quirk it as it won't support ZBC or security protocols.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reported-by: Ido Schimmel <idosch@mellanox.com>
-> Tested-by: Ido Schimmel <idosch@mellanox.com>
+Just one more month to go until the Alpine Linux Persistence and Storage
+Summit (ALPSS) will be held from September 27-29 at the Lizumerhuette
+in Austria!
 
-Applied to libata/for-4.13-fixes w/ Ido's name fixed in the
-description.
+If you want to submit a 30-minute talk please do so until Sep 1st, as we
+plan to finalize our schedule.  BOFs and team meetings will be scheduled
+ad-hoc in the available meeting rooms or outside with a beautiful mountain
+panorama.
 
-Thanks.
+If you only want to attend you can do so until last minute as long as
+space doesn't run.
 
--- 
-tejun
+To submit a talk or request attendance please send a mail to:
+
+	alpss-pc@lists.infradead.org
+
+More details are available on our website:
+
+	http://www.alpss.at/
+
+Thank you on behalf of the program committee:
+
+    Stephen Bates
+    Sagi Grimberg
+    Christoph Hellwig
+    Johannes Thumshirn
+    Richard Weinberger
