@@ -1,44 +1,34 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: ALPSS: reminder and submission deadline
-Date: Mon, 28 Aug 2017 19:37:45 +0200
-Message-ID: <20170828173745.25801-1-hch@lst.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] pata_octeon_cf: use of_property_read_{bool|u32}()
+Date: Mon, 28 Aug 2017 10:45:03 -0700
+Message-ID: <20170828174502.GX491396@devbig577.frc2.facebook.com>
+References: <20170827195613.904715064@cogentembedded.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:38401 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751161AbdH1Rhs (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Aug 2017 13:37:48 -0400
-Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dmNyt-0006F2-CW
-        for linux-ide@vger.kernel.org; Mon, 28 Aug 2017 17:37:47 +0000
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:37343 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751184AbdH1RpH (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Aug 2017 13:45:07 -0400
+Received: by mail-qt0-f194.google.com with SMTP id g13so1021961qta.4
+        for <linux-ide@vger.kernel.org>; Mon, 28 Aug 2017 10:45:06 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20170827195613.904715064@cogentembedded.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, "\"open list:LIBATA PATA DRIVERS\"" <linux-ide@vger.kernel.org>, linux-mips@linux-mips.org
 
-Just one more month to go until the Alpine Linux Persistence and Storage
-Summit (ALPSS) will be held from September 27-29 at the Lizumerhuette
-in Austria!
+On Sun, Aug 27, 2017 at 10:55:09PM +0300, Sergei Shtylyov wrote:
+> The Octeon CF driver basically  open-codes of_property_read_{bool|u32}()
+> using  of_{find|get}_property() calls in its  probe() method.  Using the
+> modern DT APIs saves 2 LoCs and 16 bytes of object code (MIPS gcc 3.4.3).
+> 
+> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-If you want to submit a 30-minute talk please do so until Sep 1st, as we
-plan to finalize our schedule.  BOFs and team meetings will be scheduled
-ad-hoc in the available meeting rooms or outside with a beautiful mountain
-panorama.
+Applied to libata/for-4.14.
 
-If you only want to attend you can do so until last minute as long as
-space doesn't run.
+Thanks.
 
-To submit a talk or request attendance please send a mail to:
-
-	alpss-pc@lists.infradead.org
-
-More details are available on our website:
-
-	http://www.alpss.at/
-
-Thank you on behalf of the program committee:
-
-    Stephen Bates
-    Sagi Grimberg
-    Christoph Hellwig
-    Johannes Thumshirn
-    Richard Weinberger
+-- 
+tejun
