@@ -1,78 +1,41 @@
-From: David Daney <ddaney.cavm@gmail.com>
-Subject: Re: [PATCH] pata_octeon_cf: use of_property_read_{bool|u32}()
-Date: Mon, 28 Aug 2017 14:52:14 -0700
-Message-ID: <d414cf99-2e53-eef8-9372-3900b0543a46@gmail.com>
-References: <20170827195613.904715064@cogentembedded.com>
+From: Ryder Lee <ryder.lee@mediatek.com>
+Subject: Re: [PATCH v4 1/2] ata: mediatek: add support for MediaTek SATA
+ controller
+Date: Tue, 29 Aug 2017 08:59:51 +0800
+Message-ID: <1503968391.27007.1.camel@mtkswgap22>
+References: <cover.1503018631.git.ryder.lee@mediatek.com>
+         <ab78899bd7fa99a12497b5b16ffb7acfeac1f42c.1503018631.git.ryder.lee@mediatek.com>
+         <20170828175528.GY491396@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:33472 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751182AbdH1VwR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Aug 2017 17:52:17 -0400
-Received: by mail-io0-f194.google.com with SMTP id s101so1583730ioe.0
-        for <linux-ide@vger.kernel.org>; Mon, 28 Aug 2017 14:52:17 -0700 (PDT)
-In-Reply-To: <20170827195613.904715064@cogentembedded.com>
-Content-Language: en-US
+Received: from mailgw01.mediatek.com ([218.249.47.110]:58570 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750812AbdH2A77 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Aug 2017 20:59:59 -0400
+In-Reply-To: <20170828175528.GY491396@devbig577.frc2.facebook.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, "open list:LIBATA PATA DRIVERS" <linux-ide@vger.kernel.org>
-Cc: linux-mips@linux-mips.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org, linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Long Cheng <long.cheng@mediatek.com>
 
-On 08/27/2017 12:55 PM, Sergei Shtylyov wrote:
-> The Octeon CF driver basically  open-codes of_property_read_{bool|u32}()
-> using  of_{find|get}_property() calls in its  probe() method.  Using the
-> modern DT APIs saves 2 LoCs and 16 bytes of object code (MIPS gcc 3.4.3).
+On Mon, 2017-08-28 at 10:55 -0700, Tejun Heo wrote:
+> On Fri, Aug 18, 2017 at 09:13:07AM +0800, Ryder Lee wrote:
+> > This adds support the AHCI-compliant Serial ATA controller present
+> > on MediaTek SoCs.
+> > 
+> > Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> > Acked-by: Tejun Heo <tj@kernel.org>
 > 
-> Signed-off-by: Sergei Shtylyov<sergei.shtylyov@cogentembedded.com>
+> Applied to libata/for-4.14.  If you want me to take the dt patch too,
+> please let me know.
+> 
+> Thanks.
+> 
 
-It still works with this applied, so:
+Yes, please take the dt patch through your tree as well.
 
-Acked-by: David Daney <david.daney@cavium.com>
-
-> 
-> ---
->   drivers/ata/pata_octeon_cf.c |   10 ++++------
->   1 file changed, 4 insertions(+), 6 deletions(-)
-> 
-> Index: libata/drivers/ata/pata_octeon_cf.c
-> ===================================================================
-> --- libata.orig/drivers/ata/pata_octeon_cf.c
-> +++ libata/drivers/ata/pata_octeon_cf.c
-> @@ -840,7 +840,6 @@ static int octeon_cf_probe(struct platfo
->   	struct property *reg_prop;
->   	int n_addr, n_size, reg_len;
->   	struct device_node *node;
-> -	const void *prop;
->   	void __iomem *cs0;
->   	void __iomem *cs1 = NULL;
->   	struct ata_host *host;
-> @@ -850,7 +849,7 @@ static int octeon_cf_probe(struct platfo
->   	void __iomem *base;
->   	struct octeon_cf_port *cf_port;
->   	int rv = -ENOMEM;
-> -
-> +	u32 bus_width;
->   
->   	node = pdev->dev.of_node;
->   	if (node == NULL)
-> @@ -860,11 +859,10 @@ static int octeon_cf_probe(struct platfo
->   	if (!cf_port)
->   		return -ENOMEM;
->   
-> -	cf_port->is_true_ide = (of_find_property(node, "cavium,true-ide", NULL) != NULL);
-> +	cf_port->is_true_ide = of_property_read_bool(node, "cavium,true-ide");
->   
-> -	prop = of_get_property(node, "cavium,bus-width", NULL);
-> -	if (prop)
-> -		is_16bit = (be32_to_cpup(prop) == 16);
-> +	if (of_property_read_u32(node, "cavium,bus-width", &bus_width) == 0)
-> +		is_16bit = (bus_width == 16);
->   	else
->   		is_16bit = false;
->   
-> 
-> 
-> 
+Thanks,
+Ryder
 
