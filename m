@@ -1,82 +1,60 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata changes for v4.14-rc1
-Date: Tue, 5 Sep 2017 07:29:59 -0700
-Message-ID: <20170905142959.GG1774378@devbig577.frc2.facebook.com>
+From: John Loy <john.robert.loy@gmail.com>
+Subject: Re: Boot failure due to some interaction between per-port MSI-X and
+ Intel RST
+Date: Tue, 5 Sep 2017 08:32:12 -0700
+Message-ID: <2916cb1e-20e0-afd0-9191-4025f8b45116@gmail.com>
+References: <fc6edbd0-d720-4112-550c-fbed78ee8b32@gmail.com>
+ <20170904061634.GA16590@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:34305 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750858AbdIEOaD (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 5 Sep 2017 10:30:03 -0400
-Content-Disposition: inline
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:38137 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752036AbdIEPcO (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 5 Sep 2017 11:32:14 -0400
+Received: by mail-pf0-f195.google.com with SMTP id q76so1831281pfq.5
+        for <linux-ide@vger.kernel.org>; Tue, 05 Sep 2017 08:32:14 -0700 (PDT)
+In-Reply-To: <20170904061634.GA16590@infradead.org>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Hans de Goede <hdegoede@redhat.com>, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-ide@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 
-Hello, Linus.
+On 9/3/17 11:16 PM, Christoph Hellwig wrote:
+> On Sun, Sep 03, 2017 at 06:42:35PM -0700, John Loy wrote:
+>> I have a system that stopped booting Linux between kernel versions 4.4.9 and
+>> 4.5.3.  It has a SATA + NVMe accelerated volume that I use with Windows and
+>> a separate SATA drive with my Linux installation.  I'm not expecting the
+>> remapped NVMe thing to be accessible, just the Linux disk, but none of the
+>> drives are accessible.
+>>
+>> Bisecting the changes turned up d684a90 as the first failing change. Passing
+>> pci=nomsi also allows the system to boot newer kernels.  Just to be sure, I
+>> built a recent kernel (4.12.9) with the PCI_IRQ_MSIX flag removed from the
+>> per-port call to pci_alloc_irq_vectors in ahci_init_msi.  This also allowed
+>> the system to boot normally.
+>>
+>> I'm totally out of my depth though so I'd really appreciate it if anyone has
+>> some ideas on how to proceed with a proper fix.
+> 
+> Something like the patch below should work.  Maybe Intel can provide
+> an explanation on why their chipset is so fucked up that we can add
+> as a comment.
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 5a5fd0b404eb..b8c8ecc854c4 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1470,6 +1470,7 @@ static void ahci_remap_check(struct pci_dev *pdev, int bar,
+>   
+>   	dev_warn(&pdev->dev, "Found %d remapped NVMe devices.\n", count);
+>   	dev_warn(&pdev->dev, "Switch your BIOS from RAID to AHCI mode to use them.\n");
+> +	hpriv->flags |= AHCI_HFLAG_NO_MSI;
+>   }
+>   
+>   static int ahci_get_irq_vector(struct ata_host *host, int port)
+> 
 
-Nothing major.  Some new platform controller support and device
-specific changes.
-
-Thanks.
-
-The following changes since commit 74cbd96bc2e00f5daa805e2ebf49e998f7045062:
-
-  Merge tag 'md/4.13-rc2' of git://git.kernel.org/pub/scm/linux/kernel/git/shli/md (2017-07-18 11:51:08 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.14
-
-for you to fetch changes up to 687abc0f77c239dc4cc93ea5cd27cfad76ddd038:
-
-  dt-bindings: ata: add DT bindings for MediaTek SATA controller (2017-08-29 07:22:24 -0700)
-
-----------------------------------------------------------------
-Andrey Korolyov (1):
-      cs5536: add support for IDE controller variant
-
-Julia Lawall (1):
-      ata: Drop unnecessary static
-
-Linus Walleij (2):
-      ata: sata_gemini: Retire custom pin control
-      ata: sata_gemini: Introduce explicit IDE pin control
-
-Nate Watterson (1):
-      ata: ahci_platform: Add shutdown handler
-
-Philipp Zabel (1):
-      ata: sata_gemini: explicitly request exclusive reset control
-
-Rob Herring (1):
-      ata: Convert to using %pOF instead of full_name
-
-Ryder Lee (2):
-      ata: mediatek: add support for MediaTek SATA controller
-      dt-bindings: ata: add DT bindings for MediaTek SATA controller
-
-Sergei Shtylyov (1):
-      pata_octeon_cf: use of_property_read_{bool|u32}()
-
- Documentation/devicetree/bindings/ata/ahci-mtk.txt |  51 ++++++
- drivers/ata/Kconfig                                |  10 ++
- drivers/ata/Makefile                               |   1 +
- drivers/ata/ahci_mtk.c                             | 196 +++++++++++++++++++++
- drivers/ata/ahci_platform.c                        |   1 +
- drivers/ata/libahci_platform.c                     |  34 ++++
- drivers/ata/pata_amd.c                             |   1 +
- drivers/ata/pata_cs5536.c                          |   1 +
- drivers/ata/pata_octeon_cf.c                       |  10 +-
- drivers/ata/sata_gemini.c                          |  67 +++----
- drivers/ata/sata_svw.c                             |   2 +-
- include/linux/ahci_platform.h                      |   2 +
- include/linux/pci_ids.h                            |   1 +
- 13 files changed, 337 insertions(+), 40 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ata/ahci-mtk.txt
- create mode 100644 drivers/ata/ahci_mtk.c
-
--- 
-tejun
+This patch works for me.
