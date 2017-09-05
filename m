@@ -1,66 +1,80 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: Boot failure due to some interaction between per-port MSI-X and
- Intel RST
-Date: Tue, 5 Sep 2017 08:46:15 -0700
-Message-ID: <CAPcyv4jwna0-6MncAtoqCJuhwdJLyOrvJf4z-bqELJPonUjOGQ@mail.gmail.com>
-References: <fc6edbd0-d720-4112-550c-fbed78ee8b32@gmail.com> <20170904061634.GA16590@infradead.org>
+From: <mgriffit@genome.wustl.edu>
+Subject: (unknown)
+Date: Tue, 05 Sep 2017 16:31:02 -0000
+Message-ID: <150462906218.24721.13402916836928294495@vnpt.vn>
+Reply-To: <mgriffit@genome.wustl.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: application/zip; name="99589200620834_linux-ide.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:32973 "EHLO
-        mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751763AbdIEPqQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 5 Sep 2017 11:46:16 -0400
-Received: by mail-oi0-f50.google.com with SMTP id x184so27111148oia.0
-        for <linux-ide@vger.kernel.org>; Tue, 05 Sep 2017 08:46:16 -0700 (PDT)
-In-Reply-To: <20170904061634.GA16590@infradead.org>
+Received: from static.vnpt.vn ([14.162.88.101]:40812 "HELO vnpt.vn"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1751863AbdIEQbU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 5 Sep 2017 12:31:20 -0400
+Content-Disposition: attachment
+Subject: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: John Loy <john.robert.loy@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On Sun, Sep 3, 2017 at 11:16 PM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Sun, Sep 03, 2017 at 06:42:35PM -0700, John Loy wrote:
->> I have a system that stopped booting Linux between kernel versions 4.4.9 and
->> 4.5.3.  It has a SATA + NVMe accelerated volume that I use with Windows and
->> a separate SATA drive with my Linux installation.  I'm not expecting the
->> remapped NVMe thing to be accessible, just the Linux disk, but none of the
->> drives are accessible.
->>
->> Bisecting the changes turned up d684a90 as the first failing change. Passing
->> pci=nomsi also allows the system to boot newer kernels.  Just to be sure, I
->> built a recent kernel (4.12.9) with the PCI_IRQ_MSIX flag removed from the
->> per-port call to pci_alloc_irq_vectors in ahci_init_msi.  This also allowed
->> the system to boot normally.
->>
->> I'm totally out of my depth though so I'd really appreciate it if anyone has
->> some ideas on how to proceed with a proper fix.
->
-> Something like the patch below should work.  Maybe Intel can provide
-> an explanation on why their chipset is so fucked up that we can add
-> as a comment.
->
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 5a5fd0b404eb..b8c8ecc854c4 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1470,6 +1470,7 @@ static void ahci_remap_check(struct pci_dev *pdev, int bar,
->
->         dev_warn(&pdev->dev, "Found %d remapped NVMe devices.\n", count);
->         dev_warn(&pdev->dev, "Switch your BIOS from RAID to AHCI mode to use them.\n");
-> +       hpriv->flags |= AHCI_HFLAG_NO_MSI;
->  }
->
->  static int ahci_get_irq_vector(struct ata_host *host, int port)
-
-Yes, this patch looks good to me.  As I said here [1]:
-
-+               /*
-+                * Don't rely on the msi-x capability in the remap case,
-+                * share the legacy interrupt across ahci and remapped
-+                * devices.
-+                */
-
-...we need to use pci-intx interrupts for both devices.
-
-[1]: http://lists.infradead.org/pipermail/linux-nvme/2016-October/006801.html
+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
+AAEAAQBPAAAABg0AAAAA
