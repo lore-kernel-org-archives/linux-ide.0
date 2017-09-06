@@ -1,37 +1,36 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ahci: don't use MSI for devices with the braindead Intel
- NVMe remapping scheme
-Date: Wed, 6 Sep 2017 07:40:09 -0700
-Message-ID: <20170906144009.GL1774378@devbig577.frc2.facebook.com>
-References: <20170905164647.24101-1-hch@lst.de>
+Subject: Re: [PATCH] libata: zpodd: make arrays cdb static, reduces object
+ code size
+Date: Wed, 6 Sep 2017 07:40:54 -0700
+Message-ID: <20170906144054.GM1774378@devbig577.frc2.facebook.com>
+References: <20170906085629.23938-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f177.google.com ([209.85.216.177]:37006 "EHLO
-        mail-qt0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932347AbdIFOkM (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 6 Sep 2017 10:40:12 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170905164647.24101-1-hch@lst.de>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20170906085629.23938-1-colin.king@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: linux-ide@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: dan.j.williams@intel.com, john.robert.loy@gmail.com, linux-ide@vger.kernel.org, stable@vger.kernel.org
 
-Hello,
-
-On Tue, Sep 05, 2017 at 06:46:47PM +0200, Christoph Hellwig wrote:
-> Intel AHCI controllers that also hide NVMe devices in their bar
-> can't use MSI interrupts, so disable them.
+On Wed, Sep 06, 2017 at 09:56:29AM +0100, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> Reported-by: John Loy <john.robert.loy@gmail.com>
-> Testd-by: John Loy <john.robert.loy@gmail.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Cc: stable@vger.kernel.org
+> Don't populate the arrays cdb on the stack, instead make them static.
+> Makes the object code smaller by 230 bytes:
+> 
+> Before:
+>    text	   data	    bss	    dec	    hex	filename
+>    3797	    240	      0	   4037	    fc5	drivers/ata/libata-zpodd.o
+> 
+> After:
+>    text	   data	    bss	    dec	    hex	filename
+>    3407	    400	      0	   3807	    edf	drivers/ata/libata-zpodd.o
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-Applied to libata/for-4.14 w/ Fixes tag added and minor edits as
-suggested by Dan - I changed braindead to silly, hope everyone is fine
-with that.
+Applied to libata/for-4.14.
 
 Thanks.
 
