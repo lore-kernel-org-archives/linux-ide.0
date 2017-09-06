@@ -1,99 +1,74 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [GIT PULL] libata changes for v4.14-rc1
-Date: Wed, 6 Sep 2017 07:46:24 -0700
-Message-ID: <20170906144624.GN1774378@devbig577.frc2.facebook.com>
-References: <20170905142959.GG1774378@devbig577.frc2.facebook.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] [RESEND] ata: avoid gcc-7 warning in ata_timing_quantize
+Date: Wed,  6 Sep 2017 23:45:34 +0200
+Message-ID: <20170906214552.2111904-1-arnd@arndb.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:37262 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932546AbdIFOq2 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 6 Sep 2017 10:46:28 -0400
-Content-Disposition: inline
-In-Reply-To: <20170905142959.GG1774378@devbig577.frc2.facebook.com>
+Received: from mout.kundenserver.de ([212.227.126.134]:62372 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752597AbdIFVp5 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 6 Sep 2017 17:45:57 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Hans de Goede <hdegoede@redhat.com>, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, Linus.
+gcc-7 warns about the result of a constant multiplication used as
+a boolean:
 
-I added the following two patches to the branch.  The ahci patch fixes
-a boot issue, so it needs some prioritizing and I applied the zpodd
-one while at it.
+drivers/ata/libata-core.c: In function 'ata_timing_quantize':
+drivers/ata/libata-core.c:3164:30: warning: '*' in boolean context, suggest '&&' instead [-Wint-in-bool-context]
 
- 795ef78 libata: zpodd: make arrays cdb static, reduces object code size
- f723fa4 ahci: don't use MSI for devices with the silly Intel NVMe remapping scheme
+This slightly rearranges the macro to simplify the code and avoid
+the warning at the same time.
 
-Except for the ahci fix, nothing major in this pull request.  Some new
-platform controller support and device specific changes.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+Hi Tejun,
 
-Thanks.
+I just noticed this patch among others I had previously sent
+but that were not applied. It seems I forgot to reply to your
+Ack after it had become clear that the serious would not
+get merged in one chunk. Please apply this for 4.14.
 
-The following changes since commit 74cbd96bc2e00f5daa805e2ebf49e998f7045062:
+Link: https://patchwork.kernel.org/patch/9840269/
+---
+ drivers/ata/libata-core.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-  Merge tag 'md/4.13-rc2' of git://git.kernel.org/pub/scm/linux/kernel/git/shli/md (2017-07-18 11:51:08 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.14
-
-for you to fetch changes up to 795ef788145ed2fa023efdf11e8d5d7bedc21462:
-
-  libata: zpodd: make arrays cdb static, reduces object code size (2017-09-06 07:40:28 -0700)
-
-----------------------------------------------------------------
-Andrey Korolyov (1):
-      cs5536: add support for IDE controller variant
-
-Christoph Hellwig (1):
-      ahci: don't use MSI for devices with the silly Intel NVMe remapping scheme
-
-Colin Ian King (1):
-      libata: zpodd: make arrays cdb static, reduces object code size
-
-Julia Lawall (1):
-      ata: Drop unnecessary static
-
-Linus Walleij (2):
-      ata: sata_gemini: Retire custom pin control
-      ata: sata_gemini: Introduce explicit IDE pin control
-
-Nate Watterson (1):
-      ata: ahci_platform: Add shutdown handler
-
-Philipp Zabel (1):
-      ata: sata_gemini: explicitly request exclusive reset control
-
-Rob Herring (1):
-      ata: Convert to using %pOF instead of full_name
-
-Ryder Lee (2):
-      ata: mediatek: add support for MediaTek SATA controller
-      dt-bindings: ata: add DT bindings for MediaTek SATA controller
-
-Sergei Shtylyov (1):
-      pata_octeon_cf: use of_property_read_{bool|u32}()
-
- Documentation/devicetree/bindings/ata/ahci-mtk.txt |  51 ++++++
- drivers/ata/Kconfig                                |  10 ++
- drivers/ata/Makefile                               |   1 +
- drivers/ata/ahci.c                                 |   9 +-
- drivers/ata/ahci_mtk.c                             | 196 +++++++++++++++++++++
- drivers/ata/ahci_platform.c                        |   1 +
- drivers/ata/libahci_platform.c                     |  34 ++++
- drivers/ata/libata-zpodd.c                         |   4 +-
- drivers/ata/pata_amd.c                             |   1 +
- drivers/ata/pata_cs5536.c                          |   1 +
- drivers/ata/pata_octeon_cf.c                       |  10 +-
- drivers/ata/sata_gemini.c                          |  67 +++----
- drivers/ata/sata_svw.c                             |   2 +-
- include/linux/ahci_platform.h                      |   2 +
- include/linux/pci_ids.h                            |   1 +
- 15 files changed, 347 insertions(+), 43 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ata/ahci-mtk.txt
- create mode 100644 drivers/ata/ahci_mtk.c
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 1945a8ea2099..ee4c1ec9dca0 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3234,19 +3234,19 @@ static const struct ata_timing ata_timing[] = {
+ };
+ 
+ #define ENOUGH(v, unit)		(((v)-1)/(unit)+1)
+-#define EZ(v, unit)		((v)?ENOUGH(v, unit):0)
++#define EZ(v, unit)		((v)?ENOUGH(((v) * 1000), unit):0)
+ 
+ static void ata_timing_quantize(const struct ata_timing *t, struct ata_timing *q, int T, int UT)
+ {
+-	q->setup	= EZ(t->setup      * 1000,  T);
+-	q->act8b	= EZ(t->act8b      * 1000,  T);
+-	q->rec8b	= EZ(t->rec8b      * 1000,  T);
+-	q->cyc8b	= EZ(t->cyc8b      * 1000,  T);
+-	q->active	= EZ(t->active     * 1000,  T);
+-	q->recover	= EZ(t->recover    * 1000,  T);
+-	q->dmack_hold	= EZ(t->dmack_hold * 1000,  T);
+-	q->cycle	= EZ(t->cycle      * 1000,  T);
+-	q->udma		= EZ(t->udma       * 1000, UT);
++	q->setup	= EZ(t->setup,       T);
++	q->act8b	= EZ(t->act8b,       T);
++	q->rec8b	= EZ(t->rec8b,       T);
++	q->cyc8b	= EZ(t->cyc8b,       T);
++	q->active	= EZ(t->active,      T);
++	q->recover	= EZ(t->recover,     T);
++	q->dmack_hold	= EZ(t->dmack_hold,  T);
++	q->cycle	= EZ(t->cycle,       T);
++	q->udma		= EZ(t->udma,       UT);
+ }
+ 
+ void ata_timing_merge(const struct ata_timing *a, const struct ata_timing *b,
 -- 
-tejun
+2.9.0
+
