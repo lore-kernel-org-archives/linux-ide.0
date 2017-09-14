@@ -1,47 +1,143 @@
-From: Nancy McCarthy <nmccarthy@reply2setup.com>
-Subject: Travelers List
-Date: Fri, 8 Sep 2017 18:22:38 -0400
-Message-ID: <3fc9587f-b913-3931-abb9-3f4de38f8744@reply2setup.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:38883 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756914AbdIHWhY (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 8 Sep 2017 18:37:24 -0400
-Received: by mail-pf0-f193.google.com with SMTP id q76so2016592pfq.5
-        for <linux-ide@vger.kernel.org>; Fri, 08 Sep 2017 15:37:23 -0700 (PDT)
-Received: from [192.168.0.8] ([103.6.157.159])
-        by smtp.gmail.com with ESMTPSA id o78sm6069066pfj.19.2017.09.08.15.37.22
-        for <linux-ide@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 08 Sep 2017 15:37:23 -0700 (PDT)
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH] libata: Add new med_power_with_dipm link_power_management_policy setting
+Date: Thu, 14 Sep 2017 12:35:36 +0200
+Message-ID: <20170914103536.7650-2-hdegoede@redhat.com>
+References: <20170914103536.7650-1-hdegoede@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170914103536.7650-1-hdegoede@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, Matthew Garrett <mjg59@srcf.ucam.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
+As described by Matthew Garret quite a while back:
+https://mjg59.dreamwidth.org/34868.html
 
-Hi,
+Intel CPUs starting with the Haswell generation need SATA links to power
+down for the "package" part of the CPU to reach low power-states like
+PC7 / P8 which bring a significant power-saving with them.
 
-Greeting of the day!
+The default max_performance lpm policy does not allow for these high
+PC states, both the medium_power and min_power policies do allow this.
 
-I hope this note finds you well!
+The min_power policy saves significantly more power, but there are some
+reports of some disks / SSDs not liking min_power leading to system
+crashes and in some cases even data corruption has been reported.
 
-Would you be interested in acquiring an email list of "Travelers" from USA?
+Matthew has found a document documenting the default settings of
+Intel's IRST Windows driver with which most laptops ship:
+https://www-ssl.intel.com/content/dam/doc/reference-guide/sata-devices-implementation-recommendations.pdf
 
-We also have data for Frequent Travelers List, Camping and Outdoor List, Scuba Divers List, Cruise Travelers List, Vacation Travelers List,Boat Owners List, Fishing Enthusiasts List, Apparel Buyers List, Luxury Brand Buyers List, Gift buyers List and many more.
+Matthew wrote a patch changing med_power to match those defaults, but
+that never got anywhere as some people where reporting issues with the
+patch-set that patch was a part of.
 
-Each record in the list contains Contact Name (First, Middle and Last Name), Mailing Address, List type and Opt-in email address.
+This commit is another attempt to make the default IRST driver settings
+available under Linux, but instead of changing medium_power and
+potentially introducing regressions, this commit adds a new
+med_power_with_dipm setting which is identical to the existing
+medium_power accept that it enables dipm on top, which makes it match
+the Windows IRST driver settings, which should hopefully be safe to
+use on most devices.
 
-All the contacts are opt-in verified, Complete permission based and can be used for unlimited multi-channel marketing.
+The med_power_with_dipm setting is close to min_power, except that:
+a) It does not use host-initiated slumber mode (ASP not set),
+   but it does allow device-initiated slumber
+b) It does not enable DevSlp mode
 
-Let me know if you'd be interested in hearing more about it.
+On my T440s test laptop I get the following power savings when idle:
+medium_power		0.9W
+med_power_with_dipm	1.2W
+min_power		1.2W
 
-Waiting for your valuable and sincere reply.
+Suggested-by: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/ata/libata-core.c |  1 +
+ drivers/ata/libata-eh.c   | 10 +++++-----
+ drivers/ata/libata-scsi.c |  9 +++++----
+ include/linux/libata.h    |  1 +
+ 4 files changed, 12 insertions(+), 9 deletions(-)
 
-Best Regards,
-Nancy McCarthy
-Business Development & Data Specialist
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 1945a8ea2099..f165d95c780f 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3964,6 +3964,7 @@ int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 		scontrol &= ~(0x1 << 8);
+ 		scontrol |= (0x6 << 8);
+ 		break;
++	case ATA_LPM_MED_POWER_WITH_DIPM:
+ 	case ATA_LPM_MIN_POWER:
+ 		if (ata_link_nr_enabled(link) > 0)
+ 			/* no restrictions on LPM transitions */
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 3dbd05532c09..aefe9a9971ad 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -3456,9 +3456,9 @@ static int ata_eh_maybe_retry_flush(struct ata_device *dev)
+  *	@r_failed_dev: out parameter for failed device
+  *
+  *	Enable SATA Interface power management.  This will enable
+- *	Device Interface Power Management (DIPM) for min_power
+- * 	policy, and then call driver specific callbacks for
+- *	enabling Host Initiated Power management.
++ *	Device Interface Power Management (DIPM) for min_power and
++ *	medium_power_with_dipm policies, and then call driver specific
++ *	callbacks for enabling Host Initiated Power management.
+  *
+  *	LOCKING:
+  *	EH context.
+@@ -3504,7 +3504,7 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 			hints &= ~ATA_LPM_HIPM;
+ 
+ 		/* disable DIPM before changing link config */
+-		if (policy != ATA_LPM_MIN_POWER && dipm) {
++		if (policy < ATA_LPM_MED_POWER_WITH_DIPM && dipm) {
+ 			err_mask = ata_dev_set_feature(dev,
+ 					SETFEATURES_SATA_DISABLE, SATA_DIPM);
+ 			if (err_mask && err_mask != AC_ERR_DEV) {
+@@ -3547,7 +3547,7 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 
+ 	/* host config updated, enable DIPM if transitioning to MIN_POWER */
+ 	ata_for_each_dev(dev, link, ENABLED) {
+-		if (policy == ATA_LPM_MIN_POWER && !no_dipm &&
++		if (policy >= ATA_LPM_MED_POWER_WITH_DIPM && !no_dipm &&
+ 		    ata_id_has_dipm(dev->id)) {
+ 			err_mask = ata_dev_set_feature(dev,
+ 					SETFEATURES_SATA_ENABLE, SATA_DIPM);
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 44ba292f2cd7..673e72f438eb 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -106,10 +106,11 @@ static const u8 def_control_mpage[CONTROL_MPAGE_LEN] = {
+ };
+ 
+ static const char *ata_lpm_policy_names[] = {
+-	[ATA_LPM_UNKNOWN]	= "max_performance",
+-	[ATA_LPM_MAX_POWER]	= "max_performance",
+-	[ATA_LPM_MED_POWER]	= "medium_power",
+-	[ATA_LPM_MIN_POWER]	= "min_power",
++	[ATA_LPM_UNKNOWN]		= "max_performance",
++	[ATA_LPM_MAX_POWER]		= "max_performance",
++	[ATA_LPM_MED_POWER]		= "medium_power",
++	[ATA_LPM_MED_POWER_WITH_DIPM]	= "med_power_with_dipm",
++	[ATA_LPM_MIN_POWER]		= "min_power",
+ };
+ 
+ static ssize_t ata_scsi_lpm_store(struct device *device,
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 931c32f1f18d..ed9826b21c5e 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -522,6 +522,7 @@ enum ata_lpm_policy {
+ 	ATA_LPM_UNKNOWN,
+ 	ATA_LPM_MAX_POWER,
+ 	ATA_LPM_MED_POWER,
++	ATA_LPM_MED_POWER_WITH_DIPM, /* Med power + DIPM as win IRST does */
+ 	ATA_LPM_MIN_POWER,
+ };
+ 
+-- 
+2.14.1
