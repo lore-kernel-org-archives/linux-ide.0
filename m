@@ -1,41 +1,48 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH 0/1] libata: Add new med_power_with_dipm link_power_management_policy setting
-Date: Thu, 14 Sep 2017 12:35:35 +0200
-Message-ID: <20170914103536.7650-1-hdegoede@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Hans de Goede <hdegoede@redhat.com>, Matthew Garrett <mjg59@srcf.ucam.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] ata: pata_artop: remove redundant initialization of pio
+Date: Thu, 14 Sep 2017 19:54:18 +0100
+Message-ID: <20170914185418.13790-1-colin.king@canonical.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:36027 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751618AbdINSyW (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 14 Sep 2017 14:54:22 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi All,
+From: Colin Ian King <colin.king@canonical.com>
 
-As described by Matthew Garret quite a while back:
-https://mjg59.dreamwidth.org/34868.html
+pio is initialized and the data is never read, instead it is almost
+immediately being updated to a new value. Fix this by removing the
+initialization.
 
-On Intel CPUs starting with the Haswell generation SATA link power
-management can save a significant amount of power.
+Detected by scan-build:
+"warning: Value stored to 'pio' during its initialization is never read"
 
-Previous attempts to try and enable SATA LPM by default have gotten stuck
-on ome reports of some disks / SSDs not liking min_power leading to system
-crashes and in some cases even data corruption has been reported.
+Fixes: 669a5db411d8 ("[libata] Add a bunch of PATA drivers")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/ata/pata_artop.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-This patch is another attempt to make the default Windows IRST driver
-settings Matthew found available under Linux, but instead of changing
-medium_power and potentially introducing regressions, this commit adds
-a new med_power_with_dipm setting.
+diff --git a/drivers/ata/pata_artop.c b/drivers/ata/pata_artop.c
+index 96c05c9494fa..6b3355343542 100644
+--- a/drivers/ata/pata_artop.c
++++ b/drivers/ata/pata_artop.c
+@@ -242,7 +242,7 @@ static void artop6210_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+ 
+ static void artop6260_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+ {
+-	unsigned int pio	= adev->pio_mode - XFER_PIO_0;
++	unsigned int pio;
+ 	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
+ 	u8 ultra;
+ 
+-- 
+2.14.1
 
-I've done a blog post asking people to test this new settings on laptops:
-https://hansdegoede.livejournal.com/18412.html
-
-As mentioned there my goal is to enable med_power_with_dipm as default
-LPM setting for laptops for Fedora 28 (to be released aprox. May 2018).
-
-How exactly this will be done is still up for debate, one option would
-be a kernel patch which recognizes the mobile variant of Intel's chipset
-and changes the default on those, another option is punting this to
-userspace.
-
-Regards,
-
-Hans
