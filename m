@@ -1,19 +1,23 @@
 From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] libata: make static arrays const, reduces object code size
-Date: Mon, 18 Sep 2017 14:31:40 +0100
-Message-ID: <20170918133140.31220-1-colin.king@canonical.com>
+Subject: [PATCH][V2] libata: make const arrays static, reduces object code size
+Date: Mon, 18 Sep 2017 14:32:19 +0100
+Message-ID: <20170918133219.31293-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:38448 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753029AbdIRNca (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 18 Sep 2017 09:32:30 -0400
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>, Mark Fasheh <mfasheh@versity.com>, Joel Becker <jlbec@evilplan.org>, Andrew Morton <akpm@linux-foundation.org>, piaojun <piaojun@huawei.com>, linux-ide@vger.kernel.org, ocfs2-devel@oss.oracle.com
 Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
 
 From: Colin Ian King <colin.king@canonical.com>
 
-Don't populate const arrayis on the stack, instead make them static.
+Don't populate const arrays on the stack, instead make them static.
 Makes the object code smaller by over 260 bytes:
 
 Signed-off-by: Colin Ian King <colin.king@canonical.com>
@@ -85,3 +89,4 @@ index 74407c6dd592..31a61e8e0152 100644
  		mres->flags |= DLM_MRES_ALL_DONE;
 -- 
 2.14.1
+
