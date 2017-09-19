@@ -1,43 +1,82 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata_piix: Add Fujitsu-Siemens Lifebook S6120 to short
- cable IDs
-Date: Mon, 18 Sep 2017 20:32:32 -0700
-Message-ID: <20170919033232.GQ378890@devbig577.frc2.facebook.com>
-References: <20170918200008.16139-1-ville.syrjala@linux.intel.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH][V3] libata: make static arrays const, reduces object code size
+Date: Tue, 19 Sep 2017 09:39:52 +0100
+Message-ID: <20170919083952.5648-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f170.google.com ([209.85.220.170]:52945 "EHLO
-        mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750897AbdISDcg (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 18 Sep 2017 23:32:36 -0400
-Received: by mail-qk0-f170.google.com with SMTP id o77so2449943qke.9
-        for <linux-ide@vger.kernel.org>; Mon, 18 Sep 2017 20:32:36 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20170918200008.16139-1-ville.syrjala@linux.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ville Syrjala <ville.syrjala@linux.intel.com>
-Cc: linux-ide@vger.kernel.org
 
-On Mon, Sep 18, 2017 at 11:00:08PM +0300, Ville Syrjala wrote:
-> From: Ville Syrjälä <ville.syrjala@linux.intel.com>
-> 
-> Fujitsu-Siemens Lifebook S6120 misdetects the cable type for some
-> drives. The problematic one in this case is an mSATA SSD hooked up via a
-> mSATA->PATA bridge. With regular hard disks the detection seems to work
-> correctly.
-> 
-> Strangely an older Lifebook model (S6020) detects the cable as 80c
-> with the mSATA SSD, even if using the exact same flex cable.
-> 
-> Cc: Tejun Heo <tj@kernel.org>
-> Signed-off-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-Applied to libata/for-4.14-fixes.
+Don't populate const arrayis on the stack, instead make them static.
+Makes the object code smaller by over 260 bytes:
 
-Thanks.
+Before:
+   text	   data	    bss	    dec	    hex	filename
+  64864	   5948	   4128	  74940	  124bc	drivers/ata/libata-scsi.o
 
+After:
+   text	   data	    bss	    dec	    hex	filename
+  64183	   6364	   4128	  74675	  123b3	drivers/ata/libata-scsi.o
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/ata/libata-scsi.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 44ba292f2cd7..c3c483fc2145 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2145,7 +2145,7 @@ static void ata_scsi_rbuf_fill(struct ata_scsi_args *args,
+  */
+ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ {
+-	const u8 versions[] = {
++	static const u8 versions[] = {
+ 		0x00,
+ 		0x60,	/* SAM-3 (no version claimed) */
+ 
+@@ -2155,7 +2155,7 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ 		0x03,
+ 		0x00	/* SPC-3 (no version claimed) */
+ 	};
+-	const u8 versions_zbc[] = {
++	static const u8 versions_zbc[] = {
+ 		0x00,
+ 		0xA0,	/* SAM-5 (no version claimed) */
+ 
+@@ -2227,7 +2227,7 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+ static unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf)
+ {
+ 	int num_pages;
+-	const u8 pages[] = {
++	static const u8 pages[] = {
+ 		0x00,	/* page 0x00, this page */
+ 		0x80,	/* page 0x80, unit serial no page */
+ 		0x83,	/* page 0x83, device ident page */
+@@ -2258,7 +2258,7 @@ static unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf)
+  */
+ static unsigned int ata_scsiop_inq_80(struct ata_scsi_args *args, u8 *rbuf)
+ {
+-	const u8 hdr[] = {
++	static const u8 hdr[] = {
+ 		0,
+ 		0x80,			/* this page code */
+ 		0,
+@@ -2580,7 +2580,7 @@ static unsigned int ata_scsiop_mode_sense(struct ata_scsi_args *args, u8 *rbuf)
+ {
+ 	struct ata_device *dev = args->dev;
+ 	u8 *scsicmd = args->cmd->cmnd, *p = rbuf;
+-	const u8 sat_blk_desc[] = {
++	static const u8 sat_blk_desc[] = {
+ 		0, 0, 0, 0,	/* number of blocks: sat unspecified */
+ 		0,
+ 		0, 0x2, 0x0	/* block length: 512 bytes */
 -- 
-tejun
+2.14.1
