@@ -1,45 +1,41 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: make static arrays const, reduces object code
- size
-Date: Mon, 18 Sep 2017 20:29:56 -0700
-Message-ID: <20170919032956.GP378890@devbig577.frc2.facebook.com>
-References: <20170918133140.31220-1-colin.king@canonical.com>
+Subject: Re: [PATCH] ata_piix: Add Fujitsu-Siemens Lifebook S6120 to short
+ cable IDs
+Date: Mon, 18 Sep 2017 20:32:32 -0700
+Message-ID: <20170919033232.GQ378890@devbig577.frc2.facebook.com>
+References: <20170918200008.16139-1-ville.syrjala@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:38202 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751100AbdISDaA (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 18 Sep 2017 23:30:00 -0400
+Received: from mail-qk0-f170.google.com ([209.85.220.170]:52945 "EHLO
+        mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750897AbdISDcg (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 18 Sep 2017 23:32:36 -0400
+Received: by mail-qk0-f170.google.com with SMTP id o77so2449943qke.9
+        for <linux-ide@vger.kernel.org>; Mon, 18 Sep 2017 20:32:36 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20170918133140.31220-1-colin.king@canonical.com>
+In-Reply-To: <20170918200008.16139-1-ville.syrjala@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Mark Fasheh <mfasheh@versity.com>, Joel Becker <jlbec@evilplan.org>, Andrew Morton <akpm@linux-foundation.org>, piaojun <piaojun@huawei.com>, linux-ide@vger.kernel.org, ocfs2-devel@oss.oracle.com, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Ville Syrjala <ville.syrjala@linux.intel.com>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, Sep 18, 2017 at 02:31:40PM +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
+On Mon, Sep 18, 2017 at 11:00:08PM +0300, Ville Syrjala wrote:
+> From: Ville Syrjälä <ville.syrjala@linux.intel.com>
 > 
-> Don't populate const arrayis on the stack, instead make them static.
-> Makes the object code smaller by over 260 bytes:
+> Fujitsu-Siemens Lifebook S6120 misdetects the cable type for some
+> drives. The problematic one in this case is an mSATA SSD hooked up via a
+> mSATA->PATA bridge. With regular hard disks the detection seems to work
+> correctly.
 > 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-...
-> diff --git a/fs/ocfs2/dlm/dlmrecovery.c b/fs/ocfs2/dlm/dlmrecovery.c
-> index 74407c6dd592..31a61e8e0152 100644
-> --- a/fs/ocfs2/dlm/dlmrecovery.c
-> +++ b/fs/ocfs2/dlm/dlmrecovery.c
-> @@ -1129,7 +1129,6 @@ static int dlm_send_mig_lockres_msg(struct dlm_ctxt *dlm,
->  		(mres->num_locks * sizeof(struct dlm_migratable_lock));
->  
->  	/* add an all-done flag if we reached the last lock */
-> -	orig_flags = mres->flags;
->  	BUG_ON(total_locks > mres_total_locks);
->  	if (total_locks == mres_total_locks)
->  		mres->flags |= DLM_MRES_ALL_DONE;
+> Strangely an older Lifebook model (S6020) detects the cable as 80c
+> with the mSATA SSD, even if using the exact same flex cable.
+> 
+> Cc: Tejun Heo <tj@kernel.org>
+> Signed-off-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
 
-Looks like patch contamination.
+Applied to libata/for-4.14-fixes.
 
 Thanks.
 
