@@ -1,16 +1,16 @@
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Subject: Re: [PATCH] PCI: Fix legacy IRQ assignment execution stage
-Date: Fri, 29 Sep 2017 14:25:11 +0100
-Message-ID: <20170929132511.GA15538@red-moon>
+Date: Fri, 29 Sep 2017 17:02:26 +0100
+Message-ID: <20170929160226.GA17398@red-moon>
 References: <1506598627-8985-1-git-send-email-lorenzo.pieralisi@arm.com>
  <20170928223719.GY15970@bhelgaas-glaptop.roam.corp.google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:43780 "EHLO
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:45790 "EHLO
         foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751176AbdI2NWl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 29 Sep 2017 09:22:41 -0400
+        id S1751973AbdI2P7x (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 29 Sep 2017 11:59:53 -0400
 Content-Disposition: inline
 In-Reply-To: <20170928223719.GY15970@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -38,11 +38,7 @@ On Thu, Sep 28, 2017 at 05:37:19PM -0500, Bjorn Helgaas wrote:
 > I think the patch is fine, but I don't understand the changelog.  I
 > want to know specifically what the dependency on dev->irq is.  "Early
 > in the boot process" is pretty vague.
-
-I agree with you Bjorn and I also agree that this fix does not
-explain what the problem really is so it is not actually fixing
-anything.
-
+> 
 > I *thought* we were doing something like this:
 > 
 >   pci_device_probe(dev1)
@@ -61,117 +57,66 @@ anything.
 > cmd64x_init_one(), which calls ide_pci_init_one(), so we shouldn't
 > have a dev2 in this path.
 
-That's my understanding too and pci_assign_irq() should have been called
-for dev1 (and failed) by then, why calling it again succeeds is not
-clear to me.
+I *think* I understand what's going on here, the key is:
 
-There is something I am missing here which is not obvious, I need
-more data to debug this, I will try to replicate Guenter's setup.
+ide_scan_pcibus()
 
-Thanks,
-Lorenzo
+and CONFIG_IDEPCI_PCIBUS_ORDER
 
-> > ide0: disabled, no IRQ
-> > ide0: failed to initialize IDE interface
-> > ide0: disabling port
-> > cmd64x 0000:00:02.0: IDE controller (0x1095:0x0646 rev 0x07)
-> > CMD64x_IDE 0000:00:02.0: BAR 0: can't reserve [io  0x8050-0x8057]
-> > cmd64x 0000:00:02.0: can't reserve resources
-> > CMD64x_IDE: probe of 0000:00:02.0 failed with error -16
-> > ide_generic: please use "probe_mask=0x3f" module parameter for probing
-> > all legacy ISA IDE ports
-> > ------------[ cut here ]------------
-> > WARNING: CPU: 0 PID: 1 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x94/0xd0
-> > sysfs: cannot create duplicate filename '/class/ide_port/ide0'
-> > ...
-> > 
-> > Trace:
-> > [<fffffc00003308a0>] __warn+0x160/0x190
-> > [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
-> > [<fffffc0000330928>] warn_slowpath_fmt+0x58/0x70
-> > [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
-> > [<fffffc0000486d40>] kernfs_path_from_node+0x30/0x60
-> > [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
-> > [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
-> > [<fffffc000048d010>] sysfs_do_create_link_sd.isra.2+0x100/0x120
-> > [<fffffc00005b9d64>] device_add+0x2a4/0x7c0
-> > [<fffffc00005ba5cc>] device_create_groups_vargs+0x14c/0x170
-> > [<fffffc00005ba518>] device_create_groups_vargs+0x98/0x170
-> > [<fffffc00005ba690>] device_create+0x50/0x70
-> > [<fffffc00005df36c>] ide_host_register+0x48c/0xa00
-> > [<fffffc00005df330>] ide_host_register+0x450/0xa00
-> > [<fffffc00005ba2a0>] device_register+0x20/0x50
-> > [<fffffc00005df330>] ide_host_register+0x450/0xa00
-> > [<fffffc00005df944>] ide_host_add+0x64/0xe0
-> > [<fffffc000079b41c>] kobject_uevent_env+0x16c/0x710
-> > [<fffffc0000310288>] do_one_initcall+0x68/0x260
-> > [<fffffc00007b13bc>] kernel_init+0x1c/0x1a0
-> > [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
-> > [<fffffc0000311868>] ret_from_kernel_thread+0x18/0x20
-> > [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
-> > 
-> > ---[ end trace 24a70433c3e4d374 ]---
-> > ide0: disabling port
-> > 
-> > Fix the IRQ allocation issue by moving the pci_assign_irq() call from
-> > pci_device_probe() to pci_device_add(), so that IRQs for a given PCI
-> > device are allocated as soon as it is scanned by the PCI enumeration.
-> > 
-> > This has the drawback of allocating an IRQ even for PCI devices that
-> > do not have a matching kernel driver but it should be safe to carry
-> > out in all configurations.
-> > 
-> > Fixes: 30fdfb929e82 ("PCI: Add a call to pci_assign_irq() in
-> > pci_device_probe()")
-> > Link: http://lkml.kernel.org/r/32ec730f-c1b0-5584-cd35-f8a809122b96@roeck-us.net
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Reported-by: Guenter Roeck <linux@roeck-us.net>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Richard Henderson <rth@twiddle.net>
-> > Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-> > Cc: David S. Miller <davem@davemloft.net>
-> > Cc: Guenter Roeck <linux@roeck-us.net>
-> > Cc: Matt Turner <mattst88@gmail.com>
-> > ---
-> >  drivers/pci/pci-driver.c | 2 --
-> >  drivers/pci/probe.c      | 3 +++
-> >  2 files changed, 3 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> > index 11bd267..750d688 100644
-> > --- a/drivers/pci/pci-driver.c
-> > +++ b/drivers/pci/pci-driver.c
-> > @@ -415,8 +415,6 @@ static int pci_device_probe(struct device *dev)
-> >  	struct pci_dev *pci_dev = to_pci_dev(dev);
-> >  	struct pci_driver *drv = to_pci_driver(dev->driver);
-> >  
-> > -	pci_assign_irq(pci_dev);
-> > -
-> >  	error = pcibios_alloc_irq(pci_dev);
-> >  	if (error < 0)
-> >  		return error;
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index ff94b69..ba4e466 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -2103,6 +2103,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
-> >  	/* Initialize various capabilities */
-> >  	pci_init_capabilities(dev);
-> >  
-> > +	/* Assign device IRQ number */
-> 
-> Pointless comment (as is the existing capabilities one above).
-> 
-> > +	pci_assign_irq(dev);
-> > +
-> >  	/*
-> >  	 * Add the device to our list of discovered devices
-> >  	 * and the bus list for fixup functions, etc.
-> > -- 
-> > 2.4.12
-> > 
-> > 
-> > _______________________________________________
-> > linux-arm-kernel mailing list
-> > linux-arm-kernel@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I still have to replicate it but I suspect that
+do_ide_setup_pci_device() for dev1 finds an unallocated IRQ (ie dev->irq
+== 0) because the probing did NOT happen via pci_device_probe(), ie
+pci_device_probe() was not called for the dev1, the cmd64x probe
+routine is called straight from ide_scan_pcidev().
+
+I am struggling to understand the logic behind:
+
+ide_pci_register_driver() and ide_scan_pcibus()
+
+and the sequence wrt PCI bus probing but I think that's the problem
+and that's why moving pci_assign_irq() to pci_device_add() will
+sort this out, adding pci_assign_irq() in ide_scan_pcidev() will
+solve the problem too (patch below).
+
+Needless to say, ide_scan_pcibus() relies on pre_init global variable
+to make sure ide_pci_register_driver() chooses the "right" way of
+registering a driver, see:
+
+__ide_pci_register_driver()
+
+Patch here to verify my assumption in case Guenter has a chance to
+run it if I do not beat him to it:
+
+-- >8 --
+diff --git a/drivers/ide/ide-scan-pci.c b/drivers/ide/ide-scan-pci.c
+index 86aa88a..86b570a 100644
+--- a/drivers/ide/ide-scan-pci.c
++++ b/drivers/ide/ide-scan-pci.c
+@@ -56,6 +56,8 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
+ {
+ 	struct list_head *l;
+ 	struct pci_driver *d;
++	int ret;
++
+ 
+ 	list_for_each(l, &ide_pci_drivers) {
+ 		d = list_entry(l, struct pci_driver, node);
+@@ -63,10 +65,14 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
+ 			const struct pci_device_id *id =
+ 				pci_match_id(d->id_table, dev);
+ 
+-			if (id != NULL && d->probe(dev, id) >= 0) {
+-				dev->driver = d;
+-				pci_dev_get(dev);
+-				return 1;
++			if (id != NULL) {
++				pci_assign_irq(dev);
++				ret = d->probe(dev, id);
++				if (ret >= 0) {
++					dev->driver = d;
++					pci_dev_get(dev);
++					return 1;
++				}
+ 			}
+ 		}
+ 	}
