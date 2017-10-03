@@ -1,55 +1,108 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata fixes for v4.14-rc3
-Date: Tue, 3 Oct 2017 06:16:13 -0700
-Message-ID: <20171003131613.GE3301751@devbig577.frc2.facebook.com>
+From: Guenter Roeck <linux@roeck-us.net>
+Subject: Re: [PATCH v2] ide: add missing hwif->portdev freeing on hwif_init()
+ failure
+Date: Tue, 3 Oct 2017 06:43:03 -0700
+Message-ID: <682ce00b-9a5d-5fea-5ee9-e7616841c397@roeck-us.net>
+References: <CGME20171003111849epcas1p3335e2bc56e5aafdeadc340301284b2b8@epcas1p3.samsung.com>
+ <1640481.zjlggixLin@amdc3058>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:35960 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752264AbdJCNQR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Oct 2017 09:16:17 -0400
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1640481.zjlggixLin@amdc3058>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, "David S. Miller" <davem@davemloft.net>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas <bhelgaas@google.com>, Richard Henderson <rth@twiddle.net>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>, Matt Turner <mattst88@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello, Linus.
+On 10/03/2017 04:18 AM, Bartlomiej Zolnierkiewicz wrote:
+> Recent pci_assign_irq() changes uncovered a problem with missing
+> freeing of ide_port class instance on hwif_init() failure in
+> ide_host_register():
+> 
+> ide0: disabled, no IRQ
+> ide0: failed to initialize IDE interface
+> ide0: disabling port
+> cmd64x 0000:00:02.0: IDE controller (0x1095:0x0646 rev 0x07)
+> CMD64x_IDE 0000:00:02.0: BAR 0: can't reserve [io  0x8050-0x8057]
+> cmd64x 0000:00:02.0: can't reserve resources
+> CMD64x_IDE: probe of 0000:00:02.0 failed with error -16
+> ide_generic: please use "probe_mask=0x3f" module parameter for probing
+> all legacy ISA IDE ports
+> ------------[ cut here ]------------
+> WARNING: CPU: 0 PID: 1 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x94/0xd0
+> sysfs: cannot create duplicate filename '/class/ide_port/ide0'
+> ...
+> 
+> Trace:
+> [<fffffc00003308a0>] __warn+0x160/0x190
+> [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
+> [<fffffc0000330928>] warn_slowpath_fmt+0x58/0x70
+> [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
+> [<fffffc0000486d40>] kernfs_path_from_node+0x30/0x60
+> [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
+> [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
+> [<fffffc000048d010>] sysfs_do_create_link_sd.isra.2+0x100/0x120
+> [<fffffc00005b9d64>] device_add+0x2a4/0x7c0
+> [<fffffc00005ba5cc>] device_create_groups_vargs+0x14c/0x170
+> [<fffffc00005ba518>] device_create_groups_vargs+0x98/0x170
+> [<fffffc00005ba690>] device_create+0x50/0x70
+> [<fffffc00005df36c>] ide_host_register+0x48c/0xa00
+> [<fffffc00005df330>] ide_host_register+0x450/0xa00
+> [<fffffc00005ba2a0>] device_register+0x20/0x50
+> [<fffffc00005df330>] ide_host_register+0x450/0xa00
+> [<fffffc00005df944>] ide_host_add+0x64/0xe0
+> [<fffffc000079b41c>] kobject_uevent_env+0x16c/0x710
+> [<fffffc0000310288>] do_one_initcall+0x68/0x260
+> [<fffffc00007b13bc>] kernel_init+0x1c/0x1a0
+> [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
+> [<fffffc0000311868>] ret_from_kernel_thread+0x18/0x20
+> [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
+> 
+> ---[ end trace 24a70433c3e4d374 ]---
+> ide0: disabling port
+> 
+> Fix the problem by adding missing code to ide_host_register().
+> 
+> Link: http://lkml.kernel.org/r/32ec730f-c1b0-5584-cd35-f8a809122b96@roeck-us.net
+> Reported-by: Guenter Roeck <linux@roeck-us.net>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Richard Henderson <rth@twiddle.net>
+> Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+> Cc: Guenter Roeck <linux@roeck-us.net>
+> Cc: Matt Turner <mattst88@gmail.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-Nothing too interesting.  Arnd's gcc-7 warning fixes that slipped
-through the cracks for two release cycles (my bad), and two minor low
-level driver updates.
+Tested-by: Guenter Roeck <linux@roeck-us.net>
 
-Thanks.
+... on linux-next which actually crashes on reboot without this
+and the "free up BARs on failure" patch.
 
-The following changes since commit c0da4fa0d1a54495d6055c009ac46b76d1da2c86:
+Guenter
 
-  Merge tag 'media/v4.14-1' of git://git.kernel.org/pub/scm/linux/kernel/git/mchehab/linux-media (2017-09-07 12:53:14 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.14-fixes
-
-for you to fetch changes up to d312fefea8387503375f728855c9a62de20c9665:
-
-  ahci: don't ignore result code of ahci_reset_controller() (2017-10-02 12:21:30 -0700)
-
-----------------------------------------------------------------
-Ard Biesheuvel (1):
-      ahci: don't ignore result code of ahci_reset_controller()
-
-Arnd Bergmann (1):
-      ata: avoid gcc-7 warning in ata_timing_quantize
-
-Ville Syrjälä (1):
-      ata_piix: Add Fujitsu-Siemens Lifebook S6120 to short cable IDs
-
- drivers/ata/ahci.c        |  5 ++++-
- drivers/ata/ata_piix.c    |  1 +
- drivers/ata/libata-core.c | 20 ++++++++++----------
- 3 files changed, 15 insertions(+), 11 deletions(-)
-
--- 
-tejun
+> ---
+> This should fix sysfs warning and probing of ide_generic driver
+> driven ports in case of hwif_init() failure (i.e. no IRQ issue
+> when pci_assign_irq() fix is not present).
+> 
+> v2:
+> - Fixed typo in the patch description: pci_assing_irq() -> pci_assign_irq().
+> 
+>   drivers/ide/ide-probe.c |    1 +
+>   1 file changed, 1 insertion(+)
+> 
+> Index: b/drivers/ide/ide-probe.c
+> ===================================================================
+> --- a/drivers/ide/ide-probe.c	2017-10-02 15:08:16.658662459 +0200
+> +++ b/drivers/ide/ide-probe.c	2017-10-03 11:59:36.867189557 +0200
+> @@ -1451,6 +1451,7 @@ int ide_host_register(struct ide_host *h
+>   		if (hwif_init(hwif) == 0) {
+>   			printk(KERN_INFO "%s: failed to initialize IDE "
+>   					 "interface\n", hwif->name);
+> +			device_unregister(hwif->portdev);
+>   			device_unregister(&hwif->gendev);
+>   			ide_disable_port(hwif);
+>   			continue;
+> 
+> 
