@@ -1,25 +1,21 @@
 From: Bjorn Helgaas <helgaas@kernel.org>
 Subject: Re: [PATCH v2] ide: add missing hwif->portdev freeing on hwif_init()
  failure
-Date: Tue, 3 Oct 2017 12:53:23 -0500
-Message-ID: <20171003175322.GB27400@bhelgaas-glaptop.roam.corp.google.com>
+Date: Tue, 3 Oct 2017 12:57:42 -0500
+Message-ID: <20171003175742.GC27400@bhelgaas-glaptop.roam.corp.google.com>
 References: <CGME20171003111849epcas1p3335e2bc56e5aafdeadc340301284b2b8@epcas1p3.samsung.com>
  <1640481.zjlggixLin@amdc3058>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55084 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750797AbdJCRx0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 3 Oct 2017 13:53:26 -0400
+Return-path: <linux-pci-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <1640481.zjlggixLin@amdc3058>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: "David S. Miller" <davem@davemloft.net>, Guenter Roeck <linux@roeck-us.net>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas <bhelgaas@google.com>, Richard Henderson <rth@twiddle.net>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>, Matt Turner <mattst88@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>, Guenter Roeck <linux@roeck-us.net>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas <bhelgaas@google.com>, Richard Henderson <rth@twiddle.net>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>, Matt Turner <mattst88@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-[+cc linux-pci]
+[+cc linux-pci for real]
 
 My plan is to take these two additional fixes via the PCI tree, along
 with Lorenzo's patch to add a pci_assign_irq() call in
