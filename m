@@ -1,23 +1,23 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [PATCH] ide: add missing hwif->portdev freeing on hwif_init()
+Subject: [PATCH v2] ide: add missing hwif->portdev freeing on hwif_init()
  failure
-Date: Tue, 03 Oct 2017 12:20:35 +0200
-Message-ID: <8525531.3RXZi23kEJ@amdc3058>
-References: <CGME20171003102037epcas2p1ed603f6c3a335ac34438ce32b5421a00@epcas2p1.samsung.com>
+Date: Tue, 03 Oct 2017 13:18:47 +0200
+Message-ID: <1640481.zjlggixLin@amdc3058>
+References: <CGME20171003111849epcas1p3335e2bc56e5aafdeadc340301284b2b8@epcas1p3.samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:49640 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751277AbdJCKUk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Oct 2017 06:20:40 -0400
+Received: from mailout2.samsung.com ([203.254.224.25]:63257 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750865AbdJCLSx (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Oct 2017 07:18:53 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: "David S. Miller" <davem@davemloft.net>
 Cc: Guenter Roeck <linux@roeck-us.net>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas <bhelgaas@google.com>, Richard Henderson <rth@twiddle.net>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>, Matt Turner <mattst88@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Recent pci_assing_irq() changes uncovered a problem with missing
+Recent pci_assign_irq() changes uncovered a problem with missing
 freeing of ide_port class instance on hwif_init() failure in 
 ide_host_register():
 
@@ -76,7 +76,10 @@ Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
 This should fix sysfs warning and probing of ide_generic driver
 driven ports in case of hwif_init() failure (i.e. no IRQ issue
-when pci_assing_irq() fix is not present).
+when pci_assign_irq() fix is not present).
+
+v2:
+- Fixed typo in the patch description: pci_assing_irq() -> pci_assign_irq().
 
  drivers/ide/ide-probe.c |    1 +
  1 file changed, 1 insertion(+)
