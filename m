@@ -1,27 +1,34 @@
-From: Guenter Roeck <linux@roeck-us.net>
-Subject: Re: [PATCH v2] ide: pci: free PCI BARs on initialization failure
-Date: Tue, 3 Oct 2017 06:43:51 -0700
-Message-ID: <fd8fb4dc-4de0-a7da-826a-baff1527f34f@roeck-us.net>
-References: <CGME20171003121716epcas2p293688077d6d66b6393f029981adb6108@epcas2p2.samsung.com>
- <2124910.9XpgDMsQpd@amdc3058>
+From: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH v2] ide: add missing hwif->portdev freeing on hwif_init()
+ failure
+Date: Tue, 3 Oct 2017 12:53:23 -0500
+Message-ID: <20171003175322.GB27400@bhelgaas-glaptop.roam.corp.google.com>
+References: <CGME20171003111849epcas1p3335e2bc56e5aafdeadc340301284b2b8@epcas1p3.samsung.com>
+ <1640481.zjlggixLin@amdc3058>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:35705 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751910AbdJCNnx (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Oct 2017 09:43:53 -0400
-In-Reply-To: <2124910.9XpgDMsQpd@amdc3058>
-Content-Language: en-US
+Received: from mail.kernel.org ([198.145.29.99]:55084 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750797AbdJCRx0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 3 Oct 2017 13:53:26 -0400
+Content-Disposition: inline
+In-Reply-To: <1640481.zjlggixLin@amdc3058>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, "David S. Miller" <davem@davemloft.net>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas <bhelgaas@google.com>, Richard Henderson <rth@twiddle.net>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>, Matt Turner <mattst88@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: "David S. Miller" <davem@davemloft.net>, Guenter Roeck <linux@roeck-us.net>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas <bhelgaas@google.com>, Richard Henderson <rth@twiddle.net>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>, Matt Turner <mattst88@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 10/03/2017 05:17 AM, Bartlomiej Zolnierkiewicz wrote:
+[+cc linux-pci]
+
+My plan is to take these two additional fixes via the PCI tree, along
+with Lorenzo's patch to add a pci_assign_irq() call in
+ide_scan_pcidev(), since they're all related.
+
+On Tue, Oct 03, 2017 at 01:18:47PM +0200, Bartlomiej Zolnierkiewicz wrote:
 > Recent pci_assign_irq() changes uncovered a problem with missing
-> freeing of PCI BARs on PCI IDE host initialization failure:
+> freeing of ide_port class instance on hwif_init() failure in 
+> ide_host_register():
 > 
 > ide0: disabled, no IRQ
 > ide0: failed to initialize IDE interface
@@ -30,9 +37,42 @@ On 10/03/2017 05:17 AM, Bartlomiej Zolnierkiewicz wrote:
 > CMD64x_IDE 0000:00:02.0: BAR 0: can't reserve [io  0x8050-0x8057]
 > cmd64x 0000:00:02.0: can't reserve resources
 > CMD64x_IDE: probe of 0000:00:02.0 failed with error -16
+> ide_generic: please use "probe_mask=0x3f" module parameter for probing
+> all legacy ISA IDE ports
+> ------------[ cut here ]------------
+> WARNING: CPU: 0 PID: 1 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x94/0xd0
+> sysfs: cannot create duplicate filename '/class/ide_port/ide0'
+> ...
 > 
-> Fix the problem by adding missing freeing of PCI BARs to
-> ide_setup_pci_controller() and ide_pci_init_two().
+> Trace:
+> [<fffffc00003308a0>] __warn+0x160/0x190
+> [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
+> [<fffffc0000330928>] warn_slowpath_fmt+0x58/0x70
+> [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
+> [<fffffc0000486d40>] kernfs_path_from_node+0x30/0x60
+> [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
+> [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
+> [<fffffc000048d010>] sysfs_do_create_link_sd.isra.2+0x100/0x120
+> [<fffffc00005b9d64>] device_add+0x2a4/0x7c0
+> [<fffffc00005ba5cc>] device_create_groups_vargs+0x14c/0x170
+> [<fffffc00005ba518>] device_create_groups_vargs+0x98/0x170
+> [<fffffc00005ba690>] device_create+0x50/0x70
+> [<fffffc00005df36c>] ide_host_register+0x48c/0xa00
+> [<fffffc00005df330>] ide_host_register+0x450/0xa00
+> [<fffffc00005ba2a0>] device_register+0x20/0x50
+> [<fffffc00005df330>] ide_host_register+0x450/0xa00
+> [<fffffc00005df944>] ide_host_add+0x64/0xe0
+> [<fffffc000079b41c>] kobject_uevent_env+0x16c/0x710
+> [<fffffc0000310288>] do_one_initcall+0x68/0x260
+> [<fffffc00007b13bc>] kernel_init+0x1c/0x1a0
+> [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
+> [<fffffc0000311868>] ret_from_kernel_thread+0x18/0x20
+> [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
+> 
+> ---[ end trace 24a70433c3e4d374 ]---
+> ide0: disabling port
+> 
+> Fix the problem by adding missing code to ide_host_register().
 > 
 > Link: http://lkml.kernel.org/r/32ec730f-c1b0-5584-cd35-f8a809122b96@roeck-us.net
 > Reported-by: Guenter Roeck <linux@roeck-us.net>
@@ -42,178 +82,27 @@ On 10/03/2017 05:17 AM, Bartlomiej Zolnierkiewicz wrote:
 > Cc: Guenter Roeck <linux@roeck-us.net>
 > Cc: Matt Turner <mattst88@gmail.com>
 > Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-
-Tested-by: Guenter Roeck <linux@roeck-us.net>
-
 > ---
-> This should fix problem with reserving PCI resources on a secondary
-> PCI device probe attempt (please test when pci_assign_irq() fix is
-> not present and "[PATCH] ide: add missing hwif->portdev freeing on
-> hwif_init() failure" is applied).
+> This should fix sysfs warning and probing of ide_generic driver
+> driven ports in case of hwif_init() failure (i.e. no IRQ issue
+> when pci_assign_irq() fix is not present).
 > 
 > v2:
-> - Added missing 'goto out;' in ide_setup_pci_controller()
+> - Fixed typo in the patch description: pci_assing_irq() -> pci_assign_irq().
 > 
->   drivers/ide/setup-pci.c |   63 ++++++++++++++++++++++++++++++------------------
->   1 file changed, 40 insertions(+), 23 deletions(-)
+>  drivers/ide/ide-probe.c |    1 +
+>  1 file changed, 1 insertion(+)
 > 
-> Index: b/drivers/ide/setup-pci.c
+> Index: b/drivers/ide/ide-probe.c
 > ===================================================================
-> --- a/drivers/ide/setup-pci.c	2017-10-03 14:13:02.391779813 +0200
-> +++ b/drivers/ide/setup-pci.c	2017-10-03 14:13:59.051779867 +0200
-> @@ -179,6 +179,7 @@ EXPORT_SYMBOL_GPL(ide_setup_pci_noise);
->   /**
->    *	ide_pci_enable	-	do PCI enables
->    *	@dev: PCI device
-> + *	@bars: PCI BARs mask
->    *	@d: IDE port info
->    *
->    *	Enable the IDE PCI device. We attempt to enable the device in full
-> @@ -189,9 +190,10 @@ EXPORT_SYMBOL_GPL(ide_setup_pci_noise);
->    *	Returns zero on success or an error code
->    */
->   
-> -static int ide_pci_enable(struct pci_dev *dev, const struct ide_port_info *d)
-> +static int ide_pci_enable(struct pci_dev *dev, int bars,
-> +			  const struct ide_port_info *d)
->   {
-> -	int ret, bars;
-> +	int ret;
->   
->   	if (pci_enable_device(dev)) {
->   		ret = pci_enable_device_io(dev);
-> @@ -216,18 +218,6 @@ static int ide_pci_enable(struct pci_dev
->   		goto out;
->   	}
->   
-> -	if (d->host_flags & IDE_HFLAG_SINGLE)
-> -		bars = (1 << 2) - 1;
-> -	else
-> -		bars = (1 << 4) - 1;
-> -
-> -	if ((d->host_flags & IDE_HFLAG_NO_DMA) == 0) {
-> -		if (d->host_flags & IDE_HFLAG_CS5520)
-> -			bars |= (1 << 2);
-> -		else
-> -			bars |= (1 << 4);
-> -	}
-> -
->   	ret = pci_request_selected_regions(dev, bars, d->name);
->   	if (ret < 0)
->   		printk(KERN_ERR "%s %s: can't reserve resources\n",
-> @@ -403,6 +393,7 @@ int ide_hwif_setup_dma(ide_hwif_t *hwif,
->   /**
->    *	ide_setup_pci_controller	-	set up IDE PCI
->    *	@dev: PCI device
-> + *	@bars: PCI BARs mask
->    *	@d: IDE port info
->    *	@noisy: verbose flag
->    *
-> @@ -411,7 +402,7 @@ int ide_hwif_setup_dma(ide_hwif_t *hwif,
->    *	and enables it if need be
->    */
->   
-> -static int ide_setup_pci_controller(struct pci_dev *dev,
-> +static int ide_setup_pci_controller(struct pci_dev *dev, int bars,
->   				    const struct ide_port_info *d, int noisy)
->   {
->   	int ret;
-> @@ -420,7 +411,7 @@ static int ide_setup_pci_controller(stru
->   	if (noisy)
->   		ide_setup_pci_noise(dev, d);
->   
-> -	ret = ide_pci_enable(dev, d);
-> +	ret = ide_pci_enable(dev, bars, d);
->   	if (ret < 0)
->   		goto out;
->   
-> @@ -428,16 +419,20 @@ static int ide_setup_pci_controller(stru
->   	if (ret < 0) {
->   		printk(KERN_ERR "%s %s: error accessing PCI regs\n",
->   			d->name, pci_name(dev));
-> -		goto out;
-> +		goto out_free_bars;
->   	}
->   	if (!(pcicmd & PCI_COMMAND_IO)) {	/* is device disabled? */
->   		ret = ide_pci_configure(dev, d);
->   		if (ret < 0)
-> -			goto out;
-> +			goto out_free_bars;
->   		printk(KERN_INFO "%s %s: device enabled (Linux)\n",
->   			d->name, pci_name(dev));
->   	}
->   
-> +	goto out;
-> +
-> +out_free_bars:
-> +	pci_release_selected_regions(dev, bars);
->   out:
->   	return ret;
->   }
-> @@ -540,13 +535,28 @@ int ide_pci_init_two(struct pci_dev *dev
->   {
->   	struct pci_dev *pdev[] = { dev1, dev2 };
->   	struct ide_host *host;
-> -	int ret, i, n_ports = dev2 ? 4 : 2;
-> +	int ret, i, n_ports = dev2 ? 4 : 2, bars;
->   	struct ide_hw hw[4], *hws[] = { NULL, NULL, NULL, NULL };
->   
-> +	if (d->host_flags & IDE_HFLAG_SINGLE)
-> +		bars = (1 << 2) - 1;
-> +	else
-> +		bars = (1 << 4) - 1;
-> +
-> +	if ((d->host_flags & IDE_HFLAG_NO_DMA) == 0) {
-> +		if (d->host_flags & IDE_HFLAG_CS5520)
-> +			bars |= (1 << 2);
-> +		else
-> +			bars |= (1 << 4);
-> +	}
-> +
->   	for (i = 0; i < n_ports / 2; i++) {
-> -		ret = ide_setup_pci_controller(pdev[i], d, !i);
-> -		if (ret < 0)
-> +		ret = ide_setup_pci_controller(pdev[i], bars, d, !i);
-> +		if (ret < 0) {
-> +			if (i == 1)
-> +				pci_release_selected_regions(pdev[0], bars);
->   			goto out;
-> +		}
->   
->   		ide_pci_setup_ports(pdev[i], d, &hw[i*2], &hws[i*2]);
->   	}
-> @@ -554,7 +564,7 @@ int ide_pci_init_two(struct pci_dev *dev
->   	host = ide_host_alloc(d, hws, n_ports);
->   	if (host == NULL) {
->   		ret = -ENOMEM;
-> -		goto out;
-> +		goto out_free_bars;
->   	}
->   
->   	host->dev[0] = &dev1->dev;
-> @@ -576,7 +586,7 @@ int ide_pci_init_two(struct pci_dev *dev
->   		 * do_ide_setup_pci_device() on the first device!
->   		 */
->   		if (ret < 0)
-> -			goto out;
-> +			goto out_free_bars;
->   
->   		/* fixup IRQ */
->   		if (ide_pci_is_in_compatibility_mode(pdev[i])) {
-> @@ -589,6 +599,13 @@ int ide_pci_init_two(struct pci_dev *dev
->   	ret = ide_host_register(host, d, hws);
->   	if (ret)
->   		ide_host_free(host);
-> +	else
-> +		goto out;
-> +
-> +out_free_bars:
-> +	i = n_ports / 2;
-> +	while (i--)
-> +		pci_release_selected_regions(pdev[i], bars);
->   out:
->   	return ret;
->   }
+> --- a/drivers/ide/ide-probe.c	2017-10-02 15:08:16.658662459 +0200
+> +++ b/drivers/ide/ide-probe.c	2017-10-03 11:59:36.867189557 +0200
+> @@ -1451,6 +1451,7 @@ int ide_host_register(struct ide_host *h
+>  		if (hwif_init(hwif) == 0) {
+>  			printk(KERN_INFO "%s: failed to initialize IDE "
+>  					 "interface\n", hwif->name);
+> +			device_unregister(hwif->portdev);
+>  			device_unregister(&hwif->gendev);
+>  			ide_disable_port(hwif);
+>  			continue;
 > 
-> 
-
