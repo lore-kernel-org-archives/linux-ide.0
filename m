@@ -1,157 +1,96 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH v2] drivers/ide/pci: Fix legacy IRQ assignment
-Date: Tue, 03 Oct 2017 11:39:55 +0200
-Message-ID: <4605844.iOhxHctWQT@amdc3058>
-References: <1506941567-10762-1-git-send-email-lorenzo.pieralisi@arm.com>
-        <CGME20171003093957epcas2p4b14b17bb8a93bbe77b385bca6d8f0c3c@epcas2p4.samsung.com>
+Subject: [PATCH] ide: add missing hwif->portdev freeing on hwif_init()
+ failure
+Date: Tue, 03 Oct 2017 12:20:35 +0200
+Message-ID: <8525531.3RXZi23kEJ@amdc3058>
+References: <CGME20171003102037epcas2p1ed603f6c3a335ac34438ce32b5421a00@epcas2p1.samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:51306 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751190AbdJCJkA (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Oct 2017 05:40:00 -0400
-In-reply-to: <1506941567-10762-1-git-send-email-lorenzo.pieralisi@arm.com>
+Received: from mailout3.samsung.com ([203.254.224.33]:49640 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751277AbdJCKUk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Oct 2017 06:20:40 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Richard Henderson <rth@twiddle.net>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>, "David S. Miller" <davem@davemloft.net>, Guenter Roeck <linux@roeck-us.net>, Matt Turner <mattst88@gmail.com>
+To: "David S. Miller" <davem@davemloft.net>
+Cc: Guenter Roeck <linux@roeck-us.net>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas <bhelgaas@google.com>, Richard Henderson <rth@twiddle.net>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>, Matt Turner <mattst88@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Monday, October 02, 2017 11:52:47 AM Lorenzo Pieralisi wrote:
-> Through struct pci_host_bridge->{map/swizzle}_irq() hooks is now
-> possible to define IRQ mapping functions on a per PCI host bridge basis.
-> 
-> Actual IRQ allocation is carried out by the pci_assign_irq() function in
-> pci_device_probe() - to make sure a device is assigned an IRQ only if it
-> is probed (ie match a driver); it retrieves a struct pci_host_bridge*
-> for a given PCI device and through {map/swizzle}_irq() it carries out
-> the PCI IRQ allocation.
-> 
-> The code conversion to struct pci_host_bridge {map/swizzle}_irq() hooks
-> and pci_assign_irq() to deal with legacy IRQs in
-> 
-> commit 30fdfb929e82 ("PCI: Add a call to pci_assign_irq() in
-> pci_device_probe()")
-> 
-> did not take into account that the IDE subsystem relies on a special
-> purpose IDE PCI layer, configured by CONFIG_IDEPCI_PCIBUS_ORDER to force
-> devices probe ordering by sidestepping the core PCI bus layer entirely
-> (and therefore pci_device_probe()) by executing the registered IDE PCI
-> drivers probe routines (ie registered with ide_pci_register_driver())
-> through ide_scan_pcidev().
-> 
-> Since this IDE PCI specific probe mechanism bypasses the PCI core
-> code generic probing (ie pci_device_probe()) it also misses the
-> pci_assign_irq() call (among other PCI initialization functions);
-> this triggers IDE PCI devices initialization failures caused
-> by the missing IRQ allocation:
-> 
-> ide0: disabled, no IRQ
-> ide0: failed to initialize IDE interface
-> ide0: disabling port
-> cmd64x 0000:00:02.0: IDE controller (0x1095:0x0646 rev 0x07)
-> CMD64x_IDE 0000:00:02.0: BAR 0: can't reserve [io  0x8050-0x8057]
-> cmd64x 0000:00:02.0: can't reserve resources
-> CMD64x_IDE: probe of 0000:00:02.0 failed with error -16
-> ide_generic: please use "probe_mask=0x3f" module parameter for probing
-> all legacy ISA IDE ports
-> ------------[ cut here ]------------
-> WARNING: CPU: 0 PID: 1 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x94/0xd0
-> sysfs: cannot create duplicate filename '/class/ide_port/ide0'
-> ...
-> 
-> Trace:
-> [<fffffc00003308a0>] __warn+0x160/0x190
-> [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
-> [<fffffc0000330928>] warn_slowpath_fmt+0x58/0x70
-> [<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
-> [<fffffc0000486d40>] kernfs_path_from_node+0x30/0x60
-> [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
-> [<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
-> [<fffffc000048d010>] sysfs_do_create_link_sd.isra.2+0x100/0x120
-> [<fffffc00005b9d64>] device_add+0x2a4/0x7c0
-> [<fffffc00005ba5cc>] device_create_groups_vargs+0x14c/0x170
-> [<fffffc00005ba518>] device_create_groups_vargs+0x98/0x170
-> [<fffffc00005ba690>] device_create+0x50/0x70
-> [<fffffc00005df36c>] ide_host_register+0x48c/0xa00
-> [<fffffc00005df330>] ide_host_register+0x450/0xa00
-> [<fffffc00005ba2a0>] device_register+0x20/0x50
-> [<fffffc00005df330>] ide_host_register+0x450/0xa00
-> [<fffffc00005df944>] ide_host_add+0x64/0xe0
-> [<fffffc000079b41c>] kobject_uevent_env+0x16c/0x710
-> [<fffffc0000310288>] do_one_initcall+0x68/0x260
-> [<fffffc00007b13bc>] kernel_init+0x1c/0x1a0
-> [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
-> [<fffffc0000311868>] ret_from_kernel_thread+0x18/0x20
-> [<fffffc00007b13a0>] kernel_init+0x0/0x1a0
-> 
-> ---[ end trace 24a70433c3e4d374 ]---
-> ide0: disabling port
-> 
-> Fix the IRQ allocation issue by adding a pci_assign_irq() call in the
-> ide_scan_pcidev() function before probing the IDE PCI drivers, so that
-> IRQs for a given PCI device are allocated for the IDE PCI drivers to
-> use them for device configuration.
-> 
-> Fixes: 30fdfb929e82 ("PCI: Add a call to pci_assign_irq() in pci_device_probe()")
-> Link: http://lkml.kernel.org/r/32ec730f-c1b0-5584-cd35-f8a809122b96@roeck-us.net
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Reported-by: Guenter Roeck <linux@roeck-us.net>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Richard Henderson <rth@twiddle.net>
-> Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-> Cc: David S. Miller <davem@davemloft.net>
-> Cc: Guenter Roeck <linux@roeck-us.net>
-> Cc: Matt Turner <mattst88@gmail.com>
+Recent pci_assing_irq() changes uncovered a problem with missing
+freeing of ide_port class instance on hwif_init() failure in 
+ide_host_register():
 
-Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+ide0: disabled, no IRQ
+ide0: failed to initialize IDE interface
+ide0: disabling port
+cmd64x 0000:00:02.0: IDE controller (0x1095:0x0646 rev 0x07)
+CMD64x_IDE 0000:00:02.0: BAR 0: can't reserve [io  0x8050-0x8057]
+cmd64x 0000:00:02.0: can't reserve resources
+CMD64x_IDE: probe of 0000:00:02.0 failed with error -16
+ide_generic: please use "probe_mask=0x3f" module parameter for probing
+all legacy ISA IDE ports
+------------[ cut here ]------------
+WARNING: CPU: 0 PID: 1 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x94/0xd0
+sysfs: cannot create duplicate filename '/class/ide_port/ide0'
+...
 
-> ---
-> v1->v2
-> 
-> - Moved fix from PCI core code to IDE subsystem following further
->   debugging and mailing list discussions
-> - Rebased against v4.14-rc3
-> 
->  drivers/ide/ide-scan-pci.c | 13 +++++++++----
->  1 file changed, 9 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/ide/ide-scan-pci.c b/drivers/ide/ide-scan-pci.c
-> index 86aa88a..acf8748 100644
-> --- a/drivers/ide/ide-scan-pci.c
-> +++ b/drivers/ide/ide-scan-pci.c
-> @@ -56,6 +56,7 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
->  {
->  	struct list_head *l;
->  	struct pci_driver *d;
-> +	int ret;
->  
->  	list_for_each(l, &ide_pci_drivers) {
->  		d = list_entry(l, struct pci_driver, node);
-> @@ -63,10 +64,14 @@ static int __init ide_scan_pcidev(struct pci_dev *dev)
->  			const struct pci_device_id *id =
->  				pci_match_id(d->id_table, dev);
->  
-> -			if (id != NULL && d->probe(dev, id) >= 0) {
-> -				dev->driver = d;
-> -				pci_dev_get(dev);
-> -				return 1;
-> +			if (id != NULL) {
-> +				pci_assign_irq(dev);
-> +				ret = d->probe(dev, id);
-> +				if (ret >= 0) {
-> +					dev->driver = d;
-> +					pci_dev_get(dev);
-> +					return 1;
-> +				}
->  			}
->  		}
->  	}
+Trace:
+[<fffffc00003308a0>] __warn+0x160/0x190
+[<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
+[<fffffc0000330928>] warn_slowpath_fmt+0x58/0x70
+[<fffffc000048c9f4>] sysfs_warn_dup+0x94/0xd0
+[<fffffc0000486d40>] kernfs_path_from_node+0x30/0x60
+[<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
+[<fffffc00004874ac>] kernfs_put+0x16c/0x2c0
+[<fffffc000048d010>] sysfs_do_create_link_sd.isra.2+0x100/0x120
+[<fffffc00005b9d64>] device_add+0x2a4/0x7c0
+[<fffffc00005ba5cc>] device_create_groups_vargs+0x14c/0x170
+[<fffffc00005ba518>] device_create_groups_vargs+0x98/0x170
+[<fffffc00005ba690>] device_create+0x50/0x70
+[<fffffc00005df36c>] ide_host_register+0x48c/0xa00
+[<fffffc00005df330>] ide_host_register+0x450/0xa00
+[<fffffc00005ba2a0>] device_register+0x20/0x50
+[<fffffc00005df330>] ide_host_register+0x450/0xa00
+[<fffffc00005df944>] ide_host_add+0x64/0xe0
+[<fffffc000079b41c>] kobject_uevent_env+0x16c/0x710
+[<fffffc0000310288>] do_one_initcall+0x68/0x260
+[<fffffc00007b13bc>] kernel_init+0x1c/0x1a0
+[<fffffc00007b13a0>] kernel_init+0x0/0x1a0
+[<fffffc0000311868>] ret_from_kernel_thread+0x18/0x20
+[<fffffc00007b13a0>] kernel_init+0x0/0x1a0
 
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+---[ end trace 24a70433c3e4d374 ]---
+ide0: disabling port
+
+Fix the problem by adding missing code to ide_host_register().
+
+Link: http://lkml.kernel.org/r/32ec730f-c1b0-5584-cd35-f8a809122b96@roeck-us.net
+Reported-by: Guenter Roeck <linux@roeck-us.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Richard Henderson <rth@twiddle.net>
+Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+Cc: Guenter Roeck <linux@roeck-us.net>
+Cc: Matt Turner <mattst88@gmail.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+---
+This should fix sysfs warning and probing of ide_generic driver
+driven ports in case of hwif_init() failure (i.e. no IRQ issue
+when pci_assing_irq() fix is not present).
+
+ drivers/ide/ide-probe.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+Index: b/drivers/ide/ide-probe.c
+===================================================================
+--- a/drivers/ide/ide-probe.c	2017-10-02 15:08:16.658662459 +0200
++++ b/drivers/ide/ide-probe.c	2017-10-03 11:59:36.867189557 +0200
+@@ -1451,6 +1451,7 @@ int ide_host_register(struct ide_host *h
+ 		if (hwif_init(hwif) == 0) {
+ 			printk(KERN_INFO "%s: failed to initialize IDE "
+ 					 "interface\n", hwif->name);
++			device_unregister(hwif->portdev);
+ 			device_unregister(&hwif->gendev);
+ 			ide_disable_port(hwif);
+ 			continue;
 
