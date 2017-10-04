@@ -1,46 +1,33 @@
-From: Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH] ata: sata_rcar: Use of_device_get_match_data() helper
-Date: Wed,  4 Oct 2017 14:13:07 +0200
-Message-ID: <1507119187-12297-1-git-send-email-geert+renesas@glider.be>
-Return-path: <linux-renesas-soc-owner@vger.kernel.org>
-Sender: linux-renesas-soc-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-renesas-soc@vger.kernel.org, Geert Uytterhoeven <geert+renesas@glider.be>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH] ata: sata_rcar: Use of_device_get_match_data() helper
+Date: Wed, 4 Oct 2017 15:51:25 +0300
+Message-ID: <aabae5a7-24d6-3ef5-a92f-dcddff78a8c9@cogentembedded.com>
+References: <1507119187-12297-1-git-send-email-geert+renesas@glider.be>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-lf0-f43.google.com ([209.85.215.43]:45675 "EHLO
+        mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751673AbdJDMvb (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 4 Oct 2017 08:51:31 -0400
+Received: by mail-lf0-f43.google.com with SMTP id d17so13286683lfe.2
+        for <linux-ide@vger.kernel.org>; Wed, 04 Oct 2017 05:51:30 -0700 (PDT)
+In-Reply-To: <1507119187-12297-1-git-send-email-geert+renesas@glider.be>
+Content-Language: en-MW
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Geert Uytterhoeven <geert+renesas@glider.be>, Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-renesas-soc@vger.kernel.org
 
-Use the of_device_get_match_data() helper instead of open coding.
-Note that the sata_rcar driver is used with DT only, so there's always a
-valid match.
+On 10/04/2017 03:13 PM, Geert Uytterhoeven wrote:
 
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
----
- drivers/ata/sata_rcar.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+> Use the of_device_get_match_data() helper instead of open coding.
+> Note that the sata_rcar driver is used with DT only, so there's always a
+> valid match.
+> 
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
-index 537d11869069aae7..80ee2f2a50d02872 100644
---- a/drivers/ata/sata_rcar.c
-+++ b/drivers/ata/sata_rcar.c
-@@ -872,7 +872,6 @@ MODULE_DEVICE_TABLE(of, sata_rcar_match);
- 
- static int sata_rcar_probe(struct platform_device *pdev)
- {
--	const struct of_device_id *of_id;
- 	struct ata_host *host;
- 	struct sata_rcar_priv *priv;
- 	struct resource *mem;
-@@ -888,11 +887,7 @@ static int sata_rcar_probe(struct platform_device *pdev)
- 	if (!priv)
- 		return -ENOMEM;
- 
--	of_id = of_match_device(sata_rcar_match, &pdev->dev);
--	if (!of_id)
--		return -ENODEV;
--
--	priv->type = (enum sata_rcar_type)of_id->data;
-+	priv->type = (enum sata_rcar_type)of_device_get_match_data(&pdev->dev);
- 	priv->clk = devm_clk_get(&pdev->dev, NULL);
- 	if (IS_ERR(priv->clk)) {
- 		dev_err(&pdev->dev, "failed to get access to sata clock\n");
--- 
-2.7.4
+Acked-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+
+MBR, Sergei
