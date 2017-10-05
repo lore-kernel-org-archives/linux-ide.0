@@ -1,7 +1,7 @@
 From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH] libata: Convert timers to use timer_setup()
-Date: Wed, 4 Oct 2017 17:48:42 -0700
-Message-ID: <20171005004842.GA23011@beast>
+Subject: [PATCH] ahci: Convert timers to use timer_setup()
+Date: Wed, 4 Oct 2017 17:54:17 -0700
+Message-ID: <20171005005417.GA23922@beast>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -13,7 +13,8 @@ List-Id: linux-ide@vger.kernel.org
 
 In preparation for unconditionally passing the struct timer_list pointer to
 all timer callbacks, switch to using the new timer_setup() and from_timer()
-to pass the timer pointer explicitly.
+to pass the timer pointer explicitly. Adds a pointer back to link
+structure.
 
 Cc: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org
@@ -24,56 +25,53 @@ This requires commit 686fef928bba ("timer: Prepare to change timer
 callback argument type") in v4.14-rc3, but should be otherwise
 stand-alone.
 ---
- drivers/ata/libata-core.c | 5 ++---
- drivers/ata/libata-eh.c   | 4 ++--
- drivers/ata/libata.h      | 2 +-
- 3 files changed, 5 insertions(+), 6 deletions(-)
+ drivers/ata/ahci.h    |  1 +
+ drivers/ata/libahci.c | 11 ++++++-----
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 1945a8ea2099..0ac2685435a4 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5979,9 +5979,8 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
- 	INIT_LIST_HEAD(&ap->eh_done_q);
- 	init_waitqueue_head(&ap->eh_wait_q);
- 	init_completion(&ap->park_req_pending);
--	setup_deferrable_timer(&ap->fastdrain_timer,
--			       ata_eh_fastdrain_timerfn,
--			       (unsigned long)ap);
-+	timer_setup(&ap->fastdrain_timer, ata_eh_fastdrain_timerfn,
-+		    TIMER_DEFERRABLE);
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 8b61123d2c3c..749fd94441b0 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -303,6 +303,7 @@ struct ahci_em_priv {
+ 	unsigned long saved_activity;
+ 	unsigned long activity;
+ 	unsigned long led_state;
++	struct ata_link *link;
+ };
  
- 	ap->cbl = ATA_CBL_NONE;
- 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index e4effef0c83f..ece6fd91a947 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -879,9 +879,9 @@ static int ata_eh_nr_in_flight(struct ata_port *ap)
- 	return nr;
+ struct ahci_port_priv {
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 3e286d86ab42..a0de7a38430c 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -968,12 +968,12 @@ static void ahci_sw_activity(struct ata_link *link)
+ 		mod_timer(&emp->timer, jiffies + msecs_to_jiffies(10));
  }
  
--void ata_eh_fastdrain_timerfn(unsigned long arg)
-+void ata_eh_fastdrain_timerfn(struct timer_list *t)
+-static void ahci_sw_activity_blink(unsigned long arg)
++static void ahci_sw_activity_blink(struct timer_list *t)
  {
--	struct ata_port *ap = (void *)arg;
-+	struct ata_port *ap = from_timer(ap, t, fastdrain_timer);
+-	struct ata_link *link = (struct ata_link *)arg;
++	struct ahci_em_priv *emp = from_timer(emp, t, timer);
++	struct ata_link *link = emp->link;
+ 	struct ata_port *ap = link->ap;
+-	struct ahci_port_priv *pp = ap->private_data;
+-	struct ahci_em_priv *emp = &pp->em_priv[link->pmp];
++
+ 	unsigned long led_message = emp->led_state;
+ 	u32 activity_led_state;
  	unsigned long flags;
- 	int cnt;
+@@ -1020,7 +1020,8 @@ static void ahci_init_sw_activity(struct ata_link *link)
  
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 839d487394b7..08a245b76417 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -154,7 +154,7 @@ extern void ata_internal_cmd_timed_out(struct ata_device *dev, u8 cmd);
- extern void ata_eh_acquire(struct ata_port *ap);
- extern void ata_eh_release(struct ata_port *ap);
- extern void ata_scsi_error(struct Scsi_Host *host);
--extern void ata_eh_fastdrain_timerfn(unsigned long arg);
-+extern void ata_eh_fastdrain_timerfn(struct timer_list *t);
- extern void ata_qc_schedule_eh(struct ata_queued_cmd *qc);
- extern void ata_dev_disable(struct ata_device *dev);
- extern void ata_eh_detach_dev(struct ata_device *dev);
+ 	/* init activity stats, setup timer */
+ 	emp->saved_activity = emp->activity = 0;
+-	setup_timer(&emp->timer, ahci_sw_activity_blink, (unsigned long)link);
++	emp->link = link;
++	timer_setup(&emp->timer, ahci_sw_activity_blink, 0);
+ 
+ 	/* check our blink policy and set flag for link if it's enabled */
+ 	if (emp->blink_policy)
 -- 
 2.7.4
 
