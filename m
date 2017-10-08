@@ -1,92 +1,208 @@
-From: Icenowy Zheng <icenowy@aosc.io>
-Subject: [PATCH 1/2] dt-bindings: add binding for Allwinner R40 SATA AHCI controller
-Date: Sun,  8 Oct 2017 12:35:40 +0800
-Message-ID: <20171008043541.48564-1-icenowy@aosc.io>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hermes.aosc.io ([199.195.250.187]:44596 "EHLO hermes.aosc.io"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750771AbdJHEgW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sun, 8 Oct 2017 00:36:22 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Icenowy Zheng <icenowy-h8G6r0blFSE@public.gmane.org>
+Subject: [PATCH 2/2] ata: ahci_sunxi: add support for R40 SATA controller
+Date: Sun,  8 Oct 2017 12:35:41 +0800
+Message-ID: <20171008043541.48564-2-icenowy@aosc.io>
+References: <20171008043541.48564-1-icenowy@aosc.io>
+Reply-To: icenowy-h8G6r0blFSE@public.gmane.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-sunxi+bncBDS6XAN6ZADRBTGW43HAKGQESVWOPDQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <20171008043541.48564-1-icenowy-h8G6r0blFSE@public.gmane.org>
+List-Post: <https://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/linux-sunxi
+List-Subscribe: <https://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/linux-sunxi/subscribe>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Chen-Yu Tsai <wens-jdAy2FN1RRM@public.gmane.org>
+Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Icenowy Zheng <icenowy-h8G6r0blFSE@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Maxime Ripard <maxime.ripard@free-electrons.com>, Chen-Yu Tsai <wens@csie.org>
-Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-sunxi@googlegroups.com, Icenowy Zheng <icenowy@aosc.io>
 
-The Allwinner R40 SoC contains a SATA AHCI controller like the one in
-A10/A20 SoCs, however a reset control and two power supplies are added
-to it.
+Allwinner R40 SoC has an AHCI SATA controller like the one in A10/A20,
+but with a reset control and two dedicated VDD pins for this controller
+(one 1.2v and one 2.5v).
 
-Add a binding document for it.
+Add support for it.
 
-As a dedicated binding document is needed now for the A10/A20/R40 AHCI
-controller, drop the A10 compatible line from generic platform AHCI
-controller binding document.
-
-Signed-off-by: Icenowy Zheng <icenowy@aosc.io>
+Signed-off-by: Icenowy Zheng <icenowy-h8G6r0blFSE@public.gmane.org>
 ---
- .../devicetree/bindings/ata/ahci-platform.txt      |  1 -
- .../bindings/ata/allwinner,sun4i-a10-ahci.txt      | 40 ++++++++++++++++++++++
- 2 files changed, 40 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/devicetree/bindings/ata/allwinner,sun4i-a10-ahci.txt
+ drivers/ata/ahci_sunxi.c | 118 +++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 115 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-index fedc213b5f1a..da6818b2c204 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -9,7 +9,6 @@ PHYs.
+diff --git a/drivers/ata/ahci_sunxi.c b/drivers/ata/ahci_sunxi.c
+index b26437430163..a650fd6508be 100644
+--- a/drivers/ata/ahci_sunxi.c
++++ b/drivers/ata/ahci_sunxi.c
+@@ -25,6 +25,7 @@
+ #include <linux/of_device.h>
+ #include <linux/platform_device.h>
+ #include <linux/regulator/consumer.h>
++#include <linux/reset.h>
+ #include "ahci.h"
  
- Required properties:
- - compatible        : compatible string, one of:
--  - "allwinner,sun4i-a10-ahci"
-   - "brcm,iproc-ahci"
-   - "hisilicon,hisi-ahci"
-   - "cavium,octeon-7130-ahci"
-diff --git a/Documentation/devicetree/bindings/ata/allwinner,sun4i-a10-ahci.txt b/Documentation/devicetree/bindings/ata/allwinner,sun4i-a10-ahci.txt
-new file mode 100644
-index 000000000000..0eea78c14ad3
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/allwinner,sun4i-a10-ahci.txt
-@@ -0,0 +1,40 @@
-+Allwinner A10/A20/R40 SoC SATA AHCI Controller
+ #define DRV_NAME "ahci-sunxi"
+@@ -58,6 +59,19 @@ MODULE_PARM_DESC(enable_pmp,
+ #define AHCI_P0PHYCR	0x0178
+ #define AHCI_P0PHYSR	0x017c
+ 
++struct ahci_sunxi_quirks {
++	bool has_reset;
++	bool has_vdd1v2;
++	bool has_vdd2v5;
++};
 +
-+Required properties:
-+- compatible        : compatible string, one of:
-+  - "allwinner,sun4i-a10-ahci"
-+  - "allwinner,sun8i-r40-ahci"
-+- interrupts        : the SATA IRQ
-+- reg               : the register mapping
-+- clocks            : the clocks needed by SATA controller, usually contains
-+		      an AHB clock and a mod clock
++struct ahci_sunxi_data {
++	const struct ahci_sunxi_quirks *quirks;
++	struct reset_control *reset;
++	struct regulator *vdd1v2;
++	struct regulator *vdd2v5;
++};
 +
-+Optional properties:
-+- target-supply     : regulator for SATA target power
+ static void sunxi_clrbits(void __iomem *reg, u32 clr_val)
+ {
+ 	u32 reg_val;
+@@ -179,17 +193,69 @@ static int ahci_sunxi_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_host_priv *hpriv;
++	struct ahci_sunxi_data *data;
+ 	int rc;
+ 
++	data = devm_kzalloc(dev, sizeof(*data), GFP_KERNEL);
++	if (!data)
++		return -ENOMEM;
 +
-+Required properties for the following compatibles:
-+  - "allwinner,sun8i-r40-ahci"
-+- resets            : the reset control needed by SATA controller
-+- vdd1v2-supply     : regulator for SATA controller's 1.2V VDD
-+- vdd2v5-supply     : regulator for SATA controller's 2.5V VDD
++	data->quirks = of_device_get_match_data(dev);
++	if (!data->quirks)
++		return -EINVAL;
 +
++	if (data->quirks->has_reset) {
++		data->reset = devm_reset_control_get(dev, NULL);
++		if (IS_ERR(data->reset)) {
++			dev_err(dev, "Failed to get reset\n");
++			return PTR_ERR(data->reset);
++		}
++	}
 +
-+Examples for A10:
-+	ahci: sata@1c18000 {
-+		compatible = "allwinner,sun4i-a10-ahci";
-+		reg = <0x01c18000 0x1000>;
-+		interrupts = <56>;
-+		clocks = <&pll6 0>, <&ahb_gates 25>;
-+		target-supply = <&reg_ahci_5v>;
-+	};
++	if (data->quirks->has_vdd1v2) {
++		data->vdd1v2 = devm_regulator_get(dev, "vdd1v2");
++		if (IS_ERR(data->vdd1v2)) {
++			dev_err(dev, "Failed to get 1.2v VDD regulator\n");
++			return PTR_ERR(data->vdd1v2);
++		}
++	}
 +
-+Examples for R40:
-+	ahci: sata@1c18000 {
-+		compatible = "allwinner,sun8i-r40-ahci";
-+		reg = <0x01c18000 0x1000>;
-+		interrupts = <GIC_SPI 56 IRQ_TYPE_LEVEL_HIGH>;
-+		clocks = <&ccu CLK_SATA>, <&ccu CLK_BUS_SATA>;
-+		resets = <&ccu RST_BUS_SATA>;
-+		vdd1v2-supply = <&reg_eldo3>;
-+		vdd2v5-supply = <&reg_dldo4>;
-+	};
++	if (data->quirks->has_vdd2v5) {
++		data->vdd2v5 = devm_regulator_get(dev, "vdd2v5");
++		if (IS_ERR(data->vdd2v5)) {
++			dev_err(dev, "Failed to get 2.5v VDD regulator\n");
++			return PTR_ERR(data->vdd2v5);
++		}
++	}
++
+ 	hpriv = ahci_platform_get_resources(pdev);
+ 	if (IS_ERR(hpriv))
+ 		return PTR_ERR(hpriv);
+ 
++	hpriv->plat_data = data;
+ 	hpriv->start_engine = ahci_sunxi_start_engine;
+ 
++	if (data->quirks->has_vdd1v2) {
++		rc = regulator_enable(data->vdd1v2);
++		if (rc)
++			return rc;
++	}
++
++	if (data->quirks->has_vdd2v5) {
++		rc = regulator_enable(data->vdd2v5);
++		if (rc)
++			goto disable_vdd1v2;
++	}
++
++	if (data->quirks->has_reset) {
++		rc = reset_control_deassert(data->reset);
++		if (rc)
++			goto disable_vdd2v5;
++	}
++
+ 	rc = ahci_platform_enable_resources(hpriv);
+ 	if (rc)
+-		return rc;
++		goto assert_reset;
+ 
+ 	rc = ahci_sunxi_phy_init(dev, hpriv->mmio);
+ 	if (rc)
+@@ -215,6 +281,35 @@ static int ahci_sunxi_probe(struct platform_device *pdev)
+ 
+ disable_resources:
+ 	ahci_platform_disable_resources(hpriv);
++assert_reset:
++	if (data->quirks->has_reset)
++		reset_control_assert(data->reset);
++disable_vdd2v5:
++	if (data->quirks->has_vdd2v5)
++		regulator_disable(data->vdd2v5);
++disable_vdd1v2:
++	if (data->quirks->has_vdd1v2)
++		regulator_disable(data->vdd1v2);
++	return rc;
++}
++
++static int ahci_sunxi_remove(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct ata_host *host = dev_get_drvdata(dev);
++	struct ahci_host_priv *hpriv = host->private_data;
++	struct ahci_sunxi_data *data = hpriv->plat_data;
++	int rc;
++
++	rc = ata_platform_remove_one(pdev);
++
++	if (data->quirks->has_reset)
++		reset_control_assert(data->reset);
++	if (data->quirks->has_vdd2v5)
++		regulator_disable(data->vdd2v5);
++	if (data->quirks->has_vdd1v2)
++		regulator_disable(data->vdd1v2);
++
+ 	return rc;
+ }
+ 
+@@ -248,15 +343,32 @@ static int ahci_sunxi_resume(struct device *dev)
+ static SIMPLE_DEV_PM_OPS(ahci_sunxi_pm_ops, ahci_platform_suspend,
+ 			 ahci_sunxi_resume);
+ 
++static const struct ahci_sunxi_quirks sun4i_a10_ahci_quirks = {
++	/* Nothing special */
++};
++
++static const struct ahci_sunxi_quirks sun8i_r40_ahci_quirks = {
++	.has_reset = true,
++	.has_vdd1v2 = true,
++	.has_vdd2v5 = true,
++};
++
+ static const struct of_device_id ahci_sunxi_of_match[] = {
+-	{ .compatible = "allwinner,sun4i-a10-ahci", },
++	{
++		.compatible = "allwinner,sun4i-a10-ahci",
++		.data = &sun4i_a10_ahci_quirks,
++	},
++	{
++		.compatible = "allwinner,sun8i-r40-ahci",
++		.data = &sun8i_r40_ahci_quirks,
++	},
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(of, ahci_sunxi_of_match);
+ 
+ static struct platform_driver ahci_sunxi_driver = {
+ 	.probe = ahci_sunxi_probe,
+-	.remove = ata_platform_remove_one,
++	.remove = ahci_sunxi_remove,
+ 	.driver = {
+ 		.name = DRV_NAME,
+ 		.of_match_table = ahci_sunxi_of_match,
 -- 
 2.13.6
-
