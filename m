@@ -1,49 +1,51 @@
-From: Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCH 1/2] dt-bindings: add binding for Allwinner
- R40 SATA AHCI controller
-Date: Tue, 10 Oct 2017 11:58:50 +0200
-Message-ID: <20171010095850.nyu3oljrz6frpeom@flea.home>
-References: <20171008043541.48564-1-icenowy@aosc.io>
-Reply-To: maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="5kc4gclnj3vkoqck"
-Return-path: <linux-sunxi+bncBDSJBYGBRIMBBQGX6LHAKGQEQVLPVCA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Content-Disposition: inline
-In-Reply-To: <20171008043541.48564-1-icenowy-h8G6r0blFSE@public.gmane.org>
-List-Post: <https://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/linux-sunxi
-List-Subscribe: <https://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/linux-sunxi/subscribe>
-To: Icenowy Zheng <icenowy-h8G6r0blFSE@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Chen-Yu Tsai <wens-jdAy2FN1RRM@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Radha Mohan Chintakuntla <mohun106@gmail.com>
+Subject: [PATCH] ahci: Add support for Cavium's fifth generation SATA controller
+Date: Tue, 10 Oct 2017 22:37:51 -0700
+Message-ID: <1507700271-12910-1-git-send-email-mohun106@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Radha Mohan Chintakuntla <rchintakuntla@cavium.com>
 List-Id: linux-ide@vger.kernel.org
 
+From: Radha Mohan Chintakuntla <rchintakuntla@cavium.com>
 
---5kc4gclnj3vkoqck
-Content-Type: text/plain; charset="UTF-8"
-Content-Disposition: inline
+This patch adds support for Cavium's fifth generation SATA controller.
+It is an on-chip controller and complies with AHCI 1.3.1. As the
+controller uses 64-bit addresses it cannot use the standard AHCI BAR5
+and so uses BAR4.
 
-On Sun, Oct 08, 2017 at 04:35:40AM +0000, Icenowy Zheng wrote:
-> The Allwinner R40 SoC contains a SATA AHCI controller like the one in
-> A10/A20 SoCs, however a reset control and two power supplies are added
-> to it.
-> 
-> Add a binding document for it.
-> 
-> As a dedicated binding document is needed now for the A10/A20/R40 AHCI
-> controller, drop the A10 compatible line from generic platform AHCI
-> controller binding document.
+Signed-off-by: Radha Mohan Chintakuntla <rchintakuntla@cavium.com>
+---
+ drivers/ata/ahci.c |    9 +++++++--
+ 1 files changed, 7 insertions(+), 2 deletions(-)
 
-Why is it needed?
-
-Maxime
-
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 9f78bb0..5443cb7 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -57,6 +57,7 @@ enum {
+ 	AHCI_PCI_BAR_STA2X11	= 0,
+ 	AHCI_PCI_BAR_CAVIUM	= 0,
+ 	AHCI_PCI_BAR_ENMOTUS	= 2,
++	AHCI_PCI_BAR_CAVIUM_GEN5	= 4,
+ 	AHCI_PCI_BAR_STANDARD	= 5,
+ };
+ 
+@@ -1570,8 +1571,12 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		ahci_pci_bar = AHCI_PCI_BAR_STA2X11;
+ 	else if (pdev->vendor == 0x1c44 && pdev->device == 0x8000)
+ 		ahci_pci_bar = AHCI_PCI_BAR_ENMOTUS;
+-	else if (pdev->vendor == 0x177d && pdev->device == 0xa01c)
+-		ahci_pci_bar = AHCI_PCI_BAR_CAVIUM;
++	else if (pdev->vendor == PCI_VENDOR_ID_CAVIUM) {
++		if (pdev->device == 0xa01c)
++			ahci_pci_bar = AHCI_PCI_BAR_CAVIUM;
++		if (pdev->device == 0xa084)
++			ahci_pci_bar = AHCI_PCI_BAR_CAVIUM_GEN5;
++	}
+ 
+ 	/* acquire resources */
+ 	rc = pcim_enable_device(pdev);
 -- 
-Maxime Ripard, Free Electrons
-Embedded Linux and Kernel engineering
-http://free-electrons.com
---5kc4gclnj3vkoqck--
+1.7.1
