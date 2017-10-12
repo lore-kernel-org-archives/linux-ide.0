@@ -1,32 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ahci: Add support for Cavium's fifth generation SATA
- controller
-Date: Wed, 11 Oct 2017 07:09:05 -0700
-Message-ID: <20171011140905.GP3301751@devbig577.frc2.facebook.com>
-References: <1507700271-12910-1-git-send-email-mohun106@gmail.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH] documentation: Update ide-cd documentation to reflect
+ CONFIG_BLK_DEV_HD_IDE removal
+Date: Thu, 12 Oct 2017 15:00:06 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1710121439020.3@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1507700271-12910-1-git-send-email-mohun106@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Radha Mohan Chintakuntla <mohun106@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Radha Mohan Chintakuntla <rchintakuntla@cavium.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-doc-owner@vger.kernel.org>
+Sender: linux-doc-owner@vger.kernel.org
+To: Jonathan Corbet <corbet@lwn.net>
+Cc: linux-ide@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Oct 10, 2017 at 10:37:51PM -0700, Radha Mohan Chintakuntla wrote:
-> From: Radha Mohan Chintakuntla <rchintakuntla@cavium.com>
-> 
-> This patch adds support for Cavium's fifth generation SATA controller.
-> It is an on-chip controller and complies with AHCI 1.3.1. As the
-> controller uses 64-bit addresses it cannot use the standard AHCI BAR5
-> and so uses BAR4.
-> 
-> Signed-off-by: Radha Mohan Chintakuntla <rchintakuntla@cavium.com>
+CONFIG_BLK_DEV_HD_IDE was removed in commit 80aa31cb460d ("ide: 
+remove CONFIG_BLK_DEV_HD_IDE config option (take 2)") but the ide-cd 
+documentation was not updated and still asks users to disable it, 
+which is misleading and involves a fruitless search.
 
-Applied to libata/for-4.15.
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
-Thanks.
-
--- 
-tejun
+diff --git a/Documentation/cdrom/ide-cd b/Documentation/cdrom/ide-cd
+index f4dc9de2694e..a5f2a7f1ff46 100644
+--- a/Documentation/cdrom/ide-cd
++++ b/Documentation/cdrom/ide-cd
+@@ -55,13 +55,9 @@ This driver provides the following features:
+    (to compile support as a module which can be loaded and unloaded)
+    to the options: 
+ 
+-      Enhanced IDE/MFM/RLL disk/cdrom/tape/floppy support
++      ATA/ATAPI/MFM/RLL support
+       Include IDE/ATAPI CDROM support
+ 
+-   and `no' to
+-
+-      Use old disk-only driver on primary interface
+-
+    Depending on what type of IDE interface you have, you may need to
+    specify additional configuration options.  See
+    Documentation/ide/ide.txt.
