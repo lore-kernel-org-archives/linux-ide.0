@@ -1,133 +1,83 @@
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Subject: [PATCH] ata: mark expected switch fall-throughs
-Date: Thu, 12 Oct 2017 14:19:16 -0500
-Message-ID: <20171012191916.GA2974@embeddedor.com>
+From: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 1/2] dt-bindings: add binding for Allwinner
+ R40 SATA AHCI controller
+Date: Fri, 13 Oct 2017 14:42:52 -0500
+Message-ID: <20171013194252.yt2zv3xpjgvzonvk@rob-hp-laptop>
+References: <20171008043541.48564-1-icenowy@aosc.io>
+Reply-To: robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-sunxi+bncBDJIP47K7MERBPVOQTHQKGQEF4G7DYQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <garsilva@embeddedor.com>
+In-Reply-To: <20171008043541.48564-1-icenowy-h8G6r0blFSE@public.gmane.org>
+List-Post: <https://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/linux-sunxi
+List-Subscribe: <https://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/linux-sunxi/subscribe>
+To: Icenowy Zheng <icenowy-h8G6r0blFSE@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Chen-Yu Tsai <wens-jdAy2FN1RRM@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-where we are expecting to fall through.
+On Sun, Oct 08, 2017 at 12:35:40PM +0800, Icenowy Zheng wrote:
+> The Allwinner R40 SoC contains a SATA AHCI controller like the one in
+> A10/A20 SoCs, however a reset control and two power supplies are added
+> to it.
+> 
+> Add a binding document for it.
+> 
+> As a dedicated binding document is needed now for the A10/A20/R40 AHCI
+> controller, drop the A10 compatible line from generic platform AHCI
+> controller binding document.
+> 
+> Signed-off-by: Icenowy Zheng <icenowy-h8G6r0blFSE@public.gmane.org>
+> ---
+>  .../devicetree/bindings/ata/ahci-platform.txt      |  1 -
+>  .../bindings/ata/allwinner,sun4i-a10-ahci.txt      | 40 ++++++++++++++++++++++
+>  2 files changed, 40 insertions(+), 1 deletion(-)
+>  create mode 100644 Documentation/devicetree/bindings/ata/allwinner,sun4i-a10-ahci.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> index fedc213b5f1a..da6818b2c204 100644
+> --- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> @@ -9,7 +9,6 @@ PHYs.
+>  
+>  Required properties:
+>  - compatible        : compatible string, one of:
+> -  - "allwinner,sun4i-a10-ahci"
+>    - "brcm,iproc-ahci"
+>    - "hisilicon,hisi-ahci"
+>    - "cavium,octeon-7130-ahci"
+> diff --git a/Documentation/devicetree/bindings/ata/allwinner,sun4i-a10-ahci.txt b/Documentation/devicetree/bindings/ata/allwinner,sun4i-a10-ahci.txt
+> new file mode 100644
+> index 000000000000..0eea78c14ad3
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/allwinner,sun4i-a10-ahci.txt
+> @@ -0,0 +1,40 @@
+> +Allwinner A10/A20/R40 SoC SATA AHCI Controller
+> +
+> +Required properties:
+> +- compatible        : compatible string, one of:
+> +  - "allwinner,sun4i-a10-ahci"
+> +  - "allwinner,sun8i-r40-ahci"
+> +- interrupts        : the SATA IRQ
+> +- reg               : the register mapping
+> +- clocks            : the clocks needed by SATA controller, usually contains
+> +		      an AHB clock and a mod clock
+> +
+> +Optional properties:
+> +- target-supply     : regulator for SATA target power
+> +
+> +Required properties for the following compatibles:
+> +  - "allwinner,sun8i-r40-ahci"
+> +- resets            : the reset control needed by SATA controller
+> +- vdd1v2-supply     : regulator for SATA controller's 1.2V VDD
+> +- vdd2v5-supply     : regulator for SATA controller's 2.5V VDD
 
-In cases where a "drop through" comment was already in place, I replaced
-it  with a proper "fall through" comment, which is what GCC is expecting
-to find.
+I have to wonder, are these really for the controller and not the phy? 
+You don't have any phy?
 
-Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
----
-This code was tested by compilation only (GCC 7.2.0 was used).
-Please, double check if the actual intention of the code is to
-fall through.
-
- drivers/ata/libahci_platform.c | 1 +
- drivers/ata/libata-core.c      | 3 +++
- drivers/ata/libata-eh.c        | 2 ++
- drivers/ata/pata_atp867x.c     | 2 ++
- drivers/ata/sata_mv.c          | 4 ++--
- 5 files changed, 10 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index a270a11..341d0ef 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -295,6 +295,7 @@ static int ahci_platform_get_phy(struct ahci_host_priv *hpriv, u32 port,
- 				node->name);
- 			break;
- 		}
-+		/* fall through */
- 	case -ENODEV:
- 		/* continue normally */
- 		hpriv->phys[port] = NULL;
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 29e3516..5b18510 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1879,6 +1879,7 @@ int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
- 	switch (class) {
- 	case ATA_DEV_SEMB:
- 		class = ATA_DEV_ATA;	/* some hard drives report SEMB sig */
-+		/* fall through */
- 	case ATA_DEV_ATA:
- 	case ATA_DEV_ZAC:
- 		tf.command = ATA_CMD_ID_ATA;
-@@ -2975,6 +2976,7 @@ int ata_bus_probe(struct ata_port *ap)
- 	case -ENODEV:
- 		/* give it just one more chance */
- 		tries[dev->devno] = min(tries[dev->devno], 1);
-+		/* fall through */
- 	case -EIO:
- 		if (tries[dev->devno] == 1) {
- 			/* This is the last chance, better to slow
-@@ -3462,6 +3464,7 @@ int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel)
- 
- 	case ATA_DNXFER_FORCE_PIO0:
- 		pio_mask &= 1;
-+		/* fall through */
- 	case ATA_DNXFER_FORCE_PIO:
- 		mwdma_mask = 0;
- 		udma_mask = 0;
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 49b3745..e070fe8 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -3711,9 +3711,11 @@ static int ata_eh_handle_dev_fail(struct ata_device *dev, int err)
- 	case -ENODEV:
- 		/* device missing or wrong IDENTIFY data, schedule probing */
- 		ehc->i.probe_mask |= (1 << dev->devno);
-+		/* fall through */
- 	case -EINVAL:
- 		/* give it just one more chance */
- 		ehc->tries[dev->devno] = min(ehc->tries[dev->devno], 1);
-+		/* fall through */
- 	case -EIO:
- 		if (ehc->tries[dev->devno] == 1) {
- 			/* This is the last chance, better to slow
-diff --git a/drivers/ata/pata_atp867x.c b/drivers/ata/pata_atp867x.c
-index 3ea50dc..3729e24 100644
---- a/drivers/ata/pata_atp867x.c
-+++ b/drivers/ata/pata_atp867x.c
-@@ -171,6 +171,7 @@ static int atp867x_get_active_clocks_shifted(struct ata_port *ap,
- 	default:
- 		printk(KERN_WARNING "ATP867X: active %dclk is invalid. "
- 			"Using 12clk.\n", clk);
-+		/* fall through */
- 	case 9 ... 12:
- 		clocks = 7;	/* 12 clk */
- 		break;
-@@ -203,6 +204,7 @@ static int atp867x_get_recover_clocks_shifted(unsigned int clk)
- 	default:
- 		printk(KERN_WARNING "ATP867X: recover %dclk is invalid. "
- 			"Using default 12clk.\n", clk);
-+		/* fall through */
- 	case 12:	/* default 12 clk */
- 		clocks = 0;
- 		break;
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 3b2246d..03f5301 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -2387,7 +2387,7 @@ static unsigned int mv_qc_issue(struct ata_queued_cmd *qc)
- 				      ": attempting PIO w/multiple DRQ: "
- 				      "this may fail due to h/w errata\n");
- 		}
--		/* drop through */
-+		/* fall through */
- 	case ATA_PROT_NODATA:
- 	case ATAPI_PROT_PIO:
- 	case ATAPI_PROT_NODATA:
-@@ -3877,7 +3877,7 @@ static int mv_chip_id(struct ata_host *host, unsigned int board_idx)
- 				" and avoid the final two gigabytes on"
- 				" all RocketRAID BIOS initialized drives.\n");
- 		}
--		/* drop through */
-+		/* fall through */
- 	case chip_6042:
- 		hpriv->ops = &mv6xxx_ops;
- 		hp_flags |= MV_HP_GEN_IIE;
--- 
-2.7.4
+Rob
