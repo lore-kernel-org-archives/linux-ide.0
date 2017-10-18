@@ -1,65 +1,65 @@
-From: Yu Chen <yu.chen.surf@gmail.com>
-Subject: Re: BUG: sleeping function called from invalid context at kernel/locking/mutex.c:238
-Date: Wed, 18 Oct 2017 16:57:06 +0800
-Message-ID: <CADjb_WROJUNy2i5XCA5N0j5pUkp=WoydFK9uW8BcbYyRD66Yfw@mail.gmail.com>
-References: <CADjb_WS86DytQ1FFMG-ucv2Pr282hacGzqpeW0_aHjON=_j5+g@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH V8 5/5] libata: Align DMA buffer to
+ dma_get_cache_alignment()
+Date: Wed, 18 Oct 2017 06:03:53 -0700
+Message-ID: <20171018130353.GA1302522@devbig577.frc2.facebook.com>
+References: <1508227542-13165-1-git-send-email-chenhc@lemote.com>
+ <1508227542-13165-5-git-send-email-chenhc@lemote.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lf0-f48.google.com ([209.85.215.48]:49179 "EHLO
-        mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753308AbdJRI5I (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 18 Oct 2017 04:57:08 -0400
-Received: by mail-lf0-f48.google.com with SMTP id w21so4953433lfc.6
-        for <linux-ide@vger.kernel.org>; Wed, 18 Oct 2017 01:57:08 -0700 (PDT)
-In-Reply-To: <CADjb_WS86DytQ1FFMG-ucv2Pr282hacGzqpeW0_aHjON=_j5+g@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1508227542-13165-5-git-send-email-chenhc@lemote.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Huacai Chen <chenhc@lemote.com>
+Cc: Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>, Robin Murphy <robin.murphy@arm.com>, Andrew Morton <akpm@linux-foundation.org>, Fuxin Zhang <zhangfx@lemote.com>, linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, James Hogan <james.hogan@imgtec.com>, linux-mips@linux-mips.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-On Wed, Oct 18, 2017 at 4:56 PM, Yu Chen <yu.chen.surf@gmail.com> wrote:
-> I saw the following backtrace when running some benchmarks, it might
-> not be critical, but it is even better we can get rid of this warning : )
->
->
-> [  318.808335] BUG: sleeping function called from invalid context at
-> kernel/locking/mutex.c:238
-> [  318.818779] in_atomic(): 1, irqs_disabled(): 1, pid: 1144, name: scsi_eh_7
-> [  318.826248] CPU: 5 PID: 1144 Comm: scsi_eh_7 Tainted: G           O
->    4.14.0-rc4-00128-g30e9e23 #2
-> [  318.835882] Call Trace:
-> [  318.838973]  dump_stack+0x63/0x86
-> [  318.842882]  ___might_sleep+0xf1/0x110
-> [  318.847214]  __might_sleep+0x4a/0x80
-> [  318.851368]  mutex_lock+0x20/0x50
-> [  318.855247]  kernfs_find_and_get_ns+0x23/0x60
-> [  318.860158]  sysfs_notify+0x77/0x90
-> [  318.864237]  scsi_device_set_state+0x63/0x150
-> [  318.869180]  ata_scsi_offline_dev+0x1c/0x30 [libata]
-> [  318.874696]  ata_eh_detach_dev+0x3b/0xb0 [libata]
-> [  318.879929]  ata_eh_schedule_probe+0x59/0x1c0 [libata]
-> [  318.885590]  ata_eh_recover+0x108/0x12d0 [libata]
-> [  318.890807]  ? ahci_pmp_attach+0x70/0x70 [libahci]
-> [  318.896105]  ? ahci_do_hardreset+0x110/0x110 [libahci]
-> [  318.901744]  ? ahci_do_softreset+0x210/0x210 [libahci]
-> [  318.907371]  ? ata_phys_link_offline+0x30/0x30 [libata]
-> [  318.913123]  ? ata_eh_report+0x34f/0x850 [libata]
-> [  318.918345]  sata_pmp_eh_recover+0xb7/0xa00 [libata]
-> [  318.923818]  ? ata_eh_report+0x6e6/0x850 [libata]
-> [  318.929028]  sata_pmp_error_handler+0x22/0x30 [libata]
-> [  318.934631]  ahci_error_handler+0x1d/0x70 [libahci]
-> [  318.939968]  ata_scsi_port_error_handler+0x430/0x720 [libata]
-> [  318.946167]  ? ata_scsi_cmd_error_handler+0xe9/0x140 [libata]
-> [  318.952368]  ata_scsi_error+0x86/0xb0 [libata]
-> [  318.957260]  ? scsi_error_handler+0x38/0x5d0
-> [  318.961965]  scsi_error_handler+0xe7/0x5d0
-> [  318.966499]  kthread+0x114/0x150
-> [  318.970155]  ? scsi_eh_get_sense+0x280/0x280
-> [  318.974848]  ? kthread_create_on_node+0x40/0x40
-> [  318.979798]  ret_from_fork+0x25/0x30
-> [  318.983813] ata8: hard resetting link
->
-> Thanks,
-> Yu
+On Tue, Oct 17, 2017 at 04:05:42PM +0800, Huacai Chen wrote:
+> In non-coherent DMA mode, kernel uses cache flushing operations to
+> maintain I/O coherency, so in ata_do_dev_read_id() the DMA buffer
+> should be aligned to ARCH_DMA_MINALIGN. Otherwise, If a DMA buffer
+> and a kernel structure share a same cache line, and if the kernel
+> structure has dirty data, cache_invalidate (no writeback) will cause
+> data corruption.
+> 
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Huacai Chen <chenhc@lemote.com>
+> ---
+>  drivers/ata/libata-core.c | 15 +++++++++++++--
+>  1 file changed, 13 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index ee4c1ec..e134955 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -1833,8 +1833,19 @@ static u32 ata_pio_mask_no_iordy(const struct ata_device *adev)
+>  unsigned int ata_do_dev_read_id(struct ata_device *dev,
+>  					struct ata_taskfile *tf, u16 *id)
+>  {
+> -	return ata_exec_internal(dev, tf, NULL, DMA_FROM_DEVICE,
+> -				     id, sizeof(id[0]) * ATA_ID_WORDS, 0);
+> +	u16 *devid;
+> +	int res, size = sizeof(u16) * ATA_ID_WORDS;
+> +
+> +	if (IS_ALIGNED((unsigned long)id, dma_get_cache_alignment(&dev->tdev)))
+> +		res = ata_exec_internal(dev, tf, NULL, DMA_FROM_DEVICE, id, size, 0);
+> +	else {
+> +		devid = kmalloc(size, GFP_KERNEL);
+> +		res = ata_exec_internal(dev, tf, NULL, DMA_FROM_DEVICE, devid, size, 0);
+> +		memcpy(id, devid, size);
+> +		kfree(devid);
+> +	}
+> +
+> +	return res;
 
-Seen on 4.14-rc4
+Hmm... I think it'd be a lot better to ensure that the buffers are
+aligned properly to begin with.  There are only two buffers which are
+used for id reading - ata_port->sector_buf and ata_device->id.  Both
+are embedded arrays but making them separately allocated aligned
+buffers shouldn't be difficult.
+
+Thanks.
+
+-- 
+tejun
