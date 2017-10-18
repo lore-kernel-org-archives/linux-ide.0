@@ -1,65 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH V8 5/5] libata: Align DMA buffer to
- dma_get_cache_alignment()
-Date: Wed, 18 Oct 2017 06:03:53 -0700
-Message-ID: <20171018130353.GA1302522@devbig577.frc2.facebook.com>
+From: Mark Greer <mgreer@animalcreek.com>
+Subject: Re: [PATCH V8 1/5] dma-mapping: Rework dma_get_cache_alignment()
+Date: Wed, 18 Oct 2017 10:23:36 -0700
+Message-ID: <20171018172336.GA29358@animalcreek.com>
 References: <1508227542-13165-1-git-send-email-chenhc@lemote.com>
- <1508227542-13165-5-git-send-email-chenhc@lemote.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1508227542-13165-5-git-send-email-chenhc@lemote.com>
+In-Reply-To: <1508227542-13165-1-git-send-email-chenhc@lemote.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Huacai Chen <chenhc@lemote.com>
-Cc: Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>, Robin Murphy <robin.murphy@arm.com>, Andrew Morton <akpm@linux-foundation.org>, Fuxin Zhang <zhangfx@lemote.com>, linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, James Hogan <james.hogan@imgtec.com>, linux-mips@linux-mips.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, stable@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, Marek Szyprowski <m.szyprowski@samsung.com>, Robin Murphy <robin.murphy@arm.com>, Andrew Morton <akpm@linux-foundation.org>, Fuxin Zhang <zhangfx@lemote.com>, linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, James Hogan <james.hogan@imgtec.com>, linux-mips@linux-mips.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, stable@vger.kernel.org, "Michael S . Tsirkin" <mst@mellanox.co.il>, Pawel Osciak <pawel@osciak.com>, Kyungmin Park <kyungmin.park@samsung.com>, Michael Chan <michael.chan@broadcom.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Ivan
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Oct 17, 2017 at 04:05:42PM +0800, Huacai Chen wrote:
-> In non-coherent DMA mode, kernel uses cache flushing operations to
-> maintain I/O coherency, so in ata_do_dev_read_id() the DMA buffer
-> should be aligned to ARCH_DMA_MINALIGN. Otherwise, If a DMA buffer
-> and a kernel structure share a same cache line, and if the kernel
-> structure has dirty data, cache_invalidate (no writeback) will cause
-> data corruption.
+On Tue, Oct 17, 2017 at 04:05:38PM +0800, Huacai Chen wrote:
+> Make dma_get_cache_alignment() to accept a 'dev' argument. As a result,
+> it can return different alignments due to different devices' I/O cache
+> coherency.
 > 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Huacai Chen <chenhc@lemote.com>
-> ---
->  drivers/ata/libata-core.c | 15 +++++++++++++--
->  1 file changed, 13 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index ee4c1ec..e134955 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -1833,8 +1833,19 @@ static u32 ata_pio_mask_no_iordy(const struct ata_device *adev)
->  unsigned int ata_do_dev_read_id(struct ata_device *dev,
->  					struct ata_taskfile *tf, u16 *id)
->  {
-> -	return ata_exec_internal(dev, tf, NULL, DMA_FROM_DEVICE,
-> -				     id, sizeof(id[0]) * ATA_ID_WORDS, 0);
-> +	u16 *devid;
-> +	int res, size = sizeof(u16) * ATA_ID_WORDS;
-> +
-> +	if (IS_ALIGNED((unsigned long)id, dma_get_cache_alignment(&dev->tdev)))
-> +		res = ata_exec_internal(dev, tf, NULL, DMA_FROM_DEVICE, id, size, 0);
-> +	else {
-> +		devid = kmalloc(size, GFP_KERNEL);
-> +		res = ata_exec_internal(dev, tf, NULL, DMA_FROM_DEVICE, devid, size, 0);
-> +		memcpy(id, devid, size);
-> +		kfree(devid);
-> +	}
-> +
-> +	return res;
+> Currently, ARM/ARM64 and MIPS support coherent & noncoherent devices
+> co-exist. This may be extended in the future, so add a new function
+> pointer (i.e, get_cache_alignment) in 'struct dma_map_ops' as a generic
+> solution.
 
-Hmm... I think it'd be a lot better to ensure that the buffers are
-aligned properly to begin with.  There are only two buffers which are
-used for id reading - ata_port->sector_buf and ata_device->id.  Both
-are embedded arrays but making them separately allocated aligned
-buffers shouldn't be difficult.
+Hi Huacai.
 
-Thanks.
+> diff --git a/drivers/tty/serial/mpsc.c b/drivers/tty/serial/mpsc.c
+> index 67ffecc..c708457 100644
+> --- a/drivers/tty/serial/mpsc.c
+> +++ b/drivers/tty/serial/mpsc.c
+> @@ -81,19 +81,19 @@
+>   * Number of Tx & Rx descriptors must be powers of 2.
+>   */
+>  #define	MPSC_RXR_ENTRIES	32
+> -#define	MPSC_RXRE_SIZE		dma_get_cache_alignment()
+> +#define	MPSC_RXRE_SIZE		dma_get_cache_alignment(dma_dev)
 
--- 
-tejun
+I would much prefer that you add a parameter to the macro to avoid forcing
+a non-flexible and non-obvious variable definition wherever it is used.
+What I mean is something like:
+
+#define MPSC_RXRE_SIZE(d)		dma_get_cache_alignment(d)
+
+Similarly for all of the other macros and where they're used.
+
+Thanks,
+
+Mark
+--
