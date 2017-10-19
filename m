@@ -1,42 +1,65 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH V8 4/5] libsas: Align SMP req/resp to
-        dma_get_cache_alignment()
-Date: Thu, 19 Oct 2017 17:12:14 +0200
-Message-ID: <20171019151214.GD24204@lst.de>
-References: <1508227542-13165-1-git-send-email-chenhc@lemote.com> <CGME20171017080448epcas5p2c7c53292d84838f6d06e78abf4416729@epcas5p2.samsung.com> <1508227542-13165-4-git-send-email-chenhc@lemote.com> <286bf838-4d2f-a25f-baf9-ef3ac9b37d93@samsung.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: David Milburn <dmilburn@redhat.com>
+Subject: [PATCH 1/2] libata: initialize link speed from sstatus if online.
+Date: Thu, 19 Oct 2017 13:30:35 -0500
+Message-ID: <1508437836-31649-2-git-send-email-dmilburn@redhat.com>
+References: <1508437836-31649-1-git-send-email-dmilburn@redhat.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:43642 "EHLO newverein.lst.de"
+Received: from mx1.redhat.com ([209.132.183.28]:56578 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751924AbdJSPMQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 19 Oct 2017 11:12:16 -0400
-Content-Disposition: inline
-In-Reply-To: <286bf838-4d2f-a25f-baf9-ef3ac9b37d93@samsung.com>
+        id S1752713AbdJSSai (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 19 Oct 2017 14:30:38 -0400
+In-Reply-To: <1508437836-31649-1-git-send-email-dmilburn@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marek Szyprowski <m.szyprowski@samsung.com>
-Cc: Huacai Chen <chenhc@lemote.com>, Christoph Hellwig <hch@lst.de>, Robin Murphy <robin.murphy@arm.com>, Andrew Morton <akpm@linux-foundation.org>, Fuxin Zhang <zhangfx@lemote.com>, linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, James Hogan <james.hogan@imgtec.com>, linux-mips@linux-mips.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, stable@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: tj@kernel.org
 
-On Tue, Oct 17, 2017 at 01:55:43PM +0200, Marek Szyprowski wrote:
-> If I remember correctly, kernel guarantees that each kmalloced buffer is
-> always at least aligned to the CPU cache line, so CPU cache can be
-> invalidated on the allocated buffer without corrupting anything else.
+If not, a 6Gbps link may be limited to 1.5 Gbps instead of 3.0 Gbps, since
+ata_dev_init initializes link->sata_spd to 0.
 
-Yes, from slab.h:
+[  938.387795] ata4: exception Emask 0x50 SAct 0x0 SErr 0x4090800 action 0xe frozen
+[  938.387803] ata4: irq_stat 0x00400040, connection status changed
+[  938.387807] ata4: SError: { HostInt PHYRdyChg 10B8B DevExch }
+[  938.387814] ata4: hard resetting link
+[  939.108967] ata4: SATA link down (SStatus 0 SControl 300)
+[  944.100701] ata4: hard resetting link
+[  944.404187] ata4: SATA link down (SStatus 0 SControl 300)
+[  944.404198] ata4: limiting SATA link speed to 1.5 Gbps
+[  949.394013] ata4: hard resetting link
+[  949.697465] ata4: SATA link down (SStatus 0 SControl 310)
+[  949.697476] ata4.00: disabled
+[  949.697490] ata4: EH complete
+[  949.697503] ata4.00: detaching (SCSI 3:0:0:0)
 
-/*
- * Some archs want to perform DMA into kmalloc caches and need a guaranteed
- * alignment larger than the alignment of a 64-bit integer.
- * Setting ARCH_KMALLOC_MINALIGN in arch headers allows that.
- */
-#if defined(ARCH_DMA_MINALIGN) && ARCH_DMA_MINALIGN > 8
-#define ARCH_KMALLOC_MINALIGN ARCH_DMA_MINALIGN
-#define KMALLOC_MIN_SIZE ARCH_DMA_MINALIGN
-#define KMALLOC_SHIFT_LOW ilog2(ARCH_DMA_MINALIGN)
-#else
-#define ARCH_KMALLOC_MINALIGN __alignof__(unsigned long long)
-#endif
+Signed-off-by: David Milburn <dmilburn@redhat.com>
+---
+ drivers/ata/libata-core.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Mips sets this for a few subarchitectures, but it seems like you need
-to set it for yours as well.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index ee4c1ec..38c40cf 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3002,16 +3002,16 @@ int ata_bus_probe(struct ata_port *ap)
+  */
+ static void sata_print_link_status(struct ata_link *link)
+ {
+-	u32 sstatus, scontrol, tmp;
++	u32 sstatus, scontrol;
+ 
+ 	if (sata_scr_read(link, SCR_STATUS, &sstatus))
+ 		return;
+ 	sata_scr_read(link, SCR_CONTROL, &scontrol);
+ 
+ 	if (ata_phys_link_online(link)) {
+-		tmp = (sstatus >> 4) & 0xf;
++		link->sata_spd = (sstatus >> 4) & 0xf;
+ 		ata_link_info(link, "SATA link up %s (SStatus %X SControl %X)\n",
+-			      sata_spd_string(tmp), sstatus, scontrol);
++			      sata_spd_string(link->sata_spd), sstatus, scontrol);
+ 	} else {
+ 		ata_link_info(link, "SATA link down (SStatus %X SControl %X)\n",
+ 			      sstatus, scontrol);
+-- 
+1.8.3.1
+
