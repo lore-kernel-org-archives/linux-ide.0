@@ -1,91 +1,95 @@
-From: "=?utf-8?B?6ZmI5Y2O5omN?=" <chenhc@lemote.com>
-Subject: Re: [PATCH V8 5/5] libata: Align DMA buffer todma_get_cache_alignment()
-Date: Fri, 20 Oct 2017 12:25:17 +0800
-Message-ID: <tencent_4202295473ED4E0D74F7E27C@qq.com>
-References: <1508227542-13165-1-git-send-email-chenhc@lemote.com>
-        <1508227542-13165-5-git-send-email-chenhc@lemote.com>
-        <20171018130353.GA1302522@devbig577.frc2.facebook.com>
-        <0ba3dc38-9020-1062-57de-0ada2cfd43a9@mips.com>
+From: Michal Simek <monstr@monstr.eu>
+Subject: Re: [PATCH v2 2/9] ata: ceva: Move sata port phy oob settings to
+ device-tree
+Date: Fri, 20 Oct 2017 12:42:32 +0200
+Message-ID: <db0a29ba-f30e-e38c-04b1-c8cd4c832620@monstr.eu>
+References: <cover.1503314240.git.michal.simek@xilinx.com>
+ <b9b0e17612ef2d1e842f178bbc47ae6bd36258dd.1503314240.git.michal.simek@xilinx.com>
+Reply-To: monstr@monstr.eu
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <0ba3dc38-9020-1062-57de-0ada2cfd43a9@mips.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: =?utf-8?B?TWF0dCBSZWRmZWFybg==?= <matt.redfearn@mips.com>, =?utf-8?B?VGVqdW4gSGVv?= <tj@kernel.org>
-Cc: =?utf-8?B?Q2hyaXN0b3BoIEhlbGx3aWc=?= <hch@lst.de>, =?utf-8?B?TWFyZWsgU3p5cHJvd3NraQ==?= <m.szyprowski@samsung.com>, =?utf-8?B?Um9iaW4gTXVycGh5?= <robin.murphy@arm.com>, =?utf-8?B?QW5kcmV3TW9ydG9u?= <akpm@linux-foundation.org>, =?utf-8?B?RnV4aW4gWmhhbmc=?= <zhangfx@lemote.com>, =?utf-8?B?bGludXgta2VybmVs?= <linux-kernel@vger.kernel.org>, =?utf-8?B?UmFsZiBCYWVjaGxl?= <ralf@linux-mips.org>, =?utf-8?B?SmFtZXNIb2dhbg==?= <james.hogan@imgtec.com>, =?utf-8?B?bGludXgtbWlwcw==?= <linux-mips@linux-mips.org>, =?utf-8?B?SmFtZXMgRSAuIEogLkJvdHRvbWxleQ==?= <jejb@linux.vnet.ibm.com>, =?utf-8?B?TWFydGluIEsgLiBQZXRlcnNlbg==?= <martin.petersen@oracle.com>, =?utf-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>, =?utf-8?B?bGludXgtaWRl?= <linux-ide@vger.kernel.or>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="2pP0UIfnpJUTKtcrR9moDjVx3avE4QaJs"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <b9b0e17612ef2d1e842f178bbc47ae6bd36258dd.1503314240.git.michal.simek@xilinx.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michal Simek <michal.simek@xilinx.com>, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Cc: Alexander Graf <agraf@suse.de>, Rob Herring <robh@kernel.org>, Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-SGksIE1hdHQsDQoNCkkgZm91bmQgdGhhdCA0ZWUzNGVhM2ExMjM5NmYzNWIyNmQ5MGEwOTRj
-NzVkYiAoImxpYmF0YTogQWxpZ24gYXRhX2RldmljZSdzIGlkIG9uIGEgY2FjaGVsaW5lIikg
-Y2FuIHJlc29sdmUgZXZlcnl0aGluZy4gQmVjYXVzZSB0aGUgc2l6ZSBvZiBpZFtBVEFfSURf
-V09SRFNdIGlzIGFscmVhZHkgYWxpZ25lZCBhbmQgZGV2c2xwX3RpbWluZyBuZWVkbid0IHRv
-IGJlIGFsaWduZWQuIFNvLCBJbiBWOSBvZiB0aGlzIHNlcmllcyBJIHdpbGwgZHJvcCB0aGlz
-IHBhdGNoLiBXaHkgSSBoYWQgcHJvYmxlbXMgYmVmb3JlPyBiZWNhdXNlIEkgdXNlZCBsaW51
-eC00LjQuDQoNCkh1YWNhaQ0KIA0KIA0KLS0tLS0tLS0tLS0tLS0tLS0tIE9yaWdpbmFsIC0t
-LS0tLS0tLS0tLS0tLS0tLQ0KRnJvbTogICJNYXR0IFJlZGZlYXJuIjxtYXR0LnJlZGZlYXJu
-QG1pcHMuY29tPjsNCkRhdGU6ICBUaHUsIE9jdCAxOSwgMjAxNyAwMzo1MiBQTQ0KVG86ICAi
-VGVqdW4gSGVvIjx0akBrZXJuZWwub3JnPjsgIkh1YWNhaSBDaGVuIjxjaGVuaGNAbGVtb3Rl
-LmNvbT47IA0KQ2M6ICAiQ2hyaXN0b3BoIEhlbGx3aWciPGhjaEBsc3QuZGU+OyAiTWFyZWsg
-U3p5cHJvd3NraSI8bS5zenlwcm93c2tpQHNhbXN1bmcuY29tPjsgIlJvYmluIE11cnBoeSI8
-cm9iaW4ubXVycGh5QGFybS5jb20+OyAiQW5kcmV3TW9ydG9uIjxha3BtQGxpbnV4LWZvdW5k
-YXRpb24ub3JnPjsgIkZ1eGluIFpoYW5nIjx6aGFuZ2Z4QGxlbW90ZS5jb20+OyAibGludXgt
-a2VybmVsIjxsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnPjsgIlJhbGYgQmFlY2hsZSI8
-cmFsZkBsaW51eC1taXBzLm9yZz47ICJKYW1lc0hvZ2FuIjxqYW1lcy5ob2dhbkBpbWd0ZWMu
-Y29tPjsgImxpbnV4LW1pcHMiPGxpbnV4LW1pcHNAbGludXgtbWlwcy5vcmc+OyAiSmFtZXMg
-RSAuIEogLkJvdHRvbWxleSI8amVqYkBsaW51eC52bmV0LmlibS5jb20+OyAiTWFydGluIEsg
-LiBQZXRlcnNlbiI8bWFydGluLnBldGVyc2VuQG9yYWNsZS5jb20+OyAibGludXgtc2NzaSI8
-bGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc+OyAibGludXgtaWRlIjxsaW51eC1pZGVAdmdl
-ci5rZXJuZWwub3JnPjsgInN0YWJsZSI8c3RhYmxlQHZnZXIua2VybmVsLm9yZz47IA0KU3Vi
-amVjdDogIFJlOiBbUEFUQ0ggVjggNS81XSBsaWJhdGE6IEFsaWduIERNQSBidWZmZXIgdG9k
-bWFfZ2V0X2NhY2hlX2FsaWdubWVudCgpDQoNCiANCg0KDQpPbiAxOC8xMC8xNyAxNDowMywg
-VGVqdW4gSGVvIHdyb3RlOg0KPiBPbiBUdWUsIE9jdCAxNywgMjAxNyBhdCAwNDowNTo0MlBN
-ICswODAwLCBIdWFjYWkgQ2hlbiB3cm90ZToNCj4+IEluIG5vbi1jb2hlcmVudCBETUEgbW9k
-ZSwga2VybmVsIHVzZXMgY2FjaGUgZmx1c2hpbmcgb3BlcmF0aW9ucyB0bw0KPj4gbWFpbnRh
-aW4gSS9PIGNvaGVyZW5jeSwgc28gaW4gYXRhX2RvX2Rldl9yZWFkX2lkKCkgdGhlIERNQSBi
-dWZmZXINCj4+IHNob3VsZCBiZSBhbGlnbmVkIHRvIEFSQ0hfRE1BX01JTkFMSUdOLiBPdGhl
-cndpc2UsIElmIGEgRE1BIGJ1ZmZlcg0KPj4gYW5kIGEga2VybmVsIHN0cnVjdHVyZSBzaGFy
-ZSBhIHNhbWUgY2FjaGUgbGluZSwgYW5kIGlmIHRoZSBrZXJuZWwNCj4+IHN0cnVjdHVyZSBo
-YXMgZGlydHkgZGF0YSwgY2FjaGVfaW52YWxpZGF0ZSAobm8gd3JpdGViYWNrKSB3aWxsIGNh
-dXNlDQo+PiBkYXRhIGNvcnJ1cHRpb24uDQo+Pg0KPj4gQ2M6IHN0YWJsZUB2Z2VyLmtlcm5l
-bC5vcmcNCj4+IFNpZ25lZC1vZmYtYnk6IEh1YWNhaSBDaGVuIDxjaGVuaGNAbGVtb3RlLmNv
-bT4NCj4+IC0tLQ0KPj4gICBkcml2ZXJzL2F0YS9saWJhdGEtY29yZS5jIHwgMTUgKysrKysr
-KysrKysrKy0tDQo+PiAgIDEgZmlsZSBjaGFuZ2VkLCAxMyBpbnNlcnRpb25zKCspLCAyIGRl
-bGV0aW9ucygtKQ0KPj4NCj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2F0YS9saWJhdGEtY29y
-ZS5jIGIvZHJpdmVycy9hdGEvbGliYXRhLWNvcmUuYw0KPj4gaW5kZXggZWU0YzFlYy4uZTEz
-NDk1NSAxMDA2NDQNCj4+IC0tLSBhL2RyaXZlcnMvYXRhL2xpYmF0YS1jb3JlLmMNCj4+ICsr
-KyBiL2RyaXZlcnMvYXRhL2xpYmF0YS1jb3JlLmMNCj4+IEBAIC0xODMzLDggKzE4MzMsMTkg
-QEAgc3RhdGljIHUzMiBhdGFfcGlvX21hc2tfbm9faW9yZHkoY29uc3Qgc3RydWN0IGF0YV9k
-ZXZpY2UgKmFkZXYpDQo+PiAgIHVuc2lnbmVkIGludCBhdGFfZG9fZGV2X3JlYWRfaWQoc3Ry
-dWN0IGF0YV9kZXZpY2UgKmRldiwNCj4+ICAgCQkJCQlzdHJ1Y3QgYXRhX3Rhc2tmaWxlICp0
-ZiwgdTE2ICppZCkNCj4+ICAgew0KPj4gLQlyZXR1cm4gYXRhX2V4ZWNfaW50ZXJuYWwoZGV2
-LCB0ZiwgTlVMTCwgRE1BX0ZST01fREVWSUNFLA0KPj4gLQkJCQkgICAgIGlkLCBzaXplb2Yo
-aWRbMF0pICogQVRBX0lEX1dPUkRTLCAwKTsNCj4+ICsJdTE2ICpkZXZpZDsNCj4+ICsJaW50
-IHJlcywgc2l6ZSA9IHNpemVvZih1MTYpICogQVRBX0lEX1dPUkRTOw0KPj4gKw0KPj4gKwlp
-ZiAoSVNfQUxJR05FRCgodW5zaWduZWQgbG9uZylpZCwgZG1hX2dldF9jYWNoZV9hbGlnbm1l
-bnQoJmRldi0+dGRldikpKQ0KPj4gKwkJcmVzID0gYXRhX2V4ZWNfaW50ZXJuYWwoZGV2LCB0
-ZiwgTlVMTCwgRE1BX0ZST01fREVWSUNFLCBpZCwgc2l6ZSwgMCk7DQo+PiArCWVsc2Ugew0K
-Pj4gKwkJZGV2aWQgPSBrbWFsbG9jKHNpemUsIEdGUF9LRVJORUwpOw0KPj4gKwkJcmVzID0g
-YXRhX2V4ZWNfaW50ZXJuYWwoZGV2LCB0ZiwgTlVMTCwgRE1BX0ZST01fREVWSUNFLCBkZXZp
-ZCwgc2l6ZSwgMCk7DQo+PiArCQltZW1jcHkoaWQsIGRldmlkLCBzaXplKTsNCj4+ICsJCWtm
-cmVlKGRldmlkKTsNCj4+ICsJfQ0KPj4gKw0KPj4gKwlyZXR1cm4gcmVzOw0KPiBIbW0uLi4g
-SSB0aGluayBpdCdkIGJlIGEgbG90IGJldHRlciB0byBlbnN1cmUgdGhhdCB0aGUgYnVmZmVy
-cyBhcmUNCj4gYWxpZ25lZCBwcm9wZXJseSB0byBiZWdpbiB3aXRoLiAgVGhlcmUgYXJlIG9u
-bHkgdHdvIGJ1ZmZlcnMgd2hpY2ggYXJlDQo+IHVzZWQgZm9yIGlkIHJlYWRpbmcgLSBhdGFf
-cG9ydC0+c2VjdG9yX2J1ZiBhbmQgYXRhX2RldmljZS0+aWQuICBCb3RoDQo+IGFyZSBlbWJl
-ZGRlZCBhcnJheXMgYnV0IG1ha2luZyB0aGVtIHNlcGFyYXRlbHkgYWxsb2NhdGVkIGFsaWdu
-ZWQNCj4gYnVmZmVycyBzaG91bGRuJ3QgYmUgZGlmZmljdWx0Lg0KPg0KPiBUaGFua3MuDQoN
-CkZXSVcsIEkgYWdyZWUgdGhhdCB0aGUgYnVmZmVycyB1c2VkIGZvciBETUEgc2hvdWxkIGJl
-IHNwbGl0IG91dCBmcm9tIHRoZSANCnN0cnVjdHVyZS4gV2UgcmFuIGludG8gdGhpcyBwcm9i
-bGVtIG9uIE1JUFMgbGFzdCB5ZWFyLCANCjRlZTM0ZWEzYTEyMzk2ZjM1YjI2ZDkwYTA5NGM3
-NWRiOTUwODBiYWEgKCJsaWJhdGE6IEFsaWduIGF0YV9kZXZpY2UncyBpZCANCm9uIGEgY2Fj
-aGVsaW5lIikgcGFydGlhbGx5IGZpeGVkIGl0LCBidXQgbGlrZWx5IHNob3VsZCBoYXZlIGFs
-c28gDQpjYWNoZWxpbmUgYWxpZ25lZCB0aGUgZm9sbG93aW5nIGRldnNscF90aW1pbmcgaW4g
-dGhlIHN0cnVjdCBzdWNoIHRoYXQgd2UgDQpndWFyYW50ZWUgdGhhdCBtZW1iZXJzIG9mIHRo
-ZSBzdHJ1Y3Qgbm90IHVzZWQgZm9yIERNQSBkbyBub3Qgc2hhcmUgdGhlIA0Kc2FtZSBjYWNo
-ZWxpbmUgYXMgdGhlIERNQSBidWZmZXIuIE5vdCBoYXZpbmcgdGhpcyBtZWFucyB0aGF0IA0K
-YXJjaGl0ZWN0dXJlcywgc3VjaCBhcyBNSVBTLCB3aGljaCBpbiBzb21lIGNhc2VzIGhhdmUg
-dG8gcGVyZm9ybSBtYW51YWwgDQppbnZhbGlkYXRpb24gb2YgRE1BIGJ1ZmZlciBjYW4gY2xv
-YmJlciB2YWxpZCBhZGphY2VudCBkYXRhIGlmIGl0IGlzIGluIA0KdGhlIHNhbWUgY2FjaGVs
-aW5lLg0KDQpUaGFua3MsDQpNYXR0
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--2pP0UIfnpJUTKtcrR9moDjVx3avE4QaJs
+Content-Type: multipart/mixed; boundary="WGtNXXaw4bUThrats8xfhMTRjFKv5iAAQ";
+ protected-headers="v1"
+From: Michal Simek <monstr@monstr.eu>
+Reply-To: monstr@monstr.eu
+To: Michal Simek <michal.simek@xilinx.com>, linux-kernel@vger.kernel.org,
+ Tejun Heo <tj@kernel.org>
+Cc: Alexander Graf <agraf@suse.de>, Rob Herring <robh@kernel.org>,
+ Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>,
+ linux-ide@vger.kernel.org
+Message-ID: <db0a29ba-f30e-e38c-04b1-c8cd4c832620@monstr.eu>
+Subject: Re: [PATCH v2 2/9] ata: ceva: Move sata port phy oob settings to
+ device-tree
+References: <cover.1503314240.git.michal.simek@xilinx.com>
+ <b9b0e17612ef2d1e842f178bbc47ae6bd36258dd.1503314240.git.michal.simek@xilinx.com>
+In-Reply-To: <b9b0e17612ef2d1e842f178bbc47ae6bd36258dd.1503314240.git.michal.simek@xilinx.com>
+
+--WGtNXXaw4bUThrats8xfhMTRjFKv5iAAQ
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
+
+Hi Tejun,
+
+On 21.8.2017 13:17, Michal Simek wrote:
+> From: Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>
+>=20
+> In SATA Speed negotiation happens with  OOB(Out of Band) signals. These=
+ OOB
+> signal timing values are configured through vendor specific registers i=
+n the
+> SATA controller. These OOB timings depends on the generator and detecto=
+r clock
+> frequency, which varies from board to board (ex: ep108 and zc1751 has d=
+ifferent
+> clock frequencies).
+> To avoid maintaing these OOB settings in the driver, it is better to mo=
+ve these
+> settings to the device-tree node and read from the device-tree.
+>=20
+> This patch does the same.
+>=20
+> Signed-off-by: Anurag Kumar Vulisha <anuragku@xilinx.com>
+> Signed-off-by: Michal Simek <michal.simek@xilinx.com>
+
+Can you please look at these patches?
+
+Thanks,
+Michal
+
+--=20
+Michal Simek, Ing. (M.Eng), OpenPGP -> KeyID: FE3D1F91
+w: www.monstr.eu p: +42-0-721842854
+Maintainer of Linux kernel - Xilinx Microblaze
+Maintainer of Linux kernel - Xilinx Zynq ARM and ZynqMP ARM64 SoCs
+U-Boot custodian - Xilinx Microblaze/Zynq/ZynqMP SoCs
+
+
+
+--WGtNXXaw4bUThrats8xfhMTRjFKv5iAAQ--
+
+--2pP0UIfnpJUTKtcrR9moDjVx3avE4QaJs
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iEYEARECAAYFAlnp0x0ACgkQykllyylKDCExSACdG1gTAVdtIfKGgUri/7YTYVCB
+5s4AniiB+usbJasESsSYXuklnVOcndtB
+=34Sm
+-----END PGP SIGNATURE-----
+
+--2pP0UIfnpJUTKtcrR9moDjVx3avE4QaJs--
