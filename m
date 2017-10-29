@@ -1,37 +1,36 @@
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [PATCH] libata: fix spelling mistake: 'ambigious' -> 'ambiguous'
-Date: Sat, 28 Oct 2017 23:51:47 +0530
-Message-ID: <b0c04473d8a7be32a06b6ba23de134491f71f40a.1509214774.git.arvind.yadav.cs@gmail.com>
+From: Hedemann Harald <laundry@bestwesternpremierdubai.com>
+Subject: Urgent Reply Needed
+Date: Sun, 29 Oct 2017 09:40:48 +0100
+Message-ID: <00d2663abbf38123f21c66e9b515320f__13835.9519922689$1509267052$gmane$org@bestwesternpremierdubai.com>
+Reply-To: hedemannharald@gmail.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:45759 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751561AbdJ1SWI (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 28 Oct 2017 14:22:08 -0400
+Received: from smtp01-smtp-4.daemonmail.net ([216.104.162.134]:36216 "EHLO
+        smtp01-smtp-4.daemonmail.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751080AbdJ2Iuf (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 29 Oct 2017 04:50:35 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Trivial fix to spelling mistakes in ata_parse_force_one().
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/ata/libata-core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 1945a8e..b38df2db 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6904,7 +6904,7 @@ static int __init ata_parse_force_one(char **cur,
- 		return -EINVAL;
- 	}
- 	if (nr_matches > 1) {
--		*reason = "ambigious value";
-+		*reason = "ambiguous value";
- 		return -EINVAL;
- 	}
- 
 -- 
-2.7.4
+Hi, compliments of the best of moment!
 
+There is a viable business opportunity in our company to supply the raw
+materials we use in our production which I've been buying from your
+region in my former capacity as purchase officer of our company. I
+require partnership of a reliable and trustworthy individuals in your
+region, the raw materials is hugely available in your region.
+
+The opportunity will not interfere with your present job as it doesn't
+matter your area of specialization.
+
+Should you desire to know more about the opportunity, kindly write me
+back to enable me avail you the full details of the offer.
+
+Thanks and Regards
+Mr.Hedemann Harald
