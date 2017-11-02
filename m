@@ -1,39 +1,40 @@
-From: Rameshwar Sahu <rsahu@apm.com>
-Subject: Re: [PATCH] ata: fixes kernel crash while tracing ata_eh_link_autopsy event
-Date: Thu, 2 Nov 2017 15:27:25 +0530
-Message-ID: <CAFd313w-SKoLR5J4qDDCnDG=OpcRXGL7DqTpy7_tuxzcFyrVdw@mail.gmail.com>
-References: <1508926976-11467-1-git-send-email-rsahu@apm.com>
- <20171025145450.GA59538@devbig577.frc2.facebook.com> <CAFd313w9W2hHFPJ47y0jeNb1u7=0deLtwcRF=+HXGBYft-QaLw@mail.gmail.com>
- <20171101143031.GL3252168@devbig577.frc2.facebook.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-io0-f177.google.com ([209.85.223.177]:47967 "EHLO
-        mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753015AbdKBJ6G (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 2 Nov 2017 05:58:06 -0400
-Received: by mail-io0-f177.google.com with SMTP id h70so12618063ioi.4
-        for <linux-ide@vger.kernel.org>; Thu, 02 Nov 2017 02:58:06 -0700 (PDT)
-In-Reply-To: <20171101143031.GL3252168@devbig577.frc2.facebook.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Rameshwar Prasad Sahu <rsahu@apm.com>
+Subject: [PATCH v2] ata: fixes kernel crash while tracing ata_eh_link_autopsy event
+Date: Thu,  2 Nov 2017 16:31:07 +0530
+Message-ID: <1509620467-6679-1-git-send-email-rsahu@apm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com, Rameshwar Prasad Sahu <rsahu@apm.com>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: olof@lixom.net, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com
 
-On Wed, Nov 1, 2017 at 8:00 PM, Tejun Heo <tj@kernel.org> wrote:
-> Hello,
->
-> On Tue, Oct 31, 2017 at 08:52:44PM +0530, Rameshwar Sahu wrote:
->> > probably should take both link and dev and use dev iff it's not NULL.
->> >
->>
->> Instead of this would it be better to call trace_ata_eh_link_autopsy() if
->> dev is not NULL from ata error handler ??
->
-> Oh yeah, that'd work too and be probably better.
-I will post another  version with this fix.
->
-> Thanks.
->
-> --
-> tejun
+When tracing ata link error event, the kernel crashes when the disk is
+removed due to NULL pointer access by trace_ata_eh_link_autopsy API.
+This occurs as the dev is NULL when the disk disappeared. This patch
+fixes this crash by calling trace_ata_eh_link_autopsy only if "dev"
+is not NULL.
+
+v2 changes:
+ Removed direct passing "link" pointer instead of "dev" in trace API.
+
+Signed-off-by: Rameshwar Prasad Sahu <rsahu@apm.com>
+---
+ drivers/ata/libata-eh.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index e4effef..ea20e0e 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2264,8 +2264,8 @@ static void ata_eh_link_autopsy(struct ata_link *link)
+ 		if (dev->flags & ATA_DFLAG_DUBIOUS_XFER)
+ 			eflags |= ATA_EFLAG_DUBIOUS_XFER;
+ 		ehc->i.action |= ata_eh_speed_down(dev, eflags, all_err_mask);
++		trace_ata_eh_link_autopsy(dev, ehc->i.action, all_err_mask);
+ 	}
+-	trace_ata_eh_link_autopsy(dev, ehc->i.action, all_err_mask);
+ 	DPRINTK("EXIT\n");
+ }
+
+--
+1.7.1
