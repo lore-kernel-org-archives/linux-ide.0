@@ -1,51 +1,39 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] block: fix CDROM dependency on BLK_DEV
-Date: Thu,  2 Nov 2017 12:19:32 +0100
-Message-ID: <20171102111952.4021454-1-arnd@arndb.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Arnd Bergmann <arnd@arndb.de>, "David S. Miller" <davem@davemloft.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bart.vanassche@wdc.com>, Hannes Reinecke <hare@suse.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: "Mr David Williams" <53917642@mylife.unisa.ac.za>
+Subject: Darlehensangebot
+Date: Thu, 02 Nov 2017 18:34:07 +0530
+Message-ID: <DB6PR0101MB23419FD8E98FA15C2603741EB65C0@DB6PR0101MB2341.eurprd01.prod.exchangelabs.com>
+Reply-To: david.loanfirm09@gmail.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-db5eur01hn0229.outbound.protection.outlook.com ([104.47.2.229]:49760
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752377AbdKBNC2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 2 Nov 2017 09:02:28 -0400
+Content-Description: Mail message body
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Recipients <53917642@mylife.unisa.ac.za>
 
-After the cdrom cleanup, I get randconfig warnings for some configurations:
+Sch=C3=B6nen Tag,
+ =
 
-warning: (BLK_DEV_IDECD && BLK_DEV_SR) selects CDROM which has unmet direct dependencies (BLK_DEV)
+Sie ben=C3=B6tigen einen echten Kredit online Ihre Rechnungen zu sichern?
+Startet ein neues Unternehmen? Sie ben=C3=B6tigen einen pers=C3=B6nlichen K=
+redit
+oder Business-Darlehen? Wir bieten ein Darlehen von =E2=82=AC 10.000 bis =
+=E2=82=AC
+500,000.000.00 mit 2% Zinsen pro Jahr und auch mit einem
+erschwinglichen R=C3=BCckzahlungsbedingungen und Zustand. Ich suche f=C3=BCr
+Darlehen und Projektinvestmentfonds ? Wir halten professionelle
+Exzellenz, unsere Definition von Exzellenz liegt in hervorragenden
+Kundenservice, erschwingliche Zahlung und R=C3=BCckzahlung Pl=C3=A4ne, schn=
+ell
+und einfach-Prozess.
+Hochachtungsvoll....
+ =
 
-This adds an explicit BLK_DEV dependency for both drivers. The other
-drivers that select 'CDROM' already have this and don't need a change.
-
-Fixes: 2a750166a5be ("block: Rework drivers/cdrom/Makefile")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/ide/Kconfig  | 1 +
- drivers/scsi/Kconfig | 2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
-index 7b92c591e4c1..cf1fb3fb5d26 100644
---- a/drivers/ide/Kconfig
-+++ b/drivers/ide/Kconfig
-@@ -117,6 +117,7 @@ config BLK_DEV_DELKIN
- 
- config BLK_DEV_IDECD
- 	tristate "Include IDE/ATAPI CDROM support"
-+	depends on BLK_DEV
- 	select IDE_ATAPI
- 	select CDROM
- 	---help---
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 1f98f666d2ef..8a739b74cfb7 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -130,7 +130,7 @@ config CHR_DEV_OSST
- 
- config BLK_DEV_SR
- 	tristate "SCSI CDROM support"
--	depends on SCSI
-+	depends on SCSI && BLK_DEV
- 	select CDROM
- 	---help---
- 	  If you want to use a CD or DVD drive attached to your computer
--- 
-2.9.0
+Freundliche Gr=C3=BC=C3=9Fe,
+Herr David Williams
