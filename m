@@ -1,40 +1,75 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] block: fix CDROM dependency on BLK_DEV
-Date: Thu, 2 Nov 2017 09:11:04 -0600
-Message-ID: <e11ff1e1-7555-1d8b-2223-bb8d7866a793@kernel.dk>
-References: <20171102111952.4021454-1-arnd@arndb.de>
- <212c24f4-7329-f1f5-93c8-090727ed7226@kernel.dk>
- <1509634878.2484.5.camel@wdc.com>
+From: Kees Cook <keescook@chromium.org>
+Subject: [PATCH] ide: Convert timers to use timer_setup()
+Date: Thu, 2 Nov 2017 16:11:48 -0700
+Message-ID: <20171102231148.GA100210@beast>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1509634878.2484.5.camel@wdc.com>
-Content-Language: en-US
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>, "arnd@arndb.de" <arnd@arndb.de>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "davem@davemloft.net" <davem@davemloft.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hare@suse.com" <hare@suse.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "David S. Miller" <davem@davemloft.net>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 11/02/2017 09:01 AM, Bart Van Assche wrote:
-> On Thu, 2017-11-02 at 08:27 -0600, Jens Axboe wrote:
->> On 11/02/2017 05:19 AM, Arnd Bergmann wrote:
->>> After the cdrom cleanup, I get randconfig warnings for some configurations:
->>>
->>> warning: (BLK_DEV_IDECD && BLK_DEV_SR) selects CDROM which has unmet direct dependencies (BLK_DEV)
->>>
->>> This adds an explicit BLK_DEV dependency for both drivers. The other
->>> drivers that select 'CDROM' already have this and don't need a change.
->>
->> Thanks Arnd, applied.
-> 
-> Hello Jens,
-> 
-> Can you wait at least 24 hours after a patch has been posted before applying it
-> such those who want to post review comments have a chance to do that?
+In preparation for unconditionally passing the struct timer_list pointer to
+all timer callbacks, switch to using the new timer_setup() and from_timer()
+to pass the timer pointer explicitly.
 
-I generally at least do that, unless they are trivial...
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ drivers/ide/ide-io.c    | 4 ++--
+ drivers/ide/ide-probe.c | 2 +-
+ include/linux/ide.h     | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+index 3a234701d92c..6f25da56a169 100644
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -611,9 +611,9 @@ static int drive_is_ready(ide_drive_t *drive)
+  *	logic that wants cleaning up.
+  */
+  
+-void ide_timer_expiry (unsigned long data)
++void ide_timer_expiry(struct timer_list *t)
+ {
+-	ide_hwif_t	*hwif = (ide_hwif_t *)data;
++	ide_hwif_t	*hwif = from_timer(hwif, t, timer);
+ 	ide_drive_t	*uninitialized_var(drive);
+ 	ide_handler_t	*handler;
+ 	unsigned long	flags;
+diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+index eaf39e5db08b..17fd55af4d92 100644
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -1184,7 +1184,7 @@ static void ide_init_port_data(ide_hwif_t *hwif, unsigned int index)
+ 
+ 	spin_lock_init(&hwif->lock);
+ 
+-	setup_timer(&hwif->timer, &ide_timer_expiry, (unsigned long)hwif);
++	timer_setup(&hwif->timer, ide_timer_expiry, 0);
+ 
+ 	init_completion(&hwif->gendev_rel_comp);
+ 
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index dc152e4b7f73..cc412175d036 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1211,7 +1211,7 @@ extern int ide_wait_not_busy(ide_hwif_t *hwif, unsigned long timeout);
+ 
+ extern void ide_stall_queue(ide_drive_t *drive, unsigned long timeout);
+ 
+-extern void ide_timer_expiry(unsigned long);
++extern void ide_timer_expiry(struct timer_list *t);
+ extern irqreturn_t ide_intr(int irq, void *dev_id);
+ extern void do_ide_request(struct request_queue *);
+ extern void ide_requeue_and_plug(ide_drive_t *drive, struct request *rq);
+-- 
+2.7.4
 
 
 -- 
-Jens Axboe
+Kees Cook
+Pixel Security
