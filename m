@@ -1,38 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] ata: fixes kernel crash while tracing
- ata_eh_link_autopsy event
-Date: Fri, 3 Nov 2017 06:28:26 -0700
-Message-ID: <20171103132826.GR3252168@devbig577.frc2.facebook.com>
-References: <1509620467-6679-1-git-send-email-rsahu@apm.com>
+From: Taras Kondratiuk <takondra@cisco.com>
+Subject: Re: Manual unbind of ATA devices causes use-after-free
+Date: Fri, 03 Nov 2017 09:32:16 -0700
+Message-ID: <150972673653.5502.7168940193960185267@takondra-t460s>
+References: <150957868766.7160.13267337838101258462@takondra-t460s>
+ <20171103131937.GQ3252168@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:47483 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755859AbdKCN2d (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 3 Nov 2017 09:28:33 -0400
-Content-Disposition: inline
-In-Reply-To: <1509620467-6679-1-git-send-email-rsahu@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171103131937.GQ3252168@devbig577.frc2.facebook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, xe-linux-external@cisco.com
 List-Id: linux-ide@vger.kernel.org
-To: Rameshwar Prasad Sahu <rsahu@apm.com>
-Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com
 
-On Thu, Nov 02, 2017 at 04:31:07PM +0530, Rameshwar Prasad Sahu wrote:
-> When tracing ata link error event, the kernel crashes when the disk is
-> removed due to NULL pointer access by trace_ata_eh_link_autopsy API.
-> This occurs as the dev is NULL when the disk disappeared. This patch
-> fixes this crash by calling trace_ata_eh_link_autopsy only if "dev"
-> is not NULL.
-> 
-> v2 changes:
->  Removed direct passing "link" pointer instead of "dev" in trace API.
-> 
-> Signed-off-by: Rameshwar Prasad Sahu <rsahu@apm.com>
+Quoting Tejun Heo (2017-11-03 06:19:37)
+> Hello,
+> =
 
-Applied to libata/for-4.15.
+> On Wed, Nov 01, 2017 at 04:24:47PM -0700, Taras Kondratiuk wrote:
+> > Manual unbind/remove unconditionally invokes devres_release_all which
+> > calls ata_host_release() and frees ata_host/ata_port memory while it is
+> > still being referenced (e.g as a parent of SCSI host).
+> > =
 
-Thanks.
+> > Is there a reason why ata_host is using derves which is not refcounted?
+> > Does it make sense to add recounting to ata_host?
+> =
 
--- 
-tejun
+> Hmm... the removal path is supposed to drain everything synchronously.
+> What kind of controller is it?
+
+It drains synchronously if scsi_host_put(ap->scsi_host) in
+ata_host_release() releases the last scsi_host reference. But when the issue
+happens there is one more reference to scsi_host because sg device is
+still open. The last reference will be dropped from sg_release.
+
+I forgot to mention that the disk may not be clearly unmounted when I'm
+unbinding it, but IMO it shouldn't cause use-after-free in the kernel.
+Also even if sg_release() is called before ata_host_release() there is
+still no guarantee that the last reference will be dropped, because
+sg_release() schedules sg_remove_sfp_usercontext() to do actual release
+and the work may not be completed in time.
+
+Driver is AHCI PCI.
