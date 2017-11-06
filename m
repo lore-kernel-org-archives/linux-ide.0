@@ -1,67 +1,62 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Manual unbind of ATA devices causes use-after-free
-Date: Mon, 6 Nov 2017 07:24:52 -0800
-Message-ID: <20171106152452.GA3252168@devbig577.frc2.facebook.com>
-References: <150957868766.7160.13267337838101258462@takondra-t460s>
- <20171103131937.GQ3252168@devbig577.frc2.facebook.com>
- <150972673653.5502.7168940193960185267@takondra-t460s>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [ata_scsi_offline_dev] BUG: sleeping function called from invalid
+ context at kernel/locking/mutex.c:238
+Date: Mon, 6 Nov 2017 15:12:31 -0800
+Message-ID: <CA+55aFy+ok0wvjCmf4gPr+TSUHTs8i42APx=xmi1RnZN=0nFkg@mail.gmail.com>
+References: <CA+55aFxSJGeN=2X-uX-on1Uq2Nb8+v1aiMDz5H1+tKW_N5Q+6g@mail.gmail.com>
+ <20171029225155.qcum5i75awrt5tzm@wfg-t540p.sh.intel.com> <20171029231835.3725fnd5yehlmqob@wfg-t540p.sh.intel.com>
+ <20171030110511.scfrdtlnf5lbdhu5@pd.tnic> <CA+55aFy2c88wKndjRAds-3MZ+MsArGBySOog+Rxmd2AciGFGkA@mail.gmail.com>
+ <CA+55aFwW7sbguREtVzKAUkNGb4cGh_eADqkEYcUurX5xS60_ww@mail.gmail.com>
+ <526e7cf2-0672-e44b-c32f-26128a2dfd37@codeaurora.org> <20171106224635.qopgsszwxzuitkpf@wfg-t540p.sh.intel.com>
+ <20171106225354.6ucl4f4ipsjlntzl@wfg-t540p.sh.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f180.google.com ([209.85.220.180]:46203 "EHLO
-        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752625AbdKFPY4 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 6 Nov 2017 10:24:56 -0500
-Content-Disposition: inline
-In-Reply-To: <150972673653.5502.7168940193960185267@takondra-t460s>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171106225354.6ucl4f4ipsjlntzl@wfg-t540p.sh.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Fengguang Wu <fengguang.wu@intel.com>
+Cc: IDE-ML <linux-ide@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>
 List-Id: linux-ide@vger.kernel.org
-To: Taras Kondratiuk <takondra@cisco.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, xe-linux-external@cisco.com, Lin Ming <minggr@gmail.com>
 
-Hello,
+On Mon, Nov 6, 2017 at 2:53 PM, Fengguang Wu <fengguang.wu@intel.com> wrote:
+>
+> The same dmesg happen to contain another libata related bug. Attached again.
+> It's rare and in the error handling path, so unlikely a new regression.
+>
+> [   49.608280] BUG: sleeping function called from invalid context at kernel/locking/mutex.c:238
+> [   49.647821]  mutex_lock+0x20/0x50
+> [   49.651443]  kernfs_find_and_get_ns+0x23/0x60
+> [   49.656104]  sysfs_notify+0x77/0x90
+> [   49.659900]  scsi_device_set_state+0x63/0x150
+> [   49.664559]  ata_scsi_offline_dev+0x1c/0x30 [libata]
+> [   49.669817]  ata_eh_detach_dev+0x3b/0xb0 [libata]
 
-On Fri, Nov 03, 2017 at 09:32:16AM -0700, Taras Kondratiuk wrote:
-> Quoting Tejun Heo (2017-11-03 06:19:37)
-> > Hello,
-> > 
-> > On Wed, Nov 01, 2017 at 04:24:47PM -0700, Taras Kondratiuk wrote:
-> > > Manual unbind/remove unconditionally invokes devres_release_all which
-> > > calls ata_host_release() and frees ata_host/ata_port memory while it is
-> > > still being referenced (e.g as a parent of SCSI host).
-> > > 
-> > > Is there a reason why ata_host is using derves which is not refcounted?
-> > > Does it make sense to add recounting to ata_host?
-> > 
-> > Hmm... the removal path is supposed to drain everything synchronously.
-> > What kind of controller is it?
-> 
-> It drains synchronously if scsi_host_put(ap->scsi_host) in
-> ata_host_release() releases the last scsi_host reference. But when the issue
-> happens there is one more reference to scsi_host because sg device is
-> still open. The last reference will be dropped from sg_release.
+ata_eh_detach_dev() does
 
-I see.
+        spin_lock_irqsave(ap->lock, flags);
 
-> I forgot to mention that the disk may not be clearly unmounted when I'm
-> unbinding it, but IMO it shouldn't cause use-after-free in the kernel.
+and then does
 
-Oh, it shouldn't.  It's a bug.
+        if (ata_scsi_offline_dev(dev)) {
+                dev->flags |= ATA_DFLAG_DETACHED;
+                ap->pflags |= ATA_PFLAG_SCSI_HOTPLUG;
+        }
 
-> Also even if sg_release() is called before ata_host_release() there is
-> still no guarantee that the last reference will be dropped, because
-> sg_release() schedules sg_remove_sfp_usercontext() to do actual release
-> and the work may not be completed in time.
+inside that spinlock. And this code is not new - it has done it since
+2006 or so.
 
-Hmmm, we didn't use to put in ata device structs in the kobject tree,
-so this wasn't an issue.  This was changed by 9a6d6a2ddabb ("ata: make
-ata port as parent device of scsi host") while adding the transport
-support.  While doing that, we didn't change the release path to match
-it, so the failure.
+But it does seem to be a new regression in 4.14, caused by commit
+8a97712e5314 ("scsi: make 'state' device attribute pollable"), because
+that's what added the sysfs_notify() call to scsi_device_set_state(),
+which made that spinlock be a problem.
 
-cc'ing Lin.  Lin, can you take a look at this?
+That commit came in through the SCSI merge this merge window, and it
+seems to still revert cleanly.
 
-Thanks.
+So I do suspect that by now we should just revert that commit. It's
+not clear why that state attribute should be pollable, and the new
+code is clearly very much buggy.
 
--- 
-tejun
+Hannes, Martin?
+
+                Linus
