@@ -1,29 +1,32 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [PATCH] drivers/ide-cd: Handle missing driver data during status
- check gracefully
-Date: Tue, 7 Nov 2017 09:13:04 -0800
-Message-ID: <CA+55aFy+peFp-u753gu43L5eisPE8g-P_eCyx-amoBADm-k0NA@mail.gmail.com>
-References: <20171107102538.mzbfdxll3fpf2kqg@wfg-t540p.sh.intel.com>
- <20171107104336.ojanuvgjgt5o53ox@pd.tnic> <20171107130626.dk5rxrprolvcne5w@wfg-t540p.sh.intel.com>
- <20171107140102.n2pncsaer5o5hmt7@pd.tnic> <CA+55aFxBEMsrqTPOST18iQ_VwNkFxqWq744W74M+8VVT2eL-3w@mail.gmail.com>
- <20171107163723.7u5iyvewrrjglqif@pd.tnic>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] drivers/ide-cd: Handle missing driver data during
+ status check gracefully
+Date: Wed, 08 Nov 2017 09:08:17 +0900 (KST)
+Message-ID: <20171108.090817.1057428368415111720.davem@davemloft.net>
+References: <CA+55aFxBEMsrqTPOST18iQ_VwNkFxqWq744W74M+8VVT2eL-3w@mail.gmail.com>
+        <20171107163723.7u5iyvewrrjglqif@pd.tnic>
+        <CA+55aFy+peFp-u753gu43L5eisPE8g-P_eCyx-amoBADm-k0NA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-it0-f49.google.com ([209.85.214.49]:51629 "EHLO
-        mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752649AbdKGRNF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 7 Nov 2017 12:13:05 -0500
-In-Reply-To: <20171107163723.7u5iyvewrrjglqif@pd.tnic>
+Received: from shards.monkeyblade.net ([184.105.139.130]:58874 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752469AbdKHAIX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 7 Nov 2017 19:08:23 -0500
+In-Reply-To: <CA+55aFy+peFp-u753gu43L5eisPE8g-P_eCyx-amoBADm-k0NA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <bp@alien8.de>
-Cc: Fengguang Wu <fengguang.wu@intel.com>, IDE-ML <linux-ide@vger.kernel.org>, "David S. Miller" <davem@davemloft.net>, Jens Axboe <axboe@kernel.dk>, Bart Van Assche <bart.vanassche@sandisk.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: torvalds@linux-foundation.org
+Cc: bp@alien8.de, fengguang.wu@intel.com, linux-ide@vger.kernel.org, axboe@kernel.dk, bart.vanassche@sandisk.com, linux-kernel@vger.kernel.org
 
-On Tue, Nov 7, 2017 at 8:37 AM, Borislav Petkov <bp@alien8.de> wrote:
->
-> Here it is:
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Tue, 7 Nov 2017 09:13:04 -0800
 
-Thanks, applied directly.
+> On Tue, Nov 7, 2017 at 8:37 AM, Borislav Petkov <bp@alien8.de> wrote:
+>>
+>> Here it is:
+> 
+> Thanks, applied directly.
 
-                 Linus
+Thanks for taking care of this.
