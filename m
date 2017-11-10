@@ -1,56 +1,51 @@
-From: "David F." <df7729@gmail.com>
-Subject: Re: When will Linux support new RAID controllers
-Date: Fri, 10 Nov 2017 11:06:02 -0800
-Message-ID: <CAGRSmLsvAR6wth7tPd5J2kAydy64uQ+h45Yu-SUeOAHkfOHXHA@mail.gmail.com>
-References: <CAGRSmLs-Hr+FFfa4_29kidEeL2d7b+cEP6u1OkOUoYW6Cm15BA@mail.gmail.com>
- <20171110131937.GA26181@infradead.org> <CAKKYfmEqw48mjBsKoy=qeny6B1X8PKytSN4UwpvSupo87746kg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Martyn Welch <martyn.welch@collabora.co.uk>
+Subject: [PATCH] ahci: imx: Handle increased read failures for IMX53 temperature sensor in low frequency mode.
+Date: Fri, 10 Nov 2017 20:51:38 +0000
+Message-ID: <1510347098-20472-1-git-send-email-martyn.welch@collabora.co.uk>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:49934 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753805AbdKJTGD (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Nov 2017 14:06:03 -0500
-In-Reply-To: <CAKKYfmEqw48mjBsKoy=qeny6B1X8PKytSN4UwpvSupo87746kg@mail.gmail.com>
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:55024 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750896AbdKJU5F (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Nov 2017 15:57:05 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dennis Mungai <dmngaie@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, linux-ide@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-nvme@lists.infradead.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Egor Starkov <egor.starkov@ge.com>, Martyn Welch <martyn.welch@collabora.co.uk>
 
-A patch would be great.  There has been several cases where no option
-to use AHCI mode available, or where a box seller would offer Linux as
-an alternate boot option against Windows in RAID mode (on the mobo)
-but could no longer provide Linux with their systems (without
-additional costs for add-in raid controller).
+From: Egor Starkov <egor.starkov@ge.com>
 
-On Fri, Nov 10, 2017 at 5:31 AM, Dennis Mungai <dmngaie@gmail.com> wrote:
-> That feature would be especially important on systems where the
-> BIOS/UEFI environment offers no option to toggle back the AHCI mode.
-> This "RAID" Intel features is also known as "Intel Premium RST mode"
-> on all current Clevo systems, and on such a platform (the Clevo
-> P751DM2-G, marketed by the likes of Schenker and Origin PC) is based
-> on this platform.
->
-> -Dennis.
->
-> On 10 November 2017 at 16:19, Christoph Hellwig <hch@infradead.org> wrote:
->> On Thu, Nov 09, 2017 at 10:24:54AM -0800, David F. wrote:
->>> It seems that Linux will not see any HD on Intel's 100 Series or newer
->>> chipsets (Z170, etc.) when in RAID mode.  (typically these systems
->>> have M2 NVMe devices ). This is problematic when wanting to use Linux
->>> on the system without having to disable RAID and when on their with
->>> Windows.   Maybe not a linux-raid issue, but is Linux RAID issue
->>> within the kernel device support.
->>
->> Dan (on Cc) posted some patches to support the awkwared so called
->> "RAID" mode (it really should be Intel landgrab mode) in the client
->> chipsets more than a year ago.
->>
->> It needed a bit of a rework to be present as a fake PCIe root port
->> instead of the platform driver magic, so I wonder what happened to
->> it - Dan any chance to get back to it?
->>
->> _______________________________________________
->> Linux-nvme mailing list
->> Linux-nvme@lists.infradead.org
->> http://lists.infradead.org/mailman/listinfo/linux-nvme
+Extended testing has shown that the imx ahci driver sometimes requires
+more than the 100 attempts currently alotted in the driver to perform a
+successful temperature reading when running at minimum (throttled) CPU
+frequency.
+
+Debugging suggests that the read cycle canitake 160 attempts (which given
+that the driver averages 80 readings from the ADC equates to one failure
+on each read).
+
+Increase the attempt limit to 200 in order to greatly reduce the
+likelyhood of the driver failing to perform a temperature reading,
+especially at low CPU frequency.
+
+Signed-off-by: Egor Starkov <egor.starkov@ge.com>
+Signed-off-by: Martyn Welch <martyn.welch@collabora.co.uk>
+---
+ drivers/ata/ahci_imx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index 787567e..a58bcc0 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -230,7 +230,7 @@ static int read_adc_sum(void *dev, u16 rtune_ctl_reg, void __iomem * mmio)
+ {
+ 	u16 adc_out_reg, read_sum;
+ 	u32 index, read_attempt;
+-	const u32 attempt_limit = 100;
++	const u32 attempt_limit = 200;
+ 
+ 	imx_phy_reg_addressing(SATA_PHY_CR_CLOCK_RTUNE_CTL, mmio);
+ 	imx_phy_reg_write(rtune_ctl_reg, mmio);
+-- 
+1.8.3.1
+
