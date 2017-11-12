@@ -1,26 +1,37 @@
-From: Amos Kalonzo <daniel.basha.tg@gmail.com>
-Subject: Re:
-Date: Mon, 13 Nov 2017 15:55:00 +0100
-Message-ID: <CAKUwMNDfC9uOG95U5f-i17isa+BX5i3BsL5ROvpZbHGNaz4Q8w__2863.72669875181$1510584960$gmane$org@mail.gmail.com>
-Reply-To: info@acalonzo.com
+From: Friedrich Mayrhofer <elazzou@fsr.ac.ma>
+Subject: (unknown)
+Date: Sun, 12 Nov 2017 15:09:12 +0000
+Message-ID: <20171112150912.93083qdw2r1fq60w__36867.6559221514$1510602758$gmane$org@koutoubia.fsr.ac.ma>
+Reply-To: friedrich_hofer65@163.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:50085 "EHLO
-        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752644AbdKMOzF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Nov 2017 09:55:05 -0500
-Received: by mail-yw0-f195.google.com with SMTP id g204so1952025ywa.6
-        for <linux-ide@vger.kernel.org>; Mon, 13 Nov 2017 06:55:04 -0800 (PST)
+Received: from [196.200.138.80] ([196.200.138.80]:60367 "EHLO
+        koutoubia.fsr.ac.ma" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+        with ESMTP id S1754658AbdKMTwi (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Nov 2017 14:52:38 -0500
+Subject: 
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Attn:
 
-I am wondering why You haven't respond to my email for some days now.
-reference to my client's contract balance payment of (11.7M,USD)
-Kindly get back to me for more details.
+This is the second time i am sending you this Email.
 
-Best Regards
+I, Friedrich Mayrhofer Donate $ 1,000,000.00 to You, Email Me  
+personally for more details.
 
-Amos Kalonzo
+Regards.
+Friedrich Mayrhofer
+
+
+
+
+
+----------------------------------------------------------------
+This message was sent using IMP, the Internet Messaging Program.
+
