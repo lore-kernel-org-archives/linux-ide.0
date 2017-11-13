@@ -1,33 +1,32 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Manual unbind of ATA devices causes use-after-free
-Date: Mon, 13 Nov 2017 12:10:37 -0800
-Message-ID: <20171113201037.GL983427@devbig577.frc2.facebook.com>
-References: <150957868766.7160.13267337838101258462@takondra-t460s>
- <20171103131937.GQ3252168@devbig577.frc2.facebook.com>
- <150972673653.5502.7168940193960185267@takondra-t460s>
- <20171106152452.GA3252168@devbig577.frc2.facebook.com>
- <151060376750.7561.9196983678072496472@takondra-t460s>
+Subject: Re: [PATCH v1] ata: sata_dwc_460ex: Propagate platform device ID to
+ DMA driver
+Date: Mon, 13 Nov 2017 12:17:20 -0800
+Message-ID: <20171113201720.GN983427@devbig577.frc2.facebook.com>
+References: <20171110175937.83792-1-andriy.shevchenko@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qt0-f181.google.com ([209.85.216.181]:55159 "EHLO
+        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755328AbdKMURY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Nov 2017 15:17:24 -0500
+Received: by mail-qt0-f181.google.com with SMTP id c36so14980459qtc.11
+        for <linux-ide@vger.kernel.org>; Mon, 13 Nov 2017 12:17:23 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <151060376750.7561.9196983678072496472@takondra-t460s>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Taras Kondratiuk <takondra@cisco.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, xe-linux-external@cisco.com, Lin Ming <minggr@gmail.com>
+In-Reply-To: <20171110175937.83792-1-andriy.shevchenko@linux.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: linux-ide@vger.kernel.org
 
-Hello,
-
-On Mon, Nov 13, 2017 at 12:09:27PM -0800, Taras Kondratiuk wrote:
-> > cc'ing Lin.  Lin, can you take a look at this?
+On Fri, Nov 10, 2017 at 07:59:37PM +0200, Andy Shevchenko wrote:
+> Propagate platform device ID to DMA driver to distinguish relationship
+> between DMA and SATA instances.
 > 
-> I'm ready to test whenever you have something. If you don't have time to
-> look at this then can you recommend a proper way to fix it. Is it better
-> to change device hierarchy back to previous state (revert 9a6d6a2ddabb)
-> or add reference counting to ata_host?
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-We'll have to add refcnting to ata_host.
+Applied to libata/for-4.15.
 
 Thanks.
 
