@@ -1,54 +1,55 @@
-From: Martyn Welch <martyn.welch@collabora.co.uk>
-Subject: [PATCH v2] ahci: imx: Handle increased read failures for IMX53 temperature sensor in low frequency mode.
-Date: Mon, 13 Nov 2017 10:31:01 +0000
-Message-ID: <1510569061-28993-1-git-send-email-martyn.welch@collabora.co.uk>
+From: "M,Shakour Rosarita" <hassantara789@gmail.com>
+Subject: Hello Dear...
+Date: Mon, 13 Nov 2017 12:08:18 +0000
+Message-ID: <CAMyxZDE63FQAQ=JTZN_2Ks1T4PC7+RQ2oo6+S3vs4Q0Mp-K2iQ@mail.gmail.com>
+Reply-To: mshakourrosarita22@gmail.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:36418 "EHLO
-        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751313AbdKMKbH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Nov 2017 05:31:07 -0500
+Received: from mail-ua0-f195.google.com ([209.85.217.195]:43898 "EHLO
+        mail-ua0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752647AbdKMMIT (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Nov 2017 07:08:19 -0500
+Received: by mail-ua0-f195.google.com with SMTP id q18so10182416uaa.0
+        for <linux-ide@vger.kernel.org>; Mon, 13 Nov 2017 04:08:19 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Egor Starkov <egor.starkov@ge.com>, Martyn Welch <martyn.welch@collabora.co.uk>
 
-From: Egor Starkov <egor.starkov@ge.com>
+Hello Dear...
 
-Extended testing has shown that the imx ahci driver sometimes requires
-more than the 100 attempts currently alotted in the driver to perform a
-successful temperature reading when running at minimum (throttled) CPU
-frequency.
+I know that this message will come to you as a surprise. I hoped that
+you will not expose or betray this trust and confident that I am about
+to repose on you, my name is M, Shakour Rosarita. I am 19 years old
+Girl, female, from Tartu Syria, (never married) 61 kg, white in
+complexion, and I am currently living in the refugee camp here in
+Abidjan Ivory Coast, My late beloved father M,Shakour Hassin was a
+renowned businessman and owner of Natour Petrol Station in Syria, he
+was killed in a stampede riot in Tartu, Syria.
+When I got the news about my parents. I fled to a nearby country
+Jordan before I joined a ferry to Africa and came to Abidjan capital
+city Ivory Coast West Africa find safety here.
+I came in 2015 to Abidjan and I now live in refugee camps here as
+refugees are allowed freely to enter here without, My late father
+deposited (US$6.200.000.00m) My late father kept the money at the bank
+of Africa, I want you to help me transfer the money to your hand so
+that you will help me bring me into your country for my continue
+education.
 
-Debugging suggests that the read cycle can take 160 attempts (which given
-that the driver averages 80 readings from the ADC equates to one failure
-on each read).
+I sent my pictures here for you to see. Who I am seriously looking for
+a good-person in my life, so I want to hear from you soon and learn
+more about you.
 
-Increase the attempt limit to 200 in order to greatly reduce the
-likelihood of the driver failing to perform a temperature reading,
-especially at low CPU frequency.
-
-Signed-off-by: Egor Starkov <egor.starkov@ge.com>
-Signed-off-by: Martyn Welch <martyn.welch@collabora.co.uk>
----
-
-v2: - Correct spelling issues in cover letter.
-
- drivers/ata/ahci_imx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-index 787567e..a58bcc0 100644
---- a/drivers/ata/ahci_imx.c
-+++ b/drivers/ata/ahci_imx.c
-@@ -230,7 +230,7 @@ static int read_adc_sum(void *dev, u16 rtune_ctl_reg, void __iomem * mmio)
- {
- 	u16 adc_out_reg, read_sum;
- 	u32 index, read_attempt;
--	const u32 attempt_limit = 100;
-+	const u32 attempt_limit = 200;
- 
- 	imx_phy_reg_addressing(SATA_PHY_CR_CLOCK_RTUNE_CTL, mmio);
- 	imx_phy_reg_write(rtune_ctl_reg, mmio);
--- 
-1.8.3.1
-
+I am an open-minded and friendly girl to share a good time with you
+and have fun and enjoy on the go, bird watching, the rest of our
+lives. My Hobbies, tourism books, dance, music, soccer, tennis,
+swimming and cinema.
+I would just think about you, including your dose and doesn=E2=80=99t .I
+believe we will do well together, and live like one family.
+Thank you and God bless you, for you in your promise to help me here,
+looking forward to your reply by the grace of God and have a good day.
+I hope you send me your photos as well? I await your next reply in
+faith please reply through my private email at
+(mshakourrosarita22@gmail.com):
+Thanks.
+Ms Rosarita
