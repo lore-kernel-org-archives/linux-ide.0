@@ -1,63 +1,126 @@
-From: David Milburn <dmilburn@redhat.com>
-Subject: [PATCH] libata: sata_down_spd_limit should return if driver has not recorded sstatus speed
-Date: Tue, 14 Nov 2017 16:17:25 -0600
-Message-ID: <1510697845-58071-1-git-send-email-dmilburn@redhat.com>
+From: Peter Chang <dpf@google.com>
+Subject: [patch] lewisburg map/pcs register handling
+Date: Tue, 14 Nov 2017 15:55:12 -0800
+Message-ID: <CAF2xp_HuE+aV3ZhrC0E9CQopYgTQ4AHcK15v248AVgxXn8A0pA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary="001a11460b4e757402055dfa1f5e"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41576 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753921AbdKNWR0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 14 Nov 2017 17:17:26 -0500
+Received: from mail-wr0-f173.google.com ([209.85.128.173]:55896 "EHLO
+        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752929AbdKNXzg (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Nov 2017 18:55:36 -0500
+Received: by mail-wr0-f173.google.com with SMTP id l8so18963089wre.12
+        for <linux-ide@vger.kernel.org>; Tue, 14 Nov 2017 15:55:35 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: tj@kernel.org
 
-During hotplug, it is possible for 6Gbps link speed to
-be limited all the way down to 1.5 Gbps which may lead
-to a slower link speed when drive is re-connected.
+--001a11460b4e757402055dfa1f5e
+Content-Type: text/plain; charset="UTF-8"
 
-This behavior has been seen on a Intel Lewisburg SATA
-controller (8086:a1d2) with HGST HUH728080ALE600 drive
-where SATA link speed was limited to 1.5 Gbps and
-when re-connected the link came up 3.0 Gbps.
+mostly, intel made the registers wider so that the offsets aren't
+right. it only matters if you don't populate all the ports and aren't
+using the first port.
 
-This patch was retested on above configuration and
-showed the hotplugged link to come back online at max
-speed (6Gbps). I did not see the downgrade when testing
-on Intel C600/X79, but retested patched linux-4.14-rc5
-kernel and didn't see any side effects from this
-change. Also, successfully retested hotplug on port
-multiplier 3Gbps link.
+\p
 
-Signed-off-by: David Milburn <dmilburn@redhat.com>
----
- drivers/ata/libata-core.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+--001a11460b4e757402055dfa1f5e
+Content-Type: text/x-patch; charset="US-ASCII";
+	name="0001-ahci-lewisburg-MAP-PCS-register-handling.patch"
+Content-Disposition: attachment;
+	filename="0001-ahci-lewisburg-MAP-PCS-register-handling.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_ja09xrfs0
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index ee4c1ec..b72b242 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3081,12 +3081,17 @@ int sata_down_spd_limit(struct ata_link *link, u32 spd_limit)
- 	mask &= ~(1 << bit);
- 
- 	/* Mask off all speeds higher than or equal to the current
--	 * one.  Force 1.5Gbps if current SPD is not available.
-+	 * one. At this point if current SPD is not available and we
-+	 * previously recorded the link speed from the Status register,
-+	 * the driver has already masked off the highest bit so mask
-+	 * should already be set to 1 or 0. Otherwise, we should
-+	 * not force 1.5Gbps on a link where we have not previously 
-+	 * recorded speed from Status register, just return in this case.
- 	 */
- 	if (spd > 1)
- 		mask &= (1 << (spd - 1)) - 1;
- 	else
--		mask &= 1;
-+		return -EINVAL;
- 
- 	/* were we already at the bottom? */
- 	if (!mask)
--- 
-1.8.3.1
-
+RnJvbSA2MmNjYzYxMTg5NjAyMDQ3Njk4MDlhMWVhOWQxNjJjZjJjMWM5NWUxIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBwZXRlciBjaGFuZyA8ZHBmQGdvb2dsZS5jb20+CkRhdGU6IFR1
+ZSwgMTQgTm92IDIwMTcgMTM6NDM6MTUgLTA4MDAKU3ViamVjdDogW1BBVENIXSBhaGNpOiBsZXdp
+c2J1cmcgTUFQIC8gUENTIHJlZ2lzdGVyIGhhbmRsaW5nCgpyZWdpc3RlcnMgYXJlIG5vdyAzMi1i
+aXRzIGFuZCB0aGUgZXhpc3Rpbmcgb2Zmc2V0cyBtZWFuIHRoYXQgdGhlCndyb25nIHJlZ2lzdGVy
+cyBhcmUgYmVpbmcgdXBkYXRlZC4KCkNoYW5nZS1JZDogSTk5MmIzMWJjOWU3ODlmOWRmYmViMjlh
+ZmViMGI3Nzc3ZTMyNWVhNzEKLS0tCiBkcml2ZXJzL2F0YS9haGNpLmMgICAgfCAzNCArKysrKysr
+KysrKysrKysrKysrKysrKysrKystLS0tLS0tCiBkcml2ZXJzL2F0YS9haGNpLmggICAgfCAgNCAr
+KysrCiBkcml2ZXJzL2F0YS9saWJhaGNpLmMgfCAxOSArKysrKysrKysrKysrKysrKysrCiAzIGZp
+bGVzIGNoYW5nZWQsIDUwIGluc2VydGlvbnMoKyksIDcgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0
+IGEvZHJpdmVycy9hdGEvYWhjaS5jIGIvZHJpdmVycy9hdGEvYWhjaS5jCmluZGV4IDlmNzhiYjAz
+YmI3Ni4uMTZiMGZhYzlmMGFlIDEwMDY0NAotLS0gYS9kcml2ZXJzL2F0YS9haGNpLmMKKysrIGIv
+ZHJpdmVycy9hdGEvYWhjaS5jCkBAIC03MSw2ICs3MSw3IEBAIGVudW0gYm9hcmRfaWRzIHsKIAog
+CS8qIGJvYXJkIElEcyBmb3Igc3BlY2lmaWMgY2hpcHNldHMgaW4gYWxwaGFiZXRpY2FsIG9yZGVy
+ICovCiAJYm9hcmRfYWhjaV9hdm4sCisJYm9hcmRfYWhjaV9sYmcsCiAJYm9hcmRfYWhjaV9tY3A2
+NSwKIAlib2FyZF9haGNpX21jcDc3LAogCWJvYXJkX2FoY2lfbWNwODksCkBAIC0xNzQsNiArMTc1
+LDE0IEBAIHN0YXRpYyBjb25zdCBzdHJ1Y3QgYXRhX3BvcnRfaW5mbyBhaGNpX3BvcnRfaW5mb1td
+ID0gewogCQkudWRtYV9tYXNrCT0gQVRBX1VETUE2LAogCQkucG9ydF9vcHMJPSAmYWhjaV9hdm5f
+b3BzLAogCX0sCisJW2JvYXJkX2FoY2lfbGJnXSA9IHsKKwkJQUhDSV9IRkxBR1MJKEFIQ0lfSEZM
+QUdfMzJCSVRfTUFQX1BDUyB8CisJCQkJIEFIQ0lfSEZMQUdfUENJX1BPUlRfTUFQKSwKKwkJLmZs
+YWdzCQk9IEFIQ0lfRkxBR19DT01NT04sCisJCS5waW9fbWFzawk9IEFUQV9QSU80LAorCQkudWRt
+YV9tYXNrCT0gQVRBX1VETUE2LAorCQkucG9ydF9vcHMJPSAmYWhjaV9vcHMsCisJfSwKIAlbYm9h
+cmRfYWhjaV9tY3A2NV0gPSB7CiAJCUFIQ0lfSEZMQUdTCShBSENJX0hGTEFHX05PX0ZQRE1BX0FB
+IHwgQUhDSV9IRkxBR19OT19QTVAgfAogCQkJCSBBSENJX0hGTEFHX1lFU19OQ1EpLApAQCAtMzc0
+LDE0ICszODMsMTQgQEAgc3RhdGljIGNvbnN0IHN0cnVjdCBwY2lfZGV2aWNlX2lkIGFoY2lfcGNp
+X3RibFtdID0gewogCXsgUENJX1ZERVZJQ0UoSU5URUwsIDB4YTEwNyksIGJvYXJkX2FoY2kgfSwg
+LyogU3VucmlzZSBQb2ludC1IIFJBSUQgKi8KIAl7IFBDSV9WREVWSUNFKElOVEVMLCAweGExMGYp
+LCBib2FyZF9haGNpIH0sIC8qIFN1bnJpc2UgUG9pbnQtSCBSQUlEICovCiAJeyBQQ0lfVkRFVklD
+RShJTlRFTCwgMHgyODIyKSwgYm9hcmRfYWhjaSB9LCAvKiBMZXdpc2J1cmcgUkFJRCovCi0JeyBQ
+Q0lfVkRFVklDRShJTlRFTCwgMHgyODIzKSwgYm9hcmRfYWhjaSB9LCAvKiBMZXdpc2J1cmcgQUhD
+SSovCisJeyBQQ0lfVkRFVklDRShJTlRFTCwgMHgyODIzKSwgYm9hcmRfYWhjaV9sYmcgfSwgLyog
+TGV3aXNidXJnIEFIQ0kqLwogCXsgUENJX1ZERVZJQ0UoSU5URUwsIDB4MjgyNiksIGJvYXJkX2Fo
+Y2kgfSwgLyogTGV3aXNidXJnIFJBSUQqLwogCXsgUENJX1ZERVZJQ0UoSU5URUwsIDB4MjgyNyks
+IGJvYXJkX2FoY2kgfSwgLyogTGV3aXNidXJnIFJBSUQqLwotCXsgUENJX1ZERVZJQ0UoSU5URUws
+IDB4YTE4MiksIGJvYXJkX2FoY2kgfSwgLyogTGV3aXNidXJnIEFIQ0kqLworCXsgUENJX1ZERVZJ
+Q0UoSU5URUwsIDB4YTE4MiksIGJvYXJkX2FoY2lfbGJnIH0sIC8qIExld2lzYnVyZyBBSENJKi8K
+IAl7IFBDSV9WREVWSUNFKElOVEVMLCAweGExODYpLCBib2FyZF9haGNpIH0sIC8qIExld2lzYnVy
+ZyBSQUlEKi8KIAl7IFBDSV9WREVWSUNFKElOVEVMLCAweGExZDIpLCBib2FyZF9haGNpIH0sIC8q
+IExld2lzYnVyZyBSQUlEKi8KIAl7IFBDSV9WREVWSUNFKElOVEVMLCAweGExZDYpLCBib2FyZF9h
+aGNpIH0sIC8qIExld2lzYnVyZyBSQUlEKi8KLQl7IFBDSV9WREVWSUNFKElOVEVMLCAweGEyMDIp
+LCBib2FyZF9haGNpIH0sIC8qIExld2lzYnVyZyBBSENJKi8KKwl7IFBDSV9WREVWSUNFKElOVEVM
+LCAweGEyMDIpLCBib2FyZF9haGNpX2xiZyB9LCAvKiBMZXdpc2J1cmcgQUhDSSovCiAJeyBQQ0lf
+VkRFVklDRShJTlRFTCwgMHhhMjA2KSwgYm9hcmRfYWhjaSB9LCAvKiBMZXdpc2J1cmcgUkFJRCov
+CiAJeyBQQ0lfVkRFVklDRShJTlRFTCwgMHhhMjUyKSwgYm9hcmRfYWhjaSB9LCAvKiBMZXdpc2J1
+cmcgUkFJRCovCiAJeyBQQ0lfVkRFVklDRShJTlRFTCwgMHhhMjU2KSwgYm9hcmRfYWhjaSB9LCAv
+KiBMZXdpc2J1cmcgUkFJRCovCkBAIC02MzAsMTIgKzYzOSwyMyBAQCBzdGF0aWMgaW50IGFoY2lf
+cGNpX3Jlc2V0X2NvbnRyb2xsZXIoc3RydWN0IGF0YV9ob3N0ICpob3N0KQogCWlmIChwZGV2LT52
+ZW5kb3IgPT0gUENJX1ZFTkRPUl9JRF9JTlRFTCkgewogCQlzdHJ1Y3QgYWhjaV9ob3N0X3ByaXYg
+Kmhwcml2ID0gaG9zdC0+cHJpdmF0ZV9kYXRhOwogCQl1MTYgdG1wMTY7CisJCXUzMiB0bXAzMjsK
+IAogCQkvKiBjb25maWd1cmUgUENTICovCi0JCXBjaV9yZWFkX2NvbmZpZ193b3JkKHBkZXYsIDB4
+OTIsICZ0bXAxNik7Ci0JCWlmICgodG1wMTYgJiBocHJpdi0+cG9ydF9tYXApICE9IGhwcml2LT5w
+b3J0X21hcCkgewotCQkJdG1wMTYgfD0gaHByaXYtPnBvcnRfbWFwOwotCQkJcGNpX3dyaXRlX2Nv
+bmZpZ193b3JkKHBkZXYsIDB4OTIsIHRtcDE2KTsKKwkJaWYgKGhwcml2LT5mbGFncyAmIEFIQ0lf
+SEZMQUdfMzJCSVRfTUFQX1BDUykKKwkJCXBjaV9yZWFkX2NvbmZpZ19kd29yZChwZGV2LCAweDk0
+LCAmdG1wMzIpOworCQllbHNlIHsKKwkJCXBjaV9yZWFkX2NvbmZpZ193b3JkKHBkZXYsIDB4OTIs
+ICZ0bXAxNik7CisJCQl0bXAzMiA9IHRtcDE2OworCQl9CisJCWlmICgodG1wMzIgJiBocHJpdi0+
+cG9ydF9tYXApICE9IGhwcml2LT5wb3J0X21hcCkgeworCQkJdG1wMzIgfD0gaHByaXYtPnBvcnRf
+bWFwOworCQkJaWYgKGhwcml2LT5mbGFncyAmIEFIQ0lfSEZMQUdfMzJCSVRfTUFQX1BDUykKKwkJ
+CQlwY2lfd3JpdGVfY29uZmlnX2R3b3JkKHBkZXYsIDB4OTQsIHRtcDMyKTsKKwkJCWVsc2Ugewor
+CQkJCXRtcDE2ID0gdG1wMzI7CisJCQkJcGNpX3dyaXRlX2NvbmZpZ193b3JkKHBkZXYsIDB4OTIs
+IHRtcDE2KTsKKwkJCX0KIAkJfQogCX0KIApkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvYWhjaS5o
+IGIvZHJpdmVycy9hdGEvYWhjaS5oCmluZGV4IDhiNjExMjNkMmMzYy4uYTY0OTEwNzAyN2RlIDEw
+MDY0NAotLS0gYS9kcml2ZXJzL2F0YS9haGNpLmgKKysrIGIvZHJpdmVycy9hdGEvYWhjaS5oCkBA
+IC0yNTEsNiArMjUxLDEwIEBAIGVudW0gewogCUFIQ0lfSEZMQUdfWUVTX0FMUE0JCT0gKDEgPDwg
+MjMpLCAvKiBmb3JjZSBBTFBNIGNhcCBvbiAqLwogCUFIQ0lfSEZMQUdfTk9fV1JJVEVfVE9fUk8J
+PSAoMSA8PCAyNCksIC8qIGRvbid0IHdyaXRlIHRvIHJlYWQKIAkJCQkJCQlvbmx5IHJlZ2lzdGVy
+cyAqLworICAgICAgICBBSENJX0hGTEFHXzMyQklUX01BUF9QQ1MJPSAoMSA8PCAyNSksIC8qIE1B
+UC9QQ1MgcmVnaXN0ZXIKKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgMzItYml0cyB3aWRlICovCisgICAgICAgIEFIQ0lfSEZMQUdfUENJX1BP
+UlRfTUFQCQk9ICgxIDw8IDI2KSwgLyogcG9ydCBtYXAgaW4gcGNpCisgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGNvbmZpZyBzcGFjZSAqLwog
+CiAJLyogYXAtPmZsYWdzIGJpdHMgKi8KIApkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvbGliYWhj
+aS5jIGIvZHJpdmVycy9hdGEvbGliYWhjaS5jCmluZGV4IDNlMjg2ZDg2YWI0Mi4uZTY1NDgxZDhl
+MzYyIDEwMDY0NAotLS0gYS9kcml2ZXJzL2F0YS9saWJhaGNpLmMKKysrIGIvZHJpdmVycy9hdGEv
+bGliYWhjaS5jCkBAIC00MCw2ICs0MCw3IEBACiAjaW5jbHVkZSA8bGludXgvaW50ZXJydXB0Lmg+
+CiAjaW5jbHVkZSA8bGludXgvZG1hLW1hcHBpbmcuaD4KICNpbmNsdWRlIDxsaW51eC9kZXZpY2Uu
+aD4KKyNpbmNsdWRlIDxsaW51eC9wY2kuaD4KICNpbmNsdWRlIDxzY3NpL3Njc2lfaG9zdC5oPgog
+I2luY2x1ZGUgPHNjc2kvc2NzaV9jbW5kLmg+CiAjaW5jbHVkZSA8bGludXgvbGliYXRhLmg+CkBA
+IC01MjMsNiArNTI0LDI0IEBAIHZvaWQgYWhjaV9zYXZlX2luaXRpYWxfY29uZmlnKHN0cnVjdCBk
+ZXZpY2UgKmRldiwgc3RydWN0IGFoY2lfaG9zdF9wcml2ICpocHJpdikKIAkJcG9ydF9tYXAgJj0g
+aHByaXYtPm1hc2tfcG9ydF9tYXA7CiAJfQogCisJaWYgKGhwcml2LT5mbGFncyAmIEFIQ0lfSEZM
+QUdfUENJX1BPUlRfTUFQKSB7CisJCXN0cnVjdCBwY2lfZGV2ICpwZGV2ID0gdG9fcGNpX2Rldihk
+ZXYpOworCQl1MTYgZGlzYWJsZWQ7CisKKwkJaWYgKGhwcml2LT5mbGFncyAmIEFIQ0lfSEZMQUdf
+MzJCSVRfTUFQX1BDUykgeworCQkJdTMyIHRtcDsKKworCQkJcGNpX3JlYWRfY29uZmlnX2R3b3Jk
+KHBkZXYsIDB4OTAsICZ0bXApOworCQkJZGlzYWJsZWQgPSAodG1wID4+IDE2KSAmIDB4ZmZmZjsK
+KwkJfSBlbHNlIHsKKwkJCXBjaV9yZWFkX2NvbmZpZ193b3JkKHBkZXYsIDB4OTAsICZkaXNhYmxl
+ZCk7CisJCQlkaXNhYmxlZCA9IChkaXNhYmxlZCA+PiA4KSAmIDB4ZmY7CisJCX0KKworCQlkZXZf
+aW5mbyhkZXYsICJwb3J0X21hcDoleCBkaXNhYmxlZDoleFxuIiwgcG9ydF9tYXAsIGRpc2FibGVk
+KTsKKwkJcG9ydF9tYXAgJj0gfmRpc2FibGVkOworCX0KKwogCS8qIGNyb3NzIGNoZWNrIHBvcnRf
+bWFwIGFuZCBjYXAubl9wb3J0cyAqLwogCWlmIChwb3J0X21hcCkgewogCQlpbnQgbWFwX3BvcnRz
+ID0gMDsKLS0gCjIuMTUuMC40NDguZ2YyOTRlM2Q5OWEtZ29vZwoK
+--001a11460b4e757402055dfa1f5e--
