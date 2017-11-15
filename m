@@ -1,126 +1,55 @@
-From: Peter Chang <dpf@google.com>
-Subject: [patch] lewisburg map/pcs register handling
-Date: Tue, 14 Nov 2017 15:55:12 -0800
-Message-ID: <CAF2xp_HuE+aV3ZhrC0E9CQopYgTQ4AHcK15v248AVgxXn8A0pA@mail.gmail.com>
+From: " M,Shakour Rosarita" <hassanamira04@gmail.com>
+Subject: Hello Dear...
+Date: Wed, 15 Nov 2017 11:34:29 +0000
+Message-ID: <CADmkupg0xBAVBPJTQH6kqm2O55RzkF38J1GMSnoSxuHD5rDUDg__2861.95750018141$1510745729$gmane$org@mail.gmail.com>
+Reply-To: mshakourrosarita22@gmail.com
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="001a11460b4e757402055dfa1f5e"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wr0-f173.google.com ([209.85.128.173]:55896 "EHLO
-        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752929AbdKNXzg (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Nov 2017 18:55:36 -0500
-Received: by mail-wr0-f173.google.com with SMTP id l8so18963089wre.12
-        for <linux-ide@vger.kernel.org>; Tue, 14 Nov 2017 15:55:35 -0800 (PST)
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:44185 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757848AbdKOLeb (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Nov 2017 06:34:31 -0500
+Received: by mail-qt0-f193.google.com with SMTP id 8so33565717qtv.1
+        for <linux-ide@vger.kernel.org>; Wed, 15 Nov 2017 03:34:31 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
---001a11460b4e757402055dfa1f5e
-Content-Type: text/plain; charset="UTF-8"
+Hello Dear...
 
-mostly, intel made the registers wider so that the offsets aren't
-right. it only matters if you don't populate all the ports and aren't
-using the first port.
+I know that this message will come to you as a surprise. I hoped that
+you will not expose or betray this trust and confident that I am about
+to repose on you, my name is M, Shakour Rosarita. I am 19 years old
+Girl, female, from Tartu Syria, (never married) 61 kg, white in
+complexion, and I am currently living in the refugee camp here in
+Abidjan Ivory Coast, My late beloved father M,Shakour Hassin was a
+renowned businessman and owner of Natour Petrol Station in Syria, he
+was killed in a stampede riot in Tartu, Syria.
+When I got the news about my parents. I fled to a nearby country
+Jordan before I joined a ferry to Africa and came to Abidjan capital
+city Ivory Coast West Africa find safety here.
+I came in 2015 to Abidjan and I now live in refugee camps here as
+refugees are allowed freely to enter here without, My late father
+deposited (US$6.200.000.00m) My late father kept the money at the bank
+of Africa, I want you to help me transfer the money to your hand so
+that you will help me bring me into your country for my continue
+education.
 
-\p
+I sent my pictures here for you to see. Who I am seriously looking for
+a good-person in my life, so I want to hear from you soon and learn
+more about you.
 
---001a11460b4e757402055dfa1f5e
-Content-Type: text/x-patch; charset="US-ASCII";
-	name="0001-ahci-lewisburg-MAP-PCS-register-handling.patch"
-Content-Disposition: attachment;
-	filename="0001-ahci-lewisburg-MAP-PCS-register-handling.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ja09xrfs0
-
-RnJvbSA2MmNjYzYxMTg5NjAyMDQ3Njk4MDlhMWVhOWQxNjJjZjJjMWM5NWUxIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBwZXRlciBjaGFuZyA8ZHBmQGdvb2dsZS5jb20+CkRhdGU6IFR1
-ZSwgMTQgTm92IDIwMTcgMTM6NDM6MTUgLTA4MDAKU3ViamVjdDogW1BBVENIXSBhaGNpOiBsZXdp
-c2J1cmcgTUFQIC8gUENTIHJlZ2lzdGVyIGhhbmRsaW5nCgpyZWdpc3RlcnMgYXJlIG5vdyAzMi1i
-aXRzIGFuZCB0aGUgZXhpc3Rpbmcgb2Zmc2V0cyBtZWFuIHRoYXQgdGhlCndyb25nIHJlZ2lzdGVy
-cyBhcmUgYmVpbmcgdXBkYXRlZC4KCkNoYW5nZS1JZDogSTk5MmIzMWJjOWU3ODlmOWRmYmViMjlh
-ZmViMGI3Nzc3ZTMyNWVhNzEKLS0tCiBkcml2ZXJzL2F0YS9haGNpLmMgICAgfCAzNCArKysrKysr
-KysrKysrKysrKysrKysrKysrKystLS0tLS0tCiBkcml2ZXJzL2F0YS9haGNpLmggICAgfCAgNCAr
-KysrCiBkcml2ZXJzL2F0YS9saWJhaGNpLmMgfCAxOSArKysrKysrKysrKysrKysrKysrCiAzIGZp
-bGVzIGNoYW5nZWQsIDUwIGluc2VydGlvbnMoKyksIDcgZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0
-IGEvZHJpdmVycy9hdGEvYWhjaS5jIGIvZHJpdmVycy9hdGEvYWhjaS5jCmluZGV4IDlmNzhiYjAz
-YmI3Ni4uMTZiMGZhYzlmMGFlIDEwMDY0NAotLS0gYS9kcml2ZXJzL2F0YS9haGNpLmMKKysrIGIv
-ZHJpdmVycy9hdGEvYWhjaS5jCkBAIC03MSw2ICs3MSw3IEBAIGVudW0gYm9hcmRfaWRzIHsKIAog
-CS8qIGJvYXJkIElEcyBmb3Igc3BlY2lmaWMgY2hpcHNldHMgaW4gYWxwaGFiZXRpY2FsIG9yZGVy
-ICovCiAJYm9hcmRfYWhjaV9hdm4sCisJYm9hcmRfYWhjaV9sYmcsCiAJYm9hcmRfYWhjaV9tY3A2
-NSwKIAlib2FyZF9haGNpX21jcDc3LAogCWJvYXJkX2FoY2lfbWNwODksCkBAIC0xNzQsNiArMTc1
-LDE0IEBAIHN0YXRpYyBjb25zdCBzdHJ1Y3QgYXRhX3BvcnRfaW5mbyBhaGNpX3BvcnRfaW5mb1td
-ID0gewogCQkudWRtYV9tYXNrCT0gQVRBX1VETUE2LAogCQkucG9ydF9vcHMJPSAmYWhjaV9hdm5f
-b3BzLAogCX0sCisJW2JvYXJkX2FoY2lfbGJnXSA9IHsKKwkJQUhDSV9IRkxBR1MJKEFIQ0lfSEZM
-QUdfMzJCSVRfTUFQX1BDUyB8CisJCQkJIEFIQ0lfSEZMQUdfUENJX1BPUlRfTUFQKSwKKwkJLmZs
-YWdzCQk9IEFIQ0lfRkxBR19DT01NT04sCisJCS5waW9fbWFzawk9IEFUQV9QSU80LAorCQkudWRt
-YV9tYXNrCT0gQVRBX1VETUE2LAorCQkucG9ydF9vcHMJPSAmYWhjaV9vcHMsCisJfSwKIAlbYm9h
-cmRfYWhjaV9tY3A2NV0gPSB7CiAJCUFIQ0lfSEZMQUdTCShBSENJX0hGTEFHX05PX0ZQRE1BX0FB
-IHwgQUhDSV9IRkxBR19OT19QTVAgfAogCQkJCSBBSENJX0hGTEFHX1lFU19OQ1EpLApAQCAtMzc0
-LDE0ICszODMsMTQgQEAgc3RhdGljIGNvbnN0IHN0cnVjdCBwY2lfZGV2aWNlX2lkIGFoY2lfcGNp
-X3RibFtdID0gewogCXsgUENJX1ZERVZJQ0UoSU5URUwsIDB4YTEwNyksIGJvYXJkX2FoY2kgfSwg
-LyogU3VucmlzZSBQb2ludC1IIFJBSUQgKi8KIAl7IFBDSV9WREVWSUNFKElOVEVMLCAweGExMGYp
-LCBib2FyZF9haGNpIH0sIC8qIFN1bnJpc2UgUG9pbnQtSCBSQUlEICovCiAJeyBQQ0lfVkRFVklD
-RShJTlRFTCwgMHgyODIyKSwgYm9hcmRfYWhjaSB9LCAvKiBMZXdpc2J1cmcgUkFJRCovCi0JeyBQ
-Q0lfVkRFVklDRShJTlRFTCwgMHgyODIzKSwgYm9hcmRfYWhjaSB9LCAvKiBMZXdpc2J1cmcgQUhD
-SSovCisJeyBQQ0lfVkRFVklDRShJTlRFTCwgMHgyODIzKSwgYm9hcmRfYWhjaV9sYmcgfSwgLyog
-TGV3aXNidXJnIEFIQ0kqLwogCXsgUENJX1ZERVZJQ0UoSU5URUwsIDB4MjgyNiksIGJvYXJkX2Fo
-Y2kgfSwgLyogTGV3aXNidXJnIFJBSUQqLwogCXsgUENJX1ZERVZJQ0UoSU5URUwsIDB4MjgyNyks
-IGJvYXJkX2FoY2kgfSwgLyogTGV3aXNidXJnIFJBSUQqLwotCXsgUENJX1ZERVZJQ0UoSU5URUws
-IDB4YTE4MiksIGJvYXJkX2FoY2kgfSwgLyogTGV3aXNidXJnIEFIQ0kqLworCXsgUENJX1ZERVZJ
-Q0UoSU5URUwsIDB4YTE4MiksIGJvYXJkX2FoY2lfbGJnIH0sIC8qIExld2lzYnVyZyBBSENJKi8K
-IAl7IFBDSV9WREVWSUNFKElOVEVMLCAweGExODYpLCBib2FyZF9haGNpIH0sIC8qIExld2lzYnVy
-ZyBSQUlEKi8KIAl7IFBDSV9WREVWSUNFKElOVEVMLCAweGExZDIpLCBib2FyZF9haGNpIH0sIC8q
-IExld2lzYnVyZyBSQUlEKi8KIAl7IFBDSV9WREVWSUNFKElOVEVMLCAweGExZDYpLCBib2FyZF9h
-aGNpIH0sIC8qIExld2lzYnVyZyBSQUlEKi8KLQl7IFBDSV9WREVWSUNFKElOVEVMLCAweGEyMDIp
-LCBib2FyZF9haGNpIH0sIC8qIExld2lzYnVyZyBBSENJKi8KKwl7IFBDSV9WREVWSUNFKElOVEVM
-LCAweGEyMDIpLCBib2FyZF9haGNpX2xiZyB9LCAvKiBMZXdpc2J1cmcgQUhDSSovCiAJeyBQQ0lf
-VkRFVklDRShJTlRFTCwgMHhhMjA2KSwgYm9hcmRfYWhjaSB9LCAvKiBMZXdpc2J1cmcgUkFJRCov
-CiAJeyBQQ0lfVkRFVklDRShJTlRFTCwgMHhhMjUyKSwgYm9hcmRfYWhjaSB9LCAvKiBMZXdpc2J1
-cmcgUkFJRCovCiAJeyBQQ0lfVkRFVklDRShJTlRFTCwgMHhhMjU2KSwgYm9hcmRfYWhjaSB9LCAv
-KiBMZXdpc2J1cmcgUkFJRCovCkBAIC02MzAsMTIgKzYzOSwyMyBAQCBzdGF0aWMgaW50IGFoY2lf
-cGNpX3Jlc2V0X2NvbnRyb2xsZXIoc3RydWN0IGF0YV9ob3N0ICpob3N0KQogCWlmIChwZGV2LT52
-ZW5kb3IgPT0gUENJX1ZFTkRPUl9JRF9JTlRFTCkgewogCQlzdHJ1Y3QgYWhjaV9ob3N0X3ByaXYg
-Kmhwcml2ID0gaG9zdC0+cHJpdmF0ZV9kYXRhOwogCQl1MTYgdG1wMTY7CisJCXUzMiB0bXAzMjsK
-IAogCQkvKiBjb25maWd1cmUgUENTICovCi0JCXBjaV9yZWFkX2NvbmZpZ193b3JkKHBkZXYsIDB4
-OTIsICZ0bXAxNik7Ci0JCWlmICgodG1wMTYgJiBocHJpdi0+cG9ydF9tYXApICE9IGhwcml2LT5w
-b3J0X21hcCkgewotCQkJdG1wMTYgfD0gaHByaXYtPnBvcnRfbWFwOwotCQkJcGNpX3dyaXRlX2Nv
-bmZpZ193b3JkKHBkZXYsIDB4OTIsIHRtcDE2KTsKKwkJaWYgKGhwcml2LT5mbGFncyAmIEFIQ0lf
-SEZMQUdfMzJCSVRfTUFQX1BDUykKKwkJCXBjaV9yZWFkX2NvbmZpZ19kd29yZChwZGV2LCAweDk0
-LCAmdG1wMzIpOworCQllbHNlIHsKKwkJCXBjaV9yZWFkX2NvbmZpZ193b3JkKHBkZXYsIDB4OTIs
-ICZ0bXAxNik7CisJCQl0bXAzMiA9IHRtcDE2OworCQl9CisJCWlmICgodG1wMzIgJiBocHJpdi0+
-cG9ydF9tYXApICE9IGhwcml2LT5wb3J0X21hcCkgeworCQkJdG1wMzIgfD0gaHByaXYtPnBvcnRf
-bWFwOworCQkJaWYgKGhwcml2LT5mbGFncyAmIEFIQ0lfSEZMQUdfMzJCSVRfTUFQX1BDUykKKwkJ
-CQlwY2lfd3JpdGVfY29uZmlnX2R3b3JkKHBkZXYsIDB4OTQsIHRtcDMyKTsKKwkJCWVsc2Ugewor
-CQkJCXRtcDE2ID0gdG1wMzI7CisJCQkJcGNpX3dyaXRlX2NvbmZpZ193b3JkKHBkZXYsIDB4OTIs
-IHRtcDE2KTsKKwkJCX0KIAkJfQogCX0KIApkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvYWhjaS5o
-IGIvZHJpdmVycy9hdGEvYWhjaS5oCmluZGV4IDhiNjExMjNkMmMzYy4uYTY0OTEwNzAyN2RlIDEw
-MDY0NAotLS0gYS9kcml2ZXJzL2F0YS9haGNpLmgKKysrIGIvZHJpdmVycy9hdGEvYWhjaS5oCkBA
-IC0yNTEsNiArMjUxLDEwIEBAIGVudW0gewogCUFIQ0lfSEZMQUdfWUVTX0FMUE0JCT0gKDEgPDwg
-MjMpLCAvKiBmb3JjZSBBTFBNIGNhcCBvbiAqLwogCUFIQ0lfSEZMQUdfTk9fV1JJVEVfVE9fUk8J
-PSAoMSA8PCAyNCksIC8qIGRvbid0IHdyaXRlIHRvIHJlYWQKIAkJCQkJCQlvbmx5IHJlZ2lzdGVy
-cyAqLworICAgICAgICBBSENJX0hGTEFHXzMyQklUX01BUF9QQ1MJPSAoMSA8PCAyNSksIC8qIE1B
-UC9QQ1MgcmVnaXN0ZXIKKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgMzItYml0cyB3aWRlICovCisgICAgICAgIEFIQ0lfSEZMQUdfUENJX1BP
-UlRfTUFQCQk9ICgxIDw8IDI2KSwgLyogcG9ydCBtYXAgaW4gcGNpCisgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGNvbmZpZyBzcGFjZSAqLwog
-CiAJLyogYXAtPmZsYWdzIGJpdHMgKi8KIApkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvbGliYWhj
-aS5jIGIvZHJpdmVycy9hdGEvbGliYWhjaS5jCmluZGV4IDNlMjg2ZDg2YWI0Mi4uZTY1NDgxZDhl
-MzYyIDEwMDY0NAotLS0gYS9kcml2ZXJzL2F0YS9saWJhaGNpLmMKKysrIGIvZHJpdmVycy9hdGEv
-bGliYWhjaS5jCkBAIC00MCw2ICs0MCw3IEBACiAjaW5jbHVkZSA8bGludXgvaW50ZXJydXB0Lmg+
-CiAjaW5jbHVkZSA8bGludXgvZG1hLW1hcHBpbmcuaD4KICNpbmNsdWRlIDxsaW51eC9kZXZpY2Uu
-aD4KKyNpbmNsdWRlIDxsaW51eC9wY2kuaD4KICNpbmNsdWRlIDxzY3NpL3Njc2lfaG9zdC5oPgog
-I2luY2x1ZGUgPHNjc2kvc2NzaV9jbW5kLmg+CiAjaW5jbHVkZSA8bGludXgvbGliYXRhLmg+CkBA
-IC01MjMsNiArNTI0LDI0IEBAIHZvaWQgYWhjaV9zYXZlX2luaXRpYWxfY29uZmlnKHN0cnVjdCBk
-ZXZpY2UgKmRldiwgc3RydWN0IGFoY2lfaG9zdF9wcml2ICpocHJpdikKIAkJcG9ydF9tYXAgJj0g
-aHByaXYtPm1hc2tfcG9ydF9tYXA7CiAJfQogCisJaWYgKGhwcml2LT5mbGFncyAmIEFIQ0lfSEZM
-QUdfUENJX1BPUlRfTUFQKSB7CisJCXN0cnVjdCBwY2lfZGV2ICpwZGV2ID0gdG9fcGNpX2Rldihk
-ZXYpOworCQl1MTYgZGlzYWJsZWQ7CisKKwkJaWYgKGhwcml2LT5mbGFncyAmIEFIQ0lfSEZMQUdf
-MzJCSVRfTUFQX1BDUykgeworCQkJdTMyIHRtcDsKKworCQkJcGNpX3JlYWRfY29uZmlnX2R3b3Jk
-KHBkZXYsIDB4OTAsICZ0bXApOworCQkJZGlzYWJsZWQgPSAodG1wID4+IDE2KSAmIDB4ZmZmZjsK
-KwkJfSBlbHNlIHsKKwkJCXBjaV9yZWFkX2NvbmZpZ193b3JkKHBkZXYsIDB4OTAsICZkaXNhYmxl
-ZCk7CisJCQlkaXNhYmxlZCA9IChkaXNhYmxlZCA+PiA4KSAmIDB4ZmY7CisJCX0KKworCQlkZXZf
-aW5mbyhkZXYsICJwb3J0X21hcDoleCBkaXNhYmxlZDoleFxuIiwgcG9ydF9tYXAsIGRpc2FibGVk
-KTsKKwkJcG9ydF9tYXAgJj0gfmRpc2FibGVkOworCX0KKwogCS8qIGNyb3NzIGNoZWNrIHBvcnRf
-bWFwIGFuZCBjYXAubl9wb3J0cyAqLwogCWlmIChwb3J0X21hcCkgewogCQlpbnQgbWFwX3BvcnRz
-ID0gMDsKLS0gCjIuMTUuMC40NDguZ2YyOTRlM2Q5OWEtZ29vZwoK
---001a11460b4e757402055dfa1f5e--
+I am an open-minded and friendly girl to share a good time with you
+and have fun and enjoy on the go, bird watching, the rest of our
+lives. My Hobbies, tourism books, dance, music, soccer, tennis,
+swimming and cinema.
+I would just think about you, including your dose and doesn=E2=80=99t .I
+believe we will do well together, and live like one family.
+Thank you and God bless you, for you in your promise to help me here,
+looking forward to your reply by the grace of God and have a good day.
+I hope you send me your photos as well? I await your next reply in
+faith please reply through my private email at
+(mshakourrosarita22@gmail.com):
+Thanks.
+Ms Rosarita
