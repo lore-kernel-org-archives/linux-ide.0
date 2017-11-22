@@ -1,13 +1,24 @@
 From: Sinan Kaya <okaya@codeaurora.org>
-Subject: [PATCH 12/30] Drivers: ide: deprecate pci_get_bus_and_slot()
-Date: Wed, 22 Nov 2017 00:30:57 -0500
-Message-ID: <1511328675-21981-13-git-send-email-okaya@codeaurora.org>
+Subject: [PATCH 04/30] ata: deprecate pci_get_bus_and_slot()
+Date: Wed, 22 Nov 2017 00:30:49 -0500
+Message-ID: <1511328675-21981-5-git-send-email-okaya@codeaurora.org>
 References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
 In-Reply-To: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
 To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Sinan Kaya <okaya@codeaurora.org>, "David S. Miller" <davem@davemloft.net>, "open list:IDE SUBSYSTEM" <linux-ide@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-arm-msm@vger.kernel.org, open list <linux-kernel@vger.kernel.org>, Sinan Kaya <okaya@codeaurora.org>, "open list:LIBATA PATA DRIVERS" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
 pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
@@ -20,24 +31,21 @@ the device.
 
 Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/ide/sl82c105.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/ata/pata_ali.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ide/sl82c105.c b/drivers/ide/sl82c105.c
-index 8755df3..3300dac 100644
---- a/drivers/ide/sl82c105.c
-+++ b/drivers/ide/sl82c105.c
-@@ -239,8 +239,9 @@ static u8 sl82c105_bridge_revision(struct pci_dev *dev)
- 	/*
- 	 * The bridge should be part of the same device, but function 0.
- 	 */
--	bridge = pci_get_bus_and_slot(dev->bus->number,
--			       PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
-+	bridge = pci_get_domain_bus_and_slot(pci_domain_nr(dev->bus),
-+					dev->bus->number,
-+					PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
- 	if (!bridge)
- 		return -1;
- 
+diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
+index d19cd88..b297fea 100644
+--- a/drivers/ata/pata_ali.c
++++ b/drivers/ata/pata_ali.c
+@@ -466,7 +466,7 @@ static void ali_init_chipset(struct pci_dev *pdev)
+ 			tmp |= 0x01;	/* CD_ROM enable for DMA */
+ 		pci_write_config_byte(pdev, 0x53, tmp);
+ 	}
+-	north = pci_get_bus_and_slot(0, PCI_DEVFN(0,0));
++	north = pci_get_domain_bus_and_slot(0, 0, PCI_DEVFN(0, 0));
+ 	if (north && north->vendor == PCI_VENDOR_ID_AL && ali_isa_bridge) {
+ 		/* Configure the ALi bridge logic. For non ALi rely on BIOS.
+ 		   Set the south bridge enable bit */
 -- 
 1.9.1
