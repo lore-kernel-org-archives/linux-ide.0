@@ -1,40 +1,88 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 12/30] Drivers: ide: deprecate pci_get_bus_and_slot()
-Date: Wed, 22 Nov 2017 08:53:02 +0100
-Message-ID: <20171122075302.GB26583@kroah.com>
-References: <1511328675-21981-1-git-send-email-okaya@codeaurora.org>
- <1511328675-21981-13-git-send-email-okaya@codeaurora.org>
+From: sonofagun@openmailbox.org
+Subject: Re: AM4 B350 chipset Sata/IDE problem
+Date: Wed, 22 Nov 2017 11:02:54 -0000
+Message-ID: <20171122110254.ADB344E0090@mta-1.openmailbox.og>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:42336 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751730AbdKVHw6 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 22 Nov 2017 02:52:58 -0500
-Content-Disposition: inline
-In-Reply-To: <1511328675-21981-13-git-send-email-okaya@codeaurora.org>
+Received: from lb1.openmailbox.org ([5.79.108.160]:39958 "EHLO
+        mta-1.openmailbox.og" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751356AbdKVLJH (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 22 Nov 2017 06:09:07 -0500
+Received: from [127.0.0.1] (unknown [10.0.0.4])
+        by mta-1.openmailbox.og (Postfix) with ESMTP id A7F0E4E008C
+        for <linux-ide@vger.kernel.org>; Wed, 22 Nov 2017 12:02:54 +0100 (CET)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, "David S. Miller" <davem@davemloft.net>, "open list:IDE SUBSYSTEM" <linux-ide@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On Wed, Nov 22, 2017 at 12:30:57AM -0500, Sinan Kaya wrote:
-> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-> where a PCI device is present. This restricts the device drivers to be
-> reused for other domain numbers.
-> 
-> Use pci_get_domain_bus_and_slot() with a domain number of 0 where we can't
-> extract the domain number. Other places, use the actual domain number from
-> the device.
-
-While this is a great generic text, you might want to make it a bit more
-custom to each specific patch.  For example, you don't use a domain of 0
-in this one, so the text is a bit wrong and confusing if you look at it
-stand-alone.
-
-I like the series and the idea, just fix up this text in some of the
-patches and you should be fine.
-
-thanks,
-
-greg k-h
+IEhlbGxvLCB5b3UgaGF2ZSBhIGJyYW5kIG5ldyBBTUQgYm94IGFuZCBhbiBvbGQgc2VhZ2F0ZSBI
+REQuIFRoYXQgZG9lcyBOT1Qgc291bmQgZ29vZC4uLiBJIGFtIGFuIEFNRCBmYW4gYXMgd2VsbC4g
+TWFueSB5ZWFycyBhZ28gbXkgYnJvdGhlciBhbmQgSSBib3VnaHQgb3VyIGZpcnN0IEFNRCBib2Fy
+ZCB3aXRoIFNCNzAwLiBBIGdvb2QgY2hpcCB0aGF0IGhhZCBtYW55IGFubm95aW5nIGVycmF0YS4u
+LiBBIFNBVEEgSUkgY2hpcCBwYWlyZWQgd2l0aCB0aGUgYmVzdCBpR1BVIG9mIGl0cyBlcmEuIE9u
+bHkgYSBnb29kIEhERCB3YXMgc3VpdGFibGUgZm9yIHN1Y2ggYSBib2FyZCEgVGhhdCB3YXMgYW4g
+SEREIGZyb20gdGhlIHNlYWdhdGUgNzIwMC4xMCBmYW1pbHkuIEEgZmFtaWx5IGZ1bGwgb2YgaW5u
+b3ZhdGlvbnMuIFRoZSBmaXJzdCBTQVRBIElJIGZhbWlseSwgdGhlIGZpcnN0IFBNUiBIREQgZmFt
+aWx5IGFuZCB0aGUgZmlyc3QgZmFtaWx5IG9mZmVyaW5nIDUgeWVhciB3YXJyYW50eS4gVGhvc2Ug
+ZGlza3MgYXJlIHZlcnkgcmVsaWFibGUgY29tcGFyZWQgdG8gNzIwMC43IGFuZCB0byA3MjAwLjEx
+ISEhIEFjdHVhbGx5IHRoZWlyIGFjY2VzcyB0aW1lIGlzIGxpa2UgNzIwMFJQTSBkaXNrcyB3aGls
+ZSB0aGUgNzIwMC4xMSBoYWQgYWNjZXNzIHRpbWVzIG9mIDU0MDBSUE0gY2xhc3MgZGlza3MuLi4g
+VW5mb3J0dW5hdGVseSB0aG9zZSBkaXNrcyBoYWQgYSBjb21wYXRpYmlsaXR5IGlzc3VlIHdpdGgg
+dGhlIEFNRCBBSENJIGltcGxlbWVudGF0aW9uLiBBbGwgcmV2aXNpb25zIG9mIHRoZSBTQjd4MCBz
+b3V0aGJyaWRnZSBmYW1pbHkgd2VyZSBhZmZlY3RlZCBhbmQgdHJhbnNmZXIgc3BlZWQgd2FzIGh1
+cnQgYmFkbHkgd2hlbiBOQ1Egd2FzIGVuYWJsZWQhIEkgd3JvdGUgYWJvdXQgaXQoaHR0cHM6Ly9h
+dGEud2lraS5rZXJuZWwub3JnL2luZGV4LnBocC9Lbm93bl9pc3N1ZXMjU0FUQV9oYXJkX2RyaXZl
+c193aGljaF9zaG93X3Bvb3JfcGVyZm9ybWFuY2Vfd2l0aF9zZXF1ZW50aWFsX3JlYWRzXy4yOGUu
+Zy5faGRwYXJtXy10LjI5KSBzbyB0aGF0IGV2ZXJ5b25lIHdpbGwga25vdyBpdC4KQXQgdGhhdCB0
+aW1lIHRoZXJlIHdhcyBubyBvZmZpY2lhbCBmaXJtd2FyZSBmb3IgYW55IFNBVEEgZGlzay4gRmly
+bXdhcmUgd2FzIGdpdmVuIG9ubHkgd2hlbiBzb21ldGhpbmcgd2FzIHJlYWxseSB3cm9uZyBzdWNo
+IGFzIHRoZSBkZWF0aHN0YXJzLiBUaGF0IGF0dGl0dWRlIGFwcGxpZWQgdG8gYWxsIEhERCBtYW51
+ZmFjdHVyZXJzLiBNeSBicm90aGVyIGhhZCB0byBwaG9uZSBzZWFnYXRlIGF0IHRoZWlyIGhlYWRx
+dWFydGVycyBpbiBvcmRlciB0byBhc2sgZm9yIGEgZml4LiBPdXIgbmV4dCBzZWFnYXRlIGRpc2tz
+KDcyMDAuMTEpIHdlcmUgYWxsIGhhdmluZyB0aGUgc2FtZSB0cmFuc2ZlciBzcGVlZCBpc3N1ZXMg
+d2l0aCBOQ1EuIFRoZXkgd2VyZSB0b28gYXJyb2dhbnQgdG8gYWRtaXQgdGhlIGlzc3VlIGFuZCB2
+ZXJ5IHJlbHVjdGFudCB0byByZWxlYXNlIG5ldyBmaXJtd2FyZS4gV2Ugd2VyZSBpbmZvcm1lZCB0
+aGF0IHRoZXJlIHdpbGwgYmUgbm8gZml4IGV2ZW4gdGhvdWdoIHRoZSA3MjAwLjExIGZhbWlseSB3
+YXMganVzdCByZWxlYXNlZC4gV2Ugd2VyZSBmb3JjZWQgdG8gUk1BIDR4IDMyMEdCIGFuZCA0eCA1
+MDBHQiBvZiB0aGVtIGF0IG9uY2UgYW5kIHN3aXRjaCB0byB0aGUgbGVnZW5kYXJ5IFdEIFJFMyhh
+bGwgdGhvc2Ugc3RpbGwgd29yayBmbGF3bGVzc2x5IGZyb20gMjAwOCEpLiBUaGlzIHdhcyBqdXN0
+IHByaW9yIHNlYWdhdGUgYWRtaXR0ZWQgdGhlIHJlc3QgZmlybXdhcmUgaXNzdWVzIG9mIHRoaXMg
+ZmFtaWx5Li4uIEFmdGVyIHRoYXQgbWVzcywgbmV3IGZpcm13YXJlIGhhcyBiZWVuIHJlbGVhc2Vk
+IGdyYWR1YWxseSBmb3IgbW9zdCBzZWFnYXRlIEhERCBmYW1pbGllcyEKCkFzIHlvdSBjYW4gZ3Vl
+c3MgSSBhbSBub3Qgc3VycHJpc2VkIHRoYXQgeW91IGhhdmUgYW4gaXNzdWUgd2l0aCBzdWNoIGEg
+ZGlzayBvbiBhbiBBTUQgYm9hcmQuIENvbXBhcmVkIHRvIGN1cnJlbnQgZGlza3MgaXQgaXMgdmVy
+eSBwb3dlciBodW5ncnkgYW5kIG5vdCBzdWl0YWJsZSBmb3IgeW91ciBib2FyZC4gV2hhdCBpcyB3
+b3JzZSwgeW91IGFyZSB1c2luZyBhbiBvdXQgb2Ygd2FycmFudHkgSEREIGhlcmUuCgpZb3VyIFNB
+VEEgSUkgSEREIGlzIGF0dGFjaGVkIG9uIGEgU0FUQSAzLnggQU1EIGNoaXAuIFRoaXMgSEREIGNh
+bm5vdCBldmVuIHJlYWNoIFNBVEEgSSBzcGVlZHMoYXZlcmFnZSB3ZWxsIGJlbG93IDEwME1CL3Mp
+LiBJZiB5b3VyIGRpc2sgb3BlcmF0ZXMgaW4gMS41IEdicHMgeW91IHdpbGwgbm90IGhhdmUgbm90
+aWNlYWJsZSBwZXJmb3JtYW5jZSBkZWdyYWRhdGlvbi4gWW91IHdpbGwganVzdCBsb3NlIG1heGlt
+dW0gYnVyc3Qgc3BlZWQuIFNvbWUgdGltZSBhZ28gSSBzYXcgdGhpczogImh0dHBzOi8vbWFyYy5p
+bmZvLz90PTE1MDg0Mzc4ODMwMDAwMiZyPTEmdz0yIiwgYnV0IEkgaGF2ZSBub3QgZmFsbGVuIG9u
+IGl0IGFzIEkgaGF2ZSBuZXZlciB1c2VkIFNBVEEgaG90cGx1Zy4gWW91IGhhdmUgbm90IG1lbnRp
+b25lZCBob3RwbHVnIGhlcmUgYnV0IGl0IG1pZ2h0IGJlIHJlbGF0ZWQgYXMgdGhlIGxpYmF0YSBF
+SCBpcyBpbnZva2VkIQoKSSBzdGlsbCBoYXZlIGEgMzIwR0IgNzIwMC4xMCBTVDMzMjA2MjBBUyB3
+aXRoIDMuQUFLIGZpcm13YXJlIGFuZCB3aWxsIHRyeSB0byBtZWFzdXJlIGl0IHdpdGggU0FUQSBJ
+IHNwZWVkIG9uIG15IEFNRCBLQUJJTkkgYm94LiBXZSB3ZXJlIGdpdmVuIGEgbmV3ZXIgZmlybXdh
+cmUgZm9yIHRoaXMgb25lIHdoaWxlIHRoZSBzZWFnYXRlIGZpcm13YXJlIGZpbmRlciBzaXRlIHNh
+eXMgaXQgaGFzIG5vIGZpcm13YXJlISBUaGUgbmV3IGZpcm13YXJlIGlzIDMuQUFNIGZvciB0aGlz
+IEdBTEFYWSBIREQgYnV0IHRoZSBzcGVlZCBwcm9ibGVtIG9uIEFNRCBBSENJIHdhcyBub3QgY29t
+cGxldGVseSByZXNvbHZlZCBidXQgaXQgbWFkZSBhIGRpZmZlcmVuY2Ugc28gd2UgaGF2ZSBrZXB0
+IHRoaXMgSERELiBXZSBoYWQgYSBjb3VwbGUgMzIwR0IgdG9vLCB3aXRoIDMuQUFFIGZpcm13YXJl
+IGJ1dCBzZWFnYXRlIHN1cHBsaWVkIG5vIG5ldyBmaXJtd2FyZSBzbyB0aGV5IHdlcmUgUk1BZWQu
+CgpBcyBJIHNhaWQgYWJvdmUsIHRob3NlIGRpc2tzIGhhdmUgaGFkIHNwZWVkIGlzc3VlcyB3aXRo
+IE5DUS4gTGV0J3Mgc3RhcnQgZnJvbSB0aGF0LiBQbGVhc2UgYm9vdCB3aXRoIE5DUSBkaXNhYmxl
+ZCBhbmQgc2VlIGlmIGl0IGhlbHBzLi4uCgpTaW5jZSB5b3VyIEhERCBpcyBvbGQsIHBsZWFzZSBy
+dW46CnN1ZG8gc21hcnRjdGwgL2Rldi9zZEAgLXgKc3VkbyBoZHBhcm0gLUkgL2Rldi9zZEAKc3Vk
+byBoZHBhcm0gLS1Jc3Rkb3V0IC9kZXYvc2RACmRtZXNnCmFuZCB1cGxvYWQgdGhlaXIgb3V0cHV0
+IGhlcmUocmVwbGFjZSBAIHdpdGggeW91ciBkcml2ZSBsZXR0ZXIpIHNvIHRoYXQgSSBjYW4gdmll
+dyBpdHMgY3VycmVudCBjb25kaXRpb24gYW5kIGdpdmUgcHJvcGVyIGFkdmljZS4KCgpBTUQgU0FU
+QSBob3N0cyBoYXZlIHZhcmlvdXMgaXNzdWVzIHdpdGggb2xkIEhERHM6CgpPbiBTQjd4MCBhbmQg
+U0I5NTAgYWxsIFNBVEEgSSBXRCAqKioqSkQgc2VyaWVzIHdlbnQgY3Jhenkgd2hlbiBESVBNIHdh
+cyBlbmFibGVkLiBJdHMgaGVhZHMgcGFya2VkIHRoZW4gdW5wYXJrZWQgYW5kIHRoYXQgd2FzIHJl
+cGVhdGVkIGVuZGxlc3NseS4gVGhpcyBoYXMgYmVlbiBmaXhlZCBieSBUZWp1biBhZnRlciB0aGlz
+IGlzc3VlIHdhcyByZXBvcnRlZCB0byB0aGUga2VybmVsLi4uCgpBbHNvIFNCOTUwIHdpbGwgbm90
+IGV2ZW4gZGV0ZWN0IHNvbWUgTUFYVE9SIEhERHMgdW5sZXNzIHRoZXkgaGF2ZSB0aGUgbGF0ZXN0
+IGZpcm13YXJlISBBZ2FpbiB0aGF0IGZpcm13YXJlIGRvZXMgIk5PVCIgZXhpc3QuLi4=
