@@ -1,43 +1,71 @@
-From: Sinan Kaya <okaya@codeaurora.org>
-Subject: [PATCH V2 04/29] ata: deprecate pci_get_bus_and_slot()
-Date: Wed, 22 Nov 2017 17:48:59 -0500
-Message-ID: <1511390964-9979-5-git-send-email-okaya@codeaurora.org>
-References: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1511390964-9979-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Sinan Kaya <okaya@codeaurora.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, "open list:LIBATA PATA DRIVERS" <linux-ide@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+From: sonofagun@openmailbox.org
+Subject: Re: AM4 B350 chipset Sata/IDE problem
+Date: Thu, 23 Nov 2017 06:40:50 -0000
+Message-ID: <20171123064050.37A674E0025@mta-1.openmailbox.og>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from lb1.openmailbox.org ([5.79.108.160]:49336 "EHLO
+        mta-1.openmailbox.og" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750872AbdKWGkv (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 23 Nov 2017 01:40:51 -0500
+Received: from [127.0.0.1] (unknown [10.0.0.4])
+        by mta-1.openmailbox.og (Postfix) with ESMTP id 32A2E4E002F
+        for <linux-ide@vger.kernel.org>; Thu, 23 Nov 2017 07:40:50 +0100 (CET)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-where a PCI device is present. This restricts the device drivers to be
-reused for other domain numbers.
-
-Getting ready to remove pci_get_bus_and_slot() function in favor of
-pci_get_domain_bus_and_slot().
-
-Use pci_get_domain_bus_and_slot() and extract the actual domain number
-from the pdev passed in.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/ata/pata_ali.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
-index d19cd88..0b122f9 100644
---- a/drivers/ata/pata_ali.c
-+++ b/drivers/ata/pata_ali.c
-@@ -466,7 +466,8 @@ static void ali_init_chipset(struct pci_dev *pdev)
- 			tmp |= 0x01;	/* CD_ROM enable for DMA */
- 		pci_write_config_byte(pdev, 0x53, tmp);
- 	}
--	north = pci_get_bus_and_slot(0, PCI_DEVFN(0,0));
-+	north = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus), 0,
-+					    PCI_DEVFN(0, 0));
- 	if (north && north->vendor == PCI_VENDOR_ID_AL && ali_isa_bridge) {
- 		/* Configure the ALi bridge logic. For non ALi rely on BIOS.
- 		   Set the south bridge enable bit */
--- 
-1.9.1
+CkhlbGxvIGFnYWluLCBJIHdvbmRlciB3aHkgbXkgcHJldmlvdXMgbWFpbCB3YXMgd3JhcHBlZCBs
+aWtlIHRoYXQuIExlYWZwYWQgYW5kIG1lIGFyZSB0byBibGFtZSEKCgo+IGxpYmF0YS5mb3JjZT1u
+b25jcSBvcHRpb24gc2VlbXMgdG8gcHJldmVudCB0aGUgbWVzc2FnZXMgZnJvbSBvY2N1cnJpbmcu
+IDUga2VybmVsIGJ1aWxkcyAoajE2KSB3aXRoIG5vbmUuCkkga25ldyBpdCwgSSB3YXMgc3VyZSEK
+Cj4gWyAgICAyLjMxNDQ0MV0gYXRhMi4wMDogQVRBLTc6IFNUMzE2MDgxNUFTLCA0LkFBQiwgbWF4
+IFVETUEvMTMzCkkgc3VwcG9zZSB0aGF0IHlvdXIgdGhpcmQgU1QzMTYwODE1QVMgd2l0aCA0LkFB
+QiBmaXJtd2FyZSBoYXMgbm8gaXNzdWUsIGNvcnJlY3Q/Cj4gWyAgICAyLjkzMzcwNl0gYXRhNS4w
+MDogQVRBLTc6IFNUMzE2MDgxMUFTLCAzLkFBRSwgbWF4IFVETUEvMTMzCkkgc3VwcG9zZSB0aGF0
+IHlvdXIgc2Vjb25kIFNUMzE2MDgxNUFTIHdpdGggMy5BQUUgZmlybXdhcmUgaGFzIG5vIGlzc3Vl
+LCBjb3JyZWN0PwoKVGhleSB3ZXJlIHByb2R1Y2VkIGluIGRpZmZlcmVudCB5ZWFycyBidXQgYWxs
+IG9mIHRoZW0gaGF2ZSBubyBmaXJtd2FyZSB1cGRhdGUhCklmIHlvdSBzZWUgdGhlIGRhdGVjb2Rl
+IG9uIGl0cyBzdGlja2VyLCB0aGUgMy5BQUQgZGF0ZWNvZGUgbXVzdCBzdGFydCBmcm9tIDA3IG9y
+IDA4IHdoaWxlIHRoZSAzLkFBRSBkYXRlY29kZSBtdXN0IHN0YXJ0IGZyb20gMDggb3IgMDkgd2hp
+bGUgdGhlIDQuQUFCIG11c3Qgc3RhcnQgZnJvbSAwOCwgMDkgb3IgZXZlbiAxMC4KWW91IG11c3Qg
+Y29udGFjdCBzZWFnYXRlIGFuZCBpbmZvcm0gdGhlbSB0aGF0IHRoZSBvbGRlciBvbmUgaXMgaW5j
+b21wYXRpYmxlIHdpdGggQjM1MCB3aGVuIE5DUSBlbmFibGVkLiBJIGJldCB0aGV5IGFscmVhZHkg
+a25vdyBpdCBidXQgeW91IGNhbiB0cnkuCgo+IFsgICAgMS43MjEyNDhdIGF0YTkuMDA6IEFUQS02
+OiBTVDM1MDAzMjBOUywgU04wNCwgbWF4IFVETUEvMTMzCkkgYXNzdW1lIHRoYXQgeW91ciBCYXJy
+YWN1ZGEgRVMuMiBoYXMgY2F1c2VkIG5vIHRyb3VibGUsIHJpZ2h0PwoKTWF5YmUgYWxsIDcyMDAu
+MTAgd2l0aCAzLiogbXVzdCBoYXZlIE5DUSBkaXNhYmxlZCBvbiBBTUQgU0FUQSBjb250cm9sbGVy
+cy4gSXQgY2FuIGJlIGRvbmUgYnV0IHRoYXQgd291bGQgb25seSBkbyB0aGUgdHJpY2sgZm9yIHNv
+bWUgYWZmZWN0ZWQgZGlza3Mgbm90IGZvciBhbGwuCk9FTXMgbGlrZSBIUCBoYXZlIGRpZmZlcmVu
+dCBmaXJtd2FyZSB3aXRoIGRpZmZlcmVudCB2ZXJzaW9ucy4gQSBibGFja2xpc3QgZm9yIDMuKiB3
+b3VsZCBub3QgZGV0ZWN0IGFuIEhQIFNUMzE2MDgxNUFTIHdpdGggSFBGMCBmaXJtd2FyZS4KVGhl
+IHNhbWUgYXBwbGllcyB0byBERUxMIGRpc2tzIGFuZCBzbyBvbi4uLgoKCj4gWyAgICAxLjY4MDAz
+NV0gYXRhMTogU0FUQSBsaW5rIHVwIDEuNSBHYnBzIChTU3RhdHVzIDExMyBTQ29udHJvbCAzMDAp
+Cj4gWyAgICAyLjI0ODA2NV0gYXRhMjogU0FUQSBsaW5rIHVwIDEuNSBHYnBzIChTU3RhdHVzIDEx
+MyBTQ29udHJvbCAzMDApCj4gWyAgICAyLjg3MjA2NV0gYXRhNTogU0FUQSBsaW5rIHVwIDEuNSBH
+YnBzIChTU3RhdHVzIDExMyBTQ29udHJvbCAzMDApCkNsZWFybHkgeW91IGFyZSBzdHVjayB3aXRo
+IFNBVEEgSSBzcGVlZHMuIFRoaXMgY2FuIGJlIGRvbmUgdXNpbmcgdHdvIG9yIHRocmVlIHdheXMu
+IEkgd2lsbCBub3Qgc2F5IGEgdGhpbmcgb24gdGhhdC4KTXkgYnJvdGhlciByZWFkIHRoZSBpbmZv
+cm1hdGlvbiB5b3UgdXBsb2FkZWQgYW5kIHJlbWluZGVkIG1lIHRoYXQgdGhvc2UgZGlza3MgaGF2
+ZSBhIHNtYWxsIGp1bXBlciB3aGljaCBjYW4gbGltaXQgdGhlIG1heGltdW0gU0FUQSBpbnRlcmZh
+Y2Ugc3BlZWQuClRoYXQgd2FzIG5lZWRlZCB0byBtYWtlIHRoZW0gd29yayBvbiBWVDgyMzcgc2Vy
+aWVzIGNoaXBzZXRzLgpJIHN1cHBvc2UgeW91IGhhdmUgdXNlZCB0aGF0IGp1bXBlciBjb25maWd1
+cmF0aW9uIG9uIGFsbCB0aHJlZSBkaXNrcyBidXQgZm9yZ290IGl0IHNpbmNlIHlvdSBtdXN0IGhh
+dmUgZG9uZSBpdCBhcm91bmQgOCBvciBtb3JlIHllYXJzIGFnby4uLgoKCj4gICA1IFJlYWxsb2Nh
+dGVkX1NlY3Rvcl9DdCAgIFBPLS1DSyAgIDEwMCAgIDEwMCAgIDAzNiAgICAtICAgIDAKPiAgMTAg
+U3Bpbl9SZXRyeV9Db3VudCAgICAgICAgUE8tLUMtICAgMTAwICAgMTAwICAgMDk3ICAgIC0gICAg
+MAo+IDE4NyBSZXBvcnRlZF9VbmNvcnJlY3QgICAgICAtTy0tQ0sgICAxMDAgICAxMDAgICAwMDAg
+ICAgLSAgICAwCj4gMTg5IEhpZ2hfRmx5X1dyaXRlcyAgICAgICAgIC1PLVJDSyAgIDEwMCAgIDEw
+MCAgIDAwMCAgICAtICAgIDAKPiAxOTggT2ZmbGluZV9VbmNvcnJlY3RhYmxlICAgLS0tLUMtICAg
+MTAwICAgMTAwICAgMDAwICAgIC0gICAgMApZb3VyIGRpc2sgaXMgaW4gZ3JlYXQgY29uZGl0aW9u
+IGRlc3BpdGUgaXRzIDc1Njc1IGhvdXJzLgpBcyBJIHNhaWQgYmVmb3JlOiAiVGhvc2UgZGlza3Mg
+YXJlIHZlcnkgcmVsaWFibGUiLgoKSSB3b3VsZCBzdWdnZXN0IHJ1bm5pbmcgYWxsIHNlbGYgdGVz
+dHMod2l0aCBOQ1EgZGlzYWJsZWQpIGFzIHRoZSBsYXN0IG9uZSBvY2N1cmVkIGF0IDk3MjUgaG91
+cnMuIFRoYXQgd2FzIDY1OTUwIGhvdXJzIGFnby4gSXQgaXMgYSB2ZXJ5IGxvbmcgdGltZS4KSSBo
+YXZlIG5vdCBzZWVuIGFueSBkaXNrIHJlYWNoaW5nIDUwMDAwIG9wZXJhdGluZyBob3VycyEKCgpD
+YW4geW91IHBsZWFzZSBtZWFzdXJlIHRoZSBzcGVlZCBvZiBhbGwgdGhyZWUgZGlza3Mgb24gdGhl
+IFJ5emVuIGJvYXJkIHdpdGggQUhDSSB3aXRoIHF1ZXVlIGRlcHRoIDMxLCAyIGFuZCAxPwoKCj4g
+aHBldDA6IDMgY29tcGFyYXRvcnMsIDMyLWJpdC4uLgpBTUQgc3RpbGwgdXNlcyAzMmJpdCBmb3Ig
+SFBFVCEgSSB3b25kZXIgd2h5Lgo=
