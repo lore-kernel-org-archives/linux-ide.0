@@ -1,71 +1,90 @@
-From: sonofagun@openmailbox.org
-Subject: Re: AM4 B350 chipset Sata/IDE problem
-Date: Thu, 23 Nov 2017 06:40:50 -0000
-Message-ID: <20171123064050.37A674E0025@mta-1.openmailbox.og>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Subject: [PATCH] pata_pdc2027x: Remove unnecessary error check and coding style error.
+Date: Sat, 25 Nov 2017 09:45:40 +0530
+Message-ID: <9c2e4c1081be44da4460072ae6129d29c7e6d6bc.1511583254.git.arvind.yadav.cs@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lb1.openmailbox.org ([5.79.108.160]:49336 "EHLO
-        mta-1.openmailbox.og" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750872AbdKWGkv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 23 Nov 2017 01:40:51 -0500
-Received: from [127.0.0.1] (unknown [10.0.0.4])
-        by mta-1.openmailbox.og (Postfix) with ESMTP id 32A2E4E002F
-        for <linux-ide@vger.kernel.org>; Thu, 23 Nov 2017 07:40:50 +0100 (CET)
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:37703 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751055AbdKYEP4 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 24 Nov 2017 23:15:56 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: b.zolnierkie@samsung.com, tj@kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-CkhlbGxvIGFnYWluLCBJIHdvbmRlciB3aHkgbXkgcHJldmlvdXMgbWFpbCB3YXMgd3JhcHBlZCBs
-aWtlIHRoYXQuIExlYWZwYWQgYW5kIG1lIGFyZSB0byBibGFtZSEKCgo+IGxpYmF0YS5mb3JjZT1u
-b25jcSBvcHRpb24gc2VlbXMgdG8gcHJldmVudCB0aGUgbWVzc2FnZXMgZnJvbSBvY2N1cnJpbmcu
-IDUga2VybmVsIGJ1aWxkcyAoajE2KSB3aXRoIG5vbmUuCkkga25ldyBpdCwgSSB3YXMgc3VyZSEK
-Cj4gWyAgICAyLjMxNDQ0MV0gYXRhMi4wMDogQVRBLTc6IFNUMzE2MDgxNUFTLCA0LkFBQiwgbWF4
-IFVETUEvMTMzCkkgc3VwcG9zZSB0aGF0IHlvdXIgdGhpcmQgU1QzMTYwODE1QVMgd2l0aCA0LkFB
-QiBmaXJtd2FyZSBoYXMgbm8gaXNzdWUsIGNvcnJlY3Q/Cj4gWyAgICAyLjkzMzcwNl0gYXRhNS4w
-MDogQVRBLTc6IFNUMzE2MDgxMUFTLCAzLkFBRSwgbWF4IFVETUEvMTMzCkkgc3VwcG9zZSB0aGF0
-IHlvdXIgc2Vjb25kIFNUMzE2MDgxNUFTIHdpdGggMy5BQUUgZmlybXdhcmUgaGFzIG5vIGlzc3Vl
-LCBjb3JyZWN0PwoKVGhleSB3ZXJlIHByb2R1Y2VkIGluIGRpZmZlcmVudCB5ZWFycyBidXQgYWxs
-IG9mIHRoZW0gaGF2ZSBubyBmaXJtd2FyZSB1cGRhdGUhCklmIHlvdSBzZWUgdGhlIGRhdGVjb2Rl
-IG9uIGl0cyBzdGlja2VyLCB0aGUgMy5BQUQgZGF0ZWNvZGUgbXVzdCBzdGFydCBmcm9tIDA3IG9y
-IDA4IHdoaWxlIHRoZSAzLkFBRSBkYXRlY29kZSBtdXN0IHN0YXJ0IGZyb20gMDggb3IgMDkgd2hp
-bGUgdGhlIDQuQUFCIG11c3Qgc3RhcnQgZnJvbSAwOCwgMDkgb3IgZXZlbiAxMC4KWW91IG11c3Qg
-Y29udGFjdCBzZWFnYXRlIGFuZCBpbmZvcm0gdGhlbSB0aGF0IHRoZSBvbGRlciBvbmUgaXMgaW5j
-b21wYXRpYmxlIHdpdGggQjM1MCB3aGVuIE5DUSBlbmFibGVkLiBJIGJldCB0aGV5IGFscmVhZHkg
-a25vdyBpdCBidXQgeW91IGNhbiB0cnkuCgo+IFsgICAgMS43MjEyNDhdIGF0YTkuMDA6IEFUQS02
-OiBTVDM1MDAzMjBOUywgU04wNCwgbWF4IFVETUEvMTMzCkkgYXNzdW1lIHRoYXQgeW91ciBCYXJy
-YWN1ZGEgRVMuMiBoYXMgY2F1c2VkIG5vIHRyb3VibGUsIHJpZ2h0PwoKTWF5YmUgYWxsIDcyMDAu
-MTAgd2l0aCAzLiogbXVzdCBoYXZlIE5DUSBkaXNhYmxlZCBvbiBBTUQgU0FUQSBjb250cm9sbGVy
-cy4gSXQgY2FuIGJlIGRvbmUgYnV0IHRoYXQgd291bGQgb25seSBkbyB0aGUgdHJpY2sgZm9yIHNv
-bWUgYWZmZWN0ZWQgZGlza3Mgbm90IGZvciBhbGwuCk9FTXMgbGlrZSBIUCBoYXZlIGRpZmZlcmVu
-dCBmaXJtd2FyZSB3aXRoIGRpZmZlcmVudCB2ZXJzaW9ucy4gQSBibGFja2xpc3QgZm9yIDMuKiB3
-b3VsZCBub3QgZGV0ZWN0IGFuIEhQIFNUMzE2MDgxNUFTIHdpdGggSFBGMCBmaXJtd2FyZS4KVGhl
-IHNhbWUgYXBwbGllcyB0byBERUxMIGRpc2tzIGFuZCBzbyBvbi4uLgoKCj4gWyAgICAxLjY4MDAz
-NV0gYXRhMTogU0FUQSBsaW5rIHVwIDEuNSBHYnBzIChTU3RhdHVzIDExMyBTQ29udHJvbCAzMDAp
-Cj4gWyAgICAyLjI0ODA2NV0gYXRhMjogU0FUQSBsaW5rIHVwIDEuNSBHYnBzIChTU3RhdHVzIDEx
-MyBTQ29udHJvbCAzMDApCj4gWyAgICAyLjg3MjA2NV0gYXRhNTogU0FUQSBsaW5rIHVwIDEuNSBH
-YnBzIChTU3RhdHVzIDExMyBTQ29udHJvbCAzMDApCkNsZWFybHkgeW91IGFyZSBzdHVjayB3aXRo
-IFNBVEEgSSBzcGVlZHMuIFRoaXMgY2FuIGJlIGRvbmUgdXNpbmcgdHdvIG9yIHRocmVlIHdheXMu
-IEkgd2lsbCBub3Qgc2F5IGEgdGhpbmcgb24gdGhhdC4KTXkgYnJvdGhlciByZWFkIHRoZSBpbmZv
-cm1hdGlvbiB5b3UgdXBsb2FkZWQgYW5kIHJlbWluZGVkIG1lIHRoYXQgdGhvc2UgZGlza3MgaGF2
-ZSBhIHNtYWxsIGp1bXBlciB3aGljaCBjYW4gbGltaXQgdGhlIG1heGltdW0gU0FUQSBpbnRlcmZh
-Y2Ugc3BlZWQuClRoYXQgd2FzIG5lZWRlZCB0byBtYWtlIHRoZW0gd29yayBvbiBWVDgyMzcgc2Vy
-aWVzIGNoaXBzZXRzLgpJIHN1cHBvc2UgeW91IGhhdmUgdXNlZCB0aGF0IGp1bXBlciBjb25maWd1
-cmF0aW9uIG9uIGFsbCB0aHJlZSBkaXNrcyBidXQgZm9yZ290IGl0IHNpbmNlIHlvdSBtdXN0IGhh
-dmUgZG9uZSBpdCBhcm91bmQgOCBvciBtb3JlIHllYXJzIGFnby4uLgoKCj4gICA1IFJlYWxsb2Nh
-dGVkX1NlY3Rvcl9DdCAgIFBPLS1DSyAgIDEwMCAgIDEwMCAgIDAzNiAgICAtICAgIDAKPiAgMTAg
-U3Bpbl9SZXRyeV9Db3VudCAgICAgICAgUE8tLUMtICAgMTAwICAgMTAwICAgMDk3ICAgIC0gICAg
-MAo+IDE4NyBSZXBvcnRlZF9VbmNvcnJlY3QgICAgICAtTy0tQ0sgICAxMDAgICAxMDAgICAwMDAg
-ICAgLSAgICAwCj4gMTg5IEhpZ2hfRmx5X1dyaXRlcyAgICAgICAgIC1PLVJDSyAgIDEwMCAgIDEw
-MCAgIDAwMCAgICAtICAgIDAKPiAxOTggT2ZmbGluZV9VbmNvcnJlY3RhYmxlICAgLS0tLUMtICAg
-MTAwICAgMTAwICAgMDAwICAgIC0gICAgMApZb3VyIGRpc2sgaXMgaW4gZ3JlYXQgY29uZGl0aW9u
-IGRlc3BpdGUgaXRzIDc1Njc1IGhvdXJzLgpBcyBJIHNhaWQgYmVmb3JlOiAiVGhvc2UgZGlza3Mg
-YXJlIHZlcnkgcmVsaWFibGUiLgoKSSB3b3VsZCBzdWdnZXN0IHJ1bm5pbmcgYWxsIHNlbGYgdGVz
-dHMod2l0aCBOQ1EgZGlzYWJsZWQpIGFzIHRoZSBsYXN0IG9uZSBvY2N1cmVkIGF0IDk3MjUgaG91
-cnMuIFRoYXQgd2FzIDY1OTUwIGhvdXJzIGFnby4gSXQgaXMgYSB2ZXJ5IGxvbmcgdGltZS4KSSBo
-YXZlIG5vdCBzZWVuIGFueSBkaXNrIHJlYWNoaW5nIDUwMDAwIG9wZXJhdGluZyBob3VycyEKCgpD
-YW4geW91IHBsZWFzZSBtZWFzdXJlIHRoZSBzcGVlZCBvZiBhbGwgdGhyZWUgZGlza3Mgb24gdGhl
-IFJ5emVuIGJvYXJkIHdpdGggQUhDSSB3aXRoIHF1ZXVlIGRlcHRoIDMxLCAyIGFuZCAxPwoKCj4g
-aHBldDA6IDMgY29tcGFyYXRvcnMsIDMyLWJpdC4uLgpBTUQgc3RpbGwgdXNlcyAzMmJpdCBmb3Ig
-SFBFVCEgSSB3b25kZXIgd2h5Lgo=
+Here, The function pdc_hardware_init always return zero. So it is not
+necessary to check its return value.
+
+Fix these checkpatch.pl error:
+
+ERROR: space prohibited after that '~' (ctx:WxW)
++		mask &= ~ (1 << (6 + ATA_SHIFT_UDMA));
+
+ERROR: spaces required around that '?' (ctx:VxW)
++	long pout_required = board_idx? PDC_133_MHZ:PDC_100_MHZ;
+
+ERROR: that open brace { should be on the previous line
++	const struct ata_port_info *ppi[] =
++		{ &pdc2027x_port_info[board_idx], NULL };
+
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/ata/pata_pdc2027x.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/ata/pata_pdc2027x.c b/drivers/ata/pata_pdc2027x.c
+index ffd8d33..9a953ef 100644
+--- a/drivers/ata/pata_pdc2027x.c
++++ b/drivers/ata/pata_pdc2027x.c
+@@ -277,7 +277,7 @@ static unsigned long pdc2027x_mode_filter(struct ata_device *adev, unsigned long
+ 			  ATA_ID_PROD_LEN + 1);
+ 	/* If the master is a maxtor in UDMA6 then the slave should not use UDMA 6 */
+ 	if (strstr(model_num, "Maxtor") == NULL && pair->dma_mode == XFER_UDMA_6)
+-		mask &= ~ (1 << (6 + ATA_SHIFT_UDMA));
++		mask &= ~(1 << (6 + ATA_SHIFT_UDMA));
+ 
+ 	return mask;
+ }
+@@ -520,7 +520,7 @@ static void pdc_adjust_pll(struct ata_host *host, long pll_clock, unsigned int b
+ 	void __iomem *mmio_base = host->iomap[PDC_MMIO_BAR];
+ 	u16 pll_ctl;
+ 	long pll_clock_khz = pll_clock / 1000;
+-	long pout_required = board_idx? PDC_133_MHZ:PDC_100_MHZ;
++	long pout_required = board_idx ? PDC_133_MHZ:PDC_100_MHZ;
+ 	long ratio = pout_required / pll_clock_khz;
+ 	int F, R;
+ 
+@@ -707,8 +707,8 @@ static int pdc2027x_init_one(struct pci_dev *pdev,
+ 	static const unsigned long cmd_offset[] = { 0x17c0, 0x15c0 };
+ 	static const unsigned long bmdma_offset[] = { 0x1000, 0x1008 };
+ 	unsigned int board_idx = (unsigned int) ent->driver_data;
+-	const struct ata_port_info *ppi[] =
+-		{ &pdc2027x_port_info[board_idx], NULL };
++	const struct ata_port_info *ppi[] = {
++		&pdc2027x_port_info[board_idx], NULL };
+ 	struct ata_host *host;
+ 	void __iomem *mmio_base;
+ 	int i, rc;
+@@ -753,8 +753,7 @@ static int pdc2027x_init_one(struct pci_dev *pdev,
+ 	//pci_enable_intx(pdev);
+ 
+ 	/* initialize adapter */
+-	if (pdc_hardware_init(host, board_idx) != 0)
+-		return -EIO;
++	pdc_hardware_init(host, board_idx);
+ 
+ 	pci_set_master(pdev);
+ 	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
+@@ -778,8 +777,7 @@ static int pdc2027x_reinit_one(struct pci_dev *pdev)
+ 	else
+ 		board_idx = PDC_UDMA_133;
+ 
+-	if (pdc_hardware_init(host, board_idx))
+-		return -EIO;
++	pdc_hardware_init(host, board_idx);
+ 
+ 	ata_host_resume(host);
+ 	return 0;
+-- 
+2.7.4
+
