@@ -1,52 +1,87 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: sata_down_spd_limit should return if driver has
- not recorded sstatus speed
-Date: Mon, 27 Nov 2017 11:19:48 -0800
-Message-ID: <20171127191948.GH983427@devbig577.frc2.facebook.com>
-References: <1510697845-58071-1-git-send-email-dmilburn@redhat.com>
+Subject: Re: [patch] lewisburg map/pcs register handling
+Date: Mon, 27 Nov 2017 11:25:26 -0800
+Message-ID: <20171127192526.GI983427@devbig577.frc2.facebook.com>
+References: <CAF2xp_HuE+aV3ZhrC0E9CQopYgTQ4AHcK15v248AVgxXn8A0pA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f170.google.com ([209.85.220.170]:38680 "EHLO
-        mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752609AbdK0TTv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 27 Nov 2017 14:19:51 -0500
-Received: by mail-qk0-f170.google.com with SMTP id a142so33917938qkb.5
-        for <linux-ide@vger.kernel.org>; Mon, 27 Nov 2017 11:19:51 -0800 (PST)
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:45916 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752866AbdK0TZ3 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 27 Nov 2017 14:25:29 -0500
+Received: by mail-qt0-f194.google.com with SMTP id r37so32518259qtj.12
+        for <linux-ide@vger.kernel.org>; Mon, 27 Nov 2017 11:25:29 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <1510697845-58071-1-git-send-email-dmilburn@redhat.com>
+In-Reply-To: <CAF2xp_HuE+aV3ZhrC0E9CQopYgTQ4AHcK15v248AVgxXn8A0pA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Milburn <dmilburn@redhat.com>
+To: Peter Chang <dpf@google.com>
 Cc: linux-ide@vger.kernel.org
 
-Hello, David.
+Hello, Peter.
 
-On Tue, Nov 14, 2017 at 04:17:25PM -0600, David Milburn wrote:
-> During hotplug, it is possible for 6Gbps link speed to
-> be limited all the way down to 1.5 Gbps which may lead
-> to a slower link speed when drive is re-connected.
+On Tue, Nov 14, 2017 at 03:55:12PM -0800, Peter Chang wrote:
+> From 62ccc6118960204769809a1ea9d162cf2c1c95e1 Mon Sep 17 00:00:00 2001
+> From: peter chang <dpf@google.com>
+> Date: Tue, 14 Nov 2017 13:43:15 -0800
+> Subject: [PATCH] ahci: lewisburg MAP / PCS register handling
+> 
+> registers are now 32-bits and the existing offsets mean that the
+> wrong registers are being updated.
+> 
+> Change-Id: I992b31bc9e789f9dfbeb29afeb0b7777e325ea71
 
-Can you please explain the scenario with more details?
+Can you please drop Change-Id and add Signed-off-by?  Also, the
+earlier part of the email where you explained what's going on was
+actually easier to understand.  Maybe put that in the description?
 
->  	/* Mask off all speeds higher than or equal to the current
-> -	 * one.  Force 1.5Gbps if current SPD is not available.
-> +	 * one. At this point if current SPD is not available and we
-> +	 * previously recorded the link speed from the Status register,
-> +	 * the driver has already masked off the highest bit so mask
-> +	 * should already be set to 1 or 0. Otherwise, we should
-> +	 * not force 1.5Gbps on a link where we have not previously 
-> +	 * recorded speed from Status register, just return in this case.
->  	 */
->  	if (spd > 1)
->  		mask &= (1 << (spd - 1)) - 1;
->  	else
-> -		mask &= 1;
-> +		return -EINVAL;
+> -		pci_read_config_word(pdev, 0x92, &tmp16);
+> -		if ((tmp16 & hpriv->port_map) != hpriv->port_map) {
+> -			tmp16 |= hpriv->port_map;
+> -			pci_write_config_word(pdev, 0x92, tmp16);
+> +		if (hpriv->flags & AHCI_HFLAG_32BIT_MAP_PCS)
+> +			pci_read_config_dword(pdev, 0x94, &tmp32);
+> +		else {
+> +			pci_read_config_word(pdev, 0x92, &tmp16);
+> +			tmp32 = tmp16;
+> +		}
 
-I get that the current behavior might not be ideal in certain
-scenarios but the above seems weird, especially given the we have
-link->sata_spd for cases where we can't access the spd value.
+The coding style says that we always add {} to both if and else bodies.
+
+> +		if ((tmp32 & hpriv->port_map) != hpriv->port_map) {
+> +			tmp32 |= hpriv->port_map;
+> +			if (hpriv->flags & AHCI_HFLAG_32BIT_MAP_PCS)
+> +				pci_write_config_dword(pdev, 0x94, tmp32);
+> +			else {
+> +				tmp16 = tmp32;
+> +				pci_write_config_word(pdev, 0x92, tmp16);
+> +			}
+
+@@ -523,6 +524,24 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
+>  		port_map &= hpriv->mask_port_map;
+>  	}
+>  
+> +	if (hpriv->flags & AHCI_HFLAG_PCI_PORT_MAP) {
+> +		struct pci_dev *pdev = to_pci_dev(dev);
+> +		u16 disabled;
+> +
+> +		if (hpriv->flags & AHCI_HFLAG_32BIT_MAP_PCS) {
+> +			u32 tmp;
+> +
+> +			pci_read_config_dword(pdev, 0x90, &tmp);
+> +			disabled = (tmp >> 16) & 0xffff;
+> +		} else {
+> +			pci_read_config_word(pdev, 0x90, &disabled);
+> +			disabled = (disabled >> 8) & 0xff;
+> +		}
+> +
+> +		dev_info(dev, "port_map:%x disabled:%x\n", port_map, disabled);
+> +		port_map &= ~disabled;
+> +	}
+
+And the patch description doesn't explain the above chunk.  Can you
+please explain this part too?
 
 Thanks.
 
