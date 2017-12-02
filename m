@@ -1,41 +1,37 @@
-From: Matthias Brugger <matthias.bgg@gmail.com>
-Subject: [PATCH 2/2] ahci: mtk: Change driver name to ahci-mtk
-Date: Fri,  1 Dec 2017 11:47:22 +0100
-Message-ID: <20171201104722.17353-1-matthias.bgg@gmail.com>
+From: Matthias Peter Walther <m_walt11@uni-muenster.de>
+Subject: Wiki account on ata.wiki.kernel.org?
+Date: Sat, 2 Dec 2017 14:54:42 +0100
+Message-ID: <c5a9fde7-0950-08bb-bef4-eef563d0890a@uni-muenster.de>
+Reply-To: m.wa@wwu.de
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:35980 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750735AbdLAKra (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 1 Dec 2017 05:47:30 -0500
+Received: from zivm-wwu3-1.uni-muenster.de ([128.176.192.17]:38239 "EHLO
+        zivm-wwu3.uni-muenster.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751756AbdLBNyp (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 2 Dec 2017 08:54:45 -0500
+Received: from [192.168.178.155] (dslb-178-006-044-134.178.006.pools.vodafone-ip.de [178.6.44.134])
+        by SECMAIL.UNI-MUENSTER.DE (Postfix) with ESMTPSA id 9A26B20ADF24
+        for <linux-ide@vger.kernel.org>; Sat,  2 Dec 2017 14:54:43 +0100 (CET)
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: matthias.bgg@gmail.com, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org, Matthias Brugger <mbrugger@suse.com>
+To: linux-ide@vger.kernel.org
 
-The driver name "ahci" is already used by the ahci platform driver.
-This leads to the following error:
-Error: Driver 'ahci' is already registered, aborting...
+Hello,
 
-Change the name to ahci-mtk to fix this.
+does someone know how to get an account on ata.wiki.kernel.org?
 
-Signed-off-by: Matthias Brugger <mbrugger@suse.com>
----
- drivers/ata/ahci_mtk.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I signed up for a new account. But it seems that an administrator needs
+to unlock it, which has never happened in my case (signed up 22th of
+November).
 
-diff --git a/drivers/ata/ahci_mtk.c b/drivers/ata/ahci_mtk.c
-index 80854f71559a..22efb9370d1d 100644
---- a/drivers/ata/ahci_mtk.c
-+++ b/drivers/ata/ahci_mtk.c
-@@ -25,7 +25,7 @@
- #include <linux/reset.h>
- #include "ahci.h"
- 
--#define DRV_NAME		"ahci"
-+#define DRV_NAME		"ahci-mtk"
- 
- #define SYS_CFG			0x14
- #define SYS_CFG_SATA_MSK	GENMASK(31, 30)
--- 
-2.12.3
+I wanted to update this list
+(https://ata.wiki.kernel.org/index.php/SATA_hardware_features) with new
+cards from this pdf
+(https://www.marvell.com/storage/system-solutions/assets/Marvell-88SE92xx-002-product-brief.pdf),
+which I own and tested.
 
+Regards,
+Matthias
