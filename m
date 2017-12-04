@@ -1,84 +1,31 @@
-From: <andy.tang@nxp.com>
-Subject: [PATCH] ahci: qoriq: refine port register configuration
-Date: Mon, 4 Dec 2017 17:01:20 +0800
-Message-ID: <20171204090120.2142-1-andy.tang@nxp.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ahci: qoriq: refine port register configuration
+Date: Mon, 4 Dec 2017 12:19:33 -0800
+Message-ID: <20171204201933.GD2421075@devbig577.frc2.facebook.com>
+References: <20171204090120.2142-1-andy.tang@nxp.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20171204090120.2142-1-andy.tang@nxp.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Yuantian Tang <andy.tang@nxp.com>
+To: andy.tang@nxp.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-From: Yuantian Tang <andy.tang@nxp.com>
+On Mon, Dec 04, 2017 at 05:01:20PM +0800, andy.tang@nxp.com wrote:
+> From: Yuantian Tang <andy.tang@nxp.com>
+> 
+> These PP2C and PP3C registers control the configuration of the PHY
+> control OOB timing for the COMINIT/COMWAKE parameters respectively
+> for sata port. Overwrite default values with calculated ones to get
+> better OOB timing.
+> 
+> Signed-off-by: Tang Yuantian <andy.tang@nxp.com>
 
-These PP2C and PP3C registers control the configuration of the PHY
-control OOB timing for the COMINIT/COMWAKE parameters respectively
-for sata port. Overwrite default values with calculated ones to get
-better OOB timing.
+Applied to libata/for-4.15-fixes.
 
-Signed-off-by: Tang Yuantian <andy.tang@nxp.com>
----
- drivers/ata/ahci_qoriq.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+Thanks.
 
-diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
-index b6b0bf76dfc7..2685f28160f7 100644
---- a/drivers/ata/ahci_qoriq.c
-+++ b/drivers/ata/ahci_qoriq.c
-@@ -35,6 +35,8 @@
- 
- /* port register default value */
- #define AHCI_PORT_PHY_1_CFG	0xa003fffe
-+#define AHCI_PORT_PHY2_CFG	0x28184d1f
-+#define AHCI_PORT_PHY3_CFG	0x0e081509
- #define AHCI_PORT_TRANS_CFG	0x08000029
- #define AHCI_PORT_AXICC_CFG	0x3fffffff
- 
-@@ -183,6 +185,8 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 		writel(readl(qpriv->ecc_addr) | ECC_DIS_ARMV8_CH2,
- 				qpriv->ecc_addr);
- 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
-+		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
-+		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
- 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
- 		if (qpriv->is_dmacoherent)
- 			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
-@@ -190,6 +194,8 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 
- 	case AHCI_LS2080A:
- 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
-+		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
-+		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
- 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
- 		if (qpriv->is_dmacoherent)
- 			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
-@@ -201,6 +207,8 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 		writel(readl(qpriv->ecc_addr) | ECC_DIS_ARMV8_CH2,
- 				qpriv->ecc_addr);
- 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
-+		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
-+		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
- 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
- 		if (qpriv->is_dmacoherent)
- 			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
-@@ -212,6 +220,8 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 		writel(readl(qpriv->ecc_addr) | ECC_DIS_LS1088A,
- 		       qpriv->ecc_addr);
- 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
-+		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
-+		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
- 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
- 		if (qpriv->is_dmacoherent)
- 			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
-@@ -219,6 +229,8 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 
- 	case AHCI_LS2088A:
- 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
-+		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
-+		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
- 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
- 		if (qpriv->is_dmacoherent)
- 			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
 -- 
-2.14.1
+tejun
