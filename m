@@ -1,37 +1,84 @@
-From: Matthias Peter Walther <m_walt11@uni-muenster.de>
-Subject: Wiki account on ata.wiki.kernel.org?
-Date: Sat, 2 Dec 2017 14:54:42 +0100
-Message-ID: <c5a9fde7-0950-08bb-bef4-eef563d0890a@uni-muenster.de>
-Reply-To: m.wa@wwu.de
+From: <andy.tang@nxp.com>
+Subject: [PATCH] ahci: qoriq: refine port register configuration
+Date: Mon, 4 Dec 2017 17:01:20 +0800
+Message-ID: <20171204090120.2142-1-andy.tang@nxp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zivm-wwu3-1.uni-muenster.de ([128.176.192.17]:38239 "EHLO
-        zivm-wwu3.uni-muenster.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751756AbdLBNyp (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 2 Dec 2017 08:54:45 -0500
-Received: from [192.168.178.155] (dslb-178-006-044-134.178.006.pools.vodafone-ip.de [178.6.44.134])
-        by SECMAIL.UNI-MUENSTER.DE (Postfix) with ESMTPSA id 9A26B20ADF24
-        for <linux-ide@vger.kernel.org>; Sat,  2 Dec 2017 14:54:43 +0100 (CET)
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Yuantian Tang <andy.tang@nxp.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Hello,
+From: Yuantian Tang <andy.tang@nxp.com>
 
-does someone know how to get an account on ata.wiki.kernel.org?
+These PP2C and PP3C registers control the configuration of the PHY
+control OOB timing for the COMINIT/COMWAKE parameters respectively
+for sata port. Overwrite default values with calculated ones to get
+better OOB timing.
 
-I signed up for a new account. But it seems that an administrator needs
-to unlock it, which has never happened in my case (signed up 22th of
-November).
+Signed-off-by: Tang Yuantian <andy.tang@nxp.com>
+---
+ drivers/ata/ahci_qoriq.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-I wanted to update this list
-(https://ata.wiki.kernel.org/index.php/SATA_hardware_features) with new
-cards from this pdf
-(https://www.marvell.com/storage/system-solutions/assets/Marvell-88SE92xx-002-product-brief.pdf),
-which I own and tested.
-
-Regards,
-Matthias
+diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
+index b6b0bf76dfc7..2685f28160f7 100644
+--- a/drivers/ata/ahci_qoriq.c
++++ b/drivers/ata/ahci_qoriq.c
+@@ -35,6 +35,8 @@
+ 
+ /* port register default value */
+ #define AHCI_PORT_PHY_1_CFG	0xa003fffe
++#define AHCI_PORT_PHY2_CFG	0x28184d1f
++#define AHCI_PORT_PHY3_CFG	0x0e081509
+ #define AHCI_PORT_TRANS_CFG	0x08000029
+ #define AHCI_PORT_AXICC_CFG	0x3fffffff
+ 
+@@ -183,6 +185,8 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
+ 		writel(readl(qpriv->ecc_addr) | ECC_DIS_ARMV8_CH2,
+ 				qpriv->ecc_addr);
+ 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
++		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
++		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
+ 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
+ 		if (qpriv->is_dmacoherent)
+ 			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
+@@ -190,6 +194,8 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
+ 
+ 	case AHCI_LS2080A:
+ 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
++		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
++		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
+ 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
+ 		if (qpriv->is_dmacoherent)
+ 			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
+@@ -201,6 +207,8 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
+ 		writel(readl(qpriv->ecc_addr) | ECC_DIS_ARMV8_CH2,
+ 				qpriv->ecc_addr);
+ 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
++		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
++		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
+ 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
+ 		if (qpriv->is_dmacoherent)
+ 			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
+@@ -212,6 +220,8 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
+ 		writel(readl(qpriv->ecc_addr) | ECC_DIS_LS1088A,
+ 		       qpriv->ecc_addr);
+ 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
++		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
++		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
+ 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
+ 		if (qpriv->is_dmacoherent)
+ 			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
+@@ -219,6 +229,8 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
+ 
+ 	case AHCI_LS2088A:
+ 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
++		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
++		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
+ 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
+ 		if (qpriv->is_dmacoherent)
+ 			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
+-- 
+2.14.1
