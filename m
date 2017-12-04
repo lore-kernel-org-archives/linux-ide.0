@@ -1,50 +1,46 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Wiki account on ata.wiki.kernel.org?
-Date: Mon, 4 Dec 2017 13:00:32 -0800
-Message-ID: <20171204210032.GJ2421075@devbig577.frc2.facebook.com>
-References: <c5a9fde7-0950-08bb-bef4-eef563d0890a@uni-muenster.de>
- <20171204202413.GG2421075@devbig577.frc2.facebook.com>
- <f2bb97f4-9006-6a38-a8b5-e7f581255d18@uni-muenster.de>
+Subject: Re: [PATCH] libata: sata_down_spd_limit should return if driver has
+ not recorded sstatus speed
+Date: Mon, 4 Dec 2017 13:57:36 -0800
+Message-ID: <20171204215736.GO2421075@devbig577.frc2.facebook.com>
+References: <1510697845-58071-1-git-send-email-dmilburn@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f170.google.com ([209.85.216.170]:39273 "EHLO
-        mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751200AbdLDVAg (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 4 Dec 2017 16:00:36 -0500
-Received: by mail-qt0-f170.google.com with SMTP id k19so24274822qtj.6
-        for <linux-ide@vger.kernel.org>; Mon, 04 Dec 2017 13:00:35 -0800 (PST)
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:38179 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752605AbdLDV5j (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 4 Dec 2017 16:57:39 -0500
+Received: by mail-qt0-f195.google.com with SMTP id d4so24635347qtj.5
+        for <linux-ide@vger.kernel.org>; Mon, 04 Dec 2017 13:57:39 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <f2bb97f4-9006-6a38-a8b5-e7f581255d18@uni-muenster.de>
+In-Reply-To: <1510697845-58071-1-git-send-email-dmilburn@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: m.wa@wwu.de
+To: David Milburn <dmilburn@redhat.com>
 Cc: linux-ide@vger.kernel.org
 
-Hello,
+On Tue, Nov 14, 2017 at 04:17:25PM -0600, David Milburn wrote:
+> During hotplug, it is possible for 6Gbps link speed to
+> be limited all the way down to 1.5 Gbps which may lead
+> to a slower link speed when drive is re-connected.
+> 
+> This behavior has been seen on a Intel Lewisburg SATA
+> controller (8086:a1d2) with HGST HUH728080ALE600 drive
+> where SATA link speed was limited to 1.5 Gbps and
+> when re-connected the link came up 3.0 Gbps.
+> 
+> This patch was retested on above configuration and
+> showed the hotplugged link to come back online at max
+> speed (6Gbps). I did not see the downgrade when testing
+> on Intel C600/X79, but retested patched linux-4.14-rc5
+> kernel and didn't see any side effects from this
+> change. Also, successfully retested hotplug on port
+> multiplier 3Gbps link.
+> 
+> Signed-off-by: David Milburn <dmilburn@redhat.com>
 
-On Mon, Dec 04, 2017 at 09:36:46PM +0100, Matthias Peter Walther wrote:
-> okay thanks, I guess you've been the one who unlocked my account today.
-> So you wouldn't spend the time to update that page?
-
-That wasn't me and no I wouldn't.
-
-> Where is the in-kernel documentation? I'm rather new to this. Is this
-> within the kernel's git or where do I find it?
-
-There's driver-api/libata.rst in the source tree but it's also
-horribly outdated.  If we want up-to-date hardware support
-documentation, I think we'd have to move it into the source code and
-generate it from there.  However, I'm not sure how useful it all
-really is.  The wiki hasn't been updated for eons, most other
-subsystems don't have the counterpart, and not much is really painful
-because of that.
-
-But, regardless of what we're gonna do in the long term, if someone is
-interested in keeping it fresh, that is really great.  The other thing
-is that libata development is pretty stale at this point, so maybe we
-don't need a grand long term plan and just bringing the wiki
-up-to-date is enough.
+Applied to libata/for-4.15-fixes.
 
 Thanks.
 
