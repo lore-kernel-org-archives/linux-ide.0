@@ -1,65 +1,69 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH v4] pata_pdc2027x: Fix pdc_adjust_pll() to return the
- error value
-Date: Wed, 6 Dec 2017 12:41:06 +0300
-Message-ID: <ff019fe7-28e8-5657-1952-9485886b348a@cogentembedded.com>
-References: <78542c42dcd2f21f6f7c01984061628fb4f19a42.1512499639.git.arvind.yadav.cs@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH 0/3] ahci: Allow setting a default LPM policy for mobile chipsets
+Date: Wed,  6 Dec 2017 16:41:07 +0100
+Message-ID: <20171206154110.11548-1-hdegoede@redhat.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:40705 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754304AbdLFJlI (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 6 Dec 2017 04:41:08 -0500
-Received: by mail-lf0-f66.google.com with SMTP id t197so3507429lfe.7
-        for <linux-ide@vger.kernel.org>; Wed, 06 Dec 2017 01:41:07 -0800 (PST)
-In-Reply-To: <78542c42dcd2f21f6f7c01984061628fb4f19a42.1512499639.git.arvind.yadav.cs@gmail.com>
-Content-Language: en-US
+Received: from mx1.redhat.com ([209.132.183.28]:36290 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751362AbdLFPlN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 6 Dec 2017 10:41:13 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>, b.zolnierkie@samsung.com, tj@kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello!
+Hi All,
 
-On 12/5/2017 9:50 PM, Arvind Yadav wrote:
+On many laptops setting a different LPM policy then unknown /
+max_performance can lead to power-savings of 1.0 - 1.5 Watts (when idle).
 
-> This change is to ensure that function pdc_adjust_pll() returns the
-> error value to avoid the unnecessary error check for pdc_hardware_init()
-> in pdc2027x_reinit_one().
-> 
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
-> ---
-> changes in v2 :
->                 Make function return type 'void' instead of 'int.
->                 Add sapce between ':'.
-> changes in v3 :
->                 Fix the checkpatch.pl errors in a sperate patch.
-> changes in v4 :
->                 return the error value from pdc_adjust_pll()
-> 
->   drivers/ata/pata_pdc2027x.c | 13 ++++++-------
->   1 file changed, 6 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/ata/pata_pdc2027x.c b/drivers/ata/pata_pdc2027x.c
-> index 82bfd51..eca16b0 100644
-> --- a/drivers/ata/pata_pdc2027x.c
-> +++ b/drivers/ata/pata_pdc2027x.c
-[...]
-> @@ -664,9 +664,8 @@ static int pdc_hardware_init(struct ata_host *host, unsigned int board_idx)
->   	dev_info(host->dev, "PLL input clock %ld kHz\n", pll_clock/1000);
->   
->   	/* Adjust PLL control register */
-> -	pdc_adjust_pll(host, pll_clock, board_idx);
-> +	return pdc_adjust_pll(host, pll_clock, board_idx);
->   
+Modern ultrabooks idle around 6W (at 50% screen brightness), 1.0 - 1.5W
+is a significant chunk of this.
 
-    Please also remove this empty line (between *return* and }).
+There are some performance / latency costs to enabling LPM by default,
+so it is desirable to make it possible to set a different LPM policy
+for mobile / laptop variants of chipsets / "South Bridges" vs their
+desktop / server counterparts.
 
-> -	return 0;
->   }
->   
->   /**
+This series adds a new ahci.mobile_lpm_policy kernel cmdline option,
+which defaults to a new SATA_MOBILE_LPM_POLICY Kconfig option so that
+Linux distributions can choose to set a LPM policy for mobile chipsets
+by default.
 
-MBR, Sergei
+I realize that this series will not be entirely uncontroversial,
+enabling LPM by default is not entirely without risk of regressions.
+At least min_power is known to cause issues with some disks, including
+some reports of data corruption.
+
+But this series only adds a Kconfig option to allow distributions to
+select a different LPM policy for mobile chipsets if they which to do so,
+the default value is unchanged from before.
+
+I've done a blog-post a while ago to ask users to test this and
+specifically the new med_power_with_dipm option which mirrors the
+Intel RST Windows drivers defaults:
+
+https://hansdegoede.livejournal.com/18412.html
+
+Test results from this can be found here:
+https://fedoraproject.org/wiki/Changes/ImprovedLaptopBatteryLife#How_To_Test
+
+All testing sofar has shown that the med_power_with_dipm option seems to
+be safe, even with SSDs which are known to corrupt data with the min_power
+setting. Taking this into account, one thing to consider is the following
+change to the Kconfig changes in the last patch in the series:
+
+ config SATA_MOBILE_LPM_POLICY
+ 	int "Default SATA Link Power Management policy for mobile chipsets"
+-	range 0 4
++	range 0 3
+ 	default 0
+ 	depends on SATA_AHCI
+ 	help
+
+Thus effectively forbidding choosing min_power as default at the Kconfig
+level.
+
+Regards,
+
+Hans
