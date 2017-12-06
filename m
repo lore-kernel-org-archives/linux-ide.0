@@ -1,76 +1,74 @@
-From: Yoshihiro Kaneko <ykaneko0929@gmail.com>
-Subject: [PATCH] sata: rcar_sata: Reset SATA PHY when Salvator-X board resumes
-Date: Thu,  7 Dec 2017 03:45:25 +0900
-Message-ID: <1512585925-4251-1-git-send-email-ykaneko0929@gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH] sata: rcar_sata: Reset SATA PHY when Salvator-X board resumes
+Date: Wed, 6 Dec 2017 19:56:09 +0100
+Message-ID: <CAMuHMdXXa5pA7eXrmEamKXY_v8t2LKSq7bA6ysH5S2Pqq-b5aA@mail.gmail.com>
+References: <1512585925-4251-1-git-send-email-ykaneko0929@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-renesas-soc-owner@vger.kernel.org>
+In-Reply-To: <1512585925-4251-1-git-send-email-ykaneko0929@gmail.com>
 Sender: linux-renesas-soc-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, Geert Uytterhoeven <geert+renesas@glider.be>, linux-renesas-soc@vger.kernel.org
+To: Yoshihiro Kaneko <ykaneko0929@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, Geert Uytterhoeven <geert+renesas@glider.be>, Linux-Renesas <linux-renesas-soc@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-From: Khiem Nguyen <khiem.nguyen.xt@rvc.renesas.com>
+Hi Kaneko-san,
 
-Because power of Salvator-X board is cut off in suspend,
-it needs to reset SATA PHY state in resume.
-Otherwise, SATA partition could not be accessed anymore.
+On Wed, Dec 6, 2017 at 7:45 PM, Yoshihiro Kaneko <ykaneko0929@gmail.com> wrote:
+> From: Khiem Nguyen <khiem.nguyen.xt@rvc.renesas.com>
+>
+> Because power of Salvator-X board is cut off in suspend,
+> it needs to reset SATA PHY state in resume.
+> Otherwise, SATA partition could not be accessed anymore.
 
-Signed-off-by: Khiem Nguyen <khiem.nguyen.xt@rvc.renesas.com>
-Signed-off-by: Hien Dang <hien.dang.eb@rvc.renesas.com>
-Signed-off-by: Yoshihiro Kaneko <ykaneko0929@gmail.com>
----
+Thanks for your patch!
 
-This patch is based on the for-next branch of libata tree.
+So this is needed on R-Car Gen3 only.
 
- drivers/ata/sata_rcar.c | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+> --- a/drivers/ata/sata_rcar.c
+> +++ b/drivers/ata/sata_rcar.c
+> @@ -977,11 +977,43 @@ static int sata_rcar_resume(struct device *dev)
+>         struct sata_rcar_priv *priv = host->private_data;
+>         void __iomem *base = priv->base;
+>         int ret;
+> +       u32 val;
+>
+>         ret = clk_prepare_enable(priv->clk);
+>         if (ret)
+>                 return ret;
+>
+> +       /* Re-use from sata_rcar_init_controller() */
+> +       /* reset and setup phy */
+> +       switch (priv->type) {
+> +       case RCAR_GEN1_SATA:
+> +               sata_rcar_gen1_phy_init(priv);
 
-diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
-index 80ee2f2..aba6121 100644
---- a/drivers/ata/sata_rcar.c
-+++ b/drivers/ata/sata_rcar.c
-@@ -977,11 +977,43 @@ static int sata_rcar_resume(struct device *dev)
- 	struct sata_rcar_priv *priv = host->private_data;
- 	void __iomem *base = priv->base;
- 	int ret;
-+	u32 val;
- 
- 	ret = clk_prepare_enable(priv->clk);
- 	if (ret)
- 		return ret;
- 
-+	/* Re-use from sata_rcar_init_controller() */
-+	/* reset and setup phy */
-+	switch (priv->type) {
-+	case RCAR_GEN1_SATA:
-+		sata_rcar_gen1_phy_init(priv);
-+		break;
-+	case RCAR_GEN2_SATA:
-+		sata_rcar_gen2_phy_init(priv);
-+		break;
-+	default:
-+		dev_warn(host->dev, "SATA phy is not initialized\n");
-+		break;
-+	}
-+
-+	/* SATA-IP reset state */
-+	val = ioread32(base + ATAPI_CONTROL1_REG);
-+	val |= ATAPI_CONTROL1_RESET;
-+	iowrite32(val, base + ATAPI_CONTROL1_REG);
-+
-+	/* ISM mode, PRD mode, DTEND flag at bit 0 */
-+	val = ioread32(base + ATAPI_CONTROL1_REG);
-+	val |= ATAPI_CONTROL1_ISM;
-+	val |= ATAPI_CONTROL1_DESE;
-+	val |= ATAPI_CONTROL1_DTA32M;
-+	iowrite32(val, base + ATAPI_CONTROL1_REG);
-+
-+	/* Release the SATA-IP from the reset state */
-+	val = ioread32(base + ATAPI_CONTROL1_REG);
-+	val &= ~ATAPI_CONTROL1_RESET;
-+	iowrite32(val, base + ATAPI_CONTROL1_REG);
-+
- 	/* ack and mask */
- 	iowrite32(0, base + SATAINTSTAT_REG);
- 	iowrite32(0x7ff, base + SATAINTMASK_REG);
--- 
-1.9.1
+Hence why do this (and the below) on R-Car Gen1, too?
+
+> +               break;
+> +       case RCAR_GEN2_SATA:
+> +               sata_rcar_gen2_phy_init(priv);
+
+And on both R-Car Gen2 and Gen3 (currently Gen3 is treated like Gen2
+everywhere in the driver)?
+What about introducing RCAR_GEN3_SATA, and doing the reinit on R-Car Gen3
+only?
+
+> +               break;
+> +       default:
+> +               dev_warn(host->dev, "SATA phy is not initialized\n");
+> +               break;
+> +       }
+
+[...]
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
