@@ -1,117 +1,96 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH 1/3] ahci: Annotate PCI ids for mobile Intel chipsets as such
-Date: Wed,  6 Dec 2017 16:41:08 +0100
-Message-ID: <20171206154110.11548-2-hdegoede@redhat.com>
-References: <20171206154110.11548-1-hdegoede@redhat.com>
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Subject: [PATCH v5] pata_pdc2027x: Fix pdc_adjust_pll() to return the error value
+Date: Wed,  6 Dec 2017 22:52:54 +0530
+Message-ID: <8a90e02cc2ccca6277702b6b7ec8f5ca1f85ba4d.1512580696.git.arvind.yadav.cs@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35266 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751809AbdLFPlO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 6 Dec 2017 10:41:14 -0500
-In-Reply-To: <20171206154110.11548-1-hdegoede@redhat.com>
+Received: from mail-pl0-f67.google.com ([209.85.160.67]:44324 "EHLO
+        mail-pl0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751604AbdLFRXG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 6 Dec 2017 12:23:06 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: b.zolnierkie@samsung.com, tj@kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Intel uses different SATA PCI ids for the Desktop and Mobile SKUs of their
-chipsets. For older models the comment describing which chipset the PCI id
-is for, aksi indicates when we're dealing with a mobile SKU. Extend the
-comments for recent chipsets to also indicate mobile SKUs.
+This change is to ensure that function pdc_adjust_pll() returns the
+error value to avoid the unnecessary error check for pdc_hardware_init()
+in pdc2027x_reinit_one().
 
-The information this commit adds comes from Intel's chipset datasheets.
-
-This commit is a preparation patch for allowing a different default
-sata link powermanagement policy for mobile chipsets.
-
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/ata/ahci.c | 32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
+changes in v2 :
+               Make function return type 'void' instead of 'int.
+               Add sapce between ':'.
+changes in v3 :
+               Fix the checkpatch.pl errors in a sperate patch.
+changes in v4 :
+               return the error value from pdc_adjust_pll()
+changes in v5 :
+               remove this empty line (between *return* and }).
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 5443cb71d7ba..9d842ff6ec51 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -268,9 +268,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x3b23), board_ahci }, /* PCH AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x3b24), board_ahci }, /* PCH RAID */
- 	{ PCI_VDEVICE(INTEL, 0x3b25), board_ahci }, /* PCH RAID */
--	{ PCI_VDEVICE(INTEL, 0x3b29), board_ahci }, /* PCH AHCI */
-+	{ PCI_VDEVICE(INTEL, 0x3b29), board_ahci }, /* PCH M AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x3b2b), board_ahci }, /* PCH RAID */
--	{ PCI_VDEVICE(INTEL, 0x3b2c), board_ahci }, /* PCH RAID */
-+	{ PCI_VDEVICE(INTEL, 0x3b2c), board_ahci }, /* PCH M RAID */
- 	{ PCI_VDEVICE(INTEL, 0x3b2f), board_ahci }, /* PCH AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x19b0), board_ahci }, /* DNV AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x19b1), board_ahci }, /* DNV AHCI */
-@@ -293,9 +293,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x19cE), board_ahci }, /* DNV AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x19cF), board_ahci }, /* DNV AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x1c02), board_ahci }, /* CPT AHCI */
--	{ PCI_VDEVICE(INTEL, 0x1c03), board_ahci }, /* CPT AHCI */
-+	{ PCI_VDEVICE(INTEL, 0x1c03), board_ahci }, /* CPT M AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x1c04), board_ahci }, /* CPT RAID */
--	{ PCI_VDEVICE(INTEL, 0x1c05), board_ahci }, /* CPT RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1c05), board_ahci }, /* CPT M RAID */
- 	{ PCI_VDEVICE(INTEL, 0x1c06), board_ahci }, /* CPT RAID */
- 	{ PCI_VDEVICE(INTEL, 0x1c07), board_ahci }, /* CPT RAID */
- 	{ PCI_VDEVICE(INTEL, 0x1d02), board_ahci }, /* PBG AHCI */
-@@ -304,20 +304,20 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci }, /* PBG RAID */
- 	{ PCI_VDEVICE(INTEL, 0x2323), board_ahci }, /* DH89xxCC AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x1e02), board_ahci }, /* Panther Point AHCI */
--	{ PCI_VDEVICE(INTEL, 0x1e03), board_ahci }, /* Panther Point AHCI */
-+	{ PCI_VDEVICE(INTEL, 0x1e03), board_ahci }, /* Panther Point M AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x1e04), board_ahci }, /* Panther Point RAID */
- 	{ PCI_VDEVICE(INTEL, 0x1e05), board_ahci }, /* Panther Point RAID */
- 	{ PCI_VDEVICE(INTEL, 0x1e06), board_ahci }, /* Panther Point RAID */
--	{ PCI_VDEVICE(INTEL, 0x1e07), board_ahci }, /* Panther Point RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1e07), board_ahci }, /* Panther Point M RAID */
- 	{ PCI_VDEVICE(INTEL, 0x1e0e), board_ahci }, /* Panther Point RAID */
- 	{ PCI_VDEVICE(INTEL, 0x8c02), board_ahci }, /* Lynx Point AHCI */
--	{ PCI_VDEVICE(INTEL, 0x8c03), board_ahci }, /* Lynx Point AHCI */
-+	{ PCI_VDEVICE(INTEL, 0x8c03), board_ahci }, /* Lynx Point M AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x8c04), board_ahci }, /* Lynx Point RAID */
--	{ PCI_VDEVICE(INTEL, 0x8c05), board_ahci }, /* Lynx Point RAID */
-+	{ PCI_VDEVICE(INTEL, 0x8c05), board_ahci }, /* Lynx Point M RAID */
- 	{ PCI_VDEVICE(INTEL, 0x8c06), board_ahci }, /* Lynx Point RAID */
--	{ PCI_VDEVICE(INTEL, 0x8c07), board_ahci }, /* Lynx Point RAID */
-+	{ PCI_VDEVICE(INTEL, 0x8c07), board_ahci }, /* Lynx Point M RAID */
- 	{ PCI_VDEVICE(INTEL, 0x8c0e), board_ahci }, /* Lynx Point RAID */
--	{ PCI_VDEVICE(INTEL, 0x8c0f), board_ahci }, /* Lynx Point RAID */
-+	{ PCI_VDEVICE(INTEL, 0x8c0f), board_ahci }, /* Lynx Point M RAID */
- 	{ PCI_VDEVICE(INTEL, 0x9c02), board_ahci }, /* Lynx Point-LP AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x9c03), board_ahci }, /* Lynx Point-LP AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x9c04), board_ahci }, /* Lynx Point-LP RAID */
-@@ -358,21 +358,21 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x9c87), board_ahci }, /* Wildcat Point-LP RAID */
- 	{ PCI_VDEVICE(INTEL, 0x9c8f), board_ahci }, /* Wildcat Point-LP RAID */
- 	{ PCI_VDEVICE(INTEL, 0x8c82), board_ahci }, /* 9 Series AHCI */
--	{ PCI_VDEVICE(INTEL, 0x8c83), board_ahci }, /* 9 Series AHCI */
-+	{ PCI_VDEVICE(INTEL, 0x8c83), board_ahci }, /* 9 Series M AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x8c84), board_ahci }, /* 9 Series RAID */
--	{ PCI_VDEVICE(INTEL, 0x8c85), board_ahci }, /* 9 Series RAID */
-+	{ PCI_VDEVICE(INTEL, 0x8c85), board_ahci }, /* 9 Series M RAID */
- 	{ PCI_VDEVICE(INTEL, 0x8c86), board_ahci }, /* 9 Series RAID */
--	{ PCI_VDEVICE(INTEL, 0x8c87), board_ahci }, /* 9 Series RAID */
-+	{ PCI_VDEVICE(INTEL, 0x8c87), board_ahci }, /* 9 Series M RAID */
- 	{ PCI_VDEVICE(INTEL, 0x8c8e), board_ahci }, /* 9 Series RAID */
--	{ PCI_VDEVICE(INTEL, 0x8c8f), board_ahci }, /* 9 Series RAID */
-+	{ PCI_VDEVICE(INTEL, 0x8c8f), board_ahci }, /* 9 Series M RAID */
- 	{ PCI_VDEVICE(INTEL, 0x9d03), board_ahci }, /* Sunrise Point-LP AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x9d05), board_ahci }, /* Sunrise Point-LP RAID */
- 	{ PCI_VDEVICE(INTEL, 0x9d07), board_ahci }, /* Sunrise Point-LP RAID */
- 	{ PCI_VDEVICE(INTEL, 0xa102), board_ahci }, /* Sunrise Point-H AHCI */
--	{ PCI_VDEVICE(INTEL, 0xa103), board_ahci }, /* Sunrise Point-H AHCI */
-+	{ PCI_VDEVICE(INTEL, 0xa103), board_ahci }, /* Sunrise Point-H M AHCI */
- 	{ PCI_VDEVICE(INTEL, 0xa105), board_ahci }, /* Sunrise Point-H RAID */
- 	{ PCI_VDEVICE(INTEL, 0xa106), board_ahci }, /* Sunrise Point-H RAID */
--	{ PCI_VDEVICE(INTEL, 0xa107), board_ahci }, /* Sunrise Point-H RAID */
-+	{ PCI_VDEVICE(INTEL, 0xa107), board_ahci }, /* Sunrise Point-H M RAID */
- 	{ PCI_VDEVICE(INTEL, 0xa10f), board_ahci }, /* Sunrise Point-H RAID */
- 	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci }, /* Lewisburg RAID*/
- 	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Lewisburg AHCI*/
+ drivers/ata/pata_pdc2027x.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/ata/pata_pdc2027x.c b/drivers/ata/pata_pdc2027x.c
+index ffd8d33..81f9178 100644
+--- a/drivers/ata/pata_pdc2027x.c
++++ b/drivers/ata/pata_pdc2027x.c
+@@ -515,7 +515,7 @@ static long pdc_read_counter(struct ata_host *host)
+  * @host: target ATA host
+  * @pll_clock: The input of PLL in HZ
+  */
+-static void pdc_adjust_pll(struct ata_host *host, long pll_clock, unsigned int board_idx)
++static int pdc_adjust_pll(struct ata_host *host, long pll_clock, unsigned int board_idx)
+ {
+ 	void __iomem *mmio_base = host->iomap[PDC_MMIO_BAR];
+ 	u16 pll_ctl;
+@@ -527,7 +527,7 @@ static void pdc_adjust_pll(struct ata_host *host, long pll_clock, unsigned int b
+ 	/* Sanity check */
+ 	if (unlikely(pll_clock_khz < 5000L || pll_clock_khz > 70000L)) {
+ 		printk(KERN_ERR DRV_NAME ": Invalid PLL input clock %ldkHz, give up!\n", pll_clock_khz);
+-		return;
++		return -EINVAL;
+ 	}
+ 
+ #ifdef PDC_DEBUG
+@@ -559,7 +559,7 @@ static void pdc_adjust_pll(struct ata_host *host, long pll_clock, unsigned int b
+ 	} else {
+ 		/* Invalid ratio */
+ 		printk(KERN_ERR DRV_NAME ": Invalid ratio %ld, give up!\n", ratio);
+-		return;
++		return -EINVAL;
+ 	}
+ 
+ 	F = (ratio * (R+2)) / 1000 - 2;
+@@ -567,7 +567,7 @@ static void pdc_adjust_pll(struct ata_host *host, long pll_clock, unsigned int b
+ 	if (unlikely(F < 0 || F > 127)) {
+ 		/* Invalid F */
+ 		printk(KERN_ERR DRV_NAME ": F[%d] invalid!\n", F);
+-		return;
++		return -EINVAL;
+ 	}
+ 
+ 	PDPRINTK("F[%d] R[%d] ratio*1000[%ld]\n", F, R, ratio);
+@@ -592,7 +592,7 @@ static void pdc_adjust_pll(struct ata_host *host, long pll_clock, unsigned int b
+ 	PDPRINTK("pll_ctl[%X]\n", pll_ctl);
+ #endif
+ 
+-	return;
++	return 0;
+ }
+ 
+ /**
+@@ -664,9 +664,7 @@ static int pdc_hardware_init(struct ata_host *host, unsigned int board_idx)
+ 	dev_info(host->dev, "PLL input clock %ld kHz\n", pll_clock/1000);
+ 
+ 	/* Adjust PLL control register */
+-	pdc_adjust_pll(host, pll_clock, board_idx);
+-
+-	return 0;
++	return pdc_adjust_pll(host, pll_clock, board_idx);
+ }
+ 
+ /**
 -- 
-2.14.3
+2.7.4
 
