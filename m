@@ -1,18 +1,14 @@
 From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH 0/3] ahci: Allow setting a default LPM policy for mobile chipsets
-Date: Wed,  6 Dec 2017 16:41:07 +0100
-Message-ID: <20171206154110.11548-1-hdegoede@redhat.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36290 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751362AbdLFPlN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 6 Dec 2017 10:41:13 -0500
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Subject: [PATCH 3/3] ahci: Allow setting a default LPM policy for mobile chipsets
+Date: Wed,  6 Dec 2017 16:41:10 +0100
+Message-ID: <20171206154110.11548-4-hdegoede@redhat.com>
+References: <20171206154110.11548-1-hdegoede@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20171206154110.11548-1-hdegoede@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-
-Hi All,
+List-Id: linux-ide@vger.kernel.org
 
 On many laptops setting a different LPM policy then unknown /
 max_performance can lead to power-savings of 1.0 - 1.5 Watts (when idle).
@@ -23,47 +19,271 @@ is a significant chunk of this.
 There are some performance / latency costs to enabling LPM by default,
 so it is desirable to make it possible to set a different LPM policy
 for mobile / laptop variants of chipsets / "South Bridges" vs their
-desktop / server counterparts.
+desktop / server counterparts. Also enabling LPM by default is not
+entirely without risk of regressions. At least min_power is known to
+cause issues with some disks, including some reports of data corruption.
 
-This series adds a new ahci.mobile_lpm_policy kernel cmdline option,
+This commits adds a new ahci.mobile_lpm_policy kernel cmdline option,
 which defaults to a new SATA_MOBILE_LPM_POLICY Kconfig option so that
 Linux distributions can choose to set a LPM policy for mobile chipsets
 by default.
 
-I realize that this series will not be entirely uncontroversial,
-enabling LPM by default is not entirely without risk of regressions.
-At least min_power is known to cause issues with some disks, including
-some reports of data corruption.
+The reason to have both a kernel cmdline option and a Kconfig default
+value for it, is to allow easy overriding of the default to allow
+trouble-shooting without needing to rebuild the kernel.
 
-But this series only adds a Kconfig option to allow distributions to
-select a different LPM policy for mobile chipsets if they which to do so,
-the default value is unchanged from before.
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ .config             |  1 +
+ drivers/ata/Kconfig | 19 +++++++++++
+ drivers/ata/ahci.c  | 97 +++++++++++++++++++++++++++++++----------------------
+ drivers/ata/ahci.h  |  3 ++
+ 4 files changed, 79 insertions(+), 41 deletions(-)
 
-I've done a blog-post a while ago to ask users to test this and
-specifically the new med_power_with_dipm option which mirrors the
-Intel RST Windows drivers defaults:
-
-https://hansdegoede.livejournal.com/18412.html
-
-Test results from this can be found here:
-https://fedoraproject.org/wiki/Changes/ImprovedLaptopBatteryLife#How_To_Test
-
-All testing sofar has shown that the med_power_with_dipm option seems to
-be safe, even with SSDs which are known to corrupt data with the min_power
-setting. Taking this into account, one thing to consider is the following
-change to the Kconfig changes in the last patch in the series:
-
- config SATA_MOBILE_LPM_POLICY
- 	int "Default SATA Link Power Management policy for mobile chipsets"
--	range 0 4
-+	range 0 3
- 	default 0
- 	depends on SATA_AHCI
+diff --git a/.config b/.config
+index 758cc273d9da..499dd1fe3cb8 100644
+--- a/.config
++++ b/.config
+@@ -2283,6 +2283,7 @@ CONFIG_SATA_PMP=y
+ # Controllers with non-SFF native interface
+ #
+ CONFIG_SATA_AHCI=y
++CONFIG_SATA_MOBILE_LPM_POLICY=3
+ CONFIG_SATA_AHCI_PLATFORM=m
+ CONFIG_SATA_INIC162X=m
+ CONFIG_SATA_ACARD_AHCI=m
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index cb5339166563..b3fad5663aeb 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -92,6 +92,25 @@ config SATA_AHCI
+ 
+ 	  If unsure, say N.
+ 
++config SATA_MOBILE_LPM_POLICY
++	int "Default SATA Link Power Management policy for mobile chipsets"
++	range 0 4
++	default 0
++	depends on SATA_AHCI
++	help
++	  Select the Default SATA Link Power Management (LPM) policy to use
++	  for mobile / laptop variants of chipsets / "South Bridges".
++
++	  The value set has the following meanings:
++		0 => Keep firmware settings
++		1 => Maximum performance
++		2 => Medium power
++		3 => Medium power with Device Initiated PM enabled
++		4 => Minimum power
++
++	  Note "Minimum power" is known to cause issues, including disk
++	  corruption, with some disks and should not be used.
++
+ config SATA_AHCI_PLATFORM
+ 	tristate "Platform AHCI SATA support"
  	help
-
-Thus effectively forbidding choosing min_power as default at the Kconfig
-level.
-
-Regards,
-
-Hans
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 844f697bedbf..8e910fae8892 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -65,6 +65,7 @@ enum board_ids {
+ 	/* board IDs by feature in alphabetical order */
+ 	board_ahci,
+ 	board_ahci_ign_iferr,
++	board_ahci_mobile,
+ 	board_ahci_nomsi,
+ 	board_ahci_noncq,
+ 	board_ahci_nosntf,
+@@ -140,6 +141,13 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_ops,
+ 	},
++	[board_ahci_mobile] = {
++		AHCI_HFLAGS	(AHCI_HFLAG_IS_MOBILE),
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_ops,
++	},
+ 	[board_ahci_nomsi] = {
+ 		AHCI_HFLAGS	(AHCI_HFLAG_NO_MSI),
+ 		.flags		= AHCI_FLAG_COMMON,
+@@ -252,13 +260,13 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x2924), board_ahci }, /* ICH9 */
+ 	{ PCI_VDEVICE(INTEL, 0x2925), board_ahci }, /* ICH9 */
+ 	{ PCI_VDEVICE(INTEL, 0x2927), board_ahci }, /* ICH9 */
+-	{ PCI_VDEVICE(INTEL, 0x2929), board_ahci }, /* ICH9M */
+-	{ PCI_VDEVICE(INTEL, 0x292a), board_ahci }, /* ICH9M */
+-	{ PCI_VDEVICE(INTEL, 0x292b), board_ahci }, /* ICH9M */
+-	{ PCI_VDEVICE(INTEL, 0x292c), board_ahci }, /* ICH9M */
+-	{ PCI_VDEVICE(INTEL, 0x292f), board_ahci }, /* ICH9M */
++	{ PCI_VDEVICE(INTEL, 0x2929), board_ahci_mobile }, /* ICH9M */
++	{ PCI_VDEVICE(INTEL, 0x292a), board_ahci_mobile }, /* ICH9M */
++	{ PCI_VDEVICE(INTEL, 0x292b), board_ahci_mobile }, /* ICH9M */
++	{ PCI_VDEVICE(INTEL, 0x292c), board_ahci_mobile }, /* ICH9M */
++	{ PCI_VDEVICE(INTEL, 0x292f), board_ahci_mobile }, /* ICH9M */
+ 	{ PCI_VDEVICE(INTEL, 0x294d), board_ahci }, /* ICH9 */
+-	{ PCI_VDEVICE(INTEL, 0x294e), board_ahci }, /* ICH9M */
++	{ PCI_VDEVICE(INTEL, 0x294e), board_ahci_mobile }, /* ICH9M */
+ 	{ PCI_VDEVICE(INTEL, 0x502a), board_ahci }, /* Tolapai */
+ 	{ PCI_VDEVICE(INTEL, 0x502b), board_ahci }, /* Tolapai */
+ 	{ PCI_VDEVICE(INTEL, 0x3a05), board_ahci }, /* ICH10 */
+@@ -268,9 +276,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x3b23), board_ahci }, /* PCH AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x3b24), board_ahci }, /* PCH RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x3b25), board_ahci }, /* PCH RAID */
+-	{ PCI_VDEVICE(INTEL, 0x3b29), board_ahci }, /* PCH M AHCI */
++	{ PCI_VDEVICE(INTEL, 0x3b29), board_ahci_mobile }, /* PCH M AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x3b2b), board_ahci }, /* PCH RAID */
+-	{ PCI_VDEVICE(INTEL, 0x3b2c), board_ahci }, /* PCH M RAID */
++	{ PCI_VDEVICE(INTEL, 0x3b2c), board_ahci_mobile }, /* PCH M RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x3b2f), board_ahci }, /* PCH AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x19b0), board_ahci }, /* DNV AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x19b1), board_ahci }, /* DNV AHCI */
+@@ -293,9 +301,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x19cE), board_ahci }, /* DNV AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x19cF), board_ahci }, /* DNV AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x1c02), board_ahci }, /* CPT AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x1c03), board_ahci }, /* CPT M AHCI */
++	{ PCI_VDEVICE(INTEL, 0x1c03), board_ahci_mobile }, /* CPT M AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x1c04), board_ahci }, /* CPT RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1c05), board_ahci }, /* CPT M RAID */
++	{ PCI_VDEVICE(INTEL, 0x1c05), board_ahci_mobile }, /* CPT M RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x1c06), board_ahci }, /* CPT RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x1c07), board_ahci }, /* CPT RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x1d02), board_ahci }, /* PBG AHCI */
+@@ -304,28 +312,28 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci }, /* PBG RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x2323), board_ahci }, /* DH89xxCC AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x1e02), board_ahci }, /* Panther Point AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x1e03), board_ahci }, /* Panther Point M AHCI */
++	{ PCI_VDEVICE(INTEL, 0x1e03), board_ahci_mobile }, /* Panther M AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x1e04), board_ahci }, /* Panther Point RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x1e05), board_ahci }, /* Panther Point RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x1e06), board_ahci }, /* Panther Point RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1e07), board_ahci }, /* Panther Point M RAID */
++	{ PCI_VDEVICE(INTEL, 0x1e07), board_ahci_mobile }, /* Panther M RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x1e0e), board_ahci }, /* Panther Point RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x8c02), board_ahci }, /* Lynx Point AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x8c03), board_ahci }, /* Lynx Point M AHCI */
++	{ PCI_VDEVICE(INTEL, 0x8c03), board_ahci_mobile }, /* Lynx M AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x8c04), board_ahci }, /* Lynx Point RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8c05), board_ahci }, /* Lynx Point M RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c05), board_ahci_mobile }, /* Lynx M RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x8c06), board_ahci }, /* Lynx Point RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8c07), board_ahci }, /* Lynx Point M RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c07), board_ahci_mobile }, /* Lynx M RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x8c0e), board_ahci }, /* Lynx Point RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8c0f), board_ahci }, /* Lynx Point M RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9c02), board_ahci }, /* Lynx Point-LP AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x9c03), board_ahci }, /* Lynx Point-LP AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x9c04), board_ahci }, /* Lynx Point-LP RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9c05), board_ahci }, /* Lynx Point-LP RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9c06), board_ahci }, /* Lynx Point-LP RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9c07), board_ahci }, /* Lynx Point-LP RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9c0e), board_ahci }, /* Lynx Point-LP RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9c0f), board_ahci }, /* Lynx Point-LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c0f), board_ahci_mobile }, /* Lynx M RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c02), board_ahci_mobile }, /* Lynx LP AHCI */
++	{ PCI_VDEVICE(INTEL, 0x9c03), board_ahci_mobile }, /* Lynx LP AHCI */
++	{ PCI_VDEVICE(INTEL, 0x9c04), board_ahci_mobile }, /* Lynx LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c05), board_ahci_mobile }, /* Lynx LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c06), board_ahci_mobile }, /* Lynx LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c07), board_ahci_mobile }, /* Lynx LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c0e), board_ahci_mobile }, /* Lynx LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c0f), board_ahci_mobile }, /* Lynx LP RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x1f22), board_ahci }, /* Avoton AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x1f23), board_ahci }, /* Avoton AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x1f24), board_ahci }, /* Avoton RAID */
+@@ -353,26 +361,26 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x8d66), board_ahci }, /* Wellsburg RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x8d6e), board_ahci }, /* Wellsburg RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x23a3), board_ahci }, /* Coleto Creek AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x9c83), board_ahci }, /* Wildcat Point-LP AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x9c85), board_ahci }, /* Wildcat Point-LP RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9c87), board_ahci }, /* Wildcat Point-LP RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9c8f), board_ahci }, /* Wildcat Point-LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c83), board_ahci_mobile }, /* Wildcat LP AHCI */
++	{ PCI_VDEVICE(INTEL, 0x9c85), board_ahci_mobile }, /* Wildcat LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c87), board_ahci_mobile }, /* Wildcat LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c8f), board_ahci_mobile }, /* Wildcat LP RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x8c82), board_ahci }, /* 9 Series AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x8c83), board_ahci }, /* 9 Series M AHCI */
++	{ PCI_VDEVICE(INTEL, 0x8c83), board_ahci_mobile }, /* 9 Series M AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x8c84), board_ahci }, /* 9 Series RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8c85), board_ahci }, /* 9 Series M RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c85), board_ahci_mobile }, /* 9 Series M RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x8c86), board_ahci }, /* 9 Series RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8c87), board_ahci }, /* 9 Series M RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c87), board_ahci_mobile }, /* 9 Series M RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x8c8e), board_ahci }, /* 9 Series RAID */
+-	{ PCI_VDEVICE(INTEL, 0x8c8f), board_ahci }, /* 9 Series M RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9d03), board_ahci }, /* Sunrise Point-LP AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x9d05), board_ahci }, /* Sunrise Point-LP RAID */
+-	{ PCI_VDEVICE(INTEL, 0x9d07), board_ahci }, /* Sunrise Point-LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c8f), board_ahci_mobile }, /* 9 Series M RAID */
++	{ PCI_VDEVICE(INTEL, 0x9d03), board_ahci_mobile }, /* Sunrise LP AHCI */
++	{ PCI_VDEVICE(INTEL, 0x9d05), board_ahci_mobile }, /* Sunrise LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9d07), board_ahci_mobile }, /* Sunrise LP RAID */
+ 	{ PCI_VDEVICE(INTEL, 0xa102), board_ahci }, /* Sunrise Point-H AHCI */
+-	{ PCI_VDEVICE(INTEL, 0xa103), board_ahci }, /* Sunrise Point-H M AHCI */
++	{ PCI_VDEVICE(INTEL, 0xa103), board_ahci_mobile }, /* Sunrise M AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0xa105), board_ahci }, /* Sunrise Point-H RAID */
+ 	{ PCI_VDEVICE(INTEL, 0xa106), board_ahci }, /* Sunrise Point-H RAID */
+-	{ PCI_VDEVICE(INTEL, 0xa107), board_ahci }, /* Sunrise Point-H M RAID */
++	{ PCI_VDEVICE(INTEL, 0xa107), board_ahci_mobile }, /* Sunrise M RAID */
+ 	{ PCI_VDEVICE(INTEL, 0xa10f), board_ahci }, /* Sunrise Point-H RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci }, /* Lewisburg RAID*/
+ 	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Lewisburg AHCI*/
+@@ -386,10 +394,10 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0xa206), board_ahci }, /* Lewisburg RAID*/
+ 	{ PCI_VDEVICE(INTEL, 0xa252), board_ahci }, /* Lewisburg RAID*/
+ 	{ PCI_VDEVICE(INTEL, 0xa256), board_ahci }, /* Lewisburg RAID*/
+-	{ PCI_VDEVICE(INTEL, 0x0f22), board_ahci }, /* Bay Trail AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x0f23), board_ahci }, /* Bay Trail AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x22a3), board_ahci }, /* Cherry Trail AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x5ae3), board_ahci }, /* Apollo Lake AHCI */
++	{ PCI_VDEVICE(INTEL, 0x0f22), board_ahci_mobile }, /* Bay Trail AHCI */
++	{ PCI_VDEVICE(INTEL, 0x0f23), board_ahci_mobile }, /* Bay Trail AHCI */
++	{ PCI_VDEVICE(INTEL, 0x22a3), board_ahci_mobile }, /* Cherry Tr. AHCI */
++	{ PCI_VDEVICE(INTEL, 0x5ae3), board_ahci_mobile }, /* ApolloLake AHCI */
+ 
+ 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+ 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+@@ -597,6 +605,9 @@ static int marvell_enable = 1;
+ module_param(marvell_enable, int, 0644);
+ MODULE_PARM_DESC(marvell_enable, "Marvell SATA via AHCI (1 = enabled)");
+ 
++static int mobile_lpm_policy = CONFIG_SATA_MOBILE_LPM_POLICY;
++module_param(mobile_lpm_policy, int, 0644);
++MODULE_PARM_DESC(mobile_lpm_policy, "Default LPM policy for mobile chipsets");
+ 
+ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
+ 					 struct ahci_host_priv *hpriv)
+@@ -1732,6 +1743,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		if (ap->flags & ATA_FLAG_EM)
+ 			ap->em_message_type = hpriv->em_msg_type;
+ 
++		if ((hpriv->flags & AHCI_HFLAG_IS_MOBILE) &&
++		    mobile_lpm_policy >= ATA_LPM_UNKNOWN &&
++		    mobile_lpm_policy <= ATA_LPM_MIN_POWER)
++			ap->target_lpm_policy = mobile_lpm_policy;
+ 
+ 		/* disabled/not-implemented port */
+ 		if (!(hpriv->port_map & (1 << i)))
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 749fd94441b0..a9d996e17d75 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -251,6 +251,9 @@ enum {
+ 	AHCI_HFLAG_YES_ALPM		= (1 << 23), /* force ALPM cap on */
+ 	AHCI_HFLAG_NO_WRITE_TO_RO	= (1 << 24), /* don't write to read
+ 							only registers */
++	AHCI_HFLAG_IS_MOBILE		= (1 << 25), /* mobile chipset, use
++							SATA_MOBILE_LPM_POLICY
++							as default lpm_policy */
+ 
+ 	/* ap->flags bits */
+ 
+-- 
+2.14.3
