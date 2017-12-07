@@ -1,74 +1,43 @@
-From: Christoph Hellwig <hch@infradead.org>
+From: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
 Subject: Re: When will Linux support new RAID controllers
-Date: Wed, 6 Dec 2017 16:00:29 -0800
-Message-ID: <20171207000029.GA2725@infradead.org>
+Date: Thu, 7 Dec 2017 14:16:12 +0000
+Message-ID: <20171207141612.2653a0fb@alans-desktop>
 References: <CAGRSmLs-Hr+FFfa4_29kidEeL2d7b+cEP6u1OkOUoYW6Cm15BA@mail.gmail.com>
- <20171110131937.GA26181@infradead.org>
- <CAKKYfmEqw48mjBsKoy=qeny6B1X8PKytSN4UwpvSupo87746kg@mail.gmail.com>
- <CAGRSmLsvAR6wth7tPd5J2kAydy64uQ+h45Yu-SUeOAHkfOHXHA@mail.gmail.com>
- <CAGRSmLto7dG19zgUkdZjuhacWXo=ju6WdS0YVjC5xOOsGjV9kg@mail.gmail.com>
+        <20171110131937.GA26181@infradead.org>
+        <CAKKYfmEqw48mjBsKoy=qeny6B1X8PKytSN4UwpvSupo87746kg@mail.gmail.com>
+        <CAGRSmLsvAR6wth7tPd5J2kAydy64uQ+h45Yu-SUeOAHkfOHXHA@mail.gmail.com>
+        <CAGRSmLto7dG19zgUkdZjuhacWXo=ju6WdS0YVjC5xOOsGjV9kg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from www.llwyncelyn.cymru ([82.70.14.225]:56380 "EHLO fuzix.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753058AbdLGORR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 7 Dec 2017 09:17:17 -0500
 In-Reply-To: <CAGRSmLto7dG19zgUkdZjuhacWXo=ju6WdS0YVjC5xOOsGjV9kg@mail.gmail.com>
-Sender: linux-raid-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: "David F." <df7729@gmail.com>
 Cc: Dennis Mungai <dmngaie@gmail.com>, Christoph Hellwig <hch@infradead.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, linux-ide@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-nvme@lists.infradead.org
-List-Id: linux-ide@vger.kernel.org
 
-I guess poor Dan got a gag order from the people responsible for this
-mess at Intel or something, as he's usually quick to reply and very
-helpful.
+On Mon, 4 Dec 2017 18:01:10 -0800
+"David F." <df7729@gmail.com> wrote:
 
-On Mon, Dec 04, 2017 at 06:01:10PM -0800, David F. wrote:
 > Hi,
 > 
 > Any word if the patch is available?
 > 
 > Is this going mainline anytime soon?
-> 
-> 
-> On Fri, Nov 10, 2017 at 11:06 AM, David F. <df7729@gmail.com> wrote:
-> > A patch would be great.  There has been several cases where no option
-> > to use AHCI mode available, or where a box seller would offer Linux as
-> > an alternate boot option against Windows in RAID mode (on the mobo)
-> > but could no longer provide Linux with their systems (without
-> > additional costs for add-in raid controller).
-> >
-> > On Fri, Nov 10, 2017 at 5:31 AM, Dennis Mungai <dmngaie@gmail.com> wrote:
-> >> That feature would be especially important on systems where the
-> >> BIOS/UEFI environment offers no option to toggle back the AHCI mode.
-> >> This "RAID" Intel features is also known as "Intel Premium RST mode"
-> >> on all current Clevo systems, and on such a platform (the Clevo
-> >> P751DM2-G, marketed by the likes of Schenker and Origin PC) is based
-> >> on this platform.
-> >>
-> >> -Dennis.
-> >>
-> >> On 10 November 2017 at 16:19, Christoph Hellwig <hch@infradead.org> wrote:
-> >>> On Thu, Nov 09, 2017 at 10:24:54AM -0800, David F. wrote:
-> >>>> It seems that Linux will not see any HD on Intel's 100 Series or newer
-> >>>> chipsets (Z170, etc.) when in RAID mode.  (typically these systems
-> >>>> have M2 NVMe devices ). This is problematic when wanting to use Linux
-> >>>> on the system without having to disable RAID and when on their with
-> >>>> Windows.   Maybe not a linux-raid issue, but is Linux RAID issue
-> >>>> within the kernel device support.
-> >>>
-> >>> Dan (on Cc) posted some patches to support the awkwared so called
-> >>> "RAID" mode (it really should be Intel landgrab mode) in the client
-> >>> chipsets more than a year ago.
-> >>>
-> >>> It needed a bit of a rework to be present as a fake PCIe root port
-> >>> instead of the platform driver magic, so I wonder what happened to
-> >>> it - Dan any chance to get back to it?
-> >>>
-> >>> _______________________________________________
-> >>> Linux-nvme mailing list
-> >>> Linux-nvme@lists.infradead.org
-> >>> http://lists.infradead.org/mailman/listinfo/linux-nvme
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
----end quoted text---
+
+I am not aware of anyone in Intel working on it or planning to work on it
+at this point. Nothing stops someone outside of Intel doing that from the
+code that was released.
+
+For things that need BIOS changes whatever the vendor my experience has
+always been that you make the most impact by talking to the actual system
+vendor (who controls the BIOS), including telling them why you didn't buy
+their machine. At the end of the day businesses make decisions based on
+dollars.
+
+Alan
