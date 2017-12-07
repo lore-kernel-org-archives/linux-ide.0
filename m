@@ -1,74 +1,74 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH] sata: rcar_sata: Reset SATA PHY when Salvator-X board resumes
-Date: Wed, 6 Dec 2017 19:56:09 +0100
-Message-ID: <CAMuHMdXXa5pA7eXrmEamKXY_v8t2LKSq7bA6ysH5S2Pqq-b5aA@mail.gmail.com>
-References: <1512585925-4251-1-git-send-email-ykaneko0929@gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: When will Linux support new RAID controllers
+Date: Wed, 6 Dec 2017 16:00:29 -0800
+Message-ID: <20171207000029.GA2725@infradead.org>
+References: <CAGRSmLs-Hr+FFfa4_29kidEeL2d7b+cEP6u1OkOUoYW6Cm15BA@mail.gmail.com>
+ <20171110131937.GA26181@infradead.org>
+ <CAKKYfmEqw48mjBsKoy=qeny6B1X8PKytSN4UwpvSupo87746kg@mail.gmail.com>
+ <CAGRSmLsvAR6wth7tPd5J2kAydy64uQ+h45Yu-SUeOAHkfOHXHA@mail.gmail.com>
+ <CAGRSmLto7dG19zgUkdZjuhacWXo=ju6WdS0YVjC5xOOsGjV9kg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-renesas-soc-owner@vger.kernel.org>
-In-Reply-To: <1512585925-4251-1-git-send-email-ykaneko0929@gmail.com>
-Sender: linux-renesas-soc-owner@vger.kernel.org
-To: Yoshihiro Kaneko <ykaneko0929@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, Geert Uytterhoeven <geert+renesas@glider.be>, Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAGRSmLto7dG19zgUkdZjuhacWXo=ju6WdS0YVjC5xOOsGjV9kg@mail.gmail.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: "David F." <df7729@gmail.com>
+Cc: Dennis Mungai <dmngaie@gmail.com>, Christoph Hellwig <hch@infradead.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, linux-ide@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-nvme@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-Hi Kaneko-san,
+I guess poor Dan got a gag order from the people responsible for this
+mess at Intel or something, as he's usually quick to reply and very
+helpful.
 
-On Wed, Dec 6, 2017 at 7:45 PM, Yoshihiro Kaneko <ykaneko0929@gmail.com> wrote:
-> From: Khiem Nguyen <khiem.nguyen.xt@rvc.renesas.com>
->
-> Because power of Salvator-X board is cut off in suspend,
-> it needs to reset SATA PHY state in resume.
-> Otherwise, SATA partition could not be accessed anymore.
-
-Thanks for your patch!
-
-So this is needed on R-Car Gen3 only.
-
-> --- a/drivers/ata/sata_rcar.c
-> +++ b/drivers/ata/sata_rcar.c
-> @@ -977,11 +977,43 @@ static int sata_rcar_resume(struct device *dev)
->         struct sata_rcar_priv *priv = host->private_data;
->         void __iomem *base = priv->base;
->         int ret;
-> +       u32 val;
->
->         ret = clk_prepare_enable(priv->clk);
->         if (ret)
->                 return ret;
->
-> +       /* Re-use from sata_rcar_init_controller() */
-> +       /* reset and setup phy */
-> +       switch (priv->type) {
-> +       case RCAR_GEN1_SATA:
-> +               sata_rcar_gen1_phy_init(priv);
-
-Hence why do this (and the below) on R-Car Gen1, too?
-
-> +               break;
-> +       case RCAR_GEN2_SATA:
-> +               sata_rcar_gen2_phy_init(priv);
-
-And on both R-Car Gen2 and Gen3 (currently Gen3 is treated like Gen2
-everywhere in the driver)?
-What about introducing RCAR_GEN3_SATA, and doing the reinit on R-Car Gen3
-only?
-
-> +               break;
-> +       default:
-> +               dev_warn(host->dev, "SATA phy is not initialized\n");
-> +               break;
-> +       }
-
-[...]
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+On Mon, Dec 04, 2017 at 06:01:10PM -0800, David F. wrote:
+> Hi,
+> 
+> Any word if the patch is available?
+> 
+> Is this going mainline anytime soon?
+> 
+> 
+> On Fri, Nov 10, 2017 at 11:06 AM, David F. <df7729@gmail.com> wrote:
+> > A patch would be great.  There has been several cases where no option
+> > to use AHCI mode available, or where a box seller would offer Linux as
+> > an alternate boot option against Windows in RAID mode (on the mobo)
+> > but could no longer provide Linux with their systems (without
+> > additional costs for add-in raid controller).
+> >
+> > On Fri, Nov 10, 2017 at 5:31 AM, Dennis Mungai <dmngaie@gmail.com> wrote:
+> >> That feature would be especially important on systems where the
+> >> BIOS/UEFI environment offers no option to toggle back the AHCI mode.
+> >> This "RAID" Intel features is also known as "Intel Premium RST mode"
+> >> on all current Clevo systems, and on such a platform (the Clevo
+> >> P751DM2-G, marketed by the likes of Schenker and Origin PC) is based
+> >> on this platform.
+> >>
+> >> -Dennis.
+> >>
+> >> On 10 November 2017 at 16:19, Christoph Hellwig <hch@infradead.org> wrote:
+> >>> On Thu, Nov 09, 2017 at 10:24:54AM -0800, David F. wrote:
+> >>>> It seems that Linux will not see any HD on Intel's 100 Series or newer
+> >>>> chipsets (Z170, etc.) when in RAID mode.  (typically these systems
+> >>>> have M2 NVMe devices ). This is problematic when wanting to use Linux
+> >>>> on the system without having to disable RAID and when on their with
+> >>>> Windows.   Maybe not a linux-raid issue, but is Linux RAID issue
+> >>>> within the kernel device support.
+> >>>
+> >>> Dan (on Cc) posted some patches to support the awkwared so called
+> >>> "RAID" mode (it really should be Intel landgrab mode) in the client
+> >>> chipsets more than a year ago.
+> >>>
+> >>> It needed a bit of a rework to be present as a fake PCIe root port
+> >>> instead of the platform driver magic, so I wonder what happened to
+> >>> it - Dan any chance to get back to it?
+> >>>
+> >>> _______________________________________________
+> >>> Linux-nvme mailing list
+> >>> Linux-nvme@lists.infradead.org
+> >>> http://lists.infradead.org/mailman/listinfo/linux-nvme
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---end quoted text---
