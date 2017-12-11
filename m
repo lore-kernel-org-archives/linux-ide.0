@@ -1,46 +1,36 @@
-From: Dennis Mungai <dmngaie@gmail.com>
-Subject: Re: When will Linux support new RAID controllers
-Date: Thu, 7 Dec 2017 17:18:54 +0300
-Message-ID: <CAKKYfmGbz5wpU3pAY2rTsuY=e9DsDW=FgTqrbf-shu7TDg1mnA@mail.gmail.com>
-References: <CAGRSmLs-Hr+FFfa4_29kidEeL2d7b+cEP6u1OkOUoYW6Cm15BA@mail.gmail.com>
- <20171110131937.GA26181@infradead.org> <CAKKYfmEqw48mjBsKoy=qeny6B1X8PKytSN4UwpvSupo87746kg@mail.gmail.com>
- <CAGRSmLsvAR6wth7tPd5J2kAydy64uQ+h45Yu-SUeOAHkfOHXHA@mail.gmail.com>
- <CAGRSmLto7dG19zgUkdZjuhacWXo=ju6WdS0YVjC5xOOsGjV9kg@mail.gmail.com> <20171207141612.2653a0fb@alans-desktop>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 2/3] ahci: Add PCI ids for Intel Bay Trail, Cherry Trail
+ and Apollo Lake AHCI
+Date: Mon, 11 Dec 2017 06:41:28 -0800
+Message-ID: <20171211144128.GA2421075@devbig577.frc2.facebook.com>
+References: <20171206154110.11548-1-hdegoede@redhat.com>
+ <20171206154110.11548-3-hdegoede@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f176.google.com ([209.85.216.176]:38459 "EHLO
-        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753298AbdLGOTf (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 7 Dec 2017 09:19:35 -0500
-In-Reply-To: <20171207141612.2653a0fb@alans-desktop>
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:34804 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750759AbdLKOlc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Dec 2017 09:41:32 -0500
+Content-Disposition: inline
+In-Reply-To: <20171206154110.11548-3-hdegoede@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
-Cc: "David F." <df7729@gmail.com>, Christoph Hellwig <hch@infradead.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, linux-ide@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-nvme@lists.infradead.org
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Eventually, a driver will roll out. The question is when.
+Hello,
 
+On Wed, Dec 06, 2017 at 04:41:09PM +0100, Hans de Goede wrote:
+> Add PCI ids for Intel Bay Trail, Cherry Trail and Apollo Lake AHCI
+> SATA controllers. This commit is a preparation patch for allowing a
+> different default sata link powermanagement policy for mobile chipsets.
+> 
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 
+Applied 1-2 to libata/for-4.16.
 
-On 7 December 2017 at 17:16, Alan Cox <gnomes@lxorguk.ukuu.org.uk> wrote:
-> On Mon, 4 Dec 2017 18:01:10 -0800
-> "David F." <df7729@gmail.com> wrote:
->
->> Hi,
->>
->> Any word if the patch is available?
->>
->> Is this going mainline anytime soon?
->
-> I am not aware of anyone in Intel working on it or planning to work on it
-> at this point. Nothing stops someone outside of Intel doing that from the
-> code that was released.
->
-> For things that need BIOS changes whatever the vendor my experience has
-> always been that you make the most impact by talking to the actual system
-> vendor (who controls the BIOS), including telling them why you didn't buy
-> their machine. At the end of the day businesses make decisions based on
-> dollars.
->
-> Alan
+Thanks.
+
+-- 
+tejun
