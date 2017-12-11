@@ -1,51 +1,62 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] ahci: Allow setting a default LPM policy for mobile
- chipsets
-Date: Mon, 11 Dec 2017 08:54:04 -0800
-Message-ID: <20171211165404.GM2421075@devbig577.frc2.facebook.com>
-References: <20171211165216.5604-1-hdegoede@redhat.com>
+Subject: [GIT PULL] libata fixes for v4.15-rc3
+Date: Mon, 11 Dec 2017 13:51:44 -0800
+Message-ID: <20171211215144.GP2421075@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:38617 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752437AbdLKQyI (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Dec 2017 11:54:08 -0500
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:35688 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752218AbdLKVvr (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Dec 2017 16:51:47 -0500
 Content-Disposition: inline
-In-Reply-To: <20171211165216.5604-1-hdegoede@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Dec 11, 2017 at 05:52:16PM +0100, Hans de Goede wrote:
-> On many laptops setting a different LPM policy then unknown /
-> max_performance can lead to power-savings of 1.0 - 1.5 Watts (when idle).
-> 
-> Modern ultrabooks idle around 6W (at 50% screen brightness), 1.0 - 1.5W
-> is a significant chunk of this.
-> 
-> There are some performance / latency costs to enabling LPM by default,
-> so it is desirable to make it possible to set a different LPM policy
-> for mobile / laptop variants of chipsets / "South Bridges" vs their
-> desktop / server counterparts. Also enabling LPM by default is not
-> entirely without risk of regressions. At least min_power is known to
-> cause issues with some disks, including some reports of data corruption.
-> 
-> This commits adds a new ahci.mobile_lpm_policy kernel cmdline option,
-> which defaults to a new SATA_MOBILE_LPM_POLICY Kconfig option so that
-> Linux distributions can choose to set a LPM policy for mobile chipsets
-> by default.
-> 
-> The reason to have both a kernel cmdline option and a Kconfig default
-> value for it, is to allow easy overriding of the default to allow
-> trouble-shooting without needing to rebuild the kernel.
-> 
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Hello, Linus.
 
-Applied to libata/for-4.16.
+Nothing too interesting.  David Milburn improved a corner case
+misbehavior during hotplug.  Other than that, minor driver-specific
+fixes.
 
-Thanks, Hans.
+Thanks.
+
+The following changes since commit 4fbd8d194f06c8a3fd2af1ce560ddb31f7ec8323:
+
+  Linux 4.15-rc1 (2017-11-26 16:01:47 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.15-fixes
+
+for you to fetch changes up to 2dc0b46b5ea30f169b0b272253ea846a5a281731:
+
+  libata: sata_down_spd_limit should return if driver has not recorded sstatus speed (2017-12-04 13:57:03 -0800)
+
+----------------------------------------------------------------
+Albert Pool (1):
+      ata: mediatek: Fix typo in module description
+
+Arvind Yadav (2):
+      pata_pdc2027x: Remove unnecessary error check
+      pata_pdc2027x : make pdc2027x_*_timing structures const
+
+David Milburn (1):
+      libata: sata_down_spd_limit should return if driver has not recorded sstatus speed
+
+Matthias Brugger (1):
+      ahci: mtk: Change driver name to ahci-mtk
+
+Yuantian Tang (1):
+      ahci: qoriq: refine port register configuration
+
+ drivers/ata/ahci_mtk.c      |  6 +++---
+ drivers/ata/ahci_qoriq.c    | 12 ++++++++++++
+ drivers/ata/libata-core.c   | 12 +++++++++---
+ drivers/ata/pata_pdc2027x.c | 16 ++++++----------
+ 4 files changed, 30 insertions(+), 16 deletions(-)
 
 -- 
 tejun
