@@ -1,55 +1,56 @@
-From: "David F." <df7729@gmail.com>
-Subject: Re: When will Linux support new RAID controllers
-Date: Wed, 13 Dec 2017 12:20:32 -0800
-Message-ID: <CAGRSmLvGiL_OfT+N42DcNf8xdar__HTWDVnNvA=L=sa5Hx-VMw@mail.gmail.com>
-References: <CAGRSmLs-Hr+FFfa4_29kidEeL2d7b+cEP6u1OkOUoYW6Cm15BA@mail.gmail.com>
- <20171110131937.GA26181@infradead.org> <CAKKYfmEqw48mjBsKoy=qeny6B1X8PKytSN4UwpvSupo87746kg@mail.gmail.com>
- <CAGRSmLsvAR6wth7tPd5J2kAydy64uQ+h45Yu-SUeOAHkfOHXHA@mail.gmail.com>
- <CAGRSmLto7dG19zgUkdZjuhacWXo=ju6WdS0YVjC5xOOsGjV9kg@mail.gmail.com>
- <20171207141612.2653a0fb@alans-desktop> <CAKKYfmGbz5wpU3pAY2rTsuY=e9DsDW=FgTqrbf-shu7TDg1mnA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Michal Suchanek <msuchanek@suse.de>
+Subject: [PATCH 0/6] Fix cdrom autoclose
+Date: Thu, 14 Dec 2017 16:13:49 +0100
+Message-ID: <cover.1513263482.git.msuchanek@suse.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:42992 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752908AbdLMUUd (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 13 Dec 2017 15:20:33 -0500
-In-Reply-To: <CAKKYfmGbz5wpU3pAY2rTsuY=e9DsDW=FgTqrbf-shu7TDg1mnA@mail.gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:52077 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752732AbdLNPOL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 14 Dec 2017 10:14:11 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dennis Mungai <dmngaie@gmail.com>
-Cc: Alan Cox <gnomes@lxorguk.ukuu.org.uk>, Christoph Hellwig <hch@infradead.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, linux-ide@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-nvme@lists.infradead.org
+To: Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>, Borislav Petkov <bp@alien8.de>, Tim Waugh <tim@cyberelk.net>, "David S. Miller" <davem@davemloft.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michal Suchanek <msuchanek@suse.de>, Christophe JAILLET <christophe.jaillet@wanadoo.fr>, Kees Cook <keescook@chromium.org>, John Stultz <john.stultz@linaro.org>, Thomas Gleixner <tglx@linutronix.de>, Russell King <rmk+kernel@armlinux.org.uk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Where is the code/patch that was released?  If nobody knows about it,
-nobody can work on it.
+Hello,
 
-"I am not aware of anyone in Intel working on it or planning to work on it
-at this point. Nothing stops someone outside of Intel doing that from the
-code that was released."
+there is cdrom autoclose feature that is supposed to close the tray, wait for
+the disc to become ready, and then open the device.
 
-On Thu, Dec 7, 2017 at 6:18 AM, Dennis Mungai <dmngaie@gmail.com> wrote:
-> Eventually, a driver will roll out. The question is when.
->
->
->
-> On 7 December 2017 at 17:16, Alan Cox <gnomes@lxorguk.ukuu.org.uk> wrote:
->> On Mon, 4 Dec 2017 18:01:10 -0800
->> "David F." <df7729@gmail.com> wrote:
->>
->>> Hi,
->>>
->>> Any word if the patch is available?
->>>
->>> Is this going mainline anytime soon?
->>
->> I am not aware of anyone in Intel working on it or planning to work on it
->> at this point. Nothing stops someone outside of Intel doing that from the
->> code that was released.
->>
->> For things that need BIOS changes whatever the vendor my experience has
->> always been that you make the most impact by talking to the actual system
->> vendor (who controls the BIOS), including telling them why you didn't buy
->> their machine. At the end of the day businesses make decisions based on
->> dollars.
->>
->> Alan
+This used to work in ancient times. Then in old times there was a hack in
+util-linux which worked around the breakage which probably resulted from
+switching to scsi emulation.
+
+Currently util-linux maintainer refuses to merge another hack on the basis that
+kernel still has the feature so it should be fixed there. Indeed, to implement
+this feature effectively from userspace one would need to know when the CD-ROM
+is in the "drive becoming ready" state which is knowledge that never leaves the
+hardware-specific driver and is passed neither to userspace nor the generic
+cdrom driver.
+
+So this patchset fixes the kernel autoclose implementation in cdrom.c and to
+do so reports the "drive becoming ready" state from the harware specific
+drivers.
+
+Michal Suchanek (6):
+  delay: add poll_event_interruptible
+  cdrom: factor out common open_for_* code
+  cdrom: wait for tray to close
+  cdrom: introduce CDS_DRIVE_ERROR
+  Documentetion: cdrom: introduce CDS_DRIVE_ERROR
+  cdrom: wait for drive to become ready
+
+ Documentation/cdrom/cdrom-standard.tex |   8 ++-
+ Documentation/cdrom/ide-cd             |   6 ++
+ Documentation/ioctl/cdrom.txt          |   1 +
+ drivers/block/paride/pcd.c             |   2 +-
+ drivers/cdrom/cdrom.c                  | 124 ++++++++++++++++-----------------
+ drivers/cdrom/gdrom.c                  |   2 +-
+ drivers/ide/ide-cd_ioctl.c             |  12 ++--
+ drivers/scsi/sr_ioctl.c                |   2 +-
+ include/linux/delay.h                  |  12 ++++
+ include/uapi/linux/cdrom.h             |   1 +
+ 10 files changed, 99 insertions(+), 71 deletions(-)
+
+-- 
+2.13.6
+
