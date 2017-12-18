@@ -1,42 +1,34 @@
-From: Xinyu Lin <xinyu0123@gmail.com>
-Subject: [PATCH] libata: apply MAX_SEC_1024 to all LITEON EP1 series devices
-Date: Sun, 17 Dec 2017 20:13:39 +0800
-Message-ID: <20171217121339.7772-1-xinyu0123@gmail.com>
+From: "Sandra Younes" <mamg7610885@angel.ocn.ne.jp>
+Subject: Re: Distress Call Please don't ignore
+Date: Mon, 18 Dec 2017 23:44:52 +0200
+Message-ID: <201712182144.vBILifkb018467@mf-smf-ucb016.ocn.ad.jp>
+Reply-To: <tdavalvse@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+        charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pl0-f68.google.com ([209.85.160.68]:40460 "EHLO
-        mail-pl0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752395AbdLQMOE (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 17 Dec 2017 07:14:04 -0500
-Received: by mail-pl0-f68.google.com with SMTP id 62so1709335pld.7
-        for <linux-ide@vger.kernel.org>; Sun, 17 Dec 2017 04:14:03 -0800 (PST)
+Received: from mbkd0125.ocn.ad.jp ([153.149.230.26]:50054 "EHLO
+        mbkd0125.ocn.ad.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935229AbdLRVzA (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 18 Dec 2017 16:55:00 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, xinyu0123@gmail.com
 
-LITEON EP1 has the same timeout issues as CX1 series devices.
+Good Day,
 
-Revert max_sectors to the value of 1024.
+Forgive my indignation if this message comes to you as a surprise and may offend your personality for contacting you without your prior consent and writing through this channel.
 
-'e0edc8c54646 ("libata: apply MAX_SEC_1024 to all CX1-JB*-HP devices")'
+I came across your name and contact on the course of my personal searching when i was searching for a foreign reliable partner. I was assured of your capability and reliability after going true your profile.
 
-Signed-off-by: Xinyu Lin <xinyu0123@gmail.com>
----
- drivers/ata/libata-core.c | 1 +
- 1 file changed, 1 insertion(+)
+I'm (Miss. Sandra) from Benghazi libya, My father of blessed memory by name late General Abdel Fattah Younes who was shot death by Islamist-linked militia within the anti-Gaddafi forces on 28th July, 2011 and after two days later my mother with my two brothers was killed one early morning by the rebels as result of civil war that is going on in my country Libya, then after the burial of my parents, my uncles conspired and sold my father's properties and left nothing for me. On a faithful morning, I opened my father's briefcase and discover a document which he has deposited ($6.250M USD) in a bank in a Turkish Bank which has a small branch in Canada with my name as the legitimate/next of kin. Meanwhile i have located the bank,and have also discussed the possiblity of transfering the fund. M
+ y father left a clause to the bank that i must introduce a trusted foreign partner who would be my trustee to help me invest this fund; hence the need for your assistance,i request that you be my t
+rustee and assist me in e
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 2a882929de4a..ca52a15af077 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4443,6 +4443,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	 * https://bugzilla.kernel.org/show_bug.cgi?id=121671
- 	 */
- 	{ "LITEON CX1-JB*-HP",	NULL,		ATA_HORKAGE_MAX_SEC_1024 },
-+	{ "LITEON EP1-*",	NULL,		ATA_HORKAGE_MAX_SEC_1024 },
- 
- 	/* Devices we expect to fail diagnostics */
- 
--- 
-2.14.1
+You will also be responsible for the investment and management of the fund for me and also you will help me get a good school where i will further my education.
+I agreed to give you 40% of the $6.250M once the transfer is done. this is my true life story, I will be glad to receive your respond soonest for more details to enable us start and champion the transfer less than 14 banking days as i was informed by the bank manager.
 
+Thanks for giving me your attention,
+
+Yours sincerely,
+Miss. Sandra Younes
