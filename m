@@ -1,34 +1,44 @@
-From: "Sandra Younes" <mamg7610885@angel.ocn.ne.jp>
-Subject: Re: Distress Call Please don't ignore
-Date: Mon, 18 Dec 2017 23:44:52 +0200
-Message-ID: <201712182144.vBILifkb018467@mf-smf-ucb016.ocn.ad.jp>
-Reply-To: <tdavalvse@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mbkd0125.ocn.ad.jp ([153.149.230.26]:50054 "EHLO
-        mbkd0125.ocn.ad.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935229AbdLRVzA (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 18 Dec 2017 16:55:00 -0500
-Sender: linux-ide-owner@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Subject: [PATCH V4 04/26] ata: deprecate pci_get_bus_and_slot()
+Date: Tue, 19 Dec 2017 00:37:40 -0500
+Message-ID: <1513661883-28662-5-git-send-email-okaya@codeaurora.org>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Sinan Kaya <okaya@codeaurora.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, "open list:LIBATA PATA DRIVERS" <linux-ide@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-Good Day,
+pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+where a PCI device is present. This restricts the device drivers to be
+reused for other domain numbers.
 
-Forgive my indignation if this message comes to you as a surprise and may offend your personality for contacting you without your prior consent and writing through this channel.
+Getting ready to remove pci_get_bus_and_slot() function in favor of
+pci_get_domain_bus_and_slot().
 
-I came across your name and contact on the course of my personal searching when i was searching for a foreign reliable partner. I was assured of your capability and reliability after going true your profile.
+Use pci_get_domain_bus_and_slot() and extract the actual domain number
+from the pdev passed in.
 
-I'm (Miss. Sandra) from Benghazi libya, My father of blessed memory by name late General Abdel Fattah Younes who was shot death by Islamist-linked militia within the anti-Gaddafi forces on 28th July, 2011 and after two days later my mother with my two brothers was killed one early morning by the rebels as result of civil war that is going on in my country Libya, then after the burial of my parents, my uncles conspired and sold my father's properties and left nothing for me. On a faithful morning, I opened my father's briefcase and discover a document which he has deposited ($6.250M USD) in a bank in a Turkish Bank which has a small branch in Canada with my name as the legitimate/next of kin. Meanwhile i have located the bank,and have also discussed the possiblity of transfering the fund. M
- y father left a clause to the bank that i must introduce a trusted foreign partner who would be my trustee to help me invest this fund; hence the need for your assistance,i request that you be my t
-rustee and assist me in e
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Acked-by: Tejun Heo <tj@kernel.org>
+---
+ drivers/ata/pata_ali.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-You will also be responsible for the investment and management of the fund for me and also you will help me get a good school where i will further my education.
-I agreed to give you 40% of the $6.250M once the transfer is done. this is my true life story, I will be glad to receive your respond soonest for more details to enable us start and champion the transfer less than 14 banking days as i was informed by the bank manager.
-
-Thanks for giving me your attention,
-
-Yours sincerely,
-Miss. Sandra Younes
+diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
+index d19cd88..0b122f9 100644
+--- a/drivers/ata/pata_ali.c
++++ b/drivers/ata/pata_ali.c
+@@ -466,7 +466,8 @@ static void ali_init_chipset(struct pci_dev *pdev)
+ 			tmp |= 0x01;	/* CD_ROM enable for DMA */
+ 		pci_write_config_byte(pdev, 0x53, tmp);
+ 	}
+-	north = pci_get_bus_and_slot(0, PCI_DEVFN(0,0));
++	north = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus), 0,
++					    PCI_DEVFN(0, 0));
+ 	if (north && north->vendor == PCI_VENDOR_ID_AL && ali_isa_bridge) {
+ 		/* Configure the ALi bridge logic. For non ALi rely on BIOS.
+ 		   Set the south bridge enable bit */
+-- 
+1.9.1
