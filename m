@@ -1,37 +1,32 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: apply MAX_SEC_1024 to all LITEON EP1 series
- devices
-Date: Tue, 19 Dec 2017 05:30:26 -0800
-Message-ID: <20171219133026.GK3919388@devbig577.frc2.facebook.com>
-References: <20171217121339.7772-1-xinyu0123@gmail.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH V4 10/26] Drivers: ide: deprecate pci_get_bus_and_slot()
+Date: Tue, 19 Dec 2017 09:13:47 -0500 (EST)
+Message-ID: <20171219.091347.2290443745330245044.davem@davemloft.net>
+References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
+        <1513661883-28662-11-git-send-email-okaya@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f171.google.com ([209.85.216.171]:33537 "EHLO
-        mail-qt0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759619AbdLSNaf (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Dec 2017 08:30:35 -0500
-Received: by mail-qt0-f171.google.com with SMTP id e2so24160370qti.0
-        for <linux-ide@vger.kernel.org>; Tue, 19 Dec 2017 05:30:35 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <20171217121339.7772-1-xinyu0123@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1513661883-28662-11-git-send-email-okaya@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: okaya@codeaurora.org
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Xinyu Lin <xinyu0123@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
-On Sun, Dec 17, 2017 at 08:13:39PM +0800, Xinyu Lin wrote:
-> LITEON EP1 has the same timeout issues as CX1 series devices.
+From: Sinan Kaya <okaya@codeaurora.org>
+Date: Tue, 19 Dec 2017 00:37:46 -0500
+
+> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
+> where a PCI device is present. This restricts the device drivers to be
+> reused for other domain numbers.
 > 
-> Revert max_sectors to the value of 1024.
+> Getting ready to remove pci_get_bus_and_slot() function in favor of
+> pci_get_domain_bus_and_slot().
 > 
-> 'e0edc8c54646 ("libata: apply MAX_SEC_1024 to all CX1-JB*-HP devices")'
+> Replace pci_get_bus_and_slot() with pci_get_domain_bus_and_slot()
+> and extract the domain number from struct pci_dev.
 > 
-> Signed-off-by: Xinyu Lin <xinyu0123@gmail.com>
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 
-Applied to libata/for-4.15-fixes.
-
-Thanks.
-
--- 
-tejun
+Acked-by: David S. Miller <davem@davemloft.net>
