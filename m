@@ -1,32 +1,42 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH V4 10/26] Drivers: ide: deprecate pci_get_bus_and_slot()
-Date: Tue, 19 Dec 2017 09:13:47 -0500 (EST)
-Message-ID: <20171219.091347.2290443745330245044.davem@davemloft.net>
-References: <1513661883-28662-1-git-send-email-okaya@codeaurora.org>
-        <1513661883-28662-11-git-send-email-okaya@codeaurora.org>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: about warning in ata_eh_finish()
+Date: Wed, 20 Dec 2017 14:13:25 +0800
+Message-ID: <5A39FF85.1040904@huawei.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1513661883-28662-11-git-send-email-okaya@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: okaya@codeaurora.org
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from szxga07-in.huawei.com ([45.249.212.35]:35981 "EHLO huawei.com"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751978AbdLTGPK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 20 Dec 2017 01:15:10 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org, linux-ide@vger.kernel.org
 
-From: Sinan Kaya <okaya@codeaurora.org>
-Date: Tue, 19 Dec 2017 00:37:46 -0500
+Hi, Tejun,
 
-> pci_get_bus_and_slot() is restrictive such that it assumes domain=0 as
-> where a PCI device is present. This restricts the device drivers to be
-> reused for other domain numbers.
-> 
-> Getting ready to remove pci_get_bus_and_slot() function in favor of
-> pci_get_domain_bus_and_slot().
-> 
-> Replace pci_get_bus_and_slot() with pci_get_domain_bus_and_slot()
-> and extract the domain number from struct pci_dev.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+We often see this warning when using sata disks with libsas:
 
-Acked-by: David S. Miller <davem@davemloft.net>
+[26705.760518] WARNING: CPU: 1 PID: 6796 at drivers/ata/libata-eh.c:4037 
+ata_eh_finish+0xb4/0xcc
+
+[26706.350156] [<ffff0000088baf70>] ata_eh_finish+0xb4/0xcc
+[26706.364260] [<ffff0000088bb764>] ata_do_eh+0x68/0xd8
+[26706.377497] [<ffff0000088bb818>] ata_std_error_handler+0x44/0x8c
+[26706.393406] [<ffff0000088bb408>] ata_scsi_port_error_handler+0x480/0x694
+[26706.411352] [<ffff000008879364>] async_sas_ata_eh+0x4c/0x80
+[26706.426133] [<ffff0000080f6be8>] async_run_entry_fn+0x4c/0x170
+[26706.441841] [<ffff0000080ebd70>] process_one_work+0x144/0x390
+[26706.457057] [<ffff0000080ec100>] worker_thread+0x144/0x418
+[26706.471610] [<ffff0000080f2c98>] kthread+0x10c/0x138
+[26706.484991] [<ffff0000080855dc>] ret_from_fork+0x10/0x18
+
+This seems implies that ap->nr_active_links is wrong and should be zero.
+But I didn't see any other errors. The disks work well.
+
+Question:
+ap->nr_active_links seems can be modified by different cpus 
+simultaneously, should it be atomic_t? Is this the reason of the warning
+above?
+
