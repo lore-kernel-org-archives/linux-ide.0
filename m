@@ -1,74 +1,132 @@
-From: Florian Fainelli <f.fainelli@gmail.com>
-Subject: [PATCH] ata: ahci_brcm: Avoid clobbering SATA_TOP_CTRL_BUS_CTRL
-Date: Fri, 22 Dec 2017 11:43:08 -0800
-Message-ID: <20171222194331.6330-1-f.fainelli@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: bcm-kernel-feedback-list@broadcom.com, Florian Fainelli <f.fainelli@gmail.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+From: Yisheng Xie <xieyisheng1@huawei.com>
+Subject: [PATCH v3 00/27] kill devm_ioremap_nocache
+Date: Sat, 23 Dec 2017 18:55:25 +0800
+Message-ID: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from szxga04-in.huawei.com ([45.249.212.190]:2718 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750713AbdLWLEk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sat, 23 Dec 2017 06:04:40 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, gregkh@linuxfoundation.org
+Cc: ysxie@foxmail.com, ulf.hansson@linaro.org, linux-mmc@vger.kernel.org, boris.brezillon@free-electrons.com, richard@nod.at, marek.vasut@gmail.com, cyrille.pitchen@wedev4u.fr, linux-mtd@lists.infradead.org, alsa-devel@alsa-project.org, wim@iguana.be, linux@roeck-us.net, linux-watchdog@vger.kernel.org, b.zolnierkie@samsung.com, linux-fbdev@vger.kernel.org, linus.walleij@linaro.org, linux-gpio@vger.kernel.org, ralf@linux-mips.org, linux-mips@linux-mips.org, lgirdwood@gmail.com, broonie@kernel.org, tglx@linutronix.de, jason@lakedaemon.net, marc.zyngier@arm.com, arnd@arndb.de, andriy.shevchenko@linux.intel.com, industrypack-devel@lists.sourceforge.net, wg@grandegger.com, mkl@pengutronix.de, linux-can@vger.kernel.org, mcheh
 
-We are doing a blind write to SATA_TOP_CTRL_BUS_CTRL to set the system
-endian, but in doing so, we are also overwriting other bits, such as the
-SATA_SCB_BURST_SIZE and SATA_FIFO_SIZE bits, which impact performance.
-Do a read/modify/write so we keep the default values.
+Hi all,
 
-While we are at it, we also greatly simplify the logic and just leave
-the NSP specific bit settings, instead of having a completely different
-sequence.
+When I tried to use devm_ioremap function and review related code, I found
+devm_ioremap and devm_ioremap_nocache is almost the same with each other,
+except one use ioremap while the other use ioremap_nocache. While ioremap's
+default function is ioremap_nocache, so devm_ioremap_nocache also have the
+same function with devm_ioremap, which can just be killed to reduce the size
+of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
 
-Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
----
-Tejun, this is against your "for-next" branch, thank you!
+I have posted two versions, which use macro instead of function for
+devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
+devm_ioremap_nocache for no need to keep a macro around for the duplicate
+thing. So here comes v3 and please help to review.
 
+Thanks so much!
+Yisheng Xie
 
- drivers/ata/ahci_brcm.c | 25 +++++++++++++++----------
- 1 file changed, 15 insertions(+), 10 deletions(-)
+[1] https://lkml.org/lkml/2017/11/20/135
+[2] https://lkml.org/lkml/2017/11/25/21
 
-diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
-index 5936d1679bf3..ad3b8826ec79 100644
---- a/drivers/ata/ahci_brcm.c
-+++ b/drivers/ata/ahci_brcm.c
-@@ -70,6 +70,13 @@
- 	(DATA_ENDIAN << DMADESC_ENDIAN_SHIFT) |		\
- 	(MMIO_ENDIAN << MMIO_ENDIAN_SHIFT))
- 
-+#define BUS_CTRL_ENDIAN_NSP_CONF			\
-+	(0x02 << DMADATA_ENDIAN_SHIFT | 0x02 << DMADESC_ENDIAN_SHIFT)
-+
-+#define BUS_CTRL_ENDIAN_CONF_MASK			\
-+	(0x3 << MMIO_ENDIAN_SHIFT | 0x3 << DMADESC_ENDIAN_SHIFT |	\
-+	 0x3 << DMADATA_ENDIAN_SHIFT | 0x3 << PIODATA_ENDIAN_SHIFT)
-+
- enum brcm_ahci_version {
- 	BRCM_SATA_BCM7425 = 1,
- 	BRCM_SATA_BCM7445,
-@@ -250,18 +257,16 @@ static u32 brcm_ahci_get_portmask(struct platform_device *pdev,
- static void brcm_sata_init(struct brcm_ahci_priv *priv)
- {
- 	void __iomem *ctrl = priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL;
-+	u32 data;
- 
- 	/* Configure endianness */
--	if (priv->version ==  BRCM_SATA_NSP) {
--		u32 data = brcm_sata_readreg(ctrl);
--
--		data &= ~((0x03 << DMADATA_ENDIAN_SHIFT) |
--			(0x03 << DMADESC_ENDIAN_SHIFT));
--		data |= (0x02 << DMADATA_ENDIAN_SHIFT) |
--			(0x02 << DMADESC_ENDIAN_SHIFT);
--		brcm_sata_writereg(data, ctrl);
--	} else
--		brcm_sata_writereg(BUS_CTRL_ENDIAN_CONF, ctrl);
-+	data = brcm_sata_readreg(ctrl);
-+	data &= ~BUS_CTRL_ENDIAN_CONF_MASK;
-+	if (priv->version == BRCM_SATA_NSP)
-+		data |= BUS_CTRL_ENDIAN_NSP_CONF;
-+	else
-+		data |= BUS_CTRL_ENDIAN_CONF;
-+	brcm_sata_writereg(data, ctrl);
- }
- 
- #ifdef CONFIG_PM_SLEEP
+Yisheng Xie (27):
+  ASOC: replace devm_ioremap_nocache with devm_ioremap
+  spi: replace devm_ioremap_nocache with devm_ioremap
+  staging: replace devm_ioremap_nocache with devm_ioremap
+  ipack: replace devm_ioremap_nocache with devm_ioremap
+  media: replace devm_ioremap_nocache with devm_ioremap
+  gpio: replace devm_ioremap_nocache with devm_ioremap
+  mmc: replace devm_ioremap_nocache with devm_ioremap
+  PCI: replace devm_ioremap_nocache with devm_ioremap
+  platform/x86: replace devm_ioremap_nocache with devm_ioremap
+  tty: replace devm_ioremap_nocache with devm_ioremap
+  video: replace devm_ioremap_nocache with devm_ioremap
+  rtc: replace devm_ioremap_nocache with devm_ioremap
+  char: replace devm_ioremap_nocache with devm_ioremap
+  mtd: nand: replace devm_ioremap_nocache with devm_ioremap
+  dmaengine: replace devm_ioremap_nocache with devm_ioremap
+  ata: replace devm_ioremap_nocache with devm_ioremap
+  irqchip: replace devm_ioremap_nocache with devm_ioremap
+  pinctrl: replace devm_ioremap_nocache with devm_ioremap
+  drm: replace devm_ioremap_nocache with devm_ioremap
+  regulator: replace devm_ioremap_nocache with devm_ioremap
+  watchdog: replace devm_ioremap_nocache with devm_ioremap
+  tools/testing/nvdimm: replace devm_ioremap_nocache with devm_ioremap
+  MIPS: pci: replace devm_ioremap_nocache with devm_ioremap
+  can: replace devm_ioremap_nocache with devm_ioremap
+  wireless: replace devm_ioremap_nocache with devm_ioremap
+  ethernet: replace devm_ioremap_nocache with devm_ioremap
+  devres: kill devm_ioremap_nocache
+
+ Documentation/driver-model/devres.txt           |  1 -
+ arch/mips/pci/pci-ar2315.c                      |  3 +--
+ drivers/ata/pata_arasan_cf.c                    |  3 +--
+ drivers/ata/pata_octeon_cf.c                    |  9 ++++----
+ drivers/ata/pata_rb532_cf.c                     |  2 +-
+ drivers/char/hw_random/bcm63xx-rng.c            |  3 +--
+ drivers/char/hw_random/octeon-rng.c             | 10 ++++-----
+ drivers/dma/altera-msgdma.c                     |  3 +--
+ drivers/dma/sprd-dma.c                          |  4 ++--
+ drivers/gpio/gpio-ath79.c                       |  3 +--
+ drivers/gpio/gpio-em.c                          |  6 ++---
+ drivers/gpio/gpio-htc-egpio.c                   |  4 ++--
+ drivers/gpio/gpio-xgene.c                       |  3 +--
+ drivers/gpu/drm/hisilicon/hibmc/hibmc_drm_drv.c |  2 +-
+ drivers/gpu/drm/msm/msm_drv.c                   |  2 +-
+ drivers/gpu/drm/sti/sti_dvo.c                   |  3 +--
+ drivers/gpu/drm/sti/sti_hda.c                   |  4 ++--
+ drivers/gpu/drm/sti/sti_hdmi.c                  |  2 +-
+ drivers/gpu/drm/sti/sti_tvout.c                 |  2 +-
+ drivers/gpu/drm/sti/sti_vtg.c                   |  2 +-
+ drivers/ipack/devices/ipoctal.c                 | 13 +++++------
+ drivers/irqchip/irq-renesas-intc-irqpin.c       |  4 ++--
+ drivers/media/platform/tegra-cec/tegra_cec.c    |  4 ++--
+ drivers/mmc/host/sdhci-acpi.c                   |  3 +--
+ drivers/mtd/nand/fsl_upm.c                      |  4 ++--
+ drivers/net/can/sja1000/sja1000_platform.c      |  4 ++--
+ drivers/net/ethernet/altera/altera_tse_main.c   |  3 +--
+ drivers/net/ethernet/ethoc.c                    |  8 +++----
+ drivers/net/ethernet/lantiq_etop.c              |  4 ++--
+ drivers/net/ethernet/ti/netcp_core.c            |  2 +-
+ drivers/net/wireless/ath/ath9k/ahb.c            |  2 +-
+ drivers/pci/dwc/pci-dra7xx.c                    |  2 +-
+ drivers/pinctrl/bcm/pinctrl-ns2-mux.c           |  2 +-
+ drivers/pinctrl/bcm/pinctrl-nsp-mux.c           |  4 ++--
+ drivers/pinctrl/freescale/pinctrl-imx1-core.c   |  2 +-
+ drivers/pinctrl/pinctrl-amd.c                   |  4 ++--
+ drivers/platform/x86/intel_pmc_core.c           |  5 ++---
+ drivers/regulator/ti-abb-regulator.c            |  6 ++---
+ drivers/rtc/rtc-sh.c                            |  4 ++--
+ drivers/spi/spi-jcore.c                         |  3 +--
+ drivers/staging/fsl-mc/bus/mc-io.c              |  8 +++----
+ drivers/tty/mips_ejtag_fdc.c                    |  4 ++--
+ drivers/tty/serial/8250/8250_omap.c             |  3 +--
+ drivers/tty/serial/lantiq.c                     |  3 +--
+ drivers/tty/serial/meson_uart.c                 |  3 +--
+ drivers/tty/serial/owl-uart.c                   |  2 +-
+ drivers/tty/serial/pic32_uart.c                 |  4 ++--
+ drivers/video/fbdev/mbx/mbxfb.c                 |  9 ++++----
+ drivers/video/fbdev/mmp/hw/mmp_ctrl.c           |  2 +-
+ drivers/video/fbdev/pxa168fb.c                  |  4 ++--
+ drivers/watchdog/bcm63xx_wdt.c                  |  4 ++--
+ drivers/watchdog/rc32434_wdt.c                  |  4 ++--
+ include/linux/io.h                              |  2 --
+ lib/devres.c                                    | 29 -------------------------
+ scripts/coccinelle/free/devm_free.cocci         |  2 --
+ sound/soc/au1x/ac97c.c                          |  4 ++--
+ sound/soc/au1x/i2sc.c                           |  4 ++--
+ sound/soc/intel/atom/sst/sst_acpi.c             | 20 ++++++++---------
+ sound/soc/intel/boards/mfld_machine.c           |  4 ++--
+ sound/soc/sh/fsi.c                              |  4 ++--
+ tools/testing/nvdimm/Kbuild                     |  2 +-
+ tools/testing/nvdimm/test/iomap.c               |  2 +-
+ 62 files changed, 109 insertions(+), 168 deletions(-)
+
 -- 
-2.15.0
+1.8.3.1
+
