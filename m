@@ -1,32 +1,30 @@
-From: "Sra. Angel Rania" <sra.angelrania83@gmail.com>
-Subject: Re: You will definetely be interested...
-Date: Wed, 27 Dec 2017 10:16:53 +0000
-Message-ID: <CAKx+QTsL6tbExobjfKn2Kvd+VURLikaeJ+JuuxF8mixxBiriEQ__26657.7980750755$1514369712$gmane$org@mail.gmail.com>
+From: "M. M. Fridman" <info@support.com>
+Subject: Re: Donation
+Date: Wed, 27 Dec 2017 16:30:48 +0800
+Message-ID: <20171227083211.327B8446394@mx.ufrnet.br>
+Reply-To: mikh.fridman@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:45999 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751858AbdL0KQ4 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 27 Dec 2017 05:16:56 -0500
-Received: by mail-qt0-f196.google.com with SMTP id g10so47346640qtj.12
-        for <linux-ide@vger.kernel.org>; Wed, 27 Dec 2017 02:16:56 -0800 (PST)
+Received: from mx.ufrnet.br ([177.20.144.208]:40544 "EHLO mx.ufrnet.br"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751145AbdL0TJM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 27 Dec 2017 14:09:12 -0500
+Content-Description: Mail message body
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Recipients <info@support.com>
 
-Hi Dear,
+I Mikhail Fridman. has selected you specially as one of my beneficiaries
+for my Charitable Donation, Just as I have declared on May 23, 2016 to give
+my fortune as charity.
 
-Reading your profile has given me courage in search of a reasponsable
-and trust worthy Fellow. The past has treated me so awfully but now I
-am ready to move on despite of my health condition. I will like to
-have a sincere and important discussion with you that will be in your
-favor likewise to you and your environment especially to your close
-family. Endeavor to reply me and I have attached my picture in case
-you long to know who emailed you. I will be waiting to hear from you
-as soon as possble.
-Thanks for paying attention to my mail and will appreciate so much if
-I receive a reply from you for understable details.
+Check the link below for confirmation:
 
-Thanks,
+http://www.ibtimes.co.uk/russias-second-wealthiest-man-mikhail-fridman-plans-leaving-14-2bn-fortune-charity-1561604
 
-Mrs. Rania Hassan
+Reply as soon as possible with further directives.
+
+Best Regards,
+Mikhail Fridman.
