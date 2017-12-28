@@ -1,38 +1,93 @@
-From: chenxiang <chenxiang66@hisilicon.com>
-Subject: [PATCH 1/2] ata: enhance the definition of SET MAX feature field value
-Date: Thu, 28 Dec 2017 18:20:46 +0800
-Message-ID: <1514456447-213928-2-git-send-email-chenxiang66@hisilicon.com>
-References: <1514456447-213928-1-git-send-email-chenxiang66@hisilicon.com>
+From: Yoshihiro Kaneko <ykaneko0929@gmail.com>
+Subject: Re: [PATCH] sata: rcar_sata: Reset SATA PHY when Salvator-X board resumes
+Date: Fri, 29 Dec 2017 07:16:59 +0900
+Message-ID: <CAH1o70JKbgACP7GG9Z=eoHx684bp48FLqvUoFEzQMPy=4RdRPA@mail.gmail.com>
+References: <1512585925-4251-1-git-send-email-ykaneko0929@gmail.com>
+ <CAMuHMdXXa5pA7eXrmEamKXY_v8t2LKSq7bA6ysH5S2Pqq-b5aA@mail.gmail.com> <20171219082649.47jp3dwuuopel5rk@verge.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1514456447-213928-1-git-send-email-chenxiang66@hisilicon.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: martin.petersen@oracle.com, tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linuxarm@huawei.com, chenxiang <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:42167 "EHLO
+        mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750982AbdL1WRA (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 28 Dec 2017 17:17:00 -0500
+In-Reply-To: <20171219082649.47jp3dwuuopel5rk@verge.net.au>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Simon Horman <horms@verge.net.au>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Magnus Damm <magnus.damm@gmail.com>, Geert Uytterhoeven <geert+renesas@glider.be>, Linux-Renesas <linux-renesas-soc@vger.kernel.org>
 
-There are two other values for SET MAX feature field according to ata
-protocol. So definite them.
+Hi Simon-san, Geert-san,
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- include/linux/ata.h | 2 ++
- 1 file changed, 2 insertions(+)
+2017-12-19 17:26 GMT+09:00 Simon Horman <horms@verge.net.au>:
+> On Wed, Dec 06, 2017 at 07:56:09PM +0100, Geert Uytterhoeven wrote:
+>> Hi Kaneko-san,
+>>
+>> On Wed, Dec 6, 2017 at 7:45 PM, Yoshihiro Kaneko <ykaneko0929@gmail.com> wrote:
+>> > From: Khiem Nguyen <khiem.nguyen.xt@rvc.renesas.com>
+>> >
+>> > Because power of Salvator-X board is cut off in suspend,
+>> > it needs to reset SATA PHY state in resume.
+>> > Otherwise, SATA partition could not be accessed anymore.
+>>
+>> Thanks for your patch!
+>>
+>> So this is needed on R-Car Gen3 only.
+>>
+>> > --- a/drivers/ata/sata_rcar.c
+>> > +++ b/drivers/ata/sata_rcar.c
+>> > @@ -977,11 +977,43 @@ static int sata_rcar_resume(struct device *dev)
+>> >         struct sata_rcar_priv *priv = host->private_data;
+>> >         void __iomem *base = priv->base;
+>> >         int ret;
+>> > +       u32 val;
+>> >
+>> >         ret = clk_prepare_enable(priv->clk);
+>> >         if (ret)
+>> >                 return ret;
+>> >
+>> > +       /* Re-use from sata_rcar_init_controller() */
+>> > +       /* reset and setup phy */
+>> > +       switch (priv->type) {
+>> > +       case RCAR_GEN1_SATA:
+>> > +               sata_rcar_gen1_phy_init(priv);
+>>
+>> Hence why do this (and the below) on R-Car Gen1, too?
+>>
+>> > +               break;
+>> > +       case RCAR_GEN2_SATA:
+>> > +               sata_rcar_gen2_phy_init(priv);
+>>
+>> And on both R-Car Gen2 and Gen3 (currently Gen3 is treated like Gen2
+>> everywhere in the driver)?
+>> What about introducing RCAR_GEN3_SATA, and doing the reinit on R-Car Gen3
+>> only?
+>
+> Agreed, that seems to make sense.
+> Kaneko-san, could you look into implementing this?
 
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index c7a3538..40d150a 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -448,6 +448,8 @@ enum {
- 	ATA_SET_MAX_LOCK	= 0x02,
- 	ATA_SET_MAX_UNLOCK	= 0x03,
- 	ATA_SET_MAX_FREEZE_LOCK	= 0x04,
-+	ATA_SET_MAX_PASSWD_DMA	= 0x05,
-+	ATA_SET_MAX_UNLOCK_DMA	= 0x06,
- 
- 	/* feature values for DEVICE CONFIGURATION OVERLAY */
- 	ATA_DCO_RESTORE		= 0xC0,
--- 
-1.9.1
+Yes, I will do it.
+
+Kaneko
+
+>
+>>
+>> > +               break;
+>> > +       default:
+>> > +               dev_warn(host->dev, "SATA phy is not initialized\n");
+>> > +               break;
+>> > +       }
+>>
+>> [...]
+>>
+>> Gr{oetje,eeting}s,
+>>
+>>                         Geert
+>>
+>> --
+>> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+>>
+>> In personal conversations with technical people, I call myself a hacker. But
+>> when I'm talking to journalists I just say "programmer" or something like that.
+>>                                 -- Linus Torvalds
+>>
