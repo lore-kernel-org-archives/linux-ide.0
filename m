@@ -1,30 +1,35 @@
-From: "M. M. Fridman" <info@support.com>
-Subject: Re: Donation
-Date: Wed, 27 Dec 2017 16:30:48 +0800
-Message-ID: <20171227083211.327B8446394@mx.ufrnet.br>
-Reply-To: mikh.fridman@gmail.com
+From: chenxiang <chenxiang66@hisilicon.com>
+Subject: [PATCH 0/2] Change frame type for SET MAX commands
+Date: Thu, 28 Dec 2017 18:20:45 +0800
+Message-ID: <1514456447-213928-1-git-send-email-chenxiang66@hisilicon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx.ufrnet.br ([177.20.144.208]:40544 "EHLO mx.ufrnet.br"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751145AbdL0TJM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 27 Dec 2017 14:09:12 -0500
-Content-Description: Mail message body
+Received: from szxga05-in.huawei.com ([45.249.212.191]:3234 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751425AbdL1JeG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 28 Dec 2017 04:34:06 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Recipients <info@support.com>
+To: martin.petersen@oracle.com, tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linuxarm@huawei.com, chenxiang <chenxiang66@hisilicon.com>
 
-I Mikhail Fridman. has selected you specially as one of my beneficiaries
-for my Charitable Donation, Just as I have declared on May 23, 2016 to give
-my fortune as charity.
+According to ATA protocol, there are two other values for SET MAX commands' 
+feature field. So definite them. Also those SET MAX commands belong to 
+different frame types,and judge feature field of SET MAX commands to decide
+which frame type they belongs to.
 
-Check the link below for confirmation:
+chenxiang (2):
+  ata: enhance the definition of SET MAX feature field value
+  scsi: hisi_sas: Change frame type for SET MAX commands
 
-http://www.ibtimes.co.uk/russias-second-wealthiest-man-mikhail-fridman-plans-leaving-14-2bn-fortune-charity-1561604
+ drivers/scsi/hisi_sas/hisi_sas.h       |  3 ++-
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 20 ++++++++++++++++++--
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  2 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  2 +-
+ include/linux/ata.h                    |  2 ++
+ 5 files changed, 24 insertions(+), 5 deletions(-)
 
-Reply as soon as possible with further directives.
+-- 
+1.9.1
 
-Best Regards,
-Mikhail Fridman.
