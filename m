@@ -1,146 +1,56 @@
-From: Christophe LEROY <christophe.leroy@c-s.fr>
+From: David Howells <dhowells@redhat.com>
 Subject: Re: [PATCH v3 00/27] kill devm_ioremap_nocache
-Date: Thu, 4 Jan 2018 09:05:45 +0100
-Message-ID: <1eb206ed-95e9-5839-485d-0e549ff3f505@c-s.fr>
-References: <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
+Date: Thu, 04 Jan 2018 14:52:54 +0000
+Message-ID: <20289.1515077574@warthog.procyon.org.uk>
+References: <CAK8P3a3i0bKvG56ha9_hzO=z80sVxCQhaeFn6QW3AwbwZs3HPg@mail.gmail.com>
+ <1514026525-32538-1-git-send-email-xieyisheng1@huawei.com>
  <20171223134831.GB10103@kroah.com>
- <b8ff7f17-7f2c-f220-9833-7ae5bd7343d5@c-s.fr>
- <8dd19411-5b06-0aa4-fd0e-e5b112c25dcb@huawei.com>
+ <f7632cf5-2bcc-4d74-b912-3999937a1269@roeck-us.net>
+ <c28ac0bc-8bd2-3dce-3167-8c0f80ec601e@c-s.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pegase1.c-s.fr ([93.17.236.30]:2267 "EHLO pegase1.c-s.fr"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751561AbeADIF5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 4 Jan 2018 03:05:57 -0500
-In-Reply-To: <8dd19411-5b06-0aa4-fd0e-e5b112c25dcb@huawei.com>
-Content-Language: fr
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <CAK8P3a3i0bKvG56ha9_hzO=z80sVxCQhaeFn6QW3AwbwZs3HPg@mail.gmail.com>
+Content-ID: <20288.1515077574.1@warthog.procyon.org.uk>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Yisheng Xie <xieyisheng1@huawei.com>, linux-mips@linux-mips.org, Ulf Hansson <ulf.hansson@linaro.org>, Jakub Kicinski <jakub.kicinski@netronome.com>, Platform Driver <platform-driver-x86@vger.kernel.org>, David Airlie <airlied@linux.ie>, linux-wireless <linux-wireless@vger.kernel.org>, alsa-devel@alsa-project.org, dri-devel <dri-devel@lists.freedesktop.org>, Liam Girdwood <lgirdwood@gmail.com>, dhowells@redhat.com, IDE-ML <linux-ide@vger.kernel.org>, Wim Van Sebroeck <wim@iguana.be>, Networking <netdev@vger.kernel.org>, linux-mtd <linux-mtd@lists.infradead.org>, Daniel Vetter <daniel.vetter@intel.com>, Dan Williams <dan.j.williams@intel.com>, Jason Cooper <jason@lakedaemon.net>, linux-rtc@vger.kernel.org, Boris Brezillon <boris.brezillon@free-electrons.com>, Mauro Carvalho Chehab <mchehab@kernel.org>, dmaengine@vger.kernel.org, Vinod Koul <vinod.koul@intel.com>, Richar
 List-Id: linux-ide@vger.kernel.org
-To: Yisheng Xie <xieyisheng1@huawei.com>, Greg KH <gregkh@linuxfoundation.org>
-Cc: linux-kernel@vger.kernel.org, ysxie@foxmail.com, ulf.hansson@linaro.org, linux-mmc@vger.kernel.org, boris.brezillon@free-electrons.com, richard@nod.at, marek.vasut@gmail.com, cyrille.pitchen@wedev4u.fr, linux-mtd@lists.infradead.org, alsa-devel@alsa-project.org, wim@iguana.be, linux@roeck-us.net, linux-watchdog@vger.kernel.org, b.zolnierkie@samsung.com, linux-fbdev@vger.kernel.org, linus.walleij@linaro.org, linux-gpio@vger.kernel.org, ralf@linux-mips.org, linux-mips@linux-mips.org, lgirdwood@gmail.com, broonie@kernel.org, tglx@linutronix.de, jason@lakedaemon.net, marc.zyngier@arm.com, arnd@arndb.de, andriy.shevchenko@linux.intel.com, industrypack-devel@lists.sourceforge.net, wg@grandegger.com, mkl@pengutronix.de, linux-can@vger.kernel.org, mchehab@kernel.org, linux-media@vg
 
-
-
-Le 25/12/2017 à 02:34, Yisheng Xie a écrit :
-> 
-> 
-> On 2017/12/24 17:05, christophe leroy wrote:
->>
->>
->> Le 23/12/2017 à 14:48, Greg KH a écrit :
->>> On Sat, Dec 23, 2017 at 06:55:25PM +0800, Yisheng Xie wrote:
->>>> Hi all,
->>>>
->>>> When I tried to use devm_ioremap function and review related code, I found
->>>> devm_ioremap and devm_ioremap_nocache is almost the same with each other,
->>>> except one use ioremap while the other use ioremap_nocache.
->>>
->>> For all arches?  Really?  Look at MIPS, and x86, they have different
->>> functions.
->>>
->>>> While ioremap's
->>>> default function is ioremap_nocache, so devm_ioremap_nocache also have the
->>>> same function with devm_ioremap, which can just be killed to reduce the size
->>>> of devres.o(from 20304 bytes to 18992 bytes in my compile environment).
->>>>
->>>> I have posted two versions, which use macro instead of function for
->>>> devm_ioremap_nocache[1] or devm_ioremap[2]. And Greg suggest me to kill
->>>> devm_ioremap_nocache for no need to keep a macro around for the duplicate
->>>> thing. So here comes v3 and please help to review.
->>>
->>> I don't think this can be done, what am I missing?  These functions are
->>> not identical, sorry for missing that before.
->>
->> devm_ioremap() and devm_ioremap_nocache() are quite similar, both use devm_ioremap_release() for the release, why not just defining:
->>
->> static void __iomem *__devm_ioremap(struct device *dev, resource_size_t offset,
->>                 resource_size_t size, bool nocache)
->> {
->> [...]
->>      if (nocache)
->>          addr = ioremap_nocache(offset, size);
->>      else
->>          addr = ioremap(offset, size);
->> [...]
->> }
->>
->> then in include/linux/io.h
->>
->> static inline void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
->>                 resource_size_t size)
->> {return __devm_ioremap(dev, offset, size, false);}
->>
->> static inline void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
->>                     resource_size_t size);
->> {return __devm_ioremap(dev, offset, size, true);}
-> 
-> Yeah, this seems good to me, right now we have devm_ioremap, devm_ioremap_wc, devm_ioremap_nocache
-> May be we can use an enum like:
-> typedef enum {
-> 	DEVM_IOREMAP = 0,
-> 	DEVM_IOREMAP_NOCACHE,
-> 	DEVM_IOREMAP_WC,
-> } devm_ioremap_type;
-> 
-> static inline void __iomem *devm_ioremap(struct device *dev, resource_size_t offset,
->                  resource_size_t size)
->   {return __devm_ioremap(dev, offset, size, DEVM_IOREMAP);}
-> 
->   static inline void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
->                      resource_size_t size);
->   {return __devm_ioremap(dev, offset, size, DEVM_IOREMAP_NOCACHE);}
-> 
->   static inline void __iomem *devm_ioremap_wc(struct device *dev, resource_size_t offset,
->                      resource_size_t size);
->   {return __devm_ioremap(dev, offset, size, DEVM_IOREMAP_WC);}
-> 
->   static void __iomem *__devm_ioremap(struct device *dev, resource_size_t offset,
->                  resource_size_t size, devm_ioremap_type type)
->   {
->       void __iomem **ptr, *addr = NULL;
->   [...]
->       switch (type){
->       case DEVM_IOREMAP:
->           addr = ioremap(offset, size);
->           break;
->       case DEVM_IOREMAP_NOCACHE:
->           addr = ioremap_nocache(offset, size);
->           break;
->       case DEVM_IOREMAP_WC:
->           addr = ioremap_wc(offset, size);
->           break;
->       }
->   [...]
->   }
-
-
-That looks good to me, will you submit a v4 ?
-
-Christophe
-
-> 
-> Thanks
-> Yisheng
-> 
->>
->> Christophe
->>
->>>
->>> thanks,
->>>
->>> greg k-h
->>> -- 
->>> To unsubscribe from this list: send the line "unsubscribe linux-watchdog" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
->> ---
->> L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
->> https://www.avast.com/antivirus
->>
->>
->> .
->>
+QXJuZCBCZXJnbWFubiA8YXJuZEBhcm5kYi5kZT4gd3JvdGU6Cgo+IC0gbW4xMDMwMCBhcHBlYXJz
+IHRvIGJlIHdyb25nLCBicm9rZW4gYnkgRGF2aWQgSG93ZWxscyBpbgo+ICAgY29tbWl0IDgzYzJk
+YzE1Y2U4MiAoIk1OMTAzMDA6IEhhbmRsZSBjYWNoZWFibGUgUENJIHJlZ2lvbnMKPiAgIGluIHBj
+aV9pb21hcCgpIikgZm9yIGFueSBkcml2ZXIgY2FsbGluZyBpb3JlbWFwKCkgYnkgdG8gZ2V0IHVu
+Y2FjaGVkCj4gICBtZW1vcnksCgpJdCdzIG5vdCBjbGVhciB3aGF0IHRoZSByaWdodCB0aGluZyB0
+byBkbyB3YXMsIGdpdmVuIHRoYXQgdGhlcmUncyBhbiBpb3JlbWFwKCkKYW5kIGFuIGlvcmVtYXBf
+dW5jYWNoZWQoKS4KCkJ1dCB0aGUgYXNiMjMwNSdzIHBjaV9pb21hcCgpIHdpbGwgdXNlIGlvcmVt
+YXAoKSAodGhlIGNhY2hlYWJsZSB3aW5kb3cpIGlmCklPUkVTT1VSQ0VfQ0FDSEVBQkxFIGlzIHNl
+dCwgYnV0IElPUkVTT1VSQ0VfSU8gaXMgbm90IGFuZCBpb3JlbWFwX3VuY2FjaGVkKCkKb3RoZXJ3
+aXNlLgoKVGhlIG90aGVyIHN1cHBvcnRlZCB1bml0cyBkb24ndCBoYXZlIFBDSSBidXNlcy4KCj4g
+aWYgSSB1bmRlcnN0YW5kIHRoZSBjb21tZW50IGZvciBjb21taXQgMzRmMWJkZWUxOTEwICgibW4x
+MDMwMDogc3dpdGNoIHRvCj4gR0VORVJJQ19QQ0lfSU9NQVAiKSBjb3JyZWN0bHk6IGl0IHNlZW1z
+IHRoYXQgUENJIGFkZHJlc3NlcyBpbmNsdWRlIHRoZQo+ICd1bmNhY2hlZCcgYml0IGJ5IGRlZmF1
+bHQgdG8gZ2V0IHRoZSByaWdodCBiZWhhdmlvciwgYnV0IGRyb3BwaW5nIHRoYXQgYml0Cj4gYnJl
+YWtzIGl0LgoKTm90IGV4YWN0bHkuICBUaGUgQ1BVIGhhcyBhIHdpbmRvdyBpbiB0aGUgcmFuZ2Ug
+MHhhMDAwMDAwMC0weGJmZmZmZmZmIHdoaWNoIGlzCmFuIHVuY2FjaGVkIHZpZXcgb2YgaXRzIGhh
+cmR3YXJlIGJ1c2VzLiAgSXQgaGFzIGFub3RoZXIgd2luZG93IGluIHRoZSByYW5nZQoweDgwMDAw
+MDAwLTB4OWZmZmZmZmYgd2hpY2ggaXMgYSBjYWNoZWQgdmlldyBvZiB0aGF0IHJlZ2lvbi4gIFRo
+ZXNlIHdpbmRvd3MKY2Fubm90IGJlIGNoYW5nZWQgYW5kIGFkZHJlc3NlcyBhYm92ZSAweDgwMDAw
+MDAwIGFyZSBzdGF0aWNhbGx5IG1hcHBlZCBhbmQgYXJlCm9ubHkgYWNjZXNzaWJsZSBieSB0aGUg
+a2VybmVsICh0aGlzIGlzIGhhcmR3aXJlZCBpbiB0aGUgTU1VKS4KClNvIHRoZSBhcmNoIGhhcyB0
+d28gc3Vid2luZG93cyB0byB0aGUgUENJIGJ1cywgb25lIGNhY2hlZCBhbmQgb25lIHVuY2FjaGVk
+LgpUaGVzZSBzdWJ3aW5kb3dzIGFyZSBmdXJ0aGVyIHN1YmRpdmlkZWQgaW50byBpb3BvcnQgYW5k
+IGlvbWVtIHNwYWNlcywgYW4gU1JBTQphbmQgc29tZSBjb250cm9sIHJlZ2lzdGVycyBmb3IgdGhl
+IENQVS1QQ0kgYnJpZGdlLgoKRGF2aWQKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX18KZHJpLWRldmVsIG1haWxpbmcgbGlzdApkcmktZGV2ZWxAbGlzdHMuZnJl
+ZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGlu
+Zm8vZHJpLWRldmVsCg==
