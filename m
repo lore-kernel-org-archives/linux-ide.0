@@ -1,32 +1,45 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata_piix: constify pci_bits
-Date: Mon, 8 Jan 2018 06:16:08 -0800
-Message-ID: <20180108141608.GQ3668920@devbig577.frc2.facebook.com>
-References: <b3ca2f147a9e0b52bfcaac891a7319bb2e039966.1514956322.git.arvind.yadav.cs@gmail.com>
+From: Travis Jeff <travisj@reply2setup.com>
+Subject: Travelers List
+Date: Mon, 8 Jan 2018 13:58:17 -0500
+Message-ID: <7a2ffd89-7293-3b6c-67c1-ae4769e64149@reply2setup.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:33222 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756822AbeAHOQM (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 8 Jan 2018 09:16:12 -0500
-Content-Disposition: inline
-In-Reply-To: <b3ca2f147a9e0b52bfcaac891a7319bb2e039966.1514956322.git.arvind.yadav.cs@gmail.com>
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:33497 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756142AbeAHTmp (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 8 Jan 2018 14:42:45 -0500
+Received: by mail-pg0-f65.google.com with SMTP id i196so6234006pgd.0
+        for <linux-ide@vger.kernel.org>; Mon, 08 Jan 2018 11:42:45 -0800 (PST)
+Received: from [192.168.0.15] ([103.6.157.159])
+        by smtp.gmail.com with ESMTPSA id w83sm3931337pfi.56.2018.01.08.11.42.43
+        for <linux-ide@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 08 Jan 2018 11:42:44 -0800 (PST)
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Wed, Jan 03, 2018 at 10:43:34AM +0530, Arvind Yadav wrote:
-> pci_bits are not supposed to change at runtime. Functions
-> pci_test_config_bits() working with const 'struct pci_bits'.
-> So mark the non-const structs as const.
-> 
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 
-Applied to libata/for-4.16.
+Hi,
 
-Thanks.
+Greeting of the day!
 
--- 
-tejun
+Would you be interested in acquiring an email list of "Travelers" from USA?
+
+We also have data for Frequent Travelers List, Camping and Outdoor List, Scuba Divers List, Cruise Travelers List, Vacation Travelers List,Boat Owners List, Fishing Enthusiasts List, Apparel Buyers List, Luxury Brand Buyers List, Gift buyers List and many more.
+
+Each record in the list contains Contact Name (First, Middle and Last Name), Mailing Address, List type and Opt-in email address.
+
+All the contacts are opt-in verified, Complete permission based and can be used for unlimited multi-channel marketing.
+
+Let me know if you'd be interested in hearing more about it.
+
+Waiting for your valuable and sincere reply.
+
+Best Regards,
+Travis Jeff
+Business Development & Data Specialist
+
