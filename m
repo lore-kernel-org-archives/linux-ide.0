@@ -1,27 +1,38 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/2] Change frame type for SET MAX commands
-Date: Mon, 08 Jan 2018 22:47:04 -0500
-Message-ID: <yq1po6jn16v.fsf@oracle.com>
-References: <1514456447-213928-1-git-send-email-chenxiang66@hisilicon.com>
+From: Preetham Chandru Ramchandra <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH V6 0/7] Refactor and add AHCI support for tegra210
+Date: Tue, 9 Jan 2018 12:47:07 +0530
+Message-ID: <1515482234-24716-1-git-send-email-pchandru@nvidia.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1514456447-213928-1-git-send-email-chenxiang66@hisilicon.com>
-        (chenxiang's message of "Thu, 28 Dec 2017 18:20:45 +0800")
-Sender: linux-scsi-owner@vger.kernel.org
-To: chenxiang <chenxiang66@hisilicon.com>
-Cc: martin.petersen@oracle.com, tj@kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linuxarm@huawei.com
+Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cyndis-/1wQRMveznE@public.gmane.org
+Cc: preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vbyravarasu-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, pkunapuli-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, Preetham Ramchandra <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
+From: Preetham Ramchandra <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 
-chenxiang,
+1. ADD AHCI support for tegra210
+2. Extend the tegra AHCI controller device tree binding with tegra210
+3. Update initialization sequence
+4. Initialize regulators based on chip
+5. Disable DevSlp
+6. Disable DIPM
+---
+Preetham Ramchandra (7):
+  dt-bindings: tegra: add binding documentation
+  arm64: tegra: Enable AHCI on Jetson TX1
+  ata: ahci_tegra: Update initialization sequence
+  ata: ahci_tegra: initialize regulators from soc_data
+  ata: ahci_tegra: disable devslp for t124
+  ata: ahci_tegra: disable DIPM
+  ata: ahci_tegra: Add AHCI support for tegra210
 
-> According to ATA protocol, there are two other values for SET MAX commands' 
-> feature field. So definite them. Also those SET MAX commands belong to 
-> different frame types,and judge feature field of SET MAX commands to decide
-> which frame type they belongs to.
-
-Applied to 4.16/scsi-queue.
+ .../bindings/ata/nvidia,tegra124-ahci.txt          |  38 ++-
+ arch/arm64/boot/dts/nvidia/tegra210-p2597.dtsi     |   6 +
+ arch/arm64/boot/dts/nvidia/tegra210.dtsi           |  16 +
+ drivers/ata/ahci_tegra.c                           | 362 ++++++++++++++++-----
+ 4 files changed, 332 insertions(+), 90 deletions(-)
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.7.4
