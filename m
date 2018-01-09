@@ -1,7 +1,7 @@
 From: Preetham Chandru Ramchandra <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH V6 2/7] arm64: tegra: Enable AHCI on Jetson TX1
-Date: Tue, 9 Jan 2018 12:47:09 +0530
-Message-ID: <1515482234-24716-3-git-send-email-pchandru@nvidia.com>
+Subject: [PATCH V6 4/7] ata: ahci_tegra: initialize regulators from soc_data
+Date: Tue, 9 Jan 2018 12:47:11 +0530
+Message-ID: <1515482234-24716-5-git-send-email-pchandru@nvidia.com>
 References: <1515482234-24716-1-git-send-email-pchandru@nvidia.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,58 +14,102 @@ List-Id: linux-ide@vger.kernel.org
 
 From: Preetham Ramchandra <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 
+Get the regulator names to be initialized from soc_data
+and initialize them.
+
 Signed-off-by: Preetham Chandru R <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 ---
-v4:
-* Fixed missing space after 'AUX'
----
- arch/arm64/boot/dts/nvidia/tegra210-p2597.dtsi |  6 ++++++
- arch/arm64/boot/dts/nvidia/tegra210.dtsi       | 16 ++++++++++++++++
- 2 files changed, 22 insertions(+)
+ drivers/ata/ahci_tegra.c | 32 ++++++++++++++++++++++----------
+ 1 file changed, 22 insertions(+), 10 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/nvidia/tegra210-p2597.dtsi b/arch/arm64/boot/dts/nvidia/tegra210-p2597.dtsi
-index d67ef4319f3b..2aa2979cd6b5 100644
---- a/arch/arm64/boot/dts/nvidia/tegra210-p2597.dtsi
-+++ b/arch/arm64/boot/dts/nvidia/tegra210-p2597.dtsi
-@@ -1325,6 +1325,12 @@
- 		status = "okay";
- 	};
+diff --git a/drivers/ata/ahci_tegra.c b/drivers/ata/ahci_tegra.c
+index 71850e96e787..90dfa803607e 100644
+--- a/drivers/ata/ahci_tegra.c
++++ b/drivers/ata/ahci_tegra.c
+@@ -164,6 +164,8 @@ struct tegra_ahci_ops {
+ };
  
-+	sata@70020000 {
-+		status = "okay";
-+		phys = <&{/padctl@7009f000/pads/sata/lanes/sata-0}>;
-+		phy-names = "sata-0";
-+	};
+ struct tegra_ahci_soc {
++	const char *const	*supply_names;
++	u32			num_supplies;
+ 	struct tegra_ahci_ops	ops;
+ };
+ 
+@@ -175,10 +177,14 @@ struct tegra_ahci_priv {
+ 	struct reset_control	   *sata_cold_rst;
+ 	/* Needs special handling, cannot use ahci_platform */
+ 	struct clk		   *sata_clk;
+-	struct regulator_bulk_data supplies[5];
++	struct regulator_bulk_data *supplies;
+ 	struct tegra_ahci_soc	   *soc_data;
+ };
+ 
++static const char *const tegra124_supply_names[] = {
++	"avdd", "hvdd", "vddio", "target-5v", "target-12v"
++};
 +
- 	padctl@7009f000 {
- 		status = "okay";
+ static int tegra124_ahci_init(struct ahci_host_priv *hpriv)
+ {
+ 	struct tegra_ahci_priv *tegra = hpriv->plat_data;
+@@ -224,6 +230,8 @@ static int tegra124_ahci_init(struct ahci_host_priv *hpriv)
+ }
  
-diff --git a/arch/arm64/boot/dts/nvidia/tegra210.dtsi b/arch/arm64/boot/dts/nvidia/tegra210.dtsi
-index 9c2402108772..bf72db5386a5 100644
---- a/arch/arm64/boot/dts/nvidia/tegra210.dtsi
-+++ b/arch/arm64/boot/dts/nvidia/tegra210.dtsi
-@@ -798,6 +798,22 @@
- 		#iommu-cells = <1>;
- 	};
+ static const struct tegra_ahci_soc tegra124_ahci_soc_data = {
++	.supply_names = tegra124_supply_names,
++	.num_supplies = ARRAY_SIZE(tegra124_supply_names),
+ 	.ops = {
+ 		.init = tegra124_ahci_init,
+ 	},
+@@ -234,7 +242,7 @@ static int tegra_ahci_power_on(struct ahci_host_priv *hpriv)
+ 	struct tegra_ahci_priv *tegra = hpriv->plat_data;
+ 	int ret;
  
-+	sata@70020000 {
-+		compatible = "nvidia,tegra210-ahci";
-+		reg = <0x0 0x70027000 0x0 0x2000>, /* AHCI */
-+		      <0x0 0x70020000 0x0 0x7000>, /* SATA */
-+		      <0x0 0x70001100 0x0 0x1000>; /* SATA AUX */
-+		interrupts = <GIC_SPI 23 IRQ_TYPE_LEVEL_HIGH>;
-+		clocks = <&tegra_car TEGRA210_CLK_SATA>,
-+			<&tegra_car TEGRA210_CLK_SATA_OOB>;
-+		clock-names = "sata", "sata-oob";
-+		resets = <&tegra_car 124>,
-+			 <&tegra_car 123>,
-+			 <&tegra_car 129>;
-+		reset-names = "sata", "sata-oob", "sata-cold";
-+		status = "disabled";
-+	};
+-	ret = regulator_bulk_enable(ARRAY_SIZE(tegra->supplies),
++	ret = regulator_bulk_enable(tegra->soc_data->num_supplies,
+ 				    tegra->supplies);
+ 	if (ret)
+ 		return ret;
+@@ -263,7 +271,7 @@ static int tegra_ahci_power_on(struct ahci_host_priv *hpriv)
+ 	tegra_powergate_power_off(TEGRA_POWERGATE_SATA);
+ 
+ disable_regulators:
+-	regulator_bulk_disable(ARRAY_SIZE(tegra->supplies), tegra->supplies);
++	regulator_bulk_disable(tegra->soc_data->num_supplies, tegra->supplies);
+ 	return ret;
+ }
+ 
+@@ -280,7 +288,7 @@ static void tegra_ahci_power_off(struct ahci_host_priv *hpriv)
+ 	clk_disable_unprepare(tegra->sata_clk);
+ 	tegra_powergate_power_off(TEGRA_POWERGATE_SATA);
+ 
+-	regulator_bulk_disable(ARRAY_SIZE(tegra->supplies), tegra->supplies);
++	regulator_bulk_disable(tegra->soc_data->num_supplies, tegra->supplies);
+ }
+ 
+ static int tegra_ahci_controller_init(struct ahci_host_priv *hpriv)
+@@ -502,13 +510,17 @@ static int tegra_ahci_probe(struct platform_device *pdev)
+ 		return PTR_ERR(tegra->sata_clk);
+ 	}
+ 
+-	tegra->supplies[0].supply = "avdd";
+-	tegra->supplies[1].supply = "hvdd";
+-	tegra->supplies[2].supply = "vddio";
+-	tegra->supplies[3].supply = "target-5v";
+-	tegra->supplies[4].supply = "target-12v";
++	tegra->supplies = devm_kcalloc(&pdev->dev,
++				       tegra->soc_data->num_supplies,
++				       sizeof(*tegra->supplies), GFP_KERNEL);
++	if (!tegra->supplies)
++		return -ENOMEM;
 +
- 	hda@70030000 {
- 		compatible = "nvidia,tegra210-hda", "nvidia,tegra30-hda";
- 		reg = <0x0 0x70030000 0x0 0x10000>;
++	for (i = 0; i < tegra->soc_data->num_supplies; i++)
++		tegra->supplies[i].supply = tegra->soc_data->supply_names[i];
+ 
+-	ret = devm_regulator_bulk_get(&pdev->dev, ARRAY_SIZE(tegra->supplies),
++	ret = devm_regulator_bulk_get(&pdev->dev,
++				      tegra->soc_data->num_supplies,
+ 				      tegra->supplies);
+ 	if (ret) {
+ 		dev_err(&pdev->dev, "Failed to get regulators\n");
 -- 
 2.7.4
