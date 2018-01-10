@@ -1,75 +1,45 @@
-From: Florian Fainelli <f.fainelli@gmail.com>
-Subject: [PATCH 2/3] phy: brcm-sata: Implementation calibrate callback
-Date: Tue,  9 Jan 2018 15:04:56 -0800
-Message-ID: <1515539097-26742-3-git-send-email-f.fainelli@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/3] ata: Allow having a port recovery callback
+Date: Wed, 10 Jan 2018 06:25:05 -0800
+Message-ID: <20180110142505.GA3668920@devbig577.frc2.facebook.com>
 References: <1515539097-26742-1-git-send-email-f.fainelli@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1515539097-26742-1-git-send-email-f.fainelli@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: bcm-kernel-feedback-list@broadcom.com
-Cc: Florian Fainelli <f.fainelli@gmail.com>, Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Heiko Stuebner <heiko@sntech.de>, Srinath Mannam <srinath.mannam@broadcom.com>, Krzysztof Kozlowski <krzk@kernel.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Dan Carpenter <dan.carpenter@oracle.com>, "open list:LIBATA SUBSYSTEM Serial and
-        Parallel ATA drivers" <linux-ide@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+ <1515539097-26742-2-git-send-email-f.fainelli@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:37158 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965311AbeAJOZJ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jan 2018 09:25:09 -0500
+Content-Disposition: inline
+In-Reply-To: <1515539097-26742-2-git-send-email-f.fainelli@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Florian Fainelli <f.fainelli@gmail.com>
+Cc: bcm-kernel-feedback-list@broadcom.com, Kishon Vijay Abraham I <kishon@ti.com>, Heiko Stuebner <heiko@sntech.de>, Srinath Mannam <srinath.mannam@broadcom.com>, Krzysztof Kozlowski <krzk@kernel.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Dan Carpenter <dan.carpenter@oracle.com>, "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" <linux-ide@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 
-Implement the calibration callback to allow turning on the Clock-Data Recovery
-module clamping when necessary.
+Hello,
 
-Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
----
- drivers/phy/broadcom/phy-brcm-sata.c | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+On Tue, Jan 09, 2018 at 03:04:55PM -0800, Florian Fainelli wrote:
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 3c09122bf038..921c2813af07 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -2045,6 +2045,8 @@ int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
+>  	if (ata_msg_warn(ap))
+>  		ata_dev_warn(dev, "failed to IDENTIFY (%s, err_mask=0x%x)\n",
+>  			     reason, err_mask);
+> +	if (ap->host->ops->port_recovery)
+> +		ap->host->ops->port_recovery(ap);
+>  	return rc;
+>  }
 
-diff --git a/drivers/phy/broadcom/phy-brcm-sata.c b/drivers/phy/broadcom/phy-brcm-sata.c
-index 3f953db70288..8000ce312d95 100644
---- a/drivers/phy/broadcom/phy-brcm-sata.c
-+++ b/drivers/phy/broadcom/phy-brcm-sata.c
-@@ -150,6 +150,9 @@ enum sata_phy_regs {
- 	TXPMD_TX_FREQ_CTRL_CONTROL2_FMIN_MASK	= 0x3ff,
- 	TXPMD_TX_FREQ_CTRL_CONTROL3		= 0x84,
- 	TXPMD_TX_FREQ_CTRL_CONTROL3_FMAX_MASK	= 0x3ff,
-+
-+	RXPMD_REG_BANK				= 0x1c0,
-+	RXPMD_RX_FREQ_MON_CONTROL1		= 0x87,
- };
- 
- enum sata_phy_ctrl_regs {
-@@ -505,8 +508,37 @@ static int brcm_sata_phy_init(struct phy *phy)
- 	return rc;
- }
- 
-+static void brcm_stb_sata_calibrate(struct brcm_sata_port *port)
-+{
-+	void __iomem *base = brcm_sata_pcb_base(port);
-+	struct brcm_sata_phy *priv = port->phy_priv;
-+	u32 tmp = BIT(8);
-+
-+	brcm_sata_phy_wr(base, RXPMD_REG_BANK, RXPMD_RX_FREQ_MON_CONTROL1,
-+			 ~tmp, tmp);
-+}
-+
-+static int brcm_sata_phy_calibrate(struct phy *phy)
-+{
-+	struct brcm_sata_port *port = phy_get_drvdata(phy);
-+	int rc = -EOPNOTSUPP;
-+
-+	switch (port->phy_priv->version) {
-+	case BRCM_SATA_PHY_STB_28NM:
-+	case BRCM_SATA_PHY_STB_40NM:
-+		brcm_stb_sata_calibrate(port);
-+		rc = 0;
-+		break;
-+	default:
-+		break;
-+	};
-+
-+	return rc;
-+}
-+
- static const struct phy_ops phy_ops = {
- 	.init		= brcm_sata_phy_init,
-+	.calibrate	= brcm_sata_phy_calibrate,
- 	.owner		= THIS_MODULE,
- };
- 
+This is a really weird spot to add a callback named port_recovery().
+Can't the affected driver simply implement its own
+ata_port_operations->read_id() operation which does the recovery if
+necessary?
+
+Thanks.
+
 -- 
-2.7.4
+tejun
