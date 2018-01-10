@@ -1,48 +1,38 @@
-From: Florian Fainelli <f.fainelli@gmail.com>
-Subject: Re: [PATCH 1/3] ata: Allow having a port recovery callback
-Date: Wed, 10 Jan 2018 09:53:10 -0800
-Message-ID: <2e1642d9-825a-317e-8f35-884b8c341a64@gmail.com>
-References: <1515539097-26742-1-git-send-email-f.fainelli@gmail.com>
- <1515539097-26742-2-git-send-email-f.fainelli@gmail.com>
- <20180110142505.GA3668920@devbig577.frc2.facebook.com>
+From: Mr Mohamad Ahmed <ahmedsule067@gmail.com>
+Subject: GREETINGS FROM MOHAMMED AHMED .
+Date: Wed, 10 Jan 2018 22:54:02 +0100
+Message-ID: <CALK9TcPqD+bcra6PJSPAZTCBxssqKvhypcUhCj7gm+rtQkgvEA__4641.44148068062$1515621139$gmane$org@mail.gmail.com>
+Reply-To: mrmohamadahmed11@outlook.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:43161 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751503AbeAJRxO (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jan 2018 12:53:14 -0500
-In-Reply-To: <20180110142505.GA3668920@devbig577.frc2.facebook.com>
-Content-Language: en-US
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:39031 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752189AbeAJVyE (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jan 2018 16:54:04 -0500
+Received: by mail-lf0-f66.google.com with SMTP id m8so508643lfc.6
+        for <linux-ide@vger.kernel.org>; Wed, 10 Jan 2018 13:54:03 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: bcm-kernel-feedback-list@broadcom.com, Kishon Vijay Abraham I <kishon@ti.com>, Heiko Stuebner <heiko@sntech.de>, Srinath Mannam <srinath.mannam@broadcom.com>, Krzysztof Kozlowski <krzk@kernel.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Dan Carpenter <dan.carpenter@oracle.com>, "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" <linux-ide@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 
-On 01/10/2018 06:25 AM, Tejun Heo wrote:
-> Hello,
-> 
-> On Tue, Jan 09, 2018 at 03:04:55PM -0800, Florian Fainelli wrote:
->> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->> index 3c09122bf038..921c2813af07 100644
->> --- a/drivers/ata/libata-core.c
->> +++ b/drivers/ata/libata-core.c
->> @@ -2045,6 +2045,8 @@ int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
->>  	if (ata_msg_warn(ap))
->>  		ata_dev_warn(dev, "failed to IDENTIFY (%s, err_mask=0x%x)\n",
->>  			     reason, err_mask);
->> +	if (ap->host->ops->port_recovery)
->> +		ap->host->ops->port_recovery(ap);
->>  	return rc;
->>  }
-> 
-> This is a really weird spot to add a callback named port_recovery().
-> Can't the affected driver simply implement its own
-> ata_port_operations->read_id() operation which does the recovery if
-> necessary?
+My Dear Friend.
 
-I did not consider that, but this is actually a great idea, thanks for
-the suggestion! I will respin with that being done.
--- 
-Florian
+I am Mr. Mohammed Ahmed a banker in Bank of Africa Burkina Faso West
+Africa, Please i want to transfer an abandoned sum of 13.5 millions
+USD to your account.50% will be for you and 50% for me.
+
+No risk involved. Contact me for more details along with your personal
+information needed below.
+
+1. Full name:.........
+2. Current Address:.........
+3. Phone.............
+4. Occupation:.............
+5. Age:............
+6. Country:........
+7. Sex........
+8. Your Passport or ID card or Driving License
+
+Thanks.
+
+Mr. Mohammed Ahmed
