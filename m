@@ -1,41 +1,36 @@
 From: Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH 2/2] ahci: Use usleep_range() in ahci_start_port()
-Date: Thu, 11 Jan 2018 15:55:51 +0300
-Message-ID: <20180111125551.61877-2-mika.westerberg@linux.intel.com>
-References: <20180111125551.61877-1-mika.westerberg@linux.intel.com>
+Subject: [PATCH 1/2] ahci: Add Intel Cannon Lake PCH-H PCI ID
+Date: Thu, 11 Jan 2018 15:55:50 +0300
+Message-ID: <20180111125551.61877-1-mika.westerberg@linux.intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:34897 "EHLO mga14.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:44729 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932365AbeAKM4Y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 11 Jan 2018 07:56:24 -0500
-In-Reply-To: <20180111125551.61877-1-mika.westerberg@linux.intel.com>
+        id S933571AbeAKM4y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 11 Jan 2018 07:56:54 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: Mika Westerberg <mika.westerberg@linux.intel.com>, linux-ide@vger.kernel.org
 
-Using msleep(1) may actually sleep much longer than 1 msecs (~20 msecs)
-which unnecessarily slows down system startup. Avoid that and use
-usleep_range() instead.
+Add Intel Cannon Lake PCH-H PCI ID to the list of supported controllers.
 
 Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/ata/libahci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ata/ahci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index a0de7a38430c..27e7daa01ccb 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -871,7 +871,7 @@ static void ahci_start_port(struct ata_port *ap)
- 				 * ports to fail the same way.
- 				 */
- 				if (rc == -EBUSY)
--					msleep(1);
-+					usleep_range(1000, 1050);
- 				else
- 					break;
- 			}
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 5443cb71d7ba..a3131107136f 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -386,6 +386,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0xa206), board_ahci }, /* Lewisburg RAID*/
+ 	{ PCI_VDEVICE(INTEL, 0xa252), board_ahci }, /* Lewisburg RAID*/
+ 	{ PCI_VDEVICE(INTEL, 0xa256), board_ahci }, /* Lewisburg RAID*/
++	{ PCI_VDEVICE(INTEL, 0xa356), board_ahci }, /* Cannon Lake PCH-H RAID */
+ 
+ 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+ 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
 -- 
 2.15.1
 
