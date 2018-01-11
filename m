@@ -1,36 +1,32 @@
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH 1/2] ahci: Add Intel Cannon Lake PCH-H PCI ID
-Date: Thu, 11 Jan 2018 15:55:50 +0300
-Message-ID: <20180111125551.61877-1-mika.westerberg@linux.intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/2] ahci: Add Intel Cannon Lake PCH-H PCI ID
+Date: Thu, 11 Jan 2018 10:10:40 -0800
+Message-ID: <20180111181040.GK3460072@devbig577.frc2.facebook.com>
+References: <20180111125551.61877-1-mika.westerberg@linux.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:44729 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933571AbeAKM4y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 11 Jan 2018 07:56:54 -0500
+Received: from mail-qk0-f169.google.com ([209.85.220.169]:37969 "EHLO
+        mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932215AbeAKSKq (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 11 Jan 2018 13:10:46 -0500
+Received: by mail-qk0-f169.google.com with SMTP id j185so5434874qkc.5
+        for <linux-ide@vger.kernel.org>; Thu, 11 Jan 2018 10:10:45 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <20180111125551.61877-1-mika.westerberg@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>, linux-ide@vger.kernel.org
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: linux-ide@vger.kernel.org
 
-Add Intel Cannon Lake PCH-H PCI ID to the list of supported controllers.
+On Thu, Jan 11, 2018 at 03:55:50PM +0300, Mika Westerberg wrote:
+> Add Intel Cannon Lake PCH-H PCI ID to the list of supported controllers.
+> 
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/ata/ahci.c | 1 +
- 1 file changed, 1 insertion(+)
+Applied to libata/for-4.16.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 5443cb71d7ba..a3131107136f 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -386,6 +386,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0xa206), board_ahci }, /* Lewisburg RAID*/
- 	{ PCI_VDEVICE(INTEL, 0xa252), board_ahci }, /* Lewisburg RAID*/
- 	{ PCI_VDEVICE(INTEL, 0xa256), board_ahci }, /* Lewisburg RAID*/
-+	{ PCI_VDEVICE(INTEL, 0xa356), board_ahci }, /* Cannon Lake PCH-H RAID */
- 
- 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
- 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+Thanks.
+
 -- 
-2.15.1
-
+tejun
