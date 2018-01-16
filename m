@@ -1,121 +1,36 @@
-From: Yoshihiro Kaneko <ykaneko0929@gmail.com>
-Subject: [PATCH v2] sata: sata_rcar: Reset SATA PHY when Salvator-X board resumes
-Date: Tue, 16 Jan 2018 23:39:12 +0900
-Message-ID: <1516113552-27701-1-git-send-email-ykaneko0929@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pl0-f65.google.com ([209.85.160.65]:37746 "EHLO
-        mail-pl0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750750AbeAPOjV (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 16 Jan 2018 09:39:21 -0500
-Sender: linux-ide-owner@vger.kernel.org
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 0/2] ata: ahci_brcm: Recover from failures to identify
+ devices
+Date: Tue, 16 Jan 2018 08:09:32 -0800
+Message-ID: <20180116160932.GP3460072@devbig577.frc2.facebook.com>
+References: <1515720668-4860-1-git-send-email-f.fainelli@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1515720668-4860-1-git-send-email-f.fainelli@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Florian Fainelli <f.fainelli@gmail.com>
+Cc: bcm-kernel-feedback-list@broadcom.com, Kishon Vijay Abraham I <kishon@ti.com>, Heiko Stuebner <heiko@sntech.de>, Srinath Mannam <srinath.mannam@broadcom.com>, Krzysztof Kozlowski <krzk@kernel.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, Dan Carpenter <dan.carpenter@oracle.com>, "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" <linux-ide@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, Geert Uytterhoeven <geert+renesas@glider.be>, linux-renesas-soc@vger.kernel.org
 
-From: Khiem Nguyen <khiem.nguyen.xt@rvc.renesas.com>
+On Thu, Jan 11, 2018 at 05:31:06PM -0800, Florian Fainelli wrote:
+> Hi Tejun, Kishon,
+> 
+> This patch series implement a recovery mechanism to work around a HW bug
+> on Broadcom AHCI SATA controller subject to noise triggering a failure to
+> identify hard drives.
+> 
+> I would like to make this this is okay with you as an approach on how to solve
+> this.
+> 
+> This should likely go through Tejun's tree to make sure the SATA controller
+> and PHY changes are bundled together.
 
-Because power of Salvator-X board is cut off in suspend,
-it needs to reset SATA PHY state in resume.
-Otherwise, SATA partition could not be accessed anymore.
+libata part looks good to me.  Once phy side gets acked, I'll route
+both through libata.
 
-Signed-off-by: Khiem Nguyen <khiem.nguyen.xt@rvc.renesas.com>
-Signed-off-by: Hien Dang <hien.dang.eb@rvc.renesas.com>
-[reinit phy in sata_rcar_resume() function on R-Car Gen3 only]
-[fixed the prefix for the subject]
-Signed-off-by: Yoshihiro Kaneko <ykaneko0929@gmail.com>
----
+Thanks.
 
-This patch is based on the for-next branch of libata tree.
-
-v2 [Yoshihiro Kaneko]
-* reinit phy on R-Car Gen3 only as suggested by Geert Uytterhoeven
-* use "sata_rcar" prefix for the subject as suggested by Sergei Shtylyov
-
- drivers/ata/sata_rcar.c | 38 ++++++++++++++++++++++++++++++++++++--
- 1 file changed, 36 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
-index 80ee2f2..4adc0d6 100644
---- a/drivers/ata/sata_rcar.c
-+++ b/drivers/ata/sata_rcar.c
-@@ -146,6 +146,7 @@
- enum sata_rcar_type {
- 	RCAR_GEN1_SATA,
- 	RCAR_GEN2_SATA,
-+	RCAR_GEN3_SATA,
- 	RCAR_R8A7790_ES1_SATA,
- };
- 
-@@ -796,6 +797,7 @@ static void sata_rcar_init_controller(struct ata_host *host)
- 		sata_rcar_gen1_phy_init(priv);
- 		break;
- 	case RCAR_GEN2_SATA:
-+	case RCAR_GEN3_SATA:
- 	case RCAR_R8A7790_ES1_SATA:
- 		sata_rcar_gen2_phy_init(priv);
- 		break;
-@@ -856,7 +858,7 @@ static void sata_rcar_init_controller(struct ata_host *host)
- 	},
- 	{
- 		.compatible = "renesas,sata-r8a7795",
--		.data = (void *)RCAR_GEN2_SATA
-+		.data = (void *)RCAR_GEN3_SATA
- 	},
- 	{
- 		.compatible = "renesas,rcar-gen2-sata",
-@@ -864,7 +866,7 @@ static void sata_rcar_init_controller(struct ata_host *host)
- 	},
- 	{
- 		.compatible = "renesas,rcar-gen3-sata",
--		.data = (void *)RCAR_GEN2_SATA
-+		.data = (void *)RCAR_GEN3_SATA
- 	},
- 	{ },
- };
-@@ -977,11 +979,43 @@ static int sata_rcar_resume(struct device *dev)
- 	struct sata_rcar_priv *priv = host->private_data;
- 	void __iomem *base = priv->base;
- 	int ret;
-+	u32 val;
- 
- 	ret = clk_prepare_enable(priv->clk);
- 	if (ret)
- 		return ret;
- 
-+	/* reinit phy on R-Car Gen3 only */
-+	switch (priv->type) {
-+	case RCAR_GEN1_SATA:
-+	case RCAR_GEN2_SATA:
-+	case RCAR_R8A7790_ES1_SATA:
-+		break;
-+	case RCAR_GEN3_SATA:
-+		sata_rcar_gen2_phy_init(priv);
-+		break;
-+	default:
-+		dev_warn(host->dev, "SATA phy is not initialized\n");
-+		break;
-+	}
-+
-+	/* SATA-IP reset state */
-+	val = ioread32(base + ATAPI_CONTROL1_REG);
-+	val |= ATAPI_CONTROL1_RESET;
-+	iowrite32(val, base + ATAPI_CONTROL1_REG);
-+
-+	/* ISM mode, PRD mode, DTEND flag at bit 0 */
-+	val = ioread32(base + ATAPI_CONTROL1_REG);
-+	val |= ATAPI_CONTROL1_ISM;
-+	val |= ATAPI_CONTROL1_DESE;
-+	val |= ATAPI_CONTROL1_DTA32M;
-+	iowrite32(val, base + ATAPI_CONTROL1_REG);
-+
-+	/* Release the SATA-IP from the reset state */
-+	val = ioread32(base + ATAPI_CONTROL1_REG);
-+	val &= ~ATAPI_CONTROL1_RESET;
-+	iowrite32(val, base + ATAPI_CONTROL1_REG);
-+
- 	/* ack and mask */
- 	iowrite32(0, base + SATAINTSTAT_REG);
- 	iowrite32(0x7ff, base + SATAINTMASK_REG);
 -- 
-1.9.1
-
+tejun
