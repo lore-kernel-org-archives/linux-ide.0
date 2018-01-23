@@ -1,47 +1,77 @@
-From: Mikko Perttunen <cyndis-/1wQRMveznE@public.gmane.org>
-Subject: Re: [PATCH V6 6/7] ata: ahci_tegra: disable DIPM
-Date: Tue, 23 Jan 2018 17:53:01 +0200
-Message-ID: <cdff68f3-9a4c-3591-0882-073ffad16e5e@kapsi.fi>
+From: Mikko Perttunen <cyndis@kapsi.fi>
+Subject: Re: [PATCH V6 7/7] ata: ahci_tegra: Add AHCI support for tegra210
+Date: Tue, 23 Jan 2018 17:56:13 +0200
+Message-ID: <00e96e38-8194-33a0-0057-31718ebce62f@kapsi.fi>
 References: <1515482234-24716-1-git-send-email-pchandru@nvidia.com>
- <1515482234-24716-7-git-send-email-pchandru@nvidia.com>
+ <1515482234-24716-8-git-send-email-pchandru@nvidia.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1515482234-24716-7-git-send-email-pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.kapsi.fi ([91.232.154.25]:50654 "EHLO mail.kapsi.fi"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751170AbeAWP4P (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 23 Jan 2018 10:56:15 -0500
+In-Reply-To: <1515482234-24716-8-git-send-email-pchandru@nvidia.com>
 Content-Language: en-US
-Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Preetham Chandru Ramchandra <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vbyravarasu-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, pkunapuli-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Preetham Chandru Ramchandra <pchandru@nvidia.com>, thierry.reding@gmail.com, tj@kernel.org
+Cc: preetham260@gmail.com, linux-tegra@vger.kernel.org, linux-ide@vger.kernel.org, vbyravarasu@nvidia.com, pkunapuli@nvidia.com
+
+Tegra210 should be capitalized in the subject, and a commit message is 
+needed.
+
+   Add support for the AHCI-compliant Serial ATA host controller on the
+   Tegra210 system-on-chip.
+
+Otherwise,
+Reviewed-by: Mikko Perttunen <mperttunen@nvidia.com>
+
+Mikko
 
 On 01/09/2018 09:17 AM, Preetham Chandru Ramchandra wrote:
-> From: Preetham Ramchandra <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+> From: Preetham Ramchandra <pchandru@nvidia.com>
 > 
-> tegra does not support DIPM and it should be disabled
-
-Nit: Tegra should be capitalized
-
-otherwise,
-Reviewed-by: Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-
-> 
-> Signed-off-by: Preetham Chandru R <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Preetham Chandru R <pchandru@nvidia.com>
 > ---
->   drivers/ata/ahci_tegra.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+>   drivers/ata/ahci_tegra.c | 10 +++++++++-
+>   1 file changed, 9 insertions(+), 1 deletion(-)
 > 
 > diff --git a/drivers/ata/ahci_tegra.c b/drivers/ata/ahci_tegra.c
-> index a59a97b1b2e5..013880de6412 100644
+> index 013880de6412..3f00dfa3760d 100644
 > --- a/drivers/ata/ahci_tegra.c
 > +++ b/drivers/ata/ahci_tegra.c
-> @@ -460,7 +460,7 @@ static struct ata_port_operations ahci_tegra_port_ops = {
+> @@ -256,6 +256,10 @@ static const struct tegra_ahci_soc tegra124_ahci_soc_data = {
+>   	},
 >   };
 >   
->   static const struct ata_port_info ahci_tegra_port_info = {
-> -	.flags		= AHCI_FLAG_COMMON,
-> +	.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NO_DIPM,
->   	.pio_mask	= ATA_PIO4,
->   	.udma_mask	= ATA_UDMA6,
->   	.port_ops	= &ahci_tegra_port_ops,
+> +static const struct tegra_ahci_soc tegra210_ahci_soc_data = {
+> +	.quirks = NO_DEVSLP,
+> +};
+> +
+
+Nit, I'd prefer this to be directly above the of_device_id table.
+
+>   static int tegra_ahci_power_on(struct ahci_host_priv *hpriv)
+>   {
+>   	struct tegra_ahci_priv *tegra = hpriv->plat_data;
+> @@ -471,6 +475,10 @@ static const struct of_device_id tegra_ahci_of_match[] = {
+>   		.compatible = "nvidia,tegra124-ahci",
+>   		.data = &tegra124_ahci_soc_data
+>   	},
+> +	{
+> +		.compatible = "nvidia,tegra210-ahci",
+> +		.data = &tegra210_ahci_soc_data
+> +	},
+>   	{}
+>   };
+>   MODULE_DEVICE_TABLE(of, tegra_ahci_of_match);
+> @@ -585,5 +593,5 @@ static struct platform_driver tegra_ahci_driver = {
+>   module_platform_driver(tegra_ahci_driver);
+>   
+>   MODULE_AUTHOR("Mikko Perttunen <mperttunen@nvidia.com>");
+> -MODULE_DESCRIPTION("Tegra124 AHCI SATA driver");
+> +MODULE_DESCRIPTION("Tegra AHCI SATA driver");
+>   MODULE_LICENSE("GPL v2");
 > 
