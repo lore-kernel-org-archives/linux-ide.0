@@ -1,124 +1,112 @@
 From: Mikko Perttunen <cyndis-/1wQRMveznE@public.gmane.org>
-Subject: Re: [PATCH V6 4/7] ata: ahci_tegra: initialize regulators from
- soc_data
-Date: Tue, 23 Jan 2018 17:47:37 +0200
-Message-ID: <4e062f5b-81dc-6dee-a2df-c865047a48b7@kapsi.fi>
+Subject: Re: [PATCH V6 5/7] ata: ahci_tegra: disable devslp for t124
+Date: Tue, 23 Jan 2018 17:51:37 +0200
+Message-ID: <9a6cc02c-0a1b-ef03-5c20-a95f421cffc4@kapsi.fi>
 References: <1515482234-24716-1-git-send-email-pchandru@nvidia.com>
- <1515482234-24716-5-git-send-email-pchandru@nvidia.com>
+ <1515482234-24716-6-git-send-email-pchandru@nvidia.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1515482234-24716-5-git-send-email-pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1515482234-24716-6-git-send-email-pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 Content-Language: en-US
 Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 To: Preetham Chandru Ramchandra <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 Cc: preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vbyravarasu-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, pkunapuli-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
+Reviewed-by: Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+
 On 01/09/2018 09:17 AM, Preetham Chandru Ramchandra wrote:
 > From: Preetham Ramchandra <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 > 
-> Get the regulator names to be initialized from soc_data
-> and initialize them.
+> t124 does not support devslp and it should be
+> disabled.
 > 
 > Signed-off-by: Preetham Chandru R <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 > ---
->   drivers/ata/ahci_tegra.c | 32 ++++++++++++++++++++++----------
->   1 file changed, 22 insertions(+), 10 deletions(-)
+>   drivers/ata/ahci_tegra.c | 29 +++++++++++++++++++++++++++++
+>   1 file changed, 29 insertions(+)
 > 
 > diff --git a/drivers/ata/ahci_tegra.c b/drivers/ata/ahci_tegra.c
-> index 71850e96e787..90dfa803607e 100644
+> index 90dfa803607e..a59a97b1b2e5 100644
 > --- a/drivers/ata/ahci_tegra.c
 > +++ b/drivers/ata/ahci_tegra.c
-> @@ -164,6 +164,8 @@ struct tegra_ahci_ops {
->   };
+> @@ -145,6 +145,10 @@
+>   #define FUSE_SATA_CALIB					0x124
+>   #define FUSE_SATA_CALIB_MASK				0x3
 >   
+> +enum {
+> +	NO_DEVSLP	= (1 << 0),
+> +};
+> +
+>   struct sata_pad_calibration {
+>   	u8 gen1_tx_amp;
+>   	u8 gen1_tx_peak;
+> @@ -166,12 +170,14 @@ struct tegra_ahci_ops {
 >   struct tegra_ahci_soc {
-> +	const char *const	*supply_names;
-> +	u32			num_supplies;
+>   	const char *const	*supply_names;
+>   	u32			num_supplies;
+> +	u32			quirks;
 >   	struct tegra_ahci_ops	ops;
 >   };
 >   
-> @@ -175,10 +177,14 @@ struct tegra_ahci_priv {
+>   struct tegra_ahci_priv {
+>   	struct platform_device	   *pdev;
+>   	void __iomem		   *sata_regs;
+> +	void __iomem		   *sata_aux_regs;
+>   	struct reset_control	   *sata_rst;
+>   	struct reset_control	   *sata_oob_rst;
 >   	struct reset_control	   *sata_cold_rst;
->   	/* Needs special handling, cannot use ahci_platform */
->   	struct clk		   *sata_clk;
-> -	struct regulator_bulk_data supplies[5];
-> +	struct regulator_bulk_data *supplies;
->   	struct tegra_ahci_soc	   *soc_data;
+> @@ -185,6 +191,18 @@ static const char *const tegra124_supply_names[] = {
+>   	"avdd", "hvdd", "vddio", "target-5v", "target-12v"
 >   };
 >   
-> +static const char *const tegra124_supply_names[] = {
-> +	"avdd", "hvdd", "vddio", "target-5v", "target-12v"
-> +};
+> +static void tegra_ahci_handle_quirks(struct ahci_host_priv *hpriv)
+> +{
+> +	struct tegra_ahci_priv *tegra = hpriv->plat_data;
+> +	u32 val;
 > +
-
-Nitpick: this should be just above the tegra124_ahci_soc_data structure.
-
+> +	if (tegra->sata_aux_regs && (tegra->soc_data->quirks & NO_DEVSLP)) {
+> +		val = readl(tegra->sata_aux_regs + SATA_AUX_MISC_CNTL_1_0);
+> +		val &= ~SATA_AUX_MISC_CNTL_1_0_SDS_SUPPORT;
+> +		writel(val, tegra->sata_aux_regs + SATA_AUX_MISC_CNTL_1_0);
+> +	}
+> +}
+> +
 >   static int tegra124_ahci_init(struct ahci_host_priv *hpriv)
 >   {
 >   	struct tegra_ahci_priv *tegra = hpriv->plat_data;
-> @@ -224,6 +230,8 @@ static int tegra124_ahci_init(struct ahci_host_priv *hpriv)
->   }
->   
+> @@ -232,6 +250,7 @@ static int tegra124_ahci_init(struct ahci_host_priv *hpriv)
 >   static const struct tegra_ahci_soc tegra124_ahci_soc_data = {
-> +	.supply_names = tegra124_supply_names,
-> +	.num_supplies = ARRAY_SIZE(tegra124_supply_names),
+>   	.supply_names = tegra124_supply_names,
+>   	.num_supplies = ARRAY_SIZE(tegra124_supply_names),
+> +	.quirks = NO_DEVSLP,
 >   	.ops = {
 >   		.init = tegra124_ahci_init,
 >   	},
-> @@ -234,7 +242,7 @@ static int tegra_ahci_power_on(struct ahci_host_priv *hpriv)
->   	struct tegra_ahci_priv *tegra = hpriv->plat_data;
->   	int ret;
+> @@ -412,6 +431,7 @@ static int tegra_ahci_controller_init(struct ahci_host_priv *hpriv)
+>   	val &= ~SATA_CONFIGURATION_0_CLK_OVERRIDE;
+>   	writel(val, tegra->sata_regs + SATA_CONFIGURATION_0);
 >   
-> -	ret = regulator_bulk_enable(ARRAY_SIZE(tegra->supplies),
-> +	ret = regulator_bulk_enable(tegra->soc_data->num_supplies,
->   				    tegra->supplies);
->   	if (ret)
->   		return ret;
-> @@ -263,7 +271,7 @@ static int tegra_ahci_power_on(struct ahci_host_priv *hpriv)
->   	tegra_powergate_power_off(TEGRA_POWERGATE_SATA);
+> +	tegra_ahci_handle_quirks(hpriv);
 >   
->   disable_regulators:
-> -	regulator_bulk_disable(ARRAY_SIZE(tegra->supplies), tegra->supplies);
-> +	regulator_bulk_disable(tegra->soc_data->num_supplies, tegra->supplies);
->   	return ret;
->   }
+>   	/* Unmask SATA interrupts */
 >   
-> @@ -280,7 +288,7 @@ static void tegra_ahci_power_off(struct ahci_host_priv *hpriv)
->   	clk_disable_unprepare(tegra->sata_clk);
->   	tegra_powergate_power_off(TEGRA_POWERGATE_SATA);
+> @@ -485,6 +505,15 @@ static int tegra_ahci_probe(struct platform_device *pdev)
+>   	tegra->sata_regs = devm_ioremap_resource(&pdev->dev, res);
+>   	if (IS_ERR(tegra->sata_regs))
+>   		return PTR_ERR(tegra->sata_regs);
+> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
+> +	/*
+> +	 * Aux register is optional.
+> +	 */
+> +	if (res) {
+> +		tegra->sata_aux_regs = devm_ioremap_resource(&pdev->dev, res);
+> +		if (IS_ERR(tegra->sata_aux_regs))
+> +			return PTR_ERR(tegra->sata_aux_regs);
+> +	}
 >   
-> -	regulator_bulk_disable(ARRAY_SIZE(tegra->supplies), tegra->supplies);
-> +	regulator_bulk_disable(tegra->soc_data->num_supplies, tegra->supplies);
->   }
->   
->   static int tegra_ahci_controller_init(struct ahci_host_priv *hpriv)
-> @@ -502,13 +510,17 @@ static int tegra_ahci_probe(struct platform_device *pdev)
->   		return PTR_ERR(tegra->sata_clk);
->   	}
->   
-> -	tegra->supplies[0].supply = "avdd";
-> -	tegra->supplies[1].supply = "hvdd";
-> -	tegra->supplies[2].supply = "vddio";
-> -	tegra->supplies[3].supply = "target-5v";
-> -	tegra->supplies[4].supply = "target-12v";
-> +	tegra->supplies = devm_kcalloc(&pdev->dev,
-> +				       tegra->soc_data->num_supplies,
-> +				       sizeof(*tegra->supplies), GFP_KERNEL);
-> +	if (!tegra->supplies)
-> +		return -ENOMEM;
-> +
-> +	for (i = 0; i < tegra->soc_data->num_supplies; i++)
-> +		tegra->supplies[i].supply = tegra->soc_data->supply_names[i];
->   
-> -	ret = devm_regulator_bulk_get(&pdev->dev, ARRAY_SIZE(tegra->supplies),
-> +	ret = devm_regulator_bulk_get(&pdev->dev,
-> +				      tegra->soc_data->num_supplies,
->   				      tegra->supplies);
->   	if (ret) {
->   		dev_err(&pdev->dev, "Failed to get regulators\n");
+>   	tegra->sata_rst = devm_reset_control_get(&pdev->dev, "sata");
+>   	if (IS_ERR(tegra->sata_rst)) {
 > 
-
-Reviewed-by: Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
