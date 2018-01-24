@@ -1,77 +1,65 @@
-From: Mikko Perttunen <cyndis@kapsi.fi>
-Subject: Re: [PATCH V6 7/7] ata: ahci_tegra: Add AHCI support for tegra210
-Date: Tue, 23 Jan 2018 17:56:13 +0200
-Message-ID: <00e96e38-8194-33a0-0057-31718ebce62f@kapsi.fi>
-References: <1515482234-24716-1-git-send-email-pchandru@nvidia.com>
- <1515482234-24716-8-git-send-email-pchandru@nvidia.com>
+From: chenxiang <chenxiang66@hisilicon.com>
+Subject: [PATCH] scsi: ata: don't reset three times if device is offline for SAS host
+Date: Wed, 24 Jan 2018 21:20:25 +0800
+Message-ID: <1516800025-193614-1-git-send-email-chenxiang66@hisilicon.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kapsi.fi ([91.232.154.25]:50654 "EHLO mail.kapsi.fi"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751170AbeAWP4P (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 23 Jan 2018 10:56:15 -0500
-In-Reply-To: <1515482234-24716-8-git-send-email-pchandru@nvidia.com>
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: martin.petersen@oracle.com, tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linuxarm@huawei.com, chenxiang <chenxiang66@hisilicon.com>
 List-Id: linux-ide@vger.kernel.org
-To: Preetham Chandru Ramchandra <pchandru@nvidia.com>, thierry.reding@gmail.com, tj@kernel.org
-Cc: preetham260@gmail.com, linux-tegra@vger.kernel.org, linux-ide@vger.kernel.org, vbyravarasu@nvidia.com, pkunapuli@nvidia.com
 
-Tegra210 should be capitalized in the subject, and a commit message is 
-needed.
+In ata_eh_reset, it will reset three times at most for sata disk. For
+some drivers through libsas, it calls sas_ata_hard_reset at last. When
+device is gone, function sas_ata_hard_reset will return -ENODEV. But
+it will still try to reset three times for offline device. This process
+lasts a long time:
 
-   Add support for the AHCI-compliant Serial ATA host controller on the
-   Tegra210 system-on-chip.
+[11248.344323] ata13.00: status: { ERR }
+[11248.344324] ata13.00: error: { ABRT }
+[11248.344327] ata13: hard resetting link
+[11248.503557] sas: ata: ex 500e004aaaaaaa1f phy02:U:A attached:0000000000000000 (no device)
+[11249.359524] sas: ata13: end_device-1:0:2: reset failed (errno=-19)[eta03d:19h:35m:17s]
+[11249.365692] ata13: reset failed (errno=-19), retrying in 9 secs
+[11258.451402] ata13: hard resetting linkKB/0KB/0KB /s] [0/0/0 iops][eta 03d:22h:10m:48s]
+[11259.411508] sas: ata13: end_device-1:0:2: reset failed (errno=-19)[eta 03d:22h:28m:05s]
+[11259.417683] ata13: reset failed (errno=-19), retrying in 10 secs
+[11268.695401] ata13: hard resetting linkKB/0KB/0KB /s] [0/0/0 iops] [eta 04d:01h:03m:37s]
+[11269.699513] sas: ata13: end_device-1:0:2: reset failed (errno=-19)[eta 04d:01h:20m:54s]
+[11269.705689] ata13: reset failed (errno=-19), retrying in 34 secs
+[11304.275393] ata13: hard resetting linkKB/0KB/0KB /s] [0/0/0 iops] [eta 04d:11h:25m:43s]
+[11305.283516] sas: ata13: end_device-1:0:2: reset failed (errno=-19)[eta 04d:11h:43m:00s]
+[11305.289692] ata13: reset failed, giving up
+[11305.293785] ata13.00: disabled
 
-Otherwise,
-Reviewed-by: Mikko Perttunen <mperttunen@nvidia.com>
+Actually it is no need to reset three times for this scenario. So add
+a check to avoid it.
 
-Mikko
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+---
+ drivers/ata/libata-eh.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-On 01/09/2018 09:17 AM, Preetham Chandru Ramchandra wrote:
-> From: Preetham Ramchandra <pchandru@nvidia.com>
-> 
-> Signed-off-by: Preetham Chandru R <pchandru@nvidia.com>
-> ---
->   drivers/ata/ahci_tegra.c | 10 +++++++++-
->   1 file changed, 9 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ata/ahci_tegra.c b/drivers/ata/ahci_tegra.c
-> index 013880de6412..3f00dfa3760d 100644
-> --- a/drivers/ata/ahci_tegra.c
-> +++ b/drivers/ata/ahci_tegra.c
-> @@ -256,6 +256,10 @@ static const struct tegra_ahci_soc tegra124_ahci_soc_data = {
->   	},
->   };
->   
-> +static const struct tegra_ahci_soc tegra210_ahci_soc_data = {
-> +	.quirks = NO_DEVSLP,
-> +};
-> +
-
-Nit, I'd prefer this to be directly above the of_device_id table.
-
->   static int tegra_ahci_power_on(struct ahci_host_priv *hpriv)
->   {
->   	struct tegra_ahci_priv *tegra = hpriv->plat_data;
-> @@ -471,6 +475,10 @@ static const struct of_device_id tegra_ahci_of_match[] = {
->   		.compatible = "nvidia,tegra124-ahci",
->   		.data = &tegra124_ahci_soc_data
->   	},
-> +	{
-> +		.compatible = "nvidia,tegra210-ahci",
-> +		.data = &tegra210_ahci_soc_data
-> +	},
->   	{}
->   };
->   MODULE_DEVICE_TABLE(of, tegra_ahci_of_match);
-> @@ -585,5 +593,5 @@ static struct platform_driver tegra_ahci_driver = {
->   module_platform_driver(tegra_ahci_driver);
->   
->   MODULE_AUTHOR("Mikko Perttunen <mperttunen@nvidia.com>");
-> -MODULE_DESCRIPTION("Tegra124 AHCI SATA driver");
-> +MODULE_DESCRIPTION("Tegra AHCI SATA driver");
->   MODULE_LICENSE("GPL v2");
-> 
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 11c3137..23a8946 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -3032,6 +3032,15 @@ int ata_eh_reset(struct ata_link *link, int classify,
+ 		goto out;
+ 	}
+ 
++	if (rc == -ENODEV && ap->flags & ATA_FLAG_SAS_HOST) {
++		ata_link_warn(failed_link,
++			"reset failed (errno=%d, device is offline for SAS host\n)",
++			rc);
++		if (ata_is_host_link(link))
++			ata_eh_thaw_port(ap);
++		goto out;
++	}
++
+ 	now = jiffies;
+ 	if (time_before(now, deadline)) {
+ 		unsigned long delta = deadline - now;
+-- 
+1.9.1
