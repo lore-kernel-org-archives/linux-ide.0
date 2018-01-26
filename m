@@ -1,44 +1,62 @@
-From: Peter Schuster <femi.ageuh@gmail.com>
-Subject: =?UTF-8?Q?Darlehen_Geld_f=C3=BCr_Einzelpersonen_und_Fachleute_in_w?=
-        =?UTF-8?Q?eniger_als_72_Stunden?=
-Date: Fri, 26 Jan 2018 08:22:47 +0100
-Message-ID: <CACKcKZ-YTVoO8xO=VcRR-F_91T=fQ=MZa2wBTk_EaRT7GRz52Q__2420.02255185998$1516951319$gmane$org@mail.gmail.com>
-Reply-To: klaus.peterschuster@outlook.de
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+From: Michal Suchanek <msuchanek@suse.de>
+Subject: [PATCH resend 0/6] Fix cdrom autoclose
+Date: Fri, 26 Jan 2018 17:58:34 +0100
+Message-ID: <cover.1516985620.git.msuchanek@suse.de>
+References: <cover.1513263482.git.msuchanek@suse.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ot0-f174.google.com ([74.125.82.174]:36071 "EHLO
-        mail-ot0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751882AbeAZHWt (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 26 Jan 2018 02:22:49 -0500
-Received: by mail-ot0-f174.google.com with SMTP id f100so9366879otf.3
-        for <linux-ide@vger.kernel.org>; Thu, 25 Jan 2018 23:22:49 -0800 (PST)
+Received: from mx2.suse.de ([195.135.220.15]:40616 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751498AbeAZTuj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 26 Jan 2018 14:50:39 -0500
+In-Reply-To: <cover.1513263482.git.msuchanek@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>, Borislav Petkov <bp@alien8.de>, Tim Waugh <tim@cyberelk.net>, "David S. Miller" <davem@davemloft.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michal Suchanek <msuchanek@suse.de>, Kees Cook <keescook@chromium.org>, Christophe JAILLET <christophe.jaillet@wanadoo.fr>, Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hallo,
+Hello,
 
-Sind Sie in einer schwierigen Situation, f=C3=BCr die Sie sich f=C3=BCr ein
-Darlehen suchen? Ben=C3=B6tigen Sie eine Finanzierung, um eine Schuld zu
-begleichen oder eine Aktivit=C3=A4t zu finanzieren? Haben Sie einen
-Verbraucherkredit, eine Hypothek, einen pers=C3=B6nlichen Kredit, eine
-Hypothek, Investition Darlehen, Schuldenkonsolidierung Darlehen oder
-andere braucht?
+  there is cdrom autoclose feature that is supposed to close the tray, wait for
+  the disc to become ready, and then open the device.
 
-Ich bin ein einzelner Investor. I zur Verf=C3=BCgung stellen die Kredit
-kurz-, mittel- und langfristige. Ihr Finanzierungsbedingungen sind
-sehr einfach und meine Zinssatz betr=C3=A4gt 3% pro Jahr.
+  This used to work in ancient times. Then in old times there was a hack in
+  util-linux which worked around the breakage which probably resulted from
+  switching to scsi emulation.
 
-F=C3=BCr alle Anfragen, bleibe ich zur Verf=C3=BCgung, um Ihre Fragen zu be=
-antworten.
+  Currently util-linux maintainer refuses to merge another hack on the basis that
+  kernel still has the feature so it should be fixed there. Indeed, to implement
+  this feature effectively from userspace one would need to know when the CD-ROM
+  is in the "drive becoming ready" state which is knowledge that never leaves the
+  hardware-specific driver and is passed neither to userspace nor the generic
+  cdrom driver.
 
-Danke, dass Sie mir per E-Mail an Sie von  :   klaus.peterschuster@outlook.=
-de
+  So this patchset fixes the kernel autoclose implementation in cdrom.c and to
+  do so reports the "drive becoming ready" state from the harware specific
+  drivers.
 
-Mit freundlichen Gr=C3=BC=C3=9Fen.
+First time I did not get any feedback for the patches. I found a defect in
+tray_close - it used status function without checking it exists. So resending
+with the defect corrected.
 
-Peter Schuster
+Michal Suchanek (6):
+  delay: add poll_event_interruptible
+  cdrom: factor out common open_for_* code
+  cdrom: wait for tray to close
+  cdrom: introduce CDS_DRIVE_ERROR
+  Documentetion: cdrom: introduce CDS_DRIVE_ERROR
+  cdrom: wait for drive to become ready
 
-Financial Bank
-https://firstfinancialsa.com/de
+ Documentation/cdrom/cdrom-standard.tex |   8 ++-
+ Documentation/cdrom/ide-cd             |   6 ++
+ Documentation/ioctl/cdrom.txt          |   1 +
+ drivers/block/paride/pcd.c             |   2 +-
+ drivers/cdrom/cdrom.c                  | 124 ++++++++++++++++-----------------
+ drivers/cdrom/gdrom.c                  |   2 +-
+ drivers/ide/ide-cd_ioctl.c             |  12 ++--
+ drivers/scsi/sr_ioctl.c                |   2 +-
+ include/linux/delay.h                  |  12 ++++
+ include/uapi/linux/cdrom.h             |   1 +
+ 10 files changed, 99 insertions(+), 71 deletions(-)
+
+-- 
+2.13.6
+
