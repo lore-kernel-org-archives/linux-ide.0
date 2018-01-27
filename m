@@ -1,91 +1,43 @@
-From: Michal Suchanek <msuchanek@suse.de>
-Subject: [PATCH resend 5/6] Documentetion: cdrom: introduce CDS_DRIVE_ERROR
-Date: Fri, 26 Jan 2018 17:58:39 +0100
-Message-ID: <b2855d98b131fec0fa20b505e09636465c46a423.1516985620.git.msuchanek@suse.de>
+From: Michal =?UTF-8?B?U3VjaMOhbmVr?= <msuchanek@suse.de>
+Subject: Re: [PATCH resend 0/6] Fix cdrom autoclose
+Date: Sat, 27 Jan 2018 23:53:06 +0100
+Message-ID: <20180127235306.1742edb9@naga.suse.cz>
 References: <cover.1513263482.git.msuchanek@suse.de>
- <cover.1516985620.git.msuchanek@suse.de>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55312 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751533AbeA0S60 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sat, 27 Jan 2018 13:58:26 -0500
-In-Reply-To: <cover.1516985620.git.msuchanek@suse.de>
-In-Reply-To: <cover.1516985620.git.msuchanek@suse.de>
-References: <cover.1516985620.git.msuchanek@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
+        <cover.1516985620.git.msuchanek@suse.de>
+        <1516997096.3034.10.camel@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1516997096.3034.10.camel@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>, Borislav Petkov <bp@alien8.de>, Tim Waugh <tim@cyberelk.net>, "David S. Miller" <davem@davemloft.net>, "Martin K. Petersen" <martin.petersen@oracle.com>, Kees Cook <keescook@chromium.org>, Christophe JAILLET <christophe.jaillet@wanadoo.fr>, Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>, Borislav Petkov <bp@alien8.de>, Tim Waugh <tim@cyberelk.net>, "David S. Miller" <davem@davemloft.net>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michal Suchanek <msuchanek@suse.de>, Kees Cook <keescook@chromium.org>, Christophe JAILLET <christophe.jaillet@wanadoo.fr>, Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-CDS_DRIVE_NOT_READY is used for the state in which CDROM is 'becoming
-ready' (typically analyzing the disc) but also as the fallback when
-nothing else applies. Introduce CDS_DRIVE_ERROR for the fallback case.
+On Fri, 26 Jan 2018 12:04:56 -0800
+James Bottomley <jejb@linux.vnet.ibm.com> wrote:
 
-Signed-off-by: Michal Suchanek <msuchanek@suse.de>
----
- Documentation/cdrom/cdrom-standard.tex | 8 +++++++-
- Documentation/cdrom/ide-cd             | 6 ++++++
- Documentation/ioctl/cdrom.txt          | 1 +
- 3 files changed, 14 insertions(+), 1 deletion(-)
+> On Fri, 2018-01-26 at 17:58 +0100, Michal Suchanek wrote:
+> > First time I did not get any feedback for the patches.  
+> 
+> This is likely because no-one who might inspect the code saw the
+> patches ... what list are they going to?  I'm on the block, scsi and
+> ide mailing lists and I only saw a doc patch the last time.
 
-diff --git a/Documentation/cdrom/cdrom-standard.tex b/Documentation/cdrom/cdrom-standard.tex
-index 8f85b0e41046..018284ba696a 100644
---- a/Documentation/cdrom/cdrom-standard.tex
-+++ b/Documentation/cdrom/cdrom-standard.tex
-@@ -371,11 +371,17 @@ $$
- CDS_NO_INFO& no information available\cr
- CDS_NO_DISC& no disc is inserted, tray is closed\cr
- CDS_TRAY_OPEN& tray is opened\cr
--CDS_DRIVE_NOT_READY& something is wrong, tray is moving?\cr
-+CDS_DRIVE_NOT_READY& tray just closed?\cr
- CDS_DISC_OK& a disc is loaded and everything is fine\cr
-+CDS_DRIVE_ERROR& something is wrong\cr
- }
- $$
- 
-+Note: The IDE and SCSI cdroms have a status code 'drive becoming ready' which
-+is typically returned when the drive has just closed and is analyzing the disc.
-+For other cdrom types this state is not reported by the hardware or not
-+implemented by the driver.
-+
- \subsection{$Int\ media_changed(struct\ cdrom_device_info * cdi, int\ disc_nr)$}
- 
- This function is very similar to the original function in $struct\ 
-diff --git a/Documentation/cdrom/ide-cd b/Documentation/cdrom/ide-cd
-index a5f2a7f1ff46..9324a8fd9a39 100644
---- a/Documentation/cdrom/ide-cd
-+++ b/Documentation/cdrom/ide-cd
-@@ -455,6 +455,9 @@ main (int argc, char **argv)
- 		case CDS_DRIVE_NOT_READY:
- 			printf ("Drive Not Ready.\n");
- 			break;
-+		case CDS_DRIVE_ERROR:
-+			printf ("Drive problem.\n");
-+			break;
- 		default:
- 			printf ("This Should not happen!\n");
- 			break;
-@@ -481,6 +484,9 @@ main (int argc, char **argv)
- 			case CDS_NO_INFO:
- 				printf ("No Information available.");
- 				break;
-+			case CDS_DRIVE_ERROR:
-+				printf ("Drive problem.\n");
-+				break;
- 			default:
- 				printf ("This Should not happen!\n");
- 				break;
-diff --git a/Documentation/ioctl/cdrom.txt b/Documentation/ioctl/cdrom.txt
-index a4d62a9d6771..7720d11807c3 100644
---- a/Documentation/ioctl/cdrom.txt
-+++ b/Documentation/ioctl/cdrom.txt
-@@ -700,6 +700,7 @@ CDROM_DRIVE_STATUS		Get tray position, etc.
- 	    CDS_TRAY_OPEN
- 	    CDS_DRIVE_NOT_READY
- 	    CDS_DISC_OK
-+	    CDS_DRIVE_ERROR
- 	    -1			error
- 
- 	error returns:
--- 
-2.13.6
+This is what the MAINTAINERS file says:
 
+UNIFORM CDROM DRIVER
+M:      Jens Axboe <axboe@kernel.dk>
+W:      http://www.kernel.dk
+S:      Maintained
+F:      Documentation/cdrom/
+F:      drivers/cdrom/cdrom.c
+F:      include/linux/cdrom.h
+F:      include/uapi/linux/cdrom.h
+
+Maybe adding some mainling lists there would be useful?
+
+Thanks
+
+Michal
