@@ -1,43 +1,41 @@
-From: Michal =?UTF-8?B?U3VjaMOhbmVr?= <msuchanek@suse.de>
-Subject: Re: [PATCH resend 0/6] Fix cdrom autoclose
-Date: Sat, 27 Jan 2018 23:53:06 +0100
-Message-ID: <20180127235306.1742edb9@naga.suse.cz>
-References: <cover.1513263482.git.msuchanek@suse.de>
-        <cover.1516985620.git.msuchanek@suse.de>
-        <1516997096.3034.10.camel@linux.vnet.ibm.com>
+From: Bart Van Assche <Bart.VanAssche@wdc.com>
+Subject: Re: [PATCH resend 1/6] delay: add poll_event_interruptible
+Date: Mon, 29 Jan 2018 17:00:14 +0000
+Message-ID: <1517245212.2687.13.camel@wdc.com>
+References: <cover.1516985620.git.msuchanek@suse.de>
+         <a26ef20e6ff686573a0af16435f20aba186746af.1516985620.git.msuchanek@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1516997096.3034.10.camel@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Jonathan Corbet <corbet@lwn.net>, Borislav Petkov <bp@alien8.de>, Tim Waugh <tim@cyberelk.net>, "David S. Miller" <davem@davemloft.net>, "Martin K. Petersen" <martin.petersen@oracle.com>, Kees Cook <keescook@chromium.org>, Christophe JAILLET <christophe.jaillet@wanadoo.fr>, Thomas Gleixner <tglx@linutronix.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Kate Stewart <kstewart@linuxfoundation.org>, Philippe Ombredanne <pombredanne@nexb.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:36809 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751234AbeA2RAT (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jan 2018 12:00:19 -0500
+In-Reply-To: <a26ef20e6ff686573a0af16435f20aba186746af.1516985620.git.msuchanek@suse.de>
+Content-Language: en-US
+Content-ID: <B77D2EA9D59D624F8DAF10C10224ECB8@namprd04.prod.outlook.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "corbet@lwn.net" <corbet@lwn.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "keescook@chromium.org" <keescook@chromium.org>, "msuchanek@suse.de" <msuchanek@suse.de>, "tglx@linutronix.de" <tglx@linutronix.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kstewart@linuxfoundation.org" <kstewart@linuxfoundation.org>, "pombredanne@nexb.com" <pombredanne@nexb.com>, "bp@alien8.de" <bp@alien8.de>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "christophe.jaillet@wanadoo.fr" <christophe.jaillet@wanadoo.fr>, davem@davemlof
 
-On Fri, 26 Jan 2018 12:04:56 -0800
-James Bottomley <jejb@linux.vnet.ibm.com> wrote:
-
-> On Fri, 2018-01-26 at 17:58 +0100, Michal Suchanek wrote:
-> > First time I did not get any feedback for the patches.  
-> 
-> This is likely because no-one who might inspect the code saw the
-> patches ... what list are they going to?  I'm on the block, scsi and
-> ide mailing lists and I only saw a doc patch the last time.
-
-This is what the MAINTAINERS file says:
-
-UNIFORM CDROM DRIVER
-M:      Jens Axboe <axboe@kernel.dk>
-W:      http://www.kernel.dk
-S:      Maintained
-F:      Documentation/cdrom/
-F:      drivers/cdrom/cdrom.c
-F:      include/linux/cdrom.h
-F:      include/uapi/linux/cdrom.h
-
-Maybe adding some mainling lists there would be useful?
-
-Thanks
-
-Michal
+T24gRnJpLCAyMDE4LTAxLTI2IGF0IDE3OjU4ICswMTAwLCBNaWNoYWwgU3VjaGFuZWsgd3JvdGU6
+DQo+IEFkZCBjb252ZW5pZW5jZSBtYWNybyBmb3IgcG9sbGluZyBhbiBldmVudCB0aGF0IGRvZXMg
+bm90IGhhdmUgYQ0KPiB3YWl0cXVldWUuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBNaWNoYWwgU3Vj
+aGFuZWsgPG1zdWNoYW5la0BzdXNlLmRlPg0KPiAtLS0NCj4gIGluY2x1ZGUvbGludXgvZGVsYXku
+aCB8IDEyICsrKysrKysrKysrKw0KPiAgMSBmaWxlIGNoYW5nZWQsIDEyIGluc2VydGlvbnMoKykN
+Cj4gDQo+IGRpZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L2RlbGF5LmggYi9pbmNsdWRlL2xpbnV4
+L2RlbGF5LmgNCj4gaW5kZXggYjc4YmFiNDM5NWQ4Li4zYWU5ZmEzOTU2MjggMTAwNjQ0DQo+IC0t
+LSBhL2luY2x1ZGUvbGludXgvZGVsYXkuaA0KPiArKysgYi9pbmNsdWRlL2xpbnV4L2RlbGF5LmgN
+Cj4gQEAgLTY0LDQgKzY0LDE2IEBAIHN0YXRpYyBpbmxpbmUgdm9pZCBzc2xlZXAodW5zaWduZWQg
+aW50IHNlY29uZHMpDQo+ICAJbXNsZWVwKHNlY29uZHMgKiAxMDAwKTsNCj4gIH0NCj4gIA0KPiAr
+I2RlZmluZSBwb2xsX2V2ZW50X2ludGVycnVwdGlibGUoZXZlbnQsIGludGVydmFsKSAoeyBcDQo+
+ICsJaW50IHJldCA9IDA7IFwNCj4gKwl3aGlsZSAoIShldmVudCkpIHsgXA0KPiArCQlpZiAoc2ln
+bmFsX3BlbmRpbmcoY3VycmVudCkpIHsgXA0KPiArCQkJcmV0ID0gLUVSRVNUQVJUU1lTOyBcDQo+
+ICsJCQlicmVhazsgXA0KPiArCQl9IFwNCj4gKwkJbXNsZWVwX2ludGVycnVwdGlibGUoaW50ZXJ2
+YWwpOyBcDQo+ICsJfSBcDQo+ICsJcmV0OyBcDQo+ICt9KQ0KPiArDQo+ICAjZW5kaWYgLyogZGVm
+aW5lZChfTElOVVhfREVMQVlfSCkgKi8NCg0KU29ycnkgYnV0IEknbSBub3Qgc3VyZSB3ZSBzaG91
+bGQgZW5jb3VyYWdlIG90aGVyIGtlcm5lbCBkZXZlbG9wZXJzIHRvIHVzZQ0KYnVzeS13YWl0aW5n
+IGJ5IGFkZGluZyB0aGUgcG9sbF9ldmVudF9pbnRlcnJ1cHRpYmxlKCkgbWFjcm8gdG8gYSBzeXN0
+ZW0td2lkZQ0KaGVhZGVyIGZpbGUuIENhbiB0aGF0IG1hY3JvIGJlIG1vdmVkIGludG8gYSBDRFJP
+TS1zcGVjaWZpYyAuYyBvciAuaCBmaWxlPw0KDQpUaGFua3MsDQoNCkJhcnQu
