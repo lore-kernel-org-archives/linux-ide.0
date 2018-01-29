@@ -1,74 +1,19 @@
-From: Eric Biggers <ebiggers3@gmail.com>
-Subject: [PATCH] libata: don't try to pass through NCQ commands to non-NCQ devices
-Date: Sat,  3 Feb 2018 20:33:51 -0800
-Message-ID: <20180204043351.16812-1-ebiggers3@gmail.com>
-References: <94eb2c1fae0400ce57055cd4e9bb@google.com>
+From: "Jones" <eortega@rits.cl>
+Subject: (unknown)
+Date: Mon, 29 Jan 2018 18:17:45 +0100
+Message-ID: <E1egD3v-0004Sg-TY@ns1.rits.cl>
+Reply-To: <ger_vlieghe@doctor.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+        charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:39700 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750744AbeBDEeJ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 3 Feb 2018 23:34:09 -0500
-In-Reply-To: <94eb2c1fae0400ce57055cd4e9bb@google.com>
+Received: from ns1.rits.cl ([190.196.161.40]:55054 "EHLO ns1.rits.cl"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750764AbeBDH3e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sun, 4 Feb 2018 02:29:34 -0500
+Subject: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
-Cc: linux-scsi@vger.kernel.org, syzkaller-bugs@googlegroups.com, Vinayak Kale <vinayak.kale@seagate.com>, Eric Biggers <ebiggers@google.com>
 
-From: Eric Biggers <ebiggers@google.com>
-
-syzkaller hit a WARN() in ata_bmdma_qc_issue() when writing to /dev/sg0.
-This happened because it issued an ATA pass-through command (ATA_16)
-where the protocol field indicated that NCQ should be used -- but the
-device did not support NCQ.
-
-We could just remove the WARN() from libata-sff.c, but the real problem
-seems to be that the SCSI -> ATA translation code passes through NCQ
-commands without verifying that the device actually supports NCQ.
-
-Fix this by adding the appropriate check to ata_scsi_pass_thru().
-
-Here's reproducer that works in QEMU when /dev/sg0 refers to a disk of
-the default type ("82371SB PIIX3 IDE"):
-
-    #include <fcntl.h>
-    #include <unistd.h>
-
-    int main()
-    {
-            char buf[53] = { 0 };
-
-	    buf[36] = 0x85;		/* ATA_16 */
-	    buf[37] = (12 << 1);	/* FPDMA */
-	    buf[38] = 0x1;		/* Has data */
-	    buf[51] = 0xC8;		/* ATA_CMD_READ */
-            write(open("/dev/sg0", O_RDWR), buf, sizeof(buf));
-    }
-
-Fixes: ee7fb331c3ac ("libata: add support for NCQ commands for SG interface")
-Reported-by: syzbot+2f69ca28df61bdfc77cd36af2e789850355a221e@syzkaller.appspotmail.com
-Cc: <stable@vger.kernel.org> # v4.4+
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
- drivers/ata/libata-scsi.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 47d421666451c..197e110f8ac75 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3316,6 +3316,12 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- 		goto invalid_fld;
- 	}
- 
-+	/* We may not issue NCQ commands to devices not supporting NCQ */
-+	if (ata_is_ncq(tf->protocol) && !ata_ncq_enabled(dev)) {
-+		fp = 1;
-+		goto invalid_fld;
-+	}
-+
- 	/* sanity check for pio multi commands */
- 	if ((cdb[1] & 0xe0) && !is_multi_taskfile(tf)) {
- 		fp = 1;
--- 
-2.16.1
-
+This is in regards to an inheritance on your surname, reply back using your email address, stating your full name for more details. Reply to email for info. Email me here ( gertvm@dr.com )
