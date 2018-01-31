@@ -1,88 +1,75 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata changes for v4.16-rc1
-Date: Tue, 30 Jan 2018 10:16:16 -0800
-Message-ID: <20180130181616.GH1121507@devbig577.frc2.facebook.com>
+From: Michal =?UTF-8?B?U3VjaMOhbmVr?= <msuchanek@suse.de>
+Subject: Re: [PATCH resend 3/6] cdrom: wait for tray to close
+Date: Wed, 31 Jan 2018 19:20:27 +0100
+Message-ID: <20180131192027.070196c1@kitsune.suse.cz>
+References: <cover.1516985620.git.msuchanek@suse.de>
+        <03915a2e64f50ec04ea6d8e6f80e36ecf16e4f0f.1516985620.git.msuchanek@suse.de>
+        <1517245546.2687.17.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:42558 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752867AbeA3SQU (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 30 Jan 2018 13:16:20 -0500
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1517245546.2687.17.camel@wdc.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "corbet@lwn.net" <corbet@lwn.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "keescook@chromium.org" <keescook@chromium.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kstewart@linuxfoundation.org" <kstewart@linuxfoundation.org>, "pombredanne@nexb.com" <pombredanne@nexb.com>, "bp@alien8.de" <bp@alien8.de>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "christophe.jaillet@wanadoo.fr" <christophe.jaillet@wanadoo.fr>, "davem@davemloft.net" <davem@davemloft.net>, linux-doc@
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, Linus.
+On Mon, 29 Jan 2018 17:05:47 +0000
+Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
 
-Nothing too interesting.  Several patches to convert mdelay() to
-usleep_range(), removal of unused pata_at32, and other low level
-driver specific changes.
+> On Fri, 2018-01-26 at 17:58 +0100, Michal Suchanek wrote:
+> > +static int cdrom_tray_close(struct cdrom_device_info *cdi)
+> > +{
+> > +	int ret;
+> > +
+> > +	ret = cdi->ops->tray_move(cdi, 0);
+> > +	if (ret || !cdi->ops->drive_status)
+> > +		return ret;
+> > +
+> > +	return poll_event_interruptible(CDS_TRAY_OPEN !=
+> > +			cdi->ops->drive_status(cdi, CDSL_CURRENT),
+> > 500); +}
+> > +
+> >  static
+> >  int open_for_common(struct cdrom_device_info *cdi, tracktype
+> > *tracks) {
+> > @@ -1048,7 +1062,9 @@ int open_for_common(struct cdrom_device_info
+> > *cdi, tracktype *tracks) if (CDROM_CAN(CDC_CLOSE_TRAY) &&
+> >  			    cdi->options & CDO_AUTO_CLOSE) {
+> >  				cd_dbg(CD_OPEN, "trying to close
+> > the tray\n");
+> > -				ret = cdo->tray_move(cdi, 0);
+> > +				ret = cdrom_tray_close(cdi);
+> > +				if (ret == -ERESTARTSYS)
+> > +					return ret;
+> >  				if (ret) {
+> >  					cd_dbg(CD_OPEN, "bummer.
+> > tried to close the tray but failed.\n"); /* Ignore the error from
+> > the low @@ -2312,7 +2328,8 @@ static int
+> > cdrom_ioctl_closetray(struct cdrom_device_info *cdi) 
+> >  	if (!CDROM_CAN(CDC_CLOSE_TRAY))
+> >  		return -ENOSYS;
+> > -	return cdi->ops->tray_move(cdi, 0);
+> > +
+> > +	return cdrom_tray_close(cdi);
+> >  }  
+> 
+> So this patch changes code that does not wait into code that
+> potentially waits forever? Sorry but I don't think that's ideal.
+> Please make sure that after a certain time (a few seconds?) the loop
+> finishes.
 
-Thanks.
+The problem is that few seconds does not cut it. We are waiting for a
+mechanical tray or CD changer to move. On non-broken hardware the tray
+either closes or an error is reported within a few seconds. For the
+timeout to not race with the event we are waiting for it must be much
+longer, though.
 
-The following changes since commit 2dc0b46b5ea30f169b0b272253ea846a5a281731:
+Also note that this code is only invoked when the user specifically
+requested that the tray gets closed automatically which is off by
+default.
 
-  libata: sata_down_spd_limit should return if driver has not recorded sstatus speed (2017-12-04 13:57:03 -0800)
+Thanks
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.16
-
-for you to fetch changes up to b3506c7ed216dd2db1f06c2845da45018e2c508d:
-
-  ata: pata_pdc2027x: Replace mdelay with msleep (2018-01-25 07:28:31 -0800)
-
-----------------------------------------------------------------
-Arnd Bergmann (1):
-      phy: brcm-sata: remove unused variable
-
-Arvind Yadav (1):
-      ata_piix: constify pci_bits
-
-Corentin Labbe (1):
-      ata: remove pata_at32
-
-Darren Stevens (1):
-      libata:pata_atiixp: Don't use unconnected secondary port on SB600
-
-Fengguang Wu (1):
-      phy: brcm-sata: fix semicolon.cocci warnings
-
-Florian Fainelli (3):
-      ata: ahci_brcm: Avoid clobbering SATA_TOP_CTRL_BUS_CTRL
-      phy: brcm-sata: Implement calibrate callback
-      ata: ahci_brcm: Recover from failures to identify devices
-
-Hans de Goede (3):
-      ahci: Annotate PCI ids for mobile Intel chipsets as such
-      ahci: Add PCI ids for Intel Bay Trail, Cherry Trail and Apollo Lake AHCI
-      ahci: Allow setting a default LPM policy for mobile chipsets
-
-Jia-Ju Bai (3):
-      ata: sata_mv: Replace mdelay with usleep_range in mv_reset_channel
-      ata: pata_it821x: Replace mdelay with usleep_range in it821x_firmware_command
-      ata: pata_pdc2027x: Replace mdelay with msleep
-
-Mika Westerberg (1):
-      ahci: Add Intel Cannon Lake PCH-H PCI ID
-
- drivers/ata/Kconfig                  |  28 ++-
- drivers/ata/Makefile                 |   1 -
- drivers/ata/ahci.c                   |  94 ++++----
- drivers/ata/ahci.h                   |   3 +
- drivers/ata/ahci_brcm.c              | 120 +++++++++--
- drivers/ata/ata_piix.c               |   2 +-
- drivers/ata/pata_at32.c              | 400 -----------------------------------
- drivers/ata/pata_atiixp.c            |   4 +
- drivers/ata/pata_it821x.c            |   2 +-
- drivers/ata/pata_pdc2027x.c          |   4 +-
- drivers/ata/sata_mv.c                |   2 +-
- drivers/phy/broadcom/phy-brcm-sata.c |  31 +++
- 12 files changed, 221 insertions(+), 470 deletions(-)
- delete mode 100644 drivers/ata/pata_at32.c
-
--- 
-tejun
+Michal
