@@ -1,74 +1,108 @@
-From: "Barr. Evans Thomas" <mr.kennethgarrett@gmail.com>
-Subject: EVANS THOMAS LAW FIRM
-Date: Fri, 2 Feb 2018 12:18:10 +0100
-Message-ID: <CAKn4yY=ktsBJKFBNP7sG1bvrdLRMNnUbAK5oxemW2_LzdpaQMQ@mail.gmail.com>
-Reply-To: evansthomas193@gmail.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:43787 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751129AbeBBLSL (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 2 Feb 2018 06:18:11 -0500
-Received: by mail-oi0-f68.google.com with SMTP id 4so15760008ois.10
-        for <linux-ide@vger.kernel.org>; Fri, 02 Feb 2018 03:18:11 -0800 (PST)
-Sender: linux-ide-owner@vger.kernel.org
+From: Eric Biggers <ebiggers3@gmail.com>
+Subject: [PATCH] libata: fix length validation of ATAPI-relayed SCSI commands
+Date: Sat,  3 Feb 2018 20:30:56 -0800
+Message-ID: <20180204043056.16466-1-ebiggers3@gmail.com>
+References: <001a114aa95cfa4339055cd4e8e0@google.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <001a114aa95cfa4339055cd4e8e0@google.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, syzkaller-bugs@googlegroups.com, Mark Lord <mlord@pobox.com>, Eric Biggers <ebiggers@google.com>
 List-Id: linux-ide@vger.kernel.org
 
-EVANS THOMAS LAW FIRM
-SOLICITORS & ADVOCATES
-No: 15 Allen Avenue
-Ikeja ,Lagos.
+From: Eric Biggers <ebiggers@google.com>
 
-Dear Friend
+syzkaller reported a crash in ata_bmdma_fill_sg() when writing to
+/dev/sg1.  The immediate cause was that the ATA command's scatterlist
+was not DMA-mapped, which causes 'pi - 1' to underflow, resulting in a
+write to 'qc->ap->bmdma_prd[0xffffffff]'.
 
-It is obvious that this proposal will come to you as a surprise.This
-is because we have not met before but I am inspired to sending you
-this email following the huge fund transfer opportunity that will be
-of mutual benefit to the two of us.
+Strangely though, the flag ATA_QCFLAG_DMAMAP was set in qc->flags.  The
+root cause is that when __ata_scsi_queuecmd() is preparing to relay a
+SCSI command to an ATAPI device, it doesn't correctly validate the CDB
+length before copying it into the 16-byte buffer 'cdb' in 'struct
+ata_queued_cmd'.  Namely, it validates the fixed CDB length expected
+based on the SCSI opcode but not the actual CDB length, which can be
+larger due to the use of the SG_NEXT_CMD_LEN ioctl.  Since 'flags' is
+the next member in ata_queued_cmd, a buffer overflow corrupts it.
 
-However, I am Barrister Evans Thomas Attorney to the late Engr.Ronald
-Johnson, a national of Northern American, who used to work with Shell
-Petroleum Development Company(SPDC) in Nigeria . On the 11th of
-November,2008. My client,his wife And their three children were
-involved in a car accident along Sagamu/Lagos Express Road.
+Fix it by requiring that the actual CDB length be <= 16 (ATAPI_CDB_LEN).
 
-Unfortunately they all lost their lives in the event of the accident,
-Since then I have made several inquiries to several Embassies to
-locate any of my clients extended relatives, this has also proved
-unsuccessful.
+[Really it seems the length should be required to be <= dev->cdb_len,
+but the current behavior seems to have been intentionally introduced by
+commit 607126c2a21c ("libata-scsi: be tolerant of 12-byte ATAPI commands
+in 16-byte CDBs") to work around a userspace bug in mplayer.  Probably
+the workaround is no longer needed (mplayer was fixed in 2007), but
+continuing to allow lengths to up 16 appears harmless for now.]
 
-After these several unsuccessful attempts, I decided to trace his
-relatives over the Internet to locate any member of his family but of
-no avail, hence I contacted you to assist in repatriating the money
-and property left behind by my client,I can easily convince the bank
-with my legal practice that you are the only surviving relation of my
-client. Otherwise the Estate he left behind will be confiscated or
-declared unserviceable by the bank where this huge deposits were
-lodged.Particularly, the Bank where the deceased had an account valued
-at about $15 million U.S dollars(Fifteen million U.S.America dollars).
+Here's a reproducer that works in QEMU when /dev/sg1 refers to the
+CD-ROM drive that qemu-system-x86_64 creates by default:
 
-Consequently,The bank issued me a notice to provide the next of kin or
-have the account confiscated within the next ten official working
-days. Since I have been unsuccessful in locating the relatives for
-over several years now.I seek your consent to present you as the next
-of kin to the deceased,so that the proceeds of this account valued at
-$15million U.S dollars can be paid to your account and then you and me
-can share the money. 55% to me and 40% to you,while 5% should be for
-expenses or tax as your government may require.
+    #include <fcntl.h>
+    #include <sys/ioctl.h>
+    #include <unistd.h>
 
-All I require is your honest cooperation to enable us see this deal
-through and also forward the following to me:
+    #define SG_NEXT_CMD_LEN 0x2283
 
-Your Full Name:
-Your House Address:
-Your Tele-phone And Fax No:
-Your Age and Gender :
-Your Nationality:
-Your Occupation:
+    int main()
+    {
+	    char buf[53] = { [36] = 0x7e, [52] = 0x02 };
+	    int fd = open("/dev/sg1", O_RDWR);
+	    ioctl(fd, SG_NEXT_CMD_LEN, &(int){ 17 });
+	    write(fd, buf, sizeof(buf));
+    }
 
-I guarantee that this will be executed under a legitimate arrangement
-that will protect you from any breach of the law.Please get in touch
-with me VIA this my confidential email:  evansthomas193@gmail.com
-Yours Faithfully,
-Barr. Evans Thomas . { SAN }
+The crash was:
+
+    BUG: unable to handle kernel paging request at ffff8cb97db37ffc
+    IP: ata_bmdma_fill_sg drivers/ata/libata-sff.c:2623 [inline]
+    IP: ata_bmdma_qc_prep+0xa4/0xc0 drivers/ata/libata-sff.c:2727
+    PGD fb6c067 P4D fb6c067 PUD 0
+    Oops: 0002 [#1] SMP
+    CPU: 1 PID: 150 Comm: syz_ata_bmdma_q Not tainted 4.15.0-next-20180202 #99
+    Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.11.0-20171110_100015-anatol 04/01/2014
+    [...]
+    Call Trace:
+     ata_qc_issue+0x100/0x1d0 drivers/ata/libata-core.c:5421
+     ata_scsi_translate+0xc9/0x1a0 drivers/ata/libata-scsi.c:2024
+     __ata_scsi_queuecmd drivers/ata/libata-scsi.c:4326 [inline]
+     ata_scsi_queuecmd+0x8c/0x210 drivers/ata/libata-scsi.c:4375
+     scsi_dispatch_cmd+0xa2/0xe0 drivers/scsi/scsi_lib.c:1727
+     scsi_request_fn+0x24c/0x530 drivers/scsi/scsi_lib.c:1865
+     __blk_run_queue_uncond block/blk-core.c:412 [inline]
+     __blk_run_queue+0x3a/0x60 block/blk-core.c:432
+     blk_execute_rq_nowait+0x93/0xc0 block/blk-exec.c:78
+     sg_common_write.isra.7+0x272/0x5a0 drivers/scsi/sg.c:806
+     sg_write+0x1ef/0x340 drivers/scsi/sg.c:677
+     __vfs_write+0x31/0x160 fs/read_write.c:480
+     vfs_write+0xa7/0x160 fs/read_write.c:544
+     SYSC_write fs/read_write.c:589 [inline]
+     SyS_write+0x4d/0xc0 fs/read_write.c:581
+     do_syscall_64+0x5e/0x110 arch/x86/entry/common.c:287
+     entry_SYSCALL_64_after_hwframe+0x21/0x86
+
+Fixes: 607126c2a21c ("libata-scsi: be tolerant of 12-byte ATAPI commands in 16-byte CDBs")
+Reported-by: syzbot+1ff6f9fcc3c35f1c72a95e26528c8e7e3276e4da@syzkaller.appspotmail.com
+Cc: <stable@vger.kernel.org> # v2.6.24+
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ drivers/ata/libata-scsi.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 66be961c93a4e..47d421666451c 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -4309,7 +4309,9 @@ static inline int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
+ 		if (likely((scsi_op != ATA_16) || !atapi_passthru16)) {
+ 			/* relay SCSI command to ATAPI device */
+ 			int len = COMMAND_SIZE(scsi_op);
+-			if (unlikely(len > scmd->cmd_len || len > dev->cdb_len))
++			if (unlikely(len > scmd->cmd_len ||
++				     len > dev->cdb_len ||
++				     scmd->cmd_len > ATAPI_CDB_LEN))
+ 				goto bad_cdb_len;
+ 
+ 			xlat_func = atapi_xlat;
+-- 
+2.16.1
