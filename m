@@ -1,45 +1,76 @@
-From: Yoshihiro Kaneko <ykaneko0929@gmail.com>
-Subject: Re: [PATCH/RFT v3] sata_rcar: Reset SATA PHY when Salvator-X board resumes
-Date: Mon, 5 Feb 2018 21:43:23 +0900
-Message-ID: <CAH1o70J63hXEgj_U6dKOzX+uXjEcd2cn4JvBKr_dBrgvGgFwBQ@mail.gmail.com>
-References: <1517771931-17157-1-git-send-email-ykaneko0929@gmail.com> <1ca78555-fea3-3fea-090d-66dca48dc4ea@cogentembedded.com>
+From: Eric Biggers <ebiggers3@gmail.com>
+Subject: Re: scsi: sg: assorted memory corruptions
+Date: Sat, 10 Feb 2018 11:13:02 -0800
+Message-ID: <20180210191302.GA23737@zzz.localdomain>
+References: <CACT4Y+b0pizvOAxtWQ-TGCRAYvHXdv79BAEaXh50W6vF8gBvkQ@mail.gmail.com>
+ <1516638634.2545.0.camel@wdc.com>
+ <097921fa-52c5-8b2b-f564-4b24d9720478@interlog.com>
+ <CACT4Y+aEx0ie3qjx6afCYV2vN7gYii0uupKWPXaNTnWUmhdHQw@mail.gmail.com>
+ <c0a7ec39-e357-9db6-cf12-ff9c46259f26@interlog.com>
+ <CACT4Y+bObXrFiB0Qn+nfkD8DZRiVck1GJ5U9UeQz+-y85gh70Q@mail.gmail.com>
+ <1517501859.3417.67.camel@codethink.co.uk>
+ <CACT4Y+ZEJ9_no0uQSXO66iyyUeJLn_zbPBEey62YkuzOEUMP2w@mail.gmail.com>
+ <20180204090710.GA607@zzz.localdomain>
+ <CACT4Y+av=1SmyN8m+F26Xs3DLmd7zLgTB6OWX0MC3gVkiqRpNg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-renesas-soc-owner@vger.kernel.org>
-In-Reply-To: <1ca78555-fea3-3fea-090d-66dca48dc4ea@cogentembedded.com>
-Sender: linux-renesas-soc-owner@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, Geert Uytterhoeven <geert+renesas@glider.be>, Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CACT4Y+av=1SmyN8m+F26Xs3DLmd7zLgTB6OWX0MC3gVkiqRpNg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Dmitry Vyukov <dvyukov@google.com>
+Cc: Ben Hutchings <ben.hutchings@codethink.co.uk>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Doug Gilbert <dgilbert@interlog.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "syzkaller@googlegroups.com" <syzkaller@googlegroups.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hi Sergei,
+On Sun, Feb 04, 2018 at 12:10:58PM +0100, Dmitry Vyukov wrote:
+> >
+> > To get memory corruption it's actually sufficient just to submit "1-byte" reads;
+> > there's no need for the SG_NEXT_CMD_LEN ioctl or anything:
+> >
+> >         #include <fcntl.h>
+> >         #include <unistd.h>
+> >
+> >         int main()
+> >         {
+> >                 int fd = open("/dev/sg0", O_RDWR);
+> >                 char buf[43] = { [36] = 0x08 /* READ_6 */ };
+> >
+> >                 for (;;)
+> >                         write(fd, buf, sizeof(buf));
+> >         }
+> >
+> > (where /dev/sg0 is the default QEMU disk type, "82371SB PIIX3 IDE")
+> >
+> > The SCSI command descriptor block is the 6 bytes at indices 36-41, so index 42
+> > is the only data byte.
+> >
+> > Also this is a different bug from the crash in ata_bmdma_fill_sg() which is
+> > fixed by "libata: fix length validation of ATAPI-relayed SCSI commands".
+> >
+> > I'm guessing the driver is DMA'ing to somewhere it shouldn't be...
+> 
+> It would be good to add KASAN checks to the DMA code that issues
+> transfers. This is another case where a silent memory corruption
+> causes dozens of assorted crashes all over the kernel. If we add
+> checks, KASAN would pinpoint the exact stack that issues the bad
+> command. This may be the simplest way to debug this bug as well. I've
+> filed https://bugzilla.kernel.org/show_bug.cgi?id=198661 for this.
 
-2018-02-05 17:33 GMT+09:00 Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>:
-> Hello!
->
-> On 2/4/2018 10:18 PM, Yoshihiro Kaneko wrote:
->
->> From: Khiem Nguyen <khiem.nguyen.xt@rvc.renesas.com>
->>
->> Because power of Salvator-X board is cut off in suspend,
->> it needs to reset SATA PHY state in resume.
->> Otherwise, SATA partition could not be accessed anymore.
->>
->> Signed-off-by: Khiem Nguyen <khiem.nguyen.xt@rvc.renesas.com>
->> Signed-off-by: Hien Dang <hien.dang.eb@rvc.renesas.com>
->> [reinit phy in sata_rcar_resume() function on R-Car Gen3 only]
->> [factor out SATA module init sequence]
->> [fixed the prefix for the subject]
->> Signed-off-by: Yoshihiro Kaneko <ykaneko0929@gmail.com>
->
-> [...]
->
->    OK, this one seems better.
+It seems the problem is related to the fact that in the PRD (Physical Region
+Descriptor) list for the DMA transfer for "BMDMA" ATA disks, the disk (emulated
+in QEMU here: https://github.com/qemu/qemu/blob/master/hw/ide/pci.c#L89) ignores
+the low bit in the lengths, causing a length of 1 (byte) to be interpreted as 0.
+But, at the same time there is also a special case where a length of 0 is
+interpreted as 65536 bytes.
 
-Thank you as always for your help.
+So the disk will DMA up to 65536 bytes into a 1-byte buffer, causing massive
+memory corruption.
 
-Best regards,
-Kaneko
+I'm not sure what the best fix is, but probably it needs to be required that the
+lengths in the sglist have the alignment needed for the disk.
 
->
-> MBR, Sergei
+KASAN would not have helped here unfortunately.  Even if there were KASAN checks
+when mapping the sglist for DMA or when filling in the PRD list, the kernel
+would not have known that the disk would actually interpret "1" as "65536".
+
+- Eric
