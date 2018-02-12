@@ -1,29 +1,42 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: libahci: fix comment indentation
-Date: Mon, 12 Feb 2018 09:18:45 -0800
-Message-ID: <20180212171845.GA695913@devbig577.frc2.facebook.com>
-References: <d047a8d1f9356e6139c61ce5f252b5747988093a.1517831436.git.baruch@tkos.co.il>
+Subject: Re: [PATCH] libata: fix length validation of ATAPI-relayed SCSI
+ commands
+Date: Mon, 12 Feb 2018 09:20:10 -0800
+Message-ID: <20180212172010.GB695913@devbig577.frc2.facebook.com>
+References: <001a114aa95cfa4339055cd4e8e0@google.com>
+ <20180204043056.16466-1-ebiggers3@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f177.google.com ([209.85.216.177]:39222 "EHLO
-        mail-qt0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750992AbeBLRSt (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Feb 2018 12:18:49 -0500
-Received: by mail-qt0-f177.google.com with SMTP id f4so429278qtj.6
-        for <linux-ide@vger.kernel.org>; Mon, 12 Feb 2018 09:18:48 -0800 (PST)
+Received: from mail-qt0-f194.google.com ([209.85.216.194]:43242 "EHLO
+        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751315AbeBLRUO (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Feb 2018 12:20:14 -0500
 Content-Disposition: inline
-In-Reply-To: <d047a8d1f9356e6139c61ce5f252b5747988093a.1517831436.git.baruch@tkos.co.il>
+In-Reply-To: <20180204043056.16466-1-ebiggers3@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Baruch Siach <baruch@tkos.co.il>
-Cc: linux-ide@vger.kernel.org
+To: Eric Biggers <ebiggers3@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, syzkaller-bugs@googlegroups.com, Mark Lord <mlord@pobox.com>, Eric Biggers <ebiggers@google.com>
 
-On Mon, Feb 05, 2018 at 01:50:36PM +0200, Baruch Siach wrote:
-> Indent the numbered item with one space like all other items in the same
-> list.
+On Sat, Feb 03, 2018 at 08:30:56PM -0800, Eric Biggers wrote:
+> From: Eric Biggers <ebiggers@google.com>
 > 
-> Signed-off-by: Baruch Siach <baruch@tkos.co.il>
+> syzkaller reported a crash in ata_bmdma_fill_sg() when writing to
+> /dev/sg1.  The immediate cause was that the ATA command's scatterlist
+> was not DMA-mapped, which causes 'pi - 1' to underflow, resulting in a
+> write to 'qc->ap->bmdma_prd[0xffffffff]'.
+> 
+> Strangely though, the flag ATA_QCFLAG_DMAMAP was set in qc->flags.  The
+> root cause is that when __ata_scsi_queuecmd() is preparing to relay a
+> SCSI command to an ATAPI device, it doesn't correctly validate the CDB
+> length before copying it into the 16-byte buffer 'cdb' in 'struct
+> ata_queued_cmd'.  Namely, it validates the fixed CDB length expected
+> based on the SCSI opcode but not the actual CDB length, which can be
+> larger due to the use of the SG_NEXT_CMD_LEN ioctl.  Since 'flags' is
+> the next member in ata_queued_cmd, a buffer overflow corrupts it.
+> 
+> Fix it by requiring that the actual CDB length be <= 16 (ATAPI_CDB_LEN).
 
 Applied to libata/for-4.16-fixes.
 
