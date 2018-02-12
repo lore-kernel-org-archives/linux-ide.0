@@ -1,50 +1,60 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] scsi: ata: don't reset three times if device is offline
- for SAS host
-Date: Mon, 12 Feb 2018 08:51:46 -0800
-Message-ID: <20180212165146.GU695913@devbig577.frc2.facebook.com>
-References: <1516800025-193614-1-git-send-email-chenxiang66@hisilicon.com>
+Subject: Re: [PATCH] Fix compile warning with ATA_DEBUG enabled
+Date: Mon, 12 Feb 2018 09:00:46 -0800
+Message-ID: <20180212170046.GV695913@devbig577.frc2.facebook.com>
+References: <1516936551-20986-1-git-send-email-zhangshaokun@hisilicon.com>
+ <5be87d13-f9a0-5b12-ced4-cec5d6394da1@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:36318 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751318AbeBLRAt (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Feb 2018 12:00:49 -0500
 Content-Disposition: inline
-In-Reply-To: <1516800025-193614-1-git-send-email-chenxiang66@hisilicon.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: chenxiang <chenxiang66@hisilicon.com>
-Cc: martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linuxarm@huawei.com
+In-Reply-To: <5be87d13-f9a0-5b12-ced4-cec5d6394da1@huawei.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "dongbo (E)" <dongbo4@huawei.com>
+Cc: linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Linuxarm <linuxarm@huawei.com>
 
-Hello,
-
-On Wed, Jan 24, 2018 at 09:20:25PM +0800, chenxiang wrote:
-> In ata_eh_reset, it will reset three times at most for sata disk. For
-> some drivers through libsas, it calls sas_ata_hard_reset at last. When
-> device is gone, function sas_ata_hard_reset will return -ENODEV. But
-> it will still try to reset three times for offline device. This process
-> lasts a long time:
+On Fri, Jan 26, 2018 at 11:21:49AM +0800, dongbo (E) wrote:
+> From: Dong Bo <dongbo4@huawei.com>
 > 
-> [11248.344323] ata13.00: status: { ERR }
-> [11248.344324] ata13.00: error: { ABRT }
-> [11248.344327] ata13: hard resetting link
-> [11248.503557] sas: ata: ex 500e004aaaaaaa1f phy02:U:A attached:0000000000000000 (no device)
-> [11249.359524] sas: ata13: end_device-1:0:2: reset failed (errno=-19)[eta03d:19h:35m:17s]
-> [11249.365692] ata13: reset failed (errno=-19), retrying in 9 secs
-> [11258.451402] ata13: hard resetting linkKB/0KB/0KB /s] [0/0/0 iops][eta 03d:22h:10m:48s]
-> [11259.411508] sas: ata13: end_device-1:0:2: reset failed (errno=-19)[eta 03d:22h:28m:05s]
-> [11259.417683] ata13: reset failed (errno=-19), retrying in 10 secs
-> [11268.695401] ata13: hard resetting linkKB/0KB/0KB /s] [0/0/0 iops] [eta 04d:01h:03m:37s]
-> [11269.699513] sas: ata13: end_device-1:0:2: reset failed (errno=-19)[eta 04d:01h:20m:54s]
-> [11269.705689] ata13: reset failed (errno=-19), retrying in 34 secs
-> [11304.275393] ata13: hard resetting linkKB/0KB/0KB /s] [0/0/0 iops] [eta 04d:11h:25m:43s]
-> [11305.283516] sas: ata13: end_device-1:0:2: reset failed (errno=-19)[eta 04d:11h:43m:00s]
-> [11305.289692] ata13: reset failed, giving up
-> [11305.293785] ata13.00: disabled
+> This fixs the following comile warnings with ATA_DEBUG enabled,
+> which detected by Linaro GCC 5.2-2015.11:
 > 
-> Actually it is no need to reset three times for this scenario. So add
-> a check to avoid it.
+> In file included from ./include/linux/printk.h:7:0,
+>                  from ./include/linux/kernel.h:14,
+>                  from ./include/asm-generic/bug.h:16,
+>                  from ./arch/arm64/include/asm/bug.h:37,
+>                  from ./include/linux/bug.h:5,
+>                  from ./include/linux/mmdebug.h:5,
+>                  from ./include/linux/gfp.h:5,
+>                  from ./include/linux/slab.h:15,
+>                  from drivers/ata/libata-scsi.c:36:
+> drivers/ata/libata-scsi.c: In function 'ata_scsi_dump_cdb':
+> ./include/linux/kern_levels.h:5:18: warning: format '%d' expects
+> argument of type 'int', but argument 6 has type 'u64 {aka long
+>  long unsigned int}' [-Wformat=]
+>  #define KERN_SOH "\001"  /* ASCII Start Of Header */
+>                   ^
+> ./include/linux/kern_levels.h:11:18: note: in expansion of macro
+> 'KERN_SOH'
+>  #define KERN_ERR KERN_SOH "3" /* error conditions */
+>                   ^
+> ./include/linux/libata.h:65:38: note: in expansion of macro 'KERN_ERR'
+>  #define DPRINTK(fmt, args...) printk(KERN_ERR "%s: " fmt,
+> 				__func__, ## args)
+>                                       ^
+> drivers/ata/libata-scsi.c:4284:2: note: in expansion of macro 'DPRINTK'
+>   DPRINTK("CDB (%u:%d,%d,%d) %9ph\n",
+>   ^
+> 
+> Signed-off-by: Dong Bo <dongbo4@huawei.com>
 
-I'm a bit reluctant in changing this per-driver.  Does this actually
-hurt something?
+Path didn't apply, probalby because of the tailing part.  Hand-applied
+to libata/for-4.16-fixes and trimmed the description a bit.
 
 Thanks.
 
