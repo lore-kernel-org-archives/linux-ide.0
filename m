@@ -1,62 +1,73 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] Fix compile warning with ATA_DEBUG enabled
-Date: Mon, 12 Feb 2018 09:00:46 -0800
-Message-ID: <20180212170046.GV695913@devbig577.frc2.facebook.com>
-References: <1516936551-20986-1-git-send-email-zhangshaokun@hisilicon.com>
- <5be87d13-f9a0-5b12-ced4-cec5d6394da1@huawei.com>
+From: Preetham Chandru <pchandru@nvidia.com>
+Subject: RE: [PATCH V6 2/7] arm64: tegra: Enable AHCI on Jetson TX1
+Date: Mon, 12 Feb 2018 17:06:46 +0000
+Message-ID: <6e4ed9500a42495cb605a139e7afae8d@bgmail102.nvidia.com>
+References: <1515482234-24716-1-git-send-email-pchandru@nvidia.com>
+ <1515482234-24716-3-git-send-email-pchandru@nvidia.com>
+ <ea0d92f7-8267-722f-fbf5-607c5d896fa8@kapsi.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:36318 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751318AbeBLRAt (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Feb 2018 12:00:49 -0500
-Content-Disposition: inline
-In-Reply-To: <5be87d13-f9a0-5b12-ced4-cec5d6394da1@huawei.com>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:18041 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751109AbeBLRGx (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Feb 2018 12:06:53 -0500
+In-Reply-To: <ea0d92f7-8267-722f-fbf5-607c5d896fa8@kapsi.fi>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "dongbo (E)" <dongbo4@huawei.com>
-Cc: linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Linuxarm <linuxarm@huawei.com>
+To: Mikko Perttunen <cyndis@kapsi.fi>, "thierry.reding@gmail.com" <thierry.reding@gmail.com>, "tj@kernel.org" <tj@kernel.org>
+Cc: "preetham260@gmail.com" <preetham260@gmail.com>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Venu Byravarasu <vbyravarasu@nvidia.com>, Pavan Kunapuli <pkunapuli@nvidia.com>
 
-On Fri, Jan 26, 2018 at 11:21:49AM +0800, dongbo (E) wrote:
-> From: Dong Bo <dongbo4@huawei.com>
-> 
-> This fixs the following comile warnings with ATA_DEBUG enabled,
-> which detected by Linaro GCC 5.2-2015.11:
-> 
-> In file included from ./include/linux/printk.h:7:0,
->                  from ./include/linux/kernel.h:14,
->                  from ./include/asm-generic/bug.h:16,
->                  from ./arch/arm64/include/asm/bug.h:37,
->                  from ./include/linux/bug.h:5,
->                  from ./include/linux/mmdebug.h:5,
->                  from ./include/linux/gfp.h:5,
->                  from ./include/linux/slab.h:15,
->                  from drivers/ata/libata-scsi.c:36:
-> drivers/ata/libata-scsi.c: In function 'ata_scsi_dump_cdb':
-> ./include/linux/kern_levels.h:5:18: warning: format '%d' expects
-> argument of type 'int', but argument 6 has type 'u64 {aka long
->  long unsigned int}' [-Wformat=]
->  #define KERN_SOH "\001"  /* ASCII Start Of Header */
->                   ^
-> ./include/linux/kern_levels.h:11:18: note: in expansion of macro
-> 'KERN_SOH'
->  #define KERN_ERR KERN_SOH "3" /* error conditions */
->                   ^
-> ./include/linux/libata.h:65:38: note: in expansion of macro 'KERN_ERR'
->  #define DPRINTK(fmt, args...) printk(KERN_ERR "%s: " fmt,
-> 				__func__, ## args)
->                                       ^
-> drivers/ata/libata-scsi.c:4284:2: note: in expansion of macro 'DPRINTK'
->   DPRINTK("CDB (%u:%d,%d,%d) %9ph\n",
->   ^
-> 
-> Signed-off-by: Dong Bo <dongbo4@huawei.com>
-
-Path didn't apply, probalby because of the tailing part.  Hand-applied
-to libata/for-4.16-fixes and trimmed the description a bit.
-
-Thanks.
-
--- 
-tejun
+T2theSwgd2lsbCBjaGFuZ2UgdGhlIGNvbW1pdCBtZXNzYWdlIGZvciBub3cgYXMgc3VnZ2VzdGVk
+DQoNCj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPkZyb206IE1pa2tvIFBlcnR0dW5lbiBb
+bWFpbHRvOmN5bmRpc0BrYXBzaS5maV0NCj5TZW50OiBUdWVzZGF5LCBKYW51YXJ5IDIzLCAyMDE4
+IDk6MDQgUE0NCj5UbzogUHJlZXRoYW0gQ2hhbmRydSA8cGNoYW5kcnVAbnZpZGlhLmNvbT47IHRo
+aWVycnkucmVkaW5nQGdtYWlsLmNvbTsNCj50akBrZXJuZWwub3JnDQo+Q2M6IHByZWV0aGFtMjYw
+QGdtYWlsLmNvbTsgbGludXgtdGVncmFAdmdlci5rZXJuZWwub3JnOyBsaW51eC0NCj5pZGVAdmdl
+ci5rZXJuZWwub3JnOyBWZW51IEJ5cmF2YXJhc3UgPHZieXJhdmFyYXN1QG52aWRpYS5jb20+OyBQ
+YXZhbg0KPkt1bmFwdWxpIDxwa3VuYXB1bGlAbnZpZGlhLmNvbT4NCj5TdWJqZWN0OiBSZTogW1BB
+VENIIFY2IDIvN10gYXJtNjQ6IHRlZ3JhOiBFbmFibGUgQUhDSSBvbiBKZXRzb24gVFgxDQo+DQo+
+SSBoYXZlIHVzdWFsbHkgc3BsaXQgdGhlIGNoYW5nZSBpbiBjaGlwIC5kdHNpIGFuZCBib2FyZCAu
+ZHRzaS8uZHRzIGluIHNlcGFyYXRlDQo+Y29tbWl0cy4gSSBkb24ndCBrbm93IGlmIHRoYXQncyBu
+ZWNlc3NhcnkgdGhvdWdoLg0KPg0KPlRoaXMgZG9lcyBob3dldmVyIHJlcXVpcmUgYSBjb21taXQg
+bWVzc2FnZSwgbGlrZQ0KPg0KPiAgIEFkZCBzYXRhIG5vZGUgdG8gdGhlIFRlZ3JhMjEwIGRldmlj
+ZSB0cmVlLCBhbmQgZW5hYmxlIHRoZSBkZXZpY2UgYW5kDQo+ICAgYXNzaWduIGJvYXJkLXNwZWNp
+ZmljIHByb3BlcnRpZXMgb24gSmV0c29uIFRYMS4NCj4NCj5NaWtrbw0KPg0KPk9uIDAxLzA5LzIw
+MTggMDk6MTcgQU0sIFByZWV0aGFtIENoYW5kcnUgUmFtY2hhbmRyYSB3cm90ZToNCj4+IEZyb206
+IFByZWV0aGFtIFJhbWNoYW5kcmEgPHBjaGFuZHJ1QG52aWRpYS5jb20+DQo+Pg0KPj4gU2lnbmVk
+LW9mZi1ieTogUHJlZXRoYW0gQ2hhbmRydSBSIDxwY2hhbmRydUBudmlkaWEuY29tPg0KPj4gLS0t
+DQo+PiB2NDoNCj4+ICogRml4ZWQgbWlzc2luZyBzcGFjZSBhZnRlciAnQVVYJw0KPj4gLS0tDQo+
+PiAgIGFyY2gvYXJtNjQvYm9vdC9kdHMvbnZpZGlhL3RlZ3JhMjEwLXAyNTk3LmR0c2kgfCAgNiAr
+KysrKysNCj4+ICAgYXJjaC9hcm02NC9ib290L2R0cy9udmlkaWEvdGVncmEyMTAuZHRzaSAgICAg
+ICB8IDE2ICsrKysrKysrKysrKysrKysNCj4+ICAgMiBmaWxlcyBjaGFuZ2VkLCAyMiBpbnNlcnRp
+b25zKCspDQo+Pg0KPj4gZGlmZiAtLWdpdCBhL2FyY2gvYXJtNjQvYm9vdC9kdHMvbnZpZGlhL3Rl
+Z3JhMjEwLXAyNTk3LmR0c2kNCj4+IGIvYXJjaC9hcm02NC9ib290L2R0cy9udmlkaWEvdGVncmEy
+MTAtcDI1OTcuZHRzaQ0KPj4gaW5kZXggZDY3ZWY0MzE5ZjNiLi4yYWEyOTc5Y2Q2YjUgMTAwNjQ0
+DQo+PiAtLS0gYS9hcmNoL2FybTY0L2Jvb3QvZHRzL252aWRpYS90ZWdyYTIxMC1wMjU5Ny5kdHNp
+DQo+PiArKysgYi9hcmNoL2FybTY0L2Jvb3QvZHRzL252aWRpYS90ZWdyYTIxMC1wMjU5Ny5kdHNp
+DQo+PiBAQCAtMTMyNSw2ICsxMzI1LDEyIEBADQo+PiAgIAkJc3RhdHVzID0gIm9rYXkiOw0KPj4g
+ICAJfTsNCj4+DQo+PiArCXNhdGFANzAwMjAwMDAgew0KPj4gKwkJc3RhdHVzID0gIm9rYXkiOw0K
+Pj4gKwkJcGh5cyA9IDwmey9wYWRjdGxANzAwOWYwMDAvcGFkcy9zYXRhL2xhbmVzL3NhdGEtMH0+
+Ow0KPj4gKwkJcGh5LW5hbWVzID0gInNhdGEtMCI7DQo+PiArCX07DQo+PiArDQo+PiAgIAlwYWRj
+dGxANzAwOWYwMDAgew0KPj4gICAJCXN0YXR1cyA9ICJva2F5IjsNCj4+DQo+PiBkaWZmIC0tZ2l0
+IGEvYXJjaC9hcm02NC9ib290L2R0cy9udmlkaWEvdGVncmEyMTAuZHRzaQ0KPj4gYi9hcmNoL2Fy
+bTY0L2Jvb3QvZHRzL252aWRpYS90ZWdyYTIxMC5kdHNpDQo+PiBpbmRleCA5YzI0MDIxMDg3NzIu
+LmJmNzJkYjUzODZhNSAxMDA2NDQNCj4+IC0tLSBhL2FyY2gvYXJtNjQvYm9vdC9kdHMvbnZpZGlh
+L3RlZ3JhMjEwLmR0c2kNCj4+ICsrKyBiL2FyY2gvYXJtNjQvYm9vdC9kdHMvbnZpZGlhL3RlZ3Jh
+MjEwLmR0c2kNCj4+IEBAIC03OTgsNiArNzk4LDIyIEBADQo+PiAgIAkJI2lvbW11LWNlbGxzID0g
+PDE+Ow0KPj4gICAJfTsNCj4+DQo+PiArCXNhdGFANzAwMjAwMDAgew0KPj4gKwkJY29tcGF0aWJs
+ZSA9ICJudmlkaWEsdGVncmEyMTAtYWhjaSI7DQo+PiArCQlyZWcgPSA8MHgwIDB4NzAwMjcwMDAg
+MHgwIDB4MjAwMD4sIC8qIEFIQ0kgKi8NCj4+ICsJCSAgICAgIDwweDAgMHg3MDAyMDAwMCAweDAg
+MHg3MDAwPiwgLyogU0FUQSAqLw0KPj4gKwkJICAgICAgPDB4MCAweDcwMDAxMTAwIDB4MCAweDEw
+MDA+OyAvKiBTQVRBIEFVWCAqLw0KPj4gKwkJaW50ZXJydXB0cyA9IDxHSUNfU1BJIDIzIElSUV9U
+WVBFX0xFVkVMX0hJR0g+Ow0KPj4gKwkJY2xvY2tzID0gPCZ0ZWdyYV9jYXIgVEVHUkEyMTBfQ0xL
+X1NBVEE+LA0KPj4gKwkJCTwmdGVncmFfY2FyIFRFR1JBMjEwX0NMS19TQVRBX09PQj47DQo+PiAr
+CQljbG9jay1uYW1lcyA9ICJzYXRhIiwgInNhdGEtb29iIjsNCj4+ICsJCXJlc2V0cyA9IDwmdGVn
+cmFfY2FyIDEyND4sDQo+PiArCQkJIDwmdGVncmFfY2FyIDEyMz4sDQo+PiArCQkJIDwmdGVncmFf
+Y2FyIDEyOT47DQo+PiArCQlyZXNldC1uYW1lcyA9ICJzYXRhIiwgInNhdGEtb29iIiwgInNhdGEt
+Y29sZCI7DQo+PiArCQlzdGF0dXMgPSAiZGlzYWJsZWQiOw0KPj4gKwl9Ow0KPj4gKw0KPj4gICAJ
+aGRhQDcwMDMwMDAwIHsNCj4+ICAgCQljb21wYXRpYmxlID0gIm52aWRpYSx0ZWdyYTIxMC1oZGEi
+LCAibnZpZGlhLHRlZ3JhMzAtaGRhIjsNCj4+ICAgCQlyZWcgPSA8MHgwIDB4NzAwMzAwMDAgMHgw
+IDB4MTAwMDA+Ow0KPj4NCg==
