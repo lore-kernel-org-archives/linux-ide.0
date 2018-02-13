@@ -1,199 +1,248 @@
 From: Aishwarya Pant <aishpant@gmail.com>
-Subject: [PATCH] libata: update documentation for sysfs interfaces
-Date: Tue, 13 Feb 2018 13:48:16 +0530
-Message-ID: <20180213081816.GA11350@mordor.localdomain>
+Subject: [PATCH] libata: transport: cleanup documentation of sysfs interface
+Date: Tue, 13 Feb 2018 16:51:59 +0530
+Message-ID: <20180213112159.GA24306@mordor.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:40478 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933651AbeBMISX (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 13 Feb 2018 03:18:23 -0500
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:41969 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934226AbeBMLWF (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 13 Feb 2018 06:22:05 -0500
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Greg KH <gregkh@linuxfoundation.org>
+To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Greg KH <gregkh@linuxfoundation.org>, Gwendal Grignou <gwendal@chromium.org>
 Cc: Julia Lawall <julia.lawall@lip6.fr>
 
-Dcoumentation has been added by parsing through git commit history and
-reading code. This might be useful for scripting and tracking changes in
-the ABI.
+Clean-up the documentation of sysfs interfaces to be in the same format
+as described in Documentation/ABI/README. This will be useful for
+tracking changes in the ABI. Attributes are grouped by function (device,
+link or port) and then by date added.
 
-I do not have complete descriptions for the following 3 attributes; they
-have been annotated with the comment [to be documented] -
-
-	/sys/class/scsi_host/hostX/ahci_port_cmd
-	/sys/class/scsi_host/hostX/ahci_host_caps
-	/sys/class/scsi_host/hostX/ahci_host_cap2
+This patch also adds documentation for one attribute -
+/sys/class/ata_port/ataX/port_no
 
 Signed-off-by: Aishwarya Pant <aishpant@gmail.com>
 ---
- Documentation/ABI/testing/sysfs-block-device    | 58 ++++++++++++++++
- Documentation/ABI/testing/sysfs-class-scsi_host | 89 +++++++++++++++++++++++++
- 2 files changed, 147 insertions(+)
- create mode 100644 Documentation/ABI/testing/sysfs-block-device
+ Documentation/ABI/testing/sysfs-ata | 171 +++++++++++++++++++++---------------
+ 1 file changed, 100 insertions(+), 71 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-block-device b/Documentation/ABI/testing/sysfs-block-device
-new file mode 100644
-index 000000000000..82ef6eab042d
---- /dev/null
-+++ b/Documentation/ABI/testing/sysfs-block-device
-@@ -0,0 +1,58 @@
-+What:		/sys/block/*/device/sw_activity
-+Date:		Jun, 2008
-+KernelVersion:	v2.6.27
-+Contact:	linux-ide@vger.kernel.org
+diff --git a/Documentation/ABI/testing/sysfs-ata b/Documentation/ABI/testing/sysfs-ata
+index aa4296498859..9ab0ef1dd1c7 100644
+--- a/Documentation/ABI/testing/sysfs-ata
++++ b/Documentation/ABI/testing/sysfs-ata
+@@ -1,110 +1,139 @@
+ What:		/sys/class/ata_...
+-Date:		August 2008
+-Contact:	Gwendal Grignou<gwendal@google.com>
+ Description:
+-
+-Provide a place in sysfs for storing the ATA topology of the system.  This allows
+-retrieving various information about ATA objects.
++		Provide a place in sysfs for storing the ATA topology of the
++		system. This allows retrieving various information about ATA
++		objects.
+ 
+ Files under /sys/class/ata_port
+ -------------------------------
+ 
+-	For each port, a directory ataX is created where X is the ata_port_id of
+-	the port. The device parent is the ata host device.
++For each port, a directory ataX is created where X is the ata_port_id of the
++port. The device parent is the ata host device.
+ 
+-idle_irq (read)
+ 
+-	Number of IRQ received by the port while idle [some ata HBA only].
++What:		/sys/class/ata_port/ataX/nr_pmp_links
++What:		/sys/class/ata_port/ataX/idle_irq
++Date:		May, 2010
++KernelVersion:	v2.6.37
++Contact:	Gwendal Grignou <gwendal@chromium.org>
 +Description:
-+		(RW) Used by drivers which support software controlled activity
-+		LEDs.
++		nr_pmp_links:	(RO) If a SATA Port Multiplier (PM) is
++				connected, the number of links behind it.
+ 
+-nr_pmp_links (read)
++		idle_irq:	(RO) Number of IRQ received by the port while
++				idle [some ata HBA only].
+ 
+-	If a SATA Port Multiplier (PM) is connected, number of link behind it.
 +
-+		It has the following valid values:
-+
-+		0	OFF - the LED is not activated on activity
-+		1	BLINK_ON - the LED blinks on every 10ms when activity is
-+			detected.
-+		2	BLINK_OFF - the LED is on when idle, and blinks off
-+			every 10ms when activity is detected.
-+
-+		Note that the user must turn sw_activity OFF it they wish to
-+		control the activity LED via the em_message file.
-+
-+
-+What:		/sys/block/*/device/unload_heads
-+Date:		Sep, 2008
-+KernelVersion:	v2.6.28
-+Contact:	linux-ide@vger.kernel.org
++What:		/sys/class/ata_port/ataX/port_no
++Date:		May, 2013
++KernelVersion:	v3.11
++Contact:	Gwendal Grignou <gwendal@chromium.org>
 +Description:
-+		(RW) Hard disk shock protection
++		(RO) Host local port number. While registering host controller,
++		port numbers are tracked based upon number of ports available on
++		the controller. This attribute is needed by udev for composing
++		persistent links in /dev/disk/by-path.
+ 
+ Files under /sys/class/ata_link
+ -------------------------------
+ 
+-	Behind each port, there is a ata_link. If there is a SATA PM in the
+-	topology, 15 ata_link objects are created.
+-
+-	If a link is behind a port, the directory name is linkX, where X is
+-	ata_port_id of the port.
+-	If a link is behind a PM, its name is linkX.Y where X is ata_port_id
+-	of the parent port and Y the PM port.
++Behind each port, there is a ata_link. If there is a SATA PM in the topology, 15
++ata_link objects are created.
+ 
+-hw_sata_spd_limit
++If a link is behind a port, the directory name is linkX, where X is ata_port_id
++of the port. If a link is behind a PM, its name is linkX.Y where X is
++ata_port_id of the parent port and Y the PM port.
+ 
+-	Maximum speed supported by the connected SATA device.
+ 
+-sata_spd_limit
++What:		/sys/class/ata_link/linkX[.Y]/hw_sata_spd_limit
++What:		/sys/class/ata_link/linkX[.Y]/sata_spd_limit
++What:		/sys/class/ata_link/linkX[.Y]/sata_spd
++Date:		May, 2010
++KernelVersion:	v2.6.37
++Contact:	Gwendal Grignou <gwendal@chromium.org>
++Description:
++		hw_sata_spd_limit:	(RO) Maximum speed supported by the
++					connected SATA device.
+ 
+-	Maximum speed imposed by libata.
++		sata_spd_limit:		(RO) Maximum speed imposed by libata.
+ 
+-sata_spd
++		sata_spd:		(RO) Current speed of the link
++					eg. 1.5, 3 Gbps etc.
+ 
+-	Current speed of the link [1.5, 3Gps,...].
+ 
+ Files under /sys/class/ata_device
+ ---------------------------------
+ 
+-	Behind each link, up to two ata device are created.
+-	The name of the directory is devX[.Y].Z where:
+-	- X is ata_port_id of the port where the device is connected,
+-	- Y the port of the PM if any, and
+-	- Z the device id: for PATA, there is usually 2 devices [0,1],
+-	only 1 for SATA.
+-
+-class
+-	Device class. Can be "ata" for disk, "atapi" for packet device,
+-	"pmp" for PM, or "none" if no device was found behind the link.
+-
+-dma_mode
++Behind each link, up to two ata devices are created.
++The name of the directory is devX[.Y].Z where:
++- X is ata_port_id of the port where the device is connected,
++- Y the port of the PM if any, and
++- Z the device id: for PATA, there is usually 2 devices [0,1], only 1 for SATA.
 +
-+		Writing an integer value to this file will take the heads of the
-+		respective drive off the platter and block all I/O operations
-+		for the specified number of milliseconds.
 +
-+		- If the device does not support the unload heads feature,
-+		  access is denied with -EOPNOTSUPP.
-+		- The maximal value accepted for a timeout is 30000
-+		  milliseconds.
-+		- A previously set timeout can be cancelled and disk can resume
-+		  normal operation immediately by specifying a timeout of 0.
-+		- Some hard drives only comply with an earlier version of the
-+		  ATA standard, but support the unload feature nonetheless.
-+		  There is no safe way Linux can detect these devices, so this
-+		  is not enabled by default. If it is known that your device
-+		  does support the unload feature, then you can tell the kernel
-+		  to enable it by writing -1. It can be disabled again by
-+		  writing -2.
-+		- Values below -2 are rejected with -EINVAL
-+
-+		For more information, see
-+		Documentation/laptops/disk-shock-protection.txt
-+
-+
-+What:		/sys/block/*/device/ncq_prio_enable
-+Date:		Oct, 2016
++What:		/sys/class/ata_device/devX[.Y].Z/spdn_cnt
++What:		/sys/class/ata_device/devX[.Y].Z/gscr
++What:		/sys/class/ata_device/devX[.Y].Z/ering
++What:		/sys/class/ata_device/devX[.Y].Z/id
++What:		/sys/class/ata_device/devX[.Y].Z/pio_mode
++What:		/sys/class/ata_device/devX[.Y].Z/xfer_mode
++What:		/sys/class/ata_device/devX[.Y].Z/dma_mode
++What:		/sys/class/ata_device/devX[.Y].Z/class
++Date:		May, 2010
++KernelVersion:	v2.6.37
++Contact:	Gwendal Grignou <gwendal@chromium.org>
++Description:
++		spdn_cnt:	(RO) Number of times libata decided to lower the
++				speed of link due to errors.
+ 
+-	Transfer modes supported by the device when in DMA mode.
+-	Mostly used by PATA device.
++		gscr:		(RO) Cached result of the dump of PM GSCR
++				register. Valid registers are:
+ 
+-pio_mode
++				0:      SATA_PMP_GSCR_PROD_ID,
++				1:	SATA_PMP_GSCR_REV,
++				2:      SATA_PMP_GSCR_PORT_INFO,
++				32:     SATA_PMP_GSCR_ERROR,
++				33:     SATA_PMP_GSCR_ERROR_EN,
++				64:     SATA_PMP_GSCR_FEAT,
++				96:     SATA_PMP_GSCR_FEAT_EN,
++				130:    SATA_PMP_GSCR_SII_GPIO
+ 
+-	Transfer modes supported by the device when in PIO mode.
+-	Mostly used by PATA device.
++				Only valid if the device is a PM.
+ 
+-xfer_mode
++		ering:		(RO) Formatted output of the error ring of the
++				device.
+ 
+-	Current transfer mode.
++		id:		(RO) Cached result of IDENTIFY command, as
++				described in ATA8 7.16 and 7.17. Only valid if
++				the device is not a PM.
+ 
+-id
++		pio_mode:	(RO) Transfer modes supported by the device when
++				in PIO mode. Mostly used by PATA device.
+ 
+-	Cached result of IDENTIFY command, as described in ATA8 7.16 and 7.17.
+-	Only valid if the device is not a PM.
++		xfer_mode:	(RO) Current transfer mode
+ 
+-gscr
++		dma_mode:	(RO) Transfer modes supported by the device when
++				in DMA mode. Mostly used by PATA device.
+ 
+-	Cached result of the dump of PM GSCR register.
+-	Valid registers are:
+-	0: 	SATA_PMP_GSCR_PROD_ID,
+-	1: 	SATA_PMP_GSCR_REV,
+-	2: 	SATA_PMP_GSCR_PORT_INFO,
+-	32:	SATA_PMP_GSCR_ERROR,
+-	33:	SATA_PMP_GSCR_ERROR_EN,
+-	64:	SATA_PMP_GSCR_FEAT,
+-	96:	SATA_PMP_GSCR_FEAT_EN,
+-	130:	SATA_PMP_GSCR_SII_GPIO
+-	Only valid if the device is a PM.
++		class:		(RO) Device class. Can be "ata" for disk,
++				"atapi" for packet device, "pmp" for PM, or
++				"none" if no device was found behind the link.
+ 
+-trim
+ 
+-	Shows the DSM TRIM mode currently used by the device. Valid
+-	values are:
+-	unsupported:		Drive does not support DSM TRIM
+-	unqueued:		Drive supports unqueued DSM TRIM only
+-	queued:			Drive supports queued DSM TRIM
+-	forced_unqueued:	Drive's queued DSM support is known to be
+-				buggy and only unqueued TRIM commands
+-				are sent
++What:		/sys/class/ata_device/devX[.Y].Z/trim
++Date:		May, 2015
 +KernelVersion:	v4.10
-+Contact:	linux-ide@vger.kernel.org
++Contact:	Gwendal Grignou <gwendal@chromium.org>
 +Description:
-+		(RW) Write to the file to turn on or off the SATA ncq (native
-+		command queueing) support. By default this feature is turned
-+		off.
-diff --git a/Documentation/ABI/testing/sysfs-class-scsi_host b/Documentation/ABI/testing/sysfs-class-scsi_host
-index 0eb255e7db12..bafc59fd7b69 100644
---- a/Documentation/ABI/testing/sysfs-class-scsi_host
-+++ b/Documentation/ABI/testing/sysfs-class-scsi_host
-@@ -27,3 +27,92 @@ Description:	This file contains the current status of the "SSD Smart Path"
- 		the direct i/o path to physical devices.  This setting is
- 		controller wide, affecting all configured logical drives on the
- 		controller.  This file is readable and writable.
-+
-+What:		/sys/class/scsi_host/hostX/link_power_management_policy
-+Date:		Oct, 2007
-+KernelVersion:	v2.6.24
-+Contact:	linux-ide@vger.kernel.org
-+Description:
-+		(RW) This parameter allows the user to read and set the link
-+		(interface) power management.
-+
-+		There are four possible options:
-+
-+		min_power: Tell the controller to try to make the link use the
-+		least possible power when possible. This may sacrifice some
-+		performance due to increased latency when coming out of lower
-+		power states.
-+
-+		max_performance: Generally, this means no power management.
-+		Tell the controller to have performance be a priority over power
-+		management.
-+
-+		medium_power: Tell the controller to enter a lower power state
-+		when possible, but do not enter the lowest power state, thus
-+		improving latency over min_power setting.
-+
-+		med_power_with_dipm: Identical to the existing medium_power
-+		setting except that it enables dipm (device initiated power
-+		management) on top, which makes it match the Windows IRST (Intel
-+		Rapid Storage Technology) driver settings. This setting is also
-+		close to min_power, except that:
-+		a) It does not use host-initiated slumber mode, but it does
-+		allow device-initiated slumber
-+		b) It does not enable low power device sleep mode (DevSlp).
-+
-+What:		/sys/class/scsi_host/hostX/em_message
-+What:		/sys/class/scsi_host/hostX/em_message_type
-+Date:		Jun, 2008
-+KernelVersion:	v2.6.27
-+Contact:	linux-ide@vger.kernel.org
-+Description:
-+		em_message: (RW) Enclosure management support. For the LED
-+		protocol, writes and reads correspond to the LED message format
-+		as defined in the AHCI spec.
-+
-+		The user must turn sw_activity (under /sys/block/*/device/) OFF
-+		it they wish to control the activity LED via the em_message
-+		file.
-+
-+		em_message_type: (RO) Displays the current enclosure management
-+		protocol that is being used by the driver (for eg. LED, SAF-TE,
-+		SES-2, SGPIO etc).
-+
-+What:		/sys/class/scsi_host/hostX/ahci_port_cmd
-+What:		/sys/class/scsi_host/hostX/ahci_host_caps
-+What:		/sys/class/scsi_host/hostX/ahci_host_cap2
-+Date:		Mar, 2010
-+KernelVersion:	v2.6.35
-+Contact:	linux-ide@vger.kernel.org
-+Description:
-+		[to be documented]
-+
-+What:		/sys/class/scsi_host/hostX/ahci_host_version
-+Date:		Mar, 2010
-+KernelVersion:	v2.6.35
-+Contact:	linux-ide@vger.kernel.org
-+Description:
-+		(RO) Display the version of the AHCI spec implemented by the
-+		host.
-+
-+What:		/sys/class/scsi_host/hostX/em_buffer
-+Date:		Apr, 2010
-+KernelVersion:	v2.6.35
-+Contact:	linux-ide@vger.kernel.org
-+Description:
-+		(RW) Allows access to AHCI EM (enclosure management) buffer
-+		directly if the host supports EM.
-+
-+		For eg. the AHCI driver supports SGPIO EM messages but the
-+		SATA/AHCI specs do not define the SGPIO message format of the EM
-+		buffer. Different hardware(HW) vendors may have different
-+		definitions. With the em_buffer attribute, this issue can be
-+		solved by allowing HW vendors to provide userland drivers and
-+		tools for their SGPIO initiators.
-+
-+What:		/sys/class/scsi_host/hostX/em_message_supported
-+Date:		Oct, 2009
-+KernelVersion:	v2.6.39
-+Contact:	linux-ide@vger.kernel.org
-+Description:
-+		(RO) Displays supported enclosure management message types.
++		(RO) Shows the DSM TRIM mode currently used by the device. Valid
++		values are:
+ 
+-spdn_cnt
++		unsupported:		Drive does not support DSM TRIM
+ 
+-	Number of time libata decided to lower the speed of link due to errors.
++		unqueued:               Drive supports unqueued DSM TRIM only
+ 
+-ering
++		queued:                 Drive supports queued DSM TRIM
+ 
+-	Formatted output of the error ring of the device.
++		forced_unqueued:	Drive's queued DSM support is known to
++					be buggy and only unqueued TRIM commands
++					are sent
 -- 
 2.16.1
 
