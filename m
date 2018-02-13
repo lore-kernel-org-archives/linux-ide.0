@@ -1,44 +1,31 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] scsi: ata: don't reset three times if device is offline
- for SAS host
-Date: Tue, 13 Feb 2018 06:27:38 -0800
-Message-ID: <20180213142738.GJ695913@devbig577.frc2.facebook.com>
-References: <1516800025-193614-1-git-send-email-chenxiang66@hisilicon.com>
- <20180212165146.GU695913@devbig577.frc2.facebook.com>
- <b3701a9b-3bf2-a979-cf75-c3dcdfaa1a89@hisilicon.com>
+Subject: Re: [PATCH] libata: transport: cleanup documentation of sysfs
+ interface
+Date: Tue, 13 Feb 2018 06:39:05 -0800
+Message-ID: <20180213143905.GL695913@devbig577.frc2.facebook.com>
+References: <20180213112159.GA24306@mordor.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <b3701a9b-3bf2-a979-cf75-c3dcdfaa1a89@hisilicon.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: "chenxiang (M)" <chenxiang66@hisilicon.com>
-Cc: martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linuxarm@huawei.com
+In-Reply-To: <20180213112159.GA24306@mordor.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Aishwarya Pant <aishpant@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Greg KH <gregkh@linuxfoundation.org>, Gwendal Grignou <gwendal@chromium.org>, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-ide@vger.kernel.org
 
-Hello,
+On Tue, Feb 13, 2018 at 04:51:59PM +0530, Aishwarya Pant wrote:
+> Clean-up the documentation of sysfs interfaces to be in the same format
+> as described in Documentation/ABI/README. This will be useful for
+> tracking changes in the ABI. Attributes are grouped by function (device,
+> link or port) and then by date added.
+> 
+> This patch also adds documentation for one attribute -
+> /sys/class/ata_port/ataX/port_no
+> 
+> Signed-off-by: Aishwarya Pant <aishpant@gmail.com>
 
-On Tue, Feb 13, 2018 at 09:44:53AM +0800, chenxiang (M) wrote:
-> For those drivers using libsas,  i think they have the same issue.
-> It takes about 1 minute to
-> recover but actually device is gone, so this recover is useless for
-> this scenario (when enter EH,
-> all normal IOs are blocked actually, so it will cause normal IOs are
-> blocked one more minute which
-> user doesn't want to).
-
-Right, it'd block other devices sharing the port.  Doesn't sas map
-each ata device to its own port tho?
-
-> Actually in sas_ata_hard_reset, there are two situations returned
-> -ENODEV which represent device is gone:
-> - LLDD directly returns -ENODEV through lldd_I_T_nexus_reset;
-> - It sends SMP DISCOVER to check local phy in smp_ata_check_ready,
-> and find it is gone;
-
-So, if there are real consequences, we can definitely add a way to
-short-circuit the recovery logic but let's do that by adding proper
-signaling rathr than testing for driver type.
+Applied to libata/for-4.16-fixes.
 
 Thanks.
 
