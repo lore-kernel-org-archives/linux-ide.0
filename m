@@ -1,38 +1,66 @@
-From: Preetham Chandru Ramchandra <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH V7 6/7] ata: ahci_tegra: disable DIPM
-Date: Mon, 12 Feb 2018 22:56:45 +0530
-Message-ID: <1518456406-21564-7-git-send-email-pchandru@nvidia.com>
-References: <1518456406-21564-1-git-send-email-pchandru@nvidia.com>
+From: "chenxiang (M)" <chenxiang66@hisilicon.com>
+Subject: Re: [PATCH] scsi: ata: don't reset three times if device is offline
+ for SAS host
+Date: Tue, 13 Feb 2018 09:44:53 +0800
+Message-ID: <b3701a9b-3bf2-a979-cf75-c3dcdfaa1a89@hisilicon.com>
+References: <1516800025-193614-1-git-send-email-chenxiang66@hisilicon.com>
+ <20180212165146.GU695913@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1518456406-21564-1-git-send-email-pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, cyndis-/1wQRMveznE@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, vbyravarasu-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, pkunapuli-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, Preetham Ramchandra <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20180212165146.GU695913@devbig577.frc2.facebook.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linuxarm@huawei.com
 List-Id: linux-ide@vger.kernel.org
 
-From: Preetham Ramchandra <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Hi Tejun,
 
-tegra does not support DIPM and it should be disabled
+在 2018/2/13 0:51, Tejun Heo 写道:
+> Hello,
+>
+> On Wed, Jan 24, 2018 at 09:20:25PM +0800, chenxiang wrote:
+>> In ata_eh_reset, it will reset three times at most for sata disk. For
+>> some drivers through libsas, it calls sas_ata_hard_reset at last. When
+>> device is gone, function sas_ata_hard_reset will return -ENODEV. But
+>> it will still try to reset three times for offline device. This process
+>> lasts a long time:
+>>
+>> [11248.344323] ata13.00: status: { ERR }
+>> [11248.344324] ata13.00: error: { ABRT }
+>> [11248.344327] ata13: hard resetting link
+>> [11248.503557] sas: ata: ex 500e004aaaaaaa1f phy02:U:A attached:0000000000000000 (no device)
+>> [11249.359524] sas: ata13: end_device-1:0:2: reset failed (errno=-19)[eta03d:19h:35m:17s]
+>> [11249.365692] ata13: reset failed (errno=-19), retrying in 9 secs
+>> [11258.451402] ata13: hard resetting linkKB/0KB/0KB /s] [0/0/0 iops][eta 03d:22h:10m:48s]
+>> [11259.411508] sas: ata13: end_device-1:0:2: reset failed (errno=-19)[eta 03d:22h:28m:05s]
+>> [11259.417683] ata13: reset failed (errno=-19), retrying in 10 secs
+>> [11268.695401] ata13: hard resetting linkKB/0KB/0KB /s] [0/0/0 iops] [eta 04d:01h:03m:37s]
+>> [11269.699513] sas: ata13: end_device-1:0:2: reset failed (errno=-19)[eta 04d:01h:20m:54s]
+>> [11269.705689] ata13: reset failed (errno=-19), retrying in 34 secs
+>> [11304.275393] ata13: hard resetting linkKB/0KB/0KB /s] [0/0/0 iops] [eta 04d:11h:25m:43s]
+>> [11305.283516] sas: ata13: end_device-1:0:2: reset failed (errno=-19)[eta 04d:11h:43m:00s]
+>> [11305.289692] ata13: reset failed, giving up
+>> [11305.293785] ata13.00: disabled
+>>
+>> Actually it is no need to reset three times for this scenario. So add
+>> a check to avoid it.
+> I'm a bit reluctant in changing this per-driver.  Does this actually
+> hurt something?
 
-Signed-off-by: Preetham Chandru R <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
----
- drivers/ata/ahci_tegra.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+For those drivers using libsas,  i think they have the same issue. It 
+takes about 1 minute to
+recover but actually device is gone, so this recover is useless for this 
+scenario (when enter EH,
+all normal IOs are blocked actually, so it will cause normal IOs are 
+blocked one more minute which
+user doesn't want to).
+Actually in sas_ata_hard_reset, there are two situations returned 
+-ENODEV which represent device is gone:
+- LLDD directly returns -ENODEV through lldd_I_T_nexus_reset;
+- It sends SMP DISCOVER to check local phy in smp_ata_check_ready, and 
+find it is gone;
 
-diff --git a/drivers/ata/ahci_tegra.c b/drivers/ata/ahci_tegra.c
-index 62f2afb54789..ffad5c61e991 100644
---- a/drivers/ata/ahci_tegra.c
-+++ b/drivers/ata/ahci_tegra.c
-@@ -447,7 +447,7 @@ static struct ata_port_operations ahci_tegra_port_ops = {
- };
- 
- static const struct ata_port_info ahci_tegra_port_info = {
--	.flags		= AHCI_FLAG_COMMON,
-+	.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NO_DIPM,
- 	.pio_mask	= ATA_PIO4,
- 	.udma_mask	= ATA_UDMA6,
- 	.port_ops	= &ahci_tegra_port_ops,
--- 
-2.7.4
+> Thanks.
+>
