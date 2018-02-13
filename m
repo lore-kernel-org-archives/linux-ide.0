@@ -1,66 +1,199 @@
-From: "chenxiang (M)" <chenxiang66@hisilicon.com>
-Subject: Re: [PATCH] scsi: ata: don't reset three times if device is offline
- for SAS host
-Date: Tue, 13 Feb 2018 09:44:53 +0800
-Message-ID: <b3701a9b-3bf2-a979-cf75-c3dcdfaa1a89@hisilicon.com>
-References: <1516800025-193614-1-git-send-email-chenxiang66@hisilicon.com>
- <20180212165146.GU695913@devbig577.frc2.facebook.com>
+From: Aishwarya Pant <aishpant@gmail.com>
+Subject: [PATCH] libata: update documentation for sysfs interfaces
+Date: Tue, 13 Feb 2018 13:48:16 +0530
+Message-ID: <20180213081816.GA11350@mordor.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20180212165146.GU695913@devbig577.frc2.facebook.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linuxarm@huawei.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ot0-f195.google.com ([74.125.82.195]:40478 "EHLO
+        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933651AbeBMISX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 13 Feb 2018 03:18:23 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Greg KH <gregkh@linuxfoundation.org>
+Cc: Julia Lawall <julia.lawall@lip6.fr>
 
-Hi Tejun,
+Dcoumentation has been added by parsing through git commit history and
+reading code. This might be useful for scripting and tracking changes in
+the ABI.
 
-在 2018/2/13 0:51, Tejun Heo 写道:
-> Hello,
->
-> On Wed, Jan 24, 2018 at 09:20:25PM +0800, chenxiang wrote:
->> In ata_eh_reset, it will reset three times at most for sata disk. For
->> some drivers through libsas, it calls sas_ata_hard_reset at last. When
->> device is gone, function sas_ata_hard_reset will return -ENODEV. But
->> it will still try to reset three times for offline device. This process
->> lasts a long time:
->>
->> [11248.344323] ata13.00: status: { ERR }
->> [11248.344324] ata13.00: error: { ABRT }
->> [11248.344327] ata13: hard resetting link
->> [11248.503557] sas: ata: ex 500e004aaaaaaa1f phy02:U:A attached:0000000000000000 (no device)
->> [11249.359524] sas: ata13: end_device-1:0:2: reset failed (errno=-19)[eta03d:19h:35m:17s]
->> [11249.365692] ata13: reset failed (errno=-19), retrying in 9 secs
->> [11258.451402] ata13: hard resetting linkKB/0KB/0KB /s] [0/0/0 iops][eta 03d:22h:10m:48s]
->> [11259.411508] sas: ata13: end_device-1:0:2: reset failed (errno=-19)[eta 03d:22h:28m:05s]
->> [11259.417683] ata13: reset failed (errno=-19), retrying in 10 secs
->> [11268.695401] ata13: hard resetting linkKB/0KB/0KB /s] [0/0/0 iops] [eta 04d:01h:03m:37s]
->> [11269.699513] sas: ata13: end_device-1:0:2: reset failed (errno=-19)[eta 04d:01h:20m:54s]
->> [11269.705689] ata13: reset failed (errno=-19), retrying in 34 secs
->> [11304.275393] ata13: hard resetting linkKB/0KB/0KB /s] [0/0/0 iops] [eta 04d:11h:25m:43s]
->> [11305.283516] sas: ata13: end_device-1:0:2: reset failed (errno=-19)[eta 04d:11h:43m:00s]
->> [11305.289692] ata13: reset failed, giving up
->> [11305.293785] ata13.00: disabled
->>
->> Actually it is no need to reset three times for this scenario. So add
->> a check to avoid it.
-> I'm a bit reluctant in changing this per-driver.  Does this actually
-> hurt something?
+I do not have complete descriptions for the following 3 attributes; they
+have been annotated with the comment [to be documented] -
 
-For those drivers using libsas,  i think they have the same issue. It 
-takes about 1 minute to
-recover but actually device is gone, so this recover is useless for this 
-scenario (when enter EH,
-all normal IOs are blocked actually, so it will cause normal IOs are 
-blocked one more minute which
-user doesn't want to).
-Actually in sas_ata_hard_reset, there are two situations returned 
--ENODEV which represent device is gone:
-- LLDD directly returns -ENODEV through lldd_I_T_nexus_reset;
-- It sends SMP DISCOVER to check local phy in smp_ata_check_ready, and 
-find it is gone;
+	/sys/class/scsi_host/hostX/ahci_port_cmd
+	/sys/class/scsi_host/hostX/ahci_host_caps
+	/sys/class/scsi_host/hostX/ahci_host_cap2
 
-> Thanks.
->
+Signed-off-by: Aishwarya Pant <aishpant@gmail.com>
+---
+ Documentation/ABI/testing/sysfs-block-device    | 58 ++++++++++++++++
+ Documentation/ABI/testing/sysfs-class-scsi_host | 89 +++++++++++++++++++++++++
+ 2 files changed, 147 insertions(+)
+ create mode 100644 Documentation/ABI/testing/sysfs-block-device
+
+diff --git a/Documentation/ABI/testing/sysfs-block-device b/Documentation/ABI/testing/sysfs-block-device
+new file mode 100644
+index 000000000000..82ef6eab042d
+--- /dev/null
++++ b/Documentation/ABI/testing/sysfs-block-device
+@@ -0,0 +1,58 @@
++What:		/sys/block/*/device/sw_activity
++Date:		Jun, 2008
++KernelVersion:	v2.6.27
++Contact:	linux-ide@vger.kernel.org
++Description:
++		(RW) Used by drivers which support software controlled activity
++		LEDs.
++
++		It has the following valid values:
++
++		0	OFF - the LED is not activated on activity
++		1	BLINK_ON - the LED blinks on every 10ms when activity is
++			detected.
++		2	BLINK_OFF - the LED is on when idle, and blinks off
++			every 10ms when activity is detected.
++
++		Note that the user must turn sw_activity OFF it they wish to
++		control the activity LED via the em_message file.
++
++
++What:		/sys/block/*/device/unload_heads
++Date:		Sep, 2008
++KernelVersion:	v2.6.28
++Contact:	linux-ide@vger.kernel.org
++Description:
++		(RW) Hard disk shock protection
++
++		Writing an integer value to this file will take the heads of the
++		respective drive off the platter and block all I/O operations
++		for the specified number of milliseconds.
++
++		- If the device does not support the unload heads feature,
++		  access is denied with -EOPNOTSUPP.
++		- The maximal value accepted for a timeout is 30000
++		  milliseconds.
++		- A previously set timeout can be cancelled and disk can resume
++		  normal operation immediately by specifying a timeout of 0.
++		- Some hard drives only comply with an earlier version of the
++		  ATA standard, but support the unload feature nonetheless.
++		  There is no safe way Linux can detect these devices, so this
++		  is not enabled by default. If it is known that your device
++		  does support the unload feature, then you can tell the kernel
++		  to enable it by writing -1. It can be disabled again by
++		  writing -2.
++		- Values below -2 are rejected with -EINVAL
++
++		For more information, see
++		Documentation/laptops/disk-shock-protection.txt
++
++
++What:		/sys/block/*/device/ncq_prio_enable
++Date:		Oct, 2016
++KernelVersion:	v4.10
++Contact:	linux-ide@vger.kernel.org
++Description:
++		(RW) Write to the file to turn on or off the SATA ncq (native
++		command queueing) support. By default this feature is turned
++		off.
+diff --git a/Documentation/ABI/testing/sysfs-class-scsi_host b/Documentation/ABI/testing/sysfs-class-scsi_host
+index 0eb255e7db12..bafc59fd7b69 100644
+--- a/Documentation/ABI/testing/sysfs-class-scsi_host
++++ b/Documentation/ABI/testing/sysfs-class-scsi_host
+@@ -27,3 +27,92 @@ Description:	This file contains the current status of the "SSD Smart Path"
+ 		the direct i/o path to physical devices.  This setting is
+ 		controller wide, affecting all configured logical drives on the
+ 		controller.  This file is readable and writable.
++
++What:		/sys/class/scsi_host/hostX/link_power_management_policy
++Date:		Oct, 2007
++KernelVersion:	v2.6.24
++Contact:	linux-ide@vger.kernel.org
++Description:
++		(RW) This parameter allows the user to read and set the link
++		(interface) power management.
++
++		There are four possible options:
++
++		min_power: Tell the controller to try to make the link use the
++		least possible power when possible. This may sacrifice some
++		performance due to increased latency when coming out of lower
++		power states.
++
++		max_performance: Generally, this means no power management.
++		Tell the controller to have performance be a priority over power
++		management.
++
++		medium_power: Tell the controller to enter a lower power state
++		when possible, but do not enter the lowest power state, thus
++		improving latency over min_power setting.
++
++		med_power_with_dipm: Identical to the existing medium_power
++		setting except that it enables dipm (device initiated power
++		management) on top, which makes it match the Windows IRST (Intel
++		Rapid Storage Technology) driver settings. This setting is also
++		close to min_power, except that:
++		a) It does not use host-initiated slumber mode, but it does
++		allow device-initiated slumber
++		b) It does not enable low power device sleep mode (DevSlp).
++
++What:		/sys/class/scsi_host/hostX/em_message
++What:		/sys/class/scsi_host/hostX/em_message_type
++Date:		Jun, 2008
++KernelVersion:	v2.6.27
++Contact:	linux-ide@vger.kernel.org
++Description:
++		em_message: (RW) Enclosure management support. For the LED
++		protocol, writes and reads correspond to the LED message format
++		as defined in the AHCI spec.
++
++		The user must turn sw_activity (under /sys/block/*/device/) OFF
++		it they wish to control the activity LED via the em_message
++		file.
++
++		em_message_type: (RO) Displays the current enclosure management
++		protocol that is being used by the driver (for eg. LED, SAF-TE,
++		SES-2, SGPIO etc).
++
++What:		/sys/class/scsi_host/hostX/ahci_port_cmd
++What:		/sys/class/scsi_host/hostX/ahci_host_caps
++What:		/sys/class/scsi_host/hostX/ahci_host_cap2
++Date:		Mar, 2010
++KernelVersion:	v2.6.35
++Contact:	linux-ide@vger.kernel.org
++Description:
++		[to be documented]
++
++What:		/sys/class/scsi_host/hostX/ahci_host_version
++Date:		Mar, 2010
++KernelVersion:	v2.6.35
++Contact:	linux-ide@vger.kernel.org
++Description:
++		(RO) Display the version of the AHCI spec implemented by the
++		host.
++
++What:		/sys/class/scsi_host/hostX/em_buffer
++Date:		Apr, 2010
++KernelVersion:	v2.6.35
++Contact:	linux-ide@vger.kernel.org
++Description:
++		(RW) Allows access to AHCI EM (enclosure management) buffer
++		directly if the host supports EM.
++
++		For eg. the AHCI driver supports SGPIO EM messages but the
++		SATA/AHCI specs do not define the SGPIO message format of the EM
++		buffer. Different hardware(HW) vendors may have different
++		definitions. With the em_buffer attribute, this issue can be
++		solved by allowing HW vendors to provide userland drivers and
++		tools for their SGPIO initiators.
++
++What:		/sys/class/scsi_host/hostX/em_message_supported
++Date:		Oct, 2009
++KernelVersion:	v2.6.39
++Contact:	linux-ide@vger.kernel.org
++Description:
++		(RO) Displays supported enclosure management message types.
+-- 
+2.16.1
+
