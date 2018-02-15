@@ -1,50 +1,45 @@
-From: Mikko Perttunen <cyndis@kapsi.fi>
-Subject: Re: [PATCH V7 0/7] Refactor and add AHCI support for tegra210
-Date: Wed, 14 Feb 2018 15:11:15 +0200
-Message-ID: <3cda27d3-bb42-9e00-2e9f-ac52fbe66630@kapsi.fi>
-References: <1518456406-21564-1-git-send-email-pchandru@nvidia.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kapsi.fi ([91.232.154.25]:42223 "EHLO mail.kapsi.fi"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S967729AbeBNNLS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 14 Feb 2018 08:11:18 -0500
-In-Reply-To: <1518456406-21564-1-git-send-email-pchandru@nvidia.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Subject: [PATCH] libata: disable LPM for Crucial BX100 SSD drives
+Date: Fri, 16 Feb 2018 03:00:23 +0800
+Message-ID: <20180215190023.25575-1-kai.heng.feng@canonical.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Kai-Heng Feng <kai.heng.feng@canonical.com>
 List-Id: linux-ide@vger.kernel.org
-To: Preetham Chandru Ramchandra <pchandru@nvidia.com>, thierry.reding@gmail.com, tj@kernel.org, robh+dt@kernel.org, mark.rutland@arm.com, devicetree@vger.kernel.org
-Cc: preetham260@gmail.com, linux-tegra@vger.kernel.org, linux-ide@vger.kernel.org, vbyravarasu@nvidia.com, pkunapuli@nvidia.com
 
-I think this now looks good enough to merge - others please take a look 
-as well.
+After Laptop Mode Tools starts to use min_power for LPM, a user found
+out Crucial BX100 SSD can't get mounted.
 
-Series,
-Reviewed-by: Mikko Perttunen <mperttunen@nvidia.com>
+Crucial BX100 SSD drives don't work well with min_power. This also
+happens to med_power_with_dipm.
 
-On 12.02.2018 19:26, Preetham Chandru Ramchandra wrote:
-> From: Preetham Ramchandra <pchandru@nvidia.com>
->
-> 1. ADD AHCI support for tegra210
-> 2. Extend the tegra AHCI controller device tree binding with tegra210
-> 3. Update initialization sequence
-> 4. Initialize regulators based on chip
-> 5. Disable DevSlp
-> 6. Disable DIPM
-> ---
-> Preetham Ramchandra (7):
->   dt-bindings: ahci-tegra: add binding documentation
->   arm64: tegra: Enable AHCI on Jetson TX1
->   ata: ahci_tegra: Update initialization sequence
->   ata: ahci_tegra: initialize regulators from soc_data
->   ata: ahci_tegra: disable devslp for t124
->   ata: ahci_tegra: disable DIPM
->   ata: ahci_tegra: Add AHCI support for Tegra210
->
->  .../bindings/ata/nvidia,tegra124-ahci.txt          |  35 +-
->  arch/arm64/boot/dts/nvidia/tegra210-p2597.dtsi     |   6 +
->  arch/arm64/boot/dts/nvidia/tegra210.dtsi           |  16 +
->  drivers/ata/ahci_tegra.c                           | 362 ++++++++++++++++-----
->  4 files changed, 329 insertions(+), 90 deletions(-)
->
+So let's disable LPM for Crucial BX100 SSD drives.
+
+BugLink: https://bugs.launchpad.net/bugs/1726930
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+---
+ drivers/ata/libata-core.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 3c09122bf038..577cf820eed4 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4592,6 +4592,14 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "WDC WD3000JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
+ 	{ "WDC WD3200JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
+ 
++	/*
++	 * Crucial BX100 SSD has broken min_power and med_power_with_dipm
++	 * support.
++	 *
++	 * https://bugs.launchpad.net/bugs/1726930
++	 */
++	{ "CT*BX100SSD1",		NULL,	ATA_HORKAGE_NOLPM },
++
+ 	/* End Marker */
+ 	{ }
+ };
+-- 
+2.15.1
