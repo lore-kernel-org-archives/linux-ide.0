@@ -1,45 +1,42 @@
-From: Kai-Heng Feng <kai.heng.feng@canonical.com>
-Subject: [PATCH] libata: disable LPM for Crucial BX100 SSD drives
-Date: Fri, 16 Feb 2018 03:00:23 +0800
-Message-ID: <20180215190023.25575-1-kai.heng.feng@canonical.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Kai-Heng Feng <kai.heng.feng@canonical.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH] sata_dwc_460ex: Delete an error message for a failed memory
+ allocation in sata_dwc_port_start()
+Date: Thu, 15 Feb 2018 22:22:16 +0100
+Message-ID: <3ba388af-286a-df63-e78f-c82c1d084439@users.sourceforge.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: kernel-janitors-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-After Laptop Mode Tools starts to use min_power for LPM, a user found
-out Crucial BX100 SSD can't get mounted.
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Thu, 15 Feb 2018 22:15:25 +0100
 
-Crucial BX100 SSD drives don't work well with min_power. This also
-happens to med_power_with_dipm.
+Omit an extra message for a memory allocation failure in this function.
 
-So let's disable LPM for Crucial BX100 SSD drives.
+This issue was detected by using the Coccinelle software.
 
-BugLink: https://bugs.launchpad.net/bugs/1726930
-Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/ata/libata-core.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/ata/sata_dwc_460ex.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 3c09122bf038..577cf820eed4 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4592,6 +4592,14 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "WDC WD3000JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
- 	{ "WDC WD3200JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
- 
-+	/*
-+	 * Crucial BX100 SSD has broken min_power and med_power_with_dipm
-+	 * support.
-+	 *
-+	 * https://bugs.launchpad.net/bugs/1726930
-+	 */
-+	{ "CT*BX100SSD1",		NULL,	ATA_HORKAGE_NOLPM },
-+
- 	/* End Marker */
- 	{ }
- };
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index 6af4ec3c88c3..ce3d6674ef80 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -901,7 +901,6 @@ static int sata_dwc_port_start(struct ata_port *ap)
+ 	/* Allocate Port Struct */
+ 	hsdevp = kzalloc(sizeof(*hsdevp), GFP_KERNEL);
+ 	if (!hsdevp) {
+-		dev_err(ap->dev, "%s: kmalloc failed for hsdevp\n", __func__);
+ 		err = -ENOMEM;
+ 		goto CLEANUP;
+ 	}
 -- 
-2.15.1
+2.16.1
+
