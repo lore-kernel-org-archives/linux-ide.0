@@ -1,48 +1,50 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH] libata: Apply NOLPM quirk to Crucial MX100 512GB SSDs
-Date: Fri, 16 Feb 2018 10:48:20 +0100
-Message-ID: <20180216094820.3587-1-hdegoede@redhat.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH] pata_samsung_cf: Delete an error message for a failed memory
+ allocation in pata_s3c_probe()
+Date: Fri, 16 Feb 2018 11:08:18 +0100
+Message-ID: <b757fb06-dde6-b1f6-77fa-f5301fb6fec1@users.sourceforge.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mout.web.de ([212.227.17.12]:56831 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933129AbeBPKIh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 16 Feb 2018 05:08:37 -0500
+Content-Language: en-US
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org
 
-Various people have reported the Crucial MX100 512GB model not working
-with LPM set to min_power. I've now received a report that it also does
-not work with the new med_power_with_dipm level.
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Fri, 16 Feb 2018 10:55:51 +0100
 
-It does work with medium_power, but that has no measurable power-savings
-and given the amount of people being bitten by the other levels not
-working, this commit just disables LPM altogether.
+Omit an extra message for a memory allocation failure in this function.
 
-Note all reporters of this have either the 512GB model (max capacity), or
-are not specifying their SSD's size. So for now this quirk assumes this is
-a problem with the 512GB model only.
+This issue was detected by using the Coccinelle software.
 
-Buglink: https://bugzilla.kernel.org/show_bug.cgi?id=89261
-Buglink: https://github.com/linrunner/TLP/issues/84
-Cc: stable@vger.kernel.org
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/ata/libata-core.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/ata/pata_samsung_cf.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 3c09122bf038..d8be0fe548f7 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4530,6 +4530,11 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "PIONEER DVD-RW  DVR-212D",	NULL,	ATA_HORKAGE_NOSETXFER },
- 	{ "PIONEER DVD-RW  DVR-216D",	NULL,	ATA_HORKAGE_NOSETXFER },
+diff --git a/drivers/ata/pata_samsung_cf.c b/drivers/ata/pata_samsung_cf.c
+index 50801c40b029..bb96dc35950d 100644
+--- a/drivers/ata/pata_samsung_cf.c
++++ b/drivers/ata/pata_samsung_cf.c
+@@ -505,10 +505,8 @@ static int __init pata_s3c_probe(struct platform_device *pdev)
+ 	cpu_type = platform_get_device_id(pdev)->driver_data;
  
-+	/* The 512GB version of the MX100 has both queued TRIM and LPM issues */
-+	{ "Crucial_CT512MX100*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
-+						ATA_HORKAGE_ZERO_AFTER_TRIM |
-+						ATA_HORKAGE_NOLPM, },
-+
- 	/* devices that don't properly handle queued TRIM commands */
- 	{ "Micron_M500_*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
- 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+ 	info = devm_kzalloc(dev, sizeof(*info), GFP_KERNEL);
+-	if (!info) {
+-		dev_err(dev, "failed to allocate memory for device data\n");
++	if (!info)
+ 		return -ENOMEM;
+-	}
+ 
+ 	info->irq = platform_get_irq(pdev, 0);
+ 
 -- 
-2.14.3
+2.16.1
+
