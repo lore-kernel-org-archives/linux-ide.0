@@ -1,87 +1,72 @@
 From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: libata: disable LPM for Crucial BX100 SSD drives
-Date: Fri, 16 Feb 2018 11:34:14 +0100
-Message-ID: <dce01c88-b1dc-dc9c-4073-3b407633d012@redhat.com>
-References: <20180215190023.25575-1-kai.heng.feng@canonical.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 0/12] USB Type-C device-connection, mux and switch support
+Date: Fri, 16 Feb 2018 11:43:09 +0100
+Message-ID: <20180216104321.8259-1-hdegoede@redhat.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:35821 "EHLO
-        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932082AbeBPKeR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 16 Feb 2018 05:34:17 -0500
-Received: by mail-wm0-f53.google.com with SMTP id x21so2279419wmh.0
-        for <linux-ide@vger.kernel.org>; Fri, 16 Feb 2018 02:34:17 -0800 (PST)
-In-Reply-To: <20180215190023.25575-1-kai.heng.feng@canonical.com>
-Content-Language: en-US
+Received: from mx3-rdu2.redhat.com ([66.187.233.73]:51634 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933633AbeBPKnY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 16 Feb 2018 05:43:24 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kai-Heng Feng <kai.heng.feng@canonical.com>, tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi,
+Hi All,
 
-On 15-02-18 20:00, Kai-Heng Feng wrote:
-> After Laptop Mode Tools starts to use min_power for LPM, a user found
-> out Crucial BX100 SSD can't get mounted.
-> 
-> Crucial BX100 SSD drives don't work well with min_power. This also
-> happens to med_power_with_dipm.
-> 
-> So let's disable LPM for Crucial BX100 SSD drives.
+Some devices with an USB Type-C connector have a bunch of muxes
+behind that connector which need to be controlled by the kernel (rather
+then having them controlled by firmware as on most devices).
 
-First of all thank you for your patch for this.
+Quite a while back I submitted a patch-series to tie together these muxes
+and the Type-C Port Manager (tcpm) code, using the then new drivers/mux
+framework. But the way I used the mux framework went against what it was
+designed for, so in the end that series got nowhere.
 
-Compared to a similar patch which I just submitted for MX100 device
-2 things stand out:
+Heikki Krogerus from Intel, who maintains the USB TYPEC subsystem, has
+recently been working on solving the same problem for some boards he is
+doing hardware-enablement for.
 
-1) The entry my patch adds needed to be above the queued TRIM
-entries because there is a more generic entry matching the SSD
-below, it might be good to group all entries together there.
+Heikki has come up with a number of infrastructure patches for this.
+The first one is a new device-connection framework. This solves the
+problem of describing non bus device-links on x86 in what in my experience
+with this problematic area is a really nice simple, clean and *generic*
+way. This could for example in the near future also replace the custom
+lookup code in the pwm subsys and the custom pwm_add_table() /
+pwm_remove_table() functions.
 
-2) Your reporter has a 500GB model and as mentioned in my
-patch I've noticed that all reporters (there are multiple
-for my model) all have the 500GB version, so I think we should
-restrict this to the 500GB version for now ?
+The other 3 patches add a framework for the different type of Type-C /
+USB "muxes".
 
-I also noticed that your reporter reports a firmware
-version of "MU02" and so does mine, where as the
-"queued TRIM" blacklist entries all check for a version
-of "MU01", could it be that the non 500GB and 500GB
-versions have different firmware ?  What about the queued
-trim quirks, do we maybe also need that for the MU02 version?
+Heikki and I have gone through a number of iterations of these patches
+together and we believe these are now ready for merging. Since merging
+infrastructure patches without users is not done and Heikki's own use-case
+for these is not yet ready for merging, the rest of this series consists
+of patches by me to make the Type-C connector found on some Cherry Trail
+devices (finally) be able to actually work as an USB port and not just
+a charge port.
+
+The last patch uses the new usb-role-switch framework to also do proper
+devcie / host switching on CHT devices with a USB micro AB connector.
+This is also a big feature for CHT users, because before this they had
+to do a reboot to get an OTG-host cable recognized (on some devices).
+
+Part of this series is an usb-role-switch driver for the role-switch
+found inside the xhci controller on e.g. CHT devices, this is currently
+implemented as the generic xhci controller instantiating a platform
+child-device for this, since this really is a separate chunk of HW
+which happens to sit in the XHCI mmio space. This approach may not be
+universally liked, given that in this new series the role-switch driver
+is much smaller and does not have any external deps anymore we could
+just integrate it into the xhci code if that is preferred.
+
+About merging this series (once everything is reviewed, etc.), there are
+quite some interdependencies in it esp. a lot of the patches depend on
+the first patch. Luckily patches 1-10 all apply to subsystems which are
+maintained by Greg (most to the USB subsys). Which just leaves patches
+11 and 12 once 1-10 are merged. Greg, can you create an immutable branch
+for the platform/x86 and extcon maintainers to merge once this is done?
 
 Regards,
 
 Hans
-
-
-
-> 
-> BugLink: https://bugs.launchpad.net/bugs/1726930
-> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
-> ---
->   drivers/ata/libata-core.c | 8 ++++++++
->   1 file changed, 8 insertions(+)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 3c09122bf038..577cf820eed4 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4592,6 +4592,14 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
->   	{ "WDC WD3000JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
->   	{ "WDC WD3200JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
->   
-> +	/*
-> +	 * Crucial BX100 SSD has broken min_power and med_power_with_dipm
-> +	 * support.
-> +	 *
-> +	 * https://bugs.launchpad.net/bugs/1726930
-> +	 */
-> +	{ "CT*BX100SSD1",		NULL,	ATA_HORKAGE_NOLPM },
-> +
->   	/* End Marker */
->   	{ }
->   };
-> 
