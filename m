@@ -1,19 +1,43 @@
 From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH 0/2] ahci/pci-quirks: Add PCI-id for the Highpoint Rocketraid 644L card
-Date: Fri,  2 Mar 2018 11:36:31 +0100
-Message-ID: <20180302103633.10592-1-hdegoede@redhat.com>
+Subject: [PATCH 1/2] ahci: Add PCI-id for the Highpoint Rocketraid 644L card
+Date: Fri,  2 Mar 2018 11:36:32 +0100
+Message-ID: <20180302103633.10592-2-hdegoede@redhat.com>
+References: <20180302103633.10592-1-hdegoede@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180302103633.10592-1-hdegoede@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>
-Cc: Hans de Goede <hdegoede@redhat.com>, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hi All,
+Like the Highpoint Rocketraid 642L and cards using a Marvel 88SE9235
+controller in general, this RAID card also supports AHCI mode and short
+of a custom driver, this is the only way to make it work under Linux.
 
-Here are 2 patches adding support for Highpoint Rocketraid 644L cards,
-they can be merged independently from each-other into their resp. subsys,
-but since they belong together I'm sending them out as a series.
+Note that even though the card is called to 644L, it has a product-id
+of 0x0645.
 
-Regards,
+Cc: stable@vger.kernel.org
+BugLink: https://bugzilla.redhat.com/show_bug.cgi?id=1534106
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/ata/ahci.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Hans
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 355a95a83a34..1ff17799769d 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -550,7 +550,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	  .driver_data = board_ahci_yes_fbs },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9230),
+ 	  .driver_data = board_ahci_yes_fbs },
+-	{ PCI_DEVICE(PCI_VENDOR_ID_TTI, 0x0642),
++	{ PCI_DEVICE(PCI_VENDOR_ID_TTI, 0x0642), /* highpoint rocketraid 642L */
++	  .driver_data = board_ahci_yes_fbs },
++	{ PCI_DEVICE(PCI_VENDOR_ID_TTI, 0x0645), /* highpoint rocketraid 644L */
+ 	  .driver_data = board_ahci_yes_fbs },
+ 
+ 	/* Promise */
+-- 
+2.14.3
