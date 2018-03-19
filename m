@@ -1,53 +1,53 @@
 From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH 3/3] libata: Modify quirks for MX100 to limit NCQ_TRIM quirk to MU01 version
-Date: Mon, 19 Mar 2018 16:34:00 +0100
-Message-ID: <20180319153400.25694-3-hdegoede@redhat.com>
-References: <20180319153400.25694-1-hdegoede@redhat.com>
+Subject: [PATCH 1/3] libata: Apply NOLPM quirk to Crucial M500 480 and 960GB SSDs
+Date: Mon, 19 Mar 2018 16:33:58 +0100
+Message-ID: <20180319153400.25694-1-hdegoede@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180319153400.25694-1-hdegoede@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-When commit 9c7be59fc519af ("libata: Apply NOLPM quirk to Crucial MX100
-512GB SSDs") was added it inherited the ATA_HORKAGE_NO_NCQ_TRIM quirk
-from the existing "Crucial_CT*MX100*" entry, but that entry sets model_rev
-to "MU01", where as the entry adding the NOLPM quirk sets it to NULL.
+There have been reports of the Crucial M500 480GB model not working
+with LPM set to min_power / med_power_with_dipm level.
 
-This means that after this commit we no apply the NO_NCQ_TRIM quirk to
-all "Crucial_CT512MX100*" SSDs even if they have the fixed "MU02"
-firmware. This commit splits the "Crucial_CT512MX100*" quirk into 2
-quirks, one for the "MU01" firmware and one for all other firmware
-versions, so that we once again only apply the NO_NCQ_TRIM quirk to the
-"MU01" firmware version.
+It has not been tested with medium_power, but that typically has no
+measurable power-savings.
 
-Fixes: 9c7be59fc519af ("libata: Apply NOLPM quirk to ... MX100 512GB SSDs")
+Note the reporters Crucial_CT480M500SSD3 has a firmware version of MU03
+and there is a MU05 update available, but that update does not mention any
+LPM fixes in its changelog, so the quirk matches all firmware versions.
+
+In my experience the LPM problems with (older) Crucial SSDs seem to be
+limited to higher capacity versions of the SSDs (different firmware?),
+so this commit adds a NOLPM quirk for the 480 and 960GB versions of the
+M500, to avoid LPM causing issues with these SSDs.
+
 Cc: stable@vger.kernel.org
+Reported-and-tested-by: Martin Steigerwald <martin@lichtvoll.de>
 Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 ---
- drivers/ata/libata-core.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/ata/libata-core.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index bce9840526da..7431ccd03316 100644
+index aec609f80c4e..53400ce09818 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -4533,10 +4533,13 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	/* Crucial BX100 SSD 500GB has broken LPM support */
- 	{ "CT500BX100SSD1",		NULL,	ATA_HORKAGE_NOLPM },
- 
--	/* The 512GB version of the MX100 has both queued TRIM and LPM issues */
--	{ "Crucial_CT512MX100*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
-+	/* 512GB MX100 with MU01 firmware has both queued TRIM and LPM issues */
-+	{ "Crucial_CT512MX100*",	"MU01",	ATA_HORKAGE_NO_NCQ_TRIM |
+@@ -4538,6 +4538,14 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
  						ATA_HORKAGE_ZERO_AFTER_TRIM |
  						ATA_HORKAGE_NOLPM, },
-+	/* 512GB MX100 with newer firmware has only LPM issues */
-+	{ "Crucial_CT512MX100*",	NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM |
-+						ATA_HORKAGE_NOLPM, },
  
- 	/* 480GB+ M500 SSDs have both queued TRIM and LPM issues */
- 	{ "Crucial_CT480M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
++	/* 480GB+ M500 SSDs have both queued TRIM and LPM issues */
++	{ "Crucial_CT480M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
++						ATA_HORKAGE_ZERO_AFTER_TRIM |
++						ATA_HORKAGE_NOLPM, },
++	{ "Crucial_CT960M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
++						ATA_HORKAGE_ZERO_AFTER_TRIM |
++						ATA_HORKAGE_NOLPM, },
++
+ 	/* devices that don't properly handle queued TRIM commands */
+ 	{ "Micron_M500_*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
 -- 
 2.14.3
