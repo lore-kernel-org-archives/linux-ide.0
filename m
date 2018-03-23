@@ -1,96 +1,123 @@
-From: Alan Tull <atull-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 06/21] fpga: Remove depends on HAS_DMA in case of
-	platform dependency
-Date: Tue, 20 Mar 2018 13:20:11 -0500
-Message-ID: <CANk1AXRve3asPTufFYe=C_YPfyGwDpXxOWYZbWDq2bAnVkj00A@mail.gmail.com>
-References: <1521208314-4783-1-git-send-email-geert@linux-m68k.org>
-	<1521208314-4783-7-git-send-email-geert@linux-m68k.org>
-	<CANk1AXR3sv2=G-KsQh1p0rdcvy-3XZs6qVy5EMbcAMS6OSVzeQ@mail.gmail.com>
-	<CAMuHMdU-0VOs6MYrCaCrtRfBqGgaQfox1AgbExNNcYxVC6Uh-Q@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <CAMuHMdU-0VOs6MYrCaCrtRfBqGgaQfox1AgbExNNcYxVC6Uh-Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
-Cc: Ulf Hansson <ulf.hansson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wolfram Sang <wsa-z923LK4zBo2bacvFa/9K2g@public.gmane.org>, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fpga-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-remoteproc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, ALSA Development Mailing List <alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org>, Bjorn Andersson <bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, MTD Maling List <linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Linux I2C <linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux1394-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Stefan Wahren <stefan.wahren-eS4NqCHxEME@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, "James E . J . Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Jassi Brar <jassisinghbrar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Marek Vasut <marek.vasut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-serial-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matias Bjorling <mb@lig>
+From: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Subject: [PATCH] ata: ahci-platform: add reset control support
+Date: Fri, 23 Mar 2018 10:30:53 +0900
+Message-ID: <1521768653-11824-1-git-send-email-hayashi.kunihiko@socionext.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>
+Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Mar 20, 2018 at 5:04 AM, Geert Uytterhoeven
-<geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org> wrote:
+Add support to get and control a list of resets for the device
+as optional and shared. These resets must be kept de-asserted until
+the device is enabled.
 
-Hi Geert,
+This is specified as shared because some SoCs like UniPhier series
+have common reset controls with all ahci controller instances.
 
-> Hi Alan,
->
-> On Mon, Mar 19, 2018 at 5:06 PM, Alan Tull <atull-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
->> On Fri, Mar 16, 2018 at 8:51 AM, Geert Uytterhoeven
->> <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org> wrote:
->> This essentially removes this commit
->>
->> commit 1c8cb409491403036919dd1c6b45013dc8835a44
->> Author: Sudip Mukherjee <sudipm.mukherjee-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->> Date:   Wed Aug 3 13:45:46 2016 -0700
->>
->>     drivers/fpga/Kconfig: fix build failure
->>
->>     While building m32r allmodconfig the build is failing with the error:
->>
->>       ERROR: "bad_dma_ops" [drivers/fpga/zynq-fpga.ko] undefined!
->>
->>     Xilinx Zynq FPGA is using DMA but there was no dependency while
->>     building.
->>
->>     Link: http://lkml.kernel.org/r/1464346526-13913-1-git-send-email-sudipm.mukherjee-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
->>     Signed-off-by: Sudip Mukherjee <sudip.mukherjee-4yDnlxn2s6sWdaTGBSpHTA@public.gmane.org>
->>     Acked-by: Moritz Fischer <moritz.fischer-+aYTwkv1SeIAvxtiuMwx3w@public.gmane.org>
->>     Cc: Alan Tull <atull-yzvPICuk2ABMcg4IHK0kFoH6Mc4MB0Vx@public.gmane.org>
->>     Signed-off-by: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
->>     Signed-off-by: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
->
-> Yes it does. The major change is that the first (core) series introduces
-> all needed dummies to do successful compile-testing on NO_DMA=y platforms.
+Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+---
+ .../devicetree/bindings/ata/ahci-platform.txt      |  1 +
+ drivers/ata/ahci.h                                 |  1 +
+ drivers/ata/libahci_platform.c                     | 24 +++++++++++++++++++---
+ 3 files changed, 23 insertions(+), 3 deletions(-)
 
-OK yes, I looked at the first patch that does the fix.  Looks good.
-Thanks for doing this.
-
->
->>> Remove dependencies on HAS_DMA where a Kconfig symbol depends on another
->>> symbol that implies HAS_DMA, and, optionally, on "|| COMPILE_TEST".
->>> In most cases this other symbol is an architecture or platform specific
->>> symbol, or PCI.
->>>
->>> Generic symbols and drivers without platform dependencies keep their
->>> dependencies on HAS_DMA, to prevent compiling subsystems or drivers that
->>> cannot work anyway.
->>>
->>> This simplifies the dependencies, and allows to improve compile-testing.
->>>
->>> Signed-off-by: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
->>> Reviewed-by: Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->>> Acked-by: Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>
-Acked-by: Alan Tull <atull-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-
-Regards,
-Alan
-
->
-> Gr{oetje,eeting}s,
->
->                         Geert
->
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org
->
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
->                                 -- Linus Torvalds
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+index c760ecb..f4006d3 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+@@ -30,6 +30,7 @@ compatible:
+ Optional properties:
+ - dma-coherent      : Present if dma operations are coherent
+ - clocks            : a list of phandle + clock specifier pairs
++- resets            : a list of phandle + reset specifier pairs
+ - target-supply     : regulator for SATA target power
+ - phys              : reference to the SATA PHY node
+ - phy-names         : must be "sata-phy"
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 749fd94..47ec77a2 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -347,6 +347,7 @@ struct ahci_host_priv {
+ 	u32			em_msg_type;	/* EM message type */
+ 	bool			got_runtime_pm; /* Did we do pm_runtime_get? */
+ 	struct clk		*clks[AHCI_MAX_CLKS]; /* Optional */
++	struct reset_control	*rsts;		/* Optional */
+ 	struct regulator	**target_pwrs;	/* Optional */
+ 	/*
+ 	 * If platform uses PHYs. There is a 1:1 relation between the port number and
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index 341d0ef..3130db9 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -25,6 +25,7 @@
+ #include <linux/phy/phy.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/of_platform.h>
++#include <linux/reset.h>
+ #include "ahci.h"
+ 
+ static void ahci_host_stop(struct ata_host *host);
+@@ -195,7 +196,8 @@ EXPORT_SYMBOL_GPL(ahci_platform_disable_regulators);
+  * following order:
+  * 1) Regulator
+  * 2) Clocks (through ahci_platform_enable_clks)
+- * 3) Phys
++ * 3) Resets
++ * 4) Phys
+  *
+  * If resource enabling fails at any point the previous enabled resources
+  * are disabled in reverse order.
+@@ -215,12 +217,19 @@ int ahci_platform_enable_resources(struct ahci_host_priv *hpriv)
+ 	if (rc)
+ 		goto disable_regulator;
+ 
+-	rc = ahci_platform_enable_phys(hpriv);
++	rc = reset_control_deassert(hpriv->rsts);
+ 	if (rc)
+ 		goto disable_clks;
+ 
++	rc = ahci_platform_enable_phys(hpriv);
++	if (rc)
++		goto disable_resets;
++
+ 	return 0;
+ 
++disable_resets:
++	reset_control_assert(hpriv->rsts);
++
+ disable_clks:
+ 	ahci_platform_disable_clks(hpriv);
+ 
+@@ -239,12 +248,15 @@ EXPORT_SYMBOL_GPL(ahci_platform_enable_resources);
+  * following order:
+  * 1) Phys
+  * 2) Clocks (through ahci_platform_disable_clks)
+- * 3) Regulator
++ * 3) Resets
++ * 4) Regulator
+  */
+ void ahci_platform_disable_resources(struct ahci_host_priv *hpriv)
+ {
+ 	ahci_platform_disable_phys(hpriv);
+ 
++	reset_control_assert(hpriv->rsts);
++
+ 	ahci_platform_disable_clks(hpriv);
+ 
+ 	ahci_platform_disable_regulators(hpriv);
+@@ -393,6 +405,12 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev)
+ 		hpriv->clks[i] = clk;
+ 	}
+ 
++	hpriv->rsts = devm_reset_control_array_get_optional_shared(dev);
++	if (IS_ERR(hpriv->rsts)) {
++		rc = PTR_ERR(hpriv->rsts);
++		goto err_out;
++	}
++
+ 	hpriv->nports = child_nodes = of_get_child_count(dev->of_node);
+ 
+ 	/*
+-- 
+2.7.4
