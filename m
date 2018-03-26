@@ -1,44 +1,32 @@
-From: Philippe Ombredanne <pombredanne@nexb.com>
-Subject: Re: [PATCH v3] ata: add Amiga Gayle PATA controller driver
-Date: Fri, 23 Mar 2018 10:10:30 -0700
-Message-ID: <CAOFm3uE1UxeW-dPyFEzr5BiaWp6wLiJ4Z8X3qcH8Crr=b4nLWA@mail.gmail.com>
-References: <CGME20180316161549epcas1p23166605ea9922198486e0c07bd184ed8@epcas1p2.samsung.com>
- <24149929.AaKeg4hYhL@amdc3058> <CAOFm3uEb6r33V9=Maxd72pM6vdwfMkvhap01+zEd6bnDuEAVKw@mail.gmail.com>
- <20180319144101.GH2943022@devbig577.frc2.facebook.com>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH] ata: ahci-platform: add reset control support
+Date: Mon, 26 Mar 2018 17:24:44 -0500
+Message-ID: <20180326222444.dclqhstvrfi6sanr@rob-hp-laptop>
+References: <1521768653-11824-1-git-send-email-hayashi.kunihiko@socionext.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180319144101.GH2943022@devbig577.frc2.facebook.com>
+Content-Disposition: inline
+In-Reply-To: <1521768653-11824-1-git-send-email-hayashi.kunihiko@socionext.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, Michael Schmitz <schmitzmic@gmail.com>, Geert Uytterhoeven <geert@linux-m68k.org>, Andy Shevchenko <andy.shevchenko@gmail.com>, linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org, LKML <linux-kernel@vger.kernel.org>
+To: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Cc: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Mark Rutland <mark.rutland@arm.com>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Tejun,
+On Fri, Mar 23, 2018 at 10:30:53AM +0900, Kunihiko Hayashi wrote:
+> Add support to get and control a list of resets for the device
+> as optional and shared. These resets must be kept de-asserted until
+> the device is enabled.
+> 
+> This is specified as shared because some SoCs like UniPhier series
+> have common reset controls with all ahci controller instances.
+> 
+> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+> ---
+>  .../devicetree/bindings/ata/ahci-platform.txt      |  1 +
 
-On Mon, Mar 19, 2018 at 7:41 AM, Tejun Heo <tj@kernel.org> wrote:
-> Hello,
->
-> On Sat, Mar 17, 2018 at 10:24:18PM -0700, Philippe Ombredanne wrote:
->> > v2:
->> > - clarify license version (it should be GPL 2.0)
->> > - use SPDX header
->>
->> For the use of SPDX ids, you have my ack: (I am not qualified for the rest)
->>
->> Acked-by: Philippe Ombredanne <pombredanne@nexb.com>
->
-> I don't think it's a good idea to add this acked-by when it's purely
-> based on a single liner license tag.  I understand that you want to
-> encourage use of the new tags but this can be misleading and it'd be
-> great if you reconsider sending out acks like this.
->
-> Thanks.
+Reviewed-by: Rob Herring <robh@kernel.org>
 
-
-You have a good point. I find it confusing myself.
-Please, remove this ack!
-
--- 
-Cordially
-Philippe Ombredanne
+>  drivers/ata/ahci.h                                 |  1 +
+>  drivers/ata/libahci_platform.c                     | 24 +++++++++++++++++++---
+>  3 files changed, 23 insertions(+), 3 deletions(-)
