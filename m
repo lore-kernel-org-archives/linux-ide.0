@@ -1,30 +1,25 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH][next] libata: ensure host is free'd on error exit paths
-Date: Tue, 27 Mar 2018 06:57:05 -0700
-Message-ID: <20180327135705.GK1840639@devbig577.frc2.facebook.com>
-References: <20180327132601.12749-1-colin.king@canonical.com>
+Subject: Re: [PATCH v2] ata: ahci-platform: add reset control support
+Date: Tue, 27 Mar 2018 07:00:39 -0700
+Message-ID: <20180327140039.GM1840639@devbig577.frc2.facebook.com>
+References: <1522133832-7760-1-git-send-email-hayashi.kunihiko@socionext.com>
+ <20180327160411.A7F7.4A936039@socionext.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20180327132601.12749-1-colin.king@canonical.com>
+In-Reply-To: <20180327160411.A7F7.4A936039@socionext.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: linux-ide@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Mar 27, 2018 at 02:26:01PM +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> The host structure is not being kfree'd on two error exit paths
-> leading to memory leaks. Add in new err_free label and kfree host.
-> 
-> Detected by CoverityScan, CID#1466103 ("Resource leak")
-> 
-> Fixes: 2623c7a5f279 ("libata: add refcounting to ata_host")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+On Tue, Mar 27, 2018 at 04:04:12PM +0900, Kunihiko Hayashi wrote:
+> Sorry, please ignore this patch because of adding unneed lines.
+> I'll resend it.
 
-Applied to libata/for-4.17.
+Already applied.  Can you please send a delta patch if something's not
+right?
 
 Thanks.
 
