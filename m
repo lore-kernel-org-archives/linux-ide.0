@@ -1,128 +1,50 @@
-From: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Subject: [RESEND PATCH v2] ata: ahci-platform: add reset control support
-Date: Tue, 27 Mar 2018 16:28:21 +0900
-Message-ID: <1522135701-9964-1-git-send-email-hayashi.kunihiko@socionext.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH][next] libata: ensure host is free'd on error exit paths
+Date: Tue, 27 Mar 2018 14:26:01 +0100
+Message-ID: <20180327132601.12749-1-colin.king@canonical.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>
-Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Add support to get and control a list of resets for the device
-as optional and shared. These resets must be kept de-asserted until
-the device is enabled.
+From: Colin Ian King <colin.king@canonical.com>
 
-This is specified as shared because some SoCs like UniPhier series
-have common reset controls with all ahci controller instances.
+The host structure is not being kfree'd on two error exit paths
+leading to memory leaks. Add in new err_free label and kfree host.
 
-Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Reviewed-by: Hans de Goede <hdegoede@redhat.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
+Detected by CoverityScan, CID#1466103 ("Resource leak")
+
+Fixes: 2623c7a5f279 ("libata: add refcounting to ata_host")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
-Changes since v1:
-- add 'Reviewed-by:' lines
+ drivers/ata/libata-core.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
- .../devicetree/bindings/ata/ahci-platform.txt      |  1 +
- drivers/ata/ahci.h                                 |  1 +
- drivers/ata/libahci_platform.c                     | 24 +++++++++++++++++++---
- 3 files changed, 23 insertions(+), 3 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-index c760ecb..f4006d3 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -30,6 +30,7 @@ compatible:
- Optional properties:
- - dma-coherent      : Present if dma operations are coherent
- - clocks            : a list of phandle + clock specifier pairs
-+- resets            : a list of phandle + reset specifier pairs
- - target-supply     : regulator for SATA target power
- - phys              : reference to the SATA PHY node
- - phy-names         : must be "sata-phy"
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 749fd94..47ec77a2 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -347,6 +347,7 @@ struct ahci_host_priv {
- 	u32			em_msg_type;	/* EM message type */
- 	bool			got_runtime_pm; /* Did we do pm_runtime_get? */
- 	struct clk		*clks[AHCI_MAX_CLKS]; /* Optional */
-+	struct reset_control	*rsts;		/* Optional */
- 	struct regulator	**target_pwrs;	/* Optional */
- 	/*
- 	 * If platform uses PHYs. There is a 1:1 relation between the port number and
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index 341d0ef..3130db9 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -25,6 +25,7 @@
- #include <linux/phy/phy.h>
- #include <linux/pm_runtime.h>
- #include <linux/of_platform.h>
-+#include <linux/reset.h>
- #include "ahci.h"
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index dc2c48b8ae45..8bc71ca61e7f 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6108,7 +6108,7 @@ struct ata_host *ata_host_alloc(struct device *dev, int max_ports)
+ 		return NULL;
  
- static void ahci_host_stop(struct ata_host *host);
-@@ -195,7 +196,8 @@ EXPORT_SYMBOL_GPL(ahci_platform_disable_regulators);
-  * following order:
-  * 1) Regulator
-  * 2) Clocks (through ahci_platform_enable_clks)
-- * 3) Phys
-+ * 3) Resets
-+ * 4) Phys
-  *
-  * If resource enabling fails at any point the previous enabled resources
-  * are disabled in reverse order.
-@@ -215,12 +217,19 @@ int ahci_platform_enable_resources(struct ahci_host_priv *hpriv)
- 	if (rc)
- 		goto disable_regulator;
+ 	if (!devres_open_group(dev, NULL, GFP_KERNEL))
+-		return NULL;
++		goto err_free;
  
--	rc = ahci_platform_enable_phys(hpriv);
-+	rc = reset_control_deassert(hpriv->rsts);
- 	if (rc)
- 		goto disable_clks;
+ 	dr = devres_alloc(ata_devres_release, 0, GFP_KERNEL);
+ 	if (!dr)
+@@ -6140,6 +6140,8 @@ struct ata_host *ata_host_alloc(struct device *dev, int max_ports)
  
-+	rc = ahci_platform_enable_phys(hpriv);
-+	if (rc)
-+		goto disable_resets;
-+
- 	return 0;
+  err_out:
+ 	devres_release_group(dev, NULL);
++ err_free:
++	kfree(host);
+ 	return NULL;
+ }
  
-+disable_resets:
-+	reset_control_assert(hpriv->rsts);
-+
- disable_clks:
- 	ahci_platform_disable_clks(hpriv);
- 
-@@ -239,12 +248,15 @@ EXPORT_SYMBOL_GPL(ahci_platform_enable_resources);
-  * following order:
-  * 1) Phys
-  * 2) Clocks (through ahci_platform_disable_clks)
-- * 3) Regulator
-+ * 3) Resets
-+ * 4) Regulator
-  */
- void ahci_platform_disable_resources(struct ahci_host_priv *hpriv)
- {
- 	ahci_platform_disable_phys(hpriv);
- 
-+	reset_control_assert(hpriv->rsts);
-+
- 	ahci_platform_disable_clks(hpriv);
- 
- 	ahci_platform_disable_regulators(hpriv);
-@@ -393,6 +405,12 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev)
- 		hpriv->clks[i] = clk;
- 	}
- 
-+	hpriv->rsts = devm_reset_control_array_get_optional_shared(dev);
-+	if (IS_ERR(hpriv->rsts)) {
-+		rc = PTR_ERR(hpriv->rsts);
-+		goto err_out;
-+	}
-+
- 	hpriv->nports = child_nodes = of_get_child_count(dev->of_node);
- 
- 	/*
 -- 
-2.7.4
+2.15.1
