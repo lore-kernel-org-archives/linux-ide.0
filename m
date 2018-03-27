@@ -1,128 +1,145 @@
 From: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Subject: [PATCH v2] ata: ahci-platform: add reset control support
-Date: Tue, 27 Mar 2018 15:57:12 +0900
-Message-ID: <1522133832-7760-1-git-send-email-hayashi.kunihiko@socionext.com>
+Subject: Re: [PATCH v2] ata: ahci-platform: add reset control support
+Date: Tue, 27 Mar 2018 16:04:12 +0900
+Message-ID: <20180327160411.A7F7.4A936039@socionext.com>
+References: <1522133832-7760-1-git-send-email-hayashi.kunihiko@socionext.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1522133832-7760-1-git-send-email-hayashi.kunihiko@socionext.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>
-Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Add support to get and control a list of resets for the device
-as optional and shared. These resets must be kept de-asserted until
-the device is enabled.
+Sorry, please ignore this patch because of adding unneed lines.
+I'll resend it.
 
-This is specified as shared because some SoCs like UniPhier series
-have common reset controls with all ahci controller instances.
+Thank you,
 
-Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Reviewed-by: Hans de Goede <hdegoede@redhat.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
+On Tue, 27 Mar 2018 15:57:12 +0900
+Kunihiko Hayashi <hayashi.kunihiko@socionext.com> wrote:
+
+> Add support to get and control a list of resets for the device
+> as optional and shared. These resets must be kept de-asserted until
+> the device is enabled.
+> 
+> This is specified as shared because some SoCs like UniPhier series
+> have common reset controls with all ahci controller instances.
+> 
+> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+> Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+> Reviewed-by: Rob Herring <robh@kernel.org>
+> ---
+> Changes since v1:
+> - add 'Reviewed-by:' lines
+> 
+> .../devicetree/bindings/ata/ahci-platform.txt      |  1 +
+>  drivers/ata/ahci.h                                 |  1 +
+>  drivers/ata/libahci_platform.c                     | 24 +++++++++++++++++++---
+>  3 files changed, 23 insertions(+), 3 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> index c760ecb..f4006d3 100644
+> --- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> @@ -30,6 +30,7 @@ compatible:
+>  Optional properties:
+>  - dma-coherent      : Present if dma operations are coherent
+>  - clocks            : a list of phandle + clock specifier pairs
+> +- resets            : a list of phandle + reset specifier pairs
+>  - target-supply     : regulator for SATA target power
+>  - phys              : reference to the SATA PHY node
+>  - phy-names         : must be "sata-phy"
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> index a9d996e..4356ef1 100644
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -350,6 +350,7 @@ struct ahci_host_priv {
+>  	u32			em_msg_type;	/* EM message type */
+>  	bool			got_runtime_pm; /* Did we do pm_runtime_get? */
+>  	struct clk		*clks[AHCI_MAX_CLKS]; /* Optional */
+> +	struct reset_control	*rsts;		/* Optional */
+>  	struct regulator	**target_pwrs;	/* Optional */
+>  	/*
+>  	 * If platform uses PHYs. There is a 1:1 relation between the port number and
+> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> index 30cc8f1..46a7624 100644
+> --- a/drivers/ata/libahci_platform.c
+> +++ b/drivers/ata/libahci_platform.c
+> @@ -25,6 +25,7 @@
+>  #include <linux/phy/phy.h>
+>  #include <linux/pm_runtime.h>
+>  #include <linux/of_platform.h>
+> +#include <linux/reset.h>
+>  #include "ahci.h"
+>  
+>  static void ahci_host_stop(struct ata_host *host);
+> @@ -195,7 +196,8 @@ EXPORT_SYMBOL_GPL(ahci_platform_disable_regulators);
+>   * following order:
+>   * 1) Regulator
+>   * 2) Clocks (through ahci_platform_enable_clks)
+> - * 3) Phys
+> + * 3) Resets
+> + * 4) Phys
+>   *
+>   * If resource enabling fails at any point the previous enabled resources
+>   * are disabled in reverse order.
+> @@ -215,12 +217,19 @@ int ahci_platform_enable_resources(struct ahci_host_priv *hpriv)
+>  	if (rc)
+>  		goto disable_regulator;
+>  
+> -	rc = ahci_platform_enable_phys(hpriv);
+> +	rc = reset_control_deassert(hpriv->rsts);
+>  	if (rc)
+>  		goto disable_clks;
+>  
+> +	rc = ahci_platform_enable_phys(hpriv);
+> +	if (rc)
+> +		goto disable_resets;
+> +
+>  	return 0;
+>  
+> +disable_resets:
+> +	reset_control_assert(hpriv->rsts);
+> +
+>  disable_clks:
+>  	ahci_platform_disable_clks(hpriv);
+>  
+> @@ -239,12 +248,15 @@ EXPORT_SYMBOL_GPL(ahci_platform_enable_resources);
+>   * following order:
+>   * 1) Phys
+>   * 2) Clocks (through ahci_platform_disable_clks)
+> - * 3) Regulator
+> + * 3) Resets
+> + * 4) Regulator
+>   */
+>  void ahci_platform_disable_resources(struct ahci_host_priv *hpriv)
+>  {
+>  	ahci_platform_disable_phys(hpriv);
+>  
+> +	reset_control_assert(hpriv->rsts);
+> +
+>  	ahci_platform_disable_clks(hpriv);
+>  
+>  	ahci_platform_disable_regulators(hpriv);
+> @@ -393,6 +405,12 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev)
+>  		hpriv->clks[i] = clk;
+>  	}
+>  
+> +	hpriv->rsts = devm_reset_control_array_get_optional_shared(dev);
+> +	if (IS_ERR(hpriv->rsts)) {
+> +		rc = PTR_ERR(hpriv->rsts);
+> +		goto err_out;
+> +	}
+> +
+>  	hpriv->nports = child_nodes = of_get_child_count(dev->of_node);
+>  
+>  	/*
+> -- 
+> 2.7.4
+
 ---
-Changes since v1:
-- add 'Reviewed-by:' lines
-
-.../devicetree/bindings/ata/ahci-platform.txt      |  1 +
- drivers/ata/ahci.h                                 |  1 +
- drivers/ata/libahci_platform.c                     | 24 +++++++++++++++++++---
- 3 files changed, 23 insertions(+), 3 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-index c760ecb..f4006d3 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -30,6 +30,7 @@ compatible:
- Optional properties:
- - dma-coherent      : Present if dma operations are coherent
- - clocks            : a list of phandle + clock specifier pairs
-+- resets            : a list of phandle + reset specifier pairs
- - target-supply     : regulator for SATA target power
- - phys              : reference to the SATA PHY node
- - phy-names         : must be "sata-phy"
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index a9d996e..4356ef1 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -350,6 +350,7 @@ struct ahci_host_priv {
- 	u32			em_msg_type;	/* EM message type */
- 	bool			got_runtime_pm; /* Did we do pm_runtime_get? */
- 	struct clk		*clks[AHCI_MAX_CLKS]; /* Optional */
-+	struct reset_control	*rsts;		/* Optional */
- 	struct regulator	**target_pwrs;	/* Optional */
- 	/*
- 	 * If platform uses PHYs. There is a 1:1 relation between the port number and
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index 30cc8f1..46a7624 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -25,6 +25,7 @@
- #include <linux/phy/phy.h>
- #include <linux/pm_runtime.h>
- #include <linux/of_platform.h>
-+#include <linux/reset.h>
- #include "ahci.h"
- 
- static void ahci_host_stop(struct ata_host *host);
-@@ -195,7 +196,8 @@ EXPORT_SYMBOL_GPL(ahci_platform_disable_regulators);
-  * following order:
-  * 1) Regulator
-  * 2) Clocks (through ahci_platform_enable_clks)
-- * 3) Phys
-+ * 3) Resets
-+ * 4) Phys
-  *
-  * If resource enabling fails at any point the previous enabled resources
-  * are disabled in reverse order.
-@@ -215,12 +217,19 @@ int ahci_platform_enable_resources(struct ahci_host_priv *hpriv)
- 	if (rc)
- 		goto disable_regulator;
- 
--	rc = ahci_platform_enable_phys(hpriv);
-+	rc = reset_control_deassert(hpriv->rsts);
- 	if (rc)
- 		goto disable_clks;
- 
-+	rc = ahci_platform_enable_phys(hpriv);
-+	if (rc)
-+		goto disable_resets;
-+
- 	return 0;
- 
-+disable_resets:
-+	reset_control_assert(hpriv->rsts);
-+
- disable_clks:
- 	ahci_platform_disable_clks(hpriv);
- 
-@@ -239,12 +248,15 @@ EXPORT_SYMBOL_GPL(ahci_platform_enable_resources);
-  * following order:
-  * 1) Phys
-  * 2) Clocks (through ahci_platform_disable_clks)
-- * 3) Regulator
-+ * 3) Resets
-+ * 4) Regulator
-  */
- void ahci_platform_disable_resources(struct ahci_host_priv *hpriv)
- {
- 	ahci_platform_disable_phys(hpriv);
- 
-+	reset_control_assert(hpriv->rsts);
-+
- 	ahci_platform_disable_clks(hpriv);
- 
- 	ahci_platform_disable_regulators(hpriv);
-@@ -393,6 +405,12 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev)
- 		hpriv->clks[i] = clk;
- 	}
- 
-+	hpriv->rsts = devm_reset_control_array_get_optional_shared(dev);
-+	if (IS_ERR(hpriv->rsts)) {
-+		rc = PTR_ERR(hpriv->rsts);
-+		goto err_out;
-+	}
-+
- 	hpriv->nports = child_nodes = of_get_child_count(dev->of_node);
- 
- 	/*
--- 
-2.7.4
+Best Regards,
+Kunihiko Hayashi
