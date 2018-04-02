@@ -1,90 +1,58 @@
-From: Robert Jarzmik <robert.jarzmik@free.fr>
-Subject: [PATCH 04/15] media: pxa_camera: remove the dmaengine compat need
-Date: Mon,  2 Apr 2018 16:26:45 +0200
-Message-ID: <20180402142656.26815-5-robert.jarzmik@free.fr>
-References: <20180402142656.26815-1-robert.jarzmik@free.fr>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: 4.16-rc2+git: pata_serverworks: hanging ata detection thread on
+ HP DL380G3
+Date: Mon, 2 Apr 2018 09:24:25 -0700
+Message-ID: <20180402162425.GB388343@devbig577.frc2.facebook.com>
+References: <alpine.LRH.2.21.1802261049140.4893@math.ut.ee>
+ <alpine.LRH.2.21.1803291153070.12825@math.ut.ee>
+ <CGME20180329101255epcas2p22aeb95d869cdd2954bb9183037dace5f@epcas2p2.samsung.com>
+ <1597679.yzYZqmDdA5@amdc3058>
+ <alpine.LRH.2.21.1803301144380.11026@math.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20180402142656.26815-1-robert.jarzmik@free.fr>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Daniel Mack <daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>, Robert Jarzmik <robert.jarzmik@free.fr>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, Vinod Koul <vinod.koul@intel.com>, Mauro Carvalho Chehab <mchehab@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Marek Vasut <marek.vasut@gmail.com>, Richard Weinberger <richard@nod.at>, Cyrille Pitchen <cyrille.pitchen@wedev4u.fr>, Nicolas Pitre <nico@fluxnic.net>, Samuel Ortiz <samuel@sortiz.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, Ar
-Cc: devel@driverdev.osuosl.org, alsa-devel@alsa-project.org, netdev@vger.kernel.org, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org, dmaengine@vger.kernel.org, =?UTF-8?q?Niklas=20S=C3=B6derlund?= <niklas.soderlund+renesas@ragnatech.se>, linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.LRH.2.21.1803301144380.11026@math.ut.ee>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Meelis Roos <mroos@linux.ee>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Linux Kernel list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-From: Robert Jarzmik <robert.jarzmik@renault.com>
+Hello,
 
-As the pxa architecture switched towards the dmaengine slave map, the
-old compatibility mechanism to acquire the dma requestor line number and
-priority are not needed anymore.
+On Fri, Mar 30, 2018 at 11:47:24AM +0300, Meelis Roos wrote:
+> Added CC-s, start of the thread is at 
+> https://lkml.org/lkml/2018/2/26/165
+> 
+> > > > 4.16 git bootup on HP Proliant DL380 G3 pauses for a a minute or two and 
+> > > > then continues with "blocked for more than 120 seconds" message with 
+> > > > libata detection functions in ther stack - 
+> > > > async_synchronize_cookie_domain() as the last. It seems to happen during 
+> > > > IDE CD-ROM detection (detected before but registered as sr0 after the 
+> > > > warning). After detection, the eject button on the drive did not work.
+> > > > 
+> > > > 
+> > > > pata_serverworks is the libata driver in use.
+> > 
+> > There were no changes to pata_serverworks since 2014 and libata changes
+> > in v4.16 look obviously correct..
+> > 
+> > > This is still the same in 4.16.0-rc7-00062-g0b412605ef5f.
+> > 
+> > Any chance that you could bisect this issue?
+> 
+> Bisected to the following commit:
+> 
+> 358f70da49d77c43f2ca11b5da584213b2add29c is the first bad commit
+> commit 358f70da49d77c43f2ca11b5da584213b2add29c
+> Author: Tejun Heo <tj@kernel.org>
+> Date:   Tue Jan 9 08:29:50 2018 -0800
+> 
+>     blk-mq: make blk_abort_request() trigger timeout path
 
-This patch simplifies the dma resource acquisition, using the more
-generic function dma_request_slave_channel().
+Can you share the .config file?
 
-Signed-off-by: Robert Jarzmik <robert.jarzmik@free.fr>
----
- drivers/media/platform/pxa_camera.c | 22 +++-------------------
- 1 file changed, 3 insertions(+), 19 deletions(-)
+Thanks.
 
-diff --git a/drivers/media/platform/pxa_camera.c b/drivers/media/platform/pxa_camera.c
-index c71a00736541..4c82d1880753 100644
---- a/drivers/media/platform/pxa_camera.c
-+++ b/drivers/media/platform/pxa_camera.c
-@@ -2357,8 +2357,6 @@ static int pxa_camera_probe(struct platform_device *pdev)
- 		.src_maxburst = 8,
- 		.direction = DMA_DEV_TO_MEM,
- 	};
--	dma_cap_mask_t mask;
--	struct pxad_param params;
- 	char clk_name[V4L2_CLK_NAME_SIZE];
- 	int irq;
- 	int err = 0, i;
-@@ -2432,34 +2430,20 @@ static int pxa_camera_probe(struct platform_device *pdev)
- 	pcdev->base = base;
- 
- 	/* request dma */
--	dma_cap_zero(mask);
--	dma_cap_set(DMA_SLAVE, mask);
--	dma_cap_set(DMA_PRIVATE, mask);
--
--	params.prio = 0;
--	params.drcmr = 68;
--	pcdev->dma_chans[0] =
--		dma_request_slave_channel_compat(mask, pxad_filter_fn,
--						 &params, &pdev->dev, "CI_Y");
-+	pcdev->dma_chans[0] = dma_request_slave_channel(&pdev->dev, "CI_Y");
- 	if (!pcdev->dma_chans[0]) {
- 		dev_err(&pdev->dev, "Can't request DMA for Y\n");
- 		return -ENODEV;
- 	}
- 
--	params.drcmr = 69;
--	pcdev->dma_chans[1] =
--		dma_request_slave_channel_compat(mask, pxad_filter_fn,
--						 &params, &pdev->dev, "CI_U");
-+	pcdev->dma_chans[1] = dma_request_slave_channel(&pdev->dev, "CI_U");
- 	if (!pcdev->dma_chans[1]) {
- 		dev_err(&pdev->dev, "Can't request DMA for Y\n");
- 		err = -ENODEV;
- 		goto exit_free_dma_y;
- 	}
- 
--	params.drcmr = 70;
--	pcdev->dma_chans[2] =
--		dma_request_slave_channel_compat(mask, pxad_filter_fn,
--						 &params, &pdev->dev, "CI_V");
-+	pcdev->dma_chans[2] = dma_request_slave_channel(&pdev->dev, "CI_V");
- 	if (!pcdev->dma_chans[2]) {
- 		dev_err(&pdev->dev, "Can't request DMA for V\n");
- 		err = -ENODEV;
 -- 
-2.11.0
+tejun
