@@ -1,29 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [GIT PULL] libata changes for v4.17-rc1
-Date: Wed, 4 Apr 2018 10:06:17 -0700
-Message-ID: <20180404170617.GB3126663@devbig577.frc2.facebook.com>
-References: <20180403143257.GN388343@devbig577.frc2.facebook.com>
- <CA+55aFyU+MnzfTfkvCgNJp+QZJdyfYrJmdzy0Z_PbxOcBTfByA@mail.gmail.com>
+From: Robert Jarzmik <robert.jarzmik@free.fr>
+Subject: Re: [PATCH 00/15] ARM: pxa: switch to DMA slave maps
+Date: Wed, 04 Apr 2018 21:49:26 +0200
+Message-ID: <874lkq4urd.fsf@belgarion.home>
+References: <20180402142656.26815-1-robert.jarzmik@free.fr>
+ <CAPDyKFot9dAST2jQL5s8E4U=bCHxkio=uwpqPd6S0N4FWJRB-w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CA+55aFyU+MnzfTfkvCgNJp+QZJdyfYrJmdzy0Z_PbxOcBTfByA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: IDE-ML <linux-ide@vger.kernel.org>, Hans de Goede <hdegoede@redhat.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <CAPDyKFot9dAST2jQL5s8E4U=bCHxkio=uwpqPd6S0N4FWJRB-w@mail.gmail.com>
+ (Ulf Hansson's message of "Tue, 3 Apr 2018 17:08:42 +0200")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: alsa-devel@alsa-project.org, Jaroslav Kysela <perex@perex.cz>, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-mtd@lists.infradead.org, driverdevel <devel@driverdev.osuosl.org>, Boris Brezillon <boris.brezillon@free-electrons.com>, Vinod Koul <vinod.koul@intel.com>, Richard Weinberger <richard@nod.at>, Takashi Iwai <tiwai@suse.com>, Marek Vasut <marek.vasut@gmail.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, linux-media@vger.kernel.org, Samuel Ortiz <samuel@sortiz.org>, Arnd Bergmann <arnd@arndb.de>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Haojian Zhuang <haojian.zhuang@gmail.com>, dmaengine@vger.kernel.org, Mark Brown <broonie@kernel.org>, Mauro Carvalho Chehab <mchehab@kernel.org>, Linux ARM <linux-arm-kernel@lists.infradead.org>, Nicolas Pitre <nico@fluxnic.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-mmc@vger.ke
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Apr 03, 2018 at 05:59:04PM -0700, Linus Torvalds wrote:
-> People hotplug ATA _controllers_?   :-O
-> 
-> As opposed to just the disks a'la eSATA?
+Ulf Hansson <ulf.hansson@linaro.org> writes:
 
-Heh, yeah, it's surprising.  IIUC, it's people trying pcie hotplug (I
-don't know whether they try physically) on SAS controllers on fancy
-machines.
+> On 2 April 2018 at 16:26, Robert Jarzmik <robert.jarzmik@free.fr> wrote:
+>> Hi,
+>>
+>> This serie is aimed at removing the dmaengine slave compat use, and transfer
+>> knowledge of the DMA requestors into architecture code.
+>> As this looks like a patch bomb, each maintainer expressing for his tree either
+>> an Ack or "I want to take through my tree" will be spared in the next iterations
+>> of this serie.
+>
+> Perhaps an option is to send this hole series as PR for 3.17 rc1, that
+> would removed some churns and make this faster/easier? Well, if you
+> receive the needed acks of course.
+For 3.17-rc1 it looks a bit optimistic with the review time ... If I have all
+acks, I'll queue it into my pxa tree. If at least one maintainer withholds his
+ack, the end of the serie (phase 3) won't be applied until it is sorted out.
 
-Thanks.
+Cheers.
 
--- 
-tejun
+--
+Robert
