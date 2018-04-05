@@ -1,78 +1,87 @@
 From: Thierry Reding <thierry.reding@gmail.com>
 Subject: Re: [PATCH] ata: ahci-platform: add reset control support
-Date: Thu, 5 Apr 2018 11:54:29 +0200
-Message-ID: <20180405095429.GA7506@ulmo>
+Date: Thu, 5 Apr 2018 11:59:24 +0200
+Message-ID: <20180405095924.GB7506@ulmo>
 References: <1521768653-11824-1-git-send-email-hayashi.kunihiko@socionext.com>
+ <20180405095429.GA7506@ulmo>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="3MwIy2ne0vdjdPXF"
+        protocol="application/pgp-signature"; boundary="tsOsTdHNUZQcU9Ye"
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1521768653-11824-1-git-send-email-hayashi.kunihiko@socionext.com>
+In-Reply-To: <20180405095429.GA7506@ulmo>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>, Tejun Heo <tj@kernel.org>, Patrice Chotard <patrice.chotard@st.com>, Matthias Brugger <matthias.bgg@gmail.com>
 Cc: Hans de Goede <hdegoede@redhat.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
 
---3MwIy2ne0vdjdPXF
+--tsOsTdHNUZQcU9Ye
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Mar 23, 2018 at 10:30:53AM +0900, Kunihiko Hayashi wrote:
-> Add support to get and control a list of resets for the device
-> as optional and shared. These resets must be kept de-asserted until
-> the device is enabled.
+On Thu, Apr 05, 2018 at 11:54:29AM +0200, Thierry Reding wrote:
+> On Fri, Mar 23, 2018 at 10:30:53AM +0900, Kunihiko Hayashi wrote:
+> > Add support to get and control a list of resets for the device
+> > as optional and shared. These resets must be kept de-asserted until
+> > the device is enabled.
+> >=20
+> > This is specified as shared because some SoCs like UniPhier series
+> > have common reset controls with all ahci controller instances.
+> >=20
+> > Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+> > ---
+> >  .../devicetree/bindings/ata/ahci-platform.txt      |  1 +
+> >  drivers/ata/ahci.h                                 |  1 +
+> >  drivers/ata/libahci_platform.c                     | 24 ++++++++++++++=
++++++---
+> >  3 files changed, 23 insertions(+), 3 deletions(-)
 >=20
-> This is specified as shared because some SoCs like UniPhier series
-> have common reset controls with all ahci controller instances.
+> This causes a regression on Tegra because we explicitly request the
+> resets after the call to ahci_platform_get_resources().
 >=20
-> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-> ---
->  .../devicetree/bindings/ata/ahci-platform.txt      |  1 +
->  drivers/ata/ahci.h                                 |  1 +
->  drivers/ata/libahci_platform.c                     | 24 ++++++++++++++++=
-+++---
->  3 files changed, 23 insertions(+), 3 deletions(-)
+> From a quick look, ahci_mtk and ahci_st are in the same boat, adding the
+> corresponding maintainers to Cc.
+>=20
+> Patrice, Matthias: does SATA still work for you after this patch? This
+> has been in linux-next since next-20180327.
+>=20
+> Given how this is one of the more hardware-specific bits, perhaps a
+> better way to do this is to move reset handling into a Uniphier driver
+> much like Tegra, Mediatek and ST?
+>=20
+> That said, I don't see SATA support for any of the Socionext hardware
+> either in the DT bindings or drivers/ata, so perhaps it'd be best to
+> back this out again until we have something that's more well tested?
 
-This causes a regression on Tegra because we explicitly request the
-resets after the call to ahci_platform_get_resources().
+Tejun,
 
-=46rom a quick look, ahci_mtk and ahci_st are in the same boat, adding the
-corresponding maintainers to Cc.
-
-Patrice, Matthias: does SATA still work for you after this patch? This
-has been in linux-next since next-20180327.
-
-Given how this is one of the more hardware-specific bits, perhaps a
-better way to do this is to move reset handling into a Uniphier driver
-much like Tegra, Mediatek and ST?
-
-That said, I don't see SATA support for any of the Socionext hardware
-either in the DT bindings or drivers/ata, so perhaps it'd be best to
-back this out again until we have something that's more well tested?
+I just noticed that Linus already pulled this for v4.17, so backing out
+isn't going to work anymore. Still, I don't think this is tested well
+enough, and given the lack of users of this I think a revert is the best
+option at this point.
 
 Thierry
 
---3MwIy2ne0vdjdPXF
+--tsOsTdHNUZQcU9Ye
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlrF8lEACgkQ3SOs138+
-s6H7EA//fqnLBMRIi+b3go4vL4naTiR/ajPZkj30Gl9LMUb0uprVgnPOC1ClhAEd
-VUqcL75MwXydIasQixfzTEmX2DPXGC4EYaPY1Zv/FDgnC0PXJMOezup8W40mHZKU
-9imul0pq7on0izFRB32xb45s2BXHAVpAyB/uEVthyWopnWK6cvGlaL5BdbHgtVhj
-GaajtH+v6+LY54zquz0noREZqFqDS5ugUHFkZq7Vquza99K2TAs9Jw9O9FaloNZq
-/rwKurnds9aeegnt6661XK5mYjuGzlA0Zwf4zk9uzU71pGmKDBNBu6WEwvTSM1jK
-l8/io7YCmbr4mVbzzoLn3hzzI9loK0ohL3e7mVJO+mORJZBCTjOzBIz+bQOdkU4y
-BQyiX8RK1tl4q1beYKV0HD6sffXiJDTBdHNMON3UNqF9MCOyAaX4t5Nr9MITUsaz
-NggHnWunPeJD0TPDEVrdYGQHj/z4Ri6AAEcuBW6KsPrwLOxRbM+qAw3VF29Ur1fC
-4v5e7Olr1ltu/NmvBiiHEELk8lnVmgZwVacpVLv2a8JZ2XMp0WH9lxVXB57SoEQ7
-KdrmDfYTcpyeCIOrUqdaz64CDsWGbZL+X048KoZmoxV5I5VEcXjCOJzd49CJYNtW
-J9bCVROflae3vM95hOt98CnC1ewPDe/SlR1HX7cySdFdAQxOaXs=
-=5EOF
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlrF83wACgkQ3SOs138+
+s6FsGw/+NGCyYB3zZfQTbmWc6w7aQKkTM68wBIKQ8CfnEP1Jt95ldFZqpiMyWw+7
+F1TWFxuKgn7t0GcABzlczYHvAkxDE9u+JFyuOh8vzLQctkOcLFmhlegKjwrT8UUp
++0MVxMtNptCyQ2qF9Z65uKuRbRgnltHtaapt6OpS9mBf15ssvC8NMxl/l2FSRcbk
+dPJ3kxTmx5CAS3SHMQV81kO+vJ3HL2zIcDKRIbJfj6lIM0vPtSOWWety4eEVxJpo
+cMejkZfmeQ7iLO5EbAkmeG44RnWsk75BzUN/QKnyPRUlL4owsTRu9HyY5f3K2vO9
+Ap0giLD2y3Rp5pLwqW68BVP0+bco362Yv9d6XEjCma1Pq5cBDNX3F+ig3p8+t0j6
+Ijdzk5G5vKxo3f0xS7L8IkctvQhmSAsRG90BPO/8rDpWxopv3RAWFjYQ18EtZG3q
+jI8MZCQsUF/+JX8XM5olnNj0q9MIaFncBX7Sd9kcEmPzkdDlWhRMBcVjO6Mj+4qm
+HjoMFhrfadK0AhO7TD84SLIC+puGu5blfB6GBfsAcx1e7vAL8fRZe92p3TKm8wT1
+F4taQb3ysHufJySo3ykBN7vkblSm5ZhBbbxgMWyvYQ2AvSrG+ejK7m25UZ2EZxSU
+lluwb4yIdnyo3FHbX25akiz/Ph7F9iT1bGaRLzs4SAHl+/xV64U=
+=Z69j
 -----END PGP SIGNATURE-----
 
---3MwIy2ne0vdjdPXF--
+--tsOsTdHNUZQcU9Ye--
