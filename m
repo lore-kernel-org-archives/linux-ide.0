@@ -1,102 +1,113 @@
-From: Hans de Goede <hdegoede@redhat.com>
+From: Patrice CHOTARD <patrice.chotard-qxv4g6HH51o@public.gmane.org>
 Subject: Re: [PATCH] ata: ahci-platform: add reset control support
-Date: Thu, 5 Apr 2018 16:00:13 +0200
-Message-ID: <6ce60a0b-0409-016a-d29c-91b8b9e2ad07@redhat.com>
+Date: Thu, 5 Apr 2018 14:00:23 +0000
+Message-ID: <aefa4c12-e976-3a0e-851c-0433a751521d@st.com>
 References: <1521768653-11824-1-git-send-email-hayashi.kunihiko@socionext.com>
  <20180405095429.GA7506@ulmo> <e33f54ed-2848-9a4f-9669-7fada8c60326@st.com>
  <1f7d0738-1963-21c5-c293-e46fb0214ecf@redhat.com>
- <20180405135435.GA10860@ulmo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180405135435.GA10860@ulmo>
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+In-Reply-To: <1f7d0738-1963-21c5-c293-e46fb0214ecf-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Patrice CHOTARD <patrice.chotard@st.com>, Kunihiko Hayashi <hayashi.kunihiko@socionext.com>, Tejun Heo <tj@kernel.org>, Matthias Brugger <matthias.bgg@gmail.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>
+Content-ID: <6345CBF3E10ACD43A7A3A801FDDD0447-qxv4g6HH51o@public.gmane.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
+List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
+Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Thierry Reding <thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kunihiko Hayashi <hayashi.kunihiko-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Matthias Brugger <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-Hi,
+Hi Hans
 
-On 05-04-18 15:54, Thierry Reding wrote:
-> On Thu, Apr 05, 2018 at 03:27:03PM +0200, Hans de Goede wrote:
->> Hi,
+On 04/05/2018 03:27 PM, Hans de Goede wrote:
+> Hi,
+> =
+
+> On 05-04-18 15:17, Patrice CHOTARD wrote:
+>> Hi Thierry
 >>
->> On 05-04-18 15:17, Patrice CHOTARD wrote:
->>> Hi Thierry
->>>
->>> On 04/05/2018 11:54 AM, Thierry Reding wrote:
->>>> On Fri, Mar 23, 2018 at 10:30:53AM +0900, Kunihiko Hayashi wrote:
->>>>> Add support to get and control a list of resets for the device
->>>>> as optional and shared. These resets must be kept de-asserted until
->>>>> the device is enabled.
->>>>>
->>>>> This is specified as shared because some SoCs like UniPhier series
->>>>> have common reset controls with all ahci controller instances.
->>>>>
->>>>> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
->>>>> ---
->>>>>     .../devicetree/bindings/ata/ahci-platform.txt      |  1 +
->>>>>     drivers/ata/ahci.h                                 |  1 +
->>>>>     drivers/ata/libahci_platform.c                     | 24 +++++++++++++++++++---
->>>>>     3 files changed, 23 insertions(+), 3 deletions(-)
+>> On 04/05/2018 11:54 AM, Thierry Reding wrote:
+>>> On Fri, Mar 23, 2018 at 10:30:53AM +0900, Kunihiko Hayashi wrote:
+>>>> Add support to get and control a list of resets for the device
+>>>> as optional and shared. These resets must be kept de-asserted until
+>>>> the device is enabled.
 >>>>
->>>> This causes a regression on Tegra because we explicitly request the
->>>> resets after the call to ahci_platform_get_resources().
->>>
->>> I confirm, we got exactly the same behavior on STi platform.
->>>
+>>>> This is specified as shared because some SoCs like UniPhier series
+>>>> have common reset controls with all ahci controller instances.
 >>>>
->>>>    From a quick look, ahci_mtk and ahci_st are in the same boat, adding the
->>>> corresponding maintainers to Cc.
->>>>
->>>> Patrice, Matthias: does SATA still work for you after this patch? This
->>>> has been in linux-next since next-20180327.
+>>>> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org>
+>>>> ---
+>>>> =A0=A0 .../devicetree/bindings/ata/ahci-platform.txt=A0=A0=A0=A0=A0 |=
+=A0 1 +
+>>>> =A0=A0 drivers/ata/ahci.h=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 |=A0 1 +
+>>>> =A0=A0 drivers/ata/libahci_platform.c=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0 | 24 =
+
+>>>> +++++++++++++++++++---
+>>>> =A0=A0 3 files changed, 23 insertions(+), 3 deletions(-)
 >>>
->>> SATA is still working after this patch, but a kernel warning is
->>> triggered due to the fact that resets are both requested by
->>> libahci_platform and by ahci_st driver.
+>>> This causes a regression on Tegra because we explicitly request the
+>>> resets after the call to ahci_platform_get_resources().
 >>
->> So in your case you might be able to remove the reset handling
->> from the ahci_st driver and rely on the new libahci_platform
->> handling instead? If that works that seems like a win to me.
+>> I confirm, we got exactly the same behavior on STi platform.
 >>
->> As said elsewhere in this thread I think it makes sense to keep (or re-add
->> after a revert) the libahci_platform reset code, but make it conditional
->> on a flag passed to ahci_platform_get_resources(). This way we get
->> the shared code for most cases and platforms which need special handling
->> can opt-out.
-> 
-> Agreed, although I prefer such helpers to be opt-in, rather than
-> opt-out. In my experience that tends make the helpers more resilient to
-> this kind of regression. It also simplifies things because instead of
-> drivers saying "I want all the helpers except this one and that one",
-> they can simply say "I want these helpers and that one". In the former
-> case whenever you add some new (opt-out) feature, you have to update all
-> drivers and add the exception. In the latter you only need to extend the
-> drivers that want to make use of the new helper.
-> 
-> With that in mind, rather than adding a flag to the
-> ahci_platform_get_resources() function, it might be more flexible to
-> split the helpers into finer-grained functions. That way drivers can
-> pick whatever functionality they want from the helpers.
+>>>
+>>> =A0 From a quick look, ahci_mtk and ahci_st are in the same boat, =
 
-Good point, so lets:
+>>> adding the
+>>> corresponding maintainers to Cc.
+>>>
+>>> Patrice, Matthias: does SATA still work for you after this patch? This
+>>> has been in linux-next since next-20180327.
+>>
+>> SATA is still working after this patch, but a kernel warning is
+>> triggered due to the fact that resets are both requested by
+>> libahci_platform and by ahci_st driver.
+> =
 
-1) Revert the patch for now
-2) Have a new version of the patch which adds a ahci_platform_get_resets() helper
-3) Modify the generic drivers/ata/ahci_platform.c driver to call the new
-    ahci_platform_get_resets() between its ahci_platform_get_resources()
-    and ahci_platform_enable_resources() calls.
-    I think that ahci_platform_enable_resources() should still automatically
-    do the right thing wrt resets if ahci_platform_get_resets() was called
-    (otherwise the resets array will be empty and should be skipped)
+> So in your case you might be able to remove the reset handling
+> from the ahci_st driver and rely on the new libahci_platform
+> handling instead? If that works that seems like a win to me.
 
-This should make the generic driver usable for the UniPhier SoCs and
-maybe some other drivers like the ahci_st driver can also switch to the
-new ahci_platform_get_resets() functionality to reduce their code a bit.
+Yes, I did a quick test, the reset handling can be removed from our driver.
 
-Regards,
+Patrice
+> =
 
-Hans
+> As said elsewhere in this thread I think it makes sense to keep (or re-add
+> after a revert) the libahci_platform reset code, but make it conditional
+> on a flag passed to ahci_platform_get_resources(). This way we get
+> the shared code for most cases and platforms which need special handling
+> can opt-out.
+> =
+
+> Regards,
+> =
+
+> Hans
+> =
+
+> =
+
+>>
+>> Patrice
+>>
+>>>
+>>> Given how this is one of the more hardware-specific bits, perhaps a
+>>> better way to do this is to move reset handling into a Uniphier driver
+>>> much like Tegra, Mediatek and ST?
+>>>
+>>> That said, I don't see SATA support for any of the Socionext hardware
+>>> either in the DT bindings or drivers/ata, so perhaps it'd be best to
+>>> back this out again until we have something that's more well tested?
+>>>
+>>> Thierry
