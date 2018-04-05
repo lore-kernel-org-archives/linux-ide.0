@@ -1,92 +1,73 @@
-From: Hans de Goede <hdegoede@redhat.com>
+From: Patrice CHOTARD <patrice.chotard-qxv4g6HH51o@public.gmane.org>
 Subject: Re: [PATCH] ata: ahci-platform: add reset control support
-Date: Thu, 5 Apr 2018 13:30:35 +0200
-Message-ID: <b2426da6-598c-8ab1-7576-7ca4a151cc2a@redhat.com>
+Date: Thu, 5 Apr 2018 13:17:45 +0000
+Message-ID: <e33f54ed-2848-9a4f-9669-7fada8c60326@st.com>
 References: <1521768653-11824-1-git-send-email-hayashi.kunihiko@socionext.com>
- <20180405095429.GA7506@ulmo> <20180405202347.2803.4A936039@socionext.com>
+ <20180405095429.GA7506@ulmo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180405202347.2803.4A936039@socionext.com>
+Return-path: <linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+In-Reply-To: <20180405095429.GA7506@ulmo>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>, Thierry Reding <thierry.reding@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Patrice Chotard <patrice.chotard@st.com>, Matthias Brugger <matthias.bgg@gmail.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org
+Content-ID: <BE3B334EEE98F84BA88BFEA6331EA38F-qxv4g6HH51o@public.gmane.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-mediatek/>
+List-Post: <mailto:linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+List-Help: <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-mediatek>,
+ <mailto:linux-mediatek-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
+Sender: "Linux-mediatek" <linux-mediatek-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Errors-To: linux-mediatek-bounces+glpam-linux-mediatek=m.gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: Thierry Reding <thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Kunihiko Hayashi <hayashi.kunihiko-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Matthias Brugger <matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-Hi,
+Hi Thierry
 
-On 05-04-18 13:23, Kunihiko Hayashi wrote:
-> Hi Thierry,
-> 
-> On Thu, 5 Apr 2018 11:54:29 +0200
-> Thierry Reding <thierry.reding@gmail.com> wrote:
-> 
->> On Fri, Mar 23, 2018 at 10:30:53AM +0900, Kunihiko Hayashi wrote:
->>> Add support to get and control a list of resets for the device
->>> as optional and shared. These resets must be kept de-asserted until
->>> the device is enabled.
->>>
->>> This is specified as shared because some SoCs like UniPhier series
->>> have common reset controls with all ahci controller instances.
->>>
->>> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
->>> ---
->>>   .../devicetree/bindings/ata/ahci-platform.txt      |  1 +
->>>   drivers/ata/ahci.h                                 |  1 +
->>>   drivers/ata/libahci_platform.c                     | 24 +++++++++++++++++++---
->>>   3 files changed, 23 insertions(+), 3 deletions(-)
+On 04/05/2018 11:54 AM, Thierry Reding wrote:
+> On Fri, Mar 23, 2018 at 10:30:53AM +0900, Kunihiko Hayashi wrote:
+>> Add support to get and control a list of resets for the device
+>> as optional and shared. These resets must be kept de-asserted until
+>> the device is enabled.
 >>
->> This causes a regression on Tegra because we explicitly request the
->> resets after the call to ahci_platform_get_resources().
+>> This is specified as shared because some SoCs like UniPhier series
+>> have common reset controls with all ahci controller instances.
 >>
->>  From a quick look, ahci_mtk and ahci_st are in the same boat, adding the
->> corresponding maintainers to Cc.
->>
->> Patrice, Matthias: does SATA still work for you after this patch? This
->> has been in linux-next since next-20180327.
+>> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko-uWyLwvC0a2jby3iVrkZq2A@public.gmane.org>
+>> ---
+>>   .../devicetree/bindings/ata/ahci-platform.txt      |  1 +
+>>   drivers/ata/ahci.h                                 |  1 +
+>>   drivers/ata/libahci_platform.c                     | 24 +++++++++++++++++++---
+>>   3 files changed, 23 insertions(+), 3 deletions(-)
 > 
-> I assume that I use "generic-ahci" driver directly, and this driver has
-> no way to handle resets, so I sent this patch.
+> This causes a regression on Tegra because we explicitly request the
+> resets after the call to ahci_platform_get_resources().
+
+I confirm, we got exactly the same behavior on STi platform.
+
 > 
-> However, also as far as I look, some hardware-specific drivers handle their
-> own resets, and call ahci_platform_{enable,disable}_resources().
-> Surely there are paths to call reset control twice in such drivers.
+>  From a quick look, ahci_mtk and ahci_st are in the same boat, adding the
+> corresponding maintainers to Cc.
 > 
-> Identically, when the driver also handle their own clocks, they have same issue.
+> Patrice, Matthias: does SATA still work for you after this patch? This
+> has been in linux-next since next-20180327.
+
+SATA is still working after this patch, but a kernel warning is 
+triggered due to the fact that resets are both requested by 
+libahci_platform and by ahci_st driver.
+
+Patrice
+
 > 
->> Given how this is one of the more hardware-specific bits, perhaps a
->> better way to do this is to move reset handling into a Uniphier driver
->> much like Tegra, Mediatek and ST?
+> Given how this is one of the more hardware-specific bits, perhaps a
+> better way to do this is to move reset handling into a Uniphier driver
+> much like Tegra, Mediatek and ST?
 > 
-> Since it's difficult to write the resets in general with ahci_platform, I can prepare
-> hardware-specific driver for our SoCs >
->> That said, I don't see SATA support for any of the Socionext hardware
->> either in the DT bindings or drivers/ata, so perhaps it'd be best to
->> back this out again until we have something that's more well tested?
+> That said, I don't see SATA support for any of the Socionext hardware
+> either in the DT bindings or drivers/ata, so perhaps it'd be best to
+> back this out again until we have something that's more well tested?
 > 
-> I'm about to use the generic driver, and prepare our phy driver and
-> DT bindings for our SoCs, but not yet.
-
-If the AHCI controller on your SoC works with the generic driver +
-a phy-driver using the generic phy framework, then IMHO that is
-preferred over adding yet another SoC specific AHCI driver. If the
-only reason to do a SoC specific AHCI driver is the need for resets,
-then IMHO we should add a flags parameter to ahci_platform_get_resources
-which specifies which resource-types to get and have the existing
-drivers call ahci_platform_get_resources() without the flag to also
-get resets, where as the generic driver would get resets.
-
-Thierry that should solve the problem, right ?
-
- > Then it's no problem that we can back this out.
-
-Yes reverting it for now is probably best, but I would like to see
-it get re-introduced while at the same time adding a flags parameter
-to ahci_platform_get_resources() and make the reset handling conditional
-on the flags. This IMHO is better then introducing another SoC driver.
-
-Regards,
-
-Hans
+> Thierry
+> 
