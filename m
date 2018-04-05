@@ -1,46 +1,78 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 00/15] ARM: pxa: switch to DMA slave maps
-Date: Thu, 5 Apr 2018 08:50:03 +0200
-Message-ID: <CAK8P3a1Y0X-2QQm+adXO8xNr7Z6SU6rDjZs8JhRskX-UrseyRw@mail.gmail.com>
-References: <20180402142656.26815-1-robert.jarzmik@free.fr>
- <CAPDyKFot9dAST2jQL5s8E4U=bCHxkio=uwpqPd6S0N4FWJRB-w@mail.gmail.com>
- <874lkq4urd.fsf@belgarion.home> <20180404215623.2bf07406@bbrezillon> <CAPDyKFoFz_HgYPOMGuOTpehrTR3DtWE3uZbcnVwUwVhDy02Mow@mail.gmail.com>
+From: Thierry Reding <thierry.reding@gmail.com>
+Subject: Re: [PATCH] ata: ahci-platform: add reset control support
+Date: Thu, 5 Apr 2018 11:54:29 +0200
+Message-ID: <20180405095429.GA7506@ulmo>
+References: <1521768653-11824-1-git-send-email-hayashi.kunihiko@socionext.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <CAPDyKFoFz_HgYPOMGuOTpehrTR3DtWE3uZbcnVwUwVhDy02Mow@mail.gmail.com>
-Sender: netdev-owner@vger.kernel.org
-To: Ulf Hansson <ulf.hansson@linaro.org>
-Cc: Boris Brezillon <boris.brezillon@bootlin.com>, Robert Jarzmik <robert.jarzmik@free.fr>, Daniel Mack <daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, Vinod Koul <vinod.koul@intel.com>, Mauro Carvalho Chehab <mchehab@kernel.org>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Marek Vasut <marek.vasut@gmail.com>, Richard Weinberger <richard@nod.at>, Cyrille Pitchen <cyrille.pitchen@wedev4u.fr>, Nicolas Pitre <nico@fluxnic.net>, Samuel Ortiz <samuel@sortiz.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jaroslav
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="3MwIy2ne0vdjdPXF"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1521768653-11824-1-git-send-email-hayashi.kunihiko@socionext.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>, Tejun Heo <tj@kernel.org>, Patrice Chotard <patrice.chotard@st.com>, Matthias Brugger <matthias.bgg@gmail.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Apr 5, 2018 at 8:29 AM, Ulf Hansson <ulf.hansson@linaro.org> wrote:
-> On 4 April 2018 at 21:56, Boris Brezillon <boris.brezillon@bootlin.com> wrote:
->> On Wed, 04 Apr 2018 21:49:26 +0200
->> Robert Jarzmik <robert.jarzmik@free.fr> wrote:
->>
->>> Ulf Hansson <ulf.hansson@linaro.org> writes:
->>>
->>> > On 2 April 2018 at 16:26, Robert Jarzmik <robert.jarzmik@free.fr> wrote:
->>> >> Hi,
->>> >>
->>> >> This serie is aimed at removing the dmaengine slave compat use, and transfer
->>> >> knowledge of the DMA requestors into architecture code.
->>> >> As this looks like a patch bomb, each maintainer expressing for his tree either
->>> >> an Ack or "I want to take through my tree" will be spared in the next iterations
->>> >> of this serie.
->>> >
->>> > Perhaps an option is to send this hole series as PR for 3.17 rc1, that
->>> > would removed some churns and make this faster/easier? Well, if you
->>> > receive the needed acks of course.
->>> For 3.17-rc1 it looks a bit optimistic with the review time ... If I have all
->>
->> Especially since 3.17-rc1 has been released more than 3 years ago :-),
->> but I guess you meant 4.17-rc1.
->
-> Yeah, I realize that I was a bit lost in time yesterday. Even more
-> people have been having fun about it (me too). :-)
 
-I occasionally still type 2.6.17 when I mean 4.17.
+--3MwIy2ne0vdjdPXF
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-       Arnd
+On Fri, Mar 23, 2018 at 10:30:53AM +0900, Kunihiko Hayashi wrote:
+> Add support to get and control a list of resets for the device
+> as optional and shared. These resets must be kept de-asserted until
+> the device is enabled.
+>=20
+> This is specified as shared because some SoCs like UniPhier series
+> have common reset controls with all ahci controller instances.
+>=20
+> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+> ---
+>  .../devicetree/bindings/ata/ahci-platform.txt      |  1 +
+>  drivers/ata/ahci.h                                 |  1 +
+>  drivers/ata/libahci_platform.c                     | 24 ++++++++++++++++=
++++---
+>  3 files changed, 23 insertions(+), 3 deletions(-)
+
+This causes a regression on Tegra because we explicitly request the
+resets after the call to ahci_platform_get_resources().
+
+=46rom a quick look, ahci_mtk and ahci_st are in the same boat, adding the
+corresponding maintainers to Cc.
+
+Patrice, Matthias: does SATA still work for you after this patch? This
+has been in linux-next since next-20180327.
+
+Given how this is one of the more hardware-specific bits, perhaps a
+better way to do this is to move reset handling into a Uniphier driver
+much like Tegra, Mediatek and ST?
+
+That said, I don't see SATA support for any of the Socionext hardware
+either in the DT bindings or drivers/ata, so perhaps it'd be best to
+back this out again until we have something that's more well tested?
+
+Thierry
+
+--3MwIy2ne0vdjdPXF
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlrF8lEACgkQ3SOs138+
+s6H7EA//fqnLBMRIi+b3go4vL4naTiR/ajPZkj30Gl9LMUb0uprVgnPOC1ClhAEd
+VUqcL75MwXydIasQixfzTEmX2DPXGC4EYaPY1Zv/FDgnC0PXJMOezup8W40mHZKU
+9imul0pq7on0izFRB32xb45s2BXHAVpAyB/uEVthyWopnWK6cvGlaL5BdbHgtVhj
+GaajtH+v6+LY54zquz0noREZqFqDS5ugUHFkZq7Vquza99K2TAs9Jw9O9FaloNZq
+/rwKurnds9aeegnt6661XK5mYjuGzlA0Zwf4zk9uzU71pGmKDBNBu6WEwvTSM1jK
+l8/io7YCmbr4mVbzzoLn3hzzI9loK0ohL3e7mVJO+mORJZBCTjOzBIz+bQOdkU4y
+BQyiX8RK1tl4q1beYKV0HD6sffXiJDTBdHNMON3UNqF9MCOyAaX4t5Nr9MITUsaz
+NggHnWunPeJD0TPDEVrdYGQHj/z4Ri6AAEcuBW6KsPrwLOxRbM+qAw3VF29Ur1fC
+4v5e7Olr1ltu/NmvBiiHEELk8lnVmgZwVacpVLv2a8JZ2XMp0WH9lxVXB57SoEQ7
+KdrmDfYTcpyeCIOrUqdaz64CDsWGbZL+X048KoZmoxV5I5VEcXjCOJzd49CJYNtW
+J9bCVROflae3vM95hOt98CnC1ewPDe/SlR1HX7cySdFdAQxOaXs=
+=5EOF
+-----END PGP SIGNATURE-----
+
+--3MwIy2ne0vdjdPXF--
