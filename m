@@ -1,38 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] Revert "ata: ahci-platform: add reset control support"
-Date: Mon, 9 Apr 2018 15:12:18 -0700
-Message-ID: <20180409221218.GJ3126663@devbig577.frc2.facebook.com>
-References: <1523237554-7928-1-git-send-email-hayashi.kunihiko@socionext.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Jia-Ju Bai <baijiaju1990@gmail.com>
+Subject: [PATCH] ide: hpt366: Replace mdelay with usleep_range in init_chipset_hpt366
+Date: Wed, 11 Apr 2018 15:50:43 +0800
+Message-ID: <1523433043-3811-1-git-send-email-baijiaju1990@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1523237554-7928-1-git-send-email-hayashi.kunihiko@socionext.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, Thierry Reding <thierry.reding@gmail.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+To: davem@davemloft.net, source@mvista.com, alan@lxorguk.ukuu.org.uk
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Apr 09, 2018 at 10:32:34AM +0900, Kunihiko Hayashi wrote:
-> This reverts commit f0f56716fc3e5d547fd7811eb218a30ed0695605.
-> 
-> According to Thierry's view,
-> https://www.spinics.net/lists/linux-ide/msg55357.html
-> some hardware-specific drivers already use their own resets,
-> and the common reset might make a path to occur double controls of resets.
-> 
-> For now, revert the commit that adds reset control support to ahci-platform,
-> and hold until the solution is confirmed not be affect all hardware-specific
-> drivers.
-> 
-> Fixes: f0f56716fc3e ("ata: ahci-platform: add reset control support")
-> Reported-by: Thierry Reding <thierry.reding@gmail.com>
-> Suggested-by: Hans de Goede <hdegoede@redhat.com>
-> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+init_chipset_hpt366() is never called in atomic context.
 
-Applied to libata/for-4.17-fixes.
+init_chipset_hpt366() is set as ".init_chipset" in struct ide_port_info.
+This function is not called in atomic context.
 
-Thanks.
+Despite never getting called from atomic context, init_chipset_hpt366()
+calls mdelay() to busily wait.
+This is not necessary and can be replaced with usleep_range() to
+avoid busy waiting.
 
+This is found by a static analysis tool named DCNS written by myself.
+And I also manually check it.
+
+Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+---
+ drivers/ide/hpt366.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ide/hpt366.c b/drivers/ide/hpt366.c
+index 4b5dc01..4045559 100644
+--- a/drivers/ide/hpt366.c
++++ b/drivers/ide/hpt366.c
+@@ -984,7 +984,7 @@ static int init_chipset_hpt366(struct pci_dev *dev)
+ 			for (temp = i = 0; i < 128; i++) {
+ 				pci_read_config_word(dev, 0x78, &f_cnt);
+ 				temp += f_cnt & 0x1ff;
+-				mdelay(1);
++				usleep_range(1000, 2000);
+ 			}
+ 			f_cnt = temp / 128;
+ 		} else
 -- 
-tejun
+1.9.1
