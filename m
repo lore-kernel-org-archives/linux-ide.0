@@ -1,15 +1,15 @@
-From: Anshuman Khandual <khandual-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCH 06/12] dma-mapping: move the NEED_DMA_MAP_STATE config
-	symbol to lib/Kconfig
-Date: Mon, 16 Apr 2018 15:27:58 +0530
-Message-ID: <1ac5e633-5455-fcb6-6b3c-ea74d6691513@linux.vnet.ibm.com>
-References: <20180415145947.1248-1-hch@lst.de>
-	<20180415145947.1248-7-hch@lst.de>
+From: Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>
+Subject: Re: [PATCH 08/12] mmc: reduce use of block bounce buffers
+Date: Mon, 16 Apr 2018 11:51:23 +0100
+Message-ID: <2067b808-65b3-e4d9-e376-1062abc1542f@arm.com>
+References: <20180416085032.7367-1-hch@lst.de>
+	<20180416085032.7367-9-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Content-Transfer-Encoding: 7bit
 Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20180415145947.1248-7-hch-jcswGhMUV9g@public.gmane.org>
+In-Reply-To: <20180416085032.7367-9-hch-jcswGhMUV9g@public.gmane.org>
+Content-Language: en-US
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
 	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
@@ -19,15 +19,49 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
 	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Konrad Rzeszutek Wilk <konrad.wilk-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Cc: linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sparclinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-On 04/15/2018 08:29 PM, Christoph Hellwig wrote:
-> This way we have one central definition of it, and user can select it as
-> needed.  Note that we now also always select it when CONFIG_DMA_API_DEBUG
-> is select, which fixes some incorrect checks in a few network drivers.
+On 16/04/18 09:50, Christoph Hellwig wrote:
+> We can rely on the dma-mapping code to handle any DMA limits that is
+> bigger than the ISA DMA mask for us (either using an iommu or swiotlb),
+> so remove setting the block layer bounce limit for anything but bouncing
+> for highmem pages.
 > 
 > Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+> ---
+>   drivers/mmc/core/queue.c | 7 ++-----
+>   1 file changed, 2 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/mmc/core/queue.c b/drivers/mmc/core/queue.c
+> index 56e9a803db21..60a02a763d01 100644
+> --- a/drivers/mmc/core/queue.c
+> +++ b/drivers/mmc/core/queue.c
+> @@ -351,17 +351,14 @@ static const struct blk_mq_ops mmc_mq_ops = {
+>   static void mmc_setup_queue(struct mmc_queue *mq, struct mmc_card *card)
+>   {
+>   	struct mmc_host *host = card->host;
+> -	u64 limit = BLK_BOUNCE_HIGH;
+> -
+> -	if (mmc_dev(host)->dma_mask && *mmc_dev(host)->dma_mask)
+> -		limit = (u64)dma_max_pfn(mmc_dev(host)) << PAGE_SHIFT;
+>   
+>   	blk_queue_flag_set(QUEUE_FLAG_NONROT, mq->queue);
+>   	blk_queue_flag_clear(QUEUE_FLAG_ADD_RANDOM, mq->queue);
+>   	if (mmc_can_erase(card))
+>   		mmc_queue_setup_discard(mq->queue, card);
+>   
+> -	blk_queue_bounce_limit(mq->queue, limit);
+> +	if (!mmc_dev(host)->dma_mask || !mmc_dev(host)->dma_mask)
 
-Reviewed-by: Anshuman Khandual <khandual-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+I'm almost surprised that GCC doesn't warn about "x || x", but 
+nevertheless I think you've lost a "*" here...
+
+Robin.
+
+> +		blk_queue_bounce_limit(mq->queue, BLK_BOUNCE_HIGH);
+>   	blk_queue_max_hw_sectors(mq->queue,
+>   		min(host->max_blk_count, host->max_req_size / 512));
+>   	blk_queue_max_segments(mq->queue, host->max_segs);
+> 
