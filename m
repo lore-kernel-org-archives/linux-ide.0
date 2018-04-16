@@ -1,15 +1,15 @@
 From: Anshuman Khandual <khandual-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCH 04/12] iommu-helper: move the IOMMU_HELPER config symbol
-	to lib/
-Date: Mon, 16 Apr 2018 15:13:04 +0530
-Message-ID: <69224eb2-7056-4894-36d8-c6e9518df647@linux.vnet.ibm.com>
+Subject: Re: [PATCH 05/12] scatterlist: move the NEED_SG_DMA_LENGTH config
+	symbol to lib/Kconfig
+Date: Mon, 16 Apr 2018 15:24:12 +0530
+Message-ID: <5c1bd095-96f0-8038-4685-492761123be6@linux.vnet.ibm.com>
 References: <20180415145947.1248-1-hch@lst.de>
-	<20180415145947.1248-5-hch@lst.de>
+	<20180415145947.1248-6-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20180415145947.1248-5-hch-jcswGhMUV9g@public.gmane.org>
+In-Reply-To: <20180415145947.1248-6-hch-jcswGhMUV9g@public.gmane.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
 	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
