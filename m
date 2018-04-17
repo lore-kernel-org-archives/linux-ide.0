@@ -1,17 +1,14 @@
-From: Michael Ellerman <mpe-Gsx/Oe8HsFggBc27wqDAHg@public.gmane.org>
-Subject: Re: [PATCH 01/12] iommu-common: move to arch/sparc
-Date: Tue, 17 Apr 2018 22:53:53 +1000
-Message-ID: <87wox60za6.fsf@concordia.ellerman.id.au>
-References: <20180415145947.1248-1-hch@lst.de>
-	<20180415145947.1248-2-hch@lst.de>
-	<f0305a92-b206-1567-3c25-67fbd194047d@linux.vnet.ibm.com>
-	<20180416.095833.969403163564136309.davem@davemloft.net>
-	<f5741528-427d-3537-5498-2080766df0fe@linux.vnet.ibm.com>
+From: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+Subject: Re: [PATCH v2 00/21] Allow compile-testing NO_DMA (drivers)
+Date: Tue, 17 Apr 2018 19:48:01 +0200
+Message-ID: <CAMuHMdUrLW7gdsUfKQ5FHBHh1t5ecYBSy-6ZKxPSJoP6TQzXvw@mail.gmail.com>
+References: <1521208314-4783-1-git-send-email-geert@linux-m68k.org>
+	<CAL_JsqJMppYaz31Gg8BH2OaAxs56dnjZ4y+nzBBp-Tt2odaqCw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <f5741528-427d-3537-5498-2080766df0fe-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+In-Reply-To: <CAL_JsqJMppYaz31Gg8BH2OaAxs56dnjZ4y+nzBBp-Tt2odaqCw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
 	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
@@ -21,50 +18,43 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
 	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Anshuman Khandual <khandual-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>khandual-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
-Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, konrad.wilk-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, sparclinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hch-jcswGhMUV9g@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+To: Rob Herring <robherring2-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Ulf Hansson <ulf.hansson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wolfram Sang <wsa-z923LK4zBo2bacvFa/9K2g@public.gmane.org>, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fpga-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "open list:REMOTE PROCESSOR (REMOTEPROC) SUBSYSTEM" <linux-remoteproc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-ALSA <alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org>, Bjorn Andersson <bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, MTD Maling List <linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Linux I2C <linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux1394-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Stefan Wahren <stefan.wahren-eS4NqCHxEME@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, "James E . J . Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Jassi Brar <jassisinghbrar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Marek Vasut <marek.vasut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, open list:SERI
 List-Id: linux-ide@vger.kernel.org
 
-Anshuman Khandual <khandual-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org> writes:
-> On 04/16/2018 07:28 PM, David Miller wrote:
->> From: Anshuman Khandual <khandual-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
->> Date: Mon, 16 Apr 2018 14:26:07 +0530
->> 
->>> On 04/15/2018 08:29 PM, Christoph Hellwig wrote:
->>>> This code is only used by sparc, and all new iommu drivers should use the
->>>> drivers/iommu/ framework.  Also remove the unused exports.
->>>>
->>>> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
->>>
->>> Right, these functions are used only from SPARC architecture. Simple
->>> git grep confirms it as well. Hence it makes sense to move them into
->>> arch code instead.
->> 
->> Well, we put these into a common location and used type friendly for
->> powerpc because we hoped powerpc would convert over to using this
->> common piece of code as well.
->> 
->> But nobody did the powerpc work.
- 
-Sorry.
+Hi Rob,
 
->> If you look at the powerpc iommu support, it's the same code basically
->> for entry allocation.
+On Thu, Apr 5, 2018 at 2:32 AM, Rob Herring <robherring2-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+> On Fri, Mar 16, 2018 at 8:51 AM, Geert Uytterhoeven
+> <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org> wrote:
+>> If NO_DMA=y, get_dma_ops() returns a reference to the non-existing
+>> symbol bad_dma_ops, thus causing a link failure if it is ever used.
+>>
+>> The intention of this is twofold:
+>>   1. To catch users of the DMA API on systems that do no support the DMA
+>>      mapping API,
+>>   2. To avoid building drivers that cannot work on such systems anyway.
+>>
+>> However, the disadvantage is that we have to keep on adding dependencies
+>> on HAS_DMA all over the place.
+>>
+>> Thanks to the COMPILE_TEST symbol, lots of drivers now depend on one or
+>> more platform dependencies (that imply HAS_DMA) || COMPILE_TEST, thus
+>> already covering intention #2.  Having to add an explicit dependency on
+>> HAS_DMA here is cumbersome, and hinders compile-testing.
 >
-> I understand. But there are some differences in iommu_table structure,
-> how both regular and large IOMMU pools are being initialized etc. So
-> if the movement of code into SPARC help cleaning up these generic config
-> options in general, I guess we should do that. But I will leave it upto
-> others who have more experience in this area.
->
-> +mpe
+> The same can be said for CONFIG_IOMEM and CONFIG_OF. Any plans to
+> remove those too? CONFIG_IOMEM is mostly just a !CONFIG_UM option.
 
-This is the first I've heard of it, I guess it's probably somewhere on
-Ben's append-only TODO list.
+Perhaps, if time permits...
 
-Some of the code does look very similar, but not 100%. So someone would
-need to do some work to reconcile the two and test the result. TBH I
-doubt we're going to get around to it any time soon. Unless we have a
-volunteer?
+Gr{oetje,eeting}s,
 
-cheers
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
