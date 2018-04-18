@@ -1,17 +1,14 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: [PATCH 01/12] iommu-common: move to arch/sparc
-Date: Tue, 17 Apr 2018 21:55:29 +0200
-Message-ID: <20180417195529.GA31335@lst.de>
-References: <20180415145947.1248-1-hch@lst.de>
-	<20180415145947.1248-2-hch@lst.de>
-	<f0305a92-b206-1567-3c25-67fbd194047d@linux.vnet.ibm.com>
-	<20180416.095833.969403163564136309.davem@davemloft.net>
+From: Wolfram Sang <wsa-z923LK4zBo2bacvFa/9K2g@public.gmane.org>
+Subject: Re: [PATCH v3 07/20] i2c: Remove depends on HAS_DMA in case of
+	platform dependency
+Date: Wed, 18 Apr 2018 09:01:54 +0200
+Message-ID: <20180418070154.mgvdb2ne7tdqyyra@ninjato>
+References: <1523987360-18760-1-git-send-email-geert@linux-m68k.org>
+	<1523987360-18760-8-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0613545038917178784=="
 Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20180416.095833.969403163564136309.davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
+In-Reply-To: <1523987360-18760-8-git-send-email-geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
 List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
 	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
@@ -21,35 +18,68 @@ List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
 	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
 Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
 Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, konrad.wilk-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, sparclinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hch-jcswGhMUV9g@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, khandual-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
+To: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+Cc: Ulf Hansson <ulf.hansson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fpga-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-remoteproc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, Bjorn Andersson <bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux1394-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Stefan Wahren <stefan.wahren-eS4NqCHxEME@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Jassi Brar <jassisinghbrar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Marek Vasut <marek.vasut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-serial-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matias Bjorling <mb-VR7NuqX4VJ8tq7phqP6ubQ@public.gmane.org>, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ohad Ben-Cohen <ohad-Ix1uc/W3ht7QT0dZR+AlfA@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, Alan Tull <atull-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, linux-k
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Apr 16, 2018 at 09:58:33AM -0400, David Miller wrote:
-> From: Anshuman Khandual <khandual-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-> Date: Mon, 16 Apr 2018 14:26:07 +0530
-> 
-> > On 04/15/2018 08:29 PM, Christoph Hellwig wrote:
-> >> This code is only used by sparc, and all new iommu drivers should use the
-> >> drivers/iommu/ framework.  Also remove the unused exports.
-> >> 
-> >> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-> > 
-> > Right, these functions are used only from SPARC architecture. Simple
-> > git grep confirms it as well. Hence it makes sense to move them into
-> > arch code instead.
-> 
-> Well, we put these into a common location and used type friendly for
-> powerpc because we hoped powerpc would convert over to using this
-> common piece of code as well.
-> 
-> But nobody did the powerpc work.
-> 
-> If you look at the powerpc iommu support, it's the same code basically
-> for entry allocation.
 
-I could also introduce a new config symbol and keep it in common code,
-but it has been there for a while without any new user.
+--===============0613545038917178784==
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="65i3mhai7gxgnaf3"
+Content-Disposition: inline
 
-Right now it just means we built the code for everyone who selects
-CONFIG_IOMMU_HELPER, which is just about anyone these days.
+
+--65i3mhai7gxgnaf3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, Apr 17, 2018 at 07:49:07PM +0200, Geert Uytterhoeven wrote:
+> Remove dependencies on HAS_DMA where a Kconfig symbol depends on another
+> symbol that implies HAS_DMA, and, optionally, on "|| COMPILE_TEST".
+> In most cases this other symbol is an architecture or platform specific
+> symbol, or PCI.
+>=20
+> Generic symbols and drivers without platform dependencies keep their
+> dependencies on HAS_DMA, to prevent compiling subsystems or drivers that
+> cannot work anyway.
+>=20
+> This simplifies the dependencies, and allows to improve compile-testing.
+>=20
+> Signed-off-by: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+> Reviewed-by: Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Acked-by: Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>
+
+Applied to for-current, thanks!
+
+
+--65i3mhai7gxgnaf3
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAlrW7V4ACgkQFA3kzBSg
+KbbXkQ/6A+My2+u0mIuo0vlx8PQNM4nXpuGAjtIwhvCDZDUsVnYi3wAnpwGSSbUe
+dFFkEoD6fo2xikBdF1xjwU36oCMO3VV4zdSPXKmBLQgLd+EDY1WS1sX54kYzNb2T
+aqxIL8J8Uf7SNNVxg1iaPLQbakS96xLocim26fWdV+H+ggLJxthEQlZrR2LKV/m2
+UHE+8NLy13Zq0+WAd9l/aX+7Lo5WZUBFAZIorLEI8v2nfWtUf3oBVBU97FxbjDwc
+gEmi2qqcggS3CtaGQmHUJc6FiirvHbNGfLAI/3SzAZ2qkrcn+kJbls3LJ6wEpfvp
+OHkQyujvT2QokgW/xddLqyMTl16EDiPKT2YWjP/fsgpfAZEubDCVyDt4VJ8sNMLH
+Zvm5A1jU/9k3LE0dxG8fEiwW3RkD7qtsUDayY1T4BZvafjXVww+VRJZyxRVCGOqd
+ohBossb6pK0difN2MbnaSeE1ykkn9sGbEot/AyQ5xfw9Mjjkm8VfBuIT/GqgIr3r
+vegJZcPwC8rdJTz5qg/6lj3JuIL51OxBfuFaIpYQR6klrer9y9VSbKKuFJyAW0Y1
+E4+f1d2cxaJPcuUbvfINWpyBLBHTFARdWYcE9tFxxOHBXLxgRnRKKljZZYq5yc6b
+LR03w8WxaMKC4cT6mPgBHSck/LY70C5pA4k/VlOj2+MNa4cPA30=
+=opRi
+-----END PGP SIGNATURE-----
+
+--65i3mhai7gxgnaf3--
+
+--===============0613545038917178784==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+
+--===============0613545038917178784==--
