@@ -1,22 +1,95 @@
-From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: Re: simplify procfs code for seq_file instances
-Date: Thu, 19 Apr 2018 21:57:50 +0300
-Message-ID: <20180419185750.GD2066@avx2>
-References: <20180419124140.9309-1-hch@lst.de>
+From: Bjorn Helgaas <helgaas-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 09/12] PCI: remove CONFIG_PCI_BUS_ADDR_T_64BIT
+Date: Fri, 20 Apr 2018 13:42:14 -0500
+Message-ID: <20180420184214.GT28657@bhelgaas-glaptop.roam.corp.google.com>
+References: <20180415145947.1248-1-hch@lst.de>
+	<20180415145947.1248-10-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <netdev-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20180419124140.9309-1-hch@lst.de>
-Sender: netdev-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Corey Minyard <minyard@acm.org>, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, linux-acpi@vger.kernel.org, drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-rtc@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20180415145947.1248-10-hch-jcswGhMUV9g@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, Konrad Rzeszutek Wilk <konrad.wilk-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mm-Bw31MaZKKs3YtjvyW6yDsg@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, sparclinux-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
->     git://git.infradead.org/users/hch/misc.git proc_create
+On Sun, Apr 15, 2018 at 04:59:44PM +0200, Christoph Hellwig wrote:
+> This symbol is now always identical to CONFIG_ARCH_DMA_ADDR_T_64BIT, so
+> remove it.
+> 
+> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 
+Acked-by: Bjorn Helgaas <bhelgaas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
 
-I want to ask if it is time to start using poorman function overloading
-with _b_c_e(). There are millions of allocation functions for example,
-all slightly difference, and people will add more. Seeing /proc interfaces
-doubled like this is painful.
+Please merge this along with the rest of the series; let me know if you
+need anything more from me.
+
+> ---
+>  drivers/pci/Kconfig | 4 ----
+>  drivers/pci/bus.c   | 4 ++--
+>  include/linux/pci.h | 2 +-
+>  3 files changed, 3 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index 34b56a8f8480..29a487f31dae 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -5,10 +5,6 @@
+>  
+>  source "drivers/pci/pcie/Kconfig"
+>  
+> -config PCI_BUS_ADDR_T_64BIT
+> -	def_bool y if (ARCH_DMA_ADDR_T_64BIT || 64BIT)
+> -	depends on PCI
+> -
+>  config PCI_MSI
+>  	bool "Message Signaled Interrupts (MSI and MSI-X)"
+>  	depends on PCI
+> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> index bc2ded4c451f..35b7fc87eac5 100644
+> --- a/drivers/pci/bus.c
+> +++ b/drivers/pci/bus.c
+> @@ -120,7 +120,7 @@ int devm_request_pci_bus_resources(struct device *dev,
+>  EXPORT_SYMBOL_GPL(devm_request_pci_bus_resources);
+>  
+>  static struct pci_bus_region pci_32_bit = {0, 0xffffffffULL};
+> -#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
+> +#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+>  static struct pci_bus_region pci_64_bit = {0,
+>  				(pci_bus_addr_t) 0xffffffffffffffffULL};
+>  static struct pci_bus_region pci_high = {(pci_bus_addr_t) 0x100000000ULL,
+> @@ -230,7 +230,7 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+>  					  resource_size_t),
+>  		void *alignf_data)
+>  {
+> -#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
+> +#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+>  	int rc;
+>  
+>  	if (res->flags & IORESOURCE_MEM_64) {
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 73178a2fcee0..55371cb827ad 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -670,7 +670,7 @@ int raw_pci_read(unsigned int domain, unsigned int bus, unsigned int devfn,
+>  int raw_pci_write(unsigned int domain, unsigned int bus, unsigned int devfn,
+>  		  int reg, int len, u32 val);
+>  
+> -#ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
+> +#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+>  typedef u64 pci_bus_addr_t;
+>  #else
+>  typedef u32 pci_bus_addr_t;
+> -- 
+> 2.17.0
+> 
