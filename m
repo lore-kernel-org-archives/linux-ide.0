@@ -1,42 +1,59 @@
-From: Palmer Dabbelt <palmer@sifive.com>
-Subject: Re: [PATCH 5/5] PCI: remove PCI_DMA_BUS_IS_PHYS
-Date: Tue, 24 Apr 2018 11:23:16 -0700 (PDT)
-Message-ID: <mhng-1f7fdc5e-bbef-409b-80cb-6a6bbb76eca4@palmer-si-x1c4>
-References: <20180424181625.22410-6-hch@lst.de>
-Mime-Version: 1.0 (MHng)
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [RFC 00/10] ARM: Remove support for Exynos5440
+Date: Tue, 24 Apr 2018 22:50:58 +0200
+Message-ID: <CAK8P3a2CZU1CYFt0fdVSFFnj2Wg=mUcC=yuWAW7zDO0u2Q2dUQ@mail.gmail.com>
+References: <20180424203239.21885-1-krzk@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180424181625.22410-6-hch@lst.de>
+In-Reply-To: <20180424203239.21885-1-krzk@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, davem@davemloft.net, linux-kernel@vger.kernel.org
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: Kukjin Kim <kgene@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Tejun Heo <tj@kernel.org>, Sylwester Nawrocki <s.nawrocki@samsung.com>, Tomasz Figa <tomasz.figa@gmail.com>, Chanwoo Choi <cw00.choi@samsung.com>, Michael Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Viresh Kumar <viresh.kumar@linaro.org>, Zhang Rui <rui.zhang@intel.com>, Eduardo Valentin <edubezval@gmail.com>, Russell King <linux@armlinux.org.uk>, Hans de Goede <hdegoede@redhat.com>, Linus Walleij <linus.walleij@linaro.org>, Andi Shyti <andi@etezian.org>, Mark Brown <broonie@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Alan Stern <stern@rowland.harvard.edu>, Greg
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, 24 Apr 2018 11:16:25 PDT (-0700), Christoph Hellwig wrote:
-> This was used by the ide, scsi and networking code in the past to
-> determine if they should bounce payloads.  Now that the dma mapping
-> always have to support dma to all physical memory (thanks to swiotlb
-> for non-iommu systems) there is no need to this crude hack any more.
+On Tue, Apr 24, 2018 at 10:32 PM, Krzysztof Kozlowski <krzk@kernel.org> wrote:
+> Hi,
 >
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
-> [...]
-> diff --git a/arch/riscv/include/asm/pci.h b/arch/riscv/include/asm/pci.h
-> index 0f2fc9ef20fc..b3638c505728 100644
-> --- a/arch/riscv/include/asm/pci.h
-> +++ b/arch/riscv/include/asm/pci.h
-> @@ -26,9 +26,6 @@
->  /* RISC-V shim does not initialize PCI bus */
->  #define pcibios_assign_all_busses() 1
 >
-> -/* We do not have an IOMMU */
-> -#define PCI_DMA_BUS_IS_PHYS 1
-> -
->  extern int isa_dma_bridge_buggy;
+> Overview
+> ========
+> Let's continue the removal of old platforms. We already get rid of Exynos4212.
+> Now it's time for Exynos5440.
 >
->  #ifdef CONFIG_PCI
+> The Exynos5440 (quad-core A15 with GMAC, PCIe, SATA) was targeting
+> server platforms but it did not make it to the market really.  There are
+> no development boards with it and probably there are no real products
+> neither.  The development for Exynos5440 ended in 2013 and since then
+> the platform is in maintenance mode.
+>
+> The only development happening around it is the PCIe driver for Exynos5433
+> (ARMv8). [1]
+>
+> Removing Exynos5440, makes our life slightly easier:
+> 1. Less maintenance,
+> 2. Smaller code, less quirks,
+> 3. No need to preserve (imaginary) backward-compatibility for Exynos PCIe
+>    driver (so it is easier to add support for Exynos5433).
+>
+>
+> Because of point (3) above - I left the PCIe and PCIe PHY drivers intact.
+>
+>
+> Dependencies
+> ============
+> I think about starting with removal of DTS in some kernel release (patch 1/10).
+> Then all drivers can be removed/updated - subsystem maintainers can pick their
+> patches freely.
+>
+> Finally, after getting rid of all Exynos5440 symbols, the last patch (10/10) will
+> end in arm-soc tree.
+>
+>
+> Any comments?
 
-Thanks!
+I don't see any hard dependency here, if this is all unused, I think we
+can apply both patches 1 and 10 into arm-soc at the same time as merging
+the other patches through the respective subsystem trees.
 
-Acked-by: Palmer Dabbelt <palmer@sifive.com> (For the RISC-V change)
+      Arnd
