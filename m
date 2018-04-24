@@ -1,58 +1,40 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH] libata: Apply NOLPM quirk for SAMSUNG MZMPC128HBFU-000MV SSD
-Date: Tue, 24 Apr 2018 11:19:07 +0200
-Message-ID: <20180424091907.19903-1-hdegoede@redhat.com>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH 10/15] ata: pata_pxa: remove the dmaengine compat need
+Date: Tue, 24 Apr 2018 13:04:07 +0200
+Message-ID: <2592887.EUCMT0tEEq@amdc3058>
+References: <20180402142656.26815-1-robert.jarzmik@free.fr>
+        <CGME20180421193220epcas1p37073b0047d529bcc888233af6200ae35@epcas1p3.samsung.com>
+        <87sh7oxsn8.fsf@belgarion.home>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <87sh7oxsn8.fsf@belgarion.home>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Kevin Shanahan <kevin@shanahan.id.au>
+To: Robert Jarzmik <robert.jarzmik@free.fr>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Kevin Shanahan reports the following repeating errors when using LPM,
-causing long delays accessing the disk:
+On Saturday, April 21, 2018 09:32:11 PM Robert Jarzmik wrote:
+> Robert Jarzmik <robert.jarzmik@free.fr> writes:
+> 
+> > As the pxa architecture switched towards the dmaengine slave map, the
+> > old compatibility mechanism to acquire the dma requestor line number and
+> > priority are not needed anymore.
+> >
+> > This patch simplifies the dma resource acquisition, using the more
+> > generic function dma_request_slave_channel().
+> >
+> > Signed-off-by: Robert Jarzmik <robert.jarzmik@free.fr>
+> 
+> Bartlomiej, could I have your ack please ?
 
-  Apr 23 10:21:43 link kernel: ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x50000 action 0x6 frozen
-  Apr 23 10:21:43 link kernel: ata1: SError: { PHYRdyChg CommWake }
-  Apr 23 10:21:43 link kernel: ata1.00: failed command: WRITE DMA
-  Apr 23 10:21:43 link kernel: ata1.00: cmd ca/00:08:60:5d:cd/00:00:00:00:00/e1 tag 9 dma 4096 out
-                                        res 50/01:01:01:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-  Apr 23 10:21:43 link kernel: ata1.00: status: { DRDY }
-  Apr 23 10:21:43 link kernel: ata1.00: error: { AMNF }
-  Apr 23 10:21:43 link kernel: ata1: hard resetting link
-  Apr 23 10:21:43 link kernel: ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-  Apr 23 10:21:43 link kernel: ata1.00: configured for UDMA/133
-  Apr 23 10:21:43 link kernel: ata1: EH complete
+Sure.
 
-These go away when switching from med_power_with_dipm to medium_power.
+Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-This is somewhat weird as the PM830 datasheet explicitly mentions DIPM
-being supported and the idle power-consumption is specified with DIPM
-enabled.
-
-There are many OEM customized firmware versions for the PM830, so for now
-lets assume this is firmware version specific and blacklist LPM based on
-the firmware version.
-
-Cc: Kevin Shanahan <kevin@shanahan.id.au>
-Reported-by: Kevin Shanahan <kevin@shanahan.id.au>
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- drivers/ata/libata-core.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 8bc71ca61e7f..6e400ff2b5db 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4549,6 +4549,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 						ATA_HORKAGE_ZERO_AFTER_TRIM |
- 						ATA_HORKAGE_NOLPM, },
- 
-+	/* This specific Samsung model/firmware-rev does not handle LPM well */
-+	{ "SAMSUNG MZMPC128HBFU-000MV", "CXM14M1Q", ATA_HORKAGE_NOLPM, },
-+
- 	/* devices that don't properly handle queued TRIM commands */
- 	{ "Micron_M500_*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
- 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
--- 
-2.17.0
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
