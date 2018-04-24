@@ -1,40 +1,35 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH 10/15] ata: pata_pxa: remove the dmaengine compat need
-Date: Tue, 24 Apr 2018 13:04:07 +0200
-Message-ID: <2592887.EUCMT0tEEq@amdc3058>
-References: <20180402142656.26815-1-robert.jarzmik@free.fr>
-        <CGME20180421193220epcas1p37073b0047d529bcc888233af6200ae35@epcas1p3.samsung.com>
-        <87sh7oxsn8.fsf@belgarion.home>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 26/39] rtc/proc: switch to proc_create_single_data
+Date: Tue, 24 Apr 2018 16:15:24 +0200
+Message-ID: <20180424141524.GB26136@lst.de>
+References: <20180419124140.9309-1-hch@lst.de> <20180419124140.9309-27-hch@lst.de> <20180419131027.GC7369@piout.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <87sh7oxsn8.fsf@belgarion.home>
+Content-Disposition: inline
+In-Reply-To: <20180419131027.GC7369@piout.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Robert Jarzmik <robert.jarzmik@free.fr>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Alexandre Belloni <alexandre.belloni@bootlin.com>
+Cc: Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Alexey Dobriyan <adobriyan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Corey Minyard <minyard@acm.org>, Alessandro Zummo <a.zummo@towertech.it>, linux-acpi@vger.kernel.org, drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-rtc@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Saturday, April 21, 2018 09:32:11 PM Robert Jarzmik wrote:
-> Robert Jarzmik <robert.jarzmik@free.fr> writes:
+On Thu, Apr 19, 2018 at 03:10:27PM +0200, Alexandre Belloni wrote:
+> On 19/04/2018 14:41:27+0200, Christoph Hellwig wrote:
+> > And stop trying to get a reference on the submodule, procfs code deals
+> > with release after and unloaded module and thus removed proc entry.
+> > 
 > 
-> > As the pxa architecture switched towards the dmaengine slave map, the
-> > old compatibility mechanism to acquire the dma requestor line number and
-> > priority are not needed anymore.
-> >
-> > This patch simplifies the dma resource acquisition, using the more
-> > generic function dma_request_slave_channel().
-> >
-> > Signed-off-by: Robert Jarzmik <robert.jarzmik@free.fr>
-> 
-> Bartlomiej, could I have your ack please ?
+> Are you sure about that? The rtc module is not the one adding the procfs
+> file so I'm not sure how the procfs code can handle it.
 
-Sure.
+The proc file is removed from this call chain:
 
-Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+  <driver>_exit (module_exit handler)
+    -> rtc_device_unregister
+      -> rtc_proc_del_device
+        -> remove_proc_entry
 
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+remove_proc_entry takes care of waiting for currently active file
+operation instances and makes sure every new operation never calls
+into the actual proc file ops.  Same behavior as in RTC exists all
+over the kernel.
