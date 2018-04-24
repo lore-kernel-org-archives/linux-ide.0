@@ -1,58 +1,58 @@
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 2/2] ata: ahci: mvebu: override ahci_stop_engine for
- mvebu AHCI
-Date: Tue, 24 Apr 2018 08:22:46 +0200
-Message-ID: <20180424062246.GB14537@kroah.com>
-References: <1524542805-11349-1-git-send-email-xswang@marvell.com>
- <1524542805-11349-3-git-send-email-xswang@marvell.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH] libata: Apply NOLPM quirk for SAMSUNG MZMPC128HBFU-000MV SSD
+Date: Tue, 24 Apr 2018 11:19:07 +0200
+Message-ID: <20180424091907.19903-1-hdegoede@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1524542805-11349-3-git-send-email-xswang@marvell.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: xswang@marvell.com
-Cc: linux-ide@vger.kernel.org, tj@kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org, oferh@marvell.com, dingwei@marvell.com, xigu@marvell.com, nadavh@marvell.com, Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Kevin Shanahan <kevin@shanahan.id.au>
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Apr 24, 2018 at 12:06:45PM +0800, xswang@marvell.com wrote:
-> From: Evan Wang <xswang@marvell.com>
-> 
-> There is an issue(Errata Ref#226) that the SATA can not be
-> detected via SATA Port-MultiPlayer(PMP) with following
-> error log:
->   ata1.15: PMP product ID mismatch
->   ata1.15: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
->   ata1.15: Port Multiplier vendor mismatch '0x1b4b'!='0x0'
->   ata1.15: PMP revalidation failed (errno=-19)
-> 
-> After debugging, the reason is found that the value Port-x
-> FIS-based Switching Control(PxFBS@0x40) become wrong.
-> According to design, the bits[11:8, 0] of register PxFBS
-> are cleared when Port Command and Status (0x18) bit[0]
-> changes its value from 1 to 0, i.e. falling edge of Port
-> Command and Status bit[0] sends PULSE that resets PxFBS
-> bits[11:8; 0].
-> So it needs a mvebu SATA WA to save the port PxFBS register
-> before PxCMD ST write and restore it afterwards.
-> 
-> This patch implements the WA in a separate function of
-> ahci_mvebu_stop_engine to override ahci_stop_gngine.
-> 
-> Signed-off-by: Evan Wang <xswang@marvell.com>
-> Suggested-by: Ofer Heifetz <oferh@marvell.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-> ---
->  drivers/ata/ahci_mvebu.c | 56 ++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 56 insertions(+)
+Kevin Shanahan reports the following repeating errors when using LPM,
+causing long delays accessing the disk:
 
+  Apr 23 10:21:43 link kernel: ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x50000 action 0x6 frozen
+  Apr 23 10:21:43 link kernel: ata1: SError: { PHYRdyChg CommWake }
+  Apr 23 10:21:43 link kernel: ata1.00: failed command: WRITE DMA
+  Apr 23 10:21:43 link kernel: ata1.00: cmd ca/00:08:60:5d:cd/00:00:00:00:00/e1 tag 9 dma 4096 out
+                                        res 50/01:01:01:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+  Apr 23 10:21:43 link kernel: ata1.00: status: { DRDY }
+  Apr 23 10:21:43 link kernel: ata1.00: error: { AMNF }
+  Apr 23 10:21:43 link kernel: ata1: hard resetting link
+  Apr 23 10:21:43 link kernel: ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+  Apr 23 10:21:43 link kernel: ata1.00: configured for UDMA/133
+  Apr 23 10:21:43 link kernel: ata1: EH complete
 
-<formletter>
+These go away when switching from med_power_with_dipm to medium_power.
 
-This is not the correct way to submit patches for inclusion in the
-stable kernel tree.  Please read:
-    https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html
-for how to do this properly.
+This is somewhat weird as the PM830 datasheet explicitly mentions DIPM
+being supported and the idle power-consumption is specified with DIPM
+enabled.
 
-</formletter>
+There are many OEM customized firmware versions for the PM830, so for now
+lets assume this is firmware version specific and blacklist LPM based on
+the firmware version.
+
+Cc: Kevin Shanahan <kevin@shanahan.id.au>
+Reported-by: Kevin Shanahan <kevin@shanahan.id.au>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/ata/libata-core.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 8bc71ca61e7f..6e400ff2b5db 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4549,6 +4549,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM |
+ 						ATA_HORKAGE_NOLPM, },
+ 
++	/* This specific Samsung model/firmware-rev does not handle LPM well */
++	{ "SAMSUNG MZMPC128HBFU-000MV", "CXM14M1Q", ATA_HORKAGE_NOLPM, },
++
+ 	/* devices that don't properly handle queued TRIM commands */
+ 	{ "Micron_M500_*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+-- 
+2.17.0
