@@ -1,33 +1,66 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [RFC 06/10] thermal: samsung: Remove support for Exynos5440
-Date: Wed, 25 Apr 2018 15:18:51 +0200
-Message-ID: <1951102.VLysaozMLK@amdc3058>
-References: <20180424203239.21885-1-krzk@kernel.org>
-        <CGME20180424203356epcas4p44b884a8d409d0faa188a0ecdf4945c11@epcas4p4.samsung.com>
-        <20180424203239.21885-7-krzk@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <20180424203239.21885-7-krzk@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: Kukjin Kim <kgene@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Tejun Heo <tj@kernel.org>, Sylwester Nawrocki <s.nawrocki@samsung.com>, Tomasz Figa <tomasz.figa@gmail.com>, Chanwoo Choi <cw00.choi@samsung.com>, Michael Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Viresh Kumar <viresh.kumar@linaro.org>, Zhang Rui <rui.zhang@intel.com>, Eduardo Valentin <edubezval@gmail.com>, Russell King <linux@armlinux.org.uk>, Hans de Goede <hdegoede@redhat.com>, Linus Walleij <linus.walleij@linaro.org>, Andi Shyti <andi@etezian.org>, Mark Brown <broonie@kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-arm
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/40] net/can: single_open_net needs to be paired with single_release_net
+Date: Wed, 25 Apr 2018 17:47:48 +0200
+Message-ID: <20180425154827.32251-2-hch@lst.de>
+References: <20180425154827.32251-1-hch@lst.de>
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20180425154827.32251-1-hch@lst.de>
+Sender: netdev-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: Alexey Dobriyan <adobriyan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, linux-acpi@vger.kernel.org, drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-rtc@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Tuesday, April 24, 2018 10:32:35 PM Krzysztof Kozlowski wrote:
-> The Exynos5440 is not actively developed, there are no development
-> boards available and probably there are no real products with it.
-> Remove wide-tree support for Exynos5440.
+Otherwise we will leak a reference to the network namespace.
 
-Thanks for doing this.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ net/can/bcm.c  | 2 +-
+ net/can/proc.c | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-> Signed-off-by: Krzysztof Kozlowski <krzk@kernel.org>
-
-Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+diff --git a/net/can/bcm.c b/net/can/bcm.c
+index ac5e5e34fee3..8073fa14e143 100644
+--- a/net/can/bcm.c
++++ b/net/can/bcm.c
+@@ -249,7 +249,7 @@ static const struct file_operations bcm_proc_fops = {
+ 	.open		= bcm_proc_open,
+ 	.read		= seq_read,
+ 	.llseek		= seq_lseek,
+-	.release	= single_release,
++	.release	= single_release_net,
+ };
+ #endif /* CONFIG_PROC_FS */
+ 
+diff --git a/net/can/proc.c b/net/can/proc.c
+index fdf704e9bb8c..fde2fd55b826 100644
+--- a/net/can/proc.c
++++ b/net/can/proc.c
+@@ -279,7 +279,7 @@ static const struct file_operations can_stats_proc_fops = {
+ 	.open		= can_stats_proc_open,
+ 	.read		= seq_read,
+ 	.llseek		= seq_lseek,
+-	.release	= single_release,
++	.release	= single_release_net,
+ };
+ 
+ static int can_reset_stats_proc_show(struct seq_file *m, void *v)
+@@ -449,7 +449,7 @@ static const struct file_operations can_rcvlist_sff_proc_fops = {
+ 	.open		= can_rcvlist_sff_proc_open,
+ 	.read		= seq_read,
+ 	.llseek		= seq_lseek,
+-	.release	= single_release,
++	.release	= single_release_net,
+ };
+ 
+ 
+@@ -492,7 +492,7 @@ static const struct file_operations can_rcvlist_eff_proc_fops = {
+ 	.open		= can_rcvlist_eff_proc_open,
+ 	.read		= seq_read,
+ 	.llseek		= seq_lseek,
+-	.release	= single_release,
++	.release	= single_release_net,
+ };
+ 
+ /*
+-- 
+2.17.0
