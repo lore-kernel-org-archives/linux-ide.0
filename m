@@ -1,35 +1,122 @@
-From: Viresh Kumar <viresh.kumar@linaro.org>
-Subject: Re: [RFC 03/10] cpufreq: exynos: Remove support for Exynos5440
-Date: Wed, 25 Apr 2018 08:18:24 +0530
-Message-ID: <20180425024824.7ej2sz5jlbiuqeqh@vireshk-i7>
-References: <20180424203239.21885-1-krzk@kernel.org>
- <20180424203239.21885-4-krzk@kernel.org>
+From: <xswang@marvell.com>
+Subject: [PATCH 2/2] ata: ahci: mvebu: override ahci_stop_engine for mvebu AHCI
+Date: Wed, 25 Apr 2018 12:27:14 +0800
+Message-ID: <1524630434-5914-3-git-send-email-xswang@marvell.com>
+References: <1524630434-5914-1-git-send-email-xswang@marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180424203239.21885-4-krzk@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: Kukjin Kim <kgene@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Tejun Heo <tj@kernel.org>, Sylwester Nawrocki <s.nawrocki@samsung.com>, Tomasz Figa <tomasz.figa@gmail.com>, Chanwoo Choi <cw00.choi@samsung.com>, Michael Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Zhang Rui <rui.zhang@intel.com>, Eduardo Valentin <edubezval@gmail.com>, Russell King <linux@armlinux.org.uk>, Hans de Goede <hdegoede@redhat.com>, Linus Walleij <linus.walleij@linaro.org>, Andi Shyti <andi@etezian.org>, Mark Brown <broonie@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1524630434-5914-1-git-send-email-xswang@marvell.com>
+Sender: stable-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, tj@kernel.org, linux-kernel@vger.kernel.org
+Cc: oferh@marvell.com, dingwei@marvell.com, xigu@marvell.com, nadavh@marvell.com, Evan Wang <xswang@marvell.com>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 24-04-18, 22:32, Krzysztof Kozlowski wrote:
-> The Exynos5440 is not actively developed, there are no development
-> boards available and probably there are no real products with it.
-> Remove wide-tree support for Exynos5440.
-> 
-> Signed-off-by: Krzysztof Kozlowski <krzk@kernel.org>
-> ---
->  .../bindings/cpufreq/cpufreq-exynos5440.txt        |  28 --
->  drivers/cpufreq/Kconfig.arm                        |  14 -
->  drivers/cpufreq/Makefile                           |   1 -
->  drivers/cpufreq/exynos5440-cpufreq.c               | 452 ---------------------
->  4 files changed, 495 deletions(-)
->  delete mode 100644 Documentation/devicetree/bindings/cpufreq/cpufreq-exynos5440.txt
->  delete mode 100644 drivers/cpufreq/exynos5440-cpufreq.c
+From: Evan Wang <xswang@marvell.com>
 
-Acked-by: Viresh Kumar <viresh.kumar@linaro.org>
+There is an issue(Errata Ref#226) that the SATA can not be
+detected via SATA Port-MultiPlayer(PMP) with following
+error log:
+  ata1.15: PMP product ID mismatch
+  ata1.15: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+  ata1.15: Port Multiplier vendor mismatch '0x1b4b'!='0x0'
+  ata1.15: PMP revalidation failed (errno=-19)
 
+After debugging, the reason is found that the value Port-x
+FIS-based Switching Control(PxFBS@0x40) become wrong.
+According to design, the bits[11:8, 0] of register PxFBS
+are cleared when Port Command and Status (0x18) bit[0]
+changes its value from 1 to 0, i.e. falling edge of Port
+Command and Status bit[0] sends PULSE that resets PxFBS
+bits[11:8; 0].
+So it needs a mvebu SATA WA to save the port PxFBS register
+before PxCMD ST write and restore it afterwards.
+
+This patch implements the WA in a separate function of
+ahci_mvebu_stop_engine to override ahci_stop_gngine.
+
+Signed-off-by: Evan Wang <xswang@marvell.com>
+Suggested-by: Ofer Heifetz <oferh@marvell.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/ata/ahci_mvebu.c | 56 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
+
+diff --git a/drivers/ata/ahci_mvebu.c b/drivers/ata/ahci_mvebu.c
+index de7128d..0045dac 100644
+--- a/drivers/ata/ahci_mvebu.c
++++ b/drivers/ata/ahci_mvebu.c
+@@ -62,6 +62,60 @@ static void ahci_mvebu_regret_option(struct ahci_host_priv *hpriv)
+ 	writel(0x80, hpriv->mmio + AHCI_VENDOR_SPECIFIC_0_DATA);
+ }
+ 
++/**
++ * ahci_mvebu_stop_engine
++ *
++ * @ap:	Target ata port
++ *
++ * Errata Ref#226 - SATA Disk HOT swap issue when connected through
++ * Port Multiplier in FIS-based Switching mode.
++ *
++ * To avoid the issue, according to design, the bits[11:8, 0] of
++ * register PxFBS are cleared when Port Command and Status (0x18) bit[0]
++ * changes its value from 1 to 0, i.e. falling edge of Port
++ * Command and Status bit[0] sends PULSE that resets PxFBS
++ * bits[11:8; 0].
++ *
++ * This function is used to override function of "ahci_stop_engine"
++ * from libahci.c by adding the mvebu work around(WA) to save PxFBS
++ * value before the PxCMD ST write of 0, then restore PxFBS value.
++ *
++ * Return: 0 on success; Error code otherwise.
++ */
++int ahci_mvebu_stop_engine(struct ata_port *ap)
++{
++	void __iomem *port_mmio = ahci_port_base(ap);
++	u32 tmp, port_fbs;
++
++	tmp = readl(port_mmio + PORT_CMD);
++
++	/* check if the HBA is idle */
++	if ((tmp & (PORT_CMD_START | PORT_CMD_LIST_ON)) == 0)
++		return 0;
++
++	/* save the port PxFBS register for later restore */
++	port_fbs = readl(port_mmio + PORT_FBS);
++
++	/* setting HBA to idle */
++	tmp &= ~PORT_CMD_START;
++	writel(tmp, port_mmio + PORT_CMD);
++
++	/*
++	 * bit #15 PxCMD signal doesn't clear PxFBS,
++	 * restore the PxFBS register right after clearing the PxCMD ST,
++	 * no need to wait for the PxCMD bit #15.
++	 */
++	writel(port_fbs, port_mmio + PORT_FBS);
++
++	/* wait for engine to stop. This could be as long as 500 msec */
++	tmp = ata_wait_register(ap, port_mmio + PORT_CMD,
++				PORT_CMD_LIST_ON, PORT_CMD_LIST_ON, 1, 500);
++	if (tmp & PORT_CMD_LIST_ON)
++		return -EIO;
++
++	return 0;
++}
++
+ #ifdef CONFIG_PM_SLEEP
+ static int ahci_mvebu_suspend(struct platform_device *pdev, pm_message_t state)
+ {
+@@ -112,6 +166,8 @@ static int ahci_mvebu_probe(struct platform_device *pdev)
+ 	if (rc)
+ 		return rc;
+ 
++	hpriv->stop_engine = ahci_mvebu_stop_engine;
++
+ 	if (of_device_is_compatible(pdev->dev.of_node,
+ 				    "marvell,armada-380-ahci")) {
+ 		dram = mv_mbus_dram_info();
 -- 
-viresh
+1.9.1
