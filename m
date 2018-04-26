@@ -1,54 +1,46 @@
-From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: Re: simplify procfs code for seq_file instances
-Date: Thu, 26 Apr 2018 00:24:11 +0300
-Message-ID: <20180425212411.GB9020@avx2>
-References: <20180419124140.9309-1-hch@lst.de> <20180419185750.GD2066@avx2>
- <20180424142304.GE26136@lst.de>
- <20180424081916.e94ca8463fb3c39ebc082bdd@linux-foundation.org>
- <20180424160652.GA28483@lst.de>
+From: Chanwoo Choi <cw00.choi@samsung.com>
+Subject: Re: [RFC 04/10] clk: samsung: Remove support for Exynos5440
+Date: Thu, 26 Apr 2018 09:58:41 +0900
+Message-ID: <5AE12441.2090506__14438.9295754538$1524704236$gmane$org@samsung.com>
+References: <20180424203239.21885-1-krzk@kernel.org>
+ <CGME20180424203341epcas5p3a6db7d58b0ce8940d03711823fbf6e41@epcas5p3.samsung.com>
+ <20180424203239.21885-5-krzk@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <20180424160652.GA28483@lst.de>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, Corey Minyard <minyard@acm.org>, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, jfs-discussion@lists.sourceforge.net, linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org, netdev@vger.kernel.org, netfilter-devel@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Jiri Slaby <jslaby@suse.com>, Andrew Morton <akpm@linux-foundation.org>, linux-ext4@vger.kernel.org, linux-afs@lists.infradead.org, megaraidlinux.pdl@broadcom.com, drbd-dev@lists.linbit.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-reply-to: <20180424203239.21885-5-krzk@kernel.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Krzysztof Kozlowski <krzk@kernel.org>, Kukjin Kim <kgene@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Tejun Heo <tj@kernel.org>, Sylwester Nawrocki <s.nawrocki@samsung.com>, Tomasz Figa <tomasz.figa@gmail.com>, Michael Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Viresh Kumar <viresh.kumar@linaro.org>, Zhang Rui <rui.zhang@intel.com>, Eduardo Valentin <edubezval@gmail.com>, Russell King <linux@armlinux.org.uk>, Hans de Goede <hdegoede@redhat.com>, Linus Walleij <linus.walleij@linaro.org>, Andi Shyti <andi@etezian.org>, Mark Brown <broonie@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, devic
+Cc: Olof Johansson <olof@lixom.net>, Jaehoon Chung <jh80.chung@samsung.com>, Arnd Bergmann <arnd@arndb.de>, Marek Szyprowski <m.szyprowski@samsung.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Apr 24, 2018 at 06:06:53PM +0200, Christoph Hellwig wrote:
-> On Tue, Apr 24, 2018 at 08:19:16AM -0700, Andrew Morton wrote:
-> > > > I want to ask if it is time to start using poorman function overloading
-> > > > with _b_c_e(). There are millions of allocation functions for example,
-> > > > all slightly difference, and people will add more. Seeing /proc interfaces
-> > > > doubled like this is painful.
-> > > 
-> > > Function overloading is totally unacceptable.
-> > > 
-> > > And I very much disagree with a tradeoff that keeps 5000 lines of 
-> > > code vs a few new helpers.
-> > 
-> > OK, the curiosity and suspense are killing me.  What the heck is
-> > "function overloading with _b_c_e()"?
-> 
-> The way I understood Alexey was to use have a proc_create macro
-> that can take different ops types.  Although the short cut for
-> __builtin_types_compatible_p would be _b_t_c or similar, so maybe
-> I misunderstood him.
-
-That's correct.
-
-I also think that several dozens kmalloc signatures are a problem.
-
-And there will be more with pmalloc* stuff and more 2D/3D array
-checked allocations and who knows what.
-And I want to add typed kmalloc!
+SGkgS3J6eXN6dG9mLAoKT24gMjAxOOuFhCAwNOyblCAyNeydvCAwNTozMiwgS3J6eXN6dG9mIEtv
+emxvd3NraSB3cm90ZToKPiBUaGUgRXh5bm9zNTQ0MCBpcyBub3QgYWN0aXZlbHkgZGV2ZWxvcGVk
+LCB0aGVyZSBhcmUgbm8gZGV2ZWxvcG1lbnQKPiBib2FyZHMgYXZhaWxhYmxlIGFuZCBwcm9iYWJs
+eSB0aGVyZSBhcmUgbm8gcmVhbCBwcm9kdWN0cyB3aXRoIGl0Lgo+IFJlbW92ZSB3aWRlLXRyZWUg
+c3VwcG9ydCBmb3IgRXh5bm9zNTQ0MC4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBLcnp5c3p0b2YgS296
+bG93c2tpIDxrcnprQGtlcm5lbC5vcmc+Cj4gLS0tCj4gIC4uLi9kZXZpY2V0cmVlL2JpbmRpbmdz
+L2Nsb2NrL2V4eW5vczU0NDAtY2xvY2sudHh0IHwgIDI4IC0tLS0KPiAgZHJpdmVycy9jbGsvc2Ft
+c3VuZy9NYWtlZmlsZSAgICAgICAgICAgICAgICAgICAgICAgfCAgIDEgLQo+ICBkcml2ZXJzL2Ns
+ay9zYW1zdW5nL2Nsay1leHlub3M1NDQwLmMgICAgICAgICAgICAgICB8IDE2NyAtLS0tLS0tLS0t
+LS0tLS0tLS0tLS0KPiAgaW5jbHVkZS9kdC1iaW5kaW5ncy9jbG9jay9leHlub3M1NDQwLmggICAg
+ICAgICAgICAgfCAgNDQgLS0tLS0tCj4gIDQgZmlsZXMgY2hhbmdlZCwgMjQwIGRlbGV0aW9ucygt
+KQo+ICBkZWxldGUgbW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdz
+L2Nsb2NrL2V4eW5vczU0NDAtY2xvY2sudHh0Cj4gIGRlbGV0ZSBtb2RlIDEwMDY0NCBkcml2ZXJz
+L2Nsay9zYW1zdW5nL2Nsay1leHlub3M1NDQwLmMKPiAgZGVsZXRlIG1vZGUgMTAwNjQ0IGluY2x1
+ZGUvZHQtYmluZGluZ3MvY2xvY2svZXh5bm9zNTQ0MC5oCj4gCgpMb29rcyBnb29kIHRvIG1lLiBU
+aGFua3MuCgpBY2tlZC1ieTogQ2hhbndvbyBDaG9pIDxjdzAwLmNob2lAc2Ftc3VuZy5jb20+Cgpb
+c25pcF0KCi0tIApCZXN0IFJlZ2FyZHMsCkNoYW53b28gQ2hvaQpTYW1zdW5nIEVsZWN0cm9uaWNz
+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1h
+cm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5v
+cmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0t
+a2VybmVsCg==
