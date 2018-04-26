@@ -1,50 +1,28 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: Apply NOLPM quirk for SAMSUNG MZMPC128HBFU-000MV
- SSD
-Date: Thu, 26 Apr 2018 11:46:43 -0700
-Message-ID: <20180426184643.GL1911913@devbig577.frc2.facebook.com>
-References: <20180424091907.19903-1-hdegoede@redhat.com>
+Subject: Re: [PATCH] Revert "ata: ahci-platform: add reset control support"
+Date: Thu, 26 Apr 2018 12:20:40 -0700
+Message-ID: <20180426192040.GT1911913@devbig577.frc2.facebook.com>
+References: <1523237554-7928-1-git-send-email-hayashi.kunihiko@socionext.com>
+ <c8ec7474-7eb4-24cf-1f53-b4bcee5508dd@redhat.com>
+ <20180418083647.GA5503@ulmo>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20180424091907.19903-1-hdegoede@redhat.com>
+In-Reply-To: <20180418083647.GA5503@ulmo>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Kevin Shanahan <kevin@shanahan.id.au>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: linux-ide@vger.kernel.org, Kunihiko Hayashi <hayashi.kunihiko@socionext.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Hans de Goede <hdegoede@redhat.com>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Apr 24, 2018 at 11:19:07AM +0200, Hans de Goede wrote:
-> Kevin Shanahan reports the following repeating errors when using LPM,
-> causing long delays accessing the disk:
-> 
->   Apr 23 10:21:43 link kernel: ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x50000 action 0x6 frozen
->   Apr 23 10:21:43 link kernel: ata1: SError: { PHYRdyChg CommWake }
->   Apr 23 10:21:43 link kernel: ata1.00: failed command: WRITE DMA
->   Apr 23 10:21:43 link kernel: ata1.00: cmd ca/00:08:60:5d:cd/00:00:00:00:00/e1 tag 9 dma 4096 out
->                                         res 50/01:01:01:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
->   Apr 23 10:21:43 link kernel: ata1.00: status: { DRDY }
->   Apr 23 10:21:43 link kernel: ata1.00: error: { AMNF }
->   Apr 23 10:21:43 link kernel: ata1: hard resetting link
->   Apr 23 10:21:43 link kernel: ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
->   Apr 23 10:21:43 link kernel: ata1.00: configured for UDMA/133
->   Apr 23 10:21:43 link kernel: ata1: EH complete
-> 
-> These go away when switching from med_power_with_dipm to medium_power.
-> 
-> This is somewhat weird as the PM830 datasheet explicitly mentions DIPM
-> being supported and the idle power-consumption is specified with DIPM
-> enabled.
-> 
-> There are many OEM customized firmware versions for the PM830, so for now
-> lets assume this is firmware version specific and blacklist LPM based on
-> the firmware version.
-> 
-> Cc: Kevin Shanahan <kevin@shanahan.id.au>
-> Reported-by: Kevin Shanahan <kevin@shanahan.id.au>
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Hello,
 
-Applied to libata/for-4.17-fixes.
+On Wed, Apr 18, 2018 at 10:36:47AM +0200, Thierry Reding wrote:
+> I see that you've applied this to your for-next branch. However, this is
+> a fix that needs to go into v4.17 because that's where the regression
+> was introduced. Is there any way you can promote this to a fixes branch?
+
+It's in for-4.17-fixes.  I'll push it out early next week.
 
 Thanks.
 
