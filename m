@@ -1,30 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] Revert "ata: ahci-platform: add reset control support"
-Date: Thu, 26 Apr 2018 12:20:40 -0700
-Message-ID: <20180426192040.GT1911913@devbig577.frc2.facebook.com>
-References: <1523237554-7928-1-git-send-email-hayashi.kunihiko@socionext.com>
- <c8ec7474-7eb4-24cf-1f53-b4bcee5508dd@redhat.com>
- <20180418083647.GA5503@ulmo>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180418083647.GA5503@ulmo>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: linux-ide@vger.kernel.org, Kunihiko Hayashi <hayashi.kunihiko@socionext.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Hans de Goede <hdegoede@redhat.com>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH] libata: Apply NOLPM quirk for SanDisk SD7UB3Q*G1001 SSDs
+Date: Thu, 26 Apr 2018 22:32:21 +0200
+Message-ID: <20180426203221.2683-1-hdegoede@redhat.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org, "Richard W . M . Jones" <rjones@redhat.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hello,
+Richard Jones has reported that using med_power_with_dipm on a T450s
+with a Sandisk SD7UB3Q256G1001 SSD (firmware version X2180501) is
+causing the machine to hang.
 
-On Wed, Apr 18, 2018 at 10:36:47AM +0200, Thierry Reding wrote:
-> I see that you've applied this to your for-next branch. However, this is
-> a fix that needs to go into v4.17 because that's where the regression
-> was introduced. Is there any way you can promote this to a fixes branch?
+Switching the LPM to max_performance fixes this, so it seems that
+this Sandisk SSD does not handle LPM well.
 
-It's in for-4.17-fixes.  I'll push it out early next week.
+Note in the past there have been bug-reports about the following
+Sandisk models not working with min_power, so we may need to extend
+the quirk list in the future: name - firmware
+Sandisk SD6SB2M512G1022I   - X210400
+Sandisk SD6PP4M-256G-1006  - A200906
 
-Thanks.
+Cc: stable@vger.kernel.org
+Cc: Richard W.M. Jones <rjones@redhat.com>
+Reported-and-tested-by: Richard W.M. Jones <rjones@redhat.com>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ drivers/ata/libata-core.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 6e400ff2b5db..68596bd4cf06 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4552,6 +4552,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	/* This specific Samsung model/firmware-rev does not handle LPM well */
+ 	{ "SAMSUNG MZMPC128HBFU-000MV", "CXM14M1Q", ATA_HORKAGE_NOLPM, },
+ 
++	/* Sandisk devices which are known to not handle LPM well */
++	{ "SanDisk SD7UB3Q*G1001",	NULL,	ATA_HORKAGE_NOLPM, },
++
+ 	/* devices that don't properly handle queued TRIM commands */
+ 	{ "Micron_M500_*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
 -- 
-tejun
+2.17.0
