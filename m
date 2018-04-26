@@ -1,30 +1,45 @@
-From: andi@etezian.org
-Subject: Re: [RFC 08/10] spi: s3c64xx: samsung: Remove support for Exynos5440
-Date: Thu, 26 Apr 2018 13:35:03 +0900
-Message-ID: <f47ea49afb9301d33383143056ed11a7@etezian.org>
-References: <20180424203239.21885-1-krzk@kernel.org>
- <20180424203239.21885-9-krzk@kernel.org>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: Re: [PATCH 2/5] ide: kill ide_toggle_bounce
+Date: Thu, 26 Apr 2018 09:20:33 +0200
+Message-ID: <20180426072033.GA14700@lst.de>
+References: <20180424181625.22410-1-hch@lst.de>
+	<20180424181625.22410-3-hch@lst.de>
+	<5aaca0d3-417f-57f3-969f-b4c777c3fd48@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180424203239.21885-9-krzk@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: Kukjin Kim <kgene@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Tejun Heo <tj@kernel.org>, Sylwester Nawrocki <s.nawrocki@samsung.com>, Tomasz Figa <tomasz.figa@gmail.com>, Chanwoo Choi <cw00.choi@samsung.com>, Michael Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Viresh Kumar <viresh.kumar@linaro.org>, Zhang Rui <rui.zhang@intel.com>, Eduardo Valentin <edubezval@gmail.com>, Russell King <linux@armlinux.org.uk>, Hans de Goede <hdegoede@redhat.com>, Linus Walleij <linus.walleij@linaro.org>, Mark Brown <broonie@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfou>
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <5aaca0d3-417f-57f3-969f-b4c777c3fd48-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Cc: linux-arch-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-Hi Krzysztof,
-
-On 25.04.2018 05:32, Krzysztof Kozlowski wrote:
-> The Exynos5440 is not actively developed, there are no development
-> boards available and probably there are no real products with it.
-> Remove wide-tree support for Exynos5440.
+On Tue, Apr 24, 2018 at 08:02:56PM -0600, Jens Axboe wrote:
+> On 4/24/18 12:16 PM, Christoph Hellwig wrote:
+> > ide_toggle_bounce did select various strange block bounce limits, including
+> > not bouncing at all as soon as an iommu is present in the system.  Given
+> > that the dma_map routines now handle any required bounce buffering except
+> > for ISA DMA, and the ide code already must handle either ISA DMA or highmem
+> > at least for iommu equipped systems we can get rid of the block layer
+> > bounce limit setting entirely.
 > 
-> Signed-off-by: Krzysztof Kozlowski <krzk@kernel.org>
+> Pretty sure I was the one to add this code, when highmem page IO was
+> enabled about two decades ago...
+> 
+> Outside of DMA, the issue was that the PIO code could not handle
+> highmem. That's not the case anymore, so this should be fine.
 
-Reviewed-by: Andi Shyti <andi@etezian.org>
-
-Thanks,
-Andi
+Yes, that is the rationale.  Any chance to you could look over the
+other patches as well?  Except for the networking one for which I'd
+really like to see a review from Dave all the users of the interface
+are block related.
