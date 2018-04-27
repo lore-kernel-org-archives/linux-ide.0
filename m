@@ -1,40 +1,60 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: Apply NOLPM quirk for SanDisk SD7UB3Q*G1001 SSDs
-Date: Thu, 26 Apr 2018 14:09:52 -0700
-Message-ID: <20180426210952.GU1911913@devbig577.frc2.facebook.com>
-References: <20180426203221.2683-1-hdegoede@redhat.com>
+From: Thierry Reding <thierry.reding@gmail.com>
+Subject: Re: [PATCH] Revert "ata: ahci-platform: add reset control support"
+Date: Fri, 27 Apr 2018 11:28:56 +0200
+Message-ID: <20180427092856.GA30388@ulmo>
+References: <1523237554-7928-1-git-send-email-hayashi.kunihiko@socionext.com>
+ <c8ec7474-7eb4-24cf-1f53-b4bcee5508dd@redhat.com>
+ <20180418083647.GA5503@ulmo>
+ <20180426192040.GT1911913@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="h31gzZEtNLTqOjlF"
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20180426203221.2683-1-hdegoede@redhat.com>
-Sender: stable-owner@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org, "Richard W . M . Jones" <rjones@redhat.com>
+In-Reply-To: <20180426192040.GT1911913@devbig577.frc2.facebook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Kunihiko Hayashi <hayashi.kunihiko@socionext.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Hans de Goede <hdegoede@redhat.com>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Apr 26, 2018 at 10:32:21PM +0200, Hans de Goede wrote:
-> Richard Jones has reported that using med_power_with_dipm on a T450s
-> with a Sandisk SD7UB3Q256G1001 SSD (firmware version X2180501) is
-> causing the machine to hang.
-> 
-> Switching the LPM to max_performance fixes this, so it seems that
-> this Sandisk SSD does not handle LPM well.
-> 
-> Note in the past there have been bug-reports about the following
-> Sandisk models not working with min_power, so we may need to extend
-> the quirk list in the future: name - firmware
-> Sandisk SD6SB2M512G1022I   - X210400
-> Sandisk SD6PP4M-256G-1006  - A200906
-> 
-> Cc: stable@vger.kernel.org
-> Cc: Richard W.M. Jones <rjones@redhat.com>
-> Reported-and-tested-by: Richard W.M. Jones <rjones@redhat.com>
-> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 
-Applied to libata/for-4.17-fixes.
+--h31gzZEtNLTqOjlF
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks.
+On Thu, Apr 26, 2018 at 12:20:40PM -0700, Tejun Heo wrote:
+> Hello,
+>=20
+> On Wed, Apr 18, 2018 at 10:36:47AM +0200, Thierry Reding wrote:
+> > I see that you've applied this to your for-next branch. However, this is
+> > a fix that needs to go into v4.17 because that's where the regression
+> > was introduced. Is there any way you can promote this to a fixes branch?
+>=20
+> It's in for-4.17-fixes.  I'll push it out early next week.
 
--- 
-tejun
+Great, thanks!
+
+Thierry
+
+--h31gzZEtNLTqOjlF
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlri7VQACgkQ3SOs138+
+s6FdOw/9H8ua3amf4gF4ALR4Ye9RLllwoIHD/LF43KfvhDk2K6G+MimAmsTY3DT2
+1aaDw3h2AMpLd/0WcBlGQaMHv/myHGaoiTDC+hF0ll4uRrQORYi8EwUygVOVBk9+
+ETmPKaQYmmf6/qd1zOFx7tdCxKQA4R+ot66rbG7iznR+Simeq04gQVSVH5AERz7J
+JIakdSVdumWqwuoDZHIOXwbPuo79CmMzEtpUs8FrQA3GHv6uVombsVrT1So6lKpx
+81bAMZexdzxKUOSutZF4vDv8DLjaDW5nBqDd92U7ncVIYjUAbxFu5AlfwYCRQSV1
+ECtlcBKLhgirb82CLhuMs2NbtpiwLYC0amPYmeVJt8gAdb5hG2Ljzqx81KehtKC7
+0nKkGcUiQiRsDlThbhJcEgonLuvJBmgXyboowIKZDEANRMXT6omCMvPX2Wko84Md
+b5sxZ+3uzKyUhBYH2VL9FrXxXKLrkrZsCwTc03IeBWcPEkUwUYi08oirrFBasDlw
+f+sYq2rZCgd/JcsO/GvQPzKKiE1zd2EY0Zz8BLjBTTg64pXl3stip2gaxXZxNwHY
+51GNVkjfO/c0jffs3w7Z2DkFtSj2iB/RvJZT7aSMAc4NKdekHIr7grQoZ+b1fan5
+t2ZZihHAg5i0oURWQs/wLTUyv7XkUk8Urc7v5L5I521MUQs0Log=
+=wrNj
+-----END PGP SIGNATURE-----
+
+--h31gzZEtNLTqOjlF--
