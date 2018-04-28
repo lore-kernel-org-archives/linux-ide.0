@@ -1,60 +1,60 @@
-From: Thierry Reding <thierry.reding@gmail.com>
-Subject: Re: [PATCH] Revert "ata: ahci-platform: add reset control support"
-Date: Fri, 27 Apr 2018 11:28:56 +0200
-Message-ID: <20180427092856.GA30388@ulmo>
-References: <1523237554-7928-1-git-send-email-hayashi.kunihiko@socionext.com>
- <c8ec7474-7eb4-24cf-1f53-b4bcee5508dd@redhat.com>
- <20180418083647.GA5503@ulmo>
- <20180426192040.GT1911913@devbig577.frc2.facebook.com>
+From: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
+Subject: Re: [PATCH v3 03/20] crypto: Remove depends on HAS_DMA in case of
+	platform dependency
+Date: Sat, 28 Apr 2018 16:24:38 +0800
+Message-ID: <20180428082438.azb64xw6hofisdwi@gondor.apana.org.au>
+References: <1523987360-18760-1-git-send-email-geert@linux-m68k.org>
+	<1523987360-18760-4-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="h31gzZEtNLTqOjlF"
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20180426192040.GT1911913@devbig577.frc2.facebook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Kunihiko Hayashi <hayashi.kunihiko@socionext.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Hans de Goede <hdegoede@redhat.com>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1523987360-18760-4-git-send-email-geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+Cc: Ulf Hansson <ulf.hansson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wolfram Sang <wsa-z923LK4zBo2bacvFa/9K2g@public.gmane.org>, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fpga-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-remoteproc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, Bjorn Andersson <bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux1394-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Stefan Wahren <stefan.wahren-eS4NqCHxEME@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Jassi Brar <jassisinghbrar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Marek Vasut <marek.vasut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-serial-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matias Bjorling <mb-VR7NuqX4VJ8tq7phqP6ubQ@public.gmane.org>, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Ohad Ben-Cohen <ohad-Ix1uc/W3ht7QT0dZR+AlfA@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, Alan Tull <atull-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, linux-kernel@vg
 List-Id: linux-ide@vger.kernel.org
 
+On Tue, Apr 17, 2018 at 07:49:03PM +0200, Geert Uytterhoeven wrote:
+> Remove dependencies on HAS_DMA where a Kconfig symbol depends on another
+> symbol that implies HAS_DMA, and, optionally, on "|| COMPILE_TEST".
+> In most cases this other symbol is an architecture or platform specific
+> symbol, or PCI.
+> 
+> Generic symbols and drivers without platform dependencies keep their
+> dependencies on HAS_DMA, to prevent compiling subsystems or drivers that
+> cannot work anyway.
+> 
+> This simplifies the dependencies, and allows to improve compile-testing.
+> 
+> Signed-off-by: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+> Reviewed-by: Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Acked-by: Robin Murphy <robin.murphy-5wv7dgnIgG8@public.gmane.org>
+> Acked-by: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
+> ---
+> v3:
+>   - Add Acked-by,
+>   - Rebase to v4.17-rc1,
+> 
+> v2:
+>   - Add Reviewed-by, Acked-by,
+>   - Drop RFC state,
+>   - Split per subsystem.
+> ---
+>  drivers/crypto/Kconfig | 14 ++++----------
+>  1 file changed, 4 insertions(+), 10 deletions(-)
 
---h31gzZEtNLTqOjlF
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, Apr 26, 2018 at 12:20:40PM -0700, Tejun Heo wrote:
-> Hello,
->=20
-> On Wed, Apr 18, 2018 at 10:36:47AM +0200, Thierry Reding wrote:
-> > I see that you've applied this to your for-next branch. However, this is
-> > a fix that needs to go into v4.17 because that's where the regression
-> > was introduced. Is there any way you can promote this to a fixes branch?
->=20
-> It's in for-4.17-fixes.  I'll push it out early next week.
-
-Great, thanks!
-
-Thierry
-
---h31gzZEtNLTqOjlF
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlri7VQACgkQ3SOs138+
-s6FdOw/9H8ua3amf4gF4ALR4Ye9RLllwoIHD/LF43KfvhDk2K6G+MimAmsTY3DT2
-1aaDw3h2AMpLd/0WcBlGQaMHv/myHGaoiTDC+hF0ll4uRrQORYi8EwUygVOVBk9+
-ETmPKaQYmmf6/qd1zOFx7tdCxKQA4R+ot66rbG7iznR+Simeq04gQVSVH5AERz7J
-JIakdSVdumWqwuoDZHIOXwbPuo79CmMzEtpUs8FrQA3GHv6uVombsVrT1So6lKpx
-81bAMZexdzxKUOSutZF4vDv8DLjaDW5nBqDd92U7ncVIYjUAbxFu5AlfwYCRQSV1
-ECtlcBKLhgirb82CLhuMs2NbtpiwLYC0amPYmeVJt8gAdb5hG2Ljzqx81KehtKC7
-0nKkGcUiQiRsDlThbhJcEgonLuvJBmgXyboowIKZDEANRMXT6omCMvPX2Wko84Md
-b5sxZ+3uzKyUhBYH2VL9FrXxXKLrkrZsCwTc03IeBWcPEkUwUYi08oirrFBasDlw
-f+sYq2rZCgd/JcsO/GvQPzKKiE1zd2EY0Zz8BLjBTTg64pXl3stip2gaxXZxNwHY
-51GNVkjfO/c0jffs3w7Z2DkFtSj2iB/RvJZT7aSMAc4NKdekHIr7grQoZ+b1fan5
-t2ZZihHAg5i0oURWQs/wLTUyv7XkUk8Urc7v5L5I521MUQs0Log=
-=wrNj
------END PGP SIGNATURE-----
-
---h31gzZEtNLTqOjlF--
+Patch applied.  Thanks.
+-- 
+Email: Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
