@@ -1,83 +1,38 @@
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Subject: [PATCH v2] libata: blacklist Micron SSD
-Date: Sun, 29 Apr 2018 17:01:38 +0100
-Message-ID: <20180429160138.11091-1-sudip.mukherjee@codethink.co.uk>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Sudip Mukherjee <sudipm.mukherjee@gmail.com>, stable@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>
+From: David Howells <dhowells@redhat.com>
+Subject: Re: [PATCH 04/40] proc: introduce proc_create_seq{,_data}
+Date: Mon, 30 Apr 2018 14:19:25 +0100
+Message-ID: <26540.1525094365@warthog.procyon.org.uk>
+References: <20180425154827.32251-5-hch@lst.de>
+ <20180425154827.32251-1-hch@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <20180425154827.32251-5-hch@lst.de>
+Content-ID: <26539.1525094365.1@warthog.procyon.org.uk>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-rtc@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, megaraidlinux.pdl@broadcom.com, linux-kernel@vger.kernel.org, Alexey Dobriyan <adobriyan@gmail.com>, dhowells@redhat.com, linux-ide@vger.kernel.org, netfilter-devel@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, netdev@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-ext4@vger.kernel.org, linux-afs@lists.infradead.org, jfs-discussion@lists.sourceforge.net, drbd-dev@lists.linbit.com
 List-Id: linux-ide@vger.kernel.org
 
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Christoph Hellwig <hch@lst.de> wrote:
 
-While whitelisting Micron M500DC drives, the tweaked blacklist entry
-enabled queued TRIM for M500IT variants also. But these do not support
-queued TRIM. And while using those SSDs with the latest kernel we have
-seen errors and even the partition table getting corrupted.
+> +
+> +struct proc_dir_entry *proc_create_seq_data(const char *name, umode_t mode,
+> +		struct proc_dir_entry *parent, const struct seq_operations *ops,
+> +		void *data)
+> +{
+> ...
+> +EXPORT_SYMBOL(proc_create_seq_data);
 
-Some part from the dmesg:
-[    6.727384] ata1.00: ATA-9: Micron_M500IT_MTFDDAK060MBD, MU01, max UDMA/133
-[    6.727390] ata1.00: 117231408 sectors, multi 16: LBA48 NCQ (depth 31/32), AA
-[    6.741026] ata1.00: supports DRM functions and may not be fully accessible
-[    6.759887] ata1.00: configured for UDMA/133
-[    6.762256] scsi 0:0:0:0: Direct-Access     ATA      Micron_M500IT_MT MU01 PQ: 0 ANSI: 5
+Please add documentation comments to exported functions when you add them.
 
-and then for the error:
-[  120.860334] ata1.00: exception Emask 0x1 SAct 0x7ffc0007 SErr 0x0 action 0x6 frozen
-[  120.860338] ata1.00: irq_stat 0x40000008
-[  120.860342] ata1.00: failed command: SEND FPDMA QUEUED
-[  120.860351] ata1.00: cmd 64/01:00:00:00:00/00:00:00:00:00/a0 tag 0 ncq dma 512 out
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x5 (timeout)
-[  120.860353] ata1.00: status: { DRDY }
-[  120.860543] ata1: hard resetting link
-[  121.166128] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[  121.166376] ata1.00: supports DRM functions and may not be fully accessible
-[  121.186238] ata1.00: supports DRM functions and may not be fully accessible
-[  121.204445] ata1.00: configured for UDMA/133
-[  121.204454] ata1.00: device reported invalid CHS sector 0
-[  121.204541] sd 0:0:0:0: [sda] tag#18 UNKNOWN(0x2003) Result: hostbyte=0x00 driverbyte=0x08
-[  121.204546] sd 0:0:0:0: [sda] tag#18 Sense Key : 0x5 [current] 
-[  121.204550] sd 0:0:0:0: [sda] tag#18 ASC=0x21 ASCQ=0x4 
-[  121.204555] sd 0:0:0:0: [sda] tag#18 CDB: opcode=0x93 93 08 00 00 00 00 00 04 28 80 00 00 00 30 00 00
-[  121.204559] print_req_error: I/O error, dev sda, sector 272512
-
-After few reboots with these errors, and the SSD is corrupted.
-After blacklisting it, the errors are not seen and the SSD does not get
-corrupted any more.
-
-We know that M500IT MG02 and M500DC support this feature, Martin asked
-Micron for a list of SSDs which have support for this feature. But there
-was no reply. It is best to blacklst all Micron SSDs for now, except the
-known two variants, to prevent corrupting other Micron SSDs which do not
-support this.
-
-Fixes: 243918be6393 ("libata: Do not blacklist Micron M500DC")
-Cc: stable@vger.kernel.org
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
----
-
-v1: Only M500IT MU01 was blacklisted.
-
-v2: Whitelist M500IT BG02 and M500DC and then blacklist all other Micron. 
-
- drivers/ata/libata-core.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 8bc71ca61e7f..df5d716c0a07 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4550,7 +4550,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 						ATA_HORKAGE_NOLPM, },
- 
- 	/* devices that don't properly handle queued TRIM commands */
--	{ "Micron_M500_*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
-+	{ "Micron_M500DC*",		NULL,	0},
-+	{ "Micron_M500IT_*",		"MG02",	0},
-+	{ "Micron_M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
- 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
- 	{ "Crucial_CT*M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
- 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
--- 
-2.11.0
+David
