@@ -1,116 +1,104 @@
-From: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-Subject: Re: [PATCH 04/15] media: pxa_camera: remove the dmaengine compat need
-Date: Fri, 4 May 2018 16:29:32 -0300
-Message-ID: <20180504162932.52a020cc@vento.lan>
-References: <20180402142656.26815-1-robert.jarzmik@free.fr>
- <20180402142656.26815-5-robert.jarzmik@free.fr>
- <89f3e97c-08a4-33b6-8fd3-0c1b4dea2065@xs4all.nl>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: Re: [PATCH 11/40] ipv6/flowlabel: simplify pid namespace lookup
+Date: Sat, 05 May 2018 07:37:33 -0500
+Message-ID: <878t8y46sy.fsf@xmission.com>
+References: <20180425154827.32251-1-hch@lst.de>
+        <20180425154827.32251-12-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <89f3e97c-08a4-33b6-8fd3-0c1b4dea2065@xs4all.nl>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Hans Verkuil <hverkuil@xs4all.nl>
-Cc: Ulf Hansson <ulf.hansson@linaro.org>, alsa-devel@alsa-project.org, Takashi Iwai <tiwai@suse.com>, linux-ide@vger.kernel.org, Pravin Shedge <pravin.shedge4linux@gmail.com>, netdev@vger.kernel.org, linux-mtd@lists.infradead.org, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, Robert Jarzmik <robert.jarzmik@free.fr>, devel@driverdev.osuosl.org, Boris Brezillon <boris.brezillon@free-electrons.com>, dmaengine@vger.kernel.org, Vinod Koul <vinod.koul@intel.com>, Richard Weinberger <richard@nod.at>, Robert Jarzmik <robert.jarzmik@renault.com>, Marek Vasut <marek.vasut@gmail.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, linux-media@vger.kernel.org, Samuel Ortiz <samuel@sortiz.org>, Arnd Bergmann <arnd@arndb.de>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Haojian Zhuang <haojian.zhuang@gmail.com>, Flavio Ceolin <flavio.ceolin@intel.com>, Mark
+Content-Type: text/plain
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20180425154827.32251-12-hch@lst.de> (Christoph Hellwig's message
+        of "Wed, 25 Apr 2018 17:47:58 +0200")
+Sender: netdev-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Alexey Dobriyan <adobriyan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, linux-acpi@vger.kernel.org, drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-rtc@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Em Sun, 22 Apr 2018 13:06:12 +0200
-Hans Verkuil <hverkuil@xs4all.nl> escreveu:
+Christoph Hellwig <hch@lst.de> writes:
 
-> On 04/02/2018 04:26 PM, Robert Jarzmik wrote:
-> > From: Robert Jarzmik <robert.jarzmik@renault.com>
-> > 
-> > As the pxa architecture switched towards the dmaengine slave map, the
-> > old compatibility mechanism to acquire the dma requestor line number and
-> > priority are not needed anymore.
-> > 
-> > This patch simplifies the dma resource acquisition, using the more
-> > generic function dma_request_slave_channel().
-> > 
-> > Signed-off-by: Robert Jarzmik <robert.jarzmik@free.fr>  
-> 
-> Acked-by: Hans Verkuil <hans.verkuil@cisco.com>
+> The shole seq_file sequence already operates under a single RCU lock pair,
+> so move the pid namespace lookup into it, and stop grabbing a reference
+> and remove all kinds of boilerplate code.
 
-I'm assuming that you'll be applying it together with other PXA patches.
-So:
+This is wrong.
 
-Acked-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Move task_active_pid_ns(current) from open to seq_start actually means
+that the results if you pass this proc file between callers the results
+will change.  So this breaks file descriptor passing.
 
-Regards,
-Mauro
-> 
-> Regards,
-> 
-> 	Hans
-> 
-> > ---
-> >  drivers/media/platform/pxa_camera.c | 22 +++-------------------
-> >  1 file changed, 3 insertions(+), 19 deletions(-)
-> > 
-> > diff --git a/drivers/media/platform/pxa_camera.c b/drivers/media/platform/pxa_camera.c
-> > index c71a00736541..4c82d1880753 100644
-> > --- a/drivers/media/platform/pxa_camera.c
-> > +++ b/drivers/media/platform/pxa_camera.c
-> > @@ -2357,8 +2357,6 @@ static int pxa_camera_probe(struct platform_device *pdev)
-> >  		.src_maxburst = 8,
-> >  		.direction = DMA_DEV_TO_MEM,
-> >  	};
-> > -	dma_cap_mask_t mask;
-> > -	struct pxad_param params;
-> >  	char clk_name[V4L2_CLK_NAME_SIZE];
-> >  	int irq;
-> >  	int err = 0, i;
-> > @@ -2432,34 +2430,20 @@ static int pxa_camera_probe(struct platform_device *pdev)
-> >  	pcdev->base = base;
-> >  
-> >  	/* request dma */
-> > -	dma_cap_zero(mask);
-> > -	dma_cap_set(DMA_SLAVE, mask);
-> > -	dma_cap_set(DMA_PRIVATE, mask);
-> > -
-> > -	params.prio = 0;
-> > -	params.drcmr = 68;
-> > -	pcdev->dma_chans[0] =
-> > -		dma_request_slave_channel_compat(mask, pxad_filter_fn,
-> > -						 &params, &pdev->dev, "CI_Y");
-> > +	pcdev->dma_chans[0] = dma_request_slave_channel(&pdev->dev, "CI_Y");
-> >  	if (!pcdev->dma_chans[0]) {
-> >  		dev_err(&pdev->dev, "Can't request DMA for Y\n");
-> >  		return -ENODEV;
-> >  	}
-> >  
-> > -	params.drcmr = 69;
-> > -	pcdev->dma_chans[1] =
-> > -		dma_request_slave_channel_compat(mask, pxad_filter_fn,
-> > -						 &params, &pdev->dev, "CI_U");
-> > +	pcdev->dma_chans[1] = dma_request_slave_channel(&pdev->dev, "CI_U");
-> >  	if (!pcdev->dma_chans[1]) {
-> >  		dev_err(&pdev->dev, "Can't request DMA for Y\n");
-> >  		err = -ENODEV;
-> >  		goto exit_free_dma_y;
-> >  	}
-> >  
-> > -	params.drcmr = 70;
-> > -	pcdev->dma_chans[2] =
-> > -		dma_request_slave_channel_compat(mask, pxad_filter_fn,
-> > -						 &params, &pdev->dev, "CI_V");
-> > +	pcdev->dma_chans[2] = dma_request_slave_channel(&pdev->dev, "CI_V");
-> >  	if (!pcdev->dma_chans[2]) {
-> >  		dev_err(&pdev->dev, "Can't request DMA for V\n");
-> >  		err = -ENODEV;
-> >   
-> 
+Open is a bad place to access current.  In the middle of read/write is
+broken.
+
+
+In this particular instance looking up the pid namespace with
+task_active_pid_ns was a personal brain fart.  What the code should be
+doing (with an appropriate helper) is:
+
+struct pid_namespace *pid_ns = inode->i_sb->s_fs_info;
+
+Because each mount of proc is bound to a pid namespace.  Looking up the
+pid namespace from the super_block is a much better way to go.
+
+Eric
 
 
 
-Thanks,
-Mauro
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  net/ipv6/ip6_flowlabel.c | 28 +++++-----------------------
+>  1 file changed, 5 insertions(+), 23 deletions(-)
+>
+> diff --git a/net/ipv6/ip6_flowlabel.c b/net/ipv6/ip6_flowlabel.c
+> index c05c4e82a7ca..a9f221d45ef9 100644
+> --- a/net/ipv6/ip6_flowlabel.c
+> +++ b/net/ipv6/ip6_flowlabel.c
+> @@ -754,7 +754,10 @@ static struct ip6_flowlabel *ip6fl_get_idx(struct seq_file *seq, loff_t pos)
+>  static void *ip6fl_seq_start(struct seq_file *seq, loff_t *pos)
+>  	__acquires(RCU)
+>  {
+> +	struct ip6fl_iter_state *state = ip6fl_seq_private(seq);
+> +
+>  	rcu_read_lock_bh();
+> +	state->pid_ns = task_active_pid_ns(current);
+>  	return *pos ? ip6fl_get_idx(seq, *pos - 1) : SEQ_START_TOKEN;
+>  }
+>  
+> @@ -810,36 +813,15 @@ static const struct seq_operations ip6fl_seq_ops = {
+>  
+>  static int ip6fl_seq_open(struct inode *inode, struct file *file)
+>  {
+> -	struct seq_file *seq;
+> -	struct ip6fl_iter_state *state;
+> -	int err;
+> -
+> -	err = seq_open_net(inode, file, &ip6fl_seq_ops,
+> +	return seq_open_net(inode, file, &ip6fl_seq_ops,
+>  			   sizeof(struct ip6fl_iter_state));
+> -
+> -	if (!err) {
+> -		seq = file->private_data;
+> -		state = ip6fl_seq_private(seq);
+> -		rcu_read_lock();
+> -		state->pid_ns = get_pid_ns(task_active_pid_ns(current));
+> -		rcu_read_unlock();
+> -	}
+> -	return err;
+> -}
+> -
+> -static int ip6fl_seq_release(struct inode *inode, struct file *file)
+> -{
+> -	struct seq_file *seq = file->private_data;
+> -	struct ip6fl_iter_state *state = ip6fl_seq_private(seq);
+> -	put_pid_ns(state->pid_ns);
+> -	return seq_release_net(inode, file);
+>  }
+>  
+>  static const struct file_operations ip6fl_seq_fops = {
+>  	.open		=	ip6fl_seq_open,
+>  	.read		=	seq_read,
+>  	.llseek		=	seq_lseek,
+> -	.release	=	ip6fl_seq_release,
+> +	.release	=	seq_release_net,
+>  };
+>  
+>  static int __net_init ip6_flowlabel_proc_init(struct net *net)
