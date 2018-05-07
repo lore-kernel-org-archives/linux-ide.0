@@ -1,104 +1,89 @@
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: simplify procfs code for seq_file instances V2
-Date: Sun, 6 May 2018 18:45:31 +0100
-Message-ID: <20180506174531.GK30522@ZenIV.linux.org.uk>
-References: <20180425154827.32251-1-hch@lst.de>
- <20180506171948.GA769@avx2>
+From: Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org>
+Subject: Re: [PATCH v3 12/20] media: Remove depends on HAS_DMA in case of
+	platform dependency
+Date: Mon, 7 May 2018 09:21:47 +0200
+Message-ID: <CAMuHMdXp8u9O7Yt3W+WxuOOadYOM+_28DLOMfktwgy_WqML_0A@mail.gmail.com>
+References: <1523987360-18760-1-git-send-email-geert@linux-m68k.org>
+	<1523987360-18760-13-git-send-email-geert@linux-m68k.org>
+	<20180505094743.4d201ba0@vento.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180506171948.GA769@avx2>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alexey Dobriyan <adobriyan@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, linux-acpi@vger.kernel.org, drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-rtc@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <20180505094743.4d201ba0-ch4gOOMV7nf/PtFMR13I2A@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: Mauro Carvalho Chehab <mchehab+samsung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Ulf Hansson <ulf.hansson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Wolfram Sang <wsa-z923LK4zBo2bacvFa/9K2g@public.gmane.org>, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fpga-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "open list:REMOTE PROCESSOR (REMOTEPROC) SUBSYSTEM" <linux-remoteproc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, ALSA Development Mailing List <alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org>, Bjorn Andersson <bjorn.andersson-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Eric Anholt <eric-WhKQ6XTQaPysTnJN9+BGXg@public.gmane.org>, netdev <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, MTD Maling List <linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Linux I2C <linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux1394-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Stefan Wahren <stefan.wahren-eS4NqCHxEME@public.gmane.org>, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Herbert Xu <herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org>, Richard Weinberger <richard-/L3Ra7n9ekc@public.gmane.org>, Jassi Brar <jassisinghbrar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Marek Vasut <marek.vasut-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "open list:SERIAL DRIVERS" <linux-serial-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Matias Bjorling <mb@light>
 List-Id: linux-ide@vger.kernel.org
 
-On Sun, May 06, 2018 at 08:19:49PM +0300, Alexey Dobriyan wrote:
-> +++ b/fs/proc/internal.h
-> @@ -48,8 +48,8 @@ struct proc_dir_entry {
->  		const struct seq_operations *seq_ops;
->  		int (*single_show)(struct seq_file *, void *);
->  	};
-> -	unsigned int state_size;
->  	void *data;
-> +	unsigned int state_size;
->  	unsigned int low_ino;
->  	nlink_t nlink;
->  	kuid_t uid;
+Hi Mauro,
 
-Makes sense
+On Sat, May 5, 2018 at 2:47 PM, Mauro Carvalho Chehab
+<mchehab+samsung-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> Em Tue, 17 Apr 2018 19:49:12 +0200
+> Geert Uytterhoeven <geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org> escreveu:
+>
+>> Remove dependencies on HAS_DMA where a Kconfig symbol depends on another
+>> symbol that implies HAS_DMA, and, optionally, on "|| COMPILE_TEST".
+>
+> Applying a patch like that is hard, as there are lots of churn at
+> the code. That's against latest media upstream:
 
-> @@ -62,9 +62,9 @@ struct proc_dir_entry {
->  	umode_t mode;
->  	u8 namelen;
->  #ifdef CONFIG_64BIT
-> -#define SIZEOF_PDE_INLINE_NAME	(192-139)
-> +#define SIZEOF_PDE_INLINE_NAME	(192-155)
->  #else
-> -#define SIZEOF_PDE_INLINE_NAME	(128-87)
-> +#define SIZEOF_PDE_INLINE_NAME	(128-95)
+[...]
 
->  #endif
->  	char inline_name[SIZEOF_PDE_INLINE_NAME];
->  } __randomize_layout;
+I can rebase. What's your preferred target? media-next?
 
-*UGH*
+>> In most cases this other symbol is an architecture or platform specific
+>> symbol, or PCI.
+>>
+>> Generic symbols and drivers without platform dependencies keep their
+>> dependencies on HAS_DMA, to prevent compiling subsystems or drivers that
+>> cannot work anyway.
+>
+> Actually, depends on HAS_DMA was introduced on media because builds
+> were failing otherwise. We started adding it before the addition
+> of COMPILE_TEST.
 
-Both to the original state and that kind of "adjustments".
-Incidentally, with __bugger_layout in there these expressions
-are simply wrong.
+Indeed. Before the 5 commits below, a missing dependency on HAS_DMA
+would cause the build to fail for NO_DMA platforms.
 
-If nothing else, I would suggest turning the last one into
-	char inline_name[];
-in hope that layout won't get... randomized that much and
-used
+    f29ab49b5388b2f8 dma-mapping: Convert NO_DMA get_dma_ops() into a real dummy
+    ab642e952f80c66c dma-coherent: Add NO_DMA dummies for managed DMA API
+    c1ce6c2beea38171 mm: Add NO_DMA dummies for DMA pool API
+    bff739b6559e2fce scsi: Add NO_DMA dummies for SCSI DMA mapping API
+    1f674e16f9ce6eb2 usb: gadget: Add NO_DMA dummies for DMA mapping API
 
-#ifdef CONFIG_64BIT
-#define PDE_SIZE 192
-#else
-#define PDE_SIZE 128
-#endif
+> Can we just remove all HAS_DMA Kconfig dependencies as a hole from the
+> entire media subsystem, with something like:
+>
+>         $ for i in $(find drivers/media -name Kconfig) $(find drivers/staging/media -name Kconfig); do sed '/depends on HAS_DMA/d;s/ && HAS_DMA//g' -i $i; done
+>
+> Or would it cause build issues?
 
-union __proc_dir_entry {
-	char pad[PDE_SIZE];
-	struct proc_dir_entry real;
-};
+It should not cause build issues, but it would enable lots of drivers that
+need DMA platform support on platforms where they wouldn't work, making the
+life of distro configurators harder.
 
-#define SIZEOF_PDE_INLINE_NAME (PDE_SIZE - offsetof(struct proc_dir_entry, inline_name))
+That's why my series removes HAS_DMA only for symbols that have a platform
+dependency.
 
-for constants, adjusted sizeof and sizeof_field when creating
-proc_dir_entry_cache and turned proc_root into
+Thanks!
 
-union __proc_dir_entry __proc_root = { .real = {
-        .low_ino        = PROC_ROOT_INO,
-        .namelen        = 5,
-        .mode           = S_IFDIR | S_IRUGO | S_IXUGO,
-        .nlink          = 2,
-        .refcnt         = REFCOUNT_INIT(1),
-        .proc_iops      = &proc_root_inode_operations,
-        .proc_fops      = &proc_root_operations,
-        .parent         = &__proc_root.real,
-        .subdir         = RB_ROOT,
-        .name           = __proc_root.real.inline_name,
-        .inline_name    = "/proc",
-}};
+Gr{oetje,eeting}s,
 
-#define proc_root __proc_root.real
-(or actually used __proc_root.real in all of a 6 places where it remains).
+                        Geert
 
-> diff --git a/fs/proc/proc_net.c b/fs/proc/proc_net.c
-> index baf1994289ce..7d94fa005b0d 100644
-> --- a/fs/proc/proc_net.c
-> +++ b/fs/proc/proc_net.c
-> @@ -40,7 +40,7 @@ static struct net *get_proc_net(const struct inode *inode)
->  
->  static int seq_open_net(struct inode *inode, struct file *file)
->  {
-> -	size_t state_size = PDE(inode)->state_size;
-> +	unsigned int state_size = PDE(inode)->state_size;
->  	struct seq_net_private *p;
->  	struct net *net;
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert-Td1EMuHUCqxL1ZNQvxDV9g@public.gmane.org
 
-<shakes head>
-You and your "size_t is evil" crusade...
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
