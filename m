@@ -1,51 +1,47 @@
 From: Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: [PATCH] ata: ata_piix: Fix a possible data race in piix_pci_device_resume
-Date: Tue,  8 May 2018 11:46:13 +0800
-Message-ID: <20180508034613.12969-1-baijiaju1990@gmail.com>
+Subject: [PATCH] ata: libata-pmp: Fix a possible data race in sata_pmp_handle_link_fail
+Date: Tue,  8 May 2018 16:21:40 +0800
+Message-ID: <20180508082140.14038-1-baijiaju1990@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: tj@kernel.org
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-The write operation to "host->flags" is protected by
-the lock on line 1048, but the read operation to
-this data on line 1046 is not protected by the lock.
-Thus, there may exist a data race for "host->flags".
+The write operation to "link->flags" is protected by
+the lock on line 898, but the read operation to
+this data on line 892 is not protected by the lock.
+Thus, there may exist a data race for "link->flags".
 
-To fix this data race, the read operation to "host->flags" 
+To fix this data race, the read operation to "link->flags" 
 should be also protected by the lock.
 
 Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
 ---
- drivers/ata/ata_piix.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/ata/libata-pmp.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 7ecb1322a514..c99fdf473dee 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -1043,8 +1043,8 @@ static int piix_pci_device_resume(struct pci_dev *pdev)
- 	unsigned long flags;
- 	int rc;
+diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+index 85aa76116a30..42f61106ac70 100644
+--- a/drivers/ata/libata-pmp.c
++++ b/drivers/ata/libata-pmp.c
+@@ -889,15 +889,14 @@ static int sata_pmp_handle_link_fail(struct ata_link *link, int *link_tries)
+ 		return 1;
  
-+	spin_lock_irqsave(&host->lock, flags);
- 	if (host->flags & PIIX_HOST_BROKEN_SUSPEND) {
--		spin_lock_irqsave(&host->lock, flags);
- 		host->flags &= ~PIIX_HOST_BROKEN_SUSPEND;
- 		spin_unlock_irqrestore(&host->lock, flags);
+ 	/* disable this link */
++	spin_lock_irqsave(ap->lock, flags);
+ 	if (!(link->flags & ATA_LFLAG_DISABLED)) {
+ 		ata_link_warn(link,
+ 			"failed to recover link after %d tries, disabling\n",
+ 			ATA_EH_PMP_LINK_TRIES);
+-
+-		spin_lock_irqsave(ap->lock, flags);
+ 		link->flags |= ATA_LFLAG_DISABLED;
+-		spin_unlock_irqrestore(ap->lock, flags);
+ 	}
++	spin_unlock_irqrestore(ap->lock, flags);
  
-@@ -1060,8 +1060,10 @@ static int piix_pci_device_resume(struct pci_dev *pdev)
- 			dev_err(&pdev->dev,
- 				"failed to enable device after resume (%d)\n",
- 				rc);
--	} else
-+	} else {
-+		spin_unlock_irqrestore(&host->lock, flags);
- 		rc = ata_pci_device_do_resume(pdev);
-+	}
- 
- 	if (rc == 0)
- 		ata_host_resume(host);
+ 	ata_dev_disable(link->device);
+ 	link->eh_context.i.action = 0;
 -- 
 2.17.0
