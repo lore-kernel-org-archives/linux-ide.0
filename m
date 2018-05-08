@@ -1,31 +1,51 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] driver core: add __printf verification to
- __ata_ehi_pushv_desc
-Date: Mon, 7 May 2018 08:32:36 -0700
-Message-ID: <20180507153236.GE2368884@devbig577.frc2.facebook.com>
-References: <20180505200038.17840-1-malat@debian.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+From: Jia-Ju Bai <baijiaju1990@gmail.com>
+Subject: [PATCH] ata: ata_piix: Fix a possible data race in piix_pci_device_resume
+Date: Tue,  8 May 2018 11:46:13 +0800
+Message-ID: <20180508034613.12969-1-baijiaju1990@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180505200038.17840-1-malat@debian.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mathieu Malaterre <malat@debian.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Sat, May 05, 2018 at 10:00:37PM +0200, Mathieu Malaterre wrote:
-> __printf is useful to verify format and arguments. Remove the following
-> warning (with W=1):
-> 
->   drivers/ata/libata-eh.c:183:10: warning: function might be possible candidate for ‘gnu_printf’ format attribute [-Wsuggest-attribute=format]
-> 
-> Signed-off-by: Mathieu Malaterre <malat@debian.org>
+The write operation to "host->flags" is protected by
+the lock on line 1048, but the read operation to
+this data on line 1046 is not protected by the lock.
+Thus, there may exist a data race for "host->flags".
 
-Applied to libata/for-4.17-fixes.
+To fix this data race, the read operation to "host->flags" 
+should be also protected by the lock.
 
-Thanks.
+Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+---
+ drivers/ata/ata_piix.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 7ecb1322a514..c99fdf473dee 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -1043,8 +1043,8 @@ static int piix_pci_device_resume(struct pci_dev *pdev)
+ 	unsigned long flags;
+ 	int rc;
+ 
++	spin_lock_irqsave(&host->lock, flags);
+ 	if (host->flags & PIIX_HOST_BROKEN_SUSPEND) {
+-		spin_lock_irqsave(&host->lock, flags);
+ 		host->flags &= ~PIIX_HOST_BROKEN_SUSPEND;
+ 		spin_unlock_irqrestore(&host->lock, flags);
+ 
+@@ -1060,8 +1060,10 @@ static int piix_pci_device_resume(struct pci_dev *pdev)
+ 			dev_err(&pdev->dev,
+ 				"failed to enable device after resume (%d)\n",
+ 				rc);
+-	} else
++	} else {
++		spin_unlock_irqrestore(&host->lock, flags);
+ 		rc = ata_pci_device_do_resume(pdev);
++	}
+ 
+ 	if (rc == 0)
+ 		ata_host_resume(host);
 -- 
-tejun
+2.17.0
