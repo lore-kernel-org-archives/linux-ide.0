@@ -1,68 +1,48 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata fixes for v4.17-rc4
-Date: Tue, 8 May 2018 07:48:54 -0700
-Message-ID: <20180508144854.GL2368884@devbig577.frc2.facebook.com>
+Subject: [PATCH libata/for-4.17-fixes] libata: Blacklist some Sandisk SSDs
+ for NCQ
+Date: Tue, 8 May 2018 14:30:36 -0700
+Message-ID: <20180508212922.GM2368884@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Dave Jones <davej@codemonkey.org.uk>, kernel-team@fb.com, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello, Linus.
+>From 322579dcc865b94b47345ad1b6002ad167f85405 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj@kernel.org>
+Date: Tue, 8 May 2018 14:21:56 -0700
 
-An earlier commit to add reset control for embedded ahci controllers
-affected some of the hardware specific drivers and got reverted for
-now.  Other than that, just per-device workarounds and trivial
-changes.
+Sandisk SSDs SD7SN6S256G and SD8SN8U256G are regularly locking up
+regularly under sustained moderate load with NCQ enabled.  Blacklist
+for now.
 
-Thanks.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Dave Jones <davej@codemonkey.org.uk>
+Cc: stable@vger.kernel.org
+---
+Applied to libata/for-4.17-fixes.
 
-The following changes since commit fd3b36d275660c905da9900b078eea341847d5e4:
+ drivers/ata/libata-core.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-  Merge branch 'work.namei' of git://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs (2018-04-09 12:48:05 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.17-fixes
-
-for you to fetch changes up to 0d74d872c3f8b9cb3d096fb932a063b43b37f188:
-
-  driver core: add __printf verification to __ata_ehi_pushv_desc (2018-05-07 08:32:20 -0700)
-
-----------------------------------------------------------------
-Colin Ian King (1):
-      ata: fix spelling mistake: "directon" -> "direction"
-
-Evan Wang (2):
-      libahci: Allow drivers to override stop_engine
-      ata: ahci: mvebu: override ahci_stop_engine for mvebu AHCI
-
-Hans de Goede (2):
-      libata: Apply NOLPM quirk for SAMSUNG MZMPC128HBFU-000MV SSD
-      libata: Apply NOLPM quirk for SanDisk SD7UB3Q*G1001 SSDs
-
-Kunihiko Hayashi (1):
-      Revert "ata: ahci-platform: add reset control support"
-
-Mathieu Malaterre (1):
-      driver core: add __printf verification to __ata_ehi_pushv_desc
-
- .../devicetree/bindings/ata/ahci-platform.txt      |  1 -
- drivers/ata/ahci.c                                 |  6 +--
- drivers/ata/ahci.h                                 |  8 +++-
- drivers/ata/ahci_mvebu.c                           | 56 ++++++++++++++++++++++
- drivers/ata/ahci_qoriq.c                           |  2 +-
- drivers/ata/ahci_xgene.c                           |  4 +-
- drivers/ata/libahci.c                              | 20 ++++----
- drivers/ata/libahci_platform.c                     | 24 ++--------
- drivers/ata/libata-core.c                          |  6 +++
- drivers/ata/libata-eh.c                            |  4 +-
- drivers/ata/sata_highbank.c                        |  2 +-
- drivers/ata/sata_sil24.c                           |  4 +-
- 12 files changed, 95 insertions(+), 42 deletions(-)
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 68596bd4..a2498f5 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4493,6 +4493,10 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	/* https://bugzilla.kernel.org/show_bug.cgi?id=15573 */
+ 	{ "C300-CTFDDAC128MAG",	"0001",		ATA_HORKAGE_NONCQ, },
+ 
++	/* Some Sandisk SSDs lock up hard with NCQ enabled.  Reported on
++	   SD7SN6S256G and SD8SN8U256G */
++	{ "SanDisk SD[78]SN*G",	NULL,		ATA_HORKAGE_NONCQ, },
++
+ 	/* devices which puke on READ_NATIVE_MAX */
+ 	{ "HDS724040KLSA80",	"KFAOA20N",	ATA_HORKAGE_BROKEN_HPA, },
+ 	{ "WDC WD3200JD-00KLB0", "WD-WCAMR1130137", ATA_HORKAGE_BROKEN_HPA },
 -- 
-tejun
+2.9.5
