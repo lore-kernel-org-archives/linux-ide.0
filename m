@@ -1,31 +1,68 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: libata-pmp: Fix a possible data race in
- sata_pmp_handle_link_fail
-Date: Tue, 8 May 2018 07:20:52 -0700
-Message-ID: <20180508142052.GK2368884@devbig577.frc2.facebook.com>
-References: <20180508082140.14038-1-baijiaju1990@gmail.com>
+Subject: [GIT PULL] libata fixes for v4.17-rc4
+Date: Tue, 8 May 2018 07:48:54 -0700
+Message-ID: <20180508144854.GL2368884@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20180508082140.14038-1-baijiaju1990@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jia-Ju Bai <baijiaju1990@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, May 08, 2018 at 04:21:40PM +0800, Jia-Ju Bai wrote:
-> The write operation to "link->flags" is protected by
-> the lock on line 898, but the read operation to
-> this data on line 892 is not protected by the lock.
-> Thus, there may exist a data race for "link->flags".
-> 
-> To fix this data race, the read operation to "link->flags" 
-> should be also protected by the lock.
+Hello, Linus.
 
-Same as the previous patch.
+An earlier commit to add reset control for embedded ahci controllers
+affected some of the hardware specific drivers and got reverted for
+now.  Other than that, just per-device workarounds and trivial
+changes.
 
 Thanks.
+
+The following changes since commit fd3b36d275660c905da9900b078eea341847d5e4:
+
+  Merge branch 'work.namei' of git://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs (2018-04-09 12:48:05 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.17-fixes
+
+for you to fetch changes up to 0d74d872c3f8b9cb3d096fb932a063b43b37f188:
+
+  driver core: add __printf verification to __ata_ehi_pushv_desc (2018-05-07 08:32:20 -0700)
+
+----------------------------------------------------------------
+Colin Ian King (1):
+      ata: fix spelling mistake: "directon" -> "direction"
+
+Evan Wang (2):
+      libahci: Allow drivers to override stop_engine
+      ata: ahci: mvebu: override ahci_stop_engine for mvebu AHCI
+
+Hans de Goede (2):
+      libata: Apply NOLPM quirk for SAMSUNG MZMPC128HBFU-000MV SSD
+      libata: Apply NOLPM quirk for SanDisk SD7UB3Q*G1001 SSDs
+
+Kunihiko Hayashi (1):
+      Revert "ata: ahci-platform: add reset control support"
+
+Mathieu Malaterre (1):
+      driver core: add __printf verification to __ata_ehi_pushv_desc
+
+ .../devicetree/bindings/ata/ahci-platform.txt      |  1 -
+ drivers/ata/ahci.c                                 |  6 +--
+ drivers/ata/ahci.h                                 |  8 +++-
+ drivers/ata/ahci_mvebu.c                           | 56 ++++++++++++++++++++++
+ drivers/ata/ahci_qoriq.c                           |  2 +-
+ drivers/ata/ahci_xgene.c                           |  4 +-
+ drivers/ata/libahci.c                              | 20 ++++----
+ drivers/ata/libahci_platform.c                     | 24 ++--------
+ drivers/ata/libata-core.c                          |  6 +++
+ drivers/ata/libata-eh.c                            |  4 +-
+ drivers/ata/sata_highbank.c                        |  2 +-
+ drivers/ata/sata_sil24.c                           |  4 +-
+ 12 files changed, 95 insertions(+), 42 deletions(-)
 
 -- 
 tejun
