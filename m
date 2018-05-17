@@ -1,27 +1,40 @@
-From: Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: simplify procfs code for seq_file instances V3
-Date: Wed, 16 May 2018 14:28:01 +0100
-Message-ID: <20180516132801.GO30522@ZenIV.linux.org.uk>
-References: <20180516094346.20506-1-hch@lst.de>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: Re: [PATCH 34/40] atm: simplify procfs code
+Date: Wed, 16 May 2018 20:15:21 -0500
+Message-ID: <87efibjd5i.fsf@xmission.com>
+References: <20180425154827.32251-1-hch@lst.de>
+        <20180425154827.32251-35-hch@lst.de> <87r2mq2rll.fsf@xmission.com>
+        <20180515141232.GD31296@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180516094346.20506-1-hch@lst.de>
-Sender: netdev-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180515141232.GD31296@lst.de> (Christoph Hellwig's message of
+        "Tue, 15 May 2018 16:12:33 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Alexey Dobriyan <adobriyan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, linux-acpi@vger.kernel.org, drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-rtc@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Alexey Dobriyan <adobriyan@gmail.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Alessandro Zummo <a.zummo@towertech.it>, Alexandre Belloni <alexandre.belloni@bootlin.com>, linux-acpi@vger.kernel.org, drbd-dev@lists.linbit.com, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-rtc@vger.kernel.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, linux-afs@lists.infradead.org, linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net, netfilter-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, May 16, 2018 at 11:43:04AM +0200, Christoph Hellwig wrote:
-> We currently have hundreds of proc files that implement plain, read-only
-> seq_file based interfaces.  This series consolidates them using new
-> procfs helpers that take the seq_operations or simple show callback
-> directly.
-> 
-> A git tree is available at:
-> 
->     git://git.infradead.org/users/hch/misc.git proc_create.3
+Christoph Hellwig <hch@lst.de> writes:
 
-Pulled, but the last bit is a bleeding atrocity in need of followup
-cleanup.
+> On Sat, May 05, 2018 at 07:51:18AM -0500, Eric W. Biederman wrote:
+>> Christoph Hellwig <hch@lst.de> writes:
+>> 
+>> > Use remove_proc_subtree to remove the whole subtree on cleanup, and
+>> > unwind the registration loop into individual calls.  Switch to use
+>> > proc_create_seq where applicable.
+>> 
+>> Can you please explain why you are removing the error handling when
+>> you are unwinding the registration loop?
+>
+> Because there is no point in handling these errors.  The code work
+> perfectly fine without procfs, or without given proc files and the
+> removal works just fine if they don't exist either.  This is a very
+> common patter in various parts of the kernel already.
+>
+> I'll document it better in the changelog.
+
+Thank you.  That is the kind of thing that could be a signal of
+inattentiveness and problems, especially when it is not documented.
+
+Eric
