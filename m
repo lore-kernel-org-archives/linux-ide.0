@@ -1,124 +1,75 @@
-From: Daniel Mack <daniel@zonque.org>
-Subject: Re: [PATCH 05/15] mtd: nand: pxa3xx: remove the dmaengine compat need
-Date: Fri, 18 May 2018 23:31:02 +0200
-Message-ID: <a09d80dc-e8fd-1e9a-1878-8875ddc83134@zonque.org>
-References: <20180402142656.26815-1-robert.jarzmik@free.fr>
- <20180402142656.26815-6-robert.jarzmik@free.fr>
-Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="------------39EE53F47ACFCC5932325DF0"
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20180402142656.26815-6-robert.jarzmik@free.fr>
-Content-Language: en-US
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Robert Jarzmik <robert.jarzmik@free.fr>, Haojian Zhuang <haojian.zhuang@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, Vinod Koul <vinod.koul@intel.com>, Mauro Carvalho Chehab <mchehab@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Marek Vasut <marek.vasut@gmail.com>, Richard Weinberger <richard@nod.at>, Cyrille Pitchen <cyrille.pitchen@wedev4u.fr>, Nicolas Pitre <nico@fluxnic.net>, Samuel Ortiz <samuel@sortiz.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>
-Cc: devel@driverdev.osuosl.org, alsa-devel@alsa-project.org, netdev@vger.kernel.org, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org, dmaengine@vger.kernel.org, Robert Jarzmik <robert.jarzmik@renault.com>, linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.org
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Subject: [PATCH resend] libata: blacklist Micron 500IT SSD with MU01 firmware
+Date: Sat, 19 May 2018 22:29:36 +0100
+Message-ID: <20180519212936.3155-1-sudip.mukherjee@codethink.co.uk>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Sudip Mukherjee <sudipm.mukherjee@gmail.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------39EE53F47ACFCC5932325DF0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
 
-Hi Robert,
+While whitelisting Micron M500DC drives, the tweaked blacklist entry
+enabled queued TRIM from M500IT variants also. But these do not support
+queued TRIM. And while using those SSDs with the latest kernel we have
+seen errors and even the partition table getting corrupted.
 
-Thanks for this series.
+Some part from the dmesg:
+[    6.727384] ata1.00: ATA-9: Micron_M500IT_MTFDDAK060MBD, MU01, max UDMA/133
+[    6.727390] ata1.00: 117231408 sectors, multi 16: LBA48 NCQ (depth 31/32), AA
+[    6.741026] ata1.00: supports DRM functions and may not be fully accessible
+[    6.759887] ata1.00: configured for UDMA/133
+[    6.762256] scsi 0:0:0:0: Direct-Access     ATA      Micron_M500IT_MT MU01 PQ: 0 ANSI: 5
 
-On Monday, April 02, 2018 04:26 PM, Robert Jarzmik wrote:
-> From: Robert Jarzmik <robert.jarzmik@renault.com>
-> 
-> As the pxa architecture switched towards the dmaengine slave map, the
-> old compatibility mechanism to acquire the dma requestor line number and
-> priority are not needed anymore.
-> 
-> This patch simplifies the dma resource acquisition, using the more
-> generic function dma_request_slave_channel().
-> 
-> Signed-off-by: Robert Jarzmik <robert.jarzmik@free.fr>
-> ---
->   drivers/mtd/nand/pxa3xx_nand.c | 10 +---------
+and then for the error:
+[  120.860334] ata1.00: exception Emask 0x1 SAct 0x7ffc0007 SErr 0x0 action 0x6 frozen
+[  120.860338] ata1.00: irq_stat 0x40000008
+[  120.860342] ata1.00: failed command: SEND FPDMA QUEUED
+[  120.860351] ata1.00: cmd 64/01:00:00:00:00/00:00:00:00:00/a0 tag 0 ncq dma 512 out
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x5 (timeout)
+[  120.860353] ata1.00: status: { DRDY }
+[  120.860543] ata1: hard resetting link
+[  121.166128] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[  121.166376] ata1.00: supports DRM functions and may not be fully accessible
+[  121.186238] ata1.00: supports DRM functions and may not be fully accessible
+[  121.204445] ata1.00: configured for UDMA/133
+[  121.204454] ata1.00: device reported invalid CHS sector 0
+[  121.204541] sd 0:0:0:0: [sda] tag#18 UNKNOWN(0x2003) Result: hostbyte=0x00 driverbyte=0x08
+[  121.204546] sd 0:0:0:0: [sda] tag#18 Sense Key : 0x5 [current]
+[  121.204550] sd 0:0:0:0: [sda] tag#18 ASC=0x21 ASCQ=0x4
+[  121.204555] sd 0:0:0:0: [sda] tag#18 CDB: opcode=0x93 93 08 00 00 00 00 00 04 28 80 00 00 00 30 00 00
+[  121.204559] print_req_error: I/O error, dev sda, sector 272512
 
-This driver was replaced by drivers/mtd/nand/raw/marvell_nand.c 
-recently, so this patch can be dropped. I attached a version for the new 
-driver which you can pick instead.
+After few reboots with these errors, and the SSD is corrupted.
+After blacklisting it, the errors are not seen and the SSD does not get
+corrupted any more.
 
-
-Thanks,
-Daniel
-
---------------39EE53F47ACFCC5932325DF0
-Content-Type: text/x-patch;
- name="0001-mtd-rawnand-marvell-remove-dmaengine-compat-code.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename*0="0001-mtd-rawnand-marvell-remove-dmaengine-compat-code.patch"
-
->From c63bc40bdfe2d596e42919235840109a2f1b2776 Mon Sep 17 00:00:00 2001
-From: Daniel Mack <daniel@zonque.org>
-Date: Sat, 12 May 2018 21:50:13 +0200
-Subject: [PATCH] mtd: rawnand: marvell: remove dmaengine compat code
-
-As the pxa architecture switched towards the dmaengine slave map, the
-old compatibility mechanism to acquire the dma requestor line number and
-priority are not needed anymore.
-
-This patch simplifies the dma resource acquisition, using the more
-generic function dma_request_slave_channel().
-
-Signed-off-by: Daniel Mack <daniel@zonque.org>
+Fixes: 243918be6393 ("libata: Do not blacklist Micron M500DC")
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: stable@vger.kernel.org
+Signed-off-by: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
 ---
- drivers/mtd/nand/raw/marvell_nand.c | 11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
 
-diff --git a/drivers/mtd/nand/raw/marvell_nand.c b/drivers/mtd/nand/raw/marvell_nand.c
-index ebb1d141b900..30017cd7d91c 100644
---- a/drivers/mtd/nand/raw/marvell_nand.c
-+++ b/drivers/mtd/nand/raw/marvell_nand.c
-@@ -2612,8 +2612,6 @@ static int marvell_nfc_init_dma(struct marvell_nfc *nfc)
- 						    dev);
- 	struct dma_slave_config config = {};
- 	struct resource *r;
--	dma_cap_mask_t mask;
--	struct pxad_param param;
- 	int ret;
+This is a resend of v1.
+v2 was blacklisting all Micron SSDs but Martin has confirmed that
+only M500IT with MU01 firmware is affected.
+
+ drivers/ata/libata-core.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index eaf0f42f6f28..cdcd55cb2a9a 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4554,6 +4554,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "SanDisk SD7UB3Q*G1001",	NULL,	ATA_HORKAGE_NOLPM, },
  
- 	if (!IS_ENABLED(CONFIG_PXA_DMA)) {
-@@ -2632,14 +2630,7 @@ static int marvell_nfc_init_dma(struct marvell_nfc *nfc)
- 		return -ENXIO;
- 	}
- 
--	param.drcmr = r->start;
--	param.prio = PXAD_PRIO_LOWEST;
--	dma_cap_zero(mask);
--	dma_cap_set(DMA_SLAVE, mask);
--	nfc->dma_chan =
--		dma_request_slave_channel_compat(mask, pxad_filter_fn,
--						 &param, nfc->dev,
--						 "data");
-+	nfc->dma_chan = dma_request_slave_channel(nfc->dev, "data");
- 	if (!nfc->dma_chan) {
- 		dev_err(nfc->dev,
- 			"Unable to request data DMA channel\n");
+ 	/* devices that don't properly handle queued TRIM commands */
++	{ "Micron_M500IT_*",		"MU01",	ATA_HORKAGE_NO_NCQ_TRIM |
++						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+ 	{ "Micron_M500_*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+ 	{ "Crucial_CT*M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
 -- 
-2.14.3
-
-
---------------39EE53F47ACFCC5932325DF0
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
---------------39EE53F47ACFCC5932325DF0--
+2.11.0
