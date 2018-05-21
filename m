@@ -1,75 +1,54 @@
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Subject: [PATCH resend] libata: blacklist Micron 500IT SSD with MU01 firmware
-Date: Sat, 19 May 2018 22:29:36 +0100
-Message-ID: <20180519212936.3155-1-sudip.mukherjee@codethink.co.uk>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Sudip Mukherjee <sudipm.mukherjee@gmail.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org
+From: Yisheng Xie <xieyisheng1@huawei.com>
+Subject: [PATCH 10/33] pata_hpt37x: use match_string() helper
+Date: Mon, 21 May 2018 19:57:47 +0800
+Message-ID: <1526903890-35761-11-git-send-email-xieyisheng1@huawei.com>
+References: <1526903890-35761-1-git-send-email-xieyisheng1@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1526903890-35761-1-git-send-email-xieyisheng1@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Yisheng Xie <xieyisheng1@huawei.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+match_string() returns the index of an array for a matching string,
+which can be used intead of open coded variant.
 
-While whitelisting Micron M500DC drives, the tweaked blacklist entry
-enabled queued TRIM from M500IT variants also. But these do not support
-queued TRIM. And while using those SSDs with the latest kernel we have
-seen errors and even the partition table getting corrupted.
-
-Some part from the dmesg:
-[    6.727384] ata1.00: ATA-9: Micron_M500IT_MTFDDAK060MBD, MU01, max UDMA/133
-[    6.727390] ata1.00: 117231408 sectors, multi 16: LBA48 NCQ (depth 31/32), AA
-[    6.741026] ata1.00: supports DRM functions and may not be fully accessible
-[    6.759887] ata1.00: configured for UDMA/133
-[    6.762256] scsi 0:0:0:0: Direct-Access     ATA      Micron_M500IT_MT MU01 PQ: 0 ANSI: 5
-
-and then for the error:
-[  120.860334] ata1.00: exception Emask 0x1 SAct 0x7ffc0007 SErr 0x0 action 0x6 frozen
-[  120.860338] ata1.00: irq_stat 0x40000008
-[  120.860342] ata1.00: failed command: SEND FPDMA QUEUED
-[  120.860351] ata1.00: cmd 64/01:00:00:00:00/00:00:00:00:00/a0 tag 0 ncq dma 512 out
-         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x5 (timeout)
-[  120.860353] ata1.00: status: { DRDY }
-[  120.860543] ata1: hard resetting link
-[  121.166128] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-[  121.166376] ata1.00: supports DRM functions and may not be fully accessible
-[  121.186238] ata1.00: supports DRM functions and may not be fully accessible
-[  121.204445] ata1.00: configured for UDMA/133
-[  121.204454] ata1.00: device reported invalid CHS sector 0
-[  121.204541] sd 0:0:0:0: [sda] tag#18 UNKNOWN(0x2003) Result: hostbyte=0x00 driverbyte=0x08
-[  121.204546] sd 0:0:0:0: [sda] tag#18 Sense Key : 0x5 [current]
-[  121.204550] sd 0:0:0:0: [sda] tag#18 ASC=0x21 ASCQ=0x4
-[  121.204555] sd 0:0:0:0: [sda] tag#18 CDB: opcode=0x93 93 08 00 00 00 00 00 04 28 80 00 00 00 30 00 00
-[  121.204559] print_req_error: I/O error, dev sda, sector 272512
-
-After few reboots with these errors, and the SSD is corrupted.
-After blacklisting it, the errors are not seen and the SSD does not get
-corrupted any more.
-
-Fixes: 243918be6393 ("libata: Do not blacklist Micron M500DC")
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: stable@vger.kernel.org
-Signed-off-by: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
+Signed-off-by: Yisheng Xie <xieyisheng1@huawei.com>
 ---
+ drivers/ata/pata_hpt37x.c | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
 
-This is a resend of v1.
-v2 was blacklisting all Micron SSDs but Martin has confirmed that
-only M500IT with MU01 firmware is affected.
-
- drivers/ata/libata-core.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index eaf0f42f6f28..cdcd55cb2a9a 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4554,6 +4554,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "SanDisk SD7UB3Q*G1001",	NULL,	ATA_HORKAGE_NOLPM, },
+diff --git a/drivers/ata/pata_hpt37x.c b/drivers/ata/pata_hpt37x.c
+index 3ba843f..ef8aaeb 100644
+--- a/drivers/ata/pata_hpt37x.c
++++ b/drivers/ata/pata_hpt37x.c
+@@ -224,17 +224,14 @@ static int hpt_dma_blacklisted(const struct ata_device *dev, char *modestr,
+ 			       const char * const list[])
+ {
+ 	unsigned char model_num[ATA_ID_PROD_LEN + 1];
+-	int i = 0;
++	int i;
  
- 	/* devices that don't properly handle queued TRIM commands */
-+	{ "Micron_M500IT_*",		"MU01",	ATA_HORKAGE_NO_NCQ_TRIM |
-+						ATA_HORKAGE_ZERO_AFTER_TRIM, },
- 	{ "Micron_M500_*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
- 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
- 	{ "Crucial_CT*M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+ 	ata_id_c_string(dev->id, model_num, ATA_ID_PROD, sizeof(model_num));
+ 
+-	while (list[i] != NULL) {
+-		if (!strcmp(list[i], model_num)) {
+-			pr_warn("%s is not supported for %s\n",
+-				modestr, list[i]);
+-			return 1;
+-		}
+-		i++;
++	i = match_string(list, -1, model_num);
++	if (i >= 0) {
++		pr_warn("%s is not supported for %s\n", modestr, list[i]);
++		return 1;
+ 	}
+ 	return 0;
+ }
 -- 
-2.11.0
+1.7.12.4
