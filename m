@@ -1,92 +1,144 @@
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH 3/6] block: Create scsi_sense.h for SCSI and ATAPI
-Date: Wed, 23 May 2018 14:23:59 -0700
-Message-ID: <6e824073-aaff-5d2e-5179-c6b890fda1d0@infradead.org>
-References: <20180522183613.GA3784@infradead.org> <yq1efi3bk3g.fsf@oracle.com>
- <CAGXu5jJ0Sice+fdpWgzBhQR=NGz-DT9qmYVdV1GeH73_q9pbmw@mail.gmail.com>
- <732f4249-5681-4a54-ec21-4ecc3d3a74e5@kernel.dk>
- <20180522191309.GA23615@infradead.org>
- <8d4af5c4-96fa-54ee-d5c1-b887b1de5a3c@kernel.dk>
- <CAGXu5j+mgGZkTDS6EDRspJKKbU=vMT4ehv9T-SekPba=ESoGDg@mail.gmail.com>
- <9A0BC289-4203-4C77-A012-AAB07F42061F@kernel.dk>
- <CAGXu5jJsGWDsZNDJvUUqncSaAcvond_B_J7=BbvVW0X3r6Sxww@mail.gmail.com>
- <aa150272-ffeb-fb8f-7303-0d9502cf9a71@kernel.dk>
- <20180523142545.GA16248@infradead.org>
- <24d36869-e037-042d-cb16-20a81b34eb76@kernel.dk>
- <CAGXu5jJn=1Rz=D8VUwv_VoaGoLtaD=+tcPZxQxntweZoZwFa5Q@mail.gmail.com>
- <f4eb4cd5-8976-3990-69b0-26cca054aa45@kernel.dk>
- <e9eb326b-aa80-07a3-4579-6828f22cdad2@infradead.org>
- <4f95332f-e298-8d7d-1284-5363c10412a8@kernel.dk>
+From: Daniel Mack <daniel@zonque.org>
+Subject: Re: [PATCH 05/15] mtd: nand: pxa3xx: remove the dmaengine compat need
+Date: Wed, 23 May 2018 23:54:50 +0200
+Message-ID: <5f614736-31b6-6561-69c1-177595fbb210@zonque.org>
+References: <20180402142656.26815-1-robert.jarzmik@free.fr>
+ <20180402142656.26815-6-robert.jarzmik@free.fr>
+ <a09d80dc-e8fd-1e9a-1878-8875ddc83134@zonque.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4f95332f-e298-8d7d-1284-5363c10412a8@kernel.dk>
+Content-Type: multipart/mixed; boundary="------------05E9BD108AABC677CA24E234"
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <a09d80dc-e8fd-1e9a-1878-8875ddc83134@zonque.org>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Kees Cook <keescook@chromium.org>
-Cc: Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block <linux-block@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Robert Jarzmik <robert.jarzmik@free.fr>, Haojian Zhuang <haojian.zhuang@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, Vinod Koul <vinod.koul@intel.com>, Mauro Carvalho Chehab <mchehab@kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Marek Vasut <marek.vasut@gmail.com>, Richard Weinberger <richard@nod.at>, Cyrille Pitchen <cyrille.pitchen@wedev4u.fr>, Nicolas Pitre <nico@fluxnic.net>, Samuel Ortiz <samuel@sortiz.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>
+Cc: devel@driverdev.osuosl.org, alsa-devel@alsa-project.org, netdev@vger.kernel.org, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org, dmaengine@vger.kernel.org, Robert Jarzmik <robert.jarzmik@renault.com>, linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 05/23/2018 02:22 PM, Jens Axboe wrote:
-> On 5/23/18 3:20 PM, Randy Dunlap wrote:
->> On 05/23/2018 02:14 PM, Jens Axboe wrote:
->>> On 5/23/18 2:52 PM, Kees Cook wrote:
->>>> On Wed, May 23, 2018 at 7:31 AM, Jens Axboe <axboe@kernel.dk> wrote:
->>>>> On 5/23/18 8:25 AM, Christoph Hellwig wrote:
->>>>>> On Wed, May 23, 2018 at 08:13:56AM -0600, Jens Axboe wrote:
->>>>>>>> Should I move to code to a new drivers/scsi/scsi_sense.c and add it to
->>>>>>>> drivers/scsi/Makefile as:
->>>>>>>>
->>>>>>>> obj-$(CONFIG_BLK_SCSI_REQUEST)    += scsi_sense.o
->>>>>>>>
->>>>>>>> Every place I want to use the code is already covered by
->>>>>>>> CONFIG_BLK_SCSI_REQUEST, so it seems like I just need to know where to
->>>>>>>> put the .c file. :P
->>>>>>>
->>>>>>> I think this is so much saner than a SCSI select or dependency, so I'll
->>>>>>> have to disagree with Martin and Christoph. Just put it in drivers/scsi,
->>>>>>> if it's the location they care about.
->>>>>>
->>>>>> I actually plan to remove CONFIG_BLK_SCSI_REQUEST in a merge window
->>>>>> or two.  The only users are scsi and the ide layer, (virtio_blk
->>>>>> support has already been accidentally disabled for a while), and getting
->>>>>> rid of it allows to to shrink and simply the scsi data structures.
->>>>>>
->>>>>> But if you want this for now lets keep scsi_sense.c in drivers/scsi
->>>>>> but depend on CONFIG_BLK_SCSI_REQUEST, that is easy enough to fix up.
->>>>>
->>>>> It could be a stand-alone dependency, doesn't have to be BLK_SCSI_REQUEST.
->>>>> BLA_SCSI_SENSE or something would do. I don't care too much about that,
->>>>> mostly getting rid of the entire stack dependency.
->>>>
->>>> Aaand, I can't do this and leave it in drivers/scsi because of drivers/Makefile:
->>>>
->>>> obj-$(CONFIG_SCSI)              += scsi/
->>>>
->>>> So: this needs to live in block/ just like CONFIG_BLK_SCSI_REQUEST's
->>>> scsi_ioctl.c. I will split it into CONFIG_BLK_SCSI_SENSE, but I'll
->>>> still need to move the code from drivers/scsi/ to block/. Is this
->>>> okay?
->>>
->>> Ugh, so that would necessitate a change there too. As I said before,
->>> I don't really care where it lives. I know the SCSI folks seem bothered
->>> by moving it, but in reality, it's not like this stuff will likely ever
->>> really change. Of the two choices (select entire SCSI stack, or just move
->>> this little bit), I know what I would consider the saner option...
->>>
->>
->> or option 3:
->>
->> obj-y                           += scsi/
->>
->> so that make descends into drivers/scsi/ and then builds whatever is needed,
->> depending on individual kconfig options.
+This is a multi-part message in MIME format.
+--------------05E9BD108AABC677CA24E234
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Hi Robert,
+
+Please refer to the attached patch instead of the one I sent earlier. I 
+missed to also remove the platform_get_resource(IORESOURCE_DMA) call.
+
+
+Thanks,
+Daniel
+
+
+On Friday, May 18, 2018 11:31 PM, Daniel Mack wrote:
+> Hi Robert,
 > 
-> Right, that was the initial option, the later two are the other options.
+> Thanks for this series.
+> 
+> On Monday, April 02, 2018 04:26 PM, Robert Jarzmik wrote:
+>> From: Robert Jarzmik <robert.jarzmik@renault.com>
+>>
+>> As the pxa architecture switched towards the dmaengine slave map, the
+>> old compatibility mechanism to acquire the dma requestor line number and
+>> priority are not needed anymore.
+>>
+>> This patch simplifies the dma resource acquisition, using the more
+>> generic function dma_request_slave_channel().
+>>
+>> Signed-off-by: Robert Jarzmik <robert.jarzmik@free.fr>
+>> ---
+>>    drivers/mtd/nand/pxa3xx_nand.c | 10 +---------
+> 
+> This driver was replaced by drivers/mtd/nand/raw/marvell_nand.c
+> recently, so this patch can be dropped. I attached a version for the new
+> driver which you can pick instead.
+> 
+> 
+> Thanks,
+> Daniel
 > 
 
-Sorry, I'm late to the party.
 
+--------------05E9BD108AABC677CA24E234
+Content-Type: text/x-patch;
+ name="0001-mtd-rawnand-marvell-remove-dmaengine-compat-code.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0001-mtd-rawnand-marvell-remove-dmaengine-compat-code.patch"
+
+>From 72a306157dedb21f8c3289f0f7a288fc4542bd96 Mon Sep 17 00:00:00 2001
+From: Daniel Mack <daniel@zonque.org>
+Date: Sat, 12 May 2018 21:50:13 +0200
+Subject: [PATCH] mtd: rawnand: marvell: remove dmaengine compat code
+
+As the pxa architecture switched towards the dmaengine slave map, the
+old compatibility mechanism to acquire the dma requestor line number and
+priority are not needed anymore.
+
+This patch simplifies the dma resource acquisition, using the more
+generic function dma_request_slave_channel().
+
+Signed-off-by: Daniel Mack <daniel@zonque.org>
+---
+ drivers/mtd/nand/raw/marvell_nand.c | 17 +----------------
+ 1 file changed, 1 insertion(+), 16 deletions(-)
+
+diff --git a/drivers/mtd/nand/raw/marvell_nand.c b/drivers/mtd/nand/raw/marvell_nand.c
+index ebb1d141b900..319fea77daf1 100644
+--- a/drivers/mtd/nand/raw/marvell_nand.c
++++ b/drivers/mtd/nand/raw/marvell_nand.c
+@@ -2612,8 +2612,6 @@ static int marvell_nfc_init_dma(struct marvell_nfc *nfc)
+ 						    dev);
+ 	struct dma_slave_config config = {};
+ 	struct resource *r;
+-	dma_cap_mask_t mask;
+-	struct pxad_param param;
+ 	int ret;
+ 
+ 	if (!IS_ENABLED(CONFIG_PXA_DMA)) {
+@@ -2626,20 +2624,7 @@ static int marvell_nfc_init_dma(struct marvell_nfc *nfc)
+ 	if (ret)
+ 		return ret;
+ 
+-	r = platform_get_resource(pdev, IORESOURCE_DMA, 0);
+-	if (!r) {
+-		dev_err(nfc->dev, "No resource defined for data DMA\n");
+-		return -ENXIO;
+-	}
+-
+-	param.drcmr = r->start;
+-	param.prio = PXAD_PRIO_LOWEST;
+-	dma_cap_zero(mask);
+-	dma_cap_set(DMA_SLAVE, mask);
+-	nfc->dma_chan =
+-		dma_request_slave_channel_compat(mask, pxad_filter_fn,
+-						 &param, nfc->dev,
+-						 "data");
++	nfc->dma_chan = dma_request_slave_channel(nfc->dev, "data");
+ 	if (!nfc->dma_chan) {
+ 		dev_err(nfc->dev,
+ 			"Unable to request data DMA channel\n");
 -- 
-~Randy
+2.14.3
+
+
+--------------05E9BD108AABC677CA24E234
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+devel mailing list
+devel@linuxdriverproject.org
+http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
+
+--------------05E9BD108AABC677CA24E234--
