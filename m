@@ -1,26 +1,46 @@
-From: Vinod <vkoul@kernel.org>
-Subject: Re: [PATCH v2 11/13] dmaengine: pxa: make the filter function
- internal
-Date: Fri, 25 May 2018 16:29:43 +0530
-Message-ID: <20180525105943.GP26663@vkoul-mobl>
-References: <20180524070703.11901-1-robert.jarzmik@free.fr>
- <20180524070703.11901-12-robert.jarzmik@free.fr>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/6] block: Create scsi_sense.h for SCSI and ATAPI
+Date: Fri, 25 May 2018 07:48:05 -0700
+Message-ID: <20180525144805.GA7929@infradead.org>
+References: <CAGXu5j+mgGZkTDS6EDRspJKKbU=vMT4ehv9T-SekPba=ESoGDg@mail.gmail.com>
+ <9A0BC289-4203-4C77-A012-AAB07F42061F@kernel.dk>
+ <CAGXu5jJsGWDsZNDJvUUqncSaAcvond_B_J7=BbvVW0X3r6Sxww@mail.gmail.com>
+ <aa150272-ffeb-fb8f-7303-0d9502cf9a71@kernel.dk>
+ <20180523142545.GA16248@infradead.org>
+ <24d36869-e037-042d-cb16-20a81b34eb76@kernel.dk>
+ <CAGXu5jJn=1Rz=D8VUwv_VoaGoLtaD=+tcPZxQxntweZoZwFa5Q@mail.gmail.com>
+ <f4eb4cd5-8976-3990-69b0-26cca054aa45@kernel.dk>
+ <20180524080015.GA2866@infradead.org>
+ <CAGXu5j+pRUWgny+h5ToVQXBP8nANjreVhnXjk5TVgy84ufNsRg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20180524070703.11901-12-robert.jarzmik@free.fr>
+In-Reply-To: <CAGXu5j+pRUWgny+h5ToVQXBP8nANjreVhnXjk5TVgy84ufNsRg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Robert Jarzmik <robert.jarzmik@free.fr>
-Cc: Daniel Mack <daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Marek Vasut <marek.vasut@gmail.com>, Richard Weinberger <richard@nod.at>, Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dmaengine@vger.kernel.org, linux-media@vger.kernel.org, linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org
+To: Kees Cook <keescook@chromium.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block <linux-block@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On 24-05-18, 09:07, Robert Jarzmik wrote:
-> As the pxa architecture and all its related drivers do not rely anymore
-> on the filter function, thanks to the slave map conversion, make
-> pxad_filter_fn() static, and remove it from the global namespace.
+On Thu, May 24, 2018 at 10:06:59AM -0700, Kees Cook wrote:
+> On Thu, May 24, 2018 at 1:00 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> > On Wed, May 23, 2018 at 03:14:19PM -0600, Jens Axboe wrote:
+> >> Ugh, so that would necessitate a change there too. As I said before,
+> >> I don't really care where it lives. I know the SCSI folks seem bothered
+> >> by moving it, but in reality, it's not like this stuff will likely ever
+> >> really change. Of the two choices (select entire SCSI stack, or just move
+> >> this little bit), I know what I would consider the saner option...
+> >
+> > Oh well.  How about something like this respin of Kees' series?
+> >
+> > http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/sense-cleanup
+> 
+> Does the CONFIG_PCMCIA in drivers/scsi/Makefile now get exposed in
+> weird config cases?
 
-Acked-by: Vinod Koul <vkoul@kernel.org>
+That just includes drivers/scsi/pcmcia/Makefile, which only
+has three conditional modules in it, so it should be fine.
 
--- 
-~Vinod
+> Otherwise, yeah, looks good to me. Thanks!
+
+Can you pick up my tweaks and ressend?
