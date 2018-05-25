@@ -1,41 +1,142 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH 3/6] block: Create scsi_sense.h for SCSI and ATAPI
-Date: Thu, 24 May 2018 10:06:59 -0700
-Message-ID: <CAGXu5j+pRUWgny+h5ToVQXBP8nANjreVhnXjk5TVgy84ufNsRg@mail.gmail.com>
-References: <20180522191309.GA23615@infradead.org> <8d4af5c4-96fa-54ee-d5c1-b887b1de5a3c@kernel.dk>
- <CAGXu5j+mgGZkTDS6EDRspJKKbU=vMT4ehv9T-SekPba=ESoGDg@mail.gmail.com>
- <9A0BC289-4203-4C77-A012-AAB07F42061F@kernel.dk> <CAGXu5jJsGWDsZNDJvUUqncSaAcvond_B_J7=BbvVW0X3r6Sxww@mail.gmail.com>
- <aa150272-ffeb-fb8f-7303-0d9502cf9a71@kernel.dk> <20180523142545.GA16248@infradead.org>
- <24d36869-e037-042d-cb16-20a81b34eb76@kernel.dk> <CAGXu5jJn=1Rz=D8VUwv_VoaGoLtaD=+tcPZxQxntweZoZwFa5Q@mail.gmail.com>
- <f4eb4cd5-8976-3990-69b0-26cca054aa45@kernel.dk> <20180524080015.GA2866@infradead.org>
+From: Daniel Mack <daniel@zonque.org>
+Subject: Re: [PATCH v2 13/13] ARM: pxa: change SSP DMA channels allocation
+Date: Fri, 25 May 2018 09:56:13 +0200
+Message-ID: <7e50d21c-c563-156f-d5d3-cd977af0e9d0@zonque.org>
+References: <20180524070703.11901-1-robert.jarzmik@free.fr>
+ <20180524070703.11901-14-robert.jarzmik@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180524080015.GA2866@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block <linux-block@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20180524070703.11901-14-robert.jarzmik@free.fr>
+Content-Language: en-US
+Sender: netdev-owner@vger.kernel.org
+To: Robert Jarzmik <robert.jarzmik@free.fr>, Haojian Zhuang <haojian.zhuang@gmail.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Marek Vasut <marek.vasut@gmail.com>, Richard Weinberger <richard@nod.at>, Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dmaengine@vger.kernel.org, linux-media@vger.kernel.org, linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, May 24, 2018 at 1:00 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Wed, May 23, 2018 at 03:14:19PM -0600, Jens Axboe wrote:
->> Ugh, so that would necessitate a change there too. As I said before,
->> I don't really care where it lives. I know the SCSI folks seem bothered
->> by moving it, but in reality, it's not like this stuff will likely ever
->> really change. Of the two choices (select entire SCSI stack, or just move
->> this little bit), I know what I would consider the saner option...
->
-> Oh well.  How about something like this respin of Kees' series?
->
-> http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/sense-cleanup
+On Thursday, May 24, 2018 09:07 AM, Robert Jarzmik wrote:
+> Now the dma_slave_map is available for PXA architecture, switch the SSP
+> device to it.
+> 
+> This specifically means that :
+> - for platform data based machines, the DMA requestor channels are
+>    extracted from the slave map, where pxa-ssp-dai.<N> is a 1-1 match to
+>    ssp.<N>, and the channels are either "rx" or "tx".
+> 
+> - for device tree platforms, the dma node should be hooked into the
+>    pxa2xx-ac97 or pxa-ssp-dai node.
+> 
+> Signed-off-by: Robert Jarzmik <robert.jarzmik@free.fr>
 
-Does the CONFIG_PCMCIA in drivers/scsi/Makefile now get exposed in
-weird config cases?
+Acked-by: Daniel Mack <daniel@zonque.org>
 
-Otherwise, yeah, looks good to me. Thanks!
 
--Kees
+We should, however, merge what's left of this management glue code into 
+the users of it, so the dma related properties can be put in the right 
+devicetree node.
 
--- 
-Kees Cook
-Pixel Security
+I'll prepare a patch for that for 4.18. This is a good preparation for 
+this round though.
+
+
+Thanks,
+Daniel
+
+
+> ---
+> Since v1: Removed channel names from platform_data
+> ---
+>   arch/arm/plat-pxa/ssp.c    | 47 ----------------------------------------------
+>   include/linux/pxa2xx_ssp.h |  2 --
+>   sound/soc/pxa/pxa-ssp.c    |  5 ++---
+>   3 files changed, 2 insertions(+), 52 deletions(-)
+> 
+> diff --git a/arch/arm/plat-pxa/ssp.c b/arch/arm/plat-pxa/ssp.c
+> index ba13f793fbce..ed36dcab80f1 100644
+> --- a/arch/arm/plat-pxa/ssp.c
+> +++ b/arch/arm/plat-pxa/ssp.c
+> @@ -127,53 +127,6 @@ static int pxa_ssp_probe(struct platform_device *pdev)
+>   	if (IS_ERR(ssp->clk))
+>   		return PTR_ERR(ssp->clk);
+>   
+> -	if (dev->of_node) {
+> -		struct of_phandle_args dma_spec;
+> -		struct device_node *np = dev->of_node;
+> -		int ret;
+> -
+> -		/*
+> -		 * FIXME: we should allocate the DMA channel from this
+> -		 * context and pass the channel down to the ssp users.
+> -		 * For now, we lookup the rx and tx indices manually
+> -		 */
+> -
+> -		/* rx */
+> -		ret = of_parse_phandle_with_args(np, "dmas", "#dma-cells",
+> -						 0, &dma_spec);
+> -
+> -		if (ret) {
+> -			dev_err(dev, "Can't parse dmas property\n");
+> -			return -ENODEV;
+> -		}
+> -		ssp->drcmr_rx = dma_spec.args[0];
+> -		of_node_put(dma_spec.np);
+> -
+> -		/* tx */
+> -		ret = of_parse_phandle_with_args(np, "dmas", "#dma-cells",
+> -						 1, &dma_spec);
+> -		if (ret) {
+> -			dev_err(dev, "Can't parse dmas property\n");
+> -			return -ENODEV;
+> -		}
+> -		ssp->drcmr_tx = dma_spec.args[0];
+> -		of_node_put(dma_spec.np);
+> -	} else {
+> -		res = platform_get_resource(pdev, IORESOURCE_DMA, 0);
+> -		if (res == NULL) {
+> -			dev_err(dev, "no SSP RX DRCMR defined\n");
+> -			return -ENODEV;
+> -		}
+> -		ssp->drcmr_rx = res->start;
+> -
+> -		res = platform_get_resource(pdev, IORESOURCE_DMA, 1);
+> -		if (res == NULL) {
+> -			dev_err(dev, "no SSP TX DRCMR defined\n");
+> -			return -ENODEV;
+> -		}
+> -		ssp->drcmr_tx = res->start;
+> -	}
+> -
+>   	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>   	if (res == NULL) {
+>   		dev_err(dev, "no memory resource defined\n");
+> diff --git a/include/linux/pxa2xx_ssp.h b/include/linux/pxa2xx_ssp.h
+> index 8461b18e4608..03a7ca46735b 100644
+> --- a/include/linux/pxa2xx_ssp.h
+> +++ b/include/linux/pxa2xx_ssp.h
+> @@ -212,8 +212,6 @@ struct ssp_device {
+>   	int		type;
+>   	int		use_count;
+>   	int		irq;
+> -	int		drcmr_rx;
+> -	int		drcmr_tx;
+>   
+>   	struct device_node	*of_node;
+>   };
+> diff --git a/sound/soc/pxa/pxa-ssp.c b/sound/soc/pxa/pxa-ssp.c
+> index 0291c7cb64eb..e09368d89bbc 100644
+> --- a/sound/soc/pxa/pxa-ssp.c
+> +++ b/sound/soc/pxa/pxa-ssp.c
+> @@ -104,9 +104,8 @@ static int pxa_ssp_startup(struct snd_pcm_substream *substream,
+>   	dma = kzalloc(sizeof(struct snd_dmaengine_dai_dma_data), GFP_KERNEL);
+>   	if (!dma)
+>   		return -ENOMEM;
+> -
+> -	dma->filter_data = substream->stream == SNDRV_PCM_STREAM_PLAYBACK ?
+> -				&ssp->drcmr_tx : &ssp->drcmr_rx;
+> +	dma->chan_name = substream->stream == SNDRV_PCM_STREAM_PLAYBACK ?
+> +		"tx" : "rx";
+>   
+>   	snd_soc_dai_set_dma_data(cpu_dai, substream, dma);
+>   
+> 
