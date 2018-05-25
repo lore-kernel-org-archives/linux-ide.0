@@ -1,142 +1,196 @@
 From: Daniel Mack <daniel@zonque.org>
-Subject: Re: [PATCH v2 13/13] ARM: pxa: change SSP DMA channels allocation
-Date: Fri, 25 May 2018 09:56:13 +0200
-Message-ID: <7e50d21c-c563-156f-d5d3-cd977af0e9d0@zonque.org>
+Subject: Re: [PATCH v2 08/13] ASoC: pxa: remove the dmaengine
+	compat need
+Date: Fri, 25 May 2018 10:35:37 +0200
+Message-ID: <5bc2aa06-7939-1ca4-6704-30f307edcda4@zonque.org>
 References: <20180524070703.11901-1-robert.jarzmik@free.fr>
- <20180524070703.11901-14-robert.jarzmik@free.fr>
+ <20180524070703.11901-9-robert.jarzmik@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20180524070703.11901-14-robert.jarzmik@free.fr>
+Return-path: <alsa-devel-bounces@alsa-project.org>
+In-Reply-To: <20180524070703.11901-9-robert.jarzmik@free.fr>
 Content-Language: en-US
-Sender: netdev-owner@vger.kernel.org
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Errors-To: alsa-devel-bounces@alsa-project.org
+Sender: alsa-devel-bounces@alsa-project.org
 To: Robert Jarzmik <robert.jarzmik@free.fr>, Haojian Zhuang <haojian.zhuang@gmail.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Marek Vasut <marek.vasut@gmail.com>, Richard Weinberger <richard@nod.at>, Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dmaengine@vger.kernel.org, linux-media@vger.kernel.org, linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org, netdev@vger.kernel.org, alsa-devel@alsa-project.org
+Cc: alsa-devel@alsa-project.org, netdev@vger.kernel.org, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org, dmaengine@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Thursday, May 24, 2018 09:07 AM, Robert Jarzmik wrote:
-> Now the dma_slave_map is available for PXA architecture, switch the SSP
-> device to it.
+On Thursday, May 24, 2018 09:06 AM, Robert Jarzmik wrote:
+> As the pxa architecture switched towards the dmaengine slave map, the
+> old compatibility mechanism to acquire the dma requestor line number and
+> priority are not needed anymore.
 > 
-> This specifically means that :
-> - for platform data based machines, the DMA requestor channels are
->    extracted from the slave map, where pxa-ssp-dai.<N> is a 1-1 match to
->    ssp.<N>, and the channels are either "rx" or "tx".
-> 
-> - for device tree platforms, the dma node should be hooked into the
->    pxa2xx-ac97 or pxa-ssp-dai node.
+> This patch simplifies the dma resource acquisition, using the more
+> generic function dma_request_slave_channel().
 > 
 > Signed-off-by: Robert Jarzmik <robert.jarzmik@free.fr>
 
-Acked-by: Daniel Mack <daniel@zonque.org>
-
-
-We should, however, merge what's left of this management glue code into 
-the users of it, so the dma related properties can be put in the right 
-devicetree node.
-
-I'll prepare a patch for that for 4.18. This is a good preparation for 
-this round though.
-
-
-Thanks,
-Daniel
-
+Reviewed-by: Daniel Mack <daniel@zonque.org>
 
 > ---
-> Since v1: Removed channel names from platform_data
-> ---
->   arch/arm/plat-pxa/ssp.c    | 47 ----------------------------------------------
->   include/linux/pxa2xx_ssp.h |  2 --
->   sound/soc/pxa/pxa-ssp.c    |  5 ++---
->   3 files changed, 2 insertions(+), 52 deletions(-)
+>   sound/arm/pxa2xx-ac97.c     | 14 ++------------
+>   sound/arm/pxa2xx-pcm-lib.c  |  6 +++---
+>   sound/soc/pxa/pxa2xx-ac97.c | 32 +++++---------------------------
+>   sound/soc/pxa/pxa2xx-i2s.c  |  6 ++----
+>   4 files changed, 12 insertions(+), 46 deletions(-)
 > 
-> diff --git a/arch/arm/plat-pxa/ssp.c b/arch/arm/plat-pxa/ssp.c
-> index ba13f793fbce..ed36dcab80f1 100644
-> --- a/arch/arm/plat-pxa/ssp.c
-> +++ b/arch/arm/plat-pxa/ssp.c
-> @@ -127,53 +127,6 @@ static int pxa_ssp_probe(struct platform_device *pdev)
->   	if (IS_ERR(ssp->clk))
->   		return PTR_ERR(ssp->clk);
->   
-> -	if (dev->of_node) {
-> -		struct of_phandle_args dma_spec;
-> -		struct device_node *np = dev->of_node;
-> -		int ret;
-> -
-> -		/*
-> -		 * FIXME: we should allocate the DMA channel from this
-> -		 * context and pass the channel down to the ssp users.
-> -		 * For now, we lookup the rx and tx indices manually
-> -		 */
-> -
-> -		/* rx */
-> -		ret = of_parse_phandle_with_args(np, "dmas", "#dma-cells",
-> -						 0, &dma_spec);
-> -
-> -		if (ret) {
-> -			dev_err(dev, "Can't parse dmas property\n");
-> -			return -ENODEV;
-> -		}
-> -		ssp->drcmr_rx = dma_spec.args[0];
-> -		of_node_put(dma_spec.np);
-> -
-> -		/* tx */
-> -		ret = of_parse_phandle_with_args(np, "dmas", "#dma-cells",
-> -						 1, &dma_spec);
-> -		if (ret) {
-> -			dev_err(dev, "Can't parse dmas property\n");
-> -			return -ENODEV;
-> -		}
-> -		ssp->drcmr_tx = dma_spec.args[0];
-> -		of_node_put(dma_spec.np);
-> -	} else {
-> -		res = platform_get_resource(pdev, IORESOURCE_DMA, 0);
-> -		if (res == NULL) {
-> -			dev_err(dev, "no SSP RX DRCMR defined\n");
-> -			return -ENODEV;
-> -		}
-> -		ssp->drcmr_rx = res->start;
-> -
-> -		res = platform_get_resource(pdev, IORESOURCE_DMA, 1);
-> -		if (res == NULL) {
-> -			dev_err(dev, "no SSP TX DRCMR defined\n");
-> -			return -ENODEV;
-> -		}
-> -		ssp->drcmr_tx = res->start;
-> -	}
-> -
->   	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->   	if (res == NULL) {
->   		dev_err(dev, "no memory resource defined\n");
-> diff --git a/include/linux/pxa2xx_ssp.h b/include/linux/pxa2xx_ssp.h
-> index 8461b18e4608..03a7ca46735b 100644
-> --- a/include/linux/pxa2xx_ssp.h
-> +++ b/include/linux/pxa2xx_ssp.h
-> @@ -212,8 +212,6 @@ struct ssp_device {
->   	int		type;
->   	int		use_count;
->   	int		irq;
-> -	int		drcmr_rx;
-> -	int		drcmr_tx;
->   
->   	struct device_node	*of_node;
+> diff --git a/sound/arm/pxa2xx-ac97.c b/sound/arm/pxa2xx-ac97.c
+> index 4bc244c40f80..236a63cdaf9f 100644
+> --- a/sound/arm/pxa2xx-ac97.c
+> +++ b/sound/arm/pxa2xx-ac97.c
+> @@ -63,28 +63,18 @@ static struct snd_ac97_bus_ops pxa2xx_ac97_ops = {
+>   	.reset	= pxa2xx_ac97_legacy_reset,
 >   };
-> diff --git a/sound/soc/pxa/pxa-ssp.c b/sound/soc/pxa/pxa-ssp.c
-> index 0291c7cb64eb..e09368d89bbc 100644
-> --- a/sound/soc/pxa/pxa-ssp.c
-> +++ b/sound/soc/pxa/pxa-ssp.c
-> @@ -104,9 +104,8 @@ static int pxa_ssp_startup(struct snd_pcm_substream *substream,
->   	dma = kzalloc(sizeof(struct snd_dmaengine_dai_dma_data), GFP_KERNEL);
->   	if (!dma)
->   		return -ENOMEM;
+>   
+> -static struct pxad_param pxa2xx_ac97_pcm_out_req = {
+> -	.prio = PXAD_PRIO_LOWEST,
+> -	.drcmr = 12,
+> -};
 > -
-> -	dma->filter_data = substream->stream == SNDRV_PCM_STREAM_PLAYBACK ?
-> -				&ssp->drcmr_tx : &ssp->drcmr_rx;
-> +	dma->chan_name = substream->stream == SNDRV_PCM_STREAM_PLAYBACK ?
-> +		"tx" : "rx";
+>   static struct snd_dmaengine_dai_dma_data pxa2xx_ac97_pcm_out = {
+>   	.addr		= __PREG(PCDR),
+>   	.addr_width	= DMA_SLAVE_BUSWIDTH_4_BYTES,
+> +	.chan_name	= "pcm_pcm_stereo_out",
+>   	.maxburst	= 32,
+> -	.filter_data	= &pxa2xx_ac97_pcm_out_req,
+> -};
+> -
+> -static struct pxad_param pxa2xx_ac97_pcm_in_req = {
+> -	.prio = PXAD_PRIO_LOWEST,
+> -	.drcmr = 11,
+>   };
 >   
->   	snd_soc_dai_set_dma_data(cpu_dai, substream, dma);
+>   static struct snd_dmaengine_dai_dma_data pxa2xx_ac97_pcm_in = {
+>   	.addr		= __PREG(PCDR),
+>   	.addr_width	= DMA_SLAVE_BUSWIDTH_4_BYTES,
+> +	.chan_name	= "pcm_pcm_stereo_in",
+>   	.maxburst	= 32,
+> -	.filter_data	= &pxa2xx_ac97_pcm_in_req,
+>   };
 >   
+>   static struct snd_pcm *pxa2xx_ac97_pcm;
+> diff --git a/sound/arm/pxa2xx-pcm-lib.c b/sound/arm/pxa2xx-pcm-lib.c
+> index e8da3b8ee721..dcbe7ecc1835 100644
+> --- a/sound/arm/pxa2xx-pcm-lib.c
+> +++ b/sound/arm/pxa2xx-pcm-lib.c
+> @@ -125,9 +125,9 @@ int __pxa2xx_pcm_open(struct snd_pcm_substream *substream)
+>   	if (ret < 0)
+>   		return ret;
+>   
+> -	return snd_dmaengine_pcm_open_request_chan(substream,
+> -					pxad_filter_fn,
+> -					dma_params->filter_data);
+> +	return snd_dmaengine_pcm_open(
+> +		substream, dma_request_slave_channel(rtd->cpu_dai->dev,
+> +						     dma_params->chan_name));
+>   }
+>   EXPORT_SYMBOL(__pxa2xx_pcm_open);
+>   
+> diff --git a/sound/soc/pxa/pxa2xx-ac97.c b/sound/soc/pxa/pxa2xx-ac97.c
+> index 803818aabee9..1b41c0f2a8fb 100644
+> --- a/sound/soc/pxa/pxa2xx-ac97.c
+> +++ b/sound/soc/pxa/pxa2xx-ac97.c
+> @@ -68,61 +68,39 @@ static struct snd_ac97_bus_ops pxa2xx_ac97_ops = {
+>   	.reset	= pxa2xx_ac97_cold_reset,
+>   };
+>   
+> -static struct pxad_param pxa2xx_ac97_pcm_stereo_in_req = {
+> -	.prio = PXAD_PRIO_LOWEST,
+> -	.drcmr = 11,
+> -};
+> -
+>   static struct snd_dmaengine_dai_dma_data pxa2xx_ac97_pcm_stereo_in = {
+>   	.addr		= __PREG(PCDR),
+>   	.addr_width	= DMA_SLAVE_BUSWIDTH_4_BYTES,
+> +	.chan_name	= "pcm_pcm_stereo_in",
+>   	.maxburst	= 32,
+> -	.filter_data	= &pxa2xx_ac97_pcm_stereo_in_req,
+> -};
+> -
+> -static struct pxad_param pxa2xx_ac97_pcm_stereo_out_req = {
+> -	.prio = PXAD_PRIO_LOWEST,
+> -	.drcmr = 12,
+>   };
+>   
+>   static struct snd_dmaengine_dai_dma_data pxa2xx_ac97_pcm_stereo_out = {
+>   	.addr		= __PREG(PCDR),
+>   	.addr_width	= DMA_SLAVE_BUSWIDTH_4_BYTES,
+> +	.chan_name	= "pcm_pcm_stereo_out",
+>   	.maxburst	= 32,
+> -	.filter_data	= &pxa2xx_ac97_pcm_stereo_out_req,
+>   };
+>   
+> -static struct pxad_param pxa2xx_ac97_pcm_aux_mono_out_req = {
+> -	.prio = PXAD_PRIO_LOWEST,
+> -	.drcmr = 10,
+> -};
+>   static struct snd_dmaengine_dai_dma_data pxa2xx_ac97_pcm_aux_mono_out = {
+>   	.addr		= __PREG(MODR),
+>   	.addr_width	= DMA_SLAVE_BUSWIDTH_2_BYTES,
+> +	.chan_name	= "pcm_aux_mono_out",
+>   	.maxburst	= 16,
+> -	.filter_data	= &pxa2xx_ac97_pcm_aux_mono_out_req,
+>   };
+>   
+> -static struct pxad_param pxa2xx_ac97_pcm_aux_mono_in_req = {
+> -	.prio = PXAD_PRIO_LOWEST,
+> -	.drcmr = 9,
+> -};
+>   static struct snd_dmaengine_dai_dma_data pxa2xx_ac97_pcm_aux_mono_in = {
+>   	.addr		= __PREG(MODR),
+>   	.addr_width	= DMA_SLAVE_BUSWIDTH_2_BYTES,
+> +	.chan_name	= "pcm_aux_mono_in",
+>   	.maxburst	= 16,
+> -	.filter_data	= &pxa2xx_ac97_pcm_aux_mono_in_req,
+>   };
+>   
+> -static struct pxad_param pxa2xx_ac97_pcm_aux_mic_mono_req = {
+> -	.prio = PXAD_PRIO_LOWEST,
+> -	.drcmr = 8,
+> -};
+>   static struct snd_dmaengine_dai_dma_data pxa2xx_ac97_pcm_mic_mono_in = {
+>   	.addr		= __PREG(MCDR),
+>   	.addr_width	= DMA_SLAVE_BUSWIDTH_2_BYTES,
+> +	.chan_name	= "pcm_aux_mic_mono",
+>   	.maxburst	= 16,
+> -	.filter_data	= &pxa2xx_ac97_pcm_aux_mic_mono_req,
+>   };
+>   
+>   static int pxa2xx_ac97_hifi_startup(struct snd_pcm_substream *substream,
+> diff --git a/sound/soc/pxa/pxa2xx-i2s.c b/sound/soc/pxa/pxa2xx-i2s.c
+> index 3fb60baf6eab..e7184de0de04 100644
+> --- a/sound/soc/pxa/pxa2xx-i2s.c
+> +++ b/sound/soc/pxa/pxa2xx-i2s.c
+> @@ -82,20 +82,18 @@ static struct pxa_i2s_port pxa_i2s;
+>   static struct clk *clk_i2s;
+>   static int clk_ena = 0;
+>   
+> -static unsigned long pxa2xx_i2s_pcm_stereo_out_req = 3;
+>   static struct snd_dmaengine_dai_dma_data pxa2xx_i2s_pcm_stereo_out = {
+>   	.addr		= __PREG(SADR),
+>   	.addr_width	= DMA_SLAVE_BUSWIDTH_4_BYTES,
+> +	.chan_name	= "tx",
+>   	.maxburst	= 32,
+> -	.filter_data	= &pxa2xx_i2s_pcm_stereo_out_req,
+>   };
+>   
+> -static unsigned long pxa2xx_i2s_pcm_stereo_in_req = 2;
+>   static struct snd_dmaengine_dai_dma_data pxa2xx_i2s_pcm_stereo_in = {
+>   	.addr		= __PREG(SADR),
+>   	.addr_width	= DMA_SLAVE_BUSWIDTH_4_BYTES,
+> +	.chan_name	= "rx",
+>   	.maxburst	= 32,
+> -	.filter_data	= &pxa2xx_i2s_pcm_stereo_in_req,
+>   };
+>   
+>   static int pxa2xx_i2s_startup(struct snd_pcm_substream *substream,
 > 
