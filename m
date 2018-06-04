@@ -1,50 +1,35 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] libata: Drop SanDisk SD7UB3Q*G1001 NOLPM quirk
-Date: Thu, 31 May 2018 08:48:54 -0700
-Message-ID: <20180531154854.GT1351649@devbig577.frc2.facebook.com>
-References: <20180531112107.13778-1-hdegoede@redhat.com>
- <20180531121038.GR1455@redhat.com>
+From: Nixiaoming <nixiaoming@huawei.com>
+Subject: For help, whether to check the return value of sata_scr_read should
+ be added in sata_print_link_status
+Date: Mon, 4 Jun 2018 03:32:07 +0000
+Message-ID: <E490CD805F7529488761C40FD9D26EF12A6828C7@dggemm507-mbx.china.huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180531121038.GR1455@redhat.com>
-Sender: stable-owner@vger.kernel.org
-To: "Richard W.M. Jones" <rjones@redhat.com>
-Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org, Lorenzo Dalrio <lorenzo.dalrio@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: zh-CN
+Sender: linux-kernel-owner@vger.kernel.org
+To: "tj@kernel.org" <tj@kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, May 31, 2018 at 01:10:38PM +0100, Richard W.M. Jones wrote:
-> On Thu, May 31, 2018 at 01:21:07PM +0200, Hans de Goede wrote:
-> > Commit 184add2ca23c ("libata: Apply NOLPM quirk for SanDisk
-> > SD7UB3Q*G1001 SSDs") disabled LPM for SanDisk SD7UB3Q*G1001 SSDs.
-> > 
-> > This has lead to several reports of users of that SSD where LPM
-> > was working fine and who know have a significantly increased idle
-> > power consumption on their laptops.
-> > 
-> > Likely there is another problem on the T450s from the original
-> > reporter which gets exposed by the uncore reaching deeper sleep
-> > states (higher PC-states) due to LPM being enabled. The problem as
-> > reported, a hardfreeze about once a day, already did not sound like
-> > it would be caused by LPM and the reports of the SSD working fine
-> > confirm this. The original reporter is ok with dropping the quirk.
-> > 
-> > A X250 user has reported the same hard freeze problem and for him
-> > the problem went away after unrelated updates, I suspect some GPU
-> > driver stack changes fixed things.
-> > 
-> > TL;DR: The original reporters problem were triggered by LPM but not
-> > an LPM issue, so drop the quirk for the SSD in question.
-> 
-> As the reporter of the original issue, I agree with Hans's
-> analysis above, so ACK from me.
+Hello
+I have trouble reading the code, I hope you can help guide
 
-I'm not sure this is related but we were seeing periodic complete
-lockups on "SanDisk SD[78]SN*G" devices with NCQ enabled and
-blacklisted them for NCQ recently.
+The function sata_print_link_status in the file drivers/ata/libata-core.c checks the return value when the function sata_scr_read is called on line 3009, 
+but does not check the return value when calling sata_scr_read on line 3011.
+Why are two calls handled differently?
+Is there any other code logic that guarantees that the 3011 line will not return an exception? 
 
-Thanks.
+drivers/ata/libata-core.c :
+3005 static void sata_print_link_status(struct ata_link *link)
+3006 {
+3007     u32 sstatus, scontrol, tmp;
+3008
+3009     if (sata_scr_read(link, SCR_STATUS, &sstatus))
+3010         return;
+3011     sata_scr_read(link, SCR_CONTROL, &scontrol);
+3012
+3013     if (ata_phys_link_online(link)) {
 
--- 
-tejun
+Thanks
