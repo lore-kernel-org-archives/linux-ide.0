@@ -1,11 +1,13 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL 1/2] libata changes for v4.18-rc1
-Date: Tue, 5 Jun 2018 12:08:07 -0700
-Message-ID: <20180605190807.GE1351649@devbig577.frc2.facebook.com>
+Subject: [GIT PULL 2/2] libata changes for v4.18-rc1
+Date: Tue, 5 Jun 2018 12:15:25 -0700
+Message-ID: <20180605191525.GF1351649@devbig577.frc2.facebook.com>
+References: <20180605190807.GE1351649@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <20180605190807.GE1351649@devbig577.frc2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Linus Torvalds <torvalds@linux-foundation.org>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
@@ -13,65 +15,74 @@ List-Id: linux-ide@vger.kernel.org
 
 Hello, Linus.
 
-These two are fixes which missed v4.17.  I tried to merge these into
-libata/for-4.18 but couldn't make "git request-pull" not generate huge
-spurious diffstat without merging v4.17 in the middle, so I'm sending
-them out as two spearate pull request.  Pulling into master should be
-clean for both.
+This is the second part of libata pull request.
 
-One is to remove an incorrect power management blacklist entry and the
-other to fix a cdb buffer overrun which has been there for a very long
-time.
+* libata has always been limiting the maximum queue depth to 31, 1 set
+  aside mostly for historical reasons.  This didn't use to make much
+  difference but Jens found out that modern hard drives can actually
+  perform measurably better with the extra one queue depth.  Jens
+  updated libata core so that it can make use of full 32 queue depth.
 
-The following changes since commit 4544e403eb25552aed7f0ee181a7a506b8800403:
+* Damien updated command retry logic in error handling so that it
+  doesn't unnecessarily retry when upper layer (SCSI) is gonna handle
+  them.
 
-  ahci: Add PCI ID for Cannon Lake PCH-LP AHCI (2018-05-24 07:03:32 -0700)
+* A couple misc changes.
+
+Thanks.
+
+The following changes since commit 75bc37fefc4471e718ba8e651aa74673d4e0a9eb:
+
+  Linux 4.17-rc4 (2018-05-06 16:57:38 -1000)
 
 are available in the git repository at:
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.17-fixes
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.18
 
-for you to fetch changes up to 2cfce3a86b64b53f0a70e92a6a659c720c319b45:
+for you to fetch changes up to 88e10092f6a623b88808f782b6637162b5b658fb:
 
-  libata: Drop SanDisk SD7UB3Q*G1001 NOLPM quirk (2018-05-31 08:45:37 -0700)
+  sata_fsl: use the right type for tag bitshift (2018-05-14 08:14:21 -0700)
 
 ----------------------------------------------------------------
-Dan Carpenter (1):
-      libata: zpodd: small read overflow in eject_tray()
+Andy Shevchenko (1):
+      ata: hpt37x: Convert to use match_string() helper
 
-Hans de Goede (1):
-      libata: Drop SanDisk SD7UB3Q*G1001 NOLPM quirk
+Christoph Hellwig (1):
+      sata_nv: don't use block layer bounce buffer
 
- drivers/ata/libata-core.c  | 3 ---
- drivers/ata/libata-zpodd.c | 2 +-
- 2 files changed, 1 insertion(+), 4 deletions(-)
+Damien Le Moal (5):
+      libata: Fix comment typo in ata_eh_analyze_tf()
+      libata: Fix ata_err_string()
+      libata: Make ata_dev_set_mode() less verbose
+      libata: Honor RQF_QUIET flag
+      libata: Fix command retry decision
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 346b163..9bfd2f7 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4557,9 +4557,6 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "SAMSUNG MZMPC128HBFU-000MV", "CXM14M1Q", ATA_HORKAGE_NOLPM, },
- 	{ "SAMSUNG SSD PM830 mSATA *",  "CXM13D1Q", ATA_HORKAGE_NOLPM, },
- 
--	/* Sandisk devices which are known to not handle LPM well */
--	{ "SanDisk SD7UB3Q*G1001",	NULL,	ATA_HORKAGE_NOLPM, },
--
- 	/* devices that don't properly handle queued TRIM commands */
- 	{ "Micron_M500IT_*",		"MU01",	ATA_HORKAGE_NO_NCQ_TRIM |
- 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
-diff --git a/drivers/ata/libata-zpodd.c b/drivers/ata/libata-zpodd.c
-index de4ddd0..b3ed8f9 100644
---- a/drivers/ata/libata-zpodd.c
-+++ b/drivers/ata/libata-zpodd.c
-@@ -35,7 +35,7 @@ struct zpodd {
- static int eject_tray(struct ata_device *dev)
- {
- 	struct ata_taskfile tf;
--	static const char cdb[] = {  GPCMD_START_STOP_UNIT,
-+	static const char cdb[ATAPI_CDB_LEN] = {  GPCMD_START_STOP_UNIT,
- 		0, 0, 0,
- 		0x02,     /* LoEj */
- 		0, 0, 0, 0, 0, 0, 0,
--- 
+Jens Axboe (10):
+      libata: introduce notion of separate hardware tags
+      libata: convert core and drivers to ->hw_tag usage
+      libata: bump ->qc_active to a 64-bit type
+      libata: use ata_tag_internal() consistently
+      libata: remove assumption that ATA_MAX_QUEUE - 1 is the max
+      sata_nv: set host can_queue count appropriately
+      libata: add extra internal command
+      libata: don't clamp queue depth to ATA_MAX_QUEUE - 1
+      ahci: enable full queue depth of 32
+      sata_fsl: use the right type for tag bitshift
+
+ drivers/ata/acard-ahci.c     |  4 +-
+ drivers/ata/ahci.h           |  2 +-
+ drivers/ata/libahci.c        |  8 ++--
+ drivers/ata/libata-core.c    | 61 ++++++++++++---------------
+ drivers/ata/libata-eh.c      | 56 ++++++++++++++++++++-----
+ drivers/ata/libata-scsi.c    | 19 +++++----
+ drivers/ata/pata_hpt37x.c    | 13 +++---
+ drivers/ata/sata_dwc_460ex.c | 14 +++----
+ drivers/ata/sata_fsl.c       | 10 ++---
+ drivers/ata/sata_mv.c        | 26 ++++++------
+ drivers/ata/sata_nv.c        | 98 +++++++++++++++++++-------------------------
+ drivers/ata/sata_sil24.c     |  6 +--
+ include/linux/libata.h       | 22 +++++-----
+ 13 files changed, 177 insertions(+), 162 deletions(-)
+
+--
 tejun
