@@ -1,88 +1,55 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL 2/2] libata changes for v4.18-rc1
-Date: Tue, 5 Jun 2018 12:15:25 -0700
-Message-ID: <20180605191525.GF1351649@devbig577.frc2.facebook.com>
-References: <20180605190807.GE1351649@devbig577.frc2.facebook.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH] libahci: Fix possible Spectre-v1 pmp indexing in ahci_led_store()
+Date: Fri, 8 Jun 2018 18:26:33 +0800
+Message-ID: <1528453593-225313-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180605190807.GE1351649@devbig577.frc2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, dan.carpenter@oracle.com, John Garry <john.garry@huawei.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hello, Linus.
+Currently smatch warns of possible Spectre-V1 issue in ahci_led_store():
+drivers/ata/libahci.c:1150 ahci_led_store() warn: potential spectre issue 'pp->em_priv' (local cap)
 
-This is the second part of libata pull request.
+Userspace controls @pmp from following callchain:
+em_message->store()
+->ata_scsi_em_message_store()
+-->ap->ops->em_store()
+--->ahci_led_store()
 
-* libata has always been limiting the maximum queue depth to 31, 1 set
-  aside mostly for historical reasons.  This didn't use to make much
-  difference but Jens found out that modern hard drives can actually
-  perform measurably better with the extra one queue depth.  Jens
-  updated libata core so that it can make use of full 32 queue depth.
+After the mask+shift @pmp is effectively an 8b value, which is used to
+index into an array of length 8, so sanitize the array index.
 
-* Damien updated command retry logic in error handling so that it
-  doesn't unnecessarily retry when upper layer (SCSI) is gonna handle
-  them.
+Signed-off-by: John Garry <john.garry@huawei.com>
 
-* A couple misc changes.
-
-Thanks.
-
-The following changes since commit 75bc37fefc4471e718ba8e651aa74673d4e0a9eb:
-
-  Linux 4.17-rc4 (2018-05-06 16:57:38 -1000)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.18
-
-for you to fetch changes up to 88e10092f6a623b88808f782b6637162b5b658fb:
-
-  sata_fsl: use the right type for tag bitshift (2018-05-14 08:14:21 -0700)
-
-----------------------------------------------------------------
-Andy Shevchenko (1):
-      ata: hpt37x: Convert to use match_string() helper
-
-Christoph Hellwig (1):
-      sata_nv: don't use block layer bounce buffer
-
-Damien Le Moal (5):
-      libata: Fix comment typo in ata_eh_analyze_tf()
-      libata: Fix ata_err_string()
-      libata: Make ata_dev_set_mode() less verbose
-      libata: Honor RQF_QUIET flag
-      libata: Fix command retry decision
-
-Jens Axboe (10):
-      libata: introduce notion of separate hardware tags
-      libata: convert core and drivers to ->hw_tag usage
-      libata: bump ->qc_active to a 64-bit type
-      libata: use ata_tag_internal() consistently
-      libata: remove assumption that ATA_MAX_QUEUE - 1 is the max
-      sata_nv: set host can_queue count appropriately
-      libata: add extra internal command
-      libata: don't clamp queue depth to ATA_MAX_QUEUE - 1
-      ahci: enable full queue depth of 32
-      sata_fsl: use the right type for tag bitshift
-
- drivers/ata/acard-ahci.c     |  4 +-
- drivers/ata/ahci.h           |  2 +-
- drivers/ata/libahci.c        |  8 ++--
- drivers/ata/libata-core.c    | 61 ++++++++++++---------------
- drivers/ata/libata-eh.c      | 56 ++++++++++++++++++++-----
- drivers/ata/libata-scsi.c    | 19 +++++----
- drivers/ata/pata_hpt37x.c    | 13 +++---
- drivers/ata/sata_dwc_460ex.c | 14 +++----
- drivers/ata/sata_fsl.c       | 10 ++---
- drivers/ata/sata_mv.c        | 26 ++++++------
- drivers/ata/sata_nv.c        | 98 +++++++++++++++++++-------------------------
- drivers/ata/sata_sil24.c     |  6 +--
- include/linux/libata.h       | 22 +++++-----
- 13 files changed, 177 insertions(+), 162 deletions(-)
-
---
-tejun
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 7adcf3c..4ce5bb4 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -35,6 +35,7 @@
+ #include <linux/kernel.h>
+ #include <linux/gfp.h>
+ #include <linux/module.h>
++#include <linux/nospec.h>
+ #include <linux/blkdev.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
+@@ -1142,10 +1143,12 @@ static ssize_t ahci_led_store(struct ata_port *ap, const char *buf,
+ 
+ 	/* get the slot number from the message */
+ 	pmp = (state & EM_MSG_LED_PMP_SLOT) >> 8;
+-	if (pmp < EM_MAX_SLOTS)
++	if (pmp < EM_MAX_SLOTS) {
++		pmp = array_index_nospec(pmp, EM_MAX_SLOTS);
+ 		emp = &pp->em_priv[pmp];
+-	else
++	} else {
+ 		return -EINVAL;
++	}
+ 
+ 	/* mask off the activity bits if we are in sw_activity
+ 	 * mode, user should turn off sw_activity before setting
+-- 
+1.9.1
