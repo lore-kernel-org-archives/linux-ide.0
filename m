@@ -2,8 +2,8 @@ From: Jens Axboe <axboe@kernel.dk>
 Subject: Re: Constant ata messages on console with commit 28361c403683
  ("libata: add extra internal command") (was Re: [GIT PULL 2/2] libata changes
  for v4.18-rc1)
-Date: Tue, 19 Jun 2018 09:26:17 -0600
-Message-ID: <21c94bb3-f2d6-535d-f9fe-399e7919c59c@kernel.dk>
+Date: Tue, 19 Jun 2018 09:39:18 -0600
+Message-ID: <f82edaa2-4b1a-c747-3d58-ec86ceb4ee7e@kernel.dk>
 References: <20180605190807.GE1351649@devbig577.frc2.facebook.com>
  <20180605191525.GF1351649@devbig577.frc2.facebook.com>
  <87bmc8a6qi.fsf@concordia.ellerman.id.au>
@@ -115,44 +115,37 @@ On 6/19/18 1:29 AM, Michael Ellerman wrote:
 > 
 >   root@p5020ds:~# mount /dev/sr0 /mnt
 >   mount: /dev/sr0 is already mounted or /mnt busy
+> 
+> cheers
 
-Can you try the below patch, on both 4.17 and on current -git? Might
-help shed some light on this. The fsl driver does weird stuff with
-the internal tag, I'm guessing that's related.
-
+Actually, just try this one on top of current -git.
 
 diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index b8d9cfc60374..9bac5ba36dac 100644
+index b8d9cfc60374..4007a9ae650d 100644
 --- a/drivers/ata/sata_fsl.c
 +++ b/drivers/ata/sata_fsl.c
-@@ -28,6 +28,9 @@
- #include <linux/of_irq.h>
- #include <linux/of_platform.h>
+@@ -395,12 +395,6 @@ static inline unsigned int sata_fsl_tag(unsigned int tag,
+ {
+ 	/* We let libATA core do actual (queue) tag allocation */
  
-+#undef DPRINTK
-+#define DPRINTK printk
-+
- static unsigned int intr_coalescing_count;
- module_param(intr_coalescing_count, int, S_IRUGO);
- MODULE_PARM_DESC(intr_coalescing_count,
-@@ -318,7 +321,7 @@ static void fsl_sata_set_irq_coalescing(struct ata_host *host,
+-	/* all non NCQ/queued commands should have tag#0 */
+-	if (ata_tag_internal(tag)) {
+-		DPRINTK("mapping internal cmds to tag#0\n");
+-		return 0;
+-	}
+-
+ 	if (unlikely(tag >= SATA_FSL_QUEUE_DEPTH)) {
+ 		DPRINTK("tag %d invalid : out of range\n", tag);
+ 		return 0;
+@@ -1229,7 +1223,7 @@ static void sata_fsl_host_intr(struct ata_port *ap)
  
- 	DPRINTK("interrupt coalescing, count = 0x%x, ticks = %x\n",
- 			intr_coalescing_count, intr_coalescing_ticks);
--	DPRINTK("ICC register status: (hcr base: 0x%x) = 0x%x\n",
-+	DPRINTK("ICC register status: (hcr base: 0x%p) = 0x%x\n",
- 			hcr_base, ioread32(hcr_base + ICC));
- }
- 
-@@ -1479,7 +1482,7 @@ static int sata_fsl_probe(struct platform_device *ofdev)
- 	}
- 
- 	DPRINTK("@reset i/o = 0x%x\n", ioread32(csr_base + TRANSCFG));
--	DPRINTK("sizeof(cmd_desc) = %d\n", sizeof(struct command_desc));
-+	DPRINTK("sizeof(cmd_desc) = %d\n", (int) sizeof(struct command_desc));
- 	DPRINTK("sizeof(#define cmd_desc) = %d\n", SATA_FSL_CMD_DESC_SIZE);
- 
- 	host_priv = kzalloc(sizeof(struct sata_fsl_host_priv), GFP_KERNEL);
+ 	/* Workaround for data length mismatch errata */
+ 	if (unlikely(hstatus & INT_ON_DATA_LENGTH_MISMATCH)) {
+-		for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
++		for (tag = 0; tag <= ATA_MAX_QUEUE; tag++) {
+ 			qc = ata_qc_from_tag(ap, tag);
+ 			if (qc && ata_is_atapi(qc->tf.protocol)) {
+ 				u32 hcontrol;
 
 -- 
 Jens Axboe
