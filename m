@@ -1,45 +1,61 @@
-From: Robert Jarzmik <robert.jarzmik@free.fr>
-Subject: Re: [PATCH v3 09/14] ASoC: pxa: remove the dmaengine
-	compat need
-Date: Thu, 21 Jun 2018 10:50:03 +0200
-Message-ID: <87muvoo75w.fsf@belgarion.home>
-References: <20180617170217.24177-1-robert.jarzmik@free.fr>
- <20180617170217.24177-10-robert.jarzmik@free.fr>
- <1984a4a7-e33b-6349-31f3-6f85ff1582b8@zonque.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <alsa-devel-bounces@alsa-project.org>
-In-Reply-To: <1984a4a7-e33b-6349-31f3-6f85ff1582b8@zonque.org> (Daniel Mack's
- message of "Sun, 17 Jun 2018 20:17:09 +0200")
-List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
-List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
-List-Post: <mailto:alsa-devel@alsa-project.org>
-List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
-List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
-Errors-To: alsa-devel-bounces@alsa-project.org
-Sender: alsa-devel-bounces@alsa-project.org
-To: Mark Brown <broonie@kernel.org>, Daniel Mack <daniel@zonque.org>
-Cc: Ulf Hansson <ulf.hansson@linaro.org>, alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org, Miquel Raynal <miquel.raynal@bootlin.com>, Mauro Carvalho Chehab <mchehab@kernel.org>, Vinod Koul <vinod.koul@intel.com>, Richard Weinberger <richard@nod.at>, Takashi Iwai <tiwai@suse.com>, Marek Vasut <marek.vasut@gmail.com>, linux-media@vger.kernel.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Haojian Zhuang <haojian.zhuang@gmail.com>, Boris Brezillon <boris.brezillon@bootlin.com>, linux-arm-kernel@lists.infradead.org, Nicolas Pitre <nico@fluxnic.net>, netdev@vger.kernel.org, linux-mmc@vger.kernel.org, Liam Girdwood <lgirdwood@gmail.com>, dmaengine@vger.kernel.org, Tejun Heo <tj@kernel.org>, Brian Norris <computersforpeace@gmail.com>, David Woodhouse <dwmw2@infradead.org>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH v4] ata: Remove depends on HAS_DMA in case of platform dependency
+Date: Fri, 22 Jun 2018 13:03:07 +0200
+Message-ID: <20180622110307.31523-1-geert@linux-m68k.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
 List-Id: linux-ide@vger.kernel.org
 
-Daniel Mack <daniel@zonque.org> writes:
+Remove dependencies on HAS_DMA where a Kconfig symbol depends on another
+symbol that implies HAS_DMA, and, optionally, on "|| COMPILE_TEST".
+In most cases this other symbol is an architecture or platform specific
+symbol, or PCI.
 
-> Hi Mark,
->
-> I prepared a series of patches for 4.18 that conflict with this one. Instead of
-> letting other people resolve this down the road, I'd prefer if this one went
-> through the ASoC tree, if you don't mind.
->
-> I've talked to Robert off-list, and he's fine with this approach.
-That's right.
+Generic symbols and drivers without platform dependencies keep their
+dependencies on HAS_DMA, to prevent compiling subsystems or drivers that
+cannot work anyway.
 
-I'll tentativaly queue this patch to my pxa/for-next tree. As soon as I hear
-that Mark queued it up in his tree, I'll drop it from mine.
+This simplifies the dependencies, and allows to improve compile-testing.
 
-Cheers.
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Reviewed-by: Mark Brown <broonie@kernel.org>
+Acked-by: Robin Murphy <robin.murphy@arm.com>
+---
+v4:
+  - Rebase to v4.18-rc1 (applies to next-20180622, too),
 
---
-Robert
+v3:
+  - Rebase to v4.17-rc1,
+
+v2:
+  - Add Reviewed-by, Acked-by,
+  - Drop RFC state,
+  - Split per subsystem.
+---
+ drivers/ata/Kconfig | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 2b16e7c8fff35764..39b181d6bd0d8cf2 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -398,7 +398,6 @@ config SATA_DWC_VDEBUG
+ 
+ config SATA_HIGHBANK
+ 	tristate "Calxeda Highbank SATA support"
+-	depends on HAS_DMA
+ 	depends on ARCH_HIGHBANK || COMPILE_TEST
+ 	help
+ 	  This option enables support for the Calxeda Highbank SoC's
+@@ -408,7 +407,6 @@ config SATA_HIGHBANK
+ 
+ config SATA_MV
+ 	tristate "Marvell SATA support"
+-	depends on HAS_DMA
+ 	depends on PCI || ARCH_DOVE || ARCH_MV78XX0 || \
+ 		   ARCH_MVEBU || ARCH_ORION5X || COMPILE_TEST
+ 	select GENERIC_PHY
+-- 
+2.17.1
