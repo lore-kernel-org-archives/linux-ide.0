@@ -1,59 +1,36 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH 1/2] ata: Fix ZBC_OUT command block check
-Date: Tue, 26 Jun 2018 16:18:37 +0900
-Message-ID: <20180626071838.15140-2-damien.lemoal@wdc.com>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 1/2] ata: Fix ZBC_OUT command block check
+Date: Tue, 26 Jun 2018 19:38:07 +0800
+Message-ID: <20180626113807.GA29708@kroah.com>
 References: <20180626071838.15140-1-damien.lemoal@wdc.com>
+ <20180626071838.15140-2-damien.lemoal@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20180626071838.15140-1-damien.lemoal@wdc.com>
+Content-Disposition: inline
+In-Reply-To: <20180626071838.15140-2-damien.lemoal@wdc.com>
 Sender: stable-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-The block (LBA) specified must not exceed the last addressable LBA,
-which is dev->nr_sectors - 1. So fix the correct check is
-"if (block >= dev->n_sectors)" and not "if (block > dev->n_sectords)".
+On Tue, Jun 26, 2018 at 04:18:37PM +0900, Damien Le Moal wrote:
+> The block (LBA) specified must not exceed the last addressable LBA,
+> which is dev->nr_sectors - 1. So fix the correct check is
+> "if (block >= dev->n_sectors)" and not "if (block > dev->n_sectords)".
+> 
+> Additionally, the asc/ascq to return for an LBA that is not a zone start
+> LBA should be ILLEGAL REQUEST, regardless if the bad LBA is out of
+> range.
+> 
+> Reported-by: David Butterfield <david.butterfield@wdc.com>
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 
-Additionally, the asc/ascq to return for an LBA that is not a zone start
-LBA should be ILLEGAL REQUEST, regardless if the bad LBA is out of
-range.
+<formletter>
 
-Reported-by: David Butterfield <david.butterfield@wdc.com>
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
----
- drivers/ata/libata-scsi.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+This is not the correct way to submit patches for inclusion in the
+stable kernel tree.  Please read:
+    https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html
+for how to do this properly.
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 6a91d04351d9..a5543751f446 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3805,8 +3805,13 @@ static unsigned int ata_scsi_zbc_out_xlat(struct ata_queued_cmd *qc)
- 		 */
- 		goto invalid_param_len;
- 	}
--	if (block > dev->n_sectors)
--		goto out_of_range;
-+	if (block >= dev->n_sectors) {
-+		/*
-+		 * Block must be a valid zone ID (a zone start LBA).
-+		 */
-+		fp = 2;
-+		goto invalid_fld;
-+	}
- 
- 	all = cdb[14] & 0x1;
- 
-@@ -3837,10 +3842,6 @@ static unsigned int ata_scsi_zbc_out_xlat(struct ata_queued_cmd *qc)
-  invalid_fld:
- 	ata_scsi_set_invalid_field(qc->dev, scmd, fp, 0xff);
- 	return 1;
-- out_of_range:
--	/* "Logical Block Address out of range" */
--	ata_scsi_set_sense(qc->dev, scmd, ILLEGAL_REQUEST, 0x21, 0x00);
--	return 1;
- invalid_param_len:
- 	/* "Parameter list length error" */
- 	ata_scsi_set_sense(qc->dev, scmd, ILLEGAL_REQUEST, 0x1a, 0x0);
--- 
-2.17.1
+</formletter>
