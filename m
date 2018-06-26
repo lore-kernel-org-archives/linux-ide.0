@@ -1,137 +1,34 @@
-From: Mark Brown <broonie@kernel.org>
-Subject: Applied "dmaengine: pxa: use a dma slave map" to the
-	asoc tree
-Date: Mon, 25 Jun 2018 14:15:38 +0100
-Message-ID: <E1fXRLG-00005A-3A@debutante>
-References: <20180524070703.11901-2-robert.jarzmik@free.fr>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <alsa-devel-bounces@alsa-project.org>
-In-Reply-To: <20180524070703.11901-2-robert.jarzmik@free.fr>
-List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
-List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
-List-Post: <mailto:alsa-devel@alsa-project.org>
-List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
-List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
-Errors-To: alsa-devel-bounces@alsa-project.org
-Sender: alsa-devel-bounces@alsa-project.org
-To: Robert Jarzmik <robert.jarzmik@free.fr>
-Cc: Boris Brezillon <boris.brezillon@free-electrons.com>, alsa-devel@alsa-project.org, Arnd Bergmann <arnd@arndb.de>, linux-ide@vger.kernel.org, Richard Weinberger <richard@nod.at>, linux-mmc@vger.kernel.org, Liam Girdwood <lgirdwood@gmail.com>, Haojian Zhuang <haojian.zhuang@gmail.com>, linux-kernel@vger.kernel.org, Marek Vasut <marek.vasut@gmail.com>, Vinod Koul <vkoul@kernel.org>, Mark Brown <broonie@kernel.org>, linux-mtd@lists.infradead.org, linux-arm-kernel@lists.infradead.org, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, netdev@vger.kernel.org, dmaengine@vger.kernel.org, Brian Norris <computersforpeace@gmail.com>, David Woodhouse <dwmw2@infradead.org>, Daniel Mack <daniel@zonque.org>, linux-media@vger.kernel.org
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH 0/2] ZBC_OUT command translation fixes
+Date: Tue, 26 Jun 2018 16:18:36 +0900
+Message-ID: <20180626071838.15140-1-damien.lemoal@wdc.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Bart Van Assche <Bart.VanAssche@wdc.com>, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-The patch
+Tejun,
 
-   dmaengine: pxa: use a dma slave map
+These two patches fix problems with the checks of the ZBC_OUT command fields
+prior to its translation to ZAC MANAGEMENT OUT.
 
-has been applied to the asoc tree at
+The first patch fixes an incorrect out-of-range check and changes the returned
+asc/ascq to the ZBC defined INVALID FIELD IN CDB instead of (the more natural
+but incorrect) LBA OUT OF RANGE.
 
-   https://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound.git 
+The second patch disables the ZBC_OUT command block address check if the ALL
+bit is set, as defined by the ZBC specifications.
 
-All being well this means that it will be integrated into the linux-next
-tree (usually sometime in the next 24 hours) and sent to Linus during
-the next merge window (or sooner if it is a bug fix), however if
-problems are discovered then the patch may be dropped or reverted.  
+Thank you for considering these patches for inclusion in 4.18 fixes (and CC
+stable).
 
-You may get further e-mails resulting from automated or manual testing
-and review of the tree, please engage with people reporting problems and
-send followup patches addressing any issues that are reported if needed.
+Damien Le Moal (2):
+  ata: Fix ZBC_OUT command block check
+  ata: Fix ZBC_OUT all bit handling
 
-If any updates are required or you are submitting further changes they
-should be sent as incremental updates against current git, existing
-patches will not be replaced.
+ drivers/ata/libata-scsi.c | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
 
-Please add any relevant lists and maintainers to the CCs when replying
-to this mail.
-
-Thanks,
-Mark
-
->From 420c0117db25db38b72b6230223f7a976d3070ea Mon Sep 17 00:00:00 2001
-From: Robert Jarzmik <robert.jarzmik@free.fr>
-Date: Sun, 17 Jun 2018 19:02:04 +0200
-Subject: [PATCH] dmaengine: pxa: use a dma slave map
-
-In order to remove the specific knowledge of the dma mapping from PXA
-drivers, add a default slave map for pxa architectures.
-
-This won't impact MMP architecture, but is aimed only at all PXA boards.
-
-This is the first step, and once all drivers are converted,
-pxad_filter_fn() will be made static, and the DMA resources removed from
-device.c.
-
-Signed-off-by: Robert Jarzmik <robert.jarzmik@free.fr>
-Reported-by: Arnd Bergmann <arnd@arndb.de>
-Acked-by: Vinod Koul <vkoul@kernel.org>
----
- drivers/dma/pxa_dma.c                 | 10 +++++++++-
- include/linux/platform_data/mmp_dma.h |  4 ++++
- 2 files changed, 13 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/dma/pxa_dma.c b/drivers/dma/pxa_dma.c
-index b53fb618bbf6..9505334f9c6e 100644
---- a/drivers/dma/pxa_dma.c
-+++ b/drivers/dma/pxa_dma.c
-@@ -179,6 +179,8 @@ static unsigned int pxad_drcmr(unsigned int line)
- 	return 0x1000 + line * 4;
- }
- 
-+bool pxad_filter_fn(struct dma_chan *chan, void *param);
-+
- /*
-  * Debug fs
-  */
-@@ -1396,9 +1398,10 @@ static int pxad_probe(struct platform_device *op)
- {
- 	struct pxad_device *pdev;
- 	const struct of_device_id *of_id;
-+	const struct dma_slave_map *slave_map = NULL;
- 	struct mmp_dma_platdata *pdata = dev_get_platdata(&op->dev);
- 	struct resource *iores;
--	int ret, dma_channels = 0, nb_requestors = 0;
-+	int ret, dma_channels = 0, nb_requestors = 0, slave_map_cnt = 0;
- 	const enum dma_slave_buswidth widths =
- 		DMA_SLAVE_BUSWIDTH_1_BYTE   | DMA_SLAVE_BUSWIDTH_2_BYTES |
- 		DMA_SLAVE_BUSWIDTH_4_BYTES;
-@@ -1429,6 +1432,8 @@ static int pxad_probe(struct platform_device *op)
- 	} else if (pdata && pdata->dma_channels) {
- 		dma_channels = pdata->dma_channels;
- 		nb_requestors = pdata->nb_requestors;
-+		slave_map = pdata->slave_map;
-+		slave_map_cnt = pdata->slave_map_cnt;
- 	} else {
- 		dma_channels = 32;	/* default 32 channel */
- 	}
-@@ -1440,6 +1445,9 @@ static int pxad_probe(struct platform_device *op)
- 	pdev->slave.device_prep_dma_memcpy = pxad_prep_memcpy;
- 	pdev->slave.device_prep_slave_sg = pxad_prep_slave_sg;
- 	pdev->slave.device_prep_dma_cyclic = pxad_prep_dma_cyclic;
-+	pdev->slave.filter.map = slave_map;
-+	pdev->slave.filter.mapcnt = slave_map_cnt;
-+	pdev->slave.filter.fn = pxad_filter_fn;
- 
- 	pdev->slave.copy_align = PDMA_ALIGNMENT;
- 	pdev->slave.src_addr_widths = widths;
-diff --git a/include/linux/platform_data/mmp_dma.h b/include/linux/platform_data/mmp_dma.h
-index d1397c8ed94e..6397b9c8149a 100644
---- a/include/linux/platform_data/mmp_dma.h
-+++ b/include/linux/platform_data/mmp_dma.h
-@@ -12,9 +12,13 @@
- #ifndef MMP_DMA_H
- #define MMP_DMA_H
- 
-+struct dma_slave_map;
-+
- struct mmp_dma_platdata {
- 	int dma_channels;
- 	int nb_requestors;
-+	int slave_map_cnt;
-+	const struct dma_slave_map *slave_map;
- };
- 
- #endif /* MMP_DMA_H */
 -- 
-2.18.0.rc2
+2.17.1
