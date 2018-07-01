@@ -1,213 +1,155 @@
-From: Mark Brown <broonie@kernel.org>
-Subject: Applied "ASoC: pxa: remove the dmaengine compat need" to the asoc tree
-Date: Fri, 29 Jun 2018 12:07:31 +0100
-Message-ID: <E1fYrFT-0002gi-9G@debutante>
-References: <20180524070703.11901-9-robert.jarzmik@free.fr>
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20180524070703.11901-9-robert.jarzmik@free.fr>
-Sender: netdev-owner@vger.kernel.org
-To: Robert Jarzmik <robert.jarzmik@free.fr>
-Cc: Daniel Mack <daniel@zonque.org>, Mark Brown <broonie@kernel.org>Daniel Mack <daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Marek Vasut <marek.vasut@gmail.com>, Richard Weinberger <richard@nod.at>, Liam Girdwood <lgirdwood@gmail.com>Mark Brown <broonie@kernel.org>, Arnd Bergmann <arnd@arndb.de>, alsa-devel@alsa-project.org, netdev@vger.kernel.org, linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mtd@lists.infradead.org, dmaengine@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.orgalsa-d
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH] ahci: Disable LPM on Lenovo 50 series laptops with a too old BIOS
+Date: Sun,  1 Jul 2018 12:15:46 +0200
+Message-ID: <20180701101546.10319-1-hdegoede@redhat.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-The patch
+There have been several reports of LPM related hard freezes about once
+a day on multiple Lenovo 50 series models. Strange enough these reports
+where not disk model specific as LPM issues usually are and some users
+with the exact same disk + laptop where seeing them while other users
+where not seeing these issues.
 
-   ASoC: pxa: remove the dmaengine compat need
+It turns out that enabling LPM triggers a firmware bug somewhere, which
+has been fixed in later BIOS versions.
 
-has been applied to the asoc tree at
+This commit adds a new ahci_broken_lpm() function and a new ATA_FLAG_NO_LPM
+for dealing with this.
 
-   https://git.kernel.org/pub/scm/linux/kernel/git/broonie/sound.git 
+The ahci_broken_lpm() function contains DMI match info for the 4 models
+which are known to be affected by this and the DMI BIOS date field for
+known good BIOS versions. If the BIOS date is older then the one in the
+table LPM will be disabled and a warning will be printed.
 
-All being well this means that it will be integrated into the linux-next
-tree (usually sometime in the next 24 hours) and sent to Linus during
-the next merge window (or sooner if it is a bug fix), however if
-problems are discovered then the patch may be dropped or reverted.  
+Note the BIOS dates are for known good versions, some older versions may
+work too, but we don't know for sure, the table is using dates from BIOS
+versions for which users have confirmed that upgrading to that version
+makes the problem go away.
 
-You may get further e-mails resulting from automated or manual testing
-and review of the tree, please engage with people reporting problems and
-send followup patches addressing any issues that are reported if needed.
+Unfortunately I've been unable to get hold of the reporter who reported
+that BIOS version 2.35 fixed the problems on the W541 for him. I've been
+able to verify the DMI_SYS_VENDOR and DMI_PRODUCT_VERSION from an older
+dmidecode, but I don't know the exact BIOS date as reported in the DMI.
+Lenovo keeps a changelog with dates in their release notes, but the
+dates there are the release dates not the build dates which are in DMI.
+So I've chosen to set the date to which we compare to one day past the
+release date of the 2.34 BIOS. I plan to fix this with a follow up
+commit once I've the necessary info.
 
-If any updates are required or you are submitting further changes they
-should be sent as incremental updates against current git, existing
-patches will not be replaced.
-
-Please add any relevant lists and maintainers to the CCs when replying
-to this mail.
-
-Thanks,
-Mark
-
->From 8f54061d001ad2da24dba89fc48adbbf4c85222b Mon Sep 17 00:00:00 2001
-From: Robert Jarzmik <robert.jarzmik@free.fr>
-Date: Thu, 28 Jun 2018 22:08:37 +0200
-Subject: [PATCH] ASoC: pxa: remove the dmaengine compat need
-
-As the pxa architecture switched towards the dmaengine slave map, the
-old compatibility mechanism to acquire the dma requestor line number and
-priority are not needed anymore.
-
-This patch simplifies the dma resource acquisition, using the more
-generic function dma_request_slave_channel().
-
-Signed-off-by: Robert Jarzmik <robert.jarzmik@free.fr>
-Signed-off-by: Daniel Mack <daniel@zonque.org>
-Signed-off-by: Mark Brown <broonie@kernel.org>
+Cc: stable@vger.kernel.org
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 ---
- sound/arm/pxa2xx-ac97.c     | 14 ++------------
- sound/arm/pxa2xx-pcm-lib.c  |  6 +++---
- sound/soc/pxa/pxa2xx-ac97.c | 32 +++++---------------------------
- sound/soc/pxa/pxa2xx-i2s.c  |  6 ++----
- 4 files changed, 12 insertions(+), 46 deletions(-)
+ drivers/ata/ahci.c        | 59 +++++++++++++++++++++++++++++++++++++++
+ drivers/ata/libata-core.c |  3 ++
+ include/linux/libata.h    |  1 +
+ 3 files changed, 63 insertions(+)
 
-diff --git a/sound/arm/pxa2xx-ac97.c b/sound/arm/pxa2xx-ac97.c
-index 4bc244c40f80..236a63cdaf9f 100644
---- a/sound/arm/pxa2xx-ac97.c
-+++ b/sound/arm/pxa2xx-ac97.c
-@@ -63,28 +63,18 @@ static struct snd_ac97_bus_ops pxa2xx_ac97_ops = {
- 	.reset	= pxa2xx_ac97_legacy_reset,
- };
- 
--static struct pxad_param pxa2xx_ac97_pcm_out_req = {
--	.prio = PXAD_PRIO_LOWEST,
--	.drcmr = 12,
--};
--
- static struct snd_dmaengine_dai_dma_data pxa2xx_ac97_pcm_out = {
- 	.addr		= __PREG(PCDR),
- 	.addr_width	= DMA_SLAVE_BUSWIDTH_4_BYTES,
-+	.chan_name	= "pcm_pcm_stereo_out",
- 	.maxburst	= 32,
--	.filter_data	= &pxa2xx_ac97_pcm_out_req,
--};
--
--static struct pxad_param pxa2xx_ac97_pcm_in_req = {
--	.prio = PXAD_PRIO_LOWEST,
--	.drcmr = 11,
- };
- 
- static struct snd_dmaengine_dai_dma_data pxa2xx_ac97_pcm_in = {
- 	.addr		= __PREG(PCDR),
- 	.addr_width	= DMA_SLAVE_BUSWIDTH_4_BYTES,
-+	.chan_name	= "pcm_pcm_stereo_in",
- 	.maxburst	= 32,
--	.filter_data	= &pxa2xx_ac97_pcm_in_req,
- };
- 
- static struct snd_pcm *pxa2xx_ac97_pcm;
-diff --git a/sound/arm/pxa2xx-pcm-lib.c b/sound/arm/pxa2xx-pcm-lib.c
-index e8da3b8ee721..dcbe7ecc1835 100644
---- a/sound/arm/pxa2xx-pcm-lib.c
-+++ b/sound/arm/pxa2xx-pcm-lib.c
-@@ -125,9 +125,9 @@ int __pxa2xx_pcm_open(struct snd_pcm_substream *substream)
- 	if (ret < 0)
- 		return ret;
- 
--	return snd_dmaengine_pcm_open_request_chan(substream,
--					pxad_filter_fn,
--					dma_params->filter_data);
-+	return snd_dmaengine_pcm_open(
-+		substream, dma_request_slave_channel(rtd->cpu_dai->dev,
-+						     dma_params->chan_name));
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 738fb22978dd..fdeb3b4d0f4a 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1280,6 +1280,59 @@ static bool ahci_broken_suspend(struct pci_dev *pdev)
+ 	return strcmp(buf, dmi->driver_data) < 0;
  }
- EXPORT_SYMBOL(__pxa2xx_pcm_open);
  
-diff --git a/sound/soc/pxa/pxa2xx-ac97.c b/sound/soc/pxa/pxa2xx-ac97.c
-index 5738a0abcd6a..c52b33802bf2 100644
---- a/sound/soc/pxa/pxa2xx-ac97.c
-+++ b/sound/soc/pxa/pxa2xx-ac97.c
-@@ -68,61 +68,39 @@ static struct snd_ac97_bus_ops pxa2xx_ac97_ops = {
- 	.reset	= pxa2xx_ac97_cold_reset,
- };
++static bool ahci_broken_lpm(struct pci_dev *pdev)
++{
++	static const struct dmi_system_id sysids[] = {
++		/* Various Lenovo 50 series have LPM issues with older BIOSen */
++		{
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
++				DMI_MATCH(DMI_PRODUCT_VERSION, "ThinkPad X250"),
++			},
++			.driver_data = "20180406", /* 1.31 */
++		},
++		{
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
++				DMI_MATCH(DMI_PRODUCT_VERSION, "ThinkPad L450"),
++			},
++			.driver_data = "20180420", /* 1.28 */
++		},
++		{
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
++				DMI_MATCH(DMI_PRODUCT_VERSION, "ThinkPad T450s"),
++			},
++			.driver_data = "20180315", /* 1.33 */
++		},
++		{
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "LENOVO"),
++				DMI_MATCH(DMI_PRODUCT_VERSION, "ThinkPad W541"),
++			},
++			/*
++			 * Note date based on release notes, 2.35 has been
++			 * reported to be good, but I've been unable to get
++			 * a hold of the reporter to get the DMI BIOS date.
++			 * TODO: fix this.
++			 */
++			.driver_data = "20180310", /* 2.35 */
++		},
++		{ }	/* terminate list */
++	};
++	const struct dmi_system_id *dmi = dmi_first_match(sysids);
++	int year, month, date;
++	char buf[9];
++
++	if (!dmi)
++		return false;
++
++	dmi_get_date(DMI_BIOS_DATE, &year, &month, &date);
++	snprintf(buf, sizeof(buf), "%04d%02d%02d", year, month, date);
++
++	return strcmp(buf, dmi->driver_data) < 0;
++}
++
+ static bool ahci_broken_online(struct pci_dev *pdev)
+ {
+ #define ENCODE_BUSDEVFN(bus, slot, func)			\
+@@ -1694,6 +1747,12 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 			"quirky BIOS, skipping spindown on poweroff\n");
+ 	}
  
--static struct pxad_param pxa2xx_ac97_pcm_stereo_in_req = {
--	.prio = PXAD_PRIO_LOWEST,
--	.drcmr = 11,
--};
--
- static struct snd_dmaengine_dai_dma_data pxa2xx_ac97_pcm_stereo_in = {
- 	.addr		= __PREG(PCDR),
- 	.addr_width	= DMA_SLAVE_BUSWIDTH_4_BYTES,
-+	.chan_name	= "pcm_pcm_stereo_in",
- 	.maxburst	= 32,
--	.filter_data	= &pxa2xx_ac97_pcm_stereo_in_req,
--};
--
--static struct pxad_param pxa2xx_ac97_pcm_stereo_out_req = {
--	.prio = PXAD_PRIO_LOWEST,
--	.drcmr = 12,
- };
++	if (ahci_broken_lpm(pdev)) {
++		pi.flags |= ATA_FLAG_NO_LPM;
++		dev_warn(&pdev->dev,
++			 "BIOS update required for Link Power Management support\n");
++	}
++
+ 	if (ahci_broken_suspend(pdev)) {
+ 		hpriv->flags |= AHCI_HFLAG_NO_SUSPEND;
+ 		dev_warn(&pdev->dev,
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 27d15ed7fa3d..cc71c63df381 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2493,6 +2493,9 @@ int ata_dev_configure(struct ata_device *dev)
+ 	    (id[ATA_ID_SATA_CAPABILITY] & 0xe) == 0x2)
+ 		dev->horkage |= ATA_HORKAGE_NOLPM;
  
- static struct snd_dmaengine_dai_dma_data pxa2xx_ac97_pcm_stereo_out = {
- 	.addr		= __PREG(PCDR),
- 	.addr_width	= DMA_SLAVE_BUSWIDTH_4_BYTES,
-+	.chan_name	= "pcm_pcm_stereo_out",
- 	.maxburst	= 32,
--	.filter_data	= &pxa2xx_ac97_pcm_stereo_out_req,
- };
- 
--static struct pxad_param pxa2xx_ac97_pcm_aux_mono_out_req = {
--	.prio = PXAD_PRIO_LOWEST,
--	.drcmr = 10,
--};
- static struct snd_dmaengine_dai_dma_data pxa2xx_ac97_pcm_aux_mono_out = {
- 	.addr		= __PREG(MODR),
- 	.addr_width	= DMA_SLAVE_BUSWIDTH_2_BYTES,
-+	.chan_name	= "pcm_aux_mono_out",
- 	.maxburst	= 16,
--	.filter_data	= &pxa2xx_ac97_pcm_aux_mono_out_req,
- };
- 
--static struct pxad_param pxa2xx_ac97_pcm_aux_mono_in_req = {
--	.prio = PXAD_PRIO_LOWEST,
--	.drcmr = 9,
--};
- static struct snd_dmaengine_dai_dma_data pxa2xx_ac97_pcm_aux_mono_in = {
- 	.addr		= __PREG(MODR),
- 	.addr_width	= DMA_SLAVE_BUSWIDTH_2_BYTES,
-+	.chan_name	= "pcm_aux_mono_in",
- 	.maxburst	= 16,
--	.filter_data	= &pxa2xx_ac97_pcm_aux_mono_in_req,
- };
- 
--static struct pxad_param pxa2xx_ac97_pcm_aux_mic_mono_req = {
--	.prio = PXAD_PRIO_LOWEST,
--	.drcmr = 8,
--};
- static struct snd_dmaengine_dai_dma_data pxa2xx_ac97_pcm_mic_mono_in = {
- 	.addr		= __PREG(MCDR),
- 	.addr_width	= DMA_SLAVE_BUSWIDTH_2_BYTES,
-+	.chan_name	= "pcm_aux_mic_mono",
- 	.maxburst	= 16,
--	.filter_data	= &pxa2xx_ac97_pcm_aux_mic_mono_req,
- };
- 
- static int pxa2xx_ac97_hifi_startup(struct snd_pcm_substream *substream,
-diff --git a/sound/soc/pxa/pxa2xx-i2s.c b/sound/soc/pxa/pxa2xx-i2s.c
-index 3fb60baf6eab..e7184de0de04 100644
---- a/sound/soc/pxa/pxa2xx-i2s.c
-+++ b/sound/soc/pxa/pxa2xx-i2s.c
-@@ -82,20 +82,18 @@ static struct pxa_i2s_port pxa_i2s;
- static struct clk *clk_i2s;
- static int clk_ena = 0;
- 
--static unsigned long pxa2xx_i2s_pcm_stereo_out_req = 3;
- static struct snd_dmaengine_dai_dma_data pxa2xx_i2s_pcm_stereo_out = {
- 	.addr		= __PREG(SADR),
- 	.addr_width	= DMA_SLAVE_BUSWIDTH_4_BYTES,
-+	.chan_name	= "tx",
- 	.maxburst	= 32,
--	.filter_data	= &pxa2xx_i2s_pcm_stereo_out_req,
- };
- 
--static unsigned long pxa2xx_i2s_pcm_stereo_in_req = 2;
- static struct snd_dmaengine_dai_dma_data pxa2xx_i2s_pcm_stereo_in = {
- 	.addr		= __PREG(SADR),
- 	.addr_width	= DMA_SLAVE_BUSWIDTH_4_BYTES,
-+	.chan_name	= "rx",
- 	.maxburst	= 32,
--	.filter_data	= &pxa2xx_i2s_pcm_stereo_in_req,
- };
- 
- static int pxa2xx_i2s_startup(struct snd_pcm_substream *substream,
++	if (ap->flags & ATA_FLAG_NO_LPM)
++		dev->horkage |= ATA_HORKAGE_NOLPM;
++
+ 	if (dev->horkage & ATA_HORKAGE_NOLPM) {
+ 		ata_dev_warn(dev, "LPM support broken, forcing max_power\n");
+ 		dev->link->ap->target_lpm_policy = ATA_LPM_MAX_POWER;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 8b8946dd63b9..26719233a5b1 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -210,6 +210,7 @@ enum {
+ 	ATA_FLAG_SLAVE_POSS	= (1 << 0), /* host supports slave dev */
+ 					    /* (doesn't imply presence) */
+ 	ATA_FLAG_SATA		= (1 << 1),
++	ATA_FLAG_NO_LPM		= (1 << 2), /* host not happy with LPM */
+ 	ATA_FLAG_NO_LOG_PAGE	= (1 << 5), /* do not issue log page read */
+ 	ATA_FLAG_NO_ATAPI	= (1 << 6), /* No ATAPI support */
+ 	ATA_FLAG_PIO_DMA	= (1 << 7), /* PIO cmds via DMA */
 -- 
-2.18.0.rc2
+2.17.1
