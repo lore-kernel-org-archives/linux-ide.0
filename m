@@ -1,94 +1,50 @@
-From: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
-Subject: [RFC PATCH] ata: ahci: Enable DEVSLP by default on x86 modern standby platform
-Date: Mon,  2 Jul 2018 12:08:45 -0700
-Message-ID: <20180702190845.7456-1-srinivas.pandruvada@linux.intel.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v4] ata: Remove depends on HAS_DMA in case of platform dependency
+Date: Mon, 2 Jul 2018 22:04:43 +0200
+Message-ID: <CAMuHMdW1JiW=AGeXp+dVVdaLo3JXCR4rn9UC84qQWt7E1BvQ+w@mail.gmail.com>
+References: <20180622110307.31523-1-geert@linux-m68k.org> <20180702161248.GG533219@devbig577.frc2.facebook.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20180702161248.GG533219@devbig577.frc2.facebook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: tj@kernel.org, hdegoede@redhat.com, rjw@rjwysocki.net
-Cc: alan.cox@intel.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, Mario.Limonciello@dell.com, Srinivas <srinivas.pandruvada@linux.intel.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-From: Srinivas <srinivas.pandruvada@linux.intel.com>
+Hi Tejun,
 
-One of the requirement for modern x86 system to enter lowest power mode
-(SLP_S0) is SATA IP block to be off. This is true even during when
-platform is suspended to idle and not only in opportunistic (runtime)
-suspend.
+On Mon, Jul 2, 2018 at 6:12 PM Tejun Heo <tj@kernel.org> wrote:
+> On Fri, Jun 22, 2018 at 01:03:07PM +0200, Geert Uytterhoeven wrote:
+> > Remove dependencies on HAS_DMA where a Kconfig symbol depends on another
+> > symbol that implies HAS_DMA, and, optionally, on "|| COMPILE_TEST".
+> > In most cases this other symbol is an architecture or platform specific
+> > symbol, or PCI.
+> >
+> > Generic symbols and drivers without platform dependencies keep their
+> > dependencies on HAS_DMA, to prevent compiling subsystems or drivers that
+> > cannot work anyway.
+> >
+> > This simplifies the dependencies, and allows to improve compile-testing.
+> >
+> > Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> > Reviewed-by: Mark Brown <broonie@kernel.org>
+> > Acked-by: Robin Murphy <robin.murphy@arm.com>
+>
+> This looks fine to me but how do you wanna route it?  Should I apply
+> it to for-4.18-fixes or should it go with arch changes in some other
+> tree?
 
-Several of these system don't have traditional ACPI S3, so it is
-important that they enter SLP_S0 state, to avoid draining battery even
-during suspend even with out of the box Linux installation.
+Please queue it in the ata tree. There are no related arch changes.
+Thanks!
 
-SATA IP block doesn't get turned off till SATA is in DEVSLP mode. Here
-user has to either use scsi-host sysfs or tools like powertop to set
-the sata-host link_power_management_policy to min_power.
+Gr{oetje,eeting}s,
 
-This change sets by default link power management policy to min_power
-for some platforms.  To avoid regressions, the following conditions
-are used:
-- The kernel config is already set to use med_power_with_dipm or deeper
-- System is a modern standby system using ACPI low power idle flag
-- The platform is not blacklisted for Suspend to Idle and suspend
-to idle is used instead of S3
-This combination will make sure that systems are fairly recent and
-since getting shipped with modern standby standby, the DEVSLP function
-is already validated.
+                        Geert
 
-Signed-off-by: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
----
- drivers/ata/ahci.c     | 13 +++++++++++++
- kernel/power/suspend.c |  1 +
- 2 files changed, 14 insertions(+)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 738fb22978dd..0b8bd1b6cf7c 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -43,6 +43,7 @@
- #include <linux/dmi.h>
- #include <linux/gfp.h>
- #include <linux/msi.h>
-+#include <linux/suspend.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_cmnd.h>
- #include <linux/libata.h>
-@@ -1550,6 +1551,16 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
- 	return pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX);
- }
- 
-+static void ahci_update_mobile_policy(void)
-+{
-+#ifdef CONFIG_ACPI
-+	if (mobile_lpm_policy > ATA_LPM_MED_POWER &&
-+	    (acpi_gbl_FADT.flags & ACPI_FADT_LOW_POWER_S0) &&
-+	    mem_sleep_current == PM_SUSPEND_TO_IDLE)
-+		mobile_lpm_policy = ATA_LPM_MIN_POWER;
-+#endif
-+}
-+
- static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
- 	unsigned int board_id = ent->driver_data;
-@@ -1736,6 +1747,8 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (pi.flags & ATA_FLAG_EM)
- 		ahci_reset_em(host);
- 
-+	ahci_update_mobile_policy();
-+
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ata_port *ap = host->ports[i];
- 
-diff --git a/kernel/power/suspend.c b/kernel/power/suspend.c
-index 87331565e505..969e67715cf7 100644
---- a/kernel/power/suspend.c
-+++ b/kernel/power/suspend.c
-@@ -49,6 +49,7 @@ static const char * const mem_sleep_labels[] = {
- const char *mem_sleep_states[PM_SUSPEND_MAX];
- 
- suspend_state_t mem_sleep_current = PM_SUSPEND_TO_IDLE;
-+EXPORT_SYMBOL_GPL(mem_sleep_current);
- suspend_state_t mem_sleep_default = PM_SUSPEND_MAX;
- suspend_state_t pm_suspend_target_state;
- EXPORT_SYMBOL_GPL(pm_suspend_target_state);
 -- 
-2.17.1
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
