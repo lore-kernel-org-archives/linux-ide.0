@@ -1,78 +1,94 @@
 From: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
-Subject: [PATCH 2/2] ata: libahci: Allow reconfigure of DEVSLP register
-Date: Mon,  2 Jul 2018 12:01:54 -0700
-Message-ID: <20180702190154.6864-3-srinivas.pandruvada@linux.intel.com>
-References: <20180702190154.6864-1-srinivas.pandruvada@linux.intel.com>
+Subject: [RFC PATCH] ata: ahci: Enable DEVSLP by default on x86 modern standby platform
+Date: Mon,  2 Jul 2018 12:08:45 -0700
+Message-ID: <20180702190845.7456-1-srinivas.pandruvada@linux.intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180702190154.6864-1-srinivas.pandruvada@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: tj@kernel.org, hdegoede@redhat.com
-Cc: rjw@rjwysocki.net, alan.cox@intel.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
+To: tj@kernel.org, hdegoede@redhat.com, rjw@rjwysocki.net
+Cc: alan.cox@intel.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, Mario.Limonciello@dell.com, Srinivas <srinivas.pandruvada@linux.intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-There are two modes in which DEVSLP can be entered. The OS initiated or
-hardware autonomous.
+From: Srinivas <srinivas.pandruvada@linux.intel.com>
 
-In hardware autonomous mode, BIOS configures the AHCI controller and the
-device to enable DEVSLP. But they may not be ideal for all cases. So in
-this case, OS should be able to reconfigure DEVSLP register.
+One of the requirement for modern x86 system to enter lowest power mode
+(SLP_S0) is SATA IP block to be off. This is true even during when
+platform is suspended to idle and not only in opportunistic (runtime)
+suspend.
 
-Currently if the DEVSLP is already enabled, we can't set again as it will
-simply return. There are some systems where the firmware is setting high
-DITO by default, in this case we can't modify here to correct settings.
-With the default in several seconds, we are not able to transition to
-DEVSLP.
+Several of these system don't have traditional ACPI S3, so it is
+important that they enter SLP_S0 state, to avoid draining battery even
+during suspend even with out of the box Linux installation.
 
-This change will allow reconfiguration of devslp register if DITO is
-different.
+SATA IP block doesn't get turned off till SATA is in DEVSLP mode. Here
+user has to either use scsi-host sysfs or tools like powertop to set
+the sata-host link_power_management_policy to min_power.
+
+This change sets by default link power management policy to min_power
+for some platforms.  To avoid regressions, the following conditions
+are used:
+- The kernel config is already set to use med_power_with_dipm or deeper
+- System is a modern standby system using ACPI low power idle flag
+- The platform is not blacklisted for Suspend to Idle and suspend
+to idle is used instead of S3
+This combination will make sure that systems are fairly recent and
+since getting shipped with modern standby standby, the DEVSLP function
+is already validated.
 
 Signed-off-by: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
 ---
- drivers/ata/libahci.c | 18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
+ drivers/ata/ahci.c     | 13 +++++++++++++
+ kernel/power/suspend.c |  1 +
+ 2 files changed, 14 insertions(+)
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index f6795d261869..432ac2f5de34 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -2104,7 +2104,7 @@ static void ahci_set_aggressive_devslp(struct ata_port *ap, bool sleep)
- 	struct ahci_host_priv *hpriv = ap->host->private_data;
- 	void __iomem *port_mmio = ahci_port_base(ap);
- 	struct ata_device *dev = ap->link.device;
--	u32 devslp, dm, dito, mdat, deto;
-+	u32 devslp, dm, dito, mdat, deto, dito_conf;
- 	int rc;
- 	unsigned int err_mask;
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 738fb22978dd..0b8bd1b6cf7c 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -43,6 +43,7 @@
+ #include <linux/dmi.h>
+ #include <linux/gfp.h>
+ #include <linux/msi.h>
++#include <linux/suspend.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <linux/libata.h>
+@@ -1550,6 +1551,16 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
+ 	return pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX);
+ }
  
-@@ -2128,8 +2128,15 @@ static void ahci_set_aggressive_devslp(struct ata_port *ap, bool sleep)
- 		return;
- 	}
- 
--	/* device sleep was already enabled */
--	if (devslp & PORT_DEVSLP_ADSE)
-+	dm = (devslp & PORT_DEVSLP_DM_MASK) >> PORT_DEVSLP_DM_OFFSET;
-+	dito = devslp_idle_timeout / (dm + 1);
-+	if (dito > 0x3ff)
-+		dito = 0x3ff;
++static void ahci_update_mobile_policy(void)
++{
++#ifdef CONFIG_ACPI
++	if (mobile_lpm_policy > ATA_LPM_MED_POWER &&
++	    (acpi_gbl_FADT.flags & ACPI_FADT_LOW_POWER_S0) &&
++	    mem_sleep_current == PM_SUSPEND_TO_IDLE)
++		mobile_lpm_policy = ATA_LPM_MIN_POWER;
++#endif
++}
 +
-+	dito_conf = (devslp >> PORT_DEVSLP_DITO_OFFSET) & 0x3FF;
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	unsigned int board_id = ent->driver_data;
+@@ -1736,6 +1747,8 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (pi.flags & ATA_FLAG_EM)
+ 		ahci_reset_em(host);
+ 
++	ahci_update_mobile_policy();
 +
-+	/* device sleep was already enabled and same dito */
-+	if ((devslp & PORT_DEVSLP_ADSE) && (dito_conf == dito))
- 		return;
+ 	for (i = 0; i < host->n_ports; i++) {
+ 		struct ata_port *ap = host->ports[i];
  
- 	/* set DITO, MDAT, DETO and enable DevSlp, need to stop engine first */
-@@ -2137,11 +2144,6 @@ static void ahci_set_aggressive_devslp(struct ata_port *ap, bool sleep)
- 	if (rc)
- 		return;
+diff --git a/kernel/power/suspend.c b/kernel/power/suspend.c
+index 87331565e505..969e67715cf7 100644
+--- a/kernel/power/suspend.c
++++ b/kernel/power/suspend.c
+@@ -49,6 +49,7 @@ static const char * const mem_sleep_labels[] = {
+ const char *mem_sleep_states[PM_SUSPEND_MAX];
  
--	dm = (devslp & PORT_DEVSLP_DM_MASK) >> PORT_DEVSLP_DM_OFFSET;
--	dito = devslp_idle_timeout / (dm + 1);
--	if (dito > 0x3ff)
--		dito = 0x3ff;
--
- 	/* Use the nominal value 10 ms if the read MDAT is zero,
- 	 * the nominal value of DETO is 20 ms.
- 	 */
+ suspend_state_t mem_sleep_current = PM_SUSPEND_TO_IDLE;
++EXPORT_SYMBOL_GPL(mem_sleep_current);
+ suspend_state_t mem_sleep_default = PM_SUSPEND_MAX;
+ suspend_state_t pm_suspend_target_state;
+ EXPORT_SYMBOL_GPL(pm_suspend_target_state);
 -- 
 2.17.1
