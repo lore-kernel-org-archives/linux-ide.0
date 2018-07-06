@@ -1,113 +1,58 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] ide: mark expected switch fall-throughs
-Date: Tue, 3 Jul 2018 14:23:05 -0500
-Message-ID: <20180703192305.GA3413@embeddedor.com>
+From: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
+Subject: Re: [RFC PATCH] ata: ahci: Enable DEVSLP by default on x86 modern
+ standby platform
+Date: Thu, 05 Jul 2018 17:52:08 -0700
+Message-ID: <681dbd37f209a29be46e9c4ff102631cfa841ec0.camel@linux.intel.com>
+References: <20180702190845.7456-1-srinivas.pandruvada@linux.intel.com>
+         <20180702202151.GK533219@devbig577.frc2.facebook.com>
+         <5493bfdb-14a9-a55d-f96e-b9c8a29f1d63@redhat.com>
+         <ca753f719e123d8e3c2306b8d55f3d4a656cbd2f.camel@linux.intel.com>
+         <fefe0ef4-e21f-72cc-18d6-a5a6693c21c6@redhat.com>
+         <660d4e4b-361f-e6b1-ef21-3985c321183a@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <660d4e4b-361f-e6b1-ef21-3985c321183a@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>
+Cc: rjw@rjwysocki.net, alan.cox@intel.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, Mario.Limonciello@dell.com
 List-Id: linux-ide@vger.kernel.org
 
-In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-where we are expecting to fall through.
+Hi Hans,
 
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/ide/hpt366.c       | 5 +++--
- drivers/ide/ide-floppy.c   | 1 +
- drivers/ide/ide-probe.c    | 1 +
- drivers/ide/ide-taskfile.c | 3 ++-
- drivers/ide/sis5513.c      | 1 +
- 5 files changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ide/hpt366.c b/drivers/ide/hpt366.c
-index e52c58c..4d565b0 100644
---- a/drivers/ide/hpt366.c
-+++ b/drivers/ide/hpt366.c
-@@ -574,13 +574,14 @@ static u8 hpt3xx_udma_filter(ide_drive_t *drive)
- 		if (!HPT370_ALLOW_ATA100_5 ||
- 		    check_in_drive_list(drive, bad_ata100_5))
- 			return ATA_UDMA4;
-+		/* else: fall through */
- 	case HPT372 :
- 	case HPT372A:
- 	case HPT372N:
- 	case HPT374 :
- 		if (ata_id_is_sata(drive->id))
- 			mask &= ~0x0e;
--		/* Fall thru */
-+		/* fall through */
- 	default:
- 		return mask;
- 	}
-@@ -600,7 +601,7 @@ static u8 hpt3xx_mdma_filter(ide_drive_t *drive)
- 	case HPT374 :
- 		if (ata_id_is_sata(drive->id))
- 			return 0x00;
--		/* Fall thru */
-+		/* else: fall through */
- 	default:
- 		return 0x07;
- 	}
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 5bd2aaf..a8df300 100644
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -427,6 +427,7 @@ static int ide_floppy_get_capacity(ide_drive_t *drive)
- 				 * (maintains previous driver behaviour)
- 				 */
- 				break;
-+			/* else: fall through */
- 		case CAPACITY_CURRENT:
- 			/* Normal Zip/LS-120 disks */
- 			if (memcmp(cap_desc, &floppy->cap_desc, 8))
-diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
-index 416a2f3..3b75a7b 100644
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -142,6 +142,7 @@ static void ide_classify_atapi_dev(ide_drive_t *drive)
- 		}
- 		/* Early cdrom models used zero */
- 		type = ide_cdrom;
-+		/* fall through */
- 	case ide_cdrom:
- 		drive->dev_flags |= IDE_DFLAG_REMOVABLE;
- #ifdef CONFIG_PPC
-diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
-index 89b2902..c21d5c5 100644
---- a/drivers/ide/ide-taskfile.c
-+++ b/drivers/ide/ide-taskfile.c
-@@ -128,7 +128,7 @@ ide_startstop_t do_rw_taskfile(ide_drive_t *drive, struct ide_cmd *orig_cmd)
- 			return pre_task_out_intr(drive, cmd);
- 		}
- 		handler = task_pio_intr;
--		/* fall-through */
-+		/* fall through */
- 	case ATA_PROT_NODATA:
- 		if (handler == NULL)
- 			handler = task_no_data_intr;
-@@ -140,6 +140,7 @@ ide_startstop_t do_rw_taskfile(ide_drive_t *drive, struct ide_cmd *orig_cmd)
- 		hwif->expiry = dma_ops->dma_timer_expiry;
- 		ide_execute_command(drive, cmd, ide_dma_intr, 2 * WAIT_CMD);
- 		dma_ops->dma_start(drive);
-+		/* fall through */
- 	default:
- 		return ide_started;
- 	}
-diff --git a/drivers/ide/sis5513.c b/drivers/ide/sis5513.c
-index c3062b5..024bc7b 100644
---- a/drivers/ide/sis5513.c
-+++ b/drivers/ide/sis5513.c
-@@ -494,6 +494,7 @@ static int init_chipset_sis5513(struct pci_dev *dev)
- 		pci_read_config_byte(dev, 0x09, &reg);
- 		if ((reg & 0x0f) != 0x00)
- 			pci_write_config_byte(dev, 0x09, reg&0xf0);
-+		/* fall through */
- 	case ATA_16:
- 		/* force per drive recovery and active timings
- 		   needed on ATA_33 and below chips */
--- 
-2.7.4
+[...]
+
+> So digging a bit deeper I just realized that another important
+> difference
+> between med_power_with_dipm and min_power is that min_power by
+> default
+> set the ASP bits making the link go to the slumber state instead of
+> to
+> the partial (power-saving) state.
+> 
+> According to:
+> https://www.intel.com/content/dam/doc/reference-guide/sata-devices-im
+> plementation-recommendations.pdf
+> 
+> ASP defaults to off in the iRST drivers. But that is a document from
+> before DEVSLP got introduced.
+> 
+> So we need to know if Windows and/or the iRST drivers use HIPM and
+> ASP by default on these systems. If they do then using min_power
+> is fine. If they don't use one or the other we are going to need
+> a new policy reflecting those settings and use that.
+Good point. In Windows there are various registry settings, so they can
+be tuned. It is difficult to know what they mean.
+Let me do some experiments to check impact of ASP on SLP_S0. Then I
+will resubmit this patch.
+
+Thanks,
+Srinivas
+
+> 
+> Regards,
+> 
+> Hans
+> 
