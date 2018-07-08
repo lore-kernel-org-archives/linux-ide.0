@@ -1,58 +1,44 @@
-From: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
-Subject: Re: [RFC PATCH] ata: ahci: Enable DEVSLP by default on x86 modern
- standby platform
-Date: Thu, 05 Jul 2018 17:52:08 -0700
-Message-ID: <681dbd37f209a29be46e9c4ff102631cfa841ec0.camel@linux.intel.com>
-References: <20180702190845.7456-1-srinivas.pandruvada@linux.intel.com>
-         <20180702202151.GK533219@devbig577.frc2.facebook.com>
-         <5493bfdb-14a9-a55d-f96e-b9c8a29f1d63@redhat.com>
-         <ca753f719e123d8e3c2306b8d55f3d4a656cbd2f.camel@linux.intel.com>
-         <fefe0ef4-e21f-72cc-18d6-a5a6693c21c6@redhat.com>
-         <660d4e4b-361f-e6b1-ef21-3985c321183a@redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/6] block: Create scsi_sense.h for SCSI and ATAPI
+Date: Sun, 8 Jul 2018 13:23:15 -0700
+Message-ID: <20180708202315.GA2239@infradead.org>
+References: <CAGXu5j+mgGZkTDS6EDRspJKKbU=vMT4ehv9T-SekPba=ESoGDg@mail.gmail.com>
+ <9A0BC289-4203-4C77-A012-AAB07F42061F@kernel.dk>
+ <CAGXu5jJsGWDsZNDJvUUqncSaAcvond_B_J7=BbvVW0X3r6Sxww@mail.gmail.com>
+ <aa150272-ffeb-fb8f-7303-0d9502cf9a71@kernel.dk>
+ <20180523142545.GA16248@infradead.org>
+ <24d36869-e037-042d-cb16-20a81b34eb76@kernel.dk>
+ <CAGXu5jJn=1Rz=D8VUwv_VoaGoLtaD=+tcPZxQxntweZoZwFa5Q@mail.gmail.com>
+ <f4eb4cd5-8976-3990-69b0-26cca054aa45@kernel.dk>
+ <20180524080015.GA2866@infradead.org>
+ <CAGXu5j+pRUWgny+h5ToVQXBP8nANjreVhnXjk5TVgy84ufNsRg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <660d4e4b-361f-e6b1-ef21-3985c321183a@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <CAGXu5j+pRUWgny+h5ToVQXBP8nANjreVhnXjk5TVgy84ufNsRg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>
-Cc: rjw@rjwysocki.net, alan.cox@intel.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, Mario.Limonciello@dell.com
+To: Kees Cook <keescook@chromium.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block <linux-block@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-Hi Hans,
+On Thu, May 24, 2018 at 10:06:59AM -0700, Kees Cook wrote:
+> On Thu, May 24, 2018 at 1:00 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> > On Wed, May 23, 2018 at 03:14:19PM -0600, Jens Axboe wrote:
+> >> Ugh, so that would necessitate a change there too. As I said before,
+> >> I don't really care where it lives. I know the SCSI folks seem bothered
+> >> by moving it, but in reality, it's not like this stuff will likely ever
+> >> really change. Of the two choices (select entire SCSI stack, or just move
+> >> this little bit), I know what I would consider the saner option...
+> >
+> > Oh well.  How about something like this respin of Kees' series?
+> >
+> > http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/sense-cleanup
+> 
+> Does the CONFIG_PCMCIA in drivers/scsi/Makefile now get exposed in
+> weird config cases?
+> 
+> Otherwise, yeah, looks good to me. Thanks!
 
-
-[...]
-
-> So digging a bit deeper I just realized that another important
-> difference
-> between med_power_with_dipm and min_power is that min_power by
-> default
-> set the ASP bits making the link go to the slumber state instead of
-> to
-> the partial (power-saving) state.
-> 
-> According to:
-> https://www.intel.com/content/dam/doc/reference-guide/sata-devices-im
-> plementation-recommendations.pdf
-> 
-> ASP defaults to off in the iRST drivers. But that is a document from
-> before DEVSLP got introduced.
-> 
-> So we need to know if Windows and/or the iRST drivers use HIPM and
-> ASP by default on these systems. If they do then using min_power
-> is fine. If they don't use one or the other we are going to need
-> a new policy reflecting those settings and use that.
-Good point. In Windows there are various registry settings, so they can
-be tuned. It is difficult to know what they mean.
-Let me do some experiments to check impact of ASP on SLP_S0. Then I
-will resubmit this patch.
-
-Thanks,
-Srinivas
-
-> 
-> Regards,
-> 
-> Hans
-> 
+Btw, did you plan to resend the series with this and your changes
+applied?
