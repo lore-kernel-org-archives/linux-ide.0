@@ -1,7 +1,7 @@
 From: Corentin Labbe <clabbe@baylibre.com>
-Subject: [PATCH v2 1/4] dt-bindings: add binding for Allwinner R40 SATA AHCI controller
-Date: Mon,  9 Jul 2018 15:20:55 +0000
-Message-ID: <1531149658-27030-2-git-send-email-clabbe@baylibre.com>
+Subject: [PATCH v2 4/4] ARM: dts: sun8i: sun8i-r40-bananapi-m2-ultra: enable AHCI
+Date: Mon,  9 Jul 2018 15:20:58 +0000
+Message-ID: <1531149658-27030-5-git-send-email-clabbe@baylibre.com>
 References: <1531149658-27030-1-git-send-email-clabbe@baylibre.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1531149658-27030-1-git-send-email-clabbe@baylibre.com>
@@ -10,83 +10,50 @@ To: linux@armlinux.org.uk, mark.rutland@arm.com, maxime.ripard@free-electrons.co
 Cc: devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-sunxi@googlegroups.com, icenowy@aosc.io, Corentin Labbe <clabbe@baylibre.com>
 List-Id: linux-ide@vger.kernel.org
 
-From: Icenowy Zheng <icenowy@aosc.io>
-
-The Allwinner R40 SoC contains a SATA AHCI controller like the one in
-A10/A20 SoCs, however a reset control and two power supplies are added
-to it.
-
-Add a binding document for it.
-
-As a dedicated binding document is needed now for the A10/A20/R40 AHCI
-controller, drop the A10 compatible line from generic platform AHCI
-controller binding document.
+This patch enable the AHCI controller.
+Since this controller need two regulator, this patch add them.
 
 Signed-off-by: Icenowy Zheng <icenowy@aosc.io>
 Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
 ---
- .../devicetree/bindings/ata/ahci-platform.txt      |  1 -
- .../bindings/ata/allwinner,sun4i-a10-ahci.txt      | 40 ++++++++++++++++++++++
- 2 files changed, 40 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/devicetree/bindings/ata/allwinner,sun4i-a10-ahci.txt
+ arch/arm/boot/dts/sun8i-r40-bananapi-m2-ultra.dts | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-index c760ecb81381..1bea4b5ef9fd 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -9,7 +9,6 @@ PHYs.
+diff --git a/arch/arm/boot/dts/sun8i-r40-bananapi-m2-ultra.dts b/arch/arm/boot/dts/sun8i-r40-bananapi-m2-ultra.dts
+index 4f3d583183dc..ceb38739f1d8 100644
+--- a/arch/arm/boot/dts/sun8i-r40-bananapi-m2-ultra.dts
++++ b/arch/arm/boot/dts/sun8i-r40-bananapi-m2-ultra.dts
+@@ -105,6 +105,12 @@
+ 	};
+ };
  
- Required properties:
- - compatible        : compatible string, one of:
--  - "allwinner,sun4i-a10-ahci"
-   - "brcm,iproc-ahci"
-   - "hisilicon,hisi-ahci"
-   - "cavium,octeon-7130-ahci"
-diff --git a/Documentation/devicetree/bindings/ata/allwinner,sun4i-a10-ahci.txt b/Documentation/devicetree/bindings/ata/allwinner,sun4i-a10-ahci.txt
-new file mode 100644
-index 000000000000..0eea78c14ad3
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/allwinner,sun4i-a10-ahci.txt
-@@ -0,0 +1,40 @@
-+Allwinner A10/A20/R40 SoC SATA AHCI Controller
++&ahci {
++	vdd1v2-supply = <&reg_dldo4>;
++	vdd2v5-supply = <&reg_eldo3>;
++	status = "okay";
++};
 +
-+Required properties:
-+- compatible        : compatible string, one of:
-+  - "allwinner,sun4i-a10-ahci"
-+  - "allwinner,sun8i-r40-ahci"
-+- interrupts        : the SATA IRQ
-+- reg               : the register mapping
-+- clocks            : the clocks needed by SATA controller, usually contains
-+		      an AHB clock and a mod clock
+ &de {
+ 	status = "okay";
+ };
+@@ -251,6 +257,18 @@
+ 	regulator-name = "vcc-wifi";
+ };
+ 
++&reg_dldo4 {
++	regulator-min-microvolt = <2500000>;
++	regulator-max-microvolt = <2500000>;
++	regulator-name = "vdd2v5-sata";
++};
 +
-+Optional properties:
-+- target-supply     : regulator for SATA target power
++&reg_eldo3 {
++	regulator-min-microvolt = <1200000>;
++	regulator-max-microvolt = <1200000>;
++	regulator-name = "vdd1v2-sata";
++};
 +
-+Required properties for the following compatibles:
-+  - "allwinner,sun8i-r40-ahci"
-+- resets            : the reset control needed by SATA controller
-+- vdd1v2-supply     : regulator for SATA controller's 1.2V VDD
-+- vdd2v5-supply     : regulator for SATA controller's 2.5V VDD
-+
-+
-+Examples for A10:
-+	ahci: sata@1c18000 {
-+		compatible = "allwinner,sun4i-a10-ahci";
-+		reg = <0x01c18000 0x1000>;
-+		interrupts = <56>;
-+		clocks = <&pll6 0>, <&ahb_gates 25>;
-+		target-supply = <&reg_ahci_5v>;
-+	};
-+
-+Examples for R40:
-+	ahci: sata@1c18000 {
-+		compatible = "allwinner,sun8i-r40-ahci";
-+		reg = <0x01c18000 0x1000>;
-+		interrupts = <GIC_SPI 56 IRQ_TYPE_LEVEL_HIGH>;
-+		clocks = <&ccu CLK_SATA>, <&ccu CLK_BUS_SATA>;
-+		resets = <&ccu RST_BUS_SATA>;
-+		vdd1v2-supply = <&reg_eldo3>;
-+		vdd2v5-supply = <&reg_dldo4>;
-+	};
+ &tcon_top_hdmi_in_tcon_tv0 {
+ 	remote-endpoint = <&tcon_tv0_out_tcon_top>;
+ };
 -- 
 2.16.4
