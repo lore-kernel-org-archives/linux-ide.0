@@ -1,217 +1,87 @@
-From: Corentin Labbe <clabbe@baylibre.com>
-Subject: [PATCH v2 2/4] ata: ahci_sunxi: add support for R40 SATA controller
-Date: Mon,  9 Jul 2018 15:20:56 +0000
-Message-ID: <1531149658-27030-3-git-send-email-clabbe@baylibre.com>
+From: Icenowy Zheng <icenowy-h8G6r0blFSE@public.gmane.org>
+Subject: Re: [PATCH v2 0/4] sun8i: r40: add AHCI
+Date: Mon, 09 Jul 2018 23:44:20 +0800
+Message-ID: <EF718AB4-DD07-4D67-BE2E-1B9EBA5EB25F@aosc.io>
 References: <1531149658-27030-1-git-send-email-clabbe@baylibre.com>
+Reply-To: icenowy-h8G6r0blFSE@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1531149658-27030-1-git-send-email-clabbe@baylibre.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: linux@armlinux.org.uk, mark.rutland@arm.com, maxime.ripard@free-electrons.com, robh+dt@kernel.org, tj@kernel.org, wens@csie.org
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-sunxi@googlegroups.com, Corentin Labbe <clabbe@baylibre.com>, linux-arm-kernel@lists.infradead.org, icenowy@aosc.io
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-sunxi+bncBDS6XAN6ZADRBF4GR3NAKGQET3Y3MCQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <1531149658-27030-1-git-send-email-clabbe-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
+List-Post: <https://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/linux-sunxi
+List-Subscribe: <https://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/linux-sunxi/subscribe>
+To: Corentin Labbe <clabbe-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, linux-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, wens-jdAy2FN1RRM@public.gmane.org
+Cc: devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-Allwinner R40 SoC has an AHCI SATA controller like the one in A10/A20,
-but with a reset control and two dedicated VDD pins for this controller
-(one 1.2v and one 2.5v).
 
-Add support for it.
 
-Signed-off-by: Icenowy Zheng <icenowy@aosc.io>
-Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
----
- drivers/ata/ahci_sunxi.c | 124 +++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 121 insertions(+), 3 deletions(-)
+=E4=BA=8E 2018=E5=B9=B47=E6=9C=889=E6=97=A5 GMT+08:00 =E4=B8=8B=E5=8D=8811:=
+20:54, Corentin Labbe <clabbe-rdvid1DuHRBWk0Htik3J/w@public.gmane.org> =E5=86=99=E5=88=B0:
+>Hello
+>
+>With Moeicenowy's agreement, I have take leadership ot this patchset.
+>
+>There are no really changes appart renaming struct quirck to variant.
+>
+>Since the last serie is really old, I will answer comment here.
+>The two regulator (1.2 and 2.5V) are not for the PHY since:
+>- nothing in the schematic said that they are for the PHY, they seems
+>  only for controller
+>- all other AHCI driver use 5V for the target/PHY (vs 1.2/2.5 which
+>  cannot be used for target)
 
-diff --git a/drivers/ata/ahci_sunxi.c b/drivers/ata/ahci_sunxi.c
-index b26437430163..8b1bc04c0435 100644
---- a/drivers/ata/ahci_sunxi.c
-+++ b/drivers/ata/ahci_sunxi.c
-@@ -25,6 +25,7 @@
- #include <linux/of_device.h>
- #include <linux/platform_device.h>
- #include <linux/regulator/consumer.h>
-+#include <linux/reset.h>
- #include "ahci.h"
- 
- #define DRV_NAME "ahci-sunxi"
-@@ -58,6 +59,19 @@ MODULE_PARM_DESC(enable_pmp,
- #define AHCI_P0PHYCR	0x0178
- #define AHCI_P0PHYSR	0x017c
- 
-+struct ahci_sunxi_variant {
-+	bool has_reset;
-+	bool has_vdd1v2;
-+	bool has_vdd2v5;
-+};
-+
-+struct ahci_sunxi_data {
-+	const struct ahci_sunxi_variant *variant;
-+	struct reset_control *reset;
-+	struct regulator *vdd1v2;
-+	struct regulator *vdd2v5;
-+};
-+
- static void sunxi_clrbits(void __iomem *reg, u32 clr_val)
- {
- 	u32 reg_val;
-@@ -179,17 +193,75 @@ static int ahci_sunxi_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
- 	struct ahci_host_priv *hpriv;
-+	struct ahci_sunxi_data *data;
- 	int rc;
- 
-+	data = devm_kzalloc(dev, sizeof(*data), GFP_KERNEL);
-+	if (!data)
-+		return -ENOMEM;
-+
-+	data->variant = of_device_get_match_data(dev);
-+	if (!data->variant)
-+		return -EINVAL;
-+
-+	if (data->variant->has_reset) {
-+		data->reset = devm_reset_control_get(dev, NULL);
-+		if (IS_ERR(data->reset)) {
-+			dev_err(dev, "Failed to get reset\n");
-+			return PTR_ERR(data->reset);
-+		}
-+	}
-+
-+	if (data->variant->has_vdd1v2) {
-+		data->vdd1v2 = devm_regulator_get(dev, "vdd1v2");
-+		if (IS_ERR(data->vdd1v2)) {
-+			rc = PTR_ERR(data->vdd1v2);
-+			if (rc == -EPROBE_DEFER)
-+				return -EPROBE_DEFER;
-+			dev_err(dev, "Failed to get 1.2v VDD regulator\n");
-+			return rc;
-+		}
-+	}
-+
-+	if (data->variant->has_vdd2v5) {
-+		data->vdd2v5 = devm_regulator_get(dev, "vdd2v5");
-+		if (IS_ERR(data->vdd2v5)) {
-+			rc = PTR_ERR(data->vdd2v5);
-+			if (rc == -EPROBE_DEFER)
-+				return -EPROBE_DEFER;
-+			dev_err(dev, "Failed to get 2.5v VDD regulator\n");
-+			return rc;
-+		}
-+	}
-+
- 	hpriv = ahci_platform_get_resources(pdev);
- 	if (IS_ERR(hpriv))
- 		return PTR_ERR(hpriv);
- 
-+	hpriv->plat_data = data;
- 	hpriv->start_engine = ahci_sunxi_start_engine;
- 
-+	if (data->variant->has_vdd1v2) {
-+		rc = regulator_enable(data->vdd1v2);
-+		if (rc)
-+			return rc;
-+	}
-+
-+	if (data->variant->has_vdd2v5) {
-+		rc = regulator_enable(data->vdd2v5);
-+		if (rc)
-+			goto disable_vdd1v2;
-+	}
-+
-+	if (data->variant->has_reset) {
-+		rc = reset_control_deassert(data->reset);
-+		if (rc)
-+			goto disable_vdd2v5;
-+	}
-+
- 	rc = ahci_platform_enable_resources(hpriv);
- 	if (rc)
--		return rc;
-+		goto assert_reset;
- 
- 	rc = ahci_sunxi_phy_init(dev, hpriv->mmio);
- 	if (rc)
-@@ -215,6 +287,35 @@ static int ahci_sunxi_probe(struct platform_device *pdev)
- 
- disable_resources:
- 	ahci_platform_disable_resources(hpriv);
-+assert_reset:
-+	if (data->variant->has_reset)
-+		reset_control_assert(data->reset);
-+disable_vdd2v5:
-+	if (data->variant->has_vdd2v5)
-+		regulator_disable(data->vdd2v5);
-+disable_vdd1v2:
-+	if (data->variant->has_vdd1v2)
-+		regulator_disable(data->vdd1v2);
-+	return rc;
-+}
-+
-+static int ahci_sunxi_remove(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct ata_host *host = dev_get_drvdata(dev);
-+	struct ahci_host_priv *hpriv = host->private_data;
-+	struct ahci_sunxi_data *data = hpriv->plat_data;
-+	int rc;
-+
-+	rc = ata_platform_remove_one(pdev);
-+
-+	if (data->variant->has_reset)
-+		reset_control_assert(data->reset);
-+	if (data->variant->has_vdd2v5)
-+		regulator_disable(data->vdd2v5);
-+	if (data->variant->has_vdd1v2)
-+		regulator_disable(data->vdd1v2);
-+
- 	return rc;
- }
- 
-@@ -248,15 +349,32 @@ static int ahci_sunxi_resume(struct device *dev)
- static SIMPLE_DEV_PM_OPS(ahci_sunxi_pm_ops, ahci_platform_suspend,
- 			 ahci_sunxi_resume);
- 
-+static const struct ahci_sunxi_variant sun4i_a10_ahci_variant = {
-+	/* Nothing special */
-+};
-+
-+static const struct ahci_sunxi_variant sun8i_r40_ahci_variant = {
-+	.has_reset = true,
-+	.has_vdd1v2 = true,
-+	.has_vdd2v5 = true,
-+};
-+
- static const struct of_device_id ahci_sunxi_of_match[] = {
--	{ .compatible = "allwinner,sun4i-a10-ahci", },
-+	{
-+		.compatible = "allwinner,sun4i-a10-ahci",
-+		.data = &sun4i_a10_ahci_variant,
-+	},
-+	{
-+		.compatible = "allwinner,sun8i-r40-ahci",
-+		.data = &sun8i_r40_ahci_variant,
-+	},
- 	{ },
- };
- MODULE_DEVICE_TABLE(of, ahci_sunxi_of_match);
- 
- static struct platform_driver ahci_sunxi_driver = {
- 	.probe = ahci_sunxi_probe,
--	.remove = ata_platform_remove_one,
-+	.remove = ahci_sunxi_remove,
- 	.driver = {
- 		.name = DRV_NAME,
- 		.of_match_table = ahci_sunxi_of_match,
--- 
-2.16.4
+Target is not equal to PHY. Target means the supply
+of the disk, which can be usually 5v (for 2.5" HDD) or
+12v (3.5" HDD).
+
+By reading Wikipedia articles  about SATA and LVDS, I assume
+2.5V is for PHY and 1.2V is for internal digital logic (VDD-SYS
+is commonly 1.2V on 40nm Allwinner SoCs; 2.5V VDD can be
+used to efficiently deliver ~1.2V LVDS.)
+
+P.S. VDD-SATA and VDD25-SATA also exist on A20, and by checking
+Banana Pi M1 (the original Banana Pi) schematics, VDD-SATA
+is connected to common VDD-SYS (called INTVDD on the
+schematics) and VDD25-SATA is connected to an always-on
+fixed LDO, maybe due to the lack of power outputs on AXP209.
+
+>
+>Furthermore, the AHCI binding support only one regulator per PHY, so
+>using the "target" regulator is out of question for registring this two
+>non-phy regulator.
+>
+>I hope this answer all comments done on last version.
+>
+>Regards
+>
+>Corentin Labbe (3):
+>  ata: ahci_sunxi: add support for R40 SATA controller
+>  ARM: dts: sun8i: r40: add sata node
+>  ARM: dts: sun8i: sun8i-r40-bananapi-m2-ultra: enable AHCI
+>
+>Icenowy Zheng (1):
+>  dt-bindings: add binding for Allwinner R40 SATA AHCI controller
+>
+> .../devicetree/bindings/ata/ahci-platform.txt      |   1 -
+> .../bindings/ata/allwinner,sun4i-a10-ahci.txt      |  40 +++++++
+> arch/arm/boot/dts/sun8i-r40-bananapi-m2-ultra.dts  |  18 +++
+> arch/arm/boot/dts/sun8i-r40.dtsi                   |   9 ++
+>drivers/ata/ahci_sunxi.c                           | 124
+>++++++++++++++++++++-
+> 5 files changed, 188 insertions(+), 4 deletions(-)
+>create mode 100644
+>Documentation/devicetree/bindings/ata/allwinner,sun4i-a10-ahci.txt
+
+--=20
+You received this message because you are subscribed to the Google Groups "=
+linux-sunxi" group.
+To unsubscribe from this group and stop receiving emails from it, send an e=
+mail to linux-sunxi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+For more options, visit https://groups.google.com/d/optout.
