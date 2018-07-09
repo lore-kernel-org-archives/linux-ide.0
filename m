@@ -1,44 +1,37 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/6] block: Create scsi_sense.h for SCSI and ATAPI
-Date: Sun, 8 Jul 2018 13:23:15 -0700
-Message-ID: <20180708202315.GA2239@infradead.org>
-References: <CAGXu5j+mgGZkTDS6EDRspJKKbU=vMT4ehv9T-SekPba=ESoGDg@mail.gmail.com>
- <9A0BC289-4203-4C77-A012-AAB07F42061F@kernel.dk>
- <CAGXu5jJsGWDsZNDJvUUqncSaAcvond_B_J7=BbvVW0X3r6Sxww@mail.gmail.com>
- <aa150272-ffeb-fb8f-7303-0d9502cf9a71@kernel.dk>
- <20180523142545.GA16248@infradead.org>
- <24d36869-e037-042d-cb16-20a81b34eb76@kernel.dk>
- <CAGXu5jJn=1Rz=D8VUwv_VoaGoLtaD=+tcPZxQxntweZoZwFa5Q@mail.gmail.com>
- <f4eb4cd5-8976-3990-69b0-26cca054aa45@kernel.dk>
- <20180524080015.GA2866@infradead.org>
- <CAGXu5j+pRUWgny+h5ToVQXBP8nANjreVhnXjk5TVgy84ufNsRg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Daniel Vetter <daniel.vetter@ffwll.ch>
+Subject: [PATCH 07/12] ide: use for_each_if
+Date: Mon,  9 Jul 2018 10:36:45 +0200
+Message-ID: <20180709083650.23549-7-daniel.vetter@ffwll.ch>
+References: <20180709083650.23549-1-daniel.vetter@ffwll.ch>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAGXu5j+pRUWgny+h5ToVQXBP8nANjreVhnXjk5TVgy84ufNsRg@mail.gmail.com>
+In-Reply-To: <20180709083650.23549-1-daniel.vetter@ffwll.ch>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block <linux-block@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: DRI Development <dri-devel@lists.freedesktop.org>, Intel Graphics Development <intel-gfx@lists.freedesktop.org>, Daniel Vetter <daniel.vetter@ffwll.ch>, Daniel Vetter <daniel.vetter@intel.com>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, May 24, 2018 at 10:06:59AM -0700, Kees Cook wrote:
-> On Thu, May 24, 2018 at 1:00 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> > On Wed, May 23, 2018 at 03:14:19PM -0600, Jens Axboe wrote:
-> >> Ugh, so that would necessitate a change there too. As I said before,
-> >> I don't really care where it lives. I know the SCSI folks seem bothered
-> >> by moving it, but in reality, it's not like this stuff will likely ever
-> >> really change. Of the two choices (select entire SCSI stack, or just move
-> >> this little bit), I know what I would consider the saner option...
-> >
-> > Oh well.  How about something like this respin of Kees' series?
-> >
-> > http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/sense-cleanup
-> 
-> Does the CONFIG_PCMCIA in drivers/scsi/Makefile now get exposed in
-> weird config cases?
-> 
-> Otherwise, yeah, looks good to me. Thanks!
+Avoids complaints from gcc about ambigious else clauses. Not that any
+of those are likely to show up in ide ...
 
-Btw, did you plan to resend the series with this and your changes
-applied?
+Signed-off-by: Daniel Vetter <daniel.vetter@intel.com>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org
+---
+ include/linux/ide.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index c74b0321922a..1530d81319ef 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1601,7 +1601,7 @@ static inline void ide_set_drivedata(ide_drive_t *drive, void *data)
+ 
+ #define ide_port_for_each_present_dev(i, dev, port) \
+ 	for ((i) = 0; ((dev) = (port)->devices[i]) || (i) < MAX_DRIVES; (i)++) \
+-		if ((dev)->dev_flags & IDE_DFLAG_PRESENT)
++		for_each_if ((dev)->dev_flags & IDE_DFLAG_PRESENT)
+ 
+ #define ide_host_for_each_port(i, port, host) \
+ 	for ((i) = 0; ((port) = (host)->ports[i]) || (i) < MAX_HOST_PORTS; (i)++)
+-- 
+2.18.0
