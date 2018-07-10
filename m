@@ -1,68 +1,51 @@
-From: Icenowy Zheng <icenowy-h8G6r0blFSE@public.gmane.org>
+From: LABBE Corentin <clabbe@baylibre.com>
 Subject: Re: [PATCH v2 0/4] sun8i: r40: add AHCI
-Date: Tue, 10 Jul 2018 20:32:27 +0800
-Message-ID: <3F7BD4FD-D8D8-4900-BC53-E2C1928616A4@aosc.io>
-References: <1531149658-27030-1-git-send-email-clabbe@baylibre.com> <20180710122922.6sgmgfislqwhn3tt@flea>
-Reply-To: icenowy-h8G6r0blFSE@public.gmane.org
+Date: Tue, 10 Jul 2018 15:05:17 +0200
+Message-ID: <20180710130517.GA27236@Red>
+References: <1531149658-27030-1-git-send-email-clabbe@baylibre.com>
+ <EF718AB4-DD07-4D67-BE2E-1B9EBA5EB25F@aosc.io>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-sunxi+bncBDS6XAN6ZADRB6WOSLNAKGQE2WTVXHY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <20180710122922.6sgmgfislqwhn3tt@flea>
-List-Post: <https://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/linux-sunxi
-List-Subscribe: <https://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/linux-sunxi/subscribe>
-To: Maxime Ripard <maxime.ripard-LDxbnhwyfcJBDgjK7y7TUQ@public.gmane.org>, Corentin Labbe <clabbe-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
-Cc: linux-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, wens-jdAy2FN1RRM@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <EF718AB4-DD07-4D67-BE2E-1B9EBA5EB25F@aosc.io>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Icenowy Zheng <icenowy@aosc.io>
+Cc: linux@armlinux.org.uk, mark.rutland@arm.com, maxime.ripard@free-electrons.com, robh+dt@kernel.org, tj@kernel.org, wens@csie.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-sunxi@googlegroups.com
 List-Id: linux-ide@vger.kernel.org
 
+On Mon, Jul 09, 2018 at 11:44:20PM +0800, Icenowy Zheng wrote:
+> 
+> 
+> 于 2018年7月9日 GMT+08:00 下午11:20:54, Corentin Labbe <clabbe@baylibre.com> 写到:
+> >Hello
+> >
+> >With Moeicenowy's agreement, I have take leadership ot this patchset.
+> >
+> >There are no really changes appart renaming struct quirck to variant.
+> >
+> >Since the last serie is really old, I will answer comment here.
+> >The two regulator (1.2 and 2.5V) are not for the PHY since:
+> >- nothing in the schematic said that they are for the PHY, they seems
+> >  only for controller
+> >- all other AHCI driver use 5V for the target/PHY (vs 1.2/2.5 which
+> >  cannot be used for target)
+> 
+> Target is not equal to PHY. Target means the supply
+> of the disk, which can be usually 5v (for 2.5" HDD) or
+> 12v (3.5" HDD).
+> 
+> By reading Wikipedia articles  about SATA and LVDS, I assume
+> 2.5V is for PHY and 1.2V is for internal digital logic (VDD-SYS
+> is commonly 1.2V on 40nm Allwinner SoCs; 2.5V VDD can be
+> used to efficiently deliver ~1.2V LVDS.)
+> 
+> P.S. VDD-SATA and VDD25-SATA also exist on A20, and by checking
+> Banana Pi M1 (the original Banana Pi) schematics, VDD-SATA
+> is connected to common VDD-SYS (called INTVDD on the
+> schematics) and VDD25-SATA is connected to an always-on
+> fixed LDO, maybe due to the lack of power outputs on AXP209.
+> 
 
-
-=E4=BA=8E 2018=E5=B9=B47=E6=9C=8810=E6=97=A5 GMT+08:00 =E4=B8=8B=E5=8D=888:=
-29:22, Maxime Ripard <maxime.ripard-LDxbnhwyfcJBDgjK7y7TUQ@public.gmane.org> =E5=86=99=E5=88=B0:
->On Mon, Jul 09, 2018 at 03:20:54PM +0000, Corentin Labbe wrote:
->> Hello
->>=20
->> With Moeicenowy's agreement, I have take leadership ot this patchset.
->>=20
->> There are no really changes appart renaming struct quirck to variant.
->>=20
->> Since the last serie is really old, I will answer comment here.
->> The two regulator (1.2 and 2.5V) are not for the PHY since:
->> - nothing in the schematic said that they are for the PHY, they seems
->>   only for controller
->> - all other AHCI driver use 5V for the target/PHY (vs 1.2/2.5 which
->>   cannot be used for target)
->
->That's a pretty bad thing to do, especially for old series. You just
->dropped all the context that you reply to, and there's no way for any
->reviewer to tell if your answers make any kind of sense, or addresses
->any question one might have had.
->
->> Furthermore, the AHCI binding support only one regulator per PHY, so
->> using the "target" regulator is out of question for registring this
->two
->> non-phy regulator.
->
->Nothing is "out of question", we have the source code and can change
->it if needed.
-
-The main problem is that he misunderstood the meaning
-of target regulator -- it's not for PHY but for disk. And if a
-device is designed to accept both 2.5" and 3.5" HDD at
-the same port multiple target regulator might really
-be useful -- one 5v and one 12v.
-
->
->Maxime
-
---=20
-You received this message because you are subscribed to the Google Groups "=
-linux-sunxi" group.
-To unsubscribe from this group and stop receiving emails from it, send an e=
-mail to linux-sunxi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit https://groups.google.com/d/optout.
+So we still need to add a regulator on the controller and add an optionnal "phy" regulator for AHCI port.
