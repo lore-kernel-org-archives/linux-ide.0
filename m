@@ -1,71 +1,82 @@
-From: Icenowy Zheng <icenowy@aosc.io>
-Subject: Re: [PATCH v2 0/4] sun8i: r40: add AHCI
-Date: Tue, 10 Jul 2018 21:15:05 +0800
-Message-ID: <A588EEB5-5305-4EFC-8DDD-369F0751E382@aosc.io>
-References: <1531149658-27030-1-git-send-email-clabbe@baylibre.com> <EF718AB4-DD07-4D67-BE2E-1B9EBA5EB25F@aosc.io> <20180710130517.GA27236@Red>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] libata fixes for v4.18-rc4
+Date: Wed, 11 Jul 2018 11:35:10 -0700
+Message-ID: <20180711183510.GI72677@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180710130517.GA27236@Red>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-arm-kernel@lists.infradead.org, LABBE Corentin <clabbe@baylibre.com>
-Cc: mark.rutland@arm.com, devicetree@vger.kernel.org, linux-sunxi@googlegroups.com, linux@armlinux.org.uk, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, wens@csie.org, robh+dt@kernel.org, tj@kernel.org, maxime.ripard@free-electrons.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
+Hello, Linus.
 
+* Jens's patches to expand the usable command depth from 31 to 32
+  broke sata_fsl due to a subtle command iteration bug.  Fixed by
+  introducing explicit iteration helpers and using the correct
+  variant.
 
-于 2018年7月10日 GMT+08:00 下午9:05:17, LABBE Corentin <clabbe@baylibre.com> 写到:
->On Mon, Jul 09, 2018 at 11:44:20PM +0800, Icenowy Zheng wrote:
->> 
->> 
->> 于 2018年7月9日 GMT+08:00 下午11:20:54, Corentin Labbe
-><clabbe@baylibre.com> 写到:
->> >Hello
->> >
->> >With Moeicenowy's agreement, I have take leadership ot this
->patchset.
->> >
->> >There are no really changes appart renaming struct quirck to
->variant.
->> >
->> >Since the last serie is really old, I will answer comment here.
->> >The two regulator (1.2 and 2.5V) are not for the PHY since:
->> >- nothing in the schematic said that they are for the PHY, they
->seems
->> >  only for controller
->> >- all other AHCI driver use 5V for the target/PHY (vs 1.2/2.5 which
->> >  cannot be used for target)
->> 
->> Target is not equal to PHY. Target means the supply
->> of the disk, which can be usually 5v (for 2.5" HDD) or
->> 12v (3.5" HDD).
->> 
->> By reading Wikipedia articles  about SATA and LVDS, I assume
->> 2.5V is for PHY and 1.2V is for internal digital logic (VDD-SYS
->> is commonly 1.2V on 40nm Allwinner SoCs; 2.5V VDD can be
->> used to efficiently deliver ~1.2V LVDS.)
->> 
->> P.S. VDD-SATA and VDD25-SATA also exist on A20, and by checking
->> Banana Pi M1 (the original Banana Pi) schematics, VDD-SATA
->> is connected to common VDD-SYS (called INTVDD on the
->> schematics) and VDD25-SATA is connected to an always-on
->> fixed LDO, maybe due to the lack of power outputs on AXP209.
->> 
->
->So we still need to add a regulator on the controller and add an
->optionnal "phy" regulator for AHCI port.
+* On some laptops, enabling LPM by default reportedly led to
+  occasional hard hangs.  Blacklist the affected cases.
 
-No, phy is not a part of the port. From the perspective of
-the users, phy is part of the controller.
+* Other misc fixes / changes.
 
-I still suggest generic multiple regulator support, to
-reduce sunxi-specified code.
+Thanks.
 
->
->
->_______________________________________________
->linux-arm-kernel mailing list
->linux-arm-kernel@lists.infradead.org
->http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+The following changes since commit 9ffc59d57228d74809700be6f7ecb1db10292f05:
+
+  Merge tag '4.18-rc1-more-smb3-fixes' of git://git.samba.org/sfrench/cifs-2.6 (2018-06-18 14:28:19 +0900)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.18-fixes
+
+for you to fetch changes up to d55bac2754476624f23bdf3b908d117f3cdf469b:
+
+  ata: Remove depends on HAS_DMA in case of platform dependency (2018-07-02 13:18:22 -0700)
+
+----------------------------------------------------------------
+Colin Ian King (1):
+      sata_nv: remove redundant pointers sdev0 and sdev1
+
+Damien Le Moal (2):
+      ata: Fix ZBC_OUT command block check
+      ata: Fix ZBC_OUT all bit handling
+
+Geert Uytterhoeven (1):
+      ata: Remove depends on HAS_DMA in case of platform dependency
+
+Hans de Goede (1):
+      ahci: Disable LPM on Lenovo 50 series laptops with a too old BIOS
+
+Jens Axboe (4):
+      libata: add command iterator helpers
+      libata: convert eh to command iterators
+      sata_fsl: convert to command iterator
+      sata_fsl: remove dead code in tag retrieval
+
+John Garry (1):
+      libahci: Fix possible Spectre-v1 pmp indexing in ahci_led_store()
+
+Mika Westerberg (1):
+      ahci: Add Intel Ice Lake LP PCI ID
+
+Wei Yongjun (1):
+      ata: ahci_mvebu: ahci_mvebu_stop_engine() can be static
+
+ drivers/ata/Kconfig       |  2 --
+ drivers/ata/ahci.c        | 60 +++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/ahci_mvebu.c  |  2 +-
+ drivers/ata/libahci.c     |  7 ++++--
+ drivers/ata/libata-core.c |  3 +++
+ drivers/ata/libata-eh.c   | 41 +++++++++++++-------------------
+ drivers/ata/libata-scsi.c | 18 +++++++++-----
+ drivers/ata/sata_fsl.c    |  9 +------
+ drivers/ata/sata_nv.c     |  3 ---
+ include/linux/libata.h    | 24 +++++++++++++++++++
+ 10 files changed, 122 insertions(+), 47 deletions(-)
+
+-- 
+tejun
