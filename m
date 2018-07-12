@@ -1,51 +1,35 @@
-From: Corentin Labbe <clabbe@baylibre.com>
-Subject: [PATCH 2/3] ata: ahci_platform: convert kzallloc to kcalloc
-Date: Thu, 12 Jul 2018 11:41:30 +0000
-Message-ID: <1531395691-4653-3-git-send-email-clabbe@baylibre.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH 0/3] ata: ahci_platform: minor fixes
+Date: Thu, 12 Jul 2018 14:15:36 +0200
+Message-ID: <c02497e3-f4a7-a4fa-8dfa-f3d3de299e38@redhat.com>
 References: <1531395691-4653-1-git-send-email-clabbe@baylibre.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1531395691-4653-1-git-send-email-clabbe@baylibre.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: hdegoede@redhat.com, tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Corentin Labbe <clabbe@baylibre.com>
+To: Corentin Labbe <clabbe@baylibre.com>, tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-It's better to kcalloc instead of kzalloc(n * sizeof())
+Hi,
 
-Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
----
- drivers/ata/libahci_platform.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+On 12-07-18 13:41, Corentin Labbe wrote:
+> Hello
+> 
+> This patchset fixes some minor problem found when working on supporting
+> allwinner R40 AHCI.
+> 
+> Regards
 
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index 70052c046559..be9f54423a9b 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -351,7 +351,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev)
- 	struct ahci_host_priv *hpriv;
- 	struct clk *clk;
- 	struct device_node *child;
--	int i, sz, enabled_ports = 0, rc = -ENOMEM, child_nodes;
-+	int i, enabled_ports = 0, rc = -ENOMEM, child_nodes;
- 	u32 mask_port_map = 0;
- 
- 	if (!devres_open_group(dev, NULL, GFP_KERNEL))
-@@ -403,14 +403,12 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev)
- 	if (!child_nodes)
- 		hpriv->nports = 1;
- 
--	sz = hpriv->nports * sizeof(*hpriv->phys);
--	hpriv->phys = devm_kzalloc(dev, sz, GFP_KERNEL);
-+	hpriv->phys = devm_kcalloc(dev, hpriv->nports, sizeof(*hpriv->phys), GFP_KERNEL);
- 	if (!hpriv->phys) {
- 		rc = -ENOMEM;
- 		goto err_out;
- 	}
--	sz = hpriv->nports * sizeof(*hpriv->target_pwrs);
--	hpriv->target_pwrs = kzalloc(sz, GFP_KERNEL);
-+	hpriv->target_pwrs = kcalloc(hpriv->nports, sizeof(*hpriv->target_pwrs), GFP_KERNEL);
- 	if (!hpriv->target_pwrs) {
- 		rc = -ENOMEM;
- 		goto err_out;
--- 
-2.16.4
+Thanks.
+
+The entire series looks good to me:
+
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+
+Regards,
+
+Hans
