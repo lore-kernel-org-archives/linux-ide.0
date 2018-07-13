@@ -1,112 +1,115 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [RFC PATCH v2 2/2] ata: ahci: Enable DEVSLP by default on x86
- with SLP_S0
-Date: Fri, 13 Jul 2018 11:13:52 +0200
-Message-ID: <f9277260-29d0-f655-f2a1-b9db1187236a@redhat.com>
-References: <20180712222712.65310-1-srinivas.pandruvada@linux.intel.com>
- <20180712222712.65310-3-srinivas.pandruvada@linux.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Corentin Labbe <clabbe@baylibre.com>
+Subject: [PATCH v3 1/9] ata: ahci_platform: add support for AHCI controller regulator
+Date: Fri, 13 Jul 2018 11:02:58 +0000
+Message-ID: <1531479786-4911-2-git-send-email-clabbe@baylibre.com>
+References: <1531479786-4911-1-git-send-email-clabbe@baylibre.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180712222712.65310-3-srinivas.pandruvada@linux.intel.com>
-Content-Language: en-US
+In-Reply-To: <1531479786-4911-1-git-send-email-clabbe@baylibre.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan.cox@intel.com, Mario.Limonciello@dell.com, rjw@rjwysocki.net
+To: hdegoede@redhat.com, linux@armlinux.org.uk, mark.rutland@arm.com, maxime.ripard@free-electrons.com, robh+dt@kernel.org, tj@kernel.org, wens@csie.org
+Cc: devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-sunxi@googlegroups.com, thierry.reding@gmail.com, icenowy@aosc.io, Corentin Labbe <clabbe@baylibre.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hi,
+The SoC R40 AHCI controller need a regulator to work.
+So this patch add a way to add an optional regulator on AHCI controller.
 
-On 13-07-18 00:27, Srinivas Pandruvada wrote:
-> From: Srinivas <srinivas.pandruvada@linux.intel.com>
-> 
-> One of the requirement for modern x86 system to enter lowest power mode
-> (SLP_S0) is SATA IP block to be off. This is true even during when
-> platform is suspended to idle and not only in opportunistic (runtime)
-> suspend.
-> 
-> Several of these system don't have traditional ACPI S3, so it is
-> important that they enter SLP_S0 state, to avoid draining battery even
-> during suspend. So it is important that out of the box Linux installation
-> reach this state.
-> 
-> SATA IP block doesn't get turned off till SATA is in DEVSLP mode. Here
-> user has to either use scsi-host sysfs or tools like powertop to set
-> the sata-host link_power_management_policy to min_power.
-> 
-> This change sets by default link power management policy to min_power
-> with partial (preferred) or slumber support on idle for some platforms.
-> To avoid regressions, the following conditions are used:
-> - The kernel config is already set to use med_power_with_dipm or deeper
-> - System is a SLP_S0 capable using ACPI low power idle flag
-> This combination will make sure that systems are fairly recent and
-> since getting shipped with SLP_S0 support, the DEVSLP function
-> is already validated.
-> 
-> Signed-off-by: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
-> ---
->   drivers/ata/ahci.c | 15 +++++++++++++++
->   1 file changed, 15 insertions(+)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index b2b9eba1d214..e8d425823f9b 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1604,6 +1604,19 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
->   	return pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX);
->   }
->   
-> +static void ahci_update_mobile_policy(struct ahci_host_priv *hpriv)
-> +{
-> +#ifdef CONFIG_ACPI
-> +	if (mobile_lpm_policy > ATA_LPM_MED_POWER &&
-> +	    (acpi_gbl_FADT.flags & ACPI_FADT_LOW_POWER_S0)) {
-> +		if (hpriv->cap & HOST_CAP_PART)
-> +			mobile_lpm_policy = ATA_LPM_MIN_POWER_WITH_ASP;
-> +		else if (hpriv->cap & HOST_CAP_SSC)
-> +			mobile_lpm_policy = ATA_LPM_MIN_POWER;
+Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
+---
+ drivers/ata/ahci.h             |  1 +
+ drivers/ata/libahci_platform.c | 27 +++++++++++++++++++++++++--
+ 2 files changed, 26 insertions(+), 2 deletions(-)
 
-You are checking hpriv flags here and changing global state based on that.
-
-Instead it would be better to add a new:
-
-int ahci_get_initial_lpm_policy(struct ahci_host_priv *hpriv);
-
-Function and replace this:
-
-                 if ((hpriv->flags & AHCI_HFLAG_IS_MOBILE) &&
-                     mobile_lpm_policy >= ATA_LPM_UNKNOWN &&
-                     mobile_lpm_policy <= ATA_LPM_MIN_POWER)
-                         ap->target_lpm_policy = mobile_lpm_policy;
-
-With:
-
-		ap->target_lpm_policy = ahci_get_initial_lpm_policy(priv);
-
-And do the original checks + your new checks all in the
-ahci_get_initial_lpm_policy() function.
-
-Regards,
-
-Hans
-
-
-
-> +	}
-> +#endif
-> +}
-> +
->   static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->   {
->   	unsigned int board_id = ent->driver_data;
-> @@ -1796,6 +1809,8 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->   	if (pi.flags & ATA_FLAG_EM)
->   		ahci_reset_em(host);
->   
-> +	ahci_update_mobile_policy(hpriv);
-> +
->   	for (i = 0; i < host->n_ports; i++) {
->   		struct ata_port *ap = host->ports[i];
->   
-> 
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 1609ebab4e23..633d3ec5c1df 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -351,6 +351,7 @@ struct ahci_host_priv {
+ 	bool			got_runtime_pm; /* Did we do pm_runtime_get? */
+ 	struct clk		*clks[AHCI_MAX_CLKS]; /* Optional */
+ 	struct regulator	**target_pwrs;	/* Optional */
++	struct regulator	*ahci_regulator;/* Optional */
+ 	/*
+ 	 * If platform uses PHYs. There is a 1:1 relation between the port number and
+ 	 * the PHY position in this array.
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index fe8939e161ea..d997a30ce793 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -138,7 +138,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_disable_clks);
+  * ahci_platform_enable_regulators - Enable regulators
+  * @hpriv: host private area to store config values
+  *
+- * This function enables all the regulators found in
++ * This function enables all the regulators found in controller and
+  * hpriv->target_pwrs, if any.  If a regulator fails to be enabled, it
+  * disables all the regulators already enabled in reverse order and
+  * returns an error.
+@@ -150,6 +150,12 @@ int ahci_platform_enable_regulators(struct ahci_host_priv *hpriv)
+ {
+ 	int rc, i;
+ 
++	if (hpriv->ahci_regulator) {
++		rc = regulator_enable(hpriv->ahci_regulator);
++		if (rc)
++			return rc;
++	}
++
+ 	for (i = 0; i < hpriv->nports; i++) {
+ 		if (!hpriv->target_pwrs[i])
+ 			continue;
+@@ -166,6 +172,8 @@ int ahci_platform_enable_regulators(struct ahci_host_priv *hpriv)
+ 		if (hpriv->target_pwrs[i])
+ 			regulator_disable(hpriv->target_pwrs[i]);
+ 
++	if (hpriv->ahci_regulator)
++		regulator_disable(hpriv->ahci_regulator);
+ 	return rc;
+ }
+ EXPORT_SYMBOL_GPL(ahci_platform_enable_regulators);
+@@ -174,7 +182,8 @@ EXPORT_SYMBOL_GPL(ahci_platform_enable_regulators);
+  * ahci_platform_disable_regulators - Disable regulators
+  * @hpriv: host private area to store config values
+  *
+- * This function disables all regulators found in hpriv->target_pwrs.
++ * This function disables all regulators found in hpriv->target_pwrs and
++ * AHCI controller.
+  */
+ void ahci_platform_disable_regulators(struct ahci_host_priv *hpriv)
+ {
+@@ -185,6 +194,9 @@ void ahci_platform_disable_regulators(struct ahci_host_priv *hpriv)
+ 			continue;
+ 		regulator_disable(hpriv->target_pwrs[i]);
+ 	}
++
++	if (hpriv->ahci_regulator)
++		regulator_disable(hpriv->ahci_regulator);
+ }
+ EXPORT_SYMBOL_GPL(ahci_platform_disable_regulators);
+ /**
+@@ -336,6 +348,7 @@ static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
+  *
+  * 1) mmio registers (IORESOURCE_MEM 0, mandatory)
+  * 2) regulator for controlling the targets power (optional)
++ *    regulator for controlling the AHCI controller (optional)
+  * 3) 0 - AHCI_MAX_CLKS clocks, as specified in the devs devicetree node,
+  *    or for non devicetree enabled platforms a single clock
+  * 4) phys (optional)
+@@ -391,6 +404,16 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev)
+ 		hpriv->clks[i] = clk;
+ 	}
+ 
++	hpriv->ahci_regulator = devm_regulator_get_optional(dev, "ahci");
++
++	if (IS_ERR(hpriv->ahci_regulator)) {
++		rc = PTR_ERR(hpriv->ahci_regulator);
++		if (rc == -EPROBE_DEFER)
++			goto err_out;
++		rc = 0;
++		hpriv->ahci_regulator = NULL;
++	}
++
+ 	hpriv->nports = child_nodes = of_get_child_count(dev->of_node);
+ 
+ 	/*
+-- 
+2.16.4
