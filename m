@@ -1,13 +1,11 @@
 From: Corentin Labbe <clabbe@baylibre.com>
-Subject: [PATCH v3 7/9] dt-bindings: ata: ahci-platform: document port-supply
-Date: Fri, 13 Jul 2018 11:03:04 +0000
-Message-ID: <1531479786-4911-8-git-send-email-clabbe@baylibre.com>
-References: <1531479786-4911-1-git-send-email-clabbe@baylibre.com>
+Subject: [PATCH v3 0/9] ata: ahci_platform: support allwinner R40 AHCI
+Date: Fri, 13 Jul 2018 11:02:57 +0000
+Message-ID: <1531479786-4911-1-git-send-email-clabbe@baylibre.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1531479786-4911-1-git-send-email-clabbe@baylibre.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -21,32 +19,45 @@ To: hdegoede@redhat.com, linux@armlinux.org.uk, mark.rutland@arm.com, maxime.rip
 Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-sunxi@googlegroups.com, thierry.reding@gmail.com, Corentin Labbe <clabbe@baylibre.com>, linux-arm-kernel@lists.infradead.org, icenowy@aosc.io
 List-Id: linux-ide@vger.kernel.org
 
-This patch document the new optional port-supply
+Hello
 
-Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
----
- Documentation/devicetree/bindings/ata/ahci-platform.txt | 2 ++
- 1 file changed, 2 insertions(+)
+This patchset add support for allwinner R40 AHCI controller.
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-index 47652521a6ed..40a636b9851e 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -31,6 +31,7 @@ Optional properties:
- - dma-coherent      : Present if dma operations are coherent
- - clocks            : a list of phandle + clock specifier pairs
- - target-supply     : regulator for SATA target power
-+- port-supply       : regulator for SATA port
- - phys              : reference to the SATA PHY node
- - phy-names         : must be "sata-phy"
- - ahci-supply       : regulator for AHCI controller
-@@ -51,6 +52,7 @@ Sub-nodes required properties:
- And at least one of the following properties:
- - phys		    : reference to the SATA PHY node
- - target-supply     : regulator for SATA target power
-+- port-supply       : regulator for SATA port
- 
- Examples:
-         sata@ffe08000 {
+This controller need two regulator and one reset which is unsupported
+for the moment on ahci_platform.
+
+So this patchset add support for reset and regulator for AHCI
+controller.
+It add also support for non-target regulator per SATA port.
+
+The whole patchset is tested on sun8i-r40-bananapi-m2-ultra and
+on sun7i-a20-cubieboard2 which doesnt have any of the ressources added
+by this serie, so no regression should come with it.
+
+Since just before sending this patchset, I discovered the revert of
+f0f56716fc3e ("ata: ahci-platform: add reset control support")
+I have also tested this serie on a tegra124-jetson-tk1.
+
+Changes since V2
+- Moved all ressources management to ahci_platform
+
+Corentin Labbe (9):
+  ata: ahci_platform: add support for AHCI controller regulator
+  dt-bindings: ata: ahci-platform: document ahci-supply
+  ata: ahci_platform: add support for AHCI controller reset
+  dt-bindings: ata: ahci-platform: document AHCI reset
+  dt-bindings: ata: ahci-platform: fix indentation of target-supply
+  ata: ahci_platform: add support for port regulator
+  dt-bindings: ata: ahci-platform: document port-supply
+  ARM: dts: sun8i: r40: add sata node
+  ARM: dts: sun8i: sun8i-r40-bananapi-m2-ultra: enable AHCI
+
+ .../devicetree/bindings/ata/ahci-platform.txt      |   7 +-
+ arch/arm/boot/dts/sun8i-r40-bananapi-m2-ultra.dts  |  21 +++++
+ arch/arm/boot/dts/sun8i-r40.dtsi                   |  16 ++++
+ drivers/ata/ahci.h                                 |   4 +
+ drivers/ata/libahci_platform.c                     | 102 ++++++++++++++++++---
+ 5 files changed, 138 insertions(+), 12 deletions(-)
+
 -- 
 2.16.4
