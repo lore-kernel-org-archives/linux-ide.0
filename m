@@ -1,15 +1,15 @@
 From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [RFC PATCH v2 1/2] ata: ahci: Support state with min power and
- Partial low power state
-Date: Fri, 13 Jul 2018 11:08:16 +0200
-Message-ID: <fa324b27-4424-afa2-9723-10437ca29801@redhat.com>
+Subject: Re: [RFC PATCH v2 2/2] ata: ahci: Enable DEVSLP by default on x86
+ with SLP_S0
+Date: Fri, 13 Jul 2018 11:13:52 +0200
+Message-ID: <f9277260-29d0-f655-f2a1-b9db1187236a@redhat.com>
 References: <20180712222712.65310-1-srinivas.pandruvada@linux.intel.com>
- <20180712222712.65310-2-srinivas.pandruvada@linux.intel.com>
+ <20180712222712.65310-3-srinivas.pandruvada@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180712222712.65310-2-srinivas.pandruvada@linux.intel.com>
+In-Reply-To: <20180712222712.65310-3-srinivas.pandruvada@linux.intel.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
 To: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, tj@kernel.org
@@ -19,26 +19,73 @@ List-Id: linux-ide@vger.kernel.org
 Hi,
 
 On 13-07-18 00:27, Srinivas Pandruvada wrote:
-> Currently when min_power policy is selected, the partial low power state
-> is not entered and link will try aggressively enter to only slumber state.
-> Add a new policy which still enable DEVSLP but also try to enter partial
-> low power state.
+> From: Srinivas <srinivas.pandruvada@linux.intel.com>
 > 
-> For information the difference between partial and slumber
-> Partial – PHY logic is powered up, and in a reduced power state. The link
-> PM exit latency to active state maximum is 10 ns.
-> Slumber – PHY logic is powered up, and in a reduced power state. The link
-> PM exit latency to active state maximum is 10 ms.
-> Devslp – PHY logic is powered down. The link PM exit latency from this
-> state to active state maximum is 20 ms, unless otherwise specified by
-> DETO.
+> One of the requirement for modern x86 system to enter lowest power mode
+> (SLP_S0) is SATA IP block to be off. This is true even during when
+> platform is suspended to idle and not only in opportunistic (runtime)
+> suspend.
 > 
-> Suggested-by: Hans de Goede <hdegoede@redhat.com>
+> Several of these system don't have traditional ACPI S3, so it is
+> important that they enter SLP_S0 state, to avoid draining battery even
+> during suspend. So it is important that out of the box Linux installation
+> reach this state.
+> 
+> SATA IP block doesn't get turned off till SATA is in DEVSLP mode. Here
+> user has to either use scsi-host sysfs or tools like powertop to set
+> the sata-host link_power_management_policy to min_power.
+> 
+> This change sets by default link power management policy to min_power
+> with partial (preferred) or slumber support on idle for some platforms.
+> To avoid regressions, the following conditions are used:
+> - The kernel config is already set to use med_power_with_dipm or deeper
+> - System is a SLP_S0 capable using ACPI low power idle flag
+> This combination will make sure that systems are fairly recent and
+> since getting shipped with SLP_S0 support, the DEVSLP function
+> is already validated.
+> 
 > Signed-off-by: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
+> ---
+>   drivers/ata/ahci.c | 15 +++++++++++++++
+>   1 file changed, 15 insertions(+)
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index b2b9eba1d214..e8d425823f9b 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1604,6 +1604,19 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
+>   	return pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX);
+>   }
+>   
+> +static void ahci_update_mobile_policy(struct ahci_host_priv *hpriv)
+> +{
+> +#ifdef CONFIG_ACPI
+> +	if (mobile_lpm_policy > ATA_LPM_MED_POWER &&
+> +	    (acpi_gbl_FADT.flags & ACPI_FADT_LOW_POWER_S0)) {
+> +		if (hpriv->cap & HOST_CAP_PART)
+> +			mobile_lpm_policy = ATA_LPM_MIN_POWER_WITH_ASP;
+> +		else if (hpriv->cap & HOST_CAP_SSC)
+> +			mobile_lpm_policy = ATA_LPM_MIN_POWER;
 
-You got this the wrong way around, when ALP is not set you only get
-partial, the ALP bit is active high, not active low as your commit
-suggests.  So the name of the new policy should be min_power_without_asp.
+You are checking hpriv flags here and changing global state based on that.
+
+Instead it would be better to add a new:
+
+int ahci_get_initial_lpm_policy(struct ahci_host_priv *hpriv);
+
+Function and replace this:
+
+                 if ((hpriv->flags & AHCI_HFLAG_IS_MOBILE) &&
+                     mobile_lpm_policy >= ATA_LPM_UNKNOWN &&
+                     mobile_lpm_policy <= ATA_LPM_MIN_POWER)
+                         ap->target_lpm_policy = mobile_lpm_policy;
+
+With:
+
+		ap->target_lpm_policy = ahci_get_initial_lpm_policy(priv);
+
+And do the original checks + your new checks all in the
+ahci_get_initial_lpm_policy() function.
 
 Regards,
 
@@ -46,78 +93,20 @@ Hans
 
 
 
-
-
-
-> ---
->   drivers/ata/libahci.c     | 6 +++++-
->   drivers/ata/libata-core.c | 1 +
->   drivers/ata/libata-scsi.c | 1 +
->   include/linux/libata.h    | 3 ++-
->   4 files changed, 9 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-> index 511fb67f363d..8cf2cf49537d 100644
-> --- a/drivers/ata/libahci.c
-> +++ b/drivers/ata/libahci.c
-> @@ -799,8 +799,11 @@ static int ahci_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
->   				return 0;
->   		} else {
->   			cmd |= PORT_CMD_ALPE;
+> +	}
+> +#endif
+> +}
 > +
->   			if (policy == ATA_LPM_MIN_POWER)
->   				cmd |= PORT_CMD_ASP;
-> +			else if (policy == ATA_LPM_MIN_POWER_WITH_ASP)
-> +				cmd &= ~PORT_CMD_ASP;
+>   static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>   {
+>   	unsigned int board_id = ent->driver_data;
+> @@ -1796,6 +1809,8 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>   	if (pi.flags & ATA_FLAG_EM)
+>   		ahci_reset_em(host);
 >   
->   			/* write out new cmd value */
->   			writel(cmd, port_mmio + PORT_CMD);
-> @@ -811,7 +814,8 @@ static int ahci_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
->   	if ((hpriv->cap2 & HOST_CAP2_SDS) &&
->   	    (hpriv->cap2 & HOST_CAP2_SADM) &&
->   	    (link->device->flags & ATA_DFLAG_DEVSLP)) {
-> -		if (policy == ATA_LPM_MIN_POWER)
-> +		if (policy == ATA_LPM_MIN_POWER ||
-> +		    policy == ATA_LPM_MIN_POWER_WITH_ASP)
->   			ahci_set_aggressive_devslp(ap, true);
->   		else
->   			ahci_set_aggressive_devslp(ap, false);
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index cc71c63df381..245a59e6cb18 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -3970,6 +3970,7 @@ int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
->   		scontrol |= (0x6 << 8);
->   		break;
->   	case ATA_LPM_MED_POWER_WITH_DIPM:
-> +	case ATA_LPM_MIN_POWER_WITH_ASP:
->   	case ATA_LPM_MIN_POWER:
->   		if (ata_link_nr_enabled(link) > 0)
->   			/* no restrictions on LPM transitions */
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index aad1b01447de..2d683db50ceb 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -110,6 +110,7 @@ static const char *ata_lpm_policy_names[] = {
->   	[ATA_LPM_MAX_POWER]		= "max_performance",
->   	[ATA_LPM_MED_POWER]		= "medium_power",
->   	[ATA_LPM_MED_POWER_WITH_DIPM]	= "med_power_with_dipm",
-> +	[ATA_LPM_MIN_POWER_WITH_ASP]	= "min_power_with_asp",
->   	[ATA_LPM_MIN_POWER]		= "min_power",
->   };
+> +	ahci_update_mobile_policy(hpriv);
+> +
+>   	for (i = 0; i < host->n_ports; i++) {
+>   		struct ata_port *ap = host->ports[i];
 >   
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 32f247cb5e9e..1e154f1f7e8f 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -523,7 +523,8 @@ enum ata_lpm_policy {
->   	ATA_LPM_MAX_POWER,
->   	ATA_LPM_MED_POWER,
->   	ATA_LPM_MED_POWER_WITH_DIPM, /* Med power + DIPM as win IRST does */
-> -	ATA_LPM_MIN_POWER,
-> +	ATA_LPM_MIN_POWER_WITH_ASP, /* Min Power + partial and slumber */
-> +	ATA_LPM_MIN_POWER, /* Min power + no partial (slumber only) */
->   };
->   
->   enum ata_lpm_hints {
 > 
