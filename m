@@ -1,60 +1,55 @@
-From: Mikko Perttunen <mperttunen@nvidia.com>
-Subject: Re: [PATCH] Revert "ata: ahci_platform: convert kcalloc to
- devm_kcalloc"
-Date: Tue, 17 Jul 2018 13:57:15 +0300
-Message-ID: <c8a963fa-70c8-ea79-3c30-69bf723fb764@nvidia.com>
-References: <1531824575-852-1-git-send-email-clabbe@baylibre.com>
+From: LABBE Corentin <clabbe@baylibre.com>
+Subject: Re: [PATCH v3 4/9] dt-bindings: ata: ahci-platform: document AHCI
+ reset
+Date: Tue, 17 Jul 2018 13:16:30 +0200
+Message-ID: <20180717111630.GA7900@Red>
+References: <1531479786-4911-1-git-send-email-clabbe@baylibre.com>
+ <1531479786-4911-5-git-send-email-clabbe@baylibre.com>
+ <20180716155416.GA32497@rob-hp-laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1531824575-852-1-git-send-email-clabbe@baylibre.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <20180716155416.GA32497@rob-hp-laptop>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Corentin Labbe <clabbe@baylibre.com>, hdegoede@redhat.com, tj@kernel.org, sfr@canb.auug.org.au
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Rob Herring <robh@kernel.org>
+Cc: hdegoede@redhat.com, linux@armlinux.org.uk, mark.rutland@arm.com, maxime.ripard@free-electrons.com, tj@kernel.org, wens@csie.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-sunxi@googlegroups.com, thierry.reding@gmail.com, icenowy@aosc.io
 List-Id: linux-ide@vger.kernel.org
 
-Thanks!
+On Mon, Jul 16, 2018 at 09:54:16AM -0600, Rob Herring wrote:
+> On Fri, Jul 13, 2018 at 11:03:01AM +0000, Corentin Labbe wrote:
+> > This patch document the new optional resets for ahci node.
+> > 
+> > Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
+> > ---
+> >  Documentation/devicetree/bindings/ata/ahci-platform.txt | 2 ++
+> >  1 file changed, 2 insertions(+)
+> > 
+> > diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> > index 5f362af2724c..a5281d7557e3 100644
+> > --- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> > +++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> > @@ -34,6 +34,8 @@ Optional properties:
+> >  - phys              : reference to the SATA PHY node
+> >  - phy-names         : must be "sata-phy"
+> >  - ahci-supply       : regulator for AHCI controller
+> > +- resets            : phandle to the reset line of AHCI controller
+> > +                      If set, must have a reset-names set as "ahci"
+> 
+> A name is pointless if there is only one. Also, the name should be what 
+> the signal in the block is called which I doubt would be called "ahci". 
+> A likely name is some form of reset, resetn, etc. which again is 
+> pointless to name if there is only 1.
+> 
+> If you do have 'reset-names' then that needs to be listed too like 
+> phy-names.
+> 
 
-Reviewed-by: Mikko Perttunen <mperttunen@nvidia.com>
+Since the ahci-platform code is common to lots of different drivers, I must have a name otherwise I could grab a reset which wasnt for me.
+See the revert of f0f56716fc3e ("ata: ahci-platform: add reset control support") for example.
 
-On 17.07.2018 13:49, Corentin Labbe wrote:
-> Since ahci_platform_put_resources() use target_pwrs after "devm_" freed
-> it, we cannot use devm_kcalloc for allocating target_pwrs.
-> 
-> This reverts commit bd0038b1b4f499d814d8f33a55b1df5ea6cf3b85.
-> 
-> Reported-by: Mikko Perttunen <mperttunen@nvidia.com>
-> Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
-> ---
->   drivers/ata/libahci_platform.c | 8 +++++++-
->   1 file changed, 7 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-> index fe8939e161ea..2ceebaf2ed56 100644
-> --- a/drivers/ata/libahci_platform.c
-> +++ b/drivers/ata/libahci_platform.c
-> @@ -271,6 +271,8 @@ static void ahci_platform_put_resources(struct device *dev, void *res)
->   	for (c = 0; c < hpriv->nports; c++)
->   		if (hpriv->target_pwrs && hpriv->target_pwrs[c])
->   			regulator_put(hpriv->target_pwrs[c]);
-> +
-> +	kfree(hpriv->target_pwrs);
->   }
->   
->   static int ahci_platform_get_phy(struct ahci_host_priv *hpriv, u32 port,
-> @@ -406,7 +408,11 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev)
->   		rc = -ENOMEM;
->   		goto err_out;
->   	}
-> -	hpriv->target_pwrs = devm_kcalloc(dev, hpriv->nports, sizeof(*hpriv->target_pwrs), GFP_KERNEL);
-> +	/*
-> +	 * We cannot use devm_ here, since ahci_platform_put_resources() uses
-> +	 * target_pwrs after devm_ have freed memory
-> +	 */
-> +	hpriv->target_pwrs = kcalloc(hpriv->nports, sizeof(*hpriv->target_pwrs), GFP_KERNEL);
->   	if (!hpriv->target_pwrs) {
->   		rc = -ENOMEM;
->   		goto err_out;
-> 
+So the code need to grab a name, and since this name could be used by other people I took the generic "ahci".
+
+In my case (R40), the reset is called sata, so I will change reset-names to "sata" in my next serie.
+
+Regards
