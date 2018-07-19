@@ -1,54 +1,43 @@
-From: Marcel Ziswiler <marcel.ziswiler@toradex.com>
-Subject: Re: [PATCH] Revert "ata: ahci_platform: convert kcalloc to
- devm_kcalloc"
-Date: Wed, 18 Jul 2018 06:30:32 +0000
-Message-ID: <1531895430.16896.2.camel@toradex.com>
-References: <1531824575-852-1-git-send-email-clabbe@baylibre.com>
-         <c8a963fa-70c8-ea79-3c30-69bf723fb764@nvidia.com>
+From: Simon Baatz <gmbnomis@gmail.com>
+Subject: Re: [PATCH v3 0/9] ata: ahci_platform: support allwinner R40 AHCI
+Date: Thu, 19 Jul 2018 02:16:42 +0200
+Message-ID: <20180719001642.GA29105@gandalf>
+References: <1531479786-4911-1-git-send-email-clabbe@baylibre.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <c8a963fa-70c8-ea79-3c30-69bf723fb764@nvidia.com>
-Content-Language: en-US
-Content-ID: <513E891F603AD547A6C70A1347175549@eurprd05.prod.outlook.com>
+Content-Disposition: inline
+In-Reply-To: <1531479786-4911-1-git-send-email-clabbe@baylibre.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "hdegoede@redhat.com" <hdegoede@redhat.com>, "tj@kernel.org" <tj@kernel.org>, "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>, "mperttunen@nvidia.com" <mperttunen@nvidia.com>, "clabbe@baylibre.com" <clabbe@baylibre.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Corentin Labbe <clabbe@baylibre.com>
+Cc: hdegoede@redhat.com, linux@armlinux.org.uk, mark.rutland@arm.com, maxime.ripard@free-electrons.com, robh+dt@kernel.org, tj@kernel.org, wens@csie.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-sunxi@googlegroups.com, thierry.reding@gmail.com, icenowy@aosc.io
 List-Id: linux-ide@vger.kernel.org
 
-T24gVHVlLCAyMDE4LTA3LTE3IGF0IDEzOjU3ICswMzAwLCBNaWtrbyBQZXJ0dHVuZW4gd3JvdGU6
-DQo+IFRoYW5rcyENCg0KWWVzLCB0aGF0IGZpeGVzIEFwYWxpcyBUSzEgY3Jhc2hpbmcgYXMgb2Yg
-bGF0ZSBhcyB3ZWxsLg0KDQo+IFJldmlld2VkLWJ5OiBNaWtrbyBQZXJ0dHVuZW4gPG1wZXJ0dHVu
-ZW5AbnZpZGlhLmNvbT4NCg0KVGVzdGVkLWJ5OiBNYXJjZWwgWmlzd2lsZXIgPG1hcmNlbC56aXN3
-aWxlckB0b3JhZGV4LmNvbT4NCg0KPiBPbiAxNy4wNy4yMDE4IDEzOjQ5LCBDb3JlbnRpbiBMYWJi
-ZSB3cm90ZToNCj4gPiBTaW5jZSBhaGNpX3BsYXRmb3JtX3B1dF9yZXNvdXJjZXMoKSB1c2UgdGFy
-Z2V0X3B3cnMgYWZ0ZXIgImRldm1fIg0KPiA+IGZyZWVkDQo+ID4gaXQsIHdlIGNhbm5vdCB1c2Ug
-ZGV2bV9rY2FsbG9jIGZvciBhbGxvY2F0aW5nIHRhcmdldF9wd3JzLg0KPiA+IA0KPiA+IFRoaXMg
-cmV2ZXJ0cyBjb21taXQgYmQwMDM4YjFiNGY0OTlkODE0ZDhmMzNhNTViMWRmNWVhNmNmM2I4NS4N
-Cj4gPiANCj4gPiBSZXBvcnRlZC1ieTogTWlra28gUGVydHR1bmVuIDxtcGVydHR1bmVuQG52aWRp
-YS5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTogQ29yZW50aW4gTGFiYmUgPGNsYWJiZUBiYXlsaWJy
-ZS5jb20+DQo+ID4gLS0tDQo+ID4gICBkcml2ZXJzL2F0YS9saWJhaGNpX3BsYXRmb3JtLmMgfCA4
-ICsrKysrKystDQo+ID4gICAxIGZpbGUgY2hhbmdlZCwgNyBpbnNlcnRpb25zKCspLCAxIGRlbGV0
-aW9uKC0pDQo+ID4gDQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvYXRhL2xpYmFoY2lfcGxhdGZv
-cm0uYw0KPiA+IGIvZHJpdmVycy9hdGEvbGliYWhjaV9wbGF0Zm9ybS5jDQo+ID4gaW5kZXggZmU4
-OTM5ZTE2MWVhLi4yY2VlYmFmMmVkNTYgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9hdGEvbGli
-YWhjaV9wbGF0Zm9ybS5jDQo+ID4gKysrIGIvZHJpdmVycy9hdGEvbGliYWhjaV9wbGF0Zm9ybS5j
-DQo+ID4gQEAgLTI3MSw2ICsyNzEsOCBAQCBzdGF0aWMgdm9pZCBhaGNpX3BsYXRmb3JtX3B1dF9y
-ZXNvdXJjZXMoc3RydWN0DQo+ID4gZGV2aWNlICpkZXYsIHZvaWQgKnJlcykNCj4gPiAgIAlmb3Ig
-KGMgPSAwOyBjIDwgaHByaXYtPm5wb3J0czsgYysrKQ0KPiA+ICAgCQlpZiAoaHByaXYtPnRhcmdl
-dF9wd3JzICYmIGhwcml2LT50YXJnZXRfcHdyc1tjXSkNCj4gPiAgIAkJCXJlZ3VsYXRvcl9wdXQo
-aHByaXYtPnRhcmdldF9wd3JzW2NdKTsNCj4gPiArDQo+ID4gKwlrZnJlZShocHJpdi0+dGFyZ2V0
-X3B3cnMpOw0KPiA+ICAgfQ0KPiA+ICAgDQo+ID4gICBzdGF0aWMgaW50IGFoY2lfcGxhdGZvcm1f
-Z2V0X3BoeShzdHJ1Y3QgYWhjaV9ob3N0X3ByaXYgKmhwcml2LA0KPiA+IHUzMiBwb3J0LA0KPiA+
-IEBAIC00MDYsNyArNDA4LDExIEBAIHN0cnVjdCBhaGNpX2hvc3RfcHJpdg0KPiA+ICphaGNpX3Bs
-YXRmb3JtX2dldF9yZXNvdXJjZXMoc3RydWN0IHBsYXRmb3JtX2RldmljZSAqcGRldikNCj4gPiAg
-IAkJcmMgPSAtRU5PTUVNOw0KPiA+ICAgCQlnb3RvIGVycl9vdXQ7DQo+ID4gICAJfQ0KPiA+IC0J
-aHByaXYtPnRhcmdldF9wd3JzID0gZGV2bV9rY2FsbG9jKGRldiwgaHByaXYtPm5wb3J0cywNCj4g
-PiBzaXplb2YoKmhwcml2LT50YXJnZXRfcHdycyksIEdGUF9LRVJORUwpOw0KPiA+ICsJLyoNCj4g
-PiArCSAqIFdlIGNhbm5vdCB1c2UgZGV2bV8gaGVyZSwgc2luY2UNCj4gPiBhaGNpX3BsYXRmb3Jt
-X3B1dF9yZXNvdXJjZXMoKSB1c2VzDQo+ID4gKwkgKiB0YXJnZXRfcHdycyBhZnRlciBkZXZtXyBo
-YXZlIGZyZWVkIG1lbW9yeQ0KPiA+ICsJICovDQo+ID4gKwlocHJpdi0+dGFyZ2V0X3B3cnMgPSBr
-Y2FsbG9jKGhwcml2LT5ucG9ydHMsIHNpemVvZigqaHByaXYtDQo+ID4gPnRhcmdldF9wd3JzKSwg
-R0ZQX0tFUk5FTCk7DQo+ID4gICAJaWYgKCFocHJpdi0+dGFyZ2V0X3B3cnMpIHsNCj4gPiAgIAkJ
-cmMgPSAtRU5PTUVNOw0KPiA+ICAgCQlnb3RvIGVycl9vdXQ7
+Hi Corentin,
+
+On Fri, Jul 13, 2018 at 11:02:57AM +0000, Corentin Labbe wrote:
+> Hello
+> 
+> This patchset add support for allwinner R40 AHCI controller.
+> 
+> This controller need two regulator and one reset which is unsupported
+> for the moment on ahci_platform.
+> 
+> So this patchset add support for reset and regulator for AHCI
+> controller.
+> It add also support for non-target regulator per SATA port.
+> 
+> The whole patchset is tested on sun8i-r40-bananapi-m2-ultra and
+> on sun7i-a20-cubieboard2 which doesnt have any of the ressources added
+> by this serie, so no regression should come with it.
+
+I tested on sun8i-v40-bananapi-m2-berry (with an adapted device
+tree).  I got it to work, but only if the U-Boot has support for AHCI
+already (from the Banana Pi M2 Ultra support).  With an U-Boot that
+hasn't, the system hangs at boot (probably when probing ahci-sunxi). 
+
+Did you test this case on the M2 Ultra board?  (I think SATA should
+work the same on both boards, but there may be subtle differences)
+
+Perhaps I did not apply all necessary patches. I took this series and
+your minor fixes series for ahci_platform. 
