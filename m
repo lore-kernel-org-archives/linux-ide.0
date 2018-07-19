@@ -1,43 +1,214 @@
-From: Simon Baatz <gmbnomis@gmail.com>
-Subject: Re: [PATCH v3 0/9] ata: ahci_platform: support allwinner R40 AHCI
-Date: Thu, 19 Jul 2018 02:16:42 +0200
-Message-ID: <20180719001642.GA29105@gandalf>
-References: <1531479786-4911-1-git-send-email-clabbe@baylibre.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [RFC PATCH v2 1/2] ata: ahci: Support state with min power and
+ Partial low power state
+Date: Thu, 19 Jul 2018 15:13:40 +0200
+Message-ID: <ca1a7c99-e579-d314-0f09-ceca1b560d4a@redhat.com>
+References: <20180712222712.65310-1-srinivas.pandruvada@linux.intel.com>
+ <20180712222712.65310-2-srinivas.pandruvada@linux.intel.com>
+ <fa324b27-4424-afa2-9723-10437ca29801@redhat.com>
+ <78b1a67902c44d3de3f5de87708993547c4a3f30.camel@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1531479786-4911-1-git-send-email-clabbe@baylibre.com>
+In-Reply-To: <78b1a67902c44d3de3f5de87708993547c4a3f30.camel@linux.intel.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Corentin Labbe <clabbe@baylibre.com>
-Cc: hdegoede@redhat.com, linux@armlinux.org.uk, mark.rutland@arm.com, maxime.ripard@free-electrons.com, robh+dt@kernel.org, tj@kernel.org, wens@csie.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-sunxi@googlegroups.com, thierry.reding@gmail.com, icenowy@aosc.io
+To: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan.cox@intel.com, Mario.Limonciello@dell.com, rjw@rjwysocki.net
 List-Id: linux-ide@vger.kernel.org
 
-Hi Corentin,
+Hi,
 
-On Fri, Jul 13, 2018 at 11:02:57AM +0000, Corentin Labbe wrote:
-> Hello
+On 13-07-18 17:06, Srinivas Pandruvada wrote:
+> Hi Hans,
+> On Fri, 2018-07-13 at 11:08 +0200, Hans de Goede wrote:
+>> Hi,
+>>
+>> On 13-07-18 00:27, Srinivas Pandruvada wrote:
+>>> Currently when min_power policy is selected, the partial low power
+>>> state
+>>> is not entered and link will try aggressively enter to only slumber
+>>> state.
+>>> Add a new policy which still enable DEVSLP but also try to enter
+>>> partial
+>>> low power state.
+>>>
+>>> For information the difference between partial and slumber
+>>> Partial – PHY logic is powered up, and in a reduced power state.
+>>> The link
+>>> PM exit latency to active state maximum is 10 ns.
+>>> Slumber – PHY logic is powered up, and in a reduced power state.
+>>> The link
+>>> PM exit latency to active state maximum is 10 ms.
+>>> Devslp – PHY logic is powered down. The link PM exit latency from
+>>> this
+>>> state to active state maximum is 20 ms, unless otherwise specified
+>>> by
+>>> DETO.
+>>>
+>>> Suggested-by: Hans de Goede <hdegoede@redhat.com>
+>>> Signed-off-by: Srinivas Pandruvada <srinivas.pandruvada@linux.intel
+>>> .com>
+>>
+>> You got this the wrong way around, when ALP
+> You mean ASP, as per spec in section 3.3.7 of the spec.
 > 
-> This patchset add support for allwinner R40 AHCI controller.
+>>   is not set you only get
+>> partial,
+> Not exactly.
+> It means that the system will try to enter aggressively  partial . I
+> have seen slumber residency also when this is reset. When "set" you
+> don't see any any partial. But when you reset you see both. So based on
+> idle duration link will transition from partial to slumber even if "not
+> set".
 > 
-> This controller need two regulator and one reset which is unsupported
-> for the moment on ahci_platform.
+>> the ALP bit is active high, not active low as your commit
+>> suggests.  So the name of the new policy should be
+>> min_power_without_asp.
 > 
-> So this patchset add support for reset and regulator for AHCI
-> controller.
-> It add also support for non-target regulator per SATA port.
 > 
-> The whole patchset is tested on sun8i-r40-bananapi-m2-ultra and
-> on sun7i-a20-cubieboard2 which doesnt have any of the ressources added
-> by this serie, so no regression should come with it.
+> The policy name I am suggesting is not the actual bit value of ASP (I
+> interpreted ASP as name for partial), but whether you will get to
+> partial or not. So I think it is better to rename to
+> "min_power_with_partial". User should not have to worry about the bit
+> value.
+> 
+> 
+> So user will see with the rename from "min_power_with_asp" to
+> "min_power_with_partial":
+> 
+> #cat /sys/class/scsi_host/host*/link_power_management_policy
+> min_power_with_partial
+> min_power_with_partial
+> min_power_with_partial
+> 
+> Output of test (You will see both partial and slumber)
+> 
+> SATA LPM Summary - Sampled: Residency (Percentage)
+> Disk Name          , Off (%), Active (%), Partial (%), Slumber (%), Devsleep (%), Other (%), Uninitialized (%)
+> ---------          , -------, ----------, -----------, -----------, ------------, ---------, -----------------
+> INTEL SSDSCKJF180A5, 0.0    , 4.6       , 13.1       , 30.3       , 52.0        , 0.0      , 0.0
+> 
+> SATA LPM Summary - Sampled: Counts
+> Disk Name          , Off, Active, Partial, Slumber, Devsleep, Other, Uninitialized
+> ---------          , ---, ------, -------, -------, --------, -----, -------------
+> INTEL SSDSCKJF180A5, 0  , 9     , 27     , 60     , 103     , 0    , 0
+> 
+> 
+> # cat /sys/class/scsi_host/host*/link_power_management_policy
+> min_power
+> min_power
+> min_power
+> 
+> Output of test (You will see only slumber)
+> 
+> SATA LPM Summary - Sampled: Residency (Percentage)
+> Disk Name          , Off (%), Active (%), Partial (%), Slumber (%), Devsleep (%), Other (%), Uninitialized (%)
+> ---------          , -------, ----------, -----------, -----------, ------------, ---------, -----------------
+> INTEL SSDSCKJF180A5, 0.0    , 6.8       , 0.0        , 53.8       , 39.3        , 0.0      , 0.0
+> 
+> SATA LPM Summary - Sampled: Counts
+> Disk Name          , Off, Active, Partial, Slumber, Devsleep, Other, Uninitialized
+> ---------          , ---, ------, -------, -------, --------, -----, -------------
+> INTEL SSDSCKJF180A5, 0  , 11    , 0      , 107    , 76      , 0    , 0
 
-I tested on sun8i-v40-bananapi-m2-berry (with an adapted device
-tree).  I got it to work, but only if the U-Boot has support for AHCI
-already (from the Banana Pi M2 Ultra support).  With an U-Boot that
-hasn't, the system hangs at boot (probably when probing ahci-sunxi). 
+Ah, I see thank you for clarifying that. Yes I agree that
+min_power_with_partial is the best name for the new policy.
 
-Did you test this case on the M2 Ultra board?  (I think SATA should
-work the same on both boards, but there may be subtle differences)
+For the next version do not forget to make the overriding of the
+lpm policy a per host thing, rather then directly overriding the
+global value as I mentioned in a previous mail.
 
-Perhaps I did not apply all necessary patches. I took this series and
-your minor fixes series for ahci_platform. 
+One other thing is to NOT override the policy if it is set on
+the kernel-commandline, which I believe will require setting the
+global value to -1 and only set another value if the global value
+is not -1 (using you settings where applicable and falling back
+to CONFIG_SATA_MOBILE_LPM_POLICY where not applicable).
+
+Regards,
+
+Hans
+
+
+>>> ---
+>>>    drivers/ata/libahci.c     | 6 +++++-
+>>>    drivers/ata/libata-core.c | 1 +
+>>>    drivers/ata/libata-scsi.c | 1 +
+>>>    include/linux/libata.h    | 3 ++-
+>>>    4 files changed, 9 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+>>> index 511fb67f363d..8cf2cf49537d 100644
+>>> --- a/drivers/ata/libahci.c
+>>> +++ b/drivers/ata/libahci.c
+>>> @@ -799,8 +799,11 @@ static int ahci_set_lpm(struct ata_link *link,
+>>> enum ata_lpm_policy policy,
+>>>    				return 0;
+>>>    		} else {
+>>>    			cmd |= PORT_CMD_ALPE;
+>>> +
+>>>    			if (policy == ATA_LPM_MIN_POWER)
+>>>    				cmd |= PORT_CMD_ASP;
+>>> +			else if (policy ==
+>>> ATA_LPM_MIN_POWER_WITH_ASP)
+>>> +				cmd &= ~PORT_CMD_ASP;
+>>>    
+>>>    			/* write out new cmd value */
+>>>    			writel(cmd, port_mmio + PORT_CMD);
+>>> @@ -811,7 +814,8 @@ static int ahci_set_lpm(struct ata_link *link,
+>>> enum ata_lpm_policy policy,
+>>>    	if ((hpriv->cap2 & HOST_CAP2_SDS) &&
+>>>    	    (hpriv->cap2 & HOST_CAP2_SADM) &&
+>>>    	    (link->device->flags & ATA_DFLAG_DEVSLP)) {
+>>> -		if (policy == ATA_LPM_MIN_POWER)
+>>> +		if (policy == ATA_LPM_MIN_POWER ||
+>>> +		    policy == ATA_LPM_MIN_POWER_WITH_ASP)
+>>>    			ahci_set_aggressive_devslp(ap, true);
+>>>    		else
+>>>    			ahci_set_aggressive_devslp(ap, false);
+>>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+>>> index cc71c63df381..245a59e6cb18 100644
+>>> --- a/drivers/ata/libata-core.c
+>>> +++ b/drivers/ata/libata-core.c
+>>> @@ -3970,6 +3970,7 @@ int sata_link_scr_lpm(struct ata_link *link,
+>>> enum ata_lpm_policy policy,
+>>>    		scontrol |= (0x6 << 8);
+>>>    		break;
+>>>    	case ATA_LPM_MED_POWER_WITH_DIPM:
+>>> +	case ATA_LPM_MIN_POWER_WITH_ASP:
+>>>    	case ATA_LPM_MIN_POWER:
+>>>    		if (ata_link_nr_enabled(link) > 0)
+>>>    			/* no restrictions on LPM transitions */
+>>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>>> index aad1b01447de..2d683db50ceb 100644
+>>> --- a/drivers/ata/libata-scsi.c
+>>> +++ b/drivers/ata/libata-scsi.c
+>>> @@ -110,6 +110,7 @@ static const char *ata_lpm_policy_names[] = {
+>>>    	[ATA_LPM_MAX_POWER]		= "max_performance",
+>>>    	[ATA_LPM_MED_POWER]		= "medium_power",
+>>>    	[ATA_LPM_MED_POWER_WITH_DIPM]	=
+>>> "med_power_with_dipm",
+>>> +	[ATA_LPM_MIN_POWER_WITH_ASP]	=
+>>> "min_power_with_asp",
+>>>    	[ATA_LPM_MIN_POWER]		= "min_power",
+>>>    };
+>>>    
+>>> diff --git a/include/linux/libata.h b/include/linux/libata.h
+>>> index 32f247cb5e9e..1e154f1f7e8f 100644
+>>> --- a/include/linux/libata.h
+>>> +++ b/include/linux/libata.h
+>>> @@ -523,7 +523,8 @@ enum ata_lpm_policy {
+>>>    	ATA_LPM_MAX_POWER,
+>>>    	ATA_LPM_MED_POWER,
+>>>    	ATA_LPM_MED_POWER_WITH_DIPM, /* Med power + DIPM as win
+>>> IRST does */
+>>> -	ATA_LPM_MIN_POWER,
+>>> +	ATA_LPM_MIN_POWER_WITH_ASP, /* Min Power + partial and
+>>> slumber */
+>>> +	ATA_LPM_MIN_POWER, /* Min power + no partial (slumber
+>>> only) */
+>>>    };
+>>>    
+>>>    enum ata_lpm_hints {
+>>>
