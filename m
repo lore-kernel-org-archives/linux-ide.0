@@ -1,10 +1,8 @@
 From: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
-Subject: [PATCH 2/2] ata: ahci: Enable DEVSLP by default on x86 with SLP_S0
-Date: Thu, 19 Jul 2018 17:01:56 -0700
-Message-ID: <20180720000156.77759-3-srinivas.pandruvada@linux.intel.com>
-References: <20180720000156.77759-1-srinivas.pandruvada@linux.intel.com>
+Subject: [UPDATE][PATCH 2/2] ata: ahci: Enable DEVSLP by default on x86 with SLP_S0
+Date: Fri, 20 Jul 2018 06:50:41 -0700
+Message-ID: <20180720135041.62265-1-srinivas.pandruvada@linux.intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180720000156.77759-1-srinivas.pandruvada@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: tj@kernel.org, hdegoede@redhat.com
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, alan.cox@intel.com, Mario.Limonciello@dell.com, rjw@rjwysocki.net, Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
@@ -37,19 +35,22 @@ is already validated.
 
 Signed-off-by: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
 ---
+Changes:
+Fix issue reported by lkp robot: Missed static.
+
  drivers/ata/ahci.c | 33 +++++++++++++++++++++++++++++----
  1 file changed, 29 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 738fb22978dd..72dc9edbc221 100644
+index 738fb22978dd..5258910a6383 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
 @@ -1550,6 +1550,34 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
  	return pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX);
  }
  
-+void ahci_update_initial_lpm_policy(struct ata_port *ap,
-+				    struct ahci_host_priv *hpriv)
++static void ahci_update_initial_lpm_policy(struct ata_port *ap,
++					   struct ahci_host_priv *hpriv)
 +{
 +	int policy = mobile_lpm_policy;
 +
