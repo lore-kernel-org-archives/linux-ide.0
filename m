@@ -1,49 +1,33 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 0/2] ata: libahci: devslp fixes
-Date: Mon, 30 Jul 2018 10:33:45 -0700
-Message-ID: <20180730173345.GI1206094@devbig004.ftw2.facebook.com>
-References: <20180702190154.6864-1-srinivas.pandruvada@linux.intel.com>
- <9712316ab62bef25953c523bce02e260a9ea40fe.camel@linux.intel.com>
- <20180730152256.GF1206094@devbig004.ftw2.facebook.com>
- <bf4b860c-6f82-4a3f-8b81-5f5c93f4389e@redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/6] block: Create scsi_sense.h for SCSI and ATAPI
+Date: Tue, 31 Jul 2018 00:53:05 -0700
+Message-ID: <20180731075305.GA16318@infradead.org>
+References: <CAGXu5jJsGWDsZNDJvUUqncSaAcvond_B_J7=BbvVW0X3r6Sxww@mail.gmail.com>
+ <aa150272-ffeb-fb8f-7303-0d9502cf9a71@kernel.dk>
+ <20180523142545.GA16248@infradead.org>
+ <24d36869-e037-042d-cb16-20a81b34eb76@kernel.dk>
+ <CAGXu5jJn=1Rz=D8VUwv_VoaGoLtaD=+tcPZxQxntweZoZwFa5Q@mail.gmail.com>
+ <f4eb4cd5-8976-3990-69b0-26cca054aa45@kernel.dk>
+ <20180524080015.GA2866@infradead.org>
+ <CAGXu5j+pRUWgny+h5ToVQXBP8nANjreVhnXjk5TVgy84ufNsRg@mail.gmail.com>
+ <20180708202315.GA2239@infradead.org>
+ <CAGXu5jKvUydp6nc3EUCyoGWbUUoiiASMFcBfVVOph1uc_oCNSg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <bf4b860c-6f82-4a3f-8b81-5f5c93f4389e@redhat.com>
+In-Reply-To: <CAGXu5jKvUydp6nc3EUCyoGWbUUoiiASMFcBfVVOph1uc_oCNSg@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, rjw@rjwysocki.net, alan.cox@intel.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-block <linux-block@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Jul 30, 2018 at 05:26:45PM +0200, Hans de Goede wrote:
-> Hi,
+On Mon, Jul 09, 2018 at 08:56:50AM -0700, Kees Cook wrote:
+> > Btw, did you plan to resend the series with this and your changes
+> > applied?
 > 
-> On 30-07-18 17:22, Tejun Heo wrote:
-> >On Mon, Jul 30, 2018 at 08:15:47AM -0700, Srinivas Pandruvada wrote:
-> >>Hi Tejan,
-> >>
-> >>On Mon, 2018-07-02 at 12:01 -0700, Srinivas Pandruvada wrote:
-> >>>Some minor fixes to be able to correctly set devslp register
-> >>>to optimize power.
-> >>>
-> >>>Srinivas Pandruvada (2):
-> >>>   ata: libahci: Correct setting of DEVSLP register
-> >>>   ata: libahci: Allow reconfigure of DEVSLP register
-> >>>
-> >>Are you applying this series?
-> >
-> >I was waiting for Hans's reviews.  Hans, what do you think?
+> Yeah, I've gotten distracted. I'll try to get to it in the next few days.
 > 
-> Ah I missed that this was another series. With the caveat that
-> I do not really know that much about devslp, both patches
-> seem sensible to me, so both are:
-> 
-> Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+> Thanks for the reminder!
 
-Applied 1-2 to libata/for-4.19.
-
-Thanks.
-
--- 
-tejun
+Another little reminder.  I'd hate to miss it for 4.19.
