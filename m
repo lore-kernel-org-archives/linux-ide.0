@@ -1,28 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 8/9] libata-scsi: Move sense buffers onto stack
-Date: Wed, 1 Aug 2018 08:45:02 -0700
-Message-ID: <20180801154502.GO1206094@devbig004.ftw2.facebook.com>
-References: <20180731195155.46664-1-keescook@chromium.org>
- <20180731195155.46664-9-keescook@chromium.org>
+From: Kees Cook <keescook@chromium.org>
+Subject: Re: [PATCH v2 3/9] scsi: build scsi_common.o for all scsi passthrough
+ request users
+Date: Wed, 1 Aug 2018 12:50:26 -0700
+Message-ID: <CAGXu5jK2kLiOGTbq2TCBp97c2KZsZKPDNLSWDWY4r+RQpAP4fQ@mail.gmail.com>
+References: <20180731195155.46664-1-keescook@chromium.org> <20180731195155.46664-4-keescook@chromium.org>
+ <a5b545eade66f95c9a9ecf37676306a8d395187c.camel@wdc.com> <20180731201225.GA1989@infradead.org>
+ <6c04fc087bae896bf00b94184def3d7697a22d6c.camel@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20180731195155.46664-9-keescook@chromium.org>
+In-Reply-To: <6c04fc087bae896bf00b94184def3d7697a22d6c.camel@wdc.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Thomas Gleixner <tglx@linutronix.de>, Philippe Ombredanne <pombredanne@nexb.com>, Stephen Boyd <sboyd@codeaurora.org>, Cyrille Pitchen <cyrille.pitchen@free-electrons.com>, Juergen Gross <jgross@suse.com>, Viresh Kumar <viresh.kumar@linaro.org>, Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>, Sagar
+To: Bart Van Assche <Bart.VanAssche@wdc.com>
+Cc: "hch@infradead.org" <hch@infradead.org>, "david.kershner@unisys.com" <david.kershner@unisys.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "rdunlap@infradead.org" <rdunlap@infradead.org>, "u.kleine-koenig@pengutronix.de" <u.kleine-koenig@pengutronix.de>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "manoj@linux.vnet.ibm.com" <manoj@linux.vnet.ibm.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "jgross@suse.com" <jgross@suse.com>, "cyrille.pitchen@free-electrons.com" <cyrille.pitchen@free-electrons.com>, "sdharia@codeaurora.org" <sdharia@codeaurora.org>, "viresh.kumar@linaro.org" <viresh.kumar@linaro.org>, linux-scs
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Jul 31, 2018 at 12:51:53PM -0700, Kees Cook wrote:
-> To support future compile-time sizeof() checks that will be able to
-> validate the length of sense buffers, this removes the only dynamically
-> allocated sense buffers in the tree by putting the 96 byte sense buffers
-> on the stack.
+On Tue, Jul 31, 2018 at 1:18 PM, Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
+> On Tue, 2018-07-31 at 13:12 -0700, hch@infradead.org wrote:
+>> It shouldn't.  All these are built into scsi_mod.o, which is only built
+>> when CONFIG_SCSI is set.  Under what circumstances do you see them built?
+>
+> Although I think you are right, I still prefer that the scsi_common.c file
+> would be moved to a new directory. That will prevent confusion later on for
+> people who want to add additional code. This patch makes it nontrivial to
+> figure out which code is built when SCSI target functionality is enabled but
+> SCSI initiator functionality is not selected. I think moving scsi_common.c
+> into a new directory would make it much easier to figure out which code is
+> built depending on the kernel configuration.
 
-Acked-by: Tejun Heo <tj@kernel.org>
+While I don't disagree with you, this series is the result of several
+back-and-forth discussions where that option was seemingly rejected.
+Christoph's approach seemed to satisfy Jens. If you can convince them,
+sure! I'll do whatever the consensus is. :)
 
-Thanks.
+-Kees
 
 -- 
-tejun
+Kees Cook
+Pixel Security
