@@ -1,26 +1,28 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH v2 6/9] ide-cd: Remove redundant sense buffer
-Date: Tue, 31 Jul 2018 14:30:15 -0700 (PDT)
-Message-ID: <20180731.143015.1326547191404152411.davem@davemloft.net>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 5/9] block: Switch struct packet_command to use struct
+ scsi_sense_hdr
+Date: Wed, 1 Aug 2018 01:22:20 -0700
+Message-ID: <20180801082220.GA26378@infradead.org>
 References: <20180731195155.46664-1-keescook@chromium.org>
-        <20180731195155.46664-7-keescook@chromium.org>
+ <20180731195155.46664-6-keescook@chromium.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180731195155.46664-7-keescook@chromium.org>
+Content-Disposition: inline
+In-Reply-To: <20180731195155.46664-6-keescook@chromium.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: keescook@chromium.org
-Cc: axboe@kernel.dk, hch@infradead.org, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, tj@kernel.org, bp@alien8.de, manoj@linux.vnet.ibm.com, mrochs@linux.vnet.ibm.com, ukrishn@linux.vnet.ibm.com, nab@linux-iscsi.org, tglx@linutronix.de, pombredanne@nexb.com, sboyd@codeaurora.org, cyrille.pitchen@free-electrons.com, jgross@suse.com, viresh.kumar@linaro.org, u.kleine-koenig@pengutronix.de, sdharia@codeaurora.org, rdunlap@infradead.org, vinod.koul@intel.com, david.kershner@unisys.com, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Thomas Gleixner <tglx@linutronix.de>, Philippe Ombredanne <pombredanne@nexb.com>, Stephen Boyd <sboyd@codeaurora.org>, Cyrille Pitchen <cyrille.pitchen@free-electrons.com>, Juergen Gross <jgross@suse.com>, Viresh Kumar <viresh.kumar@linaro.org>, Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutro>
 List-Id: linux-ide@vger.kernel.org
 
-From: Kees Cook <keescook@chromium.org>
-Date: Tue, 31 Jul 2018 12:51:51 -0700
+On Tue, Jul 31, 2018 at 12:51:50PM -0700, Kees Cook wrote:
+> There is a lot of needless struct request_sense usage in the CDROM
+> code. These can all be struct scsi_sense_hdr instead, to avoid any
+> confusion over their respective structure sizes. This patch is a lot
+> of noise changing "sense" to "sshdr", but the final code is more
+> readable to distinguish between "sense" meaning "struct request_sense"
+> and "sshdr" meaning "struct scsi_sense_hdr".
 
-> This is already able to process the sense buffer, so remove the redundant
-> parsing during the failure path. This also fixes any possible stale values
-> since the prior code did not check the sense length.
-> 
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+Looks good,
 
-Acked-by: David S. Miller <davem@davemloft.net>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
