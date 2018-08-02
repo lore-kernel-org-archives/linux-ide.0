@@ -1,40 +1,136 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH v2 3/9] scsi: build scsi_common.o for all scsi passthrough
- request users
-Date: Wed, 1 Aug 2018 12:50:26 -0700
-Message-ID: <CAGXu5jK2kLiOGTbq2TCBp97c2KZsZKPDNLSWDWY4r+RQpAP4fQ@mail.gmail.com>
-References: <20180731195155.46664-1-keescook@chromium.org> <20180731195155.46664-4-keescook@chromium.org>
- <a5b545eade66f95c9a9ecf37676306a8d395187c.camel@wdc.com> <20180731201225.GA1989@infradead.org>
- <6c04fc087bae896bf00b94184def3d7697a22d6c.camel@wdc.com>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: linux-next: Tree for Aug 1
+Date: Thu, 2 Aug 2018 19:35:12 +0800
+Message-ID: <CACVXFVMT7UwWHPQ6K-eNWZJOoZ77==Ki7zmX5UtDz4ZQFFB0Jw@mail.gmail.com>
+References: <20180801175852.36549130@canb.auug.org.au> <20180801224813.GA13074@roeck-us.net>
+ <1533163965.3158.1.camel@HansenPartnership.com> <20180801234727.GA3762@roeck-us.net>
+ <CACVXFVMrzLRP5Q=cwZGnqeUeyODL3Pq9jMkT7czZouK9510fUA@mail.gmail.com>
+ <1533168205.3158.12.camel@HansenPartnership.com> <171b2cdc-2e74-2b3c-e5f5-c656a196601a@roeck-us.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <6c04fc087bae896bf00b94184def3d7697a22d6c.camel@wdc.com>
+In-Reply-To: <171b2cdc-2e74-2b3c-e5f5-c656a196601a@roeck-us.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@wdc.com>
-Cc: "hch@infradead.org" <hch@infradead.org>, "david.kershner@unisys.com" <david.kershner@unisys.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "rdunlap@infradead.org" <rdunlap@infradead.org>, "u.kleine-koenig@pengutronix.de" <u.kleine-koenig@pengutronix.de>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "hch@lst.de" <hch@lst.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "manoj@linux.vnet.ibm.com" <manoj@linux.vnet.ibm.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "jgross@suse.com" <jgross@suse.com>, "cyrille.pitchen@free-electrons.com" <cyrille.pitchen@free-electrons.com>, "sdharia@codeaurora.org" <sdharia@codeaurora.org>, "viresh.kumar@linaro.org" <viresh.kumar@linaro.org>, linux-scs
+To: Guenter Roeck <linux@roeck-us.net>, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Linux-Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Ming Lei <ming.lei@redhat.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Jul 31, 2018 at 1:18 PM, Bart Van Assche <Bart.VanAssche@wdc.com> wrote:
-> On Tue, 2018-07-31 at 13:12 -0700, hch@infradead.org wrote:
->> It shouldn't.  All these are built into scsi_mod.o, which is only built
->> when CONFIG_SCSI is set.  Under what circumstances do you see them built?
+On Thu, Aug 2, 2018 at 12:58 PM, Guenter Roeck <linux@roeck-us.net> wrote:
+> On 08/01/2018 05:03 PM, James Bottomley wrote:
+>>
+>> On Thu, 2018-08-02 at 07:57 +0800, Ming Lei wrote:
+>>>
+>>> On Thu, Aug 2, 2018 at 7:47 AM, Guenter Roeck <linux@roeck-us.net>
+>>> wrote:
+>>>>
+>>>> On Wed, Aug 01, 2018 at 03:52:45PM -0700, James Bottomley wrote:
+>>>>>
+>>>>> On Wed, 2018-08-01 at 15:48 -0700, Guenter Roeck wrote:
+>>>>>>
+>>>>>> On Wed, Aug 01, 2018 at 05:58:52PM +1000, Stephen Rothwell
+>>>>>> wrote:
+>>>>>>>
+>>>>>>> Hi all,
+>>>>>>>
+>>>>>>> Changes since 20180731:
+>>>>>>>
+>>>>>>> The pci tree gained a conflict against the pci-current tree.
+>>>>>>>
+>>>>>>> The net-next tree gained a conflict against the bpf tree.
+>>>>>>>
+>>>>>>> The block tree lost its build failure.
+>>>>>>>
+>>>>>>> The staging tree still had its build failure due to an
+>>>>>>> interaction
+>>>>>>> with
+>>>>>>> the vfs tree for which I disabled CONFIG_EROFS_FS.
+>>>>>>>
+>>>>>>> The kspp tree lost its build failure.
+>>>>>>>
+>>>>>>> Non-merge commits (relative to Linus' tree): 10070
+>>>>>>>   9137 files changed, 417605 insertions(+), 179996 deletions(-
+>>>>>>> )
+>>>>>>>
+>>>>>>> -----------------------------------------------------------
+>>>>>>> ------
+>>>>>>> -----------
+>>>>>>>
+>>>>>>
+>>>>>> The widespread kernel hang issues are still seen. I managed
+>>>>>> to bisect it after working around the transient build failures.
+>>>>>> Bisect log is attached below. Unfortunately, it doesn't help
+>>>>>> much.
+>>>>>> The culprit is reported as:
+>>>>>>
+>>>>>> 2d542828c5e9 Merge remote-tracking branch 'scsi/for-next'
+>>>>>>
+>>>>>> The preceding merge,
+>>>>>>
+>>>>>> 453f1d821165 Merge remote-tracking branch 'cgroup/for-next'
+>>>>>>
+>>>>>> checks out fine, as does the tip of scsi-next (commit
+>>>>>> 103c7b7e0184,
+>>>>>> "Merge branch 'misc' into for-next"). No idea how to proceed.
+>>>>>
+>>>>>
+>>>>> This sounds like you may have a problem with this patch:
+>>>>>
+>>>>>      commit d5038a13eca72fb216c07eb717169092e92284f1
+>>>>>       Author: Johannes Thumshirn <jthumshirn@suse.de>
+>>>>>       Date:   Wed Jul 4 10:53:56 2018 +0200
+>>>>>
+>>>>>           scsi: core: switch to scsi-mq by default
+>>>>>
+>>>>> To verify, boot with the additional kernel parameter
+>>>>>
+>>>>> scsi_mod.use_blk_mq=0
+>>>>>
+>>>>> Which will reverse the effect of the above patch.
+>>>>>
+>>>>
+>>>> Yes, that fixes the problem.
+>>>
+>>>
+>>> That may not the root cause, given this issue is only started to
+>>> see from next-20180731, but d5038a13eca7 (scsi: core: switch to
+>>> scsi-mq by default)
+>>> has been in -next for quite a while.
+>>>
+>>> Seems something new causes this issue.
+>>
+>>
+>> Read my other email about how to find this.
+>>
+>> https://marc.info/?l=linux-scsi&m=153316446223676
+>>
+>> Now that we've confirmed the issue, Gunter, could you attempt to bisect
+>> it as that email describes?
+>>
 >
-> Although I think you are right, I still prefer that the scsi_common.c file
-> would be moved to a new directory. That will prevent confusion later on for
-> people who want to add additional code. This patch makes it nontrivial to
-> figure out which code is built when SCSI target functionality is enabled but
-> SCSI initiator functionality is not selected. I think moving scsi_common.c
-> into a new directory would make it much easier to figure out which code is
-> built depending on the kernel configuration.
+> So, I am more and more baffled.
+>
+> I ran another round of bisect, this time each test executing twice,
+> once with "scsi_mod.use_blk_mq=1" and once with "scsi_mod.use_blk_mq=0",
+> requiring both to pass. Bisect still points to the merge as culprit.
+>
+> Ok, one step further: Actually _revert_ commit d5038a13eca72 before running
+> each test, meaning the default is use_blk_mq=0. Still run both tests.
+> Bisect _still_ points to the merge of scsi-next as culprit.
+>
+> So, to me it looks like the problem is triggered by _something_ in
+> scsi-next, combined with _something_ in -next prior to the merge,
+> not specifically associated with use_blk_mq=[0|1] or d5038a13eca72,
+> but to a combination of some patch in scsi-next and some other patch.
 
-While I don't disagree with you, this series is the result of several
-back-and-forth discussions where that option was seemingly rejected.
-Christoph's approach seemed to satisfy Jens. If you can convince them,
-sure! I'll do whatever the consensus is. :)
+Today I am a bit busy, and not trace it much.
 
--Kees
+So far, I found the code hangs in scsi_test_unit_ready()
+<-get_capabilities()<-sr_probe(), and scsi_queue_rq()/ata_scsi_queuecmd()
+has queued the command successfully, but never completed.
 
--- 
-Kees Cook
-Pixel Security
+Also tried to revert commits merged to ata tree on 30th, 31th,
+but no difference.
+
+
+Thanks,
+Ming Lei
