@@ -1,50 +1,81 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH v2 0/9] block: Consolidate scsi sense buffer usage
-Date: Thu, 2 Aug 2018 14:56:49 -0700
-Message-ID: <CAGXu5jLKk_9rw5etROW4ucwK+ZR7YfC_zq+6AwtxK4=S3Y7sOw@mail.gmail.com>
-References: <20180731195155.46664-1-keescook@chromium.org> <50e0f257-60d9-73c8-b4ac-a93c7bdccb57@kernel.dk>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v2 4/9] target: don't depend on SCSI
+Date: Mon, 6 Aug 2018 16:38:52 -0700
+Message-ID: <111cb1b0-24ba-bcb2-53d5-9665d2b4c421@infradead.org>
+References: <20180731195155.46664-1-keescook@chromium.org>
+ <20180731195155.46664-5-keescook@chromium.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <50e0f257-60d9-73c8-b4ac-a93c7bdccb57@kernel.dk>
+In-Reply-To: <20180731195155.46664-5-keescook@chromium.org>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Thomas Gleixner <tglx@linutronix.de>, Philippe Ombredanne <pombredanne@nexb.com>, Stephen Boyd <sboyd@codeaurora.org>, Cyrille Pitchen <cyrille.pitchen@free-electrons.com>, Juergen Gross <jgross@suse.com>, Viresh Kumar <viresh.kumar@linaro.org>, =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, Sagar Dharia <sdharia>
+To: Kees Cook <keescook@chromium.org>, Jens Axboe <axboe@kernel.dk>
+Cc: Christoph Hellwig <hch@lst.de>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Thomas Gleixner <tglx@linutronix.de>, Philippe Ombredanne <pombredanne@nexb.com>, Stephen Boyd <sboyd@codeaurora.org>, Cyrille Pitchen <cyrille.pitchen@free-electrons.com>, Juergen Gross <jgross@suse.com>, Viresh Kumar <viresh.kumar@linaro.org>, =?UTF-8?Q?Uwe_Kleine-K=c3=b6nig?= <u.kleine-koenig@pengutronix.de>
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Aug 2, 2018 at 2:24 PM, Jens Axboe <axboe@kernel.dk> wrote:
-> On 7/31/18 1:51 PM, Kees Cook wrote:
->> This is a follow-up to commit f7068114d45e ("sr: pass down correctly
->> sized SCSI sense buffer") which further cleans up and removes needless
->> sense character array buffers and "struct request_sense" usage in favor
->> of the common "struct scsi_sense_hdr".
->>
->> First, drop a bunch of unused sense buffers:
->>  [PATCH 1/9] ide-cd: Drop unused sense buffers
->>  [PATCH 2/9] scsi: cxlflash: Drop unused sense buffers
->>
->> Next, allow the sense buffer to be usable outside SCSI tree:
->>  [PATCH 3/9] scsi: build scsi_common.o for all scsi passthrough request users
->>  [PATCH 4/9] target: don't depend on SCSI
->>
->> Then move all request_sense usage to scsi_sense_hdr:
->>  [PATCH 5/9] block: Switch struct packet_command to use struct scsi_sense_hdr
->>
->> And do some further cleanups for scsi_sense_hdr now that we can:
->>  [PATCH 6/9] ide-cd: Remove redundant sense buffer
->>  [PATCH 7/9] cdrom: Use struct scsi_sense_hdr internally
->>
->> Finally add a build-time check to make sure we don't pass bad buffer sizes:
->>  [PATCH 8/9] libata-scsi: Move sense buffers onto stack
->>  [PATCH 9/9] scsi: Check sense buffer size at build time
->
-> Thanks Kees, applied for 4.19. Note that I hand applied patch #5 and #9,
-> since they did not apply directly to the block tree.
+On 07/31/2018 12:51 PM, Kees Cook wrote:
+> From: Christoph Hellwig <hch@lst.de>
+> 
+> The core target code only needs code from scsi_common.c, which is now
+> separately selectable.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>  drivers/target/Kconfig | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/Kconfig b/drivers/target/Kconfig
+> index 4c44d7bed01a..cb6f32ce7de8 100644
+> --- a/drivers/target/Kconfig
+> +++ b/drivers/target/Kconfig
+> @@ -1,10 +1,10 @@
+>  
+>  menuconfig TARGET_CORE
+>  	tristate "Generic Target Core Mod (TCM) and ConfigFS Infrastructure"
+> -	depends on SCSI && BLOCK
+> +	depends on BLOCK
+>  	select CONFIGFS_FS
+>  	select CRC_T10DIF
+> -	select BLK_SCSI_REQUEST # only for scsi_command_size_tbl..
+> +	select BLK_SCSI_REQUEST
+>  	select SGL_ALLOC
+>  	default n
+>  	help
+> @@ -29,6 +29,7 @@ config TCM_FILEIO
+>  
+>  config TCM_PSCSI
+>  	tristate "TCM/pSCSI Subsystem Plugin for Linux/SCSI"
+> +	depends on SCSI
+>  	help
+>  	Say Y here to enable the TCM/pSCSI subsystem plugin for non-buffered
+>  	passthrough access to Linux/SCSI device
+> 
 
-Thanks; I appreciate that. I think I was based on v4.18-rc2 or something.
+Hi,
 
--Kees
+This patch causes build errors in linux-next-20180806 when SCSI=m and
+LOOPBACK_TARGET=y.
+
+drivers/target/loopback/tcm_loop.o: In function `tcm_loop_port_link':
+tcm_loop.c:(.text+0x445): undefined reference to `scsi_add_device'
+drivers/target/loopback/tcm_loop.o: In function `tcm_loop_driver_remove':
+tcm_loop.c:(.text+0x55c): undefined reference to `scsi_remove_host'
+tcm_loop.c:(.text+0x564): undefined reference to `scsi_host_put'
+drivers/target/loopback/tcm_loop.o: In function `tcm_loop_submission_work':
+tcm_loop.c:(.text+0x7c4): undefined reference to `scmd_printk'
+drivers/target/loopback/tcm_loop.o: In function `tcm_loop_driver_probe':
+tcm_loop.c:(.text+0x7fb): undefined reference to `scsi_host_alloc'
+tcm_loop.c:(.text+0x85b): undefined reference to `scsi_add_host_with_dma'
+tcm_loop.c:(.text+0x896): undefined reference to `scsi_host_put'
+drivers/target/loopback/tcm_loop.o: In function `tcm_loop_port_unlink':
+tcm_loop.c:(.text+0x962): undefined reference to `scsi_device_lookup'
+tcm_loop.c:(.text+0x972): undefined reference to `scsi_remove_device'
+tcm_loop.c:(.text+0x97a): undefined reference to `scsi_device_put'
+drivers/target/loopback/tcm_loop.o:(.data+0x210): undefined reference to `scsi_change_queue_depth'
+
 
 -- 
-Kees Cook
-Pixel Security
+~Randy
