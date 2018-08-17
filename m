@@ -1,29 +1,35 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] ide-tape: remove redundant variable buffer_size
-Date: Mon, 13 Aug 2018 11:50:38 -0700 (PDT)
-Message-ID: <20180813.115038.2070003569481963697.davem@davemloft.net>
-References: <20180702100026.16007-1-colin.king@canonical.com>
+From: zhong jiang <zhongjiang@huawei.com>
+Subject: [PATCH] ide: Use NULL to compare with pointer-typed value rather than 0
+Date: Fri, 17 Aug 2018 21:23:47 +0800
+Message-ID: <1534512227-39484-1-git-send-email-zhongjiang@huawei.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180702100026.16007-1-colin.king@canonical.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: colin.king@canonical.com
-Cc: linux-ide@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+To: davem@davemloft.net
+Cc: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-From: Colin King <colin.king@canonical.com>
-Date: Mon,  2 Jul 2018 11:00:26 +0100
+We should use NULL to compare with pointer-typed value rather than
+0. The issue is detected with the help of Coccinelle.
 
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> Variable buffer_size is being assigned but is never used hence it is
-> redundant and can be removed.
-> 
-> Cleans up clang warning:
-> warning: variable 'buffer_size' set but not used [-Wunused-but-set-variable]
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: zhong jiang <zhongjiang@huawei.com>
+---
+ drivers/ide/pmac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Applied.
+diff --git a/drivers/ide/pmac.c b/drivers/ide/pmac.c
+index c5b902b..673734b 100644
+--- a/drivers/ide/pmac.c
++++ b/drivers/ide/pmac.c
+@@ -1682,7 +1682,7 @@ static int pmac_ide_init_dma(ide_hwif_t *hwif, const struct ide_port_info *d)
+ 	/* We won't need pci_dev if we switch to generic consistent
+ 	 * DMA routines ...
+ 	 */
+-	if (dev == NULL || pmif->dma_regs == 0)
++	if (dev == NULL || pmif->dma_regs == NULL)
+ 		return -ENODEV;
+ 	/*
+ 	 * Allocate space for the DBDMA commands.
+-- 
+1.7.12.4
