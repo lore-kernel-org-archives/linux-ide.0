@@ -1,48 +1,38 @@
-From: David Miller <davem@davemloft.net>
-Subject: [GIT] IDE
-Date: Tue, 21 Aug 2018 22:17:50 -0700 (PDT)
-Message-ID: <20180821.221750.2043917894955366743.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+Subject: [PATCH 11/14] ata: ahci_st: add second argument of ahci_platform_get_resources()
+Date: Wed, 22 Aug 2018 16:37:07 +0900
+Message-ID: <1534923430-9692-12-git-send-email-hayashi.kunihiko@socionext.com>
+References: <1534923430-9692-1-git-send-email-hayashi.kunihiko@socionext.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1534923430-9692-1-git-send-email-hayashi.kunihiko@socionext.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, linux-ide@vger.kernel.org
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, Kunihiko Hayashi <hayashi.kunihiko@socionext.com>, Patrice Chotard <patrice.chotard@st.com>
 List-Id: linux-ide@vger.kernel.org
 
+Adding a flag to indicate whether acqiring the optional resources
+as the second argument of ahci_platform_get_resources(),
+add the argument as initial value 0.
 
-1) Remove redundant variables, from Colin Ian King.
+Cc: Hans de Goede <hdegoede@redhat.com>
+Cc: Patrice Chotard <patrice.chotard@st.com>
+Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+---
+ drivers/ata/ahci_st.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-2) Expected switch fall-through annotations, from Gustavo A. R. Silva
-
-Please pull, thanks!
-
-The following changes since commit 94710cac0ef4ee177a63b5227664b38c95bbf703:
-
-  Linux 4.18 (2018-08-12 13:41:04 -0700)
-
-are available in the Git repository at:
-
-  gitolite@ra.kernel.org:/pub/scm/linux/kernel/git/davem/ide.git 
-
-for you to fetch changes up to a2eed33dcdb7663170b01f05dd8d0a3323ffe4b3:
-
-  ide: mark expected switch fall-throughs (2018-08-13 11:48:54 -0700)
-
-----------------------------------------------------------------
-Colin Ian King (2):
-      ide: remove redundant variables queue_run_ms and left
-      ide-tape: remove redundant variable buffer_size
-
-Gustavo A. R. Silva (1):
-      ide: mark expected switch fall-throughs
-
- drivers/ide/hpt366.c       | 5 +++--
- drivers/ide/ide-floppy.c   | 1 +
- drivers/ide/ide-io.c       | 4 ----
- drivers/ide/ide-probe.c    | 1 +
- drivers/ide/ide-tape.c     | 2 --
- drivers/ide/ide-taskfile.c | 3 ++-
- drivers/ide/sis5513.c      | 1 +
- 7 files changed, 8 insertions(+), 9 deletions(-)
+diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
+index bc345f2..21c5c44 100644
+--- a/drivers/ata/ahci_st.c
++++ b/drivers/ata/ahci_st.c
+@@ -156,7 +156,7 @@ static int st_ahci_probe(struct platform_device *pdev)
+ 	if (!drv_data)
+ 		return -ENOMEM;
+ 
+-	hpriv = ahci_platform_get_resources(pdev);
++	hpriv = ahci_platform_get_resources(pdev, 0);
+ 	if (IS_ERR(hpriv))
+ 		return PTR_ERR(hpriv);
+ 	hpriv->plat_data = drv_data;
+-- 
+2.7.4
