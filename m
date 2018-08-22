@@ -1,7 +1,7 @@
 From: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Subject: [PATCH 14/14] ata: ahci_xgene: add second argument of ahci_platform_get_resources()
-Date: Wed, 22 Aug 2018 16:37:10 +0900
-Message-ID: <1534923430-9692-15-git-send-email-hayashi.kunihiko@socionext.com>
+Subject: [PATCH 09/14] ata: ahci_qoriq: add second argument of ahci_platform_get_resources()
+Date: Wed, 22 Aug 2018 16:37:05 +0900
+Message-ID: <1534923430-9692-10-git-send-email-hayashi.kunihiko@socionext.com>
 References: <1534923430-9692-1-git-send-email-hayashi.kunihiko@socionext.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1534923430-9692-1-git-send-email-hayashi.kunihiko@socionext.com>
@@ -17,15 +17,15 @@ add the argument as initial value 0.
 Cc: Hans de Goede <hdegoede@redhat.com>
 Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
 ---
- drivers/ata/ahci_xgene.c | 2 +-
+ drivers/ata/ahci_qoriq.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index ad58da7..7e157e1 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -759,7 +759,7 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 					      &xgene_ahci_v2_port_info };
+diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
+index cfdef4d..ce59253 100644
+--- a/drivers/ata/ahci_qoriq.c
++++ b/drivers/ata/ahci_qoriq.c
+@@ -250,7 +250,7 @@ static int ahci_qoriq_probe(struct platform_device *pdev)
+ 	struct resource *res;
  	int rc;
  
 -	hpriv = ahci_platform_get_resources(pdev);
