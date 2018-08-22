@@ -1,96 +1,60 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH 00/14] ata: ahci-platform: add reset control support
- except for existing drivers
-Date: Wed, 22 Aug 2018 11:27:18 +0200
-Message-ID: <cd35711a-5308-519d-7064-b82220a36d57@redhat.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 01/14] ata: ahci-platform: add reset control support and
+ the flag to specify using reset
+Date: Wed, 22 Aug 2018 12:34:30 +0300
+Message-ID: <1d221236-636e-962e-2e4e-3db228689c5e@cogentembedded.com>
 References: <1534923430-9692-1-git-send-email-hayashi.kunihiko@socionext.com>
+ <1534923430-9692-2-git-send-email-hayashi.kunihiko@socionext.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1534923430-9692-1-git-send-email-hayashi.kunihiko@socionext.com>
+In-Reply-To: <1534923430-9692-2-git-send-email-hayashi.kunihiko@socionext.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, linux-ide@vger.kernel.org
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>, Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, linux-ide@vger.kernel.org
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, Thierry Reding <thierry.reding@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hi,
+Hello!
 
-On 22-08-18 09:36, Kunihiko Hayashi wrote:
-> Add support to get and control a list of resets for the device, and
-> add the flag indicating whether to use the reset. Existing drivers
-> set 0 to this flags.
+On 8/22/2018 10:36 AM, Kunihiko Hayashi wrote:
+
+> Add support to get and control a list of resets for the device
+> as optional and shared. These resets must be kept de-asserted until
+> the device is enabled.
 > 
-> This series solves the issue of the previous patch [1] that was already
-> reverted [2].
-> [1] https://www.spinics.net/lists/linux-ide/msg55299.html
-> [2] https://www.spinics.net/lists/linux-ide/msg55379.html
+> This is specified as shared because some SoCs like UniPhier series
+> have common reset controls with all ahci controller instances.
 > 
-> Kunihiko Hayashi (14):
->    ata: ahci-platform: add reset control support and the flag to specify
->      using reset
->    ata: ahci_brcm: add second argument of ahci_platform_get_resources()
->    ata: ahci_ceva: add second argument of ahci_platform_get_resources()
->    ata: ahci_da850: add second argument of ahci_platform_get_resources()
->    ata: ahci_dm816: add second argument of ahci_platform_get_resources()
->    ata: ahci_imx: add second argument of ahci_platform_get_resources()
->    ata: ahci_brcm: add second argument of ahci_platform_get_resources()
->    ata: ahci_mvebu: add second argument of ahci_platform_get_resources()
->    ata: ahci_qoriq: add second argument of ahci_platform_get_resources()
->    ata: ahci_seattle: add second argument of
->      ahci_platform_get_resources()
->    ata: ahci_st: add second argument of ahci_platform_get_resources()
->    ata: ahci_sunxi: add second argument of ahci_platform_get_resources()
->    ata: ahci_tegra: add second argument of ahci_platform_get_resources()
->    ata: ahci_xgene: add second argument of ahci_platform_get_resources()
-
-When you change a function prototype, you must also change all
-the callers in a single commit, so that all intermediate commits
-will compile without errors, otherwise you will break git bisect.
-
-Otherwise this looks good.
-
-I suggest you split this like this:
-
-1) Add a flags argument to ahci_platform_get_resources(),
-    without adding support for any flags yet, so this just
-    changes the function prototype and passes 0 for the new
-    flags argument *everywhere* without any other changes
-2) Add support for a AHCI_PLATFORM_GET_RESETS flag, basically
-    your current first patch, minus the prototype patches
-3) A patch which passes AHCI_PLATFORM_GET_RESETS for the
-    generic ahci_platform driver (so break this out of your
-    first patch). Also describe in the commit message of this
-    patch why / for which platforms this is necessary.
-
-The idea of doing 3. separately is that we can easily revert
-it in case of problems while keeping the core functionality
-in place. Note I do not expect this to be necessary.
-
-Regards,
-
-Hans
-
-
+> However, according to Thierry's view,
+> https://www.spinics.net/lists/linux-ide/msg55357.html
+> some hardware-specific drivers already use their own resets,
+> and the common reset make a path to occur double controls of resets.
 > 
->   .../devicetree/bindings/ata/ahci-platform.txt      |  1 +
->   drivers/ata/ahci.h                                 |  1 +
->   drivers/ata/ahci_brcm.c                            |  2 +-
->   drivers/ata/ahci_ceva.c                            |  2 +-
->   drivers/ata/ahci_da850.c                           |  2 +-
->   drivers/ata/ahci_dm816.c                           |  2 +-
->   drivers/ata/ahci_imx.c                             |  2 +-
->   drivers/ata/ahci_mtk.c                             |  2 +-
->   drivers/ata/ahci_mvebu.c                           |  2 +-
->   drivers/ata/ahci_platform.c                        |  3 +-
->   drivers/ata/ahci_qoriq.c                           |  2 +-
->   drivers/ata/ahci_seattle.c                         |  2 +-
->   drivers/ata/ahci_st.c                              |  2 +-
->   drivers/ata/ahci_sunxi.c                           |  2 +-
->   drivers/ata/ahci_tegra.c                           |  2 +-
->   drivers/ata/ahci_xgene.c                           |  2 +-
->   drivers/ata/libahci_platform.c                     | 35 ++++++++++++++++++----
->   include/linux/ahci_platform.h                      |  4 ++-
->   18 files changed, 49 insertions(+), 21 deletions(-)
+> Now this add the flag to ahci_platform_get_resources() indicating
+> whether to use the resources, currently resets only, and existing
+> drivers set 0 to this flags.
 > 
+> Suggested-by: Hans de Goede <hdegoede@redhat.com>
+> Cc: Thierry Reding <thierry.reding@gmail.com>
+> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+[...]
+
+> diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
+> index 1b0a17b..eaedca5f 100644
+> --- a/include/linux/ahci_platform.h
+> +++ b/include/linux/ahci_platform.h
+> @@ -30,7 +30,7 @@ void ahci_platform_disable_regulators(struct ahci_host_priv *hpriv);
+>   int ahci_platform_enable_resources(struct ahci_host_priv *hpriv);
+>   void ahci_platform_disable_resources(struct ahci_host_priv *hpriv);
+>   struct ahci_host_priv *ahci_platform_get_resources(
+> -	struct platform_device *pdev);
+> +	struct platform_device *pdev, unsigned int flags);
+
+    That breaks all the users of this API. You should fix the callers in this 
+same patch to avoid breakage.
+
+[...]
+
+MBR, Sergei
