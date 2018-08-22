@@ -1,7 +1,7 @@
 From: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Subject: [PATCH 04/14] ata: ahci_da850: add second argument of ahci_platform_get_resources()
-Date: Wed, 22 Aug 2018 16:37:00 +0900
-Message-ID: <1534923430-9692-5-git-send-email-hayashi.kunihiko@socionext.com>
+Subject: [PATCH 06/14] ata: ahci_imx: add second argument of ahci_platform_get_resources()
+Date: Wed, 22 Aug 2018 16:37:02 +0900
+Message-ID: <1534923430-9692-7-git-send-email-hayashi.kunihiko@socionext.com>
 References: <1534923430-9692-1-git-send-email-hayashi.kunihiko@socionext.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1534923430-9692-1-git-send-email-hayashi.kunihiko@socionext.com>
@@ -17,16 +17,16 @@ add the argument as initial value 0.
 Cc: Hans de Goede <hdegoede@redhat.com>
 Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
 ---
- drivers/ata/ahci_da850.c | 2 +-
+ drivers/ata/ahci_imx.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
-index 9b34dff..ebaa657 100644
---- a/drivers/ata/ahci_da850.c
-+++ b/drivers/ata/ahci_da850.c
-@@ -171,7 +171,7 @@ static int ahci_da850_probe(struct platform_device *pdev)
- 	u32 mpy;
- 	int rc;
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index 6822e2f..b00799d 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -1127,7 +1127,7 @@ static int imx_ahci_probe(struct platform_device *pdev)
+ 			return ret;
+ 	}
  
 -	hpriv = ahci_platform_get_resources(pdev);
 +	hpriv = ahci_platform_get_resources(pdev, 0);
