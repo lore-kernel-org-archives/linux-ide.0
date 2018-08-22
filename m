@@ -1,66 +1,48 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCHv2] ide: Use NULL to compare with pointer-typed value
- rather than 0
-Date: Sat, 18 Aug 2018 09:26:16 -0700
-Message-ID: <1ee3e90112269452b545bba54356bdba894b275c.camel@perches.com>
-References: <1534572961-16423-1-git-send-email-zhongjiang@huawei.com>
-         <8badfdf8-ce69-1722-a489-fee161a1f4aa@cogentembedded.com>
-         <14b562e7acdb37158190e14045fe276e9899422e.camel@perches.com>
-         <94bdada0-e0f9-4dd2-ed6d-ad84f7114954@cogentembedded.com>
+From: David Miller <davem@davemloft.net>
+Subject: [GIT] IDE
+Date: Tue, 21 Aug 2018 22:17:50 -0700 (PDT)
+Message-ID: <20180821.221750.2043917894955366743.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <94bdada0-e0f9-4dd2-ed6d-ad84f7114954@cogentembedded.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, zhong jiang <zhongjiang@huawei.com>, davem@davemloft.net
-Cc: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Sat, 2018-08-18 at 19:21 +0300, Sergei Shtylyov wrote:
-> On 08/18/2018 07:15 PM, Joe Perches wrote:
-> > > > We should use NULL to compare with pointer-typed value rather than
-> > > > 0. The issue is detected with the help of Coccinelle.
-> > > 
-> > >    Your description stopped to match the patch in v2.
-> > >    Actually, this X ==  NULL to !x preference is largely spocific to netdev...
-> > > Although, IDE maintainer is the same now person. :-)  
-[]
-> > > > diff --git a/drivers/ide/pmac.c b/drivers/ide/pmac.c
-[]
-> > > > @@ -1682,7 +1682,7 @@ static int pmac_ide_init_dma(ide_hwif_t *hwif, const struct ide_port_info *d)
-> > > >  	/* We won't need pci_dev if we switch to generic consistent
-> > > >  	 * DMA routines ...
-> > > >  	 */
-> > > > -	if (dev == NULL || pmif->dma_regs == 0)
-> > > > +	if (!dev || !pmif->dma_regs)
-> > > >  		return -ENODEV;
-> > > >  	/*
-> > > >  	 * Allocate space for the DBDMA commands.
-[]
-> > Perhaps discourage trivial changes to this old subsystem.
-> > 
-> > checkpatch could bleat something if a patch was submitted for ide
-> > if the IDE MAINTAINERS entry was marked obsolete.
-> 
->    Note that the IDE fixes are still OK...
 
-The checkpatch obsolete message is
+1) Remove redundant variables, from Colin Ian King.
 
-<filename> is marked as 'obsolete' in the MAINTAINERS hierarchy.  No unnecessary modifications please.
+2) Expected switch fall-through annotations, from Gustavo A. R. Silva
 
----
-> > diff --git a/MAINTAINERS b/MAINTAINERS
-> > index e9336962d0f2..3c4992cf5249 100644
-> > --- a/MAINTAINERS
-> > +++ b/MAINTAINERS
-> > @@ -6933,7 +6933,7 @@ M:	"David S. Miller" <davem@davemloft.net>
-> >  L:	linux-ide@vger.kernel.org
-> >  Q:	http://patchwork.ozlabs.org/project/linux-ide/list/
-> >  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git
-> > -S:	Maintained
-> > +S:	Maintained / Obsolete (prefer LIBATA)
-> 
->    What about "S: Odd Fixes"? Perhaps it better reflects the reality...
+Please pull, thanks!
 
-That'd be up to David.
+The following changes since commit 94710cac0ef4ee177a63b5227664b38c95bbf703:
+
+  Linux 4.18 (2018-08-12 13:41:04 -0700)
+
+are available in the Git repository at:
+
+  gitolite@ra.kernel.org:/pub/scm/linux/kernel/git/davem/ide.git 
+
+for you to fetch changes up to a2eed33dcdb7663170b01f05dd8d0a3323ffe4b3:
+
+  ide: mark expected switch fall-throughs (2018-08-13 11:48:54 -0700)
+
+----------------------------------------------------------------
+Colin Ian King (2):
+      ide: remove redundant variables queue_run_ms and left
+      ide-tape: remove redundant variable buffer_size
+
+Gustavo A. R. Silva (1):
+      ide: mark expected switch fall-throughs
+
+ drivers/ide/hpt366.c       | 5 +++--
+ drivers/ide/ide-floppy.c   | 1 +
+ drivers/ide/ide-io.c       | 4 ----
+ drivers/ide/ide-probe.c    | 1 +
+ drivers/ide/ide-tape.c     | 2 --
+ drivers/ide/ide-taskfile.c | 3 ++-
+ drivers/ide/sis5513.c      | 1 +
+ 7 files changed, 8 insertions(+), 9 deletions(-)
