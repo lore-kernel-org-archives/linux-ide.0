@@ -1,7 +1,7 @@
 From: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Subject: [PATCH 08/14] ata: ahci_mvebu: add second argument of ahci_platform_get_resources()
-Date: Wed, 22 Aug 2018 16:37:04 +0900
-Message-ID: <1534923430-9692-9-git-send-email-hayashi.kunihiko@socionext.com>
+Subject: [PATCH 02/14] ata: ahci_brcm: add second argument of ahci_platform_get_resources()
+Date: Wed, 22 Aug 2018 16:36:58 +0900
+Message-ID: <1534923430-9692-3-git-send-email-hayashi.kunihiko@socionext.com>
 References: <1534923430-9692-1-git-send-email-hayashi.kunihiko@socionext.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1534923430-9692-1-git-send-email-hayashi.kunihiko@socionext.com>
@@ -17,21 +17,21 @@ add the argument as initial value 0.
 Cc: Hans de Goede <hdegoede@redhat.com>
 Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
 ---
- drivers/ata/ahci_mvebu.c | 2 +-
+ drivers/ata/ahci_brcm.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/ahci_mvebu.c b/drivers/ata/ahci_mvebu.c
-index 72d90b4..f9cb51b 100644
---- a/drivers/ata/ahci_mvebu.c
-+++ b/drivers/ata/ahci_mvebu.c
-@@ -158,7 +158,7 @@ static int ahci_mvebu_probe(struct platform_device *pdev)
- 	const struct mbus_dram_target_info *dram;
- 	int rc;
+diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+index ea43081..f3d5577 100644
+--- a/drivers/ata/ahci_brcm.c
++++ b/drivers/ata/ahci_brcm.c
+@@ -425,7 +425,7 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 
+ 	brcm_sata_phys_enable(priv);
  
 -	hpriv = ahci_platform_get_resources(pdev);
 +	hpriv = ahci_platform_get_resources(pdev, 0);
  	if (IS_ERR(hpriv))
  		return PTR_ERR(hpriv);
- 
+ 	hpriv->plat_data = priv;
 -- 
 2.7.4
