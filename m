@@ -1,98 +1,45 @@
-From: Suman Tripathi <stripathi@amperecomputing.com>
-Subject: RE: [PATCH] ata: Disable AHCI ALPM feature for Ampere Computing eMAG
- SATA
-Date: Mon, 27 Aug 2018 19:13:08 +0000
-Message-ID: <MWHPR01MB23360AA3459B7502DE5D5F4BB30B0@MWHPR01MB2336.prod.exchangelabs.com>
-References: <1535395673-30649-1-git-send-email-stripathi@amperecomputing.com>
- <d3cef828-6c18-f061-0fe8-1579bcf602c5@redhat.com>
+From: Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: [PATCH] ata: ftide010: Add a quirk for SQ201
+Date: Mon, 27 Aug 2018 22:22:19 +0200
+Message-ID: <CACRpkdbj1XU68xEuNy4yF_Tyo+Axup4vP4GpGYH0cnGZR59UGA@mail.gmail.com>
+References: <20180715200929.10116-1-linus.walleij@linaro.org>
+ <20180716191757.GO72677@devbig577.frc2.facebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <d3cef828-6c18-f061-0fe8-1579bcf602c5@redhat.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>, "tj@kernel.org" <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "joe@perches.com" <joe@perches.com>, "arnd@arndb.de" <arnd@arndb.de>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Cc: Open Source Submission <patches@amperecomputing.com>, Rameshwar P Sahu <Rameshwar.Sahu@amperecomputing.com>, Jens Axboe <axboe@kernel.dk>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20180716191757.GO72677@devbig577.frc2.facebook.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc: Florian Fainelli <f.fainelli@gmail.com>, Paulius Zaleckas <paulius.zaleckas@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Hans Ulli Kroll <ulli.kroll@googlemail.com>, linux-ide@vger.kernel.org, Janos Laube <janos.dev@gmail.com>, Linux ARM <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-ide@vger.kernel.org
 
-SGkgSGFucw0KDQpUaGFua3MgZm9yIHlvdXIgZmFzdCByZXNwb25zZS4NCg0KV2l0aCByZWdhcmRz
-LA0KU3VtYW4NCg0KUGxlYXNlIG5vdGUgbXkgbmV3IGVtYWlsIGFkZHJlc3Mg4oaSIHN0cmlwYXRo
-aUBhbXBlcmVjb21wdXRpbmcuY29tDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9t
-OiBIYW5zIGRlIEdvZWRlIDxoZGVnb2VkZUByZWRoYXQuY29tPiANClNlbnQ6IE1vbmRheSwgQXVn
-dXN0IDI3LCAyMDE4IDEyOjA5IFBNDQpUbzogU3VtYW4gVHJpcGF0aGkgPHN0cmlwYXRoaUBhbXBl
-cmVjb21wdXRpbmcuY29tPjsgdGpAa2VybmVsLm9yZzsgbGludXgtaWRlQHZnZXIua2VybmVsLm9y
-ZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOyBsaW51eC1rZXJuZWxAdmdl
-ci5rZXJuZWwub3JnOyBqb2VAcGVyY2hlcy5jb207IGFybmRAYXJuZGIuZGU7IGdyZWdraEBsaW51
-eGZvdW5kYXRpb24ub3JnDQpDYzogT3BlbiBTb3VyY2UgU3VibWlzc2lvbiA8cGF0Y2hlc0BhbXBl
-cmVjb21wdXRpbmcuY29tPjsgUmFtZXNod2FyIFAgU2FodSA8UmFtZXNod2FyLlNhaHVAYW1wZXJl
-Y29tcHV0aW5nLmNvbT47IEplbnMgQXhib2UgPGF4Ym9lQGtlcm5lbC5kaz4NClN1YmplY3Q6IFJl
-OiBbUEFUQ0hdIGF0YTogRGlzYWJsZSBBSENJIEFMUE0gZmVhdHVyZSBmb3IgQW1wZXJlIENvbXB1
-dGluZyBlTUFHIFNBVEENCg0KW05PVElDRTogVGhpcyBlbWFpbCBvcmlnaW5hdGVkIGZyb20gYW4g
-ZXh0ZXJuYWwgc2VuZGVyLiBQbGVhc2UgYmUgbWluZGZ1bCBvZiBzYWZlIGVtYWlsIGhhbmRsaW5n
-IGFuZCBwcm9wcmlldGFyeSBpbmZvcm1hdGlvbiBwcm90ZWN0aW9uIHByYWN0aWNlcy5dIF9fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-Xw0KDQpIaSwNCg0KT24gMjctMDgtMTggMjA6NDcsIFN1bWFuIFRyaXBhdGhpIHdyb3RlOg0KPiBE
-dWUgdG8gaGFyZHdhcmUgZXJyYXRhLCBBbXBlcmUgQ29tcHV0aW5nIGVNQUcgU0FUQSBjYW4ndCBz
-dXBwb3J0IEFIQ0kgDQo+IEFMUE0gZmVhdHVyZS4gVGhpcyBwYXRjaCBkaXNhYmxlcyB0aGUgQUhD
-SSBBTFBNIGZlYXR1cmUgZm9yIGVNQUcgU0FUQS4NCj4NCj4gU2lnbmVkLW9mZi1ieTogU3VtYW4g
-VHJpcGF0aGkgPHN0cmlwYXRoaUBhbXBlcmVjb21wdXRpbmcuY29tPg0KPiBTaWduZWQtb2ZmLWJ5
-OiBSYW1lc2h3YXIgUHJhc2FkIFNhaHUgDQo+IDxyYW1lc2h3YXIuc2FodUBhbXBlcmVjb21wdXRp
-bmcuY29tPg0KDQpUaGFuayB5b3UgZm9yIHRoZSBwYXRjaC4gMiByZW1hcmtzOg0KDQoxKSBUaGUg
-YXRhIGNvZGUgaXMgbWFpbnRhaW5lZCBieSBKZW5zIEF4Ym9lIChhZGRlZCB0byB0aGUgQ2MpIG5v
-dywgdGhpcyBpcyBhIHZlcnkgcmVjZW50IGNoYW5nZSwgd2hpY2ggc3RpbGwgaGFzIHRvIGhpdCBN
-QUlOVEFJTkVSUw0KW1N1bWFuIFRyaXBhdGhpXSBEaWRuJ3Qgc3RpbGwgc2VlIGhpbSBmb3IgbGli
-YXRhIHN1YnN5c3RlbS4gU3VyZWx5IHdpbGwgZml4IHRoZSBjb21tZW50cyBjYyBoaW0gZm9yIHRo
-ZSBuZXh0IHZlcnNpb24uIEkgc2VlIGhpbSBpbiB0aGUgc2NzaSBzdWJzeXN0ZW0uDQoNCjIpIFNl
-ZSBiZWxvdw0KDQoNCj4gLS0tDQo+ICAgZHJpdmVycy9hdGEvYWhjaV9wbGF0Zm9ybS5jIHwgMTMg
-KysrKysrKysrKysrLQ0KPiAgIDEgZmlsZSBjaGFuZ2VkLCAxMiBpbnNlcnRpb25zKCspLCAxIGRl
-bGV0aW9uKC0pDQo+DQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2F0YS9haGNpX3BsYXRmb3JtLmMg
-Yi9kcml2ZXJzL2F0YS9haGNpX3BsYXRmb3JtLmMgDQo+IGluZGV4IDk5ZjlhODkuLjBkMDIzM2Ug
-MTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvYXRhL2FoY2lfcGxhdGZvcm0uYw0KPiArKysgYi9kcml2
-ZXJzL2F0YS9haGNpX3BsYXRmb3JtLmMNCj4gQEAgLTI2LDcgKzI2LDcgQEANCj4NCj4gICAjZGVm
-aW5lIERSVl9OQU1FICJhaGNpIg0KPg0KPiAtc3RhdGljIGNvbnN0IHN0cnVjdCBhdGFfcG9ydF9p
-bmZvIGFoY2lfcG9ydF9pbmZvID0gew0KPiArc3RhdGljIHN0cnVjdCBhdGFfcG9ydF9pbmZvIGFo
-Y2lfcG9ydF9pbmZvID0gew0KPiAgICAgICAuZmxhZ3MgICAgICAgICAgPSBBSENJX0ZMQUdfQ09N
-TU9OLA0KPiAgICAgICAucGlvX21hc2sgICAgICAgPSBBVEFfUElPNCwNCj4gICAgICAgLnVkbWFf
-bWFzayAgICAgID0gQVRBX1VETUE2LA0KDQpQbGVhc2UgZG8gbm90IHJlbW92ZSBjb25zdCBoZXJl
-LCBpZiB5b3UgbmVlZCB0byBtYWtlIGEgc2hhcmVkIGluZm8gc3RydWN0IGxpa2UgdGhpcyBub24g
-Y29uc3QgeW91IGFyZSB1c3VhbGx5IGRvaW5nIHNvbWV0aGluZyB3cm9uZyAoc2VlIGJlbG93KS4N
-Cg0KPiBAQCAtNDEsNiArNDEsOCBAQCBzdGF0aWMgaW50IGFoY2lfcHJvYmUoc3RydWN0IHBsYXRm
-b3JtX2RldmljZSAqcGRldikNCj4gICB7DQo+ICAgICAgIHN0cnVjdCBkZXZpY2UgKmRldiA9ICZw
-ZGV2LT5kZXY7DQo+ICAgICAgIHN0cnVjdCBhaGNpX2hvc3RfcHJpdiAqaHByaXY7DQo+ICsgICAg
-IHN0cnVjdCBhY3BpX2RldmljZV9pbmZvICppbmZvOw0KPiArICAgICBhY3BpX3N0YXR1cyBzdGF0
-dXM7DQo+ICAgICAgIGludCByYzsNCj4NCj4gICAgICAgaHByaXYgPSBhaGNpX3BsYXRmb3JtX2dl
-dF9yZXNvdXJjZXMocGRldik7DQo+IEBAIC01Nyw2ICs1OSwxNSBAQCBzdGF0aWMgaW50IGFoY2lf
-cHJvYmUoc3RydWN0IHBsYXRmb3JtX2RldmljZSAqcGRldikNCj4gICAgICAgaWYgKG9mX2Rldmlj
-ZV9pc19jb21wYXRpYmxlKGRldi0+b2Zfbm9kZSwgImhpc2lsaWNvbixoaXNpLWFoY2kiKSkNCj4g
-ICAgICAgICAgICAgICBocHJpdi0+ZmxhZ3MgfD0gQUhDSV9IRkxBR19OT19GQlMgfCBBSENJX0hG
-TEFHX05PX05DUTsNCj4NCj4gKyAgICAgc3RhdHVzID0gYWNwaV9nZXRfb2JqZWN0X2luZm8oQUNQ
-SV9IQU5ETEUoZGV2KSwgJmluZm8pOw0KPiArICAgICBpZiAoQUNQSV9TVUNDRVNTKHN0YXR1cykp
-IHsNCj4gKyAgICAgICAgICAgICBpZiAoaW5mby0+dmFsaWQgJiBBQ1BJX1ZBTElEX0hJRCkgew0K
-PiArICAgICAgICAgICAgICAgICAgICAgaWYgKCFzdHJjbXAoIkFQTUMwRDMzIiwgaW5mby0+aGFy
-ZHdhcmVfaWQuc3RyaW5nKSkNCj4gKyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgYWhjaV9w
-b3J0X2luZm8uZmxhZ3MgfD0gQVRBX0ZMQUdfTk9fTFBNOw0KPiArICAgICAgICAgICAgIH0NCj4g
-KyAgICAgICAgICAgICBBQ1BJX0ZSRUUoaW5mbyk7DQo+ICsgICAgIH0NCj4gKw0KPiAgICAgICBy
-YyA9IGFoY2lfcGxhdGZvcm1faW5pdF9ob3N0KHBkZXYsIGhwcml2LCAmYWhjaV9wb3J0X2luZm8s
-DQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgJmFoY2lfcGxhdGZvcm1fc2h0
-KTsNCj4gICAgICAgaWYgKHJjKQ0KDQpUaGUgbm9ybWFsIHdheSB0byBnZXQgc3BlY2lmaWMgYmVo
-YXZpb3IgZm9yIGEgc3BlY2lmaWMgQUNQSSBISUQgaXMgdG8gcHV0IHRoZSBISUQgaW4gdGhlIGFo
-Y2lfYWNwaV9tYXRjaCB0YWJsZSBhbmQgdXNlIHRoZSBhY3BpX2RldmljZV9pZCBmaWVsZCB0byBw
-YXNzIHNvbWUgZmxhZ3MgKG9yIGEgcG9pbnRlcikuDQpbU3VtYW4gVHJpcGF0aGldIEFncmVlIG9u
-IHRoaXMuDQoNClNvIHRoZSBwcm9wZXIgd2F5IHRvIGZpeCB0aGlzIGlzIHRvIGRvIHNvbWV0aGlu
-ZyBsaWtlIHRoaXM6DQoNCjEpIEFkZDoNCg0Kc3RhdGljIGNvbnN0IHN0cnVjdCBhdGFfcG9ydF9p
-bmZvIGFoY2lfcG9ydF9pbmZvX25vbHBtID0gew0KICAgICAgICAgLmZsYWdzICAgICAgICAgID0g
-QUhDSV9GTEFHX0NPTU1PTiB8IEFUQV9GTEFHX05PX0xQTSwNCiAgICAgICAgIC5waW9fbWFzayAg
-ICAgICA9IEFUQV9QSU80LA0KICAgICAgICAgLnVkbWFfbWFzayAgICAgID0gQVRBX1VETUE2LA0K
-ICAgICAgICAgLnBvcnRfb3BzICAgICAgID0gJmFoY2lfcGxhdGZvcm1fb3BzLA0KfTsNCg0KMikg
-TW9kaWZ5IGFoY2lfYWNwaV9tYXRjaCB0YWJsZSB0bzoNCg0Kc3RhdGljIGNvbnN0IHN0cnVjdCBh
-Y3BpX2RldmljZV9pZCBhaGNpX2FjcGlfbWF0Y2hbXSA9IHsNCiAgICAgICAgeyAiQVBNQzBEMzMi
-LCAodW5zaWduZWQgbG9uZykmYWhjaV9wb3J0X2luZm9fbm9scG0gfSwNCiAgICAgICAgIHsgQUNQ
-SV9ERVZJQ0VfQ0xBU1MoUENJX0NMQVNTX1NUT1JBR0VfU0FUQV9BSENJLCAweGZmZmZmZikgfSwN
-CiAgICAgICAgIHt9LA0KfTsNCg0KMykgSW4gYWhjaV9wcm9iZSgpIGRvOg0KDQogICAgICAgIGNv
-bnN0IHN0cnVjdCBhdGFfcG9ydF9pbmZvICpwb3J0Ow0KDQogICAgICAgIC4uLg0KDQogICAgICAg
-IHBvcnQgPSBhY3BpX2RldmljZV9nZXRfbWF0Y2hfZGF0YShkZXYpOw0KICAgICAgICBpZiAoIXBv
-cnQpDQogICAgICAgICAgICAgICAgcG9ydCA9ICZhaGNpX3BvcnRfaW5mbzsNCg0KICAgICAgICBy
-YyA9IGFoY2lfcGxhdGZvcm1faW5pdF9ob3N0KHBkZXYsIGhwcml2LCBwb3J0LCAmYWhjaV9wbGF0
-Zm9ybV9zaHQpOw0KDQoNClJlZ2FyZHMsDQoNCkhhbnMNCg==
+On Mon, Jul 16, 2018 at 9:18 PM Tejun Heo <tj@kernel.org> wrote:
+> On Sun, Jul 15, 2018 at 10:09:29PM +0200, Linus Walleij wrote:
+> > The DMA is broken on this specific device for some unknown
+> > reason (probably badly designed or plain broken interface
+> > electronics) and will only work with PIO. Other users of
+> > the same hardware does not have this problem.
+> >
+> > Add a specific quirk so that this Gemini device gets
+> > DMA turned off. Also fix up some code around passing the
+> > port information around in probe while we're at it.
+> >
+> > Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+>
+> Applied to libata/for-4.18-fixes.
+
+This never appeared in the tree, it's still not there in v4.19-rc1!
+
+Jens can you apply it?
+
+Yours,
+Linus Walleij
