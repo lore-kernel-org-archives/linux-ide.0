@@ -1,13 +1,13 @@
 From: Corentin Labbe <clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v4 12/13] ARM: dts: sun4i: a10: add
+Subject: [PATCH v4 11/13] ARM: dts: sun7i: a20: add
  sata-port/sata-phy nodes
-Date: Thu, 30 Aug 2018 21:01:19 +0200
-Message-ID: <20180830190120.722-13-clabbe.montjoie@gmail.com>
+Date: Thu, 30 Aug 2018 21:01:18 +0200
+Message-ID: <20180830190120.722-12-clabbe.montjoie@gmail.com>
 References: <20180830190120.722-1-clabbe.montjoie@gmail.com>
 Reply-To: clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-sunxi+bncBD7YLCN32UNBBG76UDOAKGQERVY4CAI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <linux-sunxi+bncBD7YLCN32UNBBGX6UDOAKGQEBAVWC5Y-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 In-Reply-To: <20180830190120.722-1-clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Post: <https://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -20,25 +20,24 @@ To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, hdegoede-H+wXaHxf7aLQT0dZR+Al
 Cc: devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-This patch convert sun4i-a10 sata to the new binding which use a sata
+This patch convert sun7i-a20 sata to the new binding which use a sata
 phy node.
 
 Signed-off-by: Corentin Labbe <clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- arch/arm/boot/dts/sun4i-a10.dtsi | 13 +++++++++++++
+ arch/arm/boot/dts/sun7i-a20.dtsi | 13 +++++++++++++
  1 file changed, 13 insertions(+)
 
-diff --git a/arch/arm/boot/dts/sun4i-a10.dtsi b/arch/arm/boot/dts/sun4i-a10.dtsi
-index 3d62a8950720..52d5c2e79499 100644
---- a/arch/arm/boot/dts/sun4i-a10.dtsi
-+++ b/arch/arm/boot/dts/sun4i-a10.dtsi
-@@ -556,7 +556,20 @@
- 			reg = <0x01c18000 0x1000>;
- 			interrupts = <56>;
+diff --git a/arch/arm/boot/dts/sun7i-a20.dtsi b/arch/arm/boot/dts/sun7i-a20.dtsi
+index 8f7e1e29841f..8ff28f7afa85 100644
+--- a/arch/arm/boot/dts/sun7i-a20.dtsi
++++ b/arch/arm/boot/dts/sun7i-a20.dtsi
+@@ -667,6 +667,19 @@
+ 			interrupts = <GIC_SPI 56 IRQ_TYPE_LEVEL_HIGH>;
  			clocks = <&ccu CLK_AHB_SATA>, <&ccu CLK_SATA>;
+ 			status = "disabled";
 +			#address-cells = <1>;
 +			#size-cells = <0>;
- 			status = "disabled";
 +
 +			sata_port: sata-port@0 {
 +				reg = <0>;
@@ -46,9 +45,9 @@ index 3d62a8950720..52d5c2e79499 100644
 +			};
 +		};
 +
-+		sata_phy: sata_phy@1c180c0 {
++		sata_phy: sata-phy@1c180c0  {
 +			compatible = "allwinner,sun4i-a10-sata-phy";
-+			reg = <0x01c180c0 0x200>;
++			reg = <0x1c180c0 0x200>;
 +			#phy-cells = <0>;
  		};
  
