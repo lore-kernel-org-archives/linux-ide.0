@@ -1,12 +1,12 @@
 From: Corentin Labbe <clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v4 05/13] dt-bindings: phy: document sun4i-a10-sata-phy
-Date: Thu, 30 Aug 2018 21:01:12 +0200
-Message-ID: <20180830190120.722-6-clabbe.montjoie@gmail.com>
+Subject: [PATCH v4 08/13] ata: ahci_sunxi: add support for r40
+Date: Thu, 30 Aug 2018 21:01:15 +0200
+Message-ID: <20180830190120.722-9-clabbe.montjoie@gmail.com>
 References: <20180830190120.722-1-clabbe.montjoie@gmail.com>
 Reply-To: clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-sunxi+bncBD7YLCN32UNBBEP6UDOAKGQERFOYSXI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <linux-sunxi+bncBD7YLCN32UNBBF76UDOAKGQEJXM3MIY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 In-Reply-To: <20180830190120.722-1-clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Post: <https://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -19,39 +19,39 @@ To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, hdegoede-H+wXaHxf7aLQT0dZR+Al
 Cc: devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-This patch document the sun4i-a10-sata-phy bindings.
+This patch add the r40 compatible to the ahci_sunxi's supported list of
+compatible.
+
+Since R40 need ahci_platform to handle the reset controller, we also add
+the new AHCI_PLATFORM_GET_RESETS flag for ahci_platform_get_resources().
+This has no consequence for older platform (a10, a20) since the reset is
+optional.
 
 Signed-off-by: Corentin Labbe <clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- .../devicetree/bindings/phy/sun4i-sata-phy.txt       | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/phy/sun4i-sata-phy.txt
+ drivers/ata/ahci_sunxi.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/phy/sun4i-sata-phy.txt b/Documentation/devicetree/bindings/phy/sun4i-sata-phy.txt
-new file mode 100644
-index 000000000000..f031542717c1
---- /dev/null
-+++ b/Documentation/devicetree/bindings/phy/sun4i-sata-phy.txt
-@@ -0,0 +1,20 @@
-+Allwinner sun4i SATA PHY
-+-----------------------
-+
-+Required properties:
-+- compatible : should be one of
-+  * allwinner,sun4i-a10-sata-phy
-+  * allwinner,sun8i-r40-sata-phy
-+- reg : a list of offset + length pairs
-+- #phy-cells : from the generic phy bindings, must be 0
-+
-+Optional properties:
-+- phy-supply : from the generic phy bindings, a phandle to a regulator that
-+	       provides power to the PHY.
-+
-+Example:
-+	sata_phy0: sata-phy@a01800 {
-+		compatible = "allwinner,sun8i-r40-sata-phy";
-+		reg = <0x00a01800 0x4>;
-+		#phy-cells = <0>;
-+	};
+diff --git a/drivers/ata/ahci_sunxi.c b/drivers/ata/ahci_sunxi.c
+index a09d189c6dda..b8cf3a1be80b 100644
+--- a/drivers/ata/ahci_sunxi.c
++++ b/drivers/ata/ahci_sunxi.c
+@@ -190,7 +190,7 @@ static int ahci_sunxi_probe(struct platform_device *pdev)
+ 	struct ahci_host_priv *hpriv;
+ 	int rc;
+ 
+-	hpriv = ahci_platform_get_resources(pdev, 0);
++	hpriv = ahci_platform_get_resources(pdev, AHCI_PLATFORM_GET_RESETS);
+ 	if (IS_ERR(hpriv))
+ 		return PTR_ERR(hpriv);
+ 
+@@ -259,6 +259,7 @@ static SIMPLE_DEV_PM_OPS(ahci_sunxi_pm_ops, ahci_platform_suspend,
+ 
+ static const struct of_device_id ahci_sunxi_of_match[] = {
+ 	{ .compatible = "allwinner,sun4i-a10-ahci", },
++	{ .compatible = "allwinner,sun8i-r40-ahci", },
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(of, ahci_sunxi_of_match);
 -- 
 2.16.4
