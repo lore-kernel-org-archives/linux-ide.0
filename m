@@ -1,13 +1,12 @@
 From: Corentin Labbe <clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v4 11/13] ARM: dts: sun7i: a20: add
- sata-port/sata-phy nodes
-Date: Thu, 30 Aug 2018 21:01:18 +0200
-Message-ID: <20180830190120.722-12-clabbe.montjoie@gmail.com>
+Subject: [PATCH v4 13/13 DONOTMERGE] ata: ahci_sunxi: remove PHY code
+Date: Thu, 30 Aug 2018 21:01:20 +0200
+Message-ID: <20180830190120.722-14-clabbe.montjoie@gmail.com>
 References: <20180830190120.722-1-clabbe.montjoie@gmail.com>
 Reply-To: clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-sunxi+bncBD7YLCN32UNBBGX6UDOAKGQEBAVWC5Y-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <linux-sunxi+bncBD7YLCN32UNBBHP6UDOAKGQERPI7JJI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 In-Reply-To: <20180830190120.722-1-clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Post: <https://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -20,37 +19,145 @@ To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, hdegoede-H+wXaHxf7aLQT0dZR+Al
 Cc: devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-This patch convert sun7i-a20 sata to the new binding which use a sata
-phy node.
+Since PHY code is now handled by sun4i-a10-sata-phy, the code in
+ahci_sunxi is useless, remove it.
 
 Signed-off-by: Corentin Labbe <clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- arch/arm/boot/dts/sun7i-a20.dtsi | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ drivers/ata/ahci_sunxi.c | 93 ------------------------------------------------
+ 1 file changed, 93 deletions(-)
 
-diff --git a/arch/arm/boot/dts/sun7i-a20.dtsi b/arch/arm/boot/dts/sun7i-a20.dtsi
-index 8f7e1e29841f..8ff28f7afa85 100644
---- a/arch/arm/boot/dts/sun7i-a20.dtsi
-+++ b/arch/arm/boot/dts/sun7i-a20.dtsi
-@@ -667,6 +667,19 @@
- 			interrupts = <GIC_SPI 56 IRQ_TYPE_LEVEL_HIGH>;
- 			clocks = <&ccu CLK_AHB_SATA>, <&ccu CLK_SATA>;
- 			status = "disabled";
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+
-+			sata_port: sata-port@0 {
-+				reg = <0>;
-+				phys = <&sata_phy>;
-+			};
-+		};
-+
-+		sata_phy: sata-phy@1c180c0  {
-+			compatible = "allwinner,sun4i-a10-sata-phy";
-+			reg = <0x1c180c0 0x200>;
-+			#phy-cells = <0>;
- 		};
+diff --git a/drivers/ata/ahci_sunxi.c b/drivers/ata/ahci_sunxi.c
+index b8cf3a1be80b..af17f8ce65b2 100644
+--- a/drivers/ata/ahci_sunxi.c
++++ b/drivers/ata/ahci_sunxi.c
+@@ -58,15 +58,6 @@ MODULE_PARM_DESC(enable_pmp,
+ #define AHCI_P0PHYCR	0x0178
+ #define AHCI_P0PHYSR	0x017c
  
- 		ehci1: usb@1c1c000 {
+-static void sunxi_clrbits(void __iomem *reg, u32 clr_val)
+-{
+-	u32 reg_val;
+-
+-	reg_val = readl(reg);
+-	reg_val &= ~(clr_val);
+-	writel(reg_val, reg);
+-}
+-
+ static void sunxi_setbits(void __iomem *reg, u32 set_val)
+ {
+ 	u32 reg_val;
+@@ -86,81 +77,6 @@ static void sunxi_clrsetbits(void __iomem *reg, u32 clr_val, u32 set_val)
+ 	writel(reg_val, reg);
+ }
+ 
+-static u32 sunxi_getbits(void __iomem *reg, u8 mask, u8 shift)
+-{
+-	return (readl(reg) >> shift) & mask;
+-}
+-
+-static int ahci_sunxi_phy_init(struct device *dev, void __iomem *reg_base)
+-{
+-	u32 reg_val;
+-	int timeout;
+-
+-	/*
+-	 * When using the new binding, the presence of a sata port node
+-	 * means that PHY is handled by the PHY driver.
+-	 * */
+-	if (of_get_child_count(dev->of_node)) {
+-		dev_info(dev, "Bypassing PHY init\n");
+-		return 0;
+-	}
+-
+-	/* This magic is from the original code */
+-	writel(0, reg_base + AHCI_RWCR);
+-	msleep(5);
+-
+-	sunxi_setbits(reg_base + AHCI_PHYCS1R, BIT(19));
+-	sunxi_clrsetbits(reg_base + AHCI_PHYCS0R,
+-			 (0x7 << 24),
+-			 (0x5 << 24) | BIT(23) | BIT(18));
+-	sunxi_clrsetbits(reg_base + AHCI_PHYCS1R,
+-			 (0x3 << 16) | (0x1f << 8) | (0x3 << 6),
+-			 (0x2 << 16) | (0x6 << 8) | (0x2 << 6));
+-	sunxi_setbits(reg_base + AHCI_PHYCS1R, BIT(28) | BIT(15));
+-	sunxi_clrbits(reg_base + AHCI_PHYCS1R, BIT(19));
+-	sunxi_clrsetbits(reg_base + AHCI_PHYCS0R,
+-			 (0x7 << 20), (0x3 << 20));
+-	sunxi_clrsetbits(reg_base + AHCI_PHYCS2R,
+-			 (0x1f << 5), (0x19 << 5));
+-	msleep(5);
+-
+-	sunxi_setbits(reg_base + AHCI_PHYCS0R, (0x1 << 19));
+-
+-	timeout = 250; /* Power up takes aprox 50 us */
+-	do {
+-		reg_val = sunxi_getbits(reg_base + AHCI_PHYCS0R, 0x7, 28);
+-		if (reg_val == 0x02)
+-			break;
+-
+-		if (--timeout == 0) {
+-			dev_err(dev, "PHY power up failed.\n");
+-			return -EIO;
+-		}
+-		udelay(1);
+-	} while (1);
+-
+-	sunxi_setbits(reg_base + AHCI_PHYCS2R, (0x1 << 24));
+-
+-	timeout = 100; /* Calibration takes aprox 10 us */
+-	do {
+-		reg_val = sunxi_getbits(reg_base + AHCI_PHYCS2R, 0x1, 24);
+-		if (reg_val == 0x00)
+-			break;
+-
+-		if (--timeout == 0) {
+-			dev_err(dev, "PHY calibration failed.\n");
+-			return -EIO;
+-		}
+-		udelay(1);
+-	} while (1);
+-
+-	msleep(15);
+-
+-	writel(0x7, reg_base + AHCI_RWCR);
+-
+-	return 0;
+-}
+-
+ static void ahci_sunxi_start_engine(struct ata_port *ap)
+ {
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+@@ -186,7 +102,6 @@ static struct scsi_host_template ahci_platform_sht = {
+ 
+ static int ahci_sunxi_probe(struct platform_device *pdev)
+ {
+-	struct device *dev = &pdev->dev;
+ 	struct ahci_host_priv *hpriv;
+ 	int rc;
+ 
+@@ -200,10 +115,6 @@ static int ahci_sunxi_probe(struct platform_device *pdev)
+ 	if (rc)
+ 		return rc;
+ 
+-	rc = ahci_sunxi_phy_init(dev, hpriv->mmio);
+-	if (rc)
+-		goto disable_resources;
+-
+ 	hpriv->flags = AHCI_HFLAG_32BIT_ONLY | AHCI_HFLAG_NO_MSI |
+ 		       AHCI_HFLAG_YES_NCQ;
+ 
+@@ -238,10 +149,6 @@ static int ahci_sunxi_resume(struct device *dev)
+ 	if (rc)
+ 		return rc;
+ 
+-	rc = ahci_sunxi_phy_init(dev, hpriv->mmio);
+-	if (rc)
+-		goto disable_resources;
+-
+ 	rc = ahci_platform_resume_host(dev);
+ 	if (rc)
+ 		goto disable_resources;
 -- 
 2.16.4
