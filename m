@@ -1,12 +1,13 @@
 From: Corentin Labbe <clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v4 06/13] dt-bindings: ata: update ahci_sunxi bindings
-Date: Thu, 30 Aug 2018 21:01:13 +0200
-Message-ID: <20180830190120.722-7-clabbe.montjoie@gmail.com>
+Subject: [PATCH v4 07/13] ata: ahci_sunxi: Bypass PHY init when
+ using the new binding
+Date: Thu, 30 Aug 2018 21:01:14 +0200
+Message-ID: <20180830190120.722-8-clabbe.montjoie@gmail.com>
 References: <20180830190120.722-1-clabbe.montjoie@gmail.com>
 Reply-To: clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-sunxi+bncBD7YLCN32UNBBEX6UDOAKGQE23QVISQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <linux-sunxi+bncBD7YLCN32UNBBFH6UDOAKGQEX2BKDHI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 In-Reply-To: <20180830190120.722-1-clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Post: <https://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -19,32 +20,38 @@ To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, hdegoede-H+wXaHxf7aLQT0dZR+Al
 Cc: devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-Since phy code is moved from ahci_sunxi to a dedicated driver, the
-binding need to be updated with the new phy node requirement.
+The new binding split sata in two (ahci + PHY).
+ahci_sunxi must not mess with PHY when the new binding is in use.
+So when we detect sub-nodes, bypass the PHY init code.
+This is a temporarly workaround for the period where DT and ata code
+will be merged from separate tree.
+When both new binding and PHY driver will be merged, a new patch which
+remove all PHY code from ahci_sunxi.c will be sent.
 
 Signed-off-by: Corentin Labbe <clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- Documentation/devicetree/bindings/ata/ahci-platform.txt | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/ata/ahci_sunxi.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-index f495774c8af9..aa6f4c745097 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -50,6 +50,14 @@ And at least one of the following properties:
- - phys		    : reference to the SATA PHY node
- - target-supply     : regulator for SATA target power
+diff --git a/drivers/ata/ahci_sunxi.c b/drivers/ata/ahci_sunxi.c
+index 631610b72aa5..a09d189c6dda 100644
+--- a/drivers/ata/ahci_sunxi.c
++++ b/drivers/ata/ahci_sunxi.c
+@@ -96,6 +96,15 @@ static int ahci_sunxi_phy_init(struct device *dev, void __iomem *reg_base)
+ 	u32 reg_val;
+ 	int timeout;
  
-+Required properties for:
-+* allwinner,sun4i-a10-ahci
-+* allwinner,sun8i-r40-ahci
-+A port sub-node must be present and linked to a sata_phy.
++	/*
++	 * When using the new binding, the presence of a sata port node
++	 * means that PHY is handled by the PHY driver.
++	 * */
++	if (of_get_child_count(dev->of_node)) {
++		dev_info(dev, "Bypassing PHY init\n");
++		return 0;
++	}
 +
-+Required properties for allwinner,sun8i-r40-ahci
-+The reset and ahci-supply properties must be present.
-+
- Examples:
-         sata@ffe08000 {
- 		compatible = "snps,spear-ahci";
+ 	/* This magic is from the original code */
+ 	writel(0, reg_base + AHCI_RWCR);
+ 	msleep(5);
 -- 
 2.16.4
