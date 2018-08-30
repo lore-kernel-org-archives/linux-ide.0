@@ -1,13 +1,13 @@
 From: Corentin Labbe <clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH v4 01/13] dt-bindings: ata: ahci-platform: fix
- indentation of target-supply
-Date: Thu, 30 Aug 2018 21:01:08 +0200
-Message-ID: <20180830190120.722-2-clabbe.montjoie@gmail.com>
+Subject: [PATCH v4 03/13] dt-bindings: ata: ahci-platform:
+ document ahci-supply
+Date: Thu, 30 Aug 2018 21:01:10 +0200
+Message-ID: <20180830190120.722-4-clabbe.montjoie@gmail.com>
 References: <20180830190120.722-1-clabbe.montjoie@gmail.com>
 Reply-To: clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-sunxi+bncBD7YLCN32UNBBC76UDOAKGQEKROLDVQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <linux-sunxi+bncBD7YLCN32UNBBDX6UDOAKGQEBJQ7EVI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 In-Reply-To: <20180830190120.722-1-clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Post: <https://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -20,25 +20,25 @@ To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, hdegoede-H+wXaHxf7aLQT0dZR+Al
 Cc: devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-This patch fix the indentation of target-supply's ':'.
+This patch document the new optional ahci-supply.
 
 Signed-off-by: Corentin Labbe <clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Reviewed-by: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 ---
- Documentation/devicetree/bindings/ata/ahci-platform.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ Documentation/devicetree/bindings/ata/ahci-platform.txt | 1 +
+ 1 file changed, 1 insertion(+)
 
 diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-index 5d5bd456d9d9..b88820b4c01e 100644
+index b88820b4c01e..f495774c8af9 100644
 --- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
 +++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -47,7 +47,7 @@ Sub-nodes required properties:
- - reg		    : the port number
- And at least one of the following properties:
- - phys		    : reference to the SATA PHY node
--- target-supply    : regulator for SATA target power
-+- target-supply     : regulator for SATA target power
- 
- Examples:
-         sata@ffe08000 {
+@@ -33,6 +33,7 @@ Optional properties:
+ - target-supply     : regulator for SATA target power
+ - phys              : reference to the SATA PHY node
+ - phy-names         : must be "sata-phy"
++- ahci-supply       : regulator for AHCI controller
+ - ports-implemented : Mask that indicates which ports that the HBA supports
+ 		      are available for software to use. Useful if PORTS_IMPL
+ 		      is not programmed by the BIOS, which is true with
 -- 
 2.16.4
