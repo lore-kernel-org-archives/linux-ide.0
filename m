@@ -1,44 +1,72 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v2 2/3] ata: libahci_platform: add reset control support
-Date: Tue, 28 Aug 2018 19:34:18 -0500
-Message-ID: <20180829003418.GA18849@bogus>
-References: <1534939983-16264-1-git-send-email-hayashi.kunihiko@socionext.com>
- <1534939983-16264-3-git-send-email-hayashi.kunihiko@socionext.com>
+From: Corentin Labbe <clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH v4 00/13] ata: ahci_platform: support allwinner
+ R40 AHCI
+Date: Thu, 30 Aug 2018 21:01:07 +0200
+Message-ID: <20180830190120.722-1-clabbe.montjoie@gmail.com>
+Reply-To: clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1534939983-16264-3-git-send-email-hayashi.kunihiko@socionext.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Cc: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Mark Rutland <mark.rutland@arm.com>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, Thierry Reding <thierry.reding@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-sunxi+bncBD7YLCN32UNBBCP6UDOAKGQEODPDBUI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Post: <https://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/linux-sunxi
+List-Subscribe: <https://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/linux-sunxi/subscribe>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, maxime.ripard-LDxbnhwyfcJBDgjK7y7TUQ@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, wens-jdAy2FN1RRM@public.gmane.org, clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, Aug 22, 2018 at 09:13:02PM +0900, Kunihiko Hayashi wrote:
-> Add support to get and control a list of resets for the device
-> as optional and shared. These resets must be kept de-asserted until
-> the device is enabled.
-> 
-> This is specified as shared because some SoCs like UniPhier series
-> have common reset controls with all ahci controller instances.
-> 
-> However, according to Thierry's view,
-> https://www.spinics.net/lists/linux-ide/msg55357.html
-> some hardware-specific drivers already use their own resets,
-> and the common reset make a path to occur double controls of resets.
-> 
-> The ahci_platform_get_resources() can get and control the reset
-> only when the second argument includes AHCI_PLATFORM_GET_RESETS bit.
-> 
-> Suggested-by: Hans de Goede <hdegoede@redhat.com>
-> Cc: Thierry Reding <thierry.reding@gmail.com>
-> Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-> ---
->  .../devicetree/bindings/ata/ahci-platform.txt      |  1 +
+Hello
 
-Acked-by: Rob Herring <robh@kernel.org>
+This patchset add support for allwinner R40 AHCI controller.
 
->  drivers/ata/ahci.h                                 |  1 +
->  drivers/ata/libahci_platform.c                     | 31 ++++++++++++++++++----
->  include/linux/ahci_platform.h                      |  2 ++
->  4 files changed, 30 insertions(+), 5 deletions(-)
+The whole patchset is tested on sun8i-r40-bananapi-m2-ultra and
+on sun7i-a20-cubieboard2 which doesnt have any of the ressources added
+by this serie, so no regression should come with it.
+
+The last patch(ata: ahci_sunxi: remove PHY code) should not be merged,
+but will be resent for inclustion when all patchs will have hit linus
+tree.
+
+Changes since v3:
+- Moved PHY code to a new sun4i-a10-phy-sata driver
+- Removed reset code since ahci_platform support now reset controller.
+
+Changes since V2
+- Moved all ressources management to ahci_platform
+
+Corentin Labbe (13):
+  dt-bindings: ata: ahci-platform: fix indentation of target-supply
+  ata: ahci_platform: add support for AHCI controller regulator
+  dt-bindings: ata: ahci-platform: document ahci-supply
+  phy: Add sun4i-a10-phy-sata driver
+  dt-bindings: phy: document sun4i-a10-sata-phy
+  dt-bindings: ata: update ahci_sunxi bindings
+  ata: ahci_sunxi: Bypass PHY init when using the new binding
+  ata: ahci_sunxi: add support for r40
+  ARM: dts: sun8i: r40: add sata node
+  ARM: dts: sun8i: sun8i-r40-bananapi-m2-ultra: enable AHCI
+  ARM: dts: sun7i: a20: add sata-port/sata-phy nodes
+  ARM: dts: sun4i: a10: add sata-port/sata-phy nodes
+  ata: ahci_sunxi: remove PHY code
+
+ .../devicetree/bindings/ata/ahci-platform.txt      |  11 +-
+ .../devicetree/bindings/phy/sun4i-sata-phy.txt     |  20 ++
+ arch/arm/boot/dts/sun4i-a10.dtsi                   |  13 ++
+ arch/arm/boot/dts/sun7i-a20.dtsi                   |  13 ++
+ arch/arm/boot/dts/sun8i-r40-bananapi-m2-ultra.dts  |  21 +++
+ arch/arm/boot/dts/sun8i-r40.dtsi                   |  23 +++
+ drivers/ata/ahci.h                                 |   1 +
+ drivers/ata/ahci_sunxi.c                           |  87 +--------
+ drivers/ata/libahci_platform.c                     |  26 ++-
+ drivers/phy/allwinner/Kconfig                      |   7 +
+ drivers/phy/allwinner/Makefile                     |   1 +
+ drivers/phy/allwinner/phy-sun4i-sata.c             | 208 +++++++++++++++++++++
+ 12 files changed, 343 insertions(+), 88 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/phy/sun4i-sata-phy.txt
+ create mode 100644 drivers/phy/allwinner/phy-sun4i-sata.c
+
+-- 
+2.16.4
