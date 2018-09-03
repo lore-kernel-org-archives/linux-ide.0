@@ -1,100 +1,61 @@
-From: Maxime Ripard <maxime.ripard@bootlin.com>
-Subject: Re: [PATCH v4 00/13] ata: ahci_platform: support allwinner R40 AHCI
-Date: Mon, 3 Sep 2018 10:31:31 +0200
-Message-ID: <20180903083131.asgh6wp54e2fs62l@flea>
-References: <20180830190120.722-1-clabbe.montjoie@gmail.com>
- <f5838eae-fa6c-8699-14a4-95d0daa8a960@kernel.dk>
- <CAGb2v67miUjqeKeDh_E_XPee_0Hq1C6YrfXxsOp_=NtQY+LLmQ@mail.gmail.com>
- <8fa866c5-6800-505f-53bc-5c1b27582ca6@kernel.dk>
- <20180831074024.w7yicj5y4imy57e2@flea>
- <39f89b9d-f5bf-7c4a-8e68-252bfc0b91a4@kernel.dk>
+From: Corentin Labbe <clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH v5 0/9] ata: ahci_platform: support allwinner
+ R40 AHCI
+Date: Mon,  3 Sep 2018 12:01:52 +0200
+Message-ID: <20180903100201.23131-1-clabbe.montjoie@gmail.com>
+Reply-To: clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="bqnc4wmife4rizom"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <39f89b9d-f5bf-7c4a-8e68-252bfc0b91a4@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Chen-Yu Tsai <wens@csie.org>, LABBE Corentin <clabbe.montjoie@gmail.com>, Hans de Goede <hdegoede@redhat.com>, Kishon Vijay Abraham I <kishon@ti.com>, Mark Rutland <mark.rutland@arm.com>, Rob Herring <robh+dt@kernel.org>, devicetree <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>, linux-sunxi <linux-sunxi@googlegroups.com>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-sunxi+bncBD7YLCN32UNBBHUNWTOAKGQEEHPV27Y-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Post: <https://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/linux-sunxi
+List-Subscribe: <https://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/linux-sunxi/subscribe>
+To: axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, maxime.ripard-LDxbnhwyfcJBDgjK7y7TUQ@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, wens-jdAy2FN1RRM@public.gmane.org
+Cc: devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Corentin Labbe <clabbe.montjoie-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
+This patchset add support for allwinner R40 AHCI controller.
 
---bqnc4wmife4rizom
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The whole patchset is tested on sun8i-r40-bananapi-m2-ultra and
+on sun7i-a20-cubieboard2 which doesnt have any of the ressources added
+by this serie, so no regression should come with it.
 
-On Fri, Aug 31, 2018 at 08:35:23AM -0600, Jens Axboe wrote:
-> On 8/31/18 1:40 AM, Maxime Ripard wrote:
-> > Hi Jens,
-11;rgb:0000/2b2b/3636> >=20
-> > On Thu, Aug 30, 2018 at 08:52:52PM -0600, Jens Axboe wrote:
-> >> On 8/30/18 8:32 PM, Chen-Yu Tsai wrote:
-> >>> Hi,
-> >>>
-> >>> On Fri, Aug 31, 2018 at 4:31 AM Jens Axboe <axboe@kernel.dk> wrote:
-> >>>>
-> >>>> On 8/30/18 1:01 PM, Corentin Labbe wrote:
-> >>>>> Hello
-> >>>>>
-> >>>>> This patchset add support for allwinner R40 AHCI controller.
-> >>>>>
-> >>>>> The whole patchset is tested on sun8i-r40-bananapi-m2-ultra and
-> >>>>> on sun7i-a20-cubieboard2 which doesnt have any of the ressources ad=
-ded
-> >>>>> by this serie, so no regression should come with it.
-> >>>>>
-> >>>>> The last patch(ata: ahci_sunxi: remove PHY code) should not be merg=
-ed,
-> >>>>> but will be resent for inclustion when all patchs will have hit lin=
-us
-> >>>>> tree.
-> >>>>
-> >>>> Applied 1-12 with Hans's blessing, thanks Corentin.
-> >>>
-> >>> Please don't merge device tree ("dts") patches, i.e. patches 9-12. We=
- will
-> >>> merge them through the sunxi / armsoc tree. Having them in separate t=
-rees
-> >>> introduces conflicts when we have other stuff going through our tree.
-> >>
-> >> OK, fair enough, I can drop those.
-> >=20
-> > And the DT bits actually have some issues that would need to change
-> > the code significantly.
-> >=20
-> > Can you drop all of them please?
->=20
-> OK, can do.
+Patchs 1-7 should go via the ata tree
+Patchs 8,9 should go via the sunxi tree
 
-Thanks!
+Changes since v4:
+- dropped PHY dedicated driver
+- added the optionnal phy-supply
 
-Maxime
+Changes since v3:
+- Moved PHY code to a new sun4i-a10-phy-sata driver
+- Removed reset code since ahci_platform support now reset controller.
 
---=20
-Maxime Ripard, Bootlin
-Embedded Linux and Kernel engineering
-https://bootlin.com
+Changes since V2
+- Moved all ressources management to ahci_platform
 
---bqnc4wmife4rizom
-Content-Type: application/pgp-signature; name="signature.asc"
+Corentin Labbe (9):
+  dt-bindings: ata: ahci-platform: fix indentation of target-supply
+  ata: ahci_platform: add support for AHCI controller regulator
+  dt-bindings: ata: ahci-platform: document ahci-supply
+  ata: ahci_platform: add support for PHY controller regulator
+  dt-bindings: ata: ahci-platform: document phy-supply
+  ata: ahci_sunxi: add support for r40
+  dt-bindings: ata: update ahci_sunxi bindings
+  ARM: dts: sun8i: r40: add sata node
+  ARM: dts: sun8i: sun8i-r40-bananapi-m2-ultra: enable AHCI
 
------BEGIN PGP SIGNATURE-----
+ .../devicetree/bindings/ata/ahci-platform.txt      |  6 ++-
+ arch/arm/boot/dts/sun8i-r40-bananapi-m2-ultra.dts  | 18 +++++++++
+ arch/arm/boot/dts/sun8i-r40.dtsi                   | 13 ++++++
+ drivers/ata/ahci.h                                 |  2 +
+ drivers/ata/ahci_sunxi.c                           |  3 +-
+ drivers/ata/libahci_platform.c                     | 46 +++++++++++++++++++++-
+ 6 files changed, 84 insertions(+), 4 deletions(-)
 
-iQIzBAABCAAdFiEE0VqZU19dR2zEVaqr0rTAlCFNr3QFAluM8WIACgkQ0rTAlCFN
-r3TKYRAAhFvCHyzVXOZC/BzDb2cLoagfdyqL6PmDJrLnIywHrqkfEAIDGc3L9MBs
-V88pX2q/85lyW6GyadGpD+Tj+vTDcZlLi/ZZadPwFzLsgBhabY7mhsGHtp9+1GTN
-0i4rvz+xm2blUv2fQpCa4xJ/JW/FHQdgC5NvNl0LaPjMFFp1EL7DrRy9GYBs3fNP
-a1Y0hiiBVCQ5HzkiTjXLQv5bG8QLVJCnTzRU8pCE69hN+WuiXsrmAp1l7I3ovcLx
-fpIwbCs+wFv87TiTGthRaFrwb6udwYgKeUi94jZJP4VSEs2cSaDtnDUwsaSLts5O
-GfztSy9JADpKz59jtsjKjBHlEDUS34mmnzo5rg4/HOhj0mrTMP6eSmRc2FTU8z0O
-XTeBrNzMBlXUC/nnBxUrCuggKLD5b2avB6bfwayv5p8ZxdE90gB8wKTcnWxZqYut
-/irhff7nqc4WN1xvMuOGMTbidPqLX5FByXOJhE7BCXOrsUMwGtBCN9DJdFdjtXEy
-F32514jBAuiX+JCzHEC5F9PlfOZmNS15wwwOPDUNZoIrGpzrs/0LSzwn/PQuO/jD
-Fl0AbkPskhhOAtX5OO/Eb3Sj6MeJF3dihAMEAlOGaa64eXQyXzW5TVp1qH31E4f1
-LeI5BFWSCTpB+x6f2LTQKATzHQUiuamSOPc9hPtUS9ojhhCDFS0=
-=lSQ9
------END PGP SIGNATURE-----
-
---bqnc4wmife4rizom--
+-- 
+2.16.4
