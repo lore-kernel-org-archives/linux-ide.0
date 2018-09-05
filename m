@@ -1,88 +1,79 @@
-From: Paul Moore <paul@paul-moore.com>
-Subject: Re: [PATCH] [RFC v2] Drop all 00-INDEX files from Documentation/
-Date: Wed, 5 Sep 2018 07:42:04 -0400
-Message-ID: <CAHC9VhR7Zana3xTEj2jUGXb+hBzyh69g0rBg_p_4tkbjtCUdpw@mail.gmail.com>
-References: <1536012923-16275-1-git-send-email-henrik@austad.us>
+From: Suman Tripathi <stripathi@amperecomputing.com>
+Subject: [PATCH v2] ata: Disable AHCI ALPM feature for Ampere Computing eMAG SATA
+Date: Wed,  5 Sep 2018 13:12:55 -0700
+Message-ID: <1536178375-31700-1-git-send-email-stripathi@amperecomputing.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1536012923-16275-1-git-send-email-henrik@austad.us>
 Sender: linux-kernel-owner@vger.kernel.org
-To: henrik@austad.us
-Cc: linux-doc@vger.kernel.org, corbet@lwn.net, bhelgaas@google.com, paulmck@linux.vnet.ibm.com, josh@joshtriplett.org, rostedt@goodmis.org, mathieu.desnoyers@efficios.com, jiangshanlai@gmail.com, axboe@kernel.dk, robh+dt@kernel.org, mark.rutland@arm.com, b.zolnierkie@samsung.com, linus.walleij@linaro.org, davem@davemloft.net, isdn@linux-pingi.de, yamada.masahiro@socionext.com, michal.lkml@markovi.net, peterz@infradead.org, mingo@redhat.com, will.deacon@arm.com, ralf@linux-mips.org, paul.burton@mips.com, jhogan@kernel.org, jejb@parisc-linux.org, deller@gmx.de, rjw@rjwysocki.net, len.brown@intel.com, pavel@ucw.cz, benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, gregkh@linuxfoundation.org, jslaby@suse.com, broonie@kernel.o
+To: hdegoede@redhat.com, axboe@kernel.dk, tj@kernel.org, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, joe@perches.com, arnd@arndb.de, gregkh@linuxfoundation.org
+Cc: patches@amperecomputing.com, Suman Tripathi <stripathi@amperecomputing.com>, Rameshwar Prasad Sahu <rameshwar.sahu@amperecomputing.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Sep 3, 2018 at 6:15 PM Henrik Austad <henrik@austad.us> wrote:
-> This is a respin with a wider audience (all that get_maintainer returned)
-> and I know this spams a *lot* of people. Not sure what would be the correct
-> way, so my apologies for ruining your inbox.
->
-> The 00-INDEX files are supposed to give a summary of all files present
-> in a directory, but these files are horribly out of date and their
-> usefulness is brought into question. Often a simple "ls" would reveal
-> the same information as the filenames are generally quite descriptive as
-> a short introduction to what the file covers (it should not surprise
-> anyone what Documentation/sched/sched-design-CFS.txt covers)
->
-> A few years back it was mentioned that these files were no longer really
-> needed, and they have since then grown further out of date, so perhaps
-> it is time to just throw them out.
->
-> A short status yields the following _outdated_ 00-INDEX files, first
-> counter is files listed in 00-INDEX but missing in the directory, last
-> is files present but not listed in 00-INDEX.
->
-> List of outdated 00-INDEX:
-> Documentation: (4/10)
-> Documentation/sysctl: (0/1)
-> Documentation/timers: (1/0)
-> Documentation/blockdev: (3/1)
-> Documentation/w1/slaves: (0/1)
-> Documentation/locking: (0/1)
-> Documentation/devicetree: (0/5)
-> Documentation/power: (1/1)
-> Documentation/powerpc: (0/5)
-> Documentation/arm: (1/0)
-> Documentation/x86: (0/9)
-> Documentation/x86/x86_64: (1/1)
-> Documentation/scsi: (4/4)
-> Documentation/filesystems: (2/9)
-> Documentation/filesystems/nfs: (0/2)
-> Documentation/cgroup-v1: (0/2)
-> Documentation/kbuild: (0/4)
-> Documentation/spi: (1/0)
-> Documentation/virtual/kvm: (1/0)
-> Documentation/scheduler: (0/2)
-> Documentation/fb: (0/1)
-> Documentation/block: (0/1)
-> Documentation/networking: (6/37)
-> Documentation/vm: (1/3)
->
-> Then there are 364 subdirectories in Documentation/ with several files that
-> are missing 00-INDEX alltogether (and another 120 with a single file and no
-> 00-INDEX).
->
-> I don't really have an opinion to whether or not we /should/ have 00-INDEX,
-> but the above 00-INDEX should either be removed or be kept up to date. If
-> we should keep the files, I can try to keep them updated, but I rather not
-> if we just want to delete them anyway.
->
-> As a starting point, remove all index-files and references to 00-INDEX and
-> see where the discussion is going.
->
-> Again, sorry for the insanely wide distribution.
->
-> Signed-off-by: Henrik Austad <henrik@austad.us>
-...
-> Signed-off-by: Henrik Austad <haustad@cisco.com>
-> ---
->  Documentation/00-INDEX                  | 428 --------------------------------
-...
+Due to hardware errata, Ampere Computing eMAG SATA can't support
+AHCI ALPM feature. This patch disables the AHCI ALPM feature for
+eMAG SATA.
 
-Looks reasonable to me, you can add my ACK for the NetLabel bits.
+Changes for v2:
 
-Acked-by: Paul Moore <paul@paul-moore.com>
+* Introduce the new ata_port_info object which includes ATA_FLAG_NO_LPM.
+* Include this object for eMAG SATA inside the acpi match table.
+* Retrieve the ata_port_info from the acpi match table.
 
+Signed-off-by: Suman Trpathi <stripathi@amperecomputing.com>
+Signed-off-by: Rameshwar Prasad Sahu <rameshwar.sahu@amperecomputing.com>
+---
+ drivers/ata/ahci_platform.c | 17 +++++++++++++++--
+ 1 file changed, 15 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 99f9a89..c3043f6 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -33,6 +33,13 @@
+ 	.port_ops	= &ahci_platform_ops,
+ };
+ 
++static const struct ata_port_info ahci_port_info_nolpm = {
++	.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NO_LPM,
++	.pio_mask	= ATA_PIO4,
++	.udma_mask	= ATA_UDMA6,
++	.port_ops	= &ahci_platform_ops,
++};
++
+ static struct scsi_host_template ahci_platform_sht = {
+ 	AHCI_SHT(DRV_NAME),
+ };
+@@ -41,7 +48,8 @@ static int ahci_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_host_priv *hpriv;
+-	int rc;
++	const struct ata_port_info *port;
++        int rc;
+ 
+ 	hpriv = ahci_platform_get_resources(pdev);
+ 	if (IS_ERR(hpriv))
+@@ -57,7 +65,11 @@ static int ahci_probe(struct platform_device *pdev)
+ 	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
+ 		hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
+ 
+-	rc = ahci_platform_init_host(pdev, hpriv, &ahci_port_info,
++	port = acpi_device_get_match_data(dev);
++	if (!port)
++		port = &ahci_port_info;
++
++	rc = ahci_platform_init_host(pdev, hpriv, port,
+ 				     &ahci_platform_sht);
+ 	if (rc)
+ 		goto disable_resources;
+@@ -85,6 +97,7 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_suspend,
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
+ 
+ static const struct acpi_device_id ahci_acpi_match[] = {
++	{ "APMC0D33", (unsigned long)&ahci_port_info_nolpm },
+ 	{ ACPI_DEVICE_CLASS(PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff) },
+ 	{},
+ };
 -- 
-paul moore
-www.paul-moore.com
+1.8.3.1
