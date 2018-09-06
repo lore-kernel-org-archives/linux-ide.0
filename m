@@ -1,33 +1,83 @@
-From: Steven Rostedt <rostedt@goodmis.org>
-Subject: Re: [PATCH] [RFC v2] Drop all 00-INDEX files from Documentation/
-Date: Thu, 6 Sep 2018 12:01:20 -0400
-Message-ID: <20180906120120.3dd1fc91@gandalf.local.home>
-References: <1536012923-16275-1-git-send-email-henrik@austad.us>
- <20180904113030.GB25177@amd>
- <20180904095908.13298b3d@gandalf.local.home>
- <20180906095804.5ab2716f@lwn.net>
+From: Suman Tripathi <stripathi@amperecomputing.com>
+Subject: [PATCH v3] ata: Disable AHCI ALPM feature for Ampere Computing eMAG SATA
+Date: Thu,  6 Sep 2018 11:05:11 -0700
+Message-ID: <1536257111-27948-1-git-send-email-stripathi@amperecomputing.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <20180906095804.5ab2716f@lwn.net>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Jonathan Corbet <corbet@lwn.net>
-Cc: Mark Rutland <mark.rutland@arm.com>, linux-mips@linux-mips.org, linux-fbdev@vger.kernel.org, x86@kernel.org, kvm@vger.kernel.org, linux-doc@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>, James Hogan <jhogan@kernel.org>, Henrik Austad <henrik@austad.us>, Will Deacon <will.deacon@arm.com>, dri-devel@lists.freedesktop.org, Masahiro Yamada <yamada.masahiro@socionext.com>, Jan Kandziora <jjj@gmx.de>, Paul Mackerras <paulus@samba.org>, Henrik Austad <haustad@cisco.com>, Pavel Machek <pavel@ucw.cz>, "H. Peter Anvin" <hpa@zytor.com>, Evgeniy Polyakov <zbr@ioremap.net>, linux-s390@vger.kernel.org, Ian Kent <raven@themaw.net>, linux-security-module@vger.kernel.org, Paul Moore <paul@paul-moore.com>, Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>, Radim =?UTF-8?B?S3LEjW3DocWZ?= <rkrcmar@redhat.com>, "James E.J. Bottomley" <jejb@parisc-linux.org>, Ingo
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: hdegoede@redhat.com, axboe@kernel.dk, tj@kernel.org, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, joe@perches.com, arnd@arndb.de, gregkh@linuxfoundation.org
+Cc: patches@amperecomputing.com, Suman Tripathi <stripathi@amperecomputing.com>, Rameshwar Prasad Sahu <rameshwar.sahu@amperecomputing.com>
 List-Id: linux-ide@vger.kernel.org
 
-T24gVGh1LCA2IFNlcCAyMDE4IDA5OjU4OjA0IC0wNjAwCkpvbmF0aGFuIENvcmJldCA8Y29yYmV0
-QGx3bi5uZXQ+IHdyb3RlOgoKPiBUaGFua3MsCj4gCj4gam9uICAod2hvIGlzIGluY3JlYXNpbmds
-eSBpbmNsaW5lZCB0byBhcHBseSB0aGlzIHBhdGNoKQoKQXMgQ29saW4gS2FlcGVybmljayBub3cg
-c2F5cy4uLiAiSnVzdCBkbyBpdCEiCgo7LSkKCi0tIFN0ZXZlCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCmRyaS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRl
-dmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9t
-YWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbAo=
+Due to hardware errata, Ampere Computing eMAG SATA can't support
+AHCI ALPM feature. This patch disables the AHCI ALPM feature for
+eMAG SATA.
+
+Signed-off-by: Suman Trpathi <stripathi@amperecomputing.com>
+Signed-off-by: Rameshwar Prasad Sahu <rameshwar.sahu@amperecomputing.com>
+
+---
+Changes for v3:
+
+* Fix the indentation and whitespace warnings.
+
+Changes for v2:
+
+* Introduce the new ata_port_info object which includes ATA_FLAG_NO_LPM.
+* Include this object for eMAG SATA inside the acpi match table.
+* Retrieve the ata_port_info from the acpi match table.
+
+---
+ drivers/ata/ahci_platform.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 99f9a89..9ba283f 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -33,6 +33,13 @@ static const struct ata_port_info ahci_port_info = {
+ 	.port_ops	= &ahci_platform_ops,
+ };
+
++static const struct ata_port_info ahci_port_info_nolpm = {
++	.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NO_LPM,
++	.pio_mask	= ATA_PIO4,
++	.udma_mask	= ATA_UDMA6,
++	.port_ops	= &ahci_platform_ops,
++};
++
+ static struct scsi_host_template ahci_platform_sht = {
+ 	AHCI_SHT(DRV_NAME),
+ };
+@@ -41,6 +48,7 @@ static int ahci_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_host_priv *hpriv;
++	const struct ata_port_info *port;
+ 	int rc;
+
+ 	hpriv = ahci_platform_get_resources(pdev);
+@@ -57,7 +65,11 @@ static int ahci_probe(struct platform_device *pdev)
+ 	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
+ 		hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
+
+-	rc = ahci_platform_init_host(pdev, hpriv, &ahci_port_info,
++	port = acpi_device_get_match_data(dev);
++	if (!port)
++		port = &ahci_port_info;
++
++	rc = ahci_platform_init_host(pdev, hpriv, port,
+ 				     &ahci_platform_sht);
+ 	if (rc)
+ 		goto disable_resources;
+@@ -85,6 +97,7 @@ static const struct of_device_id ahci_of_match[] = {
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
+
+ static const struct acpi_device_id ahci_acpi_match[] = {
++	{ "APMC0D33", (unsigned long)&ahci_port_info_nolpm },
+ 	{ ACPI_DEVICE_CLASS(PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff) },
+ 	{},
+ };
+--
+2.7.4
