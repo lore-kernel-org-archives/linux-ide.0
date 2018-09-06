@@ -1,129 +1,37 @@
-From: Suman Tripathi <stripathi@amperecomputing.com>
-Subject: RE: [PATCH v3] ata: Disable AHCI ALPM feature for Ampere Computing
- eMAG SATA
-Date: Thu, 6 Sep 2018 20:08:19 +0000
-Message-ID: <MWHPR01MB2336EE4B6E4923C9ED851F20B3010@MWHPR01MB2336.prod.exchangelabs.com>
-References: <1536257111-27948-1-git-send-email-stripathi@amperecomputing.com>
- <d3682fff-473f-021a-c805-466030b7644e@redhat.com>
+From: Daniel Vetter <daniel@ffwll.ch>
+Subject: Re: [PATCH] [RFC v2] Drop all 00-INDEX files from Documentation/
+Date: Thu, 6 Sep 2018 23:39:42 +0200
+Message-ID: <CAKMK7uHoeB89-VVS8qVaoNiP_0waHHJ=dFCUgXkRDTnRkXz69g@mail.gmail.com>
+References: <1536012923-16275-1-git-send-email-henrik@austad.us>
+ <20180904113030.GB25177@amd> <20180904095908.13298b3d@gandalf.local.home>
+ <20180906095804.5ab2716f@lwn.net> <20180906120120.3dd1fc91@gandalf.local.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <d3682fff-473f-021a-c805-466030b7644e@redhat.com>
-Content-Language: en-US
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Hans de Goede <hdegoede@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "tj@kernel.org" <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "joe@perches.com" <joe@perches.com>, "arnd@arndb.de" <arnd@arndb.de>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Cc: Open Source Submission <patches@amperecomputing.com>, Rameshwar Sahu <Rameshwar.Sahu@amperecomputing.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <20180906120120.3dd1fc91@gandalf.local.home>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: Steven Rostedt <rostedt@goodmis.org>
+Cc: Mark Rutland <mark.rutland@arm.com>, Linux MIPS Mailing List <linux-mips@linux-mips.org>, Linux Fbdev development list <linux-fbdev@vger.kernel.org>, Jan Kandziora <jjj@gmx.de>, =?UTF-8?B?UmFkaW0gS3LEjW3DocWZ?= <rkrcmar@redhat.com>, kvm@vger.kernel.org, Linux Doc Mailing List <linux-doc@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>, James Hogan <jhogan@kernel.org>, Mark Brown <broonie@kernel.org>, Henrik Austad <henrik@austad.us>, Will Deacon <will.deacon@arm.com>, dri-devel <dri-devel@lists.freedesktop.org>, Masahiro Yamada <yamada.masahiro@socionext.com>, devicetree@vger.kernel.org, Paul Mackerras <paulus@samba.org>, Henrik Austad <haustad@cisco.com>, Pavel Machek <pavel@ucw.cz>, "H. Peter Anvin" <hpa@zytor.com>, Evgeniy Polyakov <zbr@ioremap.net>, Ian Kent <raven@themaw.net>, linux-s390@vger.kernel.org, Paul Moore <paul@paul-moore.com>, Jonathan Corbet <cor>
 List-Id: linux-ide@vger.kernel.org
 
-Hi Hans,
-
-
-With regards,
-Suman
-
-
-
------Original Message-----
-From: Hans de Goede <hdegoede@redhat.com> 
-Sent: Thursday, September 6, 2018 1:06 PM
-To: Suman Tripathi <stripathi@amperecomputing.com>; axboe@kernel.dk; tj@kernel.org; linux-ide@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-kernel@vger.kernel.org; joe@perches.com; arnd@arndb.de; gregkh@linuxfoundation.org
-Cc: Open Source Submission <patches@amperecomputing.com>; Rameshwar Sahu <Rameshwar.Sahu@amperecomputing.com>
-Subject: Re: [PATCH v3] ata: Disable AHCI ALPM feature for Ampere Computing eMAG SATA
-
-[NOTICE: This email originated from an external sender. Please be mindful of safe email handling and proprietary information protection practices.] ________________________________________________________________________________________________________________________
-
-Hi,
-
-On 06-09-18 20:05, Suman Tripathi wrote:
-> Due to hardware errata, Ampere Computing eMAG SATA can't support AHCI 
-> ALPM feature. This patch disables the AHCI ALPM feature for eMAG SATA.
->
-> Signed-off-by: Suman Trpathi <stripathi@amperecomputing.com>
-> Signed-off-by: Rameshwar Prasad Sahu 
-> <rameshwar.sahu@amperecomputing.com>
-
-Sorry, but the patch is still coming through mangled. Did you use git send-email ?
-[Suman Tripathi] yes. I rechecked before sending twice. Sorry for the inconvenience. Will figure the issue out
-
-Regards,
-
-Hans
-
-
-
-
->
-> ---
-> Changes for v3:
->
-> * Fix the indentation and whitespace warnings.
->
-> Changes for v2:
->
-> * Introduce the new ata_port_info object which includes ATA_FLAG_NO_LPM.
-> * Include this object for eMAG SATA inside the acpi match table.
-> * Retrieve the ata_port_info from the acpi match table.
->
-> ---
->   drivers/ata/ahci_platform.c | 15 ++++++++++++++-
->   1 file changed, 14 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c 
-> index 99f9a89..9ba283f 100644
-> --- a/drivers/ata/ahci_platform.c
-> +++ b/drivers/ata/ahci_platform.c
-> @@ -33,6 +33,13 @@ static const struct ata_port_info ahci_port_info = {
->       .port_ops       = &ahci_platform_ops,
->   };
->
-> +static const struct ata_port_info ahci_port_info_nolpm = {
-> +     .flags          = AHCI_FLAG_COMMON | ATA_FLAG_NO_LPM,
-> +     .pio_mask       = ATA_PIO4,
-> +     .udma_mask      = ATA_UDMA6,
-> +     .port_ops       = &ahci_platform_ops,
-> +};
-> +
->   static struct scsi_host_template ahci_platform_sht = {
->       AHCI_SHT(DRV_NAME),
->   };
-> @@ -41,6 +48,7 @@ static int ahci_probe(struct platform_device *pdev)
->   {
->       struct device *dev = &pdev->dev;
->       struct ahci_host_priv *hpriv;
-> +     const struct ata_port_info *port;
->       int rc;
->
->       hpriv = ahci_platform_get_resources(pdev);
-> @@ -57,7 +65,11 @@ static int ahci_probe(struct platform_device *pdev)
->       if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
->               hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
->
-> -     rc = ahci_platform_init_host(pdev, hpriv, &ahci_port_info,
-> +     port = acpi_device_get_match_data(dev);
-> +     if (!port)
-> +             port = &ahci_port_info;
-> +
-> +     rc = ahci_platform_init_host(pdev, hpriv, port,
->                                    &ahci_platform_sht);
->       if (rc)
->               goto disable_resources;
-> @@ -85,6 +97,7 @@ static const struct of_device_id ahci_of_match[] = {
->   MODULE_DEVICE_TABLE(of, ahci_of_match);
->
->   static const struct acpi_device_id ahci_acpi_match[] = {
-> +     { "APMC0D33", (unsigned long)&ahci_port_info_nolpm },
->       { ACPI_DEVICE_CLASS(PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff) },
->       {},
->   };
-> --
-> 2.7.4
->
+T24gVGh1LCBTZXAgNiwgMjAxOCBhdCA2OjAxIFBNLCBTdGV2ZW4gUm9zdGVkdCA8cm9zdGVkdEBn
+b29kbWlzLm9yZz4gd3JvdGU6Cj4gT24gVGh1LCA2IFNlcCAyMDE4IDA5OjU4OjA0IC0wNjAwCj4g
+Sm9uYXRoYW4gQ29yYmV0IDxjb3JiZXRAbHduLm5ldD4gd3JvdGU6Cj4KPj4gVGhhbmtzLAo+Pgo+
+PiBqb24gICh3aG8gaXMgaW5jcmVhc2luZ2x5IGluY2xpbmVkIHRvIGFwcGx5IHRoaXMgcGF0Y2gp
+Cj4KPiBBcyBDb2xpbiBLYWVwZXJuaWNrIG5vdyBzYXlzLi4uICJKdXN0IGRvIGl0ISIKPgo+IDst
+KQoKKzEKCkJ1dCBJJ20gYmlhc2VkLCBJJ20gcGFydCBvZiB0aGUgcGFydHkgdGhhdCBpcyByZXNw
+b25zaWJsZSBmb3IgdGhlIG5ldwpzaGlueSBkb2N1bWVudGF0aW9uIHN5c3RlbSAuLi4KLURhbmll
+bAotLSAKRGFuaWVsIFZldHRlcgpTb2Z0d2FyZSBFbmdpbmVlciwgSW50ZWwgQ29ycG9yYXRpb24K
+KzQxICgwKSA3OSAzNjUgNTcgNDggLSBodHRwOi8vYmxvZy5mZndsbC5jaApfX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0
+CmRyaS1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3Rv
+cC5vcmcvbWFpbG1hbi9saXN0aW5mby9kcmktZGV2ZWwK
