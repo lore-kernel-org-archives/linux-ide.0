@@ -1,84 +1,81 @@
 From: Suman Tripathi <stripathi@amperecomputing.com>
-Subject: RE: [PATCH v2] ata: Disable AHCI ALPM feature for Ampere Computing
- eMAG SATA
-Date: Wed, 5 Sep 2018 20:21:11 +0000
-Message-ID: <MWHPR01MB2336D986A5C5E74E0F3D008FB3020@MWHPR01MB2336.prod.exchangelabs.com>
-References: <1536178375-31700-1-git-send-email-stripathi@amperecomputing.com>
- <e865f801-dc68-7583-62a0-40579c324e84@redhat.com>
+Subject: [PATCH v3] ata: Disable AHCI ALPM feature for Ampere Computing eMAG SATA
+Date: Wed,  5 Sep 2018 21:33:41 -0700
+Message-ID: <1536208421-24867-1-git-send-email-stripathi@amperecomputing.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <e865f801-dc68-7583-62a0-40579c324e84@redhat.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "tj@kernel.org" <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "joe@perches.com" <joe@perches.com>, "arnd@arndb.de" <arnd@arndb.de>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-Cc: Open Source Submission <patches@amperecomputing.com>, Rameshwar Sahu <Rameshwar.Sahu@amperecomputing.com>
+To: hdegoede@redhat.com, axboe@kernel.dk, tj@kernel.org, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, joe@perches.com, arnd@arndb.de, gregkh@linuxfoundation.org
+Cc: patches@amperecomputing.com, Suman Tripathi <stripathi@amperecomputing.com>, Rameshwar Prasad Sahu <rameshwar.sahu@amperecomputing.com>
 List-Id: linux-ide@vger.kernel.org
 
-SGkgSGFucw0KDQpUaGFua3MgZm9yIHlvdXIgcXVpY2sgcmV2aWV3ICEhDQoNCg0KV2l0aCByZWdh
-cmRzLA0KU3VtYW4NCg0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBIYW5z
-IGRlIEdvZWRlIDxoZGVnb2VkZUByZWRoYXQuY29tPiANClNlbnQ6IFdlZG5lc2RheSwgU2VwdGVt
-YmVyIDUsIDIwMTggMToxNiBQTQ0KVG86IFN1bWFuIFRyaXBhdGhpIDxzdHJpcGF0aGlAYW1wZXJl
-Y29tcHV0aW5nLmNvbT47IGF4Ym9lQGtlcm5lbC5kazsgdGpAa2VybmVsLm9yZzsgbGludXgtaWRl
-QHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOyBs
-aW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBqb2VAcGVyY2hlcy5jb207IGFybmRAYXJuZGIu
-ZGU7IGdyZWdraEBsaW51eGZvdW5kYXRpb24ub3JnDQpDYzogT3BlbiBTb3VyY2UgU3VibWlzc2lv
-biA8cGF0Y2hlc0BhbXBlcmVjb21wdXRpbmcuY29tPjsgUmFtZXNod2FyIFNhaHUgPFJhbWVzaHdh
-ci5TYWh1QGFtcGVyZWNvbXB1dGluZy5jb20+DQpTdWJqZWN0OiBSZTogW1BBVENIIHYyXSBhdGE6
-IERpc2FibGUgQUhDSSBBTFBNIGZlYXR1cmUgZm9yIEFtcGVyZSBDb21wdXRpbmcgZU1BRyBTQVRB
-DQoNCltOT1RJQ0U6IFRoaXMgZW1haWwgb3JpZ2luYXRlZCBmcm9tIGFuIGV4dGVybmFsIHNlbmRl
-ci4gUGxlYXNlIGJlIG1pbmRmdWwgb2Ygc2FmZSBlbWFpbCBoYW5kbGluZyBhbmQgcHJvcHJpZXRh
-cnkgaW5mb3JtYXRpb24gcHJvdGVjdGlvbiBwcmFjdGljZXMuXSBfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18NCg0KSGksDQoNCk9u
-IDA1LTA5LTE4IDIyOjEyLCBTdW1hbiBUcmlwYXRoaSB3cm90ZToNCj4gRHVlIHRvIGhhcmR3YXJl
-IGVycmF0YSwgQW1wZXJlIENvbXB1dGluZyBlTUFHIFNBVEEgY2FuJ3Qgc3VwcG9ydCBBSENJIA0K
-PiBBTFBNIGZlYXR1cmUuIFRoaXMgcGF0Y2ggZGlzYWJsZXMgdGhlIEFIQ0kgQUxQTSBmZWF0dXJl
-IGZvciBlTUFHIFNBVEEuDQo+DQo+IENoYW5nZXMgZm9yIHYyOg0KPg0KPiAqIEludHJvZHVjZSB0
-aGUgbmV3IGF0YV9wb3J0X2luZm8gb2JqZWN0IHdoaWNoIGluY2x1ZGVzIEFUQV9GTEFHX05PX0xQ
-TS4NCj4gKiBJbmNsdWRlIHRoaXMgb2JqZWN0IGZvciBlTUFHIFNBVEEgaW5zaWRlIHRoZSBhY3Bp
-IG1hdGNoIHRhYmxlLg0KPiAqIFJldHJpZXZlIHRoZSBhdGFfcG9ydF9pbmZvIGZyb20gdGhlIGFj
-cGkgbWF0Y2ggdGFibGUuDQo+DQo+IFNpZ25lZC1vZmYtYnk6IFN1bWFuIFRycGF0aGkgPHN0cmlw
-YXRoaUBhbXBlcmVjb21wdXRpbmcuY29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBSYW1lc2h3YXIgUHJh
-c2FkIFNhaHUgDQo+IDxyYW1lc2h3YXIuc2FodUBhbXBlcmVjb21wdXRpbmcuY29tPg0KPiAtLS0N
-Cj4gICBkcml2ZXJzL2F0YS9haGNpX3BsYXRmb3JtLmMgfCAxNyArKysrKysrKysrKysrKystLQ0K
-PiAgIDEgZmlsZSBjaGFuZ2VkLCAxNSBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQ0KPg0K
-PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvYWhjaV9wbGF0Zm9ybS5jIGIvZHJpdmVycy9hdGEv
-YWhjaV9wbGF0Zm9ybS5jIA0KPiBpbmRleCA5OWY5YTg5Li5jMzA0M2Y2IDEwMDY0NA0KPiAtLS0g
-YS9kcml2ZXJzL2F0YS9haGNpX3BsYXRmb3JtLmMNCj4gKysrIGIvZHJpdmVycy9hdGEvYWhjaV9w
-bGF0Zm9ybS5jDQo+IEBAIC0zMyw2ICszMywxMyBAQA0KPiAgICAgICAucG9ydF9vcHMgICAgICAg
-PSAmYWhjaV9wbGF0Zm9ybV9vcHMsDQo+ICAgfTsNCj4NCj4gK3N0YXRpYyBjb25zdCBzdHJ1Y3Qg
-YXRhX3BvcnRfaW5mbyBhaGNpX3BvcnRfaW5mb19ub2xwbSA9IHsNCj4gKyAgICAgLmZsYWdzICAg
-ICAgICAgID0gQUhDSV9GTEFHX0NPTU1PTiB8IEFUQV9GTEFHX05PX0xQTSwNCj4gKyAgICAgLnBp
-b19tYXNrICAgICAgID0gQVRBX1BJTzQsDQo+ICsgICAgIC51ZG1hX21hc2sgICAgICA9IEFUQV9V
-RE1BNiwNCj4gKyAgICAgLnBvcnRfb3BzICAgICAgID0gJmFoY2lfcGxhdGZvcm1fb3BzLA0KPiAr
-fTsNCj4gKw0KPiAgIHN0YXRpYyBzdHJ1Y3Qgc2NzaV9ob3N0X3RlbXBsYXRlIGFoY2lfcGxhdGZv
-cm1fc2h0ID0gew0KPiAgICAgICBBSENJX1NIVChEUlZfTkFNRSksDQo+ICAgfTsNCj4gQEAgLTQx
-LDcgKzQ4LDggQEAgc3RhdGljIGludCBhaGNpX3Byb2JlKHN0cnVjdCBwbGF0Zm9ybV9kZXZpY2Ug
-KnBkZXYpDQo+ICAgew0KPiAgICAgICBzdHJ1Y3QgZGV2aWNlICpkZXYgPSAmcGRldi0+ZGV2Ow0K
-PiAgICAgICBzdHJ1Y3QgYWhjaV9ob3N0X3ByaXYgKmhwcml2Ow0KPiAtICAgICBpbnQgcmM7DQo+
-ICsgICAgIGNvbnN0IHN0cnVjdCBhdGFfcG9ydF9pbmZvICpwb3J0Ow0KPiArICAgICAgICBpbnQg
-cmM7DQoNCllvdSBhcmUgYWNjaWRlbnRhbGx5IGNoYW5naW5nIHRoZSBpbmRlbnRhdGlvbiBvZiBy
-YyBoZXJlLg0KW1N1bWFuIFRyaXBhdGhpXSB5ZXMgd2lsbCBmaXggaW4gdjMNCg0KUGxlYXNlIGZp
-eCB0aGlzIGFuZCBydW4gc2NyaXB0cy9jaGVja3BhdGNoLnBsIG9uIHRoZSBwYXRjaCBiZWZvcmUg
-c3VibWl0dGluZyB2My4gT3RoZXJ3aXNlIHYyIGxvb2tzIGdvb2QuDQoNClJlZ2FyZHMsDQoNCkhh
-bnMNCg0KDQoNCg0KDQoNCj4NCj4gICAgICAgaHByaXYgPSBhaGNpX3BsYXRmb3JtX2dldF9yZXNv
-dXJjZXMocGRldik7DQo+ICAgICAgIGlmIChJU19FUlIoaHByaXYpKQ0KPiBAQCAtNTcsNyArNjUs
-MTEgQEAgc3RhdGljIGludCBhaGNpX3Byb2JlKHN0cnVjdCBwbGF0Zm9ybV9kZXZpY2UgKnBkZXYp
-DQo+ICAgICAgIGlmIChvZl9kZXZpY2VfaXNfY29tcGF0aWJsZShkZXYtPm9mX25vZGUsICJoaXNp
-bGljb24saGlzaS1haGNpIikpDQo+ICAgICAgICAgICAgICAgaHByaXYtPmZsYWdzIHw9IEFIQ0lf
-SEZMQUdfTk9fRkJTIHwgQUhDSV9IRkxBR19OT19OQ1E7DQo+DQo+IC0gICAgIHJjID0gYWhjaV9w
-bGF0Zm9ybV9pbml0X2hvc3QocGRldiwgaHByaXYsICZhaGNpX3BvcnRfaW5mbywNCj4gKyAgICAg
-cG9ydCA9IGFjcGlfZGV2aWNlX2dldF9tYXRjaF9kYXRhKGRldik7DQo+ICsgICAgIGlmICghcG9y
-dCkNCj4gKyAgICAgICAgICAgICBwb3J0ID0gJmFoY2lfcG9ydF9pbmZvOw0KPiArDQo+ICsgICAg
-IHJjID0gYWhjaV9wbGF0Zm9ybV9pbml0X2hvc3QocGRldiwgaHByaXYsIHBvcnQsDQo+ICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgJmFoY2lfcGxhdGZvcm1fc2h0KTsNCj4gICAg
-ICAgaWYgKHJjKQ0KPiAgICAgICAgICAgICAgIGdvdG8gZGlzYWJsZV9yZXNvdXJjZXM7DQo+IEBA
-IC04NSw2ICs5Nyw3IEBAIHN0YXRpYyBTSU1QTEVfREVWX1BNX09QUyhhaGNpX3BtX29wcywgYWhj
-aV9wbGF0Zm9ybV9zdXNwZW5kLA0KPiAgIE1PRFVMRV9ERVZJQ0VfVEFCTEUob2YsIGFoY2lfb2Zf
-bWF0Y2gpOw0KPg0KPiAgIHN0YXRpYyBjb25zdCBzdHJ1Y3QgYWNwaV9kZXZpY2VfaWQgYWhjaV9h
-Y3BpX21hdGNoW10gPSB7DQo+ICsgICAgIHsgIkFQTUMwRDMzIiwgKHVuc2lnbmVkIGxvbmcpJmFo
-Y2lfcG9ydF9pbmZvX25vbHBtIH0sDQo+ICAgICAgIHsgQUNQSV9ERVZJQ0VfQ0xBU1MoUENJX0NM
-QVNTX1NUT1JBR0VfU0FUQV9BSENJLCAweGZmZmZmZikgfSwNCj4gICAgICAge30sDQo+ICAgfTsN
-Cj4NCg==
+Due to hardware errata, Ampere Computing eMAG SATA can't support
+AHCI ALPM feature. This patch disables the AHCI ALPM feature for
+eMAG SATA.
+
+Changes for v2:
+
+* Introduce the new ata_port_info object which includes ATA_FLAG_NO_LPM.
+* Include this object for eMAG SATA inside the acpi match table.
+* Retrieve the ata_port_info from the acpi match table.
+
+Changes for v3:
+
+* Fix the indentation and whitespace warnings.
+
+Signed-off-by: Suman Trpathi <stripathi@amperecomputing.com>
+Signed-off-by: Rameshwar Prasad Sahu <rameshwar.sahu@amperecomputing.com>
+---
+ drivers/ata/ahci_platform.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 99f9a89..9ba283f 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -33,6 +33,13 @@ static const struct ata_port_info ahci_port_info = {
+ 	.port_ops	= &ahci_platform_ops,
+ };
+
++static const struct ata_port_info ahci_port_info_nolpm = {
++	.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NO_LPM,
++	.pio_mask	= ATA_PIO4,
++	.udma_mask	= ATA_UDMA6,
++	.port_ops	= &ahci_platform_ops,
++};
++
+ static struct scsi_host_template ahci_platform_sht = {
+ 	AHCI_SHT(DRV_NAME),
+ };
+@@ -41,6 +48,7 @@ static int ahci_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_host_priv *hpriv;
++	const struct ata_port_info *port;
+ 	int rc;
+
+ 	hpriv = ahci_platform_get_resources(pdev);
+@@ -57,7 +65,11 @@ static int ahci_probe(struct platform_device *pdev)
+ 	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
+ 		hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
+
+-	rc = ahci_platform_init_host(pdev, hpriv, &ahci_port_info,
++	port = acpi_device_get_match_data(dev);
++	if (!port)
++		port = &ahci_port_info;
++
++	rc = ahci_platform_init_host(pdev, hpriv, port,
+ 				     &ahci_platform_sht);
+ 	if (rc)
+ 		goto disable_resources;
+@@ -85,6 +97,7 @@ static const struct of_device_id ahci_of_match[] = {
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
+
+ static const struct acpi_device_id ahci_acpi_match[] = {
++	{ "APMC0D33", (unsigned long)&ahci_port_info_nolpm },
+ 	{ ACPI_DEVICE_CLASS(PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff) },
+ 	{},
+ };
+--
+2.7.4
