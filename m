@@ -1,89 +1,35 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: Re: [PATCH RFC 3/5] coccinelle: add xxxsetbitsXX converting spatch
-Date: Sun, 9 Sep 2018 13:13:25 +0200
-Message-ID: <463dbbdc-7afc-bee8-8da1-bbe70b4aec26@users.sourceforge.net>
-References: <1536349307-20714-4-git-send-email-clabbe@baylibre.com>
+From: Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [PATCH] [RFC v2] Drop all 00-INDEX files from Documentation/
+Date: Sun, 9 Sep 2018 15:12:37 -0600
+Message-ID: <20180909151237.4bc1b3e2@lwn.net>
+References: <1536012923-16275-1-git-send-email-henrik@austad.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1536349307-20714-4-git-send-email-clabbe@baylibre.com>
-Content-Language: en-GB
-Sender: linux-kernel-owner@vger.kernel.org
-To: Corentin Labbe <clabbe@baylibre.com>, kernel-janitors@vger.kernel.org
-Cc: Coccinelle <cocci@systeme.lip6.fr>, linux-amlogic@lists.infradead.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-sunxi@googlegroups.com, linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, Alexandre Torgue <alexandre.torgue@st.com>, Alistair Popple <alistair@popple.id.au>, Anatolij Gustschin <agust@denx.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Carlo Caione <carlo@caione.org>, Chen-Yu Tsai <wens@csie.org>, "David S. Miller" <davem@davemloft.net>, Gilles Muller <Gilles.Muller@lip6.fr>, Giuseppe Cavallaro <peppe.cavallaro@st.com>, Jose Abreu <joabreu@synopsys.com>, Julia Lawall <julia.lawall@lip6.fr>, Kevin Hilman <khilman@baylibre.com>, Kumar Gala <galak@kernel.crashing.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <1536012923-16275-1-git-send-email-henrik@austad.us>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: Henrik Austad <henrik@austad.us>
+Cc: Mark Rutland <mark.rutland@arm.com>, linux-mips@linux-mips.org, linux-fbdev@vger.kernel.org, x86@kernel.org, kvm@vger.kernel.org, linux-doc@vger.kernel.org, Peter Zijlstra <peterz@infradead.org>, James Hogan <jhogan@kernel.org>, Will Deacon <will.deacon@arm.com>, dri-devel@lists.freedesktop.org, Masahiro Yamada <yamada.masahiro@socionext.com>, Jan Kandziora <jjj@gmx.de>, Paul Mackerras <paulus@samba.org>, Henrik Austad <haustad@cisco.com>, Pavel Machek <pavel@ucw.cz>, "H. Peter Anvin" <hpa@zytor.com>, Evgeniy Polyakov <zbr@ioremap.net>, linux-s390@vger.kernel.org, Ian Kent <raven@themaw.net>, linux-security-module@vger.kernel.org, Paul Moore <paul@paul-moore.com>, Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>, Radim =?UTF-8?B?S3LEjW3DocWZ?= <rkrcmar@redhat.com>, "James E.J. Bottomley" <jejb@parisc-linux.org>, Ingo Molnar <mingo@redhat.com>, Paul E
 List-Id: linux-ide@vger.kernel.org
 
-How do you think about to add any more meta-data for this semantic patch script?
-
-* SPDX identifier
-* Copyright information
-* Confidence level
-
-https://bottest.wiki.kernel.org/coccicheck
-
-
-> +virtual context
-
-Further variables will be needed if you would like to use corresponding
-operation modes (besides “patch”).
-
-
-> +expression reg;
-> +expression set;
-> +expression clear;
-
-I propose once more to avoid the repetition of (unnecessary) SmPL code.
-This part could be written like the following instead.
-
-+expression clear, set, reg;
-
-
-If you would increase the usage of SmPL disjunctions, the specification
-of duplicate SmPL code could be reduced considerably.
-
-* Would you like to merge SmPL rules based on the distinction between
-  the data types “u32” and “u64”?
-
-* Did you identify any optional code in this transformation approach?
-
-
-> +@@
-> +expression base;
-> +expression offset;
-> +expression value;
-> +@@
-> +
-> +- mtu3_setbits(base, offset, value);
-> ++ setbits32(base + offset, value);
-> +
-> +@@
-> +expression base;
-> +expression offset;
-> +expression mask;
-> +@@
-> +
-> +- mtu3_clrbits(base, offset, mask);
-> ++ clrbits32(base + offset, mask);
-
-Another update suggestion:
-
-+@replacement@
-+expression base, offset;
-+@@
-+(
-+-mtu3_clrbits
-++clrbits32
-+|
-+-mtu3_setbits
-++setbits32
-+)(base
-+-     ,
-++ +
-+  offset, ...);
-
-
-Would you like to try further software fine-tuning out?
-
-Regards,
-Markus
+T24gVHVlLCAgNCBTZXAgMjAxOCAwMDoxNToyMyArMDIwMApIZW5yaWsgQXVzdGFkIDxoZW5yaWtA
+YXVzdGFkLnVzPiB3cm90ZToKCj4gSSBkb24ndCByZWFsbHkgaGF2ZSBhbiBvcGluaW9uIHRvIHdo
+ZXRoZXIgb3Igbm90IHdlIC9zaG91bGQvIGhhdmUgMDAtSU5ERVgsCj4gYnV0IHRoZSBhYm92ZSAw
+MC1JTkRFWCBzaG91bGQgZWl0aGVyIGJlIHJlbW92ZWQgb3IgYmUga2VwdCB1cCB0byBkYXRlLiBJ
+Zgo+IHdlIHNob3VsZCBrZWVwIHRoZSBmaWxlcywgSSBjYW4gdHJ5IHRvIGtlZXAgdGhlbSB1cGRh
+dGVkLCBidXQgSSByYXRoZXIgbm90Cj4gaWYgd2UganVzdCB3YW50IHRvIGRlbGV0ZSB0aGVtIGFu
+eXdheS4KPiAKPiBBcyBhIHN0YXJ0aW5nIHBvaW50LCByZW1vdmUgYWxsIGluZGV4LWZpbGVzIGFu
+ZCByZWZlcmVuY2VzIHRvIDAwLUlOREVYIGFuZAo+IHNlZSB3aGVyZSB0aGUgZGlzY3Vzc2lvbiBp
+cyBnb2luZy4KCkFwcGxpZWQsIHRoYW5rcy4KCmpvbgpfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXwpkcmktZGV2ZWwgbWFpbGluZyBsaXN0CmRyaS1kZXZlbEBs
+aXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1h
+bi9saXN0aW5mby9kcmktZGV2ZWwK
