@@ -1,49 +1,37 @@
-From: LABBE Corentin <clabbe@baylibre.com>
-Subject: Re: [PATCH 2/5] include: add
- setbits32/clrbits32/clrsetbits32/setbits64/clrbits64/clrsetbits64 in
- linux/setbits.h
-Date: Mon, 10 Sep 2018 20:53:25 +0200
-Message-ID: <20180910185325.GC7819@Red>
-References: <1536349307-20714-1-git-send-email-clabbe@baylibre.com>
- <1536349307-20714-3-git-send-email-clabbe@baylibre.com>
- <a1795266-5679-289d-5cce-1111babf3180@c-s.fr>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 11/11] compat_ioctl: move tape handling into drivers
+Date: Tue, 11 Sep 2018 17:36:46 +0200
+Message-ID: <CAK8P3a0evhaJGL_XdUjQhJDGyAh01UjLFkKx-Cq21htXmFsY2A@mail.gmail.com>
+References: <20180908142837.2819693-1-arnd@arndb.de> <20180908142837.2819693-11-arnd@arndb.de>
+ <20180909043746.GF19965@ZenIV.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <a1795266-5679-289d-5cce-1111babf3180@c-s.fr>
+In-Reply-To: <20180909043746.GF19965@ZenIV.linux.org.uk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christophe LEROY <christophe.leroy@c-s.fr>
-Cc: Gilles.Muller@lip6.fr, Julia.Lawall@lip6.fr, agust@denx.de, alexandre.torgue@st.com, alistair@popple.id.au, benh@kernel.crashing.org, carlo@caione.org, davem@davemloft.net, galak@kernel.crashing.org, joabreu@synopsys.com, khilman@baylibre.com, maxime.ripard@bootlin.com, michal.lkml@markovi.net, mpe@ellerman.id.au, mporter@kernel.crashing.org, nicolas.palix@imag.fr, oss@buserror.net, paulus@samba.org, peppe.cavallaro@st.com, tj@kernel.org, vitb@kernel.crashing.org, wens@csie.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-sunxi@googlegroups.com, linux-amlogic@lists.infradead.org, linuxppc-dev@lists.ozlabs.org, cocci@systeme.lip6.fr, linux-arm-kernel@lists.infradead.org
+To: Al Viro <viro@zeniv.linux.org.uk>
+Cc: David Miller <davem@davemloft.net>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, osst@riede.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Kai.Makisara@kolumbus.fi, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE-ML <linux-ide@vger.kernel.org>, linux-s390 <linux-s390@vger.kernel.org>, osst-users@lists.sourceforge.net, linux-scsi <linux-scsi@vger.kernel.org>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Sep 10, 2018 at 07:22:04AM +0200, Christophe LEROY wrote:
-> 
-> 
-> Le 07/09/2018 à 21:41, Corentin Labbe a écrit :
-> > This patch adds setbits32/clrbits32/clrsetbits32 and
-> > setbits64/clrbits64/clrsetbits64 in linux/setbits.h header.
-> 
-> So you changed the name of setbits32() ... to setbits32_be() and now you 
-> are adding new functions called setbits32() ... which do something 
-> different ?
-> 
-> What will happen if any file has been forgotten during the conversion, 
-> or if anybody has outoftree drivers and missed this change ?
-> They will silently successfully compile without any error or warning, 
-> and the result will be crap buggy.
-> 
-> And why would it be more legitim to have setbits32() be implicitely LE 
-> instead of implicitely BE ?
-> 
-> I really think those new functions should be called something like 
-> setbits_le32() ...
-> 
+On Sun, Sep 9, 2018 at 6:38 AM Al Viro <viro@zeniv.linux.org.uk> wrote:
+>
+> On Sat, Sep 08, 2018 at 04:28:17PM +0200, Arnd Bergmann wrote:
+> > MTIOCPOS and MTIOCGET are incompatible between 32-bit and 64-bit user
+> > space, and traditionally have been translated in fs/compat_ioctl.c.
+> >
+> > To get rid of that translation handler, move a corresponding
+> > implementation into each of the four drivers implementing those commands.
+> >
+> > The interesting part of that is now in a new linux/mtio.h header that
+> > wraps the existing uapi/linux/mtio.h header and provides an abstraction
+> > to let drivers handle both cases easily.
+>
+> Ugh...  Frankly, this bool compat passed all way down looks wrong.
+> I can live with that; the question is whether block folks will be
+> OK with that thing...
 
-I believed that writel/readl was endian agnostic so it explain my mistake.
+I have tried to come up with an alternative, but couldn't really find anything
+that is less ugly. Since nobody else complained, I'll resend this version
+along with the other patches.
 
-I will use xxxbits_le32 as you requests.
-
-Thanks
-Regards
+       Arnd
