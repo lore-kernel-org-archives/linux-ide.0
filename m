@@ -1,30 +1,74 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] IDE: ide-dma: fix coding style issues with spaces
-Date: Fri, 14 Sep 2018 14:16:50 -0700 (PDT)
-Message-ID: <20180914.141650.1899234204768709995.davem@davemloft.net>
-References: <20180914202540.11977-1-r.aviolat@gmail.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 4/5] scsi: libsas: check the ata device status by
+ ata_dev_enabled()
+Date: Tue, 18 Sep 2018 14:54:45 +0100
+Message-ID: <57f8b9fb-3a5b-fda6-5e3c-af23524431f4@huawei.com>
+References: <20180912082946.34814-1-yanaijie@huawei.com>
+ <20180912082946.34814-5-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180914202540.11977-1-r.aviolat@gmail.com>
+In-Reply-To: <20180912082946.34814-5-yanaijie@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: r.aviolat@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jason Yan <yanaijie@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, zhaohongjiang@huawei.com, hare@suse.com, dan.j.williams@intel.com, jthumshirn@suse.de, hch@lst.de, huangdaode@hisilicon.com, chenxiang66@hisilicon.com, miaoxie@huawei.com, Ewan Milne <emilne@redhat.com>, Tomas Henzl <thenzl@redhat.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-From: Romain Aviolat <r.aviolat@gmail.com>
-Date: Fri, 14 Sep 2018 22:25:40 +0200
++
 
-> Fixing multiple coding style issues:
-> 	* prohibited spaces before that ','
-> 	* spaces before tabs
-> 
-> Signed-off-by: Romain Aviolat <r.aviolat@gmail.com>
+On 12/09/2018 09:29, Jason Yan wrote:
+> When ata device IDENTIFY failed, the ata device status is
+> ATA_DEV_UNKNOWN. The libata reported like:
+>
+> [113518.620433] ata5.00: qc timeout (cmd 0xec)
+> [113518.653646] ata5.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+>
+> But libsas verifies the device status by ata_dev_disabled(), which
+> skiped ATA_DEV_UNKNOWN. This will make libsas think the ata device
 
-This kind of coding style fix has very little value for a subsystem
-which is essentially frozen from changes, and to which the less
-changes that happen to it the better in order to avoid potential
-regressions.
+/s/skiped/skipped/
 
-Therefore I am not applying this patch, sorry.
+> probing succeed the device cannot be actually brought up. And even the
+> new bcast of this device will be considered as flutter and will not
+> probe this device again.
+>
+> Change ata_dev_disabled() to !ata_dev_enabled() so that libsas can
+> deal with this if the ata device probe failed. New bcasts can let us
+> try to probe the device again and bring it up if it is fine to
+> IDENTIFY.
+>
+> Tested-by: Zhou Yupeng <zhouyupeng1@huawei.com>
+> Signed-off-by: Jason Yan <yanaijie@huawei.com>
+
+Reviewed-by: John Garry <john.garry@huawei.com>
+
+> CC: John Garry <john.garry@huawei.com>
+> CC: Johannes Thumshirn <jthumshirn@suse.de>
+> CC: Ewan Milne <emilne@redhat.com>
+> CC: Christoph Hellwig <hch@lst.de>
+> CC: Tomas Henzl <thenzl@redhat.com>
+> CC: Dan Williams <dan.j.williams@intel.com>
+> CC: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/libsas/sas_ata.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+> index 64a958a99f6a..4f6cdf53e913 100644
+> --- a/drivers/scsi/libsas/sas_ata.c
+> +++ b/drivers/scsi/libsas/sas_ata.c
+> @@ -654,7 +654,7 @@ void sas_probe_sata(struct asd_sas_port *port)
+>  		/* if libata could not bring the link up, don't surface
+>  		 * the device
+>  		 */
+> -		if (ata_dev_disabled(sas_to_ata_dev(dev)))
+> +		if (!ata_dev_enabled(sas_to_ata_dev(dev)))
+
+I do wonder if ata_dev_disabled() needs to be updated to cover 
+ATA_DEV_UNKNOWN also or even instead of this change?
+
+>  			sas_fail_probe(dev, __func__, -ENODEV);
+>  	}
+>
+>
