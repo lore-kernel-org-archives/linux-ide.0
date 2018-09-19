@@ -1,54 +1,206 @@
 From: Aditya Prayoga <aditya@kobol.io>
-Subject: [PATCH 0/2] Add support per ATA port ledtrigger on armada 38x
-Date: Wed, 19 Sep 2018 11:45:28 +0800
-Message-ID: <1537328730-9156-1-git-send-email-aditya@kobol.io>
+Subject: [PATCH 1/2] libata: add ledtrig support
+Date: Wed, 19 Sep 2018 11:45:29 +0800
+Message-ID: <1537328730-9156-2-git-send-email-aditya@kobol.io>
+References: <1537328730-9156-1-git-send-email-aditya@kobol.io>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1537328730-9156-1-git-send-email-aditya@kobol.io>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org, linux-leds@vger.kernel.org
 Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@bootlin.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Russell King <linux@armlinux.org.uk>, Jens Axboe <axboe@kernel.dk>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Jacek Anaszewski <jacek.anaszewski@gmail.com>, Pavel Machek <pavel@ucw.cz>, Daniel Golle <daniel@makrotopia.org>, Aditya Prayoga <aditya@kobol.io>
 List-Id: linux-ide@vger.kernel.org
 
-Hi everyone,
+From: Daniel Golle <daniel@makrotopia.org>
 
-This series adds support LED trigger for each ATA port indicating disk activity
-in Armada 38x. I pick up the work done by Daniel Golle which can be found at [1]
+This adds a LED trigger for each ATA port indicating disk activity.
 
-Helios4 which is based on Armada 388, has four LEDs designed to indicate disk
-activity on each SATA ports. As the final switch (CONFIG_ATA_LEDS) to enable
-the codepath by default is no, it should not affect the rest of Armada 38x 
-based boards.
+As this is needed only on specific platforms (NAS SoCs and such),
+these platforms should define ARCH_WANTS_LIBATA_LEDS if there
+are boards with LED(s) intended to indicate ATA disk activity and
+need the OS to take care of that.
+In that way, if not selected, LED trigger support not will be
+included in libata-core and both, codepaths and structures remain
+untouched.
 
-[1] https://patchwork.ozlabs.org/patch/420733/ 
----
-Notes
-  checkpatch.pl complains about "WARNING: please write a paragraph that
-    describes the config symbol fully" but I think the description is clear
-    enough to ignore the warning.
+I'm currently deploying this for the oxnas target in OpenWrt
+https://dev.openwrt.org/changeset/43675/
 
-  Some performance number tested on Western Digital Red 2TB WD20EFRX
-    using fio randrw
-    * CONFIG_ATA_LEDS disabled and selected trigger is none
-      read : iops=326
-      write : iops=109
-    * CONFIG_ATA_LEDS disabled and selected trigger is disk-activity
-      read : iops=325
-      write : iops=108
-    * CONFIG_ATA_LEDS enabled and selected trigger is ata1
-      read : iops=325
-      write : iops=108
+v2: rebased to kernel/git/tj/libata.git
+    plus small corrections and comments added
+
+Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+URL: https://patchwork.ozlabs.org/patch/420733/
+[Aditya Prayoga:
+* Port forward
+* Change ATA_LEDS default to no
+* Reduce performance impact by moving ata_led_act() call from
+    ata_qc_new() to ata_qc_complete()]
+Signed-off-by: Aditya Prayoga <aditya@kobol.io>
 
 ---
-Aditya Prayoga (1):
-  ARM: mvebu: Enable ARCH_WANT_LIBATA_LEDS in Armada 38x
 
-Daniel Golle (1):
-  libata: add ledtrig support
+If there is anything fundamentally wrong with that approach, I'd be
+glad for some advise on how to do it better.
+I conciously choose an #ifdev approach to make sure performance will
+not be affected for non-users of that code.
 
- arch/arm/mach-mvebu/Kconfig |  1 +
- drivers/ata/Kconfig         | 16 +++++++++++++
- drivers/ata/libata-core.c   | 56 +++++++++++++++++++++++++++++++++++++++++++++
- include/linux/libata.h      |  7 ++++++
- 4 files changed, 80 insertions(+)
+Thanks
 
+Daniel
+
+---
+---
+ drivers/ata/Kconfig       | 16 ++++++++++++++
+ drivers/ata/libata-core.c | 56 +++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/libata.h    |  7 ++++++
+ 3 files changed, 79 insertions(+)
+
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 39b181d..a2c64ce 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -46,6 +46,22 @@ config ATA_VERBOSE_ERROR
+ 
+ 	  If unsure, say Y.
+ 
++config ARCH_WANT_LIBATA_LEDS
++	bool
++
++config ATA_LEDS
++	bool "support ATA port LED triggers"
++	depends on ARCH_WANT_LIBATA_LEDS
++	select NEW_LEDS
++	select LEDS_CLASS
++	select LEDS_TRIGGERS
++	default n
++	help
++	  This option adds a LED trigger for each registered ATA port.
++	  It is used to drive disk activity leds connected via GPIO.
++
++	  If unsure, say N.
++
+ config ATA_ACPI
+ 	bool "ATA ACPI Support"
+ 	depends on ACPI
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 599e01b..65228f5 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5105,6 +5105,30 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
+ }
+ 
+ /**
++ *	ata_led_act - Trigger port activity LED
++ *	@ap: indicating port
++ *
++ *	Blinks any LEDs registered to the trigger.
++ *	Commonly used with leds-gpio on NAS systems with disk activity
++ *	indicator LEDs.
++ *
++ *	LOCKING:
++ *	None.
++ */
++static inline void ata_led_act(struct ata_port *ap)
++{
++#ifdef CONFIG_ATA_LEDS
++#define LIBATA_BLINK_DELAY 20 /* ms */
++	unsigned long led_delay = LIBATA_BLINK_DELAY;
++
++	if (unlikely(!ap->ledtrig))
++		return;
++
++	led_trigger_blink_oneshot(ap->ledtrig, &led_delay, &led_delay, 0);
++#endif /* CONFIG_ATA_LEDS */
++}
++
++/**
+  *	ata_qc_new_init - Request an available ATA command, and initialize it
+  *	@dev: Device from whom we request an available command structure
+  *	@tag: tag
+@@ -5249,6 +5273,10 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
+ 	/* Trigger the LED (if available) */
+ 	ledtrig_disk_activity(!!(qc->tf.flags & ATA_TFLAG_WRITE));
+ 
++#ifdef CONFIG_ATA_LEDS
++	ata_led_act(ap);
++#endif
++
+ 	/* XXX: New EH and old EH use different mechanisms to
+ 	 * synchronize EH with regular execution path.
+ 	 *
+@@ -6028,6 +6056,9 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+ 	ap->stats.unhandled_irq = 1;
+ 	ap->stats.idle_irq = 1;
+ #endif
++#ifdef CONFIG_ATA_LEDS
++	ap->ledtrig = kzalloc(sizeof(struct led_trigger), GFP_KERNEL);
++#endif
+ 	ata_sff_port_init(ap);
+ 
+ 	return ap;
+@@ -6063,6 +6094,12 @@ static void ata_host_release(struct kref *kref)
+ 
+ 		kfree(ap->pmp_link);
+ 		kfree(ap->slave_link);
++#ifdef CONFIG_ATA_LEDS
++		if (ap->ledtrig) {
++			led_trigger_unregister(ap->ledtrig);
++			kfree(ap->ledtrig);
++		};
++#endif
+ 		kfree(ap);
+ 		host->ports[i] = NULL;
+ 	}
+@@ -6527,6 +6564,25 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+ 		host->ports[i]->local_port_no = i + 1;
+ 	}
+ 
++#ifdef CONFIG_ATA_LEDS
++	/* register LED triggers for all ports */
++	for (i = 0; i < host->n_ports; i++) {
++		if (unlikely(!host->ports[i]->ledtrig))
++			continue;
++
++		snprintf(host->ports[i]->ledtrig_name,
++			sizeof(host->ports[i]->ledtrig_name), "ata%u",
++			host->ports[i]->print_id);
++
++		host->ports[i]->ledtrig->name = host->ports[i]->ledtrig_name;
++
++		if (led_trigger_register(host->ports[i]->ledtrig)) {
++			kfree(host->ports[i]->ledtrig);
++			host->ports[i]->ledtrig = NULL;
++		}
++	}
++#endif
++
+ 	/* Create associated sysfs transport objects  */
+ 	for (i = 0; i < host->n_ports; i++) {
+ 		rc = ata_tport_add(host->dev,host->ports[i]);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 38c95d6..3cc5f63 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -38,6 +38,7 @@
+ #include <linux/acpi.h>
+ #include <linux/cdrom.h>
+ #include <linux/sched.h>
++#include <linux/leds.h>
+ 
+ /*
+  * Define if arch has non-standard setup.  This is a _PCI_ standard
+@@ -893,6 +894,12 @@ struct ata_port {
+ #ifdef CONFIG_ATA_ACPI
+ 	struct ata_acpi_gtm	__acpi_init_gtm; /* use ata_acpi_init_gtm() */
+ #endif
++
++#ifdef CONFIG_ATA_LEDS
++	struct led_trigger	*ledtrig;
++	char			ledtrig_name[8];
++#endif
++
+ 	/* owned by EH */
+ 	u8			sector_buf[ATA_SECT_SIZE] ____cacheline_aligned;
+ };
 -- 
 2.7.4
