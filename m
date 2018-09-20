@@ -1,7 +1,7 @@
 From: Florian Fainelli <f.fainelli@gmail.com>
-Subject: [PATCH 1/9] dt-bindings: phy: Document BCM63138 compatible string
-Date: Thu, 20 Sep 2018 12:16:35 -0700
-Message-ID: <20180920191646.18198-2-f.fainelli@gmail.com>
+Subject: [PATCH 2/9] phy: brcm-sata: allow PHY_BRCM_SATA driver to be built for DSL SoCs
+Date: Thu, 20 Sep 2018 12:16:36 -0700
+Message-ID: <20180920191646.18198-3-f.fainelli@gmail.com>
 References: <20180920191646.18198-1-f.fainelli@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180920191646.18198-1-f.fainelli@gmail.com>
@@ -12,25 +12,28 @@ Cc: Florian Fainelli <f.fainelli@gmail.com>, Jens Axboe <axboe@kernel.dk>, Rob H
         DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, bcm-kernel-feedback-list@broadcom.com
 List-Id: linux-ide@vger.kernel.org
 
-Document the compatible string "brcm,bcm63138-sata-phy" as a valid
-compatible string describing the standard Broadcom SATA PHY block.
+Broadcom ARM-based DSL SoCs (BCM63xx product line) have the same
+Broadcom SATA PHY that other SoCs are using, make it possible to select
+that driver on these platforms.
 
 Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
 ---
- Documentation/devicetree/bindings/phy/brcm-sata-phy.txt | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/phy/broadcom/Kconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/phy/brcm-sata-phy.txt b/Documentation/devicetree/bindings/phy/brcm-sata-phy.txt
-index 0aced97d8092..b640845fec67 100644
---- a/Documentation/devicetree/bindings/phy/brcm-sata-phy.txt
-+++ b/Documentation/devicetree/bindings/phy/brcm-sata-phy.txt
-@@ -8,6 +8,7 @@ Required properties:
-      "brcm,iproc-nsp-sata-phy"
-      "brcm,phy-sata3"
-      "brcm,iproc-sr-sata-phy"
-+     "brcm,bcm63138-sata-phy"
- - address-cells: should be 1
- - size-cells: should be 0
- - reg: register ranges for the PHY PCB interface
+diff --git a/drivers/phy/broadcom/Kconfig b/drivers/phy/broadcom/Kconfig
+index 8786a9674471..aa917a61071d 100644
+--- a/drivers/phy/broadcom/Kconfig
++++ b/drivers/phy/broadcom/Kconfig
+@@ -60,7 +60,8 @@ config PHY_NS2_USB_DRD
+ 
+ config PHY_BRCM_SATA
+ 	tristate "Broadcom SATA PHY driver"
+-	depends on ARCH_BRCMSTB || ARCH_BCM_IPROC || BMIPS_GENERIC || COMPILE_TEST
++	depends on ARCH_BRCMSTB || ARCH_BCM_IPROC || BMIPS_GENERIC || \
++		   ARCH_BCM_63XX || COMPILE_TEST
+ 	depends on OF
+ 	select GENERIC_PHY
+ 	default ARCH_BCM_IPROC
 -- 
 2.17.1
