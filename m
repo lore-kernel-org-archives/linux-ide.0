@@ -1,7 +1,7 @@
 From: Florian Fainelli <f.fainelli@gmail.com>
-Subject: [PATCH 4/9] dt-bindings: ata: Document BCM63138 compatible string
-Date: Thu, 20 Sep 2018 12:16:39 -0700
-Message-ID: <20180920191646.18198-6-f.fainelli@gmail.com>
+Subject: [PATCH 5/9] ata: ahci_brcm: Allow optional reset controller to be used
+Date: Thu, 20 Sep 2018 12:16:40 -0700
+Message-ID: <20180920191646.18198-7-f.fainelli@gmail.com>
 References: <20180920191646.18198-1-f.fainelli@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180920191646.18198-1-f.fainelli@gmail.com>
@@ -12,25 +12,54 @@ Cc: Florian Fainelli <f.fainelli@gmail.com>, Jens Axboe <axboe@kernel.dk>, Rob H
         DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, bcm-kernel-feedback-list@broadcom.com
 List-Id: linux-ide@vger.kernel.org
 
-Document the compatible string "brcm,bcm63138-ahci" as a valid
-compatible string for the standard Broadcom AHCI controller.
+On BCM63138, we need to reset the AHCI core prior to start utilizing it,
+grab the reset controller device cookie and do that.
 
 Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
 ---
- Documentation/devicetree/bindings/ata/brcm,sata-brcm.txt | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/ata/ahci_brcm.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/ata/brcm,sata-brcm.txt b/Documentation/devicetree/bindings/ata/brcm,sata-brcm.txt
-index 0a5b3b47f217..7713a413c6a7 100644
---- a/Documentation/devicetree/bindings/ata/brcm,sata-brcm.txt
-+++ b/Documentation/devicetree/bindings/ata/brcm,sata-brcm.txt
-@@ -9,6 +9,7 @@ Required properties:
- 			"brcm,bcm7445-ahci"
- 			"brcm,bcm-nsp-ahci"
- 			"brcm,sata3-ahci"
-+			"brcm,bcm63138-ahci"
- - reg                : register mappings for AHCI and SATA_TOP_CTRL
- - reg-names          : "ahci" and "top-ctrl"
- - interrupts         : interrupt mapping for SATA IRQ
+diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+index f3d557777d82..d535e87151dc 100644
+--- a/drivers/ata/ahci_brcm.c
++++ b/drivers/ata/ahci_brcm.c
+@@ -25,6 +25,7 @@
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
++#include <linux/reset.h>
+ #include <linux/string.h>
+ 
+ #include "ahci.h"
+@@ -94,6 +95,7 @@ struct brcm_ahci_priv {
+ 	u32 port_mask;
+ 	u32 quirks;
+ 	enum brcm_ahci_version version;
++	struct reset_control *rcdev;
+ };
+ 
+ static inline u32 brcm_sata_readreg(void __iomem *addr)
+@@ -411,6 +413,10 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 	if (IS_ERR(priv->top_ctrl))
+ 		return PTR_ERR(priv->top_ctrl);
+ 
++	priv->rcdev = of_reset_control_get(pdev->dev.of_node, NULL);
++	if (!IS_ERR(priv->rcdev))
++		reset_control_deassert(priv->rcdev);
++
+ 	if ((priv->version == BRCM_SATA_BCM7425) ||
+ 		(priv->version == BRCM_SATA_NSP)) {
+ 		priv->quirks |= BRCM_AHCI_QUIRK_NO_NCQ;
+@@ -464,6 +470,9 @@ static int brcm_ahci_remove(struct platform_device *pdev)
+ 
+ 	brcm_sata_phys_disable(priv);
+ 
++	if (!IS_ERR(priv->rcdev))
++		reset_control_assert(priv->rcdev);
++
+ 	return 0;
+ }
+ 
 -- 
 2.17.1
