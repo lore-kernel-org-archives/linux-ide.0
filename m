@@ -1,65 +1,66 @@
-From: Florian Fainelli <f.fainelli@gmail.com>
-Subject: Re: [PATCH 0/9] AHCI and SATA PHY support for BCM63138
-Date: Thu, 20 Sep 2018 12:19:41 -0700
-Message-ID: <7b6e1671-8efe-20d2-d3a2-51a521ce7f22@gmail.com>
-References: <20180920191646.18198-1-f.fainelli@gmail.com>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH 1/2] libata: add ledtrig support
+Date: Fri, 21 Sep 2018 00:04:49 +0200
+Message-ID: <20180920220449.GC27468@xo-6d-61-c0.localdomain>
+References: <1537328730-9156-1-git-send-email-aditya@kobol.io>
+ <1537328730-9156-2-git-send-email-aditya@kobol.io>
+ <20180920072354.GA20392@amd>
+ <20180920082425.GB20006@makrotopia.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180920191646.18198-1-f.fainelli@gmail.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <20180920082425.GB20006@makrotopia.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Florian Fainelli <f.fainelli@gmail.com>, linux-kernel@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Kishon Vijay Abraham I <kishon@ti.com>, Al Cooper <alcooperx@gmail.com>, Ray Jui <ray.jui@broadcom.com>, Tejun Heo <tj@kernel.org>, Fengguang Wu <fengguang.wu@intel.com>, Arnd Bergmann <arnd@arndb.de>, "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" <linux-ide@vger.kernel.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, bcm-kernel-feedback-list@broadcom.com
+To: Daniel Golle <daniel@makrotopia.org>
+Cc: Aditya Prayoga <aditya@kobol.io>, linux-ide@vger.kernel.org, linux-leds@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@bootlin.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Russell King <linux@armlinux.org.uk>, Jens Axboe <axboe@kernel.dk>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Jacek Anaszewski <jacek.anaszewski@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-On 09/20/2018 12:16 PM, Florian Fainelli wrote:
-> Hi Kishon, Tejun,
-> 
-> This patch series adds support for the SATA AHCI and PHY found on the
-> ARM-basd BCM63138 DSL SoCs.
-> 
-> It would probably make sense for patches 1-3 to go through Kishon's
-> tree, patches 4-7 through Tejun's tree, and I would be merging the last
-> two patches through the Broadcom ARM-SoC tree.
-> 
-> Let me know if this is not a workable plan, thank you very much!
+Hi!
 
-Looks like I had left patches with the incorrect subject, please
-disregard the following patches:
-
-[PATCH 2/9] phy: broadcom: allow PHY_BRCM_SATA driver to be built for
-DSL SoCs
-[PATCH 5/9] ata: sata_brcmstb: Allow optional reset controller to be used
-[PATCH 6/9] ata: ahci_brcmstb: Match 63138 compatible strings
-
-since they have incorrect/inconsistent titles, the other patches are
-fine though. Sorry about that.
-
+> > > +#ifdef CONFIG_ATA_LEDS
+> > > +	/* register LED triggers for all ports */
+> > > +	for (i = 0; i < host->n_ports; i++) {
+> > > +		if (unlikely(!host->ports[i]->ledtrig))
+> > > +			continue;
+> > > +
+> > > +		snprintf(host->ports[i]->ledtrig_name,
+> > > +			sizeof(host->ports[i]->ledtrig_name), "ata%u",
+> > > +			host->ports[i]->print_id);
+> > 
+> > > +		host->ports[i]->ledtrig->name = host->ports[i]->ledtrig_name;
+> > > +
+> > > +		if (led_trigger_register(host->ports[i]->ledtrig)) {
+> > > +			kfree(host->ports[i]->ledtrig);
+> > > +			host->ports[i]->ledtrig = NULL;
+> > > +		}
+> > > +	}
+> > > +#endif
+> > 
+> > No, we don't want you to register multiple triggers. We want one
+> > trigger, than has parameter "which port to watch". (Number of triggers
+> > is limited as by sysfs limitations).
 > 
-> Florian Fainelli (9):
->   dt-bindings: phy: Document BCM63138 compatible string
->   phy: brcm-sata: allow PHY_BRCM_SATA driver to be built for DSL SoCs
->   phy: brcm-sata: Add BCM63138 (DSL) PHY init sequence
->   dt-bindings: ata: Document BCM63138 compatible string
->   ata: ahci_brcm: Allow optional reset controller to be used
->   ata: ahci_brcm: Match BCM63138 compatible strings
->   ata: ahci_brcm: Allow using driver or DSL SoCs
->   ARM: dts: BCM63xx: enable SATA PHY and AHCI controller
->   ARM: bcm63138: Enable SATA AHCI and PHY
-> 
->  .../bindings/ata/brcm,sata-brcm.txt           |  1 +
->  .../devicetree/bindings/phy/brcm-sata-phy.txt |  1 +
->  arch/arm/boot/dts/bcm63138.dtsi               | 30 ++++++++
->  arch/arm/boot/dts/bcm963138dvt.dts            |  8 +++
->  drivers/ata/Kconfig                           |  3 +-
->  drivers/ata/ahci_brcm.c                       | 10 +++
->  drivers/phy/broadcom/Kconfig                  |  3 +-
->  drivers/phy/broadcom/phy-brcm-sata.c          | 70 +++++++++++++++++++
->  8 files changed, 124 insertions(+), 2 deletions(-)
-> 
+> Back then I implemented it that way to be able to define the
+> default trigger for each LED in device tree and "trigger-sources"
+> didn't exist yet (it was introduced for USB ports and isn't yet used
+> for anything other than that)
 
+I see why you did it... BUt I believe we still want single trigger solution...
+
+> However, the problem till today is also that ATA ports are often not
+> individual device-tree objects we can refer to, see for example
+> marvell,armada-370-sata which appears as one opaque controller. Ie.
+> all SATA drivers have to be converted to expose individual ports on
+> device-tree before the trigger-sources approach can be applied...
+
+Yep, well... something to do in SATA then.
+
+Perhaps this should also have an option for single LED for _any_ SATA activity,
+and 90% devices will be happy with that?
+
+									Pavel
 
 -- 
-Florian
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
