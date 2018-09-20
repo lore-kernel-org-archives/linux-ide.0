@@ -1,7 +1,7 @@
 From: Florian Fainelli <f.fainelli@gmail.com>
-Subject: [PATCH 5/9] ata: ahci_brcm: Allow optional reset controller to be used
-Date: Thu, 20 Sep 2018 12:16:40 -0700
-Message-ID: <20180920191646.18198-7-f.fainelli@gmail.com>
+Subject: [PATCH 5/9] ata: sata_brcmstb: Allow optional reset controller to be used
+Date: Thu, 20 Sep 2018 12:16:41 -0700
+Message-ID: <20180920191646.18198-8-f.fainelli@gmail.com>
 References: <20180920191646.18198-1-f.fainelli@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180920191646.18198-1-f.fainelli@gmail.com>
