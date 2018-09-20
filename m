@@ -1,68 +1,55 @@
 From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: [PATCH 1/2] libata: add ledtrig support
-Date: Thu, 20 Sep 2018 09:23:54 +0200
-Message-ID: <20180920072354.GA20392@amd>
+Subject: Re: [PATCH 2/2] ARM: mvebu: Enable ARCH_WANT_LIBATA_LEDS in Armada
+ 38x
+Date: Thu, 20 Sep 2018 09:26:35 +0200
+Message-ID: <20180920072635.GB20392@amd>
 References: <1537328730-9156-1-git-send-email-aditya@kobol.io>
- <1537328730-9156-2-git-send-email-aditya@kobol.io>
+ <1537328730-9156-3-git-send-email-aditya@kobol.io>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="AqsLC8rIMeq19msA"
+        protocol="application/pgp-signature"; boundary="VrqPEDrXMn8OVzN4"
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1537328730-9156-2-git-send-email-aditya@kobol.io>
+In-Reply-To: <1537328730-9156-3-git-send-email-aditya@kobol.io>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Aditya Prayoga <aditya@kobol.io>
 Cc: linux-ide@vger.kernel.org, linux-leds@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@bootlin.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Russell King <linux@armlinux.org.uk>, Jens Axboe <axboe@kernel.dk>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Jacek Anaszewski <jacek.anaszewski@gmail.com>, Daniel Golle <daniel@makrotopia.org>
 List-Id: linux-ide@vger.kernel.org
 
 
---AqsLC8rIMeq19msA
+--VrqPEDrXMn8OVzN4
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-Hi!
+On Wed 2018-09-19 11:45:30, Aditya Prayoga wrote:
+> Enable hidden symbol ARCH_WANT_LIBATA_LEDS so CONFIG_ATA_LEDS can be
+> used in kernel configuration.
 
-> +#ifdef CONFIG_ATA_LEDS
-> +	/* register LED triggers for all ports */
-> +	for (i =3D 0; i < host->n_ports; i++) {
-> +		if (unlikely(!host->ports[i]->ledtrig))
-> +			continue;
-> +
-> +		snprintf(host->ports[i]->ledtrig_name,
-> +			sizeof(host->ports[i]->ledtrig_name), "ata%u",
-> +			host->ports[i]->print_id);
+Should that be hidden symbol and should that be architecture specific?
 
-> +		host->ports[i]->ledtrig->name =3D host->ports[i]->ledtrig_name;
-> +
-> +		if (led_trigger_register(host->ports[i]->ledtrig)) {
-> +			kfree(host->ports[i]->ledtrig);
-> +			host->ports[i]->ledtrig =3D NULL;
-> +		}
-> +	}
-> +#endif
+For a notebook, I may want scrolllock LED to indicate ATA activity
+(because I'm using USB keyboard and can't see the disk led).
 
-No, we don't want you to register multiple triggers. We want one
-trigger, than has parameter "which port to watch". (Number of triggers
-is limited as by sysfs limitations).
+Hmm. And while at it... it would be nice to have option to watch all
+ATA ports combined, as well.
 
-Otherwise yes, ata trigger makes sense.
 									Pavel
 --=20
 (english) http://www.livejournal.com/~pavelmachek
 (cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
 g.html
 
---AqsLC8rIMeq19msA
+--VrqPEDrXMn8OVzN4
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1
 
-iEYEARECAAYFAlujSwoACgkQMOfwapXb+vIkLQCeM1xnlhIVNTLBYZqEdF3DiNEH
-dG0AniCzufR3yA8q21j0PjHy7+Vo3TiQ
-=xqO6
+iEYEARECAAYFAlujS6sACgkQMOfwapXb+vJ8dQCdE9X5r1O9YnzTYdBJ3yXuY6RA
+qE4AnA51Hs2yMwmlxrKvUAeyZsL7icqA
+=JC5/
 -----END PGP SIGNATURE-----
 
---AqsLC8rIMeq19msA--
+--VrqPEDrXMn8OVzN4--
