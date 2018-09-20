@@ -1,7 +1,7 @@
 From: Florian Fainelli <f.fainelli@gmail.com>
-Subject: [PATCH 2/9] phy: brcm-sata: allow PHY_BRCM_SATA driver to be built for DSL SoCs
-Date: Thu, 20 Sep 2018 12:16:36 -0700
-Message-ID: <20180920191646.18198-3-f.fainelli@gmail.com>
+Subject: [PATCH 2/9] phy: broadcom: allow PHY_BRCM_SATA driver to be built for DSL SoCs
+Date: Thu, 20 Sep 2018 12:16:37 -0700
+Message-ID: <20180920191646.18198-4-f.fainelli@gmail.com>
 References: <20180920191646.18198-1-f.fainelli@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180920191646.18198-1-f.fainelli@gmail.com>
