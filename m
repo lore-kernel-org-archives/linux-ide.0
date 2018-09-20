@@ -1,21 +1,46 @@
-From: Aditya Prayoga <aditya@kobol.io>
-Subject: Re: [PATCH 1/2] libata: add ledtrig support
-Date: Thu, 20 Sep 2018 16:53:26 +0700
-Message-ID: <CAFTRUBdcGqroAfiG__e0nwP2GqK3Xh9PVOGQsk9Jj_jkrcU9ag@mail.gmail.com>
-References: <1537328730-9156-1-git-send-email-aditya@kobol.io>
- <1537328730-9156-2-git-send-email-aditya@kobol.io> <20180919130104.GD26940@lunn.ch>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Florian Fainelli <f.fainelli@gmail.com>
+Subject: [PATCH 0/9] AHCI and SATA PHY support for BCM63138
+Date: Thu, 20 Sep 2018 12:16:34 -0700
+Message-ID: <20180920191646.18198-1-f.fainelli@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180919130104.GD26940@lunn.ch>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: linux-ide@vger.kernel.org, linux-leds@vger.kernel.org, jason@lakedaemon.net, gregory.clement@bootlin.com, sebastian.hesselbarth@gmail.com, linux@armlinux.org.uk, axboe@kernel.dk, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, jacek.anaszewski@gmail.com, pavel@ucw.cz, Daniel Golle <daniel@makrotopia.org>
+To: linux-kernel@vger.kernel.org
+Cc: Florian Fainelli <f.fainelli@gmail.com>, Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Kishon Vijay Abraham I <kishon@ti.com>, Al Cooper <alcooperx@gmail.com>, Ray Jui <ray.jui@broadcom.com>, Tejun Heo <tj@kernel.org>, Fengguang Wu <fengguang.wu@intel.com>, Arnd Bergmann <arnd@arndb.de>, "open list:LIBATA SUBSYSTEM Serial and
+        Parallel ATA drivers" <linux-ide@vger.kernel.org>, "open list:OPEN FIRMWARE AND FLATTENED
+        DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, bcm-kernel-feedback-list@broadcom.com
 List-Id: linux-ide@vger.kernel.org
 
-Hi Andrew,
+Hi Kishon, Tejun,
 
-thank you for your feedback. It seem i also need to resolve the issue
-reported by kbuild test robot.
+This patch series adds support for the SATA AHCI and PHY found on the
+ARM-basd BCM63138 DSL SoCs.
 
-Aditya
+It would probably make sense for patches 1-3 to go through Kishon's
+tree, patches 4-7 through Tejun's tree, and I would be merging the last
+two patches through the Broadcom ARM-SoC tree.
+
+Let me know if this is not a workable plan, thank you very much!
+
+Florian Fainelli (9):
+  dt-bindings: phy: Document BCM63138 compatible string
+  phy: brcm-sata: allow PHY_BRCM_SATA driver to be built for DSL SoCs
+  phy: brcm-sata: Add BCM63138 (DSL) PHY init sequence
+  dt-bindings: ata: Document BCM63138 compatible string
+  ata: ahci_brcm: Allow optional reset controller to be used
+  ata: ahci_brcm: Match BCM63138 compatible strings
+  ata: ahci_brcm: Allow using driver or DSL SoCs
+  ARM: dts: BCM63xx: enable SATA PHY and AHCI controller
+  ARM: bcm63138: Enable SATA AHCI and PHY
+
+ .../bindings/ata/brcm,sata-brcm.txt           |  1 +
+ .../devicetree/bindings/phy/brcm-sata-phy.txt |  1 +
+ arch/arm/boot/dts/bcm63138.dtsi               | 30 ++++++++
+ arch/arm/boot/dts/bcm963138dvt.dts            |  8 +++
+ drivers/ata/Kconfig                           |  3 +-
+ drivers/ata/ahci_brcm.c                       | 10 +++
+ drivers/phy/broadcom/Kconfig                  |  3 +-
+ drivers/phy/broadcom/phy-brcm-sata.c          | 70 +++++++++++++++++++
+ 8 files changed, 124 insertions(+), 2 deletions(-)
+
+-- 
+2.17.1
