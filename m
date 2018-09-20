@@ -1,7 +1,7 @@
 From: Florian Fainelli <f.fainelli@gmail.com>
-Subject: [PATCH 6/9] ata: ahci_brcm: Match BCM63138 compatible strings
-Date: Thu, 20 Sep 2018 12:16:42 -0700
-Message-ID: <20180920191646.18198-9-f.fainelli@gmail.com>
+Subject: [PATCH 6/9] ata: ahci_brcmstb: Match 63138 compatible strings
+Date: Thu, 20 Sep 2018 12:16:43 -0700
+Message-ID: <20180920191646.18198-10-f.fainelli@gmail.com>
 References: <20180920191646.18198-1-f.fainelli@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20180920191646.18198-1-f.fainelli@gmail.com>
@@ -11,9 +11,6 @@ Cc: Florian Fainelli <f.fainelli@gmail.com>, Jens Axboe <axboe@kernel.dk>, Rob H
         Parallel ATA drivers" <linux-ide@vger.kernel.org>, "open list:OPEN FIRMWARE AND FLATTENED
         DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, bcm-kernel-feedback-list@broadcom.com
 List-Id: linux-ide@vger.kernel.org
-
-Match the "brcm,bcm63138-ahci" compatible string in order to allow this
-driver to probe on such platforms.
 
 Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
 ---
