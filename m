@@ -1,60 +1,29 @@
-From: Florian Fainelli <f.fainelli@gmail.com>
-Subject: Re: [PATCH v2 7/7] net: stmmac: dwmac-meson8b: use xxxsetbits32
-Date: Mon, 24 Sep 2018 12:17:04 -0700
-Message-ID: <a8d06d0a-b13b-384c-ade6-b0a3b0ee61f6@gmail.com>
-References: <1537815856-31728-1-git-send-email-clabbe@baylibre.com>
- <1537815856-31728-8-git-send-email-clabbe@baylibre.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: libata-core WARNING during boot
+Date: Mon, 24 Sep 2018 13:19:52 -0600
+Message-ID: <0d5420a4-dd7c-1810-2fbd-0840372a5ba3@kernel.dk>
+References: <b9b55c84-a90c-e7ac-add7-fdf1b7e13dc6@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1537815856-31728-8-git-send-email-clabbe@baylibre.com>
+In-Reply-To: <b9b55c84-a90c-e7ac-add7-fdf1b7e13dc6@infradead.org>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Corentin Labbe <clabbe@baylibre.com>, Gilles.Muller@lip6.fr, Julia.Lawall@lip6.fr, agust@denx.de, airlied@linux.ie, alexandre.torgue@st.com, alistair@popple.id.au, benh@kernel.crashing.org, carlo@caione.org, davem@davemloft.net, galak@kernel.crashing.org, joabreu@synopsys.com, khilman@baylibre.com, maxime.ripard@bootlin.com, michal.lkml@markovi.net, mpe@ellerman.id.au, mporter@kernel.crashing.org, narmstrong@baylibre.com, nicolas.palix@imag.fr, oss@buserror.net, paulus@samba.org, peppe.cavallaro@st.com, tj@kernel.org, vitb@kernel.crashing.org, wens@csie.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org, linux-amlogic@lists.infradead.org, linuxppc-dev@lists.ozlabs.org, cocci@systeme.lip6.fr, linux-arm-kernel@lists.infradead.org
+To: Randy Dunlap <rdunlap@infradead.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On 09/24/2018 12:04 PM, Corentin Labbe wrote:
-> This patch convert meson stmmac glue driver to use all xxxsetbits32 functions.
+On 9/23/18 9:34 PM, Randy Dunlap wrote:
+> Hi,
 > 
-> Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
-> ---
->  .../net/ethernet/stmicro/stmmac/dwmac-meson8b.c    | 56 +++++++++-------------
->  1 file changed, 22 insertions(+), 34 deletions(-)
+> I'm having (repeatable) problems booting 4.18 and 4.18.9 (latest stable):
 > 
-> diff --git a/drivers/net/ethernet/stmicro/stmmac/dwmac-meson8b.c b/drivers/net/ethernet/stmicro/stmmac/dwmac-meson8b.c
-> index c5979569fd60..abcf65588576 100644
-> --- a/drivers/net/ethernet/stmicro/stmmac/dwmac-meson8b.c
-> +++ b/drivers/net/ethernet/stmicro/stmmac/dwmac-meson8b.c
-> @@ -23,6 +23,7 @@
->  #include <linux/mfd/syscon.h>
->  #include <linux/platform_device.h>
->  #include <linux/stmmac.h>
-> +#include <linux/setbits.h>
->  
->  #include "stmmac_platform.h"
->  
-> @@ -75,18 +76,6 @@ struct meson8b_dwmac_clk_configs {
->  	struct clk_gate		rgmii_tx_en;
->  };
->  
-> -static void meson8b_dwmac_mask_bits(struct meson8b_dwmac *dwmac, u32 reg,
-> -				    u32 mask, u32 value)
-> -{
-> -	u32 data;
-> -
-> -	data = readl(dwmac->regs + reg);
-> -	data &= ~mask;
-> -	data |= (value & mask);
-> -
-> -	writel(data, dwmac->regs + reg);
-> -}
+> WARNING: CPU: 1 PID: 1 at ../drivers/ata/libata-core.c:6677 ata_host_detach+0x6e/0x150
+> 
+> 
+> It never completes the boot.  Could that be due to this eh warning?
 
-Why not make mseon8b_dwmac_mask_bits() a wrapper around
-clrsetbits_le32() whose purpose is only to dereference dwmac->regs and
-pass it to clrsetbits_le32()? That would be far less changes to review
-and audit for correctness, same goes with every other patch in this
-series touching the meson drivers.
+Is this a new issue? Not quite clear based on your report.
+
 -- 
-Florian
+Jens Axboe
