@@ -1,7 +1,7 @@
 From: Corentin Labbe <clabbe@baylibre.com>
-Subject: [PATCH v2 5/7] net: ethernet: stmmac: dwmac-sun8i: use xxxsetbits32
-Date: Mon, 24 Sep 2018 19:04:14 +0000
-Message-ID: <1537815856-31728-6-git-send-email-clabbe@baylibre.com>
+Subject: [PATCH v2 7/7] net: stmmac: dwmac-meson8b: use xxxsetbits32
+Date: Mon, 24 Sep 2018 19:04:16 +0000
+Message-ID: <1537815856-31728-8-git-send-email-clabbe@baylibre.com>
 References: <1537815856-31728-1-git-send-email-clabbe@baylibre.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1537815856-31728-1-git-send-email-clabbe@baylibre.com>
@@ -10,142 +10,130 @@ To: Gilles.Muller@lip6.fr, Julia.Lawall@lip6.fr, agust@denx.de, airlied@linux.ie
 Cc: cocci@systeme.lip6.fr, dri-devel@lists.freedesktop.org, linux-amlogic@lists.infradead.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, Corentin Labbe <clabbe@baylibre.com>
 List-Id: linux-ide@vger.kernel.org
 
-This patch convert dwmac-sun8i driver to use all xxxsetbits32 functions.
+This patch convert meson stmmac glue driver to use all xxxsetbits32 functions.
 
 Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
 ---
- drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c | 62 ++++++-----------------
- 1 file changed, 16 insertions(+), 46 deletions(-)
+ .../net/ethernet/stmicro/stmmac/dwmac-meson8b.c    | 56 +++++++++-------------
+ 1 file changed, 22 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c b/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c
-index f9a61f90cfbc..74067a59af50 100644
---- a/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c
-+++ b/drivers/net/ethernet/stmicro/stmmac/dwmac-sun8i.c
-@@ -28,6 +28,7 @@
- #include <linux/regulator/consumer.h>
- #include <linux/regmap.h>
+diff --git a/drivers/net/ethernet/stmicro/stmmac/dwmac-meson8b.c b/drivers/net/ethernet/stmicro/stmmac/dwmac-meson8b.c
+index c5979569fd60..abcf65588576 100644
+--- a/drivers/net/ethernet/stmicro/stmmac/dwmac-meson8b.c
++++ b/drivers/net/ethernet/stmicro/stmmac/dwmac-meson8b.c
+@@ -23,6 +23,7 @@
+ #include <linux/mfd/syscon.h>
+ #include <linux/platform_device.h>
  #include <linux/stmmac.h>
 +#include <linux/setbits.h>
  
- #include "stmmac.h"
  #include "stmmac_platform.h"
-@@ -342,50 +343,30 @@ static void sun8i_dwmac_disable_dma_irq(void __iomem *ioaddr, u32 chan)
  
- static void sun8i_dwmac_dma_start_tx(void __iomem *ioaddr, u32 chan)
- {
--	u32 v;
+@@ -75,18 +76,6 @@ struct meson8b_dwmac_clk_configs {
+ 	struct clk_gate		rgmii_tx_en;
+ };
+ 
+-static void meson8b_dwmac_mask_bits(struct meson8b_dwmac *dwmac, u32 reg,
+-				    u32 mask, u32 value)
+-{
+-	u32 data;
 -
--	v = readl(ioaddr + EMAC_TX_CTL1);
--	v |= EMAC_TX_DMA_START;
--	v |= EMAC_TX_DMA_EN;
--	writel(v, ioaddr + EMAC_TX_CTL1);
-+	setbits_le32(ioaddr + EMAC_TX_CTL1,
-+		     EMAC_TX_DMA_START | EMAC_TX_DMA_EN);
- }
- 
- static void sun8i_dwmac_enable_dma_transmission(void __iomem *ioaddr)
- {
--	u32 v;
+-	data = readl(dwmac->regs + reg);
+-	data &= ~mask;
+-	data |= (value & mask);
 -
--	v = readl(ioaddr + EMAC_TX_CTL1);
--	v |= EMAC_TX_DMA_START;
--	v |= EMAC_TX_DMA_EN;
--	writel(v, ioaddr + EMAC_TX_CTL1);
-+	setbits_le32(ioaddr + EMAC_TX_CTL1,
-+		     EMAC_TX_DMA_START | EMAC_TX_DMA_EN);
- }
- 
- static void sun8i_dwmac_dma_stop_tx(void __iomem *ioaddr, u32 chan)
- {
--	u32 v;
+-	writel(data, dwmac->regs + reg);
+-}
 -
--	v = readl(ioaddr + EMAC_TX_CTL1);
--	v &= ~EMAC_TX_DMA_EN;
--	writel(v, ioaddr + EMAC_TX_CTL1);
-+	clrbits_le32(ioaddr + EMAC_TX_CTL1, EMAC_TX_DMA_EN);
- }
+ static struct clk *meson8b_dwmac_register_clk(struct meson8b_dwmac *dwmac,
+ 					      const char *name_suffix,
+ 					      const char **parent_names,
+@@ -192,14 +181,13 @@ static int meson8b_set_phy_mode(struct meson8b_dwmac *dwmac)
+ 	case PHY_INTERFACE_MODE_RGMII_ID:
+ 	case PHY_INTERFACE_MODE_RGMII_TXID:
+ 		/* enable RGMII mode */
+-		meson8b_dwmac_mask_bits(dwmac, PRG_ETH0,
+-					PRG_ETH0_RGMII_MODE,
+-					PRG_ETH0_RGMII_MODE);
++		clrsetbits_le32(dwmac->regs + PRG_ETH0, PRG_ETH0_RGMII_MODE,
++				PRG_ETH0_RGMII_MODE);
+ 		break;
+ 	case PHY_INTERFACE_MODE_RMII:
+ 		/* disable RGMII mode -> enables RMII mode */
+-		meson8b_dwmac_mask_bits(dwmac, PRG_ETH0,
+-					PRG_ETH0_RGMII_MODE, 0);
++		clrsetbits_le32(dwmac->regs + PRG_ETH0, PRG_ETH0_RGMII_MODE,
++				0);
+ 		break;
+ 	default:
+ 		dev_err(dwmac->dev, "fail to set phy-mode %s\n",
+@@ -218,15 +206,15 @@ static int meson_axg_set_phy_mode(struct meson8b_dwmac *dwmac)
+ 	case PHY_INTERFACE_MODE_RGMII_ID:
+ 	case PHY_INTERFACE_MODE_RGMII_TXID:
+ 		/* enable RGMII mode */
+-		meson8b_dwmac_mask_bits(dwmac, PRG_ETH0,
+-					PRG_ETH0_EXT_PHY_MODE_MASK,
+-					PRG_ETH0_EXT_RGMII_MODE);
++		clrsetbits_le32(dwmac->regs + PRG_ETH0,
++				PRG_ETH0_EXT_PHY_MODE_MASK,
++				PRG_ETH0_EXT_RGMII_MODE);
+ 		break;
+ 	case PHY_INTERFACE_MODE_RMII:
+ 		/* disable RGMII mode -> enables RMII mode */
+-		meson8b_dwmac_mask_bits(dwmac, PRG_ETH0,
+-					PRG_ETH0_EXT_PHY_MODE_MASK,
+-					PRG_ETH0_EXT_RMII_MODE);
++		clrsetbits_le32(dwmac->regs + PRG_ETH0,
++				PRG_ETH0_EXT_PHY_MODE_MASK,
++				PRG_ETH0_EXT_RMII_MODE);
+ 		break;
+ 	default:
+ 		dev_err(dwmac->dev, "fail to set phy-mode %s\n",
+@@ -255,11 +243,11 @@ static int meson8b_init_prg_eth(struct meson8b_dwmac *dwmac)
+ 	case PHY_INTERFACE_MODE_RGMII_ID:
+ 	case PHY_INTERFACE_MODE_RGMII_TXID:
+ 		/* only relevant for RMII mode -> disable in RGMII mode */
+-		meson8b_dwmac_mask_bits(dwmac, PRG_ETH0,
+-					PRG_ETH0_INVERTED_RMII_CLK, 0);
++		clrsetbits_le32(dwmac->regs + PRG_ETH0,
++				PRG_ETH0_INVERTED_RMII_CLK, 0);
  
- static void sun8i_dwmac_dma_start_rx(void __iomem *ioaddr, u32 chan)
- {
--	u32 v;
--
--	v = readl(ioaddr + EMAC_RX_CTL1);
--	v |= EMAC_RX_DMA_START;
--	v |= EMAC_RX_DMA_EN;
--	writel(v, ioaddr + EMAC_RX_CTL1);
-+	setbits_le32(ioaddr + EMAC_RX_CTL1,
-+		     EMAC_RX_DMA_START | EMAC_RX_DMA_EN);
- }
+-		meson8b_dwmac_mask_bits(dwmac, PRG_ETH0, PRG_ETH0_TXDLY_MASK,
+-					tx_dly_val << PRG_ETH0_TXDLY_SHIFT);
++		clrsetbits_le32(dwmac->regs + PRG_ETH0, PRG_ETH0_TXDLY_MASK,
++				tx_dly_val << PRG_ETH0_TXDLY_SHIFT);
  
- static void sun8i_dwmac_dma_stop_rx(void __iomem *ioaddr, u32 chan)
- {
--	u32 v;
--
--	v = readl(ioaddr + EMAC_RX_CTL1);
--	v &= ~EMAC_RX_DMA_EN;
--	writel(v, ioaddr + EMAC_RX_CTL1);
-+	clrbits_le32(ioaddr + EMAC_RX_CTL1, EMAC_RX_DMA_EN);
- }
+ 		/* Configure the 125MHz RGMII TX clock, the IP block changes
+ 		 * the output automatically (= without us having to configure
+@@ -287,13 +275,13 @@ static int meson8b_init_prg_eth(struct meson8b_dwmac *dwmac)
  
- static int sun8i_dwmac_dma_interrupt(void __iomem *ioaddr,
-@@ -578,7 +559,6 @@ static void sun8i_dwmac_set_umac_addr(struct mac_device_info *hw,
- 				      unsigned int reg_n)
- {
- 	void __iomem *ioaddr = hw->pcsr;
--	u32 v;
+ 	case PHY_INTERFACE_MODE_RMII:
+ 		/* invert internal clk_rmii_i to generate 25/2.5 tx_rx_clk */
+-		meson8b_dwmac_mask_bits(dwmac, PRG_ETH0,
+-					PRG_ETH0_INVERTED_RMII_CLK,
+-					PRG_ETH0_INVERTED_RMII_CLK);
++		clrsetbits_le32(dwmac->regs + PRG_ETH0,
++				PRG_ETH0_INVERTED_RMII_CLK,
++				PRG_ETH0_INVERTED_RMII_CLK);
  
- 	if (!addr) {
- 		writel(0, ioaddr + EMAC_MACADDR_HI(reg_n));
-@@ -588,9 +568,8 @@ static void sun8i_dwmac_set_umac_addr(struct mac_device_info *hw,
- 	stmmac_set_mac_addr(ioaddr, addr, EMAC_MACADDR_HI(reg_n),
- 			    EMAC_MACADDR_LO(reg_n));
- 	if (reg_n > 0) {
--		v = readl(ioaddr + EMAC_MACADDR_HI(reg_n));
--		v |= MAC_ADDR_TYPE_DST;
--		writel(v, ioaddr + EMAC_MACADDR_HI(reg_n));
-+		setbits_le32(ioaddr + EMAC_MACADDR_HI(reg_n),
-+			     MAC_ADDR_TYPE_DST);
+ 		/* TX clock delay cannot be configured in RMII mode */
+-		meson8b_dwmac_mask_bits(dwmac, PRG_ETH0, PRG_ETH0_TXDLY_MASK,
+-					0);
++		clrsetbits_le32(dwmac->regs + PRG_ETH0, PRG_ETH0_TXDLY_MASK,
++				0);
+ 
+ 		break;
+ 
+@@ -304,8 +292,8 @@ static int meson8b_init_prg_eth(struct meson8b_dwmac *dwmac)
  	}
+ 
+ 	/* enable TX_CLK and PHY_REF_CLK generator */
+-	meson8b_dwmac_mask_bits(dwmac, PRG_ETH0, PRG_ETH0_TX_AND_PHY_REF_CLK,
+-				PRG_ETH0_TX_AND_PHY_REF_CLK);
++	clrsetbits_le32(dwmac->regs + PRG_ETH0, PRG_ETH0_TX_AND_PHY_REF_CLK,
++			PRG_ETH0_TX_AND_PHY_REF_CLK);
+ 
+ 	return 0;
  }
- 
-@@ -608,11 +587,8 @@ static void sun8i_dwmac_get_umac_addr(struct mac_device_info *hw,
- static int sun8i_dwmac_rx_ipc_enable(struct mac_device_info *hw)
- {
- 	void __iomem *ioaddr = hw->pcsr;
--	u32 v;
- 
--	v = readl(ioaddr + EMAC_RX_CTL0);
--	v |= EMAC_RX_DO_CRC;
--	writel(v, ioaddr + EMAC_RX_CTL0);
-+	setbits_le32(ioaddr + EMAC_RX_CTL0, EMAC_RX_DO_CRC);
- 
- 	return 1;
- }
-@@ -662,21 +638,15 @@ static void sun8i_dwmac_flow_ctrl(struct mac_device_info *hw,
- 				  unsigned int pause_time, u32 tx_cnt)
- {
- 	void __iomem *ioaddr = hw->pcsr;
--	u32 v;
- 
--	v = readl(ioaddr + EMAC_RX_CTL0);
- 	if (fc == FLOW_AUTO)
--		v |= EMAC_RX_FLOW_CTL_EN;
-+		setbits_le32(ioaddr + EMAC_RX_CTL0, EMAC_RX_FLOW_CTL_EN);
- 	else
--		v &= ~EMAC_RX_FLOW_CTL_EN;
--	writel(v, ioaddr + EMAC_RX_CTL0);
--
--	v = readl(ioaddr + EMAC_TX_FLOW_CTL);
-+		clrbits_le32(ioaddr + EMAC_RX_CTL0, EMAC_RX_FLOW_CTL_EN);
- 	if (fc == FLOW_AUTO)
--		v |= EMAC_TX_FLOW_CTL_EN;
-+		setbits_le32(ioaddr + EMAC_TX_FLOW_CTL, EMAC_TX_FLOW_CTL_EN);
- 	else
--		v &= ~EMAC_TX_FLOW_CTL_EN;
--	writel(v, ioaddr + EMAC_TX_FLOW_CTL);
-+		clrbits_le32(ioaddr + EMAC_TX_FLOW_CTL, EMAC_TX_FLOW_CTL_EN);
- }
- 
- static int sun8i_dwmac_reset(struct stmmac_priv *priv)
 -- 
 2.16.4
