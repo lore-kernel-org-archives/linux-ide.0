@@ -1,60 +1,57 @@
-From: Neil Armstrong <narmstrong@baylibre.com>
-Subject: Re: [PATCH v2 7/7] net: stmmac: dwmac-meson8b: use xxxsetbits32
-Date: Tue, 25 Sep 2018 09:53:22 +0200
-Message-ID: <6af26377-e2b8-3a1c-ca17-4932f636e01d@baylibre.com>
-References: <1537815856-31728-1-git-send-email-clabbe@baylibre.com>
- <1537815856-31728-8-git-send-email-clabbe@baylibre.com>
- <a8d06d0a-b13b-384c-ade6-b0a3b0ee61f6@gmail.com>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Subject: Re: [PATCH 0/9] AHCI and SATA PHY support for BCM63138
+Date: Tue, 25 Sep 2018 09:12:59 -0700
+Message-ID: <3d4b406b-4fa4-9248-a0ab-d4eeea808034@gmail.com>
+References: <20180920191646.18198-1-f.fainelli@gmail.com>
+ <7b6e1671-8efe-20d2-d3a2-51a521ce7f22@gmail.com>
+ <fa91f7eb-3405-4607-9391-f043b73e7af6@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <a8d06d0a-b13b-384c-ade6-b0a3b0ee61f6@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <fa91f7eb-3405-4607-9391-f043b73e7af6@ti.com>
 Content-Language: en-US
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Florian Fainelli <f.fainelli@gmail.com>, Corentin Labbe <clabbe@baylibre.com>, Gilles.Muller@lip6.fr, Julia.Lawall@lip6.fr, agust@denx.de, airlied@linux.ie, alexandre.torgue@st.com, alistair@popple.id.au, benh@kernel.crashing.org, carlo@caione.org, davem@davemloft.net, galak@kernel.crashing.org, joabreu@synopsys.com, khilman@baylibre.com, maxime.ripard@bootlin.com, michal.lkml@markovi.net, mpe@ellerman.id.au, mporter@kernel.crashing.org, nicolas.palix@imag.fr, oss@buserror.net, paulus@samba.org, peppe.cavallaro@st.com, tj@kernel.org, vitb@kernel.crashing.org, wens@csie.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org, linux-amlogic@lists.infradead.org, linuxppc-dev@lists.ozlabs.org, cocci@systeme.lip6.fr, linux-arm-kernel@lists.infradead.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kishon Vijay Abraham I <kishon@ti.com>, linux-kernel@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Al Cooper <alcooperx@gmail.com>, Ray Jui <ray.jui@broadcom.com>, Tejun Heo <tj@kernel.org>, Fengguang Wu <fengguang.wu@intel.com>, Arnd Bergmann <arnd@arndb.de>, "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" <linux-ide@vger.kernel.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, bcm-kernel-feedback-list@broadcom.com
 List-Id: linux-ide@vger.kernel.org
 
-SGkgRmxvcmlhbiwKCk9uIDI0LzA5LzIwMTggMjE6MTcsIEZsb3JpYW4gRmFpbmVsbGkgd3JvdGU6
-Cj4gT24gMDkvMjQvMjAxOCAxMjowNCBQTSwgQ29yZW50aW4gTGFiYmUgd3JvdGU6Cj4+IFRoaXMg
-cGF0Y2ggY29udmVydCBtZXNvbiBzdG1tYWMgZ2x1ZSBkcml2ZXIgdG8gdXNlIGFsbCB4eHhzZXRi
-aXRzMzIgZnVuY3Rpb25zLgo+Pgo+PiBTaWduZWQtb2ZmLWJ5OiBDb3JlbnRpbiBMYWJiZSA8Y2xh
-YmJlQGJheWxpYnJlLmNvbT4KPj4gLS0tCj4+ICAuLi4vbmV0L2V0aGVybmV0L3N0bWljcm8vc3Rt
-bWFjL2R3bWFjLW1lc29uOGIuYyAgICB8IDU2ICsrKysrKysrKy0tLS0tLS0tLS0tLS0KPj4gIDEg
-ZmlsZSBjaGFuZ2VkLCAyMiBpbnNlcnRpb25zKCspLCAzNCBkZWxldGlvbnMoLSkKPj4KPj4gZGlm
-ZiAtLWdpdCBhL2RyaXZlcnMvbmV0L2V0aGVybmV0L3N0bWljcm8vc3RtbWFjL2R3bWFjLW1lc29u
-OGIuYyBiL2RyaXZlcnMvbmV0L2V0aGVybmV0L3N0bWljcm8vc3RtbWFjL2R3bWFjLW1lc29uOGIu
-Ywo+PiBpbmRleCBjNTk3OTU2OWZkNjAuLmFiY2Y2NTU4ODU3NiAxMDA2NDQKPj4gLS0tIGEvZHJp
-dmVycy9uZXQvZXRoZXJuZXQvc3RtaWNyby9zdG1tYWMvZHdtYWMtbWVzb244Yi5jCj4+ICsrKyBi
-L2RyaXZlcnMvbmV0L2V0aGVybmV0L3N0bWljcm8vc3RtbWFjL2R3bWFjLW1lc29uOGIuYwo+PiBA
-QCAtMjMsNiArMjMsNyBAQAo+PiAgI2luY2x1ZGUgPGxpbnV4L21mZC9zeXNjb24uaD4KPj4gICNp
-bmNsdWRlIDxsaW51eC9wbGF0Zm9ybV9kZXZpY2UuaD4KPj4gICNpbmNsdWRlIDxsaW51eC9zdG1t
-YWMuaD4KPj4gKyNpbmNsdWRlIDxsaW51eC9zZXRiaXRzLmg+Cj4+ICAKPj4gICNpbmNsdWRlICJz
-dG1tYWNfcGxhdGZvcm0uaCIKPj4gIAo+PiBAQCAtNzUsMTggKzc2LDYgQEAgc3RydWN0IG1lc29u
-OGJfZHdtYWNfY2xrX2NvbmZpZ3Mgewo+PiAgCXN0cnVjdCBjbGtfZ2F0ZQkJcmdtaWlfdHhfZW47
-Cj4+ICB9Owo+PiAgCj4+IC1zdGF0aWMgdm9pZCBtZXNvbjhiX2R3bWFjX21hc2tfYml0cyhzdHJ1
-Y3QgbWVzb244Yl9kd21hYyAqZHdtYWMsIHUzMiByZWcsCj4+IC0JCQkJICAgIHUzMiBtYXNrLCB1
-MzIgdmFsdWUpCj4+IC17Cj4+IC0JdTMyIGRhdGE7Cj4+IC0KPj4gLQlkYXRhID0gcmVhZGwoZHdt
-YWMtPnJlZ3MgKyByZWcpOwo+PiAtCWRhdGEgJj0gfm1hc2s7Cj4+IC0JZGF0YSB8PSAodmFsdWUg
-JiBtYXNrKTsKPj4gLQo+PiAtCXdyaXRlbChkYXRhLCBkd21hYy0+cmVncyArIHJlZyk7Cj4+IC19
-Cj4gCj4gV2h5IG5vdCBtYWtlIG1zZW9uOGJfZHdtYWNfbWFza19iaXRzKCkgYSB3cmFwcGVyIGFy
-b3VuZAo+IGNscnNldGJpdHNfbGUzMigpIHdob3NlIHB1cnBvc2UgaXMgb25seSB0byBkZXJlZmVy
-ZW5jZSBkd21hYy0+cmVncyBhbmQKPiBwYXNzIGl0IHRvIGNscnNldGJpdHNfbGUzMigpPyBUaGF0
-IHdvdWxkIGJlIGZhciBsZXNzIGNoYW5nZXMgdG8gcmV2aWV3Cj4gYW5kIGF1ZGl0IGZvciBjb3Jy
-ZWN0bmVzcywgc2FtZSBnb2VzIHdpdGggZXZlcnkgb3RoZXIgcGF0Y2ggaW4gdGhpcwo+IHNlcmll
-cyB0b3VjaGluZyB0aGUgbWVzb24gZHJpdmVycy4KPiAKClBlcnNvbmFsbHksIEknbGwgcHJlZmVy
-IGRyb3BwaW5nIG15IGN1c3RvbSB3cml0ZWxfYml0c19yZWxheGVkKCkgd2l0aCBzb21ldGhpbmcK
-bW9yZSBmdXR1cmUgcHJvb2YgKEkgYWxzbyB1c2UgaXQgaW4gc3BpLW1lc29uLXNwaWNjIGFuZCBh
-by1jZWMpLAphbmQgSSB0aGluayB0aGUgc2FtZSBmb3IgZHdtYWMtbWVzb244Yi5jCgpOZWlsCl9f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRyaS1kZXZlbCBt
-YWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRwczovL2xpc3Rz
-LmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbAo=
+On 09/24/2018 11:19 PM, Kishon Vijay Abraham I wrote:
+> 
+> 
+> On Friday 21 September 2018 12:49 AM, Florian Fainelli wrote:
+>> On 09/20/2018 12:16 PM, Florian Fainelli wrote:
+>>> Hi Kishon, Tejun,
+>>>
+>>> This patch series adds support for the SATA AHCI and PHY found on the
+>>> ARM-basd BCM63138 DSL SoCs.
+>>>
+>>> It would probably make sense for patches 1-3 to go through Kishon's
+>>> tree, patches 4-7 through Tejun's tree, and I would be merging the last
+>>> two patches through the Broadcom ARM-SoC tree.
+>>>
+>>> Let me know if this is not a workable plan, thank you very much!
+>>
+>> Looks like I had left patches with the incorrect subject, please
+>> disregard the following patches:
+>>
+>> [PATCH 2/9] phy: broadcom: allow PHY_BRCM_SATA driver to be built for
+>> DSL SoCs
+>> [PATCH 5/9] ata: sata_brcmstb: Allow optional reset controller to be used
+>> [PATCH 6/9] ata: ahci_brcmstb: Match 63138 compatible strings
+>>
+>> since they have incorrect/inconsistent titles, the other patches are
+>> fine though. Sorry about that.
+> 
+> merged the first 3 patches to linux-phy tree.
+
+Thanks a lot Kishon!
+
+> 
+> Thanks
+> Kishon
+> 
+
+
+-- 
+Florian
