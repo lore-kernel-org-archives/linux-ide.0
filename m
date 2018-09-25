@@ -1,143 +1,47 @@
-From: Christophe LEROY <christophe.leroy@c-s.fr>
-Subject: Re: [PATCH v2 2/7] include: add
- setbits32/clrbits32/clrsetbits32/setbits64/clrbits64/clrsetbits64 in
- linux/setbits.h
-Date: Tue, 25 Sep 2018 07:05:00 +0200
-Message-ID: <4a63152f-9eca-f7d9-8fe6-59caaab33666@c-s.fr>
-References: <1537815856-31728-1-git-send-email-clabbe@baylibre.com>
- <1537815856-31728-3-git-send-email-clabbe@baylibre.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH 0/9] AHCI and SATA PHY support for BCM63138
+Date: Tue, 25 Sep 2018 11:49:59 +0530
+Message-ID: <fa91f7eb-3405-4607-9391-f043b73e7af6@ti.com>
+References: <20180920191646.18198-1-f.fainelli@gmail.com>
+ <7b6e1671-8efe-20d2-d3a2-51a521ce7f22@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1537815856-31728-3-git-send-email-clabbe@baylibre.com>
-Content-Language: fr
-Sender: netdev-owner@vger.kernel.org
-To: Corentin Labbe <clabbe@baylibre.com>, Gilles.Muller@lip6.fr, Julia.Lawall@lip6.fr, agust@denx.de, airlied@linux.ie, alexandre.torgue@st.com, alistair@popple.id.au, benh@kernel.crashing.org, carlo@caione.org, davem@davemloft.net, galak@kernel.crashing.org, joabreu@synopsys.com, khilman@baylibre.com, maxime.ripard@bootlin.com, michal.lkml@markovi.net, mpe@ellerman.id.au, mporter@kernel.crashing.org, narmstrong@baylibre.com, nicolas.palix@imag.fr, oss@buserror.net, paulus@samba.org, peppe.cavallaro@st.com, tj@kernel.org, vitb@kernel.crashing.org, wens@csie.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org, linux-amlogic@lists.infradead.org, linuxppc-dev@lists.ozlabs.org, cocci@systeme.lip6.fr, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <7b6e1671-8efe-20d2-d3a2-51a521ce7f22@gmail.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Florian Fainelli <f.fainelli@gmail.com>, linux-kernel@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Al Cooper <alcooperx@gmail.com>, Ray Jui <ray.jui@broadcom.com>, Tejun Heo <tj@kernel.org>, Fengguang Wu <fengguang.wu@intel.com>, Arnd Bergmann <arnd@arndb.de>, "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" <linux-ide@vger.kernel.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, bcm-kernel-feedback-list@broadcom.com
 List-Id: linux-ide@vger.kernel.org
 
 
 
-Le 24/09/2018 à 21:04, Corentin Labbe a écrit :
-> This patch adds setbits32/clrbits32/clrsetbits32 and
-> setbits64/clrbits64/clrsetbits64 in linux/setbits.h header.
-
-Fix the patch subject and description.
-
+On Friday 21 September 2018 12:49 AM, Florian Fainelli wrote:
+> On 09/20/2018 12:16 PM, Florian Fainelli wrote:
+>> Hi Kishon, Tejun,
+>>
+>> This patch series adds support for the SATA AHCI and PHY found on the
+>> ARM-basd BCM63138 DSL SoCs.
+>>
+>> It would probably make sense for patches 1-3 to go through Kishon's
+>> tree, patches 4-7 through Tejun's tree, and I would be merging the last
+>> two patches through the Broadcom ARM-SoC tree.
+>>
+>> Let me know if this is not a workable plan, thank you very much!
 > 
-> Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
-> ---
->   include/linux/setbits.h | 88 +++++++++++++++++++++++++++++++++++++++++++++++++
->   1 file changed, 88 insertions(+)
->   create mode 100644 include/linux/setbits.h
+> Looks like I had left patches with the incorrect subject, please
+> disregard the following patches:
 > 
-> diff --git a/include/linux/setbits.h b/include/linux/setbits.h
-> new file mode 100644
-> index 000000000000..6e7e257134ae
-> --- /dev/null
-> +++ b/include/linux/setbits.h
-> @@ -0,0 +1,88 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +#ifndef __LINUX_SETBITS_H
-> +#define __LINUX_SETBITS_H
-> +
-> +#include <linux/io.h>
-> +
-> +#define __setbits(readfunction, writefunction, addr, set) \
-> +	writefunction((readfunction(addr) | (set)), addr)
-
-You don't need so long names for parameters in a 2 lines macro (See 
-Linux Kernel Codying style §4 Naming).
-
-A single line macro would be feasible with only 3 chars names:
-
-#define __setbits(rfn, wfn, addr, set) wfn((rfn(addr) | (set)), addr)
-
-> +#define __clrbits(readfunction, writefunction, addr, mask) \
-> +	writefunction((readfunction(addr) & ~(mask)), addr)
-> +#define __clrsetbits(readfunction, writefunction, addr, mask, set) \
-> +	writefunction(((readfunction(addr) & ~(mask)) | (set)), addr)
-> +#define __setclrbits(readfunction, writefunction, addr, mask, set) \
-> +	writefunction(((readfunction(addr) | (set)) & ~(mask)), addr)
-> +
-> +#ifndef setbits_le32
-> +#define setbits_le32(addr, set) __setbits(readl, writel, addr, set)
-> +#endif
-> +#ifndef setbits_le32_relaxed
-> +#define setbits_le32_relaxed(addr, set) __setbits(readl_relaxed, writel_relaxed, \
-> +					       addr, set)
-> +#endif
-> +
-> +#ifndef clrbits_le32
-> +#define clrbits_le32(addr, mask) __clrbits(readl, writel, addr, mask)
-> +#endif
-> +#ifndef clrbits_le32_relaxed
-> +#define clrbits_le32_relaxed(addr, mask) __clrbits(readl_relaxed, writel_relaxed, \
-> +						addr, mask)
-> +#endif
-> +
-> +#ifndef clrsetbits_le32
-> +#define clrsetbits_le32(addr, mask, set) __clrsetbits(readl, writel, addr, mask, set)
-> +#endif
-> +#ifndef clrsetbits_le32_relaxed
-> +#define clrsetbits_le32_relaxed(addr, mask, set) __clrsetbits(readl_relaxed, \
-> +							   writel_relaxed, \
-> +							   addr, mask, set)
-> +#endif
-> +
-> +#ifndef setclrbits_le32
-> +#define setclrbits_le32(addr, mask, set) __setclrbits(readl, writel, addr, mask, set)
-> +#endif
-> +#ifndef setclrbits_le32_relaxed
-> +#define setclrbits_le32_relaxed(addr, mask, set) __setclrbits(readl_relaxed, \
-> +							   writel_relaxed, \
-> +							   addr, mask, set)
-> +#endif
-> +
-> +/* We cannot use CONFIG_64BIT as some x86 drivers use non-atomicwriteq() */
-> +#if defined(writeq) && defined(readq)
-
-Take care. At least Alpha Arch defines it as a static inline without
-redefining it as a #define. (see arch/alpha/kernel/io.c)
-
-Christophe
-
-> +#ifndef setbits_le64
-> +#define setbits_le64(addr, set) __setbits(readq, writeq, addr, set)
-> +#endif
-> +#ifndef setbits_le64_relaxed
-> +#define setbits_le64_relaxed(addr, set) __setbits(readq_relaxed, writeq_relaxed, \
-> +					       addr, set)
-> +#endif
-> +
-> +#ifndef clrbits_le64
-> +#define clrbits_le64(addr, mask) __clrbits(readq, writeq, addr, mask)
-> +#endif
-> +#ifndef clrbits_le64_relaxed
-> +#define clrbits_le64_relaxed(addr, mask) __clrbits(readq_relaxed, writeq_relaxed, \
-> +						addr, mask)
-> +#endif
-> +
-> +#ifndef clrsetbits_le64
-> +#define clrsetbits_le64(addr, mask, set) __clrsetbits(readq, writeq, addr, mask, set)
-> +#endif
-> +#ifndef clrsetbits_le64_relaxed
-> +#define clrsetbits_le64_relaxed(addr, mask, set) __clrsetbits(readq_relaxed, \
-> +							   writeq_relaxed, \
-> +							   addr, mask, set)
-> +#endif
-> +
-> +#ifndef setclrbits_le64
-> +#define setclrbits_le64(addr, mask, set) __setclrbits(readq, writeq, addr, mask, set)
-> +#endif
-> +#ifndef setclrbits_le64_relaxed
-> +#define setclrbits_le64_relaxed(addr, mask, set) __setclrbits(readq_relaxed, \
-> +							   writeq_relaxed, \
-> +							   addr, mask, set)
-> +#endif
-> +
-> +#endif /* writeq/readq */
-> +
-> +#endif /* __LINUX_SETBITS_H */
+> [PATCH 2/9] phy: broadcom: allow PHY_BRCM_SATA driver to be built for
+> DSL SoCs
+> [PATCH 5/9] ata: sata_brcmstb: Allow optional reset controller to be used
+> [PATCH 6/9] ata: ahci_brcmstb: Match 63138 compatible strings
 > 
+> since they have incorrect/inconsistent titles, the other patches are
+> fine though. Sorry about that.
+
+merged the first 3 patches to linux-phy tree.
+
+Thanks
+Kishon
