@@ -1,57 +1,42 @@
-From: Florian Fainelli <f.fainelli@gmail.com>
-Subject: Re: [PATCH 0/9] AHCI and SATA PHY support for BCM63138
-Date: Tue, 25 Sep 2018 09:12:59 -0700
-Message-ID: <3d4b406b-4fa4-9248-a0ab-d4eeea808034@gmail.com>
-References: <20180920191646.18198-1-f.fainelli@gmail.com>
- <7b6e1671-8efe-20d2-d3a2-51a521ce7f22@gmail.com>
- <fa91f7eb-3405-4607-9391-f043b73e7af6@ti.com>
+From: Aditya Prayoga <aditya@kobol.io>
+Subject: Re: [PATCH 2/2] ARM: mvebu: Enable ARCH_WANT_LIBATA_LEDS in Armada 38x
+Date: Wed, 26 Sep 2018 13:05:49 +0700
+Message-ID: <CAFTRUBdqz8fQN--KQ36LQm_EJpOvZ2723oDRyEn+_HMM5YK5CA@mail.gmail.com>
+References: <1537328730-9156-1-git-send-email-aditya@kobol.io>
+ <1537328730-9156-3-git-send-email-aditya@kobol.io> <20180920072635.GB20392@amd>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <fa91f7eb-3405-4607-9391-f043b73e7af6@ti.com>
-Content-Language: en-US
+In-Reply-To: <20180920072635.GB20392@amd>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Kishon Vijay Abraham I <kishon@ti.com>, linux-kernel@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Al Cooper <alcooperx@gmail.com>, Ray Jui <ray.jui@broadcom.com>, Tejun Heo <tj@kernel.org>, Fengguang Wu <fengguang.wu@intel.com>, Arnd Bergmann <arnd@arndb.de>, "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" <linux-ide@vger.kernel.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, bcm-kernel-feedback-list@broadcom.com
+To: pavel@ucw.cz
+Cc: linux-ide@vger.kernel.org, linux-leds@vger.kernel.org, jason@lakedaemon.net, Andrew Lunn <andrew@lunn.ch>, gregory.clement@bootlin.com, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux@armlinux.org.uk, axboe@kernel.dk, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, jacek.anaszewski@gmail.com, Daniel Golle <daniel@makrotopia.org>
 List-Id: linux-ide@vger.kernel.org
 
-On 09/24/2018 11:19 PM, Kishon Vijay Abraham I wrote:
-> 
-> 
-> On Friday 21 September 2018 12:49 AM, Florian Fainelli wrote:
->> On 09/20/2018 12:16 PM, Florian Fainelli wrote:
->>> Hi Kishon, Tejun,
->>>
->>> This patch series adds support for the SATA AHCI and PHY found on the
->>> ARM-basd BCM63138 DSL SoCs.
->>>
->>> It would probably make sense for patches 1-3 to go through Kishon's
->>> tree, patches 4-7 through Tejun's tree, and I would be merging the last
->>> two patches through the Broadcom ARM-SoC tree.
->>>
->>> Let me know if this is not a workable plan, thank you very much!
->>
->> Looks like I had left patches with the incorrect subject, please
->> disregard the following patches:
->>
->> [PATCH 2/9] phy: broadcom: allow PHY_BRCM_SATA driver to be built for
->> DSL SoCs
->> [PATCH 5/9] ata: sata_brcmstb: Allow optional reset controller to be used
->> [PATCH 6/9] ata: ahci_brcmstb: Match 63138 compatible strings
->>
->> since they have incorrect/inconsistent titles, the other patches are
->> fine though. Sorry about that.
-> 
-> merged the first 3 patches to linux-phy tree.
+On Thu, Sep 20, 2018 at 2:26 PM Pavel Machek <pavel@ucw.cz> wrote:
+>
+> On Wed 2018-09-19 11:45:30, Aditya Prayoga wrote:
+> > Enable hidden symbol ARCH_WANT_LIBATA_LEDS so CONFIG_ATA_LEDS can be
+> > used in kernel configuration.
+>
+> Should that be hidden symbol and should that be architecture specific?
+>
 
-Thanks a lot Kishon!
+The intention was to minimize the risk of the ledtrig code being
+included by accident. The
+code itself does not have architecture specific instruction
 
-> 
-> Thanks
-> Kishon
-> 
+> For a notebook, I may want scrolllock LED to indicate ATA activity
+> (because I'm using USB keyboard and can't see the disk led).
+>
+> Hmm. And while at it... it would be nice to have option to watch all
+> ATA ports combined, as well.
 
+but there is disk-activity trigger for that purpose.
 
--- 
-Florian
+Aditya
+
+>                                                                         Pavel
+> --
+> (english) http://www.livejournal.com/~pavelmachek
+> (cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
