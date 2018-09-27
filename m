@@ -1,113 +1,70 @@
-From: LABBE Corentin <clabbe@baylibre.com>
-Subject: Re: [PATCH v2 2/7] include: add
- setbits32/clrbits32/clrsetbits32/setbits64/clrbits64/clrsetbits64 in
- linux/setbits.h
-Date: Thu, 27 Sep 2018 07:35:08 +0200
-Message-ID: <20180927053508.GB27637@Red>
-References: <1537815856-31728-1-git-send-email-clabbe@baylibre.com>
- <1537815856-31728-3-git-send-email-clabbe@baylibre.com>
- <4a63152f-9eca-f7d9-8fe6-59caaab33666@c-s.fr>
+From: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+Subject: Re: [PATCH] ata: add Amiga Gayle PATA controller driver
+Date: Thu, 27 Sep 2018 19:00:03 +0200
+Message-ID: <08866634-04fb-e8fe-08bf-003d6a982b5a@physik.fu-berlin.de>
+References: <CGME20180212134949epcas2p37f0bdae15608340bc21dbb2358db8df3@epcas2p3.samsung.com>
+ <19df19ad-47e8-1f17-6b7f-39365cd0d4df@physik.fu-berlin.de>
+ <4c590675-71dc-d7f1-b40f-3b0ee124082a@physik.fu-berlin.de>
+ <2435240.vCYXG2Zeag@amdc3058>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4a63152f-9eca-f7d9-8fe6-59caaab33666@c-s.fr>
+In-Reply-To: <2435240.vCYXG2Zeag@amdc3058>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christophe LEROY <christophe.leroy@c-s.fr>
-Cc: Gilles.Muller@lip6.fr, Julia.Lawall@lip6.fr, agust@denx.de, airlied@linux.ie, alexandre.torgue@st.com, alistair@popple.id.au, benh@kernel.crashing.org, carlo@caione.org, davem@davemloft.net, galak@kernel.crashing.org, joabreu@synopsys.com, khilman@baylibre.com, maxime.ripard@bootlin.com, michal.lkml@markovi.net, mpe@ellerman.id.au, mporter@kernel.crashing.org, narmstrong@baylibre.com, nicolas.palix@imag.fr, oss@buserror.net, paulus@samba.org, peppe.cavallaro@st.com, tj@kernel.org, vitb@kernel.crashing.org, wens@csie.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org, linux-amlogic@lists.infradead.org, linuxppc-dev@lists.ozlabs.org, cocci@systeme.lip6.fr, linux-arm-kernel@lists.infradead.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Tejun Heo <tj@kernel.org>, Michael Schmitz <schmitzmic@gmail.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Sep 25, 2018 at 07:05:00AM +0200, Christophe LEROY wrote:
+Hi Bartlomiej!
+
+Any chance you had a chance working on the libata port of the Buddha
+driver? The Amiga 4000 here is equipped with a Buddha and I'm happy
+to help testing the driver:
+
+root@elgar:~> lszorro
+00: Phase 5 Digital Products CyberSCSI/Blizzard 1220
+01: Village Tronic Ariadne Ethernet Card
+02: individual Computers X-Surf 100 Z-II/ZIII Ethernet
+03: individual Computers Buddha IDE Controller
+04: Phase 5 Digital Products CyberVision 64
+root@elgar:~>
+
+Adrian
+
+On 3/1/18 11:52 AM, Bartlomiej Zolnierkiewicz wrote:
+> On Thursday, March 01, 2018 10:55:48 AM John Paul Adrian Glaubitz wrote:
+>> Hello!
 > 
+> Hi,
 > 
-> Le 24/09/2018 à 21:04, Corentin Labbe a écrit :
-> > This patch adds setbits32/clrbits32/clrsetbits32 and
-> > setbits64/clrbits64/clrsetbits64 in linux/setbits.h header.
+>> On 02/18/2018 05:18 PM, John Paul Adrian Glaubitz wrote:
+>>> Is there any progress on this? Is it just the SDPX headers now that
+>>> are missing?
+>>
+>> Would it be okay if re-send the patch with the SPDX headers added?
+>>
+>> Or can we get the patch merged, then I'll send a patch to add the
+>> SPDX headers?
 > 
-> Fix the patch subject and description.
+> I'll post updated version later today, sorry for the delay (I've been
+> busy with other things and the patch is not v4.16 material anyway).
 > 
-> > 
-> > Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
-> > ---
-> >   include/linux/setbits.h | 88 +++++++++++++++++++++++++++++++++++++++++++++++++
-> >   1 file changed, 88 insertions(+)
-> >   create mode 100644 include/linux/setbits.h
-> > 
-> > diff --git a/include/linux/setbits.h b/include/linux/setbits.h
-> > new file mode 100644
-> > index 000000000000..6e7e257134ae
-> > --- /dev/null
-> > +++ b/include/linux/setbits.h
-> > @@ -0,0 +1,88 @@
-> > +/* SPDX-License-Identifier: GPL-2.0 */
-> > +#ifndef __LINUX_SETBITS_H
-> > +#define __LINUX_SETBITS_H
-> > +
-> > +#include <linux/io.h>
-> > +
-> > +#define __setbits(readfunction, writefunction, addr, set) \
-> > +	writefunction((readfunction(addr) | (set)), addr)
+> Best regards,
+> --
+> Bartlomiej Zolnierkiewicz
+> Samsung R&D Institute Poland
+> Samsung Electronics
 > 
-> You don't need so long names for parameters in a 2 lines macro (See 
-> Linux Kernel Codying style §4 Naming).
-> 
-> A single line macro would be feasible with only 3 chars names:
-> 
-> #define __setbits(rfn, wfn, addr, set) wfn((rfn(addr) | (set)), addr)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-m68k" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
 
-Thanks I will fix all reported problem.
-
-> > +#define __clrbits(readfunction, writefunction, addr, mask) \
-> > +	writefunction((readfunction(addr) & ~(mask)), addr)
-> > +#define __clrsetbits(readfunction, writefunction, addr, mask, set) \
-> > +	writefunction(((readfunction(addr) & ~(mask)) | (set)), addr)
-> > +#define __setclrbits(readfunction, writefunction, addr, mask, set) \
-> > +	writefunction(((readfunction(addr) | (set)) & ~(mask)), addr)
-> > +
-> > +#ifndef setbits_le32
-> > +#define setbits_le32(addr, set) __setbits(readl, writel, addr, set)
-> > +#endif
-> > +#ifndef setbits_le32_relaxed
-> > +#define setbits_le32_relaxed(addr, set) __setbits(readl_relaxed, writel_relaxed, \
-> > +					       addr, set)
-> > +#endif
-> > +
-> > +#ifndef clrbits_le32
-> > +#define clrbits_le32(addr, mask) __clrbits(readl, writel, addr, mask)
-> > +#endif
-> > +#ifndef clrbits_le32_relaxed
-> > +#define clrbits_le32_relaxed(addr, mask) __clrbits(readl_relaxed, writel_relaxed, \
-> > +						addr, mask)
-> > +#endif
-> > +
-> > +#ifndef clrsetbits_le32
-> > +#define clrsetbits_le32(addr, mask, set) __clrsetbits(readl, writel, addr, mask, set)
-> > +#endif
-> > +#ifndef clrsetbits_le32_relaxed
-> > +#define clrsetbits_le32_relaxed(addr, mask, set) __clrsetbits(readl_relaxed, \
-> > +							   writel_relaxed, \
-> > +							   addr, mask, set)
-> > +#endif
-> > +
-> > +#ifndef setclrbits_le32
-> > +#define setclrbits_le32(addr, mask, set) __setclrbits(readl, writel, addr, mask, set)
-> > +#endif
-> > +#ifndef setclrbits_le32_relaxed
-> > +#define setclrbits_le32_relaxed(addr, mask, set) __setclrbits(readl_relaxed, \
-> > +							   writel_relaxed, \
-> > +							   addr, mask, set)
-> > +#endif
-> > +
-> > +/* We cannot use CONFIG_64BIT as some x86 drivers use non-atomicwriteq() */
-> > +#if defined(writeq) && defined(readq)
-> 
-> Take care. At least Alpha Arch defines it as a static inline without
-> redefining it as a #define. (see arch/alpha/kernel/io.c)
-
-In fact, it does in arch/alpha/include/asm/io.h along with a gentle comment.
-But fixing their comment will be another interesting patch serie.
-
-Regards
-Corentin Labbe
+-- 
+ .''`.  John Paul Adrian Glaubitz
+: :' :  Debian Developer - glaubitz@debian.org
+`. `'   Freie Universitaet Berlin - glaubitz@physik.fu-berlin.de
+  `-    GPG: 62FF 8A75 84E0 2956 9546  0006 7426 3B37 F5B5 F913
