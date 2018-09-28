@@ -1,70 +1,58 @@
-From: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
-Subject: Re: [PATCH] ata: add Amiga Gayle PATA controller driver
-Date: Thu, 27 Sep 2018 19:00:03 +0200
-Message-ID: <08866634-04fb-e8fe-08bf-003d6a982b5a@physik.fu-berlin.de>
-References: <CGME20180212134949epcas2p37f0bdae15608340bc21dbb2358db8df3@epcas2p3.samsung.com>
- <19df19ad-47e8-1f17-6b7f-39365cd0d4df@physik.fu-berlin.de>
- <4c590675-71dc-d7f1-b40f-3b0ee124082a@physik.fu-berlin.de>
- <2435240.vCYXG2Zeag@amdc3058>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Subject: Re: [PATCH 0/9] AHCI and SATA PHY support for BCM63138
+Date: Fri, 28 Sep 2018 15:41:23 -0700
+Message-ID: <58d4992a-a06e-60e7-1856-5cd87741a771@gmail.com>
+References: <20180920191646.18198-1-f.fainelli@gmail.com>
+ <7b6e1671-8efe-20d2-d3a2-51a521ce7f22@gmail.com>
+ <fa91f7eb-3405-4607-9391-f043b73e7af6@ti.com>
+ <3d4b406b-4fa4-9248-a0ab-d4eeea808034@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <2435240.vCYXG2Zeag@amdc3058>
+In-Reply-To: <3d4b406b-4fa4-9248-a0ab-d4eeea808034@gmail.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Tejun Heo <tj@kernel.org>, Michael Schmitz <schmitzmic@gmail.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
+To: Florian Fainelli <f.fainelli@gmail.com>, Kishon Vijay Abraham I <kishon@ti.com>, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Al Cooper <alcooperx@gmail.com>, Ray Jui <ray.jui@broadcom.com>, Fengguang Wu <fengguang.wu@intel.com>, Arnd Bergmann <arnd@arndb.de>, "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" <linux-ide@vger.kernel.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, bcm-kernel-feedback-list@broadcom.com
 List-Id: linux-ide@vger.kernel.org
 
-Hi Bartlomiej!
-
-Any chance you had a chance working on the libata port of the Buddha
-driver? The Amiga 4000 here is equipped with a Buddha and I'm happy
-to help testing the driver:
-
-root@elgar:~> lszorro
-00: Phase 5 Digital Products CyberSCSI/Blizzard 1220
-01: Village Tronic Ariadne Ethernet Card
-02: individual Computers X-Surf 100 Z-II/ZIII Ethernet
-03: individual Computers Buddha IDE Controller
-04: Phase 5 Digital Products CyberVision 64
-root@elgar:~>
-
-Adrian
-
-On 3/1/18 11:52 AM, Bartlomiej Zolnierkiewicz wrote:
-> On Thursday, March 01, 2018 10:55:48 AM John Paul Adrian Glaubitz wrote:
->> Hello!
-> 
-> Hi,
-> 
->> On 02/18/2018 05:18 PM, John Paul Adrian Glaubitz wrote:
->>> Is there any progress on this? Is it just the SDPX headers now that
->>> are missing?
+On 09/25/2018 09:12 AM, Florian Fainelli wrote:
+> On 09/24/2018 11:19 PM, Kishon Vijay Abraham I wrote:
 >>
->> Would it be okay if re-send the patch with the SPDX headers added?
 >>
->> Or can we get the patch merged, then I'll send a patch to add the
->> SPDX headers?
+>> On Friday 21 September 2018 12:49 AM, Florian Fainelli wrote:
+>>> On 09/20/2018 12:16 PM, Florian Fainelli wrote:
+>>>> Hi Kishon, Tejun,
+>>>>
+>>>> This patch series adds support for the SATA AHCI and PHY found on the
+>>>> ARM-basd BCM63138 DSL SoCs.
+>>>>
+>>>> It would probably make sense for patches 1-3 to go through Kishon's
+>>>> tree, patches 4-7 through Tejun's tree, and I would be merging the last
+>>>> two patches through the Broadcom ARM-SoC tree.
+>>>>
+>>>> Let me know if this is not a workable plan, thank you very much!
+>>>
+>>> Looks like I had left patches with the incorrect subject, please
+>>> disregard the following patches:
+>>>
+>>> [PATCH 2/9] phy: broadcom: allow PHY_BRCM_SATA driver to be built for
+>>> DSL SoCs
+>>> [PATCH 5/9] ata: sata_brcmstb: Allow optional reset controller to be used
+>>> [PATCH 6/9] ata: ahci_brcmstb: Match 63138 compatible strings
+>>>
+>>> since they have incorrect/inconsistent titles, the other patches are
+>>> fine though. Sorry about that.
+>>
+>> merged the first 3 patches to linux-phy tree.
 > 
-> I'll post updated version later today, sorry for the delay (I've been
-> busy with other things and the patch is not v4.16 material anyway).
-> 
-> Best regards,
-> --
-> Bartlomiej Zolnierkiewicz
-> Samsung R&D Institute Poland
-> Samsung Electronics
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-m68k" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> Thanks a lot Kishon!
 
+Tejun, are you good with picking up patches 4-7 and I take the last two?
+Can you make sure you pick up the ones that contain "ahci_brcm" in their
+subject, I had incorrectly formatted them initially, sorry again about that.
+
+Thank you!
 -- 
- .''`.  John Paul Adrian Glaubitz
-: :' :  Debian Developer - glaubitz@debian.org
-`. `'   Freie Universitaet Berlin - glaubitz@physik.fu-berlin.de
-  `-    GPG: 62FF 8A75 84E0 2956 9546  0006 7426 3B37 F5B5 F913
+Florian
