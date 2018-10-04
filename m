@@ -1,88 +1,56 @@
-From: Nathan Chancellor <natechancellor@gmail.com>
-Subject: [PATCH] ata: ep93xx: Use proper enums for directions
-Date: Wed,  3 Oct 2018 19:37:54 -0700
-Message-ID: <20181004023754.15477-1-natechancellor@gmail.com>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH] ata: ep93xx: Use proper enums for directions
+Date: Thu, 4 Oct 2018 13:48:33 +0200
+Message-ID: <20181004114834eucas1p236dcc3d55686d347a82e79cc5b1628ba~aZWbN2bbZ0357203572eucas1p2e@eucas1p2.samsung.com>
+References: <CGME20181004023814epcas3p163f7ce4d927c86d837015cdbe58c2936@epcas3p1.samsung.com>
+        <20181004023754.15477-1-natechancellor@gmail.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20181004023754.15477-1-natechancellor@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>, Nathan Chancellor <natechancellor@gmail.com>
+To: Nathan Chancellor <natechancellor@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>
 List-Id: linux-ide@vger.kernel.org
 
-Clang warns when one enumerated type is implicitly converted to another.
 
-drivers/ata/pata_ep93xx.c:662:36: warning: implicit conversion from
-enumeration type 'enum dma_data_direction' to different enumeration type
-'enum dma_transfer_direction' [-Wenum-conversion]
-        drv_data->dma_rx_data.direction = DMA_FROM_DEVICE;
-                                        ~ ^~~~~~~~~~~~~~~
-drivers/ata/pata_ep93xx.c:670:36: warning: implicit conversion from
-enumeration type 'enum dma_data_direction' to different enumeration type
-'enum dma_transfer_direction' [-Wenum-conversion]
-        drv_data->dma_tx_data.direction = DMA_TO_DEVICE;
-                                        ~ ^~~~~~~~~~~~~
-drivers/ata/pata_ep93xx.c:681:19: warning: implicit conversion from
-enumeration type 'enum dma_data_direction' to different enumeration type
-'enum dma_transfer_direction' [-Wenum-conversion]
-        conf.direction = DMA_FROM_DEVICE;
-                       ~ ^~~~~~~~~~~~~~~
-drivers/ata/pata_ep93xx.c:692:19: warning: implicit conversion from
-enumeration type 'enum dma_data_direction' to different enumeration type
-'enum dma_transfer_direction' [-Wenum-conversion]
-        conf.direction = DMA_TO_DEVICE;
-                       ~ ^~~~~~~~~~~~~
+On 10/04/2018 04:37 AM, Nathan Chancellor wrote:
+> Clang warns when one enumerated type is implicitly converted to another.
+> 
+> drivers/ata/pata_ep93xx.c:662:36: warning: implicit conversion from
+> enumeration type 'enum dma_data_direction' to different enumeration type
+> 'enum dma_transfer_direction' [-Wenum-conversion]
+>         drv_data->dma_rx_data.direction = DMA_FROM_DEVICE;
+>                                         ~ ^~~~~~~~~~~~~~~
+> drivers/ata/pata_ep93xx.c:670:36: warning: implicit conversion from
+> enumeration type 'enum dma_data_direction' to different enumeration type
+> 'enum dma_transfer_direction' [-Wenum-conversion]
+>         drv_data->dma_tx_data.direction = DMA_TO_DEVICE;
+>                                         ~ ^~~~~~~~~~~~~
+> drivers/ata/pata_ep93xx.c:681:19: warning: implicit conversion from
+> enumeration type 'enum dma_data_direction' to different enumeration type
+> 'enum dma_transfer_direction' [-Wenum-conversion]
+>         conf.direction = DMA_FROM_DEVICE;
+>                        ~ ^~~~~~~~~~~~~~~
+> drivers/ata/pata_ep93xx.c:692:19: warning: implicit conversion from
+> enumeration type 'enum dma_data_direction' to different enumeration type
+> 'enum dma_transfer_direction' [-Wenum-conversion]
+>         conf.direction = DMA_TO_DEVICE;
+>                        ~ ^~~~~~~~~~~~~
+> 
+> Use the equivalent valued enums from the expected type so that Clang no
+> longer warns about a conversion.
+> 
+> DMA_TO_DEVICE = DMA_MEM_TO_DEV = 1
+> DMA_FROM_DEVICE = DMA_DEV_TO_MEM = 2
+> 
+> Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
 
-Use the equivalent valued enums from the expected type so that Clang no
-longer warns about a conversion.
+Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-DMA_TO_DEVICE = DMA_MEM_TO_DEV = 1
-DMA_FROM_DEVICE = DMA_DEV_TO_MEM = 2
-
-Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
----
- drivers/ata/pata_ep93xx.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
-index 0a550190955a..cc6d06c1b2c7 100644
---- a/drivers/ata/pata_ep93xx.c
-+++ b/drivers/ata/pata_ep93xx.c
-@@ -659,7 +659,7 @@ static void ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
- 	 * start of new transfer.
- 	 */
- 	drv_data->dma_rx_data.port = EP93XX_DMA_IDE;
--	drv_data->dma_rx_data.direction = DMA_FROM_DEVICE;
-+	drv_data->dma_rx_data.direction = DMA_DEV_TO_MEM;
- 	drv_data->dma_rx_data.name = "ep93xx-pata-rx";
- 	drv_data->dma_rx_channel = dma_request_channel(mask,
- 		ep93xx_pata_dma_filter, &drv_data->dma_rx_data);
-@@ -667,7 +667,7 @@ static void ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
- 		return;
- 
- 	drv_data->dma_tx_data.port = EP93XX_DMA_IDE;
--	drv_data->dma_tx_data.direction = DMA_TO_DEVICE;
-+	drv_data->dma_tx_data.direction = DMA_MEM_TO_DEV;
- 	drv_data->dma_tx_data.name = "ep93xx-pata-tx";
- 	drv_data->dma_tx_channel = dma_request_channel(mask,
- 		ep93xx_pata_dma_filter, &drv_data->dma_tx_data);
-@@ -678,7 +678,7 @@ static void ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
- 
- 	/* Configure receive channel direction and source address */
- 	memset(&conf, 0, sizeof(conf));
--	conf.direction = DMA_FROM_DEVICE;
-+	conf.direction = DMA_DEV_TO_MEM;
- 	conf.src_addr = drv_data->udma_in_phys;
- 	conf.src_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
- 	if (dmaengine_slave_config(drv_data->dma_rx_channel, &conf)) {
-@@ -689,7 +689,7 @@ static void ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
- 
- 	/* Configure transmit channel direction and destination address */
- 	memset(&conf, 0, sizeof(conf));
--	conf.direction = DMA_TO_DEVICE;
-+	conf.direction = DMA_MEM_TO_DEV;
- 	conf.dst_addr = drv_data->udma_out_phys;
- 	conf.dst_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
- 	if (dmaengine_slave_config(drv_data->dma_tx_channel, &conf)) {
--- 
-2.19.0
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
