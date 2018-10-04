@@ -1,33 +1,88 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v2 0/4] AHCI support for BCM63138
-Date: Mon, 1 Oct 2018 16:39:46 -0600
-Message-ID: <1f741f17-0374-f519-504b-adee93340d68@kernel.dk>
-References: <20181001173302.25398-1-f.fainelli@gmail.com>
+From: Nathan Chancellor <natechancellor@gmail.com>
+Subject: [PATCH] ata: ep93xx: Use proper enums for directions
+Date: Wed,  3 Oct 2018 19:37:54 -0700
+Message-ID: <20181004023754.15477-1-natechancellor@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181001173302.25398-1-f.fainelli@gmail.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Florian Fainelli <f.fainelli@gmail.com>, linux-kernel@vger.kernel.org
-Cc: bcm-kernel-feedback-list@broadcom.com, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" <linux-ide@vger.kernel.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Nick Desaulniers <ndesaulniers@google.com>, Nathan Chancellor <natechancellor@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-On 10/1/18 11:32 AM, Florian Fainelli wrote:
-> Hi Jens,
-> 
-> This is a resend of the previous series posted here:
-> 
-> https://lkml.org/lkml/2018/9/20/1060
-> 
-> With a few minor changes:
-> 
-> - rebased against your for-4.20/libata branch
-> - added Rob's Reviewed-by to patch
-> - fixed the use of the reset controller API
+Clang warns when one enumerated type is implicitly converted to another.
 
-Thanks, applied for 4.20.
+drivers/ata/pata_ep93xx.c:662:36: warning: implicit conversion from
+enumeration type 'enum dma_data_direction' to different enumeration type
+'enum dma_transfer_direction' [-Wenum-conversion]
+        drv_data->dma_rx_data.direction = DMA_FROM_DEVICE;
+                                        ~ ^~~~~~~~~~~~~~~
+drivers/ata/pata_ep93xx.c:670:36: warning: implicit conversion from
+enumeration type 'enum dma_data_direction' to different enumeration type
+'enum dma_transfer_direction' [-Wenum-conversion]
+        drv_data->dma_tx_data.direction = DMA_TO_DEVICE;
+                                        ~ ^~~~~~~~~~~~~
+drivers/ata/pata_ep93xx.c:681:19: warning: implicit conversion from
+enumeration type 'enum dma_data_direction' to different enumeration type
+'enum dma_transfer_direction' [-Wenum-conversion]
+        conf.direction = DMA_FROM_DEVICE;
+                       ~ ^~~~~~~~~~~~~~~
+drivers/ata/pata_ep93xx.c:692:19: warning: implicit conversion from
+enumeration type 'enum dma_data_direction' to different enumeration type
+'enum dma_transfer_direction' [-Wenum-conversion]
+        conf.direction = DMA_TO_DEVICE;
+                       ~ ^~~~~~~~~~~~~
 
+Use the equivalent valued enums from the expected type so that Clang no
+longer warns about a conversion.
+
+DMA_TO_DEVICE = DMA_MEM_TO_DEV = 1
+DMA_FROM_DEVICE = DMA_DEV_TO_MEM = 2
+
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+---
+ drivers/ata/pata_ep93xx.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
+index 0a550190955a..cc6d06c1b2c7 100644
+--- a/drivers/ata/pata_ep93xx.c
++++ b/drivers/ata/pata_ep93xx.c
+@@ -659,7 +659,7 @@ static void ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
+ 	 * start of new transfer.
+ 	 */
+ 	drv_data->dma_rx_data.port = EP93XX_DMA_IDE;
+-	drv_data->dma_rx_data.direction = DMA_FROM_DEVICE;
++	drv_data->dma_rx_data.direction = DMA_DEV_TO_MEM;
+ 	drv_data->dma_rx_data.name = "ep93xx-pata-rx";
+ 	drv_data->dma_rx_channel = dma_request_channel(mask,
+ 		ep93xx_pata_dma_filter, &drv_data->dma_rx_data);
+@@ -667,7 +667,7 @@ static void ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
+ 		return;
+ 
+ 	drv_data->dma_tx_data.port = EP93XX_DMA_IDE;
+-	drv_data->dma_tx_data.direction = DMA_TO_DEVICE;
++	drv_data->dma_tx_data.direction = DMA_MEM_TO_DEV;
+ 	drv_data->dma_tx_data.name = "ep93xx-pata-tx";
+ 	drv_data->dma_tx_channel = dma_request_channel(mask,
+ 		ep93xx_pata_dma_filter, &drv_data->dma_tx_data);
+@@ -678,7 +678,7 @@ static void ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
+ 
+ 	/* Configure receive channel direction and source address */
+ 	memset(&conf, 0, sizeof(conf));
+-	conf.direction = DMA_FROM_DEVICE;
++	conf.direction = DMA_DEV_TO_MEM;
+ 	conf.src_addr = drv_data->udma_in_phys;
+ 	conf.src_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
+ 	if (dmaengine_slave_config(drv_data->dma_rx_channel, &conf)) {
+@@ -689,7 +689,7 @@ static void ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
+ 
+ 	/* Configure transmit channel direction and destination address */
+ 	memset(&conf, 0, sizeof(conf));
+-	conf.direction = DMA_TO_DEVICE;
++	conf.direction = DMA_MEM_TO_DEV;
+ 	conf.dst_addr = drv_data->udma_out_phys;
+ 	conf.dst_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
+ 	if (dmaengine_slave_config(drv_data->dma_tx_channel, &conf)) {
 -- 
-Jens Axboe
+2.19.0
