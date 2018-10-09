@@ -1,26 +1,63 @@
-From: Florian Fainelli <f.fainelli@gmail.com>
-Subject: Re: [PATCH 9/9] ARM: bcm63138: Enable SATA AHCI and PHY
-Date: Thu, 4 Oct 2018 10:23:15 -0700
-Message-ID: <0ac69ef8-21fb-7005-4eac-b00bf46870b9@gmail.com>
-References: <20180920191646.18198-1-f.fainelli@gmail.com>
- <20180920191646.18198-13-f.fainelli@gmail.com>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: [PATCH] ata: remove redundant 'default n' from Kconfig
+Date: Tue, 9 Oct 2018 16:45:20 +0200
+Message-ID: <20181009144521eucas1p2e0e8163fc5be89f3894f25c27c2b01b0~b9-NKlREZ1372313723eucas1p2t@eucas1p2.samsung.com>
+References: <CGME20181009144521eucas1p2e0e8163fc5be89f3894f25c27c2b01b0@eucas1p2.samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20180920191646.18198-13-f.fainelli@gmail.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Kishon Vijay Abraham I <kishon@ti.com>, Al Cooper <alcooperx@gmail.com>, Ray Jui <ray.jui@broadcom.com>, Tejun Heo <tj@kernel.org>, Fengguang Wu <fengguang.wu@intel.com>, Arnd Bergmann <arnd@arndb.de>, "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" <linux-ide@vger.kernel.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, bcm-kernel-feedback-list@broadcom.com
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 09/20/2018 12:16 PM, Florian Fainelli wrote:
-> The Broadcom BCM963138DVT board has an eSATA port which is fully
-> functional, turn on the AHCI controller and the companion SATA PHY.
-> 
-> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+'default n' is the default value for any bool or tristate Kconfig
+setting so there is no need to write it explicitly.
 
-Applied to devicetree/next
--- 
-Florian
+Also since commit f467c5640c29 ("kconfig: only write '# CONFIG_FOO
+is not set' for visible symbols") the Kconfig behavior is the same
+regardless of 'default n' being present or not:
+
+    ...
+    One side effect of (and the main motivation for) this change is making
+    the following two definitions behave exactly the same:
+    
+        config FOO
+                bool
+    
+        config FOO
+                bool
+                default n
+    
+    With this change, neither of these will generate a
+    '# CONFIG_FOO is not set' line (assuming FOO isn't selected/implied).
+    That might make it clearer to people that a bare 'default n' is
+    redundant.
+    ...
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+---
+ drivers/ata/Kconfig |    2 --
+ 1 file changed, 2 deletions(-)
+
+Index: b/drivers/ata/Kconfig
+===================================================================
+--- a/drivers/ata/Kconfig	2018-10-09 15:58:37.319122897 +0200
++++ b/drivers/ata/Kconfig	2018-10-09 16:43:07.823190149 +0200
+@@ -33,7 +33,6 @@ if ATA
+ 
+ config ATA_NONSTANDARD
+        bool
+-       default n
+ 
+ config ATA_VERBOSE_ERROR
+ 	bool "Verbose ATA error reporting"
+@@ -62,7 +61,6 @@ config ATA_ACPI
+ config SATA_ZPODD
+ 	bool "SATA Zero Power Optical Disc Drive (ZPODD) support"
+ 	depends on ATA_ACPI && PM
+-	default n
+ 	help
+ 	  This option adds support for SATA Zero Power Optical Disc
+ 	  Drive (ZPODD). It requires both the ODD and the platform
