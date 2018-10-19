@@ -1,398 +1,451 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH] ata: add Buddha PATA controller driver
-Date: Fri, 19 Oct 2018 12:49:47 +1300
-Message-ID: <596fcf69-4a85-4e22-2ae4-1a6d4ab76356@gmail.com>
-References: <CGME20181018122951eucas1p2be43dc17df8d2c754e771785b3ad7457@eucas1p2.samsung.com>
- <20181018122951eucas1p2be43dc17df8d2c754e771785b3ad7457~es8dn4Tg90035600356eucas1p2H@eucas1p2.samsung.com>
+From: Nathan Chancellor <natechancellor@gmail.com>
+Subject: [PATCH] scsi/ata: Use unsigned int for cmd's type in ioctls in scsi_host_template
+Date: Fri, 19 Oct 2018 10:57:15 -0700
+Message-ID: <20181019175714.444-1-natechancellor@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181018122951eucas1p2be43dc17df8d2c754e771785b3ad7457~es8dn4Tg90035600356eucas1p2H@eucas1p2.samsung.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, Bradley Grove <linuxdrivers@attotech.com>, Don Brace <don.brace@microsemi.com>, Brian King <brking@us.ibm.com>, Bart Van Assche <bvanassche@acm.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com, Nathan Chancellor <natechancellor@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hi Bartlomiej,
+Clang warns several times in the scsi subsystem (trimmed for brevity):
 
-On 19/10/18 01:29, Bartlomiej Zolnierkiewicz wrote:
-> Add Buddha PATA controller driver. It enables libata support for
-> the Buddha, Catweasel and X-Surf expansion boards on the Zorro
-> expansion bus.
->
-> Cc: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
-> Cc: Michael Schmitz <schmitzmic@gmail.com>
-> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-> ---
-> John, please test if possible..
->
->   drivers/ata/Kconfig       |   12 ++
->   drivers/ata/Makefile      |    1
->   drivers/ata/pata_buddha.c |  257 ++++++++++++++++++++++++++++++++++++++++++++++
->   3 files changed, 270 insertions(+)
->
-> Index: b/drivers/ata/Kconfig
-> ===================================================================
-> --- a/drivers/ata/Kconfig	2018-10-18 14:18:02.766452406 +0200
-> +++ b/drivers/ata/Kconfig	2018-10-18 14:18:02.766452406 +0200
-> @@ -965,6 +965,18 @@ config PATA_GAYLE
->   
->   	  If unsure, say N.
->   
-> +config PATA_BUDDHA
-> +	tristate "Buddha/Catweasel/X-Surf PATA support"
-> +	depends on ZORRO
-> +	help
-> +	  This option enables support for the IDE interfaces
-> +	  on the Buddha, Catweasel and X-Surf expansion boards
-> +	  on the Zorro expansion bus. It supports up to two
-> +	  interfaces on the Buddha, three on the Catweasel and
-> +	  two on the X-Surf.
-> +
-> +	  If unsure, say N.
-> +
->   config PATA_ISAPNP
->   	tristate "ISA Plug and Play PATA support"
->   	depends on ISAPNP
-> Index: b/drivers/ata/Makefile
-> ===================================================================
-> --- a/drivers/ata/Makefile	2018-10-18 14:18:02.766452406 +0200
-> +++ b/drivers/ata/Makefile	2018-10-18 14:18:02.766452406 +0200
-> @@ -98,6 +98,7 @@ obj-$(CONFIG_PATA_WINBOND)	+= pata_sl82c
->   obj-$(CONFIG_PATA_CMD640_PCI)	+= pata_cmd640.o
->   obj-$(CONFIG_PATA_FALCON)	+= pata_falcon.o
->   obj-$(CONFIG_PATA_GAYLE)	+= pata_gayle.o
-> +obj-$(CONFIG_PATA_BUDDHA)	+= pata_buddha.o
->   obj-$(CONFIG_PATA_ISAPNP)	+= pata_isapnp.o
->   obj-$(CONFIG_PATA_IXP4XX_CF)	+= pata_ixp4xx_cf.o
->   obj-$(CONFIG_PATA_MPIIX)	+= pata_mpiix.o
-> Index: b/drivers/ata/pata_buddha.c
-> ===================================================================
-> --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-> +++ b/drivers/ata/pata_buddha.c	2018-10-18 14:23:41.054460925 +0200
-> @@ -0,0 +1,257 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +
-> +/*
-> + * Buddha, Catweasel and X-Surf PATA controller driver
-> + *
-> + * Copyright (c) 2018 Samsung Electronics Co., Ltd.
-> + *		http://www.samsung.com
-> + *
-> + * Based on buddha.c:
-> + *
-> + *	Copyright (C) 1997, 2001 by Geert Uytterhoeven and others
-> + */
-> +
-> +#include <linux/ata.h>
-> +#include <linux/blkdev.h>
-> +#include <linux/delay.h>
-> +#include <linux/interrupt.h>
-> +#include <linux/kernel.h>
-> +#include <linux/libata.h>
-> +#include <linux/mm.h>
-> +#include <linux/module.h>
-> +#include <linux/zorro.h>
-> +#include <scsi/scsi_cmnd.h>
-> +#include <scsi/scsi_host.h>
-> +
-> +#include <asm/amigahw.h>
-> +#include <asm/amigaints.h>
-> +#include <asm/ide.h>
-> +#include <asm/setup.h>
-> +
-> +#define DRV_NAME "pata_buddha"
-> +#define DRV_VERSION "0.1.0"
-> +
-> +#define BUDDHA_BASE1	0x800
-> +#define BUDDHA_BASE2	0xa00
-> +#define BUDDHA_BASE3	0xc00
-> +#define XSURF_BASE1	0xb000 /* 2.5" interface */
-> +#define XSURF_BASE2	0xd000 /* 3.5" interface */
-> +#define BUDDHA_CONTROL	0x11a
-> +#define BUDDHA_IRQ	0xf00
-> +#define XSURF_IRQ	0x7e
-> +#define BUDDHA_IRQ_MR	0xfc0	/* master interrupt enable */
-> +
-> +enum {
-> +	BOARD_BUDDHA = 0,
-> +	BOARD_CATWEASEL,
-> +	BOARD_XSURF
-> +};
-> +
-> +static unsigned int buddha_bases[3] __initdata = {
-> +	BUDDHA_BASE1, BUDDHA_BASE2, BUDDHA_BASE3
-> +};
-> +
-> +static unsigned int xsurf_bases[2] __initdata = {
-> +	XSURF_BASE1, XSURF_BASE2
-> +};
-> +
-> +static struct scsi_host_template pata_buddha_sht = {
-> +	ATA_PIO_SHT(DRV_NAME),
-> +};
-> +
-> +/* FIXME: is this needed? */
-> +static unsigned int pata_buddha_data_xfer(struct ata_queued_cmd *qc,
-> +					 unsigned char *buf,
-> +					 unsigned int buflen, int rw)
-> +{
-> +	struct ata_device *dev = qc->dev;
-> +	struct ata_port *ap = dev->link->ap;
-> +	void __iomem *data_addr = ap->ioaddr.data_addr;
-> +	unsigned int words = buflen >> 1;
-> +
-> +	/* Transfer multiple of 2 bytes */
-> +	if (rw == READ)
-> +		raw_insw((u16 *)data_addr, (u16 *)buf, words);
-> +	else
-> +		raw_outsw((u16 *)data_addr, (u16 *)buf, words);
-> +
-> +	/* Transfer trailing byte, if any. */
-> +	if (unlikely(buflen & 0x01)) {
-> +		unsigned char pad[2] = { };
-> +
-> +		/* Point buf to the tail of buffer */
-> +		buf += buflen - 1;
-> +
-> +		if (rw == READ) {
-> +			raw_insw((u16 *)data_addr, (u16 *)pad, 1);
-> +			*buf = pad[0];
-> +		} else {
-> +			pad[0] = *buf;
-> +			raw_outsw((u16 *)data_addr, (u16 *)pad, 1);
-> +		}
-> +		words++;
-> +	}
-> +
-> +	return words << 1;
-> +}
-> +
-> +/*
-> + * Provide our own set_mode() as we don't want to change anything that has
-> + * already been configured..
-> + */
-> +static int pata_buddha_set_mode(struct ata_link *link,
-> +				struct ata_device **unused)
-> +{
-> +	struct ata_device *dev;
-> +
-> +	ata_for_each_dev(dev, link, ENABLED) {
-> +		/* We don't really care */
-> +		dev->pio_mode = dev->xfer_mode = XFER_PIO_0;
-> +		dev->xfer_shift = ATA_SHIFT_PIO;
-> +		dev->flags |= ATA_DFLAG_PIO;
-> +		ata_dev_info(dev, "configured for PIO\n");
-> +	}
-> +	return 0;
-> +}
-> +
-> +static bool pata_buddha_irq_check(struct ata_port *ap)
-> +{
-> +	u8 ch;
-> +
-> +	ch = z_readb((unsigned long)ap->private_data);
-> +
-> +	return !!(ch & 0x80);
-> +}
-> +
-> +static void pata_xsurf_irq_clear(struct ata_port *ap)
-> +{
-> +	z_writeb(0, (unsigned long)ap->private_data);
-> +}
-> +
-> +static struct ata_port_operations pata_buddha_ops = {
-> +	.inherits	= &ata_sff_port_ops,
-> +	.sff_data_xfer	= pata_buddha_data_xfer,
-> +	.sff_irq_check	= pata_buddha_irq_check,
-> +	.cable_detect	= ata_cable_unknown,
-> +	.set_mode	= pata_buddha_set_mode,
-> +};
-> +
-> +static struct ata_port_operations pata_xsurf_ops = {
-> +	.inherits	= &ata_sff_port_ops,
-> +	.sff_data_xfer	= pata_buddha_data_xfer,
-> +	.sff_irq_check	= pata_buddha_irq_check,
-> +	.sff_irq_clear	= pata_xsurf_irq_clear,
-> +	.cable_detect	= ata_cable_unknown,
-> +	.set_mode	= pata_buddha_set_mode,
-> +};
-> +
-> +static int __init pata_buddha_init_one(void)
+drivers/scsi/hpsa.c:6209:7: warning: overflow converting case value to
+switch condition type (2147762695 to 18446744071562347015) [-Wswitch]
+        case CCISS_GETBUSTYPES:
+             ^
+drivers/scsi/hpsa.c:6208:7: warning: overflow converting case value to
+switch condition type (2147762694 to 18446744071562347014) [-Wswitch]
+        case CCISS_GETHEARTBEAT:
+             ^
 
-That's a misnomer - it'll pick up _all_ devices matching the search 
-criteria below:
+The root cause is that the _IOC macro can generate really large numbers,
+which don't find into type 'int', which is used for the cmd paremeter in
+the ioctls in scsi_host_template. My research into how GCC and Clang are
+handling this at a low level didn't prove fruitful. However, looking at
+the rest of the kernel tree, all ioctls use an 'unsigned int' for the
+cmd parameter, which will fit all of the _IOC values in the scsi/ata
+subsystems.
 
-> +{
-> +	struct zorro_dev *z = NULL;
-> +
-> +	while ((z = zorro_find_device(ZORRO_WILDCARD, z))) {
+Make that change because none of the ioctls expect to take a negative
+value, it brings the ioctls inline with the reset of the kernel, and it
+removes ambiguity, which is never good when dealing with compilers.
 
-All Zorro devices ...
-> +		static const char *board_name[]
-> +			= { "Buddha", "Catweasel", "X-Surf" };
-> +		struct ata_host *host;
-> +		void __iomem *buddha_board;
-> +		unsigned long board;
-> +		unsigned int type, nr_ports = 2;
-> +		int i;
-> +
-> +		if (z->id == ZORRO_PROD_INDIVIDUAL_COMPUTERS_BUDDHA) {
-> +			type = BOARD_BUDDHA;
-> +		} else if (z->id == ZORRO_PROD_INDIVIDUAL_COMPUTERS_CATWEASEL) {
-> +			type = BOARD_CATWEASEL;
-> +			nr_ports++;
-> +		} else if (z->id == ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF) {
-> +			type = BOARD_XSURF;
+Link: https://github.com/ClangBuiltLinux/linux/issues/85
+Link: https://github.com/ClangBuiltLinux/linux/issues/154
+Link: https://github.com/ClangBuiltLinux/linux/issues/157
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+---
+ drivers/ata/libata-scsi.c             |  5 +++--
+ drivers/scsi/aacraid/aachba.c         |  2 +-
+ drivers/scsi/aacraid/aacraid.h        |  4 ++--
+ drivers/scsi/aacraid/commctrl.c       |  2 +-
+ drivers/scsi/aacraid/linit.c          |  6 ++++--
+ drivers/scsi/cxlflash/superpipe.c     | 12 +++++-------
+ drivers/scsi/esas2r/esas2r.h          |  4 ++--
+ drivers/scsi/esas2r/esas2r_ioctl.c    | 13 ++++++-------
+ drivers/scsi/esas2r/esas2r_main.c     |  2 +-
+ drivers/scsi/hpsa.c                   | 15 +++++++++------
+ drivers/scsi/ipr.c                    |  3 ++-
+ drivers/scsi/libsas/sas_scsi_host.c   |  2 +-
+ drivers/scsi/scsi_debug.c             |  3 ++-
+ drivers/scsi/smartpqi/smartpqi_init.c |  3 ++-
+ include/linux/libata.h                |  5 +++--
+ include/scsi/libsas.h                 |  3 ++-
+ include/scsi/scsi_host.h              |  6 ++++--
+ 17 files changed, 50 insertions(+), 40 deletions(-)
 
-matching these three board IDs.
-
-> +		} else
-> +			continue;
-> +
-> +		dev_info(&z->dev, "%s IDE controller\n", board_name[type]);
-> +
-> +		board = z->resource.start;
-> +
-> +		if (type != BOARD_XSURF) {
-> +			if (!devm_request_mem_region(&z->dev,
-> +						     board + BUDDHA_BASE1,
-> +						     0x800, DRV_NAME))
-> +				continue;
-> +		} else {
-> +			if (!devm_request_mem_region(&z->dev,
-> +						     board + XSURF_BASE1,
-> +						     0x1000, DRV_NAME))
-> +				continue;
-> +			if (!devm_request_mem_region(&z->dev,
-> +						     board + XSURF_BASE2,
-> +						     0x1000, DRV_NAME))
-> +				continue;
-> +		}
-> +
-> +		/* allocate host */
-> +		host = ata_host_alloc(&z->dev, nr_ports);
-> +		if (!host)
-> +			continue;
-> +
-> +		buddha_board = ZTWO_VADDR(board);
-> +
-> +		/* enable the board IRQ on Buddha/Catweasel */
-> +		if (type != BOARD_XSURF)
-> +			z_writeb(0, buddha_board + BUDDHA_IRQ_MR);
-> +
-> +		for (i = 0; i < nr_ports; i++) {
-> +			struct ata_port *ap = host->ports[i];
-> +			void __iomem *base, *irqport;
-> +			unsigned long ctl = 0;
-> +
-> +			if (type != BOARD_XSURF) {
-> +				ap->ops = &pata_buddha_ops;
-> +				base = buddha_board + buddha_bases[i];
-> +				ctl = BUDDHA_CONTROL;
-> +				irqport = buddha_board + BUDDHA_IRQ + i * 0x40;
-> +			} else {
-> +				ap->ops = &pata_xsurf_ops;
-> +				base = buddha_board + xsurf_bases[i];
-> +				/* X-Surf has no CS1* (Control/AltStat) */
-> +				irqport = buddha_board + XSURF_IRQ;
-> +			}
-> +
-> +			ap->pio_mask = ATA_PIO4;
-> +			ap->flags |= ATA_FLAG_SLAVE_POSS | ATA_FLAG_NO_IORDY;
-> +
-> +			ap->ioaddr.data_addr		= base;
-> +			ap->ioaddr.error_addr		= base + 2 + 1 * 4;
-> +			ap->ioaddr.feature_addr		= base + 2 + 1 * 4;
-> +			ap->ioaddr.nsect_addr		= base + 2 + 2 * 4;
-> +			ap->ioaddr.lbal_addr		= base + 2 + 3 * 4;
-> +			ap->ioaddr.lbam_addr		= base + 2 + 4 * 4;
-> +			ap->ioaddr.lbah_addr		= base + 2 + 5 * 4;
-> +			ap->ioaddr.device_addr		= base + 2 + 6 * 4;
-> +			ap->ioaddr.status_addr		= base + 2 + 7 * 4;
-> +			ap->ioaddr.command_addr		= base + 2 + 7 * 4;
-> +
-> +			if (ctl) {
-> +				ap->ioaddr.altstatus_addr = base + ctl;
-> +				ap->ioaddr.ctl_addr	  = base + ctl;
-> +			}
-> +
-> +			ap->private_data = (void *)irqport;
-> +
-> +			ata_port_desc(ap, "cmd 0x%lx ctl 0x%lx", board,
-> +				      ctl ? board + buddha_bases[i] + ctl : 0);
-> +		}
-> +
-> +		ata_host_activate(host, IRQ_AMIGA_PORTS, ata_sff_interrupt,
-> +				  IRQF_SHARED, &pata_buddha_sht);
-> +
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +module_init(pata_buddha_init_one);
-> +
-> +MODULE_AUTHOR("Bartlomiej Zolnierkiewicz");
-> +MODULE_DESCRIPTION("low-level driver for Buddha/Catweasel/X-Surf PATA");
-> +MODULE_LICENSE("GPL v2");
-> +MODULE_VERSION(DRV_VERSION);
-No module_exit().
-
-Untested (stolen from pata_legacy.c):
-
-commit 66a85e7f93a0144b2542b6c9944f5fb726b04662
-Author: Michael Schmitz <schmitzmic@gmail.com>
-Date:   Fri Oct 19 12:31:57 2018 +1300
-
-     ata: pata_buddha - add module_exit()
-
-     Note ata hosts as we probe, and use those in forgotten 
-module_exit() later.
-
-     Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
-
-diff --git a/drivers/ata/pata_buddha.c b/drivers/ata/pata_buddha.c
-index 11a8044..39582c0 100644
---- a/drivers/ata/pata_buddha.c
-+++ b/drivers/ata/pata_buddha.c
-@@ -59,6 +59,10 @@ enum {
-         ATA_PIO_SHT(DRV_NAME),
-  };
-
-+#define NR_HOST 6
-+static struct ata_host *buddha_host[NR_HOST];
-+static int nr_buddha_host;
-+
-  /* FIXME: is this needed? */
-  static unsigned int pata_buddha_data_xfer(struct ata_queued_cmd *qc,
-                                          unsigned char *buf,
-@@ -244,6 +248,7 @@ static int __init pata_buddha_init_one(void)
-                 ata_host_activate(host, IRQ_AMIGA_PORTS, ata_sff_interrupt,
-                                   IRQF_SHARED, &pata_buddha_sht);
-
-+               buddha_host[nr_buddha_host++] = host;
-         }
-
-         return 0;
-@@ -251,6 +256,16 @@ static int __init pata_buddha_init_one(void)
-
-  module_init(pata_buddha_init_one);
-
-+static __exit void pata_buddha_exit_one(void)
-+{
-+       int i;
-+
-+       for (i = 0; i < nr_buddha_host; i++)
-+               ata_host_detach(buddha_host[i]);
-+}
-+
-+module_exit(pata_buddha_exit_one);
-+
-
-Cheers,
-
-     Michael
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 3d4887d0e84a..6291f1dbf342 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -778,7 +778,7 @@ static int ata_ioc32(struct ata_port *ap)
+ }
+ 
+ int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
+-		     int cmd, void __user *arg)
++		     unsigned int cmd, void __user *arg)
+ {
+ 	unsigned long val;
+ 	int rc = -EINVAL;
+@@ -829,7 +829,8 @@ int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
+ }
+ EXPORT_SYMBOL_GPL(ata_sas_scsi_ioctl);
+ 
+-int ata_scsi_ioctl(struct scsi_device *scsidev, int cmd, void __user *arg)
++int ata_scsi_ioctl(struct scsi_device *scsidev, unsigned int cmd,
++		   void __user *arg)
+ {
+ 	return ata_sas_scsi_ioctl(ata_shost_to_port(scsidev->host),
+ 				scsidev, cmd, arg);
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index bd7f352c28f3..a6399fac3333 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -3452,7 +3452,7 @@ static int delete_disk(struct aac_dev *dev, void __user *arg)
+ 	}
+ }
+ 
+-int aac_dev_ioctl(struct aac_dev *dev, int cmd, void __user *arg)
++int aac_dev_ioctl(struct aac_dev *dev, unsigned int cmd, void __user *arg)
+ {
+ 	switch (cmd) {
+ 	case FSACTL_QUERY_DISK:
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 39eb415987fc..1965072ab673 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -2705,12 +2705,12 @@ void aac_set_intx_mode(struct aac_dev *dev);
+ int aac_get_config_status(struct aac_dev *dev, int commit_flag);
+ int aac_get_containers(struct aac_dev *dev);
+ int aac_scsi_cmd(struct scsi_cmnd *cmd);
+-int aac_dev_ioctl(struct aac_dev *dev, int cmd, void __user *arg);
++int aac_dev_ioctl(struct aac_dev *dev, unsigned int cmd, void __user *arg);
+ #ifndef shost_to_class
+ #define shost_to_class(shost) &shost->shost_dev
+ #endif
+ ssize_t aac_get_serial_number(struct device *dev, char *buf);
+-int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg);
++int aac_do_ioctl(struct aac_dev *dev, unsigned int cmd, void __user *arg);
+ int aac_rx_init(struct aac_dev *dev);
+ int aac_rkt_init(struct aac_dev *dev);
+ int aac_nark_init(struct aac_dev *dev);
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+index 25f6600d6c09..fd8a10871598 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -1061,7 +1061,7 @@ static int aac_send_reset_adapter(struct aac_dev *dev, void __user *arg)
+ 	return retval;
+ }
+ 
+-int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
++int aac_do_ioctl(struct aac_dev *dev, unsigned int cmd, void __user *arg)
+ {
+ 	int status;
+ 
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 2d4e4ddc5ace..cd2efb44f62c 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -616,7 +616,8 @@ static struct device_attribute *aac_dev_attrs[] = {
+ 	NULL,
+ };
+ 
+-static int aac_ioctl(struct scsi_device *sdev, int cmd, void __user * arg)
++static int aac_ioctl(struct scsi_device *sdev, unsigned int cmd,
++		     void __user *arg)
+ {
+ 	struct aac_dev *dev = (struct aac_dev *)sdev->host->hostdata;
+ 	if (!capable(CAP_SYS_RAWIO))
+@@ -1205,7 +1206,8 @@ static long aac_compat_do_ioctl(struct aac_dev *dev, unsigned cmd, unsigned long
+ 	return ret;
+ }
+ 
+-static int aac_compat_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
++static int aac_compat_ioctl(struct scsi_device *sdev, unsigned int cmd,
++			    void __user *arg)
+ {
+ 	struct aac_dev *dev = (struct aac_dev *)sdev->host->hostdata;
+ 	if (!capable(CAP_SYS_RAWIO))
+diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
+index acac6152f50b..1a94a469051e 100644
+--- a/drivers/scsi/cxlflash/superpipe.c
++++ b/drivers/scsi/cxlflash/superpipe.c
+@@ -1924,7 +1924,7 @@ static int cxlflash_disk_verify(struct scsi_device *sdev,
+  *
+  * Return: A string identifying the decoded ioctl.
+  */
+-static char *decode_ioctl(int cmd)
++static char *decode_ioctl(unsigned int cmd)
+ {
+ 	switch (cmd) {
+ 	case DK_CXLFLASH_ATTACH:
+@@ -2051,7 +2051,7 @@ static int cxlflash_disk_direct_open(struct scsi_device *sdev, void *arg)
+  *
+  * Return: 0 on success, -errno on failure
+  */
+-static int ioctl_common(struct scsi_device *sdev, int cmd)
++static int ioctl_common(struct scsi_device *sdev, unsigned int cmd)
+ {
+ 	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
+ 	struct device *dev = &cfg->dev->dev;
+@@ -2096,7 +2096,7 @@ static int ioctl_common(struct scsi_device *sdev, int cmd)
+  *
+  * Return: 0 on success, -errno on failure
+  */
+-int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
++int cxlflash_ioctl(struct scsi_device *sdev, unsigned int cmd, void __user *arg)
+ {
+ 	typedef int (*sioctl) (struct scsi_device *, void *);
+ 
+@@ -2179,8 +2179,7 @@ int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+ 	}
+ 
+ 	if (unlikely(copy_from_user(&buf, arg, size))) {
+-		dev_err(dev, "%s: copy_from_user() fail "
+-			"size=%lu cmd=%d (%s) arg=%p\n",
++		dev_err(dev, "%s: copy_from_user() fail size=%lu cmd=%u (%s) arg=%p\n",
+ 			__func__, size, cmd, decode_ioctl(cmd), arg);
+ 		rc = -EFAULT;
+ 		goto cxlflash_ioctl_exit;
+@@ -2203,8 +2202,7 @@ int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+ 	rc = do_ioctl(sdev, (void *)&buf);
+ 	if (likely(!rc))
+ 		if (unlikely(copy_to_user(arg, &buf, size))) {
+-			dev_err(dev, "%s: copy_to_user() fail "
+-				"size=%lu cmd=%d (%s) arg=%p\n",
++			dev_err(dev, "%s: copy_to_user() fail size=%lu cmd=%u (%s) arg=%p\n",
+ 				__func__, size, cmd, decode_ioctl(cmd), arg);
+ 			rc = -EFAULT;
+ 		}
+diff --git a/drivers/scsi/esas2r/esas2r.h b/drivers/scsi/esas2r/esas2r.h
+index 858c3b33db78..7f43b95f4e94 100644
+--- a/drivers/scsi/esas2r/esas2r.h
++++ b/drivers/scsi/esas2r/esas2r.h
+@@ -965,8 +965,8 @@ struct esas2r_adapter {
+ const char *esas2r_info(struct Scsi_Host *);
+ int esas2r_write_params(struct esas2r_adapter *a, struct esas2r_request *rq,
+ 			struct esas2r_sas_nvram *data);
+-int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg);
+-int esas2r_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
++int esas2r_ioctl_handler(void *hostdata, unsigned int cmd, void __user *arg);
++int esas2r_ioctl(struct scsi_device *dev, unsigned int cmd, void __user *arg);
+ u8 handle_hba_ioctl(struct esas2r_adapter *a,
+ 		    struct atto_ioctl *ioctl_hba);
+ int esas2r_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd);
+diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esas2r_ioctl.c
+index 34bcc8c04ff4..916b9adf4921 100644
+--- a/drivers/scsi/esas2r/esas2r_ioctl.c
++++ b/drivers/scsi/esas2r/esas2r_ioctl.c
+@@ -1274,7 +1274,7 @@ int esas2r_write_params(struct esas2r_adapter *a, struct esas2r_request *rq,
+ 
+ 
+ /* This function only cares about ATTO-specific ioctls (atto_express_ioctl) */
+-int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
++int esas2r_ioctl_handler(void *hostdata, unsigned int cmd, void __user *arg)
+ {
+ 	struct atto_express_ioctl *ioctl = NULL;
+ 	struct esas2r_adapter *a;
+@@ -1292,7 +1292,7 @@ int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
+ 	ioctl = memdup_user(arg, sizeof(struct atto_express_ioctl));
+ 	if (IS_ERR(ioctl)) {
+ 		esas2r_log(ESAS2R_LOG_WARN,
+-			   "ioctl_handler access_ok failed for cmd %d, "
++			   "ioctl_handler access_ok failed for cmd %u, "
+ 			   "address %p", cmd,
+ 			   arg);
+ 		return PTR_ERR(ioctl);
+@@ -1493,7 +1493,7 @@ int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
+ ioctl_done:
+ 
+ 	if (err < 0) {
+-		esas2r_log(ESAS2R_LOG_WARN, "err %d on ioctl cmd %d", err,
++		esas2r_log(ESAS2R_LOG_WARN, "err %d on ioctl cmd %u", err,
+ 			   cmd);
+ 
+ 		switch (err) {
+@@ -1518,9 +1518,8 @@ int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
+ 	err = __copy_to_user(arg, ioctl, sizeof(struct atto_express_ioctl));
+ 	if (err != 0) {
+ 		esas2r_log(ESAS2R_LOG_WARN,
+-			   "ioctl_handler copy_to_user didn't copy "
+-			   "everything (err %d, cmd %d)", err,
+-			   cmd);
++			   "ioctl_handler copy_to_user didn't copy everything (err %d, cmd %u)",
++			   err, cmd);
+ 		kfree(ioctl);
+ 
+ 		return -EFAULT;
+@@ -1531,7 +1530,7 @@ int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
+ 	return 0;
+ }
+ 
+-int esas2r_ioctl(struct scsi_device *sd, int cmd, void __user *arg)
++int esas2r_ioctl(struct scsi_device *sd, unsigned int cmd, void __user *arg)
+ {
+ 	return esas2r_ioctl_handler(sd->host->hostdata, cmd, arg);
+ }
+diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
+index c07118617d89..25dc8d44ed8e 100644
+--- a/drivers/scsi/esas2r/esas2r_main.c
++++ b/drivers/scsi/esas2r/esas2r_main.c
+@@ -624,7 +624,7 @@ static int esas2r_proc_major;
+ long esas2r_proc_ioctl(struct file *fp, unsigned int cmd, unsigned long arg)
+ {
+ 	return esas2r_ioctl_handler(esas2r_proc_host->hostdata,
+-				    (int)cmd, (void __user *)arg);
++				    cmd, (void __user *)arg);
+ }
+ 
+ static void __exit esas2r_exit(void)
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index c9cccf35e9d7..c9d41d3b50f1 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -251,10 +251,11 @@ static int number_of_controllers;
+ 
+ static irqreturn_t do_hpsa_intr_intx(int irq, void *dev_id);
+ static irqreturn_t do_hpsa_intr_msi(int irq, void *dev_id);
+-static int hpsa_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
++static int hpsa_ioctl(struct scsi_device *dev, unsigned int cmd,
++		      void __user *arg);
+ 
+ #ifdef CONFIG_COMPAT
+-static int hpsa_compat_ioctl(struct scsi_device *dev, int cmd,
++static int hpsa_compat_ioctl(struct scsi_device *dev, unsigned int cmd,
+ 	void __user *arg);
+ #endif
+ 
+@@ -6123,7 +6124,7 @@ static void cmd_free(struct ctlr_info *h, struct CommandList *c)
+ 
+ #ifdef CONFIG_COMPAT
+ 
+-static int hpsa_ioctl32_passthru(struct scsi_device *dev, int cmd,
++static int hpsa_ioctl32_passthru(struct scsi_device *dev, unsigned int cmd,
+ 	void __user *arg)
+ {
+ 	IOCTL32_Command_struct __user *arg32 =
+@@ -6160,7 +6161,7 @@ static int hpsa_ioctl32_passthru(struct scsi_device *dev, int cmd,
+ }
+ 
+ static int hpsa_ioctl32_big_passthru(struct scsi_device *dev,
+-	int cmd, void __user *arg)
++	unsigned int cmd, void __user *arg)
+ {
+ 	BIG_IOCTL32_Command_struct __user *arg32 =
+ 	    (BIG_IOCTL32_Command_struct __user *) arg;
+@@ -6197,7 +6198,8 @@ static int hpsa_ioctl32_big_passthru(struct scsi_device *dev,
+ 	return err;
+ }
+ 
+-static int hpsa_compat_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
++static int hpsa_compat_ioctl(struct scsi_device *dev, unsigned int cmd,
++			     void __user *arg)
+ {
+ 	switch (cmd) {
+ 	case CCISS_GETPCIINFO:
+@@ -6517,7 +6519,8 @@ static void check_ioctl_unit_attention(struct ctlr_info *h,
+ /*
+  * ioctl
+  */
+-static int hpsa_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
++static int hpsa_ioctl(struct scsi_device *dev, unsigned int cmd,
++		      void __user *arg)
+ {
+ 	struct ctlr_info *h;
+ 	void __user *argp = (void __user *)arg;
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 271990bc065b..97fcc881f9f1 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -6696,7 +6696,8 @@ static int ipr_queuecommand(struct Scsi_Host *shost,
+  * Return value:
+  * 	0 on success / other on failure
+  **/
+-static int ipr_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
++static int ipr_ioctl(struct scsi_device *sdev, unsigned int cmd,
++		     void __user *arg)
+ {
+ 	struct ipr_resource_entry *res;
+ 
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 33229348dcb6..4eeaafbe0504 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -805,7 +805,7 @@ void sas_scsi_recover_host(struct Scsi_Host *shost)
+ 		    shost->host_failed, tries);
+ }
+ 
+-int sas_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
++int sas_ioctl(struct scsi_device *sdev, unsigned int cmd, void __user *arg)
+ {
+ 	struct domain_device *dev = sdev_to_domain_dev(sdev);
+ 
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 60bcc6df97a9..4c513651c95f 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -836,7 +836,8 @@ static void mk_sense_invalid_opcode(struct scsi_cmnd *scp)
+ 	mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_OPCODE, 0);
+ }
+ 
+-static int scsi_debug_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
++static int scsi_debug_ioctl(struct scsi_device *dev, unsigned int cmd,
++			    void __user *arg)
+ {
+ 	if (sdebug_verbose) {
+ 		if (0x1261 == cmd)
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index a25a07a0b7f0..498bdfbbebfa 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -5572,7 +5572,8 @@ static int pqi_passthru_ioctl(struct pqi_ctrl_info *ctrl_info, void __user *arg)
+ 	return rc;
+ }
+ 
+-static int pqi_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
++static int pqi_ioctl(struct scsi_device *sdev, unsigned int cmd,
++		     void __user *arg)
+ {
+ 	int rc;
+ 	struct pqi_ctrl_info *ctrl_info;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 38c95d66ab12..263ca4f05c24 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1123,10 +1123,11 @@ extern int ata_host_activate(struct ata_host *host, int irq,
+ extern void ata_host_detach(struct ata_host *host);
+ extern void ata_host_init(struct ata_host *, struct device *, struct ata_port_operations *);
+ extern int ata_scsi_detect(struct scsi_host_template *sht);
+-extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
++extern int ata_scsi_ioctl(struct scsi_device *dev, unsigned int cmd,
++			  void __user *arg);
+ extern int ata_scsi_queuecmd(struct Scsi_Host *h, struct scsi_cmnd *cmd);
+ extern int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *dev,
+-			    int cmd, void __user *arg);
++			    unsigned int cmd, void __user *arg);
+ extern void ata_sas_port_destroy(struct ata_port *);
+ extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
+ 					   struct ata_port_info *, struct Scsi_Host *);
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 3de3b10da19a..70461264d6e7 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -709,7 +709,8 @@ int sas_eh_target_reset_handler(struct scsi_cmnd *cmd);
+ 
+ extern void sas_target_destroy(struct scsi_target *);
+ extern int sas_slave_alloc(struct scsi_device *);
+-extern int sas_ioctl(struct scsi_device *sdev, int cmd, void __user *arg);
++extern int sas_ioctl(struct scsi_device *sdev, unsigned int cmd,
++		     void __user *arg);
+ extern int sas_drain_work(struct sas_ha_struct *ha);
+ 
+ extern void sas_ssp_task_response(struct device *dev, struct sas_task *task,
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 5ea06d310a25..5c1df26e1d4f 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -65,7 +65,8 @@ struct scsi_host_template {
+ 	 *
+ 	 * Status: OPTIONAL
+ 	 */
+-	int (* ioctl)(struct scsi_device *dev, int cmd, void __user *arg);
++	int (*ioctl)(struct scsi_device *dev, unsigned int cmd,
++		     void __user *arg);
+ 
+ 
+ #ifdef CONFIG_COMPAT
+@@ -75,7 +76,8 @@ struct scsi_host_template {
+ 	 *
+ 	 * Status: OPTIONAL
+ 	 */
+-	int (* compat_ioctl)(struct scsi_device *dev, int cmd, void __user *arg);
++	int (*compat_ioctl)(struct scsi_device *dev, unsigned int cmd,
++			    void __user *arg);
+ #endif
+ 
+ 	/*
+-- 
+2.19.1
