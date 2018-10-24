@@ -1,52 +1,125 @@
-From: Wolfram Sang <wsa+renesas@sang-engineering.com>
-Subject: [PATCH 1/1] ata: pata_samsung_cf: simplify getting .driver_data
-Date: Sun, 21 Oct 2018 21:59:49 +0200
-Message-ID: <20181021195949.1351-2-wsa+renesas@sang-engineering.com>
-References: <20181021195949.1351-1-wsa+renesas@sang-engineering.com>
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181021195949.1351-1-wsa+renesas@sang-engineering.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-renesas-soc@vger.kernel.org, Wolfram Sang <wsa+renesas@sang-engineering.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
+From: Corentin Labbe <clabbe@baylibre.com>
+Subject: [PATCH v3 0/7] include: add setbits32/clrbits32/clrsetbits32/setbits64/clrbits64/clrsetbits64
+Date: Wed, 24 Oct 2018 07:35:46 +0000
+Message-ID: <1540366553-18541-1-git-send-email-clabbe@baylibre.com>
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: Gilles.Muller@lip6.fr, Julia.Lawall@lip6.fr, agust@denx.de, airlied@linux.ie, alexandre.torgue@st.com, alistair@popple.id.au, benh@kernel.crashing.org, carlo@caione.org, davem@davemloft.net, galak@kernel.crashing.org, joabreu@synopsys.com, khilman@baylibre.com, matthias.bgg@gmail.com, maxime.ripard@bootlin.com, michal.lkml@markovi.net, mpe@ellerman.id.au, mporter@kernel.crashing.org, narmstrong@baylibre.com, nicolas.palix@imag.fr, oss@buserror.net, paulus@samba.org, peppe.cavallaro@st.com, tj@kernel.org, vitb@kernel.crashing.org, wens@csie.org
+Cc: cocci@systeme.lip6.fr, dri-devel@lists.freedesktop.org, linux-amlogic@lists.infradead.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org, linuxppc-dev@lists.ozlabs.org, netdev@vger.kernel.org, linux-sunxi@googlegroups.com, Corentin Labbe <clabbe@baylibre.com>
 List-Id: linux-ide@vger.kernel.org
 
-We should get 'driver_data' from 'struct device' directly. Going via
-platform_device is an unneeded step back and forth.
+Hello
 
-Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
----
+This patchset adds a new set of functions which are open-coded in lot of
+place.
+Basicly the pattern is always the same, "read, modify a bit, write"
+some driver and the powerpc arch already have thoses pattern them as functions. (like ahci_sunxi.c or dwmac-meson8b)
 
-Build tested only. buildbot is happy.
+The first patch rename some powerpc functions for being consistent with
+the new name convention.
 
- drivers/ata/pata_samsung_cf.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+The second patch adds the header with all setbits functions.
 
-diff --git a/drivers/ata/pata_samsung_cf.c b/drivers/ata/pata_samsung_cf.c
-index f5bd44b8bd63..1dc3361cb5a5 100644
---- a/drivers/ata/pata_samsung_cf.c
-+++ b/drivers/ata/pata_samsung_cf.c
-@@ -609,17 +609,15 @@ static int __exit pata_s3c_remove(struct platform_device *pdev)
- #ifdef CONFIG_PM_SLEEP
- static int pata_s3c_suspend(struct device *dev)
- {
--	struct platform_device *pdev = to_platform_device(dev);
--	struct ata_host *host = platform_get_drvdata(pdev);
-+	struct ata_host *host = dev_get_drvdata(dev);
- 
- 	return ata_host_suspend(host, PMSG_SUSPEND);
- }
- 
- static int pata_s3c_resume(struct device *dev)
- {
--	struct platform_device *pdev = to_platform_device(dev);
--	struct ata_host *host = platform_get_drvdata(pdev);
--	struct s3c_ide_platdata *pdata = dev_get_platdata(&pdev->dev);
-+	struct ata_host *host = dev_get_drvdata(dev);
-+	struct s3c_ide_platdata *pdata = dev_get_platdata(dev);
- 	struct s3c_ide_info *info = host->private_data;
- 
- 	pata_s3c_hwinit(info, pdata);
+The third patch is a try to implement a coccinelle semantic patch to
+find all place where xxxbits function could be used.
+It should not be merged since it is un-finalized.
+For the moment, the "add setbits.h header" is not working and need a future
+coccinelle version.
+
+The four last patch are example of some drivers conversion.
+Thoses patchs give an example of the reduction of code won by using xxxbits32.
+
+I would like to thanks Julia Lawall for her help on the coccinelle
+patch.
+
+Note that I dont know which maintainer will take the linux/setbits.h include patch.
+
+Regards
+
+Changes since v2:
+- Fixed patch title
+- Fixed style problems
+- shorted macro arguments name
+
+Changes since v1:
+- renamed LE functions to _leXX
+- updated coccinnelle patch with JLawall's comments
+
+Corentin Labbe (7):
+  powerpc: rename setbits32/clrbits32 to setbits_be32/clrbits_be32
+  include: add setbits_leXX/clrbits_leXX/clrsetbits_leXX in
+    linux/setbits.h
+  coccinelle: add xxxsetbits_leXX converting spatch
+  ata: ahci_sunxi: use xxxsetbitsi_le32 functions
+  net: ethernet: stmmac: dwmac-sun8i: use xxxsetbits_le32
+  drm: meson: use xxxsetbits_le32
+  net: stmmac: dwmac-meson8b: use xxxsetbits_le32
+
+ arch/powerpc/include/asm/fsl_lbc.h            |   2 +-
+ arch/powerpc/include/asm/io.h                 |   4 +-
+ arch/powerpc/platforms/44x/canyonlands.c      |   4 +-
+ arch/powerpc/platforms/4xx/gpio.c             |  28 +-
+ arch/powerpc/platforms/512x/pdm360ng.c        |   6 +-
+ arch/powerpc/platforms/52xx/mpc52xx_common.c  |   6 +-
+ arch/powerpc/platforms/52xx/mpc52xx_gpt.c     |  12 +-
+ arch/powerpc/platforms/82xx/ep8248e.c         |   2 +-
+ arch/powerpc/platforms/82xx/km82xx.c          |   6 +-
+ arch/powerpc/platforms/82xx/mpc8272_ads.c     |  10 +-
+ arch/powerpc/platforms/82xx/pq2.c             |   2 +-
+ arch/powerpc/platforms/82xx/pq2ads-pci-pic.c  |   4 +-
+ arch/powerpc/platforms/82xx/pq2fads.c         |  10 +-
+ arch/powerpc/platforms/83xx/km83xx.c          |   6 +-
+ arch/powerpc/platforms/83xx/mpc836x_mds.c     |   2 +-
+ arch/powerpc/platforms/85xx/mpc85xx_mds.c     |   2 +-
+ arch/powerpc/platforms/85xx/mpc85xx_pm_ops.c  |   4 +-
+ arch/powerpc/platforms/85xx/mpc85xx_rdb.c     |   2 +-
+ arch/powerpc/platforms/85xx/p1022_ds.c        |   6 +-
+ arch/powerpc/platforms/85xx/p1022_rdk.c       |   6 +-
+ arch/powerpc/platforms/85xx/t1042rdb_diu.c    |   6 +-
+ arch/powerpc/platforms/85xx/twr_p102x.c       |   2 +-
+ arch/powerpc/platforms/86xx/mpc8610_hpcd.c    |   6 +-
+ arch/powerpc/platforms/8xx/adder875.c         |   2 +-
+ arch/powerpc/platforms/8xx/m8xx_setup.c       |   4 +-
+ arch/powerpc/platforms/8xx/mpc86xads_setup.c  |   4 +-
+ arch/powerpc/platforms/8xx/mpc885ads_setup.c  |  28 +-
+ .../platforms/embedded6xx/flipper-pic.c       |   6 +-
+ arch/powerpc/platforms/embedded6xx/hlwd-pic.c |   8 +-
+ arch/powerpc/platforms/embedded6xx/wii.c      |  12 +-
+ arch/powerpc/sysdev/cpm1.c                    |  26 +-
+ arch/powerpc/sysdev/cpm2.c                    |  16 +-
+ arch/powerpc/sysdev/cpm_common.c              |   4 +-
+ arch/powerpc/sysdev/fsl_85xx_l2ctlr.c         |  16 +-
+ arch/powerpc/sysdev/fsl_lbc.c                 |   2 +-
+ arch/powerpc/sysdev/fsl_pci.c                 |  12 +-
+ arch/powerpc/sysdev/fsl_pmc.c                 |   2 +-
+ arch/powerpc/sysdev/fsl_rcpm.c                |  74 +--
+ arch/powerpc/sysdev/fsl_rio.c                 |   4 +-
+ arch/powerpc/sysdev/fsl_rmu.c                 |   9 +-
+ arch/powerpc/sysdev/mpic_timer.c              |  12 +-
+ drivers/ata/ahci_sunxi.c                      |  62 +--
+ drivers/gpu/drm/meson/meson_crtc.c            |  14 +-
+ drivers/gpu/drm/meson/meson_dw_hdmi.c         |  33 +-
+ drivers/gpu/drm/meson/meson_plane.c           |  13 +-
+ drivers/gpu/drm/meson/meson_registers.h       |   3 -
+ drivers/gpu/drm/meson/meson_venc.c            |  13 +-
+ drivers/gpu/drm/meson/meson_venc_cvbs.c       |   4 +-
+ drivers/gpu/drm/meson/meson_viu.c             |  65 +--
+ drivers/gpu/drm/meson/meson_vpp.c             |  22 +-
+ .../ethernet/stmicro/stmmac/dwmac-meson8b.c   |  56 +-
+ .../net/ethernet/stmicro/stmmac/dwmac-sun8i.c |  62 +--
+ include/linux/setbits.h                       |  84 +++
+ scripts/add_new_include_in_source.py          |  61 +++
+ scripts/coccinelle/misc/setbits32.cocci       | 487 ++++++++++++++++++
+ .../coccinelle/misc/setbits32_relaxed.cocci   | 487 ++++++++++++++++++
+ scripts/coccinelle/misc/setbits64.cocci       | 487 ++++++++++++++++++
+ scripts/coccinelle/misc/setbits_dev.cocci     | 235 +++++++++
+ 58 files changed, 2172 insertions(+), 395 deletions(-)
+ create mode 100644 include/linux/setbits.h
+ create mode 100755 scripts/add_new_include_in_source.py
+ create mode 100644 scripts/coccinelle/misc/setbits32.cocci
+ create mode 100644 scripts/coccinelle/misc/setbits32_relaxed.cocci
+ create mode 100644 scripts/coccinelle/misc/setbits64.cocci
+ create mode 100644 scripts/coccinelle/misc/setbits_dev.cocci
+
 -- 
-2.19.0
+2.18.1
