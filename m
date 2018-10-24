@@ -1,35 +1,46 @@
-From: Sergei Shtylyov <sergei.shtylyov-M4DtvfQ/ZS1MRgGoP+s0PdBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCH v3 4/7] ata: ahci_sunxi: use
- xxxsetbitsi_le32 functions
-Date: Wed, 24 Oct 2018 10:57:49 +0300
-Message-ID: <83472722-c7e7-820f-b97f-37016ff32893@cogentembedded.com>
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+Subject: Re: [PATCH v3 0/7] include: add
+ setbits32/clrbits32/clrsetbits32/setbits64/clrbits64/clrsetbits64
+Date: Wed, 24 Oct 2018 09:57:00 +0100
+Message-ID: <20181024085700.GR30658@n2100.armlinux.org.uk>
 References: <1540366553-18541-1-git-send-email-clabbe@baylibre.com>
- <1540366553-18541-5-git-send-email-clabbe@baylibre.com>
-Reply-To: sergei.shtylyov-M4DtvfQ/ZS1MRgGoP+s0PdBPR1lH4CV8@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Return-path: <linux-sunxi+bncBC6MFNV32EFRBBGMYDPAKGQEWT2T2BQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <1540366553-18541-5-git-send-email-clabbe-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
-List-Post: <https://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/linux-sunxi
-List-Subscribe: <https://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/linux-sunxi/subscribe>
-To: Corentin Labbe <clabbe-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Gilles.Muller-L2FTfq7BK8M@public.gmane.org, Julia.Lawall-L2FTfq7BK8M@public.gmane.org, agust-ynQEQJNshbs@public.gmane.org, airlied-cv59FeDIM0c@public.gmane.org, alexandre.torgue-qxv4g6HH51o@public.gmane.org, alistair-Y4h6yKqj69EXC2x5gXVKYQ@public.gmane.org, benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org, carlo-KA+7E9HrN00dnm+yROfE0A@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, galak-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org, joabreu-HKixBCOQz3hWk0Htik3J/w@public.gmane.org, khilman-rdvid1DuHRBWk0Htik3J/w@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, maxime.ripard-LDxbnhwyfcJBDgjK7y7TUQ@public.gmane.org, michal.lkml-yyZNWGI4GtDR7s880joybQ@public.gmane.org, mpe-Gsx/Oe8HsFggBc27wqDAHg@public.gmane.org, mporter-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org, narmstrong-rdvid1DuHRBWk0Htik3J/w@public.gmane.org, nicolas.palix-wMUr/XMoy4A@public.gmane.org, oss-fOR+EgIDQEHk1uMJSBkQmQ@public.gmane.org, paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, peppe.cavallaro-qxv4g6HH51o@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, vitb-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org, wens-jdAy2FN1RRM@public.gmane.org
-Cc: cocci-/FJkirnvOdkvYVN+rsErww@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-amlogic-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mediatek-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+Content-Disposition: inline
+In-Reply-To: <1540366553-18541-1-git-send-email-clabbe@baylibre.com>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: Corentin Labbe <clabbe@baylibre.com>
+Cc: Gilles.Muller@lip6.fr, maxime.ripard@bootlin.com, dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org, linux-sunxi@googlegroups.com, paulus@samba.org, linux-amlogic@lists.infradead.org, cocci@systeme.lip6.fr, mpe@ellerman.id.au, narmstrong@baylibre.com, galak@kernel.crashing.org, airlied@linux.ie, wens@csie.org, joabreu@synopsys.com, vitb@kernel.crashing.org, mporter@kernel.crashing.org, agust@denx.de, alexandre.torgue@st.com, alistair@popple.id.au, nicolas.palix@imag.fr, oss@buserror.net, Julia.Lawall@lip6.fr, linux-mediatek@lists.infradead.org, matthias.bgg@gmail.com, peppe.cavallaro@st.com, linux-arm-kernel@lists.infradead.org, michal.lkml@markovi.net, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, khilman@baylibre.com, carlo@caione.org, tj@kernel.org, linuxppc-dev@lists.ozlabs.org, davem@davemloft.net
 List-Id: linux-ide@vger.kernel.org
 
-Hello!
-
-    Typo in the subject: s/xxxsetbitsi/xxxsetbits/.
-
-On 24.10.2018 10:35, Corentin Labbe wrote:
-
-> This patch converts ahci_sunxi to use xxxsetbits_le32 functions
->
-> Signed-off-by: Corentin Labbe <clabbe-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
-[...]
-
-MBR, Sergei
+T24gV2VkLCBPY3QgMjQsIDIwMTggYXQgMDc6MzU6NDZBTSArMDAwMCwgQ29yZW50aW4gTGFiYmUg
+d3JvdGU6Cj4gVGhpcyBwYXRjaHNldCBhZGRzIGEgbmV3IHNldCBvZiBmdW5jdGlvbnMgd2hpY2gg
+YXJlIG9wZW4tY29kZWQgaW4gbG90IG9mCj4gcGxhY2UuCj4gQmFzaWNseSB0aGUgcGF0dGVybiBp
+cyBhbHdheXMgdGhlIHNhbWUsICJyZWFkLCBtb2RpZnkgYSBiaXQsIHdyaXRlIgo+IHNvbWUgZHJp
+dmVyIGFuZCB0aGUgcG93ZXJwYyBhcmNoIGFscmVhZHkgaGF2ZSB0aG9zZXMgcGF0dGVybiB0aGVt
+IGFzIGZ1bmN0aW9ucy4gKGxpa2UgYWhjaV9zdW54aS5jIG9yIGR3bWFjLW1lc29uOGIpCgpUaGUg
+YWR2YW50YWdlIG9mIHRoZW0gYmVpbmcgb3Blbi1jb2RlZCBpcyB0aGF0IGl0J3MgX29idmlvdXNf
+IHRvIHRoZQpyZXZpZXdlciB0aGF0IHRoZXJlIGlzIGEgcmVhZC1tb2RpZnktd3JpdGUgZ29pbmcg
+b24gd2hpY2gsIGluIGEgbXVsdGktCnRocmVhZGVkIGVudmlyb25tZW50LCBtYXkgbmVlZCBzb21l
+IGxvY2tpbmcgKHNvIGl0IHNob3VsZCB0cmlnZ2VyIGEKcmV2aWV3IG9mIHRoZSBsb2NraW5nIGFy
+b3VuZCB0aGF0IGNvZGUuKQoKV2l0aCBpdCBoaWRkZW4gaW5zaWRlIGEgaGVscGVyIHdoaWNoIGhh
+cyBubyBsb2NraW5nIGl0c2VsZiwgaXQgYmVjb21lcwptdWNoIGVhc2llciB0byBwYXNzIG92ZXIg
+aW4gcmV2aWV3LCB3aGljaCBtZWFucyB0aGF0IHJhY2VzIGFyZSBtdWNoCm1vcmUgbGlrZWx5IHRv
+IGdvIHVuc3BvdHRlZCAtIGFuZCB0aGF0IGlzIGJhZCBuZXdzLgoKLS0gClJNSydzIFBhdGNoIHN5
+c3RlbTogaHR0cDovL3d3dy5hcm1saW51eC5vcmcudWsvZGV2ZWxvcGVyL3BhdGNoZXMvCkZUVEMg
+YnJvYWRiYW5kIGZvciAwLjhtaWxlIGxpbmUgaW4gc3VidXJiaWE6IHN5bmMgYXQgMTIuMU1icHMg
+ZG93biA2MjJrYnBzIHVwCkFjY29yZGluZyB0byBzcGVlZHRlc3QubmV0OiAxMS45TWJwcyBkb3du
+IDUwMGticHMgdXAKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X18KZHJpLWRldmVsIG1haWxpbmcgbGlzdApkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3Jn
+Cmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vZHJpLWRldmVs
+Cg==
