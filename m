@@ -1,46 +1,120 @@
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-Subject: Re: [PATCH v3 0/7] include: add
- setbits32/clrbits32/clrsetbits32/setbits64/clrbits64/clrsetbits64
-Date: Wed, 24 Oct 2018 09:57:00 +0100
-Message-ID: <20181024085700.GR30658@n2100.armlinux.org.uk>
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: Re: [PATCH v3 2/7] include: add
+ setbits_leXX/clrbits_leXX/clrsetbits_leXX in linux/setbits.h
+Date: Wed, 24 Oct 2018 15:46:13 -0700
+Message-ID: <20181024154613.3ecc96dc@cakuba.netronome.com>
 References: <1540366553-18541-1-git-send-email-clabbe@baylibre.com>
+        <1540366553-18541-3-git-send-email-clabbe@baylibre.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-Content-Disposition: inline
-In-Reply-To: <1540366553-18541-1-git-send-email-clabbe@baylibre.com>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1540366553-18541-3-git-send-email-clabbe@baylibre.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Corentin Labbe <clabbe@baylibre.com>
-Cc: Gilles.Muller@lip6.fr, maxime.ripard@bootlin.com, dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org, linux-sunxi@googlegroups.com, paulus@samba.org, linux-amlogic@lists.infradead.org, cocci@systeme.lip6.fr, mpe@ellerman.id.au, narmstrong@baylibre.com, galak@kernel.crashing.org, airlied@linux.ie, wens@csie.org, joabreu@synopsys.com, vitb@kernel.crashing.org, mporter@kernel.crashing.org, agust@denx.de, alexandre.torgue@st.com, alistair@popple.id.au, nicolas.palix@imag.fr, oss@buserror.net, Julia.Lawall@lip6.fr, linux-mediatek@lists.infradead.org, matthias.bgg@gmail.com, peppe.cavallaro@st.com, linux-arm-kernel@lists.infradead.org, michal.lkml@markovi.net, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, khilman@baylibre.com, carlo@caione.org, tj@kernel.org, linuxppc-dev@lists.ozlabs.org, davem@davemloft.net
+Cc: Gilles.Muller@lip6.fr, Julia.Lawall@lip6.fr, agust@denx.de, airlied@linux.ie, alexandre.torgue@st.com, alistair@popple.id.au, benh@kernel.crashing.org, carlo@caione.org, davem@davemloft.net, galak@kernel.crashing.org, joabreu@synopsys.com, khilman@baylibre.com, matthias.bgg@gmail.com, maxime.ripard@bootlin.com, michal.lkml@markovi.net, mpe@ellerman.id.au, mporter@kernel.crashing.org, narmstrong@baylibre.com, nicolas.palix@imag.fr, oss@buserror.net, paulus@samba.org, peppe.cavallaro@st.com, tj@kernel.org, vitb@kernel.crashing.org, wens@csie.org, cocci@systeme.lip6.fr, dri-devel@lists.freedesktop.org, linux-amlogic@lists.infradead.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org, linuxppc-dev@lists.
 List-Id: linux-ide@vger.kernel.org
 
-T24gV2VkLCBPY3QgMjQsIDIwMTggYXQgMDc6MzU6NDZBTSArMDAwMCwgQ29yZW50aW4gTGFiYmUg
-d3JvdGU6Cj4gVGhpcyBwYXRjaHNldCBhZGRzIGEgbmV3IHNldCBvZiBmdW5jdGlvbnMgd2hpY2gg
-YXJlIG9wZW4tY29kZWQgaW4gbG90IG9mCj4gcGxhY2UuCj4gQmFzaWNseSB0aGUgcGF0dGVybiBp
-cyBhbHdheXMgdGhlIHNhbWUsICJyZWFkLCBtb2RpZnkgYSBiaXQsIHdyaXRlIgo+IHNvbWUgZHJp
-dmVyIGFuZCB0aGUgcG93ZXJwYyBhcmNoIGFscmVhZHkgaGF2ZSB0aG9zZXMgcGF0dGVybiB0aGVt
-IGFzIGZ1bmN0aW9ucy4gKGxpa2UgYWhjaV9zdW54aS5jIG9yIGR3bWFjLW1lc29uOGIpCgpUaGUg
-YWR2YW50YWdlIG9mIHRoZW0gYmVpbmcgb3Blbi1jb2RlZCBpcyB0aGF0IGl0J3MgX29idmlvdXNf
-IHRvIHRoZQpyZXZpZXdlciB0aGF0IHRoZXJlIGlzIGEgcmVhZC1tb2RpZnktd3JpdGUgZ29pbmcg
-b24gd2hpY2gsIGluIGEgbXVsdGktCnRocmVhZGVkIGVudmlyb25tZW50LCBtYXkgbmVlZCBzb21l
-IGxvY2tpbmcgKHNvIGl0IHNob3VsZCB0cmlnZ2VyIGEKcmV2aWV3IG9mIHRoZSBsb2NraW5nIGFy
-b3VuZCB0aGF0IGNvZGUuKQoKV2l0aCBpdCBoaWRkZW4gaW5zaWRlIGEgaGVscGVyIHdoaWNoIGhh
-cyBubyBsb2NraW5nIGl0c2VsZiwgaXQgYmVjb21lcwptdWNoIGVhc2llciB0byBwYXNzIG92ZXIg
-aW4gcmV2aWV3LCB3aGljaCBtZWFucyB0aGF0IHJhY2VzIGFyZSBtdWNoCm1vcmUgbGlrZWx5IHRv
-IGdvIHVuc3BvdHRlZCAtIGFuZCB0aGF0IGlzIGJhZCBuZXdzLgoKLS0gClJNSydzIFBhdGNoIHN5
-c3RlbTogaHR0cDovL3d3dy5hcm1saW51eC5vcmcudWsvZGV2ZWxvcGVyL3BhdGNoZXMvCkZUVEMg
-YnJvYWRiYW5kIGZvciAwLjhtaWxlIGxpbmUgaW4gc3VidXJiaWE6IHN5bmMgYXQgMTIuMU1icHMg
-ZG93biA2MjJrYnBzIHVwCkFjY29yZGluZyB0byBzcGVlZHRlc3QubmV0OiAxMS45TWJwcyBkb3du
-IDUwMGticHMgdXAKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X18KZHJpLWRldmVsIG1haWxpbmcgbGlzdApkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3Jn
-Cmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vZHJpLWRldmVs
-Cg==
+On Wed, 24 Oct 2018 07:35:48 +0000, Corentin Labbe wrote:
+> This patch adds setbits_le32/clrbits_le32/clrsetbits_le32 and
+> setbits_le64/clrbits_le64/clrsetbits_le64 in linux/setbits.h header.
+> 
+> Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
+
+Did you have a look at all the functions defined in bitfield.h?
+(including the magic macro-generated ones?)  Perhaps those could be
+used here?
+
+I also share the concerns about the non-atomic RMW.  Obviously correct
+beats short IMHO.
+
+> diff --git a/include/linux/setbits.h b/include/linux/setbits.h
+> new file mode 100644
+> index 000000000000..c82faf8d7fe4
+> --- /dev/null
+> +++ b/include/linux/setbits.h
+> @@ -0,0 +1,84 @@
+> +/* SPDX-License-Identifier: GPL-2.0 */
+> +#ifndef __LINUX_SETBITS_H
+> +#define __LINUX_SETBITS_H
+> +
+> +#include <linux/io.h>
+> +
+> +#define __setbits(rfn, wfn, addr, set) wfn((rfn(addr) | (set)), addr)
+> +#define __clrbits(rfn, wfn, addr, mask) wfn((rfn(addr) & ~(mask)), addr)
+> +#define __clrsetbits(rfn, wfn, addr, mask, set) wfn(((rfn(addr) & ~(mask)) | (set)), addr)
+> +#define __setclrbits(rfn, wfn, addr, mask, set) wfn(((rfn(addr) | (set)) & ~(mask)), addr)
+> +
+> +#ifndef setbits_le32
+> +#define setbits_le32(addr, set) __setbits(readl, writel, addr, set)
+> +#endif
+> +#ifndef setbits_le32_relaxed
+> +#define setbits_le32_relaxed(addr, set) __setbits(readl_relaxed, writel_relaxed, \
+> +					       addr, set)
+> +#endif
+> +
+> +#ifndef clrbits_le32
+> +#define clrbits_le32(addr, mask) __clrbits(readl, writel, addr, mask)
+> +#endif
+> +#ifndef clrbits_le32_relaxed
+> +#define clrbits_le32_relaxed(addr, mask) __clrbits(readl_relaxed, writel_relaxed, \
+> +						addr, mask)
+> +#endif
+> +
+> +#ifndef clrsetbits_le32
+> +#define clrsetbits_le32(addr, mask, set) __clrsetbits(readl, writel, addr, mask, set)
+> +#endif
+> +#ifndef clrsetbits_le32_relaxed
+> +#define clrsetbits_le32_relaxed(addr, mask, set) __clrsetbits(readl_relaxed, \
+> +							   writel_relaxed, \
+> +							   addr, mask, set)
+> +#endif
+> +
+> +#ifndef setclrbits_le32
+> +#define setclrbits_le32(addr, mask, set) __setclrbits(readl, writel, addr, mask, set)
+> +#endif
+> +#ifndef setclrbits_le32_relaxed
+> +#define setclrbits_le32_relaxed(addr, mask, set) __setclrbits(readl_relaxed, \
+> +							   writel_relaxed, \
+> +							   addr, mask, set)
+> +#endif
+> +
+> +/* We cannot use CONFIG_64BIT as some x86 drivers use non-atomicwriteq() */
+> +#if defined(writeq) && defined(readq)
+> +#ifndef setbits_le64
+> +#define setbits_le64(addr, set) __setbits(readq, writeq, addr, set)
+> +#endif
+> +#ifndef setbits_le64_relaxed
+> +#define setbits_le64_relaxed(addr, set) __setbits(readq_relaxed, writeq_relaxed, \
+> +					       addr, set)
+> +#endif
+> +
+> +#ifndef clrbits_le64
+> +#define clrbits_le64(addr, mask) __clrbits(readq, writeq, addr, mask)
+> +#endif
+> +#ifndef clrbits_le64_relaxed
+> +#define clrbits_le64_relaxed(addr, mask) __clrbits(readq_relaxed, writeq_relaxed, \
+> +						addr, mask)
+> +#endif
+> +
+> +#ifndef clrsetbits_le64
+> +#define clrsetbits_le64(addr, mask, set) __clrsetbits(readq, writeq, addr, mask, set)
+> +#endif
+> +#ifndef clrsetbits_le64_relaxed
+> +#define clrsetbits_le64_relaxed(addr, mask, set) __clrsetbits(readq_relaxed, \
+> +							   writeq_relaxed, \
+> +							   addr, mask, set)
+> +#endif
+> +
+> +#ifndef setclrbits_le64
+> +#define setclrbits_le64(addr, mask, set) __setclrbits(readq, writeq, addr, mask, set)
+> +#endif
+> +#ifndef setclrbits_le64_relaxed
+> +#define setclrbits_le64_relaxed(addr, mask, set) __setclrbits(readq_relaxed, \
+> +							   writeq_relaxed, \
+> +							   addr, mask, set)
+> +#endif
+> +
+> +#endif /* writeq/readq */
+> +
+> +#endif /* __LINUX_SETBITS_H */
