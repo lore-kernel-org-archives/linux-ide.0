@@ -1,120 +1,56 @@
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: Re: [PATCH v3 2/7] include: add
- setbits_leXX/clrbits_leXX/clrsetbits_leXX in linux/setbits.h
-Date: Wed, 24 Oct 2018 15:46:13 -0700
-Message-ID: <20181024154613.3ecc96dc@cakuba.netronome.com>
-References: <1540366553-18541-1-git-send-email-clabbe@baylibre.com>
-        <1540366553-18541-3-git-send-email-clabbe@baylibre.com>
+From: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+Subject: Re: [PATCH] ata: add Buddha PATA controller driver
+Date: Thu, 25 Oct 2018 21:38:03 +0200
+Message-ID: <f881dd9d-b41f-9993-44fe-71db55fb679d@physik.fu-berlin.de>
+References: <CGME20181018122951eucas1p2be43dc17df8d2c754e771785b3ad7457@eucas1p2.samsung.com>
+ <20181018122951eucas1p2be43dc17df8d2c754e771785b3ad7457~es8dn4Tg90035600356eucas1p2H@eucas1p2.samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1540366553-18541-3-git-send-email-clabbe@baylibre.com>
+In-Reply-To: <20181018122951eucas1p2be43dc17df8d2c754e771785b3ad7457~es8dn4Tg90035600356eucas1p2H@eucas1p2.samsung.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Corentin Labbe <clabbe@baylibre.com>
-Cc: Gilles.Muller@lip6.fr, Julia.Lawall@lip6.fr, agust@denx.de, airlied@linux.ie, alexandre.torgue@st.com, alistair@popple.id.au, benh@kernel.crashing.org, carlo@caione.org, davem@davemloft.net, galak@kernel.crashing.org, joabreu@synopsys.com, khilman@baylibre.com, matthias.bgg@gmail.com, maxime.ripard@bootlin.com, michal.lkml@markovi.net, mpe@ellerman.id.au, mporter@kernel.crashing.org, narmstrong@baylibre.com, nicolas.palix@imag.fr, oss@buserror.net, paulus@samba.org, peppe.cavallaro@st.com, tj@kernel.org, vitb@kernel.crashing.org, wens@csie.org, cocci@systeme.lip6.fr, dri-devel@lists.freedesktop.org, linux-amlogic@lists.infradead.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org, linuxppc-dev@lists.
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, Geert Uytterhoeven <geert@linux-m68k.org>, Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, 24 Oct 2018 07:35:48 +0000, Corentin Labbe wrote:
-> This patch adds setbits_le32/clrbits_le32/clrsetbits_le32 and
-> setbits_le64/clrbits_le64/clrsetbits_le64 in linux/setbits.h header.
-> 
-> Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
+Hi!
 
-Did you have a look at all the functions defined in bitfield.h?
-(including the magic macro-generated ones?)  Perhaps those could be
-used here?
+Sorry for the delay!
 
-I also share the concerns about the non-atomic RMW.  Obviously correct
-beats short IMHO.
+On 10/18/18 2:29 PM, Bartlomiej Zolnierkiewicz wrote:
+> John, please test if possible..
+Driver loads and detects hard drive connected to it:
 
-> diff --git a/include/linux/setbits.h b/include/linux/setbits.h
-> new file mode 100644
-> index 000000000000..c82faf8d7fe4
-> --- /dev/null
-> +++ b/include/linux/setbits.h
-> @@ -0,0 +1,84 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +#ifndef __LINUX_SETBITS_H
-> +#define __LINUX_SETBITS_H
-> +
-> +#include <linux/io.h>
-> +
-> +#define __setbits(rfn, wfn, addr, set) wfn((rfn(addr) | (set)), addr)
-> +#define __clrbits(rfn, wfn, addr, mask) wfn((rfn(addr) & ~(mask)), addr)
-> +#define __clrsetbits(rfn, wfn, addr, mask, set) wfn(((rfn(addr) & ~(mask)) | (set)), addr)
-> +#define __setclrbits(rfn, wfn, addr, mask, set) wfn(((rfn(addr) | (set)) & ~(mask)), addr)
-> +
-> +#ifndef setbits_le32
-> +#define setbits_le32(addr, set) __setbits(readl, writel, addr, set)
-> +#endif
-> +#ifndef setbits_le32_relaxed
-> +#define setbits_le32_relaxed(addr, set) __setbits(readl_relaxed, writel_relaxed, \
-> +					       addr, set)
-> +#endif
-> +
-> +#ifndef clrbits_le32
-> +#define clrbits_le32(addr, mask) __clrbits(readl, writel, addr, mask)
-> +#endif
-> +#ifndef clrbits_le32_relaxed
-> +#define clrbits_le32_relaxed(addr, mask) __clrbits(readl_relaxed, writel_relaxed, \
-> +						addr, mask)
-> +#endif
-> +
-> +#ifndef clrsetbits_le32
-> +#define clrsetbits_le32(addr, mask, set) __clrsetbits(readl, writel, addr, mask, set)
-> +#endif
-> +#ifndef clrsetbits_le32_relaxed
-> +#define clrsetbits_le32_relaxed(addr, mask, set) __clrsetbits(readl_relaxed, \
-> +							   writel_relaxed, \
-> +							   addr, mask, set)
-> +#endif
-> +
-> +#ifndef setclrbits_le32
-> +#define setclrbits_le32(addr, mask, set) __setclrbits(readl, writel, addr, mask, set)
-> +#endif
-> +#ifndef setclrbits_le32_relaxed
-> +#define setclrbits_le32_relaxed(addr, mask, set) __setclrbits(readl_relaxed, \
-> +							   writel_relaxed, \
-> +							   addr, mask, set)
-> +#endif
-> +
-> +/* We cannot use CONFIG_64BIT as some x86 drivers use non-atomicwriteq() */
-> +#if defined(writeq) && defined(readq)
-> +#ifndef setbits_le64
-> +#define setbits_le64(addr, set) __setbits(readq, writeq, addr, set)
-> +#endif
-> +#ifndef setbits_le64_relaxed
-> +#define setbits_le64_relaxed(addr, set) __setbits(readq_relaxed, writeq_relaxed, \
-> +					       addr, set)
-> +#endif
-> +
-> +#ifndef clrbits_le64
-> +#define clrbits_le64(addr, mask) __clrbits(readq, writeq, addr, mask)
-> +#endif
-> +#ifndef clrbits_le64_relaxed
-> +#define clrbits_le64_relaxed(addr, mask) __clrbits(readq_relaxed, writeq_relaxed, \
-> +						addr, mask)
-> +#endif
-> +
-> +#ifndef clrsetbits_le64
-> +#define clrsetbits_le64(addr, mask, set) __clrsetbits(readq, writeq, addr, mask, set)
-> +#endif
-> +#ifndef clrsetbits_le64_relaxed
-> +#define clrsetbits_le64_relaxed(addr, mask, set) __clrsetbits(readq_relaxed, \
-> +							   writeq_relaxed, \
-> +							   addr, mask, set)
-> +#endif
-> +
-> +#ifndef setclrbits_le64
-> +#define setclrbits_le64(addr, mask, set) __setclrbits(readq, writeq, addr, mask, set)
-> +#endif
-> +#ifndef setclrbits_le64_relaxed
-> +#define setclrbits_le64_relaxed(addr, mask, set) __setclrbits(readq_relaxed, \
-> +							   writeq_relaxed, \
-> +							   addr, mask, set)
-> +#endif
-> +
-> +#endif /* writeq/readq */
-> +
-> +#endif /* __LINUX_SETBITS_H */
+[  256.110000] zorro zorro3: Buddha IDE controller
+[  256.430000] scsi host2: pata_buddha
+[  256.580000] scsi host3: pata_buddha
+[  256.590000] ata2: PATA max PIO4 cmd 0xeb0000 ctl 0xeb091a irq 2
+[  256.600000] ata3: PATA max PIO4 cmd 0xeb0000 ctl 0xeb0b1a irq 2
+[  256.790000] ata2.00: ATA-6: ST380011A, 8.01, max UDMA/100
+[  256.810000] ata2.00: 156301488 sectors, multi 16: LBA48 
+[  256.820000] ata2.00: configured for PIO
+[  256.870000] scsi 2:0:0:0: Direct-Access     ATA      ST380011A        8.01 PQ: 0 ANSI: 5
+[  257.080000] sd 2:0:0:0: [sdc] 156301488 512-byte logical blocks: (80.0 GB/74.5 GiB)
+[  257.170000] sd 2:0:0:0: [sdc] Write Protect is off
+[  257.190000] sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
+[  257.330000] sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+[  257.960000] sd 2:0:0:0: [sdc] Attached SCSI disk
+
+I was then able to create an MS-DOS partition table on the disk and create
+an ext2 filesystem. I copied some files onto the partition which worked
+without any problems.
+
+Tested-by: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+
+Michael wants to make some changes to the driver though, I think. He has access
+to the Amiga 4000, in any case, so he can also test them.
+
+Adrian
+
+-- 
+ .''`.  John Paul Adrian Glaubitz
+: :' :  Debian Developer - glaubitz@debian.org
+`. `'   Freie Universitaet Berlin - glaubitz@physik.fu-berlin.de
+  `-    GPG: 62FF 8A75 84E0 2956 9546  0006 7426 3B37 F5B5 F913
