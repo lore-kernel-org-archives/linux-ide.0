@@ -1,56 +1,46 @@
-From: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
-Subject: Re: [PATCH] ata: add Buddha PATA controller driver
-Date: Thu, 25 Oct 2018 21:38:03 +0200
-Message-ID: <f881dd9d-b41f-9993-44fe-71db55fb679d@physik.fu-berlin.de>
-References: <CGME20181018122951eucas1p2be43dc17df8d2c754e771785b3ad7457@eucas1p2.samsung.com>
- <20181018122951eucas1p2be43dc17df8d2c754e771785b3ad7457~es8dn4Tg90035600356eucas1p2H@eucas1p2.samsung.com>
+From: Joris Gutjahr <joris.gutjahr@gmail.com>
+Subject: [PATCH] Malformatted switch statment
+Date: Sun, 28 Oct 2018 17:45:46 +0100
+Message-ID: <20181028164546.17178-1-joris.gutjahr@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181018122951eucas1p2be43dc17df8d2c754e771785b3ad7457~es8dn4Tg90035600356eucas1p2H@eucas1p2.samsung.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Geert Uytterhoeven <geert@linux-m68k.org>, Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
+To: davem@davemloft.net, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Joris Gutjahr <joris.gutjahr@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hi!
+I fixed this coding style error I got after running
+checkpatch --file on this file.
+The problem was that the whole case block was on one line.
 
-Sorry for the delay!
+Signed-off-by: Joris Gutjahr <joris.gutjahr@gmail.com>
+---
+ drivers/ide/amd74xx.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
 
-On 10/18/18 2:29 PM, Bartlomiej Zolnierkiewicz wrote:
-> John, please test if possible..
-Driver loads and detects hard drive connected to it:
-
-[  256.110000] zorro zorro3: Buddha IDE controller
-[  256.430000] scsi host2: pata_buddha
-[  256.580000] scsi host3: pata_buddha
-[  256.590000] ata2: PATA max PIO4 cmd 0xeb0000 ctl 0xeb091a irq 2
-[  256.600000] ata3: PATA max PIO4 cmd 0xeb0000 ctl 0xeb0b1a irq 2
-[  256.790000] ata2.00: ATA-6: ST380011A, 8.01, max UDMA/100
-[  256.810000] ata2.00: 156301488 sectors, multi 16: LBA48 
-[  256.820000] ata2.00: configured for PIO
-[  256.870000] scsi 2:0:0:0: Direct-Access     ATA      ST380011A        8.01 PQ: 0 ANSI: 5
-[  257.080000] sd 2:0:0:0: [sdc] 156301488 512-byte logical blocks: (80.0 GB/74.5 GiB)
-[  257.170000] sd 2:0:0:0: [sdc] Write Protect is off
-[  257.190000] sd 2:0:0:0: [sdc] Mode Sense: 00 3a 00 00
-[  257.330000] sd 2:0:0:0: [sdc] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-[  257.960000] sd 2:0:0:0: [sdc] Attached SCSI disk
-
-I was then able to create an MS-DOS partition table on the disk and create
-an ext2 filesystem. I copied some files onto the partition which worked
-without any problems.
-
-Tested-by: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
-
-Michael wants to make some changes to the driver though, I think. He has access
-to the Amiga 4000, in any case, so he can also test them.
-
-Adrian
-
+diff --git a/drivers/ide/amd74xx.c b/drivers/ide/amd74xx.c
+index cbfe846911d1..fa39f279bf53 100644
+--- a/drivers/ide/amd74xx.c
++++ b/drivers/ide/amd74xx.c
+@@ -273,9 +273,15 @@ static int amd74xx_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	amd_clock = (ide_pci_clk ? ide_pci_clk : 33) * 1000;
+ 
+ 	switch (amd_clock) {
+-	case 33000: amd_clock = 33333; break;
+-	case 37000: amd_clock = 37500; break;
+-	case 41000: amd_clock = 41666; break;
++	case 33000:
++		amd_clock = 33333;
++		break;
++	case 37000:
++		amd_clock = 37500;
++		break;
++	case 41000:
++		amd_clock = 41666;
++		break;
+ 	}
+ 
+ 	if (amd_clock < 20000 || amd_clock > 50000) {
 -- 
- .''`.  John Paul Adrian Glaubitz
-: :' :  Debian Developer - glaubitz@debian.org
-`. `'   Freie Universitaet Berlin - glaubitz@physik.fu-berlin.de
-  `-    GPG: 62FF 8A75 84E0 2956 9546  0006 7426 3B37 F5B5 F913
+2.19.1
