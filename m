@@ -1,46 +1,36 @@
-From: Joris Gutjahr <joris.gutjahr@gmail.com>
-Subject: [PATCH] Malformatted switch statment
-Date: Sun, 28 Oct 2018 17:45:46 +0100
-Message-ID: <20181028164546.17178-1-joris.gutjahr@gmail.com>
+From: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+Subject: Re: [PATCH] ata: add Buddha PATA controller driver
+Date: Wed, 31 Oct 2018 11:06:46 +0100
+Message-ID: <eb6a751b-8df3-d35c-a744-19d017778c74@physik.fu-berlin.de>
+References: <CGME20181018122951eucas1p2be43dc17df8d2c754e771785b3ad7457@eucas1p2.samsung.com>
+ <20181018122951eucas1p2be43dc17df8d2c754e771785b3ad7457~es8dn4Tg90035600356eucas1p2H@eucas1p2.samsung.com>
+ <f881dd9d-b41f-9993-44fe-71db55fb679d@physik.fu-berlin.de>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <f881dd9d-b41f-9993-44fe-71db55fb679d@physik.fu-berlin.de>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: davem@davemloft.net, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Joris Gutjahr <joris.gutjahr@gmail.com>
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, Geert Uytterhoeven <geert@linux-m68k.org>, Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-I fixed this coding style error I got after running
-checkpatch --file on this file.
-The problem was that the whole case block was on one line.
+Hi!
 
-Signed-off-by: Joris Gutjahr <joris.gutjahr@gmail.com>
----
- drivers/ide/amd74xx.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+On 10/25/18 9:38 PM, John Paul Adrian Glaubitz wrote:
+> Tested-by: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+> 
+> Michael wants to make some changes to the driver though, I think. He has access
+> to the Amiga 4000, in any case, so he can also test them.
 
-diff --git a/drivers/ide/amd74xx.c b/drivers/ide/amd74xx.c
-index cbfe846911d1..fa39f279bf53 100644
---- a/drivers/ide/amd74xx.c
-+++ b/drivers/ide/amd74xx.c
-@@ -273,9 +273,15 @@ static int amd74xx_probe(struct pci_dev *dev, const struct pci_device_id *id)
- 	amd_clock = (ide_pci_clk ? ide_pci_clk : 33) * 1000;
- 
- 	switch (amd_clock) {
--	case 33000: amd_clock = 33333; break;
--	case 37000: amd_clock = 37500; break;
--	case 41000: amd_clock = 41666; break;
-+	case 33000:
-+		amd_clock = 33333;
-+		break;
-+	case 37000:
-+		amd_clock = 37500;
-+		break;
-+	case 41000:
-+		amd_clock = 41666;
-+		break;
- 	}
- 
- 	if (amd_clock < 20000 || amd_clock > 50000) {
+@Michael: Can you post an updated version of the driver, rebased for 4.19
+          and with your patch?
+
+Adrian
+
 -- 
-2.19.1
+ .''`.  John Paul Adrian Glaubitz
+: :' :  Debian Developer - glaubitz@debian.org
+`. `'   Freie Universitaet Berlin - glaubitz@physik.fu-berlin.de
+  `-    GPG: 62FF 8A75 84E0 2956 9546  0006 7426 3B37 F5B5 F913
