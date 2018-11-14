@@ -1,26 +1,61 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] MAINTAINERS: Fix remaining pointers to obsolete
- libata.git
-Date: Wed, 7 Nov 2018 15:27:15 -0700
-Message-ID: <55c99084-f15f-5162-f1fa-71a74c1aef0d@kernel.dk>
-References: <20181107094757.31210-1-geert+renesas@glider.be>
+From: Takashi Iwai <tiwai@suse.de>
+Subject: [PATCH] ata: Fix racy link clearance
+Date: Wed, 14 Nov 2018 15:40:50 +0100
+Message-ID: <20181114144050.12630-1-tiwai@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181107094757.31210-1-geert+renesas@glider.be>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert+renesas@glider.be>, Tejun Heo <tj@kernel.org>, Viresh Kumar <vireshk@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Mikael Pettersson <mikpelinux@gmail.com>
+To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 11/7/18 2:47 AM, Geert Uytterhoeven wrote:
-> libata.git no longer exists.  Replace the remaining pointers to it by
-> pointers to the block tree, which is where all libata development
-> happens now.
+The ap->sff_pio_task_link gets cleared in a racy way in
+ata_sff_flush_pio_task().  This may lead to BUG_ON() check in the
+work, and screw up the whole system.
 
-Thanks, applied.
+Along with it, replace BUG_ON() with WARN_ON() and let the work quit
+gracefully.  It's no end of the world, after all.
 
+Signed-off-by: Takashi Iwai <tiwai@suse.de>
+---
+ drivers/ata/libata-sff.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index c5ea0fc635e5..28ef46ef656d 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -1271,9 +1271,8 @@ void ata_sff_flush_pio_task(struct ata_port *ap)
+ 	 */
+ 	spin_lock_irq(ap->lock);
+ 	ap->hsm_task_state = HSM_ST_IDLE;
+-	spin_unlock_irq(ap->lock);
+-
+ 	ap->sff_pio_task_link = NULL;
++	spin_unlock_irq(ap->lock);
+ 
+ 	if (ata_msg_ctl(ap))
+ 		ata_port_dbg(ap, "%s: EXIT\n", __func__);
+@@ -1283,14 +1282,17 @@ static void ata_sff_pio_task(struct work_struct *work)
+ {
+ 	struct ata_port *ap =
+ 		container_of(work, struct ata_port, sff_pio_task.work);
+-	struct ata_link *link = ap->sff_pio_task_link;
++	struct ata_link *link;
+ 	struct ata_queued_cmd *qc;
+ 	u8 status;
+ 	int poll_next;
+ 
+ 	spin_lock_irq(ap->lock);
+ 
+-	BUG_ON(ap->sff_pio_task_link == NULL);
++	link = ap->sff_pio_task_link;
++	if (WARN_ON(!link))
++		goto out_unlock;
++
+ 	/* qc can be NULL if timeout occurred */
+ 	qc = ata_qc_from_tag(ap, link->active_tag);
+ 	if (!qc) {
 -- 
-Jens Axboe
+2.19.1
