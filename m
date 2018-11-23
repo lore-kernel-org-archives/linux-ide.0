@@ -1,37 +1,78 @@
-From: Yangtao Li <tiny.windzz@gmail.com>
-Subject: [PATCH v2] ata: pata_macio: add of_node_put()
-Date: Thu, 22 Nov 2018 07:39:24 -0500
-Message-ID: <20181122123924.24438-1-tiny.windzz@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: sergei.shtylyov@cogentembedded.com, b.zolnierkie@samsung.com, axboe@kernel.dk
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Yangtao Li <tiny.windzz@gmail.com>
+From: Miquel Raynal <miquel.raynal@bootlin.com>
+Subject: [PATCH 1/7] ata: libahci_platform: comply to PHY framework
+Date: Fri, 23 Nov 2018 11:15:50 +0100
+Message-ID: <20181123101556.29888-2-miquel.raynal@bootlin.com>
+References: <20181123101556.29888-1-miquel.raynal@bootlin.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20181123101556.29888-1-miquel.raynal@bootlin.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Jens Axboe <axboe@kernel.dk>, Hans de Goede <hdegoede@redhat.com>
+Cc: devicetree@vger.kernel.org, linux-pm@vger.kernel.org, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-of_find_node_by_path() acquires a reference to the node
-returned by it and that reference needs to be dropped by its caller.
-This place doesn't do that, so fix it.
+Current implementation of the libahci does not take into account the
+new PHY framework. Correct the situation by adding a call to
+phy_set_mode() before phy_power_on() and by adding calls to
+ahci_platform_enable/disable_phys() at suspend/resume_host() time.
 
-Signed-off-by: Yangtao Li <tiny.windzz@gmail.com>
+Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
 ---
-Changes in v2:
--update changelog
----
- drivers/ata/pata_macio.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/ata/libahci_platform.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-index 9588e685d994..8cc9c429ad95 100644
---- a/drivers/ata/pata_macio.c
-+++ b/drivers/ata/pata_macio.c
-@@ -483,6 +483,8 @@ static int pata_macio_cable_detect(struct ata_port *ap)
- 		struct device_node *root = of_find_node_by_path("/");
- 		const char *model = of_get_property(root, "model", NULL);
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index 4b900fc659f7..9f33f72b674b 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -56,6 +56,12 @@ static int ahci_platform_enable_phys(struct ahci_host_priv *hpriv)
+ 		if (rc)
+ 			goto disable_phys;
  
-+		of_node_put(root);
++		rc = phy_set_mode(hpriv->phys[i], PHY_MODE_SATA);
++		if (rc) {
++			phy_exit(hpriv->phys[i]);
++			goto disable_phys;
++		}
 +
- 		if (cable && !strncmp(cable, "80-", 3)) {
- 			/* Some drives fail to detect 80c cable in PowerBook
- 			 * These machine use proprietary short IDE cable
+ 		rc = phy_power_on(hpriv->phys[i]);
+ 		if (rc) {
+ 			phy_exit(hpriv->phys[i]);
+@@ -738,6 +744,8 @@ int ahci_platform_suspend_host(struct device *dev)
+ 	writel(ctl, mmio + HOST_CTL);
+ 	readl(mmio + HOST_CTL); /* flush */
+ 
++	ahci_platform_disable_phys(hpriv);
++
+ 	return ata_host_suspend(host, PMSG_SUSPEND);
+ }
+ EXPORT_SYMBOL_GPL(ahci_platform_suspend_host);
+@@ -756,6 +764,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_suspend_host);
+ int ahci_platform_resume_host(struct device *dev)
+ {
+ 	struct ata_host *host = dev_get_drvdata(dev);
++	struct ahci_host_priv *hpriv = host->private_data;
+ 	int rc;
+ 
+ 	if (dev->power.power_state.event == PM_EVENT_SUSPEND) {
+@@ -766,6 +775,8 @@ int ahci_platform_resume_host(struct device *dev)
+ 		ahci_init_controller(host);
+ 	}
+ 
++	ahci_platform_enable_phys(hpriv);
++
+ 	ata_host_resume(host);
+ 
+ 	return 0;
 -- 
-2.17.0
+2.19.1
