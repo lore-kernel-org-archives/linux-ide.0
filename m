@@ -1,13 +1,15 @@
 From: Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH v2 5/6] ARM64: dts: marvell: armada-37xx: declare SATA clock
-Date: Fri, 30 Nov 2018 16:38:32 +0100
-Message-ID: <20181130153833.11421-6-miquel.raynal@bootlin.com>
-References: <20181130153833.11421-1-miquel.raynal@bootlin.com>
+Subject: Re: [PATCH 1/7] ata: libahci_platform: comply to PHY framework
+Date: Fri, 30 Nov 2018 16:40:16 +0100
+Message-ID: <20181130164016.7699efb3@xps13>
+References: <20181123101556.29888-1-miquel.raynal@bootlin.com>
+ <20181123101556.29888-2-miquel.raynal@bootlin.com>
+ <f14c6e8e-73a9-0b62-0dbc-87d390789c0c@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20181130153833.11421-1-miquel.raynal@bootlin.com>
+In-Reply-To: <f14c6e8e-73a9-0b62-0dbc-87d390789c0c@redhat.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,28 +19,52 @@ List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Jens Axboe <axboe@kernel.dk>, Hans de Goede <hdegoede@redhat.com>
-Cc: devicetree@vger.kernel.org, linux-pm@vger.kernel.org, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-arm-kernel@lists.infradead.org
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Mark Rutland <mark.rutland@arm.com>, Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>, devicetree@vger.kernel.org, Antoine Tenart <antoine.tenart@bootlin.com>, Gregory Clement <gregory.clement@bootlin.com>, linux-pm@vger.kernel.org, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, Jens Axboe <axboe@kernel.dk>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, linux-arm-kernel@lists.infradead.org, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-The SATA IP get its clock from the north-bridge.
-
-Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
----
- arch/arm64/boot/dts/marvell/armada-37xx.dtsi | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/arch/arm64/boot/dts/marvell/armada-37xx.dtsi b/arch/arm64/boot/dts/marvell/armada-37xx.dtsi
-index 036d6fd6c9ef..65bf774516ec 100644
---- a/arch/arm64/boot/dts/marvell/armada-37xx.dtsi
-+++ b/arch/arm64/boot/dts/marvell/armada-37xx.dtsi
-@@ -389,6 +389,7 @@
- 				compatible = "marvell,armada-3700-ahci";
- 				reg = <0xe0000 0x178>;
- 				interrupts = <GIC_SPI 27 IRQ_TYPE_LEVEL_HIGH>;
-+				clocks = <&nb_periph_clk 1>;
- 				status = "disabled";
- 			};
- 
--- 
-2.19.1
+SGkgSGFucywKClRoYW5rcyBmb3IgdGhlIHJldmlldy4KCkhhbnMgZGUgR29lZGUgPGhkZWdvZWRl
+QHJlZGhhdC5jb20+IHdyb3RlIG9uIEZyaSwgMjMgTm92IDIwMTggMTE6MzM6MTUKKzAxMDA6Cgo+
+IEhpIE1pcXVlbCwKPiAKPiBPbiAyMy0xMS0xOCAxMToxNSwgTWlxdWVsIFJheW5hbCB3cm90ZToK
+PiA+IEN1cnJlbnQgaW1wbGVtZW50YXRpb24gb2YgdGhlIGxpYmFoY2kgZG9lcyBub3QgdGFrZSBp
+bnRvIGFjY291bnQgdGhlCj4gPiBuZXcgUEhZIGZyYW1ld29yay4gQ29ycmVjdCB0aGUgc2l0dWF0
+aW9uIGJ5IGFkZGluZyBhIGNhbGwgdG8KPiA+IHBoeV9zZXRfbW9kZSgpIGJlZm9yZSBwaHlfcG93
+ZXJfb24oKSBhbmQgYnkgYWRkaW5nIGNhbGxzIHRvCj4gPiBhaGNpX3BsYXRmb3JtX2VuYWJsZS9k
+aXNhYmxlX3BoeXMoKSBhdCBzdXNwZW5kL3Jlc3VtZV9ob3N0KCkgdGltZS4KPiA+IAo+ID4gU2ln
+bmVkLW9mZi1ieTogTWlxdWVsIFJheW5hbCA8bWlxdWVsLnJheW5hbEBib290bGluLmNvbT4KPiA+
+IC0tLQo+ID4gICBkcml2ZXJzL2F0YS9saWJhaGNpX3BsYXRmb3JtLmMgfCAxMSArKysrKysrKysr
+Kwo+ID4gICAxIGZpbGUgY2hhbmdlZCwgMTEgaW5zZXJ0aW9ucygrKQo+ID4gCj4gPiBkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9hdGEvbGliYWhjaV9wbGF0Zm9ybS5jIGIvZHJpdmVycy9hdGEvbGliYWhj
+aV9wbGF0Zm9ybS5jCj4gPiBpbmRleCA0YjkwMGZjNjU5ZjcuLjlmMzNmNzJiNjc0YiAxMDA2NDQK
+PiA+IC0tLSBhL2RyaXZlcnMvYXRhL2xpYmFoY2lfcGxhdGZvcm0uYwo+ID4gKysrIGIvZHJpdmVy
+cy9hdGEvbGliYWhjaV9wbGF0Zm9ybS5jCj4gPiBAQCAtNTYsNiArNTYsMTIgQEAgc3RhdGljIGlu
+dCBhaGNpX3BsYXRmb3JtX2VuYWJsZV9waHlzKHN0cnVjdCBhaGNpX2hvc3RfcHJpdiAqaHByaXYp
+Cj4gPiAgIAkJaWYgKHJjKQo+ID4gICAJCQlnb3RvIGRpc2FibGVfcGh5czsgIAo+ID4gICA+ICsJ
+CXJjID0gcGh5X3NldF9tb2RlKGhwcml2LT5waHlzW2ldLCBQSFlfTU9ERV9TQVRBKTsgIAo+ID4g
+KwkJaWYgKHJjKSB7Cj4gPiArCQkJcGh5X2V4aXQoaHByaXYtPnBoeXNbaV0pOwo+ID4gKwkJCWdv
+dG8gZGlzYWJsZV9waHlzOwo+ID4gKwkJfQo+ID4gKyAgCj4gCj4gSSBzZWUgdGhhdCBwaHlfc2V0
+X21vZGUgcmV0dXJucyAwIGZvciBkcml2ZXJzIHdoaWNoIGRvIG5vdCBpbXBsZW1lbnQgaXQsCj4g
+c28gdGhpcyBzaG91bGQgYmUgZmluZS4KPiAKPiAKPiA+ICAgCQlyYyA9IHBoeV9wb3dlcl9vbiho
+cHJpdi0+cGh5c1tpXSk7Cj4gPiAgIAkJaWYgKHJjKSB7Cj4gPiAgIAkJCXBoeV9leGl0KGhwcml2
+LT5waHlzW2ldKTsKPiA+IEBAIC03MzgsNiArNzQ0LDggQEAgaW50IGFoY2lfcGxhdGZvcm1fc3Vz
+cGVuZF9ob3N0KHN0cnVjdCBkZXZpY2UgKmRldikKPiA+ICAgCXdyaXRlbChjdGwsIG1taW8gKyBI
+T1NUX0NUTCk7Cj4gPiAgIAlyZWFkbChtbWlvICsgSE9TVF9DVEwpOyAvKiBmbHVzaCAqLyAgCj4g
+PiAgID4gKwlhaGNpX3BsYXRmb3JtX2Rpc2FibGVfcGh5cyhocHJpdik7ICAKPiA+ICsKPiA+ICAg
+CXJldHVybiBhdGFfaG9zdF9zdXNwZW5kKGhvc3QsIFBNU0dfU1VTUEVORCk7Cj4gPiAgIH0KPiA+
+ICAgRVhQT1JUX1NZTUJPTF9HUEwoYWhjaV9wbGF0Zm9ybV9zdXNwZW5kX2hvc3QpOyAgCj4gCj4g
+SSdtIGFmcmFpZCB0aGF0IHRoaXMgYW5kIHRoZSBtYXRjaGluZyBjaGFuZ2UgaW4gYWhjaV9wbGF0
+Zm9ybV9zdXNwZW5kX2hvc3QKPiBuZWVkcyB0byBiZSBndWFyZGVkIGJ5IGEgZmxhZywgdGhlcmUg
+YXJlIHF1aXRlIGEgZmV3IHNhdGEgZHJpdmVycwo+IHVzaW5nIHRoZSBsaWJhaGNpX3BsYXRmb3Jt
+IGZ1bmN0aW9ucyBhcyB3ZWxsIGFzIHF1aXRlIGEgZmV3IHNhdGEgZHJpdmVycwo+IGNvbWJpbmlu
+ZyB0aGlzIHdpdGggdXNpbmcgcGh5IGRyaXZlcnMuCj4gCj4gSSdtIHdvcnJpZWQgdGhhdCBkb2lu
+ZyB0aGlzIHVuY29uZGl0aW9uYWxseSBvbiBkcml2ZXJzIHdoaWNoIGhhdmUKPiBub3QgYmVlbiB0
+ZXN0ZWQgd2l0aCB0aGlzIGNoYW5nZSBteSBicmVhayB0aGluZ3MuCj4gCj4gSSB0aGluayBpdCBt
+aWdodCBiZSBjbGVhbmVzdCB0byBleHRlbmQgdGhlIGV4aXN0aW5nIGZsYWdzIHBhc3NlZAo+IHRv
+IGFoY2lfcGxhdGZvcm1fZ2V0X3Jlc291cmNlcyB3aXRoIGEgZmxhZyBmb3IgdGhpcyBhbmQgc3Rv
+cmluZyB0aGVtCj4gc29tZXdoZXJlIGluIGFoY2lfaG9zdF9wcml2IHNvIHRoYXQgdGhlIHN1c3Bl
+bmQvcmVzdW1lIGZ1bmN0aW9ucyBjYW4KPiBnZXQgdG8gdGhlbS4KCkkgdW5kZXJzdGFuZCB5b3Vy
+IGNvbmNlcm4sIHBsZWFzZSBoYXZlIGEgbG9vayBhdCB0aGUgdjIgd2hpY2ggYWRkcmVzc2VzCnRo
+aXMgdGhlIHdheSB5b3Ugc3VnZ2VzdGVkLgoKClRoYW5rcywKTWlxdcOobAoKX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWls
+aW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0
+cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
