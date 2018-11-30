@@ -1,14 +1,13 @@
 From: Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: Re: [PATCH 5/7] ata: ahci: mvebu: add clock support
-Date: Thu, 29 Nov 2018 15:02:41 +0100
-Message-ID: <20181129150241.52e7ae2f@xps13>
-References: <20181123101556.29888-1-miquel.raynal@bootlin.com>
- <20181123101556.29888-6-miquel.raynal@bootlin.com>
+Subject: [PATCH v2 2/6] ata: ahci: mvebu: remove stale comment
+Date: Fri, 30 Nov 2018 16:38:29 +0100
+Message-ID: <20181130153833.11421-3-miquel.raynal@bootlin.com>
+References: <20181130153833.11421-1-miquel.raynal@bootlin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20181123101556.29888-6-miquel.raynal@bootlin.com>
+In-Reply-To: <20181130153833.11421-1-miquel.raynal@bootlin.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -19,32 +18,44 @@ List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
 To: Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Jens Axboe <axboe@kernel.dk>, Hans de Goede <hdegoede@redhat.com>
-Cc: devicetree@vger.kernel.org, linux-pm@vger.kernel.org, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, linux-arm-kernel@lists.infradead.org
+Cc: devicetree@vger.kernel.org, linux-pm@vger.kernel.org, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-SGVsbG8sCgpNaXF1ZWwgUmF5bmFsIDxtaXF1ZWwucmF5bmFsQGJvb3RsaW4uY29tPiB3cm90ZSBv
-biBGcmksIDIzIE5vdiAyMDE4CjExOjE1OjU0ICswMTAwOgoKPiBBZGQgY2xvY2sgc3VwcG9ydCB0
-byB0aGUgYWhjaV9tdmVidS5jIGRyaXZlci4gVGhpcyBpcyBuZWVkZWQgaW4gb3JkZXIKPiB0byBn
-ZXQgc3VzcGVuZCB0byBSQU0gd29ya2luZy4KPiAKPiBTaWduZWQtb2ZmLWJ5OiBNaXF1ZWwgUmF5
-bmFsIDxtaXF1ZWwucmF5bmFsQGJvb3RsaW4uY29tPgo+IC0tLQo+ICBkcml2ZXJzL2F0YS9haGNp
-X212ZWJ1LmMgfCAxMCArKysrKysrKysrCj4gIDEgZmlsZSBjaGFuZ2VkLCAxMCBpbnNlcnRpb25z
-KCspCj4gCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvYXRhL2FoY2lfbXZlYnUuYyBiL2RyaXZlcnMv
-YXRhL2FoY2lfbXZlYnUuYwo+IGluZGV4IDkwMjk3MWJmZTMwMS4uY2FkMzU4MDZjM2MyIDEwMDY0
-NAo+IC0tLSBhL2RyaXZlcnMvYXRhL2FoY2lfbXZlYnUuYwo+ICsrKyBiL2RyaXZlcnMvYXRhL2Fo
-Y2lfbXZlYnUuYwo+IEBAIC0xOTUsNiArMTk1LDE2IEBAIHN0YXRpYyBpbnQgYWhjaV9tdmVidV9w
-cm9iZShzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2KQo+ICAJaWYgKCFocHJpdi0+cGxhdF9k
-YXRhKQo+ICAJCXJldHVybiAtRUlOVkFMOwo+ICAKPiArCS8qIFRoZSBjbG9jayBwcm9wZXJ0eSBp
-cyBhYnNlbnQgaW4gb2xkIGJpbmRpbmdzICovCj4gKwlocHJpdi0+Y2xrc1swXSA9IGRldm1fY2xr
-X2dldCgmcGRldi0+ZGV2LCBOVUxMKTsKPiArCWlmIChJU19FUlIoaHByaXYtPmNsa3NbMF0pKSB7
-Cj4gKwkJaWYgKFBUUl9FUlIoaHByaXYtPmNsa3NbMF0pID09IC1FUFJPQkVfREVGRVIpCj4gKwkJ
-CXJldHVybiBQVFJfRVJSKGhwcml2LT5jbGtzWzBdKTsKPiArCj4gKwkJZGV2X3dhcm4oJnBkZXYt
-PmRldiwgIm5vIGNsb2NrIGF2YWlsYWJsZVxuIik7Cj4gKwkJaHByaXYtPmNsa3NbMF0gPSBOVUxM
-Owo+ICsJfQo+ICsKCkR1cmluZyBhIGRlYnVnIHNlc3Npb24gYWJvdXQgY2xvY2sgZGV2aWNlIGxp
-bmtzIEkgcmVhbGl6ZWQgdGhpcyBwYXRjaAp3YXMgbm90IG5lZWRlZC4gVGhlIGNsa19nZXQoKSBv
-biBocHJpdi0+Y2xrc1sqXSBpcyBkb25lIGluCmxpYmFoY2lfcGxhdGZvcm0uYyBpbiBhaGNpX3Bs
-YXRmb3JtX2dldF9yZXNvdXJjZXMoKSBzbyB0aGlzIGlzCnJlZHVuZGFudC4KCkknbGwgZml4IGl0
-IGluIHRoZSB2Mi4KCj4gIAlyYyA9IGFoY2lfcGxhdGZvcm1fZW5hYmxlX3Jlc291cmNlcyhocHJp
-dik7Cj4gIAlpZiAocmMpCj4gIAkJcmV0dXJuIHJjOwoKClRoYW5rcywKTWlxdcOobAoKX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5l
-bCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6
-Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
+For Armada-38x (32-bit) SoCs, PM platform support has been added since:
+commit 32f9494c9dfd ("ARM: mvebu: prepare pm-board.c for the
+                      introduction of Armada 38x support")
+commit 3cbd6a6ca81c ("ARM: mvebu: Add standby support")
+
+For Armada 64-bit SoCs, like the A3700 also using this AHCI driver, PM
+platform support has always existed.
+
+There are even suspend/resume hooks in this driver since:
+commit d6ecf15814888 ("ata: ahci_mvebu: add suspend/resume support")
+
+Remove the stale comment at the end of this driver stating that all
+the above does not exist yet.
+
+Fixes: d6ecf15814888 ("ata: ahci_mvebu: add suspend/resume support")
+Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
+---
+ drivers/ata/ahci_mvebu.c | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/drivers/ata/ahci_mvebu.c b/drivers/ata/ahci_mvebu.c
+index f9cb51be38eb..128d6f22926d 100644
+--- a/drivers/ata/ahci_mvebu.c
++++ b/drivers/ata/ahci_mvebu.c
+@@ -197,11 +197,6 @@ static const struct of_device_id ahci_mvebu_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, ahci_mvebu_of_match);
+ 
+-/*
+- * We currently don't provide power management related operations,
+- * since there is no suspend/resume support at the platform level for
+- * Armada 38x for the moment.
+- */
+ static struct platform_driver ahci_mvebu_driver = {
+ 	.probe = ahci_mvebu_probe,
+ 	.remove = ata_platform_remove_one,
+-- 
+2.19.1
