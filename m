@@ -1,34 +1,52 @@
-From: Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>
-Subject: Re: [PATCH RFC 00/15] Zero ****s, hugload of hugs <3
-Date: Fri, 30 Nov 2018 15:28:54 -0800
-Message-ID: <20181130232854.GA464@linux.intel.com>
-References: <20181130195652.7syqys76646kpaph@linux-r8p5>
- <20181130205521.GA21006@linux.intel.com>
- <1543611662.3031.20.camel@HansenPartnership.com>
- <20181130214405.GG23772@linux.intel.com>
- <1543615069.3031.27.camel@HansenPartnership.com>
- <20181130221219.GA25537@linux.intel.com>
- <20181130151459.3ca2f5c8@lwn.net>
- <20181130222605.GA26261@linux.intel.com>
- <1543617045.3031.41.camel@HansenPartnership.com>
- <20181130224019.GA27562@linux.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20181130224019.GA27562@linux.intel.com>
-Sender: netdev-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jonathan Corbet <corbet@lwn.net>, Davidlohr Bueso <dave@stgolabs.net>, Kees Cook <keescook@chromium.org>, LKML <linux-kernel@vger.kernel.org>, Amir Goldstein <amir73il@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Daniel Axtens <dja@axtens.net>, "David S. Miller" <davem@davemloft.net>, Dominik Brodowski <linux@dominikbrodowski.net>, Maling list - DRI developers <dri-devel@lists.freedesktop.org>, Eric Dumazet <edumazet@google.com>, federico.vaga@vaga.pv.it, Geert Uytterhoeven <geert+renesas@glider.be>, Helge Deller <deller@gmx.de>, Joshua Kinard <kumba@gentoo.org>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>linux-
+From: Yangtao Li <tiny.windzz@gmail.com>
+Subject: [PATCH] ide: Change to use DEFINE_SHOW_ATTRIBUTE macro
+Date: Fri, 30 Nov 2018 21:20:48 -0500
+Message-ID: <20181201022048.5106-1-tiny.windzz@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: davem@davemloft.net
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Yangtao Li <tiny.windzz@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Fri, Nov 30, 2018 at 02:40:19PM -0800, Jarkko Sakkinen wrote:
-> Got you... Well I now read the 2nd amendment now through, and yeah, kind
-> of way I work/function anyway.
+Use DEFINE_SHOW_ATTRIBUTE macro to simplify the code.
 
-Ugh, looked up the word from dictionary for something that makes
-additions to some guidelines because did not know the english word.
-Not meant as a political reference of any kind. Just don't know
-any better English word.
+Signed-off-by: Yangtao Li <tiny.windzz@gmail.com>
+---
+ drivers/ide/ide-proc.c | 15 ++-------------
+ 1 file changed, 2 insertions(+), 13 deletions(-)
 
-/Jarkko
+diff --git a/drivers/ide/ide-proc.c b/drivers/ide/ide-proc.c
+index 45c997430332..4c8c7a620d08 100644
+--- a/drivers/ide/ide-proc.c
++++ b/drivers/ide/ide-proc.c
+@@ -614,18 +614,7 @@ static int ide_drivers_show(struct seq_file *s, void *p)
+ 	return 0;
+ }
+ 
+-static int ide_drivers_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, &ide_drivers_show, NULL);
+-}
+-
+-static const struct file_operations ide_drivers_operations = {
+-	.owner		= THIS_MODULE,
+-	.open		= ide_drivers_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= single_release,
+-};
++DEFINE_SHOW_ATTRIBUTE(ide_drivers);
+ 
+ void proc_ide_create(void)
+ {
+@@ -634,7 +623,7 @@ void proc_ide_create(void)
+ 	if (!proc_ide_root)
+ 		return;
+ 
+-	proc_create("drivers", 0, proc_ide_root, &ide_drivers_operations);
++	proc_create("drivers", 0, proc_ide_root, &ide_drivers_fops);
+ }
+ 
+ void proc_ide_destroy(void)
+-- 
+2.17.0
