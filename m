@@ -1,99 +1,154 @@
-From: Ric Wheeler <ricwheeler@gmail.com>
-Subject: Re: block layer API for file system creation - when to
- use multidisk mode
-Date: Sat, 1 Dec 2018 15:52:31 -0500
-Message-ID: <80505ddf-8c6f-50d7-1e6d-2e50e7349c6f@gmail.com>
-References: <67627995-714c-5c38-a796-32b503de7d13@sandeen.net>
-	<20181005232710.GH12041@dastard>
-	<CAOi1vP-Z7xZk1YvWHYWQGOHfyWccFCkyn8je0HBvGhGuUrXmaQ@mail.gmail.com>
-	<20181006232037.GB18095@dastard>
-	<36bc3f17-e7d1-ce8b-2088-36ff5d7b1e8b@sandeen.net>
-	<0290ec9f-ab2b-7c1b-faaf-409d72f99e5f@gmail.com>
-	<20181129214851.GU6311@dastard>
-	<39031e68-3936-b5e1-bcb6-6fdecc5988c1@gmail.com>
-	<20181130022510.GW6311@dastard>
-	<3da04164-a89f-f4c0-1529-eab12b3226e1@gmail.com>
-	<20181201043509.GZ6311@dastard>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH v2 1/6] ata: libahci_platform: comply to PHY framework
+Date: Sun, 2 Dec 2018 14:19:49 +0100
+Message-ID: <0517746d-3fca-db57-8dca-8976910dad9c@redhat.com>
+References: <20181130153833.11421-1-miquel.raynal@bootlin.com>
+ <20181130153833.11421-2-miquel.raynal@bootlin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Content-Transfer-Encoding: base64
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20181201043509.GZ6311@dastard>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20181130153833.11421-2-miquel.raynal@bootlin.com>
 Content-Language: en-US
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Eric Sandeen <sandeen@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, Eric Sandeen <sandeen@sandeen.net>, xfs <linux-xfs@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, linux-block@vger.kernel.org, Mark Nelson <mnelson@redhat.com>, Ilya Dryomov <idryomov@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Miquel Raynal <miquel.raynal@bootlin.com>, Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Jens Axboe <axboe@kernel.dk>
+Cc: devicetree@vger.kernel.org, linux-pm@vger.kernel.org, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-T24gMTEvMzAvMTggMTE6MzUgUE0sIERhdmUgQ2hpbm5lciB3cm90ZToKPiBPbiBGcmksIE5vdiAz
-MCwgMjAxOCBhdCAwMTowMDo1MlBNIC0wNTAwLCBSaWMgV2hlZWxlciB3cm90ZToKPj4gT24gMTEv
-MzAvMTggNzo1NSBBTSwgRGF2ZSBDaGlubmVyIHdyb3RlOgo+Pj4gT24gVGh1LCBOb3YgMjksIDIw
-MTggYXQgMDY6NTM6MTRQTSAtMDUwMCwgUmljIFdoZWVsZXIgd3JvdGU6Cj4+Pj4gT3RoZXIgZmls
-ZSBzeXN0ZW1zIGFsc28gbmVlZCB0bwo+Pj4+IGFjY29tbW9kYXRlL3Byb2JlIGJlaGluZCB0aGUg
-ZmljdGl0aW91cyB2aXNpYmxlIHN0b3JhZ2UgZGV2aWNlCj4+Pj4gbGF5ZXIuLi4gU3BlY2lmaWNh
-bGx5LCBpcyB0aGVyZSBzb21ldGhpbmcgd2UgY2FuIGFkZCBwZXIgYmxvY2sKPj4+PiBkZXZpY2Ug
-dG8gaGVscCBoZXJlPyBOdW1iZXIgb2YgaW5kZXBlbmRlbnQgZGV2aWNlcwo+Pj4gVGhhdCdzIGhv
-dyBta2ZzLnhmcyB1c2VkIHRvIGRvIHN0cmlwZSB1bml0L3N0cmlwZSB3aWR0aCBjYWxjdWxhdGlv
-bnMKPj4+IGF1dG9tYXRpY2FsbHkgb24gTUQgZGV2aWNlcyBiYWNrIGluIHRoZSAyMDAwcy4gV2Ug
-Z290IHJpZCBvZiB0aGF0Cj4+PiBmb3IgbW9yZSBnZW5lcmFseSBhcHBsaWNhYmxlIGNvbmZpZ3Vy
-YXRpb24gaW5mb3JtYXRpb24gc3VjaCBhcwo+Pj4gbWluaW11bS9vcHRpbWFsIElPIHNpemVzIHNv
-IHdlIGNvdWxkIGV4cG9zZSBlcXVpdmFsZW50IGFsaWdubWVudAo+Pj4gaW5mb3JtYXRpb24gZnJv
-bSBsb3RzIG9mIGRpZmZlcmVudCB0eXBlcyBvZiBzdG9yYWdlIGRldmljZS4uLi4KPj4+Cj4+Pj4g
-b3IgYSBtYXAgb2YKPj4+PiB0aG9zZSByZWdpb25zPwo+Pj4gTm90IHN1cmUgd2hhdCB0aGlzIG1l
-YW5zIG9yIGhvdyB3ZSdkIHVzZSBpdC4KPj4+IERhdmUuCj4+IFdoYXQgSSB3YXMgdGhpbmtpbmcg
-b2Ygd2FzIGEgd2F5IG9mIGdpdmluZyB1cCBhIGdvb2Qgb3V0bGluZSBvZiBob3cKPj4gbWFueSBp
-bmRlcGVuZGVudCByZWdpb25zIHRoYXQgYXJlIGJlaGluZCBvbmUgInZpcnR1YWwiIGJsb2NrIGRl
-dmljZQo+PiBsaWtlIGEgY2VwaCByYmQgb3IgZGV2aWNlIG1hcHBlciBkZXZpY2UuIE15IGFzc3Vt
-cHRpb24gaXMgdGhhdCB3ZQo+PiBhcmUgdHJ5aW5nIHRvIGxheSBkb3duIChhdCBsZWFzdCBvbmUp
-IGFsbG9jYXRpb24gZ3JvdXAgcGVyIHJlZ2lvbi4KPj4KPj4gV2hhdCB3ZSBuZWVkIHRvIG9wdGlt
-aXplIGZvciBpbmNsdWRlczoKPj4KPj4gIMKgwqDCoCAqIGhvdyBtYW55IGluZGVwZW5kZW50IHJl
-Z2lvbnMgYXJlIHRoZXJlPwo+Pgo+PiAgwqDCoMKgICogd2hhdCBhcmUgdGhlIGJvdW5kYXJpZXMg
-b2YgdGhvc2UgcmVnaW9ucz8KPj4KPj4gIMKgwqDCoCAqIG9wdGltYWwgSU8gc2l6ZS9hbGlnbm1l
-bnQvZXRjCj4+Cj4+IFNvbWUgb2YgdGhhdCB3ZSBoYXZlLCBidXQgdGhlIGN1cnJlbnQgYXNzdW1w
-dGlvbnMgZG9uJ3Qgd29yayB3ZWxsCj4+IGZvciBhbGwgZGV2aWNlIHR5cGVzLgo+IE9oLCBzbyBl
-c3NlbnRpYWwgImluZGVwZW5kZW50IHJlZ2lvbnMiIG9mIHRoZSBzdG9yYWdlIGRldmljZS4gSQo+
-IHdyb3RlIHRoaXMgaW4gMjAwODoKPgo+IGh0dHA6Ly94ZnMub3JnL2luZGV4LnBocC9SZWxpYWJs
-ZV9EZXRlY3Rpb25fYW5kX1JlcGFpcl9vZl9NZXRhZGF0YV9Db3JydXB0aW9uI0ZhaWx1cmVfRG9t
-YWlucwo+Cj4gVGhpcyB3YXMgZGVyaXZlZCBmcm9tIHRoZSBpZGVhcyBpbiBwcm90b3R5cGUgY29k
-ZSBJIHdyb3RlIGluIH4yMDA3Cj4gdG8gdHJ5IHRvIG9wdGltaXNlIGZpbGUgbGF5b3V0IGFuZCBs
-b2FkIGRpc3RyaWJ1dGlvbiBhY3Jvc3MgbGluZWFyCj4gY29uY2F0cyBvZiBtdWx0aS1UQiBSQUlE
-NiBsdW5zLiBTb21lIG9mIHRoYXQgd29yayB3YXMgcHVibGlzaGVkCj4gbG9uZyBhZnRlciBJIGxl
-ZnQgU0dJOgo+Cj4gaHR0cHM6Ly9tYXJjLmluZm8vP2w9bGludXgteGZzJm09MTIzNDQxMTkxMjIy
-NzE0Jnc9Mgo+Cj4gRXNzZW50aWFsbHksIGluZGVwZW5kZW50IHJlZ2lvbnMgLSBjYWxsZWQgIkxv
-Z2ljYWwKPiBFeHRlbnNpb24gR3JvdXBzIiwgb3IgImxlZ3MiIG9mIHRoZSBmaWxlc3lzdGVtIC0g
-YW5kIHdvdWxkCj4gZXNzZW50aWFsbHkgYmUgYW4gYWdncmVnYXRpb24gb2YgQUdzIGluIHRoYXQg
-cmVnaW9uLiBUaGUKPiBjb25jZXB0IHdhcyB0aGF0IHdlJ2QgbW92ZSB0aGUgZ2VvbWV0cnkgaW5m
-b3JtYXRpb24gZnJvbSB0aGUKPiBzdXBlcmJsb2NrIGludG8gdGhlIGxlZ3MsIGFuZCBzbyB3ZSBj
-b3VsZCBoYXZlIGRpZmZlcmVudCBBRwo+IGdlb2VtZXRyeSBvcHRpbWllcyBmb3IgZWFjaCBpbmRl
-cGVuZGVudCBsZWcgb2YgdGhlIGZpbGVzeXN0ZW0uCj4KPiBlZyB0aGUgU1NEIHJlZ2lvbiBjb3Vs
-ZCBoYXZlIG51bWVyb3VzIHNtYWxsIEFHcywgdGhlIGxhcmdlLAo+IGNvbnRpZ3VvdXMgUkFJRDYg
-cGFydCBjb3VsZCBoYXZlIG1heGltYWxseSBzaXplIEFHcyBvciBldmVuIG1ha2UgdXNlCj4gb2Yg
-dGhlIFJUIGFsbG9jYXRvciBmb3IgZnJlZSBzcGFjZSBtYW5hZ2VtZW50IGluc3RlYWQgb2YgdGhl
-Cj4gQUcvYnRyZWUgYWxsb2NhdG9yLiBCYXNpY2FsbHkgaXQgd2FzIHNlZW4gYXMgYSBtZWNoYW5p
-c20gZm9yIGdldHRpbmcKPiByaWQgb2YgbmVlZGluZyB0byBzcGVjaWZ5IGJsb2NrIGRldmljZXMg
-YXMgY29tbWFuZCBsaW5lIG9yIG1vdW50Cj4gb3B0aW9ucy4KPgo+IEZ1bmRhbWVudGFsbHksIHRo
-b3VnaCwgaXQgd2FzIGJhc2VkIG9uIHRoZSBjb25jZXB0IHRoYXQgTGludXggd291bGQKPiBldmVu
-dHVhbGx5IGdyb3cgYW4gaW50ZXJmYWNlIGZvciB0aGUgYmxvY2sgZGV2aWNlL3ZvbHVtZSBtYW5h
-Z2VyIHRvCj4gdGVsbCB0aGUgZmlsZXN5c3RlbSB3aGVyZSB0aGUgaW5kZXBlbmRlbnQgcmVnaW9u
-cyBpbiB0aGUgZGV2aWNlCj4gd2VyZSgqKSwgYnV0IHRoYXQncyBub3Qgc29tZXRoaW5nIHRoYXQg
-aGFzIGV2ZXIgYXBwZWFyZWQuIElmIHlvdSBjYW4KPiBwcm92aWRlIGFuIGluZGVwZWRlbnQgcmVn
-aW9uIG1hcCBpbiBhbiBlYXN5IHRvIGRpZ2VzdCBmb3JtYXQgKGUuZy4gYQo+IHNldCBvZiB7b2Zm
-c2V0LCBsZW4sIGdlb21ldHJ5fSB0dXBsZXMpLCB0aGVuIHdlIGNhbiBvYnZpb3VzbHkgbWFrZQo+
-IHVzZSBvZiBpdCBpbiBYRlMuLi4uCj4KPiBDaGVlcnMsCj4KPiBEYXZlLgo+Cj4gKCopIEJhc2lj
-YWxseSBwcm92aWRlIGEgbGludXggdmVyc2lvbiBvZiB0aGUgZnVuY3Rpb25hbGl0eSBJcml4Cj4g
-dm9sdW1lIG1hbmFnZXJzIGhhZCBwcm92aWRlZCBmaWxlc3lzdGVtcyBzaW5jZSB0aGUgbGF0ZSA4
-MHMuLi4uCj4KSGkgRGF2ZSwKClRoaXMgaXMgZXhhY3RseSB0aGUga2luZCBvZiB0aGluZyBJIHRo
-aW5rIHdvdWxkIGJlIHVzZWZ1bC7CoCBXZSBtaWdodCB3YW50IHRvIApoYXZlIGEgZGlzdGluY3Qg
-dmFsdWUgKGxpa2UgdGhlIHJvdGF0aW9uYWwpIHRoYXQgaW5kaWNhdGVzIHRoaXMgaXMgYSBkZXZp
-Y2Ugd2l0aCAKbXVsdGlwbGUgImxlZ3MiIHNvIHRoYXQgbm9ybWFsbHkgd2UgcXVlcnkgdGhhdCBh
-bmQgZG9uJ3QgaGF2ZSB0byBsb29rIGZvciB0aGUgCm1vcmUgY29tcGxpY2F0ZWQgaW5mb3JtYXRp
-b24uCgpSZWdhcmRzLAoKUmljCgoKLS0KZG0tZGV2ZWwgbWFpbGluZyBsaXN0CmRtLWRldmVsQHJl
-ZGhhdC5jb20KaHR0cHM6Ly93d3cucmVkaGF0LmNvbS9tYWlsbWFuL2xpc3RpbmZvL2RtLWRldmVs
+Hi,
+
+On 30-11-18 16:38, Miquel Raynal wrote:
+> Current implementation of the libahci does not take into account the
+> new PHY framework. Correct the situation by adding a call to
+> phy_set_mode() before phy_power_on() and by adding calls to
+> ahci_platform_enable/disable_phys() at suspend/resume_host() time.
+> 
+> Suggested-by: Grzegorz Jaszczyk <jaz@semihalf.com>
+> Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
+
+Much better. Some remarks inline.
+
+> ---
+>   drivers/ata/ahci.h             |  2 ++
+>   drivers/ata/libahci_platform.c | 19 ++++++++++++++++++-
+>   2 files changed, 20 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> index ef356e70e6de..982638b37fee 100644
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -254,6 +254,8 @@ enum {
+>   	AHCI_HFLAG_IS_MOBILE		= (1 << 25), /* mobile chipset, use
+>   							SATA_MOBILE_LPM_POLICY
+>   							as default lpm_policy */
+> +	AHCI_HFLAG_MANAGE_PHYS		= (1 << 26), /* let the core manage the
+> +							PHYs when relevant */
+
+Using a hflag for this is a good idea, but the MANAGE_PHYS names is a bit
+generic, even if this is not set then ahci_platform_enable_resources() will
+still enable the phy. So I would name this AHCI_HFLAG_SUSPEND_PHYS to make
+clear this only influences suspend/resume behavior.
+
+Also see below.
+
+>   	/* ap->flags bits */
+>   
+> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> index 4b900fc659f7..f5a64eb1fea8 100644
+> --- a/drivers/ata/libahci_platform.c
+> +++ b/drivers/ata/libahci_platform.c
+> @@ -56,6 +56,12 @@ static int ahci_platform_enable_phys(struct ahci_host_priv *hpriv)
+>   		if (rc)
+>   			goto disable_phys;
+>   
+> +		rc = phy_set_mode(hpriv->phys[i], PHY_MODE_SATA);
+> +		if (rc) {
+> +			phy_exit(hpriv->phys[i]);
+> +			goto disable_phys;
+> +		}
+> +
+>   		rc = phy_power_on(hpriv->phys[i]);
+>   		if (rc) {
+>   			phy_exit(hpriv->phys[i]);
+> @@ -378,7 +384,8 @@ static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
+>    * 3) 0 - AHCI_MAX_CLKS clocks, as specified in the devs devicetree node,
+>    *    or for non devicetree enabled platforms a single clock
+>    * 4) resets, if flags has AHCI_PLATFORM_GET_RESETS (optional)
+> - * 5) phys (optional)
+> + * 5) phys (optional), PHY handling during suspend/resume will be skipped if the
+> + *    flag AHCI_HFLAG_MANAGE_PHYS is missing.
+>    *
+>    * RETURNS:
+>    * The allocated ahci_host_priv on success, otherwise an ERR_PTR value
+> @@ -458,6 +465,9 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+>   		}
+>   	}
+>   
+> +	if (flags & AHCI_HFLAG_MANAGE_PHYS)
+> +		hpriv->flags |= AHCI_HFLAG_MANAGE_PHYS;
+> +
+>   	hpriv->nports = child_nodes = of_get_child_count(dev->of_node);
+>   
+>   	/*
+
+Interpreting a flag passed to ahci_platform_get_resources using a
+AHCI_HFLAG_* mask is asking for trouble in the future.
+
+Since you are using a hflag for this, you can just drop this chunk / change
+and in the caller of ahci_platform_get_resources() do:
+
+	hpriv = ahci_platform_get_resources(pdev, ...);
+	if (IS_ERR(hpriv))
+		...
+
+	hpriv->flags |= AHCI_HFLAG_MANAGE_PHYS;
+
+Settting hflags like this after calling ahci_platform_get_resources()
+is already done in several place.
+
+Once this is changed, this patch looks good to go upstream to me.
+
+Regards,
+
+Hans
+
+
+
+
+> @@ -738,6 +748,9 @@ int ahci_platform_suspend_host(struct device *dev)
+>   	writel(ctl, mmio + HOST_CTL);
+>   	readl(mmio + HOST_CTL); /* flush */
+>   
+> +	if (hpriv->flags & AHCI_HFLAG_MANAGE_PHYS)
+> +		ahci_platform_disable_phys(hpriv);
+> +
+>   	return ata_host_suspend(host, PMSG_SUSPEND);
+>   }
+>   EXPORT_SYMBOL_GPL(ahci_platform_suspend_host);
+> @@ -756,6 +769,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_suspend_host);
+>   int ahci_platform_resume_host(struct device *dev)
+>   {
+>   	struct ata_host *host = dev_get_drvdata(dev);
+> +	struct ahci_host_priv *hpriv = host->private_data;
+>   	int rc;
+>   
+>   	if (dev->power.power_state.event == PM_EVENT_SUSPEND) {
+> @@ -766,6 +780,9 @@ int ahci_platform_resume_host(struct device *dev)
+>   		ahci_init_controller(host);
+>   	}
+>   
+> +	if (hpriv->flags & AHCI_HFLAG_MANAGE_PHYS)
+> +		ahci_platform_enable_phys(hpriv);
+> +
+>   	ata_host_resume(host);
+>   
+>   	return 0;
+> 
