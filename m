@@ -1,32 +1,38 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] Malformatted switch statment
-Date: Sun, 02 Dec 2018 22:04:12 -0800 (PST)
-Message-ID: <20181202.220412.1682693749796493451.davem@davemloft.net>
-References: <20181028164546.17178-1-joris.gutjahr@gmail.com>
+Subject: [GIT] IDE
+Date: Sun, 02 Dec 2018 22:31:52 -0800 (PST)
+Message-ID: <20181202.223152.888201577912576435.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181028164546.17178-1-joris.gutjahr@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: joris.gutjahr@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-From: Joris Gutjahr <joris.gutjahr@gmail.com>
-Date: Sun, 28 Oct 2018 17:45:46 +0100
 
-> I fixed this coding style error I got after running
-> checkpatch --file on this file.
-> The problem was that the whole case block was on one line.
-> 
-> Signed-off-by: Joris Gutjahr <joris.gutjahr@gmail.com>
+A missing of_node_put() and a small cleanup.
 
-Frankly I think the existing code is more compact and easier
-to read and understand.
+Please pull, thanks!
 
-Checkpatch is a tool, and it's results need be interpreated
-and evaluated by human beings.  It's not to be taken as the
-final verdict.
+The following changes since commit 2595646791c319cadfdbf271563aac97d0843dc7:
 
-I'm not applying this, sorry.
+  Linux 4.20-rc5 (2018-12-02 15:07:55 -0800)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git 
+
+for you to fetch changes up to 94d0fb159da94cb4522e14d6004bb7acf2ff0387:
+
+  ide: Change to use DEFINE_SHOW_ATTRIBUTE macro (2018-12-02 22:09:09 -0800)
+
+----------------------------------------------------------------
+Yangtao Li (2):
+      ide: pmac: add of_node_put()
+      ide: Change to use DEFINE_SHOW_ATTRIBUTE macro
+
+ drivers/ide/ide-proc.c | 15 ++-------------
+ drivers/ide/pmac.c     |  1 +
+ 2 files changed, 3 insertions(+), 13 deletions(-)
