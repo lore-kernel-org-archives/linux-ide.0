@@ -1,49 +1,61 @@
-From: Abuse <abuse@2.abuse.bgcomp.co.uk>
-Subject: Re: [PATCH RFC 00/15] Zero ****s, hugload of hugs <3
-Date: Fri, 30 Nov 2018 20:39:01 +0000
-Message-ID: <2007856.n5V9iKLVsV@eth7>
-References: <CAGXu5j+jBNBsD3pvUSfEh6Lc5T1YMpbM0HeG1c6BHiJe+cKVOQ@mail.gmail.com>
- <d7c34289-f03a-b641-cc9c-00395306511d@kernel.dk>
- <20181130.123507.1940310466680455876.davem@davemloft.net>
+From: Miquel Raynal <miquel.raynal@bootlin.com>
+Subject: [PATCH v3 2/7] ata: ahci: mvebu: remove stale comment
+Date: Tue,  4 Dec 2018 20:28:26 +0100
+Message-ID: <20181204192831.12440-3-miquel.raynal@bootlin.com>
+References: <20181204192831.12440-1-miquel.raynal@bootlin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-In-Reply-To: <20181130.123507.1940310466680455876.davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/nouveau>,
- <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/nouveau>
-List-Post: <mailto:nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/nouveau>,
- <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "Nouveau" <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-To: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Cc: linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, geert+renesas-gXvu3+zWzMSzQB+pC5nmwQ@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, amir73il-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, edumazet-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, makita.toshiaki-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org, yanjun.zhu-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, dave-h16yJtLeMjHk1uMJSBkQmQ@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, corbet-T1hC0tSOHrs@public.gmane.org, deller-Mmb7MZpHnFY@public.gmane.org, rostedt-nx8X9YLhiw1AfugRpC6u6w@public.gmane.org, federico.vaga-VIMSii5OdOuonA0d6jMUrA@public.gmane.org, yhs-b10kYP2dOMg@public.gmane.org, pabeni-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, pmladek-IBi9RG/b67k@public.gmane.org, keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, shannon.nelson-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, sean.wang-NuS5LvNUpcJWk0Htik3J/w@public.gmane.org, linux-X3ehHDuj6sIIGcDfoQAp7OTW4wlIGRCZ@public.gmane.org, sbrivio-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-m68k-cunTk1MwBs8S/qaLPR03pWD2FQJk+8+b@public.gmane.org, jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, matthias.bgg-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, dja-Yfaxwxk/+vWsTnJN9+BGXg@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, willemb-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org, linux-parisc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev@vger
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20181204192831.12440-1-miquel.raynal@bootlin.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Jens Axboe <axboe@kernel.dk>, Hans de Goede <hdegoede@redhat.com>
+Cc: devicetree@vger.kernel.org, linux-pm@vger.kernel.org, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-T24gRnJpZGF5LCAzMCBOb3ZlbWJlciAyMDE4IDIwOjM1OjA3IEdNVCBEYXZpZCBNaWxsZXIgd3Jv
-dGU6Cj4gRnJvbTogSmVucyBBeGJvZSA8YXhib2VAa2VybmVsLmRrPgo+IERhdGU6IEZyaSwgMzAg
-Tm92IDIwMTggMTM6MTI6MjYgLTA3MDAKPiAKPiA+IE9uIDExLzMwLzE4IDEyOjU2IFBNLCBEYXZp
-ZGxvaHIgQnVlc28gd3JvdGU6Cj4gPj4gT24gRnJpLCAzMCBOb3YgMjAxOCwgS2VlcyBDb29rIHdy
-b3RlOgo+ID4+IAo+ID4+PiBPbiBGcmksIE5vdiAzMCwgMjAxOCBhdCAxMToyNyBBTSBKYXJra28g
-U2Fra2luZW4KPiA+Pj4gPGphcmtrby5zYWtraW5lbkBsaW51eC5pbnRlbC5jb20+IHdyb3RlOgo+
-ID4+Pj4KPiA+Pj4+IEluIG9yZGVyIHRvIGNvbXBseSB3aXRoIHRoZSBDb0MsIHJlcGxhY2UgKioq
-KiB3aXRoIGEgaHVnLgo+ID4+IAo+ID4+IEkgaG9wZSB0aGlzIGlzIHNvbWUga2luZCBvZiBqb2tl
-LiBIb3cgd291bGQgYW55b25lIGdldCBvZmZlbmRlZCBieSByZWFkaW5nCj4gPj4gdGVjaG5pY2Fs
-IGNvbW1lbnRzPyBUaGlzIGlzIGFsbCBiZXlvbmQgbWUuLi4KPiA+IAo+ID4gQWdyZWUsIHRoaXMg
-aXMgaW5zYW5pdHkuCj4gCj4gQW5kIGV2ZW4gd29yc2UgaXQgaXMgY2Vuc29yc2hpcC4KPiAKCkZ1
-Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNr
-CkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpG
-dWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVj
-awpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sK
-RnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1
-Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNr
-CkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpG
-dWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVj
-awpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sKRnVjawpGdWNrCkZ1Y2sK
-CkkgYXNzdW1lIEkgd2lsbCBub3cgYmUgYmFycmVkLgoKCl9fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fCk5vdXZlYXUgbWFpbGluZyBsaXN0Ck5vdXZlYXVAbGlz
-dHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4v
-bGlzdGluZm8vbm91dmVhdQo=
+For Armada-38x (32-bit) SoCs, PM platform support has been added since:
+commit 32f9494c9dfd ("ARM: mvebu: prepare pm-board.c for the
+                      introduction of Armada 38x support")
+commit 3cbd6a6ca81c ("ARM: mvebu: Add standby support")
+
+For Armada 64-bit SoCs, like the A3700 also using this AHCI driver, PM
+platform support has always existed.
+
+There are even suspend/resume hooks in this driver since:
+commit d6ecf15814888 ("ata: ahci_mvebu: add suspend/resume support")
+
+Remove the stale comment at the end of this driver stating that all
+the above does not exist yet.
+
+Fixes: d6ecf15814888 ("ata: ahci_mvebu: add suspend/resume support")
+Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
+---
+ drivers/ata/ahci_mvebu.c | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/drivers/ata/ahci_mvebu.c b/drivers/ata/ahci_mvebu.c
+index f9cb51be38eb..128d6f22926d 100644
+--- a/drivers/ata/ahci_mvebu.c
++++ b/drivers/ata/ahci_mvebu.c
+@@ -197,11 +197,6 @@ static const struct of_device_id ahci_mvebu_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, ahci_mvebu_of_match);
+ 
+-/*
+- * We currently don't provide power management related operations,
+- * since there is no suspend/resume support at the platform level for
+- * Armada 38x for the moment.
+- */
+ static struct platform_driver ahci_mvebu_driver = {
+ 	.probe = ahci_mvebu_probe,
+ 	.remove = ata_platform_remove_one,
+-- 
+2.19.1
