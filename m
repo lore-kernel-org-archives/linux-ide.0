@@ -1,14 +1,13 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH v3 1/7] ata: libahci_platform: comply to PHY framework
-Date: Tue, 4 Dec 2018 20:48:15 +0100
-Message-ID: <ccde58fa-badd-dcd6-9834-7ef689e922e2@redhat.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v3 0/7] Bring suspend to RAM support to MVEBU SATA
+Date: Tue, 4 Dec 2018 17:11:18 -0700
+Message-ID: <35c5cdcf-0d89-9236-7937-0c750a781d13@kernel.dk>
 References: <20181204192831.12440-1-miquel.raynal@bootlin.com>
- <20181204192831.12440-2-miquel.raynal@bootlin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20181204192831.12440-2-miquel.raynal@bootlin.com>
+In-Reply-To: <20181204192831.12440-1-miquel.raynal@bootlin.com>
 Content-Language: en-US
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
@@ -19,101 +18,32 @@ List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Miquel Raynal <miquel.raynal@bootlin.com>, Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Jens Axboe <axboe@kernel.dk>
+To: Miquel Raynal <miquel.raynal@bootlin.com>, Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Hans de Goede <hdegoede@redhat.com>
 Cc: devicetree@vger.kernel.org, linux-pm@vger.kernel.org, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-Hi,
-
-On 04-12-18 20:28, Miquel Raynal wrote:
-> Current implementation of the libahci does not take into account the
-> new PHY framework. Correct the situation by adding a call to
-> phy_set_mode() before phy_power_on().
+On 12/4/18 12:28 PM, Miquel Raynal wrote:
+> Hello,
 > 
-> PHYs should also be handled at suspend/resume time. For this, call
-> ahci_platform_enable/disable_phys() at suspend/resume_host() time. These
-> calls are guarded by a HFLAG (AHCI_HFLAG_SUSPEND_PHYS) that the user of
-> the libahci driver must set manually in hpriv->flags at probe time. This
-> is to avoid breaking users that have not been tested with this change.
+> As part of an effort to bring suspend to RAM support to Armada 3700
+> SoCs (main target: ESPRESSObin), this series handles the work around
+> the SATA IP.
 > 
-> Suggested-by: Grzegorz Jaszczyk <jaz@semihalf.com>
-> Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
-
-Patch looks good to me now:
-
-Reviewed-by: Hans de Goede <hdegoede@redhat.com>
-
-Rest of the series looks ok to me to:
-
-Acked-by: Hans de Goede <hdegoede@redhat.com>
-
-Regards,
-
-Hans
-
-
-
-> ---
->   drivers/ata/ahci.h             |  2 ++
->   drivers/ata/libahci_platform.c | 13 +++++++++++++
->   2 files changed, 15 insertions(+)
+> First, a change in the libahci platform adds support for the new PHY
+> framework by following the phy_set_mode()/phy_power_on()
+> sequence. Then, the AHCI MVEBU driver is a bit updated (patch 2 & 3)
+> and a missing initialization is added for the A3700 in patch 4 (only
+> done by the Bootloader before). Missing clock support is implemented
+> in patch 5 to be sure the clock will be resumed before this driver
+> (see [1] for the series adding device links to the clock core).
 > 
-> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-> index ef356e70e6de..8810475f307a 100644
-> --- a/drivers/ata/ahci.h
-> +++ b/drivers/ata/ahci.h
-> @@ -254,6 +254,8 @@ enum {
->   	AHCI_HFLAG_IS_MOBILE		= (1 << 25), /* mobile chipset, use
->   							SATA_MOBILE_LPM_POLICY
->   							as default lpm_policy */
-> +	AHCI_HFLAG_SUSPEND_PHYS		= (1 << 26), /* handle PHYs during
-> +							suspend/resume */
->   
->   	/* ap->flags bits */
->   
-> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-> index 4b900fc659f7..81b1a3332ed6 100644
-> --- a/drivers/ata/libahci_platform.c
-> +++ b/drivers/ata/libahci_platform.c
-> @@ -56,6 +56,12 @@ static int ahci_platform_enable_phys(struct ahci_host_priv *hpriv)
->   		if (rc)
->   			goto disable_phys;
->   
-> +		rc = phy_set_mode(hpriv->phys[i], PHY_MODE_SATA);
-> +		if (rc) {
-> +			phy_exit(hpriv->phys[i]);
-> +			goto disable_phys;
-> +		}
-> +
->   		rc = phy_power_on(hpriv->phys[i]);
->   		if (rc) {
->   			phy_exit(hpriv->phys[i]);
-> @@ -738,6 +744,9 @@ int ahci_platform_suspend_host(struct device *dev)
->   	writel(ctl, mmio + HOST_CTL);
->   	readl(mmio + HOST_CTL); /* flush */
->   
-> +	if (hpriv->flags & AHCI_HFLAG_SUSPEND_PHYS)
-> +		ahci_platform_disable_phys(hpriv);
-> +
->   	return ata_host_suspend(host, PMSG_SUSPEND);
->   }
->   EXPORT_SYMBOL_GPL(ahci_platform_suspend_host);
-> @@ -756,6 +765,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_suspend_host);
->   int ahci_platform_resume_host(struct device *dev)
->   {
->   	struct ata_host *host = dev_get_drvdata(dev);
-> +	struct ahci_host_priv *hpriv = host->private_data;
->   	int rc;
->   
->   	if (dev->power.power_state.event == PM_EVENT_SUSPEND) {
-> @@ -766,6 +776,9 @@ int ahci_platform_resume_host(struct device *dev)
->   		ahci_init_controller(host);
->   	}
->   
-> +	if (hpriv->flags & AHCI_HFLAG_SUSPEND_PHYS)
-> +		ahci_platform_enable_phys(hpriv);
-> +
->   	ata_host_resume(host);
->   
->   	return 0;
-> 
+> Finally, device trees are updated to reflect the hardware: the missing
+> PHY is added to the ESPRESSObin DT, and the clock is added to the SoC
+> DT (patch 6 & 7). Bindings already document the clock and the PHY so
+> no update is needed on this regard.
+
+Probably the best/easiest to queue this through the libata tree for
+4.21. Agree?
+
+-- 
+Jens Axboe
