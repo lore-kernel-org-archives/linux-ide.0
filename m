@@ -1,37 +1,41 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH] ata: pata_oldpiix: Add missing device ID for
- INTEL_82371AB
-Date: Mon, 10 Dec 2018 17:52:35 +0300
-Message-ID: <9aab3632-4647-cb66-f720-8f6742bc9b4e@cogentembedded.com>
-References: <1544449564-16557-1-git-send-email-clabbe@baylibre.com>
+From: Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 31/73] ide: pmac: add of_node_put()
+Date: Wed, 12 Dec 2018 23:27:56 -0500
+Message-ID: <20181213042838.75160-31-sashal@kernel.org>
+References: <20181213042838.75160-1-sashal@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1544449564-16557-1-git-send-email-clabbe@baylibre.com>
-Content-Language: en-MW
+In-Reply-To: <20181213042838.75160-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Corentin Labbe <clabbe@baylibre.com>, axboe@kernel.dk, b.zolnierkie@samsung.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: Yangtao Li <tiny.windzz@gmail.com>, "David S . Miller" <davem@davemloft.net>, Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello!
+From: Yangtao Li <tiny.windzz@gmail.com>
 
-On 12/10/2018 04:46 PM, Corentin Labbe wrote:
+[ Upstream commit a51921c0db3fd26c4ed83dc0ec5d32988fa02aa5 ]
 
-> When playing with a virtual SPARC machine with qemu, I found that the
-> IDE emulated device was not probing with the ata/pata_oldpiix driver.
+use of_node_put() to release the refcount.
 
-   Correctly, it should probe with ata_piix,
+Signed-off-by: Yangtao Li <tiny.windzz@gmail.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/ide/pmac.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-> But with the old ide/piix, it was probed.> 
-> This is due to this PCI devid was not migrated from the old ide/piix.
-
-   It wasn't on purpose -- the IDE driver supports the original PIIX
-incorrectly.
-
-> Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
-
-   NAK.
-
-MBR, Sergei
+diff --git a/drivers/ide/pmac.c b/drivers/ide/pmac.c
+index c5b902b86b44..203ed4adc04a 100644
+--- a/drivers/ide/pmac.c
++++ b/drivers/ide/pmac.c
+@@ -920,6 +920,7 @@ static u8 pmac_ide_cable_detect(ide_hwif_t *hwif)
+ 	struct device_node *root = of_find_node_by_path("/");
+ 	const char *model = of_get_property(root, "model", NULL);
+ 
++	of_node_put(root);
+ 	/* Get cable type from device-tree. */
+ 	if (cable && !strncmp(cable, "80-", 3)) {
+ 		/* Some drives fail to detect 80c cable in PowerBook */
+-- 
+2.19.1
