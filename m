@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.9 14/34] ide: pmac: add of_node_put()
-Date: Wed, 12 Dec 2018 23:31:40 -0500
-Message-ID: <20181213043200.76295-14-sashal@kernel.org>
-References: <20181213043200.76295-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 13/23] ide: pmac: add of_node_put()
+Date: Wed, 12 Dec 2018 23:32:49 -0500
+Message-ID: <20181213043259.76643-13-sashal@kernel.org>
+References: <20181213043259.76643-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181213043200.76295-1-sashal@kernel.org>
+In-Reply-To: <20181213043259.76643-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Yangtao Li <tiny.windzz@gmail.com>, "David S . Miller" <davem@davemloft.net>, Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
@@ -26,7 +26,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/ide/pmac.c b/drivers/ide/pmac.c
-index 0c5d3a99468e..b20025a5a8d9 100644
+index 96a345248224..0add5bb3cee8 100644
 --- a/drivers/ide/pmac.c
 +++ b/drivers/ide/pmac.c
 @@ -920,6 +920,7 @@ static u8 pmac_ide_cable_detect(ide_hwif_t *hwif)
