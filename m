@@ -1,49 +1,33 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+From: Jens Axboe <axboe@kernel.dk>
 Subject: Re: [PATCH] ata: pata_macio: add of_node_put()
-Date: Thu, 20 Dec 2018 18:03:05 +0100
-Message-ID: <b3331d3f-3bfd-f3ce-cea1-30c4b13e6374@samsung.com>
+Date: Thu, 20 Dec 2018 11:01:24 -0700
+Message-ID: <a925d66a-09ea-b6db-8043-df58548da192@kernel.dk>
 References: <CGME20181121130510epcas3p4498edc67a02f61a6aa8e55efa9349681@epcas3p4.samsung.com>
-        <20181121130439.22255-1-tiny.windzz@gmail.com>
+ <20181121130439.22255-1-tiny.windzz@gmail.com>
+ <b3331d3f-3bfd-f3ce-cea1-30c4b13e6374@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181121130439.22255-1-tiny.windzz@gmail.com>
+In-Reply-To: <b3331d3f-3bfd-f3ce-cea1-30c4b13e6374@samsung.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Yangtao Li <tiny.windzz@gmail.com>, axboe@kernel.dk
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Yangtao Li <tiny.windzz@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-
-On 11/21/2018 02:04 PM, Yangtao Li wrote:
-> of_find_node_by_path() acquires a reference to the node
-> returned by it and that reference needs to be dropped by its caller.
-> bl_idle_init() doesn't do that, so fix it.
+On 12/20/18 10:03 AM, Bartlomiej Zolnierkiewicz wrote:
 > 
-> Signed-off-by: Yangtao Li <tiny.windzz@gmail.com>
-
-Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-
->  drivers/ata/pata_macio.c | 2 ++
->  1 file changed, 2 insertions(+)
+> On 11/21/2018 02:04 PM, Yangtao Li wrote:
+>> of_find_node_by_path() acquires a reference to the node
+>> returned by it and that reference needs to be dropped by its caller.
+>> bl_idle_init() doesn't do that, so fix it.
+>>
+>> Signed-off-by: Yangtao Li <tiny.windzz@gmail.com>
 > 
-> diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-> index 9588e685d994..8cc9c429ad95 100644
-> --- a/drivers/ata/pata_macio.c
-> +++ b/drivers/ata/pata_macio.c
-> @@ -483,6 +483,8 @@ static int pata_macio_cable_detect(struct ata_port *ap)
->  		struct device_node *root = of_find_node_by_path("/");
->  		const char *model = of_get_property(root, "model", NULL);
->  
-> +		of_node_put(root);
-> +
->  		if (cable && !strncmp(cable, "80-", 3)) {
->  			/* Some drives fail to detect 80c cable in PowerBook
->  			 * These machine use proprietary short IDE cable
-> 
+> Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+Yangtao, were you going to resend this one?
+
+-- 
+Jens Axboe
