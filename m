@@ -1,57 +1,49 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [ide] ec7d9c9ce8:
- WARNING:at_fs/proc/generic.c:#remove_proc_entry
-Date: Thu, 20 Dec 2018 17:18:32 +0100
-Message-ID: <20181220161832.GA19486@lst.de>
-References: <20181220091931.zcibvplow3oxzacs@inn2.lkp.intel.com> <CAHk-=wjvxCn2uYp7USY5bbVuffJcugusxHc-RU7u5H1=ubMyPw@mail.gmail.com> <bd9cad88-08c6-ee65-abef-eaa8a4540019@kernel.dk>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH] ata: pata_macio: add of_node_put()
+Date: Thu, 20 Dec 2018 18:03:05 +0100
+Message-ID: <b3331d3f-3bfd-f3ce-cea1-30c4b13e6374@samsung.com>
+References: <CGME20181121130510epcas3p4498edc67a02f61a6aa8e55efa9349681@epcas3p4.samsung.com>
+        <20181121130439.22255-1-tiny.windzz@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <bd9cad88-08c6-ee65-abef-eaa8a4540019@kernel.dk>
+In-Reply-To: <20181121130439.22255-1-tiny.windzz@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, kernel test robot <lkp@intel.com>, Christoph Hellwig <hch@lst.de>, David Miller <davem@davemloft.net>, LKML <linux-kernel@vger.kernel.org>, lkp@01.org, linux-ide@vger.kernel.org
+To: Yangtao Li <tiny.windzz@gmail.com>, axboe@kernel.dk
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Dec 20, 2018 at 09:14:50AM -0700, Jens Axboe wrote:
-> Maybe the the tiny subset of IDE users don't actually have the proc
-> stuff enabled? A few months ago I did plenty of IDE testing with the
-> MQ conversion, but I never saw anything like this. I'm guessing that
-> I, too, did not have IDE_PROC_FS enabled.
 
-Or the tiny subset of ide users basically doesn't exist and the
-few platforms that use ide are basically bitrotting?
+On 11/21/2018 02:04 PM, Yangtao Li wrote:
+> of_find_node_by_path() acquires a reference to the node
+> returned by it and that reference needs to be dropped by its caller.
+> bl_idle_init() doesn't do that, so fix it.
+> 
+> Signed-off-by: Yangtao Li <tiny.windzz@gmail.com>
 
-> Christoph, do you want to post the one-liner fix for this one?
+Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-See below:
+>  drivers/ata/pata_macio.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+> index 9588e685d994..8cc9c429ad95 100644
+> --- a/drivers/ata/pata_macio.c
+> +++ b/drivers/ata/pata_macio.c
+> @@ -483,6 +483,8 @@ static int pata_macio_cable_detect(struct ata_port *ap)
+>  		struct device_node *root = of_find_node_by_path("/");
+>  		const char *model = of_get_property(root, "model", NULL);
+>  
+> +		of_node_put(root);
+> +
+>  		if (cable && !strncmp(cable, "80-", 3)) {
+>  			/* Some drives fail to detect 80c cable in PowerBook
+>  			 * These machine use proprietary short IDE cable
+> 
 
+Best regards,
 --
->From c3550c617ffc48079fe6364a4fa3c7f75a09028b Mon Sep 17 00:00:00 2001
-From: Christoph Hellwig <hch@lst.de>
-Date: Thu, 20 Dec 2018 17:16:53 +0100
-Subject: ide: fix a typo in the settings proc file name
-
-Fixes: ec7d9c9ce8 ("ide: replace ->proc_fops with ->proc_show")
-Reported-by: kernel test robot <lkp@intel.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/ide/ide-proc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ide/ide-proc.c b/drivers/ide/ide-proc.c
-index 45c997430332..0e51803de0e7 100644
---- a/drivers/ide/ide-proc.c
-+++ b/drivers/ide/ide-proc.c
-@@ -544,7 +544,7 @@ void ide_proc_port_register_devices(ide_hwif_t *hwif)
- 		drive->proc = proc_mkdir(drive->name, parent);
- 		if (drive->proc) {
- 			ide_add_proc_entries(drive->proc, generic_drive_entries, drive);
--			proc_create_data("setting", S_IFREG|S_IRUSR|S_IWUSR,
-+			proc_create_data("settings", S_IFREG|S_IRUSR|S_IWUSR,
- 					drive->proc, &ide_settings_proc_fops,
- 					drive);
- 		}
--- 
-2.19.2
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
