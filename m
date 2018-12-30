@@ -1,12 +1,12 @@
 From: Sinan Kaya <okaya@kernel.org>
-Subject: [PATCH v3 02/11] ata: make PCI dependency explicit for PATA_ACPI
-Date: Sun, 23 Dec 2018 23:25:11 +0000
-Message-ID: <20181223232521.11320-3-okaya@kernel.org>
-References: <20181223232521.11320-1-okaya@kernel.org>
+Subject: [PATCH v4 02/11] ata: pata_acpi: Make PCI dependency explicit
+Date: Sun, 30 Dec 2018 19:56:03 +0000
+Message-ID: <20181230195612.6657-3-okaya@kernel.org>
+References: <20181230195612.6657-1-okaya@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181223232521.11320-1-okaya@kernel.org>
+In-Reply-To: <20181230195612.6657-1-okaya@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-next@vger.kernel.org
 Cc: linux-acpi@vger.kernel.org, Sinan Kaya <okaya@kernel.org>, Jens Axboe <axboe@kernel.dk>, "open list:LIBATA SUBSYSTEM Serial and
@@ -16,6 +16,7 @@ List-Id: linux-ide@vger.kernel.org
 PATA_ACPI is a PCI device driver but the PCI dependency has not been
 explicitly called out.
 
+Fixes: 5d32a66541c46 ("PCI/ACPI: Allow ACPI to be built without CONFIG_PCI set")
 Signed-off-by: Sinan Kaya <okaya@kernel.org>
 ---
  drivers/ata/Kconfig | 2 +-
