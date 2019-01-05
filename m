@@ -1,12 +1,12 @@
 From: Sinan Kaya <okaya@kernel.org>
-Subject: [PATCH v5 02/11] ata: pata_acpi: Make PCI dependency explicit
-Date: Wed,  2 Jan 2019 18:10:29 +0000
-Message-ID: <20190102181038.4418-3-okaya@kernel.org>
-References: <20190102181038.4418-1-okaya@kernel.org>
+Subject: [PATCH v6 02/11] ata: pata_acpi: Make PCI dependency explicit
+Date: Sat,  5 Jan 2019 10:05:57 +0000
+Message-ID: <20190105100606.6673-3-okaya@kernel.org>
+References: <20190105100606.6673-1-okaya@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190102181038.4418-1-okaya@kernel.org>
+In-Reply-To: <20190105100606.6673-1-okaya@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-next@vger.kernel.org
 Cc: linux-acpi@vger.kernel.org, Sinan Kaya <okaya@kernel.org>, Jens Axboe <axboe@kernel.dk>, "open list:LIBATA SUBSYSTEM Serial and
