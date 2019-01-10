@@ -1,118 +1,111 @@
 From: Peng Ma <peng.ma@nxp.com>
-Subject: [PATCH 1/2] ahci: qoriq: add lx2160 platforms support
-Date: Thu, 10 Jan 2019 18:05:32 +0800
-Message-ID: <20190110100533.33333-1-peng.ma@nxp.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH 2/2] arm64: dts: lx2160a: add sata node support
+Date: Thu, 10 Jan 2019 18:05:33 +0800
+Message-ID: <20190110100533.33333-2-peng.ma@nxp.com>
+References: <20190110100533.33333-1-peng.ma@nxp.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20190110100533.33333-1-peng.ma@nxp.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
 To: shawnguo@kernel.org, axboe@kernel.dk
-Cc: leoyang.li@nxp.com, robh+dt@kernel.org, mark.rutland@arm.com, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Peng Ma <peng.ma@nxp.com>
+Cc: mark.rutland@arm.com, devicetree@vger.kernel.org, Peng Ma <peng.ma@nxp.com>, linux-kernel@vger.kernel.org, leoyang.li@nxp.com, linux-ide@vger.kernel.org, robh+dt@kernel.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-Lx2160a is a new introduced soc which supports ATA3.0 and
-Clean up some code
+Add sata node support and Enable sata support
 
 Signed-off-by: Peng Ma <peng.ma@nxp.com>
 ---
- drivers/ata/ahci_qoriq.c |   44 ++++++++++++--------------------------------
- 1 files changed, 12 insertions(+), 32 deletions(-)
+ arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts |   16 +++++++
+ arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi    |   44 +++++++++++++++++++++
+ 2 files changed, 60 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
-index ce59253..1994bf2 100644
---- a/drivers/ata/ahci_qoriq.c
-+++ b/drivers/ata/ahci_qoriq.c
-@@ -57,7 +57,7 @@ enum ahci_qoriq_type {
- 	AHCI_LS2080A,
- 	AHCI_LS1046A,
- 	AHCI_LS1088A,
--	AHCI_LS2088A,
-+	AHCI_LX2160A,
+diff --git a/arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts b/arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts
+index 6481e5f..aacca27 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts
++++ b/arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts
+@@ -117,3 +117,19 @@
+ &usb1 {
+ 	status = "okay";
  };
- 
- struct ahci_qoriq_priv {
-@@ -73,7 +73,7 @@ struct ahci_qoriq_priv {
- 	{ .compatible = "fsl,ls2080a-ahci", .data = (void *)AHCI_LS2080A},
- 	{ .compatible = "fsl,ls1046a-ahci", .data = (void *)AHCI_LS1046A},
- 	{ .compatible = "fsl,ls1088a-ahci", .data = (void *)AHCI_LS1088A},
--	{ .compatible = "fsl,ls2088a-ahci", .data = (void *)AHCI_LS2088A},
-+	{ .compatible = "fsl,lx2160a-ahci", .data = (void *)AHCI_LX2160A},
- 	{},
++
++&sata0 {
++	status = "okay";
++};
++
++&sata1 {
++	status = "okay";
++};
++
++&sata2 {
++	status = "okay";
++};
++
++&sata3 {
++	status = "okay";
++};
+diff --git a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi b/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
+index a79f5c1..e857a14 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
+@@ -762,5 +762,49 @@
+ 				     <GIC_SPI 209 IRQ_TYPE_LEVEL_HIGH>;
+ 			dma-coherent;
+ 		};
++
++		sata0: sata@3200000 {
++			status = "disabled";
++			compatible = "fsl,lx2160a-ahci";
++			reg = <0x0 0x3200000 0x0 0x10000>,
++			      <0x7 0x100520 0x0 0x4>;
++			reg-names = "ahci", "sata-ecc";
++			interrupts = <GIC_SPI 133 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&clockgen 4 3>;
++			dma-coherent;
++		};
++
++		sata1: sata@3210000 {
++			status = "disabled";
++			compatible = "fsl,lx2160a-ahci";
++			reg = <0x0 0x3210000 0x0 0x10000>,
++			      <0x7 0x100520 0x0 0x4>;
++			reg-names = "ahci", "sata-ecc";
++			interrupts = <GIC_SPI 136 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&clockgen 4 3>;
++			dma-coherent;
++		};
++
++		sata2: sata@3220000 {
++			status = "disabled";
++			compatible = "fsl,lx2160a-ahci";
++			reg = <0x0 0x3220000 0x0 0x10000>,
++			      <0x7 0x100520 0x0 0x4>;
++			reg-names = "ahci", "sata-ecc";
++			interrupts = <GIC_SPI 97 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&clockgen 4 3>;
++			dma-coherent;
++		};
++
++		sata3: sata@3230000 {
++			status = "disabled";
++			compatible = "fsl,lx2160a-ahci";
++			reg = <0x0 0x3230000 0x0 0x10000>,
++			      <0x7 0x100520 0x0 0x4>;
++			reg-names = "ahci", "sata-ecc";
++			interrupts = <GIC_SPI 100 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&clockgen 4 3>;
++			dma-coherent;
++		};
+ 	};
  };
- MODULE_DEVICE_TABLE(of, ahci_qoriq_of_match);
-@@ -174,12 +174,10 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 		writel(LS1021A_PORT_PHY4, reg_base + PORT_PHY4);
- 		writel(LS1021A_PORT_PHY5, reg_base + PORT_PHY5);
- 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
--		if (qpriv->is_dmacoherent)
--			writel(AHCI_PORT_AXICC_CFG,
--					reg_base + LS1021A_AXICC_ADDR);
- 		break;
- 
- 	case AHCI_LS1043A:
-+	case AHCI_LS1046A:
- 		if (!qpriv->ecc_addr)
- 			return -EINVAL;
- 		writel(readl(qpriv->ecc_addr) | ECC_DIS_ARMV8_CH2,
-@@ -188,8 +186,6 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
- 		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
- 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
--		if (qpriv->is_dmacoherent)
--			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
- 		break;
- 
- 	case AHCI_LS2080A:
-@@ -197,24 +193,10 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
- 		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
- 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
--		if (qpriv->is_dmacoherent)
--			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
--		break;
--
--	case AHCI_LS1046A:
--		if (!qpriv->ecc_addr)
--			return -EINVAL;
--		writel(readl(qpriv->ecc_addr) | ECC_DIS_ARMV8_CH2,
--				qpriv->ecc_addr);
--		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
--		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
--		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
--		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
--		if (qpriv->is_dmacoherent)
--			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
- 		break;
- 
- 	case AHCI_LS1088A:
-+	case AHCI_LX2160A:
- 		if (!qpriv->ecc_addr)
- 			return -EINVAL;
- 		writel(readl(qpriv->ecc_addr) | ECC_DIS_LS1088A,
-@@ -223,18 +205,16 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
- 		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
- 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
--		if (qpriv->is_dmacoherent)
--			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
- 		break;
-+	}
- 
--	case AHCI_LS2088A:
--		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
--		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
--		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
--		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
--		if (qpriv->is_dmacoherent)
--			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
--		break;
-+	if (qpriv->is_dmacoherent) {
-+		if (qpriv->type == AHCI_LS1021A)
-+			writel(AHCI_PORT_AXICC_CFG,
-+			       reg_base + LS1021A_AXICC_ADDR);
-+		else
-+			writel(AHCI_PORT_AXICC_CFG,
-+			       reg_base + PORT_AXICC);
- 	}
- 
- 	return 0;
 -- 
 1.7.1
