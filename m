@@ -1,111 +1,100 @@
 From: Peng Ma <peng.ma@nxp.com>
-Subject: [PATCH 2/2] arm64: dts: lx2160a: add sata node support
-Date: Thu, 10 Jan 2019 18:05:33 +0800
-Message-ID: <20190110100533.33333-2-peng.ma@nxp.com>
+Subject: RE: [PATCH 1/2] ahci: qoriq: add lx2160 platforms support
+Date: Thu, 10 Jan 2019 10:31:52 +0000
+Message-ID: <VI1PR04MB44311C4FCA7DE543941E84B0ED840@VI1PR04MB4431.eurprd04.prod.outlook.com>
 References: <20190110100533.33333-1-peng.ma@nxp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190110100533.33333-1-peng.ma@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: shawnguo@kernel.org, axboe@kernel.dk
-Cc: mark.rutland@arm.com, devicetree@vger.kernel.org, Peng Ma <peng.ma@nxp.com>, linux-kernel@vger.kernel.org, leoyang.li@nxp.com, linux-ide@vger.kernel.org, robh+dt@kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Peng Ma <peng.ma@nxp.com>, "shawnguo@kernel.org" <shawnguo@kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: Leo Li <leoyang.li@nxp.com>, "robh+dt@kernel.org" <robh+dt@kernel.org>, "mark.rutland@arm.com" <mark.rutland@arm.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andy Tang <andy.tang@nxp.com>
 List-Id: linux-ide@vger.kernel.org
 
-Add sata node support and Enable sata support
-
-Signed-off-by: Peng Ma <peng.ma@nxp.com>
----
- arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts |   16 +++++++
- arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi    |   44 +++++++++++++++++++++
- 2 files changed, 60 insertions(+), 0 deletions(-)
-
-diff --git a/arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts b/arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts
-index 6481e5f..aacca27 100644
---- a/arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts
-+++ b/arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts
-@@ -117,3 +117,19 @@
- &usb1 {
- 	status = "okay";
- };
-+
-+&sata0 {
-+	status = "okay";
-+};
-+
-+&sata1 {
-+	status = "okay";
-+};
-+
-+&sata2 {
-+	status = "okay";
-+};
-+
-+&sata3 {
-+	status = "okay";
-+};
-diff --git a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi b/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
-index a79f5c1..e857a14 100644
---- a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
-@@ -762,5 +762,49 @@
- 				     <GIC_SPI 209 IRQ_TYPE_LEVEL_HIGH>;
- 			dma-coherent;
- 		};
-+
-+		sata0: sata@3200000 {
-+			status = "disabled";
-+			compatible = "fsl,lx2160a-ahci";
-+			reg = <0x0 0x3200000 0x0 0x10000>,
-+			      <0x7 0x100520 0x0 0x4>;
-+			reg-names = "ahci", "sata-ecc";
-+			interrupts = <GIC_SPI 133 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&clockgen 4 3>;
-+			dma-coherent;
-+		};
-+
-+		sata1: sata@3210000 {
-+			status = "disabled";
-+			compatible = "fsl,lx2160a-ahci";
-+			reg = <0x0 0x3210000 0x0 0x10000>,
-+			      <0x7 0x100520 0x0 0x4>;
-+			reg-names = "ahci", "sata-ecc";
-+			interrupts = <GIC_SPI 136 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&clockgen 4 3>;
-+			dma-coherent;
-+		};
-+
-+		sata2: sata@3220000 {
-+			status = "disabled";
-+			compatible = "fsl,lx2160a-ahci";
-+			reg = <0x0 0x3220000 0x0 0x10000>,
-+			      <0x7 0x100520 0x0 0x4>;
-+			reg-names = "ahci", "sata-ecc";
-+			interrupts = <GIC_SPI 97 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&clockgen 4 3>;
-+			dma-coherent;
-+		};
-+
-+		sata3: sata@3230000 {
-+			status = "disabled";
-+			compatible = "fsl,lx2160a-ahci";
-+			reg = <0x0 0x3230000 0x0 0x10000>,
-+			      <0x7 0x100520 0x0 0x4>;
-+			reg-names = "ahci", "sata-ecc";
-+			interrupts = <GIC_SPI 100 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&clockgen 4 3>;
-+			dma-coherent;
-+		};
- 	};
- };
--- 
-1.7.1
+SGkgSmVuc6OsDQoNCglJIHNlbmQgdGhlIHNhdGEgcGF0Y2hzIHRvIHRoZSB1cHN0cmVhbSBwYXRj
+aHdvcmsgd2l0aCAuL3NjcmlwdHMvZ2V0X21haW50YWluZXIucGwsIGJ1dCBJIGZpbmQgbXkgcGF0
+Y2ggb24gaHR0cDovL3BhdGNod29yay5vemxhYnMub3JnL3Byb2plY3QvbGludXgtaWRlL2xpc3Qv
+ICwgSSBzYXcgdGhlIE1BSU5UQUlORVJTLCB0aGUgZHJpdmVyL2F0YS8qIHNob3VsZCBiZSBvbiBo
+dHRwczovL3BhdGNod29yay5rZXJuZWwub3JnL3Byb2plY3QvbGludXgtYmxvY2svbGlzdC8gLiBj
+b3VsZCB5b3UgcGxlYXNlIGhlbHAgbWUgd2hhdCB0aGUgcGF0Y2h3b3JrIGlzIHJpZ2h0Lg0KCVRo
+YW5rcyBhIGxvdC4NCg0KQmVzdCBSZWdhcmRzLA0KUGVuZw0KDQo+LS0tLS1PcmlnaW5hbCBNZXNz
+YWdlLS0tLS0NCj5Gcm9tOiBQZW5nIE1hIDxwZW5nLm1hQG54cC5jb20+DQo+U2VudDogMjAxOcTq
+MdTCMTDI1SAxODowNg0KPlRvOiBzaGF3bmd1b0BrZXJuZWwub3JnOyBheGJvZUBrZXJuZWwuZGsN
+Cj5DYzogTGVvIExpIDxsZW95YW5nLmxpQG54cC5jb20+OyByb2JoK2R0QGtlcm5lbC5vcmc7DQo+
+bWFyay5ydXRsYW5kQGFybS5jb207IGxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9y
+ZzsNCj5kZXZpY2V0cmVlQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVs
+Lm9yZzsNCj5saW51eC1pZGVAdmdlci5rZXJuZWwub3JnOyBQZW5nIE1hIDxwZW5nLm1hQG54cC5j
+b20+DQo+U3ViamVjdDogW1BBVENIIDEvMl0gYWhjaTogcW9yaXE6IGFkZCBseDIxNjAgcGxhdGZv
+cm1zIHN1cHBvcnQNCj4NCj5MeDIxNjBhIGlzIGEgbmV3IGludHJvZHVjZWQgc29jIHdoaWNoIHN1
+cHBvcnRzIEFUQTMuMCBhbmQgQ2xlYW4gdXAgc29tZQ0KPmNvZGUNCj4NCj5TaWduZWQtb2ZmLWJ5
+OiBQZW5nIE1hIDxwZW5nLm1hQG54cC5jb20+DQo+LS0tDQo+IGRyaXZlcnMvYXRhL2FoY2lfcW9y
+aXEuYyB8ICAgNDQgKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0N
+Cj4gMSBmaWxlcyBjaGFuZ2VkLCAxMiBpbnNlcnRpb25zKCspLCAzMiBkZWxldGlvbnMoLSkNCj4N
+Cj5kaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvYWhjaV9xb3JpcS5jIGIvZHJpdmVycy9hdGEvYWhj
+aV9xb3JpcS5jIGluZGV4DQo+Y2U1OTI1My4uMTk5NGJmMiAxMDA2NDQNCj4tLS0gYS9kcml2ZXJz
+L2F0YS9haGNpX3FvcmlxLmMNCj4rKysgYi9kcml2ZXJzL2F0YS9haGNpX3FvcmlxLmMNCj5AQCAt
+NTcsNyArNTcsNyBAQCBlbnVtIGFoY2lfcW9yaXFfdHlwZSB7DQo+IAlBSENJX0xTMjA4MEEsDQo+
+IAlBSENJX0xTMTA0NkEsDQo+IAlBSENJX0xTMTA4OEEsDQo+LQlBSENJX0xTMjA4OEEsDQo+KwlB
+SENJX0xYMjE2MEEsDQo+IH07DQo+DQo+IHN0cnVjdCBhaGNpX3FvcmlxX3ByaXYgew0KPkBAIC03
+Myw3ICs3Myw3IEBAIHN0cnVjdCBhaGNpX3FvcmlxX3ByaXYgew0KPiAJeyAuY29tcGF0aWJsZSA9
+ICJmc2wsbHMyMDgwYS1haGNpIiwgLmRhdGEgPSAodm9pZCAqKUFIQ0lfTFMyMDgwQX0sDQo+IAl7
+IC5jb21wYXRpYmxlID0gImZzbCxsczEwNDZhLWFoY2kiLCAuZGF0YSA9ICh2b2lkICopQUhDSV9M
+UzEwNDZBfSwNCj4gCXsgLmNvbXBhdGlibGUgPSAiZnNsLGxzMTA4OGEtYWhjaSIsIC5kYXRhID0g
+KHZvaWQgKilBSENJX0xTMTA4OEF9LA0KPi0JeyAuY29tcGF0aWJsZSA9ICJmc2wsbHMyMDg4YS1h
+aGNpIiwgLmRhdGEgPSAodm9pZCAqKUFIQ0lfTFMyMDg4QX0sDQo+Kwl7IC5jb21wYXRpYmxlID0g
+ImZzbCxseDIxNjBhLWFoY2kiLCAuZGF0YSA9ICh2b2lkICopQUhDSV9MWDIxNjBBfSwNCj4gCXt9
+LA0KPiB9Ow0KPiBNT0RVTEVfREVWSUNFX1RBQkxFKG9mLCBhaGNpX3FvcmlxX29mX21hdGNoKTsg
+QEAgLTE3NCwxMiArMTc0LDEwDQo+QEAgc3RhdGljIGludCBhaGNpX3FvcmlxX3BoeV9pbml0KHN0
+cnVjdCBhaGNpX2hvc3RfcHJpdiAqaHByaXYpDQo+IAkJd3JpdGVsKExTMTAyMUFfUE9SVF9QSFk0
+LCByZWdfYmFzZSArIFBPUlRfUEhZNCk7DQo+IAkJd3JpdGVsKExTMTAyMUFfUE9SVF9QSFk1LCBy
+ZWdfYmFzZSArIFBPUlRfUEhZNSk7DQo+IAkJd3JpdGVsKEFIQ0lfUE9SVF9UUkFOU19DRkcsIHJl
+Z19iYXNlICsgUE9SVF9UUkFOUyk7DQo+LQkJaWYgKHFwcml2LT5pc19kbWFjb2hlcmVudCkNCj4t
+CQkJd3JpdGVsKEFIQ0lfUE9SVF9BWElDQ19DRkcsDQo+LQkJCQkJcmVnX2Jhc2UgKyBMUzEwMjFB
+X0FYSUNDX0FERFIpOw0KPiAJCWJyZWFrOw0KPg0KPiAJY2FzZSBBSENJX0xTMTA0M0E6DQo+Kwlj
+YXNlIEFIQ0lfTFMxMDQ2QToNCj4gCQlpZiAoIXFwcml2LT5lY2NfYWRkcikNCj4gCQkJcmV0dXJu
+IC1FSU5WQUw7DQo+IAkJd3JpdGVsKHJlYWRsKHFwcml2LT5lY2NfYWRkcikgfCBFQ0NfRElTX0FS
+TVY4X0NIMiwgQEAgLTE4OCw4DQo+KzE4Niw2IEBAIHN0YXRpYyBpbnQgYWhjaV9xb3JpcV9waHlf
+aW5pdChzdHJ1Y3QgYWhjaV9ob3N0X3ByaXYgKmhwcml2KQ0KPiAJCXdyaXRlbChBSENJX1BPUlRf
+UEhZMl9DRkcsIHJlZ19iYXNlICsgUE9SVF9QSFkyKTsNCj4gCQl3cml0ZWwoQUhDSV9QT1JUX1BI
+WTNfQ0ZHLCByZWdfYmFzZSArIFBPUlRfUEhZMyk7DQo+IAkJd3JpdGVsKEFIQ0lfUE9SVF9UUkFO
+U19DRkcsIHJlZ19iYXNlICsgUE9SVF9UUkFOUyk7DQo+LQkJaWYgKHFwcml2LT5pc19kbWFjb2hl
+cmVudCkNCj4tCQkJd3JpdGVsKEFIQ0lfUE9SVF9BWElDQ19DRkcsIHJlZ19iYXNlICsgUE9SVF9B
+WElDQyk7DQo+IAkJYnJlYWs7DQo+DQo+IAljYXNlIEFIQ0lfTFMyMDgwQToNCj5AQCAtMTk3LDI0
+ICsxOTMsMTAgQEAgc3RhdGljIGludCBhaGNpX3FvcmlxX3BoeV9pbml0KHN0cnVjdCBhaGNpX2hv
+c3RfcHJpdg0KPipocHJpdikNCj4gCQl3cml0ZWwoQUhDSV9QT1JUX1BIWTJfQ0ZHLCByZWdfYmFz
+ZSArIFBPUlRfUEhZMik7DQo+IAkJd3JpdGVsKEFIQ0lfUE9SVF9QSFkzX0NGRywgcmVnX2Jhc2Ug
+KyBQT1JUX1BIWTMpOw0KPiAJCXdyaXRlbChBSENJX1BPUlRfVFJBTlNfQ0ZHLCByZWdfYmFzZSAr
+IFBPUlRfVFJBTlMpOw0KPi0JCWlmIChxcHJpdi0+aXNfZG1hY29oZXJlbnQpDQo+LQkJCXdyaXRl
+bChBSENJX1BPUlRfQVhJQ0NfQ0ZHLCByZWdfYmFzZSArIFBPUlRfQVhJQ0MpOw0KPi0JCWJyZWFr
+Ow0KPi0NCj4tCWNhc2UgQUhDSV9MUzEwNDZBOg0KPi0JCWlmICghcXByaXYtPmVjY19hZGRyKQ0K
+Pi0JCQlyZXR1cm4gLUVJTlZBTDsNCj4tCQl3cml0ZWwocmVhZGwocXByaXYtPmVjY19hZGRyKSB8
+IEVDQ19ESVNfQVJNVjhfQ0gyLA0KPi0JCQkJcXByaXYtPmVjY19hZGRyKTsNCj4tCQl3cml0ZWwo
+QUhDSV9QT1JUX1BIWV8xX0NGRywgcmVnX2Jhc2UgKyBQT1JUX1BIWTEpOw0KPi0JCXdyaXRlbChB
+SENJX1BPUlRfUEhZMl9DRkcsIHJlZ19iYXNlICsgUE9SVF9QSFkyKTsNCj4tCQl3cml0ZWwoQUhD
+SV9QT1JUX1BIWTNfQ0ZHLCByZWdfYmFzZSArIFBPUlRfUEhZMyk7DQo+LQkJd3JpdGVsKEFIQ0lf
+UE9SVF9UUkFOU19DRkcsIHJlZ19iYXNlICsgUE9SVF9UUkFOUyk7DQo+LQkJaWYgKHFwcml2LT5p
+c19kbWFjb2hlcmVudCkNCj4tCQkJd3JpdGVsKEFIQ0lfUE9SVF9BWElDQ19DRkcsIHJlZ19iYXNl
+ICsgUE9SVF9BWElDQyk7DQo+IAkJYnJlYWs7DQo+DQo+IAljYXNlIEFIQ0lfTFMxMDg4QToNCj4r
+CWNhc2UgQUhDSV9MWDIxNjBBOg0KPiAJCWlmICghcXByaXYtPmVjY19hZGRyKQ0KPiAJCQlyZXR1
+cm4gLUVJTlZBTDsNCj4gCQl3cml0ZWwocmVhZGwocXByaXYtPmVjY19hZGRyKSB8IEVDQ19ESVNf
+TFMxMDg4QSwgQEAgLTIyMywxOA0KPisyMDUsMTYgQEAgc3RhdGljIGludCBhaGNpX3FvcmlxX3Bo
+eV9pbml0KHN0cnVjdCBhaGNpX2hvc3RfcHJpdiAqaHByaXYpDQo+IAkJd3JpdGVsKEFIQ0lfUE9S
+VF9QSFkyX0NGRywgcmVnX2Jhc2UgKyBQT1JUX1BIWTIpOw0KPiAJCXdyaXRlbChBSENJX1BPUlRf
+UEhZM19DRkcsIHJlZ19iYXNlICsgUE9SVF9QSFkzKTsNCj4gCQl3cml0ZWwoQUhDSV9QT1JUX1RS
+QU5TX0NGRywgcmVnX2Jhc2UgKyBQT1JUX1RSQU5TKTsNCj4tCQlpZiAocXByaXYtPmlzX2RtYWNv
+aGVyZW50KQ0KPi0JCQl3cml0ZWwoQUhDSV9QT1JUX0FYSUNDX0NGRywgcmVnX2Jhc2UgKyBQT1JU
+X0FYSUNDKTsNCj4gCQlicmVhazsNCj4rCX0NCj4NCj4tCWNhc2UgQUhDSV9MUzIwODhBOg0KPi0J
+CXdyaXRlbChBSENJX1BPUlRfUEhZXzFfQ0ZHLCByZWdfYmFzZSArIFBPUlRfUEhZMSk7DQo+LQkJ
+d3JpdGVsKEFIQ0lfUE9SVF9QSFkyX0NGRywgcmVnX2Jhc2UgKyBQT1JUX1BIWTIpOw0KPi0JCXdy
+aXRlbChBSENJX1BPUlRfUEhZM19DRkcsIHJlZ19iYXNlICsgUE9SVF9QSFkzKTsNCj4tCQl3cml0
+ZWwoQUhDSV9QT1JUX1RSQU5TX0NGRywgcmVnX2Jhc2UgKyBQT1JUX1RSQU5TKTsNCj4tCQlpZiAo
+cXByaXYtPmlzX2RtYWNvaGVyZW50KQ0KPi0JCQl3cml0ZWwoQUhDSV9QT1JUX0FYSUNDX0NGRywg
+cmVnX2Jhc2UgKyBQT1JUX0FYSUNDKTsNCj4tCQlicmVhazsNCj4rCWlmIChxcHJpdi0+aXNfZG1h
+Y29oZXJlbnQpIHsNCj4rCQlpZiAocXByaXYtPnR5cGUgPT0gQUhDSV9MUzEwMjFBKQ0KPisJCQl3
+cml0ZWwoQUhDSV9QT1JUX0FYSUNDX0NGRywNCj4rCQkJICAgICAgIHJlZ19iYXNlICsgTFMxMDIx
+QV9BWElDQ19BRERSKTsNCj4rCQllbHNlDQo+KwkJCXdyaXRlbChBSENJX1BPUlRfQVhJQ0NfQ0ZH
+LA0KPisJCQkgICAgICAgcmVnX2Jhc2UgKyBQT1JUX0FYSUNDKTsNCj4gCX0NCj4NCj4gCXJldHVy
+biAwOw0KPi0tDQo+MS43LjENCg0K
