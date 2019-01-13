@@ -1,63 +1,111 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v3 0/7] Bring suspend to RAM support to MVEBU SATA
-Date: Fri, 11 Jan 2019 14:48:08 -0700
-Message-ID: <b5be50cf-336b-c10f-5cb1-efbf8b69ab61@kernel.dk>
-References: <20181204192831.12440-1-miquel.raynal@bootlin.com>
- <35c5cdcf-0d89-9236-7937-0c750a781d13@kernel.dk>
- <20190111143404.518723a3@xps13>
+From: Shawn Guo <shawnguo@kernel.org>
+Subject: Re: [PATCH 2/2] arm64: dts: lx2160a: add sata node support
+Date: Sun, 13 Jan 2019 12:05:48 +0800
+Message-ID: <20190113040546.GL11426@dragon>
+References: <20190110100533.33333-1-peng.ma@nxp.com>
+ <20190110100533.33333-2-peng.ma@nxp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20190111143404.518723a3@xps13>
-Content-Language: en-US
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Miquel Raynal <miquel.raynal@bootlin.com>
-Cc: Mark Rutland <mark.rutland@arm.com>, Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>, Nadav Haklai <nadavh@marvell.com>, devicetree@vger.kernel.org, Antoine Tenart <antoine.tenart@bootlin.com>, Gregory Clement <gregory.clement@bootlin.com>, linux-pm@vger.kernel.org, Maxime Chevallier <maxime.chevallier@bootlin.com>, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, Rob Herring <robh+dt@kernel.org>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, linux-arm-kernel@lists.infradead.org, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20190110100533.33333-2-peng.ma@nxp.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Peng Ma <peng.ma@nxp.com>
+Cc: axboe@kernel.dk, leoyang.li@nxp.com, robh+dt@kernel.org, mark.rutland@arm.com, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 1/11/19 6:34 AM, Miquel Raynal wrote:
-> Hi Jens,
+On Thu, Jan 10, 2019 at 06:05:33PM +0800, Peng Ma wrote:
+> Add sata node support and Enable sata support
 > 
-> Jens Axboe <axboe@kernel.dk> wrote on Tue, 4 Dec 2018 17:11:18 -0700:
+> Signed-off-by: Peng Ma <peng.ma@nxp.com>
+> ---
+>  arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts |   16 +++++++
+>  arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi    |   44 +++++++++++++++++++++
+>  2 files changed, 60 insertions(+), 0 deletions(-)
 > 
->> On 12/4/18 12:28 PM, Miquel Raynal wrote:
->>> Hello,
->>>
->>> As part of an effort to bring suspend to RAM support to Armada 3700
->>> SoCs (main target: ESPRESSObin), this series handles the work around
->>> the SATA IP.
->>>
->>> First, a change in the libahci platform adds support for the new PHY
->>> framework by following the phy_set_mode()/phy_power_on()
->>> sequence. Then, the AHCI MVEBU driver is a bit updated (patch 2 & 3)
->>> and a missing initialization is added for the A3700 in patch 4 (only
->>> done by the Bootloader before). Missing clock support is implemented
->>> in patch 5 to be sure the clock will be resumed before this driver
->>> (see [1] for the series adding device links to the clock core).
->>>
->>> Finally, device trees are updated to reflect the hardware: the missing
->>> PHY is added to the ESPRESSObin DT, and the clock is added to the SoC
->>> DT (patch 6 & 7). Bindings already document the clock and the PHY so
->>> no update is needed on this regard.  
->>
->> Probably the best/easiest to queue this through the libata tree for
->> 4.21. Agree?
->>
-> 
-> It looks like this patchset got left aside for 5.0, shall I re-send? (I
-> rebased on top of 5.0 and the series applied fine).
+> diff --git a/arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts b/arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts
+> index 6481e5f..aacca27 100644
+> --- a/arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts
+> +++ b/arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts
+> @@ -117,3 +117,19 @@
+>  &usb1 {
+>  	status = "okay";
+>  };
+> +
+> +&sata0 {
+> +	status = "okay";
+> +};
+> +
+> +&sata1 {
+> +	status = "okay";
+> +};
+> +
+> +&sata2 {
+> +	status = "okay";
+> +};
+> +
+> +&sata3 {
+> +	status = "okay";
+> +};
+> diff --git a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi b/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
+> index a79f5c1..e857a14 100644
+> --- a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
+> +++ b/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
+> @@ -762,5 +762,49 @@
+>  				     <GIC_SPI 209 IRQ_TYPE_LEVEL_HIGH>;
+>  			dma-coherent;
+>  		};
+> +
+> +		sata0: sata@3200000 {
+> +			status = "disabled";
 
-I never got a reply to the above, so I didn't add it. I've now picked
-up 1-5, 6-7 should go in through someone elses tree.
+We usually have 'status' at the end of property list.
 
--- 
-Jens Axboe
+Shawn
+
+> +			compatible = "fsl,lx2160a-ahci";
+> +			reg = <0x0 0x3200000 0x0 0x10000>,
+> +			      <0x7 0x100520 0x0 0x4>;
+> +			reg-names = "ahci", "sata-ecc";
+> +			interrupts = <GIC_SPI 133 IRQ_TYPE_LEVEL_HIGH>;
+> +			clocks = <&clockgen 4 3>;
+> +			dma-coherent;
+> +		};
+> +
+> +		sata1: sata@3210000 {
+> +			status = "disabled";
+> +			compatible = "fsl,lx2160a-ahci";
+> +			reg = <0x0 0x3210000 0x0 0x10000>,
+> +			      <0x7 0x100520 0x0 0x4>;
+> +			reg-names = "ahci", "sata-ecc";
+> +			interrupts = <GIC_SPI 136 IRQ_TYPE_LEVEL_HIGH>;
+> +			clocks = <&clockgen 4 3>;
+> +			dma-coherent;
+> +		};
+> +
+> +		sata2: sata@3220000 {
+> +			status = "disabled";
+> +			compatible = "fsl,lx2160a-ahci";
+> +			reg = <0x0 0x3220000 0x0 0x10000>,
+> +			      <0x7 0x100520 0x0 0x4>;
+> +			reg-names = "ahci", "sata-ecc";
+> +			interrupts = <GIC_SPI 97 IRQ_TYPE_LEVEL_HIGH>;
+> +			clocks = <&clockgen 4 3>;
+> +			dma-coherent;
+> +		};
+> +
+> +		sata3: sata@3230000 {
+> +			status = "disabled";
+> +			compatible = "fsl,lx2160a-ahci";
+> +			reg = <0x0 0x3230000 0x0 0x10000>,
+> +			      <0x7 0x100520 0x0 0x4>;
+> +			reg-names = "ahci", "sata-ecc";
+> +			interrupts = <GIC_SPI 100 IRQ_TYPE_LEVEL_HIGH>;
+> +			clocks = <&clockgen 4 3>;
+> +			dma-coherent;
+> +		};
+>  	};
+>  };
+> -- 
+> 1.7.1
+> 
