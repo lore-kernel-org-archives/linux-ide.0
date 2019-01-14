@@ -1,38 +1,75 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] ata: rb532_cf: Remove unused variable
-Date: Mon, 14 Jan 2019 02:30:39 -0600
-Message-ID: <20190114083039.GA11208@embeddedor>
+From: Peng Ma <peng.ma@nxp.com>
+Subject: RE: [PATCH 2/2] arm64: dts: lx2160a: add sata node support
+Date: Mon, 14 Jan 2019 09:52:38 +0000
+Message-ID: <VI1PR04MB4431BD06BD9651BEEED031E9ED800@VI1PR04MB4431.eurprd04.prod.outlook.com>
+References: <20190110100533.33333-1-peng.ma@nxp.com>
+ <20190110100533.33333-2-peng.ma@nxp.com> <20190113040546.GL11426@dragon>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20190113040546.GL11426@dragon>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To: Shawn Guo <shawnguo@kernel.org>
+Cc: "axboe@kernel.dk" <axboe@kernel.dk>, Leo Li <leoyang.li@nxp.com>, "robh+dt@kernel.org" <robh+dt@kernel.org>, "mark.rutland@arm.com" <mark.rutland@arm.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-Remove unused variable *info* in rb532_pata_driver_remove():
-
-drivers/ata/pata_rb532_cf.c:165:24: warning: unused variable 'info'
-[-Wunused-variable]
-
-Fixes: 0fe98fa056d7 ("ata: rb532_cf: Convert to use GPIO descriptors")
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/ata/pata_rb532_cf.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
-index 66bb5bff126b..1b9a8552d2dd 100644
---- a/drivers/ata/pata_rb532_cf.c
-+++ b/drivers/ata/pata_rb532_cf.c
-@@ -162,7 +162,6 @@ static int rb532_pata_driver_probe(struct platform_device *pdev)
- static int rb532_pata_driver_remove(struct platform_device *pdev)
- {
- 	struct ata_host *ah = platform_get_drvdata(pdev);
--	struct rb532_cf_info *info = ah->private_data;
- 
- 	ata_host_detach(ah);
- 
--- 
-2.20.1
+DQoNCj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPkZyb206IFNoYXduIEd1byA8c2hhd25n
+dW9Aa2VybmVsLm9yZz4NCj5TZW50OiAyMDE5xOox1MIxM8jVIDEyOjA2DQo+VG86IFBlbmcgTWEg
+PHBlbmcubWFAbnhwLmNvbT4NCj5DYzogYXhib2VAa2VybmVsLmRrOyBMZW8gTGkgPGxlb3lhbmcu
+bGlAbnhwLmNvbT47IHJvYmgrZHRAa2VybmVsLm9yZzsNCj5tYXJrLnJ1dGxhbmRAYXJtLmNvbTsg
+bGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOw0KPmRldmljZXRyZWVAdmdlci5r
+ZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOw0KPmxpbnV4LWlkZUB2Z2Vy
+Lmtlcm5lbC5vcmcNCj5TdWJqZWN0OiBSZTogW1BBVENIIDIvMl0gYXJtNjQ6IGR0czogbHgyMTYw
+YTogYWRkIHNhdGEgbm9kZSBzdXBwb3J0DQo+DQo+T24gVGh1LCBKYW4gMTAsIDIwMTkgYXQgMDY6
+MDU6MzNQTSArMDgwMCwgUGVuZyBNYSB3cm90ZToNCj4+IEFkZCBzYXRhIG5vZGUgc3VwcG9ydCBh
+bmQgRW5hYmxlIHNhdGEgc3VwcG9ydA0KPj4NCj4+IFNpZ25lZC1vZmYtYnk6IFBlbmcgTWEgPHBl
+bmcubWFAbnhwLmNvbT4NCj4+IC0tLQ0KPj4gIGFyY2gvYXJtNjQvYm9vdC9kdHMvZnJlZXNjYWxl
+L2ZzbC1seDIxNjBhLXJkYi5kdHMgfCAgIDE2ICsrKysrKysNCj4+ICBhcmNoL2FybTY0L2Jvb3Qv
+ZHRzL2ZyZWVzY2FsZS9mc2wtbHgyMTYwYS5kdHNpICAgIHwgICA0NA0KPisrKysrKysrKysrKysr
+KysrKysrKw0KPj4gIDIgZmlsZXMgY2hhbmdlZCwgNjAgaW5zZXJ0aW9ucygrKSwgMCBkZWxldGlv
+bnMoLSkNCj4+DQo+PiBkaWZmIC0tZ2l0IGEvYXJjaC9hcm02NC9ib290L2R0cy9mcmVlc2NhbGUv
+ZnNsLWx4MjE2MGEtcmRiLmR0cw0KPmIvYXJjaC9hcm02NC9ib290L2R0cy9mcmVlc2NhbGUvZnNs
+LWx4MjE2MGEtcmRiLmR0cw0KPj4gaW5kZXggNjQ4MWU1Zi4uYWFjY2EyNyAxMDA2NDQNCj4+IC0t
+LSBhL2FyY2gvYXJtNjQvYm9vdC9kdHMvZnJlZXNjYWxlL2ZzbC1seDIxNjBhLXJkYi5kdHMNCj4+
+ICsrKyBiL2FyY2gvYXJtNjQvYm9vdC9kdHMvZnJlZXNjYWxlL2ZzbC1seDIxNjBhLXJkYi5kdHMN
+Cj4+IEBAIC0xMTcsMyArMTE3LDE5IEBADQo+PiAgJnVzYjEgew0KPj4gIAlzdGF0dXMgPSAib2th
+eSI7DQo+PiAgfTsNCj4+ICsNCj4+ICsmc2F0YTAgew0KPj4gKwlzdGF0dXMgPSAib2theSI7DQo+
+PiArfTsNCj4+ICsNCj4+ICsmc2F0YTEgew0KPj4gKwlzdGF0dXMgPSAib2theSI7DQo+PiArfTsN
+Cj4+ICsNCj4+ICsmc2F0YTIgew0KPj4gKwlzdGF0dXMgPSAib2theSI7DQo+PiArfTsNCj4+ICsN
+Cj4+ICsmc2F0YTMgew0KPj4gKwlzdGF0dXMgPSAib2theSI7DQo+PiArfTsNCj4+IGRpZmYgLS1n
+aXQgYS9hcmNoL2FybTY0L2Jvb3QvZHRzL2ZyZWVzY2FsZS9mc2wtbHgyMTYwYS5kdHNpDQo+Yi9h
+cmNoL2FybTY0L2Jvb3QvZHRzL2ZyZWVzY2FsZS9mc2wtbHgyMTYwYS5kdHNpDQo+PiBpbmRleCBh
+NzlmNWMxLi5lODU3YTE0IDEwMDY0NA0KPj4gLS0tIGEvYXJjaC9hcm02NC9ib290L2R0cy9mcmVl
+c2NhbGUvZnNsLWx4MjE2MGEuZHRzaQ0KPj4gKysrIGIvYXJjaC9hcm02NC9ib290L2R0cy9mcmVl
+c2NhbGUvZnNsLWx4MjE2MGEuZHRzaQ0KPj4gQEAgLTc2Miw1ICs3NjIsNDkgQEANCj4+ICAJCQkJ
+ICAgICA8R0lDX1NQSSAyMDkgSVJRX1RZUEVfTEVWRUxfSElHSD47DQo+PiAgCQkJZG1hLWNvaGVy
+ZW50Ow0KPj4gIAkJfTsNCj4+ICsNCj4+ICsJCXNhdGEwOiBzYXRhQDMyMDAwMDAgew0KPj4gKwkJ
+CXN0YXR1cyA9ICJkaXNhYmxlZCI7DQo+DQo+V2UgdXN1YWxseSBoYXZlICdzdGF0dXMnIGF0IHRo
+ZSBlbmQgb2YgcHJvcGVydHkgbGlzdC4NCj4NCj5TaGF3bg0KW1BlbmcgTWFdIA0KT2ssIGdvdCBp
+dCwgdGhhbmtzIHl1cmUgcXVpY2sgcmVwbHkuDQpSZWdhcmRzLA0KUGVuZw0KPg0KPj4gKwkJCWNv
+bXBhdGlibGUgPSAiZnNsLGx4MjE2MGEtYWhjaSI7DQo+PiArCQkJcmVnID0gPDB4MCAweDMyMDAw
+MDAgMHgwIDB4MTAwMDA+LA0KPj4gKwkJCSAgICAgIDwweDcgMHgxMDA1MjAgMHgwIDB4ND47DQo+
+PiArCQkJcmVnLW5hbWVzID0gImFoY2kiLCAic2F0YS1lY2MiOw0KPj4gKwkJCWludGVycnVwdHMg
+PSA8R0lDX1NQSSAxMzMgSVJRX1RZUEVfTEVWRUxfSElHSD47DQo+PiArCQkJY2xvY2tzID0gPCZj
+bG9ja2dlbiA0IDM+Ow0KPj4gKwkJCWRtYS1jb2hlcmVudDsNCj4+ICsJCX07DQo+PiArDQo+PiAr
+CQlzYXRhMTogc2F0YUAzMjEwMDAwIHsNCj4+ICsJCQlzdGF0dXMgPSAiZGlzYWJsZWQiOw0KPj4g
+KwkJCWNvbXBhdGlibGUgPSAiZnNsLGx4MjE2MGEtYWhjaSI7DQo+PiArCQkJcmVnID0gPDB4MCAw
+eDMyMTAwMDAgMHgwIDB4MTAwMDA+LA0KPj4gKwkJCSAgICAgIDwweDcgMHgxMDA1MjAgMHgwIDB4
+ND47DQo+PiArCQkJcmVnLW5hbWVzID0gImFoY2kiLCAic2F0YS1lY2MiOw0KPj4gKwkJCWludGVy
+cnVwdHMgPSA8R0lDX1NQSSAxMzYgSVJRX1RZUEVfTEVWRUxfSElHSD47DQo+PiArCQkJY2xvY2tz
+ID0gPCZjbG9ja2dlbiA0IDM+Ow0KPj4gKwkJCWRtYS1jb2hlcmVudDsNCj4+ICsJCX07DQo+PiAr
+DQo+PiArCQlzYXRhMjogc2F0YUAzMjIwMDAwIHsNCj4+ICsJCQlzdGF0dXMgPSAiZGlzYWJsZWQi
+Ow0KPj4gKwkJCWNvbXBhdGlibGUgPSAiZnNsLGx4MjE2MGEtYWhjaSI7DQo+PiArCQkJcmVnID0g
+PDB4MCAweDMyMjAwMDAgMHgwIDB4MTAwMDA+LA0KPj4gKwkJCSAgICAgIDwweDcgMHgxMDA1MjAg
+MHgwIDB4ND47DQo+PiArCQkJcmVnLW5hbWVzID0gImFoY2kiLCAic2F0YS1lY2MiOw0KPj4gKwkJ
+CWludGVycnVwdHMgPSA8R0lDX1NQSSA5NyBJUlFfVFlQRV9MRVZFTF9ISUdIPjsNCj4+ICsJCQlj
+bG9ja3MgPSA8JmNsb2NrZ2VuIDQgMz47DQo+PiArCQkJZG1hLWNvaGVyZW50Ow0KPj4gKwkJfTsN
+Cj4+ICsNCj4+ICsJCXNhdGEzOiBzYXRhQDMyMzAwMDAgew0KPj4gKwkJCXN0YXR1cyA9ICJkaXNh
+YmxlZCI7DQo+PiArCQkJY29tcGF0aWJsZSA9ICJmc2wsbHgyMTYwYS1haGNpIjsNCj4+ICsJCQly
+ZWcgPSA8MHgwIDB4MzIzMDAwMCAweDAgMHgxMDAwMD4sDQo+PiArCQkJICAgICAgPDB4NyAweDEw
+MDUyMCAweDAgMHg0PjsNCj4+ICsJCQlyZWctbmFtZXMgPSAiYWhjaSIsICJzYXRhLWVjYyI7DQo+
+PiArCQkJaW50ZXJydXB0cyA9IDxHSUNfU1BJIDEwMCBJUlFfVFlQRV9MRVZFTF9ISUdIPjsNCj4+
+ICsJCQljbG9ja3MgPSA8JmNsb2NrZ2VuIDQgMz47DQo+PiArCQkJZG1hLWNvaGVyZW50Ow0KPj4g
+KwkJfTsNCj4+ICAJfTsNCj4+ICB9Ow0KPj4gLS0NCj4+IDEuNy4xDQo+Pg0K
