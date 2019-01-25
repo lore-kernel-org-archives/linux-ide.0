@@ -1,134 +1,49 @@
-From: Peng Ma <peng.ma@nxp.com>
-Subject: [v4] arm64: dts: lx2160a: add sata node support
-Date: Fri, 25 Jan 2019 11:32:20 +0800
-Message-ID: <20190125033221.30333-1-peng.ma@nxp.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [v4] dt-bindings: ahci-fsl-qoriq: add lx2160a chip name to the
+ list
+Date: Fri, 25 Jan 2019 10:45:35 +0300
+Message-ID: <7c0ed8e1-7d41-8594-fd9d-9e220cbb2ab1@cogentembedded.com>
+References: <20190125033221.30333-1-peng.ma@nxp.com>
+ <20190125033221.30333-2-peng.ma@nxp.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190125033221.30333-2-peng.ma@nxp.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: shawnguo@kernel.org, axboe@kernel.dk
-Cc: robh+dt@kernel.org, mark.rutland@arm.com, leoyang.li@nxp.com, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, andy.tang@nxp.com, Peng Ma <peng.ma@nxp.com>
+To: Peng Ma <peng.ma@nxp.com>, shawnguo@kernel.org, axboe@kernel.dk
+Cc: robh+dt@kernel.org, mark.rutland@arm.com, leoyang.li@nxp.com, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, andy.tang@nxp.com
 List-Id: linux-ide@vger.kernel.org
 
-Add SATA device nodes for fsl-lx2160a and enable support
-for QDS and RDB boards.
+Hello!
 
-Signed-off-by: Peng Ma <peng.ma@nxp.com>
----
-changed for V4:
-	- no change
+On 25.01.2019 6:32, Peng Ma wrote:
 
- arch/arm64/boot/dts/freescale/fsl-lx2160a-qds.dts |   16 +++++++
- arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts |   16 +++++++
- arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi    |   44 +++++++++++++++++++++
- 3 files changed, 76 insertions(+), 0 deletions(-)
+> Add lxx2160a compatible to bindings documentation.
 
-diff --git a/arch/arm64/boot/dts/freescale/fsl-lx2160a-qds.dts b/arch/arm64/boot/dts/freescale/fsl-lx2160a-qds.dts
-index 99a22ab..1a5acf6 100644
---- a/arch/arm64/boot/dts/freescale/fsl-lx2160a-qds.dts
-+++ b/arch/arm64/boot/dts/freescale/fsl-lx2160a-qds.dts
-@@ -95,6 +95,22 @@
- 	};
- };
- 
-+&sata0 {
-+	status = "okay";
-+};
-+
-+&sata1 {
-+	status = "okay";
-+};
-+
-+&sata2 {
-+	status = "okay";
-+};
-+
-+&sata3 {
-+	status = "okay";
-+};
-+
- &uart0 {
- 	status = "okay";
- };
-diff --git a/arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts b/arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts
-index 6481e5f..5b6799e 100644
---- a/arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts
-+++ b/arch/arm64/boot/dts/freescale/fsl-lx2160a-rdb.dts
-@@ -102,6 +102,22 @@
- 	};
- };
- 
-+&sata0 {
-+	status = "okay";
-+};
-+
-+&sata1 {
-+	status = "okay";
-+};
-+
-+&sata2 {
-+	status = "okay";
-+};
-+
-+&sata3 {
-+	status = "okay";
-+};
-+
- &uart0 {
- 	status = "okay";
- };
-diff --git a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi b/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
-index a79f5c1..592034b 100644
---- a/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
-+++ b/arch/arm64/boot/dts/freescale/fsl-lx2160a.dtsi
-@@ -671,6 +671,50 @@
- 			status = "disabled";
- 		};
- 
-+		sata0: sata@3200000 {
-+			compatible = "fsl,lx2160a-ahci";
-+			reg = <0x0 0x3200000 0x0 0x10000>,
-+			      <0x7 0x100520 0x0 0x4>;
-+			reg-names = "ahci", "sata-ecc";
-+			interrupts = <GIC_SPI 133 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&clockgen 4 3>;
-+			dma-coherent;
-+			status = "disabled";
-+		};
-+
-+		sata1: sata@3210000 {
-+			compatible = "fsl,lx2160a-ahci";
-+			reg = <0x0 0x3210000 0x0 0x10000>,
-+			      <0x7 0x100520 0x0 0x4>;
-+			reg-names = "ahci", "sata-ecc";
-+			interrupts = <GIC_SPI 136 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&clockgen 4 3>;
-+			dma-coherent;
-+			status = "disabled";
-+		};
-+
-+		sata2: sata@3220000 {
-+			compatible = "fsl,lx2160a-ahci";
-+			reg = <0x0 0x3220000 0x0 0x10000>,
-+			      <0x7 0x100520 0x0 0x4>;
-+			reg-names = "ahci", "sata-ecc";
-+			interrupts = <GIC_SPI 97 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&clockgen 4 3>;
-+			dma-coherent;
-+			status = "disabled";
-+		};
-+
-+		sata3: sata@3230000 {
-+			compatible = "fsl,lx2160a-ahci";
-+			reg = <0x0 0x3230000 0x0 0x10000>,
-+			      <0x7 0x100520 0x0 0x4>;
-+			reg-names = "ahci", "sata-ecc";
-+			interrupts = <GIC_SPI 100 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&clockgen 4 3>;
-+			dma-coherent;
-+			status = "disabled";
-+		};
-+
- 		smmu: iommu@5000000 {
- 			compatible = "arm,mmu-500";
- 			reg = <0 0x5000000 0 0x800000>;
--- 
-1.7.1
+    lx2160a?
+
+> Signed-off-by: Peng Ma <peng.ma@nxp.com>
+> ---
+> changed for V4:
+> 	- add lx2160a compatible to bindings doc
+> 
+>   .../devicetree/bindings/ata/ahci-fsl-qoriq.txt     |    2 +-
+>   1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
+> index 7c3ca0e..9ecc019 100644
+> --- a/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
+> +++ b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
+> @@ -3,7 +3,7 @@ Binding for Freescale QorIQ AHCI SATA Controller
+>   Required properties:
+>     - reg: Physical base address and size of the controller's register area.
+>     - compatible: Compatibility string. Must be 'fsl,<chip>-ahci', where
+> -    chip could be ls1021a, ls1043a, ls1046a, ls1088a, ls2080a etc.
+> +    chip could be ls1021a, ls1043a, ls1046a, ls1088a, ls2080a, lx2160a, etc.
+>     - clocks: Input clock specifier. Refer to common clock bindings.
+>     - interrupts: Interrupt specifier. Refer to interrupt binding.
+>   
+
+MBR, Sergei
