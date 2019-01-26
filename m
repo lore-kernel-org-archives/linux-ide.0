@@ -1,174 +1,514 @@
-From: He Zhe <zhe.he@windriver.com>
-Subject: Re: LTP case read_all_proc fails on qemux86-64 since 5.0-rc1
-Date: Sat, 26 Jan 2019 15:29:45 +0800
-Message-ID: <a0fcb119-82e7-c9b2-ea76-6aa39bd33edb@windriver.com>
-References: <316b80da-0811-f9e6-dd42-41ddbb7eb8a0@windriver.com>
- <C1903094-A3C8-4273-9869-72D400180E51@kernel.dk>
- <11b1b3ee-a94b-dd5e-3ba6-df3efa239c7f@kernel.dk>
- <adb69f96-8825-ef14-3e02-98c046f72ecb@windriver.com>
- <31660451-9ab4-43b8-b468-ae7b9a8d2279@kernel.dk>
- <eae853aa-de54-42d6-a9bc-254c152cec5b@windriver.com>
- <29f3b60d-922e-001a-0c1c-ed8482c6e409@kernel.dk>
- <0905efc0-d4f2-08d8-0f87-bd4bfab6e46e@windriver.com>
- <ff2b87eb-54f0-f40b-a317-8bbbb32759f4@kernel.dk>
- <594d7f4d-f241-b279-954d-6d4569ea8dd2@windriver.com>
- <6028ed5e-5779-0ab9-1c7e-93e7e5e827bd@kernel.dk>
- <bc722123-86aa-e062-7792-32ca9badbe3e@kernel.dk>
+From: Nathan Chancellor <natechancellor@gmail.com>
+Subject: [PATCH v4] scsi/ata: Use unsigned int for cmd's type in ioctls in scsi_host_template
+Date: Sat, 26 Jan 2019 00:52:57 -0700
+Message-ID: <20190126075256.29608-1-natechancellor@gmail.com>
+References: <20190114044206.6351-1-natechancellor@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <bc722123-86aa-e062-7792-32ca9badbe3e@kernel.dk>
-Content-Language: en-US
+In-Reply-To: <20190114044206.6351-1-natechancellor@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: davem@davemloft.net, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Manoj N. Kumar" <manoj@linux.ibm.com>, "Matthew R. Ochs" <mrochs@linux.ibm.com>, Uma Krishnan <ukrishn@linux.ibm.com>, Bradley Grove <linuxdrivers@attotech.com>, Don Brace <don.brace@microsemi.com>, Brian King <brking@us.ibm.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, esc.storagedev@microsemi.com, Nick Desaulniers <ndesaulniers@google.com>, Nathan Chancellor <natechancellor@gmail.com>, Bart Van Assche <bvanassche@acm.org>
 List-Id: linux-ide@vger.kernel.org
 
+Clang warns several times in the scsi subsystem (trimmed for brevity):
 
+drivers/scsi/hpsa.c:6209:7: warning: overflow converting case value to
+switch condition type (2147762695 to 18446744071562347015) [-Wswitch]
+        case CCISS_GETBUSTYPES:
+             ^
+drivers/scsi/hpsa.c:6208:7: warning: overflow converting case value to
+switch condition type (2147762694 to 18446744071562347014) [-Wswitch]
+        case CCISS_GETHEARTBEAT:
+             ^
 
-On 1/26/19 3:32 AM, Jens Axboe wrote:
-> On 1/24/19 8:20 PM, Jens Axboe wrote:
->> On 1/24/19 8:14 PM, He Zhe wrote:
->>> On 1/25/19 10:26 AM, Jens Axboe wrote:
->>>> On 1/24/19 7:22 PM, He Zhe wrote:
->>>>> On 1/25/19 10:05 AM, Jens Axboe wrote:
->>>>>> On 1/24/19 6:40 PM, He Zhe wrote:
->>>>>>> On 1/24/19 11:40 PM, Jens Axboe wrote:
->>>>>>>> On 1/24/19 1:23 AM, He Zhe wrote:
->>>>>>>>> On 1/24/19 12:05 AM, Jens Axboe wrote:
->>>>>>>>>> On 1/22/19 8:39 PM, Jens Axboe wrote:
->>>>>>>>>>> On Jan 22, 2019, at 8:13 PM, He Zhe <zhe.he@windriver.com> wrote:
->>>>>>>>>>>> LTP case read_all_proc(read_all -d /proc -q -r 10) often, but not every time, fails with the following call traces, since 600335205b8d "ide: convert to blk-mq"(5.0-rc1) till now(5.0-rc3).
->>>>>>>>>>>>
->>>>>>>>>>>> qemu-system-x86_64 -drive file=rootfs.ext4,if=virtio,format=raw -object rng-random,filename=/dev/urandom,id=rng0 -device virtio-rng-pci,rng=rng0 -nographic -m 16192 -smp cpus=12 -cpu core2duo -enable-kvm -serial mon:stdio -serial null -kernel bzImage -append 'root=/dev/vda rw highres=off console=ttyS0 mem=16192M'
->>>>>>>>>>>>
->>>>>>>>>>>> tst_test.c:1085: INFO: Timeout per run is 0h 05m 00s
->>>>>>>>>>>> [   47.080156] Warning: /proc/ide/hd?/settings interface is obsolete, and will be removed soon!
->>>>>>>>>>>> [   47.085330] ------------[ cut here ]------------
->>>>>>>>>>>> [   47.085810] kernel BUG at block/blk-mq.c:767!
->>>>>>>>>>>> [   47.086498] invalid opcode: 0000 [#1] PREEMPT SMP PTI
->>>>>>>>>>>> [   47.087022] CPU: 5 PID: 146 Comm: kworker/5:1H Not tainted 5.0.0-rc3 #1
->>>>>>>>>>>> [   47.087858] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS rel-1.12.0-0-ga698c8995f-prebuilt.qemu.org 04/01/2014
->>>>>>>>>>>> [   47.088992] Workqueue: kblockd blk_mq_run_work_fn
->>>>>>>>>>>> [   47.089469] RIP: 0010:blk_mq_add_to_requeue_list+0xc1/0xd0
->>>>>>>>>>>> [   47.090035] Code: 48 8d 53 48 49 8b 8c 24 b8 04 00 00 48 89 51 08 48 89 4b 48 49 8d 8c 24 b8 04 00 00 48 89 4b 50 49 89 94 24 b8 04 00 008
->>>>>>>>>>>> [   47.091930] RSP: 0018:ffff9e1ea4b43e40 EFLAGS: 00010002
->>>>>>>>>>>> [   47.092458] RAX: ffff9e1ea13c0048 RBX: ffff9e1ea13c0000 RCX: 0000000000000006
->>>>>>>>>>>> [   47.093181] RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffff9e1ea13c0000
->>>>>>>>>>>> [   47.093906] RBP: ffff9e1ea4b43e68 R08: ffffeb5bcf630680 R09: 0000000000000000
->>>>>>>>>>>> [   47.094626] R10: 0000000000000001 R11: 0000000000000012 R12: ffff9e1ea1033a40
->>>>>>>>>>>> [   47.095347] R13: ffff9e1ea13a8d00 R14: ffff9e1ea13a9000 R15: 0000000000000046
->>>>>>>>>>>> [   47.096071] FS:  0000000000000000(0000) GS:ffff9e1ea4b40000(0000) knlGS:0000000000000000
->>>>>>>>>>>> [   47.096898] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->>>>>>>>>>>> [   47.097477] CR2: 0000003fda41fda0 CR3: 00000003d8e6a000 CR4: 00000000000006e0
->>>>>>>>>>>> [   47.098203] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
->>>>>>>>>>>> [   47.098929] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
->>>>>>>>>>>> [   47.099650] Call Trace:
->>>>>>>>>>>> [   47.099910]  <IRQ>
->>>>>>>>>>>> [   47.100128]  blk_mq_requeue_request+0x58/0x60
->>>>>>>>>>>> [   47.100576]  ide_requeue_and_plug+0x20/0x50
->>>>>>>>>>>> [   47.101014]  ide_intr+0x21a/0x230
->>>>>>>>>>>> [   47.101362]  ? idecd_open+0xc0/0xc0
->>>>>>>>>>>> [   47.101735]  __handle_irq_event_percpu+0x43/0x1e0
->>>>>>>>>>>> [   47.102214]  handle_irq_event_percpu+0x32/0x80
->>>>>>>>>>>> [   47.102668]  handle_irq_event+0x39/0x60
->>>>>>>>>>>> [   47.103074]  handle_edge_irq+0xe8/0x1c0
->>>>>>>>>>>> [   47.103470]  handle_irq+0x20/0x30
->>>>>>>>>>>> [   47.103819]  do_IRQ+0x46/0xe0
->>>>>>>>>>>> [   47.104128]  common_interrupt+0xf/0xf
->>>>>>>>>>>> [   47.104505]  </IRQ>
->>>>>>>>>>>> [   47.104731] RIP: 0010:ide_output_data+0xbc/0x100
->>>>>>>>>>>> [   47.105201] Code: 74 22 8d 41 ff 85 c9 74 24 49 8d 54 40 02 41 0f b7 00 66 41 89 01 49 83 c0 02 49 39 d0 75 ef 5b 41 5c 5d c3 4c 89 c6 445
->>>>>>>>>>>> [   47.107092] RSP: 0018:ffffbd508059bb18 EFLAGS: 00010246 ORIG_RAX: ffffffffffffffdd
->>>>>>>>>>>> [   47.107862] RAX: ffff9e1ea13a8800 RBX: ffff9e1ea13a9000 RCX: 0000000000000000
->>>>>>>>>>>> [   47.108581] RDX: 0000000000000170 RSI: ffff9e1ea13c012c RDI: 0000000000000000
->>>>>>>>>>>> [   47.109293] RBP: ffffbd508059bb28 R08: ffff9e1ea13c0120 R09: 0000000000000170
->>>>>>>>>>>> [   47.110016] R10: 000000000000000d R11: 000000000000000c R12: ffff9e1ea13a8800
->>>>>>>>>>>> [   47.110731] R13: 000000000000000c R14: ffff9e1ea13c0000 R15: 0000000000007530
->>>>>>>>>>>> [   47.111446]  ide_transfer_pc+0x216/0x310
->>>>>>>>>>>> [   47.111848]  ? __const_udelay+0x3d/0x40
->>>>>>>>>>>> [   47.112236]  ? ide_execute_command+0x85/0xb0
->>>>>>>>>>>> [   47.112668]  ? ide_pc_intr+0x3f0/0x3f0
->>>>>>>>>>>> [   47.113051]  ? ide_check_atapi_device+0x110/0x110
->>>>>>>>>>>> [   47.113524]  ide_issue_pc+0x178/0x240
->>>>>>>>>>>> [   47.113901]  ide_cd_do_request+0x15c/0x350
->>>>>>>>>>>> [   47.114314]  ide_queue_rq+0x180/0x6b0
->>>>>>>>>>>> [   47.114686]  ? blk_mq_get_driver_tag+0xa1/0x110
->>>>>>>>>>>> [   47.115153]  blk_mq_dispatch_rq_list+0x90/0x550
->>>>>>>>>>>> [   47.115606]  ? __queue_delayed_work+0x63/0x90
->>>>>>>>>>>> [   47.116054]  ? deadline_fifo_request+0x41/0x90
->>>>>>>>>>>> [   47.116506]  blk_mq_do_dispatch_sched+0x80/0x100
->>>>>>>>>>>> [   47.116976]  blk_mq_sched_dispatch_requests+0xfc/0x170
->>>>>>>>>>>> [   47.117491]  __blk_mq_run_hw_queue+0x6f/0xd0
->>>>>>>>>>>> [   47.117941]  blk_mq_run_work_fn+0x1b/0x20
->>>>>>>>>>>> [   47.118342]  process_one_work+0x14c/0x450
->>>>>>>>>>>> [   47.118747]  worker_thread+0x4a/0x440
->>>>>>>>>>>> [   47.119125]  kthread+0x105/0x140
->>>>>>>>>>>> [   47.119456]  ? process_one_work+0x450/0x450
->>>>>>>>>>>> [   47.119880]  ? kthread_park+0x90/0x90
->>>>>>>>>>>> [   47.120251]  ret_from_fork+0x35/0x40
->>>>>>>>>>>> [   47.120619] Modules linked in:
->>>>>>>>>>>> [   47.120952] ---[ end trace 4562f716e88fdefe ]---
->>>>>>>>>>>> [   47.121423] RIP: 0010:blk_mq_add_to_requeue_list+0xc1/0xd0
->>>>>>>>>>>> [   47.121981] Code: 48 8d 53 48 49 8b 8c 24 b8 04 00 00 48 89 51 08 48 89 4b 48 49 8d 8c 24 b8 04 00 00 48 89 4b 50 49 89 94 24 b8 04 00 008
->>>>>>>>>>>> [   47.123851] RSP: 0018:ffff9e1ea4b43e40 EFLAGS: 00010002
->>>>>>>>>>>> [   47.124393] RAX: ffff9e1ea13c0048 RBX: ffff9e1ea13c0000 RCX: 0000000000000006
->>>>>>>>>>>> [   47.125108] RDX: 0000000000000000 RSI: 0000000000000001 RDI: ffff9e1ea13c0000
->>>>>>>>>>>> [   47.125819] RBP: ffff9e1ea4b43e68 R08: ffffeb5bcf630680 R09: 0000000000000000
->>>>>>>>>>>> [   47.126539] R10: 0000000000000001 R11: 0000000000000012 R12: ffff9e1ea1033a40
->>>>>>>>>>>> [   47.127262] R13: ffff9e1ea13a8d00 R14: ffff9e1ea13a9000 R15: 0000000000000046
->>>>>>>>>>>> [   47.127988] FS:  0000000000000000(0000) GS:ffff9e1ea4b40000(0000) knlGS:0000000000000000
->>>>>>>>>>>> [   47.128793] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->>>>>>>>>>>> [   47.129385] CR2: 0000003fda41fda0 CR3: 00000003d8e6a000 CR4: 00000000000006e0
->>>>>>>>>>>> [   47.130104] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
->>>>>>>>>>>> [   47.130823] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
->>>>>>>>>>>> [   47.131547] Kernel panic - not syncing: Fatal exception in interrupt
->>>>>>>>>>>> [   47.132609] Kernel Offset: 0x7c00000 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffffbfffffff)
->>>>>>>>>>>> [   47.133679] ---[ end Kernel panic - not syncing: Fatal exception in interrupt ]---
->>>>>>>>>>>> [   47.134432] ------------[ cut here ]-----------
->>>>>>>>>>> I’ll take a look at this, thanks for the report.
->>>>>>>>>> I can't reproduce this, unfortunately. But I'm guessing it might be related
->>>>>>>>>> to a race with the requeue and request handling in IDE. Can you try with
->>>>>>>>>> the below patch?
->>>>>>>>> Thanks for attention, but this patch doesn't help.
->>>>>>>> OK, thanks for trying.
->>>>>>>>
->>>>>>>>> From what I reached, to reproduce it, we need to use legacy CONFIG_IDE
->>>>>>>>> and friends where "ide: convert to blk-mq" sits, not CONFIG_ATA and so
->>>>>>>>> on.  I can reproduce it with qemux86-64 with "-drive ... if=ide" or
->>>>>>>>> "-drive ... if=virtio".
->>>>>>>> Yes of course, I am trying to reproduce with the legacy stack. Just not
->>>>>>>> having any luck doing it, even thousands of read_all iterations on /proc
->>>>>>>> with IO to the IDE drives is still not doing it. From your trace, it
->>>>>>>> looks like ide-cd causing it, which would mean a cdrom of some sort.
->>>>>>>>
->>>>>>>> I'll try again!
->>>>>>> My .config is attached.
->>>>>> Can you try with this patch?
->>>>> With this patch, it cannot boot up.
->>>> Ugh, forgot it's inclusive. You want it at '2', not '1'.
->>> With "set->queue_depth = 2;", reading aganst /sys or normal disk dir is OK, but the following hang. So the related test cases are all timed out.
->>>
->>> ps -elf
->>> ---- snip ----
->>> 5 D root       415     1  0  80   0 -   664 io_sch 02:49 ttyS0    00:00:00 /opt/ltp/testcases/bin/read_all -d /proc -r 10
->>> 5 D root       416     1  0  80   0 -   669 io_sch 02:49 ttyS0    00:00:00 /opt/ltp/testcases/bin/read_all -d /proc -r 10
->>> 5 D root       417     1  0  80   0 -   674 io_sch 02:49 ttyS0    00:00:00 /opt/ltp/testcases/bin/read_all -d /proc -r 10
->>> 5 D root       421     1  0  80   0 -   629 io_sch 02:49 ttyS0    00:00:00 /opt/ltp/testcases/bin/read_all -d /proc -r 1
->>> 5 D root       434     1  0  80   0 -   629 io_sch 02:49 ttyS0    00:00:00 /opt/ltp/testcases/bin/read_all -d /proc -r 1
->>> 5 D root       448     1  0  80   0 -   629 io_sch 02:55 ttyS0    00:00:00 /opt/ltp/testcases/bin/read_all -d /proc -r 1
->>> 5 D root       474     1  0  80   0 -   629 flush_ 02:55 ttyS0    00:00:00 /opt/ltp/testcases/bin/read_all -d /dev -r 1
->>>
->>> In addition, without this change, it can be reproduced more often with more processes.
->> I've managed to reproduce it now, though I don't quite yet see what is going
->> on. It's almost like we're NOT honoring the serialization, which results
->> in a sense request being doubly queued. I'll see if I can figure it out
->> and produce a patch that works.
-> Alright, here's something that has a chance of working. I don't think we
-> can solve the ordering issue with sense requests without doing something
-> like this. Can you give it a spin?
+The root cause is that the _IOC macro can generate really large numbers,
+which don't find into type 'int', which is used for the cmd paremeter in
+the ioctls in scsi_host_template. My research into how GCC and Clang are
+handling this at a low level didn't prove fruitful. However, looking at
+the rest of the kernel tree, all ioctls use an 'unsigned int' for the
+cmd parameter, which will fit all of the _IOC values in the scsi/ata
+subsystems.
 
-This works well from my side. Thanks.
+Make that change because none of the ioctls expect to take a negative
+value, it brings the ioctls inline with the reset of the kernel, and it
+removes ambiguity, which is never good when dealing with compilers.
 
-Zhe
+Link: https://github.com/ClangBuiltLinux/linux/issues/85
+Link: https://github.com/ClangBuiltLinux/linux/issues/154
+Link: https://github.com/ClangBuiltLinux/linux/issues/157
+Signed-off-by: Nathan Chancellor <natechancellor@gmail.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+---
+
+v3 -> v4:
+
+* Repost with Bart's suggested change and his reviewed by (mainly as an
+  excuse to repost with the below comment).
+
+v2 -> v3:
+
+* Fix another -Wswitch warning from drivers/scsi/cxlflash/main.c, coming
+  from decode_hioctl (uncovered via a powernv_defconfig build).
+
+v1 -> v2:
+
+* Fix build breakage in cxlflash driver from forgetting to update
+  prototype (thanks to 0day for catching it).
+
+I apologize for resending this so soon after v3 but it has been three
+months since I sent this patch and I have yet to receive a single
+comment from ANY of the maintainers that './scripts/get_maintainer.pl'
+spits out for this patch so it feels like I am sending it into the void.
+
+I understand you all are busy people and such and maybe I am being
+impatient but these warnings are rather spammy and we're trying to get
+that category cleaned up as quick as possible so that new warnings are
+easier to spot. I'd appreciate any and all reviews/acks/testing that I
+can get on this patch (especially since it is so simple) so it can be
+accepted and merged into mainline.
+
+ drivers/ata/libata-scsi.c             |  5 +++--
+ drivers/scsi/aacraid/aachba.c         |  2 +-
+ drivers/scsi/aacraid/aacraid.h        |  4 ++--
+ drivers/scsi/aacraid/commctrl.c       |  2 +-
+ drivers/scsi/aacraid/linit.c          |  6 ++++--
+ drivers/scsi/cxlflash/common.h        |  3 ++-
+ drivers/scsi/cxlflash/main.c          |  2 +-
+ drivers/scsi/cxlflash/superpipe.c     | 12 +++++-------
+ drivers/scsi/esas2r/esas2r.h          |  4 ++--
+ drivers/scsi/esas2r/esas2r_ioctl.c    | 16 +++++++---------
+ drivers/scsi/esas2r/esas2r_main.c     |  2 +-
+ drivers/scsi/hpsa.c                   | 15 +++++++++------
+ drivers/scsi/ipr.c                    |  3 ++-
+ drivers/scsi/libsas/sas_scsi_host.c   |  2 +-
+ drivers/scsi/scsi_debug.c             |  3 ++-
+ drivers/scsi/smartpqi/smartpqi_init.c |  3 ++-
+ include/linux/libata.h                |  5 +++--
+ include/scsi/libsas.h                 |  3 ++-
+ include/scsi/scsi_host.h              |  6 ++++--
+ 19 files changed, 54 insertions(+), 44 deletions(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 3d4887d0e84a..6291f1dbf342 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -778,7 +778,7 @@ static int ata_ioc32(struct ata_port *ap)
+ }
+ 
+ int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
+-		     int cmd, void __user *arg)
++		     unsigned int cmd, void __user *arg)
+ {
+ 	unsigned long val;
+ 	int rc = -EINVAL;
+@@ -829,7 +829,8 @@ int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
+ }
+ EXPORT_SYMBOL_GPL(ata_sas_scsi_ioctl);
+ 
+-int ata_scsi_ioctl(struct scsi_device *scsidev, int cmd, void __user *arg)
++int ata_scsi_ioctl(struct scsi_device *scsidev, unsigned int cmd,
++		   void __user *arg)
+ {
+ 	return ata_sas_scsi_ioctl(ata_shost_to_port(scsidev->host),
+ 				scsidev, cmd, arg);
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 75ab5ff6b78c..6085aa087a2f 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -3455,7 +3455,7 @@ static int delete_disk(struct aac_dev *dev, void __user *arg)
+ 	}
+ }
+ 
+-int aac_dev_ioctl(struct aac_dev *dev, int cmd, void __user *arg)
++int aac_dev_ioctl(struct aac_dev *dev, unsigned int cmd, void __user *arg)
+ {
+ 	switch (cmd) {
+ 	case FSACTL_QUERY_DISK:
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 3291d1c16864..1df5171594b8 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -2706,12 +2706,12 @@ void aac_set_intx_mode(struct aac_dev *dev);
+ int aac_get_config_status(struct aac_dev *dev, int commit_flag);
+ int aac_get_containers(struct aac_dev *dev);
+ int aac_scsi_cmd(struct scsi_cmnd *cmd);
+-int aac_dev_ioctl(struct aac_dev *dev, int cmd, void __user *arg);
++int aac_dev_ioctl(struct aac_dev *dev, unsigned int cmd, void __user *arg);
+ #ifndef shost_to_class
+ #define shost_to_class(shost) &shost->shost_dev
+ #endif
+ ssize_t aac_get_serial_number(struct device *dev, char *buf);
+-int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg);
++int aac_do_ioctl(struct aac_dev *dev, unsigned int cmd, void __user *arg);
+ int aac_rx_init(struct aac_dev *dev);
+ int aac_rkt_init(struct aac_dev *dev);
+ int aac_nark_init(struct aac_dev *dev);
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+index e2899ff7913e..f0ff40332753 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -1060,7 +1060,7 @@ static int aac_send_reset_adapter(struct aac_dev *dev, void __user *arg)
+ 	return retval;
+ }
+ 
+-int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
++int aac_do_ioctl(struct aac_dev *dev, unsigned int cmd, void __user *arg)
+ {
+ 	int status;
+ 
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 7e56a11836c1..cbd955bb8674 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -616,7 +616,8 @@ static struct device_attribute *aac_dev_attrs[] = {
+ 	NULL,
+ };
+ 
+-static int aac_ioctl(struct scsi_device *sdev, int cmd, void __user * arg)
++static int aac_ioctl(struct scsi_device *sdev, unsigned int cmd,
++		     void __user *arg)
+ {
+ 	struct aac_dev *dev = (struct aac_dev *)sdev->host->hostdata;
+ 	if (!capable(CAP_SYS_RAWIO))
+@@ -1206,7 +1207,8 @@ static long aac_compat_do_ioctl(struct aac_dev *dev, unsigned cmd, unsigned long
+ 	return ret;
+ }
+ 
+-static int aac_compat_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
++static int aac_compat_ioctl(struct scsi_device *sdev, unsigned int cmd,
++			    void __user *arg)
+ {
+ 	struct aac_dev *dev = (struct aac_dev *)sdev->host->hostdata;
+ 	if (!capable(CAP_SYS_RAWIO))
+diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
+index 8908a20065c8..4d90106fcb37 100644
+--- a/drivers/scsi/cxlflash/common.h
++++ b/drivers/scsi/cxlflash/common.h
+@@ -334,7 +334,8 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t c, res_hndl_t r, u8 mode);
+ void cxlflash_list_init(void);
+ void cxlflash_term_global_luns(void);
+ void cxlflash_free_errpage(void);
+-int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg);
++int cxlflash_ioctl(struct scsi_device *sdev, unsigned int cmd,
++		   void __user *arg);
+ void cxlflash_stop_term_user_contexts(struct cxlflash_cfg *cfg);
+ int cxlflash_mark_contexts_error(struct cxlflash_cfg *cfg);
+ void cxlflash_term_local_luns(struct cxlflash_cfg *cfg);
+diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+index bfa13e3b191c..a0ea2dea7518 100644
+--- a/drivers/scsi/cxlflash/main.c
++++ b/drivers/scsi/cxlflash/main.c
+@@ -3282,7 +3282,7 @@ static int cxlflash_chr_open(struct inode *inode, struct file *file)
+  *
+  * Return: A string identifying the decoded host ioctl.
+  */
+-static char *decode_hioctl(int cmd)
++static char *decode_hioctl(unsigned int cmd)
+ {
+ 	switch (cmd) {
+ 	case HT_CXLFLASH_LUN_PROVISION:
+diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
+index acac6152f50b..1a94a469051e 100644
+--- a/drivers/scsi/cxlflash/superpipe.c
++++ b/drivers/scsi/cxlflash/superpipe.c
+@@ -1924,7 +1924,7 @@ static int cxlflash_disk_verify(struct scsi_device *sdev,
+  *
+  * Return: A string identifying the decoded ioctl.
+  */
+-static char *decode_ioctl(int cmd)
++static char *decode_ioctl(unsigned int cmd)
+ {
+ 	switch (cmd) {
+ 	case DK_CXLFLASH_ATTACH:
+@@ -2051,7 +2051,7 @@ static int cxlflash_disk_direct_open(struct scsi_device *sdev, void *arg)
+  *
+  * Return: 0 on success, -errno on failure
+  */
+-static int ioctl_common(struct scsi_device *sdev, int cmd)
++static int ioctl_common(struct scsi_device *sdev, unsigned int cmd)
+ {
+ 	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
+ 	struct device *dev = &cfg->dev->dev;
+@@ -2096,7 +2096,7 @@ static int ioctl_common(struct scsi_device *sdev, int cmd)
+  *
+  * Return: 0 on success, -errno on failure
+  */
+-int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
++int cxlflash_ioctl(struct scsi_device *sdev, unsigned int cmd, void __user *arg)
+ {
+ 	typedef int (*sioctl) (struct scsi_device *, void *);
+ 
+@@ -2179,8 +2179,7 @@ int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+ 	}
+ 
+ 	if (unlikely(copy_from_user(&buf, arg, size))) {
+-		dev_err(dev, "%s: copy_from_user() fail "
+-			"size=%lu cmd=%d (%s) arg=%p\n",
++		dev_err(dev, "%s: copy_from_user() fail size=%lu cmd=%u (%s) arg=%p\n",
+ 			__func__, size, cmd, decode_ioctl(cmd), arg);
+ 		rc = -EFAULT;
+ 		goto cxlflash_ioctl_exit;
+@@ -2203,8 +2202,7 @@ int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+ 	rc = do_ioctl(sdev, (void *)&buf);
+ 	if (likely(!rc))
+ 		if (unlikely(copy_to_user(arg, &buf, size))) {
+-			dev_err(dev, "%s: copy_to_user() fail "
+-				"size=%lu cmd=%d (%s) arg=%p\n",
++			dev_err(dev, "%s: copy_to_user() fail size=%lu cmd=%u (%s) arg=%p\n",
+ 				__func__, size, cmd, decode_ioctl(cmd), arg);
+ 			rc = -EFAULT;
+ 		}
+diff --git a/drivers/scsi/esas2r/esas2r.h b/drivers/scsi/esas2r/esas2r.h
+index 858c3b33db78..7f43b95f4e94 100644
+--- a/drivers/scsi/esas2r/esas2r.h
++++ b/drivers/scsi/esas2r/esas2r.h
+@@ -965,8 +965,8 @@ struct esas2r_adapter {
+ const char *esas2r_info(struct Scsi_Host *);
+ int esas2r_write_params(struct esas2r_adapter *a, struct esas2r_request *rq,
+ 			struct esas2r_sas_nvram *data);
+-int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg);
+-int esas2r_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
++int esas2r_ioctl_handler(void *hostdata, unsigned int cmd, void __user *arg);
++int esas2r_ioctl(struct scsi_device *dev, unsigned int cmd, void __user *arg);
+ u8 handle_hba_ioctl(struct esas2r_adapter *a,
+ 		    struct atto_ioctl *ioctl_hba);
+ int esas2r_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd);
+diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esas2r_ioctl.c
+index 34bcc8c04ff4..3d130523c288 100644
+--- a/drivers/scsi/esas2r/esas2r_ioctl.c
++++ b/drivers/scsi/esas2r/esas2r_ioctl.c
+@@ -1274,7 +1274,7 @@ int esas2r_write_params(struct esas2r_adapter *a, struct esas2r_request *rq,
+ 
+ 
+ /* This function only cares about ATTO-specific ioctls (atto_express_ioctl) */
+-int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
++int esas2r_ioctl_handler(void *hostdata, unsigned int cmd, void __user *arg)
+ {
+ 	struct atto_express_ioctl *ioctl = NULL;
+ 	struct esas2r_adapter *a;
+@@ -1292,9 +1292,8 @@ int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
+ 	ioctl = memdup_user(arg, sizeof(struct atto_express_ioctl));
+ 	if (IS_ERR(ioctl)) {
+ 		esas2r_log(ESAS2R_LOG_WARN,
+-			   "ioctl_handler access_ok failed for cmd %d, "
+-			   "address %p", cmd,
+-			   arg);
++			   "ioctl_handler access_ok failed for cmd %u, address %p",
++			   cmd, arg);
+ 		return PTR_ERR(ioctl);
+ 	}
+ 
+@@ -1493,7 +1492,7 @@ int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
+ ioctl_done:
+ 
+ 	if (err < 0) {
+-		esas2r_log(ESAS2R_LOG_WARN, "err %d on ioctl cmd %d", err,
++		esas2r_log(ESAS2R_LOG_WARN, "err %d on ioctl cmd %u", err,
+ 			   cmd);
+ 
+ 		switch (err) {
+@@ -1518,9 +1517,8 @@ int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
+ 	err = __copy_to_user(arg, ioctl, sizeof(struct atto_express_ioctl));
+ 	if (err != 0) {
+ 		esas2r_log(ESAS2R_LOG_WARN,
+-			   "ioctl_handler copy_to_user didn't copy "
+-			   "everything (err %d, cmd %d)", err,
+-			   cmd);
++			   "ioctl_handler copy_to_user didn't copy everything (err %d, cmd %u)",
++			   err, cmd);
+ 		kfree(ioctl);
+ 
+ 		return -EFAULT;
+@@ -1531,7 +1529,7 @@ int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
+ 	return 0;
+ }
+ 
+-int esas2r_ioctl(struct scsi_device *sd, int cmd, void __user *arg)
++int esas2r_ioctl(struct scsi_device *sd, unsigned int cmd, void __user *arg)
+ {
+ 	return esas2r_ioctl_handler(sd->host->hostdata, cmd, arg);
+ }
+diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
+index 64397d441bae..fdbda5c05aa0 100644
+--- a/drivers/scsi/esas2r/esas2r_main.c
++++ b/drivers/scsi/esas2r/esas2r_main.c
+@@ -623,7 +623,7 @@ static int esas2r_proc_major;
+ long esas2r_proc_ioctl(struct file *fp, unsigned int cmd, unsigned long arg)
+ {
+ 	return esas2r_ioctl_handler(esas2r_proc_host->hostdata,
+-				    (int)cmd, (void __user *)arg);
++				    cmd, (void __user *)arg);
+ }
+ 
+ static void __exit esas2r_exit(void)
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index ff67ef5d5347..28cfd3d01c5a 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -251,10 +251,11 @@ static int number_of_controllers;
+ 
+ static irqreturn_t do_hpsa_intr_intx(int irq, void *dev_id);
+ static irqreturn_t do_hpsa_intr_msi(int irq, void *dev_id);
+-static int hpsa_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
++static int hpsa_ioctl(struct scsi_device *dev, unsigned int cmd,
++		      void __user *arg);
+ 
+ #ifdef CONFIG_COMPAT
+-static int hpsa_compat_ioctl(struct scsi_device *dev, int cmd,
++static int hpsa_compat_ioctl(struct scsi_device *dev, unsigned int cmd,
+ 	void __user *arg);
+ #endif
+ 
+@@ -6127,7 +6128,7 @@ static void cmd_free(struct ctlr_info *h, struct CommandList *c)
+ 
+ #ifdef CONFIG_COMPAT
+ 
+-static int hpsa_ioctl32_passthru(struct scsi_device *dev, int cmd,
++static int hpsa_ioctl32_passthru(struct scsi_device *dev, unsigned int cmd,
+ 	void __user *arg)
+ {
+ 	IOCTL32_Command_struct __user *arg32 =
+@@ -6164,7 +6165,7 @@ static int hpsa_ioctl32_passthru(struct scsi_device *dev, int cmd,
+ }
+ 
+ static int hpsa_ioctl32_big_passthru(struct scsi_device *dev,
+-	int cmd, void __user *arg)
++	unsigned int cmd, void __user *arg)
+ {
+ 	BIG_IOCTL32_Command_struct __user *arg32 =
+ 	    (BIG_IOCTL32_Command_struct __user *) arg;
+@@ -6201,7 +6202,8 @@ static int hpsa_ioctl32_big_passthru(struct scsi_device *dev,
+ 	return err;
+ }
+ 
+-static int hpsa_compat_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
++static int hpsa_compat_ioctl(struct scsi_device *dev, unsigned int cmd,
++			     void __user *arg)
+ {
+ 	switch (cmd) {
+ 	case CCISS_GETPCIINFO:
+@@ -6521,7 +6523,8 @@ static void check_ioctl_unit_attention(struct ctlr_info *h,
+ /*
+  * ioctl
+  */
+-static int hpsa_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
++static int hpsa_ioctl(struct scsi_device *dev, unsigned int cmd,
++		      void __user *arg)
+ {
+ 	struct ctlr_info *h;
+ 	void __user *argp = (void __user *)arg;
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index d1b4025a4503..6d053e220153 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -6696,7 +6696,8 @@ static int ipr_queuecommand(struct Scsi_Host *shost,
+  * Return value:
+  * 	0 on success / other on failure
+  **/
+-static int ipr_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
++static int ipr_ioctl(struct scsi_device *sdev, unsigned int cmd,
++		     void __user *arg)
+ {
+ 	struct ipr_resource_entry *res;
+ 
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index c43a00a9d819..b775445892af 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -799,7 +799,7 @@ void sas_scsi_recover_host(struct Scsi_Host *shost)
+ 		  shost->host_failed, tries);
+ }
+ 
+-int sas_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
++int sas_ioctl(struct scsi_device *sdev, unsigned int cmd, void __user *arg)
+ {
+ 	struct domain_device *dev = sdev_to_domain_dev(sdev);
+ 
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 661512bec3ac..e0f949b7d947 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -836,7 +836,8 @@ static void mk_sense_invalid_opcode(struct scsi_cmnd *scp)
+ 	mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_OPCODE, 0);
+ }
+ 
+-static int scsi_debug_ioctl(struct scsi_device *dev, int cmd, void __user *arg)
++static int scsi_debug_ioctl(struct scsi_device *dev, unsigned int cmd,
++			    void __user *arg)
+ {
+ 	if (sdebug_verbose) {
+ 		if (0x1261 == cmd)
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index f564af8949e8..5d9ccbab7581 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -6043,7 +6043,8 @@ static int pqi_passthru_ioctl(struct pqi_ctrl_info *ctrl_info, void __user *arg)
+ 	return rc;
+ }
+ 
+-static int pqi_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
++static int pqi_ioctl(struct scsi_device *sdev, unsigned int cmd,
++		     void __user *arg)
+ {
+ 	int rc;
+ 	struct pqi_ctrl_info *ctrl_info;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 68133842e6d7..c9419c05a90a 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1122,10 +1122,11 @@ extern int ata_host_activate(struct ata_host *host, int irq,
+ extern void ata_host_detach(struct ata_host *host);
+ extern void ata_host_init(struct ata_host *, struct device *, struct ata_port_operations *);
+ extern int ata_scsi_detect(struct scsi_host_template *sht);
+-extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
++extern int ata_scsi_ioctl(struct scsi_device *dev, unsigned int cmd,
++			  void __user *arg);
+ extern int ata_scsi_queuecmd(struct Scsi_Host *h, struct scsi_cmnd *cmd);
+ extern int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *dev,
+-			    int cmd, void __user *arg);
++			    unsigned int cmd, void __user *arg);
+ extern void ata_sas_port_destroy(struct ata_port *);
+ extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
+ 					   struct ata_port_info *, struct Scsi_Host *);
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 857086cf7ebf..56b2dba7d911 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -707,7 +707,8 @@ int sas_eh_target_reset_handler(struct scsi_cmnd *cmd);
+ 
+ extern void sas_target_destroy(struct scsi_target *);
+ extern int sas_slave_alloc(struct scsi_device *);
+-extern int sas_ioctl(struct scsi_device *sdev, int cmd, void __user *arg);
++extern int sas_ioctl(struct scsi_device *sdev, unsigned int cmd,
++		     void __user *arg);
+ extern int sas_drain_work(struct sas_ha_struct *ha);
+ 
+ extern void sas_ssp_task_response(struct device *dev, struct sas_task *task,
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 6ca954e9f752..4047d68d1b08 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -60,7 +60,8 @@ struct scsi_host_template {
+ 	 *
+ 	 * Status: OPTIONAL
+ 	 */
+-	int (* ioctl)(struct scsi_device *dev, int cmd, void __user *arg);
++	int (*ioctl)(struct scsi_device *dev, unsigned int cmd,
++		     void __user *arg);
+ 
+ 
+ #ifdef CONFIG_COMPAT
+@@ -70,7 +71,8 @@ struct scsi_host_template {
+ 	 *
+ 	 * Status: OPTIONAL
+ 	 */
+-	int (* compat_ioctl)(struct scsi_device *dev, int cmd, void __user *arg);
++	int (*compat_ioctl)(struct scsi_device *dev, unsigned int cmd,
++			    void __user *arg);
+ #endif
+ 
+ 	/*
+-- 
+2.20.1
