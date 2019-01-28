@@ -1,13 +1,13 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.9 050/107] sata_rcar: fix deferred probing
-Date: Mon, 28 Jan 2019 11:18:50 -0500
-Message-ID: <20190128161947.57405-50-sashal@kernel.org>
-References: <20190128161947.57405-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 36/80] sata_rcar: fix deferred probing
+Date: Mon, 28 Jan 2019 11:23:17 -0500
+Message-ID: <20190128162401.58841-36-sashal@kernel.org>
+References: <20190128162401.58841-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190128161947.57405-1-sashal@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190128162401.58841-1-sashal@kernel.org>
+Sender: stable-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -33,10 +33,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
-index e83a3d3421b9..07e146b772ea 100644
+index 8804127b108c..21b80f5ee092 100644
 --- a/drivers/ata/sata_rcar.c
 +++ b/drivers/ata/sata_rcar.c
-@@ -872,7 +872,9 @@ static int sata_rcar_probe(struct platform_device *pdev)
+@@ -875,7 +875,9 @@ static int sata_rcar_probe(struct platform_device *pdev)
  	int ret = 0;
  
  	irq = platform_get_irq(pdev, 0);
