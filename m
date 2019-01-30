@@ -1,51 +1,28 @@
-From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.20 155/304] sata_rcar: fix deferred probing
-Date: Mon, 28 Jan 2019 10:41:12 -0500
-Message-ID: <20190128154341.47195-155-sashal@kernel.org>
-References: <20190128154341.47195-1-sashal@kernel.org>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [v5 1/2] dt-bindings: ahci-fsl-qoriq: add lx2160a chip name to
+ the list
+Date: Wed, 30 Jan 2019 10:22:48 -0600
+Message-ID: <20190130162248.GA8669@bogus>
+References: <20190125081013.21663-1-peng.ma@nxp.com>
 Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190128154341.47195-1-sashal@kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20190125081013.21663-1-peng.ma@nxp.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
+Cc: axboe@kernel.dk, shawnguo@kernel.org, robh+dt@kernel.org, mark.rutland@arm.com, leoyang.li@nxp.com, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, andy.tang@nxp.com, Peng Ma <peng.ma@nxp.com>
 List-Id: linux-ide@vger.kernel.org
 
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+On Fri, 25 Jan 2019 08:10:12 +0000, Peng Ma wrote:
+> Add lx2160a compatible to bindings documentation.
+> 
+> Signed-off-by: Peng Ma <peng.ma@nxp.com>
+> ---
+> changed for V5:
+> 	- change the lxx2160a to lx2160a
+> 
+>  .../devicetree/bindings/ata/ahci-fsl-qoriq.txt     |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
 
-[ Upstream commit 9f83cfdb1ace3ef268ecc6fda50058d2ec37d603 ]
-
-The driver overrides the error codes returned by platform_get_irq() to
--EINVAL, so if it returns -EPROBE_DEFER, the driver would fail the probe
-permanently instead of the deferred probing. Switch to propagating the
-error code upstream, still checking/overriding IRQ0 as libata regards it
-as "no IRQ" (thus polling) anyway...
-
-Fixes: 9ec36cafe43b ("of/irq: do irq resolution in platform_get_irq")
-Reviewed-by: Simon Horman <horms+renesas@verge.net.au>
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
-Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/ata/sata_rcar.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
-index 4b1ff5bc256a..59b2317acea9 100644
---- a/drivers/ata/sata_rcar.c
-+++ b/drivers/ata/sata_rcar.c
-@@ -891,7 +891,9 @@ static int sata_rcar_probe(struct platform_device *pdev)
- 	int ret = 0;
- 
- 	irq = platform_get_irq(pdev, 0);
--	if (irq <= 0)
-+	if (irq < 0)
-+		return irq;
-+	if (!irq)
- 		return -EINVAL;
- 
- 	priv = devm_kzalloc(dev, sizeof(struct sata_rcar_priv), GFP_KERNEL);
--- 
-2.19.1
+Reviewed-by: Rob Herring <robh@kernel.org>
