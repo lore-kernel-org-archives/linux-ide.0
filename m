@@ -1,8 +1,8 @@
 From: Hans de Goede <hdegoede@redhat.com>
 Subject: Re: [PATCH] libata: Add NOLPM quirk for SAMSUNG MZ7TE512HMHP-000L1
  SSD
-Date: Wed, 6 Feb 2019 20:00:00 +0100
-Message-ID: <2301d92f-1105-1eef-8f84-b73a4126022d@redhat.com>
+Date: Wed, 6 Feb 2019 20:00:04 +0100
+Message-ID: <7fffe93a-a090-8cce-be49-f29e47942c6b@redhat.com>
 References: <20190203090207.10930-1-hdegoede@redhat.com>
  <20190205185201.B3870217F9@mail.kernel.org>
 Mime-Version: 1.0
