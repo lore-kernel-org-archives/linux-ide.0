@@ -1,45 +1,76 @@
-From: Gregory CLEMENT <gregory.clement@bootlin.com>
-Subject: Re: [PATCH v3 7/7] ARM64: dts: marvell: armada-3720-espressobin:
- declare SATA PHY property
-Date: Wed, 06 Feb 2019 15:19:41 +0100
-Message-ID: <878syt6ltu.fsf@FE-laptop>
-References: <20181204192831.12440-1-miquel.raynal@bootlin.com>
- <20181204192831.12440-8-miquel.raynal@bootlin.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH] libata: Add NOLPM quirk for SAMSUNG MZ7TE512HMHP-000L1
+ SSD
+Date: Wed, 6 Feb 2019 20:00:00 +0100
+Message-ID: <2301d92f-1105-1eef-8f84-b73a4126022d@redhat.com>
+References: <20190203090207.10930-1-hdegoede@redhat.com>
+ <20190205185201.B3870217F9@mail.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20181204192831.12440-8-miquel.raynal@bootlin.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Jens Axboe <axboe@kernel.dk>, Hans de Goede <hdegoede@redhat.com>
-Cc: devicetree@vger.kernel.org, linux-pm@vger.kernel.org, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20190205185201.B3870217F9@mail.kernel.org>
+Content-Language: en-US
+Sender: stable-owner@vger.kernel.org
+To: Sasha Levin <sashal@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-ide@vger.kernel.org, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-SGkgTWlxdWVsLAogCiBPbiBtYXIuLCBkw6ljLiAwNCAyMDE4LCBNaXF1ZWwgUmF5bmFsIDxtaXF1
-ZWwucmF5bmFsQGJvb3RsaW4uY29tPiB3cm90ZToKCj4gVGhlIFNBVEEgbm9kZSBpcyB3aXJlZCB0
-byB0aGUgdGhpcmQgUEhZIG9mIHRoZSBDT01QSFkgSVAuCj4KPiBTdWdnZXN0ZWQtYnk6IEdyemVn
-b3J6IEphc3pjenlrIDxqYXpAc2VtaWhhbGYuY29tPgo+IFNpZ25lZC1vZmYtYnk6IE1pcXVlbCBS
-YXluYWwgPG1pcXVlbC5yYXluYWxAYm9vdGxpbi5jb20+CgpBcHBsaWVkIHRvIG12ZWJ1L2R0NjQK
-ClRoYW5rcywKCkdyZWdvcnkKCj4gLS0tCj4gIGFyY2gvYXJtNjQvYm9vdC9kdHMvbWFydmVsbC9h
-cm1hZGEtMzcyMC1lc3ByZXNzb2Jpbi5kdHMgfCAyICsrCj4gIDEgZmlsZSBjaGFuZ2VkLCAyIGlu
-c2VydGlvbnMoKykKPgo+IGRpZmYgLS1naXQgYS9hcmNoL2FybTY0L2Jvb3QvZHRzL21hcnZlbGwv
-YXJtYWRhLTM3MjAtZXNwcmVzc29iaW4uZHRzIGIvYXJjaC9hcm02NC9ib290L2R0cy9tYXJ2ZWxs
-L2FybWFkYS0zNzIwLWVzcHJlc3NvYmluLmR0cwo+IGluZGV4IDNhYjI1YWQ0MDJiOS4uZTk0N2Vm
-NjFkOTQ2IDEwMDY0NAo+IC0tLSBhL2FyY2gvYXJtNjQvYm9vdC9kdHMvbWFydmVsbC9hcm1hZGEt
-MzcyMC1lc3ByZXNzb2Jpbi5kdHMKPiArKysgYi9hcmNoL2FybTY0L2Jvb3QvZHRzL21hcnZlbGwv
-YXJtYWRhLTM3MjAtZXNwcmVzc29iaW4uZHRzCj4gQEAgLTUxLDYgKzUxLDggQEAKPiAgLyogSjYg
-Ki8KPiAgJnNhdGEgewo+ICAJc3RhdHVzID0gIm9rYXkiOwo+ICsJcGh5cyA9IDwmY29tcGh5MiAw
-PjsKPiArCXBoeS1uYW1lcyA9ICJzYXRhLXBoeSI7Cj4gIH07Cj4gIAo+ICAvKiBKMSAqLwo+IC0t
-IAo+IDIuMTkuMQo+CgotLSAKR3JlZ29yeSBDbGVtZW50LCBCb290bGluCkVtYmVkZGVkIExpbnV4
-IGFuZCBLZXJuZWwgZW5naW5lZXJpbmcKaHR0cDovL2Jvb3RsaW4uY29tCgpfX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxp
-bmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3Rz
-LmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
+Hi,
+
+On 05-02-19 19:52, Sasha Levin wrote:
+> Hi,
+> 
+> [This is an automated email]
+> 
+> This commit has been processed because it contains a -stable tag.
+> The stable tag indicates that it's relevant for the following trees: all
+> 
+> The bot has tested the following trees: v4.20.6, v4.19.19, v4.14.97, v4.9.154, v4.4.172, v3.18.133.
+> 
+> v4.20.6: Build OK!
+> v4.19.19: Build OK!
+> v4.14.97: Failed to apply! Possible dependencies:
+>      410b5c7b4836 ("libata: blacklist SAMSUNG MZ7TD256HAFV-000L9 SSD")
+>      76936e9a6df1 ("libata: Apply NOLPM quirk for SAMSUNG PM830 CXM13D1Q.")
+>      a435ab4f80f9 ("libata: Apply NOLPM quirk for SAMSUNG MZ7TD256HAFV-000L9")
+>      b5b4d3a52c8f ("libata: Apply NOLPM quirk for SAMSUNG MZMPC128HBFU-000MV SSD")
+
+The code to enable LPM support by default on mobile chipsets was merged
+in the 4.16 kernel, so 4.14 (and older) don't need these blacklist patches
+since they don't enable LPM by default (the user needs to write to a sysfs
+attribute to enable it).
+
+So it is fine to leave this patch out of 4.14.z and older.
+
+Regards,
+
+Hans
+
+
+> 
+> v4.9.154: Failed to apply! Possible dependencies:
+>      410b5c7b4836 ("libata: blacklist SAMSUNG MZ7TD256HAFV-000L9 SSD")
+>      76936e9a6df1 ("libata: Apply NOLPM quirk for SAMSUNG PM830 CXM13D1Q.")
+>      a435ab4f80f9 ("libata: Apply NOLPM quirk for SAMSUNG MZ7TD256HAFV-000L9")
+>      b5b4d3a52c8f ("libata: Apply NOLPM quirk for SAMSUNG MZMPC128HBFU-000MV SSD")
+> 
+> v4.4.172: Failed to apply! Possible dependencies:
+>      410b5c7b4836 ("libata: blacklist SAMSUNG MZ7TD256HAFV-000L9 SSD")
+>      76936e9a6df1 ("libata: Apply NOLPM quirk for SAMSUNG PM830 CXM13D1Q.")
+>      a435ab4f80f9 ("libata: Apply NOLPM quirk for SAMSUNG MZ7TD256HAFV-000L9")
+>      b5b4d3a52c8f ("libata: Apply NOLPM quirk for SAMSUNG MZMPC128HBFU-000MV SSD")
+> 
+> v3.18.133: Failed to apply! Possible dependencies:
+>      410b5c7b4836 ("libata: blacklist SAMSUNG MZ7TD256HAFV-000L9 SSD")
+>      76936e9a6df1 ("libata: Apply NOLPM quirk for SAMSUNG PM830 CXM13D1Q.")
+>      a435ab4f80f9 ("libata: Apply NOLPM quirk for SAMSUNG MZ7TD256HAFV-000L9")
+>      b5b4d3a52c8f ("libata: Apply NOLPM quirk for SAMSUNG MZMPC128HBFU-000MV SSD")
+> 
+> 
+> How should we proceed with this patch?
+> 
+> --
+> Thanks,
+> Sasha
+> 
