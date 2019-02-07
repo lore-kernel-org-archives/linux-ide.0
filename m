@@ -1,29 +1,26 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH] ata: macio: Use of_node_name_eq for node name
- comparisons
-Date: Thu, 7 Feb 2019 13:02:50 +0100
-Message-ID: <8c6cc6a1-dd37-c8cb-c85e-bcc514360597@samsung.com>
-References: <CGME20181205195131epcas3p3519c2452d1c90583338f098540e721ee@epcas3p3.samsung.com>
-        <20181205195050.4759-4-robh@kernel.org>
+Subject: Re: [PATCH 1/1] ata: pata_samsung_cf: simplify getting .driver_data
+Date: Thu, 7 Feb 2019 13:11:17 +0100
+Message-ID: <db237310-2a6f-e390-7032-d33262916216@samsung.com>
+References: <20181021195949.1351-1-wsa+renesas@sang-engineering.com>
+        <CGME20181021200001epcas1p29d6bcf070cdacfe093b17e2c2c3b6f50@epcas1p2.samsung.com>
+        <20181021195949.1351-2-wsa+renesas@sang-engineering.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20181205195050.4759-4-robh@kernel.org>
+In-Reply-To: <20181021195949.1351-2-wsa+renesas@sang-engineering.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Rob Herring <robh@kernel.org>
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
+To: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Cc: linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 
-On 12/05/2018 08:50 PM, Rob Herring wrote:
-> Convert string compares of DT node names to use of_node_name_eq helper
-> instead. This removes direct access to the node name pointer.
+On 10/21/2018 09:59 PM, Wolfram Sang wrote:
+> We should get 'driver_data' from 'struct device' directly. Going via
+> platform_device is an unneeded step back and forth.
 > 
-> Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Cc: linux-ide@vger.kernel.org
-> Signed-off-by: Rob Herring <robh@kernel.org>
+> Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
 
 Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
