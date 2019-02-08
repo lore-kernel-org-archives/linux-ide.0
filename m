@@ -1,58 +1,54 @@
-From: =?UTF-8?Q?Matias_Bj=c3=b8rling?= <mb@lightnvm.io>
-Subject: Re: [LSF/MM TOPIC] BPF for Block Devices
-Date: Fri, 8 Feb 2019 09:31:20 +0100
-Message-ID: <f1f00282-11be-1682-3802-c8bd0e6fec4b@lightnvm.io>
-References: <40D2EB06-6BF2-4233-9196-7A26AC43C64E@raithlin.com>
+From: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+Subject: Re: [PATCH v2] ata: add Buddha PATA controller driver
+Date: Fri, 8 Feb 2019 12:38:02 +0100
+Message-ID: <420634d6-c14f-8380-0980-548fc4740474@physik.fu-berlin.de>
+References: <CGME20190207122046eucas1p12d098289e0370252d341ccfed66b8295@eucas1p1.samsung.com>
+ <6924b9b1-6c38-2639-a824-f2d765abe437@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <40D2EB06-6BF2-4233-9196-7A26AC43C64E@raithlin.com>
-Content-Language: en-GB
+In-Reply-To: <6924b9b1-6c38-2639-a824-f2d765abe437@samsung.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Stephen Bates <sbates@raithlin.com>, Jens Axboe <axboe@kernel.dk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, Logan Gunthorpe <logang@deltatee.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "bpf@vger.kernel.org" <bpf@vger.kernel.org>, "ast@kernel.org" <ast@kernel.org>
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Jens Axboe <axboe@kernel.dk>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 2/7/19 6:12 PM, Stephen  Bates wrote:
-> Hi All
-> 
->> A BPF track will join the annual LSF/MM Summit this year! Please read the updated description and CFP information below.
-> 
-> Well if we are adding BPF to LSF/MM I have to submit a request to discuss BPF for block devices please!
-> 
-> There has been quite a bit of activity around the concept of Computational Storage in the past 12 months. SNIA recently formed a Technical Working Group (TWG) and it is expected that this TWG will be making proposals to standards like NVM Express to add APIs for computation elements that reside on or near block devices.
-> 
-> While some of these Computational Storage accelerators will provide fixed functions (e.g. a RAID, encryption or compression), others will be more flexible. Some of these flexible accelerators will be capable of running BPF code on them (something that certain Linux drivers for SmartNICs support today [1]). I would like to discuss what such a framework could look like for the storage layer and the file-system layer. I'd like to discuss how devices could advertise this capability (a special type of NVMe namespace or SCSI LUN perhaps?) and how the BPF engine could be programmed and then used against block IO. Ideally I'd like to discuss doing this in a vendor-neutral way and develop ideas I can take back to NVMe and the SNIA TWG to help shape how these standard evolve.
-> 
-> To provide an example use-case one could consider a BPF capable accelerator being used to perform a filtering function and then using p2pdma to scan data on a number of adjacent NVMe SSDs, filtering said data and then only providing filter-matched LBAs to the host. Many other potential applications apply.
-> 
-> Also, I am interested in the "The end of the DAX Experiment" topic proposed by Dan and the " Zoned Block Devices" from Matias and Damien.
-> 
-> Cheers
->   
-> Stephen
-> 
-> [1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/net/ethernet/netronome/nfp/bpf/offload.c?h=v5.0-rc5
->   
->      
-> 
+Hi!
 
-If we're going down that road, we can also look at the block I/O path 
-itself.
+On 2/7/19 1:20 PM, Bartlomiej Zolnierkiewicz wrote:
+> Add Buddha PATA controller driver. It enables libata support for
+> the Buddha, Catweasel and X-Surf expansion boards on the Zorro
+> expansion bus.
+> 
+> Module removal is currently unsupported (the old IDE's buddha
+> driver also doesn't support it).
+> 
+> Tested-by: John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+> Cc: Michael Schmitz <schmitzmic@gmail.com>
+> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+> ---
+> v2:
+> - added Tested-by from John
 
-Now that Jens' has shown that io_uring can beat SPDK. Let's take it a 
-step further, and create an API, such that we can bypass the boilerplate 
-checking in kernel block I/O path, and go straight to issuing the I/O in 
-the block layer.
+It's a bit confusing, but my primary name is Adrian, despite being
+the third one. So if this ends in a changelog, please change this
+to "- added Tested-by from Adrian".
 
-For example, we could provide an API that allows applications to 
-register a fast path through the kernel — one where checks, such as 
-generic_make_request_checks(), already has been validated.
+> - enhanced patch description
+> 
+> Jens, please consider merging for v5.1.
+Yes, that would be fantastic. We're working on addressing the module unload
+issue later. Michael has tried adding the appropriate function but we still
+ran into issues when trying to unload the driver.
 
-The user-space application registers a BFP program with the kernel, the 
-kernel prechecks the possible I/O patterns and then green-lights all 
-I/Os that goes through that unit. In that way, the checks only have to 
-be done once, instead of every I/O. This approach could work beautifully 
-with direct io and raw devices, and with a bit more work, we can do more 
-complex use-cases as well.
+Thanks,
+Adrian
+
+-- 
+ .''`.  John Paul Adrian Glaubitz
+: :' :  Debian Developer - glaubitz@debian.org
+`. `'   Freie Universitaet Berlin - glaubitz@physik.fu-berlin.de
+  `-    GPG: 62FF 8A75 84E0 2956 9546  0006 7426 3B37 F5B5 F913
