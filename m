@@ -1,90 +1,55 @@
-From: Peng Ma <peng.ma@nxp.com>
-Subject: RE: [v5 2/2] arm64: dts: lx2160a: add sata node support
-Date: Mon, 11 Feb 2019 06:47:48 +0000
-Message-ID: <VI1PR04MB4431F6A555EB53418D03DCCFED640@VI1PR04MB4431.eurprd04.prod.outlook.com>
-References: <20190125081013.21663-1-peng.ma@nxp.com>
- <20190125081013.21663-2-peng.ma@nxp.com> <20190201063011.GL19882@dragon>
- <VI1PR04MB44313B08539AA7081DC53BAFED640@VI1PR04MB4431.eurprd04.prod.outlook.com>
- <20190211053920.GM22487@dragon>
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] ide: mark expected switch fall-through
+Date: Mon, 11 Feb 2019 16:17:20 -0600
+Message-ID: <20190211221720.GA5631@embeddedor>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190211053920.GM22487@dragon>
-Content-Language: en-US
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Shawn Guo <shawnguo@kernel.org>
-Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "mark.rutland@arm.com" <mark.rutland@arm.com>, Andy Tang <andy.tang@nxp.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Leo Li <leoyang.li@nxp.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "robh+dt@kernel.org" <robh+dt@kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+To: "David S. Miller" <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Kees Cook <keescook@chromium.org>
 List-Id: linux-ide@vger.kernel.org
 
-DQoNCj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPkZyb206IFNoYXduIEd1byA8c2hhd25n
-dW9Aa2VybmVsLm9yZz4NCj5TZW50OiAyMDE55bm0MuaciDEx5pelIDEzOjM5DQo+VG86IFBlbmcg
-TWEgPHBlbmcubWFAbnhwLmNvbT4NCj5DYzogYXhib2VAa2VybmVsLmRrOyBtYXJrLnJ1dGxhbmRA
-YXJtLmNvbTsgQW5keSBUYW5nDQo+PGFuZHkudGFuZ0BueHAuY29tPjsgZGV2aWNldHJlZUB2Z2Vy
-Lmtlcm5lbC5vcmc7DQo+bGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgTGVvIExpIDxsZW95
-YW5nLmxpQG54cC5jb20+Ow0KPmxpbnV4LWlkZUB2Z2VyLmtlcm5lbC5vcmc7IHJvYmgrZHRAa2Vy
-bmVsLm9yZzsNCj5saW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcNCj5TdWJqZWN0
-OiBSZTogW3Y1IDIvMl0gYXJtNjQ6IGR0czogbHgyMTYwYTogYWRkIHNhdGEgbm9kZSBzdXBwb3J0
-DQo+DQo+T24gTW9uLCBGZWIgMTEsIDIwMTkgYXQgMDI6NTM6MThBTSArMDAwMCwgUGVuZyBNYSB3
-cm90ZToNCj4+DQo+Pg0KPj4gPi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+PiA+RnJvbTog
-U2hhd24gR3VvIDxzaGF3bmd1b0BrZXJuZWwub3JnPg0KPj4gPlNlbnQ6IDIwMTnlubQy5pyIMeaX
-pSAxNDozMA0KPj4gPlRvOiBQZW5nIE1hIDxwZW5nLm1hQG54cC5jb20+DQo+PiA+Q2M6IGF4Ym9l
-QGtlcm5lbC5kazsgcm9iaCtkdEBrZXJuZWwub3JnOyBtYXJrLnJ1dGxhbmRAYXJtLmNvbTsgTGVv
-IExpDQo+PiA+PGxlb3lhbmcubGlAbnhwLmNvbT47IGxpbnV4LWlkZUB2Z2VyLmtlcm5lbC5vcmc7
-DQo+PiA+ZGV2aWNldHJlZUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5l
-bC5vcmc7DQo+PiA+bGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOyBBbmR5IFRh
-bmcgPGFuZHkudGFuZ0BueHAuY29tPg0KPj4gPlN1YmplY3Q6IFJlOiBbdjUgMi8yXSBhcm02NDog
-ZHRzOiBseDIxNjBhOiBhZGQgc2F0YSBub2RlIHN1cHBvcnQNCj4+ID4NCj4+ID5PbiBGcmksIEph
-biAyNSwgMjAxOSBhdCAwODoxMDoxM0FNICswMDAwLCBQZW5nIE1hIHdyb3RlOg0KPj4gPj4gQWRk
-IFNBVEEgZGV2aWNlIG5vZGVzIGZvciBmc2wtbHgyMTYwYSBhbmQgZW5hYmxlIHN1cHBvcnQgZm9y
-IFFEUw0KPj4gPj4gYW5kIFJEQiBib2FyZHMuDQo+PiA+Pg0KPj4gPj4gU2lnbmVkLW9mZi1ieTog
-UGVuZyBNYSA8cGVuZy5tYUBueHAuY29tPg0KPj4gPj4gLS0tDQo+PiA+PiBjaGFuZ2VkIGZvciBW
-NToNCj4+ID4+IAktIG5vIGNoYW5nZQ0KPj4gPj4NCj4+ID4+ICBhcmNoL2FybTY0L2Jvb3QvZHRz
-L2ZyZWVzY2FsZS9mc2wtbHgyMTYwYS1xZHMuZHRzIHwgICAxNiArKysrKysrDQo+PiA+PiAgYXJj
-aC9hcm02NC9ib290L2R0cy9mcmVlc2NhbGUvZnNsLWx4MjE2MGEtcmRiLmR0cyB8ICAgMTYgKysr
-KysrKw0KPj4gPj4gIGFyY2gvYXJtNjQvYm9vdC9kdHMvZnJlZXNjYWxlL2ZzbC1seDIxNjBhLmR0
-c2kgICAgfCAgIDQ0DQo+PiA+KysrKysrKysrKysrKysrKysrKysrDQo+PiA+PiAgMyBmaWxlcyBj
-aGFuZ2VkLCA3NiBpbnNlcnRpb25zKCspLCAwIGRlbGV0aW9ucygtKQ0KPj4gPj4NCj4+ID4+IGRp
-ZmYgLS1naXQgYS9hcmNoL2FybTY0L2Jvb3QvZHRzL2ZyZWVzY2FsZS9mc2wtbHgyMTYwYS1xZHMu
-ZHRzDQo+PiA+PiBiL2FyY2gvYXJtNjQvYm9vdC9kdHMvZnJlZXNjYWxlL2ZzbC1seDIxNjBhLXFk
-cy5kdHMNCj4+ID4+IGluZGV4IDk5YTIyYWIuLjFhNWFjZjYgMTAwNjQ0DQo+PiA+PiAtLS0gYS9h
-cmNoL2FybTY0L2Jvb3QvZHRzL2ZyZWVzY2FsZS9mc2wtbHgyMTYwYS1xZHMuZHRzDQo+PiA+PiAr
-KysgYi9hcmNoL2FybTY0L2Jvb3QvZHRzL2ZyZWVzY2FsZS9mc2wtbHgyMTYwYS1xZHMuZHRzDQo+
-PiA+PiBAQCAtOTUsNiArOTUsMjIgQEANCj4+ID4+ICAJfTsNCj4+ID4+ICB9Ow0KPj4gPj4NCj4+
-ID4+ICsmc2F0YTAgew0KPj4gPj4gKwlzdGF0dXMgPSAib2theSI7DQo+PiA+PiArfTsNCj4+ID4+
-ICsNCj4+ID4+ICsmc2F0YTEgew0KPj4gPj4gKwlzdGF0dXMgPSAib2theSI7DQo+PiA+PiArfTsN
-Cj4+ID4+ICsNCj4+ID4+ICsmc2F0YTIgew0KPj4gPj4gKwlzdGF0dXMgPSAib2theSI7DQo+PiA+
-PiArfTsNCj4+ID4+ICsNCj4+ID4+ICsmc2F0YTMgew0KPj4gPj4gKwlzdGF0dXMgPSAib2theSI7
-DQo+PiA+PiArfTsNCj4+ID4+ICsNCj4+ID4+ICAmdWFydDAgew0KPj4gPj4gIAlzdGF0dXMgPSAi
-b2theSI7DQo+PiA+PiAgfTsNCj4+ID4+IGRpZmYgLS1naXQgYS9hcmNoL2FybTY0L2Jvb3QvZHRz
-L2ZyZWVzY2FsZS9mc2wtbHgyMTYwYS1yZGIuZHRzDQo+PiA+PiBiL2FyY2gvYXJtNjQvYm9vdC9k
-dHMvZnJlZXNjYWxlL2ZzbC1seDIxNjBhLXJkYi5kdHMNCj4+ID4+IGluZGV4IDY0ODFlNWYuLjVi
-Njc5OWUgMTAwNjQ0DQo+PiA+PiAtLS0gYS9hcmNoL2FybTY0L2Jvb3QvZHRzL2ZyZWVzY2FsZS9m
-c2wtbHgyMTYwYS1yZGIuZHRzDQo+PiA+PiArKysgYi9hcmNoL2FybTY0L2Jvb3QvZHRzL2ZyZWVz
-Y2FsZS9mc2wtbHgyMTYwYS1yZGIuZHRzDQo+PiA+PiBAQCAtMTAyLDYgKzEwMiwyMiBAQA0KPj4g
-Pj4gIAl9Ow0KPj4gPj4gIH07DQo+PiA+Pg0KPj4gPj4gKyZzYXRhMCB7DQo+PiA+PiArCXN0YXR1
-cyA9ICJva2F5IjsNCj4+ID4+ICt9Ow0KPj4gPj4gKw0KPj4gPj4gKyZzYXRhMSB7DQo+PiA+PiAr
-CXN0YXR1cyA9ICJva2F5IjsNCj4+ID4+ICt9Ow0KPj4gPj4gKw0KPj4gPj4gKyZzYXRhMiB7DQo+
-PiA+PiArCXN0YXR1cyA9ICJva2F5IjsNCj4+ID4+ICt9Ow0KPj4gPj4gKw0KPj4gPj4gKyZzYXRh
-MyB7DQo+PiA+PiArCXN0YXR1cyA9ICJva2F5IjsNCj4+ID4+ICt9Ow0KPj4gPj4gKw0KPj4gPj4g
-ICZ1YXJ0MCB7DQo+PiA+PiAgCXN0YXR1cyA9ICJva2F5IjsNCj4+ID4+ICB9Ow0KPj4gPj4gZGlm
-ZiAtLWdpdCBhL2FyY2gvYXJtNjQvYm9vdC9kdHMvZnJlZXNjYWxlL2ZzbC1seDIxNjBhLmR0c2kN
-Cj4+ID4+IGIvYXJjaC9hcm02NC9ib290L2R0cy9mcmVlc2NhbGUvZnNsLWx4MjE2MGEuZHRzaQ0K
-Pj4gPj4gaW5kZXggYTc5ZjVjMS4uNTkyMDM0YiAxMDA2NDQNCj4+ID4+IC0tLSBhL2FyY2gvYXJt
-NjQvYm9vdC9kdHMvZnJlZXNjYWxlL2ZzbC1seDIxNjBhLmR0c2kNCj4+ID4+ICsrKyBiL2FyY2gv
-YXJtNjQvYm9vdC9kdHMvZnJlZXNjYWxlL2ZzbC1seDIxNjBhLmR0c2kNCj4+ID4+IEBAIC02NzEs
-NiArNjcxLDUwIEBADQo+PiA+PiAgCQkJc3RhdHVzID0gImRpc2FibGVkIjsNCj4+ID4+ICAJCX07
-DQo+PiA+Pg0KPj4gPj4gKwkJc2F0YTA6IHNhdGFAMzIwMDAwMCB7DQo+PiA+PiArCQkJY29tcGF0
-aWJsZSA9ICJmc2wsbHgyMTYwYS1haGNpIjsNCj4+ID4NCj4+ID5IYXMgdGhlIGtlcm5lbCBkcml2
-ZXIgYmVlbiBwYXRjaGVkIHRvIHByb2JlIHRoZSBjb21wYXRpYmxlPw0KPj4gPg0KPj4gPlNoYXdu
-DQo+PiBZZXMsIHRoZSBkcml2ZXIgcGF0Y2ggaXMNCj4+IGh0dHBzOi8vZW1lYTAxLnNhZmVsaW5r
-cy5wcm90ZWN0aW9uLm91dGxvb2suY29tLz91cmw9aHR0cCUzQSUyRiUyRnBhdGMNCj4+DQo+aHdv
-cmsub3psYWJzLm9yZyUyRnBhdGNoJTJGMTAzNDA4MyUyRiZhbXA7ZGF0YT0wMiU3QzAxJTdDcGVu
-Zy5tYQ0KPiU0MG54cA0KPj4gLmNvbSU3QzhkYWVhNGU0YjJlYTQxOWNiMmEwMDhkNjhmZTM0ZjUx
-JTdDNjg2ZWExZDNiYzJiNGM2ZmE5MmMNCj5kOTljNWMzMA0KPj4NCj4xNjM1JTdDMCU3QzAlN0M2
-MzY4NTQ2MDM3OTQxNzA1NzYmYW1wO3NkYXRhPXozaWM4JTJGQVMxME5jRmpkUA0KPmVKRnBuRm9v
-DQo+PiBSMllvNG9ZTyUyRkFBU3I3cjJMaGclM0QmYW1wO3Jlc2VydmVkPTANCj4NCj5QaW5nIG1l
-IHdoZW4gdGhlIGRyaXZlciBwYXRjaCBpcyBhY2NlcHRlZC4gIElkZWFsbHksIHdlIG9ubHkgYWNj
-ZXB0IGR0cw0KPmNoYW5nZXMgYWZ0ZXIgdGhlIGRyaXZlciBjb3VudGVycGFydCBsYW5kcyBvbiBt
-YWlubGluZS4NCj4NCj5TaGF3bg0KW1BlbmcgTWFdIGdvdCBpdCwgdGhhbmtzLg0KQlINClBlbmcN
-Cg==
+In preparation to enabling -Wimplicit-fallthrough, mark switch
+cases where we are expecting to fall through.
+
+This patch fixes the following warning:
+
+drivers/ide/ide-floppy.c: In function ‘ide_floppy_get_capacity’:
+drivers/ide/ide-floppy.c:424:7: warning: this statement may fall through [-Wimplicit-fallthrough=]
+    if (!(drive->atapi_flags & IDE_AFLAG_CLIK_DRIVE))
+       ^
+drivers/ide/ide-floppy.c:431:3: note: here
+   case CAPACITY_CURRENT:
+   ^~~~
+
+Warning level 3 was used: -Wimplicit-fallthrough=3
+
+Notice that, in this particular case, the code comment is modified
+in accordance with what GCC is expecting to find.
+
+This patch is part of the ongoing efforts to enable
+-Wimplicit-fallthrough.
+
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
+---
+ drivers/ide/ide-floppy.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+index 780d33ccc5d8..1ea2f9e82bf8 100644
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -427,7 +427,7 @@ static int ide_floppy_get_capacity(ide_drive_t *drive)
+ 				 * (maintains previous driver behaviour)
+ 				 */
+ 				break;
+-			/* else: fall through */
++			/* fall through */
+ 		case CAPACITY_CURRENT:
+ 			/* Normal Zip/LS-120 disks */
+ 			if (memcmp(cap_desc, &floppy->cap_desc, 8))
+-- 
+2.20.1
