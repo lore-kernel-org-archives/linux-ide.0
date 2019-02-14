@@ -1,71 +1,96 @@
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Subject: [PATCH] ide: hpt366: mark expected switch fall-throughs
-Date: Tue, 12 Feb 2019 15:46:51 -0600
-Message-ID: <20190212214651.GA7476@embeddedor>
+From: Peng Ma <peng.ma@nxp.com>
+Subject: RE: [v5 2/2] arm64: dts: lx2160a: add sata node support
+Date: Thu, 14 Feb 2019 09:18:45 +0000
+Message-ID: <VI1PR04MB44315EBEB2BD414FEF6B3547ED670@VI1PR04MB4431.eurprd04.prod.outlook.com>
+References: <20190125081013.21663-1-peng.ma@nxp.com>
+ <20190125081013.21663-2-peng.ma@nxp.com> <20190212190059.GA9272@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20190212190059.GA9272@suse.de>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Kees Cook <keescook@chromium.org>
+To: Mian Yousaf Kaukab <ykaukab@suse.de>
+Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "shawnguo@kernel.org" <shawnguo@kernel.org>, "robh+dt@kernel.org" <robh+dt@kernel.org>, "mark.rutland@arm.com" <mark.rutland@arm.com>, Leo Li <leoyang.li@nxp.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Andy Tang <andy.tang@nxp.com>
 List-Id: linux-ide@vger.kernel.org
 
-In preparation to enabling -Wimplicit-fallthrough, mark switch
-cases where we are expecting to fall through.
-
-This patch fixes the following warning:
-
-drivers/ide/hpt366.c: In function ‘hpt3xx_udma_filter’:
-drivers/ide/hpt366.c:574:6: warning: this statement may fall through [-Wimplicit-fallthrough=]
-   if (!HPT370_ALLOW_ATA100_5 ||
-      ^
-drivers/ide/hpt366.c:578:2: note: here
-  case HPT372 :
-  ^~~~
-drivers/ide/hpt366.c: In function ‘hpt3xx_mdma_filter’:
-drivers/ide/hpt366.c:602:6: warning: this statement may fall through [-Wimplicit-fallthrough=]
-   if (ata_id_is_sata(drive->id))
-      ^
-drivers/ide/hpt366.c:605:2: note: here
-  default:
-  ^~~~~~~
-
-Warning level 3 was used: -Wimplicit-fallthrough=3
-
-Notice that, in this particular case, the code comment is modified
-in accordance with what GCC is expecting to find.
-
-This patch is part of the ongoing efforts to enable
--Wimplicit-fallthrough.
-
-Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
----
- drivers/ide/hpt366.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ide/hpt366.c b/drivers/ide/hpt366.c
-index 4d565b0c5a6e..0a3f9bcc8b04 100644
---- a/drivers/ide/hpt366.c
-+++ b/drivers/ide/hpt366.c
-@@ -574,7 +574,7 @@ static u8 hpt3xx_udma_filter(ide_drive_t *drive)
- 		if (!HPT370_ALLOW_ATA100_5 ||
- 		    check_in_drive_list(drive, bad_ata100_5))
- 			return ATA_UDMA4;
--		/* else: fall through */
-+		/* fall through */
- 	case HPT372 :
- 	case HPT372A:
- 	case HPT372N:
-@@ -601,7 +601,7 @@ static u8 hpt3xx_mdma_filter(ide_drive_t *drive)
- 	case HPT374 :
- 		if (ata_id_is_sata(drive->id))
- 			return 0x00;
--		/* else: fall through */
-+		/* fall through */
- 	default:
- 		return 0x07;
- 	}
--- 
-2.20.1
+DQoNCj4tLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPkZyb206IE1pYW4gWW91c2FmIEthdWth
+YiA8eWthdWthYkBzdXNlLmRlPg0KPlNlbnQ6IDIwMTnlubQy5pyIMTPml6UgMzowMQ0KPlRvOiBQ
+ZW5nIE1hIDxwZW5nLm1hQG54cC5jb20+DQo+Q2M6IGF4Ym9lQGtlcm5lbC5kazsgc2hhd25ndW9A
+a2VybmVsLm9yZzsgcm9iaCtkdEBrZXJuZWwub3JnOw0KPm1hcmsucnV0bGFuZEBhcm0uY29tOyBM
+ZW8gTGkgPGxlb3lhbmcubGlAbnhwLmNvbT47DQo+bGludXgtaWRlQHZnZXIua2VybmVsLm9yZzsg
+ZGV2aWNldHJlZUB2Z2VyLmtlcm5lbC5vcmc7DQo+bGludXgta2VybmVsQHZnZXIua2VybmVsLm9y
+ZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOyBBbmR5IFRhbmcNCj48YW5k
+eS50YW5nQG54cC5jb20+DQo+U3ViamVjdDogUmU6IFt2NSAyLzJdIGFybTY0OiBkdHM6IGx4MjE2
+MGE6IGFkZCBzYXRhIG5vZGUgc3VwcG9ydA0KPg0KPk9uIEZyaSwgSmFuIDI1LCAyMDE5IGF0IDA4
+OjEwOjEzQU0gKzAwMDAsIFBlbmcgTWEgd3JvdGU6DQo+PiBBZGQgU0FUQSBkZXZpY2Ugbm9kZXMg
+Zm9yIGZzbC1seDIxNjBhIGFuZCBlbmFibGUgc3VwcG9ydCBmb3IgUURTIGFuZA0KPj4gUkRCIGJv
+YXJkcy4NCj4+DQo+PiBTaWduZWQtb2ZmLWJ5OiBQZW5nIE1hIDxwZW5nLm1hQG54cC5jb20+DQo+
+PiAtLS0NCj4+IGNoYW5nZWQgZm9yIFY1Og0KPj4gCS0gbm8gY2hhbmdlDQo+Pg0KPj4gIGFyY2gv
+YXJtNjQvYm9vdC9kdHMvZnJlZXNjYWxlL2ZzbC1seDIxNjBhLXFkcy5kdHMgfCAgIDE2ICsrKysr
+KysNCj4+ICBhcmNoL2FybTY0L2Jvb3QvZHRzL2ZyZWVzY2FsZS9mc2wtbHgyMTYwYS1yZGIuZHRz
+IHwgICAxNiArKysrKysrDQo+PiAgYXJjaC9hcm02NC9ib290L2R0cy9mcmVlc2NhbGUvZnNsLWx4
+MjE2MGEuZHRzaSAgICB8ICAgNDQNCj4rKysrKysrKysrKysrKysrKysrKysNCj4+ICAzIGZpbGVz
+IGNoYW5nZWQsIDc2IGluc2VydGlvbnMoKyksIDAgZGVsZXRpb25zKC0pDQo+Pg0KPj4gZGlmZiAt
+LWdpdCBhL2FyY2gvYXJtNjQvYm9vdC9kdHMvZnJlZXNjYWxlL2ZzbC1seDIxNjBhLXFkcy5kdHMN
+Cj4+IGIvYXJjaC9hcm02NC9ib290L2R0cy9mcmVlc2NhbGUvZnNsLWx4MjE2MGEtcWRzLmR0cw0K
+Pj4gaW5kZXggOTlhMjJhYi4uMWE1YWNmNiAxMDA2NDQNCj4+IC0tLSBhL2FyY2gvYXJtNjQvYm9v
+dC9kdHMvZnJlZXNjYWxlL2ZzbC1seDIxNjBhLXFkcy5kdHMNCj4+ICsrKyBiL2FyY2gvYXJtNjQv
+Ym9vdC9kdHMvZnJlZXNjYWxlL2ZzbC1seDIxNjBhLXFkcy5kdHMNCj4+IEBAIC05NSw2ICs5NSwy
+MiBAQA0KPj4gIAl9Ow0KPj4gIH07DQo+Pg0KPj4gKyZzYXRhMCB7DQo+PiArCXN0YXR1cyA9ICJv
+a2F5IjsNCj4+ICt9Ow0KPj4gKw0KPj4gKyZzYXRhMSB7DQo+PiArCXN0YXR1cyA9ICJva2F5IjsN
+Cj4+ICt9Ow0KPj4gKw0KPj4gKyZzYXRhMiB7DQo+PiArCXN0YXR1cyA9ICJva2F5IjsNCj4+ICt9
+Ow0KPj4gKw0KPj4gKyZzYXRhMyB7DQo+PiArCXN0YXR1cyA9ICJva2F5IjsNCj4+ICt9Ow0KPj4g
+Kw0KPj4gICZ1YXJ0MCB7DQo+PiAgCXN0YXR1cyA9ICJva2F5IjsNCj4+ICB9Ow0KPj4gZGlmZiAt
+LWdpdCBhL2FyY2gvYXJtNjQvYm9vdC9kdHMvZnJlZXNjYWxlL2ZzbC1seDIxNjBhLXJkYi5kdHMN
+Cj4+IGIvYXJjaC9hcm02NC9ib290L2R0cy9mcmVlc2NhbGUvZnNsLWx4MjE2MGEtcmRiLmR0cw0K
+Pj4gaW5kZXggNjQ4MWU1Zi4uNWI2Nzk5ZSAxMDA2NDQNCj4+IC0tLSBhL2FyY2gvYXJtNjQvYm9v
+dC9kdHMvZnJlZXNjYWxlL2ZzbC1seDIxNjBhLXJkYi5kdHMNCj4+ICsrKyBiL2FyY2gvYXJtNjQv
+Ym9vdC9kdHMvZnJlZXNjYWxlL2ZzbC1seDIxNjBhLXJkYi5kdHMNCj4+IEBAIC0xMDIsNiArMTAy
+LDIyIEBADQo+PiAgCX07DQo+PiAgfTsNCj4+DQo+PiArJnNhdGEwIHsNCj4+ICsJc3RhdHVzID0g
+Im9rYXkiOw0KPj4gK307DQo+PiArDQo+PiArJnNhdGExIHsNCj4+ICsJc3RhdHVzID0gIm9rYXki
+Ow0KPj4gK307DQo+PiArDQo+PiArJnNhdGEyIHsNCj4+ICsJc3RhdHVzID0gIm9rYXkiOw0KPj4g
+K307DQo+PiArDQo+PiArJnNhdGEzIHsNCj4+ICsJc3RhdHVzID0gIm9rYXkiOw0KPj4gK307DQo+
+PiArDQo+PiAgJnVhcnQwIHsNCj4+ICAJc3RhdHVzID0gIm9rYXkiOw0KPj4gIH07DQo+PiBkaWZm
+IC0tZ2l0IGEvYXJjaC9hcm02NC9ib290L2R0cy9mcmVlc2NhbGUvZnNsLWx4MjE2MGEuZHRzaQ0K
+Pj4gYi9hcmNoL2FybTY0L2Jvb3QvZHRzL2ZyZWVzY2FsZS9mc2wtbHgyMTYwYS5kdHNpDQo+PiBp
+bmRleCBhNzlmNWMxLi41OTIwMzRiIDEwMDY0NA0KPj4gLS0tIGEvYXJjaC9hcm02NC9ib290L2R0
+cy9mcmVlc2NhbGUvZnNsLWx4MjE2MGEuZHRzaQ0KPj4gKysrIGIvYXJjaC9hcm02NC9ib290L2R0
+cy9mcmVlc2NhbGUvZnNsLWx4MjE2MGEuZHRzaQ0KPj4gQEAgLTY3MSw2ICs2NzEsNTAgQEANCj4+
+ICAJCQlzdGF0dXMgPSAiZGlzYWJsZWQiOw0KPj4gIAkJfTsNCj4+DQo+PiArCQlzYXRhMDogc2F0
+YUAzMjAwMDAwIHsNCj4+ICsJCQljb21wYXRpYmxlID0gImZzbCxseDIxNjBhLWFoY2kiOw0KPj4g
+KwkJCXJlZyA9IDwweDAgMHgzMjAwMDAwIDB4MCAweDEwMDAwPiwNCj4+ICsJCQkgICAgICA8MHg3
+IDB4MTAwNTIwIDB4MCAweDQ+Ow0KPj4gKwkJCXJlZy1uYW1lcyA9ICJhaGNpIiwgInNhdGEtZWNj
+IjsNCj4+ICsJCQlpbnRlcnJ1cHRzID0gPEdJQ19TUEkgMTMzIElSUV9UWVBFX0xFVkVMX0hJR0g+
+Ow0KPj4gKwkJCWNsb2NrcyA9IDwmY2xvY2tnZW4gNCAzPjsNCj4+ICsJCQlkbWEtY29oZXJlbnQ7
+DQo+PiArCQkJc3RhdHVzID0gImRpc2FibGVkIjsNCj4+ICsJCX07DQo+PiArDQo+PiArCQlzYXRh
+MTogc2F0YUAzMjEwMDAwIHsNCj4+ICsJCQljb21wYXRpYmxlID0gImZzbCxseDIxNjBhLWFoY2ki
+Ow0KPj4gKwkJCXJlZyA9IDwweDAgMHgzMjEwMDAwIDB4MCAweDEwMDAwPiwNCj4+ICsJCQkgICAg
+ICA8MHg3IDB4MTAwNTIwIDB4MCAweDQ+Ow0KPj4gKwkJCXJlZy1uYW1lcyA9ICJhaGNpIiwgInNh
+dGEtZWNjIjsNCj4+ICsJCQlpbnRlcnJ1cHRzID0gPEdJQ19TUEkgMTM2IElSUV9UWVBFX0xFVkVM
+X0hJR0g+Ow0KPj4gKwkJCWNsb2NrcyA9IDwmY2xvY2tnZW4gNCAzPjsNCj4+ICsJCQlkbWEtY29o
+ZXJlbnQ7DQo+PiArCQkJc3RhdHVzID0gImRpc2FibGVkIjsNCj4+ICsJCX07DQo+PiArDQo+PiAr
+CQlzYXRhMjogc2F0YUAzMjIwMDAwIHsNCj4+ICsJCQljb21wYXRpYmxlID0gImZzbCxseDIxNjBh
+LWFoY2kiOw0KPj4gKwkJCXJlZyA9IDwweDAgMHgzMjIwMDAwIDB4MCAweDEwMDAwPiwNCj4+ICsJ
+CQkgICAgICA8MHg3IDB4MTAwNTIwIDB4MCAweDQ+Ow0KPj4gKwkJCXJlZy1uYW1lcyA9ICJhaGNp
+IiwgInNhdGEtZWNjIjsNCj4+ICsJCQlpbnRlcnJ1cHRzID0gPEdJQ19TUEkgOTcgSVJRX1RZUEVf
+TEVWRUxfSElHSD47DQo+PiArCQkJY2xvY2tzID0gPCZjbG9ja2dlbiA0IDM+Ow0KPj4gKwkJCWRt
+YS1jb2hlcmVudDsNCj4+ICsJCQlzdGF0dXMgPSAiZGlzYWJsZWQiOw0KPj4gKwkJfTsNCj4+ICsN
+Cj4+ICsJCXNhdGEzOiBzYXRhQDMyMzAwMDAgew0KPj4gKwkJCWNvbXBhdGlibGUgPSAiZnNsLGx4
+MjE2MGEtYWhjaSI7DQo+PiArCQkJcmVnID0gPDB4MCAweDMyMzAwMDAgMHgwIDB4MTAwMDA+LA0K
+Pj4gKwkJCSAgICAgIDwweDcgMHgxMDA1MjAgMHgwIDB4ND47DQo+WW91IGFyZSB1c2luZyBzYW1l
+IHJlZyB2YWx1ZXMgZm9yIHNhdGEtZWNjIGluIGFsbCBzYXRhIGluc3RhbmNlcy4gRG9lcyB0aGlz
+DQo+YWN0dWFsbHkgd29yaz8gTm8gZXJyb3JzIHdoZW4gdGhlIGFoY2lfcW9yaXEgZHJpdmVyIGRv
+IGlvcmVtYXAgb24gaXQgd2hpbGUNCj5wcm9iaW5nIHNlY29uZCBpbnN0YW5jZSBhbmQgb253YXJk
+Pw0KPg0KIFRoYW5rcyBmb3IgeW91IHBvaW50IG91dCB0aGUgcHJvYmxlbS4gSSB3aWxsIGZpeGVk
+IGl0IHdpdGggdHdvIG9yIG1vcmUgc2F0YSBlbmFibGUuDQo+ZnNsLWxzMjA4eGEuZHRzaSBpcyB0
+aGUgb25seSBvdGhlciBmaWxlIGhlcmUgd2l0aCBtdWx0aXBsZSBzYXRhIGluc3RhbmNlcyBhbmQg
+aXQNCj5kb2VzbuKAmXQgY2FyZSBhYm91dCBzYXRhLWVjYy4NCj4NClRoZSBsczIwOHhhIHBsYXRm
+b3JtcyBpcyBub3QgbmVjZXNzYXJ5IHRvIHNldCBzYXRhLWVjYyBhZGRyLg0KQlIsDQpQZW5nDQo+
+PiArCQkJcmVnLW5hbWVzID0gImFoY2kiLCAic2F0YS1lY2MiOw0KPj4gKwkJCWludGVycnVwdHMg
+PSA8R0lDX1NQSSAxMDAgSVJRX1RZUEVfTEVWRUxfSElHSD47DQo+PiArCQkJY2xvY2tzID0gPCZj
+bG9ja2dlbiA0IDM+Ow0KPj4gKwkJCWRtYS1jb2hlcmVudDsNCj4+ICsJCQlzdGF0dXMgPSAiZGlz
+YWJsZWQiOw0KPj4gKwkJfTsNCj4+ICsNCj4+ICAJCXNtbXU6IGlvbW11QDUwMDAwMDAgew0KPj4g
+IAkJCWNvbXBhdGlibGUgPSAiYXJtLG1tdS01MDAiOw0KPj4gIAkJCXJlZyA9IDwwIDB4NTAwMDAw
+MCAwIDB4ODAwMDAwPjsNCj4NCj5CUiwNCj5Zb3VzYWYNCg==
