@@ -1,36 +1,93 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [Lsf-pc] LSF/MM 2019: Call for Proposals (UPDATED!)
-Date: Thu, 14 Feb 2019 15:08:22 +0100
-Message-ID: <20190214140822.GA7251@dhcp22.suse.cz>
-References: <4f5a15c1-4f9e-acae-5094-2f38c8eebd96@kernel.dk>
+From: Christophe Leroy <christophe.leroy@c-s.fr>
+Subject: Re: Kernel panic when loading the IDE controller driver
+Date: Thu, 14 Feb 2019 18:54:10 +0100
+Message-ID: <40b6281d-3aed-bff1-79fc-09a293d37b7f@c-s.fr>
+References: <1550055691105-0.post@n7.nabble.com>
+ <7c695098-8b2b-5af0-c961-f25457459f8e@c-s.fr>
+ <1550060685213-0.post@n7.nabble.com>
+ <558c15bc-75d0-d02a-8a78-8155838b8809@c-s.fr>
+ <1550062386389-0.post@n7.nabble.com>
+ <173559f3-7b2b-735b-acc7-66ccbdc7905d@c-s.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4f5a15c1-4f9e-acae-5094-2f38c8eebd96@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, bpf@vger.kernel.org, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, ast@kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <173559f3-7b2b-735b-acc7-66ccbdc7905d@c-s.fr>
+Content-Language: fr
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: sgosavi1 <Sachin.Gosavi@emerson.com>, linuxppc-dev@ozlabs.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
 List-Id: linux-ide@vger.kernel.org
 
-On Thu 07-02-19 08:35:06, Jens Axboe wrote:
-[...]
-> 2) Requests to attend the summit for those that are not proposing a
-> topic should be sent to:
-> 
-> 	lsf-pc@lists.linux-foundation.org
-> 
-> Please summarize what expertise you will bring to the meeting, and
-> what you would like to discuss. Please also tag your email with
-> [LSF/MM ATTEND] and send it as a new thread so there is less chance of
-> it getting lost.
 
-Just a reminder. Please do not forget to send the ATTEND request and
-make it clear which track you would like to participate in the most.
-It is quite common that people only send topic proposals without and
-expclicit ATTEND request or they do not mention the track.
 
-Thanks!
--- 
-Michal Hocko
-SUSE Labs
+Le 13/02/2019 à 16:27, Christophe Leroy a écrit :
+> 
+> 
+> Le 13/02/2019 à 13:53, sgosavi1 a écrit :
+>>> Why using 4.15.13 which is obsolete instead of using one of the Long
+>>> Term Support versions which are still maintained, like 4.14 or 4.19 ?
+>>> (see the complete list at https://www.kernel.org/category/releases.html)
+>>
+>> Well, when I started this task 4.15.13 was probably the latest stable
+>> release and hence we decided to port this version. In the older 
+>> kernel, we
+>> have the m8260_setup.c source file for our board where the function
+>> "io_block_mapping" was used to configure the non-standard IO port address
+>> starting at 0xe0000000 location. This address was passed as the base 
+>> address
+>> followed by control address and IRQ number to the ide-core.ko module. 
+>> In the
+>> new kernel we do not have an option to send these addresses and IRQ 
+>> numbers
+>> as arguments to the driver. Instead the ide-generic.c source file in 
+>> the new
+>> kernel uses the standard IO port values and IRQ values. I modified the 
+>> code
+>> in the above file to used the addresses and IRQ number we used in the 
+>> past.
+>> Also, added code in the "MMU_init" function call available under
+>> arch/PowerPC/init_32.c to setup the IO port address range by adding the
+>> "io_block_mapping" call and the required IO port address range.
+>>
+>> Is there anything else that needs to be added or how can we configure the
+>> desired IO address range in the new kernel?
+>>
+> 
+> Maybe look around 
+> https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit/?id=9a0e77f28b50128df0c9e26ae489e44e29a7270a 
+> 
+> 
+> Also look at ide_platform.c. I imagine there must be some way to set it 
+> up in your device tree.
+> 
+> Maybe Bartlomiej Zolnierkiewicz can help ?
+> 
+> Christophe
+
+Le 14/02/2019 à 09:17, sgosavi1 a écrit :>> Maybe look around
+ >
+ > I have gone through this before and also tried the pata_platform 
+driver but
+ > no success yet. I haven't found any example that passes the IO ports 
+and IRQ
+ > information through the device tree to the driver code.
+ >
+ > Thanks,
+ > Sachin.
+
+
+Maybe someone from the IDE SUBSYSTEM would be able to help better ?
+
+Entire thread at 
+http://linuxppc.10917.n7.nabble.com/Kernel-panic-when-loading-the-IDE-controller-driver-td150020.html#none
+
+Christophe
