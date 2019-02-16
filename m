@@ -1,93 +1,70 @@
-From: Christophe Leroy <christophe.leroy@c-s.fr>
-Subject: Re: Kernel panic when loading the IDE controller driver
-Date: Thu, 14 Feb 2019 18:54:10 +0100
-Message-ID: <40b6281d-3aed-bff1-79fc-09a293d37b7f@c-s.fr>
-References: <1550055691105-0.post@n7.nabble.com>
- <7c695098-8b2b-5af0-c961-f25457459f8e@c-s.fr>
- <1550060685213-0.post@n7.nabble.com>
- <558c15bc-75d0-d02a-8a78-8155838b8809@c-s.fr>
- <1550062386389-0.post@n7.nabble.com>
- <173559f3-7b2b-735b-acc7-66ccbdc7905d@c-s.fr>
+From: Jason Yan <yanaijie@huawei.com>
+Subject: [PATCH] ata: fix a race condition when internal cmd time out
+Date: Sat, 16 Feb 2019 11:42:57 +0800
+Message-ID: <20190216034257.30226-1-yanaijie@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <173559f3-7b2b-735b-acc7-66ccbdc7905d@c-s.fr>
-Content-Language: fr
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: sgosavi1 <Sachin.Gosavi@emerson.com>, linuxppc-dev@ozlabs.org, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, tj@kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org
+Cc: Jason Yan <yanaijie@huawei.com>
 List-Id: linux-ide@vger.kernel.org
 
+For internal cmds, we will unmap DMA memory associated with the cmd
+before we abort the cmd. If DMA transfering data before the aborting,
+bus error will occured.
 
+ata_exec_internal_sg
+  ->ata_port_freeze if timeout
+    ->ata_qc_complete
+      ->ata_sg_clean
+                                      dma transfering data = bus error
+  ->ap->ops->post_internal_cmd
+    ->sas_ata_post_internal
+      ->sas_ata_internal_abort
+        ->abort the cmd
 
-Le 13/02/2019 à 16:27, Christophe Leroy a écrit :
-> 
-> 
-> Le 13/02/2019 à 13:53, sgosavi1 a écrit :
->>> Why using 4.15.13 which is obsolete instead of using one of the Long
->>> Term Support versions which are still maintained, like 4.14 or 4.19 ?
->>> (see the complete list at https://www.kernel.org/category/releases.html)
->>
->> Well, when I started this task 4.15.13 was probably the latest stable
->> release and hence we decided to port this version. In the older 
->> kernel, we
->> have the m8260_setup.c source file for our board where the function
->> "io_block_mapping" was used to configure the non-standard IO port address
->> starting at 0xe0000000 location. This address was passed as the base 
->> address
->> followed by control address and IRQ number to the ide-core.ko module. 
->> In the
->> new kernel we do not have an option to send these addresses and IRQ 
->> numbers
->> as arguments to the driver. Instead the ide-generic.c source file in 
->> the new
->> kernel uses the standard IO port values and IRQ values. I modified the 
->> code
->> in the above file to used the addresses and IRQ number we used in the 
->> past.
->> Also, added code in the "MMU_init" function call available under
->> arch/PowerPC/init_32.c to setup the IO port address range by adding the
->> "io_block_mapping" call and the required IO port address range.
->>
->> Is there anything else that needs to be added or how can we configure the
->> desired IO address range in the new kernel?
->>
-> 
-> Maybe look around 
-> https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit/?id=9a0e77f28b50128df0c9e26ae489e44e29a7270a 
-> 
-> 
-> Also look at ide_platform.c. I imagine there must be some way to set it 
-> up in your device tree.
-> 
-> Maybe Bartlomiej Zolnierkiewicz can help ?
-> 
-> Christophe
+Fix this by move post_internal_cmd() before unmapping the DMA memory
+when time out. Notice that we have to set ATA_QCFLAG_FAILED flag before
+calling post_internal_cmd() so that the aborting will work.
 
-Le 14/02/2019 à 09:17, sgosavi1 a écrit :>> Maybe look around
- >
- > I have gone through this before and also tried the pata_platform 
-driver but
- > no success yet. I haven't found any example that passes the IO ports 
-and IRQ
- > information through the device tree to the driver code.
- >
- > Thanks,
- > Sachin.
+Reported-by: luojian <luojian5@huawei.com>
+Signed-off-by: Jason Yan <yanaijie@huawei.com>
+---
+ drivers/ata/libata-core.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
-
-Maybe someone from the IDE SUBSYSTEM would be able to help better ?
-
-Entire thread at 
-http://linuxppc.10917.n7.nabble.com/Kernel-panic-when-loading-the-IDE-controller-driver-td150020.html#none
-
-Christophe
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index adf28788cab5..d0ff5711e805 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1665,6 +1665,13 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+ 		 */
+ 		if (qc->flags & ATA_QCFLAG_ACTIVE) {
+ 			qc->err_mask |= AC_ERR_TIMEOUT;
++			qc->flags |= ATA_QCFLAG_FAILED;
++
++			spin_unlock_irqrestore(ap->lock, flags);
++			/* do post_internal_cmd */
++			if (ap->ops->post_internal_cmd)
++				ap->ops->post_internal_cmd(qc);
++			spin_lock_irqsave(ap->lock, flags);
+ 
+ 			if (ap->ops->error_handler)
+ 				ata_port_freeze(ap);
+@@ -1679,9 +1686,10 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+ 		spin_unlock_irqrestore(ap->lock, flags);
+ 	}
+ 
+-	/* do post_internal_cmd */
+-	if (ap->ops->post_internal_cmd)
+-		ap->ops->post_internal_cmd(qc);
++	if (!(qc->err_mask & AC_ERR_TIMEOUT))
++		/* do post_internal_cmd */
++		if (ap->ops->post_internal_cmd)
++			ap->ops->post_internal_cmd(qc);
+ 
+ 	/* perform minimal error analysis */
+ 	if (qc->flags & ATA_QCFLAG_FAILED) {
+-- 
+2.14.4
