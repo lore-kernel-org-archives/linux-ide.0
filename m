@@ -1,72 +1,43 @@
-From: Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v2] ata: fix a race condition when internal cmd time out
-Date: Sat, 16 Feb 2019 16:53:47 +0800
-Message-ID: <20190216085347.35228-1-yanaijie@huawei.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH] ata: libahci: Only warn for AHCI_HFLAG_MULTI_MSI set when genuine custom irq handler implemented
+Date: Tue, 19 Feb 2019 01:43:33 +0800
+Message-ID: <1550511813-133136-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, tj@kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org
-Cc: Jason Yan <yanaijie@huawei.com>
+To: axboe@kernel.dk
+Cc: linuxarm@huawei.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-ide@vger.kernel.org
 
-For internal cmds, we will unmap DMA memory associated with the cmd
-before we abort the cmd. If DMA transferring data before the aborting,
-bus error will occur.
+For an AHCI controller with AHCI_HFLAG_MULTI_MSI flag set, we may get the
+following log, regardless of whether a custom irq handler was implemented
+or not:
 
-ata_exec_internal_sg
-  ->ata_port_freeze if timeout
-    ->ata_qc_complete
-      ->ata_sg_clean
-                                      dma transferring data = bus error
-  ->ap->ops->post_internal_cmd
-    ->sas_ata_post_internal
-      ->sas_ata_internal_abort
-        ->abort the cmd
+[   14.700238] ahci 0000:74:03.0: both AHCI_HFLAG_MULTI_MSI flag set and custom irq handler implemented
 
-Fix this by moving post_internal_cmd() before unmapping the DMA memory
-when time out. Notice that we have to set ATA_QCFLAG_FAILED flag before
-calling post_internal_cmd() so that the aborting will work.
+This is because we can set hpriv->irq_handler to
+ahci_single_level_irq_intr() if not already set, in
+ahci_init_one()->ahci_pci_save_initial_config()->ahci_save_initial_config().
 
-Reported-by: luojian <luojian5@huawei.com>
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
----
-v2: fix some typos
+Stop having this warn being misleading by adding a check for
+hpriv->irq_handler != ahci_single_level_irq_intr.
 
- drivers/ata/libata-core.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+Signed-off-by: John Garry <john.garry@huawei.com>
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index adf28788cab5..d0ff5711e805 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1665,6 +1665,13 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
- 		 */
- 		if (qc->flags & ATA_QCFLAG_ACTIVE) {
- 			qc->err_mask |= AC_ERR_TIMEOUT;
-+			qc->flags |= ATA_QCFLAG_FAILED;
-+
-+			spin_unlock_irqrestore(ap->lock, flags);
-+			/* do post_internal_cmd */
-+			if (ap->ops->post_internal_cmd)
-+				ap->ops->post_internal_cmd(qc);
-+			spin_lock_irqsave(ap->lock, flags);
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index b5f57c69c487..692782dddc0f 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -2599,7 +2599,8 @@ int ahci_host_activate(struct ata_host *host, struct scsi_host_template *sht)
+ 	int rc;
  
- 			if (ap->ops->error_handler)
- 				ata_port_freeze(ap);
-@@ -1679,9 +1686,10 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
- 		spin_unlock_irqrestore(ap->lock, flags);
- 	}
- 
--	/* do post_internal_cmd */
--	if (ap->ops->post_internal_cmd)
--		ap->ops->post_internal_cmd(qc);
-+	if (!(qc->err_mask & AC_ERR_TIMEOUT))
-+		/* do post_internal_cmd */
-+		if (ap->ops->post_internal_cmd)
-+			ap->ops->post_internal_cmd(qc);
- 
- 	/* perform minimal error analysis */
- 	if (qc->flags & ATA_QCFLAG_FAILED) {
+ 	if (hpriv->flags & AHCI_HFLAG_MULTI_MSI) {
+-		if (hpriv->irq_handler)
++		if (hpriv->irq_handler &&
++		    hpriv->irq_handler != ahci_single_level_irq_intr)
+ 			dev_warn(host->dev,
+ 			         "both AHCI_HFLAG_MULTI_MSI flag set and custom irq handler implemented\n");
+ 		if (!hpriv->get_irq_vector) {
 -- 
-2.14.4
+2.17.1
