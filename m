@@ -1,43 +1,150 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH] ata: libahci: Only warn for AHCI_HFLAG_MULTI_MSI set when genuine custom irq handler implemented
-Date: Tue, 19 Feb 2019 01:43:33 +0800
-Message-ID: <1550511813-133136-1-git-send-email-john.garry@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Peng Ma <peng.ma@nxp.com>
+Subject: [v6 3/3] ahci: qoriq: add lx2160 platforms support
+Date: Wed, 20 Feb 2019 08:56:07 +0000
+Message-ID: <20190220085607.31582-3-peng.ma@nxp.com>
+References: <20190220085607.31582-1-peng.ma@nxp.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190220085607.31582-1-peng.ma@nxp.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: axboe@kernel.dk
-Cc: linuxarm@huawei.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
+To: axboe@kernel.dk, robh+dt@kernel.org, mark.rutland@arm.com, shawnguo@kernel.org, leoyang.li@nxp.com, andy.tang@nxp.com
+Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, yousaf.kaukab@suse.com, Peng Ma <peng.ma@nxp.com>
 List-Id: linux-ide@vger.kernel.org
 
-For an AHCI controller with AHCI_HFLAG_MULTI_MSI flag set, we may get the
-following log, regardless of whether a custom irq handler was implemented
-or not:
+Lx2160a is a new introduced soc which supports ATA3.0
 
-[   14.700238] ahci 0000:74:03.0: both AHCI_HFLAG_MULTI_MSI flag set and custom irq handler implemented
+Signed-off-by: Peng Ma <peng.ma@nxp.com>
+---
+changed for V6:
+	- Add ecc_initialized to ensure set sata bit once of
+	ECC error register
+	- Recovery AHCI_LS2088A platform
 
-This is because we can set hpriv->irq_handler to
-ahci_single_level_irq_intr() if not already set, in
-ahci_init_one()->ahci_pci_save_initial_config()->ahci_save_initial_config().
+ drivers/ata/ahci_qoriq.c |   52 +++++++++++++++++++++++++++++++---------------
+ 1 files changed, 35 insertions(+), 17 deletions(-)
 
-Stop having this warn being misleading by adding a check for
-hpriv->irq_handler != ahci_single_level_irq_intr.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
-
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index b5f57c69c487..692782dddc0f 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -2599,7 +2599,8 @@ int ahci_host_activate(struct ata_host *host, struct scsi_host_template *sht)
- 	int rc;
+diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
+index ce59253..08dbb86 100644
+--- a/drivers/ata/ahci_qoriq.c
++++ b/drivers/ata/ahci_qoriq.c
+@@ -58,6 +58,7 @@ enum ahci_qoriq_type {
+ 	AHCI_LS1046A,
+ 	AHCI_LS1088A,
+ 	AHCI_LS2088A,
++	AHCI_LX2160A,
+ };
  
- 	if (hpriv->flags & AHCI_HFLAG_MULTI_MSI) {
--		if (hpriv->irq_handler)
-+		if (hpriv->irq_handler &&
-+		    hpriv->irq_handler != ahci_single_level_irq_intr)
- 			dev_warn(host->dev,
- 			         "both AHCI_HFLAG_MULTI_MSI flag set and custom irq handler implemented\n");
- 		if (!hpriv->get_irq_vector) {
+ struct ahci_qoriq_priv {
+@@ -67,6 +68,8 @@ struct ahci_qoriq_priv {
+ 	bool is_dmacoherent;
+ };
+ 
++static bool ecc_initialized;
++
+ static const struct of_device_id ahci_qoriq_of_match[] = {
+ 	{ .compatible = "fsl,ls1021a-ahci", .data = (void *)AHCI_LS1021A},
+ 	{ .compatible = "fsl,ls1043a-ahci", .data = (void *)AHCI_LS1043A},
+@@ -74,6 +77,7 @@ struct ahci_qoriq_priv {
+ 	{ .compatible = "fsl,ls1046a-ahci", .data = (void *)AHCI_LS1046A},
+ 	{ .compatible = "fsl,ls1088a-ahci", .data = (void *)AHCI_LS1088A},
+ 	{ .compatible = "fsl,ls2088a-ahci", .data = (void *)AHCI_LS2088A},
++	{ .compatible = "fsl,lx2160a-ahci", .data = (void *)AHCI_LX2160A},
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, ahci_qoriq_of_match);
+@@ -165,9 +169,10 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
+ 
+ 	switch (qpriv->type) {
+ 	case AHCI_LS1021A:
+-		if (!qpriv->ecc_addr)
++		if (!(qpriv->ecc_addr || ecc_initialized))
+ 			return -EINVAL;
+-		writel(SATA_ECC_DISABLE, qpriv->ecc_addr);
++		else if (qpriv->ecc_addr && !ecc_initialized)
++			writel(SATA_ECC_DISABLE, qpriv->ecc_addr);
+ 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
+ 		writel(LS1021A_PORT_PHY2, reg_base + PORT_PHY2);
+ 		writel(LS1021A_PORT_PHY3, reg_base + PORT_PHY3);
+@@ -180,10 +185,12 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
+ 		break;
+ 
+ 	case AHCI_LS1043A:
+-		if (!qpriv->ecc_addr)
++		if (!(qpriv->ecc_addr || ecc_initialized))
+ 			return -EINVAL;
+-		writel(readl(qpriv->ecc_addr) | ECC_DIS_ARMV8_CH2,
+-				qpriv->ecc_addr);
++		else if (qpriv->ecc_addr && !ecc_initialized)
++			writel(readl(qpriv->ecc_addr) |
++			       ECC_DIS_ARMV8_CH2,
++			       qpriv->ecc_addr);
+ 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
+ 		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
+ 		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
+@@ -202,10 +209,12 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
+ 		break;
+ 
+ 	case AHCI_LS1046A:
+-		if (!qpriv->ecc_addr)
++		if (!(qpriv->ecc_addr || ecc_initialized))
+ 			return -EINVAL;
+-		writel(readl(qpriv->ecc_addr) | ECC_DIS_ARMV8_CH2,
+-				qpriv->ecc_addr);
++		else if (qpriv->ecc_addr && !ecc_initialized)
++			writel(readl(qpriv->ecc_addr) |
++			       ECC_DIS_ARMV8_CH2,
++			       qpriv->ecc_addr);
+ 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
+ 		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
+ 		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
+@@ -215,10 +224,13 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
+ 		break;
+ 
+ 	case AHCI_LS1088A:
+-		if (!qpriv->ecc_addr)
++	case AHCI_LX2160A:
++		if (!(qpriv->ecc_addr || ecc_initialized))
+ 			return -EINVAL;
+-		writel(readl(qpriv->ecc_addr) | ECC_DIS_LS1088A,
+-		       qpriv->ecc_addr);
++		else if (qpriv->ecc_addr && !ecc_initialized)
++			writel(readl(qpriv->ecc_addr) |
++			       ECC_DIS_LS1088A,
++			       qpriv->ecc_addr);
+ 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
+ 		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
+ 		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
+@@ -237,6 +249,7 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
+ 		break;
+ 	}
+ 
++	ecc_initialized = true;
+ 	return 0;
+ }
+ 
+@@ -264,13 +277,18 @@ static int ahci_qoriq_probe(struct platform_device *pdev)
+ 
+ 	qoriq_priv->type = (enum ahci_qoriq_type)of_id->data;
+ 
+-	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
+-			"sata-ecc");
+-	if (res) {
+-		qoriq_priv->ecc_addr = devm_ioremap_resource(dev, res);
+-		if (IS_ERR(qoriq_priv->ecc_addr))
+-			return PTR_ERR(qoriq_priv->ecc_addr);
++	if (unlikely(!ecc_initialized)) {
++		res = platform_get_resource_byname(pdev,
++						   IORESOURCE_MEM,
++						   "sata-ecc");
++		if (res) {
++			qoriq_priv->ecc_addr =
++				devm_ioremap_resource(dev, res);
++			if (IS_ERR(qoriq_priv->ecc_addr))
++				return PTR_ERR(qoriq_priv->ecc_addr);
++		}
+ 	}
++
+ 	qoriq_priv->is_dmacoherent = of_dma_is_coherent(np);
+ 
+ 	rc = ahci_platform_enable_resources(hpriv);
 -- 
-2.17.1
+1.7.1
