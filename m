@@ -1,15 +1,16 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH 2/5] ata: libahci_platform: Support per-port interrupts
-Date: Fri, 22 Feb 2019 16:26:01 +0100
-Message-ID: <5040d4cf-7da1-eefa-a8a3-bc4054d528da@redhat.com>
+From: Miquel Raynal <miquel.raynal@bootlin.com>
+Subject: Re: [PATCH 5/5] arm64: dts: marvell: armada-cp110: Switch to
+ per-port SATA interrupts
+Date: Fri, 22 Feb 2019 16:29:12 +0100
+Message-ID: <20190222162912.39e17579@xps13>
 References: <20190222145356.23072-1-miquel.raynal@bootlin.com>
- <20190222145356.23072-3-miquel.raynal@bootlin.com>
+ <20190222145356.23072-6-miquel.raynal@bootlin.com>
+ <20190222151335.r27yreym5bhaoqaw@shell.armlinux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20190222145356.23072-3-miquel.raynal@bootlin.com>
-Content-Language: en-US
+In-Reply-To: <20190222151335.r27yreym5bhaoqaw@shell.armlinux.org.uk>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -19,245 +20,74 @@ List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Miquel Raynal <miquel.raynal@bootlin.com>, Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Jens Axboe <axboe@kernel.dk>, Thomas Gleixner <tglx@linutronix.de>, Marc Zyngier <marc.zyngier@arm.com>
-Cc: devicetree@vger.kernel.org, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, linux-arm-kernel@lists.infradead.org
+To: Russell King - ARM Linux admin <linux@armlinux.org.uk>
+Cc: Mark Rutland <mark.rutland@arm.com>, Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>, devicetree@vger.kernel.org, Marc Zyngier <marc.zyngier@arm.com>, Gregory Clement <gregory.clement@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, Hans de Goede <hdegoede@redhat.com>, Rob Herring <robh+dt@kernel.org>, Antoine Tenart <antoine.tenart@bootlin.com>, Jens Axboe <axboe@kernel.dk>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, linux-ide@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hi,
-
-On 2/22/19 3:53 PM, Miquel Raynal wrote:
-> Right now the ATA core only allows IPs to use a single interrupt. Some
-> of them (for instance the Armada-CP110 one) actually has one interrupt
-> per port. Add some logic to support such situation.
-> 
-> We consider that either there is one single interrupt declared in the
-> main IP node, or there are per-port interrupts, each of them being
-> declared in the port sub-nodes.
-> 
-> Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
-> ---
->   drivers/ata/acard-ahci.c       |  2 +-
->   drivers/ata/ahci.c             |  2 +-
->   drivers/ata/ahci.h             |  3 +-
->   drivers/ata/libahci.c          |  2 +-
->   drivers/ata/libahci_platform.c | 66 ++++++++++++++++++++++++++++------
->   drivers/ata/sata_highbank.c    |  2 +-
->   6 files changed, 61 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/ata/acard-ahci.c b/drivers/ata/acard-ahci.c
-> index 583e366be7e2..9414b81e994c 100644
-> --- a/drivers/ata/acard-ahci.c
-> +++ b/drivers/ata/acard-ahci.c
-> @@ -434,7 +434,7 @@ static int acard_ahci_init_one(struct pci_dev *pdev, const struct pci_device_id
->   	if (!hpriv)
->   		return -ENOMEM;
->   
-> -	hpriv->irq = pdev->irq;
-> +	hpriv->irqs[0] = pdev->irq;
->   	hpriv->flags |= (unsigned long)pi.private_data;
->   
-
-What code-path is going to alloc hpriv->irqs for drivers using this code-path
-which are not using libahci_platform .c ?
-
-
-Regards,
-
-Hans
-
-
-
-
-
->   	if (!(hpriv->flags & AHCI_HFLAG_NO_MSI))
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 021ce46e2e57..18bce556d85f 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1817,7 +1817,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->   		/* legacy intx interrupts */
->   		pci_intx(pdev, 1);
->   	}
-> -	hpriv->irq = pci_irq_vector(pdev, 0);
-> +	hpriv->irqs[0] = pci_irq_vector(pdev, 0);
->   
->   	if (!(hpriv->cap & HOST_CAP_SSS) || ahci_ignore_sss)
->   		host->flags |= ATA_HOST_PARALLEL_SCAN;
-> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-> index ef356e70e6de..1f1c00be5b2e 100644
-> --- a/drivers/ata/ahci.h
-> +++ b/drivers/ata/ahci.h
-> @@ -361,7 +361,7 @@ struct ahci_host_priv {
->   	struct phy		**phys;
->   	unsigned		nports;		/* Number of ports */
->   	void			*plat_data;	/* Other platform data */
-> -	unsigned int		irq;		/* interrupt line */
-> +	unsigned int		*irqs;		/* interrupt line(s) */
->   	/*
->   	 * Optional ahci_start_engine override, if not set this gets set to the
->   	 * default ahci_start_engine during ahci_save_initial_config, this can
-> @@ -432,6 +432,7 @@ void ahci_print_info(struct ata_host *host, const char *scc_s);
->   int ahci_host_activate(struct ata_host *host, struct scsi_host_template *sht);
->   void ahci_error_handler(struct ata_port *ap);
->   u32 ahci_handle_port_intr(struct ata_host *host, u32 irq_masked);
-> +int ahci_get_per_port_irq_vector(struct ata_host *host, int port);
->   
->   static inline void __iomem *__ahci_port_base(struct ata_host *host,
->   					     unsigned int port_no)
-> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-> index 66d4906a5013..25970138a65a 100644
-> --- a/drivers/ata/libahci.c
-> +++ b/drivers/ata/libahci.c
-> @@ -2602,7 +2602,7 @@ static int ahci_host_activate_multi_irqs(struct ata_host *host,
->   int ahci_host_activate(struct ata_host *host, struct scsi_host_template *sht)
->   {
->   	struct ahci_host_priv *hpriv = host->private_data;
-> -	int irq = hpriv->irq;
-> +	int irq = hpriv->irqs[0];
->   	int rc;
->   
->   	if (hpriv->flags & AHCI_HFLAG_MULTI_MSI) {
-> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-> index 4b900fc659f7..af3d65c09087 100644
-> --- a/drivers/ata/libahci_platform.c
-> +++ b/drivers/ata/libahci_platform.c
-> @@ -24,6 +24,7 @@
->   #include <linux/ahci_platform.h>
->   #include <linux/phy/phy.h>
->   #include <linux/pm_runtime.h>
-> +#include <linux/of_irq.h>
->   #include <linux/of_platform.h>
->   #include <linux/reset.h>
->   #include "ahci.h"
-> @@ -89,6 +90,14 @@ static void ahci_platform_disable_phys(struct ahci_host_priv *hpriv)
->   	}
->   }
->   
-> +int ahci_get_per_port_irq_vector(struct ata_host *host, int port)
-> +{
-> +	struct ahci_host_priv *hpriv = host->private_data;
-> +
-> +	return hpriv->irqs[port];
-> +}
-> +EXPORT_SYMBOL_GPL(ahci_get_per_port_irq_vector);
-> +
->   /**
->    * ahci_platform_enable_clks - Enable platform clocks
->    * @hpriv: host private area to store config values
-> @@ -379,6 +388,7 @@ static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
->    *    or for non devicetree enabled platforms a single clock
->    * 4) resets, if flags has AHCI_PLATFORM_GET_RESETS (optional)
->    * 5) phys (optional)
-> + * 6) interrupt(s)
->    *
->    * RETURNS:
->    * The allocated ahci_host_priv on success, otherwise an ERR_PTR value
-> @@ -390,7 +400,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
->   	struct ahci_host_priv *hpriv;
->   	struct clk *clk;
->   	struct device_node *child;
-> -	int i, enabled_ports = 0, rc = -ENOMEM, child_nodes;
-> +	int i, enabled_ports = 0, rc = -ENOMEM, child_nodes, ctrl_irq;
->   	u32 mask_port_map = 0;
->   
->   	if (!devres_open_group(dev, NULL, GFP_KERNEL))
-> @@ -483,10 +493,29 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
->   		goto err_out;
->   	}
->   
-> +	hpriv->irqs = kzalloc(sizeof(*hpriv->irqs) * hpriv->nports, GFP_KERNEL);
-> +	if (!hpriv->irqs) {
-> +		rc = -ENOMEM;
-> +		goto err_out;
-> +	}
-> +
-> +	ctrl_irq = platform_get_irq(pdev, 0);
-> +	if (ctrl_irq < 0) {
-> +		if (ctrl_irq == -EPROBE_DEFER) {
-> +			rc = ctrl_irq;
-> +			goto err_out;
-> +		}
-> +		ctrl_irq = 0;
-> +	}
-> +
-> +	if (ctrl_irq > 0)
-> +		hpriv->irqs[0] = ctrl_irq;
-> +
->   	if (child_nodes) {
->   		for_each_child_of_node(dev->of_node, child) {
->   			u32 port;
->   			struct platform_device *port_dev __maybe_unused;
-> +			int port_irq;
->   
->   			if (!of_device_is_available(child))
->   				continue;
-> @@ -515,6 +544,18 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
->   			}
->   #endif
->   
-> +			if (!ctrl_irq) {
-> +				port_irq = of_irq_get(child, 0);
-> +				if (!port_irq)
-> +					port_irq = -EINVAL;
-> +				if (port_irq < 0) {
-> +					rc = port_irq;
-> +					goto err_out;
-> +				}
-> +
-> +				hpriv->irqs[port] = port_irq;
-> +			}
-> +
->   			rc = ahci_platform_get_phy(hpriv, port, dev, child);
->   			if (rc)
->   				goto err_out;
-> @@ -542,6 +583,18 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
->   		if (rc == -EPROBE_DEFER)
->   			goto err_out;
->   	}
-> +
-> +	if (!ctrl_irq && !enabled_ports) {
-> +		dev_err(&pdev->dev, "No IRQ defined\n");
-> +		rc = -ENODEV;
-> +		goto err_out;
-> +	}
-> +
-> +	if (enabled_ports > 1) {
-> +		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
-> +		hpriv->get_irq_vector = ahci_get_per_port_irq_vector;
-> +	}
-> +
->   	pm_runtime_enable(dev);
->   	pm_runtime_get_sync(dev);
->   	hpriv->got_runtime_pm = true;
-> @@ -578,16 +631,7 @@ int ahci_platform_init_host(struct platform_device *pdev,
->   	struct ata_port_info pi = *pi_template;
->   	const struct ata_port_info *ppi[] = { &pi, NULL };
->   	struct ata_host *host;
-> -	int i, irq, n_ports, rc;
-> -
-> -	irq = platform_get_irq(pdev, 0);
-> -	if (irq <= 0) {
-> -		if (irq != -EPROBE_DEFER)
-> -			dev_err(dev, "no irq\n");
-> -		return irq;
-> -	}
-> -
-> -	hpriv->irq = irq;
-> +	int i, n_ports, rc;
->   
->   	/* prepare host */
->   	pi.private_data = (void *)(unsigned long)hpriv->flags;
-> diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
-> index c8fc9280d6e4..dcfdab20021b 100644
-> --- a/drivers/ata/sata_highbank.c
-> +++ b/drivers/ata/sata_highbank.c
-> @@ -496,7 +496,7 @@ static int ahci_highbank_probe(struct platform_device *pdev)
->   		return -ENOMEM;
->   	}
->   
-> -	hpriv->irq = irq;
-> +	hpriv->irqs[0] = irq;
->   	hpriv->flags |= (unsigned long)pi.private_data;
->   
->   	hpriv->mmio = devm_ioremap(dev, mem->start, resource_size(mem));
-> 
+SGkgUnVzc2VsbCwKClRoYW5rcyBmb3IgdGhlIHJldmlldywKClJ1c3NlbGwgS2luZyAtIEFSTSBM
+aW51eCBhZG1pbiA8bGludXhAYXJtbGludXgub3JnLnVrPiB3cm90ZSBvbiBGcmksIDIyCkZlYiAy
+MDE5IDE1OjEzOjM1ICswMDAwOgoKPiBPbiBGcmksIEZlYiAyMiwgMjAxOSBhdCAwMzo1Mzo1NlBN
+ICswMTAwLCBNaXF1ZWwgUmF5bmFsIHdyb3RlOgo+ID4gRnJvbTogVGhvbWFzIFBldGF6em9uaSA8
+dGhvbWFzLnBldGF6em9uaUBib290bGluLmNvbT4KPiA+IAo+ID4gVGhlcmUgYXJlIHR3byBTQVRB
+IHBvcnRzIHBlciBDUDExMC4gRWFjaCBvZiB0aGVtIGhhcyBhIGRlZGljYXRlZAo+ID4gaW50ZXJy
+dXB0LiBEZXNjcmliZSB0aGUgcmVhbCBoYXJkd2FyZSBieSBhZGRpbmcgdHdvIFNBVEEgcG9ydHMg
+dG8gdGhlCj4gPiBDUDExMCBTQVRBIG5vZGUgYW5kIGVuYWJsaW5nIHRoZW0gaW4gYWxsIHRoZSBE
+VHMgaW5jbHVkaW5nIGl0Cj4gPiAoNzA0MC1kYi84MDQwLWRiLzgwNDAtY2xlYXJmb2cpLgo+ID4g
+Cj4gPiBTaWduZWQtb2ZmLWJ5OiBUaG9tYXMgUGV0YXp6b25pIDx0aG9tYXMucGV0YXp6b25pQGJv
+b3RsaW4uY29tPgo+ID4gU2lnbmVkLW9mZi1ieTogTWlxdWVsIFJheW5hbCA8bWlxdWVsLnJheW5h
+bEBib290bGluLmNvbT4KPiA+IC0tLQo+ID4gIGFyY2gvYXJtNjQvYm9vdC9kdHMvbWFydmVsbC9h
+cm1hZGEtNzA0MC1kYi5kdHMgfCAgNyArKysrKystCj4gPiAgYXJjaC9hcm02NC9ib290L2R0cy9t
+YXJ2ZWxsL2FybWFkYS04MDQwLWRiLmR0cyB8IDE0ICsrKysrKysrKysrKy0tCj4gPiAgYXJjaC9h
+cm02NC9ib290L2R0cy9tYXJ2ZWxsL2FybWFkYS1jcDExMC5kdHNpICB8IDE2ICsrKysrKysrKysr
+KysrLS0KPiA+ICAzIGZpbGVzIGNoYW5nZWQsIDMyIGluc2VydGlvbnMoKyksIDUgZGVsZXRpb25z
+KC0pCj4gPiAKPiA+IGRpZmYgLS1naXQgYS9hcmNoL2FybTY0L2Jvb3QvZHRzL21hcnZlbGwvYXJt
+YWRhLTcwNDAtZGIuZHRzIGIvYXJjaC9hcm02NC9ib290L2R0cy9tYXJ2ZWxsL2FybWFkYS03MDQw
+LWRiLmR0cwo+ID4gaW5kZXggNDEyZWZkYjQ2ZTdjLi41NGMxYzBkZGM4MTMgMTAwNjQ0Cj4gPiAt
+LS0gYS9hcmNoL2FybTY0L2Jvb3QvZHRzL21hcnZlbGwvYXJtYWRhLTcwNDAtZGIuZHRzCj4gPiAr
+KysgYi9hcmNoL2FybTY0L2Jvb3QvZHRzL21hcnZlbGwvYXJtYWRhLTcwNDAtZGIuZHRzCj4gPiBA
+QCAtMTk0LDcgKzE5NCwxMiBAQAo+ID4gIH07Cj4gPiAgCj4gPiAgJmNwMF9zYXRhMCB7Cj4gPiAt
+CXN0YXR1cyA9ICJva2F5IjsKPiA+ICsJc2F0YS1wb3J0QDAgeyAgCj4gCj4gRG9uJ3QgdGhlc2Ug
+YWxsIG5lZWQgYSByZWcgPSA8Tj4gdG8gY29ycmVzcG9uZCB3aXRoIEBOIGluIHRoZSBub2RlIG5h
+bWU/CgpZZXMgYSByZWcgcHJvcGVydHkgaXMgYWRkZWQgdG8gdGhlIHNhdGEtcG9ydChzKSBzdWIt
+bm9kZXMgd2hlbiB0aGV5IGFyZQpkZWZpbmVkIChoZXJlIHRoZXkgYXJlIGp1c3QgZW5hYmxlZCwg
+c2VlIGJlbG93KS4KCj4gCj4gPiArCQlzdGF0dXMgPSAib2theSI7Cj4gPiArCX07Cj4gPiArCXNh
+dGEtcG9ydEAxIHsKPiA+ICsJCXN0YXR1cyA9ICJva2F5IjsKPiA+ICsJfTsKPiA+ICB9Owo+ID4g
+IAo+ID4gICZjcDBfdXNiM18wIHsKPiA+IGRpZmYgLS1naXQgYS9hcmNoL2FybTY0L2Jvb3QvZHRz
+L21hcnZlbGwvYXJtYWRhLTgwNDAtZGIuZHRzIGIvYXJjaC9hcm02NC9ib290L2R0cy9tYXJ2ZWxs
+L2FybWFkYS04MDQwLWRiLmR0cwo+ID4gaW5kZXggMWJhYzQzNzM2OWExLi45ODhjYzdkYzE1ZDkg
+MTAwNjQ0Cj4gPiAtLS0gYS9hcmNoL2FybTY0L2Jvb3QvZHRzL21hcnZlbGwvYXJtYWRhLTgwNDAt
+ZGIuZHRzCj4gPiArKysgYi9hcmNoL2FybTY0L2Jvb3QvZHRzL21hcnZlbGwvYXJtYWRhLTgwNDAt
+ZGIuZHRzCj4gPiBAQCAtMTQ3LDcgKzE0NywxMiBAQAo+ID4gIAo+ID4gIC8qIENPTjQgb24gQ1Aw
+IGV4cGFuc2lvbiAqLwo+ID4gICZjcDBfc2F0YTAgewo+ID4gLQlzdGF0dXMgPSAib2theSI7Cj4g
+PiArCXNhdGEtcG9ydEAwIHsKPiA+ICsJCXN0YXR1cyA9ICJva2F5IjsKPiA+ICsJfTsKPiA+ICsJ
+c2F0YS1wb3J0QDEgewo+ID4gKwkJc3RhdHVzID0gIm9rYXkiOwo+ID4gKwl9Owo+ID4gIH07Cj4g
+PiAgCj4gPiAgLyogQ09OOSBvbiBDUDAgZXhwYW5zaW9uICovCj4gPiBAQCAtMjc5LDcgKzI4NCwx
+MiBAQAo+ID4gIAo+ID4gIC8qIENPTjQgb24gQ1AxIGV4cGFuc2lvbiAqLwo+ID4gICZjcDFfc2F0
+YTAgewo+ID4gLQlzdGF0dXMgPSAib2theSI7Cj4gPiArCXNhdGEtcG9ydEAwIHsKPiA+ICsJCXN0
+YXR1cyA9ICJva2F5IjsKPiA+ICsJfTsKPiA+ICsJc2F0YS1wb3J0QDEgewo+ID4gKwkJc3RhdHVz
+ID0gIm9rYXkiOwo+ID4gKwl9Owo+ID4gIH07Cj4gPiAgCj4gPiAgLyogQ09OOSBvbiBDUDEgZXhw
+YW5zaW9uICovCj4gPiBkaWZmIC0tZ2l0IGEvYXJjaC9hcm02NC9ib290L2R0cy9tYXJ2ZWxsL2Fy
+bWFkYS1jcDExMC5kdHNpIGIvYXJjaC9hcm02NC9ib290L2R0cy9tYXJ2ZWxsL2FybWFkYS1jcDEx
+MC5kdHNpCj4gPiBpbmRleCBiOWQ5ZjMxZTNiYTEuLmYyN2VkZGRjYWNkMSAxMDA2NDQKPiA+IC0t
+LSBhL2FyY2gvYXJtNjQvYm9vdC9kdHMvbWFydmVsbC9hcm1hZGEtY3AxMTAuZHRzaQo+ID4gKysr
+IGIvYXJjaC9hcm02NC9ib290L2R0cy9tYXJ2ZWxsL2FybWFkYS1jcDExMC5kdHNpCj4gPiBAQCAt
+MjkyLDEwICsyOTIsMjIgQEAKPiA+ICAJCQkiZ2VuZXJpYy1haGNpIjsKPiA+ICAJCQlyZWcgPSA8
+MHg1NDAwMDAgMHgzMDAwMD47Cj4gPiAgCQkJZG1hLWNvaGVyZW50Owo+ID4gLQkJCWludGVycnVw
+dHMgPSA8MTA3IElSUV9UWVBFX0xFVkVMX0hJR0g+Owo+ID4gIAkJCWNsb2NrcyA9IDwmQ1AxMTBf
+TEFCRUwoY2xrKSAxIDE1PiwKPiA+ICAJCQkJIDwmQ1AxMTBfTEFCRUwoY2xrKSAxIDE2PjsKPiA+
+IC0JCQlzdGF0dXMgPSAiZGlzYWJsZWQiOwo+ID4gKwkJCSNhZGRyZXNzLWNlbGxzID0gPDE+Owo+
+ID4gKwkJCSNzaXplLWNlbGxzID0gPDA+Owo+ID4gKwo+ID4gKwkJCXNhdGEtcG9ydEAwIHsKPiA+
+ICsJCQkJcmVnID0gPDA+OwoKSGVyZSAgICAgICAgICAgICAgICAgICAgICAgICAgICBeCgo+ID4g
+KwkJCQlpbnRlcnJ1cHRzID0gPDEwOSBJUlFfVFlQRV9MRVZFTF9ISUdIPjsKPiA+ICsJCQkJc3Rh
+dHVzID0gImRpc2FibGVkIjsKPiA+ICsJCQl9Owo+ID4gKwo+ID4gKwkJCXNhdGEtcG9ydEAxIHsK
+PiA+ICsJCQkJcmVnID0gPDE+Owo+ID4gKwkJCQlpbnRlcnJ1cHRzID0gPDEwNyBJUlFfVFlQRV9M
+RVZFTF9ISUdIPjsKPiA+ICsJCQkJc3RhdHVzID0gImRpc2FibGVkIjsKPiA+ICsJCQl9Owo+ID4g
+IAkJfTsKPiA+ICAKPiA+ICAJCUNQMTEwX0xBQkVMKHhvcjApOiB4b3JANmEwMDAwIHsKPiA+IC0t
+IAo+ID4gMi4xOS4xCj4gPiAKPiA+IAo+ID4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX18KPiA+IGxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0Cj4gPiBs
+aW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKPiA+IGh0dHA6Ly9saXN0cy5pbmZy
+YWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo+ID4gICAKPiAKCgpU
+aGFua3MsCk1pcXXDqGwKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFybS1rZXJuZWxAbGlz
+dHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3Rp
+bmZvL2xpbnV4LWFybS1rZXJuZWwK
