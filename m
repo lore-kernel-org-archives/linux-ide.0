@@ -1,32 +1,63 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [v6 1/3] dt-bindings: ahci-fsl-qoriq: add lx2160a chip name to
- the list
-Date: Fri, 22 Feb 2019 08:39:31 -0600
-Message-ID: <20190222143931.GA17132@bogus>
-References: <20190220085607.31582-1-peng.ma@nxp.com>
+From: Miquel Raynal <miquel.raynal@bootlin.com>
+Subject: [PATCH 1/5] ata: libahci: Ensure the host interrupt status bits are
+ cleared
+Date: Fri, 22 Feb 2019 15:53:52 +0100
+Message-ID: <20190222145356.23072-2-miquel.raynal@bootlin.com>
+References: <20190222145356.23072-1-miquel.raynal@bootlin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190220085607.31582-1-peng.ma@nxp.com>
-Sender: linux-kernel-owner@vger.kernel.org
-Cc: axboe@kernel.dk, robh+dt@kernel.org, mark.rutland@arm.com, shawnguo@kernel.org, leoyang.li@nxp.com, andy.tang@nxp.com, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, yousaf.kaukab@suse.com, Peng Ma <peng.ma@nxp.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20190222145356.23072-1-miquel.raynal@bootlin.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Jens Axboe <axboe@kernel.dk>, Hans de Goede <hdegoede@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Marc Zyngier <marc.zyngier@arm.com>
+Cc: devicetree@vger.kernel.org, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, 20 Feb 2019 08:56:05 +0000, Peng Ma wrote:
-> Add lx2160a compatible to bindings documentation.
-> 
-> Signed-off-by: Peng Ma <peng.ma@nxp.com>
-> ---
-> changed for V6:
-> 	- no changed 
-> 
->  .../devicetree/bindings/ata/ahci-fsl-qoriq.txt     |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
+ahci_multi_irqs_intr_hard() is going to be used as interrupt handler
+to support SATA per-port interrupts. The current logic is to check and
+clear the SATA port interrupt status register only. To avoid spurious
+IRQs and interrupt storms, it will be needed to clear the port
+interrupt bit in the host interrupt status register as well.
 
-Please add Acked-by/Reviewed-by tags when posting new versions. However,
-there's no need to repost patches *only* to add the tags. The upstream
-maintainer will do that for acks received on the version they apply.
+Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
+---
+ drivers/ata/libahci.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-If a tag was not added on purpose, please state why and what changed.
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index b5f57c69c487..66d4906a5013 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1912,7 +1912,10 @@ static void ahci_port_intr(struct ata_port *ap)
+ static irqreturn_t ahci_multi_irqs_intr_hard(int irq, void *dev_instance)
+ {
+ 	struct ata_port *ap = dev_instance;
++	struct ata_host *host = ap->host;
++	struct ahci_host_priv *hpriv = host->private_data;
+ 	void __iomem *port_mmio = ahci_port_base(ap);
++	void __iomem *mmio = hpriv->mmio;
+ 	u32 status;
+ 
+ 	VPRINTK("ENTER\n");
+@@ -1924,6 +1927,10 @@ static irqreturn_t ahci_multi_irqs_intr_hard(int irq, void *dev_instance)
+ 	ahci_handle_port_interrupt(ap, port_mmio, status);
+ 	spin_unlock(ap->lock);
+ 
++	spin_lock(&host->lock);
++	writel(BIT(ap->port_no), mmio + HOST_IRQ_STAT);
++	spin_unlock(&host->lock);
++
+ 	VPRINTK("EXIT\n");
+ 
+ 	return IRQ_HANDLED;
+-- 
+2.19.1
