@@ -1,14 +1,12 @@
 From: Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH 1/5] ata: libahci: Ensure the host interrupt status bits are
- cleared
-Date: Fri, 22 Feb 2019 15:53:52 +0100
-Message-ID: <20190222145356.23072-2-miquel.raynal@bootlin.com>
-References: <20190222145356.23072-1-miquel.raynal@bootlin.com>
+Subject: [PATCH 0/5] Enable per-port SATA interrupts and drop an hack in the
+ IRQ subsystem
+Date: Fri, 22 Feb 2019 15:53:51 +0100
+Message-ID: <20190222145356.23072-1-miquel.raynal@bootlin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20190222145356.23072-1-miquel.raynal@bootlin.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -22,42 +20,46 @@ To: Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemo
 Cc: devicetree@vger.kernel.org, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-ahci_multi_irqs_intr_hard() is going to be used as interrupt handler
-to support SATA per-port interrupts. The current logic is to check and
-clear the SATA port interrupt status register only. To avoid spurious
-IRQs and interrupt storms, it will be needed to clear the port
-interrupt bit in the host interrupt status register as well.
-
-Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
----
- drivers/ata/libahci.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index b5f57c69c487..66d4906a5013 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1912,7 +1912,10 @@ static void ahci_port_intr(struct ata_port *ap)
- static irqreturn_t ahci_multi_irqs_intr_hard(int irq, void *dev_instance)
- {
- 	struct ata_port *ap = dev_instance;
-+	struct ata_host *host = ap->host;
-+	struct ahci_host_priv *hpriv = host->private_data;
- 	void __iomem *port_mmio = ahci_port_base(ap);
-+	void __iomem *mmio = hpriv->mmio;
- 	u32 status;
- 
- 	VPRINTK("ENTER\n");
-@@ -1924,6 +1927,10 @@ static irqreturn_t ahci_multi_irqs_intr_hard(int irq, void *dev_instance)
- 	ahci_handle_port_interrupt(ap, port_mmio, status);
- 	spin_unlock(ap->lock);
- 
-+	spin_lock(&host->lock);
-+	writel(BIT(ap->port_no), mmio + HOST_IRQ_STAT);
-+	spin_unlock(&host->lock);
-+
- 	VPRINTK("EXIT\n");
- 
- 	return IRQ_HANDLED;
--- 
-2.19.1
+SGVsbG8sCgpTb21lIHRpbWUgYWdvLCB3aGVuIHRoZSBpbml0aWFsIHN1cHBvcnQgZm9yIEFybWFk
+YSBDUDExMCB3YXMKY29udHJpYnV0ZWQsIHRoZSBTQVRBIGNvcmUgd2FzIG5vdCBhYmxlIHRvIGhh
+bmRsZSBwZXItcG9ydAppbnRlcnJ1cHRzLiBEZXNwaXRlIHRoZSBoYXJkd2FyZSByZWFsaXR5LCB0
+aGUgZGV2aWNlIHRyZWUgb25seQpyZXByZXNlbnRzIG9uZSBtYWluIGludGVycnVwdCBmb3IgdGhl
+IHR3byBwb3J0cy4gSGF2aW5nIGJvdGggU0FUQQpwb3J0cyBlbmFibGVkIGF0IHRoZSBzYW1lIHRp
+bWUgaGFzIGJlZW4gYWNoaWV2ZWQgYnkgYSBoYWNrIGluIHRoZSBJQ1UKZHJpdmVyKDEpIHRoYXQg
+ZmFrZWQgdGhlIHVzZSBvZiB0aGUgdHdvIGludGVycnVwdHMsIG5vIG1hdHRlciB3aGljaApTQVRB
+IHBvcnQgd2FzIGluIHVzZS4KCk5vdyB0aGF0IHRoZSBTQVRBIGNvcmUgaXMgcmVhZHkgdG8gaGFu
+ZGxlIG1vcmUgdGhhbiBvbmUgaW50ZXJydXB0LAp0aGlzIHNlcmllcyBhZGRzIHN1cHBvcnQgZm9y
+IGl0IGluIHRoZSBsaWJhaGNpX3BsYXRmb3JtIGNvZGUuIFRoZQpDUDExMCBkZXZpY2UgdHJlZSBt
+dXN0IGJlIHVwZGF0ZWQgdG8gcmVmbGVjdCB0aGUgdHdvIFNBVEEgcG9ydHMKYXZhaWxhYmxlIGFu
+ZCB0aGVpciByZXNwZWN0aXZlIGludGVycnVwdHMuIFRvIGRvIG5vdCBicmVhayBEVCBiYWNrd2Fy
+ZApjb21wYXRpYmlsaXR5LCB0aGUgYWhjaV9wbGF0Zm9ybSBkcml2ZXIgbm93IGVtYmVkcyBhIHNw
+ZWNpYWwgcXVpcmsKd2hpY2ggY2hlY2tzIGlmIHRoZSBEVCBpcyB2YWxpZCAob25seSBmb3IgQThr
+IGNvbXBhdGlibGUpIGFuZCwgaWYKbmVlZGVkLCBjcmVhdGVzIHRoZSB0d28gbWlzc2luZyBzdWIt
+bm9kZXMsIGFuZCBhc3NpZ24gdGhlbSB0aGUKcmVsZXZhbnQgInJlZyIgYW5kICJpbnRlcnJ1cHRz
+IiBwcm9wZXJ0aWVzLCBiZWZvcmUgcmVtb3ZpbmcgdGhlIG1haW4KU0FUQSBub2RlICJpbnRlcnJ1
+cHRzIiBvbmUuCgoKVGhhbmtzLApNaXF1w6hsCgooMSkgVGhlIElDVSBpcyBhbiBpcnFjaGlwIGFn
+Z3JlZ2F0aW5nIHRoZSBDUDExMCAoc291dGgtYnJpZGdlKQppbnRlcnJ1cHRzIGludG8gTVNJcyBm
+b3IgdGhlIEFQODA2IChub3J0aC1icmlkZ2UpLgoKCk1pcXVlbCBSYXluYWwgKDQpOgogIGF0YTog
+bGliYWhjaTogRW5zdXJlIHRoZSBob3N0IGludGVycnVwdCBzdGF0dXMgYml0cyBhcmUgY2xlYXJl
+ZAogIGF0YTogbGliYWhjaV9wbGF0Zm9ybTogU3VwcG9ydCBwZXItcG9ydCBpbnRlcnJ1cHRzCiAg
+aXJxY2hpcC9pcnEtbXZlYnUtaWN1OiBNb3ZlIHRoZSBkb3VibGUgU0FUQSBwb3J0cyBpbnRlcnJ1
+cHQgaGFjawogIGFybTY0OiBkdHM6IG1hcnZlbGw6IGFybWFkYS04MDQwLWNsZWFyZm9nOiBEcm9w
+IG5vbi1leGlzdGVudCBTQVRBIHBvcnQKClRob21hcyBQZXRhenpvbmkgKDEpOgogIGFybTY0OiBk
+dHM6IG1hcnZlbGw6IGFybWFkYS1jcDExMDogU3dpdGNoIHRvIHBlci1wb3J0IFNBVEEgaW50ZXJy
+dXB0cwoKIC4uLi9hcm02NC9ib290L2R0cy9tYXJ2ZWxsL2FybWFkYS03MDQwLWRiLmR0cyB8ICAg
+NyArLQogLi4uL21hcnZlbGwvYXJtYWRhLTgwNDAtY2xlYXJmb2ctZ3QtOGsuZHRzICAgIHwgICA1
+IC0KIC4uLi9hcm02NC9ib290L2R0cy9tYXJ2ZWxsL2FybWFkYS04MDQwLWRiLmR0cyB8ICAxNCAr
+LQogYXJjaC9hcm02NC9ib290L2R0cy9tYXJ2ZWxsL2FybWFkYS1jcDExMC5kdHNpIHwgIDE2ICst
+CiBkcml2ZXJzL2F0YS9hY2FyZC1haGNpLmMgICAgICAgICAgICAgICAgICAgICAgfCAgIDIgKy0K
+IGRyaXZlcnMvYXRhL2FoY2kuYyAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgMiArLQog
+ZHJpdmVycy9hdGEvYWhjaS5oICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAzICstCiBk
+cml2ZXJzL2F0YS9haGNpX3BsYXRmb3JtLmMgICAgICAgICAgICAgICAgICAgfCAxNzQgKysrKysr
+KysrKysrKysrKysrCiBkcml2ZXJzL2F0YS9saWJhaGNpLmMgICAgICAgICAgICAgICAgICAgICAg
+ICAgfCAgIDkgKy0KIGRyaXZlcnMvYXRhL2xpYmFoY2lfcGxhdGZvcm0uYyAgICAgICAgICAgICAg
+ICB8ICA2NiArKysrKy0tCiBkcml2ZXJzL2F0YS9zYXRhX2hpZ2hiYW5rLmMgICAgICAgICAgICAg
+ICAgICAgfCAgIDIgKy0KIGRyaXZlcnMvaXJxY2hpcC9pcnEtbXZlYnUtaWN1LmMgICAgICAgICAg
+ICAgICB8ICAxOCAtLQogMTIgZmlsZXMgY2hhbmdlZCwgMjc0IGluc2VydGlvbnMoKyksIDQ0IGRl
+bGV0aW9ucygtKQoKLS0gCjIuMTkuMQoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFybS1r
+ZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWls
+bWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
