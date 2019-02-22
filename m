@@ -1,8 +1,7 @@
 From: Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH 3/5] irqchip/irq-mvebu-icu: Move the double SATA ports
- interrupt hack
-Date: Fri, 22 Feb 2019 15:53:54 +0100
-Message-ID: <20190222145356.23072-4-miquel.raynal@bootlin.com>
+Subject: [PATCH 2/5] ata: libahci_platform: Support per-port interrupts
+Date: Fri, 22 Feb 2019 15:53:53 +0100
+Message-ID: <20190222145356.23072-3-miquel.raynal@bootlin.com>
 References: <20190222145356.23072-1-miquel.raynal@bootlin.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,259 +21,226 @@ To: Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemo
 Cc: devicetree@vger.kernel.org, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-When writing the driver, a hack was introduced to configure both SATA
-interrupts regardless of the port in use to overcome a limitation in
-the SATA core. Now that this limitation has been addressed, let's
-clean this driver section and move the hack into the (historically)
-responsible SATA driver: ahci_platform.
+Right now the ATA core only allows IPs to use a single interrupt. Some
+of them (for instance the Armada-CP110 one) actually has one interrupt
+per port. Add some logic to support such situation.
+
+We consider that either there is one single interrupt declared in the
+main IP node, or there are per-port interrupts, each of them being
+declared in the port sub-nodes.
 
 Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
 ---
- drivers/ata/ahci_platform.c     | 174 ++++++++++++++++++++++++++++++++
- drivers/irqchip/irq-mvebu-icu.c |  18 ----
- 2 files changed, 174 insertions(+), 18 deletions(-)
+ drivers/ata/acard-ahci.c       |  2 +-
+ drivers/ata/ahci.c             |  2 +-
+ drivers/ata/ahci.h             |  3 +-
+ drivers/ata/libahci.c          |  2 +-
+ drivers/ata/libahci_platform.c | 66 ++++++++++++++++++++++++++++------
+ drivers/ata/sata_highbank.c    |  2 +-
+ 6 files changed, 61 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index cf1e0e18a7a9..4401a137e6d5 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -17,6 +17,7 @@
- #include <linux/pm.h>
- #include <linux/device.h>
- #include <linux/of_device.h>
-+#include <linux/of_irq.h>
- #include <linux/platform_device.h>
- #include <linux/libata.h>
- #include <linux/ahci_platform.h>
-@@ -26,6 +27,9 @@
+diff --git a/drivers/ata/acard-ahci.c b/drivers/ata/acard-ahci.c
+index 583e366be7e2..9414b81e994c 100644
+--- a/drivers/ata/acard-ahci.c
++++ b/drivers/ata/acard-ahci.c
+@@ -434,7 +434,7 @@ static int acard_ahci_init_one(struct pci_dev *pdev, const struct pci_device_id
+ 	if (!hpriv)
+ 		return -ENOMEM;
  
- #define DRV_NAME "ahci"
+-	hpriv->irq = pdev->irq;
++	hpriv->irqs[0] = pdev->irq;
+ 	hpriv->flags |= (unsigned long)pi.private_data;
  
-+#define ICU_SATA0_ICU_ID 109
-+#define ICU_SATA1_ICU_ID 107
-+
- static const struct ata_port_info ahci_port_info = {
- 	.flags		= AHCI_FLAG_COMMON,
- 	.pio_mask	= ATA_PIO4,
-@@ -44,6 +48,170 @@ static struct scsi_host_template ahci_platform_sht = {
- 	AHCI_SHT(DRV_NAME),
- };
+ 	if (!(hpriv->flags & AHCI_HFLAG_NO_MSI))
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 021ce46e2e57..18bce556d85f 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1817,7 +1817,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		/* legacy intx interrupts */
+ 		pci_intx(pdev, 1);
+ 	}
+-	hpriv->irq = pci_irq_vector(pdev, 0);
++	hpriv->irqs[0] = pci_irq_vector(pdev, 0);
  
-+/*
-+ * The Armada CP110 SATA unit (on A7k/A8k SoCs) has 2 ports, and a dedicated ICU
-+ * entry per port. In the past, the AHCI SATA driver only supported one
-+ * interrupt per SATA unit. To solve this, the 2 SATA wired interrupts in the
-+ * South-Bridge got configured as 1 GIC interrupt in the North-Bridge,
-+ * regardless of the number of SATA ports actually enabled/in use.
-+ *
-+ * Since then, this limitation has been addressed and the hack described
-+ * above has been removed from the ICU driver. However, for compatibility
-+ * it is needed to support DT with just one interrupt and no SATA ports.
-+ * Instead of hacking everywhere in the ahci/libahci code, this quirk has been
-+ * written to manually create the SATA port sub-nodes if they are missing,
-+ * assign them the right port numbers through the "reg" properties and their
-+ * respective "interrupts".
-+ */
-+static int ahci_armada_8k_quirk(struct device *dev)
-+{
-+	struct device_node *dn = dev->of_node;
-+	struct property *interrupt = of_find_property(dn, "interrupts", NULL);
-+	struct device_node *ports;
-+	struct property *regs, *ints;
-+	int rc, i;
-+
-+	if (!(of_device_is_compatible(dn, "marvell,armada-8k-ahci") &&
-+	      !of_get_child_count(dn)))
-+		return 0;
-+
-+	if (!of_node_get(dn))
-+		return -EINVAL;
-+
-+	/* Verify the main SATA node "interrupts" property validity */
-+	if (!interrupt) {
-+		rc = -EINVAL;
-+		goto put_dn;
-+	}
-+
-+	/* Create the two sub-nodes */
-+	ports = kzalloc(2 * sizeof(*ports), GFP_KERNEL);
-+	if (!ports) {
-+		rc = -ENOMEM;
-+		goto put_dn;
-+	}
-+
-+	for (i = 0; i < 2; i++) {
-+		of_node_set_flag(&ports[i], OF_DYNAMIC);
-+		of_node_init(&ports[i]);
-+		ports[i].parent = dn;
-+	}
-+
-+	ports[0].full_name = kstrdup("sata-port@0", GFP_KERNEL);
-+	ports[1].full_name = kstrdup("sata-port@1", GFP_KERNEL);
-+	if (!ports[0].full_name || !ports[1].full_name) {
-+		rc = -ENOMEM;
-+		goto free_ports_names;
-+	}
-+
-+	/* Create the two "reg" and "interrupts" property for the sub-nodes */
-+	regs = kzalloc(2 * sizeof(*regs), GFP_KERNEL);
-+	ints = kzalloc(2 * sizeof(*ints), GFP_KERNEL);
-+	if (!regs || !ints) {
-+		rc = -ENOMEM;
-+		goto free_props;
-+	}
-+
-+	for (i = 0; i < 2; i++) {
-+		regs[i].name = kstrdup("reg", GFP_KERNEL);
-+		regs[i].length = sizeof(u32);
-+		regs[i].value = kmalloc(sizeof(regs[i].length), GFP_KERNEL);
-+
-+		ints[i].name = kstrdup("interrupts", GFP_KERNEL);
-+		ints[i].length = interrupt->length;
-+		ints[i].value = kmemdup(interrupt->value, interrupt->length,
-+					GFP_KERNEL);
-+
-+		if (!regs[i].name || !regs[i].value ||
-+		    !ints[i].name || !ints[i].value) {
-+			rc = -ENOMEM;
-+			goto free_props_allocs;
-+		}
-+	}
-+
-+	/* Force the values of the ICU interrupts for both ports.
-+	 * In the past, "interrupts" properties had three values:
-+	 * 1/ ICU interrupt type, 2/ interrupt ID, 3/ interrupt type
-+	 * Now there are only two:
-+	 * 1/ interrupt ID, 2/ interrupt type
-+	 * In both case we want to access the penultimate.
-+	 */
-+	for (i = 0; i < 2; i++) {
-+		u32 *reg, *icu_int;
-+		u8 *value;
-+
-+		reg = regs[i].value;
-+		*reg = cpu_to_be32(i);
-+
-+		value = ints[i].value;
-+		value = &value[ints[i].length - (2 * sizeof(u32))];
-+		icu_int = (u32 *)value;
-+		if (!i)
-+			*icu_int = cpu_to_be32(ICU_SATA0_ICU_ID);
-+		else
-+			*icu_int = cpu_to_be32(ICU_SATA1_ICU_ID);
-+	}
-+
-+	for (i = 0; i < 2; i++) {
-+		ports[i].properties = &regs[i];
-+		regs[i].next = &ints[i];
-+		ints[i].next = NULL;
-+	}
-+
-+	/* Create the two sub-nodes by attaching them */
-+	rc = of_attach_node(&ports[0]);
-+	if (rc) {
-+		dev_err(dev, "Compat: cannot attach port0 (err %d)\n", rc);
-+		goto free_props_allocs;
-+	}
-+
-+	rc = of_attach_node(&ports[1]);
-+	if (rc) {
-+		dev_err(dev, "Compat: cannot attach port1 (err %d)\n", rc);
-+		goto detach_port0;
-+	}
-+
-+	/* Delete the "interrupts" property from the SATA host node */
-+	rc = of_remove_property(dn, interrupt);
-+	if (rc) {
-+		dev_err(dev, "Compat: cannot delete SATA host interrupt\n");
-+		goto detach_ports;
-+	}
-+
-+	of_node_put(dn);
-+
-+	return 0;
-+
-+detach_ports:
-+	of_detach_node(&ports[1]);
-+
-+detach_port0:
-+	of_detach_node(&ports[0]);
-+
-+free_props_allocs:
-+	for (i = 0; i < 2; i++) {
-+		kfree(regs[i].name);
-+		kfree(regs[i].value);
-+		kfree(ints[i].name);
-+		kfree(ints[i].value);
-+	}
-+
-+free_props:
-+	kfree(regs);
-+	kfree(ints);
-+
-+free_ports_names:
-+	for (i = 0; i < 2; i++)
-+		kfree(ports[i].full_name);
-+
-+	kfree(ports);
-+
-+put_dn:
-+	of_node_put(dn);
-+
-+	return rc;
-+	}
-+
- static int ahci_probe(struct platform_device *pdev)
+ 	if (!(hpriv->cap & HOST_CAP_SSS) || ahci_ignore_sss)
+ 		host->flags |= ATA_HOST_PARALLEL_SCAN;
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index ef356e70e6de..1f1c00be5b2e 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -361,7 +361,7 @@ struct ahci_host_priv {
+ 	struct phy		**phys;
+ 	unsigned		nports;		/* Number of ports */
+ 	void			*plat_data;	/* Other platform data */
+-	unsigned int		irq;		/* interrupt line */
++	unsigned int		*irqs;		/* interrupt line(s) */
+ 	/*
+ 	 * Optional ahci_start_engine override, if not set this gets set to the
+ 	 * default ahci_start_engine during ahci_save_initial_config, this can
+@@ -432,6 +432,7 @@ void ahci_print_info(struct ata_host *host, const char *scc_s);
+ int ahci_host_activate(struct ata_host *host, struct scsi_host_template *sht);
+ void ahci_error_handler(struct ata_port *ap);
+ u32 ahci_handle_port_intr(struct ata_host *host, u32 irq_masked);
++int ahci_get_per_port_irq_vector(struct ata_host *host, int port);
+ 
+ static inline void __iomem *__ahci_port_base(struct ata_host *host,
+ 					     unsigned int port_no)
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 66d4906a5013..25970138a65a 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -2602,7 +2602,7 @@ static int ahci_host_activate_multi_irqs(struct ata_host *host,
+ int ahci_host_activate(struct ata_host *host, struct scsi_host_template *sht)
  {
- 	struct device *dev = &pdev->dev;
-@@ -51,6 +219,12 @@ static int ahci_probe(struct platform_device *pdev)
- 	const struct ata_port_info *port;
+ 	struct ahci_host_priv *hpriv = host->private_data;
+-	int irq = hpriv->irq;
++	int irq = hpriv->irqs[0];
  	int rc;
  
-+	rc = ahci_armada_8k_quirk(dev);
-+	if (rc) {
-+		dev_err(dev, "Problem with CP110 backward compatibility\n");
-+		return rc;
-+	}
-+
- 	hpriv = ahci_platform_get_resources(pdev,
- 					    AHCI_PLATFORM_GET_RESETS);
- 	if (IS_ERR(hpriv))
-diff --git a/drivers/irqchip/irq-mvebu-icu.c b/drivers/irqchip/irq-mvebu-icu.c
-index 547045d89c4b..f3b43f63fe2e 100644
---- a/drivers/irqchip/irq-mvebu-icu.c
-+++ b/drivers/irqchip/irq-mvebu-icu.c
-@@ -38,8 +38,6 @@
- 
- /* ICU definitions */
- #define ICU_MAX_IRQS		207
--#define ICU_SATA0_ICU_ID	109
--#define ICU_SATA1_ICU_ID	107
- 
- struct mvebu_icu_subset_data {
- 	unsigned int icu_group;
-@@ -111,22 +109,6 @@ static void mvebu_icu_write_msg(struct msi_desc *desc, struct msi_msg *msg)
+ 	if (hpriv->flags & AHCI_HFLAG_MULTI_MSI) {
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index 4b900fc659f7..af3d65c09087 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -24,6 +24,7 @@
+ #include <linux/ahci_platform.h>
+ #include <linux/phy/phy.h>
+ #include <linux/pm_runtime.h>
++#include <linux/of_irq.h>
+ #include <linux/of_platform.h>
+ #include <linux/reset.h>
+ #include "ahci.h"
+@@ -89,6 +90,14 @@ static void ahci_platform_disable_phys(struct ahci_host_priv *hpriv)
  	}
- 
- 	writel_relaxed(icu_int, icu->base + ICU_INT_CFG(d->hwirq));
--
--	/*
--	 * The SATA unit has 2 ports, and a dedicated ICU entry per
--	 * port. The ahci sata driver supports only one irq interrupt
--	 * per SATA unit. To solve this conflict, we configure the 2
--	 * SATA wired interrupts in the south bridge into 1 GIC
--	 * interrupt in the north bridge. Even if only a single port
--	 * is enabled, if sata node is enabled, both interrupts are
--	 * configured (regardless of which port is actually in use).
--	 */
--	if (d->hwirq == ICU_SATA0_ICU_ID || d->hwirq == ICU_SATA1_ICU_ID) {
--		writel_relaxed(icu_int,
--			       icu->base + ICU_INT_CFG(ICU_SATA0_ICU_ID));
--		writel_relaxed(icu_int,
--			       icu->base + ICU_INT_CFG(ICU_SATA1_ICU_ID));
--	}
  }
  
- static struct irq_chip mvebu_icu_nsr_chip = {
++int ahci_get_per_port_irq_vector(struct ata_host *host, int port)
++{
++	struct ahci_host_priv *hpriv = host->private_data;
++
++	return hpriv->irqs[port];
++}
++EXPORT_SYMBOL_GPL(ahci_get_per_port_irq_vector);
++
+ /**
+  * ahci_platform_enable_clks - Enable platform clocks
+  * @hpriv: host private area to store config values
+@@ -379,6 +388,7 @@ static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
+  *    or for non devicetree enabled platforms a single clock
+  * 4) resets, if flags has AHCI_PLATFORM_GET_RESETS (optional)
+  * 5) phys (optional)
++ * 6) interrupt(s)
+  *
+  * RETURNS:
+  * The allocated ahci_host_priv on success, otherwise an ERR_PTR value
+@@ -390,7 +400,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 	struct ahci_host_priv *hpriv;
+ 	struct clk *clk;
+ 	struct device_node *child;
+-	int i, enabled_ports = 0, rc = -ENOMEM, child_nodes;
++	int i, enabled_ports = 0, rc = -ENOMEM, child_nodes, ctrl_irq;
+ 	u32 mask_port_map = 0;
+ 
+ 	if (!devres_open_group(dev, NULL, GFP_KERNEL))
+@@ -483,10 +493,29 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 		goto err_out;
+ 	}
+ 
++	hpriv->irqs = kzalloc(sizeof(*hpriv->irqs) * hpriv->nports, GFP_KERNEL);
++	if (!hpriv->irqs) {
++		rc = -ENOMEM;
++		goto err_out;
++	}
++
++	ctrl_irq = platform_get_irq(pdev, 0);
++	if (ctrl_irq < 0) {
++		if (ctrl_irq == -EPROBE_DEFER) {
++			rc = ctrl_irq;
++			goto err_out;
++		}
++		ctrl_irq = 0;
++	}
++
++	if (ctrl_irq > 0)
++		hpriv->irqs[0] = ctrl_irq;
++
+ 	if (child_nodes) {
+ 		for_each_child_of_node(dev->of_node, child) {
+ 			u32 port;
+ 			struct platform_device *port_dev __maybe_unused;
++			int port_irq;
+ 
+ 			if (!of_device_is_available(child))
+ 				continue;
+@@ -515,6 +544,18 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 			}
+ #endif
+ 
++			if (!ctrl_irq) {
++				port_irq = of_irq_get(child, 0);
++				if (!port_irq)
++					port_irq = -EINVAL;
++				if (port_irq < 0) {
++					rc = port_irq;
++					goto err_out;
++				}
++
++				hpriv->irqs[port] = port_irq;
++			}
++
+ 			rc = ahci_platform_get_phy(hpriv, port, dev, child);
+ 			if (rc)
+ 				goto err_out;
+@@ -542,6 +583,18 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 		if (rc == -EPROBE_DEFER)
+ 			goto err_out;
+ 	}
++
++	if (!ctrl_irq && !enabled_ports) {
++		dev_err(&pdev->dev, "No IRQ defined\n");
++		rc = -ENODEV;
++		goto err_out;
++	}
++
++	if (enabled_ports > 1) {
++		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
++		hpriv->get_irq_vector = ahci_get_per_port_irq_vector;
++	}
++
+ 	pm_runtime_enable(dev);
+ 	pm_runtime_get_sync(dev);
+ 	hpriv->got_runtime_pm = true;
+@@ -578,16 +631,7 @@ int ahci_platform_init_host(struct platform_device *pdev,
+ 	struct ata_port_info pi = *pi_template;
+ 	const struct ata_port_info *ppi[] = { &pi, NULL };
+ 	struct ata_host *host;
+-	int i, irq, n_ports, rc;
+-
+-	irq = platform_get_irq(pdev, 0);
+-	if (irq <= 0) {
+-		if (irq != -EPROBE_DEFER)
+-			dev_err(dev, "no irq\n");
+-		return irq;
+-	}
+-
+-	hpriv->irq = irq;
++	int i, n_ports, rc;
+ 
+ 	/* prepare host */
+ 	pi.private_data = (void *)(unsigned long)hpriv->flags;
+diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
+index c8fc9280d6e4..dcfdab20021b 100644
+--- a/drivers/ata/sata_highbank.c
++++ b/drivers/ata/sata_highbank.c
+@@ -496,7 +496,7 @@ static int ahci_highbank_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 	}
+ 
+-	hpriv->irq = irq;
++	hpriv->irqs[0] = irq;
+ 	hpriv->flags |= (unsigned long)pi.private_data;
+ 
+ 	hpriv->mmio = devm_ioremap(dev, mem->start, resource_size(mem));
 -- 
 2.19.1
