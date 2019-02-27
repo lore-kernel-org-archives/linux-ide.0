@@ -1,95 +1,93 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: Re: Kernel panic when loading the IDE controller driver
-Date: Tue, 26 Feb 2019 12:51:49 +0100
-Message-ID: <37311a64-63ac-3ef2-9cdf-c19248cf7d77@samsung.com>
-References: <1550055691105-0.post@n7.nabble.com>
- <7c695098-8b2b-5af0-c961-f25457459f8e@c-s.fr>
- <1550060685213-0.post@n7.nabble.com>
- <558c15bc-75d0-d02a-8a78-8155838b8809@c-s.fr>
- <1550062386389-0.post@n7.nabble.com>
- <173559f3-7b2b-735b-acc7-66ccbdc7905d@c-s.fr>
- <40b6281d-3aed-bff1-79fc-09a293d37b7f@c-s.fr>
- <CGME20190226115150eucas1p2f759d8df50102507a0ee66c4ab36003f@eucas1p2.samsung.com>
+From: Baruch Siach <baruch@tkos.co.il>
+Subject: Re: [PATCH 4/5] arm64: dts: marvell: armada-8040-clearfog: Drop
+ non-existent SATA port
+Date: Wed, 27 Feb 2019 07:16:54 +0200
+Message-ID: <87woll6cah.fsf@tarshish>
+References: <20190222145356.23072-1-miquel.raynal@bootlin.com>
+ <20190222145356.23072-5-miquel.raynal@bootlin.com> <87tvgt7o0q.fsf@tarshish>
+ <20190225115826.5bc17f6d@xps13>
+ <20190225121519.2quhgqcf24rutqn4@sapphire.tkos.co.il>
+ <20190225130502.om6y5q7cbe35fbyw@shell.armlinux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <40b6281d-3aed-bff1-79fc-09a293d37b7f@c-s.fr>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: Christophe Leroy <christophe.leroy@c-s.fr>, sgosavi1 <Sachin.Gosavi@emerson.com>
-Cc: linuxppc-dev@ozlabs.org, "David S. Miller" <davem@davemloft.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-reply-to: <20190225130502.om6y5q7cbe35fbyw@shell.armlinux.org.uk>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Russell King - ARM Linux admin <linux@armlinux.org.uk>
+Cc: Mark Rutland <mark.rutland@arm.com>, Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>, devicetree@vger.kernel.org, Marc Zyngier <marc.zyngier@arm.com>, Gregory Clement <gregory.clement@bootlin.com>, Jon Nettleton <jon@solid-run.com>, Rabeeh Khoury <rabeeh@solid-run.com>, Nadav Haklai <nadavh@marvell.com>, Hans de Goede <hdegoede@redhat.com>, Rob Herring <robh+dt@kernel.org>, Antoine Tenart <antoine.tenart@bootlin.com>, Jens Axboe <axboe@kernel.dk>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-ide@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, Maxime Chevallier <maxime.chevallier@bootlin.com>, linux-arm-kernel@lists.infradead.org, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
+Hi Russell,
 
-On 02/14/2019 06:54 PM, Christophe Leroy wrote:
-> 
-> 
-> Le 13/02/2019 à 16:27, Christophe Leroy a écrit :
+On Mon, Feb 25 2019, Russell King wrote:
+> On Mon, Feb 25, 2019 at 02:15:19PM +0200, Baruch Siach wrote:
+>> On Mon, Feb 25, 2019 at 11:58:26AM +0100, Miquel Raynal wrote:
+>> > Baruch Siach <baruch@tkos.co.il> wrote on Sun, 24 Feb 2019 07:29:09
+>> > +0200:
+>> >
+>> > > On Fri, Feb 22 2019, Miquel Raynal wrote:
+>> > > > There is no CP110 SATA port available on the 8040 Clearfog A8k, SATA
+>> > > > may be used thanks to a mPCIe -> SATA extension board only. Hence, the
+>> > > > cp1_sata0 node must be removed from the device tree.
+>> > >
+>> > > Not true. You can use the mini PCIe serdes as SATA directly if you
+>> > > configure it as such. You only need to invert the serdes Rx pair
+>> > > polarity. This is the default configuration for the Clearfog GT-8K CON3
+>> > > mini-PCIe slot (CP1, lane #0) in current mainline U-Boot. I verified
+>> > > that this setup works on Clearfog GT-8K.
+>> > >
+>> > > This patch would break mini PCIe direct SATA.
+>> >
+>> > Thanks for explaining, I am a little bit surprised that it actually
+>> > uses the SATA host IP on CP110 but fine. So can you tell me which SATA
+>> > port is used in this case? Because I will have to update the DT
+>> > representation along with the CP110 changes.
 >>
->>
->> Le 13/02/2019 à 13:53, sgosavi1 a écrit :
->>>> Why using 4.15.13 which is obsolete instead of using one of the Long
->>>> Term Support versions which are still maintained, like 4.14 or 4.19 ?
->>>> (see the complete list at https://www.kernel.org/category/releases.html)
->>>
->>> Well, when I started this task 4.15.13 was probably the latest stable
->>> release and hence we decided to port this version. In the older kernel, we
->>> have the m8260_setup.c source file for our board where the function
->>> "io_block_mapping" was used to configure the non-standard IO port address
->>> starting at 0xe0000000 location. This address was passed as the base address
->>> followed by control address and IRQ number to the ide-core.ko module. In the
->>> new kernel we do not have an option to send these addresses and IRQ numbers
->>> as arguments to the driver. Instead the ide-generic.c source file in the new
->>> kernel uses the standard IO port values and IRQ values. I modified the code
->>> in the above file to used the addresses and IRQ number we used in the past.
->>> Also, added code in the "MMU_init" function call available under
->>> arch/PowerPC/init_32.c to setup the IO port address range by adding the
->>> "io_block_mapping" call and the required IO port address range.
->>>
->>> Is there anything else that needs to be added or how can we configure the
->>> desired IO address range in the new kernel?
->>>
->>
->> Maybe look around https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit/?id=9a0e77f28b50128df0c9e26ae489e44e29a7270a
->>
->> Also look at ide_platform.c. I imagine there must be some way to set it up in your device tree.
+>> According to the cp110_comphy_phy_mux_data[] array in U-Boot
+>> drivers/phy/marvell/comphy_cp110.c, serdes 0 of CP110 can only be SATA1 (i.e.
+>> the second port; first is SATA0).
+>
+> Adding folk from SolidRun...
+>
+> Why are the mPCIe connectors configured by default for mSATA cards?
 
-Please don't add new users to subsystem deprecated almost 10 years ago..
+This is sort of capability demonstration.
 
->> Maybe Bartlomiej Zolnierkiewicz can help ?
->>
->> Christophe
-> 
-> Le 14/02/2019 à 09:17, sgosavi1 a écrit :>> Maybe look around
->>
->> I have gone through this before and also tried the pata_platform driver but
->> no success yet. I haven't found any example that passes the IO ports and IRQ
->> information through the device tree to the driver code.
+> This sounds like it's going to cause confusion.  The published
+> specification for the board at:
+>
+> https://developer.solid-run.com/products/clearfog-gt-8k/
+>
+> states that the board has "3 x mPCIe (USB 2.0 + PCIe)" and makes no
+> mention of mSATA.
+>
+> mSATA is not compatible with mPCIe - mSATA cards expect the serdes
+> lanes to be connected to a SATA interface, mPCIe cards expect a PCIe
+> controller at the other end of the serdes lanes.
+>
+> Given that there is a lot of confusion about mSATA vs mPCIe out there,
+> (caused by both being the same physical form factor and fitting into
+> the same socket, yet being electrically different) I think it's
+> important to have a coherent story on these connectors everywhere.
+>
+> Maybe we need a way to have these connectors configurable by the end
+> user?
 
-Please look at pata_of_platform.c driver from libata subsystem,
-it should have all required functionality.
+The user can set the PCIe/SATA serdes configuration in U-Boot CP110
+comphy nodes.
 
->> Thanks,
->> Sachin.
-> 
-> 
-> Maybe someone from the IDE SUBSYSTEM would be able to help better ?
-> 
-> Entire thread at http://linuxppc.10917.n7.nabble.com/Kernel-panic-when-loading-the-IDE-controller-driver-td150020.html#none
-> 
-> Christophe
+baruch
 
-Best regards,
 --
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+     http://baruch.siach.name/blog/                  ~. .~   Tk Open Systems
+=}------------------------------------------------ooO--U--Ooo------------{=
+   - baruch@tkos.co.il - tel: +972.52.368.4656, http://www.tkos.co.il -
