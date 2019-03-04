@@ -1,35 +1,38 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] ata: libahci: Only warn for AHCI_HFLAG_MULTI_MSI set when
- genuine custom irq handler implemented
-Date: Thu, 28 Feb 2019 14:08:12 -0700
-Message-ID: <639bded2-54a5-882d-b782-b7b59f8dbc93@kernel.dk>
-References: <1550511813-133136-1-git-send-email-john.garry@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Aditya Pakki <pakki001@umn.edu>
+Subject: [PATCH] ata: dwc_460ex: Avoid potential NULL pointer dereference
+Date: Mon,  4 Mar 2019 17:08:57 -0600
+Message-ID: <20190304230858.13387-1-pakki001@umn.edu>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1550511813-133136-1-git-send-email-john.garry@huawei.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: linuxarm@huawei.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: pakki001@umn.edu
+Cc: kjlu@umn.edu, Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 2/18/19 10:43 AM, John Garry wrote:
-> For an AHCI controller with AHCI_HFLAG_MULTI_MSI flag set, we may get the
-> following log, regardless of whether a custom irq handler was implemented
-> or not:
-> 
-> [   14.700238] ahci 0000:74:03.0: both AHCI_HFLAG_MULTI_MSI flag set and custom irq handler implemented
-> 
-> This is because we can set hpriv->irq_handler to
-> ahci_single_level_irq_intr() if not already set, in
-> ahci_init_one()->ahci_pci_save_initial_config()->ahci_save_initial_config().
-> 
-> Stop having this warn being misleading by adding a check for
-> hpriv->irq_handler != ahci_single_level_irq_intr.
+dma_async_tx_descriptor can contain a NULL variable and using
+it in dmaengine_submit without checking can crash the process.
+This patch avoids such a scenario.
 
-Applied, thanks.
+Signed-off-by: Aditya Pakki <pakki001@umn.edu>
+---
+ drivers/ata/sata_dwc_460ex.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index 6f142aa54f5f..44a0d7a1ef54 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -1052,8 +1052,10 @@ static void sata_dwc_bmdma_start_by_tag(struct ata_queued_cmd *qc, u8 tag)
+ 					SATA_DWC_DMACR_RXCHEN);
+ 
+ 		/* Enable AHB DMA transfer on the specified channel */
+-		dmaengine_submit(desc);
+-		dma_async_issue_pending(hsdevp->chan);
++		if (desc) {
++			dmaengine_submit(desc);
++			dma_async_issue_pending(hsdevp->chan);
++		}
+ 	}
+ }
+ 
 -- 
-Jens Axboe
+2.17.1
