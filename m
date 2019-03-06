@@ -1,7 +1,8 @@
 From: Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH v2 07/10] ata: ahci: mvebu: Support A8k compatible
-Date: Wed,  6 Mar 2019 11:21:43 +0100
-Message-ID: <20190306102146.13005-8-miquel.raynal@bootlin.com>
+Subject: [PATCH v2 01/10] ata: libahci: Ensure the host interrupt status bits
+ are cleared
+Date: Wed,  6 Mar 2019 11:21:37 +0100
+Message-ID: <20190306102146.13005-2-miquel.raynal@bootlin.com>
 References: <20190306102146.13005-1-miquel.raynal@bootlin.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,54 +22,42 @@ To: Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemo
 Cc: devicetree@vger.kernel.org, Baruch Siach <baruch@tkos.co.il>, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-The ahci_platform.c driver was historically the one bound to the A8k
-AHCI compatible string, but before adding a quirk for this compatible,
-it is probably cleaner to put all Marvell EBU code in one place: the
-ahci_mvebu.c driver.
+ahci_multi_irqs_intr_hard() is going to be used as interrupt handler
+to support SATA per-port interrupts. The current logic is to check and
+clear the SATA port interrupt status register only. To avoid spurious
+IRQs and interrupt storms, it will be needed to clear the port
+interrupt bit in the host interrupt status register as well.
 
 Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
 ---
- drivers/ata/ahci_mvebu.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ drivers/ata/libahci.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/ata/ahci_mvebu.c b/drivers/ata/ahci_mvebu.c
-index 507ee7c5437c..8671aa8179fa 100644
---- a/drivers/ata/ahci_mvebu.c
-+++ b/drivers/ata/ahci_mvebu.c
-@@ -98,6 +98,12 @@ static int ahci_mvebu_armada_3700_config(struct ahci_host_priv *hpriv,
- 	return 0;
- }
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index b5f57c69c487..66d4906a5013 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1912,7 +1912,10 @@ static void ahci_port_intr(struct ata_port *ap)
+ static irqreturn_t ahci_multi_irqs_intr_hard(int irq, void *dev_instance)
+ {
+ 	struct ata_port *ap = dev_instance;
++	struct ata_host *host = ap->host;
++	struct ahci_host_priv *hpriv = host->private_data;
+ 	void __iomem *port_mmio = ahci_port_base(ap);
++	void __iomem *mmio = hpriv->mmio;
+ 	u32 status;
  
-+static int ahci_mvebu_armada_8k_config(struct ahci_host_priv *hpriv,
-+				       struct device *dev)
-+{
-+	return 0;
-+}
-+
- /**
-  * ahci_mvebu_stop_engine
-  *
-@@ -232,6 +238,10 @@ static const struct ahci_mvebu_plat_data ahci_mvebu_armada_3700_plat_data = {
- 	.host_flags = AHCI_HFLAG_SUSPEND_PHYS,
- };
+ 	VPRINTK("ENTER\n");
+@@ -1924,6 +1927,10 @@ static irqreturn_t ahci_multi_irqs_intr_hard(int irq, void *dev_instance)
+ 	ahci_handle_port_interrupt(ap, port_mmio, status);
+ 	spin_unlock(ap->lock);
  
-+static const struct ahci_mvebu_plat_data ahci_mvebu_armada_8k_plat_data = {
-+	.plat_config = ahci_mvebu_armada_8k_config,
-+};
++	spin_lock(&host->lock);
++	writel(BIT(ap->port_no), mmio + HOST_IRQ_STAT);
++	spin_unlock(&host->lock);
 +
- static const struct of_device_id ahci_mvebu_of_match[] = {
- 	{
- 		.compatible = "marvell,armada-380-ahci",
-@@ -241,6 +251,10 @@ static const struct of_device_id ahci_mvebu_of_match[] = {
- 		.compatible = "marvell,armada-3700-ahci",
- 		.data = &ahci_mvebu_armada_3700_plat_data,
- 	},
-+	{
-+		.compatible = "marvell,armada-8k-ahci",
-+		.data = &ahci_mvebu_armada_8k_plat_data,
-+	},
- 	{ },
- };
- MODULE_DEVICE_TABLE(of, ahci_mvebu_of_match);
+ 	VPRINTK("EXIT\n");
+ 
+ 	return IRQ_HANDLED;
 -- 
 2.19.1
