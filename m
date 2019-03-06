@@ -1,7 +1,8 @@
 From: Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH v2 04/10] ata: ahci: mvebu: Rename a platform data flag
-Date: Wed,  6 Mar 2019 11:21:40 +0100
-Message-ID: <20190306102146.13005-5-miquel.raynal@bootlin.com>
+Subject: [PATCH v2 05/10] ata: ahci: mvebu: Add a parameter to a platform data
+ callback
+Date: Wed,  6 Mar 2019 11:21:41 +0100
+Message-ID: <20190306102146.13005-6-miquel.raynal@bootlin.com>
 References: <20190306102146.13005-1-miquel.raynal@bootlin.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,44 +22,67 @@ To: Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemo
 Cc: devicetree@vger.kernel.org, Baruch Siach <baruch@tkos.co.il>, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-Before adding more entries in the platform data structure, rename the
-flags entry to be more precise and name it host_flags.
+Before using the ahci_mvebu.c driver with Armada 8k hardware (right
+now it is using the ahci_platform.c generic driver), let's add a
+'struct device' pointer to the argument list of the
+->plat_config() callback. This parameter will be used by the A8k's
+callback.
 
 Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
 ---
- drivers/ata/ahci_mvebu.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/ata/ahci_mvebu.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/ata/ahci_mvebu.c b/drivers/ata/ahci_mvebu.c
-index d4bba3ace45d..43bb2db59698 100644
+index 43bb2db59698..507ee7c5437c 100644
 --- a/drivers/ata/ahci_mvebu.c
 +++ b/drivers/ata/ahci_mvebu.c
-@@ -30,7 +30,7 @@
+@@ -29,7 +29,7 @@
+ #define AHCI_WINDOW_SIZE(win)	(0x68 + ((win) << 4))
  
  struct ahci_mvebu_plat_data {
- 	int (*plat_config)(struct ahci_host_priv *hpriv);
--	unsigned int flags;
-+	unsigned int host_flags;
+-	int (*plat_config)(struct ahci_host_priv *hpriv);
++	int (*plat_config)(struct ahci_host_priv *hpriv, struct device *dev);
+ 	unsigned int host_flags;
  };
  
- static void ahci_mvebu_mbus_config(struct ahci_host_priv *hpriv,
-@@ -196,7 +196,7 @@ static int ahci_mvebu_probe(struct platform_device *pdev)
- 	if (IS_ERR(hpriv))
- 		return PTR_ERR(hpriv);
+@@ -67,7 +67,8 @@ static void ahci_mvebu_regret_option(struct ahci_host_priv *hpriv)
+ 	writel(0x80, hpriv->mmio + AHCI_VENDOR_SPECIFIC_0_DATA);
+ }
  
--	hpriv->flags |= pdata->flags;
-+	hpriv->flags |= pdata->host_flags;
- 	hpriv->plat_data = (void *)pdata;
+-static int ahci_mvebu_armada_380_config(struct ahci_host_priv *hpriv)
++static int ahci_mvebu_armada_380_config(struct ahci_host_priv *hpriv,
++					struct device *dev)
+ {
+ 	const struct mbus_dram_target_info *dram;
+ 	int rc = 0;
+@@ -83,7 +84,8 @@ static int ahci_mvebu_armada_380_config(struct ahci_host_priv *hpriv)
+ 	return rc;
+ }
  
- 	rc = ahci_platform_enable_resources(hpriv);
-@@ -227,7 +227,7 @@ static const struct ahci_mvebu_plat_data ahci_mvebu_armada_380_plat_data = {
+-static int ahci_mvebu_armada_3700_config(struct ahci_host_priv *hpriv)
++static int ahci_mvebu_armada_3700_config(struct ahci_host_priv *hpriv,
++					 struct device *dev)
+ {
+ 	u32 reg;
  
- static const struct ahci_mvebu_plat_data ahci_mvebu_armada_3700_plat_data = {
- 	.plat_config = ahci_mvebu_armada_3700_config,
--	.flags = AHCI_HFLAG_SUSPEND_PHYS,
-+	.host_flags = AHCI_HFLAG_SUSPEND_PHYS,
- };
+@@ -162,7 +164,7 @@ static int ahci_mvebu_resume(struct platform_device *pdev)
+ 	struct ahci_host_priv *hpriv = host->private_data;
+ 	const struct ahci_mvebu_plat_data *pdata = hpriv->plat_data;
  
- static const struct of_device_id ahci_mvebu_of_match[] = {
+-	pdata->plat_config(hpriv);
++	pdata->plat_config(hpriv, &pdev->dev);
+ 
+ 	return ahci_platform_resume_host(&pdev->dev);
+ }
+@@ -205,7 +207,7 @@ static int ahci_mvebu_probe(struct platform_device *pdev)
+ 
+ 	hpriv->stop_engine = ahci_mvebu_stop_engine;
+ 
+-	rc = pdata->plat_config(hpriv);
++	rc = pdata->plat_config(hpriv, &pdev->dev);
+ 	if (rc)
+ 		goto disable_resources;
+ 
 -- 
 2.19.1
