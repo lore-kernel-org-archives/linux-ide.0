@@ -1,14 +1,12 @@
 From: Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH v2 10/10] arm64: dts: marvell: armada-cp110: Switch to
- per-port SATA interrupts
-Date: Wed,  6 Mar 2019 11:21:46 +0100
-Message-ID: <20190306102146.13005-11-miquel.raynal@bootlin.com>
-References: <20190306102146.13005-1-miquel.raynal@bootlin.com>
+Subject: [PATCH v2 00/10] Enable per-port SATA interrupts and drop an hack in
+ the IRQ subsystem
+Date: Wed,  6 Mar 2019 11:21:36 +0100
+Message-ID: <20190306102146.13005-1-miquel.raynal@bootlin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20190306102146.13005-1-miquel.raynal@bootlin.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -22,116 +20,72 @@ To: Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemo
 Cc: devicetree@vger.kernel.org, Baruch Siach <baruch@tkos.co.il>, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-
-There are two SATA ports per CP110. Each of them has a dedicated
-interrupt. Describe the real hardware by adding two SATA ports to the
-CP110 SATA node and enabling them in all the DTs including it
-(7040-db/8040-db/8040-clearfog).
-
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
----
- arch/arm64/boot/dts/marvell/armada-7040-db.dts   |  7 ++++++-
- .../dts/marvell/armada-8040-clearfog-gt-8k.dts   |  5 ++++-
- arch/arm64/boot/dts/marvell/armada-8040-db.dts   | 14 ++++++++++++--
- arch/arm64/boot/dts/marvell/armada-cp110.dtsi    | 16 ++++++++++++++--
- 4 files changed, 36 insertions(+), 6 deletions(-)
-
-diff --git a/arch/arm64/boot/dts/marvell/armada-7040-db.dts b/arch/arm64/boot/dts/marvell/armada-7040-db.dts
-index 412efdb46e7c..54c1c0ddc813 100644
---- a/arch/arm64/boot/dts/marvell/armada-7040-db.dts
-+++ b/arch/arm64/boot/dts/marvell/armada-7040-db.dts
-@@ -194,7 +194,12 @@
- };
- 
- &cp0_sata0 {
--	status = "okay";
-+	sata-port@0 {
-+		status = "okay";
-+	};
-+	sata-port@1 {
-+		status = "okay";
-+	};
- };
- 
- &cp0_usb3_0 {
-diff --git a/arch/arm64/boot/dts/marvell/armada-8040-clearfog-gt-8k.dts b/arch/arm64/boot/dts/marvell/armada-8040-clearfog-gt-8k.dts
-index 5b4a9609e31f..16fc76ef7804 100644
---- a/arch/arm64/boot/dts/marvell/armada-8040-clearfog-gt-8k.dts
-+++ b/arch/arm64/boot/dts/marvell/armada-8040-clearfog-gt-8k.dts
-@@ -335,7 +335,10 @@
- 
- &cp1_sata0 {
- 	pinctrl-0 = <&cp0_pci1_reset_pins>;
--	status = "okay";
-+
-+	sata-port@1 {
-+		status = "okay";
-+	};
- };
- 
- &cp1_mdio {
-diff --git a/arch/arm64/boot/dts/marvell/armada-8040-db.dts b/arch/arm64/boot/dts/marvell/armada-8040-db.dts
-index 1bac437369a1..988cc7dc15d9 100644
---- a/arch/arm64/boot/dts/marvell/armada-8040-db.dts
-+++ b/arch/arm64/boot/dts/marvell/armada-8040-db.dts
-@@ -147,7 +147,12 @@
- 
- /* CON4 on CP0 expansion */
- &cp0_sata0 {
--	status = "okay";
-+	sata-port@0 {
-+		status = "okay";
-+	};
-+	sata-port@1 {
-+		status = "okay";
-+	};
- };
- 
- /* CON9 on CP0 expansion */
-@@ -279,7 +284,12 @@
- 
- /* CON4 on CP1 expansion */
- &cp1_sata0 {
--	status = "okay";
-+	sata-port@0 {
-+		status = "okay";
-+	};
-+	sata-port@1 {
-+		status = "okay";
-+	};
- };
- 
- /* CON9 on CP1 expansion */
-diff --git a/arch/arm64/boot/dts/marvell/armada-cp110.dtsi b/arch/arm64/boot/dts/marvell/armada-cp110.dtsi
-index b9d9f31e3ba1..f27edddcacd1 100644
---- a/arch/arm64/boot/dts/marvell/armada-cp110.dtsi
-+++ b/arch/arm64/boot/dts/marvell/armada-cp110.dtsi
-@@ -292,10 +292,22 @@
- 			"generic-ahci";
- 			reg = <0x540000 0x30000>;
- 			dma-coherent;
--			interrupts = <107 IRQ_TYPE_LEVEL_HIGH>;
- 			clocks = <&CP110_LABEL(clk) 1 15>,
- 				 <&CP110_LABEL(clk) 1 16>;
--			status = "disabled";
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+
-+			sata-port@0 {
-+				reg = <0>;
-+				interrupts = <109 IRQ_TYPE_LEVEL_HIGH>;
-+				status = "disabled";
-+			};
-+
-+			sata-port@1 {
-+				reg = <1>;
-+				interrupts = <107 IRQ_TYPE_LEVEL_HIGH>;
-+				status = "disabled";
-+			};
- 		};
- 
- 		CP110_LABEL(xor0): xor@6a0000 {
--- 
-2.19.1
+SGVsbG8sCgpTb21lIHRpbWUgYWdvLCB3aGVuIHRoZSBpbml0aWFsIHN1cHBvcnQgZm9yIEFybWFk
+YSBDUDExMCB3YXMKY29udHJpYnV0ZWQsIHRoZSBTQVRBIGNvcmUgd2FzIG5vdCBhYmxlIHRvIGhh
+bmRsZSBwZXItcG9ydAppbnRlcnJ1cHRzLiBEZXNwaXRlIHRoZSBoYXJkd2FyZSByZWFsaXR5LCB0
+aGUgZGV2aWNlIHRyZWUgb25seQpyZXByZXNlbnRzIG9uZSBtYWluIGludGVycnVwdCBmb3IgdGhl
+IHR3byBwb3J0cy4gSGF2aW5nIGJvdGggU0FUQQpwb3J0cyBlbmFibGVkIGF0IHRoZSBzYW1lIHRp
+bWUgaGFzIGJlZW4gYWNoaWV2ZWQgYnkgYSBoYWNrIGluIHRoZSBJQ1UKZHJpdmVyKDEpIHRoYXQg
+ZmFrZWQgdGhlIHVzZSBvZiB0aGUgdHdvIGludGVycnVwdHMsIG5vIG1hdHRlciB3aGljaApTQVRB
+IHBvcnQgd2FzIGluIHVzZS4KCk5vdyB0aGF0IHRoZSBTQVRBIGNvcmUgaXMgcmVhZHkgdG8gaGFu
+ZGxlIG1vcmUgdGhhbiBvbmUgaW50ZXJydXB0LAp0aGlzIHNlcmllcyBhZGRzIHN1cHBvcnQgZm9y
+IGl0IGluIHRoZSBsaWJhaGNpX3BsYXRmb3JtIGNvZGUuIFRoZQpDUDExMCBkZXZpY2UgdHJlZSBt
+dXN0IGJlIHVwZGF0ZWQgdG8gcmVmbGVjdCB0aGUgdHdvIFNBVEEgcG9ydHMKYXZhaWxhYmxlIGFu
+ZCB0aGVpciByZXNwZWN0aXZlIGludGVycnVwdHMuIFRvIGRvIG5vdCBicmVhayBEVCBiYWNrd2Fy
+ZApjb21wYXRpYmlsaXR5LCB0aGUgYWhjaV9wbGF0Zm9ybSBkcml2ZXIgbm93IGVtYmVkcyBhIHNw
+ZWNpYWwgcXVpcmsKd2hpY2ggY2hlY2tzIGlmIHRoZSBEVCBpcyB2YWxpZCAob25seSBmb3IgQThr
+IGNvbXBhdGlibGUpIGFuZCwgaWYKbmVlZGVkLCBjcmVhdGVzIHRoZSB0d28gbWlzc2luZyBzdWIt
+bm9kZXMsIGFuZCBhc3NpZ24gdGhlbSB0aGUKcmVsZXZhbnQgInJlZyIgYW5kICJpbnRlcnJ1cHRz
+IiBwcm9wZXJ0aWVzLCBiZWZvcmUgcmVtb3ZpbmcgdGhlIG1haW4KU0FUQSBub2RlICJpbnRlcnJ1
+cHRzIiBvbmUuCgoKVGhhbmtzLApNaXF1w6hsCgooMSkgVGhlIElDVSBpcyBhbiBpcnFjaGlwIGFn
+Z3JlZ2F0aW5nIHRoZSBDUDExMCAoc291dGgtYnJpZGdlKQppbnRlcnJ1cHRzIGludG8gTVNJcyBm
+b3IgdGhlIEFQODA2IChub3J0aC1icmlkZ2UpLgoKQ2hhbmdlcyBpbiB2Mgo9PT09PT09PT09PT09
+CiogSW4gdGhlIEFIQ0kgd29ybGQsIHRoZSAnaXJxJyBpcyBub3cgYW4gJyppcnFzJyBhcnJheSwg
+SSBlbnN1cmVkIGl0CiAgaXMgYWxsb2NhdGVkIGV2ZW4gd2hlbiBub3QgdXNpbmcgKl9wbGF0Zm9y
+bSBkcml2ZXJzLgoqIE1vdmVkIHRoZSB3aG9sZSBsb2dpYyBmcm9tIHRoZSBnZW5lcmljIGFoY2lf
+cGxhdGZvcm0uYyBkcml2ZXIgdG8gdGhlCiAgTWFydmVsbCdzIGFoY2lfbXZlYnUuYyBkcml2ZXIu
+CiogRHJvcHBlZCB0aGUgd2hvbGUgRFQgbWFuaXB1bGF0aW9uIHF1aXJrLgoqIEluc3RlYWQgdXNl
+ZCBhIGhhY2sgdG8gY29uZmlndXJlIGJvdGggaW50ZXJydXB0cyB3aGVuIHVzaW5nIHRoZQogIGRl
+cHJlY2F0ZWQgYmluZGluZ3MsIHRoaXMgaGFjayBpcyBhOGsgc3BlY2lmaWMgYnV0IHRoZXJlIGlz
+IGEgZmxhZwogIHRoYXQgaXMgcGFzc2VkIHRvIHRoZSBjb3JlIGR1cmluZyB0aGUgYWhjaV9wbGF0
+Zm9ybV9nZXRfcmVzb3VyY2VzKCkKICB0byBpbmRpY2F0ZSB0aGF0IHRoZSBudW1iZXIgb2YgcG9y
+dHMgbXVzdCBiZSBmb3JjZWQgdG8gMiBubyBtYXR0ZXIKICB0aGUgbnVtYmVyIG9mIGNoaWxkIG5v
+ZGVzLgoqIFRoZSBBOGsgYmFzZWQgQ2xlYXJmb2ctR1QgYWN0dWFsbHkgdXNlcyB0aGUgU0FUQSBJ
+UCAoQmFydWNoJ3MgaW5mbykKICBzbyBkbyBub3QgcmVtb3ZlIHRoZSBTQVRBIG5vZGUgZnJvbSB0
+aGUgRFQuIEluc3RlYWQsIGNoYW5nZSB0aGUgRFRTCiAgdG8gZml0IHRoZSBuZXcgYmluZGluZ3Mg
+KHRoZSBib2FyZCBvbmx5IHVzZXMgdGhlIHNlY29uZCBwb3J0IGF0CiAgb2Zmc2V0IDEpLgoqIEFk
+ZGVkIGJpbmRpbmdzIGRvY3VtZW50YXRpb24gYWJvdXQgdGhlIEE4ayBBSENJIGNvbXBhdGlibGUg
+KGV4aXN0aW5nCiAgaW4gRFRzLCBtaXNzaW5nIGluIHRoZSBkb2MpLgoqIFNBVEEgU3ViLW5vZGVz
+IHJlcHJlc2VudGluZyBwb3J0cyBhbHJlYWR5IGFyZSBkb2N1bWVudGVkLCBJIGp1c3QKICBhZGRl
+ZCBhIG1lbnRpb24gdGhhdCB0aGV5IGNhbiBhbHNvIGhhdmUgYW4gaW50ZXJydXB0cyBwcm9wZXJ0
+eSB3aGljaAogIGlzIG11dHVhbGx5IGV4Y2x1c2l2ZSB3aXRoIHRoZSByb290IFNBVEEgbm9kZS4K
+CgpNaXF1ZWwgUmF5bmFsICg5KToKICBhdGE6IGxpYmFoY2k6IEVuc3VyZSB0aGUgaG9zdCBpbnRl
+cnJ1cHQgc3RhdHVzIGJpdHMgYXJlIGNsZWFyZWQKICBhdGE6IGFoY2k6IFN1cHBvcnQgcGVyLXBv
+cnQgaW50ZXJydXB0cwogIGR0LWJpbmRpbmdzOiBhdGE6IFVwZGF0ZSBhaGNpIGJpbmRpbmdzIHdp
+dGggcG9zc2libGUgcGVyLXBvcnQKICAgIGludGVycnVwdHMKICBhdGE6IGFoY2k6IG12ZWJ1OiBS
+ZW5hbWUgYSBwbGF0Zm9ybSBkYXRhIGZsYWcKICBhdGE6IGFoY2k6IG12ZWJ1OiBBZGQgYSBwYXJh
+bWV0ZXIgdG8gYSBwbGF0Zm9ybSBkYXRhIGNhbGxiYWNrCiAgZHQtYmluZGluZ3M6IGF0YTogVXBk
+YXRlIGFoY2lfbXZlYnUgYmluZGluZ3MKICBhdGE6IGFoY2k6IG12ZWJ1OiBTdXBwb3J0IEE4ayBj
+b21wYXRpYmxlCiAgYXRhOiBhaGNpOiBtdmVidTogQWRkIHN1cHBvcnQgZm9yIEE4ayBsZWdhY3kg
+YmluZGluZ3MKICBpcnFjaGlwL2lycS1tdmVidS1pY3U6IFJlbW92ZSB0aGUgZG91YmxlIFNBVEEg
+cG9ydHMgaW50ZXJydXB0IGhhY2sKClRob21hcyBQZXRhenpvbmkgKDEpOgogIGFybTY0OiBkdHM6
+IG1hcnZlbGw6IGFybWFkYS1jcDExMDogU3dpdGNoIHRvIHBlci1wb3J0IFNBVEEgaW50ZXJydXB0
+cwoKIC4uLi9kZXZpY2V0cmVlL2JpbmRpbmdzL2F0YS9haGNpLXBsYXRmb3JtLnR4dCB8ICA3ICsr
+CiAuLi4vYXJtNjQvYm9vdC9kdHMvbWFydmVsbC9hcm1hZGEtNzA0MC1kYi5kdHMgfCAgNyArLQog
+Li4uL21hcnZlbGwvYXJtYWRhLTgwNDAtY2xlYXJmb2ctZ3QtOGsuZHRzICAgIHwgIDUgKy0KIC4u
+Li9hcm02NC9ib290L2R0cy9tYXJ2ZWxsL2FybWFkYS04MDQwLWRiLmR0cyB8IDE0ICsrKy0KIGFy
+Y2gvYXJtNjQvYm9vdC9kdHMvbWFydmVsbC9hcm1hZGEtY3AxMTAuZHRzaSB8IDE2ICsrKystCiBk
+cml2ZXJzL2F0YS9hY2FyZC1haGNpLmMgICAgICAgICAgICAgICAgICAgICAgfCAgMiArLQogZHJp
+dmVycy9hdGEvYWhjaS5jICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgIDggKystCiBkcml2
+ZXJzL2F0YS9haGNpLmggICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgMyArLQogZHJpdmVy
+cy9hdGEvYWhjaV9tdmVidS5jICAgICAgICAgICAgICAgICAgICAgIHwgNjEgKysrKysrKysrKysr
+Ky0tLQogZHJpdmVycy9hdGEvbGliYWhjaS5jICAgICAgICAgICAgICAgICAgICAgICAgIHwgIDkg
+KystCiBkcml2ZXJzL2F0YS9saWJhaGNpX3BsYXRmb3JtLmMgICAgICAgICAgICAgICAgfCA3MCAr
+KysrKysrKysrKysrKysrLS0tCiBkcml2ZXJzL2F0YS9zYXRhX2hpZ2hiYW5rLmMgICAgICAgICAg
+ICAgICAgICAgfCAgMiArLQogZHJpdmVycy9pcnFjaGlwL2lycS1tdmVidS1pY3UuYyAgICAgICAg
+ICAgICAgIHwgMTggLS0tLS0KIGluY2x1ZGUvbGludXgvYWhjaV9wbGF0Zm9ybS5oICAgICAgICAg
+ICAgICAgICB8ICAxICsKIDE0IGZpbGVzIGNoYW5nZWQsIDE3NCBpbnNlcnRpb25zKCspLCA0OSBk
+ZWxldGlvbnMoLSkKCi0tIAoyLjE5LjEKCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0t
+a2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFp
+bG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
