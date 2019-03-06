@@ -1,7 +1,7 @@
 From: Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH v2 06/10] dt-bindings: ata: Update ahci_mvebu bindings
-Date: Wed,  6 Mar 2019 11:21:42 +0100
-Message-ID: <20190306102146.13005-7-miquel.raynal@bootlin.com>
+Subject: [PATCH v2 07/10] ata: ahci: mvebu: Support A8k compatible
+Date: Wed,  6 Mar 2019 11:21:43 +0100
+Message-ID: <20190306102146.13005-8-miquel.raynal@bootlin.com>
 References: <20190306102146.13005-1-miquel.raynal@bootlin.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,24 +21,54 @@ To: Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemo
 Cc: devicetree@vger.kernel.org, Baruch Siach <baruch@tkos.co.il>, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-Update bindings with the already in use Armada 8k compatible.
+The ahci_platform.c driver was historically the one bound to the A8k
+AHCI compatible string, but before adding a quirk for this compatible,
+it is probably cleaner to put all Marvell EBU code in one place: the
+ahci_mvebu.c driver.
 
 Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
 ---
- Documentation/devicetree/bindings/ata/ahci-platform.txt | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/ata/ahci_mvebu.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-index 80261e2845b0..a1e6a3a27ee3 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -17,6 +17,7 @@ Required properties:
-   - "ibm,476gtr-ahci"
-   - "marvell,armada-380-ahci"
-   - "marvell,armada-3700-ahci"
-+  - "marvell,armada-8k-ahci"
-   - "snps,dwc-ahci"
-   - "snps,spear-ahci"
-   - "generic-ahci"
+diff --git a/drivers/ata/ahci_mvebu.c b/drivers/ata/ahci_mvebu.c
+index 507ee7c5437c..8671aa8179fa 100644
+--- a/drivers/ata/ahci_mvebu.c
++++ b/drivers/ata/ahci_mvebu.c
+@@ -98,6 +98,12 @@ static int ahci_mvebu_armada_3700_config(struct ahci_host_priv *hpriv,
+ 	return 0;
+ }
+ 
++static int ahci_mvebu_armada_8k_config(struct ahci_host_priv *hpriv,
++				       struct device *dev)
++{
++	return 0;
++}
++
+ /**
+  * ahci_mvebu_stop_engine
+  *
+@@ -232,6 +238,10 @@ static const struct ahci_mvebu_plat_data ahci_mvebu_armada_3700_plat_data = {
+ 	.host_flags = AHCI_HFLAG_SUSPEND_PHYS,
+ };
+ 
++static const struct ahci_mvebu_plat_data ahci_mvebu_armada_8k_plat_data = {
++	.plat_config = ahci_mvebu_armada_8k_config,
++};
++
+ static const struct of_device_id ahci_mvebu_of_match[] = {
+ 	{
+ 		.compatible = "marvell,armada-380-ahci",
+@@ -241,6 +251,10 @@ static const struct of_device_id ahci_mvebu_of_match[] = {
+ 		.compatible = "marvell,armada-3700-ahci",
+ 		.data = &ahci_mvebu_armada_3700_plat_data,
+ 	},
++	{
++		.compatible = "marvell,armada-8k-ahci",
++		.data = &ahci_mvebu_armada_8k_plat_data,
++	},
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(of, ahci_mvebu_of_match);
 -- 
 2.19.1
