@@ -1,8 +1,8 @@
 From: Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH v2 09/10] irqchip/irq-mvebu-icu: Remove the double SATA ports
- interrupt hack
-Date: Wed,  6 Mar 2019 11:21:45 +0100
-Message-ID: <20190306102146.13005-10-miquel.raynal@bootlin.com>
+Subject: [PATCH v2 10/10] arm64: dts: marvell: armada-cp110: Switch to
+ per-port SATA interrupts
+Date: Wed,  6 Mar 2019 11:21:46 +0100
+Message-ID: <20190306102146.13005-11-miquel.raynal@bootlin.com>
 References: <20190306102146.13005-1-miquel.raynal@bootlin.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,52 +22,116 @@ To: Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemo
 Cc: devicetree@vger.kernel.org, Baruch Siach <baruch@tkos.co.il>, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-When writing the driver, a hack was introduced to configure both SATA
-interrupts regardless of the port in use to overcome a limitation in
-the SATA core. Now that this limitation has been addressed and the
-hack moved in the (historically) responsible SATA driver,
-ahci_{platform,mvebu}.c, let's clean this driver section.
+From: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
 
+There are two SATA ports per CP110. Each of them has a dedicated
+interrupt. Describe the real hardware by adding two SATA ports to the
+CP110 SATA node and enabling them in all the DTs including it
+(7040-db/8040-db/8040-clearfog).
+
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@bootlin.com>
 Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
 ---
- drivers/irqchip/irq-mvebu-icu.c | 18 ------------------
- 1 file changed, 18 deletions(-)
+ arch/arm64/boot/dts/marvell/armada-7040-db.dts   |  7 ++++++-
+ .../dts/marvell/armada-8040-clearfog-gt-8k.dts   |  5 ++++-
+ arch/arm64/boot/dts/marvell/armada-8040-db.dts   | 14 ++++++++++++--
+ arch/arm64/boot/dts/marvell/armada-cp110.dtsi    | 16 ++++++++++++++--
+ 4 files changed, 36 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/irqchip/irq-mvebu-icu.c b/drivers/irqchip/irq-mvebu-icu.c
-index 547045d89c4b..f3b43f63fe2e 100644
---- a/drivers/irqchip/irq-mvebu-icu.c
-+++ b/drivers/irqchip/irq-mvebu-icu.c
-@@ -38,8 +38,6 @@
+diff --git a/arch/arm64/boot/dts/marvell/armada-7040-db.dts b/arch/arm64/boot/dts/marvell/armada-7040-db.dts
+index 412efdb46e7c..54c1c0ddc813 100644
+--- a/arch/arm64/boot/dts/marvell/armada-7040-db.dts
++++ b/arch/arm64/boot/dts/marvell/armada-7040-db.dts
+@@ -194,7 +194,12 @@
+ };
  
- /* ICU definitions */
- #define ICU_MAX_IRQS		207
--#define ICU_SATA0_ICU_ID	109
--#define ICU_SATA1_ICU_ID	107
+ &cp0_sata0 {
+-	status = "okay";
++	sata-port@0 {
++		status = "okay";
++	};
++	sata-port@1 {
++		status = "okay";
++	};
+ };
  
- struct mvebu_icu_subset_data {
- 	unsigned int icu_group;
-@@ -111,22 +109,6 @@ static void mvebu_icu_write_msg(struct msi_desc *desc, struct msi_msg *msg)
- 	}
+ &cp0_usb3_0 {
+diff --git a/arch/arm64/boot/dts/marvell/armada-8040-clearfog-gt-8k.dts b/arch/arm64/boot/dts/marvell/armada-8040-clearfog-gt-8k.dts
+index 5b4a9609e31f..16fc76ef7804 100644
+--- a/arch/arm64/boot/dts/marvell/armada-8040-clearfog-gt-8k.dts
++++ b/arch/arm64/boot/dts/marvell/armada-8040-clearfog-gt-8k.dts
+@@ -335,7 +335,10 @@
  
- 	writel_relaxed(icu_int, icu->base + ICU_INT_CFG(d->hwirq));
--
--	/*
--	 * The SATA unit has 2 ports, and a dedicated ICU entry per
--	 * port. The ahci sata driver supports only one irq interrupt
--	 * per SATA unit. To solve this conflict, we configure the 2
--	 * SATA wired interrupts in the south bridge into 1 GIC
--	 * interrupt in the north bridge. Even if only a single port
--	 * is enabled, if sata node is enabled, both interrupts are
--	 * configured (regardless of which port is actually in use).
--	 */
--	if (d->hwirq == ICU_SATA0_ICU_ID || d->hwirq == ICU_SATA1_ICU_ID) {
--		writel_relaxed(icu_int,
--			       icu->base + ICU_INT_CFG(ICU_SATA0_ICU_ID));
--		writel_relaxed(icu_int,
--			       icu->base + ICU_INT_CFG(ICU_SATA1_ICU_ID));
--	}
- }
+ &cp1_sata0 {
+ 	pinctrl-0 = <&cp0_pci1_reset_pins>;
+-	status = "okay";
++
++	sata-port@1 {
++		status = "okay";
++	};
+ };
  
- static struct irq_chip mvebu_icu_nsr_chip = {
+ &cp1_mdio {
+diff --git a/arch/arm64/boot/dts/marvell/armada-8040-db.dts b/arch/arm64/boot/dts/marvell/armada-8040-db.dts
+index 1bac437369a1..988cc7dc15d9 100644
+--- a/arch/arm64/boot/dts/marvell/armada-8040-db.dts
++++ b/arch/arm64/boot/dts/marvell/armada-8040-db.dts
+@@ -147,7 +147,12 @@
+ 
+ /* CON4 on CP0 expansion */
+ &cp0_sata0 {
+-	status = "okay";
++	sata-port@0 {
++		status = "okay";
++	};
++	sata-port@1 {
++		status = "okay";
++	};
+ };
+ 
+ /* CON9 on CP0 expansion */
+@@ -279,7 +284,12 @@
+ 
+ /* CON4 on CP1 expansion */
+ &cp1_sata0 {
+-	status = "okay";
++	sata-port@0 {
++		status = "okay";
++	};
++	sata-port@1 {
++		status = "okay";
++	};
+ };
+ 
+ /* CON9 on CP1 expansion */
+diff --git a/arch/arm64/boot/dts/marvell/armada-cp110.dtsi b/arch/arm64/boot/dts/marvell/armada-cp110.dtsi
+index b9d9f31e3ba1..f27edddcacd1 100644
+--- a/arch/arm64/boot/dts/marvell/armada-cp110.dtsi
++++ b/arch/arm64/boot/dts/marvell/armada-cp110.dtsi
+@@ -292,10 +292,22 @@
+ 			"generic-ahci";
+ 			reg = <0x540000 0x30000>;
+ 			dma-coherent;
+-			interrupts = <107 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&CP110_LABEL(clk) 1 15>,
+ 				 <&CP110_LABEL(clk) 1 16>;
+-			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			sata-port@0 {
++				reg = <0>;
++				interrupts = <109 IRQ_TYPE_LEVEL_HIGH>;
++				status = "disabled";
++			};
++
++			sata-port@1 {
++				reg = <1>;
++				interrupts = <107 IRQ_TYPE_LEVEL_HIGH>;
++				status = "disabled";
++			};
+ 		};
+ 
+ 		CP110_LABEL(xor0): xor@6a0000 {
 -- 
 2.19.1
