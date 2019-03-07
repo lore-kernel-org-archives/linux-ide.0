@@ -1,16 +1,16 @@
-From: Marc Zyngier <marc.zyngier@arm.com>
-Subject: Re: [PATCH v2 08/10] ata: ahci: mvebu: Add support for A8k legacy
- bindings
-Date: Thu, 7 Mar 2019 16:31:48 +0000
-Message-ID: <634bb5cc-aab9-eecb-cba9-8c7762e888c9@arm.com>
+From: Miquel Raynal <miquel.raynal@bootlin.com>
+Subject: Re: [PATCH v2 01/10] ata: libahci: Ensure the host interrupt status
+ bits are cleared
+Date: Thu, 7 Mar 2019 18:19:30 +0100
+Message-ID: <20190307181930.7142a9d7@xps13>
 References: <20190306102146.13005-1-miquel.raynal@bootlin.com>
- <20190306102146.13005-9-miquel.raynal@bootlin.com>
+ <20190306102146.13005-2-miquel.raynal@bootlin.com>
+ <57c2d67c-7411-0fca-933e-a76379f3165c@arm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20190306102146.13005-9-miquel.raynal@bootlin.com>
-Content-Language: en-US
+In-Reply-To: <57c2d67c-7411-0fca-933e-a76379f3165c@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -20,35 +20,44 @@ List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Miquel Raynal <miquel.raynal@bootlin.com>, Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Jens Axboe <axboe@kernel.dk>, Hans de Goede <hdegoede@redhat.com>, Thomas Gleixner <tglx@linutronix.de>
-Cc: devicetree@vger.kernel.org, Baruch Siach <baruch@tkos.co.il>, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, linux-arm-kernel@lists.infradead.org
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Mark Rutland <mark.rutland@arm.com>, Andrew Lunn <andrew@lunn.ch>, Baruch Siach <baruch@tkos.co.il>, Jason Cooper <jason@lakedaemon.net>, Nadav Haklai <nadavh@marvell.com>, devicetree@vger.kernel.org, Antoine Tenart <antoine.tenart@bootlin.com>, Gregory Clement <gregory.clement@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, Rob Herring <robh+dt@kernel.org>, Jens Axboe <axboe@kernel.dk>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-On 06/03/2019 10:21, Miquel Raynal wrote:
-> The CP110 SATA unit has 2 ports, and a dedicated ICU entry per
-> port. In the past, the AHCI SATA driver only supported one interrupt
-> per SATA unit. To solve this conflict, the 2 SATA wired interrupts in
-> the South-Bridge got configured as 1 GIC interrupt in the
-> North-Bridge, regardless of the number of SATA ports actually
-> enabled/in use, and the bindings only referenced the interrupt of one
-> port.
-> 
-> Since then, this limitation has been addressed and this patch ensures
-> backward compatibility with old DTs not describing SATA ports
-> correctly directly from the AHCI MVEBU driver. This way, we will be
-> able to drop the hack from the ICU driver. IOW, when the A8k
-> compatible string is used and there is no sub-nodes in the DT, we
-> fake the creation and mapping of the second (missing) interrupt.
-> 
-> Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
-
-It'd be good to add that all these hacks only exist for the purpose of
-DT. The same HW booting with ACPI doesn't require any of this because
-the firmware abstracts stuff that the kernel shouldn't be concerned with
-the first place.
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+SGkgTWFyYywKCk1hcmMgWnluZ2llciA8bWFyYy56eW5naWVyQGFybS5jb20+IHdyb3RlIG9uIFRo
+dSwgNyBNYXIgMjAxOSAxNjoyNTowMgorMDAwMDoKCj4gT24gMDYvMDMvMjAxOSAxMDoyMSwgTWlx
+dWVsIFJheW5hbCB3cm90ZToKPiA+IGFoY2lfbXVsdGlfaXJxc19pbnRyX2hhcmQoKSBpcyBnb2lu
+ZyB0byBiZSB1c2VkIGFzIGludGVycnVwdCBoYW5kbGVyCj4gPiB0byBzdXBwb3J0IFNBVEEgcGVy
+LXBvcnQgaW50ZXJydXB0cy4gVGhlIGN1cnJlbnQgbG9naWMgaXMgdG8gY2hlY2sgYW5kCj4gPiBj
+bGVhciB0aGUgU0FUQSBwb3J0IGludGVycnVwdCBzdGF0dXMgcmVnaXN0ZXIgb25seS4gVG8gYXZv
+aWQgc3B1cmlvdXMKPiA+IElSUXMgYW5kIGludGVycnVwdCBzdG9ybXMsIGl0IHdpbGwgYmUgbmVl
+ZGVkIHRvIGNsZWFyIHRoZSBwb3J0Cj4gPiBpbnRlcnJ1cHQgYml0IGluIHRoZSBob3N0IGludGVy
+cnVwdCBzdGF0dXMgcmVnaXN0ZXIgYXMgd2VsbC4KPiA+IAo+ID4gU2lnbmVkLW9mZi1ieTogTWlx
+dWVsIFJheW5hbCA8bWlxdWVsLnJheW5hbEBib290bGluLmNvbT4KPiA+IC0tLQo+ID4gIGRyaXZl
+cnMvYXRhL2xpYmFoY2kuYyB8IDcgKysrKysrKwo+ID4gIDEgZmlsZSBjaGFuZ2VkLCA3IGluc2Vy
+dGlvbnMoKykKPiA+IAo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvYXRhL2xpYmFoY2kuYyBiL2Ry
+aXZlcnMvYXRhL2xpYmFoY2kuYwo+ID4gaW5kZXggYjVmNTdjNjljNDg3Li42NmQ0OTA2YTUwMTMg
+MTAwNjQ0Cj4gPiAtLS0gYS9kcml2ZXJzL2F0YS9saWJhaGNpLmMKPiA+ICsrKyBiL2RyaXZlcnMv
+YXRhL2xpYmFoY2kuYwo+ID4gQEAgLTE5MTIsNyArMTkxMiwxMCBAQCBzdGF0aWMgdm9pZCBhaGNp
+X3BvcnRfaW50cihzdHJ1Y3QgYXRhX3BvcnQgKmFwKQo+ID4gIHN0YXRpYyBpcnFyZXR1cm5fdCBh
+aGNpX211bHRpX2lycXNfaW50cl9oYXJkKGludCBpcnEsIHZvaWQgKmRldl9pbnN0YW5jZSkKPiA+
+ICB7Cj4gPiAgCXN0cnVjdCBhdGFfcG9ydCAqYXAgPSBkZXZfaW5zdGFuY2U7Cj4gPiArCXN0cnVj
+dCBhdGFfaG9zdCAqaG9zdCA9IGFwLT5ob3N0Owo+ID4gKwlzdHJ1Y3QgYWhjaV9ob3N0X3ByaXYg
+Kmhwcml2ID0gaG9zdC0+cHJpdmF0ZV9kYXRhOwo+ID4gIAl2b2lkIF9faW9tZW0gKnBvcnRfbW1p
+byA9IGFoY2lfcG9ydF9iYXNlKGFwKTsKPiA+ICsJdm9pZCBfX2lvbWVtICptbWlvID0gaHByaXYt
+Pm1taW87Cj4gPiAgCXUzMiBzdGF0dXM7Cj4gPiAgCj4gPiAgCVZQUklOVEsoIkVOVEVSXG4iKTsK
+PiA+IEBAIC0xOTI0LDYgKzE5MjcsMTAgQEAgc3RhdGljIGlycXJldHVybl90IGFoY2lfbXVsdGlf
+aXJxc19pbnRyX2hhcmQoaW50IGlycSwgdm9pZCAqZGV2X2luc3RhbmNlKQo+ID4gIAlhaGNpX2hh
+bmRsZV9wb3J0X2ludGVycnVwdChhcCwgcG9ydF9tbWlvLCBzdGF0dXMpOwo+ID4gIAlzcGluX3Vu
+bG9jayhhcC0+bG9jayk7Cj4gPiAgCj4gPiArCXNwaW5fbG9jaygmaG9zdC0+bG9jayk7Cj4gPiAr
+CXdyaXRlbChCSVQoYXAtPnBvcnRfbm8pLCBtbWlvICsgSE9TVF9JUlFfU1RBVCk7Cj4gPiArCXNw
+aW5fdW5sb2NrKCZob3N0LT5sb2NrKTsgIAo+IAo+IFdoYXQncyBub3QgY2xlYXIgaGVyZSBpcyB1
+bmRlciB3aGljaCBjaXJjdW1zdGFuY2VzIHRoaXMgaXMgcmVxdWlyZWQuCj4gVGhpcyB3cml0ZSBz
+aG91bGQgYmUgYXRvbWljIChpZiBpdCBpc24ndCwgeW91IGhhdmUgYmlnZ2VyIHByb2JsZW1zKSwg
+YW5kCj4gaXQgaXMgYXQgYmVzdCB1bmNsZWFyIHdoYXQgeW91J3JlIGF2b2lkaW5nIGJ5IHRha2lu
+ZyB0aGUgaG9zdCBsb2NrLgoKWW91J3JlIHJpZ2h0LCB0YWtpbmcgdGhlIGxvY2sgaXMgbm90IG5l
+ZWRlZC4gSXQgaXMgYSByZWxpY3Qgb2YgYQpwcmV2aW91cyBpbXBsZW1lbnRhdGlvbiBhbnl3YXku
+CgoKVGhhbmtzLApNaXF1w6hsCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVs
+QGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9s
+aXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
