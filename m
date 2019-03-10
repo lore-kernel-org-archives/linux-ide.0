@@ -1,29 +1,32 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] ide: hpt366: mark expected switch fall-throughs
-Date: Sun, 10 Mar 2019 11:13:41 -0700 (PDT)
-Message-ID: <20190310.111341.101594049285839134.davem@davemloft.net>
-References: <20190110163423.GA17072@embeddedor>
+Subject: Re: [PATCH] ide: mark expected switch fall-through
+Date: Sun, 10 Mar 2019 11:13:51 -0700 (PDT)
+Message-ID: <20190310.111351.2266707227280485402.davem@davemloft.net>
+References: <20190211221720.GA5631@embeddedor>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: Text/Plain; charset=iso-8859-7
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190110163423.GA17072@embeddedor>
+In-Reply-To: <20190211221720.GA5631@embeddedor>
 Sender: linux-kernel-owner@vger.kernel.org
 To: gustavo@embeddedor.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, keescook@chromium.org
 List-Id: linux-ide@vger.kernel.org
 
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Date: Thu, 10 Jan 2019 10:34:23 -0600
-
-> In preparation to enabling -Wimplicit-fallthrough, mark switch cases
-> where we are expecting to fall through.
-> 
-> Notice that, in this particular case, I removed the "else: "
-> part from the comment. As we are now using Warning level 3:
-> -Wimplicit-fallthrough=3, this is what GCC is expecting to
-> find.
-> 
-> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
-
-Applied.
+RnJvbTogIkd1c3Rhdm8gQS4gUi4gU2lsdmEiIDxndXN0YXZvQGVtYmVkZGVkb3IuY29tPg0KRGF0
+ZTogTW9uLCAxMSBGZWIgMjAxOSAxNjoxNzoyMCAtMDYwMA0KDQo+IEluIHByZXBhcmF0aW9uIHRv
+IGVuYWJsaW5nIC1XaW1wbGljaXQtZmFsbHRocm91Z2gsIG1hcmsgc3dpdGNoDQo+IGNhc2VzIHdo
+ZXJlIHdlIGFyZSBleHBlY3RpbmcgdG8gZmFsbCB0aHJvdWdoLg0KPiANCj4gVGhpcyBwYXRjaCBm
+aXhlcyB0aGUgZm9sbG93aW5nIHdhcm5pbmc6DQo+IA0KPiBkcml2ZXJzL2lkZS9pZGUtZmxvcHB5
+LmM6IEluIGZ1bmN0aW9uIKFpZGVfZmxvcHB5X2dldF9jYXBhY2l0eaI6DQo+IGRyaXZlcnMvaWRl
+L2lkZS1mbG9wcHkuYzo0MjQ6Nzogd2FybmluZzogdGhpcyBzdGF0ZW1lbnQgbWF5IGZhbGwgdGhy
+b3VnaCBbLVdpbXBsaWNpdC1mYWxsdGhyb3VnaD1dDQo+ICAgICBpZiAoIShkcml2ZS0+YXRhcGlf
+ZmxhZ3MgJiBJREVfQUZMQUdfQ0xJS19EUklWRSkpDQo+ICAgICAgICBeDQo+IGRyaXZlcnMvaWRl
+L2lkZS1mbG9wcHkuYzo0MzE6Mzogbm90ZTogaGVyZQ0KPiAgICBjYXNlIENBUEFDSVRZX0NVUlJF
+TlQ6DQo+ICAgIF5+fn4NCj4gDQo+IFdhcm5pbmcgbGV2ZWwgMyB3YXMgdXNlZDogLVdpbXBsaWNp
+dC1mYWxsdGhyb3VnaD0zDQo+IA0KPiBOb3RpY2UgdGhhdCwgaW4gdGhpcyBwYXJ0aWN1bGFyIGNh
+c2UsIHRoZSBjb2RlIGNvbW1lbnQgaXMgbW9kaWZpZWQNCj4gaW4gYWNjb3JkYW5jZSB3aXRoIHdo
+YXQgR0NDIGlzIGV4cGVjdGluZyB0byBmaW5kLg0KPiANCj4gVGhpcyBwYXRjaCBpcyBwYXJ0IG9m
+IHRoZSBvbmdvaW5nIGVmZm9ydHMgdG8gZW5hYmxlDQo+IC1XaW1wbGljaXQtZmFsbHRocm91Z2gu
+DQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBHdXN0YXZvIEEuIFIuIFNpbHZhIDxndXN0YXZvQGVtYmVk
+ZGVkb3IuY29tPg0KDQpBcHBsaWVkLg0K
