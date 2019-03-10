@@ -1,32 +1,25 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] ide: mark expected switch fall-through
-Date: Sun, 10 Mar 2019 11:13:51 -0700 (PDT)
-Message-ID: <20190310.111351.2266707227280485402.davem@davemloft.net>
-References: <20190211221720.GA5631@embeddedor>
+Subject: Re: [PATCH v2] drivers: ide: Kconfig: pedantic formatting
+Date: Sun, 10 Mar 2019 11:14:03 -0700 (PDT)
+Message-ID: <20190310.111403.474053265737018469.davem@davemloft.net>
+References: <1551899004-25283-1-git-send-email-info@metux.net>
+        <1551922440-2245-1-git-send-email-info@metux.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-7
-Content-Transfer-Encoding: base64
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190211221720.GA5631@embeddedor>
+In-Reply-To: <1551922440-2245-1-git-send-email-info@metux.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: gustavo@embeddedor.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, keescook@chromium.org
+To: info@metux.net
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-RnJvbTogIkd1c3Rhdm8gQS4gUi4gU2lsdmEiIDxndXN0YXZvQGVtYmVkZGVkb3IuY29tPg0KRGF0
-ZTogTW9uLCAxMSBGZWIgMjAxOSAxNjoxNzoyMCAtMDYwMA0KDQo+IEluIHByZXBhcmF0aW9uIHRv
-IGVuYWJsaW5nIC1XaW1wbGljaXQtZmFsbHRocm91Z2gsIG1hcmsgc3dpdGNoDQo+IGNhc2VzIHdo
-ZXJlIHdlIGFyZSBleHBlY3RpbmcgdG8gZmFsbCB0aHJvdWdoLg0KPiANCj4gVGhpcyBwYXRjaCBm
-aXhlcyB0aGUgZm9sbG93aW5nIHdhcm5pbmc6DQo+IA0KPiBkcml2ZXJzL2lkZS9pZGUtZmxvcHB5
-LmM6IEluIGZ1bmN0aW9uIKFpZGVfZmxvcHB5X2dldF9jYXBhY2l0eaI6DQo+IGRyaXZlcnMvaWRl
-L2lkZS1mbG9wcHkuYzo0MjQ6Nzogd2FybmluZzogdGhpcyBzdGF0ZW1lbnQgbWF5IGZhbGwgdGhy
-b3VnaCBbLVdpbXBsaWNpdC1mYWxsdGhyb3VnaD1dDQo+ICAgICBpZiAoIShkcml2ZS0+YXRhcGlf
-ZmxhZ3MgJiBJREVfQUZMQUdfQ0xJS19EUklWRSkpDQo+ICAgICAgICBeDQo+IGRyaXZlcnMvaWRl
-L2lkZS1mbG9wcHkuYzo0MzE6Mzogbm90ZTogaGVyZQ0KPiAgICBjYXNlIENBUEFDSVRZX0NVUlJF
-TlQ6DQo+ICAgIF5+fn4NCj4gDQo+IFdhcm5pbmcgbGV2ZWwgMyB3YXMgdXNlZDogLVdpbXBsaWNp
-dC1mYWxsdGhyb3VnaD0zDQo+IA0KPiBOb3RpY2UgdGhhdCwgaW4gdGhpcyBwYXJ0aWN1bGFyIGNh
-c2UsIHRoZSBjb2RlIGNvbW1lbnQgaXMgbW9kaWZpZWQNCj4gaW4gYWNjb3JkYW5jZSB3aXRoIHdo
-YXQgR0NDIGlzIGV4cGVjdGluZyB0byBmaW5kLg0KPiANCj4gVGhpcyBwYXRjaCBpcyBwYXJ0IG9m
-IHRoZSBvbmdvaW5nIGVmZm9ydHMgdG8gZW5hYmxlDQo+IC1XaW1wbGljaXQtZmFsbHRocm91Z2gu
-DQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBHdXN0YXZvIEEuIFIuIFNpbHZhIDxndXN0YXZvQGVtYmVk
-ZGVkb3IuY29tPg0KDQpBcHBsaWVkLg0K
+From: "Enrico Weigelt, metux IT consult" <info@metux.net>
+Date: Thu,  7 Mar 2019 02:34:00 +0100
+
+> Formatting of Kconfig files doesn't look so pretty, so just
+> take a damp cloth and clean it up.
+> 
+> Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
+
+Applied.
