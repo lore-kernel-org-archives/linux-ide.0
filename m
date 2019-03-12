@@ -1,38 +1,36 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [v6 1/3] dt-bindings: ahci-fsl-qoriq: add lx2160a chip name to
- the list
-Date: Mon, 11 Mar 2019 16:39:36 -0500
-Message-ID: <CAL_Jsq+tBSw0d6=A6CS3=tWn7k4WX-KAeLBaoJ6019uGc-PRUg@mail.gmail.com>
-References: <20190220085607.31582-1-peng.ma@nxp.com> <20190222143931.GA17132@bogus>
- <VI1PR04MB44312525A43E259CE9CC45F9ED480@VI1PR04MB4431.eurprd04.prod.outlook.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+From: Peng Ma <peng.ma@nxp.com>
+Subject: [v7 1/3] dt-bindings: ahci-fsl-qoriq: add lx2160a chip name to the list
+Date: Tue, 12 Mar 2019 09:50:17 +0800
+Message-ID: <20190312015019.30628-1-peng.ma@nxp.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <VI1PR04MB44312525A43E259CE9CC45F9ED480@VI1PR04MB4431.eurprd04.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Peng Ma <peng.ma@nxp.com>
-Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "mark.rutland@arm.com" <mark.rutland@arm.com>, "shawnguo@kernel.org" <shawnguo@kernel.org>, Leo Li <leoyang.li@nxp.com>, Andy Tang <andy.tang@nxp.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Mian Yousaf Kaukab <yousaf.kaukab@suse.com>
+To: axboe@kernel.dk, robh+dt@kernel.org, mark.rutland@arm.com, shawnguo@kernel.org, leoyang.li@nxp.com
+Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Peng Ma <peng.ma@nxp.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Mar 11, 2019 at 1:57 AM Peng Ma <peng.ma@nxp.com> wrote:
->
-> Hi Rob,
+Add lx2160a compatible to bindings documentation.
 
-Please don't top post to mail lists.
+Signed-off-by: Peng Ma <peng.ma@nxp.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+---
+changed for V7:
+	- add Reviewed by tag.
 
-A: Because it messes up the order in which people normally read text.
-Q: Why is top-posting such a bad thing?
-A: Top-posting.
-Q: What is the most annoying thing in e-mail?
+ .../devicetree/bindings/ata/ahci-fsl-qoriq.txt     |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
->
-> Thanks for your comments, I don't understand what you said.
-> This patch is one of the series patchs(http://patchwork.ozlabs.org/project/linux-ide/list/?series=93099&archive=both&state=*) for review.
-> There is not changed for 6th version of this patch.
-
-I reviewed v5 and gave my Reviewed-by. When you posted v6, you should
-have added the tag so the maintainer applying this series doesn't have
-to look at prior versions to collect tags and so I don't have to
-review this again and can ignore it.
-
-Rob
+diff --git a/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
+index 7c3ca0e..9ecc019 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
+@@ -3,7 +3,7 @@ Binding for Freescale QorIQ AHCI SATA Controller
+ Required properties:
+   - reg: Physical base address and size of the controller's register area.
+   - compatible: Compatibility string. Must be 'fsl,<chip>-ahci', where
+-    chip could be ls1021a, ls1043a, ls1046a, ls1088a, ls2080a etc.
++    chip could be ls1021a, ls1043a, ls1046a, ls1088a, ls2080a, lx2160a, etc.
+   - clocks: Input clock specifier. Refer to common clock bindings.
+   - interrupts: Interrupt specifier. Refer to interrupt binding.
+ 
+-- 
+1.7.1
