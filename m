@@ -1,30 +1,40 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 9/9] drivers: ata: sata_rcar: use
- devm_platform_ioremap_resource()
-Date: Tue, 12 Mar 2019 18:06:23 +0300
-Message-ID: <a12fd539-b5f0-177d-7b91-cc203263757c@cogentembedded.com>
-References: <1552382374-28789-1-git-send-email-info@metux.net>
- <1552382374-28789-9-git-send-email-info@metux.net>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v2 03/10] dt-bindings: ata: Update ahci bindings with
+ possible per-port interrupts
+Date: Tue, 12 Mar 2019 14:05:37 -0500
+Message-ID: <20190312190537.GA17555@bogus>
+References: <20190306102146.13005-1-miquel.raynal@bootlin.com>
+ <20190306102146.13005-4-miquel.raynal@bootlin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1552382374-28789-9-git-send-email-info@metux.net>
-Content-Language: en-MW
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Enrico Weigelt, metux IT consult" <info@metux.net>, linux-kernel@vger.kernel.org
-Cc: axboe@kernel.dk, hdegoede@redhat.com, b.zolnierkie@samsung.com, linus.walleij@linaro.org, linux-ide@vger.kernel.org, linux-tegra@vger.kernel.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline
+In-Reply-To: <20190306102146.13005-4-miquel.raynal@bootlin.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+Cc: Mark Rutland <mark.rutland@arm.com>, Andrew Lunn <andrew@lunn.ch>, Baruch Siach <baruch@tkos.co.il>, Jason Cooper <jason@lakedaemon.net>, Nadav Haklai <nadavh@marvell.com>, devicetree@vger.kernel.org, Marc Zyngier <marc.zyngier@arm.com>, Gregory Clement <gregory.clement@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, Antoine Tenart <antoine.tenart@bootlin.com>, Jens Axboe <axboe@kernel.dk>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-On 03/12/2019 12:19 PM, Enrico Weigelt, metux IT consult wrote:
-
-> Use the new helper that wraps the calls to platform_get_resource()
-> and devm_ioremap_resource() together.
+On Wed,  6 Mar 2019 11:21:39 +0100, Miquel Raynal wrote:
+> Update bindings to reflect the fact that a SATA IP can either have:
+> - only one interrupt: in this case an 'interrupts' property is
+>   declared at the root of the node;
+> or
+> - each SATA port can have their own interrupt: in this case there is
+>   one 'interrupts' property per port/sub-node and none at the root.
 > 
-> Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
+> Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
+> ---
+>  Documentation/devicetree/bindings/ata/ahci-platform.txt | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
 
-Reviewed-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-
-[...]
-
-MBR, Sergei
+Reviewed-by: Rob Herring <robh@kernel.org>
