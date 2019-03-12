@@ -1,148 +1,39 @@
-From: Peng Ma <peng.ma@nxp.com>
-Subject: [v7 3/3] ahci: qoriq: add lx2160 platforms support
-Date: Tue, 12 Mar 2019 09:50:19 +0800
-Message-ID: <20190312015019.30628-3-peng.ma@nxp.com>
-References: <20190312015019.30628-1-peng.ma@nxp.com>
+From: "Enrico Weigelt, metux IT consult" <info@metux.net>
+Subject: [PATCH 1/9] drivers: ata: ahci_octeon: use devm_platform_ioremap_resource()
+Date: Tue, 12 Mar 2019 10:19:26 +0100
+Message-ID: <1552382374-28789-1-git-send-email-info@metux.net>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190312015019.30628-1-peng.ma@nxp.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: axboe@kernel.dk, robh+dt@kernel.org, mark.rutland@arm.com, shawnguo@kernel.org, leoyang.li@nxp.com
-Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Peng Ma <peng.ma@nxp.com>
+To: linux-kernel@vger.kernel.org
+Cc: axboe@kernel.dk, hdegoede@redhat.com, b.zolnierkie@samsung.com, linus.walleij@linaro.org, linux-ide@vger.kernel.org, linux-tegra@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Lx2160a is a new introduced soc which supports ATA3.0
+Use the new helper that wraps the calls to platform_get_resource()
+and devm_ioremap_resource() together.
 
-Signed-off-by: Peng Ma <peng.ma@nxp.com>
+Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
 ---
-changed for V7:
-	- no changed.
+ drivers/ata/ahci_octeon.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
- drivers/ata/ahci_qoriq.c |   52 +++++++++++++++++++++++++++++++---------------
- 1 files changed, 35 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
-index ce59253..08dbb86 100644
---- a/drivers/ata/ahci_qoriq.c
-+++ b/drivers/ata/ahci_qoriq.c
-@@ -58,6 +58,7 @@ enum ahci_qoriq_type {
- 	AHCI_LS1046A,
- 	AHCI_LS1088A,
- 	AHCI_LS2088A,
-+	AHCI_LX2160A,
- };
+diff --git a/drivers/ata/ahci_octeon.c b/drivers/ata/ahci_octeon.c
+index 5a44e08..2280180 100644
+--- a/drivers/ata/ahci_octeon.c
++++ b/drivers/ata/ahci_octeon.c
+@@ -32,13 +32,11 @@ static int ahci_octeon_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *node = dev->of_node;
+-	struct resource *res;
+ 	void __iomem *base;
+ 	u64 cfg;
+ 	int ret;
  
- struct ahci_qoriq_priv {
-@@ -67,6 +68,8 @@ struct ahci_qoriq_priv {
- 	bool is_dmacoherent;
- };
+-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	base = devm_ioremap_resource(&pdev->dev, res);
++	base = devm_platform_ioremap_resource(pdev, 0);
+ 	if (IS_ERR(base))
+ 		return PTR_ERR(base);
  
-+static bool ecc_initialized;
-+
- static const struct of_device_id ahci_qoriq_of_match[] = {
- 	{ .compatible = "fsl,ls1021a-ahci", .data = (void *)AHCI_LS1021A},
- 	{ .compatible = "fsl,ls1043a-ahci", .data = (void *)AHCI_LS1043A},
-@@ -74,6 +77,7 @@ struct ahci_qoriq_priv {
- 	{ .compatible = "fsl,ls1046a-ahci", .data = (void *)AHCI_LS1046A},
- 	{ .compatible = "fsl,ls1088a-ahci", .data = (void *)AHCI_LS1088A},
- 	{ .compatible = "fsl,ls2088a-ahci", .data = (void *)AHCI_LS2088A},
-+	{ .compatible = "fsl,lx2160a-ahci", .data = (void *)AHCI_LX2160A},
- 	{},
- };
- MODULE_DEVICE_TABLE(of, ahci_qoriq_of_match);
-@@ -165,9 +169,10 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 
- 	switch (qpriv->type) {
- 	case AHCI_LS1021A:
--		if (!qpriv->ecc_addr)
-+		if (!(qpriv->ecc_addr || ecc_initialized))
- 			return -EINVAL;
--		writel(SATA_ECC_DISABLE, qpriv->ecc_addr);
-+		else if (qpriv->ecc_addr && !ecc_initialized)
-+			writel(SATA_ECC_DISABLE, qpriv->ecc_addr);
- 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
- 		writel(LS1021A_PORT_PHY2, reg_base + PORT_PHY2);
- 		writel(LS1021A_PORT_PHY3, reg_base + PORT_PHY3);
-@@ -180,10 +185,12 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 		break;
- 
- 	case AHCI_LS1043A:
--		if (!qpriv->ecc_addr)
-+		if (!(qpriv->ecc_addr || ecc_initialized))
- 			return -EINVAL;
--		writel(readl(qpriv->ecc_addr) | ECC_DIS_ARMV8_CH2,
--				qpriv->ecc_addr);
-+		else if (qpriv->ecc_addr && !ecc_initialized)
-+			writel(readl(qpriv->ecc_addr) |
-+			       ECC_DIS_ARMV8_CH2,
-+			       qpriv->ecc_addr);
- 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
- 		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
- 		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
-@@ -202,10 +209,12 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 		break;
- 
- 	case AHCI_LS1046A:
--		if (!qpriv->ecc_addr)
-+		if (!(qpriv->ecc_addr || ecc_initialized))
- 			return -EINVAL;
--		writel(readl(qpriv->ecc_addr) | ECC_DIS_ARMV8_CH2,
--				qpriv->ecc_addr);
-+		else if (qpriv->ecc_addr && !ecc_initialized)
-+			writel(readl(qpriv->ecc_addr) |
-+			       ECC_DIS_ARMV8_CH2,
-+			       qpriv->ecc_addr);
- 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
- 		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
- 		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
-@@ -215,10 +224,13 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 		break;
- 
- 	case AHCI_LS1088A:
--		if (!qpriv->ecc_addr)
-+	case AHCI_LX2160A:
-+		if (!(qpriv->ecc_addr || ecc_initialized))
- 			return -EINVAL;
--		writel(readl(qpriv->ecc_addr) | ECC_DIS_LS1088A,
--		       qpriv->ecc_addr);
-+		else if (qpriv->ecc_addr && !ecc_initialized)
-+			writel(readl(qpriv->ecc_addr) |
-+			       ECC_DIS_LS1088A,
-+			       qpriv->ecc_addr);
- 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
- 		writel(AHCI_PORT_PHY2_CFG, reg_base + PORT_PHY2);
- 		writel(AHCI_PORT_PHY3_CFG, reg_base + PORT_PHY3);
-@@ -237,6 +249,7 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 		break;
- 	}
- 
-+	ecc_initialized = true;
- 	return 0;
- }
- 
-@@ -264,13 +277,18 @@ static int ahci_qoriq_probe(struct platform_device *pdev)
- 
- 	qoriq_priv->type = (enum ahci_qoriq_type)of_id->data;
- 
--	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
--			"sata-ecc");
--	if (res) {
--		qoriq_priv->ecc_addr = devm_ioremap_resource(dev, res);
--		if (IS_ERR(qoriq_priv->ecc_addr))
--			return PTR_ERR(qoriq_priv->ecc_addr);
-+	if (unlikely(!ecc_initialized)) {
-+		res = platform_get_resource_byname(pdev,
-+						   IORESOURCE_MEM,
-+						   "sata-ecc");
-+		if (res) {
-+			qoriq_priv->ecc_addr =
-+				devm_ioremap_resource(dev, res);
-+			if (IS_ERR(qoriq_priv->ecc_addr))
-+				return PTR_ERR(qoriq_priv->ecc_addr);
-+		}
- 	}
-+
- 	qoriq_priv->is_dmacoherent = of_dma_is_coherent(np);
- 
- 	rc = ahci_platform_enable_resources(hpriv);
 -- 
-1.7.1
+1.9.1
