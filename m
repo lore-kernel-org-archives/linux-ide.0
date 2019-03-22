@@ -1,8 +1,8 @@
 From: Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH v3 01/10] ata: libahci: Ensure the host interrupt status bits
- are cleared
-Date: Fri, 22 Mar 2019 14:39:54 +0100
-Message-ID: <20190322134003.4893-2-miquel.raynal@bootlin.com>
+Subject: [PATCH v3 03/10] dt-bindings: ata: Update ahci bindings with possible
+ per-port interrupts
+Date: Fri, 22 Mar 2019 14:39:56 +0100
+Message-ID: <20190322134003.4893-4-miquel.raynal@bootlin.com>
 References: <20190322134003.4893-1-miquel.raynal@bootlin.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,40 +22,35 @@ To: Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemo
 Cc: devicetree@vger.kernel.org, Baruch Siach <baruch@tkos.co.il>, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-ahci_multi_irqs_intr_hard() is going to be used as interrupt handler
-to support SATA per-port interrupts. The current logic is to check and
-clear the SATA port interrupt status register only. To avoid spurious
-IRQs and interrupt storms, it will be needed to clear the port
-interrupt bit in the host interrupt status register as well.
+Update bindings to reflect the fact that a SATA IP can either have:
+- only one interrupt: in this case an 'interrupts' property is
+  declared at the root of the node;
+or
+- each SATA port can have their own interrupt: in this case there is
+  one 'interrupts' property per port/sub-node and none at the root.
 
 Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- drivers/ata/libahci.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ Documentation/devicetree/bindings/ata/ahci-platform.txt | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 692782dddc0f..9db6f488db59 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1912,7 +1912,10 @@ static void ahci_port_intr(struct ata_port *ap)
- static irqreturn_t ahci_multi_irqs_intr_hard(int irq, void *dev_instance)
- {
- 	struct ata_port *ap = dev_instance;
-+	struct ata_host *host = ap->host;
-+	struct ahci_host_priv *hpriv = host->private_data;
- 	void __iomem *port_mmio = ahci_port_base(ap);
-+	void __iomem *mmio = hpriv->mmio;
- 	u32 status;
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+index e30fd106df4f..80261e2845b0 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+@@ -53,6 +53,12 @@ And at least one of the following properties:
+ - phys		    : reference to the SATA PHY node
+ - target-supply     : regulator for SATA target power
  
- 	VPRINTK("ENTER\n");
-@@ -1924,6 +1927,8 @@ static irqreturn_t ahci_multi_irqs_intr_hard(int irq, void *dev_instance)
- 	ahci_handle_port_interrupt(ap, port_mmio, status);
- 	spin_unlock(ap->lock);
- 
-+	writel(BIT(ap->port_no), mmio + HOST_IRQ_STAT);
++Sub-nodes optional properties:
++- interrupts        : <interrupt mapping for SATA ports IRQ>, please
++                      note that either the root SATA node has the
++                      interrupts property, or there is one per SATA
++                      port, but not both at the same time.
 +
- 	VPRINTK("EXIT\n");
- 
- 	return IRQ_HANDLED;
+ Examples:
+         sata@ffe08000 {
+ 		compatible = "snps,spear-ahci";
 -- 
 2.19.1
