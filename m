@@ -1,73 +1,35 @@
-From: Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH v3 09/10] irqchip/irq-mvebu-icu: Remove the double SATA ports
- interrupt hack
-Date: Fri, 22 Mar 2019 14:40:02 +0100
-Message-ID: <20190322134003.4893-10-miquel.raynal@bootlin.com>
-References: <20190322134003.4893-1-miquel.raynal@bootlin.com>
+From: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] ata: pata_oldpiix: Add missing device ID for
+ INTEL_82371AB
+Date: Fri, 22 Mar 2019 17:36:43 +0000
+Message-ID: <20190322173643.75a81d1b@alans-desktop>
+References: <1544449564-16557-1-git-send-email-clabbe@baylibre.com>
+        <9aab3632-4647-cb66-f720-8f6742bc9b4e@cogentembedded.com>
+        <20190312104102.GA28302@Red>
+        <20190312120623.46ca7286@alans-desktop>
+        <20190312133808.GA9336@Red>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20190322134003.4893-1-miquel.raynal@bootlin.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Jens Axboe <axboe@kernel.dk>, Hans de Goede <hdegoede@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Marc Zyngier <marc.zyngier@arm.com>
-Cc: devicetree@vger.kernel.org, Baruch Siach <baruch@tkos.co.il>, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-arm-kernel@lists.infradead.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190312133808.GA9336@Red>
+Sender: linux-kernel-owner@vger.kernel.org
+To: LABBE Corentin <clabbe@baylibre.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, axboe@kernel.dk, b.zolnierkie@samsung.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-When writing the driver, a hack was introduced to configure both SATA
-interrupts regardless of the port in use to overcome a limitation in
-the SATA core. Now that this limitation has been addressed and the
-hack moved in the (historically) responsible SATA driver,
-ahci_{platform,mvebu}.c, let's clean this driver section.
+> > If the virtual Sparc emulator is using it does that also mean actual
+> > Sparc hardware has it. In which case presumably it needs fixing, or at
+> > least moving to the generic driver assuming the firmware sets it up ?
+> >   
+> 
+> The qemu works perfectly with the new Linux driver.
 
-Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
----
- drivers/irqchip/irq-mvebu-icu.c | 18 ------------------
- 1 file changed, 18 deletions(-)
+For some configurations both drivers will work with even older chips. The
+question is whether your chip has separate slave timings, if not then
+while it'll work single device with ata_piix some combinations will fail.
 
-diff --git a/drivers/irqchip/irq-mvebu-icu.c b/drivers/irqchip/irq-mvebu-icu.c
-index 547045d89c4b..f3b43f63fe2e 100644
---- a/drivers/irqchip/irq-mvebu-icu.c
-+++ b/drivers/irqchip/irq-mvebu-icu.c
-@@ -38,8 +38,6 @@
- 
- /* ICU definitions */
- #define ICU_MAX_IRQS		207
--#define ICU_SATA0_ICU_ID	109
--#define ICU_SATA1_ICU_ID	107
- 
- struct mvebu_icu_subset_data {
- 	unsigned int icu_group;
-@@ -111,22 +109,6 @@ static void mvebu_icu_write_msg(struct msi_desc *desc, struct msi_msg *msg)
- 	}
- 
- 	writel_relaxed(icu_int, icu->base + ICU_INT_CFG(d->hwirq));
--
--	/*
--	 * The SATA unit has 2 ports, and a dedicated ICU entry per
--	 * port. The ahci sata driver supports only one irq interrupt
--	 * per SATA unit. To solve this conflict, we configure the 2
--	 * SATA wired interrupts in the south bridge into 1 GIC
--	 * interrupt in the north bridge. Even if only a single port
--	 * is enabled, if sata node is enabled, both interrupts are
--	 * configured (regardless of which port is actually in use).
--	 */
--	if (d->hwirq == ICU_SATA0_ICU_ID || d->hwirq == ICU_SATA1_ICU_ID) {
--		writel_relaxed(icu_int,
--			       icu->base + ICU_INT_CFG(ICU_SATA0_ICU_ID));
--		writel_relaxed(icu_int,
--			       icu->base + ICU_INT_CFG(ICU_SATA1_ICU_ID));
--	}
- }
- 
- static struct irq_chip mvebu_icu_nsr_chip = {
--- 
-2.19.1
+Digging into the datasheet the part in question has slave timing (0x44) so
+should indeed be ata_piix.
+
+Alan
