@@ -1,47 +1,101 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] pata_serverworks: clean up misaligned indentation
-Date: Thu, 14 Mar 2019 23:14:57 +0000
-Message-ID: <20190314231457.20966-1-colin.king@canonical.com>
+From: Miquel Raynal <miquel.raynal@bootlin.com>
+Subject: [PATCH v3 00/10] Enable per-port SATA interrupts and drop a hack in
+ the IRQ subsystem
+Date: Fri, 22 Mar 2019 14:39:53 +0100
+Message-ID: <20190322134003.4893-1-miquel.raynal@bootlin.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: base64
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Jens Axboe <axboe@kernel.dk>, Hans de Goede <hdegoede@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Marc Zyngier <marc.zyngier@arm.com>
+Cc: devicetree@vger.kernel.org, Baruch Siach <baruch@tkos.co.il>, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
-
-There are several lines that are indented by one space too
-many; clean these up.  Also re-work comment block to clean
-up cppcheck warnings
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/ata/pata_serverworks.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/ata/pata_serverworks.c b/drivers/ata/pata_serverworks.c
-index 57de02123c4c..6083c7acfbca 100644
---- a/drivers/ata/pata_serverworks.c
-+++ b/drivers/ata/pata_serverworks.c
-@@ -432,10 +432,12 @@ static int serverworks_init_one(struct pci_dev *pdev, const struct pci_device_id
- 		 (pdev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE) ||
- 		 (pdev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2)) {
- 
--		 /* If the returned btr is the newer revision then
--		    select the right info block */
--		 if (rc == 3)
--		 	ppi[0] = &info[3];
-+		/*
-+		 * If the returned btr is the newer revision then
-+		 * select the right info block
-+		 */
-+		if (rc == 3)
-+			ppi[0] = &info[3];
- 
- 		/* Is this the 3rd channel CSB6 IDE ? */
- 		if (pdev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2)
--- 
-2.20.1
+SGVsbG8sCgpTb21lIHRpbWUgYWdvLCB3aGVuIHRoZSBpbml0aWFsIHN1cHBvcnQgZm9yIEFybWFk
+YSBDUDExMCB3YXMKY29udHJpYnV0ZWQsIHRoZSBTQVRBIGNvcmUgd2FzIG5vdCBhYmxlIHRvIGhh
+bmRsZSBwZXItcG9ydAppbnRlcnJ1cHRzLiBEZXNwaXRlIHRoZSBoYXJkd2FyZSByZWFsaXR5LCB0
+aGUgZGV2aWNlIHRyZWUgb25seQpyZXByZXNlbnRzIG9uZSBtYWluIGludGVycnVwdCBmb3IgdGhl
+IHR3byBwb3J0cy4gSGF2aW5nIGJvdGggU0FUQQpwb3J0cyBlbmFibGVkIGF0IHRoZSBzYW1lIHRp
+bWUgaGFzIGJlZW4gYWNoaWV2ZWQgYnkgYSBoYWNrIGluIHRoZSBJQ1UKZHJpdmVyKDEpIHRoYXQg
+ZmFrZWQgdGhlIHVzZSBvZiB0aGUgdHdvIGludGVycnVwdHMsIG5vIG1hdHRlciB3aGljaApTQVRB
+IHBvcnQgd2FzIGluIHVzZS4KCk5vdyB0aGF0IHRoZSBTQVRBIGNvcmUgaXMgcmVhZHkgdG8gaGFu
+ZGxlIG1vcmUgdGhhbiBvbmUgaW50ZXJydXB0LAp0aGlzIHNlcmllcyBhZGRzIHN1cHBvcnQgZm9y
+IGl0IGluIHRoZSBsaWJhaGNpX3BsYXRmb3JtIGNvZGUuIFRoZQpDUDExMCBkZXZpY2UgdHJlZSBt
+dXN0IGJlIHVwZGF0ZWQgdG8gcmVmbGVjdCB0aGUgdHdvIFNBVEEgcG9ydHMKYXZhaWxhYmxlIGFu
+ZCB0aGVpciByZXNwZWN0aXZlIGludGVycnVwdHMuIFRvIGRvIG5vdCBicmVhayBEVCBiYWNrd2Fy
+ZApjb21wYXRpYmlsaXR5LCB0aGUgYWhjaV9wbGF0Zm9ybSBkcml2ZXIgbm93IGVtYmVkcyBhIHNw
+ZWNpYWwgcXVpcmsKd2hpY2ggY2hlY2tzIGlmIHRoZSBEVCBpcyB2YWxpZCAob25seSBmb3IgQThr
+IGNvbXBhdGlibGUpIGFuZCwgaWYKbmVlZGVkLCBjcmVhdGVzIHRoZSB0d28gbWlzc2luZyBzdWIt
+bm9kZXMsIGFuZCBhc3NpZ24gdGhlbSB0aGUKcmVsZXZhbnQgInJlZyIgYW5kICJpbnRlcnJ1cHRz
+IiBwcm9wZXJ0aWVzLCBiZWZvcmUgcmVtb3ZpbmcgdGhlIG1haW4KU0FUQSBub2RlICJpbnRlcnJ1
+cHRzIiBvbmUuCgoKVGhhbmtzLApNaXF1w6hsCgooMSkgVGhlIElDVSBpcyBhbiBpcnFjaGlwIGFn
+Z3JlZ2F0aW5nIHRoZSBDUDExMCAoc291dGgtYnJpZGdlKQppbnRlcnJ1cHRzIGludG8gTVNJcyBm
+b3IgdGhlIEFQODA2IChub3J0aC1icmlkZ2UpLgoKQ2hhbmdlcyBpbiB2Mwo9PT09PT09PT09PT09
+CiogUmVtb3ZlZCB1c2VsZXNzIGxvY2tpbmcgd2hlbiBhY2tpbmcgdGhlIFNBVEEgaG9zdCBJUlFf
+U1RBVCBiaXQuCiogQXMgc3BvdHRlZCBieSBIYW5zLCBkbyBub3QgZW5hYmxlIHRoZSBBSENJX0hG
+TEFHX01VTFRJX01TSSBmbGFnIG9ubHkKICBpZiBtb3JlIHRoYW4gb25lIHBvcnQgaXMgZW5hYmxl
+ZCwgRFRzIG1pZ2h0IGRlY2xhcmUgb25seSBvbmUKICBpbnRlcnJ1cHQgYW5kIGhhdmUgbXVsdGlw
+bGUgcG9ydHMuIEFkZGVkIEhhbnMnIFJldmlld2VkLWJ5IHRhZy4KKiBBZGRlZCBSb2IncyBSZXZp
+ZXdlZC1ieSB0YWdzLgoqIEFkZGVkIGV4cGxpY2l0IHJlZmVyZW5jZXMgdG8gdGhlICdEZXZpY2Ug
+VHJlZScgYmVpbmcgdGhlIGN1bHByaXQKICBmb3IgdGhlIGhhY2tzIHdoaWNoIGFyZSBiZWluZyB0
+cmVhdGVkIGluIHBhdGNoICJhdGE6IGFoY2k6IG12ZWJ1OgogIEFkZCBzdXBwb3J0IGZvciBBOGsg
+bGVnYWN5IGJpbmRpbmdzIiBhcyBzdWdnZXN0ZWQgYnkgTWFyYy4KKiBNb2RpZmllZCBhbGwgRFRz
+IHRvIGF2b2lkIGVuYWJsaW5nL2Rpc2FibGluZyB0aGUgU0FUQSBwb3J0cwogIGluZGVwZW5kZW50
+bHksIHdoaWNoIGRvZXMgbm90IHdvcmsuIEVpdGhlciBib3RoIHBvcnRzIGFyZSBlbmFibGVkLCBv
+cgogIG5vbmUuIFRlc3RlZCBvbiBNYWNjaGlhdG9CaW4gdGhhdCBhbGwgdGhyZWUgYXZhaWxhYmUg
+cG9ydHMgb24gdGhlCiAgYm9hcmQgYXJlIGZ1bmN0aW9uYWwuCgpDaGFuZ2VzIGluIHYyCj09PT09
+PT09PT09PT0KKiBJbiB0aGUgQUhDSSB3b3JsZCwgdGhlICdpcnEnIGlzIG5vdyBhbiAnKmlycXMn
+IGFycmF5LCBJIGVuc3VyZWQgaXQKICBpcyBhbGxvY2F0ZWQgZXZlbiB3aGVuIG5vdCB1c2luZyAq
+X3BsYXRmb3JtIGRyaXZlcnMuCiogTW92ZWQgdGhlIHdob2xlIGxvZ2ljIGZyb20gdGhlIGdlbmVy
+aWMgYWhjaV9wbGF0Zm9ybS5jIGRyaXZlciB0byB0aGUKICBNYXJ2ZWxsJ3MgYWhjaV9tdmVidS5j
+IGRyaXZlci4KKiBEcm9wcGVkIHRoZSB3aG9sZSBEVCBtYW5pcHVsYXRpb24gcXVpcmsuCiogSW5z
+dGVhZCB1c2VkIGEgaGFjayB0byBjb25maWd1cmUgYm90aCBpbnRlcnJ1cHRzIHdoZW4gdXNpbmcg
+dGhlCiAgZGVwcmVjYXRlZCBiaW5kaW5ncywgdGhpcyBoYWNrIGlzIGE4ayBzcGVjaWZpYyBidXQg
+dGhlcmUgaXMgYSBmbGFnCiAgdGhhdCBpcyBwYXNzZWQgdG8gdGhlIGNvcmUgZHVyaW5nIHRoZSBh
+aGNpX3BsYXRmb3JtX2dldF9yZXNvdXJjZXMoKQogIHRvIGluZGljYXRlIHRoYXQgdGhlIG51bWJl
+ciBvZiBwb3J0cyBtdXN0IGJlIGZvcmNlZCB0byAyIG5vIG1hdHRlcgogIHRoZSBudW1iZXIgb2Yg
+Y2hpbGQgbm9kZXMuCiogVGhlIEE4ayBiYXNlZCBDbGVhcmZvZy1HVCBhY3R1YWxseSB1c2VzIHRo
+ZSBTQVRBIElQIChCYXJ1Y2gncyBpbmZvKQogIHNvIGRvIG5vdCByZW1vdmUgdGhlIFNBVEEgbm9k
+ZSBmcm9tIHRoZSBEVC4gSW5zdGVhZCwgY2hhbmdlIHRoZSBEVFMKICB0byBmaXQgdGhlIG5ldyBi
+aW5kaW5ncyAodGhlIGJvYXJkIG9ubHkgdXNlcyB0aGUgc2Vjb25kIHBvcnQgYXQKICBvZmZzZXQg
+MSkuCiogQWRkZWQgYmluZGluZ3MgZG9jdW1lbnRhdGlvbiBhYm91dCB0aGUgQThrIEFIQ0kgY29t
+cGF0aWJsZSAoZXhpc3RpbmcKICBpbiBEVHMsIG1pc3NpbmcgaW4gdGhlIGRvYykuCiogU0FUQSBT
+dWItbm9kZXMgcmVwcmVzZW50aW5nIHBvcnRzIGFscmVhZHkgYXJlIGRvY3VtZW50ZWQsIEkganVz
+dAogIGFkZGVkIGEgbWVudGlvbiB0aGF0IHRoZXkgY2FuIGFsc28gaGF2ZSBhbiBpbnRlcnJ1cHRz
+IHByb3BlcnR5IHdoaWNoCiAgaXMgbXV0dWFsbHkgZXhjbHVzaXZlIHdpdGggdGhlIHJvb3QgU0FU
+QSBub2RlLgoKCk1pcXVlbCBSYXluYWwgKDkpOgogIGF0YTogbGliYWhjaTogRW5zdXJlIHRoZSBo
+b3N0IGludGVycnVwdCBzdGF0dXMgYml0cyBhcmUgY2xlYXJlZAogIGF0YTogYWhjaTogU3VwcG9y
+dCBwZXItcG9ydCBpbnRlcnJ1cHRzCiAgZHQtYmluZGluZ3M6IGF0YTogVXBkYXRlIGFoY2kgYmlu
+ZGluZ3Mgd2l0aCBwb3NzaWJsZSBwZXItcG9ydAogICAgaW50ZXJydXB0cwogIGF0YTogYWhjaTog
+bXZlYnU6IFJlbmFtZSBhIHBsYXRmb3JtIGRhdGEgZmxhZwogIGF0YTogYWhjaTogbXZlYnU6IEFk
+ZCBhIHBhcmFtZXRlciB0byBhIHBsYXRmb3JtIGRhdGEgY2FsbGJhY2sKICBkdC1iaW5kaW5nczog
+YXRhOiBVcGRhdGUgYWhjaV9tdmVidSBiaW5kaW5ncwogIGF0YTogYWhjaTogbXZlYnU6IFN1cHBv
+cnQgQThrIGNvbXBhdGlibGUKICBhdGE6IGFoY2k6IG12ZWJ1OiBBZGQgc3VwcG9ydCBmb3IgQThr
+IGxlZ2FjeSBEVCBiaW5kaW5ncwogIGlycWNoaXAvaXJxLW12ZWJ1LWljdTogUmVtb3ZlIHRoZSBk
+b3VibGUgU0FUQSBwb3J0cyBpbnRlcnJ1cHQgaGFjawoKVGhvbWFzIFBldGF6em9uaSAoMSk6CiAg
+YXJtNjQ6IGR0czogbWFydmVsbDogYXJtYWRhLWNwMTEwOiBTd2l0Y2ggdG8gcGVyLXBvcnQgU0FU
+QSBpbnRlcnJ1cHRzCgogLi4uL2RldmljZXRyZWUvYmluZGluZ3MvYXRhL2FoY2ktcGxhdGZvcm0u
+dHh0IHwgIDcgKysKIGFyY2gvYXJtNjQvYm9vdC9kdHMvbWFydmVsbC9hcm1hZGEtY3AxMTAuZHRz
+aSB8IDEzICsrKy0KIGRyaXZlcnMvYXRhL2FjYXJkLWFoY2kuYyAgICAgICAgICAgICAgICAgICAg
+ICB8ICAyICstCiBkcml2ZXJzL2F0YS9haGNpLmMgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+fCAgOCArKy0KIGRyaXZlcnMvYXRhL2FoY2kuaCAgICAgICAgICAgICAgICAgICAgICAgICAgICB8
+ICAzICstCiBkcml2ZXJzL2F0YS9haGNpX212ZWJ1LmMgICAgICAgICAgICAgICAgICAgICAgfCA2
+MSArKysrKysrKysrKysrLS0tCiBkcml2ZXJzL2F0YS9saWJhaGNpLmMgICAgICAgICAgICAgICAg
+ICAgICAgICAgfCAgNyArLQogZHJpdmVycy9hdGEvbGliYWhjaV9wbGF0Zm9ybS5jICAgICAgICAg
+ICAgICAgIHwgNzAgKysrKysrKysrKysrKysrKy0tLQogZHJpdmVycy9hdGEvc2F0YV9oaWdoYmFu
+ay5jICAgICAgICAgICAgICAgICAgIHwgIDIgKy0KIGRyaXZlcnMvaXJxY2hpcC9pcnEtbXZlYnUt
+aWN1LmMgICAgICAgICAgICAgICB8IDE4IC0tLS0tCiBpbmNsdWRlL2xpbnV4L2FoY2lfcGxhdGZv
+cm0uaCAgICAgICAgICAgICAgICAgfCAgMSArCiAxMSBmaWxlcyBjaGFuZ2VkLCAxNDggaW5zZXJ0
+aW9ucygrKSwgNDQgZGVsZXRpb25zKC0pCgotLSAKMi4xOS4xCgoKX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxp
+c3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZy
+YWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
