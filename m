@@ -1,7 +1,8 @@
 From: Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH v3 06/10] dt-bindings: ata: Update ahci_mvebu bindings
-Date: Fri, 22 Mar 2019 14:39:59 +0100
-Message-ID: <20190322134003.4893-7-miquel.raynal@bootlin.com>
+Subject: [PATCH v3 05/10] ata: ahci: mvebu: Add a parameter to a platform data
+ callback
+Date: Fri, 22 Mar 2019 14:39:58 +0100
+Message-ID: <20190322134003.4893-6-miquel.raynal@bootlin.com>
 References: <20190322134003.4893-1-miquel.raynal@bootlin.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,25 +22,67 @@ To: Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemo
 Cc: devicetree@vger.kernel.org, Baruch Siach <baruch@tkos.co.il>, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-Update bindings with the already in use Armada 8k compatible.
+Before using the ahci_mvebu.c driver with Armada 8k hardware (right
+now it is using the ahci_platform.c generic driver), let's add a
+'struct device' pointer to the argument list of the
+->plat_config() callback. This parameter will be used by the A8k's
+callback.
 
 Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- Documentation/devicetree/bindings/ata/ahci-platform.txt | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/ata/ahci_mvebu.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-index 80261e2845b0..a1e6a3a27ee3 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -17,6 +17,7 @@ Required properties:
-   - "ibm,476gtr-ahci"
-   - "marvell,armada-380-ahci"
-   - "marvell,armada-3700-ahci"
-+  - "marvell,armada-8k-ahci"
-   - "snps,dwc-ahci"
-   - "snps,spear-ahci"
-   - "generic-ahci"
+diff --git a/drivers/ata/ahci_mvebu.c b/drivers/ata/ahci_mvebu.c
+index 43bb2db59698..507ee7c5437c 100644
+--- a/drivers/ata/ahci_mvebu.c
++++ b/drivers/ata/ahci_mvebu.c
+@@ -29,7 +29,7 @@
+ #define AHCI_WINDOW_SIZE(win)	(0x68 + ((win) << 4))
+ 
+ struct ahci_mvebu_plat_data {
+-	int (*plat_config)(struct ahci_host_priv *hpriv);
++	int (*plat_config)(struct ahci_host_priv *hpriv, struct device *dev);
+ 	unsigned int host_flags;
+ };
+ 
+@@ -67,7 +67,8 @@ static void ahci_mvebu_regret_option(struct ahci_host_priv *hpriv)
+ 	writel(0x80, hpriv->mmio + AHCI_VENDOR_SPECIFIC_0_DATA);
+ }
+ 
+-static int ahci_mvebu_armada_380_config(struct ahci_host_priv *hpriv)
++static int ahci_mvebu_armada_380_config(struct ahci_host_priv *hpriv,
++					struct device *dev)
+ {
+ 	const struct mbus_dram_target_info *dram;
+ 	int rc = 0;
+@@ -83,7 +84,8 @@ static int ahci_mvebu_armada_380_config(struct ahci_host_priv *hpriv)
+ 	return rc;
+ }
+ 
+-static int ahci_mvebu_armada_3700_config(struct ahci_host_priv *hpriv)
++static int ahci_mvebu_armada_3700_config(struct ahci_host_priv *hpriv,
++					 struct device *dev)
+ {
+ 	u32 reg;
+ 
+@@ -162,7 +164,7 @@ static int ahci_mvebu_resume(struct platform_device *pdev)
+ 	struct ahci_host_priv *hpriv = host->private_data;
+ 	const struct ahci_mvebu_plat_data *pdata = hpriv->plat_data;
+ 
+-	pdata->plat_config(hpriv);
++	pdata->plat_config(hpriv, &pdev->dev);
+ 
+ 	return ahci_platform_resume_host(&pdev->dev);
+ }
+@@ -205,7 +207,7 @@ static int ahci_mvebu_probe(struct platform_device *pdev)
+ 
+ 	hpriv->stop_engine = ahci_mvebu_stop_engine;
+ 
+-	rc = pdata->plat_config(hpriv);
++	rc = pdata->plat_config(hpriv, &pdev->dev);
+ 	if (rc)
+ 		goto disable_resources;
+ 
 -- 
 2.19.1
