@@ -1,35 +1,47 @@
-From: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ata: pata_oldpiix: Add missing device ID for
- INTEL_82371AB
-Date: Fri, 22 Mar 2019 17:36:43 +0000
-Message-ID: <20190322173643.75a81d1b@alans-desktop>
-References: <1544449564-16557-1-git-send-email-clabbe@baylibre.com>
-        <9aab3632-4647-cb66-f720-8f6742bc9b4e@cogentembedded.com>
-        <20190312104102.GA28302@Red>
-        <20190312120623.46ca7286@alans-desktop>
-        <20190312133808.GA9336@Red>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH] ata: dwc_460ex: Avoid potential NULL pointer dereference
+Date: Sun, 24 Mar 2019 10:28:23 -0600
+Message-ID: <66403341-fa27-4b80-ab6b-2413b6b6fb98@kernel.dk>
+References: <20190304230858.13387-1-pakki001@umn.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190312133808.GA9336@Red>
+In-Reply-To: <20190304230858.13387-1-pakki001@umn.edu>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: LABBE Corentin <clabbe@baylibre.com>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, axboe@kernel.dk, b.zolnierkie@samsung.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Aditya Pakki <pakki001@umn.edu>
+Cc: kjlu@umn.edu, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-> > If the virtual Sparc emulator is using it does that also mean actual
-> > Sparc hardware has it. In which case presumably it needs fixing, or at
-> > least moving to the generic driver assuming the firmware sets it up ?
-> >   
+On 3/4/19 4:08 PM, Aditya Pakki wrote:
+> dma_async_tx_descriptor can contain a NULL variable and using
+> it in dmaengine_submit without checking can crash the process.
+> This patch avoids such a scenario.
 > 
-> The qemu works perfectly with the new Linux driver.
+> Signed-off-by: Aditya Pakki <pakki001@umn.edu>
+> ---
+>  drivers/ata/sata_dwc_460ex.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+> index 6f142aa54f5f..44a0d7a1ef54 100644
+> --- a/drivers/ata/sata_dwc_460ex.c
+> +++ b/drivers/ata/sata_dwc_460ex.c
+> @@ -1052,8 +1052,10 @@ static void sata_dwc_bmdma_start_by_tag(struct ata_queued_cmd *qc, u8 tag)
+>  					SATA_DWC_DMACR_RXCHEN);
+>  
+>  		/* Enable AHB DMA transfer on the specified channel */
+> -		dmaengine_submit(desc);
+> -		dma_async_issue_pending(hsdevp->chan);
+> +		if (desc) {
+> +			dmaengine_submit(desc);
+> +			dma_async_issue_pending(hsdevp->chan);
+> +		}
+>  	}
+>  }
 
-For some configurations both drivers will work with even older chips. The
-question is whether your chip has separate slave timings, if not then
-while it'll work single device with ata_piix some combinations will fail.
+Hmm, if desc == NULL, is that an error condition?
 
-Digging into the datasheet the part in question has slave timing (0x44) so
-should indeed be ata_piix.
-
-Alan
+-- 
+Jens Axboe
