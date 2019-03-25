@@ -1,58 +1,102 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] ata: dwc_460ex: Avoid potential NULL pointer dereference
-Date: Sun, 24 Mar 2019 11:10:02 -0600
-Message-ID: <438179a3-6fd2-c277-7b00-5f1a12d8df72@kernel.dk>
-References: <20190304230858.13387-1-pakki001@umn.edu>
- <66403341-fa27-4b80-ab6b-2413b6b6fb98@kernel.dk>
- <17a6d83b-c57e-b709-7443-302b84692a6d@umn.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Aditya Pakki <pakki001@umn.edu>
+Subject: [PATCH v2] ata: dwc_460ex: Avoid potential NULL pointer dereference
+Date: Mon, 25 Mar 2019 17:54:53 -0500
+Message-ID: <20190325225453.14276-1-pakki001@umn.edu>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <17a6d83b-c57e-b709-7443-302b84692a6d@umn.edu>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Aditya Pakki <pakki001@umn.edu>
-Cc: kjlu@umn.edu, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: pakki001@umn.edu
+Cc: kjlu@umn.edu, Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 3/24/19 10:47 AM, Aditya Pakki wrote:
-> On 3/24/19 11:28 AM, Jens Axboe wrote:
->> On 3/4/19 4:08 PM, Aditya Pakki wrote:
->>> dma_async_tx_descriptor can contain a NULL variable and using
->>> it in dmaengine_submit without checking can crash the process.
->>> This patch avoids such a scenario.
->>>
->>> Signed-off-by: Aditya Pakki <pakki001@umn.edu>
->>> ---
->>>  drivers/ata/sata_dwc_460ex.c | 6 ++++--
->>>  1 file changed, 4 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
->>> index 6f142aa54f5f..44a0d7a1ef54 100644
->>> --- a/drivers/ata/sata_dwc_460ex.c
->>> +++ b/drivers/ata/sata_dwc_460ex.c
->>> @@ -1052,8 +1052,10 @@ static void sata_dwc_bmdma_start_by_tag(struct ata_queued_cmd *qc, u8 tag)
->>>  					SATA_DWC_DMACR_RXCHEN);
->>>  
->>>  		/* Enable AHB DMA transfer on the specified channel */
->>> -		dmaengine_submit(desc);
->>> -		dma_async_issue_pending(hsdevp->chan);
->>> +		if (desc) {
->>> +			dmaengine_submit(desc);
->>> +			dma_async_issue_pending(hsdevp->chan);
->>> +		}
->>>  	}
->>>  }
->>
->> Hmm, if desc == NULL, is that an error condition?
->>
-> Jens,
-> In dmaengine_submit, the desc variable is dereferenced without a check for NULL.
+dma_async_tx_descriptor can contain a NULL variable and using
+it in dmaengine_submit without checking can crash the process.
+This patch avoids such a scenario.
 
-Yes, that's not my point. My point is if desc is NULL, and you just work around it
-by not issuing the DMA, are you just going to hang the drive/box? Should you be
-erroring the IO at that point instead?
+Signed-off-by: Aditya Pakki <pakki001@umn.edu>
 
+---
+v1: Return error in case of failure to desc variable to avoid hang up.
+---
+ drivers/ata/sata_dwc_460ex.c | 23 ++++++++++++++---------
+ 1 file changed, 14 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index 6f142aa54f5f..63d922c624a4 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -185,7 +185,7 @@ enum {
+ /*
+  * Prototypes
+  */
+-static void sata_dwc_bmdma_start_by_tag(struct ata_queued_cmd *qc, u8 tag);
++static int sata_dwc_bmdma_start_by_tag(struct ata_queued_cmd *qc, u8 tag);
+ static int sata_dwc_qc_complete(struct ata_port *ap, struct ata_queued_cmd *qc,
+ 				u32 check_status);
+ static void sata_dwc_dma_xfer_complete(struct ata_port *ap, u32 check_status);
+@@ -512,7 +512,7 @@ static irqreturn_t sata_dwc_isr(int irq, void *dev_instance)
+ 	struct ata_queued_cmd *qc;
+ 	unsigned long flags;
+ 	u8 status, tag;
+-	int handled, num_processed, port = 0;
++	int handled, num_processed, ret, port = 0;
+ 	uint intpr, sactive, sactive2, tag_mask;
+ 	struct sata_dwc_device_port *hsdevp;
+ 	hsdev->sactive_issued = 0;
+@@ -553,10 +553,11 @@ static irqreturn_t sata_dwc_isr(int irq, void *dev_instance)
+ 		 * be completed.
+ 		 */
+ 		qc->ap->link.active_tag = tag;
+-		sata_dwc_bmdma_start_by_tag(qc, tag);
+-
+-		handled = 1;
+-		goto DONE;
++		ret = sata_dwc_bmdma_start_by_tag(qc, tag);
++		if (!ret) {
++			handled = 1;
++			goto DONE;
++		}
+ 	}
+ 	sata_dwc_scr_read(&ap->link, SCR_ACTIVE, &sactive);
+ 	tag_mask = (hsdev->sactive_issued | sactive) ^ sactive;
+@@ -1008,7 +1009,7 @@ static void sata_dwc_bmdma_setup(struct ata_queued_cmd *qc)
+ 	sata_dwc_bmdma_setup_by_tag(qc, tag);
+ }
+ 
+-static void sata_dwc_bmdma_start_by_tag(struct ata_queued_cmd *qc, u8 tag)
++static int sata_dwc_bmdma_start_by_tag(struct ata_queued_cmd *qc, u8 tag)
+ {
+ 	int start_dma;
+ 	u32 reg;
+@@ -1018,6 +1019,9 @@ static void sata_dwc_bmdma_start_by_tag(struct ata_queued_cmd *qc, u8 tag)
+ 	struct dma_async_tx_descriptor *desc = hsdevp->desc[tag];
+ 	int dir = qc->dma_dir;
+ 
++	if (!desc)
++		return -ENOMEM;
++
+ 	if (hsdevp->cmd_issued[tag] != SATA_DWC_CMD_ISSUED_NOT) {
+ 		start_dma = 1;
+ 		if (dir == DMA_TO_DEVICE)
+@@ -1055,9 +1059,10 @@ static void sata_dwc_bmdma_start_by_tag(struct ata_queued_cmd *qc, u8 tag)
+ 		dmaengine_submit(desc);
+ 		dma_async_issue_pending(hsdevp->chan);
+ 	}
++	return 0;
+ }
+ 
+-static void sata_dwc_bmdma_start(struct ata_queued_cmd *qc)
++static int sata_dwc_bmdma_start(struct ata_queued_cmd *qc)
+ {
+ 	u8 tag = qc->hw_tag;
+ 
+@@ -1068,7 +1073,7 @@ static void sata_dwc_bmdma_start(struct ata_queued_cmd *qc)
+ 		tag = 0;
+ 	}
+ 	dev_dbg(qc->ap->dev, "%s\n", __func__);
+-	sata_dwc_bmdma_start_by_tag(qc, tag);
++	return sata_dwc_bmdma_start_by_tag(qc, tag);
+ }
+ 
+ static unsigned int sata_dwc_qc_issue(struct ata_queued_cmd *qc)
 -- 
-Jens Axboe
+2.17.1
