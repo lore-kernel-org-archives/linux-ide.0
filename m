@@ -1,102 +1,91 @@
-From: Aditya Pakki <pakki001@umn.edu>
-Subject: [PATCH v2] ata: dwc_460ex: Avoid potential NULL pointer dereference
-Date: Mon, 25 Mar 2019 17:54:53 -0500
-Message-ID: <20190325225453.14276-1-pakki001@umn.edu>
+From: raymond pang <raymondpangxd@gmail.com>
+Subject: [PATCH] libata: fix using DMA buffers on stack
+Date: Tue, 26 Mar 2019 03:07:14 +0000
+Message-ID: <CAHG4imOAn7rcQWj--XMV2maBLgp4DynKGxwcbSzrcxk0a8n=8Q@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: pakki001@umn.edu
-Cc: kjlu@umn.edu, Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: axboe@kernel.dk
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-dma_async_tx_descriptor can contain a NULL variable and using
-it in dmaengine_submit without checking can crash the process.
-This patch avoids such a scenario.
+When CONFIG_VMAP_STACK=y, __pa() returns incorrect physical address for
+a stack virtual address. Stack DMA buffers must be avoided.
 
-Signed-off-by: Aditya Pakki <pakki001@umn.edu>
-
+Signed-off-by: raymond pang <raymondpangxd@gmail.com>
 ---
-v1: Return error in case of failure to desc variable to avoid hang up.
----
- drivers/ata/sata_dwc_460ex.c | 23 ++++++++++++++---------
- 1 file changed, 14 insertions(+), 9 deletions(-)
+ drivers/ata/libata-zpodd.c | 36 ++++++++++++++++++++++++++----------
+ 1 file changed, 26 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 6f142aa54f5f..63d922c624a4 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -185,7 +185,7 @@ enum {
- /*
-  * Prototypes
-  */
--static void sata_dwc_bmdma_start_by_tag(struct ata_queued_cmd *qc, u8 tag);
-+static int sata_dwc_bmdma_start_by_tag(struct ata_queued_cmd *qc, u8 tag);
- static int sata_dwc_qc_complete(struct ata_port *ap, struct ata_queued_cmd *qc,
- 				u32 check_status);
- static void sata_dwc_dma_xfer_complete(struct ata_port *ap, u32 check_status);
-@@ -512,7 +512,7 @@ static irqreturn_t sata_dwc_isr(int irq, void *dev_instance)
- 	struct ata_queued_cmd *qc;
- 	unsigned long flags;
- 	u8 status, tag;
--	int handled, num_processed, port = 0;
-+	int handled, num_processed, ret, port = 0;
- 	uint intpr, sactive, sactive2, tag_mask;
- 	struct sata_dwc_device_port *hsdevp;
- 	hsdev->sactive_issued = 0;
-@@ -553,10 +553,11 @@ static irqreturn_t sata_dwc_isr(int irq, void *dev_instance)
- 		 * be completed.
- 		 */
- 		qc->ap->link.active_tag = tag;
--		sata_dwc_bmdma_start_by_tag(qc, tag);
--
--		handled = 1;
--		goto DONE;
-+		ret = sata_dwc_bmdma_start_by_tag(qc, tag);
-+		if (!ret) {
-+			handled = 1;
-+			goto DONE;
-+		}
- 	}
- 	sata_dwc_scr_read(&ap->link, SCR_ACTIVE, &sactive);
- 	tag_mask = (hsdev->sactive_issued | sactive) ^ sactive;
-@@ -1008,7 +1009,7 @@ static void sata_dwc_bmdma_setup(struct ata_queued_cmd *qc)
- 	sata_dwc_bmdma_setup_by_tag(qc, tag);
- }
- 
--static void sata_dwc_bmdma_start_by_tag(struct ata_queued_cmd *qc, u8 tag)
-+static int sata_dwc_bmdma_start_by_tag(struct ata_queued_cmd *qc, u8 tag)
+diff --git a/drivers/ata/libata-zpodd.c b/drivers/ata/libata-zpodd.c
+index b3ed8f9..5ca0ce5 100644
+--- a/drivers/ata/libata-zpodd.c
++++ b/drivers/ata/libata-zpodd.c
+@@ -52,38 +52,54 @@ static int eject_tray(struct ata_device *dev)
+ /* Per the spec, only slot type and drawer type ODD can be supported */
+ static enum odd_mech_type zpodd_get_mech_type(struct ata_device *dev)
  {
- 	int start_dma;
- 	u32 reg;
-@@ -1018,6 +1019,9 @@ static void sata_dwc_bmdma_start_by_tag(struct ata_queued_cmd *qc, u8 tag)
- 	struct dma_async_tx_descriptor *desc = hsdevp->desc[tag];
- 	int dir = qc->dma_dir;
- 
-+	if (!desc)
-+		return -ENOMEM;
+-    char buf[16];
++    char *buf;
+     unsigned int ret;
+-    struct rm_feature_desc *desc = (void *)(buf + 8);
++    struct rm_feature_desc *desc;
+     struct ata_taskfile tf;
+     static const char cdb[] = {  GPCMD_GET_CONFIGURATION,
+             2,      /* only 1 feature descriptor requested */
+             0, 3,   /* 3, removable medium feature */
+             0, 0, 0,/* reserved */
+-            0, sizeof(buf),
++            0, 16,
+             0, 0, 0,
+     };
+
++    buf = kzalloc(16, GFP_KERNEL);
++    if (!buf) {
++        ata_dev_err(dev, "zpodd mech type buffer allocation failed\n");
++        return ODD_MECH_TYPE_UNSUPPORTED;
++    }
++    desc = (void *)(buf + 8);
 +
- 	if (hsdevp->cmd_issued[tag] != SATA_DWC_CMD_ISSUED_NOT) {
- 		start_dma = 1;
- 		if (dir == DMA_TO_DEVICE)
-@@ -1055,9 +1059,10 @@ static void sata_dwc_bmdma_start_by_tag(struct ata_queued_cmd *qc, u8 tag)
- 		dmaengine_submit(desc);
- 		dma_async_issue_pending(hsdevp->chan);
- 	}
-+	return 0;
+     ata_tf_init(dev, &tf);
+     tf.flags = ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+     tf.command = ATA_CMD_PACKET;
+     tf.protocol = ATAPI_PROT_PIO;
+-    tf.lbam = sizeof(buf);
++    tf.lbam = 16;
+
+     ret = ata_exec_internal(dev, &tf, cdb, DMA_FROM_DEVICE,
+-                buf, sizeof(buf), 0);
+-    if (ret)
++                buf, 16, 0);
++    if (ret) {
++        kzfree(buf);
+         return ODD_MECH_TYPE_UNSUPPORTED;
++    }
+
+-    if (be16_to_cpu(desc->feature_code) != 3)
++    if (be16_to_cpu(desc->feature_code) != 3) {
++        kzfree(buf);
+         return ODD_MECH_TYPE_UNSUPPORTED;
++    }
+
+-    if (desc->mech_type == 0 && desc->load == 0 && desc->eject == 1)
++    if (desc->mech_type == 0 && desc->load == 0 && desc->eject == 1) {
++        kzfree(buf);
+         return ODD_MECH_TYPE_SLOT;
+-    else if (desc->mech_type == 1 && desc->load == 0 && desc->eject == 1)
++    } else if (desc->mech_type == 1 && desc->load == 0 &&
++           desc->eject == 1) {
++        kzfree(buf);
+         return ODD_MECH_TYPE_DRAWER;
+-    else
++    } else {
++        kzfree(buf);
+         return ODD_MECH_TYPE_UNSUPPORTED;
++    }
  }
- 
--static void sata_dwc_bmdma_start(struct ata_queued_cmd *qc)
-+static int sata_dwc_bmdma_start(struct ata_queued_cmd *qc)
- {
- 	u8 tag = qc->hw_tag;
- 
-@@ -1068,7 +1073,7 @@ static void sata_dwc_bmdma_start(struct ata_queued_cmd *qc)
- 		tag = 0;
- 	}
- 	dev_dbg(qc->ap->dev, "%s\n", __func__);
--	sata_dwc_bmdma_start_by_tag(qc, tag);
-+	return sata_dwc_bmdma_start_by_tag(qc, tag);
- }
- 
- static unsigned int sata_dwc_qc_issue(struct ata_queued_cmd *qc)
--- 
-2.17.1
+
+ /* Test if ODD is zero power ready by sense code */
+--
+1.9.1
