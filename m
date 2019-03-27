@@ -1,25 +1,75 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH] libata: fix using DMA buffers on stack
-Date: Tue, 26 Mar 2019 08:09:13 -0600
-Message-ID: <742c1607-1e28-3674-65ca-8e5f111e243e@kernel.dk>
-References: <CAHG4imOAn7rcQWj--XMV2maBLgp4DynKGxwcbSzrcxk0a8n=8Q@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAHG4imOAn7rcQWj--XMV2maBLgp4DynKGxwcbSzrcxk0a8n=8Q@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: raymond pang <raymondpangxd@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Subject: [PATCH] libata: Return correct rc status in sata_pmp_eh_recover_pm() pwhen ATA_DFLAG_DETACH is set
+Date: Wed, 27 Mar 2019 17:02:54 +0800
+Message-ID: <20190327090254.10365-1-kai.heng.feng@canonical.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: axboe@kernel.dk
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Kai-Heng Feng <kai.heng.feng@canonical.com>, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 3/25/19 9:07 PM, raymond pang wrote:
-> When CONFIG_VMAP_STACK=y, __pa() returns incorrect physical address for
-> a stack virtual address. Stack DMA buffers must be avoided.
+During system resume from suspend, this can be observed on ASM1062 PMP
+controller:
+<6>[12007.593358] ata10.01: SATA link down (SStatus 0 SControl 330)
+<6>[12007.593469] ata10.02: hard resetting link
+<6>[12007.908353] ata10.02: SATA link down (SStatus 0 SControl 330)
+<6>[12007.911149] ata10.00: configured for UDMA/133
+<0>[12007.972508] Kernel panic - not syncing: stack-protector: Kernel
+stack is corrupted in: sata_pmp_eh_recover+0xa2b/0xa40
+<0>[12007.972508]
+<4>[12007.972515] CPU: 2 PID: 230 Comm: scsi_eh_9 Tainted: P OE
+4.15.0-46-generic #49-Ubuntu
+<4>[12007.972517] Hardware name: System manufacturer System Product
+Name/A320M-C, BIOS 1001 12/10/2017
+<4>[12007.972518] Call Trace:
+<4>[12007.972525] dump_stack+0x63/0x8b
+<4>[12007.972530] panic+0xe4/0x244
+<4>[12007.972533] ? sata_pmp_eh_recover+0xa2b/0xa40
+<4>[12007.972536] __stack_chk_fail+0x19/0x20
+<4>[12007.972538] sata_pmp_eh_recover+0xa2b/0xa40
+<4>[12007.972543] ? ahci_do_softreset+0x260/0x260 [libahci]
+<4>[12007.972545] ? ahci_do_hardreset+0x140/0x140 [libahci]
+<4>[12007.972547] ? ata_phys_link_offline+0x60/0x60
+<4>[12007.972549] ? ahci_stop_engine+0xc0/0xc0 [libahci]
+<4>[12007.972552] sata_pmp_error_handler+0x22/0x30
+<4>[12007.972554] ahci_error_handler+0x45/0x80 [libahci]
+<4>[12007.972556] ata_scsi_port_error_handler+0x29b/0x770
+<4>[12007.972558] ? ata_scsi_cmd_error_handler+0x101/0x140
+<4>[12007.972559] ata_scsi_error+0x95/0xd0
+<4>[12007.972562] ? scsi_try_target_reset+0x90/0x90
+<4>[12007.972563] scsi_error_handler+0xd0/0x5b0
+<4>[12007.972566] kthread+0x121/0x140
+<4>[12007.972567] ? scsi_eh_get_sense+0x200/0x200
+<4>[12007.972569] ? kthread_create_worker_on_cpu+0x70/0x70
+<4>[12007.972572] ret_from_fork+0x22/0x40
+<0>[12007.972591] Kernel Offset: 0xcc00000 from 0xffffffff81000000
+(relocation range: 0xffffffff80000000-0xffffffffbfffffff)
 
-The patch looks fine, but it's white space mangled so it won't apply.
-Additionally, you don't need to use kzfree, just use kfree.
+Since sata_pmp_eh_recover_pmp() doens't set rc when ATA_DFLAG_DETACH is
+set, sata_pmp_eh_recover() continues to run. During retry it triggers
+the stack protector.
 
+Set correct rc in sata_pmp_eh_recover_pmp() to let sata_pmp_eh_recover()
+jump to pmp_fail directly.
+
+BugLink: https://bugs.launchpad.net/bugs/1821434
+Cc: stable@vger.kernel.org
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+---
+ drivers/ata/libata-pmp.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+index 2ae1799f4992..51eeaea65833 100644
+--- a/drivers/ata/libata-pmp.c
++++ b/drivers/ata/libata-pmp.c
+@@ -764,6 +764,7 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
+ 
+ 	if (dev->flags & ATA_DFLAG_DETACH) {
+ 		detach = 1;
++		rc = -ENODEV;
+ 		goto fail;
+ 	}
+ 
 -- 
-Jens Axboe
+2.17.1
