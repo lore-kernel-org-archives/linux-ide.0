@@ -1,34 +1,89 @@
 From: raymond pang <raymondpangxd@gmail.com>
-Subject: Re: [PATCH] libata: fix using DMA buffers on stack
-Date: Thu, 28 Mar 2019 12:00:15 +0000
-Message-ID: <CAHG4imPE3pNXAd5WvF-7hLyyZfpgAcT7KkVoCa+0iTGbHxxbvA@mail.gmail.com>
-References: <CAHG4imOAn7rcQWj--XMV2maBLgp4DynKGxwcbSzrcxk0a8n=8Q@mail.gmail.com>
- <742c1607-1e28-3674-65ca-8e5f111e243e@kernel.dk>
+Subject: [PATCH] libata: fix using DMA buffers on stack
+Date: Thu, 28 Mar 2019 12:19:25 +0000
+Message-ID: <20190328121925.15488-1-raymondpangxd@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <742c1607-1e28-3674-65ca-8e5f111e243e@kernel.dk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: axboe@kernel.dk
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-hi Jens,
+When CONFIG_VMAP_STACK=y, __pa() returns incorrect physical address for
+a stack virtual address. Stack DMA buffers must be avoided.
 
-Thanks for review. I'll fix them up.
+Signed-off-by: raymond pang <raymondpangxd@gmail.com>
+---
+ drivers/ata/libata-zpodd.c | 34 ++++++++++++++++++++++++----------
+ 1 file changed, 24 insertions(+), 10 deletions(-)
 
-Best regards,
-Raymond
+diff --git a/drivers/ata/libata-zpodd.c b/drivers/ata/libata-zpodd.c
+index b3ed8f995..173e6f2dd 100644
+--- a/drivers/ata/libata-zpodd.c
++++ b/drivers/ata/libata-zpodd.c
+@@ -52,38 +52,52 @@ static int eject_tray(struct ata_device *dev)
+ /* Per the spec, only slot type and drawer type ODD can be supported */
+ static enum odd_mech_type zpodd_get_mech_type(struct ata_device *dev)
+ {
+-	char buf[16];
++	char *buf;
+ 	unsigned int ret;
+-	struct rm_feature_desc *desc = (void *)(buf + 8);
++	struct rm_feature_desc *desc;
+ 	struct ata_taskfile tf;
+ 	static const char cdb[] = {  GPCMD_GET_CONFIGURATION,
+ 			2,      /* only 1 feature descriptor requested */
+ 			0, 3,   /* 3, removable medium feature */
+ 			0, 0, 0,/* reserved */
+-			0, sizeof(buf),
++			0, 16,
+ 			0, 0, 0,
+ 	};
 
-On Tue, Mar 26, 2019 at 2:09 PM Jens Axboe <axboe@kernel.dk> wrote:
->
-> On 3/25/19 9:07 PM, raymond pang wrote:
-> > When CONFIG_VMAP_STACK=y, __pa() returns incorrect physical address for
-> > a stack virtual address. Stack DMA buffers must be avoided.
->
-> The patch looks fine, but it's white space mangled so it won't apply.
-> Additionally, you don't need to use kzfree, just use kfree.
->
-> --
-> Jens Axboe
->
++	buf = kzalloc(16, GFP_KERNEL);
++	if (!buf)
++		return ODD_MECH_TYPE_UNSUPPORTED;
++	desc = (void *)(buf + 8);
++
+ 	ata_tf_init(dev, &tf);
+ 	tf.flags = ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+ 	tf.command = ATA_CMD_PACKET;
+ 	tf.protocol = ATAPI_PROT_PIO;
+-	tf.lbam = sizeof(buf);
++	tf.lbam = 16;
+
+ 	ret = ata_exec_internal(dev, &tf, cdb, DMA_FROM_DEVICE,
+-				buf, sizeof(buf), 0);
+-	if (ret)
++				buf, 16, 0);
++	if (ret) {
++		kfree(buf);
+ 		return ODD_MECH_TYPE_UNSUPPORTED;
++	}
+
+-	if (be16_to_cpu(desc->feature_code) != 3)
++	if (be16_to_cpu(desc->feature_code) != 3) {
++		kfree(buf);
+ 		return ODD_MECH_TYPE_UNSUPPORTED;
++	}
+
+-	if (desc->mech_type == 0 && desc->load == 0 && desc->eject == 1)
++	if (desc->mech_type == 0 && desc->load == 0 && desc->eject == 1) {
++		kfree(buf);
+ 		return ODD_MECH_TYPE_SLOT;
+-	else if (desc->mech_type == 1 && desc->load == 0 && desc->eject == 1)
++	} else if (desc->mech_type == 1 && desc->load == 0 &&
++		   desc->eject == 1) {
++		kfree(buf);
+ 		return ODD_MECH_TYPE_DRAWER;
+-	else
++	} else {
++		kfree(buf);
+ 		return ODD_MECH_TYPE_UNSUPPORTED;
++	}
+ }
+
+ /* Test if ODD is zero power ready by sense code */
+--
+2.19.1
