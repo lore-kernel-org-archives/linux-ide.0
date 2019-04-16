@@ -1,336 +1,188 @@
-From: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-Subject: [PATCH 16/57] docs: ide: convert it to ReST format
-Date: Mon, 15 Apr 2019 23:55:41 -0300
-Message-ID: <4ca04f310a20234dd5ede53dae7cf794241650ab.1555382110.git.mchehab+samsung@kernel.org>
-References: <cover.1555382110.git.mchehab+samsung@kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v3 00/26] compat_ioctl: cleanups
+Date: Tue, 16 Apr 2019 22:19:38 +0200
+Message-ID: <20190416202013.4034148-1-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1555382110.git.mchehab+samsung@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linux Doc Mailing List <linux-doc@vger.kernel.org>
-Cc: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: Alexander Viro <viro@zeniv.linux.org.uk>
+Cc: linux-fsdevel@vger.kernel.org, y2038@lists.linaro.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, "David S. Miller" <davem@davemloft.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Karsten Keil <isdn@linux-pingi.de>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Marcel Holtmann <marcel@holtmann.org>, netdev@vger.kernel.org, devel@driverdev.osuosl.org, linux-integrity@vger.kernel.org, qat-linux@intel.com, linux-crypto@vger.kernel.org, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, linux1394-devel@lists.sourceforge.net, amd-gfx@lists.freedesktop.org, linux-input@vger.kernel.org, linux-usb@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-iio@vger.ker
 List-Id: linux-ide@vger.kernel.org
 
-Convert the IDE documentation to ReST format, in order to prepare
-for its addition inside a book.
+Hi Al,
 
-Signed-off-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
----
- Documentation/ide/ide-tape.txt        |  23 ++--
- Documentation/ide/ide.txt             | 147 ++++++++++++++------------
- Documentation/ide/warm-plug-howto.txt |  10 +-
- 3 files changed, 96 insertions(+), 84 deletions(-)
+It took me way longer than I had hoped to revisit this series, see
+https://lore.kernel.org/lkml/20180912150142.157913-1-arnd@arndb.de/
+for the previously posted version.
 
-diff --git a/Documentation/ide/ide-tape.txt b/Documentation/ide/ide-tape.txt
-index 3f348a0b21d8..3e061d9c0e38 100644
---- a/Documentation/ide/ide-tape.txt
-+++ b/Documentation/ide/ide-tape.txt
-@@ -1,4 +1,6 @@
--IDE ATAPI streaming tape driver.
-+===============================
-+IDE ATAPI streaming tape driver
-+===============================
- 
- This driver is a part of the Linux ide driver.
- 
-@@ -10,14 +12,14 @@ to the request-list of the block device, and waits for their completion.
- The block device major and minor numbers are determined from the
- tape's relative position in the ide interfaces, as explained in ide.c.
- 
--The character device interface consists of the following devices:
-+The character device interface consists of the following devices::
- 
--ht0		major 37, minor 0	first  IDE tape, rewind on close.
--ht1		major 37, minor 1	second IDE tape, rewind on close.
--...
--nht0		major 37, minor 128	first  IDE tape, no rewind on close.
--nht1		major 37, minor 129	second IDE tape, no rewind on close.
--...
-+  ht0		major 37, minor 0	first  IDE tape, rewind on close.
-+  ht1		major 37, minor 1	second IDE tape, rewind on close.
-+  ...
-+  nht0		major 37, minor 128	first  IDE tape, no rewind on close.
-+  nht1		major 37, minor 129	second IDE tape, no rewind on close.
-+  ...
- 
- The general magnetic tape commands compatible interface, as defined by
- include/linux/mtio.h, is accessible through the character device.
-@@ -40,9 +42,10 @@ Testing was done with a 2 GB CONNER CTMA 4000 IDE ATAPI Streaming Tape Drive.
- Here are some words from the first releases of hd.c, which are quoted
- in ide.c and apply here as well:
- 
--| Special care is recommended.  Have Fun!
-+* Special care is recommended.  Have Fun!
- 
--Possible improvements:
-+Possible improvements
-+=====================
- 
- 1. Support for the ATAPI overlap protocol.
- 
-diff --git a/Documentation/ide/ide.txt b/Documentation/ide/ide.txt
-index 7aca987c23d9..88bdcba92f7d 100644
---- a/Documentation/ide/ide.txt
-+++ b/Documentation/ide/ide.txt
-@@ -1,41 +1,43 @@
--
--	Information regarding the Enhanced IDE drive in Linux 2.6
--
--==============================================================================
--
-+============================================
-+Information regarding the Enhanced IDE drive
-+============================================
- 
-    The hdparm utility can be used to control various IDE features on a
-    running system. It is packaged separately.  Please Look for it on popular
-    linux FTP sites.
- 
-+-------------------------------------------------------------------------------
- 
-+.. important::
- 
--***  IMPORTANT NOTICES:  BUGGY IDE CHIPSETS CAN CORRUPT DATA!!
--***  =================
--***  PCI versions of the CMD640 and RZ1000 interfaces are now detected
--***  automatically at startup when PCI BIOS support is configured.
--***
--***  Linux disables the "prefetch" ("readahead") mode of the RZ1000
--***  to prevent data corruption possible due to hardware design flaws.
--***
--***  For the CMD640, linux disables "IRQ unmasking" (hdparm -u1) on any
--***  drive for which the "prefetch" mode of the CMD640 is turned on.
--***  If "prefetch" is disabled (hdparm -p8), then "IRQ unmasking" can be
--***  used again.
--***
--***  For the CMD640, linux disables "32bit I/O" (hdparm -c1) on any drive
--***  for which the "prefetch" mode of the CMD640 is turned off.
--***  If "prefetch" is enabled (hdparm -p9), then "32bit I/O" can be
--***  used again.
--***
--***  The CMD640 is also used on some Vesa Local Bus (VLB) cards, and is *NOT*
--***  automatically detected by Linux.  For safe, reliable operation with such
--***  interfaces, one *MUST* use the "cmd640.probe_vlb" kernel option.
--***
--***  Use of the "serialize" option is no longer necessary.
--
--================================================================================
--Common pitfalls:
-+   BUGGY IDE CHIPSETS CAN CORRUPT DATA!!
-+
-+    PCI versions of the CMD640 and RZ1000 interfaces are now detected
-+    automatically at startup when PCI BIOS support is configured.
-+
-+    Linux disables the "prefetch" ("readahead") mode of the RZ1000
-+    to prevent data corruption possible due to hardware design flaws.
-+
-+    For the CMD640, linux disables "IRQ unmasking" (hdparm -u1) on any
-+    drive for which the "prefetch" mode of the CMD640 is turned on.
-+    If "prefetch" is disabled (hdparm -p8), then "IRQ unmasking" can be
-+    used again.
-+
-+    For the CMD640, linux disables "32bit I/O" (hdparm -c1) on any drive
-+    for which the "prefetch" mode of the CMD640 is turned off.
-+    If "prefetch" is enabled (hdparm -p9), then "32bit I/O" can be
-+    used again.
-+
-+    The CMD640 is also used on some Vesa Local Bus (VLB) cards, and is *NOT*
-+    automatically detected by Linux.  For safe, reliable operation with such
-+    interfaces, one *MUST* use the "cmd640.probe_vlb" kernel option.
-+
-+    Use of the "serialize" option is no longer necessary.
-+
-+-------------------------------------------------------------------------------
-+
-+Common pitfalls
-+===============
- 
- - 40-conductor IDE cables are capable of transferring data in DMA modes up to
-   udma2, but no faster.
-@@ -49,19 +51,18 @@ Common pitfalls:
- - Even better try to stick to the same vendor and device type on the same
-   cable.
- 
--================================================================================
--
--This is the multiple IDE interface driver, as evolved from hd.c.
-+This is the multiple IDE interface driver, as evolved from hd.c
-+===============================================================
- 
- It supports up to 9 IDE interfaces per default, on one or more IRQs (usually
--14 & 15).  There can be up to two drives per interface, as per the ATA-6 spec.
-+14 & 15).  There can be up to two drives per interface, as per the ATA-6 spec.::
- 
--Primary:    ide0, port 0x1f0; major=3;  hda is minor=0; hdb is minor=64
--Secondary:  ide1, port 0x170; major=22; hdc is minor=0; hdd is minor=64
--Tertiary:   ide2, port 0x1e8; major=33; hde is minor=0; hdf is minor=64
--Quaternary: ide3, port 0x168; major=34; hdg is minor=0; hdh is minor=64
--fifth..     ide4, usually PCI, probed
--sixth..     ide5, usually PCI, probed
-+  Primary:    ide0, port 0x1f0; major=3;  hda is minor=0; hdb is minor=64
-+  Secondary:  ide1, port 0x170; major=22; hdc is minor=0; hdd is minor=64
-+  Tertiary:   ide2, port 0x1e8; major=33; hde is minor=0; hdf is minor=64
-+  Quaternary: ide3, port 0x168; major=34; hdg is minor=0; hdh is minor=64
-+  fifth..     ide4, usually PCI, probed
-+  sixth..     ide5, usually PCI, probed
- 
- To access devices on interfaces > ide0, device entries please make sure that
- device files for them are present in /dev.  If not, please create such
-@@ -80,12 +81,15 @@ seldom occurs.  Be careful, and if in doubt, don't do it!
- 
- Drives are normally found by auto-probing and/or examining the CMOS/BIOS data.
- For really weird situations, the apparent (fdisk) geometry can also be specified
--on the kernel "command line" using LILO.  The format of such lines is:
-+on the kernel "command line" using LILO.  The format of such lines is::
- 
- 	ide_core.chs=[interface_number.device_number]:cyls,heads,sects
--or	ide_core.cdrom=[interface_number.device_number]
- 
--For example:
-+or::
-+
-+	ide_core.cdrom=[interface_number.device_number]
-+
-+For example::
- 
- 	ide_core.chs=1.0:1050,32,64  ide_core.cdrom=1.1
- 
-@@ -96,10 +100,12 @@ geometry for partitioning purposes (fdisk).
- If the auto-probing during boot time confuses a drive (ie. the drive works
- with hd.c but not with ide.c), then an command line option may be specified
- for each drive for which you'd like the drive to skip the hardware
--probe/identification sequence.  For example:
-+probe/identification sequence.  For example::
- 
- 	ide_core.noprobe=0.1
--or
-+
-+or::
-+
- 	ide_core.chs=1.0:768,16,32
- 	ide_core.noprobe=1.0
- 
-@@ -115,22 +121,24 @@ Such drives will be identified at boot time, just like a hard disk.
- 
- If for some reason your cdrom drive is *not* found at boot time, you can force
- the probe to look harder by supplying a kernel command line parameter
--via LILO, such as:
-+via LILO, such as:::
- 
- 	ide_core.cdrom=1.0	/* "master" on second interface (hdc) */
--or
-+
-+or::
-+
- 	ide_core.cdrom=1.1	/* "slave" on second interface (hdd) */
- 
- For example, a GW2000 system might have a hard drive on the primary
- interface (/dev/hda) and an IDE cdrom drive on the secondary interface
--(/dev/hdc).  To mount a CD in the cdrom drive, one would use something like:
-+(/dev/hdc).  To mount a CD in the cdrom drive, one would use something like::
- 
- 	ln -sf /dev/hdc /dev/cdrom
- 	mkdir /mnt/cdrom
- 	mount /dev/cdrom /mnt/cdrom -t iso9660 -o ro
- 
- If, after doing all of the above, mount doesn't work and you see
--errors from the driver (with dmesg) complaining about `status=0xff',
-+errors from the driver (with dmesg) complaining about `status=0xff`,
- this means that the hardware is not responding to the driver's attempts
- to read it.  One of the following is probably the problem:
- 
-@@ -165,7 +173,7 @@ drivers can always be compiled as loadable modules, the chipset drivers
- can only be compiled into the kernel, and the core code (ide.c) can be
- compiled as a loadable module provided no chipset support is needed.
- 
--When using ide.c as a module in combination with kmod, add:
-+When using ide.c as a module in combination with kmod, add::
- 
- 	alias block-major-3 ide-probe
- 
-@@ -176,10 +184,8 @@ driver using the "options=" keyword to insmod, while replacing any ',' with
- ';'.
- 
- 
--================================================================================
--
- Summary of ide driver parameters for kernel command line
----------------------------------------------------------
-+========================================================
- 
- For legacy IDE VLB host drivers (ali14xx/dtc2278/ht6560b/qd65xx/umc8672)
- you need to explicitly enable probing by using "probe" kernel parameter,
-@@ -226,28 +232,31 @@ Other kernel parameters for ide_core are:
- 
- * "chs=[interface_number.device_number]" to force device as a disk (using CHS)
- 
--================================================================================
- 
- Some Terminology
------------------
--IDE = Integrated Drive Electronics, meaning that each drive has a built-in
--controller, which is why an "IDE interface card" is not a "controller card".
-+================
- 
--ATA = AT (the old IBM 286 computer) Attachment Interface, a draft American
--National Standard for connecting hard drives to PCs.  This is the official
--name for "IDE".
-+IDE
-+  Integrated Drive Electronics, meaning that each drive has a built-in
-+  controller, which is why an "IDE interface card" is not a "controller card".
- 
--The latest standards define some enhancements, known as the ATA-6 spec,
--which grew out of vendor-specific "Enhanced IDE" (EIDE) implementations.
-+ATA
-+  AT (the old IBM 286 computer) Attachment Interface, a draft American
-+  National Standard for connecting hard drives to PCs.  This is the official
-+  name for "IDE".
- 
--ATAPI = ATA Packet Interface, a new protocol for controlling the drives,
--similar to SCSI protocols, created at the same time as the ATA2 standard.
--ATAPI is currently used for controlling CDROM, TAPE and FLOPPY (ZIP or
--LS120/240) devices, removable R/W cartridges, and for high capacity hard disk
--drives.
-+  The latest standards define some enhancements, known as the ATA-6 spec,
-+  which grew out of vendor-specific "Enhanced IDE" (EIDE) implementations.
-+
-+ATAPI
-+  ATA Packet Interface, a new protocol for controlling the drives,
-+  similar to SCSI protocols, created at the same time as the ATA2 standard.
-+  ATAPI is currently used for controlling CDROM, TAPE and FLOPPY (ZIP or
-+  LS120/240) devices, removable R/W cartridges, and for high capacity hard disk
-+  drives.
- 
- mlord@pobox.com
----
-+
- 
- Wed Apr 17 22:52:44 CEST 2002 edited by Marcin Dalecki, the current
- maintainer.
-diff --git a/Documentation/ide/warm-plug-howto.txt b/Documentation/ide/warm-plug-howto.txt
-index 98152bcd515a..c245242ef2f1 100644
---- a/Documentation/ide/warm-plug-howto.txt
-+++ b/Documentation/ide/warm-plug-howto.txt
-@@ -1,14 +1,14 @@
--
-+===================
- IDE warm-plug HOWTO
- ===================
- 
--To warm-plug devices on a port 'idex':
-+To warm-plug devices on a port 'idex'::
- 
--# echo -n "1" > /sys/class/ide_port/idex/delete_devices
-+	# echo -n "1" > /sys/class/ide_port/idex/delete_devices
- 
--unplug old device(s) and plug new device(s)
-+unplug old device(s) and plug new device(s)::
- 
--# echo -n "1" > /sys/class/ide_port/idex/scan
-+	# echo -n "1" > /sys/class/ide_port/idex/scan
- 
- done
- 
+I've come to the point where all conversion handlers and most
+COMPATIBLE_IOCTL() entries are gone from this file, but for
+now, this series only has the parts that have either been reviewed
+previously, or that are simple enough to include.
+
+The main missing piece is the SG_IO/SG_GET_REQUEST_TABLE conversion.
+I'll post the patches I made for that later, as they need more
+testing and review from the scsi maintainers.
+
+I hope you can still take these for the coming merge window, unless
+new problems come up.
+
+      Arnd
+
+Arnd Bergmann (26):
+  compat_ioctl: pppoe: fix PPPOEIOCSFWD handling
+  compat_ioctl: move simple ppp command handling into driver
+  compat_ioctl: avoid unused function warning for do_ioctl
+  compat_ioctl: move PPPIOCSCOMPRESS32 to ppp-generic.c
+  compat_ioctl: move PPPIOCSPASS32/PPPIOCSACTIVE32 to ppp_generic.c
+  compat_ioctl: handle PPPIOCGIDLE for 64-bit time_t
+  compat_ioctl: move rtc handling into rtc-dev.c
+  compat_ioctl: add compat_ptr_ioctl()
+  compat_ioctl: move drivers to compat_ptr_ioctl
+  compat_ioctl: use correct compat_ptr() translation in drivers
+  ceph: fix compat_ioctl for ceph_dir_operations
+  compat_ioctl: move more drivers to compat_ptr_ioctl
+  compat_ioctl: move tape handling into drivers
+  compat_ioctl: move ATYFB_CLK handling to atyfb driver
+  compat_ioctl: move isdn/capi ioctl translation into driver
+  compat_ioctl: move rfcomm handlers into driver
+  compat_ioctl: move hci_sock handlers into driver
+  compat_ioctl: remove HCIUART handling
+  compat_ioctl: remove HIDIO translation
+  compat_ioctl: remove translation for sound ioctls
+  compat_ioctl: remove IGNORE_IOCTL()
+  compat_ioctl: remove /dev/random commands
+  compat_ioctl: remove joystick ioctl translation
+  compat_ioctl: remove PCI ioctl translation
+  compat_ioctl: remove /dev/raw ioctl translation
+  compat_ioctl: remove last RAID handling code
+
+ Documentation/networking/ppp_generic.txt    |   2 +
+ arch/um/drivers/hostaudio_kern.c            |   1 +
+ drivers/android/binder.c                    |   2 +-
+ drivers/char/ppdev.c                        |  12 +-
+ drivers/char/random.c                       |   1 +
+ drivers/char/tpm/tpm_vtpm_proxy.c           |  12 +-
+ drivers/crypto/qat/qat_common/adf_ctl_drv.c |   2 +-
+ drivers/dma-buf/dma-buf.c                   |   4 +-
+ drivers/dma-buf/sw_sync.c                   |   2 +-
+ drivers/dma-buf/sync_file.c                 |   2 +-
+ drivers/firewire/core-cdev.c                |  12 +-
+ drivers/gpu/drm/amd/amdkfd/kfd_chardev.c    |   2 +-
+ drivers/hid/hidraw.c                        |   4 +-
+ drivers/hid/usbhid/hiddev.c                 |  11 +-
+ drivers/hwtracing/stm/core.c                |  12 +-
+ drivers/ide/ide-tape.c                      |  31 +-
+ drivers/iio/industrialio-core.c             |   2 +-
+ drivers/infiniband/core/uverbs_main.c       |   4 +-
+ drivers/isdn/capi/capi.c                    |  31 +
+ drivers/isdn/i4l/isdn_ppp.c                 |  14 +-
+ drivers/media/rc/lirc_dev.c                 |   4 +-
+ drivers/mfd/cros_ec_dev.c                   |   4 +-
+ drivers/misc/cxl/flash.c                    |   8 +-
+ drivers/misc/genwqe/card_dev.c              |  23 +-
+ drivers/misc/mei/main.c                     |  22 +-
+ drivers/misc/vmw_vmci/vmci_host.c           |   2 +-
+ drivers/mtd/ubi/cdev.c                      |  36 +-
+ drivers/net/ppp/ppp_generic.c               |  99 +++-
+ drivers/net/ppp/pppoe.c                     |   7 +
+ drivers/net/ppp/pptp.c                      |   3 +
+ drivers/net/tap.c                           |  12 +-
+ drivers/nvdimm/bus.c                        |   4 +-
+ drivers/nvme/host/core.c                    |   2 +-
+ drivers/pci/switch/switchtec.c              |   2 +-
+ drivers/platform/x86/wmi.c                  |   2 +-
+ drivers/rpmsg/rpmsg_char.c                  |   4 +-
+ drivers/rtc/dev.c                           |  13 +-
+ drivers/rtc/rtc-vr41xx.c                    |  10 +
+ drivers/s390/char/tape_char.c               |  41 +-
+ drivers/sbus/char/display7seg.c             |   2 +-
+ drivers/sbus/char/envctrl.c                 |   4 +-
+ drivers/scsi/3w-xxxx.c                      |   4 +-
+ drivers/scsi/cxlflash/main.c                |   2 +-
+ drivers/scsi/esas2r/esas2r_main.c           |   2 +-
+ drivers/scsi/megaraid/megaraid_mm.c         |  28 +-
+ drivers/scsi/osst.c                         |  34 +-
+ drivers/scsi/pmcraid.c                      |   4 +-
+ drivers/scsi/st.c                           |  35 +-
+ drivers/staging/android/ion/ion.c           |   4 +-
+ drivers/staging/pi433/pi433_if.c            |  12 +-
+ drivers/staging/vme/devices/vme_user.c      |   2 +-
+ drivers/tee/tee_core.c                      |   2 +-
+ drivers/usb/class/cdc-wdm.c                 |   2 +-
+ drivers/usb/class/usbtmc.c                  |   4 +-
+ drivers/usb/core/devio.c                    |  16 +-
+ drivers/usb/gadget/function/f_fs.c          |  12 +-
+ drivers/vfio/vfio.c                         |  39 +-
+ drivers/vhost/net.c                         |  12 +-
+ drivers/vhost/scsi.c                        |  12 +-
+ drivers/vhost/test.c                        |  12 +-
+ drivers/vhost/vsock.c                       |  12 +-
+ drivers/video/fbdev/aty/atyfb_base.c        |  12 +-
+ drivers/virt/fsl_hypervisor.c               |   2 +-
+ fs/btrfs/super.c                            |   2 +-
+ fs/ceph/dir.c                               |   1 +
+ fs/ceph/file.c                              |   2 +-
+ fs/compat_ioctl.c                           | 602 +-------------------
+ fs/fat/file.c                               |  13 +-
+ fs/fuse/dev.c                               |   2 +-
+ fs/notify/fanotify/fanotify_user.c          |   2 +-
+ fs/userfaultfd.c                            |   2 +-
+ include/linux/fs.h                          |   7 +
+ include/linux/if_pppox.h                    |   2 +
+ include/linux/mtio.h                        |  58 ++
+ include/uapi/linux/ppp-ioctl.h              |   2 +
+ include/uapi/linux/ppp_defs.h               |  14 +
+ net/bluetooth/hci_sock.c                    |  21 +-
+ net/bluetooth/rfcomm/sock.c                 |  14 +-
+ net/l2tp/l2tp_ppp.c                         |   3 +
+ net/rfkill/core.c                           |   2 +-
+ sound/core/oss/pcm_oss.c                    |   4 +
+ sound/oss/dmasound/dmasound_core.c          |   2 +
+ 82 files changed, 452 insertions(+), 1034 deletions(-)
+ create mode 100644 include/linux/mtio.h
+
 -- 
-2.20.1
+2.20.0
+
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Karsten Keil <isdn@linux-pingi.de>
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: devel@driverdev.osuosl.org
+Cc: linux-integrity@vger.kernel.org
+Cc: qat-linux@intel.com
+Cc: linux-crypto@vger.kernel.org
+Cc: linux-media@vger.kernel.org
+Cc: dri-devel@lists.freedesktop.org
+Cc: linux1394-devel@lists.sourceforge.net
+Cc: amd-gfx@lists.freedesktop.org
+Cc: linux-input@vger.kernel.org
+Cc: linux-usb@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-ide@vger.kernel.org
+Cc: linux-iio@vger.kernel.org
+Cc: linux-rdma@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-mtd@lists.infradead.org
+Cc: linux-ppp@vger.kernel.org
+Cc: linux-nvme@lists.infradead.org
+Cc: platform-driver-x86@vger.kernel.org
+Cc: linux-remoteproc@vger.kernel.org
+Cc: linux-rtc@vger.kernel.org
+Cc: linux-s390@vger.kernel.org
+Cc: sparclinux@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-fbdev@vger.kernel.org
+Cc: linux-btrfs@vger.kernel.org
+Cc: ceph-devel@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
+Cc: linux-bluetooth@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org
+Cc: alsa-devel@alsa-project.org
+Cc: y2038@lists.linaro.org
