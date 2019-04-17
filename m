@@ -1,189 +1,131 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
+From: Arnd Bergmann <arnd@arndb.de>
 Subject: Re: [PATCH v3 00/26] compat_ioctl: cleanups
-Date: Tue, 16 Apr 2019 18:33:35 -0400
-Message-ID: <c379ed8d-1f33-e391-a1b5-810da77605f2@interlog.com>
+Date: Wed, 17 Apr 2019 11:26:46 +0200
+Message-ID: <CAK8P3a31L4isqsG_qPwjOhNZdxyu2KHLg11p9kFC=gtPNS0_UQ@mail.gmail.com>
 References: <20190416202013.4034148-1-arnd@arndb.de>
-Reply-To: dgilbert@interlog.com
+ <c379ed8d-1f33-e391-a1b5-810da77605f2@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190416202013.4034148-1-arnd@arndb.de>
-Content-Language: en-CA
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: linux-fsdevel@vger.kernel.org, y2038@lists.linaro.org, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Karsten Keil <isdn@linux-pingi.de>, "James E.J. Bottomley" <jejb@linux.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Marcel Holtmann <marcel@holtmann.org>, netdev@vger.kernel.org, devel@driverdev.osuosl.org, linux-integrity@vger.kernel.org, qat-linux@intel.com, linux-crypto@vger.kernel.org, linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org, linux1394-devel@lists.sourceforge.net, amd-gfx@lists.freedesktop.org, linux-input@vger.kernel.org, linux-usb@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-iio@vger.kernel.org, linux-rdma@vge
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <dri-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <c379ed8d-1f33-e391-a1b5-810da77605f2@interlog.com>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+ <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: dri-devel-bounces@lists.freedesktop.org
+Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
+To: dgilbert@interlog.com
+Cc: linux-nvme@lists.infradead.org, linux-iio@vger.kernel.org, linux-remoteproc@vger.kernel.org, Linux Fbdev development list <linux-fbdev@vger.kernel.org>, dri-devel <dri-devel@lists.freedesktop.org>, Platform Driver <platform-driver-x86@vger.kernel.org>, IDE-ML <linux-ide@vger.kernel.org>, linux-mtd <linux-mtd@lists.infradead.org>, sparclinux <sparclinux@vger.kernel.org>, linux1394-devel@lists.sourceforge.net, driverdevel <devel@driverdev.osuosl.org>, linux-s390 <linux-s390@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Bluez mailing list <linux-bluetooth@vger.kernel.org>, y2038 Mailman List <y2038@lists.linaro.org>, qat-linux@intel.com, amd-gfx@lists.freedesktop.org, "open list:HID CORE LAYER" <linux-input@vger.kernel.org>, Marcel Holtmann <marcel@holtmann.org>, Linux Media Mailing List <linux-media@vger.kernel.org>, linux-rtc@vger.kernel.org, ALSA
 List-Id: linux-ide@vger.kernel.org
 
-On 2019-04-16 4:19 p.m., Arnd Bergmann wrote:
-> Hi Al,
-> 
-> It took me way longer than I had hoped to revisit this series, see
-> https://lore.kernel.org/lkml/20180912150142.157913-1-arnd@arndb.de/
-> for the previously posted version.
-> 
-> I've come to the point where all conversion handlers and most
-> COMPATIBLE_IOCTL() entries are gone from this file, but for
-> now, this series only has the parts that have either been reviewed
-> previously, or that are simple enough to include.
-> 
-> The main missing piece is the SG_IO/SG_GET_REQUEST_TABLE conversion.
-> I'll post the patches I made for that later, as they need more
-> testing and review from the scsi maintainers.
-
-Perhaps you could look at the document in this url:
-     http://sg.danny.cz/sg/sg_v40.html
-
-It is work-in-progress to modernize the SCSI generic driver. It
-extends ioctl(sg_fd, SG_IO, &pt_obj) to additionally accept the sg v4
-interface as defined in include/uapi/linux/bsg.h . Currently only the
-bsg driver uses the sg v4 interface. Since struct sg_io_v4 is all
-explicitly sized integers, I'm guessing it is immune "compat" problems.
-[I can see no reference to bsg nor struct sg_io_v4 in the current
-fs/compat_ioctl.c file.]
-
-Other additions described in the that document are these new ioctls:
-   - SG_IOSUBMIT    ultimately to replace write(sg_fd, ...)
-   - SG_IORECEIVE              to replace read(sg_fd, ...)
-   - SG_IOABORT     abort SCSI cmd in progress; new functionality
-   - SG_SET_GET_EXTENDED   has associated struct sg_extended_info
-
-The first three take a pointer to a struct sg_io_hdr (v3 interface) or
-a struct sg_io_v4 object. Both objects start with a 32 bit integer:
-'S' identifies the v3 interface while 'Q' identifies the v4 interface.
-
-The SG_SET_GET_EXTENDED ioctl takes a pointer to a struct
-sg_extended_info object which contains explicitly sized integers so it
-may also be immune from "compat" problems. The ioctls section (13) of
-that document referenced above has a table showing how many "sets and
-gets" are hiding in the SG_SET_GET_EXTENDED ioctl.
-
-BTW No change is proposed for this case:
-     ioctl(normal_block_device, SG_IO, &sg_v3_obj)
-which is handled by block/scsi_ioctl.c
-
-
-This would be a good time for me to address any "compat" concerns in the
-proposed sg driver update.
-
-Doug Gilbert
-
-
-> I hope you can still take these for the coming merge window, unless
-> new problems come up.
-> 
->        Arnd
-> 
-> Arnd Bergmann (26):
->    compat_ioctl: pppoe: fix PPPOEIOCSFWD handling
->    compat_ioctl: move simple ppp command handling into driver
->    compat_ioctl: avoid unused function warning for do_ioctl
->    compat_ioctl: move PPPIOCSCOMPRESS32 to ppp-generic.c
->    compat_ioctl: move PPPIOCSPASS32/PPPIOCSACTIVE32 to ppp_generic.c
->    compat_ioctl: handle PPPIOCGIDLE for 64-bit time_t
->    compat_ioctl: move rtc handling into rtc-dev.c
->    compat_ioctl: add compat_ptr_ioctl()
->    compat_ioctl: move drivers to compat_ptr_ioctl
->    compat_ioctl: use correct compat_ptr() translation in drivers
->    ceph: fix compat_ioctl for ceph_dir_operations
->    compat_ioctl: move more drivers to compat_ptr_ioctl
->    compat_ioctl: move tape handling into drivers
->    compat_ioctl: move ATYFB_CLK handling to atyfb driver
->    compat_ioctl: move isdn/capi ioctl translation into driver
->    compat_ioctl: move rfcomm handlers into driver
->    compat_ioctl: move hci_sock handlers into driver
->    compat_ioctl: remove HCIUART handling
->    compat_ioctl: remove HIDIO translation
->    compat_ioctl: remove translation for sound ioctls
->    compat_ioctl: remove IGNORE_IOCTL()
->    compat_ioctl: remove /dev/random commands
->    compat_ioctl: remove joystick ioctl translation
->    compat_ioctl: remove PCI ioctl translation
->    compat_ioctl: remove /dev/raw ioctl translation
->    compat_ioctl: remove last RAID handling code
-> 
->   Documentation/networking/ppp_generic.txt    |   2 +
->   arch/um/drivers/hostaudio_kern.c            |   1 +
->   drivers/android/binder.c                    |   2 +-
->   drivers/char/ppdev.c                        |  12 +-
->   drivers/char/random.c                       |   1 +
->   drivers/char/tpm/tpm_vtpm_proxy.c           |  12 +-
->   drivers/crypto/qat/qat_common/adf_ctl_drv.c |   2 +-
->   drivers/dma-buf/dma-buf.c                   |   4 +-
->   drivers/dma-buf/sw_sync.c                   |   2 +-
->   drivers/dma-buf/sync_file.c                 |   2 +-
->   drivers/firewire/core-cdev.c                |  12 +-
->   drivers/gpu/drm/amd/amdkfd/kfd_chardev.c    |   2 +-
->   drivers/hid/hidraw.c                        |   4 +-
->   drivers/hid/usbhid/hiddev.c                 |  11 +-
->   drivers/hwtracing/stm/core.c                |  12 +-
->   drivers/ide/ide-tape.c                      |  31 +-
->   drivers/iio/industrialio-core.c             |   2 +-
->   drivers/infiniband/core/uverbs_main.c       |   4 +-
->   drivers/isdn/capi/capi.c                    |  31 +
->   drivers/isdn/i4l/isdn_ppp.c                 |  14 +-
->   drivers/media/rc/lirc_dev.c                 |   4 +-
->   drivers/mfd/cros_ec_dev.c                   |   4 +-
->   drivers/misc/cxl/flash.c                    |   8 +-
->   drivers/misc/genwqe/card_dev.c              |  23 +-
->   drivers/misc/mei/main.c                     |  22 +-
->   drivers/misc/vmw_vmci/vmci_host.c           |   2 +-
->   drivers/mtd/ubi/cdev.c                      |  36 +-
->   drivers/net/ppp/ppp_generic.c               |  99 +++-
->   drivers/net/ppp/pppoe.c                     |   7 +
->   drivers/net/ppp/pptp.c                      |   3 +
->   drivers/net/tap.c                           |  12 +-
->   drivers/nvdimm/bus.c                        |   4 +-
->   drivers/nvme/host/core.c                    |   2 +-
->   drivers/pci/switch/switchtec.c              |   2 +-
->   drivers/platform/x86/wmi.c                  |   2 +-
->   drivers/rpmsg/rpmsg_char.c                  |   4 +-
->   drivers/rtc/dev.c                           |  13 +-
->   drivers/rtc/rtc-vr41xx.c                    |  10 +
->   drivers/s390/char/tape_char.c               |  41 +-
->   drivers/sbus/char/display7seg.c             |   2 +-
->   drivers/sbus/char/envctrl.c                 |   4 +-
->   drivers/scsi/3w-xxxx.c                      |   4 +-
->   drivers/scsi/cxlflash/main.c                |   2 +-
->   drivers/scsi/esas2r/esas2r_main.c           |   2 +-
->   drivers/scsi/megaraid/megaraid_mm.c         |  28 +-
->   drivers/scsi/osst.c                         |  34 +-
->   drivers/scsi/pmcraid.c                      |   4 +-
->   drivers/scsi/st.c                           |  35 +-
->   drivers/staging/android/ion/ion.c           |   4 +-
->   drivers/staging/pi433/pi433_if.c            |  12 +-
->   drivers/staging/vme/devices/vme_user.c      |   2 +-
->   drivers/tee/tee_core.c                      |   2 +-
->   drivers/usb/class/cdc-wdm.c                 |   2 +-
->   drivers/usb/class/usbtmc.c                  |   4 +-
->   drivers/usb/core/devio.c                    |  16 +-
->   drivers/usb/gadget/function/f_fs.c          |  12 +-
->   drivers/vfio/vfio.c                         |  39 +-
->   drivers/vhost/net.c                         |  12 +-
->   drivers/vhost/scsi.c                        |  12 +-
->   drivers/vhost/test.c                        |  12 +-
->   drivers/vhost/vsock.c                       |  12 +-
->   drivers/video/fbdev/aty/atyfb_base.c        |  12 +-
->   drivers/virt/fsl_hypervisor.c               |   2 +-
->   fs/btrfs/super.c                            |   2 +-
->   fs/ceph/dir.c                               |   1 +
->   fs/ceph/file.c                              |   2 +-
->   fs/compat_ioctl.c                           | 602 +-------------------
->   fs/fat/file.c                               |  13 +-
->   fs/fuse/dev.c                               |   2 +-
->   fs/notify/fanotify/fanotify_user.c          |   2 +-
->   fs/userfaultfd.c                            |   2 +-
->   include/linux/fs.h                          |   7 +
->   include/linux/if_pppox.h                    |   2 +
->   include/linux/mtio.h                        |  58 ++
->   include/uapi/linux/ppp-ioctl.h              |   2 +
->   include/uapi/linux/ppp_defs.h               |  14 +
->   net/bluetooth/hci_sock.c                    |  21 +-
->   net/bluetooth/rfcomm/sock.c                 |  14 +-
->   net/l2tp/l2tp_ppp.c                         |   3 +
->   net/rfkill/core.c                           |   2 +-
->   sound/core/oss/pcm_oss.c                    |   4 +
->   sound/oss/dmasound/dmasound_core.c          |   2 +
->   82 files changed, 452 insertions(+), 1034 deletions(-)
->   create mode 100644 include/linux/mtio.h
-> 
+T24gV2VkLCBBcHIgMTcsIDIwMTkgYXQgMTI6MzMgQU0gRG91Z2xhcyBHaWxiZXJ0IDxkZ2lsYmVy
+dEBpbnRlcmxvZy5jb20+IHdyb3RlOgo+Cj4gT24gMjAxOS0wNC0xNiA0OjE5IHAubS4sIEFybmQg
+QmVyZ21hbm4gd3JvdGU6Cj4gPiBIaSBBbCwKPiA+Cj4gPiBJdCB0b29rIG1lIHdheSBsb25nZXIg
+dGhhbiBJIGhhZCBob3BlZCB0byByZXZpc2l0IHRoaXMgc2VyaWVzLCBzZWUKPiA+IGh0dHBzOi8v
+bG9yZS5rZXJuZWwub3JnL2xrbWwvMjAxODA5MTIxNTAxNDIuMTU3OTEzLTEtYXJuZEBhcm5kYi5k
+ZS8KPiA+IGZvciB0aGUgcHJldmlvdXNseSBwb3N0ZWQgdmVyc2lvbi4KPiA+Cj4gPiBJJ3ZlIGNv
+bWUgdG8gdGhlIHBvaW50IHdoZXJlIGFsbCBjb252ZXJzaW9uIGhhbmRsZXJzIGFuZCBtb3N0Cj4g
+PiBDT01QQVRJQkxFX0lPQ1RMKCkgZW50cmllcyBhcmUgZ29uZSBmcm9tIHRoaXMgZmlsZSwgYnV0
+IGZvcgo+ID4gbm93LCB0aGlzIHNlcmllcyBvbmx5IGhhcyB0aGUgcGFydHMgdGhhdCBoYXZlIGVp
+dGhlciBiZWVuIHJldmlld2VkCj4gPiBwcmV2aW91c2x5LCBvciB0aGF0IGFyZSBzaW1wbGUgZW5v
+dWdoIHRvIGluY2x1ZGUuCj4gPgo+ID4gVGhlIG1haW4gbWlzc2luZyBwaWVjZSBpcyB0aGUgU0df
+SU8vU0dfR0VUX1JFUVVFU1RfVEFCTEUgY29udmVyc2lvbi4KPiA+IEknbGwgcG9zdCB0aGUgcGF0
+Y2hlcyBJIG1hZGUgZm9yIHRoYXQgbGF0ZXIsIGFzIHRoZXkgbmVlZCBtb3JlCj4gPiB0ZXN0aW5n
+IGFuZCByZXZpZXcgZnJvbSB0aGUgc2NzaSBtYWludGFpbmVycy4KPgo+IFBlcmhhcHMgeW91IGNv
+dWxkIGxvb2sgYXQgdGhlIGRvY3VtZW50IGluIHRoaXMgdXJsOgo+ICAgICAgaHR0cDovL3NnLmRh
+bm55LmN6L3NnL3NnX3Y0MC5odG1sCj4KPiBJdCBpcyB3b3JrLWluLXByb2dyZXNzIHRvIG1vZGVy
+bml6ZSB0aGUgU0NTSSBnZW5lcmljIGRyaXZlci4gSXQKPiBleHRlbmRzIGlvY3RsKHNnX2ZkLCBT
+R19JTywgJnB0X29iaikgdG8gYWRkaXRpb25hbGx5IGFjY2VwdCB0aGUgc2cgdjQKPiBpbnRlcmZh
+Y2UgYXMgZGVmaW5lZCBpbiBpbmNsdWRlL3VhcGkvbGludXgvYnNnLmggLiBDdXJyZW50bHkgb25s
+eSB0aGUKPiBic2cgZHJpdmVyIHVzZXMgdGhlIHNnIHY0IGludGVyZmFjZS4gU2luY2Ugc3RydWN0
+IHNnX2lvX3Y0IGlzIGFsbAo+IGV4cGxpY2l0bHkgc2l6ZWQgaW50ZWdlcnMsIEknbSBndWVzc2lu
+ZyBpdCBpcyBpbW11bmUgImNvbXBhdCIgcHJvYmxlbXMuCj4gW0kgY2FuIHNlZSBubyByZWZlcmVu
+Y2UgdG8gYnNnIG5vciBzdHJ1Y3Qgc2dfaW9fdjQgaW4gdGhlIGN1cnJlbnQKPiBmcy9jb21wYXRf
+aW9jdGwuYyBmaWxlLl0KCk9rLCBJJ3ZlIHRha2VuIGEgYnJpZWYgbG9vayBhdCB5b3VyIHNlcmll
+cyBub3cuIFVuZm9ydHVuYXRlbHkgaXQgY2xhc2hlcwpxdWl0ZSBoYXJkIHdpdGggbXkgc2VyaWVz
+LCBidXQgaXQncyBwcm9iYWJseSBmb3IgdGhlIGJldHRlciB0byBoYXZlIHlvdXIKc3R1ZmYgZ2V0
+IG1lcmdlZCBmaXJzdC4KCkEgZmV3ICh1bnNvcnRlZCkgY29tbWVudHMgZnJvbSBnb2luZyB0aHJv
+dWdoIHlvdXIgcGF0Y2hlczoKCi0gdGhlIGFkZGVkIGlvY3RscyBhcmUgYWxsIGNvbXBhdGlibGUg
+d2hlbiB1c2luZyB0aGUgdjQgc3RydWN0dXJlcwogIGFuZCBtb3N0bHkgZG9uJ3QgbmVlZCBoYW5k
+bGVycyBmb3IgY29tcGF0IG1vZGUsIGJ1dCB0aGV5IG5lZWQgdG8gYmUKICBjYWxsZWQgZnJvbSAu
+Y29tcGF0X2lvY3RsIHRvIGFjdHVhbGx5IGJlIHVzYWJsZSBpbiBjb21wYXQgbW9kZS4KICBXaXRo
+IG15IHBhdGNoZXMgeW91IGdldCB0aGF0LgotIE9uZSBleGNlcHRpb24gZm9yIHRoZSB2NCBsYXlv
+dXQgaXMgdGhlIHVzZSBvZiBpb3ZlYyBwb2ludGVycywgYXMKICAnc3RydWN0IGlvdmVjJyBpcyBp
+bmNvbXBhdGlibGUuIFdlIHNob3VsZCBwcm9iYWJseSBtZXJnZSB0aGUKICBnZW5lcmljIGNvbXBh
+dF9pbXBvcnRfaW92ZWMoKSBpbnRvIGltcG9ydF9pb3ZlYygpIHdpdGggYQogICdpbl9jb21wYXRf
+c3lzY2FsbCgpJyBjaGVjaywgd2hpY2ggd291bGQgYmUgaGVscGZ1bCBpbiBnZW5lcmFsLgogIGJz
+Zy5jIGRvZXMgbm90IGlvdmVjLCBzbyBpdCBpcyBub3QgYWZmZWN0ZWQgYnkgdGhpcyBhdCB0aGUg
+bW9tZW50LAogIG1heWJlIGl0IHdvdWxkIGJlIGJldHRlciB0byBzdGF5IGNvbXBhdGlibGUgd2l0
+aCB0aGF0IGFuZCBhbHNvCiAgbm90IHN1cHBvcnQgdGhlbSBpbiBzZy5jPwotIElzIHRoZXJlIGEg
+bmVlZCBmb3IgdGhlIG5ldyBzZ19pb2N0bF9pb3N1Ym1pdC9zZ19pb2N0bF9pb3JlY2VpdmUKICB0
+byBzdXBwb3J0IHRoZSB2MyBzdHJ1Y3R1cmVzPyBUaG9zZSBhcmUgL25vdC8gY29tcGF0aWJsZSwg
+c28KICB5b3UgbmVlZCBleHRyYSBjb2RlIHRvIGhhbmRsZSB0aGUgdjMtY29tcGF0IGxheW91dCBh
+cyB3ZWxsLgogIFN1cHBvcnRpbmcgb25seSB2NCB3b3VsZCBzaW1wbGlmeSB0aGlzLgotIHRoZSBs
+YWNrIG9mIGNoYW5nZXNldCBkZXNjcmlwdGlvbnMgaXMgYSBiaXQgaXJyaXRhdGluZyBhbmQgbWFr
+ZXMKICBpdCBtdWNoIGhhcmRlciB0byB1bmRlcnN0YW5kIHdoYXQgeW91IGFyZSBkb2luZy4KLSB0
+cnkgdG8ga2VlcCBwYXRjaGVzIHRoYXQgbW92ZSBjb2RlIGFyb3VuZCBzZXBhcmF0ZSBmcm9tIHRo
+b3NlCiAgdGhhdCBjaGFuZ2UgaXQgaW4gYW55IG90aGVyIHdheSwgZm9yIGJldHRlciByZXZpZXdp
+bmcuCi0gaW4gInNnOiBwcmVwYXJhdGlvbiBmb3IgcmVxdWVzdCBzaGFyaW5nIiwgeW91IHNlZW0g
+dG8gaW5hZHZlcnRlbnRseQogIGNoYW5nZSB0aGUgc2l6ZSBvZiAic3RydWN0IHNnX2V4dGVuZGVk
+X2luZm8iLCBtYWtpbmcgaXQgNCBieXRlcwogIGxvbmdlciBieSBhZGRpbmcgdHdvIG1lbWJlcnMu
+Ci0gWW91IHNob3VsZCBuZXZlciB1c2UgSVNfRVJSX09SX05VTEwoKSBpbiBub3JtYWwgY29kZSwg
+dGhhdAogIGlzIGp1c3QgYSBzaWduIG9mIGEgYmFkIEFQSS4gTWFrZSBlYWNoIGZ1bmN0aW9uIGhh
+dmUgY29uc2lzdGVudAogIGVycm9yIGJlaGF2aW9yLgotIFRoZSAiI2lmIDAgIC8qIHRlbXBvcmFy
+eSB0byBzaG9ydGVuIGJpZyBwYXRjaCAqLyIgdHJpY2sgYnJlYWtzCiAgYmlzZWN0aW9uLCB0aGF0
+IGlzIHByb2JhYmx5IHdvcnNlIHRoYW4gdGhlIGxhcmdlciBwYXRjaC4KLSBUaGUgc3BsaXQgYWNj
+ZXNzX29rKCkvX19jb3B5X2Zyb21fdXNlcigpIGhhcyBmYWxsZW4gb3V0IG9mCiAgZmF2b3IgYmVj
+YXVzZSBpdCBoYXMgY2F1c2VkIHRvbyBtYW55IGJ1Z3MgaW4gdGhlIHBhc3QsIGp1c3QKICB1c2Ug
+dGhlIGNvbWJpbmVkIGNvcHlfZnJvbV91c2VyKCkgaW5zdGVhZC4KLSBrdGltZV90b19ucyhrdGlt
+ZV9nZXRfd2l0aF9vZmZzZXQoVEtfT0ZGU19CT09UKSkgZm9sbG93ZWQKICBieSBhIDY0LWJpdCBk
+aXZpc2lvbiB3b24ndCB3b3JrIG9uIDMyLWJpdCBtYWNoaW5lcywgdXNlCiAga3RpbWVfZ2V0X2Jv
+b3R0aW1lX3RzNjQoKSBpbnN0ZWFkLgoKPiBPdGhlciBhZGRpdGlvbnMgZGVzY3JpYmVkIGluIHRo
+ZSB0aGF0IGRvY3VtZW50IGFyZSB0aGVzZSBuZXcgaW9jdGxzOgo+ICAgIC0gU0dfSU9TVUJNSVQg
+ICAgdWx0aW1hdGVseSB0byByZXBsYWNlIHdyaXRlKHNnX2ZkLCAuLi4pCj4gICAgLSBTR19JT1JF
+Q0VJVkUgICAgICAgICAgICAgIHRvIHJlcGxhY2UgcmVhZChzZ19mZCwgLi4uKQo+ICAgIC0gU0df
+SU9BQk9SVCAgICAgYWJvcnQgU0NTSSBjbWQgaW4gcHJvZ3Jlc3M7IG5ldyBmdW5jdGlvbmFsaXR5
+Cj4gICAgLSBTR19TRVRfR0VUX0VYVEVOREVEICAgaGFzIGFzc29jaWF0ZWQgc3RydWN0IHNnX2V4
+dGVuZGVkX2luZm8KPgo+IFRoZSBmaXJzdCB0aHJlZSB0YWtlIGEgcG9pbnRlciB0byBhIHN0cnVj
+dCBzZ19pb19oZHIgKHYzIGludGVyZmFjZSkgb3IKPiBhIHN0cnVjdCBzZ19pb192NCBvYmplY3Qu
+IEJvdGggb2JqZWN0cyBzdGFydCB3aXRoIGEgMzIgYml0IGludGVnZXI6Cj4gJ1MnIGlkZW50aWZp
+ZXMgdGhlIHYzIGludGVyZmFjZSB3aGlsZSAnUScgaWRlbnRpZmllcyB0aGUgdjQgaW50ZXJmYWNl
+LgoKSSB0aGluayB0aGUgbWFnaWMgY2hhcmFjdGVyIHdhcyBhIG1pc3Rha2UgaW4gdGhlIG9yaWdp
+bmFsIGRlc2lnbiwKanVzdCBsaWtlIHZlcnNpb25lZCBpbnRlcmZhY2VzIGluIGdlbmVyYWwuIElm
+IHlvdSBhcmUgZXh0ZW5kaW5nIGFuCmludGVyZmFjZSBpbiBhbiBpbmNvbXBhdGlibGUgd2F5LCB0
+aGUgbm9ybWFsIHdheSB3b3VsZCBiZSB0bwpoYXZlIHNlcGFyYXRlIGNvbW1hbmQgY29kZXMsIGxp
+a2UgU0dfSU9SRUNFSVZFX1YzCmFuZCBTR19JT1JFQ0VJVkVfVjQsIGlmIHlvdSBhYnNvbHV0ZWx5
+IGhhdmUgdG8gbWFpbnRhaW4KY29tcGF0aWJsaXR5IHdpdGggdGhlIG9sZCBpbnRlcmZhY2UgKHdo
+aWNoIEkgdGhpbmsgeW91IGRvbid0IGluCmNhc2Ugb2YgU0dfSU9SRUNFSVZFKS4KCkZvciBTR19J
+TywgSSBjYW4gc2VlICB3aHkgeW91IHdhbnQgdG8gc3VwcG9ydCBib3RoIHRoZSB2MwphbmQgdjQg
+c3RydWN0dXJlcyBwbHVzIHRoZSBjb21wYXQtdjMgdmVyc2lvbiwgYnV0IEknZCB0cnkgdG8ga2Vl
+cAp0aGVtIGFzIHNlcGFyYXRlIGFzIHBvc3NpYmxlLCBhbmQgZG8gc29tZXRoaW5nIGxpa2UKCnN0
+YXRpYyBpbnQgIHNnX2N0bF9zZ19pbyhzdHJ1Y3QgZmlsZSAqZmlscCwgc3RydWN0IHNnX2Rldmlj
+ZSAqc2RwLApzdHJ1Y3Qgc2dfZmQgKnNmcCwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgdm9pZCBfX3VzZXIgKnApCnsKICAgICAgIGludCByZXQ7CgogICAgICByZXQgPSBzZ19pb192
+NChmaWxwLCBzZHAsIHNmcCwgKHN0cnVjdCBzZ19pb192NCBfX3VzZXIgKilwKTsKCiAgICAgIGlm
+IChyZXQgIT0gLUVOT0lPQ1RMQ01EIHx8ICFTX0VOQUJMRUQoQ09ORklHX1NHX0lPX1YzKSkKICAg
+ICAgICAgICAgcmV0dXJuIHJldDsKCiAgICAgaWYgKGluX2NvbXBhdF9zeXNjYWxsKCkpCiAgICAg
+ICAgICAgcmV0ID0gc2dfaW9fY29tcGF0XyhmaWxwLCBzZHAsIHNmcCwgKHN0cnVjdApjb21wYXRf
+c2dfaW9faGRyIF9fdXNlciAqKXApOwogICAgIGVsc2UKICAgICAgICAgICByZXQgPSBzZ19pb192
+MyhmaWxwLCBzZHAsIHNmcCwgKHN0cnVjdCBzZ19pb19oZHIgX191c2VyICopcCk7Cn0KCkluIG15
+IHBhdGNoIHNlcmllcywgSSBjb21iaW5lZCB0aGUgbGF0dGVyIHR3byBjYXNlcyBhbmQgdXNlZCBh
+IHNoYXJlZApnZXRfc2dfaW9faGRyKCkvcHV0X3NnX2lvX2hkcigpIGhlbHBlciBhcyB3ZWxsIGFz
+IGEgd3JhcHBlciBmb3IgdGhlIGlvdmVjCmlzc3VlLgoKPiBUaGUgU0dfU0VUX0dFVF9FWFRFTkRF
+RCBpb2N0bCB0YWtlcyBhIHBvaW50ZXIgdG8gYSBzdHJ1Y3QKPiBzZ19leHRlbmRlZF9pbmZvIG9i
+amVjdCB3aGljaCBjb250YWlucyBleHBsaWNpdGx5IHNpemVkIGludGVnZXJzIHNvIGl0Cj4gbWF5
+IGFsc28gYmUgaW1tdW5lIGZyb20gImNvbXBhdCIgcHJvYmxlbXMuIFRoZSBpb2N0bHMgc2VjdGlv
+biAoMTMpIG9mCj4gdGhhdCBkb2N1bWVudCByZWZlcmVuY2VkIGFib3ZlIGhhcyBhIHRhYmxlIHNo
+b3dpbmcgaG93IG1hbnkgInNldHMgYW5kCj4gZ2V0cyIgYXJlIGhpZGluZyBpbiB0aGUgU0dfU0VU
+X0dFVF9FWFRFTkRFRCBpb2N0bC4KCkFncmVlZCwgU0dfU0VUX0dFVF9FWFRFTkRFRCBsb29rcyBm
+aW5lIHRvIG1lIGZyb20gYSBjb21wYXQKcGVyc3BlY3RpdmUuCgpJJ3ZlIHVwbG9hZGVkIG15IHBh
+dGNoZXMgdG8KZ2l0Oi8vZ2l0Lmtlcm5lbC5vcmc6L3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9h
+cm5kL3BsYXlncm91bmQuZ2l0CmNvbXBhdC1pb2N0bC12MwpUaGlzIGNvbnRhaW5zIGJvdGggdGhl
+IHNlcmllcyBJIHBvc3RlZCBoZXJlLCBhbmQgbXkgc2NzaSBpb2N0bCByZXdvcmsuCgpNYXliZSB5
+b3UgY2FuIHRha2UgdGhlIGJpdHMgeW91IG5lZWQgZnJvbSB0aGF0IHRvIGhhbmRsZSB0aGUgdjMt
+Y29tcGF0CnN0cnVjdHVyZXMgYW5kIGludGVncmF0ZSBpdCBpbnRvIHlvdXIgc2VyaWVzPwoKICAg
+ICBBcm5kCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRy
+aS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRw
+czovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbA==
