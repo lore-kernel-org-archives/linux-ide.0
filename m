@@ -1,131 +1,115 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v3 00/26] compat_ioctl: cleanups
-Date: Wed, 17 Apr 2019 11:26:46 +0200
-Message-ID: <CAK8P3a31L4isqsG_qPwjOhNZdxyu2KHLg11p9kFC=gtPNS0_UQ@mail.gmail.com>
-References: <20190416202013.4034148-1-arnd@arndb.de>
- <c379ed8d-1f33-e391-a1b5-810da77605f2@interlog.com>
+From: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+Subject: Avoiding merge conflicts while adding new docs - Was: Re: [PATCH
+ 00/57] Convert files to ReST
+Date: Thu, 18 Apr 2019 09:42:23 -0300
+Message-ID: <20190418091526.00e074d1@coco.lan>
+References: <cover.1555382110.git.mchehab+samsung@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <c379ed8d-1f33-e391-a1b5-810da77605f2@interlog.com>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: dgilbert@interlog.com
-Cc: linux-nvme@lists.infradead.org, linux-iio@vger.kernel.org, linux-remoteproc@vger.kernel.org, Linux Fbdev development list <linux-fbdev@vger.kernel.org>, dri-devel <dri-devel@lists.freedesktop.org>, Platform Driver <platform-driver-x86@vger.kernel.org>, IDE-ML <linux-ide@vger.kernel.org>, linux-mtd <linux-mtd@lists.infradead.org>, sparclinux <sparclinux@vger.kernel.org>, linux1394-devel@lists.sourceforge.net, driverdevel <devel@driverdev.osuosl.org>, linux-s390 <linux-s390@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Bluez mailing list <linux-bluetooth@vger.kernel.org>, y2038 Mailman List <y2038@lists.linaro.org>, qat-linux@intel.com, amd-gfx@lists.freedesktop.org, "open list:HID CORE LAYER" <linux-input@vger.kernel.org>, Marcel Holtmann <marcel@holtmann.org>, Linux Media Mailing List <linux-media@vger.kernel.org>, linux-rtc@vger.kernel.org, ALSA
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1555382110.git.mchehab+samsung@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jonathan Corbet <corbet@lwn.net>
+Cc: Linux Doc Mailing List <linux-doc@vger.kernel.org>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org, linux-fbdev@vger.kernel.org, linux-s390@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-watchdog@vger.kernel.org, xdp-newbies@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-acpi@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com, bpf@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org, linux-gpio@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, x86@kernel.org, dm-devel@redhat.com, target-devel@vger.kernel.org, netdev@vger.kernel.org, kexec@lists.infradead.org, linux-fpga@vger.kernel.org, linux-rdma@vger.ke
 List-Id: linux-ide@vger.kernel.org
 
-T24gV2VkLCBBcHIgMTcsIDIwMTkgYXQgMTI6MzMgQU0gRG91Z2xhcyBHaWxiZXJ0IDxkZ2lsYmVy
-dEBpbnRlcmxvZy5jb20+IHdyb3RlOgo+Cj4gT24gMjAxOS0wNC0xNiA0OjE5IHAubS4sIEFybmQg
-QmVyZ21hbm4gd3JvdGU6Cj4gPiBIaSBBbCwKPiA+Cj4gPiBJdCB0b29rIG1lIHdheSBsb25nZXIg
-dGhhbiBJIGhhZCBob3BlZCB0byByZXZpc2l0IHRoaXMgc2VyaWVzLCBzZWUKPiA+IGh0dHBzOi8v
-bG9yZS5rZXJuZWwub3JnL2xrbWwvMjAxODA5MTIxNTAxNDIuMTU3OTEzLTEtYXJuZEBhcm5kYi5k
-ZS8KPiA+IGZvciB0aGUgcHJldmlvdXNseSBwb3N0ZWQgdmVyc2lvbi4KPiA+Cj4gPiBJJ3ZlIGNv
-bWUgdG8gdGhlIHBvaW50IHdoZXJlIGFsbCBjb252ZXJzaW9uIGhhbmRsZXJzIGFuZCBtb3N0Cj4g
-PiBDT01QQVRJQkxFX0lPQ1RMKCkgZW50cmllcyBhcmUgZ29uZSBmcm9tIHRoaXMgZmlsZSwgYnV0
-IGZvcgo+ID4gbm93LCB0aGlzIHNlcmllcyBvbmx5IGhhcyB0aGUgcGFydHMgdGhhdCBoYXZlIGVp
-dGhlciBiZWVuIHJldmlld2VkCj4gPiBwcmV2aW91c2x5LCBvciB0aGF0IGFyZSBzaW1wbGUgZW5v
-dWdoIHRvIGluY2x1ZGUuCj4gPgo+ID4gVGhlIG1haW4gbWlzc2luZyBwaWVjZSBpcyB0aGUgU0df
-SU8vU0dfR0VUX1JFUVVFU1RfVEFCTEUgY29udmVyc2lvbi4KPiA+IEknbGwgcG9zdCB0aGUgcGF0
-Y2hlcyBJIG1hZGUgZm9yIHRoYXQgbGF0ZXIsIGFzIHRoZXkgbmVlZCBtb3JlCj4gPiB0ZXN0aW5n
-IGFuZCByZXZpZXcgZnJvbSB0aGUgc2NzaSBtYWludGFpbmVycy4KPgo+IFBlcmhhcHMgeW91IGNv
-dWxkIGxvb2sgYXQgdGhlIGRvY3VtZW50IGluIHRoaXMgdXJsOgo+ICAgICAgaHR0cDovL3NnLmRh
-bm55LmN6L3NnL3NnX3Y0MC5odG1sCj4KPiBJdCBpcyB3b3JrLWluLXByb2dyZXNzIHRvIG1vZGVy
-bml6ZSB0aGUgU0NTSSBnZW5lcmljIGRyaXZlci4gSXQKPiBleHRlbmRzIGlvY3RsKHNnX2ZkLCBT
-R19JTywgJnB0X29iaikgdG8gYWRkaXRpb25hbGx5IGFjY2VwdCB0aGUgc2cgdjQKPiBpbnRlcmZh
-Y2UgYXMgZGVmaW5lZCBpbiBpbmNsdWRlL3VhcGkvbGludXgvYnNnLmggLiBDdXJyZW50bHkgb25s
-eSB0aGUKPiBic2cgZHJpdmVyIHVzZXMgdGhlIHNnIHY0IGludGVyZmFjZS4gU2luY2Ugc3RydWN0
-IHNnX2lvX3Y0IGlzIGFsbAo+IGV4cGxpY2l0bHkgc2l6ZWQgaW50ZWdlcnMsIEknbSBndWVzc2lu
-ZyBpdCBpcyBpbW11bmUgImNvbXBhdCIgcHJvYmxlbXMuCj4gW0kgY2FuIHNlZSBubyByZWZlcmVu
-Y2UgdG8gYnNnIG5vciBzdHJ1Y3Qgc2dfaW9fdjQgaW4gdGhlIGN1cnJlbnQKPiBmcy9jb21wYXRf
-aW9jdGwuYyBmaWxlLl0KCk9rLCBJJ3ZlIHRha2VuIGEgYnJpZWYgbG9vayBhdCB5b3VyIHNlcmll
-cyBub3cuIFVuZm9ydHVuYXRlbHkgaXQgY2xhc2hlcwpxdWl0ZSBoYXJkIHdpdGggbXkgc2VyaWVz
-LCBidXQgaXQncyBwcm9iYWJseSBmb3IgdGhlIGJldHRlciB0byBoYXZlIHlvdXIKc3R1ZmYgZ2V0
-IG1lcmdlZCBmaXJzdC4KCkEgZmV3ICh1bnNvcnRlZCkgY29tbWVudHMgZnJvbSBnb2luZyB0aHJv
-dWdoIHlvdXIgcGF0Y2hlczoKCi0gdGhlIGFkZGVkIGlvY3RscyBhcmUgYWxsIGNvbXBhdGlibGUg
-d2hlbiB1c2luZyB0aGUgdjQgc3RydWN0dXJlcwogIGFuZCBtb3N0bHkgZG9uJ3QgbmVlZCBoYW5k
-bGVycyBmb3IgY29tcGF0IG1vZGUsIGJ1dCB0aGV5IG5lZWQgdG8gYmUKICBjYWxsZWQgZnJvbSAu
-Y29tcGF0X2lvY3RsIHRvIGFjdHVhbGx5IGJlIHVzYWJsZSBpbiBjb21wYXQgbW9kZS4KICBXaXRo
-IG15IHBhdGNoZXMgeW91IGdldCB0aGF0LgotIE9uZSBleGNlcHRpb24gZm9yIHRoZSB2NCBsYXlv
-dXQgaXMgdGhlIHVzZSBvZiBpb3ZlYyBwb2ludGVycywgYXMKICAnc3RydWN0IGlvdmVjJyBpcyBp
-bmNvbXBhdGlibGUuIFdlIHNob3VsZCBwcm9iYWJseSBtZXJnZSB0aGUKICBnZW5lcmljIGNvbXBh
-dF9pbXBvcnRfaW92ZWMoKSBpbnRvIGltcG9ydF9pb3ZlYygpIHdpdGggYQogICdpbl9jb21wYXRf
-c3lzY2FsbCgpJyBjaGVjaywgd2hpY2ggd291bGQgYmUgaGVscGZ1bCBpbiBnZW5lcmFsLgogIGJz
-Zy5jIGRvZXMgbm90IGlvdmVjLCBzbyBpdCBpcyBub3QgYWZmZWN0ZWQgYnkgdGhpcyBhdCB0aGUg
-bW9tZW50LAogIG1heWJlIGl0IHdvdWxkIGJlIGJldHRlciB0byBzdGF5IGNvbXBhdGlibGUgd2l0
-aCB0aGF0IGFuZCBhbHNvCiAgbm90IHN1cHBvcnQgdGhlbSBpbiBzZy5jPwotIElzIHRoZXJlIGEg
-bmVlZCBmb3IgdGhlIG5ldyBzZ19pb2N0bF9pb3N1Ym1pdC9zZ19pb2N0bF9pb3JlY2VpdmUKICB0
-byBzdXBwb3J0IHRoZSB2MyBzdHJ1Y3R1cmVzPyBUaG9zZSBhcmUgL25vdC8gY29tcGF0aWJsZSwg
-c28KICB5b3UgbmVlZCBleHRyYSBjb2RlIHRvIGhhbmRsZSB0aGUgdjMtY29tcGF0IGxheW91dCBh
-cyB3ZWxsLgogIFN1cHBvcnRpbmcgb25seSB2NCB3b3VsZCBzaW1wbGlmeSB0aGlzLgotIHRoZSBs
-YWNrIG9mIGNoYW5nZXNldCBkZXNjcmlwdGlvbnMgaXMgYSBiaXQgaXJyaXRhdGluZyBhbmQgbWFr
-ZXMKICBpdCBtdWNoIGhhcmRlciB0byB1bmRlcnN0YW5kIHdoYXQgeW91IGFyZSBkb2luZy4KLSB0
-cnkgdG8ga2VlcCBwYXRjaGVzIHRoYXQgbW92ZSBjb2RlIGFyb3VuZCBzZXBhcmF0ZSBmcm9tIHRo
-b3NlCiAgdGhhdCBjaGFuZ2UgaXQgaW4gYW55IG90aGVyIHdheSwgZm9yIGJldHRlciByZXZpZXdp
-bmcuCi0gaW4gInNnOiBwcmVwYXJhdGlvbiBmb3IgcmVxdWVzdCBzaGFyaW5nIiwgeW91IHNlZW0g
-dG8gaW5hZHZlcnRlbnRseQogIGNoYW5nZSB0aGUgc2l6ZSBvZiAic3RydWN0IHNnX2V4dGVuZGVk
-X2luZm8iLCBtYWtpbmcgaXQgNCBieXRlcwogIGxvbmdlciBieSBhZGRpbmcgdHdvIG1lbWJlcnMu
-Ci0gWW91IHNob3VsZCBuZXZlciB1c2UgSVNfRVJSX09SX05VTEwoKSBpbiBub3JtYWwgY29kZSwg
-dGhhdAogIGlzIGp1c3QgYSBzaWduIG9mIGEgYmFkIEFQSS4gTWFrZSBlYWNoIGZ1bmN0aW9uIGhh
-dmUgY29uc2lzdGVudAogIGVycm9yIGJlaGF2aW9yLgotIFRoZSAiI2lmIDAgIC8qIHRlbXBvcmFy
-eSB0byBzaG9ydGVuIGJpZyBwYXRjaCAqLyIgdHJpY2sgYnJlYWtzCiAgYmlzZWN0aW9uLCB0aGF0
-IGlzIHByb2JhYmx5IHdvcnNlIHRoYW4gdGhlIGxhcmdlciBwYXRjaC4KLSBUaGUgc3BsaXQgYWNj
-ZXNzX29rKCkvX19jb3B5X2Zyb21fdXNlcigpIGhhcyBmYWxsZW4gb3V0IG9mCiAgZmF2b3IgYmVj
-YXVzZSBpdCBoYXMgY2F1c2VkIHRvbyBtYW55IGJ1Z3MgaW4gdGhlIHBhc3QsIGp1c3QKICB1c2Ug
-dGhlIGNvbWJpbmVkIGNvcHlfZnJvbV91c2VyKCkgaW5zdGVhZC4KLSBrdGltZV90b19ucyhrdGlt
-ZV9nZXRfd2l0aF9vZmZzZXQoVEtfT0ZGU19CT09UKSkgZm9sbG93ZWQKICBieSBhIDY0LWJpdCBk
-aXZpc2lvbiB3b24ndCB3b3JrIG9uIDMyLWJpdCBtYWNoaW5lcywgdXNlCiAga3RpbWVfZ2V0X2Jv
-b3R0aW1lX3RzNjQoKSBpbnN0ZWFkLgoKPiBPdGhlciBhZGRpdGlvbnMgZGVzY3JpYmVkIGluIHRo
-ZSB0aGF0IGRvY3VtZW50IGFyZSB0aGVzZSBuZXcgaW9jdGxzOgo+ICAgIC0gU0dfSU9TVUJNSVQg
-ICAgdWx0aW1hdGVseSB0byByZXBsYWNlIHdyaXRlKHNnX2ZkLCAuLi4pCj4gICAgLSBTR19JT1JF
-Q0VJVkUgICAgICAgICAgICAgIHRvIHJlcGxhY2UgcmVhZChzZ19mZCwgLi4uKQo+ICAgIC0gU0df
-SU9BQk9SVCAgICAgYWJvcnQgU0NTSSBjbWQgaW4gcHJvZ3Jlc3M7IG5ldyBmdW5jdGlvbmFsaXR5
-Cj4gICAgLSBTR19TRVRfR0VUX0VYVEVOREVEICAgaGFzIGFzc29jaWF0ZWQgc3RydWN0IHNnX2V4
-dGVuZGVkX2luZm8KPgo+IFRoZSBmaXJzdCB0aHJlZSB0YWtlIGEgcG9pbnRlciB0byBhIHN0cnVj
-dCBzZ19pb19oZHIgKHYzIGludGVyZmFjZSkgb3IKPiBhIHN0cnVjdCBzZ19pb192NCBvYmplY3Qu
-IEJvdGggb2JqZWN0cyBzdGFydCB3aXRoIGEgMzIgYml0IGludGVnZXI6Cj4gJ1MnIGlkZW50aWZp
-ZXMgdGhlIHYzIGludGVyZmFjZSB3aGlsZSAnUScgaWRlbnRpZmllcyB0aGUgdjQgaW50ZXJmYWNl
-LgoKSSB0aGluayB0aGUgbWFnaWMgY2hhcmFjdGVyIHdhcyBhIG1pc3Rha2UgaW4gdGhlIG9yaWdp
-bmFsIGRlc2lnbiwKanVzdCBsaWtlIHZlcnNpb25lZCBpbnRlcmZhY2VzIGluIGdlbmVyYWwuIElm
-IHlvdSBhcmUgZXh0ZW5kaW5nIGFuCmludGVyZmFjZSBpbiBhbiBpbmNvbXBhdGlibGUgd2F5LCB0
-aGUgbm9ybWFsIHdheSB3b3VsZCBiZSB0bwpoYXZlIHNlcGFyYXRlIGNvbW1hbmQgY29kZXMsIGxp
-a2UgU0dfSU9SRUNFSVZFX1YzCmFuZCBTR19JT1JFQ0VJVkVfVjQsIGlmIHlvdSBhYnNvbHV0ZWx5
-IGhhdmUgdG8gbWFpbnRhaW4KY29tcGF0aWJsaXR5IHdpdGggdGhlIG9sZCBpbnRlcmZhY2UgKHdo
-aWNoIEkgdGhpbmsgeW91IGRvbid0IGluCmNhc2Ugb2YgU0dfSU9SRUNFSVZFKS4KCkZvciBTR19J
-TywgSSBjYW4gc2VlICB3aHkgeW91IHdhbnQgdG8gc3VwcG9ydCBib3RoIHRoZSB2MwphbmQgdjQg
-c3RydWN0dXJlcyBwbHVzIHRoZSBjb21wYXQtdjMgdmVyc2lvbiwgYnV0IEknZCB0cnkgdG8ga2Vl
-cAp0aGVtIGFzIHNlcGFyYXRlIGFzIHBvc3NpYmxlLCBhbmQgZG8gc29tZXRoaW5nIGxpa2UKCnN0
-YXRpYyBpbnQgIHNnX2N0bF9zZ19pbyhzdHJ1Y3QgZmlsZSAqZmlscCwgc3RydWN0IHNnX2Rldmlj
-ZSAqc2RwLApzdHJ1Y3Qgc2dfZmQgKnNmcCwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgdm9pZCBfX3VzZXIgKnApCnsKICAgICAgIGludCByZXQ7CgogICAgICByZXQgPSBzZ19pb192
-NChmaWxwLCBzZHAsIHNmcCwgKHN0cnVjdCBzZ19pb192NCBfX3VzZXIgKilwKTsKCiAgICAgIGlm
-IChyZXQgIT0gLUVOT0lPQ1RMQ01EIHx8ICFTX0VOQUJMRUQoQ09ORklHX1NHX0lPX1YzKSkKICAg
-ICAgICAgICAgcmV0dXJuIHJldDsKCiAgICAgaWYgKGluX2NvbXBhdF9zeXNjYWxsKCkpCiAgICAg
-ICAgICAgcmV0ID0gc2dfaW9fY29tcGF0XyhmaWxwLCBzZHAsIHNmcCwgKHN0cnVjdApjb21wYXRf
-c2dfaW9faGRyIF9fdXNlciAqKXApOwogICAgIGVsc2UKICAgICAgICAgICByZXQgPSBzZ19pb192
-MyhmaWxwLCBzZHAsIHNmcCwgKHN0cnVjdCBzZ19pb19oZHIgX191c2VyICopcCk7Cn0KCkluIG15
-IHBhdGNoIHNlcmllcywgSSBjb21iaW5lZCB0aGUgbGF0dGVyIHR3byBjYXNlcyBhbmQgdXNlZCBh
-IHNoYXJlZApnZXRfc2dfaW9faGRyKCkvcHV0X3NnX2lvX2hkcigpIGhlbHBlciBhcyB3ZWxsIGFz
-IGEgd3JhcHBlciBmb3IgdGhlIGlvdmVjCmlzc3VlLgoKPiBUaGUgU0dfU0VUX0dFVF9FWFRFTkRF
-RCBpb2N0bCB0YWtlcyBhIHBvaW50ZXIgdG8gYSBzdHJ1Y3QKPiBzZ19leHRlbmRlZF9pbmZvIG9i
-amVjdCB3aGljaCBjb250YWlucyBleHBsaWNpdGx5IHNpemVkIGludGVnZXJzIHNvIGl0Cj4gbWF5
-IGFsc28gYmUgaW1tdW5lIGZyb20gImNvbXBhdCIgcHJvYmxlbXMuIFRoZSBpb2N0bHMgc2VjdGlv
-biAoMTMpIG9mCj4gdGhhdCBkb2N1bWVudCByZWZlcmVuY2VkIGFib3ZlIGhhcyBhIHRhYmxlIHNo
-b3dpbmcgaG93IG1hbnkgInNldHMgYW5kCj4gZ2V0cyIgYXJlIGhpZGluZyBpbiB0aGUgU0dfU0VU
-X0dFVF9FWFRFTkRFRCBpb2N0bC4KCkFncmVlZCwgU0dfU0VUX0dFVF9FWFRFTkRFRCBsb29rcyBm
-aW5lIHRvIG1lIGZyb20gYSBjb21wYXQKcGVyc3BlY3RpdmUuCgpJJ3ZlIHVwbG9hZGVkIG15IHBh
-dGNoZXMgdG8KZ2l0Oi8vZ2l0Lmtlcm5lbC5vcmc6L3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9h
-cm5kL3BsYXlncm91bmQuZ2l0CmNvbXBhdC1pb2N0bC12MwpUaGlzIGNvbnRhaW5zIGJvdGggdGhl
-IHNlcmllcyBJIHBvc3RlZCBoZXJlLCBhbmQgbXkgc2NzaSBpb2N0bCByZXdvcmsuCgpNYXliZSB5
-b3UgY2FuIHRha2UgdGhlIGJpdHMgeW91IG5lZWQgZnJvbSB0aGF0IHRvIGhhbmRsZSB0aGUgdjMt
-Y29tcGF0CnN0cnVjdHVyZXMgYW5kIGludGVncmF0ZSBpdCBpbnRvIHlvdXIgc2VyaWVzPwoKICAg
-ICBBcm5kCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmRy
-aS1kZXZlbCBtYWlsaW5nIGxpc3QKZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZwpodHRw
-czovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbA==
+Jon,
+
+Em Mon, 15 Apr 2019 23:55:25 -0300
+Mauro Carvalho Chehab <mchehab+samsung@kernel.org> escreveu:
+
+> I have a separate patch series with do the actual rename and
+> adjustment of references. I opted to submit this first, as it
+> sounds easier to merge this way, as each subsystem maintainer
+> can apply the conversion directly on their trees (or at docs
+> tree), avoiding merge conflects.
+
+Based on the number of feedbacks we have about this, I'm
+considering to submit a second version of my conversion patch
+series that would be doing the rename together with each patch,
+adding the rst files to an index file.
+
+However, doing that would produce lots of warnings. We have
+already lots of those at linux-next:
+
+	checking consistency... 
+
+	docs/Documentation/accelerators/ocxl.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/admin-guide/mm/numaperf.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/filesystems/ext4/allocators.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/filesystems/ext4/attributes.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/filesystems/ext4/bigalloc.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/filesystems/ext4/bitmaps.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/filesystems/ext4/blockgroup.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/filesystems/ext4/blocks.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/filesystems/ext4/checksums.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/filesystems/ext4/directory.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/filesystems/ext4/eainode.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/filesystems/ext4/group_descr.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/filesystems/ext4/ifork.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/filesystems/ext4/inlinedata.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/filesystems/ext4/inodes.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/filesystems/ext4/journal.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/filesystems/ext4/mmp.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/filesystems/ext4/special_inodes.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/filesystems/ext4/super.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/fmc/index.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/gpu/msm-crash-dump.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/interconnect/interconnect.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/laptops/lg-laptop.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/virtual/kvm/amd-memory-encryption.rst: WARNING: document isn't included in any toctree
+	docs/Documentation/virtual/kvm/vcpu-requests.rst: WARNING: document isn't included in any toctree
+
+After thinking a little bit and doing some tests, I think a good solution
+would be to add ":orphan:" markup to the new .rst files that were not
+added yet into the main body (e. g. something like the enclosed example).
+
+That will make Sphinx suppress the:
+	"WARNING: document isn't included in any toctree"
+warning for the new files, while they're not included at the main indexes.
+
+This way, maintainers can do all the hard work of doing/applying the ReST
+file conversion/addition patch series on their own trees, and, once
+everything gets merged, submit a patch against the latest docs-next
+tree, removing the :orphan: tag and add them to the common index.rst
+files.
+
+That should largely avoid merging conflicts.
+
+For example, assuming that someone converts the stuff at
+Documentation/accounting and rename the text files there to
+RST (I'm actually doing that), he could add the enclosed change on
+the top of its index file:
+
+	diff --git a/Documentation/accounting/index.rst b/Documentation/accounting/index.rst
+	index e7dda5afa73f..e1f6284b5ff3 100644
+	--- a/Documentation/accounting/index.rst
+	+++ b/Documentation/accounting/index.rst
+	@@ -1,3 +1,5 @@
+	+:orphan:
+	+
+	 ==========
+	 Accounting
+	 ==========
+
+With would make Sphinx to ignore the subdir index file while
+reporting errors. It will still build the documentation, allowing
+the developer to test the changes.
+
+One of the advantages is that checking the orphaned docs is as
+easy as running:
+
+	$ git grep -l ":orphan:" Documentation/
+	...
+	Documentation/accounting/index.rst
+	...
+
+Making easy for people to check the orphaned files and send a fixup
+patch if something got orphaned after the merge window and send a
+fixes patches to be applied upstream.
+
+What do you think?
+
+Regards,
+Mauro
