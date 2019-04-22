@@ -1,13 +1,13 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.9 26/29] libata: fix using DMA buffers on stack
-Date: Mon, 22 Apr 2019 15:48:45 -0400
-Message-ID: <20190422194848.13049-26-sashal@kernel.org>
-References: <20190422194848.13049-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 38/43] libata: fix using DMA buffers on stack
+Date: Mon, 22 Apr 2019 15:47:22 -0400
+Message-ID: <20190422194727.12495-38-sashal@kernel.org>
+References: <20190422194727.12495-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20190422194848.13049-1-sashal@kernel.org>
-Sender: stable-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190422194727.12495-1-sashal@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: raymond pang <raymondpangxd@gmail.com>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -27,10 +27,10 @@ Signed-off-by: Sasha Levin (Microsoft) <sashal@kernel.org>
  1 file changed, 24 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/ata/libata-zpodd.c b/drivers/ata/libata-zpodd.c
-index 0ad96c647541..7017a81d53cf 100644
+index b3ed8f9953a8..173e6f2dd9af 100644
 --- a/drivers/ata/libata-zpodd.c
 +++ b/drivers/ata/libata-zpodd.c
-@@ -51,38 +51,52 @@ static int eject_tray(struct ata_device *dev)
+@@ -52,38 +52,52 @@ static int eject_tray(struct ata_device *dev)
  /* Per the spec, only slot type and drawer type ODD can be supported */
  static enum odd_mech_type zpodd_get_mech_type(struct ata_device *dev)
  {
