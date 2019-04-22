@@ -1,12 +1,12 @@
 From: Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.14 38/43] libata: fix using DMA buffers on stack
-Date: Mon, 22 Apr 2019 15:47:22 -0400
-Message-ID: <20190422194727.12495-38-sashal@kernel.org>
-References: <20190422194727.12495-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 60/68] libata: fix using DMA buffers on stack
+Date: Mon, 22 Apr 2019 15:45:08 -0400
+Message-ID: <20190422194516.11634-60-sashal@kernel.org>
+References: <20190422194516.11634-1-sashal@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190422194727.12495-1-sashal@kernel.org>
+In-Reply-To: <20190422194516.11634-1-sashal@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: raymond pang <raymondpangxd@gmail.com>, Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
