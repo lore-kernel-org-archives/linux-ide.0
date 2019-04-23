@@ -1,7 +1,7 @@
-From: Jens Axboe <axboe@kernel.dk>
+From: Bart Van Assche <bvanassche@acm.org>
 Subject: Re: next-20190408..0418: Suspend/resume problems on Thinkpad X60
-Date: Tue, 23 Apr 2019 07:55:05 -0600
-Message-ID: <41d56ba6-d0cb-5d5e-f5f4-9bca045440dd@kernel.dk>
+Date: Tue, 23 Apr 2019 07:09:42 -0700
+Message-ID: <fed0549d-a789-294c-d899-304911106113@acm.org>
 References: <20190408173928.GB13260@amd> <20190412102812.GA24977@amd>
  <20190423102239.GA15531@amd>
 Mime-Version: 1.0
@@ -11,12 +11,10 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20190423102239.GA15531@amd>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>, kernel list <linux-kernel@vger.kernel.org>, rjw@rjwysocki.net, linux-pm@vger.kernel.org, sfr@canb.auug.org.au, linux-next@vger.kernel.org, hdegoede@redhat.com, linux-ide@vger.kernel.org
+To: Pavel Machek <pavel@ucw.cz>, kernel list <linux-kernel@vger.kernel.org>, rjw@rjwysocki.net, linux-pm@vger.kernel.org, sfr@canb.auug.org.au, linux-next@vger.kernel.org, hdegoede@redhat.com, axboe@kernel.dk, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 4/23/19 4:22 AM, Pavel Machek wrote:
-> Hi!
-> 
+On 4/23/19 3:22 AM, Pavel Machek wrote:
 >>> It boots ok (unlike mainline -- I'm debugging that), and I can suspend
 >>> and resume... but then cursor in X is moving and I can talk to
 >>> applications cached in memory, but any access to disk hangs.
@@ -28,7 +26,8 @@ On 4/23/19 4:22 AM, Pavel Machek wrote:
 > 
 > Still broken in 0418. Ideas would be welcome at this point.
 
-Bisect it?
+Have you already tried the debugging steps explained in
+Documentation/power to obtain more information about the nature of the
+suspend/resume problem?
 
--- 
-Jens Axboe
+Bart.
