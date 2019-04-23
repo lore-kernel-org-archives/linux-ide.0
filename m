@@ -1,55 +1,30 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: next-20190408..0418: Suspend/resume problems on Thinkpad X60
-Date: Tue, 23 Apr 2019 12:22:40 +0200
-Message-ID: <20190423102239.GA15531@amd>
-References: <20190408173928.GB13260@amd>
- <20190412102812.GA24977@amd>
+From: Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: [PATCH 3/4] ARM: ep93xx: move pinctrl interfaces into include/linux/soc
+Date: Tue, 23 Apr 2019 12:41:00 +0200
+Message-ID: <CACRpkdaVYZf5y3gn-DFsDCutovtw+3-qyo7oKw3UABdfXDRYsw@mail.gmail.com>
+References: <20190415192734.935387-1-arnd@arndb.de> <20190415192734.935387-3-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="pf9I7BMVVzbSWLtt"
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20190412102812.GA24977@amd>
+In-Reply-To: <20190415192734.935387-3-arnd@arndb.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: kernel list <linux-kernel@vger.kernel.org>, rjw@rjwysocki.net, linux-pm@vger.kernel.org, sfr@canb.auug.org.au, linux-next@vger.kernel.org, hdegoede@redhat.com, axboe@kernel.dk, linux-ide@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Hartley Sweeten <hsweeten@visionengravers.com>, Alexander Sverdlin <alexander.sverdlin@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Jens Axboe <axboe@kernel.dk>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Thierry Reding <thierry.reding@gmail.com>, Mark Brown <broonie@kernel.org>, Olof Johansson <olof@lixom.net>, Linux ARM <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Linux Input <linux-input@vger.kernel.org>, linux-pwm@vger.kernel.org, "moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..." <alsa-devel@alsa-project.org>
 List-Id: linux-ide@vger.kernel.org
 
+On Mon, Apr 15, 2019 at 9:30 PM Arnd Bergmann <arnd@arndb.de> wrote:
 
---pf9I7BMVVzbSWLtt
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> ep93xx does not have a proper pinctrl driver, but does things
+> ad-hoc through mach/platform.h, which is also used for setting
+> up the boards.
+>
+> To avoid using mach/*.h headers completely, let's move the interfaces
+> into include/linux/soc/. This is far from great, but gets the job
+> done here, without the need for a proper pinctrl driver.
+>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Hi!
+Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
-> > It boots ok (unlike mainline -- I'm debugging that), and I can suspend
-> > and resume... but then cursor in X is moving and I can talk to
-> > applications cached in memory, but any access to disk hangs.
->=20
-> Mainline problem was identified.
->=20
-> But resume is still broken. I took advantage of fact that I can still
-> do cached commands, and got complete dmesg. I'm attaching it.
-
-Still broken in 0418. Ideas would be welcome at this point.
-
-Best regards,
-									Pavel
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---pf9I7BMVVzbSWLtt
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAly+528ACgkQMOfwapXb+vJUIQCfdlG+O8D9R0SH0VcyH9uQ1lq9
-WQsAoJsscMPfrfcXZTCqYo29RRWKli+K
-=Z66R
------END PGP SIGNATURE-----
-
---pf9I7BMVVzbSWLtt--
+Yours,
+Linus Walleij
