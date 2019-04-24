@@ -1,9 +1,9 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: regression -next -- scsi: sd: Rely on the driver core for
+From: Pavel Machek <pavel@denx.de>
+Subject: Re: regression -next -- scsi: sd: Rely on the driver core for
  asynchronous probing was Re: next-20190408..0418: Suspend/resume problems on
  Thinkpad X60
-Date: Wed, 24 Apr 2019 22:48:32 +0200
-Message-ID: <20190424204832.GA3111@amd>
+Date: Wed, 24 Apr 2019 22:51:50 +0200
+Message-ID: <20190424205150.GA4582@amd>
 References: <20190408173928.GB13260@amd>
  <20190412102812.GA24977@amd>
  <20190423102239.GA15531@amd>
@@ -11,98 +11,65 @@ References: <20190408173928.GB13260@amd>
  <20190424095431.GA32457@amd>
  <20190424104850.GC32457@amd>
  <20190424202119.GA26357@amd>
+ <20190424204832.GA3111@amd>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="GRPZ8SYKNexpdSJ7"
+        protocol="application/pgp-signature"; boundary="WIyZ46R2i8wDzkSu"
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20190424202119.GA26357@amd>
+In-Reply-To: <20190424204832.GA3111@amd>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>, jejb@linux.ibm.com, martin.petersen@oracle.com, lduncan@suse.com, hare@suse.com, mcgrof@kernel.org, jthumshirn@suse.de, hch@lst.de, gregkh@linuxfoundation.org, dan.j.williams@intel.com, bvanassche@acm.org
 Cc: kernel list <linux-kernel@vger.kernel.org>, rjw@rjwysocki.net, linux-pm@vger.kernel.org, sfr@canb.auug.org.au, linux-next@vger.kernel.org, hdegoede@redhat.com, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 
---GRPZ8SYKNexpdSJ7
-Content-Type: multipart/mixed; boundary="Qxx1br4bt0+wmkIi"
-Content-Disposition: inline
-
-
---Qxx1br4bt0+wmkIi
+--WIyZ46R2i8wDzkSu
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-Hi!
+On Wed 2019-04-24 22:48:32, Pavel Machek wrote:
+> Hi!
+>=20
+> > Not block, but it seems scsi subsystem is:
+>=20
+> commit 21e6ba3f0e0257cce1a226c1f15e0a8ba4338ca3
+> Author: Bart Van Assche <bvanassche@acm.org>
+> Date:   Wed Mar 20 13:09:19 2019 -0700
+>=20
+>     scsi: sd: Rely on the driver core for asynchronous probing
+>=20
+>     As explained during the 2018 LSF/MM session about increasing SCSI
+>     disk
+>         probing concurrency, the problems with the current probing
+>     approach are as
+>=20
+> Seems to be responsible. Full log attached.
 
-> Not block, but it seems scsi subsystem is:
+Unfortunately, that one does not revert cleanly on top of -next.
 
-commit 21e6ba3f0e0257cce1a226c1f15e0a8ba4338ca3
-Author: Bart Van Assche <bvanassche@acm.org>
-Date:   Wed Mar 20 13:09:19 2019 -0700
+Any ideas what is wrong?
 
-    scsi: sd: Rely on the driver core for asynchronous probing
+Does suspend/resume work for you?
 
-    As explained during the 2018 LSF/MM session about increasing SCSI
-    disk
-        probing concurrency, the problems with the current probing
-    approach are as
-
-Seems to be responsible. Full log attached.
-
-								Pavel
+I can test patches.
+									Pavel
 --=20
 (english) http://www.livejournal.com/~pavelmachek
 (cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
 g.html
 
---Qxx1br4bt0+wmkIi
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename=delme
-
-# bad: [76c938fcaa4b4a5d8f05fa907925d5043834964e] Add linux-next specific files for 20190423
-# good: [7142eaa58b49d9de492ccc16d48df7c488a5fbb6] Merge tag 'mips_fixes_5.1_3' of git://git.kernel.org/pub/scm/linux/kernel/git/mips/linux
-git bisect start 'next-20190423' '7142eaa58b49d9de492ccc16d48df7c488a5fbb6'
-# good: [ed04f675fa2c22316d7b57bea1258a18a47537ea] Merge remote-tracking branch 'crypto/master'
-git bisect good ed04f675fa2c22316d7b57bea1258a18a47537ea
-# good: [4a99e5b3463f5c936540958914bff57ec50ac1e0] Merge remote-tracking branch 'spi/for-next'
-git bisect good 4a99e5b3463f5c936540958914bff57ec50ac1e0
-# good: [61cabbda2a7e966b689a6791050ad675e6dff274] Merge remote-tracking branch 'staging/staging-next'
-git bisect good 61cabbda2a7e966b689a6791050ad675e6dff274
-# bad: [c8f0c2453f64529035e25fbfb9de9d24e98baff7] Merge remote-tracking branch 'coresight/next'
-git bisect bad c8f0c2453f64529035e25fbfb9de9d24e98baff7
-# bad: [6fb251c6f174d3cc571391baa9f6e57fff505446] Merge branch 'misc' into for-next
-git bisect bad 6fb251c6f174d3cc571391baa9f6e57fff505446
-# bad: [78a8ab3cc0f95a66c8fb2429030289103de173e7] scsi: qedf: fixup bit operations
-git bisect bad 78a8ab3cc0f95a66c8fb2429030289103de173e7
-# good: [c0327e67ecd86e88f5bc5fd54bfdf9b422a1c93f] scsi: core: remove the scsi_ioctl_reset export
-git bisect good c0327e67ecd86e88f5bc5fd54bfdf9b422a1c93f
-# good: [cbb24e26735f6142ba994b4d44fc2dcd54c3fe1f] scsi: ufs-mediatek: Make some symbols static
-git bisect good cbb24e26735f6142ba994b4d44fc2dcd54c3fe1f
-# bad: [21e6ba3f0e0257cce1a226c1f15e0a8ba4338ca3] scsi: sd: Rely on the driver core for asynchronous probing
-git bisect bad 21e6ba3f0e0257cce1a226c1f15e0a8ba4338ca3
-# good: [e7f7b6f38a44697428f5a2e7c606de028df2b0e3] scsi: lpfc: change snprintf to scnprintf for possible overflow
-git bisect good e7f7b6f38a44697428f5a2e7c606de028df2b0e3
-# good: [3e14592da654d53d87987aa09753d5a26e45446f] scsi: gdth: Only call dma_free_coherent when buf is not NULL in ioc_general
-git bisect good 3e14592da654d53d87987aa09753d5a26e45446f
-# good: [8378573353728a02602d6f956a3df48db0505c65] scsi: libcxgbi: remove uninitialized variable len
-git bisect good 8378573353728a02602d6f956a3df48db0505c65
-# good: [ea9006dfda65b7dc369aaa2359b3dedfc1bb08b6] scsi: mpt3sas: fix indentation issue
-git bisect good ea9006dfda65b7dc369aaa2359b3dedfc1bb08b6
-# first bad commit: [21e6ba3f0e0257cce1a226c1f15e0a8ba4338ca3] scsi: sd: Rely on the driver core for asynchronous probing
-
---Qxx1br4bt0+wmkIi--
-
---GRPZ8SYKNexpdSJ7
+--WIyZ46R2i8wDzkSu
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1
 
-iEYEARECAAYFAlzAy6AACgkQMOfwapXb+vIRIwCglgb39piVMku5Vq/sKRL2Qt6k
-s7AAn2Utp1UzwRboUpz63y6yQXF2hodv
-=RW0l
+iEYEARECAAYFAlzAzGYACgkQMOfwapXb+vJq4QCeNjbDQJS2ZM3PimuT0IZmO9cB
+VzAAoLzlKI6Ec0myLfIAxqC1T64C9p6y
+=lQq0
 -----END PGP SIGNATURE-----
 
---GRPZ8SYKNexpdSJ7--
+--WIyZ46R2i8wDzkSu--
