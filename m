@@ -1,97 +1,77 @@
-From: Minwoo Im <minwoo.im@samsung.com>
-Subject: RE: [PATCH 1/3] drivers: nvme: target: core: fix build break
-Date: Thu, 25 Apr 2019 15:36:08 +0900
-Message-ID: <20190425063608epcms2p8bfc5a3322e7faf20caea6bb96ca32cc6@epcms2p8>
-References: <1556102081-11820-2-git-send-email-info@metux.net>
-        <1556102081-11820-1-git-send-email-info@metux.net>
-        <CGME20190424103521epcas3p44a7fc17a216b5696a6feefc781136699@epcms2p8>
-Reply-To: minwoo.im@samsung.com
+From: Pavel Machek <pavel@denx.de>
+Subject: Re: regression -next -- scsi: sd: Rely on the driver core for
+ asynchronous probing was Re: next-20190408..0418: Suspend/resume problems on
+ Thinkpad X60
+Date: Thu, 25 Apr 2019 09:33:43 +0200
+Message-ID: <20190425073343.GA19600@amd>
+References: <20190408173928.GB13260@amd>
+ <20190412102812.GA24977@amd>
+ <20190423102239.GA15531@amd>
+ <41d56ba6-d0cb-5d5e-f5f4-9bca045440dd@kernel.dk>
+ <20190424095431.GA32457@amd>
+ <20190424104850.GC32457@amd>
+ <20190424202119.GA26357@amd>
+ <20190424204832.GA3111@amd>
+ <20190424205150.GA4582@amd>
+ <1556139361.161891.140.camel@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="k+w/mQv8wyuph6w0"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1556102081-11820-2-git-send-email-info@metux.net>
+Content-Disposition: inline
+In-Reply-To: <1556139361.161891.140.camel@acm.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Enrico Weigelt, metux IT consult" <info@metux.net>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, Minwoo Im <minwoo.im@samsung.com>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Pavel Machek <pavel@denx.de>, Jens Axboe <axboe@kernel.dk>, jejb@linux.ibm.com, martin.petersen@oracle.com, lduncan@suse.com, hare@suse.com, mcgrof@kernel.org, jthumshirn@suse.de, hch@lst.de, gregkh@linuxfoundation.org, dan.j.williams@intel.com, kernel list <linux-kernel@vger.kernel.org>, rjw@rjwysocki.net, linux-pm@vger.kernel.org, sfr@canb.auug.org.au, linux-next@vger.kernel.org, hdegoede@redhat.com, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-This looks good to me. 
 
-Reviewed-by: Minwoo Im <minwoo.im@samsung.com>
+--k+w/mQv8wyuph6w0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> -----Original Message-----
-> From: Linux-nvme [mailto:linux-nvme-bounces@lists.infradead.org] On Behalf
-> Of Enrico Weigelt, metux IT consult
-> Sent: Wednesday, April 24, 2019 7:35 PM
-> To: linux-kernel@vger.kernel.org
-> Cc: axboe@kernel.dk; linux-ide@vger.kernel.org; linux-
-> nvme@lists.infradead.org
-> Subject: [PATCH 1/3] drivers: nvme: target: core: fix build break
-> 
-> Build breaks:
-> 
->     drivers/nvme/target/core.c: In function 'nvmet_req_alloc_sgl':
->     drivers/nvme/target/core.c:939:12: error: implicit declaration of \
-> function 'sgl_alloc'; did you mean 'bio_alloc'? \
-> [-Werror=implicit-function-declaration]
->       req->sg = sgl_alloc(req->transfer_len, GFP_KERNEL, &req->sg_cnt);
->                 ^~~~~~~~~
->                 bio_alloc
->     drivers/nvme/target/core.c:939:10: warning: assignment makes pointer \
-> from integer without a cast [-Wint-conversion]
->       req->sg = sgl_alloc(req->transfer_len, GFP_KERNEL, &req->sg_cnt);
->               ^
->     drivers/nvme/target/core.c: In function 'nvmet_req_free_sgl':
->     drivers/nvme/target/core.c:952:3: error: implicit declaration of \
-> function 'sgl_free'; did you mean 'ida_free'? [-Werror=implicit-function-
-> declaration]
->        sgl_free(req->sg);
->        ^~~~~~~~
->        ida_free
-> 
-> Cause:
-> 
->     1. missing include to <linux/scatterlist.h>
->     2. SGL_ALLOC needs to be enabled
-> 
-> Therefore adding the missing include, as well as Kconfig dependency.
-> 
-> Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
-> ---
->  drivers/nvme/target/Kconfig | 1 +
->  drivers/nvme/target/core.c  | 1 +
->  2 files changed, 2 insertions(+)
-> 
-> diff --git a/drivers/nvme/target/Kconfig b/drivers/nvme/target/Kconfig
-> index d94f25c..3ef0a4e 100644
-> --- a/drivers/nvme/target/Kconfig
-> +++ b/drivers/nvme/target/Kconfig
-> @@ -3,6 +3,7 @@ config NVME_TARGET
->  	tristate "NVMe Target support"
->  	depends on BLOCK
->  	depends on CONFIGFS_FS
-> +	select SGL_ALLOC
->  	help
->  	  This enabled target side support for the NVMe protocol, that is
->  	  it allows the Linux kernel to implement NVMe subsystems and
-> diff --git a/drivers/nvme/target/core.c b/drivers/nvme/target/core.c
-> index b3e765a..08851f5 100644
-> --- a/drivers/nvme/target/core.c
-> +++ b/drivers/nvme/target/core.c
-> @@ -8,6 +8,7 @@
->  #include <linux/random.h>
->  #include <linux/rculist.h>
->  #include <linux/pci-p2pdma.h>
-> +#include <linux/scatterlist.h>
-> 
->  #include "nvmet.h"
-> 
-> --
-> 1.9.1
-> 
-> 
-> _______________________________________________
-> Linux-nvme mailing list
-> Linux-nvme@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-nvme
+On Wed 2019-04-24 13:56:01, Bart Van Assche wrote:
+> On Wed, 2019-04-24 at 22:51 +0200, Pavel Machek wrote:
+> > Unfortunately, that one does not revert cleanly on top of -next.
+>=20
+> Can you try the following:
+>=20
+> git revert d16ece577bf2cee7f94bab75a0d967bcb89dd2a7 &&
+>   git revert 21e6ba3f0e0257cce1a226c1f15e0a8ba4338ca3
+>=20
+> I will see whether I can come up with a better way to analyze what is
+> going on. I had not expected that these patches would cause any suspend/
+> resume problems.
+
+Not even d16ece reverts:
+
+pavel@duo:/data/l/linux-next-32$ git show  | head -3
+commit 76c938fcaa4b4a5d8f05fa907925d5043834964e
+Author: Stephen Rothwell <sfr@canb.auug.org.au>
+Date:   Tue Apr 23 20:24:59 2019 +1000
+pavel@duo:/data/l/linux-next-32$ git revert
+d16ece577bf2cee7f94bab75a0d967bcb89dd2a7
+error: could not revert d16ece5... scsi: sd: Inline sd_probe_part2()
+hint: after resolving the conflicts, mark the corrected paths
+hint: with 'git add <paths>' or 'git rm <paths>'
+hint: and commit the result with 'git commit'
+
+								Pavel
+--=20
+DENX Software Engineering GmbH,      Managing Director: Wolfgang Denk
+HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
+
+--k+w/mQv8wyuph6w0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlzBYtcACgkQMOfwapXb+vLSPACggAjbyoCyqU8ktZSlP27yCCjh
+Y5sAnRe/NkQIgD/Wl4euXqOxeO2JdhOO
+=JJcZ
+-----END PGP SIGNATURE-----
+
+--k+w/mQv8wyuph6w0--
