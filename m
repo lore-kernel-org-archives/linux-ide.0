@@ -1,43 +1,114 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH v3 00/26] compat_ioctl: cleanups
-Date: Mon, 6 May 2019 12:03:42 +0300
-Message-ID: <CAHp75Vc2-zzRYk0vpdPQm5duZwW+v=svEndTPV4Sr59QrGcMHg@mail.gmail.com>
-References: <20190416202013.4034148-1-arnd@arndb.de>
+From: Alexandru Ardelean <alexandru.ardelean@analog.com>
+Subject: [PATCH 00/16] treewide: fix match_string() helper when array size
+Date: Wed, 8 May 2019 14:28:25 +0300
+Message-ID: <20190508112842.11654-1-alexandru.ardelean@analog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <dri-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <20190416202013.4034148-1-arnd@arndb.de>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/dri-devel>,
- <mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: dri-devel-bounces@lists.freedesktop.org
-Sender: "dri-devel" <dri-devel-bounces@lists.freedesktop.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Linux NVMe Mailinglist <linux-nvme@lists.infradead.org>, linux-iio <linux-iio@vger.kernel.org>, linux-remoteproc@vger.kernel.org, linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org, Platform Driver <platform-driver-x86@vger.kernel.org>, linux-ide@vger.kernel.org, "open list:MEMORY TECHNOLOGY..." <linux-mtd@lists.infradead.org>, sparclinux@vger.kernel.org, linux1394-devel@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-bluetooth@vger.kernel.org, y2038@lists.linaro.org, qat-linux@intel.com, amd-gfx@lists.freedesktop.org, linux-input <linux-input@vger.kernel.org>, Marcel Holtmann <marcel@holtmann.org>, Linux Media Mailing List <linux-media@vger.kernel.org>, "open list:REAL TIME CLOCK (RTC) SUBSYSTEM" <linux-rtc@vger.kernel.org>, ALSA Development Mailing List <alsa-devel@alsa-project.o>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-clk@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org, linux-pm@vger.kernel.org, linux-gpio@vger.kernel.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, linux-omap@vger.kernel.org, linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org, devel@driverdev.osuosl.org, linux-usb@vger.kernel.org, kvm@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-mtd@lists.infradead.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-security-module@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, andriy.shevchenko@linux.intel.com, Alexandru Ardelean <alexandru.ardelean@analog.com>
 List-Id: linux-ide@vger.kernel.org
 
-T24gVHVlLCBBcHIgMTYsIDIwMTkgYXQgMTE6MjMgUE0gQXJuZCBCZXJnbWFubiA8YXJuZEBhcm5k
-Yi5kZT4gd3JvdGU6Cj4KPiBIaSBBbCwKPgo+IEl0IHRvb2sgbWUgd2F5IGxvbmdlciB0aGFuIEkg
-aGFkIGhvcGVkIHRvIHJldmlzaXQgdGhpcyBzZXJpZXMsIHNlZQo+IGh0dHBzOi8vbG9yZS5rZXJu
-ZWwub3JnL2xrbWwvMjAxODA5MTIxNTAxNDIuMTU3OTEzLTEtYXJuZEBhcm5kYi5kZS8KPiBmb3Ig
-dGhlIHByZXZpb3VzbHkgcG9zdGVkIHZlcnNpb24uCj4KPiBJJ3ZlIGNvbWUgdG8gdGhlIHBvaW50
-IHdoZXJlIGFsbCBjb252ZXJzaW9uIGhhbmRsZXJzIGFuZCBtb3N0Cj4gQ09NUEFUSUJMRV9JT0NU
-TCgpIGVudHJpZXMgYXJlIGdvbmUgZnJvbSB0aGlzIGZpbGUsIGJ1dCBmb3IKPiBub3csIHRoaXMg
-c2VyaWVzIG9ubHkgaGFzIHRoZSBwYXJ0cyB0aGF0IGhhdmUgZWl0aGVyIGJlZW4gcmV2aWV3ZWQK
-PiBwcmV2aW91c2x5LCBvciB0aGF0IGFyZSBzaW1wbGUgZW5vdWdoIHRvIGluY2x1ZGUuCj4KPiBU
-aGUgbWFpbiBtaXNzaW5nIHBpZWNlIGlzIHRoZSBTR19JTy9TR19HRVRfUkVRVUVTVF9UQUJMRSBj
-b252ZXJzaW9uLgo+IEknbGwgcG9zdCB0aGUgcGF0Y2hlcyBJIG1hZGUgZm9yIHRoYXQgbGF0ZXIs
-IGFzIHRoZXkgbmVlZCBtb3JlCj4gdGVzdGluZyBhbmQgcmV2aWV3IGZyb20gdGhlIHNjc2kgbWFp
-bnRhaW5lcnMuCj4KPiBJIGhvcGUgeW91IGNhbiBzdGlsbCB0YWtlIHRoZXNlIGZvciB0aGUgY29t
-aW5nIG1lcmdlIHdpbmRvdywgdW5sZXNzCj4gbmV3IHByb2JsZW1zIGNvbWUgdXAuCgo+ICBkcml2
-ZXJzL3BsYXRmb3JtL3g4Ni93bWkuYyAgICAgICAgICAgICAgICAgIHwgICAyICstCgpBY2tlZC1i
-eTogQW5keSBTaGV2Y2hlbmtvIDxhbmR5LnNoZXZjaGVua29AZ21haWwuY29tPgoKLS0gCldpdGgg
-QmVzdCBSZWdhcmRzLApBbmR5IFNoZXZjaGVua28KX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX18KZHJpLWRldmVsIG1haWxpbmcgbGlzdApkcmktZGV2ZWxAbGlz
-dHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4v
-bGlzdGluZm8vZHJpLWRldmVs
+The intent of this patch series is to make a case for fixing the
+match_string() string helper.
+
+The doc-string of the `__sysfs_match_string()` helper mentions that `n`
+(the size of the given array) should be:
+ * @n: number of strings in the array or -1 for NULL terminated arrays
+
+However, this is not the case.
+The helper stops on the first NULL in the array, regardless of whether -1
+is provided or not.
+
+There are some advantages to allowing this behavior (NULL elements within
+in the array). One example, is to allow reserved registers as NULL in an
+array.
+One example in the series is patch:
+   x86/mtrr: use new match_string() helper + add gaps == minor fix
+which uses a "?" string for values that are reserved/don't care.
+
+Since the change is a bit big, the change was coupled with renaming
+match_string() -> __match_string().
+The new match_string() helper (resulted here) does an ARRAY_SIZE() over the
+array, which is useful when the array is static. 
+
+Also, this way of doing things is a way to go through all the users of this
+helpers and check that nothing goes wrong, and notify them about the change
+to match_string().
+It's a way of grouping changes in a manage-able way.
+
+The first patch is important, the others can be dropped.
+
+Signed-off-by: Alexandru Ardelean <alexandru.ardelean@analog.com>
+
+Alexandru Ardelean (16):
+  lib: fix match_string() helper when array size is positive
+  treewide: rename match_string() -> __match_string()
+  lib,treewide: add new match_string() helper/macro
+  powerpc/xmon: use new match_string() helper/macro
+  ALSA: oxygen: use new match_string() helper/macro
+  x86/mtrr: use new match_string() helper + add gaps == minor fix
+  device connection: use new match_string() helper/macro
+  cpufreq/intel_pstate: remove NULL entry + use match_string()
+  mmc: sdhci-xenon: use new match_string() helper/macro
+  pinctrl: armada-37xx: use new match_string() helper/macro
+  mm/vmpressure.c: use new match_string() helper/macro
+  rdmacg: use new match_string() helper/macro
+  drm/edid: use new match_string() helper/macro
+  staging: gdm724x: use new match_string() helper/macro
+  video: fbdev: pxafb: use new match_string() helper/macro
+  sched: debug: use new match_string() helper/macro
+
+ arch/powerpc/xmon/xmon.c                         |  2 +-
+ arch/x86/kernel/cpu/mtrr/if.c                    | 10 ++++++----
+ drivers/ata/pata_hpt366.c                        |  2 +-
+ drivers/ata/pata_hpt37x.c                        |  2 +-
+ drivers/base/devcon.c                            |  2 +-
+ drivers/base/property.c                          |  2 +-
+ drivers/clk/bcm/clk-bcm2835.c                    |  4 +---
+ drivers/clk/clk.c                                |  4 ++--
+ drivers/clk/rockchip/clk.c                       |  4 ++--
+ drivers/cpufreq/intel_pstate.c                   |  9 ++++-----
+ drivers/gpio/gpiolib-of.c                        |  2 +-
+ drivers/gpu/drm/drm_edid_load.c                  |  2 +-
+ drivers/gpu/drm/drm_panel_orientation_quirks.c   |  2 +-
+ drivers/gpu/drm/i915/intel_pipe_crc.c            |  2 +-
+ drivers/ide/hpt366.c                             |  2 +-
+ drivers/mfd/omap-usb-host.c                      |  2 +-
+ drivers/mmc/host/sdhci-xenon-phy.c               | 12 ++++++------
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c |  2 +-
+ drivers/pci/pcie/aer.c                           |  2 +-
+ drivers/phy/tegra/xusb.c                         |  2 +-
+ drivers/pinctrl/mvebu/pinctrl-armada-37xx.c      |  4 ++--
+ drivers/pinctrl/pinmux.c                         |  2 +-
+ drivers/power/supply/ab8500_btemp.c              |  2 +-
+ drivers/power/supply/ab8500_charger.c            |  2 +-
+ drivers/power/supply/ab8500_fg.c                 |  2 +-
+ drivers/power/supply/abx500_chargalg.c           |  2 +-
+ drivers/power/supply/charger-manager.c           |  4 ++--
+ drivers/staging/gdm724x/gdm_tty.c                |  3 +--
+ drivers/usb/common/common.c                      |  4 ++--
+ drivers/usb/typec/class.c                        |  8 +++-----
+ drivers/usb/typec/tps6598x.c                     |  2 +-
+ drivers/vfio/vfio.c                              |  4 +---
+ drivers/video/fbdev/pxafb.c                      |  4 ++--
+ fs/ubifs/auth.c                                  |  4 ++--
+ include/linux/string.h                           | 11 ++++++++++-
+ kernel/cgroup/rdma.c                             |  2 +-
+ kernel/sched/debug.c                             |  2 +-
+ kernel/trace/trace.c                             |  2 +-
+ lib/string.c                                     | 13 ++++++++-----
+ mm/mempolicy.c                                   |  2 +-
+ mm/vmpressure.c                                  |  4 ++--
+ security/apparmor/lsm.c                          |  4 ++--
+ security/integrity/ima/ima_main.c                |  2 +-
+ sound/firewire/oxfw/oxfw.c                       |  2 +-
+ sound/pci/oxygen/oxygen_mixer.c                  |  2 +-
+ sound/soc/codecs/max98088.c                      |  2 +-
+ sound/soc/codecs/max98095.c                      |  2 +-
+ sound/soc/soc-dapm.c                             |  2 +-
+ 48 files changed, 88 insertions(+), 82 deletions(-)
+
+-- 
+2.17.1
