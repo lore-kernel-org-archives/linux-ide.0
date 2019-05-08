@@ -1,32 +1,38 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] ide: officially deprecated the legacy IDE driver
-Date: Wed, 08 May 2019 13:14:40 -0700 (PDT)
-Message-ID: <20190508.131440.579353613998007502.davem@davemloft.net>
-References: <20190508180140.12364-1-hch@lst.de>
-        <c0332901-27ac-7d8c-7bee-a1d7616627f8@kernel.dk>
+Subject: [GIT] IDE
+Date: Wed, 08 May 2019 16:53:20 -0700 (PDT)
+Message-ID: <20190508.165320.2267661705586017777.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <c0332901-27ac-7d8c-7bee-a1d7616627f8@kernel.dk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: axboe@kernel.dk
-Cc: hch@lst.de, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-From: Jens Axboe <axboe@kernel.dk>
-Date: Wed, 8 May 2019 12:08:49 -0600
 
-> On 5/8/19 12:01 PM, Christoph Hellwig wrote:
->> After a recent chat with Dave we agreed to try to finally kill off the
->> legacy IDE code base.  Set a two year grace period in which we try
->> to move everyone over.  There are a few pieces of hardware not
->> supported by libata yet, but for many of them we aren't even sure
->> if there are any users.  For those that have users we have usually
->> found a volunteer to add libata support.
-> 
-> I fully support this.
-> 
-> Acked-by: Jens Axboe <axboe@kernel.dk>
+Finally deprecate the legacy IDE layer.
 
-Yeah I totally support this too, I'll apply.
+Frankly this is long overdue.
+
+Please pull, thanks a lot!
+
+The following changes since commit ef75bd71c5d31dc17ae41ff8bec92630a3037d69:
+
+  Merge tag 'gfs2-for-5.2' of git://git.kernel.org/pub/scm/linux/kernel/git/gfs2/linux-gfs2 (2019-05-08 13:16:07 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide 
+
+for you to fetch changes up to 7ad19a99ad431b5cae005c30b09096517058e84e:
+
+  ide: officially deprecated the legacy IDE driver (2019-05-08 16:47:23 -0700)
+
+----------------------------------------------------------------
+Christoph Hellwig (1):
+      ide: officially deprecated the legacy IDE driver
+
+ drivers/ide/ide-probe.c | 3 +++
+ 1 file changed, 3 insertions(+)
