@@ -1,38 +1,24 @@
-From: David Miller <davem@davemloft.net>
-Subject: [GIT] IDE
-Date: Wed, 08 May 2019 16:53:20 -0700 (PDT)
-Message-ID: <20190508.165320.2267661705586017777.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: pr-tracker-bot@kernel.org
+Subject: Re: [GIT] IDE
+Date: Thu, 09 May 2019 04:45:11 +0000
+Message-ID: <155737711172.32092.7824293216957147097.pr-tracker-bot@kernel.org>
+References: <20190508.165320.2267661705586017777.davem@davemloft.net>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20190508.165320.2267661705586017777.davem@davemloft.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
+The pull request you sent on Wed, 08 May 2019 16:53:20 -0700 (PDT):
 
-Finally deprecate the legacy IDE layer.
+> git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide refs/heads/master
 
-Frankly this is long overdue.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/89c3b37af87ec183b666d83428cb28cc421671a6
 
-Please pull, thanks a lot!
+Thank you!
 
-The following changes since commit ef75bd71c5d31dc17ae41ff8bec92630a3037d69:
-
-  Merge tag 'gfs2-for-5.2' of git://git.kernel.org/pub/scm/linux/kernel/git/gfs2/linux-gfs2 (2019-05-08 13:16:07 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide 
-
-for you to fetch changes up to 7ad19a99ad431b5cae005c30b09096517058e84e:
-
-  ide: officially deprecated the legacy IDE driver (2019-05-08 16:47:23 -0700)
-
-----------------------------------------------------------------
-Christoph Hellwig (1):
-      ide: officially deprecated the legacy IDE driver
-
- drivers/ide/ide-probe.c | 3 +++
- 1 file changed, 3 insertions(+)
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
