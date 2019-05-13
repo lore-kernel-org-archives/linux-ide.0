@@ -1,57 +1,132 @@
-From: "Ardelean, Alexandru" <alexandru.Ardelean@analog.com>
-Subject: Re: [PATCH 03/16] lib,treewide: add new match_string() helper/macro
-Date: Mon, 13 May 2019 07:00:18 +0000
-Message-ID: <146ba7b61998d1e26cf2312fdaa01525d7c7d8de.camel@analog.com>
-References: <20190508112842.11654-1-alexandru.ardelean@analog.com>
-         <20190508112842.11654-5-alexandru.ardelean@analog.com>
-         <20190508131128.GL9224@smile.fi.intel.com>
-         <20190508131856.GB10138@kroah.com>
-         <b2440bc9485456a7a90a488c528997587b22088b.camel@analog.com>
-         <4df165bc4247e60aa4952fd55cb0c77e60712767.camel@analog.com>
-         <20190510143407.GA9224@smile.fi.intel.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [RFC PATCH v2 RESEND] drivers: ata: ahci_sunxi: Increased
+ SATA/AHCI DMA TX/RX FIFOs
+Date: Mon, 13 May 2019 09:44:46 +0200
+Message-ID: <413dcf9f-25a5-61f5-159f-a75e7b1f1522@redhat.com>
+References: <20190512205954.18435-1-um@mutluit.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190510143407.GA9224@smile.fi.intel.com>
+In-Reply-To: <20190512205954.18435-1-um@mutluit.com>
 Content-Language: en-US
-Content-ID: <FDDE4955D460DC40AB641BB9139D6ABF@analog.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "andriy.shevchenko@linux.intel.com" <andriy.shevchenko@linux.intel.com>
-Cc: "kvm@vger.kernel.org" <kvm@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>, "cgroups@vger.kernel.org" <cgroups@vger.kernel.org>, "intel-gfx@lists.freedesktop.org" <intel-gfx@lists.freedesktop.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>, "linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>, "linux-security-module@vger.kernel.org" <linux-security-module@vger.kernel.org>, devel@driverdev.osu
+To: Uenal Mutlu <um@mutluit.com>, Jens Axboe <axboe@kernel.dk>, Maxime Ripard <maxime.ripard@bootlin.com>, Chen-Yu Tsai <wens@csie.org>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Cc: linux-sunxi@googlegroups.com, linux-amarula@amarulasolutions.com, Jagan Teki <jagan@amarulasolutions.com>, Pablo Greco <pgreco@centosproject.org>, Mark Rutland <mark.rutland@arm.com>, Oliver Schinagl <oliver@schinagl.nl>, Linus Walleij <linus.walleij@linaro.org>, FUKAUMI Naoki <naobsd@gmail.com>, Andre Przywara <andre.przywara@arm.com>, Stefan Monnier <monnier@iro.umontreal.ca>
 List-Id: linux-ide@vger.kernel.org
 
-T24gRnJpLCAyMDE5LTA1LTEwIGF0IDE3OjM0ICswMzAwLCBhbmRyaXkuc2hldmNoZW5rb0BsaW51
-eC5pbnRlbC5jb20gd3JvdGU6DQo+IFtFeHRlcm5hbF0NCj4gDQo+IA0KPiBPbiBGcmksIE1heSAx
-MCwgMjAxOSBhdCAwOToxNToyN0FNICswMDAwLCBBcmRlbGVhbiwgQWxleGFuZHJ1IHdyb3RlOg0K
-PiA+IE9uIFdlZCwgMjAxOS0wNS0wOCBhdCAxNjoyMiArMDMwMCwgQWxleGFuZHJ1IEFyZGVsZWFu
-IHdyb3RlOg0KPiA+ID4gT24gV2VkLCAyMDE5LTA1LTA4IGF0IDE1OjE4ICswMjAwLCBHcmVnIEtI
-IHdyb3RlOg0KPiA+ID4gPiBPbiBXZWQsIE1heSAwOCwgMjAxOSBhdCAwNDoxMToyOFBNICswMzAw
-LCBBbmR5IFNoZXZjaGVua28gd3JvdGU6DQo+ID4gPiA+ID4gT24gV2VkLCBNYXkgMDgsIDIwMTkg
-YXQgMDI6Mjg6MjlQTSArMDMwMCwgQWxleGFuZHJ1IEFyZGVsZWFuDQo+ID4gPiA+ID4gd3JvdGU6
-DQo+ID4gPiA+ID4gQ2FuIHlvdSBzcGxpdCBpbmNsdWRlL2xpbnV4LyBjaGFuZ2UgZnJvbSB0aGUg
-cmVzdD8NCj4gPiA+ID4gDQo+ID4gPiA+IFRoYXQgd291bGQgYnJlYWsgdGhlIGJ1aWxkLCB3aHkg
-ZG8geW91IHdhbnQgaXQgc3BsaXQgb3V0PyAgVGhpcw0KPiA+ID4gPiBtYWtlcw0KPiA+ID4gPiBz
-ZW5zZSBhbGwgYXMgYSBzaW5nbGUgcGF0Y2ggdG8gbWUuDQo+ID4gPiA+IA0KPiA+ID4gDQo+ID4g
-PiBOb3QgcmVhbGx5Lg0KPiA+ID4gSXQgd291bGQgYmUganVzdCBiZSB0aGUgbmV3IG1hdGNoX3N0
-cmluZygpIGhlbHBlci9tYWNybyBpbiBhIG5ldw0KPiA+ID4gY29tbWl0Lg0KPiA+ID4gQW5kIHRo
-ZSBjb252ZXJzaW9ucyBvZiB0aGUgc2ltcGxlIHVzZXJzIG9mIG1hdGNoX3N0cmluZygpICh0aGUg
-b25lcw0KPiA+ID4gdXNpbmcNCj4gPiA+IEFSUkFZX1NJWkUoKSkgaW4gYW5vdGhlciBjb21taXQu
-DQo+ID4gPiANCj4gPiANCj4gPiBJIHNob3VsZCBoYXZlIGFza2VkIGluIG15IHByZXZpb3VzIHJl
-cGx5Lg0KPiA+IExlYXZlIHRoaXMgYXMtaXMgb3IgcmUtZm9ybXVsYXRlIGluIDIgcGF0Y2hlcyA/
-DQo+IA0KPiBEZXBlbmRzIG9uIG9uIHdoYXQgeW91IHdvdWxkIGxpa2UgdG8gc3BlbmQgeW91ciB0
-aW1lOiBjb2xsZWN0aW5nIEFja3MgZm9yDQo+IGFsbA0KPiBwaWVjZXMgaW4gdHJlZXdpZGUgcGF0
-Y2ggb3Igc2VuZCBuZXcgQVBJIGZpcnN0IGZvbGxvd2VkIHVwIGJ5IHBlciBkcml2ZXINCj4gLw0K
-PiBtb2R1bGUgdXBkYXRlIGluIG5leHQgY3ljbGUuDQoNCkkgYWN0dWFsbHkgd291bGQgaGF2ZSBw
-cmVmZXJyZWQgbmV3IEFQSSBmaXJzdCwgd2l0aCB0aGUgY3VycmVudA0KYG1hdGNoX3N0cmluZygp
-YCAtPiBgX19tYXRjaF9zdHJpbmcoKWAgcmVuYW1lIGZyb20gdGhlIHN0YXJ0LCBidXQgSSB3YXNu
-J3QNCnN1cmUuIEkgYW0gc3RpbGwgbmF2aWdhdGluZyB0aHJvdWdoIGhvdyBmZWVkYmFja3MgYXJl
-IHdvcmtpbmcgaW4gdGhpcw0KcmVhbG0uDQoNCkknbGwgc2VuZCBhIFYyIHdpdGggdGhlIEFQSSBj
-aGFuZ2UtZmlyc3Qvb25seTsgc2hvdWxkIGJlIGEgc21hbGxlciBsaXN0Lg0KVGhlbiBzZWUgYWJv
-dXQgZm9sbG93LXVwcy9jaGFuZ2VzIHBlciBzdWJzeXN0ZW1zLg0KDQo+IA0KPiBJIGFsc28gaGF2
-ZSBubyBzdHJvbmcgcHJlZmVyZW5jZS4NCj4gQW5kIEkgdGhpbmsgaXQncyBnb29kIHRvIGFkZCBI
-ZWlra2kgS3JvZ2VydXMgdG8gQ2MgbGlzdCBmb3IgYm90aCBwYXRjaA0KPiBzZXJpZXMsDQo+IHNp
-bmNlIGhlIGlzIHRoZSBhdXRob3Igb2Ygc3lzZnMgdmFyaWFudCBhbmQgbWF5IGhhdmUgc29tZXRo
-aW5nIHRvIGNvbW1lbnQNCj4gb24NCj4gdGhlIHJlc3QuDQoNClRoYW5rcyBmb3IgdGhlIHJlZmVy
-ZW5jZS4NCg0KPiANCj4gLS0NCj4gV2l0aCBCZXN0IFJlZ2FyZHMsDQo+IEFuZHkgU2hldmNoZW5r
-bw0KPiANCj4gDQo=
+Hi,
+
+On 12-05-19 22:59, Uenal Mutlu wrote:
+> Increasing the SATA/AHCI DMA TX/RX FIFOs (P0DMACR.TXTS and .RXTS, ie.
+> TX_TRANSACTION_SIZE and RX_TRANSACTION_SIZE) from default 0x0 each
+> to 0x3 each, gives a write performance boost of 120 MiB/s to 132 MiB/s
+> from lame 36 MiB/s to 45 MiB/s previously.
+> Read performance is about 200 MiB/s.
+> [tested on SSD using dd bs=2K/4K/8K/12K/16K/24K/32K: peak-perf at 12K].
+> 
+> Tested on the Banana Pi R1 (aka Lamobo R1) and Banana Pi M1 SBCs
+> with Allwinner A20 32bit-SoCs (ARMv7-a / arm-linux-gnueabihf).
+> These devices are RaspberryPi-like small devices.
+> 
+> This problem of slow SATA write-speed with these small devices lasts now
+> for more than 5 years. Many commentators throughout the years wrongly
+> assumed the slow write speed was a hardware limitation. This patch finally
+> solves the problem, which in fact was just a hard-to-fix software problem
+> (b/c of lack of documentation by the SoC-maker Allwinner Technology).
+> 
+> RFC: Since more than about 25 similar SBC/SoC models do use the
+> ahci_sunxi driver, users are encouraged to test it on all the
+> affected boards and give feedback
+
+The SATA controller on these boards is inside the A10/A20 SoC, the
+A10 and A20 use the same controller, so it is the same on all the boards.
+
+IOW I don't see this only being tested on 1 board as a reason for the patch
+to be RFC.
+
+> Lists of the affected sunxi and other boards and SoCs with SATA using
+> the ahci_sunxi driver:
+>    $ grep -i -e "^&ahci" arch/arm/boot/dts/sun*dts
+>    and http://linux-sunxi.org/SATA#Devices_with_SATA_ports
+>    See also http://linux-sunxi.org/Category:Devices_with_SATA_port
+> 
+> Patch v2:
+>    - Commented the patch in-place in ahci_sunxi.c
+>    - With bs=12K and no conv=... passed to dd, the write performance
+>      rises further to 132 MiB/s
+>    - Changed MB/s to MiB/s
+>    - Posted the story behind the patch:
+>      http://lkml.iu.edu/hypermail/linux/kernel/1905.1/03506.html
+>    - Posted a dd test script to find optimal bs, and some results:
+>      https://bit.ly/2YoOzEM
+> 
+> Patch v1:
+>    - States bs=4K for dd and a write performance of 120 MiB/s
+> 
+> Signed-off-by: Uenal Mutlu <um@mutluit.com>
+> ---
+>   drivers/ata/ahci_sunxi.c | 47 +++++++++++++++++++++++++++++++++++++++++++++--
+>   1 file changed, 45 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ata/ahci_sunxi.c b/drivers/ata/ahci_sunxi.c
+> index 911710643305..ed19f19808c5 100644
+> --- a/drivers/ata/ahci_sunxi.c
+> +++ b/drivers/ata/ahci_sunxi.c
+> @@ -157,8 +157,51 @@ static void ahci_sunxi_start_engine(struct ata_port *ap)
+>   	void __iomem *port_mmio = ahci_port_base(ap);
+>   	struct ahci_host_priv *hpriv = ap->host->private_data;
+>   
+> -	/* Setup DMA before DMA start */
+> -	sunxi_clrsetbits(hpriv->mmio + AHCI_P0DMACR, 0x0000ff00, 0x00004400);
+> +	/* Setup DMA before DMA start
+> +	 *
+> +	 * NOTE: A similar SoC with SATA/AHCI by Texas Instruments documents
+> +	 *   this Vendor Specific Port (P0DMACR, aka PxDMACR) in its
+> +	 *   User's Guide document (TMS320C674x/OMAP-L1x Processor
+> +	 *   Serial ATA (SATA) Controller, Literature Number: SPRUGJ8C,
+> +	 *   March 2011, Chapter 4.33 Port DMA Control Register (P0DMACR),
+> +	 *   p.68, https://www.ti.com/lit/ug/sprugj8c/sprugj8c.pdf)
+> +	 *   as equivalent to the following struct:
+> +	 *
+> +	 *   struct AHCI_P0DMACR_t
+> +	 *     {
+> +	 *       unsigned TXTS     : 4,
+> +	 *                RXTS     : 4,
+> +	 *                TXABL    : 4,
+> +	 *                RXABL    : 4,
+> +	 *                Reserved : 16;
+> +	 *     };
+> +	 *
+> +	 *   TXTS: Transmit Transaction Size (TX_TRANSACTION_SIZE).
+> +	 *     This field defines the DMA transaction size in DWORDs for
+> +	 *     transmit (system bus read, device write) operation. [...]
+> +	 *
+> +	 *   RXTS: Receive Transaction Size (RX_TRANSACTION_SIZE).
+> +	 *     This field defines the Port DMA transaction size in DWORDs
+> +	 *     for receive (system bus write, device read) operation. [...]
+> +	 *
+> +	 *   TXABL: Transmit Burst Limit.
+> +	 *     This field allows software to limit the VBUSP master read
+> +	 *     burst size. [...]
+> +	 *
+> +	 *   RXABL: Receive Burst Limit.
+> +	 *     Allows software to limit the VBUSP master write burst
+> +	 *     size. [...]
+> +	 *
+> +	 *   Reserved: Reserved.
+> +	 *
+> +	 *
+> +	 * NOTE: According to the above document, the following alternative
+> +	 *   to the code below could perhaps be a better option
+> +	 *   (or preparation) for possible further improvements later:
+> +	 *     sunxi_clrsetbits(hpriv->mmio + AHCI_P0DMACR, 0x0000ffff,
+> +	 *		0x00000033);
+> +	 */
+> +	sunxi_clrsetbits(hpriv->mmio + AHCI_P0DMACR, 0x0000ffff, 0x00004433);
+
+Have you tried / benchmarked the 0x00000033 option?
+
+Regards,
+
+Hans
