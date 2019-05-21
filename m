@@ -1,129 +1,103 @@
-From: Uenal Mutlu <um-lNbj7F0cCK5BDgjK7y7TUQ@public.gmane.org>
-Subject: [PATCH v3] drivers: ata: ahci_sunxi: Increased
- SATA/AHCI DMA TX/RX FIFOs
-Date: Mon, 13 May 2019 16:24:10 +0200
-Message-ID: <20190513142410.9299-1-um@mutluit.com>
-Reply-To: um-lNbj7F0cCK5BDgjK7y7TUQ@public.gmane.org
+From: Miquel Raynal <miquel.raynal@bootlin.com>
+Subject: [PATCH v4 00/10] Enable per-port SATA interrupts and drop a hack in
+ the IRQ subsystem
+Date: Tue, 21 May 2019 16:30:13 +0200
+Message-ID: <20190521143023.31810-1-miquel.raynal@bootlin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-sunxi+bncBDJNR5GB6YGRBK744XTAKGQELPMV4NA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Post: <https://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/linux-sunxi
-List-Subscribe: <https://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/linux-sunxi/subscribe>
-To: Jens Axboe <axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>, Maxime Ripard <maxime.ripard-LDxbnhwyfcJBDgjK7y7TUQ@public.gmane.org>, Chen-Yu Tsai <wens-jdAy2FN1RRM@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Uenal Mutlu <um-lNbj7F0cCK5BDgjK7y7TUQ@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-amarula-dyjBcgdgk7Pe9wHmmfpqLFaTQe2KTcn/@public.gmane.org, Jagan Teki <jagan-dyjBcgdgk7Pe9wHmmfpqLFaTQe2KTcn/@public.gmane.org>, Pablo Greco <pgreco-/kQrlZ55X3WoClj4AeEUq9i2O/JbrIOy@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, FUKAUMI Naoki <naobsd-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andre Przywara <andre.przywara-5wv7dgnIgG8@public.gmane.org>, Stefan Monnier <monnier-CRDzTM1onBSWkKpYnGOUKg@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Jens Axboe <axboe@kernel.dk>, Hans de Goede <hdegoede@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Marc Zyngier <marc.zyngier@arm.com>
+Cc: devicetree@vger.kernel.org, Baruch Siach <baruch@tkos.co.il>, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-Increasing the SATA/AHCI DMA TX/RX FIFOs (P0DMACR.TXTS and .RXTS, ie.
-TX_TRANSACTION_SIZE and RX_TRANSACTION_SIZE) from default 0x0 each
-to 0x3 each, gives a write performance boost of 120 MiB/s to 132 MiB/s
-from lame 36 MiB/s to 45 MiB/s previously.
-Read performance is above 200 MiB/s.
-[tested on SSD using dd bs=4K/8K/12K/16K/20K/24K/32K: peak-perf at 12K]
-
-Tested on the SBCs Banana Pi R1 (aka Lamobo R1) and Banana Pi M1 which
-are based on the Allwinner A20 32bit-SoC (ARMv7-a / arm-linux-gnueabihf).
-These devices are RaspberryPi-like small devices.
-
-This problem of slow SATA write-speed with these small devices lasts
-for about 7 years now (beginning with the A10 SoC). Many commentators
-throughout the years wrongly assumed the slow write speed was a
-hardware limitation. This patch finally solves the problem, which
-in fact was just a hard-to-find software problem due to lack of
-SATA/AHCI documentation by the SoC-maker Allwinner Technology.
-
-Lists of the affected sunxi and other boards and SoCs with SATA using
-the ahci_sunxi driver:
-  $ grep -i -e "^&ahci" arch/arm/boot/dts/sun*dts
-  and http://linux-sunxi.org/SATA#Devices_with_SATA_ports
-  See also http://linux-sunxi.org/Category:Devices_with_SATA_port
-
-Acked-by: Maxime Ripard <maxime.ripard-LDxbnhwyfcJBDgjK7y7TUQ@public.gmane.org>
-Reviewed-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Uenal Mutlu <um-lNbj7F0cCK5BDgjK7y7TUQ@public.gmane.org>
----
-
-v3:
-  * Removed RFC from Subject line, and also the explicit call for RFC
-    in the text, thereby submitting the patch for official merging.
-
-v2:
-  * Commented the patch in-place in ahci_sunxi.c
-  * With bs=12K and no conv=... passed to dd, the write performance
-    rises further to 132 MiB/s
-  * Changed MB/s to MiB/s
-  * Posted the story behind the patch:
-    http://lkml.iu.edu/hypermail/linux/kernel/1905.1/03506.html
-  * Posted a dd test script to find optimal bs, and some results:
-    https://bit.ly/2YoOzEM
-
-v1:
-  * States bs=4K for dd and a write performance of 120 MiB/s
----
- drivers/ata/ahci_sunxi.c | 47 +++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 45 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/ahci_sunxi.c b/drivers/ata/ahci_sunxi.c
-index 911710643305..018186a39a69 100644
---- a/drivers/ata/ahci_sunxi.c
-+++ b/drivers/ata/ahci_sunxi.c
-@@ -157,8 +157,51 @@ static void ahci_sunxi_start_engine(struct ata_port *ap)
- 	void __iomem *port_mmio = ahci_port_base(ap);
- 	struct ahci_host_priv *hpriv = ap->host->private_data;
- 
--	/* Setup DMA before DMA start */
--	sunxi_clrsetbits(hpriv->mmio + AHCI_P0DMACR, 0x0000ff00, 0x00004400);
-+	/* Setup DMA before DMA start
-+	 *
-+	 * NOTE: A similar SoC with SATA/AHCI by Texas Instruments documents
-+	 *   this Vendor Specific Port (P0DMACR, aka PxDMACR) in its
-+	 *   User's Guide document (TMS320C674x/OMAP-L1x Processor
-+	 *   Serial ATA (SATA) Controller, Literature Number: SPRUGJ8C,
-+	 *   March 2011, Chapter 4.33 Port DMA Control Register (P0DMACR),
-+	 *   p.68, https://www.ti.com/lit/ug/sprugj8c/sprugj8c.pdf)
-+	 *   as equivalent to the following struct:
-+	 *
-+	 *   struct AHCI_P0DMACR_t
-+	 *   {
-+	 *     unsigned TXTS     : 4;
-+	 *     unsigned RXTS     : 4;
-+	 *     unsigned TXABL    : 4;
-+	 *     unsigned RXABL    : 4;
-+	 *     unsigned Reserved : 16;
-+	 *   };
-+	 *
-+	 *   TXTS: Transmit Transaction Size (TX_TRANSACTION_SIZE).
-+	 *     This field defines the DMA transaction size in DWORDs for
-+	 *     transmit (system bus read, device write) operation. [...]
-+	 *
-+	 *   RXTS: Receive Transaction Size (RX_TRANSACTION_SIZE).
-+	 *     This field defines the Port DMA transaction size in DWORDs
-+	 *     for receive (system bus write, device read) operation. [...]
-+	 *
-+	 *   TXABL: Transmit Burst Limit.
-+	 *     This field allows software to limit the VBUSP master read
-+	 *     burst size. [...]
-+	 *
-+	 *   RXABL: Receive Burst Limit.
-+	 *     Allows software to limit the VBUSP master write burst
-+	 *     size. [...]
-+	 *
-+	 *   Reserved: Reserved.
-+	 *
-+	 *
-+	 * NOTE: According to the above document, the following alternative
-+	 *   to the code below could perhaps be a better option
-+	 *   (or preparation) for possible further improvements later:
-+	 *     sunxi_clrsetbits(hpriv->mmio + AHCI_P0DMACR, 0x0000ffff,
-+	 *		0x00000033);
-+	 */
-+	sunxi_clrsetbits(hpriv->mmio + AHCI_P0DMACR, 0x0000ffff, 0x00004433);
- 
- 	/* Start DMA */
- 	sunxi_setbits(port_mmio + PORT_CMD, PORT_CMD_START);
--- 
-2.11.0
+SGVsbG8sCgpTb21lIHRpbWUgYWdvLCB3aGVuIHRoZSBpbml0aWFsIHN1cHBvcnQgZm9yIEFybWFk
+YSBDUDExMCB3YXMKY29udHJpYnV0ZWQsIHRoZSBTQVRBIGNvcmUgd2FzIG5vdCBhYmxlIHRvIGhh
+bmRsZSBwZXItcG9ydAppbnRlcnJ1cHRzLiBEZXNwaXRlIHRoZSBoYXJkd2FyZSByZWFsaXR5LCB0
+aGUgZGV2aWNlIHRyZWUgb25seQpyZXByZXNlbnRzIG9uZSBtYWluIGludGVycnVwdCBmb3IgdGhl
+IHR3byBwb3J0cy4gSGF2aW5nIGJvdGggU0FUQQpwb3J0cyBlbmFibGVkIGF0IHRoZSBzYW1lIHRp
+bWUgaGFzIGJlZW4gYWNoaWV2ZWQgYnkgYSBoYWNrIGluIHRoZSBJQ1UKZHJpdmVyKDEpIHRoYXQg
+ZmFrZWQgdGhlIHVzZSBvZiB0aGUgdHdvIGludGVycnVwdHMsIG5vIG1hdHRlciB3aGljaApTQVRB
+IHBvcnQgd2FzIGluIHVzZS4KCk5vdyB0aGF0IHRoZSBTQVRBIGNvcmUgaXMgcmVhZHkgdG8gaGFu
+ZGxlIG1vcmUgdGhhbiBvbmUgaW50ZXJydXB0LAp0aGlzIHNlcmllcyBhZGRzIHN1cHBvcnQgZm9y
+IGl0IGluIHRoZSBsaWJhaGNpX3BsYXRmb3JtIGNvZGUuIFRoZQpDUDExMCBkZXZpY2UgdHJlZSBt
+dXN0IGJlIHVwZGF0ZWQgdG8gcmVmbGVjdCB0aGUgdHdvIFNBVEEgcG9ydHMKYXZhaWxhYmxlIGFu
+ZCB0aGVpciByZXNwZWN0aXZlIGludGVycnVwdHMuIFRvIGRvIG5vdCBicmVhayBEVCBiYWNrd2Fy
+ZApjb21wYXRpYmlsaXR5LCB0aGUgYWhjaV9wbGF0Zm9ybSBkcml2ZXIgbm93IGVtYmVkcyBhIHNw
+ZWNpYWwgcXVpcmsKd2hpY2ggY2hlY2tzIGlmIHRoZSBEVCBpcyB2YWxpZCAob25seSBmb3IgQThr
+IGNvbXBhdGlibGUpIGFuZCwgaWYKbmVlZGVkLCBjcmVhdGVzIHRoZSB0d28gbWlzc2luZyBzdWIt
+bm9kZXMsIGFuZCBhc3NpZ24gdGhlbSB0aGUKcmVsZXZhbnQgInJlZyIgYW5kICJpbnRlcnJ1cHRz
+IiBwcm9wZXJ0aWVzLCBiZWZvcmUgcmVtb3ZpbmcgdGhlIG1haW4KU0FUQSBub2RlICJpbnRlcnJ1
+cHRzIiBvbmUuCgoKVGhhbmtzLApNaXF1w6hsCgooMSkgVGhlIElDVSBpcyBhbiBpcnFjaGlwIGFn
+Z3JlZ2F0aW5nIHRoZSBDUDExMCAoc291dGgtYnJpZGdlKQppbnRlcnJ1cHRzIGludG8gTVNJcyBm
+b3IgdGhlIEFQODA2IChub3J0aC1icmlkZ2UpLgoKQ2hhbmdlcyBpbiB2NAo9PT09PT09PT09PT09
+CiogUmViYXNlIG9uIHRvcCBvZiB2NS4yLXJjMQoqIHMvQVJNNjQvYXJtNjQvIGluIHRoZSBEVCBj
+aGFuZ2UgY29tbWl0IHRpdGxlLgoKQ2hhbmdlcyBpbiB2Mwo9PT09PT09PT09PT09CiogUmVtb3Zl
+ZCB1c2VsZXNzIGxvY2tpbmcgd2hlbiBhY2tpbmcgdGhlIFNBVEEgaG9zdCBJUlFfU1RBVCBiaXQu
+CiogQXMgc3BvdHRlZCBieSBIYW5zLCBkbyBub3QgZW5hYmxlIHRoZSBBSENJX0hGTEFHX01VTFRJ
+X01TSSBmbGFnIG9ubHkKICBpZiBtb3JlIHRoYW4gb25lIHBvcnQgaXMgZW5hYmxlZCwgRFRzIG1p
+Z2h0IGRlY2xhcmUgb25seSBvbmUKICBpbnRlcnJ1cHQgYW5kIGhhdmUgbXVsdGlwbGUgcG9ydHMu
+IEFkZGVkIEhhbnMnIFJldmlld2VkLWJ5IHRhZy4KKiBBZGRlZCBSb2IncyBSZXZpZXdlZC1ieSB0
+YWdzLgoqIEFkZGVkIGV4cGxpY2l0IHJlZmVyZW5jZXMgdG8gdGhlICdEZXZpY2UgVHJlZScgYmVp
+bmcgdGhlIGN1bHByaXQKICBmb3IgdGhlIGhhY2tzIHdoaWNoIGFyZSBiZWluZyB0cmVhdGVkIGlu
+IHBhdGNoICJhdGE6IGFoY2k6IG12ZWJ1OgogIEFkZCBzdXBwb3J0IGZvciBBOGsgbGVnYWN5IGJp
+bmRpbmdzIiBhcyBzdWdnZXN0ZWQgYnkgTWFyYy4KKiBNb2RpZmllZCBhbGwgRFRzIHRvIGF2b2lk
+IGVuYWJsaW5nL2Rpc2FibGluZyB0aGUgU0FUQSBwb3J0cwogIGluZGVwZW5kZW50bHksIHdoaWNo
+IGRvZXMgbm90IHdvcmsuIEVpdGhlciBib3RoIHBvcnRzIGFyZSBlbmFibGVkLCBvcgogIG5vbmUu
+IFRlc3RlZCBvbiBNYWNjaGlhdG9CaW4gdGhhdCBhbGwgdGhyZWUgYXZhaWxhYmUgcG9ydHMgb24g
+dGhlCiAgYm9hcmQgYXJlIGZ1bmN0aW9uYWwuCgpDaGFuZ2VzIGluIHYyCj09PT09PT09PT09PT0K
+KiBJbiB0aGUgQUhDSSB3b3JsZCwgdGhlICdpcnEnIGlzIG5vdyBhbiAnKmlycXMnIGFycmF5LCBJ
+IGVuc3VyZWQgaXQKICBpcyBhbGxvY2F0ZWQgZXZlbiB3aGVuIG5vdCB1c2luZyAqX3BsYXRmb3Jt
+IGRyaXZlcnMuCiogTW92ZWQgdGhlIHdob2xlIGxvZ2ljIGZyb20gdGhlIGdlbmVyaWMgYWhjaV9w
+bGF0Zm9ybS5jIGRyaXZlciB0byB0aGUKICBNYXJ2ZWxsJ3MgYWhjaV9tdmVidS5jIGRyaXZlci4K
+KiBEcm9wcGVkIHRoZSB3aG9sZSBEVCBtYW5pcHVsYXRpb24gcXVpcmsuCiogSW5zdGVhZCB1c2Vk
+IGEgaGFjayB0byBjb25maWd1cmUgYm90aCBpbnRlcnJ1cHRzIHdoZW4gdXNpbmcgdGhlCiAgZGVw
+cmVjYXRlZCBiaW5kaW5ncywgdGhpcyBoYWNrIGlzIGE4ayBzcGVjaWZpYyBidXQgdGhlcmUgaXMg
+YSBmbGFnCiAgdGhhdCBpcyBwYXNzZWQgdG8gdGhlIGNvcmUgZHVyaW5nIHRoZSBhaGNpX3BsYXRm
+b3JtX2dldF9yZXNvdXJjZXMoKQogIHRvIGluZGljYXRlIHRoYXQgdGhlIG51bWJlciBvZiBwb3J0
+cyBtdXN0IGJlIGZvcmNlZCB0byAyIG5vIG1hdHRlcgogIHRoZSBudW1iZXIgb2YgY2hpbGQgbm9k
+ZXMuCiogVGhlIEE4ayBiYXNlZCBDbGVhcmZvZy1HVCBhY3R1YWxseSB1c2VzIHRoZSBTQVRBIElQ
+IChCYXJ1Y2gncyBpbmZvKQogIHNvIGRvIG5vdCByZW1vdmUgdGhlIFNBVEEgbm9kZSBmcm9tIHRo
+ZSBEVC4gSW5zdGVhZCwgY2hhbmdlIHRoZSBEVFMKICB0byBmaXQgdGhlIG5ldyBiaW5kaW5ncyAo
+dGhlIGJvYXJkIG9ubHkgdXNlcyB0aGUgc2Vjb25kIHBvcnQgYXQKICBvZmZzZXQgMSkuCiogQWRk
+ZWQgYmluZGluZ3MgZG9jdW1lbnRhdGlvbiBhYm91dCB0aGUgQThrIEFIQ0kgY29tcGF0aWJsZSAo
+ZXhpc3RpbmcKICBpbiBEVHMsIG1pc3NpbmcgaW4gdGhlIGRvYykuCiogU0FUQSBTdWItbm9kZXMg
+cmVwcmVzZW50aW5nIHBvcnRzIGFscmVhZHkgYXJlIGRvY3VtZW50ZWQsIEkganVzdAogIGFkZGVk
+IGEgbWVudGlvbiB0aGF0IHRoZXkgY2FuIGFsc28gaGF2ZSBhbiBpbnRlcnJ1cHRzIHByb3BlcnR5
+IHdoaWNoCiAgaXMgbXV0dWFsbHkgZXhjbHVzaXZlIHdpdGggdGhlIHJvb3QgU0FUQSBub2RlLgoK
+Ck1pcXVlbCBSYXluYWwgKDkpOgogIGF0YTogbGliYWhjaTogRW5zdXJlIHRoZSBob3N0IGludGVy
+cnVwdCBzdGF0dXMgYml0cyBhcmUgY2xlYXJlZAogIGF0YTogYWhjaTogU3VwcG9ydCBwZXItcG9y
+dCBpbnRlcnJ1cHRzCiAgZHQtYmluZGluZ3M6IGF0YTogVXBkYXRlIGFoY2kgYmluZGluZ3Mgd2l0
+aCBwb3NzaWJsZSBwZXItcG9ydAogICAgaW50ZXJydXB0cwogIGF0YTogYWhjaTogbXZlYnU6IFJl
+bmFtZSBhIHBsYXRmb3JtIGRhdGEgZmxhZwogIGF0YTogYWhjaTogbXZlYnU6IEFkZCBhIHBhcmFt
+ZXRlciB0byBhIHBsYXRmb3JtIGRhdGEgY2FsbGJhY2sKICBkdC1iaW5kaW5nczogYXRhOiBVcGRh
+dGUgYWhjaV9tdmVidSBiaW5kaW5ncwogIGF0YTogYWhjaTogbXZlYnU6IFN1cHBvcnQgQThrIGNv
+bXBhdGlibGUKICBhdGE6IGFoY2k6IG12ZWJ1OiBBZGQgc3VwcG9ydCBmb3IgQThrIGxlZ2FjeSBE
+VCBiaW5kaW5ncwogIGlycWNoaXAvaXJxLW12ZWJ1LWljdTogUmVtb3ZlIHRoZSBkb3VibGUgU0FU
+QSBwb3J0cyBpbnRlcnJ1cHQgaGFjawoKVGhvbWFzIFBldGF6em9uaSAoMSk6CiAgYXJtNjQ6IGR0
+czogbWFydmVsbDogYXJtYWRhLWNwMTEwOiBTd2l0Y2ggdG8gcGVyLXBvcnQgU0FUQSBpbnRlcnJ1
+cHRzCgogLi4uL2RldmljZXRyZWUvYmluZGluZ3MvYXRhL2FoY2ktcGxhdGZvcm0udHh0IHwgIDcg
+KysKIGFyY2gvYXJtNjQvYm9vdC9kdHMvbWFydmVsbC9hcm1hZGEtY3AxMTAuZHRzaSB8IDEzICsr
+Ky0KIGRyaXZlcnMvYXRhL2FjYXJkLWFoY2kuYyAgICAgICAgICAgICAgICAgICAgICB8ICAyICst
+CiBkcml2ZXJzL2F0YS9haGNpLmMgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgOCArKy0K
+IGRyaXZlcnMvYXRhL2FoY2kuaCAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAzICstCiBk
+cml2ZXJzL2F0YS9haGNpX212ZWJ1LmMgICAgICAgICAgICAgICAgICAgICAgfCA2MSArKysrKysr
+KysrKysrLS0tCiBkcml2ZXJzL2F0YS9saWJhaGNpLmMgICAgICAgICAgICAgICAgICAgICAgICAg
+fCAgNyArLQogZHJpdmVycy9hdGEvbGliYWhjaV9wbGF0Zm9ybS5jICAgICAgICAgICAgICAgIHwg
+NzAgKysrKysrKysrKysrKysrKy0tLQogZHJpdmVycy9hdGEvc2F0YV9oaWdoYmFuay5jICAgICAg
+ICAgICAgICAgICAgIHwgIDIgKy0KIGRyaXZlcnMvaXJxY2hpcC9pcnEtbXZlYnUtaWN1LmMgICAg
+ICAgICAgICAgICB8IDE4IC0tLS0tCiBpbmNsdWRlL2xpbnV4L2FoY2lfcGxhdGZvcm0uaCAgICAg
+ICAgICAgICAgICAgfCAgMSArCiAxMSBmaWxlcyBjaGFuZ2VkLCAxNDggaW5zZXJ0aW9ucygrKSwg
+NDQgZGVsZXRpb25zKC0pCgotLSAKMi4xOS4xCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgt
+YXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3Jn
+L21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
