@@ -1,8 +1,7 @@
 From: Miquel Raynal <miquel.raynal@bootlin.com>
-Subject: [PATCH v4 03/10] dt-bindings: ata: Update ahci bindings with possible
- per-port interrupts
-Date: Tue, 21 May 2019 16:30:16 +0200
-Message-ID: <20190521143023.31810-4-miquel.raynal@bootlin.com>
+Subject: [PATCH v4 04/10] ata: ahci: mvebu: Rename a platform data flag
+Date: Tue, 21 May 2019 16:30:17 +0200
+Message-ID: <20190521143023.31810-5-miquel.raynal@bootlin.com>
 References: <20190521143023.31810-1-miquel.raynal@bootlin.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,35 +21,44 @@ To: Gregory Clement <gregory.clement@bootlin.com>, Jason Cooper <jason@lakedaemo
 Cc: devicetree@vger.kernel.org, Baruch Siach <baruch@tkos.co.il>, Antoine Tenart <antoine.tenart@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Miquel Raynal <miquel.raynal@bootlin.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-Update bindings to reflect the fact that a SATA IP can either have:
-- only one interrupt: in this case an 'interrupts' property is
-  declared at the root of the node;
-or
-- each SATA port can have their own interrupt: in this case there is
-  one 'interrupts' property per port/sub-node and none at the root.
+Before adding more entries in the platform data structure, rename the
+flags entry to be more precise and name it host_flags.
 
 Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
-Reviewed-by: Rob Herring <robh@kernel.org>
 ---
- Documentation/devicetree/bindings/ata/ahci-platform.txt | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/ata/ahci_mvebu.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-index e30fd106df4f..80261e2845b0 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -53,6 +53,12 @@ And at least one of the following properties:
- - phys		    : reference to the SATA PHY node
- - target-supply     : regulator for SATA target power
+diff --git a/drivers/ata/ahci_mvebu.c b/drivers/ata/ahci_mvebu.c
+index d4bba3ace45d..43bb2db59698 100644
+--- a/drivers/ata/ahci_mvebu.c
++++ b/drivers/ata/ahci_mvebu.c
+@@ -30,7 +30,7 @@
  
-+Sub-nodes optional properties:
-+- interrupts        : <interrupt mapping for SATA ports IRQ>, please
-+                      note that either the root SATA node has the
-+                      interrupts property, or there is one per SATA
-+                      port, but not both at the same time.
-+
- Examples:
-         sata@ffe08000 {
- 		compatible = "snps,spear-ahci";
+ struct ahci_mvebu_plat_data {
+ 	int (*plat_config)(struct ahci_host_priv *hpriv);
+-	unsigned int flags;
++	unsigned int host_flags;
+ };
+ 
+ static void ahci_mvebu_mbus_config(struct ahci_host_priv *hpriv,
+@@ -196,7 +196,7 @@ static int ahci_mvebu_probe(struct platform_device *pdev)
+ 	if (IS_ERR(hpriv))
+ 		return PTR_ERR(hpriv);
+ 
+-	hpriv->flags |= pdata->flags;
++	hpriv->flags |= pdata->host_flags;
+ 	hpriv->plat_data = (void *)pdata;
+ 
+ 	rc = ahci_platform_enable_resources(hpriv);
+@@ -227,7 +227,7 @@ static const struct ahci_mvebu_plat_data ahci_mvebu_armada_380_plat_data = {
+ 
+ static const struct ahci_mvebu_plat_data ahci_mvebu_armada_3700_plat_data = {
+ 	.plat_config = ahci_mvebu_armada_3700_config,
+-	.flags = AHCI_HFLAG_SUSPEND_PHYS,
++	.host_flags = AHCI_HFLAG_SUSPEND_PHYS,
+ };
+ 
+ static const struct of_device_id ahci_mvebu_of_match[] = {
 -- 
 2.19.1
