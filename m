@@ -1,15 +1,14 @@
 From: Marc Zyngier <marc.zyngier@arm.com>
-Subject: Re: [PATCH v4 09/10] irqchip/irq-mvebu-icu: Remove the double SATA
- ports interrupt hack
-Date: Tue, 21 May 2019 16:51:47 +0100
-Message-ID: <31d75a17-858f-e289-5542-be7e6a0a4e5e@arm.com>
+Subject: Re: [PATCH v4 04/10] ata: ahci: mvebu: Rename a platform data flag
+Date: Wed, 22 May 2019 09:58:37 +0100
+Message-ID: <75a0a155-88cd-9392-1fb6-75ad4498aff5@arm.com>
 References: <20190521143023.31810-1-miquel.raynal@bootlin.com>
- <20190521143023.31810-10-miquel.raynal@bootlin.com>
+ <20190521143023.31810-5-miquel.raynal@bootlin.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20190521143023.31810-10-miquel.raynal@bootlin.com>
+In-Reply-To: <20190521143023.31810-5-miquel.raynal@bootlin.com>
 Content-Language: en-US
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
@@ -25,15 +24,51 @@ Cc: devicetree@vger.kernel.org, Baruch Siach <baruch@tkos.co.il>, Antoine Tenart
 List-Id: linux-ide@vger.kernel.org
 
 On 21/05/2019 15:30, Miquel Raynal wrote:
-> When writing the driver, a hack was introduced to configure both SATA
-> interrupts regardless of the port in use to overcome a limitation in
-> the SATA core. Now that this limitation has been addressed and the
-> hack moved in the (historically) responsible SATA driver,
-> ahci_{platform,mvebu}.c, let's clean this driver section.
+> Before adding more entries in the platform data structure, rename the
+> flags entry to be more precise and name it host_flags.
 > 
 > Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
+> ---
+>  drivers/ata/ahci_mvebu.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/ata/ahci_mvebu.c b/drivers/ata/ahci_mvebu.c
+> index d4bba3ace45d..43bb2db59698 100644
+> --- a/drivers/ata/ahci_mvebu.c
+> +++ b/drivers/ata/ahci_mvebu.c
+> @@ -30,7 +30,7 @@
+>  
+>  struct ahci_mvebu_plat_data {
+>  	int (*plat_config)(struct ahci_host_priv *hpriv);
+> -	unsigned int flags;
+> +	unsigned int host_flags;
+>  };
+>  
+>  static void ahci_mvebu_mbus_config(struct ahci_host_priv *hpriv,
+> @@ -196,7 +196,7 @@ static int ahci_mvebu_probe(struct platform_device *pdev)
+>  	if (IS_ERR(hpriv))
+>  		return PTR_ERR(hpriv);
+>  
+> -	hpriv->flags |= pdata->flags;
+> +	hpriv->flags |= pdata->host_flags;
+>  	hpriv->plat_data = (void *)pdata;
+>  
+>  	rc = ahci_platform_enable_resources(hpriv);
+> @@ -227,7 +227,7 @@ static const struct ahci_mvebu_plat_data ahci_mvebu_armada_380_plat_data = {
+>  
+>  static const struct ahci_mvebu_plat_data ahci_mvebu_armada_3700_plat_data = {
+>  	.plat_config = ahci_mvebu_armada_3700_config,
+> -	.flags = AHCI_HFLAG_SUSPEND_PHYS,
+> +	.host_flags = AHCI_HFLAG_SUSPEND_PHYS,
+>  };
+>  
+>  static const struct of_device_id ahci_mvebu_of_match[] = {
+> 
 
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+If, as I suspect, you don't need resource_flags in patch 8, then this
+patch becomes a bit pointless.
+
+Thanks,
 
 	M.
 -- 
