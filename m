@@ -1,57 +1,47 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v4 02/10] ata: ahci: Support per-port interrupts
-Date: Thu, 23 May 2019 02:36:25 -0700
-Message-ID: <20190523093625.GA26136@infradead.org>
-References: <20190521143023.31810-1-miquel.raynal@bootlin.com>
- <20190521143023.31810-3-miquel.raynal@bootlin.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: `SATA_AHCI` not selected by default with `make olddefconfig`
+Date: Fri, 24 May 2019 20:24:19 -0700
+Message-ID: <91d3b405-1da0-fe89-14d3-f45043167822@infradead.org>
+References: <c2733e6e-2b45-9311-1a90-67c0b814a01b@molgen.mpg.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-Content-Disposition: inline
-In-Reply-To: <20190521143023.31810-3-miquel.raynal@bootlin.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Miquel Raynal <miquel.raynal@bootlin.com>
-Cc: Mark Rutland <mark.rutland@arm.com>, Andrew Lunn <andrew@lunn.ch>, Baruch Siach <baruch@tkos.co.il>, Jason Cooper <jason@lakedaemon.net>, devicetree@vger.kernel.org, Marc Zyngier <marc.zyngier@arm.com>, Gregory Clement <gregory.clement@bootlin.com>, Maxime Chevallier <maxime.chevallier@bootlin.com>, Nadav Haklai <nadavh@marvell.com>, Hans de Goede <hdegoede@redhat.com>, Rob Herring <robh+dt@kernel.org>, Antoine Tenart <antoine.tenart@bootlin.com>, Jens Axboe <axboe@kernel.dk>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, linux-ide@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <c2733e6e-2b45-9311-1a90-67c0b814a01b@molgen.mpg.de>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paul Menzel <pmenzel@molgen.mpg.de>, Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-> --- a/drivers/ata/acard-ahci.c
-> +++ b/drivers/ata/acard-ahci.c
-> @@ -434,7 +434,7 @@ static int acard_ahci_init_one(struct pci_dev *pdev, const struct pci_device_id
->  	if (!hpriv)
->  		return -ENOMEM;
->  
-> -	hpriv->irq = pdev->irq;
-> +	hpriv->irqs[0] = pdev->irq;
->  	hpriv->flags |= (unsigned long)pi.private_data;
+On 1/10/19 6:43 AM, Paul Menzel wrote:
+> Dear Linux folks,
+> 
+> 
+> There were some PCI Kconfig changes, which seem to cause problems
+> with components depending on PCI. With the attached minimal config,
+> running `make olddefconfig` on Linux 4.20 and older caused
+> `SATA_AHCI` to be selected. But, with Linux 5.0-rc1 it is not
+> selected.
+> 
+> 
+> Kind regards,
+> 
+> Paul
 
-Who allocates ->irqs for the non-ahci.c case?
+[adding linux-pci for posterity]
 
-> @@ -95,6 +96,14 @@ static void ahci_platform_disable_phys(struct ahci_host_priv *hpriv)
->  	}
->  }
->  
-> +int ahci_get_per_port_irq_vector(struct ata_host *host, int port)
-> +{
-> +	struct ahci_host_priv *hpriv = host->private_data;
-> +
-> +	return hpriv->irqs[port];
-> +}
-> +EXPORT_SYMBOL_GPL(ahci_get_per_port_irq_vector);
+Hi Paul,
 
-This function seems a little misnamed.  The only multi-irq support in
-the AHCI spec itself is PCIe MSI/MSI-X, which is not handled by this
-function, but instead in the PCI layer using pci_irq_vector and the
-ahci_get_irq_vector callback in ahci.c.
+I guess this is called progress.  Anyway, it's good that you noticed and
+reported it.
 
-In fact it seems like this scheme particular to your device config,
-why don't we just add a specific libahci-using subdriver for it?  That
-would also get rid of the whole ->irq to ->irqs change.
+
+In 4.20 (and earlier), PCI defaults to y.
+As you hint, in 5.x, PCI does not default to y, so Kconfig symbols that
+depend on PCI will not be set/enabled by "make olddefconfig", including
+SATA_AHCI even though SATA_AHCI is set in your old .config file.
+
+
+-- 
+~Randy
