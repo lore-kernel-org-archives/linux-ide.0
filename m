@@ -1,47 +1,62 @@
-From: Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: `SATA_AHCI` not selected by default with `make olddefconfig`
-Date: Fri, 24 May 2019 20:24:19 -0700
-Message-ID: <91d3b405-1da0-fe89-14d3-f45043167822@infradead.org>
-References: <c2733e6e-2b45-9311-1a90-67c0b814a01b@molgen.mpg.de>
+From: Alexandru Ardelean <alexandru.ardelean@analog.com>
+Subject: [PATCH 1/3][V2] lib: fix match_string() helper on -1 array size
+Date: Tue, 28 May 2019 10:39:30 +0300
+Message-ID: <20190528073932.25365-1-alexandru.ardelean@analog.com>
+References: <20190508112842.11654-1-alexandru.ardelean@analog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <c2733e6e-2b45-9311-1a90-67c0b814a01b@molgen.mpg.de>
-Content-Language: en-US
+In-Reply-To: <20190508112842.11654-1-alexandru.ardelean@analog.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Paul Menzel <pmenzel@molgen.mpg.de>, Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>
+To: linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-clk@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org, linux-pm@vger.kernel.org, linux-gpio@vger.kernel.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, linux-omap@vger.kernel.org, linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org, devel@driverdev.osuosl.org, linux-usb@vger.kernel.org, kvm@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-mtd@lists.infradead.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-security-module@vger.kernel.org
+Cc: heikki.krogerus@linux.intel.com, gregkh@linuxfoundation.org, andriy.shevchenko@linux.intel.com, Alexandru Ardelean <alexandru.ardelean@analog.com>
 List-Id: linux-ide@vger.kernel.org
 
-On 1/10/19 6:43 AM, Paul Menzel wrote:
-> Dear Linux folks,
-> 
-> 
-> There were some PCI Kconfig changes, which seem to cause problems
-> with components depending on PCI. With the attached minimal config,
-> running `make olddefconfig` on Linux 4.20 and older caused
-> `SATA_AHCI` to be selected. But, with Linux 5.0-rc1 it is not
-> selected.
-> 
-> 
-> Kind regards,
-> 
-> Paul
+The documentation the `_match_string()` helper mentions that `n`
+should be:
+ * @n: number of strings in the array or -1 for NULL terminated arrays
 
-[adding linux-pci for posterity]
+The behavior of the function is different, in the sense that it exits on
+the first NULL element in the array, regardless of whether `n` is -1 or a
+positive number.
 
-Hi Paul,
+This patch changes the behavior, to exit the loop when a NULL element is
+found and n == -1. Essentially, this aligns the behavior with the
+doc-string.
 
-I guess this is called progress.  Anyway, it's good that you noticed and
-reported it.
+There are currently many users of `match_string()`, and so, in order to go
+through them, the next patches in the series will focus on doing some
+cosmetic changes, which are aimed at grouping the users of
+`match_string()`.
 
+Signed-off-by: Alexandru Ardelean <alexandru.ardelean@analog.com>
+---
 
-In 4.20 (and earlier), PCI defaults to y.
-As you hint, in 5.x, PCI does not default to y, so Kconfig symbols that
-depend on PCI will not be set/enabled by "make olddefconfig", including
-SATA_AHCI even though SATA_AHCI is set in your old .config file.
+Changelog v1 -> v2:
+* split the initial series into just 3 patches that fix the
+  `match_string()` helper and start introducing a new version of this
+  helper, which computes array-size of static arrays
 
+ lib/string.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
+diff --git a/lib/string.c b/lib/string.c
+index 6016eb3ac73d..e2cf5acc83bd 100644
+--- a/lib/string.c
++++ b/lib/string.c
+@@ -681,8 +681,11 @@ int match_string(const char * const *array, size_t n, const char *string)
+ 
+ 	for (index = 0; index < n; index++) {
+ 		item = array[index];
+-		if (!item)
++		if (!item) {
++			if (n != (size_t)-1)
++				continue;
+ 			break;
++		}
+ 		if (!strcmp(item, string))
+ 			return index;
+ 	}
 -- 
-~Randy
+2.20.1
