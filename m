@@ -1,19 +1,19 @@
-From: Marc Zyngier <marc.zyngier@arm.com>
+From: Miquel Raynal <miquel.raynal@bootlin.com>
 Subject: Re: [PATCH v4 01/10] ata: libahci: Ensure the host interrupt status
  bits are cleared
-Date: Wed, 29 May 2019 11:37:58 +0100
-Message-ID: <409ea2c5-c31a-fb6a-22c6-98b45e767809@arm.com>
+Date: Wed, 29 May 2019 14:13:56 +0200
+Message-ID: <20190529141356.1d9f03f3@xps13>
 References: <20190521143023.31810-1-miquel.raynal@bootlin.com>
  <20190521143023.31810-2-miquel.raynal@bootlin.com>
  <CAHG4imNxsdzjzRpFWnL+PuznjdOU4hsp2E-g1bt4WVJeokfT3w@mail.gmail.com>
  <53ce8c5b-46fc-c969-5168-18e4bcc62cde@arm.com>
  <20190529120833.29334c70@xps13>
+ <409ea2c5-c31a-fb6a-22c6-98b45e767809@arm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20190529120833.29334c70@xps13>
-Content-Language: en-US
+In-Reply-To: <409ea2c5-c31a-fb6a-22c6-98b45e767809@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -23,54 +23,52 @@ List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Miquel Raynal <miquel.raynal@bootlin.com>
+To: Marc Zyngier <marc.zyngier@arm.com>
 Cc: Mark Rutland <mark.rutland@arm.com>, Andrew Lunn <andrew@lunn.ch>, raymond pang <raymondpangxd@gmail.com>, Jason Cooper <jason@lakedaemon.net>, Nadav Haklai <nadavh@marvell.com>, devicetree@vger.kernel.org, Antoine Tenart <antoine.tenart@bootlin.com>, Gregory Clement <gregory.clement@bootlin.com>, Baruch Siach <baruch@tkos.co.il>, Maxime Chevallier <maxime.chevallier@bootlin.com>, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, Rob Herring <robh+dt@kernel.org>, Jens Axboe <axboe@kernel.dk>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-On 29/05/2019 11:08, Miquel Raynal wrote:
-> Hi Marc & Raymond,
-> 
-> Marc Zyngier <marc.zyngier@arm.com> wrote on Thu, 23 May 2019 10:26:01
-> +0100:
-> 
->> On 23/05/2019 04:11, raymond pang wrote:
->>> Hi Miquel,
->>>
->>> This patch adds clearing GHC.IS into hot path, could you explain how
->>> irq storm is generated? thanks
->>> According to AHCI Spec, HBA should not refer to GHC.IS to generate
->>> MSI when applying multiple MSIs.  
->>
->> Well spotted.
->>
->> I have the ugly feeling that this is because the Marvell AHCI
->> implementation is not using MSIs at all, but instead a pair of wired
->> interrupts (which are level triggered instead of edge, hence the
->> screaming interrupts).
->>
->> The changes in the following patches abuse the rest of the driver by
->> pretending this is a a multi-MSI setup, while it clearly doesn't match
->> the expectation of the AHCI spec for MSIs.
->>
->> It looks like this shouldn't be imposed on other unsuspecting
->> implementations which correctly use edge-triggered MSIs and do not
->> require such an MMIO access.
-> 
-> I understand your concern, let me add a AHCI_HFLAG_LEVEL_MSI in
-> hpriv->flags which will be used by the mvebu_ahci.c driver to request
-> for this MMIO access. This way, the hot path remains the same.
-
-I'm not convinced that's a good idea, if only because from the PoV of
-the AHCI device itself, these are not MSIs at all, but wired interrupts.
-The fact that there is some glue logic in the middle that turns it into
-a message (and then back into a wire) is a regrettable implementation
-detail.
-
-I'd rather you stick to the normal interrupt handler, or provide your
-own, which would solve most problems.
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+SGkgTWFyYywKCk1hcmMgWnluZ2llciA8bWFyYy56eW5naWVyQGFybS5jb20+IHdyb3RlIG9uIFdl
+ZCwgMjkgTWF5IDIwMTkgMTE6Mzc6NTgKKzAxMDA6Cgo+IE9uIDI5LzA1LzIwMTkgMTE6MDgsIE1p
+cXVlbCBSYXluYWwgd3JvdGU6Cj4gPiBIaSBNYXJjICYgUmF5bW9uZCwKPiA+IAo+ID4gTWFyYyBa
+eW5naWVyIDxtYXJjLnp5bmdpZXJAYXJtLmNvbT4gd3JvdGUgb24gVGh1LCAyMyBNYXkgMjAxOSAx
+MDoyNjowMQo+ID4gKzAxMDA6Cj4gPiAgIAo+ID4+IE9uIDIzLzA1LzIwMTkgMDQ6MTEsIHJheW1v
+bmQgcGFuZyB3cm90ZTogIAo+ID4+PiBIaSBNaXF1ZWwsCj4gPj4+Cj4gPj4+IFRoaXMgcGF0Y2gg
+YWRkcyBjbGVhcmluZyBHSEMuSVMgaW50byBob3QgcGF0aCwgY291bGQgeW91IGV4cGxhaW4gaG93
+Cj4gPj4+IGlycSBzdG9ybSBpcyBnZW5lcmF0ZWQ/IHRoYW5rcwo+ID4+PiBBY2NvcmRpbmcgdG8g
+QUhDSSBTcGVjLCBIQkEgc2hvdWxkIG5vdCByZWZlciB0byBHSEMuSVMgdG8gZ2VuZXJhdGUKPiA+
+Pj4gTVNJIHdoZW4gYXBwbHlpbmcgbXVsdGlwbGUgTVNJcy4gICAgCj4gPj4KPiA+PiBXZWxsIHNw
+b3R0ZWQuCj4gPj4KPiA+PiBJIGhhdmUgdGhlIHVnbHkgZmVlbGluZyB0aGF0IHRoaXMgaXMgYmVj
+YXVzZSB0aGUgTWFydmVsbCBBSENJCj4gPj4gaW1wbGVtZW50YXRpb24gaXMgbm90IHVzaW5nIE1T
+SXMgYXQgYWxsLCBidXQgaW5zdGVhZCBhIHBhaXIgb2Ygd2lyZWQKPiA+PiBpbnRlcnJ1cHRzICh3
+aGljaCBhcmUgbGV2ZWwgdHJpZ2dlcmVkIGluc3RlYWQgb2YgZWRnZSwgaGVuY2UgdGhlCj4gPj4g
+c2NyZWFtaW5nIGludGVycnVwdHMpLgo+ID4+Cj4gPj4gVGhlIGNoYW5nZXMgaW4gdGhlIGZvbGxv
+d2luZyBwYXRjaGVzIGFidXNlIHRoZSByZXN0IG9mIHRoZSBkcml2ZXIgYnkKPiA+PiBwcmV0ZW5k
+aW5nIHRoaXMgaXMgYSBhIG11bHRpLU1TSSBzZXR1cCwgd2hpbGUgaXQgY2xlYXJseSBkb2Vzbid0
+IG1hdGNoCj4gPj4gdGhlIGV4cGVjdGF0aW9uIG9mIHRoZSBBSENJIHNwZWMgZm9yIE1TSXMuCj4g
+Pj4KPiA+PiBJdCBsb29rcyBsaWtlIHRoaXMgc2hvdWxkbid0IGJlIGltcG9zZWQgb24gb3RoZXIg
+dW5zdXNwZWN0aW5nCj4gPj4gaW1wbGVtZW50YXRpb25zIHdoaWNoIGNvcnJlY3RseSB1c2UgZWRn
+ZS10cmlnZ2VyZWQgTVNJcyBhbmQgZG8gbm90Cj4gPj4gcmVxdWlyZSBzdWNoIGFuIE1NSU8gYWNj
+ZXNzLiAgCj4gPiAKPiA+IEkgdW5kZXJzdGFuZCB5b3VyIGNvbmNlcm4sIGxldCBtZSBhZGQgYSBB
+SENJX0hGTEFHX0xFVkVMX01TSSBpbgo+ID4gaHByaXYtPmZsYWdzIHdoaWNoIHdpbGwgYmUgdXNl
+ZCBieSB0aGUgbXZlYnVfYWhjaS5jIGRyaXZlciB0byByZXF1ZXN0Cj4gPiBmb3IgdGhpcyBNTUlP
+IGFjY2Vzcy4gVGhpcyB3YXksIHRoZSBob3QgcGF0aCByZW1haW5zIHRoZSBzYW1lLiAgCj4gCj4g
+SSdtIG5vdCBjb252aW5jZWQgdGhhdCdzIGEgZ29vZCBpZGVhLCBpZiBvbmx5IGJlY2F1c2UgZnJv
+bSB0aGUgUG9WIG9mCj4gdGhlIEFIQ0kgZGV2aWNlIGl0c2VsZiwgdGhlc2UgYXJlIG5vdCBNU0lz
+IGF0IGFsbCwgYnV0IHdpcmVkIGludGVycnVwdHMuCj4gVGhlIGZhY3QgdGhhdCB0aGVyZSBpcyBz
+b21lIGdsdWUgbG9naWMgaW4gdGhlIG1pZGRsZSB0aGF0IHR1cm5zIGl0IGludG8KPiBhIG1lc3Nh
+Z2UgKGFuZCB0aGVuIGJhY2sgaW50byBhIHdpcmUpIGlzIGEgcmVncmV0dGFibGUgaW1wbGVtZW50
+YXRpb24KPiBkZXRhaWwuCj4gCj4gSSdkIHJhdGhlciB5b3Ugc3RpY2sgdG8gdGhlIG5vcm1hbCBp
+bnRlcnJ1cHQgaGFuZGxlciwgb3IgcHJvdmlkZSB5b3VyCj4gb3duLCB3aGljaCB3b3VsZCBzb2x2
+ZSBtb3N0IHByb2JsZW1zLgoKVW5sZXNzIEkgZG9uJ3QgdW5kZXJzdGFuZCB5b3VyIHByb3Bvc2Fs
+LCAic3RpY2sgdG8gdGhlIG5vcm1hbCBpbnRlcnJ1cHQKaGFuZGxlciIgaXMgbm90IHBvc3NpYmxl
+IGFzIEkgbmVlZCB0aGlzIHJlZ2lzdGVyIHdyaXRlIHRvIGhhcHBlbiBhdAp0aGlzIHRpbWUsIG5v
+dCBhdCBhbnkgb3RoZXIgbW9tZW50LgoKSG93ZXZlciwgb24gdGhlIHBvc3NpYmlsaXR5IG9mIGhh
+dmluZyBhIHNlcGFyYXRlIGludGVycnVwdCBoYW5kbGVyLCBJCm1heSB1c2UgdGhlIG5ldyBBSENJ
+X0hGQUxHX0xFVkVMX01TSSBmbGFnIHRvIGNoYW5nZSB0aGUKZGV2bV9yZXF1ZXN0X2lycSBjYWxs
+IGhlcmUgWzFdIGFuZCB1c2UgbXkgb3duIGF0IHRoaXMgbW9tZW50LiBUaGUKaGFuZGxlciB3aWxs
+IGJlIGluIGxpYmFoY2kuYyB0aG91Z2guCgpXb3VsZCB0aGlzIGJlIGEgYmV0dGVyIGFwcHJvYWNo
+PwoKClRoYW5rcywKTWlxdcOobAoKWzFdIGh0dHBzOi8vZWxpeGlyLmJvb3RsaW4uY29tL2xpbnV4
+L3Y1LjItcmMyL3NvdXJjZS9kcml2ZXJzL2F0YS9saWJhaGNpLmMjTDI1NTcKCl9fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFp
+bGluZyBsaXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlz
+dHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
