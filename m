@@ -1,50 +1,52 @@
-From: Alexandru Ardelean <alexandru.ardelean@analog.com>
-Subject: [PATCH 3/3][V2] lib: re-introduce new match_string() helper/macro
-Date: Tue, 28 May 2019 10:39:32 +0300
-Message-ID: <20190528073932.25365-3-alexandru.ardelean@analog.com>
-References: <20190508112842.11654-1-alexandru.ardelean@analog.com>
- <20190528073932.25365-1-alexandru.ardelean@analog.com>
+From: Miquel Raynal <miquel.raynal@bootlin.com>
+Subject: Re: [PATCH v4 01/10] ata: libahci: Ensure the host interrupt status
+ bits are cleared
+Date: Wed, 29 May 2019 12:08:33 +0200
+Message-ID: <20190529120833.29334c70@xps13>
+References: <20190521143023.31810-1-miquel.raynal@bootlin.com>
+ <20190521143023.31810-2-miquel.raynal@bootlin.com>
+ <CAHG4imNxsdzjzRpFWnL+PuznjdOU4hsp2E-g1bt4WVJeokfT3w@mail.gmail.com>
+ <53ce8c5b-46fc-c969-5168-18e4bcc62cde@arm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190528073932.25365-1-alexandru.ardelean@analog.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-clk@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org, linux-pm@vger.kernel.org, linux-gpio@vger.kernel.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, linux-omap@vger.kernel.org, linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org, devel@driverdev.osuosl.org, linux-usb@vger.kernel.org, kvm@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-mtd@lists.infradead.org, cgroups@vger.kernel.org, linux-mm@kvack.org, linux-security-module@vger.kernel.org
-Cc: heikki.krogerus@linux.intel.com, gregkh@linuxfoundation.org, andriy.shevchenko@linux.intel.com, Alexandru Ardelean <alexandru.ardelean@analog.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <53ce8c5b-46fc-c969-5168-18e4bcc62cde@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Mark Rutland <mark.rutland@arm.com>, Andrew Lunn <andrew@lunn.ch>, raymond pang <raymondpangxd@gmail.com>, Jason Cooper <jason@lakedaemon.net>, Nadav Haklai <nadavh@marvell.com>, devicetree@vger.kernel.org, Antoine Tenart <antoine.tenart@bootlin.com>, Gregory Clement <gregory.clement@bootlin.com>, Baruch Siach <baruch@tkos.co.il>, Maxime Chevallier <maxime.chevallier@bootlin.com>, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, Rob Herring <robh+dt@kernel.org>, Jens Axboe <axboe@kernel.dk>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Thomas Gleixner <tglx@linutronix.de>, linux-arm-kernel@lists.infradead.org, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-This change re-introduces `match_string()` as a macro that uses
-ARRAY_SIZE() to compute the size of the array.
-
-After this change, work can start on migrating subsystems to use this new
-helper. Since the original helper is pretty used, migrating to this new one
-will take a while, and will be reviewed by each subsystem.
-
-Signed-off-by: Alexandru Ardelean <alexandru.ardelean@analog.com>
----
- include/linux/string.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/include/linux/string.h b/include/linux/string.h
-index 7149fcdf62df..34491b075449 100644
---- a/include/linux/string.h
-+++ b/include/linux/string.h
-@@ -198,6 +198,15 @@ static inline int strtobool(const char *s, bool *res)
- int __match_string(const char * const *array, size_t n, const char *string);
- int __sysfs_match_string(const char * const *array, size_t n, const char *s);
- 
-+/**
-+ * match_string - matches given string in an array
-+ * @_a: array of strings
-+ * @_s: string to match with
-+ *
-+ * Helper for __match_string(). Calculates the size of @a automatically.
-+ */
-+#define match_string(_a, _s) __match_string(_a, ARRAY_SIZE(_a), _s)
-+
- /**
-  * sysfs_match_string - matches given string in an array
-  * @_a: array of strings
--- 
-2.20.1
+SGkgTWFyYyAmIFJheW1vbmQsCgpNYXJjIFp5bmdpZXIgPG1hcmMuenluZ2llckBhcm0uY29tPiB3
+cm90ZSBvbiBUaHUsIDIzIE1heSAyMDE5IDEwOjI2OjAxCiswMTAwOgoKPiBPbiAyMy8wNS8yMDE5
+IDA0OjExLCByYXltb25kIHBhbmcgd3JvdGU6Cj4gPiBIaSBNaXF1ZWwsCj4gPiAKPiA+IFRoaXMg
+cGF0Y2ggYWRkcyBjbGVhcmluZyBHSEMuSVMgaW50byBob3QgcGF0aCwgY291bGQgeW91IGV4cGxh
+aW4gaG93Cj4gPiBpcnEgc3Rvcm0gaXMgZ2VuZXJhdGVkPyB0aGFua3MKPiA+IEFjY29yZGluZyB0
+byBBSENJIFNwZWMsIEhCQSBzaG91bGQgbm90IHJlZmVyIHRvIEdIQy5JUyB0byBnZW5lcmF0ZQo+
+ID4gTVNJIHdoZW4gYXBwbHlpbmcgbXVsdGlwbGUgTVNJcy4gIAo+IAo+IFdlbGwgc3BvdHRlZC4K
+PiAKPiBJIGhhdmUgdGhlIHVnbHkgZmVlbGluZyB0aGF0IHRoaXMgaXMgYmVjYXVzZSB0aGUgTWFy
+dmVsbCBBSENJCj4gaW1wbGVtZW50YXRpb24gaXMgbm90IHVzaW5nIE1TSXMgYXQgYWxsLCBidXQg
+aW5zdGVhZCBhIHBhaXIgb2Ygd2lyZWQKPiBpbnRlcnJ1cHRzICh3aGljaCBhcmUgbGV2ZWwgdHJp
+Z2dlcmVkIGluc3RlYWQgb2YgZWRnZSwgaGVuY2UgdGhlCj4gc2NyZWFtaW5nIGludGVycnVwdHMp
+Lgo+IAo+IFRoZSBjaGFuZ2VzIGluIHRoZSBmb2xsb3dpbmcgcGF0Y2hlcyBhYnVzZSB0aGUgcmVz
+dCBvZiB0aGUgZHJpdmVyIGJ5Cj4gcHJldGVuZGluZyB0aGlzIGlzIGEgYSBtdWx0aS1NU0kgc2V0
+dXAsIHdoaWxlIGl0IGNsZWFybHkgZG9lc24ndCBtYXRjaAo+IHRoZSBleHBlY3RhdGlvbiBvZiB0
+aGUgQUhDSSBzcGVjIGZvciBNU0lzLgo+IAo+IEl0IGxvb2tzIGxpa2UgdGhpcyBzaG91bGRuJ3Qg
+YmUgaW1wb3NlZCBvbiBvdGhlciB1bnN1c3BlY3RpbmcKPiBpbXBsZW1lbnRhdGlvbnMgd2hpY2gg
+Y29ycmVjdGx5IHVzZSBlZGdlLXRyaWdnZXJlZCBNU0lzIGFuZCBkbyBub3QKPiByZXF1aXJlIHN1
+Y2ggYW4gTU1JTyBhY2Nlc3MuCgpJIHVuZGVyc3RhbmQgeW91ciBjb25jZXJuLCBsZXQgbWUgYWRk
+IGEgQUhDSV9IRkxBR19MRVZFTF9NU0kgaW4KaHByaXYtPmZsYWdzIHdoaWNoIHdpbGwgYmUgdXNl
+ZCBieSB0aGUgbXZlYnVfYWhjaS5jIGRyaXZlciB0byByZXF1ZXN0CmZvciB0aGlzIE1NSU8gYWNj
+ZXNzLiBUaGlzIHdheSwgdGhlIGhvdCBwYXRoIHJlbWFpbnMgdGhlIHNhbWUuCgoKVGhhbmtzLApN
+aXF1w6hsCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwps
+aW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJh
+ZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51
+eC1hcm0ta2VybmVsCg==
