@@ -1,7 +1,7 @@
 From: "Enrico Weigelt, metux IT consult" <info@metux.net>
-Subject: [PATCH v2 1/2] drivers: libata: introduce sysctl directory
-Date: Wed,  5 Jun 2019 13:36:26 +0200
-Message-ID: <1559734587-32596-2-git-send-email-info@metux.net>
+Subject: [PATCH v2 2/2] drivers: libata: add sysctl: 'libata.allow_tpm' for self-encrypted devices
+Date: Wed,  5 Jun 2019 13:36:27 +0200
+Message-ID: <1559734587-32596-3-git-send-email-info@metux.net>
 References: <1559734587-32596-1-git-send-email-info@metux.net>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1559734587-32596-1-git-send-email-info@metux.net>
@@ -10,56 +10,38 @@ To: linux-kernel@vger.kernel.org
 Cc: axboe@kernel.dk, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Register a sysctl directory for libata, so upcoming knobs
-can be added here.
+libata tpm functionality, needed for self encrypted devices (OPAL, ...),
+is currently disabled per default and needs to be enabled via kernel
+command line.
+
+This patch allows enabling it via sysctl.
+
+The implementation might look a bit 'naive', as there aren't any locks
+or barriers, etc. As we're dealing just w/ a plain boolean value, that's
+only checked when an tpm-related ioctl is called, we're fine w/ that.
 
 Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
 ---
- drivers/ata/libata-core.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ drivers/ata/libata-core.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index aaa57e0..2af2470 100644
+index 2af2470..f241028 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -160,6 +160,21 @@ struct ata_force_ent {
- MODULE_LICENSE("GPL");
+@@ -161,6 +161,13 @@ struct ata_force_ent {
  MODULE_VERSION(DRV_VERSION);
  
-+static struct ctl_table ctl_libata[] = {
-+	{}
-+};
-+
-+static struct ctl_table libata_dir_table[] = {
+ static struct ctl_table ctl_libata[] = {
 +	{
-+		.procname	= "libata",
-+		.maxlen		= 0,
-+		.mode		= 0555,
-+		.child		= ctl_libata,
++		.procname	= "allow_tpm",
++		.data		= &libata_allow_tpm,
++		.maxlen		= sizeof(libata_allow_tpm),
++		.mode		= 0644,
++		.proc_handler	= proc_dointvec,
 +	},
-+	{ },
-+};
-+
-+static struct ctl_table_header *libata_sysctl_header;
+ 	{}
+ };
  
- static bool ata_sstatus_online(u32 sstatus)
- {
-@@ -7043,6 +7058,8 @@ static int __init ata_init(void)
- 		goto err_out;
- 	}
- 
-+	libata_sysctl_header = register_sysctl_table(libata_dir_table);
-+
- 	printk(KERN_DEBUG "libata version " DRV_VERSION " loaded.\n");
- 	return 0;
- 
-@@ -7056,6 +7073,7 @@ static void __exit ata_exit(void)
- 	libata_transport_exit();
- 	ata_sff_exit();
- 	kfree(ata_force_tbl);
-+	unregister_sysctl_table(libata_sysctl_header);
- }
- 
- subsys_initcall(ata_init);
 -- 
 1.9.1
