@@ -1,47 +1,33 @@
-From: "Enrico Weigelt, metux IT consult" <info@metux.net>
-Subject: [PATCH v2 2/2] drivers: libata: add sysctl: 'libata.allow_tpm' for self-encrypted devices
-Date: Wed,  5 Jun 2019 13:36:27 +0200
-Message-ID: <1559734587-32596-3-git-send-email-info@metux.net>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: libata: sysctl knob for enabling tpm/opal at runtime
+Date: Wed, 5 Jun 2019 12:23:20 -0700
+Message-ID: <20190605192320.GA16831@infradead.org>
 References: <1559734587-32596-1-git-send-email-info@metux.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <1559734587-32596-1-git-send-email-info@metux.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: axboe@kernel.dk, linux-ide@vger.kernel.org
+To: "Enrico Weigelt, metux IT consult" <info@metux.net>
+Cc: linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-libata tpm functionality, needed for self encrypted devices (OPAL, ...),
-is currently disabled per default and needs to be enabled via kernel
-command line.
+On Wed, Jun 05, 2019 at 01:36:25PM +0200, Enrico Weigelt, metux IT consult wrote:
+> Hello folks,
+> 
+> 
+> here's a patchset that allows enabling libata's tpm features (opal)
+> at runtime. Until now we need to boot with special kernel parameter,
+> in order to use OPAL - this patch also adds a sysctl knob for that.
 
-This patch allows enabling it via sysctl.
+Or you can use the block/sed-opal.c code which doesn't require the
+tweak, and really is the proper way forward to use OPAL.
 
-The implementation might look a bit 'naive', as there aren't any locks
-or barriers, etc. As we're dealing just w/ a plain boolean value, that's
-only checked when an tpm-related ioctl is called, we're fine w/ that.
+> The first patch just introduces a systcl subdir for libata, the
+> second one adds the actual knob. I had already sent these patches,
+> few weeks ago, along with some general build fixes. The latter
+> meanwhile went mainline, but haven't received any comments on
+> the two opal related ones yet.
 
-Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
----
- drivers/ata/libata-core.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 2af2470..f241028 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -161,6 +161,13 @@ struct ata_force_ent {
- MODULE_VERSION(DRV_VERSION);
- 
- static struct ctl_table ctl_libata[] = {
-+	{
-+		.procname	= "allow_tpm",
-+		.data		= &libata_allow_tpm,
-+		.maxlen		= sizeof(libata_allow_tpm),
-+		.mode		= 0644,
-+		.proc_handler	= proc_dointvec,
-+	},
- 	{}
- };
- 
--- 
-1.9.1
+Independent of that new sysctls are deprecated.
