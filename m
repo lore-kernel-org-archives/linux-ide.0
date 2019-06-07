@@ -1,43 +1,39 @@
-From: "Enrico Weigelt, metux IT consult" <lkml@metux.net>
-Subject: Re: libata: sysctl knob for enabling tpm/opal at runtime
-Date: Thu, 6 Jun 2019 16:20:46 +0200
-Message-ID: <3720d2a4-c8e8-0024-bc39-2aed5c4bf0a3@metux.net>
-References: <1559734587-32596-1-git-send-email-info@metux.net>
- <20190605192320.GA16831@infradead.org>
+From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Subject: [PATCH] drivers/ata: remove flood "Enabling discard_zeroes_data"
+Date: Fri, 07 Jun 2019 10:34:29 +0300
+Message-ID: <155989286981.1471.16344793966539115439.stgit@buzz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20190605192320.GA16831@infradead.org>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, "Enrico Weigelt, metux IT consult" <info@metux.net>
-Cc: linux-kernel@vger.kernel.org, axboe@kernel.dk, linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Dmitry Monakhov <dmtrmonakhov@yandex-team.ru>
 List-Id: linux-ide@vger.kernel.org
 
-On 05.06.19 21:23, Christoph Hellwig wrote:
-> On Wed, Jun 05, 2019 at 01:36:25PM +0200, Enrico Weigelt, metux IT consult wrote:
->> Hello folks,
->>
->>
->> here's a patchset that allows enabling libata's tpm features (opal)
->> at runtime. Until now we need to boot with special kernel parameter,
->> in order to use OPAL - this patch also adds a sysctl knob for that.
-> 
-> Or you can use the block/sed-opal.c code which doesn't require the
-> tweak, and really is the proper way forward to use OPAL.
+Printing this at each SCSI READ_CAPACITY command is too verbose.
 
-You're referring to the OPAL ioctl()s ?
+Flag "discard_zeroes_data" is deprecated since commit 48920ff2a5a9
+("block: remove the discard_zeroes_data flag").
 
-hmm, it seems that sed-util doesn't use them at all, but directly
-sends raw ata commands.
+Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+---
+ drivers/ata/libata-scsi.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Shall I use a different userland tool ?
-
-
---mtx
-
--- 
-Enrico Weigelt, metux IT consult
-Free software and Linux embedded engineering
-info@metux.net -- +49-151-27565287
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 391ac0503dc0..a475e94944b7 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2735,10 +2735,8 @@ static unsigned int ata_scsiop_read_cap(struct ata_scsi_args *args, u8 *rbuf)
+ 			rbuf[14] |= 0x80; /* LBPME */
+ 
+ 			if (ata_id_has_zero_after_trim(args->id) &&
+-			    dev->horkage & ATA_HORKAGE_ZERO_AFTER_TRIM) {
+-				ata_dev_info(dev, "Enabling discard_zeroes_data\n");
++			    dev->horkage & ATA_HORKAGE_ZERO_AFTER_TRIM)
+ 				rbuf[14] |= 0x40; /* LBPRZ */
+-			}
+ 		}
+ 		if (ata_id_zoned_cap(args->id) ||
+ 		    args->dev->class == ATA_DEV_ZAC)
