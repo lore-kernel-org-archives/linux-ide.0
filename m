@@ -1,42 +1,73 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v3 12/33] docs: ide: convert docs to ReST and rename to *.rst
-Date: Sun, 9 Jun 2019 09:50:21 +0200
-Message-ID: <CAMuHMdV9Xy7MKAY9tU4WTe=tvuLpnXQE5GMNmtEXgCj6YNhRYg@mail.gmail.com>
-References: <cover.1560045490.git.mchehab+samsung@kernel.org> <472757a7481a8645837092f0f257f37996af6299.1560045490.git.mchehab+samsung@kernel.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] drivers/ata: print trim features at device
+ initialization
+Date: Sun, 09 Jun 2019 14:37:21 -0700
+Message-ID: <1560116241.3324.19.camel@HansenPartnership.com>
+References: <155989287898.1506.14253954112551051148.stgit@buzz>
+         <yq1wohxib7t.fsf@oracle.com>
+         <eebfb1cc-f6d0-580e-1d56-2af0f481a92f@yandex-team.ru>
+         <048ed77f-8faa-fb67-c6bc-10d953f52f89@yandex-team.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <472757a7481a8645837092f0f257f37996af6299.1560045490.git.mchehab+samsung@kernel.org>
+In-Reply-To: <048ed77f-8faa-fb67-c6bc-10d953f52f89@yandex-team.ru>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-Cc: Linux Doc Mailing List <linux-doc@vger.kernel.org>, Mauro Carvalho Chehab <mchehab@infradead.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, Borislav Petkov <bp@alien8.de>, Jens Axboe <axboe@kernel.dk>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-m68k <linux-m68k@lists.linux-m68k.org>
+To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Dmitry Monakhov <dmtrmonakhov@yandex-team.ru>
 List-Id: linux-ide@vger.kernel.org
 
-On Sun, Jun 9, 2019 at 4:27 AM Mauro Carvalho Chehab
-<mchehab+samsung@kernel.org> wrote:
-> The conversion is actually:
->   - add blank lines and identation in order to identify paragraphs;
->   - fix tables markups;
->   - add some lists markups;
->   - mark literal blocks;
->   - adjust title markups.
->
-> At its new index.rst, let's add a :orphan: while this is not linked to
-> the main index.rst file, in order to avoid build warnings.
->
-> Signed-off-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
+On Sat, 2019-06-08 at 17:13 +0300, Konstantin Khlebnikov wrote:
+> > On 08.06.2019 11:25, Christoph Hellwig wrote:> On Fri, Jun 07, 2019
+> > at 10:34:39AM +0300, Konstantin Khlebnikov wrote:
+> >  >
+> >  > Do we really need to spam dmesg with even more ATA crap?  What
+> > about
+> >  > a sysfs file that can be read on demand instead?
+> >  >
+> > 
+> > Makes sense.
+> > 
+> > Trim state is exposed for ata_device:
+> > /sys/class/ata_device/devX.Y/trim
+> > but there is no link from scsi device to ata device so they hard to
+> > match.
+> > 
+> > I'll think about it.
+> 
+> Nope. There is no obvious way to link scsi device with ata_device.
+> ata_device is built on top of "transport_class" and
+> "attribute_container".
+> This some extremely over engineered sysfs framework used only in
+> ata/scsi. I don't want to touch this.
 
->  arch/m68k/q40/README                          |   2 +-
+You don't need to know any of that.  The problem is actually when the
+ata transport classes were first created, the devices weren't properly
+parented.  What should have happened, like every other transport class,
+is that the devices should have descended down to the scsi device as
+the leaf in an integrated fashion.  Instead, what we seem to have is
+three completely separate trees.
 
-Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
+So if you look at a SAS device, you see from the pci device:
 
-Gr{oetje,eeting}s,
+host2/port-2:0/end_device-2:0/target2:0:0/2:0:0:0/block/sdb/sdb1
 
-                        Geert
+But if you look at a SATA device, you see three separate paths:
 
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+ata3/host3/target3\:0\:0/3\:0\:0\:0/block/sda/sda1
+ata3/link3/dev3.0/ata_device/dev3.0
+ata3/ata_port/ata3
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Instead of an integrated tree
+
+Unfortunately, this whole thing is unfixable now.  If I integrate the
+tree properly, the separate port and link directories will get subsumed
+and we won't be able to recover them with judicious linking so scripts
+relying on them will break.  The best we can probably do is add
+additional links with what we have.
+
+To follow the way we usually do it, there should be a link from the ata
+device to the scsi target, but that wouldn't help you find the "trim"
+files, so it sounds like you want a link from the scsi device to the ata device, which would?
+
+James
