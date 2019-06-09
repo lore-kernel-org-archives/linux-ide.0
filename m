@@ -1,7 +1,7 @@
 From: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
-Subject: [PATCH v3 12/33] docs: ide: convert docs to ReST and rename to *.rst
-Date: Sat,  8 Jun 2019 23:27:02 -0300
-Message-ID: <472757a7481a8645837092f0f257f37996af6299.1560045490.git.mchehab+samsung@kernel.org>
+Subject: [PATCH v3 04/33] docs: cdrom: convert docs to ReST and rename to *.rst
+Date: Sat,  8 Jun 2019 23:26:54 -0300
+Message-ID: <3277326d69f4cdc5ccf42ec29a9530f2199feaa3.1560045490.git.mchehab+samsung@kernel.org>
 References: <cover.1560045490.git.mchehab+samsung@kernel.org>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -9,470 +9,470 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1560045490.git.mchehab+samsung@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Linux Doc Mailing List <linux-doc@vger.kernel.org>
-Cc: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Borislav Petkov <bp@alien8.de>, Jens Axboe <axboe@kernel.dk>, "David S. Miller" <davem@davemloft.net>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org
+Cc: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, Jens Axboe <axboe@kernel.dk>, Borislav Petkov <bp@alien8.de>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-The conversion is actually:
-  - add blank lines and identation in order to identify paragraphs;
-  - fix tables markups;
-  - add some lists markups;
-  - mark literal blocks;
-  - adjust title markups.
+The stuff there is almost already at ReST format. A
+conversion for them is trivial: just add a missing titles
+and fix some scape codes for them to match ReST syntax.
+
+While here, rename the cdrom-standard.txt, with was converted
+from LaTeX to ReST on the previous patch, and add it to the
+index file.
 
 At its new index.rst, let's add a :orphan: while this is not linked to
 the main index.rst file, in order to avoid build warnings.
 
 Signed-off-by: Mauro Carvalho Chehab <mchehab+samsung@kernel.org>
 ---
- .../admin-guide/kernel-parameters.txt         |   2 +-
- Documentation/cdrom/ide-cd.rst                |  18 +--
- Documentation/ide/changelogs.rst              |  17 ++
- .../ide/{ide-tape.txt => ide-tape.rst}        |  23 +--
- Documentation/ide/{ide.txt => ide.rst}        | 147 ++++++++++--------
- Documentation/ide/index.rst                   |  21 +++
- ...arm-plug-howto.txt => warm-plug-howto.rst} |  10 +-
- arch/m68k/q40/README                          |   2 +-
- drivers/ide/Kconfig                           |  20 +--
- 9 files changed, 155 insertions(+), 105 deletions(-)
- create mode 100644 Documentation/ide/changelogs.rst
- rename Documentation/ide/{ide-tape.txt => ide-tape.rst} (83%)
- rename Documentation/ide/{ide.txt => ide.rst} (72%)
- create mode 100644 Documentation/ide/index.rst
- rename Documentation/ide/{warm-plug-howto.txt => warm-plug-howto.rst} (61%)
+ ...{cdrom-standard.txt => cdrom-standard.rst} |   0
+ Documentation/cdrom/{ide-cd => ide-cd.rst}    | 178 +++++++++---------
+ Documentation/cdrom/index.rst                 |  19 ++
+ ...{packet-writing.txt => packet-writing.rst} |  27 ++-
+ MAINTAINERS                                   |   2 +-
+ drivers/block/Kconfig                         |   2 +-
+ drivers/cdrom/cdrom.c                         |   2 +-
+ drivers/ide/ide-cd.c                          |   2 +-
+ 8 files changed, 131 insertions(+), 101 deletions(-)
+ rename Documentation/cdrom/{cdrom-standard.txt => cdrom-standard.rst} (100%)
+ rename Documentation/cdrom/{ide-cd => ide-cd.rst} (84%)
+ create mode 100644 Documentation/cdrom/index.rst
+ rename Documentation/cdrom/{packet-writing.txt => packet-writing.rst} (91%)
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index d5f01f7eb5ca..e4544f0335e3 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -1502,7 +1502,7 @@
- 			Format: =0.0 to prevent dma on hda, =0.1 hdb =1.0 hdc
- 			.vlb_clock .pci_clock .noflush .nohpa .noprobe .nowerr
- 			.cdrom .chs .ignore_cable are additional options
--			See Documentation/ide/ide.txt.
-+			See Documentation/ide/ide.rst.
- 
- 	ide-generic.probe-mask= [HW] (E)IDE subsystem
- 			Format: <int>
-diff --git a/Documentation/cdrom/ide-cd.rst b/Documentation/cdrom/ide-cd.rst
-index dadc94ef6b6c..bdccb74fc92d 100644
---- a/Documentation/cdrom/ide-cd.rst
+diff --git a/Documentation/cdrom/cdrom-standard.txt b/Documentation/cdrom/cdrom-standard.rst
+similarity index 100%
+rename from Documentation/cdrom/cdrom-standard.txt
+rename to Documentation/cdrom/cdrom-standard.rst
+diff --git a/Documentation/cdrom/ide-cd b/Documentation/cdrom/ide-cd.rst
+similarity index 84%
+rename from Documentation/cdrom/ide-cd
+rename to Documentation/cdrom/ide-cd.rst
+index a5f2a7f1ff46..dadc94ef6b6c 100644
+--- a/Documentation/cdrom/ide-cd
 +++ b/Documentation/cdrom/ide-cd.rst
-@@ -47,7 +47,7 @@ This driver provides the following features:
+@@ -1,18 +1,20 @@
+ IDE-CD driver documentation
+-Originally by scott snyder  <snyder@fnald0.fnal.gov> (19 May 1996)
+-Carrying on the torch is: Erik Andersen <andersee@debian.org>
+-New maintainers (19 Oct 1998): Jens Axboe <axboe@image.dk>
++===========================
++
++:Originally by: scott snyder  <snyder@fnald0.fnal.gov> (19 May 1996)
++:Carrying on the torch is: Erik Andersen <andersee@debian.org>
++:New maintainers (19 Oct 1998): Jens Axboe <axboe@image.dk>
+ 
+ 1. Introduction
  ---------------
  
- 0. The ide-cd relies on the ide disk driver.  See
--   Documentation/ide/ide.txt for up-to-date information on the ide
-+   Documentation/ide/ide.rst for up-to-date information on the ide
+-The ide-cd driver should work with all ATAPI ver 1.2 to ATAPI 2.6 compliant 
++The ide-cd driver should work with all ATAPI ver 1.2 to ATAPI 2.6 compliant
+ CDROM drives which attach to an IDE interface.  Note that some CDROM vendors
+ (including Mitsumi, Sony, Creative, Aztech, and Goldstar) have made
+ both ATAPI-compliant drives and drives which use a proprietary
+ interface.  If your drive uses one of those proprietary interfaces,
+ this driver will not work with it (but one of the other CDROM drivers
+-probably will).  This driver will not work with `ATAPI' drives which
++probably will).  This driver will not work with `ATAPI` drives which
+ attach to the parallel port.  In addition, there is at least one drive
+ (CyCDROM CR520ie) which attaches to the IDE port but is not ATAPI;
+ this driver will not work with drives like that either (but see the
+@@ -31,7 +33,7 @@ This driver provides the following features:
+    from audio tracks.  The program cdda2wav can be used for this.
+    Note, however, that only some drives actually support this.
+ 
+- - There is now support for CDROM changers which comply with the 
++ - There is now support for CDROM changers which comply with the
+    ATAPI 2.6 draft standard (such as the NEC CDR-251).  This additional
+    functionality includes a function call to query which slot is the
+    currently selected slot, a function call to query which slots contain
+@@ -49,11 +51,11 @@ This driver provides the following features:
     driver.
  
  1. Make sure that the ide and ide-cd drivers are compiled into the
-@@ -62,7 +62,7 @@ This driver provides the following features:
+-   kernel you're using.  When configuring the kernel, in the section 
+-   entitled "Floppy, IDE, and other block devices", say either `Y' 
+-   (which will compile the support directly into the kernel) or `M'
++   kernel you're using.  When configuring the kernel, in the section
++   entitled "Floppy, IDE, and other block devices", say either `Y`
++   (which will compile the support directly into the kernel) or `M`
+    (to compile support as a module which can be loaded and unloaded)
+-   to the options: 
++   to the options::
  
-    Depending on what type of IDE interface you have, you may need to
-    specify additional configuration options.  See
--   Documentation/ide/ide.txt.
-+   Documentation/ide/ide.rst.
+       ATA/ATAPI/MFM/RLL support
+       Include IDE/ATAPI CDROM support
+@@ -72,35 +74,35 @@ This driver provides the following features:
+    address and an IRQ number, the standard assignments being
+    0x1f0 and 14 for the primary interface and 0x170 and 15 for the
+    secondary interface.  Each interface can control up to two devices,
+-   where each device can be a hard drive, a CDROM drive, a floppy drive, 
+-   or a tape drive.  The two devices on an interface are called `master'
+-   and `slave'; this is usually selectable via a jumper on the drive.
++   where each device can be a hard drive, a CDROM drive, a floppy drive,
++   or a tape drive.  The two devices on an interface are called `master`
++   and `slave`; this is usually selectable via a jumper on the drive.
  
- 2. You should also ensure that the iso9660 filesystem is either
-    compiled into the kernel or available as a loadable module.  You
-@@ -82,7 +82,7 @@ This driver provides the following features:
-    on the primary IDE interface are called `hda` and `hdb`,
+    Linux names these devices as follows.  The master and slave devices
+-   on the primary IDE interface are called `hda' and `hdb',
++   on the primary IDE interface are called `hda` and `hdb`,
     respectively.  The drives on the secondary interface are called
-    `hdc` and `hdd`.  (Interfaces at other locations get other letters
--   in the third position; see Documentation/ide/ide.txt.)
-+   in the third position; see Documentation/ide/ide.rst.)
+-   `hdc' and `hdd'.  (Interfaces at other locations get other letters
++   `hdc` and `hdd`.  (Interfaces at other locations get other letters
+    in the third position; see Documentation/ide/ide.txt.)
  
     If you want your CDROM drive to be found automatically by the
     driver, you should make sure your IDE interface uses either the
-@@ -91,7 +91,7 @@ This driver provides the following features:
-    be jumpered as `master`.  (If for some reason you cannot configure
+    primary or secondary addresses mentioned above.  In addition, if
+    the CDROM drive is the only device on the IDE interface, it should
+-   be jumpered as `master'.  (If for some reason you cannot configure
++   be jumpered as `master`.  (If for some reason you cannot configure
     your system in this manner, you can probably still use the driver.
     You may have to pass extra configuration information to the kernel
--   when you boot, however.  See Documentation/ide/ide.txt for more
-+   when you boot, however.  See Documentation/ide/ide.rst for more
+    when you boot, however.  See Documentation/ide/ide.txt for more
     information.)
  
  4. Boot the system.  If the drive is recognized, you should see a
-@@ -163,7 +163,7 @@ to change.  If the slot number is -1, the drive is unloaded.
- This section discusses some common problems encountered when trying to
- use the driver, and some possible solutions.  Note that if you are
- experiencing problems, you should probably also review
--Documentation/ide/ide.txt for current information about the underlying
-+Documentation/ide/ide.rst for current information about the underlying
+-   message which looks like
++   message which looks like::
+ 
+      hdb: NEC CD-ROM DRIVE:260, ATAPI CDROM drive
+ 
+    If you do not see this, see section 5 below.
+ 
+ 5. You may want to create a symbolic link /dev/cdrom pointing to the
+-   actual device.  You can do this with the command
++   actual device.  You can do this with the command::
+ 
+      ln -s  /dev/hdX  /dev/cdrom
+ 
+@@ -108,14 +110,14 @@ This driver provides the following features:
+    drive is installed.
+ 
+ 6. You should be able to see any error messages from the driver with
+-   the `dmesg' command.
++   the `dmesg` command.
+ 
+ 
+ 3. Basic usage
+ --------------
+ 
+-An ISO 9660 CDROM can be mounted by putting the disc in the drive and 
+-typing (as root)
++An ISO 9660 CDROM can be mounted by putting the disc in the drive and
++typing (as root)::
+ 
+   mount -t iso9660 /dev/cdrom /mnt/cdrom
+ 
+@@ -123,7 +125,7 @@ where it is assumed that /dev/cdrom is a link pointing to the actual
+ device (as described in step 5 of the last section) and /mnt/cdrom is
+ an empty directory.  You should now be able to see the contents of the
+ CDROM under the /mnt/cdrom directory.  If you want to eject the CDROM,
+-you must first dismount it with a command like
++you must first dismount it with a command like::
+ 
+   umount /mnt/cdrom
+ 
+@@ -148,7 +150,7 @@ such as cdda2wav.  The only types of drive which I've heard support
+ this are Sony and Toshiba drives.  You will get errors if you try to
+ use this function on a drive which does not support it.
+ 
+-For supported changers, you can use the `cdchange' program (appended to
++For supported changers, you can use the `cdchange` program (appended to
+ the end of this file) to switch between changer slots.  Note that the
+ drive should be unmounted before attempting this.  The program takes
+ two arguments:  the CDROM device, and the slot number to which you wish
+@@ -165,7 +167,7 @@ Documentation/ide/ide.txt for current information about the underlying
  IDE support code.  Some of these items apply only to earlier versions
  of the driver, but are mentioned here for completeness.
  
-@@ -173,7 +173,7 @@ from the driver.
+-In most cases, you should probably check with `dmesg' for any errors
++In most cases, you should probably check with `dmesg` for any errors
+ from the driver.
+ 
  a. Drive is not detected during booting.
- 
-    - Review the configuration instructions above and in
--     Documentation/ide/ide.txt, and check how your hardware is
-+     Documentation/ide/ide.rst, and check how your hardware is
-      configured.
- 
-    - If your drive is the only device on an IDE interface, it should
-@@ -181,7 +181,7 @@ a. Drive is not detected during booting.
- 
-    - If your IDE interface is not at the standard addresses of 0x170
-      or 0x1f0, you'll need to explicitly inform the driver using a
--     lilo option.  See Documentation/ide/ide.txt.  (This feature was
-+     lilo option.  See Documentation/ide/ide.rst.  (This feature was
-      added around kernel version 1.3.30.)
+@@ -184,9 +186,9 @@ a. Drive is not detected during booting.
  
     - If the autoprobing is not finding your drive, you can tell the
-@@ -207,7 +207,7 @@ a. Drive is not detected during booting.
-      Support for some interfaces needing extra initialization is
-      provided in later 1.3.x kernels.  You may need to turn on
-      additional kernel configuration options to get them to work;
--     see Documentation/ide/ide.txt.
-+     see Documentation/ide/ide.rst.
+      driver to assume that one exists by using a lilo option of the
+-     form `hdX=cdrom', where X is the drive letter corresponding to
+-     where your drive is installed.  Note that if you do this and you 
+-     see a boot message like
++     form `hdX=cdrom`, where X is the drive letter corresponding to
++     where your drive is installed.  Note that if you do this and you
++     see a boot message like::
  
-      Even if support is not available for your interface, you may be
-      able to get it to work with the following procedure.  First boot
-@@ -261,7 +261,7 @@ c. System hangups.
-     be worked around by specifying the `serialize` option when
+        hdX: ATAPI cdrom (?)
+ 
+@@ -220,7 +222,7 @@ b. Timeout/IRQ errors.
+     probably not making it to the host.
+ 
+   - IRQ problems may also be indicated by the message
+-    `IRQ probe failed (<n>)' while booting.  If <n> is zero, that
++    `IRQ probe failed (<n>)` while booting.  If <n> is zero, that
+     means that the system did not see an interrupt from the drive when
+     it was expecting one (on any feasible IRQ).  If <n> is negative,
+     that means the system saw interrupts on multiple IRQ lines, when
+@@ -240,27 +242,27 @@ b. Timeout/IRQ errors.
+     there are hardware problems with the interrupt setup; they
+     apparently don't use interrupts.
+ 
+-  - If you own a Pioneer DR-A24X, you _will_ get nasty error messages 
++  - If you own a Pioneer DR-A24X, you _will_ get nasty error messages
+     on boot such as "irq timeout: status=0x50 { DriveReady SeekComplete }"
+     The Pioneer DR-A24X CDROM drives are fairly popular these days.
+     Unfortunately, these drives seem to become very confused when we perform
+     the standard Linux ATA disk drive probe. If you own one of these drives,
+-    you can bypass the ATA probing which confuses these CDROM drives, by 
+-    adding `append="hdX=noprobe hdX=cdrom"' to your lilo.conf file and running 
+-    lilo (again where X is the drive letter corresponding to where your drive 
++    you can bypass the ATA probing which confuses these CDROM drives, by
++    adding `append="hdX=noprobe hdX=cdrom"` to your lilo.conf file and running
++    lilo (again where X is the drive letter corresponding to where your drive
+     is installed.)
+-    
++
+ c. System hangups.
+ 
+   - If the system locks up when you try to access the CDROM, the most
+     likely cause is that you have a buggy IDE adapter which doesn't
+     properly handle simultaneous transactions on multiple interfaces.
+     The most notorious of these is the CMD640B chip.  This problem can
+-    be worked around by specifying the `serialize' option when
++    be worked around by specifying the `serialize` option when
      booting.  Recent kernels should be able to detect the need for
      this automatically in most cases, but the detection is not
--    foolproof.  See Documentation/ide/ide.txt for more information
-+    foolproof.  See Documentation/ide/ide.rst for more information
-     about the `serialize` option and the CMD640B.
+     foolproof.  See Documentation/ide/ide.txt for more information
+-    about the `serialize' option and the CMD640B.
++    about the `serialize` option and the CMD640B.
  
    - Note that many MS-DOS CDROM drivers will work with such buggy
-diff --git a/Documentation/ide/changelogs.rst b/Documentation/ide/changelogs.rst
+     hardware, apparently because they never attempt to overlap CDROM
+@@ -269,14 +271,14 @@ c. System hangups.
+ 
+ d. Can't mount a CDROM.
+ 
+-  - If you get errors from mount, it may help to check `dmesg' to see
++  - If you get errors from mount, it may help to check `dmesg` to see
+     if there are any more specific errors from the driver or from the
+     filesystem.
+ 
+   - Make sure there's a CDROM loaded in the drive, and that's it's an
+     ISO 9660 disc.  You can't mount an audio CD.
+ 
+-  - With the CDROM in the drive and unmounted, try something like
++  - With the CDROM in the drive and unmounted, try something like::
+ 
+       cat /dev/cdrom | od | more
+ 
+@@ -284,9 +286,9 @@ d. Can't mount a CDROM.
+     OK, and the problem is at the filesystem level (i.e., the CDROM is
+     not ISO 9660 or has errors in the filesystem structure).
+ 
+-  - If you see `not a block device' errors, check that the definitions
++  - If you see `not a block device` errors, check that the definitions
+     of the device special files are correct.  They should be as
+-    follows:
++    follows::
+ 
+       brw-rw----   1 root     disk       3,   0 Nov 11 18:48 /dev/hda
+       brw-rw----   1 root     disk       3,  64 Nov 11 18:48 /dev/hdb
+@@ -301,7 +303,7 @@ d. Can't mount a CDROM.
+     If you have a /dev/cdrom symbolic link, check that it is pointing
+     to the correct device file.
+ 
+-    If you hear people talking of the devices `hd1a' and `hd1b', these
++    If you hear people talking of the devices `hd1a` and `hd1b`, these
+     were old names for what are now called hdc and hdd.  Those names
+     should be considered obsolete.
+ 
+@@ -311,8 +313,8 @@ d. Can't mount a CDROM.
+     always give meaningful error messages.
+ 
+ 
+-e. Directory listings are unpredictably truncated, and `dmesg' shows
+-   `buffer botch' error messages from the driver.
++e. Directory listings are unpredictably truncated, and `dmesg` shows
++   `buffer botch` error messages from the driver.
+ 
+   - There was a bug in the version of the driver in 1.2.x kernels
+     which could cause this.  It was fixed in 1.3.0.  If you can't
+@@ -335,34 +337,36 @@ f. Data corruption.
+ 5. cdchange.c
+ -------------
+ 
+-/*
+- * cdchange.c  [-v]  <device>  [<slot>]
+- *
+- * This loads a CDROM from a specified slot in a changer, and displays 
+- * information about the changer status.  The drive should be unmounted before 
+- * using this program.
+- *
+- * Changer information is displayed if either the -v flag is specified
+- * or no slot was specified.
+- *
+- * Based on code originally from Gerhard Zuber <zuber@berlin.snafu.de>.
+- * Changer status information, and rewrite for the new Uniform CDROM driver
+- * interface by Erik Andersen <andersee@debian.org>.
+- */
++::
+ 
+-#include <stdio.h>
+-#include <stdlib.h>
+-#include <errno.h>
+-#include <string.h>
+-#include <unistd.h>
+-#include <fcntl.h>
+-#include <sys/ioctl.h>
+-#include <linux/cdrom.h>
++  /*
++   * cdchange.c  [-v]  <device>  [<slot>]
++   *
++   * This loads a CDROM from a specified slot in a changer, and displays
++   * information about the changer status.  The drive should be unmounted before
++   * using this program.
++   *
++   * Changer information is displayed if either the -v flag is specified
++   * or no slot was specified.
++   *
++   * Based on code originally from Gerhard Zuber <zuber@berlin.snafu.de>.
++   * Changer status information, and rewrite for the new Uniform CDROM driver
++   * interface by Erik Andersen <andersee@debian.org>.
++   */
+ 
++  #include <stdio.h>
++  #include <stdlib.h>
++  #include <errno.h>
++  #include <string.h>
++  #include <unistd.h>
++  #include <fcntl.h>
++  #include <sys/ioctl.h>
++  #include <linux/cdrom.h>
+ 
+-int
+-main (int argc, char **argv)
+-{
++
++  int
++  main (int argc, char **argv)
++  {
+ 	char *program;
+ 	char *device;
+ 	int fd;           /* file descriptor for CD-ROM device */
+@@ -382,30 +386,30 @@ main (int argc, char **argv)
+ 		fprintf (stderr, "       Slots are numbered 1 -- n.\n");
+ 		exit (1);
+ 	}
+- 
++
+        if (strcmp (argv[0], "-v") == 0) {
+                 verbose = 1;
+                 ++argv;
+                 --argc;
+         }
+- 
++
+ 	device = argv[0];
+- 
++
+ 	if (argc == 2)
+ 		slot = atoi (argv[1]) - 1;
+ 
+-	/* open device */ 
++	/* open device */
+ 	fd = open(device, O_RDONLY | O_NONBLOCK);
+ 	if (fd < 0) {
+-		fprintf (stderr, "%s: open failed for `%s': %s\n",
++		fprintf (stderr, "%s: open failed for `%s`: %s\n",
+ 			 program, device, strerror (errno));
+ 		exit (1);
+ 	}
+ 
+-	/* Check CD player status */ 
++	/* Check CD player status */
+ 	total_slots_available = ioctl (fd, CDROM_CHANGER_NSLOTS);
+ 	if (total_slots_available <= 1 ) {
+-		fprintf (stderr, "%s: Device `%s' is not an ATAPI "
++		fprintf (stderr, "%s: Device `%s` is not an ATAPI "
+ 			"compliant CD changer.\n", program, device);
+ 		exit (1);
+ 	}
+@@ -418,7 +422,7 @@ main (int argc, char **argv)
+ 			exit (1);
+ 		}
+ 
+-		/* load */ 
++		/* load */
+ 		slot=ioctl (fd, CDROM_SELECT_DISC, slot);
+ 		if (slot<0) {
+ 			fflush(stdout);
+@@ -462,14 +466,14 @@ main (int argc, char **argv)
+ 
+ 		for (x_slot=0; x_slot<total_slots_available; x_slot++) {
+ 			printf ("Slot %2d: ", x_slot+1);
+-             		status = ioctl (fd, CDROM_DRIVE_STATUS, x_slot);
+-             		if (status<0) {
+-             		     perror(" CDROM_DRIVE_STATUS");
+-             		} else switch(status) {
++			status = ioctl (fd, CDROM_DRIVE_STATUS, x_slot);
++			if (status<0) {
++			     perror(" CDROM_DRIVE_STATUS");
++			} else switch(status) {
+ 			case CDS_DISC_OK:
+ 				printf ("Disc present.");
+ 				break;
+-			case CDS_NO_DISC: 
++			case CDS_NO_DISC:
+ 				printf ("Empty slot.");
+ 				break;
+ 			case CDS_TRAY_OPEN:
+@@ -507,11 +511,11 @@ main (int argc, char **argv)
+ 				break;
+ 			}
+ 			}
+-                  	status = ioctl (fd, CDROM_MEDIA_CHANGED, x_slot);
+-                  	if (status<0) {
++			status = ioctl (fd, CDROM_MEDIA_CHANGED, x_slot);
++			if (status<0) {
+ 				perror(" CDROM_MEDIA_CHANGED");
+-                  	}
+-		  	switch (status) {
++			}
++			switch (status) {
+ 			case 1:
+ 				printf ("Changed.\n");
+ 				break;
+@@ -525,10 +529,10 @@ main (int argc, char **argv)
+ 	/* close device */
+ 	status = close (fd);
+ 	if (status != 0) {
+-		fprintf (stderr, "%s: close failed for `%s': %s\n",
++		fprintf (stderr, "%s: close failed for `%s`: %s\n",
+ 			 program, device, strerror (errno));
+ 		exit (1);
+ 	}
+- 
++
+ 	exit (0);
+-}
++  }
+diff --git a/Documentation/cdrom/index.rst b/Documentation/cdrom/index.rst
 new file mode 100644
-index 000000000000..fdf9d0fb8027
+index 000000000000..efbd5d111825
 --- /dev/null
-+++ b/Documentation/ide/changelogs.rst
-@@ -0,0 +1,17 @@
-+Changelog for ide cd
-+--------------------
-+
-+ .. include:: ChangeLog.ide-cd.1994-2004
-+    :literal:
-+
-+Changelog for ide floppy
-+------------------------
-+
-+ .. include:: ChangeLog.ide-floppy.1996-2002
-+    :literal:
-+
-+Changelog for ide tape
-+----------------------
-+
-+ .. include:: ChangeLog.ide-tape.1995-2002
-+    :literal:
-diff --git a/Documentation/ide/ide-tape.txt b/Documentation/ide/ide-tape.rst
-similarity index 83%
-rename from Documentation/ide/ide-tape.txt
-rename to Documentation/ide/ide-tape.rst
-index 3f348a0b21d8..3e061d9c0e38 100644
---- a/Documentation/ide/ide-tape.txt
-+++ b/Documentation/ide/ide-tape.rst
-@@ -1,4 +1,6 @@
--IDE ATAPI streaming tape driver.
-+===============================
-+IDE ATAPI streaming tape driver
-+===============================
- 
- This driver is a part of the Linux ide driver.
- 
-@@ -10,14 +12,14 @@ to the request-list of the block device, and waits for their completion.
- The block device major and minor numbers are determined from the
- tape's relative position in the ide interfaces, as explained in ide.c.
- 
--The character device interface consists of the following devices:
-+The character device interface consists of the following devices::
- 
--ht0		major 37, minor 0	first  IDE tape, rewind on close.
--ht1		major 37, minor 1	second IDE tape, rewind on close.
--...
--nht0		major 37, minor 128	first  IDE tape, no rewind on close.
--nht1		major 37, minor 129	second IDE tape, no rewind on close.
--...
-+  ht0		major 37, minor 0	first  IDE tape, rewind on close.
-+  ht1		major 37, minor 1	second IDE tape, rewind on close.
-+  ...
-+  nht0		major 37, minor 128	first  IDE tape, no rewind on close.
-+  nht1		major 37, minor 129	second IDE tape, no rewind on close.
-+  ...
- 
- The general magnetic tape commands compatible interface, as defined by
- include/linux/mtio.h, is accessible through the character device.
-@@ -40,9 +42,10 @@ Testing was done with a 2 GB CONNER CTMA 4000 IDE ATAPI Streaming Tape Drive.
- Here are some words from the first releases of hd.c, which are quoted
- in ide.c and apply here as well:
- 
--| Special care is recommended.  Have Fun!
-+* Special care is recommended.  Have Fun!
- 
--Possible improvements:
-+Possible improvements
-+=====================
- 
- 1. Support for the ATAPI overlap protocol.
- 
-diff --git a/Documentation/ide/ide.txt b/Documentation/ide/ide.rst
-similarity index 72%
-rename from Documentation/ide/ide.txt
-rename to Documentation/ide/ide.rst
-index 7aca987c23d9..88bdcba92f7d 100644
---- a/Documentation/ide/ide.txt
-+++ b/Documentation/ide/ide.rst
-@@ -1,41 +1,43 @@
--
--	Information regarding the Enhanced IDE drive in Linux 2.6
--
--==============================================================================
--
-+============================================
-+Information regarding the Enhanced IDE drive
-+============================================
- 
-    The hdparm utility can be used to control various IDE features on a
-    running system. It is packaged separately.  Please Look for it on popular
-    linux FTP sites.
- 
-+-------------------------------------------------------------------------------
- 
-+.. important::
- 
--***  IMPORTANT NOTICES:  BUGGY IDE CHIPSETS CAN CORRUPT DATA!!
--***  =================
--***  PCI versions of the CMD640 and RZ1000 interfaces are now detected
--***  automatically at startup when PCI BIOS support is configured.
--***
--***  Linux disables the "prefetch" ("readahead") mode of the RZ1000
--***  to prevent data corruption possible due to hardware design flaws.
--***
--***  For the CMD640, linux disables "IRQ unmasking" (hdparm -u1) on any
--***  drive for which the "prefetch" mode of the CMD640 is turned on.
--***  If "prefetch" is disabled (hdparm -p8), then "IRQ unmasking" can be
--***  used again.
--***
--***  For the CMD640, linux disables "32bit I/O" (hdparm -c1) on any drive
--***  for which the "prefetch" mode of the CMD640 is turned off.
--***  If "prefetch" is enabled (hdparm -p9), then "32bit I/O" can be
--***  used again.
--***
--***  The CMD640 is also used on some Vesa Local Bus (VLB) cards, and is *NOT*
--***  automatically detected by Linux.  For safe, reliable operation with such
--***  interfaces, one *MUST* use the "cmd640.probe_vlb" kernel option.
--***
--***  Use of the "serialize" option is no longer necessary.
--
--================================================================================
--Common pitfalls:
-+   BUGGY IDE CHIPSETS CAN CORRUPT DATA!!
-+
-+    PCI versions of the CMD640 and RZ1000 interfaces are now detected
-+    automatically at startup when PCI BIOS support is configured.
-+
-+    Linux disables the "prefetch" ("readahead") mode of the RZ1000
-+    to prevent data corruption possible due to hardware design flaws.
-+
-+    For the CMD640, linux disables "IRQ unmasking" (hdparm -u1) on any
-+    drive for which the "prefetch" mode of the CMD640 is turned on.
-+    If "prefetch" is disabled (hdparm -p8), then "IRQ unmasking" can be
-+    used again.
-+
-+    For the CMD640, linux disables "32bit I/O" (hdparm -c1) on any drive
-+    for which the "prefetch" mode of the CMD640 is turned off.
-+    If "prefetch" is enabled (hdparm -p9), then "32bit I/O" can be
-+    used again.
-+
-+    The CMD640 is also used on some Vesa Local Bus (VLB) cards, and is *NOT*
-+    automatically detected by Linux.  For safe, reliable operation with such
-+    interfaces, one *MUST* use the "cmd640.probe_vlb" kernel option.
-+
-+    Use of the "serialize" option is no longer necessary.
-+
-+-------------------------------------------------------------------------------
-+
-+Common pitfalls
-+===============
- 
- - 40-conductor IDE cables are capable of transferring data in DMA modes up to
-   udma2, but no faster.
-@@ -49,19 +51,18 @@ Common pitfalls:
- - Even better try to stick to the same vendor and device type on the same
-   cable.
- 
--================================================================================
--
--This is the multiple IDE interface driver, as evolved from hd.c.
-+This is the multiple IDE interface driver, as evolved from hd.c
-+===============================================================
- 
- It supports up to 9 IDE interfaces per default, on one or more IRQs (usually
--14 & 15).  There can be up to two drives per interface, as per the ATA-6 spec.
-+14 & 15).  There can be up to two drives per interface, as per the ATA-6 spec.::
- 
--Primary:    ide0, port 0x1f0; major=3;  hda is minor=0; hdb is minor=64
--Secondary:  ide1, port 0x170; major=22; hdc is minor=0; hdd is minor=64
--Tertiary:   ide2, port 0x1e8; major=33; hde is minor=0; hdf is minor=64
--Quaternary: ide3, port 0x168; major=34; hdg is minor=0; hdh is minor=64
--fifth..     ide4, usually PCI, probed
--sixth..     ide5, usually PCI, probed
-+  Primary:    ide0, port 0x1f0; major=3;  hda is minor=0; hdb is minor=64
-+  Secondary:  ide1, port 0x170; major=22; hdc is minor=0; hdd is minor=64
-+  Tertiary:   ide2, port 0x1e8; major=33; hde is minor=0; hdf is minor=64
-+  Quaternary: ide3, port 0x168; major=34; hdg is minor=0; hdh is minor=64
-+  fifth..     ide4, usually PCI, probed
-+  sixth..     ide5, usually PCI, probed
- 
- To access devices on interfaces > ide0, device entries please make sure that
- device files for them are present in /dev.  If not, please create such
-@@ -80,12 +81,15 @@ seldom occurs.  Be careful, and if in doubt, don't do it!
- 
- Drives are normally found by auto-probing and/or examining the CMOS/BIOS data.
- For really weird situations, the apparent (fdisk) geometry can also be specified
--on the kernel "command line" using LILO.  The format of such lines is:
-+on the kernel "command line" using LILO.  The format of such lines is::
- 
- 	ide_core.chs=[interface_number.device_number]:cyls,heads,sects
--or	ide_core.cdrom=[interface_number.device_number]
- 
--For example:
-+or::
-+
-+	ide_core.cdrom=[interface_number.device_number]
-+
-+For example::
- 
- 	ide_core.chs=1.0:1050,32,64  ide_core.cdrom=1.1
- 
-@@ -96,10 +100,12 @@ geometry for partitioning purposes (fdisk).
- If the auto-probing during boot time confuses a drive (ie. the drive works
- with hd.c but not with ide.c), then an command line option may be specified
- for each drive for which you'd like the drive to skip the hardware
--probe/identification sequence.  For example:
-+probe/identification sequence.  For example::
- 
- 	ide_core.noprobe=0.1
--or
-+
-+or::
-+
- 	ide_core.chs=1.0:768,16,32
- 	ide_core.noprobe=1.0
- 
-@@ -115,22 +121,24 @@ Such drives will be identified at boot time, just like a hard disk.
- 
- If for some reason your cdrom drive is *not* found at boot time, you can force
- the probe to look harder by supplying a kernel command line parameter
--via LILO, such as:
-+via LILO, such as:::
- 
- 	ide_core.cdrom=1.0	/* "master" on second interface (hdc) */
--or
-+
-+or::
-+
- 	ide_core.cdrom=1.1	/* "slave" on second interface (hdd) */
- 
- For example, a GW2000 system might have a hard drive on the primary
- interface (/dev/hda) and an IDE cdrom drive on the secondary interface
--(/dev/hdc).  To mount a CD in the cdrom drive, one would use something like:
-+(/dev/hdc).  To mount a CD in the cdrom drive, one would use something like::
- 
- 	ln -sf /dev/hdc /dev/cdrom
- 	mkdir /mnt/cdrom
- 	mount /dev/cdrom /mnt/cdrom -t iso9660 -o ro
- 
- If, after doing all of the above, mount doesn't work and you see
--errors from the driver (with dmesg) complaining about `status=0xff',
-+errors from the driver (with dmesg) complaining about `status=0xff`,
- this means that the hardware is not responding to the driver's attempts
- to read it.  One of the following is probably the problem:
- 
-@@ -165,7 +173,7 @@ drivers can always be compiled as loadable modules, the chipset drivers
- can only be compiled into the kernel, and the core code (ide.c) can be
- compiled as a loadable module provided no chipset support is needed.
- 
--When using ide.c as a module in combination with kmod, add:
-+When using ide.c as a module in combination with kmod, add::
- 
- 	alias block-major-3 ide-probe
- 
-@@ -176,10 +184,8 @@ driver using the "options=" keyword to insmod, while replacing any ',' with
- ';'.
- 
- 
--================================================================================
--
- Summary of ide driver parameters for kernel command line
----------------------------------------------------------
-+========================================================
- 
- For legacy IDE VLB host drivers (ali14xx/dtc2278/ht6560b/qd65xx/umc8672)
- you need to explicitly enable probing by using "probe" kernel parameter,
-@@ -226,28 +232,31 @@ Other kernel parameters for ide_core are:
- 
- * "chs=[interface_number.device_number]" to force device as a disk (using CHS)
- 
--================================================================================
- 
- Some Terminology
------------------
--IDE = Integrated Drive Electronics, meaning that each drive has a built-in
--controller, which is why an "IDE interface card" is not a "controller card".
-+================
- 
--ATA = AT (the old IBM 286 computer) Attachment Interface, a draft American
--National Standard for connecting hard drives to PCs.  This is the official
--name for "IDE".
-+IDE
-+  Integrated Drive Electronics, meaning that each drive has a built-in
-+  controller, which is why an "IDE interface card" is not a "controller card".
- 
--The latest standards define some enhancements, known as the ATA-6 spec,
--which grew out of vendor-specific "Enhanced IDE" (EIDE) implementations.
-+ATA
-+  AT (the old IBM 286 computer) Attachment Interface, a draft American
-+  National Standard for connecting hard drives to PCs.  This is the official
-+  name for "IDE".
- 
--ATAPI = ATA Packet Interface, a new protocol for controlling the drives,
--similar to SCSI protocols, created at the same time as the ATA2 standard.
--ATAPI is currently used for controlling CDROM, TAPE and FLOPPY (ZIP or
--LS120/240) devices, removable R/W cartridges, and for high capacity hard disk
--drives.
-+  The latest standards define some enhancements, known as the ATA-6 spec,
-+  which grew out of vendor-specific "Enhanced IDE" (EIDE) implementations.
-+
-+ATAPI
-+  ATA Packet Interface, a new protocol for controlling the drives,
-+  similar to SCSI protocols, created at the same time as the ATA2 standard.
-+  ATAPI is currently used for controlling CDROM, TAPE and FLOPPY (ZIP or
-+  LS120/240) devices, removable R/W cartridges, and for high capacity hard disk
-+  drives.
- 
- mlord@pobox.com
----
-+
- 
- Wed Apr 17 22:52:44 CEST 2002 edited by Marcin Dalecki, the current
- maintainer.
-diff --git a/Documentation/ide/index.rst b/Documentation/ide/index.rst
-new file mode 100644
-index 000000000000..45bc12d3957f
---- /dev/null
-+++ b/Documentation/ide/index.rst
-@@ -0,0 +1,21 @@
++++ b/Documentation/cdrom/index.rst
+@@ -0,0 +1,19 @@
 +:orphan:
 +
-+==================================
-+Integrated Drive Electronics (IDE)
-+==================================
++=====
++cdrom
++=====
 +
 +.. toctree::
 +    :maxdepth: 1
 +
-+    ide
-+    ide-tape
-+    warm-plug-howto
-+
-+    changelogs
++    cdrom-standard
++    ide-cd
++    packet-writing
 +
 +.. only::  subproject and html
 +
@@ -480,137 +480,151 @@ index 000000000000..45bc12d3957f
 +   =======
 +
 +   * :ref:`genindex`
-diff --git a/Documentation/ide/warm-plug-howto.txt b/Documentation/ide/warm-plug-howto.rst
-similarity index 61%
-rename from Documentation/ide/warm-plug-howto.txt
-rename to Documentation/ide/warm-plug-howto.rst
-index 98152bcd515a..c245242ef2f1 100644
---- a/Documentation/ide/warm-plug-howto.txt
-+++ b/Documentation/ide/warm-plug-howto.rst
-@@ -1,14 +1,14 @@
--
-+===================
- IDE warm-plug HOWTO
- ===================
+diff --git a/Documentation/cdrom/packet-writing.txt b/Documentation/cdrom/packet-writing.rst
+similarity index 91%
+rename from Documentation/cdrom/packet-writing.txt
+rename to Documentation/cdrom/packet-writing.rst
+index 2834170d821e..c5c957195a5a 100644
+--- a/Documentation/cdrom/packet-writing.txt
++++ b/Documentation/cdrom/packet-writing.rst
+@@ -1,3 +1,7 @@
++==============
++Packet writing
++==============
++
+ Getting started quick
+ ---------------------
  
--To warm-plug devices on a port 'idex':
-+To warm-plug devices on a port 'idex'::
+@@ -10,13 +14,16 @@ Getting started quick
+   Download from http://sourceforge.net/projects/linux-udf/
  
--# echo -n "1" > /sys/class/ide_port/idex/delete_devices
-+	# echo -n "1" > /sys/class/ide_port/idex/delete_devices
+ - Grab a new CD-RW disc and format it (assuming CD-RW is hdc, substitute
+-  as appropriate):
++  as appropriate)::
++
+ 	# cdrwtool -d /dev/hdc -q
  
--unplug old device(s) and plug new device(s)
-+unplug old device(s) and plug new device(s)::
+-- Setup your writer
++- Setup your writer::
++
+ 	# pktsetup dev_name /dev/hdc
  
--# echo -n "1" > /sys/class/ide_port/idex/scan
-+	# echo -n "1" > /sys/class/ide_port/idex/scan
+-- Now you can mount /dev/pktcdvd/dev_name and copy files to it. Enjoy!
++- Now you can mount /dev/pktcdvd/dev_name and copy files to it. Enjoy::
++
+ 	# mount /dev/pktcdvd/dev_name /cdrom -t udf -o rw,noatime
  
- done
  
-diff --git a/arch/m68k/q40/README b/arch/m68k/q40/README
-index 93f4c4cd3c45..a4991d2d8af6 100644
---- a/arch/m68k/q40/README
-+++ b/arch/m68k/q40/README
-@@ -31,7 +31,7 @@ drivers used by the Q40, apart from the very obvious (console etc.):
- 		char/joystick/*		# most of this should work, not
- 				        # in default config.in
- 	        block/q40ide.c		# startup for ide
--		      ide*		# see Documentation/ide/ide.txt
-+		      ide*		# see Documentation/ide/ide.rst
- 		      floppy.c		# normal PC driver, DMA emu in asm/floppy.h
- 					# and arch/m68k/kernel/entry.S
- 					# see drivers/block/README.fd
-diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
-index fdd2a62f9d52..9eada392df15 100644
---- a/drivers/ide/Kconfig
-+++ b/drivers/ide/Kconfig
-@@ -25,13 +25,13 @@ menuconfig IDE
+@@ -25,11 +32,11 @@ Packet writing for DVD-RW media
+ 
+ DVD-RW discs can be written to much like CD-RW discs if they are in
+ the so called "restricted overwrite" mode. To put a disc in restricted
+-overwrite mode, run:
++overwrite mode, run::
+ 
+ 	# dvd+rw-format /dev/hdc
+ 
+-You can then use the disc the same way you would use a CD-RW disc:
++You can then use the disc the same way you would use a CD-RW disc::
+ 
+ 	# pktsetup dev_name /dev/hdc
+ 	# mount /dev/pktcdvd/dev_name /cdrom -t udf -o rw,noatime
+@@ -41,7 +48,7 @@ Packet writing for DVD+RW media
+ According to the DVD+RW specification, a drive supporting DVD+RW discs
+ shall implement "true random writes with 2KB granularity", which means
+ that it should be possible to put any filesystem with a block size >=
+-2KB on such a disc. For example, it should be possible to do:
++2KB on such a disc. For example, it should be possible to do::
+ 
+ 	# dvd+rw-format /dev/hdc   (only needed if the disc has never
+ 	                            been formatted)
+@@ -54,7 +61,7 @@ follow the specification, but suffer bad performance problems if the
+ writes are not 32KB aligned.
+ 
+ Both problems can be solved by using the pktcdvd driver, which always
+-generates aligned writes.
++generates aligned writes::
+ 
+ 	# dvd+rw-format /dev/hdc
+ 	# pktsetup dev_name /dev/hdc
+@@ -83,7 +90,7 @@ Notes
+ 
+ - Since the pktcdvd driver makes the disc appear as a regular block
+   device with a 2KB block size, you can put any filesystem you like on
+-  the disc. For example, run:
++  the disc. For example, run::
+ 
+ 	# /sbin/mke2fs /dev/pktcdvd/dev_name
+ 
+@@ -97,7 +104,7 @@ Since Linux 2.6.20, the pktcdvd module has a sysfs interface
+ and can be controlled by it. For example the "pktcdvd" tool uses
+ this interface. (see http://tom.ist-im-web.de/download/pktcdvd )
+ 
+-"pktcdvd" works similar to "pktsetup", e.g.:
++"pktcdvd" works similar to "pktsetup", e.g.::
+ 
+ 	# pktcdvd -a dev_name /dev/hdc
+ 	# mkudffs /dev/pktcdvd/dev_name
+@@ -115,7 +122,7 @@ For a description of the sysfs interface look into the file:
+ Using the pktcdvd debugfs interface
+ -----------------------------------
+ 
+-To read pktcdvd device infos in human readable form, do:
++To read pktcdvd device infos in human readable form, do::
+ 
+ 	# cat /sys/kernel/debug/pktcdvd/pktcdvd[0-7]/info
+ 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 10b77121b9bf..fd40fa26f062 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7631,7 +7631,7 @@ IDE/ATAPI DRIVERS
+ M:	Borislav Petkov <bp@alien8.de>
+ L:	linux-ide@vger.kernel.org
+ S:	Maintained
+-F:	Documentation/cdrom/ide-cd
++F:	Documentation/cdrom/ide-cd.rst
+ F:	drivers/ide/ide-cd*
+ 
+ IDEAPAD LAPTOP EXTRAS DRIVER
+diff --git a/drivers/block/Kconfig b/drivers/block/Kconfig
+index 20bb4bfa4be6..96ec7e0fc1ea 100644
+--- a/drivers/block/Kconfig
++++ b/drivers/block/Kconfig
+@@ -347,7 +347,7 @@ config CDROM_PKTCDVD
+ 	  is possible.
+ 	  DVD-RW disks must be in restricted overwrite mode.
+ 
+-	  See the file <file:Documentation/cdrom/packet-writing.txt>
++	  See the file <file:Documentation/cdrom/packet-writing.rst>
+ 	  for further information on the use of this driver.
+ 
  	  To compile this driver as a module, choose M here: the
- 	  module will be called ide-core.
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index 5d1e0a4a7d84..ac42ae4651ce 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -7,7 +7,7 @@
+    License.  See linux/COPYING for more information.
  
--	  For further information, please read <file:Documentation/ide/ide.txt>.
-+	  For further information, please read <file:Documentation/ide/ide.rst>.
+    Uniform CD-ROM driver for Linux.
+-   See Documentation/cdrom/cdrom-standard.txt for usage information.
++   See Documentation/cdrom/cdrom-standard.rst for usage information.
  
- 	  If unsure, say N.
- 
- if IDE
- 
--comment "Please see Documentation/ide/ide.txt for help/info on IDE drives"
-+comment "Please see Documentation/ide/ide.rst for help/info on IDE drives"
- 
- config IDE_XFER_MODE
- 	bool
-@@ -163,7 +163,7 @@ config BLK_DEV_IDETAPE
- 	  along with other IDE devices, as "hdb" or "hdc", or something
- 	  similar, and will be mapped to a character device such as "ht0"
- 	  (check the boot messages with dmesg).  Be sure to consult the
--	  <file:drivers/ide/ide-tape.c> and <file:Documentation/ide/ide.txt>
-+	  <file:drivers/ide/ide-tape.c> and <file:Documentation/ide/ide.rst>
- 	  files for usage information.
- 
- 	  To compile this driver as a module, choose M here: the
-@@ -251,7 +251,7 @@ config BLK_DEV_CMD640
- 
- 	  The CMD640 chip is also used on add-in cards by Acculogic, and on
- 	  the "CSA-6400E PCI to IDE controller" that some people have. For
--	  details, read <file:Documentation/ide/ide.txt>.
-+	  details, read <file:Documentation/ide/ide.rst>.
- 
- config BLK_DEV_CMD640_ENHANCED
- 	bool "CMD640 enhanced support"
-@@ -259,7 +259,7 @@ config BLK_DEV_CMD640_ENHANCED
- 	help
- 	  This option includes support for setting/autotuning PIO modes and
- 	  prefetch on CMD640 IDE interfaces.  For details, read
--	  <file:Documentation/ide/ide.txt>. If you have a CMD640 IDE interface
-+	  <file:Documentation/ide/ide.rst>. If you have a CMD640 IDE interface
- 	  and your BIOS does not already do this for you, then say Y here.
- 	  Otherwise say N.
- 
-@@ -819,7 +819,7 @@ config BLK_DEV_ALI14XX
- 	  boot parameter.  It enables support for the secondary IDE interface
- 	  of the ALI M1439/1443/1445/1487/1489 chipsets, and permits faster
- 	  I/O speeds to be set as well.
--	  See the files <file:Documentation/ide/ide.txt> and
-+	  See the files <file:Documentation/ide/ide.rst> and
- 	  <file:drivers/ide/ali14xx.c> for more info.
- 
- config BLK_DEV_DTC2278
-@@ -830,7 +830,7 @@ config BLK_DEV_DTC2278
- 	  This driver is enabled at runtime using the "dtc2278.probe" kernel
- 	  boot parameter. It enables support for the secondary IDE interface
- 	  of the DTC-2278 card, and permits faster I/O speeds to be set as
--	  well. See the <file:Documentation/ide/ide.txt> and
-+	  well. See the <file:Documentation/ide/ide.rst> and
- 	  <file:drivers/ide/dtc2278.c> files for more info.
- 
- config BLK_DEV_HT6560B
-@@ -841,7 +841,7 @@ config BLK_DEV_HT6560B
- 	  This driver is enabled at runtime using the "ht6560b.probe" kernel
- 	  boot parameter. It enables support for the secondary IDE interface
- 	  of the Holtek card, and permits faster I/O speeds to be set as well.
--	  See the <file:Documentation/ide/ide.txt> and
-+	  See the <file:Documentation/ide/ide.rst> and
- 	  <file:drivers/ide/ht6560b.c> files for more info.
- 
- config BLK_DEV_QD65XX
-@@ -851,7 +851,7 @@ config BLK_DEV_QD65XX
- 	help
- 	  This driver is enabled at runtime using the "qd65xx.probe" kernel
- 	  boot parameter.  It permits faster I/O speeds to be set.  See the
--	  <file:Documentation/ide/ide.txt> and <file:drivers/ide/qd65xx.c>
-+	  <file:Documentation/ide/ide.rst> and <file:drivers/ide/qd65xx.c>
- 	  for more info.
- 
- config BLK_DEV_UMC8672
-@@ -862,7 +862,7 @@ config BLK_DEV_UMC8672
- 	  This driver is enabled at runtime using the "umc8672.probe" kernel
- 	  boot parameter. It enables support for the secondary IDE interface
- 	  of the UMC-8672, and permits faster I/O speeds to be set as well.
--	  See the files <file:Documentation/ide/ide.txt> and
-+	  See the files <file:Documentation/ide/ide.rst> and
- 	  <file:drivers/ide/umc8672.c> for more info.
- 
- endif
+    The routines in the file provide a uniform interface between the
+    software that uses CD-ROMs and the various low-level drivers that
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 3b15adc6ce98..9d117936bee1 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -9,7 +9,7 @@
+  * May be copied or modified under the terms of the GNU General Public
+  * License.  See linux/COPYING for more information.
+  *
+- * See Documentation/cdrom/ide-cd for usage information.
++ * See Documentation/cdrom/ide-cd.rst for usage information.
+  *
+  * Suggestions are welcome. Patches that work are more welcome though. ;-)
+  *
 -- 
 2.21.0
