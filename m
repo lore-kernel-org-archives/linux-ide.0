@@ -1,139 +1,150 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] drivers/ata: print trim features at device
- initialization
-Date: Fri, 14 Jun 2019 07:54:18 -0700
-Message-ID: <1560524058.27102.5.camel@HansenPartnership.com>
-References: <155989287898.1506.14253954112551051148.stgit@buzz>
-         <yq1wohxib7t.fsf@oracle.com>
-         <eebfb1cc-f6d0-580e-1d56-2af0f481a92f@yandex-team.ru>
-         <048ed77f-8faa-fb67-c6bc-10d953f52f89@yandex-team.ru>
-         <1560116241.3324.19.camel@HansenPartnership.com>
-         <b554c428-417e-5fef-1776-87a4db1d674a@yandex-team.ru>
-         <1560206933.3698.27.camel@HansenPartnership.com>
-         <cd91b050-cbc6-7c3b-f9f8-91c0760668e6@yandex-team.ru>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cd91b050-cbc6-7c3b-f9f8-91c0760668e6@yandex-team.ru>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Dmitry Monakhov <dmtrmonakhov@yandex-team.ru>
-List-Id: linux-ide@vger.kernel.org
+Return-Path: <SRS0=4Yyr=UR=vger.kernel.org=linux-ide-owner@kernel.org>
+X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
+	aws-us-west-2-korg-lkml-1.web.codeaurora.org
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
+Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8327FC31E51
+	for <linux-ide@archiver.kernel.org>; Tue, 18 Jun 2019 07:46:55 +0000 (UTC)
+Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
+	by mail.kernel.org (Postfix) with ESMTP id 6320B2082C
+	for <linux-ide@archiver.kernel.org>; Tue, 18 Jun 2019 07:46:55 +0000 (UTC)
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+        id S1728979AbfFRHqw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 18 Jun 2019 03:46:52 -0400
+Received: from mx2.suse.de ([195.135.220.15]:58142 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728840AbfFRHqv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 18 Jun 2019 03:46:51 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 8B6C3AFEE;
+        Tue, 18 Jun 2019 07:46:49 +0000 (UTC)
+Subject: Re: [PATCH] PCI: Add Intel remapped NVMe device support
+To:     Daniel Drake <drake@endlessm.com>, Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagi@grimberg.me>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Keith Busch <keith.busch@gmail.com>,
+        Keith Busch <kbusch@kernel.org>, linux-ide@vger.kernel.org,
+        linux-nvme <linux-nvme@lists.infradead.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Upstreaming Team <linux@endlessm.com>
+References: <20190610074456.2761-1-drake@endlessm.com>
+ <CAOSXXT7OFzHeTxNqZ1sS6giRxhDcrUUnVjURWBiFUc5T_8p=MA@mail.gmail.com>
+ <CAD8Lp45djPU_Ur8uCO2Y5Sbek_5N9QKkxLXdKNVcvkr6rFPLUQ@mail.gmail.com>
+ <CAOSXXT7H6HxY-za66Tr9ybRQyHsTdwwAgk9O2F=xK42MT8HsuA@mail.gmail.com>
+ <20190613085402.GC13442@lst.de>
+ <CAD8Lp47Vu=w+Lj77_vL05JYV1WMog9WX3FHGE+TseFrhcLoTuA@mail.gmail.com>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <06c38b3e-603b-5bae-4959-9965ab40db62@suse.de>
+Date:   Tue, 18 Jun 2019 09:46:48 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.0
+MIME-Version: 1.0
+In-Reply-To: <CAD8Lp47Vu=w+Lj77_vL05JYV1WMog9WX3FHGE+TseFrhcLoTuA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+Sender: linux-ide-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-ide.vger.kernel.org>
+X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, 2019-06-14 at 16:49 +0300, Konstantin Khlebnikov wrote:
+On 6/14/19 4:26 AM, Daniel Drake wrote:
+> On Thu, Jun 13, 2019 at 4:54 PM Christoph Hellwig <hch@lst.de> wrote:
+>> So until we get very clear and good documentation from Intel on that
+>> I don't think any form of upstream support will fly.  And given that
+>> Dan who submitted the original patch can't even talk about this thing
+>> any more and apparently got a gag order doesn't really give me confidence
+>> any of this will ever work.
 > 
-> On 11.06.2019 1:48, James Bottomley wrote:
-> > On Mon, 2019-06-10 at 10:49 +0300, Konstantin Khlebnikov wrote:
-> > > On 10.06.2019 0:37, James Bottomley wrote:
-> > > > On Sat, 2019-06-08 at 17:13 +0300, Konstantin Khlebnikov wrote:
-> > > > > > On 08.06.2019 11:25, Christoph Hellwig wrote:> On Fri, Jun
-> > > > > > 07,
-> > > > > > 2019
-> > > > > > at 10:34:39AM +0300, Konstantin Khlebnikov wrote:
-> > > > > >    >
-> > > > > >    > Do we really need to spam dmesg with even more ATA
-> > > > > > crap?  What
-> > > > > > about
-> > > > > >    > a sysfs file that can be read on demand instead?
-> > > > > >    >
-> > > > > > 
-> > > > > > Makes sense.
-> > > > > > 
-> > > > > > Trim state is exposed for ata_device:
-> > > > > > /sys/class/ata_device/devX.Y/trim
-> > > > > > but there is no link from scsi device to ata device so they
-> > > > > > hard to match.
-> > > > > > 
-> > > > > > I'll think about it.
-> > > > > 
-> > > > > Nope. There is no obvious way to link scsi device with
-> > > > > ata_device. ata_device is built on top of "transport_class"
-> > > > > and
-> > > > > "attribute_container". This some extremely over engineered
-> > > > > sysfs
-> > > > > framework used only in ata/scsi. I don't want to touch this.
-> > > > 
-> > > > You don't need to know any of that.  The problem is actually
-> > > > when
-> > > > the ata transport classes were first created, the devices
-> > > > weren't
-> > > > properly parented.  What should have happened, like every other
-> > > > transport class, is that the devices should have descended down
-> > > > to
-> > > > the scsi device as the leaf in an integrated fashion.  Instead,
-> > > > what we seem to have is three completely separate trees.
-> > > > 
-> > > > So if you look at a SAS device, you see from the pci device:
-> > > > 
-> > > > host2/port-2:0/end_device-
-> > > > 2:0/target2:0:0/2:0:0:0/block/sdb/sdb1
-> > > > 
-> > > > But if you look at a SATA device, you see three separate paths:
-> > > > 
-> > > > ata3/host3/target3\:0\:0/3\:0\:0\:0/block/sda/sda1
-> > > > ata3/link3/dev3.0/ata_device/dev3.0
-> > > > ata3/ata_port/ata3
-> > > > 
-> > > > Instead of an integrated tree
-> > > > 
-> > > > Unfortunately, this whole thing is unfixable now.  If I
-> > > > integrate
-> > > > the tree properly, the separate port and link directories will
-> > > > get
-> > > > subsumed and we won't be able to recover them with judicious
-> > > > linking so scripts relying on them will break.  The best we can
-> > > > probably do is add additional links with what we have.
-> > > > 
-> > > > To follow the way we usually do it, there should be a link from
-> > > > the
-> > > > ata device to the scsi target, but that wouldn't help you find
-> > > > the
-> > > > "trim" files, so it sounds like you want a link from the scsi
-> > > > device to the ata device, which would?
-> > > 
-> > > Yes, I'm talking about link from scsi device to leaf ata_device
-> > > node.
-> > > 
-> > > In libata scsi_device has one to one relation with ata_device.
-> > > So making link like /sys/class/block/sda/device/ata_device should
-> > > be
-> > > possible easy.
-> > > But I haven't found implicit reference from struct ata_device to
-> > > ata_device in sysfs.
-> > 
-> > If that's all you want, it is pretty simple modulo the fact we can
-> > only
-> > get at the tdev, not the lower transport device, which is what you
-> > want, but at least it's linear from the symlink.
-> > 
-> > The attached patch should do this.
-> > 
-> > Now I see this for my non-sas device:
-> > 
-> > # ls -l /sys/class/scsi_device/3\:0\:0\:0/device/ata_device
-> > lrwxrwxrwx 1 root root 0 Jun 10 13:39
-> > /sys/class/scsi_device/3:0:0:0/device/ata_device ->
-> > ../../../link3/dev3.0
+> I realise the architecture here seems badly thought out, and the lack
+> of a decent spec makes the situation worse, but I'd encourage you to
+> reconsider this from the perspectives of:
+>  - Are the patches really more ugly than the underlying architecture?
+>  - We strive to make Linux work well on common platforms and sometimes
+> have to accept that hardware vendors do questionable things & do not
+> fully cooperate
+>  - It works out of the box on Windows
 > 
-> I've tried this too. Such link is not very useful,
-> because attribute 'trim' is deeper and suffix path isn't constant:
-> 
-> /sys/class/block/sda/device/ata_device/ata_device/dev1.0/trim
-> 
-> while I expect something like
-> 
-> /sys/class/block/sda/device/ata_device/trim
+Actually, there _is_ a register description:
 
-It provides you with an unambiguous way of finding the correct trim
-file.
+https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/300-series-chipset-pch-datasheet-vol-2.pdf
 
-The problem with trying to lower the level of the link is that all the
-devices below the one I linked to are transport class devices meaning
-they're not visible at the point the link needs to be created.  That's
-not to say some additional transport class magic couldn't be done, but
-it would require pretty extensive code changes in drivers/base because
-none of the current constructor functions carries additional
-information, which is necessary to carry the link.
+Look for section 15: Intel RST for PCIe Storage.
 
-James
+That gives you a reasonable description of the various registers etc.
+You'll have to translate from Intel-speak, but that should be manageable.
+
+In general, I am _quite_ in favour of having Linux Support for these
+kind of devices.
+I fully agree the interface is ugly, and badly thought out.
+But these devices exist and have been sold for quite some time now, so
+there is no way we can influence the design on those boxes.
+
+And we really have come a long way from the the original Linux idea of
+"hey, that's weird hardware, let's hack together a driver for it" to the
+flat rejection of hardware we don't like.
+I, for one, prefer the old way.
+
+Looking at the spec I think that Daniels approach of exposing an
+additional PCI device is the correct way of going about it (as the
+interface design can be thought of a messed-up SR-IOV interface), but
+I'll defer to Bjorn here.
+But we really should have a driver to get these boxes rolling.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Mary Higgins, Sri Rasiah
+HRB 21284 (AG Nürnberg)
