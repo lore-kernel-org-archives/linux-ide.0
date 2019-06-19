@@ -1,37 +1,55 @@
-Return-Path: <SRS0=4Yyr=UR=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=LhjH=US=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A500AC31E5B
-	for <linux-ide@archiver.kernel.org>; Tue, 18 Jun 2019 15:15:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB8E2C31E5E
+	for <linux-ide@archiver.kernel.org>; Wed, 19 Jun 2019 13:52:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B2A9213F2
-	for <linux-ide@archiver.kernel.org>; Tue, 18 Jun 2019 15:15:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BAC3B2166E
+	for <linux-ide@archiver.kernel.org>; Wed, 19 Jun 2019 13:52:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1560952335;
+	bh=hclDymaNDOsDIbtMIl2LJFfnJSsWaLYy2U58GCdGL90=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=UFaWnBW2t4+UYrJM1u/JJF4/k2c0p4peBKv190BYvrnEfEtbG58+ksUL1NCZ1Zu2g
+	 0ZPd3AYEzij2+JStV3PnPKcq04S86d3VgUXTpRBH/LoFjacXkASwDljjnR5tlP2q2g
+	 dY2Nch9S+MgiCqPNLpLxzjdqOH/x6KVFeEcyGfHM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729157AbfFRPP5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 18 Jun 2019 11:15:57 -0400
-Received: from mx2.suse.de ([195.135.220.15]:46344 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728572AbfFRPP4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 18 Jun 2019 11:15:56 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 8E7DBAE5A;
-        Tue, 18 Jun 2019 15:15:53 +0000 (UTC)
-Subject: Re: [PATCH] PCI: Add Intel remapped NVMe device support
-To:     Daniel Drake <drake@endlessm.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, Sagi Grimberg <sagi@grimberg.me>,
+        id S1726109AbfFSNwO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 19 Jun 2019 09:52:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47096 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726047AbfFSNwO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 19 Jun 2019 09:52:14 -0400
+Received: from localhost (173-25-83-245.client.mchsi.com [173.25.83.245])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5804121670;
+        Wed, 19 Jun 2019 13:52:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1560952333;
+        bh=hclDymaNDOsDIbtMIl2LJFfnJSsWaLYy2U58GCdGL90=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=B3jizonAV2P/nKMYqbPEgPAL9k/qW8ysXT3xel3+pdhOYp0ed6QM+M43NYXIgDS4R
+         TJwpRuRfyoYWC2o6XWzDHvFF1BZojHDXeUNX9GB+zXKfS/3M2bZW6qfeZgiw1jGLr+
+         ne2uDEFhd+dqrxNPw95QMPUZSaRWDeBIuK7jqKjw=
+Date:   Wed, 19 Jun 2019 08:52:12 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     Daniel Drake <drake@endlessm.com>, Jens Axboe <axboe@kernel.dk>,
+        Sagi Grimberg <sagi@grimberg.me>,
         Linux PCI <linux-pci@vger.kernel.org>,
-        Linux Upstreaming Team <linux@endlessm.com>,
         Keith Busch <keith.busch@gmail.com>, linux-ide@vger.kernel.org,
         linux-nvme <linux-nvme@lists.infradead.org>,
         Keith Busch <kbusch@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+        Linux Upstreaming Team <linux@endlessm.com>,
         Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] PCI: Add Intel remapped NVMe device support
+Message-ID: <20190619135212.GB143205@google.com>
 References: <20190610074456.2761-1-drake@endlessm.com>
  <CAOSXXT7OFzHeTxNqZ1sS6giRxhDcrUUnVjURWBiFUc5T_8p=MA@mail.gmail.com>
  <CAD8Lp45djPU_Ur8uCO2Y5Sbek_5N9QKkxLXdKNVcvkr6rFPLUQ@mail.gmail.com>
@@ -40,144 +58,33 @@ References: <20190610074456.2761-1-drake@endlessm.com>
  <CAD8Lp47Vu=w+Lj77_vL05JYV1WMog9WX3FHGE+TseFrhcLoTuA@mail.gmail.com>
  <06c38b3e-603b-5bae-4959-9965ab40db62@suse.de>
  <CAD8Lp44rqGh3nmUOFhwq+SSxpJGuWvLFJ8sKtM0q1GeY0j4v9A@mail.gmail.com>
-From:   Hannes Reinecke <hare@suse.de>
-Openpgp: preference=signencrypt
-Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
- 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
- azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <1f56c881-9005-f8ad-1557-5efd6e0ef535@suse.de>
-Date:   Tue, 18 Jun 2019 17:15:52 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.0
+ <1f56c881-9005-f8ad-1557-5efd6e0ef535@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <CAD8Lp44rqGh3nmUOFhwq+SSxpJGuWvLFJ8sKtM0q1GeY0j4v9A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1f56c881-9005-f8ad-1557-5efd6e0ef535@suse.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/18/19 10:06 AM, Daniel Drake wrote:
-> On Tue, Jun 18, 2019 at 3:46 PM Hannes Reinecke <hare@suse.de> wrote:
->> On 6/14/19 4:26 AM, Daniel Drake wrote:
->>> On Thu, Jun 13, 2019 at 4:54 PM Christoph Hellwig <hch@lst.de> wrote:
->>>> So until we get very clear and good documentation from Intel on that
->>>> I don't think any form of upstream support will fly.  And given that
->>>> Dan who submitted the original patch can't even talk about this thing
->>>> any more and apparently got a gag order doesn't really give me confidence
->>>> any of this will ever work.
->>>
->>> I realise the architecture here seems badly thought out, and the lack
->>> of a decent spec makes the situation worse, but I'd encourage you to
->>> reconsider this from the perspectives of:
->>>  - Are the patches really more ugly than the underlying architecture?
->>>  - We strive to make Linux work well on common platforms and sometimes
->>> have to accept that hardware vendors do questionable things & do not
->>> fully cooperate
->>>  - It works out of the box on Windows
->>>
->> Actually, there _is_ a register description:
->>
->> https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/300-series-chipset-pch-datasheet-vol-2.pdf
->>
->> Look for section 15: Intel RST for PCIe Storage.
->>
->> That gives you a reasonable description of the various registers etc.
-> 
-> Thanks for your email! I also spotted it for the first time earlier today.
-> 
-> Section 15 there (D24:F0) describes a special/hidden PCI device which
-> I can't figure out how to access from Linux (I believe it would be at
-> D18:F0 in the cases where the 300 PCH is integrated into the SoC, as
-> it is on the Whiskey Lake platform I have here). That's probably not
-> important because if even if we had access all the values are probably
-> read-only, as the BIOS will lock them all down during early boot, as
-> is documented. But the docs give some interesting insights into the
-> design.
-> 
-> Section 15.2 is potentially more relevant, as it describes registers
-> within the AHCI BAR and we do have access to that. Some of these
-> registers are already used by the current code to determine the
-> presence of remapped devices. It might be nice to use Device Memory
-> BAR Length (DMBL_1) but I can't figure out what is meant by "A 1 in
-> the bit location indicates the corresponding lower memory BAR bit for
-> the PCIe SSD device is a Read/Write (RW) bit." The value is 0x3fff on
-> the platform I have here.
-> 
-> We can probably also use these registers for MSI support. I started to
-> experiment, doesn't quite work but I'll keep poking. The doc suggests
-> there is a single MSI-X vector for the AHCI SATA device, and AHCI
-> MSI-X Starting Vector (AMXV) has value 0x140 on this platform. No idea
-> how to interpret that value. From experimentation, the AHCI SATA disk
-> generates interrupts on vector 0.
-> 
-The 0x140 is probably the offset into the PCI config space where the
-AHCI MSI-X vector table can be found ...
+On Tue, Jun 18, 2019 at 05:15:52PM +0200, Hannes Reinecke wrote:
+> On 6/18/19 10:06 AM, Daniel Drake wrote:
 
-> Then there are multiple vectors for the remapped NVMe devices. Device
-> MSI-X Configuration (DMXC_L_1) is set up to assign vectors 1 to 19 to
-> NVMe on this platform. But it says "This field is only valid when
-> DMXC.ID indicates interrupt delivery using MSI-X" but what/where is
-> DMXC.ID? So far I can get NVMe-related interrupts on vector 1 but
-> apparently not enough of them, the driver hangs during probe.
-> 
-I _think_ the problem here is the automatic interrupt affinity we're
-doing; we probably have to exclude the AHCI vector when setting up
-interrupt affinity.
+> > We can probably also use these registers for MSI support. I
+> > started to experiment, doesn't quite work but I'll keep poking.
+> > The doc suggests there is a single MSI-X vector for the AHCI SATA
+> > device, and AHCI MSI-X Starting Vector (AMXV) has value 0x140 on
+> > this platform. No idea how to interpret that value. From
+> > experimentation, the AHCI SATA disk generates interrupts on vector
+> > 0.
+> > 
+> The 0x140 is probably the offset into the PCI config space where the
+> AHCI MSI-X vector table can be found ...
 
-> I've nearly finished refreshing & extending Dan Williams' patches and
-> will send them for more discussion soon.
-> 
-THX.
+An MSI-X vector table is in memory space, not config space.  You'd
+have to look at PCI_MSIX_TABLE_BIR to find which BAR maps it, and then
+add PCI_MSIX_TABLE_OFFSET to the BAR value.
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Mary Higgins, Sri Rasiah
-HRB 21284 (AG Nürnberg)
+Bjorn
