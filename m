@@ -2,89 +2,57 @@ Return-Path: <SRS0=LhjH=US=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_MUTT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=0.3 required=3.0 tests=DATE_IN_PAST_03_06,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB8E2C31E5E
-	for <linux-ide@archiver.kernel.org>; Wed, 19 Jun 2019 13:52:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE088C31E5B
+	for <linux-ide@archiver.kernel.org>; Wed, 19 Jun 2019 15:04:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BAC3B2166E
-	for <linux-ide@archiver.kernel.org>; Wed, 19 Jun 2019 13:52:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1560952335;
-	bh=hclDymaNDOsDIbtMIl2LJFfnJSsWaLYy2U58GCdGL90=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=UFaWnBW2t4+UYrJM1u/JJF4/k2c0p4peBKv190BYvrnEfEtbG58+ksUL1NCZ1Zu2g
-	 0ZPd3AYEzij2+JStV3PnPKcq04S86d3VgUXTpRBH/LoFjacXkASwDljjnR5tlP2q2g
-	 dY2Nch9S+MgiCqPNLpLxzjdqOH/x6KVFeEcyGfHM=
+	by mail.kernel.org (Postfix) with ESMTP id 9ED0721874
+	for <linux-ide@archiver.kernel.org>; Wed, 19 Jun 2019 15:04:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726109AbfFSNwO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 19 Jun 2019 09:52:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47096 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726047AbfFSNwO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 19 Jun 2019 09:52:14 -0400
-Received: from localhost (173-25-83-245.client.mchsi.com [173.25.83.245])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5804121670;
-        Wed, 19 Jun 2019 13:52:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1560952333;
-        bh=hclDymaNDOsDIbtMIl2LJFfnJSsWaLYy2U58GCdGL90=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=B3jizonAV2P/nKMYqbPEgPAL9k/qW8ysXT3xel3+pdhOYp0ed6QM+M43NYXIgDS4R
-         TJwpRuRfyoYWC2o6XWzDHvFF1BZojHDXeUNX9GB+zXKfS/3M2bZW6qfeZgiw1jGLr+
-         ne2uDEFhd+dqrxNPw95QMPUZSaRWDeBIuK7jqKjw=
-Date:   Wed, 19 Jun 2019 08:52:12 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     Daniel Drake <drake@endlessm.com>, Jens Axboe <axboe@kernel.dk>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Keith Busch <keith.busch@gmail.com>, linux-ide@vger.kernel.org,
-        linux-nvme <linux-nvme@lists.infradead.org>,
-        Keith Busch <kbusch@kernel.org>,
-        Linux Upstreaming Team <linux@endlessm.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] PCI: Add Intel remapped NVMe device support
-Message-ID: <20190619135212.GB143205@google.com>
-References: <20190610074456.2761-1-drake@endlessm.com>
- <CAOSXXT7OFzHeTxNqZ1sS6giRxhDcrUUnVjURWBiFUc5T_8p=MA@mail.gmail.com>
- <CAD8Lp45djPU_Ur8uCO2Y5Sbek_5N9QKkxLXdKNVcvkr6rFPLUQ@mail.gmail.com>
- <CAOSXXT7H6HxY-za66Tr9ybRQyHsTdwwAgk9O2F=xK42MT8HsuA@mail.gmail.com>
- <20190613085402.GC13442@lst.de>
- <CAD8Lp47Vu=w+Lj77_vL05JYV1WMog9WX3FHGE+TseFrhcLoTuA@mail.gmail.com>
- <06c38b3e-603b-5bae-4959-9965ab40db62@suse.de>
- <CAD8Lp44rqGh3nmUOFhwq+SSxpJGuWvLFJ8sKtM0q1GeY0j4v9A@mail.gmail.com>
- <1f56c881-9005-f8ad-1557-5efd6e0ef535@suse.de>
+        id S1726958AbfFSPED (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 19 Jun 2019 11:04:03 -0400
+Received: from mail.excellent-customer-service.com ([185.216.140.110]:46167
+        "EHLO chulaseafood.com" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727002AbfFSPED (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jun 2019 11:04:03 -0400
+X-Greylist: delayed 3625 seconds by postgrey-1.27 at vger.kernel.org; Wed, 19 Jun 2019 11:04:02 EDT
+To:     linux-ide@vger.kernel.org
+Subject: =?UTF-8?B?wrcgICAgICAgICBjYW4geW91IGFzc2lzdCBtZT8=?=
+Message-ID: <dc07ddbe83e885adc78c5d54d941d4f7@airkinglimited.com>
+Date:   Wed, 19 Jun 2019 12:41:02 +0200
+From:   "Laura" <ansitaksi@verizon.net>
+Reply-To: turisnig@sina.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1f56c881-9005-f8ad-1557-5efd6e0ef535@suse.de>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain; format=flowed; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Jun 18, 2019 at 05:15:52PM +0200, Hannes Reinecke wrote:
-> On 6/18/19 10:06 AM, Daniel Drake wrote:
+Hi,
 
-> > We can probably also use these registers for MSI support. I
-> > started to experiment, doesn't quite work but I'll keep poking.
-> > The doc suggests there is a single MSI-X vector for the AHCI SATA
-> > device, and AHCI MSI-X Starting Vector (AMXV) has value 0x140 on
-> > this platform. No idea how to interpret that value. From
-> > experimentation, the AHCI SATA disk generates interrupts on vector
-> > 0.
-> > 
-> The 0x140 is probably the offset into the PCI config space where the
-> AHCI MSI-X vector table can be found ...
+Can you direct me to the owner/decision maker?   We’d like to send you
+more clients to help you grow your business.
 
-An MSI-X vector table is in memory space, not config space.  You'd
-have to look at PCI_MSIX_TABLE_BIR to find which BAR maps it, and then
-add PCI_MSIX_TABLE_OFFSET to the BAR value.
 
-Bjorn
+
+We can deliver to you real time, exclusive and consistent leads of people
+looking for your business.
+
+
+
+Who would be the right person to call, and what is the best number to reach
+them on?
+
+
+
+Thank you!
+
+
+
+Laura Gevins
+
