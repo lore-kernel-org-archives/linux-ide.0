@@ -1,58 +1,160 @@
-Return-Path: <SRS0=LhjH=US=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=CgUK=UT=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=0.3 required=3.0 tests=DATE_IN_PAST_03_06,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE088C31E5B
-	for <linux-ide@archiver.kernel.org>; Wed, 19 Jun 2019 15:04:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D67DC48BE1
+	for <linux-ide@archiver.kernel.org>; Thu, 20 Jun 2019 05:13:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9ED0721874
-	for <linux-ide@archiver.kernel.org>; Wed, 19 Jun 2019 15:04:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 266C520B1F
+	for <linux-ide@archiver.kernel.org>; Thu, 20 Jun 2019 05:13:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=endlessm-com.20150623.gappssmtp.com header.i=@endlessm-com.20150623.gappssmtp.com header.b="qqfZQy2C"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726958AbfFSPED (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 19 Jun 2019 11:04:03 -0400
-Received: from mail.excellent-customer-service.com ([185.216.140.110]:46167
-        "EHLO chulaseafood.com" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727002AbfFSPED (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jun 2019 11:04:03 -0400
-X-Greylist: delayed 3625 seconds by postgrey-1.27 at vger.kernel.org; Wed, 19 Jun 2019 11:04:02 EDT
-To:     linux-ide@vger.kernel.org
-Subject: =?UTF-8?B?wrcgICAgICAgICBjYW4geW91IGFzc2lzdCBtZT8=?=
-Message-ID: <dc07ddbe83e885adc78c5d54d941d4f7@airkinglimited.com>
-Date:   Wed, 19 Jun 2019 12:41:02 +0200
-From:   "Laura" <ansitaksi@verizon.net>
-Reply-To: turisnig@sina.com
+        id S1731301AbfFTFNq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 20 Jun 2019 01:13:46 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:46489 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731203AbfFTFNq (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 20 Jun 2019 01:13:46 -0400
+Received: by mail-pf1-f193.google.com with SMTP id 81so944664pfy.13
+        for <linux-ide@vger.kernel.org>; Wed, 19 Jun 2019 22:13:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=endlessm-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=x1MMOnOq8RstNP2fbCqAXnUxGL8fsmmbBQmO9ouhYxU=;
+        b=qqfZQy2CGsb+E8k+hNToCHi7yQ6EQT1ztzughkC4rZ7JZeS8tJxFUZHT3ESXaIYf13
+         UgniZjFtJNzZzllYugZzh2J0jll+rA/UjsUDGIDBFBz1XOYdoNPZfDjGQ6ccVzACDhlQ
+         fAgBwhr8ldmbQvxUiJ/rrucTy42SRYxvy1n88EHFjG+wsN2W22D5ydbGO4g9DGcZ77fL
+         tjqLQZNiZYsxR6kCib/BqTVZDnEjWI/2GpCXzNLuUp0Rmmhp7P3nomG3qPiQ6UFFeWv3
+         YIyCm6kvWIk9Yg/jt59IFnyxW6lTaGdJMA86sTL0qHAu5oVfqFIktUWro/775sloGPW5
+         X71A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=x1MMOnOq8RstNP2fbCqAXnUxGL8fsmmbBQmO9ouhYxU=;
+        b=Eod1M+h21fVPLKsoydoe0uw4flfTiRfB3+0YIzYEF2/8eXBzIfiK7GT0D1/1gxOA4N
+         MCIK9Mr/2k0oP0Y9/JxaQ/N6X3tgkfCVLGnN7ugky8mWULnf6d7PCHeNsso4fKMgvxO+
+         AI4B0CPfR9Jiqwdmx3YtwWYFoR4VkYYgOBR0/U4JL86pISmrncaFekNqKiQp9GWRNlOy
+         TGpubGQRP7PPB1NqIeI0INgtHoL7RxQ2Yplk0ZYqN+UwooHDixFn0do4gynFC5fKwv/D
+         uXlHbcjrrwSTdEp0EH6Spg5HahcGan4wM31wXgoxmKZxY37bkW6qVbFVeyFfK/3eV9ko
+         sDSw==
+X-Gm-Message-State: APjAAAW3y5MdNphg0NGmV0+UltPK/BTJ7D1cWlK+fWhH64XoWC+iA2F4
+        k7Axsbq7k/DoDqpXoTjAeQMFAw==
+X-Google-Smtp-Source: APXvYqwG59rjA9LYxKGaWy2LiC6hk6P16QRV4jC29nrowDYTzI56hJhNq74kFL956eFcU6GzoYReIw==
+X-Received: by 2002:a17:90a:216f:: with SMTP id a102mr1118147pje.29.1561007625289;
+        Wed, 19 Jun 2019 22:13:45 -0700 (PDT)
+Received: from limbo.local (123-204-46-122.static.seed.net.tw. [123.204.46.122])
+        by smtp.gmail.com with ESMTPSA id j2sm26383423pfn.135.2019.06.19.22.13.41
+        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
+        Wed, 19 Jun 2019 22:13:44 -0700 (PDT)
+From:   Daniel Drake <drake@endlessm.com>
+To:     axboe@kernel.dk, kbusch@kernel.org, hch@lst.de, sagi@grimberg.me
+Cc:     linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+        bhelgaas@google.com, linux-ide@vger.kernel.org, linux@endlessm.com,
+        linux-kernel@vger.kernel.org, hare@suse.de,
+        alex.williamson@redhat.com, dan.j.williams@intel.com
+Subject: [PATCH v2 0/5] Support Intel AHCI remapped NVMe devices
+Date:   Thu, 20 Jun 2019 13:13:28 +0800
+Message-Id: <20190620051333.2235-1-drake@endlessm.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain; format=flowed; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi,
+Intel SATA AHCI controllers support a strange mode where NVMe devices
+disappear from the PCI bus, and instead are remapped into AHCI PCI memory
+space.
 
-Can you direct me to the owner/decision maker?   We’d like to send you
-more clients to help you grow your business.
+Many current and upcoming consumer products ship with the AHCI controller
+in this "RAID" or "Intel RST Premium with Intel Optane System Acceleration"
+mode by default. Without Linux support for this remapped mode,
+the default out-of-the-box experience is that the NVMe storage device
+is inaccessible (which in many cases is the only internal storage device).
 
+In most cases, the SATA configuration can be changed in the BIOS menu to
+"AHCI", resulting in the AHCI & NVMe devices appearing as separate
+devices as you would ordinarily expect. Changing this configuration
+is the recommendation for power users because there are several limitations
+of the remapped mode (now documented in Kconfig help text).
 
+However, it's also important to support the remapped mode given that
+it is an increasingly common product default. We cannot expect ordinary
+users of consumer PCs to find out about this situation and then
+confidently go into the BIOS menu to change options.
 
-We can deliver to you real time, exclusive and consistent leads of people
-looking for your business.
+This patch set implements support for the remapped mode.
 
+v1 of these patches was originally posted by Dan Williams in 2016.
+https://marc.info/?l=linux-ide&m=147709610621480&w=2
+Since then:
 
+ - Intel stopped developing these patches & hasn't been responding to
+   my emails on this topic.
 
-Who would be the right person to call, and what is the best number to reach
-them on?
+ - More register documentation appeared in
+   https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/300-series-chipset-pch-datasheet-vol-2.pdf
 
+ - I tried Christoph's suggestion of exposing the devices on a fake PCI bus,
+   hence not requiring NVMe driver changes, but Bjorn Helgaas does not think
+   it's the right approach and instead recommends the approach taken here.
+   https://marc.info/?l=linux-pci&m=156034736822205&w=2
 
+ - More consumer devices have appeared with this setting as the default,
+   and with the decreasing cost of NVMe storage, it appears that a whole
+   bunch more consumer PC products currently in development are going to
+   ship in RAID/remapped mode, with only a single NVMe disk, which Linux
+   will otherwise be unable to access by default.
 
-Thank you!
+ - We heard from hardware vendors that this Linux incompatibility is
+   causing them to consider discontinuing Linux support on affected
+   products. Changing the BIOS setting is too much of a logistics
+   challenge.
 
+ - I updated Dan's patches for current kernels. I added docs and references
+   and incorporated the new register info. I incorporated feedback to push
+   the recommendation that the user goes back to AHCI mode via the BIOS
+   setting (in kernel logs and Kconfig help). And made some misc minor
+   changes that I think are sensible.
 
+ - I investigated MSI-X support. Can't quite get it working, but I'm hopeful
+   that we can figure it out and add it later. With these patches shared
+   I'll follow up with more details about that. With the focus on
+   compatibility with default configuration of common consumer products,
+   I'm hoping we could land an initial version without MSI support before
+   tending to those complications.
 
-Laura Gevins
+Dan Williams (2):
+  nvme: rename "pci" operations to "mmio"
+  nvme: move common definitions to pci.h
+
+Daniel Drake (3):
+  ahci: Discover Intel remapped NVMe devices
+  nvme: introduce nvme_dev_ops
+  nvme: Intel AHCI remap support
+
+ drivers/ata/Kconfig                  |  33 ++
+ drivers/ata/ahci.c                   | 173 ++++++++--
+ drivers/ata/ahci.h                   |  14 +
+ drivers/nvme/host/Kconfig            |   3 +
+ drivers/nvme/host/Makefile           |   3 +
+ drivers/nvme/host/intel-ahci-remap.c | 185 ++++++++++
+ drivers/nvme/host/pci.c              | 490 ++++++++++++++-------------
+ drivers/nvme/host/pci.h              | 145 ++++++++
+ include/linux/ahci-remap.h           | 140 +++++++-
+ 9 files changed, 922 insertions(+), 264 deletions(-)
+ create mode 100644 drivers/nvme/host/intel-ahci-remap.c
+ create mode 100644 drivers/nvme/host/pci.h
+
+-- 
+2.20.1
 
