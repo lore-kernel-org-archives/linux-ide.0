@@ -2,114 +2,120 @@ Return-Path: <SRS0=oJiQ=UY=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCE2AC4646C
-	for <linux-ide@archiver.kernel.org>; Tue, 25 Jun 2019 03:51:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2B1CC48BD5
+	for <linux-ide@archiver.kernel.org>; Tue, 25 Jun 2019 06:05:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B6D6820656
-	for <linux-ide@archiver.kernel.org>; Tue, 25 Jun 2019 03:51:41 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=endlessm-com.20150623.gappssmtp.com header.i=@endlessm-com.20150623.gappssmtp.com header.b="hPTBh4P3"
+	by mail.kernel.org (Postfix) with ESMTP id B3FA220656
+	for <linux-ide@archiver.kernel.org>; Tue, 25 Jun 2019 06:05:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726941AbfFYDvl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 24 Jun 2019 23:51:41 -0400
-Received: from mail-qt1-f194.google.com ([209.85.160.194]:35753 "EHLO
-        mail-qt1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726931AbfFYDvl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 24 Jun 2019 23:51:41 -0400
-Received: by mail-qt1-f194.google.com with SMTP id d23so1554058qto.2
-        for <linux-ide@vger.kernel.org>; Mon, 24 Jun 2019 20:51:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=endlessm-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=kXJGETA/jJ0RNhUF4386IT59bPJr3Q37TZWH9CEiV9k=;
-        b=hPTBh4P3Z7HxVQ1mJ762Mok61s1wxcWhUnvGdnKDOaJTWE83YvvY0cc1YDOaiqd7vi
-         P0dDipAcCaZ3dHpKLAGwgnGe0Wgaqa+bfKynMaz5tBjJfnuAqFAdL/EyJ1eBrWezVs18
-         ptnXHf7dxFDxwwoatvW15kdM1tOnFINndIdadOxn7Dk0tjxXq17X1zlMTKGMBeO3b8Zm
-         CibeF4oHmo8j+8hQhCu5ZgDkBrUCBcBMoI3D++8Yr59saKhcuEnuSpamgac/xxgwUq4C
-         THweH29RavF2tBZv3uTko+ba1VYlOn8w+7/GRUWWJgQ+XnCy35AbL6JKasygZeZRbaY2
-         XhEg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=kXJGETA/jJ0RNhUF4386IT59bPJr3Q37TZWH9CEiV9k=;
-        b=iVcs+ofQfajhWBW7t96v/06vQFFUp9nh5utHvvNhUTFDvIllArRHl+uUrqs4OSLOwV
-         /hTtp90iVQgJv6Q2twA8nJtAlsH2IdOEIBfdPGmRkO07HVRaZWt2QD/MtZdkIG1VVUDN
-         95OtWHb1nzhv7AomFLeejdwOvL0uHNZeegmXnh5F+8iczg162ejo66M8Wa4V0nuqv8Mb
-         WDHUfdYfiguiXuCYQNxrvR2wxwqfW6MiJM5NdK7USDh9JdFavw2V1mMIDnKxW35VTom7
-         ugJpr31FLSohsTGBr8ZezBfqTS9zhdGgOt7BY6trCVzyi5cNZ+iXqpg4nEVYK/qJqN09
-         HH7A==
-X-Gm-Message-State: APjAAAXJHE3vgljvjQsccl+vCTrKeCb+ecRrq5WqZc/5KtaGHfPsfOhk
-        Su6dSma7yFb4m1cW1ymoqZk75cnTQPg9oBD2aTImwg==
-X-Google-Smtp-Source: APXvYqysYiUZoWD/Jf4xCDTfTLYGuMOk+c5m665oC/suZNO5Km6hGfXjFCr3fn7wYiYo6ZCFPd5whrK8A0sCv8hhNSU=
-X-Received: by 2002:a0c:9807:: with SMTP id c7mr30275759qvd.26.1561434700099;
- Mon, 24 Jun 2019 20:51:40 -0700 (PDT)
+        id S1727986AbfFYGFH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 25 Jun 2019 02:05:07 -0400
+Received: from mx2.suse.de ([195.135.220.15]:43712 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726495AbfFYGFH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 25 Jun 2019 02:05:07 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 57644AC2E;
+        Tue, 25 Jun 2019 06:05:05 +0000 (UTC)
+Subject: Re: [PATCH] libata: don't request sense data on !ZAC ATA devices
+To:     Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@kernel.org>,
+        kernel-team@fb.com
+References: <20190624163250.GP657710@devbig004.ftw2.facebook.com>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <1101094a-6a8e-22c8-01f9-6dd7596ebc51@suse.de>
+Date:   Tue, 25 Jun 2019 08:05:04 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.1
 MIME-Version: 1.0
-References: <20190620051333.2235-1-drake@endlessm.com> <20190620051333.2235-3-drake@endlessm.com>
- <20190620061038.GA20564@lst.de> <CAD8Lp45ua=L+ixO+du=Njhy+dxjWobWA+V1i+Y2p6faeyt1FBQ@mail.gmail.com>
- <20190624061617.GA2848@lst.de>
-In-Reply-To: <20190624061617.GA2848@lst.de>
-From:   Daniel Drake <drake@endlessm.com>
-Date:   Tue, 25 Jun 2019 11:51:28 +0800
-Message-ID: <CAD8Lp464B0dOd+ayF_AK4DRzHEpiaSbUOXjVJ5bq5zMXq=BBKQ@mail.gmail.com>
-Subject: Re: [PATCH v2 2/5] nvme: rename "pci" operations to "mmio"
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        linux-nvme <linux-nvme@lists.infradead.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-ide@vger.kernel.org,
-        Linux Upstreaming Team <linux@endlessm.com>,
-        Linux Kernel <linux-kernel@vger.kernel.org>,
-        Hannes Reinecke <hare@suse.de>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Dan Williams <dan.j.williams@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20190624163250.GP657710@devbig004.ftw2.facebook.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, Jun 24, 2019 at 2:16 PM Christoph Hellwig <hch@lst.de> wrote:
-> IFF we want to support it it has to be done at the PCIe layer.  But
-> even that will require actual documentation and support from Intel.
->
-> If Intel still believes this scheme is their magic secret to control
-> the NVMe market and give themselves and unfair advantage over their
-> competitors there is not much we can do.
+On 6/24/19 6:32 PM, Tejun Heo wrote:
+> ZAC support added sense data requesting on error for both ZAC and ATA
+> devices. This seems to cause erratic error handling behaviors on some
+> SSDs where the device reports sense data availability and then
+> delivers the wrong content making EH take the wrong actions.  The
+> failure mode was sporadic on a LITE-ON ssd and couldn't be reliably
+> reproduced.
+> 
+> There is no value in requesting sense data from non-ZAC ATA devices
+> while there's a significant risk of introducing EH misbehaviors which
+> are difficult to reproduce and fix.  Let's do the sense data dancing
+> only for ZAC devices.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Hannes Reinecke <hare@kernel.org>
+> ---
+>  drivers/ata/libata-eh.c |    8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
+> 
+Ah well. I hoped those bothering to implement sense data would do it
+properly; seems I've been mistaken.
 
-Since the 2016 discussion, more documentation has been published:
-https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/300-series-chipset-pch-datasheet-vol-2.pdf
-Chapter 15 is entirely new, and section 15.2 provides a nice clarity
-improvement of the magic regs in the AHCI BAR, which I have used in
-these patches to clean up the code and add documentation in the header
-(see patch 1 in this series, ahci-remap.h).
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-I believe there's room for further improvement in the docs here, but
-it would be nice to know what you see as the blocking questions or
-documentation gaps that would prevent us from continuing to develop
-the fake PCI bridge approach
-(https://marc.info/?l=linux-pci&m=156015271021614&w=2). We are going
-to try and push Intel on this via other channels to see if we can get
-a contact to help us, so it would be useful if I can include a
-concrete list of what we need.
+Cheers,
 
-Bearing in mind that we've already been told that the NVMe device
-config space is inaccessible, and the new docs show exactly how the
-BIOS enforces such inaccessibility during early boot, the remaining
-points you mentioned recently were:
-
- b) reset handling, including the PCI device removal as the last
-    escalation step
- c) SR-IOV VFs and their management
- d) power management
-
-Are there other blocking questions you would require answers to?
-
-Thanks,
-Daniel
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Mary Higgins, Sri Rasiah
+HRB 21284 (AG Nürnberg)
