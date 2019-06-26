@@ -1,188 +1,142 @@
-Return-Path: <SRS0=oJiQ=UY=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=f9YD=UZ=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FD5BC48BD5
-	for <linux-ide@archiver.kernel.org>; Tue, 25 Jun 2019 20:51:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52267C48BD6
+	for <linux-ide@archiver.kernel.org>; Wed, 26 Jun 2019 08:45:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 15659205ED
-	for <linux-ide@archiver.kernel.org>; Tue, 25 Jun 2019 20:51:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26201208E3
+	for <linux-ide@archiver.kernel.org>; Wed, 26 Jun 2019 08:45:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k18QPogO"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="uCmi320p"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726562AbfFYUvL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 25 Jun 2019 16:51:11 -0400
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:35896 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726053AbfFYUvL (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 25 Jun 2019 16:51:11 -0400
-Received: by mail-pf1-f196.google.com with SMTP id r7so37504pfl.3;
-        Tue, 25 Jun 2019 13:51:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=xg8gT4d8BsI9N6+GZDzqBQ1I7Ia/w6sfBkfg2K0V9ss=;
-        b=k18QPogOlBdGd3RHyi+jwiMf5++nNuDxK7INLU9BVo33iK6zdrW4hKUAnOAl389EFn
-         C+LTLX8VqOnnrXSoE6qMqL5sZ0qcbZ3A6/wW80Rawy0QeMmw6VaPp+/4DRT4Vy3mEBsl
-         3bUWroXTPlm5Lb2VIJPoEkL6oZXQIvli+4rQbLNZqXvHcxsRnTEIp7Laqy2nwHQlWQHA
-         /a5HMwA7rSDpVx88wgVE1mjORVEMi337ClHks9gllJo65X7IRTev2eXNSyc+V5NlAb8U
-         SOXQ6I1KPFHFkPeWXWETLJ5mvIN2Wp8uSr+6rjhsZLsMCucHuB5BWwD4kGo8kKnjci/Y
-         eiQA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=xg8gT4d8BsI9N6+GZDzqBQ1I7Ia/w6sfBkfg2K0V9ss=;
-        b=Ov7mZQHsT24Ka2RqPFXBsXIaBymdXin/SsrbuU+v4CWC65ARDEOtWgYIFT3hEZw0Zl
-         /I+ZaSW01fRnD5Qqw1YX88sxwvyfZsUNLLTvSH4eS4kUtV8A5H2WFnoohOUOsTb08oF1
-         yCJkiYuRoB69wyrSBSg0NSu9Iy+Lq7jWiSZMsIEkLWEX2KHOUYITTJnBPxeIRVVyhdgh
-         T1cFzZ/btEA2D+ih5f2XG8ZzS6dyEZF3x1YD1uz7FbYpybZegI1M3asHP4T7tdE9M/Ls
-         TJEZ1drKofm42x6siBzwhDMvCQPrkov1MAZZbTvqaDww5Hy8z/rZQP//vodI+jGjugMU
-         HWuQ==
-X-Gm-Message-State: APjAAAVqorXJulrmliDkhoB/HTPp4sbU+0HRg9GO0LLO1Gnlj9Bb/+mW
-        5qQSl1IasMeGW25q3Sydksc=
-X-Google-Smtp-Source: APXvYqxdstKiGO59oQbXQCVzl9UHJI0M25gqfX9RWSzQDGtCzwFuDQxlNaAybIybjC4nL3SFM9dKZg==
-X-Received: by 2002:a63:1208:: with SMTP id h8mr39289527pgl.377.1561495870556;
-        Tue, 25 Jun 2019 13:51:10 -0700 (PDT)
-Received: from ?IPv6:2001:df0:0:200c:2cea:a92d:ab5a:6f7f? ([2001:df0:0:200c:2cea:a92d:ab5a:6f7f])
-        by smtp.gmail.com with ESMTPSA id c33sm8859804pgl.70.2019.06.25.13.51.08
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 25 Jun 2019 13:51:10 -0700 (PDT)
-Subject: Re: [PATCH RFC 1/2] m68k/atari: add platform device for Falcon IDE
- port
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     Linux/m68k <linux-m68k@vger.kernel.org>, linux-ide@vger.kernel.org,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-References: <CAMuHMdUcUqWWGNngNV3EpEq5wSsf5qTVeZvTB9gX1e26Jrq1xA@mail.gmail.com>
- <1561063642-13900-2-git-send-email-schmitzmic@gmail.com>
- <CAMuHMdWMb2MFRN6ug3Jt3MROAs0nhYYC_RDexu876n9PBRZOiQ@mail.gmail.com>
-From:   Michael Schmitz <schmitzmic@gmail.com>
-Message-ID: <92de0ad7-731e-c898-0cde-4265fb737d59@gmail.com>
-Date:   Wed, 26 Jun 2019 08:51:05 +1200
+        id S1725954AbfFZIpS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 26 Jun 2019 04:45:18 -0400
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:50632 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725876AbfFZIpS (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 26 Jun 2019 04:45:18 -0400
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id x5Q8i5Ep068189;
+        Wed, 26 Jun 2019 03:44:05 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1561538645;
+        bh=LtR8YqPAxJoiiaQr+rKC4/jbAgDp9J8cOhOylP72rFk=;
+        h=To:CC:From:Subject:Date;
+        b=uCmi320peXxY+9VVMxlqGczAuesFTOnvNiO719Tx3/VfLpv8kLRtAVEsLt4v9TA7u
+         5S+K5IDrMWs93S4SgZ9ClOyFe6U6KQdl8IHCb3oj1q3y7mPbMhe7PSkHAchIXdmQDp
+         J4CK53JrZx6ou4nwx9Ry5ka0o64SD8lcxWmsRaA0=
+Received: from DFLE115.ent.ti.com (dfle115.ent.ti.com [10.64.6.36])
+        by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id x5Q8i5lN006920
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 26 Jun 2019 03:44:05 -0500
+Received: from DFLE113.ent.ti.com (10.64.6.34) by DFLE115.ent.ti.com
+ (10.64.6.36) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5; Wed, 26
+ Jun 2019 03:44:03 -0500
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DFLE113.ent.ti.com
+ (10.64.6.34) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1713.5 via
+ Frontend Transport; Wed, 26 Jun 2019 03:44:03 -0500
+Received: from [192.168.2.6] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id x5Q8hxVh129407;
+        Wed, 26 Jun 2019 03:44:00 -0500
+To:     <hch@lst.de>, "hdegoede@redhat.com" <hdegoede@redhat.com>
+CC:     <axboe@kernel.dk>, <iommu@lists.linux-foundation.org>,
+        <linux-ide@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <rmk+kernel@arm.linux.org.uk>, "Nori, Sekhar" <nsekhar@ti.com>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Tony Lindgren <tony@atomide.com>
+From:   Roger Quadros <rogerq@ti.com>
+Subject: SATA broken with LPAE
+Message-ID: <16f065ef-f4ac-46b4-de2a-6b5420ae873a@ti.com>
+Date:   Wed, 26 Jun 2019 11:43:59 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.6.1
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdWMb2MFRN6ug3Jt3MROAs0nhYYC_RDexu876n9PBRZOiQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Geert,
+Hi Christoph / Hans,
 
-On 25/06/19 7:51 PM, Geert Uytterhoeven wrote:
-> Hi Michael,
->
-> On Thu, Jun 20, 2019 at 10:47 PM Michael Schmitz <schmitzmic@gmail.com> wrote:
->> Autoloading of Falcon IDE driver modules requires converting
->> these drivers to platform drivers.
->>
->> Add platform device for Falcon IDE interface in Atari platform
->> setup code in preparation for this.
->>
->> Add Falcon IDE base address in Atari hardware address header.
->>
->> Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
-> Thanks for your patch!
-Thanks for your feedback!
->
->> --- a/arch/m68k/atari/config.c
->> +++ b/arch/m68k/atari/config.c
->> @@ -896,6 +896,21 @@ static void isp1160_delay(struct device *dev, int delay)
->>   };
->>   #endif
->>
->> +#if IS_ENABLED(CONFIG_PATA_FALCON)
-> I wouldn't bother making this depend on a config symbol, as it is
-> builtin hardware (EtherNEC/NAT isn't), and prevents compiling a module
-> later.
+SATA has been broken on TI platforms with LPAE, on systems with RAM addresses > 32-bits,
+(e.g. DRA7 rev.H+) since v4.18.
 
-Fair enough - not sure how much it saves in kernel size when this code 
-isn't compiled (falconide does not depend on it, and that's my preferred 
-choice due to interrupt support).
+The commit at which it breaks is
+21e07dba9fb1179148089d611fc9e6e70d1887c3 ("scsi: reduce use of block bounce buffers").
 
-IDE is builtin hardware only for Falcon, not TT BTW. Building the kernel 
-for TT, all of IDE support may well be omitted altogether.
+The effect is that the SATA controller starts to see DMA addresses
+above 32-bit which it does not support.
 
-> arch/m68k/amiga/platform.c has everything unconditional.
-> I know there's such a dependency for SCSI, perhaps it should be removed?
+Could you please shed some light on how it is supposed to work if
+we don't call blk_queue_bounce_limit() for devices that can do only 32-bit DMA
+on a system that has addressable RAM above 32-bit Physical?
 
-SCSI isn't present on the Mega ST/e, so we would not need the SCSI 
-platform device there. Not sure whether it's still possible to boot 
-recent kernels on that hardware though.
+The below patch fixes it. Is this the right thing to do?
 
-I'll have to try the bloat-o-meter for these changes.
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 3aab2e3d57f3..b925dc54cfa5 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -62,6 +62,9 @@ static int ahci_probe(struct platform_device *pdev)
+ 	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
+ 		hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
+ 
++	if (of_device_is_compatible(dev->of_node, "snps,dwc-ahci"))
++		hpriv->flags |= AHCI_HFLAG_32BIT_ONLY;
++
+ 	port = acpi_device_get_match_data(dev);
+ 	if (!port)
+ 		port = &ahci_port_info;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 65d0a10c76ad..9083c7b89dfc 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1750,6 +1750,21 @@ static int scsi_map_queues(struct blk_mq_tag_set *set)
+ 	return blk_mq_map_queues(&set->map[HCTX_TYPE_DEFAULT]);
+ }
+ 
++static u64 scsi_calculate_bounce_limit(struct Scsi_Host *shost)
++{
++	struct device *dma_dev = shost->dma_dev;
++	u64 bounce_limit = 0xffffffff;
++
++	if (shost->unchecked_isa_dma)
++		return BLK_BOUNCE_ISA;
++
++	if (dma_dev && dma_dev->dma_mask)
++		bounce_limit = (u64)dma_max_pfn(dma_dev) << PAGE_SHIFT;
++
++	return bounce_limit;
++}
++
+ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+ {
+ 	struct device *dev = shost->dma_dev;
+@@ -1769,8 +1784,7 @@ void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+ 	}
+ 
+ 	blk_queue_max_hw_sectors(q, shost->max_sectors);
+-	if (shost->unchecked_isa_dma)
+-		blk_queue_bounce_limit(q, BLK_BOUNCE_ISA);
++	blk_queue_bounce_limit(q, scsi_calculate_bounce_limit(shost));
+ 	blk_queue_segment_boundary(q, shost->dma_boundary);
+ 	dma_set_seg_boundary(dev, shost->dma_boundary);
 
->
->> +static const struct resource atari_falconide_rsrc[] __initconst = {
->> +       {
->> +               .flags = IORESOURCE_MEM,
->> +               .start = FALCON_IDE_BASE,
->> +               .end   = FALCON_IDE_BASE+0x40,
->> +       },
->> +       {
->> +               .flags = IORESOURCE_IRQ,
->> +               .start = IRQ_MFP_FSCSI,
->> +               .end   = IRQ_MFP_FSCSI,
->> +       },
->> +};
->> +#endif
->> +
->>   int __init atari_platform_init(void)
->>   {
->>          int rv = 0;
->> @@ -939,6 +954,11 @@ int __init atari_platform_init(void)
->>                          atari_scsi_tt_rsrc, ARRAY_SIZE(atari_scsi_tt_rsrc));
->>   #endif
->>
->> +#if IS_ENABLED(CONFIG_PATA_FALCON)
->> +       if (ATARIHW_PRESENT(IDE))
->> +               platform_device_register_simple("pata_falcon", -1,
->> +                       atari_falconide_rsrc, ARRAY_SIZE(atari_falconide_rsrc));
->> +#endif
->>          return rv;
->>   }
->>
->> diff --git a/arch/m68k/include/asm/atarihw.h b/arch/m68k/include/asm/atarihw.h
->> index 5330082..4bea923 100644
->> --- a/arch/m68k/include/asm/atarihw.h
->> +++ b/arch/m68k/include/asm/atarihw.h
->> @@ -813,6 +813,12 @@ struct MSTE_RTC {
->>   #define mste_rtc ((*(volatile struct MSTE_RTC *)MSTE_RTC_BAS))
->>
->>   /*
->> +** Falcon IDE interface
->> +*/
->> +
->> +#define FALCON_IDE_BASE        0xfff00000
-> Is it worth having this as a #define in a global header file?
-> You still need a hardcoded region size in config.c.
-
-Probably not.
-
-I'm still incubating a hare-brained scheme to allow use of IDE 
-interrupts in pata_falcon without the use of the old locking scheme, and 
-might need to peek at the IDE interrupt status from the shared interrupt 
-handler for that. But that's gone on the back burner, so I can move the 
-#define into config.c instead.
-
-Cheers,
-
-     Michael
-
-
->
-> Gr{oetje,eeting}s,
->
->                          Geert
->
+cheers,
+-roger
+-- 
+Texas Instruments Finland Oy, Porkkalankatu 22, 00180 Helsinki.
+Y-tunnus/Business ID: 0615521-4. Kotipaikka/Domicile: Helsinki
