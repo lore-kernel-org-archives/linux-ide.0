@@ -2,102 +2,93 @@ Return-Path: <SRS0=mCBl=U2=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_NEOMUTT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.3 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
+	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0D7EC48BD7
-	for <linux-ide@archiver.kernel.org>; Thu, 27 Jun 2019 10:09:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49645C48BD7
+	for <linux-ide@archiver.kernel.org>; Thu, 27 Jun 2019 17:34:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ABE3D2085A
-	for <linux-ide@archiver.kernel.org>; Thu, 27 Jun 2019 10:09:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20B832064A
+	for <linux-ide@archiver.kernel.org>; Thu, 27 Jun 2019 17:34:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=armlinux.org.uk header.i=@armlinux.org.uk header.b="JGdVUKup"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="geEroXRs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726314AbfF0KJe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 27 Jun 2019 06:09:34 -0400
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:56390 "EHLO
-        pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726308AbfF0KJe (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 27 Jun 2019 06:09:34 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=armlinux.org.uk; s=pandora-2019; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=86sT2C5RZNFyRX03RBPoy/vTuuItxxevdJz6WedXrwM=; b=JGdVUKupW3eMIoDKOpLn5nBRI
-        a+BSaNKyJ3m6YvkiyJCvu0A1tczoxqVOxhRcQYDtmPRFKBaTkhI3f8jInwKEh/ms3i/ptA8IK56UJ
-        fIDTcccGbiM68yOyUb50YQgaQZaa9//9qpYeG7jEby2HgppwlBESvKY8VBgMVtoAc09NzxvTfWMeN
-        RjJ/z8MmSaCBzQj4EBJj/EvVbN9ypAWCR6hYeSjloqbfNhpjglQxJzy+bUEyS+dbsuQ+Zjl+0tvWN
-        hnQdtNZ/AAVu8QG4doa3Se8om4mIIEFrMPUKr4DCLKsKUcoDABJPyZdZJG8rw3yQ25XKQQEM9qxfH
-        NkINpPtew==;
-Received: from shell.armlinux.org.uk ([fd8f:7570:feb6:1:5054:ff:fe00:4ec]:60048)
-        by pandora.armlinux.org.uk with esmtpsa (TLSv1.2:ECDHE-RSA-AES256-GCM-SHA384:256)
-        (Exim 4.90_1)
-        (envelope-from <linux@armlinux.org.uk>)
-        id 1hgRLH-0002Gx-6T; Thu, 27 Jun 2019 11:09:23 +0100
-Received: from linux by shell.armlinux.org.uk with local (Exim 4.89)
-        (envelope-from <linux@shell.armlinux.org.uk>)
-        id 1hgRLD-0000Tg-BR; Thu, 27 Jun 2019 11:09:19 +0100
-Date:   Thu, 27 Jun 2019 11:09:19 +0100
-From:   Russell King - ARM Linux admin <linux@armlinux.org.uk>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Roger Quadros <rogerq@ti.com>,
-        "hdegoede@redhat.com" <hdegoede@redhat.com>, axboe@kernel.dk,
-        iommu@lists.linux-foundation.org, linux-ide@vger.kernel.org,
-        linux-omap@vger.kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, "Nori, Sekhar" <nsekhar@ti.com>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Tony Lindgren <tony@atomide.com>
-Subject: Re: SATA broken with LPAE
-Message-ID: <20190627100919.jgvtkhbpbml342cp@shell.armlinux.org.uk>
-References: <16f065ef-f4ac-46b4-de2a-6b5420ae873a@ti.com>
- <20190626125325.GA4744@lst.de>
- <20190627090753.b5xfpnsicynnqj5c@shell.armlinux.org.uk>
- <20190627091530.GA11809@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190627091530.GA11809@lst.de>
-User-Agent: NeoMutt/20170113 (1.7.2)
+        id S1726572AbfF0ReA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 27 Jun 2019 13:34:00 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:34459 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726498AbfF0ReA (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 27 Jun 2019 13:34:00 -0400
+Received: by mail-pf1-f195.google.com with SMTP id c85so1587950pfc.1;
+        Thu, 27 Jun 2019 10:34:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=rm4Hty80lq/K/gNv/Wu+JYcakoFS865X/QwhUMnSBLQ=;
+        b=geEroXRsRRS0uQfg7ei2HTk4MvUG6BZ2TCUOkuMG09wlpLIQaVJt8dngZeFm+aa/Em
+         lNpcmYDkRC87m5xmo5llMWl1EcA+Jx2Co3GZLz5u7ZMZVz+RW2K8WErcbKUtvEHco5Pz
+         gve/9gVGjIApQmEPZa8/njHGb0EseWQr8CiHcUWtSbY4pWvChxjhjk77Z0PaZrD+ENxL
+         LuSso5Lpitr6TSo6ISWwhdp3LFc7hsTEs4jcLW71OmBP3mQy7cBkzl91SD7bR13ht9h6
+         rDASDyT/TynTDN+ExUIgaVLRU/q3YJIZxFXiSHGD5JMlVcaYt2VP6xiKDl1fSHRHgTNx
+         GGpQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=rm4Hty80lq/K/gNv/Wu+JYcakoFS865X/QwhUMnSBLQ=;
+        b=Uvur0CYA8W9QuWKtn/aXaGOl8oTJMMr/Jn9vjSYCTF36Ah3jmKOFXkm19N6LRRDJRT
+         IAISqK+/JHWp5L3HQrvPZqnsKcCJBZTdmpH1CfvHKYY4WWMB579vF/JDHZoIqkzP8MjW
+         vdvx+VWZEefJUD1zq/3fnbSBzmLrMmVB3snsHlFyxPLVRX2/RmgkbZMo9qyaiZKfEwBl
+         vhV7PQkpOuy/vWBK3sbyIa/XVw1f7C0O0VOVMU/JTntkGA33I7b7oKPYxIZGuENr+o9e
+         hq52qPe+6ZpfXjgEB0+dq17SsQ+B0rUaLSdR7mn5Ip1lHWH9Go9lfqNDLd3+KNexn+Ts
+         Kq5A==
+X-Gm-Message-State: APjAAAWZfqqv++lMRB7WQPzCMLEPRRMsrtQ10HUW344VDCpwad2hElih
+        7A75ZeKZimspR5gNeA47Glo=
+X-Google-Smtp-Source: APXvYqzYEADeNpCqcwmyRjIl244F96hTAtvqwROhEGx/WCLpGb4SpknIAr0RW9Wm5avWowOZLRUKWw==
+X-Received: by 2002:a65:4383:: with SMTP id m3mr4706076pgp.435.1561656839698;
+        Thu, 27 Jun 2019 10:33:59 -0700 (PDT)
+Received: from hfq-skylake.ipads-lab.se.sjtu.edu.cn ([202.120.40.82])
+        by smtp.googlemail.com with ESMTPSA id o2sm2638615pgp.74.2019.06.27.10.33.57
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 27 Jun 2019 10:33:59 -0700 (PDT)
+From:   Fuqian Huang <huangfq.daxian@gmail.com>
+Cc:     Fuqian Huang <huangfq.daxian@gmail.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 02/87] ata: acard-ahci: Remove call to memset after dmam_alloc_coherent
+Date:   Fri, 28 Jun 2019 01:33:46 +0800
+Message-Id: <20190627173346.1933-1-huangfq.daxian@gmail.com>
+X-Mailer: git-send-email 2.11.0
+To:     unlisted-recipients:; (no To-header on input)
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Jun 27, 2019 at 11:15:30AM +0200, Christoph Hellwig wrote:
-> On Thu, Jun 27, 2019 at 10:07:53AM +0100, Russell King - ARM Linux admin wrote:
-> > dmabounce has only ever been used with specific devices that have weird
-> > setups.  Otherwise, we've never expected what you describe on ARM.  I
-> > also don't recognise your assertion about the way the DMA API should
-> > behave as ever having been documented as a requirement for architectures
-> > to implement.
-> 
-> That requirement has basically always been there since at least the
-> 2.6.x days.  The history here is that when 64-bit architectures showed
-> up they all had iommus, so this wasn't an issue.  Next was x86 with
-> highmem, which added special bounce buffering for block I/O and networking
-> only.  Then ia64 showed up that didn't always have an iommu and swiotlb
-> was added as a "software IOMMU".  At this point we had to bounce buffering
-> schemes for block and networking, while everything else potentially
-> DMAing to higher memory relied on swiotlb, which was picked up by
-> basically every architecture that could have memory not covered by a
-> 32-bit mask and didn't have an iommu.
+In commit af7ddd8a627c
+("Merge tag 'dma-mapping-4.21' of git://git.infradead.org/users/hch/dma-mapping"),
+dmam_alloc_coherent has already zeroed the memory.
+So memset is not needed.
 
-If it wasn't documented...
+Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
+---
+ drivers/ata/acard-ahci.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-> Except it seems arm never did
-> that and has been lucky as people didn't try anything that is not
-> block or networking on their extended physical address space.
-
-Because no one knew that the requirement had been introduced, and we've
-been reliant on all the code you've been stripping out.
-
-You're now causing regressions on 32-bit ARM, so you get to fix it.
-
+diff --git a/drivers/ata/acard-ahci.c b/drivers/ata/acard-ahci.c
+index b1b49dbd0b14..85357f27a66b 100644
+--- a/drivers/ata/acard-ahci.c
++++ b/drivers/ata/acard-ahci.c
+@@ -344,7 +344,6 @@ static int acard_ahci_port_start(struct ata_port *ap)
+ 	mem = dmam_alloc_coherent(dev, dma_sz, &mem_dma, GFP_KERNEL);
+ 	if (!mem)
+ 		return -ENOMEM;
+-	memset(mem, 0, dma_sz);
+ 
+ 	/*
+ 	 * First item in chunk of DMA memory: 32-slot command table,
 -- 
-RMK's Patch system: https://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line in suburbia: sync at 12.1Mbps down 622kbps up
-According to speedtest.net: 11.9Mbps down 500kbps up
+2.11.0
+
