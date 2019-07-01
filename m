@@ -2,135 +2,80 @@ Return-Path: <SRS0=Q01X=U6=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6980EC5B578
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 930A9C4646D
 	for <linux-ide@archiver.kernel.org>; Mon,  1 Jul 2019 22:02:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 33E36206E0
+	by mail.kernel.org (Postfix) with ESMTP id 5F78C21479
 	for <linux-ide@archiver.kernel.org>; Mon,  1 Jul 2019 22:02:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZGQlQswf"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OakYK1iX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726468AbfGAWCn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S1726434AbfGAWCn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Mon, 1 Jul 2019 18:02:43 -0400
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:43202 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726434AbfGAWCn (ORCPT
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:39383 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726439AbfGAWCn (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Mon, 1 Jul 2019 18:02:43 -0400
-Received: by mail-pf1-f196.google.com with SMTP id i189so7194788pfg.10;
-        Mon, 01 Jul 2019 15:02:42 -0700 (PDT)
+Received: by mail-pl1-f195.google.com with SMTP id b7so8015917pls.6;
+        Mon, 01 Jul 2019 15:02:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=m/RGaWxbD3ervCUN5FYVhOmz0L/VzhJqQQ8iqyX/oHA=;
-        b=ZGQlQswf1RukQBL/Pjan9SIAPzVFm29rh3S4XfVsUMUqe3oqy4OFhs0TVqUf+g2dZj
-         nAC6NEr71OjKdjY3+8pKN2Vwm8hb4sSDooJAxpemOJNPT+aB2xyeAvmCd96bw3r1wvZe
-         FViui3uQnEtfQeWWU1t7Rh0T/3vaEUgJAtZfcSJ5eiiASHYSgRbSFvcLa6SgMYdqaz1X
-         pMuWxgklvSHvzSpJl8Y1Q/R8rhBxQrLvGFIbcynrzUr+uz0buOYUihIl9O87dKFO8Uhj
-         g0CuGM/gwh8Tz2ymBBB1SYrUfEYI2J70tMDcKcby3htXNbYpZC7sfKGTuwiNTMn8oRnK
-         4LIA==
+        h=from:to:cc:subject:date:message-id;
+        bh=N9BhP6AJGX4/ArJ/JFMbWVXhcLnmYVxtC1mz1SEKSR8=;
+        b=OakYK1iXiKQf8QvZ7w4rRmn6PPHBc/O4jFynWpn7nqUymMz8BwRx9/p/QGXfm7LlP7
+         UBVXRtZy0IdaUvkJqZfdlfuLWdCOpB3jhEQe+oopPU2jbnIgEcXVNVkt9Aqt0ySPREcI
+         y0bVdq0mEyclywJybg/c0ADTJZGQyBgAjlLRtRayPbtwy7y2BCfdMZ/HtXpdz69+VDNF
+         cY81PEcxKtI6XsvPXOxk2Z0IUlWddtUveBPN+30gR5EU3TG8F/AG0J2r7+tT/UbN3SsM
+         7HMadP+YBdwECnvToRr7TxA3wYAeDgLjTWGqDCN1XBl+LF4oe6LBJvTFaT4KtbGfZYSd
+         Db8Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=m/RGaWxbD3ervCUN5FYVhOmz0L/VzhJqQQ8iqyX/oHA=;
-        b=jVq2ssLiJIpDti4T1rs3LJeSa/Cf+UxqiYj4Wb2/dgnyXQUGVXyN7aJFxSmR/tWtZT
-         Xnmexr5HtH1iMjBVV6AhToBt2D1eZRFr9XAtkThqrV/tr/2F4LWZwoHPz+ktQojj/vty
-         7j6sUe9G7BB2x6b2Li4gGXviBxTW1qgVFScS7nQp7eh4mcIU6Aq/b7bxWeWebTt5jLq1
-         iv9dNSXnlbvIYuIxxn0bVJ9rMijlVWkLyprWN7b6m5N8CEni6WtcpZB0kvLkmiB0fS/G
-         kF2UfKebnqofg8x0nlKbcYG4UUIUvatM3Xhdob7V58xg7XfqHa2hvYWgP+D4nIVviECy
-         QrOA==
-X-Gm-Message-State: APjAAAVDYYVJzk8PJgtyWgblkPp8JwHrSSsLxlLXalQJ3A61lvL4nsFQ
-        HlM4cZ6q/JzPvKXyqbvY4Ps=
-X-Google-Smtp-Source: APXvYqyn/gwYB5FZo/4K9YLOpqBR8NGU4uk9OrVuvx/Lf+SrQxVYJBfrN0HiC0OMCVX7CMRoU4x7yw==
-X-Received: by 2002:a63:d410:: with SMTP id a16mr25946762pgh.122.1562018562603;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=N9BhP6AJGX4/ArJ/JFMbWVXhcLnmYVxtC1mz1SEKSR8=;
+        b=ktBayHEHdL86f2H+kXggEJsctLydk0DPMoJ5vWkTItZJG2uYOoJG8V2IJBnUkAuWoM
+         M42iHykkx+kcp8+BS9jCz03nt1bW0Oxm5kQEIztUO+db4DxFvmBduzF9AnApsx4Aj6Ef
+         5g3XXCWZJqlWy/ufAvPupSz0LroxZ4e+b6DjfLkUpbh4tf8Cp4Gx3xd0/A7DUsPMxueT
+         /nji/iIgPKbGsbgil5gR8npsF3szTzqxBNUx8SaGngyNjnusWeYu/i3tfr08FSDMtkej
+         CaedJQimD4H7k6A/xA+CC0yaNqH2hC3+tFWVE3LkgaGGBbZKSR/Q0OqT0ONtl4exM8ZY
+         LvDA==
+X-Gm-Message-State: APjAAAWnJc26VRtn4193NBFs2LvuJ94Mvd6Y7e2Sf6h8IFOKFpLRcWOi
+        EgDDcy54deZpxPGudg4j5lcpFj/m
+X-Google-Smtp-Source: APXvYqwltHquQ/jQ+UZwX5GcwzG6W/Y9RMvPTd5MPD7Vcr8y1VfdTF367Xx+QdpvSy3ngELbOU3uBg==
+X-Received: by 2002:a17:902:6b86:: with SMTP id p6mr32169920plk.14.1562018562999;
         Mon, 01 Jul 2019 15:02:42 -0700 (PDT)
 Received: from xplor.waratah.dyndns.org (122-58-182-39-adsl.sparkbb.co.nz. [122.58.182.39])
-        by smtp.gmail.com with ESMTPSA id q5sm11415998pgj.49.2019.07.01.15.02.41
+        by smtp.gmail.com with ESMTPSA id t11sm9662327pgp.1.2019.07.01.15.02.41
         (version=TLS1 cipher=AES128-SHA bits=128/128);
         Mon, 01 Jul 2019 15:02:41 -0700 (PDT)
 Received: by xplor.waratah.dyndns.org (Postfix, from userid 1000)
-        id AB92A360082; Tue,  2 Jul 2019 10:02:38 +1200 (NZST)
+        id D7B0C360079; Tue,  2 Jul 2019 10:02:37 +1200 (NZST)
 From:   Michael Schmitz <schmitzmic@gmail.com>
 To:     linux-m68k@vger.kernel.org, linux-ide@vger.kernel.org
-Cc:     geert@linux-m68k.org, b.zolnierkie@samsung.com,
-        Michael Schmitz <schmitzmic@gmail.com>
-Subject: [PATCH 1/2] m68k/atari: add platform device for Falcon IDE port
-Date:   Tue,  2 Jul 2019 10:02:35 +1200
-Message-Id: <1562018556-15090-2-git-send-email-schmitzmic@gmail.com>
+Cc:     geert@linux-m68k.org, b.zolnierkie@samsung.com
+Subject: [PATCH 0/2] Convert Atari Falcon IDE driver to platform device
+Date:   Tue,  2 Jul 2019 10:02:34 +1200
+Message-Id: <1562018556-15090-1-git-send-email-schmitzmic@gmail.com>
 X-Mailer: git-send-email 1.7.0.4
-In-Reply-To: <1562018556-15090-1-git-send-email-schmitzmic@gmail.com>
-References: <1562018556-15090-1-git-send-email-schmitzmic@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Autoloading of Falcon IDE driver modules requires converting
-these drivers to platform drivers.
+As suggested by Geert, at least one of the drivers available for the Falcon
+IDE interface should be converted to a platform device driver (to enable
+module autoloading by the Debian installer).
 
-Add platform device for Falcon IDE interface in Atari platform
-setup code in preparation for this.
+Add platform device for Falcon IDE (patch 1), and rewrite the present
+libata driver to make use of that device (patch 2).
 
-Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
+Tested on ARAnyM with driver builtin.
 
---
+Cheers,
 
-Changes from RFC
-
-- fix region size (spotted by Szymon Bieganski <S.Bieganski@chello.nl>)
-- define IDE interface address in atari/config.c, create platform device
-  always (suggested by Geert Uytterhoeven <geert@linux-m68k.org>)
----
- arch/m68k/atari/config.c |   23 +++++++++++++++++++++++
- 1 files changed, 23 insertions(+), 0 deletions(-)
-
-diff --git a/arch/m68k/atari/config.c b/arch/m68k/atari/config.c
-index ca8469e..c10533c 100644
---- a/arch/m68k/atari/config.c
-+++ b/arch/m68k/atari/config.c
-@@ -896,6 +896,25 @@ static void isp1160_delay(struct device *dev, int delay)
- };
- #endif
- 
-+/*
-+ * Falcon IDE interface
-+ */
-+
-+#define FALCON_IDE_BASE	0xfff00000
-+
-+static const struct resource atari_falconide_rsrc[] __initconst = {
-+	{
-+		.flags = IORESOURCE_MEM,
-+		.start = FALCON_IDE_BASE,
-+		.end   = FALCON_IDE_BASE+0x39,
-+	},
-+	{
-+		.flags = IORESOURCE_IRQ,
-+		.start = IRQ_MFP_FSCSI,
-+		.end   = IRQ_MFP_FSCSI,
-+	},
-+};
-+
- int __init atari_platform_init(void)
- {
- 	int rv = 0;
-@@ -939,6 +958,10 @@ int __init atari_platform_init(void)
- 			atari_scsi_tt_rsrc, ARRAY_SIZE(atari_scsi_tt_rsrc));
- #endif
- 
-+	if (ATARIHW_PRESENT(IDE))
-+		platform_device_register_simple("pata_falcon", -1,
-+			atari_falconide_rsrc, ARRAY_SIZE(atari_falconide_rsrc));
-+
- 	return rv;
- }
- 
--- 
-1.7.0.4
+	Michael
 
