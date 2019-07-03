@@ -2,94 +2,79 @@ Return-Path: <SRS0=9A0L=VA=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
+	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2839CC5B57D
-	for <linux-ide@archiver.kernel.org>; Wed,  3 Jul 2019 00:51:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C8ABC5B57D
+	for <linux-ide@archiver.kernel.org>; Wed,  3 Jul 2019 01:56:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 019E8218EA
-	for <linux-ide@archiver.kernel.org>; Wed,  3 Jul 2019 00:51:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D068E2064A
+	for <linux-ide@archiver.kernel.org>; Wed,  3 Jul 2019 01:56:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dt6CEbOA"
+	dkim=fail reason="key not found in DNS" (0-bit key) header.d=gmail.com header.i=@gmail.com header.b="DTVFF+Jn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727189AbfGCAvR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 2 Jul 2019 20:51:17 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:36538 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727049AbfGCAvR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 2 Jul 2019 20:51:17 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x62KdB0N122060;
-        Tue, 2 Jul 2019 20:41:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2018-07-02;
- bh=Btqnb6jEsDeij5wx3tEbk8C4VGfyI72sDX9/2IUYuwQ=;
- b=dt6CEbOA94XnSB2ajoPrdODN/IRZihtm6hLroe+UySMPTmluP474hjbDVuIEG70wDLUJ
- S1vzethdz3jVrM718BTcdnNgpZF5A4sSoGPQrfVuWKtjHL59ZiUWwQ5UBrofDxqPO4mz
- xR3sMO+vYHi5iRm71GO+KGSrt348LuB6rITyjPbtkivAd9TQMFFyF5V4kfqgcSPsFM5K
- UoEIws07MLulsUk6HOMy7Bw75JGIxdEV3Na2EXeMHse+6jYtddbwMKrsm/P4cgKaFjC0
- jgy8qrZX3XqcCaZEhn57qXi+gzqGdnp1sR5OMpGZn6tnw1TlKPcZu9U7rWIY2TLFyKA6 Dw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2te61e5v8d-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 02 Jul 2019 20:41:48 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x62Kc6t1073119;
-        Tue, 2 Jul 2019 20:41:47 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2tebkug4fm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 02 Jul 2019 20:41:47 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x62Kfkqw025134;
-        Tue, 2 Jul 2019 20:41:46 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 02 Jul 2019 13:41:45 -0700
-To:     Hans de Goede <hdegoede@redhat.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] libata: Drop firmware version check from the ST1000LM024 quirk
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20190701165813.15607-1-hdegoede@redhat.com>
-Date:   Tue, 02 Jul 2019 16:41:44 -0400
-In-Reply-To: <20190701165813.15607-1-hdegoede@redhat.com> (Hans de Goede's
-        message of "Mon, 1 Jul 2019 18:58:13 +0200")
-Message-ID: <yq1h884f9tj.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1726821AbfGCB4T (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 2 Jul 2019 21:56:19 -0400
+Received: from walmailout09.yourhostingaccount.com ([65.254.253.73]:41717 "EHLO
+        walmailout09.yourhostingaccount.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726430AbfGCB4T (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 2 Jul 2019 21:56:19 -0400
+X-Greylist: delayed 2049 seconds by postgrey-1.27 at vger.kernel.org; Tue, 02 Jul 2019 21:56:18 EDT
+Received: from mailscan09.yourhostingaccount.com ([10.1.15.9] helo=walmailscan09.yourhostingaccount.com)
+        by walmailout09.yourhostingaccount.com with esmtp (Exim)
+        id 1hiTyJ-0003lS-KO
+        for linux-ide@vger.kernel.org; Tue, 02 Jul 2019 21:22:07 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=gmail.com;
+         s=dkim; h=Sender:Content-Transfer-Encoding:Content-Type:MIME-Version:
+        Message-ID:Reply-To:From:Date:Subject:To:Cc:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=0VoEz0yq6sjTUQcCovJoBJxDCKjUBd/MDRtwU/idMnc=; b=DTVFF+JnCbktcx2z1+5AyY2Lve
+        WRzaw0TQu9HNeOO/mHCP9u0s3oQ7qJ/9Op8h9sPppqAQS7rFK6JoocNbgZvKLQ/e1q5GIb3FebKDz
+        eCT3ey0MUD3yWDbdQHOQaTcfFmIaIQph7eu0eWZco/FG/9gGGPjV0aPC//iwi/ftthLhIHKEtiqDS
+        7np+62e2PFamocQkJJQfL9DbpXavtiA5Zjklup+oM26a6+2AKCqcxSekvXMW3DTOt/GXS/DoGvxlY
+        w51IHot3c+1L1Pm+V29vURC/ItONgZSXpagaaK0d0GGXoZsw4CdBhgXrPAH2p51Z3KPPonW+PT1VN
+        Ydee7LAw==;
+Received: from [10.114.3.31] (helo=walimpout11)
+        by walmailscan09.yourhostingaccount.com with esmtp (Exim)
+        id 1hiTyJ-00087L-FG
+        for linux-ide@vger.kernel.org; Tue, 02 Jul 2019 21:22:07 -0400
+Received: from walcustweb1705.yourhostingaccount.com ([10.1.112.101])
+        by walimpout11 with 
+        id Y1N42000i2BJt5E011N7BV; Tue, 02 Jul 2019 21:22:07 -0400
+X-EN-SP-DIR: OUT
+X-EN-SP-SQ: 1
+Received: from as.nasaautocare by walcustweb1705.yourhostingaccount.com with local (Exim)
+        id 1hiTxQ-00078U-Ov
+        for linux-ide@vger.kernel.org; Tue, 02 Jul 2019 21:21:12 -0400
+X-EN-Info: U=as.nasaautocare P=/index.php
+X-EN-CGIUser: as.nasaautocare
+X-EN-CGIPath: /index.php
+X-EN-OrigIP: 134.90.149.150
+To:     linux-ide@vger.kernel.org
+Subject: Copy of: Single women want sex in your city
+X-PHP-Originating-Script: 5378462:class.phpmailer.php
+Date:   Tue, 2 Jul 2019 21:21:12 -0400
+From:   We Install Your Parts <jwt425@gmail.com>
+Reply-To: ClintonGef <linux-ide@vger.kernel.org>
+Message-ID: <a1417b6db274f08f60bf3abf5f23bd02@weinstallyourparts.com>
+X-Mailer: PHPMailer 5.2.14 (https://github.com/PHPMailer/PHPMailer)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9306 signatures=668688
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=949
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1810050000 definitions=main-1907020228
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9306 signatures=668688
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1810050000
- definitions=main-1907020228
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+X-EN-Timestamp: Tue, 02 Jul 2019 21:21:12 -0400
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+This is a copy of the following message you sent to We Install Your Parts via We Install Your Parts
 
-Hans,
+This is an enquiry email via http://weinstallyourparts.com/ from:
+ClintonGef <linux-ide@vger.kernel.org>
 
-> There are several firmware versions between version 2AR10001 and
-> 2BA30001, presumably these also have broken FPDMA_AA activation, so
-> lets play it safe and apply the quirk to all firmware versions.
+The best women for sex in your town: https://chogoon.com/srt/s37qb
 
-Looks good.
-
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
