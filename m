@@ -1,80 +1,114 @@
-Return-Path: <SRS0=9A0L=VA=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=hjBR=VC=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
-	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+X-Spam-Status: No, score=-4.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C8ABC5B57D
-	for <linux-ide@archiver.kernel.org>; Wed,  3 Jul 2019 01:56:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC3F4C5B57D
+	for <linux-ide@archiver.kernel.org>; Fri,  5 Jul 2019 08:48:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D068E2064A
-	for <linux-ide@archiver.kernel.org>; Wed,  3 Jul 2019 01:56:19 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="key not found in DNS" (0-bit key) header.d=gmail.com header.i=@gmail.com header.b="DTVFF+Jn"
+	by mail.kernel.org (Postfix) with ESMTP id 9FCAB21738
+	for <linux-ide@archiver.kernel.org>; Fri,  5 Jul 2019 08:48:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726821AbfGCB4T (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 2 Jul 2019 21:56:19 -0400
-Received: from walmailout09.yourhostingaccount.com ([65.254.253.73]:41717 "EHLO
-        walmailout09.yourhostingaccount.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726430AbfGCB4T (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 2 Jul 2019 21:56:19 -0400
-X-Greylist: delayed 2049 seconds by postgrey-1.27 at vger.kernel.org; Tue, 02 Jul 2019 21:56:18 EDT
-Received: from mailscan09.yourhostingaccount.com ([10.1.15.9] helo=walmailscan09.yourhostingaccount.com)
-        by walmailout09.yourhostingaccount.com with esmtp (Exim)
-        id 1hiTyJ-0003lS-KO
-        for linux-ide@vger.kernel.org; Tue, 02 Jul 2019 21:22:07 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=gmail.com;
-         s=dkim; h=Sender:Content-Transfer-Encoding:Content-Type:MIME-Version:
-        Message-ID:Reply-To:From:Date:Subject:To:Cc:Content-ID:Content-Description:
-        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
-        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
-        List-Post:List-Owner:List-Archive;
-        bh=0VoEz0yq6sjTUQcCovJoBJxDCKjUBd/MDRtwU/idMnc=; b=DTVFF+JnCbktcx2z1+5AyY2Lve
-        WRzaw0TQu9HNeOO/mHCP9u0s3oQ7qJ/9Op8h9sPppqAQS7rFK6JoocNbgZvKLQ/e1q5GIb3FebKDz
-        eCT3ey0MUD3yWDbdQHOQaTcfFmIaIQph7eu0eWZco/FG/9gGGPjV0aPC//iwi/ftthLhIHKEtiqDS
-        7np+62e2PFamocQkJJQfL9DbpXavtiA5Zjklup+oM26a6+2AKCqcxSekvXMW3DTOt/GXS/DoGvxlY
-        w51IHot3c+1L1Pm+V29vURC/ItONgZSXpagaaK0d0GGXoZsw4CdBhgXrPAH2p51Z3KPPonW+PT1VN
-        Ydee7LAw==;
-Received: from [10.114.3.31] (helo=walimpout11)
-        by walmailscan09.yourhostingaccount.com with esmtp (Exim)
-        id 1hiTyJ-00087L-FG
-        for linux-ide@vger.kernel.org; Tue, 02 Jul 2019 21:22:07 -0400
-Received: from walcustweb1705.yourhostingaccount.com ([10.1.112.101])
-        by walimpout11 with 
-        id Y1N42000i2BJt5E011N7BV; Tue, 02 Jul 2019 21:22:07 -0400
-X-EN-SP-DIR: OUT
-X-EN-SP-SQ: 1
-Received: from as.nasaautocare by walcustweb1705.yourhostingaccount.com with local (Exim)
-        id 1hiTxQ-00078U-Ov
-        for linux-ide@vger.kernel.org; Tue, 02 Jul 2019 21:21:12 -0400
-X-EN-Info: U=as.nasaautocare P=/index.php
-X-EN-CGIUser: as.nasaautocare
-X-EN-CGIPath: /index.php
-X-EN-OrigIP: 134.90.149.150
-To:     linux-ide@vger.kernel.org
-Subject: Copy of: Single women want sex in your city
-X-PHP-Originating-Script: 5378462:class.phpmailer.php
-Date:   Tue, 2 Jul 2019 21:21:12 -0400
-From:   We Install Your Parts <jwt425@gmail.com>
-Reply-To: ClintonGef <linux-ide@vger.kernel.org>
-Message-ID: <a1417b6db274f08f60bf3abf5f23bd02@weinstallyourparts.com>
-X-Mailer: PHPMailer 5.2.14 (https://github.com/PHPMailer/PHPMailer)
+        id S1727587AbfGEIs7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 5 Jul 2019 04:48:59 -0400
+Received: from mail-ed1-f65.google.com ([209.85.208.65]:41281 "EHLO
+        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727010AbfGEIs7 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 5 Jul 2019 04:48:59 -0400
+Received: by mail-ed1-f65.google.com with SMTP id p15so7539922eds.8;
+        Fri, 05 Jul 2019 01:48:57 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=DrtkCOU3d35z8J32aN8s3zZgpzBWbHJuGIW4lFwRsYw=;
+        b=XrtSRwSHZloS2G5Heluef/b7vZruYDB/jfr5+ZMhwOsj1gnjx56ZJhW5HQ7OrrWzMx
+         4cfKp3M2DF2i9gBvDefGKhK5Vub75xsel3BWI3MiqjXCRQAZSeuT0UPSg19ziVaxMWOG
+         F+FMt9PcsbdxgG/lBhIu93ehH4hYMSdB/CSQg790jbIz0bGwW83FFegsM7DucUNxeDYP
+         Imuwn0GxCvXYKPHS7E0f4BE/RduVDseOPEa0nvS63Tu+8bkFkMEDuB51+CUkI1zT4VnX
+         Ca+SBNBEBrEK2ieUkT60fOB6SaSviGaDPAv7f0Egm+6pwVS/8almxhxfJXvdOKqVWcE9
+         BX+w==
+X-Gm-Message-State: APjAAAUmjJEDFX34nsWb8c3H4cOgiL3kNEJ/GmEUCqnL4uSTl0CNc4hm
+        r4iBh4eKEQ3uNjikeSDjZiNs9nn3JsE=
+X-Google-Smtp-Source: APXvYqwu+bxllRyOqly7Q+oL0fEOlMYhSGmI+6IFW1TpYlK7nJPYua/M0lZo8p1L/k1DbOthpzHkeQ==
+X-Received: by 2002:a50:a485:: with SMTP id w5mr3138570edb.277.1562316536934;
+        Fri, 05 Jul 2019 01:48:56 -0700 (PDT)
+Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com. [209.85.221.44])
+        by smtp.gmail.com with ESMTPSA id d4sm2456460edb.4.2019.07.05.01.48.55
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Fri, 05 Jul 2019 01:48:55 -0700 (PDT)
+Received: by mail-wr1-f44.google.com with SMTP id n4so9088509wrs.3;
+        Fri, 05 Jul 2019 01:48:55 -0700 (PDT)
+X-Received: by 2002:a5d:568e:: with SMTP id f14mr2777076wrv.167.1562316534957;
+ Fri, 05 Jul 2019 01:48:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-X-EN-Timestamp: Tue, 02 Jul 2019 21:21:12 -0400
+References: <20190513142410.9299-1-um@mutluit.com>
+In-Reply-To: <20190513142410.9299-1-um@mutluit.com>
+From:   Chen-Yu Tsai <wens@csie.org>
+Date:   Fri, 5 Jul 2019 16:48:44 +0800
+X-Gmail-Original-Message-ID: <CAGb2v67OEa+ge7qpbNa5R7DCpgwKfs4T8KHTKe4fnuQYwzJURQ@mail.gmail.com>
+Message-ID: <CAGb2v67OEa+ge7qpbNa5R7DCpgwKfs4T8KHTKe4fnuQYwzJURQ@mail.gmail.com>
+Subject: Re: [linux-sunxi] [PATCH v3] drivers: ata: ahci_sunxi: Increased
+ SATA/AHCI DMA TX/RX FIFOs
+To:     Jens Axboe <axboe@kernel.dk>, Hans de Goede <hdegoede@redhat.com>
+Cc:     Maxime Ripard <maxime.ripard@bootlin.com>,
+        linux-ide@vger.kernel.org,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Uenal Mutlu <um@mutluit.com>,
+        linux-sunxi <linux-sunxi@googlegroups.com>,
+        linux-amarula <linux-amarula@amarulasolutions.com>,
+        Jagan Teki <jagan@amarulasolutions.com>,
+        Pablo Greco <pgreco@centosproject.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Oliver Schinagl <oliver@schinagl.nl>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        FUKAUMI Naoki <naobsd@gmail.com>,
+        Andre Przywara <andre.przywara@arm.com>,
+        Stefan Monnier <monnier@iro.umontreal.ca>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-This is a copy of the following message you sent to We Install Your Parts via We Install Your Parts
+On Mon, May 13, 2019 at 10:24 PM Uenal Mutlu <um@mutluit.com> wrote:
+>
+> Increasing the SATA/AHCI DMA TX/RX FIFOs (P0DMACR.TXTS and .RXTS, ie.
+> TX_TRANSACTION_SIZE and RX_TRANSACTION_SIZE) from default 0x0 each
+> to 0x3 each, gives a write performance boost of 120 MiB/s to 132 MiB/s
+> from lame 36 MiB/s to 45 MiB/s previously.
+> Read performance is above 200 MiB/s.
+> [tested on SSD using dd bs=4K/8K/12K/16K/20K/24K/32K: peak-perf at 12K]
+>
+> Tested on the SBCs Banana Pi R1 (aka Lamobo R1) and Banana Pi M1 which
+> are based on the Allwinner A20 32bit-SoC (ARMv7-a / arm-linux-gnueabihf).
+> These devices are RaspberryPi-like small devices.
+>
+> This problem of slow SATA write-speed with these small devices lasts
+> for about 7 years now (beginning with the A10 SoC). Many commentators
+> throughout the years wrongly assumed the slow write speed was a
+> hardware limitation. This patch finally solves the problem, which
+> in fact was just a hard-to-find software problem due to lack of
+> SATA/AHCI documentation by the SoC-maker Allwinner Technology.
+>
+> Lists of the affected sunxi and other boards and SoCs with SATA using
+> the ahci_sunxi driver:
+>   $ grep -i -e "^&ahci" arch/arm/boot/dts/sun*dts
+>   and http://linux-sunxi.org/SATA#Devices_with_SATA_ports
+>   See also http://linux-sunxi.org/Category:Devices_with_SATA_port
+>
+> Acked-by: Maxime Ripard <maxime.ripard@bootlin.com>
+> Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+> Signed-off-by: Uenal Mutlu <um@mutluit.com>
 
-This is an enquiry email via http://weinstallyourparts.com/ from:
-ClintonGef <linux-ide@vger.kernel.org>
+Tested-by: Chen-Yu Tsai <wens@csie.org>
 
-The best women for sex in your town: https://chogoon.com/srt/s37qb
+on a Lamabo R1 as well.
 
+Maybe we could merge this soon so it makes the next merge window?
+
+Thanks.
