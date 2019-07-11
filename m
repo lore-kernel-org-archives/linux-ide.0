@@ -1,83 +1,90 @@
-Return-Path: <SRS0=7AwG=VH=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=9bcD=VI=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34896C74A21
-	for <linux-ide@archiver.kernel.org>; Wed, 10 Jul 2019 15:29:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E604C74A36
+	for <linux-ide@archiver.kernel.org>; Thu, 11 Jul 2019 00:26:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1355D20844
-	for <linux-ide@archiver.kernel.org>; Wed, 10 Jul 2019 15:29:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2319A20844
+	for <linux-ide@archiver.kernel.org>; Thu, 11 Jul 2019 00:26:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727855AbfGJP3j (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 10 Jul 2019 11:29:39 -0400
-Received: from mail-wm1-f68.google.com ([209.85.128.68]:38814 "EHLO
-        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727552AbfGJP3j (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jul 2019 11:29:39 -0400
-Received: by mail-wm1-f68.google.com with SMTP id s15so2718064wmj.3;
-        Wed, 10 Jul 2019 08:29:37 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=OYCkBfE5VzYOraD6A4aTNdxZz8pMoTxJpb4Qn0Coz5Y=;
-        b=VEQohiREzx2Qe9kGtKxlzuLl8DqCu5p1lDNNMYQGHer23qOWjf0ahOV5TCjsjQystb
-         eZqE5QOHYUXe2M93ITqSTUivT4eCIgK394hWRR7Q7PgOD6/xjEqiFG5ZA7axT+JqhY9u
-         Wi99PtksHiUK1vY8mB4uSBhljZTVKbf/kbc8hDr+e15WHQTd4hw93ikjxtyMrky/p7bR
-         hAT3Cqa1c3LHSNqSUnWkBRb9xzCiJLz755jJ9/9u+8vsbtaW617BNwktB9Sa3T2e+PAR
-         PbWbuqSCx8Tr/qQdT1bMGm25RvPaVZEaftV4siVrDUKqz9ZUPEQqjrl81kOZggMc63hJ
-         rQ7w==
-X-Gm-Message-State: APjAAAXmm/QQzZzxHf0BDSTfrUmyWBu1P4/fAhKnloedP3c72hraWo9b
-        Uf7WL5uDfgwMysWsLiKHC6o=
-X-Google-Smtp-Source: APXvYqzw654gnLQ3h8248FiJYECZ4Lf8UQgmXRoXKxJv9+cWo346I606rNIRbNXIiLEQM91cyO+iMQ==
-X-Received: by 2002:a1c:b189:: with SMTP id a131mr6142061wmf.7.1562772577140;
-        Wed, 10 Jul 2019 08:29:37 -0700 (PDT)
-Received: from localhost.localdomain (broadband-188-32-48-208.ip.moscow.rt.ru. [188.32.48.208])
-        by smtp.googlemail.com with ESMTPSA id g11sm2914510wru.24.2019.07.10.08.29.35
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 10 Jul 2019 08:29:36 -0700 (PDT)
-From:   Denis Efremov <efremov@linux.com>
-To:     Chuansheng Liu <chuansheng.liu@intel.com>
-Cc:     Denis Efremov <efremov@linux.com>, Jens Axboe <axboe@kernel.dk>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] ahci: Remove the exporting of ahci_em_messages
-Date:   Wed, 10 Jul 2019 18:29:23 +0300
-Message-Id: <20190710152923.25562-1-efremov@linux.com>
-X-Mailer: git-send-email 2.21.0
+        id S1727594AbfGKA0b (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 10 Jul 2019 20:26:31 -0400
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:45952 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727188AbfGKA0b (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jul 2019 20:26:31 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by kvm5.telegraphics.com.au (Postfix) with ESMTP id DAB0F297D3;
+        Wed, 10 Jul 2019 20:26:27 -0400 (EDT)
+Date:   Thu, 11 Jul 2019 10:26:27 +1000 (AEST)
+From:   Finn Thain <fthain@telegraphics.com.au>
+To:     linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org
+cc:     Stan <userm57@yahoo.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: pata-macio on PowerBook G3: stuck interrupt with MATSHITA CR-174
+ CD-ROM
+In-Reply-To: <alpine.LNX.2.21.1906271717080.68@nippy.intranet>
+Message-ID: <alpine.LNX.2.21.1906291014050.119@nippy.intranet>
+References: <alpine.LNX.2.21.1906271717080.68@nippy.intranet>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The variable ahci_em_messages is declared static and marked
-EXPORT_SYMBOL_GPL, which is at best an odd combination. Because the
-variable is not used outside of the drivers/ata/libahci.c file it is
-defined in, this commit removes the EXPORT_SYMBOL_GPL() marking.
+On Fri, 28 Jun 2019, Finn Thain wrote:
 
-Fixes: ed08d40cdec4 ("ahci: Changing two module params with static and __read_mostly")
-Signed-off-by: Denis Efremov <efremov@linux.com>
----
- drivers/ata/libahci.c | 1 -
- 1 file changed, 1 deletion(-)
+> Hi All,
+> 
+> I've received a bug report concerning the pata-macio driver, when running 
+> on a PowerBook G3 (Wallstreet).
+> 
+> With CONFIG_PATA_MACIO=n && CONFIG_BLK_DEV_IDE_PMAC=y, everything works.
+> 
+> With CONFIG_PATA_MACIO=y && CONFIG_BLK_DEV_IDE_PMAC=n, the CD-ROM fails.
+> 
+> When the CD-ROM mediabay module is swapped for a DVD-ROM mediabay module, 
+> everything works (either pata-macio or ide-pmac driver works fine).
+> 
+> I'm not familiar with ATA device drivers or the "Heathrow" chipset and its 
+> ATA interfaces so any hints as to how to debug this would be appreciated.
+> 
+...
+> 
+> These logs are from v4.20 but the problem is the same in v5.2-rc2.
+> 
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index e4c45d3cca79..bff369d9a1a7 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -175,7 +175,6 @@ struct ata_port_operations ahci_pmp_retry_srst_ops = {
- EXPORT_SYMBOL_GPL(ahci_pmp_retry_srst_ops);
+In the linux-ide list archive I found the same bug reported in 2.6.33-rc2, 
+shortly after the pata-macio driver was merged.
+
+https://lore.kernel.org/linux-ide/19254.17766.674348.933702@pilspetsen.it.uu.se/
+
+That report also involves a Matshita CD-ROM and a Heathrow controller 
+(beige G3).
+
+In that thread Ben suggested that the cause may be a firmware bug in the 
+drive. Is there a quirk or other workaround for that kind of bug?
+
+I tried removing the controller reset but there was no improvement...
+
+diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+index 57f2ec71cfc3..b2fd5e20367f 100644
+--- a/drivers/ata/pata_macio.c
++++ b/drivers/ata/pata_macio.c
+@@ -1096,7 +1096,7 @@ static int pata_macio_common_init(struct pata_macio_priv *priv,
+ 	priv->host->ports[0]->private_data = priv;
  
- static bool ahci_em_messages __read_mostly = true;
--EXPORT_SYMBOL_GPL(ahci_em_messages);
- module_param(ahci_em_messages, bool, 0444);
- /* add other LED protocol types when they become supported */
- MODULE_PARM_DESC(ahci_em_messages,
--- 
-2.21.0
+ 	/* hard-reset the controller */
+-	pata_macio_reset_hw(priv, 0);
++//	pata_macio_reset_hw(priv, 0);
+ 	pata_macio_apply_timings(priv->host->ports[0], 0);
+ 
+ 	/* Enable bus master if necessary */
 
+-- 
