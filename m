@@ -2,89 +2,86 @@ Return-Path: <SRS0=9bcD=VI=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
+X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E604C74A36
-	for <linux-ide@archiver.kernel.org>; Thu, 11 Jul 2019 00:26:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 518A6C74A36
+	for <linux-ide@archiver.kernel.org>; Thu, 11 Jul 2019 01:03:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2319A20844
-	for <linux-ide@archiver.kernel.org>; Thu, 11 Jul 2019 00:26:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A66121019
+	for <linux-ide@archiver.kernel.org>; Thu, 11 Jul 2019 01:03:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727594AbfGKA0b (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 10 Jul 2019 20:26:31 -0400
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:45952 "EHLO
-        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727188AbfGKA0b (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jul 2019 20:26:31 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by kvm5.telegraphics.com.au (Postfix) with ESMTP id DAB0F297D3;
-        Wed, 10 Jul 2019 20:26:27 -0400 (EDT)
-Date:   Thu, 11 Jul 2019 10:26:27 +1000 (AEST)
-From:   Finn Thain <fthain@telegraphics.com.au>
-To:     linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org
-cc:     Stan <userm57@yahoo.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: pata-macio on PowerBook G3: stuck interrupt with MATSHITA CR-174
- CD-ROM
-In-Reply-To: <alpine.LNX.2.21.1906271717080.68@nippy.intranet>
-Message-ID: <alpine.LNX.2.21.1906291014050.119@nippy.intranet>
-References: <alpine.LNX.2.21.1906271717080.68@nippy.intranet>
+        id S1727595AbfGKBDx convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 10 Jul 2019 21:03:53 -0400
+Received: from mga05.intel.com ([192.55.52.43]:52278 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726708AbfGKBDx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 10 Jul 2019 21:03:53 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 10 Jul 2019 18:03:53 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.63,476,1557212400"; 
+   d="scan'208";a="174010588"
+Received: from fmsmsx103.amr.corp.intel.com ([10.18.124.201])
+  by FMSMGA003.fm.intel.com with ESMTP; 10 Jul 2019 18:03:53 -0700
+Received: from fmsmsx112.amr.corp.intel.com (10.18.116.6) by
+ FMSMSX103.amr.corp.intel.com (10.18.124.201) with Microsoft SMTP Server (TLS)
+ id 14.3.439.0; Wed, 10 Jul 2019 18:03:52 -0700
+Received: from shsmsx108.ccr.corp.intel.com (10.239.4.97) by
+ FMSMSX112.amr.corp.intel.com (10.18.116.6) with Microsoft SMTP Server (TLS)
+ id 14.3.439.0; Wed, 10 Jul 2019 18:03:52 -0700
+Received: from shsmsx106.ccr.corp.intel.com ([169.254.10.240]) by
+ SHSMSX108.ccr.corp.intel.com ([169.254.8.174]) with mapi id 14.03.0439.000;
+ Thu, 11 Jul 2019 09:03:51 +0800
+From:   "Liu, Chuansheng" <chuansheng.liu@intel.com>
+To:     Denis Efremov <efremov@linux.com>
+CC:     Jens Axboe <axboe@kernel.dk>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] ahci: Remove the exporting of ahci_em_messages
+Thread-Topic: [PATCH] ahci: Remove the exporting of ahci_em_messages
+Thread-Index: AQHVNzRORsXS/jaDikWyr5fUt3NLt6bEmZxA
+Date:   Thu, 11 Jul 2019 01:03:51 +0000
+Message-ID: <27240C0AC20F114CBF8149A2696CBE4A60BCAAEE@SHSMSX106.ccr.corp.intel.com>
+References: <20190710152923.25562-1-efremov@linux.com>
+In-Reply-To: <20190710152923.25562-1-efremov@linux.com>
+Accept-Language: zh-CN, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ctpclassification: CTP_NT
+x-titus-metadata-40: eyJDYXRlZ29yeUxhYmVscyI6IiIsIk1ldGFkYXRhIjp7Im5zIjoiaHR0cDpcL1wvd3d3LnRpdHVzLmNvbVwvbnNcL0ludGVsMyIsImlkIjoiYTE1OTJmZWItMTcwZS00M2ViLWFmMzUtZTQ4N2JmZjkxMDI2IiwicHJvcHMiOlt7Im4iOiJDVFBDbGFzc2lmaWNhdGlvbiIsInZhbHMiOlt7InZhbHVlIjoiQ1RQX05UIn1dfV19LCJTdWJqZWN0TGFiZWxzIjpbXSwiVE1DVmVyc2lvbiI6IjE3LjEwLjE4MDQuNDkiLCJUcnVzdGVkTGFiZWxIYXNoIjoiMUZzSHlVYW9GK1BXRWpZV0RSY0MrbmlqVExsSjNGNjdcLzhrcnZEUDR4bzA0QVZCNEtGbDFWeW9GTTZUWDJ5eE0ifQ==
+dlp-product: dlpe-windows
+dlp-version: 11.2.0.6
+dlp-reaction: no-action
+x-originating-ip: [10.239.127.40]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, 28 Jun 2019, Finn Thain wrote:
 
-> Hi All,
-> 
-> I've received a bug report concerning the pata-macio driver, when running 
-> on a PowerBook G3 (Wallstreet).
-> 
-> With CONFIG_PATA_MACIO=n && CONFIG_BLK_DEV_IDE_PMAC=y, everything works.
-> 
-> With CONFIG_PATA_MACIO=y && CONFIG_BLK_DEV_IDE_PMAC=n, the CD-ROM fails.
-> 
-> When the CD-ROM mediabay module is swapped for a DVD-ROM mediabay module, 
-> everything works (either pata-macio or ide-pmac driver works fine).
-> 
-> I'm not familiar with ATA device drivers or the "Heathrow" chipset and its 
-> ATA interfaces so any hints as to how to debug this would be appreciated.
-> 
-...
-> 
-> These logs are from v4.20 but the problem is the same in v5.2-rc2.
-> 
 
-In the linux-ide list archive I found the same bug reported in 2.6.33-rc2, 
-shortly after the pata-macio driver was merged.
+> -----Original Message-----
+> From: Denis Efremov [mailto:efremov@linux.com]
+> Sent: Wednesday, July 10, 2019 11:29 PM
+> To: Liu, Chuansheng <chuansheng.liu@intel.com>
+> Cc: Denis Efremov <efremov@linux.com>; Jens Axboe <axboe@kernel.dk>;
+> linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: [PATCH] ahci: Remove the exporting of ahci_em_messages
+> 
+> The variable ahci_em_messages is declared static and marked
+> EXPORT_SYMBOL_GPL, which is at best an odd combination. Because the
+> variable is not used outside of the drivers/ata/libahci.c file it is
+> defined in, this commit removes the EXPORT_SYMBOL_GPL() marking.
 
-https://lore.kernel.org/linux-ide/19254.17766.674348.933702@pilspetsen.it.uu.se/
+Sounds good to me, thanks.
+Reviewed-by: Chuansheng Liu <chuansheng.liu@linux.intel.com>
 
-That report also involves a Matshita CD-ROM and a Heathrow controller 
-(beige G3).
-
-In that thread Ben suggested that the cause may be a firmware bug in the 
-drive. Is there a quirk or other workaround for that kind of bug?
-
-I tried removing the controller reset but there was no improvement...
-
-diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-index 57f2ec71cfc3..b2fd5e20367f 100644
---- a/drivers/ata/pata_macio.c
-+++ b/drivers/ata/pata_macio.c
-@@ -1096,7 +1096,7 @@ static int pata_macio_common_init(struct pata_macio_priv *priv,
- 	priv->host->ports[0]->private_data = priv;
- 
- 	/* hard-reset the controller */
--	pata_macio_reset_hw(priv, 0);
-+//	pata_macio_reset_hw(priv, 0);
- 	pata_macio_apply_timings(priv->host->ports[0], 0);
- 
- 	/* Enable bus master if necessary */
-
--- 
