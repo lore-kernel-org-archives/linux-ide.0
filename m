@@ -1,87 +1,67 @@
-Return-Path: <SRS0=9bcD=VI=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=E6CZ=VK=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 518A6C74A36
-	for <linux-ide@archiver.kernel.org>; Thu, 11 Jul 2019 01:03:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38777C742A7
+	for <linux-ide@archiver.kernel.org>; Sat, 13 Jul 2019 06:17:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2A66121019
-	for <linux-ide@archiver.kernel.org>; Thu, 11 Jul 2019 01:03:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1183B208E4
+	for <linux-ide@archiver.kernel.org>; Sat, 13 Jul 2019 06:17:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727595AbfGKBDx convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 10 Jul 2019 21:03:53 -0400
-Received: from mga05.intel.com ([192.55.52.43]:52278 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726708AbfGKBDx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 10 Jul 2019 21:03:53 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 10 Jul 2019 18:03:53 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.63,476,1557212400"; 
-   d="scan'208";a="174010588"
-Received: from fmsmsx103.amr.corp.intel.com ([10.18.124.201])
-  by FMSMGA003.fm.intel.com with ESMTP; 10 Jul 2019 18:03:53 -0700
-Received: from fmsmsx112.amr.corp.intel.com (10.18.116.6) by
- FMSMSX103.amr.corp.intel.com (10.18.124.201) with Microsoft SMTP Server (TLS)
- id 14.3.439.0; Wed, 10 Jul 2019 18:03:52 -0700
-Received: from shsmsx108.ccr.corp.intel.com (10.239.4.97) by
- FMSMSX112.amr.corp.intel.com (10.18.116.6) with Microsoft SMTP Server (TLS)
- id 14.3.439.0; Wed, 10 Jul 2019 18:03:52 -0700
-Received: from shsmsx106.ccr.corp.intel.com ([169.254.10.240]) by
- SHSMSX108.ccr.corp.intel.com ([169.254.8.174]) with mapi id 14.03.0439.000;
- Thu, 11 Jul 2019 09:03:51 +0800
-From:   "Liu, Chuansheng" <chuansheng.liu@intel.com>
-To:     Denis Efremov <efremov@linux.com>
-CC:     Jens Axboe <axboe@kernel.dk>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] ahci: Remove the exporting of ahci_em_messages
-Thread-Topic: [PATCH] ahci: Remove the exporting of ahci_em_messages
-Thread-Index: AQHVNzRORsXS/jaDikWyr5fUt3NLt6bEmZxA
-Date:   Thu, 11 Jul 2019 01:03:51 +0000
-Message-ID: <27240C0AC20F114CBF8149A2696CBE4A60BCAAEE@SHSMSX106.ccr.corp.intel.com>
-References: <20190710152923.25562-1-efremov@linux.com>
-In-Reply-To: <20190710152923.25562-1-efremov@linux.com>
-Accept-Language: zh-CN, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ctpclassification: CTP_NT
-x-titus-metadata-40: eyJDYXRlZ29yeUxhYmVscyI6IiIsIk1ldGFkYXRhIjp7Im5zIjoiaHR0cDpcL1wvd3d3LnRpdHVzLmNvbVwvbnNcL0ludGVsMyIsImlkIjoiYTE1OTJmZWItMTcwZS00M2ViLWFmMzUtZTQ4N2JmZjkxMDI2IiwicHJvcHMiOlt7Im4iOiJDVFBDbGFzc2lmaWNhdGlvbiIsInZhbHMiOlt7InZhbHVlIjoiQ1RQX05UIn1dfV19LCJTdWJqZWN0TGFiZWxzIjpbXSwiVE1DVmVyc2lvbiI6IjE3LjEwLjE4MDQuNDkiLCJUcnVzdGVkTGFiZWxIYXNoIjoiMUZzSHlVYW9GK1BXRWpZV0RSY0MrbmlqVExsSjNGNjdcLzhrcnZEUDR4bzA0QVZCNEtGbDFWeW9GTTZUWDJ5eE0ifQ==
-dlp-product: dlpe-windows
-dlp-version: 11.2.0.6
-dlp-reaction: no-action
-x-originating-ip: [10.239.127.40]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-MIME-Version: 1.0
+        id S1726334AbfGMGRZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 13 Jul 2019 02:17:25 -0400
+Received: from shards.monkeyblade.net ([23.128.96.9]:37434 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726301AbfGMGRZ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 13 Jul 2019 02:17:25 -0400
+Received: from localhost (unknown [IPv6:2601:601:9f80:35cd::d71])
+        (using TLSv1 with cipher AES256-SHA (256/256 bits))
+        (Client did not present a certificate)
+        (Authenticated sender: davem-davemloft)
+        by shards.monkeyblade.net (Postfix) with ESMTPSA id 3577214EF7474;
+        Fri, 12 Jul 2019 23:17:25 -0700 (PDT)
+Date:   Fri, 12 Jul 2019 23:17:24 -0700 (PDT)
+Message-Id: <20190712.231724.1616414132879925665.davem@davemloft.net>
+To:     torvalds@linux-foundation.org
+CC:     akpm@linux-foundation.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [GIT] Ide
+From:   David Miller <davem@davemloft.net>
+X-Mailer: Mew version 6.8 on Emacs 26.1
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Fri, 12 Jul 2019 23:17:25 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 
+Please pull to get this small cleanup.
 
-> -----Original Message-----
-> From: Denis Efremov [mailto:efremov@linux.com]
-> Sent: Wednesday, July 10, 2019 11:29 PM
-> To: Liu, Chuansheng <chuansheng.liu@intel.com>
-> Cc: Denis Efremov <efremov@linux.com>; Jens Axboe <axboe@kernel.dk>;
-> linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
-> Subject: [PATCH] ahci: Remove the exporting of ahci_em_messages
-> 
-> The variable ahci_em_messages is declared static and marked
-> EXPORT_SYMBOL_GPL, which is at best an odd combination. Because the
-> variable is not used outside of the drivers/ata/libahci.c file it is
-> defined in, this commit removes the EXPORT_SYMBOL_GPL() marking.
+Thanks.
 
-Sounds good to me, thanks.
-Reviewed-by: Chuansheng Liu <chuansheng.liu@linux.intel.com>
+The following changes since commit 54dee406374ce8adb352c48e175176247cb8db7c:
 
+  Merge tag 'arm64-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/arm64/linux (2019-05-22 08:36:16 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git 
+
+for you to fetch changes up to 13990cf8a180cc070f0b1266140e799db8754289:
+
+  ide: use BIT() macro for defining bit-flags (2019-07-09 14:52:14 -0700)
+
+----------------------------------------------------------------
+Amol Surati (1):
+      ide: use BIT() macro for defining bit-flags
+
+ include/linux/ide.h | 272 +++++++++++++++++++++++++++++++++++++++++++++++++-------------------------------------------------
+ 1 file changed, 136 insertions(+), 136 deletions(-)
