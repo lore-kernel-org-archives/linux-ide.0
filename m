@@ -1,73 +1,127 @@
-Return-Path: <SRS0=pw7Y=VL=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=53vO=VM=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 133BAC742D2
-	for <linux-ide@archiver.kernel.org>; Sun, 14 Jul 2019 17:55:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 897CDC7618F
+	for <linux-ide@archiver.kernel.org>; Mon, 15 Jul 2019 14:13:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E3F122089C
-	for <linux-ide@archiver.kernel.org>; Sun, 14 Jul 2019 17:55:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 628BE20868
+	for <linux-ide@archiver.kernel.org>; Mon, 15 Jul 2019 14:13:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1563199984;
+	bh=NZBbR48CYq+XLqySJkdrYuibf43IYtPTCwtonKiURyQ=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=0Fn+n7h1nCLh02Tw/Ry8+ARfQkNtVKZ0OL8YxlZM/5sxCcB+oP5VYONhGsLCMUoEj
+	 qiDgSDT0iiEBduBdOqx/r1uVKYJyzKqEuf0EmRS8bnIulqXNwmvzDdGYP4zCyzhaHf
+	 yWQcrl3qHziGdnpV1IqRsGrkcIDxkKFOZiiMjT2A=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728164AbfGNRzH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 14 Jul 2019 13:55:07 -0400
-Received: from len.romanrm.net ([91.121.75.85]:37428 "EHLO len.romanrm.net"
+        id S2389122AbfGOOMv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 15 Jul 2019 10:12:51 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52444 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726813AbfGNRzH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sun, 14 Jul 2019 13:55:07 -0400
-X-Greylist: delayed 742 seconds by postgrey-1.27 at vger.kernel.org; Sun, 14 Jul 2019 13:55:06 EDT
-Received: from natsu (unknown [IPv6:fd39::e99e:8f1b:cfc9:ccb8])
-        by len.romanrm.net (Postfix) with SMTP id 0D4782025D;
-        Sun, 14 Jul 2019 17:42:42 +0000 (UTC)
-Date:   Sun, 14 Jul 2019 22:42:42 +0500
-From:   Roman Mamedov <rm@romanrm.net>
-To:     linux-ide@vger.kernel.org
-Cc:     Jens Axboe <axboe@kernel.dk>, stable@vger.kernel.org
-Subject: [PATCH] libata: Disable queued TRIM for Samsung 860 series SSDs
-Message-ID: <20190714224242.4689a874@natsu>
+        id S2389120AbfGOOMv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 15 Jul 2019 10:12:51 -0400
+Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7931420868;
+        Mon, 15 Jul 2019 14:12:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1563199970;
+        bh=NZBbR48CYq+XLqySJkdrYuibf43IYtPTCwtonKiURyQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=TE0eKAG3yl5IFj7K5MlYbgxbXXkOe6HeYvYDH09ejRkYPPC1r98+qBbMeIMRHHQ8i
+         iNLn7/MaNOMNvt5lzZSiZ7r8B2vrGaZ4L8BVe0SuLgh+OU+0EC++QxhznsHcXr4YFB
+         58oiRIBc7yp+95+lIlkxAr0PGN2jkx3MGpCCS7Gs=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>,
+        Masato Suzuki <masato.suzuki@wdc.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
+        linux-ide@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.1 150/219] libata: don't request sense data on !ZAC ATA devices
+Date:   Mon, 15 Jul 2019 10:02:31 -0400
+Message-Id: <20190715140341.6443-150-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190715140341.6443-1-sashal@kernel.org>
+References: <20190715140341.6443-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-My Samsung 860 EVO mSATA 500GB SSD lockups for 20-30 seconds on fstrim, while
-dmesg is repeatedly flooded with:
+From: Tejun Heo <tj@kernel.org>
 
-[  332.792044] ata14.00: exception Emask 0x0 SAct 0x3fffe SErr 0x0 action 0x6 frozen
-[  332.798271] ata14.00: failed command: SEND FPDMA QUEUED
-[  332.804499] ata14.00: cmd 64/01:08:00:00:00/00:00:00:00:00/a0 tag 1 ncq dma 512 out
-                        res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-[  332.817145] ata14.00: status: { DRDY }
+[ Upstream commit ca156e006add67e4beea7896be395160735e09b0 ]
 
-Disabling queued TRIM for it, as already done for the 850 series models,
-solves the issue completely.
+ZAC support added sense data requesting on error for both ZAC and ATA
+devices. This seems to cause erratic error handling behaviors on some
+SSDs where the device reports sense data availability and then
+delivers the wrong content making EH take the wrong actions.  The
+failure mode was sporadic on a LITE-ON ssd and couldn't be reliably
+reproduced.
 
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: stable@vger.kernel.org
-BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=203475
-Signed-off-by: Roman Mamedov <rm@romanrm.net>
+There is no value in requesting sense data from non-ZAC ATA devices
+while there's a significant risk of introducing EH misbehaviors which
+are difficult to reproduce and fix.  Let's do the sense data dancing
+only for ZAC devices.
+
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Tested-by: Masato Suzuki <masato.suzuki@wdc.com>
+Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ata/libata-core.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/ata/libata-eh.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index cbb162b683b6..1fe50b8fe00d 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4566,6 +4566,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
- 	{ "Samsung SSD 850*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
- 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
-+	{ "Samsung SSD 860*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
-+						ATA_HORKAGE_ZERO_AFTER_TRIM, },
- 	{ "FCCT*M500*",			NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
- 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 938ed513b070..6215680418c4 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1486,7 +1486,7 @@ static int ata_eh_read_log_10h(struct ata_device *dev,
+ 	tf->hob_lbah = buf[10];
+ 	tf->nsect = buf[12];
+ 	tf->hob_nsect = buf[13];
+-	if (ata_id_has_ncq_autosense(dev->id))
++	if (dev->class == ATA_DEV_ZAC && ata_id_has_ncq_autosense(dev->id))
+ 		tf->auxiliary = buf[14] << 16 | buf[15] << 8 | buf[16];
  
+ 	return 0;
+@@ -1733,7 +1733,8 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
+ 	memcpy(&qc->result_tf, &tf, sizeof(tf));
+ 	qc->result_tf.flags = ATA_TFLAG_ISADDR | ATA_TFLAG_LBA | ATA_TFLAG_LBA48;
+ 	qc->err_mask |= AC_ERR_DEV | AC_ERR_NCQ;
+-	if ((qc->result_tf.command & ATA_SENSE) || qc->result_tf.auxiliary) {
++	if (dev->class == ATA_DEV_ZAC &&
++	    ((qc->result_tf.command & ATA_SENSE) || qc->result_tf.auxiliary)) {
+ 		char sense_key, asc, ascq;
+ 
+ 		sense_key = (qc->result_tf.auxiliary >> 16) & 0xff;
+@@ -1787,10 +1788,11 @@ static unsigned int ata_eh_analyze_tf(struct ata_queued_cmd *qc,
+ 	}
+ 
+ 	switch (qc->dev->class) {
+-	case ATA_DEV_ATA:
+ 	case ATA_DEV_ZAC:
+ 		if (stat & ATA_SENSE)
+ 			ata_eh_request_sense(qc, qc->scsicmd);
++		/* fall through */
++	case ATA_DEV_ATA:
+ 		if (err & ATA_ICRC)
+ 			qc->err_mask |= AC_ERR_ATA_BUS;
+ 		if (err & (ATA_UNC | ATA_AMNF))
 -- 
-2.11.0
+2.20.1
+
