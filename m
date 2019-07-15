@@ -2,126 +2,95 @@ Return-Path: <SRS0=53vO=VM=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88042C76195
-	for <linux-ide@archiver.kernel.org>; Mon, 15 Jul 2019 15:09:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB1DFC7618F
+	for <linux-ide@archiver.kernel.org>; Mon, 15 Jul 2019 17:30:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 61341206B8
-	for <linux-ide@archiver.kernel.org>; Mon, 15 Jul 2019 15:09:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1563203354;
-	bh=EvFcO/rzO9xfa64Gyrk/idXLQuQAM8q73KDNVZupXzc=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=W5C4cNjwu38eVz46r6cwCR5TV3v8x5cEl62XyqZPj+sLLw8Clk6/jKvjih7aFAZU0
-	 b1bw68IUY2dKTA2LEKayzXE5DFNZ0FT67EnSymUxj5Isflw4tlMQaKbcdgbp35d0M9
-	 kDi2MHxh8A1i7QloZ1VPegSOFi3MrZUYGfC5NTIc=
+	by mail.kernel.org (Postfix) with ESMTP id C33BD20838
+	for <linux-ide@archiver.kernel.org>; Mon, 15 Jul 2019 17:30:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="s9dc4iLl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732671AbfGON5R (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 15 Jul 2019 09:57:17 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35188 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732304AbfGON5R (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 15 Jul 2019 09:57:17 -0400
-Received: from sasha-vm.mshome.net (unknown [73.61.17.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5451D21530;
-        Mon, 15 Jul 2019 13:57:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1563199036;
-        bh=EvFcO/rzO9xfa64Gyrk/idXLQuQAM8q73KDNVZupXzc=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=vmXHgHvD5JYXFIMgTV4ga/GJW4IWJc6wBxfSIluLx3XxbUJ+wR0ieLt4NgTIlaOZz
-         bKwTI+4/5sGsUTXvsNREjOBzzBZTAu1eTasjcrFac/sMwAjj0J+pL7xNd3soWECZoh
-         6swV6oZsme9WaRghPFCvf2mU8163f29FQwve9fAc=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>,
-        Masato Suzuki <masato.suzuki@wdc.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
-        linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.2 171/249] libata: don't request sense data on !ZAC ATA devices
-Date:   Mon, 15 Jul 2019 09:45:36 -0400
-Message-Id: <20190715134655.4076-171-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190715134655.4076-1-sashal@kernel.org>
-References: <20190715134655.4076-1-sashal@kernel.org>
+        id S1732155AbfGORal (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 15 Jul 2019 13:30:41 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:33982 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731881AbfGORaj (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 15 Jul 2019 13:30:39 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x6FHTOSk117620;
+        Mon, 15 Jul 2019 17:30:32 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2018-07-02;
+ bh=oNLfqyrTB5tOhBrKek1L8dysumby1TT8eG8esbeAM/w=;
+ b=s9dc4iLlLw9cbHmOyCR4+YxfFQ95oECKyCifuCkSOH10DdF41oZDdGdZNMMj5arIqHCI
+ bBPxxl5cWcdV/geQG6Wofz12AcO2geHKQqvwVNWj1z0/ILXGTnMQ9oEU5G1KiYaBbrnL
+ TCCtqsm+nEG5MpmGMq/FgMYJOnw59GLhwMRrF8UmVluu8a6ES2Zas9aOD48ybbTtNNjV
+ dduI2iH3XV7UVv3YJIRKwr3m84q8POOTVzTHDL5hKP3sX+306eUlL2w3E/fhbnxSIUL2
+ qw9wW8gLUVGN1KoMXsTxtexFm+lc6GpxW87Yb1pd6ugE6O2QnhRJN/yH8OiBWL2SdNHR lA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2tq6qtg042-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 15 Jul 2019 17:30:32 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x6FHSWTW120586;
+        Mon, 15 Jul 2019 17:30:32 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 2tq4dtekkt-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 15 Jul 2019 17:30:31 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x6FHUTfk011882;
+        Mon, 15 Jul 2019 17:30:31 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 15 Jul 2019 10:30:28 -0700
+To:     Roman Mamedov <rm@romanrm.net>
+Cc:     linux-ide@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        stable@vger.kernel.org
+Subject: Re: [PATCH] libata: Disable queued TRIM for Samsung 860 series SSDs
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <20190714224242.4689a874@natsu>
+Date:   Mon, 15 Jul 2019 13:30:26 -0400
+In-Reply-To: <20190714224242.4689a874@natsu> (Roman Mamedov's message of "Sun,
+        14 Jul 2019 22:42:42 +0500")
+Message-ID: <yq1y30z2ojx.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9319 signatures=668688
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=766
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1810050000 definitions=main-1907150204
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9319 signatures=668688
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=833 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1810050000
+ definitions=main-1907150204
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Tejun Heo <tj@kernel.org>
 
-[ Upstream commit ca156e006add67e4beea7896be395160735e09b0 ]
+Roman,
 
-ZAC support added sense data requesting on error for both ZAC and ATA
-devices. This seems to cause erratic error handling behaviors on some
-SSDs where the device reports sense data availability and then
-delivers the wrong content making EH take the wrong actions.  The
-failure mode was sporadic on a LITE-ON ssd and couldn't be reliably
-reproduced.
+> My Samsung 860 EVO mSATA 500GB SSD lockups for 20-30 seconds on
+> fstrim, while dmesg is repeatedly flooded with:
 
-There is no value in requesting sense data from non-ZAC ATA devices
-while there's a significant risk of introducing EH misbehaviors which
-are difficult to reproduce and fix.  Let's do the sense data dancing
-only for ZAC devices.
+Is that specific to the mSATA model?
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Tested-by: Masato Suzuki <masato.suzuki@wdc.com>
-Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/ata/libata-eh.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+FWIW, queued TRIM works fine on the 2.5" form factor. So it would be
+best if we could limit the blacklist entry to the mSATA version (or a
+particular firmware rev).
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 9d687e1d4325..3bfd9da58473 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1469,7 +1469,7 @@ static int ata_eh_read_log_10h(struct ata_device *dev,
- 	tf->hob_lbah = buf[10];
- 	tf->nsect = buf[12];
- 	tf->hob_nsect = buf[13];
--	if (ata_id_has_ncq_autosense(dev->id))
-+	if (dev->class == ATA_DEV_ZAC && ata_id_has_ncq_autosense(dev->id))
- 		tf->auxiliary = buf[14] << 16 | buf[15] << 8 | buf[16];
- 
- 	return 0;
-@@ -1716,7 +1716,8 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
- 	memcpy(&qc->result_tf, &tf, sizeof(tf));
- 	qc->result_tf.flags = ATA_TFLAG_ISADDR | ATA_TFLAG_LBA | ATA_TFLAG_LBA48;
- 	qc->err_mask |= AC_ERR_DEV | AC_ERR_NCQ;
--	if ((qc->result_tf.command & ATA_SENSE) || qc->result_tf.auxiliary) {
-+	if (dev->class == ATA_DEV_ZAC &&
-+	    ((qc->result_tf.command & ATA_SENSE) || qc->result_tf.auxiliary)) {
- 		char sense_key, asc, ascq;
- 
- 		sense_key = (qc->result_tf.auxiliary >> 16) & 0xff;
-@@ -1770,10 +1771,11 @@ static unsigned int ata_eh_analyze_tf(struct ata_queued_cmd *qc,
- 	}
- 
- 	switch (qc->dev->class) {
--	case ATA_DEV_ATA:
- 	case ATA_DEV_ZAC:
- 		if (stat & ATA_SENSE)
- 			ata_eh_request_sense(qc, qc->scsicmd);
-+		/* fall through */
-+	case ATA_DEV_ATA:
- 		if (err & ATA_ICRC)
- 			qc->err_mask |= AC_ERR_ATA_BUS;
- 		if (err & (ATA_UNC | ATA_AMNF))
 -- 
-2.20.1
-
+Martin K. Petersen	Oracle Linux Engineering
