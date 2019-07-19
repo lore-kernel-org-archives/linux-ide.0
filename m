@@ -1,60 +1,99 @@
-Return-Path: <SRS0=TPKw=VO=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=CkvH=VQ=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4C90C76186
-	for <linux-ide@archiver.kernel.org>; Wed, 17 Jul 2019 04:56:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F9C2C76196
+	for <linux-ide@archiver.kernel.org>; Fri, 19 Jul 2019 03:00:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7A2BD2173E
-	for <linux-ide@archiver.kernel.org>; Wed, 17 Jul 2019 04:56:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD70D21850
+	for <linux-ide@archiver.kernel.org>; Fri, 19 Jul 2019 03:00:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sri8nXor"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="4Lz/OvJV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725856AbfGQEz7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 17 Jul 2019 00:55:59 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:50342 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725799AbfGQEz7 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 17 Jul 2019 00:55:59 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=MAfQ16ItayZEkXP0ZfuwmksYBU6cM+hrVNIGtEnzPNM=; b=sri8nXorz94Fq1VCS7x/shc4V
-        NJCByH5rxVgLZ1W99agN2rDhaPY6gyr+X3+Y4owdX0A1uJ8K5a3HnwbMH19+qmIye/+iulaRlmCVy
-        ngnza8O9lmZQEkfbHQXj74tQxbfsliHj7U+qlO95gd72J4yb33H3eH6GeqPzuDBtBlywhwFCClzhn
-        jTFyUnnxZo7mro0UZZ9p3d3nBjJgHcJscEvYusIBpfnOu0Sbt9MoDofHRgYZEx5g8uKwrNoqhiRTK
-        YVHolvArgjLPI9PKgClUlL10dBVmWD+PvvZu1up9401HhkggADRxYUEPNsDetWsEMRBKxHDXVUxon
-        SOCKzkc8Q==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1hnbyw-0001kk-R0; Wed, 17 Jul 2019 04:55:58 +0000
-Date:   Tue, 16 Jul 2019 21:55:58 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Max Staudt <max-linux@enpas.org>
-Cc:     linux-ide@vger.kernel.org
-Subject: Re: [PATCH] ata/pata_buddha: Probe via modalias instead of initcall
-Message-ID: <20190717045558.GA6616@infradead.org>
-References: <20190713140241.27076-1-max-linux@enpas.org>
- <179c6a72-dca4-5ca1-5c23-0b54b76fb010@enpas.org>
+        id S1726072AbfGSDAo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 18 Jul 2019 23:00:44 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:60188 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726055AbfGSDAo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 18 Jul 2019 23:00:44 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x6J2xREW116877;
+        Fri, 19 Jul 2019 03:00:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2018-07-02;
+ bh=TPmAbO2xfTXRlVOJn/FWTOSn9D/wh3ANJTPaokkj00U=;
+ b=4Lz/OvJVFIPHScBtB/jeeIaBRgLaoRLJxtq38wB7AgkVypLxCwtS69HALoCZdi5ySvGU
+ 9vxzuPAdNOjCt7R62O8MSX5u+KQBSjSJtsuENrlmcDpbt/dhb8mxXkdfOq70yoI5grYp
+ h3srv4v6k0nDDrqJ8clyt20fvxmWcyLJSsQJeCVThfzPMyStEq1HUlWA+CtoJ1BaGfeN
+ 7YqwL/Y2NI+K3yzIodR0bw0JW5f34vnDgPq+1eSBZrAo6TpaqQFoxhsh8rDeo7QsxjQ6
+ Uv7qRtA/2Pnl3hAD6l6H7Ra2Ganj85m6PscOVgv69voUJKCCThhF63nTyqSdRtB4/oDF Og== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2tq78q458f-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 19 Jul 2019 03:00:37 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x6J2vupA040625;
+        Fri, 19 Jul 2019 03:00:37 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 2tsctyp04h-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 19 Jul 2019 03:00:37 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x6J30XsH023949;
+        Fri, 19 Jul 2019 03:00:34 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 19 Jul 2019 03:00:33 +0000
+To:     Roman Mamedov <rm@romanrm.net>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-ide@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        stable@vger.kernel.org
+Subject: Re: [PATCH] libata: Disable queued TRIM for Samsung 860 series SSDs
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <20190714224242.4689a874@natsu> <yq1y30z2ojx.fsf@oracle.com>
+        <20190715224215.2186bc8e@natsu>
+Date:   Thu, 18 Jul 2019 23:00:31 -0400
+In-Reply-To: <20190715224215.2186bc8e@natsu> (Roman Mamedov's message of "Mon,
+        15 Jul 2019 22:42:15 +0500")
+Message-ID: <yq1lfwuwwxc.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <179c6a72-dca4-5ca1-5c23-0b54b76fb010@enpas.org>
-User-Agent: Mutt/1.11.4 (2019-03-13)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9322 signatures=668688
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=948
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1810050000 definitions=main-1907190032
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9322 signatures=668688
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1810050000
+ definitions=main-1907190033
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Jul 16, 2019 at 07:18:39PM +0200, Max Staudt wrote:
-> I just realised that I didn't CC lkml - shall I resend the patch?
 
-lkml isn't all that important. The linux-m68k list might be more useful
-to catch interested parties, though.
+Roman,
+
+> I do not have other Samsung (m)SATA models to verify. On the bugreport
+> someone confirmed this to be an issue for them too. Let's try asking
+> if they have the mSATA model too, and what firmware revision. Mine is
+> RVT42B6Q and there were no updates available last time I checked.
+
+I have tested two mSATA 860s on two different systems, both with Intel
+AHCI controllers, and queued trim works fine for me.
+
+I'll try a few more things tomorrow.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
