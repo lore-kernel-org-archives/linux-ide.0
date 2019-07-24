@@ -2,107 +2,66 @@ Return-Path: <SRS0=kXvD=VV=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECA9CC761A8
-	for <linux-ide@archiver.kernel.org>; Wed, 24 Jul 2019 03:04:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0959C76186
+	for <linux-ide@archiver.kernel.org>; Wed, 24 Jul 2019 22:01:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C34722238C
-	for <linux-ide@archiver.kernel.org>; Wed, 24 Jul 2019 03:04:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="LDv72/k2"
+	by mail.kernel.org (Postfix) with ESMTP id 9D6222189F
+	for <linux-ide@archiver.kernel.org>; Wed, 24 Jul 2019 22:01:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726004AbfGXDEi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 23 Jul 2019 23:04:38 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:42619 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725497AbfGXDEh (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jul 2019 23:04:37 -0400
-Received: by mail-pl1-f194.google.com with SMTP id ay6so21410277plb.9;
-        Tue, 23 Jul 2019 20:04:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=C+6xPWbKb+rzs9gL8dKhkZHnt63Mc+KjKpEAUD1XKXc=;
-        b=LDv72/k2qPCZcb1tWTreRVLJ0FcFDpJC3LrkiY9RuDaY5XmspfU/00LSWgbmfu9iPK
-         maRsd4A/ATKcUF9++wP6coouKh9NGaBIQStK92snWIpPv3/ZsK6vBHV9V5Arfn4+++pg
-         Vdjr3ElKOgoMppqBlPR8OdspmYjEVPzt3y6oJi7yCPk77ZpfC0fEXXFHi80qfG8fsggr
-         vM/kwtVXxl8qP+3DJsWTDDqEY/NHzWGoiHFtjC9nXcpkjKfC3byy4/a5lK6dw4JO52Lb
-         PBqacHActl2Bu/87K9MSviBBl1pOyX2L5O1a5Uy0QFnXN7TOTmUR5kGKZ8/6jKzziJ1y
-         npog==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=C+6xPWbKb+rzs9gL8dKhkZHnt63Mc+KjKpEAUD1XKXc=;
-        b=diTz46VKik+sv1ut/pRnd/sptI1Ui3WHqoToo0D7jalB2K9G12v+IlQhscS1/JtUCG
-         ++K0vm64OuxgLBQuXBUNnE110W/ZV+jJ79Lt+uyZ3q6kUtuqm/p+31aX8LjbTI3L/ZYi
-         kEodnZ6Lq1IIQ5t7XHvRl/ZJlMgb9KiMatX2TFCxlbFsjvLky1YLy7sQm5ulJ4heGOy8
-         FdtW4pN87FGzbrxBZ3MT2xGgsYQdevHq8fIv++N74UckO3Xiho/I4Q2CbIYbMhA8nS8V
-         +9U0/veehH3CuGxRpSDqUWalAAAMLPWJG40Na+7prOMsVyNEeBkbwT52NvbR9GAMh1gj
-         l+ww==
-X-Gm-Message-State: APjAAAVjsfX/hoDQ19o6KirsQlEXqOYbjb7B9q9v0BQ6ivYR/80CKGEC
-        JyIFyJpqQyz7HuzKSuADxZ0=
-X-Google-Smtp-Source: APXvYqxFwq/W7GEYnlkZ1NUqVfHzrdBkaAyomBjCgr+0+Pxoj3FusJY8DDE5rFWWtSTsmFcTdc0W/A==
-X-Received: by 2002:a17:902:be0a:: with SMTP id r10mr78943136pls.51.1563937477077;
-        Tue, 23 Jul 2019 20:04:37 -0700 (PDT)
-Received: from oslab.tsinghua.edu.cn ([2402:f000:4:72:808::3ca])
-        by smtp.gmail.com with ESMTPSA id k3sm30713560pgq.92.2019.07.23.20.04.35
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 23 Jul 2019 20:04:36 -0700 (PDT)
-From:   Jia-Ju Bai <baijiaju1990@gmail.com>
-To:     axboe@kernel.dk
+        id S1729097AbfGXWB5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 24 Jul 2019 18:01:57 -0400
+Received: from smtp09.smtpout.orange.fr ([80.12.242.131]:41742 "EHLO
+        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728744AbfGXWB5 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jul 2019 18:01:57 -0400
+Received: from localhost.localdomain ([92.140.204.221])
+        by mwinf5d44 with ME
+        id gm1q2000P4n7eLC03m1rDF; Thu, 25 Jul 2019 00:01:55 +0200
+X-ME-Helo: localhost.localdomain
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Thu, 25 Jul 2019 00:01:55 +0200
+X-ME-IP: 92.140.204.221
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To:     davem@davemloft.net
 Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: [PATCH] ata: libata-core: Fix possible null-pointer dereferences in ata_host_alloc_pinfo()
-Date:   Wed, 24 Jul 2019 11:04:30 +0800
-Message-Id: <20190724030430.27788-1-baijiaju1990@gmail.com>
-X-Mailer: git-send-email 2.17.0
+        kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] ide: tx4939ide: Fix the name used in a 'devm_request_mem_region()' call
+Date:   Thu, 25 Jul 2019 00:01:45 +0200
+Message-Id: <20190724220145.17282-1-christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.20.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-In ata_host_alloc_pinfo(), when ppi[j] is NULL (line 6184), pi is NULL.
-In this case, pi is used on lines 6187-6195:
-    ap->pio_mask = pi->pio_mask;
-    ap->mwdma_mask = pi->mwdma_mask;
-    ...
-Thus, possible null-pointer dereferences may occur.
+This should be "tx4939ide" instead of "tx4938ide", but here MODNAME is even
+better.
 
-To fix these possible bugs, when ppi[j] is NULL, the loop continues, and
-"j++" is moved to the loop's regulator.
-
-These bugs are found by a static analysis tool STCheck written by us.
-
-Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 ---
- drivers/ata/libata-core.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/ide/tx4939ide.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 28c492be0a57..dabfa50dfbbe 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6178,11 +6178,13 @@ struct ata_host *ata_host_alloc_pinfo(struct device *dev,
- 	if (!host)
- 		return NULL;
+diff --git a/drivers/ide/tx4939ide.c b/drivers/ide/tx4939ide.c
+index 88d132edc4e3..079b271dd5a7 100644
+--- a/drivers/ide/tx4939ide.c
++++ b/drivers/ide/tx4939ide.c
+@@ -549,7 +549,7 @@ static int __init tx4939ide_probe(struct platform_device *pdev)
+ 		return -ENODEV;
  
--	for (i = 0, j = 0, pi = NULL; i < host->n_ports; i++) {
-+	for (i = 0, j = 0, pi = NULL; i < host->n_ports; i++, j++) {
- 		struct ata_port *ap = host->ports[i];
- 
- 		if (ppi[j])
--			pi = ppi[j++];
-+			pi = ppi[j];
-+		else
-+			continue;
- 
- 		ap->pio_mask = pi->pio_mask;
- 		ap->mwdma_mask = pi->mwdma_mask;
+ 	if (!devm_request_mem_region(&pdev->dev, res->start,
+-				     resource_size(res), "tx4938ide"))
++				     resource_size(res), MODNAME))
+ 		return -EBUSY;
+ 	mapbase = (unsigned long)devm_ioremap(&pdev->dev, res->start,
+ 					      resource_size(res));
 -- 
-2.17.0
+2.20.1
 
