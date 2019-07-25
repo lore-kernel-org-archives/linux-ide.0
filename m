@@ -2,319 +2,184 @@ Return-Path: <SRS0=d/E6=VW=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61C58C76194
-	for <linux-ide@archiver.kernel.org>; Thu, 25 Jul 2019 18:08:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0F1EC76190
+	for <linux-ide@archiver.kernel.org>; Thu, 25 Jul 2019 21:34:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 479A6218F0
-	for <linux-ide@archiver.kernel.org>; Thu, 25 Jul 2019 18:08:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B77C122BF5
+	for <linux-ide@archiver.kernel.org>; Thu, 25 Jul 2019 21:34:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=rajagiritech-edu-in.20150623.gappssmtp.com header.i=@rajagiritech-edu-in.20150623.gappssmtp.com header.b="1Q6ULOyU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727651AbfGYSIn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 25 Jul 2019 14:08:43 -0400
-Received: from enpas.org ([46.38.239.100]:34214 "EHLO mail.enpas.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726300AbfGYSIn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 25 Jul 2019 14:08:43 -0400
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-        by mail.enpas.org (Postfix) with ESMTPSA id 16C63FFDB4;
-        Thu, 25 Jul 2019 18:08:39 +0000 (UTC)
-From:   Max Staudt <max@enpas.org>
-To:     b.zolnierkie@samsung.com, axboe@kernel.dk
-Cc:     glaubitz@physik.fu-berlin.de, schmitzmic@gmail.com,
-        geert@linux-m68k.org, linux-ide@vger.kernel.org,
-        linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Max Staudt <max@enpas.org>
-Subject: [PATCH v3] ata/pata_buddha: Probe via modalias instead of initcall
-Date:   Thu, 25 Jul 2019 20:08:25 +0200
-Message-Id: <20190725180825.31508-1-max@enpas.org>
-X-Mailer: git-send-email 2.11.0
+        id S1726447AbfGYVep (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 25 Jul 2019 17:34:45 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:44645 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726416AbfGYVep (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jul 2019 17:34:45 -0400
+Received: by mail-pg1-f193.google.com with SMTP id i18so23664500pgl.11
+        for <linux-ide@vger.kernel.org>; Thu, 25 Jul 2019 14:34:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=rajagiritech-edu-in.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=BiYRj7E3Dy6V2t5m7sV8jSh+kJY2gTdBXaMARRXcvtk=;
+        b=1Q6ULOyUGM+dXIraIPHDKr1jbbBGlCFF5Wtucww7rlIh8qmfYsWyj1KuPu64Gxyscb
+         YPmC9wHQ72iksF1wY8Eckqd5wRPeSHMrImmA4fICv6x52bGcMcyAIaZUucKNHTYNt/tJ
+         TimAfRYm+v5T5W+DEVzXEA+sjFEiq4CG9oTFbqNR3k2f2xOM+Z4P0sxv/ou94ePbjYoa
+         xGPKMPghxQsbILuHftK99D/kC5LAIntF+tZWLoOj6M3FbFBWsyAceAywdln+aKqpZ1pm
+         CZWUSNVasPHJxemw1Plg0zhJ/qOzKAUDw/hp6S9/G/2Te3x77x006ZuPdhckbWmr3XKB
+         rw0g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=BiYRj7E3Dy6V2t5m7sV8jSh+kJY2gTdBXaMARRXcvtk=;
+        b=YXM8EL0gwqX435cMQHcsXvb1kg9GsyCK6U2h5l4LuD6wDoOB9/bY1wmyR3+u86P8co
+         fPHCQ4Baz2cgV+dOGD+KNPhhibrt2HPWr9Ld2kf8lGIIehCJNrp25UjD3ZxAoyjyhtm6
+         4kj604/qWbo8O3Zp7kAWpC+LO1qbd2Jh3FTWU1PHXiaOjkH0kYj67ew3dDbRlcF2eRdQ
+         H6l29aRQ7ENJ+4kRbSzhJnwkXkvVpG1o7+4vrl0szYXObfAEqQ1FqZClqiSMTCOyueV6
+         tyVpAw0YQMe+QLmGZCyIgpjfMfP7ox0tMYfm6Act0wEgu6NNRYCERF6ua6yFc7xTaWv+
+         6HOA==
+X-Gm-Message-State: APjAAAWMvqWXW16vE02aK3AdGj1OEZ0h6pIQH5FN2FUfrRRJzIK69O9R
+        IeiWVk18OpcF17Gp/BjYn6TUrhv3CTRCIlrEj+I=
+X-Google-Smtp-Source: APXvYqyCnT13NwDrcOJPEGqTyUcS5rkM5iWvbLxEEDHraXXR5SV9vV35zNL0WhOxkpVwu6FamU9JZP08/tMVNpqCQCk=
+X-Received: by 2002:a63:c203:: with SMTP id b3mr89265365pgd.450.1564090483811;
+ Thu, 25 Jul 2019 14:34:43 -0700 (PDT)
+MIME-Version: 1.0
+References: <CAG=yYw=S197+2TzdPaiEaz-9MRuVtd+Q_L9W8GOf4jKwyppNjQ@mail.gmail.com>
+ <CAKwvOdmg2b2PMzuzNmutacFArBNagjtwG=_VZvKhb4okzSkdiA@mail.gmail.com>
+In-Reply-To: <CAKwvOdmg2b2PMzuzNmutacFArBNagjtwG=_VZvKhb4okzSkdiA@mail.gmail.com>
+From:   Jeffrin Thalakkottoor <jeffrin@rajagiritech.edu.in>
+Date:   Fri, 26 Jul 2019 03:04:07 +0530
+Message-ID: <CAG=yYwkP34+uz2vVTdYyV8KJVj_Z26Mo3gUPqss6mk6tpFkWsw@mail.gmail.com>
+Subject: Re: BUG: KASAN: global-out-of-bounds in ata_exec_internal_sg+0x50f/0xc70
+To:     Nick Desaulniers <ndesaulniers@google.com>, axboe@kernel.dk
+Cc:     Steven Rostedt <rostedt@goodmis.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+        tobin@kernel.org, lkml <linux-kernel@vger.kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        Dmitry Vyukov <dvyukov@google.com>,
+        Alexander Potapenko <glider@google.com>,
+        linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Up until now, the pata_buddha driver would only check for cards on
-initcall time. Now, the kernel will call its probe function as soon
-as a compatible card is detected.
+hello Jens Axboe,
 
-v3: Clean up devm_*, implement device removal.
+Please can you take a look at related code and also patch from Kees ?
 
-v2: Rename 'zdev' to 'z' to make the patch easy to analyse with
-    git diff --ignore-space-change
+On Tue, Jul 16, 2019 at 11:58 PM Nick Desaulniers
+<ndesaulniers@google.com> wrote:
+>
+> On Wed, Jul 10, 2019 at 10:44 AM Jeffrin Thalakkottoor
+> <jeffrin@rajagiritech.edu.in> wrote:
+> >
+> > hello all ,
+> >
+> > i encountered a KASAN bug related .    here are some related information...
+> >
+> >
+> > -------------------x-----------------------------x------------------
+> > [   30.037312] BUG: KASAN: global-out-of-bounds in
+> > ata_exec_internal_sg+0x50f/0xc70
+> > [   30.037447] Read of size 16 at addr ffffffff91f41f80 by task scsi_eh_1/149
+> >
+> >
+> > [   30.039935] The buggy address belongs to the variable:
+> > [   30.040059]  cdb.48319+0x0/0x40
+> >
+> > [   30.040241] Memory state around the buggy address:
+> > [   30.040362]  ffffffff91f41e80: fa fa fa fa 00 00 fa fa fa fa fa fa
+> > 00 00 07 fa
+> > [   30.040498]  ffffffff91f41f00: fa fa fa fa 00 00 00 00 00 00 00 03
+> > fa fa fa fa
+> > [   30.040628] >ffffffff91f41f80: 00 04 fa fa fa fa fa fa 00 00 fa fa
+> > fa fa fa fa
+> > [   30.040755]                       ^
+> > [   30.040868]  ffffffff91f42000: 00 00 00 04 fa fa fa fa 00 fa fa fa
+> > fa fa fa fa
+> > [   30.041003]  ffffffff91f42080: 04 fa fa fa fa fa fa fa 00 04 fa fa
+> > fa fa fa fa
+> >
+> > ---------------------------x--------------------------x----------------
+> > $uname -a
+> > Linux debian 5.2.0-rc7+ #4 SMP Tue Jul 9 02:54:07 IST 2019 x86_64 GNU/Linux
+> > $
+> >
+> > --------------------x----------------------------x---------------------------
+> > (gdb) l *ata_exec_internal_sg+0x50f
+> > 0xffffffff81c7b59f is in ata_exec_internal_sg (./include/linux/string.h:359).
+>
+> So looks like ata_exec_internal_sg() is panic'ing when...
+>
+> > 354 if (q_size < size)
+> > 355 __read_overflow2();
+> > 356 }
+> > 357 if (p_size < size || q_size < size)
+> > 358 fortify_panic(__func__);
+> > 359 return __builtin_memcpy(p, q, size);
+> > 360 }
+> > 361
+> > 362 __FORTIFY_INLINE void *memmove(void *p, const void *q, __kernel_size_t size)
+>
+> ...a call to memmove is made? Without having looked at the source of
+> ata_exec_internal_sg(), it's possible that either through inlining, or
+> the compiler generating a memmove, that one of the arguments was not
+> quite right.  I suggest spending more time isolating where this is
+> coming from, if you can reliably reproduce, or CC whoever wrote or
+> maintains the code and ask them to take a look.
+>
+> The cited code looks like a check comparing that the pointer distance
+> is greater than the size of bytes being passed in.  I'd wager
+> someone's calling memmove with overlapping memory regions when they
+> really wanted memcpy.  Maybe a better question, is why was memmove
+> ever used; if there was some invariant that the memory regions
+> overlapped, why is that invariant no longer holding.
+>
+> Anyways, sorry I don't have more time to look into this.  Thank you
+> for the report.
+>
+> > 363 {
+> > (gdb)
+> > --------------------------x--------------------------
+> > GNU Make            4.2.1
+> > Binutils            2.31.1
+> > Util-linux          2.33.1
+> > Mount                2.33.1
+> > Linux C Library      2.28
+> > Dynamic linker (ldd) 2.28
+> > Procps              3.3.15
+> > Kbd                  2.0.4
+> > Console-tools        2.0.4
+> > Sh-utils            8.30
+> > Udev                241
+> > ---------------------x--------------------------------x
+> > Thread model: posix
+> > gcc version 8.3.0 (Debian 8.3.0-7)
+> > ---------------------x--------------------------------x
+> >
+> > Please ask if more information is needed.
+> >
+> > --
+> > software engineer
+> > rajagiri school of engineering and technology
+>
+>
+>
+> --
+> Thanks,
+> ~Nick Desaulniers
 
-Tested-by: Max Staudt <max@enpas.org>
-Signed-off-by: Max Staudt <max@enpas.org>
----
- drivers/ata/pata_buddha.c | 215 ++++++++++++++++++++++++++--------------------
- 1 file changed, 121 insertions(+), 94 deletions(-)
 
-diff --git a/drivers/ata/pata_buddha.c b/drivers/ata/pata_buddha.c
-index 11a8044ff..b68392935 100644
---- a/drivers/ata/pata_buddha.c
-+++ b/drivers/ata/pata_buddha.c
-@@ -19,6 +19,7 @@
- #include <linux/libata.h>
- #include <linux/mm.h>
- #include <linux/module.h>
-+#include <linux/types.h>
- #include <linux/zorro.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_host.h>
-@@ -29,7 +30,7 @@
- #include <asm/setup.h>
- 
- #define DRV_NAME "pata_buddha"
--#define DRV_VERSION "0.1.0"
-+#define DRV_VERSION "0.1.1"
- 
- #define BUDDHA_BASE1	0x800
- #define BUDDHA_BASE2	0xa00
-@@ -47,11 +48,11 @@ enum {
- 	BOARD_XSURF
- };
- 
--static unsigned int buddha_bases[3] __initdata = {
-+static unsigned int buddha_bases[3] = {
- 	BUDDHA_BASE1, BUDDHA_BASE2, BUDDHA_BASE3
- };
- 
--static unsigned int xsurf_bases[2] __initdata = {
-+static unsigned int xsurf_bases[2] = {
- 	XSURF_BASE1, XSURF_BASE2
- };
- 
-@@ -145,111 +146,137 @@ static struct ata_port_operations pata_xsurf_ops = {
- 	.set_mode	= pata_buddha_set_mode,
- };
- 
--static int __init pata_buddha_init_one(void)
-+static int pata_buddha_probe(struct zorro_dev *z,
-+			     const struct zorro_device_id *ent)
- {
--	struct zorro_dev *z = NULL;
--
--	while ((z = zorro_find_device(ZORRO_WILDCARD, z))) {
--		static const char *board_name[]
--			= { "Buddha", "Catweasel", "X-Surf" };
--		struct ata_host *host;
--		void __iomem *buddha_board;
--		unsigned long board;
--		unsigned int type, nr_ports = 2;
--		int i;
--
--		if (z->id == ZORRO_PROD_INDIVIDUAL_COMPUTERS_BUDDHA) {
--			type = BOARD_BUDDHA;
--		} else if (z->id == ZORRO_PROD_INDIVIDUAL_COMPUTERS_CATWEASEL) {
--			type = BOARD_CATWEASEL;
--			nr_ports++;
--		} else if (z->id == ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF) {
--			type = BOARD_XSURF;
--		} else
--			continue;
--
--		dev_info(&z->dev, "%s IDE controller\n", board_name[type]);
--
--		board = z->resource.start;
-+	static const char * const board_name[]
-+		= { "Buddha", "Catweasel", "X-Surf" };
-+	struct ata_host *host;
-+	void __iomem *buddha_board;
-+	unsigned long board;
-+	unsigned int type, nr_ports = 2;
-+	int i;
-+
-+	switch (z->id) {
-+	case ZORRO_PROD_INDIVIDUAL_COMPUTERS_BUDDHA:
-+	default:
-+		type = BOARD_BUDDHA;
-+		break;
-+	case ZORRO_PROD_INDIVIDUAL_COMPUTERS_CATWEASEL:
-+		type = BOARD_CATWEASEL;
-+		nr_ports++;
-+		break;
-+	case ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF:
-+		type = BOARD_XSURF;
-+		break;
-+	}
-+
-+	dev_info(&z->dev, "%s IDE controller\n", board_name[type]);
-+
-+	board = z->resource.start;
-+
-+	if (type != BOARD_XSURF) {
-+		if (!devm_request_mem_region(&z->dev,
-+					     board + BUDDHA_BASE1,
-+					     0x800, DRV_NAME))
-+			return -ENXIO;
-+	} else {
-+		if (!devm_request_mem_region(&z->dev,
-+					     board + XSURF_BASE1,
-+					     0x1000, DRV_NAME))
-+			return -ENXIO;
-+		if (!devm_request_mem_region(&z->dev,
-+					     board + XSURF_BASE2,
-+					     0x1000, DRV_NAME)) {
-+		}
-+	}
-+
-+	/* allocate host */
-+	host = ata_host_alloc(&z->dev, nr_ports);
-+	if (!host)
-+		return -ENXIO;
-+
-+	buddha_board = ZTWO_VADDR(board);
-+
-+	/* enable the board IRQ on Buddha/Catweasel */
-+	if (type != BOARD_XSURF)
-+		z_writeb(0, buddha_board + BUDDHA_IRQ_MR);
-+
-+	for (i = 0; i < nr_ports; i++) {
-+		struct ata_port *ap = host->ports[i];
-+		void __iomem *base, *irqport;
-+		unsigned long ctl = 0;
- 
- 		if (type != BOARD_XSURF) {
--			if (!devm_request_mem_region(&z->dev,
--						     board + BUDDHA_BASE1,
--						     0x800, DRV_NAME))
--				continue;
-+			ap->ops = &pata_buddha_ops;
-+			base = buddha_board + buddha_bases[i];
-+			ctl = BUDDHA_CONTROL;
-+			irqport = buddha_board + BUDDHA_IRQ + i * 0x40;
- 		} else {
--			if (!devm_request_mem_region(&z->dev,
--						     board + XSURF_BASE1,
--						     0x1000, DRV_NAME))
--				continue;
--			if (!devm_request_mem_region(&z->dev,
--						     board + XSURF_BASE2,
--						     0x1000, DRV_NAME))
--				continue;
-+			ap->ops = &pata_xsurf_ops;
-+			base = buddha_board + xsurf_bases[i];
-+			/* X-Surf has no CS1* (Control/AltStat) */
-+			irqport = buddha_board + XSURF_IRQ;
- 		}
- 
--		/* allocate host */
--		host = ata_host_alloc(&z->dev, nr_ports);
--		if (!host)
--			continue;
--
--		buddha_board = ZTWO_VADDR(board);
--
--		/* enable the board IRQ on Buddha/Catweasel */
--		if (type != BOARD_XSURF)
--			z_writeb(0, buddha_board + BUDDHA_IRQ_MR);
--
--		for (i = 0; i < nr_ports; i++) {
--			struct ata_port *ap = host->ports[i];
--			void __iomem *base, *irqport;
--			unsigned long ctl = 0;
--
--			if (type != BOARD_XSURF) {
--				ap->ops = &pata_buddha_ops;
--				base = buddha_board + buddha_bases[i];
--				ctl = BUDDHA_CONTROL;
--				irqport = buddha_board + BUDDHA_IRQ + i * 0x40;
--			} else {
--				ap->ops = &pata_xsurf_ops;
--				base = buddha_board + xsurf_bases[i];
--				/* X-Surf has no CS1* (Control/AltStat) */
--				irqport = buddha_board + XSURF_IRQ;
--			}
--
--			ap->pio_mask = ATA_PIO4;
--			ap->flags |= ATA_FLAG_SLAVE_POSS | ATA_FLAG_NO_IORDY;
--
--			ap->ioaddr.data_addr		= base;
--			ap->ioaddr.error_addr		= base + 2 + 1 * 4;
--			ap->ioaddr.feature_addr		= base + 2 + 1 * 4;
--			ap->ioaddr.nsect_addr		= base + 2 + 2 * 4;
--			ap->ioaddr.lbal_addr		= base + 2 + 3 * 4;
--			ap->ioaddr.lbam_addr		= base + 2 + 4 * 4;
--			ap->ioaddr.lbah_addr		= base + 2 + 5 * 4;
--			ap->ioaddr.device_addr		= base + 2 + 6 * 4;
--			ap->ioaddr.status_addr		= base + 2 + 7 * 4;
--			ap->ioaddr.command_addr		= base + 2 + 7 * 4;
--
--			if (ctl) {
--				ap->ioaddr.altstatus_addr = base + ctl;
--				ap->ioaddr.ctl_addr	  = base + ctl;
--			}
--
--			ap->private_data = (void *)irqport;
--
--			ata_port_desc(ap, "cmd 0x%lx ctl 0x%lx", board,
--				      ctl ? board + buddha_bases[i] + ctl : 0);
-+		ap->pio_mask = ATA_PIO4;
-+		ap->flags |= ATA_FLAG_SLAVE_POSS | ATA_FLAG_NO_IORDY;
-+
-+		ap->ioaddr.data_addr		= base;
-+		ap->ioaddr.error_addr		= base + 2 + 1 * 4;
-+		ap->ioaddr.feature_addr		= base + 2 + 1 * 4;
-+		ap->ioaddr.nsect_addr		= base + 2 + 2 * 4;
-+		ap->ioaddr.lbal_addr		= base + 2 + 3 * 4;
-+		ap->ioaddr.lbam_addr		= base + 2 + 4 * 4;
-+		ap->ioaddr.lbah_addr		= base + 2 + 5 * 4;
-+		ap->ioaddr.device_addr		= base + 2 + 6 * 4;
-+		ap->ioaddr.status_addr		= base + 2 + 7 * 4;
-+		ap->ioaddr.command_addr		= base + 2 + 7 * 4;
-+
-+		if (ctl) {
-+			ap->ioaddr.altstatus_addr = base + ctl;
-+			ap->ioaddr.ctl_addr	  = base + ctl;
- 		}
- 
--		ata_host_activate(host, IRQ_AMIGA_PORTS, ata_sff_interrupt,
--				  IRQF_SHARED, &pata_buddha_sht);
-+		ap->private_data = (void *)irqport;
- 
-+		ata_port_desc(ap, "cmd 0x%lx ctl 0x%lx", board,
-+			      ctl ? board + buddha_bases[i] + ctl : 0);
- 	}
- 
-+	ata_host_activate(host, IRQ_AMIGA_PORTS, ata_sff_interrupt,
-+			  IRQF_SHARED, &pata_buddha_sht);
-+
-+
- 	return 0;
- }
- 
--module_init(pata_buddha_init_one);
-+static void pata_buddha_remove(struct zorro_dev *zdev)
-+{
-+	struct ata_host *host = dev_get_drvdata(&zdev->dev);
-+
-+	ata_host_detach(host);
-+}
-+
-+static const struct zorro_device_id pata_buddha_zorro_tbl[] = {
-+	{ ZORRO_PROD_INDIVIDUAL_COMPUTERS_BUDDHA, },
-+	{ ZORRO_PROD_INDIVIDUAL_COMPUTERS_CATWEASEL, },
-+	{ ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, },
-+	{ 0 }
-+};
-+
-+MODULE_DEVICE_TABLE(zorro, pata_buddha_zorro_tbl);
-+
-+static struct zorro_driver pata_buddha_driver = {
-+	.name           = "pata_buddha",
-+	.id_table       = pata_buddha_zorro_tbl,
-+	.probe          = pata_buddha_probe,
-+	.remove         = pata_buddha_remove,
-+};
-+
-+module_driver(pata_buddha_driver,
-+	      zorro_register_driver,
-+	      zorro_unregister_driver);
- 
- MODULE_AUTHOR("Bartlomiej Zolnierkiewicz");
- MODULE_DESCRIPTION("low-level driver for Buddha/Catweasel/X-Surf PATA");
+
 -- 
-2.11.0
-
+software engineer
+rajagiri school of engineering and technology
