@@ -1,67 +1,95 @@
-Return-Path: <SRS0=kXvD=VV=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=d/E6=VW=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
+	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0959C76186
-	for <linux-ide@archiver.kernel.org>; Wed, 24 Jul 2019 22:01:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB279C76186
+	for <linux-ide@archiver.kernel.org>; Thu, 25 Jul 2019 01:25:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9D6222189F
-	for <linux-ide@archiver.kernel.org>; Wed, 24 Jul 2019 22:01:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 77BE121901
+	for <linux-ide@archiver.kernel.org>; Thu, 25 Jul 2019 01:25:20 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Hmpr70lv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729097AbfGXWB5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 24 Jul 2019 18:01:57 -0400
-Received: from smtp09.smtpout.orange.fr ([80.12.242.131]:41742 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728744AbfGXWB5 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jul 2019 18:01:57 -0400
-Received: from localhost.localdomain ([92.140.204.221])
-        by mwinf5d44 with ME
-        id gm1q2000P4n7eLC03m1rDF; Thu, 25 Jul 2019 00:01:55 +0200
-X-ME-Helo: localhost.localdomain
-X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Thu, 25 Jul 2019 00:01:55 +0200
-X-ME-IP: 92.140.204.221
-From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To:     davem@davemloft.net
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kernel-janitors@vger.kernel.org,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] ide: tx4939ide: Fix the name used in a 'devm_request_mem_region()' call
-Date:   Thu, 25 Jul 2019 00:01:45 +0200
-Message-Id: <20190724220145.17282-1-christophe.jaillet@wanadoo.fr>
-X-Mailer: git-send-email 2.20.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S1728959AbfGYBZU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 24 Jul 2019 21:25:20 -0400
+Received: from mail-io1-f65.google.com ([209.85.166.65]:43079 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726300AbfGYBZT (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jul 2019 21:25:19 -0400
+Received: by mail-io1-f65.google.com with SMTP id k20so93668942ios.10;
+        Wed, 24 Jul 2019 18:25:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=eS818rhIBK7ubAziwLWgLj+2ZiumjMha54cYbp9Jr3A=;
+        b=Hmpr70lvHA49jQoCF1u7GDuhGYhxa3P+R6pW9b0/x+ywkzfFwvTpk7M+F2/NgktyP4
+         a3wohKoahGYEwVXpLPJZ8AcnYWAvY5IZqaA/cSGpFc6eJF4/lnF88hCE/S/TFQJbZa5B
+         J3pIojX27rKC+kZlvO6Rn3rNJwxtzqy1aJO4lQg1MSkxxhobN7sXnjKaDFE+Eb2UiSmc
+         BSBZf89RqnA6xaGqj9itSgz2N+g3Cx72+8BLajVS6M5qq8RuP3xVCOC7IZUNGFAjTmke
+         c6KKVtI34zeyLvCyKzXdiA4OaAl9WKAjEdlIOBUeOehOb+i/xvpPh3Qf5bawSkmFf+mJ
+         oNdQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=eS818rhIBK7ubAziwLWgLj+2ZiumjMha54cYbp9Jr3A=;
+        b=t7KZ1ng88LHRU37hzcKV7iiiJvwo3+y4IZXoOsuxkB3faemsqbvwLTiFlq7NLm6q4C
+         /lZ06YOVO4OJyN1GzdWXSvmE7yZkrBoe0NfMM0DMu+GmCDeNdsW4y8vdIZ7zWZ4hyc6B
+         sfkGYyJkzp1wnJnMWSIZCLNOs1o9RSHY/Ygeh5EwbBxGzd75C2QEnE9+V0NGGXeERc0C
+         wAEnVDH4Kxj2rdpH1gHav06IhqhpS0mIVi6klZjHSr2q14cLQA48NlWAhBsdI/k9k1SP
+         JMf4fgE46G8bWf+rrMXdPJXov4eNhdVfwcbHrq3XyeE4lW+pm6Q1pkST8x5kTbj+G3lc
+         FUAQ==
+X-Gm-Message-State: APjAAAUX1xEA9NYd3u94c8+qCfcaXFrWsdpPcma7qm0t/mZxuCaCvJgz
+        2ThFWPQl8DFXEirNAydAfJk=
+X-Google-Smtp-Source: APXvYqzvIu84h9LaMmZsWI4NsvNtPJGAuNf6pa+YMQqxk8pY+sRM2PyopYu6ZCW55SB1F1wD9ER/1g==
+X-Received: by 2002:a5d:85c3:: with SMTP id e3mr40637257ios.265.1564017918910;
+        Wed, 24 Jul 2019 18:25:18 -0700 (PDT)
+Received: from cs-dulles.cs.umn.edu (cs-dulles.cs.umn.edu. [128.101.35.54])
+        by smtp.googlemail.com with ESMTPSA id u17sm45222173iob.57.2019.07.24.18.25.17
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 24 Jul 2019 18:25:18 -0700 (PDT)
+From:   Navid Emamdoost <navid.emamdoost@gmail.com>
+Cc:     emamd001@umn.edu, kjlu@umn.edu, smccaman@umn.edu,
+        secalert@redhat.com, Navid Emamdoost <navid.emamdoost@gmail.com>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] pata_ali: check the pci_get_device failure
+Date:   Wed, 24 Jul 2019 20:25:06 -0500
+Message-Id: <20190725012506.17831-1-navid.emamdoost@gmail.com>
+X-Mailer: git-send-email 2.17.1
+To:     unlisted-recipients:; (no To-header on input)
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-This should be "tx4939ide" instead of "tx4938ide", but here MODNAME is even
-better.
+pci_get_device may fail and return NULL. This eventually will be
+dereferenced in __pci_register_driver. So null check is necessary.
 
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
 ---
- drivers/ide/tx4939ide.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ata/pata_ali.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/ide/tx4939ide.c b/drivers/ide/tx4939ide.c
-index 88d132edc4e3..079b271dd5a7 100644
---- a/drivers/ide/tx4939ide.c
-+++ b/drivers/ide/tx4939ide.c
-@@ -549,7 +549,7 @@ static int __init tx4939ide_probe(struct platform_device *pdev)
- 		return -ENODEV;
+diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
+index 0b122f903b8a..47d9bec1f2e2 100644
+--- a/drivers/ata/pata_ali.c
++++ b/drivers/ata/pata_ali.c
+@@ -627,6 +627,8 @@ static int __init ali_init(void)
+ {
+ 	int ret;
+ 	ali_isa_bridge = pci_get_device(PCI_VENDOR_ID_AL, PCI_DEVICE_ID_AL_M1533, NULL);
++	if (!ali_isa_bridge)
++		return -EINVAL;
  
- 	if (!devm_request_mem_region(&pdev->dev, res->start,
--				     resource_size(res), "tx4938ide"))
-+				     resource_size(res), MODNAME))
- 		return -EBUSY;
- 	mapbase = (unsigned long)devm_ioremap(&pdev->dev, res->start,
- 					      resource_size(res));
+ 	ret = pci_register_driver(&ali_pci_driver);
+ 	if (ret < 0)
 -- 
-2.20.1
+2.17.1
 
