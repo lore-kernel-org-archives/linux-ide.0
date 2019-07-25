@@ -6,23 +6,24 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFCE6C76190
-	for <linux-ide@archiver.kernel.org>; Thu, 25 Jul 2019 17:33:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E52FCC76190
+	for <linux-ide@archiver.kernel.org>; Thu, 25 Jul 2019 17:59:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A6F3C21951
-	for <linux-ide@archiver.kernel.org>; Thu, 25 Jul 2019 17:33:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0BFF229F3
+	for <linux-ide@archiver.kernel.org>; Thu, 25 Jul 2019 17:59:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729918AbfGYRdt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 25 Jul 2019 13:33:49 -0400
-Received: from enpas.org ([46.38.239.100]:34154 "EHLO mail.enpas.org"
+        id S1728318AbfGYR7k (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 25 Jul 2019 13:59:40 -0400
+Received: from enpas.org ([46.38.239.100]:34176 "EHLO mail.enpas.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728019AbfGYRds (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 25 Jul 2019 13:33:48 -0400
+        id S1728461AbfGYR7k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 25 Jul 2019 13:59:40 -0400
 Received: from [127.0.0.1] (localhost [127.0.0.1])
-        by mail.enpas.org (Postfix) with ESMTPSA id F0C1BFFDB4;
-        Thu, 25 Jul 2019 17:33:44 +0000 (UTC)
+        by mail.enpas.org (Postfix) with ESMTPSA id 75119FFBF4;
+        Thu, 25 Jul 2019 17:59:36 +0000 (UTC)
 Subject: Re: [PATCH v2] ata/pata_buddha: Probe via modalias instead of
  initcall
+From:   Max Staudt <max@enpas.org>
 To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 Cc:     linux-ide@vger.kernel.org, linux-m68k@vger.kernel.org,
         linux-kernel@vger.kernel.org,
@@ -32,7 +33,7 @@ Cc:     linux-ide@vger.kernel.org, linux-m68k@vger.kernel.org,
 References: <20190725102211.8526-1-max@enpas.org>
  <CGME20190725170359eucas1p271187268f749869088f60bf961194169@eucas1p2.samsung.com>
  <01cfe282-6ce6-ff40-9e85-e23724f9d50f@samsung.com>
-From:   Max Staudt <max@enpas.org>
+ <a81d7a5f-c773-9769-cddd-95d2fe47d32e@enpas.org>
 Openpgp: preference=signencrypt
 Autocrypt: addr=max@enpas.org; prefer-encrypt=mutual; keydata=
  xsNNBFWfXgEBIADcbJMG2xuJBIVNlhj5AFBwKLZ6GPo3tGxHye+Bk3R3W5uIws3Sxbuj++7R
@@ -105,12 +106,12 @@ Autocrypt: addr=max@enpas.org; prefer-encrypt=mutual; keydata=
  qowubYXvP+RW4E9h6/NwGzS3Sbw7dRC6HK7xeSjmnzgrbbdF3TbHa5WHGZ3MLFQqbMuSn1Gn
  a0dBnIpkQG5yGknQjCL7SGEun1siNzluV19nLu66YRJsZ1HE9RgbMhTe2Ca8bWH1985ra4GV
  urZIw0nz8zec+73Bv/qF4GHHftLYfA==
-Message-ID: <a81d7a5f-c773-9769-cddd-95d2fe47d32e@enpas.org>
-Date:   Thu, 25 Jul 2019 19:33:44 +0200
+Message-ID: <ac754751-0f51-c733-e367-a85f8cb7dbf5@enpas.org>
+Date:   Thu, 25 Jul 2019 19:59:35 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
  Thunderbird/52.9.1
 MIME-Version: 1.0
-In-Reply-To: <01cfe282-6ce6-ff40-9e85-e23724f9d50f@samsung.com>
+In-Reply-To: <a81d7a5f-c773-9769-cddd-95d2fe47d32e@enpas.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -119,64 +120,24 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 07/25/2019 07:03 PM, Bartlomiej Zolnierkiewicz wrote:
->> +err_ata_host_alloc:
->> +	switch (type) {
->> +	case BOARD_BUDDHA:
->> +	case BOARD_CATWEASEL:
->> +	default:
->> +		devm_release_mem_region(&z->dev,
->> +					board + BUDDHA_BASE1,
->> +					0x800);
+On 07/25/2019 07:33 PM, Max Staudt wrote:
+> On 07/25/2019 07:03 PM, Bartlomiej Zolnierkiewicz wrote:
+>> Please try to implement it, should be as simple as:
+>>
+>> static void pata_buddha_remove(struct zorro_dev *zdev)
+>> {
+>> 	struct ata_host *host = dev_get_drvdata(&zdev->dev);
+>>
+>> 	ata_host_detach(host);
+>> }
+>>
+>> [ ata_host_alloc() in pata_buddha_probe() sets drvdata to host ]
 > 
-> Could you please explain why this is needed now?
+> Seeing as the driver is almost 1:1 the same as pata_gayle, I see no reason against this.
 > 
-> [ The whole idea of using devm_* helpers is to not have to release
->   resources explicitly. ]
+> Do you need me to test module removal on the real machine, or is it okay to take your suggestion as-is, given that it is already accepted in pata_gayle?
 
-My mistake. Thanks, I'll fix it.
-
-
->> +static void pata_buddha_remove(struct zorro_dev *zdev)
->> +{
->> +	/* NOT IMPLEMENTED */
->> +
->> +	WARN_ONCE(1, "pata_buddha: Attempted to remove driver. This is not implemented yet.\n");
-> 
-> Please try to implement it, should be as simple as:
-> 
-> static void pata_buddha_remove(struct zorro_dev *zdev)
-> {
-> 	struct ata_host *host = dev_get_drvdata(&zdev->dev);
-> 
-> 	ata_host_detach(host);
-> }
-> 
-> [ ata_host_alloc() in pata_buddha_probe() sets drvdata to host ]
-
-Seeing as the driver is almost 1:1 the same as pata_gayle, I see no reason against this.
-
-Do you need me to test module removal on the real machine, or is it okay to take your suggestion as-is, given that it is already accepted in pata_gayle?
-
-
-> The rest of the patch looks fine, thanks for working on this driver.
-
-Thanks for reviewing it, and thanks for porting buddha to libata!
-
-
-> PS Next time please also use scripts/get_maintainer.pl script to get
->    the list of people that should be added to Cc:, i.e.:
-> 
-> $ ./scripts/get_maintainer.pl -f drivers/ata/pata_buddha.c
-> Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com> (maintainer:LIBATA PATA DRIVERS)
-> Jens Axboe <axboe@kernel.dk> (maintainer:LIBATA PATA DRIVERS)
-> linux-ide@vger.kernel.org (open list:LIBATA PATA DRIVERS)
-> linux-kernel@vger.kernel.org (open list)
-> 
-> [ I've also added John, Michael & Geert to Cc: (as they were all
->   involved in the development of the initial driver version). ]
-
-Oops, thanks for fixing this.
+Nevermind, I found a way to test it somewhat quickly. I can confirm that it works. Thanks for your suggestion!
 
 
 Max
