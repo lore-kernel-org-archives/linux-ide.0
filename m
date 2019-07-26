@@ -1,185 +1,150 @@
-Return-Path: <SRS0=d/E6=VW=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=1rkj=VX=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0F1EC76190
-	for <linux-ide@archiver.kernel.org>; Thu, 25 Jul 2019 21:34:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91A01C7618B
+	for <linux-ide@archiver.kernel.org>; Fri, 26 Jul 2019 10:32:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B77C122BF5
-	for <linux-ide@archiver.kernel.org>; Thu, 25 Jul 2019 21:34:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2BAC722BE8
+	for <linux-ide@archiver.kernel.org>; Fri, 26 Jul 2019 10:32:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=rajagiritech-edu-in.20150623.gappssmtp.com header.i=@rajagiritech-edu-in.20150623.gappssmtp.com header.b="1Q6ULOyU"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="ZOKe3aZ3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726447AbfGYVep (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 25 Jul 2019 17:34:45 -0400
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:44645 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726416AbfGYVep (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jul 2019 17:34:45 -0400
-Received: by mail-pg1-f193.google.com with SMTP id i18so23664500pgl.11
-        for <linux-ide@vger.kernel.org>; Thu, 25 Jul 2019 14:34:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=rajagiritech-edu-in.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=BiYRj7E3Dy6V2t5m7sV8jSh+kJY2gTdBXaMARRXcvtk=;
-        b=1Q6ULOyUGM+dXIraIPHDKr1jbbBGlCFF5Wtucww7rlIh8qmfYsWyj1KuPu64Gxyscb
-         YPmC9wHQ72iksF1wY8Eckqd5wRPeSHMrImmA4fICv6x52bGcMcyAIaZUucKNHTYNt/tJ
-         TimAfRYm+v5T5W+DEVzXEA+sjFEiq4CG9oTFbqNR3k2f2xOM+Z4P0sxv/ou94ePbjYoa
-         xGPKMPghxQsbILuHftK99D/kC5LAIntF+tZWLoOj6M3FbFBWsyAceAywdln+aKqpZ1pm
-         CZWUSNVasPHJxemw1Plg0zhJ/qOzKAUDw/hp6S9/G/2Te3x77x006ZuPdhckbWmr3XKB
-         rw0g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=BiYRj7E3Dy6V2t5m7sV8jSh+kJY2gTdBXaMARRXcvtk=;
-        b=YXM8EL0gwqX435cMQHcsXvb1kg9GsyCK6U2h5l4LuD6wDoOB9/bY1wmyR3+u86P8co
-         fPHCQ4Baz2cgV+dOGD+KNPhhibrt2HPWr9Ld2kf8lGIIehCJNrp25UjD3ZxAoyjyhtm6
-         4kj604/qWbo8O3Zp7kAWpC+LO1qbd2Jh3FTWU1PHXiaOjkH0kYj67ew3dDbRlcF2eRdQ
-         H6l29aRQ7ENJ+4kRbSzhJnwkXkvVpG1o7+4vrl0szYXObfAEqQ1FqZClqiSMTCOyueV6
-         tyVpAw0YQMe+QLmGZCyIgpjfMfP7ox0tMYfm6Act0wEgu6NNRYCERF6ua6yFc7xTaWv+
-         6HOA==
-X-Gm-Message-State: APjAAAWMvqWXW16vE02aK3AdGj1OEZ0h6pIQH5FN2FUfrRRJzIK69O9R
-        IeiWVk18OpcF17Gp/BjYn6TUrhv3CTRCIlrEj+I=
-X-Google-Smtp-Source: APXvYqyCnT13NwDrcOJPEGqTyUcS5rkM5iWvbLxEEDHraXXR5SV9vV35zNL0WhOxkpVwu6FamU9JZP08/tMVNpqCQCk=
-X-Received: by 2002:a63:c203:: with SMTP id b3mr89265365pgd.450.1564090483811;
- Thu, 25 Jul 2019 14:34:43 -0700 (PDT)
+        id S1726256AbfGZKcr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 26 Jul 2019 06:32:47 -0400
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:57391 "EHLO
+        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726026AbfGZKcr (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 26 Jul 2019 06:32:47 -0400
+Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20190726103245euoutp02f4b302a50b1345c84cb90245e0557c92~07ncO5Xhv1444314443euoutp02g
+        for <linux-ide@vger.kernel.org>; Fri, 26 Jul 2019 10:32:45 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20190726103245euoutp02f4b302a50b1345c84cb90245e0557c92~07ncO5Xhv1444314443euoutp02g
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1564137165;
+        bh=ZeWsLXk+YS9Yoiy28APDvI3/NlJ8HiaBiXquA6Wm64I=;
+        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
+        b=ZOKe3aZ33dRqOp+64+OiNTsmelHHYjSwvGi+0rA/7a1hjoolmM0xsTg6AxC4MlGL5
+         StRehgjVJ+GS9jhFEfNT0DibUKKrnez7C/2eyKYPoULIPDQdWsVUnhT9Y95ARY1h7s
+         v4H/UJ5nWEW5hbI13VPRFiwhDc9nNL13ik326tc4=
+Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+        20190726103245eucas1p243067430d3fa9c3a3596ae6047ab8f36~07nbqcEZb0196601966eucas1p20;
+        Fri, 26 Jul 2019 10:32:45 +0000 (GMT)
+Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
+        eusmges3new.samsung.com (EUCPMTA) with SMTP id 50.22.04325.CC6DA3D5; Fri, 26
+        Jul 2019 11:32:44 +0100 (BST)
+Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
+        20190726103244eucas1p168a5d458110c6b25d6a9b7c994b91f0e~07na8LCxd2389223892eucas1p1n;
+        Fri, 26 Jul 2019 10:32:44 +0000 (GMT)
+Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
+        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20190726103244eusmtrp1dbaa18c406dcd6eaeeca6a82eb9238c4~07nauAu010348203482eusmtrp1d;
+        Fri, 26 Jul 2019 10:32:44 +0000 (GMT)
+X-AuditID: cbfec7f5-b8fff700000010e5-b1-5d3ad6cc0d85
+Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id 32.F5.04140.BC6DA3D5; Fri, 26
+        Jul 2019 11:32:44 +0100 (BST)
+Received: from [106.120.51.71] (unknown [106.120.51.71]) by
+        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20190726103243eusmtip1ca35cb00f41769fc137927aa5d2288ec~07naODiLV2416124161eusmtip1H;
+        Fri, 26 Jul 2019 10:32:43 +0000 (GMT)
+Subject: Re: [PATCH] pata_ali: check the pci_get_device failure
+To:     Navid Emamdoost <navid.emamdoost@gmail.com>
+Cc:     emamd001@umn.edu, kjlu@umn.edu, smccaman@umn.edu,
+        secalert@redhat.com, Jens Axboe <axboe@kernel.dk>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Message-ID: <5999d94d-1e6b-541e-8cba-55270742613c@samsung.com>
+Date:   Fri, 26 Jul 2019 12:32:51 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+        Thunderbird/60.6.1
 MIME-Version: 1.0
-References: <CAG=yYw=S197+2TzdPaiEaz-9MRuVtd+Q_L9W8GOf4jKwyppNjQ@mail.gmail.com>
- <CAKwvOdmg2b2PMzuzNmutacFArBNagjtwG=_VZvKhb4okzSkdiA@mail.gmail.com>
-In-Reply-To: <CAKwvOdmg2b2PMzuzNmutacFArBNagjtwG=_VZvKhb4okzSkdiA@mail.gmail.com>
-From:   Jeffrin Thalakkottoor <jeffrin@rajagiritech.edu.in>
-Date:   Fri, 26 Jul 2019 03:04:07 +0530
-Message-ID: <CAG=yYwkP34+uz2vVTdYyV8KJVj_Z26Mo3gUPqss6mk6tpFkWsw@mail.gmail.com>
-Subject: Re: BUG: KASAN: global-out-of-bounds in ata_exec_internal_sg+0x50f/0xc70
-To:     Nick Desaulniers <ndesaulniers@google.com>, axboe@kernel.dk
-Cc:     Steven Rostedt <rostedt@goodmis.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        tobin@kernel.org, lkml <linux-kernel@vger.kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        Dmitry Vyukov <dvyukov@google.com>,
-        Alexander Potapenko <glider@google.com>,
-        linux-ide@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20190725012506.17831-1-navid.emamdoost@gmail.com>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrAKsWRmVeSWpSXmKPExsWy7djPc7pnrlnFGqxZaGCx+m4/m8Wzxums
+        FifmnWW3OLbjEZPF5V1z2Cx6T+5gttj2Rtti2pdF7A4cHjtn3WX3uHy21OP9vqtsHlcXNrF7
+        fN4kF8AaxWWTkpqTWZZapG+XwJUxc80a1oIOzoqGpUfZGhg3s3cxcnJICJhI9MzpZOti5OIQ
+        EljBKLF15XxGCOcLo8Tv031MEM5nRolXp/eywLTMXDkVqmo5o8SZlw+YIZy3jBLtf2Yxg1QJ
+        C9hL3NzfBbZEREBfYsGDx2CjmAWWMErMePoaLMEmYCUxsX0VI4jNK2AncejeNiYQm0VAVeLV
+        xvdg60QFIiTuH9vAClEjKHFy5hOwOCfQgseHnoHNYRYQl7j1ZD4ThC0vsf3tHLCLJAS2sUtM
+        WL+DFeJuF4n5mzuhbGGJV8e3QINARuL05B4WiIZ1jBJ/O15AdW9nlFg++R8bRJW1xOHjF4G6
+        OYBWaEqs36UPEXaU6Pr1hhkkLCHAJ3HjrSDEEXwSk7ZNhwrzSnS0CUFUq0lsWLaBDWZt186V
+        zBMYlWYheW0WkndmIXlnFsLeBYwsqxjFU0uLc9NTi43zUsv1ihNzi0vz0vWS83M3MQLT0el/
+        x7/uYNz3J+kQowAHoxIPr8Yqy1gh1sSy4srcQ4wSHMxKIrxbdwCFeFMSK6tSi/Lji0pzUosP
+        MUpzsCiJ81YzPIgWEkhPLEnNTk0tSC2CyTJxcEo1MPKeNL/4hyfw88rTezg9eNTfKd68M53h
+        /+fNyWdOb9bpm5U1/ZV9d09v/unPovHz3f4ycszLsH6Ts1YwbPrO06urJswQ6XO+t2Uqn8Pe
+        uxwqz3jbhP5v4jhyfFnd3bs80im/8szfvpD3eHFL4M7W7m+qvXkLkyKmlrZXuCn+/5yp2cS4
+        XXbbLhclluKMREMt5qLiRAAxIXm9QwMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrAIsWRmVeSWpSXmKPExsVy+t/xu7pnrlnFGrwMs1h9t5/N4lnjdFaL
+        E/POslsc2/GIyeLyrjlsFr0ndzBbbHujbTHtyyJ2Bw6PnbPusntcPlvq8X7fVTaPqwub2D0+
+        b5ILYI3SsynKLy1JVcjILy6xVYo2tDDSM7S00DMysdQzNDaPtTIyVdK3s0lJzcksSy3St0vQ
+        y5i5Zg1rQQdnRcPSo2wNjJvZuxg5OSQETCRmrpzK2MXIxSEksJRRounKLaAEB1BCRuL4+jKI
+        GmGJP9e62CBqXjNKrLjeANYsLGAvcXN/F5gtIqAvseDBYyaQImaBJYwSD35+Z4XomMQo8eTm
+        EiaQKjYBK4mJ7asYQWxeATuJQ/e2gcVZBFQlXm18zwJiiwpESJx5v4IFokZQ4uTMJ2A2J9C2
+        x4eegW1jFlCX+DPvEjOELS5x68l8JghbXmL72znMExiFZiFpn4WkZRaSlllIWhYwsqxiFEkt
+        Lc5Nzy020itOzC0uzUvXS87P3cQIjL1tx35u2cHY9S74EKMAB6MSD++F5ZaxQqyJZcWVuYcY
+        JTiYlUR4t+4ACvGmJFZWpRblxxeV5qQWH2I0BXpuIrOUaHI+MC3klcQbmhqaW1gamhubG5tZ
+        KInzdggcjBESSE8sSc1OTS1ILYLpY+LglGpgDBSPl3QX+nhs5cb/Vacrf73aWF1dnX284XkE
+        m0rEfb45ZXXqzNuyEv6UzmI2KFzEt6DyzaYgIaeWR8ZTtar+/b7GPqOwtUZ2cxebQWr9mncN
+        rE99XiYbG85L33/s3tGyoLmz/vo6J/rs3fPpPyuf86KQJwYGdt1SL9b+rJPQSHn6TG6zwHI+
+        JZbijERDLeai4kQAT44Mu9MCAAA=
+X-CMS-MailID: 20190726103244eucas1p168a5d458110c6b25d6a9b7c994b91f0e
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-RootMTR: 20190725012523epcas1p4b3ff8ee4cf2ceba3e6fa0ae0b568418f
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20190725012523epcas1p4b3ff8ee4cf2ceba3e6fa0ae0b568418f
+References: <CGME20190725012523epcas1p4b3ff8ee4cf2ceba3e6fa0ae0b568418f@epcas1p4.samsung.com>
+        <20190725012506.17831-1-navid.emamdoost@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-hello Jens Axboe,
 
-Please can you take a look at related code and also patch from Kees ?
+Hi,
 
-On Tue, Jul 16, 2019 at 11:58 PM Nick Desaulniers
-<ndesaulniers@google.com> wrote:
->
-> On Wed, Jul 10, 2019 at 10:44 AM Jeffrin Thalakkottoor
-> <jeffrin@rajagiritech.edu.in> wrote:
-> >
-> > hello all ,
-> >
-> > i encountered a KASAN bug related .    here are some related information...
-> >
-> >
-> > -------------------x-----------------------------x------------------
-> > [   30.037312] BUG: KASAN: global-out-of-bounds in
-> > ata_exec_internal_sg+0x50f/0xc70
-> > [   30.037447] Read of size 16 at addr ffffffff91f41f80 by task scsi_eh_1/149
-> >
-> >
-> > [   30.039935] The buggy address belongs to the variable:
-> > [   30.040059]  cdb.48319+0x0/0x40
-> >
-> > [   30.040241] Memory state around the buggy address:
-> > [   30.040362]  ffffffff91f41e80: fa fa fa fa 00 00 fa fa fa fa fa fa
-> > 00 00 07 fa
-> > [   30.040498]  ffffffff91f41f00: fa fa fa fa 00 00 00 00 00 00 00 03
-> > fa fa fa fa
-> > [   30.040628] >ffffffff91f41f80: 00 04 fa fa fa fa fa fa 00 00 fa fa
-> > fa fa fa fa
-> > [   30.040755]                       ^
-> > [   30.040868]  ffffffff91f42000: 00 00 00 04 fa fa fa fa 00 fa fa fa
-> > fa fa fa fa
-> > [   30.041003]  ffffffff91f42080: 04 fa fa fa fa fa fa fa 00 04 fa fa
-> > fa fa fa fa
-> >
-> > ---------------------------x--------------------------x----------------
-> > $uname -a
-> > Linux debian 5.2.0-rc7+ #4 SMP Tue Jul 9 02:54:07 IST 2019 x86_64 GNU/Linux
-> > $
-> >
-> > --------------------x----------------------------x---------------------------
-> > (gdb) l *ata_exec_internal_sg+0x50f
-> > 0xffffffff81c7b59f is in ata_exec_internal_sg (./include/linux/string.h:359).
->
-> So looks like ata_exec_internal_sg() is panic'ing when...
->
-> > 354 if (q_size < size)
-> > 355 __read_overflow2();
-> > 356 }
-> > 357 if (p_size < size || q_size < size)
-> > 358 fortify_panic(__func__);
-> > 359 return __builtin_memcpy(p, q, size);
-> > 360 }
-> > 361
-> > 362 __FORTIFY_INLINE void *memmove(void *p, const void *q, __kernel_size_t size)
->
-> ...a call to memmove is made? Without having looked at the source of
-> ata_exec_internal_sg(), it's possible that either through inlining, or
-> the compiler generating a memmove, that one of the arguments was not
-> quite right.  I suggest spending more time isolating where this is
-> coming from, if you can reliably reproduce, or CC whoever wrote or
-> maintains the code and ask them to take a look.
->
-> The cited code looks like a check comparing that the pointer distance
-> is greater than the size of bytes being passed in.  I'd wager
-> someone's calling memmove with overlapping memory regions when they
-> really wanted memcpy.  Maybe a better question, is why was memmove
-> ever used; if there was some invariant that the memory regions
-> overlapped, why is that invariant no longer holding.
->
-> Anyways, sorry I don't have more time to look into this.  Thank you
-> for the report.
->
-> > 363 {
-> > (gdb)
-> > --------------------------x--------------------------
-> > GNU Make            4.2.1
-> > Binutils            2.31.1
-> > Util-linux          2.33.1
-> > Mount                2.33.1
-> > Linux C Library      2.28
-> > Dynamic linker (ldd) 2.28
-> > Procps              3.3.15
-> > Kbd                  2.0.4
-> > Console-tools        2.0.4
-> > Sh-utils            8.30
-> > Udev                241
-> > ---------------------x--------------------------------x
-> > Thread model: posix
-> > gcc version 8.3.0 (Debian 8.3.0-7)
-> > ---------------------x--------------------------------x
-> >
-> > Please ask if more information is needed.
-> >
-> > --
-> > software engineer
-> > rajagiri school of engineering and technology
->
->
->
-> --
-> Thanks,
-> ~Nick Desaulniers
+On 7/25/19 3:25 AM, Navid Emamdoost wrote:
+> pci_get_device may fail and return NULL. This eventually will be
+> dereferenced in __pci_register_driver. So null check is necessary.
 
+I'm sorry to say this but the patch is incorrect and should not be
+applied.
 
+ALI M1533 ISA bridge presence is optional (the driver can work also
+with other ISA bridges) and ali_isa_bridge is always correctly checked
+for NULL before being dereferenced in the driver.
 
--- 
-software engineer
-rajagiri school of engineering and technology
+> Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
+> ---
+>  drivers/ata/pata_ali.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
+> index 0b122f903b8a..47d9bec1f2e2 100644
+> --- a/drivers/ata/pata_ali.c
+> +++ b/drivers/ata/pata_ali.c
+> @@ -627,6 +627,8 @@ static int __init ali_init(void)
+>  {
+>  	int ret;
+>  	ali_isa_bridge = pci_get_device(PCI_VENDOR_ID_AL, PCI_DEVICE_ID_AL_M1533, NULL);
+> +	if (!ali_isa_bridge)
+> +		return -EINVAL;
+>  
+>  	ret = pci_register_driver(&ali_pci_driver);
+>  	if (ret < 0)
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
