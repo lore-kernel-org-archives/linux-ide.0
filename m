@@ -2,49 +2,53 @@ Return-Path: <SRS0=5Cjq=V2=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60F22C7618B
-	for <linux-ide@archiver.kernel.org>; Mon, 29 Jul 2019 08:53:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29EAEC7618B
+	for <linux-ide@archiver.kernel.org>; Mon, 29 Jul 2019 09:05:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D432206BA
-	for <linux-ide@archiver.kernel.org>; Mon, 29 Jul 2019 08:53:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0CB782070D
+	for <linux-ide@archiver.kernel.org>; Mon, 29 Jul 2019 09:05:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726985AbfG2IxV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 29 Jul 2019 04:53:21 -0400
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:38228 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726496AbfG2IxV (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jul 2019 04:53:21 -0400
-Received: by mail-wr1-f65.google.com with SMTP id g17so60881839wrr.5;
-        Mon, 29 Jul 2019 01:53:19 -0700 (PDT)
+        id S1727686AbfG2JFl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 29 Jul 2019 05:05:41 -0400
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:33726 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726432AbfG2JFl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jul 2019 05:05:41 -0400
+Received: by mail-wr1-f67.google.com with SMTP id n9so61030954wru.0;
+        Mon, 29 Jul 2019 02:05:39 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=gYEJAxjcgTtQm2cZf+kuqC8244eoV04/bbKoaP0JwWQ=;
-        b=hrKT5Ot/r7j4G30s4V9YYNaBuGxXYNQQ3g6LL2i+YOjZNg6pgpPgi+9aNJDDy2f3Kn
-         fT8IRvocwDjv3zPiKap+N7DlLmzIBuJWJ7u5MBTUWFM3e1sOxTJ+ptxjr0lVOIYkITAH
-         KuUNUJ76ibu/Em0nF6t0vIMXguAfa+TPBVxhi7Xoupam9ZR7AJO9tOA09709Egzzg5It
-         g0/JiHXUBoQpltlevOxAzYe9SEa1c7l47w1DtxPEXON/uW9yqyhPU5UHrZ2dN4pL8KlQ
-         trMiQJh3fd1hiJdWnJJ+UD75dQdHd9yIWN69PadGqhr2BlLZOlsNEJV3wox8Kd8O0l7U
-         JCmQ==
-X-Gm-Message-State: APjAAAV93uT9FLai778aVqN8CI7B9UYsa+g9ZAozfypX823xVcvZL7y+
-        8PZDpIEijVfNAaC2uBUaxdsxnAQ8nbV2zZ99hTZUYM53
-X-Google-Smtp-Source: APXvYqx8nJujn6ne9ZWaFEFrYjHAXB637TBnOpb2N0+qfCp412FAB/ohFygoSLEF6ctIy65qF9cINXkMdMZ2RNME/WE=
-X-Received: by 2002:a5d:630c:: with SMTP id i12mr31091883wru.312.1564390398844;
- Mon, 29 Jul 2019 01:53:18 -0700 (PDT)
+        bh=qxGXy8FtO6vZfwLC9EabJrzvuG/ZhokgOoU0Ki4Dhbw=;
+        b=jDc4wGfMkBV7POTrZPf6hRcIPHyA7llZULoVLQ31Q6ZHqzBEgwKjDFFDLyTaxKMnik
+         Bqo3nTdgPdbCnPJonIrLmo6JswTmmtPdpPSQ99rys4/zCosjaH/LdEOr1a0BPhA5yLS7
+         4H+SVPuieUkzpflESR16ZAVGLfk74r3QckmTp7UBqpfcCoCnYZ3Muk/THo+TT4xPvfS5
+         vFfcjf6AeVJnJE8Y0qnxmY4iHOHgZ03geQnfNKBmJ3kME2EDPfKfV43aa+qfcwZQJ5rJ
+         /riV80osvB47VCHoGjS95d8aapqli9K8u7Fy41vKHdybTYHiptP2LmGfUNXlp3Owk0G3
+         qAFA==
+X-Gm-Message-State: APjAAAWKwpeNfQ4c3qJqv9WRq81Ke+2poT4A1W47PrW/fFJwb6JdLpuL
+        h7LCdXqnjCDIoiDpUryTVp+D7WhViZE/ce9b33g=
+X-Google-Smtp-Source: APXvYqz6uojkUazaZHHYCxUOpwqlKfsC3vg/+iiUOP1b3dFA5D9/TZrHUuJeGqZvqozJ1+Et2HptvgBmlSS7h66vIBY=
+X-Received: by 2002:adf:cd81:: with SMTP id q1mr117369836wrj.16.1564391138795;
+ Mon, 29 Jul 2019 02:05:38 -0700 (PDT)
 MIME-Version: 1.0
-References: <20190725102211.8526-1-max@enpas.org>
-In-Reply-To: <20190725102211.8526-1-max@enpas.org>
+References: <20190725180825.31508-1-max@enpas.org>
+In-Reply-To: <20190725180825.31508-1-max@enpas.org>
 From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Mon, 29 Jul 2019 10:53:07 +0200
-Message-ID: <CAMuHMdXFW2mEg8jChA=JFt-u9NMGp9m+1FnoGe=+Pxme3O2ESg@mail.gmail.com>
-Subject: Re: [PATCH v2] ata/pata_buddha: Probe via modalias instead of initcall
+Date:   Mon, 29 Jul 2019 11:05:27 +0200
+Message-ID: <CAMuHMdURm-9nazOBTL8uRH8WMt7gi=QUYy0qr9kaxzczCr+ujg@mail.gmail.com>
+Subject: Re: [PATCH v3] ata/pata_buddha: Probe via modalias instead of initcall
 To:     Max Staudt <max@enpas.org>
-Cc:     linux-ide@vger.kernel.org,
+Cc:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        linux-ide@vger.kernel.org,
         "Linux/m68k" <linux-m68k@vger.kernel.org>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
@@ -55,13 +59,12 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 Hi Max,
 
-On Thu, Jul 25, 2019 at 3:25 PM Max Staudt <max@enpas.org> wrote:
+On Thu, Jul 25, 2019 at 8:08 PM Max Staudt <max@enpas.org> wrote:
 > Up until now, the pata_buddha driver would only check for cards on
 > initcall time. Now, the kernel will call its probe function as soon
 > as a compatible card is detected.
 >
-> Device removal remains unimplemented. A WARN_ONCE() serves as a
-> reminder.
+> v3: Clean up devm_*, implement device removal.
 >
 > v2: Rename 'zdev' to 'z' to make the patch easy to analyse with
 >     git diff --ignore-space-change
@@ -69,46 +72,35 @@ On Thu, Jul 25, 2019 at 3:25 PM Max Staudt <max@enpas.org> wrote:
 > Tested-by: Max Staudt <max@enpas.org>
 > Signed-off-by: Max Staudt <max@enpas.org>
 
-Thanks for your patch!
+Sorry, I only noticed v3 after I replied to v2.
+My comments are still valid, though.
 
 > --- a/drivers/ata/pata_buddha.c
 > +++ b/drivers/ata/pata_buddha.c
 
-> @@ -145,111 +146,162 @@ static struct ata_port_operations pata_xsurf_ops = {
->         .set_mode       = pata_buddha_set_mode,
->  };
->
-> -static int __init pata_buddha_init_one(void)
-> +static int pata_buddha_probe(struct zorro_dev *z,
-> +                            const struct zorro_device_id *ent)
->  {
-
-[...]
-
-> +       switch (z->id) {
-> +       case ZORRO_PROD_INDIVIDUAL_COMPUTERS_BUDDHA:
-> +       default:
-> +               type = BOARD_BUDDHA;
-> +               break;
-> +       case ZORRO_PROD_INDIVIDUAL_COMPUTERS_CATWEASEL:
-> +               type = BOARD_CATWEASEL;
-> +               nr_ports++;
-> +               break;
-> +       case ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF:
-> +               type = BOARD_XSURF;
-> +               break;
-> +       }
-
-Please obtain the type from ent->driver_data instead of using a switch()
-statement...
-
-> -module_init(pata_buddha_init_one);
 > +static const struct zorro_device_id pata_buddha_zorro_tbl[] = {
 > +       { ZORRO_PROD_INDIVIDUAL_COMPUTERS_BUDDHA, },
 > +       { ZORRO_PROD_INDIVIDUAL_COMPUTERS_CATWEASEL, },
 > +       { ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, },
 
-... after storing it in zorro_device_id.driver_data here.
+drivers/net/ethernet/8390/zorro8390.c also matches against
+ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, while only
+a single zorro_driver can bind to it.  Hence you can no longer use both
+IDE and Ethernet on X-Surf :-(
+Before, this worked, as the IDE driver just walked the list of devices.
+
+I think the proper solution is to create MFD devices for Zorro boards
+with multiple functions, and bind against the individual MFD cells.
+That would also get rid of the nr_ports loop in the IDE driver, as each
+instance would have its own cell.
+
+I played with this a long time ago, but never finished it.
+It worked fine for my Ariadne Ethernet card.
+Last state at
+https://git.kernel.org/pub/scm/linux/kernel/git/geert/linux-m68k.git/log/?h=zorro-mfd
+
+Oh, seems I wrote up most of this before in
+https://lore.kernel.org/lkml/CAMuHMdVe1KgQWYZ_BfBkSo3zr0c+TenLMEw3T=BLEQNoZ6ex7A@mail.gmail.com/
 
 > +       { 0 }
 > +};
