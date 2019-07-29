@@ -2,33 +2,37 @@ Return-Path: <SRS0=5Cjq=V2=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 915F1C433FF
-	for <linux-ide@archiver.kernel.org>; Mon, 29 Jul 2019 10:49:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 360A6C7618B
+	for <linux-ide@archiver.kernel.org>; Mon, 29 Jul 2019 11:10:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 643F620C01
-	for <linux-ide@archiver.kernel.org>; Mon, 29 Jul 2019 10:49:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0913B21655
+	for <linux-ide@archiver.kernel.org>; Mon, 29 Jul 2019 11:10:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387426AbfG2Kt1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 29 Jul 2019 06:49:27 -0400
-Received: from enpas.org ([46.38.239.100]:37220 "EHLO mail.enpas.org"
+        id S2387625AbfG2LKD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 29 Jul 2019 07:10:03 -0400
+Received: from enpas.org ([46.38.239.100]:37238 "EHLO mail.enpas.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387404AbfG2Kt1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 29 Jul 2019 06:49:27 -0400
+        id S2387626AbfG2LKD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 29 Jul 2019 07:10:03 -0400
 Received: from [127.0.0.1] (localhost [127.0.0.1])
-        by mail.enpas.org (Postfix) with ESMTPSA id 84B55FFE76;
-        Mon, 29 Jul 2019 10:49:23 +0000 (UTC)
-Subject: Re: [PATCH v2] ata/pata_buddha: Probe via modalias instead of
+        by mail.enpas.org (Postfix) with ESMTPSA id 0AB49100129;
+        Mon, 29 Jul 2019 11:09:58 +0000 (UTC)
+Subject: Re: [PATCH v3] ata/pata_buddha: Probe via modalias instead of
  initcall
 To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     linux-ide@vger.kernel.org, Linux/m68k <linux-m68k@vger.kernel.org>,
+Cc:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        linux-ide@vger.kernel.org, Linux/m68k <linux-m68k@vger.kernel.org>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <20190725102211.8526-1-max@enpas.org>
- <CAMuHMdXFW2mEg8jChA=JFt-u9NMGp9m+1FnoGe=+Pxme3O2ESg@mail.gmail.com>
-From:   Max <max@enpas.org>
+References: <20190725180825.31508-1-max@enpas.org>
+ <CAMuHMdURm-9nazOBTL8uRH8WMt7gi=QUYy0qr9kaxzczCr+ujg@mail.gmail.com>
+From:   Max Staudt <max@enpas.org>
 Openpgp: preference=signencrypt
 Autocrypt: addr=max@enpas.org; prefer-encrypt=mutual; keydata=
  xsNNBFWfXgEBIADcbJMG2xuJBIVNlhj5AFBwKLZ6GPo3tGxHye+Bk3R3W5uIws3Sxbuj++7R
@@ -101,12 +105,12 @@ Autocrypt: addr=max@enpas.org; prefer-encrypt=mutual; keydata=
  qowubYXvP+RW4E9h6/NwGzS3Sbw7dRC6HK7xeSjmnzgrbbdF3TbHa5WHGZ3MLFQqbMuSn1Gn
  a0dBnIpkQG5yGknQjCL7SGEun1siNzluV19nLu66YRJsZ1HE9RgbMhTe2Ca8bWH1985ra4GV
  urZIw0nz8zec+73Bv/qF4GHHftLYfA==
-Message-ID: <c64543d3-10ee-c1a0-0010-f352d6fe937b@enpas.org>
-Date:   Mon, 29 Jul 2019 12:49:23 +0200
+Message-ID: <9cde6e79-52da-e0c0-f452-6afc2e5fa5ee@enpas.org>
+Date:   Mon, 29 Jul 2019 13:09:58 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
  Thunderbird/52.9.1
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdXFW2mEg8jChA=JFt-u9NMGp9m+1FnoGe=+Pxme3O2ESg@mail.gmail.com>
+In-Reply-To: <CAMuHMdURm-9nazOBTL8uRH8WMt7gi=QUYy0qr9kaxzczCr+ujg@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -115,34 +119,52 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 07/29/2019 10:53 AM, Geert Uytterhoeven wrote:
->> +       switch (z->id) {
->> +       case ZORRO_PROD_INDIVIDUAL_COMPUTERS_BUDDHA:
->> +       default:
->> +               type = BOARD_BUDDHA;
->> +               break;
->> +       case ZORRO_PROD_INDIVIDUAL_COMPUTERS_CATWEASEL:
->> +               type = BOARD_CATWEASEL;
->> +               nr_ports++;
->> +               break;
->> +       case ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF:
->> +               type = BOARD_XSURF;
->> +               break;
->> +       }
+Hi Geert,
+
+On 07/29/2019 11:05 AM, Geert Uytterhoeven wrote:
+>> --- a/drivers/ata/pata_buddha.c
+>> +++ b/drivers/ata/pata_buddha.c
 > 
-> Please obtain the type from ent->driver_data instead of using a switch()
-> statement...
-> 
->> -module_init(pata_buddha_init_one);
 >> +static const struct zorro_device_id pata_buddha_zorro_tbl[] = {
 >> +       { ZORRO_PROD_INDIVIDUAL_COMPUTERS_BUDDHA, },
 >> +       { ZORRO_PROD_INDIVIDUAL_COMPUTERS_CATWEASEL, },
 >> +       { ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, },
 > 
-> ... after storing it in zorro_device_id.driver_data here.
+> drivers/net/ethernet/8390/zorro8390.c also matches against
+> ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, while only
+> a single zorro_driver can bind to it.  Hence you can no longer use both
+> IDE and Ethernet on X-Surf :-(
+> Before, this worked, as the IDE driver just walked the list of devices.
+
+Okay, now this gets dirty.
+
+The reason why I've submitted this patch is to allow pata_buddha to be built into the kernel at all. Without this patch, its initcall would be called before the Zorro structures are initialised, hence not finding any boards.
+
+That means that not only would the previous driver only make sense as a module that is manually ensured to be loaded after Zorro has started, but the X-Surf IDE support was a really ugly hack to begin with.
 
 
-Thanks Geert for your feedback, this is a good idea. I'll make this change.
+> I think the proper solution is to create MFD devices for Zorro boards
+> with multiple functions, and bind against the individual MFD cells.
+> That would also get rid of the nr_ports loop in the IDE driver, as each
+> instance would have its own cell.
+> 
+> I played with this a long time ago, but never finished it.
+> It worked fine for my Ariadne Ethernet card.
+> Last state at
+> https://git.kernel.org/pub/scm/linux/kernel/git/geert/linux-m68k.git/log/?h=zorro-mfd
+> 
+> Oh, seems I wrote up most of this before in
+> https://lore.kernel.org/lkml/CAMuHMdVe1KgQWYZ_BfBkSo3zr0c+TenLMEw3T=BLEQNoZ6ex7A@mail.gmail.com/
+
+This looks great!
+
+Unfortunately, I don't have any MFD hardware other than a single Buddha to test this with. I especially don't have an X-Surf, hence no good way of testing this other than the two IDE channels on my Buddha. WinUAE doesn't seem to emulate the IDE controller either.
+
+What shall I do? Maybe as a stop-gap measure, we could hard-code a module_init() again, just for X-Surf? It's been good enough until a few weeks ago, so what could go wrong ;)
 
 
+On another note: Maybe your MFD idea could be used to expose the clockports on the Buddhas as well? That wouldn't solve the issue of clockport *expansions* being fundamentally non-enumerable, but maybe you can think of a reasonable way to attach a driver?
+
+
+Thanks for your feedback,
 Max
