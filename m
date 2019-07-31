@@ -2,84 +2,91 @@ Return-Path: <SRS0=hcVH=V4=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 883F9C32751
-	for <linux-ide@archiver.kernel.org>; Wed, 31 Jul 2019 14:51:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F36BC32754
+	for <linux-ide@archiver.kernel.org>; Wed, 31 Jul 2019 15:47:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2682520659
-	for <linux-ide@archiver.kernel.org>; Wed, 31 Jul 2019 14:51:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="IPz2gG+1"
+	by mail.kernel.org (Postfix) with ESMTP id 6FBAA206B8
+	for <linux-ide@archiver.kernel.org>; Wed, 31 Jul 2019 15:47:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387908AbfGaOvF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 31 Jul 2019 10:51:05 -0400
-Received: from mail-io1-f54.google.com ([209.85.166.54]:41914 "EHLO
-        mail-io1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387593AbfGaOvF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jul 2019 10:51:05 -0400
-Received: by mail-io1-f54.google.com with SMTP id j5so132731950ioj.8
-        for <linux-ide@vger.kernel.org>; Wed, 31 Jul 2019 07:51:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=+hJcglQKsXhxYcWrna658gQ9B56W6mc5bB1Q9aiEEZc=;
-        b=IPz2gG+1/xXqXZFeRzJM9JDdc78Kqh8+cFW3aNkrgHdi2LMeM4UWwoX+rZj9bNU8mC
-         yyLWRaxxTPG4w9vW+osG78TlwXFyrEeOuzOL6yG9Hnq1y+lR3G4Y4/n2Jl7b7O+CjErd
-         VY45Xr2mbr1cbPfcFof0qLjUjpW7pvAfqHPExZGeKqYDdb28GW9SH3jDBoqbJDhWFZP0
-         5KeJUZWyj83XZ19SBKx46fj6cvkBn072ENbtPhkqZLAHNedxi8vSrJ8MNLpZnQgSRdJG
-         K0048zy9C4t993qxi+Px0WSHkZ8DDsX7Ej5HD8lmo0Xx35SczF3YWtA1Ivzt6v04MW/J
-         JwvQ==
+        id S1728475AbfGaPrw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 31 Jul 2019 11:47:52 -0400
+Received: from mail-qt1-f193.google.com ([209.85.160.193]:38105 "EHLO
+        mail-qt1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727349AbfGaPrv (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jul 2019 11:47:51 -0400
+Received: by mail-qt1-f193.google.com with SMTP id n11so67033681qtl.5;
+        Wed, 31 Jul 2019 08:47:51 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=+hJcglQKsXhxYcWrna658gQ9B56W6mc5bB1Q9aiEEZc=;
-        b=dFc8u8+qI8uQM5L59rdwvz9aYkbQmPjcZ4O0tq1+cb9rcX5I3+q7KOnyHs9Zxkco5L
-         5qMVH0xW1arhxgGlO2xvkPb69wVagIQyljY8AQxYUZevPd7dKtt39ZeSGOnsVerPrXRs
-         ug1g2rIS6a6wE3mPutqLxr1W7a1AByr1eUJ3wfppKrQSZjJpiC+1BRlBqMwjFni37lvr
-         DBpfamJpxwpvnDnnw+K7v4LQX2Vc9rptt2rPUP0NYfZMEW20v1WPPUMr3kBGgVQyYThj
-         SNN84TC1DG1IgRv90Lf7JjFThw14RmCQ+ozNUDz8AcgNFEWoIk7K9/LTv215sIVwWdLh
-         1XVw==
-X-Gm-Message-State: APjAAAV80PFv0JFbf4YKszy/n4XuRUh0c5xvBW1YbLrScrAWumPkm5Zv
-        3bXc/QG3e8dkDnb/b574RMy2LTyyJOQ=
-X-Google-Smtp-Source: APXvYqwJATfi8I6o3vkTo8886RKmM4EXKAAoZ1cC3r/giDFvrwx6HdiUGgbxVAd2tp1VFtAjikOiqg==
-X-Received: by 2002:a5d:8747:: with SMTP id k7mr97569156iol.20.1564584664424;
-        Wed, 31 Jul 2019 07:51:04 -0700 (PDT)
-Received: from [192.168.1.57] ([65.144.74.34])
-        by smtp.gmail.com with ESMTPSA id a7sm55027937iok.19.2019.07.31.07.51.03
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 31 Jul 2019 07:51:03 -0700 (PDT)
-Subject: Re: [PATCH] ata: libahci: do not complain in case of deferred probe
-To:     Miquel Raynal <miquel.raynal@bootlin.com>,
-        Hans de Goede <hdegoede@redhat.com>
-Cc:     linux-ide@vger.kernel.org
-References: <20190731122651.3378-1-miquel.raynal@bootlin.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <d9606c11-7e8e-d8fe-f452-306750e9ab5a@kernel.dk>
-Date:   Wed, 31 Jul 2019 08:51:02 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=83OSe7y2aU72IIQHUhZp7X/NaI9ahxBDb1zvEgcPWYg=;
+        b=stvDV/xL+VOq1KnvigR23c8LqadzJBpq7gku4pd7eBzYzbbd74+SNY3tPA5WvVQuTy
+         SGzXMdHLU3ITXUfPgnhC3hCyCwOYgDfgl+izJPjZMUTEnCxMrfeS7tpb4spbzl50hAIR
+         zROeaUOOaBW58TSR7H6lLtUyOIBdu23oM7N/4bwba05eCWZd26W4QGbJ5j9gMWUeD2ZJ
+         fDIPs3UBfdppH7m4v3bEAOzgLoTVqJeDdWhKVF4DtGO4rfHMNYooFf8g/paKicylCcG1
+         B3ikbi1liLsYSnXro7cJrqYRVmUebEqfmexBfPczc4xVkQ8UgxnADFA9etLFevPz0vOS
+         kSVw==
+X-Gm-Message-State: APjAAAVNGbix6pwlmZtLTjVqNjHbcdKw8d1VJMX0GN8PMvzxOPxRhVGF
+        I0jOA8GZUn+cbDEpm7HHO2liQRYDtaBP682FQN0=
+X-Google-Smtp-Source: APXvYqyxedT2V2Y2ueteq5CdjTWcyt+qnzC20u56SIyvSN4Tvj+mYfIXi7Eg+U3QdqrIQo3qfLl+9AJWummnynXCsSA=
+X-Received: by 2002:a0c:b758:: with SMTP id q24mr88044697qve.45.1564588070611;
+ Wed, 31 Jul 2019 08:47:50 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20190731122651.3378-1-miquel.raynal@bootlin.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20190730192552.4014288-1-arnd@arndb.de> <20190730195819.901457-1-arnd@arndb.de>
+ <20190730195819.901457-3-arnd@arndb.de> <20190731105039.GB3488@osiris>
+In-Reply-To: <20190731105039.GB3488@osiris>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Wed, 31 Jul 2019 17:47:33 +0200
+Message-ID: <CAK8P3a05o37-JPU4RcDGACbhXtLXLn8hWYfkmZskh1r7z8Zo0g@mail.gmail.com>
+Subject: Re: [PATCH v5 15/29] compat_ioctl: move tape handling into drivers
+To:     Heiko Carstens <heiko.carstens@de.ibm.com>
+Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        =?UTF-8?Q?Kai_M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        IDE-ML <linux-ide@vger.kernel.org>,
+        linux-s390 <linux-s390@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 7/31/19 6:26 AM, Miquel Raynal wrote:
-> Retrieving PHYs can deffer the probe, do not spawn an error when
-> -EPROBE_DEFER is returned, it is normal behavior.
+On Wed, Jul 31, 2019 at 12:51 PM Heiko Carstens
+<heiko.carstens@de.ibm.com> wrote:
+>
+> On Tue, Jul 30, 2019 at 09:55:31PM +0200, Arnd Bergmann wrote:
+> > MTIOCPOS and MTIOCGET are incompatible between 32-bit and 64-bit user
+> > space, and traditionally have been translated in fs/compat_ioctl.c.
+> >
+> > To get rid of that translation handler, move a corresponding
+> > implementation into each of the four drivers implementing those commands.
+> >
+> > The interesting part of that is now in a new linux/mtio.h header that
+> > wraps the existing uapi/linux/mtio.h header and provides an abstraction
+> > to let drivers handle both cases easily. Using an in_compat_syscall()
+> > check, the caller does not have to keep track of whether this was
+> > called through .unlocked_ioctl() or .compat_ioctl().
+> >
+> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>
+> Besides the two minor things below
+>
+> Acked-by: Heiko Carstens <heiko.carstens@de.ibm.com>
 
-Applied, thanks.
+Thanks a lot for the reviewed. Both issues are fixed now, and
+I'm pushing out new git branches after adding the other Acks
+I got so far.
 
--- 
-Jens Axboe
-
+      Arnd
