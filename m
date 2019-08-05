@@ -1,92 +1,119 @@
-Return-Path: <SRS0=hcVH=V4=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=Rf6d=WB=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F36BC32754
-	for <linux-ide@archiver.kernel.org>; Wed, 31 Jul 2019 15:47:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C2AEC433FF
+	for <linux-ide@archiver.kernel.org>; Mon,  5 Aug 2019 17:39:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6FBAA206B8
-	for <linux-ide@archiver.kernel.org>; Wed, 31 Jul 2019 15:47:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5FB3420B1F
+	for <linux-ide@archiver.kernel.org>; Mon,  5 Aug 2019 17:39:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728475AbfGaPrw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 31 Jul 2019 11:47:52 -0400
-Received: from mail-qt1-f193.google.com ([209.85.160.193]:38105 "EHLO
-        mail-qt1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727349AbfGaPrv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jul 2019 11:47:51 -0400
-Received: by mail-qt1-f193.google.com with SMTP id n11so67033681qtl.5;
-        Wed, 31 Jul 2019 08:47:51 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=83OSe7y2aU72IIQHUhZp7X/NaI9ahxBDb1zvEgcPWYg=;
-        b=stvDV/xL+VOq1KnvigR23c8LqadzJBpq7gku4pd7eBzYzbbd74+SNY3tPA5WvVQuTy
-         SGzXMdHLU3ITXUfPgnhC3hCyCwOYgDfgl+izJPjZMUTEnCxMrfeS7tpb4spbzl50hAIR
-         zROeaUOOaBW58TSR7H6lLtUyOIBdu23oM7N/4bwba05eCWZd26W4QGbJ5j9gMWUeD2ZJ
-         fDIPs3UBfdppH7m4v3bEAOzgLoTVqJeDdWhKVF4DtGO4rfHMNYooFf8g/paKicylCcG1
-         B3ikbi1liLsYSnXro7cJrqYRVmUebEqfmexBfPczc4xVkQ8UgxnADFA9etLFevPz0vOS
-         kSVw==
-X-Gm-Message-State: APjAAAVNGbix6pwlmZtLTjVqNjHbcdKw8d1VJMX0GN8PMvzxOPxRhVGF
-        I0jOA8GZUn+cbDEpm7HHO2liQRYDtaBP682FQN0=
-X-Google-Smtp-Source: APXvYqyxedT2V2Y2ueteq5CdjTWcyt+qnzC20u56SIyvSN4Tvj+mYfIXi7Eg+U3QdqrIQo3qfLl+9AJWummnynXCsSA=
-X-Received: by 2002:a0c:b758:: with SMTP id q24mr88044697qve.45.1564588070611;
- Wed, 31 Jul 2019 08:47:50 -0700 (PDT)
+        id S1726847AbfHERjJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 5 Aug 2019 13:39:09 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:51470 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726779AbfHERjI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 5 Aug 2019 13:39:08 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 74DB8C056807;
+        Mon,  5 Aug 2019 17:39:06 +0000 (UTC)
+Received: from rt4.app.eng.rdu2.redhat.com (rt4.app.eng.rdu2.redhat.com [10.10.161.56])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id D7C3E5DA60;
+        Mon,  5 Aug 2019 17:39:01 +0000 (UTC)
+Received: from rt4.app.eng.rdu2.redhat.com (localhost [127.0.0.1])
+        by rt4.app.eng.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id x75Hd0BJ023399;
+        Mon, 5 Aug 2019 13:39:00 -0400
+Received: (from apache@localhost)
+        by rt4.app.eng.rdu2.redhat.com (8.14.4/8.14.4/Submit) id x75Hcnwa023396;
+        Mon, 5 Aug 2019 13:38:49 -0400
+From:   Red Hat Product Security <secalert@redhat.com>
+X-PGP-Public-Key: https://www.redhat.com/security/650d5882.txt
+Subject: [engineering.redhat.com #494100] Question on submitting patch for a security bug
+Reply-To: secalert@redhat.com
+In-Reply-To: <CAJ7L_Gp2HJoFOVxTgakCJw3LMuiPY0+60-giOtw3OwRD6zyNTQ@mail.gmail.com>
+References: <RT-Ticket-494100@engineering.redhat.com>
+ <CAJ7L_Gp2HJoFOVxTgakCJw3LMuiPY0+60-giOtw3OwRD6zyNTQ@mail.gmail.com>
+Message-ID: <rt-4.0.13-23214-1565026728-1358.494100-5-0@engineering.redhat.com>
+X-RT-Loop-Prevention: engineering.redhat.com
+RT-Ticket: engineering.redhat.com #494100
+Managed-BY: RT 4.0.13 (http://www.bestpractical.com/rt/)
+RT-Originator: pjp@redhat.com
+To:     b.zolnierkie@samsung.com, bob.liu@oracle.com,
+        chuck.lever@oracle.com, davem@davemloft.net, emamd001@umn.edu,
+        gregkh@linuxfoundation.org, kubakici@wp.pl, kvalo@codeaurora.org,
+        navid.emamdoost@gmail.com, sam@ravnborg.org
+CC:     airlied@linux.ie, alexandre.belloni@bootlin.com,
+        alexandre.torgue@st.com, allison@lohutok.net,
+        andriy.shevchenko@linux.intel.com, anna.schumaker@netapp.com,
+        axboe@kernel.dk, bfields@fieldses.org, colin.king@canonical.com,
+        daniel@ffwll.ch, devel@driverdev.osuosl.org,
+        dri-devel@lists.freedesktop.org, joabreu@synopsys.com,
+        johnfwhitmore@gmail.com, josef@toxicpanda.com, jslaby@suse.com,
+        kjlu@umn.edu, kstewart@linuxfoundation.org,
+        linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-serial@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-wireless@vger.kernel.org, matthias.bgg@gmail.com,
+        matthias@redhat.com, mcoquelin.stm32@gmail.com,
+        nbd@other.debian.org, netdev@vger.kernel.org,
+        nishkadg.linux@gmail.com, peppe.cavallaro@st.com, smccaman@umn.edu,
+        tglx@linutronix.de, thierry.reding@gmail.com,
+        trond.myklebust@hammerspace.com, unglinuxdriver@microchip.com,
+        vishal@chelsio.com, vkoul@kernel.org
 MIME-Version: 1.0
-References: <20190730192552.4014288-1-arnd@arndb.de> <20190730195819.901457-1-arnd@arndb.de>
- <20190730195819.901457-3-arnd@arndb.de> <20190731105039.GB3488@osiris>
-In-Reply-To: <20190731105039.GB3488@osiris>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Wed, 31 Jul 2019 17:47:33 +0200
-Message-ID: <CAK8P3a05o37-JPU4RcDGACbhXtLXLn8hWYfkmZskh1r7z8Zo0g@mail.gmail.com>
-Subject: Re: [PATCH v5 15/29] compat_ioctl: move tape handling into drivers
-To:     Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        =?UTF-8?Q?Kai_M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        IDE-ML <linux-ide@vger.kernel.org>,
-        linux-s390 <linux-s390@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+X-RT-Original-Encoding: utf-8
+Date:   Mon, 5 Aug 2019 13:38:48 -0400
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Mon, 05 Aug 2019 17:39:08 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, Jul 31, 2019 at 12:51 PM Heiko Carstens
-<heiko.carstens@de.ibm.com> wrote:
->
-> On Tue, Jul 30, 2019 at 09:55:31PM +0200, Arnd Bergmann wrote:
-> > MTIOCPOS and MTIOCGET are incompatible between 32-bit and 64-bit user
-> > space, and traditionally have been translated in fs/compat_ioctl.c.
-> >
-> > To get rid of that translation handler, move a corresponding
-> > implementation into each of the four drivers implementing those commands.
-> >
-> > The interesting part of that is now in a new linux/mtio.h header that
-> > wraps the existing uapi/linux/mtio.h header and provides an abstraction
-> > to let drivers handle both cases easily. Using an in_compat_syscall()
-> > check, the caller does not have to keep track of whether this was
-> > called through .unlocked_ioctl() or .compat_ioctl().
-> >
-> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->
-> Besides the two minor things below
->
-> Acked-by: Heiko Carstens <heiko.carstens@de.ibm.com>
+Hello Navid,
 
-Thanks a lot for the reviewed. Both issues are fixed now, and
-I'm pushing out new git branches after adding the other Acks
-I got so far.
+On Thu, 18 Jul 2019 01:30:20 GMT, emamd001@umn.edu wrote:
+> I've found a null dereference bug in the Linux kernel source code. I was
+> wondering should I cc the patch to you as well (along with the
+> maintainers)?
 
-      Arnd
+No. Please do not cc <secalert@redhat.com> on the upstream kernel patches.
+It is meant for reporting security issues only.
+
+Going through the patches here
+
+1. Issues in ../staging/ drivers are not considered for CVE, they are not to be
+used
+in production environment.
+
+2. Many of the patches listed fix NULL pointer dereference when memory
+allocation
+fails and returns NULL.
+
+3. Do you happen to have reproducers for these issues? Could an unprivileged
+user trigger them?
+
+> Also, I was wondering what are the steps to get CVE for the bug (this is
+> the first time I am reporting a bug)?
+
+Generally CVE is assigned after confirming that a given issue really is a
+security issue. And it may
+have impact ranging from information leakage, DoS to privilege escalation or
+maybe arbitrary code
+execution. Every NULL pointer dereference is not security issue.
+
+
+Hope it helps. Thank you.
+---
+Prasad J Pandit / Red Hat Product Security Team
+
