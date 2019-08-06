@@ -1,119 +1,112 @@
-Return-Path: <SRS0=Rf6d=WB=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=wlKU=WC=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C2AEC433FF
-	for <linux-ide@archiver.kernel.org>; Mon,  5 Aug 2019 17:39:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9099C433FF
+	for <linux-ide@archiver.kernel.org>; Tue,  6 Aug 2019 08:31:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5FB3420B1F
-	for <linux-ide@archiver.kernel.org>; Mon,  5 Aug 2019 17:39:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C3FD206A2
+	for <linux-ide@archiver.kernel.org>; Tue,  6 Aug 2019 08:31:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="jRJr7Jqs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726847AbfHERjJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 5 Aug 2019 13:39:09 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:51470 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726779AbfHERjI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 5 Aug 2019 13:39:08 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 74DB8C056807;
-        Mon,  5 Aug 2019 17:39:06 +0000 (UTC)
-Received: from rt4.app.eng.rdu2.redhat.com (rt4.app.eng.rdu2.redhat.com [10.10.161.56])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D7C3E5DA60;
-        Mon,  5 Aug 2019 17:39:01 +0000 (UTC)
-Received: from rt4.app.eng.rdu2.redhat.com (localhost [127.0.0.1])
-        by rt4.app.eng.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id x75Hd0BJ023399;
-        Mon, 5 Aug 2019 13:39:00 -0400
-Received: (from apache@localhost)
-        by rt4.app.eng.rdu2.redhat.com (8.14.4/8.14.4/Submit) id x75Hcnwa023396;
-        Mon, 5 Aug 2019 13:38:49 -0400
-From:   Red Hat Product Security <secalert@redhat.com>
-X-PGP-Public-Key: https://www.redhat.com/security/650d5882.txt
-Subject: [engineering.redhat.com #494100] Question on submitting patch for a security bug
-Reply-To: secalert@redhat.com
-In-Reply-To: <CAJ7L_Gp2HJoFOVxTgakCJw3LMuiPY0+60-giOtw3OwRD6zyNTQ@mail.gmail.com>
-References: <RT-Ticket-494100@engineering.redhat.com>
- <CAJ7L_Gp2HJoFOVxTgakCJw3LMuiPY0+60-giOtw3OwRD6zyNTQ@mail.gmail.com>
-Message-ID: <rt-4.0.13-23214-1565026728-1358.494100-5-0@engineering.redhat.com>
-X-RT-Loop-Prevention: engineering.redhat.com
-RT-Ticket: engineering.redhat.com #494100
-Managed-BY: RT 4.0.13 (http://www.bestpractical.com/rt/)
-RT-Originator: pjp@redhat.com
-To:     b.zolnierkie@samsung.com, bob.liu@oracle.com,
-        chuck.lever@oracle.com, davem@davemloft.net, emamd001@umn.edu,
-        gregkh@linuxfoundation.org, kubakici@wp.pl, kvalo@codeaurora.org,
-        navid.emamdoost@gmail.com, sam@ravnborg.org
-CC:     airlied@linux.ie, alexandre.belloni@bootlin.com,
-        alexandre.torgue@st.com, allison@lohutok.net,
-        andriy.shevchenko@linux.intel.com, anna.schumaker@netapp.com,
-        axboe@kernel.dk, bfields@fieldses.org, colin.king@canonical.com,
-        daniel@ffwll.ch, devel@driverdev.osuosl.org,
-        dri-devel@lists.freedesktop.org, joabreu@synopsys.com,
-        johnfwhitmore@gmail.com, josef@toxicpanda.com, jslaby@suse.com,
-        kjlu@umn.edu, kstewart@linuxfoundation.org,
-        linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-mediatek@lists.infradead.org, linux-nfs@vger.kernel.org,
-        linux-serial@vger.kernel.org,
-        linux-stm32@st-md-mailman.stormreply.com,
-        linux-wireless@vger.kernel.org, matthias.bgg@gmail.com,
-        matthias@redhat.com, mcoquelin.stm32@gmail.com,
-        nbd@other.debian.org, netdev@vger.kernel.org,
-        nishkadg.linux@gmail.com, peppe.cavallaro@st.com, smccaman@umn.edu,
-        tglx@linutronix.de, thierry.reding@gmail.com,
-        trond.myklebust@hammerspace.com, unglinuxdriver@microchip.com,
-        vishal@chelsio.com, vkoul@kernel.org
+        id S1728056AbfHFIbL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 6 Aug 2019 04:31:11 -0400
+Received: from gateway21.websitewelcome.com ([192.185.45.147]:18927 "EHLO
+        gateway21.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726713AbfHFIbL (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 6 Aug 2019 04:31:11 -0400
+X-Greylist: delayed 1378 seconds by postgrey-1.27 at vger.kernel.org; Tue, 06 Aug 2019 04:31:11 EDT
+Received: from cm11.websitewelcome.com (cm11.websitewelcome.com [100.42.49.5])
+        by gateway21.websitewelcome.com (Postfix) with ESMTP id EEDDC400CFFAC
+        for <linux-ide@vger.kernel.org>; Tue,  6 Aug 2019 03:08:10 -0500 (CDT)
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with SMTP
+        id uuVuhIqdmdnCeuuVuhklIb; Tue, 06 Aug 2019 03:08:10 -0500
+X-Authority-Reason: nr=8
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        MIME-Version:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:Content-ID:
+        Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc
+        :Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=tqouW1qc7UK4ejwDOesOIcmQuJMwuxvioRsJeeb5IM4=; b=jRJr7JqsYbSOKqd3gMKqlUEGdo
+        P3OgHdi2UEwTbXofL3M+SRi1gJ2Z4GjkdghudNwCHsdYrMJkwpFcWX+0UbTYUX+g2UZYBDHMss7RY
+        1v9RcUlL3gZI0JB/wonWbx1xTppZ7c0L5/luX6ETiDSh8PCNRtX/j04bfAx5Km1AjSASCjRQXvtKU
+        wUmmu0YtI2mqcVQPswZx5+FrCe2CAUgQxi9y8xu+4J2WGaeKjzKpsr+GbBhAf8ySTfcs8Xj5AyCSU
+        yabIKstVHzxCdxNqDLqDCNAXwfAO/3idG1hHr3reEdXk2bmjvHo+fU2n7tXGGVY68sT47qwcBqP1j
+        CCkwmx0Q==;
+Received: from [187.192.11.120] (port=43488 helo=embeddedor)
+        by gator4166.hostgator.com with esmtpa (Exim 4.92)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1huuVt-000ibV-Rp; Tue, 06 Aug 2019 03:08:09 -0500
+Date:   Tue, 6 Aug 2019 03:08:08 -0500
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Linus Walleij <linus.walleij@linaro.org>
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Subject: [PATCH] ata: rb532_cf: Fix unused variable warning in
+ rb532_pata_driver_probe
+Message-ID: <20190806080808.GA30026@embeddedor>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain; charset="utf-8"
-X-RT-Original-Encoding: utf-8
-Date:   Mon, 5 Aug 2019 13:38:48 -0400
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Mon, 05 Aug 2019 17:39:08 +0000 (UTC)
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 187.192.11.120
+X-Source-L: No
+X-Exim-ID: 1huuVt-000ibV-Rp
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: (embeddedor) [187.192.11.120]:43488
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 4
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello Navid,
+Fix the following warning (Building: rb532_defconfig mips):
 
-On Thu, 18 Jul 2019 01:30:20 GMT, emamd001@umn.edu wrote:
-> I've found a null dereference bug in the Linux kernel source code. I was
-> wondering should I cc the patch to you as well (along with the
-> maintainers)?
+drivers/ata/pata_rb532_cf.c: In function ‘rb532_pata_driver_remove’:
+drivers/ata/pata_rb532_cf.c:161:24: warning: unused variable ‘info’ [-Wunused-variable]
+  struct rb532_cf_info *info = ah->private_data;
+                        ^~~~
 
-No. Please do not cc <secalert@redhat.com> on the upstream kernel patches.
-It is meant for reporting security issues only.
-
-Going through the patches here
-
-1. Issues in ../staging/ drivers are not considered for CVE, they are not to be
-used
-in production environment.
-
-2. Many of the patches listed fix NULL pointer dereference when memory
-allocation
-fails and returns NULL.
-
-3. Do you happen to have reproducers for these issues? Could an unprivileged
-user trigger them?
-
-> Also, I was wondering what are the steps to get CVE for the bug (this is
-> the first time I am reporting a bug)?
-
-Generally CVE is assigned after confirming that a given issue really is a
-security issue. And it may
-have impact ranging from information leakage, DoS to privilege escalation or
-maybe arbitrary code
-execution. Every NULL pointer dereference is not security issue.
-
-
-Hope it helps. Thank you.
+Fixes: cd56f35e52d9 ("ata: rb532_cf: Convert to use GPIO descriptors")
+Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 ---
-Prasad J Pandit / Red Hat Product Security Team
+ drivers/ata/pata_rb532_cf.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
+index 7c37f2ff09e4..deae466395de 100644
+--- a/drivers/ata/pata_rb532_cf.c
++++ b/drivers/ata/pata_rb532_cf.c
+@@ -158,7 +158,6 @@ static int rb532_pata_driver_probe(struct platform_device *pdev)
+ static int rb532_pata_driver_remove(struct platform_device *pdev)
+ {
+ 	struct ata_host *ah = platform_get_drvdata(pdev);
+-	struct rb532_cf_info *info = ah->private_data;
+ 
+ 	ata_host_detach(ah);
+ 
+-- 
+2.22.0
 
