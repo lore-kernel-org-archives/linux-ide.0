@@ -1,109 +1,117 @@
-Return-Path: <SRS0=wlKU=WC=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=wiMf=WD=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.3 required=3.0 tests=DKIM_ADSP_CUSTOM_MED,
+	DKIM_INVALID,DKIM_SIGNED,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD0AAC32751
-	for <linux-ide@archiver.kernel.org>; Tue,  6 Aug 2019 21:45:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6D72C31E40
+	for <linux-ide@archiver.kernel.org>; Wed,  7 Aug 2019 02:46:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 77BBA21874
-	for <linux-ide@archiver.kernel.org>; Tue,  6 Aug 2019 21:45:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1565127947;
-	bh=Jk5erRwdW6Xn1aFjjqOIfAEDX4aSw+GfypMFT+zJTA4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ZV0Iv4wvV/I8wb4gN068UXNl/eQg1Ve3bJ6f9Zz6CMrLgx50a67j0baYkqStp7yZN
-	 V2+fwq+6udCAcZJ2hgpSUgVGuvQtd61sTwFRpIMBi5UlhkUZQ0qP2mDrMlclMUS/zW
-	 BDLIeXAp5BgXEv2wSYD5uyhGWGL35Ja32rHmtqCw=
+	by mail.kernel.org (Postfix) with ESMTP id 932A021743
+	for <linux-ide@archiver.kernel.org>; Wed,  7 Aug 2019 02:46:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="siHGvn1B"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727324AbfHFVpn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 6 Aug 2019 17:45:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51768 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727357AbfHFVdy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 6 Aug 2019 17:33:54 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id A10FE217D7;
-        Tue,  6 Aug 2019 21:33:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1565127233;
-        bh=Jk5erRwdW6Xn1aFjjqOIfAEDX4aSw+GfypMFT+zJTA4=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=feHyXgTcy9GqrMhZxry1QlRp1GoyC86IVKzC3w4cKySDKWAyf/igLa2nOeNUW2x+L
-         ZgAxG+rTdaTGGH0KLspj7EJEUonaP0r1bvriEjqxU6K/ANp1h5l4PPK+uUNpYzHeUp
-         YxcWsgSWi1ZD8m9cEfbDaGmRrMN652J1pZqg1MdQ=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Kees Cook <keescook@chromium.org>,
-        Jeffrin Jose T <jeffrin@rajagiritech.edu.in>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
-        linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.2 20/59] libata: zpodd: Fix small read overflow in zpodd_get_mech_type()
-Date:   Tue,  6 Aug 2019 17:32:40 -0400
-Message-Id: <20190806213319.19203-20-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190806213319.19203-1-sashal@kernel.org>
-References: <20190806213319.19203-1-sashal@kernel.org>
-MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+        id S1727087AbfHGCqQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 6 Aug 2019 22:46:16 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:39401 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726542AbfHGCqQ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 6 Aug 2019 22:46:16 -0400
+Received: by mail-pf1-f195.google.com with SMTP id f17so38599198pfn.6;
+        Tue, 06 Aug 2019 19:46:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=PrH45PB9RsMA7pyDP1csKVYDAqtxvNcn8nWcn6FbNjc=;
+        b=siHGvn1Bj4sIEYw5q5Gg20BGgu8x4a1UDeEVboEey9CPp5bwN7qRSX9PdbaORdYhKH
+         YkFcM8TpUuQwt6hsamQhz5DuOUHd74woX/sCdc4OzwKeHi1BwamkrTwX4FC3mMx+K6I9
+         GliEblk6tNZKXY+o7iNGHFMB3sd2XRWkiqmJ0SnmEyGAcqAvus0fi+m5oOCcpSOQ66N3
+         dDkKgbCtk9CMy9Fjaw9c5bPyAztNXN3LxHZMZBCJh267HKxdXSUsjyFxJocebohzrZuV
+         Xh2L7rAAuVYsLieEQNwEDnk/pHbhPGilXJtGs8lQwOV8Bav46NWW9TJnRpsWxVrpnF0t
+         2xqg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=PrH45PB9RsMA7pyDP1csKVYDAqtxvNcn8nWcn6FbNjc=;
+        b=EiKHvei5aAd4PhXThGlJZLcg3oR9jx4rl+7or2uE4dkNOLju7dI5JlGH0hINXoNXQP
+         al+X9cxBMLDr2lSUUPHtcWB4zpyl/vM94XlP3aeoOPy2cEnUUasm4kAYwL4DmPM7X9a9
+         ogl1KMC+u7u6D0EeMfsYS9B7VtXiJkkbQvaMGIIf7pxM4cAH6GOlWXWI/75UQrxHZUQ2
+         EsLP24LinWjJelZOUVgmwu11pOF7E+SAeJEkXkdb+PLre7ELCEehv0bmghf2kTjz8EOh
+         Ituf2s5IaTy7UGlmRJ5O234ncBMuuD7VumCRrVIbQghEtYAgZHMnq9u9R+J86lIE/RyF
+         BpqQ==
+X-Gm-Message-State: APjAAAXfNT65/t1EgFEsU8kT4S9QWzyBvHS1bSTnIIqEURNcrHcuLIjj
+        4pS/4dXNHG4ylMBR1YUw4iY=
+X-Google-Smtp-Source: APXvYqyzxmGpPw6yQPMJeAM+1VC/2whsZsEv9hdon9qas9R0gYs75IBP5NVy2m9R9E/19rHgJjBrwQ==
+X-Received: by 2002:a63:2026:: with SMTP id g38mr5668729pgg.172.1565145975883;
+        Tue, 06 Aug 2019 19:46:15 -0700 (PDT)
+Received: from hfq-skylake.ipads-lab.se.sjtu.edu.cn ([202.120.40.82])
+        by smtp.googlemail.com with ESMTPSA id q1sm104267950pfg.84.2019.08.06.19.46.13
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 06 Aug 2019 19:46:14 -0700 (PDT)
+From:   Fuqian Huang <huangfq.daxian@gmail.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Fuqian Huang <huangfq.daxian@gmail.com>
+Subject: [PATCH] libata-sff: use spin_lock_irqsave instead of spin_lock_irq in IRQ context.
+Date:   Wed,  7 Aug 2019 10:45:55 +0800
+Message-Id: <20190807024555.13770-1-huangfq.daxian@gmail.com>
+X-Mailer: git-send-email 2.11.0
+To:     unlisted-recipients:; (no To-header on input)
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Kees Cook <keescook@chromium.org>
+Function ata_sff_flush_pio_task use spin_lock_irq/spin_unlock_irq
+to protect shared data.
+spin_unlock_irq will enable interrupts.
 
-[ Upstream commit 71d6c505b4d9e6f76586350450e785e3d452b346 ]
+In the interrupt handler nv_swncq_interrupt (./drivers/ata/sata_nv.c),
+when ap->link.sactive is true, nv_swncq_host_interrupt was called.
+nv_swncq_hotplug is called when NV_SWNCQ_IRQ_HOTPLUG is set.
+Then it will follow this chain:
+nv_swncq_hotplug -> sata_scr_read (./dirvers/ata/libata-core.c)
+ -> sata_pmp_scr_read (./drivers/ata/libata-pmp.c)
+ -> sata_pmp_read -> ata_exec_internal 
+ -> ata_exec_internal_sg -> ata_sff_flush_pio_task
 
-Jeffrin reported a KASAN issue:
+Interrupts are enabled in interrupt handler.
+Use spin_lock_irqsave instead of spin_lock_irq to avoid this.
 
-  BUG: KASAN: global-out-of-bounds in ata_exec_internal_sg+0x50f/0xc70
-  Read of size 16 at addr ffffffff91f41f80 by task scsi_eh_1/149
-  ...
-  The buggy address belongs to the variable:
-    cdb.48319+0x0/0x40
-
-Much like commit 18c9a99bce2a ("libata: zpodd: small read overflow in
-eject_tray()"), this fixes a cdb[] buffer length, this time in
-zpodd_get_mech_type():
-
-We read from the cdb[] buffer in ata_exec_internal_sg(). It has to be
-ATAPI_CDB_LEN (16) bytes long, but this buffer is only 12 bytes.
-
-Reported-by: Jeffrin Jose T <jeffrin@rajagiritech.edu.in>
-Fixes: afe759511808c ("libata: identify and init ZPODD devices")
-Link: https://lore.kernel.org/lkml/201907181423.E808958@keescook/
-Tested-by: Jeffrin Jose T <jeffrin@rajagiritech.edu.in>
-Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Fuqian Huang <huangfq.daxian@gmail.com>
 ---
- drivers/ata/libata-zpodd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ata/libata-sff.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-zpodd.c b/drivers/ata/libata-zpodd.c
-index 173e6f2dd9af0..eefda51f97d35 100644
---- a/drivers/ata/libata-zpodd.c
-+++ b/drivers/ata/libata-zpodd.c
-@@ -56,7 +56,7 @@ static enum odd_mech_type zpodd_get_mech_type(struct ata_device *dev)
- 	unsigned int ret;
- 	struct rm_feature_desc *desc;
- 	struct ata_taskfile tf;
--	static const char cdb[] = {  GPCMD_GET_CONFIGURATION,
-+	static const char cdb[ATAPI_CDB_LEN] = {  GPCMD_GET_CONFIGURATION,
- 			2,      /* only 1 feature descriptor requested */
- 			0, 3,   /* 3, removable medium feature */
- 			0, 0, 0,/* reserved */
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 10aa27882142..d3143e7e6ec0 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -1241,6 +1241,7 @@ EXPORT_SYMBOL_GPL(ata_sff_queue_pio_task);
+ 
+ void ata_sff_flush_pio_task(struct ata_port *ap)
+ {
++	unsigned long flags;
+ 	DPRINTK("ENTER\n");
+ 
+ 	cancel_delayed_work_sync(&ap->sff_pio_task);
+@@ -1253,9 +1254,9 @@ void ata_sff_flush_pio_task(struct ata_port *ap)
+ 	 * __ata_sff_port_intr() checks for HSM_ST_IDLE and before it calls
+ 	 * ata_sff_hsm_move() causing ata_sff_hsm_move() to BUG().
+ 	 */
+-	spin_lock_irq(ap->lock);
++	spin_lock_irqsave(ap->lock, flags);
+ 	ap->hsm_task_state = HSM_ST_IDLE;
+-	spin_unlock_irq(ap->lock);
++	spin_unlock_irqrestore(ap->lock, flags);
+ 
+ 	ap->sff_pio_task_link = NULL;
+ 
 -- 
-2.20.1
+2.11.0
 
