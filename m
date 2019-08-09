@@ -2,481 +2,133 @@ Return-Path: <SRS0=yb+g=WF=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AF97C433FF
-	for <linux-ide@archiver.kernel.org>; Fri,  9 Aug 2019 10:55:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0957C31E40
+	for <linux-ide@archiver.kernel.org>; Fri,  9 Aug 2019 14:14:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 05C9A21783
-	for <linux-ide@archiver.kernel.org>; Fri,  9 Aug 2019 10:55:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 97D3F2171F
+	for <linux-ide@archiver.kernel.org>; Fri,  9 Aug 2019 14:14:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tCVqZ9yL"
+	dkim=pass (1024-bit key) header.d=SILICOMLTD.onmicrosoft.com header.i=@SILICOMLTD.onmicrosoft.com header.b="M/GbkeCD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406402AbfHIKzG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 9 Aug 2019 06:55:06 -0400
-Received: from mail-ed1-f68.google.com ([209.85.208.68]:40174 "EHLO
-        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2406093AbfHIKzG (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 9 Aug 2019 06:55:06 -0400
-Received: by mail-ed1-f68.google.com with SMTP id h8so6403263edv.7;
-        Fri, 09 Aug 2019 03:55:03 -0700 (PDT)
+        id S1726261AbfHIOOc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 9 Aug 2019 10:14:32 -0400
+Received: from mail-eopbgr130113.outbound.protection.outlook.com ([40.107.13.113]:21390
+        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726140AbfHIOOb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 9 Aug 2019 10:14:31 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Memk4WOpMO0y7kkjfl6lPcS1+SJ2sY9ACE5nyD1ojs5WtT9RXeP4odlaEUDAEdsxF1el6sNjAl+I53GFZTdDvv+bFaoL1vMkF3y/6e6ES8YelFtqRguKVyndRI9ZlHon9MtwfHRRfIz9lJTf2GGSpq8uBpe2Ipua7OyIkS5thgxNAIxgoC7fwxiiQuZqUiJSRMRWl24adRmOt42rS/CF+qJxj4oLhYvk9kaDcP/aSLm/S+98PndyYA9loal43SMZLfPfQG7VVoBoGaiBXm4VfPvJxcT1xdvUD6XpvfHX8OBkAQU3FUn3KTGfl6dF/qNb6wNmNeiClewmUXC5zWDfug==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=3rr6x9WPezSBbYs6tDg4+QVie557lCQ/q2W5fjClsH0=;
+ b=dUGabZ92ZZwqtjj1asFEznBfi0lujt8Qzx0irdgP65Z3UjqE88pFXdiPLNF6y34S1yUh565/CmzpeRUm+LEzO+k/mXoQgWBfX5ux6RrN3++9ieN056JiYVH5cyVrjbXqFdC0OqZ+Pve3DJHDtwGO7iQMDRUukU85JxRCbbSejO3NfBEIYmITvlC9D3xzauheDkegqY0RIJnDP0/JJ3ZszIPveqoplaMRzYek0MI5crYT0QiqoK2RzsTXMTtQVKI698gDHTLK+rTwqtZ+9dJeNsDxgQai/jWiyA86GoS9nezRH5lq5JdyJVFW3h8DBoKoXIX/IDyNnH9b8IFNh8Up9w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=silicom-usa.com; dmarc=pass action=none
+ header.from=silicom-usa.com; dkim=pass header.d=silicom-usa.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=IFobf+v5u7ekboCmajvIduUsjW5C7G85pX/gGR/QpIM=;
-        b=tCVqZ9yL9JRYNlLzVmtpUSGoiEHAXl7Gl9ND+MXKzQlU/RUUaM/5bN9Kk7mUzsTTwa
-         yg6TA7AeENPsR/QEcdxMiPFD0Fv2XbGajVMHBCELBf5FHplv06FBVJTyr9DrS/34r2m2
-         5x5qn1mFKhJzJDhnPwqQlyYlmmnJMDncuNyHf0/agTQ52b0kcOi/7kWEMFIenQRlRj6s
-         hd/46ggl5vja/w8/J2HnFwNsJ0b4wMZGnNNrJZgGvUkZ7MmXqPadFmnTOfAAmxtRP/G0
-         PID9NT88lIQrwcle3Dof8flzKWwhGRUthpFDrCY+ygjxljm1VgSodK+Qfj+WGlEhKmk5
-         pXBA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=IFobf+v5u7ekboCmajvIduUsjW5C7G85pX/gGR/QpIM=;
-        b=S+jbTMoOH5QdHvAdDhfmiJQIANZ1f8DjiQdZH0KAhgf1OobyBjspOQ0Ga7maSZ0cU7
-         a9mvL2bo0bwNv1xkjMJlid1F/dLmdgjVf7PfwjmvNfgICLZF2bOdJs2gnd/IlUmbThic
-         Hzy/GEFx3hdCy7ntp5cfwFwNB4/S7LoyBMGAEs0TzFn4eQjXuwWGWuVYpRsoCM2RJ/eU
-         nmZd22GA1/wU7lt+U0lQUCt60iCih+4mCmFNYXqfwyMjjg8NajbzkIFJT0Z9Qxtxa5fV
-         K3B800gvdf3bDuOnABBlA7seUREhyXOBhHVZ23nSLgRlpMOdQGBxHytGyIuvMKlXRoIP
-         Jwaw==
-X-Gm-Message-State: APjAAAUeZmQi6LruCjv81l0XDOz9cmXYq71Noq1xa7/2NR3yS6CkPE+k
-        atsLSHC+T9Hk7Ki3eRFZJAR37pGEG/t7Ww==
-X-Google-Smtp-Source: APXvYqx6MCjOzh34eccuqlRuKfyP8sl1s9oDvFEvvd5eq4SJxQXMPvyIgigEYkc1hRt6l/rfQJWTZA==
-X-Received: by 2002:a50:91e5:: with SMTP id h34mr20734238eda.72.1565348102877;
-        Fri, 09 Aug 2019 03:55:02 -0700 (PDT)
-Received: from continental.suse.de ([177.96.42.43])
-        by smtp.gmail.com with ESMTPSA id x55sm22289167edm.11.2019.08.09.03.54.53
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Fri, 09 Aug 2019 03:55:02 -0700 (PDT)
-From:   Marcos Paulo de Souza <marcos.souza.org@gmail.com>
-To:     linux-kernel@vger.kernel.org
-Cc:     Marcos Paulo de Souza <marcos.souza.org@gmail.com>, hch@lst.de,
-        axboe@kernel.dk, linux-block@vger.kernel.org,
-        Tim Waugh <tim@cyberelk.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Borislav Petkov <bp@alien8.de>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Keith Busch <kbusch@kernel.org>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "J. Bruce Fields" <bfields@fieldses.org>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Avri Altman <avri.altman@wdc.com>,
-        YueHaibing <yuehaibing@huawei.com>,
-        Wolfram Sang <wsa+renesas@sang-engineering.com>,
-        Chris Boot <bootc@bootc.net>, Zachary Hays <zhays@lexmark.com>,
-        Ming Lei <ming.lei@redhat.com>, Omar Sandoval <osandov@fb.com>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-ide@vger.kernel.org (open list:IDE SUBSYSTEM),
-        linux-mmc@vger.kernel.org (open list:MULTIMEDIA CARD (MMC), SECURE
-        DIGITAL (SD) AND...),
-        linux-nvme@lists.infradead.org (open list:NVM EXPRESS DRIVER),
-        linux-scsi@vger.kernel.org (open list:SCSI SUBSYSTEM),
-        linux-nfs@vger.kernel.org (open list:KERNEL NFSD, SUNRPC, AND LOCKD
-        SERVERS)
-Subject: [PATCHv2  4/4] block: Change at_head argument of blk_execute_rq to bool
-Date:   Fri,  9 Aug 2019 07:54:33 -0300
-Message-Id: <20190809105433.8946-5-marcos.souza.org@gmail.com>
-X-Mailer: git-send-email 2.22.0
-In-Reply-To: <20190809105433.8946-1-marcos.souza.org@gmail.com>
-References: <20190809105433.8946-1-marcos.souza.org@gmail.com>
+ d=SILICOMLTD.onmicrosoft.com; s=selector2-SILICOMLTD-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=3rr6x9WPezSBbYs6tDg4+QVie557lCQ/q2W5fjClsH0=;
+ b=M/GbkeCD1axc+2GNrEXUs2yKdTeWqj9ekWoUle3AIc2yUAGdMKqfA3TWZchyJkRhOUJpw/+JecqOGTkGSqannMpLWNzy6DLWR32vbafj2CdByr6O4Vm8gWzIArBb7RVVeejq0cSv8HEHNk9jvCn7/B9bXtF/x2cNBOUprrbXCzg=
+Received: from VI1PR0402MB2717.eurprd04.prod.outlook.com (10.175.22.139) by
+ VI1PR0402MB3854.eurprd04.prod.outlook.com (52.134.16.150) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2157.13; Fri, 9 Aug 2019 14:13:46 +0000
+Received: from VI1PR0402MB2717.eurprd04.prod.outlook.com
+ ([fe80::eca9:e1f:eca7:8439]) by VI1PR0402MB2717.eurprd04.prod.outlook.com
+ ([fe80::eca9:e1f:eca7:8439%9]) with mapi id 15.20.2157.020; Fri, 9 Aug 2019
+ 14:13:46 +0000
+From:   Stephen Douthit <stephend@silicom-usa.com>
+To:     Jens Axboe <axboe@kernel.dk>
+CC:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] ata: ahci: Lookup PCS register offset based on PCI device
+ ID
+Thread-Topic: [PATCH] ata: ahci: Lookup PCS register offset based on PCI
+ device ID
+Thread-Index: AQHVTidIVfq9W1HbR0i2bNtry39JoabyLaKAgACvWYA=
+Date:   Fri, 9 Aug 2019 14:13:46 +0000
+Message-ID: <9f7821b3-5bc2-bda1-eae6-4d7213677c9b@silicom-usa.com>
+References: <20190808202415.25166-1-stephend@silicom-usa.com>
+ <20be9bbb-5f09-c048-d98d-7398657c0c8f@kernel.dk>
+In-Reply-To: <20be9bbb-5f09-c048-d98d-7398657c0c8f@kernel.dk>
+Reply-To: Stephen Douthit <stephend@silicom-usa.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: BN8PR07CA0034.namprd07.prod.outlook.com
+ (2603:10b6:408:ac::47) To VI1PR0402MB2717.eurprd04.prod.outlook.com
+ (2603:10a6:800:b4::11)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=stephend@silicom-usa.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [96.82.2.57]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 1013ad46-43c6-4a65-5eeb-08d71cd3cabe
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600148)(711020)(4605104)(1401327)(2017052603328)(7193020);SRVR:VI1PR0402MB3854;
+x-ms-traffictypediagnostic: VI1PR0402MB3854:
+x-microsoft-antispam-prvs: <VI1PR0402MB3854AE3DE073D86DC7B1C78C94D60@VI1PR0402MB3854.eurprd04.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:7219;
+x-forefront-prvs: 01244308DF
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(39840400004)(376002)(346002)(136003)(396003)(366004)(189003)(199004)(53936002)(71200400001)(71190400001)(3450700001)(66446008)(64756008)(66556008)(66476007)(66946007)(6486002)(2906002)(6916009)(31686004)(43066004)(6512007)(3846002)(6116002)(53546011)(6506007)(386003)(81166006)(478600001)(81156014)(4326008)(186003)(6436002)(7736002)(305945005)(6246003)(66066001)(5660300002)(8936002)(52116002)(36756003)(76176011)(99286004)(25786009)(102836004)(26005)(14454004)(8676002)(2616005)(446003)(11346002)(31696002)(476003)(86362001)(229853002)(256004)(486006)(14444005)(54906003)(316002);DIR:OUT;SFP:1102;SCL:1;SRVR:VI1PR0402MB3854;H:VI1PR0402MB2717.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: silicom-usa.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: 9FsDvVGPvylrw3l7PLuAzhAx8QJUxTxwWFEMT4axQ8w6JwZupyOYkjLYWLnNmZIYM+lqEPjmRWQdX//xivBn94FkqbfHo8gRW2F58EZNhezpU4fzFvlmMQJ6aa64KMIy2Z9StnbTcH2Z4rpq1Ud+MOF61GAiln3HrkXuhoG94DdnRy2t7Fxe8ILZ+joSxqnOW6//bbllthvGQSI13fGm45Oe5KV0v6dmTEeAVuvHtbiV12SBRfF38W9av3G7tVvz51jTiWLBlciLKV4Zn3/FKSKIWmoPJZM9gtoU3qpE07jjcjXlGEwbBdBwehjlEG1ntMsAWD6gZZJ71jINBIc7JflqmLmZefHR38tc1hk2sELVb8uTP+79/DDWbTIEfULDoMOaMCdMY+9eO7a1RmwLWTE8/6m17dpnOxbEQU7fwXo=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <72C75ED6BFA8F747AC0E1C7EF1DAD3C0@eurprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-OriginatorOrg: silicom-usa.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1013ad46-43c6-4a65-5eeb-08d71cd3cabe
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Aug 2019 14:13:46.3844
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: c9e326d8-ce47-4930-8612-cc99d3c87ad1
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 7niXriMadjxFwYcDXLKQBju1WXruw+J8te3/cUPkJODhm+AQUxAk6gbxhQmyTyUbfVPoGxhG8V8zCjf/8lc5UyWd+U4TmI3d6745MLS8acA=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1PR0402MB3854
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Suggested-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Marcos Paulo de Souza <marcos.souza.org@gmail.com>
----
- block/blk-exec.c             |  2 +-
- block/scsi_ioctl.c           |  8 ++++----
- drivers/block/paride/pd.c    |  2 +-
- drivers/block/pktcdvd.c      |  2 +-
- drivers/cdrom/cdrom.c        |  2 +-
- drivers/ide/ide-atapi.c      |  2 +-
- drivers/ide/ide-cd.c         |  2 +-
- drivers/ide/ide-cd_ioctl.c   |  2 +-
- drivers/ide/ide-devsets.c    |  2 +-
- drivers/ide/ide-disk.c       |  2 +-
- drivers/ide/ide-ioctls.c     |  4 ++--
- drivers/ide/ide-park.c       |  2 +-
- drivers/ide/ide-pm.c         |  2 +-
- drivers/ide/ide-tape.c       |  2 +-
- drivers/ide/ide-taskfile.c   |  2 +-
- drivers/mmc/core/block.c     | 10 +++++-----
- drivers/nvme/host/core.c     |  2 +-
- drivers/nvme/host/lightnvm.c |  4 ++--
- drivers/scsi/scsi_lib.c      |  2 +-
- fs/nfsd/blocklayout.c        |  2 +-
- include/linux/blkdev.h       |  2 +-
- 21 files changed, 30 insertions(+), 30 deletions(-)
-
-diff --git a/block/blk-exec.c b/block/blk-exec.c
-index c8b88f469988..dcc4bfb7b981 100644
---- a/block/blk-exec.c
-+++ b/block/blk-exec.c
-@@ -71,7 +71,7 @@ EXPORT_SYMBOL_GPL(blk_execute_rq_nowait);
-  *    Insert a fully prepared request at the back of the I/O scheduler queue
-  *    for execution and wait for completion.
-  */
--void blk_execute_rq(struct gendisk *bd_disk, struct request *rq, int at_head)
-+void blk_execute_rq(struct gendisk *bd_disk, struct request *rq, bool at_head)
- {
- 	DECLARE_COMPLETION_ONSTACK(wait);
- 	unsigned long hang_check;
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 5411fb322c56..3231c347ee94 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -281,7 +281,7 @@ static int sg_io(struct request_queue *q, struct gendisk *bd_disk,
- 	unsigned long start_time;
- 	ssize_t ret = 0;
- 	int writing = 0;
--	int at_head = 0;
-+	bool at_head = false;
- 	struct request *rq;
- 	struct scsi_request *req;
- 	struct bio *bio;
-@@ -304,7 +304,7 @@ static int sg_io(struct request_queue *q, struct gendisk *bd_disk,
- 			break;
- 		}
- 	if (hdr->flags & SG_FLAG_Q_AT_HEAD)
--		at_head = 1;
-+		at_head = true
-
- 	ret = -ENOMEM;
- 	rq = blk_get_request(q, writing ? REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, 0);
-@@ -490,7 +490,7 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
- 		goto error;
- 	}
-
--	blk_execute_rq(disk, rq, 0);
-+	blk_execute_rq(disk, rq, false);
-
- 	err = req->result & 0xff;	/* only 8 bit SCSI status */
- 	if (err) {
-@@ -529,7 +529,7 @@ static int __blk_send_generic(struct request_queue *q, struct gendisk *bd_disk,
- 	scsi_req(rq)->cmd[0] = cmd;
- 	scsi_req(rq)->cmd[4] = data;
- 	scsi_req(rq)->cmd_len = 6;
--	blk_execute_rq(bd_disk, rq, 0);
-+	blk_execute_rq(bd_disk, rq, false);
- 	err = scsi_req(rq)->result ? -EIO : 0;
- 	blk_put_request(rq);
-
-diff --git a/drivers/block/paride/pd.c b/drivers/block/paride/pd.c
-index 22f36dc28018..d02c57247c9d 100644
---- a/drivers/block/paride/pd.c
-+++ b/drivers/block/paride/pd.c
-@@ -781,7 +781,7 @@ static int pd_special_command(struct pd_unit *disk,
- 	req = blk_mq_rq_to_pdu(rq);
-
- 	req->func = func;
--	blk_execute_rq(disk->gd, rq, 0);
-+	blk_execute_rq(disk->gd, rq, false);
- 	blk_put_request(rq);
- 	return 0;
- }
-diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
-index 00b0aa14ca07..6bd163c4c5c2 100644
---- a/drivers/block/pktcdvd.c
-+++ b/drivers/block/pktcdvd.c
-@@ -722,7 +722,7 @@ static int pkt_generic_packet(struct pktcdvd_device *pd, struct packet_command *
- 	if (cgc->quiet)
- 		rq->rq_flags |= RQF_QUIET;
-
--	blk_execute_rq(pd->bdev->bd_disk, rq, 0);
-+	blk_execute_rq(pd->bdev->bd_disk, rq, false);
- 	if (scsi_req(rq)->result)
- 		ret = -EIO;
- out:
-diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index fa85c6ab4915..b5406301e823 100644
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -2221,7 +2221,7 @@ static int cdrom_read_cdda_bpc(struct cdrom_device_info *cdi, __u8 __user *ubuf,
- 		rq->timeout = 60 * HZ;
- 		bio = rq->bio;
-
--		blk_execute_rq(cdi->disk, rq, 0);
-+		blk_execute_rq(cdi->disk, rq, false);
- 		if (scsi_req(rq)->result) {
- 			struct scsi_sense_hdr sshdr;
-
-diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-index f3e5f25e4065..571e30187a0f 100644
---- a/drivers/ide/ide-atapi.c
-+++ b/drivers/ide/ide-atapi.c
-@@ -107,7 +107,7 @@ int ide_queue_pc_tail(ide_drive_t *drive, struct gendisk *disk,
- 	memcpy(scsi_req(rq)->cmd, pc->c, 12);
- 	if (drive->media == ide_tape)
- 		scsi_req(rq)->cmd[13] = REQ_IDETAPE_PC1;
--	blk_execute_rq(disk, rq, 0);
-+	blk_execute_rq(disk, rq, false);
- 	error = scsi_req(rq)->result ? -EIO : 0;
- put_req:
- 	blk_put_request(rq);
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 31a6d1af0c2f..3d0dbb11fa8f 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -466,7 +466,7 @@ int ide_cd_queue_pc(ide_drive_t *drive, const unsigned char *cmd,
- 			}
- 		}
-
--		blk_execute_rq(info->disk, rq, 0);
-+		blk_execute_rq(info->disk, rq, false);
- 		error = scsi_req(rq)->result ? -EIO : 0;
-
- 		if (buffer)
-diff --git a/drivers/ide/ide-cd_ioctl.c b/drivers/ide/ide-cd_ioctl.c
-index 011eab9c69b7..2eed0e43bb2b 100644
---- a/drivers/ide/ide-cd_ioctl.c
-+++ b/drivers/ide/ide-cd_ioctl.c
-@@ -299,7 +299,7 @@ int ide_cdrom_reset(struct cdrom_device_info *cdi)
- 	rq = blk_get_request(drive->queue, REQ_OP_DRV_IN, 0);
- 	ide_req(rq)->type = ATA_PRIV_MISC;
- 	rq->rq_flags = RQF_QUIET;
--	blk_execute_rq(cd->disk, rq, 0);
-+	blk_execute_rq(cd->disk, rq, false);
- 	ret = scsi_req(rq)->result ? -EIO : 0;
- 	blk_put_request(rq);
- 	/*
-diff --git a/drivers/ide/ide-devsets.c b/drivers/ide/ide-devsets.c
-index ca1d4b3d3878..304df2b35b42 100644
---- a/drivers/ide/ide-devsets.c
-+++ b/drivers/ide/ide-devsets.c
-@@ -173,7 +173,7 @@ int ide_devset_execute(ide_drive_t *drive, const struct ide_devset *setting,
- 	*(int *)&scsi_req(rq)->cmd[1] = arg;
- 	ide_req(rq)->special = setting->set;
-
--	blk_execute_rq(NULL, rq, 0);
-+	blk_execute_rq(NULL, rq, false);
- 	ret = scsi_req(rq)->result;
- 	blk_put_request(rq);
-
-diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
-index ffb42a566c2b..2d2614607df9 100644
---- a/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -482,7 +482,7 @@ static int set_multcount(ide_drive_t *drive, int arg)
-
- 	drive->mult_req = arg;
- 	drive->special_flags |= IDE_SFLAG_SET_MULTMODE;
--	blk_execute_rq(NULL, rq, 0);
-+	blk_execute_rq(NULL, rq, false);
- 	blk_put_request(rq);
-
- 	return (drive->mult_count == arg) ? 0 : -EIO;
-diff --git a/drivers/ide/ide-ioctls.c b/drivers/ide/ide-ioctls.c
-index 45a313cd8698..fd861037b723 100644
---- a/drivers/ide/ide-ioctls.c
-+++ b/drivers/ide/ide-ioctls.c
-@@ -128,7 +128,7 @@ static int ide_cmd_ioctl(ide_drive_t *drive, unsigned long arg)
-
- 		rq = blk_get_request(drive->queue, REQ_OP_DRV_IN, 0);
- 		ide_req(rq)->type = ATA_PRIV_TASKFILE;
--		blk_execute_rq(NULL, rq, 0);
-+		blk_execute_rq(NULL, rq, false);
- 		err = scsi_req(rq)->result ? -EIO : 0;
- 		blk_put_request(rq);
-
-@@ -227,7 +227,7 @@ static int generic_drive_reset(ide_drive_t *drive)
- 	ide_req(rq)->type = ATA_PRIV_MISC;
- 	scsi_req(rq)->cmd_len = 1;
- 	scsi_req(rq)->cmd[0] = REQ_DRIVE_RESET;
--	blk_execute_rq(NULL, rq, 1);
-+	blk_execute_rq(NULL, rq, true);
- 	ret = scsi_req(rq)->result;
- 	blk_put_request(rq);
- 	return ret;
-diff --git a/drivers/ide/ide-park.c b/drivers/ide/ide-park.c
-index a80a0f28f7b9..0069feb228fd 100644
---- a/drivers/ide/ide-park.c
-+++ b/drivers/ide/ide-park.c
-@@ -37,7 +37,7 @@ static void issue_park_cmd(ide_drive_t *drive, unsigned long timeout)
- 	scsi_req(rq)->cmd_len = 1;
- 	ide_req(rq)->type = ATA_PRIV_MISC;
- 	ide_req(rq)->special = &timeout;
--	blk_execute_rq(NULL, rq, 1);
-+	blk_execute_rq(NULL, rq, true);
- 	rc = scsi_req(rq)->result ? -EIO : 0;
- 	blk_put_request(rq);
- 	if (rc)
-diff --git a/drivers/ide/ide-pm.c b/drivers/ide/ide-pm.c
-index fc3cb37fec14..7c53449dc462 100644
---- a/drivers/ide/ide-pm.c
-+++ b/drivers/ide/ide-pm.c
-@@ -27,7 +27,7 @@ int generic_ide_suspend(struct device *dev, pm_message_t mesg)
- 		mesg.event = PM_EVENT_FREEZE;
- 	rqpm.pm_state = mesg.event;
-
--	blk_execute_rq(NULL, rq, 0);
-+	blk_execute_rq(NULL, rq, false);
- 	ret = scsi_req(rq)->result ? -EIO : 0;
- 	blk_put_request(rq);
-
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 56f66cb0d6b6..484daef19ffe 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -867,7 +867,7 @@ static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int size)
- 			goto out_put;
- 	}
-
--	blk_execute_rq(tape->disk, rq, 0);
-+	blk_execute_rq(tape->disk, rq, false);
-
- 	/* calculate the number of transferred bytes and update buffer state */
- 	size -= scsi_req(rq)->resid_len;
-diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
-index 577e34b80244..4f9422deaf28 100644
---- a/drivers/ide/ide-taskfile.c
-+++ b/drivers/ide/ide-taskfile.c
-@@ -444,7 +444,7 @@ int ide_raw_taskfile(ide_drive_t *drive, struct ide_cmd *cmd, u8 *buf,
- 	ide_req(rq)->special = cmd;
- 	cmd->rq = rq;
-
--	blk_execute_rq(NULL, rq, 0);
-+	blk_execute_rq(NULL, rq, false);
- 	error = scsi_req(rq)->result ? -EIO : 0;
- put_req:
- 	blk_put_request(rq);
-diff --git a/drivers/mmc/core/block.c b/drivers/mmc/core/block.c
-index 7cba68054435..2543850aee99 100644
---- a/drivers/mmc/core/block.c
-+++ b/drivers/mmc/core/block.c
-@@ -249,7 +249,7 @@ static ssize_t power_ro_lock_store(struct device *dev,
- 		goto out_put;
- 	}
- 	req_to_mmc_queue_req(req)->drv_op = MMC_DRV_OP_BOOT_WP;
--	blk_execute_rq(NULL, req, 0);
-+	blk_execute_rq(NULL, req, false);
- 	ret = req_to_mmc_queue_req(req)->drv_op_result;
- 	blk_put_request(req);
-
-@@ -664,7 +664,7 @@ static int mmc_blk_ioctl_cmd(struct mmc_blk_data *md,
- 		rpmb ? MMC_DRV_OP_IOCTL_RPMB : MMC_DRV_OP_IOCTL;
- 	req_to_mmc_queue_req(req)->drv_op_data = idatas;
- 	req_to_mmc_queue_req(req)->ioc_count = 1;
--	blk_execute_rq(NULL, req, 0);
-+	blk_execute_rq(NULL, req, false);
- 	ioc_err = req_to_mmc_queue_req(req)->drv_op_result;
- 	err = mmc_blk_ioctl_copy_to_user(ic_ptr, idata);
- 	blk_put_request(req);
-@@ -733,7 +733,7 @@ static int mmc_blk_ioctl_multi_cmd(struct mmc_blk_data *md,
- 		rpmb ? MMC_DRV_OP_IOCTL_RPMB : MMC_DRV_OP_IOCTL;
- 	req_to_mmc_queue_req(req)->drv_op_data = idata;
- 	req_to_mmc_queue_req(req)->ioc_count = num_of_cmds;
--	blk_execute_rq(NULL, req, 0);
-+	blk_execute_rq(NULL, req, false);
- 	ioc_err = req_to_mmc_queue_req(req)->drv_op_result;
-
- 	/* copy to user if data and response */
-@@ -2752,7 +2752,7 @@ static int mmc_dbg_card_status_get(void *data, u64 *val)
- 	if (IS_ERR(req))
- 		return PTR_ERR(req);
- 	req_to_mmc_queue_req(req)->drv_op = MMC_DRV_OP_GET_CARD_STATUS;
--	blk_execute_rq(NULL, req, 0);
-+	blk_execute_rq(NULL, req, false);
- 	ret = req_to_mmc_queue_req(req)->drv_op_result;
- 	if (ret >= 0) {
- 		*val = ret;
-@@ -2791,7 +2791,7 @@ static int mmc_ext_csd_open(struct inode *inode, struct file *filp)
- 	}
- 	req_to_mmc_queue_req(req)->drv_op = MMC_DRV_OP_GET_EXT_CSD;
- 	req_to_mmc_queue_req(req)->drv_op_data = &ext_csd;
--	blk_execute_rq(NULL, req, 0);
-+	blk_execute_rq(NULL, req, false);
- 	err = req_to_mmc_queue_req(req)->drv_op_result;
- 	blk_put_request(req);
- 	if (err) {
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index 38c1a5db9e56..0aa72962f2a7 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -884,7 +884,7 @@ static int nvme_submit_user_cmd(struct request_queue *q,
- 		}
- 	}
-
--	blk_execute_rq(disk, req, 0);
-+	blk_execute_rq(disk, req, false);
- 	if (nvme_req(req)->flags & NVME_REQ_CANCELLED)
- 		ret = -EINTR;
- 	else
-diff --git a/drivers/nvme/host/lightnvm.c b/drivers/nvme/host/lightnvm.c
-index c09989376c3b..220e34097f94 100644
---- a/drivers/nvme/host/lightnvm.c
-+++ b/drivers/nvme/host/lightnvm.c
-@@ -706,7 +706,7 @@ static int nvme_nvm_submit_io_sync(struct nvm_dev *dev, struct nvm_rq *rqd)
- 	/* I/Os can fail and the error is signaled through rqd. Callers must
- 	 * handle the error accordingly.
- 	 */
--	blk_execute_rq(NULL, rq, 0);
-+	blk_execute_rq(NULL, rq, false);
- 	if (nvme_req(rq)->flags & NVME_REQ_CANCELLED)
- 		ret = -EINTR;
-
-@@ -835,7 +835,7 @@ static int nvme_nvm_submit_user_cmd(struct request_queue *q,
- 		bio->bi_disk = disk;
- 	}
-
--	blk_execute_rq(NULL, rq, 0);
-+	blk_execute_rq(NULL, rq, false);
-
- 	if (nvme_req(rq)->flags & NVME_REQ_CANCELLED)
- 		ret = -EINTR;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9551bc93ad0c..b02df7b09312 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -276,7 +276,7 @@ int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 	/*
- 	 * head injection *required* here otherwise quiesce won't work
- 	 */
--	blk_execute_rq(NULL, req, 1);
-+	blk_execute_rq(NULL, req, true);
-
- 	/*
- 	 * Some devices (USB mass-storage in particular) may transfer
-diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
-index b6fc7f7a0568..407b633b7691 100644
---- a/fs/nfsd/blocklayout.c
-+++ b/fs/nfsd/blocklayout.c
-@@ -253,7 +253,7 @@ static int nfsd4_scsi_identify_device(struct block_device *bdev,
- 	req->cmd[4] = bufflen & 0xff;
- 	req->cmd_len = COMMAND_SIZE(INQUIRY);
-
--	blk_execute_rq(NULL, rq, 1);
-+	blk_execute_rq(NULL, rq, true);
- 	if (req->result) {
- 		pr_err("pNFS: INQUIRY 0x83 failed with: %x\n",
- 			req->result);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 19ed996f0074..405f8ae31e5c 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -865,7 +865,7 @@ extern int blk_rq_map_kern(struct request_queue *, struct request *, void *, uns
- extern int blk_rq_map_user_iov(struct request_queue *, struct request *,
- 			       struct rq_map_data *, const struct iov_iter *,
- 			       gfp_t);
--extern void blk_execute_rq(struct gendisk *, struct request *, int);
-+extern void blk_execute_rq(struct gendisk *, struct request *, bool);
- extern void blk_execute_rq_nowait(struct gendisk *, struct request *, bool,
- 				rq_end_io_fn *);
-
---
-2.22.0
-
+T24gOC84LzE5IDExOjQ2IFBNLCBKZW5zIEF4Ym9lIHdyb3RlOg0KPiBPbiA4LzgvMTkgMToyNCBQ
+TSwgU3RlcGhlbiBEb3V0aGl0IHdyb3RlOg0KPj4gSW50ZWwgbW92ZWQgdGhlIFBDUyByZWdpc3Rl
+ciBmcm9tIDB4OTIgdG8gMHg5NCBvbiBEZW52ZXJ0b24gZm9yIHNvbWUNCj4+IHJlYXNvbiwgc28g
+bm93IHdlIGdldCB0byBjaGVjayB0aGUgZGV2aWNlIElEIGJlZm9yZSBwb2tpbmcgaXQgb24gcmVz
+ZXQuDQo+Pg0KPj4gU2lnbmVkLW9mZi1ieTogU3RlcGhlbiBEb3V0aGl0IDxzdGVwaGVuZEBzaWxp
+Y29tLXVzYS5jb20+DQo+PiAtLS0NCj4+ICAgIGRyaXZlcnMvYXRhL2FoY2kuYyB8IDQyICsrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLQ0KPj4gICAgMSBmaWxlIGNoYW5n
+ZWQsIDM5IGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pDQo+Pg0KPj4gZGlmZiAtLWdpdCBh
+L2RyaXZlcnMvYXRhL2FoY2kuYyBiL2RyaXZlcnMvYXRhL2FoY2kuYw0KPj4gaW5kZXggZjc2NTJi
+YWE2MzM3Li43MDkwYzc3NTRmYzIgMTAwNjQ0DQo+PiAtLS0gYS9kcml2ZXJzL2F0YS9haGNpLmMN
+Cj4+ICsrKyBiL2RyaXZlcnMvYXRhL2FoY2kuYw0KPj4gQEAgLTYyMyw2ICs2MjMsNDEgQEAgc3Rh
+dGljIHZvaWQgYWhjaV9wY2lfc2F2ZV9pbml0aWFsX2NvbmZpZyhzdHJ1Y3QgcGNpX2RldiAqcGRl
+diwNCj4+ICAgIAlhaGNpX3NhdmVfaW5pdGlhbF9jb25maWcoJnBkZXYtPmRldiwgaHByaXYpOw0K
+Pj4gICAgfQ0KPj4gICAgDQo+PiArLyoNCj4+ICsgKiBJbnRlbCBtb3ZlZCB0aGUgUENTIHJlZ2lz
+dGVyIG9uIHRoZSBEZW52ZXJ0b24gQUhDSSBjb250cm9sbGVyLCBzZWUgd2hpY2gNCj4+ICsgKiBv
+ZmZzZXQgdGhpcyBjb250cm9sbGVyIGlzIHVzaW5nDQo+PiArICovDQo+PiArc3RhdGljIGludCBh
+aGNpX3Bjc19vZmZzZXQoc3RydWN0IGF0YV9ob3N0ICpob3N0KQ0KPj4gK3sNCj4+ICsJc3RydWN0
+IHBjaV9kZXYgKnBkZXYgPSB0b19wY2lfZGV2KGhvc3QtPmRldik7DQo+PiArDQo+PiArCXN3aXRj
+aCAocGRldi0+ZGV2aWNlKSB7DQo+PiArCWNhc2UgMHgxOWIwOg0KPj4gKwljYXNlIDB4MTliMToN
+Cj4+ICsJY2FzZSAweDE5YjI6DQo+PiArCWNhc2UgMHgxOWIzOg0KPj4gKwljYXNlIDB4MTliNDoN
+Cj4+ICsJY2FzZSAweDE5YjU6DQo+PiArCWNhc2UgMHgxOWI2Og0KPj4gKwljYXNlIDB4MTliNzoN
+Cj4+ICsJY2FzZSAweDE5YkU6DQo+PiArCWNhc2UgMHgxOWJGOg0KPj4gKwljYXNlIDB4MTljMDoN
+Cj4+ICsJY2FzZSAweDE5YzE6DQo+PiArCWNhc2UgMHgxOWMyOg0KPj4gKwljYXNlIDB4MTljMzoN
+Cj4+ICsJY2FzZSAweDE5YzQ6DQo+PiArCWNhc2UgMHgxOWM1Og0KPj4gKwljYXNlIDB4MTljNjoN
+Cj4+ICsJY2FzZSAweDE5Yzc6DQo+PiArCWNhc2UgMHgxOWNFOg0KPj4gKwljYXNlIDB4MTljRjoN
+Cj4gDQo+IEFueSBwYXJ0aWN1bGFyIHJlYXNvbiB3aHkgeW91IG1hZGUgc29tZSBvZiBoZXggYWxw
+aGFzIHVwcGVyIGNhc2U/DQoNCk5vIGdvb2QgcmVhc29uLiAgVGhlc2Ugd2VyZSBjb3BpZWQgZnJv
+bSB0aGUgYWhjaV9wY2lfdGJsIGFib3ZlIGFuZCBJDQpkaWRuJ3Qgbm90aWNlIHRoZSBtaXhlZCBj
+YXNlLg0KDQpJJ2xsIHJlc2VuZC4NCg0KV291bGQgeW91IGxpa2UgYSBzZXBhcmF0ZSBjbGVhbnVw
+IHBhdGNoIGZvciBhaGNpX3BjaV90YmwgYXMgd2VsbD8NCg0K
