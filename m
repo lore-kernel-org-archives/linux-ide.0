@@ -2,82 +2,90 @@ Return-Path: <SRS0=D4f6=WG=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD595C41514
-	for <linux-ide@archiver.kernel.org>; Sat, 10 Aug 2019 06:59:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5BD6C433FF
+	for <linux-ide@archiver.kernel.org>; Sat, 10 Aug 2019 07:43:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 84D18208C3
-	for <linux-ide@archiver.kernel.org>; Sat, 10 Aug 2019 06:59:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 691292166E
+	for <linux-ide@archiver.kernel.org>; Sat, 10 Aug 2019 07:43:19 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hofYnX5G"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726135AbfHJG7q (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 10 Aug 2019 02:59:46 -0400
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:34010 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725468AbfHJG7q (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 10 Aug 2019 02:59:46 -0400
-Received: by mail-ot1-f66.google.com with SMTP id n5so141361086otk.1;
-        Fri, 09 Aug 2019 23:59:46 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=4fp4hsWr8syuRKTwFPCpF0dTJtEb/wet/DLA0Rph5N4=;
-        b=ImkDGR7dnfMHrXL1ARALnlFXB3jWIqQGxKxKRVzCJIq2lG9ePvdbaFllxcOANL/B83
-         5S7DBpX3UE9SjTAdtG57y+Qjn2vT3fEPCKXiNlU9bMAt6C8cvsyRJORBlcBTLI3Wj9R/
-         bGZNiwICKX7olJe6/5qPmAIDhTdvOr+FuQi27PY64p9mbcHh5yQZr4r23yLcBEx4jsk2
-         5fHLL0LP+T6ZJORqztOqvbbDCNeIFgWF9MpQBB8HVGHHfKamV8l8dLpQMC153MmrI/QJ
-         X/1W17RSTFlprer6gEgV6Vbx/tG3b2H24YHcDqsOEbNfdNp7KE922YJ052gBrX/tFcsI
-         ildQ==
-X-Gm-Message-State: APjAAAXD+LYGj0VExNFrnfEOdZ05AC7Nlcb80VqXlY2kfhs7Kd7OD1Pb
-        LjwIaTKL3ej1H/C//7UXhtHm+/yvE2DMnmOd3w8=
-X-Google-Smtp-Source: APXvYqwZqivSCVKiTybKuSYyqKw6SGkvI+q08qTetYUm3KXeOaa7QsJmq0t7hdRAs1gLZOSXjjl1xzJ2MUduMbuklWw=
-X-Received: by 2002:a9d:5c0c:: with SMTP id o12mr8786344otk.145.1565420385727;
- Fri, 09 Aug 2019 23:59:45 -0700 (PDT)
+        id S1725862AbfHJHnS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 10 Aug 2019 03:43:18 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:56150 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725468AbfHJHnS (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 10 Aug 2019 03:43:18 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=6TITaBDZzMYcxlmvixdUZyeuqA25uLCScJvSgm58UkA=; b=hofYnX5GVsR+TrdLOvUBmQwsD
+        ZnOmpzcyGQk5VT0z96cj3/oqetjnc4NO/mEdcN6zAY20C4exWfMTP+D91H6WM3f8uQOw7N8NAiPgj
+        1/8fMOPBzRsCglJEjO2YAACp26ATBjI6h44dOSmsKnnPqocq0N62Mff3hdw9zd/h7xJspFvuabO3Q
+        1fKdCbTcNIGTS5Ol3FVz0XgcwGPdBmg2sYYPMzP78tguPqqmCSFilLjcHtMQC9ktFch3tk1CLNVUd
+        74r9zZfndKU1IY75cbZ985/JJS7LJQYf8VfqLxRiYcGXOTeUBY5I1okh7P81We7SNp8LOrrE0lK9q
+        F0FHYwQYQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
+        id 1hwM21-0006Aw-8w; Sat, 10 Aug 2019 07:43:17 +0000
+Date:   Sat, 10 Aug 2019 00:43:17 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Stephen Douthit <stephend@silicom-usa.com>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH] ata: ahci: Lookup PCS register offset based on PCI
+ device ID
+Message-ID: <20190810074317.GA18582@infradead.org>
+References: <20190808202415.25166-1-stephend@silicom-usa.com>
 MIME-Version: 1.0
-References: <20190809215131.877-1-horms+renesas@verge.net.au>
-In-Reply-To: <20190809215131.877-1-horms+renesas@verge.net.au>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Sat, 10 Aug 2019 08:59:34 +0200
-Message-ID: <CAMuHMdVi4LK-v_MbeM1T6OO3A7CtGZ3FcR55PcVdgB8rh6oA2Q@mail.gmail.com>
-Subject: Re: [PATCH] dt-bindings: ata: sata_rcar: Rename bindings
- documentation file
-To:     Simon Horman <horms+renesas@verge.net.au>
-Cc:     Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Magnus Damm <magnus.damm@gmail.com>, linux-ide@vger.kernel.org,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190808202415.25166-1-stephend@silicom-usa.com>
+User-Agent: Mutt/1.11.4 (2019-03-13)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Aug 9, 2019 at 11:52 PM Simon Horman <horms+renesas@verge.net.au> wrote:
->
-> Rename the bindings documentation file for Renesas SATA controller
-> from sata_rcar.txt to renesas,rcar-sata.txt
->
-> This is part of an ongoing effort to name bindings documentation files for
-> Renesas IP blocks consistently, in line with the compat strings they
-> document.
->
-> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+On Thu, Aug 08, 2019 at 08:24:31PM +0000, Stephen Douthit wrote:
+> Intel moved the PCS register from 0x92 to 0x94 on Denverton for some
+> reason, so now we get to check the device ID before poking it on reset.
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+And now you just match on the new IDs, which means we'll perpetually
+catch up on any new device.  Dan, can you reach out inside Intel to
+figure out if there is a way to find out the PCS register location
+without the PCI ID check?
 
-Gr{oetje,eeting}s,
 
-                        Geert
+>  static int ahci_pci_reset_controller(struct ata_host *host)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(host->dev);
+> @@ -634,13 +669,14 @@ static int ahci_pci_reset_controller(struct ata_host *host)
+>  
+>  	if (pdev->vendor == PCI_VENDOR_ID_INTEL) {
+>  		struct ahci_host_priv *hpriv = host->private_data;
+> +		int pcs = ahci_pcs_offset(host);
+>  		u16 tmp16;
+>  
+>  		/* configure PCS */
+> -		pci_read_config_word(pdev, 0x92, &tmp16);
+> +		pci_read_config_word(pdev, pcs, &tmp16);
+>  		if ((tmp16 & hpriv->port_map) != hpriv->port_map) {
+> -			tmp16 |= hpriv->port_map;
+> -			pci_write_config_word(pdev, 0x92, tmp16);
+> +			tmp16 |= hpriv->port_map & 0xff;
+> +			pci_write_config_word(pdev, pcs, tmp16);
+>  		}
+>  	}
 
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+And Stephen, while you are at it, can you split this Intel-specific
+quirk into a separate helper?
