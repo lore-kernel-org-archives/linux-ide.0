@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72285C0650F
-	for <linux-ide@archiver.kernel.org>; Sun, 11 Aug 2019 15:40:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B1F3C0650F
+	for <linux-ide@archiver.kernel.org>; Sun, 11 Aug 2019 19:28:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4BD4C2085B
-	for <linux-ide@archiver.kernel.org>; Sun, 11 Aug 2019 15:40:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 119D02085A
+	for <linux-ide@archiver.kernel.org>; Sun, 11 Aug 2019 19:28:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726463AbfHKPkt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 11 Aug 2019 11:40:49 -0400
-Received: from enpas.org ([46.38.239.100]:53568 "EHLO mail.enpas.org"
+        id S1725847AbfHKT2h (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 11 Aug 2019 15:28:37 -0400
+Received: from enpas.org ([46.38.239.100]:53814 "EHLO mail.enpas.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726014AbfHKPkt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sun, 11 Aug 2019 11:40:49 -0400
+        id S1725730AbfHKT2h (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sun, 11 Aug 2019 15:28:37 -0400
 Received: from [127.0.0.1] (localhost [127.0.0.1])
-        by mail.enpas.org (Postfix) with ESMTPSA id 62A8FFF845;
-        Sun, 11 Aug 2019 15:40:46 +0000 (UTC)
+        by mail.enpas.org (Postfix) with ESMTPSA id C5516100171;
+        Sun, 11 Aug 2019 19:28:33 +0000 (UTC)
 Subject: Re: [PATCH v4] ata/pata_buddha: Probe via modalias instead of
  initcall
 To:     b.zolnierkie@samsung.com, axboe@kernel.dk
@@ -101,8 +101,8 @@ Autocrypt: addr=max@enpas.org; prefer-encrypt=mutual; keydata=
  qowubYXvP+RW4E9h6/NwGzS3Sbw7dRC6HK7xeSjmnzgrbbdF3TbHa5WHGZ3MLFQqbMuSn1Gn
  a0dBnIpkQG5yGknQjCL7SGEun1siNzluV19nLu66YRJsZ1HE9RgbMhTe2Ca8bWH1985ra4GV
  urZIw0nz8zec+73Bv/qF4GHHftLYfA==
-Message-ID: <f350fe9e-b08b-4724-e4c3-e66e3b642cdb@enpas.org>
-Date:   Sun, 11 Aug 2019 17:40:45 +0200
+Message-ID: <d9fa8aca-62a4-5d4a-b63f-bdd628e6b304@enpas.org>
+Date:   Sun, 11 Aug 2019 21:28:33 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
  Thunderbird/52.9.1
 MIME-Version: 1.0
@@ -115,12 +115,56 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi all,
+Replying to my own patch with two more questions:
 
-Thank you for your reviews. I hope this patch fixes all issues that have been raised. In case I've missed something, please let me know.
 
-Unfortunately I can't test the X-Surf part, as I don't own that board. I would be grateful for extra careful review of that part.
+On 08/11/2019 05:36 PM, Max Staudt wrote:
+> -		/* allocate host */
+> -		host = ata_host_alloc(&z->dev, nr_ports);
 
+Actually, this is an issue even the existing pata_buddha has: ata_host_alloc() will dev_set_drvdata(dev, host) which is fine on Buddha and Catweasel, but conflicts with zorro8390's own dev_set_drvdata() on an X-Surf board. Thus, if both pata_buddha and zorro8390 are active, only one can be unloaded. The original ide/buddha driver does not have this problem as far as I can see.
+
+This should be resolved once we get around to MFD support, as Geert suggested.
+
+Shall we leave this as-is, as it's not really a change from the status quo in pata_buddha?
+
+
+> +static int __init pata_buddha_late_init(void)
+> +{
+> +        struct zorro_dev *z = NULL;
+> +
+> +	pr_info("pata_buddha: Scanning for stand-alone IDE controllers...\n");
+> +	zorro_register_driver(&pata_buddha_driver);
+> +
+> +	pr_info("pata_buddha: Scanning for X-Surf boards...\n");
+> +        while ((z = zorro_find_device(ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, z))) {
+> +		static struct zorro_device_id xsurf_ent =
+> +			{ ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, BOARD_XSURF};
+> +
+> +		pata_buddha_probe(z, &xsurf_ent);
+> +        }
+> +
+> +        return 0;
+> +}
+
+This is suboptimal, as we don't release memory in case pata_buddha_probe() fails. Any suggestions?
+
+
+> +static void __exit pata_buddha_exit(void)
+> +{
+> +	struct zorro_dev *z = NULL;
+> +
+> +	pr_info("pata_buddha: Releasing X-Surf boards...\n");
+> +        while ((z = zorro_find_device(ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, z))) {
+> +		struct ata_host *host = dev_get_drvdata(&z->dev);
+> +
+> +		if (host)
+> +			ata_host_detach(host);
+> +        }
+
+I guess that here we also need to manually release the resources we allocated with devm_* above. Any ideas?
+
+
+Thanks
 
 Max
-
