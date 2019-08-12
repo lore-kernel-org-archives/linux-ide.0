@@ -2,165 +2,142 @@ Return-Path: <SRS0=iM+a=WI=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B69CC31E40
-	for <linux-ide@archiver.kernel.org>; Mon, 12 Aug 2019 10:42:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDD68C31E40
+	for <linux-ide@archiver.kernel.org>; Mon, 12 Aug 2019 10:55:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1C0A22085A
-	for <linux-ide@archiver.kernel.org>; Mon, 12 Aug 2019 10:42:19 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="nGFTvmzn"
+	by mail.kernel.org (Postfix) with ESMTP id A00E420820
+	for <linux-ide@archiver.kernel.org>; Mon, 12 Aug 2019 10:55:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727961AbfHLKmS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 12 Aug 2019 06:42:18 -0400
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:55425 "EHLO
-        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727936AbfHLKmS (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Aug 2019 06:42:18 -0400
-Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20190812104216euoutp019d834639bfd41b9ae2a812fdd3432c43~6JtmgzMDL3138531385euoutp01P
-        for <linux-ide@vger.kernel.org>; Mon, 12 Aug 2019 10:42:16 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20190812104216euoutp019d834639bfd41b9ae2a812fdd3432c43~6JtmgzMDL3138531385euoutp01P
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1565606536;
-        bh=FS72VoJ4j9I/0KoqeF6uHZUuKZul+sKw2fk3JxjZjDE=;
-        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=nGFTvmzntgkHfcXL0rC1nQgjHsfB6rieFb2+6QD6KIo9+c45A21k88Y03Mk+BlBd/
-         gBJiv2qS3qQzAMCyoBHJa9bQXFv53uTNgSYmu41AUrVobzHKjPXZW8vvtqPiXIrOGZ
-         Lz+DOnDnVwcagWmOvLSuof0OyJPcfiFe3ccpUpb0=
-Received: from eusmges2new.samsung.com (unknown [203.254.199.244]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20190812104215eucas1p132f1c48cbfb27c2446e7a4ed3f6833c0~6JtlzeRZd2991929919eucas1p1p;
-        Mon, 12 Aug 2019 10:42:15 +0000 (GMT)
-Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges2new.samsung.com (EUCPMTA) with SMTP id 7C.5E.04309.782415D5; Mon, 12
-        Aug 2019 11:42:15 +0100 (BST)
-Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20190812104215eucas1p2d2714be68f9c407dd28c861b210f870e~6JtlFcdCk1905319053eucas1p2D;
-        Mon, 12 Aug 2019 10:42:15 +0000 (GMT)
-Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
-        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20190812104214eusmtrp28a352dc6d0e2ddf42828f8fe386bf877~6Jtk3ZLzX0672406724eusmtrp2V;
-        Mon, 12 Aug 2019 10:42:14 +0000 (GMT)
-X-AuditID: cbfec7f4-afbff700000010d5-89-5d5142879a27
-Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id 9F.0C.04117.682415D5; Mon, 12
-        Aug 2019 11:42:14 +0100 (BST)
-Received: from [106.120.51.71] (unknown [106.120.51.71]) by
-        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20190812104214eusmtip2319ec221c769b841d79b043f0f656748~6JtkchpFD1621316213eusmtip2u;
-        Mon, 12 Aug 2019 10:42:14 +0000 (GMT)
+        id S1727984AbfHLKzK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 12 Aug 2019 06:55:10 -0400
+Received: from enpas.org ([46.38.239.100]:54444 "EHLO mail.enpas.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727807AbfHLKzK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 12 Aug 2019 06:55:10 -0400
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        by mail.enpas.org (Postfix) with ESMTPSA id 56B1CFFE76;
+        Mon, 12 Aug 2019 10:55:06 +0000 (UTC)
 Subject: Re: [PATCH v4] ata/pata_buddha: Probe via modalias instead of
  initcall
-To:     Max Staudt <max@enpas.org>
+To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 Cc:     axboe@kernel.dk, linux-ide@vger.kernel.org,
         linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org,
         glaubitz@physik.fu-berlin.de, schmitzmic@gmail.com,
         geert@linux-m68k.org
-From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <4729c030-549e-8797-f947-1620cd61d516@samsung.com>
-Date:   Mon, 12 Aug 2019 12:42:13 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
-        Thunderbird/60.6.1
+References: <20190811153643.12029-1-max@enpas.org>
+ <CGME20190811192838epcas1p16ec0d26fc6282e92da6aa82cdea330a5@epcas1p1.samsung.com>
+ <d9fa8aca-62a4-5d4a-b63f-bdd628e6b304@enpas.org>
+ <4729c030-549e-8797-f947-1620cd61d516@samsung.com>
+From:   Max Staudt <max@enpas.org>
+Openpgp: preference=signencrypt
+Autocrypt: addr=max@enpas.org; prefer-encrypt=mutual; keydata=
+ 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
+ urZIw0nz8zec+73Bv/qF4GHHftLYfA==
+Message-ID: <27f3bb2f-e4b8-cfc9-26da-d0984f1bf37b@enpas.org>
+Date:   Mon, 12 Aug 2019 12:55:05 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.9.1
 MIME-Version: 1.0
-In-Reply-To: <d9fa8aca-62a4-5d4a-b63f-bdd628e6b304@enpas.org>
+In-Reply-To: <4729c030-549e-8797-f947-1620cd61d516@samsung.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrMKsWRmVeSWpSXmKPExsWy7djP87rtToGxBrPmKlqsvtvPZvHs1l4m
-        i9nvlS2O7XjEZHF51xw2i93v7zNaPGz6wGQxt3U6uwOHx+Gvm9k8ds66y+5x+Wypx6HDHYwe
-        B8+dY/T4vEkugC2KyyYlNSezLLVI3y6BK2PBkzOsBa38FdePfWRsYGzj6WLk5JAQMJGYvmop
-        cxcjF4eQwApGiS8Ln7BBOF8YJfrXHWQCqRIS+Mwo8fJCIkzH6UfHoIqWM0psunqBCcJ5yygx
-        eV8/I0iVsECgxOKrS9lBbBEBOYmPrVcZQYqYBbYxShw9/QoswSZgJTGxfRVYA6+AncSvxVeZ
-        QWwWAVWJJ6sOgsVFBSIk7h/bwApRIyhxcuYTFhCbU8BWYsnPl2D1zALiEreezGeCsOUltr+d
-        A/aQhMA+doknP08BJTiAHBeJf6uEIV4Qlnh1fAs7hC0j8X/nfCaI+nWMEn87XkA1b2eUWD75
-        HxtElbXE4eMXWUEGMQtoSqzfpQ8RdpTYt3QZC8R8PokbbwUhbuCTmLRtOjNEmFeio00IolpN
-        YsOyDWwwa7t2rmSewKg0C8lns5B8MwvJN7MQ9i5gZFnFKJ5aWpybnlpslJdarlecmFtcmpeu
-        l5yfu4kRmJRO/zv+ZQfjrj9JhxgFOBiVeHgjfgbECrEmlhVX5h5ilOBgVhLhLfkLFOJNSays
-        Si3Kjy8qzUktPsQozcGiJM5bzfAgWkggPbEkNTs1tSC1CCbLxMEp1cCY4feF3zHCyOkywy81
-        /1emjYfZRCQfbPrrwtlaXqMx74TCfpmKWJHoINXtvjXbCn+lB25jqDG58iDEocjUscRA5srE
-        1Dufsv+/ebvOxXtR4vJrH29NEMs7/XzLtatqE7O48+XjP348ven24fdf3kXUvW6UL/7/8dsT
-        kR2/NyXuE+bumRC2xu26EktxRqKhFnNRcSIA0KUhzUYDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrGIsWRmVeSWpSXmKPExsVy+t/xe7ptToGxBuca9SxW3+1ns3h2ay+T
-        xez3yhbHdjxisri8aw6bxe739xktHjZ9YLKY2zqd3YHD4/DXzWweO2fdZfe4fLbU49DhDkaP
-        g+fOMXp83iQXwBalZ1OUX1qSqpCRX1xiqxRtaGGkZ2hpoWdkYqlnaGwea2VkqqRvZ5OSmpNZ
-        llqkb5egl7HgyRnWglb+iuvHPjI2MLbxdDFyckgImEicfnSMrYuRi0NIYCmjxPw3L4AcDqCE
-        jMTx9WUQNcISf651QdW8ZpTYdOkvE0hCWCBQYvHVpewgtoiAnMTH1quMIEXMAtsYJb5em84I
-        0bGTUWLJmUtsIFVsAlYSE9tXMYLYvAJ2Er8WX2UGsVkEVCWerDoIFhcViJA4834FC0SNoMTJ
-        mU/AbE4BW4klP1+C1TMLqEv8mXcJyhaXuPVkPhOELS+x/e0c5gmMQrOQtM9C0jILScssJC0L
-        GFlWMYqklhbnpucWG+kVJ+YWl+al6yXn525iBMbhtmM/t+xg7HoXfIhRgINRiYc34mdArBBr
-        YllxZe4hRgkOZiUR3pK/QCHelMTKqtSi/Pii0pzU4kOMpkDPTWSWEk3OB6aIvJJ4Q1NDcwtL
-        Q3Njc2MzCyVx3g6BgzFCAumJJanZqakFqUUwfUwcnFINjIqiX1uuvZijpD416KDV04rZV39u
-        nruk4eenZ0lpf//Pia1dMs9h0wOpVfUGHkan9/WG5J/lnP6SfZqBRZFhm6WljPJh/xcKUUr3
-        QnQPK61+r5VXah+gOu/229sKEjsWcmsZcsW1cXQJ3y7u8dJN8XJilCmWiW2849T2nZ8vsD/k
-        d/My29iNSizFGYmGWsxFxYkAcTcqgNkCAAA=
-X-CMS-MailID: 20190812104215eucas1p2d2714be68f9c407dd28c861b210f870e
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20190811192838epcas1p16ec0d26fc6282e92da6aa82cdea330a5
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20190811192838epcas1p16ec0d26fc6282e92da6aa82cdea330a5
-References: <20190811153643.12029-1-max@enpas.org>
-        <CGME20190811192838epcas1p16ec0d26fc6282e92da6aa82cdea330a5@epcas1p1.samsung.com>
-        <d9fa8aca-62a4-5d4a-b63f-bdd628e6b304@enpas.org>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+Hi Bartlomiej,
 
-On 8/11/19 9:28 PM, Max Staudt wrote:
-> Replying to my own patch with two more questions:
+Thanks for your feedback!
+
+
+On 08/12/2019 12:42 PM, Bartlomiej Zolnierkiewicz wrote:
 > 
+> ide/buddha driver cannot be unloaded currently (it lacks module_exit()).
 > 
-> On 08/11/2019 05:36 PM, Max Staudt wrote:
->> -		/* allocate host */
->> -		host = ata_host_alloc(&z->dev, nr_ports);
+> [... snip ...]
 > 
-> Actually, this is an issue even the existing pata_buddha has: ata_host_alloc()> will dev_set_drvdata(dev, host) which is fine on Buddha and Catweasel, bu> conflicts with zorro8390's own dev_set_drvdata() on an X-Surf board. Thus,
-> if both pata_buddha and zorro8390 are active, only one can be unloaded. The
-> original ide/buddha driver does not have this problem as far as I can see.
+> It should work exactly like the old code in case of X-Surf,
+> what do we need to release?
 
-ide/buddha driver cannot be unloaded currently (it lacks module_exit()).
 
-> This should be resolved once we get around to MFD support, as Geert suggested.
-> 
-> Shall we leave this as-is, as it's not really a change from the status quo in
-> pata_buddha?
-pata_buddha also cannot be unloaded currently (also lacks module_exit()),
-I think that we should leave it as it is until MFD support is added.
+So what shall I do? Once an X-Surf has been detected, we refuse to unload, and therefore we never have to release X-Surf resources? That would simplify things a lot.
 
->> +static int __init pata_buddha_late_init(void)
->> +{
->> +        struct zorro_dev *z = NULL;
->> +
->> +	pr_info("pata_buddha: Scanning for stand-alone IDE controllers...\n");
->> +	zorro_register_driver(&pata_buddha_driver);
->> +
->> +	pr_info("pata_buddha: Scanning for X-Surf boards...\n");
->> +        while ((z = zorro_find_device(ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, z))) {
->> +		static struct zorro_device_id xsurf_ent =
->> +			{ ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, BOARD_XSURF};
->> +
->> +		pata_buddha_probe(z, &xsurf_ent);
->> +        }
->> +
->> +        return 0;
->> +}
-> 
-> This is suboptimal, as we don't release memory in case pata_buddha_probe()
-> fails. Any suggestions?
+What's a good way to do that, given that we now have module_exit() defined and an exit function is void?
 
-It should work exactly like the old code in case of X-Surf,
-what do we need to release?
 
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+Thanks,
+Max
