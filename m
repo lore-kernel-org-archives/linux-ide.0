@@ -2,142 +2,116 @@ Return-Path: <SRS0=iM+a=WI=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0370AC31E40
-	for <linux-ide@archiver.kernel.org>; Mon, 12 Aug 2019 15:39:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 913E6C31E40
+	for <linux-ide@archiver.kernel.org>; Mon, 12 Aug 2019 16:29:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CDCE720679
-	for <linux-ide@archiver.kernel.org>; Mon, 12 Aug 2019 15:39:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5FE342064A
+	for <linux-ide@archiver.kernel.org>; Mon, 12 Aug 2019 16:29:23 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="vVStjjFZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726185AbfHLPjt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 12 Aug 2019 11:39:49 -0400
-Received: from enpas.org ([46.38.239.100]:55046 "EHLO mail.enpas.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725923AbfHLPjt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 12 Aug 2019 11:39:49 -0400
-Received: from [127.0.0.1] (localhost [127.0.0.1])
-        by mail.enpas.org (Postfix) with ESMTPSA id A974410016E;
-        Mon, 12 Aug 2019 15:39:45 +0000 (UTC)
-Subject: Re: [PATCH v4] ata/pata_buddha: Probe via modalias instead of
- initcall
-To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc:     axboe@kernel.dk, linux-ide@vger.kernel.org,
-        linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org,
-        glaubitz@physik.fu-berlin.de, schmitzmic@gmail.com,
-        geert@linux-m68k.org
-References: <20190811153643.12029-1-max@enpas.org>
- <CGME20190811192838epcas1p16ec0d26fc6282e92da6aa82cdea330a5@epcas1p1.samsung.com>
- <d9fa8aca-62a4-5d4a-b63f-bdd628e6b304@enpas.org>
- <4729c030-549e-8797-f947-1620cd61d516@samsung.com>
- <27f3bb2f-e4b8-cfc9-26da-d0984f1bf37b@enpas.org>
- <da84c857-2c2d-29ec-5e72-e719277faa2d@samsung.com>
- <94b4ef23-282d-44e4-d21e-60c8a33c342c@enpas.org>
- <26447daa-b183-1121-b2a8-c295d7e3468d@samsung.com>
-From:   Max Staudt <max@enpas.org>
-Openpgp: preference=signencrypt
-Autocrypt: addr=max@enpas.org; prefer-encrypt=mutual; keydata=
- xsNNBFWfXgEBIADcbJMG2xuJBIVNlhj5AFBwKLZ6GPo3tGxHye+Bk3R3W5uIws3Sxbuj++7R
- PoWqUkvrdsxJAmnkFgMKx4euW/MCzXXgEQOM2nE0CWR7xmutpoXYc9BLZ2HHE2mSkpXVa1Ea
- UTm00jR+BUXgG/ZzCRkkLvN1W9Hkdb75qE/HIpkkVyDiSteJTIjGnpTnJrwiHbZVvXoR/Bx3
- IWFNpuG80xnsGv3X9ierbalXaI3ZrmFiezbPuGzG1kqV1q0gdV4DNuFVi1NjpQU1aTmBV8bv
- gDi2Wygs1pOSj+dlLPwUJ+9jGVzFXiM3xUkNaJc4UPRKxAGskh1nWDdg0odbs0OarQ0o+E+v
- d7WbKK7TR1jfYNcQ+Trr0ca0m72XNFk0hUxNyaEv3kkZEpAv0IDKqXFQD700kr3ftZ8ZKOxd
- CP4UqVYI+1d0nR9LnJYVjRpKI9QqIx492As6Vl1YPjUbmuKi4OT2JdvaT4czGq9EJkbhjC8E
- KQqc2mWeLnnwiMJwp8fMGTq+1TuBgNIbVSdTeyMnNr5w0UmJ4Y/TNFnTsOR0yytpJlHU4YiW
- HDQKaw6wzvdxql2DCjRvn+Hgm9ifMmtPn5RO3PGvq7XQJ0bNzJ/lXl9ts9QbeR62vQUuv63S
- P6WIU+uEUZVtaNJIjmsoEkziMX01Agi+5gCgKkY8mLakdXOAGX9CaUrVAH/ssM0SIwgxbmeH
- F0mwfbd7OuPYCKpmIiX1wqNfiLhcTgV3lJ12Gz7XeeIH3JW5gw6tFGN3pQQNsy6SqtThyFQN
- RlLNZWEHBh2RdE1Bh3HFFCgdbQ2CISV+nEGdTpP+wjlP17FaBUEREM/j4FT5Dn1y/XICJog/
- dymN4Srn8BZ0q1HQBVIJszdfpBa37Fj3gHQbUPinoDsNCCjNibOD06Xk4hvex307pcsXe/Gi
- qON0vCtTfbF9jUmao84LpOMjfnqMXQDl3bIi0GwvdXWTvTNM3gCllj1sygWYvPn405BHysbk
- xbuGCP1qwRRYxrkBpCOUxBz48fT+90CewfwvhuYjBc1dPu0x2io+TRex2rfpMLbjUhYWYeun
- Oo/w+7Ea8UoxqLkvQjNY7IDBtvtPQdW5NxPh1kYOOMCMTGPR7wKMo7O0clMQ3Gviu12nvt2X
- 2rKtI56oU9pEFpIY/moDM+nDNR3fIi1BjdBfhGhSi6uRWy1vgBHYdW0rItPqYtQ9R/AxMbFN
- Kv4axzus1+yAfqSAWyp1DCC8+PX+x4gYEh0rbh2Ii91jdhzONzoEjMy8VCfu9hgeE4XazsFD
- 234zaonkEh8Mpo/SyYH4x0iMO0UyKn1RbyC9zTmAtlIvYUsQdF8exWwF07vvqbzKWkHv8a+y
- RFT9nuZZtVN3ABEBAAHNGk1heCBTdGF1ZHQgPG1heEBlbnBhcy5vcmc+wsN9BBMBCgAnAhsD
- CAsJCAcNDAsKBRUKCQgLAh4BAheAAhkBBQJc3wOtBQkJkOisAAoJEGVYAQQ5PhMuk4AgAKdf
- EzQcishDKhBOBSlRzU1/G07DRT2izrYH4skCXNBXsfiIbp+5BKkAAyxPsa+pCFrJsHC5ZV8J
- UDmnQyocp0pTSSH2eZqGGf+XqLBXuhJTvBLPWaqjkez5LHQs0LFZtPR6DkVhxwLlwvyApkpe
- 2jatxkADZGhoAqxJjScGsiDuSvChqaMfuEEaEzwve+u7SeY59UvF6iLWZ9EpWoZg8EczuJ+h
- 0FftsRE+PprQXWu7lpFcL4eo540IkOzrAschIsNMPax5rPCUglCrdMiNEka43/yIksTuVM/x
- 8hOSXfaaE434R4w5+Kd5phL3fo35RM0p+AXd87UARDiSB4xtyfXZpYPKnJtL2r1KFQeEnMUV
- UCEbgI/B9+po4iJ1ToN30X2pJxnnTM30WiNC9o2rfG4C09+3hU+Hh3Wh6cvGaQ1qBrwsKtpb
- EXSM86f5gfqEoJeUQb6lrFqlIlfSBF2ZWl4w7evyCvYbJlnQWhF+8bnYn3Hm2Lydq9TSRrt5
- 7mlDjuJrmNnbld4Ur7N7cpZ/oM8Ms2hMjbECMkXsMuQ6mY9yHwacnmhhR4Q0ukTTKArenF3W
- 2zsoQJ+nI1JNEcJudX27lnEPWZdEckXiGQECTjiTzZ7eBtYSccP8lrIRkuMP1VlUJTOVlOI6
- GPmhxhbeyYG63dYq3zNFCLSJxynC1Eqmjm70zOYqZ7Rl2cRslycoEQe4YEa1K+mk3Kz+lq4P
- wE9SvAcfhG30peoPxRFBXVXkO8w6g2fSirdBggydB5zQJFkgVM6aG1dgtbFlwERh6ps3Spj6
- eCuqcFRFrDSQDcOj1lIwjwGzJnD4Wli1afG8swqjlm99oq2xteXyWXjXa3bmlGzCvrJLZtHd
- y3qlCgyGtZ2s0WMWo3wasUXJUrAR190ZHcYVAyAU3a3iNVxd+lRUemTMyn86aPmxC79T71Ne
- oZTXxP4srTaX3+qnasViNLntxKCWR/LbLOVWfVBTl+ikXgyn4lXj0qh/7g4dKuP2ZabrOV6V
- s3YUyIwbxlHzYGqDGW7/ae+DCI/mSNuNpN9XfDrERPW7wskucYY44kFFyLN5DQABDr6fHG0w
- zuT6hlxC58X5gW7igCaQCBE3FRY1yTENVMsyRJyfRnOGLwhAHQt2GBsBffPICYiZZuhEZtAk
- C3uOT5xNnYfT/pxEdYeYX+w/MHa0VfY8nYgMd83s0psqqQiA8vBw2xlJoGpnhEkb6sjfxYay
- OViHy2Z3Bi6TAjnNFmveg3Qs2lkTzUCvYonIDPIWBMT11QPcx8hwWjdylJHbEt6zWbH+0ScA
- /iDn5aQ16Zox3JNnQcH0AoDvozyiRihO0yTEd4tS+zCwucfqxL78yy0IgbGRUAFzZvbOwU0E
- VZ96mAEQAMPq/us9ZHl8E8+V6PdoOGvwNh0DwxjVF7kT/LEIwLu94jofUSwz8sgiQqz/AEJg
- HFysMbTxpUnq9sqVMr46kOMVavkRhwZWtjLGhr9iiIRJDnCSkjYuzEmLOfAgkKo+moxz4PZk
- DL0sluOCJeWWm3fFMs4y3YcMXC0DMNGOtK+l1Xno4ZZ2euAy2+XlOgBQQH3cOyPdMeJvpu7m
- nY8CXejH/aS40H4b/yaDu1RUa1+NajnmX+EwRoHsnJcXm62Qu8zjyhYdQjV8B2raMk5HcIzl
- jeVRpEQDlQMUGXESGF4CjYlMGlTidRy6d5GydhRLZXHOLdqG2HZKz1/cot7x5Qle2+P50I32
- iB0u4aPCyeKYJV6m/evBGWwYWYvCUJWnghbP5F2ouC/ytfyzXVNAJKJDkz//wqU27K26vWjy
- Bh0Jdg+G8HivgZLmyZP229sYH0ohrJBoc68ndh9ukw53jASNGkzQ6pONue8+NKF9NUNONkw4
- jjm7lqD/VWFe5duMgSoizu/DkoN+QJwOu/z10y3oN9X7EMImppCdEVS01hdJSyEcyUq90v/O
- kt8tWo906trE65NkIj+ZSaONYAhTK+Yp/jrG88W2WAZU54CwHtoMxhbMH9xRM0hB97rBvaLO
- JwGBAU0+HrxOp1Sqy2M1v91XBt4HeW8YxzNEexq1ZtNnABEBAAHCw2UEGAEKAA8CGwwFAlzf
- A9kFCQmQzEEACgkQZVgBBDk+Ey79byAAhnvJdqOqZ3PFJgb5vODVOL0KbJJ2A1zWYX69YGw2
- rjWDf+/VvXkppswMRUCttswiNbGq8GmvAuTjOk2nnDKatZrsVTDxN8erAzafMX77XdV0+j+h
- 0epk7vAsOCxvKX3fLyyeJccbbzA6RaMlg6ACtXYZbRjjYGLWPCUEF5XN8bsSjN7fIaIYUFJO
- +5DIr3CyyRAVpgR6Hu/n0MbRTzucMDvqp9J+JDh1GNbJstIz0r8L02I/ZZS1P9FFjXlQXyE/
- WEoU0U+GJA6z3e2fcCkhhj1cVgH0KpxssKSAvcakv3nJGgE33c5CzxcGw2pJOSETDOeR8F3d
- tqjUPR+AZ2V963cCbfh0o/klaorJq54k/tlSHpWC55oXj1A1Q1wHLtl8CYYYju8MinS1dJG/
- I/gE2rQeXmwAzc3MF8jmEzZfpwR1uzwT4vG7NKcoo0UGsSSuMzj1VJUd2QSqfy3BTtpRH4Ts
- znQevaqUzuxcpFlBYj4Y2aqpw2ErWCE1/2gEWiDKmfLZNsnvFbj54RF+e6ajv0EHmgDOOU6H
- ZPQe8U6qFRMfhgCA0v8HIxIn8HCpei9XiAZoILD9w0/Pp1SqMqtEYifImGPdGIFPhiccpA/g
- Wxncxb7TvCzyTieRLCnzn2sWzHeLLtsbnxmq0gXedWAwpIV8sMpKauvc/z0gkNkbySPPLzof
- /gBw5zuaaTU8nzXWoPbDl6EuWtyVrwo1S6sSoeEb+7KHJYig8mPeyJvA+1tSTzOjPZLlA56j
- L7B2x7Mf+vohJx6qS93MVqOLPZo3lvi3QH+ScUNmQNBcLe+sGd8EIJCIMJa9ab8Esx1I8AVr
- ZVP2hV0XjPJCw/bGp66yYq7dYvvT2wOMk9FUOKCTTBxHEgz5H4LjrA0gJONNrqjI9Hjo8IJU
- IHKdyyMuKDhs8FkGpx9UTEBMXYasF2J1V9wMJp+JWYEDKQ/ienhXzMpTKeTntPaF3EPcwdmo
- n6Ro70RlUvNcCNXlosS6KWgXLVZx0xy3cFsF6m4HL3GEXarDm2ub3EatN4nGbknQqzh+1gUG
- fN1OsIbabwgqrLEUO4tTTE5BKcccjti20S8+3Xn4LCyowrqMREfXDHDT2tStJmi4i8l1NDsf
- 0deMB5e+8oupffJn64n0qod8e535MEZ8UM244dTv1bR3w9GLWr1eLIF1hOeN6YkRgks7zD1O
- qowubYXvP+RW4E9h6/NwGzS3Sbw7dRC6HK7xeSjmnzgrbbdF3TbHa5WHGZ3MLFQqbMuSn1Gn
- a0dBnIpkQG5yGknQjCL7SGEun1siNzluV19nLu66YRJsZ1HE9RgbMhTe2Ca8bWH1985ra4GV
- urZIw0nz8zec+73Bv/qF4GHHftLYfA==
-Message-ID: <9c92e927-9f15-de8a-5c2c-0675c5a27ded@enpas.org>
-Date:   Mon, 12 Aug 2019 17:39:45 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.9.1
+        id S1726675AbfHLQ3X (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 12 Aug 2019 12:29:23 -0400
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:39468 "EHLO
+        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726594AbfHLQ3W (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Aug 2019 12:29:22 -0400
+Received: by mail-ot1-f66.google.com with SMTP id r21so155128242otq.6
+        for <linux-ide@vger.kernel.org>; Mon, 12 Aug 2019 09:29:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=d4lYXmDHOGmwF8fFK172ERlHZWimaZARGHG48NSs+BE=;
+        b=vVStjjFZzKHHoR5If3HPxFCjL9tzGRaRogaaSgPV4MNVY11rVkyQoSjizAh27jTjfZ
+         1pyD7NmZWKenzz6UK8p3FF9OlFxdnPO1JD+77jsLBMLCqerKK+85TfznCSKZDfhQvjFg
+         XfyAZPQLcm9b+GaA4BFgTShZp7+MSkuOLbaHm+WgZmCoFT9dLnBe7RFG4iKAjOECXaYy
+         K8cy+SfiKa9WtcYeTMhRDKfwH3xodLoS4Ne5uyo+mjhpGBcMkJJBMxklD3FpSrXpXof8
+         USAMRY+4lPAJVnPlbtJOpmQzGA9TcVuB7vE6eh2pFLDExyxbPlEwO3UpUwTJ0+mrVh8y
+         VA7g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=d4lYXmDHOGmwF8fFK172ERlHZWimaZARGHG48NSs+BE=;
+        b=N+KVsxje9yGyZUzAfA9xXPy498BI0GqKYMVqI1f3T0X+0PDpjodn4B4J0M4ofz1WcZ
+         zZ2hqIGzbwITI1nydPBhBhkbukqw2IthKjJqBVcTTmw4hbTGlSSoSNFkBTeWsy89NU06
+         gWxk0NpucqEBzh9oNHphVywnTKFeeq6qLzondetfnqr3AZpOyva20xmr3Z8tu7NvK5TN
+         82II83izpDksrLtPvodzRisq3o+GlFMKrl/SPSv3DpDvJOMfzUfoBRmKMTQmnCr7x33j
+         AcSw2kzq8z9boI4VpvPXhyd7tuqjxgkSkppbpu7CIzqrdrRENZaJbdpzbphb/YeYkfVr
+         9fBg==
+X-Gm-Message-State: APjAAAX6owZ9oEflw8m4JnrrHiQdsPDBL5tlb9DD7+jHZtrWhXeKNS8w
+        tYocmcaQCj9/nZz0C9y7SN1Pe2IJRk6Qqi2t5ncKhg==
+X-Google-Smtp-Source: APXvYqzI4V3ncmY3z4r3B6bzu3j//xLeAjIzTzcGr9iwuASwGzNrJCVnKW/WeJcDNkN250CGp547ak5KHoqkBd4ZQN4=
+X-Received: by 2002:a9d:5f13:: with SMTP id f19mr22428216oti.207.1565627361973;
+ Mon, 12 Aug 2019 09:29:21 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <26447daa-b183-1121-b2a8-c295d7e3468d@samsung.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20190808202415.25166-1-stephend@silicom-usa.com>
+ <20190810074317.GA18582@infradead.org> <abfa4b20-2916-d89a-f4d3-b27fca5906b2@silicom-usa.com>
+In-Reply-To: <abfa4b20-2916-d89a-f4d3-b27fca5906b2@silicom-usa.com>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Mon, 12 Aug 2019 09:29:11 -0700
+Message-ID: <CAPcyv4g+PdbisZd8=FpB5QiR_FCA2OQ9EqEF9yMAN=XWTYXY1Q@mail.gmail.com>
+Subject: Re: [PATCH] ata: ahci: Lookup PCS register offset based on PCI device ID
+To:     Stephen Douthit <stephend@silicom-usa.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 08/12/2019 05:01 PM, Bartlomiej Zolnierkiewicz wrote:
->> Unfortunately, pata_buddha_exit() is void, and thus can't fail. According to Documentation/kernel-hacking/hacking.rst this is by design.
-> 
-> You are of course right and the example code is broken
-> (+ I need more caffeine).
+On Mon, Aug 12, 2019 at 6:03 AM Stephen Douthit
+<stephend@silicom-usa.com> wrote:
+>
+> On 8/10/19 3:43 AM, Christoph Hellwig wrote:
+> > On Thu, Aug 08, 2019 at 08:24:31PM +0000, Stephen Douthit wrote:
+> >> Intel moved the PCS register from 0x92 to 0x94 on Denverton for some
+> >> reason, so now we get to check the device ID before poking it on reset.
+> >
+> > And now you just match on the new IDs, which means we'll perpetually
+> > catch up on any new device.  Dan, can you reach out inside Intel to
+> > figure out if there is a way to find out the PCS register location
+> > without the PCI ID check?
+> >
+> >
+> >>   static int ahci_pci_reset_controller(struct ata_host *host)
+> >>   {
+> >>      struct pci_dev *pdev = to_pci_dev(host->dev);
+> >> @@ -634,13 +669,14 @@ static int ahci_pci_reset_controller(struct ata_host *host)
+> >>
+> >>      if (pdev->vendor == PCI_VENDOR_ID_INTEL) {
+> >>              struct ahci_host_priv *hpriv = host->private_data;
+> >> +            int pcs = ahci_pcs_offset(host);
+> >>              u16 tmp16;
+> >>
+> >>              /* configure PCS */
+> >> -            pci_read_config_word(pdev, 0x92, &tmp16);
+> >> +            pci_read_config_word(pdev, pcs, &tmp16);
+> >>              if ((tmp16 & hpriv->port_map) != hpriv->port_map) {
+> >> -                    tmp16 |= hpriv->port_map;
+> >> -                    pci_write_config_word(pdev, 0x92, tmp16);
+> >> +                    tmp16 |= hpriv->port_map & 0xff;
+> >> +                    pci_write_config_word(pdev, pcs, tmp16);
+> >>              }
+> >>      }
+> >
+> > And Stephen, while you are at it, can you split this Intel-specific
+> > quirk into a separate helper?
+>
+> I can do that.  I'll wait until we hear back from Dan if there's a
+> better scheme than a device ID lookup.
 
-Hey! That's usually my line to say!
-
-I'm just glad I didn't miss something obvious here...
-
-
->> Any other ideas? We could also continue to disallow unloading completely until MFD support comes along.
-> Yes, this would also be OK.
-
-Okay, I will refresh the patch accordingly.
-
-Thanks for your help!
-Max
+Do you see any behavior change in practice with this patch? It's
+purportedly to re-enable the ports after a reset, but that would only
+be needed if the entire pci device reset. In this path the reset is
+being performed via the host control register. That is only meant to
+touch mmio registers, not config registers. So, as far as I can see
+this register bit twiddling after reset has never been necessary.
