@@ -2,131 +2,124 @@ Return-Path: <SRS0=iM+a=WI=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8EF4C433FF
-	for <linux-ide@archiver.kernel.org>; Mon, 12 Aug 2019 13:03:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39E47C433FF
+	for <linux-ide@archiver.kernel.org>; Mon, 12 Aug 2019 14:11:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6666120684
-	for <linux-ide@archiver.kernel.org>; Mon, 12 Aug 2019 13:03:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07FFA206A2
+	for <linux-ide@archiver.kernel.org>; Mon, 12 Aug 2019 14:11:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=SILICOMLTD.onmicrosoft.com header.i=@SILICOMLTD.onmicrosoft.com header.b="Zpnnnq2D"
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="ZoO19Qxb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726767AbfHLNDM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 12 Aug 2019 09:03:12 -0400
-Received: from mail-eopbgr80123.outbound.protection.outlook.com ([40.107.8.123]:43102
-        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728651AbfHLNDL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 12 Aug 2019 09:03:11 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=cbNT4sFaRa/PW5hhjIttqOMkTB+9XWglhpPFNDUUmeQoxwyhvqqP0yyDFcuZ1N+YCj63j+yvJKZ1XOy/onZY/bEj7jg/ixAm8TKAU37CoxEMRJu9n1K521gquBZR5GBFh8w6c+Hh0Q1/FxWh6Ve6f4GmE+24V90rnOTveaUa8p20WXrdGlrtbZqWEtPipD6VCNqimOZhtX724eiv9g8gynGI/tac3QNyeNJFOg4VenRVRwmZwFaeU2cWg8AtZ3Um4Yfw1B5PIKZw7RSN/u2HV7HyK83386bPKiHQypzKtYq8NCexzHAJfNieI9Ue+vc073/KkCHsK8QHlt0DbtvwyQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3SbfqvsTQbd6Jhu7v73AipmIyY5AbVnTT0hW5s7R1C8=;
- b=RcAkUg20hDUccWL6nz86SzjEOu1NiXu4O+0XRE4uMsxz/ycYYQtg8F3aCttozjTCXoyxfdetF45XOBo7QHoVCzBeH0mFwNCGLkT0TZtgFOfbpALaZz8WIL1zZMLqA21BLGgrRZiQxNhSl1bwoFHMqYF6Dg6dZLbP0Rv28i/4ER7b8KppHzyBGZRbsXFJF3Z2nst5fgGty8S0rjO3aVOuMOEwFzT9Mpj+LzEqKYXNhrTXDzuggiMOy7MLBQmNU7sj9zxu+L09S2aqE/adFa5miTkUMJlrnO/SJk+YBB/5wnM7DIpgHa+5aR8xU74j9i2Zvc4DJq11uOzrUyhU0cqdmg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=silicom-usa.com; dmarc=pass action=none
- header.from=silicom-usa.com; dkim=pass header.d=silicom-usa.com; arc=none
+        id S1726682AbfHLOLZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 12 Aug 2019 10:11:25 -0400
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:46438 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726605AbfHLOLZ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Aug 2019 10:11:25 -0400
+Received: by mail-pf1-f196.google.com with SMTP id q139so1466264pfc.13
+        for <linux-ide@vger.kernel.org>; Mon, 12 Aug 2019 07:11:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=SILICOMLTD.onmicrosoft.com; s=selector2-SILICOMLTD-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3SbfqvsTQbd6Jhu7v73AipmIyY5AbVnTT0hW5s7R1C8=;
- b=Zpnnnq2DJn/AkxLNFDRRWwWKFoNOO7wF6lmEug43WWnwfSrMHCoschu2lsHWcY5f+w49hCXFNNEdMlLFGt+Yfp3hoeFIaRRtxKRqwDQQhtyOYR2IOJlhjWBWwwKFZSZfmBomNU/+H+ahLhr7wrqbxVGJf12OCIXBS2sGhJqHH+w=
-Received: from VI1PR0402MB2717.eurprd04.prod.outlook.com (10.175.22.139) by
- VI1PR0402MB2797.eurprd04.prod.outlook.com (10.172.255.15) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2157.20; Mon, 12 Aug 2019 13:02:28 +0000
-Received: from VI1PR0402MB2717.eurprd04.prod.outlook.com
- ([fe80::eca9:e1f:eca7:8439]) by VI1PR0402MB2717.eurprd04.prod.outlook.com
- ([fe80::eca9:e1f:eca7:8439%9]) with mapi id 15.20.2157.022; Mon, 12 Aug 2019
- 13:02:28 +0000
-From:   Stephen Douthit <stephend@silicom-usa.com>
-To:     Christoph Hellwig <hch@infradead.org>
-CC:     Jens Axboe <axboe@kernel.dk>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=ImAPf5qAoKDn0lII01+6uoZ3xRG/c5SpeNPUt2AARos=;
+        b=ZoO19QxbIJseWz0TVsYkFhTzyEIuRAAI5FFh4s6LOZdchsiJXCQjXwEWJkXC4izGpG
+         l2WwfxYhsB1j51Ke52mdJSy+0LuSN2KBNeqGs+QtewhLmXlspMQm5wNPirkFRC5DZ/qQ
+         /FdMY5S+ejnsh1H3XeLK110auQ6vACdXSoRdvZynYradCKGcqnDsvoSQ6hJdZxxBd8Jo
+         VhRWas+5VMyPkxhUsdKcOjMo88wTdDXfdMMIkRomnrqVkLS8mCtdN4+nEXOt9greQtA4
+         noSVdOzU2tXSoz3unzRoLcjABZsiCYw5uLfhl50E7i1s1xvUU6eVAPnkvB9hBLIH988E
+         d57w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=ImAPf5qAoKDn0lII01+6uoZ3xRG/c5SpeNPUt2AARos=;
+        b=mGQ6FK8Myzn//rfrNVybw13h3Nzl+JTePrDl4pdg8ZQdro01qqCik38CRTJ4rO2mUH
+         9EBcRRnfEoHrHHBJQyaKw+D6u7CvB8iHFVJnMhhcFPZ5zPqHf3lFq4Q/3e+WF6QDUG29
+         pxrwOhBPCiJ2VbiT4TE48oM7rUN8e6ogdvX48tZFHp2CuJZ1U6COsc1t6P8FvWb5xgVj
+         oMUrIL01dCBigBooQ+gDos9tAuVY9bp6zmk/5oPWTvvXiM062jfi7hfokeU/gCybPEU+
+         zJBW06YMKQnDEyX34nXneo/xizPGnONd6avN1W2oexDkk401Rk7ppDWq5pAnA23/R/ls
+         xxFQ==
+X-Gm-Message-State: APjAAAXK0h+wGk+C1PSrEiRHMCZHYJuj3Uyl52RERWqDdTTxieR1yDiZ
+        C1Xo3as6fpK2gHogDaAR+tXFBQ==
+X-Google-Smtp-Source: APXvYqzrcGcueN/pZSePR9eTjLevBjvcXVR5oTmU7sd98e+a8Yu3MVSk2M4unjv/DE2mQhUq3e7xhA==
+X-Received: by 2002:a17:90a:ab0d:: with SMTP id m13mr22580054pjq.84.1565619084986;
+        Mon, 12 Aug 2019 07:11:24 -0700 (PDT)
+Received: from [192.168.1.188] (66.29.164.166.static.utbb.net. [66.29.164.166])
+        by smtp.gmail.com with ESMTPSA id ce20sm2293923pjb.16.2019.08.12.07.11.23
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 12 Aug 2019 07:11:24 -0700 (PDT)
 Subject: Re: [PATCH] ata: ahci: Lookup PCS register offset based on PCI device
  ID
-Thread-Topic: [PATCH] ata: ahci: Lookup PCS register offset based on PCI
- device ID
-Thread-Index: AQHVTidIVfq9W1HbR0i2bNtry39Joab0Aj2AgAN9ywA=
-Date:   Mon, 12 Aug 2019 13:02:27 +0000
-Message-ID: <abfa4b20-2916-d89a-f4d3-b27fca5906b2@silicom-usa.com>
+To:     Stephen Douthit <stephend@silicom-usa.com>,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>
 References: <20190808202415.25166-1-stephend@silicom-usa.com>
  <20190810074317.GA18582@infradead.org>
-In-Reply-To: <20190810074317.GA18582@infradead.org>
-Reply-To: Stephen Douthit <stephend@silicom-usa.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-clientproxiedby: BN6PR1701CA0009.namprd17.prod.outlook.com
- (2603:10b6:405:15::19) To VI1PR0402MB2717.eurprd04.prod.outlook.com
- (2603:10a6:800:b4::11)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=stephend@silicom-usa.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-originating-ip: [96.82.2.57]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 6844c787-0299-41d4-cd7c-08d71f2553d2
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600148)(711020)(4605104)(1401327)(2017052603328)(7193020);SRVR:VI1PR0402MB2797;
-x-ms-traffictypediagnostic: VI1PR0402MB2797:
-x-microsoft-antispam-prvs: <VI1PR0402MB2797201806751C0F673104F294D30@VI1PR0402MB2797.eurprd04.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:7691;
-x-forefront-prvs: 012792EC17
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(376002)(136003)(396003)(366004)(346002)(39850400004)(189003)(199004)(3846002)(14454004)(53936002)(6116002)(64756008)(86362001)(76176011)(6486002)(31696002)(53546011)(66446008)(66556008)(26005)(2906002)(386003)(6506007)(66476007)(186003)(66946007)(3450700001)(25786009)(4326008)(102836004)(31686004)(6246003)(478600001)(66066001)(6916009)(229853002)(5660300002)(8676002)(486006)(99286004)(71200400001)(71190400001)(43066004)(81166006)(36756003)(81156014)(256004)(8936002)(305945005)(316002)(52116002)(6436002)(6512007)(446003)(11346002)(7736002)(54906003)(476003)(2616005);DIR:OUT;SFP:1102;SCL:1;SRVR:VI1PR0402MB2797;H:VI1PR0402MB2717.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-received-spf: None (protection.outlook.com: silicom-usa.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: Eat08B1Zy41Wvy5I6vJdvoAiK7G56DcoXn3wQzlsm1txFkFMevsk6lpwXscqAGo+2YATlNtEs9YJ8LU+oELLalUyvCBH4Hq3uFG5Z9nDa/zcYVGjRhmzKPyBczR5AzYvWm+wVafajN1/SehVkkxHZq0P1bIPRaq5dbDJdOSfKoquSCK7z0t806Nz/zAn4MyOW02ZBnboPfVr8jeSsjnp17b0HSVQgcGUgFxom5OqUkiHXFWHTy/maz6wH7dGdDOdPZLDV/4T78JewkxS/GtrnTivdewVxCd42oxr70uh6svj2g3VXRTlAawGW1m3urFLxV8Zl2f0HmIM6YOGrdW0MuZfK774pbzE6Oj/S6NepJDbMgsGD5KhOb/VqC/2KYH5RqwYhxoEPyXwreqoSuEmQrQxR80muiOYThr9NC0dpbQ=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <6B99C8D56EB6684D8FE2860F550E47DF@eurprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
+ <abfa4b20-2916-d89a-f4d3-b27fca5906b2@silicom-usa.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <679188f7-bb14-1de6-b533-687809fa7bc8@kernel.dk>
+Date:   Mon, 12 Aug 2019 08:11:22 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-X-OriginatorOrg: silicom-usa.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6844c787-0299-41d4-cd7c-08d71f2553d2
-X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Aug 2019 13:02:27.9338
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: c9e326d8-ce47-4930-8612-cc99d3c87ad1
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 0P66+KkogscynsoR+VjLv/OP6hYPlAo1l7XrO8kiSwYJUV+yraubi6q+k5eHsk+zyOf3R+9KRFBReb259Qc9q1AF45sh16400nbAht4ZmG4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1PR0402MB2797
+In-Reply-To: <abfa4b20-2916-d89a-f4d3-b27fca5906b2@silicom-usa.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-T24gOC8xMC8xOSAzOjQzIEFNLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90ZToNCj4gT24gVGh1LCBB
-dWcgMDgsIDIwMTkgYXQgMDg6MjQ6MzFQTSArMDAwMCwgU3RlcGhlbiBEb3V0aGl0IHdyb3RlOg0K
-Pj4gSW50ZWwgbW92ZWQgdGhlIFBDUyByZWdpc3RlciBmcm9tIDB4OTIgdG8gMHg5NCBvbiBEZW52
-ZXJ0b24gZm9yIHNvbWUNCj4+IHJlYXNvbiwgc28gbm93IHdlIGdldCB0byBjaGVjayB0aGUgZGV2
-aWNlIElEIGJlZm9yZSBwb2tpbmcgaXQgb24gcmVzZXQuDQo+IA0KPiBBbmQgbm93IHlvdSBqdXN0
-IG1hdGNoIG9uIHRoZSBuZXcgSURzLCB3aGljaCBtZWFucyB3ZSdsbCBwZXJwZXR1YWxseQ0KPiBj
-YXRjaCB1cCBvbiBhbnkgbmV3IGRldmljZS4gIERhbiwgY2FuIHlvdSByZWFjaCBvdXQgaW5zaWRl
-IEludGVsIHRvDQo+IGZpZ3VyZSBvdXQgaWYgdGhlcmUgaXMgYSB3YXkgdG8gZmluZCBvdXQgdGhl
-IFBDUyByZWdpc3RlciBsb2NhdGlvbg0KPiB3aXRob3V0IHRoZSBQQ0kgSUQgY2hlY2s/DQo+IA0K
-PiANCj4+ICAgc3RhdGljIGludCBhaGNpX3BjaV9yZXNldF9jb250cm9sbGVyKHN0cnVjdCBhdGFf
-aG9zdCAqaG9zdCkNCj4+ICAgew0KPj4gICAJc3RydWN0IHBjaV9kZXYgKnBkZXYgPSB0b19wY2lf
-ZGV2KGhvc3QtPmRldik7DQo+PiBAQCAtNjM0LDEzICs2NjksMTQgQEAgc3RhdGljIGludCBhaGNp
-X3BjaV9yZXNldF9jb250cm9sbGVyKHN0cnVjdCBhdGFfaG9zdCAqaG9zdCkNCj4+ICAgDQo+PiAg
-IAlpZiAocGRldi0+dmVuZG9yID09IFBDSV9WRU5ET1JfSURfSU5URUwpIHsNCj4+ICAgCQlzdHJ1
-Y3QgYWhjaV9ob3N0X3ByaXYgKmhwcml2ID0gaG9zdC0+cHJpdmF0ZV9kYXRhOw0KPj4gKwkJaW50
-IHBjcyA9IGFoY2lfcGNzX29mZnNldChob3N0KTsNCj4+ICAgCQl1MTYgdG1wMTY7DQo+PiAgIA0K
-Pj4gICAJCS8qIGNvbmZpZ3VyZSBQQ1MgKi8NCj4+IC0JCXBjaV9yZWFkX2NvbmZpZ193b3JkKHBk
-ZXYsIDB4OTIsICZ0bXAxNik7DQo+PiArCQlwY2lfcmVhZF9jb25maWdfd29yZChwZGV2LCBwY3Ms
-ICZ0bXAxNik7DQo+PiAgIAkJaWYgKCh0bXAxNiAmIGhwcml2LT5wb3J0X21hcCkgIT0gaHByaXYt
-PnBvcnRfbWFwKSB7DQo+PiAtCQkJdG1wMTYgfD0gaHByaXYtPnBvcnRfbWFwOw0KPj4gLQkJCXBj
-aV93cml0ZV9jb25maWdfd29yZChwZGV2LCAweDkyLCB0bXAxNik7DQo+PiArCQkJdG1wMTYgfD0g
-aHByaXYtPnBvcnRfbWFwICYgMHhmZjsNCj4+ICsJCQlwY2lfd3JpdGVfY29uZmlnX3dvcmQocGRl
-diwgcGNzLCB0bXAxNik7DQo+PiAgIAkJfQ0KPj4gICAJfQ0KPiANCj4gQW5kIFN0ZXBoZW4sIHdo
-aWxlIHlvdSBhcmUgYXQgaXQsIGNhbiB5b3Ugc3BsaXQgdGhpcyBJbnRlbC1zcGVjaWZpYw0KPiBx
-dWlyayBpbnRvIGEgc2VwYXJhdGUgaGVscGVyPw0KDQpJIGNhbiBkbyB0aGF0LiAgSSdsbCB3YWl0
-IHVudGlsIHdlIGhlYXIgYmFjayBmcm9tIERhbiBpZiB0aGVyZSdzIGENCmJldHRlciBzY2hlbWUg
-dGhhbiBhIGRldmljZSBJRCBsb29rdXAuDQo=
+On 8/12/19 6:02 AM, Stephen Douthit wrote:
+> On 8/10/19 3:43 AM, Christoph Hellwig wrote:
+>> On Thu, Aug 08, 2019 at 08:24:31PM +0000, Stephen Douthit wrote:
+>>> Intel moved the PCS register from 0x92 to 0x94 on Denverton for some
+>>> reason, so now we get to check the device ID before poking it on reset.
+>>
+>> And now you just match on the new IDs, which means we'll perpetually
+>> catch up on any new device.  Dan, can you reach out inside Intel to
+>> figure out if there is a way to find out the PCS register location
+>> without the PCI ID check?
+>>
+>>
+>>>    static int ahci_pci_reset_controller(struct ata_host *host)
+>>>    {
+>>>    	struct pci_dev *pdev = to_pci_dev(host->dev);
+>>> @@ -634,13 +669,14 @@ static int ahci_pci_reset_controller(struct ata_host *host)
+>>>    
+>>>    	if (pdev->vendor == PCI_VENDOR_ID_INTEL) {
+>>>    		struct ahci_host_priv *hpriv = host->private_data;
+>>> +		int pcs = ahci_pcs_offset(host);
+>>>    		u16 tmp16;
+>>>    
+>>>    		/* configure PCS */
+>>> -		pci_read_config_word(pdev, 0x92, &tmp16);
+>>> +		pci_read_config_word(pdev, pcs, &tmp16);
+>>>    		if ((tmp16 & hpriv->port_map) != hpriv->port_map) {
+>>> -			tmp16 |= hpriv->port_map;
+>>> -			pci_write_config_word(pdev, 0x92, tmp16);
+>>> +			tmp16 |= hpriv->port_map & 0xff;
+>>> +			pci_write_config_word(pdev, pcs, tmp16);
+>>>    		}
+>>>    	}
+>>
+>> And Stephen, while you are at it, can you split this Intel-specific
+>> quirk into a separate helper?
+> 
+> I can do that.  I'll wait until we hear back from Dan if there's a
+> better scheme than a device ID lookup.
+
+I'll drop the previous series for now.
+
+-- 
+Jens Axboe
+
