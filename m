@@ -2,431 +2,177 @@ Return-Path: <SRS0=iM+a=WI=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64B75C433FF
-	for <linux-ide@archiver.kernel.org>; Mon, 12 Aug 2019 18:06:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEA60C433FF
+	for <linux-ide@archiver.kernel.org>; Mon, 12 Aug 2019 19:12:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 20E2C20663
-	for <linux-ide@archiver.kernel.org>; Mon, 12 Aug 2019 18:06:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E06E206C2
+	for <linux-ide@archiver.kernel.org>; Mon, 12 Aug 2019 19:12:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nEETyHeJ"
+	dkim=pass (1024-bit key) header.d=SILICOMLTD.onmicrosoft.com header.i=@SILICOMLTD.onmicrosoft.com header.b="Ajiuw7HO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726694AbfHLSGQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 12 Aug 2019 14:06:16 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:43044 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726506AbfHLSGQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Aug 2019 14:06:16 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=9LTr0mkdiIxl5wzdZ+E9Oacb1k7T0QqWsD3ymwcyxX8=; b=nEETyHeJHFNpuLKHauAui0iNk
-        KOzrv90WtX1lao9U6E+hDhmqtWRNYIYfNQsxtTx0Y3yUUb6qhVlD+HJTR4zHFb7L/LleKfvRyZ+zl
-        vnvOiXL72auBqwJq7mrWQbEQMgZdp+Gfv9JgcRF4HZNCMwjICnbXTOQqI4m/71x5vEU1Qyx+q/k/r
-        /+vGiPA/73Fv8IfVc9QwFPEjrLuGIyDB44fr3sUsCBP8gTYFRBJ+A25QiZlTy1BEueRahuO+4KTdE
-        lu1nRZrqdyQZk+yR2c+LHjslQnUfCivdR7PChHZFlJe4MKIqfmC/qRlxsxku4u1uPqQUeAG0+8m1f
-        7OEafj2AQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1hxEhx-0006aQ-8z; Mon, 12 Aug 2019 18:06:13 +0000
-Date:   Mon, 12 Aug 2019 11:06:13 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Stephen Douthit <stephend@silicom-usa.com>
-Cc:     Dan Williams <dan.j.williams@intel.com>,
-        Christoph Hellwig <hch@infradead.org>,
+        id S1726670AbfHLTMh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 12 Aug 2019 15:12:37 -0400
+Received: from mail-eopbgr20132.outbound.protection.outlook.com ([40.107.2.132]:39490
+        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726200AbfHLTMh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 12 Aug 2019 15:12:37 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=lRf0lQteb2kyb36dysOLXYc3NfjDUhGbEDl+z7zbMUoXnyLdlgbGKCZCNWaxGMI6alt5IgR2RPRmIAXwtBNkq3TgrfDmL1GThu1AWRE6w9Nve1SuDIqfsnVaOStvHrnMqD806usiOsPJo99wJ+RVD99IvnPEeu2UmDeXyhHXTFDvsXopqkyPVaidgLWFIgWFnJAciAWUq4np4uiVjU3MvQcPHhPDNs0ZdYJ+kUgvRJM2axhYWiTf2cYkh+aYfrQu/DQzGWoCp8OPC9vmXLiz0sUtatqmtwcbaxdD9jt/257mFTOYnj4W84u4vRZFrZ0qI1YSqCI8cvbdEw1gf+yc2Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=syvyBpZHpxcK96/tEcEPAKMI0C3tURz9UyVv0x/o2p4=;
+ b=aYfGcOJuFK0oKAfG9u3AlKO1I/tlJzt67m62IjWsKdfhPaNF6O4AE79/LOnyjyem32h+g7pyg7SRw4YIC9UymNV+LVGNfmkKqAbK+2hc77TeeWN0M5u5NFLXNIlWr0veCIaU43FvDYpJbLKMhGstj0E7b+JepIKcLeVfm1+sATPXe3YqDcDrOQPOpT8C1tffTd+teo9TqcEHWDWJZBbnydDbKLGa8TIaa4CgSjJkYTAqhVmn+Q1Xc6X5WZuiqFVQnocQMkvM/3VP56ajKLGygw+A1QzuFdN+GRfCsBYRW5cXktWTrdT6ImdxssAD6k3F6k/I8Rye+QzCIfLSQjaVyg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=silicom-usa.com; dmarc=pass action=none
+ header.from=silicom-usa.com; dkim=pass header.d=silicom-usa.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=SILICOMLTD.onmicrosoft.com; s=selector2-SILICOMLTD-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=syvyBpZHpxcK96/tEcEPAKMI0C3tURz9UyVv0x/o2p4=;
+ b=Ajiuw7HOQXWegR61ou/xQPaXztgmeucLXnJwwGw6o1YaUKROBBFEtwkPNUlaq3Mlx/LOPIwEyE0heb+brJ/4BgcR1Ib5dybDvjS/gPfE3qdQagEaRFmy3ykrX7dCCHnvVKi1D3Bri/iR4bOVzeekdroH2UWcUxYSzvKZtnSLwmo=
+Received: from VI1PR0402MB2717.eurprd04.prod.outlook.com (10.175.22.139) by
+ VI1PR0402MB3949.eurprd04.prod.outlook.com (52.134.17.149) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2157.15; Mon, 12 Aug 2019 19:12:32 +0000
+Received: from VI1PR0402MB2717.eurprd04.prod.outlook.com
+ ([fe80::eca9:e1f:eca7:8439]) by VI1PR0402MB2717.eurprd04.prod.outlook.com
+ ([fe80::eca9:e1f:eca7:8439%9]) with mapi id 15.20.2157.022; Mon, 12 Aug 2019
+ 19:12:32 +0000
+From:   Stephen Douthit <stephend@silicom-usa.com>
+To:     Christoph Hellwig <hch@infradead.org>
+CC:     Dan Williams <dan.j.williams@intel.com>,
         Jens Axboe <axboe@kernel.dk>,
         "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] ata: ahci: Lookup PCS register offset based on PCI
+Subject: Re: [PATCH] ata: ahci: Lookup PCS register offset based on PCI device
+ ID
+Thread-Topic: [PATCH] ata: ahci: Lookup PCS register offset based on PCI
  device ID
-Message-ID: <20190812180613.GA18377@infradead.org>
+Thread-Index: AQHVTidIVfq9W1HbR0i2bNtry39Joab0Aj2AgAN9ywCAADnOgIAAFmOAgAAEuYCAABJ6gA==
+Date:   Mon, 12 Aug 2019 19:12:32 +0000
+Message-ID: <51259945-bae1-3aa3-a59b-53de25eb60f1@silicom-usa.com>
 References: <20190808202415.25166-1-stephend@silicom-usa.com>
  <20190810074317.GA18582@infradead.org>
  <abfa4b20-2916-d89a-f4d3-b27fca5906b2@silicom-usa.com>
  <CAPcyv4g+PdbisZd8=FpB5QiR_FCA2OQ9EqEF9yMAN=XWTYXY1Q@mail.gmail.com>
  <051cb164-19d5-9241-2941-0d866e565339@silicom-usa.com>
+ <20190812180613.GA18377@infradead.org>
+In-Reply-To: <20190812180613.GA18377@infradead.org>
+Reply-To: Stephen Douthit <stephend@silicom-usa.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: BN6PR11CA0055.namprd11.prod.outlook.com
+ (2603:10b6:404:f7::17) To VI1PR0402MB2717.eurprd04.prod.outlook.com
+ (2603:10a6:800:b4::11)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=stephend@silicom-usa.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [96.82.2.57]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 9db11d59-5912-44bc-eca4-08d71f5906bc
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600148)(711020)(4605104)(1401327)(2017052603328)(7193020);SRVR:VI1PR0402MB3949;
+x-ms-traffictypediagnostic: VI1PR0402MB3949:
+x-microsoft-antispam-prvs: <VI1PR0402MB3949833219005E2546B79BE294D30@VI1PR0402MB3949.eurprd04.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
+x-forefront-prvs: 012792EC17
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(396003)(376002)(136003)(366004)(346002)(39850400004)(55674003)(199004)(189003)(31686004)(316002)(26005)(5660300002)(3846002)(66066001)(6116002)(305945005)(2906002)(186003)(7736002)(71190400001)(71200400001)(8676002)(54906003)(3450700001)(43066004)(66946007)(81156014)(478600001)(6506007)(14454004)(36756003)(386003)(2616005)(52116002)(4326008)(6246003)(53546011)(446003)(6916009)(25786009)(14444005)(11346002)(31696002)(256004)(81166006)(6486002)(76176011)(64756008)(8936002)(66556008)(66476007)(6436002)(86362001)(102836004)(6512007)(66446008)(99286004)(476003)(229853002)(53936002)(486006);DIR:OUT;SFP:1102;SCL:1;SRVR:VI1PR0402MB3949;H:VI1PR0402MB2717.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: silicom-usa.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: NGFY6YuQ9bfBW9i8ST+QqawvEdptWDJ727NXXghsYbEXdN82Rgdc7p9JCeUlhSpJwM+nNtivv/H/relssytFfY1ZzUCtr8TqdJVPoSPW+j03OzaMy+y1UVWh4vpDFAcwM9Gbty5u8OkJqcGTEHFcJwrCMP3RIf4tRTVXnEvx9wmDZNKYXLNkx/hHXUdpQKTmzi73tKEi94hBXhetLaFoBgQKeFBeGe1NmfkmOKGqb6A9QCZ3CM6KBiZwV6BgbwoVgJKEDXV24c1IisBlTtevZXy3n8YSyGA47gTKM9dIdb5zPDB8AJXZwM5yiZu3rbIvOYZ18RRVx/GbVnyIGka2qGp15b/tk0bBibX9xxfcnWBYfTiR86GVZSXDEq7lS55FlUoFI5d2e1Lzg6GCYN3a0EN8QJu95WCy+i0rR+wFnGc=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <4FF8B450BA49814DBC275396A356C4A3@eurprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <051cb164-19d5-9241-2941-0d866e565339@silicom-usa.com>
-User-Agent: Mutt/1.11.4 (2019-03-13)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-OriginatorOrg: silicom-usa.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9db11d59-5912-44bc-eca4-08d71f5906bc
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Aug 2019 19:12:32.4398
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: c9e326d8-ce47-4930-8612-cc99d3c87ad1
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: wbHthWRITPyJtQL7kIF+GPbCIODog2nhpJWbzh+yqUOKLXWzOIYJAdXm2SGYRWL/Bml4KXAXGqhaRNtxfmYHiJtOEdt2TKgfGcN+hqBc3gA=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI1PR0402MB3949
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, Aug 12, 2019 at 05:49:29PM +0000, Stephen Douthit wrote:
-> Does anyone know the background of the original PCS workaround?
-
-Based on a few git-blame iterations on history.git the original PCS
-handling (just when initializing) goes back to this BK commit:
-
---
-From c0835b838e76c9500facad05dc305170a1a577a8 Mon Sep 17 00:00:00 2001
-From: Jeff Garzik <jgarzik@pobox.com>
-Date: Thu, 14 Oct 2004 16:11:44 -0400
-Subject: [libata ahci] fix several bugs
-
-* PCI IDs from test version didn't make it into mainline... doh
-* do all command setup in ->qc_prep
-* phy_reset routine that does signature check
-* check SATA phy for errors
-* reset hardware from scratch, in case card BIOS didn't run
-* implement staggered spinup by default
-* adding additional debugging output
----
- drivers/scsi/ahci.c | 150 ++++++++++++++++++++++++++++++++------------
- 1 file changed, 109 insertions(+), 41 deletions(-)
-
-diff --git a/drivers/scsi/ahci.c b/drivers/scsi/ahci.c
-index e2fdeb8b857e..408ecc527b59 100644
---- a/drivers/scsi/ahci.c
-+++ b/drivers/scsi/ahci.c
-@@ -38,7 +38,7 @@
- #include <asm/io.h>
- 
- #define DRV_NAME	"ahci"
--#define DRV_VERSION	"0.10"
-+#define DRV_VERSION	"0.11"
- 
- 
- enum {
-@@ -52,6 +52,7 @@ enum {
- 	AHCI_PORT_PRIV_DMA_SZ	= AHCI_CMD_SLOT_SZ + AHCI_CMD_TBL_SZ +
- 				  AHCI_RX_FIS_SZ,
- 	AHCI_IRQ_ON_SG		= (1 << 31),
-+	AHCI_CMD_ATAPI		= (1 << 5),
- 	AHCI_CMD_WRITE		= (1 << 6),
- 
- 	RX_FIS_D2H_REG		= 0x40,	/* offset of D2H Register FIS data */
-@@ -82,8 +83,10 @@ enum {
- 	PORT_IRQ_MASK		= 0x14, /* interrupt enable/disable mask */
- 	PORT_CMD		= 0x18, /* port command */
- 	PORT_TFDATA		= 0x20,	/* taskfile data */
-+	PORT_SIG		= 0x24,	/* device TF signature */
- 	PORT_CMD_ISSUE		= 0x38, /* command issue */
- 	PORT_SCR		= 0x28, /* SATA phy register block */
-+	PORT_SCR_STAT		= 0x28, /* SATA phy register: SStatus */
- 	PORT_SCR_CTL		= 0x2c, /* SATA phy register: SControl */
- 	PORT_SCR_ERR		= 0x30, /* SATA phy register: SError */
- 
-@@ -161,9 +164,9 @@ struct ahci_port_priv {
- static u32 ahci_scr_read (struct ata_port *ap, unsigned int sc_reg);
- static void ahci_scr_write (struct ata_port *ap, unsigned int sc_reg, u32 val);
- static int ahci_init_one (struct pci_dev *pdev, const struct pci_device_id *ent);
--static void ahci_dma_setup(struct ata_queued_cmd *qc);
--static void ahci_dma_start(struct ata_queued_cmd *qc);
-+static int ahci_qc_issue(struct ata_queued_cmd *qc);
- static irqreturn_t ahci_interrupt (int irq, void *dev_instance, struct pt_regs *regs);
-+static void ahci_phy_reset(struct ata_port *ap);
- static void ahci_irq_clear(struct ata_port *ap);
- static void ahci_eng_timeout(struct ata_port *ap);
- static int ahci_port_start(struct ata_port *ap);
-@@ -202,13 +205,12 @@ static struct ata_port_operations ahci_ops = {
- 	.tf_read		= ahci_tf_read,
- 	.check_status		= ahci_check_status,
- 	.exec_command		= ahci_exec_command,
-+	.dev_select		= ata_noop_dev_select,
- 
--	.phy_reset		= sata_phy_reset,
-+	.phy_reset		= ahci_phy_reset,
- 
--	.bmdma_setup            = ahci_dma_setup,
--	.bmdma_start            = ahci_dma_start,
- 	.qc_prep		= ahci_qc_prep,
--	.qc_issue		= ata_qc_issue_prot,
-+	.qc_issue		= ahci_qc_issue,
- 
- 	.eng_timeout		= ahci_eng_timeout,
- 
-@@ -236,7 +238,9 @@ static struct ata_port_info ahci_port_info[] = {
- };
- 
- static struct pci_device_id ahci_pci_tbl[] = {
--	{ PCI_VENDOR_ID_INTEL, 0x0000, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+	{ PCI_VENDOR_ID_INTEL, 0x2652, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
-+	  board_ahci },
-+	{ PCI_VENDOR_ID_INTEL, 0x2653, PCI_ANY_ID, PCI_ANY_ID, 0, 0,
- 	  board_ahci },
- 	{ }	/* terminate list */
- };
-@@ -292,6 +296,7 @@ static int ahci_port_start(struct ata_port *ap)
- 		rc = -ENOMEM;
- 		goto err_out_kfree;
- 	}
-+	memset(mem, 0, AHCI_PORT_PRIV_DMA_SZ);
- 
- 	pp->rx_fis = mem;
- 	pp->rx_fis_dma = mem_dma;
-@@ -302,7 +307,7 @@ static int ahci_port_start(struct ata_port *ap)
- 	pp->cmd_tbl = mem;
- 	pp->cmd_tbl_dma = mem_dma;
- 
--	mem2 = mem + 128;
-+	mem2 = mem + 0x80;
- 	pp->cmd_tbl_sg = mem2;
- 
- 	mem += AHCI_CMD_TBL_SZ;
-@@ -398,6 +403,29 @@ static void ahci_scr_write (struct ata_port *ap, unsigned int sc_reg_in,
- 	writel(val, (void *) ap->ioaddr.scr_addr + (sc_reg * 4));
- }
- 
-+static void ahci_phy_reset(struct ata_port *ap)
-+{
-+	void __iomem *port_mmio = (void __iomem *) ap->ioaddr.cmd_addr;
-+	struct ata_taskfile tf;
-+	struct ata_device *dev = &ap->device[0];
-+	u32 tmp;
-+
-+	__sata_phy_reset(ap);
-+
-+	if (ap->flags & ATA_FLAG_PORT_DISABLED)
-+		return;
-+
-+	tmp = readl(port_mmio + PORT_SIG);
-+	tf.lbah		= (tmp >> 24)	& 0xff;
-+	tf.lbam		= (tmp >> 16)	& 0xff;
-+	tf.lbal		= (tmp >> 8)	& 0xff;
-+	tf.nsect	= (tmp)		& 0xff;
-+
-+	dev->class = ata_dev_classify(&tf);
-+	if (!ata_dev_present(dev))
-+		ata_port_disable(ap);
-+}
-+
- static u8 ahci_check_status(struct ata_port *ap)
- {
- 	void *mmio = (void *) ap->ioaddr.cmd_addr;
-@@ -424,7 +452,7 @@ static void ahci_fill_sg(struct ata_queued_cmd *qc)
- 
- 		pp->cmd_tbl_sg[i].addr = cpu_to_le32(addr & 0xffffffff);
- 		pp->cmd_tbl_sg[i].addr_hi = cpu_to_le32((addr >> 16) >> 16);
--		pp->cmd_tbl_sg[i].flags_size = cpu_to_le32(sg_len);
-+		pp->cmd_tbl_sg[i].flags_size = cpu_to_le32(sg_len - 1);
- 	}
- }
- 
-@@ -442,6 +470,19 @@ static void ahci_qc_prep(struct ata_queued_cmd *qc)
- 	opts = (qc->n_elem << 16) | cmd_fis_len;
- 	if (qc->tf.flags & ATA_TFLAG_WRITE)
- 		opts |= AHCI_CMD_WRITE;
-+
-+	switch (qc->tf.protocol) {
-+	case ATA_PROT_ATAPI:
-+	case ATA_PROT_ATAPI_NODATA:
-+	case ATA_PROT_ATAPI_DMA:
-+		opts |= AHCI_CMD_ATAPI;
-+		break;
-+
-+	default:
-+		/* do nothing */
-+		break;
-+	}
-+
- 	pp->cmd_slot->opts = cpu_to_le32(opts);
- 	pp->cmd_slot->status = 0;
- 	pp->cmd_slot->tbl_addr = cpu_to_le32(pp->cmd_tbl_dma & 0xffffffff);
-@@ -547,11 +588,12 @@ static inline int ahci_host_intr(struct ata_port *ap, struct ata_queued_cmd *qc)
- {
- 	void *mmio = ap->host_set->mmio_base;
- 	void *port_mmio = ahci_port_base(mmio, ap->port_no);
--	u32 status, ci;
-+	u32 status, serr, ci;
-+
-+	serr = readl(port_mmio + PORT_SCR_ERR);
-+	writel(serr, port_mmio + PORT_SCR_ERR);
- 
- 	status = readl(port_mmio + PORT_IRQ_STAT);
--	if (!status)
--		return 0;
- 	writel(status, port_mmio + PORT_IRQ_STAT);
- 
- 	ci = readl(port_mmio + PORT_CMD_ISSUE);
-@@ -624,18 +666,15 @@ static irqreturn_t ahci_interrupt (int irq, void *dev_instance, struct pt_regs *
- 	return IRQ_RETVAL(handled);
- }
- 
--static void ahci_dma_setup(struct ata_queued_cmd *qc)
--{
--	/* do nothing... for now */
--}
--
--static void ahci_dma_start(struct ata_queued_cmd *qc)
-+static int ahci_qc_issue(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
- 	void *mmio = (void *) ap->ioaddr.cmd_addr;
- 
- 	writel(1, mmio + PORT_CMD_ISSUE);
- 	readl(mmio + PORT_CMD_ISSUE);	/* flush */
-+
-+	return 0;
- }
- 
- static void ahci_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
-@@ -663,20 +702,30 @@ static void ahci_exec_command(struct ata_port *ap, struct ata_taskfile *tf)
- static void ahci_setup_port(struct ata_ioports *port, unsigned long base,
- 			    unsigned int port_idx)
- {
-+	VPRINTK("ENTER, base==0x%lx, port_idx %u\n", base, port_idx);
- 	base = ahci_port_base_ul(base, port_idx);
-+	VPRINTK("base now==0x%lx\n", base);
- 
- 	port->cmd_addr		= base;
- 	port->scr_addr		= base + PORT_SCR;
-+
-+	VPRINTK("EXIT\n");
- }
- 
- static int ahci_host_init(struct ata_probe_ent *probe_ent)
- {
- 	struct ahci_host_priv *hpriv = probe_ent->private_data;
- 	struct pci_dev *pdev = probe_ent->pdev;
--	void *mmio = probe_ent->mmio_base;
--	u32 tmp;
--	unsigned int i, using_dac;
-+	void __iomem *mmio = probe_ent->mmio_base;
-+	u32 tmp, cap_save;
-+	u16 tmp16;
-+	unsigned int i, j, using_dac;
- 	int rc;
-+	void __iomem *port_mmio;
-+
-+	cap_save = readl(mmio + HOST_CAP);
-+	cap_save &= ( (1<<28) | (1<<17) );
-+	cap_save |= (1 << 27);
- 
- 	/* global controller reset */
- 	tmp = readl(mmio + HOST_CTL);
-@@ -698,23 +747,22 @@ static int ahci_host_init(struct ata_probe_ent *probe_ent)
- 		return -EIO;
- 	}
- 
--	/* make sure we're in AHCI mode, with irq disabled */
--	if ((tmp & (HOST_AHCI_EN | HOST_IRQ_EN)) != HOST_AHCI_EN) {
--		tmp |= HOST_AHCI_EN;
--		tmp &= ~HOST_IRQ_EN;
--		writel(tmp, mmio + HOST_CTL);
--		readl(mmio + HOST_CTL); /* flush */
--	}
--	tmp = readl(mmio + HOST_CTL);
--	if ((tmp & (HOST_AHCI_EN | HOST_IRQ_EN)) != HOST_AHCI_EN) {
--		printk(KERN_ERR DRV_NAME "(%s): AHCI enable failed (0x%x)\n",
--			pci_name(pdev), tmp);
--		return -EIO;
--	}
-+	writel(HOST_AHCI_EN, mmio + HOST_CTL);
-+	(void) readl(mmio + HOST_CTL);	/* flush */
-+	writel(cap_save, mmio + HOST_CAP);
-+	writel(0xf, mmio + HOST_PORTS_IMPL);
-+	(void) readl(mmio + HOST_PORTS_IMPL);	/* flush */
-+
-+	pci_read_config_word(pdev, 0x92, &tmp16);
-+	tmp16 |= 0xf;
-+	pci_write_config_word(pdev, 0x92, tmp16);
- 
- 	hpriv->cap = readl(mmio + HOST_CAP);
- 	hpriv->port_map = readl(mmio + HOST_PORTS_IMPL);
--	probe_ent->n_ports = hpriv->cap & 0x1f;
-+	probe_ent->n_ports = (hpriv->cap & 0x1f) + 1;
-+
-+	VPRINTK("cap 0x%x  port_map 0x%x  n_ports %d\n",
-+		hpriv->cap, hpriv->port_map, probe_ent->n_ports);
- 
- 	using_dac = hpriv->cap & HOST_CAP_64;
- 	if (using_dac &&
-@@ -746,18 +794,18 @@ static int ahci_host_init(struct ata_probe_ent *probe_ent)
- 	}
- 
- 	for (i = 0; i < probe_ent->n_ports; i++) {
--		void *port_mmio;
--
- 		if (!(hpriv->port_map & (1 << i)))
- 			continue;
- 
- 		port_mmio = ahci_port_base(mmio, i);
-+		VPRINTK("mmio %p  port_mmio %p\n", mmio, port_mmio);
- 
- 		ahci_setup_port(&probe_ent->port[i],
- 				(unsigned long) mmio, i);
- 
- 		/* make sure port is not active */
- 		tmp = readl(port_mmio + PORT_CMD);
-+		VPRINTK("PORT_CMD 0x%x\n", tmp);
- 		if (tmp & (PORT_CMD_LIST_ON | PORT_CMD_FIS_ON |
- 			   PORT_CMD_FIS_RX | PORT_CMD_START)) {
- 			tmp &= ~(PORT_CMD_LIST_ON | PORT_CMD_FIS_ON |
-@@ -772,14 +820,27 @@ static int ahci_host_init(struct ata_probe_ent *probe_ent)
- 			schedule_timeout((HZ / 2) + 1);
- 		}
- 
-+		writel(PORT_CMD_SPIN_UP, port_mmio + PORT_CMD);
-+
-+		j = 0;
-+		while (j < 100) {
-+			msleep(10);
-+			tmp = readl(port_mmio + PORT_SCR_STAT);
-+			if ((tmp & 0xf) == 0x3)
-+				break;
-+			j++;
-+		}
-+
-+		tmp = readl(port_mmio + PORT_SCR_ERR);
-+		VPRINTK("PORT_SCR_ERR 0x%x\n", tmp);
-+		writel(tmp, port_mmio + PORT_SCR_ERR);
-+
- 		/* ack any pending irq events for this port */
- 		tmp = readl(port_mmio + PORT_IRQ_STAT);
-+		VPRINTK("PORT_IRQ_STAT 0x%x\n", tmp);
- 		if (tmp)
- 			writel(tmp, port_mmio + PORT_IRQ_STAT);
- 
--		tmp = readl(port_mmio + PORT_SCR_ERR);
--		writel(tmp, port_mmio + PORT_SCR_ERR);
--
- 		writel(1 << i, mmio + HOST_IRQ_STAT);
- 
- 		/* set irq mask (enables interrupts) */
-@@ -787,7 +848,10 @@ static int ahci_host_init(struct ata_probe_ent *probe_ent)
- 	}
- 
- 	tmp = readl(mmio + HOST_CTL);
-+	VPRINTK("HOST_CTL 0x%x\n", tmp);
- 	writel(tmp | HOST_IRQ_EN, mmio + HOST_CTL);
-+	tmp = readl(mmio + HOST_CTL);
-+	VPRINTK("HOST_CTL 0x%x\n", tmp);
- 
- 	pci_set_master(pdev);
- 
-@@ -830,10 +894,12 @@ static void ahci_print_info(struct ata_probe_ent *probe_ent)
- 		"%u slots %u ports %s Gbps 0x%x impl\n"
- 	       	,
- 	       	pci_name(pdev),
-+
- 	       	(vers >> 24) & 0xff,
- 	       	(vers >> 16) & 0xff,
- 	       	(vers >> 8) & 0xff,
- 	       	vers & 0xff,
-+
- 		((cap >> 8) & 0x1f) + 1,
- 		(cap & 0x1f) + 1,
- 		speed_s,
-@@ -872,6 +938,8 @@ static int ahci_init_one (struct pci_dev *pdev, const struct pci_device_id *ent)
- 	unsigned int board_idx = (unsigned int) ent->driver_data;
- 	int rc;
- 
-+	VPRINTK("ENTER\n");
-+
- 	if (!printed_version++)
- 		printk(KERN_DEBUG DRV_NAME " version " DRV_VERSION "\n");
- 
--- 
-2.20.1
-
+T24gOC8xMi8xOSAyOjA2IFBNLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90ZToNCj4gT24gTW9uLCBB
+dWcgMTIsIDIwMTkgYXQgMDU6NDk6MjlQTSArMDAwMCwgU3RlcGhlbiBEb3V0aGl0IHdyb3RlOg0K
+Pj4gRG9lcyBhbnlvbmUga25vdyB0aGUgYmFja2dyb3VuZCBvZiB0aGUgb3JpZ2luYWwgUENTIHdv
+cmthcm91bmQ/DQo+IA0KPiBCYXNlZCBvbiBhIGZldyBnaXQtYmxhbWUgaXRlcmF0aW9ucyBvbiBo
+aXN0b3J5LmdpdCB0aGUgb3JpZ2luYWwgUENTDQo+IGhhbmRsaW5nIChqdXN0IHdoZW4gaW5pdGlh
+bGl6aW5nKSBnb2VzIGJhY2sgdG8gdGhpcyBCSyBjb21taXQ6DQo+IA0KPiAtLQ0KPiAgRnJvbSBj
+MDgzNWI4MzhlNzZjOTUwMGZhY2FkMDVkYzMwNTE3MGExYTU3N2E4IE1vbiBTZXAgMTcgMDA6MDA6
+MDAgMjAwMQ0KPiBGcm9tOiBKZWZmIEdhcnppayA8amdhcnppa0Bwb2JveC5jb20+DQo+IERhdGU6
+IFRodSwgMTQgT2N0IDIwMDQgMTY6MTE6NDQgLTA0MDANCg0KVGhhbmtzIGZvciBkaWdnaW5nLCB0
+aGlzIGlzIGRlZmluaXRlbHkgZnVydGhlciBiYWNrIHRoYW4gSSBsb29rZWQuDQoNCj4gU3ViamVj
+dDogW2xpYmF0YSBhaGNpXSBmaXggc2V2ZXJhbCBidWdzDQo+IA0KPiAqIFBDSSBJRHMgZnJvbSB0
+ZXN0IHZlcnNpb24gZGlkbid0IG1ha2UgaXQgaW50byBtYWlubGluZS4uLiBkb2gNCj4gKiBkbyBh
+bGwgY29tbWFuZCBzZXR1cCBpbiAtPnFjX3ByZXANCj4gKiBwaHlfcmVzZXQgcm91dGluZSB0aGF0
+IGRvZXMgc2lnbmF0dXJlIGNoZWNrDQo+ICogY2hlY2sgU0FUQSBwaHkgZm9yIGVycm9ycw0KPiAq
+IHJlc2V0IGhhcmR3YXJlIGZyb20gc2NyYXRjaCwgaW4gY2FzZSBjYXJkIEJJT1MgZGlkbid0IHJ1
+bg0KPiAqIGltcGxlbWVudCBzdGFnZ2VyZWQgc3BpbnVwIGJ5IGRlZmF1bHQNCj4gKiBhZGRpbmcg
+YWRkaXRpb25hbCBkZWJ1Z2dpbmcgb3V0cHV0DQoNCltzbmlwXQ0KDQo+IEBAIC0yMzYsNyArMjM4
+LDkgQEAgc3RhdGljIHN0cnVjdCBhdGFfcG9ydF9pbmZvIGFoY2lfcG9ydF9pbmZvW10gPSB7DQo+
+ICAgfTsNCj4gICANCj4gICBzdGF0aWMgc3RydWN0IHBjaV9kZXZpY2VfaWQgYWhjaV9wY2lfdGJs
+W10gPSB7DQo+IC0JeyBQQ0lfVkVORE9SX0lEX0lOVEVMLCAweDAwMDAsIFBDSV9BTllfSUQsIFBD
+SV9BTllfSUQsIDAsIDAsDQo+ICsJeyBQQ0lfVkVORE9SX0lEX0lOVEVMLCAweDI2NTIsIFBDSV9B
+TllfSUQsIFBDSV9BTllfSUQsIDAsIDAsDQo+ICsJICBib2FyZF9haGNpIH0sDQo+ICsJeyBQQ0lf
+VkVORE9SX0lEX0lOVEVMLCAweDI2NTMsIFBDSV9BTllfSUQsIFBDSV9BTllfSUQsIDAsIDAsDQoN
+ClRoZXNlIGxvb2sgdG8gYmUgZm9yIHRoZSBJQ0g2LCBhbmQgYXQgdGhlc2UgZWFybHkgZGF5cyBJ
+bnRlbCBsb29rcyB0byBiZQ0KdGhlIG9ubHkgdmVuZG9yIGluIHRoZSBsaXN0LiAgVGhhdCB3b3Vs
+ZCBleHBsYWluIHRoZSBsYWNrIG9mIGEgdmVuZG9yDQpndWFyZCBvbiB0aGUgUENTIHBva2UgYmVs
+b3cuDQoNCj4gICAJICBib2FyZF9haGNpIH0sDQo+ICAgCXsgfQkvKiB0ZXJtaW5hdGUgbGlzdCAq
+Lw0KPiAgIH07DQoNCltzbmlwXQ0KDQo+ICAgc3RhdGljIGludCBhaGNpX2hvc3RfaW5pdChzdHJ1
+Y3QgYXRhX3Byb2JlX2VudCAqcHJvYmVfZW50KQ0KPiAgIHsNCj4gICAJc3RydWN0IGFoY2lfaG9z
+dF9wcml2ICpocHJpdiA9IHByb2JlX2VudC0+cHJpdmF0ZV9kYXRhOw0KPiAgIAlzdHJ1Y3QgcGNp
+X2RldiAqcGRldiA9IHByb2JlX2VudC0+cGRldjsNCj4gLQl2b2lkICptbWlvID0gcHJvYmVfZW50
+LT5tbWlvX2Jhc2U7DQo+IC0JdTMyIHRtcDsNCj4gLQl1bnNpZ25lZCBpbnQgaSwgdXNpbmdfZGFj
+Ow0KPiArCXZvaWQgX19pb21lbSAqbW1pbyA9IHByb2JlX2VudC0+bW1pb19iYXNlOw0KPiArCXUz
+MiB0bXAsIGNhcF9zYXZlOw0KPiArCXUxNiB0bXAxNjsNCj4gKwl1bnNpZ25lZCBpbnQgaSwgaiwg
+dXNpbmdfZGFjOw0KPiAgIAlpbnQgcmM7DQo+ICsJdm9pZCBfX2lvbWVtICpwb3J0X21taW87DQo+
+ICsNCj4gKwljYXBfc2F2ZSA9IHJlYWRsKG1taW8gKyBIT1NUX0NBUCk7DQo+ICsJY2FwX3NhdmUg
+Jj0gKCAoMTw8MjgpIHwgKDE8PDE3KSApOw0KPiArCWNhcF9zYXZlIHw9ICgxIDw8IDI3KTsNCj4g
+ICANCj4gICAJLyogZ2xvYmFsIGNvbnRyb2xsZXIgcmVzZXQgKi8NCj4gICAJdG1wID0gcmVhZGwo
+bW1pbyArIEhPU1RfQ1RMKTsNCj4gQEAgLTY5OCwyMyArNzQ3LDIyIEBAIHN0YXRpYyBpbnQgYWhj
+aV9ob3N0X2luaXQoc3RydWN0IGF0YV9wcm9iZV9lbnQgKnByb2JlX2VudCkNCj4gICAJCXJldHVy
+biAtRUlPOw0KPiAgIAl9DQo+ICAgDQo+IC0JLyogbWFrZSBzdXJlIHdlJ3JlIGluIEFIQ0kgbW9k
+ZSwgd2l0aCBpcnEgZGlzYWJsZWQgKi8NCj4gLQlpZiAoKHRtcCAmIChIT1NUX0FIQ0lfRU4gfCBI
+T1NUX0lSUV9FTikpICE9IEhPU1RfQUhDSV9FTikgew0KPiAtCQl0bXAgfD0gSE9TVF9BSENJX0VO
+Ow0KPiAtCQl0bXAgJj0gfkhPU1RfSVJRX0VOOw0KPiAtCQl3cml0ZWwodG1wLCBtbWlvICsgSE9T
+VF9DVEwpOw0KPiAtCQlyZWFkbChtbWlvICsgSE9TVF9DVEwpOyAvKiBmbHVzaCAqLw0KPiAtCX0N
+Cj4gLQl0bXAgPSByZWFkbChtbWlvICsgSE9TVF9DVEwpOw0KPiAtCWlmICgodG1wICYgKEhPU1Rf
+QUhDSV9FTiB8IEhPU1RfSVJRX0VOKSkgIT0gSE9TVF9BSENJX0VOKSB7DQo+IC0JCXByaW50ayhL
+RVJOX0VSUiBEUlZfTkFNRSAiKCVzKTogQUhDSSBlbmFibGUgZmFpbGVkICgweCV4KVxuIiwNCj4g
+LQkJCXBjaV9uYW1lKHBkZXYpLCB0bXApOw0KPiAtCQlyZXR1cm4gLUVJTzsNCj4gLQl9DQo+ICsJ
+d3JpdGVsKEhPU1RfQUhDSV9FTiwgbW1pbyArIEhPU1RfQ1RMKTsNCj4gKwkodm9pZCkgcmVhZGwo
+bW1pbyArIEhPU1RfQ1RMKTsJLyogZmx1c2ggKi8NCj4gKwl3cml0ZWwoY2FwX3NhdmUsIG1taW8g
+KyBIT1NUX0NBUCk7DQo+ICsJd3JpdGVsKDB4ZiwgbW1pbyArIEhPU1RfUE9SVFNfSU1QTCk7DQo+
+ICsJKHZvaWQpIHJlYWRsKG1taW8gKyBIT1NUX1BPUlRTX0lNUEwpOwkvKiBmbHVzaCAqLw0KPiAr
+DQo+ICsJcGNpX3JlYWRfY29uZmlnX3dvcmQocGRldiwgMHg5MiwgJnRtcDE2KTsNCj4gKwl0bXAx
+NiB8PSAweGY7DQo+ICsJcGNpX3dyaXRlX2NvbmZpZ193b3JkKHBkZXYsIDB4OTIsIHRtcDE2KTsN
+Cg0KTm90IG11Y2ggdG8gZXhwbGFpbiB3aHkgdGhpcyBpcyBoZXJlIHVuZm9ydHVuYXRlbHkuLi4N
+Cg0KTWF5YmUgdGhpcyBpc24ndCBzbyBtdWNoIGEgd29ya2Fyb3VuZCBhcyBhbiBpbXBsZW1lbnRh
+dGlvbiBzcGVjaWZpYw0KcXVpcmsuICBJZiB3ZSBjYW4ndCByZWx5IG9uIDEwMCUgb2YgQklPUyBp
+bXBsZW1lbnRhdGlvbnMgdG8gaGF2ZSBzZXQgUENTDQp0byBtYXRjaCBQb3J0cyBJbXBsZW1lbnRl
+ZCAocHJvYmFibHkgYSBzYWZlIGJldCkgdGhlbiB3ZSBzdGlsbCBuZWVkIHRoZQ0KUENTIHBva2Ug
+Y29kZS4NCg0KSW4gdGhhdCBjYXNlIHdlJ3JlIGJhY2sgdG8gQ2hyaXN0b3BoJ3MgcXVlc3Rpb24g
+b2YgaWYgdGhlcmUncyBhIGJldHRlcg0Kd2F5IG9mIGZpZ3VyaW5nIG91dCB3aGVyZSBQQ1MgbGl2
+ZXMgdGhhbiBjaGVja2luZyBkZXZpY2UgSURzLg0KDQpJbiB0aGUgbWVhbnRpbWUgb24gRGVudmVy
+dG9uIDB4OTIgY29udGFpbnMgdGhlIFBvcnQgRGlzYWJsZSBiaXRzIG9mIHRoZQ0KTUFQIHJlZ2lz
+dGVyLiAgU2luY2UgdGhlc2UgYXJlIHdyaXRlLW9uY2UgQklPUyBzaG91bGQgaGF2ZSBsb2NrZWQg
+dGhlbQ0KYWxyZWFkeSBzbyB3ZSBwcm9iYWJseSB3b24ndCBicmVhayBhbnl0aGluZyBwb2tpbmcg
+dGhlbSB1bnRpbCBhIHNvbHV0aW9uDQppcyBpZGVudGlmaWVkLiAgSSBkb24ndCB0aGluayB3ZSB3
+YW50IHRvIHJlbHkgb24gdGhhdCBhc3N1bXB0aW9uIGluIHRoZQ0KbG9uZyB0ZXJtIHRob3VnaC4N
+Cg==
