@@ -2,91 +2,128 @@ Return-Path: <SRS0=Y6BW=WJ=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52E90C32750
-	for <linux-ide@archiver.kernel.org>; Tue, 13 Aug 2019 21:45:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F4A0C32750
+	for <linux-ide@archiver.kernel.org>; Tue, 13 Aug 2019 22:07:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 230E2206C2
-	for <linux-ide@archiver.kernel.org>; Tue, 13 Aug 2019 21:45:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D003920665
+	for <linux-ide@archiver.kernel.org>; Tue, 13 Aug 2019 22:07:34 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="vwIDTkS2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726457AbfHMVo7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 13 Aug 2019 17:44:59 -0400
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:38302 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726275AbfHMVo7 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 13 Aug 2019 17:44:59 -0400
-Received: by mail-wr1-f65.google.com with SMTP id g17so109139144wrr.5;
-        Tue, 13 Aug 2019 14:44:57 -0700 (PDT)
+        id S1726689AbfHMWHa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 13 Aug 2019 18:07:30 -0400
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:45770 "EHLO
+        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726973AbfHMWH3 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 13 Aug 2019 18:07:29 -0400
+Received: by mail-ot1-f66.google.com with SMTP id m24so24755392otp.12
+        for <linux-ide@vger.kernel.org>; Tue, 13 Aug 2019 15:07:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=d03nL8ERgbgYAWE4oae6TV+Y2qh8WtdG9cGr+aCg9ZQ=;
+        b=vwIDTkS2RxXqreaUoIYOxGHoRq0ix6eOj5r7Iah+Cs0wFLgrEtI9Av42Og6E502jCD
+         mWI6WKcNcPjhCDXBekDnayBLj57mPlJ3VMYbYmWAtQrNO2sc7va1RjAS98ITH7UWv6Tc
+         uZIIq773vIQyH9pgOTlXJIt0lX6X4gHOEpMQzMaiXKWS2W14Ba7xhkRGNth/QaRE1pGj
+         F5wyJTBLk/Wu5wcBfdpRT4k8JRw8KD8jgooKYYO99uRQjesRixfT317sNEjICySX8bcN
+         DuheCGzynJSyRiqknxRLiqQgdaVhGf0DpTpGloW8bJNXGWzHo7cQKN1rniNIy7+4wJrE
+         pMgQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=GHzSLD8380XO5cvMJ3boVjrnEElPkNe5Hv186h7Ab/g=;
-        b=G/X6BEZPF1P/ObINDdtQfHHnqvj2I6+e2szLLAh5NqiYJ8o4cJYLHEVpNP8q8db1h7
-         ZTpfgrkT7tFL1n+r9MzA6JfSAMvGZf6TE+trSCwjzdmv0Qf+GnxkO4izV4HGyROTbXpB
-         sotgsRWFTrYepFAWsGS0AkSWfcGXC/Eg4qUmfAlv3Vl6mNXxgMiYMd1Vr23TZbKkfqFi
-         5CIuVjxqiA+dFiOm9/z5hmNKPBfiVsMXIkLV5rqJA/v1TO3Ts+rj7gTaCLldA7cdPN+5
-         BMJYK0HrY9vetU65Cr5buUjTOcA6MZ5EASPyUayd7DjoZBsjNLjFlnQrEyrHt3XTZDU+
-         M2iQ==
-X-Gm-Message-State: APjAAAUkNuW2vj7xhogCEaa4nm2ZAZWhpSRoehW0jIaoT6Mu7tLxCwpP
-        ej4ynFT+XPb1bz9b1TTWDf0=
-X-Google-Smtp-Source: APXvYqz6c4gFO3wb0bC1PSubSlMD0NZJFOM2QauOX0Mff41FyyTyiF7KorOO0PDEPQkLvl+kXwPzIg==
-X-Received: by 2002:a5d:494d:: with SMTP id r13mr41032995wrs.82.1565732697294;
-        Tue, 13 Aug 2019 14:44:57 -0700 (PDT)
-Received: from [10.68.32.192] (broadband-188-32-48-208.ip.moscow.rt.ru. [188.32.48.208])
-        by smtp.gmail.com with ESMTPSA id u186sm5034219wmu.26.2019.08.13.14.44.56
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 13 Aug 2019 14:44:56 -0700 (PDT)
-Subject: Re: [PATCH] ahci: Remove the exporting of ahci_em_messages
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     "Liu, Chuansheng" <chuansheng.liu@intel.com>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>
-References: <20190710152923.25562-1-efremov@linux.com>
- <27240C0AC20F114CBF8149A2696CBE4A60BCAAEE@SHSMSX106.ccr.corp.intel.com>
-From:   Denis Efremov <efremov@linux.com>
-Message-ID: <340001e6-1750-b6b5-9482-3843679acb63@linux.com>
-Date:   Wed, 14 Aug 2019 00:44:55 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=d03nL8ERgbgYAWE4oae6TV+Y2qh8WtdG9cGr+aCg9ZQ=;
+        b=bh/PnYe9mq7T484uenybK5WhukeN0Rp/F0l8MqX0PQMTVNqdKci+PTVSUffyjnyfAZ
+         9MzbhrEIccsX/JIi54usofVomXo1laMqMPEGSFEG9HmxODQwpGKNdmnDjsZjwN/O1+/4
+         DLPuI4pTfyE4kaEMrjVL5ktZxDtZ5eVJaspNgoxv72Z3aMk9IJDDSqjKR9n1suLvLi2D
+         ilAFIK2nxs3U3tXSmxIMfKj924UNe6q4+rDZbhBVuovmWaveE7vHzDpHNuFm6Jz6Y5lH
+         WnccjnxHfOtCG4V4Ao7quJ3CmyFsQ2fqSb0kSJYNUne7QMB24+2dgYCxI6SgakwntSes
+         rI6g==
+X-Gm-Message-State: APjAAAWyZhqu8JZFNF47qLehdKUjYbWvwlxVuxZrxDgfnc9mlnBNor0N
+        PwItYNCDTTHX9DB3s56hQecxxhtc4tLuaoGqpNGtDg==
+X-Google-Smtp-Source: APXvYqy3DxXsEW3npvG6mgihqbS7KjpppCn+StlyxBweAbJRDgFcRIGWBS4ex+T5tEtLiguZXcMGzdQOhWjmsA71r7o=
+X-Received: by 2002:a9d:7a9a:: with SMTP id l26mr32328700otn.71.1565734048841;
+ Tue, 13 Aug 2019 15:07:28 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <27240C0AC20F114CBF8149A2696CBE4A60BCAAEE@SHSMSX106.ccr.corp.intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20190808202415.25166-1-stephend@silicom-usa.com>
+ <20190810074317.GA18582@infradead.org> <abfa4b20-2916-d89a-f4d3-b27fca5906b2@silicom-usa.com>
+ <CAPcyv4g+PdbisZd8=FpB5QiR_FCA2OQ9EqEF9yMAN=XWTYXY1Q@mail.gmail.com>
+ <051cb164-19d5-9241-2941-0d866e565339@silicom-usa.com> <20190812180613.GA18377@infradead.org>
+ <CAA9_cme3saBAJEyob3B1tX=t8keTodWJZMUd1j_v7vPMRU+aXA@mail.gmail.com> <20190813072954.GA23417@infradead.org>
+In-Reply-To: <20190813072954.GA23417@infradead.org>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Tue, 13 Aug 2019 15:07:17 -0700
+Message-ID: <CAPcyv4h5kCKVyCjomBUY27MJwheDZ8v87+a9K-2YCgyqRWR7eQ@mail.gmail.com>
+Subject: Re: [PATCH] ata: ahci: Lookup PCS register offset based on PCI device ID
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Stephen Douthit <stephend@silicom-usa.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Jens,
+On Tue, Aug 13, 2019 at 12:31 AM Christoph Hellwig <hch@infradead.org> wrote:
+>
+> On Mon, Aug 12, 2019 at 12:31:35PM -0700, Dan Williams wrote:
+> > It seems platforms / controllers that fail to run the option-rom
+> > should be quirked by device-id, but the PCS register twiddling be
+> > removed for everyone else. "Card BIOS" to me implies devices with an
+> > Option-ROM BAR which I don't think modern devices have, so that might
+> > be a simple way to try to phase out this quirk going forward without
+> > regressing working setups that might be relying on this.
+> >
+> > Then again the driver is already depending on the number of enabled
+> > ports to be reliable before PCS is written, and the current driver
+> > does not attempt to enable ports that were not enabled previously.
+> > That tells me that if the PCS quirk ever mattered it would have
+> > already regressed when the driver switched from blindly writing 0xf to
+> > only setting the bits that were already set in ->port_map.
+>
+> But how do we find that out?
 
-On 11.07.2019 04:03, Liu, Chuansheng wrote:
->> -----Original Message-----
->> From: Denis Efremov [mailto:efremov@linux.com]
->> Sent: Wednesday, July 10, 2019 11:29 PM
->> To: Liu, Chuansheng <chuansheng.liu@intel.com>
->> Cc: Denis Efremov <efremov@linux.com>; Jens Axboe <axboe@kernel.dk>;
->> linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
->> Subject: [PATCH] ahci: Remove the exporting of ahci_em_messages
->>
->> The variable ahci_em_messages is declared static and marked
->> EXPORT_SYMBOL_GPL, which is at best an odd combination. Because the
->> variable is not used outside of the drivers/ata/libahci.c file it is
->> defined in, this commit removes the EXPORT_SYMBOL_GPL() marking.
-> 
-> Sounds good to me, thanks.
-> Reviewed-by: Chuansheng Liu <chuansheng.liu@linux.intel.com>
-> 
+We can layer another assumption on top of Tejun's assumptions from
+commit 49f290903935 "ahci: update PCS programming". The kernel
+community has not received any regression reports from that change
+which says:
 
-Could you please look at this patch once again and accept it if it's ok?
-static ahci_em_messages will trigger a warning after this check
-will be in tree https://lkml.org/lkml/2019/7/14/118
+"
+    port_map is determined from PORTS_IMPL PCI register which is
+    implemented as write or write-once register.  If the register isn't
+    programmed, ahci automatically generates it from number of ports,
+    which is good enough for PCS programming.  ICH6/7M are probably the
+    only ones where non-contiguous enable bits are necessary && PORTS_IMPL
+    isn't programmed properly but they're proven to work reliably with 0xf
+    anyway.
+"
 
-Thanks,
-Denis
+So the potential options I see are:
+
+1/ Keep the current scheme, but limit it to cases where PORTS_IMPL is
+less than 8 and assume this need to set the bits is unnecessary legacy
+to carry forward
+
+2/ Option1 + additionally use PORTS_IMPL as a gate to guess when the
+PCS format might be different for values >= 8.
+
+I think the driver does not need to consider Option2 unless / until it
+encounters a platform where firmware does not "do the right thing",
+and given Denverton has been in the wild with the wrong PCS twiddling
+it seems to suggest nothing needs to be done there.
+
+> A compromise to me seems that we just do the PCS quirk for all Intel
+> devices explicitly listed in the PCI Ids based on new board_* values
+> as long as they have the old PCS location, and assume anything new
+> enough to have the new location won't need to quirk, given that it
+> never properly worked.  This might miss some intel devices that were
+> supported with the class based catchall, though.
+
+I'd be more comfortable with PORT_IMPL as the deciding factor.
