@@ -1,112 +1,78 @@
-Return-Path: <SRS0=iM+a=WI=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=Y6BW=WJ=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A685C433FF
-	for <linux-ide@archiver.kernel.org>; Mon, 12 Aug 2019 19:31:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12761C32750
+	for <linux-ide@archiver.kernel.org>; Tue, 13 Aug 2019 07:25:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 684E52067D
-	for <linux-ide@archiver.kernel.org>; Mon, 12 Aug 2019 19:31:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE83D20665
+	for <linux-ide@archiver.kernel.org>; Tue, 13 Aug 2019 07:25:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="mTXf7n2L"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="SJPNBPJM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726752AbfHLTbs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 12 Aug 2019 15:31:48 -0400
-Received: from mail-ot1-f68.google.com ([209.85.210.68]:43379 "EHLO
-        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726681AbfHLTbr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Aug 2019 15:31:47 -0400
-Received: by mail-ot1-f68.google.com with SMTP id e12so19015967otp.10;
-        Mon, 12 Aug 2019 12:31:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=r2rO/WLuk4jqhjOyvblSLWfVGDCVFevnenUKc3T2vXE=;
-        b=mTXf7n2L/tWj2GeXTRaqOKVq3tmQ6jcRutXb0WOYoYol7v5Ctz5NPeNpUoaVd2hqbs
-         oP4O46zAaQYhq6ZJN6xaVycFmxC0Jnwynysm/+DtOPtQwrKWLAfYlgejb98NvLDfcIbL
-         OWnIRPq+ZOngD8zCvkRGVcWoT+VD7VKgKiTKa/L0u1t6HdnF3UGz3tCUjUONzNmGpsC9
-         6QxhaMGdca19AfLglykP5gfweF4Fvs/aLGCu08nxPFU9bXoXwjpiyhI7vGrHLTq4Xrc3
-         DHvVeh5IuWl+ZzL/0d5yEjKJ+do5EPgnU0mHYmXrM6RhWCkNF974u9OGl8SKXt9Yid2M
-         bZtA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=r2rO/WLuk4jqhjOyvblSLWfVGDCVFevnenUKc3T2vXE=;
-        b=oMxjfB9YDM03v9BsBXCAGQODVNv9TIbU+h3CXBTw7PxIVa1UofXBLBWmKf6nPWdVPT
-         6vGU4F9i2Bb5CQ8OnTeGsnP4rZ+rv6vBgo03r5Z0xkXpMWo6qRDjIBbTAAZdziXogQZV
-         njcFccFwmXjH2rDNZZRww61M+V9h+ldcAVie69ds+To2TUi/eRtVqu2mWK7UIxqelDEf
-         KsdfccqOrJllcmvHmPwvryA8TgcH38nCoLMgdFtO71dEsTVbCj4h14W71jKy1BHDd8Mx
-         5AQThlniGxnswOD0j+pnNZMTYzGdhPjMIVixzO/ZyUxBvskLB6+lCh0CR4uYglH3Qksq
-         Tqfg==
-X-Gm-Message-State: APjAAAW51jIjq00UK/WNbSPImsUj/zNvLc8hnDouVX0SY9o6/b/StmHR
-        F0C+a/yuno8DthCTHPy34BVtwVEJm0OBp36KzgI=
-X-Google-Smtp-Source: APXvYqyNn0/qfDF9fazKFcP1RqRIS7NkpYdZ41O1fLhn9LJCvmdHKKWpJQkr0PSt/J3+1pT90Q8ZxbzSsa2/mRaQjSg=
-X-Received: by 2002:a6b:fd19:: with SMTP id c25mr23437832ioi.267.1565638306900;
- Mon, 12 Aug 2019 12:31:46 -0700 (PDT)
+        id S1725981AbfHMHZW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 13 Aug 2019 03:25:22 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:50024 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725820AbfHMHZW (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 13 Aug 2019 03:25:22 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=rpLZk77wYd+19lLl2WqyfSlNdZZpStM5OxSeXpJwPP8=; b=SJPNBPJMs7N2cZWW6pFtDl1pG
+        /ON+8Dm2FPqFskavNg/QqV+zFAJBJdpPx8JmCyJPpwN2MVw6jY24vjR5aN4KkIY9R0uR+TCJqFh0d
+        /FuNjsE2bNIybXxB2MAUOoeLEWVec68xLRLyU8AG0cSgn6pVxiawshVz1fy+clcuE35BNIWG6SOIp
+        mAOWn7f6oFE+5y3TeqM9i551UDXaAwpMejMg4e4u+mumh/VeZgcPWVM+pMusM8AgGhYxYHx6UvQgw
+        nx4ReupifeHe8wvm9ZCREYZ7vUOZZ+uTbh1O3ZmE6Q8XyBRimXVKYBze9x0TG3PGO7Lnh+BljV6E9
+        bs2DyOv2A==;
+Received: from [2001:4bb8:180:1ec3:c70:4a89:bc61:2] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
+        id 1hxRBE-00064c-Ef; Tue, 13 Aug 2019 07:25:16 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Tony Luck <tony.luck@intel.com>, Fenghua Yu <fenghua.yu@intel.com>,
+        Mike Travis <mike.travis@hpe.com>,
+        Dimitri Sivanich <sivanich@hpe.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-ia64@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: RFC: remove sn2, hpsim and ia64 machvecs v2
+Date:   Tue, 13 Aug 2019 09:24:46 +0200
+Message-Id: <20190813072514.23299-1-hch@lst.de>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-References: <20190808202415.25166-1-stephend@silicom-usa.com>
- <20190810074317.GA18582@infradead.org> <abfa4b20-2916-d89a-f4d3-b27fca5906b2@silicom-usa.com>
- <CAPcyv4g+PdbisZd8=FpB5QiR_FCA2OQ9EqEF9yMAN=XWTYXY1Q@mail.gmail.com>
- <051cb164-19d5-9241-2941-0d866e565339@silicom-usa.com> <20190812180613.GA18377@infradead.org>
-In-Reply-To: <20190812180613.GA18377@infradead.org>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Mon, 12 Aug 2019 12:31:35 -0700
-Message-ID: <CAA9_cme3saBAJEyob3B1tX=t8keTodWJZMUd1j_v7vPMRU+aXA@mail.gmail.com>
-Subject: Re: [PATCH] ata: ahci: Lookup PCS register offset based on PCI device ID
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Stephen Douthit <stephend@silicom-usa.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, Aug 12, 2019 at 11:08 AM Christoph Hellwig <hch@infradead.org> wrote:
->
-> On Mon, Aug 12, 2019 at 05:49:29PM +0000, Stephen Douthit wrote:
-> > Does anyone know the background of the original PCS workaround?
->
-> Based on a few git-blame iterations on history.git the original PCS
-> handling (just when initializing) goes back to this BK commit:
->
-> --
-> From c0835b838e76c9500facad05dc305170a1a577a8 Mon Sep 17 00:00:00 2001
-> From: Jeff Garzik <jgarzik@pobox.com>
-> Date: Thu, 14 Oct 2004 16:11:44 -0400
-> Subject: [libata ahci] fix several bugs
->
-> * PCI IDs from test version didn't make it into mainline... doh
-> * do all command setup in ->qc_prep
-> * phy_reset routine that does signature check
-> * check SATA phy for errors
-> * reset hardware from scratch, in case card BIOS didn't run
+[adding some ex-SGI folks to comment as well]
 
-Ok, that at least matches the expectation that platform firmware
-initially enables the ports. However, it still leaves open the
-question of whether the PCS bits were actually not configured, or
-whether just the controller reset was needed. Certainly there is no
-reason to touch that configuration register after every controller
-reset (via the HOST_CTL mmio register)
+Hi Tony,
 
-It seems platforms / controllers that fail to run the option-rom
-should be quirked by device-id, but the PCS register twiddling be
-removed for everyone else. "Card BIOS" to me implies devices with an
-Option-ROM BAR which I don't think modern devices have, so that might
-be a simple way to try to phase out this quirk going forward without
-regressing working setups that might be relying on this.
+let me know what you think of this series.  This drops the pretty much
+dead sn2 and hpsim support, which then allows us to build a single ia64
+kernel image that supports all remaining systems without extra indirections
+in the fast path.
 
-Then again the driver is already depending on the number of enabled
-ports to be reliable before PCS is written, and the current driver
-does not attempt to enable ports that were not enabled previously.
-That tells me that if the PCS quirk ever mattered it would have
-already regressed when the driver switched from blindly writing 0xf to
-only setting the bits that were already set in ->port_map.
+A git tree is also available at:
+
+    git://git.infradead.org/users/hch/misc.git ia64-remove-machvecs
+
+Gitweb:
+
+    http://git.infradead.org/users/hch/misc.git/shortlog/refs/heads/ia64-remove-machvecs
+
+Changes since v1:
+ - restore !NUMA support
+ - fix compile for configs
