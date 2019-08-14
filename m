@@ -4,50 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35CBCC433FF
-	for <linux-ide@archiver.kernel.org>; Wed, 14 Aug 2019 02:24:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 290AFC32753
+	for <linux-ide@archiver.kernel.org>; Wed, 14 Aug 2019 02:26:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0497220842
-	for <linux-ide@archiver.kernel.org>; Wed, 14 Aug 2019 02:24:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB19D20679
+	for <linux-ide@archiver.kernel.org>; Wed, 14 Aug 2019 02:26:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1565749491;
-	bh=8lbmIY1aOT4JZP/B0nvlZvq0dITQdhB1j8LjOqmC96o=;
+	s=default; t=1565749616;
+	bh=jX8fTWyNSK6du04D93U9Tv5IXcgdx3qFvD1n2Jb5vpM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=wBSTaeE7ZQeMxvrj5z0aNubaicAU55cyv5jII5NrzYJzlso32AuouXnA9eRYHRwHk
-	 DWdUO4CIKCK4Chia0PiAdv3SdGfCXz+Z3JeYLyPQVIn0smgxJ/wzr6Nrxi2VO4bS4k
-	 I7HD0k5jrPpcAN+vNdGMbyUM3ZAKBW3nTb0YFkgw=
+	b=vU48FEg3tHFj0cNDUF90DpLPDSXpQBVDQIpR9rSHRxZAOBvByMmE/lTPxUU04n1K2
+	 5rvv3bbt3pp/K3hHMnhkQxQdp7L2cQ3b/RDrPDrzcJA4f5+jsmun4nS2AXY6aFgeLQ
+	 H2dapDrlPd19/KU8SyC8HH6jsTDGj/o0lNZMRXdQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728277AbfHNCYM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 13 Aug 2019 22:24:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53076 "EHLO mail.kernel.org"
+        id S1728883AbfHNC0z (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 13 Aug 2019 22:26:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54624 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730102AbfHNCYL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 13 Aug 2019 22:24:11 -0400
+        id S1730369AbfHNC0e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 13 Aug 2019 22:26:34 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 233CE216F4;
-        Wed, 14 Aug 2019 02:24:10 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id B323A2173B;
+        Wed, 14 Aug 2019 02:26:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1565749450;
-        bh=8lbmIY1aOT4JZP/B0nvlZvq0dITQdhB1j8LjOqmC96o=;
+        s=default; t=1565749594;
+        bh=jX8fTWyNSK6du04D93U9Tv5IXcgdx3qFvD1n2Jb5vpM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=E+uUi4baBRd111IbbisGx7nZlCdfxxeZxhggP2JSdRmHKsfl3s2kNQrTYfIWurI8n
-         ksEpKHXIR+nFFR1va7bCxh/SHkNQHDpeIiGENRAtC+UlTVxSn2vOk9qEpIiwgGl04c
-         ti5h3wywX7GsAw2CcRPliR5uxzj1XYEIUwF/L9Ws=
+        b=Tq03IogP8/RzDcWaj7DH3veTFMLpSCCIVIe+m+4+uuBUmsovJSC0wUm1wrF1lIX/6
+         GzL1iChg0/SfPtC0Cv7fwVND5g0lStXqig1UDqr7WmKx5LGbGsgBZgkUb7Sczxn6R8
+         l3h6P3wD76RyULV7l6WkHl0S2KwOopnZsD/yB6uk=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Jens Axboe <axboe@kernel.dk>, Kees Cook <keescook@chromium.org>,
         Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 29/33] libata: add SG safety checks in SFF pio transfers
-Date:   Tue, 13 Aug 2019 22:23:19 -0400
-Message-Id: <20190814022323.17111-29-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 27/28] libata: add SG safety checks in SFF pio transfers
+Date:   Tue, 13 Aug 2019 22:25:49 -0400
+Message-Id: <20190814022550.17463-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190814022323.17111-1-sashal@kernel.org>
-References: <20190814022323.17111-1-sashal@kernel.org>
+In-Reply-To: <20190814022550.17463-1-sashal@kernel.org>
+References: <20190814022550.17463-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -74,7 +74,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 6 insertions(+)
 
 diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 8d22acdf90f0b..0e2bc5b9a78c1 100644
+index 18de4c4570682..1d8901fc0bfa9 100644
 --- a/drivers/ata/libata-sff.c
 +++ b/drivers/ata/libata-sff.c
 @@ -703,6 +703,10 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
