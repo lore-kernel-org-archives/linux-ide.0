@@ -4,52 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 284BDC31E40
-	for <linux-ide@archiver.kernel.org>; Thu, 15 Aug 2019 08:53:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 609B5C433FF
+	for <linux-ide@archiver.kernel.org>; Thu, 15 Aug 2019 08:55:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 004572064A
-	for <linux-ide@archiver.kernel.org>; Thu, 15 Aug 2019 08:53:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E85F2064A
+	for <linux-ide@archiver.kernel.org>; Thu, 15 Aug 2019 08:55:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730150AbfHOIxK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 15 Aug 2019 04:53:10 -0400
-Received: from mail-ed1-f68.google.com ([209.85.208.68]:36990 "EHLO
-        mail-ed1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726443AbfHOIxK (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 15 Aug 2019 04:53:10 -0400
-Received: by mail-ed1-f68.google.com with SMTP id f22so1543509edt.4
-        for <linux-ide@vger.kernel.org>; Thu, 15 Aug 2019 01:53:08 -0700 (PDT)
+        id S1726643AbfHOIzf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 15 Aug 2019 04:55:35 -0400
+Received: from mail-ed1-f67.google.com ([209.85.208.67]:37214 "EHLO
+        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726357AbfHOIzf (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 15 Aug 2019 04:55:35 -0400
+Received: by mail-ed1-f67.google.com with SMTP id f22so1548142edt.4
+        for <linux-ide@vger.kernel.org>; Thu, 15 Aug 2019 01:55:34 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=XeKVU1y7K/0+7zxnhgeGuNaVnZh3R481wD54ua/mFUU=;
-        b=NzSAEAkEHfYUZf5/qth0rtlY7CvYKztAI49W1JmLS+4Ul1i0ThlUq6UAj8ryGDbYfW
-         AiG2JGolOAUd92+XMEgddKy6mi6L+sfv4qbeP2VM5cpnAj6rg4TwbxlARytZ4HwIGoVx
-         3FphI8zq/sCEeq4hlQvA8QJhXTK/hOMcXAVmqKChX82EVNJsu76FeavFqrZnc3DVEp4A
-         HrJ3TYx7uyv0Dncl9cdfZr6kDeLHO9MjpYu2TwBt0b3kAQGPCJDY5+rFrJThw25xnvOa
-         wLCZgwwolib0BK8uszlVqTBe/aioisWxqGebrIun7Nhr+bno7XyhvLJmp5lHtcRhhmEz
-         MDmA==
-X-Gm-Message-State: APjAAAUi7+Hkv6/VUFwu+9GwY4D6dKpiUaXIcEmCXb0B3Wcvc42OjoM7
-        i9lF5JRsUgVjLfoRuf2Ko0A+LpUP1j4=
-X-Google-Smtp-Source: APXvYqx6bJqgyrfjiTg9W4LAwi7QG4CNfgZ1HUY+uG8k1g5OEbD2MTyisBi/sxJX/RdsnxlpZuH/tg==
-X-Received: by 2002:a17:906:8392:: with SMTP id p18mr3408377ejx.17.1565859188250;
-        Thu, 15 Aug 2019 01:53:08 -0700 (PDT)
+        bh=w12IhXmASUdChiniQIcmTiLoQtyHTC3MdMv6IJNT4MA=;
+        b=WKKU/yhyWTr5P239YIvVa3oguutlv+dbMXMk3FQUVWaU3V2Pc+CA65MWzGkpiVuTns
+         B8+t+5vNH/2HI7PAdyCj1X+PJlWuvVRrotAJ/+SikpQDB8QGaNUoJ6Vd1u/XA/2sjzGS
+         F3y/K/UM1oU+GNk3N3oBTumR9G4Pox5sZpWHoEOBRrNxfTA7ocvHgsvGIP2RTVHVRgPq
+         chNfOiqImOVXBjMZfSvnToNcinE+hzURY2Ll51HVxXBm7kb8TCYDOnh20rptQz3LCiGO
+         UxI1o3SS8SX1QyKnwEgpNm20eb4IzJajcr1pzkfoCmyndSHAqMAS9d+Rxbuq9dk0W/QY
+         tPyA==
+X-Gm-Message-State: APjAAAWXrMazLV4D8NUeSDcjKFa0rlXqCXWJ5LfSoo5qdGTZC37Q9CcC
+        lbXZ/qnskUwxuSBVeELjAWno/A==
+X-Google-Smtp-Source: APXvYqzl3yjd2kRjc5l321gkj1B2VEL0uJrhSqt1nABxYa2F5oWs1PuPlbN+GvxvMFZAAkkS4RBhxA==
+X-Received: by 2002:a17:906:7c4d:: with SMTP id g13mr2153637ejp.188.1565859334032;
+        Thu, 15 Aug 2019 01:55:34 -0700 (PDT)
 Received: from shalem.localdomain (84-106-84-65.cable.dynamic.v4.ziggo.nl. [84.106.84.65])
-        by smtp.gmail.com with ESMTPSA id s11sm440161edh.60.2019.08.15.01.53.07
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 15 Aug 2019 01:53:07 -0700 (PDT)
-Subject: for_each_child_of_node semantics are broken (was [PATCH] ata:
- libahci_platform: Add of_node_put() before loop exit)
+        by smtp.gmail.com with ESMTPSA id fk15sm294773ejb.42.2019.08.15.01.55.33
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Thu, 15 Aug 2019 01:55:33 -0700 (PDT)
+Subject: Re: [PATCH] ata: libahci_platform: Add of_node_put() before loop exit
 To:     Nishka Dasgupta <nishkadg.linux@gmail.com>, axboe@kernel.dk,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devicetree <devicetree@vger.kernel.org>
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20190815060014.2191-1-nishkadg.linux@gmail.com>
 From:   Hans de Goede <hdegoede@redhat.com>
-Message-ID: <a469ccae-0b34-8a8f-376c-7cd176fd05bf@redhat.com>
-Date:   Thu, 15 Aug 2019 10:53:06 +0200
+Message-ID: <159af6e4-90cb-bf10-8186-18f95f6a6f80@redhat.com>
+Date:   Thu, 15 Aug 2019 10:55:32 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
@@ -62,7 +60,7 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Nishka,
+Hi,
 
 On 15-08-19 08:00, Nishka Dasgupta wrote:
 > Each iteration of for_each_child_of_node puts the previous node, but
@@ -73,80 +71,14 @@ On 15-08-19 08:00, Nishka Dasgupta wrote:
 > 
 > Signed-off-by: Nishka Dasgupta <nishkadg.linux@gmail.com>
 
-Thank you for your patch.
+I really believe the for_each_child_of_node semantics are broken, see my
+other reply. But that is no reason not to fix this, so this is:
 
-I do not like doing an of_node_put for something which we did not
-explicitly of_node_get. So I was thinking about maybe replacing the
-goto-s with a break.
-
-But even if we put a break in the for_each_child_of_node loop,
-we still leak the reference. Which IMHO means that the semantics of
-the for_each_child_of_node helper are broken, this certainly violates
-the principle of least surprise which one would expect of a good API.
-
-I see that there are quite a few callers of this function:
-
-[hans@shalem linux]$ ack -l for_each_child_of_node drivers | wc -l
-194
-
-And doing a manual check of these (with the intend to stop after
-a couple) I already find something suspicious in the second file
-ack -l returns:
-
-         for_each_child_of_node(parent, dn) {
-                 pnv_php_detach_device_nodes(dn);
-
-                 of_node_put(dn);
-                 refcount = kref_read(&dn->kobj.kref);
-                 if (refcount != 1)
-                         pr_warn("Invalid refcount %d on <%pOF>\n",
-                                 refcount, dn);
-
-                 of_detach_node(dn);
-         }
-
-note this does an of_node_put itself and then continues iterating,
-now this function looks pretty magical to me, so it might be fine...
-
-4th file inspected, same issue with error returns as the libahci_platform
-code, see drivers/pci/controller/pci-tegra.c: tegra_pcie_parse_dt
-also should that function not do a a get on the node since it stores
-it in rp->np if things do succeed ?
-
-5th file: drivers/char/rtc.c:
-
-         for_each_node_by_name(ebus_dp, "ebus") {
-                 struct device_node *dp;
-                 for_each_child_of_node(ebus_dp, dp) {
-                         if (of_node_name_eq(dp, "rtc")) {
-                                 op = of_find_device_by_node(dp);
-                                 if (op) {
-                                         rtc_port = op->resource[0].start;
-                                         rtc_irq = op->irqs[0];
-                                         goto found;
-                                 }
-                         }
-                 }
-         }
-
-Also a leak AFAICT.
-
-10th file: drivers/phy/phy-core.c:
-
-                 for_each_child_of_node(phy_provider->children, child)
-                         if (child == node)
-                                 return phy_provider;
-
-Another leak...
-
-I'm going to stop now because this just aint funny, but I do believe this
-nicely illustrates how for_each_child_of_node() is ridiculously hard to use
-correct.
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
 
 Regards,
 
 Hans
-
 
 
 > ---
