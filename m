@@ -1,199 +1,119 @@
-Return-Path: <SRS0=+md1=WK=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=tRDq=WL=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD858C32753
-	for <linux-ide@archiver.kernel.org>; Wed, 14 Aug 2019 17:17:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4534C31E40
+	for <linux-ide@archiver.kernel.org>; Thu, 15 Aug 2019 06:00:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A950B206C1
-	for <linux-ide@archiver.kernel.org>; Wed, 14 Aug 2019 17:17:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B4CD206C2
+	for <linux-ide@archiver.kernel.org>; Thu, 15 Aug 2019 06:00:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="xvPLhIfB"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BsbFFroY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730878AbfHNRRy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 14 Aug 2019 13:17:54 -0400
-Received: from mail-ot1-f68.google.com ([209.85.210.68]:40176 "EHLO
-        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730915AbfHNRRs (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 14 Aug 2019 13:17:48 -0400
-Received: by mail-ot1-f68.google.com with SMTP id c34so44168273otb.7
-        for <linux-ide@vger.kernel.org>; Wed, 14 Aug 2019 10:17:47 -0700 (PDT)
+        id S1730289AbfHOGA3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 15 Aug 2019 02:00:29 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:47060 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726008AbfHOGA2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 15 Aug 2019 02:00:28 -0400
+Received: by mail-pl1-f194.google.com with SMTP id c2so700618plz.13;
+        Wed, 14 Aug 2019 23:00:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=crB+nxJNxKA7+LfGp99pkLEtxRpsZSR38/Cnl1gWQQQ=;
-        b=xvPLhIfBavfKoFTozNbXoqQymDemYYwcajs09pVxKhV2vNanlKtk8nQXUbNpdtSFai
-         qrbhI27lIfUxsHeyeGnTmcJP14rJvR+5DEL2upZR2SPF4Xe3a4M3GV2MZ4GvhuW5sRia
-         HRyMlB5ntx1rng8Qes9lGczoKa/neJnmVL6IMpOPX8eRZSFw6+sn/DIotnCbpRBLEXrd
-         nnRCq3bB5zGFkKI8Es4FTdgceSfQzPXQhBVYRlefOf24Q8vmEr99gcrYTHjsWS72yxnY
-         FW88E4GP1e88g6DVIEvI3W8PiVWz8+xoot4PESXFNFs8QuIuy8yMpKfq3DAh844Vjc6E
-         UDVw==
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=iHk0jK1HEft/SVCetsI5tXpmz7bQuY1G+3y6n19Cwo8=;
+        b=BsbFFroYY5WlVlovWF6nQoym+VeuI4m+UOU/asXHXRK37/2ZRav2UStHmccwdXS6AU
+         fYL1l4spKZ2mDGQfOGRMkwCr9Yvkq2PwXEvjdEjaeRTR0OzJK6oZ9r5PD5SSxDGbIr6U
+         9axlTs9u4s1L9HdjjigQPgdILgMCplm2lWyhDFyxg1Zb50tbpqpVPnuVxCvJE92w0Eae
+         upsJeL/rifQrLBhHWUKoGvkDcvm+ZYep2p9MpvFTkgEsJJhEcsvRfPZ/ns/FxLpTWl4u
+         1d7vwY6G41CuCRJnJp2GTqtlLlTDYt+JrAv2c3bwgZFFRAwGKsRZYshW+qwFP+CgF7Yj
+         lj9A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=crB+nxJNxKA7+LfGp99pkLEtxRpsZSR38/Cnl1gWQQQ=;
-        b=PTtDLxkBzcmek/PWKT4f9QZ77yRkLP6JSUqPHkWR8gdoPqEiYJeJ/bFdOp0JXUiSvB
-         4lshsY+0wHbkbJcDBKy96e4kfDETOHA4tbf2NhYCuZDVBgds9ciTB0WxSxBONV0qSDRW
-         JFHGuR9xmnKFZXToKJnUEDfBvZ2i55ixnxp9RuhsNIa0B7qBNBd6OWMGlI+A0zsUKC1z
-         qonX9JQqfxYOv+Ibymp1d1fe8zE7AahcPKpOaKKCnxfk2dWRn2RRZ1ru/po+fRS1eVR2
-         pZ0Tg4PamBKDF46mfeXYjGFhgxXhnQkWXv4fYXzCgAsFIJq5Z2Vs8nCAwD/cjKOWUz1q
-         82Ag==
-X-Gm-Message-State: APjAAAVx8LnyVO+iIAvWhHoUgQrhwz96KCcJmginkZNNYv1Ty1jgI+Qu
-        gsdG8LLE7bqw1YvidJx0rbW2mzTZ2c0Avrk5C3VYGA==
-X-Google-Smtp-Source: APXvYqzTF7QF77DDEGRUEs/DHk6/esLMHaUWx9ZeluK6JZd/WMMER49sw1yEVyKSOYKywh/Yf4ozJOrdQOaWiVvcxXo=
-X-Received: by 2002:a05:6830:458:: with SMTP id d24mr139683otc.126.1565803067353;
- Wed, 14 Aug 2019 10:17:47 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=iHk0jK1HEft/SVCetsI5tXpmz7bQuY1G+3y6n19Cwo8=;
+        b=gSsRd7jMz77aim8NzmRCof6D6H3GpEZLYv449LEr4WPy0ROgc/zPVmm0LhQmaE5KxD
+         8JlH/0pusf2skMiqf2F03cjE3DzFM4Y+G4gJbclN/xhPlXZofxRbr0CQHeLmmROXGOUc
+         yN9XgtBG7TcsxQC7dWXiK3ZXbsC3O1G5dgt7ByzVXksMSdsuzF/681OnQlatbtSHi5d+
+         b1c9SK2Rj0UlOHgv7+OY2l9Bup/welbzzBhYa4Iv/2wVzcNrF5zriiNByZ3LDI3JLU1R
+         gI7gaw3S2qhQe7PLnYfSi8UpMYeWewXLqtRVfIf/Qx2LmE3UDl+zOPdsfVqCHdlXMly2
+         uhgg==
+X-Gm-Message-State: APjAAAWZ07sdZ9rTABHv7g4VVaz9KuBM04b7wYsNfSXXQmVCMgHpy9PV
+        wSDbmDkWd1bYqzMNVaqmgc0=
+X-Google-Smtp-Source: APXvYqxTK4pEpESpRen2PMxU8JXsjr2HKEhQxS6NEA104v0fy9n/EKwCRxgxbzoakUSR0MEiP8/3lA==
+X-Received: by 2002:a17:902:20ec:: with SMTP id v41mr2829873plg.117.1565848828134;
+        Wed, 14 Aug 2019 23:00:28 -0700 (PDT)
+Received: from localhost.localdomain ([110.225.3.176])
+        by smtp.gmail.com with ESMTPSA id a6sm798014pjv.30.2019.08.14.23.00.25
+        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
+        Wed, 14 Aug 2019 23:00:27 -0700 (PDT)
+From:   Nishka Dasgupta <nishkadg.linux@gmail.com>
+To:     hdegoede@redhat.com, axboe@kernel.dk, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Nishka Dasgupta <nishkadg.linux@gmail.com>
+Subject: [PATCH] ata: libahci_platform: Add of_node_put() before loop exit
+Date:   Thu, 15 Aug 2019 11:30:14 +0530
+Message-Id: <20190815060014.2191-1-nishkadg.linux@gmail.com>
+X-Mailer: git-send-email 2.19.1
 MIME-Version: 1.0
-References: <20190808202415.25166-1-stephend@silicom-usa.com>
- <20190810074317.GA18582@infradead.org> <abfa4b20-2916-d89a-f4d3-b27fca5906b2@silicom-usa.com>
- <CAPcyv4g+PdbisZd8=FpB5QiR_FCA2OQ9EqEF9yMAN=XWTYXY1Q@mail.gmail.com>
- <051cb164-19d5-9241-2941-0d866e565339@silicom-usa.com> <20190812180613.GA18377@infradead.org>
- <CAA9_cme3saBAJEyob3B1tX=t8keTodWJZMUd1j_v7vPMRU+aXA@mail.gmail.com>
- <20190813072954.GA23417@infradead.org> <CAPcyv4h5kCKVyCjomBUY27MJwheDZ8v87+a9K-2YCgyqRWR7eQ@mail.gmail.com>
- <c023a18c-8b70-dc59-3db8-51d3a6b23d3c@silicom-usa.com> <CAPcyv4jcaY04nu31oStLc-eCO-+T1iOpxARmAHvPS1jxKF9cQA@mail.gmail.com>
- <40ef7e71-2c87-9853-fcbd-1510b97647f0@silicom-usa.com>
-In-Reply-To: <40ef7e71-2c87-9853-fcbd-1510b97647f0@silicom-usa.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Wed, 14 Aug 2019 10:17:36 -0700
-Message-ID: <CAPcyv4ivzdEKbVepxcyJMmDmb5zG4Zvw+3f0rVJ8FOErK+c27g@mail.gmail.com>
-Subject: Re: [PATCH] ata: ahci: Lookup PCS register offset based on PCI device ID
-To:     Stephen Douthit <stephend@silicom-usa.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, Aug 14, 2019 at 9:54 AM Stephen Douthit
-<stephend@silicom-usa.com> wrote:
->
-> On 8/14/19 12:09 PM, Dan Williams wrote:
-> > On Wed, Aug 14, 2019 at 7:34 AM Stephen Douthit
-> > <stephend@silicom-usa.com> wrote:
-> >>
-> >> On 8/13/19 6:07 PM, Dan Williams wrote:
-> >>> On Tue, Aug 13, 2019 at 12:31 AM Christoph Hellwig <hch@infradead.org> wrote:
-> >>>>
-> >>>> On Mon, Aug 12, 2019 at 12:31:35PM -0700, Dan Williams wrote:
-> >>>>> It seems platforms / controllers that fail to run the option-rom
-> >>>>> should be quirked by device-id, but the PCS register twiddling be
-> >>>>> removed for everyone else. "Card BIOS" to me implies devices with an
-> >>>>> Option-ROM BAR which I don't think modern devices have, so that might
-> >>>>> be a simple way to try to phase out this quirk going forward without
-> >>>>> regressing working setups that might be relying on this.
-> >>>>>
-> >>>>> Then again the driver is already depending on the number of enabled
-> >>>>> ports to be reliable before PCS is written, and the current driver
-> >>>>> does not attempt to enable ports that were not enabled previously.
-> >>>>> That tells me that if the PCS quirk ever mattered it would have
-> >>>>> already regressed when the driver switched from blindly writing 0xf to
-> >>>>> only setting the bits that were already set in ->port_map.
-> >>>>
-> >>>> But how do we find that out?
-> >>>
-> >>> We can layer another assumption on top of Tejun's assumptions from
-> >>> commit 49f290903935 "ahci: update PCS programming". The kernel
-> >>> community has not received any regression reports from that change
-> >>> which says:
-> >>>
-> >>> "
-> >>>       port_map is determined from PORTS_IMPL PCI register which is
-> >>>       implemented as write or write-once register.  If the register isn't
-> >>>       programmed, ahci automatically generates it from number of ports,
-> >>>       which is good enough for PCS programming.  ICH6/7M are probably the
-> >>>       only ones where non-contiguous enable bits are necessary && PORTS_IMPL
-> >>>       isn't programmed properly but they're proven to work reliably with 0xf
-> >>>       anyway.
-> >>> "
-> >>>
-> >>> So the potential options I see are:
-> >>>
-> >>> 1/ Keep the current scheme, but limit it to cases where PORTS_IMPL is
-> >>> less than 8 and assume this need to set the bits is unnecessary legacy
-> >>> to carry forward
-> >>>
-> >>> 2/ Option1 + additionally use PORTS_IMPL as a gate to guess when the
-> >>> PCS format might be different for values >= 8.
-> >>>
-> >>> I think the driver does not need to consider Option2 unless / until it
-> >>> encounters a platform where firmware does not "do the right thing",
-> >>> and given Denverton has been in the wild with the wrong PCS twiddling
-> >>> it seems to suggest nothing needs to be done there.
-> >>>
-> >>>> A compromise to me seems that we just do the PCS quirk for all Intel
-> >>>> devices explicitly listed in the PCI Ids based on new board_* values
-> >>>> as long as they have the old PCS location, and assume anything new
-> >>>> enough to have the new location won't need to quirk, given that it
-> >>>> never properly worked.  This might miss some intel devices that were
-> >>>> supported with the class based catchall, though.
-> >>>
-> >>> I'd be more comfortable with PORT_IMPL as the deciding factor.
-> >>
-> >> Unfortunately we can't use CAP.NP or PORTS_IMPL for this heuristic.
-> >>
-> >> The problem is that BIOS should be setting the PORTS_IMPL bitmask to
-> >> match which lanes have actually been connected on the board.  So
-> >> PORTS_IMPL can be < 8 even if the controller is new enough to
-> >> potentially support > 8 and has the new config space layout.
-> >>
-> >> As proof here's the relevant ahci_print_info() output booting on a
-> >> Denverton based box with 5 ports implemented:
-> >>
-> >> ahci 0000:00:14.0: AHCI 0001.0301 32 slots 5 ports 6 Gbps 0x7a impl SATA mode
-> >>                                              |               \-PORTS_IMPL
-> >>                                              \-CAP.NP
-> >
-> > Ugh, ok, thanks for clarifying and my mistake for not realizing
-> > Denverton already violates that heuristic.
-> >
-> > So now I'm trying to grok Christoph's suggestion. Are you saying that
-> > all existing board-ids would assume old PCS format? That would mean
-> > that Denverton gets the wrong format via board_ahci via the class code
-> > matching? Maybe I'm not understanding the suggestion...
->
-> My understanding of Christoph's suggestion was that we create a new
-> board_ahci_* entry (e.g. board_ahci_intel_legacy) to match in
-> ahci_pci_tbl against those devices using the original config space
-> layout where PCS is @ 0x92.
->
-> Once we have that we can conditionally run the PCS poke code in
-> ahci_pci_reset_controller() only for devices with that new board_id.  We
-> assume that all newer devices added to the table will not use the legacy
-> board_id and not need to do PCS pokes.
->
-> Right now there are entries for devices with both the new and old config
-> space layout in ahci_pci_tbl.  That means someone at Intel would need
-> to go through each entry and mark it as new or old.
->
-> Your point about devices matching solely on the class code still
-> applies.
->
-> > Another option might be that controllers >= 1.3.1 will stop using the
-> > PCS twiddling, and then we go add a new board id where / if it happens
-> > to matter in practice.
->
-> Can you get someone from the controller design team to give us a clear
-> answer on a revision where this PCS change happened?
->
-> It would be nice if we could just check PCI_REVISION_ID or something
-> similar.
+Each iteration of for_each_child_of_node puts the previous node, but
+in the case of a goto from the middle of the loop, there is no put,
+thus causing a memory leak. Add an of_node_put before three such goto
+statements.
+Issue found with Coccinelle.
 
-I don't think such a reliable association with rev-id exists, the
-intent was that the OS need never consider PCS. The way Linux is using
-it is already broken with the assumption that it is performed after
-every HOST_CTL based reset which only resets mmio space. At most it
-should only be required at initial PCI discovery iff platform firmware
-failed to run. There are no bug reports with the current
-implementation that only attempts to enable bits based on PORTS_IMPL,
-so I think we are firmer ground trying to draw a line where the driver
-just stops worrying about PCS rather than try to detect the layout.
+Signed-off-by: Nishka Dasgupta <nishkadg.linux@gmail.com>
+---
+ drivers/ata/libahci_platform.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index 9e9583a6bba9..e742780950de 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -497,6 +497,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 
+ 			if (of_property_read_u32(child, "reg", &port)) {
+ 				rc = -EINVAL;
++				of_node_put(child);
+ 				goto err_out;
+ 			}
+ 
+@@ -514,14 +515,18 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 			if (port_dev) {
+ 				rc = ahci_platform_get_regulator(hpriv, port,
+ 								&port_dev->dev);
+-				if (rc == -EPROBE_DEFER)
++				if (rc == -EPROBE_DEFER) {
++					of_node_put(child);
+ 					goto err_out;
++				}
+ 			}
+ #endif
+ 
+ 			rc = ahci_platform_get_phy(hpriv, port, dev, child);
+-			if (rc)
++			if (rc) {
++				of_node_put(child);
+ 				goto err_out;
++			}
+ 
+ 			enabled_ports++;
+ 		}
+-- 
+2.19.1
+
