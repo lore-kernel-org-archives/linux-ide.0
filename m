@@ -7,106 +7,106 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2E3CC3A589
-	for <linux-ide@archiver.kernel.org>; Tue, 20 Aug 2019 13:29:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7899BC3A589
+	for <linux-ide@archiver.kernel.org>; Tue, 20 Aug 2019 13:30:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C529D214DA
-	for <linux-ide@archiver.kernel.org>; Tue, 20 Aug 2019 13:29:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43DF6214DA
+	for <linux-ide@archiver.kernel.org>; Tue, 20 Aug 2019 13:30:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="OVrq1T1I"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="V6CWS6K/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729937AbfHTN3x (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 20 Aug 2019 09:29:53 -0400
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:39811 "EHLO
-        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729812AbfHTN3x (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 20 Aug 2019 09:29:53 -0400
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20190820132952euoutp0156f9a228055baa4dd0e3346111c70405~8pKNkM-aC2771827718euoutp01c
-        for <linux-ide@vger.kernel.org>; Tue, 20 Aug 2019 13:29:52 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20190820132952euoutp0156f9a228055baa4dd0e3346111c70405~8pKNkM-aC2771827718euoutp01c
+        id S1729900AbfHTNaz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 20 Aug 2019 09:30:55 -0400
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:50390 "EHLO
+        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728993AbfHTNaz (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 20 Aug 2019 09:30:55 -0400
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20190820133053euoutp026f92f2ff8f1591e70c2e1e20b0fd1315~8pLHAR-bs0669606696euoutp02V
+        for <linux-ide@vger.kernel.org>; Tue, 20 Aug 2019 13:30:53 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20190820133053euoutp026f92f2ff8f1591e70c2e1e20b0fd1315~8pLHAR-bs0669606696euoutp02V
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1566307792;
-        bh=gMGt+C48DObcEXPmCG2SfXow6Z687O1QjQd04+4kn28=;
+        s=mail20170921; t=1566307853;
+        bh=/t3KxMf7noDEJ6n4BDpGewDuBYttiUk64Q/ztb5Vlss=;
         h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=OVrq1T1IPgEwk+rqnujHo5hbO5gdmN5PXVWJ04j5lKV7WOhobM5aOLpn8vpj3LsRY
-         aXfFvCYXXoad0YtN28e7kbml0IHVfG/SYrKviDmSpUMLxZWxhRADgZUstVKjc4QTks
-         vpYlojfDKFHkizNvunjmmOwfgpPzFfn9kK6PPp2k=
-Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
+        b=V6CWS6K/QmRdhQzBBt0J86o3g4rtKyOz2WhFcMe9PXfnmCDexYDtlMia4sZccytiA
+         b6mCK68UNDhV6z8u2PXHXW+DeYlxZrzxOkDq3J+EbA0fooh+V/eXCasn4Gf/TcyBL7
+         m5/4+ZistmUssABanz0xavfXEA+nAjubDm8UwCJE=
+Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
         eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20190820132951eucas1p254cee4bbf91829d81bd9f1d50adbb46e~8pKNQZD711143211432eucas1p2K;
-        Tue, 20 Aug 2019 13:29:51 +0000 (GMT)
+        20190820133053eucas1p2fbe1e38aec821f5a0d5113f97c9d9a4a~8pLGsAqAm1903519035eucas1p2K;
+        Tue, 20 Aug 2019 13:30:53 +0000 (GMT)
 Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges3new.samsung.com (EUCPMTA) with SMTP id F6.5E.04374.FC5FB5D5; Tue, 20
-        Aug 2019 14:29:51 +0100 (BST)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20190820132950eucas1p1f2467a1a3329e4fffc05f94f34bdcf4e~8pKMYsNRG0564505645eucas1p1L;
-        Tue, 20 Aug 2019 13:29:50 +0000 (GMT)
-Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
-        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20190820132950eusmtrp1f53f3e6bbca859d46a2dceb8dac58555~8pKMKYykj1664416644eusmtrp1R;
-        Tue, 20 Aug 2019 13:29:50 +0000 (GMT)
-X-AuditID: cbfec7f5-4f7ff70000001116-c1-5d5bf5cf3003
+        eusmges1new.samsung.com (EUCPMTA) with SMTP id 64.E0.04469.D06FB5D5; Tue, 20
+        Aug 2019 14:30:53 +0100 (BST)
+Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
+        20190820133052eucas1p293f12e7cdf66e5ee1194c154fdeadaf4~8pLFzl7ky1143611436eucas1p2W;
+        Tue, 20 Aug 2019 13:30:52 +0000 (GMT)
+Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
+        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20190820133052eusmtrp26fabca1de536980742356d327d5e5694~8pLFlYc9g3182731827eusmtrp2N;
+        Tue, 20 Aug 2019 13:30:52 +0000 (GMT)
+X-AuditID: cbfec7f2-54fff70000001175-81-5d5bf60db5da
 Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id 19.65.04166.EC5FB5D5; Tue, 20
-        Aug 2019 14:29:50 +0100 (BST)
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id 09.F6.04117.C06FB5D5; Tue, 20
+        Aug 2019 14:30:52 +0100 (BST)
 Received: from [106.120.51.71] (unknown [106.120.51.71]) by
         eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20190820132950eusmtip1ccf392877fc2d4d330c6c65c6b9886e1~8pKL1k-VV1622416224eusmtip1U;
-        Tue, 20 Aug 2019 13:29:50 +0000 (GMT)
-Subject: Re: [PATCH 5/9] drivers: ata: libahci_platform: use
+        20190820133051eusmtip15186b92b2b17df57a7de78e95964fa07~8pLFRckRA1776217762eusmtip14;
+        Tue, 20 Aug 2019 13:30:51 +0000 (GMT)
+Subject: Re: [PATCH 6/9] drivers: ata: pata_bk3710: use
  devm_platform_ioremap_resource()
-To:     "Enrico Weigelt, metux IT consult" <info@metux.net>,
-        linux-kernel@vger.kernel.org
-Cc:     axboe@kernel.dk, hdegoede@redhat.com, linus.walleij@linaro.org,
-        linux-ide@vger.kernel.org, linux-tegra@vger.kernel.org
+To:     "Enrico Weigelt, metux IT consult" <info@metux.net>
+Cc:     linux-kernel@vger.kernel.org, axboe@kernel.dk, hdegoede@redhat.com,
+        linus.walleij@linaro.org, linux-ide@vger.kernel.org,
+        linux-tegra@vger.kernel.org
 From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <ed75f2c9-c49e-8fb4-a17f-686a76580f01@samsung.com>
-Date:   Tue, 20 Aug 2019 15:29:49 +0200
+Message-ID: <d567bae7-b952-7dcd-976c-13d833c7d0a8@samsung.com>
+Date:   Tue, 20 Aug 2019 15:30:50 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
         Thunderbird/60.6.1
 MIME-Version: 1.0
-In-Reply-To: <1566304548-19972-5-git-send-email-info@metux.net>
+In-Reply-To: <1566304548-19972-6-git-send-email-info@metux.net>
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrFKsWRmVeSWpSXmKPExsWy7djP87rnv0bHGtxbJ2ux+m4/m8Wb49OZ
-        LG427maymPJnOZPFsR2PmCwu75rDZtH5ZRabA7vH5bOlHneu7WHzmPDhLZvH+31X2Tw+b5IL
-        YI3isklJzcksSy3St0vgymg+vZu54CJHxfZ7pxkbGGexdzFyckgImEisn7qDrYuRi0NIYAWj
-        RF/XeVYI5wujxK4lLUwQzmdGiYc3drLCtLy8954dIrGcUWJP22RmCOcto8SDZYdYQKqEBeIl
-        Li65zwhiiwiES/QfACni5GAWqJG4eOAe2CQ2ASuJie2rwGp4Bewkph5+DHYUi4CqxNL398Hq
-        RQUiJO4f28AKUSMocXLmE7D5nAL2Ej/ntDFBzBSXuPVkPpQtL7H97RxmiEvXsUu8+WUNYbtI
-        dM5/xQZhC0u8Or4FGgAyEqcn97CAPABUzyjxt+MFM4SznVFi+eR/UB3WEoePXwS6ggNog6bE
-        +l36EGFHidMLQEHBAWTzSdx4KwhxA5/EpG3TmSHCvBIdbUIQ1WoSG5ZtYINZ27VzJfMERqVZ
-        SD6bheSbWUi+mYWwdwEjyypG8dTS4tz01GLjvNRyveLE3OLSvHS95PzcTYzAFHT63/GvOxj3
-        /Uk6xCjAwajEw5twPTpWiDWxrLgy9xCjBAezkghvxZyoWCHelMTKqtSi/Pii0pzU4kOM0hws
-        SuK81QwPooUE0hNLUrNTUwtSi2CyTBycUg2M/i9azRa7bG1YGGgl8enhpazuLUoHVjX16AYE
-        FdfUdG7bWWxj1fh+3b2PErwrW863HU9wXnXlDNcknZCpCubc1y6fYU4JnO/K7ftdvHGGylSu
-        LZeZ1C/vP1tjf//zrrDqRVJy69aIOs20sWfjnBl35mr+8c6p1rNs/71PzFH5Mltr5XYu6To3
-        JZbijERDLeai4kQA00z5qD0DAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrDIsWRmVeSWpSXmKPExsVy+t/xu7rnvkbHGjScU7RYfbefzeLN8elM
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrDKsWRmVeSWpSXmKPExsWy7djP87q836JjDdbu47JYfbefzeLN8elM
         FjcbdzNZTPmznMni2I5HTBaXd81hs+j8MovNgd3j8tlSjzvX9rB5TPjwls3j/b6rbB6fN8kF
-        sEbp2RTll5akKmTkF5fYKkUbWhjpGVpa6BmZWOoZGpvHWhmZKunb2aSk5mSWpRbp2yXoZTSf
-        3s1ccJGjYvu904wNjLPYuxg5OSQETCRe3nsPZHNxCAksZZT41vuQrYuRAyghI3F8fRlEjbDE
-        n2tdbBA1rxklJty/xAKSEBaIl7i45D4jiC0iEC7Rt+YRG4jNLFAjcfxfB1TDcUaJ1k2vWEES
-        bAJWEhPbV4E18ArYSUw9/BjsChYBVYml7+8zg9iiAhESZ96vYIGoEZQ4OfMJmM0pYC/xc04b
-        E8QCdYk/8y4xQ9jiEreezIeKy0tsfzuHeQKj0Cwk7bOQtMxC0jILScsCRpZVjCKppcW56bnF
-        hnrFibnFpXnpesn5uZsYgTG37djPzTsYL20MPsQowMGoxMO742Z0rBBrYllxZe4hRgkOZiUR
-        3oo5UbFCvCmJlVWpRfnxRaU5qcWHGE2BnpvILCWanA9MB3kl8YamhuYWlobmxubGZhZK4rwd
-        AgdjhATSE0tSs1NTC1KLYPqYODilGhhL3ltknyg6yBvwiqtq3jqRFx+7ZDnWCXZckVsvo3Iv
-        Zus2Ds47QRYKe79wRWU2CM56ltk3y+y4wq6Y8NCj86LDPkSc9eTeqtqTlxS0NsrX4nD9iWns
-        uQluFh0v2To6MnJkffo+tRvvsrC9wLBb3srxTLeqoLRMTeGBM7qpc24fdTz99MSPpUosxRmJ
-        hlrMRcWJAG/AnPPPAgAA
-X-CMS-MailID: 20190820132950eucas1p1f2467a1a3329e4fffc05f94f34bdcf4e
+        sEZx2aSk5mSWpRbp2yVwZcw83cNY0MFT8fPpZ9YGxsecXYycHBICJhK/J+xk72Lk4hASWMEo
+        8bZjFiuE84VR4s+mZVDOZ0aJm11TmWFaWtetYYRILGeUuNZ8D6r/LaPEur97WECqhAWiJB7t
+        +s4IYosImEs8frIQbBSzwBxGiY9/t4EVsQlYSUxsXwVWxCtgJ7Hp+2pWEJtFQFXiTNccNhBb
+        VCBC4v6xDawQNYISJ2c+AevlFLCXaPm3A8xmFhCXuPVkPhOELS+x/e0cZpBlEgLb2CXmn57H
+        BnG3i8Sk51OYIGxhiVfHt7BD2DIS/3eCNIM0rGOU+NvxAqp7O6PE8sn/oLqtJQ4fvwh0BgfQ
+        Ck2J9bv0IcKOEtMbFzGBhCUE+CRuvBWEOIJPYtK26cwQYV6JjjYhiGo1iQ3LNrDBrO3auZJ5
+        AqPSLCSvzULyziwk78xC2LuAkWUVo3hqaXFuemqxYV5quV5xYm5xaV66XnJ+7iZGYBo6/e/4
+        px2MXy8lHWIU4GBU4uHdcTM6Vog1say4MvcQowQHs5IIb8WcqFgh3pTEyqrUovz4otKc1OJD
+        jNIcLErivNUMD6KFBNITS1KzU1MLUotgskwcnFINjNnreKf/v8u74PPBWSIrS1NWphffZTm9
+        0fhHBvfjqttJKaLODPbSyvziBV+PpG7QCFp0MfC+fepGbrkD3wOuJ80VeDWf7Q+v0oWQ6VtP
+        zo676buJx3x23Oysyb9XPRGZOOd3TWOn3TJpFsUmsewtH4zufzIIOnOqXPdym4+ExNw+v8z5
+        IkusDJVYijMSDbWYi4oTAeFz3kI/AwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrLIsWRmVeSWpSXmKPExsVy+t/xu7o836JjDVau4rVYfbefzeLN8elM
+        FjcbdzNZTPmznMni2I5HTBaXd81hs+j8MovNgd3j8tlSjzvX9rB5TPjwls3j/b6rbB6fN8kF
+        sEbp2RTll5akKmTkF5fYKkUbWhjpGVpa6BmZWOoZGpvHWhmZKunb2aSk5mSWpRbp2yXoZcw8
+        3cNY0MFT8fPpZ9YGxsecXYycHBICJhKt69YwdjFycQgJLGWUePXoPJDDAZSQkTi+vgyiRlji
+        z7UuNoia14wS77/uYgRJCAtESTza9R3MFhEwl3j8ZCErSBGzwBxGie/LZ7FCdBxnlFh4cAM7
+        SBWbgJXExPZVYB28AnYSm76vZgWxWQRUJc50zWEDsUUFIiTOvF/BAlEjKHFy5hMwm1PAXqLl
+        3w4wm1lAXeLPvEvMELa4xK0n85kgbHmJ7W/nME9gFJqFpH0WkpZZSFpmIWlZwMiyilEktbQ4
+        Nz232EivODG3uDQvXS85P3cTIzDqth37uWUHY9e74EOMAhyMSjy8O25GxwqxJpYVV+YeYpTg
+        YFYS4a2YExUrxJuSWFmVWpQfX1Sak1p8iNEU6LmJzFKiyfnAhJBXEm9oamhuYWlobmxubGah
+        JM7bIXAwRkggPbEkNTs1tSC1CKaPiYNTqoHRiLUm/J3S1u9t9XM+StXdZt22Q41L/mSdSYnr
+        kxMRlxKPuZUsz/3Zw7oy4+WaP+UabN0cO558ffaTSfQj1+Q6+33OL2587RbpVrq2hbViqUpB
+        /O/XQSZnrJ+tSpukKCFvs+9vxEuBZ0fWdi969VWVmy/t49z2n26Oi0XWzJx11fvCignSFRXp
+        SizFGYmGWsxFxYkAna+Tv9ACAAA=
+X-CMS-MailID: 20190820133052eucas1p293f12e7cdf66e5ee1194c154fdeadaf4
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20190820123559epcas2p34bca6e3589759dc2ffe4ad7f194615a5
+X-RootMTR: 20190820123559epcas2p1be29e0bcaef4f4b1042b6177f387d7e2
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20190820123559epcas2p34bca6e3589759dc2ffe4ad7f194615a5
+X-CMS-RootMailID: 20190820123559epcas2p1be29e0bcaef4f4b1042b6177f387d7e2
 References: <1566304548-19972-1-git-send-email-info@metux.net>
-        <CGME20190820123559epcas2p34bca6e3589759dc2ffe4ad7f194615a5@epcas2p3.samsung.com>
-        <1566304548-19972-5-git-send-email-info@metux.net>
+        <CGME20190820123559epcas2p1be29e0bcaef4f4b1042b6177f387d7e2@epcas2p1.samsung.com>
+        <1566304548-19972-6-git-send-email-info@metux.net>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
@@ -128,20 +128,34 @@ Samsung R&D Institute Poland
 Samsung Electronics
 
 > ---
->  drivers/ata/libahci_platform.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
+>  drivers/ata/pata_bk3710.c | 5 +----
+>  1 file changed, 1 insertion(+), 4 deletions(-)
 > 
-> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-> index 9e9583a..3d84be8 100644
-> --- a/drivers/ata/libahci_platform.c
-> +++ b/drivers/ata/libahci_platform.c
-> @@ -408,8 +408,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+> diff --git a/drivers/ata/pata_bk3710.c b/drivers/ata/pata_bk3710.c
+> index fad95cf..92b036d 100644
+> --- a/drivers/ata/pata_bk3710.c
+> +++ b/drivers/ata/pata_bk3710.c
+> @@ -291,7 +291,6 @@ static void pata_bk3710_chipinit(void __iomem *base)
+>  static int __init pata_bk3710_probe(struct platform_device *pdev)
+>  {
+>  	struct clk *clk;
+> -	struct resource *mem;
+>  	struct ata_host *host;
+>  	struct ata_port *ap;
+>  	void __iomem *base;
+> @@ -310,15 +309,13 @@ static int __init pata_bk3710_probe(struct platform_device *pdev)
+>  	/* NOTE:  round *down* to meet minimum timings; we count in clocks */
+>  	ideclk_period = 1000000000UL / rate;
 >  
->  	devres_add(dev, hpriv);
+> -	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> -
+>  	irq = platform_get_irq(pdev, 0);
+>  	if (irq < 0) {
+>  		pr_err(DRV_NAME ": failed to get IRQ resource\n");
+>  		return irq;
+>  	}
 >  
-> -	hpriv->mmio = devm_ioremap_resource(dev,
-> -			      platform_get_resource(pdev, IORESOURCE_MEM, 0));
-> +	hpriv->mmio = devm_platform_ioremap_resource(pdev, 0);
->  	if (IS_ERR(hpriv->mmio)) {
->  		rc = PTR_ERR(hpriv->mmio);
->  		goto err_out;
+> -	base = devm_ioremap_resource(&pdev->dev, mem);
+> +	base = devm_platform_ioremap_resource(pdev, 0);
+>  	if (IS_ERR(base))
+>  		return PTR_ERR(base);
