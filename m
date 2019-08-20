@@ -2,453 +2,519 @@ Return-Path: <SRS0=dx/Z=WQ=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9BF5C3A5A0
-	for <linux-ide@archiver.kernel.org>; Tue, 20 Aug 2019 02:18:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF277C3A589
+	for <linux-ide@archiver.kernel.org>; Tue, 20 Aug 2019 12:06:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5EE4320644
-	for <linux-ide@archiver.kernel.org>; Tue, 20 Aug 2019 02:18:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9399B22CF7
+	for <linux-ide@archiver.kernel.org>; Tue, 20 Aug 2019 12:06:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="j++zj8lf"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="u3wBjXpa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728975AbfHTCR7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 19 Aug 2019 22:17:59 -0400
-Received: from mail-oi1-f194.google.com ([209.85.167.194]:36755 "EHLO
-        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728770AbfHTCR7 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 19 Aug 2019 22:17:59 -0400
-Received: by mail-oi1-f194.google.com with SMTP id n1so523135oic.3
-        for <linux-ide@vger.kernel.org>; Mon, 19 Aug 2019 19:17:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=gAZ1DKclwBk3qGTCISZmLl9nQ8pdrslR5WbQgrKeNgI=;
-        b=j++zj8lf48qrLqLQGMfBsGHVAuMO36GqhxxxwFu9F6qktIYLOFT9VF8ksNSIkrvrlL
-         pRN+xQumjZNbttXaXGR9TByYzUhRHR8ktiZYEsFH5entlTKiLDcKX5LNvROI0fN6I41i
-         kowti6oJ8aqI7NMSweTIWjMEBokzoGwyVdgBbdeTlbNTcMDzGOrhYN3z1glci9dVt4kO
-         TpKL/UKw/Xr0/Zau3JuIe4cORZoRxkhP/qXW3mC9gMPPe+4CJtMQKBZKRZ9GIyZXwKpE
-         kU+p7ENvtHkpq/Vf96++0PECMzQIYe70Zgwti9awgdXP1WwYH++F/v3wd8hnk5d8RR/v
-         snUQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=gAZ1DKclwBk3qGTCISZmLl9nQ8pdrslR5WbQgrKeNgI=;
-        b=r/+yTB/HMJRtudX90LQIjuy4ZzAx3hkWIWuSHCe1iSyCScVJJKfG63Kfmw5vSRTZt8
-         yJxHM7SbEhFat7dUi2k548IO6wh1VMt8tl9lW+ebNFENsiAjZ8hn2zyBypyz4uiBdJ+F
-         cdGQfaF12JPEr+cd+U6K+ZYdgRK2bdPSTl3rKcG0IGZfPTE92LSY41CgLjOYKlMMd/kA
-         j2UCmQLNuL6WODWPcSgcsJAkEIQO16AHyyV6vKn7ifkH+eAtHq9L9zPdoMomeMnYEKFO
-         6xJ+c9gDacdrE2WD3dtjtyY7iABmOJw0uxaLppActnvLtvMWzcjUmpuIiEKjo9JybKJJ
-         k9/A==
-X-Gm-Message-State: APjAAAXSv6NzxgLPxS9y+DqCNTlFN84fILSYFyxDYKiuk8N5roJGpswc
-        +NHfa+TVVYOiyj8HZvcZ5IsnJ2k7fwD0AaG6faHKeA==
-X-Google-Smtp-Source: APXvYqwHeT/aESUYbIUg84cxPXCn8xBO8F7c7d37ZEC8P0/FE1NWQioWuSQaVgbWwsRV8F54sPk0AzmSUFZlKSzVXNA=
-X-Received: by 2002:aca:ba02:: with SMTP id k2mr14608027oif.70.1566267478056;
- Mon, 19 Aug 2019 19:17:58 -0700 (PDT)
+        id S1729409AbfHTMGV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 20 Aug 2019 08:06:21 -0400
+Received: from mailout1.w1.samsung.com ([210.118.77.11]:34700 "EHLO
+        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729265AbfHTMGV (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 20 Aug 2019 08:06:21 -0400
+Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
+        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20190820120618euoutp016dc21a9862173d61c3e24a8cdcbf68d6~8oBQcQmsM2977229772euoutp01k
+        for <linux-ide@vger.kernel.org>; Tue, 20 Aug 2019 12:06:18 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20190820120618euoutp016dc21a9862173d61c3e24a8cdcbf68d6~8oBQcQmsM2977229772euoutp01k
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1566302778;
+        bh=BzcCkHRTbzmM5ZSwsq73zQeDv/bh8Evnqn49cphH/OI=;
+        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
+        b=u3wBjXpazuzfa3lpbtzIVJpen63PIZXKt+xqOtiHbcsmnw8/iqJtEzOpHYp+sJCC6
+         Fq+cr5uKfX1RspXfF4mV0wjR29ok6yGLmFMdQ9SOZJXG89N09r1y+ULuQ2tPv4gTP2
+         OIZrzqv66/k5Ka9nF/0W7GNg4muh/A2hf5KTJmKA=
+Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+        20190820120617eucas1p268147c730fae571ee76a03f6f80d63ab~8oBPygOSa1502815028eucas1p2d;
+        Tue, 20 Aug 2019 12:06:17 +0000 (GMT)
+Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
+        eusmges3new.samsung.com (EUCPMTA) with SMTP id 48.22.04374.932EB5D5; Tue, 20
+        Aug 2019 13:06:17 +0100 (BST)
+Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
+        20190820120617eucas1p27f378b14d1e0ed4777cfa4a876e1a47f~8oBPCW2_41502715027eucas1p2j;
+        Tue, 20 Aug 2019 12:06:17 +0000 (GMT)
+Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
+        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20190820120616eusmtrp1887adcf49cd97a06e4458baf6df4315e~8oBOz4OAe0397703977eusmtrp17;
+        Tue, 20 Aug 2019 12:06:16 +0000 (GMT)
+X-AuditID: cbfec7f5-4f7ff70000001116-3e-5d5be2397230
+Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id 80.3B.04117.832EB5D5; Tue, 20
+        Aug 2019 13:06:16 +0100 (BST)
+Received: from [106.120.51.71] (unknown [106.120.51.71]) by
+        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20190820120616eusmtip1bf8af4045fe19b0ee7048454ece5fcb2~8oBOR4zq_0304303043eusmtip1k;
+        Tue, 20 Aug 2019 12:06:16 +0000 (GMT)
+Subject: Re: [PATCH v5] ata/pata_buddha: Probe via modalias instead of
+ initcall
+To:     Max Staudt <max@enpas.org>
+Cc:     axboe@kernel.dk, linux-ide@vger.kernel.org,
+        linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org,
+        glaubitz@physik.fu-berlin.de, schmitzmic@gmail.com,
+        geert@linux-m68k.org
+From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Message-ID: <9966f79c-278b-5ec9-3c4b-e1de55af55f0@samsung.com>
+Date:   Tue, 20 Aug 2019 14:06:15 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+        Thunderbird/60.6.1
 MIME-Version: 1.0
-References: <20190808202415.25166-1-stephend@silicom-usa.com>
- <20190810074317.GA18582@infradead.org> <abfa4b20-2916-d89a-f4d3-b27fca5906b2@silicom-usa.com>
- <CAPcyv4g+PdbisZd8=FpB5QiR_FCA2OQ9EqEF9yMAN=XWTYXY1Q@mail.gmail.com>
- <051cb164-19d5-9241-2941-0d866e565339@silicom-usa.com> <20190812180613.GA18377@infradead.org>
- <CAA9_cme3saBAJEyob3B1tX=t8keTodWJZMUd1j_v7vPMRU+aXA@mail.gmail.com>
- <20190813072954.GA23417@infradead.org> <CAPcyv4h5kCKVyCjomBUY27MJwheDZ8v87+a9K-2YCgyqRWR7eQ@mail.gmail.com>
- <c023a18c-8b70-dc59-3db8-51d3a6b23d3c@silicom-usa.com> <CAPcyv4jcaY04nu31oStLc-eCO-+T1iOpxARmAHvPS1jxKF9cQA@mail.gmail.com>
- <40ef7e71-2c87-9853-fcbd-1510b97647f0@silicom-usa.com> <CAPcyv4ivzdEKbVepxcyJMmDmb5zG4Zvw+3f0rVJ8FOErK+c27g@mail.gmail.com>
- <f6399f3a-3899-2663-6667-e967eb43b156@silicom-usa.com>
-In-Reply-To: <f6399f3a-3899-2663-6667-e967eb43b156@silicom-usa.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Mon, 19 Aug 2019 19:17:47 -0700
-Message-ID: <CAPcyv4giQDk3ZMzCUM5dv_QLk_NDVCeAgcTi-Mk-YVENq_xpjg@mail.gmail.com>
-Subject: Re: [PATCH] ata: ahci: Lookup PCS register offset based on PCI device ID
-To:     Stephen Douthit <stephend@silicom-usa.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20190812164830.16244-1-max@enpas.org>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrEKsWRmVeSWpSXmKPExsWy7djP87qWj6JjDSadULNYfbefzeLZrb1M
+        FrPfK1sc2/GIyeLyrjlsFrvf32e0eNj0gclibut0dgcOj8NfN7N57Jx1l93j8tlSj0OHOxg9
+        Dp47x+jxeZNcAFsUl01Kak5mWWqRvl0CV8b2O8+ZCzYkVPR86GBqYDzq2cXIySEhYCLx7O1e
+        ZhBbSGAFo0TvT6suRi4g+wujxLYHbawQzmdGie/TulhhOr5M/ccO0bGcUeLcrkKIoreMEtO/
+        /mIBSQgLBErMeP8YrEhEQE7iY+tVRpAiZoFtjBJHT78CS7AJWElMbF/FCGLzCthJrP4yiQ3E
+        ZhFQlZh0+QJYjahAhMT9YxtYIWoEJU7OfAK0gIODU8BY4tFHB5Aws4C4xK0n85kgbHmJ7W/n
+        MIPskhA4xC4x+eppJoirXSR2rPnHDGELS7w6voUdwpaROD25hwWiYR2jxN+OF1Dd2xkllk/+
+        xwZRZS1x+PhFVpDNzAKaEut36UOEHSV2f9/FBBKWEOCTuPFWEOIIPolJ26YzQ4R5JTrahCCq
+        1SQ2LNvABrO2a+dK5gmMSrOQfDYLyTuzkLwzC2HvAkaWVYziqaXFuempxcZ5qeV6xYm5xaV5
+        6XrJ+bmbGIEp6fS/4193MO77k3SIUYCDUYmHN+F6dKwQa2JZcWXuIUYJDmYlEd6KOVGxQrwp
+        iZVVqUX58UWlOanFhxilOViUxHmrGR5ECwmkJ5akZqemFqQWwWSZODilGhgLrnYcUHbctaBl
+        61GZiXefTrebe5B7yvq0aaoBptNWV1gtDZ/4Wmryv1NlNSqytWn7Te8u23tpltPtk4uCFAWO
+        Kr7olb5u/EDkYagyX8hcUavJuwv8Gm/mL1GSL4l0SFU/lZa/zmD2z7fu2ooF/+aIN01OP3M0
+        2bxLLYVlvwGX7gVZy/Lw07+UWIozEg21mIuKEwFEG7P0RQMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrKIsWRmVeSWpSXmKPExsVy+t/xu7oWj6JjDZZNNLZYfbefzeLZrb1M
+        FrPfK1sc2/GIyeLyrjlsFrvf32e0eNj0gclibut0dgcOj8NfN7N57Jx1l93j8tlSj0OHOxg9
+        Dp47x+jxeZNcAFuUnk1RfmlJqkJGfnGJrVK0oYWRnqGlhZ6RiaWeobF5rJWRqZK+nU1Kak5m
+        WWqRvl2CXsb2O8+ZCzYkVPR86GBqYDzq2cXIySEhYCLxZeo/9i5GLg4hgaWMEjfevGbpYuQA
+        SshIHF9fBlEjLPHnWhcbRM1rRonN7fvYQBLCAoESM94/ZgexRQTkJD62XmUEKWIW2MYo8fXa
+        dEaIjjZGiVVPL4NVsQlYSUxsX8UIYvMK2Ems/jIJbBKLgKrEpMsXwGpEBSIkzrxfwQJRIyhx
+        cuYTsIs4BYwlHn10AAkzC6hL/Jl3iRnCFpe49WQ+E4QtL7H97RzmCYxCs5B0z0LSMgtJyywk
+        LQsYWVYxiqSWFuem5xYb6RUn5haX5qXrJefnbmIERuG2Yz+37GDsehd8iFGAg1GJh3fHzehY
+        IdbEsuLK3EOMEhzMSiK8FXOiYoV4UxIrq1KL8uOLSnNSiw8xmgL9NpFZSjQ5H5gg8kriDU0N
+        zS0sDc2NzY3NLJTEeTsEDsYICaQnlqRmp6YWpBbB9DFxcEo1MLZ+emvJ45rWw3d6k2fvvI12
+        JhZv85Luli9/z/z370Fr+56jttzT9LQEfh5Wl9XtPXdil6KmnjrXP7ein4ICc6655ut3q78L
+        3sjg9eHj/auJq/cbZgSuEprR/2MlZ+rNayLp8o7bJh6UyNgd9WM9x03527HHRaaEfZiR/OxA
+        Feeey+UF4Sp93UosxRmJhlrMRcWJANptVTfYAgAA
+X-CMS-MailID: 20190820120617eucas1p27f378b14d1e0ed4777cfa4a876e1a47f
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-RootMTR: 20190812164840epcas2p4b88d3ebaf313f0c99ccb693047bce04c
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20190812164840epcas2p4b88d3ebaf313f0c99ccb693047bce04c
+References: <CGME20190812164840epcas2p4b88d3ebaf313f0c99ccb693047bce04c@epcas2p4.samsung.com>
+        <20190812164830.16244-1-max@enpas.org>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, Aug 19, 2019 at 9:30 AM Stephen Douthit
-<stephend@silicom-usa.com> wrote:
->
-> On 8/14/19 1:17 PM, Dan Williams wrote:
-> >> Can you get someone from the controller design team to give us a clear
-> >> answer on a revision where this PCS change happened?
-> >>
-> >> It would be nice if we could just check PCI_REVISION_ID or something
-> >> similar.
-> >
-> > I don't think such a reliable association with rev-id exists, the> intent was that the OS need never consider PCS.
->
-> Can you please ask to confirm?  It would be a much simpler check if it
-> is possible.
 
-No. Even if it were accidentally the case today the Linux driver can't
-trust that rev-id across the different implementations will be
-maintained for this purpose because the OS driver is not meant to
-touch this register. Just look at a sampling of rev-id from a few
-different systems, and note that rev-id applies to the chipset not
-just the ahci controller.
+Hi Max,
 
-    rev 08
-    rev 11
-    rev 31
+Few more review comments below.
 
-...which one of those is Denverton?
+On 8/12/19 6:48 PM, Max Staudt wrote:
+> Up until now, the pata_buddha driver would only check for cards on
+> initcall time. Now, the kernel will call its probe function as soon
+> as a compatible card is detected.
+> 
+> v5: Remove module_exit(): There's no good way to handle the X-Surf hack.
+>     Also include a workaround to save X-Surf's drvdata in case zorro8390
+>     is active.
+> 
+> v4: Clean up pata_buddha_probe() by using ent->driver_data.
+>     Support X-Surf via late_initcall()
+> 
+> v3: Clean up devm_*, implement device removal.
+> 
+> v2: Rename 'zdev' to 'z' to make the patch easy to analyse with
+>     git diff --ignore-space-change
+> 
+> Signed-off-by: Max Staudt <max@enpas.org>
+> ---
+>  drivers/ata/pata_buddha.c | 234 +++++++++++++++++++++++++++-------------------
+>  1 file changed, 140 insertions(+), 94 deletions(-)
+> 
+> diff --git a/drivers/ata/pata_buddha.c b/drivers/ata/pata_buddha.c
+> index 11a8044ff..6014befc9 100644
+> --- a/drivers/ata/pata_buddha.c
+> +++ b/drivers/ata/pata_buddha.c
+> @@ -18,7 +18,9 @@
+>  #include <linux/kernel.h>
+>  #include <linux/libata.h>
+>  #include <linux/mm.h>
+> +#include <linux/mod_devicetable.h>
+>  #include <linux/module.h>
+> +#include <linux/types.h>
+>  #include <linux/zorro.h>
+>  #include <scsi/scsi_cmnd.h>
+>  #include <scsi/scsi_host.h>
+> @@ -29,7 +31,7 @@
+>  #include <asm/setup.h>
+>  
+>  #define DRV_NAME "pata_buddha"
+> -#define DRV_VERSION "0.1.0"
+> +#define DRV_VERSION "0.1.1"
+>  
+>  #define BUDDHA_BASE1	0x800
+>  #define BUDDHA_BASE2	0xa00
+> @@ -47,11 +49,11 @@ enum {
+>  	BOARD_XSURF
+>  };
+>  
+> -static unsigned int buddha_bases[3] __initdata = {
+> +static unsigned int buddha_bases[3] = {
+>  	BUDDHA_BASE1, BUDDHA_BASE2, BUDDHA_BASE3
+>  };
+>  
+> -static unsigned int xsurf_bases[2] __initdata = {
+> +static unsigned int xsurf_bases[2] = {
+>  	XSURF_BASE1, XSURF_BASE2
+>  };
+>  
+> @@ -145,111 +147,155 @@ static struct ata_port_operations pata_xsurf_ops = {
+>  	.set_mode	= pata_buddha_set_mode,
+>  };
+>  
+> -static int __init pata_buddha_init_one(void)
+> +static int pata_buddha_probe(struct zorro_dev *z,
+> +			     const struct zorro_device_id *ent)
+>  {
+> -	struct zorro_dev *z = NULL;
+> -
+> -	while ((z = zorro_find_device(ZORRO_WILDCARD, z))) {
+> -		static const char *board_name[]
+> -			= { "Buddha", "Catweasel", "X-Surf" };
+> -		struct ata_host *host;
+> -		void __iomem *buddha_board;
+> -		unsigned long board;
+> -		unsigned int type, nr_ports = 2;
+> -		int i;
+> -
+> -		if (z->id == ZORRO_PROD_INDIVIDUAL_COMPUTERS_BUDDHA) {
+> -			type = BOARD_BUDDHA;
+> -		} else if (z->id == ZORRO_PROD_INDIVIDUAL_COMPUTERS_CATWEASEL) {
+> -			type = BOARD_CATWEASEL;
+> -			nr_ports++;
+> -		} else if (z->id == ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF) {
+> -			type = BOARD_XSURF;
+> -		} else
+> -			continue;
+> -
+> -		dev_info(&z->dev, "%s IDE controller\n", board_name[type]);
+> -
+> -		board = z->resource.start;
+> +	static const char * const board_name[]
+> +		= { "Buddha", "Catweasel", "X-Surf" };
+> +	struct ata_host *host;
+> +	void __iomem *buddha_board;
+> +	unsigned long board;
+> +	unsigned int type = ent->driver_data;
+> +	unsigned int nr_ports = (type == BOARD_CATWEASEL) ? 3 : 2;
+> +	void *old_drvdata;
+> +	int i;
+> +
+> +	dev_info(&z->dev, "%s IDE controller\n", board_name[type]);
+> +
+> +	board = z->resource.start;
+> +
+> +	if (type != BOARD_XSURF) {
+> +		if (!devm_request_mem_region(&z->dev,
+> +					     board + BUDDHA_BASE1,
+> +					     0x800, DRV_NAME))
+> +			return -ENXIO;
+> +	} else {
+> +		if (!devm_request_mem_region(&z->dev,
+> +					     board + XSURF_BASE1,
+> +					     0x1000, DRV_NAME))
+> +			return -ENXIO;
+> +		if (!devm_request_mem_region(&z->dev,
+> +					     board + XSURF_BASE2,
+> +					     0x1000, DRV_NAME)) {
+> +		}
+> +	}
+> +
+> +	/* Workaround for X-Surf: Save drvdata in case zorro8390 has set it */
+> +	old_drvdata = dev_get_drvdata(&z->dev);
 
-The intent is that PCS is a platform-firmware concern and that any
-software that cares about PCS is caring about it by explicit
-identification.
+This should be done only for type == BOARD_XSURF.
 
-> > The way Linux is using
-> > it is already broken with the assumption that it is performed after
-> > every HOST_CTL based reset which only resets mmio space. At most it
-> > should only be required at initial PCI discovery iff platform firmware
-> > failed to run.
->
-> This is a separate issue.
->
-> It's broken in the sense that the code is called more often that it
-> needs to be, but reset isn't a hot path, and there are no side effects
-> to doing this multiple times that I can see.
+> +	/* allocate host */
+> +	host = ata_host_alloc(&z->dev, nr_ports);
+> +	dev_set_drvdata(&z->dev, old_drvdata);
 
-The problem is that there is no known need to do it for Denverton, and
-likely more platform implementations.
+ditto
 
->  And as you point out, no
-> bug reports, so pretty benign all things considered.
->
-> We could move the PCS quirk code to ahci_init_one() to address this
-> concern once there's agreement on what the criteria is to run/not-run
-> this code.
->
-> > There are no bug reports with the current
-> > implementation that only attempts to enable bits based on PORTS_IMPL,
-> > so I think we are firmer ground trying to draw a line where the driver
-> > just stops worrying about PCS rather than try to detect the layout.
->
-> Someone at Intel is going to need to decide where/how to draw this line.
+> +	if (!host)
+> +		return -ENXIO;
+> +
+> +
+> +	buddha_board = ZTWO_VADDR(board);
+> +
+> +	/* enable the board IRQ on Buddha/Catweasel */
+> +	if (type != BOARD_XSURF)
+> +		z_writeb(0, buddha_board + BUDDHA_IRQ_MR);
+> +
+> +	for (i = 0; i < nr_ports; i++) {
+> +		struct ata_port *ap = host->ports[i];
+> +		void __iomem *base, *irqport;
+> +		unsigned long ctl = 0;
+>  
+>  		if (type != BOARD_XSURF) {
+> -			if (!devm_request_mem_region(&z->dev,
+> -						     board + BUDDHA_BASE1,
+> -						     0x800, DRV_NAME))
+> -				continue;
+> +			ap->ops = &pata_buddha_ops;
+> +			base = buddha_board + buddha_bases[i];
+> +			ctl = BUDDHA_CONTROL;
+> +			irqport = buddha_board + BUDDHA_IRQ + i * 0x40;
+>  		} else {
+> -			if (!devm_request_mem_region(&z->dev,
+> -						     board + XSURF_BASE1,
+> -						     0x1000, DRV_NAME))
+> -				continue;
+> -			if (!devm_request_mem_region(&z->dev,
+> -						     board + XSURF_BASE2,
+> -						     0x1000, DRV_NAME))
+> -				continue;
+> +			ap->ops = &pata_xsurf_ops;
+> +			base = buddha_board + xsurf_bases[i];
+> +			/* X-Surf has no CS1* (Control/AltStat) */
+> +			irqport = buddha_board + XSURF_IRQ;
+>  		}
+>  
+> -		/* allocate host */
+> -		host = ata_host_alloc(&z->dev, nr_ports);
+> -		if (!host)
+> -			continue;
+> -
+> -		buddha_board = ZTWO_VADDR(board);
+> -
+> -		/* enable the board IRQ on Buddha/Catweasel */
+> -		if (type != BOARD_XSURF)
+> -			z_writeb(0, buddha_board + BUDDHA_IRQ_MR);
+> -
+> -		for (i = 0; i < nr_ports; i++) {
+> -			struct ata_port *ap = host->ports[i];
+> -			void __iomem *base, *irqport;
+> -			unsigned long ctl = 0;
+> -
+> -			if (type != BOARD_XSURF) {
+> -				ap->ops = &pata_buddha_ops;
+> -				base = buddha_board + buddha_bases[i];
+> -				ctl = BUDDHA_CONTROL;
+> -				irqport = buddha_board + BUDDHA_IRQ + i * 0x40;
+> -			} else {
+> -				ap->ops = &pata_xsurf_ops;
+> -				base = buddha_board + xsurf_bases[i];
+> -				/* X-Surf has no CS1* (Control/AltStat) */
+> -				irqport = buddha_board + XSURF_IRQ;
+> -			}
+> -
+> -			ap->pio_mask = ATA_PIO4;
+> -			ap->flags |= ATA_FLAG_SLAVE_POSS | ATA_FLAG_NO_IORDY;
+> -
+> -			ap->ioaddr.data_addr		= base;
+> -			ap->ioaddr.error_addr		= base + 2 + 1 * 4;
+> -			ap->ioaddr.feature_addr		= base + 2 + 1 * 4;
+> -			ap->ioaddr.nsect_addr		= base + 2 + 2 * 4;
+> -			ap->ioaddr.lbal_addr		= base + 2 + 3 * 4;
+> -			ap->ioaddr.lbam_addr		= base + 2 + 4 * 4;
+> -			ap->ioaddr.lbah_addr		= base + 2 + 5 * 4;
+> -			ap->ioaddr.device_addr		= base + 2 + 6 * 4;
+> -			ap->ioaddr.status_addr		= base + 2 + 7 * 4;
+> -			ap->ioaddr.command_addr		= base + 2 + 7 * 4;
+> -
+> -			if (ctl) {
+> -				ap->ioaddr.altstatus_addr = base + ctl;
+> -				ap->ioaddr.ctl_addr	  = base + ctl;
+> -			}
+> -
+> -			ap->private_data = (void *)irqport;
+> -
+> -			ata_port_desc(ap, "cmd 0x%lx ctl 0x%lx", board,
+> -				      ctl ? board + buddha_bases[i] + ctl : 0);
+> +		ap->pio_mask = ATA_PIO4;
+> +		ap->flags |= ATA_FLAG_SLAVE_POSS | ATA_FLAG_NO_IORDY;
+> +
+> +		ap->ioaddr.data_addr		= base;
+> +		ap->ioaddr.error_addr		= base + 2 + 1 * 4;
+> +		ap->ioaddr.feature_addr		= base + 2 + 1 * 4;
+> +		ap->ioaddr.nsect_addr		= base + 2 + 2 * 4;
+> +		ap->ioaddr.lbal_addr		= base + 2 + 3 * 4;
+> +		ap->ioaddr.lbam_addr		= base + 2 + 4 * 4;
+> +		ap->ioaddr.lbah_addr		= base + 2 + 5 * 4;
+> +		ap->ioaddr.device_addr		= base + 2 + 6 * 4;
+> +		ap->ioaddr.status_addr		= base + 2 + 7 * 4;
+> +		ap->ioaddr.command_addr		= base + 2 + 7 * 4;
+> +
+> +		if (ctl) {
+> +			ap->ioaddr.altstatus_addr = base + ctl;
+> +			ap->ioaddr.ctl_addr	  = base + ctl;
+>  		}
+>  
+> -		ata_host_activate(host, IRQ_AMIGA_PORTS, ata_sff_interrupt,
+> -				  IRQF_SHARED, &pata_buddha_sht);
+> +		ap->private_data = (void *)irqport;
+>  
+> +		ata_port_desc(ap, "cmd 0x%lx ctl 0x%lx", board,
+> +			      ctl ? board + buddha_bases[i] + ctl : 0);
+>  	}
+>  
+> +	ata_host_activate(host, IRQ_AMIGA_PORTS, ata_sff_interrupt,
+> +			  IRQF_SHARED, &pata_buddha_sht);
+> +
+> +
+>  	return 0;
+>  }
+>  
+> -module_init(pata_buddha_init_one);
+> +static void pata_buddha_remove(struct zorro_dev *z)
+> +{
+> +	struct ata_host *host = dev_get_drvdata(&z->dev);
+> +
+> +	ata_host_detach(host);
+> +}
+> +
+> +static const struct zorro_device_id pata_buddha_zorro_tbl[] = {
+> +	{ ZORRO_PROD_INDIVIDUAL_COMPUTERS_BUDDHA, BOARD_BUDDHA},
+> +	{ ZORRO_PROD_INDIVIDUAL_COMPUTERS_CATWEASEL, BOARD_CATWEASEL},
+> +	/* { ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, BOARD_XSURF}, */
 
-This is a case of Linux touching a "BIOS only" register and assuming
-that the quirk is widely applicable. I think a reasonable fix is to
-just whitelist all the known Intel ids, apply the PCS fixup assuming
-the legacy configuration register location, and stop applying the
-quirk by default.
+Commented out code should be removed.
 
-Here is a proposed patch along these lines. I can send a
-non-whitespace damaged version if this approach looks acceptable:
+> +	{ 0 }
+> +};
+> +
 
----
+Extra newline, please remove it.
 
-From f40a7f287c97cfba71393ccb592ba521e43d807b Mon Sep 17 00:00:00 2001
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 19 Aug 2019 11:30:37 -0700
-Subject: [PATCH] libata/ahci: Drop PCS quirk for Denverton and beyond
+> +MODULE_DEVICE_TABLE(zorro, pata_buddha_zorro_tbl);
+> +
+> +static struct zorro_driver pata_buddha_driver = {
+> +	.name           = "pata_buddha",
+> +	.id_table       = pata_buddha_zorro_tbl,
+> +	.probe          = pata_buddha_probe,
+> +	.remove         = pata_buddha_remove,
 
-The Linux ahci driver has historically implemented a configuration fixup
-for platforms / platform-firmware that fails to enable the ports prior
-to OS hand-off at boot. The fixup was originally implemented way back
-before ahci moved from drivers/scsi/ to drivers/ata/, and was updated in
-2007 via commit 49f290903935 "ahci: update PCS programming". The quirk
-sets a port-enable bitmap in the PCS register at offset 0x92.
+I think that we should also add:
 
-This quirk could be applied generically up until the arrival of the
-Denverton (DNV) platform. The DNV AHCI controller architecture supports
-more than 6 ports and along with that the PCS register location and
-format were updated to allow for more possible ports in the bitmap. DNV
-AHCI expands the register to 32-bits and moves it to offset 0x94.
+	.driver  = {
+		.suppress_bind_attrs = true,
+	},
 
-As it stands there are no known problem reports with existing Linux
-trying to set bits at offset 0x92 which indicates that the quirk is not
-applicable. Likely it is not applicable on a wider range of platforms,
-but it is difficult to discern which platforms if any still depend on
-the quirk.
+to prevent the device from being unbinded (and thus ->remove called)
+from the driver using sysfs interface.
 
-Rather than try to fix the PCS quirk to consider the DNV register layout
-instead require explicit opt-in. The assumption is that the OS driver
-need not touch this register, and platforms can be added to a whitelist
-when / if problematic platforms are found in the future. The list in
-ahci_intel_pcs_quirk() is populated with all the current explicit
-device-ids with the expectation that class-code based detection need not
-apply the quirk.
+> +};
+> +
 
-Reported-by: Stephen Douthit <stephend@silicom-usa.com>
-Cc: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/ata/ahci.c | 211 +++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 184 insertions(+), 27 deletions(-)
+Extra newline, please remove it.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index f7652baa6337..ceb38d205e1b 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -623,30 +623,6 @@ static void ahci_pci_save_initial_config(struct
-pci_dev *pdev,
-        ahci_save_initial_config(&pdev->dev, hpriv);
- }
+> +
 
--static int ahci_pci_reset_controller(struct ata_host *host)
--{
--       struct pci_dev *pdev = to_pci_dev(host->dev);
--       int rc;
--
--       rc = ahci_reset_controller(host);
--       if (rc)
--               return rc;
--
--       if (pdev->vendor == PCI_VENDOR_ID_INTEL) {
--               struct ahci_host_priv *hpriv = host->private_data;
--               u16 tmp16;
--
--               /* configure PCS */
--               pci_read_config_word(pdev, 0x92, &tmp16);
--               if ((tmp16 & hpriv->port_map) != hpriv->port_map) {
--                       tmp16 |= hpriv->port_map;
--                       pci_write_config_word(pdev, 0x92, tmp16);
--               }
--       }
--
--       return 0;
--}
--
- static void ahci_pci_init_controller(struct ata_host *host)
- {
-        struct ahci_host_priv *hpriv = host->private_data;
-@@ -849,7 +825,7 @@ static int ahci_pci_device_runtime_resume(struct
-device *dev)
-        struct ata_host *host = pci_get_drvdata(pdev);
-        int rc;
+ditto
 
--       rc = ahci_pci_reset_controller(host);
-+       rc = ahci_reset_controller(host);
-        if (rc)
-                return rc;
-        ahci_pci_init_controller(host);
-@@ -884,7 +860,7 @@ static int ahci_pci_device_resume(struct device *dev)
-                ahci_mcp89_apple_enable(pdev);
+> +
+> +/*
+> + * We cannot have a modalias for X-Surf boards, as it competes with the
+> + * zorro8390 network driver. As a stopgap measure until we have proper
+> + * MFC support for this board, we manually attach to it late after Zorro
 
-        if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND) {
--               rc = ahci_pci_reset_controller(host);
-+               rc = ahci_reset_controller(host);
-                if (rc)
-                        return rc;
+s/MFC/MFD/
 
-@@ -1619,6 +1595,181 @@ static void
-ahci_update_initial_lpm_policy(struct ata_port *ap,
-                ap->target_lpm_policy = policy;
- }
+> + * has enumerated its boards.
+> + */
+> +static int __init pata_buddha_late_init(void)
+> +{
+> +        struct zorro_dev *z = NULL;
+> +
+> +	pr_info("pata_buddha: Scanning for stand-alone IDE controllers...\n");
 
-+static void ahci_intel_pcs_quirk(struct pci_dev *pdev, struct
-ahci_host_priv *hpriv)
-+{
-+       static const struct pci_device_id ahci_pcs_ids[] = {
-+               /* Historical ids, ambiguous if the PCS quirk is needed... */
-+               { PCI_VDEVICE(INTEL, 0x2652), }, /* ICH6 */
-+               { PCI_VDEVICE(INTEL, 0x2653), }, /* ICH6M */
-+               { PCI_VDEVICE(INTEL, 0x27c1), }, /* ICH7 */
-+               { PCI_VDEVICE(INTEL, 0x27c5), }, /* ICH7M */
-+               { PCI_VDEVICE(INTEL, 0x27c3), }, /* ICH7R */
-+               { PCI_VDEVICE(INTEL, 0x2681), }, /* ESB2 */
-+               { PCI_VDEVICE(INTEL, 0x2682), }, /* ESB2 */
-+               { PCI_VDEVICE(INTEL, 0x2683), }, /* ESB2 */
-+               { PCI_VDEVICE(INTEL, 0x27c6), }, /* ICH7-M DH */
-+               { PCI_VDEVICE(INTEL, 0x2821), }, /* ICH8 */
-+               { PCI_VDEVICE(INTEL, 0x2822), }, /* ICH8 */
-+               { PCI_VDEVICE(INTEL, 0x2824), }, /* ICH8 */
-+               { PCI_VDEVICE(INTEL, 0x2829), }, /* ICH8M */
-+               { PCI_VDEVICE(INTEL, 0x282a), }, /* ICH8M */
-+               { PCI_VDEVICE(INTEL, 0x2922), }, /* ICH9 */
-+               { PCI_VDEVICE(INTEL, 0x2923), }, /* ICH9 */
-+               { PCI_VDEVICE(INTEL, 0x2924), }, /* ICH9 */
-+               { PCI_VDEVICE(INTEL, 0x2925), }, /* ICH9 */
-+               { PCI_VDEVICE(INTEL, 0x2927), }, /* ICH9 */
-+               { PCI_VDEVICE(INTEL, 0x2929), }, /* ICH9M */
-+               { PCI_VDEVICE(INTEL, 0x292a), }, /* ICH9M */
-+               { PCI_VDEVICE(INTEL, 0x292b), }, /* ICH9M */
-+               { PCI_VDEVICE(INTEL, 0x292c), }, /* ICH9M */
-+               { PCI_VDEVICE(INTEL, 0x292f), }, /* ICH9M */
-+               { PCI_VDEVICE(INTEL, 0x294d), }, /* ICH9 */
-+               { PCI_VDEVICE(INTEL, 0x294e), }, /* ICH9M */
-+               { PCI_VDEVICE(INTEL, 0x502a), }, /* Tolapai */
-+               { PCI_VDEVICE(INTEL, 0x502b), }, /* Tolapai */
-+               { PCI_VDEVICE(INTEL, 0x3a05), }, /* ICH10 */
-+               { PCI_VDEVICE(INTEL, 0x3a22), }, /* ICH10 */
-+               { PCI_VDEVICE(INTEL, 0x3a25), }, /* ICH10 */
-+               { PCI_VDEVICE(INTEL, 0x3b22), }, /* PCH AHCI */
-+               { PCI_VDEVICE(INTEL, 0x3b23), }, /* PCH AHCI */
-+               { PCI_VDEVICE(INTEL, 0x3b24), }, /* PCH RAID */
-+               { PCI_VDEVICE(INTEL, 0x3b25), }, /* PCH RAID */
-+               { PCI_VDEVICE(INTEL, 0x3b29), }, /* PCH M AHCI */
-+               { PCI_VDEVICE(INTEL, 0x3b2b), }, /* PCH RAID */
-+               { PCI_VDEVICE(INTEL, 0x3b2c), }, /* PCH M RAID */
-+               { PCI_VDEVICE(INTEL, 0x3b2f), }, /* PCH AHCI */
-+               { PCI_VDEVICE(INTEL, 0x1c02), }, /* CPT AHCI */
-+               { PCI_VDEVICE(INTEL, 0x1c03), }, /* CPT M AHCI */
-+               { PCI_VDEVICE(INTEL, 0x1c04), }, /* CPT RAID */
-+               { PCI_VDEVICE(INTEL, 0x1c05), }, /* CPT M RAID */
-+               { PCI_VDEVICE(INTEL, 0x1c06), }, /* CPT RAID */
-+               { PCI_VDEVICE(INTEL, 0x1c07), }, /* CPT RAID */
-+               { PCI_VDEVICE(INTEL, 0x1d02), }, /* PBG AHCI */
-+               { PCI_VDEVICE(INTEL, 0x1d04), }, /* PBG RAID */
-+               { PCI_VDEVICE(INTEL, 0x1d06), }, /* PBG RAID */
-+               { PCI_VDEVICE(INTEL, 0x2826), }, /* PBG RAID */
-+               { PCI_VDEVICE(INTEL, 0x2323), }, /* DH89xxCC AHCI */
-+               { PCI_VDEVICE(INTEL, 0x1e02), }, /* Panther Point AHCI */
-+               { PCI_VDEVICE(INTEL, 0x1e03), }, /* Panther M AHCI */
-+               { PCI_VDEVICE(INTEL, 0x1e04), }, /* Panther Point RAID */
-+               { PCI_VDEVICE(INTEL, 0x1e05), }, /* Panther Point RAID */
-+               { PCI_VDEVICE(INTEL, 0x1e06), }, /* Panther Point RAID */
-+               { PCI_VDEVICE(INTEL, 0x1e07), }, /* Panther M RAID */
-+               { PCI_VDEVICE(INTEL, 0x1e0e), }, /* Panther Point RAID */
-+               { PCI_VDEVICE(INTEL, 0x8c02), }, /* Lynx Point AHCI */
-+               { PCI_VDEVICE(INTEL, 0x8c03), }, /* Lynx M AHCI */
-+               { PCI_VDEVICE(INTEL, 0x8c04), }, /* Lynx Point RAID */
-+               { PCI_VDEVICE(INTEL, 0x8c05), }, /* Lynx M RAID */
-+               { PCI_VDEVICE(INTEL, 0x8c06), }, /* Lynx Point RAID */
-+               { PCI_VDEVICE(INTEL, 0x8c07), }, /* Lynx M RAID */
-+               { PCI_VDEVICE(INTEL, 0x8c0e), }, /* Lynx Point RAID */
-+               { PCI_VDEVICE(INTEL, 0x8c0f), }, /* Lynx M RAID */
-+               { PCI_VDEVICE(INTEL, 0x9c02), }, /* Lynx LP AHCI */
-+               { PCI_VDEVICE(INTEL, 0x9c03), }, /* Lynx LP AHCI */
-+               { PCI_VDEVICE(INTEL, 0x9c04), }, /* Lynx LP RAID */
-+               { PCI_VDEVICE(INTEL, 0x9c05), }, /* Lynx LP RAID */
-+               { PCI_VDEVICE(INTEL, 0x9c06), }, /* Lynx LP RAID */
-+               { PCI_VDEVICE(INTEL, 0x9c07), }, /* Lynx LP RAID */
-+               { PCI_VDEVICE(INTEL, 0x9c0e), }, /* Lynx LP RAID */
-+               { PCI_VDEVICE(INTEL, 0x9c0f), }, /* Lynx LP RAID */
-+               { PCI_VDEVICE(INTEL, 0x9dd3), }, /* Cannon Lake PCH-LP AHCI */
-+               { PCI_VDEVICE(INTEL, 0x1f22), }, /* Avoton AHCI */
-+               { PCI_VDEVICE(INTEL, 0x1f23), }, /* Avoton AHCI */
-+               { PCI_VDEVICE(INTEL, 0x1f24), }, /* Avoton RAID */
-+               { PCI_VDEVICE(INTEL, 0x1f25), }, /* Avoton RAID */
-+               { PCI_VDEVICE(INTEL, 0x1f26), }, /* Avoton RAID */
-+               { PCI_VDEVICE(INTEL, 0x1f27), }, /* Avoton RAID */
-+               { PCI_VDEVICE(INTEL, 0x1f2e), }, /* Avoton RAID */
-+               { PCI_VDEVICE(INTEL, 0x1f2f), }, /* Avoton RAID */
-+               { PCI_VDEVICE(INTEL, 0x1f32), }, /* Avoton AHCI */
-+               { PCI_VDEVICE(INTEL, 0x1f33), }, /* Avoton AHCI */
-+               { PCI_VDEVICE(INTEL, 0x1f34), }, /* Avoton RAID */
-+               { PCI_VDEVICE(INTEL, 0x1f35), }, /* Avoton RAID */
-+               { PCI_VDEVICE(INTEL, 0x1f36), }, /* Avoton RAID */
-+               { PCI_VDEVICE(INTEL, 0x1f37), }, /* Avoton RAID */
-+               { PCI_VDEVICE(INTEL, 0x1f3e), }, /* Avoton RAID */
-+               { PCI_VDEVICE(INTEL, 0x1f3f), }, /* Avoton RAID */
-+               { PCI_VDEVICE(INTEL, 0x2823), }, /* Wellsburg RAID */
-+               { PCI_VDEVICE(INTEL, 0x2827), }, /* Wellsburg RAID */
-+               { PCI_VDEVICE(INTEL, 0x8d02), }, /* Wellsburg AHCI */
-+               { PCI_VDEVICE(INTEL, 0x8d04), }, /* Wellsburg RAID */
-+               { PCI_VDEVICE(INTEL, 0x8d06), }, /* Wellsburg RAID */
-+               { PCI_VDEVICE(INTEL, 0x8d0e), }, /* Wellsburg RAID */
-+               { PCI_VDEVICE(INTEL, 0x8d62), }, /* Wellsburg AHCI */
-+               { PCI_VDEVICE(INTEL, 0x8d64), }, /* Wellsburg RAID */
-+               { PCI_VDEVICE(INTEL, 0x8d66), }, /* Wellsburg RAID */
-+               { PCI_VDEVICE(INTEL, 0x8d6e), }, /* Wellsburg RAID */
-+               { PCI_VDEVICE(INTEL, 0x23a3), }, /* Coleto Creek AHCI */
-+               { PCI_VDEVICE(INTEL, 0x9c83), }, /* Wildcat LP AHCI */
-+               { PCI_VDEVICE(INTEL, 0x9c85), }, /* Wildcat LP RAID */
-+               { PCI_VDEVICE(INTEL, 0x9c87), }, /* Wildcat LP RAID */
-+               { PCI_VDEVICE(INTEL, 0x9c8f), }, /* Wildcat LP RAID */
-+               { PCI_VDEVICE(INTEL, 0x8c82), }, /* 9 Series AHCI */
-+               { PCI_VDEVICE(INTEL, 0x8c83), }, /* 9 Series M AHCI */
-+               { PCI_VDEVICE(INTEL, 0x8c84), }, /* 9 Series RAID */
-+               { PCI_VDEVICE(INTEL, 0x8c85), }, /* 9 Series M RAID */
-+               { PCI_VDEVICE(INTEL, 0x8c86), }, /* 9 Series RAID */
-+               { PCI_VDEVICE(INTEL, 0x8c87), }, /* 9 Series M RAID */
-+               { PCI_VDEVICE(INTEL, 0x8c8e), }, /* 9 Series RAID */
-+               { PCI_VDEVICE(INTEL, 0x8c8f), }, /* 9 Series M RAID */
-+               { PCI_VDEVICE(INTEL, 0x9d03), }, /* Sunrise LP AHCI */
-+               { PCI_VDEVICE(INTEL, 0x9d05), }, /* Sunrise LP RAID */
-+               { PCI_VDEVICE(INTEL, 0x9d07), }, /* Sunrise LP RAID */
-+               { PCI_VDEVICE(INTEL, 0xa102), }, /* Sunrise Point-H AHCI */
-+               { PCI_VDEVICE(INTEL, 0xa103), }, /* Sunrise M AHCI */
-+               { PCI_VDEVICE(INTEL, 0xa105), }, /* Sunrise Point-H RAID */
-+               { PCI_VDEVICE(INTEL, 0xa106), }, /* Sunrise Point-H RAID */
-+               { PCI_VDEVICE(INTEL, 0xa107), }, /* Sunrise M RAID */
-+               { PCI_VDEVICE(INTEL, 0xa10f), }, /* Sunrise Point-H RAID */
-+               { PCI_VDEVICE(INTEL, 0x2822), }, /* Lewisburg RAID*/
-+               { PCI_VDEVICE(INTEL, 0x2823), }, /* Lewisburg AHCI*/
-+               { PCI_VDEVICE(INTEL, 0x2826), }, /* Lewisburg RAID*/
-+               { PCI_VDEVICE(INTEL, 0x2827), }, /* Lewisburg RAID*/
-+               { PCI_VDEVICE(INTEL, 0xa182), }, /* Lewisburg AHCI*/
-+               { PCI_VDEVICE(INTEL, 0xa186), }, /* Lewisburg RAID*/
-+               { PCI_VDEVICE(INTEL, 0xa1d2), }, /* Lewisburg RAID*/
-+               { PCI_VDEVICE(INTEL, 0xa1d6), }, /* Lewisburg RAID*/
-+               { PCI_VDEVICE(INTEL, 0xa202), }, /* Lewisburg AHCI*/
-+               { PCI_VDEVICE(INTEL, 0xa206), }, /* Lewisburg RAID*/
-+               { PCI_VDEVICE(INTEL, 0xa252), }, /* Lewisburg RAID*/
-+               { PCI_VDEVICE(INTEL, 0xa256), }, /* Lewisburg RAID*/
-+               { PCI_VDEVICE(INTEL, 0xa356), }, /* Cannon Lake PCH-H RAID */
-+               { PCI_VDEVICE(INTEL, 0x0f22), }, /* Bay Trail AHCI */
-+               { PCI_VDEVICE(INTEL, 0x0f23), }, /* Bay Trail AHCI */
-+               { PCI_VDEVICE(INTEL, 0x22a3), }, /* Cherry Tr. AHCI */
-+               { PCI_VDEVICE(INTEL, 0x5ae3), }, /* ApolloLake AHCI */
-+               { PCI_VDEVICE(INTEL, 0x34d3), }, /* Ice Lake LP AHCI */
-+
-+               /*
-+                * Known ids where PCS fixup is needed, be careful to
-+                * check the format and location of PCS when adding ids
-+                * to this list. For example Denverton supports more
-+                * than 6 ports and changes the format of PCS, but
-+                * deployed platforms are not known to require a PCS
-+                * fixup.
-+                */
-+               { },
-+       };
-+       u16 tmp16;
-+
-+       if (!pci_match_id(ahci_pcs_ids, pdev))
-+               return;
-+
-+       /*
-+        * port_map is determined from PORTS_IMPL PCI register which is
-+        * implemented as write or write-once register.  If the register
-+        * isn't programmed, ahci automatically generates it from number
-+        * of ports, which is good enough for PCS programming. It is
-+        * otherwise expected that platform firmware enables the ports
-+        * before the OS boots.
-+        */
-+       pci_read_config_word(pdev, 0x92, &tmp16);
-+       if ((tmp16 & hpriv->port_map) != hpriv->port_map) {
-+               tmp16 |= hpriv->port_map;
-+               pci_write_config_word(pdev, 0x92, tmp16);
-+       }
-+}
-+
- static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
-        unsigned int board_id = ent->driver_data;
-@@ -1731,6 +1882,12 @@ static int ahci_init_one(struct pci_dev *pdev,
-const struct pci_device_id *ent)
-        /* save initial config */
-        ahci_pci_save_initial_config(pdev, hpriv);
+I think that there is no need for being extra verbose,
+please remove it.
 
-+       /*
-+        * If platform firmware failed to enable ports, try to enable
-+        * them here.
-+        */
-+       ahci_intel_pcs_quirk(pdev, hpriv);
-+
-        /* prepare host */
-        if (hpriv->cap & HOST_CAP_NCQ) {
-                pi.flags |= ATA_FLAG_NCQ;
-@@ -1840,7 +1997,7 @@ static int ahci_init_one(struct pci_dev *pdev,
-const struct pci_device_id *ent)
-        if (rc)
-                return rc;
+> +	zorro_register_driver(&pata_buddha_driver);
+> +
+> +	pr_info("pata_buddha: Scanning for X-Surf boards...\n");
 
--       rc = ahci_pci_reset_controller(host);
-+       rc = ahci_reset_controller(host);
-        if (rc)
-                return rc;
+ditto
 
--- 
-2.20.1
+> +        while ((z = zorro_find_device(ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, z))) {
+> +		static struct zorro_device_id xsurf_ent =
+> +			{ ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, BOARD_XSURF};
+> +
+> +		pata_buddha_probe(z, &xsurf_ent);
+> +        }
+> +
+> +        return 0;
+> +}
+> +
+> +late_initcall(pata_buddha_late_init);
+> +
+
+Extra newline, please remove it.
+
+>  
+>  MODULE_AUTHOR("Bartlomiej Zolnierkiewicz");
+>  MODULE_DESCRIPTION("low-level driver for Buddha/Catweasel/X-Surf PATA");
+
+Please also always check your patches with scripts/checkpatch.pl and
+fix the reported issues:
+
+ERROR: code indent should use tabs where possible
+#348: FILE: drivers/ata/pata_buddha.c:281:
++        struct zorro_dev *z = NULL;$
+
+WARNING: please, no spaces at the start of a line
+#348: FILE: drivers/ata/pata_buddha.c:281:
++        struct zorro_dev *z = NULL;$
+
+WARNING: line over 80 characters
+#354: FILE: drivers/ata/pata_buddha.c:287:
++        while ((z = zorro_find_device(ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, z))) {
+
+ERROR: code indent should use tabs where possible
+#354: FILE: drivers/ata/pata_buddha.c:287:
++        while ((z = zorro_find_device(ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, z))) {$
+
+WARNING: please, no spaces at the start of a line
+#354: FILE: drivers/ata/pata_buddha.c:287:
++        while ((z = zorro_find_device(ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, z))) {$
+
+ERROR: that open brace { should be on the previous line
+#356: FILE: drivers/ata/pata_buddha.c:289:
++               static struct zorro_device_id xsurf_ent =
++                       { ZORRO_PROD_INDIVIDUAL_COMPUTERS_X_SURF, BOARD_XSURF};
+
+ERROR: code indent should use tabs where possible
+#359: FILE: drivers/ata/pata_buddha.c:292:
++        }$
+
+WARNING: please, no spaces at the start of a line
+#359: FILE: drivers/ata/pata_buddha.c:292:
++        }$
+
+ERROR: code indent should use tabs where possible
+#361: FILE: drivers/ata/pata_buddha.c:294:
++        return 0;$
+
+WARNING: please, no spaces at the start of a line
+#361: FILE: drivers/ata/pata_buddha.c:294:
++        return 0;$
+
+total: 5 errors, 6 warnings, 276 lines checked
+
+
+Otherwise the patch looks fine.
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
