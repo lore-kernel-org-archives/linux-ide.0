@@ -7,48 +7,46 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9AC4C3A589
-	for <linux-ide@archiver.kernel.org>; Tue, 20 Aug 2019 12:36:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44CD3C3A589
+	for <linux-ide@archiver.kernel.org>; Tue, 20 Aug 2019 12:36:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 864992332A
-	for <linux-ide@archiver.kernel.org>; Tue, 20 Aug 2019 12:36:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2581422DA7
+	for <linux-ide@archiver.kernel.org>; Tue, 20 Aug 2019 12:36:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730008AbfHTMgP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 20 Aug 2019 08:36:15 -0400
-Received: from mout.kundenserver.de ([217.72.192.75]:40927 "EHLO
+        id S1729946AbfHTMf7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 20 Aug 2019 08:35:59 -0400
+Received: from mout.kundenserver.de ([217.72.192.73]:44021 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729965AbfHTMgA (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 20 Aug 2019 08:36:00 -0400
+        with ESMTP id S1728731AbfHTMf7 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 20 Aug 2019 08:35:59 -0400
 Received: from orion.localdomain ([95.117.23.32]) by mrelayeu.kundenserver.de
  (mreue106 [212.227.15.183]) with ESMTPSA (Nemesis) id
- 1MZk5x-1hn3562KTn-00Wr6k; Tue, 20 Aug 2019 14:35:51 +0200
+ 1MkYoK-1igE8J2vvC-00m1Xj; Tue, 20 Aug 2019 14:35:49 +0200
 From:   "Enrico Weigelt, metux IT consult" <info@metux.net>
 To:     linux-kernel@vger.kernel.org
 Cc:     axboe@kernel.dk, hdegoede@redhat.com, b.zolnierkie@samsung.com,
         linus.walleij@linaro.org, linux-ide@vger.kernel.org,
         linux-tegra@vger.kernel.org
-Subject: [PATCH 6/9] drivers: ata: pata_bk3710: use devm_platform_ioremap_resource()
-Date:   Tue, 20 Aug 2019 14:35:45 +0200
-Message-Id: <1566304548-19972-6-git-send-email-info@metux.net>
+Subject: [PATCH 1/9] drivers: ata: ahci_octeon: use devm_platform_ioremap_resource()
+Date:   Tue, 20 Aug 2019 14:35:40 +0200
+Message-Id: <1566304548-19972-1-git-send-email-info@metux.net>
 X-Mailer: git-send-email 1.9.1
-In-Reply-To: <1566304548-19972-1-git-send-email-info@metux.net>
-References: <1566304548-19972-1-git-send-email-info@metux.net>
-X-Provags-ID: V03:K1:2hBSmJV62+8u86tNoFA272pxYClBqiHKGxotWvy/XhYayx1Y/OK
- saJTNeaWvrZH8a1EFkpQx8p4VUzxTAomxyK8/n3PecRs1dZGlXSdFjN+gElbNsVpg/Ja6Yk
- ZeAbca1JaNJHCorW5Nr+k4g1YXLzsYHpkDsyYOlLWF+z0BU6kroO3bURRxmZfEZYPBcNjgg
- mRqsrM4lcvh05JQW+FcZQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:KMsYP2dbA/k=:XHmq4ec6/xJN39WmCgSXba
- eZ6aftXlVkctcroCRteJUeED3pplyY8SuNb3A3iL4M9GBTAaXJ0BJUj32JlqA+9I/3ZWKMPcn
- TFPI0sQ9ZrVhw6bh2RFdJf86xYtC+CSs+GAwMDMuCDOVTlRxufV6AYTNI95v5DaQGRdHhK+8B
- LxsXr/Zn2ZSI040f60PwPEnhzaf8IqfYj+ptvZxmjTdX4DagDid2ETEkNEzWldAvXPRPCSSXC
- RGB3TFNXmNvyi8VYTQRTjttLsoijREMldkw/wuiWjLBrun4pjLINS4wb/V/YJv2EL2g8qXQll
- z11w84cI2BRArthiJLpYWmCquvzmtr0PEXXK46Tw7bKcdUaCbYwa59jsC9zRlCUnQP6W0eTPd
- MrEBIb/SGkTiJGK5clBaM+0FAz66vbQ3RZP/wastoWoU/PJzdwOPwtGoUU+AhxWs/qZ9wR+3c
- oGEqynCQmwhQvgaK+GRsO9SNii65SDgPsHPFErHSFhjdVLryHht8WoQb/NCP8QkCswEVFjMgH
- PgtNC/fsC6qHWm/2vGcAWWE9ECkCdpR5dePLfcFdSvL3X6tD/b3WaAYh/DKIOgP5H9WBLCXtq
- KYG42QJiZ9RlxnSis75XopehvKPMRPh9ocvHXYOSi5wfUoTTSc/wBkcJOZLgHYM+O2i/R4VUa
- 13DByy+Pk/lUGE+mHGIhoTiJoWeVFFvpklxUhq26+InOs5gqO8xvzGN+bqcYiQxGBZYfyaRKd
- AWrJ6cdwgQiew7zj2/V8t7E5TYevNhoFZZZJng==
+X-Provags-ID: V03:K1:19J2XSPCk+I/viSh5iyQa/yxyvInlBQRvuSLFAGqJIGLIQ5m7JT
+ w92Df6oXLjJ1wIZGi6PVbYdoG114M6ozQvNXvi5fnevA881eYYtaTrB9PuKgtzx/s9jl32c
+ I+hxBr0HSCaKKba/8P8WLWqjajf2WVwX7SND09cfYPQjM3jNnBxjUn4dNABjwzv6fHYLSG3
+ NNAAMXn2rAK5zH68gCcNQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:N1v9EQ0hAFo=:OdvgjeT4RSR+MmWeET+OXc
+ e1FxY4T3UBE8o1xfMkTh9sI4/YvR9px1fFxQftfC2L9QeNFkhOvhtMlgko38BzK9QW1SiB+Xz
+ I0K+RfAHkBOSsxdQe/cIjZrphVQQQprvCHw7Bp8Rs680Cd0s7wQG6JqxJZ5IwSkFuQ4aumccS
+ vkBGe2gwjXtxwGdSU6cqxgz/1k477E5ojt114G0+S0TP/aimgWbvJKUUZuLtKnzuQ6t6s9ZbC
+ 1yufO5bBupeyK6/GI22xLC0+PbXmXS58eV/UToL8NEC5FXpWLILnvDBPOpgYHwbJMuLM+rY7V
+ nCvHCyDyb2BIOD5Sv78+Oybln8hjjarsEQ7R4X17F2zVDUoxP6BuDfuJIl16y3X9CUOFehKL1
+ +cEU4X30KIBpeH3bvN4K9boAf6fqBlZtEsTfnk53CjEWo560oIUI7Mps3jloPXKWQtFlIgqDn
+ 5P6syF+6kIn20rWgZdnctSQxka6CkRdiL8LuutJ01Spa5lI58KwSOfAYcixRktYU3GcL9oub3
+ W+0SBQnc8+JtuDgZrFcjNsZS3i0ZPonmJyOBB2wLZ9weBwG9Yx4WTaicC2QefpmjpKMYmjRTE
+ jWQNX2NQJFXL17o4DkopvZ3Ar41VIeBujlyeBohWnOmh+a8LZZWLi2XAkXInftOF+Ymmlt59N
+ suv4mpHBUvugeNf5k7SD8r0PZobWRBdEDBWOIbkbc+H21tRiB91PStjl9X6vr1vRMIZeUFABu
+ Wy4yxhzpggeZMvAWp03P7gWh1BD+4OjYPW7O4g==
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
@@ -59,34 +57,24 @@ and devm_ioremap_resource() together.
 
 Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
 ---
- drivers/ata/pata_bk3710.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/ata/ahci_octeon.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/ata/pata_bk3710.c b/drivers/ata/pata_bk3710.c
-index fad95cf..92b036d 100644
---- a/drivers/ata/pata_bk3710.c
-+++ b/drivers/ata/pata_bk3710.c
-@@ -291,7 +291,6 @@ static void pata_bk3710_chipinit(void __iomem *base)
- static int __init pata_bk3710_probe(struct platform_device *pdev)
+diff --git a/drivers/ata/ahci_octeon.c b/drivers/ata/ahci_octeon.c
+index 5a44e08..2280180 100644
+--- a/drivers/ata/ahci_octeon.c
++++ b/drivers/ata/ahci_octeon.c
+@@ -32,13 +32,11 @@ static int ahci_octeon_probe(struct platform_device *pdev)
  {
- 	struct clk *clk;
--	struct resource *mem;
- 	struct ata_host *host;
- 	struct ata_port *ap;
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *node = dev->of_node;
+-	struct resource *res;
  	void __iomem *base;
-@@ -310,15 +309,13 @@ static int __init pata_bk3710_probe(struct platform_device *pdev)
- 	/* NOTE:  round *down* to meet minimum timings; we count in clocks */
- 	ideclk_period = 1000000000UL / rate;
+ 	u64 cfg;
+ 	int ret;
  
--	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--
- 	irq = platform_get_irq(pdev, 0);
- 	if (irq < 0) {
- 		pr_err(DRV_NAME ": failed to get IRQ resource\n");
- 		return irq;
- 	}
- 
--	base = devm_ioremap_resource(&pdev->dev, mem);
+-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	base = devm_ioremap_resource(&pdev->dev, res);
 +	base = devm_platform_ioremap_resource(pdev, 0);
  	if (IS_ERR(base))
  		return PTR_ERR(base);
