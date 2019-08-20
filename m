@@ -4,50 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F179DC3A589
-	for <linux-ide@archiver.kernel.org>; Tue, 20 Aug 2019 12:36:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33FADC3A589
+	for <linux-ide@archiver.kernel.org>; Tue, 20 Aug 2019 12:36:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CE72522DA7
-	for <linux-ide@archiver.kernel.org>; Tue, 20 Aug 2019 12:36:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 147A92054F
+	for <linux-ide@archiver.kernel.org>; Tue, 20 Aug 2019 12:36:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730093AbfHTMgC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 20 Aug 2019 08:36:02 -0400
-Received: from mout.kundenserver.de ([217.72.192.75]:36057 "EHLO
+        id S1729981AbfHTMgH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 20 Aug 2019 08:36:07 -0400
+Received: from mout.kundenserver.de ([217.72.192.74]:44103 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730091AbfHTMgB (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 20 Aug 2019 08:36:01 -0400
+        with ESMTP id S1730092AbfHTMgC (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 20 Aug 2019 08:36:02 -0400
 Received: from orion.localdomain ([95.117.23.32]) by mrelayeu.kundenserver.de
  (mreue106 [212.227.15.183]) with ESMTPSA (Nemesis) id
- 1Mbj7g-1iXSht3wqc-00dBq3; Tue, 20 Aug 2019 14:35:52 +0200
+ 1N7hrw-1iLHVS2kkc-014oTr; Tue, 20 Aug 2019 14:35:52 +0200
 From:   "Enrico Weigelt, metux IT consult" <info@metux.net>
 To:     linux-kernel@vger.kernel.org
 Cc:     axboe@kernel.dk, hdegoede@redhat.com, b.zolnierkie@samsung.com,
         linus.walleij@linaro.org, linux-ide@vger.kernel.org,
         linux-tegra@vger.kernel.org
-Subject: [PATCH 7/9] drivers: ata: sata_dwc_460ex: use devm_platform_ioremap_resource()
-Date:   Tue, 20 Aug 2019 14:35:46 +0200
-Message-Id: <1566304548-19972-7-git-send-email-info@metux.net>
+Subject: [PATCH 9/9] drivers: ata: sata_rcar: use devm_platform_ioremap_resource()
+Date:   Tue, 20 Aug 2019 14:35:48 +0200
+Message-Id: <1566304548-19972-9-git-send-email-info@metux.net>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1566304548-19972-1-git-send-email-info@metux.net>
 References: <1566304548-19972-1-git-send-email-info@metux.net>
-X-Provags-ID: V03:K1:WhHDhrUh+A6TDsinQAj2garKIQ/Ta1t5vveiFsAMmbsXap4bHbM
- AX3795s5AjHe5+h8t22FJw9hQgNXzcrXFm5XpJHaNr+A6VKyFFfMuMQ8V2WyV4w157e+4Wl
- 6tBjD11lgCOW3LuVGCRTqkAtoNlSXktEmkKqpwHgaQHlAesgAIdQ4RgpBwWrMwB3nHy0ihC
- iWIgFxib0J1CSHH4JwbBQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:+Dn2jZWxmis=:M4QV+GCuPIdHv54b7IbCnw
- d/n4WkFgpOiNg1OyG1Lzm1M0jQLQNGy1b/C42bP5GoVNj8Sf4haEDt4h1z8n5ONO4GjoiALfu
- YqetGaJ1kttD9uIs/68DsvIqu0ll0eNYjW1PASPbCVs1mhFRGkXfjTLY8GBaH+7Ax+kO3akME
- q7ZyyuPVLcQujUXqXEBwejF/39EsqtG9ltCOCtGQmpPDDBZNQ8IaDFo4He1V6PdOclKJlo0Kn
- ivjSPLleBmCHsN7/CNO0c49t/xNwoaTbTAEvQuLCNsAkz68OTzFgwT6QctjOtLJOeWOPW9tYd
- pY1M3pYFZnCLwokcQsigsRuQD3mYUM9fn5C/mrisNcFllTHp2XeDvDEjW/6/PoHvrsplfCXZ8
- wV/tGHWjRAQfkqk9Yu1oanvKTYBXwE9U4Qv8ACAs+HtTmXzCnyExt4eJpWsAtPE4wmFWZO7np
- AmxT3mVI/lnM0yoGUlK2V0Bu3MG3QB0IkPy2f/PJQlncaemrZcO99zykHsekx2r90cOsPGfO2
- HahEc+eaDdoAFWPyX/Ig0W8bKnBDAmPyq5Pdi1Xfeq3PUdQKn8Iapy1jCp5Mnrq+Mr9wFvVyM
- qYLtIIsLovPn/shZm1TaCCggxcm6AScNp3m02IsM5Soyf0OqkKcgl9tPBvPOu2i3UC0VkOgTF
- kYgkO2CPVuiEtxS/tY520GlK4Ykl58+K+sXcQTj+nbJckFXvuPHWz/LFTqpi7iFs/g719cvDr
- lpgN44KScm0F7IH5Z1GlMP0wVkskRPJwQhZBvg==
+X-Provags-ID: V03:K1:GFgie2U970YyZGkG3noiek5XN2mWDBvFVquvcRyQ8cdHVlBoBTL
+ k9/T/AQBNZXUzA6MeJD860+e9ts/WfgOEqwuJSP/lL6TrW8ud6bclphAPPQ6ALxxw6s2/1a
+ 7TE4ulpn8yWXcc3fPix3RTIurmWWM9RTygD2PlIw13R5TmAAneXU4b6aY1TSml/ohkueKQI
+ 6Lau3jZWQUiupvjs9fyZg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:vAo2nzR61+Q=:XbDBDurTSEjw+v7eLAAMbW
+ p4odBvqVWzliFJU4ZG93L9zje7OXjQRMxuMnqfgtCSZpAUwEt0m556BjmdxMIGeM4Q9XWoXY3
+ Y3n6bML24M4dyF6zXQ/H/P2chP3pwxQOGtDcUSszklqPo3zRdQd4EnbLXd9I+q2QXCRaEOksA
+ MS2y3hk9v51qXlguUe/0VQ2wHlrb6IGj8bNZD2WvCiMUuKo6UH28H1apcpjHEh9JMacSOj36i
+ zAKwcmgf7MHV+yvGfa4d+10yG8tpZEMbR0Q1X2ZVJLSIqovGYHV1ESUGeHiqnjXgSHPrNSGFB
+ SiGIGko8VdYJ6SwdcRKp7JYwuwRo+MstsWRthb1aC8HK2dkVCRqcULxGozLJRXV9GbcZLckoM
+ uqvbMoj9c9B6Hi/RtAsZnAvvP4WMF2efyC9v+IA4nuQjsY990O43BD41QRBZsFfhcKrT8Q6d6
+ Ep0NesXEAzGnSiaNK1TZiwUNEc6LjTuXIjDuiTMOzIx0VI4jx4XyNTRGaEi3RUsj10iyhA5K+
+ y4VkfTm8++CqQzxEYtL/BZphAiVTCHovZrtoChCct2xrsmhR4ixXchEBLTgOQKLP9uU69QSu2
+ IbfMdE6Q/V4wAa0Y+PM3sKj2ZCTRRaer9qf1SbdBNEhyZfWiigHu3j2OTROeNlWI8gQRB3DsV
+ cVuebIAXUWG65jcgh7t0IFgeAkJQG1oaJnZu/qYYF8spCvWgak29ba/64iJUicsOAQ3ndvyNj
+ kn3FKToMnKoYuKhQzUQpGbupk68ZZ4N9kFoksg==
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
@@ -58,31 +59,31 @@ and devm_ioremap_resource() together.
 
 Signed-off-by: Enrico Weigelt, metux IT consult <info@metux.net>
 ---
- drivers/ata/sata_dwc_460ex.c | 4 +---
+ drivers/ata/sata_rcar.c | 4 +---
  1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 9dcef6a..de248fa 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -237,7 +237,6 @@ static int sata_dwc_dma_init_old(struct platform_device *pdev,
- 				 struct sata_dwc_device *hsdev)
- {
- 	struct device_node *np = pdev->dev.of_node;
--	struct resource *res;
+diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+index 3495e17..14ea1d6 100644
+--- a/drivers/ata/sata_rcar.c
++++ b/drivers/ata/sata_rcar.c
+@@ -886,7 +886,6 @@ static int sata_rcar_probe(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct ata_host *host;
+ 	struct sata_rcar_priv *priv;
+-	struct resource *mem;
+ 	int irq;
+ 	int ret = 0;
  
- 	hsdev->dma = devm_kzalloc(&pdev->dev, sizeof(*hsdev->dma), GFP_KERNEL);
- 	if (!hsdev->dma)
-@@ -254,8 +253,7 @@ static int sata_dwc_dma_init_old(struct platform_device *pdev,
- 	}
+@@ -915,8 +914,7 @@ static int sata_rcar_probe(struct platform_device *pdev)
  
- 	/* Get physical SATA DMA register base address */
--	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
--	hsdev->dma->regs = devm_ioremap_resource(&pdev->dev, res);
-+	hsdev->dma->regs = devm_platform_ioremap_resource(pdev, 1);
- 	if (IS_ERR(hsdev->dma->regs))
- 		return PTR_ERR(hsdev->dma->regs);
+ 	host->private_data = priv;
  
+-	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	priv->base = devm_ioremap_resource(dev, mem);
++	priv->base = devm_platform_ioremap_resource(pdev, 0);
+ 	if (IS_ERR(priv->base)) {
+ 		ret = PTR_ERR(priv->base);
+ 		goto err_pm_put;
 -- 
 1.9.1
 
