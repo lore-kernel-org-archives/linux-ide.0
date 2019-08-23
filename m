@@ -2,167 +2,136 @@ Return-Path: <SRS0=Ia3p=WT=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 376CBC3A5A4
-	for <linux-ide@archiver.kernel.org>; Fri, 23 Aug 2019 10:42:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4E51C3A5A2
+	for <linux-ide@archiver.kernel.org>; Fri, 23 Aug 2019 10:48:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0C64A2166E
-	for <linux-ide@archiver.kernel.org>; Fri, 23 Aug 2019 10:42:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="T5sIc6AL"
+	by mail.kernel.org (Postfix) with ESMTP id 79EC72166E
+	for <linux-ide@archiver.kernel.org>; Fri, 23 Aug 2019 10:48:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388655AbfHWKmd (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 23 Aug 2019 06:42:33 -0400
-Received: from mailout2.w1.samsung.com ([210.118.77.12]:35228 "EHLO
-        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389496AbfHWKmb (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 23 Aug 2019 06:42:31 -0400
-Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20190823104229euoutp02fbd8eb64ca99791191de84590ab8e417~9hz7q4qz62158921589euoutp02U
-        for <linux-ide@vger.kernel.org>; Fri, 23 Aug 2019 10:42:29 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20190823104229euoutp02fbd8eb64ca99791191de84590ab8e417~9hz7q4qz62158921589euoutp02U
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1566556949;
-        bh=/+8sX1IwLtd70Fz4kr7IaaRknglBZi+mCocggncPzmQ=;
-        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=T5sIc6ALwC9iPZFhwAFv/qdzKSKIHieA5RuGoO6sc8SqRkTDZ04EwMnISK4isuLF1
-         1+ZRNeel+AjN6YD9mD35qOPsEPz9u7HeabjMFlwcDdUNtMbNo8OrttcHZONSYxWeoZ
-         yQ/5RdGifp+pMCyOxz1SIEldQjTAQ58jTOus1sHc=
-Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20190823104228eucas1p186ef5140430ad48c986e5e56202d7b43~9hz61FU-92136521365eucas1p1B;
-        Fri, 23 Aug 2019 10:42:28 +0000 (GMT)
-Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
-        eusmges1new.samsung.com (EUCPMTA) with SMTP id E2.92.04469.413CF5D5; Fri, 23
-        Aug 2019 11:42:28 +0100 (BST)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20190823104228eucas1p2ce9162667a7fac65d3bf4abfa38253e7~9hz6GWqJR0355603556eucas1p2K;
-        Fri, 23 Aug 2019 10:42:28 +0000 (GMT)
-Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
-        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20190823104227eusmtrp16ee00847a73b5142e0981d52aaf6f641~9hz52bcv90951109511eusmtrp1X;
-        Fri, 23 Aug 2019 10:42:27 +0000 (GMT)
-X-AuditID: cbfec7f2-569ff70000001175-68-5d5fc314047d
-Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id 6E.EE.04166.313CF5D5; Fri, 23
-        Aug 2019 11:42:27 +0100 (BST)
-Received: from [106.120.51.71] (unknown [106.120.51.71]) by
-        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20190823104227eusmtip2e7c89f5bb809d018b40bbd2c3a1aea7b~9hz5f3nw20575205752eusmtip27;
-        Fri, 23 Aug 2019 10:42:27 +0000 (GMT)
+        id S2390699AbfHWKsD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 23 Aug 2019 06:48:03 -0400
+Received: from enpas.org ([46.38.239.100]:44636 "EHLO mail.enpas.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2389133AbfHWKsD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 23 Aug 2019 06:48:03 -0400
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        by mail.enpas.org (Postfix) with ESMTPSA id 85263FFD56;
+        Fri, 23 Aug 2019 10:47:59 +0000 (UTC)
 Subject: Re: [PATCH v6] ata/pata_buddha: Probe via modalias instead of
  initcall
-To:     Max Staudt <max@enpas.org>
+To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 Cc:     axboe@kernel.dk, linux-ide@vger.kernel.org,
         linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org,
         glaubitz@physik.fu-berlin.de, schmitzmic@gmail.com,
         geert@linux-m68k.org
-From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <7d3c4379-23bd-ef3a-e725-86516097850a@samsung.com>
-Date:   Fri, 23 Aug 2019 12:42:25 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
-        Thunderbird/60.6.1
+References: <CGME20190820165731epcas2p340cc3421251987896b857da4ec42038e@epcas2p3.samsung.com>
+ <20190820165715.15185-1-max@enpas.org>
+ <7d3c4379-23bd-ef3a-e725-86516097850a@samsung.com>
+From:   Max Staudt <max@enpas.org>
+Openpgp: preference=signencrypt
+Autocrypt: addr=max@enpas.org; prefer-encrypt=mutual; keydata=
+ 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
+ urZIw0nz8zec+73Bv/qF4GHHftLYfA==
+Message-ID: <cc15fb71-0e83-5b53-eb5f-f276f8718a4e@enpas.org>
+Date:   Fri, 23 Aug 2019 12:47:59 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.9.1
 MIME-Version: 1.0
-In-Reply-To: <20190820165715.15185-1-max@enpas.org>
+In-Reply-To: <7d3c4379-23bd-ef3a-e725-86516097850a@samsung.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrEKsWRmVeSWpSXmKPExsWy7djPc7oih+NjDVrmylusvtvPZvHs1l4m
-        i9nvlS2O7XjEZHF51xw2i93v7zNaPGz6wGQxt3U6uwOHx+Gvm9k8ds66y+5x+Wypx6HDHYwe
-        B8+dY/T4vEkugC2KyyYlNSezLLVI3y6BK2Pn3ymsBU28FatX32dvYJzP1cXIySEhYCIxde8l
-        ti5GLg4hgRWMEv83nWGCcL4wStxdcIkVwvnMKLH7x0d2mJa1Kz9BJZYzShzbsoQNJCEk8JZR
-        YusJERBbWCBQ4tenWYwgtoiAnMTH1quMIA3MAtsYJY6efgU2iU3ASmJi+yqwIl4BO4mWZxPA
-        bBYBVYmXTXuYQWxRgQiJ+8c2sELUCEqcnPmEBcTmFDCWeL1hDlgNs4C4xK0n85kgbHmJ7W8h
-        4hICh9glbq2Bsl0knu5cxARhC0u8Or4F6hsZidOTe1hAjpMQWMco8bfjBTOEs51RYvnkf2wQ
-        VdYSh49fBLqCA2iDpsT6XfogpoSAo8TFv7IQJp/EjbeCECfwSUzaNp0ZIswr0dEmBDFDTWLD
-        sg1sMFu7dq5knsCoNAvJY7OQPDMLyTOzENYuYGRZxSieWlqcm55abJiXWq5XnJhbXJqXrpec
-        n7uJEZiSTv87/mkH49dLSYcYBTgYlXh4T3TFxQqxJpYVV+YeYpTgYFYS4S2bCBTiTUmsrEot
-        yo8vKs1JLT7EKM3BoiTOW83wIFpIID2xJDU7NbUgtQgmy8TBKdXAqHLk8k6XdVd5u6JvVKv8
-        VCpKbd724cCsx7VqG3w2SCrr7hEye5ovl3jp+iRJM//2U2Juu+3+nZbRW8nkmCHbfCvrR23A
-        8m+OCt1N+TLSyqWr2Bb+NJ3s+iOB5eoB00N/TK6FKJpd3i3Bn9PatY9ryfkLLy8Kz1NVuN/+
-        VUK9vmWB779yO4P/SizFGYmGWsxFxYkAJawZ7kUDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrGIsWRmVeSWpSXmKPExsVy+t/xe7rCh+NjDVZd07ZYfbefzeLZrb1M
-        FrPfK1sc2/GIyeLyrjlsFrvf32e0eNj0gclibut0dgcOj8NfN7N57Jx1l93j8tlSj0OHOxg9
-        Dp47x+jxeZNcAFuUnk1RfmlJqkJGfnGJrVK0oYWRnqGlhZ6RiaWeobF5rJWRqZK+nU1Kak5m
-        WWqRvl2CXsbOv1NYC5p4K1avvs/ewDifq4uRk0NCwERi7cpPrF2MXBxCAksZJQ5ve8LexcgB
-        lJCROL6+DKJGWOLPtS42iJrXjBL3PqxkB0kICwRK/Po0ixHEFhGQk/jYepURpIhZYBujxNdr
-        0xkhOtoYJe6snsIEUsUmYCUxsX0VWAevgJ1Ey7MJYDaLgKrEy6Y9zCC2qECExJn3K1ggagQl
-        Ts58AmZzChhLvN4wB6yGWUBd4s+8S1C2uMStJ/OZIGx5ie1v5zBPYBSahaR9FpKWWUhaZiFp
-        WcDIsopRJLW0ODc9t9hQrzgxt7g0L10vOT93EyMwDrcd+7l5B+OljcGHGAU4GJV4eE90xcUK
-        sSaWFVfmHmKU4GBWEuEtmwgU4k1JrKxKLcqPLyrNSS0+xGgK9NxEZinR5HxgisgriTc0NTS3
-        sDQ0NzY3NrNQEuftEDgYIySQnliSmp2aWpBaBNPHxMEp1cCY+XwmU21jUeuOpYt/LJuS4edX
-        9jDV/Nukg5EG6/3jexVY468e5T9c9Oj3/GmachqtDRMXT7xQJvSYpT7vaWbi//ubcpwN5oum
-        GHe0se9YbrPpmF7KQlvHmZdEtaWlU/52TBaf4CUMjOmJDzQezDzXFFHtdvtJZ4RH48J1zz88
-        e3heQ1Lz3iIlluKMREMt5qLiRAAiHiZD2QIAAA==
-X-CMS-MailID: 20190823104228eucas1p2ce9162667a7fac65d3bf4abfa38253e7
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20190820165731epcas2p340cc3421251987896b857da4ec42038e
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20190820165731epcas2p340cc3421251987896b857da4ec42038e
-References: <CGME20190820165731epcas2p340cc3421251987896b857da4ec42038e@epcas2p3.samsung.com>
-        <20190820165715.15185-1-max@enpas.org>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-
-Hi,
-
-On 8/20/19 6:57 PM, Max Staudt wrote:
-> Up until now, the pata_buddha driver would only check for cards on
-> initcall time. Now, the kernel will call its probe function as soon
-> as a compatible card is detected.
+On 08/23/2019 12:42 PM, Bartlomiej Zolnierkiewicz wrote:
+>> +static struct zorro_driver pata_buddha_driver = {
+>> +	.name           = "pata_buddha",
+>> +	.id_table       = pata_buddha_zorro_tbl,
+>> +	.probe          = pata_buddha_probe,
+>> +	.remove         = pata_buddha_remove,
+>> +	.driver  = {
+>> +		.suppress_bind_attrs = true,
 > 
-> v6: Only do the drvdata workaround for X-Surf (remove breaks otherwise)
->     Style
-> 
-> v5: Remove module_exit(): There's no good way to handle the X-Surf hack.
->     Also include a workaround to save X-Surf's drvdata in case zorro8390
->     is active.
-> 
-> v4: Clean up pata_buddha_probe() by using ent->driver_data.
->     Support X-Surf via late_initcall()
-> 
-> v3: Clean up devm_*, implement device removal.
-> 
-> v2: Rename 'zdev' to 'z' to make the patch easy to analyse with
->     git diff --ignore-space-change
-> 
-> Signed-off-by: Max Staudt <max@enpas.org>
-> ---
->  drivers/ata/pata_buddha.c | 231 +++++++++++++++++++++++++++-------------------
->  1 file changed, 138 insertions(+), 93 deletions(-)
-> 
-> diff --git a/drivers/ata/pata_buddha.c b/drivers/ata/pata_buddha.c
-> index 11a8044ff..9e1b57866 100644
-> --- a/drivers/ata/pata_buddha.c
-> +++ b/drivers/ata/pata_buddha.c
+> I thought that we had agreed that this is not needed?
 
-[...]
+You're right, that slipped in. Thanks for catching it!
 
-> +static struct zorro_driver pata_buddha_driver = {
-> +	.name           = "pata_buddha",
-> +	.id_table       = pata_buddha_zorro_tbl,
-> +	.probe          = pata_buddha_probe,
-> +	.remove         = pata_buddha_remove,
-> +	.driver  = {
-> +		.suppress_bind_attrs = true,
+I'll send a v7 i two minutes, and would be grateful if you could ACK it.
 
-I thought that we had agreed that this is not needed?
 
-With that fixed:
-
-Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+Max
