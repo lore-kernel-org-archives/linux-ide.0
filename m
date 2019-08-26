@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 635D2C3A5A6
-	for <linux-ide@archiver.kernel.org>; Mon, 26 Aug 2019 10:57:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF70CC3A59F
+	for <linux-ide@archiver.kernel.org>; Mon, 26 Aug 2019 10:57:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3A6C520874
-	for <linux-ide@archiver.kernel.org>; Mon, 26 Aug 2019 10:57:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A66FD20874
+	for <linux-ide@archiver.kernel.org>; Mon, 26 Aug 2019 10:57:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mehBp7T+"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="RLpxBcVE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730280AbfHZK5f (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 26 Aug 2019 06:57:35 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:45516 "EHLO
+        id S1730306AbfHZK5i (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 26 Aug 2019 06:57:38 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:45536 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730199AbfHZK5f (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 26 Aug 2019 06:57:35 -0400
+        with ESMTP id S1730199AbfHZK5i (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 26 Aug 2019 06:57:38 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=qEtWmI88RiyaP/sTKR3fvS150WdddPM7l8bkWy4ssys=; b=mehBp7T+mJCf6hrQ7Kc0kBNmmA
-        x6YLZ/JjaJ6unigVQ+njNYMDSQRkW49DKLtbHSp+QwhewKC9ZONfgrDjMbAvOZyDr1TSR8y0yy+Fn
-        2wyUDngHupzKw3ZI6+1brdi8o2a4s37FRIq+4ZuttqPg5R5wkmEGmYRgDdGqbXqOJbNGUGRq8D0zg
-        0kHQhC1L2zQhiMYy4GuaO7rX+yE5abpgHTrK/VdGbftsO9VXMSGQ3paxs/c0pEb5rA+fU6sG2G8Cq
-        ktpLrB2NhtOfhEKPa/y6WuOXWO13y38bVDALZq8HlrtTxd4vdU7NMv2w1nQbMLsnySuid4QZ5yAcg
-        SqLBI7WQ==;
+        bh=aw+7XU6MuWjQxjWW7Mcc3DHxkBoO7y4+DXCT2jzxFyQ=; b=RLpxBcVE+wYXs5oh77wwmGmLjH
+        2J8cDb6skQOjz6cjd+acSto+E3Nz0S8FOCOmgHnk7Rd5EDxO6aFa5trC1Ewy1ZgdtlG0Vbdn7uk5V
+        tX4LE0UFbvO8pY5kGv6ltip+W8ZJjA5o+6Sd2N0/XApk6jt+D+9Y3yKmRrIvIcgyb/Iul7vqc2LF2
+        Ngpv8uWb0SqDXUbpWbqC9Ewez1ygFAnlKFLgwpvu2WbXVELNHFZTvY5z6JKEFwAX/hjnhrneLKNpf
+        rRfONCm0pWhdfELMiagOIEct8B5mfppexbPvSoUCdHglg9s/zRjojBtJqaFyxpWEtQU7GMDTQ6Nfj
+        pQkfyLjg==;
 Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1i2Cgo-0007fb-5f; Mon, 26 Aug 2019 10:57:34 +0000
+        id 1i2Cgq-0007fo-RM; Mon, 26 Aug 2019 10:57:37 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>,
         Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
         Mikael Pettersson <mikpelinux@gmail.com>
 Cc:     linux-ide@vger.kernel.org
-Subject: [PATCH 2/8] ahci: use dma_set_mask_and_coherent
-Date:   Mon, 26 Aug 2019 12:57:19 +0200
-Message-Id: <20190826105725.19405-3-hch@lst.de>
+Subject: [PATCH 3/8] pdc_adma: use dma_set_mask_and_coherent
+Date:   Mon, 26 Aug 2019 12:57:20 +0200
+Message-Id: <20190826105725.19405-4-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190826105725.19405-1-hch@lst.de>
 References: <20190826105725.19405-1-hch@lst.de>
@@ -62,62 +62,51 @@ fallback code.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/ata/ahci.c | 33 ++++++++-------------------------
- 1 file changed, 8 insertions(+), 25 deletions(-)
+ drivers/ata/pdc_adma.c | 23 ++++-------------------
+ 1 file changed, 4 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index f7652baa6337..ad840f20f8e2 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -901,40 +901,23 @@ static int ahci_pci_device_resume(struct device *dev)
- 
- static int ahci_configure_dma_masks(struct pci_dev *pdev, int using_dac)
- {
-+	const int dma_bits = using_dac ? 64 : 32;
- 	int rc;
- 
- 	/*
- 	 * If the device fixup already set the dma_mask to some non-standard
- 	 * value, don't extend it here. This happens on STA2X11, for example.
-+	 *
-+	 * XXX: manipulating the DMA mask from platform code is completely
-+	 * bogus, platform code should use dev->bus_dma_mask instead..
- 	 */
- 	if (pdev->dma_mask && pdev->dma_mask < DMA_BIT_MASK(32))
- 		return 0;
- 
--	if (using_dac &&
--	    !dma_set_mask(&pdev->dev, DMA_BIT_MASK(64))) {
--		rc = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(64));
--		if (rc) {
--			rc = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
--			if (rc) {
--				dev_err(&pdev->dev,
--					"64-bit DMA enable failed\n");
--				return rc;
--			}
--		}
--	} else {
--		rc = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
--		if (rc) {
--			dev_err(&pdev->dev, "32-bit DMA enable failed\n");
--			return rc;
--		}
--		rc = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
--		if (rc) {
--			dev_err(&pdev->dev,
--				"32-bit consistent DMA enable failed\n");
--			return rc;
--		}
--	}
--	return 0;
-+	rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(dma_bits));
-+	if (rc)
-+		dev_err(&pdev->dev, "DMA enable failed\n");
-+	return rc;
+diff --git a/drivers/ata/pdc_adma.c b/drivers/ata/pdc_adma.c
+index c5bbb07aa7d9..cb490531b62e 100644
+--- a/drivers/ata/pdc_adma.c
++++ b/drivers/ata/pdc_adma.c
+@@ -572,23 +572,6 @@ static void adma_host_init(struct ata_host *host, unsigned int chip_id)
+ 		adma_reset_engine(host->ports[port_no]);
  }
  
- static void ahci_pci_print_info(struct ata_host *host)
+-static int adma_set_dma_masks(struct pci_dev *pdev, void __iomem *mmio_base)
+-{
+-	int rc;
+-
+-	rc = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
+-	if (rc) {
+-		dev_err(&pdev->dev, "32-bit DMA enable failed\n");
+-		return rc;
+-	}
+-	rc = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
+-	if (rc) {
+-		dev_err(&pdev->dev, "32-bit consistent DMA enable failed\n");
+-		return rc;
+-	}
+-	return 0;
+-}
+-
+ static int adma_ata_init_one(struct pci_dev *pdev,
+ 			     const struct pci_device_id *ent)
+ {
+@@ -619,9 +602,11 @@ static int adma_ata_init_one(struct pci_dev *pdev,
+ 	host->iomap = pcim_iomap_table(pdev);
+ 	mmio_base = host->iomap[ADMA_MMIO_BAR];
+ 
+-	rc = adma_set_dma_masks(pdev, mmio_base);
+-	if (rc)
++	rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
++	if (rc) {
++		dev_err(&pdev->dev, "32-bit DMA enable failed\n");
+ 		return rc;
++	}
+ 
+ 	for (port_no = 0; port_no < ADMA_PORTS; ++port_no) {
+ 		struct ata_port *ap = host->ports[port_no];
 -- 
 2.20.1
 
