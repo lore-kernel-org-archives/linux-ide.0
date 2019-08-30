@@ -2,75 +2,89 @@ Return-Path: <SRS0=R/8C=W2=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D66BC3A59B
-	for <linux-ide@archiver.kernel.org>; Fri, 30 Aug 2019 19:42:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 522C3C3A59B
+	for <linux-ide@archiver.kernel.org>; Fri, 30 Aug 2019 20:26:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D89FD206BB
-	for <linux-ide@archiver.kernel.org>; Fri, 30 Aug 2019 19:42:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 25AE72342E
+	for <linux-ide@archiver.kernel.org>; Fri, 30 Aug 2019 20:26:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="srxXErUh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728094AbfH3Tm6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 30 Aug 2019 15:42:58 -0400
-Received: from mga12.intel.com ([192.55.52.136]:54276 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727246AbfH3Tm6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 30 Aug 2019 15:42:58 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 30 Aug 2019 12:42:58 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.64,447,1559545200"; 
-   d="scan'208";a="382117602"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga006.fm.intel.com with ESMTP; 30 Aug 2019 12:42:57 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id 220A01A1; Fri, 30 Aug 2019 22:42:56 +0300 (EEST)
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
-Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Chuansheng Liu <chuansheng.liu@intel.com>
-Subject: [PATCH v1] ahci: Do not export local variable ahci_em_messages
-Date:   Fri, 30 Aug 2019 22:42:55 +0300
-Message-Id: <20190830194255.878-1-andriy.shevchenko@linux.intel.com>
-X-Mailer: git-send-email 2.23.0.rc1
+        id S1728067AbfH3U02 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 30 Aug 2019 16:26:28 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:36643 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728042AbfH3U02 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 30 Aug 2019 16:26:28 -0400
+Received: by mail-pf1-f195.google.com with SMTP id w2so5341677pfi.3
+        for <linux-ide@vger.kernel.org>; Fri, 30 Aug 2019 13:26:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=iIIskhaqEKfh/HRB4yBq2WDy6v4Ph+jgnR6iPGJXHsQ=;
+        b=srxXErUhH5ILDsZj+NdfHqeJT9DKZXlXYUDH6dDqrwO8scgOKWJ2FHrRR/dAIgubII
+         +D/0vPYrqXWgmN8on16mDk/GTueMFgvv7uXETtPygVZKJiET0trcBW+BuqIfP9N4hbh3
+         py4DZsT3sguDssxvraOgx3riF5L8k85I3Xoabm2E/qQFevODldUrWGNuMQOnOIodoHYA
+         NnYc644xJINtiV+JY2hrpiXPMutnxx7m6Uvqm3XcK6s0s4YO1bB5mHtzwZalefv2vwvh
+         nJ+lMUHvADS23acSOO0BT1USS8kT+/LA5/yBqk/V6IkXwmvEdDW+PS+qYDOPBgsiWSx4
+         HjFg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=iIIskhaqEKfh/HRB4yBq2WDy6v4Ph+jgnR6iPGJXHsQ=;
+        b=mkiTBE/+vmcvILV63WlqSUJHdwI0gPksaIw1MzH6FVNaXtucZDVcR4yIPa2ZKtEGJG
+         i7KfKdil2KudgEBuYh2WhEDrMflIXxvlY6QwV4FwVE7CZOENt4DGdWRp/jE2cPU91tMd
+         /NZN/8fduscvTSYgVy00962/yHiOTGoWu1t5Bqe0G2Ce3GJ36YbcJMc7S74nCTp1ehLg
+         fDxDdB1XIAJIoUDL1tspXTLoqnlDbkOfeSPA57yXJNj4MKd4gREst9hG7jIikZoqSn+c
+         EhjgmmObdVlOwi0JDW2olmJkxZ4muQNAxhg0xN1yA1mYuvDU58Pn1FiO7/+EKvCYF6Ee
+         jNyg==
+X-Gm-Message-State: APjAAAV/LAbfarqTVrbpFVxnZCakc62NScwV+rQt3mpVOtlWx4FYn0tj
+        xVptrInSViiS2H9ZFrGKItL31g==
+X-Google-Smtp-Source: APXvYqze7cGDwL8Y6Ty1UGnMAlUH8jEYU616/pZNV97iIw+5uNPo24kDUYn6QOBtRsSSb+0zYrtUhw==
+X-Received: by 2002:a17:90a:37a7:: with SMTP id v36mr368563pjb.3.1567196787807;
+        Fri, 30 Aug 2019 13:26:27 -0700 (PDT)
+Received: from [192.168.1.188] (66.29.164.166.static.utbb.net. [66.29.164.166])
+        by smtp.gmail.com with ESMTPSA id d3sm5173507pjz.31.2019.08.30.13.26.26
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 30 Aug 2019 13:26:27 -0700 (PDT)
+Subject: Re: [PATCH v1] ahci: Do not export local variable ahci_em_messages
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        linux-ide@vger.kernel.org
+Cc:     Chuansheng Liu <chuansheng.liu@intel.com>
+References: <20190830194255.878-1-andriy.shevchenko@linux.intel.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <65481074-5107-14d0-af7a-ec571a13d28c@kernel.dk>
+Date:   Fri, 30 Aug 2019 14:26:25 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190830194255.878-1-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The commit ed08d40cdec4
-  ("ahci: Changing two module params with static and __read_mostly")
-moved ahci_em_messages to be static while missing the fact of exporting it.
+On 8/30/19 1:42 PM, Andy Shevchenko wrote:
+> The commit ed08d40cdec4
+>    ("ahci: Changing two module params with static and __read_mostly")
+> moved ahci_em_messages to be static while missing the fact of exporting it.
+> 
+> WARNING: "ahci_em_messages" [vmlinux] is a static EXPORT_SYMBOL_GPL
+> 
+> Drop export for the local variable ahci_em_messages.
 
-WARNING: "ahci_em_messages" [vmlinux] is a static EXPORT_SYMBOL_GPL
+Applied, thanks.
 
-Drop export for the local variable ahci_em_messages.
-
-Fixes: ed08d40cdec4 ("ahci: Changing two module params with static and __read_mostly")
-Cc: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/ata/libahci.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index e4c45d3cca79..bff369d9a1a7 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -175,7 +175,6 @@ struct ata_port_operations ahci_pmp_retry_srst_ops = {
- EXPORT_SYMBOL_GPL(ahci_pmp_retry_srst_ops);
- 
- static bool ahci_em_messages __read_mostly = true;
--EXPORT_SYMBOL_GPL(ahci_em_messages);
- module_param(ahci_em_messages, bool, 0444);
- /* add other LED protocol types when they become supported */
- MODULE_PARM_DESC(ahci_em_messages,
 -- 
-2.23.0.rc1
+Jens Axboe
 
