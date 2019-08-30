@@ -4,193 +4,230 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7598CC3A59B
-	for <linux-ide@archiver.kernel.org>; Fri, 30 Aug 2019 16:01:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 886A9C3A59B
+	for <linux-ide@archiver.kernel.org>; Fri, 30 Aug 2019 17:06:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 389942341B
-	for <linux-ide@archiver.kernel.org>; Fri, 30 Aug 2019 16:01:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2951923426
+	for <linux-ide@archiver.kernel.org>; Fri, 30 Aug 2019 17:06:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="1L+6bgks"
+	dkim=pass (1024-bit key) header.d=SILICOMLTD.onmicrosoft.com header.i=@SILICOMLTD.onmicrosoft.com header.b="qfbuJsIi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728240AbfH3QBD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 30 Aug 2019 12:01:03 -0400
-Received: from mail-ot1-f68.google.com ([209.85.210.68]:38960 "EHLO
-        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727924AbfH3QBD (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 30 Aug 2019 12:01:03 -0400
-Received: by mail-ot1-f68.google.com with SMTP id b1so7379638otp.6
-        for <linux-ide@vger.kernel.org>; Fri, 30 Aug 2019 09:01:02 -0700 (PDT)
+        id S1727791AbfH3RGG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 30 Aug 2019 13:06:06 -0400
+Received: from mail-eopbgr40124.outbound.protection.outlook.com ([40.107.4.124]:13029
+        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727883AbfH3RGG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 30 Aug 2019 13:06:06 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=N4oKHqcMIJe6tkoOoYK/0iyPYSOAZMzsz46+DgMhOUKrAc68wT40kXkYom2HSb3Rd4vgvabLZ2EOqhhuL/VUxJchMWP6urp6mkFEL5++UAp0bb5mChH6Mn2Yd8TteUdR15Rs7Rju9vJCSmOwp66rQaQBnl+Gekkrlg8de6268XMm3rXpiYEALr/sOrrktvWj2UagxB0ILgyOtfAbTsGArE5hL5HiOQpRTFjxNAOLn4xL+uKNIhKcViPumsXFyzL8Gm5vN9diXF9w6TbS8CPtpMKH9id4u7udl9B+nfk50lc/S0T/FVlwjJaquqR729rDNvO/Uf2WE00GN71NBYvhew==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=bnZJLAyBjSoxwKZfoee60m0kI+hHIbPSK2YA+LS3o/Y=;
+ b=RFssWaa/tBwrgtZkgz1zJe7DFGUTzRdjVaYxyFEhp9Vz1XTSZ2TtlsORsGJ6ePvNGqcdGgfxJIvHhPKPQEq7VfRjaom3uC7r97ItHUzf36vA0Suf5PzM2KeTPGxpo5f5/I4YZw6PvgrOrjoNmrWUUFNgKXSaorsLGOIkR+ryHw3lDunwZSE71CCN+wwta5QifrYWjsgZq9z/FQ2d8fpPC8JmH2uUUTz/uLxzhYhQtMSrHT0vrQB8IJEMAarmiUjeR0aPP0eiXNbh0DMhY1/dDA7c50r1ihXLt1BzOch6TeSJiIs8SjRR3lYKbDnCUwP0JdN4HruhhZBkuWEu4soXqQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=silicom-usa.com; dmarc=pass action=none
+ header.from=silicom-usa.com; dkim=pass header.d=silicom-usa.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ySfHoB8l/xyw8qkOA35nwr7iHxPZP1YOxL7hVP9E3h4=;
-        b=1L+6bgkshAql1vjG+F+Qinh4kK7fAjxpP05HH8wUoQj50+FjvvLvLw2lUiddjp4fCD
-         noU3eenfi5DgIeiNL9zxQqZeDXFSMyZ3qHwRG3NQkjzUooWqvHEKlpZlSLBCF3794JMk
-         fnmYt7eukhwAVo+a6mQkArQsFL9ZhzgsPsi4npqNWXbsgRK6JqtMR+iVIP0MMU1NC1rR
-         FLVKCFrATvforvUK0oSB3NTRZUCVlC+HGnp7P8j6iaU/8EfaVARXv80wrGl9MsrQrTVF
-         UUTOaKMZnD6L41iWBj3RS2hrOARNoTFdqEwqw6gai0kO5CO64Wyc71BoGnXINKP9kx9/
-         /lVA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ySfHoB8l/xyw8qkOA35nwr7iHxPZP1YOxL7hVP9E3h4=;
-        b=Ib0oyQSZPv4sRD9uprnU8wMKXnVcz+P3cSM6YH738/9iv8J0OJQPA17q5Tj5nOsO7e
-         mnHhhR7CvLim+cup6DAPZAgeGJc/dgHsmiB/0viS+byPIcZNy1dASynujbCg3TvSAysn
-         szFglgKA+06lA4Lunua3mVxYmcy2wb3eOLEDgShefvyC64oEf6cI3xphI4KD/CE5C+pz
-         dP0FW9iGLq1MxgRSLnTLK05jfNnD/vZ7GzryKTM85MyW9RfZaaAYa3zIO1fH2kSI4Mqx
-         VfVT2gBoMV/2/xsJaVPWtD2OlKZTrMgajITM5t6EQtkizC7x1aUkM5LQ7yaMppwipKEW
-         vnjQ==
-X-Gm-Message-State: APjAAAXZG0oHkzoiJIOno8NQZv+OXRB6kD/W1Yk6wmaNnLCU3B8vA8F8
-        y8NorjP3vmV2uRynt18AbCDXU4e5BnXqhnS7jb4ou0YIEt8=
-X-Google-Smtp-Source: APXvYqyipA8UNkC9jFwZFjWhmNOU4RjajQwMFnKJMHl6vT1i7F+SkTBCCB9CI5CTCSa+8tEnJCkS/xbKemvtfvD0nNs=
-X-Received: by 2002:a05:6830:458:: with SMTP id d24mr12543472otc.126.1567180861989;
- Fri, 30 Aug 2019 09:01:01 -0700 (PDT)
-MIME-Version: 1.0
-References: <156712139395.1614755.3489977733530873708.stgit@dwillia2-desk3.amr.corp.intel.com>
- <63de1aac-ff06-729e-0db4-bc1a8a799dc0@silicom-usa.com>
-In-Reply-To: <63de1aac-ff06-729e-0db4-bc1a8a799dc0@silicom-usa.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Fri, 30 Aug 2019 09:00:50 -0700
-Message-ID: <CAPcyv4h2tNRC0w1mKjnt6tuZrUcUTh+y1YCeQKTb+b8HftEWZg@mail.gmail.com>
-Subject: Re: [PATCH v3] libata/ahci: Drop PCS quirk for Denverton and beyond
-To:     Stephen Douthit <stephend@silicom-usa.com>
-Cc:     "axboe@kernel.dk" <axboe@kernel.dk>,
+ d=SILICOMLTD.onmicrosoft.com; s=selector2-SILICOMLTD-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=bnZJLAyBjSoxwKZfoee60m0kI+hHIbPSK2YA+LS3o/Y=;
+ b=qfbuJsIi5atCZ56coXRnTXHJpdCU68DQt566dWyRkHztF/My//u4I5j/7qFhttVnGiVdPe/+qNzZUD3FPBW98vtGqYknCNhBh357ojUbObwpsOS9KAKQMdRPOMmlQbsdy61Of46TXohcJHPjWkZlhQprAkY/5FT003vuYDorRTY=
+Received: from AM0PR0402MB3890.eurprd04.prod.outlook.com (52.133.33.145) by
+ AM0PR0402MB3618.eurprd04.prod.outlook.com (52.133.43.28) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2199.21; Fri, 30 Aug 2019 17:05:56 +0000
+Received: from AM0PR0402MB3890.eurprd04.prod.outlook.com
+ ([fe80::e407:31b1:53c3:856c]) by AM0PR0402MB3890.eurprd04.prod.outlook.com
+ ([fe80::e407:31b1:53c3:856c%3]) with mapi id 15.20.2220.013; Fri, 30 Aug 2019
+ 17:05:56 +0000
+From:   Stephen Douthit <stephend@silicom-usa.com>
+To:     Dan Williams <dan.j.williams@intel.com>
+CC:     "axboe@kernel.dk" <axboe@kernel.dk>,
         Christoph Hellwig <hch@infradead.org>,
         "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH v3] libata/ahci: Drop PCS quirk for Denverton and beyond
+Thread-Topic: [PATCH v3] libata/ahci: Drop PCS quirk for Denverton and beyond
+Thread-Index: AQHVXsPCoizI5LMiXE+ZJb2FJ5s6kKcT1ukAgAADvwCAABIqgA==
+Date:   Fri, 30 Aug 2019 17:05:56 +0000
+Message-ID: <9d40bccf-d133-b78e-f6b4-683868e20ddf@silicom-usa.com>
+References: <156712139395.1614755.3489977733530873708.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <63de1aac-ff06-729e-0db4-bc1a8a799dc0@silicom-usa.com>
+ <CAPcyv4h2tNRC0w1mKjnt6tuZrUcUTh+y1YCeQKTb+b8HftEWZg@mail.gmail.com>
+In-Reply-To: <CAPcyv4h2tNRC0w1mKjnt6tuZrUcUTh+y1YCeQKTb+b8HftEWZg@mail.gmail.com>
+Reply-To: Stephen Douthit <stephend@silicom-usa.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-clientproxiedby: BN6PR19CA0110.namprd19.prod.outlook.com
+ (2603:10b6:404:a0::24) To AM0PR0402MB3890.eurprd04.prod.outlook.com
+ (2603:10a6:208:3::17)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=stephend@silicom-usa.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [96.82.2.57]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 33e2d8dc-273e-46ca-f082-08d72d6c52c2
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600166)(711020)(4605104)(1401327)(2017052603328)(7193020);SRVR:AM0PR0402MB3618;
+x-ms-traffictypediagnostic: AM0PR0402MB3618:
+x-microsoft-antispam-prvs: <AM0PR0402MB36186FEF696D9C3E4B8C70D994BD0@AM0PR0402MB3618.eurprd04.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:3826;
+x-forefront-prvs: 0145758B1D
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(366004)(136003)(346002)(396003)(376002)(39850400004)(189003)(199004)(316002)(6512007)(6436002)(478600001)(4326008)(6486002)(76176011)(36756003)(486006)(71200400001)(446003)(11346002)(14454004)(26005)(71190400001)(2906002)(476003)(2616005)(256004)(14444005)(52116002)(53546011)(386003)(66066001)(6506007)(5660300002)(186003)(53936002)(3450700001)(305945005)(66556008)(31696002)(6916009)(66476007)(99286004)(102836004)(66446008)(64756008)(3846002)(6246003)(8936002)(66946007)(229853002)(7736002)(86362001)(31686004)(8676002)(81166006)(6116002)(54906003)(25786009)(43066004)(81156014);DIR:OUT;SFP:1102;SCL:1;SRVR:AM0PR0402MB3618;H:AM0PR0402MB3890.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
+received-spf: None (protection.outlook.com: silicom-usa.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: O0mLjvoEYWminf772t/YjLXWDlhA1Ru6n57DN6B59z7oX4ylC3xEJFFyfjudjmy0Ua08UbfAjFpXqLud+WCgMOlyHpS4aWBAE5060XHuBc9QSVonWqIeAz6jRhitn7N9/KenEzrXAAkh3YX+i/jU28OtasEOK6hFzD90a9/8v8A6QebASKAI6zNIdJQbSuGcRgP87Q2y05WkZhjwFM+FkffrlGSmThKUToNmxGH85a9MBPlCAeJ/rafkWB54fsta/aL2IANgY4BK5IYXmQstP+crlZXpOeG4EUHr/A+qKQaUYkuDgxnaWtcCpAwePVDHeAlQeaYRo4G3cj9wGiCMScwqNATsJzRu1QCNaM/jNoQWCAi/FKf8dLzR1hQEsK5vVOP7E2wz8gzQWkeK8kGf5W8CwjnskhOb/SBuZkkd5Dw=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <6D550560CE4A91429D770D3D48C87C38@eurprd04.prod.outlook.com>
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: silicom-usa.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 33e2d8dc-273e-46ca-f082-08d72d6c52c2
+X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Aug 2019 17:05:56.5668
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: c9e326d8-ce47-4930-8612-cc99d3c87ad1
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: uoXAPOOTxoi9AuTaruaPn4iaYwrzMCcL3c86gzdwiuuLSr7rKwe1cTk1cQTtfVuxkFQjGr0Z5cWF84gz1q9xp1j+4eNLwtCviK8o2lbSaao=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR0402MB3618
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Aug 30, 2019 at 8:47 AM Stephen Douthit
-<stephend@silicom-usa.com> wrote:
->
-> On 8/29/19 7:30 PM, Dan Williams wrote:
-> > The Linux ahci driver has historically implemented a configuration fixup
-> > for platforms / platform-firmware that fails to enable the ports prior
-> > to OS hand-off at boot. The fixup was originally implemented way back
-> > before ahci moved from drivers/scsi/ to drivers/ata/, and was updated in
-> > 2007 via commit 49f290903935 "ahci: update PCS programming". The quirk
-> > sets a port-enable bitmap in the PCS register at offset 0x92.
-> >
-> > This quirk could be applied generically up until the arrival of the
-> > Denverton (DNV) platform. The DNV AHCI controller architecture supports
-> > more than 6 ports and along with that the PCS register location and
-> > format were updated to allow for more possible ports in the bitmap. DNV
-> > AHCI expands the register to 32-bits and moves it to offset 0x94.
-> >
-> > As it stands there are no known problem reports with existing Linux
-> > trying to set bits at offset 0x92 which indicates that the quirk is not
-> > applicable. Likely it is not applicable on a wider range of platforms,
-> > but it is difficult to discern which platforms if any still depend on
-> > the quirk.
-> >
-> > Rather than try to fix the PCS quirk to consider the DNV register layout
-> > instead require explicit opt-in. The assumption is that the OS driver
-> > need not touch this register, and platforms can be added with a new
-> > boad_ahci_pcs7 board-id when / if problematic platforms are found in the
-> > future. The logic in ahci_intel_pcs_quirk() looks for all Intel AHCI
-> > instances with "legacy" board-ids and otherwise skips the quirk if the
-> > board was matched by class-code.
-> >
-> > Reported-by: Stephen Douthit <stephend@silicom-usa.com>
-> > Cc: Christoph Hellwig <hch@infradead.org>
-> > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> > ---
-> > Changes since v2:
-> > - Use board_ahci_pcs7 to opt Denverton out of the PCS quirk.
-> >
-> >   drivers/ata/ahci.c |  116 +++++++++++++++++++++++++++++++---------------------
-> >   drivers/ata/ahci.h |    2 +
-> >   2 files changed, 71 insertions(+), 47 deletions(-)
-> >
-> > diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> > index f7652baa6337..3e63294304c7 100644
-> > --- a/drivers/ata/ahci.c
-> > +++ b/drivers/ata/ahci.c
-> > @@ -65,6 +65,12 @@ enum board_ids {
-> >       board_ahci_sb700,       /* for SB700 and SB800 */
-> >       board_ahci_vt8251,
-> >
-> > +     /*
-> > +      * board IDs for Intel chipsets that support more than 6 ports
-> > +      * *and* end up needing the PCS quirk.
-> > +      */
-> > +     board_ahci_pcs7,
-> > +
-> >       /* aliases */
-> >       board_ahci_mcp_linux    = board_ahci_mcp65,
-> >       board_ahci_mcp67        = board_ahci_mcp65,
-> > @@ -220,6 +226,12 @@ static const struct ata_port_info ahci_port_info[] = {
-> >               .udma_mask      = ATA_UDMA6,
-> >               .port_ops       = &ahci_vt8251_ops,
-> >       },
-> > +     [board_ahci_pcs7] = {
-> > +             .flags          = AHCI_FLAG_COMMON,
-> > +             .pio_mask       = ATA_PIO4,
-> > +             .udma_mask      = ATA_UDMA6,
-> > +             .port_ops       = &ahci_ops,
-> > +     },
-> >   };
-> >
-> >   static const struct pci_device_id ahci_pci_tbl[] = {
-> > @@ -264,26 +276,26 @@ static const struct pci_device_id ahci_pci_tbl[] = {
-> >       { PCI_VDEVICE(INTEL, 0x3b2b), board_ahci }, /* PCH RAID */
-> >       { PCI_VDEVICE(INTEL, 0x3b2c), board_ahci_mobile }, /* PCH M RAID */
-> >       { PCI_VDEVICE(INTEL, 0x3b2f), board_ahci }, /* PCH AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19b0), board_ahci }, /* DNV AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19b1), board_ahci }, /* DNV AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19b2), board_ahci }, /* DNV AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19b3), board_ahci }, /* DNV AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19b4), board_ahci }, /* DNV AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19b5), board_ahci }, /* DNV AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19b6), board_ahci }, /* DNV AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19b7), board_ahci }, /* DNV AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19bE), board_ahci }, /* DNV AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19bF), board_ahci }, /* DNV AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19c0), board_ahci }, /* DNV AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19c1), board_ahci }, /* DNV AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19c2), board_ahci }, /* DNV AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19c3), board_ahci }, /* DNV AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19c4), board_ahci }, /* DNV AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19c5), board_ahci }, /* DNV AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19c6), board_ahci }, /* DNV AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19c7), board_ahci }, /* DNV AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19cE), board_ahci }, /* DNV AHCI */
-> > -     { PCI_VDEVICE(INTEL, 0x19cF), board_ahci }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19b0), board_ahci_pcs7 }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19b1), board_ahci_pcs7 }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19b2), board_ahci_pcs7 }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19b3), board_ahci_pcs7 }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19b4), board_ahci_pcs7 }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19b5), board_ahci_pcs7 }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19b6), board_ahci_pcs7 }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19b7), board_ahci_pcs7 }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19bE), board_ahci_pcs7 }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19bF), board_ahci_pcs7 }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19c0), board_ahci_pcs7 }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19c1), board_ahci_pcs7 }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19c2), board_ahci_pcs7 }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19c3), board_ahci_pcs7 }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19c4), board_ahci_pcs7 }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19c5), board_ahci_pcs7 }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19c6), board_ahci_pcs7 }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19c7), board_ahci_pcs7 }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19cE), board_ahci_pcs7 }, /* DNV AHCI */
-> > +     { PCI_VDEVICE(INTEL, 0x19cF), board_ahci_pcs7 }, /* DNV AHCI */
->
-> I think you want to invert this scheme and mark the old controllers as
-> board_ahci_pcs6 and leave Denverton/newer controllers as board_ahci.
->
-> Otherwise the quirk below runs for any Intel controllers that matched
-> based on the AHCI class code, since their board_id will be board_ahci
-> which is < board_ahci_pcs7.
-
-It shouldn't apply for the class code because the id->vendor in that
-case will be PCI_ANY_ID not PCI_VENDOR_ID_INTEL.
+T24gOC8zMC8xOSAxMjowMCBQTSwgRGFuIFdpbGxpYW1zIHdyb3RlOg0KPiBPbiBGcmksIEF1ZyAz
+MCwgMjAxOSBhdCA4OjQ3IEFNIFN0ZXBoZW4gRG91dGhpdA0KPiA8c3RlcGhlbmRAc2lsaWNvbS11
+c2EuY29tPiB3cm90ZToNCj4+DQo+PiBPbiA4LzI5LzE5IDc6MzAgUE0sIERhbiBXaWxsaWFtcyB3
+cm90ZToNCj4+PiBUaGUgTGludXggYWhjaSBkcml2ZXIgaGFzIGhpc3RvcmljYWxseSBpbXBsZW1l
+bnRlZCBhIGNvbmZpZ3VyYXRpb24gZml4dXANCj4+PiBmb3IgcGxhdGZvcm1zIC8gcGxhdGZvcm0t
+ZmlybXdhcmUgdGhhdCBmYWlscyB0byBlbmFibGUgdGhlIHBvcnRzIHByaW9yDQo+Pj4gdG8gT1Mg
+aGFuZC1vZmYgYXQgYm9vdC4gVGhlIGZpeHVwIHdhcyBvcmlnaW5hbGx5IGltcGxlbWVudGVkIHdh
+eSBiYWNrDQo+Pj4gYmVmb3JlIGFoY2kgbW92ZWQgZnJvbSBkcml2ZXJzL3Njc2kvIHRvIGRyaXZl
+cnMvYXRhLywgYW5kIHdhcyB1cGRhdGVkIGluDQo+Pj4gMjAwNyB2aWEgY29tbWl0IDQ5ZjI5MDkw
+MzkzNSAiYWhjaTogdXBkYXRlIFBDUyBwcm9ncmFtbWluZyIuIFRoZSBxdWlyaw0KPj4+IHNldHMg
+YSBwb3J0LWVuYWJsZSBiaXRtYXAgaW4gdGhlIFBDUyByZWdpc3RlciBhdCBvZmZzZXQgMHg5Mi4N
+Cj4+Pg0KPj4+IFRoaXMgcXVpcmsgY291bGQgYmUgYXBwbGllZCBnZW5lcmljYWxseSB1cCB1bnRp
+bCB0aGUgYXJyaXZhbCBvZiB0aGUNCj4+PiBEZW52ZXJ0b24gKEROVikgcGxhdGZvcm0uIFRoZSBE
+TlYgQUhDSSBjb250cm9sbGVyIGFyY2hpdGVjdHVyZSBzdXBwb3J0cw0KPj4+IG1vcmUgdGhhbiA2
+IHBvcnRzIGFuZCBhbG9uZyB3aXRoIHRoYXQgdGhlIFBDUyByZWdpc3RlciBsb2NhdGlvbiBhbmQN
+Cj4+PiBmb3JtYXQgd2VyZSB1cGRhdGVkIHRvIGFsbG93IGZvciBtb3JlIHBvc3NpYmxlIHBvcnRz
+IGluIHRoZSBiaXRtYXAuIEROVg0KPj4+IEFIQ0kgZXhwYW5kcyB0aGUgcmVnaXN0ZXIgdG8gMzIt
+Yml0cyBhbmQgbW92ZXMgaXQgdG8gb2Zmc2V0IDB4OTQuDQo+Pj4NCj4+PiBBcyBpdCBzdGFuZHMg
+dGhlcmUgYXJlIG5vIGtub3duIHByb2JsZW0gcmVwb3J0cyB3aXRoIGV4aXN0aW5nIExpbnV4DQo+
+Pj4gdHJ5aW5nIHRvIHNldCBiaXRzIGF0IG9mZnNldCAweDkyIHdoaWNoIGluZGljYXRlcyB0aGF0
+IHRoZSBxdWlyayBpcyBub3QNCj4+PiBhcHBsaWNhYmxlLiBMaWtlbHkgaXQgaXMgbm90IGFwcGxp
+Y2FibGUgb24gYSB3aWRlciByYW5nZSBvZiBwbGF0Zm9ybXMsDQo+Pj4gYnV0IGl0IGlzIGRpZmZp
+Y3VsdCB0byBkaXNjZXJuIHdoaWNoIHBsYXRmb3JtcyBpZiBhbnkgc3RpbGwgZGVwZW5kIG9uDQo+
+Pj4gdGhlIHF1aXJrLg0KPj4+DQo+Pj4gUmF0aGVyIHRoYW4gdHJ5IHRvIGZpeCB0aGUgUENTIHF1
+aXJrIHRvIGNvbnNpZGVyIHRoZSBETlYgcmVnaXN0ZXIgbGF5b3V0DQo+Pj4gaW5zdGVhZCByZXF1
+aXJlIGV4cGxpY2l0IG9wdC1pbi4gVGhlIGFzc3VtcHRpb24gaXMgdGhhdCB0aGUgT1MgZHJpdmVy
+DQo+Pj4gbmVlZCBub3QgdG91Y2ggdGhpcyByZWdpc3RlciwgYW5kIHBsYXRmb3JtcyBjYW4gYmUg
+YWRkZWQgd2l0aCBhIG5ldw0KPj4+IGJvYWRfYWhjaV9wY3M3IGJvYXJkLWlkIHdoZW4gLyBpZiBw
+cm9ibGVtYXRpYyBwbGF0Zm9ybXMgYXJlIGZvdW5kIGluIHRoZQ0KPj4+IGZ1dHVyZS4gVGhlIGxv
+Z2ljIGluIGFoY2lfaW50ZWxfcGNzX3F1aXJrKCkgbG9va3MgZm9yIGFsbCBJbnRlbCBBSENJDQo+
+Pj4gaW5zdGFuY2VzIHdpdGggImxlZ2FjeSIgYm9hcmQtaWRzIGFuZCBvdGhlcndpc2Ugc2tpcHMg
+dGhlIHF1aXJrIGlmIHRoZQ0KPj4+IGJvYXJkIHdhcyBtYXRjaGVkIGJ5IGNsYXNzLWNvZGUuDQo+
+Pj4NCj4+PiBSZXBvcnRlZC1ieTogU3RlcGhlbiBEb3V0aGl0IDxzdGVwaGVuZEBzaWxpY29tLXVz
+YS5jb20+DQo+Pj4gQ2M6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAaW5mcmFkZWFkLm9yZz4NCj4+
+PiBTaWduZWQtb2ZmLWJ5OiBEYW4gV2lsbGlhbXMgPGRhbi5qLndpbGxpYW1zQGludGVsLmNvbT4N
+Cj4+PiAtLS0NCj4+PiBDaGFuZ2VzIHNpbmNlIHYyOg0KPj4+IC0gVXNlIGJvYXJkX2FoY2lfcGNz
+NyB0byBvcHQgRGVudmVydG9uIG91dCBvZiB0aGUgUENTIHF1aXJrLg0KPj4+DQo+Pj4gICAgZHJp
+dmVycy9hdGEvYWhjaS5jIHwgIDExNiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tDQo+Pj4gICAgZHJpdmVycy9hdGEvYWhjaS5oIHwgICAgMiArDQo+
+Pj4gICAgMiBmaWxlcyBjaGFuZ2VkLCA3MSBpbnNlcnRpb25zKCspLCA0NyBkZWxldGlvbnMoLSkN
+Cj4+Pg0KPj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2F0YS9haGNpLmMgYi9kcml2ZXJzL2F0YS9h
+aGNpLmMNCj4+PiBpbmRleCBmNzY1MmJhYTYzMzcuLjNlNjMyOTQzMDRjNyAxMDA2NDQNCj4+PiAt
+LS0gYS9kcml2ZXJzL2F0YS9haGNpLmMNCj4+PiArKysgYi9kcml2ZXJzL2F0YS9haGNpLmMNCj4+
+PiBAQCAtNjUsNiArNjUsMTIgQEAgZW51bSBib2FyZF9pZHMgew0KPj4+ICAgICAgICBib2FyZF9h
+aGNpX3NiNzAwLCAgICAgICAvKiBmb3IgU0I3MDAgYW5kIFNCODAwICovDQo+Pj4gICAgICAgIGJv
+YXJkX2FoY2lfdnQ4MjUxLA0KPj4+DQo+Pj4gKyAgICAgLyoNCj4+PiArICAgICAgKiBib2FyZCBJ
+RHMgZm9yIEludGVsIGNoaXBzZXRzIHRoYXQgc3VwcG9ydCBtb3JlIHRoYW4gNiBwb3J0cw0KPj4+
+ICsgICAgICAqICphbmQqIGVuZCB1cCBuZWVkaW5nIHRoZSBQQ1MgcXVpcmsuDQo+Pj4gKyAgICAg
+ICovDQo+Pj4gKyAgICAgYm9hcmRfYWhjaV9wY3M3LA0KPj4+ICsNCj4+PiAgICAgICAgLyogYWxp
+YXNlcyAqLw0KPj4+ICAgICAgICBib2FyZF9haGNpX21jcF9saW51eCAgICA9IGJvYXJkX2FoY2lf
+bWNwNjUsDQo+Pj4gICAgICAgIGJvYXJkX2FoY2lfbWNwNjcgICAgICAgID0gYm9hcmRfYWhjaV9t
+Y3A2NSwNCj4+PiBAQCAtMjIwLDYgKzIyNiwxMiBAQCBzdGF0aWMgY29uc3Qgc3RydWN0IGF0YV9w
+b3J0X2luZm8gYWhjaV9wb3J0X2luZm9bXSA9IHsNCj4+PiAgICAgICAgICAgICAgICAudWRtYV9t
+YXNrICAgICAgPSBBVEFfVURNQTYsDQo+Pj4gICAgICAgICAgICAgICAgLnBvcnRfb3BzICAgICAg
+ID0gJmFoY2lfdnQ4MjUxX29wcywNCj4+PiAgICAgICAgfSwNCj4+PiArICAgICBbYm9hcmRfYWhj
+aV9wY3M3XSA9IHsNCj4+PiArICAgICAgICAgICAgIC5mbGFncyAgICAgICAgICA9IEFIQ0lfRkxB
+R19DT01NT04sDQo+Pj4gKyAgICAgICAgICAgICAucGlvX21hc2sgICAgICAgPSBBVEFfUElPNCwN
+Cj4+PiArICAgICAgICAgICAgIC51ZG1hX21hc2sgICAgICA9IEFUQV9VRE1BNiwNCj4+PiArICAg
+ICAgICAgICAgIC5wb3J0X29wcyAgICAgICA9ICZhaGNpX29wcywNCj4+PiArICAgICB9LA0KPj4+
+ICAgIH07DQo+Pj4NCj4+PiAgICBzdGF0aWMgY29uc3Qgc3RydWN0IHBjaV9kZXZpY2VfaWQgYWhj
+aV9wY2lfdGJsW10gPSB7DQo+Pj4gQEAgLTI2NCwyNiArMjc2LDI2IEBAIHN0YXRpYyBjb25zdCBz
+dHJ1Y3QgcGNpX2RldmljZV9pZCBhaGNpX3BjaV90YmxbXSA9IHsNCj4+PiAgICAgICAgeyBQQ0lf
+VkRFVklDRShJTlRFTCwgMHgzYjJiKSwgYm9hcmRfYWhjaSB9LCAvKiBQQ0ggUkFJRCAqLw0KPj4+
+ICAgICAgICB7IFBDSV9WREVWSUNFKElOVEVMLCAweDNiMmMpLCBib2FyZF9haGNpX21vYmlsZSB9
+LCAvKiBQQ0ggTSBSQUlEICovDQo+Pj4gICAgICAgIHsgUENJX1ZERVZJQ0UoSU5URUwsIDB4M2Iy
+ZiksIGJvYXJkX2FoY2kgfSwgLyogUENIIEFIQ0kgKi8NCj4+PiAtICAgICB7IFBDSV9WREVWSUNF
+KElOVEVMLCAweDE5YjApLCBib2FyZF9haGNpIH0sIC8qIEROViBBSENJICovDQo+Pj4gLSAgICAg
+eyBQQ0lfVkRFVklDRShJTlRFTCwgMHgxOWIxKSwgYm9hcmRfYWhjaSB9LCAvKiBETlYgQUhDSSAq
+Lw0KPj4+IC0gICAgIHsgUENJX1ZERVZJQ0UoSU5URUwsIDB4MTliMiksIGJvYXJkX2FoY2kgfSwg
+LyogRE5WIEFIQ0kgKi8NCj4+PiAtICAgICB7IFBDSV9WREVWSUNFKElOVEVMLCAweDE5YjMpLCBi
+b2FyZF9haGNpIH0sIC8qIEROViBBSENJICovDQo+Pj4gLSAgICAgeyBQQ0lfVkRFVklDRShJTlRF
+TCwgMHgxOWI0KSwgYm9hcmRfYWhjaSB9LCAvKiBETlYgQUhDSSAqLw0KPj4+IC0gICAgIHsgUENJ
+X1ZERVZJQ0UoSU5URUwsIDB4MTliNSksIGJvYXJkX2FoY2kgfSwgLyogRE5WIEFIQ0kgKi8NCj4+
+PiAtICAgICB7IFBDSV9WREVWSUNFKElOVEVMLCAweDE5YjYpLCBib2FyZF9haGNpIH0sIC8qIERO
+ViBBSENJICovDQo+Pj4gLSAgICAgeyBQQ0lfVkRFVklDRShJTlRFTCwgMHgxOWI3KSwgYm9hcmRf
+YWhjaSB9LCAvKiBETlYgQUhDSSAqLw0KPj4+IC0gICAgIHsgUENJX1ZERVZJQ0UoSU5URUwsIDB4
+MTliRSksIGJvYXJkX2FoY2kgfSwgLyogRE5WIEFIQ0kgKi8NCj4+PiAtICAgICB7IFBDSV9WREVW
+SUNFKElOVEVMLCAweDE5YkYpLCBib2FyZF9haGNpIH0sIC8qIEROViBBSENJICovDQo+Pj4gLSAg
+ICAgeyBQQ0lfVkRFVklDRShJTlRFTCwgMHgxOWMwKSwgYm9hcmRfYWhjaSB9LCAvKiBETlYgQUhD
+SSAqLw0KPj4+IC0gICAgIHsgUENJX1ZERVZJQ0UoSU5URUwsIDB4MTljMSksIGJvYXJkX2FoY2kg
+fSwgLyogRE5WIEFIQ0kgKi8NCj4+PiAtICAgICB7IFBDSV9WREVWSUNFKElOVEVMLCAweDE5YzIp
+LCBib2FyZF9haGNpIH0sIC8qIEROViBBSENJICovDQo+Pj4gLSAgICAgeyBQQ0lfVkRFVklDRShJ
+TlRFTCwgMHgxOWMzKSwgYm9hcmRfYWhjaSB9LCAvKiBETlYgQUhDSSAqLw0KPj4+IC0gICAgIHsg
+UENJX1ZERVZJQ0UoSU5URUwsIDB4MTljNCksIGJvYXJkX2FoY2kgfSwgLyogRE5WIEFIQ0kgKi8N
+Cj4+PiAtICAgICB7IFBDSV9WREVWSUNFKElOVEVMLCAweDE5YzUpLCBib2FyZF9haGNpIH0sIC8q
+IEROViBBSENJICovDQo+Pj4gLSAgICAgeyBQQ0lfVkRFVklDRShJTlRFTCwgMHgxOWM2KSwgYm9h
+cmRfYWhjaSB9LCAvKiBETlYgQUhDSSAqLw0KPj4+IC0gICAgIHsgUENJX1ZERVZJQ0UoSU5URUws
+IDB4MTljNyksIGJvYXJkX2FoY2kgfSwgLyogRE5WIEFIQ0kgKi8NCj4+PiAtICAgICB7IFBDSV9W
+REVWSUNFKElOVEVMLCAweDE5Y0UpLCBib2FyZF9haGNpIH0sIC8qIEROViBBSENJICovDQo+Pj4g
+LSAgICAgeyBQQ0lfVkRFVklDRShJTlRFTCwgMHgxOWNGKSwgYm9hcmRfYWhjaSB9LCAvKiBETlYg
+QUhDSSAqLw0KPj4+ICsgICAgIHsgUENJX1ZERVZJQ0UoSU5URUwsIDB4MTliMCksIGJvYXJkX2Fo
+Y2lfcGNzNyB9LCAvKiBETlYgQUhDSSAqLw0KPj4+ICsgICAgIHsgUENJX1ZERVZJQ0UoSU5URUws
+IDB4MTliMSksIGJvYXJkX2FoY2lfcGNzNyB9LCAvKiBETlYgQUhDSSAqLw0KPj4+ICsgICAgIHsg
+UENJX1ZERVZJQ0UoSU5URUwsIDB4MTliMiksIGJvYXJkX2FoY2lfcGNzNyB9LCAvKiBETlYgQUhD
+SSAqLw0KPj4+ICsgICAgIHsgUENJX1ZERVZJQ0UoSU5URUwsIDB4MTliMyksIGJvYXJkX2FoY2lf
+cGNzNyB9LCAvKiBETlYgQUhDSSAqLw0KPj4+ICsgICAgIHsgUENJX1ZERVZJQ0UoSU5URUwsIDB4
+MTliNCksIGJvYXJkX2FoY2lfcGNzNyB9LCAvKiBETlYgQUhDSSAqLw0KPj4+ICsgICAgIHsgUENJ
+X1ZERVZJQ0UoSU5URUwsIDB4MTliNSksIGJvYXJkX2FoY2lfcGNzNyB9LCAvKiBETlYgQUhDSSAq
+Lw0KPj4+ICsgICAgIHsgUENJX1ZERVZJQ0UoSU5URUwsIDB4MTliNiksIGJvYXJkX2FoY2lfcGNz
+NyB9LCAvKiBETlYgQUhDSSAqLw0KPj4+ICsgICAgIHsgUENJX1ZERVZJQ0UoSU5URUwsIDB4MTli
+NyksIGJvYXJkX2FoY2lfcGNzNyB9LCAvKiBETlYgQUhDSSAqLw0KPj4+ICsgICAgIHsgUENJX1ZE
+RVZJQ0UoSU5URUwsIDB4MTliRSksIGJvYXJkX2FoY2lfcGNzNyB9LCAvKiBETlYgQUhDSSAqLw0K
+Pj4+ICsgICAgIHsgUENJX1ZERVZJQ0UoSU5URUwsIDB4MTliRiksIGJvYXJkX2FoY2lfcGNzNyB9
+LCAvKiBETlYgQUhDSSAqLw0KPj4+ICsgICAgIHsgUENJX1ZERVZJQ0UoSU5URUwsIDB4MTljMCks
+IGJvYXJkX2FoY2lfcGNzNyB9LCAvKiBETlYgQUhDSSAqLw0KPj4+ICsgICAgIHsgUENJX1ZERVZJ
+Q0UoSU5URUwsIDB4MTljMSksIGJvYXJkX2FoY2lfcGNzNyB9LCAvKiBETlYgQUhDSSAqLw0KPj4+
+ICsgICAgIHsgUENJX1ZERVZJQ0UoSU5URUwsIDB4MTljMiksIGJvYXJkX2FoY2lfcGNzNyB9LCAv
+KiBETlYgQUhDSSAqLw0KPj4+ICsgICAgIHsgUENJX1ZERVZJQ0UoSU5URUwsIDB4MTljMyksIGJv
+YXJkX2FoY2lfcGNzNyB9LCAvKiBETlYgQUhDSSAqLw0KPj4+ICsgICAgIHsgUENJX1ZERVZJQ0Uo
+SU5URUwsIDB4MTljNCksIGJvYXJkX2FoY2lfcGNzNyB9LCAvKiBETlYgQUhDSSAqLw0KPj4+ICsg
+ICAgIHsgUENJX1ZERVZJQ0UoSU5URUwsIDB4MTljNSksIGJvYXJkX2FoY2lfcGNzNyB9LCAvKiBE
+TlYgQUhDSSAqLw0KPj4+ICsgICAgIHsgUENJX1ZERVZJQ0UoSU5URUwsIDB4MTljNiksIGJvYXJk
+X2FoY2lfcGNzNyB9LCAvKiBETlYgQUhDSSAqLw0KPj4+ICsgICAgIHsgUENJX1ZERVZJQ0UoSU5U
+RUwsIDB4MTljNyksIGJvYXJkX2FoY2lfcGNzNyB9LCAvKiBETlYgQUhDSSAqLw0KPj4+ICsgICAg
+IHsgUENJX1ZERVZJQ0UoSU5URUwsIDB4MTljRSksIGJvYXJkX2FoY2lfcGNzNyB9LCAvKiBETlYg
+QUhDSSAqLw0KPj4+ICsgICAgIHsgUENJX1ZERVZJQ0UoSU5URUwsIDB4MTljRiksIGJvYXJkX2Fo
+Y2lfcGNzNyB9LCAvKiBETlYgQUhDSSAqLw0KPj4NCj4+IEkgdGhpbmsgeW91IHdhbnQgdG8gaW52
+ZXJ0IHRoaXMgc2NoZW1lIGFuZCBtYXJrIHRoZSBvbGQgY29udHJvbGxlcnMgYXMNCj4+IGJvYXJk
+X2FoY2lfcGNzNiBhbmQgbGVhdmUgRGVudmVydG9uL25ld2VyIGNvbnRyb2xsZXJzIGFzIGJvYXJk
+X2FoY2kuDQo+Pg0KPj4gT3RoZXJ3aXNlIHRoZSBxdWlyayBiZWxvdyBydW5zIGZvciBhbnkgSW50
+ZWwgY29udHJvbGxlcnMgdGhhdCBtYXRjaGVkDQo+PiBiYXNlZCBvbiB0aGUgQUhDSSBjbGFzcyBj
+b2RlLCBzaW5jZSB0aGVpciBib2FyZF9pZCB3aWxsIGJlIGJvYXJkX2FoY2kNCj4+IHdoaWNoIGlz
+IDwgYm9hcmRfYWhjaV9wY3M3Lg0KPiANCj4gSXQgc2hvdWxkbid0IGFwcGx5IGZvciB0aGUgY2xh
+c3MgY29kZSBiZWNhdXNlIHRoZSBpZC0+dmVuZG9yIGluIHRoYXQNCj4gY2FzZSB3aWxsIGJlIFBD
+SV9BTllfSUQgbm90IFBDSV9WRU5ET1JfSURfSU5URUwuDQoNCkdvdCBpdC4gIEkganVzdCBhc3N1
+bWVkIChpbmNvcnJlY3RseSkgdGhlIHZlbmRvciBJRCB3YXMgZnJvbSB0aGUgZGV2aWNlDQpjb25m
+aWcgc3BhY2UgYW5kIG5vdCB0aGUgbWF0Y2ggdGFibGUuDQoNCkluIHRoYXQgY2FzZToNClJldmll
+d2VkLWJ5OiBTdGVwaGVuIERvdXRoaXQgPHN0ZXBoZW5kQHNpbGljb20tdXNhLmNvbT4NCg==
