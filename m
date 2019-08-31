@@ -1,4 +1,4 @@
-Return-Path: <SRS0=R/8C=W2=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=4+ri=W3=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
@@ -6,66 +6,67 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 522C3C3A59B
-	for <linux-ide@archiver.kernel.org>; Fri, 30 Aug 2019 20:26:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12E03C3A59B
+	for <linux-ide@archiver.kernel.org>; Sat, 31 Aug 2019 02:54:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 25AE72342E
-	for <linux-ide@archiver.kernel.org>; Fri, 30 Aug 2019 20:26:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D03CB21874
+	for <linux-ide@archiver.kernel.org>; Sat, 31 Aug 2019 02:54:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="srxXErUh"
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="1Iu4PZ+x"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728067AbfH3U02 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 30 Aug 2019 16:26:28 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:36643 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728042AbfH3U02 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 30 Aug 2019 16:26:28 -0400
-Received: by mail-pf1-f195.google.com with SMTP id w2so5341677pfi.3
-        for <linux-ide@vger.kernel.org>; Fri, 30 Aug 2019 13:26:28 -0700 (PDT)
+        id S1728368AbfHaCyI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 30 Aug 2019 22:54:08 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:35382 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728353AbfHaCyI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 30 Aug 2019 22:54:08 -0400
+Received: by mail-pl1-f194.google.com with SMTP id gn20so4168277plb.2
+        for <linux-ide@vger.kernel.org>; Fri, 30 Aug 2019 19:54:08 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=kernel-dk.20150623.gappssmtp.com; s=20150623;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=iIIskhaqEKfh/HRB4yBq2WDy6v4Ph+jgnR6iPGJXHsQ=;
-        b=srxXErUhH5ILDsZj+NdfHqeJT9DKZXlXYUDH6dDqrwO8scgOKWJ2FHrRR/dAIgubII
-         +D/0vPYrqXWgmN8on16mDk/GTueMFgvv7uXETtPygVZKJiET0trcBW+BuqIfP9N4hbh3
-         py4DZsT3sguDssxvraOgx3riF5L8k85I3Xoabm2E/qQFevODldUrWGNuMQOnOIodoHYA
-         NnYc644xJINtiV+JY2hrpiXPMutnxx7m6Uvqm3XcK6s0s4YO1bB5mHtzwZalefv2vwvh
-         nJ+lMUHvADS23acSOO0BT1USS8kT+/LA5/yBqk/V6IkXwmvEdDW+PS+qYDOPBgsiWSx4
-         HjFg==
+        bh=wAWfdwIa59FDP4d1Sh8DtaH6oUROjcWqQZupPqcqAko=;
+        b=1Iu4PZ+xk9yt3s0D5xhvqKUGEHHu9DM1d65KGBVMvEiz9DhyqIyBMcTYJtRcIEm1g3
+         lQjhAWj6DbYiG6V+4uoThTxI0JHqKMokBIP6+9QpYRq226/0uo+Ja/pP5LpSqSTPDYWX
+         QVEYAPZeCSYenj4l2o52rgSwaxNXGdhF/THZz2hqMJg4hx2oY8NPsoPEFmnK/VJ8ijgX
+         m/R8ut11iMO4feH3teYhqmlrFob46xKCNI/aD/dg8B2a9xtQK1rFMYIKVQLNJiEnkDjE
+         W1O1K93AvNkjGKO3tJkNz3lcf8lj0IBgxFwxh2yv+4NuZ+UFouITThRT4Vfz75qL/kLG
+         9Gmg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=iIIskhaqEKfh/HRB4yBq2WDy6v4Ph+jgnR6iPGJXHsQ=;
-        b=mkiTBE/+vmcvILV63WlqSUJHdwI0gPksaIw1MzH6FVNaXtucZDVcR4yIPa2ZKtEGJG
-         i7KfKdil2KudgEBuYh2WhEDrMflIXxvlY6QwV4FwVE7CZOENt4DGdWRp/jE2cPU91tMd
-         /NZN/8fduscvTSYgVy00962/yHiOTGoWu1t5Bqe0G2Ce3GJ36YbcJMc7S74nCTp1ehLg
-         fDxDdB1XIAJIoUDL1tspXTLoqnlDbkOfeSPA57yXJNj4MKd4gREst9hG7jIikZoqSn+c
-         EhjgmmObdVlOwi0JDW2olmJkxZ4muQNAxhg0xN1yA1mYuvDU58Pn1FiO7/+EKvCYF6Ee
-         jNyg==
-X-Gm-Message-State: APjAAAV/LAbfarqTVrbpFVxnZCakc62NScwV+rQt3mpVOtlWx4FYn0tj
-        xVptrInSViiS2H9ZFrGKItL31g==
-X-Google-Smtp-Source: APXvYqze7cGDwL8Y6Ty1UGnMAlUH8jEYU616/pZNV97iIw+5uNPo24kDUYn6QOBtRsSSb+0zYrtUhw==
-X-Received: by 2002:a17:90a:37a7:: with SMTP id v36mr368563pjb.3.1567196787807;
-        Fri, 30 Aug 2019 13:26:27 -0700 (PDT)
+        bh=wAWfdwIa59FDP4d1Sh8DtaH6oUROjcWqQZupPqcqAko=;
+        b=knEJcJKFPMmpKhYSh18cQA1pytO+IztR1wC5nM1jI2Pt4zZ0a7aWPiz9r8EQbCszh2
+         YM1Jq9fiqEzoGukslwgNsOvJGbgHK5ogzKA7NZlAEUCEhsf6QYtIaIRYLqxRBkiehC7c
+         7vSTudO1EqKn0+nKcQSKUJXchufDiHysHIp+b1yQUxbryByvH9bQ6BoohPk3Nx78XouX
+         MHko/ebyIH7jGnQTon7qPUVe7AZgTgAnfYcPHp+IUjKgMfH3mRyNCcQvHKMFuJp0H4/b
+         oCejxSP5i/laVMrg+l6ARtFjsNrxjH5l2HIBiQkmhRnKgRh2PK7WCPZ4jephM+nz7SAS
+         /qQQ==
+X-Gm-Message-State: APjAAAWswdwyV+PsEKijF/6OPQ3LRceki7N5oFTEUECeYEVTFG7qQhZM
+        pB8tCuoU8DNPLbBZGE+wdxbTkA==
+X-Google-Smtp-Source: APXvYqzzA4EqNb2ZgfIiSGQbashFjxYR/2tcDPaOc1UoZOOiyiuG70N7dHLix0LHokxF9YEOJ7nNQw==
+X-Received: by 2002:a17:902:85:: with SMTP id a5mr19762477pla.213.1567220047902;
+        Fri, 30 Aug 2019 19:54:07 -0700 (PDT)
 Received: from [192.168.1.188] (66.29.164.166.static.utbb.net. [66.29.164.166])
-        by smtp.gmail.com with ESMTPSA id d3sm5173507pjz.31.2019.08.30.13.26.26
+        by smtp.gmail.com with ESMTPSA id e2sm8130595pff.49.2019.08.30.19.54.05
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 30 Aug 2019 13:26:27 -0700 (PDT)
-Subject: Re: [PATCH v1] ahci: Do not export local variable ahci_em_messages
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        linux-ide@vger.kernel.org
-Cc:     Chuansheng Liu <chuansheng.liu@intel.com>
-References: <20190830194255.878-1-andriy.shevchenko@linux.intel.com>
+        Fri, 30 Aug 2019 19:54:06 -0700 (PDT)
+Subject: Re: [PATCH v3] libata/ahci: Drop PCS quirk for Denverton and beyond
+To:     Dan Williams <dan.j.williams@intel.com>
+Cc:     Stephen Douthit <stephend@silicom-usa.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <156712139395.1614755.3489977733530873708.stgit@dwillia2-desk3.amr.corp.intel.com>
 From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <65481074-5107-14d0-af7a-ec571a13d28c@kernel.dk>
-Date:   Fri, 30 Aug 2019 14:26:25 -0600
+Message-ID: <73e48d44-631a-71f9-4437-292c5b480891@kernel.dk>
+Date:   Fri, 30 Aug 2019 20:54:04 -0600
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20190830194255.878-1-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <156712139395.1614755.3489977733530873708.stgit@dwillia2-desk3.amr.corp.intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -74,16 +75,35 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 8/30/19 1:42 PM, Andy Shevchenko wrote:
-> The commit ed08d40cdec4
->    ("ahci: Changing two module params with static and __read_mostly")
-> moved ahci_em_messages to be static while missing the fact of exporting it.
+On 8/29/19 5:30 PM, Dan Williams wrote:
+> The Linux ahci driver has historically implemented a configuration fixup
+> for platforms / platform-firmware that fails to enable the ports prior
+> to OS hand-off at boot. The fixup was originally implemented way back
+> before ahci moved from drivers/scsi/ to drivers/ata/, and was updated in
+> 2007 via commit 49f290903935 "ahci: update PCS programming". The quirk
+> sets a port-enable bitmap in the PCS register at offset 0x92.
 > 
-> WARNING: "ahci_em_messages" [vmlinux] is a static EXPORT_SYMBOL_GPL
+> This quirk could be applied generically up until the arrival of the
+> Denverton (DNV) platform. The DNV AHCI controller architecture supports
+> more than 6 ports and along with that the PCS register location and
+> format were updated to allow for more possible ports in the bitmap. DNV
+> AHCI expands the register to 32-bits and moves it to offset 0x94.
 > 
-> Drop export for the local variable ahci_em_messages.
+> As it stands there are no known problem reports with existing Linux
+> trying to set bits at offset 0x92 which indicates that the quirk is not
+> applicable. Likely it is not applicable on a wider range of platforms,
+> but it is difficult to discern which platforms if any still depend on
+> the quirk.
+> 
+> Rather than try to fix the PCS quirk to consider the DNV register layout
+> instead require explicit opt-in. The assumption is that the OS driver
+> need not touch this register, and platforms can be added with a new
+> boad_ahci_pcs7 board-id when / if problematic platforms are found in the
+> future. The logic in ahci_intel_pcs_quirk() looks for all Intel AHCI
+> instances with "legacy" board-ids and otherwise skips the quirk if the
+> board was matched by class-code.
 
-Applied, thanks.
+Applied, thanks Dan.
 
 -- 
 Jens Axboe
