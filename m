@@ -2,86 +2,94 @@ Return-Path: <SRS0=jKCH=W6=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BD08C3A5A2
-	for <linux-ide@archiver.kernel.org>; Tue,  3 Sep 2019 11:21:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6584CC3A5A2
+	for <linux-ide@archiver.kernel.org>; Tue,  3 Sep 2019 12:40:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0B1AA22CF8
-	for <linux-ide@archiver.kernel.org>; Tue,  3 Sep 2019 11:21:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="D6lYrl2+"
+	by mail.kernel.org (Postfix) with ESMTP id 412CD20820
+	for <linux-ide@archiver.kernel.org>; Tue,  3 Sep 2019 12:40:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727667AbfICLVz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 3 Sep 2019 07:21:55 -0400
-Received: from mail-ed1-f53.google.com ([209.85.208.53]:46053 "EHLO
-        mail-ed1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727077AbfICLVz (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Sep 2019 07:21:55 -0400
-Received: by mail-ed1-f53.google.com with SMTP id f19so4211170eds.12
-        for <linux-ide@vger.kernel.org>; Tue, 03 Sep 2019 04:21:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=JZz7wAagt4mlfPayavJhD6O6ohW5ze8Brcqj9LIEeb4=;
-        b=D6lYrl2+K9GBK1SQMphuApiyQRqsDfVUfX5pVSYgkdizou2E061j5Gp3Q/VQDprHYg
-         +lsskG42byrji6IMDGHSb7Q9TygIk7Z5TZKuCeb/SPXIm/f80TWL3PrvMaSqzys3G85/
-         kOgEGhudt9Z6/Msks5WZ2ymQo0Ri/4OQ/Quu8LXVh67v8lWBDbVL6332zVVN+qvkY94u
-         M7F4e3u6yvnhns1Nbf9DSHP2WEABBmiqrT8sRO95j/3LCQyI4zGmGafPOfg1s2ijNjl6
-         N9N/x6AEEHyV+xFvfNb+MPQFVv4oN1DMfUhwxovBJKE7ofxnjpASCa3OL0XBAxTmD3Xv
-         lDLA==
+        id S1728983AbfICMkR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 3 Sep 2019 08:40:17 -0400
+Received: from mail-oi1-f194.google.com ([209.85.167.194]:46442 "EHLO
+        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728571AbfICMkR (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Sep 2019 08:40:17 -0400
+Received: by mail-oi1-f194.google.com with SMTP id t24so12574954oij.13;
+        Tue, 03 Sep 2019 05:40:16 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=JZz7wAagt4mlfPayavJhD6O6ohW5ze8Brcqj9LIEeb4=;
-        b=oSm/2mbgLplI6mKZr+pF2kIdtP2ADvguhRMDOZhnxh1TlLpcHM9TMtyCf5TqdioqjI
-         fNjRHePxCNSuyW0jHfR/VJi9/T7j4uWlMMFZ4KDVFYJb5EfoIhCqpj/b8soHRciaf8oA
-         GRjQLi0zMkZkPrvXDpLvVer1baLhIVTV7tMQF1M3NDCV6B3SRULAKFpvaWUk/2cXWI8F
-         goPq2HlWLzMTpEeeb6af/ATlc+fHIa5pJ387xth0um84TzbSJeSWsvh5gBolq5Ucj8sP
-         7r4c0sK5Zh5Voc6JuIpnGrz2xNPwy+QBmsLALfrx8fuQ5gu6WkRO1aLxtQTPXJ2DkiqK
-         Ek3g==
-X-Gm-Message-State: APjAAAX0OR1EicBmVrKip3n/Y21GoMV9pNwNQHAQPyQfld44elt/YWhN
-        VZMfaFXCmwHeKx2OfoiU4TLdInYXaw/IeCOtX2alUzDq
-X-Google-Smtp-Source: APXvYqxP9BSs2f9eW19gk//YpIr/mC7i5kIXn7ncraqzN/SfeXYfSH8olKKodwdZrgz6YXA/ADMPRECRS1VaiRFSJBE=
-X-Received: by 2002:a50:9f42:: with SMTP id b60mr2584517edf.192.1567509713140;
- Tue, 03 Sep 2019 04:21:53 -0700 (PDT)
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=kcH39V4DNdqQS6WWWsrApfpjkeKXVrVclWhhJQ/I6aQ=;
+        b=r9rIiZzxHvE+k+MGoC11GOrQig7ooM+TdxoYBnmv3qLYzS4BgXiGsrX+WJleJ2ISYq
+         TkpIkXtMfIzSEOjCCSq7oBLq0qdNrtPNcNrbco2xGT0yRtuh8LboIKB33UUo6LcugPCC
+         I5aoxF/oOsM/5emUlr4xKhm43QFGx7+oEG8EtpO6Hbd7VrbqddiEVK+iBy8iGebrhDLY
+         m/CCTotPfZzjm6YAQEifrTqURLH8O7ABgAPHJG7xjcaW60o3doOdrLlpRvs0MIQK+yJR
+         hcJ6zOPDy0++sNr3phJ9dSxMzMF1enM2BWwoeCrdi8rsgJwH8GXitdkfV5vkIDpIpqDK
+         WkUw==
+X-Gm-Message-State: APjAAAW892Xck3ayBcjNk306NHYYz4v9NvqhSFFo5yiXSPy9C4Vri3dx
+        mTfonhYXgOUkRgI9JcFSmtaajqh7Z4pawqsacHw=
+X-Google-Smtp-Source: APXvYqxNTbUtrKsQicfzx0dq5ybjGYtIMhR3c5q1wWcUbPtErgqnr1MJ7HV/m49vtBHhBW7LUkXQpR+pLDsORIgB+Nk=
+X-Received: by 2002:aca:f305:: with SMTP id r5mr3826728oih.131.1567514416285;
+ Tue, 03 Sep 2019 05:40:16 -0700 (PDT)
 MIME-Version: 1.0
-From:   Ioannis Barkas <jnyb.de@gmail.com>
-Date:   Tue, 3 Sep 2019 14:21:41 +0300
-Message-ID: <CADUzMVYrdSJYnpS+qiP=cLFshvP7PKYF6CPiufJEaRVmBVFdVA@mail.gmail.com>
-Subject: Re: [PATCH v3] libata/ahci: Drop PCS quirk for Denverton and beyond
-To:     linux-ide@vger.kernel.org
+References: <1562018556-15090-1-git-send-email-schmitzmic@gmail.com> <1562018556-15090-2-git-send-email-schmitzmic@gmail.com>
+In-Reply-To: <1562018556-15090-2-git-send-email-schmitzmic@gmail.com>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Tue, 3 Sep 2019 14:40:05 +0200
+Message-ID: <CAMuHMdU405QPEk+w7n5tBtSWgeFPrvj44pbJSCi90N_-CxDFAA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] m68k/atari: add platform device for Falcon IDE port
+To:     Michael Schmitz <schmitzmic@gmail.com>
+Cc:     "Linux/m68k" <linux-m68k@vger.kernel.org>,
+        linux-ide@vger.kernel.org,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello guys,
+Hi Michael,
 
-Catching up with the Denverton converstion feels like a deja vu as
-this isn't the first time I am looking at datasheets to find out what
-engineers have modified this time on intel chipsets.
+On Tue, Jul 2, 2019 at 12:02 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
+> Autoloading of Falcon IDE driver modules requires converting
+> these drivers to platform drivers.
+>
+> Add platform device for Falcon IDE interface in Atari platform
+> setup code in preparation for this.
+>
+> Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
+>
+> --
+>
+> Changes from RFC
+>
+> - fix region size (spotted by Szymon Bieganski <S.Bieganski@chello.nl>)
+> - define IDE interface address in atari/config.c, create platform device
+>   always (suggested by Geert Uytterhoeven <geert@linux-m68k.org>)
 
-After carefully reading some datasheets, it is clear that this patch
-has a no go. That is because the DNV isn't the only PCH using PCS at
-offset 94. The same offset is used at Union Point(200 series) as well
-as Lewisburg(C620-series) PCH. As a result, this patch will ensure
-offset 92 is used for Lewisburg IDs A182, A186, A202 & A206. In
-reality those devices use offset 94 so please be careful here as
-things may get nasty. Please assign all devices using offset 94 for
-the PCS register to board_ahci_pcs7.
+Thanks for the update!
 
-While at it, I have seen that Intel C620 uses device 2822 & 2826.
-While 2826 can be added, 2822 has a duplicate entry:
-    { PCI_VDEVICE(INTEL, 0x2822), board_ahci_nosntf }, /* ICH8 */
-    { PCI_VDEVICE(INTEL, 0x2822), board_ahci }, /* Lewisburg RAID*/
+Looks good to me.  However, with just this patch applied, pata_falcon
+fails with:
 
-This doesn't look good. On ICH8 we need to disable Asynchronous
-Notification but which one is applied to Lewisburg? The SNTF one?
-It gets more interesting as C620 RSTe 0x2822 uses offset 94 not 92. A
-new patch must handle all those chipsets having a different version of
-the SATA controller.
+    pata_falcon: Atari Falcon PATA controller
+    pata_falcon: resources busy
+
+To avoid bisection issues, probably both patches should be combined into a
+single patch.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
