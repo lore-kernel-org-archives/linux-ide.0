@@ -1,168 +1,87 @@
-Return-Path: <SRS0=Mc6E=W5=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=jKCH=W6=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EBD0C3A59E
-	for <linux-ide@archiver.kernel.org>; Mon,  2 Sep 2019 17:22:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BD08C3A5A2
+	for <linux-ide@archiver.kernel.org>; Tue,  3 Sep 2019 11:21:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 15E4D21744
-	for <linux-ide@archiver.kernel.org>; Mon,  2 Sep 2019 17:22:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1567444955;
-	bh=YjO1uTJm2Cze6wF4H+o+shlYdgkYcUd6ReFeG/yso/U=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=Jem2oUi2HIBASrfKF/y6wcwyZWdV7kbrKCuSJCRyCZlNMyG0X8mMh3SyBk2pwe9zb
-	 BB5yiDdx1Zbog6drnWwAb70uKoMKRRBdINKz9Wf2PG75VLvNwBPzziu2F7JsFSeOhd
-	 uWmjgaVhQZdlpkknHM6lWgrar8OghQOoxShwQFUo=
+	by mail.kernel.org (Postfix) with ESMTP id 0B1AA22CF8
+	for <linux-ide@archiver.kernel.org>; Tue,  3 Sep 2019 11:21:56 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="D6lYrl2+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726472AbfIBRWe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 2 Sep 2019 13:22:34 -0400
-Received: from heliosphere.sirena.org.uk ([172.104.155.198]:42456 "EHLO
-        heliosphere.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726185AbfIBRWe (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 2 Sep 2019 13:22:34 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=sirena.org.uk; s=20170815-heliosphere; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=Ge4iDkVXLJAE0tqMDUvKSuDj6sip/kNFFFYp4OhwDS4=; b=i0CMNhgrLirnfNGlywpG5eJSA
-        RQdtBob8zHVzDgM5/+ggJ6fkWt+1KC1FVc0g7K5V7iVEJ0/LDsvtOiKbTl8ZKU491Of/Z2BUe67s0
-        1a6nYD1guVqtOY3V4GqtyMD53SdfkjTJwZSOWxOhFNhoIBWmQT0zhGpVatc3dkRvg2F8U=;
-Received: from cpc102320-sgyl38-2-0-cust46.18-2.cable.virginm.net ([82.37.168.47] helo=ypsilon.sirena.org.uk)
-        by heliosphere.sirena.org.uk with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <broonie@sirena.co.uk>)
-        id 1i4q29-0003rT-P9; Mon, 02 Sep 2019 17:22:29 +0000
-Received: by ypsilon.sirena.org.uk (Postfix, from userid 1000)
-        id 047D92742CB7; Mon,  2 Sep 2019 18:22:28 +0100 (BST)
-From:   Mark Brown <broonie@kernel.org>
-To:     Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Mark Brown <broonie@kernel.org>
-Subject: [PATCH] ata: libahci_platform: Fix regulator_get_optional() misuse
-Date:   Mon,  2 Sep 2019 18:22:24 +0100
-Message-Id: <20190902172224.49989-1-broonie@kernel.org>
-X-Mailer: git-send-email 2.20.1
+        id S1727667AbfICLVz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 3 Sep 2019 07:21:55 -0400
+Received: from mail-ed1-f53.google.com ([209.85.208.53]:46053 "EHLO
+        mail-ed1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727077AbfICLVz (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Sep 2019 07:21:55 -0400
+Received: by mail-ed1-f53.google.com with SMTP id f19so4211170eds.12
+        for <linux-ide@vger.kernel.org>; Tue, 03 Sep 2019 04:21:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=JZz7wAagt4mlfPayavJhD6O6ohW5ze8Brcqj9LIEeb4=;
+        b=D6lYrl2+K9GBK1SQMphuApiyQRqsDfVUfX5pVSYgkdizou2E061j5Gp3Q/VQDprHYg
+         +lsskG42byrji6IMDGHSb7Q9TygIk7Z5TZKuCeb/SPXIm/f80TWL3PrvMaSqzys3G85/
+         kOgEGhudt9Z6/Msks5WZ2ymQo0Ri/4OQ/Quu8LXVh67v8lWBDbVL6332zVVN+qvkY94u
+         M7F4e3u6yvnhns1Nbf9DSHP2WEABBmiqrT8sRO95j/3LCQyI4zGmGafPOfg1s2ijNjl6
+         N9N/x6AEEHyV+xFvfNb+MPQFVv4oN1DMfUhwxovBJKE7ofxnjpASCa3OL0XBAxTmD3Xv
+         lDLA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=JZz7wAagt4mlfPayavJhD6O6ohW5ze8Brcqj9LIEeb4=;
+        b=oSm/2mbgLplI6mKZr+pF2kIdtP2ADvguhRMDOZhnxh1TlLpcHM9TMtyCf5TqdioqjI
+         fNjRHePxCNSuyW0jHfR/VJi9/T7j4uWlMMFZ4KDVFYJb5EfoIhCqpj/b8soHRciaf8oA
+         GRjQLi0zMkZkPrvXDpLvVer1baLhIVTV7tMQF1M3NDCV6B3SRULAKFpvaWUk/2cXWI8F
+         goPq2HlWLzMTpEeeb6af/ATlc+fHIa5pJ387xth0um84TzbSJeSWsvh5gBolq5Ucj8sP
+         7r4c0sK5Zh5Voc6JuIpnGrz2xNPwy+QBmsLALfrx8fuQ5gu6WkRO1aLxtQTPXJ2DkiqK
+         Ek3g==
+X-Gm-Message-State: APjAAAX0OR1EicBmVrKip3n/Y21GoMV9pNwNQHAQPyQfld44elt/YWhN
+        VZMfaFXCmwHeKx2OfoiU4TLdInYXaw/IeCOtX2alUzDq
+X-Google-Smtp-Source: APXvYqxP9BSs2f9eW19gk//YpIr/mC7i5kIXn7ncraqzN/SfeXYfSH8olKKodwdZrgz6YXA/ADMPRECRS1VaiRFSJBE=
+X-Received: by 2002:a50:9f42:: with SMTP id b60mr2584517edf.192.1567509713140;
+ Tue, 03 Sep 2019 04:21:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From:   Ioannis Barkas <jnyb.de@gmail.com>
+Date:   Tue, 3 Sep 2019 14:21:41 +0300
+Message-ID: <CADUzMVYrdSJYnpS+qiP=cLFshvP7PKYF6CPiufJEaRVmBVFdVA@mail.gmail.com>
+Subject: Re: [PATCH v3] libata/ahci: Drop PCS quirk for Denverton and beyond
+To:     linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-This driver is using regulator_get_optional() to handle all the supplies
-that it handles, and only ever enables and disables all supplies en masse
-without ever doing any other configuration of the device to handle missing
-power. These are clear signs that the API is being misused - it should only
-be used for supplies that may be physically absent from the system and in
-these cases the hardware usually needs different configuration if the
-supply is missing. Instead use normal regualtor_get(), if the supply is
-not described in DT then the framework will substitute a dummy regulator in
-so no special handling is needed by the consumer driver.
+Hello guys,
 
-In the case of the PHY regulator the handling in the driver is a hack to
-deal with integrated PHYs; the supplies are only optional in the sense
-that that there's some confusion in the code about where they're bound to.
-From a code point of view they function exactly as normal supplies so can
-be treated as such. It'd probably be better to model this by instantiating
-a PHY object for integrated PHYs.
+Catching up with the Denverton converstion feels like a deja vu as
+this isn't the first time I am looking at datasheets to find out what
+engineers have modified this time on intel chipsets.
 
-Signed-off-by: Mark Brown <broonie@kernel.org>
----
- drivers/ata/libahci_platform.c | 38 +++++++++++++---------------------
- 1 file changed, 14 insertions(+), 24 deletions(-)
+After carefully reading some datasheets, it is clear that this patch
+has a no go. That is because the DNV isn't the only PCH using PCS at
+offset 94. The same offset is used at Union Point(200 series) as well
+as Lewisburg(C620-series) PCH. As a result, this patch will ensure
+offset 92 is used for Lewisburg IDs A182, A186, A202 & A206. In
+reality those devices use offset 94 so please be careful here as
+things may get nasty. Please assign all devices using offset 94 for
+the PCS register to board_ahci_pcs7.
 
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index 9e9583a6bba9..57882b3e46eb 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -153,17 +153,13 @@ int ahci_platform_enable_regulators(struct ahci_host_priv *hpriv)
- {
- 	int rc, i;
- 
--	if (hpriv->ahci_regulator) {
--		rc = regulator_enable(hpriv->ahci_regulator);
--		if (rc)
--			return rc;
--	}
-+	rc = regulator_enable(hpriv->ahci_regulator);
-+	if (rc)
-+		return rc;
- 
--	if (hpriv->phy_regulator) {
--		rc = regulator_enable(hpriv->phy_regulator);
--		if (rc)
--			goto disable_ahci_pwrs;
--	}
-+	rc = regulator_enable(hpriv->phy_regulator);
-+	if (rc)
-+		goto disable_ahci_pwrs;
- 
- 	for (i = 0; i < hpriv->nports; i++) {
- 		if (!hpriv->target_pwrs[i])
-@@ -181,11 +177,9 @@ int ahci_platform_enable_regulators(struct ahci_host_priv *hpriv)
- 		if (hpriv->target_pwrs[i])
- 			regulator_disable(hpriv->target_pwrs[i]);
- 
--	if (hpriv->phy_regulator)
--		regulator_disable(hpriv->phy_regulator);
-+	regulator_disable(hpriv->phy_regulator);
- disable_ahci_pwrs:
--	if (hpriv->ahci_regulator)
--		regulator_disable(hpriv->ahci_regulator);
-+	regulator_disable(hpriv->ahci_regulator);
- 	return rc;
- }
- EXPORT_SYMBOL_GPL(ahci_platform_enable_regulators);
-@@ -207,10 +201,8 @@ void ahci_platform_disable_regulators(struct ahci_host_priv *hpriv)
- 		regulator_disable(hpriv->target_pwrs[i]);
- 	}
- 
--	if (hpriv->ahci_regulator)
--		regulator_disable(hpriv->ahci_regulator);
--	if (hpriv->phy_regulator)
--		regulator_disable(hpriv->phy_regulator);
-+	regulator_disable(hpriv->ahci_regulator);
-+	regulator_disable(hpriv->phy_regulator);
- }
- EXPORT_SYMBOL_GPL(ahci_platform_disable_regulators);
- /**
-@@ -359,7 +351,7 @@ static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
- 	struct regulator *target_pwr;
- 	int rc = 0;
- 
--	target_pwr = regulator_get_optional(dev, "target");
-+	target_pwr = regulator_get(dev, "target");
- 
- 	if (!IS_ERR(target_pwr))
- 		hpriv->target_pwrs[port] = target_pwr;
-@@ -436,16 +428,14 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
- 		hpriv->clks[i] = clk;
- 	}
- 
--	hpriv->ahci_regulator = devm_regulator_get_optional(dev, "ahci");
-+	hpriv->ahci_regulator = devm_regulator_get(dev, "ahci");
- 	if (IS_ERR(hpriv->ahci_regulator)) {
- 		rc = PTR_ERR(hpriv->ahci_regulator);
--		if (rc == -EPROBE_DEFER)
-+		if (rc != 0)
- 			goto err_out;
--		rc = 0;
--		hpriv->ahci_regulator = NULL;
- 	}
- 
--	hpriv->phy_regulator = devm_regulator_get_optional(dev, "phy");
-+	hpriv->phy_regulator = devm_regulator_get(dev, "phy");
- 	if (IS_ERR(hpriv->phy_regulator)) {
- 		rc = PTR_ERR(hpriv->phy_regulator);
- 		if (rc == -EPROBE_DEFER)
--- 
-2.20.1
+While at it, I have seen that Intel C620 uses device 2822 & 2826.
+While 2826 can be added, 2822 has a duplicate entry:
+    { PCI_VDEVICE(INTEL, 0x2822), board_ahci_nosntf }, /* ICH8 */
+    { PCI_VDEVICE(INTEL, 0x2822), board_ahci }, /* Lewisburg RAID*/
 
+This doesn't look good. On ICH8 we need to disable Asynchronous
+Notification but which one is applied to Lewisburg? The SNTF one?
+It gets more interesting as C620 RSTe 0x2822 uses offset 94 not 92. A
+new patch must handle all those chipsets having a different version of
+the SATA controller.
