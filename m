@@ -1,86 +1,69 @@
-Return-Path: <SRS0=kPYe=XL=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=NLwT=XN=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CB9EC49ED7
-	for <linux-ide@archiver.kernel.org>; Mon, 16 Sep 2019 20:48:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D76CC4CECD
+	for <linux-ide@archiver.kernel.org>; Wed, 18 Sep 2019 00:25:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 345BE206A4
-	for <linux-ide@archiver.kernel.org>; Mon, 16 Sep 2019 20:48:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E864D206C2
+	for <linux-ide@archiver.kernel.org>; Wed, 18 Sep 2019 00:25:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1568766328;
+	bh=7NJgUFdmTK5f/WlT4VTsG27UfcB1jkmbeYnlzcdHrqc=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
+	b=d72LSMUFK4HZa9yJjEqfb71HO4F/2MR0bQF1nEJOpTO6p+lBRbU9Wej7mstDyKsNL
+	 jpgPxwVcccFzZKnFx/s5KBEc4N1WHyezNVstg1CyyBmGi7fjouKsUeJGEdVIvJ+wEQ
+	 qgJniyy4PyHS0n+GwYS8egYCcWKrz/V6h7gYf6QY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391573AbfIPUrg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 16 Sep 2019 16:47:36 -0400
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:39050 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391566AbfIPUrf (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 16 Sep 2019 16:47:35 -0400
-Received: by mail-wr1-f68.google.com with SMTP id r3so836397wrj.6;
-        Mon, 16 Sep 2019 13:47:34 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=2FqysY5HATBDrBuyFDyYiBCyyYkjbnS9XQbtyyTHOy0=;
-        b=GhMsmFP1zvXpfnfVTo1EVsAoGnZ2fuNtYU2CusLxWV/znhtGb0RGeJBLQUyjD4i2TF
-         BmgUyCQj+6La8dwUAMQ6pULn6YG5ZLAuD8ZIXokTQ0BGRWxsPJBh61JsMznzwZPwnXP9
-         2jsHkumrBxsk8PkN81ZuGOxv39FuRSOS6Qgv9f/SZsjaEAbFDjP/v9vSJ0dYQZkVc42j
-         FY6Ew+jkMy/McFio618C6amtQ1hcvSuAD9+U9PR9rCCev3L8wHerF39frCg2ig9fiQo4
-         7nmUxfassNcaT8uoTzpxfHHF3FHMpq/Pozys1H6ojr93kHuGvWAbeF47hb/l2Z94dXg7
-         VGBQ==
-X-Gm-Message-State: APjAAAXkDxbAwnAUNkF9y1vb4uWVIE7pAauwk81xTsJK1wDLcyVPGssY
-        zoaJ1AViip+ESEhxibh7HVNcpIPW0zM=
-X-Google-Smtp-Source: APXvYqyImLLCgKryGD8YrkgXaU55B5YLepDP0MFlB8OxuTaSZRBDTlao8EoEJYIvZczQZHXYodK1qg==
-X-Received: by 2002:a5d:63c6:: with SMTP id c6mr204595wrw.117.1568666853795;
-        Mon, 16 Sep 2019 13:47:33 -0700 (PDT)
-Received: from black.home (broadband-188-32-48-208.ip.moscow.rt.ru. [188.32.48.208])
-        by smtp.googlemail.com with ESMTPSA id x6sm231437wmf.38.2019.09.16.13.47.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 16 Sep 2019 13:47:33 -0700 (PDT)
-From:   Denis Efremov <efremov@linux.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Denis Efremov <efremov@linux.com>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Andrew Murray <andrew.murray@arm.com>,
-        linux-ide@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-Subject: [PATCH v3 19/26] ata: sata_nv: Use PCI_STD_NUM_BARS
-Date:   Mon, 16 Sep 2019 23:41:51 +0300
-Message-Id: <20190916204158.6889-20-efremov@linux.com>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20190916204158.6889-1-efremov@linux.com>
-References: <20190916204158.6889-1-efremov@linux.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S1726721AbfIRAZ1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 17 Sep 2019 20:25:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34546 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726017AbfIRAZ0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 17 Sep 2019 20:25:26 -0400
+Subject: Re: [GIT PULL] libata changes for 5.4
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1568766326;
+        bh=7NJgUFdmTK5f/WlT4VTsG27UfcB1jkmbeYnlzcdHrqc=;
+        h=From:In-Reply-To:References:Date:To:Cc:From;
+        b=dSdQxRNNxU9hnnhtW+KC7TvPjiVAqgHbRtmyChJDu9TT+H6+W4bt8Ivry8CSOfNAs
+         2hQ3MIQBYHezkhCTTyX/JDUmy15YyLFenOlVqJ9ARFwtBfObd4JGZTQG0CLL+/87im
+         /kKrO5RPR21QDpQfWreUtip3/5c27lmFkQfmE5V8=
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <565dc49a-4bd5-d25c-d859-1c3b103e1e22@kernel.dk>
+References: <565dc49a-4bd5-d25c-d859-1c3b103e1e22@kernel.dk>
+X-PR-Tracked-List-Id: <linux-block.vger.kernel.org>
+X-PR-Tracked-Message-Id: <565dc49a-4bd5-d25c-d859-1c3b103e1e22@kernel.dk>
+X-PR-Tracked-Remote: git://git.kernel.dk/linux-block.git
+ tags/for-5.4/libata-2019-09-15
+X-PR-Tracked-Commit-Id: c312ef176399e04fc5f7f2809d9a589751fbf6d9
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 5260c2b863ef1152445ce93476c95d8c8a727eef
+Message-Id: <156876632641.801.10445823909731470810.pr-tracker-bot@kernel.org>
+Date:   Wed, 18 Sep 2019 00:25:26 +0000
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        IDE/ATA development list <linux-ide@vger.kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Replace the magic constant (6) with define PCI_STD_NUM_BARS representing
-the number of PCI BARs.
+The pull request you sent on Sun, 15 Sep 2019 17:59:08 -0600:
 
-Cc: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Denis Efremov <efremov@linux.com>
----
- drivers/ata/sata_nv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> git://git.kernel.dk/linux-block.git tags/for-5.4/libata-2019-09-15
 
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index b44b4b64354c..31a32a4bb05b 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -2329,7 +2329,7 @@ static int nv_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
-         // Make sure this is a SATA controller by counting the number of bars
-         // (NVIDIA SATA controllers will always have six bars).  Otherwise,
-         // it's an IDE controller and we ignore it.
--	for (bar = 0; bar < 6; bar++)
-+	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++)
- 		if (pci_resource_start(pdev, bar) == 0)
- 			return -ENODEV;
- 
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/5260c2b863ef1152445ce93476c95d8c8a727eef
+
+Thank you!
+
 -- 
-2.21.0
-
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
