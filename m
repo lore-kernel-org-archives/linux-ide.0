@@ -1,94 +1,145 @@
-Return-Path: <SRS0=NLwT=XN=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=QrRe=XO=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B4B1C4CEC4
-	for <linux-ide@archiver.kernel.org>; Wed, 18 Sep 2019 20:08:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 094CFC3A5A6
+	for <linux-ide@archiver.kernel.org>; Thu, 19 Sep 2019 18:17:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E94AF21927
-	for <linux-ide@archiver.kernel.org>; Wed, 18 Sep 2019 20:08:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C36D421928
+	for <linux-ide@archiver.kernel.org>; Thu, 19 Sep 2019 18:17:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="DfqrCjY/"
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="EH1vmoja"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390534AbfIRUIp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 18 Sep 2019 16:08:45 -0400
-Received: from mail-io1-f67.google.com ([209.85.166.67]:35872 "EHLO
-        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390532AbfIRUIp (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 18 Sep 2019 16:08:45 -0400
-Received: by mail-io1-f67.google.com with SMTP id b136so2241545iof.3
-        for <linux-ide@vger.kernel.org>; Wed, 18 Sep 2019 13:08:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=/tirIKQwqPi5b7L0wgzdi+w4/XVdukjfcgtLLjEguwI=;
-        b=DfqrCjY/L+ncH827dgVkK47JxDWYDq8n1Gr+IjrtakEagsw0/tnUlUGJXScHyD4s6N
-         mSmIB7G2/5J6eid16zBuRBzXZ//jVAF561Ju849aXVesApT36gPfhX0QT8nYhw+JEfYu
-         R2XHwS+ADhbrl+Z9r8PJQjhjZg8WeZQEnBkpDO0w8LiHDmMyTBk1UQtauLtqn9OAIOTa
-         tZn9VVoqW2LEbN203rLKhsfLG7utSqDM4lD7TAmkalCcQyFE0h+hpVWdNGiesLv3kE+K
-         zeDkosvPACEMW5xdSBFjXQKgG24/H2ExH0uRE+b5gd8MQ/ZroY5XVKeZuBTc/DJ0b+La
-         zlqA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=/tirIKQwqPi5b7L0wgzdi+w4/XVdukjfcgtLLjEguwI=;
-        b=NGfQ0Un2y1Aa0r44Sn6/s+QcyMM3Xb+ptvz9dF6ux+yJXcFcA67TOLyapnFlUcXAuy
-         GcnMyhbZKFCNQ9hAWd5BAsyEzgDE0+QAnE4LRKXmMqtlegD1lNl8X4N/HNaM5/ZpfpuZ
-         5iHOeBqIuPWJMew0aecbzBqqCIPaDJRdMyEgKu06nzs1j/0vUmkS11QqyMnZ46IzmM+i
-         Q18HmekIYEIozpS4ClVuG0Bi0kn3Tw81e3+joJlmBDsv2DChnIcA/cKrqM7SNchMBpyO
-         mXNtRMPP7tYVbYz2CjVsfKzc60n0hkwQXRzCQ6hxRp74COda9BdDutDTNgK2tuCgtqT0
-         pljw==
-X-Gm-Message-State: APjAAAXUjysk3lbPDeqTcivcZOl2cOsrnr4RbEBlBcbjwyWX7lXCG9wk
-        49huaOWqjM9wyy3cKTkxRPyD4g==
-X-Google-Smtp-Source: APXvYqxqyIESBbs5UNuARsPiCqsoNXJY06TIV1cftP2bVGya9UvnKZSogfqsdXBIH00g/Ko6QmyX9A==
-X-Received: by 2002:a5e:8218:: with SMTP id l24mr1950526iom.56.1568837323239;
-        Wed, 18 Sep 2019 13:08:43 -0700 (PDT)
-Received: from [192.168.1.50] ([65.144.74.34])
-        by smtp.gmail.com with ESMTPSA id b24sm5310567iob.2.2019.09.18.13.08.41
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 18 Sep 2019 13:08:42 -0700 (PDT)
-Subject: Re: [PATCH] ahci: stop exporting ahci_em_messages
-To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     "Liu, Chuansheng" <chuansheng.liu@intel.com>,
-        Tejun Heo <tj@kernel.org>, Steve Winslow <swinslow@gmail.com>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20190918200028.2247535-1-arnd@arndb.de>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <cd65486c-b5c1-63d4-ea73-1d16e123aa41@kernel.dk>
-Date:   Wed, 18 Sep 2019 14:08:41 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1729760AbfISSRm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 19 Sep 2019 14:17:42 -0400
+Received: from mout.web.de ([212.227.15.14]:58675 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2389923AbfISSRm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 19 Sep 2019 14:17:42 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
+        s=dbaedf251592; t=1568917055;
+        bh=Mn7H6xHac7+YgWw5ExZQ7NpTTpj1wObuTz0x0wOxj2Q=;
+        h=X-UI-Sender-Class:To:Cc:References:Subject:From:Date:In-Reply-To;
+        b=EH1vmojaA3Mu1SvLHPR1Ot/MQjBuxSUqKgVN2AVrGHxWTghyE+e8IJYIq5ZtWXhkX
+         Qjts9BZ6AmyBj6n65Gd7ioOua/nFm+MpIawOSbI2vH4IV0AAFu240BZk9ILbGpaJdn
+         p1Gax/KiYfLKjRCF31IcT8N8wgNx5V5KXCViotQ4=
+X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
+Received: from [192.168.1.2] ([93.132.191.36]) by smtp.web.de (mrweb002
+ [213.165.67.108]) with ESMTPSA (Nemesis) id 0Lc8n7-1hlKsU2PcT-00jYXi; Thu, 19
+ Sep 2019 20:17:35 +0200
+To:     Nishka Dasgupta <nishkadg.linux@gmail.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Hans de Goede <hdegoede@redhat.com>,
+        linux-ide@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+References: <20190815060014.2191-1-nishkadg.linux@gmail.com>
+Subject: Re: [PATCH] ata: libahci_platform: Add of_node_put() before loop exit
+From:   Markus Elfring <Markus.Elfring@web.de>
+Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
+ 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 FEE=
+Message-ID: <c61069af-29c0-449a-a07f-c89c5a5535fa@web.de>
+Date:   Thu, 19 Sep 2019 20:17:34 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.0
 MIME-Version: 1.0
-In-Reply-To: <20190918200028.2247535-1-arnd@arndb.de>
+In-Reply-To: <20190815060014.2191-1-nishkadg.linux@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:nzKw3wyZsubFjlljoNomFG4WACDEUOfE0pZ5d82fQgTkMxPisve
+ N48RqhZy5dh4NUIG/Txi5F4M83FzyxGQ1UmUXZpYe9WfUxJSHXG5MkNUYxb3crKZDv+L+wo
+ 2gHoe/gp/YObShqOXbh5I3dQPbVHpgAvkgLRV8pZs+zO/e69N1xgXBtaF068TIgVtJyDJKh
+ oNcSayVpLN3umSWziN+rg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:E9+fhUT11VA=:aZWTWHgIDupJsEg6T54BOf
+ jj4ty5ysJSrCGCqRYASBI5T9zxYCEys+aaHERFWuaTalq+FtePuV8P7LQ53QtK9dtinUO7BJT
+ I26Rqc0PgJ4VpYUn5tdecvj2OrIAp45RUjrNsyDiNV2yYChYzy+eHlBKBsu6TAT+I22IpLW1e
+ GjtSBuPLBTInUw5i5wGLKrUe+HPkZj30oc9Ar+MPd/KJHsvhEi2czbTEncjZJFNAl3wuqPGGk
+ Rl8I+IdJuPUkGZV2OZHzXHZ2xWAIl905roEC69+woF1Xx4COZCgjMLwJwDmHBc+RK1zgCn1YL
+ mk1lYmxHDxozz7S6wp4nvU3JWMqMZMqpnPLEHNqvdj5RAtJzI1S9N70cUPK/AVzfmitM5i1jH
+ IBqxu5G3bvvFOqZE4bHKWpRYdH2E3P+yIudUbvGLkLe0K86ywiKX/QpdbvMsNVBtioBhJP9pK
+ bM+bVVGXcKpLaVsqIz/vip9BJ9jMBaX8dMg+mXWkcMSKtpcRjflf9QQigJ0uDV6B3/Pg5oz+I
+ dtrBobtLZ8IerMYsZDUbco+FDLItoFuJJ6n2943LzoH92zsJXBVon9Y/z0geUXZto9PwTMPHC
+ Q0KQjaHqTDsnqpzUwR5jZBa51T/eqB/8UHTUNdLy5VrkbmVII5PpvvNZ+RtO8jZoR5qCuP56P
+ J+/5n8Tft7pTAKL/mgAsO37Ay9FIhCSzgGsIIR+o+v9pneTGbBc4OYLf7auKwiDz3cojQwTaz
+ UudOt/GCup0T/3Rl9l+UvN2++h4PcbajbGeRMaK1r0s7vvHp7VcqVGgyYwyHLxqe6nO8ENYcQ
+ pgMtPj8tgIIweBb+E9t7wghzutykqAcPwe5ZP8ghLT3ImCGrk+Zc61hq5aD/5+wKid8G8Y5yk
+ ALMawDGQPvYG7VLow1OQV3+pVPg1Sk3Fs/v98DReC/OBiokA7l+YW8Dw+0k+9bqaoqVYKbOqw
+ tHkPS/qt4PuaacZ1FIRKtFSzkBpQLPezHDPZwfHRRzym+R6HeyfK/Qc/e/jcEyPbcc0FNqd/z
+ LIep0wC2J7aF7ITMSQKUJYSbOH+D/XeM0acwEXcBNgsiISdZhLLIzvIgBCamZny5WqIBRUJID
+ nRC9iXpCZYNpHZiczbDzPw18gauUDjl7MQwFf0pMjGR2hg2gec8yQ386V2SI12fBzdfNi5eRb
+ UEie80jKIme+VkEFOUXY7/1PtKl6TN9uE13WrLL7jbGRdM2+Kizy6xNBHRrMQ+nU48Q02gxh2
+ NW9TKBKH4XaUllIkCUvKIbGsL2X2+iVAzujKNSQcNUuIO6fgaTSVJ/JgfS5M=
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/18/19 2:00 PM, Arnd Bergmann wrote:
-> The symbol is now static and not used elswhere, which
-> leads to a warning message:
-> 
-> WARNING: "ahci_em_messages" [vmlinux] is a static EXPORT_SYMBOL_GPL
+> +++ b/drivers/ata/libahci_platform.c
+> @@ -497,6 +497,7 @@ struct ahci_host_priv *ahci_platform_get_resources(s=
+truct platform_device *pdev,
+>
+>  			if (of_property_read_u32(child, "reg", &port)) {
+>  				rc =3D -EINVAL;
+> +				of_node_put(child);
+>  				goto err_out;
+>  			}
 
-If you look at master, this was fixed in this merge window:
+I suggest to move the added function call to another jump target.
 
-commit 60fc35f327e0a9e60b955c0f3c3ed623608d1baa
-Author: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Date:   Fri Aug 30 22:42:55 2019 +0300
+-				goto err_out;
++				goto err_put_node;
+ 	=E2=80=A6
++err_put_node:
+ 	of_node_put(child);
+ err_out:
+ 	=E2=80=A6
 
-    ahci: Do not export local variable ahci_em_messages
 
--- 
-Jens Axboe
-
+Regards,
+Markus
