@@ -2,43 +2,44 @@ Return-Path: <SRS0=o87c=XR=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3EB5C3A5A2
-	for <linux-ide@archiver.kernel.org>; Sun, 22 Sep 2019 13:56:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3937C3A5A6
+	for <linux-ide@archiver.kernel.org>; Sun, 22 Sep 2019 15:08:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 755A82064A
-	for <linux-ide@archiver.kernel.org>; Sun, 22 Sep 2019 13:56:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C94D820882
+	for <linux-ide@archiver.kernel.org>; Sun, 22 Sep 2019 15:08:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="EQBxSWAn"
+	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="FHEzZUbE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728954AbfIVN4B (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 22 Sep 2019 09:56:01 -0400
-Received: from mout.web.de ([212.227.17.11]:42999 "EHLO mout.web.de"
+        id S2387419AbfIVPIB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 22 Sep 2019 11:08:01 -0400
+Received: from mout.web.de ([212.227.17.12]:49963 "EHLO mout.web.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728613AbfIVN4B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sun, 22 Sep 2019 09:56:01 -0400
+        id S1728211AbfIVPIB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sun, 22 Sep 2019 11:08:01 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1569160554;
-        bh=lX6emF+xjsAZLDbG4WIHkDXFQUJXQ8PmDva8OKKoGb0=;
-        h=X-UI-Sender-Class:To:From:Subject:Cc:Date;
-        b=EQBxSWAn87+ihu55I+DwdCCJabdPCkKa7/rtFwYntS2bdA5N215Rd3F+CUzNh93xn
-         s7wpI/UrPx86Lt5dRBfcvyW8a6fltYUJzRHR+03VwRabvXs2iE9CV8eyTRaEK/K0BH
-         dO68ehF/hi7DI6pLdpXwIWGsIOoLG2KUtlAF8B+A=
+        s=dbaedf251592; t=1569164875;
+        bh=/tLF8FNd+5kmvda8nqiASXRcjfYhY59Qr9QPeVtm7Yk=;
+        h=X-UI-Sender-Class:Cc:References:Subject:To:From:Date:In-Reply-To;
+        b=FHEzZUbE9BT1BiV2mklFHfH6Qc8q7n/mNtHv9AVksispNM514AAIpKURAoNeNMzzI
+         gDWziUbOUgePIPndN8STFJyhSvN2eYvd6NEPp9fQq4uLGZODw9cG6N7PXhRLvTgp/Y
+         BTpAeDfyS+uQ1bHVAf9K35ev1ihLeTvF7hCpTY8w=
 X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
-Received: from [192.168.1.2] ([2.244.8.78]) by smtp.web.de (mrweb102
- [213.165.67.124]) with ESMTPSA (Nemesis) id 0Ljrq1-1hetNb32u9-00brWF; Sun, 22
- Sep 2019 15:55:54 +0200
-To:     linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>,
+Received: from [192.168.1.2] ([2.244.8.78]) by smtp.web.de (mrweb101
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 0LZeVM-1hmdoV13ds-00lXHa; Sun, 22
+ Sep 2019 17:07:55 +0200
+Cc:     linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+References: <20190815060014.2191-1-nishkadg.linux@gmail.com>
+Subject: Re: [PATCH] ata: libahci_platform: Add of_node_put() before loop exit
+To:     Nishka Dasgupta <nishkadg.linux@gmail.com>,
         Jens Axboe <axboe@kernel.dk>,
-        Nishka Dasgupta <nishkadg.linux@gmail.com>
+        Hans de Goede <hdegoede@redhat.com>,
+        linux-ide@vger.kernel.org
 From:   Markus Elfring <Markus.Elfring@web.de>
-Subject: [PATCH] ata: libahci_platform: Use common error handling code in
- ahci_platform_get_resources()
 Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
  mQINBFg2+xABEADBJW2hoUoFXVFWTeKbqqif8VjszdMkriilx90WB5c0ddWQX14h6w5bT/A8
  +v43YoGpDNyhgA0w9CEhuwfZrE91GocMtjLO67TAc2i2nxMc/FJRDI0OemO4VJ9RwID6ltwt
@@ -82,106 +83,45 @@ Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
  Z/wsLiWTgKlih2QYULvW61XU+mWsK8+ZlYUrRMpkauN4CJ5yTpvp+Orcz5KixHQmc5tbkLWf
  x0n1QFc1xxJhbzN+r9djSGGN/5IBDfUqSANC8cWzHpWaHmSuU3JSAMB/N+yQjIad2ztTckZY
  pwT6oxng29LzZspTYUEzMz3wK2jQHw+U66qBFk8whA7B2uAU1QdGyPgahLYSOa4XAEGb6wbI FEE=
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org
-Message-ID: <6ca97aeb-0892-ed0e-a149-b25848adf324@web.de>
-Date:   Sun, 22 Sep 2019 15:55:53 +0200
+Message-ID: <ac53316a-7856-fdad-d982-5e80305be9d2@web.de>
+Date:   Sun, 22 Sep 2019 17:07:54 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.1.0
 MIME-Version: 1.0
+In-Reply-To: <20190815060014.2191-1-nishkadg.linux@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:/4/JbLOSCKw/9J5S3k0+ovryNiywB5oTV3LWxinMqTowLGWW6XW
- B8LTFsJLYcpDGuJJbUXzveI9a7bmWaGI3PkVoQiTfljJwQQp06ea+OYzSncxC/jy3RkIz5s
- Rk/D5O78s1176Eu6V25fAZoxhlAOEkghSG1q1z8i78Z49xwa7CrRBo5JsMpf8cFcko511sW
- ON8roMuYhsyRdb6lD2Xrw==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:uKkoYPDikFg=:8N06mFnT4RnyiF0j/pyk7t
- 8Zfh+bLyizrjFV4QeXkIcxQSciTgu4VJkiqBj/gTHpDr7IjetdLkLMankVMLETda0KR+MjrKR
- g/RvimeJiopDsExTyiF8/Gk/cC+Noxob8nMRMnBg3I7o3gXSQmQdMkJa35RqgAKAeal31pqvG
- fVEpAKK8nepG8xGpievF/jlrggrlgBR++lyqIvRgKh2MoFxdk6K7s35Hi+8GG+zBApzb4HCSx
- W5XpVOw75ylx200awJ99l248ISTr0oiTIsVVZI+MvRPsM/sZtbV1P6NaSTrYsqMn0B4dxY7vY
- cUecoxlSLcbEw5xhwDMoyqcfheCSxB7MPkMF9TX51cY+74JxBH2DQHciKuEgEuHkVMPcnMsOu
- Cklidz33On/rvqhb6BdO1JJSu/JELMjeEu4KPiiMY0kStlMb/p96FsdU9G4ScYkyNWXYUnp3T
- 91+F71LNv/0DY8wOWnReanL8BR7XA9ATIPZawMncZpY77+LZgdmNSvfbJdhrhfL5FW2hBdE45
- vCGh67Q7n1uGk0T8aPd1vdLzKG29axytWfeuVClzwu13iWEvjdgQZikuPwqu71EoHc5QNj5Jc
- xDC/b5P4poscnIrEbJiihb1ur6UNypQ9kz8t1dFEiu/xhJjgmuw0g0bZjxKF0IEXVQtu8SHVq
- FEzVeOCNXu4HJyoFeVc+YSf28Ij+Djlp0gs23x/iwXGN6cxNukdTi6QXeULvgmGzhpgdKEivv
- txdoHRiNfMlfHmqJskRki2lZajvOdmBYhnacCRAq0ie+NcLu6mq8CfyiwTdf6QfvwtIuNQ3OR
- S4JNXEtTuA5J7wrc6G4WF+IrPuuljeJ9kVWoyLdSLzvnotTIxdt90AOVAOoZDbfweNVZVj9PE
- Q5mg7rLefch45+FfaKVreRxzUCvMxAKCeavWSZ84LSBjFdQU1qpGHVDq7JAxJURRRkhd0wH8M
- cwnn122pzOScmRPgr+5BU8+Ar8TErUTcHsi9ow/WYISVAGa+c2DvHhJ58tZrDzdqRmb0DfD36
- 4mgUb5dm/5Uq66fpz1/Xt53N9ChTnMaKUUuRBxInZ9NPRzJa7Xph+GOEz8opIfF5PfZAzVd5z
- VwfEtc15NOPo9/XzPOUSvzp7Jm1bHYQIEG1kHzHxSDwpBPnOu595QnhIjtjgb4U/mndZztdwK
- ZiG//J02iX434NY2xdk31jRvMexxtCnQN99/BdglQUzAwP8ghXHQZQwuyoijJ+NX1YJftOfDz
- MiSezxLtd51k92H9GUvPPS1DoyJdWFEivR7bkrnocybzlyQIDeG+ksW62+X8=
+X-Provags-ID: V03:K1:QGWuVhgsrTwQtbMJvkcPYLOzikF4K9VLIABRRISa0iSUnkrbX8A
+ jYzgnyKsK5saHIhzle0TXebDfDQQU7fNMNQJ05W9jdwm5cq+XKqnCI/I/klCUKVD2aRDcej
+ Pa1DEoLNWCXHYMlaRNOZyVuePcrTpEimuiE4jjVGi6StcMzgYvgzLjJItUhDbjovczTT8y2
+ j7LeW9AC6FbSJPe/hg6rQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:HeexO2ggeQ0=:JxhmIxpQ1w+vlKGsBYZLRo
+ Q+tmEHqkezEghj4ZlGv0z9gsqg9hp4WcwiVtJq3ZvjAPBG8lCZsgcPYrB1kRA0iU3nKjhvBZn
+ wJT5lH7ZpHBp+9dTNeiEoNocc9eu/iCJh+k47gXhQA7wJ4oGEMEDcEvhoaVWvaZB5I9GhRUVF
+ pPB8c8xPP6bo92F8+WZw4Sxf+V+dua4+j3yJcp8fyoIY2Mfpat1bVtojvcU8nofBDtwZ/wP+R
+ Or1clhLAjDPwRM0SLT/xrX0WiGS8zje+JQ9bWwgGG+IOs1SV6Msyunxedp+tadwCv/169YWut
+ xGr9liIwLdm3ziJlT649EabqQZaOKnjj+Y3T1MCCM40Qxc4YuSeZ75XriTeq1SIBy3b/b1iRl
+ 2Sam5E/a80Wy9MNYsWbF3bbWRwZ1ch71y3F187hSd07tEa3SxKmG0wNhIsIEGqQET/AbDpQ5l
+ grj02wGyk8Wui/USWhAGfKkLDPKROUN0X5ss4m4FzHPulRGQy8zjvgtrR1TyN2wWvqAFWG37K
+ z8snJmIhrgbSzYMrJqvmc9buR8TDjLh7kqy3Q0kI+/eA/9gtpKa2YetI+dYyJznhikAJK0PHD
+ 6LaAm6igZaLC1SprJ5r0wXyCXoEHykF22kvbX/0aQfIKrQnR0TJ4uizbq+MCpjxEPtS3wzqS7
+ HP/7N0iGTLt+Zj+Bf7obr03YCxJGrtEPHwZroXsMWEYvVGQL7+8XpmNIqqOBnsE2lmAsaNUsq
+ L2xWR/csPeF8Kqd3TDFG5/pB4/mmuyJ9g6kjcpVyo4LRo88gnaY0l+HCojKJghz1qnqJqM8Cl
+ wGOjZbcdN9rxL3o64CxeusORn1uq1yF86qLzet9gP2yQxwtw+Ns7TUIajzMyRwIiom7hhiiqp
+ O4iNFZG8HNzX53cslmnQm5uHlXBePlqlVDlEhuDQ1t/WHZya+VDXyHRzz6vhBZWQ9TS7GCrvc
+ UrlHbzilDuNe0fRu9TMi8SxEp+mpsODBpd/6LocGblY8Rr5fJjNmjLk36dsbJdNOn+52o2+lw
+ yrJARmtPrVBQdfkhODgor6+I6ycGo/Tpwe6QgFmCS5LXkjJLgqLzZ7g+sm7ziWDLaFl/tkN20
+ FmnVmoklBHwqVN+2D8T3/BstT0yexLzDn5HJLaAGEUFtYZEG5n47vG4joMcXZReDBth5JqET4
+ KbBpPhjKljDjKAO8WBqPewwbo8HqgfPeKzSnvfknjFeSYqDI4B/H1YRO305FETprVNz2TyViI
+ rH7FzhcGbJr/bHVl+xTmwk/nI6ketenEbB7I5RvihBxU1630+PE53Kw93j7A=
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sun, 22 Sep 2019 15:42:46 +0200
+How do you think about to add the tag =E2=80=9CFixes=E2=80=9D for this sof=
+tware correction?
 
-Convert the call of the function =E2=80=9Cof_node_put=E2=80=9D to another =
-jump target
-so that it can be better reused at three places in this function.
-
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-=2D--
- drivers/ata/libahci_platform.c | 17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform=
-.c
-index e742780950de..7b2e364f3bd5 100644
-=2D-- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -497,8 +497,7 @@ struct ahci_host_priv *ahci_platform_get_resources(str=
-uct platform_device *pdev,
-
- 			if (of_property_read_u32(child, "reg", &port)) {
- 				rc =3D -EINVAL;
--				of_node_put(child);
--				goto err_out;
-+				goto err_put_node;
- 			}
-
- 			if (port >=3D hpriv->nports) {
-@@ -515,18 +514,14 @@ struct ahci_host_priv *ahci_platform_get_resources(s=
-truct platform_device *pdev,
- 			if (port_dev) {
- 				rc =3D ahci_platform_get_regulator(hpriv, port,
- 								&port_dev->dev);
--				if (rc =3D=3D -EPROBE_DEFER) {
--					of_node_put(child);
--					goto err_out;
--				}
-+				if (rc =3D=3D -EPROBE_DEFER)
-+					goto err_put_node;
- 			}
- #endif
-
- 			rc =3D ahci_platform_get_phy(hpriv, port, dev, child);
--			if (rc) {
--				of_node_put(child);
--				goto err_out;
--			}
-+			if (rc)
-+				goto err_put_node;
-
- 			enabled_ports++;
- 		}
-@@ -558,6 +553,8 @@ struct ahci_host_priv *ahci_platform_get_resources(str=
-uct platform_device *pdev,
- 	devres_remove_group(dev, NULL);
- 	return hpriv;
-
-+err_put_node:
-+	of_node_put(child);
- err_out:
- 	devres_release_group(dev, NULL);
- 	return ERR_PTR(rc);
-=2D-
-2.23.0
-
+Regards,
+Markus
