@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 070C1C3A5A6
-	for <linux-ide@archiver.kernel.org>; Sun, 22 Sep 2019 19:15:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AA5EC49ED7
+	for <linux-ide@archiver.kernel.org>; Sun, 22 Sep 2019 19:23:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CC42C208C2
-	for <linux-ide@archiver.kernel.org>; Sun, 22 Sep 2019 19:15:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 426CE20882
+	for <linux-ide@archiver.kernel.org>; Sun, 22 Sep 2019 19:23:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569179750;
-	bh=zfmKVGVACNVuvUon5CogXc+/gorzHawt/cRCqkQbnr0=;
+	s=default; t=1569180239;
+	bh=jL5wQ6eTQyWxcf7RX45gfmdeByKDlb/Cp7nHYsl2g88=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=sNAV0MlbOSSgkyOEfWOZwBJdaymDwXSAgPoruFFg45Rne/IHlY27JIkwWc8sYdaft
-	 wv2HDtFSvF6Ob91oSzYcT2+9ePO3SajDHTHLHMEpSojJ+GCQbZ6yQlIN+maU9Tqzk7
-	 QNfx01c2pRYfc4BJTrfwEpy3NfR3PLZZ3KBK3yvk=
+	b=WBXdX2yZxwMQE3X69PQwaYXf7LXA4aAHc26omE23FYXgA1Jbf4NCf+CWdMux2NVYg
+	 gBBSJufu/6XFju6FKZM4oQ80ms4gXRsFo6GgL+RwSy1MO7E7SQSpbNSAUUOUSVHXF3
+	 /yLMgqJn4+e354/n6FoyRS65i1UzNPwBsI3Z1tHA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730845AbfIVTPm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 22 Sep 2019 15:15:42 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58490 "EHLO mail.kernel.org"
+        id S2393640AbfIVSxO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 22 Sep 2019 14:53:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:52774 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2408184AbfIVS42 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sun, 22 Sep 2019 14:56:28 -0400
+        id S2393584AbfIVSxM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sun, 22 Sep 2019 14:53:12 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0FC242184D;
-        Sun, 22 Sep 2019 18:56:26 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3DAE521A4A;
+        Sun, 22 Sep 2019 18:53:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569178587;
-        bh=zfmKVGVACNVuvUon5CogXc+/gorzHawt/cRCqkQbnr0=;
+        s=default; t=1569178391;
+        bh=jL5wQ6eTQyWxcf7RX45gfmdeByKDlb/Cp7nHYsl2g88=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=zugTYT+RIGT6+9U4aVlH/A6u7sXB3olxHcqlNs2T1pYZvAqCXwMH80e/bG6Q4k5Z+
-         gMH5c5zMKqp1jJn4+vUwB3Ppx71Fh5+LuhR3cACusIgfmAl+slJPkVZ6XPI43Cs+eI
-         FdjrVZGy5Rbnk/H16diz/91G2l3pdKio6Y0/I69o=
+        b=VsDPdyzlxO5emagXBokapu6EGNjiHTCLIoiDZJGj2CClUHmNDWhsj0w1y+KB0AV8M
+         9kx13rlnY+dx5w8XWu0sccfXVV/WmzFz6W6spe3QRAnuBhlqIsIRW8H7OYVAAuLzmL
+         QgnHuWnkEhFAogmFBZ91p1JLVHLQQMk9iah40Ces=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Dan Williams <dan.j.williams@intel.com>,
@@ -45,12 +45,12 @@ Cc:     Dan Williams <dan.j.williams@intel.com>,
         Christoph Hellwig <hch@infradead.org>,
         Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
         linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 096/128] libata/ahci: Drop PCS quirk for Denverton and beyond
-Date:   Sun, 22 Sep 2019 14:53:46 -0400
-Message-Id: <20190922185418.2158-96-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.2 137/185] libata/ahci: Drop PCS quirk for Denverton and beyond
+Date:   Sun, 22 Sep 2019 14:48:35 -0400
+Message-Id: <20190922184924.32534-137-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190922185418.2158-1-sashal@kernel.org>
-References: <20190922185418.2158-1-sashal@kernel.org>
+In-Reply-To: <20190922184924.32534-1-sashal@kernel.org>
+References: <20190922184924.32534-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -103,10 +103,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 71 insertions(+), 47 deletions(-)
 
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 021ce46e2e573..5d110b1362e74 100644
+index f7652baa63370..3e63294304c72 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -81,6 +81,12 @@ enum board_ids {
+@@ -65,6 +65,12 @@ enum board_ids {
  	board_ahci_sb700,	/* for SB700 and SB800 */
  	board_ahci_vt8251,
  
@@ -119,7 +119,7 @@ index 021ce46e2e573..5d110b1362e74 100644
  	/* aliases */
  	board_ahci_mcp_linux	= board_ahci_mcp65,
  	board_ahci_mcp67	= board_ahci_mcp65,
-@@ -236,6 +242,12 @@ static const struct ata_port_info ahci_port_info[] = {
+@@ -220,6 +226,12 @@ static const struct ata_port_info ahci_port_info[] = {
  		.udma_mask	= ATA_UDMA6,
  		.port_ops	= &ahci_vt8251_ops,
  	},
@@ -132,7 +132,7 @@ index 021ce46e2e573..5d110b1362e74 100644
  };
  
  static const struct pci_device_id ahci_pci_tbl[] = {
-@@ -280,26 +292,26 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+@@ -264,26 +276,26 @@ static const struct pci_device_id ahci_pci_tbl[] = {
  	{ PCI_VDEVICE(INTEL, 0x3b2b), board_ahci }, /* PCH RAID */
  	{ PCI_VDEVICE(INTEL, 0x3b2c), board_ahci_mobile }, /* PCH M RAID */
  	{ PCI_VDEVICE(INTEL, 0x3b2f), board_ahci }, /* PCH AHCI */
@@ -179,7 +179,7 @@ index 021ce46e2e573..5d110b1362e74 100644
  	{ PCI_VDEVICE(INTEL, 0x1c02), board_ahci }, /* CPT AHCI */
  	{ PCI_VDEVICE(INTEL, 0x1c03), board_ahci_mobile }, /* CPT M AHCI */
  	{ PCI_VDEVICE(INTEL, 0x1c04), board_ahci }, /* CPT RAID */
-@@ -639,30 +651,6 @@ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
+@@ -623,30 +635,6 @@ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
  	ahci_save_initial_config(&pdev->dev, hpriv);
  }
  
@@ -210,7 +210,7 @@ index 021ce46e2e573..5d110b1362e74 100644
  static void ahci_pci_init_controller(struct ata_host *host)
  {
  	struct ahci_host_priv *hpriv = host->private_data;
-@@ -865,7 +853,7 @@ static int ahci_pci_device_runtime_resume(struct device *dev)
+@@ -849,7 +837,7 @@ static int ahci_pci_device_runtime_resume(struct device *dev)
  	struct ata_host *host = pci_get_drvdata(pdev);
  	int rc;
  
@@ -219,7 +219,7 @@ index 021ce46e2e573..5d110b1362e74 100644
  	if (rc)
  		return rc;
  	ahci_pci_init_controller(host);
-@@ -900,7 +888,7 @@ static int ahci_pci_device_resume(struct device *dev)
+@@ -884,7 +872,7 @@ static int ahci_pci_device_resume(struct device *dev)
  		ahci_mcp89_apple_enable(pdev);
  
  	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND) {
@@ -228,7 +228,7 @@ index 021ce46e2e573..5d110b1362e74 100644
  		if (rc)
  			return rc;
  
-@@ -1635,6 +1623,34 @@ static void ahci_update_initial_lpm_policy(struct ata_port *ap,
+@@ -1619,6 +1607,34 @@ static void ahci_update_initial_lpm_policy(struct ata_port *ap,
  		ap->target_lpm_policy = policy;
  }
  
@@ -263,7 +263,7 @@ index 021ce46e2e573..5d110b1362e74 100644
  static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
  {
  	unsigned int board_id = ent->driver_data;
-@@ -1747,6 +1763,12 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -1731,6 +1747,12 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
  	/* save initial config */
  	ahci_pci_save_initial_config(pdev, hpriv);
  
@@ -276,7 +276,7 @@ index 021ce46e2e573..5d110b1362e74 100644
  	/* prepare host */
  	if (hpriv->cap & HOST_CAP_NCQ) {
  		pi.flags |= ATA_FLAG_NCQ;
-@@ -1856,7 +1878,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -1840,7 +1862,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
  	if (rc)
  		return rc;
  
@@ -286,10 +286,10 @@ index 021ce46e2e573..5d110b1362e74 100644
  		return rc;
  
 diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 6a1515f0da402..9290e787abdc4 100644
+index 0570629d719d8..3dbf398c92eaf 100644
 --- a/drivers/ata/ahci.h
 +++ b/drivers/ata/ahci.h
-@@ -261,6 +261,8 @@ enum {
+@@ -247,6 +247,8 @@ enum {
  					  ATA_FLAG_ACPI_SATA | ATA_FLAG_AN,
  
  	ICH_MAP				= 0x90, /* ICH MAP register */
