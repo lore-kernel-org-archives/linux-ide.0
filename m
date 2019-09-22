@@ -2,126 +2,302 @@ Return-Path: <SRS0=o87c=XR=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3937C3A5A6
-	for <linux-ide@archiver.kernel.org>; Sun, 22 Sep 2019 15:08:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8139FC49ED7
+	for <linux-ide@archiver.kernel.org>; Sun, 22 Sep 2019 18:48:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C94D820882
-	for <linux-ide@archiver.kernel.org>; Sun, 22 Sep 2019 15:08:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=web.de header.i=@web.de header.b="FHEzZUbE"
+	by mail.kernel.org (Postfix) with ESMTP id 4BF17214AF
+	for <linux-ide@archiver.kernel.org>; Sun, 22 Sep 2019 18:48:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1569178083;
+	bh=jL5wQ6eTQyWxcf7RX45gfmdeByKDlb/Cp7nHYsl2g88=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=p2gpJHX9e6AuuxgDoaO+5VBjRhHjRoLMy3997jNtKqBu9gPYgvkzLbrVRyXHBHY+S
+	 fARTNBe4g2ntEvT9EjvJIwaYCRsoaGwnOrkJ1TXwC1fJAkLaEVCjkWjuLPV3L+KOuh
+	 eNR6hFF5Fzl32gjcrEshjckmsJXFKQdktnQvGeNw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387419AbfIVPIB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 22 Sep 2019 11:08:01 -0400
-Received: from mout.web.de ([212.227.17.12]:49963 "EHLO mout.web.de"
+        id S2391336AbfIVSsC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 22 Sep 2019 14:48:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44686 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728211AbfIVPIB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sun, 22 Sep 2019 11:08:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=web.de;
-        s=dbaedf251592; t=1569164875;
-        bh=/tLF8FNd+5kmvda8nqiASXRcjfYhY59Qr9QPeVtm7Yk=;
-        h=X-UI-Sender-Class:Cc:References:Subject:To:From:Date:In-Reply-To;
-        b=FHEzZUbE9BT1BiV2mklFHfH6Qc8q7n/mNtHv9AVksispNM514AAIpKURAoNeNMzzI
-         gDWziUbOUgePIPndN8STFJyhSvN2eYvd6NEPp9fQq4uLGZODw9cG6N7PXhRLvTgp/Y
-         BTpAeDfyS+uQ1bHVAf9K35ev1ihLeTvF7hCpTY8w=
-X-UI-Sender-Class: c548c8c5-30a9-4db5-a2e7-cb6cb037b8f9
-Received: from [192.168.1.2] ([2.244.8.78]) by smtp.web.de (mrweb101
- [213.165.67.124]) with ESMTPSA (Nemesis) id 0LZeVM-1hmdoV13ds-00lXHa; Sun, 22
- Sep 2019 17:07:55 +0200
-Cc:     linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-References: <20190815060014.2191-1-nishkadg.linux@gmail.com>
-Subject: Re: [PATCH] ata: libahci_platform: Add of_node_put() before loop exit
-To:     Nishka Dasgupta <nishkadg.linux@gmail.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Hans de Goede <hdegoede@redhat.com>,
+        id S2391329AbfIVSsC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sun, 22 Sep 2019 14:48:02 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 09F0D21479;
+        Sun, 22 Sep 2019 18:47:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1569178081;
+        bh=jL5wQ6eTQyWxcf7RX45gfmdeByKDlb/Cp7nHYsl2g88=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Ga4CXdMIedZ5XC3iPrt1/zNRP23+l8g2uiekn10EuwEChZ+Wu0ui4ZA6FxoRVr4g0
+         8jZM5BzSDNVd6qdSPw5PdMAyk2c54mBBvQMZd/lA3KDCxpyms9CTxzEwThi98JCebg
+         b6bmskT31KMauim13GL5P2lvJ5ak6IXKG+1+e7yw=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Dan Williams <dan.j.williams@intel.com>,
+        Stephen Douthit <stephend@silicom-usa.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
         linux-ide@vger.kernel.org
-From:   Markus Elfring <Markus.Elfring@web.de>
-Autocrypt: addr=Markus.Elfring@web.de; prefer-encrypt=mutual; keydata=
- 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 FEE=
-Message-ID: <ac53316a-7856-fdad-d982-5e80305be9d2@web.de>
-Date:   Sun, 22 Sep 2019 17:07:54 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.0
+Subject: [PATCH AUTOSEL 5.3 151/203] libata/ahci: Drop PCS quirk for Denverton and beyond
+Date:   Sun, 22 Sep 2019 14:42:57 -0400
+Message-Id: <20190922184350.30563-151-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20190922184350.30563-1-sashal@kernel.org>
+References: <20190922184350.30563-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20190815060014.2191-1-nishkadg.linux@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:QGWuVhgsrTwQtbMJvkcPYLOzikF4K9VLIABRRISa0iSUnkrbX8A
- jYzgnyKsK5saHIhzle0TXebDfDQQU7fNMNQJ05W9jdwm5cq+XKqnCI/I/klCUKVD2aRDcej
- Pa1DEoLNWCXHYMlaRNOZyVuePcrTpEimuiE4jjVGi6StcMzgYvgzLjJItUhDbjovczTT8y2
- j7LeW9AC6FbSJPe/hg6rQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:HeexO2ggeQ0=:JxhmIxpQ1w+vlKGsBYZLRo
- Q+tmEHqkezEghj4ZlGv0z9gsqg9hp4WcwiVtJq3ZvjAPBG8lCZsgcPYrB1kRA0iU3nKjhvBZn
- wJT5lH7ZpHBp+9dTNeiEoNocc9eu/iCJh+k47gXhQA7wJ4oGEMEDcEvhoaVWvaZB5I9GhRUVF
- pPB8c8xPP6bo92F8+WZw4Sxf+V+dua4+j3yJcp8fyoIY2Mfpat1bVtojvcU8nofBDtwZ/wP+R
- Or1clhLAjDPwRM0SLT/xrX0WiGS8zje+JQ9bWwgGG+IOs1SV6Msyunxedp+tadwCv/169YWut
- xGr9liIwLdm3ziJlT649EabqQZaOKnjj+Y3T1MCCM40Qxc4YuSeZ75XriTeq1SIBy3b/b1iRl
- 2Sam5E/a80Wy9MNYsWbF3bbWRwZ1ch71y3F187hSd07tEa3SxKmG0wNhIsIEGqQET/AbDpQ5l
- grj02wGyk8Wui/USWhAGfKkLDPKROUN0X5ss4m4FzHPulRGQy8zjvgtrR1TyN2wWvqAFWG37K
- z8snJmIhrgbSzYMrJqvmc9buR8TDjLh7kqy3Q0kI+/eA/9gtpKa2YetI+dYyJznhikAJK0PHD
- 6LaAm6igZaLC1SprJ5r0wXyCXoEHykF22kvbX/0aQfIKrQnR0TJ4uizbq+MCpjxEPtS3wzqS7
- HP/7N0iGTLt+Zj+Bf7obr03YCxJGrtEPHwZroXsMWEYvVGQL7+8XpmNIqqOBnsE2lmAsaNUsq
- L2xWR/csPeF8Kqd3TDFG5/pB4/mmuyJ9g6kjcpVyo4LRo88gnaY0l+HCojKJghz1qnqJqM8Cl
- wGOjZbcdN9rxL3o64CxeusORn1uq1yF86qLzet9gP2yQxwtw+Ns7TUIajzMyRwIiom7hhiiqp
- O4iNFZG8HNzX53cslmnQm5uHlXBePlqlVDlEhuDQ1t/WHZya+VDXyHRzz6vhBZWQ9TS7GCrvc
- UrlHbzilDuNe0fRu9TMi8SxEp+mpsODBpd/6LocGblY8Rr5fJjNmjLk36dsbJdNOn+52o2+lw
- yrJARmtPrVBQdfkhODgor6+I6ycGo/Tpwe6QgFmCS5LXkjJLgqLzZ7g+sm7ziWDLaFl/tkN20
- FmnVmoklBHwqVN+2D8T3/BstT0yexLzDn5HJLaAGEUFtYZEG5n47vG4joMcXZReDBth5JqET4
- KbBpPhjKljDjKAO8WBqPewwbo8HqgfPeKzSnvfknjFeSYqDI4B/H1YRO305FETprVNz2TyViI
- rH7FzhcGbJr/bHVl+xTmwk/nI6ketenEbB7I5RvihBxU1630+PE53Kw93j7A=
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-How do you think about to add the tag =E2=80=9CFixes=E2=80=9D for this sof=
-tware correction?
+From: Dan Williams <dan.j.williams@intel.com>
 
-Regards,
-Markus
+[ Upstream commit c312ef176399e04fc5f7f2809d9a589751fbf6d9 ]
+
+The Linux ahci driver has historically implemented a configuration fixup
+for platforms / platform-firmware that fails to enable the ports prior
+to OS hand-off at boot. The fixup was originally implemented way back
+before ahci moved from drivers/scsi/ to drivers/ata/, and was updated in
+2007 via commit 49f290903935 "ahci: update PCS programming". The quirk
+sets a port-enable bitmap in the PCS register at offset 0x92.
+
+This quirk could be applied generically up until the arrival of the
+Denverton (DNV) platform. The DNV AHCI controller architecture supports
+more than 6 ports and along with that the PCS register location and
+format were updated to allow for more possible ports in the bitmap. DNV
+AHCI expands the register to 32-bits and moves it to offset 0x94.
+
+As it stands there are no known problem reports with existing Linux
+trying to set bits at offset 0x92 which indicates that the quirk is not
+applicable. Likely it is not applicable on a wider range of platforms,
+but it is difficult to discern which platforms if any still depend on
+the quirk.
+
+Rather than try to fix the PCS quirk to consider the DNV register layout
+instead require explicit opt-in. The assumption is that the OS driver
+need not touch this register, and platforms can be added with a new
+boad_ahci_pcs7 board-id when / if problematic platforms are found in the
+future. The logic in ahci_intel_pcs_quirk() looks for all Intel AHCI
+instances with "legacy" board-ids and otherwise skips the quirk if the
+board was matched by class-code.
+
+Reported-by: Stephen Douthit <stephend@silicom-usa.com>
+Cc: Christoph Hellwig <hch@infradead.org>
+Reviewed-by: Stephen Douthit <stephend@silicom-usa.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/ata/ahci.c | 116 +++++++++++++++++++++++++++------------------
+ drivers/ata/ahci.h |   2 +
+ 2 files changed, 71 insertions(+), 47 deletions(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index f7652baa63370..3e63294304c72 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -65,6 +65,12 @@ enum board_ids {
+ 	board_ahci_sb700,	/* for SB700 and SB800 */
+ 	board_ahci_vt8251,
+ 
++	/*
++	 * board IDs for Intel chipsets that support more than 6 ports
++	 * *and* end up needing the PCS quirk.
++	 */
++	board_ahci_pcs7,
++
+ 	/* aliases */
+ 	board_ahci_mcp_linux	= board_ahci_mcp65,
+ 	board_ahci_mcp67	= board_ahci_mcp65,
+@@ -220,6 +226,12 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_vt8251_ops,
+ 	},
++	[board_ahci_pcs7] = {
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_ops,
++	},
+ };
+ 
+ static const struct pci_device_id ahci_pci_tbl[] = {
+@@ -264,26 +276,26 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x3b2b), board_ahci }, /* PCH RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x3b2c), board_ahci_mobile }, /* PCH M RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x3b2f), board_ahci }, /* PCH AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19b0), board_ahci }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19b1), board_ahci }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19b2), board_ahci }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19b3), board_ahci }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19b4), board_ahci }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19b5), board_ahci }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19b6), board_ahci }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19b7), board_ahci }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19bE), board_ahci }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19bF), board_ahci }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19c0), board_ahci }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19c1), board_ahci }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19c2), board_ahci }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19c3), board_ahci }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19c4), board_ahci }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19c5), board_ahci }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19c6), board_ahci }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19c7), board_ahci }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19cE), board_ahci }, /* DNV AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x19cF), board_ahci }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19b0), board_ahci_pcs7 }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19b1), board_ahci_pcs7 }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19b2), board_ahci_pcs7 }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19b3), board_ahci_pcs7 }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19b4), board_ahci_pcs7 }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19b5), board_ahci_pcs7 }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19b6), board_ahci_pcs7 }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19b7), board_ahci_pcs7 }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19bE), board_ahci_pcs7 }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19bF), board_ahci_pcs7 }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19c0), board_ahci_pcs7 }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19c1), board_ahci_pcs7 }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19c2), board_ahci_pcs7 }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19c3), board_ahci_pcs7 }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19c4), board_ahci_pcs7 }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19c5), board_ahci_pcs7 }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19c6), board_ahci_pcs7 }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19c7), board_ahci_pcs7 }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19cE), board_ahci_pcs7 }, /* DNV AHCI */
++	{ PCI_VDEVICE(INTEL, 0x19cF), board_ahci_pcs7 }, /* DNV AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x1c02), board_ahci }, /* CPT AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x1c03), board_ahci_mobile }, /* CPT M AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x1c04), board_ahci }, /* CPT RAID */
+@@ -623,30 +635,6 @@ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
+ 	ahci_save_initial_config(&pdev->dev, hpriv);
+ }
+ 
+-static int ahci_pci_reset_controller(struct ata_host *host)
+-{
+-	struct pci_dev *pdev = to_pci_dev(host->dev);
+-	int rc;
+-
+-	rc = ahci_reset_controller(host);
+-	if (rc)
+-		return rc;
+-
+-	if (pdev->vendor == PCI_VENDOR_ID_INTEL) {
+-		struct ahci_host_priv *hpriv = host->private_data;
+-		u16 tmp16;
+-
+-		/* configure PCS */
+-		pci_read_config_word(pdev, 0x92, &tmp16);
+-		if ((tmp16 & hpriv->port_map) != hpriv->port_map) {
+-			tmp16 |= hpriv->port_map;
+-			pci_write_config_word(pdev, 0x92, tmp16);
+-		}
+-	}
+-
+-	return 0;
+-}
+-
+ static void ahci_pci_init_controller(struct ata_host *host)
+ {
+ 	struct ahci_host_priv *hpriv = host->private_data;
+@@ -849,7 +837,7 @@ static int ahci_pci_device_runtime_resume(struct device *dev)
+ 	struct ata_host *host = pci_get_drvdata(pdev);
+ 	int rc;
+ 
+-	rc = ahci_pci_reset_controller(host);
++	rc = ahci_reset_controller(host);
+ 	if (rc)
+ 		return rc;
+ 	ahci_pci_init_controller(host);
+@@ -884,7 +872,7 @@ static int ahci_pci_device_resume(struct device *dev)
+ 		ahci_mcp89_apple_enable(pdev);
+ 
+ 	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND) {
+-		rc = ahci_pci_reset_controller(host);
++		rc = ahci_reset_controller(host);
+ 		if (rc)
+ 			return rc;
+ 
+@@ -1619,6 +1607,34 @@ static void ahci_update_initial_lpm_policy(struct ata_port *ap,
+ 		ap->target_lpm_policy = policy;
+ }
+ 
++static void ahci_intel_pcs_quirk(struct pci_dev *pdev, struct ahci_host_priv *hpriv)
++{
++	const struct pci_device_id *id = pci_match_id(ahci_pci_tbl, pdev);
++	u16 tmp16;
++
++	/*
++	 * Only apply the 6-port PCS quirk for known legacy platforms.
++	 */
++	if (!id || id->vendor != PCI_VENDOR_ID_INTEL)
++		return;
++	if (((enum board_ids) id->driver_data) < board_ahci_pcs7)
++		return;
++
++	/*
++	 * port_map is determined from PORTS_IMPL PCI register which is
++	 * implemented as write or write-once register.  If the register
++	 * isn't programmed, ahci automatically generates it from number
++	 * of ports, which is good enough for PCS programming. It is
++	 * otherwise expected that platform firmware enables the ports
++	 * before the OS boots.
++	 */
++	pci_read_config_word(pdev, PCS_6, &tmp16);
++	if ((tmp16 & hpriv->port_map) != hpriv->port_map) {
++		tmp16 |= hpriv->port_map;
++		pci_write_config_word(pdev, PCS_6, tmp16);
++	}
++}
++
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ {
+ 	unsigned int board_id = ent->driver_data;
+@@ -1731,6 +1747,12 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	/* save initial config */
+ 	ahci_pci_save_initial_config(pdev, hpriv);
+ 
++	/*
++	 * If platform firmware failed to enable ports, try to enable
++	 * them here.
++	 */
++	ahci_intel_pcs_quirk(pdev, hpriv);
++
+ 	/* prepare host */
+ 	if (hpriv->cap & HOST_CAP_NCQ) {
+ 		pi.flags |= ATA_FLAG_NCQ;
+@@ -1840,7 +1862,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (rc)
+ 		return rc;
+ 
+-	rc = ahci_pci_reset_controller(host);
++	rc = ahci_reset_controller(host);
+ 	if (rc)
+ 		return rc;
+ 
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 0570629d719d8..3dbf398c92eaf 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -247,6 +247,8 @@ enum {
+ 					  ATA_FLAG_ACPI_SATA | ATA_FLAG_AN,
+ 
+ 	ICH_MAP				= 0x90, /* ICH MAP register */
++	PCS_6				= 0x92, /* 6 port PCS */
++	PCS_7				= 0x94, /* 7+ port PCS (Denverton) */
+ 
+ 	/* em constants */
+ 	EM_MAX_SLOTS			= 8,
+-- 
+2.20.1
+
