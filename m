@@ -1,143 +1,167 @@
-Return-Path: <SRS0=z20e=XV=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=TkZ6=XW=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AA97C4360C
-	for <linux-ide@archiver.kernel.org>; Thu, 26 Sep 2019 22:01:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E3BFC388F4
+	for <linux-ide@archiver.kernel.org>; Fri, 27 Sep 2019 23:40:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6B36720835
-	for <linux-ide@archiver.kernel.org>; Thu, 26 Sep 2019 22:01:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="azeLIFk5"
+	by mail.kernel.org (Postfix) with ESMTP id 4B3AB217D9
+	for <linux-ide@archiver.kernel.org>; Fri, 27 Sep 2019 23:40:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728706AbfIZWBV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 26 Sep 2019 18:01:21 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:47384 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728637AbfIZWBV (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 26 Sep 2019 18:01:21 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8QLwdbg073477;
-        Thu, 26 Sep 2019 22:01:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=EB5I11fp/sugBNR0Bk95vLcbosGFf8qCInfwQyXL1Ks=;
- b=azeLIFk53uuKYvu4fqV1LT9fcHW8tyxOHrIicdZzMjJocFyEsWN1Cvs3/gjmDxlFMPsT
- gnn/Aw9pZJIH9OEliCdjkDsT0zkm5WkCLVNfRtoKId5cJMTCVFOzzzEobtJ/Vxi5OtWD
- 2Djr6azcKVEqJ7TGjvRx2uTt4cDLv5PZFRwSgwzpMZFmIw3kdZNIrCU2ESxsdU3l2dvt
- 5JmsEs3j+n7em1lcCxGMGGTQS7qJY1UxP0M3MNFYUDiCFWvH2ARYPDvGtuhlXevPvomo
- r1lewxJqzZPGv3OtoYEcFVF3hloY27UnwE/uXdn7WYorVULVgpxtSsP05/XvLqbGIFVl EA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2v5cgregt1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 26 Sep 2019 22:01:08 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8QLwmVH123295;
-        Thu, 26 Sep 2019 22:01:08 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2v8yjx6cgj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 26 Sep 2019 22:01:08 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8QM17Qg010299;
-        Thu, 26 Sep 2019 22:01:07 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 26 Sep 2019 15:01:06 -0700
-To:     Stefan Tauner <tauner@technikum-wien.at>
-Cc:     linux-ide@vger.kernel.org
-Subject: Re: Questions (and a possible bug) regarding the ata_device_blacklist and ATA_HORKAGE_ZERO_AFTER_TRIM
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-References: <20190926150400.2524a63b@legacy>
-Date:   Thu, 26 Sep 2019 18:01:03 -0400
-In-Reply-To: <20190926150400.2524a63b@legacy> (Stefan Tauner's message of
-        "Thu, 26 Sep 2019 15:04:00 +0200")
-Message-ID: <yq1pnjm1zvk.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+        id S1727758AbfI0Xkv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 27 Sep 2019 19:40:51 -0400
+Received: from mail-lf1-f67.google.com ([209.85.167.67]:35217 "EHLO
+        mail-lf1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725990AbfI0Xkv (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 27 Sep 2019 19:40:51 -0400
+Received: by mail-lf1-f67.google.com with SMTP id w6so3114025lfl.2;
+        Fri, 27 Sep 2019 16:40:46 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=/vjA3feuVjhECJGCJlv7w7hKdoWzVAzTRzB0psX8g5s=;
+        b=cyYcyUamH/ZJxf1UPzvn/4gz0YorW7s+CfbhnVmploaBcmV29oJLvYo3uJwU0mjY58
+         3LWWSqUd8ot/ev0O7q3aZAJpUR1POuZMfY2vKm0V3xuUf7ZeMNZjutuJHIavuOa4azPF
+         XRNkWfLv6RBEMZcJX4IfJT5Z74EzX4Zvlb9ZknQvFacosYbT+VGJcv4Mq2iJhNU6D/Rt
+         hRwKC4wEfDeURwXeCr6uxvYfkyWO2U6rV+P7GGXXdtoEHmqk5vLIgYXe3uF8HCavjLaD
+         wG703e3baIwYGGDSZILhLVcOM/afcTqJG6Ume4iYUaX9aFh0llteu5a4JB4M53kygSxa
+         6Acw==
+X-Gm-Message-State: APjAAAXafwV/kRJo63q6NYOpyM5CSiynf+c+Iq9sebobZLx66zGoXoeb
+        pT2b/y18TMmkWfo3zr3cjKE=
+X-Google-Smtp-Source: APXvYqzJjAsZOxffDP6X1PyAJObAmIHMhsLPPyKIAwdxjZFuFJU1hlQRv1yAEhIhnnum3sSXraXujg==
+X-Received: by 2002:ac2:568c:: with SMTP id 12mr4300543lfr.133.1569627646034;
+        Fri, 27 Sep 2019 16:40:46 -0700 (PDT)
+Received: from localhost.localdomain (broadband-188-32-48-208.ip.moscow.rt.ru. [188.32.48.208])
+        by smtp.googlemail.com with ESMTPSA id x25sm778810ljb.60.2019.09.27.16.40.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 27 Sep 2019 16:40:45 -0700 (PDT)
+From:   Denis Efremov <efremov@linux.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Denis Efremov <efremov@linux.com>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        x86@kernel.org, linux-s390@vger.kernel.org,
+        linux-alpha@vger.kernel.org, linux-ia64@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
+        linux-fbdev@vger.kernel.org, kvm@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-usb@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-serial@vger.kernel.org, linux-mmc@vger.kernel.org
+Subject: [PATCH RESEND v3 00/26] Add definition for the number of standard PCI BARs
+Date:   Sat, 28 Sep 2019 02:40:26 +0300
+Message-Id: <20190927234026.23342-1-efremov@linux.com>
+X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20190916204158.6889-3-efremov@linux.com>
+References: <20190916204158.6889-3-efremov@linux.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9392 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1909260173
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9392 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1909260173
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+Code that iterates over all standard PCI BARs typically uses
+PCI_STD_RESOURCE_END, but this is error-prone because it requires
+"i <= PCI_STD_RESOURCE_END" rather than something like
+"i < PCI_STD_NUM_BARS". We could add such a definition and use it the same
+way PCI_SRIOV_NUM_BARS is used. The patchset also replaces constant (6)
+with new define PCI_STD_NUM_BARS where appropriate and removes local
+declarations for the number of PCI BARs.
 
-Stefan,
+Changes in v3:
+  - Updated commits description.
+  - Refactored "< PCI_ROM_RESOURCE" with "< PCI_STD_NUM_BARS" in loops.
+  - Refactored "<= BAR_5" with "< PCI_STD_NUM_BARS" in loops.
+  - Removed local define GASKET_NUM_BARS.
+  - Removed local define PCI_NUM_BAR_RESOURCES.
 
-> I don't know the technical details how this is communicated by the
-> drive but I assume it's the same thing that smartctl and hdparm output
-> as "Model Number" and "Device Model" respectively.
+Changes in v2:
+  - Reversed checks in pci_iomap_range,pci_iomap_wc_range.
+  - Refactored loops in vfio_pci to keep PCI_STD_RESOURCES.
+  - Added 2 new patches to replace the magic constant with new define.
+  - Splitted net patch in v1 to separate stmmac and dwc-xlgmac patches.
 
-Yes.
+Denis Efremov (26):
+  PCI: Add define for the number of standard PCI BARs
+  PCI: hv: Use PCI_STD_NUM_BARS
+  PCI: dwc: Use PCI_STD_NUM_BARS
+  PCI: endpoint: Use PCI_STD_NUM_BARS
+  misc: pci_endpoint_test: Use PCI_STD_NUM_BARS
+  s390/pci: Use PCI_STD_NUM_BARS
+  x86/PCI: Loop using PCI_STD_NUM_BARS
+  alpha/PCI: Use PCI_STD_NUM_BARS
+  ia64: Use PCI_STD_NUM_BARS
+  stmmac: pci: Loop using PCI_STD_NUM_BARS
+  net: dwc-xlgmac: Loop using PCI_STD_NUM_BARS
+  ixgb: use PCI_STD_NUM_BARS
+  e1000: Use PCI_STD_NUM_BARS
+  rapidio/tsi721: Loop using PCI_STD_NUM_BARS
+  efifb: Loop using PCI_STD_NUM_BARS
+  fbmem: use PCI_STD_NUM_BARS
+  vfio_pci: Loop using PCI_STD_NUM_BARS
+  scsi: pm80xx: Use PCI_STD_NUM_BARS
+  ata: sata_nv: Use PCI_STD_NUM_BARS
+  staging: gasket: Use PCI_STD_NUM_BARS
+  serial: 8250_pci: Use PCI_STD_NUM_BARS
+  pata_atp867x: Use PCI_STD_NUM_BARS
+  memstick: use PCI_STD_NUM_BARS
+  USB: core: Use PCI_STD_NUM_BARS
+  usb: pci-quirks: Use PCI_STD_NUM_BARS
+  devres: use PCI_STD_NUM_BARS
 
-> If this is correct (is it?) then there is a problem with the list
-> AFAICT because the Crucial SSD I have reports this field simply as
-> "CT500MX500SSD4" but the kernel expects "Crucial" at the beginning of
-> almost all Crucial drives (line 4523+) including the vendor wildcard at
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/ata/libata-core.c#n4586
-> Interestingly, in line 4520 there is an entry for the CT500BX100SSD1
-> that does not start with "Crucial".
-
-With a few exceptions, the entries in the libata white/blacklist were
-submitted by Crucial/Micron themselves. But it's possible that they
-changed their naming scheme.
-
-> After looking into smartctl's drive database I guess the MX500 [2] (as
-> well as BX100, BX200, BX300 and BX500 [1]) series stand out in this
-> regard. This means that all of them do *not* get the
-> ATA_HORKAGE_ZERO_AFTER_TRIM flag set because they are not matched by
-> any of the model-specific entries nor the cumulative "Crucial*" vendor
-> entry.
-
-The newest drives I have are M550 models.
-
-> I have not tested my drive to actually return zeros after trimming but
-> from the kernel code I would assume that its intent is to match all
-> Crucial SSDs and thus it is a bug mine is not matched. If someone
-> tells me to the preferred method to test it I am happy to do this. If
-> need be I can also submit a patch (just for MX500? all of the above?).
-
-There's no way to exhaustively test. Many drives will return zeroes most
-of the time but can have corner conditions that cause them to ignore
-TRIM commands.
-
-The ones we whitelisted were as a result of feedback from the vendors
-themselves (thanks to an advertised qualification for use with hardware
-RAID5 controllers). As you know, there is no way for a drive to express
-this capability/guarantee in the ATA protocol.
-
-> Is there any way to see which flags the kernel applies to a drive?
-
-# grep . /sys/class/ata_device/*/trim
-/sys/class/ata_device/dev1.0/trim:unqueued
-/sys/class/ata_device/dev2.0/trim:queued
-
-> Interestingly, "lsblk -D" does only show "0" for the Samsung device
-> (although AFAICT it is matched by the white list AND reports
-> "Deterministic read ZEROs after TRIM" according to hdparm. But I don't
-> know what lsblk actually looks at...?
-
-lsblk looks at /sys/block/*/queue/discard*
-
-You get "0" for the discard granularity on the Samsung?
+ arch/alpha/kernel/pci-sysfs.c                 |  8 ++---
+ arch/ia64/sn/pci/pcibr/pcibr_dma.c            |  4 +--
+ arch/s390/include/asm/pci.h                   |  5 +--
+ arch/s390/include/asm/pci_clp.h               |  6 ++--
+ arch/s390/pci/pci.c                           | 16 +++++-----
+ arch/s390/pci/pci_clp.c                       |  6 ++--
+ arch/x86/pci/common.c                         |  2 +-
+ arch/x86/pci/intel_mid_pci.c                  |  2 +-
+ drivers/ata/pata_atp867x.c                    |  2 +-
+ drivers/ata/sata_nv.c                         |  2 +-
+ drivers/memstick/host/jmb38x_ms.c             |  2 +-
+ drivers/misc/pci_endpoint_test.c              |  8 ++---
+ drivers/net/ethernet/intel/e1000/e1000.h      |  1 -
+ drivers/net/ethernet/intel/e1000/e1000_main.c |  2 +-
+ drivers/net/ethernet/intel/ixgb/ixgb.h        |  1 -
+ drivers/net/ethernet/intel/ixgb/ixgb_main.c   |  2 +-
+ .../net/ethernet/stmicro/stmmac/stmmac_pci.c  |  4 +--
+ .../net/ethernet/synopsys/dwc-xlgmac-pci.c    |  2 +-
+ drivers/pci/controller/dwc/pci-dra7xx.c       |  2 +-
+ .../pci/controller/dwc/pci-layerscape-ep.c    |  2 +-
+ drivers/pci/controller/dwc/pcie-artpec6.c     |  2 +-
+ .../pci/controller/dwc/pcie-designware-plat.c |  2 +-
+ drivers/pci/controller/dwc/pcie-designware.h  |  2 +-
+ drivers/pci/controller/pci-hyperv.c           | 10 +++---
+ drivers/pci/endpoint/functions/pci-epf-test.c | 10 +++---
+ drivers/pci/pci-sysfs.c                       |  4 +--
+ drivers/pci/pci.c                             | 13 ++++----
+ drivers/pci/proc.c                            |  4 +--
+ drivers/pci/quirks.c                          |  4 +--
+ drivers/rapidio/devices/tsi721.c              |  2 +-
+ drivers/scsi/pm8001/pm8001_hwi.c              |  2 +-
+ drivers/scsi/pm8001/pm8001_init.c             |  2 +-
+ drivers/staging/gasket/gasket_constants.h     |  3 --
+ drivers/staging/gasket/gasket_core.c          | 12 +++----
+ drivers/staging/gasket/gasket_core.h          |  4 +--
+ drivers/tty/serial/8250/8250_pci.c            |  8 ++---
+ drivers/usb/core/hcd-pci.c                    |  2 +-
+ drivers/usb/host/pci-quirks.c                 |  2 +-
+ drivers/vfio/pci/vfio_pci.c                   | 11 ++++---
+ drivers/vfio/pci/vfio_pci_config.c            | 32 ++++++++++---------
+ drivers/vfio/pci/vfio_pci_private.h           |  4 +--
+ drivers/video/fbdev/core/fbmem.c              |  4 +--
+ drivers/video/fbdev/efifb.c                   |  2 +-
+ include/linux/pci-epc.h                       |  2 +-
+ include/linux/pci.h                           |  2 +-
+ include/uapi/linux/pci_regs.h                 |  1 +
+ lib/devres.c                                  |  2 +-
+ 47 files changed, 112 insertions(+), 115 deletions(-)
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.21.0
+
