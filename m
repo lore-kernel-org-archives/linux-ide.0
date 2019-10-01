@@ -1,167 +1,95 @@
-Return-Path: <SRS0=ytiS=XZ=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=+WCl=X2=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52C80C32792
-	for <linux-ide@archiver.kernel.org>; Mon, 30 Sep 2019 21:16:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42116C352AA
+	for <linux-ide@archiver.kernel.org>; Tue,  1 Oct 2019 13:23:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2676B20815
-	for <linux-ide@archiver.kernel.org>; Mon, 30 Sep 2019 21:16:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569878162;
-	bh=5YkIavbcZo/fLAlcbxRAjN/RrUGTMkGP8SzMSvE3lfY=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=c0iHTqsssT/ZsqL7NXgbmYi8Yf41P0pOj0bdJNphrYuLFBT/28HNyYwWUD4NQUh0a
-	 F2hnxaZO21m1WzHrwYPUq454ezdrypekHBKetPerAtgkEw45JlVi9SWspI7AkebMJP
-	 DUo1oHUZMW27J5FJs1GP8AK2R+0qVii9oEyMoQhc=
+	by mail.kernel.org (Postfix) with ESMTP id 1400720815
+	for <linux-ide@archiver.kernel.org>; Tue,  1 Oct 2019 13:23:46 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=bgdev-pl.20150623.gappssmtp.com header.i=@bgdev-pl.20150623.gappssmtp.com header.b="pNZ/xbdG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731865AbfI3VPz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 30 Sep 2019 17:15:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46020 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731050AbfI3VPy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 30 Sep 2019 17:15:54 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 67EDD224D7;
-        Mon, 30 Sep 2019 19:58:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569873536;
-        bh=5YkIavbcZo/fLAlcbxRAjN/RrUGTMkGP8SzMSvE3lfY=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=eQ2EwAbhTnIoCao80RsHAjyuX0FiFTAlEN6giJaMJlAygtJFtLFebghluVb1IgARK
-         QJIQQXZWBQEH68It6VK2j2PAMzsVDbeK0hNpsI8f9l+BsiWY2zGIHPbIo8lDV07B5v
-         nuE1LfjWC+uyDHhdEx/TeJU/HbfFo2GBNRL7OTVo=
-Date:   Mon, 30 Sep 2019 14:58:55 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Denis Efremov <efremov@linux.com>
-Cc:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, x86@kernel.org,
-        linux-s390@vger.kernel.org, linux-alpha@vger.kernel.org,
-        linux-ia64@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        netdev@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        kvm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-usb@vger.kernel.org,
-        devel@driverdev.osuosl.org, linux-serial@vger.kernel.org,
-        linux-mmc@vger.kernel.org
-Subject: Re: [PATCH RESEND v3 00/26] Add definition for the number of
- standard PCI BARs
-Message-ID: <20190930195855.GA191519@google.com>
+        id S2388306AbfJANXp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 1 Oct 2019 09:23:45 -0400
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:52776 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388290AbfJANXp (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 1 Oct 2019 09:23:45 -0400
+Received: by mail-wm1-f67.google.com with SMTP id r19so3387906wmh.2
+        for <linux-ide@vger.kernel.org>; Tue, 01 Oct 2019 06:23:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bgdev-pl.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=SMP20nsut8K+lsuDT/dJwOJCmshErHGRxDa2UzJ4ZSA=;
+        b=pNZ/xbdGWvMJsrR7LsXNQNn33ITo6LZWDWxKIj+23UfEU0tPa4OTxtwuulGSIiue/8
+         X2z+ubrhvAbCxFXavidWWf2FPs1QLxu6krwSgY6PHudkSlKEaLZgDkBzc6NwYGIx6O2M
+         gJGIhlJWhK/ZIkdZACSA7HXTfduo2+8gMtYCvMnjziBC0/HQAatX59iobBg6IKjSfjD3
+         rLOizJzInMBqYjfpyAmLaTJjQd/MLnr733PVks/P89Tj53XeC/UQRVcWijRJ2aSPr0Ir
+         ozuJWiz6IJXcSR2YFIfW3DBIud2oNsLgV3/FeBX2XdDnnadTVVJj4DyL8XYJNX/LsIH5
+         V6NA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=SMP20nsut8K+lsuDT/dJwOJCmshErHGRxDa2UzJ4ZSA=;
+        b=nZjHjbrbeqo4Z7ZZqz6QJaxFXxE3HaLW//1RFxsY5QJ7KF5vuVzcKd82JnWR/XF4Z6
+         oxa46HOnfV0AphsErARlBr6pQ6/pxp7qAfnXNvFUMc8reJC7QpT5E+FgX9XJmwfL7+3A
+         PMVJuyp3C02eEX6jUBbrcK/FTasRHVWsJlbv/eLzNPo+12+gVtGjq46MuncxMjzu7NDC
+         wVvjBWUw3vlcv9CqblZDMRjNXfl9iw5R+HOohswprptsus83ALA6RF8MEo3ak7w1dAuE
+         PGWXiKSJUgAEGBSzvQeCOGOo30XpicpcTPULfrVrR3SlMIhIW0nEHoB5POd+NkCBFzy2
+         hX3w==
+X-Gm-Message-State: APjAAAWm6k8el9UPm9/AylunJXKP6PpHqjl2ry4Kh0IjmaTyN2bLYhus
+        MqzjENDrV4mDRMU3Vp5kQgmwuw==
+X-Google-Smtp-Source: APXvYqwyifTBE4GQLXEIzUj8q0mUZotz7tkb9kVX+0xOqDAooBCfQ0uylmeNHVo+z3S+VXuqNhiuhg==
+X-Received: by 2002:a7b:c8d6:: with SMTP id f22mr3519152wml.173.1569936223907;
+        Tue, 01 Oct 2019 06:23:43 -0700 (PDT)
+Received: from localhost.localdomain (amontpellier-652-1-281-69.w109-210.abo.wanadoo.fr. [109.210.96.69])
+        by smtp.gmail.com with ESMTPSA id o22sm41847990wra.96.2019.10.01.06.23.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 01 Oct 2019 06:23:43 -0700 (PDT)
+From:   Bartosz Golaszewski <brgl@bgdev.pl>
+To:     Jens Axboe <axboe@kernel.dk>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        JC Kuo <jckuo@nvidia.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     linux-ide@vger.kernel.org, linux-tegra@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
+        Bartosz Golaszewski <bgolaszewski@baylibre.com>
+Subject: [PATCH 0/3] tegra: use regulator_bulk_set_supply_names()
+Date:   Tue,  1 Oct 2019 15:23:30 +0200
+Message-Id: <20191001132333.20146-1-brgl@bgdev.pl>
+X-Mailer: git-send-email 2.23.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190927234026.23342-1-efremov@linux.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sat, Sep 28, 2019 at 02:40:26AM +0300, Denis Efremov wrote:
-> Code that iterates over all standard PCI BARs typically uses
-> PCI_STD_RESOURCE_END, but this is error-prone because it requires
-> "i <= PCI_STD_RESOURCE_END" rather than something like
-> "i < PCI_STD_NUM_BARS". We could add such a definition and use it the same
-> way PCI_SRIOV_NUM_BARS is used. The patchset also replaces constant (6)
-> with new define PCI_STD_NUM_BARS where appropriate and removes local
-> declarations for the number of PCI BARs.
-> 
-> Changes in v3:
->   - Updated commits description.
->   - Refactored "< PCI_ROM_RESOURCE" with "< PCI_STD_NUM_BARS" in loops.
->   - Refactored "<= BAR_5" with "< PCI_STD_NUM_BARS" in loops.
->   - Removed local define GASKET_NUM_BARS.
->   - Removed local define PCI_NUM_BAR_RESOURCES.
-> 
-> Changes in v2:
->   - Reversed checks in pci_iomap_range,pci_iomap_wc_range.
->   - Refactored loops in vfio_pci to keep PCI_STD_RESOURCES.
->   - Added 2 new patches to replace the magic constant with new define.
->   - Splitted net patch in v1 to separate stmmac and dwc-xlgmac patches.
-> 
-> Denis Efremov (26):
->   PCI: Add define for the number of standard PCI BARs
->   PCI: hv: Use PCI_STD_NUM_BARS
->   PCI: dwc: Use PCI_STD_NUM_BARS
->   PCI: endpoint: Use PCI_STD_NUM_BARS
->   misc: pci_endpoint_test: Use PCI_STD_NUM_BARS
->   s390/pci: Use PCI_STD_NUM_BARS
->   x86/PCI: Loop using PCI_STD_NUM_BARS
->   alpha/PCI: Use PCI_STD_NUM_BARS
->   ia64: Use PCI_STD_NUM_BARS
->   stmmac: pci: Loop using PCI_STD_NUM_BARS
->   net: dwc-xlgmac: Loop using PCI_STD_NUM_BARS
->   ixgb: use PCI_STD_NUM_BARS
->   e1000: Use PCI_STD_NUM_BARS
->   rapidio/tsi721: Loop using PCI_STD_NUM_BARS
->   efifb: Loop using PCI_STD_NUM_BARS
->   fbmem: use PCI_STD_NUM_BARS
->   vfio_pci: Loop using PCI_STD_NUM_BARS
->   scsi: pm80xx: Use PCI_STD_NUM_BARS
->   ata: sata_nv: Use PCI_STD_NUM_BARS
->   staging: gasket: Use PCI_STD_NUM_BARS
->   serial: 8250_pci: Use PCI_STD_NUM_BARS
->   pata_atp867x: Use PCI_STD_NUM_BARS
->   memstick: use PCI_STD_NUM_BARS
->   USB: core: Use PCI_STD_NUM_BARS
->   usb: pci-quirks: Use PCI_STD_NUM_BARS
->   devres: use PCI_STD_NUM_BARS
-> 
->  arch/alpha/kernel/pci-sysfs.c                 |  8 ++---
->  arch/ia64/sn/pci/pcibr/pcibr_dma.c            |  4 +--
->  arch/s390/include/asm/pci.h                   |  5 +--
->  arch/s390/include/asm/pci_clp.h               |  6 ++--
->  arch/s390/pci/pci.c                           | 16 +++++-----
->  arch/s390/pci/pci_clp.c                       |  6 ++--
->  arch/x86/pci/common.c                         |  2 +-
->  arch/x86/pci/intel_mid_pci.c                  |  2 +-
->  drivers/ata/pata_atp867x.c                    |  2 +-
->  drivers/ata/sata_nv.c                         |  2 +-
->  drivers/memstick/host/jmb38x_ms.c             |  2 +-
->  drivers/misc/pci_endpoint_test.c              |  8 ++---
->  drivers/net/ethernet/intel/e1000/e1000.h      |  1 -
->  drivers/net/ethernet/intel/e1000/e1000_main.c |  2 +-
->  drivers/net/ethernet/intel/ixgb/ixgb.h        |  1 -
->  drivers/net/ethernet/intel/ixgb/ixgb_main.c   |  2 +-
->  .../net/ethernet/stmicro/stmmac/stmmac_pci.c  |  4 +--
->  .../net/ethernet/synopsys/dwc-xlgmac-pci.c    |  2 +-
->  drivers/pci/controller/dwc/pci-dra7xx.c       |  2 +-
->  .../pci/controller/dwc/pci-layerscape-ep.c    |  2 +-
->  drivers/pci/controller/dwc/pcie-artpec6.c     |  2 +-
->  .../pci/controller/dwc/pcie-designware-plat.c |  2 +-
->  drivers/pci/controller/dwc/pcie-designware.h  |  2 +-
->  drivers/pci/controller/pci-hyperv.c           | 10 +++---
->  drivers/pci/endpoint/functions/pci-epf-test.c | 10 +++---
->  drivers/pci/pci-sysfs.c                       |  4 +--
->  drivers/pci/pci.c                             | 13 ++++----
->  drivers/pci/proc.c                            |  4 +--
->  drivers/pci/quirks.c                          |  4 +--
->  drivers/rapidio/devices/tsi721.c              |  2 +-
->  drivers/scsi/pm8001/pm8001_hwi.c              |  2 +-
->  drivers/scsi/pm8001/pm8001_init.c             |  2 +-
->  drivers/staging/gasket/gasket_constants.h     |  3 --
->  drivers/staging/gasket/gasket_core.c          | 12 +++----
->  drivers/staging/gasket/gasket_core.h          |  4 +--
->  drivers/tty/serial/8250/8250_pci.c            |  8 ++---
->  drivers/usb/core/hcd-pci.c                    |  2 +-
->  drivers/usb/host/pci-quirks.c                 |  2 +-
->  drivers/vfio/pci/vfio_pci.c                   | 11 ++++---
->  drivers/vfio/pci/vfio_pci_config.c            | 32 ++++++++++---------
->  drivers/vfio/pci/vfio_pci_private.h           |  4 +--
->  drivers/video/fbdev/core/fbmem.c              |  4 +--
->  drivers/video/fbdev/efifb.c                   |  2 +-
->  include/linux/pci-epc.h                       |  2 +-
->  include/linux/pci.h                           |  2 +-
->  include/uapi/linux/pci_regs.h                 |  1 +
->  lib/devres.c                                  |  2 +-
->  47 files changed, 112 insertions(+), 115 deletions(-)
+From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
 
-Applied to pci/resource for v5.5, thanks!
+The regulator_bulk_set_supply_names() helper was merged upstream. Use it
+in a couple tegra drivers.
 
-I ended up squashing these all together because they're all related
-and tiny.
+Bartosz Golaszewski (3):
+  ahci: tegra: use regulator_bulk_set_supply_names()
+  phy: tegra: use regulator_bulk_set_supply_names()
+  usb: host: xhci-tegra: use regulator_bulk_set_supply_names()
+
+ drivers/ata/ahci_tegra.c      | 6 +++---
+ drivers/phy/tegra/xusb.c      | 6 +++---
+ drivers/usb/host/xhci-tegra.c | 5 +++--
+ 3 files changed, 9 insertions(+), 8 deletions(-)
+
+-- 
+2.23.0
+
