@@ -1,123 +1,86 @@
-Return-Path: <SRS0=1mkK=X3=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=mvR8=X5=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BEC5C352AA
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Oct 2019 12:26:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59966C4360C
+	for <linux-ide@archiver.kernel.org>; Fri,  4 Oct 2019 19:45:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4EE7D21920
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Oct 2019 12:26:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D5B42084D
+	for <linux-ide@archiver.kernel.org>; Fri,  4 Oct 2019 19:45:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QPKITSG0"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="AMunfFNp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726453AbfJBM0x (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 2 Oct 2019 08:26:53 -0400
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:44808 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725875AbfJBM0w (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Oct 2019 08:26:52 -0400
-Received: by mail-wr1-f67.google.com with SMTP id z9so6301011wrl.11;
-        Wed, 02 Oct 2019 05:26:51 -0700 (PDT)
+        id S1727978AbfJDTpH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 4 Oct 2019 15:45:07 -0400
+Received: from mail-lf1-f68.google.com ([209.85.167.68]:36504 "EHLO
+        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728954AbfJDTpH (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 4 Oct 2019 15:45:07 -0400
+Received: by mail-lf1-f68.google.com with SMTP id x80so5289371lff.3
+        for <linux-ide@vger.kernel.org>; Fri, 04 Oct 2019 12:45:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=YsapF76Q1TOEmh1rttebz7zK2OwlZHHTPamgXkWw2iI=;
-        b=QPKITSG0ejX6kL/FKLVFzzcjl/OaEH4/nNl6nT45pNUXIy8uCQekgc/W6ycjA9FmxT
-         459PBRykWQmEEW4XnkDGxjImbHlSt6zrDPY6volB/pi03fJJdiOpl2Aj3znNsZ5U3W9t
-         gqezCM26cWXLYSXtYL9Esof7ZluA96QgSeO2YG5zGnu45f0d4k+TTOi+sxLIQSnA7/i8
-         y57n/thQP1T+wDAHPdxqA65mquBU9HH/nwmtiAU71SlAQJhhu8xSsE5ZlgYorQpJP5oc
-         qGfhv1PLVkNU42rmx6GUmjbXc84XsvXIuDJt65FarnjT0WZ6D/MzJIBAJjfUsQjb1n2e
-         4quA==
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ig2bd75GnHMToY2Lt27CYgTDtNYbuy1gGc25rUD2An4=;
+        b=AMunfFNpKE+8jkSxgQ+CmomwXobKVHz4DqW5IBbefEKK+erUajn7p/Qm7dt9Z6mmZH
+         0rS++FlqOof4RDzziQob9sz9zzPwzTrhE5GkE/x/F/amWFcehLUSVXRSDjYCdfXwUTW/
+         PjBIO1alDROA7ICvUJGxxWOuIDhf6j8kKt13KavYOw2GzeIx7vtMEVZXN2uFx3XibqkS
+         Owe1ULicJr+Qh8sKAuDQNjH+SP+37Cj4LnCGNgq0n9LLSGr8c/aILBVaPH98cpusnlLn
+         VOfZa4DSPWHoEJ22H301f8oPbFYOUdFDPY7xDoXHuPXgWcApGpW1pmFQuNvVXwu3KYTu
+         1lfg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=YsapF76Q1TOEmh1rttebz7zK2OwlZHHTPamgXkWw2iI=;
-        b=AZWG5QyJzQnBH4ic/ubbk0EZD6vVclyhbiZ+1xBXjapjVck6hNqxfqgXKiNgfb7WC2
-         VM+DKEuMxy+S0XM7L6XVXWyXeWJq89/zuVpdT+qLDlU+YdNHCWv46ORtbo5sQWHVrPTo
-         6cs8hLEUgZM/7OSubRJegUwyc9gZsmy2JJ3f6gnshCCtkpiVmrZIZs1zJzLhGvRZ/SEY
-         /MPyiY+r8s/PomT66qRzQFfJngmudzwbbMOSbukbBa7rmiNr34J+kL1DWTWTEUTXEd66
-         G+XReXa/rnDhDJ3xiRiUiC7OclNMmhCJ+YFHsIN0IryxgEzXaHPgRx8AISI5wmPvhkVK
-         uHnA==
-X-Gm-Message-State: APjAAAVZ+RPhUV/O2iUZGZwarO3Ig9AF+VM9fz4oJ0DzU616MjEJzXoT
-        UfcK6whI/UAy3cXogkTDRAM=
-X-Google-Smtp-Source: APXvYqwNCk9dTLf6PRTkYsS5B9lezj1GIKYCU3LxHDQIG+agVQDk5svygrX8B+BbbrB5sBIE/3Ta+g==
-X-Received: by 2002:a5d:63cb:: with SMTP id c11mr2683779wrw.281.1570019210652;
-        Wed, 02 Oct 2019 05:26:50 -0700 (PDT)
-Received: from localhost (p2E5BE2CE.dip0.t-ipconnect.de. [46.91.226.206])
-        by smtp.gmail.com with ESMTPSA id t203sm8458080wmf.42.2019.10.02.05.26.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Oct 2019 05:26:49 -0700 (PDT)
-Date:   Wed, 2 Oct 2019 14:26:48 +0200
-From:   Thierry Reding <thierry.reding@gmail.com>
-To:     Bartosz Golaszewski <brgl@bgdev.pl>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        JC Kuo <jckuo@nvidia.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-ide@vger.kernel.org, linux-tegra@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-        Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: Re: [PATCH 3/3] usb: host: xhci-tegra: use
- regulator_bulk_set_supply_names()
-Message-ID: <20191002122648.GC3908655@ulmo>
-References: <20191001132333.20146-1-brgl@bgdev.pl>
- <20191001132333.20146-4-brgl@bgdev.pl>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ig2bd75GnHMToY2Lt27CYgTDtNYbuy1gGc25rUD2An4=;
+        b=XRy4QM1rMz6CPLxrHA1GpOJNbbdq8e5zWbUh0ZTqgc8aUAdpW3YZvpBRqITMuC/5bN
+         8ffPhQoO+HlfjqN6e3FEjNFboz0FA/wb5ew07g2bZ2Mg6loxssWa4C6mWRNOnDHpFWLc
+         Fd6VkeKNZGefJnW6EofthGbQ0skYhDI4e/LwcInP3A1sKJpGZOMYVLA5dG5HPVP3zAD6
+         /+3fc2c+1gW/yLkKCXAjlFELss6PNdAzS9xi4N+IjX90t4eJsbcPxh4sxbqSktiMXRNN
+         LzcmWrWb7CNqaZI0IympNzQoCD55qa7dI09jeRGPs/FsJbA9p37NydfY0JvIKsOj7JPR
+         b7iA==
+X-Gm-Message-State: APjAAAV+h1QFs3u7UzEui56uO5SbWDIuOWBHmgkW37l3ow6abtPFFeNe
+        vDm4jlYCh8JbyNq1CW+oTfTEgoBa9lQ7MNaO60eiZA==
+X-Google-Smtp-Source: APXvYqyfDJMQJRS/zQ6t2yMjF09Dcf72KV0t+O+BMP8nioJ5Z9vrYI6QxASJCmiz1bsPY3Z4HKU2ONkNeMD7WhAvZho=
+X-Received: by 2002:a19:117:: with SMTP id 23mr9983798lfb.115.1570218304825;
+ Fri, 04 Oct 2019 12:45:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="+xNpyl7Qekk2NvDX"
-Content-Disposition: inline
-In-Reply-To: <20191001132333.20146-4-brgl@bgdev.pl>
-User-Agent: Mutt/1.12.2 (2019-09-21)
+References: <b17404cd-294f-fe2f-e8a3-2218a0dae14f@web.de>
+In-Reply-To: <b17404cd-294f-fe2f-e8a3-2218a0dae14f@web.de>
+From:   Linus Walleij <linus.walleij@linaro.org>
+Date:   Fri, 4 Oct 2019 21:44:52 +0200
+Message-ID: <CACRpkdbgUVm_6MdHw+6MJBc-oHYp-MA7_3jM3buQtKJEtEMtnA@mail.gmail.com>
+Subject: Re: [PATCH] sata_gemini: Use devm_platform_ioremap_resource() in gemini_sata_probe()
+To:     Markus Elfring <Markus.Elfring@web.de>
+Cc:     linux-ide@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org,
+        Bartosz Golaszewski <bgolaszewski@baylibre.com>,
+        Himanshu Jha <himanshujha199640@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+On Wed, Sep 18, 2019 at 8:34 AM Markus Elfring <Markus.Elfring@web.de> wrote:
 
---+xNpyl7Qekk2NvDX
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Wed, 18 Sep 2019 08:28:09 +0200
+>
+> Simplify this function implementation by using a known wrapper function.
+>
+> This issue was detected by using the Coccinelle software.
+>
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 
-On Tue, Oct 01, 2019 at 03:23:33PM +0200, Bartosz Golaszewski wrote:
-> From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
->=20
-> Use the new regulator helper instead of a for loop.
->=20
-> Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-> ---
->  drivers/usb/host/xhci-tegra.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+Looks correct.
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 
-Acked-by: Thierry Reding <treding@nvidia.com>
-
---+xNpyl7Qekk2NvDX
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAl2Ul4gACgkQ3SOs138+
-s6HhUA/5Ab4y4CUvbNGI3qBuN5kszxhX3js9RnOzfvLMECkxSStw0S9bI4cluZBJ
-Y9T9McYbSoWyoAqGuvVAK5BnqcgytzaqBMvLqmsYb0q5hYxQGCSHeQkpYir0Aq9q
-0GiFHGkbqg0+y5UQkM0SlfWHwIYT7arDhd0XHncmNQtaAWWEKopZTSR2mys4XAE+
-bXskoedemp3oIvjxXIvYQZzMYnJyMXTzLjtjEZFetaOWq1QVXY0Dqf5YasutN5/K
-Urs9TGZtW31qxC9z6T6xWxLuPtS0kXOIhYQ+dlS66+sra4MNQaRse5h+1BWFKeee
-Vmn81FVXniTLbpCMQ0M/gxFSGIoAADiK2EI0sDju3KzoOcq1Ol9gxQGeTnkXklSj
-gXxt/1PwZPQLJxlerrYUvlv2gQLjdv74pRKCgAN5/JOKw25kXzANWjmNfWn3E3p0
-/CUmrVCrCgIFG6yTt9bGGWCMsgMieEQP+scabwBYEi1Vflt+I4lwvxNFMD/3Qk4A
-N7TRvhVMB8o4pa1jls6/NM6edqFnj7KZqBk4RhkCWsYbAECVgDB01rOsCH9sRIj9
-mZMG6HUatyG3auomJxl4PZl4COre1ECfu92u182uqyt6+cIh1xyuZo0fNd9FJCei
-TKkVS8C8ryl0zFEjPnObWBdD0HLb8aQJedzelvubwCU1U1bek28=
-=qTAb
------END PGP SIGNATURE-----
-
---+xNpyl7Qekk2NvDX--
+Yours,
+Linus Walleij
