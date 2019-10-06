@@ -1,86 +1,86 @@
-Return-Path: <SRS0=mvR8=X5=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=bdUt=X7=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59966C4360C
-	for <linux-ide@archiver.kernel.org>; Fri,  4 Oct 2019 19:45:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31187ECE58D
+	for <linux-ide@archiver.kernel.org>; Sun,  6 Oct 2019 14:28:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2D5B42084D
-	for <linux-ide@archiver.kernel.org>; Fri,  4 Oct 2019 19:45:08 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="AMunfFNp"
+	by mail.kernel.org (Postfix) with ESMTP id 08EC520862
+	for <linux-ide@archiver.kernel.org>; Sun,  6 Oct 2019 14:28:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727978AbfJDTpH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 4 Oct 2019 15:45:07 -0400
-Received: from mail-lf1-f68.google.com ([209.85.167.68]:36504 "EHLO
-        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728954AbfJDTpH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 4 Oct 2019 15:45:07 -0400
-Received: by mail-lf1-f68.google.com with SMTP id x80so5289371lff.3
-        for <linux-ide@vger.kernel.org>; Fri, 04 Oct 2019 12:45:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ig2bd75GnHMToY2Lt27CYgTDtNYbuy1gGc25rUD2An4=;
-        b=AMunfFNpKE+8jkSxgQ+CmomwXobKVHz4DqW5IBbefEKK+erUajn7p/Qm7dt9Z6mmZH
-         0rS++FlqOof4RDzziQob9sz9zzPwzTrhE5GkE/x/F/amWFcehLUSVXRSDjYCdfXwUTW/
-         PjBIO1alDROA7ICvUJGxxWOuIDhf6j8kKt13KavYOw2GzeIx7vtMEVZXN2uFx3XibqkS
-         Owe1ULicJr+Qh8sKAuDQNjH+SP+37Cj4LnCGNgq0n9LLSGr8c/aILBVaPH98cpusnlLn
-         VOfZa4DSPWHoEJ22H301f8oPbFYOUdFDPY7xDoXHuPXgWcApGpW1pmFQuNvVXwu3KYTu
-         1lfg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ig2bd75GnHMToY2Lt27CYgTDtNYbuy1gGc25rUD2An4=;
-        b=XRy4QM1rMz6CPLxrHA1GpOJNbbdq8e5zWbUh0ZTqgc8aUAdpW3YZvpBRqITMuC/5bN
-         8ffPhQoO+HlfjqN6e3FEjNFboz0FA/wb5ew07g2bZ2Mg6loxssWa4C6mWRNOnDHpFWLc
-         Fd6VkeKNZGefJnW6EofthGbQ0skYhDI4e/LwcInP3A1sKJpGZOMYVLA5dG5HPVP3zAD6
-         /+3fc2c+1gW/yLkKCXAjlFELss6PNdAzS9xi4N+IjX90t4eJsbcPxh4sxbqSktiMXRNN
-         LzcmWrWb7CNqaZI0IympNzQoCD55qa7dI09jeRGPs/FsJbA9p37NydfY0JvIKsOj7JPR
-         b7iA==
-X-Gm-Message-State: APjAAAV+h1QFs3u7UzEui56uO5SbWDIuOWBHmgkW37l3ow6abtPFFeNe
-        vDm4jlYCh8JbyNq1CW+oTfTEgoBa9lQ7MNaO60eiZA==
-X-Google-Smtp-Source: APXvYqyfDJMQJRS/zQ6t2yMjF09Dcf72KV0t+O+BMP8nioJ5Z9vrYI6QxASJCmiz1bsPY3Z4HKU2ONkNeMD7WhAvZho=
-X-Received: by 2002:a19:117:: with SMTP id 23mr9983798lfb.115.1570218304825;
- Fri, 04 Oct 2019 12:45:04 -0700 (PDT)
+        id S1726426AbfJFO2Z (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 6 Oct 2019 10:28:25 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:55227 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726420AbfJFO2Z (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 6 Oct 2019 10:28:25 -0400
+Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <colin.king@canonical.com>)
+        id 1iH7WI-0002R8-5q; Sun, 06 Oct 2019 14:28:22 +0000
+From:   Colin King <colin.king@canonical.com>
+To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ata: pata_artop: make arrays static const, makes object smaller
+Date:   Sun,  6 Oct 2019 15:28:21 +0100
+Message-Id: <20191006142821.23249-1-colin.king@canonical.com>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-References: <b17404cd-294f-fe2f-e8a3-2218a0dae14f@web.de>
-In-Reply-To: <b17404cd-294f-fe2f-e8a3-2218a0dae14f@web.de>
-From:   Linus Walleij <linus.walleij@linaro.org>
-Date:   Fri, 4 Oct 2019 21:44:52 +0200
-Message-ID: <CACRpkdbgUVm_6MdHw+6MJBc-oHYp-MA7_3jM3buQtKJEtEMtnA@mail.gmail.com>
-Subject: Re: [PATCH] sata_gemini: Use devm_platform_ioremap_resource() in gemini_sata_probe()
-To:     Markus Elfring <Markus.Elfring@web.de>
-Cc:     linux-ide@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org,
-        Bartosz Golaszewski <bgolaszewski@baylibre.com>,
-        Himanshu Jha <himanshujha199640@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, Sep 18, 2019 at 8:34 AM Markus Elfring <Markus.Elfring@web.de> wrote:
+From: Colin Ian King <colin.king@canonical.com>
 
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Wed, 18 Sep 2019 08:28:09 +0200
->
-> Simplify this function implementation by using a known wrapper function.
->
-> This issue was detected by using the Coccinelle software.
->
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+Don't populate the arrays on the stack but instead make them
+tatic const. Makes the object code smaller by 292 bytes.
 
-Looks correct.
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Before:
+   text	   data	    bss	    dec	    hex	filename
+   6988	   3132	    128	  10248	   2808	drivers/ata/pata_artop.o
 
-Yours,
-Linus Walleij
+After:
+   text	   data	    bss	    dec	    hex	filename
+   6536	   3292	    128	   9956	   26e4	drivers/ata/pata_artop.o
+
+(gcc version 9.2.1, amd64)
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/ata/pata_artop.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/pata_artop.c b/drivers/ata/pata_artop.c
+index 3aa006c5ed0c..6bd2228bb6ff 100644
+--- a/drivers/ata/pata_artop.c
++++ b/drivers/ata/pata_artop.c
+@@ -100,7 +100,7 @@ static void artop6210_load_piomode(struct ata_port *ap, struct ata_device *adev,
+ {
+ 	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
+ 	int dn = adev->devno + 2 * ap->port_no;
+-	const u16 timing[2][5] = {
++	static const u16 timing[2][5] = {
+ 		{ 0x0000, 0x000A, 0x0008, 0x0303, 0x0301 },
+ 		{ 0x0700, 0x070A, 0x0708, 0x0403, 0x0401 }
+ 
+@@ -154,7 +154,7 @@ static void artop6260_load_piomode (struct ata_port *ap, struct ata_device *adev
+ {
+ 	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
+ 	int dn = adev->devno + 2 * ap->port_no;
+-	const u8 timing[2][5] = {
++	static const u8 timing[2][5] = {
+ 		{ 0x00, 0x0A, 0x08, 0x33, 0x31 },
+ 		{ 0x70, 0x7A, 0x78, 0x43, 0x41 }
+ 
+-- 
+2.20.1
+
