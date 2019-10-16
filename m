@@ -2,126 +2,166 @@ Return-Path: <SRS0=7hjg=YJ=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E343C4360C
-	for <linux-ide@archiver.kernel.org>; Wed, 16 Oct 2019 10:23:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E8F7FA372A
+	for <linux-ide@archiver.kernel.org>; Wed, 16 Oct 2019 10:51:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5A8DC20650
-	for <linux-ide@archiver.kernel.org>; Wed, 16 Oct 2019 10:23:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA7B72168B
+	for <linux-ide@archiver.kernel.org>; Wed, 16 Oct 2019 10:51:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1571223073;
+	bh=sUXwlMdLrlAjeXOPiqbcoolQqJSyWZalDi1LX2oTFUk=;
+	h=From:To:Cc:Subject:Date:List-ID:From;
+	b=eF0lNgzgKkZNaFs9cGBl1xwjq3KcKqxMgfDRwZrW52yMzD2XCkraZ5/tTYZ4GllXz
+	 QPoJ1774qMOwVy7WfwEXV/OSRYzTQOG8GvlnybareLPzXQY8lI5NdPrOFDoHswHi2b
+	 Ooxqw2i1VPHLpjwqfUv4W+Iuj+IU48r0/brYwT6k=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727138AbfJPKXC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 16 Oct 2019 06:23:02 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:47100 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726394AbfJPKXC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 16 Oct 2019 06:23:02 -0400
-Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 7BE6C3E9025F397CF751;
-        Wed, 16 Oct 2019 18:22:59 +0800 (CST)
-Received: from localhost.localdomain (10.67.212.75) by
- DGGEMS405-HUB.china.huawei.com (10.3.19.205) with Microsoft SMTP Server id
- 14.3.439.0; Wed, 16 Oct 2019 18:22:53 +0800
-From:   John Garry <john.garry@huawei.com>
-To:     <axboe@kernel.dk>
-CC:     <linux-ide@vger.kernel.org>, <linuxarm@huawei.com>,
-        <linux-kernel@vger.kernel.org>, John Garry <john.garry@huawei.com>
-Subject: [PATCH] libata: Ensure ata_port probe has completed before detach
-Date:   Wed, 16 Oct 2019 18:19:52 +0800
-Message-ID: <1571221192-216909-1-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
+        id S1726697AbfJPKvM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 16 Oct 2019 06:51:12 -0400
+Received: from heliosphere.sirena.org.uk ([172.104.155.198]:34652 "EHLO
+        heliosphere.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726083AbfJPKvL (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 16 Oct 2019 06:51:11 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=sirena.org.uk; s=20170815-heliosphere; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=ryZDKnjzyr3o7f9oS+guur2f8okhr7j5V/KmEONdvFY=; b=j2uQBaYcQXgKQV8gLW2SJUQ3g
+        +bEyLYD8HtWGGDzLR2LwuWhjUt0O3u4excrdSwz6MPgiYo1B2PPdn6V+FRgH8mJ00a/PRLWDxuT8C
+        XOwEoJIkKcoG9znxXE38m7iKrfYypTPCvUX3PntBs7ptdqUa/n7nMnwvgavIKSC/75knU=;
+Received: from cpc102320-sgyl38-2-0-cust46.18-2.cable.virginm.net ([82.37.168.47] helo=ypsilon.sirena.org.uk)
+        by heliosphere.sirena.org.uk with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <broonie@sirena.co.uk>)
+        id 1iKgtX-00054L-B2; Wed, 16 Oct 2019 10:51:07 +0000
+Received: by ypsilon.sirena.org.uk (Postfix, from userid 1000)
+        id 4C6682741FD5; Wed, 16 Oct 2019 11:51:06 +0100 (BST)
+From:   Mark Brown <broonie@kernel.org>
+To:     Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>
+Cc:     linux-ide@vger.kernel.org, Mark Brown <broonie@kernel.org>
+Subject: [PATCH] ata: libahci_platform: Fix regulator_get_optional() misuse
+Date:   Wed, 16 Oct 2019 11:51:05 +0100
+Message-Id: <20191016105105.7791-1-broonie@kernel.org>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.67.212.75]
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-With CONFIG_DEBUG_TEST_DRIVER_REMOVE set, we may find the following WARN:
+This driver is using regulator_get_optional() to handle all the supplies
+that it handles, and only ever enables and disables all supplies en masse
+without ever doing any other configuration of the device to handle missing
+power. These are clear signs that the API is being misused - it should only
+be used for supplies that may be physically absent from the system and in
+these cases the hardware usually needs different configuration if the
+supply is missing. Instead use normal regualtor_get(), if the supply is
+not described in DT then the framework will substitute a dummy regulator in
+so no special handling is needed by the consumer driver.
 
-[   23.452574] ------------[ cut here ]------------
-[   23.457190] WARNING: CPU: 59 PID: 1 at drivers/ata/libata-core.c:6676 ata_host_detach+0x15c/0x168
-[   23.466047] Modules linked in:
-[   23.469092] CPU: 59 PID: 1 Comm: swapper/0 Not tainted 5.4.0-rc1-00010-g5b83fd27752b-dirty #296
-[   23.477776] Hardware name: Huawei D06 /D06, BIOS Hisilicon D06 UEFI RC0 - V1.16.01 03/15/2019
-[   23.486286] pstate: a0c00009 (NzCv daif +PAN +UAO)
-[   23.491065] pc : ata_host_detach+0x15c/0x168
-[   23.495322] lr : ata_host_detach+0x88/0x168
-[   23.499491] sp : ffff800011cabb50
-[   23.502792] x29: ffff800011cabb50 x28: 0000000000000007
-[   23.508091] x27: ffff80001137f068 x26: ffff8000112c0c28
-[   23.513390] x25: 0000000000003848 x24: ffff0023ea185300
-[   23.518689] x23: 0000000000000001 x22: 00000000000014c0
-[   23.523987] x21: 0000000000013740 x20: ffff0023bdc20000
-[   23.529286] x19: 0000000000000000 x18: 0000000000000004
-[   23.534584] x17: 0000000000000001 x16: 00000000000000f0
-[   23.539883] x15: ffff0023eac13790 x14: ffff0023eb76c408
-[   23.545181] x13: 0000000000000000 x12: ffff0023eac13790
-[   23.550480] x11: ffff0023eb76c228 x10: 0000000000000000
-[   23.555779] x9 : ffff0023eac13798 x8 : 0000000040000000
-[   23.561077] x7 : 0000000000000002 x6 : 0000000000000001
-[   23.566376] x5 : 0000000000000002 x4 : 0000000000000000
-[   23.571674] x3 : ffff0023bf08a0bc x2 : 0000000000000000
-[   23.576972] x1 : 3099674201f72700 x0 : 0000000000400284
-[   23.582272] Call trace:
-[   23.584706]  ata_host_detach+0x15c/0x168
-[   23.588616]  ata_pci_remove_one+0x10/0x18
-[   23.592615]  ahci_remove_one+0x20/0x40
-[   23.596356]  pci_device_remove+0x3c/0xe0
-[   23.600267]  really_probe+0xdc/0x3e0
-[   23.603830]  driver_probe_device+0x58/0x100
-[   23.608000]  device_driver_attach+0x6c/0x90
-[   23.612169]  __driver_attach+0x84/0xc8
-[   23.615908]  bus_for_each_dev+0x74/0xc8
-[   23.619730]  driver_attach+0x20/0x28
-[   23.623292]  bus_add_driver+0x148/0x1f0
-[   23.627115]  driver_register+0x60/0x110
-[   23.630938]  __pci_register_driver+0x40/0x48
-[   23.635199]  ahci_pci_driver_init+0x20/0x28
-[   23.639372]  do_one_initcall+0x5c/0x1b0
-[   23.643199]  kernel_init_freeable+0x1a4/0x24c
-[   23.647546]  kernel_init+0x10/0x108
-[   23.651023]  ret_from_fork+0x10/0x18
-[   23.654590] ---[ end trace 634a14b675b71c13 ]---
+In the case of the PHY regulator the handling in the driver is a hack to
+deal with integrated PHYs; the supplies are only optional in the sense
+that that there's some confusion in the code about where they're bound to.
+From a code point of view they function exactly as normal supplies so can
+be treated as such. It'd probably be better to model this by instantiating
+a PHY object for integrated PHYs.
 
-With KASAN also enabled, we may also get many use-after-free reports.
-
-The issue is that when CONFIG_DEBUG_TEST_DRIVER_REMOVE is set, we may
-attempt to detach the ata_port before it has been probed.
-
-This is because the ata_ports are async probed, meaning that there is no
-guarantee that the ata_port has probed prior to detach. When the ata_port
-does probe in this scenario, we get all sorts of issues as the detach may
-have already happened.
-
-Fix by ensuring synchronisation with async_synchronize_full(). We could
-alternatively use the cookie returned from the ata_port probe
-async_schedule() call, but that means managing the cookie, so more
-complicated.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Mark Brown <broonie@kernel.org>
 ---
-Note: This has only been boot tested and manual driver remove/add.
-         My system has no disk attached to the ahci host.
+ drivers/ata/libahci_platform.c | 38 +++++++++++++---------------------
+ 1 file changed, 14 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 28c492be0a57..74c9b3032d46 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6708,6 +6708,9 @@ void ata_host_detach(struct ata_host *host)
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index e742780950de..8befce036af8 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -153,17 +153,13 @@ int ahci_platform_enable_regulators(struct ahci_host_priv *hpriv)
  {
- 	int i;
+ 	int rc, i;
  
-+	/* Ensure ata_port probe has completed */
-+	async_synchronize_full();
-+
- 	for (i = 0; i < host->n_ports; i++)
- 		ata_port_detach(host->ports[i]);
+-	if (hpriv->ahci_regulator) {
+-		rc = regulator_enable(hpriv->ahci_regulator);
+-		if (rc)
+-			return rc;
+-	}
++	rc = regulator_enable(hpriv->ahci_regulator);
++	if (rc)
++		return rc;
  
+-	if (hpriv->phy_regulator) {
+-		rc = regulator_enable(hpriv->phy_regulator);
+-		if (rc)
+-			goto disable_ahci_pwrs;
+-	}
++	rc = regulator_enable(hpriv->phy_regulator);
++	if (rc)
++		goto disable_ahci_pwrs;
+ 
+ 	for (i = 0; i < hpriv->nports; i++) {
+ 		if (!hpriv->target_pwrs[i])
+@@ -181,11 +177,9 @@ int ahci_platform_enable_regulators(struct ahci_host_priv *hpriv)
+ 		if (hpriv->target_pwrs[i])
+ 			regulator_disable(hpriv->target_pwrs[i]);
+ 
+-	if (hpriv->phy_regulator)
+-		regulator_disable(hpriv->phy_regulator);
++	regulator_disable(hpriv->phy_regulator);
+ disable_ahci_pwrs:
+-	if (hpriv->ahci_regulator)
+-		regulator_disable(hpriv->ahci_regulator);
++	regulator_disable(hpriv->ahci_regulator);
+ 	return rc;
+ }
+ EXPORT_SYMBOL_GPL(ahci_platform_enable_regulators);
+@@ -207,10 +201,8 @@ void ahci_platform_disable_regulators(struct ahci_host_priv *hpriv)
+ 		regulator_disable(hpriv->target_pwrs[i]);
+ 	}
+ 
+-	if (hpriv->ahci_regulator)
+-		regulator_disable(hpriv->ahci_regulator);
+-	if (hpriv->phy_regulator)
+-		regulator_disable(hpriv->phy_regulator);
++	regulator_disable(hpriv->ahci_regulator);
++	regulator_disable(hpriv->phy_regulator);
+ }
+ EXPORT_SYMBOL_GPL(ahci_platform_disable_regulators);
+ /**
+@@ -359,7 +351,7 @@ static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
+ 	struct regulator *target_pwr;
+ 	int rc = 0;
+ 
+-	target_pwr = regulator_get_optional(dev, "target");
++	target_pwr = regulator_get(dev, "target");
+ 
+ 	if (!IS_ERR(target_pwr))
+ 		hpriv->target_pwrs[port] = target_pwr;
+@@ -436,16 +428,14 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 		hpriv->clks[i] = clk;
+ 	}
+ 
+-	hpriv->ahci_regulator = devm_regulator_get_optional(dev, "ahci");
++	hpriv->ahci_regulator = devm_regulator_get(dev, "ahci");
+ 	if (IS_ERR(hpriv->ahci_regulator)) {
+ 		rc = PTR_ERR(hpriv->ahci_regulator);
+-		if (rc == -EPROBE_DEFER)
++		if (rc != 0)
+ 			goto err_out;
+-		rc = 0;
+-		hpriv->ahci_regulator = NULL;
+ 	}
+ 
+-	hpriv->phy_regulator = devm_regulator_get_optional(dev, "phy");
++	hpriv->phy_regulator = devm_regulator_get(dev, "phy");
+ 	if (IS_ERR(hpriv->phy_regulator)) {
+ 		rc = PTR_ERR(hpriv->phy_regulator);
+ 		if (rc == -EPROBE_DEFER)
 -- 
-2.17.1
+2.20.1
 
