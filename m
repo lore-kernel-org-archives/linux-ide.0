@@ -1,114 +1,127 @@
-Return-Path: <SRS0=137m=YI=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=7hjg=YJ=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06FB1ECE59E
-	for <linux-ide@archiver.kernel.org>; Tue, 15 Oct 2019 21:26:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E343C4360C
+	for <linux-ide@archiver.kernel.org>; Wed, 16 Oct 2019 10:23:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CF57820854
-	for <linux-ide@archiver.kernel.org>; Tue, 15 Oct 2019 21:26:46 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="sseX6QWU"
+	by mail.kernel.org (Postfix) with ESMTP id 5A8DC20650
+	for <linux-ide@archiver.kernel.org>; Wed, 16 Oct 2019 10:23:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728607AbfJOV0m (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 15 Oct 2019 17:26:42 -0400
-Received: from mail-oi1-f194.google.com ([209.85.167.194]:37663 "EHLO
-        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728282AbfJOV0m (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Oct 2019 17:26:42 -0400
-Received: by mail-oi1-f194.google.com with SMTP id i16so18191969oie.4
-        for <linux-ide@vger.kernel.org>; Tue, 15 Oct 2019 14:26:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=FjTzov0ZWMBRnnkfLydTowwTTWaZQQMz8GLbYd2DoJY=;
-        b=sseX6QWUP9CFA63813y5OMpaVx25163OITn2IzLP24ux6NTGMBFIsckkEKwagWvAJq
-         9yXBTSntSikoMBdORY8eLAPlVHulfEOthNtwXgw3Sxy1X0v3CvRKlAM22m0WLC13KAQp
-         tg6hf/IYvnxhoNNhrcZUre5exfMwHVc6OOcnJDanCqFhPXEtxsOU7604QOyRVekBGf/Q
-         9oSMyaDTlrnjKheT8DHhUuWZEeR6Oy7YrH0suqKEP5N4kQAF/FgyjxnX/IZEYuMutYqA
-         9mlugtK7Tvhu+3kjPcR3vG4lbWby8JiJigfNzpb6QFeE7MNKOctL3kyENkpQV1UpzU3Z
-         sZuQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=FjTzov0ZWMBRnnkfLydTowwTTWaZQQMz8GLbYd2DoJY=;
-        b=BWK+u6NxXvdfQkKjG75Q7A8CCtclK0bLNo6a/RNjcPc77YqdszbiSi2d02MQ5blBAf
-         XiGitJp645N7MhK7TODPs2FOxrGIK2wA5KkkEtM5ustgzyH3WG7WhWWbSbofztjXQQxQ
-         6bB19S/XRKpy39G4iZVuZx7j+0kBqEsn5AMGjOsLvua8xNFTCyInK1hcW962U6YZMasf
-         pjXZDcKbsqRmnR0h/qhwq9Yus4ynBdTsGS/tsi+lqy7fXRjuIKwZ9ZMEPOt9WRDfTiuR
-         jp9/Wbrw/daLFzViJwYwcAxsInH1GCAt0/MDddIrBU7OPrtt2YUZWt1Ab0u9voFVlCR0
-         R13g==
-X-Gm-Message-State: APjAAAXm+FwNLkvOeblnD0uP0YrVhHU5GXF71Wekiiqh+ySx9qCBiSwT
-        sPOSKtM+2nyMWVt98vhRQJH8JjXOheonl2pGPYEjCA==
-X-Google-Smtp-Source: APXvYqziwX4Qd/CruVwbh4d+LgL43yQ6WwVxz8RVdhbf141kc/6k1rSNikV7EoWIivQB8kktrbIH2SlneWo8tRyAGPA=
-X-Received: by 2002:a05:6808:7cd:: with SMTP id f13mr551315oij.70.1571174801334;
- Tue, 15 Oct 2019 14:26:41 -0700 (PDT)
+        id S1727138AbfJPKXC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 16 Oct 2019 06:23:02 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:47100 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726394AbfJPKXC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 16 Oct 2019 06:23:02 -0400
+Received: from DGGEMS405-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 7BE6C3E9025F397CF751;
+        Wed, 16 Oct 2019 18:22:59 +0800 (CST)
+Received: from localhost.localdomain (10.67.212.75) by
+ DGGEMS405-HUB.china.huawei.com (10.3.19.205) with Microsoft SMTP Server id
+ 14.3.439.0; Wed, 16 Oct 2019 18:22:53 +0800
+From:   John Garry <john.garry@huawei.com>
+To:     <axboe@kernel.dk>
+CC:     <linux-ide@vger.kernel.org>, <linuxarm@huawei.com>,
+        <linux-kernel@vger.kernel.org>, John Garry <john.garry@huawei.com>
+Subject: [PATCH] libata: Ensure ata_port probe has completed before detach
+Date:   Wed, 16 Oct 2019 18:19:52 +0800
+Message-ID: <1571221192-216909-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-References: <157116925749.1211205.12806062056189943042.stgit@dwillia2-desk3.amr.corp.intel.com>
- <e4544252-d2d7-e464-94d6-4df7cda0e248@silicom-usa.com>
-In-Reply-To: <e4544252-d2d7-e464-94d6-4df7cda0e248@silicom-usa.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Tue, 15 Oct 2019 14:26:29 -0700
-Message-ID: <CAPcyv4iRFZ3AZ6WOduDPxBu2sNUY3AJLO-81sWhkDityoeQAiw@mail.gmail.com>
-Subject: Re: [PATCH] libata/ahci: Fix PCS quirk application
-To:     Stephen Douthit <stephend@silicom-usa.com>
-Cc:     "axboe@kernel.dk" <axboe@kernel.dk>,
-        Andreas Friedrich <afrie@gmx.net>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-Originating-IP: [10.67.212.75]
+X-CFilter-Loop: Reflected
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Oct 15, 2019 at 2:02 PM Stephen Douthit
-<stephend@silicom-usa.com> wrote:
->
-> On 10/15/19 3:54 PM, Dan Williams wrote:
-> > Commit c312ef176399 "libata/ahci: Drop PCS quirk for Denverton and
-> > beyond" got the polarity wrong on the check for which board-ids should
-> > have the quirk applied. The board type board_ahci_pcs7 is defined at the
-> > end of the list such that "pcs7" boards can be special cased in the
-> > future if they need the quirk. All prior Intel board ids "<
-> > board_ahci_pcs7" should proceed with applying the quirk.
-> >
-> > Reported-by: Andreas Friedrich <afrie@gmx.net>
-> > Reported-by: Stephen Douthit <stephend@silicom-usa.com>
-> > Fixes: c312ef176399 ("libata/ahci: Drop PCS quirk for Denverton and beyond")
-> > Cc: <stable@vger.kernel.org>
-> > Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> > ---
-> >   drivers/ata/ahci.c |    4 +++-
-> >   1 file changed, 3 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> > index dd92faf197d5..05c2b32dcc4d 100644
-> > --- a/drivers/ata/ahci.c
-> > +++ b/drivers/ata/ahci.c
-> > @@ -1600,7 +1600,9 @@ static void ahci_intel_pcs_quirk(struct pci_dev *pdev, struct ahci_host_priv *hp
-> >        */
-> >       if (!id || id->vendor != PCI_VENDOR_ID_INTEL)
-> >               return;
->
-> Unless I'm missing something this will short-circuit if there are any
-> older Intel controllers not explicitly listed with a PCI_VDEVICE entry
-> in ahci_pci_tbl.  Those will match on:
->
->         /* Generic, PCI class code for AHCI */
->         { PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
->           PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci },
+With CONFIG_DEBUG_TEST_DRIVER_REMOVE set, we may find the following WARN:
 
-You're not missing anything, but I think we should stick with explicit
-mapping as only newer controllers tend to match on class id rather
-than pci-id, and there's no way to know if that class-id match is for
-PCS_6 or PCS_7. Hopefully newer controllers are tested with Linux and
-the BIOS fixed prior to the breakage leaking into the wild.
+[   23.452574] ------------[ cut here ]------------
+[   23.457190] WARNING: CPU: 59 PID: 1 at drivers/ata/libata-core.c:6676 ata_host_detach+0x15c/0x168
+[   23.466047] Modules linked in:
+[   23.469092] CPU: 59 PID: 1 Comm: swapper/0 Not tainted 5.4.0-rc1-00010-g5b83fd27752b-dirty #296
+[   23.477776] Hardware name: Huawei D06 /D06, BIOS Hisilicon D06 UEFI RC0 - V1.16.01 03/15/2019
+[   23.486286] pstate: a0c00009 (NzCv daif +PAN +UAO)
+[   23.491065] pc : ata_host_detach+0x15c/0x168
+[   23.495322] lr : ata_host_detach+0x88/0x168
+[   23.499491] sp : ffff800011cabb50
+[   23.502792] x29: ffff800011cabb50 x28: 0000000000000007
+[   23.508091] x27: ffff80001137f068 x26: ffff8000112c0c28
+[   23.513390] x25: 0000000000003848 x24: ffff0023ea185300
+[   23.518689] x23: 0000000000000001 x22: 00000000000014c0
+[   23.523987] x21: 0000000000013740 x20: ffff0023bdc20000
+[   23.529286] x19: 0000000000000000 x18: 0000000000000004
+[   23.534584] x17: 0000000000000001 x16: 00000000000000f0
+[   23.539883] x15: ffff0023eac13790 x14: ffff0023eb76c408
+[   23.545181] x13: 0000000000000000 x12: ffff0023eac13790
+[   23.550480] x11: ffff0023eb76c228 x10: 0000000000000000
+[   23.555779] x9 : ffff0023eac13798 x8 : 0000000040000000
+[   23.561077] x7 : 0000000000000002 x6 : 0000000000000001
+[   23.566376] x5 : 0000000000000002 x4 : 0000000000000000
+[   23.571674] x3 : ffff0023bf08a0bc x2 : 0000000000000000
+[   23.576972] x1 : 3099674201f72700 x0 : 0000000000400284
+[   23.582272] Call trace:
+[   23.584706]  ata_host_detach+0x15c/0x168
+[   23.588616]  ata_pci_remove_one+0x10/0x18
+[   23.592615]  ahci_remove_one+0x20/0x40
+[   23.596356]  pci_device_remove+0x3c/0xe0
+[   23.600267]  really_probe+0xdc/0x3e0
+[   23.603830]  driver_probe_device+0x58/0x100
+[   23.608000]  device_driver_attach+0x6c/0x90
+[   23.612169]  __driver_attach+0x84/0xc8
+[   23.615908]  bus_for_each_dev+0x74/0xc8
+[   23.619730]  driver_attach+0x20/0x28
+[   23.623292]  bus_add_driver+0x148/0x1f0
+[   23.627115]  driver_register+0x60/0x110
+[   23.630938]  __pci_register_driver+0x40/0x48
+[   23.635199]  ahci_pci_driver_init+0x20/0x28
+[   23.639372]  do_one_initcall+0x5c/0x1b0
+[   23.643199]  kernel_init_freeable+0x1a4/0x24c
+[   23.647546]  kernel_init+0x10/0x108
+[   23.651023]  ret_from_fork+0x10/0x18
+[   23.654590] ---[ end trace 634a14b675b71c13 ]---
+
+With KASAN also enabled, we may also get many use-after-free reports.
+
+The issue is that when CONFIG_DEBUG_TEST_DRIVER_REMOVE is set, we may
+attempt to detach the ata_port before it has been probed.
+
+This is because the ata_ports are async probed, meaning that there is no
+guarantee that the ata_port has probed prior to detach. When the ata_port
+does probe in this scenario, we get all sorts of issues as the detach may
+have already happened.
+
+Fix by ensuring synchronisation with async_synchronize_full(). We could
+alternatively use the cookie returned from the ata_port probe
+async_schedule() call, but that means managing the cookie, so more
+complicated.
+
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+Note: This has only been boot tested and manual driver remove/add.
+         My system has no disk attached to the ahci host.
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 28c492be0a57..74c9b3032d46 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6708,6 +6708,9 @@ void ata_host_detach(struct ata_host *host)
+ {
+ 	int i;
+ 
++	/* Ensure ata_port probe has completed */
++	async_synchronize_full();
++
+ 	for (i = 0; i < host->n_ports; i++)
+ 		ata_port_detach(host->ports[i]);
+ 
+-- 
+2.17.1
+
