@@ -1,101 +1,67 @@
-Return-Path: <SRS0=Xxjh=YM=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=O8dD=YP=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.7 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
-	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0079CA9EAF
-	for <linux-ide@archiver.kernel.org>; Sat, 19 Oct 2019 10:35:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37085C47E49
+	for <linux-ide@archiver.kernel.org>; Tue, 22 Oct 2019 16:21:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8850E22459
-	for <linux-ide@archiver.kernel.org>; Sat, 19 Oct 2019 10:35:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13B1221783
+	for <linux-ide@archiver.kernel.org>; Tue, 22 Oct 2019 16:21:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725810AbfJSKfN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 19 Oct 2019 06:35:13 -0400
-Received: from smtp09.smtpout.orange.fr ([80.12.242.131]:54214 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725794AbfJSKfM (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 19 Oct 2019 06:35:12 -0400
-Received: from belgarion ([90.76.41.223])
-        by mwinf5d17 with ME
-        id FNb42100B4otT8A03Nb44m; Sat, 19 Oct 2019 12:35:10 +0200
-X-ME-Helo: belgarion
-X-ME-Auth: amFyem1pay5yb2JlcnRAb3JhbmdlLmZy
-X-ME-Date: Sat, 19 Oct 2019 12:35:10 +0200
-X-ME-IP: 90.76.41.223
-From:   Robert Jarzmik <robert.jarzmik@free.fr>
-To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     Daniel Mack <daniel@zonque.org>,
-        Haojian Zhuang <haojian.zhuang@gmail.com>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        linux-clk <linux-clk@vger.kernel.org>,
-        Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
-        IDE-ML <linux-ide@vger.kernel.org>,
-        "open list\:HID CORE LAYER" <linux-input@vger.kernel.org>,
-        linux-leds@vger.kernel.org, linux-mmc <linux-mmc@vger.kernel.org>,
-        linux-mtd <linux-mtd@lists.infradead.org>,
-        Linux PM list <linux-pm@vger.kernel.org>,
-        linux-rtc@vger.kernel.org, USB list <linux-usb@vger.kernel.org>,
-        LINUXWATCHDOG <linux-watchdog@vger.kernel.org>
-Subject: Re: [PATCH 00/46] ARM: pxa: towards multiplatform support
-References: <20191018154052.1276506-1-arnd@arndb.de>
-        <87v9slg9k5.fsf@belgarion.home>
-        <CAK8P3a1JDtHsOW=iaxEycbJ4TBkR9MHUyDMeJnwxCtb=tefnBQ@mail.gmail.com>
-        <CAK8P3a0376Anmoc8VWXcEBg+z2B+1vcxJoywYYROBQNxpVmZuA@mail.gmail.com>
-X-URL:  http://belgarath.falguerolles.org/
-Date:   Sat, 19 Oct 2019 12:35:03 +0200
-In-Reply-To: <CAK8P3a0376Anmoc8VWXcEBg+z2B+1vcxJoywYYROBQNxpVmZuA@mail.gmail.com>
-        (Arnd Bergmann's message of "Fri, 18 Oct 2019 21:32:36 +0200")
-Message-ID: <87r239f2g8.fsf@belgarion.home>
-User-Agent: Gnus/5.130008 (Ma Gnus v0.8) Emacs/26 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain
+        id S1732263AbfJVQVc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 22 Oct 2019 12:21:32 -0400
+Received: from relmlor1.renesas.com ([210.160.252.171]:44972 "EHLO
+        relmlie5.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1731132AbfJVQVc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 22 Oct 2019 12:21:32 -0400
+X-IronPort-AV: E=Sophos;i="5.68,216,1569250800"; 
+   d="scan'208";a="29712998"
+Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
+  by relmlie5.idc.renesas.com with ESMTP; 23 Oct 2019 01:21:30 +0900
+Received: from fabrizio-dev.ree.adwin.renesas.com (unknown [10.226.36.196])
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 665C74000FBD;
+        Wed, 23 Oct 2019 01:21:27 +0900 (JST)
+From:   Fabrizio Castro <fabrizio.castro@bp.renesas.com>
+To:     Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Cc:     Fabrizio Castro <fabrizio.castro@bp.renesas.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Magnus Damm <magnus.damm@gmail.com>, linux-ide@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        Simon Horman <horms@verge.net.au>,
+        Chris Paterson <Chris.Paterson2@renesas.com>,
+        Biju Das <biju.das@bp.renesas.com>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+        Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>,
+        Jacopo Mondi <jacopo+renesas@jmondi.org>
+Subject: [PATCH 0/2] Add SATA support to RZ/G2N
+Date:   Tue, 22 Oct 2019 17:21:17 +0100
+Message-Id: <1571761279-17347-1-git-send-email-fabrizio.castro@bp.renesas.com>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Arnd Bergmann <arnd@arndb.de> writes:
+Dear All,
 
-> On Fri, Oct 18, 2019 at 9:17 PM Arnd Bergmann <arnd@arndb.de> wrote:
->> On Fri, Oct 18, 2019 at 9:04 PM Robert Jarzmik <robert.jarzmik@free.fr> wrote:
->> > Arnd Bergmann <arnd@arndb.de> writes:
->> >
->> > > Hi PXA maintainers,
->> > >
->> > > I'm in the process of getting the old ARM platforms to all build
->> > > in a single kernel. The largest part of that work is changing all
->> > > the device drivers to no longer require mach/*.h header files.
->> > >
->> > > This series does it for arch/pxa/.
->> > >
->> > > As with the omap1 and s3c24xx series I sent before, I don't
->> > > expect this all to be correct in the first version, though
->> > > a lot of the patches are fairly simple and I did exhaustive
->> > > compile-time testing on them.
->> > >
->> > > Please test if you have the hardware, or review!
->> >
->> > Hi Arnd,
->> >
->> > Would you have a git tree I can pull from ?
->> > That would make my life easier than applying manually 46 patches...
->>
->> I've now pushed it to
->>
->> git://git.kernel.org:/pub/scm/linux/kernel/git/arnd/playground.git
->> pxa-multiplatform
->
-> Sorry for the duplication, I had some problems with email configuration
-> so my reply got rejected, let's see if it goes through this time.
-I have it now, thanks, I'll test and review as soon as I can.
+this series adds SoC specific SATA support for the RZ/G2N.
 
-Cheers.
+Thanks,
+Fab
+
+Fabrizio Castro (2):
+  ata: sata_rcar: Add r8a774b1 support
+  arm64: dts: renesas: r8a774b1: Add SATA controller node
+
+ Documentation/devicetree/bindings/ata/sata_rcar.txt |  7 +++++--
+ arch/arm64/boot/dts/renesas/r8a774b1.dtsi           | 11 +++++++++++
+ 2 files changed, 16 insertions(+), 2 deletions(-)
 
 -- 
-Robert
+2.7.4
+
