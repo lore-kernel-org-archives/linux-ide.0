@@ -6,43 +6,43 @@ X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C197ACA9EB9
-	for <linux-ide@archiver.kernel.org>; Wed, 23 Oct 2019 07:19:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DD8DC47E49
+	for <linux-ide@archiver.kernel.org>; Wed, 23 Oct 2019 07:22:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9449D20684
-	for <linux-ide@archiver.kernel.org>; Wed, 23 Oct 2019 07:19:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 146F72173B
+	for <linux-ide@archiver.kernel.org>; Wed, 23 Oct 2019 07:22:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389298AbfJWHTs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 23 Oct 2019 03:19:48 -0400
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:40404 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388218AbfJWHTs (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Oct 2019 03:19:48 -0400
-Received: by mail-ot1-f67.google.com with SMTP id d8so5342452otc.7;
-        Wed, 23 Oct 2019 00:19:48 -0700 (PDT)
+        id S2389655AbfJWHW1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 23 Oct 2019 03:22:27 -0400
+Received: from mail-oi1-f194.google.com ([209.85.167.194]:33838 "EHLO
+        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731524AbfJWHW1 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Oct 2019 03:22:27 -0400
+Received: by mail-oi1-f194.google.com with SMTP id 83so16542084oii.1;
+        Wed, 23 Oct 2019 00:22:27 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=IJM538QGULV0yrGWRkYjucTY4pfTVAVqowSX27qxGcI=;
-        b=lX8iiTwu31DjjIZxfgeHcrLGw7xey8M9UOnBBInxmY9fEFBl6j/yxBRVCwSbXJf3y/
-         JavXl1zH0bEDv3e/3MU2LuC2Cc8cKjxbhnCC+oB2ktfyrmBKgOVvjMor8og2f7BjrP6p
-         RdwlKjqglteCGU4Un6jR500VWTOztSVac15zYLbgZrrpP5wMlsxCCEAh6BTyx8cKtEzM
-         /1ChZwuWJpCht6k0iMOEEHUdd7Zxb2QE09NpOsq7ML39XupQIz1wreFetOvOnmArBmbl
-         qr2x5HhFXKEAUdeCLYTNdd03jhqwjRnMAG2gi0lCJDd+RUqU5lCZP8JIBnpV1NR4is2Z
-         mFxQ==
-X-Gm-Message-State: APjAAAXO01mnbomajnU3LULAfNW0vW/rrmDxZAwHXsphqlGiXZjqu2aq
-        t41hWtgpwvsO6Djw0SMHxIeerIt3PZhz8YP37eA=
-X-Google-Smtp-Source: APXvYqyezP/IJtJGFbND0BnrS7vBOKCGGe2gKuP0Gg18dh7D0xWZJ0cBvY2EKgMpfNdQkOxkWdXGGjzLs4kBXeQmzXY=
-X-Received: by 2002:a9d:422:: with SMTP id 31mr5644316otc.107.1571815187625;
- Wed, 23 Oct 2019 00:19:47 -0700 (PDT)
+        bh=TOaUWyi/x9JZGeLAJtv/bTsxt59bZqT5nf8AkAwdah0=;
+        b=PasBKWcsWtOxaUcd3g5c5Y9cea1AmFsYgIg6FUvSwgdLmXyK7Ee12Kx1/KU0TwaOKf
+         oOHF3JnrMB+AmTjhWN0lGkU4FQxZotQme4x6dMz5ApMMuNHLfikXExOJJB0DTWx5KXKy
+         UcyD5Z+vCO7DfCC83rLJCR4/j7BgjquCZH94uGi39BVlgpYTp8hkjdiENa/zpfl4pHaF
+         P3HXb+BjHL5noNJsdaxfGOIWk6hlWTy2WYrU/7bXxsdMCDVUqvRSIDGjn006QAAtsVE4
+         M/rsPwBrmPnMeTCThI4226Q6p+6fF2K7z1pyok0z0L6G79bogrhgFvjeI+ybqo+M9vB8
+         oE0g==
+X-Gm-Message-State: APjAAAW7KNj+tRvbFZPWf4N5ylGiPUV18hlCsSG1MbhE6YxiF15zSDn7
+        flwJC9HPydRxT4ldvEqBgpP2is1DQ8/7X1cArSA=
+X-Google-Smtp-Source: APXvYqzsr3XeKcQn61PFHf2SGc7J2g+d0f3gAwX4hrPcrdjZJlMXSyaeDBlcX+lUVj31AitjhNwWrzH38NO0lFIscTg=
+X-Received: by 2002:a54:4e89:: with SMTP id c9mr6106926oiy.148.1571815346600;
+ Wed, 23 Oct 2019 00:22:26 -0700 (PDT)
 MIME-Version: 1.0
-References: <1571761279-17347-1-git-send-email-fabrizio.castro@bp.renesas.com> <1571761279-17347-2-git-send-email-fabrizio.castro@bp.renesas.com>
-In-Reply-To: <1571761279-17347-2-git-send-email-fabrizio.castro@bp.renesas.com>
+References: <1571761279-17347-1-git-send-email-fabrizio.castro@bp.renesas.com> <1571761279-17347-3-git-send-email-fabrizio.castro@bp.renesas.com>
+In-Reply-To: <1571761279-17347-3-git-send-email-fabrizio.castro@bp.renesas.com>
 From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Wed, 23 Oct 2019 09:19:36 +0200
-Message-ID: <CAMuHMdVggP40u8_+9yZFAO5_E0_qbnDM5hy1k+n6RWkYKOssYw@mail.gmail.com>
-Subject: Re: [PATCH 1/2] ata: sata_rcar: Add r8a774b1 support
+Date:   Wed, 23 Oct 2019 09:22:15 +0200
+Message-ID: <CAMuHMdXOr_kyZbva5Es8awh9J63w07KS_iJ+J_2bCyBKxB=uPQ@mail.gmail.com>
+Subject: Re: [PATCH 2/2] arm64: dts: renesas: r8a774b1: Add SATA controller node
 To:     Fabrizio Castro <fabrizio.castro@bp.renesas.com>
 Cc:     Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
         Mark Rutland <mark.rutland@arm.com>,
@@ -63,15 +63,15 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-dt-bindings: ?
-
 On Tue, Oct 22, 2019 at 6:21 PM Fabrizio Castro
 <fabrizio.castro@bp.renesas.com> wrote:
-> Document SATA support for the RZ/G2N, no driver change required.
+> Add the SATA controller node to the RZ/G2N SoC specific
+> dtsi.
 >
 > Signed-off-by: Fabrizio Castro <fabrizio.castro@bp.renesas.com>
 
 Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+i.e. will queue in renesas-devel for v5.5.
 
 Gr{oetje,eeting}s,
 
