@@ -1,84 +1,85 @@
-Return-Path: <SRS0=O8dD=YP=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=3OFZ=YQ=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7BD5CA9EA0
-	for <linux-ide@archiver.kernel.org>; Tue, 22 Oct 2019 16:21:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C197ACA9EB9
+	for <linux-ide@archiver.kernel.org>; Wed, 23 Oct 2019 07:19:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A9A062084B
-	for <linux-ide@archiver.kernel.org>; Tue, 22 Oct 2019 16:21:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9449D20684
+	for <linux-ide@archiver.kernel.org>; Wed, 23 Oct 2019 07:19:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732276AbfJVQVj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 22 Oct 2019 12:21:39 -0400
-Received: from relmlor1.renesas.com ([210.160.252.171]:27441 "EHLO
-        relmlie5.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1731132AbfJVQVj (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 22 Oct 2019 12:21:39 -0400
-X-IronPort-AV: E=Sophos;i="5.68,216,1569250800"; 
-   d="scan'208";a="29713005"
-Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie5.idc.renesas.com with ESMTP; 23 Oct 2019 01:21:38 +0900
-Received: from fabrizio-dev.ree.adwin.renesas.com (unknown [10.226.36.196])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id C5C544012BF1;
-        Wed, 23 Oct 2019 01:21:34 +0900 (JST)
-From:   Fabrizio Castro <fabrizio.castro@bp.renesas.com>
-To:     Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Cc:     Fabrizio Castro <fabrizio.castro@bp.renesas.com>,
+        id S2389298AbfJWHTs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 23 Oct 2019 03:19:48 -0400
+Received: from mail-ot1-f67.google.com ([209.85.210.67]:40404 "EHLO
+        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388218AbfJWHTs (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Oct 2019 03:19:48 -0400
+Received: by mail-ot1-f67.google.com with SMTP id d8so5342452otc.7;
+        Wed, 23 Oct 2019 00:19:48 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=IJM538QGULV0yrGWRkYjucTY4pfTVAVqowSX27qxGcI=;
+        b=lX8iiTwu31DjjIZxfgeHcrLGw7xey8M9UOnBBInxmY9fEFBl6j/yxBRVCwSbXJf3y/
+         JavXl1zH0bEDv3e/3MU2LuC2Cc8cKjxbhnCC+oB2ktfyrmBKgOVvjMor8og2f7BjrP6p
+         RdwlKjqglteCGU4Un6jR500VWTOztSVac15zYLbgZrrpP5wMlsxCCEAh6BTyx8cKtEzM
+         /1ChZwuWJpCht6k0iMOEEHUdd7Zxb2QE09NpOsq7ML39XupQIz1wreFetOvOnmArBmbl
+         qr2x5HhFXKEAUdeCLYTNdd03jhqwjRnMAG2gi0lCJDd+RUqU5lCZP8JIBnpV1NR4is2Z
+         mFxQ==
+X-Gm-Message-State: APjAAAXO01mnbomajnU3LULAfNW0vW/rrmDxZAwHXsphqlGiXZjqu2aq
+        t41hWtgpwvsO6Djw0SMHxIeerIt3PZhz8YP37eA=
+X-Google-Smtp-Source: APXvYqyezP/IJtJGFbND0BnrS7vBOKCGGe2gKuP0Gg18dh7D0xWZJ0cBvY2EKgMpfNdQkOxkWdXGGjzLs4kBXeQmzXY=
+X-Received: by 2002:a9d:422:: with SMTP id 31mr5644316otc.107.1571815187625;
+ Wed, 23 Oct 2019 00:19:47 -0700 (PDT)
+MIME-Version: 1.0
+References: <1571761279-17347-1-git-send-email-fabrizio.castro@bp.renesas.com> <1571761279-17347-2-git-send-email-fabrizio.castro@bp.renesas.com>
+In-Reply-To: <1571761279-17347-2-git-send-email-fabrizio.castro@bp.renesas.com>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Wed, 23 Oct 2019 09:19:36 +0200
+Message-ID: <CAMuHMdVggP40u8_+9yZFAO5_E0_qbnDM5hy1k+n6RWkYKOssYw@mail.gmail.com>
+Subject: Re: [PATCH 1/2] ata: sata_rcar: Add r8a774b1 support
+To:     Fabrizio Castro <fabrizio.castro@bp.renesas.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
         Geert Uytterhoeven <geert+renesas@glider.be>,
         Magnus Damm <magnus.damm@gmail.com>, linux-ide@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
         Simon Horman <horms@verge.net.au>,
         Chris Paterson <Chris.Paterson2@renesas.com>,
         Biju Das <biju.das@bp.renesas.com>,
         Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
         Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>,
         Jacopo Mondi <jacopo+renesas@jmondi.org>
-Subject: [PATCH 2/2] arm64: dts: renesas: r8a774b1: Add SATA controller node
-Date:   Tue, 22 Oct 2019 17:21:19 +0100
-Message-Id: <1571761279-17347-3-git-send-email-fabrizio.castro@bp.renesas.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1571761279-17347-1-git-send-email-fabrizio.castro@bp.renesas.com>
-References: <1571761279-17347-1-git-send-email-fabrizio.castro@bp.renesas.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add the SATA controller node to the RZ/G2N SoC specific
-dtsi.
+dt-bindings: ?
 
-Signed-off-by: Fabrizio Castro <fabrizio.castro@bp.renesas.com>
----
- arch/arm64/boot/dts/renesas/r8a774b1.dtsi | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+On Tue, Oct 22, 2019 at 6:21 PM Fabrizio Castro
+<fabrizio.castro@bp.renesas.com> wrote:
+> Document SATA support for the RZ/G2N, no driver change required.
+>
+> Signed-off-by: Fabrizio Castro <fabrizio.castro@bp.renesas.com>
 
-diff --git a/arch/arm64/boot/dts/renesas/r8a774b1.dtsi b/arch/arm64/boot/dts/renesas/r8a774b1.dtsi
-index 80b8b2e..1267bb5 100644
---- a/arch/arm64/boot/dts/renesas/r8a774b1.dtsi
-+++ b/arch/arm64/boot/dts/renesas/r8a774b1.dtsi
-@@ -1404,6 +1404,17 @@
- 			status = "disabled";
- 		};
- 
-+		sata: sata@ee300000 {
-+			compatible = "renesas,sata-r8a774b1",
-+				     "renesas,rcar-gen3-sata";
-+			reg = <0 0xee300000 0 0x200000>;
-+			interrupts = <GIC_SPI 105 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&cpg CPG_MOD 815>;
-+			power-domains = <&sysc R8A774B1_PD_ALWAYS_ON>;
-+			resets = <&cpg 815>;
-+			status = "disabled";
-+		};
-+
- 		gic: interrupt-controller@f1010000 {
- 			compatible = "arm,gic-400";
- 			#interrupt-cells = <3>;
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
 -- 
-2.7.4
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
