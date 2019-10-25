@@ -2,101 +2,92 @@ Return-Path: <SRS0=i9Gt=YS=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C9B4CA9EA0
-	for <linux-ide@archiver.kernel.org>; Fri, 25 Oct 2019 20:33:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED13ECA9EA0
+	for <linux-ide@archiver.kernel.org>; Fri, 25 Oct 2019 23:36:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0BDF821872
-	for <linux-ide@archiver.kernel.org>; Fri, 25 Oct 2019 20:33:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="SSm31oGv"
+	by mail.kernel.org (Postfix) with ESMTP id BC7ED21872
+	for <linux-ide@archiver.kernel.org>; Fri, 25 Oct 2019 23:36:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1572046594;
+	bh=sKl/3SVEV5okuMmvnQ+j0YfMyXoo1WEJYkOyNtx02G8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=klbdJlH8rzTJdAVOR6qV+ZJBrWVs1UPHQcAEwL1U/jh1/YQnWwHP5zsiHsCFifTrj
+	 lT7S4plhGlHar/UrOP4C/hHtbXtDuqMlpMFtb4mLwjOABFWjIt+KpmKuILeMiSzYC2
+	 +SQwyqJ1NpAZG1thNGtq110waXjNS2vumkQ1R2z8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728273AbfJYUdX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 25 Oct 2019 16:33:23 -0400
-Received: from mail-io1-f66.google.com ([209.85.166.66]:45299 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726032AbfJYUdX (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 25 Oct 2019 16:33:23 -0400
-Received: by mail-io1-f66.google.com with SMTP id c25so3845284iot.12
-        for <linux-ide@vger.kernel.org>; Fri, 25 Oct 2019 13:33:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=PP+PlfZ4dT+9sk7iuXzO4Uyb+ZqNRDXomKw0WBHExLc=;
-        b=SSm31oGv5i/zxtkLnyGI4XSLhh5I2k4gJRgCdQWG16+3AX/19ppIPgjk0ktfF8nOla
-         nhwpAGy0VTKsHSocofC4K6xSrnhtfYEIDVmQf5QV57XIgJ57pV5kHNC9svdQjWu4iTa5
-         naCvJYn690uEz86lrgVfvM0BE7nHMyvz4SrK30eeJfHSA0uJc/Sm/If6tWxinPtzOy4x
-         gKDnCpazugG1papmJuLK1QByHANCRydqUPSUJbtVLwXZ7tBUBDOoFfL+G/IyjM8+r7l2
-         MHL2XFb/HAAdkLavz4GarwNtpydgEFroSRb8makBZAe7DazJl1UflZSyK3BnZdeTKoxm
-         SwoA==
+        id S1725865AbfJYXge (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 25 Oct 2019 19:36:34 -0400
+Received: from mail-oi1-f193.google.com ([209.85.167.193]:46212 "EHLO
+        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725847AbfJYXge (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 25 Oct 2019 19:36:34 -0400
+Received: by mail-oi1-f193.google.com with SMTP id c2so2676736oic.13;
+        Fri, 25 Oct 2019 16:36:32 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=PP+PlfZ4dT+9sk7iuXzO4Uyb+ZqNRDXomKw0WBHExLc=;
-        b=CsfCC0wHaB0fo/wsQtVasN2j8uiKHuxVQTTQ3LU7ik4A8PlV0/6QZ9++0Dr9pLUQ3h
-         VEMtdWf2d1avNVRO99FjpEyKe6af1Fu/IrVWKGD2upyxhhs8J8qzneF+eXeWx8MBwWzb
-         151hyseWcsTJqOUvwRyjS2bKRe1SR4qTn8y7im2FMZhO+oROLtaOAOezjh6/PYXSscJK
-         mprWUvhbNFJDZt6N6SrZ7V8yTi7XU0CSJ3nTgh5Sbc7yFhHaw8++kJAVGMC++MapjT8c
-         +GBp44jp1MSj6ZfkxEnzhUv17zJHd1t/xgR+Tn/nELm5MHqyUrpg90VBynJfkSXk0s6J
-         UTmA==
-X-Gm-Message-State: APjAAAV87DMuIvvrAgqPUf1dATF9h6a+bEevWlKNT0PdtqKlXIVZP0V0
-        HQEC45OFWm/ykGBDvV2Iiyxy+T0kXGseHQ==
-X-Google-Smtp-Source: APXvYqyq8H++eBr6G2Hfm2x7KlaOZIBtGQejm0N2txoL+90BlqRsGQMCaxCORp7wVSvo1YZIrZL0QA==
-X-Received: by 2002:a02:920f:: with SMTP id x15mr5769616jag.57.1572035602496;
-        Fri, 25 Oct 2019 13:33:22 -0700 (PDT)
-Received: from [192.168.1.159] ([65.144.74.34])
-        by smtp.gmail.com with ESMTPSA id z22sm362079iol.75.2019.10.25.13.33.21
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 25 Oct 2019 13:33:21 -0700 (PDT)
-Subject: Re: [PATCH RESEND v2 0/2] Convert Atari Falcon IDE driver to platform
- device
-To:     Michael Schmitz <schmitzmic@gmail.com>, linux-m68k@vger.kernel.org,
-        linux-ide@vger.kernel.org
-Cc:     geert@linux-m68k.org, b.zolnierkie@samsung.com
-References: <1569470064-3977-1-git-send-email-schmitzmic@gmail.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <7bd80760-0d46-3b3d-16e7-41cbc9169822@kernel.dk>
-Date:   Fri, 25 Oct 2019 14:33:20 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=zGcJ7bfctCdlUW4jRyBejRVotK09mQ4mxQ5sxW55+Ok=;
+        b=ozIt9+1F78CGsoKuzrP/s6iYw0qv4UkXo6nkoPolQAW/TiUeItvcGM3xnk5GFaDhtX
+         EefnyP8GSRye6rf0SDCzJ26Ot1q9YpAQ2mqbrl1HRIQDh6DVsnd7n+fwRYd4CSeRBo+S
+         7R9D2VjCqLfqxVjT6vd8jrczHOKIrW21ENvfXJ2BjPvjN8wHr3CzS5J2G4sXoQYwSqIy
+         EpdKQrhx9G/J11p+DFls0ThfZlBr3wC/uBZJyPGTbtldvYf+XQT52jBIO0uAj+RX5ly1
+         2jPrSfwwC/aX9DqEDt8GkL9ZzTJwX+juTxEn4FeCeM177wlnv8Te14wmTgslMb6OOFwg
+         zVgQ==
+X-Gm-Message-State: APjAAAWQgCCuA6Fv8aIHKW9kCg4R+oBZH2gYuq/ON/8pGjWdeCSr7RCF
+        rAiLm3CKrcgna3eHXen5YQ==
+X-Google-Smtp-Source: APXvYqyDvUjg+Vr1NWH5LDuxuu2+wEll9CmzHa5U7i/mJ5HB4WmswhL8J3qYCbo9xDQef1QSAExk2g==
+X-Received: by 2002:a05:6808:1d4:: with SMTP id x20mr5196885oic.36.1572046591383;
+        Fri, 25 Oct 2019 16:36:31 -0700 (PDT)
+Received: from localhost (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
+        by smtp.gmail.com with ESMTPSA id b12sm1214085otp.72.2019.10.25.16.36.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 25 Oct 2019 16:36:30 -0700 (PDT)
+Date:   Fri, 25 Oct 2019 18:36:30 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Fabrizio Castro <fabrizio.castro@bp.renesas.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Mark Rutland <mark.rutland@arm.com>,
+        Fabrizio Castro <fabrizio.castro@bp.renesas.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Magnus Damm <magnus.damm@gmail.com>, linux-ide@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        Simon Horman <horms@verge.net.au>,
+        Chris Paterson <Chris.Paterson2@renesas.com>,
+        Biju Das <biju.das@bp.renesas.com>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+        Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>,
+        Jacopo Mondi <jacopo+renesas@jmondi.org>
+Subject: Re: [PATCH v2] dt-bindings: ata: sata_rcar: Add r8a774b1 support
+Message-ID: <20191025233630.GA10027@bogus>
+References: <1571822106-16258-1-git-send-email-fabrizio.castro@bp.renesas.com>
 MIME-Version: 1.0
-In-Reply-To: <1569470064-3977-1-git-send-email-schmitzmic@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1571822106-16258-1-git-send-email-fabrizio.castro@bp.renesas.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/25/19 9:54 PM, Michael Schmitz wrote:
-> [Resend because linux-m68k was dropped from the recipient list ...]
+On Wed, 23 Oct 2019 10:15:06 +0100, Fabrizio Castro wrote:
+> Document SATA support for the RZ/G2N, no driver change required.
 > 
-> As suggested by Geert, at least one of the drivers available for the Falcon
-> IDE interface should be converted to a platform device driver (to enable
-> module autoloading by the Debian installer).
+> Signed-off-by: Fabrizio Castro <fabrizio.castro@bp.renesas.com>
+> Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> ---
+> v1->v2:
+> * Prepended "dt-bindings: " to commit title as per Geert's comment
 > 
-> Add platform device for Falcon IDE (patch 1), and rewrite the present
-> libata driver to make use of that device (patch 2).
+>  Documentation/devicetree/bindings/ata/sata_rcar.txt | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
 > 
-> Changes from v1:
-> 
-> Incorporated review comments by Geert; corrected silly mismatch between
-> platform device name and platform driver name that caused loading driver
-> to fail locating the related resource; check return code of platform device
-> register call.
-> 
-> Tested on ARAnyM with only the pata_falcon driver builtin.
 
-Who's going to pick this one up? I can do it, but it'd be nice to have
-m68k on patch 1 first.
+Applied, thanks.
 
--- 
-Jens Axboe
-
+Rob
