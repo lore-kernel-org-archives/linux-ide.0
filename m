@@ -2,80 +2,94 @@ Return-Path: <SRS0=h62M=YT=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2B40CA9EA0
-	for <linux-ide@archiver.kernel.org>; Sat, 26 Oct 2019 01:58:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02D1AC47E49
+	for <linux-ide@archiver.kernel.org>; Sat, 26 Oct 2019 18:17:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7AA3B214DA
-	for <linux-ide@archiver.kernel.org>; Sat, 26 Oct 2019 01:58:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D5D2E21655
+	for <linux-ide@archiver.kernel.org>; Sat, 26 Oct 2019 18:17:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725955AbfJZB6w (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 25 Oct 2019 21:58:52 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:5190 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725954AbfJZB6w (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 25 Oct 2019 21:58:52 -0400
-Received: from DGGEMS412-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id E90E473D29F01046C96D;
-        Sat, 26 Oct 2019 09:58:46 +0800 (CST)
-Received: from huawei.com (10.175.113.133) by DGGEMS412-HUB.china.huawei.com
- (10.3.19.212) with Microsoft SMTP Server id 14.3.439.0; Sat, 26 Oct 2019
- 09:58:40 +0800
-From:   Wang Hai <wanghai38@huawei.com>
-To:     <davem@davemloft.net>, <benh@kernel.crashing.org>,
-        <paulus@samba.org>, <mpe@ellerman.id.au>
-CC:     <linux-ide@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-        <linux-kernel@vger.kernel.org>, <wanghai38@huawei.com>
-Subject: [PATCH] ide: remove set but not used variable 'hwif'
-Date:   Sat, 26 Oct 2019 09:57:38 +0800
-Message-ID: <20191026015738.4865-1-wanghai38@huawei.com>
-X-Mailer: git-send-email 2.17.1
+        id S1726462AbfJZSRo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 26 Oct 2019 14:17:44 -0400
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:42077 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726276AbfJZSRo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 26 Oct 2019 14:17:44 -0400
+Received: by mail-oi1-f196.google.com with SMTP id i185so3655929oif.9;
+        Sat, 26 Oct 2019 11:17:43 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=SEdAFZBZ5NUS+Fh7ssVzDmGSUoLPSmlnubte9uHFVAc=;
+        b=RcKHU3S0MaE7nQMW8inYfAopovvwZ50iKsGU+HXsKHNzTqpEnHr0cZU0kVRaZZ07+p
+         mgpUcCNDnOm3tNo1cC/nTdFRbjDjj5Z6RTZdSfZsbJ9eIQGAGQx8S7D3AXeoUnupGl9N
+         WfVrwrLy5JUcvUlTt214UnWSxMYkw5SDH0uK7AM32VMppjaE8TCvgLWx/iZO3AltFf6k
+         fVQbUmS2MNOktjZJGrVK8DdWxIS28Q77RXewDXlqiBJ+uG7Ik4k4TcKvB2L5UQ+fhlX3
+         V6p7sNEByqiCuEciruhwAZYNS8tyYwnp7IMWvzeQY4PNDxL2iu0ydOgtHkjXOw3DtmSQ
+         BVyg==
+X-Gm-Message-State: APjAAAXCrYU51s28DAOdkdmdttlB2Vexfm6opwviacrW/ZXR89pJCTS5
+        wd7D3ZS1onA2dqwFxywiv+N5BQzWR8Q3cyij1Hc=
+X-Google-Smtp-Source: APXvYqyR4U7mhyMxGgIjP7SyS9+jPq8Fvs6iNNQ4OXbCJQb4LVsJcddLjDglds+YJFYrZ+Y77Cola0gRxO5ZKq6d6mU=
+X-Received: by 2002:a05:6808:3b4:: with SMTP id n20mr7672689oie.131.1572113862818;
+ Sat, 26 Oct 2019 11:17:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.175.113.133]
-X-CFilter-Loop: Reflected
+References: <1569470064-3977-1-git-send-email-schmitzmic@gmail.com> <7bd80760-0d46-3b3d-16e7-41cbc9169822@kernel.dk>
+In-Reply-To: <7bd80760-0d46-3b3d-16e7-41cbc9169822@kernel.dk>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Sat, 26 Oct 2019 20:17:31 +0200
+Message-ID: <CAMuHMdWFoC8YUbmW8J7tJSsq4b67WkjyRzhkW=yfrEEJJmsZKQ@mail.gmail.com>
+Subject: Re: [PATCH RESEND v2 0/2] Convert Atari Falcon IDE driver to platform device
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Michael Schmitz <schmitzmic@gmail.com>,
+        "Linux/m68k" <linux-m68k@vger.kernel.org>,
+        linux-ide@vger.kernel.org,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Fix the following gcc warning:
+On Fri, Oct 25, 2019 at 10:33 PM Jens Axboe <axboe@kernel.dk> wrote:
+> On 9/25/19 9:54 PM, Michael Schmitz wrote:
+> > [Resend because linux-m68k was dropped from the recipient list ...]
+> >
+> > As suggested by Geert, at least one of the drivers available for the Falcon
+> > IDE interface should be converted to a platform device driver (to enable
+> > module autoloading by the Debian installer).
+> >
+> > Add platform device for Falcon IDE (patch 1), and rewrite the present
+> > libata driver to make use of that device (patch 2).
+> >
+> > Changes from v1:
+> >
+> > Incorporated review comments by Geert; corrected silly mismatch between
+> > platform device name and platform driver name that caused loading driver
+> > to fail locating the related resource; check return code of platform device
+> > register call.
+> >
+> > Tested on ARAnyM with only the pata_falcon driver builtin.
+>
+> Who's going to pick this one up? I can do it, but it'd be nice to have
+> m68k on patch 1 first.
 
-drivers/ide/pmac.c: In function pmac_ide_setup_device:
-drivers/ide/pmac.c:1027:14: warning: variable hwif set but not used
-[-Wunused-but-set-variable]
+Sorry for the late reply.  I'll have a closer look after ELC-E, and will apply
+to the m68k tree if it passes.
 
-Fixes: d58b0c39e32f ("powerpc/macio: Rework hotplug media bay support")
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Wang Hai <wanghai38@huawei.com>
----
- drivers/ide/pmac.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+BTW, I believe v1 of both patches has been acked by Bartlomiej?
 
-diff --git a/drivers/ide/pmac.c b/drivers/ide/pmac.c
-index b5647e3..ea0b064 100644
---- a/drivers/ide/pmac.c
-+++ b/drivers/ide/pmac.c
-@@ -1019,7 +1019,6 @@ static int pmac_ide_setup_device(pmac_ide_hwif_t *pmif, struct ide_hw *hw)
- 	struct device_node *np = pmif->node;
- 	const int *bidp;
- 	struct ide_host *host;
--	ide_hwif_t *hwif;
- 	struct ide_hw *hws[] = { hw };
- 	struct ide_port_info d = pmac_port_info;
- 	int rc;
-@@ -1075,7 +1074,7 @@ static int pmac_ide_setup_device(pmac_ide_hwif_t *pmif, struct ide_hw *hw)
- 		rc = -ENOMEM;
- 		goto bail;
- 	}
--	hwif = pmif->hwif = host->ports[0];
-+	pmif->hwif = host->ports[0];
- 
- 	if (on_media_bay(pmif)) {
- 		/* Fixup bus ID for media bay */
--- 
-1.8.3.1
+Gr{oetje,eeting}s,
 
+                        Geert
+
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
