@@ -1,97 +1,203 @@
-Return-Path: <SRS0=8WGb=YX=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=nNvH=YY=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49AC9CA9EC7
-	for <linux-ide@archiver.kernel.org>; Wed, 30 Oct 2019 20:40:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E13F9CA9ECB
+	for <linux-ide@archiver.kernel.org>; Thu, 31 Oct 2019 08:35:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 131562087E
-	for <linux-ide@archiver.kernel.org>; Wed, 30 Oct 2019 20:40:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1572468057;
-	bh=uDzTuuW0eeNiIMtkt7NpH65MPpTxQGR0fvDGgA3VMI4=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=xfQ53kydwyDqLMNBa7hwf5bo96uXQ118VZ9NUAdh3+Qwm3zTpMeI+O+vQRHHE8uVe
-	 q/MMwZ55Za3MTRoGIJKV4UgxM37F5QiclEBIDFeWwPZKwPg+Nf4MNi2k0WppLibz7K
-	 5QCT36y9H+FNXRSBjNBwsz09R7oRp6+3o5P8IocI=
+	by mail.kernel.org (Postfix) with ESMTP id B78A92087F
+	for <linux-ide@archiver.kernel.org>; Thu, 31 Oct 2019 08:35:15 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=netronome-com.20150623.gappssmtp.com header.i=@netronome-com.20150623.gappssmtp.com header.b="r19RbJrr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726939AbfJ3Uk4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 30 Oct 2019 16:40:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36154 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726483AbfJ3Uk4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 30 Oct 2019 16:40:56 -0400
-Received: from localhost (unknown [69.71.4.100])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 7C21A2080F;
-        Wed, 30 Oct 2019 20:40:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1572468055;
-        bh=uDzTuuW0eeNiIMtkt7NpH65MPpTxQGR0fvDGgA3VMI4=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=UqNGd+ZTUpJFhDMfv4SJi/+Ag6YQuDIuqGDEH2hEJ1sXl1QquoHjHNRJcjOJgXZe5
-         cODQTCGliDN5izuvmxmqSeQlF77MS6TQqon4dFGAVw+hm+hNfjQ5yWp4VLP03VwqtJ
-         0mBFRh1OclJ7C8JEuD5pTRYODL2gC/iQGKnT5HhE=
-Date:   Wed, 30 Oct 2019 15:40:54 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
+        id S1727012AbfJaIfO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 31 Oct 2019 04:35:14 -0400
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:37389 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727005AbfJaIfO (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 31 Oct 2019 04:35:14 -0400
+Received: by mail-wm1-f67.google.com with SMTP id q130so4927977wme.2
+        for <linux-ide@vger.kernel.org>; Thu, 31 Oct 2019 01:35:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=netronome-com.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=rmDq6FxRuUYkoax7fknWg9lZtSi88FQnuHiD1s4eg5U=;
+        b=r19RbJrrR3TTQRFvNVgH7muc0VuAYAy6rKwAenBj+MBaMLmAwvooeA4uJPujOZH/3f
+         Z38+un06J7GpZ7qzlIBluqhhNCKQaWpQMA676w27Uq3/NB3ccSjBROSFDlaPHO1d4VHG
+         IJrmYs9psQzlLCLW1tNvWUHfZ5FD3R+nqfWbEJQWVUHNzGo1biYTUC47PS4wDJYYoNdB
+         efvLI/52efMQGN2fhxcU3VXQUIWQIzCIuhCef1hEsbPzN6iWNVoVX7W4Rx1VirV8VhAT
+         C6K1MLxvnxYyF2hCKEzWrb24APK5ufdQEoK8a7DMjJzeFDQQmPGQ5GSzPZ/glg65NJDL
+         kEJw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=rmDq6FxRuUYkoax7fknWg9lZtSi88FQnuHiD1s4eg5U=;
+        b=YDm9upgjHvMvm+Cm2e4XlZJGU13ZHZT0FfF++nBySAHgRPpsXqzmDddmi/oXyfZBdC
+         MAEjXlmzLjZSfevGJ/6S2gtFGT5QLnVmALnHbnfvtumURwWCtdWEulmHR8Mkasqdx43L
+         3AJgRnzDQVGhCKGVKEQjLPnwJP/clvhKho8g+Edb4XUF/oc4QakrPAKs6oj42mjbnO8S
+         2HZ7U4/AN7DRJCQr4VkzJncpH7oCUww+LsfkZEozLD0VEbGlF6854XNgLQDUE4Mg1A4c
+         drGtBvBWDj1ctO3qKrFGgK3Wt1Fo/3NE1Ug4tTG3Fota5DD3Ttn4JY+mOWfj2kBDpp9P
+         OSog==
+X-Gm-Message-State: APjAAAVVP7+EmWLkdGRdxzqu53V8mVigZdg5nyBGFab8HvvUNU64CCX5
+        m9eXxKyM6DSPbVJ9Ot/aCRbnpg==
+X-Google-Smtp-Source: APXvYqzFt/7CmZZG28e813dIiqfXPdkh/FrOn1ZW0fYjE3EhnPpwhz4KlImOvd6t8BDPMhbuXOGzHQ==
+X-Received: by 2002:a1c:3b44:: with SMTP id i65mr3744553wma.1.1572510912455;
+        Thu, 31 Oct 2019 01:35:12 -0700 (PDT)
+Received: from netronome.com (fred-musen.rivierenbuurt.horms.nl. [2001:470:7eb3:404:a2a4:c5ff:fe4c:9ce9])
+        by smtp.gmail.com with ESMTPSA id 11sm3233576wmb.34.2019.10.31.01.35.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 31 Oct 2019 01:35:12 -0700 (PDT)
+Date:   Thu, 31 Oct 2019 09:35:10 +0100
+From:   Simon Horman <simon.horman@netronome.com>
 To:     Jiaxun Yang <jiaxun.yang@flygoat.com>
 Cc:     linux-mips@vger.kernel.org, davem@davemloft.net,
         robh+dt@kernel.org, mark.rutland@arm.com, axboe@kernel.dk,
         peppe.cavallaro@st.com, alexandre.torgue@st.com,
-        joabreu@synopsys.com, netdev@vger.kernel.org,
+        joabreu@synopsys.com, bhelgaas@google.com, netdev@vger.kernel.org,
         devicetree@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/5] PCI: pci_ids: Add Loongson IDs
-Message-ID: <20191030204054.GA247856@google.com>
+Subject: Re: [PATCH 4/5] dt-bindings: net: document loongson.pci-gmac
+Message-ID: <20191031083509.GA30739@netronome.com>
+References: <20191030135347.3636-1-jiaxun.yang@flygoat.com>
+ <20191030135347.3636-5-jiaxun.yang@flygoat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191030135347.3636-2-jiaxun.yang@flygoat.com>
+In-Reply-To: <20191030135347.3636-5-jiaxun.yang@flygoat.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Please pay attention to the "git log --oneline
-include/linux/pci_ids.h" output and make yours match, e.g.,
+Hi Jiaxun,
 
-  PCI: Add Loongson Vendor and Device IDs
+thanks for your patch.
 
-On Wed, Oct 30, 2019 at 09:53:43PM +0800, Jiaxun Yang wrote:
-> Add Loongson device IDs that will be used by drivers later.
+On Wed, Oct 30, 2019 at 09:53:46PM +0800, Jiaxun Yang wrote:
+> This binding will provide extra information for PCI enabled
+> device.
 > 
 > Signed-off-by: Jiaxun Yang <jiaxun.yang@flygoat.com>
 
-With that change,
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Please verify the bindings using dtbs_check as described in
+Documentation/devicetree/writing-schema.rst
 
 > ---
->  include/linux/pci_ids.h | 4 ++++
->  1 file changed, 4 insertions(+)
+>  .../net/wireless/loongson,pci-gmac.yaml       | 71 +++++++++++++++++++
+>  1 file changed, 71 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/net/wireless/loongson,pci-gmac.yaml
 > 
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 21a572469a4e..75f3336116eb 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -148,6 +148,10 @@
->  
->  /* Vendors and devices.  Sort key: vendor first, device next. */
->  
-> +#define PCI_VENDOR_ID_LOONGSON		0x0014
-> +#define PCI_DEVICE_ID_LOONGSON_GMAC	0x7a03
-> +#define PCI_DEVICE_ID_LOONGSON_AHCI	0x7a08
+> diff --git a/Documentation/devicetree/bindings/net/wireless/loongson,pci-gmac.yaml b/Documentation/devicetree/bindings/net/wireless/loongson,pci-gmac.yaml
+> new file mode 100644
+> index 000000000000..5f764bd46735
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/net/wireless/loongson,pci-gmac.yaml
+> @@ -0,0 +1,71 @@
+> +# SPDX-License-Identifier: GPL-2.0
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/net/allwinner,sun7i-a20-gmac.yaml#
+
+The id does not match the filename of the schema.
+
+i.e. the above should be:
+
+	$id: http://devicetree.org/schemas/net/wireless/loongson,pci-gmac.yaml#
+
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
 > +
->  #define PCI_VENDOR_ID_TTTECH		0x0357
->  #define PCI_DEVICE_ID_TTTECH_MC322	0x000a
->  
+> +title: Loongson PCI GMAC Device Tree Bindings
+> +
+> +allOf:
+> +  - $ref: "snps,dwmac.yaml#"
+
+snps,dwmac.yaml# is in the parent directory relative to loongson,pci-gmac.yaml.
+So I think the above needs to be:
+
+	$ref: "../snps,dwmac.yaml#"
+
+> +
+> +maintainers:
+> +  - Jiaxun Yang <jiaxun.yang@flygoat.com>
+> +
+> +properties:
+> +  compatible:
+> +    const: loongson,pci-gmac
+> +
+> +  reg:
+> +    maxItems: 1
+> +
+> +  interrupts:
+> +    minItems: 1
+> +    maxItems: 3
+> +    items:
+> +      - description: Combined signal for various interrupt events
+> +      - description: The interrupt to manage the remote wake-up packet detection
+> +      - description: The interrupt that occurs when Rx exits the LPI state
+> +
+> +  interrupt-names:
+> +    minItems: 1
+> +    maxItems: 3
+> +    items:
+> +      - const: macirq
+> +      - const: eth_wake_irq
+> +      - const: eth_lpi
+> +
+> +  clocks:
+> +    items:
+> +      - description: GMAC main clock
+> +
+> +  clock-names:
+> +    items:
+> +      - const: stmmaceth
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - interrupts
+> +  - interrupt-names
+> +  - clocks
+> +  - clock-names
+> +  - phy-mode
+> +
+> +examples:
+> +  - |
+> +    gmac: ethernet@ {
+
+I would have expected a bus address here, f.e.:
+
+	gmac: ethernet@0x00001800
+
+> +        compatible = "loongson,pci-irq";
+> +        reg = <0x00001800 0 0 0 0>;
+
+I think there is one to many cell in the above, perhaps it should be.
+
+	reg = <0x00001800 0 0 0>;
+
+Also, I would expect the registers to be wider than 0, i.e. no registers.
+
+`
+> +        interrupts = <12>, <13>;
+> +        interrupt-names = "macirq", "eth_lpi";
+> +        clocks =  <&clk_pch_gmac>;
+> +        clock-names = "stmmaceth";
+> +        phy-mode = "rgmii";
+> +    };
+> +
+> +# FIXME: We should set it, but it would report all the generic
+> +# properties as additional properties.
+> +# additionalProperties: false
+> +
+> +...
 > -- 
 > 2.23.0
 > 
