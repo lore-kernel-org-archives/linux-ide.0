@@ -4,32 +4,35 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 763BECA9EC3
-	for <linux-ide@archiver.kernel.org>; Thu, 31 Oct 2019 09:59:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBB96CA9EC3
+	for <linux-ide@archiver.kernel.org>; Thu, 31 Oct 2019 09:59:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4519C20862
-	for <linux-ide@archiver.kernel.org>; Thu, 31 Oct 2019 09:59:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C7DAC20873
+	for <linux-ide@archiver.kernel.org>; Thu, 31 Oct 2019 09:59:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726922AbfJaJ7s (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 31 Oct 2019 05:59:48 -0400
-Received: from mx2.suse.de ([195.135.220.15]:34178 "EHLO mx1.suse.de"
+        id S1727186AbfJaJ7v (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 31 Oct 2019 05:59:51 -0400
+Received: from mx2.suse.de ([195.135.220.15]:34214 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726864AbfJaJ7s (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 31 Oct 2019 05:59:48 -0400
+        id S1727130AbfJaJ7u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 31 Oct 2019 05:59:50 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 231A9B12E;
-        Thu, 31 Oct 2019 09:59:47 +0000 (UTC)
+        by mx1.suse.de (Postfix) with ESMTP id 50999B181;
+        Thu, 31 Oct 2019 09:59:48 +0000 (UTC)
 From:   Jiri Slaby <jslaby@suse.cz>
 To:     axboe@kernel.dk
 Cc:     linux-kernel@vger.kernel.org, Jiri Slaby <jslaby@suse.cz>,
-        linux-ide@vger.kernel.org
-Subject: [PATCH v2 -resend 1/4] ata: Documentation, fix function names
-Date:   Thu, 31 Oct 2019 10:59:43 +0100
-Message-Id: <20191031095946.7070-1-jslaby@suse.cz>
+        linux-ide@vger.kernel.org,
+        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: [PATCH v2 -resend 4/4] ata: sata_mv, avoid trigerrable BUG_ON
+Date:   Thu, 31 Oct 2019 10:59:46 +0100
+Message-Id: <20191031095946.7070-4-jslaby@suse.cz>
 X-Mailer: git-send-email 2.23.0
+In-Reply-To: <20191031095946.7070-1-jslaby@suse.cz>
+References: <20191031095946.7070-1-jslaby@suse.cz>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
@@ -37,52 +40,49 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-ata_qc_prep no longer exists, there are ata_bmdma_qc_prep and
-ata_bmdma_dumb_qc_prep instead. And most drivers do not use them, so
-reword the paragraph.
+There are several reports that the BUG_ON on unsupported command in
+mv_qc_prep can be triggered under some circumstances:
+https://bugzilla.suse.com/show_bug.cgi?id=1110252
+https://serverfault.com/questions/888897/raid-problems-after-power-outage
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1652185
+https://bugs.centos.org/view.php?id=14998
 
-ata_qc_issue_prot was renamed to ata_sff_qc_issue. ->tf_load is now
-->sff_tf_load. Fix them.
+Let sata_mv handle the failure gracefully: warn about that incl. the
+failed command number and return an AC_ERR_INVALID error. We can do that
+now thanks to the previous patch.
 
-And fix spelling supercede -> supersede.
+Remove also the long-standing FIXME.
+
+[v2] use %.2x as commands are defined as hexa.
 
 Signed-off-by: Jiri Slaby <jslaby@suse.cz>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: linux-ide@vger.kernel.org
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 ---
- Documentation/driver-api/libata.rst | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/ata/sata_mv.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/Documentation/driver-api/libata.rst b/Documentation/driver-api/libata.rst
-index 70e180e6b93d..c2ee38098e85 100644
---- a/Documentation/driver-api/libata.rst
-+++ b/Documentation/driver-api/libata.rst
-@@ -254,19 +254,19 @@ High-level taskfile hooks
-     int (*qc_issue) (struct ata_queued_cmd *qc);
- 
- 
--Higher-level hooks, these two hooks can potentially supercede several of
-+Higher-level hooks, these two hooks can potentially supersede several of
- the above taskfile/DMA engine hooks. ``->qc_prep`` is called after the
- buffers have been DMA-mapped, and is typically used to populate the
--hardware's DMA scatter-gather table. Most drivers use the standard
--:c:func:`ata_qc_prep` helper function, but more advanced drivers roll their
--own.
-+hardware's DMA scatter-gather table. Some drivers use the standard
-+:c:func:`ata_bmdma_qc_prep` and :c:func:`ata_bmdma_dumb_qc_prep` helper
-+functions, but more advanced drivers roll their own.
- 
- ``->qc_issue`` is used to make a command active, once the hardware and S/G
- tables have been prepared. IDE BMDMA drivers use the helper function
--:c:func:`ata_qc_issue_prot` for taskfile protocol-based dispatch. More
-+:c:func:`ata_sff_qc_issue` for taskfile protocol-based dispatch. More
- advanced drivers implement their own ``->qc_issue``.
- 
--:c:func:`ata_qc_issue_prot` calls ``->tf_load()``, ``->bmdma_setup()``, and
-+:c:func:`ata_sff_qc_issue` calls ``->sff_tf_load()``, ``->bmdma_setup()``, and
- ``->bmdma_start()`` as necessary to initiate a transfer.
- 
- Exception and probe handling (EH)
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 5d5c8936a590..277f11909fc1 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -2098,12 +2098,10 @@ static enum ata_completion_errors mv_qc_prep(struct ata_queued_cmd *qc)
+ 		 * non-NCQ mode are: [RW] STREAM DMA and W DMA FUA EXT, none
+ 		 * of which are defined/used by Linux.  If we get here, this
+ 		 * driver needs work.
+-		 *
+-		 * FIXME: modify libata to give qc_prep a return value and
+-		 * return error here.
+ 		 */
+-		BUG_ON(tf->command);
+-		break;
++		ata_port_err(ap, "%s: unsupported command: %.2x\n", __func__,
++				tf->command);
++		return AC_ERR_INVALID;
+ 	}
+ 	mv_crqb_pack_cmd(cw++, tf->nsect, ATA_REG_NSECT, 0);
+ 	mv_crqb_pack_cmd(cw++, tf->hob_lbal, ATA_REG_LBAL, 0);
 -- 
 2.23.0
 
