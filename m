@@ -2,223 +2,88 @@ Return-Path: <SRS0=mhhG=YZ=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D378CA9ED0
-	for <linux-ide@archiver.kernel.org>; Fri,  1 Nov 2019 12:18:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE845CA9ECF
+	for <linux-ide@archiver.kernel.org>; Fri,  1 Nov 2019 14:51:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4F9A2217F9
-	for <linux-ide@archiver.kernel.org>; Fri,  1 Nov 2019 12:18:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7627A20650
+	for <linux-ide@archiver.kernel.org>; Fri,  1 Nov 2019 14:51:31 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="V5pb6Vo4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729493AbfKAMSI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 1 Nov 2019 08:18:08 -0400
-Received: from foss.arm.com ([217.140.110.172]:34540 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727989AbfKAMSI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 1 Nov 2019 08:18:08 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 314F31F1;
-        Fri,  1 Nov 2019 05:18:07 -0700 (PDT)
-Received: from localhost (unknown [10.37.6.20])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 8BBFD3F6C4;
-        Fri,  1 Nov 2019 05:18:06 -0700 (PDT)
-Date:   Fri, 1 Nov 2019 12:18:04 +0000
-From:   Andrew Murray <andrew.murray@arm.com>
-To:     Jiaxun Yang <jiaxun.yang@flygoat.com>
-Cc:     linux-mips@vger.kernel.org, davem@davemloft.net,
-        robh+dt@kernel.org, mark.rutland@arm.com, axboe@kernel.dk,
-        peppe.cavallaro@st.com, alexandre.torgue@st.com,
-        joabreu@synopsys.com, bhelgaas@google.com, netdev@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/5] net: stmmac: Split devicetree parse
-Message-ID: <20191101121802.GD9723@e119886-lin.cambridge.arm.com>
-References: <20191030135347.3636-1-jiaxun.yang@flygoat.com>
- <20191030135347.3636-3-jiaxun.yang@flygoat.com>
+        id S1727483AbfKAOvb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 1 Nov 2019 10:51:31 -0400
+Received: from mail-io1-f66.google.com ([209.85.166.66]:35498 "EHLO
+        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727326AbfKAOvb (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 1 Nov 2019 10:51:31 -0400
+Received: by mail-io1-f66.google.com with SMTP id h9so11213123ioh.2
+        for <linux-ide@vger.kernel.org>; Fri, 01 Nov 2019 07:51:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=YoC4inVicscoZ9/JjyDbV0BdRtw0qEy4/WkPCgA3aYQ=;
+        b=V5pb6Vo4FuDYZcp5h04IOOyI+arougnhmiP9otzeMaGyTEkxXi/30nYxxHnMq8DsNM
+         NxtpUCmtUwbvbGNarNyJTGb5JuRiO2y2Vu/czsnylakAs9+I0A27IKm50oHpHbEU52L7
+         VSEjceZ0GmabBu2n7m1WH0fHLoEWCuejc5njp5/GMLuWw0igWnYDBonf8oWjqTiH+UQI
+         JKm0cyAEaMvCfNNtECkyR1o5v+DSnu9ZrMYw0A6IU1sP8k+HG5j0NJ2b9OsfsBoCKumw
+         GcEjt+TW5JGvm3tQyuW4zqYkp5387ECSekwY8cLThqf479ZXpnvQrfjRldtet6BtD1qN
+         Eqww==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=YoC4inVicscoZ9/JjyDbV0BdRtw0qEy4/WkPCgA3aYQ=;
+        b=sAatgwoxcqdptAQ4LHxyF6txpcxShoOefsHnwxICFh+gYwnRaRnwe8POyPR5ruaWIx
+         2PuF+60e7PTm443Q0z3PtysFo/g5QRkelnjA8kqi+MFPlFPB2mOZnVosO0C5+HGHkNDP
+         2hgkXASG9HOLxDPI1NH+fFE9WzRmTnDVB4jGkQW+5mvdSKS6d/vELFeFKnE1hsXWmnph
+         ek9W5NDTaRxqvTFjxMyztmW5IEMCot/+H0G2pOLF6OD0PGhsjQvtQRNiCtdRplUXNTlv
+         TT+BjUIUzZ6fM7tRGDanWtoKknQ32B1afeYvaVqvgbiOtY42P2uBQCHM6C4eZJN3JUax
+         3z/g==
+X-Gm-Message-State: APjAAAXRFyfHILAm9TnKC1Qu1thvYIg3+Iri9VuFdKfZumWH1lsL2Mpu
+        YGbknIbD4MrA3zq5YE95ZdRl3ihICA+Fwg==
+X-Google-Smtp-Source: APXvYqwMJzmozzaTEaAeXq8YBSMZEaHQQWlUxa/Cm7BOa+9bXqGtCkl+3Z2ci+WjCIKj9BkWHp7koA==
+X-Received: by 2002:a5d:8f9a:: with SMTP id l26mr10794049iol.196.1572619889703;
+        Fri, 01 Nov 2019 07:51:29 -0700 (PDT)
+Received: from [192.168.1.159] ([65.144.74.34])
+        by smtp.gmail.com with ESMTPSA id d27sm1026777ill.64.2019.11.01.07.51.28
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 01 Nov 2019 07:51:28 -0700 (PDT)
+Subject: Re: [PATCH v2 -resend 1/4] ata: Documentation, fix function names
+To:     Jiri Slaby <jslaby@suse.cz>
+Cc:     linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+References: <20191031095946.7070-1-jslaby@suse.cz>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <53384e14-c294-3036-9549-2c08ac502e47@kernel.dk>
+Date:   Fri, 1 Nov 2019 08:51:27 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191030135347.3636-3-jiaxun.yang@flygoat.com>
-User-Agent: Mutt/1.10.1+81 (426a6c1) (2018-08-26)
+In-Reply-To: <20191031095946.7070-1-jslaby@suse.cz>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, Oct 30, 2019 at 09:53:44PM +0800, Jiaxun Yang wrote:
-> PCI based devices can share devicetree info parse with platform
-> device based devices after split dt parse frpm dt probe.
-
-s/frpm/from/
-
+On 10/31/19 3:59 AM, Jiri Slaby wrote:
+> ata_qc_prep no longer exists, there are ata_bmdma_qc_prep and
+> ata_bmdma_dumb_qc_prep instead. And most drivers do not use them, so
+> reword the paragraph.
 > 
-> Signed-off-by: Jiaxun Yang <jiaxun.yang@flygoat.com>
-> ---
->  .../ethernet/stmicro/stmmac/stmmac_platform.c | 63 ++++++++++++++-----
->  .../ethernet/stmicro/stmmac/stmmac_platform.h |  3 +
->  2 files changed, 49 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.c b/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.c
-> index 170c3a052b14..7e29bc76b7c3 100644
-> --- a/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.c
-> +++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.c
-> @@ -385,25 +385,19 @@ static int stmmac_of_get_mac_mode(struct device_node *np)
->  }
->  
->  /**
-> - * stmmac_probe_config_dt - parse device-tree driver parameters
-> - * @pdev: platform_device structure
-> - * @mac: MAC address to use
-> + * stmmac_parse_config_dt - parse device-tree driver parameters
-> + * @np: device_mode structure
-> + * @plat: plat_stmmacenet_data structure
->   * Description:
->   * this function is to read the driver parameters from device-tree and
->   * set some private fields that will be used by the main at runtime.
->   */
-> -struct plat_stmmacenet_data *
-> -stmmac_probe_config_dt(struct platform_device *pdev, const char **mac)
-> +int stmmac_parse_config_dt(struct device_node *np,
-> +				struct plat_stmmacenet_data *plat)
->  {
-> -	struct device_node *np = pdev->dev.of_node;
-> -	struct plat_stmmacenet_data *plat;
->  	struct stmmac_dma_cfg *dma_cfg;
->  	int rc;
->  
-> -	plat = devm_kzalloc(&pdev->dev, sizeof(*plat), GFP_KERNEL);
-> -	if (!plat)
-> -		return ERR_PTR(-ENOMEM);
-> -
->  	*mac = of_get_mac_address(np);
->  	if (IS_ERR(*mac)) {
->  		if (PTR_ERR(*mac) == -EPROBE_DEFER)
-> @@ -414,7 +408,7 @@ stmmac_probe_config_dt(struct platform_device *pdev, const char **mac)
->  
->  	plat->phy_interface = of_get_phy_mode(np);
->  	if (plat->phy_interface < 0)
-> -		return ERR_PTR(plat->phy_interface);
-> +		return plat->phy_interface;
->  
->  	plat->interface = stmmac_of_get_mac_mode(np);
->  	if (plat->interface < 0)
-> @@ -453,7 +447,7 @@ stmmac_probe_config_dt(struct platform_device *pdev, const char **mac)
->  	/* To Configure PHY by using all device-tree supported properties */
->  	rc = stmmac_dt_phy(plat, np, &pdev->dev);
->  	if (rc)
-> -		return ERR_PTR(rc);
-> +		return rc;
->  
->  	of_property_read_u32(np, "tx-fifo-depth", &plat->tx_fifo_size);
->  
-> @@ -531,7 +525,7 @@ stmmac_probe_config_dt(struct platform_device *pdev, const char **mac)
->  			       GFP_KERNEL);
->  	if (!dma_cfg) {
->  		stmmac_remove_config_dt(pdev, plat);
-> -		return ERR_PTR(-ENOMEM);
-> +		return -ENOMEM;
->  	}
->  	plat->dma_cfg = dma_cfg;
->  
-> @@ -560,7 +554,7 @@ stmmac_probe_config_dt(struct platform_device *pdev, const char **mac)
->  	rc = stmmac_mtl_setup(pdev, plat);
->  	if (rc) {
->  		stmmac_remove_config_dt(pdev, plat);
-> -		return ERR_PTR(rc);
-> +		return rc;
->  	}
->  
->  	/* clock setup */
-> @@ -604,14 +598,43 @@ stmmac_probe_config_dt(struct platform_device *pdev, const char **mac)
->  		plat->stmmac_rst = NULL;
->  	}
->  
-> -	return plat;
-> +	return 0;
->  
->  error_hw_init:
->  	clk_disable_unprepare(plat->pclk);
->  error_pclk_get:
->  	clk_disable_unprepare(plat->stmmac_clk);
->  
-> -	return ERR_PTR(-EPROBE_DEFER);
-> +	return -EPROBE_DEFER;
-> +}
-> +
-> +/**
-> + * stmmac_probe_config_dt - probe and setup stmmac platform data by devicetree
-> + * @pdev: platform_device structure
-> + * @mac: MAC address to use
-> + * Description:
-> + * this function is to set up plat_stmmacenet_data  private structure
-> + * for platform drivers.
-> + */
-> +struct plat_stmmacenet_data *
-> +stmmac_probe_config_dt(struct platform_device *pdev, const char **mac)
-> +{
-> +	struct device_node *np = pdev->dev.of_node;
-> +	struct plat_stmmacenet_data *plat;
-> +	int rc;
-> +
-> +	plat = devm_kzalloc(&pdev->dev, sizeof(*plat), GFP_KERNEL);
-> +	if (!plat)
-> +		return ERR_PTR(-ENOMEM);
-> +
-> +	rc = stmmac_parse_config_dt(np, plat);
-> +
-> +	if (rc) {
-> +		free(plat);
+> ata_qc_issue_prot was renamed to ata_sff_qc_issue. ->tf_load is now
+> ->sff_tf_load. Fix them.
 
-Given the devm_kzalloc - is the free really needed here?
+Applied 1-4 for 5.4 (please use a cover letter for more than one patch
+series...).
 
-Thanks,
+-- 
+Jens Axboe
 
-Andrew Murray
-
-> +		return ERR_PTR(rc);
-> +	}
-> +
-> +	return plat;
->  }
->  
->  /**
-> @@ -628,6 +651,11 @@ void stmmac_remove_config_dt(struct platform_device *pdev,
->  	of_node_put(plat->mdio_node);
->  }
->  #else
-> +int stmmac_parse_config_dt(struct device_node *np,
-> +				struct plat_stmmacenet_data *plat)
-> +{
-> +	return -EINVAL;
-> +}
->  struct plat_stmmacenet_data *
->  stmmac_probe_config_dt(struct platform_device *pdev, const char **mac)
->  {
-> @@ -639,6 +667,7 @@ void stmmac_remove_config_dt(struct platform_device *pdev,
->  {
->  }
->  #endif /* CONFIG_OF */
-> +EXPORT_SYMBOL_GPL(stmmac_parse_config_dt);
->  EXPORT_SYMBOL_GPL(stmmac_probe_config_dt);
->  EXPORT_SYMBOL_GPL(stmmac_remove_config_dt);
->  
-> diff --git a/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.h b/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.h
-> index 3a4663b7b460..0e4aec1f502a 100644
-> --- a/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.h
-> +++ b/drivers/net/ethernet/stmicro/stmmac/stmmac_platform.h
-> @@ -11,6 +11,9 @@
->  
->  #include "stmmac.h"
->  
-> +int stmmac_parse_config_dt(struct device_node *np,
-> +				struct plat_stmmacenet_data *plat);
-> +
->  struct plat_stmmacenet_data *
->  stmmac_probe_config_dt(struct platform_device *pdev, const char **mac);
->  void stmmac_remove_config_dt(struct platform_device *pdev,
-> -- 
-> 2.23.0
-> 
