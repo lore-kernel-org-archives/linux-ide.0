@@ -2,85 +2,83 @@ Return-Path: <SRS0=j7Np=Y4=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C244CA9ECF
-	for <linux-ide@archiver.kernel.org>; Mon,  4 Nov 2019 11:04:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB4F1CA9EA0
+	for <linux-ide@archiver.kernel.org>; Mon,  4 Nov 2019 11:06:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F2FD5222C2
-	for <linux-ide@archiver.kernel.org>; Mon,  4 Nov 2019 11:04:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD18521E6F
+	for <linux-ide@archiver.kernel.org>; Mon,  4 Nov 2019 11:06:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728882AbfKDLEW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 4 Nov 2019 06:04:22 -0500
-Received: from mail-ot1-f68.google.com ([209.85.210.68]:33427 "EHLO
-        mail-ot1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728879AbfKDLEW (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 4 Nov 2019 06:04:22 -0500
-Received: by mail-ot1-f68.google.com with SMTP id u13so14036254ote.0;
-        Mon, 04 Nov 2019 03:04:21 -0800 (PST)
+        id S1728904AbfKDLGT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 4 Nov 2019 06:06:19 -0500
+Received: from mail-ot1-f65.google.com ([209.85.210.65]:36882 "EHLO
+        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728898AbfKDLGS (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 4 Nov 2019 06:06:18 -0500
+Received: by mail-ot1-f65.google.com with SMTP id d5so1972555otp.4;
+        Mon, 04 Nov 2019 03:06:17 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=JsOl871X0kKz16edSR3lS8hZtNOWUkUDpyqOjBQZaX0=;
-        b=fD84bfXRgZibmu1crOHQcHKpVoTnbNE2gO8Nz+Dc60w7lcT6FBe29uumehoWnhPO1+
-         0RlepYC0xsIZ1aTQ1rGqFjDgYCQD6S3WtW5TusifBWdflSfWtkYqLtrNmy9/Ugh20V4e
-         NVubSQSOafnnwdYmEvyohMZ1cfV3Otd0j0px8r+0KCnmUn8yZxuIZxmor5JRIa2GMRlQ
-         jNbG+KGm/NWD4q/+K2v8OWMUBllKko2vUWuU/fD4RzpnYdzhk7q/hT3oSFVI5IMefnKX
-         ruKZTu9cOeedlxUtZtnxRzBWRIq/PM8+ODG9kWxnQ9kIlhtvWLOQgbIIEWaohf/SBMk7
-         N8ag==
-X-Gm-Message-State: APjAAAU2WaEiXYeBH/72r8aCHnGjkLimui3ocLODKmHpYx2YBMHxQdTJ
-        ATfAAjj1TKcPb6H2ITSanrlUJ2kjGTSNT7di6FI=
-X-Google-Smtp-Source: APXvYqxav4hM5eDGKqJ4lDPQUpV311EuoAtDoeNmtgISoHuH9sJ6ssKQ/MtGNLy60K3vMOVDAIeOgIB+16nBjPhi4vU=
-X-Received: by 2002:a9d:422:: with SMTP id 31mr17125100otc.107.1572865461312;
- Mon, 04 Nov 2019 03:04:21 -0800 (PST)
+        bh=ETdYQqKxbujIixaJfu7S3lGMivGjpLGpc/OtjAqnGG8=;
+        b=egehcCU2nKAD9Wrjt65VVN+2bkaHg2Su7gFgxdiygM4MrALcieOhg9VmMQ+pKpy1M7
+         BbuQd90b5FMVPpqjQRxVHP5ugqb4VxSryq8yPjcuZDAnVbI8GN1+hZHj9cMUaRDvwwrV
+         MHLFGUpcUDSMA2JGS+ghPtHzckfDGWr2aYi+d1uzqE7Klp08fewiHPsz3JX9BokGY6cd
+         PInPOTEYb8h6Nl+OW16BGOycnuIJP6N8ayGKQPXAEyyGApvB6jWhEeRfesimF+zDoqPg
+         Qhcrl+OVzqlr/w6ixWNKV1GgTSVtDyPZNLiSilhErfy/2j6Ayuda2M9QTemXDoJwtlX2
+         Repw==
+X-Gm-Message-State: APjAAAUBd7UOyDTYhbDbPuNqVfIOo/sWnlAWIZg6718u50/VXPYYxTvq
+        3XXwRfVdBQzj76krbkDQr3sJBITwF7CfzIgygRs=
+X-Google-Smtp-Source: APXvYqygLQ2AogODbL/7VtIebfrmJFCbEEfMOz9WdEdP8U3aOM5vso61oGKu+A507Pm58HIaVwHAz28GIKiQ2AueE1M=
+X-Received: by 2002:a9d:191e:: with SMTP id j30mr8641683ota.297.1572865577253;
+ Mon, 04 Nov 2019 03:06:17 -0800 (PST)
 MIME-Version: 1.0
-References: <1569470064-3977-1-git-send-email-schmitzmic@gmail.com>
- <7bd80760-0d46-3b3d-16e7-41cbc9169822@kernel.dk> <CAMuHMdWFoC8YUbmW8J7tJSsq4b67WkjyRzhkW=yfrEEJJmsZKQ@mail.gmail.com>
- <edb1ab21-9b60-4a25-b18c-76173ae6b28f@gmail.com>
-In-Reply-To: <edb1ab21-9b60-4a25-b18c-76173ae6b28f@gmail.com>
+References: <20191001073539.4488-1-geert@linux-m68k.org> <7fa02d50-6092-5f59-5018-c5b425a30726@enpas.org>
+In-Reply-To: <7fa02d50-6092-5f59-5018-c5b425a30726@enpas.org>
 From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Mon, 4 Nov 2019 12:04:10 +0100
-Message-ID: <CAMuHMdU6mcW_EcmE3bCTRGVCdouFPDoawTVyyGJP50oGES=duA@mail.gmail.com>
-Subject: Re: [PATCH RESEND v2 0/2] Convert Atari Falcon IDE driver to platform device
-To:     Michael Schmitz <schmitzmic@gmail.com>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "Linux/m68k" <linux-m68k@vger.kernel.org>,
-        linux-ide@vger.kernel.org,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Date:   Mon, 4 Nov 2019 12:06:05 +0100
+Message-ID: <CAMuHMdX3+-JO68LGE-NuT9axRUj3=bbtpDZ8E3v5UNoj5ctLHg@mail.gmail.com>
+Subject: Re: [PATCH] m68k: defconfig: Update defconfigs for v5.4-rc1
+To:     Max Staudt <max@enpas.org>
+Cc:     linux-m68k <linux-m68k@lists.linux-m68k.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-ide@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Michael,
+Hi Max,
 
-On Mon, Oct 28, 2019 at 8:03 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> Am 27.10.2019 um 07:17 schrieb Geert Uytterhoeven:
-> >>
-> >> Who's going to pick this one up? I can do it, but it'd be nice to have
-> >> m68k on patch 1 first.
-> >
-> > Sorry for the late reply.  I'll have a closer look after ELC-E, and will apply
-> > to the m68k tree if it passes.
-> >
-> > BTW, I believe v1 of both patches has been acked by Bartlomiej?
+On Mon, Oct 7, 2019 at 4:12 PM Max Staudt <max@enpas.org> wrote:
+> (CC linux-ide)
 >
-> Correct - on July 3rd. I totally forgot about that, and didn't add his
-> Acked-by in v2, sorry.
+> As for the Amiga defconfig, how about moving from IDE drivers to ATA?
+>
+> The old IDE stack is slated for removal in less than 2 years, and people should probably move over to libata instead.
+>
+> How about the following changes?
+> Is there any Amiga IDE controller left without a libata equivalent?
+>
+> CONFIG_IDE=n
+> CONFIG_IDE_GD_ATAPI=n
+> CONFIG_BLK_DEV_IDECD=n
+> CONFIG_BLK_DEV_GAYLE=n
+> CONFIG_BLK_DEV_BUDDHA=n
+>
+> CONFIG_ATA=y
+> CONFIG_ATA_VERBOSE_ERROR=y
+> CONFIG_PATA_GAYLE=y
+> CONFIG_PATA_BUDDHA=y
 
-OK.
+Amiga is fine.
 
-I was about to queue the combined patch, until I realized the defconfigs
-default to falconide, which is broken by patch 1/2.
-My proposed solution for that is:
-  1. Switch the defconfigs from falconide to pata_falcon,
-  2. Remove the legacy falconide driver.
-
-Does that sound OK? Thanks!
+Mac and Q40 are not, apparently.
 
 Gr{oetje,eeting}s,
 
