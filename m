@@ -2,48 +2,48 @@ Return-Path: <SRS0=j7Np=Y4=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52D3CC47E49
-	for <linux-ide@archiver.kernel.org>; Mon,  4 Nov 2019 10:57:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B0BCC47E49
+	for <linux-ide@archiver.kernel.org>; Mon,  4 Nov 2019 10:58:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2EFA021D7D
-	for <linux-ide@archiver.kernel.org>; Mon,  4 Nov 2019 10:57:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C45C21D7D
+	for <linux-ide@archiver.kernel.org>; Mon,  4 Nov 2019 10:58:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728012AbfKDK5I (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 4 Nov 2019 05:57:08 -0500
-Received: from mail-ot1-f66.google.com ([209.85.210.66]:46990 "EHLO
-        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727236AbfKDK5I (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 4 Nov 2019 05:57:08 -0500
-Received: by mail-ot1-f66.google.com with SMTP id n23so3742865otr.13;
-        Mon, 04 Nov 2019 02:57:06 -0800 (PST)
+        id S1728432AbfKDK62 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 4 Nov 2019 05:58:28 -0500
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:33201 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728413AbfKDK61 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 4 Nov 2019 05:58:27 -0500
+Received: by mail-oi1-f196.google.com with SMTP id m193so13706584oig.0;
+        Mon, 04 Nov 2019 02:58:27 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=pGQ4gD0I1FZ6dwxxybtlK40/QHMirWL/gzWuIysg0DM=;
-        b=dPDw6SbAnkn1VbhRaRocLDEMxnotZTh0UkYvR9Mc4xelICw/ohbjCUA96M3VneZbyL
-         eWW8SjZuTLRFdk1sWVPZB0x5WjQ+tMxbnK5x4ZpYgZYRGjsfvYIDvKzlci1zYgd2Hp7o
-         v9geefMdT9CaijZpXUqNPJHlQp4gIg+Ina7vjaHV3PEm1iTYKPViNNckbtOE0VMQuLPa
-         1Z3HvYUSbS0IXXiQcaBuft7BoNPfRXNpPDuBIlzExOQjUGtZMF6lBrnuCggezi8JG48Z
-         bbtzdLXs7C1gtZVaY3jcHxQ8LT0+Tbwb+Y7nrO+bR79QzupONvc9mRrzO0GYz4heCd71
-         HIGQ==
-X-Gm-Message-State: APjAAAWTfHgPT+vrjTTo8EkFDC/KGZ0+6ER0DaAGTDuX+TG2FB+8vZHm
-        RiGU+iUpV7vzt69p/hRqCJmxnNxFiGbDYcJbpX8=
-X-Google-Smtp-Source: APXvYqwC8wqBGh0YvOC7EMnHt6kRo2jwjscRoETKpSbjobHIoNnISKPDJ5z8r8yhrmJ4RAVCLpUJN0cfgZZQODTj3rI=
-X-Received: by 2002:a05:6830:2363:: with SMTP id r3mr14984160oth.39.1572865026350;
- Mon, 04 Nov 2019 02:57:06 -0800 (PST)
+        bh=HOQkH2KS03U7K6gMvBKfRvzbmw+kx4YDjIamPXg+S8Y=;
+        b=ZDj2iz+qk3+IVawnTVBib78bkfqSydKNakD+a0yiw2c+k9tuzRJtc6uO6EBFzEDr1K
+         gT5SbfcgL4k3/tjycXd2J1cm1kUVECMoTz7jSRvQg2UpivDfA5xJPVnPDdQgCnH89YWq
+         vR05wivjXly+Inf1Rd3PyMDpopdXJuc2Q8zXGCI2ubRF2DjMl5K+xH0gVqnNx+ahTwhi
+         VDj//xRK5TNo1kN20mzHEsI0nuTK70p7IduzRNsd8g/4Zo23jEZ5Uuf/WVr2nKoD6mdX
+         LYdgljmfD3oGkA3Ztz9GjRc2uN+AToqXgaNYdo+WesyZ64J1ArL0hsA6Cn394n547dRW
+         bBvA==
+X-Gm-Message-State: APjAAAVnpSjQZN8aaNz7nWD4n/c+mLrOfCPjEFLIJ2mFD2ErNKXfN91Y
+        W0jt0V9/3bcsfmbdRHaY/voyIEa6V8de5YbvDVg=
+X-Google-Smtp-Source: APXvYqy0SFQrsYBRJVGzrWOjid8x6rBsnfbm0P2tkwHtDlgm1mTkR58CLxzQssXw57acPAW03IS978IjVygoGXqwwN0=
+X-Received: by 2002:aca:4ac5:: with SMTP id x188mr1737484oia.148.1572865106728;
+ Mon, 04 Nov 2019 02:58:26 -0800 (PST)
 MIME-Version: 1.0
-References: <1569470064-3977-1-git-send-email-schmitzmic@gmail.com> <1569470064-3977-2-git-send-email-schmitzmic@gmail.com>
-In-Reply-To: <1569470064-3977-2-git-send-email-schmitzmic@gmail.com>
+References: <1569470064-3977-1-git-send-email-schmitzmic@gmail.com> <1569470064-3977-3-git-send-email-schmitzmic@gmail.com>
+In-Reply-To: <1569470064-3977-3-git-send-email-schmitzmic@gmail.com>
 From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Mon, 4 Nov 2019 11:56:55 +0100
-Message-ID: <CAMuHMdULi8F8Ky4VxiQew25p5vOTQuf1tXrg7Dx-6aRu1Tj3qw@mail.gmail.com>
-Subject: Re: [PATCH RESEND v2 1/2] m68k/atari: add platform device for Falcon
- IDE port
+Date:   Mon, 4 Nov 2019 11:58:15 +0100
+Message-ID: <CAMuHMdUWpNp286PoqUHqtktE9V-q6eiH4uJEH0DYh4BF6SHZ+w@mail.gmail.com>
+Subject: Re: [PATCH RESEND v2 2/2] drivers/ata: convert pata_falcon to arch
+ platform device
 To:     Michael Schmitz <schmitzmic@gmail.com>
 Cc:     "Linux/m68k" <linux-m68k@vger.kernel.org>,
         linux-ide@vger.kernel.org,
@@ -57,65 +57,41 @@ X-Mailing-List: linux-ide@vger.kernel.org
 Hi Michael,
 
 On Thu, Sep 26, 2019 at 5:54 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> Autoloading of Falcon IDE driver modules requires converting
-> these drivers to platform drivers.
->
-> Add platform device for Falcon IDE interface in Atari platform
-> setup code in preparation for this.
+> The Atari platform device setup now provides a platform device
+> for the Falcon IDE interface. Use this in place of the simple platform
+> device set up in the old pata_falcon probe code.
 >
 > Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
 >
 > --
 
-This should be a triple dash.
+Should be a triple dash.
 
->
-> Changes from RFC
->
-> - fix region size (spotted by Szymon Bieganski <S.Bieganski@chello.nl>)
-> - define IDE interface address in atari/config.c, create platform device
->   always (suggested by Geert Uytterhoeven <geert@linux-m68k.org>)
->
-> Changes from v1
->
-> - add error checking for Falcon IDE platform device register
-
-Thanks for the update!
-
-> --- a/arch/m68k/atari/config.c
-> +++ b/arch/m68k/atari/config.c
-> @@ -939,6 +959,13 @@ int __init atari_platform_init(void)
->                         atari_scsi_tt_rsrc, ARRAY_SIZE(atari_scsi_tt_rsrc));
->  #endif
->
-> +       if (ATARIHW_PRESENT(IDE)) {
-> +               pdev = platform_device_register_simple("atari-falcon-ide", -1,
-> +                       atari_falconide_rsrc, ARRAY_SIZE(atari_falconide_rsrc));
-> +               if (IS_ERR(pdev))
-> +                       rv = PTR_ERR(pdev);
-> +       }
-> +
->         return rv;
->  }
-
-This breaks both falconide and pata_falcon, as it marks the resource
-busy:
-
-    ide: Falcon IDE controller
-    falconide: resources busy
-
-and
-
-    pata_falcon: Atari Falcon PATA controller
-    pata_falcon: resources busy
-
-For pata_falcon, that regression can easily be fixed by merging both patches.
-For falconide, I think the sensible thing to do is just remove the driver.
-But before that, the defconfigs should be updated to use pata_falcon
-instead of falconide.
-
-For the actual code changes:
 Reviewed-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Minor nit below.
+
+> --- a/drivers/ata/pata_falcon.c
+> +++ b/drivers/ata/pata_falcon.c
+> @@ -120,24 +119,22 @@ static int pata_falcon_set_mode(struct ata_link *link,
+>         .set_mode       = pata_falcon_set_mode,
+>  };
+>
+> -static int pata_falcon_init_one(void)
+> +static int __init pata_falcon_init_one(struct platform_device *pdev)
+>  {
+> +       struct resource *res;
+>         struct ata_host *host;
+>         struct ata_port *ap;
+> -       struct platform_device *pdev;
+>         void __iomem *base;
+>
+> -       if (!MACH_IS_ATARI || !ATARIHW_PRESENT(IDE))
+> -               return -ENODEV;
+> -
+> -       pr_info(DRV_NAME ": Atari Falcon PATA controller\n");
+> +       dev_info(&pdev->dev, ": Atari Falcon PATA controller\n");
+
+Please drop the ": ".
 
 Gr{oetje,eeting}s,
 
