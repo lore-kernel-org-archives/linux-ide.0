@@ -2,104 +2,159 @@ Return-Path: <SRS0=j7Np=Y4=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36ABBC47E49
-	for <linux-ide@archiver.kernel.org>; Mon,  4 Nov 2019 20:06:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8492CA9ED3
+	for <linux-ide@archiver.kernel.org>; Mon,  4 Nov 2019 21:09:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1853D20869
-	for <linux-ide@archiver.kernel.org>; Mon,  4 Nov 2019 20:06:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE2A020842
+	for <linux-ide@archiver.kernel.org>; Mon,  4 Nov 2019 21:09:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IRZaEwU4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728377AbfKDUGO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 4 Nov 2019 15:06:14 -0500
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:45940 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726417AbfKDUGO (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 4 Nov 2019 15:06:14 -0500
-Received: by mail-ot1-f67.google.com with SMTP id 77so11103918oti.12;
-        Mon, 04 Nov 2019 12:06:14 -0800 (PST)
+        id S1729194AbfKDVJc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 4 Nov 2019 16:09:32 -0500
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:45213 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728409AbfKDVJc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 4 Nov 2019 16:09:32 -0500
+Received: by mail-pl1-f196.google.com with SMTP id y24so8219859plr.12;
+        Mon, 04 Nov 2019 13:09:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=GS3fugTA2a7Yt1UpBdNzvr8P7jV9TpKGIQc839n4xws=;
+        b=IRZaEwU4isjLJqky5EHJmlYSY9uPgmm/Dx6KGRQWEs9s1AmUtWlZOxpRPlUfWxb0Q4
+         NTSK7La2NievKNNe4jf2ROSULq6osAPd/jJx84q8jtqJDwHQJnYlFEuYZrvZoBlOTqIr
+         0/RfqjnDtHZkw8gzeHrBUfwcP0Oyq7rN3fLl/iWU9zlAmvjcWF71vCeESRi/X96O5VLV
+         LybEfrOfPGXxbVktfNH4AeBf6WMe1BLvSg5hbMaj5d5MkSQHlG16YcZmWBRpr6b7240d
+         wZ5XyfApk+zYqduwd2vyYugDyomyw+RpDl7CVVLSeC9m3qKxr0EIrwfUhZobBz/VYhXB
+         qRFg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=h4qbCO6b+EddwK63iiWuHjAl6ARaEUL6F3uMnifVRXU=;
-        b=JF52UDaFoL4h87m03J0ltuILfd1YF/egO7SCzZWrYe5vXnWYBKmjasPSiXtUaJwP/6
-         6cGpySohkLmr0n4qDSgxHwTlIAsfDDbntJLVT93pw6uZLbAnoD699ZaRPJnYc9LF3GyK
-         caieuwGhZeNnpxpGVbb4Myh401mCcjXC0mctdhRwwqejygIDyA/uNJTNzBFZHcCMjwKp
-         ccR4EXSNapTzxb8DWvkGj3h3WeHD398He6Oh7cxnJCRu9875FHC1U0jQPM3AwFE60Rn8
-         9PsxQpzwIqXUTdRQHbRJ4Rx/RtYQNFAdXPoTzM1+4jP1D0nyC3RsL35AWMuK0O3NfsGQ
-         1l9w==
-X-Gm-Message-State: APjAAAVEA6pEjVNKHbzYuTD7wuOePsnkTSfyIg/2tJ5R9Fjdcgk1QWBE
-        SoVr2Wrg92p+xXF+6XxSHL1YCicDAG8e57pHWYA=
-X-Google-Smtp-Source: APXvYqwy9jIkfgZ2H6H7qJdG15+5FXdq6XazJwbYBQy9j0WfJhB7rWwooYyQYonowR4ww2BSIIXv6IGOgZkPWyPM58I=
-X-Received: by 2002:a05:6830:210e:: with SMTP id i14mr5610181otc.250.1572897973465;
- Mon, 04 Nov 2019 12:06:13 -0800 (PST)
-MIME-Version: 1.0
-References: <1569470064-3977-1-git-send-email-schmitzmic@gmail.com>
- <7bd80760-0d46-3b3d-16e7-41cbc9169822@kernel.dk> <CAMuHMdWFoC8YUbmW8J7tJSsq4b67WkjyRzhkW=yfrEEJJmsZKQ@mail.gmail.com>
- <edb1ab21-9b60-4a25-b18c-76173ae6b28f@gmail.com> <CAMuHMdU6mcW_EcmE3bCTRGVCdouFPDoawTVyyGJP50oGES=duA@mail.gmail.com>
- <db487366-b0d7-d65d-70b5-261aa439298b@gmail.com>
-In-Reply-To: <db487366-b0d7-d65d-70b5-261aa439298b@gmail.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Mon, 4 Nov 2019 21:06:02 +0100
-Message-ID: <CAMuHMdVJmT5xMGpyK3hm3j7OX7asjz2U4=+=B4SaGtqVDnxiHw@mail.gmail.com>
-Subject: Re: [PATCH RESEND v2 0/2] Convert Atari Falcon IDE driver to platform device
-To:     Michael Schmitz <schmitzmic@gmail.com>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "Linux/m68k" <linux-m68k@vger.kernel.org>,
-        linux-ide@vger.kernel.org,
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=GS3fugTA2a7Yt1UpBdNzvr8P7jV9TpKGIQc839n4xws=;
+        b=RMRKI2C+ffCrtr2EMDRaZoX/Ui3RyQp7vXQqm4c3n2vpCML5gw044+zARd1hQcWz/6
+         S9Ze7/1OriOnZBcOHY+aCXXQ2gbe0EzESBjp0HVONh2iQfGcqlfrd9wK7/36D5ofoPUV
+         vEYIbsCXeeESzFn8wp/ewuHbAXd0ROi87lfIYx9l63cg2ura6B5Zxr+3pVg3ozOE3LwZ
+         YgZxU24Zvb27LygBo/gsee8AivY0DGUepU8uctNoR5UwXw422oUgRr+CNwaLIou8fhB5
+         5jZXzf3lhdpwCp7wEx2yt5scOfMx2e89FZHmeUrb13D3Gi8T7Bb4jelrY02o8r2dQDN4
+         xWaA==
+X-Gm-Message-State: APjAAAWNOIrA7qxIvt9fIkwitv2TS1r5DSLO4C819ntjRMDWgD0eWUe+
+        T8S4QlI9BTYij1OX1j3801HUpmFm
+X-Google-Smtp-Source: APXvYqw9gOtdZDELq5OfGDTTBeWysbo82JPmj9qz9oTv1l0A+790agRJzbLjfaqZePn/NwQ6Bcn5qQ==
+X-Received: by 2002:a17:902:a58c:: with SMTP id az12mr28784833plb.140.1572901771483;
+        Mon, 04 Nov 2019 13:09:31 -0800 (PST)
+Received: from ?IPv6:2001:df0:0:200c:9888:8ef6:cb36:21e0? ([2001:df0:0:200c:9888:8ef6:cb36:21e0])
+        by smtp.gmail.com with ESMTPSA id e5sm18326699pfa.110.2019.11.04.13.09.29
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 04 Nov 2019 13:09:30 -0800 (PST)
+Subject: Re: [PATCH RESEND v2 1/2] m68k/atari: add platform device for Falcon
+ IDE port
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     Linux/m68k <linux-m68k@vger.kernel.org>, linux-ide@vger.kernel.org,
         Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Content-Type: text/plain; charset="UTF-8"
+References: <1569470064-3977-1-git-send-email-schmitzmic@gmail.com>
+ <1569470064-3977-2-git-send-email-schmitzmic@gmail.com>
+ <CAMuHMdULi8F8Ky4VxiQew25p5vOTQuf1tXrg7Dx-6aRu1Tj3qw@mail.gmail.com>
+From:   Michael Schmitz <schmitzmic@gmail.com>
+Message-ID: <4cb95fe6-c2ea-0195-9124-fc2e1223ab38@gmail.com>
+Date:   Tue, 5 Nov 2019 10:09:26 +1300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.6.1
+MIME-Version: 1.0
+In-Reply-To: <CAMuHMdULi8F8Ky4VxiQew25p5vOTQuf1tXrg7Dx-6aRu1Tj3qw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Michael,
+Hi Geert,
 
-On Mon, Nov 4, 2019 at 8:17 PM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> On 5/11/19 12:04 AM, Geert Uytterhoeven wrote:
-> > On Mon, Oct 28, 2019 at 8:03 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> >> Am 27.10.2019 um 07:17 schrieb Geert Uytterhoeven:
-> >>>> Who's going to pick this one up? I can do it, but it'd be nice to have
-> >>>> m68k on patch 1 first.
-> >>> Sorry for the late reply.  I'll have a closer look after ELC-E, and will apply
-> >>> to the m68k tree if it passes.
-> >>>
-> >>> BTW, I believe v1 of both patches has been acked by Bartlomiej?
-> >> Correct - on July 3rd. I totally forgot about that, and didn't add his
-> >> Acked-by in v2, sorry.
-> > OK.
-> >
-> > I was about to queue the combined patch, until I realized the defconfigs
-> > default to falconide, which is broken by patch 1/2.
-> > My proposed solution for that is:
-> >    1. Switch the defconfigs from falconide to pata_falcon,
+thanks for your review!
+
+On 4/11/19 11:56 PM, Geert Uytterhoeven wrote:
+> Hi Michael,
 >
-> Ack.
+> On Thu, Sep 26, 2019 at 5:54 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
+>> Autoloading of Falcon IDE driver modules requires converting
+>> these drivers to platform drivers.
+>>
+>> Add platform device for Falcon IDE interface in Atari platform
+>> setup code in preparation for this.
+>>
+>> Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
+>>
+>> --
+> This should be a triple dash.
 >
-> >    2. Remove the legacy falconide driver.
+>> Changes from RFC
+>>
+>> - fix region size (spotted by Szymon Bieganski <S.Bieganski@chello.nl>)
+>> - define IDE interface address in atari/config.c, create platform device
+>>    always (suggested by Geert Uytterhoeven <geert@linux-m68k.org>)
+>>
+>> Changes from v1
+>>
+>> - add error checking for Falcon IDE platform device register
+> Thanks for the update!
 >
-> Nack - I still use that one (because pata_falcon has no support for
-> using interrupts with the Falcon IDE interface, and I'm unsure how much
-> more kernel bloat libata will add). Need to check the impact of
-> switching to pata_falcon first.
+>> --- a/arch/m68k/atari/config.c
+>> +++ b/arch/m68k/atari/config.c
+>> @@ -939,6 +959,13 @@ int __init atari_platform_init(void)
+>>                          atari_scsi_tt_rsrc, ARRAY_SIZE(atari_scsi_tt_rsrc));
+>>   #endif
+>>
+>> +       if (ATARIHW_PRESENT(IDE)) {
+>> +               pdev = platform_device_register_simple("atari-falcon-ide", -1,
+>> +                       atari_falconide_rsrc, ARRAY_SIZE(atari_falconide_rsrc));
+>> +               if (IS_ERR(pdev))
+>> +                       rv = PTR_ERR(pdev);
+>> +       }
+>> +
+>>          return rv;
+>>   }
+> This breaks both falconide and pata_falcon, as it marks the resource
+> busy:
+>
+>      ide: Falcon IDE controller
+>      falconide: resources busy
+>
+> and
+>
+>      pata_falcon: Atari Falcon PATA controller
+>      pata_falcon: resources busy
+>
+> For pata_falcon, that regression can easily be fixed by merging both patches.
 
-Oh, I forgot about that.
-So yes, in that case pata_falcon is not a viable alternative yet.
-However, that means we can only avoid regressions by converting
-falconide to the new platform device, too, and doing that together, atomically,
-with your 2 patches in this series.
+I obviously need to test this again, but from what I remember from my 
+last testing, falconide still worked OK after applying both patches. 
+That would have been without loading pata_falcon at all.
 
-Gr{oetje,eeting}s,
+I'll rewrite falconide to use the same platform device as pata_falcon.
 
-                        Geert
+Cheers,
 
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+     Michael
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+> For falconide, I think the sensible thing to do is just remove the driver.
+> But before that, the defconfigs should be updated to use pata_falcon
+> instead of falconide.
+>
+> For the actual code changes:
+> Reviewed-by: Geert Uytterhoeven <geert@linux-m68k.org>
+>
+> Gr{oetje,eeting}s,
+>
+>                          Geert
+>
