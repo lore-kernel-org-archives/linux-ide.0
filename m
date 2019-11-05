@@ -2,138 +2,106 @@ Return-Path: <SRS0=rygF=Y5=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5175C47E49
-	for <linux-ide@archiver.kernel.org>; Tue,  5 Nov 2019 20:03:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49618C5DF62
+	for <linux-ide@archiver.kernel.org>; Tue,  5 Nov 2019 20:36:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 60EDC217F5
-	for <linux-ide@archiver.kernel.org>; Tue,  5 Nov 2019 20:03:05 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ftim7AGv"
+	by mail.kernel.org (Postfix) with ESMTP id 1577C21A49
+	for <linux-ide@archiver.kernel.org>; Tue,  5 Nov 2019 20:36:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726612AbfKEUDF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 5 Nov 2019 15:03:05 -0500
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:44789 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726608AbfKEUDE (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 5 Nov 2019 15:03:04 -0500
-Received: by mail-pg1-f195.google.com with SMTP id f19so6051039pgk.11;
-        Tue, 05 Nov 2019 12:03:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=YoazNcCapO07EMrilU/xDFZwOoErJtAzoLTDVccbvTI=;
-        b=Ftim7AGv71FuxXE+aioupZ9uwFyZKGlbaxEUfIwypfmVY9WmxmQ0H5ic9vLSzrQqox
-         oeeRz+Ug3muRATZmhDjYLt1edDmpbCON3TbLtmkyctWdPocqOjdMwd5jXX/bWDeTbntD
-         XEIRHqhW885L7s21Hq8nam+GQ2an5Geym5a3XhkngsPPSPZDFknMoMCwgqMPW2gyDCUu
-         iG5oKnR71r6gZ45/sSnwnIfenrGyVW4FyY465Jo17z/TslQN5a43/UI/P5/DD5sE30+Y
-         AYtCFRxJrjsD/Zumu6IUdzZl53mR8oRlze1b2nOJlvzzHIOkhM73MTKhveldt3fNwWjw
-         4CRQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=YoazNcCapO07EMrilU/xDFZwOoErJtAzoLTDVccbvTI=;
-        b=bWqdfGU0//E2Ucu+iFDs6R/ceyQ7+j4J+CETg24/5EjUyNcyHiiiBKbIVxUJcJyZkB
-         G9PMvfhYVrjL7WnAIhCMR/SV/zRACJVHmuFkyvCGrxvvP5UVWuxNJWa/6mFOcTiBvrj7
-         eCZKb52jNIZlTMa/mO8bMMzyENIoSvNPmDJJShgrrHg4TKRqqVelytY6AhVx/IDSiC1n
-         mRcA7uy8GJTnVoWdr41tPodJfNzTK8HQX/emfnWfldXK4uYJW1pbz3n6mCwF0xAaV5Nu
-         OKxTuvTevFCqHoxGbM/9yUvcTXjePx/5MnF9ij9lDwQgr6tWkWtvHqRuDD0EDM6Rs8k9
-         0MnA==
-X-Gm-Message-State: APjAAAWx7imCbx1ZmeLUiPDZukgHvDBVqc2BekcMFvZk+EK6yQRMUVeD
-        7z2553ZzqcBwh12vuH9lL7Mcs90L/7sjv4JWyPc=
-X-Google-Smtp-Source: APXvYqweRqJ16EuTyRfiirhgXTXQ0ihILysGNzqk0J5178d2Tjjry8pyvn2jDa3pmLHE2A9Nfo0EU/95haHHuDazo8A=
-X-Received: by 2002:a17:90a:c082:: with SMTP id o2mr1073773pjs.94.1572984184041;
- Tue, 05 Nov 2019 12:03:04 -0800 (PST)
+        id S1729728AbfKEUg1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 5 Nov 2019 15:36:27 -0500
+Received: from cynthia.allandria.com ([50.242.82.17]:51581 "EHLO
+        cynthia.allandria.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726608AbfKEUg1 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 5 Nov 2019 15:36:27 -0500
+Received: from flar by cynthia.allandria.com with local (Exim 4.84_2)
+        (envelope-from <flar@allandria.com>)
+        id 1iS5Yr-0003WE-2t; Tue, 05 Nov 2019 12:36:21 -0800
+Date:   Tue, 5 Nov 2019 12:36:21 -0800
+From:   Brad Boyer <flar@allandria.com>
+To:     Finn Thain <fthain@telegraphics.com.au>
+Cc:     John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Max Staudt <max@enpas.org>,
+        linux-m68k <linux-m68k@lists.linux-m68k.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-ide@vger.kernel.org
+Subject: Re: [PATCH] m68k: defconfig: Update defconfigs for v5.4-rc1
+Message-ID: <20191105203620.GA12862@allandria.com>
+References: <20191001073539.4488-1-geert@linux-m68k.org>
+ <7fa02d50-6092-5f59-5018-c5b425a30726@enpas.org>
+ <CAMuHMdX3+-JO68LGE-NuT9axRUj3=bbtpDZ8E3v5UNoj5ctLHg@mail.gmail.com>
+ <640d4fd8-b879-3cfd-e522-1acc3cbd323a@physik.fu-berlin.de>
+ <20191105005318.GA29558@allandria.com>
+ <alpine.LNX.2.21.1.1911051318590.160@nippy.intranet>
+ <20191105031946.GA31507@allandria.com>
+ <alpine.LNX.2.21.1.1911051444570.160@nippy.intranet>
 MIME-Version: 1.0
-References: <4cb95fe6-c2ea-0195-9124-fc2e1223ab38@gmail.com>
- <1572935872-28394-1-git-send-email-schmitzmic@gmail.com> <CAMuHMdXM+h_GsbkSvyfpLJ0DJixmr-wOS_d5qQrZ8e7VY_bbPg@mail.gmail.com>
- <CAOmrzkKLosq7LdXS6BuvHSARPXCXPiasW1zGywY3+hoys4NxoA@mail.gmail.com> <CAMuHMdVBpMJ6E9N1=YG6VPNJifexdbM9=PWAkjyLwdz9b5n0YQ@mail.gmail.com>
-In-Reply-To: <CAMuHMdVBpMJ6E9N1=YG6VPNJifexdbM9=PWAkjyLwdz9b5n0YQ@mail.gmail.com>
-From:   Michael Schmitz <schmitzmic@gmail.com>
-Date:   Wed, 6 Nov 2019 09:02:52 +1300
-Message-ID: <CAOmrzk+-FD63N88MTE6993V8-Z96vXpAcB7yd33fftcj3ZebbA@mail.gmail.com>
-Subject: Re: [PATCH] ide: falconide: convert to platform driver
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     "Linux/m68k" <linux-m68k@vger.kernel.org>,
-        linux-ide@vger.kernel.org,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        Michael Schmitz <schmitz@debian.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <alpine.LNX.2.21.1.1911051444570.160@nippy.intranet>
+User-Agent: Mutt/1.5.23 (2014-03-12)
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Geert,
+On Tue, Nov 05, 2019 at 03:13:31PM +1100, Finn Thain wrote:
+> On Mon, 4 Nov 2019, Brad Boyer wrote:
+> > I'll try the PB190 first anyway. It should be easier due to not needing 
+> > to setup a monitor. 
+> 
+> I think you can put the 630 into a standard VESA video mode (with MacOS or 
+> Linux) given the right adapter/cable. I have a pin-out somewhere.
 
-On Wed, Nov 6, 2019 at 7:46 AM Geert Uytterhoeven <geert@linux-m68k.org> wrote:
->
-> > > > @@ -169,10 +177,21 @@ static int __init falconide_init(void)
-> >
-> > Should I remove the __init here? Doesn't hurt in the built-in use
-> > case, what about use as a module?
->
-> Should be fine.
+I have an adapter. I also own several official Apple monitors of various
+styles and capabilities. The problem is desk space. I need to clean before
+I have enough room to setup anything bigger than a laptop.
 
-OK, I'll leave it.
+> > I just took a look at the macide driver, and it appears to do basically
+> > nothing other than pass a list of addresses into the core ide code. It's
+> > one of the smallest drivers I've ever seen.
+> > 
+> 
+> The fly in the ointment is interrupt handling. There is a theoretical bug. 
+> (Though it doesn't seem to hurt in practice.)
+> 
+> AFAIK the hardware is publicly undocumented and so we need to do 
+> experiments like this:
+> https://github.com/fthain/linux/commit/01405199e8d05500bf458df690027655f526a7fd
+> 
+> My suspicion is that macide_clear_irq() does nothing useful. It's not 
+> called on a Powerbook 190. Maybe it is needed on a PowerBook 150 and 
+> Performa 630, maybe not...
 
->
-> >
-> > > >  err_free:
-> > > >         ide_host_free(host);
-> > > >  err:
-> > > > -       release_mem_region(ATA_HD_BASE, 0x40);
-> > > > +       release_mem_region(res->start, resource_size(res));
-> > > >         return rc;
-> > > >  }
-> > > >
-> > > > -module_init(falconide_init);
-> > > > +static struct platform_driver ide_falcon_driver = {
-> > > > +       .driver   = {
-> > > > +               .name   = "atari-falcon-ide",
-> > > > +       },
-> > > > +};
-> > >
-> > > Missing .remove() callback.
-> >
-> > Can't easily test driver remove, but I can certainly add a callback for that.
-> >
-> > ide_unregister does the Right Thing (i.e. leaves the ST-DMA interrupt
-> > registered) so no reason why it shouldn't work.
->
-> gayle.c uses ide_host_remove().
+My understanding has always been that Apple was really sloppy with how
+the hardware handled interrupts. On many models, you can't actually
+block interrupts in a sane fashion. Because of that, you usually have
+to shut up the interrupts by talking to the actual device.
 
-I'm using that, too. But  ide_host_remove() is not where free_irq() is called.
+I would not be surprised in the slightest to see that register write
+do absolutely nothing. It might be more interesting to just disable
+the clear function for all models and see if it still works. I don't
+have a PB 150 to test that style, but I do have the other two.
 
->
-> > > > +
-> > > > +module_platform_driver_probe(ide_falcon_driver, falconide_init);
-> > > > +
-> > > >
-> > > > +MODULE_AUTHOR("Geert Uytterhoeven");
-> > > > +MODULE_DESCRIPTION("low-level driver for Atari Falcon IDE");
-> > > >  MODULE_LICENSE("GPL");
-> > > > +MODULE_ALIAS("platform:atari-falcon-ide");
-> > > > +MODULE_VERSION(DRV_VERSION);
-> > >
-> > > I'd drop the MODULE_VERSION().
-> >
-> > Done.
-> >
-> > Shall I merge this one with part one of the old series so there's no
-> > chance of a bisection going wrong?
->
-> Yes please.
-> Thanks!
+> > > But watch out for leaking capacitors and batteries...
+> > 
+> > I should pull out every machine in my collection and look for those 
+> > sorts of issues. None of them have been checked in at least 5 or 6 
+> > years.
+> > 
+> 
+> None of the machines in my collection have any batteries now. Desoldering 
+> the Ni-Cd PRAM battery from a Powerbook 14x/16x/170/180 is difficult but 
+> necessary. Powerbook 150 and 190 are easier (no desoldering needed).
 
-Thanks, I'll send a new version shortly.
+That makes sense. I need to do the same. It's just a pain since a few
+models won't boot without a battery.
 
-Cheers,
+	Brad Boyer
+	flar@allandria.com
 
-    Michael
