@@ -2,166 +2,98 @@ Return-Path: <SRS0=U8wY=ZA=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BD3CC5DF60
-	for <linux-ide@archiver.kernel.org>; Fri,  8 Nov 2019 14:06:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7718C5DF60
+	for <linux-ide@archiver.kernel.org>; Fri,  8 Nov 2019 14:27:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D62072178F
-	for <linux-ide@archiver.kernel.org>; Fri,  8 Nov 2019 14:06:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7BC7222C2
+	for <linux-ide@archiver.kernel.org>; Fri,  8 Nov 2019 14:27:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="GFG8Bngh"
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="iqwILVQY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726616AbfKHOGQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 8 Nov 2019 09:06:16 -0500
-Received: from mailout2.w1.samsung.com ([210.118.77.12]:59016 "EHLO
-        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726005AbfKHOGQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 8 Nov 2019 09:06:16 -0500
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20191108140613euoutp0297a9da8f2f529f912cd381eee264b99c~VNQysq8dc2377423774euoutp02W
-        for <linux-ide@vger.kernel.org>; Fri,  8 Nov 2019 14:06:13 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20191108140613euoutp0297a9da8f2f529f912cd381eee264b99c~VNQysq8dc2377423774euoutp02W
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1573221973;
-        bh=N+JCkz4JeDOFadjc5rrFs2UE9NippHyLnoYIO9LMYBg=;
-        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=GFG8Bngh77npG5R41S8Ms7pbUOUb1LtJk00qFUfdrXwATH68iySYo8AFmnD3Rd5ke
-         Sl3Sd2ddIGaPwfuWYkGPd8+bIFuwqPzSd635rHs8kGJpgLQin33Ndzuf2n4+g2nFaw
-         6KPQdYQoYve1lUpvTyAFxYZCxk9tWu8NmeBd7fEM=
-Received: from eusmges2new.samsung.com (unknown [203.254.199.244]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20191108140613eucas1p2fff573cac0dd5366361e9a6cc2d58071~VNQylDFbo0666806668eucas1p2u;
-        Fri,  8 Nov 2019 14:06:13 +0000 (GMT)
-Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges2new.samsung.com (EUCPMTA) with SMTP id A9.18.04309.55675CD5; Fri,  8
-        Nov 2019 14:06:13 +0000 (GMT)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20191108140612eucas1p152704f9fb95a6187f536beacd66097d7~VNQyLxode0694406944eucas1p1M;
-        Fri,  8 Nov 2019 14:06:12 +0000 (GMT)
-Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
-        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20191108140612eusmtrp12ef22e7307c356a0ee608d70bfb9d664~VNQyLM8d22316223162eusmtrp1c;
-        Fri,  8 Nov 2019 14:06:12 +0000 (GMT)
-X-AuditID: cbfec7f4-afbff700000010d5-dc-5dc576555138
-Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id 8B.24.04166.45675CD5; Fri,  8
-        Nov 2019 14:06:12 +0000 (GMT)
-Received: from [106.120.51.71] (unknown [106.120.51.71]) by
-        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20191108140612eusmtip2177259d5802e85fc4f9be980128fced7~VNQx0F0MB2151621516eusmtip2X;
-        Fri,  8 Nov 2019 14:06:12 +0000 (GMT)
+        id S1726335AbfKHO1A (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 8 Nov 2019 09:27:00 -0500
+Received: from mail-io1-f50.google.com ([209.85.166.50]:37139 "EHLO
+        mail-io1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726039AbfKHO1A (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 8 Nov 2019 09:27:00 -0500
+Received: by mail-io1-f50.google.com with SMTP id 1so6552679iou.4
+        for <linux-ide@vger.kernel.org>; Fri, 08 Nov 2019 06:26:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=U+gZ1iZyMycMyu4RO24BAjLSYNHz9sOObk4L5rAMf7c=;
+        b=iqwILVQYZSgmH9OUII6SqeT4Drvw0j1zpDG2nt3rLVuYNmHI7uc2IUg7rI+JESGb7J
+         VPdhKPgxjTYrje0kLVpESYLZeMPp32BZE9qQW3kRPV4A2Ov04mesqZ7YGidApVohuRQ/
+         s1C0A+EmO3dMNP+YvKu0SHgwE9+YqcymXT1jRkDqwT8LaDVCEAmgQOau+ojwU/TOJyYv
+         FbZ94VSTvKvxoN68eEF3O3bSY5UvDEhKkshv3g7CDh9e3NkSC6+y92JYNZfCRTv7UEh5
+         OXRNey3HvzswzpyTOhU3rakgDLkDbiXKQQS/kgpE9zIr1d955aRiaB8CIeiks5cn7mXa
+         +j+g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=U+gZ1iZyMycMyu4RO24BAjLSYNHz9sOObk4L5rAMf7c=;
+        b=KeCiU7sEYzMDmE4ccUx6ywUAitsRfax8IwCBXJZDNWuR/qsHfpGfp9aANK5/AtiZuX
+         350KykPlHYuOVixGN+FtKWmPZyq9WJjG9LN8YSMG5oSh0z6+EIqfYsWBK3q7041RSq0q
+         1IwXJEYL4puBX52/0oacVCG68uVfTxaDBAhUTA0mWVZGuc1tQV+kP3FkDI6ySOGyCx5R
+         K60l4Q8KGcKMdX0DqflEe9Bqbjw1+ReniPmpIKlTRnJ38gor6VkltMq9dRDV//BmXMMQ
+         AjMOgXcTP1o+uabbHuSERW7p/OaD8aTgVumXF8Sm17HLm3X9ddjSGyilMl2CVHg7MXAq
+         Sfaw==
+X-Gm-Message-State: APjAAAVtPKYZPuQSdopyxlREQpwJIaJ0d+mJm7/s/zbRvUdeSqNDNK3U
+        4tBzmbvCS0qPPtZTMgT2acbmGA==
+X-Google-Smtp-Source: APXvYqzwYZ+WipkYapK99X3KqatJkMZI+Jw2MzH942P7q0uMgKJc79YO5XDMV6HvnRPVP9zk3ee6lA==
+X-Received: by 2002:a6b:f914:: with SMTP id j20mr11044257iog.223.1573223219271;
+        Fri, 08 Nov 2019 06:26:59 -0800 (PST)
+Received: from [192.168.1.159] ([65.144.74.34])
+        by smtp.gmail.com with ESMTPSA id u9sm452653ior.46.2019.11.08.06.26.57
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 08 Nov 2019 06:26:58 -0800 (PST)
 Subject: Re: [PATCH][V2] ata: pata_artop: make arrays static const, makes
  object smaller
-To:     Colin King <colin.king@canonical.com>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-ide@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <50c64370-067a-a15e-29d6-dff3fc25cc77@samsung.com>
-Date:   Fri, 8 Nov 2019 15:06:08 +0100
+To:     Colin King <colin.king@canonical.com>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        linux-ide@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20191006142956.23360-1-colin.king@canonical.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <5dae76cc-e71d-d295-7947-b7005a7f1af3@kernel.dk>
+Date:   Fri, 8 Nov 2019 07:26:57 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
-        Thunderbird/60.8.0
+ Thunderbird/60.9.0
 MIME-Version: 1.0
 In-Reply-To: <20191006142956.23360-1-colin.king@canonical.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprGKsWRmVeSWpSXmKPExsWy7djP87qhZUdjDWY94bJYfbefzeL36l42
-        i623pC2O7XjEZHF51xw2B1aPWQ29bB6Xz5Z6fN4kF8AcxWWTkpqTWZZapG+XwJVx/uZb9oKF
-        fBV3Dp9haWD8xtXFyMkhIWAicevDAvYuRi4OIYEVjBKnrn1ihnC+MEpM+L0TyvnMKNH5aj0b
-        TEvnoUtMEInljBILNr9khXDeMkpsOXAArEpYIEri4NTN7CC2iIC7xIxds5hAbGaBOIlX5z8x
-        gthsAlYSE9tXgdm8AnYSk07+A+tlEVCReLJ3HyuILSoQIfHpwWFWiBpBiZMzn7CA2JxA9fu3
-        trBAzBSXuPVkPtR8eYntb+eAnS0h0M8usfPwC6izXSS63uxjhrCFJV4d38IOYctInJ7cwwLR
-        sI5R4m/HC6ju7YwSyyf/g+q2ljh8/CLQGRxAKzQl1u/Shwg7Siyfc4wRJCwhwCdx460gxBF8
-        EpO2TWeGCPNKdLQJQVSrSWxYtoENZm3XzpXMExiVZiF5bRaSd2YheWcWwt4FjCyrGMVTS4tz
-        01OLjfJSy/WKE3OLS/PS9ZLzczcxAlPL6X/Hv+xg3PUn6RCjAAejEg9vhMyRWCHWxLLiytxD
-        jBIczEoivJwtQCHelMTKqtSi/Pii0pzU4kOM0hwsSuK81QwPooUE0hNLUrNTUwtSi2CyTByc
-        Ug2MwlUJ/FYS/S4ftx53uv94IWdEXGNwX2zebhN2vUM7DnvYiT1d+S39xv0LUre84qTdnn1x
-        dl9rtMZivn/WopKYpX6bmUQDT1wPi5BMYFLbruG7/UddjN4n/6zLCb9aTxVN+LPxUJNH8PVf
-        v5XfaNUGt8oeePXpwoNzsW+v3dM/eFA4P0No8/4TSizFGYmGWsxFxYkAZdbd5ikDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrGIsWRmVeSWpSXmKPExsVy+t/xe7ohZUdjDZpmGFisvtvPZvF7dS+b
-        xdZb0hbHdjxisri8aw6bA6vHrIZeNo/LZ0s9Pm+SC2CO0rMpyi8tSVXIyC8usVWKNrQw0jO0
-        tNAzMrHUMzQ2j7UyMlXSt7NJSc3JLEst0rdL0Ms4f/Mte8FCvoo7h8+wNDB+4+pi5OSQEDCR
-        6Dx0iamLkYtDSGApo8SDe20sXYwcQAkZiePryyBqhCX+XOtiA7GFBF4zSlzYnARiCwtESRyc
-        upkdxBYRcJeYsWsWE4jNLBAncebYD0aImRMZJTbsngLWzCZgJTGxfRUjiM0rYCcx6eQ/sDiL
-        gIrEk737WEFsUYEIicM7ZkHVCEqcnPmEBcTmBKrfv7WFBWKBusSfeZeYIWxxiVtP5kMtlpfY
-        /nYO8wRGoVlI2mchaZmFpGUWkpYFjCyrGEVSS4tz03OLDfWKE3OLS/PS9ZLzczcxAuNo27Gf
-        m3cwXtoYfIhRgINRiYd3g9yRWCHWxLLiytxDjBIczEoivJwtQCHelMTKqtSi/Pii0pzU4kOM
-        pkDPTWSWEk3OB8Z4Xkm8oamhuYWlobmxubGZhZI4b4fAwRghgfTEktTs1NSC1CKYPiYOTqkG
-        RsHsZpaAZPWNXe/Vr79vnXa8WujmXkapxZcThZ3OFAv0SvBVhXDP3RPRrC7GNqNe2rHU4cCd
-        iL0HW9706Gy8UWEwu+KAbmm17Ld9Ydm3T374kvXZ3ynm+tJp6Sc6rLL9dPnruR44sDnc3Nz4
-        V3xZk+WkEhafW9u7lTaFG33NeTzp2L11ydkmSizFGYmGWsxFxYkAXMMIpbkCAAA=
-X-CMS-MailID: 20191108140612eucas1p152704f9fb95a6187f536beacd66097d7
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20191006143000epcas2p168872c0c7b1e1879e31931d3244dfd4d
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20191006143000epcas2p168872c0c7b1e1879e31931d3244dfd4d
-References: <CGME20191006143000epcas2p168872c0c7b1e1879e31931d3244dfd4d@epcas2p1.samsung.com>
-        <20191006142956.23360-1-colin.king@canonical.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-
-On 10/6/19 4:29 PM, Colin King wrote:
+On 10/6/19 8:29 AM, Colin King wrote:
 > From: Colin Ian King <colin.king@canonical.com>
 > 
 > Don't populate the const arrays on the stack but instead make them
 > static. Makes the object code smaller by 292 bytes.
 > 
 > Before:
->    text	   data	    bss	    dec	    hex	filename
->    6988	   3132	    128	  10248	   2808	drivers/ata/pata_artop.o
+>     text	   data	    bss	    dec	    hex	filename
+>     6988	   3132	    128	  10248	   2808	drivers/ata/pata_artop.o
 > 
 > After:
->    text	   data	    bss	    dec	    hex	filename
->    6536	   3292	    128	   9956	   26e4	drivers/ata/pata_artop.o
+>     text	   data	    bss	    dec	    hex	filename
+>     6536	   3292	    128	   9956	   26e4	drivers/ata/pata_artop.o
 > 
 > (gcc version 9.2.1, amd64)
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Applied, thanks.
 
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+-- 
+Jens Axboe
 
-> ---
-> 
-> V2: fix up commit message
-> 
-> ---
->  drivers/ata/pata_artop.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/pata_artop.c b/drivers/ata/pata_artop.c
-> index 3aa006c5ed0c..6bd2228bb6ff 100644
-> --- a/drivers/ata/pata_artop.c
-> +++ b/drivers/ata/pata_artop.c
-> @@ -100,7 +100,7 @@ static void artop6210_load_piomode(struct ata_port *ap, struct ata_device *adev,
->  {
->  	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
->  	int dn = adev->devno + 2 * ap->port_no;
-> -	const u16 timing[2][5] = {
-> +	static const u16 timing[2][5] = {
->  		{ 0x0000, 0x000A, 0x0008, 0x0303, 0x0301 },
->  		{ 0x0700, 0x070A, 0x0708, 0x0403, 0x0401 }
->  
-> @@ -154,7 +154,7 @@ static void artop6260_load_piomode (struct ata_port *ap, struct ata_device *adev
->  {
->  	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
->  	int dn = adev->devno + 2 * ap->port_no;
-> -	const u8 timing[2][5] = {
-> +	static const u8 timing[2][5] = {
->  		{ 0x00, 0x0A, 0x08, 0x33, 0x31 },
->  		{ 0x70, 0x7A, 0x78, 0x43, 0x41 }
->  
