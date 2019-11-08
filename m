@@ -1,50 +1,127 @@
-Return-Path: <SRS0=DDHy=Y7=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=U8wY=ZA=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.5 required=3.0 tests=FREEMAIL_REPLYTO_END_DIGIT,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CE21C5DF60
-	for <linux-ide@archiver.kernel.org>; Thu,  7 Nov 2019 15:09:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 650C8C5DF60
+	for <linux-ide@archiver.kernel.org>; Fri,  8 Nov 2019 12:08:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5A94F218AE
-	for <linux-ide@archiver.kernel.org>; Thu,  7 Nov 2019 15:09:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A589215EA
+	for <linux-ide@archiver.kernel.org>; Fri,  8 Nov 2019 12:08:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1573214902;
+	bh=gCbS15XtXj4oIuSuRwt5i3q+8lCfPki4Urq31VaAOrw=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=cup+WKojvklnivGChLGgLuUy+vGksOxx+LOp6hCiQR2GU7BILPd7CoUpgXQRPpr9x
+	 E80HpJiL/rPNi6atbkZahMgazyaH66V5DSFPUdA8xCgS7BiOElbC4R99xMuYFOCts7
+	 Dn1B2sHix6cIN22HWl0LqxDlVotlRM2U/A1yrqMI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388421AbfKGPJe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 7 Nov 2019 10:09:34 -0500
-Received: from [211.53.128.215] ([211.53.128.215]:49660 "EHLO MAIL.isd.co.kr"
-        rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2388220AbfKGPJe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 7 Nov 2019 10:09:34 -0500
-Received: from 192.168.1.3 (217.217.179.17) by MAIL.isd.co.kr (10.10.10.22)
- with Microsoft SMTP Server id 14.3.123.3; Fri, 8 Nov 2019 00:08:15 +0900
-Date:   Thu, 7 Nov 2019 16:08:14 +0100
-From:   Peter Wong <choimj@isd.co.kr>
-Reply-To: Peter Wong <pw178483@protonmail.com>
-To:     <linux-ide@vger.kernel.org>
-Message-ID: <28071375.22533.1573139296078.JavaMail.cash@211.53.128.215>
-Subject: Investment opportunity
+        id S2388760AbfKHLkf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 8 Nov 2019 06:40:35 -0500
+Received: from mail.kernel.org ([198.145.29.99]:53492 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388743AbfKHLkf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 8 Nov 2019 06:40:35 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id B512C21D7B;
+        Fri,  8 Nov 2019 11:40:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1573213234;
+        bh=gCbS15XtXj4oIuSuRwt5i3q+8lCfPki4Urq31VaAOrw=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=lkWm/IXwu+x/P7QCP4DAkt8FMR56ebrOLyNZWzlM9nvGS1vQY+imPo79CAsUQRaHb
+         /G9+LNxlGwNxKlCoifP3apOt4Al7WvqojpDVTCQk+azXee/IPv8jfMjxKoSmuh9MO6
+         WV0uMdpH1bSwC4soE+rLsvqOwFUpWEppdUW+4psc=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Suman Tripathi <stripathi@amperecomputing.com>,
+        Rameshwar Prasad Sahu <rameshwar.sahu@amperecomputing.com>,
+        Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
+        linux-ide@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 104/205] ata: Disable AHCI ALPM feature for Ampere Computing eMAG SATA
+Date:   Fri,  8 Nov 2019 06:36:11 -0500
+Message-Id: <20191108113752.12502-104-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191108113752.12502-1-sashal@kernel.org>
+References: <20191108113752.12502-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [217.217.179.17]
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Greetings,
+From: Suman Tripathi <stripathi@amperecomputing.com>
 
-Find attached email very confidential. reply for more details
+[ Upstream commit 20bdc376b427cb420836f39ee8f281ea85dbaeef ]
 
-Thanks.
-Peter Wong
+Due to hardware errata, Ampere Computing eMAG SATA can't support
+AHCI ALPM feature. This patch disables the AHCI ALPM feature for
+eMAG SATA.
 
+Signed-off-by: Suman Trpathi <stripathi@amperecomputing.com>
+Signed-off-by: Rameshwar Prasad Sahu <rameshwar.sahu@amperecomputing.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/ata/ahci_platform.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
-
-
-----------------------------------------------------
-This email was sent by the shareware version of Postman Professional.
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 46f0bd75eff79..cf1e0e18a7a98 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -33,6 +33,13 @@ static const struct ata_port_info ahci_port_info = {
+ 	.port_ops	= &ahci_platform_ops,
+ };
+ 
++static const struct ata_port_info ahci_port_info_nolpm = {
++	.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NO_LPM,
++	.pio_mask	= ATA_PIO4,
++	.udma_mask	= ATA_UDMA6,
++	.port_ops	= &ahci_platform_ops,
++};
++
+ static struct scsi_host_template ahci_platform_sht = {
+ 	AHCI_SHT(DRV_NAME),
+ };
+@@ -41,6 +48,7 @@ static int ahci_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_host_priv *hpriv;
++	const struct ata_port_info *port;
+ 	int rc;
+ 
+ 	hpriv = ahci_platform_get_resources(pdev,
+@@ -58,7 +66,11 @@ static int ahci_probe(struct platform_device *pdev)
+ 	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
+ 		hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
+ 
+-	rc = ahci_platform_init_host(pdev, hpriv, &ahci_port_info,
++	port = acpi_device_get_match_data(dev);
++	if (!port)
++		port = &ahci_port_info;
++
++	rc = ahci_platform_init_host(pdev, hpriv, port,
+ 				     &ahci_platform_sht);
+ 	if (rc)
+ 		goto disable_resources;
+@@ -85,6 +97,7 @@ static const struct of_device_id ahci_of_match[] = {
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
+ 
+ static const struct acpi_device_id ahci_acpi_match[] = {
++	{ "APMC0D33", (unsigned long)&ahci_port_info_nolpm },
+ 	{ ACPI_DEVICE_CLASS(PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff) },
+ 	{},
+ };
+-- 
+2.20.1
 
