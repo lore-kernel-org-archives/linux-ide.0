@@ -1,228 +1,173 @@
-Return-Path: <SRS0=U8wY=ZA=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=qlmu=ZE=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55B5CC5DF60
-	for <linux-ide@archiver.kernel.org>; Fri,  8 Nov 2019 14:40:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CD78C43331
+	for <linux-ide@archiver.kernel.org>; Tue, 12 Nov 2019 05:17:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1BF94214DB
-	for <linux-ide@archiver.kernel.org>; Fri,  8 Nov 2019 14:40:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E97872067B
+	for <linux-ide@archiver.kernel.org>; Tue, 12 Nov 2019 05:17:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="isAkNQJu"
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="MPN0oaiM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727109AbfKHOkn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 8 Nov 2019 09:40:43 -0500
-Received: from mailout2.w1.samsung.com ([210.118.77.12]:43741 "EHLO
-        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727108AbfKHOkn (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 8 Nov 2019 09:40:43 -0500
-Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20191108144042euoutp028e4518fdd2851f2f90ac827809f4404e~VNu5eTlBh1297912979euoutp02J
-        for <linux-ide@vger.kernel.org>; Fri,  8 Nov 2019 14:40:42 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20191108144042euoutp028e4518fdd2851f2f90ac827809f4404e~VNu5eTlBh1297912979euoutp02J
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1573224042;
-        bh=FgyVFyuCJHWS+qKVf2bnwTdN8Rtc4PgvOj9/7MINFoo=;
-        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=isAkNQJugGMm/PP/gcNnzlZGm2sIqBg/pXvVDSYMLN9+B+Pr0T50HNNhqlEIgdA77
-         D23JGzpthdwvaNGI8KZf9Gy1SN3X/LVrQ+WP9E5oQMO/9E5YbYNBjldsk+gAfK/9p/
-         97qpn5y4VG5KPguGAUuOMcPg2FZld6Vj6u4cC2F0=
-Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20191108144042eucas1p11915113d458b62a08bafa3c8c7423875~VNu5RiSp52585925859eucas1p1r;
-        Fri,  8 Nov 2019 14:40:42 +0000 (GMT)
-Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
-        eusmges1new.samsung.com (EUCPMTA) with SMTP id D1.5C.04469.96E75CD5; Fri,  8
-        Nov 2019 14:40:41 +0000 (GMT)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20191108144041eucas1p184de963ca635a6d6325903bf960b1652~VNu4_mk802593625936eucas1p1m;
-        Fri,  8 Nov 2019 14:40:41 +0000 (GMT)
-Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
-        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20191108144041eusmtrp1cd3a7901aa05aeda9a3daa9efdac2cfe~VNu4971TZ1442914429eusmtrp1b;
-        Fri,  8 Nov 2019 14:40:41 +0000 (GMT)
-X-AuditID: cbfec7f2-569ff70000001175-5a-5dc57e6964c7
-Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id 55.B9.04117.96E75CD5; Fri,  8
-        Nov 2019 14:40:41 +0000 (GMT)
-Received: from [106.120.51.71] (unknown [106.120.51.71]) by
-        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20191108144041eusmtip245f93ed2e2edcb2559c51f012b5153e2~VNu4lB6L71069710697eusmtip2D;
-        Fri,  8 Nov 2019 14:40:41 +0000 (GMT)
-Subject: Re: [PATCH 14/46] ARM: pxa: use pdev resource for palmld mmio
-To:     Arnd Bergmann <arnd@arndb.de>
-Cc:     Daniel Mack <daniel@zonque.org>,
-        Haojian Zhuang <haojian.zhuang@gmail.com>,
-        Robert Jarzmik <robert.jarzmik@free.fr>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
-From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <490c888b-a034-c883-2f6e-d8a08753ef4d@samsung.com>
-Date:   Fri, 8 Nov 2019 15:40:36 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
-        Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <20191018154201.1276638-14-arnd@arndb.de>
+        id S1725775AbfKLFRK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 12 Nov 2019 00:17:10 -0500
+Received: from mail-eopbgr80054.outbound.protection.outlook.com ([40.107.8.54]:31872
+        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725283AbfKLFRK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 12 Nov 2019 00:17:10 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=jygputyZUho0YKieZ+H3ayF/l8UWtrY/eLdh1UL95Zhtom0XxXnooE9cMWJFpY0nq0KRJMCMBn8BbhwOypmZwpdrQaoGE8QCNrI44fkL/oGKrBbFwDJJjO9t/qz8G6SdIz8To/w02aNSE9FGHNn3jkaE66d1SHZ3/zI6GsZd6S3+w0hP+fDkQwlfB4vrKg75xqb5qZ8RtJ89uyy/YzPncgMFVZdn71CfX7h8xBTKbL2CbBwtuH3UnGSKZAR0WMavdw89HquUr1pqP7MzQD2kpPR69PMQZS0ehoKVo1xklvXuNOFjN0eXmlZKA5UUl9E+fo719wSFW+jHTSBLX5RDVA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=XPhhHxAHP+UuD1NdFA221pqluDn6X2kp4Z2mQ7QD8MI=;
+ b=jRSjPPlmg41xW9fHmeCoE4sRUCACX8PFOSZfvf4RvatE0q0LE0Md6HAfxykYSNXrqZphn0Z01TNaZnx1iyrKrvztFV/durFS1N0LEA6XJM0XOi7CjjKUcbnsSyjcgahi/M2DLZtYgZtXyKV26XSvspIOmNhZvnLiXAlSgA2+EoczSRRRbvufiQMUBHBohDgrU5ooE383/E5P19QE4x37Spb/psXI1KSKQHlAyiIoNBSqVzzwsvzXwb3DGMORGN/OY4cShOUm4tyGQf1olRa7R05VsopZMe0umNojcGnv5SivnB1xX6EChIkygdf8y3FQjzWOj0Env3EmqZy/S+MAzw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=XPhhHxAHP+UuD1NdFA221pqluDn6X2kp4Z2mQ7QD8MI=;
+ b=MPN0oaiMsiGCv9ieqlagi0rNh47sVA+qGOrKDE2HGz7VctOY5JLpyDl3kY9cUN72La92S1JZ/8zRBCN3JFNZ3vZagJWMztf+5Wj/1iP4p8PZDFohpP6KFiHqcFfCey3Xyi1/vbbjngWCbqqgL5BjvMiOv1DDtyDIWdCCBpGKSnY=
+Received: from AM0PR04MB4481.eurprd04.prod.outlook.com (52.135.147.15) by
+ AM0PR04MB6337.eurprd04.prod.outlook.com (20.179.253.213) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2430.24; Tue, 12 Nov 2019 05:16:26 +0000
+Received: from AM0PR04MB4481.eurprd04.prod.outlook.com
+ ([fe80::f16d:a26a:840:f97c]) by AM0PR04MB4481.eurprd04.prod.outlook.com
+ ([fe80::f16d:a26a:840:f97c%4]) with mapi id 15.20.2430.027; Tue, 12 Nov 2019
+ 05:16:26 +0000
+From:   Peng Fan <peng.fan@nxp.com>
+To:     "axboe@kernel.dk" <axboe@kernel.dk>,
+        "shawnguo@kernel.org" <shawnguo@kernel.org>,
+        "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>,
+        "hdegoede@redhat.com" <hdegoede@redhat.com>,
+        "tj@kernel.org" <tj@kernel.org>
+CC:     "kernel@pengutronix.de" <kernel@pengutronix.de>,
+        "festevam@gmail.com" <festevam@gmail.com>,
+        dl-linux-imx <linux-imx@nxp.com>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Richard Zhu <hongxing.zhu@nxp.com>, Peng Fan <peng.fan@nxp.com>
+Subject: [PATCH] ahci: imx: i.MX8QM: fix error handling
+Thread-Topic: [PATCH] ahci: imx: i.MX8QM: fix error handling
+Thread-Index: AQHVmRhVtJOcbRZcDU+JyEEqGXtClA==
+Date:   Tue, 12 Nov 2019 05:16:26 +0000
+Message-ID: <1573535674-25364-1-git-send-email-peng.fan@nxp.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA02SbUhTYRTHe3ZfdjecXKfpSc1opJGRLxR20ZISq0ufjKCssJx5mUM3ZXOW
-        BiUqaiJamqRDKCJdGup8n9qH1HxjZC+alCjMl0KkmenKLLWcV8lvv/M///Oc/4GHwqSdhDul
-        VCdzGrU8QUaK8Zbe5cFDyts9UQFWC8OsFvUKmefjhSSTsTqLM29rjzIPVgwCpmFqhGB6TZMC
-        Zqi9nGT0X51PiNg/v4sQW1i7SLBt+nEhO/Rax46NvCDZxqd32MUGL7a1w4BHUJfFx2K5BGUK
-        p/EPjRbHZVrNRFKz1825XwtYOirZlYdEFNBHwNi0SuQhMSWlnyGob/i+WdgQmO9WkXyxiKBg
-        fgDfGunqNuB8w4DA2Lck4AsrgsyeGqHd5UyfhjF9NmFnF3ovlMx8weyM0ZUCKMyKsTNJB8P9
-        nGpkZwkdCqW2pQ0PTu+Dir/TpJ130pGwYOkmeI8TDJRNb6QQ0UGQVWMW8m+6wej0IwHPe6DV
-        Wo7ZAwE9IoTR0s+bscOhonQC49kZZvuahDx7grk4H+cHahGs5s5sTrciMBSvkbwrBLr73q3H
-        oNZXHIC6dn9ePgnWMZPALgPtCB+tTnwIRyhqeYjxsgRys6W82weMlUZya21eWxV2D8n0207T
-        bztHv+0c/f+9jxFejdw4nVal4LSBau6Gn1au0urUCr/riaoGtP6xzGt9Cyb0431MF6IpJHOQ
-        RHq+ipIS8hRtqqoLAYXJXCSirHVJEitPTeM0idc0ugRO24U8KFzmJrm1w3JFSivkyVw8xyVx
-        mq2ugBK5p6P4oDNj3uUO1DeTasXS3QnSotqzTSnVveTBeczY4u0TXr92PMQ0obyq+en7SXxh
-        rkwSHO7wZtDjSfnkxYKE/dGHk6tybP75daxrhVv/uYwPtpzGZQXhE6dUTK9MNYfRutQ02hYh
-        w9mJaHVAfyM5vFz38lLYqfMdnWddrbstwzJcGycP9MU0Wvk/szZfdFQDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrEIsWRmVeSWpSXmKPExsVy+t/xe7qZdUdjDa5N07T4O+kYu8Xqu/1s
-        Fk1/X7FYXFhnbjHlz3Imi02Pr7FaHNvxiMni8q45bBaz3gg7cHr8/jWJ0aN/3WdWj52z7rJ7
-        XD5b6nHn2h42j81L6j0+b5Lz2L57OUsAR5SeTVF+aUmqQkZ+cYmtUrShhZGeoaWFnpGJpZ6h
-        sXmslZGpkr6dTUpqTmZZapG+XYJeRvPb06wFW+Uq3v34xNzAOFWyi5GTQ0LAROLQ4eUsXYxc
-        HEICSxklzq7awtjFyAGUkJE4vr4MokZY4s+1LjaImteMEgfmnmMGSQgLuEncmdXGCmKLCChK
-        TH3xjBmkiFlgGZPE/7tLGUESQgJbGCW+rFQFsdkErCQmtq8Ci/MK2EnM+PIdbBCLgIrE0v9P
-        2EBsUYEIicM7ZkHVCEqcnPmEBcTmFDCTaFl7mh3EZhZQl/gz7xIzhC0ucevJfCYIW15i+9s5
-        zBMYhWYhaZ+FpGUWkpZZSFoWMLKsYhRJLS3OTc8tNtIrTswtLs1L10vOz93ECIzPbcd+btnB
-        2PUu+BCjAAejEg/vi+qjsUKsiWXFlbmHGCU4mJVEeDlbjsQK8aYkVlalFuXHF5XmpBYfYjQF
-        em4is5Rocj4wdeSVxBuaGppbWBqaG5sbm1koifN2CByMERJITyxJzU5NLUgtgulj4uCUamBs
-        y7v+aWX1z8QbXMWnLxVpsIiqNDopn/a4pWVin2gm5c/Y0RIVUZ51UVb85+S+gHsmmafLbKVu
-        xZ8v6/0eKtkbWy5e5tkhKSnYsHjWfLktvg5VTvZ3P/9uLmhzMDLrbDvBrVlV8VqKK6KD4+Ci
-        VXsyT51TTU3Yv+7FbV2lnPZmzxW8IZ5mSizFGYmGWsxFxYkAa5A+X+UCAAA=
-X-CMS-MailID: 20191108144041eucas1p184de963ca635a6d6325903bf960b1652
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20191018154230epcas4p3a961777ba34c3eaa7d416665f934185d
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20191018154230epcas4p3a961777ba34c3eaa7d416665f934185d
-References: <20191018154052.1276506-1-arnd@arndb.de>
-        <CGME20191018154230epcas4p3a961777ba34c3eaa7d416665f934185d@epcas4p3.samsung.com>
-        <20191018154201.1276638-14-arnd@arndb.de>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: git-send-email 2.7.4
+x-clientproxiedby: HK0PR03CA0011.apcprd03.prod.outlook.com
+ (2603:1096:203:2e::23) To AM0PR04MB4481.eurprd04.prod.outlook.com
+ (2603:10a6:208:70::15)
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=peng.fan@nxp.com; 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-originating-ip: [119.31.174.66]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 0bf503f8-df2c-472f-db8c-08d7672f77c4
+x-ms-traffictypediagnostic: AM0PR04MB6337:|AM0PR04MB6337:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <AM0PR04MB633777E56C4BF490F5401FFF88770@AM0PR04MB6337.eurprd04.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:4502;
+x-forefront-prvs: 021975AE46
+x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(4636009)(39860400002)(396003)(136003)(376002)(346002)(366004)(51234002)(199004)(189003)(6436002)(66556008)(2906002)(50226002)(66476007)(8936002)(66946007)(81156014)(6486002)(81166006)(3846002)(6116002)(99286004)(66446008)(64756008)(316002)(54906003)(110136005)(5660300002)(8676002)(66066001)(478600001)(14454004)(52116002)(71200400001)(6512007)(4326008)(71190400001)(5024004)(14444005)(256004)(25786009)(86362001)(36756003)(305945005)(7736002)(44832011)(486006)(186003)(2201001)(2616005)(6506007)(476003)(2501003)(102836004)(26005)(386003)(7416002);DIR:OUT;SFP:1101;SCL:1;SRVR:AM0PR04MB6337;H:AM0PR04MB4481.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+received-spf: None (protection.outlook.com: nxp.com does not designate
+ permitted sender hosts)
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: KY0eLOBtDkdqWGEXEVP3gcz69Zc71CC6EALMx9hsCVPipM+WoU21JIAEa3D0Bo2uxI484UkV9xkaR1FVlg93aqfw7ahuafitjIl7VC/flH4o4ymqVT1/n9siEcqNDIrtLqY7EEdu7c9UfSl+YQCr349WCR93e5SS2OWt226Ns2S90boLFwqKjZVbzk6F2ZlSRAVRmieWwlEejTBLoiHliRJ4Eic+yYQNvq8ubTbSbG0GlsNJHXbYQNcPLM86zYXPclXtf5iGa5Zk2LFn15B5nMzV7UAlep5A1x3shj5ii7FhRYKzM9g3h0Y5hMd50jrRxWD1hrBgyAyzl7tiefzgURQJAQ3AheR6BVFaLizWNRKSWY3aS2/iOMFjulsAOrtlbnEqqsmiPtLKwKp1jt5Htd5MtqSNoW/K6op5qwPAPNLAQ90om7LLvFOvOaRND+ymuU0sekSNoMk0Q6hbQfYsnw==
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0bf503f8-df2c-472f-db8c-08d7672f77c4
+X-MS-Exchange-CrossTenant-originalarrivaltime: 12 Nov 2019 05:16:26.9226
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: Z5Ga1WKMzW5BIitRM6PH3iwEPLs/xjcw0J7KGvJCJkJSwWO/e3WiR6OUnJk+wsraL17L2lSLlBqUqiKrGB192g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR04MB6337
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+From: Peng Fan <peng.fan@nxp.com>
 
-On 10/18/19 5:41 PM, Arnd Bergmann wrote:
-> The palmld header is almost unused in drivers, the only
-> remaining thing now is the PATA device address, which should
-> really be passed as a resource.
-> 
-> Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Cc: linux-ide@vger.kernel.org
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+When imx8_sata_enable failed, need to jump to path disable_clk.
+Otherwise there will be kernel dump as following.
+    Workqueue: events deferred_probe_work_func
+    pstate: 60000005 (nZCv daif -PAN -UAO)
+    pc : _regulator_put.part.27+0x34/0x158
+    lr : _regulator_put.part.27+0x2c/0x158
+    sp : ffff80001286bb00
+    x29: ffff80001286bb00 x28: 0000000000000000
+    x27: 0000000000000000 x26: ffff8000100fddf0
+    x25: 0000000000000000 x24: 000000000000001b
+    x23: ffff80001286bbd8 x22: ffff0008ea007600
+    x21: ffff0008ea0104f0 x20: ffff0008ea007e00
+    x19: ffff8000120753e8 x18: 0000000000000010
+    x17: 00000000eefd8a54 x16: 00000000deadbeef
+    x15: ffffffffffffffff x14: ffff800011f198c8
+    x13: 0000000000000000 x12: 0000000000000001
+    x11: 0000000000000000 x10: 0000000000000990
+    x9 : ffff80001286b870 x8 : ffff0008eb99c0f0
+    x7 : ffff0008eb99b880 x6 : ffff0008eb99b7c0
+    x5 : 00000000000001df x4 : 0000000000001adb
+    x3 : ffff8008de089000 x2 : a4c383a3cc862400
+    x1 : 0000000000000000 x0 : 0000000000000001
+    Call trace:
+     _regulator_put.part.27+0x34/0x158
+     regulator_put+0x34/0x48
+     ahci_platform_put_resources+0x64/0xd0
+     release_nodes+0x1b0/0x220
+     devres_release_all+0x34/0x50
+     really_probe+0x1b8/0x308
+     driver_probe_device+0x54/0xe8
+     __device_attach_driver+0x80/0xb8
+     bus_for_each_drv+0x78/0xc8
+     __device_attach+0xd4/0x130
+     device_initial_probe+0x10/0x18
+     bus_probe_device+0x90/0x98
+     deferred_probe_work_func+0x64/0x98
+     process_one_work+0x1e0/0x358
+     worker_thread+0x208/0x488
+     kthread+0x118/0x120
+     ret_from_fork+0x10/0x18
 
-Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Signed-off-by: Peng Fan <peng.fan@nxp.com>
+---
+ drivers/ata/ahci_imx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index bfc617cc8ac5..1d6a5ef78259 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -692,6 +692,8 @@ static int imx_sata_enable(struct ahci_host_priv *hpriv=
+)
+ 		}
+ 	} else if (imxpriv->type =3D=3D AHCI_IMX8QM) {
+ 		ret =3D imx8_sata_enable(hpriv);
++		if (ret)
++			goto disable_clk;
+ 	}
+=20
+ 	usleep_range(1000, 2000);
+--=20
+2.16.4
 
-> ---
->  arch/arm/mach-pxa/palmld-pcmcia.c             |  3 ++-
->  arch/arm/mach-pxa/palmld.c                    | 12 +++++++++---
->  arch/arm/mach-pxa/{include/mach => }/palmld.h |  2 +-
->  drivers/ata/pata_palmld.c                     |  3 +--
->  4 files changed, 13 insertions(+), 7 deletions(-)
->  rename arch/arm/mach-pxa/{include/mach => }/palmld.h (98%)
-> 
-> diff --git a/arch/arm/mach-pxa/palmld-pcmcia.c b/arch/arm/mach-pxa/palmld-pcmcia.c
-> index 07e0f7438db1..720294a50864 100644
-> --- a/arch/arm/mach-pxa/palmld-pcmcia.c
-> +++ b/arch/arm/mach-pxa/palmld-pcmcia.c
-> @@ -13,9 +13,10 @@
->  #include <linux/gpio.h>
->  
->  #include <asm/mach-types.h>
-> -#include <mach/palmld.h>
->  #include <pcmcia/soc_common.h>
->  
-> +#include "palmld.h"
-> +
->  static struct gpio palmld_pcmcia_gpios[] = {
->  	{ GPIO_NR_PALMLD_PCMCIA_POWER,	GPIOF_INIT_LOW,	"PCMCIA Power" },
->  	{ GPIO_NR_PALMLD_PCMCIA_RESET,	GPIOF_INIT_HIGH,"PCMCIA Reset" },
-> diff --git a/arch/arm/mach-pxa/palmld.c b/arch/arm/mach-pxa/palmld.c
-> index d85146957004..d821606ce0b5 100644
-> --- a/arch/arm/mach-pxa/palmld.c
-> +++ b/arch/arm/mach-pxa/palmld.c
-> @@ -29,8 +29,8 @@
->  #include <asm/mach/map.h>
->  
->  #include "pxa27x.h"
-> +#include "palmld.h"
->  #include <linux/platform_data/asoc-pxa.h>
-> -#include <mach/palmld.h>
->  #include <linux/platform_data/mmc-pxamci.h>
->  #include <linux/platform_data/video-pxafb.h>
->  #include <linux/platform_data/irda-pxaficp.h>
-> @@ -279,9 +279,15 @@ static inline void palmld_leds_init(void) {}
->   * HDD
->   ******************************************************************************/
->  #if defined(CONFIG_PATA_PALMLD) || defined(CONFIG_PATA_PALMLD_MODULE)
-> +static struct resource palmld_ide_resources[] = {
-> +	DEFINE_RES_MEM(PALMLD_IDE_PHYS, 0x1000),
-> +};
-> +
->  static struct platform_device palmld_ide_device = {
-> -	.name	= "pata_palmld",
-> -	.id	= -1,
-> +	.name		= "pata_palmld",
-> +	.id		= -1,
-> +	.resource	= palmld_ide_resources,
-> +	.num_resources	= ARRAY_SIZE(palmld_ide_resources),
->  };
->  
->  static struct gpiod_lookup_table palmld_ide_gpio_table = {
-> diff --git a/arch/arm/mach-pxa/include/mach/palmld.h b/arch/arm/mach-pxa/palmld.h
-> similarity index 98%
-> rename from arch/arm/mach-pxa/include/mach/palmld.h
-> rename to arch/arm/mach-pxa/palmld.h
-> index 99a6d8b3a1e3..ee3bc15b71a2 100644
-> --- a/arch/arm/mach-pxa/include/mach/palmld.h
-> +++ b/arch/arm/mach-pxa/palmld.h
-> @@ -9,7 +9,7 @@
->  #ifndef _INCLUDE_PALMLD_H_
->  #define _INCLUDE_PALMLD_H_
->  
-> -#include "irqs.h" /* PXA_GPIO_TO_IRQ */
-> +#include <mach/irqs.h> /* PXA_GPIO_TO_IRQ */
->  
->  /** HERE ARE GPIOs **/
->  
-> diff --git a/drivers/ata/pata_palmld.c b/drivers/ata/pata_palmld.c
-> index 2448441571ed..400e65190904 100644
-> --- a/drivers/ata/pata_palmld.c
-> +++ b/drivers/ata/pata_palmld.c
-> @@ -25,7 +25,6 @@
->  #include <linux/gpio/consumer.h>
->  
->  #include <scsi/scsi_host.h>
-> -#include <mach/palmld.h>
->  
->  #define DRV_NAME "pata_palmld"
->  
-> @@ -63,7 +62,7 @@ static int palmld_pata_probe(struct platform_device *pdev)
->  		return -ENOMEM;
->  
->  	/* remap drive's physical memory address */
-> -	mem = devm_ioremap(dev, PALMLD_IDE_PHYS, 0x1000);
-> +	mem = devm_platform_ioremap_resource(pdev, 0);
->  	if (!mem)
->  		return -ENOMEM;
->  
