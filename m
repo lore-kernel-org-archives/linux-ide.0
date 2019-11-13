@@ -1,50 +1,91 @@
-Return-Path: <SRS0=qlmu=ZE=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=nA6N=ZF=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.5 required=3.0 tests=FREEMAIL_REPLYTO_END_DIGIT,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACF9CC43331
-	for <linux-ide@archiver.kernel.org>; Tue, 12 Nov 2019 17:59:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5001BC43331
+	for <linux-ide@archiver.kernel.org>; Wed, 13 Nov 2019 01:56:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8E33B21A49
-	for <linux-ide@archiver.kernel.org>; Tue, 12 Nov 2019 17:59:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E3C7222CF
+	for <linux-ide@archiver.kernel.org>; Wed, 13 Nov 2019 01:56:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1573610206;
+	bh=b9cOOqN6mQFnZs78FIgD6ZunfWBisXdwsKiH6hJNCbA=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=HCXoJCPP8nE7dUP8SLZPP9N+gk853WYzcev05zrq0sdwPdvJ62Tu+E50MOT4nmilm
+	 1uV7mYnUTYc3VzGs6le9WGNENqWdOETtL9f3WkiaK7I3TF/nkJ/vihqhHdkoUnEJy2
+	 /gTAQxGSdHuGkDciRMnEnPXYGs7h2NcN+8DycTmg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726912AbfKLR7o (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 12 Nov 2019 12:59:44 -0500
-Received: from [211.53.128.215] ([211.53.128.215]:29963 "EHLO MAIL.isd.co.kr"
-        rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726964AbfKLR7o (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 12 Nov 2019 12:59:44 -0500
-Received: from 192.168.1.163 (217.217.179.17) by MAIL.isd.co.kr (10.10.10.22)
- with Microsoft SMTP Server id 14.3.123.3; Wed, 13 Nov 2019 02:57:10 +0900
-Date:   Tue, 12 Nov 2019 18:57:03 +0100
-From:   Peter Wong <choimj@isd.co.kr>
-Reply-To: Peter Wong <pw178484@gmail.com>
-To:     <linux-ide@vger.kernel.org>
-Message-ID: <29088443.155142.1573581434311.JavaMail.cash@webmail.isd.co.kr>
-Subject: Investment opportunity
+        id S1729576AbfKMB4o (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 12 Nov 2019 20:56:44 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49316 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729567AbfKMB4o (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 12 Nov 2019 20:56:44 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id DA48A222CF;
+        Wed, 13 Nov 2019 01:56:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1573610203;
+        bh=b9cOOqN6mQFnZs78FIgD6ZunfWBisXdwsKiH6hJNCbA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=DRIP7zaT2FtK1op7whyqP2OjnpUqOjUlC7XEpag1ReyJ0PV36x3e/RQeCYgQSNRBC
+         8xp87GrfZt7LylTz6Ns8l//1idhn1CmhUkvZ9VBY6+WiN1euUHdVpApJzKDoTT4G+R
+         RH8bFh34cfJyQwozqpy9hNWqJ+gnUp4R8X1AfHME=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Florian Fainelli <f.fainelli@gmail.com>,
+        Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
+        linux-ide@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 015/115] ata: ahci_brcm: Allow using driver or DSL SoCs
+Date:   Tue, 12 Nov 2019 20:54:42 -0500
+Message-Id: <20191113015622.11592-15-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191113015622.11592-1-sashal@kernel.org>
+References: <20191113015622.11592-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [217.217.179.17]
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Greetings,
+From: Florian Fainelli <f.fainelli@gmail.com>
 
-Find attached email very confidential. reply for more details
+[ Upstream commit 7fb44929cb0e5cdcde143e1ca3ca57b5b8247db0 ]
 
-Thanks.
-Peter Wong
+The Broadcom STB AHCI controller is the same as the one found on DSL
+SoCs, so we will utilize the same driver on these systems as well.
 
+Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/ata/Kconfig | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-
-
-----------------------------------------------------
-This email was sent by the shareware version of Postman Professional.
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index cb5339166563e..229a5ccd6b73b 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -102,7 +102,8 @@ config SATA_AHCI_PLATFORM
+ 
+ config AHCI_BRCM
+ 	tristate "Broadcom AHCI SATA support"
+-	depends on ARCH_BRCMSTB || BMIPS_GENERIC || ARCH_BCM_NSP
++	depends on ARCH_BRCMSTB || BMIPS_GENERIC || ARCH_BCM_NSP || \
++		   ARCH_BCM_63XX
+ 	help
+ 	  This option enables support for the AHCI SATA3 controller found on
+ 	  Broadcom SoC's.
+-- 
+2.20.1
 
