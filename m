@@ -4,48 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82CCAC17440
-	for <linux-ide@archiver.kernel.org>; Wed, 13 Nov 2019 02:09:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BD3EC17440
+	for <linux-ide@archiver.kernel.org>; Wed, 13 Nov 2019 02:09:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5357C222CD
-	for <linux-ide@archiver.kernel.org>; Wed, 13 Nov 2019 02:09:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A80C206B6
+	for <linux-ide@archiver.kernel.org>; Wed, 13 Nov 2019 02:09:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573610943;
-	bh=JZdrSf66McTwmVPyGVXRXf/zpqf72r7V9/3MkaYOAbA=;
+	s=default; t=1573610951;
+	bh=x0MvYd0gbLXS3k9ZgjNkV36oD44hq2GP9hNJk1Cizb4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=ZG23OdU+/xdspALwszG6yVU22+SqjxBEP+KRlZJWnWUbBwJjf9WgssHiI/Y2J1ygu
-	 QdWcHrk6YGC9O3O50xVqeNGz1Gjs15TkF3jmbfa5NJXBXphj8IPf3sBkqkNU7DTxOL
-	 RSVA0vH8w4QVCI+Lf1CF/V7dN1eCevIZc3ZjR5Q0=
+	b=SXRVvfOrjy7FW18+59CmaM9t5Yp4hEmty5QU7n9zZx8iaSSL44eR/ICi9HPcxHlB0
+	 n5FkkXZVeoe7i8zyv72dr8Ynbeui9miDF6c+NtLHVOaJRJUkjqbm30b8w+wnQel3CJ
+	 QZ95ul1eMbh6cTAUwRN2cOFHeirM2W4ScaNVmCMM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728320AbfKMCJC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 12 Nov 2019 21:09:02 -0500
-Received: from mail.kernel.org ([198.145.29.99]:54604 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729407AbfKMB7s (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        id S1727721AbfKMB7s (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Tue, 12 Nov 2019 20:59:48 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54560 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729317AbfKMB7r (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 12 Nov 2019 20:59:47 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0E453222CF;
-        Wed, 13 Nov 2019 01:59:46 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 04B4522474;
+        Wed, 13 Nov 2019 01:59:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573610387;
-        bh=JZdrSf66McTwmVPyGVXRXf/zpqf72r7V9/3MkaYOAbA=;
+        s=default; t=1573610386;
+        bh=x0MvYd0gbLXS3k9ZgjNkV36oD44hq2GP9hNJk1Cizb4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=TxR/OFpCDoy53maRjsUukBnMd8txkRj6hZ4aOBqhKKVD01D28y/Y0M4hsuIpjfLl7
-         BCjK/dLsIfZdpCj/8wIF7rbiXeAge5SdTjbI3KC11QqxfIPThvFHnDvYr7uHMCw1nT
-         LHguDND+MhR/V1OySLNRVDNqB+ZkEaqBfpnFQYIo=
+        b=I9RmuJFJ48x73FkUNTAcDJWGb82ySp7pOukPI6dVZ5KqWA/PLFdSpJgSzI1OxMQzd
+         QWmVLXCNUQps7NbYEG8u+lZTn4LQ3gkMwXxJ/R5wuQBkFG4GYs5/H6l/JQ/vSkDE2P
+         aRNnbvscJuZMaRC1tGWG1kuDGZnoRznHAk7i6os4=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Florian Fainelli <f.fainelli@gmail.com>,
         Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
         linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 10/68] ata: ahci_brcm: Allow using driver or DSL SoCs
-Date:   Tue, 12 Nov 2019 20:58:34 -0500
-Message-Id: <20191113015932.12655-10-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 09/68] ata: ahci_brcm: Match BCM63138 compatible strings
+Date:   Tue, 12 Nov 2019 20:58:33 -0500
+Message-Id: <20191113015932.12655-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191113015932.12655-1-sashal@kernel.org>
 References: <20191113015932.12655-1-sashal@kernel.org>
@@ -60,32 +60,30 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 From: Florian Fainelli <f.fainelli@gmail.com>
 
-[ Upstream commit 7fb44929cb0e5cdcde143e1ca3ca57b5b8247db0 ]
+[ Upstream commit fb8506f15f2e394f5f648575cf48a26e8744390c ]
 
-The Broadcom STB AHCI controller is the same as the one found on DSL
-SoCs, so we will utilize the same driver on these systems as well.
+Match the "brcm,bcm63138-ahci" compatible string in order to allow this
+driver to probe on such platforms.
 
 Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
 Signed-off-by: Jens Axboe <axboe@kernel.dk>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ata/Kconfig | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/ata/ahci_brcm.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 5d16fc4fa46c7..a8d4f4b5a77eb 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -100,7 +100,8 @@ config SATA_AHCI_PLATFORM
- 
- config AHCI_BRCM
- 	tristate "Broadcom AHCI SATA support"
--	depends on ARCH_BRCMSTB || BMIPS_GENERIC || ARCH_BCM_NSP
-+	depends on ARCH_BRCMSTB || BMIPS_GENERIC || ARCH_BCM_NSP || \
-+		   ARCH_BCM_63XX
- 	help
- 	  This option enables support for the AHCI SATA3 controller found on
- 	  Broadcom SoC's.
+diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+index 6f8a7341fa08a..e0efeccd9c118 100644
+--- a/drivers/ata/ahci_brcm.c
++++ b/drivers/ata/ahci_brcm.c
+@@ -302,6 +302,7 @@ static struct scsi_host_template ahci_platform_sht = {
+ static const struct of_device_id ahci_of_match[] = {
+ 	{.compatible = "brcm,bcm7425-ahci", .data = (void *)BRCM_SATA_BCM7425},
+ 	{.compatible = "brcm,bcm7445-ahci", .data = (void *)BRCM_SATA_BCM7445},
++	{.compatible = "brcm,bcm63138-ahci", .data = (void *)BRCM_SATA_BCM7445},
+ 	{.compatible = "brcm,bcm-nsp-ahci", .data = (void *)BRCM_SATA_NSP},
+ 	{},
+ };
 -- 
 2.20.1
 
