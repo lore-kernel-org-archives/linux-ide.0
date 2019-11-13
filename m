@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF8EEC43331
-	for <linux-ide@archiver.kernel.org>; Wed, 13 Nov 2019 02:04:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A63FCC17441
+	for <linux-ide@archiver.kernel.org>; Wed, 13 Nov 2019 02:08:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 86C49206B6
-	for <linux-ide@archiver.kernel.org>; Wed, 13 Nov 2019 02:04:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D5EC21783
+	for <linux-ide@archiver.kernel.org>; Wed, 13 Nov 2019 02:08:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573610675;
+	s=default; t=1573610887;
 	bh=l51evxqU8zJCOrGtKLHrLz9etFFXDJe12qIraGCuN0U=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=mFTQTWc4DswXayySQMSYcUp1BqYxL09K1Q+ljgsNMuQ1njMA5jNvj2KDZ5pVV3OW/
-	 sqd6cKLc2hI1VgcJVfVk1nT6OYTP2BqZpuF51ZiMh46lfbz6zCOnLO1gy4Ll6ctNi5
-	 ac4a3Ra4ozemFm4PhL99kLJywwVFAyuy0AIy3G1A=
+	b=sLPOgv+g4yVsp8N6ThFeZ5Qg40Is/O1BYBF5Xmqt1pRHkI3VBMCJiTRp+VJWAnMDs
+	 kCfpElqXHVNIXgA6wQ2htHfGMoMiVGTxZzxZNyE54arVhZr9xA2uwCM5lGvQ/0Lfne
+	 oNPWczUAjTPqaCJjkQKgI6DHOkNNtpOXGVVnrU+s=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730932AbfKMCCD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 12 Nov 2019 21:02:03 -0500
-Received: from mail.kernel.org ([198.145.29.99]:58308 "EHLO mail.kernel.org"
+        id S1727590AbfKMCH6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 12 Nov 2019 21:07:58 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55318 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730003AbfKMCCD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 12 Nov 2019 21:02:03 -0500
+        id S1730443AbfKMCAO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 12 Nov 2019 21:00:14 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DDFAD20674;
-        Wed, 13 Nov 2019 02:02:00 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5622922469;
+        Wed, 13 Nov 2019 02:00:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573610521;
+        s=default; t=1573610413;
         bh=l51evxqU8zJCOrGtKLHrLz9etFFXDJe12qIraGCuN0U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=M+GK5ppL8zswQdRQHHRmgPUs1MuMby4YnrLM4lUts4N089Tftwihv7Q4h9YA/xInV
-         AaaRObA3XKz33be77Sh/R7r8f7Qi+6V1Ux5P3BTHd8DyvYTsi0m5KdzBo7bUrKoCgY
-         LKreoyS6NkdtnZ5CUMYypNybjexSsAQEIyNul7pA=
+        b=IP+6Ya2xSANg9jwqiCf6aqA3hhx0PuT3m8Guk3vMx+FxNjovIsB2fDY5X9wsIRPUc
+         v9euERtQYlXKhBxjvG0uNcH3trZ1ZsA5c8RsfYdhdQj3bnGgeESU9Ln3vTvHKP2Rma
+         xXhFkKWjWplJ+DzIIEUPqokGOA21XMnIi1JaFWR0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Nathan Chancellor <natechancellor@gmail.com>,
         Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
         Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
         linux-ide@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH AUTOSEL 4.4 19/48] ata: ep93xx: Use proper enums for directions
-Date:   Tue, 12 Nov 2019 21:01:02 -0500
-Message-Id: <20191113020131.13356-19-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 26/68] ata: ep93xx: Use proper enums for directions
+Date:   Tue, 12 Nov 2019 20:58:50 -0500
+Message-Id: <20191113015932.12655-26-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191113020131.13356-1-sashal@kernel.org>
-References: <20191113020131.13356-1-sashal@kernel.org>
+In-Reply-To: <20191113015932.12655-1-sashal@kernel.org>
+References: <20191113015932.12655-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
