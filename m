@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ADA1C17441
-	for <linux-ide@archiver.kernel.org>; Wed, 13 Nov 2019 01:57:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF8EEC43331
+	for <linux-ide@archiver.kernel.org>; Wed, 13 Nov 2019 02:04:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3402D2245A
-	for <linux-ide@archiver.kernel.org>; Wed, 13 Nov 2019 01:57:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 86C49206B6
+	for <linux-ide@archiver.kernel.org>; Wed, 13 Nov 2019 02:04:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1573610257;
-	bh=EaemQSMRjOoOZA9hgJ+Xxl+flpaibVvlHklLcHHBV1Q=;
+	s=default; t=1573610675;
+	bh=l51evxqU8zJCOrGtKLHrLz9etFFXDJe12qIraGCuN0U=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=fzDcDL+FArKMoV8zpEaVlvtpngBAk/83KxnSoFLSvjumESG7b8AIRG9SmoktXvXNF
-	 aTO20+IfyphlSBAlYE2bGbmtU4M40HF6AwvEcOGerS6Zs8JUNcF8v58Z69hO1ol8py
-	 LGFDV54MtI3ZuKteJy16kwt60TfOAavp3PzoCHGo=
+	b=mFTQTWc4DswXayySQMSYcUp1BqYxL09K1Q+ljgsNMuQ1njMA5jNvj2KDZ5pVV3OW/
+	 sqd6cKLc2hI1VgcJVfVk1nT6OYTP2BqZpuF51ZiMh46lfbz6zCOnLO1gy4Ll6ctNi5
+	 ac4a3Ra4ozemFm4PhL99kLJywwVFAyuy0AIy3G1A=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728750AbfKMB5f (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 12 Nov 2019 20:57:35 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50868 "EHLO mail.kernel.org"
+        id S1730932AbfKMCCD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 12 Nov 2019 21:02:03 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58308 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729837AbfKMB5e (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 12 Nov 2019 20:57:34 -0500
+        id S1730003AbfKMCCD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 12 Nov 2019 21:02:03 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id DF3C5222D3;
-        Wed, 13 Nov 2019 01:57:32 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id DDFAD20674;
+        Wed, 13 Nov 2019 02:02:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1573610253;
-        bh=EaemQSMRjOoOZA9hgJ+Xxl+flpaibVvlHklLcHHBV1Q=;
+        s=default; t=1573610521;
+        bh=l51evxqU8zJCOrGtKLHrLz9etFFXDJe12qIraGCuN0U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=vpTjgECGvJt/8jfOQBUi/sPGgqcSajlqC4aYnUr2KUKXcWYBcQAF1CtRqbWF2IEgd
-         NOvaWjoH4GUqTnlrCZHwoVXpgn5E/XHfzn20oO9GXyi5xeDklqxPFL+dNK1aeK431X
-         zo9UzIiL0lqcP/lzBNpy/dCEdZ4eRXP4Sy96Xc6Y=
+        b=M+GK5ppL8zswQdRQHHRmgPUs1MuMby4YnrLM4lUts4N089Tftwihv7Q4h9YA/xInV
+         AaaRObA3XKz33be77Sh/R7r8f7Qi+6V1Ux5P3BTHd8DyvYTsi0m5KdzBo7bUrKoCgY
+         LKreoyS6NkdtnZ5CUMYypNybjexSsAQEIyNul7pA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Nathan Chancellor <natechancellor@gmail.com>,
         Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
         Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
         linux-ide@vger.kernel.org, clang-built-linux@googlegroups.com
-Subject: [PATCH AUTOSEL 4.14 049/115] ata: ep93xx: Use proper enums for directions
-Date:   Tue, 12 Nov 2019 20:55:16 -0500
-Message-Id: <20191113015622.11592-49-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 19/48] ata: ep93xx: Use proper enums for directions
+Date:   Tue, 12 Nov 2019 21:01:02 -0500
+Message-Id: <20191113020131.13356-19-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191113015622.11592-1-sashal@kernel.org>
-References: <20191113015622.11592-1-sashal@kernel.org>
+In-Reply-To: <20191113020131.13356-1-sashal@kernel.org>
+References: <20191113020131.13356-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -101,7 +101,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
-index 0a550190955ad..cc6d06c1b2c70 100644
+index bd6b089c67a3a..634c814cbeda4 100644
 --- a/drivers/ata/pata_ep93xx.c
 +++ b/drivers/ata/pata_ep93xx.c
 @@ -659,7 +659,7 @@ static void ep93xx_pata_dma_init(struct ep93xx_pata_data *drv_data)
