@@ -2,30 +2,28 @@ Return-Path: <SRS0=mnNo=ZL=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 913EFC33C9D
-	for <linux-ide@archiver.kernel.org>; Tue, 19 Nov 2019 12:57:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD2F2C33C8C
+	for <linux-ide@archiver.kernel.org>; Tue, 19 Nov 2019 17:00:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 69766222AB
-	for <linux-ide@archiver.kernel.org>; Tue, 19 Nov 2019 12:57:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A619B208D4
+	for <linux-ide@archiver.kernel.org>; Tue, 19 Nov 2019 17:00:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725798AbfKSM5v (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 19 Nov 2019 07:57:51 -0500
-Received: from mx2.suse.de ([195.135.220.15]:53112 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727255AbfKSM5v (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 19 Nov 2019 07:57:51 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 9B69FB1A0;
-        Tue, 19 Nov 2019 12:57:47 +0000 (UTC)
-Message-ID: <dd074ef5c23ba56598e92be19e8e25ae31b75f93.camel@suse.de>
-Subject: Re: [PATCH] dma-mapping: treat dev->bus_dma_mask as a DMA limit
-From:   Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-To:     Dave Hansen <dave.hansen@linux.intel.com>,
+        id S1727212AbfKSRAP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 19 Nov 2019 12:00:15 -0500
+Received: from verein.lst.de ([213.95.11.211]:35389 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727968AbfKSRAP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 19 Nov 2019 12:00:15 -0500
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 254F868C4E; Tue, 19 Nov 2019 18:00:07 +0100 (CET)
+Date:   Tue, 19 Nov 2019 18:00:06 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
+Cc:     Dave Hansen <dave.hansen@linux.intel.com>,
         Andy Lutomirski <luto@kernel.org>,
         Peter Zijlstra <peterz@infradead.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
@@ -37,8 +35,8 @@ To:     Dave Hansen <dave.hansen@linux.intel.com>,
         Frank Rowand <frowand.list@gmail.com>,
         Christoph Hellwig <hch@lst.de>,
         Marek Szyprowski <m.szyprowski@samsung.com>,
-        Robin Murphy <robin.murphy@arm.com>
-Cc:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-ide@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
         "H. Peter Anvin" <hpa@zytor.com>,
@@ -53,75 +51,32 @@ Cc:     Benjamin Herrenschmidt <benh@kernel.crashing.org>,
         "Rafael J. Wysocki" <rjw@rjwysocki.net>,
         linux-mips@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
         iommu@lists.linux-foundation.org, linuxppc-dev@lists.ozlabs.org
-Date:   Tue, 19 Nov 2019 13:57:43 +0100
-In-Reply-To: <20191113161340.27228-1-nsaenzjulienne@suse.de>
-References: <20191113161340.27228-1-nsaenzjulienne@suse.de>
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-KZ1OEZ2plCMDP0ydmpq5"
-User-Agent: Evolution 3.34.1 
+Subject: Re: [PATCH] dma-mapping: treat dev->bus_dma_mask as a DMA limit
+Message-ID: <20191119170006.GA19569@lst.de>
+References: <20191113161340.27228-1-nsaenzjulienne@suse.de> <dd074ef5c23ba56598e92be19e8e25ae31b75f93.camel@suse.de>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <dd074ef5c23ba56598e92be19e8e25ae31b75f93.camel@suse.de>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+On Tue, Nov 19, 2019 at 01:57:43PM +0100, Nicolas Saenz Julienne wrote:
+> Hi Rob & Christoph,
+> do you mind if I append v2 of this into my upcoming v3 RPi4 PCIe support
+> series, I didn't do it initially as I thought this was going to be a
+> contentious patch.  But as it turned out better than expected, I think it
+> should go into the PCIe series. In the end it's the first explicit user of the
+> bus DMA limit.
+> 
+> Here's v2 in case you don't know what I'm talking about:
+> https://www.spinics.net/lists/arm-kernel/msg768459.html
 
---=-KZ1OEZ2plCMDP0ydmpq5
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Wed, 2019-11-13 at 17:13 +0100, Nicolas Saenz Julienne wrote:
-> Using a mask to represent bus DMA constraints has a set of limitations.
-> The biggest one being it can only hold a power of two (minus one). The
-> DMA mapping code is already aware of this and treats dev->bus_dma_mask
-> as a limit. This quirk is already used by some architectures although
-> still rare.
->=20
-> With the introduction of the Raspberry Pi 4 we've found a new contender
-> for the use of bus DMA limits, as its PCIe bus can only address the
-> lower 3GB of memory (of a total of 4GB). This is impossible to represent
-> with a mask. To make things worse the device-tree code rounds non power
-> of two bus DMA limits to the next power of two, which is unacceptable in
-> this case.
->=20
-> In the light of this, rename dev->bus_dma_mask to dev->bus_dma_limit all
-> over the tree and treat it as such. Note that dev->bus_dma_limit is
-> meant to contain the higher accesible DMA address.
->=20
-> Signed-off-by: Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
->=20
-
-Hi Rob & Christoph,
-do you mind if I append v2 of this into my upcoming v3 RPi4 PCIe support
-series, I didn't do it initially as I thought this was going to be a
-contentious patch.  But as it turned out better than expected, I think it
-should go into the PCIe series. In the end it's the first explicit user of =
-the
-bus DMA limit.
-
-Here's v2 in case you don't know what I'm talking about:
-https://www.spinics.net/lists/arm-kernel/msg768459.html
-
-Regards,
-Nicolas
-
-
---=-KZ1OEZ2plCMDP0ydmpq5
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCAAdFiEErOkkGDHCg2EbPcGjlfZmHno8x/4FAl3T5scACgkQlfZmHno8
-x/7FNgf/TPvrVamDNHipGFKFiSr22YaNYJU4aGZyFuJab0Z9dF35ZbNQqx3sXA83
-gyltGXByQ4c747nqq+LWQTaXLvI4NEMDu/ueQ6T4Vgs0ijtKvI9hVjrjlKU7UVsR
-/v+6HHolAP4q5zxgJbL3PRMlFeJlLs9xRbikBEmGDbc4INP8nBSUiQmk4lrgCAwH
-xV11EcSTA5eKJPS1jpsEP/vKwfu7LQ9ASExtpK5Oud7ZBD8zq1qKQBSVMGXQ1m9L
-l0ok+gqBZtMgwKtigs9mAr0Y09evU1GOVS0ttcncZ854J6/+hr9nuK8eXyhLEm0J
-l/jpo2vtZH0gMy68b+P8LkDtGJisYg==
-=9wOf
------END PGP SIGNATURE-----
-
---=-KZ1OEZ2plCMDP0ydmpq5--
-
+In principle I wouldn't mind, but I think this is going to conflict
+quite badly with other changes in the dma-mapping tree (including
+yours).  So I think we'll need a shared tree or I'll need to pull
+in the whole series through the dma-mapping tree if there are not
+other conflicts and the other maintainers are fine with it.
