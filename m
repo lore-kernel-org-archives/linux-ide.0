@@ -2,122 +2,79 @@ Return-Path: <SRS0=6DY5=ZN=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0B64C43215
-	for <linux-ide@archiver.kernel.org>; Thu, 21 Nov 2019 03:20:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A2E6C432C0
+	for <linux-ide@archiver.kernel.org>; Thu, 21 Nov 2019 07:32:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 975D7208A3
-	for <linux-ide@archiver.kernel.org>; Thu, 21 Nov 2019 03:20:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1574306449;
-	bh=NjVI8odmttsECwSZARjFEDrBXK5my+3emM678PTtG94=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=BXoCEm/tXIMLsgxueun5mID7B1LBqgIqBbv4T9Fu89oyzpwBwB6DMKPCZZXAYqD1U
-	 wEJmUx1/Cu4mKbBbsidLrIolleuOdXtWIrRXKu9k6zJEErABB33BEe2AjFrjYNM06F
-	 9dW4C0jU4oCg7EBUEvcoaS9y9nXbuviXpxeF0fSg=
+	by mail.kernel.org (Postfix) with ESMTP id 4C03420855
+	for <linux-ide@archiver.kernel.org>; Thu, 21 Nov 2019 07:32:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727560AbfKUDUs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 20 Nov 2019 22:20:48 -0500
-Received: from mail.kernel.org ([198.145.29.99]:34664 "EHLO mail.kernel.org"
+        id S1726265AbfKUHcA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 21 Nov 2019 02:32:00 -0500
+Received: from verein.lst.de ([213.95.11.211]:44458 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727590AbfKUDUs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 20 Nov 2019 22:20:48 -0500
-Received: from PC-kkoz.proceq.com (unknown [213.160.61.66])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id BD5B8208A3;
-        Thu, 21 Nov 2019 03:20:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1574306447;
-        bh=NjVI8odmttsECwSZARjFEDrBXK5my+3emM678PTtG94=;
-        h=From:To:Cc:Subject:Date:From;
-        b=WQZK6cMtaWkIJOSMao3ywIh41eaZr/u5Q+zJRP2Ygdiih7Vut5cuyF2oorTeQxGlh
-         8UhcwkSQ7REj+BI1zv0UYiC6enciol0rMqllbx5yAPsRoQCYcITn7fO/0tfEWxY6z2
-         pnake7TWOhdy79laqUJpRXpKzt7Hkz/srqWieYx8=
-From:   Krzysztof Kozlowski <krzk@kernel.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Krzysztof Kozlowski <krzk@kernel.org>,
-        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
-Subject: [PATCH v2] ata: Fix Kconfig indentation
-Date:   Thu, 21 Nov 2019 04:20:44 +0100
-Message-Id: <1574306444-30831-1-git-send-email-krzk@kernel.org>
-X-Mailer: git-send-email 2.7.4
+        id S1726230AbfKUHb7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 21 Nov 2019 02:31:59 -0500
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 0FAB768B05; Thu, 21 Nov 2019 08:31:53 +0100 (CET)
+Date:   Thu, 21 Nov 2019 08:31:52 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     Robin Murphy <robin.murphy@arm.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        Andy Lutomirski <luto@kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Hanjun Guo <guohanjun@huawei.com>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        Jens Axboe <axboe@kernel.dk>, Joerg Roedel <joro@8bytes.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Paul Burton <paulburton@kernel.org>,
+        Michael Ellerman <mpe@ellerman.id.au>, x86@kernel.org,
+        phil@raspberrypi.org, linux-acpi@vger.kernel.org,
+        Ingo Molnar <mingo@redhat.com>,
+        James Hogan <jhogan@kernel.org>, Len Brown <lenb@kernel.org>,
+        devicetree@vger.kernel.org, Borislav Petkov <bp@alien8.de>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-arm-kernel@lists.infradead.org,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        linux-mips@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+        iommu@lists.linux-foundation.org, linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH] dma-mapping: treat dev->bus_dma_mask as a DMA limit
+Message-ID: <20191121073152.GB24024@lst.de>
+References: <20191113161340.27228-1-nsaenzjulienne@suse.de> <dd074ef5c23ba56598e92be19e8e25ae31b75f93.camel@suse.de> <20191119170006.GA19569@lst.de> <7609007d-52f5-bb10-e8d5-96fadbfab46d@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <7609007d-52f5-bb10-e8d5-96fadbfab46d@arm.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Adjust indentation from spaces to tab (+optional two spaces) as in
-coding style with command like:
-	$ sed -e 's/^        /\t/' -i */Kconfig
+On Tue, Nov 19, 2019 at 05:17:03PM +0000, Robin Murphy wrote:
+> TBH I can't see it being a massive problem even if the DMA patch, driver 
+> and DTS patch went entirely separately via the respective DMA, PCI, and 
+> arm-soc trees in the same cycle. Bisecting over a merge window is a big 
+> enough pain in the bum as it is, and if the worst case is that someone 
+> trying to do that on a Pi4 has a wonky PCI controller appear for a couple 
+> of commits, they may as well just disable that driver for their bisection, 
+> because it wasn't there at the start so can't possibly be the thing they're 
+> looking for regressions in ;)
 
-Signed-off-by: Krzysztof Kozlowski <krzk@kernel.org>
+Agreed.
 
----
-
-Changes since v1:
-1. Fix also 7-space and tab+1 space indentation issues.
----
- drivers/ata/Kconfig | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index a6beb2c5a692..c9132177faee 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -32,7 +32,7 @@ menuconfig ATA
- if ATA
- 
- config ATA_NONSTANDARD
--       bool
-+	bool
- 
- config ATA_VERBOSE_ERROR
- 	bool "Verbose ATA error reporting"
-@@ -695,7 +695,7 @@ config PATA_IMX
- 	depends on ARCH_MXC
- 	help
- 	  This option enables support for the PATA host available on Freescale
--          iMX SoCs.
-+	  iMX SoCs.
- 
- 	  If unsure, say N.
- 
-@@ -704,7 +704,7 @@ config PATA_IT8213
- 	depends on PCI
- 	help
- 	  This option enables support for the ITE 821 PATA
--          controllers via the new ATA layer.
-+	  controllers via the new ATA layer.
- 
- 	  If unsure, say N.
- 
-@@ -732,9 +732,9 @@ config PATA_MACIO
- 	depends on PPC_PMAC
- 	help
- 	  Most IDE capable PowerMacs have IDE busses driven by a variant
--          of this controller which is part of the Apple chipset used on
--          most PowerMac models. Some models have multiple busses using
--          different chipsets, though generally, MacIO is one of them.
-+	  of this controller which is part of the Apple chipset used on
-+	  most PowerMac models. Some models have multiple busses using
-+	  different chipsets, though generally, MacIO is one of them.
- 
- config PATA_MARVELL
- 	tristate "Marvell PATA support via legacy mode"
-@@ -915,7 +915,7 @@ config PATA_PXA
- 	  This option enables support for harddrive attached to PXA CPU's bus.
- 
- 	  NOTE: This driver utilizes PXA DMA controller, in case your hardware
--	        is not capable of doing MWDMA, use pata_platform instead.
-+	  is not capable of doing MWDMA, use pata_platform instead.
- 
- 	  If unsure, say N.
- 
--- 
-2.7.4
-
+Nicolas, can you send a respin?  That way I can still queue it up
+for 5.5.
