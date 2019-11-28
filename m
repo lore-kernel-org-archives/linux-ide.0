@@ -1,100 +1,94 @@
-Return-Path: <SRS0=P1Kd=ZS=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=sTlp=ZU=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-9.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E204DC43215
-	for <linux-ide@archiver.kernel.org>; Tue, 26 Nov 2019 21:45:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83E74C432C3
+	for <linux-ide@archiver.kernel.org>; Thu, 28 Nov 2019 08:11:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BF6C42064B
-	for <linux-ide@archiver.kernel.org>; Tue, 26 Nov 2019 21:45:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5BA7E2176D
+	for <linux-ide@archiver.kernel.org>; Thu, 28 Nov 2019 08:11:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=endlessm-com.20150623.gappssmtp.com header.i=@endlessm-com.20150623.gappssmtp.com header.b="FNYJx1kd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726504AbfKZVpc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 26 Nov 2019 16:45:32 -0500
-Received: from foss.arm.com ([217.140.110.172]:39712 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726033AbfKZVpc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 26 Nov 2019 16:45:32 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 59F5431B;
-        Tue, 26 Nov 2019 13:45:31 -0800 (PST)
-Received: from [192.168.1.124] (unknown [172.31.20.19])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 37D3B3F52E;
-        Tue, 26 Nov 2019 13:45:26 -0800 (PST)
-Subject: Re: [PATCH v2] dma-mapping: treat dev->bus_dma_mask as a DMA limit
-To:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        Christoph Hellwig <hch@lst.de>,
-        Nathan Chancellor <natechancellor@gmail.com>
-Cc:     Dave Hansen <dave.hansen@linux.intel.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Hanjun Guo <guohanjun@huawei.com>,
-        Sudeep Holla <sudeep.holla@arm.com>,
-        Jens Axboe <axboe@kernel.dk>, Joerg Roedel <joro@8bytes.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        Paul Burton <paulburton@kernel.org>,
-        Michael Ellerman <mpe@ellerman.id.au>, x86@kernel.org,
-        linux-acpi@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
-        James Hogan <jhogan@kernel.org>, Len Brown <lenb@kernel.org>,
-        devicetree@vger.kernel.org, Borislav Petkov <bp@alien8.de>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-arm-kernel@lists.infradead.org,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        linux-mips@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
-        iommu@lists.linux-foundation.org, linuxppc-dev@lists.ozlabs.org
-References: <20191121092646.8449-1-nsaenzjulienne@suse.de>
- <20191123165108.GA15306@ubuntu-x2-xlarge-x86> <20191125074412.GA30595@lst.de>
- <0b851d0e-37c7-062e-c287-05f8c8a54c16@arm.com>
- <45feed391bbd95c46f64b31cf8817d4f773c8da1.camel@suse.de>
-From:   Robin Murphy <robin.murphy@arm.com>
-Message-ID: <935d65b4-a28e-d7b9-7392-42fec71b5150@arm.com>
-Date:   Tue, 26 Nov 2019 21:45:19 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:68.0) Gecko/20100101
- Thunderbird/68.2.1
+        id S1727266AbfK1ILV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 28 Nov 2019 03:11:21 -0500
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:43358 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726301AbfK1ILV (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 28 Nov 2019 03:11:21 -0500
+Received: by mail-pl1-f195.google.com with SMTP id q16so7075982plr.10
+        for <linux-ide@vger.kernel.org>; Thu, 28 Nov 2019 00:11:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=endlessm-com.20150623.gappssmtp.com; s=20150623;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=c/GhN/CYsiRUWVz52gd5JGKtSUoupS+PdXzJYF/Cc8k=;
+        b=FNYJx1kdbLHj9iR60nnvsEGZEaKFTjOmg0G0MnY7CRSlyNtEP87oYykgt5psRsa4ml
+         GlZrAQhtDLsEBX37OjvTNtYW35kq0TJdbTaSja19RHqqWG50iR3FS8GA64hyhQJGRFKZ
+         vAIENIzkxv4CImBHl8k4Q1cVi0nsFCGtrn5LzbdBo8LcJhZfTfQP6W5oiaWLOyzfS02o
+         C/H/lw9trG4KdA1d2ARKEKPrVAslqtflACgdY3RWUO8Kh6XGM3vKIct0vliVDwCipmGK
+         587hZF/fC1fWuOc2ZmAlcUMQhj7XsCRgLhXBotNVsGdrCEP1w4grLZWLxiDW7lZueVx8
+         NwTw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=c/GhN/CYsiRUWVz52gd5JGKtSUoupS+PdXzJYF/Cc8k=;
+        b=dijwFYHVLQv9p3JHH48dtXK+CuRf0sXcNkEgxkW4eNB91tOGNqxI3ldDyylaDovx7x
+         JNrjXfDbRERdle3B0sleE2AM3lUkuXYYXu4c7jbp4cNtSkdH3VM7tmZtU17iHjA2/Sq1
+         8CDrDgFS9RNfN7hDjqgtr/S0TsBcqr0LhzhaUZpB8j5AuFDdzVzpDI5Bvu4ehQVu5otS
+         4jAa1iERCQyg4ChNIRDArisqiXnYmHzRMVQuuLn0Yqose3unRr41gQX/q3/g4uPlCVQz
+         4U/dgyqnm+znGhMrCDLB+SSu+6ZvtRe051VVKIj20nznYRF3jhU/dnZstlunhHcjp0v7
+         syrA==
+X-Gm-Message-State: APjAAAVbDf0aTRAxvgg5B45/VA47FTFcaYf90ic1wlWc20E7GgvdSqpT
+        DgHxfXx7P0ZveUGUziHfu9kPvA==
+X-Google-Smtp-Source: APXvYqznYal4NAldeLQ4QS7qBNETlYZpDDXWJse1Y/WYjGufOSeGy5IbkPuTp+1EmglENTh/B1Gfew==
+X-Received: by 2002:a17:90b:46cf:: with SMTP id jx15mr11476702pjb.19.1574928678161;
+        Thu, 28 Nov 2019 00:11:18 -0800 (PST)
+Received: from localhost.localdomain (123-204-46-122.static.seed.net.tw. [123.204.46.122])
+        by smtp.gmail.com with ESMTPSA id a3sm9364110pjh.31.2019.11.28.00.11.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 28 Nov 2019 00:11:17 -0800 (PST)
+From:   Jian-Hong Pan <jian-hong@endlessm.com>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux@endlessm.com, Jian-Hong Pan <jian-hong@endlessm.com>
+Subject: [PATCH] ahci: Add Intel Comet Lake PCH RAID PCI ID
+Date:   Thu, 28 Nov 2019 16:10:42 +0800
+Message-Id: <20191128081041.6948-1-jian-hong@endlessm.com>
+X-Mailer: git-send-email 2.24.0
 MIME-Version: 1.0
-In-Reply-To: <45feed391bbd95c46f64b31cf8817d4f773c8da1.camel@suse.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-GB
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2019-11-26 6:51 pm, Nicolas Saenz Julienne wrote:
-> On Mon, 2019-11-25 at 16:33 +0000, Robin Murphy wrote:
->> On 25/11/2019 7:44 am, Christoph Hellwig wrote:
->>> On Sat, Nov 23, 2019 at 09:51:08AM -0700, Nathan Chancellor wrote:
->>>> Just as an FYI, this introduces a warning on arm32 allyesconfig for me:
->>>
->>> I think the dma_limit argument to iommu_dma_alloc_iova should be a u64
->>> and/or we need to use min_t and open code the zero exception.
->>>
->>> Robin, Nicolas - any opinions?
->>
->> Yeah, given that it's always held a mask I'm not entirely sure why it
->> was ever a dma_addr_t rather than a u64. Unless anyone else is desperate
->> to do it I'll get a cleanup patch ready for rc1.
-> 
-> Sounds good to me too
-> 
-> Robin, since I started the mess, I'll be happy to do it if it helps offloading
-> some work from you.
+Intel Comet Lake should use the default LPM policy for mobile chipsets.
+So, add the PCI ID to the driver list of supported devices.
 
-No worries - your change only exposed my original weird decision ;)  On 
-second look the patch was literally a trivial one-liner, so I've written 
-it up already.
+Signed-off-by: Jian-Hong Pan <jian-hong@endlessm.com>
+---
+ drivers/ata/ahci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Cheers,
-Robin.
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index ec6c64fce74a..d9b3a9f7a4ee 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -405,6 +405,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x22a3), board_ahci_mobile }, /* Cherry Tr. AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x5ae3), board_ahci_mobile }, /* ApolloLake AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x34d3), board_ahci_mobile }, /* Ice Lake LP AHCI */
++	{ PCI_VDEVICE(INTEL, 0x02d7), board_ahci_mobile }, /* Comet Lake PCH RAID */
+ 
+ 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+ 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+-- 
+2.20.1
+
