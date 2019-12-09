@@ -1,142 +1,157 @@
-Return-Path: <SRS0=R0uG=Z2=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=LLJp=Z7=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 845E5C2BBE2
-	for <linux-ide@archiver.kernel.org>; Wed,  4 Dec 2019 07:11:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7F08C43603
+	for <linux-ide@archiver.kernel.org>; Mon,  9 Dec 2019 05:21:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 49CF320640
-	for <linux-ide@archiver.kernel.org>; Wed,  4 Dec 2019 07:11:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95A9B206D3
+	for <linux-ide@archiver.kernel.org>; Mon,  9 Dec 2019 05:21:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=Synaptics.onmicrosoft.com header.i=@Synaptics.onmicrosoft.com header.b="LG8g+Sey"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TsG72EKh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727149AbfLDHLJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 4 Dec 2019 02:11:09 -0500
-Received: from mail-bn7nam10on2054.outbound.protection.outlook.com ([40.107.92.54]:23361
-        "EHLO NAM10-BN7-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725958AbfLDHLI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 4 Dec 2019 02:11:08 -0500
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=QK8ADGoMo20vUXHIQI4NBiobnJWOkoR6qZEDZdA7uxb7sI9rbEvAoicFfHYhkza4nEtdv+3FHlBdOJeyWNM/vVKymz9A2To9EYN58wnQcPpvlHXIdIwCNJKYEvR/ep66ihqaD9PrpbIZ5MX71LJGT6t5K0UYM/7Inj94VJmLcGjpv1DXmBRwGLth53yf6RsicbPj7EZvGtBcYWqoLXlOMFuS2Tl6cilzFH725glUQb3ZDrRUuucTpLR29SJcS134Nk+fJbuBBSxCHVVeMYFvyhDJOMyyaPPq7liDVB+k6QuDa+XYikGw5rffEGtdhXRHu7L6AhMNSdzuDGw9Ds2TsQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5/L1s+6Zyyh0icNiqHibaC1USTb6zbT6Bd3LIiulJjQ=;
- b=Ou3wRTr2r/f5uc+DKSB9DuvSoC5kgMOafeCTpoMW5CsUiuankY5qJlzYzdDMoROnZmkRR+Hc0x/w9TW7SYQQXTQ2CtlT71cpydx2KmQ8zCoqbKWDAJhZ3JXZ1zZfZcS3M1Sp0dSkXlRqQMHgX8CpcTVqGmv0K2JkgrXy0aZT/pyC4NzN+gOhYOvYVF6jItzKAxTli5S8AV+dBKLFVGuUcpu3/REcgsq4W4L2yFbeBu/i8cucoeN58uNisDwr6v98nN2lTThRFE3DdWxKBmcgTpeeQ3ek9oSV6Yhms4/nAjlIGSiIOedJk6eVCgAe671pz1BchZMFYP5sxBQpOT45fA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=synaptics.com; dmarc=pass action=none
- header.from=synaptics.com; dkim=pass header.d=synaptics.com; arc=none
+        id S1725842AbfLIFVY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 9 Dec 2019 00:21:24 -0500
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:35255 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725819AbfLIFVY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 9 Dec 2019 00:21:24 -0500
+Received: by mail-pg1-f195.google.com with SMTP id l24so6507226pgk.2;
+        Sun, 08 Dec 2019 21:21:23 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=Synaptics.onmicrosoft.com; s=selector2-Synaptics-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5/L1s+6Zyyh0icNiqHibaC1USTb6zbT6Bd3LIiulJjQ=;
- b=LG8g+SeyHIKJwd9AjIwXqZvdBWubqdwvvP562uzAfDwM80HrBkhskA9ccpyVJ9dxaJ7x0HFSYbp/TiKA1c5CWwpkVo/WT+etmPkWATHfiQKL7T8aLiqdoq6qKVktGBd+br1BbA/Qjg3VRQTZMe4FeUTyIa86DE+/ltybp4/akrU=
-Received: from BYAPR03MB4773.namprd03.prod.outlook.com (20.179.93.213) by
- BYAPR03MB3719.namprd03.prod.outlook.com (52.135.215.23) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2495.18; Wed, 4 Dec 2019 07:11:05 +0000
-Received: from BYAPR03MB4773.namprd03.prod.outlook.com
- ([fe80::708d:91cc:79a7:9b9a]) by BYAPR03MB4773.namprd03.prod.outlook.com
- ([fe80::708d:91cc:79a7:9b9a%6]) with mapi id 15.20.2495.014; Wed, 4 Dec 2019
- 07:11:04 +0000
-From:   Jisheng Zhang <Jisheng.Zhang@synaptics.com>
-To:     Christoph Hellwig <hch@infradead.org>
-CC:     Jun Nie <jun.nie@linaro.org>,
-        "ulf.hansson@linaro.org" <ulf.hansson@linaro.org>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Subject: Re: [PATCH 4/4] mmc: sdhci: Add DMA memory boundary workaround
-Thread-Topic: [PATCH 4/4] mmc: sdhci: Add DMA memory boundary workaround
-Thread-Index: AQHVqR6bSNy8xcyAyESfm+a1vx+I5KensdkAgAAQtICAAFjjgIAAB4wAgAAE9QCAADqtgIABKzyA
-Date:   Wed, 4 Dec 2019 07:11:04 +0000
-Message-ID: <20191204145709.34e42f56@xhacker.debian>
-References: <20191202144104.5069-1-jun.nie@linaro.org>
-        <20191202144104.5069-5-jun.nie@linaro.org>
-        <20191203103320.273a7309@xhacker.debian>
-        <CABymUCMVi_N2Mt82YDt7wrys4Z_vnXYEu15-YBa+S1CejT9iZw@mail.gmail.com>
-        <20191203165123.4e6f9e28@xhacker.debian>
-        <20191203091824.GA4685@infradead.org>
-        <20191203172434.39b2c2c2@xhacker.debian>
-        <20191203130609.GA2144@infradead.org>
-In-Reply-To: <20191203130609.GA2144@infradead.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [124.74.246.114]
-x-clientproxiedby: TYAPR01CA0092.jpnprd01.prod.outlook.com
- (2603:1096:404:2c::32) To BYAPR03MB4773.namprd03.prod.outlook.com
- (2603:10b6:a03:139::21)
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Jisheng.Zhang@synaptics.com; 
-x-ms-exchange-messagesentrepresentingtype: 1
-x-mailer: Claws Mail 3.17.4 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: e162b7c2-71dd-4716-09af-08d778892041
-x-ms-traffictypediagnostic: BYAPR03MB3719:
-x-microsoft-antispam-prvs: <BYAPR03MB3719361EB266BCBE601EC981ED5D0@BYAPR03MB3719.namprd03.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:8273;
-x-forefront-prvs: 0241D5F98C
-x-forefront-antispam-report: SFV:NSPM;SFS:(10009020)(39860400002)(396003)(366004)(136003)(346002)(376002)(51874003)(189003)(199004)(6436002)(9686003)(2906002)(6246003)(54906003)(6486002)(6116002)(4326008)(102836004)(256004)(66946007)(76176011)(3846002)(6512007)(71190400001)(5660300002)(71200400001)(66446008)(64756008)(66556008)(66476007)(52116002)(478600001)(50226002)(14454004)(316002)(6916009)(25786009)(186003)(4744005)(99286004)(305945005)(386003)(7736002)(6506007)(8676002)(8936002)(81166006)(7416002)(446003)(86362001)(11346002)(229853002)(81156014)(26005)(1076003)(39210200001);DIR:OUT;SFP:1101;SCL:1;SRVR:BYAPR03MB3719;H:BYAPR03MB4773.namprd03.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:0;
-received-spf: None (protection.outlook.com: synaptics.com does not designate
- permitted sender hosts)
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 1Ds3v3pX44hgUC+rJoBiMgpgpR1Jwhgfqa8KE1yOYw0cM+739bR8ROdQh5V1q6bAQOlJ2XuMpR+1qS90mLljT+STmjCP8C28pfUVTpwqM5w1Aug+ns5+yJMMumAAz0YrX7ZXyU5arykqBOSj7mtL/rv3d6ibtmOpdvI2rOXQ95RPSj4X76J+pVogrlSB5e83qzCdP7SVTNk9QKy8PN2COFB7e1freP8Sv+/KSlIf9SLnKtCUh+SG5M44Rle5IBDP4Nguhb6nuNxq17O64huY6eRDZZ0tn92DVugQMmvbO1w22mzKa67GZGP3aVh1nZ3ugMXZw0zlyjfdPzgtHbHOzYuulu+gxdCj4hL4qEEkWSuoVpAf6s4p/8zuK4LZ+gtTGODU7qhupftxiy2h2JpEVXC3s/SQkeOG1EVh7RaWMPg1EzNYo2h89dK8dnE7JSe/KRyK3LTW0rAq1mE/C555lDnk/MNyTfJFPbGH7lVPebHwbIu+8nQMS2BIoOb+JSFJeE12TCsfbrh2mie1HEf8Ng==
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <E328B430D6EEBE469FC9141252210664@namprd03.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
-X-OriginatorOrg: synaptics.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e162b7c2-71dd-4716-09af-08d778892041
-X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Dec 2019 07:11:04.7208
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 335d1fbc-2124-4173-9863-17e7051a2a0e
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 4uChLndwhnd1rnS2jyMw19g9LhW43/p84TMgBC+m80kYLBb9248nLrt7qujY2kv6RJIqp6N/o5Acfr3+aSStIA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR03MB3719
+        d=gmail.com; s=20161025;
+        h=sender:from:to:cc:subject:date:message-id;
+        bh=AW9VGumdZy3wyOIy/HTgLy8T6vfCGABBPNOsP0bKaQE=;
+        b=TsG72EKhhevQp6j8XWGxYjQUHFzVKmaJ+m6N3d0iIbPMuUY9MxkgA1+vjqDbRmFDeO
+         ghawKgXv6oFiwdG60kodv4PWWwf2+7SjkF/xi6rhUHjJOpkQpQtpYsKQvmIaAf/vr+BC
+         r3ovygDlMulStfAJC+J2FJfON43TXLO8IrfNuZZvvwtdulQqdItQBNmRP/9sCpBEUNUQ
+         /A4W2DZsA7wRKxgYBl7xwDVwE1xK9bkEsu4sMM0OLnLcN6UrfP0joLWUZcfrhEfZsklz
+         ktfOtxJJDO+Adp1o6Ul8WBQN0+Udjkits3w7hrH+/olZ69NId9+GyD5QYMdBdJBB50G8
+         ZGng==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id;
+        bh=AW9VGumdZy3wyOIy/HTgLy8T6vfCGABBPNOsP0bKaQE=;
+        b=IdmRvHtBfQdKdWykFZURtgzXOuwrmw9rVFyVssh5/yCvDZ1+USioUA2+Gd3RHarnpo
+         YE30Cr3Oc4AQMXvvnD2IrxgJhvSaK0ggd0E7UJuSORtbk/AgERmmCgRBlnheeyoOscy/
+         CpCnOeYJnsrJLOkB7hwuK7DC9c3nQTQqn1Ewcm26pEjB/+fjnnwSGi4yckJnREhCvyp+
+         jR/i7XsQsh1JFec60+CKUzvjWfEKzCX6XlvvRJSkhnCFcJC1cYJjlAwFLBgG9upBe7Gj
+         uUgzi7O0cNaOsDsQTSFGU25Q5c4uOL0UyjmA6gBQQlZfQhbKY9AV+ZYL3Bewp8btHNMj
+         gBXQ==
+X-Gm-Message-State: APjAAAVXpfTgBYfOjsnMDcxif+ssJbkD4GmNCHhJh4B20N0N/3ohBKTr
+        2b6yHG9UXrDA5AXD7Kt3PLUTddFT
+X-Google-Smtp-Source: APXvYqxYDPRGsuZZfyTlwwznlYvBbns+TS2/nPhxae0oeWbWTkG1vruV0JtDqhcrduLGxraf//k3IQ==
+X-Received: by 2002:a63:4a50:: with SMTP id j16mr17333906pgl.308.1575868882682;
+        Sun, 08 Dec 2019 21:21:22 -0800 (PST)
+Received: from localhost ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id b7sm10752127pjo.3.2019.12.08.21.21.20
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Sun, 08 Dec 2019 21:21:21 -0800 (PST)
+From:   Guenter Roeck <linux@roeck-us.net>
+To:     linux-hwmon@vger.kernel.org
+Cc:     Jean Delvare <jdelvare@suse.com>, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-ide@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>
+Subject: [PATCH 0/1] Summary: hwmon driver for temperature sensors on SATA drives
+Date:   Sun,  8 Dec 2019 21:21:18 -0800
+Message-Id: <20191209052119.32072-1-linux@roeck-us.net>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Christoph
+In the past, several attempts have been made to add support for reporting
+SCSI/[S]ATA drive temperatures to the Linux kernel. This is desirable to
+have a means to report drive temperatures to userspace without root
+privileges and in a standard format, but also to be able to tie reported
+temperatures with the thermal subsystem.
 
-On Tue, 3 Dec 2019 05:06:09 -0800 Christoph Hellwig wrote:
+The most recent attempt was [1] by Linus Walleij. It went through a total
+of seven iterations. At the end, it was rejected for a number of reasons;
+see the provided link for details. This implementation resides in the
+SCSI core. It originally resided in libata but was moved to SCSI per
+maintainer request, where it was ultimately rejected.
 
+The feedback on this approach suggests to use the SCSI Temperature log page
+[0x0d] as means to access drive temperature information. It is unknown
+if this is implemented in any real SCSI drive. The feedback also suggests to
+obtain temperature from ATA drives, convert it into the SCSI temperature log
+page in libata-scsi, and to use that information in a hardware monitoring
+driver. The format and method to do this is documented in [3]. This is not
+currently implemented in the Linux kernel.
 
->=20
-> On Tue, Dec 03, 2019 at 09:49:49AM +0000, Jisheng Zhang wrote:
-> > > As in exactly one boundary and not an alignment?  Where the one
-> > > boundary is not a power of two and thus can't be expressed? =20
-> >
-> > Take drivers/mmc/host/sdhci-of-dwcmshc.c for example, target physical D=
-MA addr
-> > can't span 128MB, 256MB, 128*3MB, ...128*nMB
-> >
-> > I'm not sure whether blk_queue_segment_boundary could solve this limita=
-tion. =20
->=20
-> That is exaxtly the kind of limitation blk_queue_segment_boundary is
-> intended for.
+An earlier submission of a driver to report SCSI/SATA drive temperatures
+was made back in 2009 by Constantin Baranov [2]. This submission resides
+in the hardware monitoring subsystem. It does not rely on changes in the
+SCSI subsystem or in libata-scsi. Instead, it registers itself with the
+SCSI subsystem using scsi_register_interface(). It was rejected primarily
+because it executes ATA passthrough commands without verification that it
+is actually connected to an ATA drive.
 
-Until after dma_map_sg(), we can't know the physical DMA address range, so
-how does block layer know and check the DMA range beforehand? I'm a newbie =
-on
-block layer, could you please teach me? At the same time
-I'm reading the code as well.
+Both submissions use SMART attributes to read drive temperature information.
+[1] also tries to identify temperature limits from those attributes.
+Unfortunately, SMART attributes are not well defined, resulting in relative
+complex code trying to identify the exact format of the reported data.
 
-Thanks in advance
+With the available information and feedback, we can make a number of
+observations and conclusions.
+a) Using available (S)ATA drive temperature information and convert it to
+   a SCSI log page is an interesting idea. On the downside, it would add a
+   substantial amount of complexity to libata-scsi. The code would either
+   have to be optional, or it would have to be built into the kernel even
+   if it is never used on a given system. Without access to SCSI drives
+   supporting this feature, it would be all but impossible to test the code
+   against such a drive. It would neither be possible to test correctness
+   of the code in libata-scsi nor in the driver using that information.
+   Overall it would be much easier and much less risky to implement such
+   code on the receiving side (ie in a driver reporting the temperatures)
+   instead of trying to convert the information from one format to another
+   first. In summary, it is neither practical nor feasible. On top of that,
+   there is no guarantee that code implementing this functionality would
+   ever be accepted into the kernel for this very reason.
+b) The code needed to read and analyze SCSI temperature log pages is quite
+   complex (see smartmontools [5]). There is no existing support code
+   in the Linux kernel; such code would have to be written. This makes
+   the approach discussed in a) even more risky and less practical.
+c) Overall, any attempt to report temperature information for anything
+   but SATA drives in the kernel is not practical due to the complexity
+   involved, and due to the inability to test the resulting code with
+   non-SATA drives.
+d) Using SMART data for anything but basic temperature reporting is not
+   really feasible due to the lack of standardization. Any attempt to do
+   this would add a substantial amount of code, ambiguity, and risk.
 
+This submission implements a driver to report the temperature of SATA
+drives through the hardware monitoring subsystem. It is implemented as
+stand-alone driver in the hardware monitoring subsystem. The driver uses
+the mechanism from submission [1] to register with the SCSI subsystem.
+By using this mechanism, changes in the SCSI or ATA subsystems are not
+required.  To reduce risk and complexity, it only instantiates after
+reliably validating that it is connected to a SATA drive. It does not
+attempt to report the temperature of non-SATA drives.
+
+The driver uses the SCT Command Transport feature set as specified in
+ATA8-ACS [4] to read and report the temperature as well as temperature
+limits and lowest/highest temperature information (if available) for
+SATA drives. If a drive does not support SCT Command Transport, the driver
+attempts to access a limited set of well known SMART attributes to read
+the drive temperature. In that case, only the current drive temperature
+is reported.
+
+---
+References:
+[1] https://patchwork.kernel.org/patch/10688021/
+[2] https://lore.kernel.org/lkml/20090913040104.ab1d0b69.const@mimas.ru/
+[3] http://www.t10.org/cgi-bin/ac.pl?t=f&f=sat5r02.pdf
+    Information technology - SCSI / ATA Translation - 5 (SAT-5),
+    section 10.3.8 (Temperature log page).
+[4] http://www.t13.org/documents/uploadeddocuments/docs2008/d1699r6a-ata8-acs.pdf
+    ANS T13/1699-D "Information technology - AT Attachment 8 - ATA/ATAPI Command
+    Set (ATA8-ACS)"
+[5] https://github.com/mirror/smartmontools.git
