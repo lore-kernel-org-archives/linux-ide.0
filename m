@@ -2,107 +2,107 @@ Return-Path: <SRS0=HnBo=2A=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CDB1C2D0BF
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 16:10:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC34AC43603
+	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 18:55:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE9F92077B
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 16:10:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9294B206D5
+	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 18:55:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mzOOSYax"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727425AbfLJQKh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 10 Dec 2019 11:10:37 -0500
-Received: from mail-qk1-f195.google.com ([209.85.222.195]:44877 "EHLO
-        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727178AbfLJQKh (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 Dec 2019 11:10:37 -0500
-Received: by mail-qk1-f195.google.com with SMTP id w127so5053472qkb.11;
-        Tue, 10 Dec 2019 08:10:36 -0800 (PST)
+        id S1727455AbfLJSzM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 10 Dec 2019 13:55:12 -0500
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:41811 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727349AbfLJSzL (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 Dec 2019 13:55:11 -0500
+Received: by mail-wr1-f67.google.com with SMTP id c9so21329432wrw.8;
+        Tue, 10 Dec 2019 10:55:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=gRtOZdgRT/ANVUaDFwM1DFPPZAUHxCMR/8XqEYr9qfk=;
+        b=mzOOSYaxLUFfQr5wR6FevwJm4qw5wbakB9bwQ+j9HakAuf4lMSDpq0ief8wTekxS0R
+         C9tohH2wZBPnsoFkc9QCHDg0miAOA4Jo2C9AHdXk7PKv2ZcYtYbZ4HJkrGdFcC0oJ9ol
+         uxU6wi6Zoz7SU98JhEqNEHopQ9ZZXOD7UvRZNtUWLLuWFEha0/+w0d+VNxDSyg2tmAZO
+         KVnHOarv9I/45PpvY/eC1A0phRRYL5eYoa3/VM4nCrlLKU9zfaLPr0uL1mAr6qSsk2vg
+         bcipxoOHxIQS2hkKd1UKKkc8Yg8doo5gT6qf8pyy/ACy0JoUX6g1FuAG0P+ocTUDvLTD
+         hbmQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=lZE47SpvmWbaZCLW9SF04UfyFA5hnwe7EynLuzbBXEU=;
-        b=QE1w6CNXmkuHy57MqPqKfNMMXwOwNrbJirtcE9psbiCsDc6rzaAfRnk8ihzFMEoaVL
-         MImPsc1IFDFfKNxvxw8FxBdVGma5DsAA/P544nWiJluscH2NGd1C53wzVzi+UFpTj7yK
-         dyu0I8QvSK1WhUrYVr4q56xtAfcsy5twl0EB4L82q/T4zwzZ00+LAtX3xTC8L8RzQ50r
-         wc/+Xihw//FIWXVdWaO816ZvrsRu+BOWxYtNTfg9lj9Y7CuBBxcLo5lsaE7IvFZaYTVr
-         clwDAtMvG6ICFJ1X0o9+TLqYM+9rNgOa6gw3xRdQCu0eaQaKP9V/zgO5PY9HYCwYVShP
-         DRAw==
-X-Gm-Message-State: APjAAAUooKSLt5k1s4hUaWz+H4SeKft+JsmyGLB1vmXbUQbrlZmD0ZYE
-        jRIt16oL8eCTwJGEKHL4GBw=
-X-Google-Smtp-Source: APXvYqwtb+bh5ogy/mgbL/ALEUxzw0JUumrhq01yBDoTtXEUY99U0X4eCKZqwQE7q8Md9k5/c1fofg==
-X-Received: by 2002:a37:6d47:: with SMTP id i68mr20525610qkc.228.1575994235780;
-        Tue, 10 Dec 2019 08:10:35 -0800 (PST)
-Received: from ?IPv6:2620:0:1003:512:62e9:2658:28c:bd76? ([2620:0:1003:512:62e9:2658:28c:bd76])
-        by smtp.gmail.com with ESMTPSA id g9sm1052744qkm.9.2019.12.10.08.10.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 10 Dec 2019 08:10:34 -0800 (PST)
-Subject: Re: [PATCH 1/1] hwmon: Driver for temperature sensors on SATA drives
-To:     Guenter Roeck <linux@roeck-us.net>
-Cc:     linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        Chris Healy <cphealy@gmail.com>,
-        Linus Walleij <linus.walleij@linaro.org>
-References: <20191209052119.32072-1-linux@roeck-us.net>
- <20191209052119.32072-2-linux@roeck-us.net>
- <c87ca545-d8f1-bf1e-2474-b98a6eb60422@acm.org>
- <20191209192048.GA3940@roeck-us.net>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <ad33d8cb-5247-0bf8-d0cb-87073a41e3ff@acm.org>
-Date:   Tue, 10 Dec 2019 11:10:33 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
-MIME-Version: 1.0
-In-Reply-To: <20191209192048.GA3940@roeck-us.net>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=gRtOZdgRT/ANVUaDFwM1DFPPZAUHxCMR/8XqEYr9qfk=;
+        b=FWpiDTphWfvX/kojKky1Bi8/TqwmWxcsOYH/HQuPvBS1DHSSSWHJ2x7xlq/oEyFHBO
+         2QqhlsyTPrZAlqSiuqsi8hhWcBqsnZsBhFOqwnCrcsVYFmuibLjSkELPD0WuJUEJmHJM
+         9RL8NnckfztJaR7qcdflBJLeGAMAyxUpDrSLAA9UW0hZo98RAuDTIeUg0A3LUf5jqiHD
+         xpjJW30rmvoOooJgGyS2VBqRk+/eS5kV90pKVmaw5yqcVB2wZHLma1NxQFqpoKJ/l+wi
+         V0whXakqKOa+m2T5qbkxDyH1dnseb28hQRmCOBiq3AMRZlARf1vspsIAEoWonq+Y05G7
+         /0uQ==
+X-Gm-Message-State: APjAAAU9XQ4yNtuum5MTndjKS+RbmPdkn2cEV+jfLwROphPSsnxB37k/
+        4jUa5YpQUDSeJNy5pBnJ0arY7XoF
+X-Google-Smtp-Source: APXvYqyT+IZZBXlEJY9YdUaBpm1PovK7SsMJmVHMvmSMlo93jKNUo+dnd9ki65HQQpu2LlHM6eCTOw==
+X-Received: by 2002:a5d:5708:: with SMTP id a8mr5224945wrv.79.1576004109818;
+        Tue, 10 Dec 2019 10:55:09 -0800 (PST)
+Received: from fainelli-desktop.igp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id e6sm4213536wru.44.2019.12.10.10.55.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 10 Dec 2019 10:55:09 -0800 (PST)
+From:   Florian Fainelli <f.fainelli@gmail.com>
+To:     linux-kernel@vger.kernel.org
+Cc:     bcm-kernel-feedback-list@broadcom.com,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Tejun Heo <tj@kernel.org>, Jaedon Shin <jaedon.shin@gmail.com>,
+        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
+        Parallel ATA drivers)),
+        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
+        DEVICE TREE BINDINGS)
+Subject: [PATCH 0/8] ata: ahci_brcm: Fixes and new device support
+Date:   Tue, 10 Dec 2019 10:53:43 -0800
+Message-Id: <20191210185351.14825-1-f.fainelli@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 12/9/19 2:20 PM, Guenter Roeck wrote:
-> On Mon, Dec 09, 2019 at 09:08:13AM -0800, Bart Van Assche wrote:
->> How much does synchronously submitting SCSI commands from inside the
->> device probing call back slow down SCSI device discovery? What is the
->> impact of this code on systems with a large number of ATA devices?
-> 
-> Interesting question. In general, any SCSI commands would only be executed
-> for SATA drives since the very first check in satatemp_identify() uses
-> sdev->inquiriy and aborts if the drive in question is not an ATA drive.
-> When connected to SATA drives, I measured the execution time of
-> satatemp_identify() to be between ~900 uS and 1,700 uS on a system with
-> Ryzen 3900 CPU.
-> 
-> In more detail:
-> - Time to read VPD page: ~10-20 uS
-> - Time to execute SMART_READ_LOG/SCT_STATUS_REQ_ADDR: ~140-150 uS
-> - Time to execute SMART_WRITE_LOG/SCT_STATUS_REQ_ADDR: ~600-1,500 uS
-> - Time to execute SMART_READ_LOG/SCT_READ_LOG_ADDR: ~100-130 uS
-> 
-> Does that answer your question ?
-> 
-> Please note that I think that this is irrelevant in this context.
-> The driver is only instantiated if loaded explicitly, so whoever uses it
-> will be in a position to decide if the benefit of using it will outweigh
-> its cost.
-> 
-> If instantiation time ever becomes a real problem, for example if someone
-> with a large number of SATA drives in a system wants to use the driver
-> and is concerned about instantiation time, we can make the second part
-> of its registration (ie everything after identifying SATA drives)
-> asynchronous. That would, however, add a substantial amount of complexity
-> to the driver, and we should only do it if it is really warranted.
+Hi Jens,
 
-Hi Guenter,
+The first 4 patches are fixes and should ideally be queued up/picked up
+by stable. The last 4 patches add support for BCM7216 which is one of
+our latest devices supported by this driver.
 
-Thank you for having answered my question in great detail. I think this
-overhead is low enough to be acceptable.
+Patch #2 does a few things, but it was pretty badly broken before and it
+is hard not to fix all call sites (probe, suspend, resume) in one shot.
 
-Bart.
+Please let me know if you have any comments.
+
+Thanks!
+
+Florian Fainelli (8):
+  ata: libahci_platform: Export again ahci_platform_<en/dis>able_phys()
+  ata: ahci_brcm: Fix AHCI resources management
+  ata: ahci_brcm: BCM7425 AHCI requires AHCI_HFLAG_DELAY_ENGINE
+  ata: ahci_brcm: Add missing clock management during recovery
+  ata: ahci_brcm: Manage reset line during suspend/resume
+  ata: ahci_brcm: Add a shutdown callback
+  dt-bindings: ata: Document BCM7216 AHCI controller compatible
+  ata: ahci_brcm: Support BCM7216 reset controller name
+
+ .../bindings/ata/brcm,sata-brcm.txt           |   7 +
+ drivers/ata/ahci_brcm.c                       | 167 ++++++++++++++----
+ drivers/ata/libahci_platform.c                |   6 +-
+ include/linux/ahci_platform.h                 |   2 +
+ 4 files changed, 141 insertions(+), 41 deletions(-)
+
+-- 
+2.17.1
+
