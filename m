@@ -2,277 +2,112 @@ Return-Path: <SRS0=HnBo=2A=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DF34C00454
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 20:09:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75483C47409
+	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 21:25:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EE3112073D
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 20:09:27 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iryaSD52"
+	by mail.kernel.org (Postfix) with ESMTP id 3EF1C206D5
+	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 21:25:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1576013110;
+	bh=TaILOQjdQJF4e3ozYjxKmHMaISIlc5tWIgaU9YIpieE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=BoKcT+ZCSnbVYcrJVEgIgX0e/6mxtZ3dH2khYulxTyUxbDlk7yYMtKedgOGEAw7it
+	 eB3gpdfQ629Z3FoPV04F63wnLcakLOn27Tn5DCJ5k8BzvSfOcCJmHA+/IjfZuObd2O
+	 zF0+7OpU5vCc4cM5/IMIO+iDaaXDgMgW3K3g14GQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726685AbfLJUJX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 10 Dec 2019 15:09:23 -0500
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:38309 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726045AbfLJUJX (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 Dec 2019 15:09:23 -0500
-Received: by mail-wr1-f66.google.com with SMTP id y17so21561368wrh.5;
-        Tue, 10 Dec 2019 12:09:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=u/LjPuF3/fCHoU0gjJ+jhVHgMQTJmMf2Obyi4CIeoxM=;
-        b=iryaSD524QzJLWrvBJeXCxs6EkdwiQqRjSmDFZXGuvbUw21wuS9yN10e3SW/37q6P9
-         eWloyjbs5DoLPeR572uw1d5acE+ae35FV6018cV2NlXlw32USWCaLtnN4pKcTeW6sezR
-         9c0omx2nBvsPnID3HTeIIPHzm8NU8i19qB4jC5esPPhsXMR6uKeU/TXsxRd4nXuqtaLg
-         x8OaoJ0FzU9e/+nuyJEYyZr9mu6tcmOsUNDsG/BDRA5w+VnFsNU/yBR8xLJuoKwFG5C0
-         X1MZeD8ui/GUMoCJ0JAzIdVIRSQXXzsHxzmXktm//gmUE93sthMSiLczVC9lH1B2b3IY
-         6sEg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=u/LjPuF3/fCHoU0gjJ+jhVHgMQTJmMf2Obyi4CIeoxM=;
-        b=cdmupNeKLgstIJMy76UENIGly6L4hCC06eKlh854Jb5ZbYi/1miCgIsE3A3CN3eaUO
-         RMMZnk9GN+qjbg4TDvbyI7zmUu+sFRGOqpW0n+C6SAoBojGca4ROxhONv5n0dutAmyGR
-         NIpnN3gUE+qFZCTDOhtdPIkYotr1Ets40j4QnrFxzHaT9JKuRt/jH2tzxfHUfYJ965qf
-         hte7eMZRXnTTMO8Y8VU2WIRUilJfWcKLNrTCsbcOb4BHIfueCqhB5l6Re8DN0WQuny3z
-         4maD0NuDnCyAK9NZMDs6ZjGv2uk/o0VFNM8C9HJZbIKJ5rBM90IDM//9y5S778kifK1u
-         qwRA==
-X-Gm-Message-State: APjAAAX8UM8ai9imYkfQvoupYYSkHT2mEkNlLT0kLRnWbjAlmlf+XDJM
-        jormGI/jYBqYNEXo+E1LHdU=
-X-Google-Smtp-Source: APXvYqz1HahWkU6kOI2OPxbyEF894A8hHjOhrlhREULuOqq0LKqnnSaxBzfWtlfLB1Lx0VXZjwD33g==
-X-Received: by 2002:adf:ee92:: with SMTP id b18mr5465886wro.281.1576008559977;
-        Tue, 10 Dec 2019 12:09:19 -0800 (PST)
-Received: from fainelli-desktop.igp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id w19sm4113643wmc.22.2019.12.10.12.09.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 Dec 2019 12:09:19 -0800 (PST)
-From:   Florian Fainelli <f.fainelli@gmail.com>
-To:     kishon@ti.com
-Cc:     Florian Fainelli <f.fainelli@gmail.com>,
-        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Al Cooper <alcooperx@gmail.com>,
-        Ray Jui <ray.jui@broadcom.com>, Tejun Heo <tj@kernel.org>,
-        Fengguang Wu <fengguang.wu@intel.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
-        Parallel ATA drivers)),
-        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
-        DEVICE TREE BINDINGS), linux-kernel@vger.kernel.org (open list),
-        bcm-kernel-feedback-list@broadcom.com
-Subject: [PATCH 2/2] phy: brcm-sata: Implement 7216 initialization sequence
-Date:   Tue, 10 Dec 2019 12:08:52 -0800
-Message-Id: <20191210200852.24945-3-f.fainelli@gmail.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20191210200852.24945-1-f.fainelli@gmail.com>
-References: <20191210200852.24945-1-f.fainelli@gmail.com>
+        id S1727821AbfLJVKl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 10 Dec 2019 16:10:41 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60820 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728561AbfLJVKk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 10 Dec 2019 16:10:40 -0500
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id B2804246B2;
+        Tue, 10 Dec 2019 21:10:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1576012239;
+        bh=TaILOQjdQJF4e3ozYjxKmHMaISIlc5tWIgaU9YIpieE=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=MFE/xrpsRcxCwz/b9kXRh15UY6t9s5QS7qNvICkp0zr8Esp/O6p9cGaNlfFY58gJd
+         24hFNc9hKHBVenCxDllTmlYmrV6zetMjpQm9wZ6wLAyRsC/f6mYnEeVPMMuf8RxG+B
+         xwotyeWtHXjQXWo5+M88+YGiQC3enw/Z+Sogt5dY=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Jiri Slaby <jslaby@suse.cz>, Jens Axboe <axboe@kernel.dk>,
+        linux-ide@vger.kernel.org,
+        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+        Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 188/350] ata: sata_mv, avoid trigerrable BUG_ON
+Date:   Tue, 10 Dec 2019 16:04:53 -0500
+Message-Id: <20191210210735.9077-149-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191210210735.9077-1-sashal@kernel.org>
+References: <20191210210735.9077-1-sashal@kernel.org>
+MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-7216 is a 16nm process chip with a slightly different version of the PHY
-SerdDeS/AFE that requires a specific tuning sequence. Key on the
-compatible string to perform that initialization.
+From: Jiri Slaby <jslaby@suse.cz>
 
-Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+[ Upstream commit e9f691d899188679746eeb96e6cb520459eda9b4 ]
+
+There are several reports that the BUG_ON on unsupported command in
+mv_qc_prep can be triggered under some circumstances:
+https://bugzilla.suse.com/show_bug.cgi?id=1110252
+https://serverfault.com/questions/888897/raid-problems-after-power-outage
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1652185
+https://bugs.centos.org/view.php?id=14998
+
+Let sata_mv handle the failure gracefully: warn about that incl. the
+failed command number and return an AC_ERR_INVALID error. We can do that
+now thanks to the previous patch.
+
+Remove also the long-standing FIXME.
+
+[v2] use %.2x as commands are defined as hexa.
+
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: linux-ide@vger.kernel.org
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/phy/broadcom/phy-brcm-sata.c | 120 +++++++++++++++++++++++++++
- 1 file changed, 120 insertions(+)
+ drivers/ata/sata_mv.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/phy/broadcom/phy-brcm-sata.c b/drivers/phy/broadcom/phy-brcm-sata.c
-index 50ac75bbb0c9..4710cfcc3037 100644
---- a/drivers/phy/broadcom/phy-brcm-sata.c
-+++ b/drivers/phy/broadcom/phy-brcm-sata.c
-@@ -33,6 +33,7 @@
- #define SATA_PHY_CTRL_REG_28NM_SPACE_SIZE		0x8
- 
- enum brcm_sata_phy_version {
-+	BRCM_SATA_PHY_STB_16NM,
- 	BRCM_SATA_PHY_STB_28NM,
- 	BRCM_SATA_PHY_STB_40NM,
- 	BRCM_SATA_PHY_IPROC_NS2,
-@@ -104,10 +105,13 @@ enum sata_phy_regs {
- 	PLL1_ACTRL5				= 0x85,
- 	PLL1_ACTRL6				= 0x86,
- 	PLL1_ACTRL7				= 0x87,
-+	PLL1_ACTRL8				= 0x88,
- 
- 	TX_REG_BANK				= 0x070,
- 	TX_ACTRL0				= 0x80,
- 	TX_ACTRL0_TXPOL_FLIP			= BIT(6),
-+	TX_ACTRL5				= 0x85,
-+	TX_ACTRL5_SSC_EN			= BIT(11),
- 
- 	AEQRX_REG_BANK_0			= 0xd0,
- 	AEQ_CONTROL1				= 0x81,
-@@ -116,6 +120,7 @@ enum sata_phy_regs {
- 	AEQ_FRC_EQ				= 0x83,
- 	AEQ_FRC_EQ_FORCE			= BIT(0),
- 	AEQ_FRC_EQ_FORCE_VAL			= BIT(1),
-+	AEQ_RFZ_FRC_VAL				= BIT(8),
- 	AEQRX_REG_BANK_1			= 0xe0,
- 	AEQRX_SLCAL0_CTRL0			= 0x82,
- 	AEQRX_SLCAL1_CTRL0			= 0x86,
-@@ -152,7 +157,28 @@ enum sata_phy_regs {
- 	TXPMD_TX_FREQ_CTRL_CONTROL3_FMAX_MASK	= 0x3ff,
- 
- 	RXPMD_REG_BANK				= 0x1c0,
-+	RXPMD_RX_CDR_CONTROL1			= 0x81,
-+	RXPMD_RX_PPM_VAL_MASK			= 0x1ff,
-+	RXPMD_RXPMD_EN_FRC			= BIT(12),
-+	RXPMD_RXPMD_EN_FRC_VAL			= BIT(13),
-+	RXPMD_RX_CDR_CDR_PROP_BW		= 0x82,
-+	RXPMD_G_CDR_PROP_BW_MASK		= 0x7,
-+	RXPMD_G1_CDR_PROP_BW_SHIFT		= 0,
-+	RXPMD_G2_CDR_PROP_BW_SHIFT		= 3,
-+	RXPMD_G3_CDR_PROB_BW_SHIFT		= 6,
-+	RXPMD_RX_CDR_CDR_ACQ_INTEG_BW		= 0x83,
-+	RXPMD_G_CDR_ACQ_INT_BW_MASK		= 0x7,
-+	RXPMD_G1_CDR_ACQ_INT_BW_SHIFT		= 0,
-+	RXPMD_G2_CDR_ACQ_INT_BW_SHIFT		= 3,
-+	RXPMD_G3_CDR_ACQ_INT_BW_SHIFT		= 6,
-+	RXPMD_RX_CDR_CDR_LOCK_INTEG_BW		= 0x84,
-+	RXPMD_G_CDR_LOCK_INT_BW_MASK		= 0x7,
-+	RXPMD_G1_CDR_LOCK_INT_BW_SHIFT		= 0,
-+	RXPMD_G2_CDR_LOCK_INT_BW_SHIFT		= 3,
-+	RXPMD_G3_CDR_LOCK_INT_BW_SHIFT		= 6,
- 	RXPMD_RX_FREQ_MON_CONTROL1		= 0x87,
-+	RXPMD_MON_CORRECT_EN			= BIT(8),
-+	RXPMD_MON_MARGIN_VAL_MASK		= 0xff,
- };
- 
- enum sata_phy_ctrl_regs {
-@@ -166,6 +192,7 @@ static inline void __iomem *brcm_sata_pcb_base(struct brcm_sata_port *port)
- 	u32 size = 0;
- 
- 	switch (priv->version) {
-+	case BRCM_SATA_PHY_STB_16NM:
- 	case BRCM_SATA_PHY_STB_28NM:
- 	case BRCM_SATA_PHY_IPROC_NS2:
- 	case BRCM_SATA_PHY_DSL_28NM:
-@@ -287,6 +314,94 @@ static int brcm_stb_sata_init(struct brcm_sata_port *port)
- 	return brcm_stb_sata_rxaeq_init(port);
- }
- 
-+static int brcm_stb_sata_16nm_ssc_init(struct brcm_sata_port *port)
-+{
-+	void __iomem *base = brcm_sata_pcb_base(port);
-+	u32 tmp, value;
-+
-+	/* Reduce CP tail current to 1/16th of its default value */
-+	brcm_sata_phy_wr(base, PLL1_REG_BANK, PLL1_ACTRL6, 0, 0x141);
-+
-+	/* Turn off CP tail current boost */
-+	brcm_sata_phy_wr(base, PLL1_REG_BANK, PLL1_ACTRL8, 0, 0xc006);
-+
-+	/* Set a specific AEQ equalizer value */
-+	tmp = AEQ_FRC_EQ_FORCE_VAL | AEQ_FRC_EQ_FORCE;
-+	brcm_sata_phy_wr(base, AEQRX_REG_BANK_0, AEQ_FRC_EQ,
-+			 ~(tmp | AEQ_RFZ_FRC_VAL |
-+			   AEQ_FRC_EQ_VAL_MASK << AEQ_FRC_EQ_VAL_SHIFT),
-+			 tmp | 32 << AEQ_FRC_EQ_VAL_SHIFT);
-+
-+	/* Set RX PPM val center frequency */
-+	if (port->ssc_en)
-+		value = 0x52;
-+	else
-+		value = 0;
-+	brcm_sata_phy_wr(base, RXPMD_REG_BANK, RXPMD_RX_CDR_CONTROL1,
-+			 ~RXPMD_RX_PPM_VAL_MASK, value);
-+
-+	/* Set proportional loop bandwith Gen1/2/3 */
-+	tmp = RXPMD_G_CDR_PROP_BW_MASK << RXPMD_G1_CDR_PROP_BW_SHIFT |
-+	      RXPMD_G_CDR_PROP_BW_MASK << RXPMD_G2_CDR_PROP_BW_SHIFT |
-+	      RXPMD_G_CDR_PROP_BW_MASK << RXPMD_G3_CDR_PROB_BW_SHIFT;
-+	if (port->ssc_en)
-+		value = 2 << RXPMD_G1_CDR_PROP_BW_SHIFT |
-+			2 << RXPMD_G2_CDR_PROP_BW_SHIFT |
-+			2 << RXPMD_G3_CDR_PROB_BW_SHIFT;
-+	else
-+		value = 1 << RXPMD_G1_CDR_PROP_BW_SHIFT |
-+			1 << RXPMD_G2_CDR_PROP_BW_SHIFT |
-+			1 << RXPMD_G3_CDR_PROB_BW_SHIFT;
-+	brcm_sata_phy_wr(base, RXPMD_REG_BANK, RXPMD_RX_CDR_CDR_PROP_BW, ~tmp,
-+			 value);
-+
-+	/* Set CDR integral loop acquisition bandwidth for Gen1/2/3 */
-+	tmp = RXPMD_G_CDR_ACQ_INT_BW_MASK << RXPMD_G1_CDR_ACQ_INT_BW_SHIFT |
-+	      RXPMD_G_CDR_ACQ_INT_BW_MASK << RXPMD_G2_CDR_ACQ_INT_BW_SHIFT |
-+	      RXPMD_G_CDR_ACQ_INT_BW_MASK << RXPMD_G3_CDR_ACQ_INT_BW_SHIFT;
-+	if (port->ssc_en)
-+		value = 1 << RXPMD_G1_CDR_ACQ_INT_BW_SHIFT |
-+			1 << RXPMD_G2_CDR_ACQ_INT_BW_SHIFT |
-+			1 << RXPMD_G3_CDR_ACQ_INT_BW_SHIFT;
-+	else
-+		value = 0;
-+	brcm_sata_phy_wr(base, RXPMD_REG_BANK, RXPMD_RX_CDR_CDR_ACQ_INTEG_BW,
-+			 ~tmp, value);
-+
-+	/* Set CDR integral loop locking bandwidth to 1 for Gen 1/2/3 */
-+	tmp = RXPMD_G_CDR_LOCK_INT_BW_MASK << RXPMD_G1_CDR_LOCK_INT_BW_SHIFT |
-+	      RXPMD_G_CDR_LOCK_INT_BW_MASK << RXPMD_G2_CDR_LOCK_INT_BW_SHIFT |
-+	      RXPMD_G_CDR_LOCK_INT_BW_MASK << RXPMD_G3_CDR_LOCK_INT_BW_SHIFT;
-+	if (port->ssc_en)
-+		value = 1 << RXPMD_G1_CDR_LOCK_INT_BW_SHIFT |
-+			1 << RXPMD_G2_CDR_LOCK_INT_BW_SHIFT |
-+			1 << RXPMD_G3_CDR_LOCK_INT_BW_SHIFT;
-+	else
-+		value = 0;
-+	brcm_sata_phy_wr(base, RXPMD_REG_BANK, RXPMD_RX_CDR_CDR_LOCK_INTEG_BW,
-+			 ~tmp, value);
-+
-+	/* Set no guard band and clamp CDR */
-+	tmp = RXPMD_MON_CORRECT_EN | RXPMD_MON_MARGIN_VAL_MASK;
-+	if (port->ssc_en)
-+		value = 0x51;
-+	else
-+		value = 0;
-+	brcm_sata_phy_wr(base, RXPMD_REG_BANK, RXPMD_RX_FREQ_MON_CONTROL1,
-+			 ~tmp, RXPMD_MON_CORRECT_EN | value);
-+
-+	/* Turn on/off SSC */
-+	brcm_sata_phy_wr(base, TX_REG_BANK, TX_ACTRL5, ~TX_ACTRL5_SSC_EN,
-+			 port->ssc_en ? TX_ACTRL5_SSC_EN : 0);
-+
-+	return 0;
-+}
-+
-+static int brcm_stb_sata_16nm_init(struct brcm_sata_port *port)
-+{
-+	return brcm_stb_sata_16nm_ssc_init(port);
-+}
-+
- /* NS2 SATA PLL1 defaults were characterized by H/W group */
- #define NS2_PLL1_ACTRL2_MAGIC	0x1df8
- #define NS2_PLL1_ACTRL3_MAGIC	0x2b00
-@@ -544,6 +659,9 @@ static int brcm_sata_phy_init(struct phy *phy)
- 	struct brcm_sata_port *port = phy_get_drvdata(phy);
- 
- 	switch (port->phy_priv->version) {
-+	case BRCM_SATA_PHY_STB_16NM:
-+		rc = brcm_stb_sata_16nm_init(port);
-+		break;
- 	case BRCM_SATA_PHY_STB_28NM:
- 	case BRCM_SATA_PHY_STB_40NM:
- 		rc = brcm_stb_sata_init(port);
-@@ -601,6 +719,8 @@ static const struct phy_ops phy_ops = {
- };
- 
- static const struct of_device_id brcm_sata_phy_of_match[] = {
-+	{ .compatible	= "brcm,bcm7216-sata-phy",
-+	  .data = (void *)BRCM_SATA_PHY_STB_16NM },
- 	{ .compatible	= "brcm,bcm7445-sata-phy",
- 	  .data = (void *)BRCM_SATA_PHY_STB_28NM },
- 	{ .compatible	= "brcm,bcm7425-sata-phy",
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index ad385a113391e..a2b56c882081e 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -2098,12 +2098,10 @@ static void mv_qc_prep(struct ata_queued_cmd *qc)
+ 		 * non-NCQ mode are: [RW] STREAM DMA and W DMA FUA EXT, none
+ 		 * of which are defined/used by Linux.  If we get here, this
+ 		 * driver needs work.
+-		 *
+-		 * FIXME: modify libata to give qc_prep a return value and
+-		 * return error here.
+ 		 */
+-		BUG_ON(tf->command);
+-		break;
++		ata_port_err(ap, "%s: unsupported command: %.2x\n", __func__,
++				tf->command);
++		return AC_ERR_INVALID;
+ 	}
+ 	mv_crqb_pack_cmd(cw++, tf->nsect, ATA_REG_NSECT, 0);
+ 	mv_crqb_pack_cmd(cw++, tf->hob_lbal, ATA_REG_LBAL, 0);
 -- 
-2.17.1
+2.20.1
 
