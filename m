@@ -4,50 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB2FFC2D0BF
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 21:25:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE573C2D0BF
+	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 21:34:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7BAFF2073B
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 21:25:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9E6D208C3
+	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 21:34:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576013112;
-	bh=Afo0ZIf5GYFp8mlkMxRwspw4KlnJbwWXjoAzg132PXQ=;
+	s=default; t=1576013657;
+	bh=SRxD/UdSUIhXNsk1VgfV48n5LlcaWg5Vpie+dxeAzck=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=StdBuR52pTulfrN/SIkdmohR56OyjgYo2YxbX3olK+qMrPocp2ZUbmj/Zb9YZ9BDH
-	 jGnZNDrEbGotiliiILzONKKIm32VpHbbAUFxYlfOq3snHmDxsZO1+fdV6CAzm8VPBb
-	 fOAnFEWu9XpC0JYEUl2nmC3+3EOf96c/fWZYQzRQ=
+	b=VjoFVWJajlNH2fMr8DVm+/kfSBPZCGi457Jtj5+PjfkUw98BShW0EGFvswg7dYnYw
+	 M+LoGoDcENCcLfRF5czD/m5klpeUY0bfnDDbfMwMWkDMA5AcG6bXZYi/W0TaEokJud
+	 kXl9dnWJsWy54rx1xEEZe0PPfyhYE+bzOnXZp6RI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728513AbfLJVKj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 10 Dec 2019 16:10:39 -0500
-Received: from mail.kernel.org ([198.145.29.99]:60730 "EHLO mail.kernel.org"
+        id S1729432AbfLJVeQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 10 Dec 2019 16:34:16 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39230 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728557AbfLJVKi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 10 Dec 2019 16:10:38 -0500
+        id S1729981AbfLJVeP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 10 Dec 2019 16:34:15 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9721A246A3;
-        Tue, 10 Dec 2019 21:10:36 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C923D22464;
+        Tue, 10 Dec 2019 21:34:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576012237;
-        bh=Afo0ZIf5GYFp8mlkMxRwspw4KlnJbwWXjoAzg132PXQ=;
+        s=default; t=1576013654;
+        bh=SRxD/UdSUIhXNsk1VgfV48n5LlcaWg5Vpie+dxeAzck=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hnYlR1sFiRxk3eFIF+l2kL9bRcx9TpTjZWJITvo+OHgCJS8x3mNnCNfR/2FSelkP7
-         Lm6YaSIeJCCabz/3HLxNuMdhpolazhLOCSRFiPz1YhIQs+J8VrdRP9ZGZQva3WFOou
-         lQvgzv8e7XU5m68wXZ1pfZ8UkVQz4uyerioyqT3Q=
+        b=DTO5BI+nvC2fIynjNcgFS59EE0rvhBEIygay8H9RAtXlnt9Ia62DxUzQ+kfzVaLK0
+         Em/WpwxRn67WwnFoQ1XRel0p47Q9znZqZnuMf/91Z/X0N6Z1AbqdaWJfqpF9YmgmKf
+         g6s5kSgUkKvmK9dBHvMagnUuKN2FTAiNlmVBuQV8=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     John Garry <john.garry@huawei.com>, Jens Axboe <axboe@kernel.dk>,
-        Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 186/350] libata: Ensure ata_port probe has completed before detach
-Date:   Tue, 10 Dec 2019 16:04:51 -0500
-Message-Id: <20191210210735.9077-147-sashal@kernel.org>
+Cc:     Jiri Slaby <jslaby@suse.cz>, Jens Axboe <axboe@kernel.dk>,
+        linux-ide@vger.kernel.org,
+        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+        Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 093/177] ata: sata_mv, avoid trigerrable BUG_ON
+Date:   Tue, 10 Dec 2019 16:30:57 -0500
+Message-Id: <20191210213221.11921-93-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191210210735.9077-1-sashal@kernel.org>
-References: <20191210210735.9077-1-sashal@kernel.org>
+In-Reply-To: <20191210213221.11921-1-sashal@kernel.org>
+References: <20191210213221.11921-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -57,93 +59,55 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: John Garry <john.garry@huawei.com>
+From: Jiri Slaby <jslaby@suse.cz>
 
-[ Upstream commit 130f4caf145c3562108b245a576db30b916199d2 ]
+[ Upstream commit e9f691d899188679746eeb96e6cb520459eda9b4 ]
 
-With CONFIG_DEBUG_TEST_DRIVER_REMOVE set, we may find the following WARN:
+There are several reports that the BUG_ON on unsupported command in
+mv_qc_prep can be triggered under some circumstances:
+https://bugzilla.suse.com/show_bug.cgi?id=1110252
+https://serverfault.com/questions/888897/raid-problems-after-power-outage
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1652185
+https://bugs.centos.org/view.php?id=14998
 
-[   23.452574] ------------[ cut here ]------------
-[   23.457190] WARNING: CPU: 59 PID: 1 at drivers/ata/libata-core.c:6676 ata_host_detach+0x15c/0x168
-[   23.466047] Modules linked in:
-[   23.469092] CPU: 59 PID: 1 Comm: swapper/0 Not tainted 5.4.0-rc1-00010-g5b83fd27752b-dirty #296
-[   23.477776] Hardware name: Huawei D06 /D06, BIOS Hisilicon D06 UEFI RC0 - V1.16.01 03/15/2019
-[   23.486286] pstate: a0c00009 (NzCv daif +PAN +UAO)
-[   23.491065] pc : ata_host_detach+0x15c/0x168
-[   23.495322] lr : ata_host_detach+0x88/0x168
-[   23.499491] sp : ffff800011cabb50
-[   23.502792] x29: ffff800011cabb50 x28: 0000000000000007
-[   23.508091] x27: ffff80001137f068 x26: ffff8000112c0c28
-[   23.513390] x25: 0000000000003848 x24: ffff0023ea185300
-[   23.518689] x23: 0000000000000001 x22: 00000000000014c0
-[   23.523987] x21: 0000000000013740 x20: ffff0023bdc20000
-[   23.529286] x19: 0000000000000000 x18: 0000000000000004
-[   23.534584] x17: 0000000000000001 x16: 00000000000000f0
-[   23.539883] x15: ffff0023eac13790 x14: ffff0023eb76c408
-[   23.545181] x13: 0000000000000000 x12: ffff0023eac13790
-[   23.550480] x11: ffff0023eb76c228 x10: 0000000000000000
-[   23.555779] x9 : ffff0023eac13798 x8 : 0000000040000000
-[   23.561077] x7 : 0000000000000002 x6 : 0000000000000001
-[   23.566376] x5 : 0000000000000002 x4 : 0000000000000000
-[   23.571674] x3 : ffff0023bf08a0bc x2 : 0000000000000000
-[   23.576972] x1 : 3099674201f72700 x0 : 0000000000400284
-[   23.582272] Call trace:
-[   23.584706]  ata_host_detach+0x15c/0x168
-[   23.588616]  ata_pci_remove_one+0x10/0x18
-[   23.592615]  ahci_remove_one+0x20/0x40
-[   23.596356]  pci_device_remove+0x3c/0xe0
-[   23.600267]  really_probe+0xdc/0x3e0
-[   23.603830]  driver_probe_device+0x58/0x100
-[   23.608000]  device_driver_attach+0x6c/0x90
-[   23.612169]  __driver_attach+0x84/0xc8
-[   23.615908]  bus_for_each_dev+0x74/0xc8
-[   23.619730]  driver_attach+0x20/0x28
-[   23.623292]  bus_add_driver+0x148/0x1f0
-[   23.627115]  driver_register+0x60/0x110
-[   23.630938]  __pci_register_driver+0x40/0x48
-[   23.635199]  ahci_pci_driver_init+0x20/0x28
-[   23.639372]  do_one_initcall+0x5c/0x1b0
-[   23.643199]  kernel_init_freeable+0x1a4/0x24c
-[   23.647546]  kernel_init+0x10/0x108
-[   23.651023]  ret_from_fork+0x10/0x18
-[   23.654590] ---[ end trace 634a14b675b71c13 ]---
+Let sata_mv handle the failure gracefully: warn about that incl. the
+failed command number and return an AC_ERR_INVALID error. We can do that
+now thanks to the previous patch.
 
-With KASAN also enabled, we may also get many use-after-free reports.
+Remove also the long-standing FIXME.
 
-The issue is that when CONFIG_DEBUG_TEST_DRIVER_REMOVE is set, we may
-attempt to detach the ata_port before it has been probed.
+[v2] use %.2x as commands are defined as hexa.
 
-This is because the ata_ports are async probed, meaning that there is no
-guarantee that the ata_port has probed prior to detach. When the ata_port
-does probe in this scenario, we get all sorts of issues as the detach may
-have already happened.
-
-Fix by ensuring synchronisation with async_synchronize_full(). We could
-alternatively use the cookie returned from the ata_port probe
-async_schedule() call, but that means managing the cookie, so more
-complicated.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: linux-ide@vger.kernel.org
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Signed-off-by: Jens Axboe <axboe@kernel.dk>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ata/libata-core.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/ata/sata_mv.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 28c492be0a572..74c9b3032d46f 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6708,6 +6708,9 @@ void ata_host_detach(struct ata_host *host)
- {
- 	int i;
- 
-+	/* Ensure ata_port probe has completed */
-+	async_synchronize_full();
-+
- 	for (i = 0; i < host->n_ports; i++)
- 		ata_port_detach(host->ports[i]);
- 
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 73ba8e134ca9a..bb6c0220e2aca 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -2111,12 +2111,10 @@ static void mv_qc_prep(struct ata_queued_cmd *qc)
+ 		 * non-NCQ mode are: [RW] STREAM DMA and W DMA FUA EXT, none
+ 		 * of which are defined/used by Linux.  If we get here, this
+ 		 * driver needs work.
+-		 *
+-		 * FIXME: modify libata to give qc_prep a return value and
+-		 * return error here.
+ 		 */
+-		BUG_ON(tf->command);
+-		break;
++		ata_port_err(ap, "%s: unsupported command: %.2x\n", __func__,
++				tf->command);
++		return AC_ERR_INVALID;
+ 	}
+ 	mv_crqb_pack_cmd(cw++, tf->nsect, ATA_REG_NSECT, 0);
+ 	mv_crqb_pack_cmd(cw++, tf->hob_lbal, ATA_REG_LBAL, 0);
 -- 
 2.20.1
 
