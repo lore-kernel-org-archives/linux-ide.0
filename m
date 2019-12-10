@@ -2,165 +2,95 @@ Return-Path: <SRS0=HnBo=2A=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69C8AC00454
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 18:55:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70E44C2D0BF
+	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 20:09:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 399D7214AF
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 18:55:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 471A020836
+	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 20:09:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZysT5SpU"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="j54TP/nA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727349AbfLJSzW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 10 Dec 2019 13:55:22 -0500
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:37931 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727747AbfLJSzW (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 Dec 2019 13:55:22 -0500
-Received: by mail-wr1-f66.google.com with SMTP id y17so21339577wrh.5;
-        Tue, 10 Dec 2019 10:55:20 -0800 (PST)
+        id S1726613AbfLJUJP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 10 Dec 2019 15:09:15 -0500
+Received: from mail-wr1-f67.google.com ([209.85.221.67]:44541 "EHLO
+        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726045AbfLJUJP (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 Dec 2019 15:09:15 -0500
+Received: by mail-wr1-f67.google.com with SMTP id q10so21538171wrm.11;
+        Tue, 10 Dec 2019 12:09:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=ussfTu+qKekY3R6LJaAGiwDCkgbbShyh4zMKrgN/Il4=;
-        b=ZysT5SpUotNYb5GYyIEszS8bGySuyYzY701iBr/aCI9ZdADa1AhiIuRlR6qlBY7joC
-         DF9KGVC2KRnmx8lum6fNXSWjD6AuSGXvfJ4H3Vx5ueWtWXsikx3SG8TKmZZajTmQ3jrB
-         SugBoxSgvsEtcNySPIT6hwq7NbMgzJE2bzym/YJFJ41ZKM6M7gyQzbK3iTxmgjkzjRwJ
-         38ykf8C6RFUB1PMF7asZPrAoK/83I+gfi7Z+ZQFKUqUpEYtfSBLy8KUfbXhaHXmOEMxL
-         bXfremNGmyq2gPv2EJiHBsRPGYkmfrVmKvY0TZ9bPy1CuhPZRYT6MWRMNy3jxYu9MH0+
-         29qg==
+        h=from:to:cc:subject:date:message-id;
+        bh=6AQpS5vqGgn6cf28d0t5hILD50hP2Bm2ar9YDrMWAUM=;
+        b=j54TP/nAwGznoZrN5sbykaR8He5pb7OtuziWr36u24bFjtgGC4fQqmYI7bt0kQ38Qz
+         AIIBe0vVsCM7FpOz0f27YlcWHKCgzIuAx7vTuT4eMaNThvOD+jLiiZDSAkx0gylHcr8R
+         lQ1uKTx1wQOijjR0jD4PsHKZ8GtZ1JqwSElf5tOW344+hb00eWcRKg25W0y9nlwXFTwO
+         4eCh01Ccn+W/AYaYvwNxY7ecHXsrmeWhzU7dg3GtqxJd/YFZpbVffV9zh31G4a8xmoqq
+         acMn+8dd9s/BK4xl7KbvCHa6yaKsJRYFirKOgOPqreB84RBGY39kNaYP+wIVoIe0uNp5
+         6fIg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=ussfTu+qKekY3R6LJaAGiwDCkgbbShyh4zMKrgN/Il4=;
-        b=fl/3PNerx/hOT48mXLgUxKHQ6o6wyItMV6OGp5ruTo+3qq2kDbcTq/39rF0HbDeoVy
-         1B4crKt1uVAvCAB9a7FbY+evQiIWCaogxnoZUu5PEKR2EsYhxbdszKNifpcnHUi1X6oD
-         LwYtlZr8dbdLk5m2Ca2Wfkq35uYMK8OeHzUyofn1oH9+c4x+PRdLB10Wjj/Xewc2Fdyx
-         2MTp6k1MChBrvgzOMwGXSemmh8blnO0g60vB6KzpsTkN8LmecSGIxGqrMuccL/vkOymc
-         pphreDFS/p8mfpq1vGn/hKl2Un9gUSk6it+Lwv5T3HcoOoXmO8bFRHOo0Jm6aT46kaDq
-         8ARA==
-X-Gm-Message-State: APjAAAW+eyjxhPikcv2VTs/YFDEYdcUl3MlKjcalJugZXGYMbWK7lfP3
-        n5Dre5laz09qb4P8nr2Vv+18MSwp
-X-Google-Smtp-Source: APXvYqzp9OKkCMvVkNYUpQHqFNRAz4mVpSPT9zH+WehxDqqalY+Oqd9MwOyTQX92PLdQymbuneaCEQ==
-X-Received: by 2002:adf:ea0f:: with SMTP id q15mr4767236wrm.324.1576004119205;
-        Tue, 10 Dec 2019 10:55:19 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=6AQpS5vqGgn6cf28d0t5hILD50hP2Bm2ar9YDrMWAUM=;
+        b=L2t8D7IEqJB7L3kNpoLLXl73+iiCe/zr4iULV1An5FXx0FNeOZEZAqiiOztLWn2J8e
+         qmkMbeX+RNJr4Jryj51cIgBoeGixYXC/u5FEoLbPv4EAKH3zxKjQkjT/vJ5gQ7KsGA1z
+         8PEw2uWwyikoZ2PZrKmBGxFvmbNbK/N9wi04UGe4nq71XHn5fylyMv3QMC2zKYv3lMnL
+         U5FMbvZWPeRcH8QJBZH3uXC5G1EGrHupZf1N0SRG9Ek8ahvP9fDpES1YzlAvZbDHdFF/
+         4a8PMLr1xU7aXbj6XX6+fp/jCiBs/TMp7sm/Z6hLzR1jzRbzA5TM6yxc90/o4muUFnYi
+         iQKw==
+X-Gm-Message-State: APjAAAVpytTHvBPz+njRzSlg5SlulQaWP/rCzTpIqPBt8Gdfo8aBFJlj
+        3rl/x96KIsAPYpXU3h5oBHE=
+X-Google-Smtp-Source: APXvYqxMVlaHW5ay98kOIFO+brzIC+QLtbbjUCNbwV2fRMJftfklsg7j/ydpu5uw9XjJbdY3Vj3f5Q==
+X-Received: by 2002:adf:dfc1:: with SMTP id q1mr5177155wrn.155.1576008552975;
+        Tue, 10 Dec 2019 12:09:12 -0800 (PST)
 Received: from fainelli-desktop.igp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id e6sm4213536wru.44.2019.12.10.10.55.16
+        by smtp.gmail.com with ESMTPSA id w19sm4113643wmc.22.2019.12.10.12.09.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 Dec 2019 10:55:18 -0800 (PST)
+        Tue, 10 Dec 2019 12:09:12 -0800 (PST)
 From:   Florian Fainelli <f.fainelli@gmail.com>
-To:     linux-kernel@vger.kernel.org
-Cc:     bcm-kernel-feedback-list@broadcom.com,
-        Florian Fainelli <f.fainelli@gmail.com>,
+To:     kishon@ti.com
+Cc:     Florian Fainelli <f.fainelli@gmail.com>,
         Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
         Mark Rutland <mark.rutland@arm.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Tejun Heo <tj@kernel.org>, Jaedon Shin <jaedon.shin@gmail.com>,
+        Al Cooper <alcooperx@gmail.com>,
+        Ray Jui <ray.jui@broadcom.com>, Tejun Heo <tj@kernel.org>,
+        Fengguang Wu <fengguang.wu@intel.com>,
+        Arnd Bergmann <arnd@arndb.de>,
         linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
         Parallel ATA drivers)),
         devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
-        DEVICE TREE BINDINGS)
-Subject: [PATCH 3/8] ata: ahci_brcm: BCM7425 AHCI requires AHCI_HFLAG_DELAY_ENGINE
-Date:   Tue, 10 Dec 2019 10:53:46 -0800
-Message-Id: <20191210185351.14825-4-f.fainelli@gmail.com>
+        DEVICE TREE BINDINGS), linux-kernel@vger.kernel.org (open list),
+        bcm-kernel-feedback-list@broadcom.com
+Subject: [PATCH 0/2] phy: brcm-sata: Support for 7216
+Date:   Tue, 10 Dec 2019 12:08:50 -0800
+Message-Id: <20191210200852.24945-1-f.fainelli@gmail.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20191210185351.14825-1-f.fainelli@gmail.com>
-References: <20191210185351.14825-1-f.fainelli@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Set AHCI_HFLAG_DELAY_ENGINE for the BCM7425 AHCI controller thus making
-it conforming to the 'strict' AHCI implementation which this controller
-is based on.
+Hi Kishon,
 
-This solves long link establishment with specific hard drives (e.g.:
-Seagate ST1000VM002-9ZL1 SC12) that would otherwise have to complete the
-error recovery handling before finally establishing a succesful SATA
-link at the desired speed.
+This patch series adds support for our latest 7216 class of devices
+which are taped out in a 16nm process and use a different SATA PHY AFE
+that requires a custom initialization sequence.
 
-We re-order the hpriv->flags assignment to also remove the NONCQ quirk
-since we can set the flag directly.
+Thanks!
 
-Fixes: 9586114cf1e9 ("ata: ahci_brcmstb: add support MIPS-based platforms")
-Fixes: 423be77daabe ("ata: ahci_brcmstb: add quirk for broken ncq")
-Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
----
- drivers/ata/ahci_brcm.c | 31 ++++++++++++++++---------------
- 1 file changed, 16 insertions(+), 15 deletions(-)
+Florian Fainelli (2):
+  dt-bindings: phy: Document BCM7216 SATA PHY compatible string
+  phy: brcm-sata: Implement 7216 initialization sequence
 
-diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
-index a8b2f3f7bbbc..58f8fd7bb8b8 100644
---- a/drivers/ata/ahci_brcm.c
-+++ b/drivers/ata/ahci_brcm.c
-@@ -76,8 +76,7 @@ enum brcm_ahci_version {
- };
- 
- enum brcm_ahci_quirks {
--	BRCM_AHCI_QUIRK_NO_NCQ		= BIT(0),
--	BRCM_AHCI_QUIRK_SKIP_PHY_ENABLE	= BIT(1),
-+	BRCM_AHCI_QUIRK_SKIP_PHY_ENABLE	= BIT(0),
- };
- 
- struct brcm_ahci_priv {
-@@ -432,18 +431,27 @@ static int brcm_ahci_probe(struct platform_device *pdev)
- 	if (!IS_ERR_OR_NULL(priv->rcdev))
- 		reset_control_deassert(priv->rcdev);
- 
--	if ((priv->version == BRCM_SATA_BCM7425) ||
--		(priv->version == BRCM_SATA_NSP)) {
--		priv->quirks |= BRCM_AHCI_QUIRK_NO_NCQ;
--		priv->quirks |= BRCM_AHCI_QUIRK_SKIP_PHY_ENABLE;
--	}
--
- 	hpriv = ahci_platform_get_resources(pdev, 0);
- 	if (IS_ERR(hpriv)) {
- 		ret = PTR_ERR(hpriv);
- 		goto out_reset;
- 	}
- 
-+	hpriv->plat_data = priv;
-+	hpriv->flags = AHCI_HFLAG_WAKE_BEFORE_STOP | AHCI_HFLAG_NO_WRITE_TO_RO;
-+
-+	switch (priv->version) {
-+	case BRCM_SATA_BCM7425:
-+		hpriv->flags |= AHCI_HFLAG_DELAY_ENGINE;
-+		/* fall through */
-+	case BRCM_SATA_NSP:
-+		hpriv->flags |= AHCI_HFLAG_NO_NCQ;
-+		priv->quirks |= BRCM_AHCI_QUIRK_SKIP_PHY_ENABLE;
-+		break;
-+	default:
-+		break;
-+	}
-+
- 	ret = ahci_platform_enable_clks(hpriv);
- 	if (ret)
- 		goto out_reset;
-@@ -463,15 +471,8 @@ static int brcm_ahci_probe(struct platform_device *pdev)
- 	/* Must be done before ahci_platform_enable_phys() */
- 	brcm_sata_phys_enable(priv);
- 
--	hpriv->plat_data = priv;
--	hpriv->flags = AHCI_HFLAG_WAKE_BEFORE_STOP;
--
- 	brcm_sata_alpm_init(hpriv);
- 
--	if (priv->quirks & BRCM_AHCI_QUIRK_NO_NCQ)
--		hpriv->flags |= AHCI_HFLAG_NO_NCQ;
--	hpriv->flags |= AHCI_HFLAG_NO_WRITE_TO_RO;
--
- 	ret = ahci_platform_enable_phys(hpriv);
- 	if (ret)
- 		goto out_disable_phys;
+ .../devicetree/bindings/phy/brcm-sata-phy.txt |   1 +
+ drivers/phy/broadcom/phy-brcm-sata.c          | 120 ++++++++++++++++++
+ 2 files changed, 121 insertions(+)
+
 -- 
 2.17.1
 
