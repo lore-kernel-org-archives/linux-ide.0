@@ -5,55 +5,55 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA6A5C2D0BF
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 18:55:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 871F9C2D0BF
+	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 18:55:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A1C3B207FF
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 18:55:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60062214AF
+	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 18:55:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lVRphTYl"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="N6OcGoP2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727747AbfLJSzZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 10 Dec 2019 13:55:25 -0500
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:40556 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727777AbfLJSzZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 Dec 2019 13:55:25 -0500
-Received: by mail-wr1-f66.google.com with SMTP id c14so21311056wrn.7;
-        Tue, 10 Dec 2019 10:55:23 -0800 (PST)
+        id S1727610AbfLJSzf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 10 Dec 2019 13:55:35 -0500
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:37356 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727777AbfLJSzb (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 Dec 2019 13:55:31 -0500
+Received: by mail-wm1-f67.google.com with SMTP id f129so4413501wmf.2;
+        Tue, 10 Dec 2019 10:55:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=buyLI45l4zB2SYDrnrkuR0XbVX9htttO2YBB5BmsEdg=;
-        b=lVRphTYlkKXnztZvgIn6OhW2ANapDiarJXM+1NdrWmhdluIthENf58m2q+4BDl958E
-         XVlz6rNhmXRpXxY6HFfeloYi9FFHi6dVGLOEw/5xPb5A9HyfXV9lggTLIYPHu+WHLrfz
-         uf6QleJcHZCvSaI1AAr+CFDxDPChU1tfpFRuNo1AoX1mcQhffC4nvXxpnJJbqu91J7R0
-         TrOiUnN5dhLwRIqxam0RHfld17iM/vMNK0ZO8joAYIXF8UhncSyASuQqLMT+4YxkybAs
-         Lf7Rqd+yND2ThEaULn7JXZ02XJ5IhRqkyS+G44SXlW9OShR+LM5B0dh2lm3ZZ7/sCTxs
-         Z+Aw==
+        bh=RMN6HasSUrZjdtLofZk55AQ4vWrDosUhaoGmITPUruw=;
+        b=N6OcGoP2//bOSKN/C0LkpKHYEx2GCJWt/G7nnQxkK5nBgqLkCPfGnYoc8x0wN5EF72
+         AIamhHDO9meWhDiSzAVBn2LrVkJTRLaOGzggXQAnEuRNlUzqoCFC0TNmWZl08vnQCoas
+         wObGE4wqtbw1mj69aeB8Sa9cLDX6k1LfX+4aXdQAMYVUFRTPdAGld2Msx0pbr4orQ8Fq
+         4l27QWvtciXYq7rbFWOUfG3orjyIbycWidiIZEYzG6JWLPJcDTCfzDtvEcV6y4mjdYR4
+         ySodLRRV1D9rleVYfzlsYxGwU8FTevKfnKQWYf/v+L2iWNuR4Sj83ewPsN9PaSgo6Ul+
+         9Vbw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=buyLI45l4zB2SYDrnrkuR0XbVX9htttO2YBB5BmsEdg=;
-        b=oK/8RVFvCnj/lUmGthqUoySBm6fMubclEhwXLN6H38Kl3nWyN2j9WzYbOGYs3fhAeL
-         OEov1DdCXXXrpyolv+KTpcTzRIKNuTPcZW46C7VcP22p7QvwHqvsPSbieo2c+79O1HtO
-         X1evVQA254/EYST3OBZ2yj+9OunuJT9OEpGVkx4jpVlsegPX9lYtEHnwQhkUhxB6250r
-         Q9LJO+h0CEifa9UqzAnbX0LcGgMG9MgHiN7yQp5y/WFbrXsCtSIa/gFMVddn9jxhbvez
-         uoOjzOmKnhR/6XnoIFV1E0DeScXHPe+/sTVaYFKga1aR+dbDLtqcpVuXS3iFGzL36Ohq
-         CIxQ==
-X-Gm-Message-State: APjAAAWTArv21k6bEVjscREy8zM794RMNICIftseCSJkZrPlr9HVFsEZ
-        iPNGL5qbEa8lF0HYPQ2S03O7jW18
-X-Google-Smtp-Source: APXvYqzj5EReFxF160THPK7rEWBfVB4+rTGlzMJbnbHBDFvu8E8Gz7fADcgSauoJzarnONnYz2LNWw==
-X-Received: by 2002:a5d:50d2:: with SMTP id f18mr4939176wrt.366.1576004122183;
-        Tue, 10 Dec 2019 10:55:22 -0800 (PST)
+        bh=RMN6HasSUrZjdtLofZk55AQ4vWrDosUhaoGmITPUruw=;
+        b=Ik3w5CHsLVtGqp04TSkVvgaFB/xanl+9w5QZzrqJixZOeYznevfoh/OgxoPWhJklY9
+         Y6454R6wnBs9czSGJhB/GiJD6FtlSszfHDarPdI9WBfrRYyJZLabk5nZqoDTtlE/V9pM
+         VEvzXaEdJ2buYN24UhcoKCI5T3ddgbosbKvFmynZS48o+3FVI54hgMlhQbY6pjo21g0b
+         ZleKflNh/R8EpM1cstq5rRkcjgdl3A8b7sULdZxizNorwyxtLV2yFB33tfA2uBvoQ0bR
+         ogwPoXZaVs8dmk3m2XIFcKD1P/LTFmiFylfaUk8eOgnPfJTHJxfPH+A6y4UXOl5Mq24g
+         ylJA==
+X-Gm-Message-State: APjAAAWcCuIBT6IJkJyHvR6IQDDUzKLNJrxxIhTKPBELiRQUOfe7rS1p
+        khNlJpfU5rfp9EmmW0k2aVdMT065
+X-Google-Smtp-Source: APXvYqwvZzO8JHumxzd0awYSiQe8a+UtB87swX6SrfJGACOtIOliudtPwPNlG5qFoIdU2iNZotugcA==
+X-Received: by 2002:a7b:c947:: with SMTP id i7mr7027735wml.71.1576004128685;
+        Tue, 10 Dec 2019 10:55:28 -0800 (PST)
 Received: from fainelli-desktop.igp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id e6sm4213536wru.44.2019.12.10.10.55.19
+        by smtp.gmail.com with ESMTPSA id e6sm4213536wru.44.2019.12.10.10.55.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 Dec 2019 10:55:21 -0800 (PST)
+        Tue, 10 Dec 2019 10:55:28 -0800 (PST)
 From:   Florian Fainelli <f.fainelli@gmail.com>
 To:     linux-kernel@vger.kernel.org
 Cc:     bcm-kernel-feedback-list@broadcom.com,
@@ -67,9 +67,9 @@ Cc:     bcm-kernel-feedback-list@broadcom.com,
         Parallel ATA drivers)),
         devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
         DEVICE TREE BINDINGS)
-Subject: [PATCH 4/8] ata: ahci_brcm: Add missing clock management during recovery
-Date:   Tue, 10 Dec 2019 10:53:47 -0800
-Message-Id: <20191210185351.14825-5-f.fainelli@gmail.com>
+Subject: [PATCH 6/8] ata: ahci_brcm: Add a shutdown callback
+Date:   Tue, 10 Dec 2019 10:53:49 -0800
+Message-Id: <20191210185351.14825-7-f.fainelli@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191210185351.14825-1-f.fainelli@gmail.com>
 References: <20191210185351.14825-1-f.fainelli@gmail.com>
@@ -78,39 +78,45 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The downstream implementation of ahci_brcm.c did contain clock
-management recovery, but until recently, did that outside of the
-libahci_platform helpers and this was unintentionally stripped out while
-forward porting the patch upstream.
+Make sure that we quiesce the controller and shut down the clocks in a
+shutdown callback.
 
-Add the missing clock management during recovery and sleep for 10
-milliseconds per the design team recommendations to ensure the SATA PHY
-controller and AFE have been fully quiesced.
-
-Fixes: eb73390ae241 ("ata: ahci_brcm: Recover from failures to identify devices")
 Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
 ---
- drivers/ata/ahci_brcm.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/ata/ahci_brcm.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
 diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
-index 58f8fd7bb8b8..66a570d0da83 100644
+index 76612577a59a..58e1a6e5478d 100644
 --- a/drivers/ata/ahci_brcm.c
 +++ b/drivers/ata/ahci_brcm.c
-@@ -274,6 +274,13 @@ static unsigned int brcm_ahci_read_id(struct ata_device *dev,
- 	/* Perform the SATA PHY reset sequence */
- 	brcm_sata_phy_disable(priv, ap->port_no);
+@@ -532,11 +532,26 @@ static int brcm_ahci_remove(struct platform_device *pdev)
+ 	return 0;
+ }
  
-+	/* Reset the SATA clock */
-+	ahci_platform_disable_clks(hpriv);
-+	msleep(10);
++static void brcm_ahci_shutdown(struct platform_device *pdev)
++{
++	int ret;
 +
-+	ahci_platform_enable_clks(hpriv);
-+	msleep(10);
++	/* All resources releasing happens via devres, but our device, unlike a
++	 * proper remove is not disappearing, therefore using
++	 * brcm_ahci_suspend() here which does explicit power management is
++	 * appropriate.
++	 */
++	ret = brcm_ahci_suspend(&pdev->dev);
++	if (ret)
++		dev_err(&pdev->dev, "failed to shutdown\n");
++}
 +
- 	/* Bring the PHY back on */
- 	brcm_sata_phy_enable(priv, ap->port_no);
+ static SIMPLE_DEV_PM_OPS(ahci_brcm_pm_ops, brcm_ahci_suspend, brcm_ahci_resume);
  
+ static struct platform_driver brcm_ahci_driver = {
+ 	.probe = brcm_ahci_probe,
+ 	.remove = brcm_ahci_remove,
++	.shutdown = brcm_ahci_shutdown,
+ 	.driver = {
+ 		.name = DRV_NAME,
+ 		.of_match_table = ahci_of_match,
 -- 
 2.17.1
 
