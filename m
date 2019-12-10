@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66FA6C3F68F
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 22:37:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2794C2D0BF
+	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 22:42:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 37EF72077B
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 22:37:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 776272077B
+	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 22:42:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576017462;
-	bh=bVJ90G973wK+gEv7rb3ZETyXiDl3oo4TIxN4ZfAmAL8=;
+	s=default; t=1576017729;
+	bh=/wr7f69ycqZFhinrnrv4t11zWCsbzEx6MAndDAn+BlU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=R8X3sJ7xjAppsmpoGRgXIb58kN+jzhAyAVqZaWgpB52jKv49PfiqibChxZ6g7NnTZ
-	 lyVLox5UyRJlGc4zpn44ZwzIx5iMa/zxyDrerLnFdWpZPlWHqt2FKxdB1gXMnux0H1
-	 a5KWLjjnzp/cXzv9b0btI0jl6CXD3jgJfP/BS3Vs=
+	b=HfEnfWeMq0J5YTakPjLjuE5DA6oRoLzKQkFSa/3ICAGCAApo7I21aVyHXKgTjlOST
+	 oXPulmuE5vu6xBJug8gStgx6I4wMttxboWZIgWoIhYB7wwY5fpa2AxfDrrFWsLIMTe
+	 MQkO07XqmhG/eNvTTdvj/wT4nC6V2/YKF3oaRKPg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729240AbfLJWd7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 10 Dec 2019 17:33:59 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55106 "EHLO mail.kernel.org"
+        id S1728561AbfLJWbb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 10 Dec 2019 17:31:31 -0500
+Received: from mail.kernel.org ([198.145.29.99]:51538 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730048AbfLJWd6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 10 Dec 2019 17:33:58 -0500
+        id S1728511AbfLJWb3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 10 Dec 2019 17:31:29 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6B6D620828;
-        Tue, 10 Dec 2019 22:33:56 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 06B45214D8;
+        Tue, 10 Dec 2019 22:31:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576017237;
-        bh=bVJ90G973wK+gEv7rb3ZETyXiDl3oo4TIxN4ZfAmAL8=;
+        s=default; t=1576017088;
+        bh=/wr7f69ycqZFhinrnrv4t11zWCsbzEx6MAndDAn+BlU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=y/wJBV2EBIfK10imcTK81VC8wIZk7sukXnPK4EyjE9wLpCmTWRAfiGTcgIuRNwsb0
-         D4M7scc8KFNrql5/vW2luFS3WH3suRgENT82/xqhRT3erOQhcrMvVIi/Mw9FSzB3mQ
-         UqOgCK4Q7a6mv6jJsJDOEe7zd2QLsBl7F8e9UZ4I=
+        b=dtAS5RgnUW2aVG6VF98PBNutMj/81dnvzdVT+u9d96ucH6sGEo8Ml6/6FXH1+AJ6O
+         BdWpGh6dj6oluxu3J5czlSAN607naGLG5fliz3EsXb+zLs3PlnkrER40/9iqte7K+c
+         cyYQ1R/4GIm68NNSO0NomTVQKGLNHmtsGYrzmb3I=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     John Garry <john.garry@huawei.com>, Jens Axboe <axboe@kernel.dk>,
         Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 34/71] libata: Ensure ata_port probe has completed before detach
-Date:   Tue, 10 Dec 2019 17:32:39 -0500
-Message-Id: <20191210223316.14988-34-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 44/91] libata: Ensure ata_port probe has completed before detach
+Date:   Tue, 10 Dec 2019 17:29:48 -0500
+Message-Id: <20191210223035.14270-44-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191210223316.14988-1-sashal@kernel.org>
-References: <20191210223316.14988-1-sashal@kernel.org>
+In-Reply-To: <20191210223035.14270-1-sashal@kernel.org>
+References: <20191210223035.14270-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -131,10 +131,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index a352f09baef68..fc4bf8ff40ead 100644
+index da1a987c622a4..b1582f1611717 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -6355,6 +6355,9 @@ void ata_host_detach(struct ata_host *host)
+@@ -6550,6 +6550,9 @@ void ata_host_detach(struct ata_host *host)
  {
  	int i;
  
