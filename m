@@ -8,52 +8,52 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0A36C3F68F
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 18:55:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69C8AC00454
+	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 18:55:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C9C0C214AF
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 18:55:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 399D7214AF
+	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 18:55:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gtWNev19"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZysT5SpU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727840AbfLJSze (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 10 Dec 2019 13:55:34 -0500
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:37958 "EHLO
+        id S1727349AbfLJSzW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 10 Dec 2019 13:55:22 -0500
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:37931 "EHLO
         mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727813AbfLJSze (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 Dec 2019 13:55:34 -0500
-Received: by mail-wr1-f66.google.com with SMTP id y17so21340173wrh.5;
-        Tue, 10 Dec 2019 10:55:32 -0800 (PST)
+        with ESMTP id S1727747AbfLJSzW (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 Dec 2019 13:55:22 -0500
+Received: by mail-wr1-f66.google.com with SMTP id y17so21339577wrh.5;
+        Tue, 10 Dec 2019 10:55:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=MZGxKkjM3GfxdQHN3yZAl1Qk3NVNJ9qPzoQRTnTiiYA=;
-        b=gtWNev19Ji+Mx5eOZKN76LtLVlVukccE+8NfVVWNY7TMR6Up4+gelQOx6TeJoQluv2
-         Z+ii7LmFS89vctX69+GbL8JVqUKxY819ix/9F7aVSZ8bWtfC+zj4pE8ZpwW+waqulwUX
-         MgFLr946UyG19AbNCtJdSYx9+BEUxtHDH3VN7QN8AD5GkmDVVVGDuoCiNfR/Hn+Ro4TR
-         zhFVXHdYX7BTrfeSkfAkuwLlyoyzN3PKZhntDhgggHshANQTdGgNiEi3CvdVLaqXJAYd
-         AIuftst4TCYEOER+seTqBb4CqORxEYSvs2yr8SkkeEU7cvmTwShbEGijJ3rFQvlsJPhj
-         BHww==
+        bh=ussfTu+qKekY3R6LJaAGiwDCkgbbShyh4zMKrgN/Il4=;
+        b=ZysT5SpUotNYb5GYyIEszS8bGySuyYzY701iBr/aCI9ZdADa1AhiIuRlR6qlBY7joC
+         DF9KGVC2KRnmx8lum6fNXSWjD6AuSGXvfJ4H3Vx5ueWtWXsikx3SG8TKmZZajTmQ3jrB
+         SugBoxSgvsEtcNySPIT6hwq7NbMgzJE2bzym/YJFJ41ZKM6M7gyQzbK3iTxmgjkzjRwJ
+         38ykf8C6RFUB1PMF7asZPrAoK/83I+gfi7Z+ZQFKUqUpEYtfSBLy8KUfbXhaHXmOEMxL
+         bXfremNGmyq2gPv2EJiHBsRPGYkmfrVmKvY0TZ9bPy1CuhPZRYT6MWRMNy3jxYu9MH0+
+         29qg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=MZGxKkjM3GfxdQHN3yZAl1Qk3NVNJ9qPzoQRTnTiiYA=;
-        b=Zom+OQVAdngWEuEFkvLE4YEk/dUPlfKqlU5dKyBOOkBn01+1CBHEtR4h3DlPA3xvVA
-         +sCrVjuFf1z3nFiPz6V2k0kmIBTv20tqnYYjPD7NDpBRv6zOEsq+xn84/6yiFb0L/vNk
-         XwVPHfj5afIlwNyMn0HyqJVo4zyZHFxCCV67VthsyCZ4fjTsssK/Ec6Y1l8+A34pArU7
-         Xy+EXtizDCqezY9+/EyYxUpJrUKwRvhSBocYgdAtwPGfFKhw6Uk++U/pT+9q75Fk6kx6
-         kxCQ0nsHnzgCgiQNfMomwrJ0TutJWSuJUxabhnvl1GboJihffA0d2fZ07HV/hVIGIsN9
-         McHQ==
-X-Gm-Message-State: APjAAAUHHMFBuGadn72yHXEHxq4Wb/7d2JFeZtmAO4hQ8bnuiB8ERqFC
-        cZt9/kQmJs0yo4Z+j+hgheWi1BlK
-X-Google-Smtp-Source: APXvYqzr7vFBDEMA0EceUoUPW+KD+5q4iMsC32nx3Qq087NgA8IF8RVYtnX7ET8lpzOR69z2jA6h9Q==
-X-Received: by 2002:adf:f052:: with SMTP id t18mr4868262wro.192.1576004131730;
-        Tue, 10 Dec 2019 10:55:31 -0800 (PST)
+        bh=ussfTu+qKekY3R6LJaAGiwDCkgbbShyh4zMKrgN/Il4=;
+        b=fl/3PNerx/hOT48mXLgUxKHQ6o6wyItMV6OGp5ruTo+3qq2kDbcTq/39rF0HbDeoVy
+         1B4crKt1uVAvCAB9a7FbY+evQiIWCaogxnoZUu5PEKR2EsYhxbdszKNifpcnHUi1X6oD
+         LwYtlZr8dbdLk5m2Ca2Wfkq35uYMK8OeHzUyofn1oH9+c4x+PRdLB10Wjj/Xewc2Fdyx
+         2MTp6k1MChBrvgzOMwGXSemmh8blnO0g60vB6KzpsTkN8LmecSGIxGqrMuccL/vkOymc
+         pphreDFS/p8mfpq1vGn/hKl2Un9gUSk6it+Lwv5T3HcoOoXmO8bFRHOo0Jm6aT46kaDq
+         8ARA==
+X-Gm-Message-State: APjAAAW+eyjxhPikcv2VTs/YFDEYdcUl3MlKjcalJugZXGYMbWK7lfP3
+        n5Dre5laz09qb4P8nr2Vv+18MSwp
+X-Google-Smtp-Source: APXvYqzp9OKkCMvVkNYUpQHqFNRAz4mVpSPT9zH+WehxDqqalY+Oqd9MwOyTQX92PLdQymbuneaCEQ==
+X-Received: by 2002:adf:ea0f:: with SMTP id q15mr4767236wrm.324.1576004119205;
+        Tue, 10 Dec 2019 10:55:19 -0800 (PST)
 Received: from fainelli-desktop.igp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id e6sm4213536wru.44.2019.12.10.10.55.28
+        by smtp.gmail.com with ESMTPSA id e6sm4213536wru.44.2019.12.10.10.55.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 Dec 2019 10:55:31 -0800 (PST)
+        Tue, 10 Dec 2019 10:55:18 -0800 (PST)
 From:   Florian Fainelli <f.fainelli@gmail.com>
 To:     linux-kernel@vger.kernel.org
 Cc:     bcm-kernel-feedback-list@broadcom.com,
@@ -67,9 +67,9 @@ Cc:     bcm-kernel-feedback-list@broadcom.com,
         Parallel ATA drivers)),
         devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
         DEVICE TREE BINDINGS)
-Subject: [PATCH 7/8] dt-bindings: ata: Document BCM7216 AHCI controller compatible
-Date:   Tue, 10 Dec 2019 10:53:50 -0800
-Message-Id: <20191210185351.14825-8-f.fainelli@gmail.com>
+Subject: [PATCH 3/8] ata: ahci_brcm: BCM7425 AHCI requires AHCI_HFLAG_DELAY_ENGINE
+Date:   Tue, 10 Dec 2019 10:53:46 -0800
+Message-Id: <20191210185351.14825-4-f.fainelli@gmail.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20191210185351.14825-1-f.fainelli@gmail.com>
 References: <20191210185351.14825-1-f.fainelli@gmail.com>
@@ -78,40 +78,89 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The BCM7216 AHCI controller makes use of a specific reset controller
-line/name, document the compatible string and the optional reset
-properties.
+Set AHCI_HFLAG_DELAY_ENGINE for the BCM7425 AHCI controller thus making
+it conforming to the 'strict' AHCI implementation which this controller
+is based on.
 
+This solves long link establishment with specific hard drives (e.g.:
+Seagate ST1000VM002-9ZL1 SC12) that would otherwise have to complete the
+error recovery handling before finally establishing a succesful SATA
+link at the desired speed.
+
+We re-order the hpriv->flags assignment to also remove the NONCQ quirk
+since we can set the flag directly.
+
+Fixes: 9586114cf1e9 ("ata: ahci_brcmstb: add support MIPS-based platforms")
+Fixes: 423be77daabe ("ata: ahci_brcmstb: add quirk for broken ncq")
 Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
 ---
- Documentation/devicetree/bindings/ata/brcm,sata-brcm.txt | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/ata/ahci_brcm.c | 31 ++++++++++++++++---------------
+ 1 file changed, 16 insertions(+), 15 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ata/brcm,sata-brcm.txt b/Documentation/devicetree/bindings/ata/brcm,sata-brcm.txt
-index 7713a413c6a7..b9ae4ce4a0a0 100644
---- a/Documentation/devicetree/bindings/ata/brcm,sata-brcm.txt
-+++ b/Documentation/devicetree/bindings/ata/brcm,sata-brcm.txt
-@@ -5,6 +5,7 @@ Each SATA controller should have its own node.
+diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+index a8b2f3f7bbbc..58f8fd7bb8b8 100644
+--- a/drivers/ata/ahci_brcm.c
++++ b/drivers/ata/ahci_brcm.c
+@@ -76,8 +76,7 @@ enum brcm_ahci_version {
+ };
  
- Required properties:
- - compatible         : should be one or more of
-+			"brcm,bcm7216-ahci"
- 			"brcm,bcm7425-ahci"
- 			"brcm,bcm7445-ahci"
- 			"brcm,bcm-nsp-ahci"
-@@ -14,6 +15,12 @@ Required properties:
- - reg-names          : "ahci" and "top-ctrl"
- - interrupts         : interrupt mapping for SATA IRQ
+ enum brcm_ahci_quirks {
+-	BRCM_AHCI_QUIRK_NO_NCQ		= BIT(0),
+-	BRCM_AHCI_QUIRK_SKIP_PHY_ENABLE	= BIT(1),
++	BRCM_AHCI_QUIRK_SKIP_PHY_ENABLE	= BIT(0),
+ };
  
-+Optional properties:
+ struct brcm_ahci_priv {
+@@ -432,18 +431,27 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 	if (!IS_ERR_OR_NULL(priv->rcdev))
+ 		reset_control_deassert(priv->rcdev);
+ 
+-	if ((priv->version == BRCM_SATA_BCM7425) ||
+-		(priv->version == BRCM_SATA_NSP)) {
+-		priv->quirks |= BRCM_AHCI_QUIRK_NO_NCQ;
+-		priv->quirks |= BRCM_AHCI_QUIRK_SKIP_PHY_ENABLE;
+-	}
+-
+ 	hpriv = ahci_platform_get_resources(pdev, 0);
+ 	if (IS_ERR(hpriv)) {
+ 		ret = PTR_ERR(hpriv);
+ 		goto out_reset;
+ 	}
+ 
++	hpriv->plat_data = priv;
++	hpriv->flags = AHCI_HFLAG_WAKE_BEFORE_STOP | AHCI_HFLAG_NO_WRITE_TO_RO;
 +
-+- reset: for "brcm,bcm7216-ahci" must be a valid reset phandle
-+  pointing to the RESCAL reset controller provider node.
-+- reset-names: for "brcm,bcm7216-ahci", must be "rescal".
++	switch (priv->version) {
++	case BRCM_SATA_BCM7425:
++		hpriv->flags |= AHCI_HFLAG_DELAY_ENGINE;
++		/* fall through */
++	case BRCM_SATA_NSP:
++		hpriv->flags |= AHCI_HFLAG_NO_NCQ;
++		priv->quirks |= BRCM_AHCI_QUIRK_SKIP_PHY_ENABLE;
++		break;
++	default:
++		break;
++	}
 +
- Also see ahci-platform.txt.
+ 	ret = ahci_platform_enable_clks(hpriv);
+ 	if (ret)
+ 		goto out_reset;
+@@ -463,15 +471,8 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 	/* Must be done before ahci_platform_enable_phys() */
+ 	brcm_sata_phys_enable(priv);
  
- Example:
+-	hpriv->plat_data = priv;
+-	hpriv->flags = AHCI_HFLAG_WAKE_BEFORE_STOP;
+-
+ 	brcm_sata_alpm_init(hpriv);
+ 
+-	if (priv->quirks & BRCM_AHCI_QUIRK_NO_NCQ)
+-		hpriv->flags |= AHCI_HFLAG_NO_NCQ;
+-	hpriv->flags |= AHCI_HFLAG_NO_WRITE_TO_RO;
+-
+ 	ret = ahci_platform_enable_phys(hpriv);
+ 	if (ret)
+ 		goto out_disable_phys;
 -- 
 2.17.1
 
