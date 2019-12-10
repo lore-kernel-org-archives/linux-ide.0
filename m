@@ -4,52 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7042DC43603
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 22:31:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48D62C2D0C5
+	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 22:37:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C627214D8
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 22:31:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 147202077B
+	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 22:37:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576017092;
-	bh=9GYC482xubuw+Sl8xaw1dMPpBuoo/M3QJrbWA1UOpbQ=;
+	s=default; t=1576017455;
+	bh=rs2sJsURr2HfQ37CNR+4elN+tvV4lCBxruCYPnxdazE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=p9IsLqRqt8mhdXKsM5Hz4GEMsq5VPTYW0yS2mncpKhKSHN4ovQ4XXrgEPgy7LgT/6
-	 yXY+m+zOJcmYOpz/vxx7PnQbijfBQil2QPqVa6fLp1lx2yo6ykVypDoYZLnNAYkFNB
-	 zdy2t0xuh8yldGTEq1K68stBbRGBjqdrKrcxlArs=
+	b=GeLTY5z1WCbafZGWAbauuurYdNxff9cBkB056uLFP6gWd80RLdzfUUmnBHLvCbpIY
+	 WDO3/MO1401rt8SNW1AkMEecCcWL+aeUrDTfCs7oICHPIERgVVP9Ji/fNp+/LCkzhm
+	 y3asU4tNnbvex5yJ5i89fFQJVqIp4bIiOGVLlq3M=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728553AbfLJWbb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 10 Dec 2019 17:31:31 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51558 "EHLO mail.kernel.org"
+        id S1730072AbfLJWeA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 10 Dec 2019 17:34:00 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55166 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728526AbfLJWba (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 10 Dec 2019 17:31:30 -0500
+        id S1730058AbfLJWd6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 10 Dec 2019 17:33:58 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 11E402073D;
-        Tue, 10 Dec 2019 22:31:28 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7DD4120836;
+        Tue, 10 Dec 2019 22:33:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576017089;
-        bh=9GYC482xubuw+Sl8xaw1dMPpBuoo/M3QJrbWA1UOpbQ=;
+        s=default; t=1576017238;
+        bh=rs2sJsURr2HfQ37CNR+4elN+tvV4lCBxruCYPnxdazE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=c6567TuCruuJZTFduqhFFUdtows7GS1595VvypTQobD7MNovI18102di3OsXhoIv9
-         twViFN24x+nQk6FKefyBkgceZYSJbDxSNnqJNFoJ8MuhmcprrnnPEFQq2gVAnSmgVO
-         bqaNGufwvtyeYYLpAtvZO4XYHzQJpXEKO/ZmLX98=
+        b=ubRyAE7aZrOhNyNgKG+/+nW5ciMy6Dre2NKTyJuB2KB+I/0wGvZcD5HmBpzynI3JQ
+         Du6aLZsth/Xr8lF6YfkrumKsZ7ZMS2ZJNUyx3FfHOdK8Wiu9WIknllbKLO1kk/lkJ4
+         xW7YzgPbfa3tLmEVp6a94rXPqOucTVMq/rySh+W8=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Jiri Slaby <jslaby@suse.cz>, Jens Axboe <axboe@kernel.dk>,
         linux-ide@vger.kernel.org,
         Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
         Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 4.9 45/91] ata: sata_mv, avoid trigerrable BUG_ON
-Date:   Tue, 10 Dec 2019 17:29:49 -0500
-Message-Id: <20191210223035.14270-45-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 35/71] ata: sata_mv, avoid trigerrable BUG_ON
+Date:   Tue, 10 Dec 2019 17:32:40 -0500
+Message-Id: <20191210223316.14988-35-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191210223035.14270-1-sashal@kernel.org>
-References: <20191210223035.14270-1-sashal@kernel.org>
+In-Reply-To: <20191210223316.14988-1-sashal@kernel.org>
+References: <20191210223316.14988-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -89,10 +89,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 2f32782cea6d9..2ec37a038eda8 100644
+index 729f26322095e..c24bbdb3f76c8 100644
 --- a/drivers/ata/sata_mv.c
 +++ b/drivers/ata/sata_mv.c
-@@ -2111,12 +2111,10 @@ static void mv_qc_prep(struct ata_queued_cmd *qc)
+@@ -2113,12 +2113,10 @@ static void mv_qc_prep(struct ata_queued_cmd *qc)
  		 * non-NCQ mode are: [RW] STREAM DMA and W DMA FUA EXT, none
  		 * of which are defined/used by Linux.  If we get here, this
  		 * driver needs work.
