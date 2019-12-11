@@ -2,135 +2,246 @@ Return-Path: <SRS0=88f8=2B=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19459C00454
-	for <linux-ide@archiver.kernel.org>; Wed, 11 Dec 2019 13:31:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADD8FC00454
+	for <linux-ide@archiver.kernel.org>; Wed, 11 Dec 2019 20:45:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E324A208C3
-	for <linux-ide@archiver.kernel.org>; Wed, 11 Dec 2019 13:31:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="alFWGGfv"
+	by mail.kernel.org (Postfix) with ESMTP id 8E26A206A5
+	for <linux-ide@archiver.kernel.org>; Wed, 11 Dec 2019 20:45:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729315AbfLKNbK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 11 Dec 2019 08:31:10 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:56628 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727477AbfLKNbK (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 11 Dec 2019 08:31:10 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1576071068;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=TV5FAi/Fe1/Rw5238yLkedzxccC6tTFgA5QXvsNOUGA=;
-        b=alFWGGfvlADzo/3ukXISRXAmEq7ecAi3O9P14VMqmsGLdyAQTAt7OiWsgdgXw8YdEgjiIc
-        FSBGQj8zay/L6mSoE4FIQ/UUGnv2Z2oJ2xoItZlbuZ5pMTGufY688yEKze593SU9PPvXa2
-        ta7jknTVZ9cMz5gCHoqYB2y2+xXQgh8=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-388-sfwMdCEMO5WOgeT7tfc6fg-1; Wed, 11 Dec 2019 08:31:05 -0500
-Received: by mail-wm1-f72.google.com with SMTP id l13so2377184wmj.8
-        for <linux-ide@vger.kernel.org>; Wed, 11 Dec 2019 05:31:05 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=TV5FAi/Fe1/Rw5238yLkedzxccC6tTFgA5QXvsNOUGA=;
-        b=F2Be2JZhatm/0mn9+7ivFB9o/lkPphU/DKQ6YVQVMjs8tDkwjAA1o+onfzf63yr0ND
-         RKz3U0luudUZFXd819Xn42ec00s1+cMAT69UzcC2X+5N6VmGlQElUvR+FsuskNSr0upB
-         2rBCytIRtcl0Zcg6W2ticsgNVCct8fytNl1d7xVKCgSAykZaZhbckiLFYdFwywL/d+Ut
-         rkjljBavVhMdiJconnBQ+8ZoG1e3u3kABh8hd11jJ2Qz7VoqV41MWoI6jzCrO7BM7tD2
-         PMkq1sksJn9Y39+wbof5BQOtHilgnMOCzbH5bT0Iv17jQ/lhlHm8nmZgT3KeDuHSwtbV
-         NYIA==
-X-Gm-Message-State: APjAAAW5Nguww1TTBtuGfyy2hxW7gPTT638D+341EgcHww+i65msyiNE
-        nEj/hQRd7KxWjENNGX1w9SbDNi0E6JAfYrabsypH2HmZ69nwjQb34fRu2xtGPjXWRC0MHsgIG3t
-        SjzguadC3EMzbiuFjYZQf
-X-Received: by 2002:a1c:5451:: with SMTP id p17mr3617120wmi.57.1576071064469;
-        Wed, 11 Dec 2019 05:31:04 -0800 (PST)
-X-Google-Smtp-Source: APXvYqymrCgLwNxNOpQF3dxf3OYmi9fdNcxPA2z09i7pimQR443NM/SqTB9zsjyB+GkU7qbeqV3iXA==
-X-Received: by 2002:a1c:5451:: with SMTP id p17mr3617098wmi.57.1576071064298;
-        Wed, 11 Dec 2019 05:31:04 -0800 (PST)
-Received: from shalem.localdomain (2001-1c00-0c0c-fe00-7e79-4dac-39d0-9c14.cable.dynamic.v6.ziggo.nl. [2001:1c00:c0c:fe00:7e79:4dac:39d0:9c14])
-        by smtp.gmail.com with ESMTPSA id i5sm2281274wml.31.2019.12.11.05.31.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 11 Dec 2019 05:31:03 -0800 (PST)
-Subject: Re: [PATCH 0/8] ata: ahci_brcm: Fixes and new device support
-To:     Florian Fainelli <f.fainelli@gmail.com>,
-        linux-kernel@vger.kernel.org
-Cc:     bcm-kernel-feedback-list@broadcom.com,
-        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Tejun Heo <tj@kernel.org>, Jaedon Shin <jaedon.shin@gmail.com>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>
-References: <20191210185351.14825-1-f.fainelli@gmail.com>
-From:   Hans de Goede <hdegoede@redhat.com>
-Message-ID: <b65b61a6-3cc7-1e9b-9fa7-83f314e9bbf2@redhat.com>
-Date:   Wed, 11 Dec 2019 14:31:02 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        id S1726620AbfLKUpb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 11 Dec 2019 15:45:31 -0500
+Received: from mout.kundenserver.de ([212.227.17.13]:53105 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726141AbfLKUpb (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 11 Dec 2019 15:45:31 -0500
+Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
+ (mreue108 [212.227.15.145]) with ESMTPA (Nemesis) id
+ 1MF35K-1iUAUW2lIm-00FVsT; Wed, 11 Dec 2019 21:43:48 +0100
+From:   Arnd Bergmann <arnd@arndb.de>
+To:     Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>
+Cc:     linux-kernel@vger.kernel.org, y2038@lists.linaro.org,
+        Arnd Bergmann <arnd@arndb.de>, corbet@lwn.net,
+        catalin.marinas@arm.com, will@kernel.org, jdike@addtoit.com,
+        richard@nod.at, anton.ivanov@cambridgegreys.com,
+        fujita.tomonori@lab.ntt.co.jp, justin@coraid.com,
+        efremov@linux.com, tim@cyberelk.net, mst@redhat.com,
+        jasowang@redhat.com, pbonzini@redhat.com, stefanha@redhat.com,
+        boris.ostrovsky@oracle.com, jgross@suse.com,
+        sstabellini@kernel.org, konrad.wilk@oracle.com,
+        roger.pau@citrix.com, bp@alien8.de, davem@davemloft.net,
+        john.garry@huawei.com, brking@us.ibm.com,
+        intel-linux-scu@intel.com, artur.paszkiewicz@intel.com,
+        jinpu.wang@cloud.ionos.com, dgilbert@interlog.com,
+        Kai.Makisara@kolumbus.fi, damien.lemoal@hgst.com, hare@suse.com,
+        linux-doc@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-um@lists.infradead.org,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org, linux-fsdevel@vger.kernel.org
+Subject: [PATCH 00/24] block, scsi: final compat_ioctl cleanup
+Date:   Wed, 11 Dec 2019 21:42:34 +0100
+Message-Id: <20191211204306.1207817-1-arnd@arndb.de>
+X-Mailer: git-send-email 2.20.0
 MIME-Version: 1.0
-In-Reply-To: <20191210185351.14825-1-f.fainelli@gmail.com>
-Content-Language: en-US
-X-MC-Unique: sfwMdCEMO5WOgeT7tfc6fg-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Provags-ID: V03:K1:tZdBk04hRhASKvxNK9GoShdQF2eDzAxPp3Cg+nGJZHfdv+pgn9O
+ kwmXMRprVfQ0pim31l7qW7s2PAdADCj/awdh7RjgyY/fpM05v6Q4FPoPxGv7M/voa/433hE
+ iMtmqCgX/c3+k4mAysDUXpBN3iwaTARXVJkOprXX/vYPQFVr07NqenTLneDPM6daZwlm0hy
+ 0YX0ky3/WBqCzIZatfYnA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:a4B9TvEXteU=:6Cc91AD+KrupUd8aoLdxST
+ pLfWD4GRVX78zFLH10jxyBk47NToOUHPMzZ76AUs4LjwJIXCgzQ8lswxiYHO149apHXiNngIl
+ vL6/HJ1QNL3gHBiZC6xbd/blGxhvEYzR/6K861xG028YhtTZyjkgvzNI4s+ZxjZQY3dBZXdtj
+ UdsvdU9++f/akx191P/dx25X1cmHruMzPZ01VXH8m97YsuLMWM+B8G5ivaA4v8fCixGGXLAMr
+ Clon04TCHz/QZelKq5De+Y09hFfQZgKM59HeSRuO4E8YOnKSt5nLG3kilomFqHSACrCSSUjNR
+ 5tt2Vr5wZDgiCBh6PCcBH9RXJWu24f2jptleN0EgRsm4faACe0x+A3CkdVquadMyd+E7vcK0F
+ 105IejPyxALlM8fACy6sEuAcTCVpa1DNJgOnvrswp8DOGcGj4NQZgnygKvVkbF+ctQC1kuH0L
+ CVdoCkBlR77nIRW086rlN5fqFeDgoOz++WPC+Z4RCiMRqNzSjTG5SNIwoPEJPB3xGl1JU4v8V
+ Jt4bKd6rB7CDuqggZ9Lsevm9gESw8V6Z6QaEmmL1k9s0p2g2y6fY67sAaVS1tSdXC4RZhAWZp
+ 5w4jEC/3SXNjtkR/AxiNrVjmpWvyUvgOV5XWSwU6IfzHdLcduFtRVwtpupm4YQYPDtyP/X3GU
+ ofUZ0OsCJl1LWPytMLCf41zavpNOa86cXoxxvpFBVy98fkEnxsUymIsSb4p637NQQcFmz5Y1G
+ m0RHQzeIuHR+dythmrWwFtBfI1/olCBtw3mimdzdploPhmuM8DjlS8eyzmuooX0ApryMh/GNn
+ XsTJ05wjvOw24IeAQNMPLG2EGrP55tZFrElwpprXZDRQVPzCOL1+o/9scTvPzLZqh6Bi59Iy3
+ t9uhoj8CKsmpUlIUsX+FRJzTifWm/uGhMxGlgIorYAUlSm90Ef5Z5WRQiZoQZ+6MedLbr5hqH
+ WXA8oae97alSp0RHkhZOcO6ctORW1LVM=
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi,
+Hi Jens, James and Martin,
 
-On 10-12-2019 19:53, Florian Fainelli wrote:
-> Hi Jens,
-> 
-> The first 4 patches are fixes and should ideally be queued up/picked up
-> by stable. The last 4 patches add support for BCM7216 which is one of
-> our latest devices supported by this driver.
-> 
-> Patch #2 does a few things, but it was pretty badly broken before and it
-> is hard not to fix all call sites (probe, suspend, resume) in one shot.
-> 
-> Please let me know if you have any comments.
-> 
-> Thanks!
+This series concludes the work I did for linux-5.5 on the compat_ioctl()
+cleanup, killing off fs/compat_ioctl.c and block/compat_ioctl.c by moving
+everything into drivers.
 
-The entire series looks good to me:
+Overall this would be a reduction both in complexity and line count, but
+as I'm also adding documentation the overall number of lines increases
+in the end.
 
-Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+My plan was originally to keep the SCSI and block parts separate.
+This did not work easily because of interdependencies: I cannot
+do the final SCSI cleanup in a good way without first addressing the
+CDROM ioctls, so this is one series that I hope could be merged through
+either the block or the scsi git trees, or possibly both if you can
+pull in the same branch.
 
-Regards,
+The series comes in these steps:
 
-Hans
+1. clean up the sg v3 interface as suggested by Linus. I have
+   talked about this with Doug Gilbert as well, and he would
+   rebase his sg v4 patches on top of "compat: scsi: sg: fix v3
+   compat read/write interface"
 
+2. Four patches for missing block compat_ioctl handlers, to be
+   backported into stable kernels. Separate patches because they
+   are needed in different stable versions.
 
+3. Actually moving handlers out of block/compat_ioctl.c and
+   block/scsi_ioctl.c into drivers, mixed in with cleanup
+   patches
 
-> 
-> Florian Fainelli (8):
->    ata: libahci_platform: Export again ahci_platform_<en/dis>able_phys()
->    ata: ahci_brcm: Fix AHCI resources management
->    ata: ahci_brcm: BCM7425 AHCI requires AHCI_HFLAG_DELAY_ENGINE
->    ata: ahci_brcm: Add missing clock management during recovery
->    ata: ahci_brcm: Manage reset line during suspend/resume
->    ata: ahci_brcm: Add a shutdown callback
->    dt-bindings: ata: Document BCM7216 AHCI controller compatible
->    ata: ahci_brcm: Support BCM7216 reset controller name
-> 
->   .../bindings/ata/brcm,sata-brcm.txt           |   7 +
->   drivers/ata/ahci_brcm.c                       | 167 ++++++++++++++----
->   drivers/ata/libahci_platform.c                |   6 +-
->   include/linux/ahci_platform.h                 |   2 +
->   4 files changed, 141 insertions(+), 41 deletions(-)
-> 
+4. Document how to do this right. I keep getting asked about this,
+   and it helps to point to some documentation file.
 
+The series is avaialable for testing at [1].
+
+       Arnd
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/arnd/playground.git/log/?h=compat-ioctl-endgame
+
+Arnd Bergmann (24):
+  compat: ARM64: always include asm-generic/compat.h
+  compat: scsi: sg: fix v3 compat read/write interface
+  compat_ioctl: block: handle BLKREPORTZONE/BLKRESETZONE
+  compat_ioctl: block: handle BLKGETZONESZ/BLKGETNRZONES
+  compat_ioctl: block: handle add zone open, close and finish ioctl
+  compat_ioctl: block: handle Persistent Reservations
+  compaT_ioctl: ubd, aoe: use blkdev_compat_ptr_ioctl
+  compat_ioctl: move CDROM_SEND_PACKET handling into scsi
+  compat_ioctl: move CDROMREADADIO to cdrom.c
+  compat_ioctl: cdrom: handle CDROM_LAST_WRITTEN
+  compat_ioctl: block: handle cdrom compat ioctl in non-cdrom drivers
+  compat_ioctl: add scsi_compat_ioctl
+  compat_ioctl: bsg: add handler
+  compat_ioctl: ide: floppy: add handler
+  compat_ioctl: scsi: move ioctl handling into drivers
+  compat_ioctl: move sys_compat_ioctl() to ioctl.c
+  compat_ioctl: simplify the implementation
+  compat_ioctl: move cdrom commands into cdrom.c
+  compat_ioctl: scsi: handle HDIO commands from drivers
+  compat_ioctl: move HDIO ioctl handling into drivers/ide
+  compat_ioctl: block: move blkdev_compat_ioctl() into ioctl.c
+  compat_ioctl: block: simplify compat_blkpg_ioctl()
+  compat_ioctl: simplify up block/ioctl.c
+  Documentation: document ioctl interfaces better
+
+ Documentation/core-api/index.rst       |   1 +
+ Documentation/core-api/ioctl.rst       | 250 +++++++++++++++
+ arch/arm64/include/asm/compat.h        |   5 +-
+ arch/um/drivers/ubd_kern.c             |   1 +
+ block/Makefile                         |   1 -
+ block/bsg.c                            |   1 +
+ block/compat_ioctl.c                   | 411 -------------------------
+ block/ioctl.c                          | 319 +++++++++++++++----
+ block/scsi_ioctl.c                     | 214 ++++++++-----
+ drivers/ata/libata-scsi.c              |   9 +
+ drivers/block/aoe/aoeblk.c             |   1 +
+ drivers/block/floppy.c                 |   3 +
+ drivers/block/paride/pcd.c             |   3 +
+ drivers/block/paride/pd.c              |   1 +
+ drivers/block/paride/pf.c              |   1 +
+ drivers/block/pktcdvd.c                |  26 +-
+ drivers/block/sunvdc.c                 |   1 +
+ drivers/block/virtio_blk.c             |   3 +
+ drivers/block/xen-blkfront.c           |   1 +
+ drivers/cdrom/cdrom.c                  |  35 ++-
+ drivers/cdrom/gdrom.c                  |   3 +
+ drivers/ide/ide-cd.c                   |  40 +++
+ drivers/ide/ide-disk.c                 |   3 +
+ drivers/ide/ide-floppy.c               |   4 +
+ drivers/ide/ide-floppy.h               |   2 +
+ drivers/ide/ide-floppy_ioctl.c         |  35 +++
+ drivers/ide/ide-gd.c                   |  14 +
+ drivers/ide/ide-ioctls.c               |  47 ++-
+ drivers/ide/ide-tape.c                 |  14 +
+ drivers/scsi/aic94xx/aic94xx_init.c    |   3 +
+ drivers/scsi/ch.c                      |   9 +-
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |   3 +
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |   3 +
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |   3 +
+ drivers/scsi/ipr.c                     |   3 +
+ drivers/scsi/isci/init.c               |   3 +
+ drivers/scsi/mvsas/mv_init.c           |   3 +
+ drivers/scsi/pm8001/pm8001_init.c      |   3 +
+ drivers/scsi/scsi_ioctl.c              |  54 +++-
+ drivers/scsi/sd.c                      |  50 ++-
+ drivers/scsi/sg.c                      | 169 +++++-----
+ drivers/scsi/sr.c                      |  53 +++-
+ drivers/scsi/st.c                      |  51 +--
+ fs/Makefile                            |   2 +-
+ fs/compat_ioctl.c                      | 261 ----------------
+ fs/internal.h                          |   6 -
+ fs/ioctl.c                             | 131 +++++---
+ include/linux/blkdev.h                 |   7 +
+ include/linux/falloc.h                 |   2 -
+ include/linux/fs.h                     |   4 -
+ include/linux/ide.h                    |   2 +
+ include/linux/libata.h                 |   6 +
+ include/scsi/scsi_ioctl.h              |   1 +
+ include/scsi/sg.h                      |  30 ++
+ 54 files changed, 1249 insertions(+), 1062 deletions(-)
+ create mode 100644 Documentation/core-api/ioctl.rst
+ delete mode 100644 block/compat_ioctl.c
+ delete mode 100644 fs/compat_ioctl.c
+
+-- 
+2.20.0
+
+Cc: corbet@lwn.net
+Cc: catalin.marinas@arm.com
+Cc: will@kernel.org
+Cc: jdike@addtoit.com
+Cc: richard@nod.at
+Cc: anton.ivanov@cambridgegreys.com
+Cc: fujita.tomonori@lab.ntt.co.jp
+Cc: justin@coraid.com
+Cc: efremov@linux.com
+Cc: tim@cyberelk.net
+Cc: mst@redhat.com
+Cc: jasowang@redhat.com
+Cc: pbonzini@redhat.com
+Cc: stefanha@redhat.com
+Cc: boris.ostrovsky@oracle.com
+Cc: jgross@suse.com
+Cc: sstabellini@kernel.org
+Cc: konrad.wilk@oracle.com
+Cc: roger.pau@citrix.com
+Cc: bp@alien8.de
+Cc: davem@davemloft.net
+Cc: john.garry@huawei.com
+Cc: brking@us.ibm.com
+Cc: intel-linux-scu@intel.com
+Cc: artur.paszkiewicz@intel.com
+Cc: jinpu.wang@cloud.ionos.com
+Cc: dgilbert@interlog.com
+Cc: Kai.Makisara@kolumbus.fi
+Cc: arnd@arndb.de
+Cc: damien.lemoal@hgst.com
+Cc: hare@suse.com
+Cc: linux-doc@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-block@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-um@lists.infradead.org
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
+Cc: virtualization@lists.linux-foundation.org
+Cc: xen-devel@lists.xenproject.org
+Cc: linux-fsdevel@vger.kernel.org
