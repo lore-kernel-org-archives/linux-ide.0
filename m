@@ -1,149 +1,76 @@
-Return-Path: <SRS0=HnBo=2A=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=88f8=2B=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2794C2D0BF
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 22:42:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB1E3C43603
+	for <linux-ide@archiver.kernel.org>; Wed, 11 Dec 2019 03:22:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 776272077B
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Dec 2019 22:42:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576017729;
-	bh=/wr7f69ycqZFhinrnrv4t11zWCsbzEx6MAndDAn+BlU=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=HfEnfWeMq0J5YTakPjLjuE5DA6oRoLzKQkFSa/3ICAGCAApo7I21aVyHXKgTjlOST
-	 oXPulmuE5vu6xBJug8gStgx6I4wMttxboWZIgWoIhYB7wwY5fpa2AxfDrrFWsLIMTe
-	 MQkO07XqmhG/eNvTTdvj/wT4nC6V2/YKF3oaRKPg=
+	by mail.kernel.org (Postfix) with ESMTP id C81B320838
+	for <linux-ide@archiver.kernel.org>; Wed, 11 Dec 2019 03:22:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728561AbfLJWbb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 10 Dec 2019 17:31:31 -0500
-Received: from mail.kernel.org ([198.145.29.99]:51538 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728511AbfLJWb3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 10 Dec 2019 17:31:29 -0500
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 06B45214D8;
-        Tue, 10 Dec 2019 22:31:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1576017088;
-        bh=/wr7f69ycqZFhinrnrv4t11zWCsbzEx6MAndDAn+BlU=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=dtAS5RgnUW2aVG6VF98PBNutMj/81dnvzdVT+u9d96ucH6sGEo8Ml6/6FXH1+AJ6O
-         BdWpGh6dj6oluxu3J5czlSAN607naGLG5fliz3EsXb+zLs3PlnkrER40/9iqte7K+c
-         cyYQ1R/4GIm68NNSO0NomTVQKGLNHmtsGYrzmb3I=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     John Garry <john.garry@huawei.com>, Jens Axboe <axboe@kernel.dk>,
-        Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 44/91] libata: Ensure ata_port probe has completed before detach
-Date:   Tue, 10 Dec 2019 17:29:48 -0500
-Message-Id: <20191210223035.14270-44-sashal@kernel.org>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191210223035.14270-1-sashal@kernel.org>
-References: <20191210223035.14270-1-sashal@kernel.org>
+        id S1726901AbfLKDWC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 10 Dec 2019 22:22:02 -0500
+Received: from szxga05-in.huawei.com ([45.249.212.191]:7213 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726687AbfLKDWC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 10 Dec 2019 22:22:02 -0500
+Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 86EDA17B335F7DBE9168;
+        Wed, 11 Dec 2019 11:21:59 +0800 (CST)
+Received: from [127.0.0.1] (10.74.219.194) by DGGEMS402-HUB.china.huawei.com
+ (10.3.19.202) with Microsoft SMTP Server id 14.3.439.0; Wed, 11 Dec 2019
+ 11:21:50 +0800
+From:   "chenxiang (M)" <chenxiang66@hisilicon.com>
+Subject: Failed to disable WCE for a SATA disk
+To:     "axboe@kernel.dk" <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, Linuxarm <linuxarm@huawei.com>,
+        John Garry <john.garry@huawei.com>
+Message-ID: <a3624979-0917-4b66-ca18-89e0e2dd3bf2@hisilicon.com>
+Date:   Wed, 11 Dec 2019 11:21:49 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.2.0
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.74.219.194]
+X-CFilter-Loop: Reflected
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: John Garry <john.garry@huawei.com>
+Hi,
 
-[ Upstream commit 130f4caf145c3562108b245a576db30b916199d2 ]
+I encounter a issue related to libata and libsas. For hisi_sas driver, 
+it uses libsas. When disable WCE with tool sdparm (sdparm --clear=WCE 
+/dev/sda) for a SATA disk,
+it fails with error info from hardware (the error info indicates that 
+the length of transfer data is conflicted with the direction of data, 
+the length is 0 but
+the data of direction is from host to device).
 
-With CONFIG_DEBUG_TEST_DRIVER_REMOVE set, we may find the following WARN:
+I check the process: When disable WCE, it sends pasthrough IO with sg_io 
+, req->__data_len is not 0, and scsi_cmd->sc_data_direction = DMA_TO_DEVICE.
+But for the command (MODE_SELECT), qc->tf.protocol is set 0 (not 
+ATA_PROT_DMA) in ->queuecommand() 
+->ata_sas_queuecmd()->ata_scsi_translate()->ata_scsi_mod_select_xlat()->ata_mselect_caching(),
+so it doesn't dma map ata sg in function ata_qc_issue(). While in 
+function sas_ata_qc_issue()，it calcutes the length with the total sum of 
+sg_dma_len(sg), as for the
+command it doesn't dma map ata sg, so the length is 0.
 
-[   23.452574] ------------[ cut here ]------------
-[   23.457190] WARNING: CPU: 59 PID: 1 at drivers/ata/libata-core.c:6676 ata_host_detach+0x15c/0x168
-[   23.466047] Modules linked in:
-[   23.469092] CPU: 59 PID: 1 Comm: swapper/0 Not tainted 5.4.0-rc1-00010-g5b83fd27752b-dirty #296
-[   23.477776] Hardware name: Huawei D06 /D06, BIOS Hisilicon D06 UEFI RC0 - V1.16.01 03/15/2019
-[   23.486286] pstate: a0c00009 (NzCv daif +PAN +UAO)
-[   23.491065] pc : ata_host_detach+0x15c/0x168
-[   23.495322] lr : ata_host_detach+0x88/0x168
-[   23.499491] sp : ffff800011cabb50
-[   23.502792] x29: ffff800011cabb50 x28: 0000000000000007
-[   23.508091] x27: ffff80001137f068 x26: ffff8000112c0c28
-[   23.513390] x25: 0000000000003848 x24: ffff0023ea185300
-[   23.518689] x23: 0000000000000001 x22: 00000000000014c0
-[   23.523987] x21: 0000000000013740 x20: ffff0023bdc20000
-[   23.529286] x19: 0000000000000000 x18: 0000000000000004
-[   23.534584] x17: 0000000000000001 x16: 00000000000000f0
-[   23.539883] x15: ffff0023eac13790 x14: ffff0023eb76c408
-[   23.545181] x13: 0000000000000000 x12: ffff0023eac13790
-[   23.550480] x11: ffff0023eb76c228 x10: 0000000000000000
-[   23.555779] x9 : ffff0023eac13798 x8 : 0000000040000000
-[   23.561077] x7 : 0000000000000002 x6 : 0000000000000001
-[   23.566376] x5 : 0000000000000002 x4 : 0000000000000000
-[   23.571674] x3 : ffff0023bf08a0bc x2 : 0000000000000000
-[   23.576972] x1 : 3099674201f72700 x0 : 0000000000400284
-[   23.582272] Call trace:
-[   23.584706]  ata_host_detach+0x15c/0x168
-[   23.588616]  ata_pci_remove_one+0x10/0x18
-[   23.592615]  ahci_remove_one+0x20/0x40
-[   23.596356]  pci_device_remove+0x3c/0xe0
-[   23.600267]  really_probe+0xdc/0x3e0
-[   23.603830]  driver_probe_device+0x58/0x100
-[   23.608000]  device_driver_attach+0x6c/0x90
-[   23.612169]  __driver_attach+0x84/0xc8
-[   23.615908]  bus_for_each_dev+0x74/0xc8
-[   23.619730]  driver_attach+0x20/0x28
-[   23.623292]  bus_add_driver+0x148/0x1f0
-[   23.627115]  driver_register+0x60/0x110
-[   23.630938]  __pci_register_driver+0x40/0x48
-[   23.635199]  ahci_pci_driver_init+0x20/0x28
-[   23.639372]  do_one_initcall+0x5c/0x1b0
-[   23.643199]  kernel_init_freeable+0x1a4/0x24c
-[   23.647546]  kernel_init+0x10/0x108
-[   23.651023]  ret_from_fork+0x10/0x18
-[   23.654590] ---[ end trace 634a14b675b71c13 ]---
+Do we need to dma map ata sg for the command? Or is it really we need 
+the data for the command MODE_SELECT?
 
-With KASAN also enabled, we may also get many use-after-free reports.
+Thanks,
+Shawn
 
-The issue is that when CONFIG_DEBUG_TEST_DRIVER_REMOVE is set, we may
-attempt to detach the ata_port before it has been probed.
 
-This is because the ata_ports are async probed, meaning that there is no
-guarantee that the ata_port has probed prior to detach. When the ata_port
-does probe in this scenario, we get all sorts of issues as the detach may
-have already happened.
-
-Fix by ensuring synchronisation with async_synchronize_full(). We could
-alternatively use the cookie returned from the ata_port probe
-async_schedule() call, but that means managing the cookie, so more
-complicated.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/ata/libata-core.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index da1a987c622a4..b1582f1611717 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6550,6 +6550,9 @@ void ata_host_detach(struct ata_host *host)
- {
- 	int i;
- 
-+	/* Ensure ata_port probe has completed */
-+	async_synchronize_full();
-+
- 	for (i = 0; i < host->n_ports; i++)
- 		ata_port_detach(host->ports[i]);
- 
--- 
-2.20.1
 
