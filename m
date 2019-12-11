@@ -2,75 +2,138 @@ Return-Path: <SRS0=88f8=2B=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB1E3C43603
-	for <linux-ide@archiver.kernel.org>; Wed, 11 Dec 2019 03:22:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5978C3F68F
+	for <linux-ide@archiver.kernel.org>; Wed, 11 Dec 2019 04:09:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C81B320838
-	for <linux-ide@archiver.kernel.org>; Wed, 11 Dec 2019 03:22:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC4092077B
+	for <linux-ide@archiver.kernel.org>; Wed, 11 Dec 2019 04:09:13 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="I2EwFONY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726901AbfLKDWC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 10 Dec 2019 22:22:02 -0500
-Received: from szxga05-in.huawei.com ([45.249.212.191]:7213 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726687AbfLKDWC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 10 Dec 2019 22:22:02 -0500
-Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 86EDA17B335F7DBE9168;
-        Wed, 11 Dec 2019 11:21:59 +0800 (CST)
-Received: from [127.0.0.1] (10.74.219.194) by DGGEMS402-HUB.china.huawei.com
- (10.3.19.202) with Microsoft SMTP Server id 14.3.439.0; Wed, 11 Dec 2019
- 11:21:50 +0800
-From:   "chenxiang (M)" <chenxiang66@hisilicon.com>
-Subject: Failed to disable WCE for a SATA disk
-To:     "axboe@kernel.dk" <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, Linuxarm <linuxarm@huawei.com>,
-        John Garry <john.garry@huawei.com>
-Message-ID: <a3624979-0917-4b66-ca18-89e0e2dd3bf2@hisilicon.com>
-Date:   Wed, 11 Dec 2019 11:21:49 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.2.0
+        id S1727359AbfLKEJB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 10 Dec 2019 23:09:01 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:53182 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726642AbfLKEJB (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 Dec 2019 23:09:01 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBB442Pp179945;
+        Wed, 11 Dec 2019 04:08:36 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=NsytSED1IdKLk5zj6xtHrR0U2YjxCSjKc6zTpdZVg4Q=;
+ b=I2EwFONYap60CNgUAo3T/+I6fxoUgXpkeedOuHbGWnRe5I51yYyxDxB8z3fhUhTIdVGq
+ ZPQ20I86VGh4Ks5AIiQkfmCZSiUm2M+rVhq8A5eMzeo92Hc5GvFOWSxTQKjS1masJky8
+ BF1Khtt7o1kq+eQH6iBB/6ZxQBxkmaKv+727ppF+maxHdFucRZRQCN2u/5bou3oCcpJg
+ ioYfSZgw5GArinBEWHxPE3bCgu/+01fPXDzZra81hUuj2utqRw1m2IA4Uu5IXTpDfOV1
+ x7GuNkXCLQ1HudrnJb0A0U7kyq/qwGyE6TVil26Fp7vvoMABI6Ogw9yBwiCuLiRgrghy sQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2wrw4n6x8t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 11 Dec 2019 04:08:36 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBB4462h010025;
+        Wed, 11 Dec 2019 04:08:36 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2wte9b9sm1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 11 Dec 2019 04:08:36 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xBB48YKM022438;
+        Wed, 11 Dec 2019 04:08:35 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 10 Dec 2019 20:08:07 -0800
+To:     Guenter Roeck <linux@roeck-us.net>
+Cc:     linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH 0/1] Summary: hwmon driver for temperature sensors on SATA drives
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <20191209052119.32072-1-linux@roeck-us.net>
+Date:   Tue, 10 Dec 2019 23:08:04 -0500
+In-Reply-To: <20191209052119.32072-1-linux@roeck-us.net> (Guenter Roeck's
+        message of "Sun, 8 Dec 2019 21:21:18 -0800")
+Message-ID: <yq15zinmrmj.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.74.219.194]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9467 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1912110034
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9467 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1912110034
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi,
 
-I encounter a issue related to libata and libsas. For hisi_sas driver, 
-it uses libsas. When disable WCE with tool sdparm (sdparm --clear=WCE 
-/dev/sda) for a SATA disk,
-it fails with error info from hardware (the error info indicates that 
-the length of transfer data is conflicted with the direction of data, 
-the length is 0 but
-the data of direction is from host to device).
+Hi Guenter,
 
-I check the process: When disable WCE, it sends pasthrough IO with sg_io 
-, req->__data_len is not 0, and scsi_cmd->sc_data_direction = DMA_TO_DEVICE.
-But for the command (MODE_SELECT), qc->tf.protocol is set 0 (not 
-ATA_PROT_DMA) in ->queuecommand() 
-->ata_sas_queuecmd()->ata_scsi_translate()->ata_scsi_mod_select_xlat()->ata_mselect_caching(),
-so it doesn't dma map ata sg in function ata_qc_issue(). While in 
-function sas_ata_qc_issue()，it calcutes the length with the total sum of 
-sg_dma_len(sg), as for the
-command it doesn't dma map ata sg, so the length is 0.
+> The most recent attempt was [1] by Linus Walleij. It went through a total
+> of seven iterations. At the end, it was rejected for a number of reasons;
+> see the provided link for details. This implementation resides in the
+> SCSI core. It originally resided in libata but was moved to SCSI per
+> maintainer request, where it was ultimately rejected.
 
-Do we need to dma map ata sg for the command? Or is it really we need 
-the data for the command MODE_SELECT?
+While I am sure I come across as a curmudgeon, regressions is a major
+concern for me. That, and making sure we pick the right architecture. I
+thought we were making good progress in that department when Linus
+abandoned the effort.
 
-Thanks,
-Shawn
+> The feedback on this approach suggests to use the SCSI Temperature log
+> page [0x0d] as means to access drive temperature information. It is
+> unknown if this is implemented in any real SCSI drive.
 
+Almost every SCSI drive has it.
 
+> The feedback also suggests to obtain temperature from ATA drives,
+> convert it into the SCSI temperature log page in libata-scsi, and to
+> use that information in a hardware monitoring driver. The format and
+> method to do this is documented in [3]. This is not currently
+> implemented in the Linux kernel.
 
+Correct, but I have no qualms over exporting the SCSI temperature log
+page. The devices that export that page are generally well-behaved.
+
+My concerns are wrt. identifying whether SMART data is available for
+USB/UAS. I am not too worried about ATA and "real" SCSI (ignoring RAID
+controllers that hide the real drives in various ways).
+
+I am not sure why the SCSI temperature log page parsing would be
+complex. I will have to go check smartmontools to see what that is all
+about. The spec is as simple as can be.
+
+Anyway. I think the overall approach wrt. SCT and falling back to
+well-known SMART fields is reasonably sane and fine for libata. But I
+don't understand the pushback wrt. using the SCSI temperature log page
+as a conduit. I think it would be fine if this worked out of the box for
+both SCSI and ATA drives.
+
+The elephant in the room remains USB. And coming up with a way we can
+reliably detect whether it is safe to start poking at the device to
+discover if SMART is provided. If we eventually want to pursue USB, I
+think your heuristic stuff needs to be a library that can be leveraged
+by both libata and USB. But that doesn't have to be part of the initial
+effort.
+
+And finally, my concerns wrt. reacting to bad sensors remain. Not too
+familiar with hwmon, but I would still like any actions based on
+reported temperatures to be under user control and not the kernel.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
