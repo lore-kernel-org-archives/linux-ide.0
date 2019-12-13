@@ -2,165 +2,263 @@ Return-Path: <SRS0=ypzH=2D=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CBCD6C43603
-	for <linux-ide@archiver.kernel.org>; Fri, 13 Dec 2019 04:18:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B558FC43603
+	for <linux-ide@archiver.kernel.org>; Fri, 13 Dec 2019 07:49:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A323424656
-	for <linux-ide@archiver.kernel.org>; Fri, 13 Dec 2019 04:18:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7EAB7214D8
+	for <linux-ide@archiver.kernel.org>; Fri, 13 Dec 2019 07:49:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ksDmDwZw"
+	dkim=pass (2048-bit key) header.d=cerno.tech header.i=@cerno.tech header.b="M5Z0fhzE";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="xZ+B6sOQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731706AbfLMESP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 12 Dec 2019 23:18:15 -0500
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:37750 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727299AbfLMESP (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 Dec 2019 23:18:15 -0500
-Received: by mail-pf1-f196.google.com with SMTP id p14so766598pfn.4;
-        Thu, 12 Dec 2019 20:18:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=J+VXXEpqpT1b0Kt78pCe+xpHKloAmNUpN7ezOmJ2NB0=;
-        b=ksDmDwZwpGeEFBHqIZzt8KKfMIYgWH5S5NsW05L0CjlXsVFWSChJeZ+xC+VC/X0auG
-         /gvQeFbOfkBqLuX4qu6xCgDBpJS3EYiYCSgTausXPWxTTU+TuehXNF5PiuNOpw6Rv8if
-         yXH3e/lwIm22D9qlN81HSa8SmFPEp92pkfsc/jwgLZh3XGP2PNJlVrqRqrJpNzfNV07X
-         SiHNNgQDdo7xBw2Z/Q5PziQtRpzfqcHxtFjR9WmL9LrWyUvYJNKkAGMLuaOXXtDA4UTB
-         SQNkozDBYCYPLCPN+iiwI9Li70BvZemw0o/qAY20vUr/qSks8wYH/IStnMLig4s3KTru
-         +Aow==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=J+VXXEpqpT1b0Kt78pCe+xpHKloAmNUpN7ezOmJ2NB0=;
-        b=g48hSp0Q02R41l8iMUE3d/OjWKM2t878MCyeg/IkqLDf++/ExhDkXSUKiYi2cpbs5M
-         AJkZrd4Z6ixCuB5uPZRY3Yw+zkg4Q1YlRSKOz//gUXSx3TN1Gp8M/N4putRQVBxYe7kG
-         4P/Y0hjEfOeq+wAZ2SyAxfqt1EMNN56CQ7iEOBJsGoi+A9ZTrYqK6E0jhL1UNJ1hSH11
-         5TPMSoBkTph3KsbgG0fvTWObnXMhKttxfaSxpZcyCb0U9ngIUKvpXXzl2EAXw1a3L5Xl
-         v09lU5fLiztgJV7kqF2HE2+2ZiyhYLscRhEaKF8TigkliYNUF0tUSSa3Jx9nTBz2nTiP
-         XGNw==
-X-Gm-Message-State: APjAAAUUpopGfY40/oY36APZ50iwbqzu9TwkPa0UfOZ3aHQQnusXmIGh
-        +Tv0roa+Ds6Jjl8qgpq1LVI=
-X-Google-Smtp-Source: APXvYqyu9bam4Mq+Jdr4Xf4RkjFCzPnnKOKiqla8LydRYnEZ6HNk9qndLr9uuzCyMPiQqzSmDrMEuQ==
-X-Received: by 2002:a63:4b52:: with SMTP id k18mr14579197pgl.371.1576210694052;
-        Thu, 12 Dec 2019 20:18:14 -0800 (PST)
-Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id g18sm9275813pfi.80.2019.12.12.20.18.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 12 Dec 2019 20:18:13 -0800 (PST)
-Subject: Re: [PATCH 1/1] hwmon: Driver for temperature sensors on SATA drives
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Linus Walleij <linus.walleij@linaro.org>
-Cc:     linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
-        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        Chris Healy <cphealy@gmail.com>
-References: <20191209052119.32072-1-linux@roeck-us.net>
- <20191209052119.32072-2-linux@roeck-us.net>
- <CACRpkdYjidQHB0=S_brDxH3k+qJ2mfXCTF9A3SVZkPvBaVg6JQ@mail.gmail.com>
- <yq1wob1jfjm.fsf@oracle.com>
-From:   Guenter Roeck <linux@roeck-us.net>
-Message-ID: <541a7ddd-f4c9-5d5f-4f43-0ae5bc46aef6@roeck-us.net>
-Date:   Thu, 12 Dec 2019 20:18:11 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        id S1725747AbfLMHto (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 13 Dec 2019 02:49:44 -0500
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:51043 "EHLO
+        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725535AbfLMHtn (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 13 Dec 2019 02:49:43 -0500
+Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
+        by mailout.nyi.internal (Postfix) with ESMTP id 1125822784;
+        Fri, 13 Dec 2019 02:49:43 -0500 (EST)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute3.internal (MEProxy); Fri, 13 Dec 2019 02:49:43 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cerno.tech; h=
+        from:to:cc:subject:date:message-id:mime-version
+        :content-transfer-encoding; s=fm1; bh=mJFqAJ0C3QCpWN2iUjPkDmdFvn
+        znhTzLbrbNUZFsDHk=; b=M5Z0fhzEup+SlJRpXx8Nk9814SOijbwUlJwPFXr3Fp
+        UXqpw5TDvfj53uwfP5k001Y0KKkIp3sJ3cYzvL4uM/IXYvnLSwLktwJEs56LQr5u
+        ONz83jKed3LKu4T/4s7I4BXg7MigZxMWmdCxPEZ+Nf0MDMxJLgncD+u4Oc53/3iU
+        43jlJXMsQKMt8OY0AbZ9vrAmgzwBpvrLT1UG05t48wWpJq5dq4iqiCkeIH4teVsG
+        yZnXhDz4Agl3XjSZzV/kO0lhfCFXb27UMBkO4bliuoBRhBgcxunN4EBCBmzUJQx5
+        WuFaqBkVj22GilvqhuhbKm580KicthIsSZY0/U6EJ4og==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:date:from
+        :message-id:mime-version:subject:to:x-me-proxy:x-me-proxy
+        :x-me-sender:x-me-sender:x-sasl-enc; s=fm1; bh=mJFqAJ0C3QCpWN2iU
+        jPkDmdFvnznhTzLbrbNUZFsDHk=; b=xZ+B6sOQYtZxyvToFKhUpaFvzQkiGu4k2
+        D6M/OzzLo3y3zN0FMj6bGuZj5J9eK5Ul5pUQKbQa07XVXIchfOXMGf8jq02dmhUE
+        X47btzYL4GBhsJRPzSamTYnNNnVvz8CAqAqqYLgvsQM5oShXYymZ7HW424A8+ASD
+        RYWHPvkQVbZQ05gRqaT9d6OVUcjaBgGuXB2GFuDOreCUtX9HTX+oKh6VMNTd9sDI
+        RA9qk6iDz+KRVjbkzlrJsYBxeml0XQuZ6Fx0RxjhnpBYwfbWij7ocHPyT2pNx4cE
+        uFSZI+O37mrXTdNpQ26er2HxIFBzDr4SfYRsQKkliH/jR1YefStww==
+X-ME-Sender: <xms:lkLzXZU9KDrpochxgUwvzHVDtY2_D3LFfhBduW93rjRu1WIZMAFpZg>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedufedrudelkedgudduvdcutefuodetggdotefrod
+    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfgh
+    necuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmd
+    enogevohgrshhtrghlqdfhgeduvddqtddvucdludehtddmnecujfgurhephffvufffkffo
+    ggfgsedtkeertdertddtnecuhfhrohhmpeforgigihhmvgcutfhiphgrrhguuceomhgrgi
+    himhgvsegtvghrnhhordhtvggthheqnecuffhomhgrihhnpeguvghvihgtvghtrhgvvgdr
+    ohhrghenucfkphepledtrdekledrieekrdejieenucfrrghrrghmpehmrghilhhfrhhomh
+    epmhgrgihimhgvsegtvghrnhhordhtvggthhenucevlhhushhtvghrufhiiigvpedt
+X-ME-Proxy: <xmx:lkLzXQf9_gBrxN17AcTL8Ma1jJ5ZOsSrHDAgNj-2FlZd56KBp_9UfQ>
+    <xmx:lkLzXduYbHuMJZUUQmKSo__iuMRC7xP9IKO5qpN5P1WKJzsRQZp-Yw>
+    <xmx:lkLzXX8BF3j5y60ZmFiHgjESVUxrzH8OnQFfXiKt4SfeI7M1-RC9pw>
+    <xmx:l0LzXdSX-vkhze1OcB_TTFVL9e23hD77BV-zKs4PVlnD6LXN07sjXQ>
+Received: from localhost (lfbn-tou-1-1502-76.w90-89.abo.wanadoo.fr [90.89.68.76])
+        by mail.messagingengine.com (Postfix) with ESMTPA id B783880069;
+        Fri, 13 Dec 2019 02:49:41 -0500 (EST)
+From:   Maxime Ripard <maxime@cerno.tech>
+To:     Mark Rutland <mark.rutland@arm.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>
+Cc:     Chen-Yu Tsai <wens@csie.org>, Maxime Ripard <mripard@kernel.org>,
+        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        axboe@kernel.dk, linux-ide@vger.kernel.org,
+        Maxime Ripard <maxime@cerno.tech>
+Subject: [PATCH] dt-bindings: ata: Convert Allwinner AHCI controller to a schema
+Date:   Fri, 13 Dec 2019 08:49:38 +0100
+Message-Id: <20191213074938.27285-1-maxime@cerno.tech>
+X-Mailer: git-send-email 2.23.0
 MIME-Version: 1.0
-In-Reply-To: <yq1wob1jfjm.fsf@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 12/12/19 3:21 PM, Martin K. Petersen wrote:
-> 
-> Linus,
-> 
->> It's a nice addition with the SCT command, I never figured that part
->> out. Also nice how you register the scsi class interface I never saw
->> that before, it makes it a very neat plug-in.
-> 
-> Yep, I agree that the patch looks pretty good in general. There are just
-> a few wrinkles in the detection heuristics I would like to tweak. More
-> on that later.
-> 
-> Yesterday I added support for the SCSI temperature log page and am
-> working through some kinks wrt. making this work for USB as well.
-> 
->> When I read the comments from the previous thread I got the impression
->> the SCSI people wanted me to use something like the SCT transport and
->> the hook in the SMART thing in the libata back-end specifically for
->> [S]ATA in response to the SCT read log command.
-> 
-> Our recommendation was for libata-scsi.c to export the SCSI temperature
-> log page, just like we do for all the other ATA parameters.
-> 
-> However, in tinkering with this the last couple of days, I find myself
-> torn on the subject. For two reasons. First of all, there is no 1:1
-> sensor mapping unless you implement the slightly more complex
-> environmental log page. Which isn't a big deal, except out of the
-> hundred or so SCSI devices I have here there isn't a single one that
-> supports it it. So in practice this interface would probably only exist
-> for the purpose of the libata SATL.
-> 
-> The other reason the libata approach is slightly less attractive is that
-> we need all the same SMART parsing for USB as well. So while it is
-> cleaner to hide everything ATA in libata, the reality of USB-ATA bridges
-> gets in the way. That is why I previously suggested having a libsmart or
-> similar with those common bits.
-> 
-> Anyway, based on what I've worked on today, I'm not sure that libata is
-> necessarily the way to go. Sorry about giving bad advice! We've
-> successfully implemented translations for everything else in libata over
-> the years without too much trouble. And it's not really that the
-> translation is bad. It's more the need to support it for USB as well
-> that makes things clunky.
-> 
->> I don't understand if that means the SCT read log also works
->> on some SCSI drives, or if it is just a slot-in thing for
->> ATA translation that has no meaning on SCSI drives.
-> 
-> It's an ATA command.
-> 
-> One concern I have is wrt. to sensor naming. Maybe my /usr/bin/sensors
-> command is too old. But it's pretty hopeless to get sensor readings for
+The Allwinner SoCs have a AHCI controllers that is supported in Linux, with
+a matching Device Tree binding.
 
-You'll need the command (and libsensors) from the lm-sensors package version
-3.5 or later for it to recognize SCSI/ATA drives.
+Now that we have the DT validation in place, let's convert the device tree
+bindings for that controller over to a YAML schemas.
 
-> 100 drives without being able to tell which sensor is for which
-> device. Haven't looked into that yet. The links exist in
-> /sys/class/hwmon that would allow vendor/model/serial to be queried.
-> 
+Signed-off-by: Maxime Ripard <maxime@cerno.tech>
+---
+ .../devicetree/bindings/ata/ahci-platform.txt | 12 ----
+ .../ata/allwinner,sun4i-a10-ahci.yaml         | 47 +++++++++++++
+ .../ata/allwinner,sun8i-r40-ahci.yaml         | 67 +++++++++++++++++++
+ 3 files changed, 114 insertions(+), 12 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/allwinner,sun4i-a10-ahci.yaml
+ create mode 100644 Documentation/devicetree/bindings/ata/allwinner,sun8i-r40-ahci.yaml
 
-There is a device/ subdirectory which points to that information.
-Is that what you are looking for ? "sensors" displays something
-like satatemp-scsi-5-0, which matches sd 5:0:0:0:
-
-> Oh, and another issue. While technically legal according to the spec, I
-> am not sure it's a good idea to export a sensor per scsi_device. I have
-> moved things to scsi_target instead to avoid having bazillions of
-> sensors show up. Multi-actuator drives are already shipping.
-> 
-
-Not sure I understand what you mean with 'bazillions of sensors' and
-'sensor per scsi_device'. Can you elaborate ? I see one sensor per drive,
-which is what I would expect.
-
-Thanks,
-Guenter
-
-> If I recall correctly, though, I seem to recall that you had some sort
-> of multi-LUN external disk box that warranted you working on this in the
-> first place. Is that correct? Can you refresh my memory?
-> 
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+index 55c6fab1b373..77091a277642 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+@@ -9,8 +9,6 @@ PHYs.
+ 
+ Required properties:
+ - compatible        : compatible string, one of:
+-  - "allwinner,sun4i-a10-ahci"
+-  - "allwinner,sun8i-r40-ahci"
+   - "brcm,iproc-ahci"
+   - "hisilicon,hisi-ahci"
+   - "cavium,octeon-7130-ahci"
+@@ -45,8 +43,6 @@ Required properties when using sub-nodes:
+ - #address-cells    : number of cells to encode an address
+ - #size-cells       : number of cells representing the size of an address
+ 
+-For allwinner,sun8i-r40-ahci, the reset property must be present.
+-
+ Sub-nodes required properties:
+ - reg		    : the port number
+ And at least one of the following properties:
+@@ -60,14 +56,6 @@ Examples:
+ 		interrupts = <115>;
+         };
+ 
+-	ahci: sata@1c18000 {
+-		compatible = "allwinner,sun4i-a10-ahci";
+-		reg = <0x01c18000 0x1000>;
+-		interrupts = <56>;
+-		clocks = <&pll6 0>, <&ahb_gates 25>;
+-		target-supply = <&reg_ahci_5v>;
+-	};
+-
+ With sub-nodes:
+ 	sata@f7e90000 {
+ 		compatible = "marvell,berlin2q-achi", "generic-ahci";
+diff --git a/Documentation/devicetree/bindings/ata/allwinner,sun4i-a10-ahci.yaml b/Documentation/devicetree/bindings/ata/allwinner,sun4i-a10-ahci.yaml
+new file mode 100644
+index 000000000000..cb530b46beff
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/allwinner,sun4i-a10-ahci.yaml
+@@ -0,0 +1,47 @@
++# SPDX-License-Identifier: GPL-2.0
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/ata/allwinner,sun4i-a10-ahci.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Allwinner A10 AHCI SATA Controller bindings
++
++maintainers:
++  - Chen-Yu Tsai <wens@csie.org>
++  - Maxime Ripard <mripard@kernel.org>
++
++properties:
++  compatible:
++    const: allwinner,sun4i-a10-ahci
++
++  reg:
++    maxItems: 1
++
++  clocks:
++    items:
++      - description: AHCI Bus Clock
++      - description: AHCI Module Clock
++
++  interrupts:
++    maxItems: 1
++
++  target-supply:
++    description: Regulator for SATA target power
++
++required:
++  - compatible
++  - reg
++  - clocks
++  - interrupts
++
++additionalProperties: false
++
++examples:
++  - |
++    ahci: sata@1c18000 {
++        compatible = "allwinner,sun4i-a10-ahci";
++        reg = <0x01c18000 0x1000>;
++        interrupts = <56>;
++        clocks = <&pll6 0>, <&ahb_gates 25>;
++        target-supply = <&reg_ahci_5v>;
++    };
+diff --git a/Documentation/devicetree/bindings/ata/allwinner,sun8i-r40-ahci.yaml b/Documentation/devicetree/bindings/ata/allwinner,sun8i-r40-ahci.yaml
+new file mode 100644
+index 000000000000..e74d609be3cc
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/allwinner,sun8i-r40-ahci.yaml
+@@ -0,0 +1,67 @@
++# SPDX-License-Identifier: GPL-2.0
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/ata/allwinner,sun8i-r40-ahci.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Allwinner R40 AHCI SATA Controller bindings
++
++maintainers:
++  - Chen-Yu Tsai <wens@csie.org>
++  - Maxime Ripard <mripard@kernel.org>
++
++properties:
++  compatible:
++    const: allwinner,sun8i-r40-ahci
++
++  reg:
++    maxItems: 1
++
++  clocks:
++    items:
++      - description: AHCI Bus Clock
++      - description: AHCI Module Clock
++
++  interrupts:
++    maxItems: 1
++
++  resets:
++    description: AHCI Reset Line
++
++  reset-names:
++    const: ahci
++
++  ahci-supply:
++    description: Regulator for the AHCI controller
++
++  phy-supply:
++    description: Regulator for the SATA PHY power
++
++required:
++  - compatible
++  - reg
++  - clocks
++  - interrupts
++  - resets
++  - reset-names
++
++additionalProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/clock/sun8i-r40-ccu.h>
++    #include <dt-bindings/reset/sun8i-r40-ccu.h>
++
++    ahci: sata@1c18000 {
++        compatible = "allwinner,sun8i-r40-ahci";
++        reg = <0x01c18000 0x1000>;
++        interrupts = <GIC_SPI 56 IRQ_TYPE_LEVEL_HIGH>;
++        clocks = <&ccu CLK_BUS_SATA>, <&ccu CLK_SATA>;
++        resets = <&ccu RST_BUS_SATA>;
++        reset-names = "ahci";
++        ahci-supply = <&reg_dldo4>;
++        phy-supply = <&reg_eldo3>;
++    };
++
++...
+-- 
+2.23.0
 
