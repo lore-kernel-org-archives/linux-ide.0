@@ -2,118 +2,157 @@ Return-Path: <SRS0=9Eh1=2H=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21378C2D0C3
-	for <linux-ide@archiver.kernel.org>; Tue, 17 Dec 2019 02:49:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AD90C43603
+	for <linux-ide@archiver.kernel.org>; Tue, 17 Dec 2019 03:57:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E9BC221D7D
-	for <linux-ide@archiver.kernel.org>; Tue, 17 Dec 2019 02:49:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 30CB82072B
+	for <linux-ide@archiver.kernel.org>; Tue, 17 Dec 2019 03:57:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ZJbSmQl+"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uHcqm7W3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726698AbfLQCtk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 16 Dec 2019 21:49:40 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:41848 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726526AbfLQCtk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 16 Dec 2019 21:49:40 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBH2nBuE100388;
-        Tue, 17 Dec 2019 02:49:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : references : date : in-reply-to : message-id : mime-version :
- content-type; s=corp-2019-08-05;
- bh=6Dw/6QEafOj9ykXN3RsietDgQiqYwUUa6oCGWlOI9fs=;
- b=ZJbSmQl+XH3G2lwSkWZa3gaZGw20awPAyLL+jFuZUQ6ULqkVokJoxMQWoAiD8SQo3zy2
- OsnQqQ0fa1YUksLR+gm5rWZ5A7FBkUMawhXvn6ZPmWjZShz1yk2k2gTvyjwW04GLwh9O
- 5eBtE02PAKs40mnebuYG/p4NGIQKi4SlhXrQiyRPFZMt+2eAipbDR2kd4i0d3K5PokhC
- IwmIzrwXrSMIOmXCXfZ08Ura5OFL1OCoeWbBIUT69WIXzq26bBfI+rLIrk//nvIFhE3u
- ltKXJu4loZDVDSODA6ESD0xjSZPseMr9/mELJUn621GbT2FKHUL60rv+ENR3WZQ9ujMA ug== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2wvq5ubpy1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 17 Dec 2019 02:49:15 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBH2i9A6105960;
-        Tue, 17 Dec 2019 02:47:15 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2wxm5j5bu1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 17 Dec 2019 02:47:15 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBH2lDq9013230;
-        Tue, 17 Dec 2019 02:47:14 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 16 Dec 2019 18:47:13 -0800
-To:     Guenter Roeck <linux@roeck-us.net>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
-        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        Chris Healy <cphealy@gmail.com>
-Subject: Re: [PATCH 1/1] hwmon: Driver for temperature sensors on SATA drives
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
+        id S1727257AbfLQD5g (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 16 Dec 2019 22:57:36 -0500
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:46097 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726296AbfLQD5g (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 16 Dec 2019 22:57:36 -0500
+Received: by mail-pf1-f193.google.com with SMTP id y14so6756206pfm.13;
+        Mon, 16 Dec 2019 19:57:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=iCxYfSe4wfh5Oa268U6X7/B5eWsDv/JbGRRyvV87dDA=;
+        b=uHcqm7W3PzpQu2wXLlo4vlInUiEOW1NW0HRrtfokI3T2/O6wtgcmbRjOQG3F0ks8J2
+         UU1yGhmsq1uf6vX6kyu/Cg/X2dJSAjVi+3WBQAPjE2LsohRsR80Yx6O9RKAhmnchdmRd
+         58/JYZS1v3AGwzP0V6ez8ryQ0A+cjh/+KzkEzFJ5nlOH+fA1ZxoCkw45BXj4b1wZT9BI
+         6OuKZHqMh3uheN+xo/dL8tSU8DytbAUt709MyVg+JfTgaGkjKWgpFeViQenhRgENiz53
+         kyjR1e5ivK0EHyYNTY1z+48hBh2auVjWcmNNTxjuLlw52nJ6ih49uHt+xnoy1dnSwQAF
+         n6xg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=iCxYfSe4wfh5Oa268U6X7/B5eWsDv/JbGRRyvV87dDA=;
+        b=liPz62p4MMYBQJ1bFzfHOyooYGHvo/+bvIPDyk1vvWxnc5jSJpzEn+z1J82aplHTrz
+         EAoLzI6NQdRRn7wKi3avlNYi9JcodHW3GCkk7+9aXULTAERVs1/ipk8GJOOCiOCzd6JA
+         QCXyPqmRBzejWcksbZ9GKb3XwSpf7XCT2xK3D76DP2POlcf5kz/PPW0F7vkJbQ1In8x1
+         AFQh6knYUknEfo5ZpHC1W8uHOCjGbkprywVDqTXcZ853O0h0hKsHn05EZGaeaEYm2As4
+         0XZoMC5H2BnH0sGzDVa5NpYLsphqFFDa1H6hsgD9kEnTgYnv7bgPaQsDsqAVOS6HZFfF
+         d8tQ==
+X-Gm-Message-State: APjAAAVRY22/ufvfbUg0l5JTeYBY1Aor8HwZHd/mPqr0WT+XT6oyf6Va
+        ayxR733Xacejthx9/Rcv6crroozI
+X-Google-Smtp-Source: APXvYqxWfrO+VkUtpr7Mu+1RYEbPbCCigVRj4dF8yKxw2ueMgAOyXi/Y+7TLPLC6K+Y43BudQixSuQ==
+X-Received: by 2002:a63:5407:: with SMTP id i7mr22917017pgb.330.1576555055209;
+        Mon, 16 Dec 2019 19:57:35 -0800 (PST)
+Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id d85sm24508645pfd.146.2019.12.16.19.57.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 16 Dec 2019 19:57:32 -0800 (PST)
+Subject: Re: [PATCH 0/1] Summary: hwmon driver for temperature sensors on SATA
+ drives
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 References: <20191209052119.32072-1-linux@roeck-us.net>
-        <20191209052119.32072-2-linux@roeck-us.net>
-        <CACRpkdYjidQHB0=S_brDxH3k+qJ2mfXCTF9A3SVZkPvBaVg6JQ@mail.gmail.com>
-        <yq1wob1jfjm.fsf@oracle.com>
-        <541a7ddd-f4c9-5d5f-4f43-0ae5bc46aef6@roeck-us.net>
-Date:   Mon, 16 Dec 2019 21:47:10 -0500
-In-Reply-To: <541a7ddd-f4c9-5d5f-4f43-0ae5bc46aef6@roeck-us.net> (Guenter
-        Roeck's message of "Thu, 12 Dec 2019 20:18:11 -0800")
-Message-ID: <yq1tv5zhdn5.fsf@oracle.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
+ <yq15zinmrmj.fsf@oracle.com>
+ <67b75394-801d-ce91-55f2-f0c0db9cfffc@roeck-us.net>
+ <yq1y2vbhe6i.fsf@oracle.com>
+From:   Guenter Roeck <linux@roeck-us.net>
+Message-ID: <83d528fc-42b7-aa3f-5dd9-a000268da38e@roeck-us.net>
+Date:   Mon, 16 Dec 2019 19:57:31 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9473 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-1912170023
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9473 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-1912170024
+In-Reply-To: <yq1y2vbhe6i.fsf@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+On 12/16/19 6:35 PM, Martin K. Petersen wrote:
+> 
+> Guenter,
+> 
+>> If and when drives are detected which report bad information, such
+>> drives can be added to a blacklist without impact on the core SCSI or
+>> ATA code. Until that happens, not loading the driver solves the
+>> problem on any affected system.
+> 
+> My only concern with that is that we'll have blacklisting several
+> places. We already have ATA and SCSI blacklists. If we now add a third
+> place, that's going to be a maintenance nightmare.
+> 
+> More on that below.
+> 
+>>> My concerns are wrt. identifying whether SMART data is available for
+>>> USB/UAS. I am not too worried about ATA and "real" SCSI (ignoring RAID
+>>> controllers that hide the real drives in various ways).
+> 
+> OK, so I spent my weekend tinkering with 15+ years of accumulated USB
+> devices. And my conclusion is that no, we can't in any sensible manner,
+> support USB storage monitoring in the kernel. There is no heuristic that
+> I can find that identifies that "this is a hard drive or an SSD and
+> attempting one of the various SMART methods may be safe". As opposed to
+> "this is a USB key that's likely to lock up if you try". And that's
+> ignoring the drives with USB-ATA bridges that I managed to wedge in my
+> attempt at sending down commands.
+> 
+> Even smartmontools is failing to work on a huge part of my vintage
+> collection.  Thanks to a wide variety of bridges with random, custom
+> interfaces.
+> 
+> So my stance on all this is that I'm fine with your general approach for
+> ATA. I will post a patch adding the required bits for SCSI. And if a
+> device does not implement either of the two standard methods, people
+> should use smartmontools.
+> 
+> Wrt. name, since I've added SCSI support, satatemp is a bit of a
+> misnomer. drivetemp, maybe? No particular preference.
+> 
+Agreed, if we extend this to SCSI, satatemp is less than perfect.
+drivetemp ? disktemp ? I am open to suggestions, with maybe a small
+personal preference for disktemp out of those two.
 
-Guenter,
+>> The one USB/UAS connected SATA drive I have (a WD passport) reports
+>> itself as "WD      ", not as "ATA     ". I would expect other drives
+>> to do the same.
+> 
+> Yes. Most vendors are too fond of their brand names to put "ATA" in
+> there. So my suggestion is to relax the heuristic to trigger on the ATA
+> Information VPD page only and ignore the name.
+> 
 
-> Not sure I understand what you mean with 'bazillions of sensors' and
-> 'sensor per scsi_device'. Can you elaborate ? I see one sensor per
-> drive, which is what I would expect.
+Fine with me. I wanted to be as restrictive as possible.
 
-Yes, but for storage arrays, hanging off of struct scsi_device means you
-would get a sensor for each volume you create. Even though you
-presumably only have one physical "box" to monitor (ignoring for a
-moment that the drives inside the box may have their own sensors that
-may or may not be visible to the host).
+> Also, there are some devices that will lock up the way you access that
+> VPD page. So a tweak is also required there.
+> 
+Do you have details ? Do I need to add a call to scsi_device_supports_vpd(),
+maybe ?
 
-Also, multi-actuator disk drives are shipping. They present themselves
-to the host as a target with multiple LUNs. Once again you'll probably
-have one temperature sensor for the physical drive but many virtual
-disks being presented to the OS. So you'd end up with for instance 4
-sensors in hwmon even though there physically only is one.
+> To avoid the multiple blacklists and heuristic collections my suggestion
+> is that I introduce a helper function in SCSI (based on what I did in
+> the disk driver) that can be called to identify whether something is an
+> ATA device. And then the hwmon driver can call that and we can keep the
+> heuristics in one place.
+> 
+> If a device turns out to be problematic wrt. getting the ATA VPD for the
+> purpose of SMART, for instance, it will also need to be blacklisted for
+> other reasons in SCSI. So I would really like to keep the heuristics in
+> one place.
+> 
+Fine with me. My only concern is that I don't want the driver to disappear
+into nowhere-land (again).
 
-It's a tough call since there may be hardware configurations where
-distinct per-LUN temperature is valid (some quirky JBODs represent disk
-drives as different LUNs instead of different targets, for instance).
-
-How expensive will it be to have - say - 100 hwmon sensors instantiated
-for a drive tray?
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Thanks,
+Guenter
