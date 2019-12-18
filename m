@@ -2,92 +2,132 @@ Return-Path: <SRS0=NmVq=2I=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25176C43603
-	for <linux-ide@archiver.kernel.org>; Wed, 18 Dec 2019 02:13:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97872C2D0CD
+	for <linux-ide@archiver.kernel.org>; Wed, 18 Dec 2019 03:40:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E3F2F21582
-	for <linux-ide@archiver.kernel.org>; Wed, 18 Dec 2019 02:13:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1576635234;
-	bh=QU8E+UgTIE2Eobq8W0HvjxOZ4TsnNh2xSFPNnFjhqrw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=aXM+63XIYl9MzzZ2270Re7OIAcYfvNH+roYiIJZLgb4zt1aOiDSUg49VwRo6nvFgy
-	 1391iQmcPpMoD23V1CzvLADOuhbUKgjhxVNsn+c39qD0z0Qku1z1b2eWnIZoqh0/wd
-	 uvHRf0Zf5Gbe4HsNwTyBUecwXE/VakbKQmKK7xhw=
+	by mail.kernel.org (Postfix) with ESMTP id 6046C206D8
+	for <linux-ide@archiver.kernel.org>; Wed, 18 Dec 2019 03:40:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jVGSSstu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726492AbfLRCNx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 17 Dec 2019 21:13:53 -0500
-Received: from mail-oi1-f196.google.com ([209.85.167.196]:33647 "EHLO
-        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726454AbfLRCNx (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Dec 2019 21:13:53 -0500
-Received: by mail-oi1-f196.google.com with SMTP id v140so324363oie.0;
-        Tue, 17 Dec 2019 18:13:53 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=LPBOmy7W/ZFe0ELwwz580Y4hQoxgj9ncwGmvv/HKHek=;
-        b=aWFrXKPdaxfhI9dHxPMhFdWuz0aZtr1BqnnSEd1JSoPuWzXbAkInYff9kCoW9zJzi+
-         VLD7Jbgif23w+++KfBgv49SEwZGzQbW88M/bjqd1KuMrDrOodYJZ5bWQFNmZ3w71r3dP
-         qbWHJrHI7LMlWJRaHqwX+GLoKf+M6zWA0ysq7GF220seEZtmI5sxmhghOc/aX1mGy3Im
-         evKdy+HWvB+YXGIDjP4nTGheEJuSJMicjsZHlrMue3HAv3XVcwym7NwjLYsnQi6OMPJ7
-         nqwDS38VXCjwHCbJY4aBTbg8Jkj30JE35eHdX0gmg1HhfJbJY4mpcTojoHK/B6z72gUw
-         HrLw==
-X-Gm-Message-State: APjAAAVwafc2h16d09coT82xruvKamSHC/EdTkK2xIMNu6NblOYn26Lb
-        rsrquqtyfHK0ztt3aU43xg==
-X-Google-Smtp-Source: APXvYqz7hA2CoDvvetbOQ4+F/q4I9CRdUWC0eiBMNhIaRXad6ue52NPnIHqnVn/hvXCON7ayOwtNyQ==
-X-Received: by 2002:aca:61c4:: with SMTP id v187mr157794oib.8.1576635232618;
-        Tue, 17 Dec 2019 18:13:52 -0800 (PST)
-Received: from localhost (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id x16sm252374oto.41.2019.12.17.18.13.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 17 Dec 2019 18:13:52 -0800 (PST)
-Date:   Tue, 17 Dec 2019 20:13:51 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Maxime Ripard <maxime@cerno.tech>
-Cc:     Mark Rutland <mark.rutland@arm.com>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Chen-Yu Tsai <wens@csie.org>,
-        Maxime Ripard <mripard@kernel.org>, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, axboe@kernel.dk,
-        linux-ide@vger.kernel.org, Maxime Ripard <maxime@cerno.tech>
-Subject: Re: [PATCH] dt-bindings: ata: Convert Allwinner AHCI controller to a
- schema
-Message-ID: <20191218021351.GA27803@bogus>
-References: <20191213074938.27285-1-maxime@cerno.tech>
+        id S1726510AbfLRDkB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 17 Dec 2019 22:40:01 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:59848 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726454AbfLRDkB (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Dec 2019 22:40:01 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBI3dbKd117311;
+        Wed, 18 Dec 2019 03:39:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=8IAu41A0ROVfnDWMZhCpBuGeJC+jZ2Wigf/4tr6lnzM=;
+ b=jVGSSstumhiA6eWydK51KgVcr9RgGcwslrbhh28s0pNJalGmNqBqg2x8/GDGsslkrH9E
+ Suzgnc7JfszD2CH+QQ1vgu0XAAHZFVLXbiyr0BzZqeP3ypK9g7SknPmnpE6uPqanM7lT
+ UaykzEV+5ZG0i7OFamBFq7NUm+DufGD2i2awn+/YXlE+PBfc1U0kWxPwCEPU0Sts+X+3
+ K6kN27SlC+i8DXVvudga8LXIuqzdO91Bgu1S17UCUOtfGcqvwq7aRAXS3AbBlt8p5X7D
+ PSXnO6FONm3LwqSUR7Sao8c4pOCYJMwUeuM0nxhnpyTNX7/eo4ngl3u192OPEr7M+0bE wA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2wvqpqav23-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 18 Dec 2019 03:39:37 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xBI3dPB7078330;
+        Wed, 18 Dec 2019 03:39:37 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2wxm5pbcdv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 18 Dec 2019 03:39:36 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xBI3dTJu021649;
+        Wed, 18 Dec 2019 03:39:29 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 17 Dec 2019 19:39:29 -0800
+To:     Guenter Roeck <linux@roeck-us.net>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        Chris Healy <cphealy@gmail.com>
+Subject: Re: [PATCH 1/1] hwmon: Driver for temperature sensors on SATA drives
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <20191209052119.32072-1-linux@roeck-us.net>
+        <20191209052119.32072-2-linux@roeck-us.net>
+        <CACRpkdYjidQHB0=S_brDxH3k+qJ2mfXCTF9A3SVZkPvBaVg6JQ@mail.gmail.com>
+        <yq1wob1jfjm.fsf@oracle.com>
+        <541a7ddd-f4c9-5d5f-4f43-0ae5bc46aef6@roeck-us.net>
+        <yq1tv5zhdn5.fsf@oracle.com>
+        <c5689126-46bc-b551-11d7-e5bd8c01f82c@roeck-us.net>
+Date:   Tue, 17 Dec 2019 22:39:26 -0500
+In-Reply-To: <c5689126-46bc-b551-11d7-e5bd8c01f82c@roeck-us.net> (Guenter
+        Roeck's message of "Mon, 16 Dec 2019 20:20:57 -0800")
+Message-ID: <yq14kxygv4h.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191213074938.27285-1-maxime@cerno.tech>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9474 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=790
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-1912180026
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9474 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=848 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-1912180026
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, 13 Dec 2019 08:49:38 +0100, Maxime Ripard wrote:
-> The Allwinner SoCs have a AHCI controllers that is supported in Linux, with
-> a matching Device Tree binding.
-> 
-> Now that we have the DT validation in place, let's convert the device tree
-> bindings for that controller over to a YAML schemas.
-> 
-> Signed-off-by: Maxime Ripard <maxime@cerno.tech>
-> ---
->  .../devicetree/bindings/ata/ahci-platform.txt | 12 ----
->  .../ata/allwinner,sun4i-a10-ahci.yaml         | 47 +++++++++++++
->  .../ata/allwinner,sun8i-r40-ahci.yaml         | 67 +++++++++++++++++++
->  3 files changed, 114 insertions(+), 12 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/ata/allwinner,sun4i-a10-ahci.yaml
->  create mode 100644 Documentation/devicetree/bindings/ata/allwinner,sun8i-r40-ahci.yaml
-> 
 
-Applied, thanks.
+Guenter,
 
-Rob
+> If there are 100 physical drives, you would actually want to see the
+> temperature of each drive separately, as one of them might be
+> overheating due to some internal failure.
+
+Yep. However, for "big boxes" you'll typically get that information from
+SAF-TE or SES enclosure services and not from the drive itself.
+
+SES allows you to monitor power supplies, drive bays, hot swap events,
+thermals, etc. We have a SES driver in SCSI that exposes all these
+things in sysfs. It is not currently tied into hwmon.
+
+> If the storage array is represented to the system as single huge
+> physical drive, which is then split into logical entities not related
+> to physical drives, I guess that would represent a problem for system
+> management overall.
+
+Yep. That's why there's dedicated plumbing in smartmontools to handle
+various RAID controller interfaces for accessing physical drive
+information. It's typically highly vendor-specific.
+
+> I would not mind to tie the hardware monitoring device to something
+> else than the scsi device if the scsi device does not always have a
+> physical representation. Is there a way to determine if a scsi device
+> is virtual or real ?
+
+Not really. Target is usually a pretty good approximation, although some
+arrays introduce virtual targets because of limited LUN (scsi_device)
+numbering capabilities. However, arrays generally don't support per-LUN
+temperature because it makes no sense.
+
+I'm trying to gauge how much a pain potentially redundant sensors would
+be for userland monitoring tooling vs. how many oddball devices we'd not
+be able to support if we were to use scsi_target as parent (or restrict
+the sensor binding to LUN 0).
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
