@@ -1,69 +1,111 @@
-Return-Path: <SRS0=/r9a=2Q=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=GrSz=2R=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97E4CC2D0DA
-	for <linux-ide@archiver.kernel.org>; Thu, 26 Dec 2019 18:19:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EC63C2D0DB
+	for <linux-ide@archiver.kernel.org>; Fri, 27 Dec 2019 03:36:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6FF162080D
-	for <linux-ide@archiver.kernel.org>; Thu, 26 Dec 2019 18:19:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7566F20643
+	for <linux-ide@archiver.kernel.org>; Fri, 27 Dec 2019 03:36:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="0tE0Ffhs"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Qd30cIky"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726597AbfLZSTF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 26 Dec 2019 13:19:05 -0500
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:40603 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726511AbfLZSTE (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 26 Dec 2019 13:19:04 -0500
-Received: by mail-pf1-f195.google.com with SMTP id q8so13520328pfh.7
-        for <linux-ide@vger.kernel.org>; Thu, 26 Dec 2019 10:19:04 -0800 (PST)
+        id S1727040AbfL0DgU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 26 Dec 2019 22:36:20 -0500
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:43647 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726804AbfL0DgU (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 26 Dec 2019 22:36:20 -0500
+Received: by mail-pl1-f195.google.com with SMTP id p27so11205978pli.10
+        for <linux-ide@vger.kernel.org>; Thu, 26 Dec 2019 19:36:19 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=to:cc:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=08B4u/S15ecKYI/XSdrazPr5ZmzptAt9X1vFOPdWkjY=;
-        b=0tE0Ffhs4qKFi382ulWtwm8qM6dpv8KqM1tjXlvHZNvRDT2GOBCSwatuVJJmzKxI1B
-         xu1l7EIAZUJ6SWT4on+RYzojKrnPfgznknnQ3GzqUYseE6ojamUF41pAhHk/3XZTQ3+F
-         mFzG/RZULFRcqClGX7vhLObVe/Os2OwHFGrhPD9m2x7UStDFurwMELxFZnqEhxA1GyNt
-         RWoeAyiuFvVwprVEDsgN544MYxAdM9bQJT1XSEJ8jDtJNIhgGkK7zTuaybBJUEnPdgJt
-         1/fevj5ptrm9//IVz1Y2SyAmEbtVcWpwEFAYCly9qVq0kageCoRygE6FJBPM8TocZ10f
-         FgKQ==
+        d=broadcom.com; s=google;
+        h=subject:to:cc:references:from:autocrypt:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=fLq96bOfsAzmbSOIUyDYSk8L7LxVPi35XEytAjg4LuM=;
+        b=Qd30cIkyA8SKvQi0RvQCvKt7QvsnrdmHr6BufKwyWxkABdiHAMZ4LBivJLmuPDCP1O
+         BEIVChvSf5TfrpEetcHbLhCg2OrdjBJuVff+9LRTg82UOLXroTPguXo33gQJ3+NAwwLB
+         ltJBycTiwtWYaHF4F2ZgOg3au37yN9LB1GtvY=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=08B4u/S15ecKYI/XSdrazPr5ZmzptAt9X1vFOPdWkjY=;
-        b=cfFvV8KtFthX5IlbeTqWz2msyE72UaYQXw3nyC+VGH3jRRRKJmLK/bZMPGsUWxHA2t
-         jhifzJJw37qk2X0soIBZ59D7b7bMO00H4dgZgDgN5SyBzoUS3kZKkKPSsbow5XRBdEXQ
-         4IPWPrV+SNDk08AIujxNHVJNLV3GzsXOqnqXKRCq6YXuQ6WwziuxdaQT7aAsO1gZ4m82
-         kd8HQvw9MxSn0fWNkzxiQbcWdudWsP0+MGUS69HuSEHXoUQkNIy0iFBLmxXOMPxzk6/o
-         kAIFV5yASX2o3JAjNyMWab5ptBsoD3JFKwRNjlf8eaEo1cwGfrraP836dQGXxoaB1TRw
-         9P0w==
-X-Gm-Message-State: APjAAAWOWfa8ORuOki/KUUQWr1aUKzcEfHKHaKZFcmRHdStINogJ4Y8w
-        /8Q2rwFJX5V/QOehOo+5EPoogA==
-X-Google-Smtp-Source: APXvYqzgbI5Fm+kDBgTCy0vN0nhJvVlPfQbwdcmLFHqKjZ+3e/qjJAfQmNox1buvt/A1qZDd71XNaQ==
-X-Received: by 2002:a63:4d4c:: with SMTP id n12mr51094655pgl.212.1577384344062;
-        Thu, 26 Dec 2019 10:19:04 -0800 (PST)
-Received: from [192.168.1.188] ([66.219.217.145])
-        by smtp.gmail.com with ESMTPSA id z13sm11495368pjz.15.2019.12.26.10.19.03
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=fLq96bOfsAzmbSOIUyDYSk8L7LxVPi35XEytAjg4LuM=;
+        b=iu5+1+CqajFQHktJCAeZr43ZlBqpn+L1qiRFf+tXdCX5yYeSxYat684JnlFIUVxLfl
+         s1oj4Q7732q9Vn24CtsPh92ajUTevE2Zf57w4kLmLJbGhgCbs/fjdjPua3vhJ/J+jtss
+         EdKml69FUT2Gaqvx9fkQxSWHcNB8fHUKbNNNhKvgTRWKZ+lh79X1l/Yjz6iBsNGpyMnu
+         4RboXX7pQZcQK2vGM3UqsxL7IwsZfdEjKZWxaBMh9X8PW5NaGFGE0mt6QiEOHVhYJtkT
+         7/IlWVrYsqqZfR66Y1RcDe03c3D2gcsj6ThZk5YQCcMDuDEgpv7MTmntjPPhF7mFKQTd
+         x6Xg==
+X-Gm-Message-State: APjAAAUUrn2Iw3fOqQDN9sit/XftaUOphsHNoFK5U6t25QZYOGCKzBY9
+        dC8kwziSk+gwbbTXCvzgsx3ctA==
+X-Google-Smtp-Source: APXvYqz/z/s8kSHuJyZyHEjj+uFSNBXKEzYgNH9kRupx8P0DjqaQBacLL815WhavxOy1+Okpr3Ogdw==
+X-Received: by 2002:a17:90a:8912:: with SMTP id u18mr23351899pjn.21.1577417779227;
+        Thu, 26 Dec 2019 19:36:19 -0800 (PST)
+Received: from [10.230.28.123] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id d23sm37569846pfo.176.2019.12.26.19.36.16
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 26 Dec 2019 10:19:03 -0800 (PST)
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     IDE/ATA development list <linux-ide@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-From:   Jens Axboe <axboe@kernel.dk>
-Subject: [GIT PULL] libata fixes for 5.5-rc4
-Message-ID: <465cf62f-2e8e-de03-fd02-f82e756db91c@kernel.dk>
-Date:   Thu, 26 Dec 2019 11:19:02 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        Thu, 26 Dec 2019 19:36:18 -0800 (PST)
+Subject: Re: [PATCH 0/2] phy: brcm-sata: Support for 7216
+To:     Florian Fainelli <f.fainelli@gmail.com>, kishon@ti.com
+Cc:     Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Al Cooper <alcooperx@gmail.com>,
+        Ray Jui <ray.jui@broadcom.com>, Tejun Heo <tj@kernel.org>,
+        Fengguang Wu <fengguang.wu@intel.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        bcm-kernel-feedback-list@broadcom.com
+References: <20191210200852.24945-1-f.fainelli@gmail.com>
+From:   Florian Fainelli <florian.fainelli@broadcom.com>
+Autocrypt: addr=florian.fainelli@broadcom.com; keydata=
+ mQENBFPAG8ABCAC3EO02urEwipgbUNJ1r6oI2Vr/+uE389lSEShN2PmL3MVnzhViSAtrYxeT
+ M0Txqn1tOWoIc4QUl6Ggqf5KP6FoRkCrgMMTnUAINsINYXK+3OLe7HjP10h2jDRX4Ajs4Ghs
+ JrZOBru6rH0YrgAhr6O5gG7NE1jhly+EsOa2MpwOiXO4DE/YKZGuVe6Bh87WqmILs9KvnNrQ
+ PcycQnYKTVpqE95d4M824M5cuRB6D1GrYovCsjA9uxo22kPdOoQRAu5gBBn3AdtALFyQj9DQ
+ KQuc39/i/Kt6XLZ/RsBc6qLs+p+JnEuPJngTSfWvzGjpx0nkwCMi4yBb+xk7Hki4kEslABEB
+ AAG0MEZsb3JpYW4gRmFpbmVsbGkgPGZsb3JpYW4uZmFpbmVsbGlAYnJvYWRjb20uY29tPokB
+ xAQQAQIArgUCW382iBcKAAG/SMv+fS3xUQWa0NryPuoRGjsA3SAUAAAAAAAWAAFrZXktdXNh
+ Z2UtbWFza0BwZ3AuY29tjjAUgAAAAAAgAAdwcmVmZXJyZWQtZW1haWwtZW5jb2RpbmdAcGdw
+ LmNvbXBncG1pbWUICwkIBwMCAQoFF4AAAAAZGGxkYXA6Ly9rZXlzLmJyb2FkY29tLmNvbQUb
+ AwAAAAMWAgEFHgEAAAAEFQgJCgAKCRCBMbXEKbxmoFYGB/9qN5VL6f/88+qtDaDhUKvwBgF8
+ koryGCH/gw6FBW5h5hwW0m6946WnsBnqKnZ8OYr8qsCgeJewCh0BEN9rIg8SC5oU7WdcmNg5
+ KTv4/V1CmBo6dQaSHA8yQoeHsrw0gQ9HK4EYjhAU60RYXxX7/LFAy0rJMLf0qGKdWW2f5EkN
+ dS5GwWOrTp477WL2g+R0khhP57qpejxlMN+Mtvin52UjbAcr1PAx8Zt2rXpFIZsXVWADpZDd
+ qIb6PZPdcP/lD1v5it4sTN7D27FgjvbvAgj/D3NmyOjIUsbN9ZDJDfgv431RsJ9LOd6ySaNr
+ yuje7L0dbiYrcOi3CN6S+zE1UJsLuQENBFPAG8EBCACsa+9aKnvtPjGAnO1mn1hHKUBxVML2
+ C3HQaDp5iT8Q8A0ab1OS4akj75P8iXYfZOMVA0Lt65taiFtiPT7pOZ/yc/5WbKhsPE9dwysr
+ vHjHL2gP4q5vZV/RJduwzx8v9KrMZsVZlKbvcvUvgZmjG9gjPSLssTFhJfa7lhUtowFof0fA
+ q3Zy+vsy5OtEe1xs5kiahdPb2DZSegXW7DFg15GFlj+VG9WSRjSUOKk+4PCDdKl8cy0LJs+r
+ W4CzBB2ARsfNGwRfAJHU4Xeki4a3gje1ISEf+TVxqqLQGWqNsZQ6SS7jjELaB/VlTbrsUEGR
+ 1XfIn/sqeskSeQwJiFLeQgj3ABEBAAGJAkEEGAECASsFAlPAG8IFGwwAAADAXSAEGQEIAAYF
+ AlPAG8EACgkQk2AGqJgvD1UNFQgAlpN5/qGxQARKeUYOkL7KYvZFl3MAnH2VeNTiGFoVzKHO
+ e7LIwmp3eZ6GYvGyoNG8cOKrIPvXDYGdzzfwxVnDSnAE92dv+H05yanSUv/2HBIZa/LhrPmV
+ hXKgD27XhQjOHRg0a7qOvSKx38skBsderAnBZazfLw9OukSnrxXqW/5pe3mBHTeUkQC8hHUD
+ Cngkn95nnLXaBAhKnRfzFqX1iGENYRH3Zgtis7ZvodzZLfWUC6nN8LDyWZmw/U9HPUaYX8qY
+ MP0n039vwh6GFZCqsFCMyOfYrZeS83vkecAwcoVh8dlHdke0rnZk/VytXtMe1u2uc9dUOr68
+ 7hA+Z0L5IQAKCRCBMbXEKbxmoLoHCACXeRGHuijOmOkbyOk7x6fkIG1OXcb46kokr2ptDLN0
+ Ky4nQrWp7XBk9ls/9j5W2apKCcTEHONK2312uMUEryWI9BlqWnawyVL1LtyxLLpwwsXVq5m5
+ sBkSqma2ldqBu2BHXZg6jntF5vzcXkqG3DCJZ2hOldFPH+czRwe2OOsiY42E/w7NUyaN6b8H
+ rw1j77+q3QXldOw/bON361EusWHdbhcRwu3WWFiY2ZslH+Xr69VtYAoMC1xtDxIvZ96ps9ZX
+ pUPJUqHJr8QSrTG1/zioQH7j/4iMJ07MMPeQNkmj4kGQOdTcsFfDhYLDdCE5dj5WeE6fYRxE
+ Q3up0ArDSP1L
+Message-ID: <9ede5ded-9ca2-e0c8-0b81-e43b08f99b29@broadcom.com>
+Date:   Thu, 26 Dec 2019 19:36:16 -0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.3.1
 MIME-Version: 1.0
+In-Reply-To: <20191210200852.24945-1-f.fainelli@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -72,41 +114,28 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Linus,
-
-Two things in this pull request:
-
-- First half of a series that fixes ahci_brcm, also marked for stable.
-  The other part of the series is going into 5.6 (Florian)
-
-- sata_nv regression fix that is also marked for stable (Sascha)
-
-Please pull!
 
 
-  git://git.kernel.dk/linux-block.git tags/libata-5.5-20191226
+On 12/10/2019 12:08 PM, Florian Fainelli wrote:
+> Hi Kishon,
+> 
+> This patch series adds support for our latest 7216 class of devices
+> which are taped out in a 16nm process and use a different SATA PHY AFE
+> that requires a custom initialization sequence.
 
+Kishon, is this looking good to you for merging? Thanks!
 
-----------------------------------------------------------------
-Florian Fainelli (4):
-      ata: libahci_platform: Export again ahci_platform_<en/dis>able_phys()
-      ata: ahci_brcm: Fix AHCI resources management
-      ata: ahci_brcm: BCM7425 AHCI requires AHCI_HFLAG_DELAY_ENGINE
-      ata: ahci_brcm: Add missing clock management during recovery
-
-Sascha Hauer (1):
-      libata: Fix retrieving of active qcs
-
- drivers/ata/ahci_brcm.c        | 133 +++++++++++++++++++++++++++++------------
- drivers/ata/libahci_platform.c |   6 +-
- drivers/ata/libata-core.c      |  24 ++++++++
- drivers/ata/sata_fsl.c         |   2 +-
- drivers/ata/sata_mv.c          |   2 +-
- drivers/ata/sata_nv.c          |   2 +-
- include/linux/ahci_platform.h  |   2 +
- include/linux/libata.h         |   1 +
- 8 files changed, 128 insertions(+), 44 deletions(-)
+> 
+> Thanks!
+> 
+> Florian Fainelli (2):
+>   dt-bindings: phy: Document BCM7216 SATA PHY compatible string
+>   phy: brcm-sata: Implement 7216 initialization sequence
+> 
+>  .../devicetree/bindings/phy/brcm-sata-phy.txt |   1 +
+>  drivers/phy/broadcom/phy-brcm-sata.c          | 120 ++++++++++++++++++
+>  2 files changed, 121 insertions(+)
+> 
 
 -- 
-Jens Axboe
-
+Florian
