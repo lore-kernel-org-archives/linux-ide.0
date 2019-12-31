@@ -2,141 +2,93 @@ Return-Path: <SRS0=b2kW=2V=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF0ECC2D0C2
-	for <linux-ide@archiver.kernel.org>; Tue, 31 Dec 2019 17:46:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7E81C3F68F
+	for <linux-ide@archiver.kernel.org>; Tue, 31 Dec 2019 17:56:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AC269205ED
-	for <linux-ide@archiver.kernel.org>; Tue, 31 Dec 2019 17:46:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8239B206E4
+	for <linux-ide@archiver.kernel.org>; Tue, 31 Dec 2019 17:56:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cogentembedded-com.20150623.gappssmtp.com header.i=@cogentembedded-com.20150623.gappssmtp.com header.b="10RtHqBF"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="qcEknz0F"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727066AbfLaRq4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 31 Dec 2019 12:46:56 -0500
-Received: from mail-lf1-f68.google.com ([209.85.167.68]:35622 "EHLO
-        mail-lf1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726060AbfLaRqz (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 31 Dec 2019 12:46:55 -0500
-Received: by mail-lf1-f68.google.com with SMTP id 15so27398814lfr.2
-        for <linux-ide@vger.kernel.org>; Tue, 31 Dec 2019 09:46:52 -0800 (PST)
+        id S1726060AbfLaR4h (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 31 Dec 2019 12:56:37 -0500
+Received: from mail-vs1-f66.google.com ([209.85.217.66]:45150 "EHLO
+        mail-vs1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726720AbfLaR4g (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 31 Dec 2019 12:56:36 -0500
+Received: by mail-vs1-f66.google.com with SMTP id b4so22587800vsa.12
+        for <linux-ide@vger.kernel.org>; Tue, 31 Dec 2019 09:56:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cogentembedded-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:organization:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=3fTDdhLi1IOKP9I0hbX5TWBA0qDWLDQvrRlWQlcOtq8=;
-        b=10RtHqBF5lBxwbvD2uSgcXpsDW/ubqiM/5wkw3R8xH1L5e7xlKEk9NrD8QxtTLYAzk
-         qwo3Wi4pachA6Q5iz0966j+dj9uDynIenvc9GDRgE9533GqqhAkt6GICA+nsbiAEr+00
-         l0noo0DZCTrXkWh7UILFMvdaTWwvFtQ36zkcfpTS9deVhg+v9AGRtfgC02yjOPWaKOna
-         Bikchmy8NxJDau2cBNxBqrZCnS4SKBSxW19osA0IP7mibwpThaYZXd9bi9a55xRMz/gE
-         KO9NkezXMuCIxrIGpWexhNQz14+LBRFsEXCcJOoj75lGkXzIf57OCFfXSdw1UZszz93j
-         cbig==
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=pLpAEzOviLlSpzsuupiIxoP5cKE2eMBcdFuHtjuJtX0=;
+        b=qcEknz0FyNVy/qBvaT+RYvY/itzWo50HMGa6KVDvlM0lGlwCml/E1s2tvdUIV8on1S
+         +QTOj1BqZJm4G1jT3sSI40SeaXi2Sith27Z7I2kY0cOFXxRV1WhHIkQ4n0uhwWMnnjxH
+         cZ9xvXwItFxuXxg7I0/KvqO1X2o1gG6YxUh5tMAv6iTNdfKfpik+4x8tlaNTHsVXM32I
+         4Zv72HcaMvNmX935yAGhVX/iv44F49r3HSQLosv1AQjSp6rkNcw/PvSc49xhR/eTGYwa
+         3lMOxGtwlxuipdwoC1Ock/okzLuDjVIP8b2AX7H9Bg2/8b4SNQCtuRmqwT1pTOXliayk
+         a3lw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:organization
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=3fTDdhLi1IOKP9I0hbX5TWBA0qDWLDQvrRlWQlcOtq8=;
-        b=Q3+4Mny6MsWkJEN0CANclT1ccqmYjRW7BJmgLW1ssD7nG9knfHQgoKkBdSWz9L1Yev
-         tZ7gG5oNRZNFqqw7bLNBoot0qO6RXvpyTBvCn9HK6LVZBe8zyuClFWsQdPLMCzBzV0k0
-         zpgleeqabHnLqXFzKOr32Dm9rFue0aftokkB2QF4ARuhHN1VUysn8IiDY05z3KbBVQKJ
-         IpgIndzSmvBbwzswc5R8jpSWqsiDY213m06hayVnfV84Tc8ESSnQELwJAjGnLtYb6bhN
-         XlL/B6NlI+62clNCNzFdiSLmgJQigHWVvRGlUO7HIs32KvjgZ7I6XNhdR132uM9bQn/F
-         m1MA==
-X-Gm-Message-State: APjAAAWV14u10pbIenmPBdIqeBonK3UMYGQllnV1GbkvfwjauLXiyYfV
-        9ZIJXWc6LqE1D9YfBFOGt1Y8VqRDBK9y3Q==
-X-Google-Smtp-Source: APXvYqymB4BjR6axudSAtiLveX48fUBKnrk5NTKARe+yKnx6TPJotX2dYZnRGIs5cCmqWUjMzNJSrg==
-X-Received: by 2002:ac2:52a5:: with SMTP id r5mr42540399lfm.19.1577814411813;
-        Tue, 31 Dec 2019 09:46:51 -0800 (PST)
-Received: from wasted.cogentembedded.com ([2a00:1fa0:278:b572:bf70:f2c5:7a0b:f05])
-        by smtp.gmail.com with ESMTPSA id 78sm19602629ljj.28.2019.12.31.09.46.50
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 31 Dec 2019 09:46:51 -0800 (PST)
-Subject: Re: [PATCH 1/2] dt-bindings: Create DT bindings for [PS]ATA
- controllers
-To:     Linus Walleij <linus.walleij@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>
-Cc:     linux-ide@vger.kernel.org
-References: <20191231172458.25984-1-linus.walleij@linaro.org>
-From:   Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Organization: Cogent Embedded
-Message-ID: <41b527ba-003d-425b-5e59-43cdd8c778e2@cogentembedded.com>
-Date:   Tue, 31 Dec 2019 20:46:49 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.2.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=pLpAEzOviLlSpzsuupiIxoP5cKE2eMBcdFuHtjuJtX0=;
+        b=NUXUvBwE6Tijxo7RPKTzbxjMnhArIB/HRbaqQc3x35a1xWjpdCaTXusDhPl1s9uiUR
+         A4sjVceaFw8xegsjwNEbTlZxuYSybREyOzCHurRLhlX6DTgnmfDxICNzCFacxnRSPdHE
+         +YyjqCV0vqXYOGjyGb0EUwS2zMbmj9gu7cWwm/436cjPHCSh9suBRIrvXL+16KMhwX6v
+         vZD1dKipc1PMG7o5lYmaJw6h9sAap/zswhuAjiMfnuBP3yv1JH1AYvKdZVmBVxe6z91Z
+         30f/ZENmJugra8kfHpac7NjeFoEtNA8U6XhGzJUIcb6vKJlnqcZj2b4w2bCpMdp2CPo6
+         Zu+w==
+X-Gm-Message-State: APjAAAV2UpvffsOklcilghKdoDmlnCOorKHIPjgQqd+4r+Sb1+N4rCfC
+        1kGMa5sMurXBdFVF69Fcnq6UH6NDZXFWa4oMrPqfqw==
+X-Google-Smtp-Source: APXvYqx5VkakzqFLoXgQq86E7x9FUeLOTTbSSGdmhj9jd4igW8yErWuj941u8gYgz+qodMoQZfTINEQQHDC/P2wh8uQ=
+X-Received: by 2002:a67:af11:: with SMTP id v17mr17254848vsl.99.1577814995527;
+ Tue, 31 Dec 2019 09:56:35 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20191231172458.25984-1-linus.walleij@linaro.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-MW
-Content-Transfer-Encoding: 7bit
+References: <20191231172458.25984-1-linus.walleij@linaro.org> <41b527ba-003d-425b-5e59-43cdd8c778e2@cogentembedded.com>
+In-Reply-To: <41b527ba-003d-425b-5e59-43cdd8c778e2@cogentembedded.com>
+From:   Linus Walleij <linus.walleij@linaro.org>
+Date:   Tue, 31 Dec 2019 18:56:24 +0100
+Message-ID: <CACRpkdbR3TTiNqU8g54M4N4=N8yiV2UreFKoV0LffYUxZEChJw@mail.gmail.com>
+Subject: Re: [PATCH 1/2] dt-bindings: Create DT bindings for [PS]ATA controllers
+To:     Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc:     Rob Herring <robh+dt@kernel.org>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>,
+        linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello!
+On Tue, Dec 31, 2019 at 6:46 PM Sergei Shtylyov
+<sergei.shtylyov@cogentembedded.com> wrote:
+> On 12/31/2019 08:24 PM, Linus Walleij wrote:
 
-On 12/31/2019 08:24 PM, Linus Walleij wrote:
+> > +properties:
+> > +  $nodename:
+> > +    pattern: "^[ps]ata-controller(@.*)?$"
+>
+>    I thought the DT spec has long ago standardized the node name as "ide" and "sata"?
 
-> I need to create subnodes for drives connected to PATA
-> or SATA host controllers, and this needs to be supported
-> generally, so create a common YAML binding for
-> "pata-controller" or "sata-controller" that will support
-> subnodes with drives.
-> 
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: devicetree@vger.kernel.org
-> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
-> ---
->  .../bindings/ata/pata-sata-common.yaml        | 47 +++++++++++++++++++
->  1 file changed, 47 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ata/pata-sata-common.yaml
-> 
-> diff --git a/Documentation/devicetree/bindings/ata/pata-sata-common.yaml b/Documentation/devicetree/bindings/ata/pata-sata-common.yaml
-> new file mode 100644
-> index 000000000000..d94aa20a29e3
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/pata-sata-common.yaml
-> @@ -0,0 +1,47 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/ata/pata-sata-common.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: Common Properties for Parallel and Serial AT attachment controllers
-> +
-> +maintainers:
-> +  - Linus Walleij <linus.walleij@linaro.org>
-> +
-> +description: |
-> +  This document defines device tree properties common to most Parallel
-> +  (PATA) and Serial (SATA) AT attachment storage devices. It doesn't
-> +  constitue a device tree binding specification by itself but is meant to
-> +  be referenced by device tree bindings.
-> +
-> +  The PATA/SATA controller device tree bindings are responsible for
-> +  defining whether each property is required or optional.
-> +
-> +properties:
-> +  $nodename:
-> +    pattern: "^[ps]ata-controller(@.*)?$"
+I'm not 100% sure (Rob can answer) but I have *half-guessed* that the process
+so far has been that when we define a schema for some generic node name
+we also invent some new generic node name like this, or else all the old DTS
+files people have will generate (lots of) errors.
 
-   I thought the DT spec has long ago standardized the node name as "ide" and "sata"?
+The DTS files can then opt in to the schema by simply renaming its nodes
+in accordance: "ide" -> "pata-controller", "sata" -> "sata-controller"
+(I have such a patch for the Gemini that I made this for.)
 
-> +    description:
-> +      Specifies the host controller node.
-> +
-> +  "#address-cells":
-> +    const: 1
-> +
-> +  "#size-cells":
-> +    const: 0
-[...]
+If I'm wrong I'll switch to to ide@ and sata@.
 
-MBR, Sergei
+Rob?
+
+Yours,
+Linus Walleij
