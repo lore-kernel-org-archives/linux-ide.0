@@ -1,82 +1,160 @@
-Return-Path: <SRS0=b2kW=2V=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=OFfr=2W=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D88CEC2D0C2
-	for <linux-ide@archiver.kernel.org>; Tue, 31 Dec 2019 19:15:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90280C3F68F
+	for <linux-ide@archiver.kernel.org>; Wed,  1 Jan 2020 14:36:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A6AC1206DA
-	for <linux-ide@archiver.kernel.org>; Tue, 31 Dec 2019 19:15:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1577819702;
-	bh=UWto3XP+ZHcVrrBu2TteLJLRk/PVGGUsPg6wRnGsP+c=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=W8n6pTsrks+TzSNHU4+iRRCZuX45E93NmYiscK1dRmn7wmmPQscq0iUdST3PF/QUh
-	 ojt9ITzQEIhHOaH8F3h1dMmng1f656m1Ktt8K6VzXBKkuEcwJvL08QtqAFl3gfwbhL
-	 AZIItqdRMRUWF3m6QT/LN21V4HAEeAG3zCAxg9D8=
+	by mail.kernel.org (Postfix) with ESMTP id 669C82073D
+	for <linux-ide@archiver.kernel.org>; Wed,  1 Jan 2020 14:36:54 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="HerjmcCR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727079AbfLaTPC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 31 Dec 2019 14:15:02 -0500
-Received: from mail.kernel.org ([198.145.29.99]:43142 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727071AbfLaTPC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 31 Dec 2019 14:15:02 -0500
-Received: from mail-qt1-f169.google.com (mail-qt1-f169.google.com [209.85.160.169])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 2AF4A206DA;
-        Tue, 31 Dec 2019 19:15:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1577819701;
-        bh=UWto3XP+ZHcVrrBu2TteLJLRk/PVGGUsPg6wRnGsP+c=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=pAq7Rgix32WHI6LNSqKDVVDCW3njo46IzFAiEVoINxwiSCxTtBLBCNSWDmIMFo3Z9
-         pX+3FoZ3MZ4AcQuXprYeiS6vV26H4JR6erkzrS/66Kh00GR+L0HopVtt+F6rPkMUzT
-         VaVjacJ+dKDlq/l4XSadBsZOZf8kkpsMWsKcBALM=
-Received: by mail-qt1-f169.google.com with SMTP id k40so32087395qtk.8;
-        Tue, 31 Dec 2019 11:15:01 -0800 (PST)
-X-Gm-Message-State: APjAAAUhdfeGJP0BpTJH6RZoA9NHzOPnOYjDCbvC2uP5QrenrzRcNlFt
-        vp/4Z2BTyQAhiVxYXbZgSqyRn/v2g4XdWYr5vw==
-X-Google-Smtp-Source: APXvYqxc0cAnoLAtxMDKYY5xyGwDWOT1jbUfpXfE/kyndHP4PA+CDISAdBOM06xN+iB1TJYfS67KpcYKxPmY+HL8Sn4=
-X-Received: by 2002:ac8:59:: with SMTP id i25mr54208175qtg.110.1577819700388;
- Tue, 31 Dec 2019 11:15:00 -0800 (PST)
+        id S1725895AbgAAOgx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 1 Jan 2020 09:36:53 -0500
+Received: from mail-lj1-f193.google.com ([209.85.208.193]:39164 "EHLO
+        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725876AbgAAOgx (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 1 Jan 2020 09:36:53 -0500
+Received: by mail-lj1-f193.google.com with SMTP id l2so38451176lja.6
+        for <linux-ide@vger.kernel.org>; Wed, 01 Jan 2020 06:36:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=8O70E37h24vkoHiMNJvNiwTAZ71A5RPO6yfcxT8SqIQ=;
+        b=HerjmcCR/AkztR7YuD0XP2NDZIC/Q5IMdllq8QBoARmG5gh1G0ca8btZLYCc7agV9p
+         07cxuV6+/WQV0D70gORpg+QS4E8AyBw6WNZGDp7bPUmIqv2YqIwVJTOCDE5hLwIdIGuW
+         d/51lVyK7p792csF4U7Zf+2Uo7u2oJyT8whIZ+R6EMYHaOdjmyBNck8Oxrz8pqR9cp+Q
+         +wBoSV89JZTt9ML7bRPss6JiPLYO2HqTfk2E/5Ygyn6eg/7UrXznON3nzjoEtsYpEG9/
+         B6WglfQ4NazSCPCSf5kNLo3LyBwmPechg61U5mXfUImi9h+fxlwKoSirJDN9JnahBZlj
+         63Iw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=8O70E37h24vkoHiMNJvNiwTAZ71A5RPO6yfcxT8SqIQ=;
+        b=g28OBK4obus0kNmvn/3ZQ6O4UozK5iqss+gKNPs0f9KKvQ68Jxl3tswPFrnNaW3/Lg
+         IuRJsUMX5vl+6MP7CzZr5YBLW31X+HoijFXnPYPflnysyWG0v1Scy5iLh+u46rrdkbBT
+         sGsJk5gRVavPvGeK1BjIuIP4tCWA+3F/ISW2E9yZKawpOoZd0u9mo09hv5vwUWfZdcBY
+         XiWEOinPqfdtJovPtw/3Sbp+lfsSVMNB2465zZdQP+CzcBSs1VPuxq19dWfqO92FKDI4
+         0PPjeX9xBB/CMRCH0LJ066oIKcl/1apFyQuJybTDbmtGceQbm6JcrCrs5S6oy8WbIXru
+         atGA==
+X-Gm-Message-State: APjAAAXVrUA26vgJ3/PIBnIqNYCVLMV9gRTbyn3FV+TrvHDaVB4GdRH5
+        uMasTVyZL+6yLM/qXmDaM+EhIyHex9NtgrbF9KhDHA==
+X-Google-Smtp-Source: APXvYqzt9vsXSeRCw3uCB3GWXCfo51EaaziA1khmXLcgZ0iBGlbzvQULCBw/u6Az40zhZlPPLgjyollLCWEkt22Nr2A=
+X-Received: by 2002:a2e:b4f6:: with SMTP id s22mr46532718ljm.218.1577889411528;
+ Wed, 01 Jan 2020 06:36:51 -0800 (PST)
 MIME-Version: 1.0
-References: <20191231172458.25984-1-linus.walleij@linaro.org> <20191231172458.25984-2-linus.walleij@linaro.org>
-In-Reply-To: <20191231172458.25984-2-linus.walleij@linaro.org>
-From:   Rob Herring <robh+dt@kernel.org>
-Date:   Tue, 31 Dec 2019 12:14:44 -0700
-X-Gmail-Original-Message-ID: <CAL_JsqKm=7Gx7g=uKFtFprPMRSxS24vAq9J85YYB+9sNjJVQWg@mail.gmail.com>
-Message-ID: <CAL_JsqKm=7Gx7g=uKFtFprPMRSxS24vAq9J85YYB+9sNjJVQWg@mail.gmail.com>
-Subject: Re: [PATCH 2/2] dt-bindings: Convert Faraday FTIDE010 to DT schema
-To:     Linus Walleij <linus.walleij@linaro.org>
-Cc:     devicetree@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>, device@vger.kernel.org
+References: <20191226175051.31664-1-linux@roeck-us.net> <20191226175051.31664-2-linux@roeck-us.net>
+In-Reply-To: <20191226175051.31664-2-linux@roeck-us.net>
+From:   Linus Walleij <linus.walleij@linaro.org>
+Date:   Wed, 1 Jan 2020 15:36:40 +0100
+Message-ID: <CACRpkdb8rehAPKE2Zu-Jf4TSE2m6ks91vZdrVy+HitijabeVbg@mail.gmail.com>
+Subject: Re: [RFT PATCH v3 1/1] hwmon: Driver for disk and solid state drives
+ with temperature sensors
+To:     Guenter Roeck <linux@roeck-us.net>
+Cc:     linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        Chris Healy <cphealy@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Dec 31, 2019 at 10:25 AM Linus Walleij <linus.walleij@linaro.org> wrote:
->
-> This uses the new pata-sata-controller.yaml schema to
-> convert the Faraday FTIDE010 to DT schema.
->
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: device@vger.kernel.org
-> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
-> ---
->  .../bindings/ata/faraday,ftide010.txt         | 38 --------
->  .../bindings/ata/faraday,ftide010.yaml        | 89 +++++++++++++++++++
->  2 files changed, 89 insertions(+), 38 deletions(-)
->  delete mode 100644 Documentation/devicetree/bindings/ata/faraday,ftide010.txt
->  create mode 100644 Documentation/devicetree/bindings/ata/faraday,ftide010.yaml
+On Thu, Dec 26, 2019 at 6:51 PM Guenter Roeck <linux@roeck-us.net> wrote:
 
-LGTM. Will wait for new version of patch 1.
+> Reading the temperature of ATA drives has been supported for years
+> by userspace tools such as smarttools or hddtemp. The downside of
+> such tools is that they need to run with super-user privilege, that
+> the temperatures are not reported by standard tools such as 'sensors'
+> or 'libsensors', and that drive temperatures are not available for use
+> in the kernel's thermal subsystem.
+(...)
+> Cc: Chris Healy <cphealy@gmail.com>
+> Cc: Linus Walleij <linus.walleij@linaro.org>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: Bart Van Assche <bvanassche@acm.org>
+> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
 
-Rob
+I took the v3 patch for a test run on the D-Link DIR-695 NAS/router
+and it works like a charm.
+
+With a few additional patches (that I am
+starting to upstream) the temperature zone in the drive can be used
+to control the GPIO-based fan in the NAS to keep the enclosure/chassis
+temperature down.
+
+I define a thermal zone in device tree like this:
+
++       thermal-zones {
++               chassis-thermal {
++                       /* Poll every 20 seconds */
++                       polling-delay = <20000>;
++                       /* Poll every 2nd second when cooling */
++                       polling-delay-passive = <2000>;
++                       /*  Use the thermal sensor in the hard drive */
++                       thermal-sensors = <&sata_drive>;
++
++                       /* Tripping points from the fan.script in the rootfs */
++                       trips {
++                               alert: chassis-alert {
++                                       /* At 43 degrees turn on the fan */
++                                       temperature = <43000>;
++                                       hysteresis = <3000>;
++                                       type = "active";
++                               };
++                               crit: chassis-crit {
++                                       /* Just shut down at 60 degrees */
++                                       temperature = <60000>;
++                                       hysteresis = <2000>;
++                                       type = "critical";
++                               };
++                       };
++
++                       cooling-maps {
++                               map0 {
++                                       trip = <&alert>;
++                                       cooling-device = <&fan0 1 1>;
++                               };
++                       };
++               };
++       };
+(...)
+                pata-controller@63000000 {
+                        status = "okay";
++
++                       /*
++                        * This drive may have a temperature sensor with a
++                        * thermal zone we can use for thermal control of the
++                        * chassis temperature using the fan.
++                        */
++                       sata_drive: drive@0 {
++                               reg = <0>;
++                               #thermal-sensor-cells = <0>;
++                       };
+                };
+
+The temperature started out at household temperature 26 degrees
+this morning, leaving the device running it gradually reached
+the trip point at 43 degrees and runs the fan. It then switches
+the fan off/on with some hysteresis keeping the temperature
+around 43 degreed.
+
+The PID-controller in the thermal framework handles it all
+in-kernel as expected.
+
+Tested-by: Linus Walleij <linus.walleij@linaro.org>
+
+Yours,
+Linus Walleij
