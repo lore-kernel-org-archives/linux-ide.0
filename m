@@ -4,207 +4,255 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5643DC2D0DC
-	for <linux-ide@archiver.kernel.org>; Thu,  2 Jan 2020 15:01:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A932C3276D
+	for <linux-ide@archiver.kernel.org>; Thu,  2 Jan 2020 15:03:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2F4652072C
-	for <linux-ide@archiver.kernel.org>; Thu,  2 Jan 2020 15:01:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0C8820848
+	for <linux-ide@archiver.kernel.org>; Thu,  2 Jan 2020 15:03:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728575AbgABPBl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 2 Jan 2020 10:01:41 -0500
-Received: from mout.kundenserver.de ([212.227.126.134]:35147 "EHLO
+        id S1728575AbgABPDY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 2 Jan 2020 10:03:24 -0500
+Received: from mout.kundenserver.de ([212.227.126.187]:38279 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728571AbgABPBl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 2 Jan 2020 10:01:41 -0500
+        with ESMTP id S1728571AbgABPDY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 2 Jan 2020 10:03:24 -0500
 Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
  (mreue011 [212.227.15.129]) with ESMTPA (Nemesis) id
- 1MrPyJ-1jYEoj3ART-00oSvc; Thu, 02 Jan 2020 16:00:38 +0100
+ 1MJVY8-1j2VY31jlw-00Jvad; Thu, 02 Jan 2020 16:02:43 +0100
 From:   Arnd Bergmann <arnd@arndb.de>
 To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Arnd Bergmann <arnd@arndb.de>,
+Cc:     Arnd Bergmann <arnd@arndb.de>, Jens Axboe <axboe@kernel.dk>,
+        Tim Waugh <tim@cyberelk.net>, Borislav Petkov <bp@alien8.de>,
         "David S. Miller" <davem@davemloft.net>,
-        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
-        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        zhengbin <zhengbin13@huawei.com>,
+        Hannes Reinecke <hare@suse.com>,
+        YueHaibing <yuehaibing@huawei.com>,
         Martin Wilck <mwilck@suse.com>,
-        Amol Surati <suratiamol@gmail.com>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v3 12/22] compat_ioctl: ide: floppy: add handler
-Date:   Thu,  2 Jan 2020 15:55:30 +0100
-Message-Id: <20200102145552.1853992-13-arnd@arndb.de>
+        Sergey Senozhatsky <sergey.senozhatsky@gmail.com>,
+        Kefeng Wang <wangkefeng.wang@huawei.com>,
+        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: [PATCH v3 16/22] compat_ioctl: move cdrom commands into cdrom.c
+Date:   Thu,  2 Jan 2020 15:55:34 +0100
+Message-Id: <20200102145552.1853992-17-arnd@arndb.de>
 X-Mailer: git-send-email 2.20.0
 In-Reply-To: <20200102145552.1853992-1-arnd@arndb.de>
 References: <20200102145552.1853992-1-arnd@arndb.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:PpFBLdgmMhPS8ohTpLjgVgR48oR0XOCUBItZhe4AT+xbR/Z1a2P
- tOr70kI+XNqVktlBmCJCRAC0t4kgNfRUShbGiTabC8AJY1kNDlrV9jR2dyprHVvETZyPu9o
- ZJxX344gvTkx0ZlPzneHfYkA0Qlf4nsy8ysQUyX9BeSBXQ/qvKwUhpyjRGJJ6mgRBYep3q/
- b5dmCICcpaPeigK/V3yKQ==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:5RxWy8LIVGo=:GvElw8pEl/9N4GkxpgjMXj
- IVnffGDzbcQjHuV1iuFtBO5yXoPah459tyQyTgXkdo9jqSTxhMMONNM7ZYrRiDr9+Sv+JROke
- H3S5HtBLZc7rG/sYckHk5sCfJ64Uk0O5auhRcVNBHuPbQyuDDNRkG0GK25QHUYLeOcPb+wuPg
- vjozaItY9XbRl2RCWnVKOHSZ8Voj5qecb2hQcIVTQecgdVQo004l9gSA70S80Fa+L+uosydyL
- msnV7IqB0N5Xrq4tWMRjzb1qYw/6l1RSdAcPEmE4slbogWBd9+W9eiOiLC9+hXtZ3gd68O5g9
- bM9gWyaa9LkiaeKrS704tDGSN3sE2GYEDoBXNDfwQ9ewruEkz/tVXRJx4O7mZjg6/CRCO1/q3
- zqYtw2Sdb+zkMwAnrGi7o97qVLisxk6M+6PjPgzLg/USyrAO+7Ftzo6OBAxHCR44Wt5giofI8
- ZHRFKPOM1Axh59370WMyZpGv+X2oBDTdrjx5/8zMfDUt2X99xbxa3zZq/S563bCC1Ivl3SD3V
- zBuaZnnTwRhlMMfFxoCCymAI++IMFVWm5g691ANirPDKQSMCEQZLy+2LAtfzP2vdKODgBWDYx
- t6lwdsBjwpjEmm7J4wbbWaBxv8w7LuALQ+pcDieNjEyv9pBx9MpLBjfAUrbd0zfTGU665O4pk
- iWWniBlS7h2/oKVTIdlkZXm6uKeHt5m28RIHj9vJMD+AMjIUGcX7EwrFxwfgu39zfW/NmDMj3
- xbQBuJhMsPOqGbm0ybegCQOGhNKYLQVLLFU6Su5LwckOvYXUITbHnBMzJLG9yM//2I0/KHa5v
- LvBnEg7i4BKBlu6QpRNoOF5Kl9Fj5b/TBNoeg9PU+giDPRF8BONAGD9/LXhHJF2sHT/S3hPWL
- x2D3qEaPKuFT16Ii06gA==
+X-Provags-ID: V03:K1:7HaNj+kg58AHuRufCpul7Uhfs08N+yeTpHJHjVcGayfYtYbvyK/
+ gPTfC9V0RX3Kh4qb5P9bESSKsqBmuS0QZeYKIFmBoCnu4tTgTjLk3R7+WbBhFt6kV0hxyY1
+ Jjso1mB8Kaykxnvjsdrvi8LSF+OW82GA9NtdSACP+37KgJ7QT2UD809QOiI7czN3j4kP3HW
+ XNp6J1m4r7jDQV/3WWS8A==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:RE0c2PHyQfE=:ClFbXwEaGJkU0KS/r5Q+A/
+ eIyf/Q6YAnGOp2uglCpr1u8m4djz9Ezo7M8lfXZ1Kg3xgQPQzOJhpGFnt9P0YCX3nT9qrX4W8
+ tlXHEFsPDv2DsL+cOG4sAMD967fnicQYTji5yMEaK6LumDsyY+xMYC2a3B6kutmnkNKPiRzCM
+ zaPzRGn7e7HrMwnK3BMGsWVwL8lzRHASVgNR5XKek8F20wSy0eQTxjSj20yBeMJgXGsh+OU5x
+ aq7mYPxjrfQ34xawfAu3KHqlUebDGTX+fynFCRevnt5qFTIRMwC+48R50tKww1X9mAQabEaDs
+ E6ka36s8cMLPWxcR7pgkL2aQSx9oGtRu0hwypIGVG93TG1KkrbJV4E5z+KwG6lTm/zOfoh9aF
+ +2OxEW9FBlYephcGDutuk/+GR7ayUQ1/56jNOEGWiG94c9P2QnP5Q8uk1mdaXVFT3ovqoQNms
+ eXsj1Cfm1HNZ4tQqYAXv/GcJa5LeDDNkbhJ6ESY+EyhvQClTB9DWGvLD04PlBwU/trVTFCOzP
+ LGvljnJCQ8F8r0NKAe+QbqqFTD+AiwkJdcSbYSBefw04iyfZDNCO/3+XzmEXmbLXBCO7AUEwE
+ hI6VWJXUwiMbWU6FPx/Xjf+khPFgqfnzcgLz1HnIL9BQAGcRfvpk0Zw6ljhQ+kceZSE6qDBxd
+ BOhpcRRhweV57XZuxM9hfBINBXLSoMbDx1GSc55/4u520SxrvdqUbua79ZkZbzxlCnFMdlgDg
+ d9zBaW7QINy13zc3lQbL6gW+FWUx8ZRHcJ3jTzQ3dOzpGh+U0JSbR16iXJsXfitJse6nvi2i1
+ QE6YyBQ0OOHbYPxKe315VC8j5h7TkmQYHNDJkxgMKjCbIDRJBbL1bxRFwVbiRjbuTXZOFJuTw
+ N8FS7F4VdCsxqBkQwDWA==
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Rather than relying on fs/compat_ioctl.c, this adds support
-for a compat_ioctl() callback in the ide-floppy driver directly,
-which lets it translate the scsi commands.
+There is no need for the special cases for the cdrom ioctls any more now,
+so make sure that each cdrom driver has a .compat_ioctl() callback and
+calls cdrom_compat_ioctl() directly there.
 
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/ide/ide-floppy.c       |  4 ++++
- drivers/ide/ide-floppy.h       |  2 ++
- drivers/ide/ide-floppy_ioctl.c | 36 ++++++++++++++++++++++++++++++++++
- drivers/ide/ide-gd.c           | 17 ++++++++++++++++
- include/linux/ide.h            |  2 ++
- 5 files changed, 61 insertions(+)
+ block/compat_ioctl.c       | 45 --------------------------------------
+ drivers/block/paride/pcd.c |  3 +++
+ drivers/cdrom/gdrom.c      |  3 +++
+ drivers/ide/ide-cd.c       | 37 +++++++++++++++++++++++++++++++
+ drivers/scsi/sr.c          |  8 ++-----
+ 5 files changed, 45 insertions(+), 51 deletions(-)
 
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 1ea2f9e82bf8..1fe1f9d37a51 100644
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -19,6 +19,7 @@
- #include <linux/types.h>
- #include <linux/string.h>
- #include <linux/kernel.h>
-+#include <linux/compat.h>
- #include <linux/delay.h>
- #include <linux/timer.h>
- #include <linux/mm.h>
-@@ -546,4 +547,7 @@ const struct ide_disk_ops ide_atapi_disk_ops = {
- 	.set_doorlock	= ide_set_media_lock,
- 	.do_request	= ide_floppy_do_request,
- 	.ioctl		= ide_floppy_ioctl,
+diff --git a/block/compat_ioctl.c b/block/compat_ioctl.c
+index 91a5dcf6e36c..e1c5d07b09e5 100644
+--- a/block/compat_ioctl.c
++++ b/block/compat_ioctl.c
+@@ -160,42 +160,6 @@ static int compat_blkdev_driver_ioctl(struct block_device *bdev, fmode_t mode,
+ 	case HDIO_DRIVE_CMD:
+ 	/* 0x330 is reserved -- it used to be HDIO_GETGEO_BIG */
+ 	case 0x330:
+-	/* CDROM stuff */
+-	case CDROMPAUSE:
+-	case CDROMRESUME:
+-	case CDROMPLAYMSF:
+-	case CDROMPLAYTRKIND:
+-	case CDROMREADTOCHDR:
+-	case CDROMREADTOCENTRY:
+-	case CDROMSTOP:
+-	case CDROMSTART:
+-	case CDROMEJECT:
+-	case CDROMVOLCTRL:
+-	case CDROMSUBCHNL:
+-	case CDROMMULTISESSION:
+-	case CDROM_GET_MCN:
+-	case CDROMRESET:
+-	case CDROMVOLREAD:
+-	case CDROMSEEK:
+-	case CDROMPLAYBLK:
+-	case CDROMCLOSETRAY:
+-	case CDROM_DISC_STATUS:
+-	case CDROM_CHANGER_NSLOTS:
+-	case CDROM_GET_CAPABILITY:
+-	case CDROM_SEND_PACKET:
+-	/* Ignore cdrom.h about these next 5 ioctls, they absolutely do
+-	 * not take a struct cdrom_read, instead they take a struct cdrom_msf
+-	 * which is compatible.
+-	 */
+-	case CDROMREADMODE2:
+-	case CDROMREADMODE1:
+-	case CDROMREADRAW:
+-	case CDROMREADCOOKED:
+-	case CDROMREADALL:
+-	/* DVD ioctls */
+-	case DVD_READ_STRUCT:
+-	case DVD_WRITE_STRUCT:
+-	case DVD_AUTH:
+ 		arg = (unsigned long)compat_ptr(arg);
+ 	/* These intepret arg as an unsigned long, not as a pointer,
+ 	 * so we must not do compat_ptr() conversion. */
+@@ -211,15 +175,6 @@ static int compat_blkdev_driver_ioctl(struct block_device *bdev, fmode_t mode,
+ 	case HDIO_SET_ACOUSTIC:
+ 	case HDIO_SET_BUSSTATE:
+ 	case HDIO_SET_ADDRESS:
+-	case CDROMEJECT_SW:
+-	case CDROM_SET_OPTIONS:
+-	case CDROM_CLEAR_OPTIONS:
+-	case CDROM_SELECT_SPEED:
+-	case CDROM_SELECT_DISC:
+-	case CDROM_MEDIA_CHANGED:
+-	case CDROM_DRIVE_STATUS:
+-	case CDROM_LOCKDOOR:
+-	case CDROM_DEBUG:
+ 		break;
+ 	default:
+ 		/* unknown ioctl number */
+diff --git a/drivers/block/paride/pcd.c b/drivers/block/paride/pcd.c
+index 636bfea2de6f..117cfc8cd05a 100644
+--- a/drivers/block/paride/pcd.c
++++ b/drivers/block/paride/pcd.c
+@@ -275,6 +275,9 @@ static const struct block_device_operations pcd_bdops = {
+ 	.open		= pcd_block_open,
+ 	.release	= pcd_block_release,
+ 	.ioctl		= pcd_block_ioctl,
 +#ifdef CONFIG_COMPAT
-+	.compat_ioctl	= ide_floppy_compat_ioctl,
++	.ioctl		= blkdev_compat_ptr_ioctl,
++#endif
+ 	.check_events	= pcd_block_check_events,
+ };
+ 
+diff --git a/drivers/cdrom/gdrom.c b/drivers/cdrom/gdrom.c
+index 5b21dc421c94..886b2638c730 100644
+--- a/drivers/cdrom/gdrom.c
++++ b/drivers/cdrom/gdrom.c
+@@ -518,6 +518,9 @@ static const struct block_device_operations gdrom_bdops = {
+ 	.release		= gdrom_bdops_release,
+ 	.check_events		= gdrom_bdops_check_events,
+ 	.ioctl			= gdrom_bdops_ioctl,
++#ifdef CONFIG_COMPAT
++	.ioctl			= blkdev_compat_ptr_ioctl,
 +#endif
  };
-diff --git a/drivers/ide/ide-floppy.h b/drivers/ide/ide-floppy.h
-index 13c9b4b6d75e..8505a5f58f4e 100644
---- a/drivers/ide/ide-floppy.h
-+++ b/drivers/ide/ide-floppy.h
-@@ -26,6 +26,8 @@ void ide_floppy_create_read_capacity_cmd(struct ide_atapi_pc *);
- /* ide-floppy_ioctl.c */
- int ide_floppy_ioctl(ide_drive_t *, struct block_device *, fmode_t,
- 		     unsigned int, unsigned long);
-+int ide_floppy_compat_ioctl(ide_drive_t *, struct block_device *, fmode_t,
-+			    unsigned int, unsigned long);
  
- #ifdef CONFIG_IDE_PROC_FS
- /* ide-floppy_proc.c */
-diff --git a/drivers/ide/ide-floppy_ioctl.c b/drivers/ide/ide-floppy_ioctl.c
-index 40a2ebe34e1d..4fd70f804d6f 100644
---- a/drivers/ide/ide-floppy_ioctl.c
-+++ b/drivers/ide/ide-floppy_ioctl.c
-@@ -5,6 +5,7 @@
+ static irqreturn_t gdrom_command_interrupt(int irq, void *dev_id)
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 9d117936bee1..e09b949a7c46 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -25,6 +25,7 @@
  
- #include <linux/kernel.h>
- #include <linux/ide.h>
+ #define IDECD_VERSION "5.00"
+ 
 +#include <linux/compat.h>
- #include <linux/cdrom.h>
- #include <linux/mutex.h>
- 
-@@ -302,3 +303,38 @@ int ide_floppy_ioctl(ide_drive_t *drive, struct block_device *bdev,
- 	mutex_unlock(&ide_floppy_ioctl_mutex);
- 	return err;
+ #include <linux/module.h>
+ #include <linux/types.h>
+ #include <linux/kernel.h>
+@@ -1710,6 +1711,39 @@ static int idecd_ioctl(struct block_device *bdev, fmode_t mode,
+ 	return ret;
  }
-+
+ 
 +#ifdef CONFIG_COMPAT
-+int ide_floppy_compat_ioctl(ide_drive_t *drive, struct block_device *bdev,
-+			    fmode_t mode, unsigned int cmd, unsigned long arg)
++static int idecd_locked_compat_ioctl(struct block_device *bdev, fmode_t mode,
++			unsigned int cmd, unsigned long arg)
 +{
-+	struct ide_atapi_pc pc;
++	struct cdrom_info *info = ide_drv_g(bdev->bd_disk, cdrom_info);
 +	void __user *argp = compat_ptr(arg);
 +	int err;
 +
-+	mutex_lock(&ide_floppy_ioctl_mutex);
-+	if (cmd == CDROMEJECT || cmd == CDROM_LOCKDOOR) {
-+		err = ide_floppy_lockdoor(drive, &pc, arg, cmd);
-+		goto out;
++	switch (cmd) {
++	case CDROMSETSPINDOWN:
++		return idecd_set_spindown(&info->devinfo, (unsigned long)argp);
++	case CDROMGETSPINDOWN:
++		return idecd_get_spindown(&info->devinfo, (unsigned long)argp);
++	default:
++		break;
 +	}
 +
-+	err = ide_floppy_format_ioctl(drive, &pc, mode, cmd, argp);
-+	if (err != -ENOTTY)
-+		goto out;
-+
-+	/*
-+	 * skip SCSI_IOCTL_SEND_COMMAND (deprecated)
-+	 * and CDROM_SEND_PACKET (legacy) ioctls
-+	 */
-+	if (cmd != CDROM_SEND_PACKET && cmd != SCSI_IOCTL_SEND_COMMAND)
-+		err = scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
-+
-+	/*
-+	 * there is no generic_ide_compat_ioctl(), that is handled
-+	 * through compat_blkdev_ioctl().
-+	 */
-+out:
-+	mutex_unlock(&ide_floppy_ioctl_mutex);
-+	return err;
++	return cdrom_ioctl(&info->devinfo, bdev, mode, cmd,
++			   (unsigned long)argp);
 +}
-+#endif
-diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
-index dba9ad5c97b3..1bb99b556393 100644
---- a/drivers/ide/ide-gd.c
-+++ b/drivers/ide/ide-gd.c
-@@ -341,11 +341,28 @@ static int ide_gd_ioctl(struct block_device *bdev, fmode_t mode,
- 	return drive->disk_ops->ioctl(drive, bdev, mode, cmd, arg);
- }
- 
-+#ifdef CONFIG_COMPAT
-+static int ide_gd_compat_ioctl(struct block_device *bdev, fmode_t mode,
-+			       unsigned int cmd, unsigned long arg)
++
++static int idecd_compat_ioctl(struct block_device *bdev, fmode_t mode,
++			     unsigned int cmd, unsigned long arg)
 +{
-+	struct ide_disk_obj *idkp = ide_drv_g(bdev->bd_disk, ide_disk_obj);
-+	ide_drive_t *drive = idkp->drive;
++	int ret;
 +
-+	if (!drive->disk_ops->compat_ioctl)
-+		return -ENOIOCTLCMD;
++	mutex_lock(&ide_cd_mutex);
++	ret = idecd_locked_compat_ioctl(bdev, mode, cmd, arg);
++	mutex_unlock(&ide_cd_mutex);
 +
-+	return drive->disk_ops->compat_ioctl(drive, bdev, mode, cmd, arg);
++	return ret;
 +}
 +#endif
-+
- static const struct block_device_operations ide_gd_ops = {
- 	.owner			= THIS_MODULE,
- 	.open			= ide_gd_unlocked_open,
- 	.release		= ide_gd_release,
- 	.ioctl			= ide_gd_ioctl,
-+#ifdef CONFIG_COMPAT
-+	.ioctl			= ide_gd_compat_ioctl,
-+#endif
- 	.getgeo			= ide_gd_getgeo,
- 	.check_events		= ide_gd_check_events,
- 	.unlock_native_capacity	= ide_gd_unlock_native_capacity,
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index 46b771d6999e..06dae6438557 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -413,6 +413,8 @@ struct ide_disk_ops {
- 				      sector_t);
- 	int		(*ioctl)(struct ide_drive_s *, struct block_device *,
- 				 fmode_t, unsigned int, unsigned long);
-+	int		(*compat_ioctl)(struct ide_drive_s *, struct block_device *,
-+					fmode_t, unsigned int, unsigned long);
- };
  
- /* ATAPI device flags */
+ static unsigned int idecd_check_events(struct gendisk *disk,
+ 				       unsigned int clearing)
+@@ -1732,6 +1766,9 @@ static const struct block_device_operations idecd_ops = {
+ 	.open			= idecd_open,
+ 	.release		= idecd_release,
+ 	.ioctl			= idecd_ioctl,
++#ifdef CONFIG_COMPAT
++	.compat_ioctl		= idecd_compat_ioctl,
++#endif
+ 	.check_events		= idecd_check_events,
+ 	.revalidate_disk	= idecd_revalidate_disk
+ };
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index f1e7aab00ce3..0fbb8fe6e521 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -628,12 +628,8 @@ static int sr_block_compat_ioctl(struct block_device *bdev, fmode_t mode, unsign
+ 		goto put;
+ 	}
+ 
+-	/*
+-	 * CDROM ioctls are handled in the block layer, but
+-	 * do the scsi blk ioctls here.
+-	 */
+-	ret = scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
+-	if (ret != -ENOTTY)
++	ret = cdrom_ioctl(&cd->cdi, bdev, mode, cmd, (unsigned long)argp);
++	if (ret != -ENOSYS)
+ 		goto put;
+ 
+ 	ret = scsi_compat_ioctl(sdev, cmd, argp);
 -- 
 2.20.0
 
