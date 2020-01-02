@@ -1,130 +1,210 @@
-Return-Path: <SRS0=OFfr=2W=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=u6qf=2X=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBDAAC3F68F
-	for <linux-ide@archiver.kernel.org>; Wed,  1 Jan 2020 17:46:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5643DC2D0DC
+	for <linux-ide@archiver.kernel.org>; Thu,  2 Jan 2020 15:01:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 99AF7207E0
-	for <linux-ide@archiver.kernel.org>; Wed,  1 Jan 2020 17:46:28 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UNRFGzzS"
+	by mail.kernel.org (Postfix) with ESMTP id 2F4652072C
+	for <linux-ide@archiver.kernel.org>; Thu,  2 Jan 2020 15:01:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727250AbgAARq0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 1 Jan 2020 12:46:26 -0500
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:45891 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727234AbgAARqZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 1 Jan 2020 12:46:25 -0500
-Received: by mail-pl1-f196.google.com with SMTP id b22so16949359pls.12;
-        Wed, 01 Jan 2020 09:46:25 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=jgFQTqseU0AOmtbn0bXATUNb8DmaYbEHD/mrJGCMGbQ=;
-        b=UNRFGzzS1y/I5c1sv6nxOMRtNrS0HCd6gOFGIT8F4wnx2BxLzNpbEgKDfjeczU2Sq8
-         tBK+RKZT+k30Ckh6kPObJXTldb8lu4hb2yUEtJbIRPsNBSwyGNgazVBLlB6Udpwst5bL
-         MosjSgK9f8FwGbSNCvAUaS8irkq86BjjJO2SuVZ8EPFSq5+sS8WMcsH067BjfOPNZH3z
-         9Ch9WnaIqp60Sn/ACxxtR8Jvcbde7APYD9mxuZ4RsFOx8KqwbwALWcifnPzolYPHPY+U
-         sJg/9giUIn+YCHloFsDxmIsxhUJ/Por0Yl6zJrlgyI9XqIUNJnnSIu/TKgeoK69ADiZp
-         Za5w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=jgFQTqseU0AOmtbn0bXATUNb8DmaYbEHD/mrJGCMGbQ=;
-        b=soaN8MKUX07aLYKG8ul8Axt2/wW6gFAzzOKxigALHlZX5/aSRqEvzHHg3wPgTQ57Pr
-         +hycxPr74KiasUnnRQfvCv+5ST8fJEsp5o6uXj40G6HsaE69MGF5j/QmCNLM8/ErWLtG
-         UCoyiqrNsuACbbPAtGnoRN3f+pT9bR/V386698ygSidytAtUCEazK5WMtN6M/aVWWoKv
-         XcY9aCI9GfykHWxqdnZFoJaA8RNX+/GbynBGw5XIrXRQV5pGIeRk9Lo4xtymtQ1Odcb+
-         oTZuM4r1a5u6qDAgNynrYwMjcigOhatPqMs0h6u2uoNATiK+PyPcwFMXhVyjD+bzwNJV
-         aI1Q==
-X-Gm-Message-State: APjAAAWEcbg/JYGL+G4QWjqdCdc9SB9JAXOT7+GEwfQ2O16KxNPkLPNQ
-        3UcEBNWocvW3ttkL+Ia04Qk=
-X-Google-Smtp-Source: APXvYqy1a++YnyCNOnWLIYqvsCOFO/RVcKBMCIhyX+zWGvbzERkJB9E/9pn3Z5EQ8i/HKKGvIQigzQ==
-X-Received: by 2002:a17:902:d694:: with SMTP id v20mr41272054ply.127.1577900784990;
-        Wed, 01 Jan 2020 09:46:24 -0800 (PST)
-Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id b128sm56470997pga.43.2020.01.01.09.46.23
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 01 Jan 2020 09:46:24 -0800 (PST)
-Subject: Re: [PATCH v2] hwmon: Driver for temperature sensors on SATA drives
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-        Chris Healy <cphealy@gmail.com>
-References: <20191215174509.1847-1-linux@roeck-us.net>
- <20191215174509.1847-2-linux@roeck-us.net> <yq1r211dvck.fsf@oracle.com>
-From:   Guenter Roeck <linux@roeck-us.net>
-Message-ID: <b22a519c-8f26-e731-345f-9deca1b2150e@roeck-us.net>
-Date:   Wed, 1 Jan 2020 09:46:23 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        id S1728575AbgABPBl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 2 Jan 2020 10:01:41 -0500
+Received: from mout.kundenserver.de ([212.227.126.134]:35147 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728571AbgABPBl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 2 Jan 2020 10:01:41 -0500
+Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
+ (mreue011 [212.227.15.129]) with ESMTPA (Nemesis) id
+ 1MrPyJ-1jYEoj3ART-00oSvc; Thu, 02 Jan 2020 16:00:38 +0100
+From:   Arnd Bergmann <arnd@arndb.de>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Arnd Bergmann <arnd@arndb.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        "Gustavo A. R. Silva" <gustavo@embeddedor.com>,
+        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.com>,
+        Martin Wilck <mwilck@suse.com>,
+        Amol Surati <suratiamol@gmail.com>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v3 12/22] compat_ioctl: ide: floppy: add handler
+Date:   Thu,  2 Jan 2020 15:55:30 +0100
+Message-Id: <20200102145552.1853992-13-arnd@arndb.de>
+X-Mailer: git-send-email 2.20.0
+In-Reply-To: <20200102145552.1853992-1-arnd@arndb.de>
+References: <20200102145552.1853992-1-arnd@arndb.de>
 MIME-Version: 1.0
-In-Reply-To: <yq1r211dvck.fsf@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Provags-ID: V03:K1:PpFBLdgmMhPS8ohTpLjgVgR48oR0XOCUBItZhe4AT+xbR/Z1a2P
+ tOr70kI+XNqVktlBmCJCRAC0t4kgNfRUShbGiTabC8AJY1kNDlrV9jR2dyprHVvETZyPu9o
+ ZJxX344gvTkx0ZlPzneHfYkA0Qlf4nsy8ysQUyX9BeSBXQ/qvKwUhpyjRGJJ6mgRBYep3q/
+ b5dmCICcpaPeigK/V3yKQ==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:5RxWy8LIVGo=:GvElw8pEl/9N4GkxpgjMXj
+ IVnffGDzbcQjHuV1iuFtBO5yXoPah459tyQyTgXkdo9jqSTxhMMONNM7ZYrRiDr9+Sv+JROke
+ H3S5HtBLZc7rG/sYckHk5sCfJ64Uk0O5auhRcVNBHuPbQyuDDNRkG0GK25QHUYLeOcPb+wuPg
+ vjozaItY9XbRl2RCWnVKOHSZ8Voj5qecb2hQcIVTQecgdVQo004l9gSA70S80Fa+L+uosydyL
+ msnV7IqB0N5Xrq4tWMRjzb1qYw/6l1RSdAcPEmE4slbogWBd9+W9eiOiLC9+hXtZ3gd68O5g9
+ bM9gWyaa9LkiaeKrS704tDGSN3sE2GYEDoBXNDfwQ9ewruEkz/tVXRJx4O7mZjg6/CRCO1/q3
+ zqYtw2Sdb+zkMwAnrGi7o97qVLisxk6M+6PjPgzLg/USyrAO+7Ftzo6OBAxHCR44Wt5giofI8
+ ZHRFKPOM1Axh59370WMyZpGv+X2oBDTdrjx5/8zMfDUt2X99xbxa3zZq/S563bCC1Ivl3SD3V
+ zBuaZnnTwRhlMMfFxoCCymAI++IMFVWm5g691ANirPDKQSMCEQZLy+2LAtfzP2vdKODgBWDYx
+ t6lwdsBjwpjEmm7J4wbbWaBxv8w7LuALQ+pcDieNjEyv9pBx9MpLBjfAUrbd0zfTGU665O4pk
+ iWWniBlS7h2/oKVTIdlkZXm6uKeHt5m28RIHj9vJMD+AMjIUGcX7EwrFxwfgu39zfW/NmDMj3
+ xbQBuJhMsPOqGbm0ybegCQOGhNKYLQVLLFU6Su5LwckOvYXUITbHnBMzJLG9yM//2I0/KHa5v
+ LvBnEg7i4BKBlu6QpRNoOF5Kl9Fj5b/TBNoeg9PU+giDPRF8BONAGD9/LXhHJF2sHT/S3hPWL
+ x2D3qEaPKuFT16Ii06gA==
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Martin,
+Rather than relying on fs/compat_ioctl.c, this adds support
+for a compat_ioctl() callback in the ide-floppy driver directly,
+which lets it translate the scsi commands.
 
-On 12/18/19 4:15 PM, Martin K. Petersen wrote:
-> 
-> Guenter,
-> 
->> This driver solves this problem by adding support for reading the
->> temperature of SATA drives from the kernel using the hwmon API and
->> by adding a temperature zone for each drive.
-> 
-> My working tree is available here:
-> 
->    https://git.kernel.org/pub/scm/linux/kernel/git/mkp/linux.git/log/?h=5.6/drivetemp
-> 
-> A few notes:
-> 
->   - Before applying your patch I did s/satatemp/drivetemp/
-> 
->   - I get a crash in the driver core during probe if the drivetemp module
->     is loaded prior to loading ahci or a SCSI HBA driver. This crash is
->     unrelated to my changes. Haven't had time to debug.
-> 
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/ide/ide-floppy.c       |  4 ++++
+ drivers/ide/ide-floppy.h       |  2 ++
+ drivers/ide/ide-floppy_ioctl.c | 36 ++++++++++++++++++++++++++++++++++
+ drivers/ide/ide-gd.c           | 17 ++++++++++++++++
+ include/linux/ide.h            |  2 ++
+ 5 files changed, 61 insertions(+)
 
-Any idea how I might be able to reproduce this ? So far I have been
-unsuccessful.
-
-Building drivetemp into the kernel, with ahci and everything SCSI
-built as module, doesn't trigger the crash for me. This is with the
-drivetemp patch (v3) as well as commit d188b0675b ("scsi: core: Add
-sysfs attributes for VPD pages 0h and 89h") applied on top of v5.4.7.
-
-Thanks,
-Guenter
-
->   - I tweaked your ATA detection heuristics and now use the cached VPD
->     page 0x89 instead of fetching one from the device.
-> 
->   - I also added support for reading the temperature log page on SCSI
->     drives.
-> 
->   - Tested with a mixed bag of about 40 SCSI and SATA drives attached.
-> 
->   - I still think sensor naming needs work. How and where are the
->     "drivetemp-scsi-8-140" names generated?
-> 
-> I'll tinker some more but thought I'd share what I have for now.
-> 
+diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
+index 1ea2f9e82bf8..1fe1f9d37a51 100644
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -19,6 +19,7 @@
+ #include <linux/types.h>
+ #include <linux/string.h>
+ #include <linux/kernel.h>
++#include <linux/compat.h>
+ #include <linux/delay.h>
+ #include <linux/timer.h>
+ #include <linux/mm.h>
+@@ -546,4 +547,7 @@ const struct ide_disk_ops ide_atapi_disk_ops = {
+ 	.set_doorlock	= ide_set_media_lock,
+ 	.do_request	= ide_floppy_do_request,
+ 	.ioctl		= ide_floppy_ioctl,
++#ifdef CONFIG_COMPAT
++	.compat_ioctl	= ide_floppy_compat_ioctl,
++#endif
+ };
+diff --git a/drivers/ide/ide-floppy.h b/drivers/ide/ide-floppy.h
+index 13c9b4b6d75e..8505a5f58f4e 100644
+--- a/drivers/ide/ide-floppy.h
++++ b/drivers/ide/ide-floppy.h
+@@ -26,6 +26,8 @@ void ide_floppy_create_read_capacity_cmd(struct ide_atapi_pc *);
+ /* ide-floppy_ioctl.c */
+ int ide_floppy_ioctl(ide_drive_t *, struct block_device *, fmode_t,
+ 		     unsigned int, unsigned long);
++int ide_floppy_compat_ioctl(ide_drive_t *, struct block_device *, fmode_t,
++			    unsigned int, unsigned long);
+ 
+ #ifdef CONFIG_IDE_PROC_FS
+ /* ide-floppy_proc.c */
+diff --git a/drivers/ide/ide-floppy_ioctl.c b/drivers/ide/ide-floppy_ioctl.c
+index 40a2ebe34e1d..4fd70f804d6f 100644
+--- a/drivers/ide/ide-floppy_ioctl.c
++++ b/drivers/ide/ide-floppy_ioctl.c
+@@ -5,6 +5,7 @@
+ 
+ #include <linux/kernel.h>
+ #include <linux/ide.h>
++#include <linux/compat.h>
+ #include <linux/cdrom.h>
+ #include <linux/mutex.h>
+ 
+@@ -302,3 +303,38 @@ int ide_floppy_ioctl(ide_drive_t *drive, struct block_device *bdev,
+ 	mutex_unlock(&ide_floppy_ioctl_mutex);
+ 	return err;
+ }
++
++#ifdef CONFIG_COMPAT
++int ide_floppy_compat_ioctl(ide_drive_t *drive, struct block_device *bdev,
++			    fmode_t mode, unsigned int cmd, unsigned long arg)
++{
++	struct ide_atapi_pc pc;
++	void __user *argp = compat_ptr(arg);
++	int err;
++
++	mutex_lock(&ide_floppy_ioctl_mutex);
++	if (cmd == CDROMEJECT || cmd == CDROM_LOCKDOOR) {
++		err = ide_floppy_lockdoor(drive, &pc, arg, cmd);
++		goto out;
++	}
++
++	err = ide_floppy_format_ioctl(drive, &pc, mode, cmd, argp);
++	if (err != -ENOTTY)
++		goto out;
++
++	/*
++	 * skip SCSI_IOCTL_SEND_COMMAND (deprecated)
++	 * and CDROM_SEND_PACKET (legacy) ioctls
++	 */
++	if (cmd != CDROM_SEND_PACKET && cmd != SCSI_IOCTL_SEND_COMMAND)
++		err = scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
++
++	/*
++	 * there is no generic_ide_compat_ioctl(), that is handled
++	 * through compat_blkdev_ioctl().
++	 */
++out:
++	mutex_unlock(&ide_floppy_ioctl_mutex);
++	return err;
++}
++#endif
+diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
+index dba9ad5c97b3..1bb99b556393 100644
+--- a/drivers/ide/ide-gd.c
++++ b/drivers/ide/ide-gd.c
+@@ -341,11 +341,28 @@ static int ide_gd_ioctl(struct block_device *bdev, fmode_t mode,
+ 	return drive->disk_ops->ioctl(drive, bdev, mode, cmd, arg);
+ }
+ 
++#ifdef CONFIG_COMPAT
++static int ide_gd_compat_ioctl(struct block_device *bdev, fmode_t mode,
++			       unsigned int cmd, unsigned long arg)
++{
++	struct ide_disk_obj *idkp = ide_drv_g(bdev->bd_disk, ide_disk_obj);
++	ide_drive_t *drive = idkp->drive;
++
++	if (!drive->disk_ops->compat_ioctl)
++		return -ENOIOCTLCMD;
++
++	return drive->disk_ops->compat_ioctl(drive, bdev, mode, cmd, arg);
++}
++#endif
++
+ static const struct block_device_operations ide_gd_ops = {
+ 	.owner			= THIS_MODULE,
+ 	.open			= ide_gd_unlocked_open,
+ 	.release		= ide_gd_release,
+ 	.ioctl			= ide_gd_ioctl,
++#ifdef CONFIG_COMPAT
++	.ioctl			= ide_gd_compat_ioctl,
++#endif
+ 	.getgeo			= ide_gd_getgeo,
+ 	.check_events		= ide_gd_check_events,
+ 	.unlock_native_capacity	= ide_gd_unlock_native_capacity,
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index 46b771d6999e..06dae6438557 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -413,6 +413,8 @@ struct ide_disk_ops {
+ 				      sector_t);
+ 	int		(*ioctl)(struct ide_drive_s *, struct block_device *,
+ 				 fmode_t, unsigned int, unsigned long);
++	int		(*compat_ioctl)(struct ide_drive_s *, struct block_device *,
++					fmode_t, unsigned int, unsigned long);
+ };
+ 
+ /* ATAPI device flags */
+-- 
+2.20.0
 
