@@ -1,183 +1,105 @@
-Return-Path: <SRS0=u6qf=2X=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=FJqb=2Y=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98A65C3276C
-	for <linux-ide@archiver.kernel.org>; Thu,  2 Jan 2020 23:06:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DCEBC32771
+	for <linux-ide@archiver.kernel.org>; Fri,  3 Jan 2020 03:06:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5D534206DA
-	for <linux-ide@archiver.kernel.org>; Thu,  2 Jan 2020 23:06:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 35E8322525
+	for <linux-ide@archiver.kernel.org>; Fri,  3 Jan 2020 03:06:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lbq7shZM"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="j3UBfkgE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726130AbgABXGD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 2 Jan 2020 18:06:03 -0500
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:34298 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725890AbgABXGD (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 2 Jan 2020 18:06:03 -0500
-Received: by mail-pg1-f193.google.com with SMTP id r11so22605704pgf.1;
-        Thu, 02 Jan 2020 15:06:02 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:autocrypt:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=Bb6h4ccFElvLG5xqjKacq3uQ2ZA+WTV9OSPOnPBr7yI=;
-        b=lbq7shZMwC/+4dAihW75yVYmcIwB76oxVMtdSmQdRyTzsDOaFoCeEoz7NsVH/baakN
-         wBCjoVYBaiOkRipBKXnfIBxNYByctXw2c3n0mN/Ku/mYXaewpl6CldC7sPHSo9dPgY+E
-         MOMepFRI3iWQeQ5UWAz4hJ8lQLMXO/CWoPylfoNwlhPo5kV6OPN13T0QSMAp0OExdze+
-         goYUS7V4pIMLobJAkMylgbaw67Dci3/FpG9uDTeFscS0tGvxKWLP/OnJaCjs91/Fd0M1
-         ligejLk5JP5nnc3Jh1tp1VFDjS5JwMFLKJ+22EX0fL61tep3QisI0fTpb7qDvgsMNjz0
-         3hVg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=Bb6h4ccFElvLG5xqjKacq3uQ2ZA+WTV9OSPOnPBr7yI=;
-        b=UJtUvQdFgc4pxFFlPwZYeqYwkgFPJPw18KuofATvXGUrJUmvjmoiAaUI4hJ40iGXmp
-         zqG4GKpvVsuW65/Ad/C0D1hEsvhkYEiu9sqhJw9jgn+Y2mkdkEy74orE0AqkljYRhHln
-         MUiGHaAQ2XG3MGfDzDc0W2NBrhGHH7N7en7NN6J1DtECLjk4kRFCidRpe5oURe4elyNx
-         a7j0HiIxH3cveJ7oHcBXEixH+CrtBZS89wV7Z6xm+0Jxz9ukekD/p0qzZsEF58GrI7I6
-         9chocQAAFgM3349BklX+0W7nBxyVpZrJL1cnS/2Yyd/MPk9wC9BmfmY7sAp9zMVWGiVj
-         jE2A==
-X-Gm-Message-State: APjAAAUMjWoTOXj8wkChFaijVe68vngLXkfAzZUTY+4VmwLRmwqkWm2a
-        ypERsjFjA3j+K2OS7YFAIaA/m8J3
-X-Google-Smtp-Source: APXvYqxxe7wCOB3G/7ptIEiY2cPoUZSi24nVB9ou4EPATi5X+O7Gr/v6tHy19EALuMJhymUw1ItipA==
-X-Received: by 2002:a63:696:: with SMTP id 144mr96064050pgg.260.1578006362189;
-        Thu, 02 Jan 2020 15:06:02 -0800 (PST)
-Received: from [10.67.50.49] ([192.19.223.252])
-        by smtp.googlemail.com with ESMTPSA id a22sm69756313pfk.108.2020.01.02.15.06.00
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 02 Jan 2020 15:06:01 -0800 (PST)
-Subject: Re: [PATCH 0/8] ata: ahci_brcm: Fixes and new device support
-To:     Jens Axboe <axboe@kernel.dk>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        linux-kernel@vger.kernel.org
-Cc:     bcm-kernel-feedback-list@broadcom.com,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Tejun Heo <tj@kernel.org>, Jaedon Shin <jaedon.shin@gmail.com>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>
-References: <20191210185351.14825-1-f.fainelli@gmail.com>
- <b65b61a6-3cc7-1e9b-9fa7-83f314e9bbf2@redhat.com>
- <5ef8d453-84e9-72dc-3db9-6a1923d61076@gmail.com>
- <e1b21ba3-7129-17dc-86e1-2d2d68302e39@kernel.dk>
-From:   Florian Fainelli <f.fainelli@gmail.com>
-Autocrypt: addr=f.fainelli@gmail.com; prefer-encrypt=mutual; keydata=
- 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
- G10n8gCguORqNGMsVRxrlLs7/himep7MrCc=
-Message-ID: <81a60d6e-78f2-3f13-f5c8-cb835d31a80f@gmail.com>
-Date:   Thu, 2 Jan 2020 15:06:00 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.2
+        id S1727359AbgACDGi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 2 Jan 2020 22:06:38 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:57870 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727314AbgACDGh (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 2 Jan 2020 22:06:37 -0500
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 0032xCVx104390;
+        Fri, 3 Jan 2020 03:06:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=6WN8BnX46enSJnLoTfGfgR/jjp5s8P+IVbviZnrvV4U=;
+ b=j3UBfkgEAyhQO46FO5WiBBs4KtW4d2svJU7Kau3g5rJrgzfW8uH5zGOWKPVoU+K4+giD
+ YBAZ636mFdKFh9iyaJhoJAMicfFtmbsi1sCPkPoE86DAm3z6qa2IAvGMRiTYpnNJrpza
+ TMds341tqwHj2BOy1cjOU4KF/Jpdb8md9Rz5xqhN7BTHgPkYllECrhx0J8dvD6wR1pju
+ ZpYoOlRf7+JtAF6xh+VoKjRN30tCyC4EUuIdprfvc5DBl5VXJoazAg65ukR/wrBfkGsB
+ DKArazsAhbl6rbBuxoDro1KlHBmjTp5ZkIwFPPhAffqY+c6PvEpPSCWDNIA1OWqOUitN jg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2x5xfttf3a-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 03 Jan 2020 03:06:10 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00333Jed070321;
+        Fri, 3 Jan 2020 03:06:09 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2x8guur5e7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 03 Jan 2020 03:06:09 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 003367Hj017786;
+        Fri, 3 Jan 2020 03:06:07 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 02 Jan 2020 19:06:07 -0800
+To:     Guenter Roeck <linux@roeck-us.net>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        Chris Healy <cphealy@gmail.com>
+Subject: Re: [PATCH v2] hwmon: Driver for temperature sensors on SATA drives
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+References: <20191215174509.1847-1-linux@roeck-us.net>
+        <20191215174509.1847-2-linux@roeck-us.net>
+        <yq1r211dvck.fsf@oracle.com>
+        <b22a519c-8f26-e731-345f-9deca1b2150e@roeck-us.net>
+Date:   Thu, 02 Jan 2020 22:06:04 -0500
+In-Reply-To: <b22a519c-8f26-e731-345f-9deca1b2150e@roeck-us.net> (Guenter
+        Roeck's message of "Wed, 1 Jan 2020 09:46:23 -0800")
+Message-ID: <yq1sgkx44tf.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-In-Reply-To: <e1b21ba3-7129-17dc-86e1-2d2d68302e39@kernel.dk>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9488 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=784
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-2001030027
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9488 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=842 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-2001030027
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 12/25/19 7:46 PM, Jens Axboe wrote:
-> On 12/25/19 8:34 PM, Florian Fainelli wrote:
->>
->>
->> On 12/11/2019 5:31 AM, Hans de Goede wrote:
->>> Hi,
->>>
->>> On 10-12-2019 19:53, Florian Fainelli wrote:
->>>> Hi Jens,
->>>>
->>>> The first 4 patches are fixes and should ideally be queued up/picked up
->>>> by stable. The last 4 patches add support for BCM7216 which is one of
->>>> our latest devices supported by this driver.
->>>>
->>>> Patch #2 does a few things, but it was pretty badly broken before and it
->>>> is hard not to fix all call sites (probe, suspend, resume) in one shot.
->>>>
->>>> Please let me know if you have any comments.
->>>>
->>>> Thanks!
->>>
->>> The entire series looks good to me:
->>>
->>> Reviewed-by: Hans de Goede <hdegoede@redhat.com>
->>>
->>> Regards,
->>
->> Thanks Hans, Jens is this good to go from your perspective?
-> 
-> I'll queue 1-4 up for 5.5 and mark for stable, then add 5-8 for
-> 5.6. Thanks!
 
-It looks like I will have two incremental changes on top to minimize the
-number of resources that get cycled through during EPROBE_DEFER and also
-ensure that the 7216 reset line gets properly managed with a call to
-reset_control_reset() per review feedback from the reset controller
-maintainer.
+Guenter,
+
+>>   - I get a crash in the driver core during probe if the drivetemp module
+>>     is loaded prior to loading ahci or a SCSI HBA driver. This crash is
+>>     unrelated to my changes. Haven't had time to debug.
+>>
+>
+> Any idea how I might be able to reproduce this ? So far I have been
+> unsuccessful.
+
+I'm chipping away at a mountain of email. Will take a look tomorrow.
+
 -- 
-Florian
+Martin K. Petersen	Oracle Linux Engineering
