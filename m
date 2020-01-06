@@ -2,122 +2,153 @@ Return-Path: <SRS0=GUab=23=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 074FAC32771
-	for <linux-ide@archiver.kernel.org>; Mon,  6 Jan 2020 08:16:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FBA3C33C9E
+	for <linux-ide@archiver.kernel.org>; Mon,  6 Jan 2020 11:55:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D5983206E6
-	for <linux-ide@archiver.kernel.org>; Mon,  6 Jan 2020 08:16:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2271A2146E
+	for <linux-ide@archiver.kernel.org>; Mon,  6 Jan 2020 11:55:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L8gc2Xfm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725821AbgAFIQI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 6 Jan 2020 03:16:08 -0500
-Received: from metis.ext.pengutronix.de ([85.220.165.71]:50909 "EHLO
-        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725446AbgAFIQI (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 6 Jan 2020 03:16:08 -0500
-Received: from ptx.hi.pengutronix.de ([2001:67c:670:100:1d::c0])
-        by metis.ext.pengutronix.de with esmtps (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <sha@pengutronix.de>)
-        id 1ioNYU-0006U1-T7; Mon, 06 Jan 2020 09:16:06 +0100
-Received: from sha by ptx.hi.pengutronix.de with local (Exim 4.89)
-        (envelope-from <sha@pengutronix.de>)
-        id 1ioNYT-0005Dm-3y; Mon, 06 Jan 2020 09:16:05 +0100
-Date:   Mon, 6 Jan 2020 09:16:05 +0100
-From:   Sascha Hauer <s.hauer@pengutronix.de>
-To:     Pali =?iso-8859-15?Q?Roh=E1r?= <pali.rohar@gmail.com>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>, kernel@pengutronix.de
-Subject: Re: [PATCH v2] libata: Fix retrieving of active qcs
-Message-ID: <20200106081605.ffjz7xy6e24rfcgx@pengutronix.de>
-References: <20191213080408.27032-1-s.hauer@pengutronix.de>
- <20191225181840.ooo6mw5rffghbmu2@pali>
+        id S1726281AbgAFLzV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 6 Jan 2020 06:55:21 -0500
+Received: from mail-io1-f66.google.com ([209.85.166.66]:37983 "EHLO
+        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725787AbgAFLzV (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 6 Jan 2020 06:55:21 -0500
+Received: by mail-io1-f66.google.com with SMTP id v3so48335593ioj.5;
+        Mon, 06 Jan 2020 03:55:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=6Di6ffajBH2cZR+pVdW7IOpKkZDUHrowT9et6cWo7uY=;
+        b=L8gc2XfmZbBDtaLDePZyXvUltjzM6ScSH0/znKIKaMCtMCibv+eO04IaTmDlBTGhbT
+         1rWQ6Vxtd+o4e39T+uUEzmVcl6tC6lTKZECYTG3ADyckeJ2TKRJsyelTSAZPGKez8D1u
+         m9AV1p7UxTh7bcRIN24V638UW6qgwex5yhHpV1oBPHLuyL16FphzTKID3dnJ402mwY7T
+         fNA+T9uDhZOQbhiwhChgDX/xjmgG4zPj25Gy6KRmUXp8XXJJSewwhBEmcXUuqTv8EAue
+         UdDLrzLHpxFMpL4MJqK4cUngKwqznMSJAKFLCIvYGaknkBlUacMMgm2Nm416NF7SRbZg
+         mAYA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=6Di6ffajBH2cZR+pVdW7IOpKkZDUHrowT9et6cWo7uY=;
+        b=KdJeOx5DrqPUqLUxPDZ+PuHUYCQb5BI06oXxlCvW3W6w+S5CdK5C7N8y2cPV7YWQHi
+         At8MJloPi5c4AOymZNvhfczlZfQDy7Wx4Epo9YuHrQngrBZG6LUI+uGpiEUFgiobgfNE
+         NtI74WnumVRduhCWLfd9HV2mJ3aCpPwgfgbH94HMknLkmWWP1e5gNgbE0psGu3JiRMuq
+         Z3/puamYjPSR/DcbTBZTfsEJJa7sepr85u7SkMIfOP8olda+auJLtcj6NTrbgJePnf+5
+         lNyYivrdALsHDxPBTG/HOtKegJ7JkcZsvmAjcCL3Df0iiPUDmAcdXriw4EYYqzZl4nYh
+         cNIg==
+X-Gm-Message-State: APjAAAUkPoiLiQysULbUH1dNYdsnIenU2B2ZnfVyh3NnhxZ+g69RuUcp
+        /dIDmlvx7uD9UDa7kvTPlgJwS+yIM+jNJ4Gf2Zz023RG
+X-Google-Smtp-Source: APXvYqyK5B13r8HZFUhRRLwCjL031uyNVHRJy14fnkwQW+NME79KYnHpYoaVPSOY+KwNL7GKReAVKzghVs3O6n2eRC8=
+X-Received: by 2002:a02:c90a:: with SMTP id t10mr77309211jao.25.1578311720271;
+ Mon, 06 Jan 2020 03:55:20 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20191225181840.ooo6mw5rffghbmu2@pali>
-X-Sent-From: Pengutronix Hildesheim
-X-URL:  http://www.pengutronix.de/
-X-IRC:  #ptxdist @freenode
-X-Accept-Language: de,en
-X-Accept-Content-Type: text/plain
-X-Uptime: 09:12:30 up 182 days, 14:22, 61 users,  load average: 0.22, 0.48,
- 0.43
-User-Agent: NeoMutt/20170113 (1.7.2)
-X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::c0
-X-SA-Exim-Mail-From: sha@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-ide@vger.kernel.org
+From:   Prabhakar Kushwaha <prabhakar.pkin@gmail.com>
+Date:   Mon, 6 Jan 2020 17:24:44 +0530
+Message-ID: <CAJ2QiJ+MVVztHONagmYc2-BzbtdGQhABRKO7h4+kOE9cCK=CxA@mail.gmail.com>
+Subject: kexec -e not working: root disk not able to detect
+To:     linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+        Ganapatrao Prabhakerrao Kulkarni <gkulkarni@marvell.com>,
+        Kamlakant Patel <kamlakantp@marvell.com>,
+        kexec mailing list <kexec@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, Dec 25, 2019 at 07:18:40PM +0100, Pali Rohár wrote:
-> Hello Sascha!
-> 
-> On Friday 13 December 2019 09:04:08 Sascha Hauer wrote:
-> > ata_qc_complete_multiple() is called with a mask of the still active
-> > tags.
-> > 
-> > mv_sata doesn't have this information directly and instead calculates
-> > the still active tags from the started tags (ap->qc_active) and the
-> > finished tags as (ap->qc_active ^ done_mask)
-> > 
-> > Since 28361c40368 the hw_tag and tag are no longer the same and the
-> > equation is no longer valid. In ata_exec_internal_sg() ap->qc_active is
-> > initialized as 1ULL << ATA_TAG_INTERNAL, but in hardware tag 0 is
-> > started and this will be in done_mask on completion. ap->qc_active ^
-> > done_mask becomes 0x100000000 ^ 0x1 = 0x100000001 and thus tag 0 used as
-> > the internal tag will never be reported as completed.
-> > 
-> > This is fixed by introducing ata_qc_get_active() which returns the
-> > active hardware tags and calling it where appropriate.
-> > 
-> > This is tested on mv_sata, but sata_fsl and sata_nv suffer from the same
-> > problem. There is another case in sata_nv that most likely needs fixing
-> > as well, but this looks a little different, so I wasn't confident enough
-> > to change that.
-> 
-> I can confirm that sata_nv.ko does not work in 4.18 (and new) kernel
-> version correctly. More details are in email:
-> 
-> https://lore.kernel.org/linux-ide/20191225180824.bql2o5whougii4ch@pali/T/
-> 
-> I tried this patch and it fixed above problems with sata_nv.ko. It just
-> needs small modification (see below).
-> 
-> So you can add my:
-> 
-> Tested-by: Pali Rohár <pali.rohar@gmail.com>
-> 
-> And I hope that patch would be backported to 4.18 and 4.19 stable
-> branches soon as distributions kernels are broken for machines with
-> these nvidia sata controllers.
-> 
-> Anyway, what is that another case in sata_nv which needs to be fixed
-> too?
+Hi All,
 
-It's in nv_swncq_sdbfis(). Here we have:
+I am trying kexec -e with latest kernel i.e. Linux-5.5.0-rc4.  Here
+second kernel is not able to detect/mount hard-disk having root file
+system (INTEL SSDSC2BB240G7).
 
-	sactive = readl(pp->sactive_block);
-	done_mask = pp->qc_active ^ sactive;
+[  279.690575] ata1: softreset failed (1st FIS failed)
+[  279.695446] ata1: limiting SATA link speed to 3.0 Gbps
+[  280.910020] ata1: SATA link down (SStatus 0 SControl 320)
+[  282.626018] ata1: SATA link down (SStatus 0 SControl 300)
+[  282.631409] ata1: link online but 1 devices misclassified, retrying
+[  282.637665] ata1: reset failed (errno=-11), retrying in 9 secs
+[  298.294546] ata1: failed to reset engine (errno=-5)
+[  302.042967] ata1: softreset failed (1st FIS failed)
+[  308.798609] ata1: failed to reset engine (errno=-5)
+[  337.546605] ata1: softreset failed (1st FIS failed)
+[  337.551475] ata1: limiting SATA link speed to 3.0 Gbps
+[  338.766022] ata1: SATA link down (SStatus 0 SControl 320)
+[  339.270943] ata1: EH pending after 5 tries, giving up
 
-	pp->qc_active &= ~done_mask;
-	pp->dhfis_bits &= ~done_mask;
-	pp->dmafis_bits &= ~done_mask;
-	pp->sdbfis_bits |= done_mask;
-	ata_qc_complete_multiple(ap, ap->qc_active ^ done_mask);
+I found following two workaround for this issue.
+A) Define ".shutdown" in driver/ata/ahci.c.
 
-Sascha
+reboot --> kernel_kexec() --> kernel_restart_prepare() -->
+device_shutdown() --> pci_device_shutdown() --> ahci_shutdown_one()
+--> new function
 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 4bfd1b14b390..50a101002885 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -81,6 +81,7 @@ enum board_ids {
 
--- 
-Pengutronix e.K.                           |                             |
-Steuerwalder Str. 21                       | http://www.pengutronix.de/  |
-31137 Hildesheim, Germany                  | Phone: +49-5121-206917-0    |
-Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+ static int ahci_init_one(struct pci_dev *pdev, const struct
+pci_device_id *ent);
+ static void ahci_remove_one(struct pci_dev *dev);
+ +static void ahci_shutdown_one(struct pci_dev *dev);
+ static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
+                                  unsigned long deadline);
+  static int ahci_avn_hardreset(struct ata_link *link, unsigned int *class,
+ @@ -606,6 +607,7 @@ static struct pci_driver ahci_pci_driver = {
+         .id_table               = ahci_pci_tbl,
+         .probe                  = ahci_init_one,
+         .remove                 = ahci_remove_one,
+ +       .shutdown               = ahci_shutdown_one,
+         .driver = {
+                 .pm             = &ahci_pci_pm_ops,
+         },
+
+ +static void ahci_shutdown_one(struct pci_dev *pdev)
+ +{
+ +       pm_runtime_get_noresume(&pdev->dev);
+ +       ata_pci_remove_one(pdev);
+ +}
+ +
+Note: After defining shutdown, error related to file-system write
+seen. Looks like even after device_shutdown, file system related
+transaction goes to disk.
+
+B)) Commenting of pci_clear_master() from pci_device_shutdown()
+reboot --> kernel_kexec() --> kernel_restart_prepare() -->
+device_shutdown() --> pci_device_shutdown()
+
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 0454ca0e4e3f..ddffaa9321bb 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -481,8 +481,10 @@ static void pci_device_shutdown(struct device *dev)
+        /*
+         * If this is a kexec reboot, turn off Bus Master bit on the
+@@ -491,8 +493,16 @@ static void pci_device_shutdown(struct device *dev)
+         * If it is not a kexec reboot, firmware will hit the PCI
+         * devices with big hammer and stop their DMA any way.
+         */
+
+ - if (kexec_in_progress && (pci_dev->current_state <= PCI_D3hot))
+ -                pci_clear_master(pci_dev);
+
+Here pci_dev current_state. It is "0" i.e. D0.
+
+From A and B. Looks like even after pci_clear_master(), Some DMA
+transactions going on PCIe device  causing device in unstable.
+Not sure if this is the reason and how to solve this problem.
+
+Any help/guidance will help me in moving forward.
+
+Thanks!!
+
+--prabhakar (pk)
