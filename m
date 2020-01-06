@@ -7,65 +7,61 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEE55C00523
-	for <linux-ide@archiver.kernel.org>; Mon,  6 Jan 2020 01:42:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B2F6C00523
+	for <linux-ide@archiver.kernel.org>; Mon,  6 Jan 2020 01:53:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A9CB521582
-	for <linux-ide@archiver.kernel.org>; Mon,  6 Jan 2020 01:42:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C51102072C
+	for <linux-ide@archiver.kernel.org>; Mon,  6 Jan 2020 01:53:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="dISKWiGp"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="stOruzXe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727268AbgAFBmm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 5 Jan 2020 20:42:42 -0500
-Received: from mail-lj1-f196.google.com ([209.85.208.196]:40316 "EHLO
-        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727263AbgAFBmm (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 5 Jan 2020 20:42:42 -0500
-Received: by mail-lj1-f196.google.com with SMTP id u1so49297801ljk.7
-        for <linux-ide@vger.kernel.org>; Sun, 05 Jan 2020 17:42:40 -0800 (PST)
+        id S1727321AbgAFBxF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 5 Jan 2020 20:53:05 -0500
+Received: from mail-lf1-f66.google.com ([209.85.167.66]:39451 "EHLO
+        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727226AbgAFBxF (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 5 Jan 2020 20:53:05 -0500
+Received: by mail-lf1-f66.google.com with SMTP id y1so35339073lfb.6
+        for <linux-ide@vger.kernel.org>; Sun, 05 Jan 2020 17:53:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=9chmsIJFFcnPXoPZqXhoMG9yNnYZPSmA0/GegFR4AgY=;
-        b=dISKWiGp1dnOoENE6xq992Bu0fjXWJCbwBJOzcI2wlasU4sYRntzWEoMzkOX2/ol3e
-         YDNV93UM+T9M8LUjlReE3tv8sFwn5i9KWOhmzRipHeFDZdin9Eg/F/GfDSuyyWlEqbOh
-         mWYrEgRzVftHLjkdHx9qL9x3yjcleruUzTXlqSorX85IGoQvVKVyoxo+CIhDT5BCtjeu
-         5lqIb9vilMbXwZPnz8ZOLzHdP766D0T3pRG6Xo4DNlIiwjF8pxf+B9PWOrJiJivtU6/d
-         nfWXN7HVZJj8NRJ5cDSQtH6SfMM/Wk5kXsr1NYfMMgsIbpBDLiaZlrgLqvaRes5bHnh6
-         KFyQ==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=iD+50azB+tBKY9G51G0/uhlJUSlWLQtRjkrA1mNR5YY=;
+        b=stOruzXeJyJ/iE3IWrf9S/Cd2tR8jd2uiRl9BelOJJzATVGY+EwgRN7zdChxXra/3a
+         WzLGlNiBdQS7iHYgL9imf5adLfJgc0JD9VzJhNPhOxlwoKhZ18ygZMVCpX3b/Cgco9yu
+         Mo1AiiazwDJf+MxlfxwzeFnHBsWtJXQhIB9sqb5l9lHXz8QmcsegEsMqNoJV/CxscDhM
+         gFkNRUd6U/ThpkgZyI70UTPBhxkMV4YoNFq/h5X4QVysEI8w/o4ADhUJHb8h2TNbb5gB
+         BLoacIOt9Al3CKrbwv/46H7MnBZbRX5QeUWswo0xBE/o43u2daBvCQzoCjNi9rhIC//t
+         HD3Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=9chmsIJFFcnPXoPZqXhoMG9yNnYZPSmA0/GegFR4AgY=;
-        b=oXOwHNWNkJaHQFS+VPFz9tjoafaJ0pxg/w25MSIgSiuuHtWPuD97gj+YK0Sglv7J0M
-         IbwcIdaTSDgCDtOyLOhGfrO+qoCstClA8UPf8hnFj61xGhBhsB2zCMY7P5hRtIMtqGn3
-         nSsIZkM0/mBD+4mLhcmLq5NeO6DlFFGHcm1C5cScjdkogTCdY+ish6zjiuch777kpOtw
-         0aI66xTQxg5rVGWgmlv5FXIXUcS+sKAtGrwQ/tFIvIveGoPobiY+D9xBNjWv1I73Yg2U
-         z1ugSAheehfBot535ufcwAsIGRzaodvw2oCb+m7YtQ0v4bfRn8zzNbioytBVNcAhp8Xl
-         qdwQ==
-X-Gm-Message-State: APjAAAX+CghUKUaJ0Z3KkwvSjHmNNYhH0+F8M4JUe5POMusa6cC3hPLw
-        5CeJoT98vYZ0wHxGnx/QZYa4hA==
-X-Google-Smtp-Source: APXvYqwAO/UkDTtdUJ2tVUWTcRhd+zDL47nEx1Fdrit2CMkcoC8E7iOG4qhb3GMNbfcV596U49jm5A==
-X-Received: by 2002:a2e:800b:: with SMTP id j11mr53409191ljg.126.1578274959658;
-        Sun, 05 Jan 2020 17:42:39 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=iD+50azB+tBKY9G51G0/uhlJUSlWLQtRjkrA1mNR5YY=;
+        b=emDDe9Rbx2Xp7Dqa0YRd/q6kufZTiWcNh/oG9p48d/JGUFSuNlcoDse9Yx1VMx5Es3
+         q4bPDP4avsMohJ+Su4F3M0h30dXY621WJC17AEoYsQ4Il8SxqqunDZWWNietV9ptUD0W
+         sXLtJa++yS7ONb+YjR1ooiE2/WY7/ItrbXuST48JtHrkwrO5R1sHy1FYW4cbTWlyEVjU
+         /11KkHGfmXLPXxFk8FMJiwXGApxIwebY5Na0i1/yQOnykQXkQ/yKIPddds+4K7T22tAO
+         KrmAazAPjcQrKHPMULCLr/69ryt7QbWVEajYKYWuyayi9vzXX6mY9S7+WMvKXqNxcdhI
+         BSug==
+X-Gm-Message-State: APjAAAU6Rm/omtIDr+NbBsG5sL0nFecK7Y1hBxTole6u0LAalm5B/gbI
+        h9STBkpUrCao0RiErUES095sYA==
+X-Google-Smtp-Source: APXvYqyQsSVL56NAprHy8ONdVeBhui2YsYjZVSScZMAt+kEwr25M7JfCOcTjn2UDxwdNN0NSjx24ug==
+X-Received: by 2002:ac2:5582:: with SMTP id v2mr15879998lfg.183.1578275582860;
+        Sun, 05 Jan 2020 17:53:02 -0800 (PST)
 Received: from localhost.bredbandsbolaget (c-5ac9225c.014-348-6c756e10.bbcust.telenor.se. [92.34.201.90])
-        by smtp.gmail.com with ESMTPSA id y8sm28377300lji.56.2020.01.05.17.42.38
+        by smtp.gmail.com with ESMTPSA id v26sm28389374lfq.73.2020.01.05.17.53.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 05 Jan 2020 17:42:39 -0800 (PST)
+        Sun, 05 Jan 2020 17:53:02 -0800 (PST)
 From:   Linus Walleij <linus.walleij@linaro.org>
 To:     Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
         Jens Axboe <axboe@kernel.dk>
-Cc:     linux-ide@vger.kernel.org,
-        Linus Walleij <linus.walleij@linaro.org>,
-        device@vger.kernel.org
+Cc:     linux-ide@vger.kernel.org, Linus Walleij <linus.walleij@linaro.org>
 Subject: [PATCH 2/2 v2] dt-bindings: Convert Faraday FTIDE010 to DT schema
-Date:   Mon,  6 Jan 2020 02:42:24 +0100
-Message-Id: <20200106014224.12791-2-linus.walleij@linaro.org>
+Date:   Mon,  6 Jan 2020 02:52:56 +0100
+Message-Id: <20200106015256.13194-1-linus.walleij@linaro.org>
 X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20200106014224.12791-1-linus.walleij@linaro.org>
-References: <20200106014224.12791-1-linus.walleij@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
@@ -77,7 +73,7 @@ This uses the new pata-sata-controller.yaml schema to
 convert the Faraday FTIDE010 to DT schema.
 
 Cc: Rob Herring <robh+dt@kernel.org>
-Cc: device@vger.kernel.org
+Cc: devicetree@vger.kernel.org
 Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 ---
 ChangeLog v1->v2:
