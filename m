@@ -4,151 +4,97 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FBA3C33C9E
-	for <linux-ide@archiver.kernel.org>; Mon,  6 Jan 2020 11:55:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97E37C33C8C
+	for <linux-ide@archiver.kernel.org>; Mon,  6 Jan 2020 18:59:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2271A2146E
-	for <linux-ide@archiver.kernel.org>; Mon,  6 Jan 2020 11:55:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A66E2072A
+	for <linux-ide@archiver.kernel.org>; Mon,  6 Jan 2020 18:59:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="L8gc2Xfm"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NhUlkwXW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726281AbgAFLzV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 6 Jan 2020 06:55:21 -0500
-Received: from mail-io1-f66.google.com ([209.85.166.66]:37983 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725787AbgAFLzV (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 6 Jan 2020 06:55:21 -0500
-Received: by mail-io1-f66.google.com with SMTP id v3so48335593ioj.5;
-        Mon, 06 Jan 2020 03:55:20 -0800 (PST)
+        id S1726690AbgAFS7F (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 6 Jan 2020 13:59:05 -0500
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:32784 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726683AbgAFS7E (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 6 Jan 2020 13:59:04 -0500
+Received: by mail-pf1-f193.google.com with SMTP id z16so27373762pfk.0;
+        Mon, 06 Jan 2020 10:59:04 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=6Di6ffajBH2cZR+pVdW7IOpKkZDUHrowT9et6cWo7uY=;
-        b=L8gc2XfmZbBDtaLDePZyXvUltjzM6ScSH0/znKIKaMCtMCibv+eO04IaTmDlBTGhbT
-         1rWQ6Vxtd+o4e39T+uUEzmVcl6tC6lTKZECYTG3ADyckeJ2TKRJsyelTSAZPGKez8D1u
-         m9AV1p7UxTh7bcRIN24V638UW6qgwex5yhHpV1oBPHLuyL16FphzTKID3dnJ402mwY7T
-         fNA+T9uDhZOQbhiwhChgDX/xjmgG4zPj25Gy6KRmUXp8XXJJSewwhBEmcXUuqTv8EAue
-         UdDLrzLHpxFMpL4MJqK4cUngKwqznMSJAKFLCIvYGaknkBlUacMMgm2Nm416NF7SRbZg
-         mAYA==
+        h=from:to:cc:subject:date:message-id;
+        bh=yuKcwd4KrNa9rtLutSuAmTGJfnwaF6J8Fm5oKI6kNYg=;
+        b=NhUlkwXWHDnT9Ee7YQzIdS0l0yN0Fp51RP1Wyujpo2gEw1HQoIlY/cB7Iumgap0XEf
+         GSD8q0anWELFYMXuTSPSvkn5qxwU7w0P9wzoW6gpGRBG3WwRcRr7n9stsrvnGD4wlSo1
+         PMlRCC41B9LCal4obGprJDYT6l9ymqmRLnIX4nF+xiCGASQj+VKJRMCRKkYVBmAyVwNJ
+         E2tSqVhcMVYYvfnTDCpcoFKjI+cO7G4vJ0aQVlvMquyFkVjGKHWLxg9yr22PZTQ26vTs
+         Y7nGLNhBKNR+L82yLboyAirUQqD9EQ8/FsUqsrS0jkfrp8eUxsqqX6yWoUfW002VSFDk
+         K5VQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=6Di6ffajBH2cZR+pVdW7IOpKkZDUHrowT9et6cWo7uY=;
-        b=KdJeOx5DrqPUqLUxPDZ+PuHUYCQb5BI06oXxlCvW3W6w+S5CdK5C7N8y2cPV7YWQHi
-         At8MJloPi5c4AOymZNvhfczlZfQDy7Wx4Epo9YuHrQngrBZG6LUI+uGpiEUFgiobgfNE
-         NtI74WnumVRduhCWLfd9HV2mJ3aCpPwgfgbH94HMknLkmWWP1e5gNgbE0psGu3JiRMuq
-         Z3/puamYjPSR/DcbTBZTfsEJJa7sepr85u7SkMIfOP8olda+auJLtcj6NTrbgJePnf+5
-         lNyYivrdALsHDxPBTG/HOtKegJ7JkcZsvmAjcCL3Df0iiPUDmAcdXriw4EYYqzZl4nYh
-         cNIg==
-X-Gm-Message-State: APjAAAUkPoiLiQysULbUH1dNYdsnIenU2B2ZnfVyh3NnhxZ+g69RuUcp
-        /dIDmlvx7uD9UDa7kvTPlgJwS+yIM+jNJ4Gf2Zz023RG
-X-Google-Smtp-Source: APXvYqyK5B13r8HZFUhRRLwCjL031uyNVHRJy14fnkwQW+NME79KYnHpYoaVPSOY+KwNL7GKReAVKzghVs3O6n2eRC8=
-X-Received: by 2002:a02:c90a:: with SMTP id t10mr77309211jao.25.1578311720271;
- Mon, 06 Jan 2020 03:55:20 -0800 (PST)
-MIME-Version: 1.0
-From:   Prabhakar Kushwaha <prabhakar.pkin@gmail.com>
-Date:   Mon, 6 Jan 2020 17:24:44 +0530
-Message-ID: <CAJ2QiJ+MVVztHONagmYc2-BzbtdGQhABRKO7h4+kOE9cCK=CxA@mail.gmail.com>
-Subject: kexec -e not working: root disk not able to detect
-To:     linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
-        Ganapatrao Prabhakerrao Kulkarni <gkulkarni@marvell.com>,
-        Kamlakant Patel <kamlakantp@marvell.com>,
-        kexec mailing list <kexec@lists.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=yuKcwd4KrNa9rtLutSuAmTGJfnwaF6J8Fm5oKI6kNYg=;
+        b=cvGG1gix/eF5z5pSwctsRSih3wsno2TcI2VIP5Ka0V6GoThpVk16B4vqIRvVcHHAW5
+         eKbxXiiIpc0UC6qWNe9HXlxhy9rxg/NggOFpQ4GbCCwUyaFgTwkjR6RYLHEOHM1y9LhN
+         tQVOMPughnwwPy85z8YgztWODXsY5G5kfsewW9Zn+qOdSOrEiFE0NVwJDSkxUOU3QHrL
+         cViNMs9Nsw8S0Mmy44T/uqCPAm4iO0mzgfjCN3bas/UEZyXLhA++iyMhnZ1Od2yUISFU
+         eHig7Mm8wj+fCSEWRZySBg+/QVanmvr8mcSt/8Coj5WikgWPLYIXU1r3yS6Ll4kY8vn4
+         w0eg==
+X-Gm-Message-State: APjAAAU1NM4LsoqZTWVxKEojDUtV5TVQ1xgsJBNc/kG1PN6TKCsejs51
+        YVjJqtpHuHRPTZDJTg7rQB3Ah43B
+X-Google-Smtp-Source: APXvYqyM0Vkr6F4WPszfaw/wRE7e0DfBFVIslFFUeCauxUMZXaEM3yfKutPJb5NJe5yX3K3YUFGCfg==
+X-Received: by 2002:a65:4142:: with SMTP id x2mr109431013pgp.393.1578337143645;
+        Mon, 06 Jan 2020 10:59:03 -0800 (PST)
+Received: from fainelli-desktop.igp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id 18sm71758718pfj.3.2020.01.06.10.59.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 06 Jan 2020 10:59:03 -0800 (PST)
+From:   Florian Fainelli <f.fainelli@gmail.com>
+To:     linux-kernel@vger.kernel.org
+Cc:     Florian Fainelli <f.fainelli@gmail.com>,
+        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Tejun Heo <tj@kernel.org>, Jaedon Shin <jaedon.shin@gmail.com>,
+        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
+        Parallel ATA drivers)),
+        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
+        DEVICE TREE BINDINGS)
+Subject: [PATCH 0/2] ata: ahci_brcm: Follow-up changes for BCM7216
+Date:   Mon,  6 Jan 2020 10:58:55 -0800
+Message-Id: <20200106185857.11128-1-f.fainelli@gmail.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi All,
+Hi Jens,
 
-I am trying kexec -e with latest kernel i.e. Linux-5.5.0-rc4.  Here
-second kernel is not able to detect/mount hard-disk having root file
-system (INTEL SSDSC2BB240G7).
+These two patches are a follow-up to my previous series titled: ata:
+ahci_brcm: Fixes and new device support.
 
-[  279.690575] ata1: softreset failed (1st FIS failed)
-[  279.695446] ata1: limiting SATA link speed to 3.0 Gbps
-[  280.910020] ata1: SATA link down (SStatus 0 SControl 320)
-[  282.626018] ata1: SATA link down (SStatus 0 SControl 300)
-[  282.631409] ata1: link online but 1 devices misclassified, retrying
-[  282.637665] ata1: reset failed (errno=-11), retrying in 9 secs
-[  298.294546] ata1: failed to reset engine (errno=-5)
-[  302.042967] ata1: softreset failed (1st FIS failed)
-[  308.798609] ata1: failed to reset engine (errno=-5)
-[  337.546605] ata1: softreset failed (1st FIS failed)
-[  337.551475] ata1: limiting SATA link speed to 3.0 Gbps
-[  338.766022] ata1: SATA link down (SStatus 0 SControl 320)
-[  339.270943] ata1: EH pending after 5 tries, giving up
+After submitting the BCM7216 RESCAL reset driver, Philipp the reset
+controller maintained indicated that the reset line should be self
+de-asserting and so reset_control_reset() should be used instead.
 
-I found following two workaround for this issue.
-A) Define ".shutdown" in driver/ata/ahci.c.
+These two patches update the driver in that regard. It would be great if
+you could apply those and get them queued up for 5.6 since they are
+directly related to the previous series.
 
-reboot --> kernel_kexec() --> kernel_restart_prepare() -->
-device_shutdown() --> pci_device_shutdown() --> ahci_shutdown_one()
---> new function
+Thanks!
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 4bfd1b14b390..50a101002885 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -81,6 +81,7 @@ enum board_ids {
+Florian Fainelli (2):
+  ata: ahci_brcm: Perform reset after obtaining resources
+  ata: ahci_brcm: BCM7216 reset is self de-asserting
 
- static int ahci_init_one(struct pci_dev *pdev, const struct
-pci_device_id *ent);
- static void ahci_remove_one(struct pci_dev *dev);
- +static void ahci_shutdown_one(struct pci_dev *dev);
- static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
-                                  unsigned long deadline);
-  static int ahci_avn_hardreset(struct ata_link *link, unsigned int *class,
- @@ -606,6 +607,7 @@ static struct pci_driver ahci_pci_driver = {
-         .id_table               = ahci_pci_tbl,
-         .probe                  = ahci_init_one,
-         .remove                 = ahci_remove_one,
- +       .shutdown               = ahci_shutdown_one,
-         .driver = {
-                 .pm             = &ahci_pci_pm_ops,
-         },
+ drivers/ata/ahci_brcm.c | 20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
 
- +static void ahci_shutdown_one(struct pci_dev *pdev)
- +{
- +       pm_runtime_get_noresume(&pdev->dev);
- +       ata_pci_remove_one(pdev);
- +}
- +
-Note: After defining shutdown, error related to file-system write
-seen. Looks like even after device_shutdown, file system related
-transaction goes to disk.
+-- 
+2.17.1
 
-B)) Commenting of pci_clear_master() from pci_device_shutdown()
-reboot --> kernel_kexec() --> kernel_restart_prepare() -->
-device_shutdown() --> pci_device_shutdown()
-
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 0454ca0e4e3f..ddffaa9321bb 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -481,8 +481,10 @@ static void pci_device_shutdown(struct device *dev)
-        /*
-         * If this is a kexec reboot, turn off Bus Master bit on the
-@@ -491,8 +493,16 @@ static void pci_device_shutdown(struct device *dev)
-         * If it is not a kexec reboot, firmware will hit the PCI
-         * devices with big hammer and stop their DMA any way.
-         */
-
- - if (kexec_in_progress && (pci_dev->current_state <= PCI_D3hot))
- -                pci_clear_master(pci_dev);
-
-Here pci_dev current_state. It is "0" i.e. D0.
-
-From A and B. Looks like even after pci_clear_master(), Some DMA
-transactions going on PCIe device  causing device in unstable.
-Not sure if this is the reason and how to solve this problem.
-
-Any help/guidance will help me in moving forward.
-
-Thanks!!
-
---prabhakar (pk)
