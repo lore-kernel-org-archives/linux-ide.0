@@ -2,67 +2,69 @@ Return-Path: <SRS0=18Rx=24=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 868D2C282DD
-	for <linux-ide@archiver.kernel.org>; Tue,  7 Jan 2020 22:51:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5423EC282DD
+	for <linux-ide@archiver.kernel.org>; Tue,  7 Jan 2020 22:53:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 468DA2072A
-	for <linux-ide@archiver.kernel.org>; Tue,  7 Jan 2020 22:51:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17F7C2072A
+	for <linux-ide@archiver.kernel.org>; Tue,  7 Jan 2020 22:53:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hm7aDjVv"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="huOQleIp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727435AbgAGWvq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 7 Jan 2020 17:51:46 -0500
-Received: from mail-ed1-f65.google.com ([209.85.208.65]:38402 "EHLO
-        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727174AbgAGWvp (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jan 2020 17:51:45 -0500
-Received: by mail-ed1-f65.google.com with SMTP id i16so985647edr.5;
-        Tue, 07 Jan 2020 14:51:43 -0800 (PST)
+        id S1727077AbgAGWxC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 7 Jan 2020 17:53:02 -0500
+Received: from mail-ed1-f67.google.com ([209.85.208.67]:35951 "EHLO
+        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727046AbgAGWxC (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jan 2020 17:53:02 -0500
+Received: by mail-ed1-f67.google.com with SMTP id j17so1009425edp.3;
+        Tue, 07 Jan 2020 14:53:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:to:cc:references:from:autocrypt:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=hVdFgOLC38/sGgu0lHA+eIgOMdEzeUbw2xdw0Xi40vA=;
-        b=hm7aDjVvkZIA2/5nIcma7Cv39IWyUtHPVN7P3auywbS6R4eLG84XIDCfBvRENzI/gx
-         3lypI3Ajby9Z+tQDvVcWT3H6w59oyHou0DL53DwmPR6QscLDXiTN8A6FB441mJBUqDdW
-         X0JbzcyOU+HHsWnPghP0odDOg1hcA2kww5Sgi6FVeWHAUjCaRfSefFTFOsCEli4FvgHJ
-         prSprkQtGKqVCuBo7X9K9c/+RmdW06Im536/bVc6Lz3hGnHdqHU6RaGEq+3JmRQ5Hhjf
-         S6Sy8qpZhlO4KrJx8S5pSMkYDg/4jhlJnzlRQw01AeBCb7sKUhdLVOEcb8tgn6gpkq6n
-         XRMQ==
+        bh=bLf9MRl/zEuO2K43L/4HQmzn+iRdGQ6WkPQMnmdAgZQ=;
+        b=huOQleIphTNE+eVRD2OVId9XW6a481/O+guS/D/Gpe5wkIMOHVEi+U+1Xi+OM+tnKa
+         AjaRBXED1HtnGGhLVrssRptfjilpnG7Ib/q7pqQ8c6B/Oal+NN9s/K1gDUkZghBCaLXv
+         4ykWVuLnnHYvdS98qCjqn4+hH6IvW+JQCxl/kWIrirPKczlECiIrMIGXAiPUXFIZpqGu
+         py6XD0W7zpIig3Gm4RmDZql1zIpIctnhOZSsR1+8WmDCFwtPVyqAQENiEkqFHnfrPaVF
+         ssmvIfKFM501PvaX+WBUbzyy28mkN2el/zJJO/5S52P7Jk02UQqb+XeSr/JqwqydCtyA
+         P1vw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:autocrypt
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=hVdFgOLC38/sGgu0lHA+eIgOMdEzeUbw2xdw0Xi40vA=;
-        b=YCplHGgnrTdaLIG83/EN8xXv37Hqk46RMPNZmQagPqeLyhgSG117DT3+/rXJVY7tcH
-         5iYsBl3pcL5bF8tISMU+AkISbjbZEpjM8QotCP9o7YXKlozoI0ubV251g/HxZzXgMUcU
-         FjpCYfjjDHU4+/ykghUMVWrPBoyXURkTzmWybltSRetZS3JcYH7KF/JuSaVr5LuTYCqi
-         +PMq9SCEcewWyzaa3XjVAujeJNAoWm6DZznvzY30YuyB+nOpQiIHiG9RTam2CDH0Ou4F
-         ULGILV+Mq1ww4i5WQJNq9/sc8nVtYp/HA7YsRUKdF5dx3yyMrIXa1OacLTBja5bh9UQs
-         2obw==
-X-Gm-Message-State: APjAAAXaZHWQ1efTDb8TT12X9r/lxpftEo7h0tVB/X7QinGjfnrg+4Hi
-        iqicwK2h9LOh1UMgXhV92gEAvyMI
-X-Google-Smtp-Source: APXvYqy2uq0Aw+G9akM1wx20PwcbVvt8eHZrYLz2fhOeykzfbOv5/dVbsF25ZYk7qEDAX/ZzWnCeFw==
-X-Received: by 2002:a50:fb02:: with SMTP id d2mr2406160edq.270.1578437502930;
-        Tue, 07 Jan 2020 14:51:42 -0800 (PST)
+        bh=bLf9MRl/zEuO2K43L/4HQmzn+iRdGQ6WkPQMnmdAgZQ=;
+        b=M0tnHwFlVu+sJ5cvs2OgphfCTTyG4aj8vsJvKCd53s9g8iJ2v21Rpij2owSxHM+MOz
+         BqH6dMJ87Fm5/uaW2/zRQlEbyabs+/ke6oeDbONaAx84IOXZbWP1kQAwFun5sq9lDqd1
+         4N+lgxOAk+qYlUcV8BI3gmyV8HWgYeqwnHrYG7TfwDRUADsUbCQI6qDwIeerN56Ul8kd
+         tY4IbABoRBvj3uz3y+nv/aywHSQofAPfLtEBvR+abZAq25mu54xpXm+cMKJDP6xGF8YV
+         f/c8vQijutD8DrNzrqnqoCJA8VGgD69fTFQ2y/w6njrjeaSyb3TdbGDm/9Zk3gbsGnt2
+         IFTg==
+X-Gm-Message-State: APjAAAU5KM14KMnCqDxZNbuuWHW/KxqV80t+NrPdsI7qDTcnLNuGeRLZ
+        4XKjBaDytnLxF+xMFKc7ZT0t8mu3
+X-Google-Smtp-Source: APXvYqwD+m+tE9hNINU7r7t60XQOD/JnvvTaW1ZjdRq09KOiAvETtwFYY24f0+mqZzmGWOnVu8VbvA==
+X-Received: by 2002:aa7:dc48:: with SMTP id g8mr2368186edu.208.1578437579709;
+        Tue, 07 Jan 2020 14:52:59 -0800 (PST)
 Received: from [10.67.50.41] ([192.19.223.252])
-        by smtp.googlemail.com with ESMTPSA id n10sm22276ejc.58.2020.01.07.14.51.40
+        by smtp.googlemail.com with ESMTPSA id md13sm24104ejb.85.2020.01.07.14.52.57
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 07 Jan 2020 14:51:42 -0800 (PST)
-Subject: Re: [PATCH 1/2] ata: brcm: mark PM functions as __maybe_unused
+        Tue, 07 Jan 2020 14:52:59 -0800 (PST)
+Subject: Re: [PATCH 2/2] ata: brcm: fix reset controller API usage
 To:     Arnd Bergmann <arnd@arndb.de>, Jens Axboe <axboe@kernel.dk>,
-        Hans de Goede <hdegoede@redhat.com>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Philipp Zabel <p.zabel@pengutronix.de>
+Cc:     Hans de Goede <hdegoede@redhat.com>,
+        Allison Randal <allison@lohutok.net>,
         Thomas Gleixner <tglx@linutronix.de>,
         linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20200107221506.2731280-1-arnd@arndb.de>
+ <20200107221506.2731280-2-arnd@arndb.de>
 From:   Florian Fainelli <f.fainelli@gmail.com>
 Autocrypt: addr=f.fainelli@gmail.com; prefer-encrypt=mutual; keydata=
  xsDiBEjPuBIRBACW9MxSJU9fvEOCTnRNqG/13rAGsj+vJqontvoDSNxRgmafP8d3nesnqPyR
@@ -118,12 +120,12 @@ Autocrypt: addr=f.fainelli@gmail.com; prefer-encrypt=mutual; keydata=
  HvsHIcv4lxCWkFXkwsuWqzEKK6kxVpRDoEQPDj+Oy/ZJ5fYuMbkdHrlegwoQ64LrqdmiVVPC
  TwQYEQIADwIbDAUCVF/S8QUJHlwd3wAKCRBhV5kVtWN2Do+FAJ956xSz2XpDHql+Wg/2qv3b
  G10n8gCguORqNGMsVRxrlLs7/himep7MrCc=
-Message-ID: <3291c8d7-8fa1-3f8a-6ca0-cbd556dc3799@gmail.com>
-Date:   Tue, 7 Jan 2020 14:51:39 -0800
+Message-ID: <6fb53662-ebdb-55de-c470-0aa1c447bbd0@gmail.com>
+Date:   Tue, 7 Jan 2020 14:52:56 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.2.2
 MIME-Version: 1.0
-In-Reply-To: <20200107221506.2731280-1-arnd@arndb.de>
+In-Reply-To: <20200107221506.2731280-2-arnd@arndb.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -132,22 +134,78 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/7/20 2:14 PM, Arnd Bergmann wrote:
-> The new shutdown callback causes a link failure:
+On 1/7/20 2:15 PM, Arnd Bergmann wrote:
+> While fixing another issue in this driver I noticed it uses
+> IS_ERR_OR_NULL(), which is almost always a mistake.
 > 
-> drivers/ata/ahci_brcm.c: In function 'brcm_ahci_shutdown':
-> drivers/ata/ahci_brcm.c:552:8: error: implicit declaration of function 'brcm_ahci_suspend'; did you mean 'brcm_ahci_shutdown'? [-Werror=implicit-function-declaration]
->   ret = brcm_ahci_suspend(&pdev->dev);
->         ^~~~~~~~~~~~~~~~~
+> Change the driver to use the proper devm_reset_control_get_optional()
+> interface instead and remove the checks except for the one that
+> checks for a failure in that function.
 > 
-> Remove the incorrect #ifdef and use __maybe_unused annotations
-> instead to make this more robust.
-> 
-> Fixes: 7de9b1688c1d ("ata: ahci_brcm: Add a shutdown callback")
+> Fixes: 2b2c47d9e1fe ("ata: ahci_brcm: Allow optional reset controller to be used")
 > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Acked-by: Florian Fainelli <f.fainelli@gmail.com>
+This is nearly equivalent to:
 
-good catch, thanks!
+https://lore.kernel.org/lkml/20200107183022.26224-2-f.fainelli@gmail.com/
+
+which was just submitted this morning. Thanks!
+
+> ---
+>  drivers/ata/ahci_brcm.c | 17 ++++++++---------
+>  1 file changed, 8 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+> index 239333d11b88..7ac1141c6ad0 100644
+> --- a/drivers/ata/ahci_brcm.c
+> +++ b/drivers/ata/ahci_brcm.c
+> @@ -352,8 +352,7 @@ static int brcm_ahci_suspend(struct device *dev)
+>  	else
+>  		ret = 0;
+>  
+> -	if (!IS_ERR_OR_NULL(priv->rcdev))
+> -		reset_control_assert(priv->rcdev);
+> +	reset_control_assert(priv->rcdev);
+>  
+>  	return ret;
+>  }
+> @@ -365,8 +364,7 @@ static int __maybe_unused brcm_ahci_resume(struct device *dev)
+>  	struct brcm_ahci_priv *priv = hpriv->plat_data;
+>  	int ret = 0;
+>  
+> -	if (!IS_ERR_OR_NULL(priv->rcdev))
+> -		ret = reset_control_deassert(priv->rcdev);
+> +	ret = reset_control_deassert(priv->rcdev);
+>  	if (ret)
+>  		return ret;
+>  
+> @@ -454,9 +452,11 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+>  	else
+>  		reset_name = "ahci";
+>  
+> -	priv->rcdev = devm_reset_control_get(&pdev->dev, reset_name);
+> -	if (!IS_ERR_OR_NULL(priv->rcdev))
+> -		reset_control_deassert(priv->rcdev);
+> +	priv->rcdev = devm_reset_control_get_optional(&pdev->dev, reset_name);
+> +	if (IS_ERR(priv->rcdev))
+> +		return PTR_ERR(priv->rcdev);
+> +
+> +	reset_control_deassert(priv->rcdev);
+>  
+>  	hpriv = ahci_platform_get_resources(pdev, 0);
+>  	if (IS_ERR(hpriv)) {
+> @@ -520,8 +520,7 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+>  out_disable_clks:
+>  	ahci_platform_disable_clks(hpriv);
+>  out_reset:
+> -	if (!IS_ERR_OR_NULL(priv->rcdev))
+> -		reset_control_assert(priv->rcdev);
+> +	reset_control_assert(priv->rcdev);
+>  	return ret;
+>  }
+>  
+> 
+
+
 -- 
 Florian
