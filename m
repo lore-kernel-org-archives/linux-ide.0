@@ -2,149 +2,202 @@ Return-Path: <SRS0=qZXL=26=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DFE3C32771
-	for <linux-ide@archiver.kernel.org>; Thu,  9 Jan 2020 09:56:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD3E3C33CA4
+	for <linux-ide@archiver.kernel.org>; Thu,  9 Jan 2020 10:19:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2861220673
-	for <linux-ide@archiver.kernel.org>; Thu,  9 Jan 2020 09:56:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3517206ED
+	for <linux-ide@archiver.kernel.org>; Thu,  9 Jan 2020 10:19:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="o3iFruUp"
+	dkim=pass (2048-bit key) header.d=owltronix-com.20150623.gappssmtp.com header.i=@owltronix-com.20150623.gappssmtp.com header.b="uYzxlv0M"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729750AbgAIJ4C (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 9 Jan 2020 04:56:02 -0500
-Received: from lelv0142.ext.ti.com ([198.47.23.249]:49880 "EHLO
-        lelv0142.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729831AbgAIJ4C (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Jan 2020 04:56:02 -0500
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 0099tkHV091457;
-        Thu, 9 Jan 2020 03:55:46 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-        s=ti-com-17Q1; t=1578563746;
-        bh=57suhMCFB8+YbjQP7Y/XHgAE605fSx1517RzPpUYq4I=;
-        h=Subject:To:CC:References:From:Date:In-Reply-To;
-        b=o3iFruUpSNapR9mFETDlc//SjIUW3ElYpWkWxpamXjh1YDO+tTeelXV+/PH3fUdao
-         Yp5Tv7ZClB1Jbku48lCiLk+y9vL3KCXV+L14GpB+kaSGSs0lhzvTR2ae6rHJW/dEPL
-         9eyFFfillTY1KsEF9azoAB8MQaQxVijURqiGXEqA=
-Received: from DLEE113.ent.ti.com (dlee113.ent.ti.com [157.170.170.24])
-        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 0099tkGB004550
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Thu, 9 Jan 2020 03:55:46 -0600
-Received: from DLEE114.ent.ti.com (157.170.170.25) by DLEE113.ent.ti.com
- (157.170.170.24) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Thu, 9 Jan
- 2020 03:55:46 -0600
-Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE114.ent.ti.com
- (157.170.170.25) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
- Frontend Transport; Thu, 9 Jan 2020 03:55:45 -0600
-Received: from [10.24.69.159] (ileax41-snat.itg.ti.com [10.172.224.153])
-        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 0099tg5W116934;
-        Thu, 9 Jan 2020 03:55:43 -0600
-Subject: Re: ata: sunxi: Regression due to 5253fe05bb47 ("phy: core: Add
- consumer device link support")
-To:     Corentin Labbe <clabbe.montjoie@gmail.com>,
-        <alexandre.torgue@st.com>, <mripard@kernel.org>, <wens@csie.org>,
-        <lgirdwood@gmail.com>, <broonie@kernel.org>, <axboe@kernel.dk>
-CC:     <linux-ide@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <linux-sunxi@googlegroups.com>
-References: <20200109095403.GA26453@Red>
-From:   Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <f79dbcea-ea69-3687-1a2a-6d396cda4113@ti.com>
-Date:   Thu, 9 Jan 2020 15:27:49 +0530
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.0
+        id S1729181AbgAIKTj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 9 Jan 2020 05:19:39 -0500
+Received: from mail-lf1-f66.google.com ([209.85.167.66]:46723 "EHLO
+        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729085AbgAIKTj (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Jan 2020 05:19:39 -0500
+Received: by mail-lf1-f66.google.com with SMTP id f15so4758710lfl.13
+        for <linux-ide@vger.kernel.org>; Thu, 09 Jan 2020 02:19:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=owltronix-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=yc4QpQbWMkHB15aVjvX5Uf8UyPL+iSSMmYHHhc2yIwo=;
+        b=uYzxlv0MH3lWrOqNXTAMC4nSdMn9kXVD7TITYZVX48fhAILr+2N98aficvb6pw7P8p
+         0gxJxLCckWdMKiUatQOJ0Nh5o8Xp7tu7YWcluC8wIQj7ZAa7FvXvMolQGh0gMSGueuh6
+         oAbECXOL8iUN6kDN+PdXcAstydIMeZCq+cmGmT6MLgXss5c8N0Rgz689E6tMxquB/HoK
+         m/NGGSky1xcDkq+0suKtbTwkebL2+gjO51iEwBBnMoV5ZHhAKdD/pkK+M8IBEwJM5UGe
+         P11aPxWK1Di+Y9gCax0lRgRyMwlj52m8QVGfQM9Eh59vwTjDUaR1/LCLBqMJoDlIO3p+
+         nNtw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=yc4QpQbWMkHB15aVjvX5Uf8UyPL+iSSMmYHHhc2yIwo=;
+        b=hgZ8zKub6NZdebFNrr4tLU8a2/nCQy8lEvvJO6LdLD8msKWFAodpoO1vK154/5NW8E
+         y76LfjD+ycv+UEJjN1yStA/HRs4mZ4MoRu9ckeMDqlYuVibjPOrjMa1JwRrdmpQqEpus
+         jW33OeBQrA/oszqDr+5Jl9RWBUuut+B+dyNyDNZn0KOIDvlKyTdWX2ChMbLsuvRa/u+z
+         fPs3TAPxj1tywunxnPBOpwLrlNL7p/N8cm/rZ4RciB6xFKH3gS+UcDWRP1ENg1NQsSK+
+         eWdaKX1QnFmgQsnYPIwl9yM/ny+vHkTzSmntaEX5X7+l+jKfq7xCXibtShhxAxJzdqFl
+         wJIQ==
+X-Gm-Message-State: APjAAAVAQ5yxxsv5j0b2bHSJqyJz80tHAGIBwnYGcvF3dT+/6SSBKnsc
+        Zq+97HT4m/l+FTKoAePixFv4ze4C+59GfPIwjyWY5w==
+X-Google-Smtp-Source: APXvYqxmGTVUfoDgWWWDW+R4ESIx2uJCdDcI1Lqi+Tz0MO4cyGhe0CQU0VdfHQ5e1HYKYj1OvVtzWjMUcdBgFrHWbCU=
+X-Received: by 2002:a19:850a:: with SMTP id h10mr5795499lfd.89.1578565176867;
+ Thu, 09 Jan 2020 02:19:36 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20200109095403.GA26453@Red>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+References: <BYAPR04MB5749B4DC50C43EE845A04612865A0@BYAPR04MB5749.namprd04.prod.outlook.com>
+ <BYAPR04MB5749EDD9E5928E769413B38086520@BYAPR04MB5749.namprd04.prod.outlook.com>
+In-Reply-To: <BYAPR04MB5749EDD9E5928E769413B38086520@BYAPR04MB5749.namprd04.prod.outlook.com>
+From:   Hans Holmberg <hans@owltronix.com>
+Date:   Thu, 9 Jan 2020 11:19:25 +0100
+Message-ID: <CANr-nt0=C+1v=1MU6eNhX0-X4CEvc7D2UEF02oRMNHraQ1FRow@mail.gmail.com>
+Subject: Re: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: add blktrace
+ extension support
+To:     Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
+Cc:     "lsf-pc@lists.linux-foundation.org" 
+        <lsf-pc@lists.linux-foundation.org>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.de>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Omar Sandoval <osandov@fb.com>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>,
+        Keith Busch <kbusch@kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        Matias Bjorling <Matias.Bjorling@wdc.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-btrace@vger.kernel.org" <linux-btrace@vger.kernel.org>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi,
+On Thu, Dec 19, 2019 at 6:50 AM Chaitanya Kulkarni
+<Chaitanya.Kulkarni@wdc.com> wrote:
+>
+> Adding Damien to this thread.
+> On 12/10/2019 10:17 PM, Chaitanya Kulkarni wrote:
+> > Hi,
+> >
+> > * Background:-
+> > -----------------------------------------------------------------------
+> >
+> > Linux Kernel Block layer now supports new Zone Management operations
+> > (REQ_OP_ZONE_[OPEN/CLOSE/FINISH] [1]).
+> >
+> > These operations are added mainly to support NVMe Zoned Namespces
+> > (ZNS) [2]. We are adding support for ZNS in Linux Kernel Block layer,
+> > user-space tools (sys-utils/nvme-cli), NVMe driver, File Systems,
+> > Device-mapper in order to support these devices in the field.
+> >
+> > Over the years Linux kernel block layer tracing infrastructure
+> > has proven to be not only extremely useful but essential for:-
+> >
+> > 1. Debugging the problems in the development of kernel block drivers.
+> > 2. Solving the issues at the customer sites.
+> > 3. Speeding up the development for the file system developers.
+> > 4. Finding the device-related issues on the fly without modifying
+> >      the kernel.
+> > 5. Building white box test-cases around the complex areas in the
+> >      linux-block layer.
+> >
+> > * Problem with block layer tracing infrastructure:-
+> > -----------------------------------------------------------------------
+> >
+> > If blktrace is such a great tool why we need this session for ?
+> >
+> > Existing blktrace infrastructure lacks the number of free bits that are
+> > available to track the new trace category. With the addition of new
+> > REQ_OP_ZONE_XXX we need more bits to expand the blktrace so that we can
+> > track more number of requests.
 
-On 09/01/20 3:24 PM, Corentin Labbe wrote:
-> Hello
-> 
-> On next-20200108 (at least), the sunxi_ahci fail to probe with:
->     3.025955] 8<--- cut here ---
-> [    3.029012] Unable to handle kernel NULL pointer dereference at virtual address 00000071
-> [    3.037115] pgd = (ptrval)
-> [    3.039819] [00000071] *pgd=00000000
-> [    3.043408] Internal error: Oops: 5 [#1] SMP ARM
-> [    3.048019] Modules linked in:
-> [    3.051078] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 5.5.0-rc1-00004-g5253fe05bb47 #24
-> [    3.059067] Hardware name: Allwinner sun7i (A20) Family
-> [    3.064297] PC is at device_link_add+0x68/0x4c8
-> [    3.068824] LR is at device_link_add+0x68/0x4c8
-> [    3.073348] pc : [<c04783ac>]    lr : [<c04783ac>]    psr: 60000013
-> [    3.079605] sp : ef04dd68  ip : 60000013  fp : 00000007
-> [    3.084822] r10: 00000000  r9 : eea8a740  r8 : ef0a5c10
-> [    3.090039] r7 : ef0a5c10  r6 : ffffffed  r5 : 00000001  r4 : 00000001
-> [    3.096556] r3 : ef060000  r2 : 00000000  r1 : 00000000  r0 : c0a4e588
-> [    3.103076] Flags: nZCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment none
-> [    3.110201] Control: 10c5387d  Table: 4000406a  DAC: 00000051
-> [    3.115937] Process swapper/0 (pid: 1, stack limit = 0x(ptrval))
-> [    3.121936] Stack: (0xef04dd68 to 0xef04e000)
-> [    3.126292] dd60:                   000005e4 c02141e4 ef7bf970 ffffffed ef0a5c10 eea8a7c0
-> [    3.134461] dd80: 00000000 ef0a5c10 eea8a740 00000000 00000007 c03acaec 00000000 ee8a3700
-> [    3.142630] dda0: ef7bf970 ee8a3700 ef0a5c10 c04d2804 ef04c000 ef0a5c10 ef0a5c00 ee8a3700
-> [    3.150799] ddc0: 00000000 00000000 00000000 c04d2e20 00000001 c029b2bc c0a4f9fc 00000000
-> [    3.158969] dde0: ef0b3630 c029aec8 00000000 5aef773a eea8c478 ef0a5c10 00000000 ef0a5c00
-> [    3.167138] de00: 00000000 00000000 c0a4f9fc 00000000 00000007 c04cedfc ef0a5c10 00000000
-> [    3.175307] de20: c0a4f9fc c047d6b8 c0aa51dc ef0a5c10 c0aa51e0 00000000 00000000 c047b894
-> [    3.183476] de40: ef0a5c10 c0a4f9fc c0a4f9fc c047be38 c093d834 c09004a8 000000d8 c047bb84
-> [    3.191646] de60: 000000d8 c05a37c0 c0760330 ef0a5c10 00000000 c0a4f9fc c047be38 c093d834
-> [    3.199815] de80: c09004a8 000000d8 00000007 c047be30 00000000 c0a4f9fc ef0a5c10 c047be90
-> [    3.207984] dea0: ef0fc634 ef04c000 c0a4f9fc c0479c68 c09004a8 ef01e458 ef0fc634 5aef773a
-> [    3.216152] dec0: c0a4df18 c0a4f9fc eea8a300 c0a4df18 00000000 c047acb0 c083ac48 c0aa5870
-> [    3.224321] dee0: c0a4f9fc c0a4f9fc c091eff4 00000000 ffffe000 c047c6fc c0a6fc40 c091eff4
-> [    3.232491] df00: 00000000 c01026e8 effffe6e c013c488 00000000 c08b9d00 c0845f90 00000000
-> [    3.240660] df20: 00000006 00000006 c07ff574 00000000 c0809bd8 c07ff5e8 00000000 effffe67
-> [    3.248829] df40: effffe6a 5aef773a 00000000 00000006 c0a6fc40 5aef773a c093d850 c0952220
-> [    3.256998] df60: c0a6fc40 c0a6fc40 c093d854 c0900ed0 00000006 00000006 00000000 c09004a8
-> [    3.265167] df80: 00000000 00000000 c06f7a9c 00000000 00000000 00000000 00000000 00000000
-> [    3.273335] dfa0: 00000000 c06f7aa4 00000000 c01010e8 00000000 00000000 00000000 00000000
-> [    3.281504] dfc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-> [    3.289672] dfe0: 00000000 00000000 00000000 00000000 00000013 00000000 00000000 00000000
-> [    3.297858] [<c04783ac>] (device_link_add) from [<c03acaec>] (devm_of_phy_get+0x64/0xb0)
-> [    3.305947] [<c03acaec>] (devm_of_phy_get) from [<c04d2804>] (ahci_platform_get_phy+0x28/0xd0)
-> [    3.314552] [<c04d2804>] (ahci_platform_get_phy) from [<c04d2e20>] (ahci_platform_get_resources+0x234/0x448)
-> [    3.324372] [<c04d2e20>] (ahci_platform_get_resources) from [<c04cedfc>] (ahci_sunxi_probe+0x10/0xa8)
-> [    3.333585] [<c04cedfc>] (ahci_sunxi_probe) from [<c047d6b8>] (platform_drv_probe+0x48/0x98)
-> [    3.342017] [<c047d6b8>] (platform_drv_probe) from [<c047b894>] (really_probe+0x1e0/0x348)
-> [    3.350267] [<c047b894>] (really_probe) from [<c047bb84>] (driver_probe_device+0x60/0x16c)
-> [    3.358525] [<c047bb84>] (driver_probe_device) from [<c047be30>] (device_driver_attach+0x58/0x60)
-> [    3.367390] [<c047be30>] (device_driver_attach) from [<c047be90>] (__driver_attach+0x58/0xcc)
-> [    3.375908] [<c047be90>] (__driver_attach) from [<c0479c68>] (bus_for_each_dev+0x78/0xb8)
-> [    3.384080] [<c0479c68>] (bus_for_each_dev) from [<c047acb0>] (bus_add_driver+0x1b4/0x1d4)
-> [    3.392337] [<c047acb0>] (bus_add_driver) from [<c047c6fc>] (driver_register+0x74/0x108)
-> [    3.400423] [<c047c6fc>] (driver_register) from [<c01026e8>] (do_one_initcall+0x78/0x1d4)
-> [    3.408598] [<c01026e8>] (do_one_initcall) from [<c0900ed0>] (kernel_init_freeable+0x138/0x1d4)
-> [    3.417291] [<c0900ed0>] (kernel_init_freeable) from [<c06f7aa4>] (kernel_init+0x8/0x110)
-> [    3.425462] [<c06f7aa4>] (kernel_init) from [<c01010e8>] (ret_from_fork+0x14/0x2c)
-> [    3.433019] Exception stack(0xef04dfb0 to 0xef04dff8)
-> [    3.438065] dfa0:                                     00000000 00000000 00000000 00000000
-> [    3.446234] dfc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-> [    3.454400] dfe0: 00000000 00000000 00000000 00000000 00000013 00000000
-> [    3.461010] Code: e59f0464 03844040 eb0a0b7b eb004882 (e5d63084) 
-> [    3.467153] ---[ end trace 0dbbaca7a7b65a4b ]---
-> 
-> The problem was bisected to 5253fe05bb47a2402f471d76078b3dcc66442d6c ("phy: core: Add consumer device link support")
-> Reverting this patch fix the problem
+In addition to tracing the zone operations, it would be greatly
+beneficial to add tracing(and blktrace support) for the reported zone
+states.
+I did something similar[5] for pblk and open channel chunk states, and
+that proved invaluable when figuring out whether the disk or pblk was
+broken.
 
-This should be fixed in the latest -next branch. Please try it and let
-me us know.
+In pblk the reported chunk state transitions are traced along with the
+expected zone transitions (based on io and management commands
+submitted).
 
-Thanks
-Kishon
+[5] https://www.lkml.org/lkml/2018/8/29/457
+
+Thanks!
+Hans
+
+> >
+> > * Current state of the work:-
+> > -----------------------------------------------------------------------
+> >
+> > RFC implementations [3] has been posted with the addition of new IOCTLs
+> > which is far from the production so that it can provide a basis to get
+> > the discussion started.
+> >
+> > This RFC implementation provides:-
+> > 1. Extended bits to track new trace categories.
+> > 2. Support for tracing per trace priorities.
+> > 3. Support for priority mask.
+> > 4. New IOCTLs so that user-space tools can setup the extensions.
+> > 5. Ability to track the integrity fields.
+> > 6. blktrace and blkparse implementation which supports the above
+> >      mentioned features.
+> >
+> > Bart and Martin has suggested changes which I've incorporated in the RFC
+> > revisions.
+> >
+> > * What we will discuss in the proposed session ?
+> > -----------------------------------------------------------------------
+> >
+> > I'd like to propose a session for Storage track to go over the following
+> > discussion points:-
+> >
+> > 1. What is the right approach to move this work forward?
+> > 2. What are the other information bits we need to add which will help
+> >      kernel community to speed up the development and improve tracing?
+> > 3. What are the other tracepoints we need to add in the block layer
+> >      to improve the tracing?
+> > 4. What are device driver callbacks tracing we can add in the block
+> >      layer?
+> > 5. Since polling is becoming popular what are the new tracepoints
+> >      we need to improve debugging ?
+> >
+> >
+> > * Required Participants:-
+> > -----------------------------------------------------------------------
+> >
+> > I'd like to invite block layer, device drivers and file system
+> > developers to:-
+> >
+> > 1. Share their opinion on the topic.
+> > 2. Share their experience and any other issues with blktrace
+> >      infrastructure.
+> > 3. Uncover additional details that are missing from this proposal.
+> >
+> > Regards,
+> > Chaitanya
+> >
+> > References :-
+> >
+> > [1] https://www.spinics.net/lists/linux-block/msg46043.html
+> > [2] https://nvmexpress.org/new-nvmetm-specification-defines-zoned-
+> > namespaces-zns-as-go-to-industry-technology/
+> > [3] https://www.spinics.net/lists/linux-btrace/msg01106.html
+> >       https://www.spinics.net/lists/linux-btrace/msg01002.html
+> >       https://www.spinics.net/lists/linux-btrace/msg01042.html
+> >       https://www.spinics.net/lists/linux-btrace/msg00880.html
+> >
+>
