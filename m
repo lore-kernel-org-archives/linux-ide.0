@@ -4,64 +4,66 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A90B9C33CA4
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Jan 2020 08:14:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DCBBC33CA2
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Jan 2020 08:15:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7BD5E2072A
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Jan 2020 08:14:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 639192072A
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Jan 2020 08:15:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="GMcisQ9a"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="skq8ltOJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726583AbgAJIOy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Jan 2020 03:14:54 -0500
-Received: from mail-lf1-f66.google.com ([209.85.167.66]:37045 "EHLO
-        mail-lf1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726551AbgAJIOy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jan 2020 03:14:54 -0500
-Received: by mail-lf1-f66.google.com with SMTP id b15so783915lfc.4
-        for <linux-ide@vger.kernel.org>; Fri, 10 Jan 2020 00:14:53 -0800 (PST)
+        id S1726598AbgAJIPN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 10 Jan 2020 03:15:13 -0500
+Received: from mail-lj1-f196.google.com ([209.85.208.196]:36948 "EHLO
+        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726549AbgAJIPN (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jan 2020 03:15:13 -0500
+Received: by mail-lj1-f196.google.com with SMTP id o13so1201069ljg.4
+        for <linux-ide@vger.kernel.org>; Fri, 10 Jan 2020 00:15:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=vu5pZrGVWV+F+Z9ZVUAzowNazkPEg3KOIUjTjFIkErE=;
-        b=GMcisQ9amaS34fIthUecflepm50B1uWjJDtbxOPvqoZ/36/4IU2GPRgjwWAq7EJxj2
-         lhXZhRG4v6pZUm00cL77GDbqV4QHMOihNRv1r7fKyUHW9r1llBy2PpSNR+x5W9k3Mxbk
-         z0vS+/dYWyl9do8g3CRKc4Ma7tV0BLMyPgHdyieBRu34os1r7G+GRypk96I1XRDceBZG
-         3XzCaCbpf+OlrrJNwwtHqbmUHQqCqNBbTjnbVlUZKpAkuskaUtQs3m/p51azuoJYeyPa
-         Eo9cJmHVssRCV1BjKz400ZLAamxgGxffwZ1PO7kQ6Yq5s07tUBgy9dgophpOZGICRKGl
-         glzA==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=LgBAA26YSmvqOQUXo77H/YHA2sgAeLttOgWtV78OrVM=;
+        b=skq8ltOJVTP+GvSkiER6qztqVtoRvig5AuVl05qGh+a2i+n7mk50686F/ChgctC9uO
+         xAay+vEdK9JtDr1oGEYNjDkDjB4owDI+zv01kKh8aqj8/pW00JgrWTFGkixmUNJxZCXJ
+         m2S51N5X/g6yBPX+E+PXiiQdJ0+CyC6HqbsKQBF8rkioSVIznuUb6NCAPplPGFuXE0Aq
+         AOPclZIS9sfW+z/CvbIfRE/NCmCANxB5OUtaQEp70Z+tJMjtj2Q+PiBBHxmWZbV1mHTZ
+         sgB0K+a5kbUeDy4ZEAHN7mF2cHCZILO7fAlsog33WxiQfbjOVNbzdfZdq5yXuDVkGklo
+         dW6A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=vu5pZrGVWV+F+Z9ZVUAzowNazkPEg3KOIUjTjFIkErE=;
-        b=T/HGUutCmRz0ElD+lfIJF7sU9iBbU+AHUKlKajSQw/VIeVUfeypLfimddnArnsgMpQ
-         DccqSVMtGPYR+CQUzJhwCfQKGTDvyIU/P5M4h799Oybp+EUkuyInavwv5tD6Jl0jZCqP
-         gQ+BVuUFh4DIvnptWgjZBeOZUzGU5DptLaRHMU8nbLe/WOzq6ctEPHoMEzHRjoS3sh41
-         0KeKAkGeYxOGmuz0AA92wM2V4f0o6H/DDabMvicixYKfn4SxmjxYJjcxTw1FhR/OuN1Z
-         vYVbixfAcisWI/wlr9QzjNyC3nE6ecflwNE/Y4oYBVjNphj1LokfLD5IKliRCm6kqBRJ
-         dMhA==
-X-Gm-Message-State: APjAAAXIepj5nTMQ6/pR3yfZKgtwKKtDNTaQv8v0S0d0xp5m0g675VDs
-        r/afpHjx8Rj+E8pwRzrxrnol/Q==
-X-Google-Smtp-Source: APXvYqzDinwDz72/xXRbkcBAs4ET4X1I2qV5Pwg0o+UfqzZswBcw8YQThvrupnrF3gM+YJRvDt+3IQ==
-X-Received: by 2002:a19:48c5:: with SMTP id v188mr1446391lfa.100.1578644092720;
-        Fri, 10 Jan 2020 00:14:52 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=LgBAA26YSmvqOQUXo77H/YHA2sgAeLttOgWtV78OrVM=;
+        b=t3k2St9OGPCi2PC/a0TjsD1ZnTdbFrgpT7gE4YR7pWSkAxkFF5w/IcAZ4XfR6XDdMv
+         uU6CCoLcU7ZFU+nYa94g0ILIYTv7e3IifpAylYSsjB+TPxdxZA+EOnfAUTrsGYblGk4B
+         nEKFkgGjPRHTBQ+LWFGvDMlQa9EtpwdXgASSTMM14FGRL4ANxdodoowaLQEHP3fuImw8
+         b73a0BnARBBJkblpPb2+8h7uDc4vXjsjML0Y4hqhPUkvqAGC2lP8tOe4cBlhwKU7LnJw
+         GDZHpIghoenFN2/bGqjG1RLDtWfBOpSbaaR+sfilaXspSs+m3hQvVHWMVSvFpvbg5poz
+         RY5g==
+X-Gm-Message-State: APjAAAWj9L/+mkLs7qxyd0GXebMO6+Vtg1PYpzkRaavTAI20gNDKEk4X
+        jJ92mubXKQwITV+NvS7Z7DsVmQ==
+X-Google-Smtp-Source: APXvYqzGLxatgljJ/feU2uNk9/NiI44HjHEGXnYpfo7WgmsW+aoAhqoscfWqU6bFXCPFBSCCirrmBg==
+X-Received: by 2002:a2e:8698:: with SMTP id l24mr1791134lji.94.1578644110045;
+        Fri, 10 Jan 2020 00:15:10 -0800 (PST)
 Received: from linux.local (c-5ac9225c.014-348-6c756e10.bbcust.telenor.se. [92.34.201.90])
-        by smtp.gmail.com with ESMTPSA id r15sm592496ljh.11.2020.01.10.00.14.51
+        by smtp.gmail.com with ESMTPSA id r15sm592496ljh.11.2020.01.10.00.15.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Jan 2020 00:14:52 -0800 (PST)
+        Fri, 10 Jan 2020 00:15:09 -0800 (PST)
 From:   Linus Walleij <linus.walleij@linaro.org>
 To:     Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
         Jens Axboe <axboe@kernel.dk>
 Cc:     linux-ide@vger.kernel.org, Linus Walleij <linus.walleij@linaro.org>
-Subject: [PATCH 1/2 v3] dt-bindings: Create DT bindings for PATA controllers
-Date:   Fri, 10 Jan 2020 09:14:10 +0100
-Message-Id: <20200110081411.9806-1-linus.walleij@linaro.org>
+Subject: [PATCH 2/2 v3] dt-bindings: Convert Faraday FTIDE010 to DT schema
+Date:   Fri, 10 Jan 2020 09:14:11 +0100
+Message-Id: <20200110081411.9806-2-linus.walleij@linaro.org>
 X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20200110081411.9806-1-linus.walleij@linaro.org>
+References: <20200110081411.9806-1-linus.walleij@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
@@ -69,90 +71,164 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-I need to create subnodes for drives connected to PATA
-host controllers, and this needs to be supported generally,
-so create a common YAML binding for "ide" that will support
-subnodes with ports.
-
-This has been designed as a subset of
-ata/ahci-platform.txt with the bare essentials and
-should be possible to extend or superset to cover the
-common bindings.
+This uses the new pata-common.yaml schema to
+convert the Faraday FTIDE010 to DT schema.
 
 Cc: Rob Herring <robh+dt@kernel.org>
 Cc: devicetree@vger.kernel.org
 Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 ---
 ChangeLog v2->v3:
-- Only support PATA controllers for now since it is all I
-  need right now. SATA controller have complex topology and
-  might need more elaborate subnodes, possibly a subnode for
-  the multiplier itself, so I will split that off into its
-  own RFC patch.
+- Rebase on the new common binding for just PATA
+  controllers.
 ChangeLog v1->v2:
-- Use ide@ and sata@ as node names.
-- Use ide-port@ and sata-port@ for the ports toward the
-  drives, rather than letting the subnodes be the drives
-  themselves.
+- Rename the node for the example controller to "ide@"
+- Rename the drives to ports, so ide-port@0 etc instead of
+  drive@0.
 ---
- .../devicetree/bindings/ata/pata-common.yaml  | 50 +++++++++++++++++++
- 1 file changed, 50 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ata/pata-common.yaml
+ .../bindings/ata/faraday,ftide010.txt         | 38 --------
+ .../bindings/ata/faraday,ftide010.yaml        | 89 +++++++++++++++++++
+ 2 files changed, 89 insertions(+), 38 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/ata/faraday,ftide010.txt
+ create mode 100644 Documentation/devicetree/bindings/ata/faraday,ftide010.yaml
 
-diff --git a/Documentation/devicetree/bindings/ata/pata-common.yaml b/Documentation/devicetree/bindings/ata/pata-common.yaml
+diff --git a/Documentation/devicetree/bindings/ata/faraday,ftide010.txt b/Documentation/devicetree/bindings/ata/faraday,ftide010.txt
+deleted file mode 100644
+index a0c64a29104d..000000000000
+--- a/Documentation/devicetree/bindings/ata/faraday,ftide010.txt
++++ /dev/null
+@@ -1,38 +0,0 @@
+-* Faraday Technology FTIDE010 PATA controller
+-
+-This controller is the first Faraday IDE interface block, used in the
+-StorLink SL2312 and SL3516, later known as the Cortina Systems Gemini
+-platform. The controller can do PIO modes 0 through 4, Multi-word DMA
+-(MWDM)modes 0 through 2 and Ultra DMA modes 0 through 6.
+-
+-On the Gemini platform, this PATA block is accompanied by a PATA to
+-SATA bridge in order to support SATA. This is why a phandle to that
+-controller is compulsory on that platform.
+-
+-The timing properties are unique per-SoC, not per-board.
+-
+-Required properties:
+-- compatible: should be one of
+-  "cortina,gemini-pata", "faraday,ftide010"
+-  "faraday,ftide010"
+-- interrupts: interrupt for the block
+-- reg: registers and size for the block
+-
+-Optional properties:
+-- clocks: a SoC clock running the peripheral.
+-- clock-names: should be set to "PCLK" for the peripheral clock.
+-
+-Required properties for "cortina,gemini-pata" compatible:
+-- sata: a phande to the Gemini PATA to SATA bridge, see
+-  cortina,gemini-sata-bridge.txt for details.
+-
+-Example:
+-
+-ata@63000000 {
+-	compatible = "cortina,gemini-pata", "faraday,ftide010";
+-	reg = <0x63000000 0x100>;
+-	interrupts = <4 IRQ_TYPE_EDGE_RISING>;
+-	clocks = <&gcc GEMINI_CLK_GATE_IDE>;
+-	clock-names = "PCLK";
+-	sata = <&sata>;
+-};
+diff --git a/Documentation/devicetree/bindings/ata/faraday,ftide010.yaml b/Documentation/devicetree/bindings/ata/faraday,ftide010.yaml
 new file mode 100644
-index 000000000000..fc5ebbe7108d
+index 000000000000..bfc6357476fd
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/pata-common.yaml
-@@ -0,0 +1,50 @@
++++ b/Documentation/devicetree/bindings/ata/faraday,ftide010.yaml
+@@ -0,0 +1,89 @@
 +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 +%YAML 1.2
 +---
-+$id: http://devicetree.org/schemas/ata/pata-common.yaml#
++$id: http://devicetree.org/schemas/ata/faraday,ftide010.yaml#
 +$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
-+title: Common Properties for Parallel AT attachment (PATA) controllers
++title: Faraday Technology FTIDE010 PATA controller
 +
 +maintainers:
 +  - Linus Walleij <linus.walleij@linaro.org>
 +
 +description: |
-+  This document defines device tree properties common to most Parallel
-+  ATA (PATA, also known as IDE) AT attachment storage devices.
-+  It doesn't constitue a device tree binding specification by itself but is
-+  meant to be referenced by device tree bindings.
++  This controller is the first Faraday IDE interface block, used in the
++  StorLink SL3512 and SL3516, later known as the Cortina Systems Gemini
++  platform. The controller can do PIO modes 0 through 4, Multi-word DMA
++  (MWDM) modes 0 through 2 and Ultra DMA modes 0 through 6.
 +
-+  The PATA (IDE) controller-specific device tree bindings are responsible for
-+  defining whether each property is required or optional.
++  On the Gemini platform, this PATA block is accompanied by a PATA to
++  SATA bridge in order to support SATA. This is why a phandle to that
++  controller is compulsory on that platform.
++
++  The timing properties are unique per-SoC, not per-board.
 +
 +properties:
-+  $nodename:
-+    pattern: "^ide(@.*)?$"
++  compatible:
++    oneOf:
++      - const: faraday,ftide010
++      - items:
++        - const: cortina,gemini-pata
++        - const: faraday,ftide010
++
++  reg:
++    maxItems: 1
++
++  interrupts:
++    maxItems: 1
++
++  clocks:
++    minItems: 1
++
++  clock-names:
++    const: PCLK
++
++  sata:
 +    description:
-+      Specifies the host controller node. PATA host controller nodes are named
-+      "ide".
++      phandle to the Gemini PATA to SATA bridge, if available
++    $ref: /schemas/types.yaml#/definitions/phandle
 +
-+  "#address-cells":
-+    const: 1
++required:
++  - compatible
++  - reg
++  - interrupts
 +
-+  "#size-cells":
-+    const: 0
++allOf:
++  - $ref: pata-common.yaml#
 +
-+patternProperties:
-+  "^ide-port@[0-1]$":
-+    description: |
-+      DT nodes for ports connected on the PATA host. The master drive will have
-+      ID number 0 and the slave drive will have ID number 1. The PATA port
-+      nodes will be named "ide-port".
-+    type: object
++  - if:
++      properties:
++        compatible:
++          contains:
++            const: cortina,gemini-pata
 +
-+    properties:
-+      reg:
-+        minimum: 0
-+        maximum: 1
-+        description:
-+          The ID number of the drive port, 0 for the master port and 1 for the
-+          slave port.
++    then:
++      required:
++        - sata
++
++examples:
++  - |
++    #include <dt-bindings/interrupt-controller/irq.h>
++    #include <dt-bindings/clock/cortina,gemini-clock.h>
++
++    ide@63000000 {
++      compatible = "cortina,gemini-pata", "faraday,ftide010";
++      reg = <0x63000000 0x100>;
++      interrupts = <4 IRQ_TYPE_EDGE_RISING>;
++      clocks = <&gcc GEMINI_CLK_GATE_IDE>;
++      clock-names = "PCLK";
++      sata = <&sata>;
++      #address-cells = <1>;
++      #size-cells = <0>;
++      ide-port@0 {
++        reg = <0>;
++      };
++      ide-port@1 {
++        reg = <1>;
++      };
++    };
 +
 +...
 -- 
