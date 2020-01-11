@@ -2,174 +2,114 @@ Return-Path: <SRS0=2kzO=3A=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FD92C282DD
-	for <linux-ide@archiver.kernel.org>; Sat, 11 Jan 2020 15:29:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9226C33CA4
+	for <linux-ide@archiver.kernel.org>; Sat, 11 Jan 2020 20:23:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2E1BC20842
-	for <linux-ide@archiver.kernel.org>; Sat, 11 Jan 2020 15:29:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E73E20866
+	for <linux-ide@archiver.kernel.org>; Sat, 11 Jan 2020 20:23:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cogentembedded-com.20150623.gappssmtp.com header.i=@cogentembedded-com.20150623.gappssmtp.com header.b="EYeLJEoh"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="vZ2ZQzhb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729957AbgAKP3d (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 11 Jan 2020 10:29:33 -0500
-Received: from mail-lj1-f195.google.com ([209.85.208.195]:40479 "EHLO
-        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729932AbgAKP3d (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 11 Jan 2020 10:29:33 -0500
-Received: by mail-lj1-f195.google.com with SMTP id u1so5244562ljk.7
-        for <linux-ide@vger.kernel.org>; Sat, 11 Jan 2020 07:29:32 -0800 (PST)
+        id S1731132AbgAKUXB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 11 Jan 2020 15:23:01 -0500
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:36061 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731119AbgAKUXA (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 11 Jan 2020 15:23:00 -0500
+Received: by mail-pf1-f195.google.com with SMTP id x184so2861699pfb.3;
+        Sat, 11 Jan 2020 12:23:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cogentembedded-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:organization:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=+yyz8Q0QX9xYsWJoU0+FyOfRmn5JGVzY0Qs3w+7UtAg=;
-        b=EYeLJEoh5Ypto/JQ3a+tfiWQLR2ymhe/P1LrB6znfOyDal9+j3hZCeRcFn57i/il52
-         jX0lzr12VmeYREHmYMhvQqnsA51acM38xUxlwM8p7HvJt1ZA3rnmQiahWOyuZRZDlKDv
-         5zN0JzjFiLAGVn5z95fKfGw17gjmvU8/QMCF/MHAUxBWF91Nb3UBoeF95Ds3spT/uCxT
-         wADnlQVBdXNYc9OQ15wDWpmHBqlGDgLcD2d+vErc4Ad4/EO4mSghsKwg1ksC/6phGDXq
-         J0HW+xEoVDFD4nGf33C7aSfWdpH5PND+gxT4S5ubasP0NqXWGkv4VidHnOOuYyd0OTjz
-         TaPA==
+        d=gmail.com; s=20161025;
+        h=sender:subject:from:to:cc:references:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=41KWMk1pZePqF7DfgTawJC7PFNFV1UU7PbNC+WCjwvw=;
+        b=vZ2ZQzhbAdvQJc6i1VGPzo9PLxV1GRAtcj4FNeKlizCfjGVoIi1N+h4A+/941KxN+K
+         Or5V7F/FqqwYcoY/I0IELwJMc1OB4/SeieFXzIQXNzzWHAJFiHE95uQYNxUWFE79oRqR
+         SQZlM1xt9m+6DjAGHIR4JN+Ky8GXwFR83vc0513L656LSwct6Lf0m77fXi2k6tw2isKF
+         f9+8Wpaeji9ri//KUKpJRXjfdo9GjKJLE9pdawsG4HeaW/e6Es0PrxCMCAUuHSAMyQAV
+         lzMa/3Qlagy1ZW2ZrRKzsVFyQxoF43PQsooNsstDlyuGruyMrX2F+ZA4x8xxLL01cRwj
+         63sA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:organization
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=+yyz8Q0QX9xYsWJoU0+FyOfRmn5JGVzY0Qs3w+7UtAg=;
-        b=SfbaGx8/DWmPkbHK/cMOnGqT2149EqWUDSY7JEOeOO6uYHgVCxhG9SEmWWv+lW616T
-         /C1YrrYRjgKenoq5JNOKJf3mbjnhKhm116fHv7Vf1pP9Fmc3I4GF+RkU9NwqhXMc6AN6
-         B0fAJh17IJ0KkbGe4TKwbZ7DkmFfswteWVZQmuqRmM488fNNojOVmJxKPgug95gp2Pam
-         bHU2osV8Y3UjHx2j+t0b6ko0swCnNY7oo2jTFEVh3xMo/7Eg/PnxwCsXTpzgVn162Pg3
-         kYHoxE/iU9i0QJ2fm0rm9YE3VIRUFLyYDcxLtwhZM4L7N12ktoIJbXVI3U+04aWoBYZ+
-         ZI9Q==
-X-Gm-Message-State: APjAAAVacn1bqqSZhQtprsosq6mCFBoPQnraY57IVEwJZ2DNVYm8f4mu
-        qgbRnHu3Zr9L7lC2ElWxY/ljkZG5EpwjtA==
-X-Google-Smtp-Source: APXvYqxotAwRwA2HmV4//JkAfwQxXY+vp5mgQ9RHqHBLD2c/gKUaVLFzna4/fqCub7KMfJGufTx9DQ==
-X-Received: by 2002:a2e:80cc:: with SMTP id r12mr6032098ljg.154.1578756570955;
-        Sat, 11 Jan 2020 07:29:30 -0800 (PST)
-Received: from wasted.cogentembedded.com ([2a00:1fa0:867:6876:dd67:e9de:b279:534b])
-        by smtp.gmail.com with ESMTPSA id q11sm2704957ljm.76.2020.01.11.07.29.29
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 11 Jan 2020 07:29:30 -0800 (PST)
-Subject: Re: [PATCH v3] RFC: dt-bindings: Create DT bindings for SATA
- controllers
-To:     Linus Walleij <linus.walleij@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-        Jens Axboe <axboe@kernel.dk>
-Cc:     linux-ide@vger.kernel.org
-References: <20200110081743.10086-1-linus.walleij@linaro.org>
-From:   Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Organization: Cogent Embedded
-Message-ID: <438c2afd-c751-8548-f7c8-c79ebfbe6a45@cogentembedded.com>
-Date:   Sat, 11 Jan 2020 18:29:28 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
- Thunderbird/52.2.1
+        h=x-gm-message-state:sender:subject:from:to:cc:references:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=41KWMk1pZePqF7DfgTawJC7PFNFV1UU7PbNC+WCjwvw=;
+        b=tbkucNVnTzmfcaSDn2PpG0mduXkGdk+XO+O392RSiGY0KOYUlAe4vPan3+x6DGIgKO
+         kGeuHrIeI3M8LCQXiZXFcvTV6C4iYOKLA13mfa4AGPBcWI/Cy3TT9RdjbuE0pmePfgBm
+         0LbUGpWXgKpMqlEeJ+UptuGvqfyuT/b90XvlyyBtllIhsDuR5EgfvIdhZG3Xvk1oGhDu
+         36TSUmNMi2ccyPVb9KMwoFTn4roWH9GU6a0+LqM9O+PbE1x5OxYYBDGIbXQdstBchEzo
+         iuqMGGoGJcFpmT8GkjrJ6kIm6pO6V6q3PfzXGkcNEdDnz1py4qp3VHpVlR6jodMVNPZW
+         hOdw==
+X-Gm-Message-State: APjAAAXNdIMhAASR74GnhuNMUhlDNTPDDUSkZ9IpD5K9p92OY+FOCYHN
+        aL55M6qMFRYX2eY6NxRoOiw=
+X-Google-Smtp-Source: APXvYqyzTVgDIcY913y1z652I02ZglZtHagv5esZ0OSA1Rm/rl7v3G+QeLDwAGkHey9qCR8Hz8yWjg==
+X-Received: by 2002:a63:d306:: with SMTP id b6mr12428585pgg.195.1578774179696;
+        Sat, 11 Jan 2020 12:22:59 -0800 (PST)
+Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id b193sm7962800pfb.57.2020.01.11.12.22.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 11 Jan 2020 12:22:59 -0800 (PST)
+Subject: Re: [PATCH v2] hwmon: Driver for temperature sensors on SATA drives
+From:   Guenter Roeck <linux@roeck-us.net>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+        Chris Healy <cphealy@gmail.com>
+References: <20191215174509.1847-1-linux@roeck-us.net>
+ <20191215174509.1847-2-linux@roeck-us.net> <yq1r211dvck.fsf@oracle.com>
+ <b22a519c-8f26-e731-345f-9deca1b2150e@roeck-us.net>
+ <yq1sgkq21ll.fsf@oracle.com> <20200108153341.GB28530@roeck-us.net>
+Message-ID: <38af9fda-9edf-1b54-bd8d-92f712ae4cda@roeck-us.net>
+Date:   Sat, 11 Jan 2020 12:22:57 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-In-Reply-To: <20200110081743.10086-1-linus.walleij@linaro.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-MW
+In-Reply-To: <20200108153341.GB28530@roeck-us.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 01/10/2020 11:17 AM, Linus Walleij wrote:
-
-> I need to create subnodes for drives connected to SATA
-> host controllers, and this needs to be supported
-> generally, so create a common YAML binding for
-> "sata" that will support subnodes with ports.
+On 1/8/20 7:33 AM, Guenter Roeck wrote:
+> On Tue, Jan 07, 2020 at 08:12:06PM -0500, Martin K. Petersen wrote:
+>>
+>> Guenter,
+>>
+>>> Any idea how I might be able to reproduce this ? So far I have been
+>>> unsuccessful.
+>>>
+>>> Building drivetemp into the kernel, with ahci and everything SCSI
+>>> built as module, doesn't trigger the crash for me. This is with the
+>>> drivetemp patch (v3) as well as commit d188b0675b ("scsi: core: Add
+>>> sysfs attributes for VPD pages 0h and 89h") applied on top of v5.4.7.
+>>
+>> This is with 5.5-rc1. I'll try another kernel.
+>>
+>> My repro is:
+>>
+>> # modprobe drivetemp
+>> # modprobe <any SCSI driver, including ahci>
+>>
+> No luck on my side. Can you provide a traceback ? Maybe we can use it
+> to find out what is happening.
 > 
-> This has been designed as a subset of
-> ata/ahci-platform.txt with the bare essentials and
-> should be possible to extend or superset to cover the
-> common bindings.
-> 
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: devicetree@vger.kernel.org
-> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
-> ---
-> ChangeLog v2->v3:
-> - Split off into its own RFC patch
-> - Only support sata-port@ in this binding
-> - Opt to support devices 0..14 on the sata-port in
->   line with ahci-platforn.txt not modeling the port
->   multiplier in the device tree at all.
-> ChangeLog v1->v2:
-> - Use ide@ and sata@ as node names.
-> - Use ide-port@ and sata-port@ for the ports toward the
->   drives, rather than letting the subnodes be the drives
->   themselves.
-> ---
->  .../devicetree/bindings/ata/sata-common.yaml  | 51 +++++++++++++++++++
->  1 file changed, 51 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ata/sata-common.yaml
-> 
-> diff --git a/Documentation/devicetree/bindings/ata/sata-common.yaml b/Documentation/devicetree/bindings/ata/sata-common.yaml
-> new file mode 100644
-> index 000000000000..9f6718a69dfd
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/sata-common.yaml
-> @@ -0,0 +1,51 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/ata/sata-common.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: Common Properties for Serial AT attachment (SATA) controllers
-> +
-> +maintainers:
-> +  - Linus Walleij <linus.walleij@linaro.org>
-> +
-> +description: |
-> +  This document defines device tree properties common to most Serial
-> +  AT attachment (SATA) storage devices. It doesn't constitue a device tree
-> +  binding specification by itself but is meant to be referenced by device
-> +  tree bindings.
-> +
-> +  The SATA controller-specific device tree bindings are responsible for
-> +  defining whether each property is required or optional.
-> +
-> +properties:
-> +  $nodename:
-> +    pattern: "^sata(@.*)?$"
-> +    description:
-> +      Specifies the host controller node. SATA host controller nodes are named
-> +      "sata"
-> +
-> +  "#address-cells":
-> +    const: 1
-> +
-> +  "#size-cells":
-> +    const: 0
-> +
-> +patternProperties:
-> +  "^sata-port@[0-1]$":
-> +    description: |
-> +      DT nodes for ports connected on the SATA host. The master drive will have
-> +      ID number 0 and the slave drive will have ID number 1. The SATA port
 
-   Mhm... SATA doesn't have master/slave drives, there's only 1 drive pert port, IIRC.
+I tried again, this time with v5.5-rc5. Loading and unloading ahci and
+drivetemp in any order does not cause any problems for me.
 
-> +      nodes will be named "sata-port".
-> +    type: object
-> +
-> +    properties:
-> +      reg:
-> +        minimum: 0
-> +        maximum: 14
-> +        description:
-> +          The ID number of the drive port SATA can potentially use a port
-> +          multiplier making it possible to connect up to 15 disks to a single
-> +          SATA port.
-> +
-> +...
+At this point I don't know what else I could test. I went ahead and
+applied the drivetemp patch to hwmon-next. Maybe we'll get some additional
+test feedback this way.
 
-MBR, Sergei
+Guenter
