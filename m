@@ -2,92 +2,191 @@ Return-Path: <SRS0=hzpW=3B=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.5 required=3.0 tests=FREEMAIL_REPLYTO_END_DIGIT,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF954C3F68F
-	for <linux-ide@archiver.kernel.org>; Sun, 12 Jan 2020 14:45:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E01CC33CA2
+	for <linux-ide@archiver.kernel.org>; Sun, 12 Jan 2020 15:26:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8FE002187F
-	for <linux-ide@archiver.kernel.org>; Sun, 12 Jan 2020 14:45:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EDEAE2187F
+	for <linux-ide@archiver.kernel.org>; Sun, 12 Jan 2020 15:26:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QbaxMTLB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733030AbgALOpm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 12 Jan 2020 09:45:42 -0500
-Received: from mail02.vodafone.es ([217.130.24.81]:8919 "EHLO
-        mail02.vodafone.es" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733028AbgALOpm (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 12 Jan 2020 09:45:42 -0500
-IronPort-SDR: 1AHBbMRRuBQNywmQ4FQN1fd0LZekkWG4vfKzX+UQfyLgj4YftrcseWiYYf5U/sSwui33wOdNiE
- nn2uavNnaj2w==
-IronPort-PHdr: =?us-ascii?q?9a23=3AP2Dj4BLT7MVcjssm/dmcpTZWNBhigK39O0sv0r?=
- =?us-ascii?q?FitYgeIvjxwZ3uMQTl6Ol3ixeRBMOHsqkC0bSG+P6wEUU7or+5+EgYd5JNUx?=
- =?us-ascii?q?JXwe43pCcHRPC/NEvgMfTxZDY7FskRHHVs/nW8LFQHUJ2mPw6arXK99yMdFQ?=
- =?us-ascii?q?viPgRpOOv1BpTSj8Oq3Oyu5pHfeQpFiCezbL9oMhm7rAbcusYXjIZhN6081g?=
- =?us-ascii?q?bHrnxUdupM2GhmP0iTnxHy5sex+J5s7SFdsO8/+sBDTKv3Yb02QaRXAzo6PW?=
- =?us-ascii?q?814tbrtQTYQguU+nQcSGQWnQFWDAXD8Rr3Q43+sir+tup6xSmaIcj7Rq06VD?=
- =?us-ascii?q?i+86tmTgLjhCEAOzAk7G7YkMlwjaJCrB+/oBx/2ZbUYIaPNPVkYqPSY8oWSn?=
- =?us-ascii?q?RHXspISyFBHp+8YJETAOoBI+lYqpfyp10SrRenGwasAvrjxDhPhn/ww6I70/?=
- =?us-ascii?q?0tHh/A3Ac9G94DvmjYoMnwOKoUTOu7zrTHzS/bYv1Y2Tn98pbGfBM8r/6DQb?=
- =?us-ascii?q?1+ftHcyVUtGgzZklmctZDpMy2T2+8Qs2ab9e1gVee3hmA9tQ5xviagxt0xgY?=
- =?us-ascii?q?bJgYIVzF/E/jh+zYYtO9K4VFB0YcSqEZtXsSGaOJB7QsM5Q25zpCk20KEJuZ?=
- =?us-ascii?q?m+fCQQyJQnxAfSZvqaeIaL+hLuTPidLSp6iX5/Zb6yiQq+/VK+xuDzTMW4zk?=
- =?us-ascii?q?tGoyhDn9LRrH4CzQbT5dKCSvZl+0eh3iuA2B7L5+FfJEA0ibLbK5k8wr4sjp?=
- =?us-ascii?q?YTsVrMHivxmEjuia+ZbEQk+uyy6+v5ZrXqupGRO5VqigH5L6shgMK/AeM+Mg?=
- =?us-ascii?q?cQRWSU5/+82KXi/U3/XrpKkuU7nrfEvJ3YP8gXu6C0DxNP3oo95BuzFSmq3M?=
- =?us-ascii?q?kakHUfKVJKYhOHj4znO1HUJ/D4CO+yg0yynzd32f/GJLPgApLLLnjMi7rhfa?=
- =?us-ascii?q?195FVAxwYp0d9f4JdUBqsBIPLwQkPxrsDXDgclMwyoxObqENF91oIYWWKSDa?=
- =?us-ascii?q?6VKaLSvkKW6e80PemMa5EauCznJ/gm+fHul3k5lkEZfaWz2psXcn+4TbxaJB?=
- =?us-ascii?q?CdYHzxkpIAHWoioAUzVqrphUeEXDoVYGy9DJgx/jUqNIXzNYrfS5rlv7uH02?=
- =?us-ascii?q?/vBoIPOTAaWgukHnLhdoHCUPAJPnG8OMhkxwQJSbW7A7Am0x7m4Bf317d9Me?=
- =?us-ascii?q?3S9QUYrpjoktNy4qvTlkdhpnRPE82B3jTUHClPlWQSSmpthPhy?=
-X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2HhAgBpMBteXdkYgtlNGBoBAQEBAQE?=
- =?us-ascii?q?BAQEDAQEBAREBAQECAgEBAQGBaAQBAQEBCwEBARgBAYEugU1SIBKNOYdkH4F?=
- =?us-ascii?q?KgXmLY4EAggqBFBWGBxQMgVsNAQEBAQEbGgIBAYRATgEXgTM1CA4CAw0BAQU?=
- =?us-ascii?q?BAQEBAQUEAQECAxoWBYV0QgEBBAcBgU0MHgEEAQEBAQMDAwEBDAGDXQcZDzk?=
- =?us-ascii?q?pIUwBDgEET4VPAQEznUMBhASJAA0NAoUdgkUECoEJgRojgTYBjDKBQT+BIyG?=
- =?us-ascii?q?CKwgBggGCfwESAWyCSIJZBI1CEiGBB4gpmBeCQQR2iUyMAoI3AQ+IAYQxAxC?=
- =?us-ascii?q?CRQ4BHG2IA4ROgX2jN1d0AYEecTMagiYagSBPGA2WSECBFhACT4RNgUmFJII?=
- =?us-ascii?q?yAQE?=
-X-IPAS-Result: =?us-ascii?q?A2HhAgBpMBteXdkYgtlNGBoBAQEBAQEBAQEDAQEBAREBA?=
- =?us-ascii?q?QECAgEBAQGBaAQBAQEBCwEBARgBAYEugU1SIBKNOYdkH4FKgXmLY4EAggqBF?=
- =?us-ascii?q?BWGBxQMgVsNAQEBAQEbGgIBAYRATgEXgTM1CA4CAw0BAQUBAQEBAQUEAQECA?=
- =?us-ascii?q?xoWBYV0QgEBBAcBgU0MHgEEAQEBAQMDAwEBDAGDXQcZDzkpIUwBDgEET4VPA?=
- =?us-ascii?q?QEznUMBhASJAA0NAoUdgkUECoEJgRojgTYBjDKBQT+BIyGCKwgBggGCfwESA?=
- =?us-ascii?q?WyCSIJZBI1CEiGBB4gpmBeCQQR2iUyMAoI3AQ+IAYQxAxCCRQ4BHG2IA4ROg?=
- =?us-ascii?q?X2jN1d0AYEecTMagiYagSBPGA2WSECBFhACT4RNgUmFJIIyAQE?=
-X-IronPort-AV: E=Sophos;i="5.69,425,1571695200"; 
-   d="scan'208";a="323424708"
-Received: from smtp.iservicesmail.com (HELO mailrel03.vodafone.es) ([217.130.24.217])
-  by mail02.vodafone.es with ESMTP; 12 Jan 2020 15:45:39 +0100
-Received: (qmail 27481 invoked from network); 12 Jan 2020 14:45:34 -0000
-Received: from unknown (HELO 192.168.1.3) (quesosbelda@[217.217.179.17])
-          (envelope-sender <peterwong@hsbc.com.hk>)
-          by mailrel03.vodafone.es (qmail-ldap-1.03) with SMTP
-          for <linux-ide@vger.kernel.org>; 12 Jan 2020 14:45:34 -0000
-Date:   Sun, 12 Jan 2020 15:45:36 +0100 (CET)
-From:   Peter Wong <peterwong@hsbc.com.hk>
-Reply-To: Peter Wong <pw178483@gmail.com>
-To:     linux-ide@vger.kernel.org
-Message-ID: <1715051.558767.1578840337049.JavaMail.cash@217.130.24.55>
-Subject: Investment opportunity
+        id S1733067AbgALP0l (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 12 Jan 2020 10:26:41 -0500
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:36723 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1733062AbgALP0l (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 12 Jan 2020 10:26:41 -0500
+Received: by mail-pg1-f194.google.com with SMTP id k3so3472055pgc.3;
+        Sun, 12 Jan 2020 07:26:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=9mpci+1EtRHccMISBpQo/AaeUz8hmG5B92+V59ldewE=;
+        b=QbaxMTLBdKalE2qMh2Tpw+5yK7FumIrWlcYNOLDH18cuwZlJNkNE5Pdg4ERKs+7hSr
+         jKs4+T5bHy1SSe+2xxdCJ5B0XxIcbDaRWJwFW/J/GHcutfT/+XVWH9Rd5Klqg4ZMKa4o
+         zNYmr9Os9X0xFrTzo5dcCsTNrAaJ4ecIn+pjhA2ck1lKeiTCA2x1xuCEkvRQeP7wyXnH
+         SGWs0oqSy1X6zBwEZI4F+u25DKFcwJYGblp/drIaV0ETZLxQYPACy/BnfVmBQHzE+4X6
+         wA+U5OhkUlsAohaeB3ebYNhBr228glL/KrNLYWW825nnPqcnHPNk3vxB49NToK3bqnGh
+         PbtA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
+         :date:user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=9mpci+1EtRHccMISBpQo/AaeUz8hmG5B92+V59ldewE=;
+        b=Amf/bol+Y+qwKHZ3VmNVdQbyw1tdCatnGFzYyUkK/5HgVAlkjo6ayspFfPeYvYK1bs
+         0R8shQIiIEv8y+x68YV82VOKFpy/R4XMjlnmaCI5AGouR1LzzroSGbE2CzDCpLef6oWK
+         9OvhNkXqM2SeX5rv0k2ANfLsT116MnYt6aeCdyLAuLyVTCGqWcl0rawYZKnq9rMi0g+F
+         tGHbioZLFcflvfk3uU0DnpmsTNYBkNVg4CU26GICLaqM4vXMG6g0WcwSRgEq0bdiOFnF
+         oLeVvN/hb625ifkeJ1aGVpTaUDR8+61kil2Yq18lXtOPie998kPpWj8dEo9K9mxy7h+u
+         kemA==
+X-Gm-Message-State: APjAAAVK2OZhTsxu35omG/fdXn5SKAn+1vFQiWa8raiHpsYZWVndiORc
+        EBUXYR+6RDASF2S8nhC8y7A=
+X-Google-Smtp-Source: APXvYqwtXlY/DrUh/9KJc0JZMcj64zOvfPnmBKd6tEWpEB6gV61zOaYlOu+px7l9oQR+Mgboegh2xw==
+X-Received: by 2002:aa7:848c:: with SMTP id u12mr14881679pfn.12.1578842799627;
+        Sun, 12 Jan 2020 07:26:39 -0800 (PST)
+Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id l21sm10624740pff.100.2020.01.12.07.26.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 12 Jan 2020 07:26:38 -0800 (PST)
+Subject: Re: [PATCH v2] hwmon: Driver for temperature sensors on SATA drives
+To:     Gabriel C <nix.or.die@gmail.com>
+Cc:     Linus Walleij <linus.walleij@linaro.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-hwmon@vger.kernel.org, Jean Delvare <jdelvare@suse.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>, Chris Healy <cphealy@gmail.com>
+References: <20191215174509.1847-1-linux@roeck-us.net>
+ <20191215174509.1847-2-linux@roeck-us.net> <yq1r211dvck.fsf@oracle.com>
+ <b22a519c-8f26-e731-345f-9deca1b2150e@roeck-us.net>
+ <yq1sgkq21ll.fsf@oracle.com> <20200108153341.GB28530@roeck-us.net>
+ <38af9fda-9edf-1b54-bd8d-92f712ae4cda@roeck-us.net>
+ <CAEJqkgg_piiAWy4r3VD=KyQ7pi69bZNym2Ws=Tr8SY5wf+Sprg@mail.gmail.com>
+ <CACRpkdYU7ZDcKp+BbXRCnEFDw1xwDkU_vXsfo-AZNUWGEVknXQ@mail.gmail.com>
+ <CAEJqkggo3Mou1SykjisyYn+3SGGgNfnKagr=7ZPyw=Y=1MZ55w@mail.gmail.com>
+ <CACRpkdayHFmdz4nAMaXR07Hcy=dLLGnnU8PkFhwQKuDTLnvOSw@mail.gmail.com>
+ <e3caa946-b8f2-75c7-4bcb-69ad198de472@roeck-us.net>
+ <CAEJqkggBvBus-G=TevSf0OUWLx_63qmZEThi-tNyPmAD2JXW-g@mail.gmail.com>
+From:   Guenter Roeck <linux@roeck-us.net>
+Message-ID: <25c57e9d-94db-3a8b-5f68-f8a49e500b45@roeck-us.net>
+Date:   Sun, 12 Jan 2020 07:26:36 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.2.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <CAEJqkggBvBus-G=TevSf0OUWLx_63qmZEThi-tNyPmAD2JXW-g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Greetings,
-Please read the attached investment proposal and reply for more details.
-Are you interested in loan?
-Sincerely: Peter Wong
+On 1/12/20 5:45 AM, Gabriel C wrote:
+> Am So., 12. Jan. 2020 um 14:07 Uhr schrieb Guenter Roeck <linux@roeck-us.net>:
+>>
+>> On 1/12/20 4:07 AM, Linus Walleij wrote:
+>>> On Sun, Jan 12, 2020 at 1:03 PM Gabriel C <nix.or.die@gmail.com> wrote:
+>>>> Am So., 12. Jan. 2020 um 12:22 Uhr schrieb Linus Walleij
+>>>> <linus.walleij@linaro.org>:
+>>>>>
+>>>>> On Sun, Jan 12, 2020 at 12:18 PM Gabriel C <nix.or.die@gmail.com> wrote:
+>>>>>
+>>>>>> What I've noticed however is the nvme temperature low/high values on
+>>>>>> the Sensors X are strange here.
+>>>>> (...)
+>>>>>> Sensor 1:     +27.9°C  (low  = -273.1°C, high = +65261.8°C)
+>>>>>> Sensor 2:     +29.9°C  (low  = -273.1°C, high = +65261.8°C)
+>>>>> (...)
+>>>>>> Sensor 1:     +23.9°C  (low  = -273.1°C, high = +65261.8°C)
+>>>>>> Sensor 2:     +25.9°C  (low  = -273.1°C, high = +65261.8°C)
+>>>>>
+>>>>> That doesn't look strange to me. It seems like reasonable defaults
+>>>>> from the firmware if either it doesn't really log the min/max temperatures
+>>>>> or hasn't been through a cycle of updating these yet. Just set both
+>>>>> to absolute min/max temperatures possible.
+>>>>
+>>>> Ok I'll check that.
+>>>>
+>>>> Do you mean by setting the temperatures to use a lmsensors config?
+>>>> Or is there a way to set these with a nvme command?
+>>>
+>>> Not that I know of.
+>>>
+>>> The min/max are the minumum and maximum temperatures the
+>>> device has experienced during this power-on cycle.
+>>>
+>>
+>> No, that would be lowest/highest. The above are (or should be) per-sensor
+>> setpoints. The default for those is typically the absolute minimum /
+>> maximum of the supported range.
+>>
+>> Some SATA drives report the lowest/highest temperatures experienced
+>> since power cycle, like here.
+>>
+>> drivetemp-scsi-5-0
+>> Adapter: SCSI adapter
+>> temp1:        +23.0°C  (low  =  +0.0°C, high = +60.0°C)
+>>                          (crit low = -41.0°C, crit = +85.0°C)
+>>                          (lowest = +20.0°C, highest = +31.0°C)
+>>
+> 
+> The SATA temperatures are fine and reported like this here too, just
+> the nvme ones are strange.
+> 
+> drivetemp-scsi-4-0
+> Adapter: SCSI adapter
+> temp1:        +28.0°C  (low  =  +1.0°C, high = +61.0°C)
+>                        (crit low =  +2.0°C, crit = +60.0°C)
+>                        (lowest = +16.0°C, highest = +31.0°C)
+> 
+> drivetemp-scsi-12-0
+> Adapter: SCSI adapter
+> temp1:        +29.0°C  (low  =  +1.0°C, high = +61.0°C)
+>                        (crit low =  +2.0°C, crit = +60.0°C)
+>                        (lowest = +18.0°C, highest = +32.0°C)
+> 
+> and so on.
+> 
+> Btw, where I can find the code does these calculations?
+> 
 
+Not sure if that is what you are looking for, but the nvme hardware
+monitoring driver is at drivers/nvme/host/hwmon.c, the SATA hardware
+monitoring driver is at drivers/hwmon/drivetemp.c.
 
+The limits on nvme drives are configurable.
 
+root@server:/sys/class/hwmon# sensors nvme-pci-0100
+nvme-pci-0100
+Adapter: PCI adapter
+Composite:    +40.9°C  (low  = -273.1°C, high = +84.8°C)
+                        (crit = +84.8°C)
+Sensor 1:     +40.9°C  (low  = -273.1°C, high = +65261.8°C)
+Sensor 2:     +43.9°C  (low  = -273.1°C, high = +65261.8°C)
 
-----------------------------------------------------
-This email was sent by the shareware version of Postman Professional.
+root@server:/sys/class/hwmon# echo 0 > hwmon1/temp2_min
+root@server:/sys/class/hwmon# echo 100000 > hwmon1/temp2_max
 
+root@server:/sys/class/hwmon# sensors nvme-pci-0100
+nvme-pci-0100
+Adapter: PCI adapter
+Composite:    +38.9°C  (low  = -273.1°C, high = +84.8°C)
+                        (crit = +84.8°C)
+Sensor 1:     +38.9°C  (low  =  -0.1°C, high = +99.8°C)
+Sensor 2:     +42.9°C  (low  = -273.1°C, high = +65261.8°C)
+
+If you dislike the defaults, just configure whatever you think is
+appropriate for your system.
+
+Thanks,
+Guenter
