@@ -1,62 +1,106 @@
 Return-Path: <SRS0=yvY0=3C=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
-X-Spam-Level: *
-X-Spam-Status: No, score=1.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,UNWANTED_LANGUAGE_BODY autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Level: 
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07E0CC33CA8
-	for <linux-ide@archiver.kernel.org>; Mon, 13 Jan 2020 09:19:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CD56C33C9A
+	for <linux-ide@archiver.kernel.org>; Mon, 13 Jan 2020 10:11:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CDB242080D
-	for <linux-ide@archiver.kernel.org>; Mon, 13 Jan 2020 09:19:07 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=eatcard24.eu header.i=@eatcard24.eu header.b="zdwg96ec"
+	by mail.kernel.org (Postfix) with ESMTP id 08B0B21734
+	for <linux-ide@archiver.kernel.org>; Mon, 13 Jan 2020 10:11:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727014AbgAMJTH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 13 Jan 2020 04:19:07 -0500
-Received: from mail.eatcard24.eu ([80.211.25.68]:56047 "EHLO mail.eatcard24.eu"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726435AbgAMJTH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 13 Jan 2020 04:19:07 -0500
-X-Greylist: delayed 434 seconds by postgrey-1.27 at vger.kernel.org; Mon, 13 Jan 2020 04:19:06 EST
-Received: by mail.eatcard24.eu (Postfix, from userid 1001)
-        id 9FC0787B71; Mon, 13 Jan 2020 10:10:42 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=eatcard24.eu; s=mail;
-        t=1578906674; bh=mwFI0mAZxzeho6TT6Q+d78QMEWhjq4VpIwhM1Up6VrE=;
-        h=Date:From:To:Subject:From;
-        b=zdwg96ecDguQODoS3wHxDWLpUq1Wm3oK7v7fTjhBzgfF6u0pdU6SLQ3M+jE/ccdoP
-         F3pUiXe7kft/tSmDjAqaSzdtsxpSfeH2oZSxajMqmge9EPtfeYHYBZAVakV2AhpYC6
-         4V9bfQdxYkZfcqQ3iRlVoT9D6vk//W/Po0vEhmL8=
-Received: by mail.eatcard24.eu for <linux-ide@vger.kernel.org>; Mon, 13 Jan 2020 09:10:29 GMT
-Message-ID: <20200113100930-0.1.20.2k75.0.ngpec6lf0h@eatcard24.eu>
-Date:   Mon, 13 Jan 2020 09:10:29 GMT
-From:   "Bastien Cassel" <bastien.cassel@eatcard24.eu>
-To:     <linux-ide@vger.kernel.org>
-Subject: =?UTF-8?Q?GPS_avanc=C3=A9?=
-X-Mailer: mail.eatcard24.eu
+        id S1726336AbgAMKLm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 13 Jan 2020 05:11:42 -0500
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2260 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725978AbgAMKLm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 13 Jan 2020 05:11:42 -0500
+Received: from LHREML713-CAH.china.huawei.com (unknown [172.18.7.106])
+        by Forcepoint Email with ESMTP id 523AA4E041E01063F6F0;
+        Mon, 13 Jan 2020 10:11:41 +0000 (GMT)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ LHREML713-CAH.china.huawei.com (10.201.108.36) with Microsoft SMTP Server
+ (TLS) id 14.3.408.0; Mon, 13 Jan 2020 10:11:40 +0000
+Received: from [127.0.0.1] (10.202.226.43) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1713.5; Mon, 13 Jan
+ 2020 10:11:40 +0000
+Subject: Re: Failed to disable WCE for a SATA disk
+To:     "chenxiang (M)" <chenxiang66@hisilicon.com>,
+        "axboe@kernel.dk" <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, Linuxarm <linuxarm@huawei.com>,
+        Jason Yan <yanaijie@huawei.com>
+References: <a3624979-0917-4b66-ca18-89e0e2dd3bf2@hisilicon.com>
+ <d6e8987b-e44e-661e-7338-321583e9fb75@hisilicon.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <55db2e1d-5a3c-55e1-1513-25506ebf3d8f@huawei.com>
+Date:   Mon, 13 Jan 2020 10:11:39 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <d6e8987b-e44e-661e-7338-321583e9fb75@hisilicon.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.202.226.43]
+X-ClientProxiedBy: lhreml729-chm.china.huawei.com (10.201.108.80) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Bonjour,
-Je vous =C3=A9cris sur l'un des meilleurs outils GPS du march=C3=A9.
-=20
-L'outil, que je voudrais vous pr=C3=A9senter bri=C3=A8vement, a de nombre=
-uses fonctions utiles dans votre travail, qui optimisent les processus de=
- transport et aident =C3=A0 effectuer les t=C3=A2ches sur le terrain plus=
- efficacement.
-=20
-Voulez-vous conna=C3=AEtre les d=C3=A9tails?
-Dans l'attente de votre r=C3=A9ponse.
-=20
+On 13/01/2020 03:30, chenxiang (M) wrote:
 
-Meilleures salutations,
-Bastien Cassel
-Conseiller client=C3=A8le
-bastien.cassel@eatcard24.eu
++ Jason
+
+> Hi,
+> 
+> 在 2019/12/11 11:21, chenxiang (M) 写道:
+>> Hi,
+>>
+>> I encounter a issue related to libata and libsas. For hisi_sas driver, 
+>> it uses libsas. When disable WCE with tool sdparm (sdparm --clear=WCE 
+>> /dev/sda) for a SATA disk,
+>> it fails with error info from hardware (the error info indicates that 
+>> the length of transfer data is conflicted with the direction of data, 
+>> the length is 0 but
+>> the data of direction is from host to device).
+>>
+>> I check the process: When disable WCE, it sends pasthrough IO with 
+>> sg_io , req->__data_len is not 0, and scsi_cmd->sc_data_direction = 
+>> DMA_TO_DEVICE.
+>> But for the command (MODE_SELECT), qc->tf.protocol is set 0 (not 
+>> ATA_PROT_DMA) in ->queuecommand() 
+>> ->ata_sas_queuecmd()->ata_scsi_translate()->ata_scsi_mod_select_xlat()->ata_mselect_caching(), 
+>>
+>> so it doesn't dma map ata sg in function ata_qc_issue(). While in 
+>> function sas_ata_qc_issue()，it calcutes the length with the total sum 
+>> of sg_dma_len(sg), as for the
+>> command it doesn't dma map ata sg, so the length is 0.
+>>
+>> Do we need to dma map ata sg for the command? Or is it really we need 
+>> the data for the command MODE_SELECT?
+> 
+> Does anyone have idea about it ?
+> 
+>>
+>> Thanks,
+>> Shawn
+>>
+>>
+>>
+>>
+>> .
+>>
+> 
+> 
+> .
+
