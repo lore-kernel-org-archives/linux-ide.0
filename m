@@ -4,52 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A19E0C33CAF
-	for <linux-ide@archiver.kernel.org>; Thu, 16 Jan 2020 18:04:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 276EEC33CB8
+	for <linux-ide@archiver.kernel.org>; Thu, 16 Jan 2020 18:17:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7B94B214AF
-	for <linux-ide@archiver.kernel.org>; Thu, 16 Jan 2020 18:04:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EF24A24681
+	for <linux-ide@archiver.kernel.org>; Thu, 16 Jan 2020 18:17:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579197888;
-	bh=KPGjdXEAIWa/tzOeY7sU6vy4h8YTgu68F93lD1zPqnM=;
+	s=default; t=1579198660;
+	bh=JgI2roxLOmy0H3SjGoq12s9tb2vfddbZ6GGbCTxrDAA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=Rsnyf4GtKD89khMCI5+4eKtBt/li71t7Tb/38j0DysQJGyDk9l28CSP2l0LqCa1OV
-	 RWU8WOVKIOtKNAO8rvvaLt6Cx/bocU4jjl93/3L7BkXgEtaG1/Hq4PesFc7BoA55US
-	 RIahAv8RfXOK8UGMbkggxCdFZCnZqtBSRs4/DZ84=
+	b=hF8xOS9EAMegocmT69yOyxKn5sgPk3qdK7WgQu8lKskKkwq7LZpRRAyLM4u+btKvn
+	 yPzEO6epj/vLsJHhziArMWrLEPtnZlmlfD0f00IW54B6j93OSzjJ1HxyCP6wVa+HJb
+	 sh6HKrWdaaxKWQLRXMPiYOcvNan7iuhTRF4YESm4=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406845AbgAPSEq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 16 Jan 2020 13:04:46 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57400 "EHLO mail.kernel.org"
+        id S2404267AbgAPR3E (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 16 Jan 2020 12:29:04 -0500
+Received: from mail.kernel.org ([198.145.29.99]:40620 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389695AbgAPRkS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 16 Jan 2020 12:40:18 -0500
+        id S2404263AbgAPR3D (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 16 Jan 2020 12:29:03 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C0B4824731;
-        Thu, 16 Jan 2020 17:40:16 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 82202246F3;
+        Thu, 16 Jan 2020 17:29:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579196417;
-        bh=KPGjdXEAIWa/tzOeY7sU6vy4h8YTgu68F93lD1zPqnM=;
+        s=default; t=1579195743;
+        bh=JgI2roxLOmy0H3SjGoq12s9tb2vfddbZ6GGbCTxrDAA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=N2GBzKJlOTmSBVYCXrDR4o/bt1fCYTf+oAQAvQTgAlccl2TrPw2ZrvncmcdGFoORI
-         ZZ3rrYQRHTkXV+0pnu8jjs6WB7kDlvEKxKJv/+ajkd4G4AfveZjV3flauSewqd7+e2
-         WE7mlb7TKc/RmN5ovMu6udSPxGZkYprGZ9sVlkIo=
+        b=1mI+dsYFfgN4N3Oh4xmu2ySFgDww628yTsk86ViSRpFa6Bn4tjrPAvmgHLkCxEXbG
+         NOktxlKDjaCsUd/IpED1swOyjP7EES5f8E/rzNw3KignRzDfRDjPY9cfGtCku8I+/w
+         Sb6vT0rswbx/X/Tl/VXCV0XwqdoJsqconeEDgAU0=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
         Chuansheng Liu <chuansheng.liu@intel.com>,
         Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
         linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 188/251] ahci: Do not export local variable ahci_em_messages
-Date:   Thu, 16 Jan 2020 12:35:37 -0500
-Message-Id: <20200116173641.22137-148-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 278/371] ahci: Do not export local variable ahci_em_messages
+Date:   Thu, 16 Jan 2020 12:22:30 -0500
+Message-Id: <20200116172403.18149-221-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200116173641.22137-1-sashal@kernel.org>
-References: <20200116173641.22137-1-sashal@kernel.org>
+In-Reply-To: <20200116172403.18149-1-sashal@kernel.org>
+References: <20200116172403.18149-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -81,10 +81,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 deletion(-)
 
 diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index f233ce60a678..1610fff19bb3 100644
+index cda9a0b5bdaa..7473ff46de66 100644
 --- a/drivers/ata/libahci.c
 +++ b/drivers/ata/libahci.c
-@@ -190,7 +190,6 @@ struct ata_port_operations ahci_pmp_retry_srst_ops = {
+@@ -191,7 +191,6 @@ struct ata_port_operations ahci_pmp_retry_srst_ops = {
  EXPORT_SYMBOL_GPL(ahci_pmp_retry_srst_ops);
  
  static bool ahci_em_messages __read_mostly = true;
