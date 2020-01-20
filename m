@@ -6,55 +6,49 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3EC7C2D0DB
-	for <linux-ide@archiver.kernel.org>; Mon, 20 Jan 2020 13:39:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1CBDC2D0DB
+	for <linux-ide@archiver.kernel.org>; Mon, 20 Jan 2020 13:40:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D20DF2087E
-	for <linux-ide@archiver.kernel.org>; Mon, 20 Jan 2020 13:39:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE3D52087E
+	for <linux-ide@archiver.kernel.org>; Mon, 20 Jan 2020 13:40:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727289AbgATNjq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 20 Jan 2020 08:39:46 -0500
-Received: from shards.monkeyblade.net ([23.128.96.9]:56804 "EHLO
+        id S1727071AbgATNkF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 20 Jan 2020 08:40:05 -0500
+Received: from shards.monkeyblade.net ([23.128.96.9]:56822 "EHLO
         shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726626AbgATNjq (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jan 2020 08:39:46 -0500
+        with ESMTP id S1726626AbgATNkF (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jan 2020 08:40:05 -0500
 Received: from localhost (82-95-191-104.ip.xs4all.nl [82.95.191.104])
         (using TLSv1 with cipher AES256-SHA (256/256 bits))
         (Client did not present a certificate)
         (Authenticated sender: davem-davemloft)
-        by shards.monkeyblade.net (Postfix) with ESMTPSA id 4DB9314E9DEF7;
-        Mon, 20 Jan 2020 05:39:44 -0800 (PST)
-Date:   Mon, 20 Jan 2020 14:39:43 +0100 (CET)
-Message-Id: <20200120.143943.2039981041531373204.davem@davemloft.net>
-To:     wanghai38@huawei.com
-Cc:     benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-        linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ide: remove set but not used variable 'hwif'
+        by shards.monkeyblade.net (Postfix) with ESMTPSA id 16D6214EAD04E;
+        Mon, 20 Jan 2020 05:40:03 -0800 (PST)
+Date:   Mon, 20 Jan 2020 14:40:02 +0100 (CET)
+Message-Id: <20200120.144002.869964951393529700.davem@davemloft.net>
+To:     krzk@kernel.org
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] ide: ht6560b: Fix cast to pointer from integer of
+ different size
 From:   David Miller <davem@davemloft.net>
-In-Reply-To: <20191026015738.4865-1-wanghai38@huawei.com>
-References: <20191026015738.4865-1-wanghai38@huawei.com>
+In-Reply-To: <20200104143348.27842-1-krzk@kernel.org>
+References: <20200104143348.27842-1-krzk@kernel.org>
 X-Mailer: Mew version 6.8 on Emacs 26.3
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Mon, 20 Jan 2020 05:39:45 -0800 (PST)
+Content-Type: Text/Plain; charset=iso-8859-7
+Content-Transfer-Encoding: base64
+X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Mon, 20 Jan 2020 05:40:04 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Wang Hai <wanghai38@huawei.com>
-Date: Sat, 26 Oct 2019 09:57:38 +0800
-
-> Fix the following gcc warning:
-> 
-> drivers/ide/pmac.c: In function pmac_ide_setup_device:
-> drivers/ide/pmac.c:1027:14: warning: variable hwif set but not used
-> [-Wunused-but-set-variable]
-> 
-> Fixes: d58b0c39e32f ("powerpc/macio: Rework hotplug media bay support")
-> Reported-by: Hulk Robot <hulkci@huawei.com>
-> Signed-off-by: Wang Hai <wanghai38@huawei.com>
-
-Applied.
+RnJvbTogS3J6eXN6dG9mIEtvemxvd3NraSA8a3J6a0BrZXJuZWwub3JnPg0KRGF0ZTogU2F0LCAg
+NCBKYW4gMjAyMCAxNTozMzo0NyArMDEwMA0KDQo+IEludGVnZXIgcGFzc2VkIGFzIHBvaW50ZXIg
+dG8gZHJ2ZGF0YSBzaG91bGQgYmUgY2FzdCB0byB1bnNpZ25lZCBsb25nIHRvDQo+IGF2b2lkIHdh
+cm5pbmcgKGNvbXBpbGUgdGVzdGluZyBvbiBhbHBoYSBhcmNoaXRlY3R1cmUpOg0KPiANCj4gICAg
+IGRyaXZlcnMvaWRlL2h0NjU2MGIuYzogSW4gZnVuY3Rpb24goWh0NjU2MGJfaW5pdF9kZXaiOg0K
+PiAgICAgZHJpdmVycy9pZGUvaHQ2NTYwYi5jOjMxODoyNzogd2FybmluZzoNCj4gICAgICAgICBj
+YXN0IHRvIHBvaW50ZXIgZnJvbSBpbnRlZ2VyIG9mIGRpZmZlcmVudCBzaXplIFstV2ludC10by1w
+b2ludGVyLWNhc3RdDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBLcnp5c3p0b2YgS296bG93c2tpIDxr
+cnprQGtlcm5lbC5vcmc+DQoNCkFwcGxpZWQuDQo=
