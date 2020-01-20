@@ -1,75 +1,55 @@
-Return-Path: <SRS0=N3Aw=3I=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=+4Y/=3J=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77F99C32771
-	for <linux-ide@archiver.kernel.org>; Sun, 19 Jan 2020 00:27:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD496C2D0DB
+	for <linux-ide@archiver.kernel.org>; Mon, 20 Jan 2020 13:39:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 46F59246A5
-	for <linux-ide@archiver.kernel.org>; Sun, 19 Jan 2020 00:27:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ADF7322314
+	for <linux-ide@archiver.kernel.org>; Mon, 20 Jan 2020 13:39:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727028AbgASA14 convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 18 Jan 2020 19:27:56 -0500
-Received: from mail.kernel.org ([198.145.29.99]:36020 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727012AbgASA14 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sat, 18 Jan 2020 19:27:56 -0500
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-ide@vger.kernel.org
-Subject: [Bug 205107] No HDD spindown/parking on shutdown
-Date:   Sun, 19 Jan 2020 00:27:55 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo io_ide@kernel-bugs.osdl.org
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: IDE
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: high
-X-Bugzilla-Who: helder.armando@hotmail.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: io_ide@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-205107-11633-rErcm6wfLY@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-205107-11633@https.bugzilla.kernel.org/>
-References: <bug-205107-11633@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
-MIME-Version: 1.0
+        id S1726819AbgATNjR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 20 Jan 2020 08:39:17 -0500
+Received: from shards.monkeyblade.net ([23.128.96.9]:56790 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726738AbgATNjR (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jan 2020 08:39:17 -0500
+Received: from localhost (82-95-191-104.ip.xs4all.nl [82.95.191.104])
+        (using TLSv1 with cipher AES256-SHA (256/256 bits))
+        (Client did not present a certificate)
+        (Authenticated sender: davem-davemloft)
+        by shards.monkeyblade.net (Postfix) with ESMTPSA id 3631C14EAD04B;
+        Mon, 20 Jan 2020 05:39:16 -0800 (PST)
+Date:   Mon, 20 Jan 2020 14:39:07 +0100 (CET)
+Message-Id: <20200120.143907.404082019388749442.davem@davemloft.net>
+To:     christophe.jaillet@wanadoo.fr
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] ide: tx4939ide: Fix the name used in a
+ 'devm_request_mem_region()' call
+From:   David Miller <davem@davemloft.net>
+In-Reply-To: <20190724220145.17282-1-christophe.jaillet@wanadoo.fr>
+References: <20190724220145.17282-1-christophe.jaillet@wanadoo.fr>
+X-Mailer: Mew version 6.8 on Emacs 26.3
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Mon, 20 Jan 2020 05:39:17 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=205107
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Date: Thu, 25 Jul 2019 00:01:45 +0200
 
---- Comment #15 from Hélder (helder.armando@hotmail.com) ---
-Let me fix some of the information I have sent.
-I decided to retry these scenarios just to be certain. If I do leave the cable
-plugged in until the system is completely off (never unplugged) and (prior to
-shutdown):
-- unmount normally (via the file manager) ->> the problem is still present
-(disc doesn't spin down).
-- Use the script (which includes "udisksctl power-off") ->> the problem is not
-present most of the time, but the HDD is sometimes re-awoken by the system
-during shutdown, resulting in the same problem.
+> This should be "tx4939ide" instead of "tx4938ide", but here MODNAME is even
+> better.
+> 
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 
-PS: Under normal circumstances, I execute the script, unplug the HDD manually
-and then shut the system down as normal.
-PPS: Multiple messages were sent due to the networking problems forcing me to
-refresh the page until the reply is visibly sent.
-
-- Hélder
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Applied.
