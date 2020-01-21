@@ -4,69 +4,72 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5B75C32771
-	for <linux-ide@archiver.kernel.org>; Tue, 21 Jan 2020 01:33:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AED21C2D0CE
+	for <linux-ide@archiver.kernel.org>; Tue, 21 Jan 2020 08:48:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A60C22527
-	for <linux-ide@archiver.kernel.org>; Tue, 21 Jan 2020 01:33:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B0A022522
+	for <linux-ide@archiver.kernel.org>; Tue, 21 Jan 2020 08:48:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728712AbgAUBda (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 20 Jan 2020 20:33:30 -0500
-Received: from szxga05-in.huawei.com ([45.249.212.191]:9221 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727009AbgAUBd3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 20 Jan 2020 20:33:29 -0500
-Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id DF10D2200792A4E24220;
-        Tue, 21 Jan 2020 09:33:26 +0800 (CST)
-Received: from localhost.localdomain.localdomain (10.175.113.25) by
- DGGEMS414-HUB.china.huawei.com (10.3.19.214) with Microsoft SMTP Server id
- 14.3.439.0; Tue, 21 Jan 2020 09:33:18 +0800
-From:   Chen Zhou <chenzhou10@huawei.com>
-To:     <b.zolnierkie@samsung.com>, <axboe@kernel.dk>
-CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <chenzhou10@huawei.com>
-Subject: [PATCH -next] ata: pata_macio: fix comparing pointer to 0
-Date:   Tue, 21 Jan 2020 09:28:27 +0800
-Message-ID: <20200121012827.1036-1-chenzhou10@huawei.com>
-X-Mailer: git-send-email 2.20.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.113.25]
-X-CFilter-Loop: Reflected
+        id S1727312AbgAUIsz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 21 Jan 2020 03:48:55 -0500
+Received: from out30-130.freemail.mail.aliyun.com ([115.124.30.130]:32947 "EHLO
+        out30-130.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725789AbgAUIsz (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 21 Jan 2020 03:48:55 -0500
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R181e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e07417;MF=alex.shi@linux.alibaba.com;NM=1;PH=DS;RN=3;SR=0;TI=SMTPD_---0ToHXESk_1579596532;
+Received: from localhost(mailfrom:alex.shi@linux.alibaba.com fp:SMTPD_---0ToHXESk_1579596532)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Tue, 21 Jan 2020 16:48:52 +0800
+From:   Alex Shi <alex.shi@linux.alibaba.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] ata/acard_ahci: remove unused variable n_elem
+Date:   Tue, 21 Jan 2020 16:48:49 +0800
+Message-Id: <1579596529-257563-1-git-send-email-alex.shi@linux.alibaba.com>
+X-Mailer: git-send-email 1.8.3.1
+To:     unlisted-recipients:; (no To-header on input)
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Fixes coccicheck warning:
+No one care the varible acard_ahci in func acard_ahci_qc_prep.
+better to remove it.
 
-./drivers/ata/pata_macio.c:982:31-32:
-	WARNING comparing pointer to 0, suggest !E
-
-Compare pointer-typed values to NULL rather than 0.
-
-Signed-off-by: Chen Zhou <chenzhou10@huawei.com>
+Signed-off-by: Alex Shi <alex.shi@linux.alibaba.com>
+Cc: Jens Axboe <axboe@kernel.dk> 
+Cc: linux-ide@vger.kernel.org 
+Cc: linux-kernel@vger.kernel.org 
 ---
- drivers/ata/pata_macio.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ata/acard-ahci.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-index 1bfd015..e47a282 100644
---- a/drivers/ata/pata_macio.c
-+++ b/drivers/ata/pata_macio.c
-@@ -979,7 +979,7 @@ static void pata_macio_invariants(struct pata_macio_priv *priv)
- 	priv->aapl_bus_id =  bidp ? *bidp : 0;
+diff --git a/drivers/ata/acard-ahci.c b/drivers/ata/acard-ahci.c
+index 46dc54d18f0b..2a04e8abd397 100644
+--- a/drivers/ata/acard-ahci.c
++++ b/drivers/ata/acard-ahci.c
+@@ -218,7 +218,6 @@ static enum ata_completion_errors acard_ahci_qc_prep(struct ata_queued_cmd *qc)
+ 	void *cmd_tbl;
+ 	u32 opts;
+ 	const u32 cmd_fis_len = 5; /* five dwords */
+-	unsigned int n_elem;
  
- 	/* Fixup missing Apple bus ID in case of media-bay */
--	if (priv->mediabay && bidp == 0)
-+	if (priv->mediabay && !bidp)
- 		priv->aapl_bus_id = 1;
- }
+ 	/*
+ 	 * Fill in command table information.  First, the header,
+@@ -232,9 +231,8 @@ static enum ata_completion_errors acard_ahci_qc_prep(struct ata_queued_cmd *qc)
+ 		memcpy(cmd_tbl + AHCI_CMD_TBL_CDB, qc->cdb, qc->dev->cdb_len);
+ 	}
  
+-	n_elem = 0;
+ 	if (qc->flags & ATA_QCFLAG_DMAMAP)
+-		n_elem = acard_ahci_fill_sg(qc, cmd_tbl);
++		acard_ahci_fill_sg(qc, cmd_tbl);
+ 
+ 	/*
+ 	 * Fill in command slot information.
 -- 
-2.7.4
+1.8.3.1
 
