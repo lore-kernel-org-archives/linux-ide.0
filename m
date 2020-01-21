@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 265AFC2D0CE
-	for <linux-ide@archiver.kernel.org>; Tue, 21 Jan 2020 11:55:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 973B4C2D0CE
+	for <linux-ide@archiver.kernel.org>; Tue, 21 Jan 2020 12:07:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EC70C2253D
-	for <linux-ide@archiver.kernel.org>; Tue, 21 Jan 2020 11:55:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B1EE2073A
+	for <linux-ide@archiver.kernel.org>; Tue, 21 Jan 2020 12:07:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kUmWb58v"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="n50CjAdt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728748AbgAULzb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 21 Jan 2020 06:55:31 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:44442 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727817AbgAULzb (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 21 Jan 2020 06:55:31 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00LBrQ4t049836;
-        Tue, 21 Jan 2020 11:55:25 GMT
+        id S1729431AbgAUMHp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 21 Jan 2020 07:07:45 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:52038 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728655AbgAUMHo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 21 Jan 2020 07:07:44 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00LC3A4R018648;
+        Tue, 21 Jan 2020 12:07:35 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=zBdqAA4BOQgFITAGeYfb5IM0FCacLYaCNGSteW28NRw=;
- b=kUmWb58vbPPMkVaSaPym3eMXjGh8juZrFbcy8p3eP/ACP2a/mWeO1tZAlxA2L40RE6Ss
- s0h+Mh89TKhW0Zt1Lh25JHc6pf7i1Ulh2KuasSxFOy902KocEoQY7YBz/v3n+nRJplUB
- G1RyGOi6BGX+kOOZP8CP3+OLsJJUq2IG8H7x/NXSBeopmJOA8nVhNoLA9eiH/swBHzZd
- uR+j2n/YEC5nT5l4zsabxyDOwdozfstThIb+Fg82DkZHbTHd0HIehorT+aOIymoVT5d6
- ThLK3ysH6QleZ/6lqIo9RpHXsrww2/dMhyGo0VffcOb2FkjXfZeM0Wbb+otIgyicIMKD 5g== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2xkseuckjb-1
+ bh=tdcR9JxADXhA1TYD2QHiLpZepwhEWa+ITm01KGLpQp0=;
+ b=n50CjAdtc0ioDh2yWLG4Uy9G6g9WSvNrq8QxiXlWM0qTjU/XUN1o8wE0O85mA/4cFnRD
+ kmbju7EMiLpNYkEy74LhKDv+l+A7lzdVF2GZZiFsvdw5I9iBDLnlXZT4SbwwEpbRD0nf
+ eTz9F1tCUBx9IQrnco+P4sLg/brAiIhYgTdqphAyoUUZUI1nojEn8zz/W+ga2dfnPh6P
+ d2/FR4kjdrzrz7wLf2JLtSJxqbfN8ZG1Fo9nSEymL2OLOQjIWcmQsbZpOL8/tsRnzp7G
+ CDx6jFQjgGwgDvS9oDI8kFY9PaD+b2cIw6WizwTkFwlK+74Qv/L0/NepjaJQn3AlDE0R FA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2xksyq4fsy-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Jan 2020 11:55:25 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00LBs7Rs031564;
-        Tue, 21 Jan 2020 11:55:25 GMT
+        Tue, 21 Jan 2020 12:07:35 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00LC3tdw159797;
+        Tue, 21 Jan 2020 12:07:34 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2xnsj4ex8k-1
+        by userp3030.oracle.com with ESMTP id 2xnsa8ggmf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 21 Jan 2020 11:55:25 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00LBtNd6032589;
-        Tue, 21 Jan 2020 11:55:23 GMT
+        Tue, 21 Jan 2020 12:07:34 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 00LC7WBX006911;
+        Tue, 21 Jan 2020 12:07:32 GMT
 Received: from kadam (/129.205.23.165)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 21 Jan 2020 03:55:22 -0800
-Date:   Tue, 21 Jan 2020 14:55:14 +0300
+        with ESMTP ; Tue, 21 Jan 2020 04:07:31 -0800
+Date:   Tue, 21 Jan 2020 15:07:25 +0300
 From:   Dan Carpenter <dan.carpenter@oracle.com>
 To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 Cc:     David Miller <davem@davemloft.net>, linux-ide@vger.kernel.org,
         kernel-janitors@vger.kernel.org
 Subject: Re: Re: [PATCH 1/2] cmd64x: potential buffer overflow in
  cmd64x_program_timings()
-Message-ID: <20200121115514.GA1870@kadam>
+Message-ID: <20200121120724.GC1847@kadam>
 References: <20200107130441.y3owvcnxdljailt5@kili.mountain>
  <20200120.144042.1810086369376110530.davem@davemloft.net>
  <CGME20200121111555eucas1p2d26b5230ab428f40ee3fc76d687e601f@eucas1p2.samsung.com>
@@ -72,13 +72,13 @@ X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9506 signatures=6
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1911140001 definitions=main-2001210101
+ engine=8.0.1-1911140001 definitions=main-2001210103
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9506 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
- definitions=main-2001210101
+ definitions=main-2001210103
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
@@ -121,11 +121,32 @@ On Tue, Jan 21, 2020 at 02:48:35PM +0300, Dan Carpenter wrote:
 >    215          IDE_PROC_DEVSET(keepsettings, 0, 1),
 >    216          IDE_PROC_DEVSET(nice1, 0, 1),
 >    217          IDE_PROC_DEVSET(number, 0, 3),
-                                          ^^^^
-Argh...  This clamps it to 0-3 doesn't it.
+>    218          IDE_PROC_DEVSET(pio_mode, 0, 255),
+>    219          IDE_PROC_DEVSET(unmaskirq, 0, 1),
+>    220          IDE_PROC_DEVSET(using_dma, 0, 1),
+>    221          { NULL },
+>    222  };
+> 
+> drivers/ide/ide-devsets.c
+>    159  int ide_devset_execute(ide_drive_t *drive, const struct ide_devset *setting,
+>    160                         int arg)
+>    161  {
+>    162          struct request_queue *q = drive->queue;
+>    163          struct request *rq;
+>    164          int ret = 0;
+>    165  
+>    166          if (!(setting->flags & DS_SYNC))
+>    167                  return setting->set(drive, arg);
+>                                ^^^^^^^^^^^^^^^^^^^^^^^^
+> Called from here according to Smatch.
+> 
 
-Sorry, I didn't see that.
+Actually this is where I went wrong.  The function is never called from
+here.
+
+Sorry for the noise.  These patches are not required.
 
 regards,
 dan carpenter
+
 
