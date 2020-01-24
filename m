@@ -2,145 +2,91 @@ Return-Path: <SRS0=frJy=3N=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FAKE_REPLY_C,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C34B1C2D0DB
-	for <linux-ide@archiver.kernel.org>; Fri, 24 Jan 2020 20:36:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95B1CC35242
+	for <linux-ide@archiver.kernel.org>; Fri, 24 Jan 2020 23:03:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 981BB20702
-	for <linux-ide@archiver.kernel.org>; Fri, 24 Jan 2020 20:36:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 69DF32075D
+	for <linux-ide@archiver.kernel.org>; Fri, 24 Jan 2020 23:03:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1579898210;
-	bh=qL67LPbRm0gwuNb+oeddj46XlTu8jpHDWEiYvLb9kzc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=Qmhs21ophpOvpQMz/XEfPI3nDJOC5A2Hq59zn5sFnHn9LQQgPzuxVB+kZ4vR+5a+z
-	 WXOWkjUIn5XSe5CiYXH9R3M4ZWjfckeGUMHNxadPbtGb/eTpRi8Pe1Nozs88lt/TVg
-	 5xkwWRIt6hVmwgHIMG3k5vamD7B0bYXshJ6W38GE=
+	s=default; t=1579907028;
+	bh=XkOzqoHMd66BSJcwkXbP8ppioKDpOd3Zweui0TDTqdI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=qaNC0QoFFxiyXCC4L0JYujuEXmOf9ZnNOdEli6c6Rjb6AIpiKArQdGt+BQftu/2mj
+	 4cyU1+zTKzPxNH6T4xbq8THws8+CjRQeVbDibzbWPODpEqtqKR88U72HXsplALUu/V
+	 1zSi+0miimQ0WlET8T8LvdUvITxHMMXWk6auLw/A=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388677AbgAXUf2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 24 Jan 2020 15:35:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55326 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387548AbgAXUf1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 24 Jan 2020 15:35:27 -0500
-Received: from localhost (mobile-166-175-186-165.mycingular.net [166.175.186.165])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6D86F2072C;
-        Fri, 24 Jan 2020 20:35:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1579898126;
-        bh=qL67LPbRm0gwuNb+oeddj46XlTu8jpHDWEiYvLb9kzc=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=0WF6W5LvnFymdP9cYB99vwaSYsflgBXnpJDjm4GKegXXfK+hE7dJ/VaF4SQ0C0157
-         z1h7ADGYANEF8cuuJkTfSmIt2Z+QqPJC6jl0TPD8wua3bcfkiYeAl0tnXYlThQB4Pg
-         s+yDcxK1kvKq2BCic0xrb9P8ofikTz8JXqSrwKjA=
-Date:   Fri, 24 Jan 2020 14:35:24 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Prabhakar Kushwaha <prabhakar.pkin@gmail.com>
-Cc:     Prabhakar Kushwaha <pkushwaha@marvell.com>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "kexec@lists.infradead.org" <kexec@lists.infradead.org>,
-        Ganapatrao Prabhakerrao Kulkarni <gkulkarni@marvell.com>,
-        Kamlakant Patel <kamlakantp@marvell.com>
-Subject: Re: [PATCH] ata: ahci: Add shutdown to freeze hardware resources of
- ahci
-Message-ID: <20200124203524.GA47417@google.com>
+        id S1729195AbgAXXDs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 24 Jan 2020 18:03:48 -0500
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:37292 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729182AbgAXXDr (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 24 Jan 2020 18:03:47 -0500
+Received: by mail-pl1-f195.google.com with SMTP id c23so1387859plz.4;
+        Fri, 24 Jan 2020 15:03:47 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=MGRq2AwVFd4DWNsp7d7HFpzZlRbQ0ZEgqyNAkNe3J5M=;
+        b=T2dnSFG4VA2vnPZpfzkw4yn9JywADHhYTfKD4mgqoMFBYi+4OZZa2ZxvmK/eJI4xLt
+         hMV157cOO0o5B2rILrrDUAbO6Uuk1GKS5UL5aAE3Ow1RLD9QfpGD8ZGSjLlkiS5abh9U
+         0/CfdgAsW++0EAqWSouOVUtkOuSas5f7kqNaFUJC3iERqSLSVGkq1BaKOjftG/kwZ/CJ
+         mgxCl/DYCLz0D0BXSI+2ufQZV6YqIC/9WbX/VQCkyByE+oRjQOqoOTfnruScn3ppCbV9
+         Uw+NdCI5JOiIwfrdMZtoGprneOZ+B4eKeFhhpRo2dBGO8blMK+rTS76Tg0ceItsfx3KP
+         Sj5A==
+X-Gm-Message-State: APjAAAWNWlvy68FbZT5ULwGjGcfnlVYqPlc7UT0cy1Iztpmn+0eFZjG6
+        PItmOpPFsE07G64A2lZH53Y=
+X-Google-Smtp-Source: APXvYqxRiq2ERDzSNYLx4Td68ALF8xKHPHga/5pBcCGxCccQkad/3g/y+5tRl662fUbnwVu3Wc4PPw==
+X-Received: by 2002:a17:90a:5206:: with SMTP id v6mr1779319pjh.136.1579907026837;
+        Fri, 24 Jan 2020 15:03:46 -0800 (PST)
+Received: from localhost (MIPS-TECHNO.ear1.SanJose1.Level3.net. [4.15.122.74])
+        by smtp.gmail.com with ESMTPSA id v10sm7726710pgk.24.2020.01.24.15.03.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 24 Jan 2020 15:03:46 -0800 (PST)
+Date:   Fri, 24 Jan 2020 15:03:45 -0800
+From:   Paul Burton <paulburton@kernel.org>
+To:     "David S . Miller" <davem@davemloft.net>,
+        Jonathan Corbet <corbet@lwn.net>
+Cc:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Paul Burton <paul.burton@mips.com>,
+        James Hogan <jhogan@kernel.org>, linux-ide@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/3] ide/MIPS/docs: remove no longer used au1xxx-ide
+ driver
+Message-ID: <20200124230345.m3i223nazraoont3@pburton-laptop>
+References: <CGME20200116122951eucas1p1d36493f2b496bb13dca4fd1a17abad49@eucas1p1.samsung.com>
+ <20200116122938.20789-1-b.zolnierkie@samsung.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAJ2QiJKLJCa7QKs3MFn1_EgsjD7-Qp7ab1DLab87hhqTr-Cnzg@mail.gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20200116122938.20789-1-b.zolnierkie@samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-[FYI, your reply was a multipart message (not a simple plain text
-message), so I think the mailing lists discarded it and it doesn't
-appear in the archives]
+Hi David & Jonathan,
 
-On Thu, Jan 23, 2020 at 08:05:04PM +0530, Prabhakar Kushwaha wrote:
-> Thanks Bjorn for review. Reply is in-lined.
-> 
-> On Thu, Jan 23, 2020 at 7:24 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> 
-> > On Thu, Jan 23, 2020 at 10:41:57AM +0000, Prabhakar Kushwaha wrote:
-> > > device_shutdown() called from reboot/power_shutdown expect all
-> > > devices to be shutdown. Same is true for ahci pci driver.
-> > > As no shutdown function was implemented ata subsystem remains
-> > > always alive and DMA/interrupt still active.
-> > >
-> > > It creates problem during kexec, here "M" bit is cleared to stop
-> > > DMA usage.
-> >
-> > Maybe this is obvious to AHCI folks, but I don't know what "M" bit you
-> > are referring to, and I don't see anything in the patch itself that
-> > looks like an "M" bit.  I thought maybe you meant the "Bus Master
-> > Enable" bit (PCI_COMMAND_MASTER), but I don't see an obvious
-> > connection to that either.
-> >
-> I missed to explain M bit. Thanks for pointing it out.
-> M bit is PCI_COMMAND_MASTER bit i.e. Bus Master Enable.
+On Thu, Jan 16, 2020 at 01:29:35PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> Since patch #2 depends on patch #1 (and it is also the best to
+> apply patch #3 after driver code removal) it would be probably
+> easiest to merge everything through MIPS tree (after getting
+> necessary ACKs, from David for the first patch and Jonathan for
+> the third one).
 
-Please don't call it the "M" bit.  Neither the Conventional PCI nor
-the PCIe specs call it that, and it could just as easily refer to the
-"Memory Space Enable" bit.  Just call it the "Bus Master Enable" bit
-like the specs do.
+Does that sound good to you? If so could you ack the patches as
+appropriate?
 
-> There are 2 flow in kernel which calls device_shutdown() which inherently
-> call pci_device_shutdown()().
-> a) reboot flow
-> b) kexec -e flow
-> 
-> issue seen in kexec -e flow where hard-disk is not getting detected in
-> second kernel.
-> There is special code in pci_device_shutdown() which clear M bit during
-> kexec -e i.e. kexec_in_progress flag is set.
-> 
-> if (kexec_in_progress && (pci_dev->current_state <= PCI_D3hot))
->                 pci_clear_master(pci_dev);
-> 
-> There should not be any transaction after pci_clear_master() but i am
-> seeing filesystem sync function calls after this.
-> this is the reason shutdown function is added(this patch) which disable
-> interrupt, stop DMA and freeze SATA port before execution of
-> pci_clear_master()
+Alternatively I have no problem if you'd rather take this through the
+IDE tree David, in which case for patch 2:
 
-I don't see where your patch adds anything that clears Bus Master
-Enable.  You're adding ahci_shutdown_one(), so pci_device_shutdown()
-will now call it, and maybe something inside ahci_shutdown_one() will
-clear Bus Master Enable, but I couldn't find it with a quick look.
+    Acked-by: Paul Burton <paulburton@kernel.org>
 
-pci_device_shutdown() *does* clear it, of course, but only when
-kexec_in_progress, and it does that even without this patch.
-
-Just to be clear, I don't object to the patch itself -- that's an AHCI
-thing that I don't know much about.  I'm just complaining because it's
-not obvious that your commit log describes what the patch actually
-does.
-
-ahci_shutdown_one() might indeed stop the AHCI port DMA, but I suspect
-it's doing that via the AHCI programming model, not by clearing Bus
-Master Enable.  So maybe all you need to do is remove the references
-to BME.
-
-> After adding shutdown function, i can see hard-disk getting detected in
-> second kernel.
-> 
-> > > Any further DMA transaction may cause instability and
-> > > the hard-disk may even not get detected for second kernel.
-> > > One of possible case is periodic file system sync.
-> >
-> > I think "may cause instability" and "disk may even not get detected"
-> > is too vague and hand-wavy to really add useful information to the
-> > commit log.
-> >
-> let me rework on this.. Thanks
-> 
-> > > So defining ahci pci driver shutdown to freeze hardware (mask
-> > > interrupt, stop DMA engine and free DMA resources).
+Thanks,
+    Paul
