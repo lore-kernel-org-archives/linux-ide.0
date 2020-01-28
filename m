@@ -5,55 +5,55 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4213CC3F68F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17E02C2D0DB
 	for <linux-ide@archiver.kernel.org>; Tue, 28 Jan 2020 13:35:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1960D24686
-	for <linux-ide@archiver.kernel.org>; Tue, 28 Jan 2020 13:35:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C456B22522
+	for <linux-ide@archiver.kernel.org>; Tue, 28 Jan 2020 13:35:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="ft/2pzy0"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="h3nPfmnZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726443AbgA1NfW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S1726323AbgA1NfW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Tue, 28 Jan 2020 08:35:22 -0500
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:58900 "EHLO
+Received: from mailout1.w1.samsung.com ([210.118.77.11]:58898 "EHLO
         mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726467AbgA1NeR (ORCPT
+        with ESMTP id S1726481AbgA1NeR (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Jan 2020 08:34:17 -0500
-Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200128133415euoutp01f9811f8d7839225aef6204bb9e42de8b~uEFAvYgd20284402844euoutp01Z
+Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
+        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200128133415euoutp010f8dabb9809a2106db752384fd277a72~uEFAYxAkd0286702867euoutp01W
         for <linux-ide@vger.kernel.org>; Tue, 28 Jan 2020 13:34:15 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200128133415euoutp01f9811f8d7839225aef6204bb9e42de8b~uEFAvYgd20284402844euoutp01Z
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200128133415euoutp010f8dabb9809a2106db752384fd277a72~uEFAYxAkd0286702867euoutp01W
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
         s=mail20170921; t=1580218455;
-        bh=Ark+fkMgLf1ZNUCc5wzMzdsqKRNjN891oQ1Cqnnqj+0=;
+        bh=3uYMSAA1WyojWrdPwQGuRlb/VV0u+NCe8ys3XAQpI7w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ft/2pzy0E7qOKRZOjsk3Me2pJ2sFjHHzuDiwI5RmuiGaHzr/YjOOk9z9Xzk5xRCDx
-         7bjjfYYL345fCfbjt5ezb8rk5oWezkygkQbfPOxrQxXOiiqv6uFgvuImPwe2D7H4dY
-         IJ/A0zD3wIgZf6r2xC5UC+wDWAmaoERc8hGJCq2E=
+        b=h3nPfmnZove6ymJ0F2+Ti/vVXUMcp+yEPG9lwLrXWDKEs4ympICj4XuxmbfSpgrNg
+         tGn/A2YTjrdITaMx8kWCuyChrsPj8oNpbKEsMoN75gInt2ofT/g+Gpm3OFE/TmBxhx
+         OZkmAGmCQCdbcGSicgkg0EaMKZ471DWjDpzZB4yA=
 Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20200128133415eucas1p21456bb04fd2cbfdd63f1d9ade02c6b66~uEFAVY3xO1867618676eucas1p2c;
+        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
+        20200128133415eucas1p13a1220ac6eb18b14ef4d123862821eec~uEFAJfkqK1372113721eucas1p1D;
         Tue, 28 Jan 2020 13:34:15 +0000 (GMT)
-Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
-        eusmges1new.samsung.com (EUCPMTA) with SMTP id BE.CA.61286.758303E5; Tue, 28
+Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
+        eusmges1new.samsung.com (EUCPMTA) with SMTP id 3E.CA.61286.758303E5; Tue, 28
         Jan 2020 13:34:15 +0000 (GMT)
 Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
         eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20200128133415eucas1p258c0d5c313e2ae42a05508b67eec16ef~uEFABo90w1871818718eucas1p2I;
-        Tue, 28 Jan 2020 13:34:15 +0000 (GMT)
-Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
+        20200128133414eucas1p2baefeb1a492375b18bdf6cdfbd0db796~uEE-wxc433228632286eucas1p2l;
+        Tue, 28 Jan 2020 13:34:14 +0000 (GMT)
+Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
         eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200128133415eusmtrp248656553bccf58a04aa8f5a33d7a6b05~uEFABHKpH0330003300eusmtrp20;
-        Tue, 28 Jan 2020 13:34:15 +0000 (GMT)
-X-AuditID: cbfec7f2-ef1ff7000001ef66-80-5e3038571d9a
+        20200128133414eusmtrp2d069b470b42661cdc5dd67ff1b4e3ddd~uEE-wOcls0330103301eusmtrp2w;
+        Tue, 28 Jan 2020 13:34:14 +0000 (GMT)
+X-AuditID: cbfec7f2-ef1ff7000001ef66-7e-5e30385729dc
 Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id E0.82.07950.658303E5; Tue, 28
+        eusmgms1.samsung.com (EUCPMTA) with SMTP id F2.92.08375.658303E5; Tue, 28
         Jan 2020 13:34:14 +0000 (GMT)
 Received: from AMDC3058.digital.local (unknown [106.120.51.71]) by
         eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200128133414eusmtip2ac44a4cec89001bf562317e2180daeb9~uEE-rYOv10657406574eusmtip2f;
+        20200128133414eusmtip21b39c6c1bb4b68cbd13b411ebb4e7ec5~uEE-Xb22a0657406574eusmtip2e;
         Tue, 28 Jan 2020 13:34:14 +0000 (GMT)
 From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 To:     Jens Axboe <axboe@kernel.dk>
@@ -61,179 +61,689 @@ Cc:     Michael Schmitz <schmitzmic@gmail.com>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
         b.zolnierkie@samsung.com
-Subject: [PATCH 13/28] ata: move ata_do_link_spd_horkage() to
- libata-core-sata.c
-Date:   Tue, 28 Jan 2020 14:33:28 +0100
-Message-Id: <20200128133343.29905-14-b.zolnierkie@samsung.com>
+Subject: [PATCH 12/28] ata: start separating SATA specific code from
+ libata-core.c
+Date:   Tue, 28 Jan 2020 14:33:27 +0100
+Message-Id: <20200128133343.29905-13-b.zolnierkie@samsung.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200128133343.29905-1-b.zolnierkie@samsung.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprFKsWRmVeSWpSXmKPExsWy7djPc7rhFgZxBpvniVmsvtvPZrFxxnpW
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprFKsWRmVeSWpSXmKPExsWy7djP87rhFgZxBq8msFusvtvPZrFxxnpW
         i2e39jJZHNvxiMni8q45bBZzW6ezO7B57Jx1l93j8tlSj0OHOxg9+rasYvT4vEkugDWKyyYl
-        NSezLLVI3y6BK+P/rSdsBTvlKpb+usnUwHhFoouRk0NCwESif8kv1i5GLg4hgRWMEm07X7FD
-        OF8YJdbseMcI4XxmlHjw+DgzTMuMFX3MEInljBLXNlxihmv5v/UfG0gVm4CVxMT2VYwgtoiA
-        gkTP75VsIEXMAmsYJVYdbgJLCAsESXyatBHMZhFQlejsessCYvMK2El8eP+eEWKdvMTWb5+A
-        LuTg4ASK9+w1hygRlDg58wlYOTNQSfPW2WBHSAi0s0ssWjudFaLXReLT+/0sELawxKvjW9gh
-        bBmJ/zvnM0E0rGOU+NvxAqp7O6PE8skQL0gIWEvcOfeLDWQzs4CmxPpd+hBhR4nvG2aDhSUE
-        +CRuvBWEOIJPYtK26cwQYV6JjjYhiGo1iQ3LNrDBrO3auRIaih4ST2ZdYpzAqDgLyTuzkLwz
-        C2HvAkbmVYziqaXFuempxYZ5qeV6xYm5xaV56XrJ+bmbGIEp5vS/4592MH69lHSIUYCDUYmH
-        d4aKQZwQa2JZcWXuIUYJDmYlEd5OJqAQb0piZVVqUX58UWlOavEhRmkOFiVxXuNFL2OFBNIT
-        S1KzU1MLUotgskwcnFINjFo+dy61XvplE2QqIfvI+FTMrG9Xms/scfq3/dOl36VsL/mWeUwz
-        rVu/q8XNZdMch8WRNQuCNzQZrP59ZeWnR41B8tOu9Tf4fg/9kLXtyoUTRcHageXfzY/w3Jf5
-        MMtMNXV9VIJNo/qtabsuWjJfd9bYVHzinuzf7dv47d9tPiPFv939qHgvV5MSS3FGoqEWc1Fx
-        IgDGwjdCLQMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpjkeLIzCtJLcpLzFFi42I5/e/4Pd0wC4M4g5+Nthar7/azWWycsZ7V
-        4tmtvUwWx3Y8YrK4vGsOm8Xc1unsDmweO2fdZfe4fLbU49DhDkaPvi2rGD0+b5ILYI3SsynK
-        Ly1JVcjILy6xVYo2tDDSM7S00DMysdQzNDaPtTIyVdK3s0lJzcksSy3St0vQy/h/6wlbwU65
-        iqW/bjI1MF6R6GLk5JAQMJGYsaKPuYuRi0NIYCmjRPO6RsYuRg6ghIzE8fVlEDXCEn+udbFB
-        1HxilHjStpIJJMEmYCUxsX0VI4gtIqAg0fN7JVgRs8AGRolXN7+wgCSEBQIkzjWfB7NZBFQl
-        Orvegtm8AnYSH96/Z4TYIC+x9dsnVpDFnEDxnr3mIGEhAVuJ9WeeskKUC0qcnPkErJUZqLx5
-        62zmCYwCs5CkZiFJLWBkWsUoklpanJueW2ykV5yYW1yal66XnJ+7iREYB9uO/dyyg7HrXfAh
-        RgEORiUeXgclgzgh1sSy4srcQ4wSHMxKIrydTEAh3pTEyqrUovz4otKc1OJDjKZAP0xklhJN
-        zgfGaF5JvKGpobmFpaG5sbmxmYWSOG+HwMEYIYH0xJLU7NTUgtQimD4mDk6pBkbza/Nb+Xm2
-        5RtMXuZz4J31IhW3bTwV/y9Frzkh1596Yp7O6ntx1xdOTurJ+j7RKT730+0DB0/fX90ss7b+
-        9+cL116+PW8X6GJxctutqTmMu1cFzrS5s9umtUfzR7Z/aK69rmlF6On051Kx86TS9dJND+pW
-        du4pPP1BL3XfwlXlf3p63Q8sLl6rxFKckWioxVxUnAgARIMkgpkCAAA=
-X-CMS-MailID: 20200128133415eucas1p258c0d5c313e2ae42a05508b67eec16ef
+        NSezLLVI3y6BK+P7+ttsBdfmMlZs/LuEvYHxZ20XIyeHhICJxLnjh9m6GLk4hARWMEr0fu5m
+        BUkICXxhlFjc7QuR+Mwo8ff9VDaYjolvvrJCJJYzStz928oE4QB1/O/awQ5SxSZgJTGxfRUj
+        iC0ioCDR83sl2A5mgTWMEqsON4ElhAVCJJ7OPgrWwCKgKnH4wi8wm1fATmL1vdtQ6+Qltn77
+        BLSOg4MTKN6z1xyiRFDi5MwnLCA2M1BJ89bZzCDzJQTa2SU+zvzLDtHrIrHr6m0mCFtY4tXx
+        LVBxGYn/O+czQTSsA/qt4wVU93ZGieWT/0Fttpa4c+4XG8hmZgFNifW79CHCjhLv+1sZQcIS
+        AnwSN94KQhzBJzFp23RmiDCvREebEES1msSGZRvYYNZ27VzJDGF7SJxcfZRlAqPiLCTvzELy
+        ziyEvQsYmVcxiqeWFuempxYb5qWW6xUn5haX5qXrJefnbmIEppjT/45/2sH49VLSIUYBDkYl
+        Ht4ZKgZxQqyJZcWVuYcYJTiYlUR4O5mAQrwpiZVVqUX58UWlOanFhxilOViUxHmNF72MFRJI
+        TyxJzU5NLUgtgskycXBKNTDmxDKv+3PuXIDOw/rUS6cZVhyRctu1z2VjRlOuBfuGHUeUlr0O
+        3vMypFUoyMVEIvbnpPQflmwWuYetXATnSR1SP/A44XnrTZPfR6v9047GzDXPvL7z2rJvz+Yd
+        NTZ1m30/IWbKnP8py+6u/Wc7TeWWdFKbwm8vxhtvGtbP27bK/GeV7nXxop4yJZbijERDLeai
+        4kQA8IWspS0DAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpjkeLIzCtJLcpLzFFi42I5/e/4Pd0wC4M4g8M/NCxW3+1ns9g4Yz2r
+        xbNbe5ksju14xGRxedccNou5rdPZHdg8ds66y+5x+Wypx6HDHYwefVtWMXp83iQXwBqlZ1OU
+        X1qSqpCRX1xiqxRtaGGkZ2hpoWdkYqlnaGwea2VkqqRvZ5OSmpNZllqkb5egl/F9/W22gmtz
+        GSs2/l3C3sD4s7aLkZNDQsBEYuKbr6xdjFwcQgJLGSVe7pwN5HAAJWQkjq8vg6gRlvhzrYsN
+        ouYTUM30m2wgCTYBK4mJ7asYQWwRAQWJnt8rwYqYBTYwSry6+YUFZJCwQJDErm1gg1gEVCUO
+        X/jFDmLzCthJrL53mw1igbzE1m+fwPZyAsV79pqDhIUEbCXWn3nKClEuKHFy5hMWEJsZqLx5
+        62zmCYwCs5CkZiFJLWBkWsUoklpanJueW2yoV5yYW1yal66XnJ+7iREYB9uO/dy8g/HSxuBD
+        jAIcjEo8vDNUDOKEWBPLiitzDzFKcDArifB2MgGFeFMSK6tSi/Lji0pzUosPMZoC/TCRWUo0
+        OR8Yo3kl8YamhuYWlobmxubGZhZK4rwdAgdjhATSE0tSs1NTC1KLYPqYODilGhi7ZLLNLEU9
+        A0W3S7FPtEs6UPzhguwqzsLOJwJzFudK72GWZjdv2B/Ju8WffVPu38ld+vXq09dM79APtlr5
+        LOL0CbsGTevrrRuldhxYpLyhx+yq6m3THUuNruqxBYa9mSHKEfAg1jFw6rZb21duKVdwaZA4
+        kCn2fe0yl86vH4QUbnvV+R7gn6HEUpyRaKjFXFScCABAP4v2mQIAAA==
+X-CMS-MailID: 20200128133414eucas1p2baefeb1a492375b18bdf6cdfbd0db796
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200128133415eucas1p258c0d5c313e2ae42a05508b67eec16ef
+X-RootMTR: 20200128133414eucas1p2baefeb1a492375b18bdf6cdfbd0db796
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20200128133415eucas1p258c0d5c313e2ae42a05508b67eec16ef
+X-CMS-RootMailID: 20200128133414eucas1p2baefeb1a492375b18bdf6cdfbd0db796
 References: <20200128133343.29905-1-b.zolnierkie@samsung.com>
-        <CGME20200128133415eucas1p258c0d5c313e2ae42a05508b67eec16ef@eucas1p2.samsung.com>
+        <CGME20200128133414eucas1p2baefeb1a492375b18bdf6cdfbd0db796@eucas1p2.samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-* move ata_do_link_spd_horkage() to libata-core-sata.c
+Start separating SATA specific code from libata-core.c:
 
-* add static inline for CONFIG_SATA_HOST=n case
+* move following functions to libata-core-sata.c:
+  - ata_tf_to_fis()
+  - ata_tf_from_fis()
+  - sata_link_scr_lpm()
+  - ata_slave_link_init()
+  - sata_lpm_ignore_phy_events()
+
+* group above functions together in <linux/libata.h> and cover
+  them with CONFIG_SATA_HOST ifdef
+
+* include libata-core-sata.c in the build when CONFIG_SATA_HOST=y
 
 Code size savings on m68k arch using atari_defconfig:
 
    text    data     bss     dec     hex filename
 before:
-  36762     572      40   37374    91fe drivers/ata/libata-core.o
+  37582     572      40   38194    9532 drivers/ata/libata-core.o
 after:
-  36627     572      40   37239    9177 drivers/ata/libata-core.o
+  36762     572      40   37374    91fe drivers/ata/libata-core.o
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/ata/libata-core-sata.c | 33 +++++++++++++++++++++++++++++++++
- drivers/ata/libata-core.c      | 33 ---------------------------------
- drivers/ata/libata.h           |  7 +++++++
- 3 files changed, 40 insertions(+), 33 deletions(-)
+ drivers/ata/Makefile           |   1 +
+ drivers/ata/libata-core-sata.c | 258 +++++++++++++++++++++++++++++++++
+ drivers/ata/libata-core.c      | 245 -------------------------------
+ include/linux/libata.h         |  18 ++-
+ 4 files changed, 271 insertions(+), 251 deletions(-)
+ create mode 100644 drivers/ata/libata-core-sata.c
 
-diff --git a/drivers/ata/libata-core-sata.c b/drivers/ata/libata-core-sata.c
-index 8b939d2db0a6..fed8009981c0 100644
---- a/drivers/ata/libata-core-sata.c
-+++ b/drivers/ata/libata-core-sata.c
-@@ -87,6 +87,39 @@ void ata_tf_from_fis(const u8 *fis, struct ata_taskfile *tf)
- }
- EXPORT_SYMBOL_GPL(ata_tf_from_fis);
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index cdaf965fed25..b06b9a211691 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -123,6 +123,7 @@ obj-$(CONFIG_PATA_LEGACY)	+= pata_legacy.o
  
-+int ata_do_link_spd_horkage(struct ata_device *dev)
+ libata-y	:= libata-core.o libata-scsi.o libata-eh.o \
+ 	libata-transport.o libata-trace.o
++libata-$(CONFIG_SATA_HOST)	+= libata-core-sata.o
+ libata-$(CONFIG_ATA_SFF)	+= libata-sff.o
+ libata-$(CONFIG_SATA_PMP)	+= libata-pmp.o
+ libata-$(CONFIG_ATA_ACPI)	+= libata-acpi.o
+diff --git a/drivers/ata/libata-core-sata.c b/drivers/ata/libata-core-sata.c
+new file mode 100644
+index 000000000000..8b939d2db0a6
+--- /dev/null
++++ b/drivers/ata/libata-core-sata.c
+@@ -0,0 +1,258 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ *  libata-core-sata.c - SATA specific part of ATA helper library
++ *
++ *  Copyright 2003-2004 Red Hat, Inc.  All rights reserved.
++ *  Copyright 2003-2004 Jeff Garzik
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/libata.h>
++
++#include "libata.h"
++
++/**
++ *	ata_tf_to_fis - Convert ATA taskfile to SATA FIS structure
++ *	@tf: Taskfile to convert
++ *	@pmp: Port multiplier port
++ *	@is_cmd: This FIS is for command
++ *	@fis: Buffer into which data will output
++ *
++ *	Converts a standard ATA taskfile to a Serial ATA
++ *	FIS structure (Register - Host to Device).
++ *
++ *	LOCKING:
++ *	Inherited from caller.
++ */
++void ata_tf_to_fis(const struct ata_taskfile *tf, u8 pmp, int is_cmd, u8 *fis)
 +{
-+	struct ata_link *plink = ata_dev_phys_link(dev);
-+	u32 target, target_limit;
++	fis[0] = 0x27;			/* Register - Host to Device FIS */
++	fis[1] = pmp & 0xf;		/* Port multiplier number*/
++	if (is_cmd)
++		fis[1] |= (1 << 7);	/* bit 7 indicates Command FIS */
 +
-+	if (!sata_scr_valid(plink))
-+		return 0;
++	fis[2] = tf->command;
++	fis[3] = tf->feature;
 +
-+	if (dev->horkage & ATA_HORKAGE_1_5_GBPS)
-+		target = 1;
-+	else
-+		return 0;
++	fis[4] = tf->lbal;
++	fis[5] = tf->lbam;
++	fis[6] = tf->lbah;
++	fis[7] = tf->device;
 +
-+	target_limit = (1 << target) - 1;
++	fis[8] = tf->hob_lbal;
++	fis[9] = tf->hob_lbam;
++	fis[10] = tf->hob_lbah;
++	fis[11] = tf->hob_feature;
 +
-+	/* if already on stricter limit, no need to push further */
-+	if (plink->sata_spd_limit <= target_limit)
-+		return 0;
++	fis[12] = tf->nsect;
++	fis[13] = tf->hob_nsect;
++	fis[14] = 0;
++	fis[15] = tf->ctl;
 +
-+	plink->sata_spd_limit = target_limit;
++	fis[16] = tf->auxiliary & 0xff;
++	fis[17] = (tf->auxiliary >> 8) & 0xff;
++	fis[18] = (tf->auxiliary >> 16) & 0xff;
++	fis[19] = (tf->auxiliary >> 24) & 0xff;
++}
++EXPORT_SYMBOL_GPL(ata_tf_to_fis);
 +
-+	/* Request another EH round by returning -EAGAIN if link is
-+	 * going faster than the target speed.  Forward progress is
-+	 * guaranteed by setting sata_spd_limit to target_limit above.
-+	 */
-+	if (plink->sata_spd > target) {
-+		ata_dev_info(dev, "applying link speed limit horkage to %s\n",
-+			     sata_spd_string(target));
-+		return -EAGAIN;
++/**
++ *	ata_tf_from_fis - Convert SATA FIS to ATA taskfile
++ *	@fis: Buffer from which data will be input
++ *	@tf: Taskfile to output
++ *
++ *	Converts a serial ATA FIS structure to a standard ATA taskfile.
++ *
++ *	LOCKING:
++ *	Inherited from caller.
++ */
++
++void ata_tf_from_fis(const u8 *fis, struct ata_taskfile *tf)
++{
++	tf->command	= fis[2];	/* status */
++	tf->feature	= fis[3];	/* error */
++
++	tf->lbal	= fis[4];
++	tf->lbam	= fis[5];
++	tf->lbah	= fis[6];
++	tf->device	= fis[7];
++
++	tf->hob_lbal	= fis[8];
++	tf->hob_lbam	= fis[9];
++	tf->hob_lbah	= fis[10];
++
++	tf->nsect	= fis[12];
++	tf->hob_nsect	= fis[13];
++}
++EXPORT_SYMBOL_GPL(ata_tf_from_fis);
++
++/**
++ *	sata_link_scr_lpm - manipulate SControl IPM and SPM fields
++ *	@link: ATA link to manipulate SControl for
++ *	@policy: LPM policy to configure
++ *	@spm_wakeup: initiate LPM transition to active state
++ *
++ *	Manipulate the IPM field of the SControl register of @link
++ *	according to @policy.  If @policy is ATA_LPM_MAX_POWER and
++ *	@spm_wakeup is %true, the SPM field is manipulated to wake up
++ *	the link.  This function also clears PHYRDY_CHG before
++ *	returning.
++ *
++ *	LOCKING:
++ *	EH context.
++ *
++ *	RETURNS:
++ *	0 on success, -errno otherwise.
++ */
++int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
++		      bool spm_wakeup)
++{
++	struct ata_eh_context *ehc = &link->eh_context;
++	bool woken_up = false;
++	u32 scontrol;
++	int rc;
++
++	rc = sata_scr_read(link, SCR_CONTROL, &scontrol);
++	if (rc)
++		return rc;
++
++	switch (policy) {
++	case ATA_LPM_MAX_POWER:
++		/* disable all LPM transitions */
++		scontrol |= (0x7 << 8);
++		/* initiate transition to active state */
++		if (spm_wakeup) {
++			scontrol |= (0x4 << 12);
++			woken_up = true;
++		}
++		break;
++	case ATA_LPM_MED_POWER:
++		/* allow LPM to PARTIAL */
++		scontrol &= ~(0x1 << 8);
++		scontrol |= (0x6 << 8);
++		break;
++	case ATA_LPM_MED_POWER_WITH_DIPM:
++	case ATA_LPM_MIN_POWER_WITH_PARTIAL:
++	case ATA_LPM_MIN_POWER:
++		if (ata_link_nr_enabled(link) > 0)
++			/* no restrictions on LPM transitions */
++			scontrol &= ~(0x7 << 8);
++		else {
++			/* empty port, power off */
++			scontrol &= ~0xf;
++			scontrol |= (0x1 << 2);
++		}
++		break;
++	default:
++		WARN_ON(1);
 +	}
++
++	rc = sata_scr_write(link, SCR_CONTROL, scontrol);
++	if (rc)
++		return rc;
++
++	/* give the link time to transit out of LPM state */
++	if (woken_up)
++		msleep(10);
++
++	/* clear PHYRDY_CHG from SError */
++	ehc->i.serror &= ~SERR_PHYRDY_CHG;
++	return sata_scr_write(link, SCR_ERROR, SERR_PHYRDY_CHG);
++}
++EXPORT_SYMBOL_GPL(sata_link_scr_lpm);
++
++/**
++ *	ata_slave_link_init - initialize slave link
++ *	@ap: port to initialize slave link for
++ *
++ *	Create and initialize slave link for @ap.  This enables slave
++ *	link handling on the port.
++ *
++ *	In libata, a port contains links and a link contains devices.
++ *	There is single host link but if a PMP is attached to it,
++ *	there can be multiple fan-out links.  On SATA, there's usually
++ *	a single device connected to a link but PATA and SATA
++ *	controllers emulating TF based interface can have two - master
++ *	and slave.
++ *
++ *	However, there are a few controllers which don't fit into this
++ *	abstraction too well - SATA controllers which emulate TF
++ *	interface with both master and slave devices but also have
++ *	separate SCR register sets for each device.  These controllers
++ *	need separate links for physical link handling
++ *	(e.g. onlineness, link speed) but should be treated like a
++ *	traditional M/S controller for everything else (e.g. command
++ *	issue, softreset).
++ *
++ *	slave_link is libata's way of handling this class of
++ *	controllers without impacting core layer too much.  For
++ *	anything other than physical link handling, the default host
++ *	link is used for both master and slave.  For physical link
++ *	handling, separate @ap->slave_link is used.  All dirty details
++ *	are implemented inside libata core layer.  From LLD's POV, the
++ *	only difference is that prereset, hardreset and postreset are
++ *	called once more for the slave link, so the reset sequence
++ *	looks like the following.
++ *
++ *	prereset(M) -> prereset(S) -> hardreset(M) -> hardreset(S) ->
++ *	softreset(M) -> postreset(M) -> postreset(S)
++ *
++ *	Note that softreset is called only for the master.  Softreset
++ *	resets both M/S by definition, so SRST on master should handle
++ *	both (the standard method will work just fine).
++ *
++ *	LOCKING:
++ *	Should be called before host is registered.
++ *
++ *	RETURNS:
++ *	0 on success, -errno on failure.
++ */
++int ata_slave_link_init(struct ata_port *ap)
++{
++	struct ata_link *link;
++
++	WARN_ON(ap->slave_link);
++	WARN_ON(ap->flags & ATA_FLAG_PMP);
++
++	link = kzalloc(sizeof(*link), GFP_KERNEL);
++	if (!link)
++		return -ENOMEM;
++
++	ata_link_init(ap, link, 1);
++	ap->slave_link = link;
 +	return 0;
 +}
++EXPORT_SYMBOL_GPL(ata_slave_link_init);
 +
- /**
-  *	sata_link_scr_lpm - manipulate SControl IPM and SPM fields
-  *	@link: ATA link to manipulate SControl for
++/**
++ *	sata_lpm_ignore_phy_events - test if PHY event should be ignored
++ *	@link: Link receiving the event
++ *
++ *	Test whether the received PHY event has to be ignored or not.
++ *
++ *	LOCKING:
++ *	None:
++ *
++ *	RETURNS:
++ *	True if the event has to be ignored.
++ */
++bool sata_lpm_ignore_phy_events(struct ata_link *link)
++{
++	unsigned long lpm_timeout = link->last_lpm_change +
++				    msecs_to_jiffies(ATA_TMOUT_SPURIOUS_PHY);
++
++	/* if LPM is enabled, PHYRDY doesn't mean anything */
++	if (link->lpm_policy > ATA_LPM_MAX_POWER)
++		return true;
++
++	/* ignore the first PHY event after the LPM policy changed
++	 * as it is might be spurious
++	 */
++	if ((link->flags & ATA_LFLAG_CHANGED) &&
++	    time_before(jiffies, lpm_timeout))
++		return true;
++
++	return false;
++}
++EXPORT_SYMBOL_GPL(sata_lpm_ignore_phy_events);
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 24b8ee668e6f..52bd81bad484 100644
+index 408dee580f24..24b8ee668e6f 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -2074,39 +2074,6 @@ static bool ata_identify_page_supported(struct ata_device *dev, u8 page)
- 	return false;
+@@ -531,81 +531,6 @@ int atapi_cmd_type(u8 opcode)
  }
+ EXPORT_SYMBOL_GPL(atapi_cmd_type);
  
--static int ata_do_link_spd_horkage(struct ata_device *dev)
+-/**
+- *	ata_tf_to_fis - Convert ATA taskfile to SATA FIS structure
+- *	@tf: Taskfile to convert
+- *	@pmp: Port multiplier port
+- *	@is_cmd: This FIS is for command
+- *	@fis: Buffer into which data will output
+- *
+- *	Converts a standard ATA taskfile to a Serial ATA
+- *	FIS structure (Register - Host to Device).
+- *
+- *	LOCKING:
+- *	Inherited from caller.
+- */
+-void ata_tf_to_fis(const struct ata_taskfile *tf, u8 pmp, int is_cmd, u8 *fis)
 -{
--	struct ata_link *plink = ata_dev_phys_link(dev);
--	u32 target, target_limit;
+-	fis[0] = 0x27;			/* Register - Host to Device FIS */
+-	fis[1] = pmp & 0xf;		/* Port multiplier number*/
+-	if (is_cmd)
+-		fis[1] |= (1 << 7);	/* bit 7 indicates Command FIS */
 -
--	if (!sata_scr_valid(plink))
--		return 0;
+-	fis[2] = tf->command;
+-	fis[3] = tf->feature;
 -
--	if (dev->horkage & ATA_HORKAGE_1_5_GBPS)
--		target = 1;
--	else
--		return 0;
+-	fis[4] = tf->lbal;
+-	fis[5] = tf->lbam;
+-	fis[6] = tf->lbah;
+-	fis[7] = tf->device;
 -
--	target_limit = (1 << target) - 1;
+-	fis[8] = tf->hob_lbal;
+-	fis[9] = tf->hob_lbam;
+-	fis[10] = tf->hob_lbah;
+-	fis[11] = tf->hob_feature;
 -
--	/* if already on stricter limit, no need to push further */
--	if (plink->sata_spd_limit <= target_limit)
--		return 0;
+-	fis[12] = tf->nsect;
+-	fis[13] = tf->hob_nsect;
+-	fis[14] = 0;
+-	fis[15] = tf->ctl;
 -
--	plink->sata_spd_limit = target_limit;
+-	fis[16] = tf->auxiliary & 0xff;
+-	fis[17] = (tf->auxiliary >> 8) & 0xff;
+-	fis[18] = (tf->auxiliary >> 16) & 0xff;
+-	fis[19] = (tf->auxiliary >> 24) & 0xff;
+-}
+-EXPORT_SYMBOL_GPL(ata_tf_to_fis);
 -
--	/* Request another EH round by returning -EAGAIN if link is
--	 * going faster than the target speed.  Forward progress is
--	 * guaranteed by setting sata_spd_limit to target_limit above.
--	 */
--	if (plink->sata_spd > target) {
--		ata_dev_info(dev, "applying link speed limit horkage to %s\n",
--			     sata_spd_string(target));
--		return -EAGAIN;
+-/**
+- *	ata_tf_from_fis - Convert SATA FIS to ATA taskfile
+- *	@fis: Buffer from which data will be input
+- *	@tf: Taskfile to output
+- *
+- *	Converts a serial ATA FIS structure to a standard ATA taskfile.
+- *
+- *	LOCKING:
+- *	Inherited from caller.
+- */
+-
+-void ata_tf_from_fis(const u8 *fis, struct ata_taskfile *tf)
+-{
+-	tf->command	= fis[2];	/* status */
+-	tf->feature	= fis[3];	/* error */
+-
+-	tf->lbal	= fis[4];
+-	tf->lbam	= fis[5];
+-	tf->lbah	= fis[6];
+-	tf->device	= fis[7];
+-
+-	tf->hob_lbal	= fis[8];
+-	tf->hob_lbam	= fis[9];
+-	tf->hob_lbah	= fis[10];
+-
+-	tf->nsect	= fis[12];
+-	tf->hob_nsect	= fis[13];
+-}
+-EXPORT_SYMBOL_GPL(ata_tf_from_fis);
+-
+ static const u8 ata_rw_cmds[] = {
+ 	/* pio multi */
+ 	ATA_CMD_READ_MULTI,
+@@ -3777,81 +3702,6 @@ int sata_link_resume(struct ata_link *link, const unsigned long *params,
+ }
+ EXPORT_SYMBOL_GPL(sata_link_resume);
+ 
+-/**
+- *	sata_link_scr_lpm - manipulate SControl IPM and SPM fields
+- *	@link: ATA link to manipulate SControl for
+- *	@policy: LPM policy to configure
+- *	@spm_wakeup: initiate LPM transition to active state
+- *
+- *	Manipulate the IPM field of the SControl register of @link
+- *	according to @policy.  If @policy is ATA_LPM_MAX_POWER and
+- *	@spm_wakeup is %true, the SPM field is manipulated to wake up
+- *	the link.  This function also clears PHYRDY_CHG before
+- *	returning.
+- *
+- *	LOCKING:
+- *	EH context.
+- *
+- *	RETURNS:
+- *	0 on success, -errno otherwise.
+- */
+-int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+-		      bool spm_wakeup)
+-{
+-	struct ata_eh_context *ehc = &link->eh_context;
+-	bool woken_up = false;
+-	u32 scontrol;
+-	int rc;
+-
+-	rc = sata_scr_read(link, SCR_CONTROL, &scontrol);
+-	if (rc)
+-		return rc;
+-
+-	switch (policy) {
+-	case ATA_LPM_MAX_POWER:
+-		/* disable all LPM transitions */
+-		scontrol |= (0x7 << 8);
+-		/* initiate transition to active state */
+-		if (spm_wakeup) {
+-			scontrol |= (0x4 << 12);
+-			woken_up = true;
+-		}
+-		break;
+-	case ATA_LPM_MED_POWER:
+-		/* allow LPM to PARTIAL */
+-		scontrol &= ~(0x1 << 8);
+-		scontrol |= (0x6 << 8);
+-		break;
+-	case ATA_LPM_MED_POWER_WITH_DIPM:
+-	case ATA_LPM_MIN_POWER_WITH_PARTIAL:
+-	case ATA_LPM_MIN_POWER:
+-		if (ata_link_nr_enabled(link) > 0)
+-			/* no restrictions on LPM transitions */
+-			scontrol &= ~(0x7 << 8);
+-		else {
+-			/* empty port, power off */
+-			scontrol &= ~0xf;
+-			scontrol |= (0x1 << 2);
+-		}
+-		break;
+-	default:
+-		WARN_ON(1);
 -	}
+-
+-	rc = sata_scr_write(link, SCR_CONTROL, scontrol);
+-	if (rc)
+-		return rc;
+-
+-	/* give the link time to transit out of LPM state */
+-	if (woken_up)
+-		msleep(10);
+-
+-	/* clear PHYRDY_CHG from SError */
+-	ehc->i.serror &= ~SERR_PHYRDY_CHG;
+-	return sata_scr_write(link, SCR_ERROR, SERR_PHYRDY_CHG);
+-}
+-EXPORT_SYMBOL_GPL(sata_link_scr_lpm);
+-
+ /**
+  *	ata_std_prereset - prepare for reset
+  *	@link: ATA link to be reset
+@@ -6116,69 +5966,6 @@ struct ata_host *ata_host_alloc_pinfo(struct device *dev,
+ }
+ EXPORT_SYMBOL_GPL(ata_host_alloc_pinfo);
+ 
+-/**
+- *	ata_slave_link_init - initialize slave link
+- *	@ap: port to initialize slave link for
+- *
+- *	Create and initialize slave link for @ap.  This enables slave
+- *	link handling on the port.
+- *
+- *	In libata, a port contains links and a link contains devices.
+- *	There is single host link but if a PMP is attached to it,
+- *	there can be multiple fan-out links.  On SATA, there's usually
+- *	a single device connected to a link but PATA and SATA
+- *	controllers emulating TF based interface can have two - master
+- *	and slave.
+- *
+- *	However, there are a few controllers which don't fit into this
+- *	abstraction too well - SATA controllers which emulate TF
+- *	interface with both master and slave devices but also have
+- *	separate SCR register sets for each device.  These controllers
+- *	need separate links for physical link handling
+- *	(e.g. onlineness, link speed) but should be treated like a
+- *	traditional M/S controller for everything else (e.g. command
+- *	issue, softreset).
+- *
+- *	slave_link is libata's way of handling this class of
+- *	controllers without impacting core layer too much.  For
+- *	anything other than physical link handling, the default host
+- *	link is used for both master and slave.  For physical link
+- *	handling, separate @ap->slave_link is used.  All dirty details
+- *	are implemented inside libata core layer.  From LLD's POV, the
+- *	only difference is that prereset, hardreset and postreset are
+- *	called once more for the slave link, so the reset sequence
+- *	looks like the following.
+- *
+- *	prereset(M) -> prereset(S) -> hardreset(M) -> hardreset(S) ->
+- *	softreset(M) -> postreset(M) -> postreset(S)
+- *
+- *	Note that softreset is called only for the master.  Softreset
+- *	resets both M/S by definition, so SRST on master should handle
+- *	both (the standard method will work just fine).
+- *
+- *	LOCKING:
+- *	Should be called before host is registered.
+- *
+- *	RETURNS:
+- *	0 on success, -errno on failure.
+- */
+-int ata_slave_link_init(struct ata_port *ap)
+-{
+-	struct ata_link *link;
+-
+-	WARN_ON(ap->slave_link);
+-	WARN_ON(ap->flags & ATA_FLAG_PMP);
+-
+-	link = kzalloc(sizeof(*link), GFP_KERNEL);
+-	if (!link)
+-		return -ENOMEM;
+-
+-	ata_link_init(ap, link, 1);
+-	ap->slave_link = link;
 -	return 0;
 -}
+-EXPORT_SYMBOL_GPL(ata_slave_link_init);
 -
- static inline u8 ata_dev_knobble(struct ata_device *dev)
+ static void ata_host_stop(struct device *gendev, void *res)
  {
- 	struct ata_port *ap = dev->link->ap;
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index cd8090ad43e5..9eebe4e0be39 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -87,6 +87,13 @@ extern unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
+ 	struct ata_host *host = dev_get_drvdata(gendev);
+@@ -7083,38 +6870,6 @@ u32 ata_wait_register(struct ata_port *ap, void __iomem *reg, u32 mask, u32 val,
+ }
+ EXPORT_SYMBOL_GPL(ata_wait_register);
  
- #define to_ata_port(d) container_of(d, struct ata_port, tdev)
- 
-+/* libata-core-sata.c */
-+#ifdef CONFIG_SATA_HOST
-+int ata_do_link_spd_horkage(struct ata_device *dev);
-+#else
-+static inline int ata_do_link_spd_horkage(struct ata_device *dev) { return 0; }
-+#endif
+-/**
+- *	sata_lpm_ignore_phy_events - test if PHY event should be ignored
+- *	@link: Link receiving the event
+- *
+- *	Test whether the received PHY event has to be ignored or not.
+- *
+- *	LOCKING:
+- *	None:
+- *
+- *	RETURNS:
+- *	True if the event has to be ignored.
+- */
+-bool sata_lpm_ignore_phy_events(struct ata_link *link)
+-{
+-	unsigned long lpm_timeout = link->last_lpm_change +
+-				    msecs_to_jiffies(ATA_TMOUT_SPURIOUS_PHY);
+-
+-	/* if LPM is enabled, PHYRDY doesn't mean anything */
+-	if (link->lpm_policy > ATA_LPM_MAX_POWER)
+-		return true;
+-
+-	/* ignore the first PHY event after the LPM policy changed
+-	 * as it is might be spurious
+-	 */
+-	if ((link->flags & ATA_LFLAG_CHANGED) &&
+-	    time_before(jiffies, lpm_timeout))
+-		return true;
+-
+-	return false;
+-}
+-EXPORT_SYMBOL_GPL(sata_lpm_ignore_phy_events);
+-
+ /*
+  * Dummy port_ops
+  */
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 5b7bed18f56e..6bb0bd644f17 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1084,8 +1084,6 @@ extern int sata_link_debounce(struct ata_link *link,
+ 			const unsigned long *params, unsigned long deadline);
+ extern int sata_link_resume(struct ata_link *link, const unsigned long *params,
+ 			    unsigned long deadline);
+-extern int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+-			     bool spm_wakeup);
+ extern int sata_link_hardreset(struct ata_link *link,
+ 			const unsigned long *timing, unsigned long deadline,
+ 			bool *online, int (*check_ready)(struct ata_link *));
+@@ -1096,7 +1094,6 @@ extern void ata_std_postreset(struct ata_link *link, unsigned int *classes);
+ extern struct ata_host *ata_host_alloc(struct device *dev, int max_ports);
+ extern struct ata_host *ata_host_alloc_pinfo(struct device *dev,
+ 			const struct ata_port_info * const * ppi, int n_ports);
+-extern int ata_slave_link_init(struct ata_port *ap);
+ extern void ata_host_get(struct ata_host *host);
+ extern void ata_host_put(struct ata_host *host);
+ extern int ata_host_start(struct ata_host *host);
+@@ -1154,9 +1151,6 @@ extern void ata_msleep(struct ata_port *ap, unsigned int msecs);
+ extern u32 ata_wait_register(struct ata_port *ap, void __iomem *reg, u32 mask,
+ 			u32 val, unsigned long interval, unsigned long timeout);
+ extern int atapi_cmd_type(u8 opcode);
+-extern void ata_tf_to_fis(const struct ata_taskfile *tf,
+-			  u8 pmp, int is_cmd, u8 *fis);
+-extern void ata_tf_from_fis(const u8 *fis, struct ata_taskfile *tf);
+ extern unsigned long ata_pack_xfermask(unsigned long pio_mask,
+ 			unsigned long mwdma_mask, unsigned long udma_mask);
+ extern void ata_unpack_xfermask(unsigned long xfer_mask,
+@@ -1197,7 +1191,19 @@ extern struct ata_device *ata_dev_pair(struct ata_device *adev);
+ extern int ata_do_set_mode(struct ata_link *link, struct ata_device **r_failed_dev);
+ extern void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap);
+ extern void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap, struct list_head *eh_q);
 +
- /* libata-acpi.c */
- #ifdef CONFIG_ATA_ACPI
- extern unsigned int ata_acpi_gtf_filter;
++/*
++ * Core layer (SATA specific part) - drivers/ata/libata-core-sata.c
++ */
++#ifdef CONFIG_SATA_HOST
++extern int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
++			     bool spm_wakeup);
++extern int ata_slave_link_init(struct ata_port *ap);
++extern void ata_tf_to_fis(const struct ata_taskfile *tf,
++			  u8 pmp, int is_cmd, u8 *fis);
++extern void ata_tf_from_fis(const u8 *fis, struct ata_taskfile *tf);
+ extern bool sata_lpm_ignore_phy_events(struct ata_link *link);
++#endif
+ 
+ extern int ata_cable_40wire(struct ata_port *ap);
+ extern int ata_cable_80wire(struct ata_port *ap);
 -- 
 2.24.1
 
