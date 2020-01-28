@@ -2,229 +2,226 @@ Return-Path: <SRS0=dw68=3R=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E7E5C33CB3
-	for <linux-ide@archiver.kernel.org>; Tue, 28 Jan 2020 13:35:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25C3CC2D0DB
+	for <linux-ide@archiver.kernel.org>; Tue, 28 Jan 2020 13:35:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4509B22522
-	for <linux-ide@archiver.kernel.org>; Tue, 28 Jan 2020 13:35:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E30CB22522
+	for <linux-ide@archiver.kernel.org>; Tue, 28 Jan 2020 13:35:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="ErSftcT7"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="rzq5epKh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726504AbgA1NfW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 28 Jan 2020 08:35:22 -0500
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:58896 "EHLO
-        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726293AbgA1NeR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Jan 2020 08:34:17 -0500
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200128133416euoutp01baf0c60b41b972d31ee849665c48eb70~uEFBYAo5p0325703257euoutp01L
-        for <linux-ide@vger.kernel.org>; Tue, 28 Jan 2020 13:34:16 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200128133416euoutp01baf0c60b41b972d31ee849665c48eb70~uEFBYAo5p0325703257euoutp01L
+        id S1726486AbgA1NeQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 28 Jan 2020 08:34:16 -0500
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:52353 "EHLO
+        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726442AbgA1NeP (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Jan 2020 08:34:15 -0500
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200128133414euoutp02e57d554a99cfaad68ea1fdc51cfb155e~uEE-aahw02862028620euoutp026
+        for <linux-ide@vger.kernel.org>; Tue, 28 Jan 2020 13:34:14 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200128133414euoutp02e57d554a99cfaad68ea1fdc51cfb155e~uEE-aahw02862028620euoutp026
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1580218456;
-        bh=9GC41GZxsu9pE/kEPtcdNoCfP8ZZpAvDx72nJ/t5b5M=;
+        s=mail20170921; t=1580218454;
+        bh=YvXBNHY+8yH0MLPg1IfQRsk9QA/9ErQStYmSCxwTyY4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ErSftcT7fuYEpEulBSvxDYwH1zck4TT9hjY1SMJX2Tn6lX60JQMTwtImEb9INpCYF
-         Aevd7X8duTooH/L2EkEhFLkeIuvhIyn0OJeyI5JKuAqOK5kw5qrpzg39IqiRwUDk7F
-         t6pU2zV/i6Rbuo/kqAK/PigWBJ5MsJjDLG3o1/cU=
-Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
+        b=rzq5epKhh3hmdDR+TcLsS9T4QpybId/1Ili714oQAmxDzGAxJk23prU/gzPcba7Lq
+         rPz00zU9OQcg1ewJNKxK3NdHSImV67jbrncT/uGc0ehnCpg1tc16KBa7ROz/K9LmVC
+         eb2QBgpfXptHOb6HhG8OM34ZuR6fEEOvkegGIcv0=
+Received: from eusmges2new.samsung.com (unknown [203.254.199.244]) by
         eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20200128133416eucas1p170536042e847b1d13cd09fc51ec308ae~uEFBGrF7S1372113721eucas1p1F;
-        Tue, 28 Jan 2020 13:34:16 +0000 (GMT)
+        20200128133414eucas1p154c78b12f3047e87c493bc32b2c8c75d~uEE-CgCWO1369913699eucas1p1Q;
+        Tue, 28 Jan 2020 13:34:14 +0000 (GMT)
 Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges3new.samsung.com (EUCPMTA) with SMTP id F8.DA.60698.858303E5; Tue, 28
-        Jan 2020 13:34:16 +0000 (GMT)
+        eusmges2new.samsung.com (EUCPMTA) with SMTP id C0.5A.60679.558303E5; Tue, 28
+        Jan 2020 13:34:13 +0000 (GMT)
 Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
         eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20200128133415eucas1p12cc620dd5f19e6a26f1deeba083ea82f~uEFAwye7t0714007140eucas1p1j;
-        Tue, 28 Jan 2020 13:34:15 +0000 (GMT)
-Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
+        20200128133413eucas1p1725ccae03fb5aba49f0e0cef798da9d6~uEE_vLL-K0096700967eucas1p1A;
+        Tue, 28 Jan 2020 13:34:13 +0000 (GMT)
+Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
         eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200128133415eusmtrp2be066cc50ecb226b9de5031f609a3522~uEFAq2Mvj0330103301eusmtrp2z;
-        Tue, 28 Jan 2020 13:34:15 +0000 (GMT)
-X-AuditID: cbfec7f5-a29ff7000001ed1a-bc-5e3038589b4c
+        20200128133413eusmtrp2cbc5876973ff5f09eba9408c566d00e5~uEE_uoHWd0330003300eusmtrp2v;
+        Tue, 28 Jan 2020 13:34:13 +0000 (GMT)
+X-AuditID: cbfec7f4-0cbff7000001ed07-43-5e30385540b4
 Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id 71.82.07950.758303E5; Tue, 28
-        Jan 2020 13:34:15 +0000 (GMT)
+        eusmgms1.samsung.com (EUCPMTA) with SMTP id 51.92.08375.558303E5; Tue, 28
+        Jan 2020 13:34:13 +0000 (GMT)
 Received: from AMDC3058.digital.local (unknown [106.120.51.71]) by
         eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200128133415eusmtip270e3d36fdc14666da25e0e6e36854a2f~uEFAS4n1z0657106571eusmtip2i;
-        Tue, 28 Jan 2020 13:34:15 +0000 (GMT)
+        20200128133413eusmtip2244283b159be6c5e2b198a60a9d4da73~uEE_baEVU0685506855eusmtip2V;
+        Tue, 28 Jan 2020 13:34:13 +0000 (GMT)
 From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Michael Schmitz <schmitzmic@gmail.com>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
         b.zolnierkie@samsung.com
-Subject: [PATCH 15/28] ata: move sata_print_link_status() to
- libata-core-sata.c
-Date:   Tue, 28 Jan 2020 14:33:30 +0100
-Message-Id: <20200128133343.29905-16-b.zolnierkie@samsung.com>
+Subject: [PATCH 09/28] ata: remove EXPORT_SYMBOL_GPL()s not used by modules
+Date:   Tue, 28 Jan 2020 14:33:24 +0100
+Message-Id: <20200128133343.29905-10-b.zolnierkie@samsung.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200128133343.29905-1-b.zolnierkie@samsung.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprBKsWRmVeSWpSXmKPExsWy7djP87oRFgZxBuv/cVmsvtvPZrFxxnpW
-        i2e39jJZHNvxiMni8q45bBZzW6ezO7B57Jx1l93j8tlSj0OHOxg9+rasYvT4vEkugDWKyyYl
-        NSezLLVI3y6BK+PU9DtMBcdlK/Zu72ZqYHwt3sXIySEhYCJxdf5Uxi5GLg4hgRWMEnu+LWKB
-        cL4wSlzrmw2V+cwo0f6gnQWmZfXeXcwgtpDAckaJD/uL4Dqm9j0BK2ITsJKY2L6KEcQWEVCQ
-        6Pm9kg2kiFlgDaPEqsNNYAlhgUCJ210bmUBsFgFViRfdu8CaeQXsJL6ffgi1TV5i67dPrF2M
-        HBycQPGeveYQJYISJ2dC7GIGKmneOpsZorydXeLskWoI20Vi5atGJghbWOLV8S3sELaMxP+d
-        85lA7pEQWMco8bfjBTOEs51RYvnkf2wQVdYSd879YgNZzCygKbF+lz5E2FFi5vfT7CBhCQE+
-        iRtvBSFu4JOYtG06M0SYV6KjTQiiWk1iw7INbDBru3auhDrTQ+Ll6TbWCYyKs5B8MwvJN7MQ
-        9i5gZF7FKJ5aWpybnlpsnJdarlecmFtcmpeul5yfu4kRmF5O/zv+dQfjvj9JhxgFOBiVeHgd
-        lAzihFgTy4orcw8xSnAwK4nwdjIBhXhTEiurUovy44tKc1KLDzFKc7AoifMaL3oZKySQnliS
-        mp2aWpBaBJNl4uCUamA8/2pZc2n4V68DnTq7/0ipS29r3Dq16qnbvrz1Fy4enfyme780Z+4/
-        k3xdyQNB7N2BGTGBUZcskjgufdr/bZnTKzmp1we8u4PiuhZ59z2Smy5fqrh2LdeZYN6kCKk5
-        eRImbkntrWJxp37oXIv6XbKkYGa9UNbrWYprTk1/ZXprvdefJsNbtxqVWIozEg21mIuKEwHk
-        OXu+KwMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpjkeLIzCtJLcpLzFFi42I5/e/4Pd1wC4M4gwWPNSxW3+1ns9g4Yz2r
-        xbNbe5ksju14xGRxedccNou5rdPZHdg8ds66y+5x+Wypx6HDHYwefVtWMXp83iQXwBqlZ1OU
-        X1qSqpCRX1xiqxRtaGGkZ2hpoWdkYqlnaGwea2VkqqRvZ5OSmpNZllqkb5egl3Fq+h2mguOy
-        FXu3dzM1ML4W72Lk5JAQMJFYvXcXcxcjF4eQwFJGic2rTrB3MXIAJWQkjq8vg6gRlvhzrYsN
-        ouYTo8Tk9cuZQRJsAlYSE9tXMYLYIgIKEj2/V4IVMQtsYJR4dfMLC0hCWMBfYv/++2A2i4Cq
-        xIvuXWA2r4CdxPfTD1kgNshLbP32iRVkMSdQvGevOUhYSMBWYv2Zp6wQ5YISJ2c+AStnBipv
-        3jqbeQKjwCwkqVlIUgsYmVYxiqSWFuem5xYb6RUn5haX5qXrJefnbmIExsG2Yz+37GDsehd8
-        iFGAg1GJh9dBySBOiDWxrLgy9xCjBAezkghvJxNQiDclsbIqtSg/vqg0J7X4EKMp0A8TmaVE
-        k/OBMZpXEm9oamhuYWlobmxubGahJM7bIXAwRkggPbEkNTs1tSC1CKaPiYNTqoGxearq3HYG
-        jhd2591M1so8UOq++Sr0q9KaoI8HtJ/nyj6Qn+JZuHpX/YxV19m61ctyv81o6PcL9Nugm5Tl
-        cj6j+G1r1DIxpbMPX27u36jHLCkctyztgCdn6KtP+jJfPq8XnrnceV2h+px6lUUTV50OCWnq
-        ObLQ3O7HguBL+pNcJ3jMEqoOO2ioxFKckWioxVxUnAgAp50g2JkCAAA=
-X-CMS-MailID: 20200128133415eucas1p12cc620dd5f19e6a26f1deeba083ea82f
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprGKsWRmVeSWpSXmKPExsWy7djP87qhFgZxBt0zrSxW3+1ns9g4Yz2r
+        xbNbe5ksju14xGRxedccNou5rdPZHdg8ds66y+5x+Wypx6HDHYwefVtWMXp83iQXwBrFZZOS
+        mpNZllqkb5fAlTGno6zglUzF/HmaDYzbxbsYOTkkBEwk7i7bzNLFyMUhJLCCUeJ6Vx+U84VR
+        4t2ED1DOZ0aJR892McO0PJ/1lREisRyo5eluRpAEWMus68kgNpuAlcTE9lVgcREBBYme3yvZ
+        QBqYBdYwSqw63ASWEBbwlpjfuhJsKouAqsTKHZdZQGxeATuJfd1LmCC2yUts/faJtYuRg4MT
+        KN6z1xyiRFDi5MwnYOXMQCXNW2czg8yXEGhmlzhz4DBUr4vE08UboK4Wlnh1fAs7hC0j8X/n
+        fCaIhnWMEn87XkB1b2eUWD75HxtElbXEnXO/2EA2MwtoSqzfpQ8RdpR4Mvk4C0hYQoBP4sZb
+        QYgj+CQmbZvODBHmlehoE4KoVpPYsGwDG8zarp0roUo8JM4vVZzAqDgLyTezkHwzC2HtAkbm
+        VYziqaXFuempxUZ5qeV6xYm5xaV56XrJ+bmbGIGp5fS/4192MO76k3SIUYCDUYmHd4aKQZwQ
+        a2JZcWXuIUYJDmYlEd5OJqAQb0piZVVqUX58UWlOavEhRmkOFiVxXuNFL2OFBNITS1KzU1ML
+        UotgskwcnFINjBum6nIkO35RCxLl3DXDQOu988t5bXbqbZyzJIsmc6vM7Q0Wi/vSaD7hTYEM
+        j/OrBRZL5tRUXKmbEi5x53ei2Md2T+fZaU3hcoq/+uM3WhoaBHK3XnYqFp3U3d/VtCeNWzq/
+        Q6X8uH+j6MVNPjrX3s2a+d/8Unjf0mt3viz4K7k/MOPD4sAlSizFGYmGWsxFxYkAASlETSkD
+        AAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmphkeLIzCtJLcpLzFFi42I5/e/4Pd1QC4M4g7ZFGhar7/azWWycsZ7V
+        4tmtvUwWx3Y8YrK4vGsOm8Xc1unsDmweO2fdZfe4fLbU49DhDkaPvi2rGD0+b5ILYI3SsynK
+        Ly1JVcjILy6xVYo2tDDSM7S00DMysdQzNDaPtTIyVdK3s0lJzcksSy3St0vQy5jTUVbwSqZi
+        /jzNBsbt4l2MnBwSAiYSz2d9Zexi5OIQEljKKLH0Sj9TFyMHUEJG4vj6MogaYYk/17rYIGo+
+        MUq8mP2PBSTBJmAlMbF9FSOILSKgINHzeyVYEbPABkaJVze/gBUJC3hLzG9dyQxiswioSqzc
+        cRkszitgJ7GvewkTxAZ5ia3fPrGCLOYEivfsNQcJCwnYSqw/85QVolxQ4uTMJ2CtzEDlzVtn
+        M09gFJiFJDULSWoBI9MqRpHU0uLc9NxiQ73ixNzi0rx0veT83E2MwBjYduzn5h2MlzYGH2IU
+        4GBU4uGdoWIQJ8SaWFZcmXuIUYKDWUmEt5MJKMSbklhZlVqUH19UmpNafIjRFOiHicxSosn5
+        wPjMK4k3NDU0t7A0NDc2NzazUBLn7RA4GCMkkJ5YkpqdmlqQWgTTx8TBKdXAKD/7VMyySxWT
+        df0j4q5wTDlnNNO8fGnrniObxe/JMRo1HC8umytpZ6JoF8H15WWu1EzD6xwSB/fJc5VMiTW0
+        OL/00Z9PAevXyMxQj+Y4U7YoakfED+W8qbznHm7KUqp6cfer95vNUR+fBhouzow+meeilv4j
+        6ltFo3jX+ur3rX+qXxrKzdj7XImlOCPRUIu5qDgRAGSvj+iXAgAA
+X-CMS-MailID: 20200128133413eucas1p1725ccae03fb5aba49f0e0cef798da9d6
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200128133415eucas1p12cc620dd5f19e6a26f1deeba083ea82f
+X-RootMTR: 20200128133413eucas1p1725ccae03fb5aba49f0e0cef798da9d6
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20200128133415eucas1p12cc620dd5f19e6a26f1deeba083ea82f
+X-CMS-RootMailID: 20200128133413eucas1p1725ccae03fb5aba49f0e0cef798da9d6
 References: <20200128133343.29905-1-b.zolnierkie@samsung.com>
-        <CGME20200128133415eucas1p12cc620dd5f19e6a26f1deeba083ea82f@eucas1p1.samsung.com>
+        <CGME20200128133413eucas1p1725ccae03fb5aba49f0e0cef798da9d6@eucas1p1.samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-* move sata_print_link_status() to libata-core-sata.c
-
-* add static inline for CONFIG_SATA_HOST=n case
+Remove EXPORT_SYMBOL_GPL()s for functions used only by
+the core libata code.
 
 Code size savings on m68k arch using atari_defconfig:
 
    text    data     bss     dec     hex filename
 before:
-  35499     572      40   36111    8d0f drivers/ata/libata-core.o
+  39838     573      40   40451    9e03 drivers/ata/libata-core.o
+  21071     105    4096   25272    62b8 drivers/ata/libata-scsi.o
+  17519      18       0   17537    4481 drivers/ata/libata-eh.o
 after:
-  35276     572      40   35888    8c30 drivers/ata/libata-core.o
+  39688     573      40   40301    9d6d drivers/ata/libata-core.o
+  21040     105    4096   25241    6299 drivers/ata/libata-scsi.o
+  17405      18       0   17423    440f drivers/ata/libata-eh.o
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/ata/libata-core-sata.c | 27 +++++++++++++++++++++++++++
- drivers/ata/libata-core.c      | 27 ---------------------------
- drivers/ata/libata.h           |  2 ++
- 3 files changed, 29 insertions(+), 27 deletions(-)
+ drivers/ata/libata-core.c | 5 -----
+ drivers/ata/libata-eh.c   | 4 ----
+ drivers/ata/libata-scsi.c | 1 -
+ 3 files changed, 10 deletions(-)
 
-diff --git a/drivers/ata/libata-core-sata.c b/drivers/ata/libata-core-sata.c
-index f2629e069a55..8ad8f97660df 100644
---- a/drivers/ata/libata-core-sata.c
-+++ b/drivers/ata/libata-core-sata.c
-@@ -258,6 +258,33 @@ int ata_dev_config_ncq(struct ata_device *dev, char *desc, size_t desc_sz)
- 	return 0;
- }
- 
-+/**
-+ *	sata_print_link_status - Print SATA link status
-+ *	@link: SATA link to printk link status about
-+ *
-+ *	This function prints link speed and status of a SATA link.
-+ *
-+ *	LOCKING:
-+ *	None.
-+ */
-+void sata_print_link_status(struct ata_link *link)
-+{
-+	u32 sstatus, scontrol, tmp;
-+
-+	if (sata_scr_read(link, SCR_STATUS, &sstatus))
-+		return;
-+	sata_scr_read(link, SCR_CONTROL, &scontrol);
-+
-+	if (ata_phys_link_online(link)) {
-+		tmp = (sstatus >> 4) & 0xf;
-+		ata_link_info(link, "SATA link up %s (SStatus %X SControl %X)\n",
-+			      sata_spd_string(tmp), sstatus, scontrol);
-+	} else {
-+		ata_link_info(link, "SATA link down (SStatus %X SControl %X)\n",
-+			      sstatus, scontrol);
-+	}
-+}
-+
- /**
-  *	sata_link_scr_lpm - manipulate SControl IPM and SPM fields
-  *	@link: ATA link to manipulate SControl for
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 0a90e0e65f0b..73f732a32261 100644
+index ad724602c47c..c41198bb9582 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -2742,33 +2742,6 @@ int ata_bus_probe(struct ata_port *ap)
- 	goto retry;
- }
+@@ -80,7 +80,6 @@ const struct ata_port_operations ata_base_port_ops = {
+ 	.sched_eh		= ata_std_sched_eh,
+ 	.end_eh			= ata_std_end_eh,
+ };
+-EXPORT_SYMBOL_GPL(ata_base_port_ops);
  
--/**
-- *	sata_print_link_status - Print SATA link status
-- *	@link: SATA link to printk link status about
-- *
-- *	This function prints link speed and status of a SATA link.
-- *
-- *	LOCKING:
-- *	None.
-- */
--static void sata_print_link_status(struct ata_link *link)
--{
--	u32 sstatus, scontrol, tmp;
--
--	if (sata_scr_read(link, SCR_STATUS, &sstatus))
--		return;
--	sata_scr_read(link, SCR_CONTROL, &scontrol);
--
--	if (ata_phys_link_online(link)) {
--		tmp = (sstatus >> 4) & 0xf;
--		ata_link_info(link, "SATA link up %s (SStatus %X SControl %X)\n",
--			      sata_spd_string(tmp), sstatus, scontrol);
--	} else {
--		ata_link_info(link, "SATA link down (SStatus %X SControl %X)\n",
--			      sstatus, scontrol);
--	}
--}
--
+ const struct ata_port_operations sata_port_ops = {
+ 	.inherits		= &ata_base_port_ops,
+@@ -902,7 +901,6 @@ void ata_unpack_xfermask(unsigned long xfer_mask, unsigned long *pio_mask,
+ 	if (udma_mask)
+ 		*udma_mask = (xfer_mask & ATA_MASK_UDMA) >> ATA_SHIFT_UDMA;
+ }
+-EXPORT_SYMBOL_GPL(ata_unpack_xfermask);
+ 
+ static const struct ata_xfer_ent {
+ 	int shift, bits;
+@@ -3425,7 +3423,6 @@ u8 ata_timing_cycle2mode(unsigned int xfer_shift, int cycle)
+ 
+ 	return last_mode;
+ }
+-EXPORT_SYMBOL_GPL(ata_timing_cycle2mode);
+ 
  /**
-  *	ata_dev_pair		-	return other device on cable
-  *	@adev: device
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 24b08efd79a3..909c2cae52a0 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -102,6 +102,7 @@ static inline bool ata_log_supported(struct ata_device *dev, u8 log)
- #ifdef CONFIG_SATA_HOST
- int ata_do_link_spd_horkage(struct ata_device *dev);
- int ata_dev_config_ncq(struct ata_device *dev, char *desc, size_t desc_sz);
-+void sata_print_link_status(struct ata_link *link);
- #else
- static inline int ata_do_link_spd_horkage(struct ata_device *dev) { return 0; }
- static inline int ata_dev_config_ncq(struct ata_device *dev, char *desc,
-@@ -110,6 +111,7 @@ static inline int ata_dev_config_ncq(struct ata_device *dev, char *desc,
- 	desc[0] = '\0';
- 	return 0;
+  *	ata_down_xfermask_limit - adjust dev xfer masks downward
+@@ -5051,7 +5048,6 @@ void ata_sg_init(struct ata_queued_cmd *qc, struct scatterlist *sg,
+ 	qc->n_elem = n_elem;
+ 	qc->cursg = qc->sg;
  }
-+static inline void sata_print_link_status(struct ata_link *link) { }
- #endif
+-EXPORT_SYMBOL_GPL(ata_sg_init);
  
- /* libata-acpi.c */
+ #ifdef CONFIG_HAS_DMA
+ 
+@@ -6157,7 +6153,6 @@ void ata_host_get(struct ata_host *host)
+ {
+ 	kref_get(&host->kref);
+ }
+-EXPORT_SYMBOL_GPL(ata_host_get);
+ 
+ void ata_host_put(struct ata_host *host)
+ {
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 1d231cfab26f..04275f4c8d36 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1215,7 +1215,6 @@ void ata_eh_thaw_port(struct ata_port *ap)
+ 
+ 	DPRINTK("ata%u port thawed\n", ap->print_id);
+ }
+-EXPORT_SYMBOL_GPL(ata_eh_thaw_port);
+ 
+ static void ata_eh_scsidone(struct scsi_cmnd *scmd)
+ {
+@@ -1250,7 +1249,6 @@ void ata_eh_qc_complete(struct ata_queued_cmd *qc)
+ 	scmd->retries = scmd->allowed;
+ 	__ata_eh_qc_complete(qc);
+ }
+-EXPORT_SYMBOL_GPL(ata_eh_qc_complete);
+ 
+ /**
+  *	ata_eh_qc_retry - Tell midlayer to retry an ATA command after EH
+@@ -1270,7 +1268,6 @@ void ata_eh_qc_retry(struct ata_queued_cmd *qc)
+ 		scmd->allowed++;
+ 	__ata_eh_qc_complete(qc);
+ }
+-EXPORT_SYMBOL_GPL(ata_eh_qc_retry);
+ 
+ /**
+  *	ata_dev_disable - disable ATA device
+@@ -4041,7 +4038,6 @@ void ata_do_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 
+ 	ata_eh_finish(ap);
+ }
+-EXPORT_SYMBOL_GPL(ata_do_eh);
+ 
+ /**
+  *	ata_std_error_handler - standard error handler
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 321b5a1d610a..d549bd5b3d36 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -4535,7 +4535,6 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd)
+ 
+ 	cmd->scsi_done(cmd);
+ }
+-EXPORT_SYMBOL_GPL(ata_scsi_simulate);
+ 
+ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
+ {
 -- 
 2.24.1
 
