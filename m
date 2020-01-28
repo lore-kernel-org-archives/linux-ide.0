@@ -7,285 +7,441 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39CEAC2D0DB
-	for <linux-ide@archiver.kernel.org>; Tue, 28 Jan 2020 13:34:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A132FC2D0DB
+	for <linux-ide@archiver.kernel.org>; Tue, 28 Jan 2020 13:34:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EA3F822522
-	for <linux-ide@archiver.kernel.org>; Tue, 28 Jan 2020 13:34:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4CEEF22522
+	for <linux-ide@archiver.kernel.org>; Tue, 28 Jan 2020 13:34:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="rR//N+6N"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="UShVDJAW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726548AbgA1NeV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 28 Jan 2020 08:34:21 -0500
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:58987 "EHLO
+        id S1726641AbgA1NeY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 28 Jan 2020 08:34:24 -0500
+Received: from mailout1.w1.samsung.com ([210.118.77.11]:58896 "EHLO
         mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726557AbgA1NeT (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Jan 2020 08:34:19 -0500
+        with ESMTP id S1726604AbgA1NeW (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Jan 2020 08:34:22 -0500
 Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200128133418euoutp01641fc49598555bc078cf51da1eb05de3~uEFDEeMT00325703257euoutp01O
-        for <linux-ide@vger.kernel.org>; Tue, 28 Jan 2020 13:34:18 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200128133418euoutp01641fc49598555bc078cf51da1eb05de3~uEFDEeMT00325703257euoutp01O
+        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200128133420euoutp01df87cd266fe67dce0736976a40cde47d~uEFFS2Q8p0284402844euoutp01i
+        for <linux-ide@vger.kernel.org>; Tue, 28 Jan 2020 13:34:20 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200128133420euoutp01df87cd266fe67dce0736976a40cde47d~uEFFS2Q8p0284402844euoutp01i
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1580218458;
-        bh=8/d83X2GMFWte90CRHDeZ11Hw0OcTRKjIJ3T+rqa7hE=;
+        s=mail20170921; t=1580218460;
+        bh=FnAxc8I0haCRwqAAiq/E3v5iEVuaI9WWSWiKifmrAUw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rR//N+6N3692tTC8smygh/ol6oO7xZM1eqgOr6e4d4cNYsUGlMFIXrJBwiFZf+7jP
-         /lBusZbZ4O3Ik6OO0zz31pnI7/HJl/6mRkQEex+JTE9TQyopf/AAuxUMlC7dmNeJFc
-         fGJqG/MAuA6Y0DK7mbYM15Y2byihG1fw6iDJ2mZs=
-Received: from eusmges2new.samsung.com (unknown [203.254.199.244]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20200128133418eucas1p1d67cd1530bcba3b151ca7243c0919915~uEFC3AGGS1375113751eucas1p1J;
-        Tue, 28 Jan 2020 13:34:18 +0000 (GMT)
+        b=UShVDJAWLMGKndZqpHpFOykPwH5tZ+8pJkbPsSxWkFzCp78qVTNzMcuiyCmbcWJH/
+         +6SL/7zq8QjZCCaTaJQ83HlNCbXgEKRGS8ZXTUXHMFG25cmjv1otDsP+SAWiVqwf6n
+         4UeYbRKd4G/TeKN5cMKNoLtnBZ5okKdpVa3ffJ20=
+Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+        20200128133420eucas1p2c30153238fe597a56437c6470904b2fb~uEFFFqdhM0683706837eucas1p2P;
+        Tue, 28 Jan 2020 13:34:20 +0000 (GMT)
 Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
-        eusmges2new.samsung.com (EUCPMTA) with SMTP id 76.5A.60679.A58303E5; Tue, 28
-        Jan 2020 13:34:18 +0000 (GMT)
+        eusmges1new.samsung.com (EUCPMTA) with SMTP id B2.DA.61286.C58303E5; Tue, 28
+        Jan 2020 13:34:20 +0000 (GMT)
 Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
         eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20200128133417eucas1p27f91558f4b86f6951d2f9f1ed19d84b5~uEFCjq-xu2469924699eucas1p2z;
-        Tue, 28 Jan 2020 13:34:17 +0000 (GMT)
-Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
+        20200128133420eucas1p294e2d41ec0eb0457ff781c69a5bcc489~uEFEx0XzH2264122641eucas1p2G;
+        Tue, 28 Jan 2020 13:34:20 +0000 (GMT)
+Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
         eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200128133417eusmtrp262dad9ac779ad03c2d198d880f7afeeb~uEFCjIntb0330103301eusmtrp25;
-        Tue, 28 Jan 2020 13:34:17 +0000 (GMT)
-X-AuditID: cbfec7f4-0cbff7000001ed07-59-5e30385aa0c3
+        20200128133420eusmtrp2966682352ca9e0cd8fd27a40d7f6f61e~uEFExP5me0330003300eusmtrp2C;
+        Tue, 28 Jan 2020 13:34:20 +0000 (GMT)
+X-AuditID: cbfec7f2-f0bff7000001ef66-93-5e30385c5008
 Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id C5.92.08375.958303E5; Tue, 28
-        Jan 2020 13:34:17 +0000 (GMT)
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id F5.82.07950.C58303E5; Tue, 28
+        Jan 2020 13:34:20 +0000 (GMT)
 Received: from AMDC3058.digital.local (unknown [106.120.51.71]) by
         eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200128133417eusmtip22a22b559b3fd1c74a17a98ecdced0af9~uEFCJwRAA0657106571eusmtip2k;
-        Tue, 28 Jan 2020 13:34:17 +0000 (GMT)
+        20200128133419eusmtip2e8cfbf4715c43f70bc8f8bfa9430b2be~uEFEdeK6X0724907249eusmtip2C;
+        Tue, 28 Jan 2020 13:34:19 +0000 (GMT)
 From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Michael Schmitz <schmitzmic@gmail.com>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
         linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
         b.zolnierkie@samsung.com
-Subject: [PATCH 21/28] ata: move ata_qc_complete_multiple() to
+Subject: [PATCH 27/28] ata: move ata_eh_analyze_ncq_error() & co. to
  libata-core-sata.c
-Date:   Tue, 28 Jan 2020 14:33:36 +0100
-Message-Id: <20200128133343.29905-22-b.zolnierkie@samsung.com>
+Date:   Tue, 28 Jan 2020 14:33:42 +0100
+Message-Id: <20200128133343.29905-28-b.zolnierkie@samsung.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200128133343.29905-1-b.zolnierkie@samsung.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprJKsWRmVeSWpSXmKPExsWy7djPc7pRFgZxBn1XWSxW3+1ns9g4Yz2r
-        xbNbe5ksju14xGRxedccNou5rdPZHdg8ds66y+5x+Wypx6HDHYwefVtWMXp83iQXwBrFZZOS
-        mpNZllqkb5fAldE16S1LwVH9iu1bTrM1MJ5S62Lk5JAQMJE4tq2PrYuRi0NIYAWjREfDDhYI
-        5wujxLwX11ghnM+MEguvbmCFaXn1uo8dIrGcUeLwy4lscC3Trz5iBqliE7CSmNi+ihHEFhFQ
-        kOj5vRKsiFlgDaPEqsNNYAlhgWCJFTOnMoHYLAKqEjsXfAFr5hWwk7h76BMbxDp5ia3fPgGt
-        5uDgBIr37DWHKBGUODnzCQuIzQxU0rx1NjNEeTu7xOeNdRC2i8TBbWug4sISr45vYYewZST+
-        75zPBHKPhMA6Rom/HS+YIZztjBLLJ/+DWmwtcefcLzaQxcwCmhLrd+lDhB0lDkybww4SlhDg
-        k7jxVhDiBj6JSdumM0OEeSU62oQgqtUkNizbwAaztmvnSqhzPCQOXv3PPoFRcRaSb2Yh+WYW
-        wt4FjMyrGMVTS4tz01OLjfJSy/WKE3OLS/PS9ZLzczcxAhPM6X/Hv+xg3PUn6RCjAAejEg/v
-        DBWDOCHWxLLiytxDjBIczEoivJ1MQCHelMTKqtSi/Pii0pzU4kOM0hwsSuK8xotexgoJpCeW
-        pGanphakFsFkmTg4pRoYFa/PWt6qviT/dpztbmYp19RPv9fc13/ydh175p3LLmL96f/7H2aX
-        /ir7paDvv0A66ofz4cTQedOZpAQKzzt1GRpPnnVq2+NZslcMn83/6B6e/+HQwsNy1fc/SOR8
-        KznhEKfUJBF8ISlZ2VOnxW7mtTLXzT861vAY6Wlccgy4m+D3tq3Y6s1MJZbijERDLeai4kQA
-        79Lk6ywDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpjkeLIzCtJLcpLzFFi42I5/e/4Pd1IC4M4gzOnNCxW3+1ns9g4Yz2r
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprBKsWRmVeSWpSXmKPExsWy7djPc7oxFgZxBrN2SVusvtvPZrFxxnpW
+        i2e39jJZHNvxiMni8q45bBZzW6ezO7B57Jx1l93j8tlSj0OHOxg9+rasYvT4vEkugDWKyyYl
+        NSezLLVI3y6BK+PkJ++Clb4V134eYG9g3GvbxcjJISFgIrH98S+mLkYuDiGBFYwSB3dvZoNw
+        vjBKzD79mQXC+cwo0fO6gwWm5czn5VBVyxklVh9fwgTXsnDudDaQKjYBK4mJ7asYQWwRAQWJ
+        nt8rwTqYBdYwSqw63ASWEBaIlPh0ayc7iM0ioCpx8uJKsBW8AnYSW8+eYIdYJy+x9dsn1i5G
+        Dg5OoHjPXnOIEkGJkzOfgJUzA5U0b53NDDJfQqCZXaJ3yW+oXheJlZ+vsELYwhKvjm+BistI
+        /N85nwmiYR2jxN+OF1Dd2xkllk/+xwZRZS1x59wvNpDNzAKaEut36YOYEgKOEiu/eEKYfBI3
+        3gpC3MAnMWnbdGaIMK9ER5sQxAw1iQ3LNrDBbO3auZIZwvaQ2DXrG9sERsVZSL6ZheSbWQhr
+        FzAyr2IUTy0tzk1PLTbMSy3XK07MLS7NS9dLzs/dxAhML6f/Hf+0g/HrpaRDjAIcjEo8vDNU
+        DOKEWBPLiitzDzFKcDArifB2MgGFeFMSK6tSi/Lji0pzUosPMUpzsCiJ8xovehkrJJCeWJKa
+        nZpakFoEk2Xi4JRqYCyc8ebUpb1PHn7U0m4o3iF/a+UL97w/c5jfzi18tyBC9ME2j/sCe7et
+        /ji1MvVAsO/FLAHrnGvHvGMOC+jU9sYG500t9+6tEdDd0GUyaVo1S+np+tPPbA2lpPXXaKwx
+        mHdppkqczdJLiTvZWg2S780SFFiQILhlVXDpOTnfQ2+sbI2tJp6VnqbEUpyRaKjFXFScCADX
+        BdfWKwMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmplkeLIzCtJLcpLzFFi42I5/e/4Pd0YC4M4g1czOSxW3+1ns9g4Yz2r
         xbNbe5ksju14xGRxedccNou5rdPZHdg8ds66y+5x+Wypx6HDHYwefVtWMXp83iQXwBqlZ1OU
-        X1qSqpCRX1xiqxRtaGGkZ2hpoWdkYqlnaGwea2VkqqRvZ5OSmpNZllqkb5egl9E16S1LwVH9
-        iu1bTrM1MJ5S62Lk5JAQMJF49bqPvYuRi0NIYCmjRP/CA2xdjBxACRmJ4+vLIGqEJf5c62KD
-        qPnEKPG++wwLSIJNwEpiYvsqRhBbREBBouf3SrAiZoENjBKvbn4BKxIWCJSYv/MwG4jNIqAq
-        sXPBF2YQm1fATuLuoU9sEBvkJbZ++8QKspgTKN6z1xwkLCRgK7H+zFNWiHJBiZMzn4CNZAYq
-        b946m3kCo8AsJKlZSFILGJlWMYqklhbnpucWG+oVJ+YWl+al6yXn525iBMbBtmM/N+9gvLQx
-        +BCjAAejEg/vDBWDOCHWxLLiytxDjBIczEoivJ1MQCHelMTKqtSi/Pii0pzU4kOMpkA/TGSW
-        Ek3OB8ZoXkm8oamhuYWlobmxubGZhZI4b4fAwRghgfTEktTs1NSC1CKYPiYOTqkGxil9xrOj
-        K3c8tuC5xPhoQp13tX7/vg3Hmn17/RY73F53MqSyOqY0ttlDK1vpHxOPieTT/771IZFOPcuy
-        2mLaZwVaflvls3Q/Z8N/4UrfG0063LxtardiHqy6t82bvYLj/nnD60pHgh1r2Fpt1ogL6BoW
-        8YdmT723Wv80z4S/Ov8XcHYb/q5UYinOSDTUYi4qTgQAcA23f5kCAAA=
-X-CMS-MailID: 20200128133417eucas1p27f91558f4b86f6951d2f9f1ed19d84b5
+        X1qSqpCRX1xiqxRtaGGkZ2hpoWdkYqlnaGwea2VkqqRvZ5OSmpNZllqkb5egl3Hyk3fBSt+K
+        az8PsDcw7rXtYuTkkBAwkTjzeTlbFyMXh5DAUkaJnVt2MnUxcgAlZCSOry+DqBGW+HOtC6rm
+        E6PE++ffmUASbAJWEhPbVzGC2CICChI9v1eCFTELbGCUeHXzCwtIQlggXGLL0mNgNouAqsTJ
+        iyvBbF4BO4mtZ0+wQ2yQl9j67RMryGJOoHjPXnOQsJCArcT6M09ZIcoFJU7OfALWygxU3rx1
+        NvMERoFZSFKzkKQWMDKtYhRJLS3OTc8tNtIrTswtLs1L10vOz93ECIyCbcd+btnB2PUu+BCj
+        AAejEg+vg5JBnBBrYllxZe4hRgkOZiUR3k4moBBvSmJlVWpRfnxRaU5q8SFGU6AfJjJLiSbn
+        AyM0ryTe0NTQ3MLS0NzY3NjMQkmct0PgYIyQQHpiSWp2ampBahFMHxMHp1QD47k9ch/cnZ8/
+        ETdY0+Qt8iDSfEEr46OskOP7ZL0dAthPZO1UeHKh95vGv0sHO2OKbnccWjf1XI1RzaPlAYvs
+        llW/N+WtyhIWPaomxLzuY5r0Ck/NRRkaxacfPOp3XapvIX9C3Ub630HtjTqTt4nPyDrgkeWz
+        66yX6kSmbffXrEpY3XfPsvK9jBJLcUaioRZzUXEiAJvWUCGYAgAA
+X-CMS-MailID: 20200128133420eucas1p294e2d41ec0eb0457ff781c69a5bcc489
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200128133417eucas1p27f91558f4b86f6951d2f9f1ed19d84b5
+X-RootMTR: 20200128133420eucas1p294e2d41ec0eb0457ff781c69a5bcc489
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20200128133417eucas1p27f91558f4b86f6951d2f9f1ed19d84b5
+X-CMS-RootMailID: 20200128133420eucas1p294e2d41ec0eb0457ff781c69a5bcc489
 References: <20200128133343.29905-1-b.zolnierkie@samsung.com>
-        <CGME20200128133417eucas1p27f91558f4b86f6951d2f9f1ed19d84b5@eucas1p2.samsung.com>
+        <CGME20200128133420eucas1p294e2d41ec0eb0457ff781c69a5bcc489@eucas1p2.samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-* move ata_qc_complete_multiple() to libata-core-sata.c
+* move ata_eh_analyze_ncq_error() and ata_eh_read_log_10h() to
+  libata-eh-sata.c
+
+* add static inline for ata_eh_analyze_ncq_error() for
+  CONFIG_SATA_HOST=n case (link->sactive is non-zero only if
+  NCQ commands are actually queued so empty function body is
+  sufficient)
 
 Code size savings on m68k arch using atari_defconfig:
 
    text    data     bss     dec     hex filename
 before:
-  33212     572      40   33824    8420 drivers/ata/libata-core.o
+  16810      18       0   16828    41bc drivers/ata/libata-eh.o
 after:
-  32815     572      40   33427    8293 drivers/ata/libata-core.o
+  16092      18       0   16110    3eee drivers/ata/libata-eh.o
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/ata/libata-core-sata.c | 59 ++++++++++++++++++++++++++++++++++
- drivers/ata/libata-core.c      | 59 ----------------------------------
- include/linux/libata.h         |  2 +-
- 3 files changed, 60 insertions(+), 60 deletions(-)
+ drivers/ata/libata-eh-sata.c | 131 +++++++++++++++++++++++++++++++++++
+ drivers/ata/libata-eh.c      | 131 -----------------------------------
+ include/linux/libata.h       |   4 +-
+ 3 files changed, 134 insertions(+), 132 deletions(-)
 
-diff --git a/drivers/ata/libata-core-sata.c b/drivers/ata/libata-core-sata.c
-index 8c6ed82dc166..5749aa57c352 100644
---- a/drivers/ata/libata-core-sata.c
-+++ b/drivers/ata/libata-core-sata.c
-@@ -772,6 +772,65 @@ int sata_link_hardreset(struct ata_link *link, const unsigned long *timing,
+diff --git a/drivers/ata/libata-eh-sata.c b/drivers/ata/libata-eh-sata.c
+index 4b6dc715629a..4b55d89862fb 100644
+--- a/drivers/ata/libata-eh-sata.c
++++ b/drivers/ata/libata-eh-sata.c
+@@ -83,3 +83,134 @@ int sata_async_notification(struct ata_port *ap)
+ 	}
  }
- EXPORT_SYMBOL_GPL(sata_link_hardreset);
- 
+ EXPORT_SYMBOL_GPL(sata_async_notification);
++
 +/**
-+ *	ata_qc_complete_multiple - Complete multiple qcs successfully
-+ *	@ap: port in question
-+ *	@qc_active: new qc_active mask
++ *	ata_eh_read_log_10h - Read log page 10h for NCQ error details
++ *	@dev: Device to read log page 10h from
++ *	@tag: Resulting tag of the failed command
++ *	@tf: Resulting taskfile registers of the failed command
 + *
-+ *	Complete in-flight commands.  This functions is meant to be
-+ *	called from low-level driver's interrupt routine to complete
-+ *	requests normally.  ap->qc_active and @qc_active is compared
-+ *	and commands are completed accordingly.
-+ *
-+ *	Always use this function when completing multiple NCQ commands
-+ *	from IRQ handlers instead of calling ata_qc_complete()
-+ *	multiple times to keep IRQ expect status properly in sync.
++ *	Read log page 10h to obtain NCQ error details and clear error
++ *	condition.
 + *
 + *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
++ *	Kernel thread context (may sleep).
 + *
 + *	RETURNS:
-+ *	Number of completed commands on success, -errno otherwise.
++ *	0 on success, -errno otherwise.
 + */
-+int ata_qc_complete_multiple(struct ata_port *ap, u64 qc_active)
++static int ata_eh_read_log_10h(struct ata_device *dev,
++			       int *tag, struct ata_taskfile *tf)
 +{
-+	u64 done_mask, ap_qc_active = ap->qc_active;
-+	int nr_done = 0;
++	u8 *buf = dev->link->ap->sector_buf;
++	unsigned int err_mask;
++	u8 csum;
++	int i;
 +
-+	/*
-+	 * If the internal tag is set on ap->qc_active, then we care about
-+	 * bit0 on the passed in qc_active mask. Move that bit up to match
-+	 * the internal tag.
-+	 */
-+	if (ap_qc_active & (1ULL << ATA_TAG_INTERNAL)) {
-+		qc_active |= (qc_active & 0x01) << ATA_TAG_INTERNAL;
-+		qc_active ^= qc_active & 0x01;
-+	}
++	err_mask = ata_read_log_page(dev, ATA_LOG_SATA_NCQ, 0, buf, 1);
++	if (err_mask)
++		return -EIO;
 +
-+	done_mask = ap_qc_active ^ qc_active;
++	csum = 0;
++	for (i = 0; i < ATA_SECT_SIZE; i++)
++		csum += buf[i];
++	if (csum)
++		ata_dev_warn(dev, "invalid checksum 0x%x on log page 10h\n",
++			     csum);
 +
-+	if (unlikely(done_mask & qc_active)) {
-+		ata_port_err(ap, "illegal qc_active transition (%08llx->%08llx)\n",
-+			     ap->qc_active, qc_active);
-+		return -EINVAL;
-+	}
++	if (buf[0] & 0x80)
++		return -ENOENT;
 +
-+	while (done_mask) {
-+		struct ata_queued_cmd *qc;
-+		unsigned int tag = __ffs64(done_mask);
++	*tag = buf[0] & 0x1f;
 +
-+		qc = ata_qc_from_tag(ap, tag);
-+		if (qc) {
-+			ata_qc_complete(qc);
-+			nr_done++;
-+		}
-+		done_mask &= ~(1ULL << tag);
-+	}
++	tf->command = buf[2];
++	tf->feature = buf[3];
++	tf->lbal = buf[4];
++	tf->lbam = buf[5];
++	tf->lbah = buf[6];
++	tf->device = buf[7];
++	tf->hob_lbal = buf[8];
++	tf->hob_lbam = buf[9];
++	tf->hob_lbah = buf[10];
++	tf->nsect = buf[12];
++	tf->hob_nsect = buf[13];
++	if (dev->class == ATA_DEV_ZAC && ata_id_has_ncq_autosense(dev->id))
++		tf->auxiliary = buf[14] << 16 | buf[15] << 8 | buf[16];
 +
-+	return nr_done;
++	return 0;
 +}
-+EXPORT_SYMBOL_GPL(ata_qc_complete_multiple);
 +
- /**
-  *	sata_link_init_spd - Initialize link->sata_spd_limit
-  *	@link: Link to configure sata_spd_limit for
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 17f1d98eab71..204e64ff4b93 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4456,65 +4456,6 @@ u64 ata_qc_get_active(struct ata_port *ap)
++/**
++ *	ata_eh_analyze_ncq_error - analyze NCQ error
++ *	@link: ATA link to analyze NCQ error for
++ *
++ *	Read log page 10h, determine the offending qc and acquire
++ *	error status TF.  For NCQ device errors, all LLDDs have to do
++ *	is setting AC_ERR_DEV in ehi->err_mask.  This function takes
++ *	care of the rest.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ */
++void ata_eh_analyze_ncq_error(struct ata_link *link)
++{
++	struct ata_port *ap = link->ap;
++	struct ata_eh_context *ehc = &link->eh_context;
++	struct ata_device *dev = link->device;
++	struct ata_queued_cmd *qc;
++	struct ata_taskfile tf;
++	int tag, rc;
++
++	/* if frozen, we can't do much */
++	if (ap->pflags & ATA_PFLAG_FROZEN)
++		return;
++
++	/* is it NCQ device error? */
++	if (!link->sactive || !(ehc->i.err_mask & AC_ERR_DEV))
++		return;
++
++	/* has LLDD analyzed already? */
++	ata_qc_for_each_raw(ap, qc, tag) {
++		if (!(qc->flags & ATA_QCFLAG_FAILED))
++			continue;
++
++		if (qc->err_mask)
++			return;
++	}
++
++	/* okay, this error is ours */
++	memset(&tf, 0, sizeof(tf));
++	rc = ata_eh_read_log_10h(dev, &tag, &tf);
++	if (rc) {
++		ata_link_err(link, "failed to read log page 10h (errno=%d)\n",
++			     rc);
++		return;
++	}
++
++	if (!(link->sactive & (1 << tag))) {
++		ata_link_err(link, "log page 10h reported inactive tag %d\n",
++			     tag);
++		return;
++	}
++
++	/* we've got the perpetrator, condemn it */
++	qc = __ata_qc_from_tag(ap, tag);
++	memcpy(&qc->result_tf, &tf, sizeof(tf));
++	qc->result_tf.flags = ATA_TFLAG_ISADDR | ATA_TFLAG_LBA | ATA_TFLAG_LBA48;
++	qc->err_mask |= AC_ERR_DEV | AC_ERR_NCQ;
++	if (dev->class == ATA_DEV_ZAC &&
++	    ((qc->result_tf.command & ATA_SENSE) || qc->result_tf.auxiliary)) {
++		char sense_key, asc, ascq;
++
++		sense_key = (qc->result_tf.auxiliary >> 16) & 0xff;
++		asc = (qc->result_tf.auxiliary >> 8) & 0xff;
++		ascq = qc->result_tf.auxiliary & 0xff;
++		ata_scsi_set_sense(dev, qc->scsicmd, sense_key, asc, ascq);
++		ata_scsi_set_sense_information(dev, qc->scsicmd,
++					       &qc->result_tf);
++		qc->flags |= ATA_QCFLAG_SENSE_VALID;
++	}
++
++	ehc->i.err_mask &= ~AC_ERR_DEV;
++}
++EXPORT_SYMBOL_GPL(ata_eh_analyze_ncq_error);
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 201165955b90..b37e93c5013d 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1351,62 +1351,6 @@ static const char *ata_err_string(unsigned int err_mask)
+ 	return "unknown error";
  }
- EXPORT_SYMBOL_GPL(ata_qc_get_active);
  
 -/**
-- *	ata_qc_complete_multiple - Complete multiple qcs successfully
-- *	@ap: port in question
-- *	@qc_active: new qc_active mask
+- *	ata_eh_read_log_10h - Read log page 10h for NCQ error details
+- *	@dev: Device to read log page 10h from
+- *	@tag: Resulting tag of the failed command
+- *	@tf: Resulting taskfile registers of the failed command
 - *
-- *	Complete in-flight commands.  This functions is meant to be
-- *	called from low-level driver's interrupt routine to complete
-- *	requests normally.  ap->qc_active and @qc_active is compared
-- *	and commands are completed accordingly.
-- *
-- *	Always use this function when completing multiple NCQ commands
-- *	from IRQ handlers instead of calling ata_qc_complete()
-- *	multiple times to keep IRQ expect status properly in sync.
+- *	Read log page 10h to obtain NCQ error details and clear error
+- *	condition.
 - *
 - *	LOCKING:
-- *	spin_lock_irqsave(host lock)
+- *	Kernel thread context (may sleep).
 - *
 - *	RETURNS:
-- *	Number of completed commands on success, -errno otherwise.
+- *	0 on success, -errno otherwise.
 - */
--int ata_qc_complete_multiple(struct ata_port *ap, u64 qc_active)
+-static int ata_eh_read_log_10h(struct ata_device *dev,
+-			       int *tag, struct ata_taskfile *tf)
 -{
--	u64 done_mask, ap_qc_active = ap->qc_active;
--	int nr_done = 0;
+-	u8 *buf = dev->link->ap->sector_buf;
+-	unsigned int err_mask;
+-	u8 csum;
+-	int i;
 -
--	/*
--	 * If the internal tag is set on ap->qc_active, then we care about
--	 * bit0 on the passed in qc_active mask. Move that bit up to match
--	 * the internal tag.
--	 */
--	if (ap_qc_active & (1ULL << ATA_TAG_INTERNAL)) {
--		qc_active |= (qc_active & 0x01) << ATA_TAG_INTERNAL;
--		qc_active ^= qc_active & 0x01;
--	}
+-	err_mask = ata_read_log_page(dev, ATA_LOG_SATA_NCQ, 0, buf, 1);
+-	if (err_mask)
+-		return -EIO;
 -
--	done_mask = ap_qc_active ^ qc_active;
+-	csum = 0;
+-	for (i = 0; i < ATA_SECT_SIZE; i++)
+-		csum += buf[i];
+-	if (csum)
+-		ata_dev_warn(dev, "invalid checksum 0x%x on log page 10h\n",
+-			     csum);
 -
--	if (unlikely(done_mask & qc_active)) {
--		ata_port_err(ap, "illegal qc_active transition (%08llx->%08llx)\n",
--			     ap->qc_active, qc_active);
--		return -EINVAL;
--	}
+-	if (buf[0] & 0x80)
+-		return -ENOENT;
 -
--	while (done_mask) {
--		struct ata_queued_cmd *qc;
--		unsigned int tag = __ffs64(done_mask);
+-	*tag = buf[0] & 0x1f;
 -
--		qc = ata_qc_from_tag(ap, tag);
--		if (qc) {
--			ata_qc_complete(qc);
--			nr_done++;
--		}
--		done_mask &= ~(1ULL << tag);
--	}
+-	tf->command = buf[2];
+-	tf->feature = buf[3];
+-	tf->lbal = buf[4];
+-	tf->lbam = buf[5];
+-	tf->lbah = buf[6];
+-	tf->device = buf[7];
+-	tf->hob_lbal = buf[8];
+-	tf->hob_lbam = buf[9];
+-	tf->hob_lbah = buf[10];
+-	tf->nsect = buf[12];
+-	tf->hob_nsect = buf[13];
+-	if (dev->class == ATA_DEV_ZAC && ata_id_has_ncq_autosense(dev->id))
+-		tf->auxiliary = buf[14] << 16 | buf[15] << 8 | buf[16];
 -
--	return nr_done;
+-	return 0;
 -}
--EXPORT_SYMBOL_GPL(ata_qc_complete_multiple);
 -
  /**
-  *	ata_qc_issue - issue taskfile to device
-  *	@qc: command to issue to device
+  *	atapi_eh_tur - perform ATAPI TEST_UNIT_READY
+  *	@dev: target ATAPI device
+@@ -1590,81 +1534,6 @@ static void ata_eh_analyze_serror(struct ata_link *link)
+ 	ehc->i.action |= action;
+ }
+ 
+-/**
+- *	ata_eh_analyze_ncq_error - analyze NCQ error
+- *	@link: ATA link to analyze NCQ error for
+- *
+- *	Read log page 10h, determine the offending qc and acquire
+- *	error status TF.  For NCQ device errors, all LLDDs have to do
+- *	is setting AC_ERR_DEV in ehi->err_mask.  This function takes
+- *	care of the rest.
+- *
+- *	LOCKING:
+- *	Kernel thread context (may sleep).
+- */
+-void ata_eh_analyze_ncq_error(struct ata_link *link)
+-{
+-	struct ata_port *ap = link->ap;
+-	struct ata_eh_context *ehc = &link->eh_context;
+-	struct ata_device *dev = link->device;
+-	struct ata_queued_cmd *qc;
+-	struct ata_taskfile tf;
+-	int tag, rc;
+-
+-	/* if frozen, we can't do much */
+-	if (ap->pflags & ATA_PFLAG_FROZEN)
+-		return;
+-
+-	/* is it NCQ device error? */
+-	if (!link->sactive || !(ehc->i.err_mask & AC_ERR_DEV))
+-		return;
+-
+-	/* has LLDD analyzed already? */
+-	ata_qc_for_each_raw(ap, qc, tag) {
+-		if (!(qc->flags & ATA_QCFLAG_FAILED))
+-			continue;
+-
+-		if (qc->err_mask)
+-			return;
+-	}
+-
+-	/* okay, this error is ours */
+-	memset(&tf, 0, sizeof(tf));
+-	rc = ata_eh_read_log_10h(dev, &tag, &tf);
+-	if (rc) {
+-		ata_link_err(link, "failed to read log page 10h (errno=%d)\n",
+-			     rc);
+-		return;
+-	}
+-
+-	if (!(link->sactive & (1 << tag))) {
+-		ata_link_err(link, "log page 10h reported inactive tag %d\n",
+-			     tag);
+-		return;
+-	}
+-
+-	/* we've got the perpetrator, condemn it */
+-	qc = __ata_qc_from_tag(ap, tag);
+-	memcpy(&qc->result_tf, &tf, sizeof(tf));
+-	qc->result_tf.flags = ATA_TFLAG_ISADDR | ATA_TFLAG_LBA | ATA_TFLAG_LBA48;
+-	qc->err_mask |= AC_ERR_DEV | AC_ERR_NCQ;
+-	if (dev->class == ATA_DEV_ZAC &&
+-	    ((qc->result_tf.command & ATA_SENSE) || qc->result_tf.auxiliary)) {
+-		char sense_key, asc, ascq;
+-
+-		sense_key = (qc->result_tf.auxiliary >> 16) & 0xff;
+-		asc = (qc->result_tf.auxiliary >> 8) & 0xff;
+-		ascq = qc->result_tf.auxiliary & 0xff;
+-		ata_scsi_set_sense(dev, qc->scsicmd, sense_key, asc, ascq);
+-		ata_scsi_set_sense_information(dev, qc->scsicmd,
+-					       &qc->result_tf);
+-		qc->flags |= ATA_QCFLAG_SENSE_VALID;
+-	}
+-
+-	ehc->i.err_mask &= ~AC_ERR_DEV;
+-}
+-EXPORT_SYMBOL_GPL(ata_eh_analyze_ncq_error);
+-
+ /**
+  *	ata_eh_analyze_tf - analyze taskfile of a failed qc
+  *	@qc: qc to analyze
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 453322cdf64a..62e962b62c5d 100644
+index d09997e2290b..aba4bebb25f1 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -1166,7 +1166,6 @@ extern void ata_id_c_string(const u16 *id, unsigned char *s,
- extern unsigned int ata_do_dev_read_id(struct ata_device *dev,
- 					struct ata_taskfile *tf, u16 *id);
- extern void ata_qc_complete(struct ata_queued_cmd *qc);
--extern int ata_qc_complete_multiple(struct ata_port *ap, u64 qc_active);
- extern u64 ata_qc_get_active(struct ata_port *ap);
- extern void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd);
- extern int ata_std_bios_param(struct scsi_device *sdev,
-@@ -1202,6 +1201,7 @@ extern int ata_slave_link_init(struct ata_port *ap);
- extern void ata_tf_to_fis(const struct ata_taskfile *tf,
- 			  u8 pmp, int is_cmd, u8 *fis);
- extern void ata_tf_from_fis(const u8 *fis, struct ata_taskfile *tf);
-+extern int ata_qc_complete_multiple(struct ata_port *ap, u64 qc_active);
- extern bool sata_lpm_ignore_phy_events(struct ata_link *link);
- #else
- static inline int sata_set_spd(struct ata_link *link) { return -EOPNOTSUPP; }
+@@ -1341,7 +1341,6 @@ extern void ata_eh_thaw_port(struct ata_port *ap);
+ 
+ extern void ata_eh_qc_complete(struct ata_queued_cmd *qc);
+ extern void ata_eh_qc_retry(struct ata_queued_cmd *qc);
+-extern void ata_eh_analyze_ncq_error(struct ata_link *link);
+ 
+ extern void ata_do_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 		      ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
+@@ -1356,6 +1355,9 @@ extern int ata_link_nr_enabled(struct ata_link *link);
+  */
+ #ifdef CONFIG_SATA_HOST
+ extern int sata_async_notification(struct ata_port *ap);
++extern void ata_eh_analyze_ncq_error(struct ata_link *link);
++#else
++static inline void ata_eh_analyze_ncq_error(struct ata_link *link) { }
+ #endif
+ 
+ /*
 -- 
 2.24.1
 
