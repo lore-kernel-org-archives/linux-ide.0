@@ -1,96 +1,122 @@
-Return-Path: <SRS0=dw68=3R=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=TxtD=3S=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8177BC2D0DB
-	for <linux-ide@archiver.kernel.org>; Tue, 28 Jan 2020 14:31:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66371C33C9E
+	for <linux-ide@archiver.kernel.org>; Wed, 29 Jan 2020 02:37:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4F70324687
-	for <linux-ide@archiver.kernel.org>; Tue, 28 Jan 2020 14:31:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1580221865;
-	bh=JIimpl7XnHlfN00aqAoGZDJsaTw4YcIrTHYOcBqWbs4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=IoW2fSGvhstMtiTqNXpFw9By9n/AP6A3AxbX8Xcj0PVGWJ+GMLuj4D+iRiyTgDH7Q
-	 Fk/55WD6j1cAMiJle5vhEmNtDWPuTrjF0AKWFxY93OmI0tnmhJSuokzpt6MfaPUuKX
-	 7OvfOVb3enVSYF8RS/UVVS2Ks4XXTt09Ml7sB0+U=
+	by mail.kernel.org (Postfix) with ESMTP id 393DC2071E
+	for <linux-ide@archiver.kernel.org>; Wed, 29 Jan 2020 02:37:37 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HwSQEdJz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387495AbgA1O2Z (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 28 Jan 2020 09:28:25 -0500
-Received: from mail-qt1-f193.google.com ([209.85.160.193]:43327 "EHLO
-        mail-qt1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733167AbgA1O2Y (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Jan 2020 09:28:24 -0500
-Received: by mail-qt1-f193.google.com with SMTP id d18so10373502qtj.10;
-        Tue, 28 Jan 2020 06:28:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=Yqk1C8lrdb1DLZld5pSoFu2cPtA+P5GkIV0KjhIeFLk=;
-        b=kjxIEoKg7/lM1dYRY7dMYZWFhLw7CXiG/2RzEle7ozn+Bbh1YTvzzuu5w1W5yaGIvf
-         s0LMpj9VKu5qYKZqF7FIl1CDGSZnpG1d3rTFV5f3gf7C6KpTPqcI2DWzno27Vqx8hfeZ
-         uOFUN8TDRnHidIXo/6JuAOdvYaQQJC4yp5u0TXwyWOFxD62J6EW5C0aSokL3gR/RBnzK
-         Lm3BM+96Xu8x0oVCBFIfI3vITJAq4pmb2B0Tayb/I9ocAb8s2WDvKUyypQfQDVe5alJo
-         ho9ncw42EdtEOrggMysKX324UQnXwldzRCC5k4Jnw5DFDgMtP4aTbX77NYVX0kk+14B5
-         gLUg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :references:mime-version:content-disposition:in-reply-to;
-        bh=Yqk1C8lrdb1DLZld5pSoFu2cPtA+P5GkIV0KjhIeFLk=;
-        b=lGmz4tM0Ox934aFVTw9V4Rxhf6i+b7UEPqQjql6iE64hQ4yrNeW6S8cG0NIo4ppm3v
-         5r3Two5cbDRTEGfQZvBce32TwJTb5cJspvLh7DbRE/Krcul6D3iNhbEZpZNC/6ldSS6t
-         bRcZu1NFFvz4SOQrh8jGCyAEpH4fQpe1RbebotNRUdKfGzf5S8zx0RrucSd63ZP6hgrT
-         XDLSelzHZoH18DsIpHZxFeGj4t80GPl5WjD4+hv8kWRhAwE7pXCH9QLZJ+NttT+2k7+Y
-         HBqvhiBBx6KimwZI48wDRVGaVkDi558T/YETWEATQkf5u0gx3eO9+Eob+wCdL/iQ6T6i
-         o6gw==
-X-Gm-Message-State: APjAAAVjx+2a5WTk+U36oG541ojPb0THFqneGISpgsVlHttDU72IBg0l
-        ill3Ow+uBTQdom/LPpbvRjY=
-X-Google-Smtp-Source: APXvYqzup1fp+i+JnWooocuItDd8YhwjZJebyMt1IdjaR/2bX5lUVpHSb/AIFej5XajdmTGSiOcnkA==
-X-Received: by 2002:aed:3765:: with SMTP id i92mr17267845qtb.373.1580221703523;
-        Tue, 28 Jan 2020 06:28:23 -0800 (PST)
-Received: from localhost ([2620:10d:c091:500::3:99c])
-        by smtp.gmail.com with ESMTPSA id h12sm6197278qtn.56.2020.01.28.06.28.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Jan 2020 06:28:23 -0800 (PST)
-Date:   Tue, 28 Jan 2020 09:28:22 -0500
-From:   Tejun Heo <tj@kernel.org>
+        id S1726539AbgA2Chg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 28 Jan 2020 21:37:36 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:49842 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726467AbgA2Chg (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 28 Jan 2020 21:37:36 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00T2Y8hn111870;
+        Wed, 29 Jan 2020 02:37:25 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : references : date : in-reply-to : message-id : mime-version :
+ content-type; s=corp-2019-08-05;
+ bh=HfW61FK9uk+WkM9utdU/THqOxC9th3YYTgHs+EIQeWA=;
+ b=HwSQEdJz8ERKqdgeKVO2dXoa9kMNvLpkEu6cdCurXG+LlvlafNLsMMATd2Kuwcq37qVx
+ eaNayazE7jeMY0K6JMlB1KHdnpM9zbbndfltl1uLhUWvEfKYr4FGAEW+mbd/LXBXJ1g8
+ b6MD7FoxiU3RTUl5OOEPIfPgQgmMQfMKeUEMJu2FkkM/aP/Mg8YRKMMdndS0M585wpvi
+ SUaCCFymv/keIaXrAuYyf4m8RiKMdGKNmnoqiq3wQZ2HzQCWZrw9TE8/k+XGtyem2gua
+ ZapSMoZ/skWIlVD+2Ss3zlfZIKhGU2sHKGrwwPZdSzHBQTT1k0IRzqhcbJQtJNA2P7t4 2A== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2xreara2ve-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 29 Jan 2020 02:37:24 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id 00T2Y3N5033622;
+        Wed, 29 Jan 2020 02:35:24 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 2xth5j3de0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 29 Jan 2020 02:35:24 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 00T2ZMox032109;
+        Wed, 29 Jan 2020 02:35:22 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 28 Jan 2020 18:35:22 -0800
 To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 Cc:     Jens Axboe <axboe@kernel.dk>,
         Michael Schmitz <schmitzmic@gmail.com>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 01/28] ata: remove stale maintainership information from
- core code
-Message-ID: <20200128142822.GD180576@mtj.thefacebook.com>
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 03/28] ata: make SATA_PMP option selectable only if any SATA host driver is enabled
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
 References: <20200128133343.29905-1-b.zolnierkie@samsung.com>
- <CGME20200128133410eucas1p271284329b9b63c2c48167308809c569c@eucas1p2.samsung.com>
- <20200128133343.29905-2-b.zolnierkie@samsung.com>
+        <CGME20200128133411eucas1p1671c280eb6f5d2ca2d10743eea6c96e5@eucas1p1.samsung.com>
+        <20200128133343.29905-4-b.zolnierkie@samsung.com>
+Date:   Tue, 28 Jan 2020 21:35:19 -0500
+In-Reply-To: <20200128133343.29905-4-b.zolnierkie@samsung.com> (Bartlomiej
+        Zolnierkiewicz's message of "Tue, 28 Jan 2020 14:33:18 +0100")
+Message-ID: <yq1zhe76lco.fsf@oracle.com>
+User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1.92 (gnu/linux)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200128133343.29905-2-b.zolnierkie@samsung.com>
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9514 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=926
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1911140001 definitions=main-2001290020
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9514 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=993 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1911140001
+ definitions=main-2001290020
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Jan 28, 2020 at 02:33:16PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> In commit 7634ccd2da97 ("libata: maintainership update") from 2018
-> Jens has officially taken over libata maintainership from Tejun so
-> remove stale information from core libata code.
-> 
-> Cc: Tejun Heo <tj@kernel.org>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-Acked-by: Tejun Heo <tj@kernel.org>
+Bartlomiej,
 
-Thanks.
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index a7881f8eb05e..1b6eaf8da5fa 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -989,6 +989,7 @@ config SCSI_SYM53C8XX_MMIO
+>  config SCSI_IPR
+>  	tristate "IBM Power Linux RAID adapter support"
+>  	depends on PCI && SCSI && ATA
+> +	select SATA_HOST
+>  	select FW_LOADER
+>  	select IRQ_POLL
+>  	select SGL_ALLOC
+> diff --git a/drivers/scsi/libsas/Kconfig b/drivers/scsi/libsas/Kconfig
+> index 5c6a5eff2f8e..052ee3a26f6e 100644
+> --- a/drivers/scsi/libsas/Kconfig
+> +++ b/drivers/scsi/libsas/Kconfig
+> @@ -19,6 +19,7 @@ config SCSI_SAS_ATA
+>  	bool "ATA support for libsas (requires libata)"
+>  	depends on SCSI_SAS_LIBSAS
+>  	depends on ATA = y || ATA = SCSI_SAS_LIBSAS
+> +	select SATA_HOST
+>  	help
+>  		Builds in ATA support into libsas.  Will necessitate
+>  		the loading of libata along with libsas.
+
+SCSI bits look fine.
+
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
-tejun
+Martin K. Petersen	Oracle Linux Engineering
