@@ -7,101 +7,102 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58F6AC33C9E
-	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 10:48:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38E13C33C9E
+	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 10:49:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2AFCD2082E
-	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 10:48:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09116206D3
+	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 10:49:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="YuMiNfUx"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="ttLlRKxS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726893AbgA3Ksy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 30 Jan 2020 05:48:54 -0500
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:50568 "EHLO
-        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726873AbgA3Ksy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jan 2020 05:48:54 -0500
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200130104853euoutp01991b73a5adff069fa2a97f820262d2cc~upHMJjLpb3038730387euoutp01s
-        for <linux-ide@vger.kernel.org>; Thu, 30 Jan 2020 10:48:53 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200130104853euoutp01991b73a5adff069fa2a97f820262d2cc~upHMJjLpb3038730387euoutp01s
+        id S1726913AbgA3Kt2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 30 Jan 2020 05:49:28 -0500
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:43103 "EHLO
+        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726873AbgA3Kt2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jan 2020 05:49:28 -0500
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200130104927euoutp02669f776654eea7a242d198bc71dc32b0~upHr_FMs43039230392euoutp02A
+        for <linux-ide@vger.kernel.org>; Thu, 30 Jan 2020 10:49:27 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200130104927euoutp02669f776654eea7a242d198bc71dc32b0~upHr_FMs43039230392euoutp02A
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1580381333;
-        bh=O6NxsY+ynijgWFfDlXB4VxxygOr0FxT5jeaG8qdotmc=;
+        s=mail20170921; t=1580381367;
+        bh=W3YILrl+iCdxOmRVIBOQ3DwjvYg/VM46eTmou+CaoVI=;
         h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=YuMiNfUxeHdlydkhM9RfKjD2ahxsNMfPtpFGI/D1zjtLQ2ZG1LWAowDAyeaYcjqp9
-         aXj8JSG0q3ADw5QIHtevGeSWTPBoJswFuf/bPoIw10KhJR3Bvtk+V0I7VhplZNmvJA
-         zfgzmUpmN0tNwiRrAu892/9dDr2qyJME1nQ0WRzo=
-Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20200130104853eucas1p20f456e35250d45f5daba6e335625d14f~upHL8IrWW0879208792eucas1p2a;
-        Thu, 30 Jan 2020 10:48:53 +0000 (GMT)
+        b=ttLlRKxSBn2GjjT/cUpDL0U2OCwhTWRvg85hRkmZTxSkhb8nwe+irMr+qbLNMhzLZ
+         u2/dK0UDXkDJxo655ufAc5kWpi5LXIbphQABQKsHmWNcXjH+Ut/t04QfOG2QweS6Tf
+         C/Z8nPBtO1rNBJ0gfIyDhX1JNU0Rk/shTcnEkANc=
+Received: from eusmges2new.samsung.com (unknown [203.254.199.244]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
+        20200130104927eucas1p10275aa6fb16f2dcdf742a5ded993d53f~upHrvf3vB0646506465eucas1p1z;
+        Thu, 30 Jan 2020 10:49:27 +0000 (GMT)
 Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges1new.samsung.com (EUCPMTA) with SMTP id 86.D8.61286.494B23E5; Thu, 30
-        Jan 2020 10:48:52 +0000 (GMT)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
+        eusmges2new.samsung.com (EUCPMTA) with SMTP id 77.2E.60679.7B4B23E5; Thu, 30
+        Jan 2020 10:49:27 +0000 (GMT)
+Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
         eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20200130104852eucas1p21e62ee38a80ac08b76d1423d2e8634ff~upHLobli21537115371eucas1p2l;
-        Thu, 30 Jan 2020 10:48:52 +0000 (GMT)
+        20200130104926eucas1p203e21dd725dc3fe052a2a1cab8be2e15~upHrfvRau1338413384eucas1p2-;
+        Thu, 30 Jan 2020 10:49:26 +0000 (GMT)
 Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
-        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200130104852eusmtrp1095f24095a2f82a726b69f699db4d609~upHLn21r01108511085eusmtrp1a;
-        Thu, 30 Jan 2020 10:48:52 +0000 (GMT)
-X-AuditID: cbfec7f2-ef1ff7000001ef66-a3-5e32b494e500
+        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200130104926eusmtrp2a3975a4c4a3bb29a325f2a5d6a26856a~upHrefz_12157621576eusmtrp23;
+        Thu, 30 Jan 2020 10:49:26 +0000 (GMT)
+X-AuditID: cbfec7f4-0cbff7000001ed07-12-5e32b4b7c8cd
 Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id E5.DD.07950.494B23E5; Thu, 30
-        Jan 2020 10:48:52 +0000 (GMT)
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id F8.ED.07950.6B4B23E5; Thu, 30
+        Jan 2020 10:49:26 +0000 (GMT)
 Received: from [106.120.51.71] (unknown [106.120.51.71]) by
         eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200130104852eusmtip1d43bb90822b368ccea14705d135c146c~upHLQeMHS1201412014eusmtip1V;
-        Thu, 30 Jan 2020 10:48:52 +0000 (GMT)
-Subject: Re: [PATCH 06/24] sata_qstor: move DPRINTK to ata debugging
-To:     Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+        20200130104926eusmtip1fb58c6ffa4f0b6d4f6a57434ef2c90c4~upHrMlUSB1451114511eusmtip1j;
+        Thu, 30 Jan 2020 10:49:26 +0000 (GMT)
+Subject: Re: [PATCH 07/24] pdc_adma: move DPRINTK to ata debugging
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
+        Hannes Reinecke <hare@suse.com>
 From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <a95cf16a-5651-a3b2-d3ab-b529a4902e31@samsung.com>
-Date:   Thu, 30 Jan 2020 11:48:52 +0100
+Message-ID: <f1a25a6d-110c-8d2c-7b49-d83fdc67aa0f@samsung.com>
+Date:   Thu, 30 Jan 2020 11:49:26 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
         Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20181213104716.31930-18-hare@suse.de>
+In-Reply-To: <20181213104716.31930-19-hare@suse.de>
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprKKsWRmVeSWpSXmKPExsWy7djP87pTthjFGexYaWmx+m4/m8WCN3vZ
-        LPYsmsRkcWzHIyYHFo/LZ0s91m+5yuKx+XS1x+dNcgEsUVw2Kak5mWWpRfp2CVwZvzf/YizY
-        zlHxrHkjWwPjE7YuRk4OCQETib+zfgPZXBxCAisYJY4tf8MO4XxhlNgx4y4jhPOZUaL320ZG
-        mJau7e1MEInljBIPLv9ihnDeMkos+f6BBaRKWMBFYtGLNrAOEQEHiae3GsDizAJ2EhevtrKD
-        2GwCVhIT21eB1fACxQ+2PgQ6hIODRUBVYu9fXpCwqECExKcHh1khSgQlTs58AjaGU8BY4nLf
-        TFaIkeISt57MZ4Kw5SW2v50Ddo+EQD+7xPemHVBXu0i07NrHDGELS7w6voUdwpaROD25hwWi
-        YR2jxN+OF1Dd2xkllk/+Bw0ma4k7536BXccsoCmxfpc+RNhRYs233UwgYQkBPokbbwUhjuCT
-        mLRtOjNEmFeio00IolpNYsOyDWwwa7t2rmSewKg0C8lrs5C8MwvJO7MQ9i5gZFnFKJ5aWpyb
-        nlpsmJdarlecmFtcmpeul5yfu4kRmFhO/zv+aQfj10tJhxgFOBiVeHg1NhjFCbEmlhVX5h5i
-        lOBgVhLhFXU1jBPiTUmsrEotyo8vKs1JLT7EKM3BoiTOa7zoZayQQHpiSWp2ampBahFMlomD
-        U6qBUX/+OrHo3Nupa/cLtaZpXZLrlxCQrFzmoDZ7r14Kp2tVYeOVgwzB2YpJLlfX82/Ycn3V
-        7IWHlklaLCwz/reSxeJ9mYKFuvXH9abbd22tn8ESt+bTz3a5dcXHgt+by391r2BYXPW+1f0B
-        9+JTv8TqKxl/2l7p6oq5wLWJhWP+LCcFH8P65xMDlFiKMxINtZiLihMBrDhGGigDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrKIsWRmVeSWpSXmKPExsVy+t/xu7pTthjFGUzarmax+m4/m8WCN3vZ
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprCKsWRmVeSWpSXmKPExsWy7djP87rbtxjFGaz5zW6x+m4/m8WCN3vZ
+        LPYsmsRkcWzHIyYHFo/LZ0s91m+5yuKx+XS1x+dNcgEsUVw2Kak5mWWpRfp2CVwZK87MYSqY
+        wlExeeFW9gbG82xdjJwcEgImEs+nrGDuYuTiEBJYwSixoHMnG4TzhVHi4vTzLBDOZ0aJWZs+
+        MMK0nH7YBJVYzigxf8srRgjnLaNE7+sTQP3sHMICThJzpUHqRQSUJD62H2IHsZkF4iSartwF
+        s9kErCQmtq8Cm8krYCfRfmkbWJxFQFVi8b2vYLaoQITEpweHWSFqBCVOznzCAmJzChhLnLjQ
+        AzVTXOLWk/lMELa8xPa3c8DekRDoZ5fYemsmC8TRLhInHt6H+llY4tXxLewQtozE/50gzSAN
+        6xgl/na8gOreziixfPI/qA5riTvnfgHZHEArNCXW79KHCDtKbNn+gBUkLCHAJ3HjrSDEEXwS
+        k7ZNZ4YI80p0tAlBVKtJbFi2gQ1mbdfOlcwTGJVmIXltFpJ3ZiF5ZxbC3gWMLKsYxVNLi3PT
+        U4uN8lLL9YoTc4tL89L1kvNzNzEC08rpf8e/7GDc9SfpEKMAB6MSD6/GBqM4IdbEsuLK3EOM
+        EhzMSiK8oq6GcUK8KYmVValF+fFFpTmpxYcYpTlYlMR5jRe9jBUSSE8sSc1OTS1ILYLJMnFw
+        SjUwrt6XEN/i/q4yTf/CemWrtywy2v43/c9298Z/jX1hPvVwzqIJsdeNlJXD+cP+Xa/95SfD
+        36BvrL/J+eHReZYHt7TxN51V3XxhmWrNPW/uX2X6e489n2y7ovXAmsYUnbyn0ekVoltbsqSP
+        OU879pB/g5Z7iVtwYcgZI9nSFXxJqcaXFr6TnJavxFKckWioxVxUnAgAPtfRjycDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrKIsWRmVeSWpSXmKPExsVy+t/xu7rbthjFGWzYaWix+m4/m8WCN3vZ
         LPYsmsRkcWzHIyYHFo/LZ0s91m+5yuKx+XS1x+dNcgEsUXo2RfmlJakKGfnFJbZK0YYWRnqG
-        lhZ6RiaWeobG5rFWRqZK+nY2Kak5mWWpRfp2CXoZvzf/YizYzlHxrHkjWwPjE7YuRk4OCQET
-        ia7t7UxdjFwcQgJLGSXu7lzK2MXIAZSQkTi+vgyiRljiz7UuNoia14wSZ090s4AkhAVcJBa9
-        aGMEsUUEHCSe3moAizML2ElcvNrKDmILCaxjlDi2zxPEZhOwkpjYvgqsnheo5mDrQzaQXSwC
-        qhJ7//KChEUFIiQO75gFVSIocXLmE7CRnALGEpf7ZrJCjFeX+DPvEjOELS5x68l8JghbXmL7
-        2znMExiFZiFpn4WkZRaSlllIWhYwsqxiFEktLc5Nzy020itOzC0uzUvXS87P3cQIjKJtx35u
-        2cHY9S74EKMAB6MSD6/GBqM4IdbEsuLK3EOMEhzMSiK8oq6GcUK8KYmVValF+fFFpTmpxYcY
-        TYF+m8gsJZqcD4zwvJJ4Q1NDcwtLQ3Njc2MzCyVx3g6BgzFCAumJJanZqakFqUUwfUwcnFIN
-        jI6MAbnRzj/OP/8ZkXNyipqh0kp10S9H1u7JTHbeESWrXNU8rX7xjYAnfIuZ2exs5Ca5bp9X
-        kT3nxO87ghG/5ZxO6TGdaL34UeqnfnLyj/av+R2dbbV/K987n/0vt+JDU6HbtzqtHLe9L3i9
-        n71M8gj+G75XvqVwx95cbpbaC4LXlTTK7x9gV2Ipzkg01GIuKk4EANnjZvK4AgAA
-X-CMS-MailID: 20200130104852eucas1p21e62ee38a80ac08b76d1423d2e8634ff
+        lhZ6RiaWeobG5rFWRqZK+nY2Kak5mWWpRfp2CXoZK87MYSqYwlExeeFW9gbG82xdjJwcEgIm
+        EqcfNrF0MXJxCAksZZS4fGQ1excjB1BCRuL4+jKIGmGJP9e62CBqXjNKXFraAuSwcwgLOEnM
+        lQYpERFQkvjYfogdxGYWiJP417ebCaJ8HaPE39eXWUESbAJWEhPbVzGC2LwCdhLtl7aBNbAI
+        qEosvvcVzBYViJA4vGMWVI2gxMmZT1hAbE4BY4kTF3qgFqhL/Jl3iRnCFpe49WQ+E4QtL7H9
+        7RzmCYxCs5C0z0LSMgtJyywkLQsYWVYxiqSWFuem5xYb6RUn5haX5qXrJefnbmIERtG2Yz+3
+        7GDsehd8iFGAg1GJh1djg1GcEGtiWXFl7iFGCQ5mJRFeUVfDOCHelMTKqtSi/Pii0pzU4kOM
+        pkDPTWSWEk3OB0Z4Xkm8oamhuYWlobmxubGZhZI4b4fAwRghgfTEktTs1NSC1CKYPiYOTqkG
+        xlU2dwMZeNmefnz6YH2q77y1H/gF1pf3nG88NpPD8sDbp4JTXzRoN5uGG1xs8LEKmfrldW2p
+        hcaOZ5f+fRFhtGt7cKh5ufv2HK/9PszTGy1yLzc77jkj+6mP073JWefDv2U1EqUKNd15CaYi
+        /VabuU30D8np80yZ2zbF5UPVNq+XLzIyvorxKbEUZyQaajEXFScCADidSmS4AgAA
+X-CMS-MailID: 20200130104926eucas1p203e21dd725dc3fe052a2a1cab8be2e15
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20181213104832epcas5p268d10f69ecfa32949f56cae0fed83f90
+X-RootMTR: 20181213104738epcas2p471da9b8d359cec2dbb81dd9cdee37a15
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20181213104832epcas5p268d10f69ecfa32949f56cae0fed83f90
+X-CMS-RootMailID: 20181213104738epcas2p471da9b8d359cec2dbb81dd9cdee37a15
 References: <20181213104716.31930-1-hare@suse.de>
-        <CGME20181213104832epcas5p268d10f69ecfa32949f56cae0fed83f90@epcas5p2.samsung.com>
-        <20181213104716.31930-18-hare@suse.de>
+        <CGME20181213104738epcas2p471da9b8d359cec2dbb81dd9cdee37a15@epcas2p4.samsung.com>
+        <20181213104716.31930-19-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
@@ -113,28 +114,27 @@ On 12/13/18 11:46 AM, Hannes Reinecke wrote:
 > 
 > Signed-off-by: Hannes Reinecke <hare@suse.com>
 > ---
->  drivers/ata/sata_qstor.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+>  drivers/ata/pdc_adma.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
-> index 1fe941688e95..f38f15fe1f79 100644
-> --- a/drivers/ata/sata_qstor.c
-> +++ b/drivers/ata/sata_qstor.c
-> @@ -388,8 +388,9 @@ static inline unsigned int qs_intr_pkt(struct ata_host *host)
->  			struct qs_port_priv *pp = ap->private_data;
->  			struct ata_queued_cmd *qc;
->  
-> -			DPRINTK("SFF=%08x%08x: sCHAN=%u sHST=%d sDST=%02x\n",
-> -					sff1, sff0, port_no, sHST, sDST);
-> +			ata_port_dbg(ap,
-> +				"SFF=%08x%08x: sCHAN=%u sHST=%d sDST=%02x\n",
-> +				sff1, sff0, port_no, sHST, sDST);
+> diff --git a/drivers/ata/pdc_adma.c b/drivers/ata/pdc_adma.c
+> index f1e873a37465..ee9c26ef78c0 100644
+> --- a/drivers/ata/pdc_adma.c
+> +++ b/drivers/ata/pdc_adma.c
+> @@ -490,8 +490,8 @@ static inline unsigned int adma_intr_mmio(struct ata_host *host)
+>  			u8 status = ata_sff_check_status(ap);
+>  			if ((status & ATA_BUSY))
+>  				continue;
+> -			DPRINTK("ata%u: protocol %d (dev_stat 0x%X)\n",
+> -				ap->print_id, qc->tf.protocol, status);
+> +			ata_port_dbg(ap, "protocol %d (dev_stat 0x%X)\n",
+> +				qc->tf.protocol, status);
 
 Please preserve __func__ printing in the conversion.
 
->  			handled = 1;
->  			if (!pp || pp->state != qs_state_pkt)
->  				continue;
+>  			/* complete taskfile transaction */
+>  			pp->state = adma_state_idle;
+
 Best regards,
 --
 Bartlomiej Zolnierkiewicz
