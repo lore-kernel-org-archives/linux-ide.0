@@ -2,156 +2,125 @@ Return-Path: <SRS0=S1Gt=3T=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC8CDC33C9E
-	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 10:53:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B412EC33C9E
+	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 10:55:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 71800206F0
-	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 10:53:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="g+HpksOs"
+	by mail.kernel.org (Postfix) with ESMTP id 8F55F206F0
+	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 10:55:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727024AbgA3KxP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 30 Jan 2020 05:53:15 -0500
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:52299 "EHLO
-        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726873AbgA3KxO (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jan 2020 05:53:14 -0500
-Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200130105313euoutp0109bbfcf48cbaa726f4c26cfe962cd0a2~upK_LPmUt0216302163euoutp01X
-        for <linux-ide@vger.kernel.org>; Thu, 30 Jan 2020 10:53:13 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200130105313euoutp0109bbfcf48cbaa726f4c26cfe962cd0a2~upK_LPmUt0216302163euoutp01X
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1580381593;
-        bh=D92FGO5X5EnoaBy78eLvQ5PyhiAXxFV+WPZHGaRz87Q=;
-        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=g+HpksOsoQBuwOGREAu5JgmcMbtoaHdCP88Cbf8C8Z5L3HIrvmLrGANhpkNH4mvc6
-         Gfn5NmljbRwQzc4kwY4QA/5WyMooYq5sHSITqFSXmzN27SUneJIW6poMxZcdrmeQ89
-         m2kbNhXIHKSENe2NRDUHqoKkoNF/s29Ci2cweCGg=
-Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20200130105312eucas1p2e02d875addaa7cd51460bc1f41c4e1f1~upK_DA1hN2353323533eucas1p26;
-        Thu, 30 Jan 2020 10:53:12 +0000 (GMT)
-Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
-        eusmges3new.samsung.com (EUCPMTA) with SMTP id 7C.3A.60698.895B23E5; Thu, 30
-        Jan 2020 10:53:12 +0000 (GMT)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20200130105312eucas1p1429dce347deac33e03b211eb35b338b5~upK9wTUAm3130631306eucas1p1m;
-        Thu, 30 Jan 2020 10:53:12 +0000 (GMT)
-Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
-        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200130105312eusmtrp12f2e0af8b98973715b69d3032291a96a~upK9vss9c1386813868eusmtrp1U;
-        Thu, 30 Jan 2020 10:53:12 +0000 (GMT)
-X-AuditID: cbfec7f5-a29ff7000001ed1a-de-5e32b5982c62
-Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id E1.7E.07950.895B23E5; Thu, 30
-        Jan 2020 10:53:12 +0000 (GMT)
-Received: from [106.120.51.71] (unknown [106.120.51.71]) by
-        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200130105312eusmtip2473b239c3ce8b6a212ed5e36818c2ff9~upK9hS-xn1041810418eusmtip2a;
-        Thu, 30 Jan 2020 10:53:12 +0000 (GMT)
-Subject: Re: [PATCH 12/24] ata_piix: Remove DPRINTK usage
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
-        Hannes Reinecke <hare@suse.com>
-From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <1cff692d-8eff-df9a-b771-f3dccbd775f6@samsung.com>
-Date:   Thu, 30 Jan 2020 11:53:11 +0100
+        id S1726902AbgA3KzG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 30 Jan 2020 05:55:06 -0500
+Received: from mx2.suse.de ([195.135.220.15]:44356 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726885AbgA3KzG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 30 Jan 2020 05:55:06 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 6B01CAC9A;
+        Thu, 30 Jan 2020 10:55:03 +0000 (UTC)
+Subject: Re: [PATCH 00/24] ata: move DPRINTK to dynamic debugging
+To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
+References: <CGME20181213104740epcas3p419fa4d0d7bbd5a5004ba3f3c632ba7bd@epcas3p4.samsung.com>
+ <20181213104716.31930-1-hare@suse.de>
+ <055a2421-a59a-29a5-152b-fde54ff55aea@samsung.com>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <83682bb4-68c9-af8b-c8e5-aac79d18efd2@suse.de>
+Date:   Thu, 30 Jan 2020 11:55:02 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
-        Thunderbird/60.8.0
+ Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20181213104716.31930-24-hare@suse.de>
+In-Reply-To: <055a2421-a59a-29a5-152b-fde54ff55aea@samsung.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprCKsWRmVeSWpSXmKPExsWy7djPc7ozthrFGTxrNbVYfbefzWLBm71s
-        FnsWTWKyOLbjEZMDi8fls6Ue67dcZfHYfLra4/MmuQCWKC6blNSczLLUIn27BK6MpV3BBZO5
-        KqYd2MvewNjJ0cXIySEhYCJx8fwNpi5GLg4hgRWMEjt/LWWHcL4wSuxecoQZpEpI4DOjxKop
-        NjAdk6YcZ4QoWs4osXTqLWYI5y2jxMR3M9hBqoQFLCX6dr0Es0UElCQ+th8Cs5kF4iSartwF
-        s9kErCQmtq9iBLF5BewkTh2cDBZnEVCVmHrvGQuILSoQIfHpwWFWiBpBiZMzn4DFOQWMJa5O
-        XccCMVNc4taT+UwQtrzE9rdzwA6SEOhnl1j46BQrxNkuEhevvWOGsIUlXh3fwg5hy0icntzD
-        AtGwjlHib8cLqO7tjBLLJ/9jg6iylrhz7heQzQG0QlNi/S59iLCjRMPZs6wgYQkBPokbbwUh
-        juCTmLRtOjNEmFeio00IolpNYsOyDWwwa7t2rmSewKg0C8lrs5C8MwvJO7MQ9i5gZFnFKJ5a
-        WpybnlpsnJdarlecmFtcmpeul5yfu4kRmFZO/zv+dQfjvj9JhxgFOBiVeHg1NhjFCbEmlhVX
-        5h5ilOBgVhLhFXU1jBPiTUmsrEotyo8vKs1JLT7EKM3BoiTOa7zoZayQQHpiSWp2ampBahFM
-        lomDU6qBcanGZcXlE5qrQs6s2G/Bszbi6cqvvfUXmMynR21J8Xj3zTBGJrO3p/Gl4Kv/fT0/
-        Xx3gNGJ9vaNc1IuzZqnossl7f14xO9pa5KV1pEFHWiI6S5y1i7V3BYeEp/9en3kTAmTEhK0v
-        MX0JKnIr67i87d8aq6s+GncObOC/va2vdpV4xlz7HJllSizFGYmGWsxFxYkAyOkCaCcDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrGIsWRmVeSWpSXmKPExsVy+t/xe7ozthrFGbycqGax+m4/m8WCN3vZ
-        LPYsmsRkcWzHIyYHFo/LZ0s91m+5yuKx+XS1x+dNcgEsUXo2RfmlJakKGfnFJbZK0YYWRnqG
-        lhZ6RiaWeobG5rFWRqZK+nY2Kak5mWWpRfp2CXoZS7uCCyZzVUw7sJe9gbGTo4uRk0NCwERi
-        0pTjjF2MXBxCAksZJd71NLB2MXIAJWQkjq8vg6gRlvhzrYsNouY1o8SURX9YQRLCApYSfbte
-        soPYIgJKEh/bD4HZzAJxEv/6djNBNKxjlNjfdAUswSZgJTGxfRUjiM0rYCdx6uBksDiLgKrE
-        1HvPWEBsUYEIicM7ZkHVCEqcnPkELM4pYCxxdeo6FogF6hJ/5l1ihrDFJW49mc8EYctLbH87
-        h3kCo9AsJO2zkLTMQtIyC0nLAkaWVYwiqaXFuem5xUZ6xYm5xaV56XrJ+bmbGIFxtO3Yzy07
-        GLveBR9iFOBgVOLh1dhgFCfEmlhWXJl7iFGCg1lJhFfU1TBOiDclsbIqtSg/vqg0J7X4EKMp
-        0HMTmaVEk/OBMZ5XEm9oamhuYWlobmxubGahJM7bIXAwRkggPbEkNTs1tSC1CKaPiYNTqoFx
-        /2KdKTP/W8k0NQYtdK8Mzufwd98s21Sb1JPtbjRvTcLpQpNW561VU1esVUttW7tg1b8Pv7iV
-        IudG3Zt6dM7UqK237llNdlyt84Lt9ZXyv5+4PV6sX2Hz4gaP3tzySJ7XmzYGFq6taE/pzT1y
-        8KW/4bNrCre2tO3QlE9XVly9rO7TY6/r37YcU2Ipzkg01GIuKk4EAAAEeYG5AgAA
-X-CMS-MailID: 20200130105312eucas1p1429dce347deac33e03b211eb35b338b5
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20181213104821epcas1p232acb49869e54a322a48109bb43eeacc
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20181213104821epcas1p232acb49869e54a322a48109bb43eeacc
-References: <20181213104716.31930-1-hare@suse.de>
-        <CGME20181213104821epcas1p232acb49869e54a322a48109bb43eeacc@epcas1p2.samsung.com>
-        <20181213104716.31930-24-hare@suse.de>
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-
-On 12/13/18 11:47 AM, Hannes Reinecke wrote:
-> Drop pointless DPRINTK calls around pci_register_driver() and move the
-> remaining call over to dev_dbg().
+On 1/30/20 11:24 AM, Bartlomiej Zolnierkiewicz wrote:
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
->  drivers/ata/ata_piix.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
+> On 12/13/18 11:46 AM, Hannes Reinecke wrote:
+>> Hi all,
 > 
-> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-> index 7ecb1322a514..f757ff8d0248 100644
-> --- a/drivers/ata/ata_piix.c
-> +++ b/drivers/ata/ata_piix.c
-> @@ -1362,7 +1362,8 @@ static void piix_init_pcs(struct ata_host *host,
->  	new_pcs = pcs | map_db->port_enable;
->  
->  	if (new_pcs != pcs) {
-> -		DPRINTK("updating PCS from 0x%x to 0x%x\n", pcs, new_pcs);
-> +		dev_dbg(&pdev->dev,
-> +			"updating PCS from 0x%x to 0x%x\n", pcs, new_pcs);
+> Hi,
+> 
+>> I got tired of always having to recompile the ATA drivers with ATA_DEBUG
+>> set so here's now a patchset of move every user of DPRINTK over to
+>> dynamic debugging, and drop ATA_DEBUG completely.
+>>
+>> As usual, comments and reviews are welcome.
+> 
+> This patchset somehow slipped through the cracks which is
+> a shame because it seems to be a valuable contribution.
+> 
+> I agree with the general approach but have some comments to
+> the individual patches (please see my other replies).
+> 
+Whee!
 
-Please preserve __func__ printing in the conversion.
+The work's not been lost!
 
->  		pci_write_config_word(pdev, ICH5_PCS, new_pcs);
->  		msleep(150);
->  	}
-> @@ -1786,14 +1787,12 @@ static int __init piix_init(void)
->  {
->  	int rc;
->  
-> -	DPRINTK("pci_register_driver\n");
->  	rc = pci_register_driver(&piix_pci_driver);
->  	if (rc)
->  		return rc;
->  
->  	in_module_init = 0;
->  
-> -	DPRINTK("done\n");
->  	return 0;
->  }
+I've found myself to redo the patches occasionally, but then never
+resend them due to lack of reviews (and, by implication, lack of
+interest ...)
 
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+Thanks for the review!
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		      Teamlead Storage & Networking
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
