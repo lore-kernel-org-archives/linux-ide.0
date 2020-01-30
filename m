@@ -2,72 +2,60 @@ Return-Path: <SRS0=S1Gt=3T=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44216C33C9E
-	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 05:48:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BBDDC33CB3
+	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 10:02:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6E2802082E
-	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 05:48:32 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=xenosoft.de header.i=@xenosoft.de header.b="N3pK6s9z"
+	by mail.kernel.org (Postfix) with ESMTP id 5AD822082E
+	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 10:02:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725923AbgA3Fsc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 30 Jan 2020 00:48:32 -0500
-Received: from mo4-p00-ob.smtp.rzone.de ([85.215.255.22]:18546 "EHLO
-        mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725847AbgA3Fsb (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jan 2020 00:48:31 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1580363310;
-        s=strato-dkim-0002; d=xenosoft.de;
-        h=In-Reply-To:Date:Message-ID:From:Cc:References:To:Subject:
-        X-RZG-CLASS-ID:X-RZG-AUTH:From:Subject:Sender;
-        bh=VbxIk49PwwJL/PpB59nJmX7k7w8iLmssMnvRwXtUHLM=;
-        b=N3pK6s9zFhNTv/q8bt0kVBnbEyYrYA5EfWVuZOzB3ilyyVqnk9wpL9N70xhjhOPzAr
-        GcRy1/amyNUd5VC7/HoUJDeOhyd0extTUyqz8nn1q9dtuY9FoEyUcMWkUz3Ab5koavfA
-        2ksy3zDRVYZJARYOezAG7QRBZW/Z3junexDR+YUaM2+DTQaQDE681GYM15ObuIQhH9qS
-        WRhudTcwRmyfiqOxb6Tqzc/mO2bHzfS/6cMKnMX52QNQW2gLOCNBFwPn6xYD5EKoY0G1
-        n4LmpfT12bWEj6N2QOhxBci5iWlrUgkxkg9Y5AnGeCwfU/0KS2CGu9vFjQdvQoWQLfn5
-        oG+w==
-X-RZG-AUTH: ":L2QefEenb+UdBJSdRCXu93KJ1bmSGnhMdmOod1DhGM4l4Hio94KKxRySfLxnHfJ+Dkjp5DdBJSrwuuqxvPhRLvX2C+0zn1U71blMv0pYsVjxhg=="
-X-RZG-CLASS-ID: mo00
-Received: from [IPv6:2a02:8109:89c0:ebfc:2820:4e0f:3a13:7fa7]
-        by smtp.strato.de (RZmta 46.1.8 AUTH)
-        with ESMTPSA id 20a669w0U5mS2Tp
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-        (Client did not present a certificate);
-        Thu, 30 Jan 2020 06:48:28 +0100 (CET)
-Subject: Re: [PATCH] Using of new SanDisk High (>8G) CF cards with the
- pata_pcmcia driver
-To:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
-        Christian Zigotzky <info@xenosoft.de>
-References: <c88372ea-1cb7-6ae4-21dd-ff67304c7885@xenosoft.de>
- <24ffb33b-8ccb-3dfb-7a18-bb791f020e08@kernel.dk>
-Cc:     "R.T.Dickinson" <rtd2@xtra.co.nz>,
-        "contact@a-eon.com" <contact@a-eon.com>,
-        Darren Stevens <darren@stevens-zone.net>
-From:   Christian Zigotzky <chzigotzky@xenosoft.de>
-Message-ID: <960a3eb7-a290-eb8a-8cec-c2f8141bd5fe@xenosoft.de>
-Date:   Thu, 30 Jan 2020 06:48:19 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
-MIME-Version: 1.0
-In-Reply-To: <24ffb33b-8ccb-3dfb-7a18-bb791f020e08@kernel.dk>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        id S1726893AbgA3KCk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 30 Jan 2020 05:02:40 -0500
+Received: from shards.monkeyblade.net ([23.128.96.9]:52624 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726882AbgA3KCk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jan 2020 05:02:40 -0500
+Received: from localhost (unknown [IPv6:2001:982:756:1:57a7:3bfd:5e85:defb])
+        (using TLSv1 with cipher AES256-SHA (256/256 bits))
+        (Client did not present a certificate)
+        (Authenticated sender: davem-davemloft)
+        by shards.monkeyblade.net (Postfix) with ESMTPSA id 4CF9E15AB0D16;
+        Thu, 30 Jan 2020 02:02:38 -0800 (PST)
+Date:   Thu, 30 Jan 2020 11:02:36 +0100 (CET)
+Message-Id: <20200130.110236.635220430261346308.davem@davemloft.net>
+To:     b.zolnierkie@samsung.com
+Cc:     ralf@linux-mips.org, paul.burton@mips.com, jhogan@kernel.org,
+        corbet@lwn.net, linux-ide@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] ide: remove no longer used au1xxx-ide driver
+From:   David Miller <davem@davemloft.net>
+In-Reply-To: <20200116122938.20789-2-b.zolnierkie@samsung.com>
+References: <20200116122938.20789-1-b.zolnierkie@samsung.com>
+        <CGME20200116122951eucas1p27bed87e1d46b5e1d8fc91abc33cd013a@eucas1p2.samsung.com>
+        <20200116122938.20789-2-b.zolnierkie@samsung.com>
+X-Mailer: Mew version 6.8 on Emacs 26.3
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Thu, 30 Jan 2020 02:02:40 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 30 January 2020 at 04:55 am, Jens Axboe wrote:
-> On 1/28/20 1:49 AM, Christian Zigotzky wrote:
->> Add new SanDisk High (>8G) CF cards to the pata_pcmcia driver.
-> This patch is corrupt, you need to check your mailer setup. I've
-> applied it by hand, thanks.
->
-Thanks a lot for applying the patch and thanks for the hint because of 
-my mailer setup. I will check it.
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Date: Thu, 16 Jan 2020 13:29:36 +0100
+
+> Commit 54ff4a1d1732 ("MIPS: Alchemy: pata_platform for DB1200")
+> from year 2014 converted the only user of au1xxx-ide IDE host
+> driver (MIPS Alchemy DB1200 platform) to use pata_platform
+> libata host driver instead. This patch removes dead au1xxx-ide
+> driver code.
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+
+Acked-by: David S. Miller <davem@davemloft.net>
