@@ -7,102 +7,102 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B18A3C33C9E
-	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 11:55:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B114C33C9E
+	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 11:56:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 83B7E2082E
-	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 11:55:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B66F2083E
+	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 11:56:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="XyVlZJJl"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="a3w3eb8f"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727089AbgA3Lzo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 30 Jan 2020 06:55:44 -0500
-Received: from mailout2.w1.samsung.com ([210.118.77.12]:39238 "EHLO
+        id S1726873AbgA3L45 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 30 Jan 2020 06:56:57 -0500
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:39670 "EHLO
         mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726873AbgA3Lzo (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jan 2020 06:55:44 -0500
+        with ESMTP id S1727161AbgA3L45 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jan 2020 06:56:57 -0500
 Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200130115542euoutp02344c8e02409e856c9c2e29ff9f050ac6~uqBiGmCKn0960909609euoutp02V
-        for <linux-ide@vger.kernel.org>; Thu, 30 Jan 2020 11:55:42 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200130115542euoutp02344c8e02409e856c9c2e29ff9f050ac6~uqBiGmCKn0960909609euoutp02V
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200130115656euoutp022dbee0f7a7d0fc91fbb84654a5965fb5~uqCnAvPaD0971009710euoutp02-
+        for <linux-ide@vger.kernel.org>; Thu, 30 Jan 2020 11:56:56 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200130115656euoutp022dbee0f7a7d0fc91fbb84654a5965fb5~uqCnAvPaD0971009710euoutp02-
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1580385342;
-        bh=k7RPOdxluhf8dYXgweZoro4XJjfdEueUhLXAF9DZdKA=;
+        s=mail20170921; t=1580385416;
+        bh=UQlZlpxnZnCen9+L4Vvn4fBEB4yk3oJgp3Hm0czj5Zk=;
         h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=XyVlZJJlOBlcowFUxQGAXb62Gz+qlKl5WuWbA0YkOSbRtKH+39Pj6sauFqREaNHBp
-         VLHvD7mfnyMo6D8+uhBNTZ9Z9UkFhqI+II5PanVmbzYtV6L8+ID81oCf4uE2OniId+
-         eGAY8bcojT9AeXTu5R1sG1QspDpkJDQ2XBsAV1hM=
-Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20200130115542eucas1p291756e93d1087c68f85d0038bc4e4616~uqBhuIqUc3156031560eucas1p2X;
-        Thu, 30 Jan 2020 11:55:42 +0000 (GMT)
+        b=a3w3eb8fgS5O5xqFhlOtFduTtrpl68UHc1OSrqUgD2RN1eqqFCDvW0kvlvV80qgsh
+         jrY7ZL4NCt+YHTli0sOpBPmh3A7+Q0ZOJAmu468RVam31cOrBl4WNeoMfoJnfKqNth
+         GxJbVzgC9TuV7wd3EsSKWduVgyNThnFbFh638Dq4=
+Received: from eusmges2new.samsung.com (unknown [203.254.199.244]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
+        20200130115656eucas1p1e6fc4c404b2c194c57297e0d3f02f89e~uqCmzn-Z82969129691eucas1p1o;
+        Thu, 30 Jan 2020 11:56:56 +0000 (GMT)
 Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges1new.samsung.com (EUCPMTA) with SMTP id 18.E2.61286.D34C23E5; Thu, 30
-        Jan 2020 11:55:42 +0000 (GMT)
+        eusmges2new.samsung.com (EUCPMTA) with SMTP id 0C.C8.60679.884C23E5; Thu, 30
+        Jan 2020 11:56:56 +0000 (GMT)
 Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20200130115541eucas1p2134ea9aaae8a64ff359577435cdc75a3~uqBhVgyy03145231452eucas1p2h;
-        Thu, 30 Jan 2020 11:55:41 +0000 (GMT)
+        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
+        20200130115656eucas1p1b60418f3327a8204396ac00b29462337~uqCmmlMPd2000120001eucas1p1H;
+        Thu, 30 Jan 2020 11:56:56 +0000 (GMT)
 Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
         eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200130115541eusmtrp2df28cea8afcec48b129b521b77d8d818~uqBhU9v253084930849eusmtrp2B;
-        Thu, 30 Jan 2020 11:55:41 +0000 (GMT)
-X-AuditID: cbfec7f2-ef1ff7000001ef66-71-5e32c43d07b0
+        20200130115656eusmtrp28aceccccac19dac98e9459ed3a1a18e1~uqCmmCxoz3146231462eusmtrp2k;
+        Thu, 30 Jan 2020 11:56:56 +0000 (GMT)
+X-AuditID: cbfec7f4-0cbff7000001ed07-4c-5e32c488639a
 Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id 50.47.07950.D34C23E5; Thu, 30
-        Jan 2020 11:55:41 +0000 (GMT)
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id B1.67.07950.784C23E5; Thu, 30
+        Jan 2020 11:56:56 +0000 (GMT)
 Received: from [106.120.51.71] (unknown [106.120.51.71]) by
         eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200130115541eusmtip2ba9853b64c4d04d9c194f9a79ed05a22~uqBg5VrqP1780917809eusmtip2b;
-        Thu, 30 Jan 2020 11:55:41 +0000 (GMT)
-Subject: Re: [PATCH 20/24] pata_pdc202xx_old: move DPRINTK to ata debugging
+        20200130115655eusmtip232964ef0ffdf5149d0d1abc24cede466~uqCmMQweB1780917809eusmtip21;
+        Thu, 30 Jan 2020 11:56:55 +0000 (GMT)
+Subject: Re: [PATCH 21/24] libata: remove DPRINTK() macro
 To:     Hannes Reinecke <hare@suse.de>
 Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
         Hannes Reinecke <hare@suse.com>
 From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <bba1e0c7-d5db-86b3-3ded-efb0c91208f6@samsung.com>
-Date:   Thu, 30 Jan 2020 12:55:40 +0100
+Message-ID: <81b5b0c6-1aee-6dd1-456d-52759e3c6d6c@samsung.com>
+Date:   Thu, 30 Jan 2020 12:56:55 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
         Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20181213104716.31930-32-hare@suse.de>
+In-Reply-To: <20181213104716.31930-33-hare@suse.de>
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprMKsWRmVeSWpSXmKPExsWy7djP87p2R4ziDDb2M1msvtvPZrHgzV42
-        iz2LJjFZHNvxiMmBxePy2VKP9VuusnhsPl3t8XmTXABLFJdNSmpOZllqkb5dAlfG51MPmAu+
-        s1fMOfyFpYHxMlsXIyeHhICJxOlnDxm7GLk4hARWMEr8PLmWBSQhJPCFUeLUBz8I+zOjxJ/N
-        STANzfN6WCEaljNKrFnYxQLhvGWUmNn2nAmkSljAW2L3/DZGEFtEQEniY/shdhCbWSBOounK
-        XTCbTcBKYmL7KrAaXgE7iVuPl7KC2CwCqhIvjqwFO09UIELi04PDrBA1ghInZz4Bu45TwFji
-        xL3ZLBAzxSVuPZnPBGHLS2x/O4cZ5CAJgX52iZY5nUAOB5DjIrFgmhTEB8ISr45vYYewZST+
-        7wTpBalfxyjxt+MFVPN2Ronlk/9BA8la4s65X2wgg5gFNCXW79KHCDtKbHv8khFiPp/EjbeC
-        EDfwSUzaNh1qLa9ER5sQRLWaxIZlG9hg1nbtXMk8gVFpFpLPZiH5ZhaSb2Yh7F3AyLKKUTy1
-        tDg3PbXYMC+1XK84Mbe4NC9dLzk/dxMjMKmc/nf80w7Gr5eSDjEKcDAq8fBqbDCKE2JNLCuu
-        zD3EKMHBrCTCK+pqGCfEm5JYWZValB9fVJqTWnyIUZqDRUmc13jRy1ghgfTEktTs1NSC1CKY
-        LBMHp1QDY3ara+sbvuVM2pK9DqVGfRw351hND5qhe7ir4CyjJeuht09+VvCHfGQr0p5ZKnng
-        UOn5y0zveN++mMx41Ym9yHjLs1aFcOvAydnqq5035ca+UQwy0Lm6aa/ZAw71oKrXfzcvkFwS
-        +0fuiZ3o3JpXGzsF+zdqqZ+py7Tq3DL7+geF5lSV/9ZFSizFGYmGWsxFxYkANs/TyiYDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrOIsWRmVeSWpSXmKPExsVy+t/xe7q2R4ziDB4c0rJYfbefzWLBm71s
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprMKsWRmVeSWpSXmKPExsWy7djP87odR4ziDK72CVmsvtvPZrHgzV42
+        iz2LJjFZHNvxiMmBxePy2VKP9VuusnhsPl3t8XmTXABLFJdNSmpOZllqkb5dAlfG/APiBb/Z
+        K9Z8+sTewHiQrYuRk0NCwERi09k2IJuLQ0hgBaPE1Q1nwBJCAl8YJQ5/4oRIfGaUaOy+Cdcx
+        99BUVojEckaJ291LodrfMkrce3SBHaRKWMBS4t2Fo2C2iICSxMf2Q2A2s0CcRNOVu2A2m4CV
+        xMT2VYwgNq+AncSGteuZQWwWAVWJLf+3gm0TFYiQ+PTgMCtEjaDEyZlPWEBsTgFjiTdbdjJC
+        zBSXuPVkPhOELS+x/e0cZpCDJAT62SX6T4IM5QByXCTm3bOG+EBY4tXxLewQtozE/50gvSD1
+        6xgl/na8gGreziixfPI/qJ+tJe6c+8UGMohZQFNi/S59iLCjxImdV1gg5vNJ3HgrCHEDn8Sk
+        bdOh1vJKdLQJQVSrSWxYtoENZm3XzpXMExiVZiH5bBaSb2Yh+WYWwt4FjCyrGMVTS4tz01OL
+        jfJSy/WKE3OLS/PS9ZLzczcxApPK6X/Hv+xg3PUn6RCjAAejEg+vxgajOCHWxLLiytxDjBIc
+        zEoivKKuhnFCvCmJlVWpRfnxRaU5qcWHGKU5WJTEeY0XvYwVEkhPLEnNTk0tSC2CyTJxcEo1
+        MBaIbNGtTm5TzPdx/Tube37kuZPuLjl6vIcC526YWOx+7mHw5Q1+c599dqqRW3uuSoCzt0jn
+        ubOMouKk4GW7k8qe/XE48sh19zdb8/X9f+LPbPygU7y99fflXaZSvh+aTzrmujPEJlkeWNFf
+        dVopq+6w9pUQ7QstJ5m+srTdf/WWh5X1ovfWF0osxRmJhlrMRcWJADujtxEmAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrGIsWRmVeSWpSXmKPExsVy+t/xe7odR4ziDJYvZbRYfbefzWLBm71s
         FnsWTWKyOLbjEZMDi8fls6Ue67dcZfHYfLra4/MmuQCWKD2bovzSklSFjPziElulaEMLIz1D
-        Sws9IxNLPUNj81grI1MlfTublNSczLLUIn27BL2Mz6ceMBd8Z6+Yc/gLSwPjZbYuRk4OCQET
-        ieZ5PaxdjFwcQgJLGSU6X64EcjiAEjISx9eXQdQIS/y51sUGUfOaUaJh3lFGkISwgLfE7vlt
-        YLaIgJLEx/ZD7CA2s0CcxL++3UwQDesYJY7dXgKWYBOwkpjYvgqsgVfATuLW46WsIDaLgKrE
-        iyNrwS4SFYiQOLxjFlSNoMTJmU9YQGxOAWOJE/dms0AsUJf4M+8SM4QtLnHryXwmCFteYvvb
-        OcwTGIVmIWmfhaRlFpKWWUhaFjCyrGIUSS0tzk3PLTbSK07MLS7NS9dLzs/dxAiMpG3Hfm7Z
-        wdj1LvgQowAHoxIPr8YGozgh1sSy4srcQ4wSHMxKIryiroZxQrwpiZVVqUX58UWlOanFhxhN
-        gZ6byCwlmpwPjPK8knhDU0NzC0tDc2NzYzMLJXHeDoGDMUIC6YklqdmpqQWpRTB9TBycUg2M
-        EyS6u/pWJn2ZdoS9fELTyRb2y06cfQIp05rfaSfYvmV4rztp9sYDiZlCn/5pPpKsC/uzLVPR
-        iaVEJiKzh8WkO1R3kWQ862wL1nde3w48Vd2wIrNgXtX6LarTlod/THUo2mjX9kJs0Rq12QaL
-        P2qLzvlkfzdg5r0PRzPP3D/B45z/KpC/apG9EktxRqKhFnNRcSIAmgqImboCAAA=
-X-CMS-MailID: 20200130115541eucas1p2134ea9aaae8a64ff359577435cdc75a3
+        Sws9IxNLPUNj81grI1MlfTublNSczLLUIn27BL2M+QfEC36zV6z59Im9gfEgWxcjJ4eEgInE
+        3ENTWbsYuTiEBJYySvSd3wzkcAAlZCSOry+DqBGW+HOtiw2i5jWjxLOW+8wgCWEBS4l3F46y
+        g9giAkoSH9sPgdnMAnES//p2M0E0rGOUOP51JlgDm4CVxMT2VYwgNq+AncSGtevB4iwCqhJb
+        /m8Fu0hUIELi8I5ZUDWCEidnPmEBsTkFjCXebNnJCLFAXeLPvEvMELa4xK0n85kgbHmJ7W/n
+        ME9gFJqFpH0WkpZZSFpmIWlZwMiyilEktbQ4Nz232EivODG3uDQvXS85P3cTIzCOth37uWUH
+        Y9e74EOMAhyMSjy8GhuM4oRYE8uKK3MPMUpwMCuJ8Iq6GsYJ8aYkVlalFuXHF5XmpBYfYjQF
+        em4is5Rocj4wxvNK4g1NDc0tLA3Njc2NzSyUxHk7BA7GCAmkJ5akZqemFqQWwfQxcXBKNTB2
+        RJjt1ii7OVs704yt+az8V0abpNQu5qLw47lb/uq1nfAxFYn9m2uUJ515/L/rw4dsrLeN7s8U
+        SeA6cP9dTa5pd2H/1Rqp674KTXqyjItOxonX/9jx3OvWtfVauxVDfp1zaHHelvtDY/1rm9e3
+        rMpOFr07e2nKiW0MSzW7QyckG22vsZxXuk6JpTgj0VCLuag4EQDViYNXuQIAAA==
+X-CMS-MailID: 20200130115656eucas1p1b60418f3327a8204396ac00b29462337
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20181213104753epcas1p338a6423f03225a101ef438786f3932b0
+X-RootMTR: 20181213104745epcas2p285b2e3d67650cbeee8298e30124ab9a4
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20181213104753epcas1p338a6423f03225a101ef438786f3932b0
+X-CMS-RootMailID: 20181213104745epcas2p285b2e3d67650cbeee8298e30124ab9a4
 References: <20181213104716.31930-1-hare@suse.de>
-        <CGME20181213104753epcas1p338a6423f03225a101ef438786f3932b0@epcas1p3.samsung.com>
-        <20181213104716.31930-32-hare@suse.de>
+        <CGME20181213104745epcas2p285b2e3d67650cbeee8298e30124ab9a4@epcas2p2.samsung.com>
+        <20181213104716.31930-33-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
@@ -110,9 +110,11 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 
 On 12/13/18 11:47 AM, Hannes Reinecke wrote:
-> Replace all DPRINTK calls with the ata_XXX_dbg functions.
+> No users left, remove it.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
 
-Please preserve __func__ printing in the conversion.
+Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
 Best regards,
 --
@@ -120,21 +122,25 @@ Bartlomiej Zolnierkiewicz
 Samsung R&D Institute Poland
 Samsung Electronics
 
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
 > ---
->  drivers/ata/pata_pdc202xx_old.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  include/linux/libata.h | 2 --
+>  1 file changed, 2 deletions(-)
 > 
-> diff --git a/drivers/ata/pata_pdc202xx_old.c b/drivers/ata/pata_pdc202xx_old.c
-> index 9001991d2830..6d52b1bb1b9e 100644
-> --- a/drivers/ata/pata_pdc202xx_old.c
-> +++ b/drivers/ata/pata_pdc202xx_old.c
-> @@ -37,7 +37,7 @@ static int pdc2026x_cable_detect(struct ata_port *ap)
->  static void pdc202xx_exec_command(struct ata_port *ap,
->  				  const struct ata_taskfile *tf)
->  {
-> -	DPRINTK("ata%u: cmd 0x%X\n", ap->print_id, tf->command);
-> +	ata_port_dbg(ap, "ata%u: cmd 0x%X\n", ap->print_id, tf->command);
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 808a96a8cb1d..cf62f3bdf4ef 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -62,14 +62,12 @@
 >  
->  	iowrite8(tf->command, ap->ioaddr.command_addr);
->  	ndelay(400);
+>  /* note: prints function name for you */
+>  #ifdef ATA_DEBUG
+> -#define DPRINTK(fmt, args...) printk(KERN_ERR "%s: " fmt, __func__, ## args)
+>  #ifdef ATA_VERBOSE_DEBUG
+>  #define VPRINTK(fmt, args...) printk(KERN_ERR "%s: " fmt, __func__, ## args)
+>  #else
+>  #define VPRINTK(fmt, args...)
+>  #endif	/* ATA_VERBOSE_DEBUG */
+>  #else
+> -#define DPRINTK(fmt, args...)
+>  #define VPRINTK(fmt, args...)
+>  #endif	/* ATA_DEBUG */
