@@ -6,56 +6,54 @@ X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BBDDC33CB3
-	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 10:02:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CDD3C33C9E
+	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 10:03:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5AD822082E
-	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 10:02:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A3D220702
+	for <linux-ide@archiver.kernel.org>; Thu, 30 Jan 2020 10:03:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726893AbgA3KCk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 30 Jan 2020 05:02:40 -0500
-Received: from shards.monkeyblade.net ([23.128.96.9]:52624 "EHLO
+        id S1726922AbgA3KDw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 30 Jan 2020 05:03:52 -0500
+Received: from shards.monkeyblade.net ([23.128.96.9]:52642 "EHLO
         shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726882AbgA3KCk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jan 2020 05:02:40 -0500
+        with ESMTP id S1726882AbgA3KDw (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jan 2020 05:03:52 -0500
 Received: from localhost (unknown [IPv6:2001:982:756:1:57a7:3bfd:5e85:defb])
         (using TLSv1 with cipher AES256-SHA (256/256 bits))
         (Client did not present a certificate)
         (Authenticated sender: davem-davemloft)
-        by shards.monkeyblade.net (Postfix) with ESMTPSA id 4CF9E15AB0D16;
-        Thu, 30 Jan 2020 02:02:38 -0800 (PST)
-Date:   Thu, 30 Jan 2020 11:02:36 +0100 (CET)
-Message-Id: <20200130.110236.635220430261346308.davem@davemloft.net>
-To:     b.zolnierkie@samsung.com
-Cc:     ralf@linux-mips.org, paul.burton@mips.com, jhogan@kernel.org,
-        corbet@lwn.net, linux-ide@vger.kernel.org,
-        linux-mips@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] ide: remove no longer used au1xxx-ide driver
+        by shards.monkeyblade.net (Postfix) with ESMTPSA id B0F4D15AB0D1A;
+        Thu, 30 Jan 2020 02:03:50 -0800 (PST)
+Date:   Thu, 30 Jan 2020 11:03:49 +0100 (CET)
+Message-Id: <20200130.110349.1758084246617103502.davem@davemloft.net>
+To:     dan.carpenter@oracle.com
+Cc:     b.zolnierkie@samsung.com, linux-ide@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] ide: make drive->dn read only
 From:   David Miller <davem@davemloft.net>
-In-Reply-To: <20200116122938.20789-2-b.zolnierkie@samsung.com>
-References: <20200116122938.20789-1-b.zolnierkie@samsung.com>
-        <CGME20200116122951eucas1p27bed87e1d46b5e1d8fc91abc33cd013a@eucas1p2.samsung.com>
-        <20200116122938.20789-2-b.zolnierkie@samsung.com>
+In-Reply-To: <20200121125942.hkr3zg77i5gtgc7v@kili.mountain>
+References: <89d856ef-7c00-a2b7-bfcc-483c78092d20@samsung.com>
+        <20200121125942.hkr3zg77i5gtgc7v@kili.mountain>
 X-Mailer: Mew version 6.8 on Emacs 26.3
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Thu, 30 Jan 2020 02:02:40 -0800 (PST)
+X-Greylist: Sender succeeded SMTP AUTH, not delayed by milter-greylist-4.5.12 (shards.monkeyblade.net [149.20.54.216]); Thu, 30 Jan 2020 02:03:51 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Date: Thu, 16 Jan 2020 13:29:36 +0100
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Date: Tue, 21 Jan 2020 16:06:42 +0300
 
-> Commit 54ff4a1d1732 ("MIPS: Alchemy: pata_platform for DB1200")
-> from year 2014 converted the only user of au1xxx-ide IDE host
-> driver (MIPS Alchemy DB1200 platform) to use pata_platform
-> libata host driver instead. This patch removes dead au1xxx-ide
-> driver code.
+> The IDE core always sets ->dn correctly so changing it is never
+> required.
 > 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+> Setting it to a different value than assigned by IDE core is very likely
+> to result in data corruption (due to wrong transfer timings being set on
+> the controller etc.)
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Acked-by: David S. Miller <davem@davemloft.net>
+Applied, thanks Dan.
