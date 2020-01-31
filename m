@@ -6,31 +6,30 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0768C33CB2
-	for <linux-ide@archiver.kernel.org>; Fri, 31 Jan 2020 11:45:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12AC6C33CB2
+	for <linux-ide@archiver.kernel.org>; Fri, 31 Jan 2020 12:57:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C8C7C206F0
-	for <linux-ide@archiver.kernel.org>; Fri, 31 Jan 2020 11:45:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D954820705
+	for <linux-ide@archiver.kernel.org>; Fri, 31 Jan 2020 12:57:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728428AbgAaLpB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 31 Jan 2020 06:45:01 -0500
-Received: from mx2.suse.de ([195.135.220.15]:58336 "EHLO mx2.suse.de"
+        id S1728635AbgAaM5y (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 31 Jan 2020 07:57:54 -0500
+Received: from mx2.suse.de ([195.135.220.15]:32982 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728423AbgAaLpB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 31 Jan 2020 06:45:01 -0500
+        id S1728514AbgAaM5y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 31 Jan 2020 07:57:54 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 7BBDFAC24;
-        Fri, 31 Jan 2020 11:44:58 +0000 (UTC)
-Subject: Re: [PATCH 01/24] libata: move ata_{port,link,dev}_dbg to dynamic
- debugging
+        by mx2.suse.de (Postfix) with ESMTP id 4B791AD69;
+        Fri, 31 Jan 2020 12:57:50 +0000 (UTC)
+Subject: Re: [PATCH 02/24] sata_nv: move DPRINTK to ata debugging
 To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
-        Hannes Reinecke <hare@suse.com>, Tejun Heo <tj@kernel.org>
+        Hannes Reinecke <hare@suse.com>
 References: <20181213104716.31930-1-hare@suse.de>
- <CGME20181213104740epcas3p430cad94d8c4c4f58f1d6595ea1eff438@epcas3p4.samsung.com>
- <20181213104716.31930-2-hare@suse.de>
- <78a7d597-7d44-6b64-ed60-e7da74df692c@samsung.com>
+ <CGME20181213104751epcas1p46f3208764bdb8b6a0c03ff234cbe61bf@epcas1p4.samsung.com>
+ <20181213104716.31930-13-hare@suse.de>
+ <9e9442f4-a8b1-71ac-dabc-a91496f3af78@samsung.com>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -76,12 +75,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <d5d54b26-10f7-36da-1272-223f8271cb50@suse.de>
-Date:   Fri, 31 Jan 2020 12:44:58 +0100
+Message-ID: <caba9737-e370-5c0e-3d33-b1274739f8fd@suse.de>
+Date:   Fri, 31 Jan 2020 13:57:49 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <78a7d597-7d44-6b64-ed60-e7da74df692c@samsung.com>
+In-Reply-To: <9e9442f4-a8b1-71ac-dabc-a91496f3af78@samsung.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -90,79 +89,135 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/30/20 11:42 AM, Bartlomiej Zolnierkiewicz wrote:
-> 
-> [ added Tejun to Cc: ]
+On 1/30/20 11:46 AM, Bartlomiej Zolnierkiewicz wrote:
 > 
 > On 12/13/18 11:46 AM, Hannes Reinecke wrote:
->> Use dev_dbg() for ata_{port,link,dev}_dbg to allow for selective
->> debugging during runtime.
+>> Replace all DPRINTK calls with the ata_XXX_dbg functions.
 >>
 >> Signed-off-by: Hannes Reinecke <hare@suse.com>
 >> ---
->>  include/linux/libata.h | 6 +++---
->>  1 file changed, 3 insertions(+), 3 deletions(-)
+>>  drivers/ata/sata_nv.c | 22 ++++++++++------------
+>>  1 file changed, 10 insertions(+), 12 deletions(-)
 >>
->> diff --git a/include/linux/libata.h b/include/linux/libata.h
->> index 38c95d66ab12..7b2f039d3d21 100644
-[ .. ]
+>> diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+>> index 72c9b922a77b..aa2611d638ea 100644
+>> --- a/drivers/ata/sata_nv.c
+>> +++ b/drivers/ata/sata_nv.c
+>> @@ -1451,7 +1451,7 @@ static unsigned int nv_adma_qc_issue(struct ata_queued_cmd *qc)
+>>  
+>>  	writew(qc->hw_tag, mmio + NV_ADMA_APPEND);
+>>  
+>> -	DPRINTK("Issued tag %u\n", qc->hw_tag);
+>> +	ata_dev_dbg(qc->dev, "Issued tag %u\n", qc->hw_tag);
 > 
-> While you are at it please remove ata_{port,link,dev}_printk()
-> altogether.
+> Please preserve __func__ printing in the conversion.
+>  
+>>  	return 0;
+>>  }
+>> @@ -2029,8 +2029,6 @@ static unsigned int nv_swncq_issue_atacmd(struct ata_port *ap,
+>>  	if (qc == NULL)
+>>  		return 0;
+>>  
+>> -	DPRINTK("Enter\n");
+>> -
 > 
-> [ Since code in libata-transport.c sets valid device names using
->   dev_set_name() we can simply use generic dev_*() helpers. ]
+> Please either keep it or document the removal in the patch description.
 > 
-> Please also note that ata_{link,dev}_printk() differs slightly in PMP
-> handling for links and devices names from code in libata-transport.c:
+>>  	writel((1 << qc->hw_tag), pp->sactive_block);
+>>  	pp->last_issue_tag = qc->hw_tag;
+>>  	pp->dhfis_bits &= ~(1 << qc->hw_tag);
+>> @@ -2040,7 +2038,7 @@ static unsigned int nv_swncq_issue_atacmd(struct ata_port *ap,
+>>  	ap->ops->sff_tf_load(ap, &qc->tf);	 /* load tf registers */
+>>  	ap->ops->sff_exec_command(ap, &qc->tf);
+>>  
+>> -	DPRINTK("Issued tag %u\n", qc->hw_tag);
+>> +	ata_dev_dbg(qc->dev, "Issued tag %u\n", qc->hw_tag);
 > 
-I know.
-I hated it, too.
-One should try to keep the naming consistent, and these 'link' devices
-mess up everything.
-
-> void ata_link_printk(const struct ata_link *link, const char *level,
-> 		     const char *fmt, ...)
-> ...
-> 	if (sata_pmp_attached(link->ap) || link->ap->slave_link)
-> 		printk("%sata%u.%02u: %pV",
-> 		       level, link->ap->print_id, link->pmp, &vaf);
-> 	else
-> 		printk("%sata%u: %pV",
-> 		       level, link->ap->print_id, &vaf);
-> ...
+> Please preserve __func__ printing in the conversion.
+>  
+>>  	return 0;
+>>  }
+>> @@ -2053,7 +2051,7 @@ static unsigned int nv_swncq_qc_issue(struct ata_queued_cmd *qc)
+>>  	if (qc->tf.protocol != ATA_PROT_NCQ)
+>>  		return ata_bmdma_qc_issue(qc);
+>>  
+>> -	DPRINTK("Enter\n");
+>> +	ata_dev_dbg(qc->dev, "Enter\n");
 > 
-> int ata_tlink_add(struct ata_link *link)
-> ...
-> 	if (ata_is_host_link(link))
-> 		dev_set_name(dev, "link%d", ap->print_id);
->         else
-> 		dev_set_name(dev, "link%d.%d", ap->print_id, link->pmp);
-> ...
+> ditto
+>  
+>>  	if (!pp->qc_active)
+>>  		nv_swncq_issue_atacmd(ap, qc);
+>> @@ -2121,7 +2119,7 @@ static int nv_swncq_sdbfis(struct ata_port *ap)
+>>  	ata_qc_complete_multiple(ap, ap->qc_active ^ done_mask);
+>>  
+>>  	if (!ap->qc_active) {
+>> -		DPRINTK("over\n");
+>> +		ata_port_dbg(ap, "over\n");
 > 
+> ditto
 > 
-> void ata_dev_printk(const struct ata_device *dev, const char *level,
-> 		    const char *fmt, ...)
-> ...
-> 	printk("%sata%u.%02u: %pV",
-> 	       level, dev->link->ap->print_id, dev->link->pmp + dev->devno,
-> 	       &vaf);
-> ...
+>>  		nv_swncq_pp_reinit(ap);
+>>  		return 0;
+>>  	}
+>> @@ -2136,10 +2134,10 @@ static int nv_swncq_sdbfis(struct ata_port *ap)
+>>  		 */
+>>  		lack_dhfis = 1;
+>>  
+>> -	DPRINTK("id 0x%x QC: qc_active 0x%x,"
+>> +	ata_port_dbg(ap, "QC: qc_active 0x%llx,"
 > 
-> static int ata_tdev_add(struct ata_device *ata_dev)
-> ...
-> 	if (ata_is_host_link(link))
-> 		dev_set_name(dev, "dev%d.%d", ap->print_id,ata_dev->devno);
->         else
-> 		dev_set_name(dev, "dev%d.%d.0", ap->print_id, link->pmp);
-> ...
+> ditto
 > 
-> I assume that the code in libata-transport.c is the preferred one but
-> I would like Jens or Tejun to confirm this.
+>>  		"SWNCQ:qc_active 0x%X defer_bits %X "
+>>  		"dhfis 0x%X dmafis 0x%X last_issue_tag %x\n",
+>> -		ap->print_id, ap->qc_active, pp->qc_active,
+>> +		ap->qc_active, pp->qc_active,
+>>  		pp->defer_queue.defer_bits, pp->dhfis_bits,
+>>  		pp->dmafis_bits, pp->last_issue_tag);
+>>  
+>> @@ -2181,7 +2179,7 @@ static void nv_swncq_dmafis(struct ata_port *ap)
+>>  	__ata_bmdma_stop(ap);
+>>  	tag = nv_swncq_tag(ap);
+>>  
+>> -	DPRINTK("dma setup tag 0x%x\n", tag);
+>> +	ata_port_dbg(ap, "dma setup tag 0x%x\n", tag);
 > 
-I'll go with the libata-transport names; one should really prefix the
-subsystem with the names otherwise things really get messy if one tries
-to analyse or debug issues.
+> ditto
+> 
+>>  	qc = ata_qc_from_tag(ap, tag);
+>>  
+>>  	if (unlikely(!qc))
+>> @@ -2249,9 +2247,9 @@ static void nv_swncq_host_interrupt(struct ata_port *ap, u16 fis)
+>>  
+>>  	if (fis & NV_SWNCQ_IRQ_SDBFIS) {
+>>  		pp->ncq_flags |= ncq_saw_sdb;
+>> -		DPRINTK("id 0x%x SWNCQ: qc_active 0x%X "
+>> +		ata_port_dbg(ap, "SWNCQ: qc_active 0x%X "
+> 
+> ditto
+> 
+>>  			"dhfis 0x%X dmafis 0x%X sactive 0x%X\n",
+>> -			ap->print_id, pp->qc_active, pp->dhfis_bits,
+>> +			pp->qc_active, pp->dhfis_bits,
+>>  			pp->dmafis_bits, readl(pp->sactive_block));
+>>  		if (nv_swncq_sdbfis(ap) < 0)
+>>  			goto irq_error;
+>> @@ -2277,7 +2275,7 @@ static void nv_swncq_host_interrupt(struct ata_port *ap, u16 fis)
+>>  				goto irq_exit;
+>>  
+>>  			if (pp->defer_queue.defer_bits) {
+>> -				DPRINTK("send next command\n");
+>> +				ata_port_dbg(ap, "send next command\n");
+> 
+> ditto
+> 
+>>  				qc = nv_swncq_qc_from_dq(ap);
+>>  				nv_swncq_issue_atacmd(ap, qc);
+>>  			}
+>>
+I've moved the __func__ argument into the ata_XXX_dbg() macros; this
+should take care of it.
 
 Cheers,
 
