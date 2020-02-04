@@ -6,30 +6,29 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0C6AC3B18A
-	for <linux-ide@archiver.kernel.org>; Tue,  4 Feb 2020 16:56:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCA31C352A5
+	for <linux-ide@archiver.kernel.org>; Tue,  4 Feb 2020 16:56:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 809E120674
-	for <linux-ide@archiver.kernel.org>; Tue,  4 Feb 2020 16:56:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A81A320674
+	for <linux-ide@archiver.kernel.org>; Tue,  4 Feb 2020 16:56:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727436AbgBDQ4W (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 4 Feb 2020 11:56:22 -0500
-Received: from mx2.suse.de ([195.135.220.15]:34808 "EHLO mx2.suse.de"
+        id S1727388AbgBDQ4P (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 4 Feb 2020 11:56:15 -0500
+Received: from mx2.suse.de ([195.135.220.15]:34806 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727420AbgBDQ4O (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 4 Feb 2020 11:56:14 -0500
+        id S1727399AbgBDQ4K (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 4 Feb 2020 11:56:10 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 38983B1D8;
+        by mx2.suse.de (Postfix) with ESMTP id 21AD6B1C2;
         Tue,  4 Feb 2020 16:56:05 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Bartolomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 30/46] libata-core: add postreset tracepoints
-Date:   Tue,  4 Feb 2020 17:55:31 +0100
-Message-Id: <20200204165547.115220-31-hare@suse.de>
+        linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 21/46] sata_fsl: drop DPRINTK() calls in reset
+Date:   Tue,  4 Feb 2020 17:55:22 +0100
+Message-Id: <20200204165547.115220-22-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200204165547.115220-1-hare@suse.de>
 References: <20200204165547.115220-1-hare@suse.de>
@@ -38,70 +37,65 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Hannes Reinecke <hare@suse.com>
-
-Add additional tracepoints for postreset and remove
-the DPRINTK() call.
+Reset is now logged with tracepoints, so the DPRINTK() calls can
+be dropped, and some calls can be dropped as they don't provide
+additional value.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-eh.c       | 5 ++++-
- drivers/ata/libata-sff.c      | 4 +---
- include/trace/events/libata.h | 8 ++++++++
- 3 files changed, 13 insertions(+), 4 deletions(-)
+ drivers/ata/sata_fsl.c | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 253dcf903c1b..ef3576eb5874 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2900,8 +2900,11 @@ int ata_eh_reset(struct ata_link *link, int classify,
- 	 */
- 	if (postreset) {
- 		postreset(link, classes);
--		if (slave)
-+		trace_ata_link_postreset(link, classes, rc);
-+		if (slave) {
- 			postreset(slave, classes);
-+			trace_ata_slave_postreset(slave, classes, rc);
-+		}
- 	}
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index 0864c4fafa39..5d48e1d223fa 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -825,8 +825,6 @@ static int sata_fsl_hardreset(struct ata_link *link, unsigned int *class,
+ 	int i = 0;
+ 	unsigned long start_jiffies;
  
+-	DPRINTK("in xx_hardreset\n");
+-
+ try_offline_again:
  	/*
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 228f801ef611..ffe633f13f55 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -2052,10 +2052,8 @@ void ata_sff_postreset(struct ata_link *link, unsigned int *classes)
- 		ap->ops->sff_dev_select(ap, 0);
+ 	 * Force host controller to go off-line, aborting current operations
+@@ -941,10 +939,7 @@ static int sata_fsl_softreset(struct ata_link *link, unsigned int *class,
+ 	u8 *cfis;
+ 	u32 Serror;
  
- 	/* bail out if no device is present */
--	if (classes[0] == ATA_DEV_NONE && classes[1] == ATA_DEV_NONE) {
--		DPRINTK("EXIT, no device\n");
-+	if (classes[0] == ATA_DEV_NONE && classes[1] == ATA_DEV_NONE)
- 		return;
--	}
+-	DPRINTK("in xx_softreset\n");
+-
+ 	if (ata_link_offline(link)) {
+-		DPRINTK("PHY reports no device\n");
+ 		*class = ATA_DEV_NONE;
+ 		return 0;
+ 	}
+@@ -957,8 +952,6 @@ static int sata_fsl_softreset(struct ata_link *link, unsigned int *class,
+ 	 * reached here, we can send a command to the target device
+ 	 */
  
- 	/* set up device control */
- 	if (ap->ops->sff_set_devctl || ap->ioaddr.ctl_addr) {
-diff --git a/include/trace/events/libata.h b/include/trace/events/libata.h
-index 446f56cb3f01..40027d8424f8 100644
---- a/include/trace/events/libata.h
-+++ b/include/trace/events/libata.h
-@@ -526,6 +526,14 @@ DEFINE_EVENT(ata_link_reset_end_template, ata_link_softreset_end,
- 	     TP_PROTO(struct ata_link *link, unsigned int *class, int rc),
- 	     TP_ARGS(link, class, rc));
+-	DPRINTK("Sending SRST/device reset\n");
+-
+ 	ata_tf_init(link->device, &tf);
+ 	cfis = (u8 *) &pp->cmdentry->cfis;
  
-+DEFINE_EVENT(ata_link_reset_end_template, ata_link_postreset,
-+	     TP_PROTO(struct ata_link *link, unsigned int *class, int rc),
-+	     TP_ARGS(link, class, rc));
-+
-+DEFINE_EVENT(ata_link_reset_end_template, ata_slave_postreset,
-+	     TP_PROTO(struct ata_link *link, unsigned int *class, int rc),
-+	     TP_ARGS(link, class, rc));
-+
- DECLARE_EVENT_CLASS(ata_sff_hsm_template,
+@@ -1030,8 +1023,6 @@ static int sata_fsl_softreset(struct ata_link *link, unsigned int *class,
+ 	 */
+ 	iowrite32(0x01, CC + hcr_base);	/* We know it will be cmd#0 always */
  
- 	TP_PROTO(struct ata_queued_cmd *qc, unsigned char status),
+-	DPRINTK("SATA FSL : Now checking device signature\n");
+-
+ 	*class = ATA_DEV_NONE;
+ 
+ 	/* Verify if SStatus indicates device presence */
+@@ -1045,7 +1036,6 @@ static int sata_fsl_softreset(struct ata_link *link, unsigned int *class,
+ 
+ 		*class = sata_fsl_dev_classify(ap);
+ 
+-		DPRINTK("class = %d\n", *class);
+ 		VPRINTK("ccreg = 0x%x\n", ioread32(hcr_base + CC));
+ 		VPRINTK("cereg = 0x%x\n", ioread32(hcr_base + CE));
+ 	}
 -- 
 2.16.4
 
