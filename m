@@ -2,64 +2,172 @@ Return-Path: <SRS0=KtmC=3Z=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9952C35249
-	for <linux-ide@archiver.kernel.org>; Wed,  5 Feb 2020 08:29:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCD7CC35247
+	for <linux-ide@archiver.kernel.org>; Wed,  5 Feb 2020 18:44:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BB71C20730
-	for <linux-ide@archiver.kernel.org>; Wed,  5 Feb 2020 08:29:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B4D820674
+	for <linux-ide@archiver.kernel.org>; Wed,  5 Feb 2020 18:44:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="aRg9jp3V"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727992AbgBEI3g (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 5 Feb 2020 03:29:36 -0500
-Received: from mx2.suse.de ([195.135.220.15]:36194 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726490AbgBEI3g (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 5 Feb 2020 03:29:36 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 52D4DAD6F;
-        Wed,  5 Feb 2020 08:29:34 +0000 (UTC)
-From:   Hannes Reinecke <hare@suse.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Bartolomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        linux-ide@vger.kernel.org,
-        Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>,
-        Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
-Subject: [PATCH] libata: add horkage for ASMedia 1092
-Date:   Wed,  5 Feb 2020 09:29:30 +0100
-Message-Id: <20200205082930.113885-1-hare@suse.de>
-X-Mailer: git-send-email 2.16.4
+        id S1727369AbgBESoE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 5 Feb 2020 13:44:04 -0500
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:41125 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727331AbgBESoE (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 5 Feb 2020 13:44:04 -0500
+Received: by mail-pl1-f196.google.com with SMTP id t14so1233447plr.8
+        for <linux-ide@vger.kernel.org>; Wed, 05 Feb 2020 10:44:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=5T8MzJpEKCZQD1TpWCDlzD98e7wG/FbZy8dik7t5eOA=;
+        b=aRg9jp3VaplFOBgt2oPDi8HqIKx0WGZwBoRnQ1n0qNlh8vjzzZviyN+h94Gi7BZaFg
+         93DLnwMLm8qK9JZrzSgL1jBYWrDfjZ/oSvLyP9bPgFhTyugPMUXMpLRuURwojLD2LRbq
+         BN3tCsj0ZBNTv2tr/7QeYdiWYxRH3v+pOt7KU=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=5T8MzJpEKCZQD1TpWCDlzD98e7wG/FbZy8dik7t5eOA=;
+        b=cRcIU+8Rv+PJU09zMgusI+lcHD6H2N49/PAaPyl2g5o/pHKxrjvC3gyko/7cSorWq8
+         r30DLhgugEfPZV1eTZXPRyhD7HUAVr6i6+WNNXA6nM4Uv8xzJpArpVDTJX2JYPaATLy6
+         fXIS1/3B9qKxYNXajTMR/npzhYfuUy9TIDGnNyA9G8AbZ3AEjZNJGFTgTPeKgiexBEkR
+         srqeTxURRkVpKZq2hqI/k/hGksQgYB0x0tyUpbuoy3WacdkwB1BUr8Eox9ZlXvblbWYT
+         KV1yEaCqD+PRaMQRxBAAlmEjxR89IvKvVwHNNltpCbMm+Z9Hmtgz3I23PWXODYaZ5BkE
+         /02w==
+X-Gm-Message-State: APjAAAWqH9/msGAAfwhMQKlaNPokbxIcbV9qaoxDlTfkVi47ZlNfpett
+        zwRbEK+8WcWsLUZIX5HxVdCrQ/YHju8=
+X-Google-Smtp-Source: APXvYqyi42gAF8IDbEUzCkaIHLkoaxQsvKZJxw52io5DKj8A4zY2JCiFQSxn/xClzcAGrKziS7dQIQ==
+X-Received: by 2002:a17:902:9b93:: with SMTP id y19mr36176082plp.89.1580928243216;
+        Wed, 05 Feb 2020 10:44:03 -0800 (PST)
+Received: from localhost ([2620:15c:202:1:4cc0:7eee:97c9:3c1a])
+        by smtp.gmail.com with ESMTPSA id c26sm238920pfj.8.2020.02.05.10.44.02
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 05 Feb 2020 10:44:02 -0800 (PST)
+From:   Gwendal Grignou <gwendal@chromium.org>
+To:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Gwendal Grignou <gwendal@chromium.org>,
+        Guenter Roeck <groeck@chromium.org>
+Subject: [PATCH] ata/scsi: Prevent FS corruption on chromebook pixel2  at reboot
+Date:   Wed,  5 Feb 2020 10:43:58 -0800
+Message-Id: <20200205184358.116927-1-gwendal@chromium.org>
+X-Mailer: git-send-email 2.25.0.341.g760bfbb309-goog
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The ASMedia 1092 has a configuration mode which will present a
-dummy device; sadly the implementation falsely claims to provide
-a device with 100M which doesn't actually exist.
-So disable this device to avoid errors during boot.
+On Samus, even when rebooting, the root device is power cycled.
+Normally, during reboot, root device is not power cycled, so the device
+does not have to flush its volatle drive cache to permanent media.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+However, in case of Samus, given the SSD is power cycled, we force the SSD
+to flush its cache by issuing a SCSI START_STOP command, translated into
+an ATA STANDBY command.
+
+Reviewed-by: Guenter Roeck <groeck@chromium.org>
+Signed-off-by: Gwendal Grignou <gwendal@chromium.org>
 ---
- drivers/ata/libata-core.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/ata/ahci.c         | 25 +++++++++++++++++++++++++
+ drivers/scsi/sd.c          |  5 +++--
+ include/scsi/scsi_device.h |  1 +
+ 3 files changed, 29 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 9c05177e09c2..f1a2f0a4ce05 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4416,6 +4416,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "VRFDFC22048UCHC-TE*", NULL,		ATA_HORKAGE_NODMA },
- 	/* Odd clown on sil3726/4726 PMPs */
- 	{ "Config  Disk",	NULL,		ATA_HORKAGE_DISABLE },
-+	/* Similar story with ASMedia 1092 */
-+	{ "ASMT109x- Config",	NULL,		ATA_HORKAGE_DISABLE },
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index dd92faf197d5e..0677c9f1d14af 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -29,6 +29,7 @@
+ #include <linux/msi.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_device.h>
+ #include <linux/libata.h>
+ #include <linux/ahci-remap.h>
+ #include <linux/io-64-nonatomic-lo-hi.h>
+@@ -88,6 +89,8 @@ static void ahci_mcp89_apple_enable(struct pci_dev *pdev);
+ static bool is_mcp89_apple(struct pci_dev *pdev);
+ static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
+ 				unsigned long deadline);
++static int ahci_slave_configure(struct scsi_device *sdev);
++
+ #ifdef CONFIG_PM
+ static int ahci_pci_device_runtime_suspend(struct device *dev);
+ static int ahci_pci_device_runtime_resume(struct device *dev);
+@@ -99,6 +102,7 @@ static int ahci_pci_device_resume(struct device *dev);
  
- 	/* Weird ATAPI devices */
- 	{ "TORiSAN DVD-ROM DRD-N216", NULL,	ATA_HORKAGE_MAX_SEC_128 },
+ static struct scsi_host_template ahci_sht = {
+ 	AHCI_SHT("ahci"),
++	.slave_configure	= ahci_slave_configure,
+ };
+ 
+ static struct ata_port_operations ahci_vt8251_ops = {
+@@ -1398,6 +1402,27 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+ {}
+ #endif
+ 
++static int ahci_slave_configure(struct scsi_device *sdev)
++{
++	/*
++	 * Machines cutting power to the SSD during a warm reboot must send
++	 * a STANDBY_IMMEDIATE before to prevent unclean shutdown of the disk.
++	 */
++	static struct dmi_system_id sysids[] = {
++		{
++			/* x86-samus, the Chromebook Pixel 2. */
++			.matches = {
++				DMI_MATCH(DMI_SYS_VENDOR, "GOOGLE"),
++				DMI_MATCH(DMI_PRODUCT_NAME, "Samus"),
++			},
++		},
++		{ /* sentinel */ }
++	};
++	if (dmi_check_system(sysids))
++		sdev->send_stop_reboot = 1;
++	return ata_scsi_slave_config(sdev);
++}
++
+ /*
+  * On the Acer Aspire Switch Alpha 12, sometimes all SATA ports are detected
+  * as DUMMY, or detected but eventually get a "link down" and never get up
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 5abdf03083ae8..248e04cc46a9e 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3533,8 +3533,9 @@ static void sd_shutdown(struct device *dev)
+ 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+ 		sd_sync_cache(sdkp, NULL);
+ 	}
+-
+-	if (system_state != SYSTEM_RESTART && sdkp->device->manage_start_stop) {
++	if ((sdkp->device->send_stop_reboot ||
++	     system_state != SYSTEM_RESTART) &&
++	    sdkp->device->manage_start_stop) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		sd_start_stop_device(sdkp, 0);
+ 	}
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 202f4d6a43421..eca9e5cf281f2 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -199,6 +199,7 @@ struct scsi_device {
+ 	unsigned broken_fua:1;		/* Don't set FUA bit */
+ 	unsigned lun_in_cdb:1;		/* Store LUN bits in CDB[1] */
+ 	unsigned unmap_limit_for_ws:1;	/* Use the UNMAP limit for WRITE SAME */
++	unsigned send_stop_reboot:1;	/* Send START_STOP_UNIT at reboot */
+ 
+ 	atomic_t disk_events_disable_depth; /* disable depth for disk events */
+ 
 -- 
-2.16.4
+2.25.0.341.g760bfbb309-goog
 
