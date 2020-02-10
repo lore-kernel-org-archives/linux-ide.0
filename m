@@ -7,102 +7,102 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E258C352A3
-	for <linux-ide@archiver.kernel.org>; Mon, 10 Feb 2020 13:25:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C4D0C3B186
+	for <linux-ide@archiver.kernel.org>; Mon, 10 Feb 2020 13:27:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E5E820733
-	for <linux-ide@archiver.kernel.org>; Mon, 10 Feb 2020 13:25:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0670E2465D
+	for <linux-ide@archiver.kernel.org>; Mon, 10 Feb 2020 13:27:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="ezwLwocw"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="pCYB5ND7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729539AbgBJNZx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 10 Feb 2020 08:25:53 -0500
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:33689 "EHLO
-        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728012AbgBJNZw (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 10 Feb 2020 08:25:52 -0500
+        id S1728399AbgBJN1i (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 10 Feb 2020 08:27:38 -0500
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:57345 "EHLO
+        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728404AbgBJMgc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 10 Feb 2020 07:36:32 -0500
 Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200210132551euoutp01614f0194fc239c71acfee2316c2070ac~yDWYg8LLR2025620256euoutp01Y
-        for <linux-ide@vger.kernel.org>; Mon, 10 Feb 2020 13:25:51 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200210132551euoutp01614f0194fc239c71acfee2316c2070ac~yDWYg8LLR2025620256euoutp01Y
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200210123631euoutp027a3d8b3cb25e1162a59afc095d4c3b90~yCrT7R18d2571325713euoutp02s
+        for <linux-ide@vger.kernel.org>; Mon, 10 Feb 2020 12:36:31 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200210123631euoutp027a3d8b3cb25e1162a59afc095d4c3b90~yCrT7R18d2571325713euoutp02s
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1581341151;
-        bh=i4FdHcSz/wNx9hqo+RtKnV6gHGj9ldmwQ6TU12WKJhc=;
+        s=mail20170921; t=1581338191;
+        bh=TT5pMZ/oqc1r+k1Lei6+zs7A/MFFHCvBhH6YGVmI2VE=;
         h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=ezwLwocwfqRdsXWQaaFLq6gQC8nkqrY4P/H85G84qF0nP8sVdq+WBiS8dvSC1xOqT
-         UonNFsEFUZD2PD+YSHdcwAAEHHWUqPUSZZzQbBW3E5enJcGT63kZRJqh6TGHQKNlL0
-         jiKOIE5pHzkMcERkganT4ctOYR8Q7cLlytscxLeY=
-Received: from eusmges2new.samsung.com (unknown [203.254.199.244]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20200210132551eucas1p26bf5e509a0bd10f4f92408c6f378eeb1~yDWYS_67A0519705197eucas1p2c;
-        Mon, 10 Feb 2020 13:25:51 +0000 (GMT)
+        b=pCYB5ND7lZvnE8ZYExyhk89a/SHV9dWySUpZy/pn+defAco9nUMecvrwDbY5Qjw6Z
+         j/sw3FhnM9O7/Bx57BKMxntOI00WPqLikONZxZMdnrRojVeVpmVY/Nbq/gwITZLKZq
+         FOq7ubkZ6bYHDXpZt/njc2ELcIiLEdY7IbdayGZo=
+Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
+        20200210123631eucas1p18ee892b7e3501033c083e7811f91c0c8~yCrTZfG000879408794eucas1p1s;
+        Mon, 10 Feb 2020 12:36:31 +0000 (GMT)
 Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges2new.samsung.com (EUCPMTA) with SMTP id 52.16.60679.FD9514E5; Mon, 10
-        Feb 2020 13:25:51 +0000 (GMT)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
+        eusmges1new.samsung.com (EUCPMTA) with SMTP id 03.42.61286.E4E414E5; Mon, 10
+        Feb 2020 12:36:30 +0000 (GMT)
+Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
         eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20200210132550eucas1p133c217adbb80dd20a838ec1693c0f6ca~yDWYCggPt0126101261eucas1p1s;
-        Mon, 10 Feb 2020 13:25:50 +0000 (GMT)
+        20200210123630eucas1p191203c7456132e7e5d3b6889dbaf5f01~yCrTJSl152606326063eucas1p1p;
+        Mon, 10 Feb 2020 12:36:30 +0000 (GMT)
 Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
-        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200210132550eusmtrp1583c037ecb987f49144ff948bfcabc35~yDWYB9oCG0678706787eusmtrp1i;
-        Mon, 10 Feb 2020 13:25:50 +0000 (GMT)
-X-AuditID: cbfec7f4-0cbff7000001ed07-a9-5e4159df14d3
-Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id 9A.7C.08375.ED9514E5; Mon, 10
-        Feb 2020 13:25:50 +0000 (GMT)
+        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200210123630eusmtrp2573b10cc81ea49afd7584858ff452fb0~yCrTIv4BR2485824858eusmtrp2B;
+        Mon, 10 Feb 2020 12:36:30 +0000 (GMT)
+X-AuditID: cbfec7f2-ef1ff7000001ef66-5b-5e414e4e2614
+Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
+        eusmgms1.samsung.com (EUCPMTA) with SMTP id 40.F4.08375.E4E414E5; Mon, 10
+        Feb 2020 12:36:30 +0000 (GMT)
 Received: from [106.120.51.71] (unknown [106.120.51.71]) by
-        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200210132550eusmtip1329d56e478a283e3ef76c6d9c8d9a825~yDWXi2O1Y2592725927eusmtip1W;
-        Mon, 10 Feb 2020 13:25:50 +0000 (GMT)
-Subject: Re: [PATCH 11/46] sata_nv: move DPRINTK to ata debugging
+        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200210123630eusmtip21fa834a28cf5fdfd51d1461bf880a00a~yCrSzJSCg2037920379eusmtip2Q;
+        Mon, 10 Feb 2020 12:36:30 +0000 (GMT)
+Subject: Re: [PATCH 06/46] ata_piix: remove debugging message in piix_init()
 To:     Hannes Reinecke <hare@suse.de>
 Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
         Hannes Reinecke <hare@suse.com>
 From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <249ba478-6f55-9236-1f5a-86f771080220@samsung.com>
-Date:   Mon, 10 Feb 2020 14:25:50 +0100
+Message-ID: <616a0374-32ca-3993-6bd9-82277f890e7d@samsung.com>
+Date:   Mon, 10 Feb 2020 13:36:29 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
         Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20200204165547.115220-12-hare@suse.de>
+In-Reply-To: <20200204165547.115220-7-hare@suse.de>
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprKKsWRmVeSWpSXmKPExsWy7djP87r3Ix3jDNae57JYfbefzWLBm71s
-        FnsWTWKyOLbjEZMDi8fls6Ue67dcZfHYfLra4/MmuQCWKC6blNSczLLUIn27BK6MR1/2sxX8
-        UajoO/2TtYFxnVQXIyeHhICJxKvZt5m6GLk4hARWMEqcePyQFcL5wiixc+t3qMxnRokDey8w
-        wbT8mn+IESKxnFHi4ZEDzBDOW0aJo7fPgVUJCzhK/O/oZgSxRQSUJD62H2IHsZkF4iSartwF
-        s9kErCQmtq8Cq+EVsJM4+OcTmM0ioCpx5uJ1NhBbVCBC4tODw6wQNYISJ2c+YQGxOYGu6OpZ
-        yQQxU1zi1pP5ULa8xPa3c8AOkhDoZ5d4s/IJI8TZLhLHW/cyQ9jCEq+Ob2GHsGUkTk/uYYFo
-        WMco8bfjBVT3dkaJ5ZP/sUFUWUvcOfcLyOYAWqEpsX6XPogpAfTl9F5vCJNP4sZbQYgb+CQm
-        bZvODBHmlehoE4KYoSaxYdkGNpitXTtXMk9gVJqF5LNZSL6ZheSbWQhrFzCyrGIUTy0tzk1P
-        LTbKSy3XK07MLS7NS9dLzs/dxAhMLKf/Hf+yg3HXn6RDjAIcjEo8vBWBjnFCrIllxZW5hxgl
-        OJiVRHgtpYFCvCmJlVWpRfnxRaU5qcWHGKU5WJTEeY0XvYwVEkhPLEnNTk0tSC2CyTJxcEo1
-        MIr/XTd5fb7Cgdkps4wcZ/ZkHLsRoqm8tOuyQ4jJg+SgiXIMk+77cXoUek3w6W/Rke7fofC9
-        YeWytTvYJGV9esQNNH8IXDe1Xfr541uLzYprZMs3LumJ+7/93423+d/WxeUdmWctPqMooE+O
-        18XRW3Vd5NctpqUtAll5rzUmfmBZ62F0TCF1ohJLcUaioRZzUXEiADjXOBMoAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrGIsWRmVeSWpSXmKPExsVy+t/xu7r3Ih3jDO51G1msvtvPZrHgzV42
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprCKsWRmVeSWpSXmKPExsWy7djP87p+fo5xBheabCxW3+1ns1jwZi+b
+        xZ5Fk5gsju14xOTA4nH5bKnH+i1XWTw2n672+LxJLoAlissmJTUnsyy1SN8ugSvjQusmtoKb
+        bBULNk5kbmBcw9rFyMkhIWAisfF5EwuILSSwglFi+7zkLkYuIPsLo8Sam70sEM5nRon3Ww6x
+        dzFygHUc3qMGEV/OKLHry3mooreMEocPfWYDGSUs4CNxvH8emC0ioCTxsR2kmZODWSBOounK
+        XTCbTcBKYmL7KkYQm1fATuLXr1YmEJtFQFVi5452MFtUIELi04PDrBA1ghInZz4BO5VTwFji
+        15fLUDPFJW49mc8EYctLbH87hxnkIAmBfnaJ+X2ToP50kTh1ZyoThC0s8er4FnYIW0bi/06Q
+        ZpCGdYwSfzteQHVvZ5RYPvkfG0SVtcSdc7/YQP5nFtCUWL9LHyLsKHH1/CJWSLDwSdx4Kwhx
+        BJ/EpG3TmSHCvBIdbUIQ1WoSG5ZtYINZ27VzJfMERqVZSF6bheSdWUjemYWwdwEjyypG8dTS
+        4tz01GLDvNRyveLE3OLSvHS95PzcTYzAtHL63/FPOxi/Xko6xCjAwajEw+tg7xAnxJpYVlyZ
+        e4hRgoNZSYTXUtoxTog3JbGyKrUoP76oNCe1+BCjNAeLkjiv8aKXsUIC6YklqdmpqQWpRTBZ
+        Jg5OqQbGpOorwnukfZQs7lsszHZLe71OssLywJep/Q13mat/8zYK9H35wPnzvtSb5ZmFAsIf
+        j14+eFl9g+UurdIdMx9eWm2yqds2OXnqtnXbAnv0muxnZSzc0nOCY+qiD/Psy5f4LJhxMI4t
+        Xl4y61vSX43Dl36YcF1/c4HhxV8NmwitK+GzeOz7T504pcRSnJFoqMVcVJwIAF8YQ+cnAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrKIsWRmVeSWpSXmKPExsVy+t/xe7p+fo5xBp/2qVmsvtvPZrHgzV42
         iz2LJjFZHNvxiMmBxePy2VKP9VuusnhsPl3t8XmTXABLlJ5NUX5pSapCRn5xia1StKGFkZ6h
-        pYWekYmlnqGxeayVkamSvp1NSmpOZllqkb5dgl7Goy/72Qr+KFT0nf7J2sC4TqqLkZNDQsBE
-        4tf8Q4xdjFwcQgJLGSVuXrjP0sXIAZSQkTi+vgyiRljiz7UuNhBbSOA1o8T+IxYgtrCAo8T/
-        jm5GEFtEQEniY/shdhCbWSBO4l/fbiaImRsYJQ7/fsYKkmATsJKY2L4KrIFXwE7i4J9PYDaL
-        gKrEmYvXwRaICkRIHN4xC6pGUOLkzCcsIDYn0KFdPSuZIBaoS/yZd4kZwhaXuPVkPlRcXmL7
-        2znMExiFZiFpn4WkZRaSlllIWhYwsqxiFEktLc5Nzy021CtOzC0uzUvXS87P3cQIjKNtx35u
-        3sF4aWPwIUYBDkYlHt6KQMc4IdbEsuLK3EOMEhzMSiK8ltJAId6UxMqq1KL8+KLSnNTiQ4ym
-        QM9NZJYSTc4HxnheSbyhqaG5haWhubG5sZmFkjhvh8DBGCGB9MSS1OzU1ILUIpg+Jg5OqQbG
-        4MneT0XWXZG77CF7RI37ZamV49qqyZcbLvNe/u5S1CyfLsrspvrZSl72fXHfKRdfdzsFtUm6
-        GZeY61maV+q+zb+7dOMi87oN3LLWlyq4XaPDVX45dDhIL34SGnw17nWk6eKvHiWsB3pnHP8U
-        HHGF1ed1fcbH6dsz9uczbmdcbLOucU32mmVKLMUZiYZazEXFiQCRip32uQIAAA==
-X-CMS-MailID: 20200210132550eucas1p133c217adbb80dd20a838ec1693c0f6ca
+        pYWekYmlnqGxeayVkamSvp1NSmpOZllqkb5dgl7GhdZNbAU32SoWbJzI3MC4hrWLkYNDQsBE
+        4vAetS5GLg4hgaWMEnvf/YOKy0gcX1/WxcgJZApL/LnWxQZR85pRouXtTSaQhLCAj8Tx/nls
+        ILaIgJLEx/ZD7CA2s0CcxL++3WA1QgLrGSVunAOz2QSsJCa2r2IEsXkF7CR+/WoFi7MIqErs
+        3NEOZosKREgc3jELqkZQ4uTMJywgNqeAscSvL5eh5qtL/Jl3iRnCFpe49WQ+E4QtL7H97Rzm
+        CYxCs5C0z0LSMgtJyywkLQsYWVYxiqSWFuem5xYb6hUn5haX5qXrJefnbmIERtG2Yz8372C8
+        tDH4EKMAB6MSD6+DvUOcEGtiWXFl7iFGCQ5mJRFeS2nHOCHelMTKqtSi/Pii0pzU4kOMpkDP
+        TWSWEk3OB0Z4Xkm8oamhuYWlobmxubGZhZI4b4fAwRghgfTEktTs1NSC1CKYPiYOTqkGxvZJ
+        xiuXV8Ruv3q0piT5rODeaV95rV8datl9/Y+faemW1FevTSJbsnxizx62+39ps7BW0aOerd/s
+        4991TVjwwNpna8bPnxv5cp26ngsarEwy44z60Zrsctxr+abZZV57ahclbz890/3UkW/3V7VX
+        mq9Tc74Y52GuFHraJHhT5wahqE3fr9n+6FJiKc5INNRiLipOBADZkg6guAIAAA==
+X-CMS-MailID: 20200210123630eucas1p191203c7456132e7e5d3b6889dbaf5f01
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200204165612eucas1p1f0f3866f82e8ac7fe7573ecc3ad03094
+X-RootMTR: 20200204165612eucas1p1126d505b54388d84c35eda28bac8f2c7
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20200204165612eucas1p1f0f3866f82e8ac7fe7573ecc3ad03094
+X-CMS-RootMailID: 20200204165612eucas1p1126d505b54388d84c35eda28bac8f2c7
 References: <20200204165547.115220-1-hare@suse.de>
-        <CGME20200204165612eucas1p1f0f3866f82e8ac7fe7573ecc3ad03094@eucas1p1.samsung.com>
-        <20200204165547.115220-12-hare@suse.de>
+        <CGME20200204165612eucas1p1126d505b54388d84c35eda28bac8f2c7@eucas1p1.samsung.com>
+        <20200204165547.115220-7-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
@@ -110,30 +110,11 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 
 On 2/4/20 5:55 PM, Hannes Reinecke wrote:
-> From: Hannes Reinecke <hare@suse.com>
+> Drop pointless debugging message in piix_init()
 > 
-> Replace all DPRINTK calls with the ata_XXX_dbg functions.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/ata/sata_nv.c | 24 ++++++++++++------------
->  1 file changed, 12 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-> index 8639f66706a3..0cbddad7cd12 100644
-> --- a/drivers/ata/sata_nv.c
-> +++ b/drivers/ata/sata_nv.c
-> @@ -1394,7 +1394,7 @@ static unsigned int nv_adma_qc_issue(struct ata_queued_cmd *qc)
->  	void __iomem *mmio = pp->ctl_block;
->  	int curr_ncq = (qc->tf.protocol == ATA_PROT_NCQ);
->  
-> -	VPRINTK("ENTER\n");
-> +	ata_dev_dbg(qc->dev, "ENTER\n");
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
 
-This is VPRINTK() instance so it should be either left
-alone or documented in the patch description.
-
-Otherwise the patch looks fine.
+Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
 Best regards,
 --
@@ -141,94 +122,26 @@ Bartlomiej Zolnierkiewicz
 Samsung R&D Institute Poland
 Samsung Electronics
 
->  	/* We can't handle result taskfile with NCQ commands, since
->  	   retrieving the taskfile switches us out of ADMA mode and would abort
-> @@ -1428,7 +1428,7 @@ static unsigned int nv_adma_qc_issue(struct ata_queued_cmd *qc)
->  
->  	writew(qc->hw_tag, mmio + NV_ADMA_APPEND);
->  
-> -	DPRINTK("Issued tag %u\n", qc->hw_tag);
-> +	ata_dev_dbg(qc->dev, "Issued tag %u\n", qc->hw_tag);
->  
->  	return 0;
->  }
-> @@ -2007,7 +2007,7 @@ static unsigned int nv_swncq_issue_atacmd(struct ata_port *ap,
->  	if (qc == NULL)
->  		return 0;
->  
-> -	DPRINTK("Enter\n");
-> +	ata_port_dbg(ap, "Enter\n");
->  
->  	writel((1 << qc->hw_tag), pp->sactive_block);
->  	pp->last_issue_tag = qc->hw_tag;
-> @@ -2018,7 +2018,7 @@ static unsigned int nv_swncq_issue_atacmd(struct ata_port *ap,
->  	ap->ops->sff_tf_load(ap, &qc->tf);	 /* load tf registers */
->  	ap->ops->sff_exec_command(ap, &qc->tf);
->  
-> -	DPRINTK("Issued tag %u\n", qc->hw_tag);
-> +	ata_port_dbg(ap, "Issued tag %u\n", qc->hw_tag);
->  
->  	return 0;
->  }
-> @@ -2031,7 +2031,7 @@ static unsigned int nv_swncq_qc_issue(struct ata_queued_cmd *qc)
->  	if (qc->tf.protocol != ATA_PROT_NCQ)
->  		return ata_bmdma_qc_issue(qc);
->  
-> -	DPRINTK("Enter\n");
-> +	ata_port_dbg(ap, "Enter\n");
->  
->  	if (!pp->qc_active)
->  		nv_swncq_issue_atacmd(ap, qc);
-> @@ -2099,7 +2099,7 @@ static int nv_swncq_sdbfis(struct ata_port *ap)
->  	ata_qc_complete_multiple(ap, ap->qc_active ^ done_mask);
->  
->  	if (!ap->qc_active) {
-> -		DPRINTK("over\n");
-> +		ata_port_dbg(ap, "over\n");
->  		nv_swncq_pp_reinit(ap);
->  		return 0;
->  	}
-> @@ -2114,10 +2114,10 @@ static int nv_swncq_sdbfis(struct ata_port *ap)
->  		 */
->  		lack_dhfis = 1;
->  
-> -	DPRINTK("id 0x%x QC: qc_active 0x%x,"
-> +	ata_port_dbg(ap, "QC: qc_active 0x%llx,"
->  		"SWNCQ:qc_active 0x%X defer_bits %X "
->  		"dhfis 0x%X dmafis 0x%X last_issue_tag %x\n",
-> -		ap->print_id, ap->qc_active, pp->qc_active,
-> +		ap->qc_active, pp->qc_active,
->  		pp->defer_queue.defer_bits, pp->dhfis_bits,
->  		pp->dmafis_bits, pp->last_issue_tag);
->  
-> @@ -2159,7 +2159,7 @@ static void nv_swncq_dmafis(struct ata_port *ap)
->  	__ata_bmdma_stop(ap);
->  	tag = nv_swncq_tag(ap);
->  
-> -	DPRINTK("dma setup tag 0x%x\n", tag);
-> +	ata_port_dbg(ap, "dma setup tag 0x%x\n", tag);
->  	qc = ata_qc_from_tag(ap, tag);
->  
->  	if (unlikely(!qc))
-> @@ -2227,9 +2227,9 @@ static void nv_swncq_host_interrupt(struct ata_port *ap, u16 fis)
->  
->  	if (fis & NV_SWNCQ_IRQ_SDBFIS) {
->  		pp->ncq_flags |= ncq_saw_sdb;
-> -		DPRINTK("id 0x%x SWNCQ: qc_active 0x%X "
-> +		ata_port_dbg(ap, "SWNCQ: qc_active 0x%X "
->  			"dhfis 0x%X dmafis 0x%X sactive 0x%X\n",
-> -			ap->print_id, pp->qc_active, pp->dhfis_bits,
-> +			pp->qc_active, pp->dhfis_bits,
->  			pp->dmafis_bits, readl(pp->sactive_block));
->  		if (nv_swncq_sdbfis(ap) < 0)
->  			goto irq_error;
-> @@ -2255,7 +2255,7 @@ static void nv_swncq_host_interrupt(struct ata_port *ap, u16 fis)
->  				goto irq_exit;
->  
->  			if (pp->defer_queue.defer_bits) {
-> -				DPRINTK("send next command\n");
-> +				ata_port_dbg(ap, "send next command\n");
->  				qc = nv_swncq_qc_from_dq(ap);
->  				nv_swncq_issue_atacmd(ap, qc);
->  			}
+> ---
+>  drivers/ata/ata_piix.c | 2 --
+>  1 file changed, 2 deletions(-)
 > 
+> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+> index 3ca7720e7d8f..f940ecf72aaa 100644
+> --- a/drivers/ata/ata_piix.c
+> +++ b/drivers/ata/ata_piix.c
+> @@ -1767,14 +1767,12 @@ static int __init piix_init(void)
+>  {
+>  	int rc;
+>  
+> -	DPRINTK("pci_register_driver\n");
+>  	rc = pci_register_driver(&piix_pci_driver);
+>  	if (rc)
+>  		return rc;
+>  
+>  	in_module_init = 0;
+>  
+> -	DPRINTK("done\n");
+>  	return 0;
+>  }
+>  
