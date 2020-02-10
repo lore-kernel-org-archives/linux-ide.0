@@ -7,102 +7,101 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C015C352A3
-	for <linux-ide@archiver.kernel.org>; Mon, 10 Feb 2020 16:49:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 632AEC352A3
+	for <linux-ide@archiver.kernel.org>; Mon, 10 Feb 2020 16:50:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 33B8020733
-	for <linux-ide@archiver.kernel.org>; Mon, 10 Feb 2020 16:49:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 35C5120733
+	for <linux-ide@archiver.kernel.org>; Mon, 10 Feb 2020 16:50:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="WLWVexAH"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="RGLFzFpR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727620AbgBJQt6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 10 Feb 2020 11:49:58 -0500
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:54896 "EHLO
-        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727880AbgBJQt6 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 10 Feb 2020 11:49:58 -0500
+        id S1727530AbgBJQub (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 10 Feb 2020 11:50:31 -0500
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:44131 "EHLO
+        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727003AbgBJQua (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 10 Feb 2020 11:50:30 -0500
 Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200210164957euoutp01711cd8e31141d802854240c17f360efd~yGIlGWtH63237632376euoutp013
-        for <linux-ide@vger.kernel.org>; Mon, 10 Feb 2020 16:49:57 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200210164957euoutp01711cd8e31141d802854240c17f360efd~yGIlGWtH63237632376euoutp013
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200210165029euoutp02b96ff32938e1848cb20e541bdced5a8c~yGJDZqgnR3151231512euoutp02M
+        for <linux-ide@vger.kernel.org>; Mon, 10 Feb 2020 16:50:29 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200210165029euoutp02b96ff32938e1848cb20e541bdced5a8c~yGJDZqgnR3151231512euoutp02M
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1581353397;
-        bh=a4w1BihNKToDuRB8AY/wBejzYOHIZ5UvC2aY7aS/vM4=;
+        s=mail20170921; t=1581353429;
+        bh=IRHmfqzebPKNA8k3U+05QtTXvLIzXpMS0bfIeYXryms=;
         h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=WLWVexAHxjLdISG28drK9iKY0oDjusn3KDqKsNTSbddmSV22YAh+LDD55tUqZVrnZ
-         LPEg3hSxx+oIvzvCGH3k6fuSwAzkuail5E7PY2oqFYaqZUL2wRgTtLJTSHw8E49U+/
-         kn/zgvFQQJfzxRksxofqM3WK+Pcns0ugfZ2cbZtg=
+        b=RGLFzFpRvlboZscEvS60RjBJyp3Z/sN0luvcOOcTE9IR8ulvDBGbBdTZsxfbcY/GI
+         HNPq/K41cF8K0xU6p9KJjnXyuGt1VqeTmK+2BvT6eDRdEXBTixhMqS1mF4Rx3/p/tA
+         G3K93B8NaPgwxKqmuZ+0g2b8bXvcdwh7FXwU0zmg=
 Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
         eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20200210164956eucas1p210bed4361c0ef05be6cd81b179289144~yGIk9Ixpc1728917289eucas1p23;
-        Mon, 10 Feb 2020 16:49:56 +0000 (GMT)
+        20200210165029eucas1p22af70af52b5fa60577c53b07a8588d57~yGJDTZOEY0729807298eucas1p2V;
+        Mon, 10 Feb 2020 16:50:29 +0000 (GMT)
 Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges3new.samsung.com (EUCPMTA) with SMTP id 6F.8C.60698.4B9814E5; Mon, 10
-        Feb 2020 16:49:56 +0000 (GMT)
+        eusmges3new.samsung.com (EUCPMTA) with SMTP id 8C.9C.60698.5D9814E5; Mon, 10
+        Feb 2020 16:50:29 +0000 (GMT)
 Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
         eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20200210164956eucas1p2d451624436536b005a47dc8d46c3c872~yGIkp_BGl1929519295eucas1p27;
-        Mon, 10 Feb 2020 16:49:56 +0000 (GMT)
+        20200210165028eucas1p2023f3fd8fad917cfd90933ebffb1ed0c~yGJC2ByL52125321253eucas1p2W;
+        Mon, 10 Feb 2020 16:50:28 +0000 (GMT)
 Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
         eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200210164956eusmtrp2a96df4b8cba459eb5d861a734cec1692~yGIkpXyHw3239232392eusmtrp2a;
-        Mon, 10 Feb 2020 16:49:56 +0000 (GMT)
-X-AuditID: cbfec7f5-a29ff7000001ed1a-39-5e4189b4f210
-Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id 86.45.07950.4B9814E5; Mon, 10
-        Feb 2020 16:49:56 +0000 (GMT)
+        20200210165028eusmtrp2c605f7a732190e284cc15a610cf89562~yGJC1c8Jn0051100511eusmtrp2u;
+        Mon, 10 Feb 2020 16:50:28 +0000 (GMT)
+X-AuditID: cbfec7f5-a29ff7000001ed1a-87-5e4189d53af8
+Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id 87.55.07950.4D9814E5; Mon, 10
+        Feb 2020 16:50:28 +0000 (GMT)
 Received: from [106.120.51.71] (unknown [106.120.51.71]) by
-        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200210164956eusmtip1c8eaf46708d6c4f1e0b265374bded954~yGIkV8FoO0945009450eusmtip13;
-        Mon, 10 Feb 2020 16:49:56 +0000 (GMT)
-Subject: Re: [PATCH 44/46] libata: kill ATA_MSG_CTL
+        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200210165028eusmtip25ee3553f5521b0b6cf4a83b3d6476e8b~yGJCStXlT0812608126eusmtip2d;
+        Mon, 10 Feb 2020 16:50:28 +0000 (GMT)
+Subject: Re: [PATCH 45/46] libata: remove references to ATA_DEBUG
 To:     Hannes Reinecke <hare@suse.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
-        Hannes Reinecke <hare@suse.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
 From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <460a07ce-41a2-e5e8-aaeb-41da67473940@samsung.com>
-Date:   Mon, 10 Feb 2020 17:49:55 +0100
+Message-ID: <e897abaa-4d67-5c37-1775-bb1d2b034c95@samsung.com>
+Date:   Mon, 10 Feb 2020 17:50:28 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
         Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20200204165547.115220-45-hare@suse.de>
+In-Reply-To: <20200204165547.115220-46-hare@suse.de>
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprCKsWRmVeSWpSXmKPExsWy7djP87pbOh3jDP7fNbRYfbefzWLBm71s
-        FnsWTWKyOLbjEZMDi8fls6Ue67dcZfHYfLra4/MmuQCWKC6blNSczLLUIn27BK6Mtb37WAsO
-        CFY0zJrI0sC4iq+LkZNDQsBE4sLDZ+xdjFwcQgIrGCVuLelghXC+MEocnrKIDcL5zCix4tZu
-        FpiW/hOroBLLGSUufelihHDeMkrs2vKHDaRKWMBYYuvcRiYQW0RASeJj+yF2EJtZIE6i6cpd
-        MJtNwEpiYvsqRhCbV8BOYubqRlYQm0VAVeLiiWdgtqhAhMSnB4dZIWoEJU7OfAJ0BQcHJ9AV
-        c7bHQYwUl7j1ZD4ThC0vsf3tHGaIQ7vZJU6stoawXSROHN8A9YCwxKvjW9ghbBmJ/ztBermA
-        7HWMEn87XjBDONsZJZZP/scGUWUtcefcLzaQxcwCmhLrd+lDhB0lbl9fBHaPhACfxI23ghA3
-        8ElM2jadGSLMK9HRJgRRrSaxYdkGNpi1XTtXMk9gVJqF5LFZSL6ZheSbWQh7FzCyrGIUTy0t
-        zk1PLTbOSy3XK07MLS7NS9dLzs/dxAhMK6f/Hf+6g3Hfn6RDjAIcjEo8vBeCHeOEWBPLiitz
-        DzFKcDArifBaSgOFeFMSK6tSi/Lji0pzUosPMUpzsCiJ8xovehkrJJCeWJKanZpakFoEk2Xi
-        4JRqYPT6sGKt+hbT1FsXfQ182y0mc+1x1XavnT/ree5T9RvLP5pMSZopIzD9e/gPp/+rvt+Y
-        //B2woT+FounDbeaXFX87zWoO1789tgwdh+nSeohgdnFxYEdB9akLGBp6Nhqzeiy69WrxxEH
-        z2u+zMwTX/0ude20XRMjmjgCj8abPpr99YnfJR/m1+JKLMUZiYZazEXFiQD1vH7rJwMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrKIsWRmVeSWpSXmKPExsVy+t/xu7pbOh3jDD5clLdYfbefzWLBm71s
-        FnsWTWKyOLbjEZMDi8fls6Ue67dcZfHYfLra4/MmuQCWKD2bovzSklSFjPziElulaEMLIz1D
-        Sws9IxNLPUNj81grI1MlfTublNSczLLUIn27BL2Mtb37WAsOCFY0zJrI0sC4iq+LkZNDQsBE
-        ov/EKrYuRi4OIYGljBJzO6cxdTFyACVkJI6vL4OoEZb4c60LquY1o8S1w1OZQBLCAsYSW+c2
-        gtkiAkoSH9sPsYPYzAJxEv/6doPFhQQ2MEpcnJUIYrMJWElMbF/FCGLzCthJzFzdyApiswio
-        Slw88QzMFhWIkDi8YxZUjaDEyZlPWEDu4QQ6dM72OIjx6hJ/5l1ihrDFJW49mc8EYctLbH87
-        h3kCo9AsJN2zkLTMQtIyC0nLAkaWVYwiqaXFuem5xUZ6xYm5xaV56XrJ+bmbGIFRtO3Yzy07
-        GLveBR9iFOBgVOLhvRDsGCfEmlhWXJl7iFGCg1lJhNdSGijEm5JYWZValB9fVJqTWnyI0RTo
-        t4nMUqLJ+cAIzyuJNzQ1NLewNDQ3Njc2s1AS5+0QOBgjJJCeWJKanZpakFoE08fEwSnVwJhs
-        uLK9Ve1syyztU/JdMeyLCi23hpjXbiyVzGs9ICizQz6vM+P8lDbtlX+fbnlz6dzJoktJe5Y/
-        5Jp1wEKYUcDPOnvL6zZprnVbD+U+zKwrmyjQUMsduz84NILFat1z8VmSui/5zCvDFddq8DJV
-        trjwHinZvTVYyXDHw9YoO4W8DX3ntH2fKrEUZyQaajEXFScCABGrtzy4AgAA
-X-CMS-MailID: 20200210164956eucas1p2d451624436536b005a47dc8d46c3c872
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupileLIzCtJLcpLzFFi42LZduzned2rnY5xBs93iFisvtvPZrFn0SQm
+        i2M7HjE5MHtcPlvqsfl0tcfnTXIBzFFcNimpOZllqUX6dglcGdd6wwv6+Ss+btrN1sA4m6eL
+        kZNDQsBE4vi1p4xdjFwcQgIrGCWW/LrEBOF8YZT4umIuVOYzo8S6rd+Zuxg5wFrW39SBiC9n
+        lGj+upcdwnnLKHG87yILyFxhAUeJY+emgNkiAkoSH9sPsYPYzALWErMXr2cCsdkErCQmtq9i
+        BLF5Bewk/rzZzQxiswioSmx79wfMFhWIkPj04DArRI2gxMmZT8BmcgId8fr2dBaImeISt57M
+        Z4Kw5SW2v53DDHKQhMB/Nol5i16yQjzqIvHobQ87hC0s8er4FihbRuL/zvlMEA3rGCX+dryA
+        6t7OKLF88j82iCpriTvnfrGB/M8soCmxfpc+RNhRYv+2q4yQYOGTuPFWEOIIPolJ26ZDQ4tX
+        oqNNCKJaTWLDsg1sMGu7dq5knsCoNAvJa7OQvDMLyTuzEPYuYGRZxSieWlqcm55abJyXWq5X
+        nJhbXJqXrpecn7uJEZhCTv87/nUH474/SYcYBTgYlXh4LwQ7xgmxJpYVV+YeYpTgYFYS4bWU
+        BgrxpiRWVqUW5ccXleakFh9ilOZgURLnNV70MlZIID2xJDU7NbUgtQgmy8TBKdXAmP7r6Mbq
+        f9mbJ1068E9LTKKA91rHYZfGOXsXLNxtdOzi+ROVObdWC9nu/fqlSaQ+5Uh7K2N9iO+XrVkl
+        rq7HVmtu/Xnc/vSG8ndWxgd1Drkb5onwu38o1W7pE/m0Jcpo14yK29oSFzMPv507zb42dr5z
+        YMdtlYaX3lFb5025szYi2Lz+36dkKSWW4oxEQy3mouJEAO5iZvMdAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprNIsWRmVeSWpSXmKPExsVy+t/xe7pXOh3jDA60mVisvtvPZrFn0SQm
+        i2M7HjE5MHtcPlvqsfl0tcfnTXIBzFF6NkX5pSWpChn5xSW2StGGFkZ6hpYWekYmlnqGxuax
+        VkamSvp2NimpOZllqUX6dgl6Gdd6wwv6+Ss+btrN1sA4m6eLkYNDQsBEYv1NnS5GLg4hgaWM
+        EnfeTGOHiMtIHF9f1sXICWQKS/y51sUGUfOaUWL+u+mMIAlhAUeJY+emsIDYIgJKEh/bD7GD
+        2MwC1hKzF69ngmjYwCjx7NtiJpAEm4CVxMT2VWDNvAJ2En/e7GYGsVkEVCW2vfsDZosKREgc
+        3jELqkZQ4uTMJ2ALOIEOfX17OgvEAnWJP/MuMUPY4hK3nsxngrDlJba/ncM8gVFoFpL2WUha
+        ZiFpmYWkZQEjyypGkdTS4tz03GIjveLE3OLSvHS95PzcTYzAiNl27OeWHYxd74IPMQpwMCrx
+        8F4IdowTYk0sK67MPcQowcGsJMJrKQ0U4k1JrKxKLcqPLyrNSS0+xGgK9NxEZinR5HxgNOeV
+        xBuaGppbWBqaG5sbm1koifN2CByMERJITyxJzU5NLUgtgulj4uCUamD0ihBT0e/K1j00ew6T
+        u8/BS7ee+uVMS34vuPKQXJhv7uFDArIzw/+wWBiKaaVfjDj8zJulTaOD33vF4+mWl+yee+fa
+        zFr6d73GnM21O2ey8jW9Xa33r2GjUY3UxxOxkmcL57YvEFL7xjxNes+cjVxTTEriavN4rm+b
+        Kut04mRi+6HJk/gud3MrsRRnJBpqMRcVJwIARG+W7q4CAAA=
+X-CMS-MailID: 20200210165028eucas1p2023f3fd8fad917cfd90933ebffb1ed0c
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200204165618eucas1p25e3b27075d1aa43c4b7fe1245a55e7a5
+X-RootMTR: 20200204165617eucas1p264b8a6c0b9ff47ac5c64ee5f1c242039
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20200204165618eucas1p25e3b27075d1aa43c4b7fe1245a55e7a5
+X-CMS-RootMailID: 20200204165617eucas1p264b8a6c0b9ff47ac5c64ee5f1c242039
 References: <20200204165547.115220-1-hare@suse.de>
-        <CGME20200204165618eucas1p25e3b27075d1aa43c4b7fe1245a55e7a5@eucas1p2.samsung.com>
-        <20200204165547.115220-45-hare@suse.de>
+        <CGME20200204165617eucas1p264b8a6c0b9ff47ac5c64ee5f1c242039@eucas1p2.samsung.com>
+        <20200204165547.115220-46-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
@@ -110,10 +109,7 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 
 On 2/4/20 5:55 PM, Hannes Reinecke wrote:
-> From: Hannes Reinecke <hare@suse.com>
-> 
-> All instances had been converted to ata_XXX_dbg() anyway, so
-> the conditional is pointless anyway.
+> All instances are gone.
 > 
 > Signed-off-by: Hannes Reinecke <hare@suse.de>
 
@@ -126,50 +122,48 @@ Samsung R&D Institute Poland
 Samsung Electronics
 
 > ---
->  drivers/ata/libata-core.c | 5 ++---
->  include/linux/libata.h    | 2 --
->  2 files changed, 2 insertions(+), 5 deletions(-)
+>  drivers/ata/libata-core.c | 2 --
+>  include/linux/libata.h    | 5 -----
+>  2 files changed, 7 deletions(-)
 > 
 > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index a81e7006e73f..0f1682a55b54 100644
+> index 0f1682a55b54..9c05177e09c2 100644
 > --- a/drivers/ata/libata-core.c
 > +++ b/drivers/ata/libata-core.c
-> @@ -1858,8 +1858,7 @@ int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
->  	int may_fallback = 1, tried_spinup = 0;
->  	int rc;
->  
-> -	if (ata_msg_ctl(ap))
-> -		ata_dev_dbg(dev, "%s: ENTER\n", __func__);
-> +	ata_dev_dbg(dev, "ENTER\n");
->  
->  retry:
->  	ata_tf_init(dev, &tf);
-> @@ -6036,7 +6035,7 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+> @@ -6034,8 +6034,6 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+>  #if defined(ATA_VERBOSE_DEBUG)
 >  	/* turn on all debugging levels */
 >  	ap->msg_enable = 0x00FF;
->  #elif defined(ATA_DEBUG)
-> -	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_CTL | ATA_MSG_WARN | ATA_MSG_ERR;
-> +	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_WARN | ATA_MSG_ERR;
+> -#elif defined(ATA_DEBUG)
+> -	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_WARN | ATA_MSG_ERR;
 >  #else
 >  	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_ERR | ATA_MSG_WARN;
 >  #endif
 > diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index cab7aa3f0ed0..1012aed05187 100644
+> index 1012aed05187..06d6a3e18e18 100644
 > --- a/include/linux/libata.h
 > +++ b/include/linux/libata.h
-> @@ -73,7 +73,6 @@ enum {
->  	ATA_MSG_PROBE	= 0x0004,
->  	ATA_MSG_WARN	= 0x0008,
->  	ATA_MSG_MALLOC	= 0x0010,
-> -	ATA_MSG_CTL	= 0x0020,
->  	ATA_MSG_INTR	= 0x0040,
->  	ATA_MSG_ERR	= 0x0080,
->  };
-> @@ -82,7 +81,6 @@ enum {
->  #define ata_msg_probe(p)  ((p)->msg_enable & ATA_MSG_PROBE)
->  #define ata_msg_warn(p)   ((p)->msg_enable & ATA_MSG_WARN)
->  #define ata_msg_malloc(p) ((p)->msg_enable & ATA_MSG_MALLOC)
-> -#define ata_msg_ctl(p)    ((p)->msg_enable & ATA_MSG_CTL)
->  #define ata_msg_intr(p)   ((p)->msg_enable & ATA_MSG_INTR)
->  #define ata_msg_err(p)    ((p)->msg_enable & ATA_MSG_ERR)
+> @@ -38,22 +38,17 @@
+>   * compile-time options: to be removed as soon as all the drivers are
+>   * converted to the new debugging mechanism
+>   */
+> -#undef ATA_DEBUG		/* debugging output */
+>  #undef ATA_VERBOSE_DEBUG	/* yet more debugging output */
+>  #undef ATA_IRQ_TRAP		/* define to ack screaming irqs */
+>  #undef ATA_NDEBUG		/* define to disable quick runtime checks */
 >  
+>  
+>  /* note: prints function name for you */
+> -#ifdef ATA_DEBUG
+>  #ifdef ATA_VERBOSE_DEBUG
+>  #define VPRINTK(fmt, args...) printk(KERN_ERR "%s: " fmt, __func__, ## args)
+>  #else
+>  #define VPRINTK(fmt, args...)
+>  #endif	/* ATA_VERBOSE_DEBUG */
+> -#else
+> -#define VPRINTK(fmt, args...)
+> -#endif	/* ATA_DEBUG */
+>  
+>  #define ata_print_version_once(dev, version)			\
+>  ({								\
+> 
