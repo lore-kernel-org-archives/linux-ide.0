@@ -7,101 +7,101 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC8A2C352A3
-	for <linux-ide@archiver.kernel.org>; Mon, 10 Feb 2020 13:46:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B0D7C352A3
+	for <linux-ide@archiver.kernel.org>; Mon, 10 Feb 2020 13:46:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B1D182070A
-	for <linux-ide@archiver.kernel.org>; Mon, 10 Feb 2020 13:46:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 18D2C2070A
+	for <linux-ide@archiver.kernel.org>; Mon, 10 Feb 2020 13:46:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="LMEhWltA"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="nkCmb+Ti"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727655AbgBJNqG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 10 Feb 2020 08:46:06 -0500
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:42381 "EHLO
-        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727417AbgBJNqG (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 10 Feb 2020 08:46:06 -0500
+        id S1727742AbgBJNqp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 10 Feb 2020 08:46:45 -0500
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:59995 "EHLO
+        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727632AbgBJNqp (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 10 Feb 2020 08:46:45 -0500
 Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200210134604euoutp01ced1b94ca0d56d2a913d430a72713c25~yDoCqBJ_K0697806978euoutp01f
-        for <linux-ide@vger.kernel.org>; Mon, 10 Feb 2020 13:46:04 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200210134604euoutp01ced1b94ca0d56d2a913d430a72713c25~yDoCqBJ_K0697806978euoutp01f
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200210134643euoutp0241c080574cd59dd5f69f50bac4571f94~yDomxFj-V0841408414euoutp02J
+        for <linux-ide@vger.kernel.org>; Mon, 10 Feb 2020 13:46:43 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200210134643euoutp0241c080574cd59dd5f69f50bac4571f94~yDomxFj-V0841408414euoutp02J
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1581342364;
-        bh=bb2gjtBwfSKpGm94wNzsfW77Eqr/OMVD9yPRKUlBshA=;
+        s=mail20170921; t=1581342403;
+        bh=CGL4MlxF32i9jLjYTtUYtOfGTHztoG+Ydk5mBNDjRzQ=;
         h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=LMEhWltA0Nr3PQ8AvD9aVY42I5PrcYpvgrD2jKFCqGZXiFK6jgt4OR0APbWRxTVMQ
-         DgMSQE2OGYmkXt4yUybkTFQ2QuOiyvCcTCjso3k5Q+9TaLXOnifKn8dAfZi6LTTOec
-         F7EzXcOuT3ogSr1OIVph2MheRXhbNriX+98rT3yU=
-Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20200210134604eucas1p1fbc9cc0fdd8937920d543e7bccbfc032~yDoCjSDQv3099330993eucas1p1b;
-        Mon, 10 Feb 2020 13:46:04 +0000 (GMT)
+        b=nkCmb+TiEppmiTZg22U41FJYQ3j3sihqkfZZ4MiSCbq6anF4xb1otYv74S74LWBrn
+         ki30Amc/JlQDgKA8aCuEFmerbGHwsaEnfsyHqIFQJN2dkR56+7IjYbFUQeGGFg2jHB
+         esN//gAGCEtmUzKxlEHilyWqQU9yjAQRIZkecGkQ=
+Received: from eusmges2new.samsung.com (unknown [203.254.199.244]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+        20200210134643eucas1p2c7290f163c26236d961d62bc04450422~yDommkOpZ3047630476eucas1p2c;
+        Mon, 10 Feb 2020 13:46:43 +0000 (GMT)
 Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges1new.samsung.com (EUCPMTA) with SMTP id 5E.FD.61286.C9E514E5; Mon, 10
-        Feb 2020 13:46:04 +0000 (GMT)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20200210134604eucas1p118d16312fda48cd23fa5567a04ad8cb1~yDoB9xAC80056900569eucas1p1Q;
-        Mon, 10 Feb 2020 13:46:04 +0000 (GMT)
-Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
-        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200210134604eusmtrp1447076afd9d4269a3ff6eaa2f5cf31d1~yDoB9KMDj1866318663eusmtrp1f;
-        Mon, 10 Feb 2020 13:46:04 +0000 (GMT)
-X-AuditID: cbfec7f2-f0bff7000001ef66-e5-5e415e9c5f7d
-Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id B8.BF.08375.C9E514E5; Mon, 10
-        Feb 2020 13:46:04 +0000 (GMT)
+        eusmges2new.samsung.com (EUCPMTA) with SMTP id 4C.B9.60679.3CE514E5; Mon, 10
+        Feb 2020 13:46:43 +0000 (GMT)
+Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
+        20200210134643eucas1p210ddf5e93df04da9ab6ee9ab760c71e1~yDomHV9z73048030480eucas1p2M;
+        Mon, 10 Feb 2020 13:46:43 +0000 (GMT)
+Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
+        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200210134642eusmtrp26e01e51fadbb4b5f30cd73c5b37c0069~yDomGz86N2977729777eusmtrp28;
+        Mon, 10 Feb 2020 13:46:42 +0000 (GMT)
+X-AuditID: cbfec7f4-0e5ff7000001ed07-34-5e415ec39acf
+Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id D2.1C.07950.2CE514E5; Mon, 10
+        Feb 2020 13:46:42 +0000 (GMT)
 Received: from [106.120.51.71] (unknown [106.120.51.71]) by
-        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200210134603eusmtip23e0b93c66729e67981f193690b888a64~yDoBvaQcr3129231292eusmtip2k;
-        Mon, 10 Feb 2020 13:46:03 +0000 (GMT)
-Subject: Re: [PATCH 17/46] pata_octeon_cf: drop DPRINTK() calls in reset
+        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20200210134642eusmtip101c11320878f2c904aaa5f4ff88132bd~yDol3Irbx0269402694eusmtip1M;
+        Mon, 10 Feb 2020 13:46:42 +0000 (GMT)
+Subject: Re: [PATCH 18/46] libahci: drop DPRINTK() calls in reset
 To:     Hannes Reinecke <hare@suse.de>
 Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
 From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <4299bc4c-50a1-7fbe-92d1-083f709b8ba6@samsung.com>
-Date:   Mon, 10 Feb 2020 14:46:03 +0100
+Message-ID: <201308e3-101e-82d4-6183-6b1b0fa55ea7@samsung.com>
+Date:   Mon, 10 Feb 2020 14:46:42 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
         Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20200204165547.115220-18-hare@suse.de>
+In-Reply-To: <20200204165547.115220-19-hare@suse.de>
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupmleLIzCtJLcpLzFFi42LZduzned05cY5xBhtmqVmsvtvPZrFn0SQm
-        i2M7HjE5MHtcPlvqsfl0tcfnTXIBzFFcNimpOZllqUX6dglcGdPvLGAreMRZ0Xq5ibmBsZGj
-        i5GTQ0LARGJz+xU2EFtIYAWjxO5bxV2MXED2F0aJmQvOs0I4nxkltl47wAbTcWfNEiaIxHJG
-        ic2bz7NBOG8ZJa7sfswKUiUs4CHxc8cUZhBbREBJ4mP7IXYQm1nAWmL24vVMIDabgJXExPZV
-        jCA2r4CdxKzVjWA1LAKqEpsXzAOLiwpESHx6cJgVokZQ4uTMJywgNifQFe8XX2WCmCkucevJ
-        fChbXmL72znMIAdJCDSzS6xa2swKcbaLxMt/u1ggbGGJV8e3sEPYMhKnJ/ewQDSsY5T42/EC
-        qns7o8Tyyf+gnraWuHPuF5DNAbRCU2L9Ln2IsKPE6YZ3jCBhCQE+iRtvBSGO4JOYtG06M0SY
-        V6KjTQiiWk1iw7INbDBru3auZJ7AqDQLyWuzkLwzC8k7sxD2LmBkWcUonlpanJueWmyYl1qu
-        V5yYW1yal66XnJ+7iRGYRE7/O/5pB+PXS0mHGAU4GJV4eCsCHeOEWBPLiitzDzFKcDArifBa
-        SgOFeFMSK6tSi/Lji0pzUosPMUpzsCiJ8xovehkrJJCeWJKanZpakFoEk2Xi4JRqYOy+/N71
-        x+fDVXE//rjPsLz35UC45MxgDatv0y48PK3Zr7M5N3ZCOV+d+yehw31WOmcki14/+3SARYWN
-        UUrtjf3vtraTyqsTtr+cf9aoomPFyYbEj6efWLT2Wrbe6El+vOVw+Kz6W12mKfMrWLvXFemn
-        H0nJrp6/8NX+e3eXr9E/FJNTbf/t8DslluKMREMt5qLiRACVtOSpHgMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprDIsWRmVeSWpSXmKPExsVy+t/xe7pz4hzjDF4u4rBYfbefzWLPoklM
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupileLIzCtJLcpLzFFi42LZduzned3DcY5xBmuXSlisvtvPZrFn0SQm
+        i2M7HjE5MHtcPlvqsfl0tcfnTXIBzFFcNimpOZllqUX6dglcGW8mnGArWClY8eXfb6YGxke8
+        XYycHBICJhInv8xi7WLk4hASWMEocb3pIzuE84VR4vvOv8wgVUICnxkl1hxghuk40XacCSK+
+        nFFiyXYHiIa3jBJLu3aygySEBRwldrz7ywZiiwgoSXxsPwQWZxawlpi9eD1YM5uAlcTE9lWM
+        IDavgJ3Ei7a1YAtYBFQlLl3uAesVFYiQ+PTgMCtEjaDEyZlPWEBsTqAjui5/ZYSYKS5x68l8
+        JghbXmL72znMIAdJCDSzS7RN+McGcbWLxLz+l4wQtrDEq+Nb2CFsGYn/O0GaQRrWMUr87XgB
+        1b2dUWL5ZJhua4k7534B2RxAKzQl1u/Shwg7SvxsfMAKEpYQ4JO48VYQ4gg+iUnbpjNDhHkl
+        OtqEIKrVJDYs28AGs7Zr50rmCYxKs5C8NgvJO7OQvDMLYe8CRpZVjOKppcW56anFRnmp5XrF
+        ibnFpXnpesn5uZsYgSnk9L/jX3Yw7vqTdIhRgINRiYe3ItAxTog1say4MvcQowQHs5IIr6U0
+        UIg3JbGyKrUoP76oNCe1+BCjNAeLkjiv8aKXsUIC6YklqdmpqQWpRTBZJg5OqQbGSTfyG0pf
+        p9zZnNxecobBT9rlRGFIt/ws8Ubn2ITrl113bmpe/qHPafFjlzuTFm6r3i+7LmfdV9nT82wm
+        lXA+eXN3cvfnkgbDa1fbLYSv9G0z3SfgOzF2m+ScxHu2/b7czqEze1M8jKPd/hYeTXHKyVv1
+        QUkzSuLQO1bV4p83qlbvVQrwXuauxFKckWioxVxUnAgA+HzRAR0DAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprLIsWRmVeSWpSXmKPExsVy+t/xu7qH4hzjDF58NLdYfbefzWLPoklM
         Fsd2PGJyYPa4fLbUY/Ppao/Pm+QCmKP0bIryS0tSFTLyi0tslaINLYz0DC0t9IxMLPUMjc1j
-        rYxMlfTtbFJSczLLUov07RL0MqbfWcBW8IizovVyE3MDYyNHFyMnh4SAicSdNUuYuhi5OIQE
-        ljJK7Oldw9jFyAGUkJE4vr4MokZY4s+1LjaImteMEq1dj1lBEsICHhI/d0xhBrFFBJQkPrYf
-        YgexmQWsJWYvXs8EYgsJbGCU+PuNE8RmE7CSmNi+ihHE5hWwk5i1uhGsnkVAVWLzgnlgcVGB
-        CInDO2ZB1QhKnJz5hAXE5gQ69P3iq0wQ89Ul/sy7xAxhi0vcejIfKi4vsf3tHOYJjEKzkLTP
-        QtIyC0nLLCQtCxhZVjGKpJYW56bnFhvqFSfmFpfmpesl5+duYgTGzLZjPzfvYLy0MfgQowAH
-        oxIPb0WgY5wQa2JZcWXuIUYJDmYlEV5LaaAQb0piZVVqUX58UWlOavEhRlOg5yYyS4km5wPj
-        Oa8k3tDU0NzC0tDc2NzYzEJJnLdD4GCMkEB6YklqdmpqQWoRTB8TB6dUA2Ps1bN/bFp0LDm+
-        Khhe2iI+1e5E5JZztWdP7pn4JLms5pcK6z6e9ctLZhUJNvgkfMm/+dTFzuxI+CeX7ytfHMww
-        +3zuzJxWe+NXy17tb7f341wpKLjmQo/Hydvbq37/uzNXWOLEhfkv5ggkts89G2X10aArObXm
-        gLnpfNfF07gksu6nvXpesqROiaU4I9FQi7moOBEAh5/qiq8CAAA=
-X-CMS-MailID: 20200210134604eucas1p118d16312fda48cd23fa5567a04ad8cb1
+        rYxMlfTtbFJSczLLUov07RL0Mt5MOMFWsFKw4su/30wNjI94uxg5OSQETCROtB1n6mLk4hAS
+        WMoosaNnJ1sXIwdQQkbi+PoyiBphiT/Xutggal4zSpyYsZwVJCEs4Cix491fNhBbREBJ4mP7
+        IXYQm1nAWmL24vVQQzcwSpx9eBGsiE3ASmJi+ypGEJtXwE7iRdtaZhCbRUBV4tLlHrAaUYEI
+        icM7ZkHVCEqcnPmEBcTmBLq06/JXRogF6hJ/5l1ihrDFJW49mc8EYctLbH87h3kCo9AsJO2z
+        kLTMQtIyC0nLAkaWVYwiqaXFuem5xUZ6xYm5xaV56XrJ+bmbGIFRs+3Yzy07GLveBR9iFOBg
+        VOLhvRDsGCfEmlhWXJl7iFGCg1lJhNdSGijEm5JYWZValB9fVJqTWnyI0RTouYnMUqLJ+cCI
+        ziuJNzQ1NLewNDQ3Njc2s1AS5+0QOBgjJJCeWJKanZpakFoE08fEwSnVwKi8/ebEHx+3/tSa
+        ui+NZ/JRpxQuN4WDGjo7fvPMvbpOs/7qJMc7rDPrlygvvcVhwOpXPkNR4s47tdPfWHUEVF5s
+        SdaT9z3evMklILF+9UWxAsvybhHdTRKmDzfUHjizpmyPA3+57PTb1sslLXKOyG1edP7ipaT3
+        XM5VCVrb169JK7+zWWmvo4MSS3FGoqEWc1FxIgCIj1IJsAIAAA==
+X-CMS-MailID: 20200210134643eucas1p210ddf5e93df04da9ab6ee9ab760c71e1
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200204165615eucas1p189dc18c2faea6b0ea041784bdcd8d512
+X-RootMTR: 20200204165614eucas1p2e5d852483c0728f1d0a5a3063db03c88
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20200204165615eucas1p189dc18c2faea6b0ea041784bdcd8d512
+X-CMS-RootMailID: 20200204165614eucas1p2e5d852483c0728f1d0a5a3063db03c88
 References: <20200204165547.115220-1-hare@suse.de>
-        <CGME20200204165615eucas1p189dc18c2faea6b0ea041784bdcd8d512@eucas1p1.samsung.com>
-        <20200204165547.115220-18-hare@suse.de>
+        <CGME20200204165614eucas1p2e5d852483c0728f1d0a5a3063db03c88@eucas1p2.samsung.com>
+        <20200204165547.115220-19-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
@@ -123,26 +123,63 @@ Samsung R&D Institute Poland
 Samsung Electronics
 
 > ---
->  drivers/ata/pata_octeon_cf.c | 2 --
->  1 file changed, 2 deletions(-)
+>  drivers/ata/libahci.c | 10 ----------
+>  1 file changed, 10 deletions(-)
 > 
-> diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
-> index d3d851b014a3..f5cd89173028 100644
-> --- a/drivers/ata/pata_octeon_cf.c
-> +++ b/drivers/ata/pata_octeon_cf.c
-> @@ -440,7 +440,6 @@ static int octeon_cf_softreset16(struct ata_link *link, unsigned int *classes,
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index c1bc973ecc16..1c6d98fab3a3 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -1391,8 +1391,6 @@ int ahci_do_softreset(struct ata_link *link, unsigned int *class,
+>  	bool fbs_disabled = false;
 >  	int rc;
->  	u8 err;
 >  
-> -	DPRINTK("about to softreset\n");
->  	__raw_writew(ap->ctl, base + 0xe);
->  	udelay(20);
->  	__raw_writew(ap->ctl | ATA_SRST, base + 0xe);
-> @@ -455,7 +454,6 @@ static int octeon_cf_softreset16(struct ata_link *link, unsigned int *classes,
+> -	DPRINTK("ENTER\n");
+> -
+>  	/* prepare for SRST (AHCI-1.1 10.4.1) */
+>  	rc = ahci_kick_engine(ap);
+>  	if (rc && rc != -EOPNOTSUPP)
+> @@ -1452,7 +1450,6 @@ int ahci_do_softreset(struct ata_link *link, unsigned int *class,
+>  	if (fbs_disabled)
+>  		ahci_enable_fbs(ap);
 >  
->  	/* determine by signature whether we have ATA or ATAPI devices */
->  	classes[0] = ata_sff_dev_classify(&link->device[0], 1, &err);
-> -	DPRINTK("EXIT, classes[0]=%u [1]=%u\n", classes[0], classes[1]);
+> -	DPRINTK("EXIT, class=%u\n", *class);
 >  	return 0;
->  }
 >  
+>   fail:
+> @@ -1474,8 +1471,6 @@ static int ahci_softreset(struct ata_link *link, unsigned int *class,
+>  {
+>  	int pmp = sata_srst_pmp(link);
+>  
+> -	DPRINTK("ENTER\n");
+> -
+>  	return ahci_do_softreset(link, class, pmp, deadline, ahci_check_ready);
+>  }
+>  EXPORT_SYMBOL_GPL(ahci_do_softreset);
+> @@ -1505,8 +1500,6 @@ static int ahci_pmp_retry_softreset(struct ata_link *link, unsigned int *class,
+>  	int rc;
+>  	u32 irq_sts;
+>  
+> -	DPRINTK("ENTER\n");
+> -
+>  	rc = ahci_do_softreset(link, class, pmp, deadline,
+>  			       ahci_bad_pmp_check_ready);
+>  
+> @@ -1540,8 +1533,6 @@ int ahci_do_hardreset(struct ata_link *link, unsigned int *class,
+>  	struct ata_taskfile tf;
+>  	int rc;
+>  
+> -	DPRINTK("ENTER\n");
+> -
+>  	hpriv->stop_engine(ap);
+>  
+>  	/* clear D2H reception area to properly wait for D2H FIS */
+> @@ -1557,7 +1548,6 @@ int ahci_do_hardreset(struct ata_link *link, unsigned int *class,
+>  	if (*online)
+>  		*class = ahci_dev_classify(ap);
+>  
+> -	DPRINTK("EXIT, rc=%d, class=%u\n", rc, *class);
+>  	return rc;
+>  }
+>  EXPORT_SYMBOL_GPL(ahci_do_hardreset);
+> 
