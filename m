@@ -1,186 +1,117 @@
-Return-Path: <SRS0=qhS8=33=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=vLfT=36=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 640BEC35250
-	for <linux-ide@archiver.kernel.org>; Fri,  7 Feb 2020 14:29:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0C32C352A3
+	for <linux-ide@archiver.kernel.org>; Mon, 10 Feb 2020 11:51:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3B4ED21775
-	for <linux-ide@archiver.kernel.org>; Fri,  7 Feb 2020 14:29:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41D3B2070A
+	for <linux-ide@archiver.kernel.org>; Mon, 10 Feb 2020 11:51:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="FsrPUcDk"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="jnjdz9Vs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727254AbgBGO3w (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 7 Feb 2020 09:29:52 -0500
-Received: from mailout2.w1.samsung.com ([210.118.77.12]:49530 "EHLO
-        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727347AbgBGO1y (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 7 Feb 2020 09:27:54 -0500
-Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200207142751euoutp0220ca68bdcc65fe903f66a49d3c272378~xJQqoCTIf2564025640euoutp02I
-        for <linux-ide@vger.kernel.org>; Fri,  7 Feb 2020 14:27:51 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200207142751euoutp0220ca68bdcc65fe903f66a49d3c272378~xJQqoCTIf2564025640euoutp02I
+        id S1726961AbgBJLvJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 10 Feb 2020 06:51:09 -0500
+Received: from mailout1.w1.samsung.com ([210.118.77.11]:49079 "EHLO
+        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726950AbgBJLvI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 10 Feb 2020 06:51:08 -0500
+Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
+        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200210115106euoutp010e12bee5fe77a28cab1246c8b2a066e9~yCDqIuW7t0412404124euoutp01D
+        for <linux-ide@vger.kernel.org>; Mon, 10 Feb 2020 11:51:06 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200210115106euoutp010e12bee5fe77a28cab1246c8b2a066e9~yCDqIuW7t0412404124euoutp01D
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1581085671;
-        bh=Q0zpKvRNgz/gxJ8iAVrCi7y/xOUkBAMZYSLecc9T6Ro=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=FsrPUcDkwlZP/zdX511f3p9NbP8wANgkM1YC50uB7Tykb3j3qhn2O5XimyTI01Y5o
-         hOL9XmpcFtaLgaRvJG2QtwcNviqQ1T/0Nva8UOI96w6iXNQX87xjtDbq+2hpRAhCBf
-         KCrQohe1FksHa6MB4qfjwlv/fspWMk+ENTp1z/9I=
+        s=mail20170921; t=1581335466;
+        bh=YAX8oqGBV8ClQo477d1/9huOg4u5dNBBb8Nzs8rLxNU=;
+        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
+        b=jnjdz9VsKG0G0CRP9C6O65AMEk7IlIUkEeSBIfmPY6E420sE0H0F9B0QMSUvoqUac
+         gGNauCgcht+TCLjbij7ka8nWFnOuHqM+YcxafDpMgyUGS5Imadd3FnCamSHbkTVhxG
+         lU8ADDn/U6jeItV2N3GF63H15veuIRxQjHlRZeZ8=
 Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20200207142751eucas1p1b4b747ebf0521dbbc02ab7d1ea9b9911~xJQqTyXgs1078610786eucas1p1o;
-        Fri,  7 Feb 2020 14:27:51 +0000 (GMT)
-Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges3new.samsung.com (EUCPMTA) with SMTP id DC.C8.60698.7E37D3E5; Fri,  7
-        Feb 2020 14:27:51 +0000 (GMT)
+        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+        20200210115106eucas1p27ccb1acd942e4701c2ac94bc301a8e2c~yCDqBjUpd2287422874eucas1p2j;
+        Mon, 10 Feb 2020 11:51:06 +0000 (GMT)
+Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
+        eusmges3new.samsung.com (EUCPMTA) with SMTP id 96.AE.60698.AA3414E5; Mon, 10
+        Feb 2020 11:51:06 +0000 (GMT)
 Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
         eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20200207142751eucas1p2499d9a7ebbca93fff43c47629ba8b6ce~xJQp4ru1f3055030550eucas1p2-;
-        Fri,  7 Feb 2020 14:27:51 +0000 (GMT)
-Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
+        20200210115106eucas1p2f9a0a24206a45365de9835771b2d7a8c~yCDpwgrAE0066800668eucas1p2K;
+        Mon, 10 Feb 2020 11:51:06 +0000 (GMT)
+Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
         eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200207142751eusmtrp2a3a47c5c713fc2a091d45c1944fcce05~xJQp4DEnL1102911029eusmtrp20;
-        Fri,  7 Feb 2020 14:27:51 +0000 (GMT)
-X-AuditID: cbfec7f5-a29ff7000001ed1a-b0-5e3d73e72224
-Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id FB.C5.07950.7E37D3E5; Fri,  7
-        Feb 2020 14:27:51 +0000 (GMT)
-Received: from AMDC3058.digital.local (unknown [106.120.51.71]) by
-        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200207142750eusmtip204d34bcf30b4bffe1316f89710009321~xJQpa_Xhp2944029440eusmtip2W;
-        Fri,  7 Feb 2020 14:27:50 +0000 (GMT)
+        20200210115106eusmtrp29234e2c79ddfd268303ebb4578cc7aab~yCDpv--xG3226632266eusmtrp2I;
+        Mon, 10 Feb 2020 11:51:06 +0000 (GMT)
+X-AuditID: cbfec7f5-a0fff7000001ed1a-ce-5e4143aae3da
+Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
+        eusmgms1.samsung.com (EUCPMTA) with SMTP id 9B.5E.08375.AA3414E5; Mon, 10
+        Feb 2020 11:51:06 +0000 (GMT)
+Received: from [106.120.51.71] (unknown [106.120.51.71]) by
+        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20200210115105eusmtip17580788df647a637f59597b7305ae1d3~yCDpc_MBu0653706537eusmtip1D;
+        Mon, 10 Feb 2020 11:51:05 +0000 (GMT)
+Subject: Re: [PATCH 02/46] libata.h: whitespace and indentation fixes
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
 From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Michael Schmitz <schmitzmic@gmail.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Christoph Hellwig <hch@lst.de>, linux-ide@vger.kernel.org,
-        linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
-        b.zolnierkie@samsung.com
-Subject: [PATCH v2 00/26] ata: optimize core code size on PATA only setups
-Date:   Fri,  7 Feb 2020 15:27:08 +0100
-Message-Id: <20200207142734.8431-1-b.zolnierkie@samsung.com>
-X-Mailer: git-send-email 2.24.1
+Message-ID: <7bcf24d1-9f22-3bd7-40f7-a79cf2a6f25b@samsung.com>
+Date:   Mon, 10 Feb 2020 12:51:04 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+        Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrDKsWRmVeSWpSXmKPExsWy7djP87rPi23jDO60yFqsvtvPZrFxxnpW
-        i2e39jJZrFx9lMni2I5HTBaXd81hs1j+ZC2zxdzW6ewOHB47Z91l97h8ttTj0OEORo+Trd9Y
-        PHbfbGDz6NuyitHj8ya5APYoLpuU1JzMstQifbsErozv75azFezTqfj1eTJbA2ObShcjJ4eE
-        gInE39ZpTF2MXBxCAisYJY7M7YRyvjBK/Dl2B8r5zChx4MwsRpiWpxO2sEMkljNK/D/3jBkk
-        Adbyf3YciM0mYCUxsX0VWIOIgIJEz++VbCANzALvGSVWTNrLApIQFvCSWP5lBVgzi4CqxNV3
-        k4CKODh4BWwkri7jglgmL7H12ydWEJtXQFDi5MwnYK3MQPHmrbOZQWZKCPSzS8w8OpMJosFF
-        4vqNo1CXCku8Og5yKYgtI/F/53wmiIZ1jBJ/O15AdW9nlFg++R8bRJW1xJ1zv8CuYBbQlFi/
-        Sx8i7Cjx5/hjZpCwhACfxI23ghBH8ElM2jYdKswr0dEmBFGtJrFh2QY2mLVdO1dClXhINF7h
-        gARVrMSChuOsExgVZiH5bBaSz2YhnLCAkXkVo3hqaXFuemqxcV5quV5xYm5xaV66XnJ+7iZG
-        YBo6/e/41x2M+/4kHWIU4GBU4uFNcLSJE2JNLCuuzD3EKMHBrCTC26dqGyfEm5JYWZValB9f
-        VJqTWnyIUZqDRUmc13jRy1ghgfTEktTs1NSC1CKYLBMHp1QD483fU25apzWxrjk9ya9QTpXX
-        4t/3QnWmF5+50z6GHTl7bvOC8yYf7PpPBYsLB74u3SBhf4T7/eRZLisTw7o6RPIsO+765e5P
-        /T+PPfah5Okt5x0NWCSiLMVbs2OkmE6V/ma0lHjac/DqdG/Wm9XKJ/XXuzwt7c8/mcWzM2+v
-        5GeJKj9xU89qJZbijERDLeai4kQA7tVjTT8DAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpikeLIzCtJLcpLzFFi42I5/e/4Pd3nxbZxBp/mMlusvtvPZrFxxnpW
-        i2e39jJZrFx9lMni2I5HTBaXd81hs1j+ZC2zxdzW6ewOHB47Z91l97h8ttTj0OEORo+Trd9Y
-        PHbfbGDz6NuyitHj8ya5APYoPZui/NKSVIWM/OISW6VoQwsjPUNLCz0jE0s9Q2PzWCsjUyV9
-        O5uU1JzMstQifbsEvYzv75azFezTqfj1eTJbA2ObShcjJ4eEgInE0wlb2LsYuTiEBJYySjw6
-        08TSxcgBlJCROL6+DKJGWOLPtS42iJpPjBLdHTuZQBJsAlYSE9tXMYLYIgIKEj2/V4IVMQt8
-        ZZRYOqmbGSQhLOAlsfzLCjCbRUBV4uq7SWwgC3gFbCSuLuOCWCAvsfXbJ1YQm1dAUOLkzCcs
-        IDYzULx562zmCYx8s5CkZiFJLWBkWsUoklpanJueW2ykV5yYW1yal66XnJ+7iREY/tuO/dyy
-        g7HrXfAhRgEORiUe3gRHmzgh1sSy4srcQ4wSHMxKIrx9qrZxQrwpiZVVqUX58UWlOanFhxhN
-        gW6dyCwlmpwPjM28knhDU0NzC0tDc2NzYzMLJXHeDoGDMUIC6YklqdmpqQWpRTB9TBycUg2M
-        e+ru1rX4+rk/O806M/zGv+vnJCZva0vZvv7FH6sV89kZsySnHjxhIVkVt07J8278umOK/ssr
-        LaVurcg5rCH2eoYs39dPAnpLnp/xm6O4giXfNv0Qc/ulk2KOIYX1f/ztvrEkd5TbuXS+9Zkd
-        u+Jc56J3f8q8ew1OfXTZxjIraJGMLevLUzJOSizFGYmGWsxFxYkAes3SUJUCAAA=
-X-CMS-MailID: 20200207142751eucas1p2499d9a7ebbca93fff43c47629ba8b6ce
+In-Reply-To: <20200204165547.115220-3-hare@suse.de>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFuphleLIzCtJLcpLzFFi42LZduznOd1Vzo5xBhc+yFmsvtvPZrFn0SQm
+        i2M7HjE5MHtcPlvqsfl0tcfnTXIBzFFcNimpOZllqUX6dglcGYdWdTMWnNCt6J20hrWB8ZhK
+        FyMnh4SAicTiiwfYuxi5OIQEVjBKfHq2nQnC+cIoMXnxVSjnM6PEnkl97DAtB758YINILGeU
+        WDRrPTOE85ZR4sS2bYwgVcICrhIfz/5hArFFBJQkPrYfAutmFrCWmL14PVicTcBKYmL7KrB6
+        XgE7ic8PF7OC2CwCqhJ31p9hAbFFBSIkPj04zApRIyhxcuYTsDingLHEjTv32CBmikvcejKf
+        CcKWl9j+dg7YQRICzewSz95NZYM420Vi7etNLBC2sMSr41ug3pGR+L9zPhNEwzpGib8dL6C6
+        tzNKLJ/8D6rbWuLOuV9ANgfQCk2J9bv0IcKOEtMn3GAHCUsI8EnceCsIcQSfxKRt05khwrwS
+        HW1CENVqEhuWbWCDWdu1cyXzBEalWUhem4XknVlI3pmFsHcBI8sqRvHU0uLc9NRi47zUcr3i
+        xNzi0rx0veT83E2MwDRy+t/xrzsY9/1JOsQowMGoxMM7w9EhTog1say4MvcQowQHs5IIr6W0
+        Y5wQb0piZVVqUX58UWlOavEhRmkOFiVxXuNFL2OFBNITS1KzU1MLUotgskwcnFINjPt+vOh/
+        czfN3Oid3qcbPYWyrIGXJ5usmnuitJSledsXrnDZ5b1ql9c+XFQwy/KkLW/H3xlT3hp+Wuvm
+        /qM5Yi1H3fI4Fau9eqs+6TvkXxUwy1f6xhTn6LQsyln+T0WvVHqI6cZa1RnRPFqtoTKL/D82
+        hXKsv/uxINw2dtOh6MqoG5cZ0vXzlFiKMxINtZiLihMBx+/LnB8DAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprDIsWRmVeSWpSXmKPExsVy+t/xu7qrnB3jDFqfclisvtvPZrFn0SQm
+        i2M7HjE5MHtcPlvqsfl0tcfnTXIBzFF6NkX5pSWpChn5xSW2StGGFkZ6hpYWekYmlnqGxuax
+        VkamSvp2NimpOZllqUX6dgl6GYdWdTMWnNCt6J20hrWB8ZhKFyMnh4SAicSBLx/YQGwhgaWM
+        EhebgGwOoLiMxPH1ZRAlwhJ/rnUBhbmASl4zStz+1g5WLyzgKvHx7B8mEFtEQEniY/shdhCb
+        WcBaYvbi9UwQDesZJa5s2AlWxCZgJTGxfRUjiM0rYCfx+eFiVhCbRUBV4s76MywgtqhAhMTh
+        HbOgagQlTs58AhbnFDCWuHHnHhvEAnWJP/MuMUPY4hK3nsxngrDlJba/ncM8gVFoFpL2WUha
+        ZiFpmYWkZQEjyypGkdTS4tz03GJDveLE3OLSvHS95PzcTYzAmNl27OfmHYyXNgYfYhTgYFTi
+        4XWwd4gTYk0sK67MPcQowcGsJMJrKe0YJ8SbklhZlVqUH19UmpNafIjRFOi5icxSosn5wHjO
+        K4k3NDU0t7A0NDc2NzazUBLn7RA4GCMkkJ5YkpqdmlqQWgTTx8TBKdXAqKVzq/8Mf56t2lq9
+        M28FLn5IviczYXekikBp655Jbq9EEnyMDl08xO61LPvQ5bc6Ki/7HjjMe/PmQOZ/+zehMkFr
+        e/ev8QucHbFXtfPhh6TAbf/yYqaqHXkhdrCfYdL3lfZeVtLZD7bJH1i878ec2jPSkRsuNSvc
+        nmpXfrLiyDNOGd13j+d8uKTEUpyRaKjFXFScCADjYN/MrwIAAA==
+X-CMS-MailID: 20200210115106eucas1p2f9a0a24206a45365de9835771b2d7a8c
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200207142751eucas1p2499d9a7ebbca93fff43c47629ba8b6ce
+X-RootMTR: 20200204165609eucas1p1c43442d85f050cdce16537b11878f8b1
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20200207142751eucas1p2499d9a7ebbca93fff43c47629ba8b6ce
-References: <CGME20200207142751eucas1p2499d9a7ebbca93fff43c47629ba8b6ce@eucas1p2.samsung.com>
+X-CMS-RootMailID: 20200204165609eucas1p1c43442d85f050cdce16537b11878f8b1
+References: <20200204165547.115220-1-hare@suse.de>
+        <CGME20200204165609eucas1p1c43442d85f050cdce16537b11878f8b1@eucas1p1.samsung.com>
+        <20200204165547.115220-3-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi,
 
-There have been reports in the past of libata core code size
-being a problem in migration from deprecated IDE subsystem on
-legacy PATA only systems, i.e.:
+On 2/4/20 5:55 PM, Hannes Reinecke wrote:
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-https://lore.kernel.org/linux-ide/db2838b7-4862-785b-3a1d-3bf09811340a@gmail.com/
-
-This patchset re-organizes libata core code to exclude SATA
-specific code from being built for PATA only setups.
-
-The end result is up to 20% (by 20429 bytes, from 101787 bytes to
-81358 bytes) smaller libata core code size (as measured for m68k
-arch using modified atari_defconfig) on affected setups.
-
-I've tested this patchset using pata_falcon driver under ARAnyM
-emulator.
-
-
-patches #1-10 are general fixes/cleanups done in the process of
-making the patchset (there should be no inter-dependencies between
-them except patch #9 which depends on patch #8)
-
-patch #11 separates PATA timings code to libata-pata-timings.c file
-
-patches #12-14 let compiler optimize out SATA specific code on
-non-SATA hosts by adding !IS_ENABLED(CONFIG_SATA_HOST) instances
-
-patches #15-21 separate SATA only code from libata-core.c file to
-libata-sata.c one
-
-patches #22-23 separate SATA only code from libata-scsi.c file to
-libata-sata.c one
-
-patches #24-25 separate SATA only code from libata-eh.c file to
-libata-sata.c one
-
-patch #26 makes "libata.force" kernel parameter optional
-
-
-Changes since v1
-(https://lore.kernel.org/linux-ide/20200128133343.29905-1-b.zolnierkie@samsung.com/):
-- added Acked-by: tag from Tejun to "ata: remove stale maintainership
-  information from core code" patch
-- added Reviewed-by: tag from Martin to "ata: make SATA_PMP option
-  selectable only if any SATA host driver is enabled" patch
-- added Reviewed-by: tag from Christoph to following patches:
-  - "ata: simplify ata_scsiop_inq_89()"
-  - "ata: use COMMAND_LINE_SIZE for ata_force_param_buf[] size"
-  - "ata: optimize struct ata_force_param size"
-  - "ata: move EXPORT_SYMBOL_GPL()s close to exported code"
-  - "ata: remove EXPORT_SYMBOL_GPL()s not used by modules"
-- converted "ata: add CONFIG_SATA_HOST=n version of ata_ncq_enabled()"
-  patch to use IS_ENABLED()
-- added "ata: let compiler optimize out ata_dev_config_ncq() on
-  non-SATA hosts" and "ata: let compiler optimize out ata_eh_set_lpm()
-  on non-SATA hosts" patches
-- moved "ata: move sata_scr_*() to libata-core-sata.c" patch just
-  after "ata: start separating SATA specific code from libata-core.c"
-  one
-- dropped no longer needed patches (code savings <= 8 bytes):
-  - "ata: move ata_do_link_spd_horkage() to libata-core-sata.c"
-  - "ata: move ata_dev_config_ncq*() to libata-core-sata.c"
-  - "ata: move sata_print_link_status() to libata-core-sata.c"
-  - "ata: move sata_down_spd_limit() to libata-core-sata.c"
-  - "ata: move sata_link_init_spd() to libata-core-sata.c"
-  - "ata: move ata_eh_set_lpm() to libata-core-sata.c"
-- removed superfluos ifdefs
-- dropped file names in top of file headers
-- merged libata-scsi-sata.c and libata-eh-sata.c into libata-sata.c
-- emphasised in patch descriptions that atari_defconfig used for
-  measurements has been modified (original one is still using
-  deprecated IDE subsystem)
-- added "ata: make "libata.force" kernel parameter optional" patch
+Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
 Best regards,
 --
@@ -188,52 +119,127 @@ Bartlomiej Zolnierkiewicz
 Samsung R&D Institute Poland
 Samsung Electronics
 
-Bartlomiej Zolnierkiewicz (26):
-  ata: remove stale maintainership information from core code
-  ata: expose ncq_enable_prio sysfs attribute only on NCQ capable hosts
-  ata: make SATA_PMP option selectable only if any SATA host driver is
-    enabled
-  sata_promise: use ata_cable_sata()
-  ata: simplify ata_scsiop_inq_89()
-  ata: use COMMAND_LINE_SIZE for ata_force_param_buf[] size
-  ata: optimize struct ata_force_param size
-  ata: move EXPORT_SYMBOL_GPL()s close to exported code
-  ata: remove EXPORT_SYMBOL_GPL()s not used by modules
-  ata: fix CodingStyle issues in PATA timings code
-  ata: separate PATA timings code from libata-core.c
-  ata: add CONFIG_SATA_HOST=n version of ata_ncq_enabled()
-  ata: let compiler optimize out ata_dev_config_ncq() on non-SATA hosts
-  ata: let compiler optimize out ata_eh_set_lpm() on non-SATA hosts
-  ata: start separating SATA specific code from libata-core.c
-  ata: move sata_scr_*() to libata-sata.c
-  ata: move *sata_set_spd*() to libata-sata.c
-  ata: move sata_link_{debounce,resume}() to libata-sata.c
-  ata: move sata_link_hardreset() to libata-sata.c
-  ata: move ata_qc_complete_multiple() to libata-sata.c
-  ata: move sata_deb_timing_*() to libata-sata.c
-  ata: start separating SATA specific code from libata-scsi.c
-  ata: move ata_sas_*() to libata-sata.c
-  ata: start separating SATA specific code from libata-eh.c
-  ata: move ata_eh_analyze_ncq_error() & co. to libata-sata.c
-  ata: make "libata.force" kernel parameter optional
-
- drivers/ata/Kconfig               |   77 ++
- drivers/ata/Makefile              |    2 +
- drivers/ata/libata-core.c         | 1124 ++--------------------
- drivers/ata/libata-eh.c           |  224 +----
- drivers/ata/libata-pata-timings.c |  192 ++++
- drivers/ata/libata-sata.c         | 1483 +++++++++++++++++++++++++++++
- drivers/ata/libata-scsi.c         |  542 +----------
- drivers/ata/libata-sff.c          |    4 -
- drivers/ata/libata.h              |   25 +-
- drivers/ata/sata_promise.c        |    8 +-
- drivers/scsi/Kconfig              |    1 +
- drivers/scsi/libsas/Kconfig       |    1 +
- include/linux/libata.h            |  163 ++--
- 13 files changed, 2007 insertions(+), 1839 deletions(-)
- create mode 100644 drivers/ata/libata-pata-timings.c
- create mode 100644 drivers/ata/libata-sata.c
-
--- 
-2.24.1
-
+> ---
+>  include/linux/libata.h | 41 ++++++++++++++++++++++++++---------------
+>  1 file changed, 26 insertions(+), 15 deletions(-)
+> 
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index bd78646f88a0..19c9c32bd339 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -593,7 +593,7 @@ struct ata_ioports {
+>  
+>  struct ata_host {
+>  	spinlock_t		lock;
+> -	struct device 		*dev;
+> +	struct device		*dev;
+>  	void __iomem * const	*iomap;
+>  	unsigned int		n_ports;
+>  	unsigned int		n_tags;			/* nr of NCQ tags */
+> @@ -813,7 +813,7 @@ struct ata_port {
+>  	/* Flags that change dynamically, protected by ap->lock */
+>  	unsigned int		pflags; /* ATA_PFLAG_xxx */
+>  	unsigned int		print_id; /* user visible unique port ID */
+> -	unsigned int            local_port_no; /* host local port num */
+> +	unsigned int		local_port_no; /* host local port num */
+>  	unsigned int		port_no; /* 0 based port no. inside the host */
+>  
+>  #ifdef CONFIG_ATA_SFF
+> @@ -848,7 +848,7 @@ struct ata_port {
+>  
+>  	struct ata_port_stats	stats;
+>  	struct ata_host		*host;
+> -	struct device 		*dev;
+> +	struct device		*dev;
+>  	struct device		tdev;
+>  
+>  	struct mutex		scsi_scan_mutex;
+> @@ -900,11 +900,14 @@ struct ata_port_operations {
+>  	 * Configuration and exception handling
+>  	 */
+>  	int  (*cable_detect)(struct ata_port *ap);
+> -	unsigned long (*mode_filter)(struct ata_device *dev, unsigned long xfer_mask);
+> +	unsigned long (*mode_filter)(struct ata_device *dev,
+> +				     unsigned long xfer_mask);
+>  	void (*set_piomode)(struct ata_port *ap, struct ata_device *dev);
+>  	void (*set_dmamode)(struct ata_port *ap, struct ata_device *dev);
+> -	int  (*set_mode)(struct ata_link *link, struct ata_device **r_failed_dev);
+> -	unsigned int (*read_id)(struct ata_device *dev, struct ata_taskfile *tf, u16 *id);
+> +	int  (*set_mode)(struct ata_link *link,
+> +			 struct ata_device **r_failed_dev);
+> +	unsigned int (*read_id)(struct ata_device *dev,
+> +				struct ata_taskfile *tf, u16 *id);
+>  
+>  	void (*dev_config)(struct ata_device *dev);
+>  
+> @@ -999,7 +1002,7 @@ struct ata_port_info {
+>  	unsigned long		mwdma_mask;
+>  	unsigned long		udma_mask;
+>  	struct ata_port_operations *port_ops;
+> -	void 			*private_data;
+> +	void			*private_data;
+>  };
+>  
+>  struct ata_timing {
+> @@ -1103,7 +1106,8 @@ extern int ata_host_activate(struct ata_host *host, int irq,
+>  			     irq_handler_t irq_handler, unsigned long irq_flags,
+>  			     struct scsi_host_template *sht);
+>  extern void ata_host_detach(struct ata_host *host);
+> -extern void ata_host_init(struct ata_host *, struct device *, struct ata_port_operations *);
+> +extern void ata_host_init(struct ata_host *, struct device *,
+> +			  struct ata_port_operations *);
+>  extern int ata_scsi_detect(struct scsi_host_template *sht);
+>  extern int ata_scsi_ioctl(struct scsi_device *dev, unsigned int cmd,
+>  			  void __user *arg);
+> @@ -1117,7 +1121,8 @@ extern int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *dev,
+>  			    unsigned int cmd, void __user *arg);
+>  extern void ata_sas_port_destroy(struct ata_port *);
+>  extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
+> -					   struct ata_port_info *, struct Scsi_Host *);
+> +					   struct ata_port_info *,
+> +					   struct Scsi_Host *);
+>  extern void ata_sas_async_probe(struct ata_port *ap);
+>  extern int ata_sas_sync_probe(struct ata_port *ap);
+>  extern int ata_sas_port_init(struct ata_port *);
+> @@ -1188,12 +1193,17 @@ extern int ata_scsi_slave_config(struct scsi_device *sdev);
+>  extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
+>  extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
+>  				       int queue_depth);
+> -extern int __ata_change_queue_depth(struct ata_port *ap, struct scsi_device *sdev,
+> +extern int __ata_change_queue_depth(struct ata_port *ap,
+> +				    struct scsi_device *sdev,
+>  				    int queue_depth);
+>  extern struct ata_device *ata_dev_pair(struct ata_device *adev);
+> -extern int ata_do_set_mode(struct ata_link *link, struct ata_device **r_failed_dev);
+> -extern void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap);
+> -extern void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap, struct list_head *eh_q);
+> +extern int ata_do_set_mode(struct ata_link *link,
+> +			   struct ata_device **r_failed_dev);
+> +extern void ata_scsi_port_error_handler(struct Scsi_Host *host,
+> +					struct ata_port *ap);
+> +extern void ata_scsi_cmd_error_handler(struct Scsi_Host *host,
+> +				       struct ata_port *ap,
+> +				       struct list_head *eh_q);
+>  extern bool sata_lpm_ignore_phy_events(struct ata_link *link);
+>  
+>  extern int ata_cable_40wire(struct ata_port *ap);
+> @@ -1223,7 +1233,8 @@ struct pci_bits {
+>  	unsigned long		val;
+>  };
+>  
+> -extern int pci_test_config_bits(struct pci_dev *pdev, const struct pci_bits *bits);
+> +extern int pci_test_config_bits(struct pci_dev *pdev,
+> +				const struct pci_bits *bits);
+>  extern void ata_pci_remove_one(struct pci_dev *pdev);
+>  
+>  #ifdef CONFIG_PM
+> @@ -1496,7 +1507,7 @@ static inline bool ata_tag_valid(unsigned int tag)
+>   * Internal use only, iterate commands ignoring error handling and
+>   * status of 'qc'.
+>   */
+> -#define ata_qc_for_each_raw(ap, qc, tag)					\
+> +#define ata_qc_for_each_raw(ap, qc, tag)			\
+>  	__ata_qc_for_each(ap, qc, tag, ATA_MAX_QUEUE, __ata_qc_from_tag)
+>  
+>  /*
+> 
