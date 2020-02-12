@@ -2,38 +2,34 @@ Return-Path: <SRS0=BUdv=4A=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1690C2BA83
-	for <linux-ide@archiver.kernel.org>; Wed, 12 Feb 2020 11:56:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F1B1C2BA83
+	for <linux-ide@archiver.kernel.org>; Wed, 12 Feb 2020 12:09:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9327E2073C
-	for <linux-ide@archiver.kernel.org>; Wed, 12 Feb 2020 11:56:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59CCA20714
+	for <linux-ide@archiver.kernel.org>; Wed, 12 Feb 2020 12:09:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728237AbgBLL4M convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 12 Feb 2020 06:56:12 -0500
-Received: from eu-smtp-delivery-151.mimecast.com ([146.101.78.151]:29422 "EHLO
-        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728363AbgBLL4M (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 12 Feb 2020 06:56:12 -0500
-Received: from AcuMS.aculab.com (156.67.243.126 [156.67.243.126]) (Using
- TLS) by relay.mimecast.com with ESMTP id
- uk-mta-27-6s1ADMqVNEa4MBw75WIRIA-1; Wed, 12 Feb 2020 11:56:07 +0000
-Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) by
- AcuMS.aculab.com (fd9f:af1c:a25b:0:43c:695e:880f:8750) with Microsoft SMTP
- Server (TLS) id 15.0.1347.2; Wed, 12 Feb 2020 11:56:06 +0000
-Received: from AcuMS.Aculab.com ([fe80::43c:695e:880f:8750]) by
- AcuMS.aculab.com ([fe80::43c:695e:880f:8750%12]) with mapi id 15.00.1347.000;
- Wed, 12 Feb 2020 11:56:06 +0000
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     'Robin Murphy' <robin.murphy@arm.com>,
+        id S1727761AbgBLMJu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 12 Feb 2020 07:09:50 -0500
+Received: from foss.arm.com ([217.140.110.172]:60372 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727041AbgBLMJu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 12 Feb 2020 07:09:50 -0500
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 271F930E;
+        Wed, 12 Feb 2020 04:09:50 -0800 (PST)
+Received: from [192.168.1.123] (unknown [172.31.20.19])
+        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 44B4C3F6CF;
+        Wed, 12 Feb 2020 04:09:48 -0800 (PST)
+Subject: Re: [PATCH] ata: ahci_platform: add 32-bit quirk for dwc-ahci
+To:     David Laight <David.Laight@ACULAB.COM>,
         Hans de Goede <hdegoede@redhat.com>,
         Roger Quadros <rogerq@ti.com>,
         "axboe@kernel.dk" <axboe@kernel.dk>
-CC:     "vigneshr@ti.com" <vigneshr@ti.com>,
+Cc:     "vigneshr@ti.com" <vigneshr@ti.com>,
         "nsekhar@ti.com" <nsekhar@ti.com>,
         "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
@@ -42,60 +38,58 @@ CC:     "vigneshr@ti.com" <vigneshr@ti.com>,
         Rob Herring <robh+dt@kernel.org>,
         "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
         Kishon Vijay Abraham I <kishon@ti.com>,
-        =?iso-8859-1?Q?P=E9ter_Ujfalusi?= <peter.ujfalusi@ti.com>
-Subject: RE: [PATCH] ata: ahci_platform: add 32-bit quirk for dwc-ahci
-Thread-Topic: [PATCH] ata: ahci_platform: add 32-bit quirk for dwc-ahci
-Thread-Index: AQHV4Zmb/DqkVgCd3ECs486jc5D8CqgXcftg
-Date:   Wed, 12 Feb 2020 11:56:06 +0000
-Message-ID: <2a527d21087b4f959c7f95895d70b669@AcuMS.aculab.com>
+        =?UTF-8?Q?P=c3=a9ter_Ujfalusi?= <peter.ujfalusi@ti.com>
 References: <20200206111728.6703-1-rogerq@ti.com>
  <d3a80407-a40a-c9e4-830f-138cfe9b163c@redhat.com>
  <1c3ec10c-8505-a067-d51d-667f47d8d55b@ti.com>
  <37c3ca6a-dc64-9ce9-e43b-03b12da6325e@redhat.com>
  <7e5f503f-03df-29d0-baae-af12d0af6f61@arm.com>
-In-Reply-To: <7e5f503f-03df-29d0-baae-af12d0af6f61@arm.com>
-Accept-Language: en-GB, en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
+ <2a527d21087b4f959c7f95895d70b669@AcuMS.aculab.com>
+From:   Robin Murphy <robin.murphy@arm.com>
+Message-ID: <2f82cd89-a1c2-cf47-97df-3acac0798c85@arm.com>
+Date:   Wed, 12 Feb 2020 12:09:49 +0000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.2
 MIME-Version: 1.0
-X-MC-Unique: 6s1ADMqVNEa4MBw75WIRIA-1
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: aculab.com
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+In-Reply-To: <2a527d21087b4f959c7f95895d70b669@AcuMS.aculab.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Robin Murphy
-> Sent: 12 February 2020 11:43
-...
-> If the device *is* inherently 64-bit capable, then setting 64-bit masks
-> in the driver is correct - if a 64-bit IP block happens to have been
-> integrated with only 32 address bits wired up, but the system has memory
-> above the 32-bit boundary, then that should be described via
-> "dma-ranges", which should then end up being used to further constrain
-> the device masks internally to the DMA API.
+On 2020-02-12 11:56 am, David Laight wrote:
+> From: Robin Murphy
+>> Sent: 12 February 2020 11:43
+> ...
+>> If the device *is* inherently 64-bit capable, then setting 64-bit masks
+>> in the driver is correct - if a 64-bit IP block happens to have been
+>> integrated with only 32 address bits wired up, but the system has memory
+>> above the 32-bit boundary, then that should be described via
+>> "dma-ranges", which should then end up being used to further constrain
+>> the device masks internally to the DMA API.
+> 
+> Given how often this happens (please can I shoot some more
+> hardware engineers - he says while compiling some VHDL)
+> is it possible to allocate some memory pages that are
+> aliases if the address bits over 31 are ignored?
+> 
+> Then (at least some) drivers could to a run-time probe
+> reading to the high address and checking the data didn't
+> appear in the low address.
+> 
+> Only one such set of pages is needed - access can be locked.
+> But they'd need to be reserved early on.
 
-Given how often this happens (please can I shoot some more
-hardware engineers - he says while compiling some VHDL)
-is it possible to allocate some memory pages that are
-aliases if the address bits over 31 are ignored?
+(Oh, for that much control over page allocation!)
 
-Then (at least some) drivers could to a run-time probe
-reading to the high address and checking the data didn't
-appear in the low address.
+It's a fun idea, but there's no guarantee that the platform memory map 
+is actually suitable (AMD Seattle is the go-to counterexample), and 
+having an opt-in test that every driver has to implement individually 
+sounds like a maintenance nightmare. I think it's far better all round 
+to just expect the firmware-provided machine description - be it 
+devicetree, ACPI, or whatever - to correctly describe the integration.
 
-Only one such set of pages is needed - access can be locked.
-But they'd need to be reserved early on.
-
-	David
-
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
-
+Robin.
