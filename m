@@ -2,165 +2,175 @@ Return-Path: <SRS0=BUdv=4A=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D15BCC2BA83
-	for <linux-ide@archiver.kernel.org>; Wed, 12 Feb 2020 10:11:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BEAFC2BA83
+	for <linux-ide@archiver.kernel.org>; Wed, 12 Feb 2020 11:01:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AE8E32073C
-	for <linux-ide@archiver.kernel.org>; Wed, 12 Feb 2020 10:11:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E04E20675
+	for <linux-ide@archiver.kernel.org>; Wed, 12 Feb 2020 11:01:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="Vco7dHic"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727743AbgBLKLH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 12 Feb 2020 05:11:07 -0500
-Received: from mx2.suse.de ([195.135.220.15]:46612 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727910AbgBLKLG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 12 Feb 2020 05:11:06 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id BED63ACCE;
-        Wed, 12 Feb 2020 10:11:03 +0000 (UTC)
-Subject: Re: [PATCH 14/46] libata: add reset tracepoints
-To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
-References: <20200204165547.115220-1-hare@suse.de>
- <CGME20200204165612eucas1p27b387db5137925e140ad53712a5af2d9@eucas1p2.samsung.com>
- <20200204165547.115220-15-hare@suse.de>
- <a9df9616-03c7-48bb-026a-e99cbef5ad44@samsung.com>
-From:   Hannes Reinecke <hare@suse.de>
-Openpgp: preference=signencrypt
-Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
- 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
- azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <d4c24ed9-42f9-c55c-8d80-b5f573da04ab@suse.de>
-Date:   Wed, 12 Feb 2020 11:11:03 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.7.2
+        id S1727279AbgBLLBr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 12 Feb 2020 06:01:47 -0500
+Received: from fllv0016.ext.ti.com ([198.47.19.142]:54586 "EHLO
+        fllv0016.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727007AbgBLLBq (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 12 Feb 2020 06:01:46 -0500
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 01CB1bdO061311;
+        Wed, 12 Feb 2020 05:01:37 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1581505297;
+        bh=V0cNRr6nMfebDwQ1Gji0eIn7moZlgt46XRlYG9hjkd4=;
+        h=Subject:To:CC:References:From:Date:In-Reply-To;
+        b=Vco7dHicYxB7mfj5Soxbrl92Azfqsz+llyU8Jba5IXt81AyX7xYDshilWIgfKvqi9
+         mN05xnujwaQJlCgCcSKdS+U3op8nRvNMAqCYSYH3zDVfwQyyeGfyJlWp7qGH41nrUD
+         VBfAW2CB3RNEsR/dvTL7N6mCvWm62qkgcuNggLj0=
+Received: from DLEE107.ent.ti.com (dlee107.ent.ti.com [157.170.170.37])
+        by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 01CB1bkv031866
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 12 Feb 2020 05:01:37 -0600
+Received: from DLEE109.ent.ti.com (157.170.170.41) by DLEE107.ent.ti.com
+ (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3; Wed, 12
+ Feb 2020 05:01:35 -0600
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DLEE109.ent.ti.com
+ (157.170.170.41) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1847.3 via
+ Frontend Transport; Wed, 12 Feb 2020 05:01:35 -0600
+Received: from [192.168.2.14] (ileax41-snat.itg.ti.com [10.172.224.153])
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 01CB1WXq116272;
+        Wed, 12 Feb 2020 05:01:33 -0600
+Subject: Re: [PATCH] ata: ahci_platform: add 32-bit quirk for dwc-ahci
+To:     Hans de Goede <hdegoede@redhat.com>, <axboe@kernel.dk>
+CC:     <vigneshr@ti.com>, <nsekhar@ti.com>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>,
+        <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
+        Rob Herring <robh+dt@kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        =?UTF-8?Q?P=c3=a9ter_Ujfalusi?= <peter.ujfalusi@ti.com>
+References: <20200206111728.6703-1-rogerq@ti.com>
+ <d3a80407-a40a-c9e4-830f-138cfe9b163c@redhat.com>
+From:   Roger Quadros <rogerq@ti.com>
+Message-ID: <1c3ec10c-8505-a067-d51d-667f47d8d55b@ti.com>
+Date:   Wed, 12 Feb 2020 13:01:32 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-In-Reply-To: <a9df9616-03c7-48bb-026a-e99cbef5ad44@samsung.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <d3a80407-a40a-c9e4-830f-138cfe9b163c@redhat.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/10/20 2:42 PM, Bartlomiej Zolnierkiewicz wrote:
+Hi,
+
+On 06/02/2020 13:50, Hans de Goede wrote:
+> Hi,
 > 
-> On 2/4/20 5:55 PM, Hannes Reinecke wrote:
->> To follow the flow of control we should be using tracepoints, as
->> they will tie in with the actual I/O flow and deliver a better
->> overview about what it happening.
->> This patch adds tracepoints for hard and soft reset and adds
->> them in the libata-eh control flow.
+> On 2/6/20 12:17 PM, Roger Quadros wrote:
+>> On TI Platforms using LPAE, SATA breaks with 64-bit DMA.
+>> Restrict it to 32-bit.
 >>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> Cc: stable@vger.kernel.org
+>> Signed-off-by: Roger Quadros <rogerq@ti.com>
+>> ---
+>> † drivers/ata/ahci_platform.c | 3 +++
+>> † 1 file changed, 3 insertions(+)
+>>
+>> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+>> index 3aab2e3d57f3..b925dc54cfa5 100644
+>> --- a/drivers/ata/ahci_platform.c
+>> +++ b/drivers/ata/ahci_platform.c
+>> @@ -62,6 +62,9 @@ static int ahci_probe(struct platform_device *pdev)
+>> ††††† if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
+>> ††††††††† hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
+>> +††† if (of_device_is_compatible(dev->of_node, "snps,dwc-ahci"))
+>> +††††††† hpriv->flags |= AHCI_HFLAG_32BIT_ONLY;
+>> +
 > 
-> checkpatch.pl complains about CodingStyle issues:
+> The "snps,dwc-ahci" is a generic (non TI specific) compatible which
+> is e.g. also used on some exynos devices. So using that to key the
+> setting of the 32 bit flag seems wrong to me.
 > 
-> WARNING: line over 80 characters
-> #164: FILE: include/trace/events/libata.h:350:
-> +       TP_PROTO(struct ata_link *link, unsigned int *class, unsigned long deadline),
-> 
-> ERROR: space prohibited after that open parenthesis '('
-> #169: FILE: include/trace/events/libata.h:355:
-> +               __field( unsigned int,  ata_port )
-> 
-> ERROR: space prohibited before that close parenthesis ')'
-> #169: FILE: include/trace/events/libata.h:355:
-> +               __field( unsigned int,  ata_port )
-> 
-> ERROR: space prohibited after that open parenthesis '('
-> #170: FILE: include/trace/events/libata.h:356:
-> +               __array( unsigned int,  class, 2)
-> 
-> ERROR: space prohibited after that open parenthesis '('
-> #171: FILE: include/trace/events/libata.h:357:
-> +               __field( unsigned long, deadline)
-> 
-> WARNING: line over 80 characters
-> #187: FILE: include/trace/events/libata.h:373:
-> +            TP_PROTO(struct ata_link *link, unsigned int *class, unsigned long deadline),
-> 
-> WARNING: line over 80 characters
-> #191: FILE: include/trace/events/libata.h:377:
-> +            TP_PROTO(struct ata_link *link, unsigned int *class, unsigned long deadline),
-> 
-> WARNING: line over 80 characters
-> #195: FILE: include/trace/events/libata.h:381:
-> +            TP_PROTO(struct ata_link *link, unsigned int *class, unsigned long deadline),
-> 
-> ERROR: space prohibited after that open parenthesis '('
-> #205: FILE: include/trace/events/libata.h:391:
-> +               __field( unsigned int,  ata_port )
-> 
-> ERROR: space prohibited before that close parenthesis ')'
-> #205: FILE: include/trace/events/libata.h:391:
-> +               __field( unsigned int,  ata_port )
-> 
-> ERROR: space prohibited after that open parenthesis '('
-> #206: FILE: include/trace/events/libata.h:392:
-> +               __array( unsigned int,  class, 2)
-> 
-> ERROR: space prohibited after that open parenthesis '('
-> #207: FILE: include/trace/events/libata.h:393:
-> +               __field( int,           rc)
-> 
-> Otherwise the patch looks fine.
-> 
-[ .. ]
-This is just following the existing coding style used in the trace event
-declaration. Seeing that tracepoint generation is quite black magic in
-itself I'd rather keep it in-line with the rest of the header file.
+> IMHO it would be better to introduce a TI specific compatible
+> and use that to match on instead (and also adjust the dts files
+> accordingly).
 
-Cheers,
+Thinking further on this I think it is a bad idea to add a special
+binding because the IP is not different. It is just that it is
+wired differently on the TI SoC so DMA range is limited.
 
-Hannes
+IMO the proper solution is to have the right dma-ranges property in the
+device tree. However, SATA platform driver is doing the wrong thing
+by overriding the dma masks.
+i.e. in ahci_platform_init_host() in libahci_platform.c
+
+         if (hpriv->cap & HOST_CAP_64) {
+                 rc = dma_coerce_mask_and_coherent(dev, DMA_BIT_MASK(64));
+                 if (rc) {
+                         rc = dma_coerce_mask_and_coherent(dev,
+                                                           DMA_BIT_MASK(32));
+                         if (rc) {
+                                 dev_err(dev, "Failed to enable 64-bit DMA.\n");
+                                 return rc;
+                         }
+                         dev_warn(dev, "Enable 32-bit DMA instead of 64-bit.\n");
+                 }
+         }
+
+This should be removed. Do you agree?
+
+You can also see a similar in ahci_configure_dma_masks() with the XXX disclaimer
+explaining that it is wrong.
+
+static int ahci_configure_dma_masks(struct pci_dev *pdev, int using_dac)
+{
+         const int dma_bits = using_dac ? 64 : 32;
+         int rc;
+
+         /*
+          * If the device fixup already set the dma_mask to some non-standard
+          * value, don't extend it here. This happens on STA2X11, for example.
+          *
+          * XXX: manipulating the DMA mask from platform code is completely
+          * bogus, platform code should use dev->bus_dma_limit instead..
+          */
+         if (pdev->dma_mask && pdev->dma_mask < DMA_BIT_MASK(32))
+                 return 0;
+
+         rc = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(dma_bits));
+         if (rc)
+                 dev_err(&pdev->dev, "DMA enable failed\n");
+         return rc;
+}
+
+
+> 
+> Regards,
+> 
+> Hans
+> 
+> 
+> 
+>> ††††† port = acpi_device_get_match_data(dev);
+>> ††††† if (!port)
+>> ††††††††† port = &ahci_port_info;
+>>
+> 
+
 -- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 N√ºrnberg
-HRB 36809 (AG N√ºrnberg), GF: Felix Imend√∂rffer
+cheers,
+-roger
+Texas Instruments Finland Oy, Porkkalankatu 22, 00180 Helsinki.
+Y-tunnus/Business ID: 0615521-4. Kotipaikka/Domicile: Helsinki
