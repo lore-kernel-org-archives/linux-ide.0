@@ -1,95 +1,134 @@
-Return-Path: <SRS0=BUdv=4A=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=vWVy=4B=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F1B1C2BA83
-	for <linux-ide@archiver.kernel.org>; Wed, 12 Feb 2020 12:09:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD5BCC2BA83
+	for <linux-ide@archiver.kernel.org>; Thu, 13 Feb 2020 07:15:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 59CCA20714
-	for <linux-ide@archiver.kernel.org>; Wed, 12 Feb 2020 12:09:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0CB62168B
+	for <linux-ide@archiver.kernel.org>; Thu, 13 Feb 2020 07:15:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727761AbgBLMJu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 12 Feb 2020 07:09:50 -0500
-Received: from foss.arm.com ([217.140.110.172]:60372 "EHLO foss.arm.com"
+        id S1729757AbgBMHP6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 13 Feb 2020 02:15:58 -0500
+Received: from mx2.suse.de ([195.135.220.15]:47090 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727041AbgBLMJu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 12 Feb 2020 07:09:50 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 271F930E;
-        Wed, 12 Feb 2020 04:09:50 -0800 (PST)
-Received: from [192.168.1.123] (unknown [172.31.20.19])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 44B4C3F6CF;
-        Wed, 12 Feb 2020 04:09:48 -0800 (PST)
-Subject: Re: [PATCH] ata: ahci_platform: add 32-bit quirk for dwc-ahci
-To:     David Laight <David.Laight@ACULAB.COM>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Roger Quadros <rogerq@ti.com>,
-        "axboe@kernel.dk" <axboe@kernel.dk>
-Cc:     "vigneshr@ti.com" <vigneshr@ti.com>,
-        "nsekhar@ti.com" <nsekhar@ti.com>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Rob Herring <robh+dt@kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        =?UTF-8?Q?P=c3=a9ter_Ujfalusi?= <peter.ujfalusi@ti.com>
-References: <20200206111728.6703-1-rogerq@ti.com>
- <d3a80407-a40a-c9e4-830f-138cfe9b163c@redhat.com>
- <1c3ec10c-8505-a067-d51d-667f47d8d55b@ti.com>
- <37c3ca6a-dc64-9ce9-e43b-03b12da6325e@redhat.com>
- <7e5f503f-03df-29d0-baae-af12d0af6f61@arm.com>
- <2a527d21087b4f959c7f95895d70b669@AcuMS.aculab.com>
-From:   Robin Murphy <robin.murphy@arm.com>
-Message-ID: <2f82cd89-a1c2-cf47-97df-3acac0798c85@arm.com>
-Date:   Wed, 12 Feb 2020 12:09:49 +0000
-User-Agent: Mozilla/5.0 (Windows NT 10.0; rv:68.0) Gecko/20100101
- Thunderbird/68.4.2
+        id S1729728AbgBMHP5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 13 Feb 2020 02:15:57 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 90357AE63;
+        Thu, 13 Feb 2020 07:15:55 +0000 (UTC)
+Subject: Re: [PATCH 08/46] libata: Add ata_port_classify() helper
+To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
+References: <20200204165547.115220-1-hare@suse.de>
+ <CGME20200204165612eucas1p28955522b9717c3c135c3e9974404d7d2@eucas1p2.samsung.com>
+ <20200204165547.115220-9-hare@suse.de>
+ <1960187e-257d-bf6b-9531-c3c517e918f6@samsung.com>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <219fef1f-eac8-866e-ab74-77ab07cdf7bd@suse.de>
+Date:   Thu, 13 Feb 2020 08:15:55 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <2a527d21087b4f959c7f95895d70b669@AcuMS.aculab.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-GB
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <1960187e-257d-bf6b-9531-c3c517e918f6@samsung.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2020-02-12 11:56 am, David Laight wrote:
-> From: Robin Murphy
->> Sent: 12 February 2020 11:43
-> ...
->> If the device *is* inherently 64-bit capable, then setting 64-bit masks
->> in the driver is correct - if a 64-bit IP block happens to have been
->> integrated with only 32 address bits wired up, but the system has memory
->> above the 32-bit boundary, then that should be described via
->> "dma-ranges", which should then end up being used to further constrain
->> the device masks internally to the DMA API.
+On 2/10/20 1:44 PM, Bartlomiej Zolnierkiewicz wrote:
 > 
-> Given how often this happens (please can I shoot some more
-> hardware engineers - he says while compiling some VHDL)
-> is it possible to allocate some memory pages that are
-> aliases if the address bits over 31 are ignored?
+> On 2/4/20 5:55 PM, Hannes Reinecke wrote:
+>> Add an ata_port_classify() helper to print out the results from
+>> the device classification and remove the debugging statements
+>> from ata_dev_classify(). Also provide a mapping ata_dev_class_string()
+>> to provide a string representation for those instances calling
+>> ata_dev_classify() directly.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>  drivers/ata/libahci.c       |  2 +-
+>>  drivers/ata/libata-core.c   | 68 ++++++++++++++++++++++++++++++++++-----------
+>>  drivers/ata/libata-sff.c    |  5 ++++
+>>  drivers/ata/sata_fsl.c      |  2 +-
+>>  drivers/ata/sata_inic162x.c |  2 +-
+>>  drivers/ata/sata_sil24.c    |  2 +-
+>>  include/linux/libata.h      |  3 ++
+>>  7 files changed, 64 insertions(+), 20 deletions(-)
+>>
+[ .. ]
+>> @@ -7267,6 +7301,7 @@ EXPORT_SYMBOL_GPL(ata_xfer_mask2mode);
+>>  EXPORT_SYMBOL_GPL(ata_xfer_mode2mask);
+>>  EXPORT_SYMBOL_GPL(ata_xfer_mode2shift);
+>>  EXPORT_SYMBOL_GPL(ata_mode_string);
+>> +EXPORT_SYMBOL_GPL(ata_dev_class_string);
 > 
-> Then (at least some) drivers could to a run-time probe
-> reading to the high address and checking the data didn't
-> appear in the low address.
+> This is not needed currently, please remove it.
 > 
-> Only one such set of pages is needed - access can be locked.
-> But they'd need to be reserved early on.
+Okay, will do.
 
-(Oh, for that much control over page allocation!)
+> Also EXPORT_SYMBOL_GPL() for ata_dev_classify() should be now
+> removed too.
+> 
+No, we can't, as it's being used in drivers/scsi/libsas/sas_ata.c.
 
-It's a fun idea, but there's no guarantee that the platform memory map 
-is actually suitable (AMD Seattle is the go-to counterexample), and 
-having an opt-in test that every driver has to implement individually 
-sounds like a maintenance nightmare. I think it's far better all round 
-to just expect the firmware-provided machine description - be it 
-devicetree, ACPI, or whatever - to correctly describe the integration.
+Cheers,
 
-Robin.
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
