@@ -7,45 +7,46 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C5CAC2BA83
-	for <linux-ide@archiver.kernel.org>; Fri, 14 Feb 2020 17:03:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E8CDC3B1A1
+	for <linux-ide@archiver.kernel.org>; Fri, 14 Feb 2020 17:03:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6CF3C20656
-	for <linux-ide@archiver.kernel.org>; Fri, 14 Feb 2020 17:03:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2C6A2067D
+	for <linux-ide@archiver.kernel.org>; Fri, 14 Feb 2020 17:03:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1581699822;
-	bh=rjrhQW09Vso9tajVY7leCL9tNge/xnc21nLf2tfe578=;
+	s=default; t=1581699828;
+	bh=fwizeftwlR9izkeLredXixUH0zyGGLB15OEPZL7soIU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=HKEYqdoUiA4IuTejxW9K8WxgxdDMgOuPqRHTNCL5jRfGr5cRX9eYbZf/yNv8u6PsB
-	 CeGiJYvTuRb+Lww9OGDYZTJ6TxsMNMVM+oRZEhgJHb3fh8HfWYIO/yYcyG4eoEmN4x
-	 Aw5gH3wEhs71nO28A3IhSo7VpN9/e2wYk0Mg6ZeU=
+	b=JZdtKJbWy4T/S6SjqXk4g6/mSUlvUWx7j67E6w0khBsrqFwffHjWeAoxrg8a4mJEJ
+	 jEwANjAwGOhc6ppoEAi1+l6tzLZY5R5JKlafRCv6JJVlx4s4AlxwPk6NvQXeG0zX6p
+	 t83pHJwEGFjxhdfhngAVp5eYlTeHRXK8aqrWAp44=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390191AbgBNRDj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 14 Feb 2020 12:03:39 -0500
-Received: from mail.kernel.org ([198.145.29.99]:46366 "EHLO mail.kernel.org"
+        id S2403802AbgBNQPu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 14 Feb 2020 11:15:50 -0500
+Received: from mail.kernel.org ([198.145.29.99]:46306 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2403985AbgBNQPv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 14 Feb 2020 11:15:51 -0500
+        id S2392520AbgBNQPt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 14 Feb 2020 11:15:49 -0500
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6E7BA246E0;
-        Fri, 14 Feb 2020 16:15:50 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1BB5A246EA;
+        Fri, 14 Feb 2020 16:15:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1581696951;
-        bh=rjrhQW09Vso9tajVY7leCL9tNge/xnc21nLf2tfe578=;
+        s=default; t=1581696949;
+        bh=fwizeftwlR9izkeLredXixUH0zyGGLB15OEPZL7soIU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OeVKP67ZGAPKIT+Yu0AEXcpaNH3dkTXjFg4vBZZM34Oiv5tO2vUJaxDlQT6U5G26H
-         vOpnlyTlLVK2F+dl08uC4H7sbnpDWHCFsqejN6qDySpF3dVf3j8xW9GtS5ic13uNFS
-         zbMpJ2KwMcaQq4yJkx4N7bkSRQqj7PW3R4WsCq/E=
+        b=kSs44vaQ9x/975PbRAiuAuOPdJiTNiGiNDXVfLRnUSNGhuSmAP/wyGXWWZ/QSDmg1
+         iqAFbukJFy98zaFoKGtWAluHu3VdyjBcem9PtkUvUVjwXOAZqzWaRcOQ0Da44Omoar
+         l8v/ZXbYyUz4yMYwfsq7rr53YRUbAE+l+LbUmrks=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dan Carpenter <dan.carpenter@oracle.com>,
+Cc:     Wang Hai <wanghai38@huawei.com>, Hulk Robot <hulkci@huawei.com>,
         "David S . Miller" <davem@davemloft.net>,
-        Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 192/252] ide: serverworks: potential overflow in svwks_set_pio_mode()
-Date:   Fri, 14 Feb 2020 11:10:47 -0500
-Message-Id: <20200214161147.15842-192-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH AUTOSEL 4.19 190/252] ide: remove set but not used variable 'hwif'
+Date:   Fri, 14 Feb 2020 11:10:45 -0500
+Message-Id: <20200214161147.15842-190-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200214161147.15842-1-sashal@kernel.org>
 References: <20200214161147.15842-1-sashal@kernel.org>
@@ -58,43 +59,46 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
+From: Wang Hai <wanghai38@huawei.com>
 
-[ Upstream commit ce1f31b4c0b9551dd51874dd5364654ed4ca13ae ]
+[ Upstream commit 98949a1946d70771789def0c9dbc239497f9f138 ]
 
-The "drive->dn" variable is a u8 controlled by root.
+Fix the following gcc warning:
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+drivers/ide/pmac.c: In function pmac_ide_setup_device:
+drivers/ide/pmac.c:1027:14: warning: variable hwif set but not used
+[-Wunused-but-set-variable]
+
+Fixes: d58b0c39e32f ("powerpc/macio: Rework hotplug media bay support")
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Wang Hai <wanghai38@huawei.com>
 Signed-off-by: David S. Miller <davem@davemloft.net>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ide/serverworks.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/ide/pmac.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/ide/serverworks.c b/drivers/ide/serverworks.c
-index a97affca18abe..0f57d45484d1d 100644
---- a/drivers/ide/serverworks.c
-+++ b/drivers/ide/serverworks.c
-@@ -114,6 +114,9 @@ static void svwks_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
- 	struct pci_dev *dev = to_pci_dev(hwif->dev);
- 	const u8 pio = drive->pio_mode - XFER_PIO_0;
+diff --git a/drivers/ide/pmac.c b/drivers/ide/pmac.c
+index 203ed4adc04ae..7db083ec5ee06 100644
+--- a/drivers/ide/pmac.c
++++ b/drivers/ide/pmac.c
+@@ -1024,7 +1024,6 @@ static int pmac_ide_setup_device(pmac_ide_hwif_t *pmif, struct ide_hw *hw)
+ 	struct device_node *np = pmif->node;
+ 	const int *bidp;
+ 	struct ide_host *host;
+-	ide_hwif_t *hwif;
+ 	struct ide_hw *hws[] = { hw };
+ 	struct ide_port_info d = pmac_port_info;
+ 	int rc;
+@@ -1080,7 +1079,7 @@ static int pmac_ide_setup_device(pmac_ide_hwif_t *pmif, struct ide_hw *hw)
+ 		rc = -ENOMEM;
+ 		goto bail;
+ 	}
+-	hwif = pmif->hwif = host->ports[0];
++	pmif->hwif = host->ports[0];
  
-+	if (drive->dn >= ARRAY_SIZE(drive_pci))
-+		return;
-+
- 	pci_write_config_byte(dev, drive_pci[drive->dn], pio_modes[pio]);
- 
- 	if (svwks_csb_check(dev)) {
-@@ -140,6 +143,9 @@ static void svwks_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
- 
- 	u8 ultra_enable	 = 0, ultra_timing = 0, dma_timing = 0;
- 
-+	if (drive->dn >= ARRAY_SIZE(drive_pci2))
-+		return;
-+
- 	pci_read_config_byte(dev, (0x56|hwif->channel), &ultra_timing);
- 	pci_read_config_byte(dev, 0x54, &ultra_enable);
- 
+ 	if (on_media_bay(pmif)) {
+ 		/* Fixup bus ID for media bay */
 -- 
 2.20.1
 
