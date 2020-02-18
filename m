@@ -2,52 +2,52 @@ Return-Path: <SRS0=Qeln=4G=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEA00C34051
-	for <linux-ide@archiver.kernel.org>; Tue, 18 Feb 2020 17:14:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F9B4C34049
+	for <linux-ide@archiver.kernel.org>; Tue, 18 Feb 2020 17:14:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BFDAE2176D
-	for <linux-ide@archiver.kernel.org>; Tue, 18 Feb 2020 17:14:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EBF26208C4
+	for <linux-ide@archiver.kernel.org>; Tue, 18 Feb 2020 17:14:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1582046074;
-	bh=ok1xiAZ7WXj+mbnCKpDrCgz5JGz9ZCZABjFXb9dYyNM=;
+	s=default; t=1582046089;
+	bh=p5RYf9TBAgA92fDTAf+vaHyC7OQz7krvXxB4AQnSM+0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=MNn6X6IYuPXBicQL2H5vRJ7mU46+apjba8atO1J6nnG7OJVFOVBDca8Qd20UKUrus
-	 xF9FRC0UuINkcsLQtGJNiiPJ01hGz5MYaeWcc0syLg1PTI60G9A/Vx/Mht+oFCVybu
-	 OqFRJjQ3t9D7phSzDSxxAih70+DHVHmVTCzhsCY4=
+	b=LfU2oyW5AJrHew2ArtkNPrSOz4sLSexWXcJqP43p3BylfjPFEj3FBiZcXy82uRe8O
+	 Ybkg29+9Iiqb+Zly/duFN28BjXm0+S4LZ1WQ+mxfsiF3bPkozOVKjXW5bvoC66ZEHf
+	 pWOmEGmqofXHjczV7JhjxOsi3CROqf5jY3PY8wgI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727460AbgBRRNh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 18 Feb 2020 12:13:37 -0500
-Received: from mail-oi1-f193.google.com ([209.85.167.193]:39880 "EHLO
-        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727259AbgBRRNe (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Feb 2020 12:13:34 -0500
-Received: by mail-oi1-f193.google.com with SMTP id z2so20835228oih.6;
-        Tue, 18 Feb 2020 09:13:32 -0800 (PST)
+        id S1727001AbgBRRNa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 18 Feb 2020 12:13:30 -0500
+Received: from mail-ot1-f65.google.com ([209.85.210.65]:38483 "EHLO
+        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726963AbgBRRN3 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Feb 2020 12:13:29 -0500
+Received: by mail-ot1-f65.google.com with SMTP id z9so20243638oth.5;
+        Tue, 18 Feb 2020 09:13:27 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=v0Vl76UEuxsk5yg9Po+ygPtGTaEk/mhPYQr81MGY08w=;
-        b=Oc1p5IkhFbSD7nyEpRUNxjrbtupY5OMRnXbUqBraJiMzOpIFdybAtdJB7yOtyb7/mV
-         uYllS6jCktnGrzaAMJMwJDWheweSzWV1H3A7Um2FQVUmeb0ytJL6yYEasWtMN3tTQkLc
-         AbVQ8JEGF2SOGKUoqytXCJ/JW2ULp2/WsHiSP3komFUhTMsirNQFFkfNhSdLDNfRcAAi
-         Uh/kLv9aTUd+JTWSO+xz+UpiD0ZpLn2OF0TdB4yUTXsccX1WKZh5WEgwzLRROA7t3VEG
-         096sZDcYweCfGK9sBJO7QP9wgNrvEfSb5bX92Tkk0xhBRhRJayJmIEUtAGkESxdIGbpO
-         46Lw==
-X-Gm-Message-State: APjAAAX9bsBkqsPeJnyDtC6TyuzPKdA8UvSAIr5XE5sBxaVoXLJWyamv
-        7/yecvUCGPHtEVXIMyD6Bg==
-X-Google-Smtp-Source: APXvYqwUc3inMoCdecbdUuNsMDgvDcrJjhj8ChMk19cWCZkyZjwjeXollkDMysGYw5kJtCo1GqwvHQ==
-X-Received: by 2002:a54:4791:: with SMTP id o17mr1818618oic.70.1582046011959;
-        Tue, 18 Feb 2020 09:13:31 -0800 (PST)
+        bh=VtNQPtbipsuMwKFOkITQFTxijny53xSg+1st3kaRJ70=;
+        b=ld111lcikpM2/46lkAWhNuMOypwNEWRO9oepV/zS9j10iMou6sLI7VoTpyo2vZMP4a
+         wXXET0/ajGJWumK+bB+65ot3S3QMu9Sb/szRCmcV0gpdzVz9/mkN1umV+34hVxEcBMNm
+         cEWlleBBNyvhqPOftRY2AHhPhhSFwV37pDVsfkwKhjmPzDS77EET61U0hnuwUilY0e/X
+         fKV7FB900uAGtm1bx1pAfQfCK7A0U7m+f4Rtc+hryJonT2rPxmSUTEhlBxqyJY6JI+39
+         2lfwO1bfdl1Q4c8NPEKN/Wp8sOZevQO4USZKOAmBqkQp2D8wQNELx/lkVU+FSdzjjMc/
+         17ZA==
+X-Gm-Message-State: APjAAAWoJQDy6MjiyVhjdbrYWnPt6WrylxhRx92nnYdWDniTrNTdPGU2
+        FDDEqZkajI0ft1S+Y+zYyg==
+X-Google-Smtp-Source: APXvYqxIgJEiGcrP9a/AzGpB/TQJQKJ5OUIjHj/qcJRzDQIshhUxZWM3aByoxTrV9DaB6xNB+e2CaA==
+X-Received: by 2002:a05:6830:2111:: with SMTP id i17mr15604572otc.24.1582046007043;
+        Tue, 18 Feb 2020 09:13:27 -0800 (PST)
 Received: from xps15.herring.priv (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.googlemail.com with ESMTPSA id y25sm1545755oto.27.2020.02.18.09.13.30
+        by smtp.googlemail.com with ESMTPSA id y25sm1545755oto.27.2020.02.18.09.13.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 Feb 2020 09:13:31 -0800 (PST)
+        Tue, 18 Feb 2020 09:13:26 -0800 (PST)
 From:   Rob Herring <robh@kernel.org>
 To:     linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
         soc@kernel.org, Andre Przywara <andre.przywara@arm.com>,
@@ -74,9 +74,9 @@ Cc:     Alex Williamson <alex.williamson@redhat.com>,
         Tony Luck <tony.luck@intel.com>,
         Viresh Kumar <viresh.kumar@linaro.org>,
         Will Deacon <will@kernel.org>
-Subject: [RFC PATCH 05/11] EDAC: Remove Calxeda drivers
-Date:   Tue, 18 Feb 2020 11:13:15 -0600
-Message-Id: <20200218171321.30990-6-robh@kernel.org>
+Subject: [RFC PATCH 02/11] ata: Remove Calxeda AHCI driver
+Date:   Tue, 18 Feb 2020 11:13:12 -0600
+Message-Id: <20200218171321.30990-3-robh@kernel.org>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20200218171321.30990-1-robh@kernel.org>
 References: <20200218171321.30990-1-robh@kernel.org>
@@ -87,506 +87,690 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: James Morse <james.morse@arm.com>
-Cc: Robert Richter <rrichter@marvell.com>
-Cc: linux-edac@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: linux-ide@vger.kernel.org
 Signed-off-by: Rob Herring <robh@kernel.org>
 ---
 Do not apply yet.
 
- MAINTAINERS                     |   6 -
- drivers/edac/Kconfig            |  14 --
- drivers/edac/Makefile           |   3 -
- drivers/edac/highbank_l2_edac.c | 142 -----------------
- drivers/edac/highbank_mc_edac.c | 272 --------------------------------
- 5 files changed, 437 deletions(-)
- delete mode 100644 drivers/edac/highbank_l2_edac.c
- delete mode 100644 drivers/edac/highbank_mc_edac.c
+ drivers/ata/Kconfig         |   9 -
+ drivers/ata/Makefile        |   1 -
+ drivers/ata/sata_highbank.c | 635 ------------------------------------
+ 3 files changed, 645 deletions(-)
+ delete mode 100644 drivers/ata/sata_highbank.c
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index a0d86490c2c6..4732bb268299 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5964,12 +5964,6 @@ M:	Shravan Kumar Ramani <sramani@mellanox.com>
- S:	Supported
- F:	drivers/edac/bluefield_edac.c
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index a6beb2c5a692..687ddd9f4188 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -395,15 +395,6 @@ config SATA_DWC_VDEBUG
+ 	help
+ 	  This option enables the taskfile dumping and NCQ debugging.
 
--EDAC-CALXEDA
--M:	Robert Richter <rric@kernel.org>
--L:	linux-edac@vger.kernel.org
--S:	Maintained
--F:	drivers/edac/highbank*
--
- EDAC-CAVIUM OCTEON
- M:	Ralf Baechle <ralf@linux-mips.org>
- M:	Robert Richter <rrichter@marvell.com>
-diff --git a/drivers/edac/Kconfig b/drivers/edac/Kconfig
-index b3c99bb5fe77..f3ff75e5ed9b 100644
---- a/drivers/edac/Kconfig
-+++ b/drivers/edac/Kconfig
-@@ -334,20 +334,6 @@ config EDAC_CPC925
- 	  a companion chip to the PowerPC 970 family of
- 	  processors.
-
--config EDAC_HIGHBANK_MC
--	tristate "Highbank Memory Controller"
--	depends on ARCH_HIGHBANK
+-config SATA_HIGHBANK
+-	tristate "Calxeda Highbank SATA support"
+-	depends on ARCH_HIGHBANK || COMPILE_TEST
 -	help
--	  Support for error detection and correction on the
--	  Calxeda Highbank memory controller.
+-	  This option enables support for the Calxeda Highbank SoC's
+-	  onboard SATA.
 -
--config EDAC_HIGHBANK_L2
--	tristate "Highbank L2 Cache"
--	depends on ARCH_HIGHBANK
--	help
--	  Support for error detection and correction on the
--	  Calxeda Highbank memory controller.
+-	  If unsure, say N.
 -
- config EDAC_OCTEON_PC
- 	tristate "Cavium Octeon Primary Caches"
- 	depends on CPU_CAVIUM_OCTEON
-diff --git a/drivers/edac/Makefile b/drivers/edac/Makefile
-index d77200c9680b..9a563db39bc3 100644
---- a/drivers/edac/Makefile
-+++ b/drivers/edac/Makefile
-@@ -69,9 +69,6 @@ obj-$(CONFIG_EDAC_PPC4XX)		+= ppc4xx_edac.o
- obj-$(CONFIG_EDAC_AMD8111)		+= amd8111_edac.o
- obj-$(CONFIG_EDAC_AMD8131)		+= amd8131_edac.o
-
--obj-$(CONFIG_EDAC_HIGHBANK_MC)		+= highbank_mc_edac.o
--obj-$(CONFIG_EDAC_HIGHBANK_L2)		+= highbank_l2_edac.o
--
- obj-$(CONFIG_EDAC_OCTEON_PC)		+= octeon_edac-pc.o
- obj-$(CONFIG_EDAC_OCTEON_L2C)		+= octeon_edac-l2c.o
- obj-$(CONFIG_EDAC_OCTEON_LMC)		+= octeon_edac-lmc.o
-diff --git a/drivers/edac/highbank_l2_edac.c b/drivers/edac/highbank_l2_edac.c
+ config SATA_MV
+ 	tristate "Marvell SATA support"
+ 	depends on PCI || ARCH_DOVE || ARCH_MV78XX0 || \
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index d8cc2e04a6c7..08f26d674ed7 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -12,7 +12,6 @@ obj-$(CONFIG_SATA_GEMINI)	+= sata_gemini.o
+ obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
+ obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
+ obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
+-obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
+ obj-$(CONFIG_AHCI_BRCM)		+= ahci_brcm.o libahci.o libahci_platform.o
+ obj-$(CONFIG_AHCI_CEVA)		+= ahci_ceva.o libahci.o libahci_platform.o
+ obj-$(CONFIG_AHCI_DA850)	+= ahci_da850.o libahci.o libahci_platform.o
+diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
 deleted file mode 100644
-index c4549cec788b..000000000000
---- a/drivers/edac/highbank_l2_edac.c
+index ad3893c62572..000000000000
+--- a/drivers/ata/sata_highbank.c
 +++ /dev/null
-@@ -1,142 +0,0 @@
+@@ -1,635 +0,0 @@
 -// SPDX-License-Identifier: GPL-2.0-only
 -/*
-- * Copyright 2011-2012 Calxeda, Inc.
+- * Calxeda Highbank AHCI SATA platform driver
+- * Copyright 2012 Calxeda, Inc.
+- *
+- * based on the AHCI SATA platform driver by Jeff Garzik and Anton Vorontsov
 - */
--#include <linux/types.h>
 -#include <linux/kernel.h>
--#include <linux/ctype.h>
--#include <linux/edac.h>
--#include <linux/interrupt.h>
+-#include <linux/gfp.h>
+-#include <linux/module.h>
+-#include <linux/types.h>
+-#include <linux/err.h>
+-#include <linux/io.h>
+-#include <linux/spinlock.h>
+-#include <linux/device.h>
+-#include <linux/of_device.h>
+-#include <linux/of_address.h>
 -#include <linux/platform_device.h>
--#include <linux/of_platform.h>
+-#include <linux/libata.h>
+-#include <linux/interrupt.h>
+-#include <linux/delay.h>
+-#include <linux/export.h>
+-#include <linux/gpio/consumer.h>
 -
--#include "edac_module.h"
+-#include "ahci.h"
 -
--#define SR_CLR_SB_ECC_INTR	0x0
--#define SR_CLR_DB_ECC_INTR	0x4
+-#define CPHY_MAP(dev, addr) ((((dev) & 0x1f) << 7) | (((addr) >> 9) & 0x7f))
+-#define CPHY_ADDR(addr) (((addr) & 0x1ff) << 2)
+-#define SERDES_CR_CTL			0x80a0
+-#define SERDES_CR_ADDR			0x80a1
+-#define SERDES_CR_DATA			0x80a2
+-#define CR_BUSY				0x0001
+-#define CR_START			0x0001
+-#define CR_WR_RDN			0x0002
+-#define CPHY_TX_INPUT_STS		0x2001
+-#define CPHY_RX_INPUT_STS		0x2002
+-#define CPHY_SATA_TX_OVERRIDE		0x8000
+-#define CPHY_SATA_RX_OVERRIDE	 	0x4000
+-#define CPHY_TX_OVERRIDE		0x2004
+-#define CPHY_RX_OVERRIDE		0x2005
+-#define SPHY_LANE			0x100
+-#define SPHY_HALF_RATE			0x0001
+-#define CPHY_SATA_DPLL_MODE		0x0700
+-#define CPHY_SATA_DPLL_SHIFT		8
+-#define CPHY_SATA_DPLL_RESET		(1 << 11)
+-#define CPHY_SATA_TX_ATTEN		0x1c00
+-#define CPHY_SATA_TX_ATTEN_SHIFT	10
+-#define CPHY_PHY_COUNT			6
+-#define CPHY_LANE_COUNT			4
+-#define CPHY_PORT_COUNT			(CPHY_PHY_COUNT * CPHY_LANE_COUNT)
 -
--struct hb_l2_drvdata {
--	void __iomem *base;
--	int sb_irq;
--	int db_irq;
+-static DEFINE_SPINLOCK(cphy_lock);
+-/* Each of the 6 phys can have up to 4 sata ports attached to i. Map 0-based
+- * sata ports to their phys and then to their lanes within the phys
+- */
+-struct phy_lane_info {
+-	void __iomem *phy_base;
+-	u8 lane_mapping;
+-	u8 phy_devs;
+-	u8 tx_atten;
+-};
+-static struct phy_lane_info port_data[CPHY_PORT_COUNT];
+-
+-static DEFINE_SPINLOCK(sgpio_lock);
+-#define SCLOCK				0
+-#define SLOAD				1
+-#define SDATA				2
+-#define SGPIO_PINS			3
+-#define SGPIO_PORTS			8
+-
+-struct ecx_plat_data {
+-	u32		n_ports;
+-	/* number of extra clocks that the SGPIO PIC controller expects */
+-	u32		pre_clocks;
+-	u32		post_clocks;
+-	struct gpio_desc *sgpio_gpiod[SGPIO_PINS];
+-	u32		sgpio_pattern;
+-	u32		port_to_sgpio[SGPIO_PORTS];
 -};
 -
--static irqreturn_t highbank_l2_err_handler(int irq, void *dev_id)
+-#define SGPIO_SIGNALS			3
+-#define ECX_ACTIVITY_BITS		0x300000
+-#define ECX_ACTIVITY_SHIFT		0
+-#define ECX_LOCATE_BITS			0x80000
+-#define ECX_LOCATE_SHIFT		1
+-#define ECX_FAULT_BITS			0x400000
+-#define ECX_FAULT_SHIFT			2
+-static inline int sgpio_bit_shift(struct ecx_plat_data *pdata, u32 port,
+-				u32 shift)
 -{
--	struct edac_device_ctl_info *dci = dev_id;
--	struct hb_l2_drvdata *drvdata = dci->pvt_info;
--
--	if (irq == drvdata->sb_irq) {
--		writel(1, drvdata->base + SR_CLR_SB_ECC_INTR);
--		edac_device_handle_ce(dci, 0, 0, dci->ctl_name);
--	}
--	if (irq == drvdata->db_irq) {
--		writel(1, drvdata->base + SR_CLR_DB_ECC_INTR);
--		edac_device_handle_ue(dci, 0, 0, dci->ctl_name);
--	}
--
--	return IRQ_HANDLED;
+-	return 1 << (3 * pdata->port_to_sgpio[port] + shift);
 -}
 -
--static const struct of_device_id hb_l2_err_of_match[] = {
--	{ .compatible = "calxeda,hb-sregs-l2-ecc", },
--	{},
--};
--MODULE_DEVICE_TABLE(of, hb_l2_err_of_match);
--
--static int highbank_l2_err_probe(struct platform_device *pdev)
+-static void ecx_parse_sgpio(struct ecx_plat_data *pdata, u32 port, u32 state)
 -{
--	const struct of_device_id *id;
--	struct edac_device_ctl_info *dci;
--	struct hb_l2_drvdata *drvdata;
--	struct resource *r;
--	int res = 0;
--
--	dci = edac_device_alloc_ctl_info(sizeof(*drvdata), "cpu",
--		1, "L", 1, 2, NULL, 0, 0);
--	if (!dci)
--		return -ENOMEM;
--
--	drvdata = dci->pvt_info;
--	dci->dev = &pdev->dev;
--	platform_set_drvdata(pdev, dci);
--
--	if (!devres_open_group(&pdev->dev, NULL, GFP_KERNEL))
--		return -ENOMEM;
--
--	r = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	if (!r) {
--		dev_err(&pdev->dev, "Unable to get mem resource\n");
--		res = -ENODEV;
--		goto err;
--	}
--
--	if (!devm_request_mem_region(&pdev->dev, r->start,
--				     resource_size(r), dev_name(&pdev->dev))) {
--		dev_err(&pdev->dev, "Error while requesting mem region\n");
--		res = -EBUSY;
--		goto err;
--	}
--
--	drvdata->base = devm_ioremap(&pdev->dev, r->start, resource_size(r));
--	if (!drvdata->base) {
--		dev_err(&pdev->dev, "Unable to map regs\n");
--		res = -ENOMEM;
--		goto err;
--	}
--
--	id = of_match_device(hb_l2_err_of_match, &pdev->dev);
--	dci->mod_name = pdev->dev.driver->name;
--	dci->ctl_name = id ? id->compatible : "unknown";
--	dci->dev_name = dev_name(&pdev->dev);
--
--	if (edac_device_add_device(dci))
--		goto err;
--
--	drvdata->db_irq = platform_get_irq(pdev, 0);
--	res = devm_request_irq(&pdev->dev, drvdata->db_irq,
--			       highbank_l2_err_handler,
--			       0, dev_name(&pdev->dev), dci);
--	if (res < 0)
--		goto err2;
--
--	drvdata->sb_irq = platform_get_irq(pdev, 1);
--	res = devm_request_irq(&pdev->dev, drvdata->sb_irq,
--			       highbank_l2_err_handler,
--			       0, dev_name(&pdev->dev), dci);
--	if (res < 0)
--		goto err2;
--
--	devres_close_group(&pdev->dev, NULL);
--	return 0;
--err2:
--	edac_device_del_device(&pdev->dev);
--err:
--	devres_release_group(&pdev->dev, NULL);
--	edac_device_free_ctl_info(dci);
--	return res;
+-	if (state & ECX_ACTIVITY_BITS)
+-		pdata->sgpio_pattern |= sgpio_bit_shift(pdata, port,
+-						ECX_ACTIVITY_SHIFT);
+-	else
+-		pdata->sgpio_pattern &= ~sgpio_bit_shift(pdata, port,
+-						ECX_ACTIVITY_SHIFT);
+-	if (state & ECX_LOCATE_BITS)
+-		pdata->sgpio_pattern |= sgpio_bit_shift(pdata, port,
+-						ECX_LOCATE_SHIFT);
+-	else
+-		pdata->sgpio_pattern &= ~sgpio_bit_shift(pdata, port,
+-						ECX_LOCATE_SHIFT);
+-	if (state & ECX_FAULT_BITS)
+-		pdata->sgpio_pattern |= sgpio_bit_shift(pdata, port,
+-						ECX_FAULT_SHIFT);
+-	else
+-		pdata->sgpio_pattern &= ~sgpio_bit_shift(pdata, port,
+-						ECX_FAULT_SHIFT);
 -}
 -
--static int highbank_l2_err_remove(struct platform_device *pdev)
--{
--	struct edac_device_ctl_info *dci = platform_get_drvdata(pdev);
--
--	edac_device_del_device(&pdev->dev);
--	edac_device_free_ctl_info(dci);
--	return 0;
--}
--
--static struct platform_driver highbank_l2_edac_driver = {
--	.probe = highbank_l2_err_probe,
--	.remove = highbank_l2_err_remove,
--	.driver = {
--		.name = "hb_l2_edac",
--		.of_match_table = hb_l2_err_of_match,
--	},
--};
--
--module_platform_driver(highbank_l2_edac_driver);
--
--MODULE_LICENSE("GPL v2");
--MODULE_AUTHOR("Calxeda, Inc.");
--MODULE_DESCRIPTION("EDAC Driver for Calxeda Highbank L2 Cache");
-diff --git a/drivers/edac/highbank_mc_edac.c b/drivers/edac/highbank_mc_edac.c
-deleted file mode 100644
-index 61b76ec226af..000000000000
---- a/drivers/edac/highbank_mc_edac.c
-+++ /dev/null
-@@ -1,272 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0-only
 -/*
-- * Copyright 2011-2012 Calxeda, Inc.
+- * Tell the LED controller that the signal has changed by raising the clock
+- * line for 50 uS and then lowering it for 50 uS.
 - */
--#include <linux/types.h>
--#include <linux/kernel.h>
--#include <linux/ctype.h>
--#include <linux/edac.h>
--#include <linux/interrupt.h>
--#include <linux/platform_device.h>
--#include <linux/of_platform.h>
--#include <linux/uaccess.h>
--
--#include "edac_module.h"
--
--/* DDR Ctrlr Error Registers */
--
--#define HB_DDR_ECC_ERR_BASE		0x128
--#define MW_DDR_ECC_ERR_BASE		0x1b4
--
--#define HB_DDR_ECC_OPT			0x00
--#define HB_DDR_ECC_U_ERR_ADDR		0x08
--#define HB_DDR_ECC_U_ERR_STAT		0x0c
--#define HB_DDR_ECC_U_ERR_DATAL		0x10
--#define HB_DDR_ECC_U_ERR_DATAH		0x14
--#define HB_DDR_ECC_C_ERR_ADDR		0x18
--#define HB_DDR_ECC_C_ERR_STAT		0x1c
--#define HB_DDR_ECC_C_ERR_DATAL		0x20
--#define HB_DDR_ECC_C_ERR_DATAH		0x24
--
--#define HB_DDR_ECC_OPT_MODE_MASK	0x3
--#define HB_DDR_ECC_OPT_FWC		0x100
--#define HB_DDR_ECC_OPT_XOR_SHIFT	16
--
--/* DDR Ctrlr Interrupt Registers */
--
--#define HB_DDR_ECC_INT_BASE		0x180
--#define MW_DDR_ECC_INT_BASE		0x218
--
--#define HB_DDR_ECC_INT_STATUS		0x00
--#define HB_DDR_ECC_INT_ACK		0x04
--
--#define HB_DDR_ECC_INT_STAT_CE		0x8
--#define HB_DDR_ECC_INT_STAT_DOUBLE_CE	0x10
--#define HB_DDR_ECC_INT_STAT_UE		0x20
--#define HB_DDR_ECC_INT_STAT_DOUBLE_UE	0x40
--
--struct hb_mc_drvdata {
--	void __iomem *mc_err_base;
--	void __iomem *mc_int_base;
--};
--
--static irqreturn_t highbank_mc_err_handler(int irq, void *dev_id)
+-static void ecx_led_cycle_clock(struct ecx_plat_data *pdata)
 -{
--	struct mem_ctl_info *mci = dev_id;
--	struct hb_mc_drvdata *drvdata = mci->pvt_info;
--	u32 status, err_addr;
--
--	/* Read the interrupt status register */
--	status = readl(drvdata->mc_int_base + HB_DDR_ECC_INT_STATUS);
--
--	if (status & HB_DDR_ECC_INT_STAT_UE) {
--		err_addr = readl(drvdata->mc_err_base + HB_DDR_ECC_U_ERR_ADDR);
--		edac_mc_handle_error(HW_EVENT_ERR_UNCORRECTED, mci, 1,
--				     err_addr >> PAGE_SHIFT,
--				     err_addr & ~PAGE_MASK, 0,
--				     0, 0, -1,
--				     mci->ctl_name, "");
--	}
--	if (status & HB_DDR_ECC_INT_STAT_CE) {
--		u32 syndrome = readl(drvdata->mc_err_base + HB_DDR_ECC_C_ERR_STAT);
--		syndrome = (syndrome >> 8) & 0xff;
--		err_addr = readl(drvdata->mc_err_base + HB_DDR_ECC_C_ERR_ADDR);
--		edac_mc_handle_error(HW_EVENT_ERR_CORRECTED, mci, 1,
--				     err_addr >> PAGE_SHIFT,
--				     err_addr & ~PAGE_MASK, syndrome,
--				     0, 0, -1,
--				     mci->ctl_name, "");
--	}
--
--	/* clear the error, clears the interrupt */
--	writel(status, drvdata->mc_int_base + HB_DDR_ECC_INT_ACK);
--	return IRQ_HANDLED;
+-	gpiod_set_value(pdata->sgpio_gpiod[SCLOCK], 1);
+-	udelay(50);
+-	gpiod_set_value(pdata->sgpio_gpiod[SCLOCK], 0);
+-	udelay(50);
 -}
 -
--static void highbank_mc_err_inject(struct mem_ctl_info *mci, u8 synd)
+-static ssize_t ecx_transmit_led_message(struct ata_port *ap, u32 state,
+-					ssize_t size)
 -{
--	struct hb_mc_drvdata *pdata = mci->pvt_info;
--	u32 reg;
+-	struct ahci_host_priv *hpriv =  ap->host->private_data;
+-	struct ecx_plat_data *pdata = hpriv->plat_data;
+-	struct ahci_port_priv *pp = ap->private_data;
+-	unsigned long flags;
+-	int pmp, i;
+-	struct ahci_em_priv *emp;
+-	u32 sgpio_out;
 -
--	reg = readl(pdata->mc_err_base + HB_DDR_ECC_OPT);
--	reg &= HB_DDR_ECC_OPT_MODE_MASK;
--	reg |= (synd << HB_DDR_ECC_OPT_XOR_SHIFT) | HB_DDR_ECC_OPT_FWC;
--	writel(reg, pdata->mc_err_base + HB_DDR_ECC_OPT);
--}
--
--#define to_mci(k) container_of(k, struct mem_ctl_info, dev)
--
--static ssize_t highbank_mc_inject_ctrl(struct device *dev,
--	struct device_attribute *attr, const char *buf, size_t count)
--{
--	struct mem_ctl_info *mci = to_mci(dev);
--	u8 synd;
--
--	if (kstrtou8(buf, 16, &synd))
+-	/* get the slot number from the message */
+-	pmp = (state & EM_MSG_LED_PMP_SLOT) >> 8;
+-	if (pmp < EM_MAX_SLOTS)
+-		emp = &pp->em_priv[pmp];
+-	else
 -		return -EINVAL;
 -
--	highbank_mc_err_inject(mci, synd);
+-	if (!(hpriv->em_msg_type & EM_MSG_TYPE_LED))
+-		return size;
 -
--	return count;
+-	spin_lock_irqsave(&sgpio_lock, flags);
+-	ecx_parse_sgpio(pdata, ap->port_no, state);
+-	sgpio_out = pdata->sgpio_pattern;
+-	for (i = 0; i < pdata->pre_clocks; i++)
+-		ecx_led_cycle_clock(pdata);
+-
+-	gpiod_set_value(pdata->sgpio_gpiod[SLOAD], 1);
+-	ecx_led_cycle_clock(pdata);
+-	gpiod_set_value(pdata->sgpio_gpiod[SLOAD], 0);
+-	/*
+-	 * bit-bang out the SGPIO pattern, by consuming a bit and then
+-	 * clocking it out.
+-	 */
+-	for (i = 0; i < (SGPIO_SIGNALS * pdata->n_ports); i++) {
+-		gpiod_set_value(pdata->sgpio_gpiod[SDATA], sgpio_out & 1);
+-		sgpio_out >>= 1;
+-		ecx_led_cycle_clock(pdata);
+-	}
+-	for (i = 0; i < pdata->post_clocks; i++)
+-		ecx_led_cycle_clock(pdata);
+-
+-	/* save off new led state for port/slot */
+-	emp->led_state = state;
+-
+-	spin_unlock_irqrestore(&sgpio_lock, flags);
+-	return size;
 -}
 -
--static DEVICE_ATTR(inject_ctrl, S_IWUSR, NULL, highbank_mc_inject_ctrl);
+-static void highbank_set_em_messages(struct device *dev,
+-					struct ahci_host_priv *hpriv,
+-					struct ata_port_info *pi)
+-{
+-	struct device_node *np = dev->of_node;
+-	struct ecx_plat_data *pdata = hpriv->plat_data;
+-	int i;
 -
--static struct attribute *highbank_dev_attrs[] = {
--	&dev_attr_inject_ctrl.attr,
--	NULL
+-	for (i = 0; i < SGPIO_PINS; i++) {
+-		struct gpio_desc *gpiod;
+-
+-		gpiod = devm_gpiod_get_index(dev, "calxeda,sgpio", i,
+-					     GPIOD_OUT_HIGH);
+-		if (IS_ERR(gpiod)) {
+-			dev_err(dev, "failed to get GPIO %d\n", i);
+-			continue;
+-		}
+-		gpiod_set_consumer_name(gpiod, "CX SGPIO");
+-
+-		pdata->sgpio_gpiod[i] = gpiod;
+-	}
+-	of_property_read_u32_array(np, "calxeda,led-order",
+-						pdata->port_to_sgpio,
+-						pdata->n_ports);
+-	if (of_property_read_u32(np, "calxeda,pre-clocks", &pdata->pre_clocks))
+-		pdata->pre_clocks = 0;
+-	if (of_property_read_u32(np, "calxeda,post-clocks",
+-				&pdata->post_clocks))
+-		pdata->post_clocks = 0;
+-
+-	/* store em_loc */
+-	hpriv->em_loc = 0;
+-	hpriv->em_buf_sz = 4;
+-	hpriv->em_msg_type = EM_MSG_TYPE_LED;
+-	pi->flags |= ATA_FLAG_EM | ATA_FLAG_SW_ACTIVITY;
+-}
+-
+-static u32 __combo_phy_reg_read(u8 sata_port, u32 addr)
+-{
+-	u32 data;
+-	u8 dev = port_data[sata_port].phy_devs;
+-	spin_lock(&cphy_lock);
+-	writel(CPHY_MAP(dev, addr), port_data[sata_port].phy_base + 0x800);
+-	data = readl(port_data[sata_port].phy_base + CPHY_ADDR(addr));
+-	spin_unlock(&cphy_lock);
+-	return data;
+-}
+-
+-static void __combo_phy_reg_write(u8 sata_port, u32 addr, u32 data)
+-{
+-	u8 dev = port_data[sata_port].phy_devs;
+-	spin_lock(&cphy_lock);
+-	writel(CPHY_MAP(dev, addr), port_data[sata_port].phy_base + 0x800);
+-	writel(data, port_data[sata_port].phy_base + CPHY_ADDR(addr));
+-	spin_unlock(&cphy_lock);
+-}
+-
+-static void combo_phy_wait_for_ready(u8 sata_port)
+-{
+-	while (__combo_phy_reg_read(sata_port, SERDES_CR_CTL) & CR_BUSY)
+-		udelay(5);
+-}
+-
+-static u32 combo_phy_read(u8 sata_port, u32 addr)
+-{
+-	combo_phy_wait_for_ready(sata_port);
+-	__combo_phy_reg_write(sata_port, SERDES_CR_ADDR, addr);
+-	__combo_phy_reg_write(sata_port, SERDES_CR_CTL, CR_START);
+-	combo_phy_wait_for_ready(sata_port);
+-	return __combo_phy_reg_read(sata_port, SERDES_CR_DATA);
+-}
+-
+-static void combo_phy_write(u8 sata_port, u32 addr, u32 data)
+-{
+-	combo_phy_wait_for_ready(sata_port);
+-	__combo_phy_reg_write(sata_port, SERDES_CR_ADDR, addr);
+-	__combo_phy_reg_write(sata_port, SERDES_CR_DATA, data);
+-	__combo_phy_reg_write(sata_port, SERDES_CR_CTL, CR_WR_RDN | CR_START);
+-}
+-
+-static void highbank_cphy_disable_overrides(u8 sata_port)
+-{
+-	u8 lane = port_data[sata_port].lane_mapping;
+-	u32 tmp;
+-	if (unlikely(port_data[sata_port].phy_base == NULL))
+-		return;
+-	tmp = combo_phy_read(sata_port, CPHY_RX_INPUT_STS + lane * SPHY_LANE);
+-	tmp &= ~CPHY_SATA_RX_OVERRIDE;
+-	combo_phy_write(sata_port, CPHY_RX_OVERRIDE + lane * SPHY_LANE, tmp);
+-}
+-
+-static void cphy_override_tx_attenuation(u8 sata_port, u32 val)
+-{
+-	u8 lane = port_data[sata_port].lane_mapping;
+-	u32 tmp;
+-
+-	if (val & 0x8)
+-		return;
+-
+-	tmp = combo_phy_read(sata_port, CPHY_TX_INPUT_STS + lane * SPHY_LANE);
+-	tmp &= ~CPHY_SATA_TX_OVERRIDE;
+-	combo_phy_write(sata_port, CPHY_TX_OVERRIDE + lane * SPHY_LANE, tmp);
+-
+-	tmp |= CPHY_SATA_TX_OVERRIDE;
+-	combo_phy_write(sata_port, CPHY_TX_OVERRIDE + lane * SPHY_LANE, tmp);
+-
+-	tmp |= (val << CPHY_SATA_TX_ATTEN_SHIFT) & CPHY_SATA_TX_ATTEN;
+-	combo_phy_write(sata_port, CPHY_TX_OVERRIDE + lane * SPHY_LANE, tmp);
+-}
+-
+-static void cphy_override_rx_mode(u8 sata_port, u32 val)
+-{
+-	u8 lane = port_data[sata_port].lane_mapping;
+-	u32 tmp;
+-	tmp = combo_phy_read(sata_port, CPHY_RX_INPUT_STS + lane * SPHY_LANE);
+-	tmp &= ~CPHY_SATA_RX_OVERRIDE;
+-	combo_phy_write(sata_port, CPHY_RX_OVERRIDE + lane * SPHY_LANE, tmp);
+-
+-	tmp |= CPHY_SATA_RX_OVERRIDE;
+-	combo_phy_write(sata_port, CPHY_RX_OVERRIDE + lane * SPHY_LANE, tmp);
+-
+-	tmp &= ~CPHY_SATA_DPLL_MODE;
+-	tmp |= val << CPHY_SATA_DPLL_SHIFT;
+-	combo_phy_write(sata_port, CPHY_RX_OVERRIDE + lane * SPHY_LANE, tmp);
+-
+-	tmp |= CPHY_SATA_DPLL_RESET;
+-	combo_phy_write(sata_port, CPHY_RX_OVERRIDE + lane * SPHY_LANE, tmp);
+-
+-	tmp &= ~CPHY_SATA_DPLL_RESET;
+-	combo_phy_write(sata_port, CPHY_RX_OVERRIDE + lane * SPHY_LANE, tmp);
+-
+-	msleep(15);
+-}
+-
+-static void highbank_cphy_override_lane(u8 sata_port)
+-{
+-	u8 lane = port_data[sata_port].lane_mapping;
+-	u32 tmp, k = 0;
+-
+-	if (unlikely(port_data[sata_port].phy_base == NULL))
+-		return;
+-	do {
+-		tmp = combo_phy_read(sata_port, CPHY_RX_INPUT_STS +
+-						lane * SPHY_LANE);
+-	} while ((tmp & SPHY_HALF_RATE) && (k++ < 1000));
+-	cphy_override_rx_mode(sata_port, 3);
+-	cphy_override_tx_attenuation(sata_port, port_data[sata_port].tx_atten);
+-}
+-
+-static int highbank_initialize_phys(struct device *dev, void __iomem *addr)
+-{
+-	struct device_node *sata_node = dev->of_node;
+-	int phy_count = 0, phy, port = 0, i;
+-	void __iomem *cphy_base[CPHY_PHY_COUNT] = {};
+-	struct device_node *phy_nodes[CPHY_PHY_COUNT] = {};
+-	u32 tx_atten[CPHY_PORT_COUNT] = {};
+-
+-	memset(port_data, 0, sizeof(struct phy_lane_info) * CPHY_PORT_COUNT);
+-
+-	do {
+-		u32 tmp;
+-		struct of_phandle_args phy_data;
+-		if (of_parse_phandle_with_args(sata_node,
+-				"calxeda,port-phys", "#phy-cells",
+-				port, &phy_data))
+-			break;
+-		for (phy = 0; phy < phy_count; phy++) {
+-			if (phy_nodes[phy] == phy_data.np)
+-				break;
+-		}
+-		if (phy_nodes[phy] == NULL) {
+-			phy_nodes[phy] = phy_data.np;
+-			cphy_base[phy] = of_iomap(phy_nodes[phy], 0);
+-			if (cphy_base[phy] == NULL) {
+-				return 0;
+-			}
+-			phy_count += 1;
+-		}
+-		port_data[port].lane_mapping = phy_data.args[0];
+-		of_property_read_u32(phy_nodes[phy], "phydev", &tmp);
+-		port_data[port].phy_devs = tmp;
+-		port_data[port].phy_base = cphy_base[phy];
+-		of_node_put(phy_data.np);
+-		port += 1;
+-	} while (port < CPHY_PORT_COUNT);
+-	of_property_read_u32_array(sata_node, "calxeda,tx-atten",
+-				tx_atten, port);
+-	for (i = 0; i < port; i++)
+-		port_data[i].tx_atten = (u8) tx_atten[i];
+-	return 0;
+-}
+-
+-/*
+- * The Calxeda SATA phy intermittently fails to bring up a link with Gen3
+- * Retrying the phy hard reset can work around the issue, but the drive
+- * may fail again. In less than 150 out of 15000 test runs, it took more
+- * than 10 tries for the link to be established (but never more than 35).
+- * Triple the maximum observed retry count to provide plenty of margin for
+- * rare events and to guarantee that the link is established.
+- *
+- * Also, the default 2 second time-out on a failed drive is too long in
+- * this situation. The uboot implementation of the same driver function
+- * uses a much shorter time-out period and never experiences a time out
+- * issue. Reducing the time-out to 500ms improves the responsiveness.
+- * The other timing constants were kept the same as the stock AHCI driver.
+- * This change was also tested 15000 times on 24 drives and none of them
+- * experienced a time out.
+- */
+-static int ahci_highbank_hardreset(struct ata_link *link, unsigned int *class,
+-				unsigned long deadline)
+-{
+-	static const unsigned long timing[] = { 5, 100, 500};
+-	struct ata_port *ap = link->ap;
+-	struct ahci_port_priv *pp = ap->private_data;
+-	struct ahci_host_priv *hpriv = ap->host->private_data;
+-	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
+-	struct ata_taskfile tf;
+-	bool online;
+-	u32 sstatus;
+-	int rc;
+-	int retry = 100;
+-
+-	hpriv->stop_engine(ap);
+-
+-	/* clear D2H reception area to properly wait for D2H FIS */
+-	ata_tf_init(link->device, &tf);
+-	tf.command = ATA_BUSY;
+-	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
+-
+-	do {
+-		highbank_cphy_disable_overrides(link->ap->port_no);
+-		rc = sata_link_hardreset(link, timing, deadline, &online, NULL);
+-		highbank_cphy_override_lane(link->ap->port_no);
+-
+-		/* If the status is 1, we are connected, but the link did not
+-		 * come up. So retry resetting the link again.
+-		 */
+-		if (sata_scr_read(link, SCR_STATUS, &sstatus))
+-			break;
+-		if (!(sstatus & 0x3))
+-			break;
+-	} while (!online && retry--);
+-
+-	hpriv->start_engine(ap);
+-
+-	if (online)
+-		*class = ahci_dev_classify(ap);
+-
+-	return rc;
+-}
+-
+-static struct ata_port_operations ahci_highbank_ops = {
+-	.inherits		= &ahci_ops,
+-	.hardreset		= ahci_highbank_hardreset,
+-	.transmit_led_message   = ecx_transmit_led_message,
 -};
 -
--ATTRIBUTE_GROUPS(highbank_dev);
--
--struct hb_mc_settings {
--	int	err_offset;
--	int	int_offset;
+-static const struct ata_port_info ahci_highbank_port_info = {
+-	.flags          = AHCI_FLAG_COMMON,
+-	.pio_mask       = ATA_PIO4,
+-	.udma_mask      = ATA_UDMA6,
+-	.port_ops       = &ahci_highbank_ops,
 -};
 -
--static struct hb_mc_settings hb_settings = {
--	.err_offset = HB_DDR_ECC_ERR_BASE,
--	.int_offset = HB_DDR_ECC_INT_BASE,
+-static struct scsi_host_template ahci_highbank_platform_sht = {
+-	AHCI_SHT("sata_highbank"),
 -};
 -
--static struct hb_mc_settings mw_settings = {
--	.err_offset = MW_DDR_ECC_ERR_BASE,
--	.int_offset = MW_DDR_ECC_INT_BASE,
--};
--
--static const struct of_device_id hb_ddr_ctrl_of_match[] = {
--	{ .compatible = "calxeda,hb-ddr-ctrl",		.data = &hb_settings },
--	{ .compatible = "calxeda,ecx-2000-ddr-ctrl",	.data = &mw_settings },
+-static const struct of_device_id ahci_of_match[] = {
+-	{ .compatible = "calxeda,hb-ahci" },
 -	{},
 -};
--MODULE_DEVICE_TABLE(of, hb_ddr_ctrl_of_match);
+-MODULE_DEVICE_TABLE(of, ahci_of_match);
 -
--static int highbank_mc_probe(struct platform_device *pdev)
+-static int ahci_highbank_probe(struct platform_device *pdev)
 -{
--	const struct of_device_id *id;
--	const struct hb_mc_settings *settings;
--	struct edac_mc_layer layers[2];
--	struct mem_ctl_info *mci;
--	struct hb_mc_drvdata *drvdata;
--	struct dimm_info *dimm;
--	struct resource *r;
--	void __iomem *base;
--	u32 control;
+-	struct device *dev = &pdev->dev;
+-	struct ahci_host_priv *hpriv;
+-	struct ecx_plat_data *pdata;
+-	struct ata_host *host;
+-	struct resource *mem;
 -	int irq;
--	int res = 0;
+-	int i;
+-	int rc;
+-	u32 n_ports;
+-	struct ata_port_info pi = ahci_highbank_port_info;
+-	const struct ata_port_info *ppi[] = { &pi, NULL };
 -
--	id = of_match_device(hb_ddr_ctrl_of_match, &pdev->dev);
--	if (!id)
--		return -ENODEV;
--
--	layers[0].type = EDAC_MC_LAYER_CHIP_SELECT;
--	layers[0].size = 1;
--	layers[0].is_virt_csrow = true;
--	layers[1].type = EDAC_MC_LAYER_CHANNEL;
--	layers[1].size = 1;
--	layers[1].is_virt_csrow = false;
--	mci = edac_mc_alloc(0, ARRAY_SIZE(layers), layers,
--			    sizeof(struct hb_mc_drvdata));
--	if (!mci)
--		return -ENOMEM;
--
--	mci->pdev = &pdev->dev;
--	drvdata = mci->pvt_info;
--	platform_set_drvdata(pdev, mci);
--
--	if (!devres_open_group(&pdev->dev, NULL, GFP_KERNEL))
--		return -ENOMEM;
--
--	r = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	if (!r) {
--		dev_err(&pdev->dev, "Unable to get mem resource\n");
--		res = -ENODEV;
--		goto err;
+-	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	if (!mem) {
+-		dev_err(dev, "no mmio space\n");
+-		return -EINVAL;
 -	}
--
--	if (!devm_request_mem_region(&pdev->dev, r->start,
--				     resource_size(r), dev_name(&pdev->dev))) {
--		dev_err(&pdev->dev, "Error while requesting mem region\n");
--		res = -EBUSY;
--		goto err;
--	}
--
--	base = devm_ioremap(&pdev->dev, r->start, resource_size(r));
--	if (!base) {
--		dev_err(&pdev->dev, "Unable to map regs\n");
--		res = -ENOMEM;
--		goto err;
--	}
--
--	settings = id->data;
--	drvdata->mc_err_base = base + settings->err_offset;
--	drvdata->mc_int_base = base + settings->int_offset;
--
--	control = readl(drvdata->mc_err_base + HB_DDR_ECC_OPT) & 0x3;
--	if (!control || (control == 0x2)) {
--		dev_err(&pdev->dev, "No ECC present, or ECC disabled\n");
--		res = -ENODEV;
--		goto err;
--	}
--
--	mci->mtype_cap = MEM_FLAG_DDR3;
--	mci->edac_ctl_cap = EDAC_FLAG_NONE | EDAC_FLAG_SECDED;
--	mci->edac_cap = EDAC_FLAG_SECDED;
--	mci->mod_name = pdev->dev.driver->name;
--	mci->ctl_name = id->compatible;
--	mci->dev_name = dev_name(&pdev->dev);
--	mci->scrub_mode = SCRUB_SW_SRC;
--
--	/* Only a single 4GB DIMM is supported */
--	dimm = *mci->dimms;
--	dimm->nr_pages = (~0UL >> PAGE_SHIFT) + 1;
--	dimm->grain = 8;
--	dimm->dtype = DEV_X8;
--	dimm->mtype = MEM_DDR3;
--	dimm->edac_mode = EDAC_SECDED;
--
--	res = edac_mc_add_mc_with_groups(mci, highbank_dev_groups);
--	if (res < 0)
--		goto err;
 -
 -	irq = platform_get_irq(pdev, 0);
--	res = devm_request_irq(&pdev->dev, irq, highbank_mc_err_handler,
--			       0, dev_name(&pdev->dev), mci);
--	if (res < 0) {
--		dev_err(&pdev->dev, "Unable to request irq %d\n", irq);
--		goto err2;
+-	if (irq <= 0) {
+-		dev_err(dev, "no irq\n");
+-		return -EINVAL;
 -	}
 -
--	devres_close_group(&pdev->dev, NULL);
+-	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
+-	if (!hpriv) {
+-		dev_err(dev, "can't alloc ahci_host_priv\n");
+-		return -ENOMEM;
+-	}
+-	pdata = devm_kzalloc(dev, sizeof(*pdata), GFP_KERNEL);
+-	if (!pdata) {
+-		dev_err(dev, "can't alloc ecx_plat_data\n");
+-		return -ENOMEM;
+-	}
+-
+-	hpriv->irq = irq;
+-	hpriv->flags |= (unsigned long)pi.private_data;
+-
+-	hpriv->mmio = devm_ioremap(dev, mem->start, resource_size(mem));
+-	if (!hpriv->mmio) {
+-		dev_err(dev, "can't map %pR\n", mem);
+-		return -ENOMEM;
+-	}
+-
+-	rc = highbank_initialize_phys(dev, hpriv->mmio);
+-	if (rc)
+-		return rc;
+-
+-
+-	ahci_save_initial_config(dev, hpriv);
+-
+-	/* prepare host */
+-	if (hpriv->cap & HOST_CAP_NCQ)
+-		pi.flags |= ATA_FLAG_NCQ;
+-
+-	if (hpriv->cap & HOST_CAP_PMP)
+-		pi.flags |= ATA_FLAG_PMP;
+-
+-	if (hpriv->cap & HOST_CAP_64)
+-		dma_set_coherent_mask(dev, DMA_BIT_MASK(64));
+-
+-	/* CAP.NP sometimes indicate the index of the last enabled
+-	 * port, at other times, that of the last possible port, so
+-	 * determining the maximum port number requires looking at
+-	 * both CAP.NP and port_map.
+-	 */
+-	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
+-
+-	pdata->n_ports = n_ports;
+-	hpriv->plat_data = pdata;
+-	highbank_set_em_messages(dev, hpriv, &pi);
+-
+-	host = ata_host_alloc_pinfo(dev, ppi, n_ports);
+-	if (!host) {
+-		rc = -ENOMEM;
+-		goto err0;
+-	}
+-
+-	host->private_data = hpriv;
+-
+-	if (!(hpriv->cap & HOST_CAP_SSS) || ahci_ignore_sss)
+-		host->flags |= ATA_HOST_PARALLEL_SCAN;
+-
+-	for (i = 0; i < host->n_ports; i++) {
+-		struct ata_port *ap = host->ports[i];
+-
+-		ata_port_desc(ap, "mmio %pR", mem);
+-		ata_port_desc(ap, "port 0x%x", 0x100 + ap->port_no * 0x80);
+-
+-		/* set enclosure management message type */
+-		if (ap->flags & ATA_FLAG_EM)
+-			ap->em_message_type = hpriv->em_msg_type;
+-
+-		/* disabled/not-implemented port */
+-		if (!(hpriv->port_map & (1 << i)))
+-			ap->ops = &ata_dummy_port_ops;
+-	}
+-
+-	rc = ahci_reset_controller(host);
+-	if (rc)
+-		goto err0;
+-
+-	ahci_init_controller(host);
+-	ahci_print_info(host, "platform");
+-
+-	rc = ahci_host_activate(host, &ahci_highbank_platform_sht);
+-	if (rc)
+-		goto err0;
+-
 -	return 0;
--err2:
--	edac_mc_del_mc(&pdev->dev);
--err:
--	devres_release_group(&pdev->dev, NULL);
--	edac_mc_free(mci);
--	return res;
+-err0:
+-	return rc;
 -}
 -
--static int highbank_mc_remove(struct platform_device *pdev)
+-#ifdef CONFIG_PM_SLEEP
+-static int ahci_highbank_suspend(struct device *dev)
 -{
--	struct mem_ctl_info *mci = platform_get_drvdata(pdev);
+-	struct ata_host *host = dev_get_drvdata(dev);
+-	struct ahci_host_priv *hpriv = host->private_data;
+-	void __iomem *mmio = hpriv->mmio;
+-	u32 ctl;
+-	int rc;
 -
--	edac_mc_del_mc(&pdev->dev);
--	edac_mc_free(mci);
+-	if (hpriv->flags & AHCI_HFLAG_NO_SUSPEND) {
+-		dev_err(dev, "firmware update required for suspend/resume\n");
+-		return -EIO;
+-	}
+-
+-	/*
+-	 * AHCI spec rev1.1 section 8.3.3:
+-	 * Software must disable interrupts prior to requesting a
+-	 * transition of the HBA to D3 state.
+-	 */
+-	ctl = readl(mmio + HOST_CTL);
+-	ctl &= ~HOST_IRQ_EN;
+-	writel(ctl, mmio + HOST_CTL);
+-	readl(mmio + HOST_CTL); /* flush */
+-
+-	rc = ata_host_suspend(host, PMSG_SUSPEND);
+-	if (rc)
+-		return rc;
+-
 -	return 0;
 -}
 -
--static struct platform_driver highbank_mc_edac_driver = {
--	.probe = highbank_mc_probe,
--	.remove = highbank_mc_remove,
--	.driver = {
--		.name = "hb_mc_edac",
--		.of_match_table = hb_ddr_ctrl_of_match,
--	},
+-static int ahci_highbank_resume(struct device *dev)
+-{
+-	struct ata_host *host = dev_get_drvdata(dev);
+-	int rc;
+-
+-	if (dev->power.power_state.event == PM_EVENT_SUSPEND) {
+-		rc = ahci_reset_controller(host);
+-		if (rc)
+-			return rc;
+-
+-		ahci_init_controller(host);
+-	}
+-
+-	ata_host_resume(host);
+-
+-	return 0;
+-}
+-#endif
+-
+-static SIMPLE_DEV_PM_OPS(ahci_highbank_pm_ops,
+-		  ahci_highbank_suspend, ahci_highbank_resume);
+-
+-static struct platform_driver ahci_highbank_driver = {
+-	.remove = ata_platform_remove_one,
+-        .driver = {
+-                .name = "highbank-ahci",
+-                .of_match_table = ahci_of_match,
+-                .pm = &ahci_highbank_pm_ops,
+-        },
+-	.probe = ahci_highbank_probe,
 -};
 -
--module_platform_driver(highbank_mc_edac_driver);
+-module_platform_driver(ahci_highbank_driver);
 -
--MODULE_LICENSE("GPL v2");
--MODULE_AUTHOR("Calxeda, Inc.");
--MODULE_DESCRIPTION("EDAC Driver for Calxeda Highbank");
+-MODULE_DESCRIPTION("Calxeda Highbank AHCI SATA platform driver");
+-MODULE_AUTHOR("Mark Langsdorf <mark.langsdorf@calxeda.com>");
+-MODULE_LICENSE("GPL");
+-MODULE_ALIAS("sata:highbank");
 --
 2.20.1
