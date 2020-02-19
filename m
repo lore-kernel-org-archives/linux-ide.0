@@ -4,184 +4,140 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55079C34047
-	for <linux-ide@archiver.kernel.org>; Wed, 19 Feb 2020 15:41:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAEFCC34047
+	for <linux-ide@archiver.kernel.org>; Wed, 19 Feb 2020 16:52:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3771524671
-	for <linux-ide@archiver.kernel.org>; Wed, 19 Feb 2020 15:41:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8BD222464E
+	for <linux-ide@archiver.kernel.org>; Wed, 19 Feb 2020 16:52:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726707AbgBSPlt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 19 Feb 2020 10:41:49 -0500
-Received: from laurent.telenet-ops.be ([195.130.137.89]:52718 "EHLO
-        laurent.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726634AbgBSPlt (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Feb 2020 10:41:49 -0500
-Received: from ramsan ([84.195.182.253])
-        by laurent.telenet-ops.be with bizsmtp
-        id 4fhn2200J5USYZQ01fhn68; Wed, 19 Feb 2020 16:41:48 +0100
-Received: from rox.of.borg ([192.168.97.57])
-        by ramsan with esmtp (Exim 4.90_1)
-        (envelope-from <geert@linux-m68k.org>)
-        id 1j4RTv-0004PG-Qu; Wed, 19 Feb 2020 16:41:47 +0100
-Received: from geert by rox.of.borg with local (Exim 4.90_1)
-        (envelope-from <geert@linux-m68k.org>)
-        id 1j4RTv-0002vr-PH; Wed, 19 Feb 2020 16:41:47 +0100
-From:   Geert Uytterhoeven <geert+renesas@glider.be>
-To:     Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>
-Cc:     devicetree@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org,
-        Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH] dt-bindings: ata: rcar-sata: Convert to json-schema
-Date:   Wed, 19 Feb 2020 16:41:46 +0100
-Message-Id: <20200219154146.11230-1-geert+renesas@glider.be>
-X-Mailer: git-send-email 2.17.1
+        id S1726779AbgBSQwU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 19 Feb 2020 11:52:20 -0500
+Received: from mout.kundenserver.de ([217.72.192.75]:52941 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726450AbgBSQwU (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Feb 2020 11:52:20 -0500
+Received: from threadripper.lan ([149.172.19.189]) by mrelayeu.kundenserver.de
+ (mreue107 [212.227.15.145]) with ESMTPA (Nemesis) id
+ 1M8QFi-1j8sQZ3yPg-004Vt0; Wed, 19 Feb 2020 17:51:52 +0100
+From:   Arnd Bergmann <arnd@arndb.de>
+To:     Jens Axboe <axboe@kernel.dk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Adam Williamson <awilliam@redhat.com>,
+        Chris Murphy <bugzilla@colorremedies.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Ben Hutchings <ben.hutchings@codethink.co.uk>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Tim Waugh <tim@cyberelk.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: [PATCH] compat_ioctl, cdrom: Replace .ioctl with .compat_ioctl in four appropriate places
+Date:   Wed, 19 Feb 2020 17:50:07 +0100
+Message-Id: <20200219165139.3467320-1-arnd@arndb.de>
+X-Mailer: git-send-email 2.25.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Provags-ID: V03:K1:s83bO8mKDR7xliqovCqp1GmWzEogAJvpGM54ZuLLH4pmNDsLTFY
+ ZxQUDSrXrb28nM+9drVbtrJ8MxqeW1pcICoxq0M2y+aB7qvD7iMDpcHWlECDzZL3mhdhI8K
+ BS8BYAcJqRI2ZWDXrlXqDDTO/DjF/Q05SjUWe1SBIBOeT7W12CpXurHmSTHy5X5VVQQIUtO
+ bOHv7lVkw7ikMgz7kiz/w==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:6qcWV+qWiLI=:kjXIiUB/VicY7yGRA7ziGY
+ 1kANGtrqCMHfXJf786bqSJ4WFSALkZjbMLtINIV4T+vxgzLgP14+/+o87XoB8AVtCbsM8kSU2
+ JI4f2MPP0HNWgn+2LpS3cLb7xghKtlFrZesE8ZoHQdrwNQA8TYnwo7i8iyWT9HB/jOsfGV3LL
+ 44C+RdOO+cVWTpSTxrIQlkh0FqrhHoevLjCx+9RY95AdV8S2y5F34wcsWwJ6ip0PT5kuzV6Il
+ hzgefpeFTffFB3QgfQolJedi0HJGGr8LxI0ncuaVgWICAk3xBtKfPuNevbrVXP4lsI1AM8hgF
+ e+AIJYY4vi0qSKjKANRQ/QT0Dx71Txo5/LLy3/UAuJTwirsg+AcLyZvPJMm64+1WptLr3b6BF
+ RKNkDnFWVixEY95EGsfpmnYdt9NeK0dbodW6RUy81Q/jnEPU2MGfTAu1tIbqmB2W35IXC6DuF
+ podvY+5Xxnq/2Q2vk9VqoBFXvehS9LY6pj6EZ5yEWpyT7NauOEat01WVpSczGhPHXHnEN/3h6
+ aKIueqLHBKpGHnXYIjiuy2iGxQsibiG/eLbSbcBMKwYVdRWRbqcnHP4Kq9GTyLwL4dTE5USZi
+ aPOlnrKGSAjB/LMbVO4F7dN1KG6ykrsF2HvXh7QxFP6Q1NvKuZte5cMMhgj1N8BSC4ARzLYxv
+ LBdyXTSwHlhJGZV+d1tLgWwyR1mZFiTy0jP5n1sx42z9DwEe1XaujjxQN57RcT2S93y3Qj0Ky
+ rm7R3B5pUNK3kdNFswGHNan0hA50VY7ikJxsHyKcBI69ebqUEeCdCLq1mGBHTdpDNsPeiCTQE
+ 1WnDQxC7sbtImKsPybVj6QylWejuYsNDlTlTBj14+wohn9SOzM=
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Convert the Renesas R-Car Serial-ATA Device Tree binding documentation
-to json-schema.
+From: Adam Williamson <awilliam@redhat.com>
 
-While at it:
-  - Remove the deprecated "renesas,rcar-sata" compatible value,
-  - Add "iommus", "power-domains", and "resets" properties,
-  - Update the example.
+Arnd Bergmann inadvertently typoed these in d320a9551e394 and
+64cbfa96551a; they seem to be the cause of
+https://bugzilla.redhat.com/show_bug.cgi?id=1801353 , invalid
+SCSI commands when udev tries to query a DVD drive.
 
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+[arnd] Found another instance of the same bug, also introduced
+in my compat_ioctl series.
+
+Fixes: d320a9551e39 ("compat_ioctl: scsi: move ioctl handling into drivers")
+Fixes: 64cbfa96551a ("compat_ioctl: move cdrom commands into cdrom.c")
+Fixes: c103d6ee69f9 ("compat_ioctl: ide: floppy: add handler")
+Link: https://bugzilla.redhat.com/show_bug.cgi?id=1801353
+Bisected-by: Chris Murphy <bugzilla@colorremedies.com>
+Signed-off-by: Adam Williamson <awilliam@redhat.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
-Not having to care about the deprecated value simplifies the
-jscon-schema.
----
- .../bindings/ata/renesas,rcar-sata.yaml       | 71 +++++++++++++++++++
- .../devicetree/bindings/ata/sata_rcar.txt     | 36 ----------
- 2 files changed, 71 insertions(+), 36 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
- delete mode 100644 Documentation/devicetree/bindings/ata/sata_rcar.txt
+ drivers/block/paride/pcd.c | 2 +-
+ drivers/cdrom/gdrom.c      | 2 +-
+ drivers/ide/ide-gd.c       | 2 +-
+ drivers/scsi/sr.c          | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml b/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
-new file mode 100644
-index 0000000000000000..7b69831060d8b9c5
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
-@@ -0,0 +1,71 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: "http://devicetree.org/schemas/ata/renesas,rcar-sata.yaml#"
-+$schema: "http://devicetree.org/meta-schemas/core.yaml#"
-+
-+title: Renesas R-Car Serial-ATA Interface
-+
-+maintainers:
-+  - Geert Uytterhoeven <geert+renesas@glider.be>
-+
-+properties:
-+  compatible:
-+    oneOf:
-+      - items:
-+          - enum:
-+              - renesas,sata-r8a7779      # R-Car H1
-+      - items:
-+          - enum:
-+              - renesas,sata-r8a7790-es1  # R-Car H2 ES1
-+              - renesas,sata-r8a7790      # R-Car H2 other than ES1
-+              - renesas,sata-r8a7791      # R-Car M2-W
-+              - renesas,sata-r8a7793      # R-Car M2-N
-+          - const: renesas,rcar-gen2-sata # generic R-Car Gen2
-+      - items:
-+          - enum:
-+              - renesas,sata-r8a774b1     # RZ/G2N
-+              - renesas,sata-r8a7795      # R-Car H3
-+              - renesas,sata-r8a77965     # R-Car M3-N
-+          - const: renesas,rcar-gen3-sata # generic R-Car Gen3 or RZ/G2
-+
-+  reg:
-+    maxItems: 1
-+
-+  interrupts:
-+    maxItems: 1
-+
-+  clocks:
-+    maxItems: 1
-+
-+  iommus:
-+    maxItems: 1
-+
-+  power-domains:
-+    maxItems: 1
-+
-+  resets:
-+    maxItems: 1
-+
-+required:
-+  - compatible
-+  - reg
-+  - interrupts
-+  - clocks
-+
-+additionalProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/clock/r8a7791-cpg-mssr.h>
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+    #include <dt-bindings/power/r8a7791-sysc.h>
-+
-+    sata@ee300000 {
-+            compatible = "renesas,sata-r8a7791", "renesas,rcar-gen2-sata";
-+            reg = <0xee300000 0x200000>;
-+            interrupts = <GIC_SPI 105 IRQ_TYPE_LEVEL_HIGH>;
-+            clocks = <&cpg CPG_MOD 815>;
-+            power-domains = <&sysc R8A7791_PD_ALWAYS_ON>;
-+            resets = <&cpg 815>;
-+    };
-diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt b/Documentation/devicetree/bindings/ata/sata_rcar.txt
-deleted file mode 100644
-index a2fbdc91570d0f7c..0000000000000000
---- a/Documentation/devicetree/bindings/ata/sata_rcar.txt
-+++ /dev/null
-@@ -1,36 +0,0 @@
--* Renesas R-Car SATA
--
--Required properties:
--- compatible		: should contain one or more of the following:
--			  - "renesas,sata-r8a774b1" for RZ/G2N
--			  - "renesas,sata-r8a7779" for R-Car H1
--			  - "renesas,sata-r8a7790-es1" for R-Car H2 ES1
--			  - "renesas,sata-r8a7790" for R-Car H2 other than ES1
--			  - "renesas,sata-r8a7791" for R-Car M2-W
--			  - "renesas,sata-r8a7793" for R-Car M2-N
--			  - "renesas,sata-r8a7795" for R-Car H3
--			  - "renesas,sata-r8a77965" for R-Car M3-N
--			  - "renesas,rcar-gen2-sata" for a generic R-Car Gen2
--			     compatible device
--			  - "renesas,rcar-gen3-sata" for a generic R-Car Gen3 or
--			     RZ/G2 compatible device
--			  - "renesas,rcar-sata" is deprecated
--
--			  When compatible with the generic version nodes
--			  must list the SoC-specific version corresponding
--			  to the platform first followed by the generic
--			  version.
--
--- reg			: address and length of the SATA registers;
--- interrupts		: must consist of one interrupt specifier.
--- clocks		: must contain a reference to the functional clock.
--
--Example:
--
--sata0: sata@ee300000 {
--	compatible = "renesas,sata-r8a7791", "renesas,rcar-gen2-sata";
--	reg = <0 0xee300000 0 0x2000>;
--	interrupt-parent = <&gic>;
--	interrupts = <0 105 IRQ_TYPE_LEVEL_HIGH>;
--	clocks = <&mstp8_clks R8A7791_CLK_SATA0>;
--};
+diff --git a/drivers/block/paride/pcd.c b/drivers/block/paride/pcd.c
+index 117cfc8cd05a..cda5cf917e9a 100644
+--- a/drivers/block/paride/pcd.c
++++ b/drivers/block/paride/pcd.c
+@@ -276,7 +276,7 @@ static const struct block_device_operations pcd_bdops = {
+ 	.release	= pcd_block_release,
+ 	.ioctl		= pcd_block_ioctl,
+ #ifdef CONFIG_COMPAT
+-	.ioctl		= blkdev_compat_ptr_ioctl,
++	.compat_ioctl	= blkdev_compat_ptr_ioctl,
+ #endif
+ 	.check_events	= pcd_block_check_events,
+ };
+diff --git a/drivers/cdrom/gdrom.c b/drivers/cdrom/gdrom.c
+index 886b2638c730..c51292c2a131 100644
+--- a/drivers/cdrom/gdrom.c
++++ b/drivers/cdrom/gdrom.c
+@@ -519,7 +519,7 @@ static const struct block_device_operations gdrom_bdops = {
+ 	.check_events		= gdrom_bdops_check_events,
+ 	.ioctl			= gdrom_bdops_ioctl,
+ #ifdef CONFIG_COMPAT
+-	.ioctl			= blkdev_compat_ptr_ioctl,
++	.compat_ioctl		= blkdev_compat_ptr_ioctl,
+ #endif
+ };
+ 
+diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
+index 1bb99b556393..05c26986637b 100644
+--- a/drivers/ide/ide-gd.c
++++ b/drivers/ide/ide-gd.c
+@@ -361,7 +361,7 @@ static const struct block_device_operations ide_gd_ops = {
+ 	.release		= ide_gd_release,
+ 	.ioctl			= ide_gd_ioctl,
+ #ifdef CONFIG_COMPAT
+-	.ioctl			= ide_gd_compat_ioctl,
++	.compat_ioctl		= ide_gd_compat_ioctl,
+ #endif
+ 	.getgeo			= ide_gd_getgeo,
+ 	.check_events		= ide_gd_check_events,
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 0fbb8fe6e521..e4240e4ae8bb 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -688,7 +688,7 @@ static const struct block_device_operations sr_bdops =
+ 	.release	= sr_block_release,
+ 	.ioctl		= sr_block_ioctl,
+ #ifdef CONFIG_COMPAT
+-	.ioctl		= sr_block_compat_ioctl,
++	.compat_ioctl	= sr_block_compat_ioctl,
+ #endif
+ 	.check_events	= sr_block_check_events,
+ 	.revalidate_disk = sr_block_revalidate_disk,
 -- 
-2.17.1
+2.25.0
 
