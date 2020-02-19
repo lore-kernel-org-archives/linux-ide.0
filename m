@@ -2,76 +2,186 @@ Return-Path: <SRS0=BS17=4H=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2778DC34050
-	for <linux-ide@archiver.kernel.org>; Wed, 19 Feb 2020 14:23:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55079C34047
+	for <linux-ide@archiver.kernel.org>; Wed, 19 Feb 2020 15:41:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EA96B24656
-	for <linux-ide@archiver.kernel.org>; Wed, 19 Feb 2020 14:23:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3771524671
+	for <linux-ide@archiver.kernel.org>; Wed, 19 Feb 2020 15:41:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727786AbgBSOW4 convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 19 Feb 2020 09:22:56 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:32999 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727855AbgBSOW4 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Feb 2020 09:22:56 -0500
-Received: from mail-pl1-f200.google.com ([209.85.214.200])
-        by youngberry.canonical.com with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <kai.heng.feng@canonical.com>)
-        id 1j4QFZ-000220-MG
-        for linux-ide@vger.kernel.org; Wed, 19 Feb 2020 14:22:53 +0000
-Received: by mail-pl1-f200.google.com with SMTP id w17so251848plq.16
-        for <linux-ide@vger.kernel.org>; Wed, 19 Feb 2020 06:22:53 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:content-transfer-encoding:mime-version
-         :subject:message-id:date:cc:to;
-        bh=MLzunwtdiwZE8X3dSBg1bcU+Imt/wqtftJaxuJ1ldhU=;
-        b=EmNyziiMCjFtT2QynVz3FvIsnAVvlEjGn2kxy3mUceiaAlGi20WlTiAy0orXur2A1V
-         Ec/z/an0Zwo097LrM/VZMfN7znJ7EJbCb2e98LkWGwCGRlmQCxnhhd0bLaeBFrztyrhr
-         dydy+aKtfIvZS5zxi3dwes2QNqurLK7ljMBsN4SFXgbvNsm5doYSXDTpWPg+pSMOysrV
-         /jY4XozsXs8TyX1Cw4exfkx2aIZGsLShjtDhLeuRTrH15+66ymXtGLcmUcZUzEVHZ0l7
-         d7NuwZ1zamzUA+v66DrYjfwP/8MYfrVnTvk45nTI5B/mnvJ+5MxOCXU5m+8VHXN+DrCy
-         e4Uw==
-X-Gm-Message-State: APjAAAXb1ymLxTOcftDmU72Jbn28+ZT+S9oKWugkJFetjJz6CstvIfmx
-        A7xHyDpri83HxdND87sxL8KUWdaH0VyYjTIh47wnwf/eHjVpzcXFnLkDI0m3FGMsNp/cUjO2MaR
-        SCApVpKSf7rpG9zfhjlBIzqG+TxlLhcVE6h2sOg==
-X-Received: by 2002:a63:f84b:: with SMTP id v11mr27755929pgj.133.1582122172397;
-        Wed, 19 Feb 2020 06:22:52 -0800 (PST)
-X-Google-Smtp-Source: APXvYqyAf9zQyTPVPbMjR6FbxyzaCj2ekLS3doKIrUEPzVc140+FEtyEVjAoXaVkdyd8BTxOWOpurg==
-X-Received: by 2002:a63:f84b:: with SMTP id v11mr27755913pgj.133.1582122172066;
-        Wed, 19 Feb 2020 06:22:52 -0800 (PST)
-Received: from 2001-b011-380f-3214-7181-50ee-02bc-c2ee.dynamic-ip6.hinet.net (2001-b011-380f-3214-7181-50ee-02bc-c2ee.dynamic-ip6.hinet.net. [2001:b011:380f:3214:7181:50ee:2bc:c2ee])
-        by smtp.gmail.com with ESMTPSA id w26sm3190144pfj.119.2020.02.19.06.22.50
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 19 Feb 2020 06:22:51 -0800 (PST)
-From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-Content-Type: text/plain;
-        charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Mime-Version: 1.0 (Mac OS X Mail 13.0 \(3608.60.0.2.5\))
-Subject: Hard Disk consumes lots of power in s2idle
-Message-Id: <0955D72C-D24D-402E-884F-C706578BF477@canonical.com>
-Date:   Wed, 19 Feb 2020 22:22:48 +0800
-Cc:     Linux PM <linux-pm@vger.kernel.org>, linux-ide@vger.kernel.org,
-        open list <linux-kernel@vger.kernel.org>,
-        Kent Lin <kent.lin@canonical.com>
-To:     Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
-X-Mailer: Apple Mail (2.3608.60.0.2.5)
+        id S1726707AbgBSPlt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 19 Feb 2020 10:41:49 -0500
+Received: from laurent.telenet-ops.be ([195.130.137.89]:52718 "EHLO
+        laurent.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726634AbgBSPlt (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Feb 2020 10:41:49 -0500
+Received: from ramsan ([84.195.182.253])
+        by laurent.telenet-ops.be with bizsmtp
+        id 4fhn2200J5USYZQ01fhn68; Wed, 19 Feb 2020 16:41:48 +0100
+Received: from rox.of.borg ([192.168.97.57])
+        by ramsan with esmtp (Exim 4.90_1)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1j4RTv-0004PG-Qu; Wed, 19 Feb 2020 16:41:47 +0100
+Received: from geert by rox.of.borg with local (Exim 4.90_1)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1j4RTv-0002vr-PH; Wed, 19 Feb 2020 16:41:47 +0100
+From:   Geert Uytterhoeven <geert+renesas@glider.be>
+To:     Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>
+Cc:     devicetree@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org,
+        Geert Uytterhoeven <geert+renesas@glider.be>
+Subject: [PATCH] dt-bindings: ata: rcar-sata: Convert to json-schema
+Date:   Wed, 19 Feb 2020 16:41:46 +0100
+Message-Id: <20200219154146.11230-1-geert+renesas@glider.be>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Srinivas,
+Convert the Renesas R-Car Serial-ATA Device Tree binding documentation
+to json-schema.
 
-Your previous work to support DEVSLP works well on SATA SSDs, so I am asking you the issue I am facing:
-Once a laptop has a HDD installed, the power consumption during S2Idle increases ~0.4W, which is quite a lot.
-However, HDDs don't seem to support DEVSLP, so I wonder if you know to do proper power management for HDDs?
+While at it:
+  - Remove the deprecated "renesas,rcar-sata" compatible value,
+  - Add "iommus", "power-domains", and "resets" properties,
+  - Update the example.
 
-Kai-Heng
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+---
+Not having to care about the deprecated value simplifies the
+jscon-schema.
+---
+ .../bindings/ata/renesas,rcar-sata.yaml       | 71 +++++++++++++++++++
+ .../devicetree/bindings/ata/sata_rcar.txt     | 36 ----------
+ 2 files changed, 71 insertions(+), 36 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
+ delete mode 100644 Documentation/devicetree/bindings/ata/sata_rcar.txt
+
+diff --git a/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml b/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
+new file mode 100644
+index 0000000000000000..7b69831060d8b9c5
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
+@@ -0,0 +1,71 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: "http://devicetree.org/schemas/ata/renesas,rcar-sata.yaml#"
++$schema: "http://devicetree.org/meta-schemas/core.yaml#"
++
++title: Renesas R-Car Serial-ATA Interface
++
++maintainers:
++  - Geert Uytterhoeven <geert+renesas@glider.be>
++
++properties:
++  compatible:
++    oneOf:
++      - items:
++          - enum:
++              - renesas,sata-r8a7779      # R-Car H1
++      - items:
++          - enum:
++              - renesas,sata-r8a7790-es1  # R-Car H2 ES1
++              - renesas,sata-r8a7790      # R-Car H2 other than ES1
++              - renesas,sata-r8a7791      # R-Car M2-W
++              - renesas,sata-r8a7793      # R-Car M2-N
++          - const: renesas,rcar-gen2-sata # generic R-Car Gen2
++      - items:
++          - enum:
++              - renesas,sata-r8a774b1     # RZ/G2N
++              - renesas,sata-r8a7795      # R-Car H3
++              - renesas,sata-r8a77965     # R-Car M3-N
++          - const: renesas,rcar-gen3-sata # generic R-Car Gen3 or RZ/G2
++
++  reg:
++    maxItems: 1
++
++  interrupts:
++    maxItems: 1
++
++  clocks:
++    maxItems: 1
++
++  iommus:
++    maxItems: 1
++
++  power-domains:
++    maxItems: 1
++
++  resets:
++    maxItems: 1
++
++required:
++  - compatible
++  - reg
++  - interrupts
++  - clocks
++
++additionalProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/r8a7791-cpg-mssr.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/power/r8a7791-sysc.h>
++
++    sata@ee300000 {
++            compatible = "renesas,sata-r8a7791", "renesas,rcar-gen2-sata";
++            reg = <0xee300000 0x200000>;
++            interrupts = <GIC_SPI 105 IRQ_TYPE_LEVEL_HIGH>;
++            clocks = <&cpg CPG_MOD 815>;
++            power-domains = <&sysc R8A7791_PD_ALWAYS_ON>;
++            resets = <&cpg 815>;
++    };
+diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+deleted file mode 100644
+index a2fbdc91570d0f7c..0000000000000000
+--- a/Documentation/devicetree/bindings/ata/sata_rcar.txt
++++ /dev/null
+@@ -1,36 +0,0 @@
+-* Renesas R-Car SATA
+-
+-Required properties:
+-- compatible		: should contain one or more of the following:
+-			  - "renesas,sata-r8a774b1" for RZ/G2N
+-			  - "renesas,sata-r8a7779" for R-Car H1
+-			  - "renesas,sata-r8a7790-es1" for R-Car H2 ES1
+-			  - "renesas,sata-r8a7790" for R-Car H2 other than ES1
+-			  - "renesas,sata-r8a7791" for R-Car M2-W
+-			  - "renesas,sata-r8a7793" for R-Car M2-N
+-			  - "renesas,sata-r8a7795" for R-Car H3
+-			  - "renesas,sata-r8a77965" for R-Car M3-N
+-			  - "renesas,rcar-gen2-sata" for a generic R-Car Gen2
+-			     compatible device
+-			  - "renesas,rcar-gen3-sata" for a generic R-Car Gen3 or
+-			     RZ/G2 compatible device
+-			  - "renesas,rcar-sata" is deprecated
+-
+-			  When compatible with the generic version nodes
+-			  must list the SoC-specific version corresponding
+-			  to the platform first followed by the generic
+-			  version.
+-
+-- reg			: address and length of the SATA registers;
+-- interrupts		: must consist of one interrupt specifier.
+-- clocks		: must contain a reference to the functional clock.
+-
+-Example:
+-
+-sata0: sata@ee300000 {
+-	compatible = "renesas,sata-r8a7791", "renesas,rcar-gen2-sata";
+-	reg = <0 0xee300000 0 0x2000>;
+-	interrupt-parent = <&gic>;
+-	interrupts = <0 105 IRQ_TYPE_LEVEL_HIGH>;
+-	clocks = <&mstp8_clks R8A7791_CLK_SATA0>;
+-};
+-- 
+2.17.1
+
