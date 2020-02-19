@@ -2,73 +2,59 @@ Return-Path: <SRS0=BS17=4H=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD7F5C3405F
-	for <linux-ide@archiver.kernel.org>; Wed, 19 Feb 2020 18:36:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F969C34022
+	for <linux-ide@archiver.kernel.org>; Wed, 19 Feb 2020 21:25:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 92F9E2467B
-	for <linux-ide@archiver.kernel.org>; Wed, 19 Feb 2020 18:36:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD8C724670
+	for <linux-ide@archiver.kernel.org>; Wed, 19 Feb 2020 21:25:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726645AbgBSSgG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 19 Feb 2020 13:36:06 -0500
-Received: from mga17.intel.com ([192.55.52.151]:27984 "EHLO mga17.intel.com"
+        id S1727082AbgBSVZY convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 19 Feb 2020 16:25:24 -0500
+Received: from mail.kernel.org ([198.145.29.99]:42702 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726598AbgBSSgG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 19 Feb 2020 13:36:06 -0500
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 19 Feb 2020 10:36:06 -0800
-X-IronPort-AV: E=Sophos;i="5.70,461,1574150400"; 
-   d="scan'208";a="348991894"
-Received: from ramya1g-mobl.gar.corp.intel.com ([10.252.147.199])
-  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 19 Feb 2020 10:36:03 -0800
-Message-ID: <a9fd25cd0a151d20e975ce79ab70197e39ef01e1.camel@linux.intel.com>
-Subject: Re: Hard Disk consumes lots of power in s2idle
-From:   Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
-Cc:     Linux PM <linux-pm@vger.kernel.org>, linux-ide@vger.kernel.org,
-        open list <linux-kernel@vger.kernel.org>,
-        Kent Lin <kent.lin@canonical.com>
-Date:   Wed, 19 Feb 2020 10:36:00 -0800
-In-Reply-To: <0955D72C-D24D-402E-884F-C706578BF477@canonical.com>
-References: <0955D72C-D24D-402E-884F-C706578BF477@canonical.com>
+        id S1726703AbgBSVZY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 19 Feb 2020 16:25:24 -0500
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-ide@vger.kernel.org
+Subject: [Bug 206405] kernel crash during boot debian server on qemu+kvm
+Date:   Wed, 19 Feb 2020 21:25:23 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo io_ide@kernel-bugs.osdl.org
+X-Bugzilla-Product: IO/Storage
+X-Bugzilla-Component: IDE
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: antdev66@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: io_ide@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-206405-11633-Dt7buLdEpp@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-206405-11633@https.bugzilla.kernel.org/>
+References: <bug-206405-11633@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.1-2 
+Content-Transfer-Encoding: 8BIT
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Kai,
+https://bugzilla.kernel.org/show_bug.cgi?id=206405
 
-On Wed, 2020-02-19 at 22:22 +0800, Kai-Heng Feng wrote:
-> Hi Srinivas,
-> 
-> Your previous work to support DEVSLP works well on SATA SSDs, so I am
-> asking you the issue I am facing:
-> Once a laptop has a HDD installed, the power consumption during
-> S2Idle increases ~0.4W, which is quite a lot.
-> However, HDDs don't seem to support DEVSLP, so I wonder if you know
-> to do proper power management for HDDs?
-What is the default here
-cat /sys/power/mem_sleep
-s2idle or deep?
+--- Comment #3 from anthony (antdev66@gmail.com) ---
+same problem in version 5.5.5
 
-Please follow debug steps here:
-https://01.org/blogs/qwang59/2018/how-achieve-s0ix-states-linux
-
-We need to check whether you get any PC10 residency or not.
-
-Thanks,
-Srinivas
-
-
-> 
-> Kai-Heng
-
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
