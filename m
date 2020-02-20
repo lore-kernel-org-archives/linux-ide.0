@@ -2,155 +2,131 @@ Return-Path: <SRS0=dJ96=4I=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55F97C11D07
-	for <linux-ide@archiver.kernel.org>; Thu, 20 Feb 2020 11:21:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67A96C11D04
+	for <linux-ide@archiver.kernel.org>; Thu, 20 Feb 2020 13:30:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 374F32465D
-	for <linux-ide@archiver.kernel.org>; Thu, 20 Feb 2020 11:21:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29B5B208C4
+	for <linux-ide@archiver.kernel.org>; Thu, 20 Feb 2020 13:30:08 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="k9S0o+Cf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727233AbgBTLV0 convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 20 Feb 2020 06:21:26 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:40431 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726501AbgBTLVZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 20 Feb 2020 06:21:25 -0500
-Received: from mail-pg1-f198.google.com ([209.85.215.198])
-        by youngberry.canonical.com with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <kai.heng.feng@canonical.com>)
-        id 1j4jtT-0006Wv-0T
-        for linux-ide@vger.kernel.org; Thu, 20 Feb 2020 11:21:23 +0000
-Received: by mail-pg1-f198.google.com with SMTP id o2so2031574pgj.11
-        for <linux-ide@vger.kernel.org>; Thu, 20 Feb 2020 03:21:22 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=WSsVKe5m/fI49zLSWZeeXgxmZuAkrbCjOSeJyTky1JM=;
-        b=T4a7kpP2E0g8UHw5lGiv+rbSFGKjdONF6/+5+Vf1Cwt3UHiUJt8YAR1+rSFm3lZp7S
-         OHHUyo43zZZz54EyEdj8vt2UWYVgLyCP6rtyU4XI9HjlaivT6bPGa0/4+axAwkXeOSl9
-         qGgN9XoDIsnxySh5Xo+IR6eW9wQoK+ARX6n/h1QGaCNeK3UF5OCiO49t3pnkRRZLqfxt
-         DP/jKi3LdUru4oB3rbVNi79ZypQiDhJ0+3n72OmWPcx75xjBpY334IY2HDwsUHgwStzw
-         nhevFSPS808Spi4mzoGJRRGZGOCWgS8gI945xDBnoYksgPRCIyZSQesJZlK954cvSilC
-         Lb8w==
-X-Gm-Message-State: APjAAAX3bzOor9Xmhw1rvzWg72L1iDfu6eLtJoeBy9IM9/yezTqdGvuF
-        CzPGVWb7/UDI3EW2v6Ol6x6SnBYs+3dcynfQFItw1X91XSIlqEfTwtHQ2c8ADwNhWeOEFVC+iSQ
-        MtJLAq39s5zGvxoODaHZptWsYLiF/+F2odI4Org==
-X-Received: by 2002:a17:902:503:: with SMTP id 3mr31362167plf.78.1582197681512;
-        Thu, 20 Feb 2020 03:21:21 -0800 (PST)
-X-Google-Smtp-Source: APXvYqxyOojlmbrBEfU+UtdeK3OKApDHQEphuC9Anq0405U24Th2wQQ/B3DkQ1V9+saRUPwRC1RdxA==
-X-Received: by 2002:a17:902:503:: with SMTP id 3mr31362145plf.78.1582197681120;
-        Thu, 20 Feb 2020 03:21:21 -0800 (PST)
-Received: from 2001-b011-380f-3214-b828-48d4-ee3d-9937.dynamic-ip6.hinet.net (2001-b011-380f-3214-b828-48d4-ee3d-9937.dynamic-ip6.hinet.net. [2001:b011:380f:3214:b828:48d4:ee3d:9937])
-        by smtp.gmail.com with ESMTPSA id 84sm3445110pgg.90.2020.02.20.03.21.19
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 20 Feb 2020 03:21:20 -0800 (PST)
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 13.0 \(3608.60.0.2.5\))
-Subject: Re: Hard Disk consumes lots of power in s2idle
-From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-In-Reply-To: <CAJZ5v0in-v9iu88Wj0gAg_th-E-QWDSHZ_XvgyoOuqE=CZPtqQ@mail.gmail.com>
-Date:   Thu, 20 Feb 2020 19:21:18 +0800
-Cc:     Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        Kent Lin <kent.lin@canonical.com>, Tejun Heo <tj@kernel.org>
-Content-Transfer-Encoding: 8BIT
-Message-Id: <73F7D94E-65B1-4069-AA97-5A34617308B9@canonical.com>
-References: <0955D72C-D24D-402E-884F-C706578BF477@canonical.com>
- <a9fd25cd0a151d20e975ce79ab70197e39ef01e1.camel@linux.intel.com>
- <235CF4F8-19BF-4B00-8C92-E59CB2D476A7@canonical.com>
- <CAJZ5v0jXvo0ceNMp=kstTi24Ne7F-ZGMcD0T0TSMpcZZWsJsUA@mail.gmail.com>
- <CA007B3C-C084-429E-B774-70264A9E609F@canonical.com>
- <CAJZ5v0in-v9iu88Wj0gAg_th-E-QWDSHZ_XvgyoOuqE=CZPtqQ@mail.gmail.com>
-To:     "Rafael J. Wysocki" <rafael@kernel.org>
-X-Mailer: Apple Mail (2.3608.60.0.2.5)
+        id S1728042AbgBTNaH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 20 Feb 2020 08:30:07 -0500
+Received: from mailout1.w1.samsung.com ([210.118.77.11]:48711 "EHLO
+        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727951AbgBTNaH (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 20 Feb 2020 08:30:07 -0500
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200220133006euoutp01c13abf2c376aef3a527f00eb3abbe8ef~1H28UrWVg3202732027euoutp01_
+        for <linux-ide@vger.kernel.org>; Thu, 20 Feb 2020 13:30:06 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200220133006euoutp01c13abf2c376aef3a527f00eb3abbe8ef~1H28UrWVg3202732027euoutp01_
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1582205406;
+        bh=cGD/GyX9sEQXtXq7CzbZUtvx2En/EcYW11DHg+0QRDM=;
+        h=Subject:To:From:Cc:Date:In-Reply-To:References:From;
+        b=k9S0o+CfOPDLerFSFq8p8E5t7DdaToEEVYvtoPdgXzWQSmjB8qKxG0OjNxKAvGW2k
+         3JCQWBssjlTDE9SE8pl88sdHm/rnoKHnSG44Vu3HUPPSjiAx2ND0OGuwrTOesnYROf
+         j8OweLocuOSXa8p+Do5KmTbWhva4J1gQuJLHVJCM=
+Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
+        20200220133005eucas1p1a858bcc7e93249cb17a136fbefcfe475~1H28OlG1C2600526005eucas1p1k;
+        Thu, 20 Feb 2020 13:30:05 +0000 (GMT)
+Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
+        eusmges3new.samsung.com (EUCPMTA) with SMTP id F7.FF.60698.DD98E4E5; Thu, 20
+        Feb 2020 13:30:05 +0000 (GMT)
+Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
+        20200220133005eucas1p2e28507407434ce211b71980fd82f921a~1H2749Io82158021580eucas1p2x;
+        Thu, 20 Feb 2020 13:30:05 +0000 (GMT)
+Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
+        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20200220133005eusmtrp1121a6d09d35c71aaecb780dbd56cdc41~1H27y4z513090930909eusmtrp1e;
+        Thu, 20 Feb 2020 13:30:05 +0000 (GMT)
+X-AuditID: cbfec7f5-a0fff7000001ed1a-d0-5e4e89ddf38b
+Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id EB.DB.07950.DD98E4E5; Thu, 20
+        Feb 2020 13:30:05 +0000 (GMT)
+Received: from [106.120.51.71] (unknown [106.120.51.71]) by
+        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20200220133005eusmtip1ca9aff79fc9ef3dfb66e7b68aadd6538~1H27lvU5n2869128691eusmtip1V;
+        Thu, 20 Feb 2020 13:30:05 +0000 (GMT)
+Subject: Re: [Bug 206405] kernel crash during boot debian server on qemu+kvm
+To:     bugzilla-daemon@bugzilla.kernel.org
+From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc:     linux-ide@vger.kernel.org
+Message-ID: <401155b9-e8d6-b70c-4c16-7a8d2e15f842@samsung.com>
+Date:   Thu, 20 Feb 2020 14:30:05 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+        Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <bug-206405-11633-Dt7buLdEpp@https.bugzilla.kernel.org/>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFmpmleLIzCtJLcpLzFFi42LZduzned27nX5xBst7zSx6LzQxWxzb8YjJ
+        gcnj1ZQ3zB6fN8kFMEVx2aSk5mSWpRbp2yVwZSw//5m1YBdrxekTy1kaGI+wdDFyckgImEjs
+        fr+YuYuRi0NIYAWjxMXeF0wQzhdGidOPJrJDOJ8ZJZbP38zaxcgB1vL9uT1EfDmjxIPO76wQ
+        zltGiYZVZ5hB5goL+EhMP/qDDcQWEVCXuHVnH9g+NgEriYntqxhBbGYBWYnGW0vZQWxeATuJ
+        RQ9mM4HYLAKqElPun2AFsUUFIiQ+PTjMClEjKHFy5hOwOZwCrhKTG26zQswRl7j1ZD4ThC0v
+        sf3tHLB/JAQ+s0mc63zECPGoi8S89qdQtrDEq+Nb2CFsGYnTk3tYIBrWMUr87XgB1b0d6OfJ
+        /9ggqqwl7pz7xQbyP7OApsT6XfoQYUeJ63cfs0GChU/ixltBiCP4JCZtm84MEeaV6GgTgqhW
+        k9iwbAMbzNqunSuZJzAqzULy2iwk78xC8s4shL0LGFlWMYqnlhbnpqcWG+ellusVJ+YWl+al
+        6yXn525iBCaN0/+Of93BuO9P0iFGAQ5GJR7eiga/OCHWxLLiytxDjBIczEoivGo8QCHelMTK
+        qtSi/Pii0pzU4kOM0hwsSuK8xotexgoJpCeWpGanphakFsFkmTg4pRoYFx7b9vuvhO0sdeF1
+        RkLLdJgiuhZf1XhwYHnN8k3PbnYyP7Gat/5yr5/4FQv+q/sj5gl7ft+9s2JnoZZvV7/Nn+++
+        ga2LFt+oZDy3sMt3d9K5GdOs7y7x0Mmwmff8W5soLzNve4bimctGttPmlMdFyR32c2NpfTP3
+        n3fJtbWNJ+r3z3yy4bjnXyWW4oxEQy3mouJEABTCW5EWAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprEIsWRmVeSWpSXmKPExsVy+t/xu7p3O/3iDA7tlrTovdDEbHFsxyMm
+        ByaPV1PeMHt83iQXwBSlZ1OUX1qSqpCRX1xiqxRtaGGkZ2hpoWdkYqlnaGwea2VkqqRvZ5OS
+        mpNZllqkb5egl7H8/GfWgl2sFadPLGdpYDzC0sXIwSEhYCLx/bl9FyMXh5DAUkaJRwuaGSHi
+        MhLH15d1MXICmcISf651sUHUvGaU+PV+OQtIQljAR2L60R9sILaIgLrErTv7wGYKCZRItB0C
+        K2ETsJKY2L6KEcRmFpCVaLy1lB3E5hWwk1j0YDYTiM0ioCox5f4JVhBbVCBC4vCOWYwQNYIS
+        J2c+AZvDKeAqMbnhNivEHHWJP/MuMUPY4hK3nsxngrDlJba/ncM8gVFoFpL2WUhaZiFpmYWk
+        ZQEjyypGkdTS4tz03GIjveLE3OLSvHS95PzcTYzA+Nh27OeWHYxd74IPMQpwMCrx8FY0+MUJ
+        sSaWFVfmHmKU4GBWEuFV4wEK8aYkVlalFuXHF5XmpBYfYjQFem4is5Rocj4wdvNK4g1NDc0t
+        LA3Njc2NzSyUxHk7BA7GCAmkJ5akZqemFqQWwfQxcXBKNTC29b+Y2Bi/9pt6UfP2jXcuqKbK
+        6Zk8W+1976bpHOGA/LwLP237I6QFIj3CttmF95Z7n/zWFrAuWLg18pBO/LvSKImOn9pro7bL
+        xDa/4pNPsrsboVowvTYjZ/W795ky4tNyfljMu21Qv+qB5qrKcGYG7aJ/4lflldcGrJw6KSvw
+        t/K2tzFGdUosxRmJhlrMRcWJAPMZZg6lAgAA
+X-CMS-MailID: 20200220133005eucas1p2e28507407434ce211b71980fd82f921a
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-RootMTR: 20200220133005eucas1p2e28507407434ce211b71980fd82f921a
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20200220133005eucas1p2e28507407434ce211b71980fd82f921a
+References: <bug-206405-11633@https.bugzilla.kernel.org/>
+        <bug-206405-11633-Dt7buLdEpp@https.bugzilla.kernel.org/>
+        <CGME20200220133005eucas1p2e28507407434ce211b71980fd82f921a@eucas1p2.samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 
+On 2/19/20 10:25 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=206405
+> 
+> --- Comment #3 from anthony (antdev66@gmail.com) ---
+> same problem in version 5.5.5
 
-> On Feb 20, 2020, at 18:34, Rafael J. Wysocki <rafael@kernel.org> wrote:
-> 
-> On Thu, Feb 20, 2020 at 11:25 AM Kai-Heng Feng
-> <kai.heng.feng@canonical.com> wrote:
->> 
->> 
->> 
->>> On Feb 20, 2020, at 18:12, Rafael J. Wysocki <rafael@kernel.org> wrote:
->>> 
->>> On Thu, Feb 20, 2020 at 9:08 AM Kai-Heng Feng
->>> <kai.heng.feng@canonical.com> wrote:
->>>> 
->>>> Hi Srinivas,
->>>> 
->>>>> On Feb 20, 2020, at 02:36, Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com> wrote:
->>>>> 
->>>>> Hi Kai,
->>>>> 
->>>>> On Wed, 2020-02-19 at 22:22 +0800, Kai-Heng Feng wrote:
->>>>>> Hi Srinivas,
->>>>>> 
->>>>>> Your previous work to support DEVSLP works well on SATA SSDs, so I am
->>>>>> asking you the issue I am facing:
->>>>>> Once a laptop has a HDD installed, the power consumption during
->>>>>> S2Idle increases ~0.4W, which is quite a lot.
->>>>>> However, HDDs don't seem to support DEVSLP, so I wonder if you know
->>>>>> to do proper power management for HDDs?
->>>>> What is the default here
->>>>> cat /sys/power/mem_sleep
->>>>> s2idle or deep?
->>>> 
->>>> It defaults to s2idle.
->>>> 
->>>>> 
->>>>> Please follow debug steps here:
->>>>> https://01.org/blogs/qwang59/2018/how-achieve-s0ix-states-linux
->>>>> 
->>>>> We need to check whether you get any PC10 residency or not.
->>>> 
->>>> Yes it reaches PC10. It doesn't reach SLP_S0 though.
->>>> The real number on S2Idle power consumption:
->>>> No HDD: ~1.4W
->>>> One HDD: ~1.8W
->>>> 
->>>> If the SoC doesn't hit PC10 the number should be significantly higher.
->>>> That's why I think the issue is the power management on HDD itself.
->>> 
->>> I'm assuming that you mean a non-SSD device here.
->> 
->> Yes, it's spinning rust here.
->> 
->>> 
->>> That would be handled via ata_port_suspend() I gather and whatever
->>> that does should do the right thing.
->>> 
->>> Do you think that the disk doesn't spin down or it spins down, but the
->>> logic stays on?
->> 
->> The spin sound is audible, so I am certain the HDD spins down during S2Idle.
-> 
-> OK
-> 
->> How do I know if the logic is on or off?
-> 
-> Well, if it were off, it would not draw power. :-)
-> 
-> So IMO it is reasonable to assume that the logic on the drive stays
-> on.  I'm not aware of anything that can be done to turn it off,
-> however.
+Hi,
 
-Okay, thanks for the info.
-I'll ask vendors the possibility to handle it at system firmware level.
+Please check v5.6-rc2 and if it doesn't help please try to do
+bisection between v5.4 and v5.5 kernel versions as described in:
 
-Kai-Heng
+	Documentation/admin-guide/bug-bisect.rst
+
+Also could you please explain what prevents you from migration to
+libata drivers (CONFIG_ATA) from the IDE subsystem (CONFIG_IDE, it
+has been deprecated many years ago and is scheduled for removal)?
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
