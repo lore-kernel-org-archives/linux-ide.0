@@ -2,226 +2,214 @@ Return-Path: <SRS0=IMLo=4M=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-13.3 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DAE4C11D30
-	for <linux-ide@archiver.kernel.org>; Mon, 24 Feb 2020 13:08:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C28AAC35671
+	for <linux-ide@archiver.kernel.org>; Mon, 24 Feb 2020 14:09:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E96BE20836
-	for <linux-ide@archiver.kernel.org>; Mon, 24 Feb 2020 13:08:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UBu+Mn2+"
+	by mail.kernel.org (Postfix) with ESMTP id 92D452072D
+	for <linux-ide@archiver.kernel.org>; Mon, 24 Feb 2020 14:09:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727648AbgBXNIK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 24 Feb 2020 08:08:10 -0500
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:46320 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727393AbgBXNII (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 24 Feb 2020 08:08:08 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1582549688;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=8hYIHZTnTP03p6Yp4LlShbTvxf4UyOXsFmmyMPgeaYI=;
-        b=UBu+Mn2+Cqq8qxHVMdYuhKKTpPl3lbfDhfuLgNOeOBYQpSvqrJ82ShK30LjxpurJ/zKU5c
-        pREotHTsz4ASBbWLWkrjzo1ZLbiSgw1Pb/0RZ3sFgCvwv9Hl1wjYFv7/3SCQPKR1OPn4kj
-        UkswwjsCComhogJ9t11q2y0orGqPjbY=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-463-1KFA4pPFOt-nSzxZ1v6H2w-1; Mon, 24 Feb 2020 08:08:01 -0500
-X-MC-Unique: 1KFA4pPFOt-nSzxZ1v6H2w-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1727489AbgBXOJW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 24 Feb 2020 09:09:22 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:45295 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727451AbgBXOJW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 24 Feb 2020 09:09:22 -0500
+Received: from hypnotoad.molgen.mpg.de (hypnotoad.molgen.mpg.de [141.14.18.16])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A47AB107ACCA;
-        Mon, 24 Feb 2020 13:07:55 +0000 (UTC)
-Received: from [10.36.116.59] (ovpn-116-59.ams2.redhat.com [10.36.116.59])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id BF3FB909E9;
-        Mon, 24 Feb 2020 13:07:44 +0000 (UTC)
-Subject: Re: [RFC PATCH 01/11] vfio: Remove Calxeda XGMAC reset driver
-To:     Rob Herring <robh@kernel.org>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        soc@kernel.org, Andre Przywara <andre.przywara@arm.com>,
-        Robert Richter <rrichter@marvell.com>,
-        Jon Loeliger <jdl@jdl.com>, Alexander Graf <graf@amazon.com>,
-        Matthias Brugger <mbrugger@suse.com>,
-        Mark Langsdorf <mlangsdo@redhat.com>
-Cc:     Alex Williamson <alex.williamson@redhat.com>,
-        Borislav Petkov <bp@alien8.de>,
-        Cornelia Huck <cohuck@redhat.com>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        devicetree@vger.kernel.org, iommu@lists.linux-foundation.org,
-        James Morse <james.morse@arm.com>,
-        Jens Axboe <axboe@kernel.dk>, Joerg Roedel <joro@8bytes.org>,
-        kvm@vger.kernel.org, linux-clk@vger.kernel.org,
-        linux-edac@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-pm@vger.kernel.org,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        netdev@vger.kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Tony Luck <tony.luck@intel.com>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Will Deacon <will@kernel.org>
-References: <20200218171321.30990-1-robh@kernel.org>
- <20200218171321.30990-2-robh@kernel.org>
-From:   Auger Eric <eric.auger@redhat.com>
-Message-ID: <23fda074-149e-9c77-5eee-4d6b591a6ebf@redhat.com>
-Date:   Mon, 24 Feb 2020 14:07:42 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.4.0
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 736FE20643C40;
+        Mon, 24 Feb 2020 15:09:18 +0100 (CET)
+To:     David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        Keith Busch <kbusch@kernel.org>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        LKML <linux-kernel@vger.kernel.org>
+Cc:     dri-devel@lists.freedesktop.org, linux-fbdev@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-nvme@lists.infradead.org,
+        LKML <linux-kernel@vger.kernel.org>
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: [PATCH] Initialize ATA before graphics
+Message-ID: <041f4abd-f894-b990-b320-bf0aab4242f2@molgen.mpg.de>
+Date:   Mon, 24 Feb 2020 15:09:17 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <20200218171321.30990-2-robh@kernel.org>
-Content-Type: text/plain; charset=windows-1252
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256; boundary="------------ms020501020505050405070104"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Rob, Alex,
+This is a cryptographically signed message in MIME format.
 
-On 2/18/20 6:13 PM, Rob Herring wrote:
-> Cc: Eric Auger <eric.auger@redhat.com>
-> Cc: Alex Williamson <alex.williamson@redhat.com>
-> Cc: Cornelia Huck <cohuck@redhat.com>
-> Cc: kvm@vger.kernel.org
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> ---
-> Do not apply yet.
-> 
->  drivers/vfio/platform/reset/Kconfig           |  8 --
->  drivers/vfio/platform/reset/Makefile          |  2 -
->  .../reset/vfio_platform_calxedaxgmac.c        | 74 -------------------
->  3 files changed, 84 deletions(-)
->  delete mode 100644 drivers/vfio/platform/reset/vfio_platform_calxedaxgmac.c
-> 
-> diff --git a/drivers/vfio/platform/reset/Kconfig b/drivers/vfio/platform/reset/Kconfig
-> index 1edbe9ee7356..3668d1d92909 100644
-> --- a/drivers/vfio/platform/reset/Kconfig
-> +++ b/drivers/vfio/platform/reset/Kconfig
-> @@ -1,12 +1,4 @@
->  # SPDX-License-Identifier: GPL-2.0-only
-> -config VFIO_PLATFORM_CALXEDAXGMAC_RESET
-> -	tristate "VFIO support for calxeda xgmac reset"
-> -	depends on VFIO_PLATFORM
-> -	help
-> -	  Enables the VFIO platform driver to handle reset for Calxeda xgmac
-> -
-> -	  If you don't know what to do here, say N.
-> -
->  config VFIO_PLATFORM_AMDXGBE_RESET
->  	tristate "VFIO support for AMD XGBE reset"
->  	depends on VFIO_PLATFORM
-> diff --git a/drivers/vfio/platform/reset/Makefile b/drivers/vfio/platform/reset/Makefile
-> index 7294c5ea122e..be7960ce5dbc 100644
-> --- a/drivers/vfio/platform/reset/Makefile
-> +++ b/drivers/vfio/platform/reset/Makefile
-> @@ -1,7 +1,5 @@
->  # SPDX-License-Identifier: GPL-2.0
-> -vfio-platform-calxedaxgmac-y := vfio_platform_calxedaxgmac.o
->  vfio-platform-amdxgbe-y := vfio_platform_amdxgbe.o
-> 
-> -obj-$(CONFIG_VFIO_PLATFORM_CALXEDAXGMAC_RESET) += vfio-platform-calxedaxgmac.o
->  obj-$(CONFIG_VFIO_PLATFORM_AMDXGBE_RESET) += vfio-platform-amdxgbe.o
->  obj-$(CONFIG_VFIO_PLATFORM_BCMFLEXRM_RESET) += vfio_platform_bcmflexrm.o
-> diff --git a/drivers/vfio/platform/reset/vfio_platform_calxedaxgmac.c b/drivers/vfio/platform/reset/vfio_platform_calxedaxgmac.c
-> deleted file mode 100644
-> index 09a9453b75c5..000000000000
-> --- a/drivers/vfio/platform/reset/vfio_platform_calxedaxgmac.c
-> +++ /dev/null
-> @@ -1,74 +0,0 @@
-> -// SPDX-License-Identifier: GPL-2.0-only
-> -/*
-> - * VFIO platform driver specialized for Calxeda xgmac reset
-> - * reset code is inherited from calxeda xgmac native driver
-> - *
-> - * Copyright 2010-2011 Calxeda, Inc.
-> - * Copyright (c) 2015 Linaro Ltd.
-> - *              www.linaro.org
-> - */
-> -
-> -#include <linux/module.h>
-> -#include <linux/kernel.h>
-> -#include <linux/init.h>
-> -#include <linux/io.h>
-> -
-> -#include "../vfio_platform_private.h"
-> -
-> -#define DRIVER_VERSION  "0.1"
-> -#define DRIVER_AUTHOR   "Eric Auger <eric.auger@linaro.org>"
-> -#define DRIVER_DESC     "Reset support for Calxeda xgmac vfio platform device"
-> -
-> -/* XGMAC Register definitions */
-> -#define XGMAC_CONTROL           0x00000000      /* MAC Configuration */
-> -
-> -/* DMA Control and Status Registers */
-> -#define XGMAC_DMA_CONTROL       0x00000f18      /* Ctrl (Operational Mode) */
-> -#define XGMAC_DMA_INTR_ENA      0x00000f1c      /* Interrupt Enable */
-> -
-> -/* DMA Control registe defines */
-> -#define DMA_CONTROL_ST          0x00002000      /* Start/Stop Transmission */
-> -#define DMA_CONTROL_SR          0x00000002      /* Start/Stop Receive */
-> -
-> -/* Common MAC defines */
-> -#define MAC_ENABLE_TX           0x00000008      /* Transmitter Enable */
-> -#define MAC_ENABLE_RX           0x00000004      /* Receiver Enable */
-> -
-> -static inline void xgmac_mac_disable(void __iomem *ioaddr)
-> -{
-> -	u32 value = readl(ioaddr + XGMAC_DMA_CONTROL);
-> -
-> -	value &= ~(DMA_CONTROL_ST | DMA_CONTROL_SR);
-> -	writel(value, ioaddr + XGMAC_DMA_CONTROL);
-> -
-> -	value = readl(ioaddr + XGMAC_CONTROL);
-> -	value &= ~(MAC_ENABLE_TX | MAC_ENABLE_RX);
-> -	writel(value, ioaddr + XGMAC_CONTROL);
-> -}
-> -
-> -static int vfio_platform_calxedaxgmac_reset(struct vfio_platform_device *vdev)
-> -{
-> -	struct vfio_platform_region *reg = &vdev->regions[0];
-> -
-> -	if (!reg->ioaddr) {
-> -		reg->ioaddr =
-> -			ioremap(reg->addr, reg->size);
-> -		if (!reg->ioaddr)
-> -			return -ENOMEM;
-> -	}
-> -
-> -	/* disable IRQ */
-> -	writel(0, reg->ioaddr + XGMAC_DMA_INTR_ENA);
-> -
-> -	/* Disable the MAC core */
-> -	xgmac_mac_disable(reg->ioaddr);
-> -
-> -	return 0;
-> -}
-> -
-> -module_vfio_reset_handler("calxeda,hb-xgmac", vfio_platform_calxedaxgmac_reset);
-> -
-> -MODULE_VERSION(DRIVER_VERSION);
-> -MODULE_LICENSE("GPL v2");
-> -MODULE_AUTHOR(DRIVER_AUTHOR);
-> -MODULE_DESCRIPTION(DRIVER_DESC);
-> --
-> 2.20.1
-> 
-I do not have access to this HW anymore and I use Seattle to test
-vfio-platform. So
+--------------ms020501020505050405070104
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-Acked-by: Eric Auger <eric.auger@redhat.com>
+From: Arjan van de Ven <arjan@linux.intel.com>
+Date: Thu, 2 Jun 2016 23:36:32 -0500
 
-Thanks
+ATA init is the long pole in the boot process, and its asynchronous.
+Move the graphics init after it, so that ATA and graphics initialize
+in parallel.
 
-Eric
+Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
+---
 
+1.  Taken from Clear Linux: https://github.com/clearlinux-pkgs/linux/comm=
+its/master/0110-Initialize-ata-before-graphics.patch
+2.  Arjan, can you please add your Signed-off-by line?
+
+ drivers/Makefile | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/Makefile b/drivers/Makefile
+index aaef17c..d08f3a3 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -58,15 +58,8 @@ obj-y                                +=3D char/
+ # iommu/ comes before gpu as gpu are using iommu controllers
+ obj-y                          +=3D iommu/
+=20
+-# gpu/ comes after char for AGP vs DRM startup and after iommu
+-obj-y                          +=3D gpu/
+-
+ obj-$(CONFIG_CONNECTOR)                +=3D connector/
+=20
+-# i810fb and intelfb depend on char/agp/
+-obj-$(CONFIG_FB_I810)           +=3D video/fbdev/i810/
+-obj-$(CONFIG_FB_INTEL)          +=3D video/fbdev/intelfb/
+-
+ obj-$(CONFIG_PARPORT)          +=3D parport/
+ obj-$(CONFIG_NVM)              +=3D lightnvm/
+ obj-y                          +=3D base/ block/ misc/ mfd/ nfc/
+@@ -79,6 +72,14 @@ obj-$(CONFIG_IDE)            +=3D ide/
+ obj-y                          +=3D scsi/
+ obj-y                          +=3D nvme/
+ obj-$(CONFIG_ATA)              +=3D ata/
++
++# gpu/ comes after char for AGP vs DRM startup and after iommu
++obj-y                          +=3D gpu/
++
++# i810fb and intelfb depend on char/agp/
++obj-$(CONFIG_FB_I810)           +=3D video/fbdev/i810/
++obj-$(CONFIG_FB_INTEL)          +=3D video/fbdev/intelfb/
++
+ obj-$(CONFIG_TARGET_CORE)      +=3D target/
+ obj-$(CONFIG_MTD)              +=3D mtd/
+ obj-$(CONFIG_SPI)              +=3D spi/
+--=20
+https://clearlinux.org
+
+
+--------------ms020501020505050405070104
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCC
+EFowggUSMIID+qADAgECAgkA4wvV+K8l2YEwDQYJKoZIhvcNAQELBQAwgYIxCzAJBgNVBAYT
+AkRFMSswKQYDVQQKDCJULVN5c3RlbXMgRW50ZXJwcmlzZSBTZXJ2aWNlcyBHbWJIMR8wHQYD
+VQQLDBZULVN5c3RlbXMgVHJ1c3QgQ2VudGVyMSUwIwYDVQQDDBxULVRlbGVTZWMgR2xvYmFs
+Um9vdCBDbGFzcyAyMB4XDTE2MDIyMjEzMzgyMloXDTMxMDIyMjIzNTk1OVowgZUxCzAJBgNV
+BAYTAkRFMUUwQwYDVQQKEzxWZXJlaW4genVyIEZvZXJkZXJ1bmcgZWluZXMgRGV1dHNjaGVu
+IEZvcnNjaHVuZ3NuZXR6ZXMgZS4gVi4xEDAOBgNVBAsTB0RGTi1QS0kxLTArBgNVBAMTJERG
+Ti1WZXJlaW4gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgMjCCASIwDQYJKoZIhvcNAQEBBQAD
+ggEPADCCAQoCggEBAMtg1/9moUHN0vqHl4pzq5lN6mc5WqFggEcVToyVsuXPztNXS43O+FZs
+FVV2B+pG/cgDRWM+cNSrVICxI5y+NyipCf8FXRgPxJiZN7Mg9mZ4F4fCnQ7MSjLnFp2uDo0p
+eQcAIFTcFV9Kltd4tjTTwXS1nem/wHdN6r1ZB+BaL2w8pQDcNb1lDY9/Mm3yWmpLYgHurDg0
+WUU2SQXaeMpqbVvAgWsRzNI8qIv4cRrKO+KA3Ra0Z3qLNupOkSk9s1FcragMvp0049ENF4N1
+xDkesJQLEvHVaY4l9Lg9K7/AjsMeO6W/VRCrKq4Xl14zzsjz9AkH4wKGMUZrAcUQDBHHWekC
+AwEAAaOCAXQwggFwMA4GA1UdDwEB/wQEAwIBBjAdBgNVHQ4EFgQUk+PYMiba1fFKpZFK4OpL
+4qIMz+EwHwYDVR0jBBgwFoAUv1kgNgB5oKAia4zV8mHSuCzLgkowEgYDVR0TAQH/BAgwBgEB
+/wIBAjAzBgNVHSAELDAqMA8GDSsGAQQBga0hgiwBAQQwDQYLKwYBBAGBrSGCLB4wCAYGZ4EM
+AQICMEwGA1UdHwRFMEMwQaA/oD2GO2h0dHA6Ly9wa2kwMzM2LnRlbGVzZWMuZGUvcmwvVGVs
+ZVNlY19HbG9iYWxSb290X0NsYXNzXzIuY3JsMIGGBggrBgEFBQcBAQR6MHgwLAYIKwYBBQUH
+MAGGIGh0dHA6Ly9vY3NwMDMzNi50ZWxlc2VjLmRlL29jc3ByMEgGCCsGAQUFBzAChjxodHRw
+Oi8vcGtpMDMzNi50ZWxlc2VjLmRlL2NydC9UZWxlU2VjX0dsb2JhbFJvb3RfQ2xhc3NfMi5j
+ZXIwDQYJKoZIhvcNAQELBQADggEBAIcL/z4Cm2XIVi3WO5qYi3FP2ropqiH5Ri71sqQPrhE4
+eTizDnS6dl2e6BiClmLbTDPo3flq3zK9LExHYFV/53RrtCyD2HlrtrdNUAtmB7Xts5et6u5/
+MOaZ/SLick0+hFvu+c+Z6n/XUjkurJgARH5pO7917tALOxrN5fcPImxHhPalR6D90Bo0fa3S
+PXez7vTXTf/D6OWST1k+kEcQSrCFWMBvf/iu7QhCnh7U3xQuTY+8npTD5+32GPg8SecmqKc2
+2CzeIs2LgtjZeOJVEqM7h0S2EQvVDFKvaYwPBt/QolOLV5h7z/0HJPT8vcP9SpIClxvyt7bP
+ZYoaorVyGTkwggWNMIIEdaADAgECAgwcOtRQhH7u81j4jncwDQYJKoZIhvcNAQELBQAwgZUx
+CzAJBgNVBAYTAkRFMUUwQwYDVQQKEzxWZXJlaW4genVyIEZvZXJkZXJ1bmcgZWluZXMgRGV1
+dHNjaGVuIEZvcnNjaHVuZ3NuZXR6ZXMgZS4gVi4xEDAOBgNVBAsTB0RGTi1QS0kxLTArBgNV
+BAMTJERGTi1WZXJlaW4gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgMjAeFw0xNjExMDMxNTI0
+NDhaFw0zMTAyMjIyMzU5NTlaMGoxCzAJBgNVBAYTAkRFMQ8wDQYDVQQIDAZCYXllcm4xETAP
+BgNVBAcMCE11ZW5jaGVuMSAwHgYDVQQKDBdNYXgtUGxhbmNrLUdlc2VsbHNjaGFmdDEVMBMG
+A1UEAwwMTVBHIENBIC0gRzAyMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnhx4
+59Lh4WqgOs/Md04XxU2yFtfM15ZuJV0PZP7BmqSJKLLPyqmOrADfNdJ5PIGBto2JBhtRRBHd
+G0GROOvTRHjzOga95WOTeura79T21FWwwAwa29OFnD3ZplQs6HgdwQrZWNi1WHNJxn/4mA19
+rNEBUc5urSIpZPvZi5XmlF3v3JHOlx3KWV7mUteB4pwEEfGTg4npPAJbp2o7arxQdoIq+Pu2
+OsvqhD7Rk4QeaX+EM1QS4lqd1otW4hE70h/ODPy1xffgbZiuotWQLC6nIwa65Qv6byqlIX0q
+Zuu99Vsu+r3sWYsL5SBkgecNI7fMJ5tfHrjoxfrKl/ErTAt8GQIDAQABo4ICBTCCAgEwEgYD
+VR0TAQH/BAgwBgEB/wIBATAOBgNVHQ8BAf8EBAMCAQYwKQYDVR0gBCIwIDANBgsrBgEEAYGt
+IYIsHjAPBg0rBgEEAYGtIYIsAQEEMB0GA1UdDgQWBBTEiKUH7rh7qgwTv9opdGNSG0lwFjAf
+BgNVHSMEGDAWgBST49gyJtrV8UqlkUrg6kviogzP4TCBjwYDVR0fBIGHMIGEMECgPqA8hjpo
+dHRwOi8vY2RwMS5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWcyLWNhL3B1Yi9jcmwvY2Fjcmwu
+Y3JsMECgPqA8hjpodHRwOi8vY2RwMi5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWcyLWNhL3B1
+Yi9jcmwvY2FjcmwuY3JsMIHdBggrBgEFBQcBAQSB0DCBzTAzBggrBgEFBQcwAYYnaHR0cDov
+L29jc3AucGNhLmRmbi5kZS9PQ1NQLVNlcnZlci9PQ1NQMEoGCCsGAQUFBzAChj5odHRwOi8v
+Y2RwMS5wY2EuZGZuLmRlL2dsb2JhbC1yb290LWcyLWNhL3B1Yi9jYWNlcnQvY2FjZXJ0LmNy
+dDBKBggrBgEFBQcwAoY+aHR0cDovL2NkcDIucGNhLmRmbi5kZS9nbG9iYWwtcm9vdC1nMi1j
+YS9wdWIvY2FjZXJ0L2NhY2VydC5jcnQwDQYJKoZIhvcNAQELBQADggEBABLpeD5FygzqOjj+
+/lAOy20UQOGWlx0RMuPcI4nuyFT8SGmK9lD7QCg/HoaJlfU/r78ex+SEide326evlFAoJXIF
+jVyzNltDhpMKrPIDuh2N12zyn1EtagqPL6hu4pVRzcBpl/F2HCvtmMx5K4WN1L1fmHWLcSap
+dhXLvAZ9RG/B3rqyULLSNN8xHXYXpmtvG0VGJAndZ+lj+BH7uvd3nHWnXEHC2q7iQlDUqg0a
+wIqWJgdLlx1Q8Dg/sodv0m+LN0kOzGvVDRCmowBdWGhhusD+duKV66pBl+qhC+4LipariWaM
+qK5ppMQROATjYeNRvwI+nDcEXr2vDaKmdbxgDVwwggWvMIIEl6ADAgECAgweKlJIhfynPMVG
+/KIwDQYJKoZIhvcNAQELBQAwajELMAkGA1UEBhMCREUxDzANBgNVBAgMBkJheWVybjERMA8G
+A1UEBwwITXVlbmNoZW4xIDAeBgNVBAoMF01heC1QbGFuY2stR2VzZWxsc2NoYWZ0MRUwEwYD
+VQQDDAxNUEcgQ0EgLSBHMDIwHhcNMTcxMTE0MTEzNDE2WhcNMjAxMTEzMTEzNDE2WjCBizEL
+MAkGA1UEBhMCREUxIDAeBgNVBAoMF01heC1QbGFuY2stR2VzZWxsc2NoYWZ0MTQwMgYDVQQL
+DCtNYXgtUGxhbmNrLUluc3RpdHV0IGZ1ZXIgbW9sZWt1bGFyZSBHZW5ldGlrMQ4wDAYDVQQL
+DAVNUElNRzEUMBIGA1UEAwwLUGF1bCBNZW56ZWwwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAw
+ggEKAoIBAQDIh/UR/AX/YQ48VWWDMLTYtXjYJyhRHMc81ZHMMoaoG66lWB9MtKRTnB5lovLZ
+enTIUyPsCrMhTqV9CWzDf6v9gOTWVxHEYqrUwK5H1gx4XoK81nfV8oGV4EKuVmmikTXiztGz
+peyDmOY8o/EFNWP7YuRkY/lPQJQBeBHYq9AYIgX4StuXu83nusq4MDydygVOeZC15ts0tv3/
+6WmibmZd1OZRqxDOkoBbY3Djx6lERohs3IKS6RKiI7e90rCSy9rtidJBOvaQS9wvtOSKPx0a
++2pAgJEVzZFjOAfBcXydXtqXhcpOi2VCyl+7+LnnTz016JJLsCBuWEcB3kP9nJYNAgMBAAGj
+ggIxMIICLTAJBgNVHRMEAjAAMA4GA1UdDwEB/wQEAwIF4DAdBgNVHSUEFjAUBggrBgEFBQcD
+AgYIKwYBBQUHAwQwHQYDVR0OBBYEFHM0Mc3XjMLlhWpp4JufRELL4A/qMB8GA1UdIwQYMBaA
+FMSIpQfuuHuqDBO/2il0Y1IbSXAWMCAGA1UdEQQZMBeBFXBtZW56ZWxAbW9sZ2VuLm1wZy5k
+ZTB9BgNVHR8EdjB0MDigNqA0hjJodHRwOi8vY2RwMS5wY2EuZGZuLmRlL21wZy1nMi1jYS9w
+dWIvY3JsL2NhY3JsLmNybDA4oDagNIYyaHR0cDovL2NkcDIucGNhLmRmbi5kZS9tcGctZzIt
+Y2EvcHViL2NybC9jYWNybC5jcmwwgc0GCCsGAQUFBwEBBIHAMIG9MDMGCCsGAQUFBzABhido
+dHRwOi8vb2NzcC5wY2EuZGZuLmRlL09DU1AtU2VydmVyL09DU1AwQgYIKwYBBQUHMAKGNmh0
+dHA6Ly9jZHAxLnBjYS5kZm4uZGUvbXBnLWcyLWNhL3B1Yi9jYWNlcnQvY2FjZXJ0LmNydDBC
+BggrBgEFBQcwAoY2aHR0cDovL2NkcDIucGNhLmRmbi5kZS9tcGctZzItY2EvcHViL2NhY2Vy
+dC9jYWNlcnQuY3J0MEAGA1UdIAQ5MDcwDwYNKwYBBAGBrSGCLAEBBDARBg8rBgEEAYGtIYIs
+AQEEAwYwEQYPKwYBBAGBrSGCLAIBBAMGMA0GCSqGSIb3DQEBCwUAA4IBAQCQs6bUDROpFO2F
+Qz2FMgrdb39VEo8P3DhmpqkaIMC5ZurGbbAL/tAR6lpe4af682nEOJ7VW86ilsIJgm1j0ueY
+aOuL8jrN4X7IF/8KdZnnNnImW3QVni6TCcc+7+ggci9JHtt0IDCj5vPJBpP/dKXLCN4M+exl
+GXYpfHgxh8gclJPY1rquhQrihCzHfKB01w9h9tWZDVMtSoy9EUJFhCXw7mYUsvBeJwZesN2B
+fndPkrXx6XWDdU3S1LyKgHlLIFtarLFm2Hb5zAUR33h+26cN6ohcGqGEEzgIG8tXS8gztEaj
+1s2RyzmKd4SXTkKR3GhkZNVWy+gM68J7jP6zzN+cMYIDmjCCA5YCAQEwejBqMQswCQYDVQQG
+EwJERTEPMA0GA1UECAwGQmF5ZXJuMREwDwYDVQQHDAhNdWVuY2hlbjEgMB4GA1UECgwXTWF4
+LVBsYW5jay1HZXNlbGxzY2hhZnQxFTATBgNVBAMMDE1QRyBDQSAtIEcwMgIMHipSSIX8pzzF
+RvyiMA0GCWCGSAFlAwQCAQUAoIIB8TAYBgkqhkiG9w0BCQMxCwYJKoZIhvcNAQcBMBwGCSqG
+SIb3DQEJBTEPFw0yMDAyMjQxNDA5MThaMC8GCSqGSIb3DQEJBDEiBCCaon7+8v02J3APh+S7
+gaR91avgMZ+mqRMXI+nJH/ElyzBsBgkqhkiG9w0BCQ8xXzBdMAsGCWCGSAFlAwQBKjALBglg
+hkgBZQMEAQIwCgYIKoZIhvcNAwcwDgYIKoZIhvcNAwICAgCAMA0GCCqGSIb3DQMCAgFAMAcG
+BSsOAwIHMA0GCCqGSIb3DQMCAgEoMIGJBgkrBgEEAYI3EAQxfDB6MGoxCzAJBgNVBAYTAkRF
+MQ8wDQYDVQQIDAZCYXllcm4xETAPBgNVBAcMCE11ZW5jaGVuMSAwHgYDVQQKDBdNYXgtUGxh
+bmNrLUdlc2VsbHNjaGFmdDEVMBMGA1UEAwwMTVBHIENBIC0gRzAyAgweKlJIhfynPMVG/KIw
+gYsGCyqGSIb3DQEJEAILMXygejBqMQswCQYDVQQGEwJERTEPMA0GA1UECAwGQmF5ZXJuMREw
+DwYDVQQHDAhNdWVuY2hlbjEgMB4GA1UECgwXTWF4LVBsYW5jay1HZXNlbGxzY2hhZnQxFTAT
+BgNVBAMMDE1QRyBDQSAtIEcwMgIMHipSSIX8pzzFRvyiMA0GCSqGSIb3DQEBAQUABIIBAJ4p
+oDlyN4m+v1gAozadNHNAY4+zLRgDfHfvpyZsUjfPCihtGDrJn2yoalCpIbWK63hpft2ZATuS
+voWGeq1NQXOCw167n6SEn5hs7GXdf27wI2si0jTnImHnlV1Kh9C5Osn3x40Bo0vZlXhAUGwz
+UJoeYnIugyNKY+imv3d/PLfFtQxoXzSuEFRWJS5OkMaFfc8vev5igQJFF04Oq5VDRqGgRpgK
+MRM9AXGR4CXLW44dtVav7lU8EHz60ftYL1h/d09Fgid9flR+YdA7hf2yfhInbo1wiJylKnAO
+LFoEdQcc5NiJsx4KlNJp6Gr4nhFmJhYD0Tzk/Wub0M35HqgMx4cAAAAAAAA=
+--------------ms020501020505050405070104--
