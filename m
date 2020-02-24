@@ -1,169 +1,227 @@
-Return-Path: <SRS0=eeaJ=4K=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=IMLo=4M=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D959C35671
-	for <linux-ide@archiver.kernel.org>; Sat, 22 Feb 2020 15:51:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DAE4C11D30
+	for <linux-ide@archiver.kernel.org>; Mon, 24 Feb 2020 13:08:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4ADC0206EF
-	for <linux-ide@archiver.kernel.org>; Sat, 22 Feb 2020 15:51:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E96BE20836
+	for <linux-ide@archiver.kernel.org>; Mon, 24 Feb 2020 13:08:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Jq6bKHlm"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="UBu+Mn2+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727339AbgBVPvp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 22 Feb 2020 10:51:45 -0500
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:33073 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727230AbgBVPvo (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 22 Feb 2020 10:51:44 -0500
-Received: by mail-pg1-f195.google.com with SMTP id 6so2627333pgk.0
-        for <linux-ide@vger.kernel.org>; Sat, 22 Feb 2020 07:51:44 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=/dFIX7JpghOy5p2V8HH1laMs8deAcd8gQNu7/tngB4k=;
-        b=Jq6bKHlmx0VAoY1hYsRt73l6S02vKTUNPCzF3fERzS3o5KEf8ja4RAmZhhsE1zNRza
-         LjPJ0k9nUcHmsVqm9UEpJ4lkeAUbNaiYajoKMljwrviNC2W3dTGMIBBtjZcIDXPJ2dXv
-         ZTgBhBIOCiVRuzzQXbzHDXkW9JPwblMZ0y8Maz83z0YNvfdl9xLGbhHkRjdPVETA43dv
-         qju4GTMJ/lPXjaoyPHxaPmL4wvuP6FtqQ+tOacBE1JrOZdwwpwmf+dAIPY5m/Gfpar+A
-         zhxd+ffANHyAOiJkdZeQ0f2vweZSf9WtPgiQ1xvw1V3W9uBb9+w2Cu891/WE08fGFdjS
-         M+ZQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=/dFIX7JpghOy5p2V8HH1laMs8deAcd8gQNu7/tngB4k=;
-        b=CGm9YyioYutcfu5Rxhc3ejgWqzZSPku0DxrxglJFq5d5EHuSBqVYITv+gEjUe2dEbI
-         prO4FDjPCeWkuYNi10aPnRH2JeHbuqYTg/p1x1iHQJ/r/t6RFunrnJn7FimKulBwja+c
-         PL4Bl11DyD7v2ErD4dLOcYJC4cGLF4MMmNH66gCzonGZYr9fkBPhLgaNKbgeWZ6BC65t
-         mwjSPbJm/HP5zIdVNGhWw9982uQ097Kq1vfAFOI98s3d12wGdaPukpijQCmFcQDoL0vT
-         QRFOn1BghTgq0ogR/nTPTiJKWCPCC4TEkLDDCB/mSepwzbGaMoulB8bbBkj/MD3whSHt
-         DhJA==
-X-Gm-Message-State: APjAAAUvS67PVvyEhP/lzwtcFXD/DXqVr8knIvgYQjQ0zJPIC4F6NSFI
-        qatM3cDI3liR5C/sp5VA2HM=
-X-Google-Smtp-Source: APXvYqyqV+c/pYXSgszoI7gGazFm0QQjdd3wqyjImP5R/o5sSPaNqjhcBJhT/PLIJBagGXjIMKKKmg==
-X-Received: by 2002:a62:446:: with SMTP id 67mr41293556pfe.109.1582386704226;
-        Sat, 22 Feb 2020 07:51:44 -0800 (PST)
-Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id s124sm7040753pfc.57.2020.02.22.07.51.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 22 Feb 2020 07:51:43 -0800 (PST)
-Subject: Re: [PATCH v2] libata: Assign OF node to the SCSI device
-To:     Linus Walleij <linus.walleij@linaro.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc:     linux-ide@vger.kernel.org, Chris Healy <cphealy@gmail.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>
-References: <20200222112057.31476-1-linus.walleij@linaro.org>
-From:   Guenter Roeck <linux@roeck-us.net>
-Message-ID: <6ea324b8-7831-b95e-d042-28d05442321a@roeck-us.net>
-Date:   Sat, 22 Feb 2020 07:51:42 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        id S1727648AbgBXNIK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 24 Feb 2020 08:08:10 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:46320 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727393AbgBXNII (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 24 Feb 2020 08:08:08 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1582549688;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=8hYIHZTnTP03p6Yp4LlShbTvxf4UyOXsFmmyMPgeaYI=;
+        b=UBu+Mn2+Cqq8qxHVMdYuhKKTpPl3lbfDhfuLgNOeOBYQpSvqrJ82ShK30LjxpurJ/zKU5c
+        pREotHTsz4ASBbWLWkrjzo1ZLbiSgw1Pb/0RZ3sFgCvwv9Hl1wjYFv7/3SCQPKR1OPn4kj
+        UkswwjsCComhogJ9t11q2y0orGqPjbY=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-463-1KFA4pPFOt-nSzxZ1v6H2w-1; Mon, 24 Feb 2020 08:08:01 -0500
+X-MC-Unique: 1KFA4pPFOt-nSzxZ1v6H2w-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A47AB107ACCA;
+        Mon, 24 Feb 2020 13:07:55 +0000 (UTC)
+Received: from [10.36.116.59] (ovpn-116-59.ams2.redhat.com [10.36.116.59])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id BF3FB909E9;
+        Mon, 24 Feb 2020 13:07:44 +0000 (UTC)
+Subject: Re: [RFC PATCH 01/11] vfio: Remove Calxeda XGMAC reset driver
+To:     Rob Herring <robh@kernel.org>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        soc@kernel.org, Andre Przywara <andre.przywara@arm.com>,
+        Robert Richter <rrichter@marvell.com>,
+        Jon Loeliger <jdl@jdl.com>, Alexander Graf <graf@amazon.com>,
+        Matthias Brugger <mbrugger@suse.com>,
+        Mark Langsdorf <mlangsdo@redhat.com>
+Cc:     Alex Williamson <alex.williamson@redhat.com>,
+        Borislav Petkov <bp@alien8.de>,
+        Cornelia Huck <cohuck@redhat.com>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        devicetree@vger.kernel.org, iommu@lists.linux-foundation.org,
+        James Morse <james.morse@arm.com>,
+        Jens Axboe <axboe@kernel.dk>, Joerg Roedel <joro@8bytes.org>,
+        kvm@vger.kernel.org, linux-clk@vger.kernel.org,
+        linux-edac@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-pm@vger.kernel.org,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        netdev@vger.kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Tony Luck <tony.luck@intel.com>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Will Deacon <will@kernel.org>
+References: <20200218171321.30990-1-robh@kernel.org>
+ <20200218171321.30990-2-robh@kernel.org>
+From:   Auger Eric <eric.auger@redhat.com>
+Message-ID: <23fda074-149e-9c77-5eee-4d6b591a6ebf@redhat.com>
+Date:   Mon, 24 Feb 2020 14:07:42 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.4.0
 MIME-Version: 1.0
-In-Reply-To: <20200222112057.31476-1-linus.walleij@linaro.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20200218171321.30990-2-robh@kernel.org>
+Content-Type: text/plain; charset=windows-1252
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/22/20 3:20 AM, Linus Walleij wrote:
-> When we spawn a SCSI device from an ATA device in libata-scsi
-> the SCSI device had no relation to the device tree.
-> 
-> The DT binding allows us to define port nodes under a
-> PATA (IDE) or SATA host controller, so we can have proper device
-> nodes for these devices.
-> 
-> If OF is enabled, walk the children of the host controller node
-> to see if there is a valid device tree node to assign. The reg
-> is used to match to ID 0 for the master device and ID 1 for the
-> slave device.
-> 
-> The corresponding device tree bindings have been accepted by
-> the device tree maintainers.
-> 
-> Cc: Chris Healy <cphealy@gmail.com>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: Bart Van Assche <bvanassche@acm.org>
-> Cc: Guenter Roeck <linux@roeck-us.net>
-> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+Hi Rob, Alex,
 
-Reviewed-by: Guenter Roeck <linux@roeck-us.net>
+On 2/18/20 6:13 PM, Rob Herring wrote:
+> Cc: Eric Auger <eric.auger@redhat.com>
+> Cc: Alex Williamson <alex.williamson@redhat.com>
+> Cc: Cornelia Huck <cohuck@redhat.com>
+> Cc: kvm@vger.kernel.org
+> Signed-off-by: Rob Herring <robh@kernel.org>
+> ---
+> Do not apply yet.
+> 
+>  drivers/vfio/platform/reset/Kconfig           |  8 --
+>  drivers/vfio/platform/reset/Makefile          |  2 -
+>  .../reset/vfio_platform_calxedaxgmac.c        | 74 -------------------
+>  3 files changed, 84 deletions(-)
+>  delete mode 100644 drivers/vfio/platform/reset/vfio_platform_calxedaxgmac.c
+> 
+> diff --git a/drivers/vfio/platform/reset/Kconfig b/drivers/vfio/platform/reset/Kconfig
+> index 1edbe9ee7356..3668d1d92909 100644
+> --- a/drivers/vfio/platform/reset/Kconfig
+> +++ b/drivers/vfio/platform/reset/Kconfig
+> @@ -1,12 +1,4 @@
+>  # SPDX-License-Identifier: GPL-2.0-only
+> -config VFIO_PLATFORM_CALXEDAXGMAC_RESET
+> -	tristate "VFIO support for calxeda xgmac reset"
+> -	depends on VFIO_PLATFORM
+> -	help
+> -	  Enables the VFIO platform driver to handle reset for Calxeda xgmac
+> -
+> -	  If you don't know what to do here, say N.
+> -
+>  config VFIO_PLATFORM_AMDXGBE_RESET
+>  	tristate "VFIO support for AMD XGBE reset"
+>  	depends on VFIO_PLATFORM
+> diff --git a/drivers/vfio/platform/reset/Makefile b/drivers/vfio/platform/reset/Makefile
+> index 7294c5ea122e..be7960ce5dbc 100644
+> --- a/drivers/vfio/platform/reset/Makefile
+> +++ b/drivers/vfio/platform/reset/Makefile
+> @@ -1,7 +1,5 @@
+>  # SPDX-License-Identifier: GPL-2.0
+> -vfio-platform-calxedaxgmac-y := vfio_platform_calxedaxgmac.o
+>  vfio-platform-amdxgbe-y := vfio_platform_amdxgbe.o
+> 
+> -obj-$(CONFIG_VFIO_PLATFORM_CALXEDAXGMAC_RESET) += vfio-platform-calxedaxgmac.o
+>  obj-$(CONFIG_VFIO_PLATFORM_AMDXGBE_RESET) += vfio-platform-amdxgbe.o
+>  obj-$(CONFIG_VFIO_PLATFORM_BCMFLEXRM_RESET) += vfio_platform_bcmflexrm.o
+> diff --git a/drivers/vfio/platform/reset/vfio_platform_calxedaxgmac.c b/drivers/vfio/platform/reset/vfio_platform_calxedaxgmac.c
+> deleted file mode 100644
+> index 09a9453b75c5..000000000000
+> --- a/drivers/vfio/platform/reset/vfio_platform_calxedaxgmac.c
+> +++ /dev/null
+> @@ -1,74 +0,0 @@
+> -// SPDX-License-Identifier: GPL-2.0-only
+> -/*
+> - * VFIO platform driver specialized for Calxeda xgmac reset
+> - * reset code is inherited from calxeda xgmac native driver
+> - *
+> - * Copyright 2010-2011 Calxeda, Inc.
+> - * Copyright (c) 2015 Linaro Ltd.
+> - *              www.linaro.org
+> - */
+> -
+> -#include <linux/module.h>
+> -#include <linux/kernel.h>
+> -#include <linux/init.h>
+> -#include <linux/io.h>
+> -
+> -#include "../vfio_platform_private.h"
+> -
+> -#define DRIVER_VERSION  "0.1"
+> -#define DRIVER_AUTHOR   "Eric Auger <eric.auger@linaro.org>"
+> -#define DRIVER_DESC     "Reset support for Calxeda xgmac vfio platform device"
+> -
+> -/* XGMAC Register definitions */
+> -#define XGMAC_CONTROL           0x00000000      /* MAC Configuration */
+> -
+> -/* DMA Control and Status Registers */
+> -#define XGMAC_DMA_CONTROL       0x00000f18      /* Ctrl (Operational Mode) */
+> -#define XGMAC_DMA_INTR_ENA      0x00000f1c      /* Interrupt Enable */
+> -
+> -/* DMA Control registe defines */
+> -#define DMA_CONTROL_ST          0x00002000      /* Start/Stop Transmission */
+> -#define DMA_CONTROL_SR          0x00000002      /* Start/Stop Receive */
+> -
+> -/* Common MAC defines */
+> -#define MAC_ENABLE_TX           0x00000008      /* Transmitter Enable */
+> -#define MAC_ENABLE_RX           0x00000004      /* Receiver Enable */
+> -
+> -static inline void xgmac_mac_disable(void __iomem *ioaddr)
+> -{
+> -	u32 value = readl(ioaddr + XGMAC_DMA_CONTROL);
+> -
+> -	value &= ~(DMA_CONTROL_ST | DMA_CONTROL_SR);
+> -	writel(value, ioaddr + XGMAC_DMA_CONTROL);
+> -
+> -	value = readl(ioaddr + XGMAC_CONTROL);
+> -	value &= ~(MAC_ENABLE_TX | MAC_ENABLE_RX);
+> -	writel(value, ioaddr + XGMAC_CONTROL);
+> -}
+> -
+> -static int vfio_platform_calxedaxgmac_reset(struct vfio_platform_device *vdev)
+> -{
+> -	struct vfio_platform_region *reg = &vdev->regions[0];
+> -
+> -	if (!reg->ioaddr) {
+> -		reg->ioaddr =
+> -			ioremap(reg->addr, reg->size);
+> -		if (!reg->ioaddr)
+> -			return -ENOMEM;
+> -	}
+> -
+> -	/* disable IRQ */
+> -	writel(0, reg->ioaddr + XGMAC_DMA_INTR_ENA);
+> -
+> -	/* Disable the MAC core */
+> -	xgmac_mac_disable(reg->ioaddr);
+> -
+> -	return 0;
+> -}
+> -
+> -module_vfio_reset_handler("calxeda,hb-xgmac", vfio_platform_calxedaxgmac_reset);
+> -
+> -MODULE_VERSION(DRIVER_VERSION);
+> -MODULE_LICENSE("GPL v2");
+> -MODULE_AUTHOR(DRIVER_AUTHOR);
+> -MODULE_DESCRIPTION(DRIVER_DESC);
+> --
+> 2.20.1
+> 
+I do not have access to this HW anymore and I use Seattle to test
+vfio-platform. So
 
-> ---
-> ChangeLog v1->v2:
-> - Use dev_dbg() for the debug print
-> - return immediately after finding a matching OF node
-> ---
->   drivers/ata/libata-scsi.c | 30 ++++++++++++++++++++++++++++++
->   1 file changed, 30 insertions(+)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index eb2eb599e602..9b2bd080f4e4 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -36,6 +36,7 @@
->   #include <linux/suspend.h>
->   #include <asm/unaligned.h>
->   #include <linux/ioprio.h>
-> +#include <linux/of.h>
->   
->   #include "libata.h"
->   #include "libata-transport.h"
-> @@ -4582,6 +4583,34 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
->   	return rc;
->   }
->   
-> +#ifdef CONFIG_OF
-> +static void ata_scsi_assign_ofnode(struct ata_device *dev, struct ata_port *ap)
-> +{
-> +	struct scsi_device *sdev = dev->sdev;
-> +	struct device *d = ap->host->dev;
-> +	struct device_node *np = d->of_node;
-> +	struct device_node *child;
-> +
-> +	for_each_available_child_of_node(np, child) {
-> +		int ret;
-> +		u32 val;
-> +
-> +		ret = of_property_read_u32(child, "reg", &val);
-> +		if (ret)
-> +			continue;
-> +		if (val == dev->devno) {
-> +			dev_dbg(d, "found matching device node\n");
-> +			sdev->sdev_gendev.of_node = child;
-> +			return;
-> +		}
-> +	}
-> +}
-> +#else
-> +static void ata_scsi_assign_ofnode(struct ata_device *dev, struct ata_port *ap)
-> +{
-> +}
-> +#endif
-> +
->   void ata_scsi_scan_host(struct ata_port *ap, int sync)
->   {
->   	int tries = 5;
-> @@ -4607,6 +4636,7 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
->   						 NULL);
->   			if (!IS_ERR(sdev)) {
->   				dev->sdev = sdev;
-> +				ata_scsi_assign_ofnode(dev, ap);
->   				scsi_device_put(sdev);
->   			} else {
->   				dev->sdev = NULL;
-> 
+Acked-by: Eric Auger <eric.auger@redhat.com>
+
+Thanks
+
+Eric
 
