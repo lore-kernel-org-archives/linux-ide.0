@@ -2,125 +2,119 @@ Return-Path: <SRS0=Wfas=4N=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E52F4C35E01
-	for <linux-ide@archiver.kernel.org>; Tue, 25 Feb 2020 16:33:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F56FC4BA01
+	for <linux-ide@archiver.kernel.org>; Tue, 25 Feb 2020 22:02:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B7B5520CC7
-	for <linux-ide@archiver.kernel.org>; Tue, 25 Feb 2020 16:33:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lTpmZeZ1"
+	by mail.kernel.org (Postfix) with ESMTP id 6FF6122464
+	for <linux-ide@archiver.kernel.org>; Tue, 25 Feb 2020 22:02:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1582668128;
+	bh=ASA6axefWklSU78pWejTSwer0ZOaWKFTnH47gYDjOZA=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=yEnDqdeJ4LRm/K8RNjv6D2ccyv6BVVDcZyaOMtaUTWP4/OzCZE20RtZwktHaIebKL
+	 jlwn/IAcmbuuzz0mD+TtiwWhUduwmU/kfADJzN2QFEIMCrY5cjG4x2FO6DbUcfjq7V
+	 MHeEMcetgBYusZNYP0fjBRZsVAIxC0y8u5Emo0wg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730966AbgBYQdf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 25 Feb 2020 11:33:35 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:33424 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730628AbgBYQde (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 25 Feb 2020 11:33:34 -0500
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:
-        Subject:Sender:Reply-To:Content-ID:Content-Description;
-        bh=YKyZV60LHUuQnl24YQ6e7CN9lTy1VXZjsH7/atkgKsQ=; b=lTpmZeZ1NeoF6dscoMg4qMMjFo
-        glMYR+C65qyUo9XeiQnzabqMC7yYHKugSV9aEx4q2bfFnZyr60vQTPd8Kf/UhIZHUNcyam1POEBuV
-        vc/XzzQPk9KxrdLDFtulgA59QtmYM/nSoKY4M8hCrdgHzDIvGeHtdBbx3djNmAjsMXAJZ/StGa7NN
-        irttrCy8WbAwz9vC0ihJM9pKB+D4cUL66aIEflu+R+kwLj/fk2IJFu00pZUU9NXQWT7cfHRG6UqXl
-        VI2pdKL1/UdqS7wLaZFULOlPOs3YIA62BCA2etGDwY1DXdGVw//V6KKMAQ/UJkqIljws5M5knWV93
-        oUNXOZTA==;
-Received: from [2601:1c0:6280:3f0:897c:6038:c71d:ecac]
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1j6d9G-0007zL-Uv; Tue, 25 Feb 2020 16:33:31 +0000
-Subject: Re: [PATCH] Initialize ATA before graphics
-To:     Paul Menzel <pmenzel@molgen.mpg.de>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        Keith Busch <kbusch@kernel.org>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        LKML <linux-kernel@vger.kernel.org>
-Cc:     dri-devel@lists.freedesktop.org, linux-fbdev@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-nvme@lists.infradead.org,
-        Arjan van de Ven <arjan@linux.intel.com>
-References: <041f4abd-f894-b990-b320-bf0aab4242f2@molgen.mpg.de>
-From:   Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <0da5bb70-2e55-0fa2-d950-3832f9ff7bcd@infradead.org>
-Date:   Tue, 25 Feb 2020 08:33:29 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        id S1726607AbgBYWCI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 25 Feb 2020 17:02:08 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52078 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726421AbgBYWCH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 25 Feb 2020 17:02:07 -0500
+Received: from mail-qk1-f182.google.com (mail-qk1-f182.google.com [209.85.222.182])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id BABEF2467B;
+        Tue, 25 Feb 2020 22:02:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1582668126;
+        bh=ASA6axefWklSU78pWejTSwer0ZOaWKFTnH47gYDjOZA=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=CTCD9kg9XuK/5B5/i8D8A/5G6NN6eG+R/lePr4JYYbypdV7FZygukNX4N2vScKNMR
+         AcowiA3TsPtPrp9pjfqln0aJMCgno1iOeRyF4hIx8g2f5Ai/mJTN4X1rrllv43N8WQ
+         yeXIAeDINI5iDpqzRb+S/V40752h2KdAmsoPsWz0=
+Received: by mail-qk1-f182.google.com with SMTP id 11so763049qkd.1;
+        Tue, 25 Feb 2020 14:02:06 -0800 (PST)
+X-Gm-Message-State: APjAAAXovnpnqOnxO6TIMLj1I1Q7o6ie4wdbK3YAQfHoY7wP6QY/+mQF
+        ty23BTDM2NQtFgs0W1Isrn4f1OKezLZdVWydnw==
+X-Google-Smtp-Source: APXvYqw5XKZGdHCXY9u0tVRDbjlPaa0iutz4jC8T9d3E9Z8AVXYJLUY39qJiOoxuGit3bif1zq9Awqp6HaEj5QU++i0=
+X-Received: by 2002:ae9:f205:: with SMTP id m5mr1310560qkg.152.1582668125762;
+ Tue, 25 Feb 2020 14:02:05 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <041f4abd-f894-b990-b320-bf0aab4242f2@molgen.mpg.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20200218171321.30990-1-robh@kernel.org> <20200218171321.30990-7-robh@kernel.org>
+ <20200218172000.GF1133@willie-the-truck>
+In-Reply-To: <20200218172000.GF1133@willie-the-truck>
+From:   Rob Herring <robh@kernel.org>
+Date:   Tue, 25 Feb 2020 16:01:54 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqJn1kG6gah+4318NQfJ4PaS3x3woWEUh08+OTfOcD+1MQ@mail.gmail.com>
+Message-ID: <CAL_JsqJn1kG6gah+4318NQfJ4PaS3x3woWEUh08+OTfOcD+1MQ@mail.gmail.com>
+Subject: Re: [RFC PATCH 06/11] iommu: arm-smmu: Remove Calxeda secure mode quirk
+To:     Will Deacon <will@kernel.org>
+Cc:     "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        soc@kernel.org, Andre Przywara <andre.przywara@arm.com>,
+        Robert Richter <rrichter@marvell.com>,
+        Jon Loeliger <jdl@jdl.com>, Alexander Graf <graf@amazon.com>,
+        Matthias Brugger <mbrugger@suse.com>,
+        Mark Langsdorf <mlangsdo@redhat.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Borislav Petkov <bp@alien8.de>,
+        Cornelia Huck <cohuck@redhat.com>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        devicetree@vger.kernel.org, Eric Auger <eric.auger@redhat.com>,
+        Linux IOMMU <iommu@lists.linux-foundation.org>,
+        James Morse <james.morse@arm.com>,
+        Jens Axboe <axboe@kernel.dk>, Joerg Roedel <joro@8bytes.org>,
+        kvm@vger.kernel.org, linux-clk <linux-clk@vger.kernel.org>,
+        linux-edac <linux-edac@vger.kernel.org>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        "open list:THERMAL" <linux-pm@vger.kernel.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Tony Luck <tony.luck@intel.com>,
+        Viresh Kumar <viresh.kumar@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Paul,
-You should have also Cc-ed Arjan on this email. [done]
+On Tue, Feb 18, 2020 at 11:20 AM Will Deacon <will@kernel.org> wrote:
+>
+> On Tue, Feb 18, 2020 at 11:13:16AM -0600, Rob Herring wrote:
+> > Cc: Will Deacon <will@kernel.org>
+> > Cc: Robin Murphy <robin.murphy@arm.com>
+> > Cc: Joerg Roedel <joro@8bytes.org>
+> > Cc: iommu@lists.linux-foundation.org
+> > Signed-off-by: Rob Herring <robh@kernel.org>
+> > ---
+> > Do not apply yet.
+>
+> Pleeeeease? ;)
+>
+> >  drivers/iommu/arm-smmu-impl.c | 43 -----------------------------------
+> >  1 file changed, 43 deletions(-)
+>
+> Yes, I'm happy to get rid of this. Sadly, I don't think we can remove
+> anything from 'struct arm_smmu_impl' because most implementations fall
+> just short of perfect.
+>
+> Anyway, let me know when I can push the button and I'll queue this in
+> the arm-smmu tree.
 
+Seems we're leaving the platform support for now, but I think we never
+actually enabled SMMU support. It's not in the dts either in mainline
+nor the version I have which should be close to what shipped in
+firmware. So as long as Andre agrees, this one is good to apply.
 
-On 2/24/20 6:09 AM, Paul Menzel wrote:
-> From: Arjan van de Ven <arjan@linux.intel.com>
-> Date: Thu, 2 Jun 2016 23:36:32 -0500
-> 
-> ATA init is the long pole in the boot process, and its asynchronous.
-> Move the graphics init after it, so that ATA and graphics initialize
-> in parallel.
-> 
-> Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
-> ---
-> 
-> 1.  Taken from Clear Linux: https://github.com/clearlinux-pkgs/linux/commits/master/0110-Initialize-ata-before-graphics.patch
-> 2.  Arjan, can you please add your Signed-off-by line?
-> 
->  drivers/Makefile | 15 ++++++++-------
->  1 file changed, 8 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/Makefile b/drivers/Makefile
-> index aaef17c..d08f3a3 100644
-> --- a/drivers/Makefile
-> +++ b/drivers/Makefile
-> @@ -58,15 +58,8 @@ obj-y                                += char/
->  # iommu/ comes before gpu as gpu are using iommu controllers
->  obj-y                          += iommu/
->  
-> -# gpu/ comes after char for AGP vs DRM startup and after iommu
-> -obj-y                          += gpu/
-> -
->  obj-$(CONFIG_CONNECTOR)                += connector/
->  
-> -# i810fb and intelfb depend on char/agp/
-> -obj-$(CONFIG_FB_I810)           += video/fbdev/i810/
-> -obj-$(CONFIG_FB_INTEL)          += video/fbdev/intelfb/
-> -
->  obj-$(CONFIG_PARPORT)          += parport/
->  obj-$(CONFIG_NVM)              += lightnvm/
->  obj-y                          += base/ block/ misc/ mfd/ nfc/
-> @@ -79,6 +72,14 @@ obj-$(CONFIG_IDE)            += ide/
->  obj-y                          += scsi/
->  obj-y                          += nvme/
->  obj-$(CONFIG_ATA)              += ata/
-> +
-> +# gpu/ comes after char for AGP vs DRM startup and after iommu
-> +obj-y                          += gpu/
-> +
-> +# i810fb and intelfb depend on char/agp/
-> +obj-$(CONFIG_FB_I810)           += video/fbdev/i810/
-> +obj-$(CONFIG_FB_INTEL)          += video/fbdev/intelfb/
-> +
->  obj-$(CONFIG_TARGET_CORE)      += target/
->  obj-$(CONFIG_MTD)              += mtd/
->  obj-$(CONFIG_SPI)              += spi/
-> 
-
-
--- 
-~Randy
-Reported-by: Randy Dunlap <rdunlap@infradead.org>
+Rob
