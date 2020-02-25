@@ -2,230 +2,125 @@ Return-Path: <SRS0=Wfas=4N=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42978C35E0C
-	for <linux-ide@archiver.kernel.org>; Tue, 25 Feb 2020 16:23:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E52F4C35E01
+	for <linux-ide@archiver.kernel.org>; Tue, 25 Feb 2020 16:33:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 119122082F
-	for <linux-ide@archiver.kernel.org>; Tue, 25 Feb 2020 16:23:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7B5520CC7
+	for <linux-ide@archiver.kernel.org>; Tue, 25 Feb 2020 16:33:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ragnatech-se.20150623.gappssmtp.com header.i=@ragnatech-se.20150623.gappssmtp.com header.b="PQPl17Lo"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="lTpmZeZ1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728051AbgBYQXF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 25 Feb 2020 11:23:05 -0500
-Received: from mail-lf1-f67.google.com ([209.85.167.67]:39128 "EHLO
-        mail-lf1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729992AbgBYQXF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 25 Feb 2020 11:23:05 -0500
-Received: by mail-lf1-f67.google.com with SMTP id n30so9394608lfh.6
-        for <linux-ide@vger.kernel.org>; Tue, 25 Feb 2020 08:23:03 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ragnatech-se.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=5Dk67v+npqu0EQERfbIuN+7my2CbgWhjf5DbNvAyZJ0=;
-        b=PQPl17Loc0S6TpTVmab3H2e6w0TiVNEnHmIkGPYF+kKwGu10CsKsu8PPDzZkj1qpPB
-         WgkOj1YrAr4JCItxUhh6iIq3PlfkOmzOQHKn4ZQx7scePHR2/8z+6QOrbUCdhJtKmTSJ
-         x82mQHhjQyupbzRiC7i1z6YUvdjrggn8SRCKpu9weHqEzTyJu18KJ8wqmAgHPmICXjdZ
-         AwNUh6tljWrSquO9C4BXzhsmcyiDxUWxqpq+q9/3+FzpQpOGjlEScI5c5oR15LmF64Yh
-         QAn5Nde9PUiGRt0VtxD1tqMRd+oNf3Zz/L26OImabzA5dfr92Tx9gtvJhVFuRZhjMnzn
-         1s1A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=5Dk67v+npqu0EQERfbIuN+7my2CbgWhjf5DbNvAyZJ0=;
-        b=L4Sa0M7n/GaQnjgP/F58fQl/bAPH0TRN9RD1k2eTO3np5dlyv3KdqMz2lcAi51SDox
-         W6YJ2Q6zzb+sqAIDUo6ZADD08VzRbim9txC9xHzGjjtz62sQj/y8XRN7FIQZx7l30dwu
-         tMiHC0ttah+uQS5E1iba+TSNfEnn1YZLHmQz6Sg6kQl1YWTZahp1SN/1p5uoe9TfbTrE
-         4T7uKXzwmMKk1vIXq3PDlSosxXoFxofNyCv9KFRQNawpCDrspfBVp1Xj6oYoBzJtu76p
-         imscPael6FU5EDaMcyzKPSOWf0dQOaAxaIeBuAa0lCJJgIoWuW342udRN7QZat5bXf8p
-         FOPw==
-X-Gm-Message-State: APjAAAWT8BC5eBY/St4Yw9bKPZviimZQ7OiSomWEfdFVgStHl0ctg+h+
-        i/Ma+9q4fjQmQ14xko8Uo6AQeg==
-X-Google-Smtp-Source: APXvYqwPW6h1QKilPwRuqWez6A/erb4CBWnOzO1OLK96UKtW/skgBTn+ro2I0LdsmGFEs+G3Ox+z1Q==
-X-Received: by 2002:a05:6512:1109:: with SMTP id l9mr1441299lfg.62.1582647781108;
-        Tue, 25 Feb 2020 08:23:01 -0800 (PST)
-Received: from localhost (h-200-138.A463.priv.bahnhof.se. [176.10.200.138])
-        by smtp.gmail.com with ESMTPSA id z3sm8134562ljh.83.2020.02.25.08.23.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 25 Feb 2020 08:23:00 -0800 (PST)
-Date:   Tue, 25 Feb 2020 17:22:59 +0100
-From:   Niklas =?iso-8859-1?Q?S=F6derlund?= 
-        <niklas.soderlund@ragnatech.se>
-To:     Geert Uytterhoeven <geert+renesas@glider.be>
-Cc:     Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        devicetree@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH] dt-bindings: ata: rcar-sata: Convert to json-schema
-Message-ID: <20200225162259.GC3165317@oden.dyn.berto.se>
-References: <20200219154146.11230-1-geert+renesas@glider.be>
+        id S1730966AbgBYQdf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 25 Feb 2020 11:33:35 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:33424 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730628AbgBYQde (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 25 Feb 2020 11:33:34 -0500
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:
+        Subject:Sender:Reply-To:Content-ID:Content-Description;
+        bh=YKyZV60LHUuQnl24YQ6e7CN9lTy1VXZjsH7/atkgKsQ=; b=lTpmZeZ1NeoF6dscoMg4qMMjFo
+        glMYR+C65qyUo9XeiQnzabqMC7yYHKugSV9aEx4q2bfFnZyr60vQTPd8Kf/UhIZHUNcyam1POEBuV
+        vc/XzzQPk9KxrdLDFtulgA59QtmYM/nSoKY4M8hCrdgHzDIvGeHtdBbx3djNmAjsMXAJZ/StGa7NN
+        irttrCy8WbAwz9vC0ihJM9pKB+D4cUL66aIEflu+R+kwLj/fk2IJFu00pZUU9NXQWT7cfHRG6UqXl
+        VI2pdKL1/UdqS7wLaZFULOlPOs3YIA62BCA2etGDwY1DXdGVw//V6KKMAQ/UJkqIljws5M5knWV93
+        oUNXOZTA==;
+Received: from [2601:1c0:6280:3f0:897c:6038:c71d:ecac]
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1j6d9G-0007zL-Uv; Tue, 25 Feb 2020 16:33:31 +0000
+Subject: Re: [PATCH] Initialize ATA before graphics
+To:     Paul Menzel <pmenzel@molgen.mpg.de>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        Keith Busch <kbusch@kernel.org>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        LKML <linux-kernel@vger.kernel.org>
+Cc:     dri-devel@lists.freedesktop.org, linux-fbdev@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-nvme@lists.infradead.org,
+        Arjan van de Ven <arjan@linux.intel.com>
+References: <041f4abd-f894-b990-b320-bf0aab4242f2@molgen.mpg.de>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <0da5bb70-2e55-0fa2-d950-3832f9ff7bcd@infradead.org>
+Date:   Tue, 25 Feb 2020 08:33:29 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20200219154146.11230-1-geert+renesas@glider.be>
+In-Reply-To: <041f4abd-f894-b990-b320-bf0aab4242f2@molgen.mpg.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Geert,
+Hi Paul,
+You should have also Cc-ed Arjan on this email. [done]
 
-Thanks for your work.
 
-On 2020-02-19 16:41:46 +0100, Geert Uytterhoeven wrote:
-> Convert the Renesas R-Car Serial-ATA Device Tree binding documentation
-> to json-schema.
+On 2/24/20 6:09 AM, Paul Menzel wrote:
+> From: Arjan van de Ven <arjan@linux.intel.com>
+> Date: Thu, 2 Jun 2016 23:36:32 -0500
 > 
-> While at it:
->   - Remove the deprecated "renesas,rcar-sata" compatible value,
->   - Add "iommus", "power-domains", and "resets" properties,
->   - Update the example.
+> ATA init is the long pole in the boot process, and its asynchronous.
+> Move the graphics init after it, so that ATA and graphics initialize
+> in parallel.
 > 
-> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
-
-Reviewed-by: Niklas Söderlund <niklas.soderlund+renesas@ragnatech.se>
-
+> Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
 > ---
-> Not having to care about the deprecated value simplifies the
-> jscon-schema.
-> ---
->  .../bindings/ata/renesas,rcar-sata.yaml       | 71 +++++++++++++++++++
->  .../devicetree/bindings/ata/sata_rcar.txt     | 36 ----------
->  2 files changed, 71 insertions(+), 36 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
->  delete mode 100644 Documentation/devicetree/bindings/ata/sata_rcar.txt
 > 
-> diff --git a/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml b/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
-> new file mode 100644
-> index 0000000000000000..7b69831060d8b9c5
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
-> @@ -0,0 +1,71 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: "http://devicetree.org/schemas/ata/renesas,rcar-sata.yaml#"
-> +$schema: "http://devicetree.org/meta-schemas/core.yaml#"
-> +
-> +title: Renesas R-Car Serial-ATA Interface
-> +
-> +maintainers:
-> +  - Geert Uytterhoeven <geert+renesas@glider.be>
-> +
-> +properties:
-> +  compatible:
-> +    oneOf:
-> +      - items:
-> +          - enum:
-> +              - renesas,sata-r8a7779      # R-Car H1
-> +      - items:
-> +          - enum:
-> +              - renesas,sata-r8a7790-es1  # R-Car H2 ES1
-> +              - renesas,sata-r8a7790      # R-Car H2 other than ES1
-> +              - renesas,sata-r8a7791      # R-Car M2-W
-> +              - renesas,sata-r8a7793      # R-Car M2-N
-> +          - const: renesas,rcar-gen2-sata # generic R-Car Gen2
-> +      - items:
-> +          - enum:
-> +              - renesas,sata-r8a774b1     # RZ/G2N
-> +              - renesas,sata-r8a7795      # R-Car H3
-> +              - renesas,sata-r8a77965     # R-Car M3-N
-> +          - const: renesas,rcar-gen3-sata # generic R-Car Gen3 or RZ/G2
-> +
-> +  reg:
-> +    maxItems: 1
-> +
-> +  interrupts:
-> +    maxItems: 1
-> +
-> +  clocks:
-> +    maxItems: 1
-> +
-> +  iommus:
-> +    maxItems: 1
-> +
-> +  power-domains:
-> +    maxItems: 1
-> +
-> +  resets:
-> +    maxItems: 1
-> +
-> +required:
-> +  - compatible
-> +  - reg
-> +  - interrupts
-> +  - clocks
-> +
-> +additionalProperties: false
-> +
-> +examples:
-> +  - |
-> +    #include <dt-bindings/clock/r8a7791-cpg-mssr.h>
-> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
-> +    #include <dt-bindings/power/r8a7791-sysc.h>
-> +
-> +    sata@ee300000 {
-> +            compatible = "renesas,sata-r8a7791", "renesas,rcar-gen2-sata";
-> +            reg = <0xee300000 0x200000>;
-> +            interrupts = <GIC_SPI 105 IRQ_TYPE_LEVEL_HIGH>;
-> +            clocks = <&cpg CPG_MOD 815>;
-> +            power-domains = <&sysc R8A7791_PD_ALWAYS_ON>;
-> +            resets = <&cpg 815>;
-> +    };
-> diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt b/Documentation/devicetree/bindings/ata/sata_rcar.txt
-> deleted file mode 100644
-> index a2fbdc91570d0f7c..0000000000000000
-> --- a/Documentation/devicetree/bindings/ata/sata_rcar.txt
-> +++ /dev/null
-> @@ -1,36 +0,0 @@
-> -* Renesas R-Car SATA
-> -
-> -Required properties:
-> -- compatible		: should contain one or more of the following:
-> -			  - "renesas,sata-r8a774b1" for RZ/G2N
-> -			  - "renesas,sata-r8a7779" for R-Car H1
-> -			  - "renesas,sata-r8a7790-es1" for R-Car H2 ES1
-> -			  - "renesas,sata-r8a7790" for R-Car H2 other than ES1
-> -			  - "renesas,sata-r8a7791" for R-Car M2-W
-> -			  - "renesas,sata-r8a7793" for R-Car M2-N
-> -			  - "renesas,sata-r8a7795" for R-Car H3
-> -			  - "renesas,sata-r8a77965" for R-Car M3-N
-> -			  - "renesas,rcar-gen2-sata" for a generic R-Car Gen2
-> -			     compatible device
-> -			  - "renesas,rcar-gen3-sata" for a generic R-Car Gen3 or
-> -			     RZ/G2 compatible device
-> -			  - "renesas,rcar-sata" is deprecated
-> -
-> -			  When compatible with the generic version nodes
-> -			  must list the SoC-specific version corresponding
-> -			  to the platform first followed by the generic
-> -			  version.
-> -
-> -- reg			: address and length of the SATA registers;
-> -- interrupts		: must consist of one interrupt specifier.
-> -- clocks		: must contain a reference to the functional clock.
-> -
-> -Example:
-> -
-> -sata0: sata@ee300000 {
-> -	compatible = "renesas,sata-r8a7791", "renesas,rcar-gen2-sata";
-> -	reg = <0 0xee300000 0 0x2000>;
-> -	interrupt-parent = <&gic>;
-> -	interrupts = <0 105 IRQ_TYPE_LEVEL_HIGH>;
-> -	clocks = <&mstp8_clks R8A7791_CLK_SATA0>;
-> -};
-> -- 
-> 2.17.1
+> 1.  Taken from Clear Linux: https://github.com/clearlinux-pkgs/linux/commits/master/0110-Initialize-ata-before-graphics.patch
+> 2.  Arjan, can you please add your Signed-off-by line?
 > 
+>  drivers/Makefile | 15 ++++++++-------
+>  1 file changed, 8 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/Makefile b/drivers/Makefile
+> index aaef17c..d08f3a3 100644
+> --- a/drivers/Makefile
+> +++ b/drivers/Makefile
+> @@ -58,15 +58,8 @@ obj-y                                += char/
+>  # iommu/ comes before gpu as gpu are using iommu controllers
+>  obj-y                          += iommu/
+>  
+> -# gpu/ comes after char for AGP vs DRM startup and after iommu
+> -obj-y                          += gpu/
+> -
+>  obj-$(CONFIG_CONNECTOR)                += connector/
+>  
+> -# i810fb and intelfb depend on char/agp/
+> -obj-$(CONFIG_FB_I810)           += video/fbdev/i810/
+> -obj-$(CONFIG_FB_INTEL)          += video/fbdev/intelfb/
+> -
+>  obj-$(CONFIG_PARPORT)          += parport/
+>  obj-$(CONFIG_NVM)              += lightnvm/
+>  obj-y                          += base/ block/ misc/ mfd/ nfc/
+> @@ -79,6 +72,14 @@ obj-$(CONFIG_IDE)            += ide/
+>  obj-y                          += scsi/
+>  obj-y                          += nvme/
+>  obj-$(CONFIG_ATA)              += ata/
+> +
+> +# gpu/ comes after char for AGP vs DRM startup and after iommu
+> +obj-y                          += gpu/
+> +
+> +# i810fb and intelfb depend on char/agp/
+> +obj-$(CONFIG_FB_I810)           += video/fbdev/i810/
+> +obj-$(CONFIG_FB_INTEL)          += video/fbdev/intelfb/
+> +
+>  obj-$(CONFIG_TARGET_CORE)      += target/
+>  obj-$(CONFIG_MTD)              += mtd/
+>  obj-$(CONFIG_SPI)              += spi/
+> 
+
 
 -- 
-Regards,
-Niklas Söderlund
+~Randy
+Reported-by: Randy Dunlap <rdunlap@infradead.org>
