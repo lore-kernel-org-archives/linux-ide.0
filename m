@@ -1,104 +1,231 @@
-Return-Path: <SRS0=IMLo=4M=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=Wfas=4N=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C7EDC38BE6
-	for <linux-ide@archiver.kernel.org>; Mon, 24 Feb 2020 20:18:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42978C35E0C
+	for <linux-ide@archiver.kernel.org>; Tue, 25 Feb 2020 16:23:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 134DC21556
-	for <linux-ide@archiver.kernel.org>; Mon, 24 Feb 2020 20:18:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 119122082F
+	for <linux-ide@archiver.kernel.org>; Tue, 25 Feb 2020 16:23:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="SSIU4cLl"
+	dkim=pass (2048-bit key) header.d=ragnatech-se.20150623.gappssmtp.com header.i=@ragnatech-se.20150623.gappssmtp.com header.b="PQPl17Lo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727479AbgBXUSn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 24 Feb 2020 15:18:43 -0500
-Received: from mail-pj1-f46.google.com ([209.85.216.46]:55312 "EHLO
-        mail-pj1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726628AbgBXUSn (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 24 Feb 2020 15:18:43 -0500
-Received: by mail-pj1-f46.google.com with SMTP id d5so229652pjz.5
-        for <linux-ide@vger.kernel.org>; Mon, 24 Feb 2020 12:18:42 -0800 (PST)
+        id S1728051AbgBYQXF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 25 Feb 2020 11:23:05 -0500
+Received: from mail-lf1-f67.google.com ([209.85.167.67]:39128 "EHLO
+        mail-lf1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729992AbgBYQXF (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 25 Feb 2020 11:23:05 -0500
+Received: by mail-lf1-f67.google.com with SMTP id n30so9394608lfh.6
+        for <linux-ide@vger.kernel.org>; Tue, 25 Feb 2020 08:23:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=AsAkVqeBlUTVNMBFWbPGk3JGWoog8P01z4Gn0jtsTzU=;
-        b=SSIU4cLlI2n2qbxmevdwvOEapG9ngx6Anv8KODNUhHrGmYkwT+Vofd9rZbxyHYkKrL
-         OxIz6NSZEnenQmkNwJTqQ7MX59IDkoyi5+gbn6dZSi/Vmqw2XCm1CT1uozT+GL7ce+3I
-         LkkDnNqFQ5GJLRTLckEy6NzC4iL9ezTOdrkohbZ8ObYNe5mKFiQ/hXG32lxMg3M7PXH6
-         RwO3R25e38NobOg9yVRKix9CgSdWvD1Sk80l+Z5DSkfFYtF1zX3wjPB0Tx2vMiP8SPnd
-         MiuDWaNOseXqsfnYBNDDkZWqHqMUP1nXomlnJbj5nzcgYwftoxxDbjvfAuOOH+hQ2PSr
-         mD4w==
+        d=ragnatech-se.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=5Dk67v+npqu0EQERfbIuN+7my2CbgWhjf5DbNvAyZJ0=;
+        b=PQPl17Loc0S6TpTVmab3H2e6w0TiVNEnHmIkGPYF+kKwGu10CsKsu8PPDzZkj1qpPB
+         WgkOj1YrAr4JCItxUhh6iIq3PlfkOmzOQHKn4ZQx7scePHR2/8z+6QOrbUCdhJtKmTSJ
+         x82mQHhjQyupbzRiC7i1z6YUvdjrggn8SRCKpu9weHqEzTyJu18KJ8wqmAgHPmICXjdZ
+         AwNUh6tljWrSquO9C4BXzhsmcyiDxUWxqpq+q9/3+FzpQpOGjlEScI5c5oR15LmF64Yh
+         QAn5Nde9PUiGRt0VtxD1tqMRd+oNf3Zz/L26OImabzA5dfr92Tx9gtvJhVFuRZhjMnzn
+         1s1A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=AsAkVqeBlUTVNMBFWbPGk3JGWoog8P01z4Gn0jtsTzU=;
-        b=FSsDLldSOJFLp67D+/1fx+SUgvl/Nh16eUjCR2+OSd6Hm1cTeEGMTOfhskrLavH/QK
-         Y59nhGZSSCpTna/3Qq4xy9MF+Dp/QQaktOwkFwfH9i2Rlji0QbP8MmbWzuDh1D2eLl6M
-         Qd4cTHrQaCIZ51nVSXauhQDNTFn/xTAeJoToQxD7CAX5k5HhwKwy3B8ITBQD/CxnMO3j
-         WOFExBtGp8DISy5ccncakxMPRZZL6j71FQAky+6SeojYzuccPFK1rgj66Xud5wcU5YMe
-         Hmk9Yfjn8t6fqM1x/3M3RL8QU+n/931wiwCvXI+30ZneaZG/17Qh+P+bhbsb5ORSNiF8
-         iRPg==
-X-Gm-Message-State: APjAAAURdCyz7WDftNRtofhK6K5D6mDGQaE7/EFBbyhfbpS6UhjJvMDR
-        9hyEVQZurzsUSx/uau51XIjWxw==
-X-Google-Smtp-Source: APXvYqzMuuqbYsAPQLvRqQa13jz2PshPPsaVA7gSaadKM9nV82v1GczAEn13xMLYijD8wngok8Dx/g==
-X-Received: by 2002:a17:90b:11cd:: with SMTP id gv13mr955512pjb.94.1582575521719;
-        Mon, 24 Feb 2020 12:18:41 -0800 (PST)
-Received: from ?IPv6:2620:10d:c085:21c8::10cd? ([2620:10d:c090:400::5:9b45])
-        by smtp.gmail.com with ESMTPSA id e2sm300316pjs.25.2020.02.24.12.18.40
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 24 Feb 2020 12:18:41 -0800 (PST)
-Subject: Re: [PATCH] compat_ioctl, cdrom: Replace .ioctl with .compat_ioctl in
- four appropriate places
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Arnd Bergmann <arnd@arndb.de>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Adam Williamson <awilliam@redhat.com>,
-        Chris Murphy <bugzilla@colorremedies.com>,
-        Ben Hutchings <ben.hutchings@codethink.co.uk>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Tim Waugh <tim@cyberelk.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20200219165139.3467320-1-arnd@arndb.de>
- <yq1eeujda1d.fsf@oracle.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <d9d25fda-e3c3-e6b6-0189-93fbe7c5f743@kernel.dk>
-Date:   Mon, 24 Feb 2020 13:18:38 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=5Dk67v+npqu0EQERfbIuN+7my2CbgWhjf5DbNvAyZJ0=;
+        b=L4Sa0M7n/GaQnjgP/F58fQl/bAPH0TRN9RD1k2eTO3np5dlyv3KdqMz2lcAi51SDox
+         W6YJ2Q6zzb+sqAIDUo6ZADD08VzRbim9txC9xHzGjjtz62sQj/y8XRN7FIQZx7l30dwu
+         tMiHC0ttah+uQS5E1iba+TSNfEnn1YZLHmQz6Sg6kQl1YWTZahp1SN/1p5uoe9TfbTrE
+         4T7uKXzwmMKk1vIXq3PDlSosxXoFxofNyCv9KFRQNawpCDrspfBVp1Xj6oYoBzJtu76p
+         imscPael6FU5EDaMcyzKPSOWf0dQOaAxaIeBuAa0lCJJgIoWuW342udRN7QZat5bXf8p
+         FOPw==
+X-Gm-Message-State: APjAAAWT8BC5eBY/St4Yw9bKPZviimZQ7OiSomWEfdFVgStHl0ctg+h+
+        i/Ma+9q4fjQmQ14xko8Uo6AQeg==
+X-Google-Smtp-Source: APXvYqwPW6h1QKilPwRuqWez6A/erb4CBWnOzO1OLK96UKtW/skgBTn+ro2I0LdsmGFEs+G3Ox+z1Q==
+X-Received: by 2002:a05:6512:1109:: with SMTP id l9mr1441299lfg.62.1582647781108;
+        Tue, 25 Feb 2020 08:23:01 -0800 (PST)
+Received: from localhost (h-200-138.A463.priv.bahnhof.se. [176.10.200.138])
+        by smtp.gmail.com with ESMTPSA id z3sm8134562ljh.83.2020.02.25.08.23.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 25 Feb 2020 08:23:00 -0800 (PST)
+Date:   Tue, 25 Feb 2020 17:22:59 +0100
+From:   Niklas =?iso-8859-1?Q?S=F6derlund?= 
+        <niklas.soderlund@ragnatech.se>
+To:     Geert Uytterhoeven <geert+renesas@glider.be>
+Cc:     Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        devicetree@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH] dt-bindings: ata: rcar-sata: Convert to json-schema
+Message-ID: <20200225162259.GC3165317@oden.dyn.berto.se>
+References: <20200219154146.11230-1-geert+renesas@glider.be>
 MIME-Version: 1.0
-In-Reply-To: <yq1eeujda1d.fsf@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200219154146.11230-1-geert+renesas@glider.be>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/24/20 1:07 PM, Martin K. Petersen wrote:
-> 
-> Arnd,
-> 
->> Arnd Bergmann inadvertently typoed these in d320a9551e394 and
->> 64cbfa96551a; they seem to be the cause of
->> https://bugzilla.redhat.com/show_bug.cgi?id=1801353 , invalid SCSI
->> commands when udev tries to query a DVD drive.
-> 
-> Applied to 5.6/scsi-fixes. Thanks!
-> 
-> Jens, I hope that's OK? I keep getting mail about this bug.
+Hi Geert,
 
-Yeah that's fine, thanks for picking this up.
+Thanks for your work.
+
+On 2020-02-19 16:41:46 +0100, Geert Uytterhoeven wrote:
+> Convert the Renesas R-Car Serial-ATA Device Tree binding documentation
+> to json-schema.
+> 
+> While at it:
+>   - Remove the deprecated "renesas,rcar-sata" compatible value,
+>   - Add "iommus", "power-domains", and "resets" properties,
+>   - Update the example.
+> 
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+
+Reviewed-by: Niklas Söderlund <niklas.soderlund+renesas@ragnatech.se>
+
+> ---
+> Not having to care about the deprecated value simplifies the
+> jscon-schema.
+> ---
+>  .../bindings/ata/renesas,rcar-sata.yaml       | 71 +++++++++++++++++++
+>  .../devicetree/bindings/ata/sata_rcar.txt     | 36 ----------
+>  2 files changed, 71 insertions(+), 36 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
+>  delete mode 100644 Documentation/devicetree/bindings/ata/sata_rcar.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml b/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
+> new file mode 100644
+> index 0000000000000000..7b69831060d8b9c5
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
+> @@ -0,0 +1,71 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: "http://devicetree.org/schemas/ata/renesas,rcar-sata.yaml#"
+> +$schema: "http://devicetree.org/meta-schemas/core.yaml#"
+> +
+> +title: Renesas R-Car Serial-ATA Interface
+> +
+> +maintainers:
+> +  - Geert Uytterhoeven <geert+renesas@glider.be>
+> +
+> +properties:
+> +  compatible:
+> +    oneOf:
+> +      - items:
+> +          - enum:
+> +              - renesas,sata-r8a7779      # R-Car H1
+> +      - items:
+> +          - enum:
+> +              - renesas,sata-r8a7790-es1  # R-Car H2 ES1
+> +              - renesas,sata-r8a7790      # R-Car H2 other than ES1
+> +              - renesas,sata-r8a7791      # R-Car M2-W
+> +              - renesas,sata-r8a7793      # R-Car M2-N
+> +          - const: renesas,rcar-gen2-sata # generic R-Car Gen2
+> +      - items:
+> +          - enum:
+> +              - renesas,sata-r8a774b1     # RZ/G2N
+> +              - renesas,sata-r8a7795      # R-Car H3
+> +              - renesas,sata-r8a77965     # R-Car M3-N
+> +          - const: renesas,rcar-gen3-sata # generic R-Car Gen3 or RZ/G2
+> +
+> +  reg:
+> +    maxItems: 1
+> +
+> +  interrupts:
+> +    maxItems: 1
+> +
+> +  clocks:
+> +    maxItems: 1
+> +
+> +  iommus:
+> +    maxItems: 1
+> +
+> +  power-domains:
+> +    maxItems: 1
+> +
+> +  resets:
+> +    maxItems: 1
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - interrupts
+> +  - clocks
+> +
+> +additionalProperties: false
+> +
+> +examples:
+> +  - |
+> +    #include <dt-bindings/clock/r8a7791-cpg-mssr.h>
+> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
+> +    #include <dt-bindings/power/r8a7791-sysc.h>
+> +
+> +    sata@ee300000 {
+> +            compatible = "renesas,sata-r8a7791", "renesas,rcar-gen2-sata";
+> +            reg = <0xee300000 0x200000>;
+> +            interrupts = <GIC_SPI 105 IRQ_TYPE_LEVEL_HIGH>;
+> +            clocks = <&cpg CPG_MOD 815>;
+> +            power-domains = <&sysc R8A7791_PD_ALWAYS_ON>;
+> +            resets = <&cpg 815>;
+> +    };
+> diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+> deleted file mode 100644
+> index a2fbdc91570d0f7c..0000000000000000
+> --- a/Documentation/devicetree/bindings/ata/sata_rcar.txt
+> +++ /dev/null
+> @@ -1,36 +0,0 @@
+> -* Renesas R-Car SATA
+> -
+> -Required properties:
+> -- compatible		: should contain one or more of the following:
+> -			  - "renesas,sata-r8a774b1" for RZ/G2N
+> -			  - "renesas,sata-r8a7779" for R-Car H1
+> -			  - "renesas,sata-r8a7790-es1" for R-Car H2 ES1
+> -			  - "renesas,sata-r8a7790" for R-Car H2 other than ES1
+> -			  - "renesas,sata-r8a7791" for R-Car M2-W
+> -			  - "renesas,sata-r8a7793" for R-Car M2-N
+> -			  - "renesas,sata-r8a7795" for R-Car H3
+> -			  - "renesas,sata-r8a77965" for R-Car M3-N
+> -			  - "renesas,rcar-gen2-sata" for a generic R-Car Gen2
+> -			     compatible device
+> -			  - "renesas,rcar-gen3-sata" for a generic R-Car Gen3 or
+> -			     RZ/G2 compatible device
+> -			  - "renesas,rcar-sata" is deprecated
+> -
+> -			  When compatible with the generic version nodes
+> -			  must list the SoC-specific version corresponding
+> -			  to the platform first followed by the generic
+> -			  version.
+> -
+> -- reg			: address and length of the SATA registers;
+> -- interrupts		: must consist of one interrupt specifier.
+> -- clocks		: must contain a reference to the functional clock.
+> -
+> -Example:
+> -
+> -sata0: sata@ee300000 {
+> -	compatible = "renesas,sata-r8a7791", "renesas,rcar-gen2-sata";
+> -	reg = <0 0xee300000 0 0x2000>;
+> -	interrupt-parent = <&gic>;
+> -	interrupts = <0 105 IRQ_TYPE_LEVEL_HIGH>;
+> -	clocks = <&mstp8_clks R8A7791_CLK_SATA0>;
+> -};
+> -- 
+> 2.17.1
+> 
 
 -- 
-Jens Axboe
-
+Regards,
+Niklas Söderlund
