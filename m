@@ -7,103 +7,103 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1678C3F2CD
-	for <linux-ide@archiver.kernel.org>; Mon,  2 Mar 2020 17:51:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 985C3C3F2CD
+	for <linux-ide@archiver.kernel.org>; Mon,  2 Mar 2020 17:57:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B2A652173E
-	for <linux-ide@archiver.kernel.org>; Mon,  2 Mar 2020 17:51:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39DA52465E
+	for <linux-ide@archiver.kernel.org>; Mon,  2 Mar 2020 17:57:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="k9thf7xz"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="Vq1TaiEK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727159AbgCBRvl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 2 Mar 2020 12:51:41 -0500
-Received: from mailout2.w1.samsung.com ([210.118.77.12]:49640 "EHLO
-        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727126AbgCBRvl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 2 Mar 2020 12:51:41 -0500
+        id S1727113AbgCBR5b (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 2 Mar 2020 12:57:31 -0500
+Received: from mailout1.w1.samsung.com ([210.118.77.11]:59069 "EHLO
+        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726451AbgCBR5b (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 2 Mar 2020 12:57:31 -0500
 Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200302175139euoutp0262222f62677be0291ffc372c6a3ac065~4jhcq57rG2348023480euoutp02Y
-        for <linux-ide@vger.kernel.org>; Mon,  2 Mar 2020 17:51:39 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200302175139euoutp0262222f62677be0291ffc372c6a3ac065~4jhcq57rG2348023480euoutp02Y
+        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200302175730euoutp01b320197e8a586fd4457f86936a3b4e2b~4jmjlPcWR2010320103euoutp01c
+        for <linux-ide@vger.kernel.org>; Mon,  2 Mar 2020 17:57:30 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200302175730euoutp01b320197e8a586fd4457f86936a3b4e2b~4jmjlPcWR2010320103euoutp01c
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1583171499;
-        bh=iEHsbW0VnVtU85aTi7+NRCGGtmTXpFlmrlNDk4PL6ec=;
+        s=mail20170921; t=1583171850;
+        bh=7C/tyT2VNvJAALycnVnOlCRXJXXM/7+fimdOsDTOBHw=;
         h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=k9thf7xzg7EdSi3UxXBIP00yCML4F0NY0YNDQd4jBD66iWfLSCYxOnVKL5/bXCzhr
-         pEC4wsKFkPTOCw4zVLO0LypHVrpZ2Mo20WwAdbb3zCa+I2zdlE/UV718EWBWi5ijfe
-         YmrOYoLhYSb0MFwcIK3AREIz9uPyixKanW2TzP+Y=
-Received: from eusmges2new.samsung.com (unknown [203.254.199.244]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20200302175138eucas1p200f01d86dfb11b364d373816921ae9f5~4jhccvAsd2640826408eucas1p2q;
-        Mon,  2 Mar 2020 17:51:38 +0000 (GMT)
+        b=Vq1TaiEKpf3pEczCNzQXT0BCNWfHgl1s9/F4UKOJmihfHkw1u1PwNT3m2uLUgpo9o
+         UCofPfFsEa9Zbb4ZHMLODRFq57wL6mSQ6cHvkLDzur5bLOX+OuBY416rM71Vn0UItW
+         B/Mu9xkErc7EKaPQifAVZctBMa2vBacBJx5vyZvo=
+Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
+        20200302175730eucas1p1c48b3b8945d8cdc1cdc2e4c707ff65f3~4jmjedaIP0986009860eucas1p1Q;
+        Mon,  2 Mar 2020 17:57:30 +0000 (GMT)
 Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges2new.samsung.com (EUCPMTA) with SMTP id 60.AC.60679.AA74D5E5; Mon,  2
-        Mar 2020 17:51:38 +0000 (GMT)
-Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
+        eusmges3new.samsung.com (EUCPMTA) with SMTP id 9D.EF.60698.9094D5E5; Mon,  2
+        Mar 2020 17:57:30 +0000 (GMT)
+Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
         eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20200302175138eucas1p20001ff8c435c7e3226e3d64c48336267~4jhb-L81V2096920969eucas1p2O;
-        Mon,  2 Mar 2020 17:51:38 +0000 (GMT)
+        20200302175729eucas1p2429f9aaef8b9db3c1f976c785c075b07~4jmjPnFkh1183811838eucas1p2E;
+        Mon,  2 Mar 2020 17:57:29 +0000 (GMT)
 Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
-        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200302175138eusmtrp293467f7055d7225529821b7daafc9ff1~4jhb_qfjS1569915699eusmtrp2G;
-        Mon,  2 Mar 2020 17:51:38 +0000 (GMT)
-X-AuditID: cbfec7f4-0cbff7000001ed07-d7-5e5d47aa6031
+        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20200302175729eusmtrp16288d31ed308cb5a73abd902824f4b60~4jmjPB7y12087220872eusmtrp18;
+        Mon,  2 Mar 2020 17:57:29 +0000 (GMT)
+X-AuditID: cbfec7f5-a29ff7000001ed1a-e3-5e5d49090634
 Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id 1B.1B.07950.AA74D5E5; Mon,  2
-        Mar 2020 17:51:38 +0000 (GMT)
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id FE.5B.07950.9094D5E5; Mon,  2
+        Mar 2020 17:57:29 +0000 (GMT)
 Received: from [106.120.51.71] (unknown [106.120.51.71]) by
         eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200302175138eusmtip24be744dc0ec95a3d9631342b0ce110db~4jhbsCfB_2919529195eusmtip27;
-        Mon,  2 Mar 2020 17:51:38 +0000 (GMT)
-Subject: Re: [PATCH 22/42] sata_nv: use generic tracepoints
+        20200302175729eusmtip2cb4bbfe259739db1887c26f9eb2ab74b~4jmi7WDcS1012210122eusmtip2U;
+        Mon,  2 Mar 2020 17:57:29 +0000 (GMT)
+Subject: Re: [PATCH 24/42] libata-sff: drop DPRINTK for the HSM state
+ machine
 To:     Hannes Reinecke <hare@suse.de>
 Cc:     Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
         linux-ide@vger.kernel.org
 From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <341f40d3-7388-89a5-33c0-1cff55f6d4fd@samsung.com>
-Date:   Mon, 2 Mar 2020 18:51:37 +0100
+Message-ID: <a687fe23-2cab-0b2b-b9fc-8c0c617394c3@samsung.com>
+Date:   Mon, 2 Mar 2020 18:57:28 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
         Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20200213095412.23773-23-hare@suse.de>
+In-Reply-To: <20200213095412.23773-25-hare@suse.de>
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprMKsWRmVeSWpSXmKPExsWy7djP87qr3GPjDPZdNbFYfbefzWLPoklM
-        Fsd2PGKy+LX8KKMDi8fls6Uem1Z1snlsPl3t8XmTXABLFJdNSmpOZllqkb5dAlfG7e7FzAX/
-        +Su2dqxgbWB8w9PFyMEhIWAi8WhORRcjJ4eQwApGiZ43Sl2MXED2F0aJ2ad/skE4nxklDs/c
-        xghSBdIw49VLVojEckaJrp9HoKreMkrc3PgBrEpYwFri3LMmNhBbREBJ4mP7IXYQm1kgQmLj
-        hrVMIDabgJXExPZVjCBn8ArYSZy8aA0SZhFQkTi0ZD7YGFGg8k8PDrOC2LwCghInZz5hAbE5
-        BYwlLnRdZoIYKS5x68l8KFteYvvbOcwg90gI9LNL9P6azAxxtYvE/kPzWSBsYYlXx7ewQ9gy
-        Ev93gjSDNKxjlPjb8QKqezujxPLJ/9ggqqwl7pz7xQZyKbOApsT6XfoQYUeJ+93HWSDhyCdx
-        460gxBF8EpO2TWeGCPNKdLQJQVSrSWxYtoENZm3XzpXMExiVZiF5bRaSd2YheWcWwt4FjCyr
-        GMVTS4tz01OLjfJSy/WKE3OLS/PS9ZLzczcxApPK6X/Hv+xg3PUn6RCjAAejEg9vAHNsnBBr
-        YllxZe4hRgkOZiURXl/O6Dgh3pTEyqrUovz4otKc1OJDjNIcLErivMaLXsYKCaQnlqRmp6YW
-        pBbBZJk4OKUaGGeVT1tYtvTpv2PFvY5NF7vszxicsw7m+t5yv/y1hNYxpWnFvEaVOZt3zJ16
-        99LERa2yc7g+17clVCUxCK5sPcir6PzaIaHfYduM9xKlqQa5TPILYkLNlykI/O76uHdWeXD/
-        l2PbF1lFTei8MU1hklnUFZZt/zpPxZs6Cknw5Pd8Tr1wZ9rh2UosxRmJhlrMRcWJAMAqLPwm
-        AwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrGIsWRmVeSWpSXmKPExsVy+t/xe7qr3GPjDKavFLNYfbefzWLPoklM
-        Fsd2PGKy+LX8KKMDi8fls6Uem1Z1snlsPl3t8XmTXABLlJ5NUX5pSapCRn5xia1StKGFkZ6h
-        pYWekYmlnqGxeayVkamSvp1NSmpOZllqkb5dgl7G7e7FzAX/+Su2dqxgbWB8w9PFyMkhIWAi
-        MePVS9YuRi4OIYGljBL/H/1g62LkAErISBxfXwZRIyzx51oXG0TNa0aJNavbWEASwgLWEuee
-        NbGB2CICShIf2w+xg9jMAhES3a/OQDWsY5T43nyQESTBJmAlMbF9FSPIAl4BO4mTF61BwiwC
-        KhKHlswHKxEF6j28YxaYzSsgKHFy5hOwXZwCxhIXui4zQcxXl/gz7xIzhC0ucevJfKi4vMT2
-        t3OYJzAKzULSPgtJyywkLbOQtCxgZFnFKJJaWpybnltspFecmFtcmpeul5yfu4kRGEfbjv3c
-        soOx613wIUYBDkYlHt4fDLFxQqyJZcWVuYcYJTiYlUR4fTmj44R4UxIrq1KL8uOLSnNSiw8x
-        mgI9N5FZSjQ5HxjjeSXxhqaG5haWhubG5sZmFkrivB0CB2OEBNITS1KzU1MLUotg+pg4OKUa
-        GE8/7lY/ImMhGqI+96a0t6nWV4fzSSGVSq6n3+1271/Ys4vdjTX99NHzv6vPVJ1ZOKEhpT3A
-        xtRs1gYfX0bW3x/LNv5kjdPtz/ApO/bi3izNKwqm313F7VocZuy7cOnN1o8NvPvYuA2uMdTs
-        0X6zZJZua//Cg2fPcgsun7LFm3FVcTCz37YgESWW4oxEQy3mouJEADty1KO5AgAA
-X-CMS-MailID: 20200302175138eucas1p20001ff8c435c7e3226e3d64c48336267
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprMKsWRmVeSWpSXmKPExsWy7djP87pcnrFxBt1fGS1W3+1ns9izaBKT
+        xbEdj5gsfi0/yujA4nH5bKnHplWdbB6bT1d7fN4kF8ASxWWTkpqTWZZapG+XwJXRfnAlW8FO
+        0YpJTwsbGI8IdjFyckgImEgcP76NuYuRi0NIYAWjxNRdu9hBEkICXxglXn3lhkh8ZpSYcXo/
+        axcjB1jH9Q4viPhyRomOhj3sEM5bRonvCw6ygXQLC/hLHLh+nAnEFhFQkvjYfghsKrNAhMTG
+        DWvB4mwCVhIT21cxgti8AnYSl+Y8AbNZBFQkXi75CVYvClT/6cFhVogaQYmTM5+wgNicAsYS
+        L7/1sEDMFJe49WQ+E4QtL7H97RywdyQEutkl9v38xALxp4vEz6+7oWxhiVfHt7BD2DISpyeD
+        DAJpWMco8bfjBVT3dkaJ5ZP/sUFUWUvcOfeLDeR/ZgFNifW79CHCjhK/Fr9igwQLn8SNt4IQ
+        R/BJTNo2nRkizCvR0SYEUa0msWHZBjaYtV07VzJPYFSaheS1WUjemYXknVkIexcwsqxiFE8t
+        Lc5NTy02zkst1ytOzC0uzUvXS87P3cQITCqn/x3/uoNx35+kQ4wCHIxKPLwBzLFxQqyJZcWV
+        uYcYJTiYlUR4fTmj44R4UxIrq1KL8uOLSnNSiw8xSnOwKInzGi96GSskkJ5YkpqdmlqQWgST
+        ZeLglGpgNJ0dEmOjc9nMdJEXi6rYOjktg+jJS1fqa9WdqmKt1Wj9z86SWfJ95adfx922TD1o
+        qLR8E7cV97snjevCkroPCHYuusT0/3rDn1rXb/N4X1zYUfb55bN9nBe2XHdU2/t5xpKWY347
+        96oyVS/3FOS4NIN1RXqxqthbw7Q9+08IV6q2lr3betx9jxJLcUaioRZzUXEiAJGV/iAmAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrKIsWRmVeSWpSXmKPExsVy+t/xe7qcnrFxBpfm6FqsvtvPZrFn0SQm
+        i2M7HjFZ/Fp+lNGBxePy2VKPTas62Tw2n672+LxJLoAlSs+mKL+0JFUhI7+4xFYp2tDCSM/Q
+        0kLPyMRSz9DYPNbKyFRJ384mJTUnsyy1SN8uQS+j/eBKtoKdohWTnhY2MB4R7GLk4JAQMJG4
+        3uHVxcjFISSwlFHiz/s+Zoi4jMTx9WVdjJxAprDEn2tdbBA1rxklts37yQaSEBbwlei6tJoJ
+        xBYRUJL42H6IHcRmFoiQ6H51BqphHaPEz7cXmEESbAJWEhPbVzGC2LwCdhKX5jwBs1kEVCRe
+        LvkJ1iwK1Hx4xyyoGkGJkzOfsIDYnALGEi+/9bBALFCX+DPvEjOELS5x68l8JghbXmL72znM
+        ExiFZiFpn4WkZRaSlllIWhYwsqxiFEktLc5Nzy020itOzC0uzUvXS87P3cQIjKJtx35u2cHY
+        9S74EKMAB6MSD+8Phtg4IdbEsuLK3EOMEhzMSiK8vpzRcUK8KYmVValF+fFFpTmpxYcYTYGe
+        m8gsJZqcD4zwvJJ4Q1NDcwtLQ3Njc2MzCyVx3g6BgzFCAumJJanZqakFqUUwfUwcnFINjN7f
+        ve7Hpswy/bZ/TuG7NktXt478XwXzUlMXa8VfuuKbfMl44sxsxYoIle8te7jdfMt2e/Xd+MnX
+        0Pmnfs21NjOfNVKBJ8u90qX7I5tn1dVYGvDf26bKxee30kTD/uMijQ1v80809ixb8d1pi3di
+        8gt5l6r8JdMndOquq12TNpW5c9KzvuT9SizFGYmGWsxFxYkAmAC1kLgCAAA=
+X-CMS-MailID: 20200302175729eucas1p2429f9aaef8b9db3c1f976c785c075b07
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200213095440eucas1p272a76fbb6e1c56529d98a8e99f85e5a2
+X-RootMTR: 20200213095440eucas1p1b61fc4ffc55268e3947d9d4651ce9ab7
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20200213095440eucas1p272a76fbb6e1c56529d98a8e99f85e5a2
+X-CMS-RootMailID: 20200213095440eucas1p1b61fc4ffc55268e3947d9d4651ce9ab7
 References: <20200213095412.23773-1-hare@suse.de>
-        <CGME20200213095440eucas1p272a76fbb6e1c56529d98a8e99f85e5a2@eucas1p2.samsung.com>
-        <20200213095412.23773-23-hare@suse.de>
+        <CGME20200213095440eucas1p1b61fc4ffc55268e3947d9d4651ce9ab7@eucas1p1.samsung.com>
+        <20200213095412.23773-25-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
@@ -111,12 +111,14 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 
 On 2/13/20 10:53 AM, Hannes Reinecke wrote:
-> Remove logging messages covered by generic tracepoints and add
-> generic tracepoints for internal calls.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> The information is now logged with tracepoints, so the DPRINTK
+> calls can be dropped.
 
-Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+The addition of trace_*() statements should be in patch #23 and
+this patch should contain only the removal of no longer needed
+DPRINTK() instances.
+
+[ Just like it has been done in reset tracepoints conversion. ]
 
 Best regards,
 --
@@ -124,61 +126,59 @@ Bartlomiej Zolnierkiewicz
 Samsung R&D Institute Poland
 Samsung Electronics
 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 > ---
->  drivers/ata/sata_nv.c | 11 +++--------
->  1 file changed, 3 insertions(+), 8 deletions(-)
+>  drivers/ata/libata-sff.c | 12 +++++-------
+>  1 file changed, 5 insertions(+), 7 deletions(-)
 > 
-> diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-> index 8639f66706a3..f7dd32679c8e 100644
-> --- a/drivers/ata/sata_nv.c
-> +++ b/drivers/ata/sata_nv.c
-> @@ -31,6 +31,7 @@
->  #include <scsi/scsi_host.h>
->  #include <scsi/scsi_device.h>
->  #include <linux/libata.h>
-> +#include <trace/events/libata.h>
+> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+> index 1078b621d47b..f6a54b574b25 100644
+> --- a/drivers/ata/libata-sff.c
+> +++ b/drivers/ata/libata-sff.c
+> @@ -660,7 +660,7 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
+>  	page = nth_page(page, (offset >> PAGE_SHIFT));
+>  	offset %= PAGE_SIZE;
 >  
->  #define DRV_NAME			"sata_nv"
->  #define DRV_VERSION			"3.5"
-> @@ -1428,8 +1429,6 @@ static unsigned int nv_adma_qc_issue(struct ata_queued_cmd *qc)
+> -	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
+> +	trace_ata_sff_pio_transfer_data(qc, offset, qc->sect_size);
 >  
->  	writew(qc->hw_tag, mmio + NV_ADMA_APPEND);
+>  	/* do the actual data transfer */
+>  	buf = kmap_atomic(page);
+> @@ -723,7 +723,7 @@ static void ata_pio_sectors(struct ata_queued_cmd *qc)
+>  static void atapi_send_cdb(struct ata_port *ap, struct ata_queued_cmd *qc)
+>  {
+>  	/* send SCSI cdb */
+> -	DPRINTK("send cdb\n");
+> +	trace_atapi_send_cdb(qc, 0, qc->dev->cdb_len);
+>  	WARN_ON_ONCE(qc->dev->cdb_len < 12);
 >  
-> -	DPRINTK("Issued tag %u\n", qc->hw_tag);
-> -
->  	return 0;
->  }
+>  	ap->ops->sff_data_xfer(qc, qc->cdb, qc->dev->cdb_len, 1);
+> @@ -794,7 +794,7 @@ static int __atapi_pio_bytes(struct ata_queued_cmd *qc, unsigned int bytes)
+>  	/* don't cross page boundaries */
+>  	count = min(count, (unsigned int)PAGE_SIZE - offset);
 >  
-> @@ -2007,19 +2006,17 @@ static unsigned int nv_swncq_issue_atacmd(struct ata_port *ap,
->  	if (qc == NULL)
->  		return 0;
+> -	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
+> +	trace_atapi_pio_transfer_data(qc, offset, count);
 >  
-> -	DPRINTK("Enter\n");
-> -
->  	writel((1 << qc->hw_tag), pp->sactive_block);
->  	pp->last_issue_tag = qc->hw_tag;
->  	pp->dhfis_bits &= ~(1 << qc->hw_tag);
->  	pp->dmafis_bits &= ~(1 << qc->hw_tag);
->  	pp->qc_active |= (0x1 << qc->hw_tag);
+>  	/* do the actual data transfer */
+>  	buf = kmap_atomic(page);
+> @@ -976,8 +976,7 @@ int ata_sff_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
+>  	WARN_ON_ONCE(in_wq != ata_hsm_ok_in_wq(ap, qc));
 >  
-> +	trace_ata_tf_load(ap, &qc->tf);
->  	ap->ops->sff_tf_load(ap, &qc->tf);	 /* load tf registers */
-> +	trace_ata_exec_command(ap, &qc->tf, qc->hw_tag);
->  	ap->ops->sff_exec_command(ap, &qc->tf);
+>  fsm_start:
+> -	DPRINTK("ata%u: protocol %d task_state %d (dev_stat 0x%X)\n",
+> -		ap->print_id, qc->tf.protocol, ap->hsm_task_state, status);
+> +	trace_ata_sff_hsm_state(qc, status);
 >  
-> -	DPRINTK("Issued tag %u\n", qc->hw_tag);
-> -
->  	return 0;
->  }
+>  	switch (ap->hsm_task_state) {
+>  	case HSM_ST_FIRST:
+> @@ -1178,8 +1177,7 @@ int ata_sff_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
+>  		}
 >  
-> @@ -2031,8 +2028,6 @@ static unsigned int nv_swncq_qc_issue(struct ata_queued_cmd *qc)
->  	if (qc->tf.protocol != ATA_PROT_NCQ)
->  		return ata_bmdma_qc_issue(qc);
+>  		/* no more data to transfer */
+> -		DPRINTK("ata%u: dev %u command complete, drv_stat 0x%x\n",
+> -			ap->print_id, qc->dev->devno, status);
+> +		trace_ata_sff_hsm_command_complete(qc, status);
 >  
-> -	DPRINTK("Enter\n");
-> -
->  	if (!pp->qc_active)
->  		nv_swncq_issue_atacmd(ap, qc);
->  	else
-> 
-
+>  		WARN_ON_ONCE(qc->err_mask & (AC_ERR_DEV | AC_ERR_HSM));
+>  
