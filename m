@@ -7,111 +7,114 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4F0BC3F2D1
-	for <linux-ide@archiver.kernel.org>; Mon,  2 Mar 2020 17:06:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68A98C3F2CD
+	for <linux-ide@archiver.kernel.org>; Mon,  2 Mar 2020 17:09:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C26B21775
-	for <linux-ide@archiver.kernel.org>; Mon,  2 Mar 2020 17:06:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3657B21775
+	for <linux-ide@archiver.kernel.org>; Mon,  2 Mar 2020 17:09:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="rSJY0Epw"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="rKL8KkQc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727111AbgCBRGz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 2 Mar 2020 12:06:55 -0500
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:49728 "EHLO
-        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726451AbgCBRGz (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 2 Mar 2020 12:06:55 -0500
-Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200302170653euoutp0193b571ac4c37e4d91a70ce1a146bcb00~4i6XnuLrB1656416564euoutp01P
-        for <linux-ide@vger.kernel.org>; Mon,  2 Mar 2020 17:06:53 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200302170653euoutp0193b571ac4c37e4d91a70ce1a146bcb00~4i6XnuLrB1656416564euoutp01P
+        id S1727032AbgCBRJx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 2 Mar 2020 12:09:53 -0500
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:41602 "EHLO
+        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727459AbgCBRJx (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 2 Mar 2020 12:09:53 -0500
+Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200302170951euoutp022e7f15bd042d5835f40ad98186dc12d5~4i886VcPH3133431334euoutp02e
+        for <linux-ide@vger.kernel.org>; Mon,  2 Mar 2020 17:09:51 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200302170951euoutp022e7f15bd042d5835f40ad98186dc12d5~4i886VcPH3133431334euoutp02e
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1583168813;
-        bh=9rSi6DcLyIZStA7MZzAaliquks3u6LXu9pl+YF9kaMo=;
+        s=mail20170921; t=1583168991;
+        bh=BbndpC4Javo9IaXaYO1oMPu3ZAoWtjf0VUz2rt3NqoY=;
         h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=rSJY0EpwoHQ2tOx5yiFTjKNKz62mUfJKMI6hRIOGE8tfqhdy+IS8rQ65l3p/l9R+C
-         CXIjaze4CVr8TtEXDOeDU88sbHADk9PryfKyYp3OOysuQwHSxQxTYMWp1+vVMRCuxG
-         ZrZO9kIx2OGKDo+ALlxxVhGqr3UnDOFd/VSpAUEE=
+        b=rKL8KkQc7/2IU3BkBHzx4btb2JF9fKePdJ/rNG1RkdEZ/r18IoztOsHSnk6u3fKJE
+         8LyLLRMvL0EDNSITEJz5auZ81d8QIgIROYABsCtIsITvuC7E46bM15BeCslWdF/y3b
+         Jc8WCXw/KqvuUTHTAoX7i0sBhyXIJ6+gUrEE7/XY=
 Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20200302170653eucas1p1e382a3d5bd33aa5e1db9eafb0ee8c282~4i6XgchYI2919929199eucas1p1r;
-        Mon,  2 Mar 2020 17:06:53 +0000 (GMT)
+        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+        20200302170951eucas1p20ed96dc9144d3f08ffa66d150677c7e5~4i88zMA4E2585125851eucas1p2g;
+        Mon,  2 Mar 2020 17:09:51 +0000 (GMT)
 Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges1new.samsung.com (EUCPMTA) with SMTP id 9C.F6.61286.D2D3D5E5; Mon,  2
-        Mar 2020 17:06:53 +0000 (GMT)
+        eusmges1new.samsung.com (EUCPMTA) with SMTP id F0.47.61286.EDD3D5E5; Mon,  2
+        Mar 2020 17:09:51 +0000 (GMT)
 Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20200302170653eucas1p10a162ed3a2b449465cb984c7807bf25b~4i6XMnVZl3275132751eucas1p1n;
-        Mon,  2 Mar 2020 17:06:53 +0000 (GMT)
-Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
+        20200302170950eucas1p22791bf8d9cb9d403154acdee136ead1c~4i88fNCGh2585125851eucas1p2d;
+        Mon,  2 Mar 2020 17:09:50 +0000 (GMT)
+Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
         eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200302170653eusmtrp11c77797b63a493cfc320316a0ede7d44~4i6XMAE1r2044020440eusmtrp1m;
-        Mon,  2 Mar 2020 17:06:53 +0000 (GMT)
-X-AuditID: cbfec7f2-f0bff7000001ef66-f3-5e5d3d2d7071
-Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id E4.B8.08375.D2D3D5E5; Mon,  2
-        Mar 2020 17:06:53 +0000 (GMT)
+        20200302170950eusmtrp1796508385e6b701a900bd0c78158f26b~4i88enhIO2219622196eusmtrp18;
+        Mon,  2 Mar 2020 17:09:50 +0000 (GMT)
+X-AuditID: cbfec7f2-ef1ff7000001ef66-98-5e5d3dded5ae
+Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id DF.A8.07950.EDD3D5E5; Mon,  2
+        Mar 2020 17:09:50 +0000 (GMT)
 Received: from [106.120.51.71] (unknown [106.120.51.71]) by
-        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200302170652eusmtip2ddb35848a01d9502489d9d5738f3bea4~4i6W7qYXk0149601496eusmtip2L;
-        Mon,  2 Mar 2020 17:06:52 +0000 (GMT)
-Subject: Re: [PATCH 35/42] sata_nv: move DPRINTK to ata debugging
+        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20200302170950eusmtip17dde2a4768073e1f6b1ea7aaf1a704a3~4i87_agcG0763607636eusmtip1K;
+        Mon,  2 Mar 2020 17:09:50 +0000 (GMT)
+Subject: Re: [PATCH 15/42] libata: add reset tracepoints
 To:     Hannes Reinecke <hare@suse.de>
 Cc:     Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
         linux-ide@vger.kernel.org
 From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <c46bb910-20bd-0405-bd9f-830ecd74f0f2@samsung.com>
-Date:   Mon, 2 Mar 2020 18:06:52 +0100
+Message-ID: <ca7c3510-0fef-9783-6523-307c50a2cff5@samsung.com>
+Date:   Mon, 2 Mar 2020 18:09:49 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
         Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20200213095412.23773-36-hare@suse.de>
+In-Reply-To: <20200213095412.23773-16-hare@suse.de>
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprMKsWRmVeSWpSXmKPExsWy7djP87q6trFxBnunyVusvtvPZrFn0SQm
-        i2M7HjFZ/Fp+lNGBxePy2VKPTas62Tw2n672+LxJLoAlissmJTUnsyy1SN8ugSvj9bYetoIL
-        whWr75Y0MN7i72Lk5JAQMJF42XePvYuRi0NIYAWjxP4jU1ghnC+MEi8//maGcD4zSrxY38UE
-        03Jr6wxGiMRyRolFO34ygySEBN4ySnzdxANiCws4SpzatYkRxBYRUJL42H6IHcRmFoiQ2Lhh
-        LdggNgEriYntq4BqODh4Bewk1q2JAQmzCKhI3L/fCtYqClT+6cFhVhCbV0BQ4uTMJywgNqeA
-        scTEf6uYIEaKS9x6Mh/KlpfY/nYO2NESAv3sEjvmPWSFONpFYue85cwQtrDEq+Nb2CFsGYnT
-        k3tYIBrWMUr87XgB1b2dUWL55H9sEFXWEnfO/WIDuZRZQFNi/S59iLCjxP6Z/9hBwhICfBI3
-        3gpCHMEnMWnbdGaIMK9ER5sQRLWaxIZlG9hg1nbtXMk8gVFpFpLXZiF5ZxaSd2Yh7F3AyLKK
-        UTy1tDg3PbXYMC+1XK84Mbe4NC9dLzk/dxMjMKmc/nf80w7Gr5eSDjEKcDAq8fAGMMfGCbEm
-        lhVX5h5ilOBgVhLh9eWMjhPiTUmsrEotyo8vKs1JLT7EKM3BoiTOa7zoZayQQHpiSWp2ampB
-        ahFMlomDU6qBccnSqq9eKl1M6ikhk9dMP3ZF0O6uzf3j+gbir+YsEperFig5+HnLriXnZoX8
-        EN+W4S+ocPmamPtp89KLzbJTJX5arZCMY5346l8B45aDArwVs1gmX2qr5Vq6KXnfrGK/yfIH
-        HrxNCDrG9Lvggr23i6vBPQ+DrLsXPcIrhEo3MygfffWO48qXs0osxRmJhlrMRcWJABOEQxAm
-        AwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrCIsWRmVeSWpSXmKPExsVy+t/xe7q6trFxBg9Wc1msvtvPZrFn0SQm
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprMKsWRmVeSWpSXmKPExsWy7djP87r3bWPjDG60MFqsvtvPZrFn0SQm
+        i2M7HjFZ/Fp+lNGBxePy2VKPTas62Tw2n672+LxJLoAlissmJTUnsyy1SN8ugSvjx533TAXn
+        zSvm3NnG3sD4VKeLkZNDQsBEYvrvdrYuRi4OIYEVjBLLLi1hh3C+MErMWvGSGcL5zCix7uQD
+        JpiWXd/WQlUtZ5To/XIAqv8to8Se/acYQaqEBSwktu96yA5iiwgoSXxsPwRmMwtESGzcsBZs
+        EpuAlcTE9lVg9bwCdhJvFq5n6WLk4GARUJH4/EgKJCwKVP7pwWFWiBJBiZMzn7CA2JwCxhJz
+        ts5mgRgpLnHryXwmCFteYvvbOWBXSwhMZpfYs2sLM8hMCQEXiU3roH4Wlnh1fAs7hC0jcXpy
+        DwtE/TpGib8dL6CatzNKLJ/8jw2iylrizrlfbCCDmAU0Jdbv0oeY6Shx4aMFhMknceOtIMQJ
+        fBKTtk2H2sor0dEmBDFDTWLDsg1sMFu7dq5knsCoNAvJY7OQPDMLyTOzENYuYGRZxSieWlqc
+        m55abJiXWq5XnJhbXJqXrpecn7uJEZhUTv87/mkH49dLSYcYBTgYlXh4A5hj44RYE8uKK3MP
+        MUpwMCuJ8PpyRscJ8aYkVlalFuXHF5XmpBYfYpTmYFES5zVe9DJWSCA9sSQ1OzW1ILUIJsvE
+        wSnVwLg05JZPSMn3kqiM/hnLnDY0Brdt7pvDf/apXeUlYaW8VN43Uza/YfDbp5Pm+EL2apY9
+        Q4DkrgvnHk87Gl6xL2NTyfP1q9d9qfggYrL8/CRv8YB/Ja72ZfOPzAqY2JJrP+Xptv1Ja4Tt
+        Zk0LUz+laKLLfO5BRrXExl09v7v87U7zTNiXp/ORf54SS3FGoqEWc1FxIgDYalMuJgMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrKIsWRmVeSWpSXmKPExsVy+t/xu7r3bGPjDJ51aFisvtvPZrFn0SQm
         i2M7HjFZ/Fp+lNGBxePy2VKPTas62Tw2n672+LxJLoAlSs+mKL+0JFUhI7+4xFYp2tDCSM/Q
-        0kLPyMRSz9DYPNbKyFRJ384mJTUnsyy1SN8uQS/j9bYetoILwhWr75Y0MN7i72Lk5JAQMJG4
-        tXUGI4gtJLCUUWL50+IuRg6guIzE8fVlECXCEn+udbF1MXIBlbxmlOj9vosZJCEs4Chxatcm
-        sF4RASWJj+2H2EFsZoEIie5XZ6Aa1jFKLJjziBUkwSZgJTGxfRUjyAJeATuJdWtiQMIsAioS
-        9++3gs0RBeo9vGMWmM0rIChxcuYTFhCbU8BYYuK/VUwQ89Ul/sy7xAxhi0vcejIfKi4vsf3t
-        HOYJjEKzkLTPQtIyC0nLLCQtCxhZVjGKpJYW56bnFhvqFSfmFpfmpesl5+duYgTG0LZjPzfv
-        YLy0MfgQowAHoxIPbwBzbJwQa2JZcWXuIUYJDmYlEV5fzug4Id6UxMqq1KL8+KLSnNTiQ4ym
-        QM9NZJYSTc4HxndeSbyhqaG5haWhubG5sZmFkjhvh8DBGCGB9MSS1OzU1ILUIpg+Jg5OqQbG
-        CYt7mqNvfkgof9fxRNOPafIfU4ab374nOaic/bAtoUzwfVye+K2pnSE8vS93BP/rCpyxNMc+
-        IHsLG/uNpMnlDMp7c3LsGIx797+8PL8zUdDrwvHbhX4ed54qnqm4/3V27ET23IcN0xsefZ1U
-        8PmZ8Olvn3QP/LLQ/GX+X1lPcBObpcg791UblViKMxINtZiLihMBdix4UrcCAAA=
-X-CMS-MailID: 20200302170653eucas1p10a162ed3a2b449465cb984c7807bf25b
+        0kLPyMRSz9DYPNbKyFRJ384mJTUnsyy1SN8uQS/jx533TAXnzSvm3NnG3sD4VKeLkZNDQsBE
+        Yte3texdjFwcQgJLGSWOzuxl62LkAErISBxfXwZRIyzx51oXG4gtJPCaUeLHKVMQW1jAQmL7
+        rofsILaIgJLEx/ZDYDazQIRE96szbBAz1zFK7FlxA6yZTcBKYmL7KkYQm1fATuLNwvUsILtY
+        BFQkPj+SAgmLAvUe3jELqkRQ4uTMJywgNqeAscScrbNZIOarS/yZd4kZwhaXuPVkPhOELS+x
+        /e0c5gmMQrOQtM9C0jILScssJC0LGFlWMYqklhbnpucWG+kVJ+YWl+al6yXn525iBEbRtmM/
+        t+xg7HoXfIhRgINRiYf3B0NsnBBrYllxZe4hRgkOZiURXl/O6Dgh3pTEyqrUovz4otKc1OJD
+        jKZAv01klhJNzgdGeF5JvKGpobmFpaG5sbmxmYWSOG+HwMEYIYH0xJLU7NTUgtQimD4mDk6p
+        BsZydvtTLy1EjPvibPU+xObOZl2mzNVyNcrzU9GCh+q/3r1gfu/l/illi2rwvaWqNUpXJgbO
+        Zgnl+DYp2dlkquW58PvqZ18+PdWzzin9uQh3kJNTbO3L/7zXOG8oXd+xZWOgyUr5tyfCSvd+
+        3858TUA590Zlwtrm1dseSF66+5kz3z0kkJVvToUSS3FGoqEWc1FxIgDQ4rj9uAIAAA==
+X-CMS-MailID: 20200302170950eucas1p22791bf8d9cb9d403154acdee136ead1c
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200213095439eucas1p25ca4b1f73de237ab2ae0ce63977b061f
+X-RootMTR: 20200213095437eucas1p24ba8aec2f3324878490eca28a6e1c3d1
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20200213095439eucas1p25ca4b1f73de237ab2ae0ce63977b061f
+X-CMS-RootMailID: 20200213095437eucas1p24ba8aec2f3324878490eca28a6e1c3d1
 References: <20200213095412.23773-1-hare@suse.de>
-        <CGME20200213095439eucas1p25ca4b1f73de237ab2ae0ce63977b061f@eucas1p2.samsung.com>
-        <20200213095412.23773-36-hare@suse.de>
+        <CGME20200213095437eucas1p24ba8aec2f3324878490eca28a6e1c3d1@eucas1p2.samsung.com>
+        <20200213095412.23773-16-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 
-On 2/13/20 10:54 AM, Hannes Reinecke wrote:
-> Replace all DPRINTK calls with the ata_XXX_dbg functions.
+On 2/13/20 10:53 AM, Hannes Reinecke wrote:
+> To follow the flow of control we should be using tracepoints, as
+> they will tie in with the actual I/O flow and deliver a better
+> overview about what it happening.
+> This patch adds tracepoints for hard reset, soft reset, and postreset
+> and adds them in the libata-eh control flow.
 > 
 > Signed-off-by: Hannes Reinecke <hare@suse.de>
 
@@ -124,63 +127,183 @@ Samsung R&D Institute Poland
 Samsung Electronics
 
 > ---
->  drivers/ata/sata_nv.c | 14 +++++++-------
->  1 file changed, 7 insertions(+), 7 deletions(-)
+>  drivers/ata/libata-eh.c       | 21 ++++++++--
+>  include/trace/events/libata.h | 96 +++++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 114 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-> index f7dd32679c8e..0bdf18625d95 100644
-> --- a/drivers/ata/sata_nv.c
-> +++ b/drivers/ata/sata_nv.c
-> @@ -2094,7 +2094,7 @@ static int nv_swncq_sdbfis(struct ata_port *ap)
->  	ata_qc_complete_multiple(ap, ap->qc_active ^ done_mask);
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index 3bfd9da58473..ef3576eb5874 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -2787,12 +2787,19 @@ int ata_eh_reset(struct ata_link *link, int classify,
 >  
->  	if (!ap->qc_active) {
-> -		DPRINTK("over\n");
-> +		ata_port_dbg(ap, "over\n");
->  		nv_swncq_pp_reinit(ap);
->  		return 0;
->  	}
-> @@ -2109,10 +2109,10 @@ static int nv_swncq_sdbfis(struct ata_port *ap)
->  		 */
->  		lack_dhfis = 1;
+>  		/* mark that this EH session started with reset */
+>  		ehc->last_reset = jiffies;
+> -		if (reset == hardreset)
+> +		if (reset == hardreset) {
+>  			ehc->i.flags |= ATA_EHI_DID_HARDRESET;
+> -		else
+> +			trace_ata_link_hardreset_begin(link, classes, deadline);
+> +		} else {
+>  			ehc->i.flags |= ATA_EHI_DID_SOFTRESET;
+> +			trace_ata_link_softreset_begin(link, classes, deadline);
+> +		}
 >  
-> -	DPRINTK("id 0x%x QC: qc_active 0x%x,"
-> +	ata_port_dbg(ap, "QC: qc_active 0x%llx,"
->  		"SWNCQ:qc_active 0x%X defer_bits %X "
->  		"dhfis 0x%X dmafis 0x%X last_issue_tag %x\n",
-> -		ap->print_id, ap->qc_active, pp->qc_active,
-> +		ap->qc_active, pp->qc_active,
->  		pp->defer_queue.defer_bits, pp->dhfis_bits,
->  		pp->dmafis_bits, pp->last_issue_tag);
+>  		rc = ata_do_reset(link, reset, classes, deadline, true);
+> +		if (reset == hardreset)
+> +			trace_ata_link_hardreset_end(link, classes, rc);
+> +		else
+> +			trace_ata_link_softreset_end(link, classes, rc);
+>  		if (rc && rc != -EAGAIN) {
+>  			failed_link = link;
+>  			goto fail;
+> @@ -2806,8 +2813,11 @@ int ata_eh_reset(struct ata_link *link, int classify,
+>  				ata_link_info(slave, "hard resetting link\n");
 >  
-> @@ -2154,7 +2154,7 @@ static void nv_swncq_dmafis(struct ata_port *ap)
->  	__ata_bmdma_stop(ap);
->  	tag = nv_swncq_tag(ap);
->  
-> -	DPRINTK("dma setup tag 0x%x\n", tag);
-> +	ata_port_dbg(ap, "dma setup tag 0x%x\n", tag);
->  	qc = ata_qc_from_tag(ap, tag);
->  
->  	if (unlikely(!qc))
-> @@ -2222,9 +2222,9 @@ static void nv_swncq_host_interrupt(struct ata_port *ap, u16 fis)
->  
->  	if (fis & NV_SWNCQ_IRQ_SDBFIS) {
->  		pp->ncq_flags |= ncq_saw_sdb;
-> -		DPRINTK("id 0x%x SWNCQ: qc_active 0x%X "
-> +		ata_port_dbg(ap, "SWNCQ: qc_active 0x%X "
->  			"dhfis 0x%X dmafis 0x%X sactive 0x%X\n",
-> -			ap->print_id, pp->qc_active, pp->dhfis_bits,
-> +			pp->qc_active, pp->dhfis_bits,
->  			pp->dmafis_bits, readl(pp->sactive_block));
->  		if (nv_swncq_sdbfis(ap) < 0)
->  			goto irq_error;
-> @@ -2250,7 +2250,7 @@ static void nv_swncq_host_interrupt(struct ata_port *ap, u16 fis)
->  				goto irq_exit;
->  
->  			if (pp->defer_queue.defer_bits) {
-> -				DPRINTK("send next command\n");
-> +				ata_port_dbg(ap, "send next command\n");
->  				qc = nv_swncq_qc_from_dq(ap);
->  				nv_swncq_issue_atacmd(ap, qc);
+>  			ata_eh_about_to_do(slave, NULL, ATA_EH_RESET);
+> +			trace_ata_slave_hardreset_begin(slave, classes,
+> +							deadline);
+>  			tmp = ata_do_reset(slave, reset, classes, deadline,
+>  					   false);
+> +			trace_ata_slave_hardreset_end(slave, classes, tmp);
+>  			switch (tmp) {
+>  			case -EAGAIN:
+>  				rc = -EAGAIN;
+> @@ -2834,7 +2844,9 @@ int ata_eh_reset(struct ata_link *link, int classify,
 >  			}
+>  
+>  			ata_eh_about_to_do(link, NULL, ATA_EH_RESET);
+> +			trace_ata_link_softreset_begin(link, classes, deadline);
+>  			rc = ata_do_reset(link, reset, classes, deadline, true);
+> +			trace_ata_link_softreset_end(link, classes, rc);
+>  			if (rc) {
+>  				failed_link = link;
+>  				goto fail;
+> @@ -2888,8 +2900,11 @@ int ata_eh_reset(struct ata_link *link, int classify,
+>  	 */
+>  	if (postreset) {
+>  		postreset(link, classes);
+> -		if (slave)
+> +		trace_ata_link_postreset(link, classes, rc);
+> +		if (slave) {
+>  			postreset(slave, classes);
+> +			trace_ata_slave_postreset(slave, classes, rc);
+> +		}
+>  	}
+>  
+>  	/*
+> diff --git a/include/trace/events/libata.h b/include/trace/events/libata.h
+> index ab69434e2329..ec2a350d1aca 100644
+> --- a/include/trace/events/libata.h
+> +++ b/include/trace/events/libata.h
+> @@ -132,6 +132,22 @@
+>  		ata_protocol_name(ATAPI_PROT_PIO),	\
+>  		ata_protocol_name(ATAPI_PROT_DMA))
+>  
+> +#define ata_class_name(class)	{ class, #class }
+> +#define show_class_name(val)				\
+> +	__print_symbolic(val,				\
+> +		ata_class_name(ATA_DEV_UNKNOWN),	\
+> +		ata_class_name(ATA_DEV_ATA),		\
+> +		ata_class_name(ATA_DEV_ATA_UNSUP),	\
+> +		ata_class_name(ATA_DEV_ATAPI),		\
+> +		ata_class_name(ATA_DEV_ATAPI_UNSUP),	\
+> +		ata_class_name(ATA_DEV_PMP),		\
+> +		ata_class_name(ATA_DEV_PMP_UNSUP),	\
+> +		ata_class_name(ATA_DEV_SEMB),		\
+> +		ata_class_name(ATA_DEV_SEMB_UNSUP),	\
+> +		ata_class_name(ATA_DEV_ZAC),		\
+> +		ata_class_name(ATA_DEV_ZAC_UNSUP),	\
+> +		ata_class_name(ATA_DEV_NONE))
+> +
+>  const char *libata_trace_parse_status(struct trace_seq*, unsigned char);
+>  #define __parse_status(s) libata_trace_parse_status(p, s)
+>  
+> @@ -329,6 +345,86 @@ TRACE_EVENT(ata_eh_link_autopsy_qc,
+>  		  __parse_eh_err_mask(__entry->eh_err_mask))
+>  );
+>  
+> +DECLARE_EVENT_CLASS(ata_link_reset_begin_template,
+> +
+> +	TP_PROTO(struct ata_link *link, unsigned int *class, unsigned long deadline),
+> +
+> +	TP_ARGS(link, class, deadline),
+> +
+> +	TP_STRUCT__entry(
+> +		__field( unsigned int,	ata_port )
+> +		__array( unsigned int,	class, 2 )
+> +		__field( unsigned long,	deadline )
+> +	),
+> +
+> +	TP_fast_assign(
+> +		__entry->ata_port	= link->ap->print_id;
+> +		memcpy(__entry->class, class, 2);
+> +		__entry->deadline	= deadline;
+> +	),
+> +
+> +	TP_printk("ata_port=%u deadline=%lu classes=[%s,%s]",
+> +		  __entry->ata_port, __entry->deadline,
+> +		  show_class_name(__entry->class[0]),
+> +		  show_class_name(__entry->class[1]))
+> +);
+> +
+> +DEFINE_EVENT(ata_link_reset_begin_template, ata_link_hardreset_begin,
+> +	     TP_PROTO(struct ata_link *link, unsigned int *class, unsigned long deadline),
+> +	     TP_ARGS(link, class, deadline));
+> +
+> +DEFINE_EVENT(ata_link_reset_begin_template, ata_slave_hardreset_begin,
+> +	     TP_PROTO(struct ata_link *link, unsigned int *class, unsigned long deadline),
+> +	     TP_ARGS(link, class, deadline));
+> +
+> +DEFINE_EVENT(ata_link_reset_begin_template, ata_link_softreset_begin,
+> +	     TP_PROTO(struct ata_link *link, unsigned int *class, unsigned long deadline),
+> +	     TP_ARGS(link, class, deadline));
+> +
+> +DECLARE_EVENT_CLASS(ata_link_reset_end_template,
+> +
+> +	TP_PROTO(struct ata_link *link, unsigned int *class, int rc),
+> +
+> +	TP_ARGS(link, class, rc),
+> +
+> +	TP_STRUCT__entry(
+> +		__field( unsigned int,	ata_port )
+> +		__array( unsigned int,	class, 2 )
+> +		__field( int,		rc	)
+> +	),
+> +
+> +	TP_fast_assign(
+> +		__entry->ata_port	= link->ap->print_id;
+> +		memcpy(__entry->class, class, 2);
+> +		__entry->rc		= rc;
+> +	),
+> +
+> +	TP_printk("ata_port=%u rc=%d class=[%s,%s]",
+> +		  __entry->ata_port, __entry->rc,
+> +		  show_class_name(__entry->class[0]),
+> +		  show_class_name(__entry->class[1]))
+> +);
+> +
+> +DEFINE_EVENT(ata_link_reset_end_template, ata_link_hardreset_end,
+> +	     TP_PROTO(struct ata_link *link, unsigned int *class, int rc),
+> +	     TP_ARGS(link, class, rc));
+> +
+> +DEFINE_EVENT(ata_link_reset_end_template, ata_slave_hardreset_end,
+> +	     TP_PROTO(struct ata_link *link, unsigned int *class, int rc),
+> +	     TP_ARGS(link, class, rc));
+> +
+> +DEFINE_EVENT(ata_link_reset_end_template, ata_link_softreset_end,
+> +	     TP_PROTO(struct ata_link *link, unsigned int *class, int rc),
+> +	     TP_ARGS(link, class, rc));
+> +
+> +DEFINE_EVENT(ata_link_reset_end_template, ata_link_postreset,
+> +	     TP_PROTO(struct ata_link *link, unsigned int *class, int rc),
+> +	     TP_ARGS(link, class, rc));
+> +
+> +DEFINE_EVENT(ata_link_reset_end_template, ata_slave_postreset,
+> +	     TP_PROTO(struct ata_link *link, unsigned int *class, int rc),
+> +	     TP_ARGS(link, class, rc));
+> +
+>  #endif /*  _TRACE_LIBATA_H */
+>  
+>  /* This part must be outside protection */
 > 
