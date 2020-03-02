@@ -1,149 +1,56 @@
-Return-Path: <SRS0=Wmko=4Q=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=3I3m=4T=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B3EFC3F2CD
-	for <linux-ide@archiver.kernel.org>; Fri, 28 Feb 2020 14:11:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EEB4C3F2D2
+	for <linux-ide@archiver.kernel.org>; Mon,  2 Mar 2020 09:10:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 29E43246A8
-	for <linux-ide@archiver.kernel.org>; Fri, 28 Feb 2020 14:11:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D8FD6246A1
+	for <linux-ide@archiver.kernel.org>; Mon,  2 Mar 2020 09:10:54 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=bestcraftonline.com header.i=@bestcraftonline.com header.b="rbZGCZw6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726748AbgB1OLi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 28 Feb 2020 09:11:38 -0500
-Received: from foss.arm.com ([217.140.110.172]:39026 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725796AbgB1OLi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 28 Feb 2020 09:11:38 -0500
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 4A6DC31B;
-        Fri, 28 Feb 2020 06:11:37 -0800 (PST)
-Received: from donnerap.cambridge.arm.com (usa-sjc-imap-foss1.foss.arm.com [10.121.207.14])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 6B99B3F7B4;
-        Fri, 28 Feb 2020 06:11:33 -0800 (PST)
-Date:   Fri, 28 Feb 2020 14:11:30 +0000
-From:   Andre Przywara <andre.przywara@arm.com>
-To:     Will Deacon <will@kernel.org>
-List-Id: <soc.lore.kernel.org>
-Cc:     Rob Herring <robh@kernel.org>,
-        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        soc@kernel.org, Robert Richter <rrichter@marvell.com>,
-        Jon Loeliger <jdl@jdl.com>, Alexander Graf <graf@amazon.com>,
-        Matthias Brugger <mbrugger@suse.com>,
-        Mark Langsdorf <mlangsdo@redhat.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Borislav Petkov <bp@alien8.de>,
-        Cornelia Huck <cohuck@redhat.com>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        devicetree@vger.kernel.org, Eric Auger <eric.auger@redhat.com>,
-        Linux IOMMU <iommu@lists.linux-foundation.org>,
-        James Morse <james.morse@arm.com>,
-        Jens Axboe <axboe@kernel.dk>, Joerg Roedel <joro@8bytes.org>,
-        kvm@vger.kernel.org, linux-clk <linux-clk@vger.kernel.org>,
-        linux-edac <linux-edac@vger.kernel.org>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>,
-        "open list:THERMAL" <linux-pm@vger.kernel.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Tony Luck <tony.luck@intel.com>,
-        Viresh Kumar <viresh.kumar@linaro.org>
-Subject: Re: [RFC PATCH 06/11] iommu: arm-smmu: Remove Calxeda secure mode
- quirk
-Message-ID: <20200228141130.18be5bb8@donnerap.cambridge.arm.com>
-In-Reply-To: <20200228135645.GA4745@willie-the-truck>
-References: <20200218171321.30990-1-robh@kernel.org>
-        <20200218171321.30990-7-robh@kernel.org>
-        <20200218172000.GF1133@willie-the-truck>
-        <CAL_JsqJn1kG6gah+4318NQfJ4PaS3x3woWEUh08+OTfOcD+1MQ@mail.gmail.com>
-        <20200228100446.GA2395@willie-the-truck>
-        <20200228102556.1dde016e@donnerap.cambridge.arm.com>
-        <20200228105024.GC2395@willie-the-truck>
-        <20200228134254.03fc5e1b@donnerap.cambridge.arm.com>
-        <20200228135645.GA4745@willie-the-truck>
-Organization: ARM
-X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; aarch64-unknown-linux-gnu)
+        id S1726960AbgCBJKy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 2 Mar 2020 04:10:54 -0500
+Received: from mail.bestcraftonline.com ([217.61.16.101]:35798 "EHLO
+        mail.bestcraftonline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726144AbgCBJKy (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 2 Mar 2020 04:10:54 -0500
+X-Greylist: delayed 584 seconds by postgrey-1.27 at vger.kernel.org; Mon, 02 Mar 2020 04:10:53 EST
+Received: by mail.bestcraftonline.com (Postfix, from userid 1001)
+        id 06A5687ABC; Mon,  2 Mar 2020 10:01:01 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=bestcraftonline.com;
+        s=mail; t=1583139667;
+        bh=H5jvKw6dOzVbWca4OhbhM25hErOGSKFaESTwyKhCBBY=;
+        h=Date:From:To:Subject:From;
+        b=rbZGCZw6fuw1bbkwLmXApKGGLwdVOiHSxFj7LaJ0Pz5rVlHvJuO5EBn1EI1ilzY1b
+         mSeRk2FsVTgXfVHMtVl0SJlRiIUEkHOQD6Q1ltn10ZWCPfoe/wQtRnp0SjpC2g6jqE
+         0v7pmj4Rrbpil2YAWdMaFtmV4GKZEMYwioZajYGc=
+Received: by mail.bestcraftonline.com for <linux-ide@vger.kernel.org>; Mon,  2 Mar 2020 09:01:00 GMT
+Message-ID: <20200302084500-0.1.1q.3mwh.0.8cn3r5hqqk@bestcraftonline.com>
+Date:   Mon,  2 Mar 2020 09:01:00 GMT
+From:   "Christophe Le Brun" <christophe@bestcraftonline.com>
+To:     <linux-ide@vger.kernel.org>
+Subject: =?UTF-8?Q?Co=C3=BBts_de_carburant_r=C3=A9duits?=
+X-Mailer: mail.bestcraftonline.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, 28 Feb 2020 13:56:46 +0000
-Will Deacon <will@kernel.org> wrote:
+Bonjour
 
-> On Fri, Feb 28, 2020 at 01:42:54PM +0000, Andre Przywara wrote:
-> > On Fri, 28 Feb 2020 10:50:25 +0000
-> > Will Deacon <will@kernel.org> wrote:  
-> > > On Fri, Feb 28, 2020 at 10:25:56AM +0000, Andre Przywara wrote:  
-> > > > > On Tue, Feb 25, 2020 at 04:01:54PM -0600, Rob Herring wrote:    
-> > > > > > Seems we're leaving the platform support for now, but I think we never
-> > > > > > actually enabled SMMU support. It's not in the dts either in mainline
-> > > > > > nor the version I have which should be close to what shipped in
-> > > > > > firmware. So as long as Andre agrees, this one is good to apply.      
-> > > > > 
-> > > > > Andre? Can I queue this one for 5.7, please?    
-> > > > 
-> > > > I was wondering how much of a pain it is to keep it in? AFAICS there are
-> > > > other users of the "impl" indirection. If those goes away, I would be
-> > > > happy to let Calxeda go.    
-> > > 
-> > > The impl stuff is new, so we'll keep it around. The concern is more about
-> > > testing (see below).
-> > >   
-> > > > But Eric had the magic DT nodes to get the SMMU working, and I used that
-> > > > before, with updating the DT either on flash or dynamically via U-Boot.    
-> > > 
-> > > What did you actually use the SMMU for, though? The
-> > > 'arm_iommu_create_mapping()' interface isn't widely used and, given that
-> > > highbank doesn't support KVM, the use-cases for VFIO are pretty limited
-> > > too.  
-> > 
-> > AFAIK Highbank doesn't have the SMMU, probably mostly for that reason.
-> > I have a DT snippet for Midway, and that puts the MMIO base at ~36GB, which is not possible on Highbank.
-> > So I think that the quirk is really meant and needed for Midway.  
-> 
-> Sorry, but I don't follow your reasoning here. The MMIO base has nothing
-> to do with the quirk,
+=C3=8Ates-vous int=C3=A9ress=C3=A9 par une solution qui r=C3=A9duit les c=
+o=C3=BBts d'entreprise en termes de service de v=C3=A9hicule et r=C3=A9du=
+it le temps de trajet?
 
-It hasn't, but Highbank has no LPAE, so couldn't possible have a device at such an address. And this is the only MMIO address I know of.
 
-> although doing some digging it looks like your
-> conclusion about this applying to Midway (ecx-2000?) is correct:
-> 
-> http://lists.infradead.org/pipermail/linux-arm-kernel/2014-January/226095.html
-
-Right, thanks for that find. Yes, Midway is the codename for the ECX-2000 SoC product.
-
-Cheers,
-Andre
- 
-> > > > So I don't know exactly *how* desperate you are with removing this, or if
-> > > > there are other reasons than "negative diffstat", but if possible I would
-> > > > like to keep it in.    
-> > > 
-> > > It's more that we *do* make quite a lot of changes to the arm-smmu driver
-> > > and it's never tested with this quirk. If you're stepping up to run smmu
-> > > tests on my queue for each release on highbank, then great, but otherwise
-> > > I'd rather not carry the code for fun. The change in diffstat is minimal
-> > > (we're going to need to hooks for nvidia, who broke things in a different
-> > > way).  
-> > 
-> > I am about to set up some more sophisticated testing, and will include
-> > some SMMU bits in it.  
-> 
-> Yes, please.
-> 
-> Will
-
+Cordialement,
+Christophe Le Brun
