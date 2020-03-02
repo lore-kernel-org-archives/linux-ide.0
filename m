@@ -5,122 +5,118 @@ X-Spam-Level:
 X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03DE1C3F2CD
-	for <linux-ide@archiver.kernel.org>; Mon,  2 Mar 2020 14:54:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A8CAC3F2CD
+	for <linux-ide@archiver.kernel.org>; Mon,  2 Mar 2020 16:47:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BC1182080C
-	for <linux-ide@archiver.kernel.org>; Mon,  2 Mar 2020 14:54:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 16F0321D56
+	for <linux-ide@archiver.kernel.org>; Mon,  2 Mar 2020 16:47:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="XQekw8sf"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="u7dbmQiV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727249AbgCBOyD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 2 Mar 2020 09:54:03 -0500
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:37249 "EHLO
+        id S1727072AbgCBQrK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 2 Mar 2020 11:47:10 -0500
+Received: from mailout1.w1.samsung.com ([210.118.77.11]:45480 "EHLO
         mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727137AbgCBOyD (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 2 Mar 2020 09:54:03 -0500
+        with ESMTP id S1727126AbgCBQrJ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 2 Mar 2020 11:47:09 -0500
 Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200302145400euoutp0112f1b6857f5c97076f70a1774a4dd1d3~4hGWa5zGv0523405234euoutp01Q
-        for <linux-ide@vger.kernel.org>; Mon,  2 Mar 2020 14:54:00 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200302145400euoutp0112f1b6857f5c97076f70a1774a4dd1d3~4hGWa5zGv0523405234euoutp01Q
+        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200302164707euoutp015c65467efd9681c1a2fb1ae3336ffa71~4ipHMXbGc3275332753euoutp01k
+        for <linux-ide@vger.kernel.org>; Mon,  2 Mar 2020 16:47:07 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200302164707euoutp015c65467efd9681c1a2fb1ae3336ffa71~4ipHMXbGc3275332753euoutp01k
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1583160840;
-        bh=1YpBDdUSj9Tutu65M9yYPLwIeiCBzQByBPG3bXUqKY4=;
+        s=mail20170921; t=1583167627;
+        bh=k14umeTOKmyfGWvUMOL6JLum4aWLtROCtjyyUBUvU3c=;
         h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=XQekw8sfKybOYgQC9ih5kcxAQgSrNO31iRcSCH5XaG2VW3c0YtT4zC7Dpd5n12vim
-         zRN+naodv8kYLHuuwNiCuYqXICTKIK0hfsKsW2OmW0/M9ed9ejbABQFO/HPN7ijF5b
-         UE+TCrorV90nv4HOdllr6JSlhW95IS/L/t8/yZVA=
+        b=u7dbmQiVd7aqz5MQuIzNX5yyfnTzLmpWHINA8srjZ60KrEp7FPL5ms/AQQ/nyBPfq
+         dfdDBGnrwEg06ibPV/jy50uLPX3U1drN9DniWUNJMXVJKjdpTAPeudpG6tsdTyc4tr
+         hTMfxMErj4QG8NXbilfKVb0JCj0LHW7ixjz5uK1w=
 Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20200302145400eucas1p27f063bda85698a26b9d40051649fd22f~4hGWBTIDR2039220392eucas1p20;
-        Mon,  2 Mar 2020 14:54:00 +0000 (GMT)
+        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
+        20200302164707eucas1p17ef9af28f400454eb1cd32933a25dc80~4ipHAaQFm1460814608eucas1p1f;
+        Mon,  2 Mar 2020 16:47:07 +0000 (GMT)
 Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges1new.samsung.com (EUCPMTA) with SMTP id 96.46.61286.80E1D5E5; Mon,  2
-        Mar 2020 14:54:00 +0000 (GMT)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20200302145400eucas1p27779f8a73135d47fb5818994550c7b95~4hGVqQ5Fi1653316533eucas1p2G;
-        Mon,  2 Mar 2020 14:54:00 +0000 (GMT)
+        eusmges1new.samsung.com (EUCPMTA) with SMTP id 2E.25.61286.B883D5E5; Mon,  2
+        Mar 2020 16:47:07 +0000 (GMT)
+Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
+        20200302164707eucas1p15f4b556b14a97b195c41851b3ef55e5a~4ipGs05uD2031420314eucas1p17;
+        Mon,  2 Mar 2020 16:47:07 +0000 (GMT)
 Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
-        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200302145400eusmtrp1fae3b2bcb60e0fabfc651cacdac0b518~4hGVpez122816728167eusmtrp1h;
-        Mon,  2 Mar 2020 14:54:00 +0000 (GMT)
-X-AuditID: cbfec7f2-ef1ff7000001ef66-6b-5e5d1e081bb3
+        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200302164707eusmtrp22c4fd8a5951a3ba0b04c0d5d01376f8f~4ipGsS5De0795407954eusmtrp2H;
+        Mon,  2 Mar 2020 16:47:07 +0000 (GMT)
+X-AuditID: cbfec7f2-ef1ff7000001ef66-7e-5e5d388ba4d8
 Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id 89.09.07950.80E1D5E5; Mon,  2
-        Mar 2020 14:54:00 +0000 (GMT)
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id 08.E6.07950.B883D5E5; Mon,  2
+        Mar 2020 16:47:07 +0000 (GMT)
 Received: from [106.120.51.71] (unknown [106.120.51.71]) by
         eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200302145359eusmtip1dbbc18d93b300458c81e7d2b8ca625c8~4hGVP6H3y2510725107eusmtip1w;
-        Mon,  2 Mar 2020 14:53:59 +0000 (GMT)
-Subject: Re: [PATCH 3/3] docs: mips: remove no longer needed au1xxx_ide.rst
- documentation
-To:     Jonathan Corbet <corbet@lwn.net>
-Cc:     "David S . Miller" <davem@davemloft.net>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Paul Burton <paul.burton@mips.com>,
-        James Hogan <jhogan@kernel.org>, linux-ide@vger.kernel.org,
-        linux-mips@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org
+        20200302164707eusmtip1ae84b299b99d979f793222615630d105~4ipGdVzmT2910929109eusmtip1q;
+        Mon,  2 Mar 2020 16:47:06 +0000 (GMT)
+Subject: Re: [PATCH 05/42] libata: move __func__ into
+ ata_{port,link,dev}_dbg() helper
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
+        linux-ide@vger.kernel.org
 From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <a3c6522f-ab0e-8212-a049-a31286b36ad7@samsung.com>
-Date:   Mon, 2 Mar 2020 15:53:58 +0100
+Message-ID: <e632a4a2-cb57-0268-2d80-1babda1c6fa0@samsung.com>
+Date:   Mon, 2 Mar 2020 17:47:06 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
         Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20200116122938.20789-4-b.zolnierkie@samsung.com>
+In-Reply-To: <20200213095412.23773-6-hare@suse.de>
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA02Se0hTcRTH+e3eXe+kyXVaO/iqphRZ+SDBi4mYJIygEJJYidbMi0puyqam
-        qbHQnE5bqYU4hTTztdDGMDU1lGUzETOMIu3hoxX5BKeCmlnOm+R/3/M9n/P7ngM/EhO0c13I
-        RHkqo5BLk0SEPd5mXhs+TnpEx/j9WnelLb1qRFcN5+F0yWsrTtfkP8Zpc8cUh37XWUXQhcZn
-        iNbOmjF6pNsrlCdubRrliI36QkL8qqmZI67VlnHFs32TuHjJ6BFBXLIPjmOSEtMZhW/IFfuE
-        0sEhLKX3WMYT9RdChbo8NYhHAhUA63UVSIPsSQHViKDlva3gbRXLCOZUR9nGEoK8pj58Z2I6
-        txhjoQYEwzXuLDSPQL1p2IacqChYNuZzNYgknSkvmCm8YGMwqogDo0UmwsYQVBCUqPXbaXwq
-        BFY7i7Z9fIs3rt23s+m9lASsEy+5LOMIAxUW3PYmb4s3lgbZbIwSwpjlIYfV+6F9vgqzZQFl
-        toOVxjyMXfo0WJZWuax2gpn+VjtWu8FgWTHODrQg+F3w8990O4KGsk2CpU7C5zfrhC0Zo47A
-        005f1j4FNR/ubC8ElAN8nHdkl3CA0rZyjLX5UJAvYOlDYKg3EDuxmudN2D0k0u26TLfrHN2u
-        c3T/c6sRrkdCJk0pi2eU/nLmuo9SKlOmyeN9ribLjGjrOw1u9ls70MpIrAlRJBLt4Udg0TEC
-        rjRdmSkzISAxkTP/LC8qRsCPk2beYBTJlxVpSYzShFxJXCTkn3g0HS2g4qWpzDWGSWEUO10O
-        yXNRIYesntAAw2Jlo7tl0c3w/dz4pwNdlbkLXuJ9gWE5Ev1Nf5dmdXhOOPH1cIZ2irr4Yy5b
-        8e1Wck/1mDlyY2JhPGLB15DVDd3tFn4go1dFPvAUbhwMW5VQ4mnv8y/erk3WD9XG+vUvplon
-        zdrl4Lt1f8pBYQZT65nsAUli2u16Ea5MkPp7Ywql9C/RZTY/SgMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrFIsWRmVeSWpSXmKPExsVy+t/xu7occrFxBo3zWSyeHGhntJhzvoXF
-        YuKJTywWC9uWsFgc2/GIyeLyrjlsFp2btjJa9L0+xmxxaY+KA6fHlpU3mTw2repk8zi6ci2T
-        x+K+yawer488ZPH4vEkugC1Kz6Yov7QkVSEjv7jEVina0MJIz9DSQs/IxFLP0Ng81srIVEnf
-        ziYlNSezLLVI3y5BL2PS6bPMBQd0Kla332VrYNyt3MXIySEhYCLxsrmHuYuRi0NIYCmjxJy7
-        TaxdjBxACRmJ4+vLIGqEJf5c62KDqHnNKPF4/j4WkISwQLTEl01tYPUiAioSrzrDQGqYBXqZ
-        JP69nskK0XCUUaLx6HNmkAY2ASuJie2rGEFsXgE7iR+7utlAbBag5k0/p7CD2KICERKHd8yC
-        qhGUODnzCQvIAk6g+k2TrEDCzALqEn/mXWKGsMUlbj2ZzwRhy0tsfzuHeQKj0Cwk3bOQtMxC
-        0jILScsCRpZVjCKppcW56bnFRnrFibnFpXnpesn5uZsYgfG47djPLTsYu94FH2IU4GBU4uH9
-        wRAbJ8SaWFZcmXuIUYKDWUmE15czOk6INyWxsiq1KD++qDQntfgQoynQbxOZpUST84GpIq8k
-        3tDU0NzC0tDc2NzYzEJJnLdD4GCMkEB6YklqdmpqQWoRTB8TB6dUA6Prxmv+C83XTlKZ+ytr
-        7yf+nJmb80ST9c6lRc+q+XOJ8VzKY+ttKpZ8uvsy9stO1X/Qsl7YUfRI4TFxvm0OuaGvznww
-        lYyWyRE+ZSsnfLrRUljR/+WmQ1x/1aT4qy2ZZ4ceztnxX/+og+Zagfh51nPc93CGTGln+D3/
-        G1fmLEmWLDOLiY3TS5RYijMSDbWYi4oTAYPFi4/dAgAA
-X-CMS-MailID: 20200302145400eucas1p27779f8a73135d47fb5818994550c7b95
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprMKsWRmVeSWpSXmKPExsWy7djP87rdFrFxBhdeqVisvtvPZrFn0SQm
+        i2M7HjFZ/Fp+lNGBxePy2VKPTas62Tw2n672+LxJLoAlissmJTUnsyy1SN8ugStjxsGvrAWP
+        dCsWv25nbWA8r9LFyMkhIWAi8e/AX+YuRi4OIYEVjBK/dt5ignC+MErMujSHDcL5zChx/t1a
+        VpiWIw8WsEIkljNKdHVcYgdJCAm8ZZT4+rS+i5GDQ1ggQmLadLCwiICSxMf2Q2A2M1B444a1
+        TCA2m4CVxMT2VYwgNq+AncTqJT9YQGwWARWJ96+bwHaJAtV/enCYFaJGUOLkzCcsIOM5BYwk
+        Vi+uhBgpLnHryXwmCFteYvvbOWDfSAh0s0vca73NCHGzi8Ttjz+gbGGJV8e3sEPYMhL/d85n
+        gmhYxyjxt+MFVPd2Ronlk/+xQVRZS9w594sNZDOzgKbE+l36EGFHiZevW5lAwhICfBI33gpC
+        HMEnMWnbdGaIMK9ER5sQRLWaxIZlG9hg1nbtXMk8gVFpFpLPZiF5ZxaSd2Yh7F3AyLKKUTy1
+        tDg3PbXYMC+1XK84Mbe4NC9dLzk/dxMjMKmc/nf80w7Gr5eSDjEKcDAq8fAGMMfGCbEmlhVX
+        5h5ilOBgVhLh9eWMjhPiTUmsrEotyo8vKs1JLT7EKM3BoiTOa7zoZayQQHpiSWp2ampBahFM
+        lomDU6qB0aHRRSRXWNDrjXPx0yf+2fFKTZaCc5e9kr/zoSV0hcFzz3f7RSTt1olp6T135irK
+        4Uybk8DoMv/dCvNQAdeUw1Mzp0gb5V/1D52dWf300C9xafuAPBXFppvvk05uaEmWCfCZKRL4
+        uznnzYawNBHFJ2fMEy6W13YJNejP0a++aPfO33FSQLcSS3FGoqEWc1FxIgAcanOIJgMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrKIsWRmVeSWpSXmKPExsVy+t/xu7rdFrFxBg/38VusvtvPZrFn0SQm
+        i2M7HjFZ/Fp+lNGBxePy2VKPTas62Tw2n672+LxJLoAlSs+mKL+0JFUhI7+4xFYp2tDCSM/Q
+        0kLPyMRSz9DYPNbKyFRJ384mJTUnsyy1SN8uQS9jxsGvrAWPdCsWv25nbWA8r9LFyMkhIWAi
+        ceTBAtYuRi4OIYGljBIvP85h6WLkAErISBxfXwZRIyzx51oXG0TNa0aJv/MmMYLUCAtESEyb
+        zg5SIyKgJPGx/RCYzQwU7n51Bqp+LaPE5vfrWUASbAJWEhPbVzGC2LwCdhKrl/wAi7MIqEi8
+        f93ECmKLAjUf3jELqkZQ4uTMJ2D3cAoYSaxeXAkxX13iz7xLzBC2uMStJ/OZIGx5ie1v5zBP
+        YBSahaR7FpKWWUhaZiFpWcDIsopRJLW0ODc9t9hIrzgxt7g0L10vOT93EyMwirYd+7llB2PX
+        u+BDjAIcjEo8vD8YYuOEWBPLiitzDzFKcDArifD6ckbHCfGmJFZWpRblxxeV5qQWH2I0Bfpt
+        IrOUaHI+MMLzSuINTQ3NLSwNzY3Njc0slMR5OwQOxggJpCeWpGanphakFsH0MXFwSjUwCk79
+        83q7/JqwZVHxC/rSzzPpqq7Mld9zqyjuqsjpw7PtLbv4pytcdnkY+e+KfCeb1N638VVsxpIF
+        0+V/3dslbqOzISDh3G03HuYKv12Tzh4+bSFcnfr0zSy5iBUKM8TfNv7L26Gf3BgyS3PSDfNL
+        vHzl1Ud+Rc40me2+6ceN6RKs25Mn38l2UmIpzkg01GIuKk4EAB+MaPO4AgAA
+X-CMS-MailID: 20200302164707eucas1p15f4b556b14a97b195c41851b3ef55e5a
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200116122952eucas1p2060adca6613ae02096ecc80319e5d197
+X-RootMTR: 20200213101349eucas1p26f6bc526e07cf9ac94de8dc754ab5c06
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20200116122952eucas1p2060adca6613ae02096ecc80319e5d197
-References: <20200116122938.20789-1-b.zolnierkie@samsung.com>
-        <CGME20200116122952eucas1p2060adca6613ae02096ecc80319e5d197@eucas1p2.samsung.com>
-        <20200116122938.20789-4-b.zolnierkie@samsung.com>
+X-CMS-RootMailID: 20200213101349eucas1p26f6bc526e07cf9ac94de8dc754ab5c06
+References: <20200213095412.23773-1-hare@suse.de>
+        <CGME20200213101349eucas1p26f6bc526e07cf9ac94de8dc754ab5c06@eucas1p2.samsung.com>
+        <20200213095412.23773-6-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 
-Hi Jonathan,
+On 2/13/20 10:53 AM, Hannes Reinecke wrote:
+> Move the __func__ argument into the ata_{port,link,dev}_dbg()
+> helper and drop the explicit argument from the caller.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-Gentle ping.
-
-Can we get your ACK to merge this patch through MIPS (or IDE) tree?
+Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
 Best regards,
 --
@@ -128,164 +124,143 @@ Bartlomiej Zolnierkiewicz
 Samsung R&D Institute Poland
 Samsung Electronics
 
-On 1/16/20 1:29 PM, Bartlomiej Zolnierkiewicz wrote:
-> Since the au1xxx-ide IDE host driver is no longer needed its documentation
-> can be removed.
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 > ---
->  Documentation/mips/au1xxx_ide.rst | 130 ------------------------------
->  Documentation/mips/index.rst      |   2 -
->  2 files changed, 132 deletions(-)
->  delete mode 100644 Documentation/mips/au1xxx_ide.rst
+>  drivers/ata/libata-acpi.c | 14 ++++++--------
+>  drivers/ata/libata-core.c |  9 ++++-----
+>  drivers/ata/libata-sff.c  |  2 +-
+>  include/linux/libata.h    |  6 +++---
+>  4 files changed, 14 insertions(+), 17 deletions(-)
 > 
-> diff --git a/Documentation/mips/au1xxx_ide.rst b/Documentation/mips/au1xxx_ide.rst
-> deleted file mode 100644
-> index 2f9c2cff6738..000000000000
-> --- a/Documentation/mips/au1xxx_ide.rst
-> +++ /dev/null
-> @@ -1,130 +0,0 @@
-> -.. include:: <isonum.txt>
-> -
-> -======================
-> -MIPS AU1XXX IDE driver
-> -======================
-> -
-> -Released 2005-07-15
-> -
-> -About
-> -=====
-> -
-> -This file describes the 'drivers/ide/au1xxx-ide.c', related files and the
-> -services they provide.
-> -
-> -If you are short in patience and just want to know how to add your hard disc to
-> -the white or black list, go to the 'ADD NEW HARD DISC TO WHITE OR BLACK LIST'
-> -section.
-> -
-> -
-> -License
-> -=======
-> -
-> -:Copyright: |copy| 2003-2005 AMD, Personal Connectivity Solutions
-> -
-> -This program is free software; you can redistribute it and/or modify it under
-> -the terms of the GNU General Public License as published by the Free Software
-> -Foundation; either version 2 of the License, or (at your option) any later
-> -version.
-> -
-> -THIS SOFTWARE IS PROVIDED ``AS IS`` AND ANY EXPRESS OR IMPLIED WARRANTIES,
-> -INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
-> -FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR
-> -BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-> -CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-> -SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-> -INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-> -CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-> -ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-> -POSSIBILITY OF SUCH DAMAGE.
-> -
-> -You should have received a copy of the GNU General Public License along with
-> -this program; if not, write to the Free Software Foundation, Inc.,
-> -675 Mass Ave, Cambridge, MA 02139, USA.
-> -
-> -Note:
-> -      for more information, please refer "AMD Alchemy Au1200/Au1550 IDE
-> -      Interface and Linux Device Driver" Application Note.
-> -
-> -
-> -Files, Configs and Compatibility
-> -================================
-> -
-> -Two files are introduced:
-> -
-> -  a) 'arch/mips/include/asm/mach-au1x00/au1xxx_ide.h'
-> -     contains : struct _auide_hwif
-> -
-> -                - timing parameters for PIO mode 0/1/2/3/4
-> -                - timing parameters for MWDMA 0/1/2
-> -
-> -  b) 'drivers/ide/mips/au1xxx-ide.c'
-> -     contains the functionality of the AU1XXX IDE driver
-> -
-> -Following extra configs variables are introduced:
-> -
-> -  CONFIG_BLK_DEV_IDE_AU1XXX_PIO_DBDMA
-> -	- enable the PIO+DBDMA mode
-> -  CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
-> -	- enable the MWDMA mode
-> -
-> -
-> -Supported IDE Modes
-> -===================
-> -
-> -The AU1XXX IDE driver supported all PIO modes - PIO mode 0/1/2/3/4 - and all
-> -MWDMA modes - MWDMA 0/1/2 -. There is no support for SWDMA and UDMA mode.
-> -
-> -To change the PIO mode use the program hdparm with option -p, e.g.
-> -'hdparm -p0 [device]' for PIO mode 0. To enable the MWDMA mode use the option
-> --X, e.g. 'hdparm -X32 [device]' for MWDMA mode 0.
-> -
-> -
-> -Performance Configurations
-> -==========================
-> -
-> -If the used system doesn't need USB support enable the following kernel
-> -configs::
-> -
-> -    CONFIG_IDE=y
-> -    CONFIG_BLK_DEV_IDE=y
-> -    CONFIG_IDE_GENERIC=y
-> -    CONFIG_BLK_DEV_IDEPCI=y
-> -    CONFIG_BLK_DEV_GENERIC=y
-> -    CONFIG_BLK_DEV_IDEDMA_PCI=y
-> -    CONFIG_BLK_DEV_IDE_AU1XXX=y
-> -    CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA=y
-> -    CONFIG_BLK_DEV_IDEDMA=y
-> -
-> -Also define 'IDE_AU1XXX_BURSTMODE' in 'drivers/ide/mips/au1xxx-ide.c' to enable
-> -the burst support on DBDMA controller.
-> -
-> -If the used system need the USB support enable the following kernel configs for
-> -high IDE to USB throughput.
-> -
-> -::
-> -
-> -    CONFIG_IDE_GENERIC=y
-> -    CONFIG_BLK_DEV_IDEPCI=y
-> -    CONFIG_BLK_DEV_GENERIC=y
-> -    CONFIG_BLK_DEV_IDEDMA_PCI=y
-> -    CONFIG_BLK_DEV_IDE_AU1XXX=y
-> -    CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA=y
-> -    CONFIG_BLK_DEV_IDEDMA=y
-> -
-> -Also undefine 'IDE_AU1XXX_BURSTMODE' in 'drivers/ide/mips/au1xxx-ide.c' to
-> -disable the burst support on DBDMA controller.
-> -
-> -
-> -Acknowledgments
-> -===============
-> -
-> -These drivers wouldn't have been done without the base of kernel 2.4.x AU1XXX
-> -IDE driver from AMD.
-> -
-> -Additional input also from:
-> -Matthias Lenk <matthias.lenk@amd.com>
-> -
-> -Happy hacking!
-> -
-> -Enrico Walther <enrico.walther@amd.com>
-> diff --git a/Documentation/mips/index.rst b/Documentation/mips/index.rst
-> index a93c2f65884c..d5ad8c00f0bd 100644
-> --- a/Documentation/mips/index.rst
-> +++ b/Documentation/mips/index.rst
-> @@ -10,8 +10,6 @@ MIPS-specific Documentation
+> diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+> index 9a7c25252e50..d5bcf5718fd3 100644
+> --- a/drivers/ata/libata-acpi.c
+> +++ b/drivers/ata/libata-acpi.c
+> @@ -419,8 +419,7 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf)
+>  	output.pointer = NULL;	/* ACPI-CA sets this; save/free it later */
 >  
->     ingenic-tcu
+>  	if (ata_msg_probe(ap))
+> -		ata_dev_dbg(dev, "%s: ENTER: port#: %d\n",
+> -			    __func__, ap->port_no);
+> +		ata_dev_dbg(dev, "ENTER: port#: %d\n", ap->port_no);
 >  
-> -   au1xxx_ide
-> -
->  .. only::  subproject and html
+>  	/* _GTF has no input parameters */
+>  	status = acpi_evaluate_object(ata_dev_acpi_handle(dev), "_GTF", NULL,
+> @@ -438,8 +437,7 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf)
 >  
->     Indices
-> 
+>  	if (!output.length || !output.pointer) {
+>  		if (ata_msg_probe(ap))
+> -			ata_dev_dbg(dev, "%s: Run _GTF: length or ptr is NULL (0x%llx, 0x%p)\n",
+> -				    __func__,
+> +			ata_dev_dbg(dev, "Run _GTF: length or ptr is NULL (0x%llx, 0x%p)\n",
+>  				    (unsigned long long)output.length,
+>  				    output.pointer);
+>  		rc = -EINVAL;
+> @@ -465,8 +463,8 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf)
+>  	if (gtf) {
+>  		*gtf = (void *)out_obj->buffer.pointer;
+>  		if (ata_msg_probe(ap))
+> -			ata_dev_dbg(dev, "%s: returning gtf=%p, gtf_count=%d\n",
+> -				    __func__, *gtf, rc);
+> +			ata_dev_dbg(dev, "returning gtf=%p, gtf_count=%d\n",
+> +				    *gtf, rc);
+>  	}
+>  	return rc;
+>  
+> @@ -780,8 +778,8 @@ static int ata_acpi_push_id(struct ata_device *dev)
+>  	union acpi_object in_params[1];
+>  
+>  	if (ata_msg_probe(ap))
+> -		ata_dev_dbg(dev, "%s: ix = %d, port#: %d\n",
+> -			    __func__, dev->devno, ap->port_no);
+> +		ata_dev_dbg(dev, "ix = %d, port#: %d\n",
+> +			    dev->devno, ap->port_no);
+>  
+>  	/* Give the drive Identify data to the drive via the _SDD method */
+>  	/* _SDD: set up input parameters */
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 5bf6e4da218a..3a8af0fef540 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -1846,7 +1846,7 @@ int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
+>  	int rc;
+>  
+>  	if (ata_msg_ctl(ap))
+> -		ata_dev_dbg(dev, "%s: ENTER\n", __func__);
+> +		ata_dev_dbg(dev, "ENTER\n");
+>  
+>  retry:
+>  	ata_tf_init(dev, &tf);
+> @@ -2447,7 +2447,7 @@ int ata_dev_configure(struct ata_device *dev)
+>  	}
+>  
+>  	if (ata_msg_probe(ap))
+> -		ata_dev_dbg(dev, "%s: ENTER\n", __func__);
+> +		ata_dev_dbg(dev, "ENTER\n");
+>  
+>  	/* set horkage */
+>  	dev->horkage |= ata_dev_blacklisted(dev);
+> @@ -2498,9 +2498,8 @@ int ata_dev_configure(struct ata_device *dev)
+>  	/* print device capabilities */
+>  	if (ata_msg_probe(ap))
+>  		ata_dev_dbg(dev,
+> -			    "%s: cfg 49:%04x 82:%04x 83:%04x 84:%04x "
+> +			    "cfg 49:%04x 82:%04x 83:%04x 84:%04x "
+>  			    "85:%04x 86:%04x 87:%04x 88:%04x\n",
+> -			    __func__,
+>  			    id[49], id[82], id[83], id[84],
+>  			    id[85], id[86], id[87], id[88]);
+>  
+> @@ -2767,7 +2766,7 @@ int ata_dev_configure(struct ata_device *dev)
+>  
+>  err_out_nosup:
+>  	if (ata_msg_probe(ap))
+> -		ata_dev_dbg(dev, "%s: EXIT, err\n", __func__);
+> +		ata_dev_dbg(dev, "EXIT, err\n");
+>  	return rc;
+>  }
+>  
+> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+> index 038db94216a9..277398427e4e 100644
+> --- a/drivers/ata/libata-sff.c
+> +++ b/drivers/ata/libata-sff.c
+> @@ -1266,7 +1266,7 @@ void ata_sff_flush_pio_task(struct ata_port *ap)
+>  	ap->sff_pio_task_link = NULL;
+>  
+>  	if (ata_msg_ctl(ap))
+> -		ata_port_dbg(ap, "%s: EXIT\n", __func__);
+> +		ata_port_dbg(ap, "EXIT\n");
+>  }
+>  
+>  static void ata_sff_pio_task(struct work_struct *work)
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 6b1ffb78a410..508f501095c9 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -1424,7 +1424,7 @@ static inline int sata_srst_pmp(struct ata_link *link)
+>  #define ata_port_info(ap, fmt, ...)				\
+>  	dev_info(&ap->tdev, fmt, ##__VA_ARGS__)
+>  #define ata_port_dbg(ap, fmt, ...)				\
+> -	dev_dbg(&ap->tdev, fmt, ##__VA_ARGS__)
+> +	dev_dbg(&ap->tdev, "%s: " fmt, __func__, ##__VA_ARGS__)
+>  
+>  #define ata_link_err(link, fmt, ...)				\
+>  	dev_err(&link->tdev, fmt, ##__VA_ARGS__)
+> @@ -1435,7 +1435,7 @@ static inline int sata_srst_pmp(struct ata_link *link)
+>  #define ata_link_info(link, fmt, ...)				\
+>  	dev_info(&link->tdev, fmt, ##__VA_ARGS__)
+>  #define ata_link_dbg(link, fmt, ...)				\
+> -	dev_dbg(&link->tdev, fmt, ##__VA_ARGS__)
+> +	dev_dbg(&link->tdev, "%s: " fmt, __func__, ##__VA_ARGS__)
+>  
+>  #define ata_dev_err(dev, fmt, ...)				\
+>  	dev_err(&dev->tdev, fmt, ##__VA_ARGS__)
+> @@ -1446,7 +1446,7 @@ static inline int sata_srst_pmp(struct ata_link *link)
+>  #define ata_dev_info(dev, fmt, ...)				\
+>  	dev_info(&dev->tdev, fmt, ##__VA_ARGS__)
+>  #define ata_dev_dbg(dev, fmt, ...)				\
+> -	dev_dbg(&dev->tdev, fmt, ##__VA_ARGS__)
+> +	dev_dbg(&dev->tdev, "%s: " fmt, __func__, ##__VA_ARGS__)
+>  
+>  void ata_print_version(const struct device *dev, const char *version);
+>  
+
