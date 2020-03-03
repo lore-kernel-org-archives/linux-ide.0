@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3C08C3F2C6
-	for <linux-ide@archiver.kernel.org>; Tue,  3 Mar 2020 09:39:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21708C3F2DB
+	for <linux-ide@archiver.kernel.org>; Tue,  3 Mar 2020 09:39:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CE6FC205ED
-	for <linux-ide@archiver.kernel.org>; Tue,  3 Mar 2020 09:39:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0768921741
+	for <linux-ide@archiver.kernel.org>; Tue,  3 Mar 2020 09:39:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728232AbgCCJjp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S1728235AbgCCJjp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Tue, 3 Mar 2020 04:39:45 -0500
-Received: from mx2.suse.de ([195.135.220.15]:47718 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:47674 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728218AbgCCJjp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        id S1727742AbgCCJjp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
         Tue, 3 Mar 2020 04:39:45 -0500
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id AFE44B1FF;
+        by mx2.suse.de (Postfix) with ESMTP id A4706B1E1;
         Tue,  3 Mar 2020 09:39:41 +0000 (UTC)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Tejun Heo <tj@kernel.org>,
         Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
         linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 10/40] libata: move ata_dump_id() to dynamic debugging
-Date:   Tue,  3 Mar 2020 10:37:43 +0100
-Message-Id: <20200303093813.18523-11-hare@suse.de>
+Subject: [PATCH 05/40] libata: move __func__ into ata_{port,link,dev}_dbg() helper
+Date:   Tue,  3 Mar 2020 10:37:38 +0100
+Message-Id: <20200303093813.18523-6-hare@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20200303093813.18523-1-hare@suse.de>
 References: <20200303093813.18523-1-hare@suse.de>
@@ -38,78 +38,150 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Use ata_dev_dbg() to print out the information in ata_dump_id()
-and remove the ata_msg_probe() conditional.
+Move the __func__ argument into the ata_{port,link,dev}_dbg()
+helper and drop the explicit argument from the caller.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/ata/libata-core.c | 38 ++++++++++----------------------------
- 1 file changed, 10 insertions(+), 28 deletions(-)
+ drivers/ata/libata-acpi.c | 14 ++++++--------
+ drivers/ata/libata-core.c |  9 ++++-----
+ drivers/ata/libata-sff.c  |  2 +-
+ include/linux/libata.h    |  6 +++---
+ 4 files changed, 14 insertions(+), 17 deletions(-)
 
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index 9a7c25252e50..d5bcf5718fd3 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -419,8 +419,7 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf)
+ 	output.pointer = NULL;	/* ACPI-CA sets this; save/free it later */
+ 
+ 	if (ata_msg_probe(ap))
+-		ata_dev_dbg(dev, "%s: ENTER: port#: %d\n",
+-			    __func__, ap->port_no);
++		ata_dev_dbg(dev, "ENTER: port#: %d\n", ap->port_no);
+ 
+ 	/* _GTF has no input parameters */
+ 	status = acpi_evaluate_object(ata_dev_acpi_handle(dev), "_GTF", NULL,
+@@ -438,8 +437,7 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf)
+ 
+ 	if (!output.length || !output.pointer) {
+ 		if (ata_msg_probe(ap))
+-			ata_dev_dbg(dev, "%s: Run _GTF: length or ptr is NULL (0x%llx, 0x%p)\n",
+-				    __func__,
++			ata_dev_dbg(dev, "Run _GTF: length or ptr is NULL (0x%llx, 0x%p)\n",
+ 				    (unsigned long long)output.length,
+ 				    output.pointer);
+ 		rc = -EINVAL;
+@@ -465,8 +463,8 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf)
+ 	if (gtf) {
+ 		*gtf = (void *)out_obj->buffer.pointer;
+ 		if (ata_msg_probe(ap))
+-			ata_dev_dbg(dev, "%s: returning gtf=%p, gtf_count=%d\n",
+-				    __func__, *gtf, rc);
++			ata_dev_dbg(dev, "returning gtf=%p, gtf_count=%d\n",
++				    *gtf, rc);
+ 	}
+ 	return rc;
+ 
+@@ -780,8 +778,8 @@ static int ata_acpi_push_id(struct ata_device *dev)
+ 	union acpi_object in_params[1];
+ 
+ 	if (ata_msg_probe(ap))
+-		ata_dev_dbg(dev, "%s: ix = %d, port#: %d\n",
+-			    __func__, dev->devno, ap->port_no);
++		ata_dev_dbg(dev, "ix = %d, port#: %d\n",
++			    dev->devno, ap->port_no);
+ 
+ 	/* Give the drive Identify data to the drive via the _SDD method */
+ 	/* _SDD: set up input parameters */
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 17abc52ce41e..1987886140b6 100644
+index 5bf6e4da218a..3a8af0fef540 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -1440,6 +1440,7 @@ static int ata_hpa_resize(struct ata_device *dev)
+@@ -1846,7 +1846,7 @@ int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
+ 	int rc;
  
- /**
-  *	ata_dump_id - IDENTIFY DEVICE info debugging output
-+ *	@dev: device from which the information is fetched
-  *	@id: IDENTIFY DEVICE page to dump
-  *
-  *	Dump selected 16-bit words from the given IDENTIFY DEVICE
-@@ -1449,32 +1450,14 @@ static int ata_hpa_resize(struct ata_device *dev)
-  *	caller.
-  */
+ 	if (ata_msg_ctl(ap))
+-		ata_dev_dbg(dev, "%s: ENTER\n", __func__);
++		ata_dev_dbg(dev, "ENTER\n");
  
--static inline void ata_dump_id(const u16 *id)
--{
--	DPRINTK("49==0x%04x  "
--		"53==0x%04x  "
--		"63==0x%04x  "
--		"64==0x%04x  "
--		"75==0x%04x  \n",
--		id[49],
--		id[53],
--		id[63],
--		id[64],
--		id[75]);
--	DPRINTK("80==0x%04x  "
--		"81==0x%04x  "
--		"82==0x%04x  "
--		"83==0x%04x  "
--		"84==0x%04x  \n",
--		id[80],
--		id[81],
--		id[82],
--		id[83],
--		id[84]);
--	DPRINTK("88==0x%04x  "
--		"93==0x%04x\n",
--		id[88],
--		id[93]);
-+static inline void ata_dump_id(struct ata_device *dev, const u16 *id)
-+{
-+	ata_dev_dbg(dev,
-+		"49==0x%04x  53==0x%04x  63==0x%04x  64==0x%04x  75==0x%04x\n"
-+		"80==0x%04x  81==0x%04x  82==0x%04x  83==0x%04x  84==0x%04x\n"
-+		"88==0x%04x  93==0x%04x\n",
-+		id[49], id[53], id[63], id[64], id[75], id[80],
-+		id[81], id[82], id[83], id[84], id[88], id[93]);
+ retry:
+ 	ata_tf_init(dev, &tf);
+@@ -2447,7 +2447,7 @@ int ata_dev_configure(struct ata_device *dev)
+ 	}
+ 
+ 	if (ata_msg_probe(ap))
+-		ata_dev_dbg(dev, "%s: ENTER\n", __func__);
++		ata_dev_dbg(dev, "ENTER\n");
+ 
+ 	/* set horkage */
+ 	dev->horkage |= ata_dev_blacklisted(dev);
+@@ -2498,9 +2498,8 @@ int ata_dev_configure(struct ata_device *dev)
+ 	/* print device capabilities */
+ 	if (ata_msg_probe(ap))
+ 		ata_dev_dbg(dev,
+-			    "%s: cfg 49:%04x 82:%04x 83:%04x 84:%04x "
++			    "cfg 49:%04x 82:%04x 83:%04x 84:%04x "
+ 			    "85:%04x 86:%04x 87:%04x 88:%04x\n",
+-			    __func__,
+ 			    id[49], id[82], id[83], id[84],
+ 			    id[85], id[86], id[87], id[88]);
+ 
+@@ -2767,7 +2766,7 @@ int ata_dev_configure(struct ata_device *dev)
+ 
+ err_out_nosup:
+ 	if (ata_msg_probe(ap))
+-		ata_dev_dbg(dev, "%s: EXIT, err\n", __func__);
++		ata_dev_dbg(dev, "EXIT, err\n");
+ 	return rc;
  }
  
- /**
-@@ -2551,8 +2534,7 @@ int ata_dev_configure(struct ata_device *dev)
- 	/* find max transfer mode; for printk only */
- 	xfer_mask = ata_id_xfermask(id);
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 038db94216a9..277398427e4e 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -1266,7 +1266,7 @@ void ata_sff_flush_pio_task(struct ata_port *ap)
+ 	ap->sff_pio_task_link = NULL;
  
--	if (ata_msg_probe(ap))
--		ata_dump_id(id);
-+	ata_dump_id(dev, id);
+ 	if (ata_msg_ctl(ap))
+-		ata_port_dbg(ap, "%s: EXIT\n", __func__);
++		ata_port_dbg(ap, "EXIT\n");
+ }
  
- 	/* SCSI only uses 4-char revisions, dump full 8 chars from ATA */
- 	ata_id_c_string(dev->id, fwrevbuf, ATA_ID_FW_REV,
+ static void ata_sff_pio_task(struct work_struct *work)
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 6b1ffb78a410..508f501095c9 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1424,7 +1424,7 @@ static inline int sata_srst_pmp(struct ata_link *link)
+ #define ata_port_info(ap, fmt, ...)				\
+ 	dev_info(&ap->tdev, fmt, ##__VA_ARGS__)
+ #define ata_port_dbg(ap, fmt, ...)				\
+-	dev_dbg(&ap->tdev, fmt, ##__VA_ARGS__)
++	dev_dbg(&ap->tdev, "%s: " fmt, __func__, ##__VA_ARGS__)
+ 
+ #define ata_link_err(link, fmt, ...)				\
+ 	dev_err(&link->tdev, fmt, ##__VA_ARGS__)
+@@ -1435,7 +1435,7 @@ static inline int sata_srst_pmp(struct ata_link *link)
+ #define ata_link_info(link, fmt, ...)				\
+ 	dev_info(&link->tdev, fmt, ##__VA_ARGS__)
+ #define ata_link_dbg(link, fmt, ...)				\
+-	dev_dbg(&link->tdev, fmt, ##__VA_ARGS__)
++	dev_dbg(&link->tdev, "%s: " fmt, __func__, ##__VA_ARGS__)
+ 
+ #define ata_dev_err(dev, fmt, ...)				\
+ 	dev_err(&dev->tdev, fmt, ##__VA_ARGS__)
+@@ -1446,7 +1446,7 @@ static inline int sata_srst_pmp(struct ata_link *link)
+ #define ata_dev_info(dev, fmt, ...)				\
+ 	dev_info(&dev->tdev, fmt, ##__VA_ARGS__)
+ #define ata_dev_dbg(dev, fmt, ...)				\
+-	dev_dbg(&dev->tdev, fmt, ##__VA_ARGS__)
++	dev_dbg(&dev->tdev, "%s: " fmt, __func__, ##__VA_ARGS__)
+ 
+ void ata_print_version(const struct device *dev, const char *version);
+ 
 -- 
 2.16.4
 
