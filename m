@@ -1,187 +1,151 @@
-Return-Path: <SRS0=3I3m=4T=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=c38X=4U=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD08AC3F2CD
-	for <linux-ide@archiver.kernel.org>; Mon,  2 Mar 2020 18:30:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39F61C3F2CD
+	for <linux-ide@archiver.kernel.org>; Tue,  3 Mar 2020 08:16:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8AB8C24676
-	for <linux-ide@archiver.kernel.org>; Mon,  2 Mar 2020 18:30:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="W+D8/iVW"
+	by mail.kernel.org (Postfix) with ESMTP id 132812072A
+	for <linux-ide@archiver.kernel.org>; Tue,  3 Mar 2020 08:16:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726997AbgCBSaZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 2 Mar 2020 13:30:25 -0500
-Received: from mailout2.w1.samsung.com ([210.118.77.12]:55005 "EHLO
-        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727255AbgCBSaY (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 2 Mar 2020 13:30:24 -0500
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200302183023euoutp021f6404d2ff340d1090b95c0dbd7d5b7e~4kDRRBrBQ1226512265euoutp02J
-        for <linux-ide@vger.kernel.org>; Mon,  2 Mar 2020 18:30:23 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200302183023euoutp021f6404d2ff340d1090b95c0dbd7d5b7e~4kDRRBrBQ1226512265euoutp02J
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1583173823;
-        bh=KnJOX7D75ijtRUDI1ExXjaO55YtxTUzWTUFvHRhWgmY=;
-        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=W+D8/iVWQuSjXh+y4R2oYIfFP7PKIjeHtQ/DzJC/qW2qWKczUIbqDgnoXnhN07roa
-         7op+mZgn3oG5BhEcJV0JqjJkvaw6qleL44Ekntqgqz85DSAR435Mdz8S25+6T8j75m
-         V531wOO7a/gFZKv7Lau8NxITPILVW4t454rrGM0Q=
-Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20200302183023eucas1p28336956db18434522f36a1f369fae8f4~4kDRJsOdO0634706347eucas1p2z;
-        Mon,  2 Mar 2020 18:30:23 +0000 (GMT)
-Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges3new.samsung.com (EUCPMTA) with SMTP id 8E.41.60698.FB05D5E5; Mon,  2
-        Mar 2020 18:30:23 +0000 (GMT)
-Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20200302183022eucas1p15ac29c46960a1b42c4114b1c0d2403ac~4kDQv1rpf3097830978eucas1p1U;
-        Mon,  2 Mar 2020 18:30:22 +0000 (GMT)
-Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
-        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200302183022eusmtrp260d7b4caebadc45c9b4bfbe118a44925~4kDQvQrgQ0778607786eusmtrp2R;
-        Mon,  2 Mar 2020 18:30:22 +0000 (GMT)
-X-AuditID: cbfec7f5-a29ff7000001ed1a-15-5e5d50bfb0c0
-Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id 1B.8C.07950.EB05D5E5; Mon,  2
-        Mar 2020 18:30:22 +0000 (GMT)
-Received: from [106.120.51.71] (unknown [106.120.51.71]) by
-        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200302183022eusmtip2c11e91540f5182622b8af9fb63e17afe~4kDQPvA3s2373923739eusmtip2V;
-        Mon,  2 Mar 2020 18:30:22 +0000 (GMT)
-Subject: Re: [PATCH 13/42] sata_mv: kill 'port' argument in
- mv_dump_all_regs()
-To:     Hannes Reinecke <hare@suse.de>
+        id S1727594AbgCCIQB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 3 Mar 2020 03:16:01 -0500
+Received: from mx2.suse.de ([195.135.220.15]:49788 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727552AbgCCIQB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 3 Mar 2020 03:16:01 -0500
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id 0E4D7B380;
+        Tue,  3 Mar 2020 08:15:59 +0000 (UTC)
+Subject: Re: [PATCH 17/42] libata: tracepoints for bus-master DMA
+To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 Cc:     Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
         linux-ide@vger.kernel.org
-From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <7ef19013-c047-1d45-f4c9-a3cc626a7797@samsung.com>
-Date:   Mon, 2 Mar 2020 19:30:22 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
-        Thunderbird/60.8.0
-MIME-Version: 1.0
-In-Reply-To: <20200213095412.23773-14-hare@suse.de>
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprCKsWRmVeSWpSXmKPExsWy7djP87r7A2LjDLq6OS1W3+1ns9izaBKT
-        xbEdj5gsfi0/yujA4nH5bKnHplWdbB6bT1d7fN4kF8ASxWWTkpqTWZZapG+XwJWx6fs99oIf
-        ohV3b95kbmDcKNjFyMkhIWAicfPrH+YuRi4OIYEVjBJHv7xngnC+MEpM+D0PKvOZUeLFyz2s
-        MC2PXn5mhEgsB6q6+JIdwnnLKHGtazkjSJWwQIDE41M/WEBsEQEliY/th9hBbGaBCImNG9Yy
-        gdhsAlYSE9tXgdXzCthJ3G1fydbFyMHBIqAisWi+M0hYFKj804PDrBAlghInZz5hASnhFDCW
-        aH7BBDFRXOLWk/lQtrzE9rdzwI6WEOhml7h1YTHU0S4S7UfnskPYwhKvjm+BsmUk/u+czwTR
-        sI5R4m/HC6ju7YwSyyf/Y4Oospa4c+4X2HHMApoS63fpQ4QdJTb2b2YECUsI8EnceCsIcQSf
-        xKRt05khwrwSHW1CENVqEhuWbWCDWdu1cyXzBEalWUg+m4XknVlI3pmFsHcBI8sqRvHU0uLc
-        9NRi47zUcr3ixNzi0rx0veT83E2MwLRy+t/xrzsY9/1JOsQowMGoxMMbwBwbJ8SaWFZcmXuI
-        UYKDWUmE15czOk6INyWxsiq1KD++qDQntfgQozQHi5I4r/Gil7FCAumJJanZqakFqUUwWSYO
-        TqkGxp3/Zmp6/6uxcL28Upg/UN3C6IeVxfnuxYtiA8vvHl6mNvFPgWHlpI3fdeMjZm/qFuKc
-        P3Xt0ooew9C+a+m1vDXJDnGGHgsqZQ5H9Ico/5kWGWT0Mn6l1rMfpivfMbxS3lqw6ZfIbN6J
-        /Dkeu+Y8mhv01tSfsYezep7ShOAMUzP7yDlS3vG8SizFGYmGWsxFxYkAs4/1XCcDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrCIsWRmVeSWpSXmKPExsVy+t/xe7r7AmLjDCZ36FmsvtvPZrFn0SQm
-        i2M7HjFZ/Fp+lNGBxePy2VKPTas62Tw2n672+LxJLoAlSs+mKL+0JFUhI7+4xFYp2tDCSM/Q
-        0kLPyMRSz9DYPNbKyFRJ384mJTUnsyy1SN8uQS9j0/d77AU/RCvu3rzJ3MC4UbCLkZNDQsBE
-        4tHLz4wgtpDAUkaJx7Nkuxg5gOIyEsfXl0GUCEv8udbF1sXIBVTymlFi8awmZpCEsICfxKnt
-        e8BsEQEliY/th9hBbGaBCInuV2egGtYxSpyd84cVJMEmYCUxsX0V2DJeATuJu+0r2UCWsQio
-        SCya7wwSFgXqPbxjFlSJoMTJmU9YQEo4BYwlml8wQYxXl/gz7xIzhC0ucevJfKi4vMT2t3OY
-        JzAKzULSPQtJyywkLbOQtCxgZFnFKJJaWpybnltspFecmFtcmpeul5yfu4kRGEPbjv3csoOx
-        613wIUYBDkYlHt4fDLFxQqyJZcWVuYcYJTiYlUR4fTmj44R4UxIrq1KL8uOLSnNSiw8xmgK9
-        NpFZSjQ5HxjfeSXxhqaG5haWhubG5sZmFkrivB0CB2OEBNITS1KzU1MLUotg+pg4OKUaGHt0
-        5IMiOsQe3umR/V/3tf/UTRk90fsT3j9973bs9po/ynVt1qems+/Qnc1Tdnlr//b8Kp+MXJ4C
-        r+U3py2NSDl8ykLd0CT22IRkGTahdG3HnIKO9c4L0nOUmjXWHnrkl60il/1s+b4rx13EzZmq
-        MufeydigHM86fX+ezkStKRHC5o/qVDt+KLEUZyQaajEXFScCABMy3my3AgAA
-X-CMS-MailID: 20200302183022eucas1p15ac29c46960a1b42c4114b1c0d2403ac
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200213095436eucas1p24b6b4f2f68e201be8151c56265f54d46
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20200213095436eucas1p24b6b4f2f68e201be8151c56265f54d46
 References: <20200213095412.23773-1-hare@suse.de>
-        <CGME20200213095436eucas1p24b6b4f2f68e201be8151c56265f54d46@eucas1p2.samsung.com>
-        <20200213095412.23773-14-hare@suse.de>
+ <CGME20200213095437eucas1p106742c3b4f5dcc56b7a3a4e01971fa89@eucas1p1.samsung.com>
+ <20200213095412.23773-18-hare@suse.de>
+ <47837f23-6727-bb49-5eb0-1b739bd373c5@samsung.com>
+From:   Hannes Reinecke <hare@suse.de>
+Openpgp: preference=signencrypt
+Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
+ 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
+ azzYF4VRJsdl+d0MCaSy8mUh
+Message-ID: <4781ead8-c693-6875-1a2d-86ce8f82b05b@suse.de>
+Date:   Tue, 3 Mar 2020 09:15:58 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
+MIME-Version: 1.0
+In-Reply-To: <47837f23-6727-bb49-5eb0-1b739bd373c5@samsung.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-
-On 2/13/20 10:53 AM, Hannes Reinecke wrote:
-> Always '-1', so drop it and simplify the function.
+On 3/2/20 6:24 PM, Bartlomiej Zolnierkiewicz wrote:
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-
-Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
-
-> ---
->  drivers/ata/sata_mv.c | 24 +++++++-----------------
->  1 file changed, 7 insertions(+), 17 deletions(-)
+> On 2/13/20 10:53 AM, Hannes Reinecke wrote:
+>> Add tracepoints for bus-master DMA and taskfile related functions.
+>> That allows us to drop the relevant DPRINTK() calls.
 > 
-> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-> index 1eb93976af8d..940b7f2e9105 100644
-> --- a/drivers/ata/sata_mv.c
-> +++ b/drivers/ata/sata_mv.c
-> @@ -1283,23 +1283,13 @@ static void mv_dump_pci_cfg(struct pci_dev *pdev, unsigned bytes)
->  	}
->  }
->  
-> -static void mv_dump_all_regs(void __iomem *mmio_base, int port,
-> -			     struct pci_dev *pdev)
-> +static void mv_dump_all_regs(void __iomem *mmio_base, struct pci_dev *pdev)
->  {
-> -	void __iomem *hc_base = mv_hc_base(mmio_base,
-> -					   port >> MV_PORT_HC_SHIFT);
-> -	void __iomem *port_base;
->  	int start_port, num_ports, p, start_hc, num_hcs, hc;
->  
-> -	if (0 > port) {
-> -		start_hc = start_port = 0;
-> -		num_ports = 8;		/* shld be benign for 4 port devs */
-> -		num_hcs = 2;
-> -	} else {
-> -		start_hc = port >> MV_PORT_HC_SHIFT;
-> -		start_port = port;
-> -		num_ports = num_hcs = 1;
-> -	}
-> +	start_hc = start_port = 0;
-> +	num_ports = 8;		/* shld be benign for 4 port devs */
-> +	num_hcs = 2;
->  	dev_printk(KERN_DEBUG, &pdev->dev,
->  		   "%s: All registers for port(s) %u-%u:\n", __func__,
->  		   start_port, num_ports > 1 ? num_ports - 1 : start_port);
-> @@ -1314,13 +1304,13 @@ static void mv_dump_all_regs(void __iomem *mmio_base, int port,
->  	mv_dump_mem(&pdev->dev, mmio_base+0xf00, 0x4);
->  	mv_dump_mem(&pdev->dev, mmio_base+0x1d00, 0x6c);
->  	for (hc = start_hc; hc < start_hc + num_hcs; hc++) {
-> -		hc_base = mv_hc_base(mmio_base, hc);
-> +		void __iomem *hc_base = mv_hc_base(mmio_base, hc);
->  		dev_printk(KERN_DEBUG, &pdev->dev, "%s: HC regs (HC %i):\n",
->  			   __func__, hc);
->  		mv_dump_mem(&pdev->dev, hc_base, 0x1c);
->  	}
->  	for (p = start_port; p < start_port + num_ports; p++) {
-> -		port_base = mv_port_base(mmio_base, p);
-> +		void __iomem *port_base = mv_port_base(mmio_base, p);
->  		dev_printk(KERN_DEBUG, &pdev->dev, "%s: EDMA regs (port %i):\n",
->  			   __func__, p);
->  		mv_dump_mem(&pdev->dev, port_base, 0x54);
-> @@ -2969,7 +2959,7 @@ static int mv_pci_error(struct ata_host *host, void __iomem *mmio)
->  	if (pci_dump) {
->  		dev_printk(KERN_DEBUG, host->dev, "%s: All regs @ PCI error\n",
->  			   __func__);
-> -		mv_dump_all_regs(mmio, -1, to_pci_dev(host->dev));
-> +		mv_dump_all_regs(mmio, to_pci_dev(host->dev));
->  	}
->  	writelfl(0, mmio + hpriv->irq_cause_offset);
->  
+> ..DPRINTK() & VPRINTK() calls.
 > 
+> Also please see comments below (from v1 review).
+> 
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>  drivers/ata/libata-core.c     |  5 +++
+>>  drivers/ata/libata-sff.c      | 23 +++++++---
+>>  include/trace/events/libata.h | 97 +++++++++++++++++++++++++++++++++++++++++++
+>>  3 files changed, 120 insertions(+), 5 deletions(-)
+>>
+[ .. ]
+>> +	TP_STRUCT__entry(
+>> +		__field( unsigned int,	ata_port )
+>> +		__field( unsigned char,	cmd	)
+>> +		__field( unsigned char,	dev	)
+>> +		__field( unsigned char,	lbal	)
+>> +		__field( unsigned char,	lbam	)
+>> +		__field( unsigned char,	lbah	)
+>> +		__field( unsigned char,	nsect	)
+>> +		__field( unsigned char,	feature	)
+>> +		__field( unsigned char,	hob_lbal )
+>> +		__field( unsigned char,	hob_lbam )
+>> +		__field( unsigned char,	hob_lbah )
+>> +		__field( unsigned char,	hob_nsect )
+>> +		__field( unsigned char,	hob_feature )
+>> +		__field( unsigned char,	proto	)
+>> +		__field( unsigned long,	flags	)
+>> +	),
+> 
+> 'flags' field doesn't seem to be used?
+> 
+Indeed.
+
+[ .. ]
+>> +	TP_printk("ata_port=%u cmd=%s%s tag=%d",
+>> +		  __entry->ata_port,
+>> +		  show_protocol_name(__entry->proto),
+>> +		  show_opcode_name(__entry->cmd),
+>> +		  __entry->tag)
+> 
+> Please keep both new events consistent regarding 'proto' and
+> 'cmd' fields printing (add "proto=%s" in this event or rework
+> printing in ata_tf_load one).
+> right, will be doing so in the next round.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
