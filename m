@@ -1,101 +1,97 @@
-Return-Path: <SRS0=OW13=43=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=c3L7=44=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D491C10F27
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Mar 2020 13:30:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBD09C10F25
+	for <linux-ide@archiver.kernel.org>; Wed, 11 Mar 2020 07:11:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 212CA2071B
-	for <linux-ide@archiver.kernel.org>; Tue, 10 Mar 2020 13:30:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC69A20727
+	for <linux-ide@archiver.kernel.org>; Wed, 11 Mar 2020 07:11:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728579AbgCJMu2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 10 Mar 2020 08:50:28 -0400
-Received: from mail.loongson.cn ([114.242.206.163]:36166 "EHLO loongson.cn"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728595AbgCJMu2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 10 Mar 2020 08:50:28 -0400
-Received: from linux.localdomain (unknown [113.200.148.30])
-        by mail.loongson.cn (Coremail) with SMTP id AQAAf9Dxn9kBjWdeay0ZAA--.25S3;
-        Tue, 10 Mar 2020 20:50:11 +0800 (CST)
-From:   Tiezhu Yang <yangtiezhu@loongson.cn>
-To:     Bjorn Helgaas <bhelgaas@google.com>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Jiaxun Yang <jiaxun.yang@flygoat.com>,
-        Xuefeng Li <lixuefeng@loongson.cn>
-Subject: [PATCH 2/2] AHCI: Add support for Loongson 7A1000 SATA controller
-Date:   Tue, 10 Mar 2020 20:50:08 +0800
-Message-Id: <1583844608-30029-2-git-send-email-yangtiezhu@loongson.cn>
-X-Mailer: git-send-email 2.1.0
-In-Reply-To: <1583844608-30029-1-git-send-email-yangtiezhu@loongson.cn>
-References: <1583844608-30029-1-git-send-email-yangtiezhu@loongson.cn>
-X-CM-TRANSID: AQAAf9Dxn9kBjWdeay0ZAA--.25S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7AFW8Wr48CFW8GFyDtr4kXrb_yoW8JFyxpF
-        43XayDKr40grWFga1DA3ykGa43JFs8Wa4xKa90k3yvqr4qyryrWryUZa47JrW7K34kW3W7
-        XFnFkw12gF4UXw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUBa14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-        rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_Jr4l82xGYIkIc2
-        x26xkF7I0E14v26r1I6r4UM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2z4x0
-        Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1l84
-        ACjcxK6I8E87Iv67AKxVWxJr0_GcWl84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s0DM2AI
-        xVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20x
-        vE14v26r1j6r18McIj6I8E87Iv67AKxVW8JVWxJwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xv
-        r2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkIecxEwVAFwVW5JwCF04k20x
-        vY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I
-        3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIxkGc2Ij64vIr41lIx
-        AIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAI
-        cVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r4j6F4UMIIF0xvEx4A2js
-        IEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUrpnLUUUUU=
-X-CM-SenderInfo: p1dqw3xlh2x3gn0dqz5rrqw2lrqou0/
+        id S1726472AbgCKHLI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 11 Mar 2020 03:11:08 -0400
+Received: from mx2.suse.de ([195.135.220.15]:33622 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726160AbgCKHLI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 11 Mar 2020 03:11:08 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx2.suse.de (Postfix) with ESMTP id D4C9DAF57;
+        Wed, 11 Mar 2020 07:11:06 +0000 (UTC)
+From:   Takashi Iwai <tiwai@suse.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-ide@vger.kernel.org
+Subject: [PATCH] libata: transport: Use scnprintf() for avoiding potential buffer overflow
+Date:   Wed, 11 Mar 2020 08:11:00 +0100
+Message-Id: <20200311071100.3969-1-tiwai@suse.de>
+X-Mailer: git-send-email 2.16.4
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Loongson 7A1000 SATA controller uses BAR0 as the base address register.
+Since snprintf() returns the would-be-output size instead of the
+actual output size, the succeeding calls may go beyond the given
+buffer limit.  Fix it by replacing with scnprintf().
 
-Signed-off-by: Tiezhu Yang <yangtiezhu@loongson.cn>
+Signed-off-by: Takashi Iwai <tiwai@suse.de>
 ---
- drivers/ata/ahci.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/ata/libata-transport.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 11ea1af..33d051a 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -40,6 +40,7 @@
- enum {
- 	AHCI_PCI_BAR_STA2X11	= 0,
- 	AHCI_PCI_BAR_CAVIUM	= 0,
-+	AHCI_PCI_BAR_LOONGSON	= 0,
- 	AHCI_PCI_BAR_ENMOTUS	= 2,
- 	AHCI_PCI_BAR_CAVIUM_GEN5	= 4,
- 	AHCI_PCI_BAR_STANDARD	= 5,
-@@ -589,6 +590,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	/* Enmotus */
- 	{ PCI_DEVICE(0x1c44, 0x8000), board_ahci },
+diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
+index 12a505bb9c5b..6a40e3c6cf49 100644
+--- a/drivers/ata/libata-transport.c
++++ b/drivers/ata/libata-transport.c
+@@ -208,7 +208,7 @@ show_ata_port_##name(struct device *dev,				\
+ {									\
+ 	struct ata_port *ap = transport_class_to_port(dev);		\
+ 									\
+-	return snprintf(buf, 20, format_string, cast ap->field);	\
++	return scnprintf(buf, 20, format_string, cast ap->field);	\
+ }
  
-+	/* Loongson */
-+	{ PCI_VDEVICE(LOONGSON, 0x7a08), board_ahci },
-+
- 	/* Generic, PCI class code for AHCI */
- 	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
- 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci },
-@@ -1680,6 +1684,9 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 			ahci_pci_bar = AHCI_PCI_BAR_CAVIUM;
- 		if (pdev->device == 0xa084)
- 			ahci_pci_bar = AHCI_PCI_BAR_CAVIUM_GEN5;
-+	} else if (pdev->vendor == PCI_VENDOR_ID_LOONGSON) {
-+		if (pdev->device == 0x7a08)
-+			ahci_pci_bar = AHCI_PCI_BAR_LOONGSON;
+ #define ata_port_simple_attr(field, name, format_string, type)		\
+@@ -479,7 +479,7 @@ show_ata_dev_##field(struct device *dev,				\
+ {									\
+ 	struct ata_device *ata_dev = transport_class_to_dev(dev);	\
+ 									\
+-	return snprintf(buf, 20, format_string, cast ata_dev->field);	\
++	return scnprintf(buf, 20, format_string, cast ata_dev->field);	\
+ }
+ 
+ #define ata_dev_simple_attr(field, format_string, type)	\
+@@ -533,7 +533,7 @@ show_ata_dev_id(struct device *dev,
+ 	if (ata_dev->class == ATA_DEV_PMP)
+ 		return 0;
+ 	for(i=0;i<ATA_ID_WORDS;i++)  {
+-		written += snprintf(buf+written, 20, "%04x%c",
++		written += scnprintf(buf+written, 20, "%04x%c",
+ 				    ata_dev->id[i],
+ 				    ((i+1) & 7) ? ' ' : '\n');
  	}
+@@ -552,7 +552,7 @@ show_ata_dev_gscr(struct device *dev,
+ 	if (ata_dev->class != ATA_DEV_PMP)
+ 		return 0;
+ 	for(i=0;i<SATA_PMP_GSCR_DWORDS;i++)  {
+-		written += snprintf(buf+written, 20, "%08x%c",
++		written += scnprintf(buf+written, 20, "%08x%c",
+ 				    ata_dev->gscr[i],
+ 				    ((i+1) & 3) ? ' ' : '\n');
+ 	}
+@@ -581,7 +581,7 @@ show_ata_dev_trim(struct device *dev,
+ 	else
+ 		mode = "unqueued";
  
- 	/* acquire resources */
+-	return snprintf(buf, 20, "%s\n", mode);
++	return scnprintf(buf, 20, "%s\n", mode);
+ }
+ 
+ static DEVICE_ATTR(trim, S_IRUGO, show_ata_dev_trim, NULL);
 -- 
-2.1.0
+2.16.4
 
