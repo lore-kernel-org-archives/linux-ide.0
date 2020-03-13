@@ -1,100 +1,65 @@
-Return-Path: <SRS0=Eprx=45=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=X5Sc=46=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60949C10DCE
-	for <linux-ide@archiver.kernel.org>; Thu, 12 Mar 2020 15:08:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7258C2BB1D
+	for <linux-ide@archiver.kernel.org>; Fri, 13 Mar 2020 08:25:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 336652067C
-	for <linux-ide@archiver.kernel.org>; Thu, 12 Mar 2020 15:08:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C5BF2073E
+	for <linux-ide@archiver.kernel.org>; Fri, 13 Mar 2020 08:25:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="kNrCAc8o"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="h0nC3b0l"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727133AbgCLPH7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 12 Mar 2020 11:07:59 -0400
-Received: from mail-io1-f66.google.com ([209.85.166.66]:35441 "EHLO
-        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727072AbgCLPH7 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 Mar 2020 11:07:59 -0400
-Received: by mail-io1-f66.google.com with SMTP id h8so6031643iob.2
-        for <linux-ide@vger.kernel.org>; Thu, 12 Mar 2020 08:07:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=KtQaH9KXOQlJHeG5o9weoEGCTXOh3L9hHlBarSlajOk=;
-        b=kNrCAc8ogR9Xq83wOSFtS9Gq2pfebSz+cYuSC4Ye60Lefx0uRuoOcl/dYVwcBpzZ0c
-         ARwd529wlJ4OAZRHnKvs3cQ56OqfH8ofKhgoQQK7uBPySkWCy8psJGh/SMRpsFc8463P
-         leVBXiyv36xEUQibsfSd0QFOAAQCAcr1ZIQ/v/jd5p7wLU2embDdyB95bMgQm/NnAImK
-         teXHnEXM9TVBX+uDOGmig1M9EwkAkRAZvB3Vrsjntrdp2BFaRw/QJGangAPJI4UTWt5S
-         EvEKhCDq/evAhKbe+ZFS/Yb66oEJKKyau8qvF/pkLISopbglSfRLFDbtxXCx56+IYZF1
-         RJZg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=KtQaH9KXOQlJHeG5o9weoEGCTXOh3L9hHlBarSlajOk=;
-        b=Hf71Lzhc6Z5f/qFIrjmA1W3m61b8/esYf5mwCSJFetYWnNGjjZOIYQi0cduLHSIYY4
-         Veh+rX65yUJ+JRDLyoaTDyvYvPvCuBlKNCmW4AWhfpg0lElRJYOgi/osxQJcl8qTNGrI
-         wDLpY5LFZ7GA4AlSIZck6LWZmW7zHWYl/zLUkjX2IGFxVBOSDq0L1OfmkX+gyjA8Cfwe
-         ufHjL+vyIWTi4kFifEfgj3A9DwXUlZou8P6sWUut7vu0VJXA9YAesw9MbjPO+EBqibH7
-         gSjy52pd7Ym9UpIufCL0+R+iIPLwOsOsyfYqJoum0MVFUCct8a8kMVCoQ7QHfBis+1Vq
-         5l+Q==
-X-Gm-Message-State: ANhLgQ13CNxCjI2bMvjBRqz1yKk6y3KKBoEdY6UlZWhPSDlYld0JO+yS
-        AAVy6BZ3P3pZMgLxia9MW39slA==
-X-Google-Smtp-Source: ADFU+vt2eeLCKlnEFuWg0tw6jEX0u/SFCCC7I/YAeIqtH0SU1YeBU8kvHxUWeqdcM5K/gwOz3IjzSg==
-X-Received: by 2002:a02:8801:: with SMTP id r1mr8190913jai.50.1584025679011;
-        Thu, 12 Mar 2020 08:07:59 -0700 (PDT)
-Received: from [192.168.1.159] ([65.144.74.34])
-        by smtp.gmail.com with ESMTPSA id h14sm10246024iow.23.2020.03.12.08.07.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 12 Mar 2020 08:07:58 -0700 (PDT)
-Subject: Re: [PATCH v2] libata: Assign OF node to the SCSI device
-To:     Linus Walleij <linus.walleij@linaro.org>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc:     linux-ide@vger.kernel.org, Chris Healy <cphealy@gmail.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Guenter Roeck <linux@roeck-us.net>
-References: <20200222112057.31476-1-linus.walleij@linaro.org>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <4ae878c8-a4ed-4aee-68bf-806463f31e37@kernel.dk>
-Date:   Thu, 12 Mar 2020 09:07:57 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        id S1726464AbgCMIZP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 13 Mar 2020 04:25:15 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:34010 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726406AbgCMIZO (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 13 Mar 2020 04:25:14 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=/ZdDlbLqNOvakJ4NWfeKFrm2xJH0FxuVXIiomBTeWY0=; b=h0nC3b0lys4AAFlklVuzX011mM
+        aHVnRucRLsffajpU6AVN5ImOUq9DYUQk/8gBFO80Sg/fTAjqTJ0XiqmWvPve7tuqVDjJEqyAmYuUZ
+        bqQ/GWEiKM8bO0yKpKacYY2OQJClYNWda3Wf4EyMniDg4/SLt23w5bwyeHZu2x52xijyMGx23TdqG
+        T83ispvqZvSbDr2cgRfJPZ4jpDnloh/lNDY7Vdho5o+etQWEpjKmccgwP0uzeCdHBOnDLLv68D5vd
+        B6GTSlbxQfeBfIwAJxva6gGs6+dJtEAhcXMLMzVmW7AQktEp5K2Clsb0pU1yj3qpp0rNK3viZRG0l
+        WR2idzGg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jCfch-0005OI-Ce; Fri, 13 Mar 2020 08:24:51 +0000
+Date:   Fri, 13 Mar 2020 01:24:51 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Tiezhu Yang <yangtiezhu@loongson.cn>
+Cc:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Huacai Chen <chenhc@lemote.com>,
+        Jiaxun Yang <jiaxun.yang@flygoat.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-mips@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Xuefeng Li <lixuefeng@loongson.cn>
+Subject: Re: [PATCH 4/6] MIPS: Loongson: Add DMA support for 7A1000
+Message-ID: <20200313082451.GA20331@infradead.org>
+References: <1583742206-29163-1-git-send-email-yangtiezhu@loongson.cn>
+ <1583742206-29163-5-git-send-email-yangtiezhu@loongson.cn>
 MIME-Version: 1.0
-In-Reply-To: <20200222112057.31476-1-linus.walleij@linaro.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1583742206-29163-5-git-send-email-yangtiezhu@loongson.cn>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/22/20 4:20 AM, Linus Walleij wrote:
-> When we spawn a SCSI device from an ATA device in libata-scsi
-> the SCSI device had no relation to the device tree.
-> 
-> The DT binding allows us to define port nodes under a
-> PATA (IDE) or SATA host controller, so we can have proper device
-> nodes for these devices.
-> 
-> If OF is enabled, walk the children of the host controller node
-> to see if there is a valid device tree node to assign. The reg
-> is used to match to ID 0 for the master device and ID 1 for the
-> slave device.
-> 
-> The corresponding device tree bindings have been accepted by
-> the device tree maintainers.
+On Mon, Mar 09, 2020 at 04:23:24PM +0800, Tiezhu Yang wrote:
+> Implement __phys_to_dma() and __dma_to_phys() according to the
+> node id offset in 7A1000 DMA route config register.
 
-Applied, thanks.
-
--- 
-Jens Axboe
-
+Can you just switch Loongson over to use the dma_pfn_offset field in
+struct device?  I'd love to kill the __phys_to_dma and __dma_to_phys
+hooks wherever possible.
