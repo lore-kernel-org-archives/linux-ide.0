@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42EDFC4CECE
-	for <linux-ide@archiver.kernel.org>; Tue, 17 Mar 2020 14:43:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A1A9C3F2CE
+	for <linux-ide@archiver.kernel.org>; Tue, 17 Mar 2020 14:43:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1BBB4206EC
-	for <linux-ide@archiver.kernel.org>; Tue, 17 Mar 2020 14:43:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 401F720735
+	for <linux-ide@archiver.kernel.org>; Tue, 17 Mar 2020 14:43:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="hocDEjmP"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="KQmD7fjR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726784AbgCQOnu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 17 Mar 2020 10:43:50 -0400
-Received: from mailout2.w1.samsung.com ([210.118.77.12]:40405 "EHLO
+        id S1727050AbgCQOn5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 17 Mar 2020 10:43:57 -0400
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:40504 "EHLO
         mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726879AbgCQOns (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Mar 2020 10:43:48 -0400
-Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200317144347euoutp02ebb802ded961836974e9ef7f489f09d8~9Hos3US8P1539915399euoutp02S
-        for <linux-ide@vger.kernel.org>; Tue, 17 Mar 2020 14:43:47 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200317144347euoutp02ebb802ded961836974e9ef7f489f09d8~9Hos3US8P1539915399euoutp02S
+        with ESMTP id S1726998AbgCQOn5 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Mar 2020 10:43:57 -0400
+Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200317144353euoutp02cb176fae53eada576bbfc9339250defd~9Hoy9mDox1583015830euoutp02J
+        for <linux-ide@vger.kernel.org>; Tue, 17 Mar 2020 14:43:53 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200317144353euoutp02cb176fae53eada576bbfc9339250defd~9Hoy9mDox1583015830euoutp02J
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1584456227;
-        bh=oy/p9fzaAcyCLXLjGVXpJdB3/7eka9TGQ/vlbsdueDk=;
+        s=mail20170921; t=1584456233;
+        bh=E5c8KMi7orRT/hIuviqy3NcbY3w9jv4xgCf0VZERwFE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hocDEjmP3qb4M7EyCBTTvhKPu6YGT8gMvT6JCP9Gan09JwmnGJRyxfr7Doe6ls409
-         XySObul7g7oUVy1DHnBptMtzSOURF4/jHDdF3O1MX+2LHHsfAr3Vsv8z/UIMHHv+IM
-         3y0er/hZt/gAA8I3uwgyE03w4Vqo89K1sePss1Gc=
+        b=KQmD7fjRWECxp2qPAmxwBiMuSsqKyr0JRjq8rheU7tPY0RJk8SDmvjj4tM7T3ABfN
+         IPeNRApUip0ArEMiAyrFTmL0RTr/Kc6Auc8/b0V/HGFrnw70/KCa/ECIaH3RrhhEnh
+         lT3YlTk0us3VcCrM02Cm1W0eJkqyXxjPJJzDinZM=
 Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20200317144346eucas1p145d97531baac4b9b29339a43503081e7~9HosVrJCH1084410844eucas1p1S;
-        Tue, 17 Mar 2020 14:43:46 +0000 (GMT)
-Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges3new.samsung.com (EUCPMTA) with SMTP id C1.E9.60698.222E07E5; Tue, 17
-        Mar 2020 14:43:46 +0000 (GMT)
-Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20200317144346eucas1p2d1e330410bd3482ce01c98db40d5612b~9Hor-dv5b0133301333eucas1p2j;
-        Tue, 17 Mar 2020 14:43:46 +0000 (GMT)
+        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+        20200317144353eucas1p2f2d26d1a9eee4854a76c59af8def9880~9HoyWHSzf3190931909eucas1p2e;
+        Tue, 17 Mar 2020 14:43:53 +0000 (GMT)
+Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
+        eusmges3new.samsung.com (EUCPMTA) with SMTP id 47.E9.60698.822E07E5; Tue, 17
+        Mar 2020 14:43:52 +0000 (GMT)
+Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
+        20200317144352eucas1p1ddb279cb52e2ae6f5189878912581162~9Hox23XQ61082710827eucas1p1q;
+        Tue, 17 Mar 2020 14:43:52 +0000 (GMT)
 Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
-        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200317144346eusmtrp2061635c062071393e56b89b90faa642f~9Hor_lbb-0147801478eusmtrp26;
-        Tue, 17 Mar 2020 14:43:46 +0000 (GMT)
-X-AuditID: cbfec7f5-a29ff7000001ed1a-e5-5e70e22284d9
+        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20200317144352eusmtrp10dfe74b50a626cb32e1b3e33f741d67e~9Hox2SUe20867908679eusmtrp1x;
+        Tue, 17 Mar 2020 14:43:52 +0000 (GMT)
+X-AuditID: cbfec7f5-a29ff7000001ed1a-f9-5e70e2288984
 Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id 7C.D4.08375.222E07E5; Tue, 17
-        Mar 2020 14:43:46 +0000 (GMT)
+        eusmgms1.samsung.com (EUCPMTA) with SMTP id 44.E4.08375.822E07E5; Tue, 17
+        Mar 2020 14:43:52 +0000 (GMT)
 Received: from AMDC3058.digital.local (unknown [106.120.51.71]) by
         eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200317144345eusmtip182568f50a1031c454f258f8cb3709275~9HoratHaJ0970009700eusmtip1V;
-        Tue, 17 Mar 2020 14:43:45 +0000 (GMT)
+        20200317144352eusmtip1719b4eada508eb31ad4135f34a261f7f~9HoxXLr2M0973009730eusmtip1Z;
+        Tue, 17 Mar 2020 14:43:51 +0000 (GMT)
 From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Michael Schmitz <schmitzmic@gmail.com>,
@@ -62,170 +62,806 @@ Cc:     Michael Schmitz <schmitzmic@gmail.com>,
         Christoph Hellwig <hch@lst.de>, linux-ide@vger.kernel.org,
         linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
         b.zolnierkie@samsung.com
-Subject: [PATCH v4 10/27] ata: remove EXPORT_SYMBOL_GPL()s not used by
- modules
-Date:   Tue, 17 Mar 2020 15:43:16 +0100
-Message-Id: <20200317144333.2904-11-b.zolnierkie@samsung.com>
+Subject: [PATCH v4 23/27] ata: start separating SATA specific code from
+ libata-scsi.c
+Date:   Tue, 17 Mar 2020 15:43:29 +0100
+Message-Id: <20200317144333.2904-24-b.zolnierkie@samsung.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200317144333.2904-1-b.zolnierkie@samsung.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrLKsWRmVeSWpSXmKPExsWy7djP87pKjwriDLq2qlisvtvPZrFxxnpW
-        i2e39jJZrFx9lMni2I5HTBaXd81hs1j+ZC2zxdzW6ewOHB47Z91l97h8ttTj0OEORo+Trd9Y
-        PHbfbGDz6NuyitHj8ya5APYoLpuU1JzMstQifbsErowTlz8wF/TKVmw8so6xgfGqeBcjJ4eE
-        gInE1t/r2LoYuTiEBFYwSpydM5kRwvnCKPF44Q1mCOczo8SnC+/ZYFoOtM+CqlrOKHGiawYT
-        XEvD3d9MIFVsAlYSE9tXMYLYIgIKEj2/V4ItYRZ4zyixYtJeFpCEsECAxL1D15lBbBYBVYnt
-        J3tYQWxeAVuJo/Mb2CHWyUts/fYJLM4JFL92+B8bRI2gxMmZT8DmMAPVNG+dzQxRv4pdYl2H
-        AoTtInH76kOouLDEq+NboGbKSPzfOR/sagmBdYwSfzteMEM42xkllk/+B/WotcSdc7+AbA6g
-        DZoS63fpg5gSAo4SK6e4QJh8EjfeCkKcwCcxadt0Zogwr0RHmxDEDDWJDcs2sMFs7dq5Euoa
-        D4k5554zTmBUnIXkmVlInpmFsHYBI/MqRvHU0uLc9NRi47zUcr3ixNzi0rx0veT83E2MwER0
-        +t/xrzsY9/1JOsQowMGoxMObsKkgTog1say4MvcQowQHs5II7+LC/Dgh3pTEyqrUovz4otKc
-        1OJDjNIcLErivMaLXsYKCaQnlqRmp6YWpBbBZJk4OKUaGHvuGRry+XdIvG3UObzinCdz0Wk9
-        Hel5t5pvv+tmOrax8U5HxvvVs28GL47okTCZ1HZl+9PCGZE+crUXVV87T3y/6fE/Fj5hX3eD
-        o7kZ7EfeJy26/4WRmXHJp8y9h0QMHP9f29zFPe3d+0KentAX3/b9FtQxvJK389f0Oq+Xi7fw
-        b5uTK9xtk6TEUpyRaKjFXFScCABfZIY4QAMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprFIsWRmVeSWpSXmKPExsVy+t/xu7pKjwriDHZdY7dYfbefzWLjjPWs
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrIKsWRmVeSWpSXmKPExsWy7djPc7oajwriDO4tsbJYfbefzWLjjPWs
+        Fs9u7WWyWLn6KJPFsR2PmCwu75rDZrH8yVpmi7mt09kdODx2zrrL7nH5bKnHocMdjB4nW7+x
+        eOy+2cDm0bdlFaPH501yAexRXDYpqTmZZalF+nYJXBmNMw8zFvzcwlix9s8VlgbG11MZuxg5
+        OSQETCSaJu5n7WLk4hASWMEo0XZtBRuE84VR4s2q2YwQzmdGibnXVjHBtDz9+Z8dIrGcUWLl
+        2j4muJb7Z6awgFSxCVhJTGxfBbZEREBBouf3SrC5zALvGSVWTNoLViQsEC5xeusiNhCbRUBV
+        Ys+0jawgNq+ArURb7y+oC+Ultn77BBbnBIpfO/yPDaJGUOLkzCdgc5iBapq3zmYGWSAhsIpd
+        orV/FStEs4tE38G7bBC2sMSr41vYIWwZidOTe1ggGtYxSvzteAHVvZ1RYvnkf1Ad1hJ3zv0C
+        sjmAVmhKrN+lDxF2lLi57TMLSFhCgE/ixltBiCP4JCZtm84MEeaV6GgTgqhWk9iwbAMbzNqu
+        nSuZIWwPidMPd7NPYFScheSdWUjemYWwdwEj8ypG8dTS4tz01GLjvNRyveLE3OLSvHS95Pzc
+        TYzAhHT63/GvOxj3/Uk6xCjAwajEw5uwqSBOiDWxrLgy9xCjBAezkgjv4sL8OCHelMTKqtSi
+        /Pii0pzU4kOM0hwsSuK8xotexgoJpCeWpGanphakFsFkmTg4pRoYq1yjuNzKv3qyxLM+Err2
+        v2V/lMi5Z9XTvKbN0BGWuivyTPW/n9qlSbcu/23bf986ZuPr+WyP/79tELwnf6ppflxS7iHt
+        xFbxue9XPu7T7o2OD7/YbvE7aW3c4U0bS8KPcnY+Fq0RucZQOjlqY98UM07plDnhrLdKau3l
+        ZvwPvBNhfVn7X4ObEktxRqKhFnNRcSIAKzRe6UQDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprDIsWRmVeSWpSXmKPExsVy+t/xu7oajwriDE49lbZYfbefzWLjjPWs
         Fs9u7WWyWLn6KJPFsR2PmCwu75rDZrH8yVpmi7mt09kdODx2zrrL7nH5bKnHocMdjB4nW7+x
         eOy+2cDm0bdlFaPH501yAexRejZF+aUlqQoZ+cUltkrRhhZGeoaWFnpGJpZ6hsbmsVZGpkr6
-        djYpqTmZZalF+nYJehknLn9gLuiVrdh4ZB1jA+NV8S5GTg4JAROJA+2zGEFsIYGljBLrbid0
-        MXIAxWUkjq8vgygRlvhzrYuti5ELqOQTo8S8Wc9YQBJsAlYSE9tXgfWKCChI9PxeCVbELPCV
-        UWLppG5mkISwgJ/EhC/nmUBsFgFVie0ne1hBbF4BW4mj8xvYITbIS2z99gkszgkUv3b4HxvE
-        QTYSL978Z4KoF5Q4OfMJ2GJmoPrmrbOZJzAKzEKSmoUktYCRaRWjSGppcW56brGhXnFibnFp
-        Xrpecn7uJkZgvGw79nPzDsZLG4MPMQpwMCrx8HJsKIgTYk0sK67MPcQowcGsJMK7uDA/Tog3
-        JbGyKrUoP76oNCe1+BCjKdATE5mlRJPzgbGcVxJvaGpobmFpaG5sbmxmoSTO2yFwMEZIID2x
-        JDU7NbUgtQimj4mDU6qBUettTGnxAa9vRi+3ONyunCX8Pktfx89GbKHgHu1vkoKmcyo+TN+1
-        2fNV5LSX+/0ef/gVzqcUf/zBoqoVmsfnXSp4zx5m8/lp9N6Sjss2TCtdviYsfuZ76MTbx73C
-        z49e9jqhyNE5b8Wy2ecXcG9lnJx3wkxu29yLskbnvXv1w6L3fKiy5izS26vEUpyRaKjFXFSc
-        CADlk5CPrQIAAA==
-X-CMS-MailID: 20200317144346eucas1p2d1e330410bd3482ce01c98db40d5612b
+        djYpqTmZZalF+nYJehmNMw8zFvzcwlix9s8VlgbG11MZuxg5OSQETCSe/vzP3sXIxSEksJRR
+        YuGUg8xdjBxACRmJ4+vLIGqEJf5c62IDsYUEPjFKHGi1AbHZBKwkJravApsjIqAg0fN7JRvI
+        HGaBr4wSSyd1M4MkhAVCJX78eccCYrMIqErsmbaRFcTmFbCVaOv9BXWEvMTWb5/A4pxA8WuH
+        /0Ets5F48eY/E0S9oMTJmU/A5jAD1Tdvnc08gVFgFpLULCSpBYxMqxhFUkuLc9Nziw31ihNz
+        i0vz0vWS83M3MQJjZtuxn5t3MF7aGHyIUYCDUYmHl2NDQZwQa2JZcWXuIUYJDmYlEd7Fhflx
+        QrwpiZVVqUX58UWlOanFhxhNgZ6YyCwlmpwPjOe8knhDU0NzC0tDc2NzYzMLJXHeDoGDMUIC
+        6YklqdmpqQWpRTB9TBycUg2M/sn1nB9myPBv3xzs1PygIfi+l5+vepB2b7DvW6079mJtq9vm
+        GKd4OLmqhR7nLU78e/zIi+vvJ3nw3nzxsfT4lFqdWjZtq/ePNezfPXlfzPN9v4yq1eO7+vyW
+        Z920Dh/+6+y+ml0mY/62P6480/mE8kSLXD0f/bep339c4MfGjJ8NNhzr39UosRRnJBpqMRcV
+        JwIAU9s80K8CAAA=
+X-CMS-MailID: 20200317144352eucas1p1ddb279cb52e2ae6f5189878912581162
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200317144346eucas1p2d1e330410bd3482ce01c98db40d5612b
+X-RootMTR: 20200317144352eucas1p1ddb279cb52e2ae6f5189878912581162
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20200317144346eucas1p2d1e330410bd3482ce01c98db40d5612b
+X-CMS-RootMailID: 20200317144352eucas1p1ddb279cb52e2ae6f5189878912581162
 References: <20200317144333.2904-1-b.zolnierkie@samsung.com>
-        <CGME20200317144346eucas1p2d1e330410bd3482ce01c98db40d5612b@eucas1p2.samsung.com>
+        <CGME20200317144352eucas1p1ddb279cb52e2ae6f5189878912581162@eucas1p1.samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Remove EXPORT_SYMBOL_GPL()s for functions used only by
-the core libata code.
+Start separating SATA specific code from libata-scsi.c:
+
+* un-static ata_scsi_find_dev()
+
+* move following code to libata-sata.c:
+  - SATA only sysfs device attributes handling
+  - __ata_change_queue_depth()
+  - ata_scsi_change_queue_depth()
+
+* cover with CONFIG_SATA_HOST ifdef SATA only sysfs device
+  attributes handling code and ATA_SHT_NCQ() macro in
+  <linux/libata.h>
 
 Code size savings on m68k arch using (modified) atari_defconfig:
 
    text    data     bss     dec     hex filename
 before:
-  39838     573      40   40451    9e03 drivers/ata/libata-core.o
-  21071     105     576   21752    54f8 drivers/ata/libata-scsi.o
-  17519      18       0   17537    4481 drivers/ata/libata-eh.o
+  20702     105     576   21383    5387 drivers/ata/libata-scsi.o
 after:
-  39688     573      40   40301    9d6d drivers/ata/libata-core.o
-  21040     105     576   21721    54d9 drivers/ata/libata-scsi.o
-  17405      18       0   17423    440f drivers/ata/libata-eh.o
+  19137      23     576   19736    4d18 drivers/ata/libata-scsi.o
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/ata/libata-core.c | 5 -----
- drivers/ata/libata-eh.c   | 4 ----
- drivers/ata/libata-scsi.c | 1 -
- 3 files changed, 10 deletions(-)
+ drivers/ata/libata-sata.c | 298 +++++++++++++++++++++++++++++++++++++
+ drivers/ata/libata-scsi.c | 301 +-------------------------------------
+ drivers/ata/libata.h      |   2 +
+ include/linux/libata.h    |   9 +-
+ 4 files changed, 308 insertions(+), 302 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index dae625fc5e8a..e4df091fdcde 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -80,7 +80,6 @@ const struct ata_port_operations ata_base_port_ops = {
- 	.sched_eh		= ata_std_sched_eh,
- 	.end_eh			= ata_std_end_eh,
- };
--EXPORT_SYMBOL_GPL(ata_base_port_ops);
+diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+index 0cf30782452a..c9760b52fb57 100644
+--- a/drivers/ata/libata-sata.c
++++ b/drivers/ata/libata-sata.c
+@@ -8,6 +8,7 @@
  
- const struct ata_port_operations sata_port_ops = {
- 	.inherits		= &ata_base_port_ops,
-@@ -899,7 +898,6 @@ void ata_unpack_xfermask(unsigned long xfer_mask, unsigned long *pio_mask,
- 	if (udma_mask)
- 		*udma_mask = (xfer_mask & ATA_MASK_UDMA) >> ATA_SHIFT_UDMA;
+ #include <linux/kernel.h>
+ #include <linux/module.h>
++#include <scsi/scsi_device.h>
+ #include <linux/libata.h>
+ 
+ #include "libata.h"
+@@ -761,3 +762,300 @@ bool sata_lpm_ignore_phy_events(struct ata_link *link)
+ 	return false;
  }
--EXPORT_SYMBOL_GPL(ata_unpack_xfermask);
- 
- static const struct ata_xfer_ent {
- 	int shift, bits;
-@@ -3437,7 +3435,6 @@ u8 ata_timing_cycle2mode(unsigned int xfer_shift, int cycle)
- 
- 	return last_mode;
- }
--EXPORT_SYMBOL_GPL(ata_timing_cycle2mode);
- 
- /**
-  *	ata_down_xfermask_limit - adjust dev xfer masks downward
-@@ -5058,7 +5055,6 @@ void ata_sg_init(struct ata_queued_cmd *qc, struct scatterlist *sg,
- 	qc->n_elem = n_elem;
- 	qc->cursg = qc->sg;
- }
--EXPORT_SYMBOL_GPL(ata_sg_init);
- 
- #ifdef CONFIG_HAS_DMA
- 
-@@ -6158,7 +6154,6 @@ void ata_host_get(struct ata_host *host)
- {
- 	kref_get(&host->kref);
- }
--EXPORT_SYMBOL_GPL(ata_host_get);
- 
- void ata_host_put(struct ata_host *host)
- {
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 827d437d8cb4..3b8d276b5107 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1212,7 +1212,6 @@ void ata_eh_thaw_port(struct ata_port *ap)
- 
- 	trace_ata_port_thaw(ap);
- }
--EXPORT_SYMBOL_GPL(ata_eh_thaw_port);
- 
- static void ata_eh_scsidone(struct scsi_cmnd *scmd)
- {
-@@ -1247,7 +1246,6 @@ void ata_eh_qc_complete(struct ata_queued_cmd *qc)
- 	scmd->retries = scmd->allowed;
- 	__ata_eh_qc_complete(qc);
- }
--EXPORT_SYMBOL_GPL(ata_eh_qc_complete);
- 
- /**
-  *	ata_eh_qc_retry - Tell midlayer to retry an ATA command after EH
-@@ -1267,7 +1265,6 @@ void ata_eh_qc_retry(struct ata_queued_cmd *qc)
- 		scmd->allowed++;
- 	__ata_eh_qc_complete(qc);
- }
--EXPORT_SYMBOL_GPL(ata_eh_qc_retry);
- 
- /**
-  *	ata_dev_disable - disable ATA device
-@@ -4044,7 +4041,6 @@ void ata_do_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
- 
- 	ata_eh_finish(ap);
- }
--EXPORT_SYMBOL_GPL(ata_do_eh);
- 
- /**
-  *	ata_std_error_handler - standard error handler
+ EXPORT_SYMBOL_GPL(sata_lpm_ignore_phy_events);
++
++static const char *ata_lpm_policy_names[] = {
++	[ATA_LPM_UNKNOWN]		= "max_performance",
++	[ATA_LPM_MAX_POWER]		= "max_performance",
++	[ATA_LPM_MED_POWER]		= "medium_power",
++	[ATA_LPM_MED_POWER_WITH_DIPM]	= "med_power_with_dipm",
++	[ATA_LPM_MIN_POWER_WITH_PARTIAL] = "min_power_with_partial",
++	[ATA_LPM_MIN_POWER]		= "min_power",
++};
++
++static ssize_t ata_scsi_lpm_store(struct device *device,
++				  struct device_attribute *attr,
++				  const char *buf, size_t count)
++{
++	struct Scsi_Host *shost = class_to_shost(device);
++	struct ata_port *ap = ata_shost_to_port(shost);
++	struct ata_link *link;
++	struct ata_device *dev;
++	enum ata_lpm_policy policy;
++	unsigned long flags;
++
++	/* UNKNOWN is internal state, iterate from MAX_POWER */
++	for (policy = ATA_LPM_MAX_POWER;
++	     policy < ARRAY_SIZE(ata_lpm_policy_names); policy++) {
++		const char *name = ata_lpm_policy_names[policy];
++
++		if (strncmp(name, buf, strlen(name)) == 0)
++			break;
++	}
++	if (policy == ARRAY_SIZE(ata_lpm_policy_names))
++		return -EINVAL;
++
++	spin_lock_irqsave(ap->lock, flags);
++
++	ata_for_each_link(link, ap, EDGE) {
++		ata_for_each_dev(dev, &ap->link, ENABLED) {
++			if (dev->horkage & ATA_HORKAGE_NOLPM) {
++				count = -EOPNOTSUPP;
++				goto out_unlock;
++			}
++		}
++	}
++
++	ap->target_lpm_policy = policy;
++	ata_port_schedule_eh(ap);
++out_unlock:
++	spin_unlock_irqrestore(ap->lock, flags);
++	return count;
++}
++
++static ssize_t ata_scsi_lpm_show(struct device *dev,
++				 struct device_attribute *attr, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct ata_port *ap = ata_shost_to_port(shost);
++
++	if (ap->target_lpm_policy >= ARRAY_SIZE(ata_lpm_policy_names))
++		return -EINVAL;
++
++	return snprintf(buf, PAGE_SIZE, "%s\n",
++			ata_lpm_policy_names[ap->target_lpm_policy]);
++}
++DEVICE_ATTR(link_power_management_policy, S_IRUGO | S_IWUSR,
++	    ata_scsi_lpm_show, ata_scsi_lpm_store);
++EXPORT_SYMBOL_GPL(dev_attr_link_power_management_policy);
++
++static ssize_t ata_ncq_prio_enable_show(struct device *device,
++					struct device_attribute *attr,
++					char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(device);
++	struct ata_port *ap;
++	struct ata_device *dev;
++	bool ncq_prio_enable;
++	int rc = 0;
++
++	ap = ata_shost_to_port(sdev->host);
++
++	spin_lock_irq(ap->lock);
++	dev = ata_scsi_find_dev(ap, sdev);
++	if (!dev) {
++		rc = -ENODEV;
++		goto unlock;
++	}
++
++	ncq_prio_enable = dev->flags & ATA_DFLAG_NCQ_PRIO_ENABLE;
++
++unlock:
++	spin_unlock_irq(ap->lock);
++
++	return rc ? rc : snprintf(buf, 20, "%u\n", ncq_prio_enable);
++}
++
++static ssize_t ata_ncq_prio_enable_store(struct device *device,
++					 struct device_attribute *attr,
++					 const char *buf, size_t len)
++{
++	struct scsi_device *sdev = to_scsi_device(device);
++	struct ata_port *ap;
++	struct ata_device *dev;
++	long int input;
++	int rc;
++
++	rc = kstrtol(buf, 10, &input);
++	if (rc)
++		return rc;
++	if ((input < 0) || (input > 1))
++		return -EINVAL;
++
++	ap = ata_shost_to_port(sdev->host);
++	dev = ata_scsi_find_dev(ap, sdev);
++	if (unlikely(!dev))
++		return  -ENODEV;
++
++	spin_lock_irq(ap->lock);
++	if (input)
++		dev->flags |= ATA_DFLAG_NCQ_PRIO_ENABLE;
++	else
++		dev->flags &= ~ATA_DFLAG_NCQ_PRIO_ENABLE;
++
++	dev->link->eh_info.action |= ATA_EH_REVALIDATE;
++	dev->link->eh_info.flags |= ATA_EHI_QUIET;
++	ata_port_schedule_eh(ap);
++	spin_unlock_irq(ap->lock);
++
++	ata_port_wait_eh(ap);
++
++	if (input) {
++		spin_lock_irq(ap->lock);
++		if (!(dev->flags & ATA_DFLAG_NCQ_PRIO)) {
++			dev->flags &= ~ATA_DFLAG_NCQ_PRIO_ENABLE;
++			rc = -EIO;
++		}
++		spin_unlock_irq(ap->lock);
++	}
++
++	return rc ? rc : len;
++}
++
++DEVICE_ATTR(ncq_prio_enable, S_IRUGO | S_IWUSR,
++	    ata_ncq_prio_enable_show, ata_ncq_prio_enable_store);
++EXPORT_SYMBOL_GPL(dev_attr_ncq_prio_enable);
++
++struct device_attribute *ata_ncq_sdev_attrs[] = {
++	&dev_attr_unload_heads,
++	&dev_attr_ncq_prio_enable,
++	NULL
++};
++EXPORT_SYMBOL_GPL(ata_ncq_sdev_attrs);
++
++static ssize_t
++ata_scsi_em_message_store(struct device *dev, struct device_attribute *attr,
++			  const char *buf, size_t count)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct ata_port *ap = ata_shost_to_port(shost);
++	if (ap->ops->em_store && (ap->flags & ATA_FLAG_EM))
++		return ap->ops->em_store(ap, buf, count);
++	return -EINVAL;
++}
++
++static ssize_t
++ata_scsi_em_message_show(struct device *dev, struct device_attribute *attr,
++			 char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct ata_port *ap = ata_shost_to_port(shost);
++
++	if (ap->ops->em_show && (ap->flags & ATA_FLAG_EM))
++		return ap->ops->em_show(ap, buf);
++	return -EINVAL;
++}
++DEVICE_ATTR(em_message, S_IRUGO | S_IWUSR,
++		ata_scsi_em_message_show, ata_scsi_em_message_store);
++EXPORT_SYMBOL_GPL(dev_attr_em_message);
++
++static ssize_t
++ata_scsi_em_message_type_show(struct device *dev, struct device_attribute *attr,
++			      char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct ata_port *ap = ata_shost_to_port(shost);
++
++	return snprintf(buf, 23, "%d\n", ap->em_message_type);
++}
++DEVICE_ATTR(em_message_type, S_IRUGO,
++		  ata_scsi_em_message_type_show, NULL);
++EXPORT_SYMBOL_GPL(dev_attr_em_message_type);
++
++static ssize_t
++ata_scsi_activity_show(struct device *dev, struct device_attribute *attr,
++		char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	struct ata_port *ap = ata_shost_to_port(sdev->host);
++	struct ata_device *atadev = ata_scsi_find_dev(ap, sdev);
++
++	if (atadev && ap->ops->sw_activity_show &&
++	    (ap->flags & ATA_FLAG_SW_ACTIVITY))
++		return ap->ops->sw_activity_show(atadev, buf);
++	return -EINVAL;
++}
++
++static ssize_t
++ata_scsi_activity_store(struct device *dev, struct device_attribute *attr,
++	const char *buf, size_t count)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	struct ata_port *ap = ata_shost_to_port(sdev->host);
++	struct ata_device *atadev = ata_scsi_find_dev(ap, sdev);
++	enum sw_activity val;
++	int rc;
++
++	if (atadev && ap->ops->sw_activity_store &&
++	    (ap->flags & ATA_FLAG_SW_ACTIVITY)) {
++		val = simple_strtoul(buf, NULL, 0);
++		switch (val) {
++		case OFF: case BLINK_ON: case BLINK_OFF:
++			rc = ap->ops->sw_activity_store(atadev, val);
++			if (!rc)
++				return count;
++			else
++				return rc;
++		}
++	}
++	return -EINVAL;
++}
++DEVICE_ATTR(sw_activity, S_IWUSR | S_IRUGO, ata_scsi_activity_show,
++			ata_scsi_activity_store);
++EXPORT_SYMBOL_GPL(dev_attr_sw_activity);
++
++/**
++ *	__ata_change_queue_depth - helper for ata_scsi_change_queue_depth
++ *	@ap: ATA port to which the device change the queue depth
++ *	@sdev: SCSI device to configure queue depth for
++ *	@queue_depth: new queue depth
++ *
++ *	libsas and libata have different approaches for associating a sdev to
++ *	its ata_port.
++ *
++ */
++int __ata_change_queue_depth(struct ata_port *ap, struct scsi_device *sdev,
++			     int queue_depth)
++{
++	struct ata_device *dev;
++	unsigned long flags;
++
++	if (queue_depth < 1 || queue_depth == sdev->queue_depth)
++		return sdev->queue_depth;
++
++	dev = ata_scsi_find_dev(ap, sdev);
++	if (!dev || !ata_dev_enabled(dev))
++		return sdev->queue_depth;
++
++	/* NCQ enabled? */
++	spin_lock_irqsave(ap->lock, flags);
++	dev->flags &= ~ATA_DFLAG_NCQ_OFF;
++	if (queue_depth == 1 || !ata_ncq_enabled(dev)) {
++		dev->flags |= ATA_DFLAG_NCQ_OFF;
++		queue_depth = 1;
++	}
++	spin_unlock_irqrestore(ap->lock, flags);
++
++	/* limit and apply queue depth */
++	queue_depth = min(queue_depth, sdev->host->can_queue);
++	queue_depth = min(queue_depth, ata_id_queue_depth(dev->id));
++	queue_depth = min(queue_depth, ATA_MAX_QUEUE);
++
++	if (sdev->queue_depth == queue_depth)
++		return -EINVAL;
++
++	return scsi_change_queue_depth(sdev, queue_depth);
++}
++EXPORT_SYMBOL_GPL(__ata_change_queue_depth);
++
++/**
++ *	ata_scsi_change_queue_depth - SCSI callback for queue depth config
++ *	@sdev: SCSI device to configure queue depth for
++ *	@queue_depth: new queue depth
++ *
++ *	This is libata standard hostt->change_queue_depth callback.
++ *	SCSI will call into this callback when user tries to set queue
++ *	depth via sysfs.
++ *
++ *	LOCKING:
++ *	SCSI layer (we don't care)
++ *
++ *	RETURNS:
++ *	Newly configured queue depth.
++ */
++int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
++{
++	struct ata_port *ap = ata_shost_to_port(sdev->host);
++
++	return __ata_change_queue_depth(ap, sdev, queue_depth);
++}
++EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2b0262aa3bcc..2bf1376bc027 100644
+index 2bf1376bc027..1000f7b0098b 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -4522,7 +4522,6 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd)
+@@ -46,8 +46,6 @@ typedef unsigned int (*ata_xlat_func_t)(struct ata_queued_cmd *qc);
  
- 	cmd->scsi_done(cmd);
- }
--EXPORT_SYMBOL_GPL(ata_scsi_simulate);
+ static struct ata_device *__ata_scsi_find_dev(struct ata_port *ap,
+ 					const struct scsi_device *scsidev);
+-static struct ata_device *ata_scsi_find_dev(struct ata_port *ap,
+-					    const struct scsi_device *scsidev);
  
- int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
+ #define RW_RECOVERY_MPAGE 0x1
+ #define RW_RECOVERY_MPAGE_LEN 12
+@@ -87,71 +85,6 @@ static const u8 def_control_mpage[CONTROL_MPAGE_LEN] = {
+ 	0, 30	/* extended self test time, see 05-359r1 */
+ };
+ 
+-static const char *ata_lpm_policy_names[] = {
+-	[ATA_LPM_UNKNOWN]		= "max_performance",
+-	[ATA_LPM_MAX_POWER]		= "max_performance",
+-	[ATA_LPM_MED_POWER]		= "medium_power",
+-	[ATA_LPM_MED_POWER_WITH_DIPM]	= "med_power_with_dipm",
+-	[ATA_LPM_MIN_POWER_WITH_PARTIAL] = "min_power_with_partial",
+-	[ATA_LPM_MIN_POWER]		= "min_power",
+-};
+-
+-static ssize_t ata_scsi_lpm_store(struct device *device,
+-				  struct device_attribute *attr,
+-				  const char *buf, size_t count)
+-{
+-	struct Scsi_Host *shost = class_to_shost(device);
+-	struct ata_port *ap = ata_shost_to_port(shost);
+-	struct ata_link *link;
+-	struct ata_device *dev;
+-	enum ata_lpm_policy policy;
+-	unsigned long flags;
+-
+-	/* UNKNOWN is internal state, iterate from MAX_POWER */
+-	for (policy = ATA_LPM_MAX_POWER;
+-	     policy < ARRAY_SIZE(ata_lpm_policy_names); policy++) {
+-		const char *name = ata_lpm_policy_names[policy];
+-
+-		if (strncmp(name, buf, strlen(name)) == 0)
+-			break;
+-	}
+-	if (policy == ARRAY_SIZE(ata_lpm_policy_names))
+-		return -EINVAL;
+-
+-	spin_lock_irqsave(ap->lock, flags);
+-
+-	ata_for_each_link(link, ap, EDGE) {
+-		ata_for_each_dev(dev, &ap->link, ENABLED) {
+-			if (dev->horkage & ATA_HORKAGE_NOLPM) {
+-				count = -EOPNOTSUPP;
+-				goto out_unlock;
+-			}
+-		}
+-	}
+-
+-	ap->target_lpm_policy = policy;
+-	ata_port_schedule_eh(ap);
+-out_unlock:
+-	spin_unlock_irqrestore(ap->lock, flags);
+-	return count;
+-}
+-
+-static ssize_t ata_scsi_lpm_show(struct device *dev,
+-				 struct device_attribute *attr, char *buf)
+-{
+-	struct Scsi_Host *shost = class_to_shost(dev);
+-	struct ata_port *ap = ata_shost_to_port(shost);
+-
+-	if (ap->target_lpm_policy >= ARRAY_SIZE(ata_lpm_policy_names))
+-		return -EINVAL;
+-
+-	return snprintf(buf, PAGE_SIZE, "%s\n",
+-			ata_lpm_policy_names[ap->target_lpm_policy]);
+-}
+-DEVICE_ATTR(link_power_management_policy, S_IRUGO | S_IWUSR,
+-	    ata_scsi_lpm_show, ata_scsi_lpm_store);
+-EXPORT_SYMBOL_GPL(dev_attr_link_power_management_policy);
+-
+ static ssize_t ata_scsi_park_show(struct device *device,
+ 				  struct device_attribute *attr, char *buf)
  {
+@@ -255,83 +188,6 @@ DEVICE_ATTR(unload_heads, S_IRUGO | S_IWUSR,
+ 	    ata_scsi_park_show, ata_scsi_park_store);
+ EXPORT_SYMBOL_GPL(dev_attr_unload_heads);
+ 
+-static ssize_t ata_ncq_prio_enable_show(struct device *device,
+-					struct device_attribute *attr,
+-					char *buf)
+-{
+-	struct scsi_device *sdev = to_scsi_device(device);
+-	struct ata_port *ap;
+-	struct ata_device *dev;
+-	bool ncq_prio_enable;
+-	int rc = 0;
+-
+-	ap = ata_shost_to_port(sdev->host);
+-
+-	spin_lock_irq(ap->lock);
+-	dev = ata_scsi_find_dev(ap, sdev);
+-	if (!dev) {
+-		rc = -ENODEV;
+-		goto unlock;
+-	}
+-
+-	ncq_prio_enable = dev->flags & ATA_DFLAG_NCQ_PRIO_ENABLE;
+-
+-unlock:
+-	spin_unlock_irq(ap->lock);
+-
+-	return rc ? rc : snprintf(buf, 20, "%u\n", ncq_prio_enable);
+-}
+-
+-static ssize_t ata_ncq_prio_enable_store(struct device *device,
+-					 struct device_attribute *attr,
+-					 const char *buf, size_t len)
+-{
+-	struct scsi_device *sdev = to_scsi_device(device);
+-	struct ata_port *ap;
+-	struct ata_device *dev;
+-	long int input;
+-	int rc;
+-
+-	rc = kstrtol(buf, 10, &input);
+-	if (rc)
+-		return rc;
+-	if ((input < 0) || (input > 1))
+-		return -EINVAL;
+-
+-	ap = ata_shost_to_port(sdev->host);
+-	dev = ata_scsi_find_dev(ap, sdev);
+-	if (unlikely(!dev))
+-		return  -ENODEV;
+-
+-	spin_lock_irq(ap->lock);
+-	if (input)
+-		dev->flags |= ATA_DFLAG_NCQ_PRIO_ENABLE;
+-	else
+-		dev->flags &= ~ATA_DFLAG_NCQ_PRIO_ENABLE;
+-
+-	dev->link->eh_info.action |= ATA_EH_REVALIDATE;
+-	dev->link->eh_info.flags |= ATA_EHI_QUIET;
+-	ata_port_schedule_eh(ap);
+-	spin_unlock_irq(ap->lock);
+-
+-	ata_port_wait_eh(ap);
+-
+-	if (input) {
+-		spin_lock_irq(ap->lock);
+-		if (!(dev->flags & ATA_DFLAG_NCQ_PRIO)) {
+-			dev->flags &= ~ATA_DFLAG_NCQ_PRIO_ENABLE;
+-			rc = -EIO;
+-		}
+-		spin_unlock_irq(ap->lock);
+-	}
+-
+-	return rc ? rc : len;
+-}
+-
+-DEVICE_ATTR(ncq_prio_enable, S_IRUGO | S_IWUSR,
+-	    ata_ncq_prio_enable_show, ata_ncq_prio_enable_store);
+-EXPORT_SYMBOL_GPL(dev_attr_ncq_prio_enable);
+-
+ void ata_scsi_set_sense(struct ata_device *dev, struct scsi_cmnd *cmd,
+ 			u8 sk, u8 asc, u8 ascq)
+ {
+@@ -380,100 +236,12 @@ static void ata_scsi_set_invalid_parameter(struct ata_device *dev,
+ 				     field, 0xff, 0);
+ }
+ 
+-static ssize_t
+-ata_scsi_em_message_store(struct device *dev, struct device_attribute *attr,
+-			  const char *buf, size_t count)
+-{
+-	struct Scsi_Host *shost = class_to_shost(dev);
+-	struct ata_port *ap = ata_shost_to_port(shost);
+-	if (ap->ops->em_store && (ap->flags & ATA_FLAG_EM))
+-		return ap->ops->em_store(ap, buf, count);
+-	return -EINVAL;
+-}
+-
+-static ssize_t
+-ata_scsi_em_message_show(struct device *dev, struct device_attribute *attr,
+-			 char *buf)
+-{
+-	struct Scsi_Host *shost = class_to_shost(dev);
+-	struct ata_port *ap = ata_shost_to_port(shost);
+-
+-	if (ap->ops->em_show && (ap->flags & ATA_FLAG_EM))
+-		return ap->ops->em_show(ap, buf);
+-	return -EINVAL;
+-}
+-DEVICE_ATTR(em_message, S_IRUGO | S_IWUSR,
+-		ata_scsi_em_message_show, ata_scsi_em_message_store);
+-EXPORT_SYMBOL_GPL(dev_attr_em_message);
+-
+-static ssize_t
+-ata_scsi_em_message_type_show(struct device *dev, struct device_attribute *attr,
+-			      char *buf)
+-{
+-	struct Scsi_Host *shost = class_to_shost(dev);
+-	struct ata_port *ap = ata_shost_to_port(shost);
+-
+-	return snprintf(buf, 23, "%d\n", ap->em_message_type);
+-}
+-DEVICE_ATTR(em_message_type, S_IRUGO,
+-		  ata_scsi_em_message_type_show, NULL);
+-EXPORT_SYMBOL_GPL(dev_attr_em_message_type);
+-
+-static ssize_t
+-ata_scsi_activity_show(struct device *dev, struct device_attribute *attr,
+-		char *buf)
+-{
+-	struct scsi_device *sdev = to_scsi_device(dev);
+-	struct ata_port *ap = ata_shost_to_port(sdev->host);
+-	struct ata_device *atadev = ata_scsi_find_dev(ap, sdev);
+-
+-	if (atadev && ap->ops->sw_activity_show &&
+-	    (ap->flags & ATA_FLAG_SW_ACTIVITY))
+-		return ap->ops->sw_activity_show(atadev, buf);
+-	return -EINVAL;
+-}
+-
+-static ssize_t
+-ata_scsi_activity_store(struct device *dev, struct device_attribute *attr,
+-	const char *buf, size_t count)
+-{
+-	struct scsi_device *sdev = to_scsi_device(dev);
+-	struct ata_port *ap = ata_shost_to_port(sdev->host);
+-	struct ata_device *atadev = ata_scsi_find_dev(ap, sdev);
+-	enum sw_activity val;
+-	int rc;
+-
+-	if (atadev && ap->ops->sw_activity_store &&
+-	    (ap->flags & ATA_FLAG_SW_ACTIVITY)) {
+-		val = simple_strtoul(buf, NULL, 0);
+-		switch (val) {
+-		case OFF: case BLINK_ON: case BLINK_OFF:
+-			rc = ap->ops->sw_activity_store(atadev, val);
+-			if (!rc)
+-				return count;
+-			else
+-				return rc;
+-		}
+-	}
+-	return -EINVAL;
+-}
+-DEVICE_ATTR(sw_activity, S_IWUSR | S_IRUGO, ata_scsi_activity_show,
+-			ata_scsi_activity_store);
+-EXPORT_SYMBOL_GPL(dev_attr_sw_activity);
+-
+ struct device_attribute *ata_common_sdev_attrs[] = {
+ 	&dev_attr_unload_heads,
+ 	NULL
+ };
+ EXPORT_SYMBOL_GPL(ata_common_sdev_attrs);
+ 
+-struct device_attribute *ata_ncq_sdev_attrs[] = {
+-	&dev_attr_unload_heads,
+-	&dev_attr_ncq_prio_enable,
+-	NULL
+-};
+-EXPORT_SYMBOL_GPL(ata_ncq_sdev_attrs);
+-
+ /**
+  *	ata_std_bios_param - generic bios head/sector/cylinder calculator used by sd.
+  *	@sdev: SCSI device for which BIOS geometry is to be determined
+@@ -1391,73 +1159,6 @@ void ata_scsi_slave_destroy(struct scsi_device *sdev)
+ }
+ EXPORT_SYMBOL_GPL(ata_scsi_slave_destroy);
+ 
+-/**
+- *	__ata_change_queue_depth - helper for ata_scsi_change_queue_depth
+- *	@ap: ATA port to which the device change the queue depth
+- *	@sdev: SCSI device to configure queue depth for
+- *	@queue_depth: new queue depth
+- *
+- *	libsas and libata have different approaches for associating a sdev to
+- *	its ata_port.
+- *
+- */
+-int __ata_change_queue_depth(struct ata_port *ap, struct scsi_device *sdev,
+-			     int queue_depth)
+-{
+-	struct ata_device *dev;
+-	unsigned long flags;
+-
+-	if (queue_depth < 1 || queue_depth == sdev->queue_depth)
+-		return sdev->queue_depth;
+-
+-	dev = ata_scsi_find_dev(ap, sdev);
+-	if (!dev || !ata_dev_enabled(dev))
+-		return sdev->queue_depth;
+-
+-	/* NCQ enabled? */
+-	spin_lock_irqsave(ap->lock, flags);
+-	dev->flags &= ~ATA_DFLAG_NCQ_OFF;
+-	if (queue_depth == 1 || !ata_ncq_enabled(dev)) {
+-		dev->flags |= ATA_DFLAG_NCQ_OFF;
+-		queue_depth = 1;
+-	}
+-	spin_unlock_irqrestore(ap->lock, flags);
+-
+-	/* limit and apply queue depth */
+-	queue_depth = min(queue_depth, sdev->host->can_queue);
+-	queue_depth = min(queue_depth, ata_id_queue_depth(dev->id));
+-	queue_depth = min(queue_depth, ATA_MAX_QUEUE);
+-
+-	if (sdev->queue_depth == queue_depth)
+-		return -EINVAL;
+-
+-	return scsi_change_queue_depth(sdev, queue_depth);
+-}
+-EXPORT_SYMBOL_GPL(__ata_change_queue_depth);
+-
+-/**
+- *	ata_scsi_change_queue_depth - SCSI callback for queue depth config
+- *	@sdev: SCSI device to configure queue depth for
+- *	@queue_depth: new queue depth
+- *
+- *	This is libata standard hostt->change_queue_depth callback.
+- *	SCSI will call into this callback when user tries to set queue
+- *	depth via sysfs.
+- *
+- *	LOCKING:
+- *	SCSI layer (we don't care)
+- *
+- *	RETURNS:
+- *	Newly configured queue depth.
+- */
+-int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
+-{
+-	struct ata_port *ap = ata_shost_to_port(sdev->host);
+-
+-	return __ata_change_queue_depth(ap, sdev, queue_depth);
+-}
+-EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
+-
+ /**
+  *	ata_scsi_start_stop_xlat - Translate SCSI START STOP UNIT command
+  *	@qc: Storage for translated ATA taskfile
+@@ -3082,7 +2783,7 @@ static struct ata_device *__ata_scsi_find_dev(struct ata_port *ap,
+  *	RETURNS:
+  *	Associated ATA device, or %NULL if not found.
+  */
+-static struct ata_device *
++struct ata_device *
+ ata_scsi_find_dev(struct ata_port *ap, const struct scsi_device *scsidev)
+ {
+ 	struct ata_device *dev = __ata_scsi_find_dev(ap, scsidev);
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index cd8090ad43e5..ce3f3c039572 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -112,6 +112,8 @@ static inline void ata_acpi_bind_dev(struct ata_device *dev) {}
+ #endif
+ 
+ /* libata-scsi.c */
++extern struct ata_device *ata_scsi_find_dev(struct ata_port *ap,
++					    const struct scsi_device *scsidev);
+ extern int ata_scsi_add_hosts(struct ata_host *host,
+ 			      struct scsi_host_template *sht);
+ extern void ata_scsi_scan_host(struct ata_port *ap, int sync);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 0fa34370eefa..cc14030c139e 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -519,12 +519,14 @@ typedef int (*ata_reset_fn_t)(struct ata_link *link, unsigned int *classes,
+ 			      unsigned long deadline);
+ typedef void (*ata_postreset_fn_t)(struct ata_link *link, unsigned int *classes);
+ 
+-extern struct device_attribute dev_attr_link_power_management_policy;
+ extern struct device_attribute dev_attr_unload_heads;
++#ifdef CONFIG_SATA_HOST
++extern struct device_attribute dev_attr_link_power_management_policy;
+ extern struct device_attribute dev_attr_ncq_prio_enable;
+ extern struct device_attribute dev_attr_em_message_type;
+ extern struct device_attribute dev_attr_em_message;
+ extern struct device_attribute dev_attr_sw_activity;
++#endif
+ 
+ enum sw_activity {
+ 	OFF,
+@@ -1374,7 +1376,6 @@ extern int ata_link_nr_enabled(struct ata_link *link);
+ extern const struct ata_port_operations ata_base_port_ops;
+ extern const struct ata_port_operations sata_port_ops;
+ extern struct device_attribute *ata_common_sdev_attrs[];
+-extern struct device_attribute *ata_ncq_sdev_attrs[];
+ 
+ /*
+  * All sht initializers (BASE, PIO, BMDMA, NCQ) must be instantiated
+@@ -1402,10 +1403,14 @@ extern struct device_attribute *ata_ncq_sdev_attrs[];
+ 	__ATA_BASE_SHT(drv_name),				\
+ 	.sdev_attrs		= ata_common_sdev_attrs
+ 
++#ifdef CONFIG_SATA_HOST
++extern struct device_attribute *ata_ncq_sdev_attrs[];
++
+ #define ATA_NCQ_SHT(drv_name)					\
+ 	__ATA_BASE_SHT(drv_name),				\
+ 	.sdev_attrs		= ata_ncq_sdev_attrs,		\
+ 	.change_queue_depth	= ata_scsi_change_queue_depth
++#endif
+ 
+ /*
+  * PMP helpers
 -- 
 2.24.1
 
