@@ -1,367 +1,185 @@
-Return-Path: <SRS0=X5Sc=46=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=AjNr=5C=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F0CAC10DCE
-	for <linux-ide@archiver.kernel.org>; Fri, 13 Mar 2020 14:43:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4793C10F29
+	for <linux-ide@archiver.kernel.org>; Tue, 17 Mar 2020 08:56:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CE3AC206B7
-	for <linux-ide@archiver.kernel.org>; Fri, 13 Mar 2020 14:43:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A4CF20674
+	for <linux-ide@archiver.kernel.org>; Tue, 17 Mar 2020 08:56:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Mw3Q3i6r"
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="azb1qjUS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726595AbgCMOns (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 13 Mar 2020 10:43:48 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:46496 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726436AbgCMOns (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 13 Mar 2020 10:43:48 -0400
-Received: by mail-pf1-f194.google.com with SMTP id c19so5326752pfo.13
-        for <linux-ide@vger.kernel.org>; Fri, 13 Mar 2020 07:43:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=MNBK3UeY2dBcVvXm/HJiu7eCqbdmyZRc/QzykJs956k=;
-        b=Mw3Q3i6rBTk627NoQCfx8EnM/DA7rmaOO7N4yIrHb4/5SnV7xnQ5rbgopfDR7SqKGZ
-         Wi3Qt4f5BjTIpOTJ22VmSdKhghfPt2w9kEMUZL6lZtK+hRKRB5p5inL/mTElfor0Hv/5
-         KcZKP1sxAnHc9SsYamLJPCNxk6WUw2bZGmNxsIsa+pNE57Sdx4J0keWw8MCll4qXVaq4
-         ZdLjJrarjMo8xJtm/E8IspWEQv/2QCWySZy1vERhdmG9iP5kvQptYugzfuJ2hgEbgvZ4
-         5dSrfMVGKI43N3HmfTqIOLw6DQuzfWt/Vc02s6Jv6eWlgKtzbuzjwvUUCvYU+oWpHfop
-         xnXw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :references:mime-version:content-disposition:in-reply-to:user-agent;
-        bh=MNBK3UeY2dBcVvXm/HJiu7eCqbdmyZRc/QzykJs956k=;
-        b=V2nL/ajZPGPA5wdlmGtOb0DJWOmwoLDL1PItJPPJSASMnv1OfVpqmAsNmbOi7Z8Gkz
-         hNpH96Qbhy2pnRi6p50JXlB51p0JOFQhLGIl7JmX1fQxVyzCI2Hk0CIupTuz5qZUXPTK
-         +IMIel6JkyZqSjs6vsVH9nT/nVQ0UsIdzFhr71tzZ/JW2PqB76QAz38yJhcKjjBUUli5
-         sWgwcIKBJnqwB4kLaF8fVxGWoZDsj9VAZUjJqOd4o6SMkUtyC3I3+KfW2xKwW05p1GnI
-         E6+bpiDRYYFe7PVDBCjgR6fZqzMxHotTyieM3bGZet7up0TJH48PaZKpvWNlzvEV+lLS
-         8KTQ==
-X-Gm-Message-State: ANhLgQ31l8DwKzs5M8lpEUSTV4sid98+WPoZUv0PCSQGC5uV44dJDmZd
-        AvaZJH5E8spDs1a7UpLw34w=
-X-Google-Smtp-Source: ADFU+vuZtSbI88yuSf9Kj73nlTk/sENwD4QQl6uon4vczZmmVuvYNuYdpYgT52bVIPWCZPFD95sSvg==
-X-Received: by 2002:a62:3086:: with SMTP id w128mr14136817pfw.63.1584110626755;
-        Fri, 13 Mar 2020 07:43:46 -0700 (PDT)
-Received: from localhost ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id w128sm56403741pgb.55.2020.03.13.07.43.45
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Fri, 13 Mar 2020 07:43:46 -0700 (PDT)
-Date:   Fri, 13 Mar 2020 07:43:44 -0700
-From:   Guenter Roeck <linux@roeck-us.net>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        linux-ide@vger.kernel.org
-Subject: Re: [PATCH 35/40] sata_fsl: move DPRINTK to ata debugging
-Message-ID: <20200313144344.GA6330@roeck-us.net>
-References: <20200303093813.18523-1-hare@suse.de>
- <20200303093813.18523-36-hare@suse.de>
+        id S1725868AbgCQI4X (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 17 Mar 2020 04:56:23 -0400
+Received: from mail-eopbgr50058.outbound.protection.outlook.com ([40.107.5.58]:20355
+        "EHLO EUR03-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725536AbgCQI4W (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 17 Mar 2020 04:56:22 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ZD37Ht1ULx8DxYVFLsAuG1GuXdptmgp7lK01VPZgqwyBD8I7e0EiVgr7l/ognnb7RtE7A6pdOeK8jy1VQk7j/6ihu1i56LE0kndEyLidfqGtwL8ZD7sFf3Me4WEZ81JnbF2ZR0qp0y/TtTHD5KGIP2wPu0edpR62BuXLwennzJUpEuLmAfJbTjtCtJE7ADOVvpXppuwG2wKjYGyQgccVkbRmCukFFAWAmtZLnXb1J+/jBcZnqLyRz0KKb38eWvAWjREV+U7Hcvp4SqwGQP5+AWIXeqnCPs2xs/l9gQyM+ALEKHqVpDkCJNlemxxgKgtIY7USnwi5XbR+ZmQxUlr/rA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=NUwk74+bJFeLafMQBjpLQkYQnkx6+DwDjioK6mgjbLA=;
+ b=C41pfnWrxvVrG4nlQ9xqFDzi6SwXznsJbAPBYxTLUA9nOjP+T5ClgwaLaJQzKL8mku8x+FGdHb5qWN/jiGjrP9MO5gVWS5PC3vLE3t+1suEq9Brkm86W3QtOmByUMblpxEzWdkmeORNDftYnf+C+nE7S3s7oIf2bt0dgnkVdXN6KULArF06jh9b26DfHXLkXvPjSbIUn1gzhXHY/BqfrB4pABbwuZEhaBRjqT2JlEjfob16oI1B2j7YsjmLzRWL1oMSJsD6C1NcdXukKVTuQwuHBga+pIoKBmbW2KmksRJ/lycOS0nWjmtIE/LBIzUDFsv+q9NM/OhXLvpn7esVCKQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=NUwk74+bJFeLafMQBjpLQkYQnkx6+DwDjioK6mgjbLA=;
+ b=azb1qjUS8EtGERkLWHr3EpNMiITb70bolZabrHqXLvM6+wV5eomNudrsFCdstC71c2V4Lvm++1YO4qUrjlLIDZiYjNCq3p/i3yadkDKl6oAvy3/dXQOKMF+1p98wbGlVBFJT8WxPNFNgZR/MYEAXUzU6nhkbq+aU+iaxsLQ7sxw=
+Authentication-Results: spf=none (sender IP is )
+ smtp.mailfrom=peng.ma@nxp.com; 
+Received: from AM7PR04MB7016.eurprd04.prod.outlook.com (52.135.58.214) by
+ AM7PR04MB7109.eurprd04.prod.outlook.com (52.135.57.10) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2814.18; Tue, 17 Mar 2020 08:56:19 +0000
+Received: from AM7PR04MB7016.eurprd04.prod.outlook.com
+ ([fe80::14c2:8800:1248:ddfa]) by AM7PR04MB7016.eurprd04.prod.outlook.com
+ ([fe80::14c2:8800:1248:ddfa%7]) with mapi id 15.20.2814.021; Tue, 17 Mar 2020
+ 08:56:19 +0000
+From:   Peng Ma <peng.ma@nxp.com>
+To:     axboe@kernel.dk
+Cc:     leoyang.li@nxp.com, andy.tang@nxp.com, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Udit Kumar <udit.kumar@nxp.com>,
+        Peng Ma <peng.ma@nxp.com>
+Subject: [PATCH] ahci_qoriq: enable acpi support in qoriq ahci driver
+Date:   Tue, 17 Mar 2020 16:52:54 +0800
+Message-Id: <20200317085254.40795-1-peng.ma@nxp.com>
+X-Mailer: git-send-email 2.17.1
+Content-Type: text/plain
+X-ClientProxiedBy: SG2PR01CA0104.apcprd01.prod.exchangelabs.com
+ (2603:1096:3:15::30) To AM7PR04MB7016.eurprd04.prod.outlook.com
+ (2603:10a6:20b:11e::22)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200303093813.18523-36-hare@suse.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from localhost.localdomain (119.31.174.73) by SG2PR01CA0104.apcprd01.prod.exchangelabs.com (2603:1096:3:15::30) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.2814.16 via Frontend Transport; Tue, 17 Mar 2020 08:56:16 +0000
+X-Mailer: git-send-email 2.17.1
+X-Originating-IP: [119.31.174.73]
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-HT: Tenant
+X-MS-Office365-Filtering-Correlation-Id: 0bf27c23-a18d-446b-709c-08d7ca510f11
+X-MS-TrafficTypeDiagnostic: AM7PR04MB7109:|AM7PR04MB7109:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <AM7PR04MB71092A8FF47343A36AA88EC7EDF60@AM7PR04MB7109.eurprd04.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:299;
+X-Forefront-PRVS: 0345CFD558
+X-Forefront-Antispam-Report: SFV:NSPM;SFS:(10009020)(4636009)(376002)(346002)(136003)(396003)(366004)(39860400002)(199004)(6506007)(4326008)(52116002)(69590400007)(6512007)(66946007)(6666004)(66476007)(66556008)(1076003)(36756003)(2616005)(956004)(81166006)(44832011)(6486002)(54906003)(478600001)(2906002)(86362001)(16526019)(186003)(81156014)(8936002)(6916009)(8676002)(5660300002)(26005)(316002);DIR:OUT;SFP:1101;SCL:1;SRVR:AM7PR04MB7109;H:AM7PR04MB7016.eurprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;
+Received-SPF: None (protection.outlook.com: nxp.com does not designate
+ permitted sender hosts)
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: kyLzg0+UKp6ZPz31FD6sky+QvAsneZko+1f9Voh7OOwbm9GMruJBJ8mgGZVBD5zcZOgKr1XvDXy5OICcZwi3Djp6eVwE/j+nvz+ukpN716P20gzmSTk6mxnX00v4YmzvBsJi4skzcyxYQBYQhqrTRi3Ez7t3akRMiVyL9DqZxC/uQK4Tj3a7w5M1n41OtRTSn5rBOomIooP5ApoA676sff7CQRAb+1tVtwPifZAgYbDwj//QEjGrwQ9vDpGzYhQ7fm7vjnJYwRngkYnOj/taRD7jm45+Tch/ZZjQteljfH2szJF06Wh6Uuk8FTunpDyIusSce5ceszPSdhvaCbTESMWiZtlGtj7nq2hYsbfaQzpwTZoJPrzx540qOAze+oAp2pIHcAJ0u9fDqYIgVPFiILaRwpJ26lsYnUZXRsRqWIqyTJ/djz9Y/w3/KBGU/3Nd8Hen/V1Oel8pWgP02fZH7+6G8QvpJVYF1l6uHRy1HutXgrmt8HG4zZyZJF13O/ih
+X-MS-Exchange-AntiSpam-MessageData: kJUCIILO+ACGkpLHBYDk3O/roTXF5OrR9GTfLQcQUsgqF5qlwxWOa5Rg0yvOmXSlqHN9udn0Zel6e4W/tnfyN+Uc12ywRGvvcr0LRa4j54XE+6z2uCbOHixzfIM5rNJtR7PI15DC6LpKuEBKHcs6Tg==
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0bf27c23-a18d-446b-709c-08d7ca510f11
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Mar 2020 08:56:19.2467
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: yltehquZr5N7FULKU2SgFaZIAMe586CNszG3n/+zUcz092XVvzDHBsaPrq87ejUa
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM7PR04MB7109
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Mar 03, 2020 at 10:38:08AM +0100, Hannes Reinecke wrote:
-> Replace all DPRINTK calls with the standard logging functions.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+From: Udit Kumar <udit.kumar@nxp.com>
 
-drivers/ata/sata_fsl.c: In function 'sata_fsl_init_controller':
-drivers/ata/sata_fsl.c:1365:15: error: 'ap' undeclared (first use in this function); did you mean 'up'?
+This patch enables ACPI support in qoriq ahci driver.
 
-and several other similar errors.
+Signed-off-by: Udit Kumar <udit.kumar@nxp.com>
+Signed-off-by: Peng Ma <peng.ma@nxp.com>
+---
+ drivers/ata/ahci_qoriq.c | 24 ++++++++++++++++++------
+ 1 file changed, 18 insertions(+), 6 deletions(-)
 
-Guenter
+diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
+index a330307..f0f7723 100644
+--- a/drivers/ata/ahci_qoriq.c
++++ b/drivers/ata/ahci_qoriq.c
+@@ -6,6 +6,7 @@
+  *   Tang Yuantian <Yuantian.Tang@freescale.com>
+  */
+ 
++#include <linux/acpi.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/pm.h>
+@@ -80,6 +81,12 @@ static const struct of_device_id ahci_qoriq_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, ahci_qoriq_of_match);
+ 
++static const struct acpi_device_id ahci_qoriq_acpi_match[] = {
++	{"NXP0004", .driver_data = (kernel_ulong_t)AHCI_LX2160A},
++	{ }
++};
++MODULE_DEVICE_TABLE(acpi, ahci_qoriq_acpi_match);
++
+ static int ahci_qoriq_hardreset(struct ata_link *link, unsigned int *class,
+ 			  unsigned long deadline)
+ {
+@@ -261,25 +268,28 @@ static int ahci_qoriq_probe(struct platform_device *pdev)
+ 	const struct of_device_id *of_id;
+ 	struct resource *res;
+ 	int rc;
++	const struct acpi_device_id *acpi_id;
+ 
+ 	hpriv = ahci_platform_get_resources(pdev, 0);
+ 	if (IS_ERR(hpriv))
+ 		return PTR_ERR(hpriv);
+ 
+ 	of_id = of_match_node(ahci_qoriq_of_match, np);
+-	if (!of_id)
++	acpi_id = acpi_match_device(ahci_qoriq_acpi_match, &pdev->dev);
++	if (!(of_id || acpi_id))
+ 		return -ENODEV;
+ 
+ 	qoriq_priv = devm_kzalloc(dev, sizeof(*qoriq_priv), GFP_KERNEL);
+ 	if (!qoriq_priv)
+ 		return -ENOMEM;
+ 
+-	qoriq_priv->type = (enum ahci_qoriq_type)of_id->data;
++	if (of_id)
++		qoriq_priv->type = (enum ahci_qoriq_type)of_id->data;
++	else
++		qoriq_priv->type = (enum ahci_qoriq_type)acpi_id->driver_data;
+ 
+ 	if (unlikely(!ecc_initialized)) {
+-		res = platform_get_resource_byname(pdev,
+-						   IORESOURCE_MEM,
+-						   "sata-ecc");
++		res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+ 		if (res) {
+ 			qoriq_priv->ecc_addr =
+ 				devm_ioremap_resource(dev, res);
+@@ -288,7 +298,8 @@ static int ahci_qoriq_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
+-	qoriq_priv->is_dmacoherent = of_dma_is_coherent(np);
++	if (device_get_dma_attr(&pdev->dev) == DEV_DMA_COHERENT)
++		qoriq_priv->is_dmacoherent = true;
+ 
+ 	rc = ahci_platform_enable_resources(hpriv);
+ 	if (rc)
+@@ -354,6 +365,7 @@ static struct platform_driver ahci_qoriq_driver = {
+ 	.driver = {
+ 		.name = DRV_NAME,
+ 		.of_match_table = ahci_qoriq_of_match,
++		.acpi_match_table = ahci_qoriq_acpi_match,
+ 		.pm = &ahci_qoriq_pm_ops,
+ 	},
+ };
+-- 
+2.9.5
 
-> ---
->  drivers/ata/sata_fsl.c | 90 ++++++++++++++++++++++++++------------------------
->  1 file changed, 46 insertions(+), 44 deletions(-)
-> 
-> diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-> index 5d48e1d223fa..730f6701052c 100644
-> --- a/drivers/ata/sata_fsl.c
-> +++ b/drivers/ata/sata_fsl.c
-> @@ -311,10 +311,12 @@ static void fsl_sata_set_irq_coalescing(struct ata_host *host,
->  	intr_coalescing_ticks = ticks;
->  	spin_unlock_irqrestore(&host->lock, flags);
->  
-> -	DPRINTK("interrupt coalescing, count = 0x%x, ticks = %x\n",
-> -			intr_coalescing_count, intr_coalescing_ticks);
-> -	DPRINTK("ICC register status: (hcr base: 0x%x) = 0x%x\n",
-> -			hcr_base, ioread32(hcr_base + ICC));
-> +	dev_dbg(host->dev,
-> +		"%s: interrupt coalescing, count = 0x%x, ticks = %x\n",
-> +		__func__, intr_coalescing_count, intr_coalescing_ticks);
-> +	dev_dbg(host->dev,
-> +		"%s: ICC register status: (hcr base: 0x%x) = 0x%x\n",
-> +		__func__, hcr_base, ioread32(hcr_base + ICC));
->  }
->  
->  static ssize_t fsl_sata_intr_coalescing_show(struct device *dev,
-> @@ -385,18 +387,19 @@ static ssize_t fsl_sata_rx_watermark_store(struct device *dev,
->  	return strlen(buf);
->  }
->  
-> -static inline unsigned int sata_fsl_tag(unsigned int tag,
-> +static inline unsigned int sata_fsl_tag(struct ata_port *ap,
-> +					unsigned int tag,
->  					void __iomem *hcr_base)
->  {
->  	/* We let libATA core do actual (queue) tag allocation */
->  
->  	if (unlikely(tag >= SATA_FSL_QUEUE_DEPTH)) {
-> -		DPRINTK("tag %d invalid : out of range\n", tag);
-> +		ata_port_dbg(ap, "tag %d invalid : out of range\n", tag);
->  		return 0;
->  	}
->  
->  	if (unlikely((ioread32(hcr_base + CQ)) & (1 << tag))) {
-> -		DPRINTK("tag %d invalid : in use!!\n", tag);
-> +		ata_port_dbg(ap, "tag %d invalid : in use!!\n", tag);
->  		return 0;
->  	}
->  
-> @@ -508,7 +511,7 @@ static enum ata_completion_errors sata_fsl_qc_prep(struct ata_queued_cmd *qc)
->  	struct sata_fsl_port_priv *pp = ap->private_data;
->  	struct sata_fsl_host_priv *host_priv = ap->host->private_data;
->  	void __iomem *hcr_base = host_priv->hcr_base;
-> -	unsigned int tag = sata_fsl_tag(qc->hw_tag, hcr_base);
-> +	unsigned int tag = sata_fsl_tag(ap, qc->hw_tag, hcr_base);
->  	struct command_desc *cd;
->  	u32 desc_info = CMD_DESC_RES | CMD_DESC_SNOOP_ENABLE;
->  	u32 num_prde = 0;
-> @@ -557,7 +560,7 @@ static unsigned int sata_fsl_qc_issue(struct ata_queued_cmd *qc)
->  	struct ata_port *ap = qc->ap;
->  	struct sata_fsl_host_priv *host_priv = ap->host->private_data;
->  	void __iomem *hcr_base = host_priv->hcr_base;
-> -	unsigned int tag = sata_fsl_tag(qc->hw_tag, hcr_base);
-> +	unsigned int tag = sata_fsl_tag(ap, qc->hw_tag, hcr_base);
->  
->  	VPRINTK("xx_qc_issue called,CQ=0x%x,CA=0x%x,CE=0x%x,CC=0x%x\n",
->  		ioread32(CQ + hcr_base),
-> @@ -586,7 +589,7 @@ static bool sata_fsl_qc_fill_rtf(struct ata_queued_cmd *qc)
->  	struct sata_fsl_port_priv *pp = qc->ap->private_data;
->  	struct sata_fsl_host_priv *host_priv = qc->ap->host->private_data;
->  	void __iomem *hcr_base = host_priv->hcr_base;
-> -	unsigned int tag = sata_fsl_tag(qc->hw_tag, hcr_base);
-> +	unsigned int tag = sata_fsl_tag(qc->ap, qc->hw_tag, hcr_base);
->  	struct command_desc *cd;
->  
->  	cd = pp->cmdentry + tag;
-> @@ -850,7 +853,7 @@ static int sata_fsl_hardreset(struct ata_link *link, unsigned int *class,
->  			goto try_offline_again;
->  	}
->  
-> -	DPRINTK("hardreset, controller off-lined\n");
-> +	ata_port_dbg(ap, "hardreset, controller off-lined\n");
->  	VPRINTK("HStatus = 0x%x\n", ioread32(hcr_base + HSTATUS));
->  	VPRINTK("HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
->  
-> @@ -880,7 +883,7 @@ static int sata_fsl_hardreset(struct ata_link *link, unsigned int *class,
->  		goto err;
->  	}
->  
-> -	DPRINTK("hardreset, controller off-lined & on-lined\n");
-> +	ata_port_dbg(ap, "controller off-lined & on-lined\n");
->  	VPRINTK("HStatus = 0x%x\n", ioread32(hcr_base + HSTATUS));
->  	VPRINTK("HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
->  
-> @@ -962,7 +965,7 @@ static int sata_fsl_softreset(struct ata_link *link, unsigned int *class,
->  	tf.ctl |= ATA_SRST;	/* setup SRST bit in taskfile control reg */
->  	ata_tf_to_fis(&tf, pmp, 0, cfis);
->  
-> -	DPRINTK("Dumping cfis : 0x%x, 0x%x, 0x%x, 0x%x\n",
-> +	ata_port_dbg(ap, "Dumping cfis : 0x%x, 0x%x, 0x%x, 0x%x\n",
->  		cfis[0], cfis[1], cfis[2], cfis[3]);
->  
->  	/*
-> @@ -970,7 +973,7 @@ static int sata_fsl_softreset(struct ata_link *link, unsigned int *class,
->  	 * other commands are active on the controller/device
->  	 */
->  
-> -	DPRINTK("@Softreset, CQ = 0x%x, CA = 0x%x, CC = 0x%x\n",
-> +	ata_port_dbg(ap, "CQ = 0x%x, CA = 0x%x, CC = 0x%x\n",
->  		ioread32(CQ + hcr_base),
->  		ioread32(CA + hcr_base), ioread32(CC + hcr_base));
->  
-> @@ -983,15 +986,17 @@ static int sata_fsl_softreset(struct ata_link *link, unsigned int *class,
->  	if (temp & 0x1) {
->  		ata_port_warn(ap, "ATA_SRST issue failed\n");
->  
-> -		DPRINTK("Softreset@5000,CQ=0x%x,CA=0x%x,CC=0x%x\n",
-> +		ata_port_dbg(ap, "Softreset@5000,CQ=0x%x,CA=0x%x,CC=0x%x\n",
->  			ioread32(CQ + hcr_base),
->  			ioread32(CA + hcr_base), ioread32(CC + hcr_base));
->  
->  		sata_fsl_scr_read(&ap->link, SCR_ERROR, &Serror);
->  
-> -		DPRINTK("HStatus = 0x%x\n", ioread32(hcr_base + HSTATUS));
-> -		DPRINTK("HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
-> -		DPRINTK("Serror = 0x%x\n", Serror);
-> +		ata_port_dbg(ap,
-> +			     "HStatus = 0x%x HControl = 0x%x Serror = 0x%x\n",
-> +			     ioread32(hcr_base + HSTATUS),
-> +			     ioread32(hcr_base + HCONTROL),
-> +			     Serror);
->  		goto err;
->  	}
->  
-> @@ -1049,7 +1054,7 @@ static int sata_fsl_softreset(struct ata_link *link, unsigned int *class,
->  static void sata_fsl_error_handler(struct ata_port *ap)
->  {
->  
-> -	DPRINTK("in xx_error_handler\n");
-> +	ata_port_dbg(ap, "ENTER\n");
->  	sata_pmp_error_handler(ap);
->  
->  }
-> @@ -1092,7 +1097,7 @@ static void sata_fsl_error_intr(struct ata_port *ap)
->  	if (unlikely(SError & 0xFFFF0000))
->  		sata_fsl_scr_write(&ap->link, SCR_ERROR, SError);
->  
-> -	DPRINTK("error_intr,hStat=0x%x,CE=0x%x,DE =0x%x,SErr=0x%x\n",
-> +	ata_port_dbg(ap, "hStat=0x%x,CE=0x%x,DE =0x%x,SErr=0x%x\n",
->  		hstatus, cereg, ioread32(hcr_base + DE), SError);
->  
->  	/* handle fatal errors */
-> @@ -1109,7 +1114,7 @@ static void sata_fsl_error_intr(struct ata_port *ap)
->  
->  	/* Handle PHYRDY change notification */
->  	if (hstatus & INT_ON_PHYRDY_CHG) {
-> -		DPRINTK("SATA FSL: PHYRDY change indication\n");
-> +		ata_port_dbg(ap, "PHYRDY change indication\n");
->  
->  		/* Setup a soft-reset EH action */
->  		ata_ehi_hotplugged(ehi);
-> @@ -1130,7 +1135,7 @@ static void sata_fsl_error_intr(struct ata_port *ap)
->  		 */
->  		abort = 1;
->  
-> -		DPRINTK("single device error, CE=0x%x, DE=0x%x\n",
-> +		ata_port_dbg(ap, "single device error, CE=0x%x, DE=0x%x\n",
->  			ioread32(hcr_base + CE), ioread32(hcr_base + DE));
->  
->  		/* find out the offending link and qc */
-> @@ -1235,12 +1240,12 @@ static void sata_fsl_host_intr(struct ata_port *ap)
->  	}
->  
->  	if (unlikely(SError & 0xFFFF0000)) {
-> -		DPRINTK("serror @host_intr : 0x%x\n", SError);
-> +		ata_port_dbg(ap, "serror @host_intr : 0x%x\n", SError);
->  		sata_fsl_error_intr(ap);
->  	}
->  
->  	if (unlikely(hstatus & status_mask)) {
-> -		DPRINTK("error interrupt!!\n");
-> +		ata_port_dbg(ap, "error interrupt!!\n");
->  		sata_fsl_error_intr(ap);
->  		return;
->  	}
-> @@ -1258,17 +1263,15 @@ static void sata_fsl_host_intr(struct ata_port *ap)
->  		/* clear CC bit, this will also complete the interrupt */
->  		iowrite32(done_mask, hcr_base + CC);
->  
-> -		DPRINTK("Status of all queues :\n");
-> -		DPRINTK("done_mask/CC = 0x%x, CA = 0x%x, CE=0x%x\n",
-> -			done_mask, ioread32(hcr_base + CA),
-> -			ioread32(hcr_base + CE));
-> +		ata_port_dbg(ap, "Status of all queues: done_mask/CC = 0x%x, CA = 0x%x, CE=0x%x\n",
-> +			     done_mask, ioread32(hcr_base + CA),
-> +			     ioread32(hcr_base + CE));
->  
->  		for (i = 0; i < SATA_FSL_QUEUE_DEPTH; i++) {
->  			if (done_mask & (1 << i))
-> -				DPRINTK
-> -				    ("completing ncq cmd,tag=%d,CC=0x%x,CA=0x%x\n",
-> -				     i, ioread32(hcr_base + CC),
-> -				     ioread32(hcr_base + CA));
-> +				ata_port_dbg(ap, "completing ncq cmd,tag=%d,CC=0x%x,CA=0x%x\n",
-> +					     i, ioread32(hcr_base + CC),
-> +					     ioread32(hcr_base + CA));
->  		}
->  		ata_qc_complete_multiple(ap, ata_qc_get_active(ap) ^ done_mask);
->  		return;
-> @@ -1277,16 +1280,16 @@ static void sata_fsl_host_intr(struct ata_port *ap)
->  		iowrite32(1, hcr_base + CC);
->  		qc = ata_qc_from_tag(ap, ATA_TAG_INTERNAL);
->  
-> -		DPRINTK("completing non-ncq cmd, CC=0x%x\n",
-> -			 ioread32(hcr_base + CC));
-> +		ata_port_dbg(ap, "completing non-ncq cmd, CC=0x%x\n",
-> +			     ioread32(hcr_base + CC));
->  
->  		if (qc) {
->  			ata_qc_complete(qc);
->  		}
->  	} else {
->  		/* Spurious Interrupt!! */
-> -		DPRINTK("spurious interrupt!!, CC = 0x%x\n",
-> -			ioread32(hcr_base + CC));
-> +		ata_port_dbg(ap, "spurious interrupt!!, CC = 0x%x\n",
-> +			     ioread32(hcr_base + CC));
->  		iowrite32(done_mask, hcr_base + CC);
->  		return;
->  	}
-> @@ -1305,7 +1308,7 @@ static irqreturn_t sata_fsl_interrupt(int irq, void *dev_instance)
->  	interrupt_enables = ioread32(hcr_base + HSTATUS);
->  	interrupt_enables &= 0x3F;
->  
-> -	DPRINTK("interrupt status 0x%x\n", interrupt_enables);
-> +	ata_port_dbg(ap, "interrupt status 0x%x\n", interrupt_enables);
->  
->  	if (!interrupt_enables)
->  		return IRQ_NONE;
-> @@ -1359,14 +1362,14 @@ static int sata_fsl_init_controller(struct ata_host *host)
->  	iowrite32((temp & ~0x3F), hcr_base + HCONTROL);
->  
->  	/* Disable interrupt coalescing control(icc), for the moment */
-> -	DPRINTK("icc = 0x%x\n", ioread32(hcr_base + ICC));
-> +	ata_port_dbg(ap, "icc = 0x%x\n", ioread32(hcr_base + ICC));
->  	iowrite32(0x01000000, hcr_base + ICC);
->  
->  	/* clear error registers, SError is cleared by libATA  */
->  	iowrite32(0x00000FFFF, hcr_base + CE);
->  	iowrite32(0x00000FFFF, hcr_base + DE);
->  
-> - 	/*
-> +	/*
->  	 * reset the number of command complete bits which will cause the
->  	 * interrupt to be signaled
->  	 */
-> @@ -1378,8 +1381,9 @@ static int sata_fsl_init_controller(struct ata_host *host)
->  	 * callback, that should also initiate the OOB, COMINIT sequence
->  	 */
->  
-> -	DPRINTK("HStatus = 0x%x\n", ioread32(hcr_base + HSTATUS));
-> -	DPRINTK("HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
-> +	ata_port_dbg(ap, "HStatus = 0x%x HControl = 0x%x\n",
-> +		     ioread32(hcr_base + HSTATUS),
-> +		     ioread32(hcr_base + HCONTROL));
->  
->  	return 0;
->  }
-> @@ -1458,9 +1462,7 @@ static int sata_fsl_probe(struct platform_device *ofdev)
->  		iowrite32(temp | TRANSCFG_RX_WATER_MARK, csr_base + TRANSCFG);
->  	}
->  
-> -	DPRINTK("@reset i/o = 0x%x\n", ioread32(csr_base + TRANSCFG));
-> -	DPRINTK("sizeof(cmd_desc) = %d\n", sizeof(struct command_desc));
-> -	DPRINTK("sizeof(#define cmd_desc) = %d\n", SATA_FSL_CMD_DESC_SIZE);
-> +	ata_port_dbg(ap, "@reset i/o = 0x%x\n", ioread32(csr_base + TRANSCFG));
->  
->  	host_priv = kzalloc(sizeof(struct sata_fsl_host_priv), GFP_KERNEL);
->  	if (!host_priv)
