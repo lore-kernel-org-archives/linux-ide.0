@@ -2,156 +2,101 @@ Return-Path: <SRS0=G9Vu=5J=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3D4CC54FD1
-	for <linux-ide@archiver.kernel.org>; Tue, 24 Mar 2020 11:14:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6160EC2BAEE
+	for <linux-ide@archiver.kernel.org>; Tue, 24 Mar 2020 13:26:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CDD0D20786
-	for <linux-ide@archiver.kernel.org>; Tue, 24 Mar 2020 11:14:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="DD6H9WxK"
+	by mail.kernel.org (Postfix) with ESMTP id 3A1CC20BED
+	for <linux-ide@archiver.kernel.org>; Tue, 24 Mar 2020 13:26:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727282AbgCXLOl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 24 Mar 2020 07:14:41 -0400
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:43097 "EHLO
-        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727238AbgCXLOl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 Mar 2020 07:14:41 -0400
-Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200324111438euoutp01dab5df9bee3beea8a87ed4fd1c38fa4f~-OTFnd78Q0293702937euoutp01L
-        for <linux-ide@vger.kernel.org>; Tue, 24 Mar 2020 11:14:38 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200324111438euoutp01dab5df9bee3beea8a87ed4fd1c38fa4f~-OTFnd78Q0293702937euoutp01L
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1585048478;
-        bh=4Ipof9r/d5t6lCf7L27jo1b5FaNLzhn50JEXNBKKV3s=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=DD6H9WxKVjdBSTIBtzIjuTZ5Smr6kzb5oHRyUu5ThK1TZgPcjlC43U+cAKHWgoz5r
-         kvhAW4qvVtgmkZ6+T/6UfVcy3QIPn7rzhzyoeKkYxtMwJUTBgFkwi++LvL4PFJR5Ew
-         mf+fHeOPWdyUUWWyFVuAxJYzWB84ApUEgiggHn6w=
-Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
-        20200324111437eucas1p1a0624677971437b0684aebeb4a567163~-OTFTGhV-1901819018eucas1p1e;
-        Tue, 24 Mar 2020 11:14:37 +0000 (GMT)
-Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
-        eusmges1new.samsung.com (EUCPMTA) with SMTP id CA.1D.61286.D9BE97E5; Tue, 24
-        Mar 2020 11:14:37 +0000 (GMT)
-Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20200324111437eucas1p1a898c365a825deb9d0dc6c99202e2f57~-OTE8sEcY2111821118eucas1p1M;
-        Tue, 24 Mar 2020 11:14:37 +0000 (GMT)
-Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
-        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20200324111437eusmtrp26711795f1c51421d52348f6df73d621a~-OTE8AAAx0446404464eusmtrp2l;
-        Tue, 24 Mar 2020 11:14:37 +0000 (GMT)
-X-AuditID: cbfec7f2-f0bff7000001ef66-10-5e79eb9d2bbd
-Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id 75.BE.07950.D9BE97E5; Tue, 24
-        Mar 2020 11:14:37 +0000 (GMT)
-Received: from AMDC3058.digital.local (unknown [106.120.51.71]) by
-        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200324111436eusmtip1cedec3205fd652355a66a8eafd7eddcf~-OTEZ9ROp0080400804eusmtip1m;
-        Tue, 24 Mar 2020 11:14:36 +0000 (GMT)
-From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-To:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Cc:     "David S . Miller" <davem@davemloft.net>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Paul Burton <paul.burton@mips.com>,
-        James Hogan <jhogan@kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Manuel Lauss <manuel.lauss@gmail.com>,
-        Christoph Hellwig <hch@lst.de>, linux-ide@vger.kernel.org,
-        linux-mips@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com
-Subject: [PATCH v2 0/3] ide/MIPS/docs: remove no longer used au1xxx-ide
- driver
-Date:   Tue, 24 Mar 2020 12:14:17 +0100
-Message-Id: <20200324111420.31793-1-b.zolnierkie@samsung.com>
-X-Mailer: git-send-email 2.24.1
+        id S1729731AbgCXN0t (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 24 Mar 2020 09:26:49 -0400
+Received: from albert.telenet-ops.be ([195.130.137.90]:51324 "EHLO
+        albert.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729650AbgCXN0s (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 Mar 2020 09:26:48 -0400
+Received: from ramsan ([84.195.182.253])
+        by albert.telenet-ops.be with bizsmtp
+        id JDSm220085USYZQ06DSmt4; Tue, 24 Mar 2020 14:26:46 +0100
+Received: from geert (helo=localhost)
+        by ramsan with local-esmtp (Exim 4.90_1)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1jGjZu-00061K-5Z; Tue, 24 Mar 2020 14:26:46 +0100
+Date:   Tue, 24 Mar 2020 14:26:46 +0100 (CET)
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+To:     Hannes Reinecke <hare@suse.de>
+cc:     Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        linux-ide@vger.kernel.org, linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH 04/40] libata: move ata_{port,link,dev}_dbg to standard
+ dev_XXX() macros
+In-Reply-To: <20200303093813.18523-5-hare@suse.de>
+Message-ID: <alpine.DEB.2.21.2003241414490.21582@ramsan.of.borg>
+References: <20200303093813.18523-1-hare@suse.de> <20200303093813.18523-5-hare@suse.de>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrKKsWRmVeSWpSXmKPExsWy7djPc7pzX1fGGex7qmexccZ6VosnB9oZ
-        Leacb2GxWLn6KJPFxBOfWCwWti1hsTi24xGTxeVdc9gsOjdtZbS49uURu0Xf62PMFpf2qFgc
-        bjrI7MDr0XppOYvHlpU3mTx2zrrL7rFpVSebx9GVa5k8dt9sYPNY3DeZ1eP1kYcsHn1bVjF6
-        fN4kF8AVxWWTkpqTWZZapG+XwJVxaekJ9oIXXBVff7QyNzCu4+hi5OSQEDCRWLlmG1sXIxeH
-        kMAKRonP39tYIZwvjBLTdl5hA6kSEvjMKPH3XBxMx9rLB5kgipYzSvyeNIkZrmNLw20WkCo2
-        ASuJie2rGEFsEQFjifVbd4ONZRaYwiyx/cw8sCJhgQCJtcs6gbo5OFgEVCUev/EGCfMK2ErM
-        /bKdGWKbvMTWb59YIeKCEidnPgFrZQaKN2+dDbZYQuAUu8TxJZ8ZIRpcJD7sussKYQtLvDq+
-        hR3ClpH4v3M+E0TDOqB3Ol5AdW9nlFg++R8bRJW1xJ1zv9hALmIW0JRYv0sfIuwoMW3HCxaQ
-        sIQAn8SNt4IQR/BJTNo2nRkizCvR0SYEUa0msWHZBjaYtV07V0L94iHRceUpOyREYyWub2hl
-        mcCoMAvJa7OQvDYL4YYFjMyrGMVTS4tz01OLDfNSy/WKE3OLS/PS9ZLzczcxAhPb6X/HP+1g
-        /Hop6RCjAAejEg+vxsPKOCHWxLLiytxDjBIczEoivJtTK+KEeFMSK6tSi/Lji0pzUosPMUpz
-        sCiJ8xovehkrJJCeWJKanZpakFoEk2Xi4JRqYOx88mtjzGTNBYzJjJ61/653696d5/Iq8H3S
-        OZFbmy55zsoxD+Te8GLW8YhXklNl5i0rYZHZHmmcbLJOvVfBe0Mo98rVAa/eMbZP2vyJ58Ib
-        F+X+zyp7tCtzFff4bBA/ZSkmn6YqI86wIfOurmzqi/VBJy+7zOP/V6NZtj/ZuFLi3tYgDUcz
-        ZSWW4oxEQy3mouJEAFZ6B61oAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrFIsWRmVeSWpSXmKPExsVy+t/xu7pzX1fGGexcLm2xccZ6VosnB9oZ
-        Leacb2GxWLn6KJPFxBOfWCwWti1hsTi24xGTxeVdc9gsOjdtZbS49uURu0Xf62PMFpf2qFgc
-        bjrI7MDr0XppOYvHlpU3mTx2zrrL7rFpVSebx9GVa5k8dt9sYPNY3DeZ1eP1kYcsHn1bVjF6
-        fN4kF8AVpWdTlF9akqqQkV9cYqsUbWhhpGdoaaFnZGKpZ2hsHmtlZKqkb2eTkpqTWZZapG+X
-        oJdxaekJ9oIXXBVff7QyNzCu4+hi5OSQEDCRWHv5IFMXIxeHkMBSRomXSxazdDFyACVkJI6v
-        L4OoEZb4c62LDaLmE6NE8+uzzCAJNgEriYntqxhBbBEBY4n1W3ezghQxC8xjlrjx4jITSEJY
-        wE9i0pR2ZpChLAKqEo/feIOEeQVsJeZ+2c4MsUBeYuu3T6wQcUGJkzOfsIDYzEDx5q2zmScw
-        8s1CkpqFJLWAkWkVo0hqaXFuem6xkV5xYm5xaV66XnJ+7iZGYDxtO/Zzyw7GrnfBhxgFOBiV
-        eHg1HlbGCbEmlhVX5h5ilOBgVhLh3ZxaESfEm5JYWZValB9fVJqTWnyI0RTo1onMUqLJ+cBY
-        zyuJNzQ1NLewNDQ3Njc2s1AS5+0QOBgjJJCeWJKanZpakFoE08fEwSnVwNgfduiV5/e7FdKy
-        oqYpc2LUOH8Kvfp7fbXYF+XPn3U5UnzbGK4bOB5yE+jeJhtyoKqw0vbNtcpTt24782WLtkpu
-        uTSnb94ziw/2M6QE/fJ7vP/ULNm+qlqmv8qa9ZCz7v/Ju3tY9Zw/57fb++pdjziyu3qpbUK0
-        QsCpiB25OYtereI65vCnVImlOCPRUIu5qDgRANVqptq9AgAA
-X-CMS-MailID: 20200324111437eucas1p1a898c365a825deb9d0dc6c99202e2f57
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200324111437eucas1p1a898c365a825deb9d0dc6c99202e2f57
-X-EPHeader: CA
-CMS-TYPE: 201P
-X-CMS-RootMailID: 20200324111437eucas1p1a898c365a825deb9d0dc6c99202e2f57
-References: <CGME20200324111437eucas1p1a898c365a825deb9d0dc6c99202e2f57@eucas1p1.samsung.com>
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi,
+ 	Hi Hannes,
 
-Commit 54ff4a1d1732 ("MIPS: Alchemy: pata_platform for DB1200")
-from year 2014 converted the only user of au1xxx-ide IDE host
-driver (MIPS Alchemy DB1200 platform) to use pata_platform libata
-host driver instead. This patch series removes dead au1xxx-ide
-driver code & co.
+On Tue, 3 Mar 2020, Hannes Reinecke wrote:
+> Use standard dev_{dbg,info,notice,warn,err} macros instead of the
+> hand-crafted printk helpers.
+>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-Please merge through mips tree (IDE changes have been Acked by
-David Miller).
+This is now commit ad9f23bd12e1d721 ("libata: move
+ata_{port,link,dev}_dbg to standard dev_XXX() macros") in
+linux-block/for-next.
 
-Changes since v1
-(https://lore.kernel.org/linux-ide/20200116122938.20789-1-b.zolnierkie@samsung.com/):
-- added ACKs
+This patch causes an intriguing change in boot messages, adding a space
+at the beginning of each printed line:
 
-Best regards,
+      scsi host0: sata_rcar
+     -ata1: SATA max UDMA/133 irq 117
+     + ata1: SATA max UDMA/133 irq 117
+
+     -ata1: link resume succeeded after 1 retries
+     + link1: link resume succeeded after 1 retries
+
+     -ata1: SATA link down (SStatus 0 SControl 300)
+     + link1: SATA link down (SStatus 0 SControl 300)
+
+It turns out dev_driver_string(&link->tdev) returns an empty string, as
+its driver field is NULL, so __dev_printk() prints the empty string and
+the device name, separated by a space.
+
+At first I thought this was a bug in rcar-sata, lacking some setup that
+was harmless before, but it turns out other drivers (e.g. pata-falcon)
+show the same issue:
+
+      scsi host0: pata_falcon
+     -ata1: PATA max PIO4 cmd 0xfff00000 ctl 0xfff00039
+     + ata1: PATA max PIO4 cmd 0xfff00000 ctl 0xfff00039
+
+     -ata1.01: NODEV after polling detection
+     -ata1.00: ATA-2: Sarge m68k, , max PIO2
+     -ata1.00: 2118816 sectors, multi 0: LBA
+     -ata1.00: configured for PIO
+     + dev1.0: ATA-2: Sarge m68k, , max PIO2
+     + dev1.0: 2118816 sectors, multi 0: LBA
+     + dev1.0: configured for PIO
+
+Gr{oetje,eeting}s,
+
+ 						Geert
+
 --
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-
-Bartlomiej Zolnierkiewicz (3):
-  ide: remove no longer used au1xxx-ide driver
-  MIPS: Alchemy: remove no longer used au1xxx_ide.h header
-  docs: mips: remove no longer needed au1xxx_ide.rst documentation
-
- Documentation/mips/au1xxx_ide.rst             | 130 ----
- Documentation/mips/index.rst                  |   2 -
- .../mips/include/asm/mach-au1x00/au1xxx_ide.h | 178 ------
- drivers/ide/Kconfig                           |  17 -
- drivers/ide/Makefile                          |   2 -
- drivers/ide/au1xxx-ide.c                      | 597 ------------------
- 6 files changed, 926 deletions(-)
- delete mode 100644 Documentation/mips/au1xxx_ide.rst
- delete mode 100644 arch/mips/include/asm/mach-au1x00/au1xxx_ide.h
- delete mode 100644 drivers/ide/au1xxx-ide.c
-
--- 
-2.24.1
-
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+ 							    -- Linus Torvalds
