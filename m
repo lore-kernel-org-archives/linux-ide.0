@@ -2,59 +2,59 @@ Return-Path: <SRS0=G9Vu=5J=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B8D7C4332B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3D4CC54FD1
 	for <linux-ide@archiver.kernel.org>; Tue, 24 Mar 2020 11:14:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D9D9C20870
-	for <linux-ide@archiver.kernel.org>; Tue, 24 Mar 2020 11:14:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CDD0D20786
+	for <linux-ide@archiver.kernel.org>; Tue, 24 Mar 2020 11:14:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="YvmoiBWF"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="DD6H9WxK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727332AbgCXLOn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 24 Mar 2020 07:14:43 -0400
-Received: from mailout2.w1.samsung.com ([210.118.77.12]:38346 "EHLO
-        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727262AbgCXLOm (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 Mar 2020 07:14:42 -0400
+        id S1727282AbgCXLOl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 24 Mar 2020 07:14:41 -0400
+Received: from mailout1.w1.samsung.com ([210.118.77.11]:43097 "EHLO
+        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727238AbgCXLOl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 Mar 2020 07:14:41 -0400
 Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200324111440euoutp021bd356d3fc2ca795a6b92b5245969f13~-OTHdGC1W2972129721euoutp02S
-        for <linux-ide@vger.kernel.org>; Tue, 24 Mar 2020 11:14:40 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200324111440euoutp021bd356d3fc2ca795a6b92b5245969f13~-OTHdGC1W2972129721euoutp02S
+        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200324111438euoutp01dab5df9bee3beea8a87ed4fd1c38fa4f~-OTFnd78Q0293702937euoutp01L
+        for <linux-ide@vger.kernel.org>; Tue, 24 Mar 2020 11:14:38 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200324111438euoutp01dab5df9bee3beea8a87ed4fd1c38fa4f~-OTFnd78Q0293702937euoutp01L
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1585048480;
-        bh=HC92hbHB4NGqYkPZ4aXE02GdPjHLAUV0nlXwgx6RQZo=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=YvmoiBWFWykGSHyEa0KH4uCU6ZrKpGIalUFmhAQYskR7vcv0Y/Sth1Nh0NWdwMFvR
-         mFK/cOXE/j47yS+8HEFm1dgZF9u6IQpgJndsny3G7jj/XzKXPNuLiIZ92MqtZYnsBg
-         7y0skiv9KGxzRCVwe6et3RLdWvpocsDC3fLRd6jo=
-Received: from eusmges2new.samsung.com (unknown [203.254.199.244]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20200324111439eucas1p21631711698dc6768828e415bbb2d469f~-OTHJyAuI0228102281eucas1p2y;
-        Tue, 24 Mar 2020 11:14:39 +0000 (GMT)
+        s=mail20170921; t=1585048478;
+        bh=4Ipof9r/d5t6lCf7L27jo1b5FaNLzhn50JEXNBKKV3s=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=DD6H9WxKVjdBSTIBtzIjuTZ5Smr6kzb5oHRyUu5ThK1TZgPcjlC43U+cAKHWgoz5r
+         kvhAW4qvVtgmkZ6+T/6UfVcy3QIPn7rzhzyoeKkYxtMwJUTBgFkwi++LvL4PFJR5Ew
+         mf+fHeOPWdyUUWWyFVuAxJYzWB84ApUEgiggHn6w=
+Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
+        20200324111437eucas1p1a0624677971437b0684aebeb4a567163~-OTFTGhV-1901819018eucas1p1e;
+        Tue, 24 Mar 2020 11:14:37 +0000 (GMT)
 Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
-        eusmges2new.samsung.com (EUCPMTA) with SMTP id E7.60.60679.F9BE97E5; Tue, 24
-        Mar 2020 11:14:39 +0000 (GMT)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
+        eusmges1new.samsung.com (EUCPMTA) with SMTP id CA.1D.61286.D9BE97E5; Tue, 24
+        Mar 2020 11:14:37 +0000 (GMT)
+Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
         eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20200324111439eucas1p1d0e34bd0563643bce53f060490772075~-OTGnNaKD2380323803eucas1p1Q;
-        Tue, 24 Mar 2020 11:14:39 +0000 (GMT)
-Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
-        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200324111439eusmtrp1e3684ba0109e679d2fed3e9fcde49889~-OTGmegks2210322103eusmtrp1e;
-        Tue, 24 Mar 2020 11:14:39 +0000 (GMT)
-X-AuditID: cbfec7f4-0cbff7000001ed07-12-5e79eb9ffe9b
+        20200324111437eucas1p1a898c365a825deb9d0dc6c99202e2f57~-OTE8sEcY2111821118eucas1p1M;
+        Tue, 24 Mar 2020 11:14:37 +0000 (GMT)
+Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
+        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200324111437eusmtrp26711795f1c51421d52348f6df73d621a~-OTE8AAAx0446404464eusmtrp2l;
+        Tue, 24 Mar 2020 11:14:37 +0000 (GMT)
+X-AuditID: cbfec7f2-f0bff7000001ef66-10-5e79eb9d2bbd
 Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id 54.6F.08375.F9BE97E5; Tue, 24
-        Mar 2020 11:14:39 +0000 (GMT)
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id 75.BE.07950.D9BE97E5; Tue, 24
+        Mar 2020 11:14:37 +0000 (GMT)
 Received: from AMDC3058.digital.local (unknown [106.120.51.71]) by
         eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200324111438eusmtip192e38a4eb7b2bb65871a9d021311ae88~-OTGDeXfh0076200762eusmtip12;
-        Tue, 24 Mar 2020 11:14:38 +0000 (GMT)
+        20200324111436eusmtip1cedec3205fd652355a66a8eafd7eddcf~-OTEZ9ROp0080400804eusmtip1m;
+        Tue, 24 Mar 2020 11:14:36 +0000 (GMT)
 From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 To:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>
 Cc:     "David S . Miller" <davem@davemloft.net>,
@@ -66,217 +66,92 @@ Cc:     "David S . Miller" <davem@davemloft.net>,
         Christoph Hellwig <hch@lst.de>, linux-ide@vger.kernel.org,
         linux-mips@vger.kernel.org, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com
-Subject: [PATCH v2 3/3] docs: mips: remove no longer needed au1xxx_ide.rst
- documentation
-Date:   Tue, 24 Mar 2020 12:14:20 +0100
-Message-Id: <20200324111420.31793-4-b.zolnierkie@samsung.com>
+Subject: [PATCH v2 0/3] ide/MIPS/docs: remove no longer used au1xxx-ide
+ driver
+Date:   Tue, 24 Mar 2020 12:14:17 +0100
+Message-Id: <20200324111420.31793-1-b.zolnierkie@samsung.com>
 X-Mailer: git-send-email 2.24.1
-In-Reply-To: <20200324111420.31793-1-b.zolnierkie@samsung.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA01Sa0hTcRTnv3t3d11tXafgoaJypaiUlvbh0gsF0wv1oaQXQtbU66zcsl1n
-        Gn2whzothjqzmpb5SjfJx3xOpXSVJlZWq7CoIJOwRhE5pCSjXa+S337nnN/jHDgkpnguXk4e
-        02awOq0qTUlI8c7B3083VLqyEzbWjIbTrdeaxfREfz6iK0Yv4rSl8aGILn70E6er8mpxerB7
-        XEQ7eyoIusDWgejX7nEJbXQNYvSLvnX0/fMDWKSMyX1RjzPtljcixm5+L2Fs1gKCeWi5I2J6
-        3+QQTI3RJGZcDz7ijLHdipgp26o90njptmQ27VgmqwvbcVSa+tZAp08GZf3qsqMcZPEvRCQJ
-        1GY4b1pWiKSkgmpA4Gy0S4TCjSC/MhcTiilPUTomWlDMTGiEfj2Cuq4rHoWXoOi3ZfCYoLZA
-        cb4V8diXioDmjl4xL8CoUgy6Ht/E+YEPFQ+1FU/mxDgVAA5jq4jHMmo7nLvbR/AYqNXQMf1T
-        zGMvage0DTUhgeMNw9cn5nwwD+dCR/ncpkCNS8DRaBALm0aD/Uai4OMDX4faJQJeCSOmy7jA
-        b0Iwa5icF3chqDf9nU/eCu+ezhC8EUYFQ3NPmNCOgpkWNxL85TD2zVvYQQ4lnVcxoS0DQ55C
-        YAdCy+0WYiG20G6ZpzAw+mNXEfI3LzrGvOgY8//YWwizIj9Wz2nULBeuZU+HcioNp9eqQ5NO
-        amzI82gjf4fc3ajnT6IDUSRSLpUFfcxOUIhVmVy2xoGAxJS+sjY2K0EhS1Zln2F1J4/o9Gks
-        50ArSFzpJ4uo/nJYQalVGewJlk1ndQtTEem1PAeFz0bm77yUGXnoljM2dl9ZWQhF1UynBLiK
-        HqQVmz6d/nAq6Vxla0w5ik32Czsek7Tk1eNAQyKs/947ozbsi3GW7x4OjvsRIg8vjyZOVX/e
-        HyLfc9Cpf882kL6QEuV2xU7FHTAPzE4X+Zi2WceeTdSVrBnVrrr3smrt2apHe4tstBLnUlWb
-        QjAdp/oH+ut/BWQDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrIIsWRmVeSWpSXmKPExsVy+t/xu7rzX1fGGezp5bXYOGM9q8WTA+2M
-        FnPOt7BYrFx9lMli4olPLBYL25awWBzb8YjJ4vKuOWwWnZu2Mlpc+/KI3aLv9TFmi0t7VCwO
-        Nx1kduD1aL20nMVjy8qbTB47Z91l99i0qpPN4+jKtUweu282sHks7pvM6vH6yEMWj74tqxg9
-        Pm+SC+CK0rMpyi8tSVXIyC8usVWKNrQw0jO0tNAzMrHUMzQ2j7UyMlXSt7NJSc3JLEst0rdL
-        0Mu41WFR8EKj4sf2nYwNjCsVuxg5OCQETCR+PcntYuTiEBJYyiixf8p9Zoi4jMTx9WVdjJxA
-        prDEn2tdbBA1nxglHl24xwSSYBOwkpjYvooRxBYRMJZYv3U3K0gRs8A8ZokbLy6DFQkLREjc
-        62kAs1kEVCUO9W0Es3kFbCUa9+1hg9ggL7H12ydWEJtTwE5i8/F1YEOFgGpeffrMDlEvKHFy
-        5hMWEJsZqL5562zmCYwCs5CkZiFJLWBkWsUoklpanJueW2yoV5yYW1yal66XnJ+7iREYfduO
-        /dy8g/HSxuBDjAIcjEo8vBoPK+OEWBPLiitzDzFKcDArifBuTq2IE+JNSaysSi3Kjy8qzUkt
-        PsRoCvTERGYp0eR8YGLIK4k3NDU0t7A0NDc2NzazUBLn7RA4GCMkkJ5YkpqdmlqQWgTTx8TB
-        KdXAaBHgdbdn455tDx3vaK9v3X+s+4x/80Ux7k1zlx33+vTfKDM/4sLel5Y569hnnr+swtvt
-        83XX7b09MmxVR27M7ll+7RPzxpLulPuzhdW43LLP9P/4kd6z6eLvqcs7eqdv+SIz14nN9bbn
-        SqcJ9uwFQXvn9pY+r7vPZzr7f2Jsus0L5/0nHkrnuiuxFGckGmoxFxUnAgC8dPGE1AIAAA==
-X-CMS-MailID: 20200324111439eucas1p1d0e34bd0563643bce53f060490772075
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrKKsWRmVeSWpSXmKPExsWy7djPc7pzX1fGGex7qmexccZ6VosnB9oZ
+        Leacb2GxWLn6KJPFxBOfWCwWti1hsTi24xGTxeVdc9gsOjdtZbS49uURu0Xf62PMFpf2qFgc
+        bjrI7MDr0XppOYvHlpU3mTx2zrrL7rFpVSebx9GVa5k8dt9sYPNY3DeZ1eP1kYcsHn1bVjF6
+        fN4kF8AVxWWTkpqTWZZapG+XwJVxaekJ9oIXXBVff7QyNzCu4+hi5OSQEDCRWLlmG1sXIxeH
+        kMAKRonP39tYIZwvjBLTdl5hA6kSEvjMKPH3XBxMx9rLB5kgipYzSvyeNIkZrmNLw20WkCo2
+        ASuJie2rGEFsEQFjifVbd4ONZRaYwiyx/cw8sCJhgQCJtcs6gbo5OFgEVCUev/EGCfMK2ErM
+        /bKdGWKbvMTWb59YIeKCEidnPgFrZQaKN2+dDbZYQuAUu8TxJZ8ZIRpcJD7sussKYQtLvDq+
+        hR3ClpH4v3M+E0TDOqB3Ol5AdW9nlFg++R8bRJW1xJ1zv9hALmIW0JRYv0sfIuwoMW3HCxaQ
+        sIQAn8SNt4IQR/BJTNo2nRkizCvR0SYEUa0msWHZBjaYtV07V0L94iHRceUpOyREYyWub2hl
+        mcCoMAvJa7OQvDYL4YYFjMyrGMVTS4tz01OLDfNSy/WKE3OLS/PS9ZLzczcxAhPb6X/HP+1g
+        /Hop6RCjAAejEg+vxsPKOCHWxLLiytxDjBIczEoivJtTK+KEeFMSK6tSi/Lji0pzUosPMUpz
+        sCiJ8xovehkrJJCeWJKanZpakFoEk2Xi4JRqYOx88mtjzGTNBYzJjJ61/653696d5/Iq8H3S
+        OZFbmy55zsoxD+Te8GLW8YhXklNl5i0rYZHZHmmcbLJOvVfBe0Mo98rVAa/eMbZP2vyJ58Ib
+        F+X+zyp7tCtzFff4bBA/ZSkmn6YqI86wIfOurmzqi/VBJy+7zOP/V6NZtj/ZuFLi3tYgDUcz
+        ZSWW4oxEQy3mouJEAFZ6B61oAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrFIsWRmVeSWpSXmKPExsVy+t/xu7pzX1fGGexcLm2xccZ6VosnB9oZ
+        Leacb2GxWLn6KJPFxBOfWCwWti1hsTi24xGTxeVdc9gsOjdtZbS49uURu0Xf62PMFpf2qFgc
+        bjrI7MDr0XppOYvHlpU3mTx2zrrL7rFpVSebx9GVa5k8dt9sYPNY3DeZ1eP1kYcsHn1bVjF6
+        fN4kF8AVpWdTlF9akqqQkV9cYqsUbWhhpGdoaaFnZGKpZ2hsHmtlZKqkb2eTkpqTWZZapG+X
+        oJdxaekJ9oIXXBVff7QyNzCu4+hi5OSQEDCRWHv5IFMXIxeHkMBSRomXSxazdDFyACVkJI6v
+        L4OoEZb4c62LDaLmE6NE8+uzzCAJNgEriYntqxhBbBEBY4n1W3ezghQxC8xjlrjx4jITSEJY
+        wE9i0pR2ZpChLAKqEo/feIOEeQVsJeZ+2c4MsUBeYuu3T6wQcUGJkzOfsIDYzEDx5q2zmScw
+        8s1CkpqFJLWAkWkVo0hqaXFuem6xkV5xYm5xaV66XnJ+7iZGYDxtO/Zzyw7GrnfBhxgFOBiV
+        eHg1HlbGCbEmlhVX5h5ilOBgVhLh3ZxaESfEm5JYWZValB9fVJqTWnyI0RTo1onMUqLJ+cBY
+        zyuJNzQ1NLewNDQ3Njc2s1AS5+0QOBgjJJCeWJKanZpakFoE08fEwSnVwNgfduiV5/e7FdKy
+        oqYpc2LUOH8Kvfp7fbXYF+XPn3U5UnzbGK4bOB5yE+jeJhtyoKqw0vbNtcpTt24782WLtkpu
+        uTSnb94ziw/2M6QE/fJ7vP/ULNm+qlqmv8qa9ZCz7v/Ju3tY9Zw/57fb++pdjziyu3qpbUK0
+        QsCpiB25OYtereI65vCnVImlOCPRUIu5qDgRANVqptq9AgAA
+X-CMS-MailID: 20200324111437eucas1p1a898c365a825deb9d0dc6c99202e2f57
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200324111439eucas1p1d0e34bd0563643bce53f060490772075
+X-RootMTR: 20200324111437eucas1p1a898c365a825deb9d0dc6c99202e2f57
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20200324111439eucas1p1d0e34bd0563643bce53f060490772075
-References: <20200324111420.31793-1-b.zolnierkie@samsung.com>
-        <CGME20200324111439eucas1p1d0e34bd0563643bce53f060490772075@eucas1p1.samsung.com>
+X-CMS-RootMailID: 20200324111437eucas1p1a898c365a825deb9d0dc6c99202e2f57
+References: <CGME20200324111437eucas1p1a898c365a825deb9d0dc6c99202e2f57@eucas1p1.samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Since the au1xxx-ide IDE host driver is no longer needed its documentation
-can be removed.
+Hi,
 
-Acked-by: Manuel Lauss <manuel.lauss@gmail.com>
-Acked-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
----
- Documentation/mips/au1xxx_ide.rst | 130 ------------------------------
- Documentation/mips/index.rst      |   2 -
- 2 files changed, 132 deletions(-)
+Commit 54ff4a1d1732 ("MIPS: Alchemy: pata_platform for DB1200")
+from year 2014 converted the only user of au1xxx-ide IDE host
+driver (MIPS Alchemy DB1200 platform) to use pata_platform libata
+host driver instead. This patch series removes dead au1xxx-ide
+driver code & co.
+
+Please merge through mips tree (IDE changes have been Acked by
+David Miller).
+
+Changes since v1
+(https://lore.kernel.org/linux-ide/20200116122938.20789-1-b.zolnierkie@samsung.com/):
+- added ACKs
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
+
+
+Bartlomiej Zolnierkiewicz (3):
+  ide: remove no longer used au1xxx-ide driver
+  MIPS: Alchemy: remove no longer used au1xxx_ide.h header
+  docs: mips: remove no longer needed au1xxx_ide.rst documentation
+
+ Documentation/mips/au1xxx_ide.rst             | 130 ----
+ Documentation/mips/index.rst                  |   2 -
+ .../mips/include/asm/mach-au1x00/au1xxx_ide.h | 178 ------
+ drivers/ide/Kconfig                           |  17 -
+ drivers/ide/Makefile                          |   2 -
+ drivers/ide/au1xxx-ide.c                      | 597 ------------------
+ 6 files changed, 926 deletions(-)
  delete mode 100644 Documentation/mips/au1xxx_ide.rst
+ delete mode 100644 arch/mips/include/asm/mach-au1x00/au1xxx_ide.h
+ delete mode 100644 drivers/ide/au1xxx-ide.c
 
-diff --git a/Documentation/mips/au1xxx_ide.rst b/Documentation/mips/au1xxx_ide.rst
-deleted file mode 100644
-index 2f9c2cff6738..000000000000
---- a/Documentation/mips/au1xxx_ide.rst
-+++ /dev/null
-@@ -1,130 +0,0 @@
--.. include:: <isonum.txt>
--
--======================
--MIPS AU1XXX IDE driver
--======================
--
--Released 2005-07-15
--
--About
--=====
--
--This file describes the 'drivers/ide/au1xxx-ide.c', related files and the
--services they provide.
--
--If you are short in patience and just want to know how to add your hard disc to
--the white or black list, go to the 'ADD NEW HARD DISC TO WHITE OR BLACK LIST'
--section.
--
--
--License
--=======
--
--:Copyright: |copy| 2003-2005 AMD, Personal Connectivity Solutions
--
--This program is free software; you can redistribute it and/or modify it under
--the terms of the GNU General Public License as published by the Free Software
--Foundation; either version 2 of the License, or (at your option) any later
--version.
--
--THIS SOFTWARE IS PROVIDED ``AS IS`` AND ANY EXPRESS OR IMPLIED WARRANTIES,
--INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
--FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR
--BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
--CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
--SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
--INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
--CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
--ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
--POSSIBILITY OF SUCH DAMAGE.
--
--You should have received a copy of the GNU General Public License along with
--this program; if not, write to the Free Software Foundation, Inc.,
--675 Mass Ave, Cambridge, MA 02139, USA.
--
--Note:
--      for more information, please refer "AMD Alchemy Au1200/Au1550 IDE
--      Interface and Linux Device Driver" Application Note.
--
--
--Files, Configs and Compatibility
--================================
--
--Two files are introduced:
--
--  a) 'arch/mips/include/asm/mach-au1x00/au1xxx_ide.h'
--     contains : struct _auide_hwif
--
--                - timing parameters for PIO mode 0/1/2/3/4
--                - timing parameters for MWDMA 0/1/2
--
--  b) 'drivers/ide/mips/au1xxx-ide.c'
--     contains the functionality of the AU1XXX IDE driver
--
--Following extra configs variables are introduced:
--
--  CONFIG_BLK_DEV_IDE_AU1XXX_PIO_DBDMA
--	- enable the PIO+DBDMA mode
--  CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
--	- enable the MWDMA mode
--
--
--Supported IDE Modes
--===================
--
--The AU1XXX IDE driver supported all PIO modes - PIO mode 0/1/2/3/4 - and all
--MWDMA modes - MWDMA 0/1/2 -. There is no support for SWDMA and UDMA mode.
--
--To change the PIO mode use the program hdparm with option -p, e.g.
--'hdparm -p0 [device]' for PIO mode 0. To enable the MWDMA mode use the option
---X, e.g. 'hdparm -X32 [device]' for MWDMA mode 0.
--
--
--Performance Configurations
--==========================
--
--If the used system doesn't need USB support enable the following kernel
--configs::
--
--    CONFIG_IDE=y
--    CONFIG_BLK_DEV_IDE=y
--    CONFIG_IDE_GENERIC=y
--    CONFIG_BLK_DEV_IDEPCI=y
--    CONFIG_BLK_DEV_GENERIC=y
--    CONFIG_BLK_DEV_IDEDMA_PCI=y
--    CONFIG_BLK_DEV_IDE_AU1XXX=y
--    CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA=y
--    CONFIG_BLK_DEV_IDEDMA=y
--
--Also define 'IDE_AU1XXX_BURSTMODE' in 'drivers/ide/mips/au1xxx-ide.c' to enable
--the burst support on DBDMA controller.
--
--If the used system need the USB support enable the following kernel configs for
--high IDE to USB throughput.
--
--::
--
--    CONFIG_IDE_GENERIC=y
--    CONFIG_BLK_DEV_IDEPCI=y
--    CONFIG_BLK_DEV_GENERIC=y
--    CONFIG_BLK_DEV_IDEDMA_PCI=y
--    CONFIG_BLK_DEV_IDE_AU1XXX=y
--    CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA=y
--    CONFIG_BLK_DEV_IDEDMA=y
--
--Also undefine 'IDE_AU1XXX_BURSTMODE' in 'drivers/ide/mips/au1xxx-ide.c' to
--disable the burst support on DBDMA controller.
--
--
--Acknowledgments
--===============
--
--These drivers wouldn't have been done without the base of kernel 2.4.x AU1XXX
--IDE driver from AMD.
--
--Additional input also from:
--Matthias Lenk <matthias.lenk@amd.com>
--
--Happy hacking!
--
--Enrico Walther <enrico.walther@amd.com>
-diff --git a/Documentation/mips/index.rst b/Documentation/mips/index.rst
-index a93c2f65884c..d5ad8c00f0bd 100644
---- a/Documentation/mips/index.rst
-+++ b/Documentation/mips/index.rst
-@@ -10,8 +10,6 @@ MIPS-specific Documentation
- 
-    ingenic-tcu
- 
--   au1xxx_ide
--
- .. only::  subproject and html
- 
-    Indices
 -- 
 2.24.1
 
