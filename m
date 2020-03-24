@@ -1,220 +1,319 @@
-Return-Path: <SRS0=5IPi=5E=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=G9Vu=5J=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C406C4332D
-	for <linux-ide@archiver.kernel.org>; Thu, 19 Mar 2020 16:15:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D3ECC43331
+	for <linux-ide@archiver.kernel.org>; Tue, 24 Mar 2020 11:14:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 31D0920775
-	for <linux-ide@archiver.kernel.org>; Thu, 19 Mar 2020 16:15:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF56E20786
+	for <linux-ide@archiver.kernel.org>; Tue, 24 Mar 2020 11:14:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="vcvcXvtZ"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="feQLktMt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727689AbgCSQPM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 19 Mar 2020 12:15:12 -0400
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:60877 "EHLO
-        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727655AbgCSQPM (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 19 Mar 2020 12:15:12 -0400
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200319161510euoutp0168436768e64cda7abfb679334eba5800~9wLD0XLZk0412804128euoutp01F
-        for <linux-ide@vger.kernel.org>; Thu, 19 Mar 2020 16:15:10 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200319161510euoutp0168436768e64cda7abfb679334eba5800~9wLD0XLZk0412804128euoutp01F
+        id S1727112AbgCXLOl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 24 Mar 2020 07:14:41 -0400
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:38337 "EHLO
+        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727257AbgCXLOl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 Mar 2020 07:14:41 -0400
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200324111439euoutp02fb759a64ef800ba1d62720eb6eb77d6f~-OTG2gmRv2967329673euoutp02Y
+        for <linux-ide@vger.kernel.org>; Tue, 24 Mar 2020 11:14:39 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200324111439euoutp02fb759a64ef800ba1d62720eb6eb77d6f~-OTG2gmRv2967329673euoutp02Y
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1584634510;
-        bh=PH4XpAvDTqRnnkexutJQDHffmNTuPS+R8AFy6ym3OEM=;
-        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=vcvcXvtZ0abSCDV5pqEpaQzKGOi4w1noRZh0iJRinft5n6kAqAlxXeZgVyNZNjsmA
-         ed3OGumeWAuvn7Z8znSPwkrekb0c0snAq91g02c0u7v6HQtoSjNEc+zblGICeEnxiv
-         bobP1n0GEg7f/drPlw1Fuyi1peRrm/73pXqJTpvQ=
-Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20200319161509eucas1p2afddab88cb58d0c9e5010bb10f3f84ce~9wLDnhj6C0339903399eucas1p27;
-        Thu, 19 Mar 2020 16:15:09 +0000 (GMT)
-Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
-        eusmges3new.samsung.com (EUCPMTA) with SMTP id 23.E1.60698.D8A937E5; Thu, 19
-        Mar 2020 16:15:09 +0000 (GMT)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20200319161509eucas1p168ca3c148f341f23e29d4637a538e17c~9wLDQWr5P0720007200eucas1p1R;
-        Thu, 19 Mar 2020 16:15:09 +0000 (GMT)
+        s=mail20170921; t=1585048479;
+        bh=m771JCPoRTsA5p+KuB0lE8yop6dn4Z3GGmdKM1i8Ap4=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=feQLktMtbpgcEJKM4nt7ZMWbzdTT/lb79ekRsVGMqfr7LHsSH4cltHpIGkei81l3D
+         hszQCSmIoI4xRTeMU26Vnz+NOlt+YFPAFmScN10fERPsQVMg3+YhXbhF3MVbiuZnod
+         Z7ZsM6txE/Zvj3fcQ0yG2grEy5xLfERkENYB8K80=
+Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
+        20200324111439eucas1p1399fcd1a1cb5e1abeb677961199d9dbd~-OTGgngtN2373023730eucas1p1K;
+        Tue, 24 Mar 2020 11:14:39 +0000 (GMT)
+Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
+        eusmges1new.samsung.com (EUCPMTA) with SMTP id EB.1D.61286.F9BE97E5; Tue, 24
+        Mar 2020 11:14:39 +0000 (GMT)
+Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
+        20200324111438eucas1p20e45db250af6e2419e97f8a0e3e3e065~-OTGEG-9x1838518385eucas1p2r;
+        Tue, 24 Mar 2020 11:14:38 +0000 (GMT)
 Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
-        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200319161509eusmtrp1c6b0b994825553f20d23c3288fa585dd~9wLDPrUl80891708917eusmtrp1U;
-        Thu, 19 Mar 2020 16:15:09 +0000 (GMT)
-X-AuditID: cbfec7f5-a29ff7000001ed1a-65-5e739a8d0b35
-Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id 7A.08.07950.D8A937E5; Thu, 19
-        Mar 2020 16:15:09 +0000 (GMT)
-Received: from [106.120.51.71] (unknown [106.120.51.71]) by
-        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20200319161509eusmtip273a87bca46d0e365c4c4666d945b2d29~9wLCxGxdz1186411864eusmtip2i;
-        Thu, 19 Mar 2020 16:15:08 +0000 (GMT)
-Subject: Re: [PATCH v4 03/27] ata: make SATA_PMP option selectable only if
- any SATA host driver is enabled
-To:     James Bottomley <jejb@linux.ibm.com>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        Michael Schmitz <schmitzmic@gmail.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Christoph Hellwig <hch@lst.de>, linux-ide@vger.kernel.org,
-        linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
+        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200324111438eusmtrp2db8a69ab698f5735a9c8311661360354~-OTGDfMuN0435704357eusmtrp21;
+        Tue, 24 Mar 2020 11:14:38 +0000 (GMT)
+X-AuditID: cbfec7f2-f0bff7000001ef66-14-5e79eb9f0bf2
+Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id 97.BE.07950.E9BE97E5; Tue, 24
+        Mar 2020 11:14:38 +0000 (GMT)
+Received: from AMDC3058.digital.local (unknown [106.120.51.71]) by
+        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20200324111438eusmtip1a63813eb2f9ed78b174cad1dc03fa8e1~-OTFe1QQq0893908939eusmtip1K;
+        Tue, 24 Mar 2020 11:14:38 +0000 (GMT)
 From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <8b77928f-5985-046c-f760-b50625dbeeb4@samsung.com>
-Date:   Thu, 19 Mar 2020 17:15:07 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
-        Thunderbird/60.8.0
+To:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+Cc:     "David S . Miller" <davem@davemloft.net>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Paul Burton <paul.burton@mips.com>,
+        James Hogan <jhogan@kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Manuel Lauss <manuel.lauss@gmail.com>,
+        Christoph Hellwig <hch@lst.de>, linux-ide@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com,
+        Paul Burton <paulburton@kernel.org>
+Subject: [PATCH v2 2/3] MIPS: Alchemy: remove no longer used au1xxx_ide.h
+ header
+Date:   Tue, 24 Mar 2020 12:14:19 +0100
+Message-Id: <20200324111420.31793-3-b.zolnierkie@samsung.com>
+X-Mailer: git-send-email 2.24.1
+In-Reply-To: <20200324111420.31793-1-b.zolnierkie@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <1584456957.4545.7.camel@linux.ibm.com>
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA01SbUhTYRTu3b279244uc7FDhZGw6IMtZjlxUKMgu6vDPoTgtbUy9R0yq5a
-        +kejTBtFpsZwKJaBuqn5kfkVikzcEMtEf2TL+dX6UFpkVpqotO0q+e85z3mec84Dh8LkQ+Ig
-        Kk2Xw+l1mgwVIcW7bH/Hwh6Y+MTj01Y10+R8SDCfHf0ixtw0LGLqprpEjK1nQcRM9lUTTIOr
-        BWMa7FsipqbYSMZK2F6Tk2Qn3+Sy1qFSxJbVDSJ2pPgPzr56X0Swy58cOLvSEXyJipeeSeEy
-        0vI4fUTMNWnqyq0fWLYz+KZlVF+EusGAJBTQkTDzYhY3ICklpxsRPG1ux4TiF4KN8VWxUKwg
-        sHUaxTsWY4uNFBoNCNz9PdsWN4KRwUrSqwqkM6C5thL3YgV9BLrX55FXhNFmETwb/ugTEXQ0
-        PCqxIC+W0THgmqv3GXD6EHwfLPHhvfQV+Dk3JBY0ATBS5fLxEs8ZlrV5zIsxWgkOV61IwAeg
-        213tuwjoCRJer1Z7FlCe4jxsfUsTIgTCkr2TFPB+GK24jwv65wg2S79um7sRNFRsEYLqNEyP
-        rRPeQRh9FFr7IgT6LHQ0bpLCfH+YcgcIN/hDeZcRE2gZlN6VC+rD0FbfRuysNfSasTKkMu1K
-        ZtqVxrQrjen/3icItyAll8tnajlereNuhPOaTD5Xpw1PzsrsQJ7XGt2y/+5BAxtJVkRTSOUn
-        i73DJ8rFmjw+P9OKgMJUClmY1kPJUjT5BZw+66o+N4PjrWgfhauUMnXdYoKc1mpyuOscl83p
-        d7oiShJUhBKwwuykcqwufdwRQrrVF3XtjStRoaXWHt7JOCHE4LwXV/UyTqp6nGhclM7ET7xV
-        LBTGX/7SyyvssRfWXP3v0nPshqhCNuLcxp7K6E2zMoRsTx3Q8rVT+tsF2dONNZHV5EjrsXSF
-        fHhp+VT8rE1S+8GPUB6UJQcV5Z9cDFbhfKrmRCim5zX/ANwXbrNWAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrKIsWRmVeSWpSXmKPExsVy+t/xe7q9s4rjDM6skrVYfbefzeLZrb1M
-        FitXH2WyWHRjG5PFsR2PmCwu75rDZrH8yVpmi+XH/zFZzG2dzu7A6bFz1l12j8tnSz0OHe5g
-        9Jiw6ACjx8nWbyweu282sHl8fHqLxePzJrkAjig9m6L80pJUhYz84hJbpWhDCyM9Q0sLPSMT
-        Sz1DY/NYKyNTJX07m5TUnMyy1CJ9uwS9jM+NH5gL7spVrDpd1MC4XaKLkZNDQsBEYvraY+xd
-        jFwcQgJLGSWufbjP0sXIAZSQkTi+vgyiRljiz7UuNoia14wSExe8YAZJCAvkSNy8+YEFxBYR
-        0JDY/ushI0gRs8BKJok3W55CdbxllGjp/gLWwSZgJTGxfRUjiM0rYCfx5MEysG4WAVWJdwfa
-        wWxRgQiJwztmQdUISpyc+QQszgl06qofD8HmMAuoS/yZdwnKFpe49WQ+E4QtL7H97RzmCYxC
-        s5C0z0LSMgtJyywkLQsYWVYxiqSWFuem5xYb6RUn5haX5qXrJefnbmIERum2Yz+37GDsehd8
-        iFGAg1GJh3dGW3GcEGtiWXFl7iFGCQ5mJRFe3XSgEG9KYmVValF+fFFpTmrxIUZToOcmMkuJ
-        JucDE0heSbyhqaG5haWhubG5sZmFkjhvh8DBGCGB9MSS1OzU1ILUIpg+Jg5OqQbGbcqCVQoL
-        ufc33RO1EnZWSi8R6jJbbrhtRpNTi3uh66vjYkw8ZzrWnPvbwGreYOs69bbRCl7WvzGH27WU
-        +XxfOU384aB/SKlwwa/HJ3SEtmgstRbutmUrmep77FfV3+zOFbEt1+ZPn2Tz4qie+uamjNn+
-        Zkf/MuxKXu/iwXuHa4+Uz5N7qR+VWIozEg21mIuKEwEFGdgb6AIAAA==
-X-CMS-MailID: 20200319161509eucas1p168ca3c148f341f23e29d4637a538e17c
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA01Se0hTYRzt27139zqaXKfgl4XRqEjBFwZd1ESh8lJBL4gIUpfeVHTTdtVc
+        JIjvDdTU8LEUrSR1PpuPfFE6dT6CJBPJ0sIppukq1CTDVtuulv+d3/md853zg49ARO8xJyJK
+        Fs/IZZIYMV+Atus3x9wqlhXBnj/nMOpZSRNGzfdmAapsLB2lausGeVT+8CpKPcqsQil9h4FH
+        ve0q41NKbRugJtcNOJW7rEeo7I1ylBrvOUz1p/YhAbZ0xng1SrfWTvHoTvUMTms1Sj49WNvA
+        o7unUvj0k9xCjF4emEXp3FYNoNe0zhcF1wV+4UxMVCIj9/APFUQOaRfRuGHfpNTyCTwF6D1V
+        wIaA5HG40LuBqYCAEJE1AHYZBgE3rANoaOzic8MagL2rDfiOpb6qD+EW1QDmTRRh/yyNlUae
+        RcUnfWB+lgZYsAPpDZvauq0ihOxEYL1BbRXZk5fhinELsWCUPAI7Bh6gKoATQvIkLHHkwg7C
+        to1VzIJtSH/YMtRofVJI2sGR0nnUghGzJq3tobUQJI041H5Qbjc9BSdKe1AO28MvQ63b/AH4
+        p7OCxxkaAfydvbjtfg5gdaGJz6l84fTrX2ZMmCNcYFOXB0cHwpQanZWGpC18Z7TjStjCgvZi
+        hKOFMDtTxKmPwuanzfydWFVnLcJhGo4Wl+P3wSH1rnPUu85R/8+tBIgGODIJrDSCYb1kzB13
+        ViJlE2QR7mGxUi0w/7hXpqHVDvBj/KYOkAQQ7xUem1UEizBJIquQ6gAkELGDsIVJChYJwyWK
+        u4w8NkSeEMOwOrCfQMWOQu/HSzdEZIQknolmmDhGvrPlETZOKcD141panPMZLEyfPCG5tBKl
+        LTLppTXEd5/PZ0f6567ONOtH2r3eDHwtq9vKjLW/MJq5R/wi41zep3vXavAE0nt4qafFFDKT
+        Q22aNMoTBVief4D/QqtbgS5eMZ0YmuPy0tiXHJcevS/o1vlvLg5+QbcNaaFuk6Hp6adDVgKv
+        IJO+YpSNlHi5InJW8hdiekmWbQMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrKIsWRmVeSWpSXmKPExsVy+t/xu7rzXlfGGaxbrWGxccZ6VosnB9oZ
+        Leacb2GxWLn6KJPFxBOfWCwWti1hsTi24xGTxeVdc9gsOjdtZbS49uURu0Xf62PMFh3f5rJY
+        XNqjYnG46SCzA59H66XlLB5bVt5k8tg56y67x6ZVnWweR1euZfLYfbOBzWNx32RWj9dHHrJ4
+        9G1ZxejxeZNcAFeUnk1RfmlJqkJGfnGJrVK0oYWRnqGlhZ6RiaWeobF5rJWRqZK+nU1Kak5m
+        WWqRvl2CXsbxTS9YCk5YVzTNvcLewHjMoIuRk0NCwERizZKDzF2MXBxCAksZJQ6+/8LSxcgB
+        lJCROL6+DKJGWOLPtS42iJpPjBJv9p9nAkmwCVhJTGxfxQhiiwgYS6zfupsVxGYWOMos0Xvb
+        E8QWFgiQaL3Tzg5iswioSuw4MgVoPjsHr4CtxAxxiPHyElu/fQLr5BSwk9h8fB3YRCGgilef
+        PoN18goISpyc+YQFYrq8RPPW2cwTGAVmIUnNQpJawMi0ilEktbQ4Nz232EivODG3uDQvXS85
+        P3cTIzAKtx37uWUHY9e74EOMAhyMSjy8Gg8r44RYE8uKK3MPMUpwMCuJ8G5OrYgT4k1JrKxK
+        LcqPLyrNSS0+xGgK9MJEZinR5HxggsgriTc0NTS3sDQ0NzY3NrNQEuftEDgYIySQnliSmp2a
+        WpBaBNPHxMEp1cAo2nw4afE9qweW7ZubhHL6FRXef3JkP1nA5GL2b/4d2zlHlDsOPd9j5xSq
+        2S/0rkSCxbG9NcN09epw+avqH9a+X9ViI7JlowvXCWFr4a3xumUHmlb39Vz3tY0V2jox7Z3P
+        SpWguB/1r0+wvLzz6Un8wsU3PkVvfflIK7R1WcvKo5XMZ0sOGhcrsRRnJBpqMRcVJwIAtTPK
+        09gCAAA=
+X-CMS-MailID: 20200324111438eucas1p20e45db250af6e2419e97f8a0e3e3e065
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200317144342eucas1p2d73deadcdb4cee860dd610f9f8e26bda
+X-RootMTR: 20200324111438eucas1p20e45db250af6e2419e97f8a0e3e3e065
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20200317144342eucas1p2d73deadcdb4cee860dd610f9f8e26bda
-References: <20200317144333.2904-1-b.zolnierkie@samsung.com>
-        <CGME20200317144342eucas1p2d73deadcdb4cee860dd610f9f8e26bda@eucas1p2.samsung.com>
-        <20200317144333.2904-4-b.zolnierkie@samsung.com>
-        <1584456957.4545.7.camel@linux.ibm.com>
+X-CMS-RootMailID: 20200324111438eucas1p20e45db250af6e2419e97f8a0e3e3e065
+References: <20200324111420.31793-1-b.zolnierkie@samsung.com>
+        <CGME20200324111438eucas1p20e45db250af6e2419e97f8a0e3e3e065@eucas1p2.samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+Since the only user of this header (au1xxx-ide IDE host driver) is
+now gone it can also be removed.
 
-On 3/17/20 3:55 PM, James Bottomley wrote:
-> On Tue, 2020-03-17 at 15:43 +0100, Bartlomiej Zolnierkiewicz wrote:
->> There is no reason to expose SATA_PMP config option when no SATA
->> host drivers are enabled. To fix it add SATA_HOST config option,
->> make all SATA host drivers select it and finally make SATA_PMP
->> config options depend on it.
->>
->> This also serves as preparation for the future changes which
->> optimize libata core code size on PATA only setups.
->>
->> CC: "James E.J. Bottomley" <jejb@linux.ibm.com>
->> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com> # for
->> SCSI bits
->> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
->> ---
->>  drivers/ata/Kconfig         | 40
->> +++++++++++++++++++++++++++++++++++++
->>  drivers/scsi/Kconfig        |  1 +
->>  drivers/scsi/libsas/Kconfig |  1 +
->>  3 files changed, 42 insertions(+)
->>
->> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
->> index a6beb2c5a692..ad7760656f71 100644
->> --- a/drivers/ata/Kconfig
->> +++ b/drivers/ata/Kconfig
->> @@ -34,6 +34,9 @@ if ATA
->>  config ATA_NONSTANDARD
->>         bool
->>  
->> +config SATA_HOST
->> +	bool
->> +
->>  config ATA_VERBOSE_ERROR
->>  	bool "Verbose ATA error reporting"
->>  	default y
->> @@ -73,6 +76,7 @@ config SATA_ZPODD
->>  
->>  config SATA_PMP
->>  	bool "SATA Port Multiplier support"
->> +	depends on SATA_HOST
->>  	default y
->>  	help
->>  	  This option adds support for SATA Port Multipliers
->> @@ -85,6 +89,7 @@ comment "Controllers with non-SFF native interface"
->>  config SATA_AHCI
->>  	tristate "AHCI SATA support"
->>  	depends on PCI
->> +	select SATA_HOST
->>  	help
->>  	  This option enables support for AHCI Serial ATA.
-> 
-> This is a bit fragile and not the way Kconfig should be done.  The
-> fragility comes because anyone adding a new host has also to remember
-> to add the select, and there will be no real consequences for not doing
+Acked-by: Paul Burton <paulburton@kernel.org>
+Acked-by: Manuel Lauss <manuel.lauss@gmail.com>
+Acked-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+---
+ .../mips/include/asm/mach-au1x00/au1xxx_ide.h | 178 ------------------
+ 1 file changed, 178 deletions(-)
+ delete mode 100644 arch/mips/include/asm/mach-au1x00/au1xxx_ide.h
 
-People adding the new host driver usually look at the existing Kconfig
-entries before introducing the new one (most probably just copy and then
-modify existing entry) so they should notice that the existing entries
-contain the select.
+diff --git a/arch/mips/include/asm/mach-au1x00/au1xxx_ide.h b/arch/mips/include/asm/mach-au1x00/au1xxx_ide.h
+deleted file mode 100644
+index bb91b8923a49..000000000000
+--- a/arch/mips/include/asm/mach-au1x00/au1xxx_ide.h
++++ /dev/null
+@@ -1,178 +0,0 @@
+-/*
+- * include/asm-mips/mach-au1x00/au1xxx_ide.h  version 01.30.00  Aug. 02 2005
+- *
+- * BRIEF MODULE DESCRIPTION
+- * AMD Alchemy Au1xxx IDE interface routines over the Static Bus
+- *
+- * Copyright (c) 2003-2005 AMD, Personal Connectivity Solutions
+- *
+- * This program is free software; you can redistribute it and/or modify it under
+- * the terms of the GNU General Public License as published by the Free Software
+- * Foundation; either version 2 of the License, or (at your option) any later
+- * version.
+- *
+- * THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
+- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+- * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR
+- * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+- * POSSIBILITY OF SUCH DAMAGE.
+- *
+- * You should have received a copy of the GNU General Public License along with
+- * this program; if not, write to the Free Software Foundation, Inc.,
+- * 675 Mass Ave, Cambridge, MA 02139, USA.
+- *
+- * Note: for more information, please refer "AMD Alchemy Au1200/Au1550 IDE
+- *	 Interface and Linux Device Driver" Application Note.
+- */
+-
+-#ifdef CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
+-#define DMA_WAIT_TIMEOUT	100
+-#define NUM_DESCRIPTORS		PRD_ENTRIES
+-#else /* CONFIG_BLK_DEV_IDE_AU1XXX_PIO_DBDMA */
+-#define NUM_DESCRIPTORS		2
+-#endif
+-
+-#ifndef AU1XXX_ATA_RQSIZE
+-#define AU1XXX_ATA_RQSIZE	128
+-#endif
+-
+-/* Disable Burstable-Support for DBDMA */
+-#ifndef CONFIG_BLK_DEV_IDE_AU1XXX_BURSTABLE_ON
+-#define CONFIG_BLK_DEV_IDE_AU1XXX_BURSTABLE_ON	0
+-#endif
+-
+-typedef struct {
+-	u32			tx_dev_id, rx_dev_id, target_dev_id;
+-	u32			tx_chan, rx_chan;
+-	void			*tx_desc_head, *rx_desc_head;
+-	ide_hwif_t		*hwif;
+-#ifdef CONFIG_BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
+-	ide_drive_t		*drive;
+-	struct dbdma_cmd	*dma_table_cpu;
+-	dma_addr_t		dma_table_dma;
+-#endif
+-	int			irq;
+-	u32			regbase;
+-	int			ddma_id;
+-} _auide_hwif;
+-
+-/******************************************************************************/
+-/* PIO Mode timing calculation :					      */
+-/*									      */
+-/* Static Bus Spec   ATA Spec						      */
+-/*	Tcsoe	   =	t1						      */
+-/*	Toecs	   =	t9						      */
+-/*	Twcs	   =	t9						      */
+-/*	Tcsh	   =	t2i | t2					      */
+-/*	Tcsoff	   =	t2i | t2					      */
+-/*	Twp	   =	t2						      */
+-/*	Tcsw	   =	t1						      */
+-/*	Tpm	   =	0						      */
+-/*	Ta	   =	t1+t2						      */
+-/******************************************************************************/
+-
+-#define TCSOE_MASK		(0x07 << 29)
+-#define TOECS_MASK		(0x07 << 26)
+-#define TWCS_MASK		(0x07 << 28)
+-#define TCSH_MASK		(0x0F << 24)
+-#define TCSOFF_MASK		(0x07 << 20)
+-#define TWP_MASK		(0x3F << 14)
+-#define TCSW_MASK		(0x0F << 10)
+-#define TPM_MASK		(0x0F << 6)
+-#define TA_MASK			(0x3F << 0)
+-#define TS_MASK			(1 << 8)
+-
+-/* Timing parameters PIO mode 0 */
+-#define SBC_IDE_PIO0_TCSOE	(0x04 << 29)
+-#define SBC_IDE_PIO0_TOECS	(0x01 << 26)
+-#define SBC_IDE_PIO0_TWCS	(0x02 << 28)
+-#define SBC_IDE_PIO0_TCSH	(0x08 << 24)
+-#define SBC_IDE_PIO0_TCSOFF	(0x07 << 20)
+-#define SBC_IDE_PIO0_TWP	(0x10 << 14)
+-#define SBC_IDE_PIO0_TCSW	(0x04 << 10)
+-#define SBC_IDE_PIO0_TPM	(0x00 << 6)
+-#define SBC_IDE_PIO0_TA		(0x15 << 0)
+-/* Timing parameters PIO mode 1 */
+-#define SBC_IDE_PIO1_TCSOE	(0x03 << 29)
+-#define SBC_IDE_PIO1_TOECS	(0x01 << 26)
+-#define SBC_IDE_PIO1_TWCS	(0x01 << 28)
+-#define SBC_IDE_PIO1_TCSH	(0x06 << 24)
+-#define SBC_IDE_PIO1_TCSOFF	(0x06 << 20)
+-#define SBC_IDE_PIO1_TWP	(0x08 << 14)
+-#define SBC_IDE_PIO1_TCSW	(0x03 << 10)
+-#define SBC_IDE_PIO1_TPM	(0x00 << 6)
+-#define SBC_IDE_PIO1_TA		(0x0B << 0)
+-/* Timing parameters PIO mode 2 */
+-#define SBC_IDE_PIO2_TCSOE	(0x05 << 29)
+-#define SBC_IDE_PIO2_TOECS	(0x01 << 26)
+-#define SBC_IDE_PIO2_TWCS	(0x01 << 28)
+-#define SBC_IDE_PIO2_TCSH	(0x07 << 24)
+-#define SBC_IDE_PIO2_TCSOFF	(0x07 << 20)
+-#define SBC_IDE_PIO2_TWP	(0x1F << 14)
+-#define SBC_IDE_PIO2_TCSW	(0x05 << 10)
+-#define SBC_IDE_PIO2_TPM	(0x00 << 6)
+-#define SBC_IDE_PIO2_TA		(0x22 << 0)
+-/* Timing parameters PIO mode 3 */
+-#define SBC_IDE_PIO3_TCSOE	(0x05 << 29)
+-#define SBC_IDE_PIO3_TOECS	(0x01 << 26)
+-#define SBC_IDE_PIO3_TWCS	(0x01 << 28)
+-#define SBC_IDE_PIO3_TCSH	(0x0D << 24)
+-#define SBC_IDE_PIO3_TCSOFF	(0x0D << 20)
+-#define SBC_IDE_PIO3_TWP	(0x15 << 14)
+-#define SBC_IDE_PIO3_TCSW	(0x05 << 10)
+-#define SBC_IDE_PIO3_TPM	(0x00 << 6)
+-#define SBC_IDE_PIO3_TA		(0x1A << 0)
+-/* Timing parameters PIO mode 4 */
+-#define SBC_IDE_PIO4_TCSOE	(0x04 << 29)
+-#define SBC_IDE_PIO4_TOECS	(0x01 << 26)
+-#define SBC_IDE_PIO4_TWCS	(0x01 << 28)
+-#define SBC_IDE_PIO4_TCSH	(0x04 << 24)
+-#define SBC_IDE_PIO4_TCSOFF	(0x04 << 20)
+-#define SBC_IDE_PIO4_TWP	(0x0D << 14)
+-#define SBC_IDE_PIO4_TCSW	(0x03 << 10)
+-#define SBC_IDE_PIO4_TPM	(0x00 << 6)
+-#define SBC_IDE_PIO4_TA		(0x12 << 0)
+-/* Timing parameters MDMA mode 0 */
+-#define SBC_IDE_MDMA0_TCSOE	(0x03 << 29)
+-#define SBC_IDE_MDMA0_TOECS	(0x01 << 26)
+-#define SBC_IDE_MDMA0_TWCS	(0x01 << 28)
+-#define SBC_IDE_MDMA0_TCSH	(0x07 << 24)
+-#define SBC_IDE_MDMA0_TCSOFF	(0x07 << 20)
+-#define SBC_IDE_MDMA0_TWP	(0x0C << 14)
+-#define SBC_IDE_MDMA0_TCSW	(0x03 << 10)
+-#define SBC_IDE_MDMA0_TPM	(0x00 << 6)
+-#define SBC_IDE_MDMA0_TA	(0x0F << 0)
+-/* Timing parameters MDMA mode 1 */
+-#define SBC_IDE_MDMA1_TCSOE	(0x05 << 29)
+-#define SBC_IDE_MDMA1_TOECS	(0x01 << 26)
+-#define SBC_IDE_MDMA1_TWCS	(0x01 << 28)
+-#define SBC_IDE_MDMA1_TCSH	(0x05 << 24)
+-#define SBC_IDE_MDMA1_TCSOFF	(0x05 << 20)
+-#define SBC_IDE_MDMA1_TWP	(0x0F << 14)
+-#define SBC_IDE_MDMA1_TCSW	(0x05 << 10)
+-#define SBC_IDE_MDMA1_TPM	(0x00 << 6)
+-#define SBC_IDE_MDMA1_TA	(0x15 << 0)
+-/* Timing parameters MDMA mode 2 */
+-#define SBC_IDE_MDMA2_TCSOE	(0x04 << 29)
+-#define SBC_IDE_MDMA2_TOECS	(0x01 << 26)
+-#define SBC_IDE_MDMA2_TWCS	(0x01 << 28)
+-#define SBC_IDE_MDMA2_TCSH	(0x04 << 24)
+-#define SBC_IDE_MDMA2_TCSOFF	(0x04 << 20)
+-#define SBC_IDE_MDMA2_TWP	(0x0D << 14)
+-#define SBC_IDE_MDMA2_TCSW	(0x04 << 10)
+-#define SBC_IDE_MDMA2_TPM	(0x00 << 6)
+-#define SBC_IDE_MDMA2_TA	(0x12 << 0)
+-
+-#define SBC_IDE_TIMING(mode) \
+-	(SBC_IDE_##mode##_TWCS | \
+-	 SBC_IDE_##mode##_TCSH | \
+-	 SBC_IDE_##mode##_TCSOFF | \
+-	 SBC_IDE_##mode##_TWP | \
+-	 SBC_IDE_##mode##_TCSW | \
+-	 SBC_IDE_##mode##_TPM | \
+-	 SBC_IDE_##mode##_TA)
+-- 
+2.24.1
 
-Also we shouldn't have problem in catching potential select omissions
-during the code review.
-
-Not to mention that the addition of the new ATA host driver is quite
-a rare event nowadays.. ;)
-
-> so.  The way to get rid of the fragility is to make SATA_HOST a
-> menuconfig option enclosing all the hosts, which makes the patch much
-> smaller as well.  The hint implies you want to separate out all the
-> PATA drivers, which also makes a menuconfig sound like the better
-> option.
-SATA_HOST is not for grouping SATA hosts, it is for core libata
-code to enable SATA support (please see patches #13-26 for details,
-maybe it should have been named ATA_SATA?) and menuconfig usage in
-this case is problematic:
-
-- we have host drivers supporting both SATA and PATA (i.e. ata_piix)
-
-- we have currently host drivers sorted in Kconfig by different 
-  criteria than SATA or PATA support
-
-- I would prefer to avoid making users to have explicitly select
-  SATA_HOST option (right now it gets auto-selected when needed)
-
-- SCSI_SAS_ATA (which also needs to select SATA_HOST) lives in
-  drivers/scsi/libsas/Kconfig so menuconfig will not cover it
-
-> I've also got to say that the problem doesn't seem to be one ... even
-> if some raving lunatic disables all SATA hosts and then enables PMP it
-> doesn't cause any problems does it?
-
-It doesn't cause any real problems (just some dead code being present
-in the kernel image) but this patch is a prerequisite for patches #13-26
-(patch description mentions that this change is needed for the future
-changes which optimize libata core code size on PATA only setups).
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
