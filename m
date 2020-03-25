@@ -2,77 +2,421 @@ Return-Path: <SRS0=f0ic=5K=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35DDAC43331
-	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 10:09:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF562C43331
+	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 11:26:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 07C78206F6
-	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 10:09:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A85A920775
+	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 11:26:24 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=crapouillou.net header.i=@crapouillou.net header.b="nj9JIoQ4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726206AbgCYKJk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 25 Mar 2020 06:09:40 -0400
-Received: from mga09.intel.com ([134.134.136.24]:63568 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726262AbgCYKJk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 25 Mar 2020 06:09:40 -0400
-IronPort-SDR: 8OyfFwnvmvvzLWAojnJfcUHlbZfn7kdkO5R3w2xE/0YcjyafqriXKnmh0qS3e33Y8WY1J5aY57
- ZbLezrICKg2w==
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Mar 2020 03:09:39 -0700
-IronPort-SDR: /ytYtoqO2NvLdBQC2HYjChseA3d+p1NwQzi7zzJfNSJxuXTwCaTQsjh7s1d4zWMnjaYdFaMelT
- U4JuOU/1b9sA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.72,303,1580803200"; 
-   d="scan'208";a="357762525"
-Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.163])
-  by fmsmga001.fm.intel.com with SMTP; 25 Mar 2020 03:09:37 -0700
-Received: by lahna (sSMTP sendmail emulation); Wed, 25 Mar 2020 12:09:37 +0200
-Date:   Wed, 25 Mar 2020 12:09:37 +0200
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     linux-ide@vger.kernel.org
-Subject: Re: [PATCH] ahci: Add Intel Comet Lake PCH-V PCI ID
-Message-ID: <20200325100937.GT2564@lahna.fi.intel.com>
-References: <20200228105048.75786-1-mika.westerberg@linux.intel.com>
+        id S1727280AbgCYL0U (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 25 Mar 2020 07:26:20 -0400
+Received: from outils.crapouillou.net ([89.234.176.41]:47660 "EHLO
+        crapouillou.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727082AbgCYL0U (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 25 Mar 2020 07:26:20 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=crapouillou.net;
+        s=mail; t=1585135575; h=from:from:sender:reply-to:subject:subject:date:date:
+         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
+         content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=vxToi3KTDzFJBN1BtzBBWc1h5r29Fizq0kChEo/QN34=;
+        b=nj9JIoQ48/+TrFjPOPi5gGRB2uVE++5Na+KwJdpekcF/14qnsel6Lm9T5TdXHN8qyNWRlH
+        IPfpe6YRwY4DR4l6JANh/GtXeqpw2fgBw4Bq3kz0AwcKlNnkCOv3h+k9MhoynTUZRd+4Qi
+        VBT5sg7ZTqTpD17BQYz0DVfRxQyFfug=
+Date:   Wed, 25 Mar 2020 12:25:58 +0100
+From:   Paul Cercueil <paul@crapouillou.net>
+Subject: Re: [PATCH v7 01/12] irqchip: Add driver for Loongson I/O Local
+ Interrupt Controller
+To:     Jiaxun Yang <jiaxun.yang@flygoat.com>
+Cc:     linux-mips@vger.kernel.org, Huacai Chen <chenhc@lemote.com>,
+        Marc Zyngier <maz@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Jonathan Corbet <corbet@lwn.net>,
+        John Crispin <john@phrozen.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Jean Delvare <jdelvare@suse.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Andi Kleen <ak@linux.intel.com>,
+        "H. Nikolaus Schaller" <hns@goldelico.com>,
+        "Eric W. Biederman" <ebiederm@xmission.com>,
+        Tiezhu Yang <yangtiezhu@loongson.cn>,
+        Yinglu Yang <yangyinglu@loongson.cn>,
+        Allison Randal <allison@lohutok.net>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Paul Burton <paulburton@kernel.org>,
+        Manuel Lauss <manuel.lauss@gmail.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Matt Redfearn <matt.redfearn@mips.com>,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org, linux-ide@vger.kernel.org
+Message-Id: <AFYQ7Q.2LEJN3L8ZS5J3@crapouillou.net>
+In-Reply-To: <20200325022916.106641-2-jiaxun.yang@flygoat.com>
+References: <20200325022916.106641-1-jiaxun.yang@flygoat.com>
+        <20200325022916.106641-2-jiaxun.yang@flygoat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200228105048.75786-1-mika.westerberg@linux.intel.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Jens,
+Hi Jiaxun,
 
-On Fri, Feb 28, 2020 at 01:50:48PM +0300, Mika Westerberg wrote:
-> Add Intel Comet Lake PCH-V PCI ID to the list of supported controllers.
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-Any comments?
-
+Le mer. 25 mars 2020 =E0 10:28, Jiaxun Yang <jiaxun.yang@flygoat.com> a=20
+=E9crit :
+> This controller appeared on Loongson family of chips as the primary
+> package interrupt source.
+>=20
+> Signed-off-by: Jiaxun Yang <jiaxun.yang@flygoat.com>
+> Co-developed-by: Huacai Chen <chenhc@lemote.com>
+> Signed-off-by: Huacai Chen <chenhc@lemote.com>
+> Reviewed-by: Marc Zyngier <maz@kernel.org>
 > ---
->  drivers/ata/ahci.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 5f461a92998f..cf069b369723 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -402,6 +402,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->  	{ PCI_VDEVICE(INTEL, 0xa252), board_ahci }, /* Lewisburg RAID*/
->  	{ PCI_VDEVICE(INTEL, 0xa256), board_ahci }, /* Lewisburg RAID*/
->  	{ PCI_VDEVICE(INTEL, 0xa356), board_ahci }, /* Cannon Lake PCH-H RAID */
-> +	{ PCI_VDEVICE(INTEL, 0xa386), board_ahci }, /* Comet Lake PCH-V RAID */
->  	{ PCI_VDEVICE(INTEL, 0x0f22), board_ahci_mobile }, /* Bay Trail AHCI */
->  	{ PCI_VDEVICE(INTEL, 0x0f23), board_ahci_mobile }, /* Bay Trail AHCI */
->  	{ PCI_VDEVICE(INTEL, 0x22a3), board_ahci_mobile }, /* Cherry Tr. AHCI */
-> -- 
-> 2.25.0
+> v4-v5:
+> 	Resolve suggestions from maz:
+> 		- Remove DT validation
+> 		- Simplify unnucessary functions & variables
+> ---
+>  drivers/irqchip/Kconfig                |   9 +
+>  drivers/irqchip/Makefile               |   1 +
+>  drivers/irqchip/irq-loongson-liointc.c | 261=20
+> +++++++++++++++++++++++++
+>  3 files changed, 271 insertions(+)
+>  create mode 100644 drivers/irqchip/irq-loongson-liointc.c
+>=20
+> diff --git a/drivers/irqchip/Kconfig b/drivers/irqchip/Kconfig
+> index 6d397732138d..c609eaa319d2 100644
+> --- a/drivers/irqchip/Kconfig
+> +++ b/drivers/irqchip/Kconfig
+> @@ -513,4 +513,13 @@ config EXYNOS_IRQ_COMBINER
+>  	  Say yes here to add support for the IRQ combiner devices embedded
+>  	  in Samsung Exynos chips.
+>=20
+> +config LOONGSON_LIOINTC
+> +	bool "Loongson Local I/O Interrupt Controller"
+> +	depends on MACH_LOONGSON64
+> +	default y
+> +	select IRQ_DOMAIN
+> +	select GENERIC_IRQ_CHIP
+> +	help
+> +	  Support for the Loongson Local I/O Interrupt Controller.
+> +
+>  endmenu
+> diff --git a/drivers/irqchip/Makefile b/drivers/irqchip/Makefile
+> index eae0d78cbf22..5e7678efdfe6 100644
+> --- a/drivers/irqchip/Makefile
+> +++ b/drivers/irqchip/Makefile
+> @@ -105,3 +105,4 @@ obj-$(CONFIG_MADERA_IRQ)		+=3D irq-madera.o
+>  obj-$(CONFIG_LS1X_IRQ)			+=3D irq-ls1x.o
+>  obj-$(CONFIG_TI_SCI_INTR_IRQCHIP)	+=3D irq-ti-sci-intr.o
+>  obj-$(CONFIG_TI_SCI_INTA_IRQCHIP)	+=3D irq-ti-sci-inta.o
+> +obj-$(CONFIG_LOONGSON_LIOINTC)		+=3D irq-loongson-liointc.o
+> diff --git a/drivers/irqchip/irq-loongson-liointc.c=20
+> b/drivers/irqchip/irq-loongson-liointc.c
+> new file mode 100644
+> index 000000000000..18de2c09ece4
+> --- /dev/null
+> +++ b/drivers/irqchip/irq-loongson-liointc.c
+> @@ -0,0 +1,261 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + *  Copyright (C) 2020, Jiaxun Yang <jiaxun.yang@flygoat.com>
+> + *  Loongson Local IO Interrupt Controller support
+> + */
+> +
+> +#include <linux/errno.h>
+> +#include <linux/init.h>
+> +#include <linux/types.h>
+> +#include <linux/interrupt.h>
+> +#include <linux/ioport.h>
+> +#include <linux/irqchip.h>
+> +#include <linux/of_address.h>
+> +#include <linux/of_irq.h>
+> +#include <linux/io.h>
+> +#include <linux/smp.h>
+> +#include <linux/irqchip/chained_irq.h>
+> +
+> +#include <boot_param.h>
+> +
+> +#define LIOINTC_CHIP_IRQ	32
+> +#define LIOINTC_NUM_PARENT 4
+> +
+> +#define LIOINTC_INTC_CHIP_START	0x20
+> +
+> +#define LIOINTC_REG_INTC_STATUS	(LIOINTC_INTC_CHIP_START + 0x20)
+> +#define LIOINTC_REG_INTC_EN_STATUS	(LIOINTC_INTC_CHIP_START + 0x04)
+> +#define LIOINTC_REG_INTC_ENABLE	(LIOINTC_INTC_CHIP_START + 0x08)
+> +#define LIOINTC_REG_INTC_DISABLE	(LIOINTC_INTC_CHIP_START + 0x0c)
+> +#define LIOINTC_REG_INTC_POL	(LIOINTC_INTC_CHIP_START + 0x10)
+> +#define LIOINTC_REG_INTC_EDGE	(LIOINTC_INTC_CHIP_START + 0x14)
+> +
+> +#define LIOINTC_SHIFT_INTx	4
+> +
+> +struct liointc_handler_data {
+> +	struct liointc_priv	*priv;
+> +	u32			parent_int_map;
+> +};
+> +
+> +struct liointc_priv {
+> +	struct irq_chip_generic		*gc;
+> +	struct liointc_handler_data	handler[LIOINTC_NUM_PARENT];
+> +	u8				map_cache[LIOINTC_CHIP_IRQ];
+> +};
+> +
+> +static void liointc_chained_handle_irq(struct irq_desc *desc)
+> +{
+> +	struct liointc_handler_data *handler =3D=20
+> irq_desc_get_handler_data(desc);
+> +	struct irq_chip *chip =3D irq_desc_get_chip(desc);
+> +	struct irq_chip_generic *gc =3D handler->priv->gc;
+> +	u32 pending;
+> +
+> +	chained_irq_enter(chip, desc);
+> +
+> +	pending =3D readl(gc->reg_base + LIOINTC_REG_INTC_STATUS);
+> +
+> +	if (!pending)
+> +		spurious_interrupt();
+> +
+> +	while (pending) {
+> +		int bit =3D __ffs(pending);
+> +
+> +		generic_handle_irq(irq_find_mapping(gc->domain, bit));
+> +		pending &=3D ~BIT(bit);
+> +	}
+
+Consider using the for_each_set_bit() macro from <linux/bitops.h>.
+See drivers/irqchip/irq-ingenic-tcu.c for instance.
+
+> +
+> +	chained_irq_exit(chip, desc);
+> +}
+> +
+> +static void liointc_set_bit(struct irq_chip_generic *gc,
+> +				unsigned int offset,
+> +				u32 mask, bool set)
+> +{
+> +	if (set)
+> +		writel(readl(gc->reg_base + offset) | mask,
+> +				gc->reg_base + offset);
+> +	else
+> +		writel(readl(gc->reg_base + offset) & ~mask,
+> +				gc->reg_base + offset);
+> +}
+> +
+> +static int liointc_set_type(struct irq_data *data, unsigned int type)
+> +{
+> +	struct irq_chip_generic *gc =3D irq_data_get_irq_chip_data(data);
+> +	u32 mask =3D data->mask;
+> +	unsigned long flags;
+> +
+> +	irq_gc_lock_irqsave(gc, flags);
+> +	switch (type) {
+> +	case IRQ_TYPE_LEVEL_HIGH:
+> +		liointc_set_bit(gc, LIOINTC_REG_INTC_EDGE, mask, false);
+> +		liointc_set_bit(gc, LIOINTC_REG_INTC_POL, mask, true);
+> +		break;
+> +	case IRQ_TYPE_LEVEL_LOW:
+> +		liointc_set_bit(gc, LIOINTC_REG_INTC_EDGE, mask, false);
+> +		liointc_set_bit(gc, LIOINTC_REG_INTC_POL, mask, false);
+> +		break;
+> +	case IRQ_TYPE_EDGE_RISING:
+> +		liointc_set_bit(gc, LIOINTC_REG_INTC_EDGE, mask, true);
+> +		liointc_set_bit(gc, LIOINTC_REG_INTC_POL, mask, true);
+> +		break;
+> +	case IRQ_TYPE_EDGE_FALLING:
+> +		liointc_set_bit(gc, LIOINTC_REG_INTC_EDGE, mask, true);
+> +		liointc_set_bit(gc, LIOINTC_REG_INTC_POL, mask, false);
+> +		break;
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +	irq_gc_unlock_irqrestore(gc, flags);
+> +
+> +	irqd_set_trigger_type(data, type);
+> +	return 0;
+> +}
+> +
+> +static void liointc_resume(struct irq_chip_generic *gc)
+> +{
+> +	struct liointc_priv *priv =3D gc->private;
+> +	unsigned long flags;
+> +	int i;
+> +
+> +	irq_gc_lock_irqsave(gc, flags);
+> +	/* Disable all at first */
+> +	writel(0xffffffff, gc->reg_base + LIOINTC_REG_INTC_DISABLE);
+> +	/* Revert map cache */
+> +	for (i =3D 0; i < LIOINTC_CHIP_IRQ; i++)
+> +		writeb(priv->map_cache[i], gc->reg_base + i);
+> +	/* Revert mask cache */
+> +	writel(~gc->mask_cache, gc->reg_base + LIOINTC_REG_INTC_ENABLE);
+> +	irq_gc_unlock_irqrestore(gc, flags);
+> +}
+> +
+> +static const char * const parent_names[] =3D {"int0", "int1", "int2",=20
+> "int3"};
+> +
+> +int __init liointc_of_init(struct device_node *node,
+> +				struct device_node *parent)
+> +{
+> +	struct irq_chip_generic *gc;
+> +	struct irq_domain *domain;
+> +	struct irq_chip_type *ct;
+> +	struct liointc_priv *priv;
+> +	void __iomem *base;
+> +	u32 of_parent_int_map[LIOINTC_NUM_PARENT];
+> +	int parent_irq[LIOINTC_NUM_PARENT];
+> +	bool have_parent =3D FALSE;
+> +	int sz, i, err =3D 0;
+> +
+> +	priv =3D kzalloc(sizeof(*priv), GFP_KERNEL);
+> +	if (!priv)
+> +		return -ENOMEM;
+> +
+> +	base =3D of_iomap(node, 0);
+> +	if (!base) {
+> +		err =3D -ENODEV;
+> +		goto out_free_priv;
+> +	}
+> +
+> +	for (i =3D 0; i < LIOINTC_NUM_PARENT; i++) {
+> +		parent_irq[i] =3D of_irq_get_byname(node, parent_names[i]);
+> +		if (parent_irq[i] > 0)
+> +			have_parent =3D TRUE;
+> +	}
+> +	if (!have_parent) {
+> +		err =3D -ENODEV;
+> +		goto out_iounmap;
+> +	}
+> +
+> +	sz =3D of_property_read_variable_u32_array(node,
+> +						"loongson,parent_int_map",
+> +						&of_parent_int_map[0],
+> +						LIOINTC_NUM_PARENT,
+> +						LIOINTC_NUM_PARENT);
+> +	if (sz < 4) {
+> +		pr_err("loongson-liointc: No parent_int_map\n");
+> +		err =3D -ENODEV;
+> +		goto out_iounmap;
+> +	}
+> +
+> +	for (i =3D 0; i < LIOINTC_NUM_PARENT; i++)
+> +		priv->handler[i].parent_int_map =3D of_parent_int_map[i];
+> +
+> +	/* Setup IRQ domain */
+> +	domain =3D irq_domain_add_linear(node, 32,
+> +					&irq_generic_chip_ops, priv);
+> +	if (!domain) {
+> +		pr_err("loongson-liointc: cannot add IRQ domain\n");
+> +		err =3D -EINVAL;
+> +		goto out_iounmap;
+> +	}
+> +
+> +	err =3D irq_alloc_domain_generic_chips(domain, 32, 1,
+> +					node->full_name, handle_level_irq,
+> +					IRQ_NOPROBE, 0, 0);
+> +	if (err) {
+> +		pr_err("loongson-liointc: unable to register IRQ domain\n");
+> +		goto out_free_domain;
+> +	}
+> +
+> +
+> +	/* Disable all IRQs */
+> +	writel(0xffffffff, base + LIOINTC_REG_INTC_DISABLE);
+> +	/* Set to level triggered */
+> +	writel(0x0, base + LIOINTC_REG_INTC_EDGE);
+> +
+> +	/* Generate parent INT part of map cache */
+> +	for (i =3D 0; i < LIOINTC_NUM_PARENT; i++) {
+> +		u32 pending =3D priv->handler[i].parent_int_map;
+> +
+> +		while (pending) {
+> +			int bit =3D __ffs(pending);
+> +
+> +			priv->map_cache[bit] =3D BIT(i) << LIOINTC_SHIFT_INTx;
+> +			pending &=3D ~BIT(bit);
+> +		}
+
+Same here.
+
+-Paul
+
+> +	}
+> +
+> +	for (i =3D 0; i < LIOINTC_CHIP_IRQ; i++) {
+> +		/* Generate core part of map cache */
+> +		priv->map_cache[i] |=3D BIT(loongson_sysconf.boot_cpu_id);
+> +		writeb(priv->map_cache[i], base + i);
+> +	}
+> +
+> +	gc =3D irq_get_domain_generic_chip(domain, 0);
+> +	gc->private =3D priv;
+> +	gc->reg_base =3D base;
+> +	gc->domain =3D domain;
+> +	gc->resume =3D liointc_resume;
+> +
+> +	ct =3D gc->chip_types;
+> +	ct->regs.enable =3D LIOINTC_REG_INTC_ENABLE;
+> +	ct->regs.disable =3D LIOINTC_REG_INTC_DISABLE;
+> +	ct->chip.irq_unmask =3D irq_gc_unmask_enable_reg;
+> +	ct->chip.irq_mask =3D irq_gc_mask_disable_reg;
+> +	ct->chip.irq_mask_ack =3D irq_gc_mask_disable_reg;
+> +	ct->chip.irq_set_type =3D liointc_set_type;
+> +
+> +	gc->mask_cache =3D 0xffffffff;
+> +	priv->gc =3D gc;
+> +
+> +	for (i =3D 0; i < LIOINTC_NUM_PARENT; i++) {
+> +		if (parent_irq[i] <=3D 0)
+> +			continue;
+> +
+> +		priv->handler[i].priv =3D priv;
+> +		irq_set_chained_handler_and_data(parent_irq[i],
+> +				liointc_chained_handle_irq, &priv->handler[i]);
+> +	}
+> +
+> +	return 0;
+> +
+> +out_free_domain:
+> +	irq_domain_remove(domain);
+> +out_iounmap:
+> +	iounmap(base);
+> +out_free_priv:
+> +	kfree(priv);
+> +
+> +	return err;
+> +}
+> +
+> +IRQCHIP_DECLARE(loongson_liointc_1_0, "loongson,liointc-1.0",=20
+> liointc_of_init);
+> +IRQCHIP_DECLARE(loongson_liointc_1_0a, "loongson,liointc-1.0a",=20
+> liointc_of_init);
+> --
+> 2.26.0.rc2
+>=20
+>=20
+
+
