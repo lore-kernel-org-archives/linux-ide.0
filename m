@@ -2,119 +2,77 @@ Return-Path: <SRS0=f0ic=5K=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92823C54FD2
-	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 02:35:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FDE4C54FD0
+	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 10:08:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 650F820714
-	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 02:35:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=flygoat.com header.i=jiaxun.yang@flygoat.com header.b="DjuCOQ4e"
+	by mail.kernel.org (Postfix) with ESMTP id 72C022077D
+	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 10:08:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727357AbgCYCfh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 24 Mar 2020 22:35:37 -0400
-Received: from sender3-op-o12.zoho.com.cn ([124.251.121.243]:17898 "EHLO
-        sender3-op-o12.zoho.com.cn" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727268AbgCYCfg (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 Mar 2020 22:35:36 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1585103557;
-        s=mail; d=flygoat.com; i=jiaxun.yang@flygoat.com;
-        h=From:To:Cc:Message-ID:Subject:Date:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Content-Type;
-        bh=npt681j7OlP7ZSLk8k6P4PyWCdxxnt6o5Olle4tXENs=;
-        b=DjuCOQ4erRnLLiXGEbfrRUs43h9P4HLYMuXPb1FGlzWCV8FKI6xsFeYRowUydzRf
-        Xb2WgmTQxWLp+zfflNUpcgcdszYSnrytwSiCiYncfWEOQ5cl+G2Vzq/FLc38H9f+3DC
-        8mr5kZ6sQsEP3dfCmRLc/5b4lZNDXSJ3n83EOHkk=
-Received: from localhost.localdomain (39.155.141.144 [39.155.141.144]) by mx.zoho.com.cn
-        with SMTPS id 1585103555009451.3472600108754; Wed, 25 Mar 2020 10:32:35 +0800 (CST)
-From:   Jiaxun Yang <jiaxun.yang@flygoat.com>
-To:     linux-mips@vger.kernel.org
-Cc:     Alex Smith <alex.smith@imgtec.com>,
-        "H . Nikolaus Schaller" <hns@goldelico.com>,
-        Paul Cercueil <paul@crapouillou.net>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Marc Zyngier <maz@kernel.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Huacai Chen <chenhc@lemote.com>,
-        Jiaxun Yang <jiaxun.yang@flygoat.com>,
-        John Crispin <john@phrozen.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Jean Delvare <jdelvare@suse.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Andi Kleen <ak@linux.intel.com>,
-        "Eric W. Biederman" <ebiederm@xmission.com>,
-        Kees Cook <keescook@chromium.org>,
-        Paul Burton <paulburton@kernel.org>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Yinglu Yang <yangyinglu@loongson.cn>,
-        Tiezhu Yang <yangtiezhu@loongson.cn>,
-        Allison Randal <allison@lohutok.net>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        Manuel Lauss <manuel.lauss@gmail.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Matt Redfearn <matt.redfearn@mips.com>,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linux-ide@vger.kernel.org
-Message-ID: <20200325022916.106641-5-jiaxun.yang@flygoat.com>
-Subject: [PATCH v7 02/12] MIPS: DTS: CI20: add DT node for IR sensor
-Date:   Wed, 25 Mar 2020 10:28:20 +0800
-X-Mailer: git-send-email 2.26.0.rc2
-In-Reply-To: <20200325022916.106641-1-jiaxun.yang@flygoat.com>
-References: <20200325022916.106641-1-jiaxun.yang@flygoat.com>
+        id S1727358AbgCYKI5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 25 Mar 2020 06:08:57 -0400
+Received: from mga04.intel.com ([192.55.52.120]:28316 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726206AbgCYKI5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 25 Mar 2020 06:08:57 -0400
+IronPort-SDR: nUC9ZfTm7WCiYcvHN8xFpv1cyU5ZKIo0YtOgM7VqPJj74GXOZXOlCQsepGJC3ZIB6Ml4yPXNyJ
+ cbftwhDLK8VQ==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Mar 2020 03:08:57 -0700
+IronPort-SDR: v2TV795Bm99e07M5L0QyAf0Y+5uRHQr2M4T9vMV4YNjRDAFsLixqhYI8Pkohkt6GOTJDcD8Znb
+ WM4jX4Nh5Bog==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.72,303,1580803200"; 
+   d="scan'208";a="357762450"
+Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.163])
+  by fmsmga001.fm.intel.com with SMTP; 25 Mar 2020 03:08:55 -0700
+Received: by lahna (sSMTP sendmail emulation); Wed, 25 Mar 2020 12:08:54 +0200
+Date:   Wed, 25 Mar 2020 12:08:54 +0200
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-ide@vger.kernel.org
+Subject: Re: [PATCH] ahci: Add Intel Comet Lake PCH-H PCI ID
+Message-ID: <20200325100854.GS2564@lahna.fi.intel.com>
+References: <20200227143259.67172-1-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-ZohoCNMailClient: External
-Content-Type: text/plain; charset=utf8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200227143259.67172-1-mika.westerberg@linux.intel.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Alex Smith <alex.smith@imgtec.com>
+Hi Jens,
 
-The infrared sensor on the CI20 board is connected to a GPIO and can
-be operated by using the gpio-ir-recv driver. Add a DT node for the
-sensor to allow that driver to be used.
+On Thu, Feb 27, 2020 at 05:32:59PM +0300, Mika Westerberg wrote:
+> Add Intel Comet Lake PCH-H PCI ID to the list of supported controllers.
+> 
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-Signed-off-by: Alex Smith <alex.smith@imgtec.com>
-Signed-off-by: H. Nikolaus Schaller <hns@goldelico.com>
-Reviewed-by: Paul Cercueil <paul@crapouillou.net>
-Signed-off-by: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
----
- arch/mips/boot/dts/ingenic/ci20.dts | 5 +++++
- 1 file changed, 5 insertions(+)
+Any comments regarding this?
 
-diff --git a/arch/mips/boot/dts/ingenic/ci20.dts b/arch/mips/boot/dts/ingen=
-ic/ci20.dts
-index c340f947baa0..fc4e64200c3d 100644
---- a/arch/mips/boot/dts/ingenic/ci20.dts
-+++ b/arch/mips/boot/dts/ingenic/ci20.dts
-@@ -62,6 +62,11 @@ eth0_power: fixedregulator@0 {
- =09=09enable-active-high;
- =09};
-=20
-+=09ir: ir {
-+=09=09compatible =3D "gpio-ir-receiver";
-+=09=09gpios =3D <&gpe 3 GPIO_ACTIVE_LOW>;
-+=09};
-+
- =09wlan0_power: fixedregulator@1 {
- =09=09compatible =3D "regulator-fixed";
- =09=09regulator-name =3D "wlan0_power";
---=20
-2.26.0.rc2
-
-
+> ---
+>  drivers/ata/ahci.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 11ea1aff40db..5f461a92998f 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -245,6 +245,7 @@ static const struct ata_port_info ahci_port_info[] = {
+>  
+>  static const struct pci_device_id ahci_pci_tbl[] = {
+>  	/* Intel */
+> +	{ PCI_VDEVICE(INTEL, 0x06d6), board_ahci }, /* Comet Lake PCH-H RAID */
+>  	{ PCI_VDEVICE(INTEL, 0x2652), board_ahci }, /* ICH6 */
+>  	{ PCI_VDEVICE(INTEL, 0x2653), board_ahci }, /* ICH6M */
+>  	{ PCI_VDEVICE(INTEL, 0x27c1), board_ahci }, /* ICH7 */
+> -- 
+> 2.25.0
