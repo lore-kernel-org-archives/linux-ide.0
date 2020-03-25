@@ -2,269 +2,133 @@ Return-Path: <SRS0=f0ic=5K=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C25BAC54FD3
-	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 15:45:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D09FC1975A
+	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 16:25:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 97CAB20719
-	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 15:45:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5350420714
+	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 16:25:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="IYIrjKTt"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="o92f4nyK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727488AbgCYPpZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 25 Mar 2020 11:45:25 -0400
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:53635 "EHLO
+        id S1727880AbgCYQZb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 25 Mar 2020 12:25:31 -0400
+Received: from mailout1.w1.samsung.com ([210.118.77.11]:35398 "EHLO
         mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727439AbgCYPpZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 25 Mar 2020 11:45:25 -0400
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200325154522euoutp01bf87c6301a950a32486664a38eee2616~-low8UraG2525625256euoutp01a
-        for <linux-ide@vger.kernel.org>; Wed, 25 Mar 2020 15:45:22 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200325154522euoutp01bf87c6301a950a32486664a38eee2616~-low8UraG2525625256euoutp01a
+        with ESMTP id S1727386AbgCYQZa (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 25 Mar 2020 12:25:30 -0400
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200325162529euoutp01f1f9f216d3fb06ef2191c3a7489ad0f6~-mLx_gVJH2133621336euoutp01P
+        for <linux-ide@vger.kernel.org>; Wed, 25 Mar 2020 16:25:29 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200325162529euoutp01f1f9f216d3fb06ef2191c3a7489ad0f6~-mLx_gVJH2133621336euoutp01P
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1585151122;
-        bh=sIv1WoDiv7/UvS7VpN4mBqOLTms/HS05UTcywIaNFNg=;
-        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
-        b=IYIrjKTt+gciBW09c8fBBOCthUqkD6frRQLgJV88pPhpV2/qULtEoNV0hM/P0KN7L
-         1myEYIj846/0bBwDmbqEZJFX8V0fBfOkeCOpk5knd8eNpYCgAXD4helkSc1UnSRlRg
-         PmP5tkOEQAC6N0hnRnfnA1qeafxUk8LseRhpnIZ8=
+        s=mail20170921; t=1585153529;
+        bh=KvXXJtDJ/wBN32i5E+GiFYtwOg8fa3F+yhCAoTFrrjo=;
+        h=From:Subject:To:Cc:Date:In-Reply-To:References:From;
+        b=o92f4nyK6Ih0rHfv/LeviqobF33FhnrzilyrncpvfnIxShASiqpY9Cj3EbSzu7cIF
+         EuLKU4i4oqG8tQnoIp/Ah4vUsy63biXMEqU4t1bCeLFLl22yTwFyUJUhOLPZI/sXJX
+         lHifMfP0s/NkuVEbXi64H7jZ9pHnubeHLtQMM504=
 Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
         eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20200325154522eucas1p2bbbff4fb38ccaa10a4354ba35324b703~-lowvY-Gw2902729027eucas1p26;
-        Wed, 25 Mar 2020 15:45:22 +0000 (GMT)
-Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
-        eusmges1new.samsung.com (EUCPMTA) with SMTP id EF.56.61286.29C7B7E5; Wed, 25
-        Mar 2020 15:45:22 +0000 (GMT)
-Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
+        20200325162528eucas1p274a596847c7757bc39a6026f048744d8~-mLxqARxA2241122411eucas1p2T;
+        Wed, 25 Mar 2020 16:25:28 +0000 (GMT)
+Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
+        eusmges1new.samsung.com (EUCPMTA) with SMTP id 19.5B.61286.8F58B7E5; Wed, 25
+        Mar 2020 16:25:28 +0000 (GMT)
+Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
         eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20200325154522eucas1p1cd06922826b5ceafc772b7f047a18abc~-lowYACN71522715227eucas1p1F;
-        Wed, 25 Mar 2020 15:45:22 +0000 (GMT)
-Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
-        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200325154522eusmtrp1351f884fb0fa614f79a16e168cc63300~-lowXbvCe2573025730eusmtrp15;
-        Wed, 25 Mar 2020 15:45:22 +0000 (GMT)
-X-AuditID: cbfec7f2-ef1ff7000001ef66-d2-5e7b7c922dd8
-Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms2.samsung.com (EUCPMTA) with SMTP id 1E.40.07950.29C7B7E5; Wed, 25
-        Mar 2020 15:45:22 +0000 (GMT)
+        20200325162528eucas1p11d41a3668f28abd648f6c041a5518b83~-mLxPnlqR2154121541eucas1p1y;
+        Wed, 25 Mar 2020 16:25:28 +0000 (GMT)
+Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
+        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200325162528eusmtrp283806200cc286b131f1fb5934129f81c~-mLxPEJ7B0314603146eusmtrp2l;
+        Wed, 25 Mar 2020 16:25:28 +0000 (GMT)
+X-AuditID: cbfec7f2-ef1ff7000001ef66-22-5e7b85f8bab6
+Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
+        eusmgms1.samsung.com (EUCPMTA) with SMTP id E5.A5.08375.8F58B7E5; Wed, 25
+        Mar 2020 16:25:28 +0000 (GMT)
 Received: from [106.120.51.71] (unknown [106.120.51.71]) by
-        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200325154521eusmtip10cabe83b3572be6a998218f12d687e08~-lov9zk7F3186531865eusmtip1K;
-        Wed, 25 Mar 2020 15:45:21 +0000 (GMT)
-Subject: Re: [PATCH 04/40] libata: move ata_{port,link,dev}_dbg to standard
- dev_XXX() macros
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
-        Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200325162528eusmtip22fb8ec90a9d8225a322bd6e52c49c89b~-mLw7LjlY1625516255eusmtip2P;
+        Wed, 25 Mar 2020 16:25:28 +0000 (GMT)
 From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Message-ID: <787989d3-b969-df37-3da2-f4405476bd55@samsung.com>
-Date:   Wed, 25 Mar 2020 16:45:21 +0100
+Subject: Re: [PATCH] sata_fsl: build fix
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Guenter Roeck <linux@roeck-us.net>, Hannes Reinecke <hare@suse.de>,
+        Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+Message-ID: <5e52900b-6674-4220-15e4-8156ebd98df5@samsung.com>
+Date:   Wed, 25 Mar 2020 17:25:27 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
         Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdVMLBOOau9YAGo5WoQUwdU7nKZY2Yy_YEQqbypKojcczg@mail.gmail.com>
+In-Reply-To: <87a9e403-efd2-5464-9e8c-4d966ed1ab39@kernel.dk>
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA01SfSyUcRzf73kej8fN2c/R7jsa8ygtG7KsXWlWmz9uvWyxSsuiwxMWh3uc
-        95q31YXtisU6elOoUzrvl0ijmFnmZVmRKVnIrhX5g4XcPSz/fb6fl9/3+9l+DCmpsnJiYpXJ
-        nEqpiGNpEdXSszzgVZyVGbbv60MPWe2ElpZ9H+sgZO2VxYSsxzhFyJrnfhKylZp36AgtH3mv
-        ljfob9Dyrm4Nkjf2Z8oXG1xOWZ0XHY7i4mJTOJVPwEVRzMqaiU7M904r0Y+T2eg3W4BsGMB+
-        8PbvIFGARIwEP0GgHZ6hheEPgtHsT5vKIoL6vnlqK/JtNpcShBoEkx/akTCYEEyszBNmlwMO
-        g8LmgQ2BYRyxF1QsW14i8XMEukfPSLOHxofg1nU9MmMxDoCcjhkLpvBuaB7RWjw78DlY+NJt
-        JXjsoe/OtOUKGxwEIyPVFkxiKYxN3ycE7AqtpgrSvAyw3hpq8g2bZwfCkr6WFLAD/Ohtshbw
-        TugvKaKEQB2CVc3sZroVQU3JGi24/OHzwAptrkPivfCizUegj8LUeidlpgHbwUeTvXCEHRS3
-        lJECLQbNNYng9gBDtYHeWlvw8il5E7G6bdV02+rottXR/d/7AFF6JOXUfHw0x/squVRvXhHP
-        q5XR3pEJ8Q1o4/P0r/UuGNHScEQXwgxibcWGg5lhEitFCp8e34WAIVlHcSOXFiYRRynSMzhV
-        QrhKHcfxXciZoVipeH/l3AUJjlYkc5c5LpFTbakEY+OUjcLPehpz+tgJedzVpqxJXehptSYw
-        aaj0dSdbaNTuynPY4z/uZ5t3uyW3/4Tbyc7yV8PlZzS892Cq33GvK+6l08qkjnvskNvdwXJt
-        9ZvOX/XSY0WVq4Xrde6RIRmXDC66iGqTbFIbWhUcHDQ859sU8vhAY5lrm7NrwGhhqr3NYBbD
-        UnyMwteTVPGKfxkCJsU4AwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrGIsWRmVeSWpSXmKPExsVy+t/xu7qTaqrjDK4s4bNYfbefzeLZrb1M
-        FnsWTWKyOLbjEZPF1pfvmCx+LT/K6MDmcflsqcemVZ1sHocOdzB6bD5d7fF5k1wAa5SeTVF+
-        aUmqQkZ+cYmtUrShhZGeoaWFnpGJpZ6hsXmslZGpkr6dTUpqTmZZapG+XYJexq9/b9kKWvQq
-        Jq+6zdzA+FGpi5GTQ0LAROLxiyaWLkYuDiGBpYwSWyd8Zeti5ABKyEgcX18GUSMs8edaFxtE
-        zWtGiS0HnzCCJIQF4iS6t55jBKkXEdCVmPOTCaSGWWAto8SKy1uhGh4wSVxZuYcNpIFNwEpi
-        YvsqsGZeATuJxr3PwWwWAVWJrZf7mUFsUYEIicM7ZkHVCEqcnPmEBcTmFAiUuHx5GZjNLKAu
-        8WfeJWYIW1zi1pP5TBC2vMT2t3OYJzAKzULSPgtJyywkLbOQtCxgZFnFKJJaWpybnltspFec
-        mFtcmpeul5yfu4kRGGfbjv3csoOx613wIUYBDkYlHt4NltVxQqyJZcWVuYcYJTiYlUR4N6dW
-        xAnxpiRWVqUW5ccXleakFh9iNAV6biKzlGhyPjAF5JXEG5oamltYGpobmxubWSiJ83YIHIwR
-        EkhPLEnNTk0tSC2C6WPi4JRqYHRwqJvN9/rUwq38E8IS3tqrZiwznM/vVzVha0amyw+xttp/
-        8dl2hk/ebb+3v/GjeXh/89v3AZethffK/k+vUdsxv6Xz0f8LspMnTrCYLqB1/uPkw4U/l7oL
-        Fll/929WN78Tx+jszHJPfmade4cTC0dGv4HJ3qebb4gaRyrcssk/2L1zzv+sCUosxRmJhlrM
-        RcWJAFjDW1DJAgAA
-X-CMS-MailID: 20200325154522eucas1p1cd06922826b5ceafc772b7f047a18abc
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprJKsWRmVeSWpSXmKPExsWy7djP87o/WqvjDP7+1LdYfbefzWLPoklM
+        Fsd2PGKyeLLwDJPFr+VHGR1YPS6fLfXYtKqTzWPn9wZ2j82nqz0+b5ILYI3isklJzcksSy3S
+        t0vgyljfsYStoI+t4so9gwbGtyxdjJwcEgImEj0PDjJ1MXJxCAmsYJRY93kRK0hCSOALo8Tc
+        nXkQic+MEksXt7F1MXKAdTz8ZwpRs5xR4vg0cYiat4wSf94/BJvKJmAlMbF9FSNIvbCAhsS2
+        9VIgYREBBYme3yvZQGxmgTqJNzNXMIHYvAJ2Ems3LGEEsVkEVCX+7bgFViMqECHx6cFhVoga
+        QYmTM5+AjecUsJWYufsrK8QccYlbT+YzQdjyEtvfzmGGOHMRu0SbNsSPLhJTLs9mh7CFJV4d
+        3wJly0j83zkf7HcJgXWMEn87XjBDONsZJZZP/scGUWUtcefcL7DfmQU0Jdbv0ocIO0os3Xac
+        HWIXn8SNt4IQJ/BJTNo2HeoEXomONiGIajWJDcs2sMGs7dq5knkCo9IsJI/NQvLMLCTPzELY
+        u4CRZRWjeGppcW56arFhXmq5XnFibnFpXrpecn7uJkZggjn97/inHYxfLyUdYhTgYFTi4d1g
+        WR0nxJpYVlyZe4hRgoNZSYR3c2pFnBBvSmJlVWpRfnxRaU5q8SFGaQ4WJXFe40UvY4UE0hNL
+        UrNTUwtSi2CyTBycUg2Mc3OPL2pKWmcWIf7y7Pb1S3/zx8SqZDBpz/ZL/LJq9eKQA8GTpX++
+        EGNfH79g/vUbc/pmTjPlMzQqydm4xWRe0jfWXmvdXo+TzjJfN9Vzz1/U/VAlLlqzTun5JLe2
+        boMDtfWr9K+c9slKX+14vjz3J6+Yx4MzK2r+HDA6za38mE1C4vXRDefTlViKMxINtZiLihMB
+        FKRniCwDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrLIsWRmVeSWpSXmKPExsVy+t/xe7o/WqvjDD7dFLZYfbefzWLPoklM
+        Fsd2PGKyeLLwDJPFr+VHGR1YPS6fLfXYtKqTzWPn9wZ2j82nqz0+b5ILYI3SsynKLy1JVcjI
+        Ly6xVYo2tDDSM7S00DMysdQzNDaPtTIyVdK3s0lJzcksSy3St0vQy1jfsYStoI+t4so9gwbG
+        tyxdjBwcEgImEg//mXYxcnIICSxllNh42AUiLCNxfH0ZSFhCQFjiz7Uuti5GLqCS14wSLT1v
+        WEESbAJWEhPbVzGC1AsLaEhsWy8FEhYRUJDo+b2SDcRmFqiT6O94xQTRe5RRYnfvD7AEr4Cd
+        xNoNSxhBbBYBVYl/O26BxUUFIiQO75jFCFEjKHFy5hMWEJtTwFZi5u6vrBBD1SX+zLvEDGGL
+        S9x6Mp8JwpaX2P52DvMERqFZSNpnIWmZhaRlFpKWBYwsqxhFUkuLc9Nziw31ihNzi0vz0vWS
+        83M3MQKjatuxn5t3MF7aGHyIUYCDUYmHd4NldZwQa2JZcWXuIUYJDmYlEd7NqRVxQrwpiZVV
+        qUX58UWlOanFhxhNgZ6byCwlmpwPjPi8knhDU0NzC0tDc2NzYzMLJXHeDoGDMUIC6Yklqdmp
+        qQWpRTB9TBycUg2MjdEC+xuOfTnSX75c+9qGa0uS9Z9WL2Pr0W7lubqD44xbxY57009unxCz
+        efYWGYWsm4v9dt8Ok05ctq1l8bZcc6kJhkmC3ZaS/7UivvqfO3q87YAt/9VV2YnP/37t/iV7
+        pHVuktiOs1wnmX6p7bXPj23/+LbS/NX25VM6LdP9tYSFJfm0o/NnKrEUZyQaajEXFScCAFRz
+        yd3AAgAA
+X-CMS-MailID: 20200325162528eucas1p11d41a3668f28abd648f6c041a5518b83
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200324132651eucas1p2e1570d1edf07101d29addd27df69d0e7
+X-RootMTR: 20200325151525eucas1p1870a02b81ef13a8e449b0dfbabd0fe81
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20200324132651eucas1p2e1570d1edf07101d29addd27df69d0e7
-References: <20200303093813.18523-1-hare@suse.de>
-        <20200303093813.18523-5-hare@suse.de>
-        <CGME20200324132651eucas1p2e1570d1edf07101d29addd27df69d0e7@eucas1p2.samsung.com>
-        <alpine.DEB.2.21.2003241414490.21582@ramsan.of.borg>
-        <49e11382-5fa7-f858-97de-feb1e6033f33@samsung.com>
-        <CAMuHMdVMLBOOau9YAGo5WoQUwdU7nKZY2Yy_YEQqbypKojcczg@mail.gmail.com>
+X-CMS-RootMailID: 20200325151525eucas1p1870a02b81ef13a8e449b0dfbabd0fe81
+References: <CGME20200325151525eucas1p1870a02b81ef13a8e449b0dfbabd0fe81@eucas1p1.samsung.com>
+        <98bf5f87-3601-efd5-57ce-58e6db308e95@samsung.com>
+        <87a9e403-efd2-5464-9e8c-4d966ed1ab39@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 
-On 3/25/20 4:34 PM, Geert Uytterhoeven wrote:
-> Hi Bartl,
+On 3/25/20 4:17 PM, Jens Axboe wrote:
+> On 3/25/20 9:15 AM, Bartlomiej Zolnierkiewicz wrote:
+>> Fix incorrect DPRINTK() conversion in sata_fsl_init_controller()
+>> (dev_dbg() should be used instead of ata_port_dbg()).
 > 
-> On Wed, Mar 25, 2020 at 3:56 PM Bartlomiej Zolnierkiewicz
-> <b.zolnierkie@samsung.com> wrote:
->> On 3/24/20 2:26 PM, Geert Uytterhoeven wrote:
->>> On Tue, 3 Mar 2020, Hannes Reinecke wrote:
->>>> Use standard dev_{dbg,info,notice,warn,err} macros instead of the
->>>> hand-crafted printk helpers.
->>>>
->>>> Signed-off-by: Hannes Reinecke <hare@suse.de>
->>>> Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
->>>
->>> This is now commit ad9f23bd12e1d721 ("libata: move
->>> ata_{port,link,dev}_dbg to standard dev_XXX() macros") in
->>> linux-block/for-next.
->>>
->>> This patch causes an intriguing change in boot messages, adding a space
->>> at the beginning of each printed line:
->>>
->>>      scsi host0: sata_rcar
->>>     -ata1: SATA max UDMA/133 irq 117
->>>     + ata1: SATA max UDMA/133 irq 117
->>>
->>>     -ata1: link resume succeeded after 1 retries
->>>     + link1: link resume succeeded after 1 retries
->>>
->>>     -ata1: SATA link down (SStatus 0 SControl 300)
->>>     + link1: SATA link down (SStatus 0 SControl 300)
->>>
->>> It turns out dev_driver_string(&link->tdev) returns an empty string, as
->>> its driver field is NULL, so __dev_printk() prints the empty string and
->>> the device name, separated by a space.
->>>
->>> At first I thought this was a bug in rcar-sata, lacking some setup that
->>> was harmless before, but it turns out other drivers (e.g. pata-falcon)
->>> show the same issue:
->>>
->>>      scsi host0: pata_falcon
->>>     -ata1: PATA max PIO4 cmd 0xfff00000 ctl 0xfff00039
->>>     + ata1: PATA max PIO4 cmd 0xfff00000 ctl 0xfff00039
->>>
->>>     -ata1.01: NODEV after polling detection
->>>     -ata1.00: ATA-2: Sarge m68k, , max PIO2
->>>     -ata1.00: 2118816 sectors, multi 0: LBA
->>>     -ata1.00: configured for PIO
->>>     + dev1.0: ATA-2: Sarge m68k, , max PIO2
->>>     + dev1.0: 2118816 sectors, multi 0: LBA
->>>     + dev1.0: configured for PIO
->>
->> I'm more worried about change of ATA devices and ATA links names
->> (unfortunately we cannot change the ones used in libata-transport.c
->> as they are a part of ABI exposed through sysfs).
+> Thanks Bart, another piece of fallout. Applied.
 > 
-> True.
-> 
->> One way to improve the situation is to use transport classes names
->> for dev_printk() when no other means are available, please see/try
->> the patch below (compile tested only). It also includes fixup for
->> extra space issue (change to __dev_printk()).
-> 
-> Thanks for the suggestion!
-> 
->> --- a/drivers/base/core.c
->> +++ b/drivers/base/core.c
->> @@ -1225,7 +1225,8 @@ const char *dev_driver_string(const stru
->>         drv = READ_ONCE(dev->driver);
->>         return drv ? drv->name :
->>                         (dev->bus ? dev->bus->name :
->> -                       (dev->class ? dev->class->name : ""));
->> +                        (dev->class ? dev->class->name :
->> +                         (dev->tclass ? (&dev->tclass->class)->name : "")));
-> 
-> Aren't "dev->class->name" and "(&dev->tclass->class)->name"
-> exactly the same, as the first member of struct transport_class is
-> a struct class object?
+> With the recent discussion as well, I wonder if we should just kill
+> this series entirely.
+I hate to admit it but probably yes..
 
-struct class is embedded in struct transport_class but it doesn't
-have to be the same class as pointed by dev->class (for ATA dev->class
-should be NULL).
+It seems that the one of base concepts needs to be redesigned and
+we are at -rc7 so it is a bit too late do it now..
 
-> (If they're not the same, and I need more coffee, I'm still afraid this is
->  too fragile.  Then there is no guarantee the pointer points to a real
-> transport_class object, so this might cause a crash.)
+I've also tried to find a way to revert it partially but changes are
+inter-dependent and it doesn't seem to be easy way to do it..
 
-I see, we can't do unnamed union optimization in <linux/device.h> but
-otherwise it should be OK, no?
-
->> --- a/drivers/ata/libata-transport.c
->> +++ b/drivers/ata/libata-transport.c
->> @@ -289,6 +289,7 @@ int ata_tport_add(struct device *parent,
->>         ata_host_get(ap->host);
->>         dev->release = ata_tport_release;
->>         dev_set_name(dev, "ata%d", ap->print_id);
->> +       dev->tclass = &ata_port_class;
-> 
-> Can't you just do dev->class = &ata_port_class.class...
-> 
->>         transport_setup_device(dev);
->>         ata_acpi_bind_port(ap);
->>         error = device_add(dev);
->> @@ -418,6 +419,7 @@ int ata_tlink_add(struct ata_link *link)
->>                 dev_set_name(dev, "link%d", ap->print_id);
->>         else
->>                 dev_set_name(dev, "link%d.%d", ap->print_id, link->pmp);
->> +       dev->tclass = &ata_link_class;
-> 
-> ... and dev->class = &ata_link_class.class...
-> 
->>
->>         transport_setup_device(dev);
->>
->> @@ -669,6 +671,7 @@ static int ata_tdev_add(struct ata_devic
->>                 dev_set_name(dev, "dev%d.%d", ap->print_id,ata_dev->devno);
->>         else
->>                 dev_set_name(dev, "dev%d.%d.0", ap->print_id, link->pmp);
->> +       dev->tclass = &ata_dev_class;
-> 
-> ... and dev->class = &ata_dev_class.class...
-> 
->> --- a/include/linux/device.h
->> +++ b/include/linux/device.h
->> @@ -29,6 +29,7 @@
->>  #include <linux/device/bus.h>
->>  #include <linux/device/class.h>
->>  #include <linux/device/driver.h>
->> +#include <linux/transport_class.h>
->>  #include <asm/device.h>
->>
->>  struct device;
->> @@ -608,7 +609,11 @@ struct device {
->>         spinlock_t              devres_lock;
->>         struct list_head        devres_head;
->>
->> -       struct class            *class;
->> +       union {
->> +               struct class            *class;
->> +               struct transport_class  *tclass;
->> +       };
->> +
->>         const struct attribute_group **groups;  /* optional groups */
->>
->>         void    (*release)(struct device *dev);
-> 
-> ... and drop all changes to device.h?
-
-That would have unintended consequences that we don't want
-(driver core code checks dev->class existence not only in
-dev_driver_string())..
+Hannes?
 
 Best regards,
 --
