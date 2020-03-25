@@ -2,48 +2,42 @@ Return-Path: <SRS0=f0ic=5K=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1343BC54FD0
-	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 16:54:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14A36C54FCF
+	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 17:01:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F0A802073E
-	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 16:54:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2D9020774
+	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 17:01:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727236AbgCYQyN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 25 Mar 2020 12:54:13 -0400
-Received: from mx2.suse.de ([195.135.220.15]:46030 "EHLO mx2.suse.de"
+        id S1727006AbgCYRBd (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 25 Mar 2020 13:01:33 -0400
+Received: from mx2.suse.de ([195.135.220.15]:49264 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726102AbgCYQyN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 25 Mar 2020 12:54:13 -0400
+        id S1726102AbgCYRBd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 25 Mar 2020 13:01:33 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx2.suse.de (Postfix) with ESMTP id 8AAE9AC19;
-        Wed, 25 Mar 2020 16:54:10 +0000 (UTC)
-Subject: Re: [PATCH 04/40] libata: move ata_{port,link,dev}_dbg to standard
- dev_XXX() macros
+        by mx2.suse.de (Postfix) with ESMTP id 144BBADCC;
+        Wed, 25 Mar 2020 17:01:32 +0000 (UTC)
+Subject: Re: [PATCH] sata_fsl: build fix
 To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
-        linux-ide@vger.kernel.org,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-References: <20200303093813.18523-1-hare@suse.de>
- <20200303093813.18523-5-hare@suse.de>
- <CGME20200324132651eucas1p2e1570d1edf07101d29addd27df69d0e7@eucas1p2.samsung.com>
- <alpine.DEB.2.21.2003241414490.21582@ramsan.of.borg>
- <49e11382-5fa7-f858-97de-feb1e6033f33@samsung.com>
- <CAMuHMdVMLBOOau9YAGo5WoQUwdU7nKZY2Yy_YEQqbypKojcczg@mail.gmail.com>
- <787989d3-b969-df37-3da2-f4405476bd55@samsung.com>
+        Jens Axboe <axboe@kernel.dk>
+Cc:     Guenter Roeck <linux@roeck-us.net>, Tejun Heo <tj@kernel.org>,
+        linux-ide@vger.kernel.org
+References: <CGME20200325151525eucas1p1870a02b81ef13a8e449b0dfbabd0fe81@eucas1p1.samsung.com>
+ <98bf5f87-3601-efd5-57ce-58e6db308e95@samsung.com>
+ <87a9e403-efd2-5464-9e8c-4d966ed1ab39@kernel.dk>
+ <5e52900b-6674-4220-15e4-8156ebd98df5@samsung.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <0dc64715-b3c1-c208-c032-6f1e10715757@suse.de>
-Date:   Wed, 25 Mar 2020 17:54:07 +0100
+Message-ID: <4eaa5514-ea9b-1682-60b2-7da173529cfc@suse.de>
+Date:   Wed, 25 Mar 2020 18:01:28 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.5.0
 MIME-Version: 1.0
-In-Reply-To: <787989d3-b969-df37-3da2-f4405476bd55@samsung.com>
+In-Reply-To: <5e52900b-6674-4220-15e4-8156ebd98df5@samsung.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -52,107 +46,30 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 3/25/20 4:45 PM, Bartlomiej Zolnierkiewicz wrote:
+On 3/25/20 5:25 PM, Bartlomiej Zolnierkiewicz wrote:
 > 
-> On 3/25/20 4:34 PM, Geert Uytterhoeven wrote:
->> Hi Bartl,
+> On 3/25/20 4:17 PM, Jens Axboe wrote:
+>> On 3/25/20 9:15 AM, Bartlomiej Zolnierkiewicz wrote:
+>>> Fix incorrect DPRINTK() conversion in sata_fsl_init_controller()
+>>> (dev_dbg() should be used instead of ata_port_dbg()).
 >>
->> On Wed, Mar 25, 2020 at 3:56 PM Bartlomiej Zolnierkiewicz
->> <b.zolnierkie@samsung.com> wrote:
->>> On 3/24/20 2:26 PM, Geert Uytterhoeven wrote:
->>>> On Tue, 3 Mar 2020, Hannes Reinecke wrote:
->>>>> Use standard dev_{dbg,info,notice,warn,err} macros instead of the
->>>>> hand-crafted printk helpers.
->>>>>
->>>>> Signed-off-by: Hannes Reinecke <hare@suse.de>
->>>>> Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
->>>>
->>>> This is now commit ad9f23bd12e1d721 ("libata: move
->>>> ata_{port,link,dev}_dbg to standard dev_XXX() macros") in
->>>> linux-block/for-next.
->>>>
->>>> This patch causes an intriguing change in boot messages, adding a space
->>>> at the beginning of each printed line:
->>>>
->>>>       scsi host0: sata_rcar
->>>>      -ata1: SATA max UDMA/133 irq 117
->>>>      + ata1: SATA max UDMA/133 irq 117
->>>>
->>>>      -ata1: link resume succeeded after 1 retries
->>>>      + link1: link resume succeeded after 1 retries
->>>>
->>>>      -ata1: SATA link down (SStatus 0 SControl 300)
->>>>      + link1: SATA link down (SStatus 0 SControl 300)
->>>>
->>>> It turns out dev_driver_string(&link->tdev) returns an empty string, as
->>>> its driver field is NULL, so __dev_printk() prints the empty string and
->>>> the device name, separated by a space.
->>>>
->>>> At first I thought this was a bug in rcar-sata, lacking some setup that
->>>> was harmless before, but it turns out other drivers (e.g. pata-falcon)
->>>> show the same issue:
->>>>
->>>>       scsi host0: pata_falcon
->>>>      -ata1: PATA max PIO4 cmd 0xfff00000 ctl 0xfff00039
->>>>      + ata1: PATA max PIO4 cmd 0xfff00000 ctl 0xfff00039
->>>>
->>>>      -ata1.01: NODEV after polling detection
->>>>      -ata1.00: ATA-2: Sarge m68k, , max PIO2
->>>>      -ata1.00: 2118816 sectors, multi 0: LBA
->>>>      -ata1.00: configured for PIO
->>>>      + dev1.0: ATA-2: Sarge m68k, , max PIO2
->>>>      + dev1.0: 2118816 sectors, multi 0: LBA
->>>>      + dev1.0: configured for PIO
->>>
->>> I'm more worried about change of ATA devices and ATA links names
->>> (unfortunately we cannot change the ones used in libata-transport.c
->>> as they are a part of ABI exposed through sysfs).
+>> Thanks Bart, another piece of fallout. Applied.
 >>
->> True.
->>
->>> One way to improve the situation is to use transport classes names
->>> for dev_printk() when no other means are available, please see/try
->>> the patch below (compile tested only). It also includes fixup for
->>> extra space issue (change to __dev_printk()).
->>
->> Thanks for the suggestion!
->>
-Well, the space can (should?) be fixed with a simple patch to 
-__dev_printk() but just checking if 'dev_driver_string()' returns a 
-value or not:
-
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index dbb0f9130f42..a84f170a1a1f 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -3635,10 +3635,15 @@ EXPORT_SYMBOL(dev_printk_emit);
-  static void __dev_printk(const char *level, const struct device *dev,
-                         struct va_format *vaf)
-  {
--       if (dev)
--               dev_printk_emit(level[1] - '0', dev, "%s %s: %pV",
--                               dev_driver_string(dev), dev_name(dev), vaf);
--       else
-+       if (dev) {
-+               if (dev_string_string(dev))
-+                       dev_printk_emit(level[1] - '0', dev, "%s %s: %pV",
-+                                       dev_driver_string(dev), 
-dev_name(dev),
-+                                       vaf);
-+               else
-+                       dev_printk_emit(level[1] - '0', dev, "%s: %pV",
-+                                       dev_name(dev), vaf);
-+       } else
-                 printk("%s(NULL device *): %pV", level, vaf);
-  }
-
-which actually makes sense on its own.
-As for the name change, yes, I'm not that happy with it, either.
-
-I'll see if we can do some transport class magic such that the
-names do not change.
-
-(And no-one is to mention 'cake' and 'eat it' ...)
+>> With the recent discussion as well, I wonder if we should just kill
+>> this series entirely.
+> I hate to admit it but probably yes..
+> 
+> It seems that the one of base concepts needs to be redesigned and
+> we are at -rc7 so it is a bit too late do it now..
+> 
+> I've also tried to find a way to revert it partially but changes are
+> inter-dependent and it doesn't seem to be easy way to do it..
+> 
+> Hannes?
+> 
+Seeing that we are late in the game and the dev_printk() fallacies are 
+indeed there I fear that you are correct.
+Jens, again, sorry for the mess.
 
 Cheers,
 
