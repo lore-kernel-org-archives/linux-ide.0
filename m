@@ -2,239 +2,121 @@ Return-Path: <SRS0=f0ic=5K=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9102C43331
-	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 11:35:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4747C43331
+	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 13:40:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 88C992077D
-	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 11:35:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1585136141;
-	bh=hDdH6NzW082kdtiNJh6NcBX/8zpFKDBtBCPyNFL3akc=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:List-ID:From;
-	b=GlqcQAnX/vAuD93uUpPxGXov6Ar2rMUeDxiWEqn5BZHbqCacUHoer8xqtUuJR8frc
-	 0D3+H7hc6yXhHyYUV2a5qgl67Qkppyd41n/U85e615uCJmYP8yBMyOyY9PZQIi/wR9
-	 bBK1XCDbrY2Fwc3va5EdvCPfuglDsu2qR8m0hjF8=
+	by mail.kernel.org (Postfix) with ESMTP id 94CCA207FF
+	for <linux-ide@archiver.kernel.org>; Wed, 25 Mar 2020 13:40:08 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=baylibre-com.20150623.gappssmtp.com header.i=@baylibre-com.20150623.gappssmtp.com header.b="ZfvdjM/Q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727280AbgCYLfi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 25 Mar 2020 07:35:38 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50462 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726805AbgCYLfh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 25 Mar 2020 07:35:37 -0400
-Received: from disco-boy.misterjones.org (disco-boy.misterjones.org [51.254.78.96])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id EA7AF20722;
-        Wed, 25 Mar 2020 11:35:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1585136136;
-        bh=hDdH6NzW082kdtiNJh6NcBX/8zpFKDBtBCPyNFL3akc=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=Q7GoJqppdtvNHQJdM0XE9y8P+ki1AutLvirfSEQTn6FrAdVzJZHPIwqIDKhFlg2Q0
-         Tkrvk1QDhThLTbgftm+MddcYEzlZs3PpQ+Y2cnZ+0BK9mRoxAcy45dF3s/9fBv6nq4
-         7736pvMud3vI8wyuEoiF/EqEkM+W6ffESuahi3Lw=
-Received: from disco-boy.misterjones.org ([51.254.78.96] helo=www.loen.fr)
-        by disco-boy.misterjones.org with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.92)
-        (envelope-from <maz@kernel.org>)
-        id 1jH4Jq-00FYG3-87; Wed, 25 Mar 2020 11:35:34 +0000
+        id S1727514AbgCYNkI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 25 Mar 2020 09:40:08 -0400
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:35927 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727114AbgCYNkI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 25 Mar 2020 09:40:08 -0400
+Received: by mail-wr1-f68.google.com with SMTP id 31so3144070wrs.3
+        for <linux-ide@vger.kernel.org>; Wed, 25 Mar 2020 06:40:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=baylibre-com.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to
+         :user-agent;
+        bh=9Tmx/q/z1h228maidx+B+W5v7B2DB3ULOBj1YoNCmLQ=;
+        b=ZfvdjM/QWPkvRF4aZhOMcGD8uAaEa3a9z57/KDQQUDHSC5P6ju2LOZ5Jrvope2JRFg
+         0t4jUSopz0kgg8yni93HOKWxANCNEhS+wzzpLW31vWacTB2yGwp9K4aYnZuR6ql8kwqM
+         PJN/YYBp6zqIXe8QtdYJSA3SBRofZafeVTnocx4ShsyzD/UtfGeLIFFJSOwEZ+FrpOYX
+         /F1QLqE+LzxAhvecrCZh7vTtvNpzam/ERoF39ewr5jl0S0W2N2IaT7ohXE0l18Cuerf0
+         mzwgDsVO3s5tZrhb7QHR4apjCaECxh/LYTdT89JLtWulr6uDVoi2Ef8jnZaHvasErlCJ
+         uJYw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to:user-agent;
+        bh=9Tmx/q/z1h228maidx+B+W5v7B2DB3ULOBj1YoNCmLQ=;
+        b=d1fo2QntE3LL0/91BwqUogp01YXef98LtkCfxKJVKmI0oTdna88X3i63VT7MgrCfnu
+         6JZGUwskXkAwoJck44RJCTO5yRYK1yBJHO9TF3+T5gq0RGInFC7ZeHfnnAWAAfJcX4zF
+         9z6aa1iAuGixcci2V9kM7PkpdH4HJZQxu08CXou6P/3jEv/v5UuW6KMf1L0l+ZLdih9X
+         1OPA54860VdFaoJooO4iWCXmvAAUpzYVMLmYwe461hYPRfmHNsYg1HnV52mA3Xc2Sqsc
+         FZjoqC1CyzGZxmz0YuLce/dj/FnvCYwoymG4qr5ZW1Wy5PJlBkVp5AWmwSFcLvjLNBNH
+         d+hQ==
+X-Gm-Message-State: ANhLgQ2/dIdHpnrizfKjzCSzSqwJvCFFvM4A1th7qsb2Etnol9xG8GXt
+        /M9NPW+OLEuNb7QqkzUjyWXQW+fzFdk=
+X-Google-Smtp-Source: ADFU+vvUFo5VyLEdXlLvP4jxG7ZFn8D4rnGgV0PvYjNl6zV+qg4FIS+krg5jIfgSc0QpMaFDiUqtFw==
+X-Received: by 2002:a5d:55c2:: with SMTP id i2mr3397860wrw.133.1585143606663;
+        Wed, 25 Mar 2020 06:40:06 -0700 (PDT)
+Received: from Red ([2a01:cb1d:3d5:a100:2e56:dcff:fed2:c6d6])
+        by smtp.googlemail.com with ESMTPSA id b11sm22503149wrq.26.2020.03.25.06.40.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Mar 2020 06:40:05 -0700 (PDT)
+Date:   Wed, 25 Mar 2020 14:40:03 +0100
+From:   LABBE Corentin <clabbe@baylibre.com>
+To:     Nicolas Chauvet <kwizart@gmail.com>
+Cc:     Thierry Reding <thierry.reding@gmail.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Prashant Gaikwad <pgaikwad@nvidia.com>,
+        pdeschrijver@nvidia.com,
+        Michael Turquette <mturquette@baylibre.com>, sboyd@kernel.org,
+        axboe@kernel.dk, linux-tegra@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-clk@vger.kernel.org,
+        linux-ide@vger.kernel.org
+Subject: Re: tegra124-jetson-tk1: sata doesnt work since 5.2
+Message-ID: <20200325134003.GA27961@Red>
+References: <20200319074401.GA4116@Red>
+ <CABr+WTnBmJsDZPjUxYkG98dTneDD1p8G=uRftVduTGYbY0ruqQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-Date:   Wed, 25 Mar 2020 11:35:34 +0000
-From:   Marc Zyngier <maz@kernel.org>
-To:     Paul Cercueil <paul@crapouillou.net>
-Cc:     Jiaxun Yang <jiaxun.yang@flygoat.com>, linux-mips@vger.kernel.org,
-        Huacai Chen <chenhc@lemote.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Jonathan Corbet <corbet@lwn.net>,
-        John Crispin <john@phrozen.org>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Jean Delvare <jdelvare@suse.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Mauro Carvalho Chehab <mchehab+samsung@kernel.org>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Andi Kleen <ak@linux.intel.com>,
-        "H. Nikolaus Schaller" <hns@goldelico.com>,
-        "Eric W. Biederman" <ebiederm@xmission.com>,
-        Tiezhu Yang <yangtiezhu@loongson.cn>,
-        Yinglu Yang <yangyinglu@loongson.cn>,
-        Allison Randal <allison@lohutok.net>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        Paul Burton <paulburton@kernel.org>,
-        Manuel Lauss <manuel.lauss@gmail.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Matt Redfearn <matt.redfearn@mips.com>,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org, linux-ide@vger.kernel.org
-Subject: Re: [PATCH v7 01/12] irqchip: Add driver for Loongson I/O Local
- Interrupt Controller
-In-Reply-To: <AFYQ7Q.2LEJN3L8ZS5J3@crapouillou.net>
-References: <20200325022916.106641-1-jiaxun.yang@flygoat.com>
- <20200325022916.106641-2-jiaxun.yang@flygoat.com>
- <AFYQ7Q.2LEJN3L8ZS5J3@crapouillou.net>
-Message-ID: <30bbde289a0cc4c1bfc0d3f6475f8f3e@kernel.org>
-X-Sender: maz@kernel.org
-User-Agent: Roundcube Webmail/1.3.10
-X-SA-Exim-Connect-IP: 51.254.78.96
-X-SA-Exim-Rcpt-To: paul@crapouillou.net, jiaxun.yang@flygoat.com, linux-mips@vger.kernel.org, chenhc@lemote.com, tglx@linutronix.de, jason@lakedaemon.net, robh+dt@kernel.org, mark.rutland@arm.com, tsbogend@alpha.franken.de, corbet@lwn.net, john@phrozen.org, matthias.bgg@gmail.com, jdelvare@suse.com, davem@davemloft.net, mchehab+samsung@kernel.org, Jonathan.Cameron@huawei.com, gregkh@linuxfoundation.org, andriy.shevchenko@linux.intel.com, geert+renesas@glider.be, krzk@kernel.org, miquel.raynal@bootlin.com, ak@linux.intel.com, hns@goldelico.com, ebiederm@xmission.com, yangtiezhu@loongson.cn, yangyinglu@loongson.cn, allison@lohutok.net, b.zolnierkie@samsung.com, paulburton@kernel.org, manuel.lauss@gmail.com, fancer.lancer@gmail.com, matt.redfearn@mips.com, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linux-doc@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, linux-ide@vger.kernel.org
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+In-Reply-To: <CABr+WTnBmJsDZPjUxYkG98dTneDD1p8G=uRftVduTGYbY0ruqQ@mail.gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2020-03-25 11:25, Paul Cercueil wrote:
-> Hi Jiaxun,
+On Thu, Mar 19, 2020 at 08:55:38AM +0100, Nicolas Chauvet wrote:
+> Le jeu. 19 mars 2020 à 08:44, LABBE Corentin <clabbe@baylibre.com> a écrit :
+> >
+> > Hello
+> >
+> > sata doesnt work on tegra124-jetson-tk1 on next and master and at least since 5.2 (but 5.1 works).
+> > [    0.492810] +5V_SATA: supplied by +5V_SYS
+> > [    0.493230] +12V_SATA: supplied by +VDD_MUX
+> > [    2.088675] tegra-ahci 70027000.sata: 70027000.sata supply ahci not found, using dummy regulator
+> > [    2.097643] tegra-ahci 70027000.sata: 70027000.sata supply phy not found, using dummy regulator
+> > [    3.314776] tegra-ahci 70027000.sata: 70027000.sata supply ahci not found, using dummy regulator
+> > [    3.323658] tegra-ahci 70027000.sata: 70027000.sata supply phy not found, using dummy regulator
+> > [    5.236964] tegra-ahci 70027000.sata: 70027000.sata supply ahci not found, using dummy regulator
+> > [    5.245867] tegra-ahci 70027000.sata: 70027000.sata supply phy not found, using dummy regulator
+> > [    5.254706] tegra-ahci 70027000.sata: 70027000.sata supply target not found, using dummy regulator
+> > [    5.310270] phy phy-sata.6: phy poweron failed --> -110
+> > [    5.315604] tegra-ahci 70027000.sata: failed to power on AHCI controller: -110
+> > [    5.323022] tegra-ahci: probe of 70027000.sata failed with error -110
+> > [   35.694269] +5V_SATA: disabling
+> > [   35.697438] +12V_SATA: disabling
 > 
+> It looks strange, because (on same device) , I have sata working as
+> appropriate, but ethernet fails with me.
+> https://bugzilla.kernel.org/show_bug.cgi?id=206217
 > 
-> Le mer. 25 mars 2020 Ã  10:28, Jiaxun Yang <jiaxun.yang@flygoat.com> a 
-> Ã©crit :
->> This controller appeared on Loongson family of chips as the primary
->> package interrupt source.
->> 
->> Signed-off-by: Jiaxun Yang <jiaxun.yang@flygoat.com>
->> Co-developed-by: Huacai Chen <chenhc@lemote.com>
->> Signed-off-by: Huacai Chen <chenhc@lemote.com>
->> Reviewed-by: Marc Zyngier <maz@kernel.org>
->> ---
->> v4-v5:
->> 	Resolve suggestions from maz:
->> 		- Remove DT validation
->> 		- Simplify unnucessary functions & variables
->> ---
->>  drivers/irqchip/Kconfig                |   9 +
->>  drivers/irqchip/Makefile               |   1 +
->>  drivers/irqchip/irq-loongson-liointc.c | 261 
->> +++++++++++++++++++++++++
->>  3 files changed, 271 insertions(+)
->>  create mode 100644 drivers/irqchip/irq-loongson-liointc.c
->> 
->> diff --git a/drivers/irqchip/Kconfig b/drivers/irqchip/Kconfig
->> index 6d397732138d..c609eaa319d2 100644
->> --- a/drivers/irqchip/Kconfig
->> +++ b/drivers/irqchip/Kconfig
->> @@ -513,4 +513,13 @@ config EXYNOS_IRQ_COMBINER
->>  	  Say yes here to add support for the IRQ combiner devices embedded
->>  	  in Samsung Exynos chips.
->> 
->> +config LOONGSON_LIOINTC
->> +	bool "Loongson Local I/O Interrupt Controller"
->> +	depends on MACH_LOONGSON64
->> +	default y
->> +	select IRQ_DOMAIN
->> +	select GENERIC_IRQ_CHIP
->> +	help
->> +	  Support for the Loongson Local I/O Interrupt Controller.
->> +
->>  endmenu
->> diff --git a/drivers/irqchip/Makefile b/drivers/irqchip/Makefile
->> index eae0d78cbf22..5e7678efdfe6 100644
->> --- a/drivers/irqchip/Makefile
->> +++ b/drivers/irqchip/Makefile
->> @@ -105,3 +105,4 @@ obj-$(CONFIG_MADERA_IRQ)		+= irq-madera.o
->>  obj-$(CONFIG_LS1X_IRQ)			+= irq-ls1x.o
->>  obj-$(CONFIG_TI_SCI_INTR_IRQCHIP)	+= irq-ti-sci-intr.o
->>  obj-$(CONFIG_TI_SCI_INTA_IRQCHIP)	+= irq-ti-sci-inta.o
->> +obj-$(CONFIG_LOONGSON_LIOINTC)		+= irq-loongson-liointc.o
->> diff --git a/drivers/irqchip/irq-loongson-liointc.c 
->> b/drivers/irqchip/irq-loongson-liointc.c
->> new file mode 100644
->> index 000000000000..18de2c09ece4
->> --- /dev/null
->> +++ b/drivers/irqchip/irq-loongson-liointc.c
->> @@ -0,0 +1,261 @@
->> +// SPDX-License-Identifier: GPL-2.0
->> +/*
->> + *  Copyright (C) 2020, Jiaxun Yang <jiaxun.yang@flygoat.com>
->> + *  Loongson Local IO Interrupt Controller support
->> + */
->> +
->> +#include <linux/errno.h>
->> +#include <linux/init.h>
->> +#include <linux/types.h>
->> +#include <linux/interrupt.h>
->> +#include <linux/ioport.h>
->> +#include <linux/irqchip.h>
->> +#include <linux/of_address.h>
->> +#include <linux/of_irq.h>
->> +#include <linux/io.h>
->> +#include <linux/smp.h>
->> +#include <linux/irqchip/chained_irq.h>
->> +
->> +#include <boot_param.h>
->> +
->> +#define LIOINTC_CHIP_IRQ	32
->> +#define LIOINTC_NUM_PARENT 4
->> +
->> +#define LIOINTC_INTC_CHIP_START	0x20
->> +
->> +#define LIOINTC_REG_INTC_STATUS	(LIOINTC_INTC_CHIP_START + 0x20)
->> +#define LIOINTC_REG_INTC_EN_STATUS	(LIOINTC_INTC_CHIP_START + 0x04)
->> +#define LIOINTC_REG_INTC_ENABLE	(LIOINTC_INTC_CHIP_START + 0x08)
->> +#define LIOINTC_REG_INTC_DISABLE	(LIOINTC_INTC_CHIP_START + 0x0c)
->> +#define LIOINTC_REG_INTC_POL	(LIOINTC_INTC_CHIP_START + 0x10)
->> +#define LIOINTC_REG_INTC_EDGE	(LIOINTC_INTC_CHIP_START + 0x14)
->> +
->> +#define LIOINTC_SHIFT_INTx	4
->> +
->> +struct liointc_handler_data {
->> +	struct liointc_priv	*priv;
->> +	u32			parent_int_map;
->> +};
->> +
->> +struct liointc_priv {
->> +	struct irq_chip_generic		*gc;
->> +	struct liointc_handler_data	handler[LIOINTC_NUM_PARENT];
->> +	u8				map_cache[LIOINTC_CHIP_IRQ];
->> +};
->> +
->> +static void liointc_chained_handle_irq(struct irq_desc *desc)
->> +{
->> +	struct liointc_handler_data *handler = 
->> irq_desc_get_handler_data(desc);
->> +	struct irq_chip *chip = irq_desc_get_chip(desc);
->> +	struct irq_chip_generic *gc = handler->priv->gc;
->> +	u32 pending;
->> +
->> +	chained_irq_enter(chip, desc);
->> +
->> +	pending = readl(gc->reg_base + LIOINTC_REG_INTC_STATUS);
->> +
->> +	if (!pending)
->> +		spurious_interrupt();
->> +
->> +	while (pending) {
->> +		int bit = __ffs(pending);
->> +
->> +		generic_handle_irq(irq_find_mapping(gc->domain, bit));
->> +		pending &= ~BIT(bit);
->> +	}
+> It might worth to have another report.
 > 
-> Consider using the for_each_set_bit() macro from <linux/bitops.h>.
-> See drivers/irqchip/irq-ingenic-tcu.c for instance.
 
-which would require changing the pending type to be unsigned long.
-Open-coding these if fine if it helps keeping the type system 
-consistent.
+Hello
 
-         M.
--- 
-Jazz is not dead. It just smells funny...
+Mine has ethernet works well. But I hit many problem with it and older kernel.
+Perhaps the 5.1.21, were I am stuck, does not have it.
+
+Anyway, the tegra of kerneci has the same SATA problem.
+https://storage.kernelci.org/next/master/next-20200325/arm/multi_v7_defconfig+CONFIG_SMP=n/gcc-8/lab-baylibre/boot-tegra124-jetson-tk1.txt
+
+Maintainers, any idea on this sata issue ?
+
+Regards
