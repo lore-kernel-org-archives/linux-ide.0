@@ -6,69 +6,68 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66BE5C2D0E8
-	for <linux-ide@archiver.kernel.org>; Thu, 26 Mar 2020 15:16:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1A06C43331
+	for <linux-ide@archiver.kernel.org>; Thu, 26 Mar 2020 15:17:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 40D9F2073E
-	for <linux-ide@archiver.kernel.org>; Thu, 26 Mar 2020 15:16:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88D722073E
+	for <linux-ide@archiver.kernel.org>; Thu, 26 Mar 2020 15:17:20 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="Z2wYiDyF"
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="Vqpcchf0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727612AbgCZPQt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 26 Mar 2020 11:16:49 -0400
-Received: from mail-pj1-f68.google.com ([209.85.216.68]:37288 "EHLO
-        mail-pj1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726496AbgCZPQs (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 26 Mar 2020 11:16:48 -0400
-Received: by mail-pj1-f68.google.com with SMTP id o12so2531709pjs.2
-        for <linux-ide@vger.kernel.org>; Thu, 26 Mar 2020 08:16:46 -0700 (PDT)
+        id S1727502AbgCZPRU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 26 Mar 2020 11:17:20 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:46817 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726764AbgCZPRU (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 26 Mar 2020 11:17:20 -0400
+Received: by mail-pf1-f193.google.com with SMTP id q3so2901674pff.13
+        for <linux-ide@vger.kernel.org>; Thu, 26 Mar 2020 08:17:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=kernel-dk.20150623.gappssmtp.com; s=20150623;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=wYPpm/roqn+t+5JwnWeUfdJW3sGbPaRDzYCBTuCQby4=;
-        b=Z2wYiDyFq+4kYFEy1ZL0i6gxvSpUpfAJmOXyCbqhKg+PdPvlSUr3ali/GljgK/Y/ZO
-         r1lE/mqPo5Lh3fepBdj1tRSHRumc5SJSeaGHIQ56MIMlijSzSdT+IHejkr8PEGyu1fMC
-         8ELfNIDF/fbI5SEeMO0/SDbx/7Q+0xS2AbvSXseYolyb5kZOhWi20hUwBKONH5YJk3L0
-         EcFNsSrEYhwMVeqyM2Pkl0IMon2MeA4R9F6OxqbgesIBzlOZTzqedR9li1D0qUa4vV0Z
-         f0FJOSYZ6XY1EwH1AZh5KO5QOZQ8+Xt/IKb11SPCZDhUgxzDDM5IDautzEdEILRygdmx
-         eoEQ==
+        bh=cgOWd2mmKFNevzzwZmClgw5vOEafrGQd9YYx6vt9JK4=;
+        b=Vqpcchf00mOVPcS78f6v1MHgrYZAW4q8KRX797u2FHxh2gJu7Jx/wPI/7JJqzA7V1w
+         tl7mJi1i9C4bpk/3D7Gs3n4Nn2kXTwLejNXRgRzOs/q+uHlQ66DUfwL5DdKN/P0mKFo9
+         HlPY4HTh3kX0K4brFQgWCvygGCmh7ZD+Hu492nSNZNQH+Mv/ko6mchmNCcWLjT1XJ/j6
+         W7B1SMBGnkLhWY7PrtwKrpZk1UCgSBV1h02c1WPQo7bqSAUslTeMVXlSCoVR4hK0LeDB
+         fJ8V7Yf+M/gbySCtgTsmvpl4zTk/ndFGwOeH69Kr3kFjBr/SCb8VKXeGRa0MnwLIfuHs
+         AcwA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=wYPpm/roqn+t+5JwnWeUfdJW3sGbPaRDzYCBTuCQby4=;
-        b=MRwLbWnFL7aCV+rrxVN/6ZFbfQM9vKWUBvC219Jalzx49hJahhVCcoK70jwKFvOun2
-         SanKC/E1wCtiavJ8Umfr3B5PBzYROPhKyrKJqnMEC1/hemIt73tWib+fE48h3bjyggFZ
-         BdZjEHwPUwGmSYl+6RafCu6cxpzJ5gZMeXWh7IZt+wBe8u8yIAm2HsAo14rXW4/zZNQW
-         KxTiOj7o8GzCue5OoD0opXIJNWrKREODsZTdY7Ddu29IfYNsqu5L8NjkVmgpaTcSqqNt
-         W/1/dOpc3No48SBWjap+y4/T1UzntZaOejcAVGDAi4UjfKRikwIu/g/54qbbhsAgcT7P
-         sfBg==
-X-Gm-Message-State: ANhLgQ1WVPgFhs13IunUTit905D/gyX/z8VZKnMZKCKPn5t7whJswlh/
-        HBUDc6MgyUlMOw+QkMCpLv7W7w==
-X-Google-Smtp-Source: ADFU+vvSwDGZ3vi5MYUbHEhhi1yLLSyC9+GawkQSsKQc/4RZYnNcX1X8a7E9gp+ST4kC/Xk11Sw3Gw==
-X-Received: by 2002:a17:90a:ab0a:: with SMTP id m10mr466536pjq.173.1585235805719;
-        Thu, 26 Mar 2020 08:16:45 -0700 (PDT)
+        bh=cgOWd2mmKFNevzzwZmClgw5vOEafrGQd9YYx6vt9JK4=;
+        b=CmyVExK1G9seGxsXUu+Tzm/dwzsWeIz7U1GmJ1rzB6/8hnNLbVEUQ/oTRn6Sx9DAtR
+         HQjxv9D7oBgwM2+OrHTWH+g90CCIrdC3GFADudmzFeEvKIFuC9WkXLlAOqetE8dZTX5m
+         X3p8DGV6tE93s200Z81QKk2m4XwDBNl7SmdL4Gqwcq5lSdexYt1f9Vncpq31xz40pcFN
+         p2wCy2gBp4eEG8mlGpTMlXFQsQ0jYUE0hYfkLzseiH40Gbd/EfzH5NqqDUHOe9cTVNeh
+         mV8bfRoEQppijoPCaP/XZARpTlwerMKpPMX5oOPA86AsZ9IZ4CQjBzWg9epiq6UFx/le
+         EtUQ==
+X-Gm-Message-State: ANhLgQ2E5HMUmawcy6D1dsSg7H02EwdZMIUSMYJZ+zBOBZeeyUlJVS4K
+        wBW0c0jR97QPJEUF/zBHCZLDJQ==
+X-Google-Smtp-Source: ADFU+vvrhAugJMt0hChhUDacr6c1uF+Pf7E91Y3u6GT6xmUbUr9taW0rOVFoiywIwydmB2lMlt8/DQ==
+X-Received: by 2002:a62:6807:: with SMTP id d7mr9569423pfc.230.1585235837937;
+        Thu, 26 Mar 2020 08:17:17 -0700 (PDT)
 Received: from [192.168.1.188] ([66.219.217.145])
-        by smtp.gmail.com with ESMTPSA id b3sm1878746pgs.69.2020.03.26.08.16.42
+        by smtp.gmail.com with ESMTPSA id s137sm1999703pfs.45.2020.03.26.08.17.16
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 26 Mar 2020 08:16:44 -0700 (PDT)
-Subject: Re: [PATCH v4 00/27] ata: optimize core code size on PATA only setups
-To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc:     Michael Schmitz <schmitzmic@gmail.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Christoph Hellwig <hch@lst.de>, linux-ide@vger.kernel.org,
-        linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
-References: <CGME20200317144340eucas1p1f6f7a6fbd27cbfeaab2ea97fbccb2836@eucas1p1.samsung.com>
- <20200317144333.2904-1-b.zolnierkie@samsung.com>
+        Thu, 26 Mar 2020 08:17:16 -0700 (PDT)
+Subject: Re: [linux-next PATCH] ata: sata_fsl: fix a compile error
+To:     Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+        Li Yang <leoyang.li@nxp.com>
+Cc:     Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20200325235921.22431-1-leoyang.li@nxp.com>
+ <7dda967d-4328-abd1-2687-95bc213030dc@cogentembedded.com>
 From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <3ec639bd-f307-df95-857c-d613a375c7fc@kernel.dk>
-Date:   Thu, 26 Mar 2020 09:16:41 -0600
+Message-ID: <34cdd2ed-f272-668f-03bc-18cc9efd57c0@kernel.dk>
+Date:   Thu, 26 Mar 2020 09:17:14 -0600
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.4.1
 MIME-Version: 1.0
-In-Reply-To: <20200317144333.2904-1-b.zolnierkie@samsung.com>
+In-Reply-To: <7dda967d-4328-abd1-2687-95bc213030dc@cogentembedded.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -77,28 +76,20 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 3/17/20 8:43 AM, Bartlomiej Zolnierkiewicz wrote:
-> Hi,
+On 3/26/20 3:06 AM, Sergei Shtylyov wrote:
+> Hello!
 > 
-> There have been reports in the past of libata core code size
-> being a problem in migration from deprecated IDE subsystem on
-> legacy PATA only systems, i.e.:
+> On 26.03.2020 2:59, Li Yang wrote:
 > 
-> https://lore.kernel.org/linux-ide/db2838b7-4862-785b-3a1d-3bf09811340a@gmail.com/
+>> drivers/ata/sata_fsl.c: In function 'sata_fsl_init_controller':
+>> drivers/ata/sata_fsl.c:1365:15: error: 'ap' undeclared (first use in this function)
+>>    ata_port_dbg(ap, "icc = 0x%x\n", ioread32(hcr_base + ICC));
+>  >                 ^
 > 
-> This patchset re-organizes libata core code to exclude SATA
-> specific code from being built for PATA only setups.
-> 
-> The end result is up to 24% (by 23949 bytes, from 101769 bytes to
-> 77820 bytes) smaller libata core code size (as measured for m68k
-> arch using modified atari_defconfig) on affected setups.
-> 
-> I've tested this patchset using pata_falcon driver under ARAnyM
-> emulator.
+>     Another fix has been posted yesterday.
 
-Bart, I'd like to get this into 5.7, can you rebase on current
-for-5.7/libata? As you know, I dropped the dprintk series, and it's
-now throwing rejects.
+I also dropped the series yesterday, so we don't need any of these
+patches anymore.
 
 -- 
 Jens Axboe
