@@ -5,56 +5,56 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DE5BC2D0EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5DB4C2D0F0
 	for <linux-ide@archiver.kernel.org>; Thu, 26 Mar 2020 15:59:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 34B8420737
+	by mail.kernel.org (Postfix) with ESMTP id 755FF20737
 	for <linux-ide@archiver.kernel.org>; Thu, 26 Mar 2020 15:59:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="jsc6jESY"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="N3GIXAyB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727934AbgCZP72 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 26 Mar 2020 11:59:28 -0400
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:58970 "EHLO
+        id S1728648AbgCZP73 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 26 Mar 2020 11:59:29 -0400
+Received: from mailout1.w1.samsung.com ([210.118.77.11]:58992 "EHLO
         mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728578AbgCZP6t (ORCPT
+        with ESMTP id S1728600AbgCZP6t (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Thu, 26 Mar 2020 11:58:49 -0400
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200326155847euoutp013af0a91723014d6169ca1a33818ad234~-5dwczwvD3032230322euoutp01C
-        for <linux-ide@vger.kernel.org>; Thu, 26 Mar 2020 15:58:47 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200326155847euoutp013af0a91723014d6169ca1a33818ad234~-5dwczwvD3032230322euoutp01C
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200326155848euoutp01563178320022a4027d31b250ee04d7e2~-5dxCci3Y2919829198euoutp01_
+        for <linux-ide@vger.kernel.org>; Thu, 26 Mar 2020 15:58:48 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200326155848euoutp01563178320022a4027d31b250ee04d7e2~-5dxCci3Y2919829198euoutp01_
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1585238327;
-        bh=FXlvVo2ucia17qGwJ/iW56q2pvAF9VZdpWgkBcPtlAE=;
+        s=mail20170921; t=1585238328;
+        bh=MjEAvxE9az05TD4ljo19sQQTx7oyiMSJNzS3vHE5Dw0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jsc6jESYqyYx09XSx2hTO5mRbbUORoYMuLu0UuLIFIxoKF0V5SYbovwrlssrk2ME7
-         j6RmYGpEPPUfTX91Ev5C82BJ1ZGxHHvdeOEf66XR4Hla5uDI4pmEOwFIkzn03OVhmB
-         ax094OfE7EPhtVVNMLfGM6gMPjkPrKMIZH193gNA=
+        b=N3GIXAyBOwhoCpFzRAkUrWFnNRgXqSNIWFTaL2sUbbK8QN8mydTQnSyCyIRFbr6EF
+         rD0e3Eaq1vj8HRJVAqxQYrfvi/v9Frt6LXIZ5VM6jHv795G93kjDQOc9GrnY9Q7hEu
+         c3JNhMPIUJd6e7zaFF1H4Tqg4hLWVm7ItGFhhUm4=
 Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
-        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20200326155846eucas1p223ff0dbc5c9e3ff373d70a0cb30ad70b~-5dvpy2G62254722547eucas1p2M;
-        Thu, 26 Mar 2020 15:58:46 +0000 (GMT)
-Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges3new.samsung.com (EUCPMTA) with SMTP id 96.F7.60698.631DC7E5; Thu, 26
-        Mar 2020 15:58:46 +0000 (GMT)
+        eucas1p1.samsung.com (KnoxPortal) with ESMTP id
+        20200326155847eucas1p140d3fee2e780848bfdf3ad81f4120365~-5dwxYbJ60942909429eucas1p1U;
+        Thu, 26 Mar 2020 15:58:47 +0000 (GMT)
+Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
+        eusmges3new.samsung.com (EUCPMTA) with SMTP id 87.F7.60698.731DC7E5; Thu, 26
+        Mar 2020 15:58:47 +0000 (GMT)
 Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
         eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-        20200326155846eucas1p2c1a68a558be3f6df1308cd665ca60e32~-5dvVpKIW2254022540eucas1p2I;
-        Thu, 26 Mar 2020 15:58:46 +0000 (GMT)
-Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
+        20200326155847eucas1p274137b9af50464c076fbbfb45947493d~-5dwd_0OM2633426334eucas1p2g;
+        Thu, 26 Mar 2020 15:58:47 +0000 (GMT)
+Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
         eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200326155846eusmtrp1955108fec5eadb36db1113a55997f249~-5dvU_Bha2091520915eusmtrp1T;
-        Thu, 26 Mar 2020 15:58:46 +0000 (GMT)
-X-AuditID: cbfec7f5-a0fff7000001ed1a-9d-5e7cd136155b
+        20200326155847eusmtrp1c7f62cbe6bc1de3f1c8bce69a3ffb165~-5dwdaRay2090020900eusmtrp1w;
+        Thu, 26 Mar 2020 15:58:47 +0000 (GMT)
+X-AuditID: cbfec7f5-a0fff7000001ed1a-a1-5e7cd1373c99
 Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id 5F.5A.08375.631DC7E5; Thu, 26
-        Mar 2020 15:58:46 +0000 (GMT)
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id 40.DA.07950.731DC7E5; Thu, 26
+        Mar 2020 15:58:47 +0000 (GMT)
 Received: from AMDC3058.digital.local (unknown [106.120.51.71]) by
         eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200326155845eusmtip13fb8178c1af746fa30792a63cf1e2da1~-5du7ZOY70452404524eusmtip1O;
-        Thu, 26 Mar 2020 15:58:45 +0000 (GMT)
+        20200326155846eusmtip1c1887f262c25ec1b4b58720833f13763~-5dwCdKSW1233412334eusmtip1z;
+        Thu, 26 Mar 2020 15:58:46 +0000 (GMT)
 From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Michael Schmitz <schmitzmic@gmail.com>,
@@ -62,414 +62,176 @@ Cc:     Michael Schmitz <schmitzmic@gmail.com>,
         Christoph Hellwig <hch@lst.de>, linux-ide@vger.kernel.org,
         linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
         b.zolnierkie@samsung.com
-Subject: [PATCH v5 19/27] ata: move sata_link_{debounce,resume}() to
- libata-sata.c
-Date:   Thu, 26 Mar 2020 16:58:14 +0100
-Message-Id: <20200326155822.19400-20-b.zolnierkie@samsung.com>
+Subject: [PATCH v5 22/27] ata: move sata_deb_timing_*() to libata-sata.c
+Date:   Thu, 26 Mar 2020 16:58:17 +0100
+Message-Id: <20200326155822.19400-23-b.zolnierkie@samsung.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200326155822.19400-1-b.zolnierkie@samsung.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrLKsWRmVeSWpSXmKPExsWy7djP87pmF2viDBb9l7RYfbefzWLjjPWs
-        Fs9u7WWyWLn6KJPFsR2PmCwu75rDZrH8yVpmi7mt09kdODx2zrrL7nH5bKnHocMdjB4nW7+x
-        eOy+2cDm0bdlFaPH501yAexRXDYpqTmZZalF+nYJXBk/mmayFdyJqnj2egdrA+ND9y5GTg4J
-        AROJ1/unMXUxcnEICaxglHj7+x0LhPOFUeLEyyPMIFVCAp8ZJXoPc8B09F9vZ4QoWs4ose3U
-        VoSO33vPMIJUsQlYSUxsXwVmiwgoSPT8XskGUsQs8J5RYsWkvSwgCWGBEIlDC5+A2SwCqhLt
-        Vy6xdjFycPAK2Elc/uwFsU1eYuu3T6wgNidQePm6+WAX8QoISpycCdHKDFTTvHU2M8h8CYF1
-        7BL/2q+yQjS7SMy/+IodwhaWeHV8C5QtI3F6cg8LVAOjxN+OF1Dd2xkllk/+xwZRZS1x59wv
-        NpCLmAU0Jdbv0ocIO0r8O7uDHSQsIcAnceOtIMQRfBKTtk1nhgjzSnS0CUFUq0lsWLaBDWZt
-        186VzBC2h8SsKVdZJjAqzkLyziwk78xC2LuAkXkVo3hqaXFuemqxcV5quV5xYm5xaV66XnJ+
-        7iZGYCI6/e/41x2M+/4kHWIU4GBU4uFtaKuJE2JNLCuuzD3EKMHBrCTC+zQSKMSbklhZlVqU
-        H19UmpNafIhRmoNFSZzXeNHLWCGB9MSS1OzU1ILUIpgsEwenVAOjjeNOrXlKdhwW/+JXTnlq
-        fvbLUjf56c1dTZyNy0W258vcF5v80e7chZqmp1MWHklT/MK1w4Ql76iOUf0N6Y1ltxs1p/5t
-        y1eUO9opvt3Ws23Tek4/I805uqfMN/hmlu4yj3i0OZ/958R1DgUyl/0yT32KVorySJJKqJMX
-        E4o8najnuS4q10GJpTgj0VCLuag4EQAc1eDwQAMAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprJIsWRmVeSWpSXmKPExsVy+t/xu7pmF2viDDbd57JYfbefzWLjjPWs
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrHKsWRmVeSWpSXmKPExsWy7djPc7rmF2viDDpWa1usvtvPZrFxxnpW
+        i2e39jJZrFx9lMni2I5HTBaXd81hs1j+ZC2zxdzW6ewOHB47Z91l97h8ttTj0OEORo+Trd9Y
+        PHbfbGDz6NuyitHj8ya5APYoLpuU1JzMstQifbsEroyeRUeZC04oV3zb0c/SwHhdtouRk0NC
+        wERi3Yn77F2MXBxCAisYJRZ92sgI4XxhlFg4+zoLhPOZUaL51XxGmJbJ96awQSSWM0pc3Xwf
+        oeXEwqlgVWwCVhIT21eB2SICChI9v1eCdTALvGeUWDFpLwtIQljAQ2L2nAPsIDaLgKrErtnH
+        mUFsXgE7iZ1LzzFBrJOX2PrtEyuIzQkUX75uPlSNoMTJmU/A5jAD1TRvnc0MskBCYBm7xPwv
+        C4E2cwA5LhItzYEQc4QlXh3fwg5hy0icntzDAlG/jlHib8cLqObtjBLLJ/9jg6iylrhz7hcb
+        yCBmAU2J9bv0IcKOEu+aJjFDzOeTuPFWEOIGPolJ26ZDhXklOtqEIKrVJDYs28AGs7Zr50pm
+        CNtDYsqz5SwTGBVnIflmFpJvZiHsXcDIvIpRPLW0ODc9tdg4L7Vcrzgxt7g0L10vOT93EyMw
+        FZ3+d/zrDsZ9f5IOMQpwMCrx8Da01cQJsSaWFVfmHmKU4GBWEuF9GgkU4k1JrKxKLcqPLyrN
+        SS0+xCjNwaIkzmu86GWskEB6YklqdmpqQWoRTJaJg1OqgfF4ppVvsFCgxaHL096nuXJxx8wM
+        aWmzOd9ys0FYrFKmb4EYQzGv8Mnlb9YduRWiJfC/2eWhTE/3p+2PrObOD8zglDwRU+T+z3bb
+        6xaT8M5Os5zbjn72Esdtl3PErxTWiH4u/IrhnNz+hbuEhZ5OXH5Z9cBV/iStyEA1pqIcL503
+        Uw4Hb3T8qcRSnJFoqMVcVJwIAGaUScdBAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprNIsWRmVeSWpSXmKPExsVy+t/xu7rmF2viDLa8EbZYfbefzWLjjPWs
         Fs9u7WWyWLn6KJPFsR2PmCwu75rDZrH8yVpmi7mt09kdODx2zrrL7nH5bKnHocMdjB4nW7+x
         eOy+2cDm0bdlFaPH501yAexRejZF+aUlqQoZ+cUltkrRhhZGeoaWFnpGJpZ6hsbmsVZGpkr6
-        djYpqTmZZalF+nYJehk/mmayFdyJqnj2egdrA+ND9y5GTg4JAROJ/uvtjF2MXBxCAksZJSYd
-        +MHcxcgBlJCROL6+DKJGWOLPtS42EFtI4BOjxMmWbBCbTcBKYmL7KkYQW0RAQaLn90o2kDnM
-        Al8ZJZZO6mYGSQgLBEmcWfABzGYRUJVov3KJFWQ+r4CdxOXPXhDz5SW2fvvECmJzAoWXr5vP
-        DLHLVmLxlw9MIDavgKDEyZlPWEBsZqD65q2zmScwCsxCkpqFJLWAkWkVo0hqaXFuem6xoV5x
-        Ym5xaV66XnJ+7iZGYLRsO/Zz8w7GSxuDDzEKcDAq8fBqtNTECbEmlhVX5h5ilOBgVhLhfRoJ
-        FOJNSaysSi3Kjy8qzUktPsRoCvTDRGYp0eR8YCTnlcQbmhqaW1gamhubG5tZKInzdggcjBES
-        SE8sSc1OTS1ILYLpY+LglGpgbI1iqjx03PDbpq0TinlSkvd1Tf4i+OF6g/hFqfVnArJTjzoy
-        ff/85tQjnh1PPc8t5NhRu/Hezkfrtk8U0vjFIVsZee6lXbruA82ZLMa+q968WOq+40Dnmw9W
-        6ee+udfYpK1+zPxT1MIv++fOLTPEz3H7LNPY66Ys8Z9hjoSMXdyb604hr3p+eSmxFGckGmox
-        FxUnAgCFu4nHrAIAAA==
-X-CMS-MailID: 20200326155846eucas1p2c1a68a558be3f6df1308cd665ca60e32
+        djYpqTmZZalF+nYJehk9i44yF5xQrvi2o5+lgfG6bBcjJ4eEgInE5HtT2LoYuTiEBJYySpz7
+        tZG9i5EDKCEjcXx9GUSNsMSfa11QNZ8YJV5t7mUCSbAJWElMbF/FCGKLCChI9PxeCVbELPCV
+        UWLppG5mkISwgIfE7DkH2EFsFgFViV2zj4PFeQXsJHYuPccEsUFeYuu3T6wgNidQfPm6+WA1
+        QgK2Eou/fGCCqBeUODnzCQuIzQxU37x1NvMERoFZSFKzkKQWMDKtYhRJLS3OTc8tNtIrTswt
+        Ls1L10vOz93ECIyYbcd+btnB2PUu+BCjAAejEg+vRktNnBBrYllxZe4hRgkOZiUR3qeRQCHe
+        lMTKqtSi/Pii0pzU4kOMpkBPTGSWEk3OB0ZzXkm8oamhuYWlobmxubGZhZI4b4fAwRghgfTE
+        ktTs1NSC1CKYPiYOTqkGRma29u6fYimfz7+QPmWelZwQ7pXQaV4nduJUwGyTvz9CpYU32p2f
+        ZSKvtMQlfc9fgSUlf1qOWXxedTaDu0nErVBrzvqinJXfv21yqXKrO9MhMckwK2+GmcP9BVcv
+        Fv3glcgzkI9N3C/FcbrT31jQ0uOzmeSWNXNuv26+cHrfniW1B5ZMOHI5S4mlOCPRUIu5qDgR
+        ANUH3I+uAgAA
+X-CMS-MailID: 20200326155847eucas1p274137b9af50464c076fbbfb45947493d
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200326155846eucas1p2c1a68a558be3f6df1308cd665ca60e32
+X-RootMTR: 20200326155847eucas1p274137b9af50464c076fbbfb45947493d
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20200326155846eucas1p2c1a68a558be3f6df1308cd665ca60e32
+X-CMS-RootMailID: 20200326155847eucas1p274137b9af50464c076fbbfb45947493d
 References: <20200326155822.19400-1-b.zolnierkie@samsung.com>
-        <CGME20200326155846eucas1p2c1a68a558be3f6df1308cd665ca60e32@eucas1p2.samsung.com>
+        <CGME20200326155847eucas1p274137b9af50464c076fbbfb45947493d@eucas1p2.samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-* move sata_link_{debounce,resume}() to libata-sata.c
+* move sata_deb_timing_*() to libata-sata.c
 
-* add static inline for CONFIG_SATA_HOST=n case (only one,
-  for sata_link_resume() is needed)
+* add static inline for sata_ehc_deb_timing() for
+  CONFIG_SATA_HOST=n case
 
 Code size savings on m68k arch using (modified) atari_defconfig:
 
    text    data     bss     dec     hex filename
 before:
-  32816     572      40   33428    8294 drivers/ata/libata-core.o
+  32158     572      40   32770    8002 drivers/ata/libata-core.o
 after:
-  32724     572      40   33336    8238 drivers/ata/libata-core.o
+  32015     572      40   32627    7f73 drivers/ata/libata-core.o
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/ata/libata-core.c | 138 --------------------------------------
- drivers/ata/libata-sata.c | 138 ++++++++++++++++++++++++++++++++++++++
- include/linux/libata.h    |  14 ++--
- 3 files changed, 148 insertions(+), 142 deletions(-)
+ drivers/ata/libata-core.c |  8 --------
+ drivers/ata/libata-sata.c |  8 ++++++++
+ include/linux/libata.h    | 31 ++++++++++++++++++-------------
+ 3 files changed, 26 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 13214ebd0e5c..4ca81ef7c8bd 100644
+index 2ef0960b2154..20c22dbc1f24 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -3485,144 +3485,6 @@ int ata_wait_after_reset(struct ata_link *link, unsigned long deadline,
- }
- EXPORT_SYMBOL_GPL(ata_wait_after_reset);
+@@ -65,14 +65,6 @@
+ #include "libata.h"
+ #include "libata-transport.h"
  
--/**
-- *	sata_link_debounce - debounce SATA phy status
-- *	@link: ATA link to debounce SATA phy status for
-- *	@params: timing parameters { interval, duration, timeout } in msec
-- *	@deadline: deadline jiffies for the operation
-- *
-- *	Make sure SStatus of @link reaches stable state, determined by
-- *	holding the same value where DET is not 1 for @duration polled
-- *	every @interval, before @timeout.  Timeout constraints the
-- *	beginning of the stable state.  Because DET gets stuck at 1 on
-- *	some controllers after hot unplugging, this functions waits
-- *	until timeout then returns 0 if DET is stable at 1.
-- *
-- *	@timeout is further limited by @deadline.  The sooner of the
-- *	two is used.
-- *
-- *	LOCKING:
-- *	Kernel thread context (may sleep)
-- *
-- *	RETURNS:
-- *	0 on success, -errno on failure.
-- */
--int sata_link_debounce(struct ata_link *link, const unsigned long *params,
--		       unsigned long deadline)
--{
--	unsigned long interval = params[0];
--	unsigned long duration = params[1];
--	unsigned long last_jiffies, t;
--	u32 last, cur;
--	int rc;
+-/* debounce timing parameters in msecs { interval, duration, timeout } */
+-const unsigned long sata_deb_timing_normal[]		= {   5,  100, 2000 };
+-EXPORT_SYMBOL_GPL(sata_deb_timing_normal);
+-const unsigned long sata_deb_timing_hotplug[]		= {  25,  500, 2000 };
+-EXPORT_SYMBOL_GPL(sata_deb_timing_hotplug);
+-const unsigned long sata_deb_timing_long[]		= { 100, 2000, 5000 };
+-EXPORT_SYMBOL_GPL(sata_deb_timing_long);
 -
--	t = ata_deadline(jiffies, params[2]);
--	if (time_before(t, deadline))
--		deadline = t;
--
--	if ((rc = sata_scr_read(link, SCR_STATUS, &cur)))
--		return rc;
--	cur &= 0xf;
--
--	last = cur;
--	last_jiffies = jiffies;
--
--	while (1) {
--		ata_msleep(link->ap, interval);
--		if ((rc = sata_scr_read(link, SCR_STATUS, &cur)))
--			return rc;
--		cur &= 0xf;
--
--		/* DET stable? */
--		if (cur == last) {
--			if (cur == 1 && time_before(jiffies, deadline))
--				continue;
--			if (time_after(jiffies,
--				       ata_deadline(last_jiffies, duration)))
--				return 0;
--			continue;
--		}
--
--		/* unstable, start over */
--		last = cur;
--		last_jiffies = jiffies;
--
--		/* Check deadline.  If debouncing failed, return
--		 * -EPIPE to tell upper layer to lower link speed.
--		 */
--		if (time_after(jiffies, deadline))
--			return -EPIPE;
--	}
--}
--EXPORT_SYMBOL_GPL(sata_link_debounce);
--
--/**
-- *	sata_link_resume - resume SATA link
-- *	@link: ATA link to resume SATA
-- *	@params: timing parameters { interval, duration, timeout } in msec
-- *	@deadline: deadline jiffies for the operation
-- *
-- *	Resume SATA phy @link and debounce it.
-- *
-- *	LOCKING:
-- *	Kernel thread context (may sleep)
-- *
-- *	RETURNS:
-- *	0 on success, -errno on failure.
-- */
--int sata_link_resume(struct ata_link *link, const unsigned long *params,
--		     unsigned long deadline)
--{
--	int tries = ATA_LINK_RESUME_TRIES;
--	u32 scontrol, serror;
--	int rc;
--
--	if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
--		return rc;
--
--	/*
--	 * Writes to SControl sometimes get ignored under certain
--	 * controllers (ata_piix SIDPR).  Make sure DET actually is
--	 * cleared.
--	 */
--	do {
--		scontrol = (scontrol & 0x0f0) | 0x300;
--		if ((rc = sata_scr_write(link, SCR_CONTROL, scontrol)))
--			return rc;
--		/*
--		 * Some PHYs react badly if SStatus is pounded
--		 * immediately after resuming.  Delay 200ms before
--		 * debouncing.
--		 */
--		if (!(link->flags & ATA_LFLAG_NO_DB_DELAY))
--			ata_msleep(link->ap, 200);
--
--		/* is SControl restored correctly? */
--		if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
--			return rc;
--	} while ((scontrol & 0xf0f) != 0x300 && --tries);
--
--	if ((scontrol & 0xf0f) != 0x300) {
--		ata_link_warn(link, "failed to resume link (SControl %X)\n",
--			     scontrol);
--		return 0;
--	}
--
--	if (tries < ATA_LINK_RESUME_TRIES)
--		ata_link_warn(link, "link resume succeeded after %d retries\n",
--			      ATA_LINK_RESUME_TRIES - tries);
--
--	if ((rc = sata_link_debounce(link, params, deadline)))
--		return rc;
--
--	/* clear SError, some PHYs require this even for SRST to work */
--	if (!(rc = sata_scr_read(link, SCR_ERROR, &serror)))
--		rc = sata_scr_write(link, SCR_ERROR, serror);
--
--	return rc != -EINVAL ? rc : 0;
--}
--EXPORT_SYMBOL_GPL(sata_link_resume);
--
- /**
-  *	ata_std_prereset - prepare for reset
-  *	@link: ATA link to be reset
+ const struct ata_port_operations ata_base_port_ops = {
+ 	.prereset		= ata_std_prereset,
+ 	.postreset		= ata_std_postreset,
 diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index d66afdc33d54..34852fced999 100644
+index 849582e0d653..f3ad4aca5d09 100644
 --- a/drivers/ata/libata-sata.c
 +++ b/drivers/ata/libata-sata.c
-@@ -196,6 +196,144 @@ void ata_tf_from_fis(const u8 *fis, struct ata_taskfile *tf)
- }
- EXPORT_SYMBOL_GPL(ata_tf_from_fis);
+@@ -12,6 +12,14 @@
  
-+/**
-+ *	sata_link_debounce - debounce SATA phy status
-+ *	@link: ATA link to debounce SATA phy status for
-+ *	@params: timing parameters { interval, duration, timeout } in msec
-+ *	@deadline: deadline jiffies for the operation
-+ *
-+ *	Make sure SStatus of @link reaches stable state, determined by
-+ *	holding the same value where DET is not 1 for @duration polled
-+ *	every @interval, before @timeout.  Timeout constraints the
-+ *	beginning of the stable state.  Because DET gets stuck at 1 on
-+ *	some controllers after hot unplugging, this functions waits
-+ *	until timeout then returns 0 if DET is stable at 1.
-+ *
-+ *	@timeout is further limited by @deadline.  The sooner of the
-+ *	two is used.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep)
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno on failure.
-+ */
-+int sata_link_debounce(struct ata_link *link, const unsigned long *params,
-+		       unsigned long deadline)
-+{
-+	unsigned long interval = params[0];
-+	unsigned long duration = params[1];
-+	unsigned long last_jiffies, t;
-+	u32 last, cur;
-+	int rc;
-+
-+	t = ata_deadline(jiffies, params[2]);
-+	if (time_before(t, deadline))
-+		deadline = t;
-+
-+	if ((rc = sata_scr_read(link, SCR_STATUS, &cur)))
-+		return rc;
-+	cur &= 0xf;
-+
-+	last = cur;
-+	last_jiffies = jiffies;
-+
-+	while (1) {
-+		ata_msleep(link->ap, interval);
-+		if ((rc = sata_scr_read(link, SCR_STATUS, &cur)))
-+			return rc;
-+		cur &= 0xf;
-+
-+		/* DET stable? */
-+		if (cur == last) {
-+			if (cur == 1 && time_before(jiffies, deadline))
-+				continue;
-+			if (time_after(jiffies,
-+				       ata_deadline(last_jiffies, duration)))
-+				return 0;
-+			continue;
-+		}
-+
-+		/* unstable, start over */
-+		last = cur;
-+		last_jiffies = jiffies;
-+
-+		/* Check deadline.  If debouncing failed, return
-+		 * -EPIPE to tell upper layer to lower link speed.
-+		 */
-+		if (time_after(jiffies, deadline))
-+			return -EPIPE;
-+	}
-+}
-+EXPORT_SYMBOL_GPL(sata_link_debounce);
-+
-+/**
-+ *	sata_link_resume - resume SATA link
-+ *	@link: ATA link to resume SATA
-+ *	@params: timing parameters { interval, duration, timeout } in msec
-+ *	@deadline: deadline jiffies for the operation
-+ *
-+ *	Resume SATA phy @link and debounce it.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep)
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno on failure.
-+ */
-+int sata_link_resume(struct ata_link *link, const unsigned long *params,
-+		     unsigned long deadline)
-+{
-+	int tries = ATA_LINK_RESUME_TRIES;
-+	u32 scontrol, serror;
-+	int rc;
-+
-+	if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
-+		return rc;
-+
-+	/*
-+	 * Writes to SControl sometimes get ignored under certain
-+	 * controllers (ata_piix SIDPR).  Make sure DET actually is
-+	 * cleared.
-+	 */
-+	do {
-+		scontrol = (scontrol & 0x0f0) | 0x300;
-+		if ((rc = sata_scr_write(link, SCR_CONTROL, scontrol)))
-+			return rc;
-+		/*
-+		 * Some PHYs react badly if SStatus is pounded
-+		 * immediately after resuming.  Delay 200ms before
-+		 * debouncing.
-+		 */
-+		if (!(link->flags & ATA_LFLAG_NO_DB_DELAY))
-+			ata_msleep(link->ap, 200);
-+
-+		/* is SControl restored correctly? */
-+		if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
-+			return rc;
-+	} while ((scontrol & 0xf0f) != 0x300 && --tries);
-+
-+	if ((scontrol & 0xf0f) != 0x300) {
-+		ata_link_warn(link, "failed to resume link (SControl %X)\n",
-+			     scontrol);
-+		return 0;
-+	}
-+
-+	if (tries < ATA_LINK_RESUME_TRIES)
-+		ata_link_warn(link, "link resume succeeded after %d retries\n",
-+			      ATA_LINK_RESUME_TRIES - tries);
-+
-+	if ((rc = sata_link_debounce(link, params, deadline)))
-+		return rc;
-+
-+	/* clear SError, some PHYs require this even for SRST to work */
-+	if (!(rc = sata_scr_read(link, SCR_ERROR, &serror)))
-+		rc = sata_scr_write(link, SCR_ERROR, serror);
-+
-+	return rc != -EINVAL ? rc : 0;
-+}
-+EXPORT_SYMBOL_GPL(sata_link_resume);
+ #include "libata.h"
+ 
++/* debounce timing parameters in msecs { interval, duration, timeout } */
++const unsigned long sata_deb_timing_normal[]		= {   5,  100, 2000 };
++EXPORT_SYMBOL_GPL(sata_deb_timing_normal);
++const unsigned long sata_deb_timing_hotplug[]		= {  25,  500, 2000 };
++EXPORT_SYMBOL_GPL(sata_deb_timing_hotplug);
++const unsigned long sata_deb_timing_long[]		= { 100, 2000, 5000 };
++EXPORT_SYMBOL_GPL(sata_deb_timing_long);
 +
  /**
-  *	sata_link_scr_lpm - manipulate SControl IPM and SPM fields
-  *	@link: ATA link to manipulate SControl for
+  *	sata_scr_valid - test whether SCRs are accessible
+  *	@link: ATA link to test SCR accessibility for
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index f0817a8f1e3f..b05538d06919 100644
+index 08fec96a6a1e..90c929b5df3d 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -1077,10 +1077,6 @@ static inline int ata_port_is_dummy(struct ata_port *ap)
- extern int ata_std_prereset(struct ata_link *link, unsigned long deadline);
- extern int ata_wait_after_reset(struct ata_link *link, unsigned long deadline,
- 				int (*check_ready)(struct ata_link *link));
--extern int sata_link_debounce(struct ata_link *link,
--			const unsigned long *params, unsigned long deadline);
--extern int sata_link_resume(struct ata_link *link, const unsigned long *params,
--			    unsigned long deadline);
- extern int sata_link_hardreset(struct ata_link *link,
- 			const unsigned long *timing, unsigned long deadline,
- 			bool *online, int (*check_ready)(struct ata_link *));
-@@ -1194,6 +1190,8 @@ extern int sata_scr_read(struct ata_link *link, int reg, u32 *val);
+@@ -1019,10 +1019,6 @@ struct ata_timing {
+ /*
+  * Core layer - drivers/ata/libata-core.c
+  */
+-extern const unsigned long sata_deb_timing_normal[];
+-extern const unsigned long sata_deb_timing_hotplug[];
+-extern const unsigned long sata_deb_timing_long[];
+-
+ extern struct ata_port_operations ata_dummy_port_ops;
+ extern const struct ata_port_info ata_dummy_port_info;
+ 
+@@ -1060,15 +1056,6 @@ static inline int is_multi_taskfile(struct ata_taskfile *tf)
+ 	       (tf->command == ATA_CMD_WRITE_MULTI_FUA_EXT);
+ }
+ 
+-static inline const unsigned long *
+-sata_ehc_deb_timing(struct ata_eh_context *ehc)
+-{
+-	if (ehc->i.flags & ATA_EHI_HOTPLUGGED)
+-		return sata_deb_timing_hotplug;
+-	else
+-		return sata_deb_timing_normal;
+-}
+-
+ static inline int ata_port_is_dummy(struct ata_port *ap)
+ {
+ 	return ap->ops == &ata_dummy_port_ops;
+@@ -1181,6 +1168,19 @@ extern void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *
+  * SATA specific code - drivers/ata/libata-sata.c
+  */
+ #ifdef CONFIG_SATA_HOST
++extern const unsigned long sata_deb_timing_normal[];
++extern const unsigned long sata_deb_timing_hotplug[];
++extern const unsigned long sata_deb_timing_long[];
++
++static inline const unsigned long *
++sata_ehc_deb_timing(struct ata_eh_context *ehc)
++{
++	if (ehc->i.flags & ATA_EHI_HOTPLUGGED)
++		return sata_deb_timing_hotplug;
++	else
++		return sata_deb_timing_normal;
++}
++
+ extern int sata_scr_valid(struct ata_link *link);
+ extern int sata_scr_read(struct ata_link *link, int reg, u32 *val);
  extern int sata_scr_write(struct ata_link *link, int reg, u32 val);
- extern int sata_scr_write_flush(struct ata_link *link, int reg, u32 val);
- extern int sata_set_spd(struct ata_link *link);
-+extern int sata_link_resume(struct ata_link *link, const unsigned long *params,
-+			    unsigned long deadline);
+@@ -1192,6 +1192,11 @@ extern int sata_link_hardreset(struct ata_link *link,
+ extern int sata_link_resume(struct ata_link *link, const unsigned long *params,
+ 			    unsigned long deadline);
  #else
++static inline const unsigned long *
++sata_ehc_deb_timing(struct ata_eh_context *ehc)
++{
++	return NULL;
++}
  static inline int sata_scr_valid(struct ata_link *link) { return 0; }
  static inline int sata_scr_read(struct ata_link *link, int reg, u32 *val)
-@@ -1209,7 +1207,15 @@ static inline int sata_scr_write_flush(struct ata_link *link, int reg, u32 val)
- 	return -EOPNOTSUPP;
- }
- static inline int sata_set_spd(struct ata_link *link) { return -EOPNOTSUPP; }
-+static inline int sata_link_resume(struct ata_link *link,
-+				   const unsigned long *params,
-+				   unsigned long deadline)
-+{
-+	return -EOPNOTSUPP;
-+}
- #endif
-+extern int sata_link_debounce(struct ata_link *link,
-+			const unsigned long *params, unsigned long deadline);
- extern int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
- 			     bool spm_wakeup);
- extern int ata_slave_link_init(struct ata_port *ap);
+ {
 -- 
 2.24.1
 
