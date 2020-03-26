@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05348C2D0E5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86626C2D0EE
 	for <linux-ide@archiver.kernel.org>; Thu, 26 Mar 2020 15:59:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C1B8D2073E
-	for <linux-ide@archiver.kernel.org>; Thu, 26 Mar 2020 15:59:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D8FE2073E
+	for <linux-ide@archiver.kernel.org>; Thu, 26 Mar 2020 15:59:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="dC1r49yo"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="Jauiz6Nl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728636AbgCZP7N (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S1728626AbgCZP7N (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Thu, 26 Mar 2020 11:59:13 -0400
-Received: from mailout1.w1.samsung.com ([210.118.77.11]:58902 "EHLO
-        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728629AbgCZP6v (ORCPT
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:52676 "EHLO
+        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728625AbgCZP6v (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Thu, 26 Mar 2020 11:58:51 -0400
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200326155849euoutp01d60dc41069ad35c3bae86616e7bf3ddc~-5dyYWGeo2919829198euoutp01C
-        for <linux-ide@vger.kernel.org>; Thu, 26 Mar 2020 15:58:49 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200326155849euoutp01d60dc41069ad35c3bae86616e7bf3ddc~-5dyYWGeo2919829198euoutp01C
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200326155850euoutp02b3085e4aa48a3f2bfe3b8d9b1df9e9f7~-5dy61Hbj0089000890euoutp02W
+        for <linux-ide@vger.kernel.org>; Thu, 26 Mar 2020 15:58:50 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200326155850euoutp02b3085e4aa48a3f2bfe3b8d9b1df9e9f7~-5dy61Hbj0089000890euoutp02W
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1585238329;
-        bh=ClzUpKG2VnZyQz5IwFzjQO6Uh0tMYISB0yCrxJPnVFA=;
+        s=mail20170921; t=1585238330;
+        bh=vGtux1WiegvO/UUDLPVSnOePgjBue0cxSOaZFFwOA0c=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=dC1r49youdBr/QYIULYgn5AI7i0x980bElLa3a4n7bP1JbHz/fyttSV1+p7AAoviw
-         kQSrRQTg5Sef6rJpcDyejh9wV4Dcz9yiTIwPOn049fKHv5+Ycau9YshPAjne9qPjrs
-         fskYgdjB3vgYjAxWEGxCcHLt0UKRjrKoU/3llk4U=
-Received: from eusmges1new.samsung.com (unknown [203.254.199.242]) by
+        b=Jauiz6NlE5IR7sJYw+1Rq0RB4O0yJJPaikrX4+Sx+yZyB3f4CIbkB9syZZkSTmATz
+         eXKLMIJJnj2/jSjgLwtWsf2Fz4948nR91sBOt4bUR0zTFVt/a6Q0kX+bOfh8O6izGW
+         oDtViTk7W6fzG0fF6ywNvcbHQi1B8IHmEFXdZD4M=
+Received: from eusmges2new.samsung.com (unknown [203.254.199.244]) by
         eucas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20200326155849eucas1p2e54138f2d5ccc6bb6daaefd4788f8ef8~-5dyDUXqD2255222552eucas1p2T;
+        20200326155849eucas1p2ece3135eb66cc4632dd1a82d474cc4f7~-5dyiTSy23015130151eucas1p27;
         Thu, 26 Mar 2020 15:58:49 +0000 (GMT)
 Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
-        eusmges1new.samsung.com (EUCPMTA) with SMTP id A3.06.61286.931DC7E5; Thu, 26
+        eusmges2new.samsung.com (EUCPMTA) with SMTP id 8A.E9.60679.931DC7E5; Thu, 26
         Mar 2020 15:58:49 +0000 (GMT)
 Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
-        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
-        20200326155848eucas1p1c9c2ca0451748cdfa4ab6a3420ab2847~-5dxnHQeX2422724227eucas1p18;
-        Thu, 26 Mar 2020 15:58:48 +0000 (GMT)
-Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
+        20200326155849eucas1p2c1c0d059d5474597bd1eec3a6855ed8a~-5dySLE_O2254022540eucas1p2K;
+        Thu, 26 Mar 2020 15:58:49 +0000 (GMT)
+Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
         eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20200326155848eusmtrp179162452eb08329f6e215f85bf92ace0~-5dxmka5v2090020900eusmtrp1z;
-        Thu, 26 Mar 2020 15:58:48 +0000 (GMT)
-X-AuditID: cbfec7f2-ef1ff7000001ef66-d7-5e7cd139aba8
+        20200326155849eusmtrp10d0ffdf0d8922e481d392a5f3596e67b~-5dyRlS8j2091520915eusmtrp1c;
+        Thu, 26 Mar 2020 15:58:49 +0000 (GMT)
+X-AuditID: cbfec7f4-0cbff7000001ed07-e0-5e7cd1396012
 Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
-        eusmgms1.samsung.com (EUCPMTA) with SMTP id E3.6A.08375.831DC7E5; Thu, 26
-        Mar 2020 15:58:48 +0000 (GMT)
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id E2.DA.07950.931DC7E5; Thu, 26
+        Mar 2020 15:58:49 +0000 (GMT)
 Received: from AMDC3058.digital.local (unknown [106.120.51.71]) by
         eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20200326155848eusmtip179a6e09043f77af95a8bb31428580121~-5dxKEjG91235312353eusmtip12;
+        20200326155848eusmtip16cabfd6934476f0488c53c84ec50c54f~-5dx49A821572015720eusmtip1a;
         Thu, 26 Mar 2020 15:58:48 +0000 (GMT)
 From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 To:     Jens Axboe <axboe@kernel.dk>
@@ -62,270 +62,200 @@ Cc:     Michael Schmitz <schmitzmic@gmail.com>,
         Christoph Hellwig <hch@lst.de>, linux-ide@vger.kernel.org,
         linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
         b.zolnierkie@samsung.com
-Subject: [PATCH v5 25/27] ata: start separating SATA specific code from
- libata-eh.c
-Date:   Thu, 26 Mar 2020 16:58:20 +0100
-Message-Id: <20200326155822.19400-26-b.zolnierkie@samsung.com>
+Subject: [PATCH v5 27/27] ata: make "libata.force" kernel parameter optional
+Date:   Thu, 26 Mar 2020 16:58:22 +0100
+Message-Id: <20200326155822.19400-28-b.zolnierkie@samsung.com>
 X-Mailer: git-send-email 2.24.1
 In-Reply-To: <20200326155822.19400-1-b.zolnierkie@samsung.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrHKsWRmVeSWpSXmKPExsWy7djP87qWF2viDP5uZrZYfbefzWLjjPWs
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrLKsWRmVeSWpSXmKPExsWy7djP87qWF2viDNacVrVYfbefzWLjjPWs
         Fs9u7WWyWLn6KJPFsR2PmCwu75rDZrH8yVpmi7mt09kdODx2zrrL7nH5bKnHocMdjB4nW7+x
-        eOy+2cDm0bdlFaPH501yAexRXDYpqTmZZalF+nYJXBlTn71kLHhmXDGl7wVjA+MrjS5GTg4J
-        AROJp1d2MHYxcnEICaxglJh/YDMbhPOFUeLrmR4WCOczo8TelZOZYVouvt0CVbWcUWLe15MI
-        LTunP2MEqWITsJKY2L4KzBYRUJDo+b0SrIhZ4D2jxIpJe1lAEsICoRL9y54xgdgsAqoSa2/P
-        YgOxeQXsJD7N+84GsU5eYuu3T6wgNidQfPm6+cwQNYISJ2c+AZvDDFTTvHU2M8gCCYFl7BLL
-        ljYADeUAclwk7m23gpgjLPHq+BZ2CFtG4vRkiN8kBNYxSvzteAHVvJ1RYvnkf1CbrSXunPvF
-        BjKIWUBTYv0ufYiwo8ScK/vZIObzSdx4KwhxA5/EpG3TmSHCvBIdbUIQ1WoSG5ZtYINZ27Vz
-        JTQUPSRe3X3BPoFRcRaSb2Yh+WYWwt4FjMyrGMVTS4tz01OLDfNSy/WKE3OLS/PS9ZLzczcx
-        AlPR6X/HP+1g/Hop6RCjAAejEg+vRktNnBBrYllxZe4hRgkOZiUR3qeRQCHelMTKqtSi/Pii
-        0pzU4kOM0hwsSuK8xotexgoJpCeWpGanphakFsFkmTg4pRoYA7dez9aqXNRfWnL04MFDy2LE
-        OMo+LtXTiO76x/5tEqfB4Zc/HXmkaiY7+tQ8mRwQ9VXOOkYjdN/dRWFSGWaXjK8uaP4qOjVp
-        74ojP/b3iNdtVTslsGNPwA6hPvnPz48W2W24kcIV/nn5q/CbW39mzj7dxH9Bmk/n60FZd5Fb
-        mTZfK7MXxDwTUmIpzkg01GIuKk4EAFdAOIxBAwAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprNIsWRmVeSWpSXmKPExsVy+t/xu7oWF2viDBrWKVisvtvPZrFxxnpW
-        i2e39jJZrFx9lMni2I5HTBaXd81hs1j+ZC2zxdzW6ewOHB47Z91l97h8ttTj0OEORo+Trd9Y
-        PHbfbGDz6NuyitHj8ya5APYoPZui/NKSVIWM/OISW6VoQwsjPUNLCz0jE0s9Q2PzWCsjUyV9
-        O5uU1JzMstQifbsEvYypz14yFjwzrpjS94KxgfGVRhcjJ4eEgInExbdb2LoYuTiEBJYyStxt
-        b2buYuQASshIHF9fBlEjLPHnWhdUzSdGic7rE5lAEmwCVhIT21cxgtgiAgoSPb9XghUxC3xl
-        lFg6qZsZJCEsECzx9fAjFhCbRUBVYu3tWWwgNq+AncSned/ZIDbIS2z99okVxOYEii9fNx+s
-        V0jAVmLxlw9MEPWCEidnPgGbwwxU37x1NvMERoFZSFKzkKQWMDKtYhRJLS3OTc8tNtQrTswt
-        Ls1L10vOz93ECIyYbcd+bt7BeGlj8CFGAQ5GJR5ejZaaOCHWxLLiytxDjBIczEoivE8jgUK8
-        KYmVValF+fFFpTmpxYcYTYGemMgsJZqcD4zmvJJ4Q1NDcwtLQ3Njc2MzCyVx3g6BgzFCAumJ
-        JanZqakFqUUwfUwcnFINjLWl/2d95g2b9uDTCrlTJ5LvzJTkvbLrnUXKuerSu6cFVgWpqUg/
-        2HtJ2WFS/ak2M8XFK/fMVG3k61We1NfXyXz65xRVkZ2PlWUUOvq+Wdwr21fVlpryP/eb1pbf
-        DZbFR/a8WLOHLevjClbdPu+Kxra83qqDbyyf/ZJkZLapFr5yPbCs4fSmuUosxRmJhlrMRcWJ
-        AFSwUiSuAgAA
-X-CMS-MailID: 20200326155848eucas1p1c9c2ca0451748cdfa4ab6a3420ab2847
+        eOy+2cDm0bdlFaPH501yAexRXDYpqTmZZalF+nYJXBlLv71gLTinVjGtfTVrA+NN+S5GTg4J
+        AROJoxuvsYHYQgIrGCWWP2eGsL8wSlyfEdDFyAVkf2aUOL7tHiNMw9Sz1xghEssZJWZMmsAE
+        4QB1tC75CNbOJmAlMbF9FViHiICCRM/vlWwgRcwC7xklVkzaywKSEBbwkXi47BfYbhYBVYmn
+        q2eCNfAK2Encu7GIDWKdvMTWb59YQWxOoPjydfOZIWoEJU7OfAI2hxmopnnrbGaQBRICq9gl
+        7rfdZododpG48OY+C4QtLPHq+BaouIzE6ck9LBAN6xgl/na8gOreDgyByf+gVltL3DkHch4H
+        0ApNifW79CHCjhKzPj9mAglLCPBJ3HgrCHEEn8SkbdOZIcK8Eh1tQhDVahIblm1gg1nbtXMl
+        M4TtITFn0322CYyKs5C8MwvJO7MQ9i5gZF7FKJ5aWpybnlpslJdarlecmFtcmpeul5yfu4kR
+        mIhO/zv+ZQfjrj9JhxgFOBiVeHg1WmrihFgTy4orcw8xSnAwK4nwPo0ECvGmJFZWpRblxxeV
+        5qQWH2KU5mBREuc1XvQyVkggPbEkNTs1tSC1CCbLxMEp1cBY25Xenv0m/xezf2pGmtn0QKMK
+        zuNhDx49ZY+ZZeXT6NBW3yf0yV2f6cDPfZz1Cz97zl0cuLBowsyPDvVaZ77/7S02m5C4ZXNz
+        /6k3Vtzz2KvSGI7MlQh4saSzpnLW+9i+FNlOvsRfzYfMNKYnGv6fPiNIyz5w+ubEjrQKjSuX
+        LPZvVsn4UK3EUpyRaKjFXFScCABDtMsOQAMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprNIsWRmVeSWpSXmKPExsVy+t/xu7qWF2viDKauELZYfbefzWLjjPWs
+        Fs9u7WWyWLn6KJPFsR2PmCwu75rDZrH8yVpmi7mt09kdODx2zrrL7nH5bKnHocMdjB4nW7+x
+        eOy+2cDm0bdlFaPH501yAexRejZF+aUlqQoZ+cUltkrRhhZGeoaWFnpGJpZ6hsbmsVZGpkr6
+        djYpqTmZZalF+nYJehlLv71gLTinVjGtfTVrA+NN+S5GTg4JAROJqWevMXYxcnEICSxllHi9
+        4QtTFyMHUEJG4vj6MogaYYk/17rYIGo+MUo87GthBkmwCVhJTGxfxQhiiwgoSPT8XglWxCzw
+        lVFi6aRusCJhAR+Jh8t+sYHYLAKqEk9XzwRr4BWwk7h3YxEbxAZ5ia3fPrGC2JxA8eXr5oP1
+        CgnYSiz+8oEJol5Q4uTMJywgNjNQffPW2cwTGAVmIUnNQpJawMi0ilEktbQ4Nz232EivODG3
+        uDQvXS85P3cTIzBith37uWUHY9e74EOMAhyMSjy8Gi01cUKsiWXFlbmHGCU4mJVEeJ9GAoV4
+        UxIrq1KL8uOLSnNSiw8xmgI9MZFZSjQ5HxjNeSXxhqaG5haWhubG5sZmFkrivB0CB2OEBNIT
+        S1KzU1MLUotg+pg4OKUaGFcIF/8Of3L60Lcdi2ReT7FS0D/g+CCcJfnxohMfJzNHyd1Snf1Y
+        KzWRqfbzmnq/Csf2LjYny2ULjS+tqZ968etmPaeiilsS5zf5V+s5P9u8aGHJhlN2aV9m/Tlv
+        kflnpeDBuaYpba842i/rbL7NmHLQ2nu15NSIBTczn3RxL+D5dUtqb/mlrEtKLMUZiYZazEXF
+        iQA73+eGrgIAAA==
+X-CMS-MailID: 20200326155849eucas1p2c1c0d059d5474597bd1eec3a6855ed8a
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20200326155848eucas1p1c9c2ca0451748cdfa4ab6a3420ab2847
+X-RootMTR: 20200326155849eucas1p2c1c0d059d5474597bd1eec3a6855ed8a
 X-EPHeader: CA
 CMS-TYPE: 201P
-X-CMS-RootMailID: 20200326155848eucas1p1c9c2ca0451748cdfa4ab6a3420ab2847
+X-CMS-RootMailID: 20200326155849eucas1p2c1c0d059d5474597bd1eec3a6855ed8a
 References: <20200326155822.19400-1-b.zolnierkie@samsung.com>
-        <CGME20200326155848eucas1p1c9c2ca0451748cdfa4ab6a3420ab2847@eucas1p1.samsung.com>
+        <CGME20200326155849eucas1p2c1c0d059d5474597bd1eec3a6855ed8a@eucas1p2.samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Start separating SATA specific code from libata-eh.c:
-
-* move sata_async_notification() to libata-sata.c:
+Add ATA_FORCE config option (visible only if EXPERT config
+option is enabled) and make "libata.force" kernel parameter
+optional.
 
 Code size savings on m68k arch using (modified) atari_defconfig:
 
    text    data     bss     dec     hex filename
-before:
-  16243      18       0   16261    3f85 drivers/ata/libata-eh.o
-after:
-  16164      18       0   16182    3f36 drivers/ata/libata-eh.o
+w/ CONFIG_ATA_FORCE=y:
+  31983     572      40   32595    7f53 drivers/ata/libata-core.o
+w/ CONFIG_ATA_FROCE=n:
+  28958     316      32   29306    727a drivers/ata/libata-core.o
 
+Suggested-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/ata/libata-eh.c   | 74 --------------------------------------
- drivers/ata/libata-sata.c | 75 +++++++++++++++++++++++++++++++++++++++
- include/linux/libata.h    |  2 +-
- 3 files changed, 76 insertions(+), 75 deletions(-)
+ drivers/ata/Kconfig       | 16 ++++++++++++++++
+ drivers/ata/libata-core.c | 22 ++++++++++++++++++++--
+ drivers/ata/libata.h      |  4 ++++
+ 3 files changed, 40 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 8dc33b6832f0..ef4d606cd8c6 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1092,80 +1092,6 @@ int ata_port_freeze(struct ata_port *ap)
- }
- EXPORT_SYMBOL_GPL(ata_port_freeze);
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 5b55ebf56b5a..05ecdce1b702 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -51,6 +51,22 @@ config ATA_VERBOSE_ERROR
  
--/**
-- *	sata_async_notification - SATA async notification handler
-- *	@ap: ATA port where async notification is received
-- *
-- *	Handler to be called when async notification via SDB FIS is
-- *	received.  This function schedules EH if necessary.
-- *
-- *	LOCKING:
-- *	spin_lock_irqsave(host lock)
-- *
-- *	RETURNS:
-- *	1 if EH is scheduled, 0 otherwise.
-- */
--int sata_async_notification(struct ata_port *ap)
--{
--	u32 sntf;
--	int rc;
--
--	if (!(ap->flags & ATA_FLAG_AN))
--		return 0;
--
--	rc = sata_scr_read(&ap->link, SCR_NOTIFICATION, &sntf);
--	if (rc == 0)
--		sata_scr_write(&ap->link, SCR_NOTIFICATION, sntf);
--
--	if (!sata_pmp_attached(ap) || rc) {
--		/* PMP is not attached or SNTF is not available */
--		if (!sata_pmp_attached(ap)) {
--			/* PMP is not attached.  Check whether ATAPI
--			 * AN is configured.  If so, notify media
--			 * change.
--			 */
--			struct ata_device *dev = ap->link.device;
--
--			if ((dev->class == ATA_DEV_ATAPI) &&
--			    (dev->flags & ATA_DFLAG_AN))
--				ata_scsi_media_change_notify(dev);
--			return 0;
--		} else {
--			/* PMP is attached but SNTF is not available.
--			 * ATAPI async media change notification is
--			 * not used.  The PMP must be reporting PHY
--			 * status change, schedule EH.
--			 */
--			ata_port_schedule_eh(ap);
--			return 1;
--		}
--	} else {
--		/* PMP is attached and SNTF is available */
--		struct ata_link *link;
--
--		/* check and notify ATAPI AN */
--		ata_for_each_link(link, ap, EDGE) {
--			if (!(sntf & (1 << link->pmp)))
--				continue;
--
--			if ((link->device->class == ATA_DEV_ATAPI) &&
--			    (link->device->flags & ATA_DFLAG_AN))
--				ata_scsi_media_change_notify(link->device);
--		}
--
--		/* If PMP is reporting that PHY status of some
--		 * downstream ports has changed, schedule EH.
--		 */
--		if (sntf & (1 << SATA_PMP_CTRL_PORT)) {
--			ata_port_schedule_eh(ap);
--			return 1;
--		}
--
--		return 0;
--	}
--}
--EXPORT_SYMBOL_GPL(sata_async_notification);
--
+ 	  If unsure, say Y.
+ 
++config ATA_FORCE
++	bool "\"libata.force=\" kernel parameter support" if EXPERT
++	default y
++	help
++	  This option adds support for "libata.force=" kernel parameter for
++	  forcing configuration settings.
++
++	  For further information, please read
++	  <file:Documentation/admin-guide/kernel-parameters.txt>.
++
++	  This option will enlarge the kernel by approx. 3KB. Disable it if
++	  kernel size is more important than ability to override the default
++	  configuration settings.
++
++	  If unsure, say Y.
++
+ config ATA_ACPI
+ 	bool "ATA ACPI Support"
+ 	depends on ACPI
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 20c22dbc1f24..beca5f91bb4c 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -89,6 +89,7 @@ static unsigned long ata_dev_blacklisted(const struct ata_device *dev);
+ 
+ atomic_t ata_print_id = ATOMIC_INIT(0);
+ 
++#ifdef CONFIG_ATA_FORCE
+ struct ata_force_param {
+ 	const char	*name;
+ 	u8		cbl;
+@@ -112,6 +113,7 @@ static char ata_force_param_buf[COMMAND_LINE_SIZE] __initdata;
+ /* param_buf is thrown away after initialization, disallow read */
+ module_param_string(force, ata_force_param_buf, sizeof(ata_force_param_buf), 0);
+ MODULE_PARM_DESC(force, "Force ATA configurations including cable type, link speed and transfer mode (see Documentation/admin-guide/kernel-parameters.rst for details)");
++#endif
+ 
+ static int atapi_enabled = 1;
+ module_param(atapi_enabled, int, 0444);
+@@ -303,6 +305,7 @@ struct ata_link *ata_dev_phys_link(struct ata_device *dev)
+ 	return ap->slave_link;
+ }
+ 
++#ifdef CONFIG_ATA_FORCE
  /**
-  *	ata_eh_freeze_port - EH helper to freeze port
-  *	@ap: ATA port to freeze
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index 2d934ccfc930..008468e516cd 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -4,6 +4,7 @@
-  *
-  *  Copyright 2003-2004 Red Hat, Inc.  All rights reserved.
-  *  Copyright 2003-2004 Jeff Garzik
-+ *  Copyright 2006 Tejun Heo <htejun@gmail.com>
-  */
- 
- #include <linux/kernel.h>
-@@ -1275,3 +1276,77 @@ void ata_sas_free_tag(unsigned int tag, struct ata_port *ap)
- {
- 	clear_bit(tag, &ap->sas_tag_allocated);
+  *	ata_force_cbl - force cable type according to libata.force
+  *	@ap: ATA port of interest
+@@ -483,6 +486,11 @@ static void ata_force_horkage(struct ata_device *dev)
+ 			       fe->param.name);
+ 	}
  }
-+
-+/**
-+ *	sata_async_notification - SATA async notification handler
-+ *	@ap: ATA port where async notification is received
-+ *
-+ *	Handler to be called when async notification via SDB FIS is
-+ *	received.  This function schedules EH if necessary.
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ *
-+ *	RETURNS:
-+ *	1 if EH is scheduled, 0 otherwise.
-+ */
-+int sata_async_notification(struct ata_port *ap)
++#else
++static inline void ata_force_link_limits(struct ata_link *link) { }
++static inline void ata_force_xfermask(struct ata_device *dev) { }
++static inline void ata_force_horkage(struct ata_device *dev) { }
++#endif
+ 
+ /**
+  *	atapi_cmd_type - Determine ATAPI command type from SCSI opcode
+@@ -6080,6 +6088,7 @@ int ata_platform_remove_one(struct platform_device *pdev)
+ }
+ EXPORT_SYMBOL_GPL(ata_platform_remove_one);
+ 
++#ifdef CONFIG_ATA_FORCE
+ static int __init ata_parse_force_one(char **cur,
+ 				      struct ata_force_ent *force_ent,
+ 				      const char **reason)
+@@ -6259,6 +6268,15 @@ static void __init ata_parse_force_param(void)
+ 	ata_force_tbl_size = idx;
+ }
+ 
++static void ata_free_force_param(void)
 +{
-+	u32 sntf;
-+	int rc;
-+
-+	if (!(ap->flags & ATA_FLAG_AN))
-+		return 0;
-+
-+	rc = sata_scr_read(&ap->link, SCR_NOTIFICATION, &sntf);
-+	if (rc == 0)
-+		sata_scr_write(&ap->link, SCR_NOTIFICATION, sntf);
-+
-+	if (!sata_pmp_attached(ap) || rc) {
-+		/* PMP is not attached or SNTF is not available */
-+		if (!sata_pmp_attached(ap)) {
-+			/* PMP is not attached.  Check whether ATAPI
-+			 * AN is configured.  If so, notify media
-+			 * change.
-+			 */
-+			struct ata_device *dev = ap->link.device;
-+
-+			if ((dev->class == ATA_DEV_ATAPI) &&
-+			    (dev->flags & ATA_DFLAG_AN))
-+				ata_scsi_media_change_notify(dev);
-+			return 0;
-+		} else {
-+			/* PMP is attached but SNTF is not available.
-+			 * ATAPI async media change notification is
-+			 * not used.  The PMP must be reporting PHY
-+			 * status change, schedule EH.
-+			 */
-+			ata_port_schedule_eh(ap);
-+			return 1;
-+		}
-+	} else {
-+		/* PMP is attached and SNTF is available */
-+		struct ata_link *link;
-+
-+		/* check and notify ATAPI AN */
-+		ata_for_each_link(link, ap, EDGE) {
-+			if (!(sntf & (1 << link->pmp)))
-+				continue;
-+
-+			if ((link->device->class == ATA_DEV_ATAPI) &&
-+			    (link->device->flags & ATA_DFLAG_AN))
-+				ata_scsi_media_change_notify(link->device);
-+		}
-+
-+		/* If PMP is reporting that PHY status of some
-+		 * downstream ports has changed, schedule EH.
-+		 */
-+		if (sntf & (1 << SATA_PMP_CTRL_PORT)) {
-+			ata_port_schedule_eh(ap);
-+			return 1;
-+		}
-+
-+		return 0;
-+	}
++	kfree(ata_force_tbl);
 +}
-+EXPORT_SYMBOL_GPL(sata_async_notification);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index da899f18a3e9..9c7ca659dc94 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1240,6 +1240,7 @@ extern void ata_tf_to_fis(const struct ata_taskfile *tf,
- extern void ata_tf_from_fis(const u8 *fis, struct ata_taskfile *tf);
- extern int ata_qc_complete_multiple(struct ata_port *ap, u64 qc_active);
- extern bool sata_lpm_ignore_phy_events(struct ata_link *link);
-+extern int sata_async_notification(struct ata_port *ap);
++#else
++static inline void ata_parse_force_param(void) { }
++static inline void ata_free_force_param(void) { }
++#endif
++
+ static int __init ata_init(void)
+ {
+ 	int rc;
+@@ -6267,7 +6285,7 @@ static int __init ata_init(void)
  
- extern int ata_cable_40wire(struct ata_port *ap);
- extern int ata_cable_80wire(struct ata_port *ap);
-@@ -1332,7 +1333,6 @@ extern void ata_port_wait_eh(struct ata_port *ap);
- extern int ata_link_abort(struct ata_link *link);
- extern int ata_port_abort(struct ata_port *ap);
- extern int ata_port_freeze(struct ata_port *ap);
--extern int sata_async_notification(struct ata_port *ap);
+ 	rc = ata_sff_init();
+ 	if (rc) {
+-		kfree(ata_force_tbl);
++		ata_free_force_param();
+ 		return rc;
+ 	}
  
- extern void ata_eh_freeze_port(struct ata_port *ap);
- extern void ata_eh_thaw_port(struct ata_port *ap);
+@@ -6291,7 +6309,7 @@ static void __exit ata_exit(void)
+ 	ata_release_transport(ata_scsi_transport_template);
+ 	libata_transport_exit();
+ 	ata_sff_exit();
+-	kfree(ata_force_tbl);
++	ata_free_force_param();
+ }
+ 
+ subsys_initcall(ata_init);
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 6c808cf39135..68cdd81d747c 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -37,7 +37,11 @@ extern int libata_noacpi;
+ extern int libata_allow_tpm;
+ extern const struct device_type ata_port_type;
+ extern struct ata_link *ata_dev_phys_link(struct ata_device *dev);
++#ifdef CONFIG_ATA_FORCE
+ extern void ata_force_cbl(struct ata_port *ap);
++#else
++static inline void ata_force_cbl(struct ata_port *ap) { }
++#endif
+ extern u64 ata_tf_to_lba(const struct ata_taskfile *tf);
+ extern u64 ata_tf_to_lba48(const struct ata_taskfile *tf);
+ extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag);
 -- 
 2.24.1
 
