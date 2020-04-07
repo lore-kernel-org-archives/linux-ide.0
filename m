@@ -4,68 +4,65 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 827ADC2BABC
-	for <linux-ide@archiver.kernel.org>; Tue,  7 Apr 2020 06:08:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2984EC2BABC
+	for <linux-ide@archiver.kernel.org>; Tue,  7 Apr 2020 06:09:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 632522051A
-	for <linux-ide@archiver.kernel.org>; Tue,  7 Apr 2020 06:08:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 095992072A
+	for <linux-ide@archiver.kernel.org>; Tue,  7 Apr 2020 06:09:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726232AbgDGGIR convert rfc822-to-8bit (ORCPT
+        id S1726892AbgDGGJj convert rfc822-to-8bit (ORCPT
         <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 7 Apr 2020 02:08:17 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:34653 "EHLO
+        Tue, 7 Apr 2020 02:09:39 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:34666 "EHLO
         youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726720AbgDGGIR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 7 Apr 2020 02:08:17 -0400
-Received: from mail-pf1-f197.google.com ([209.85.210.197])
+        with ESMTP id S1726635AbgDGGJj (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 7 Apr 2020 02:09:39 -0400
+Received: from mail-pf1-f198.google.com ([209.85.210.198])
         by youngberry.canonical.com with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
         (Exim 4.86_2)
         (envelope-from <kai.heng.feng@canonical.com>)
-        id 1jLhPD-0005Zn-JG
-        for linux-ide@vger.kernel.org; Tue, 07 Apr 2020 06:08:15 +0000
-Received: by mail-pf1-f197.google.com with SMTP id s8so1630038pfd.23
-        for <linux-ide@vger.kernel.org>; Mon, 06 Apr 2020 23:08:15 -0700 (PDT)
+        id 1jLhQX-0005er-OG
+        for linux-ide@vger.kernel.org; Tue, 07 Apr 2020 06:09:37 +0000
+Received: by mail-pf1-f198.google.com with SMTP id 78so1629124pfy.22
+        for <linux-ide@vger.kernel.org>; Mon, 06 Apr 2020 23:09:37 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
          :content-transfer-encoding:message-id:references:to;
-        bh=9Ugp4stwtf/wNgGldSIENqPT9PoLpHxx5Ki/Pa6V0pE=;
-        b=TJSVXOnMQhaBO7/vqnL2i1oePeig/6SjZx96c0bdGMpfvEyHoU73B3cbcD12/CHylq
-         1/f2vlQXez3ubemi4u6ac3ph8tCAWQ+5haBJPckT9ldG006Px4/UIjONNGzwcrv5uFe/
-         Dkh82vhbM8PrOJMhuQ8UveofFf29qhIqo0gcBHbib9oerlDW1ZvTTTC0GUlXtBohyvI+
-         QfAmQVogEwcG04qqdrzy9Oi4+XD+bPatxc5TLk6OWE4m9sVMTUfuDMYzAAWPZWqupwNT
-         TNSFuU6SjsGKibQ+yxbjtgMTUxV8EuouKiivTBX5b82fnRuOImeCSRqrjtsVXbRS1Ipx
-         Kp8Q==
-X-Gm-Message-State: AGi0PuaCGuFwHG7xlfKhHZytmWZzJdMds//wE5j8rhOnU3HJF3MR76CI
-        5WWCpM67sEdK//OwJgpR3XxYe40+ZMTJvqw9QQK6bWXsG4qK7H79zY4s2xF2Is9dPwLwGyUWVeS
-        aeF0sMEkg7yCBa80hpZa7wThefsTQGLETWP/qRA==
-X-Received: by 2002:a65:6412:: with SMTP id a18mr517484pgv.322.1586239694101;
-        Mon, 06 Apr 2020 23:08:14 -0700 (PDT)
-X-Google-Smtp-Source: APiQypKm7WeWP+BQJP2ssXkJwPYZCnGokYAzGuDaiDSKMicHiRR++pICN6i+unNEnOmLnyrafpR1WA==
-X-Received: by 2002:a65:6412:: with SMTP id a18mr517468pgv.322.1586239693796;
-        Mon, 06 Apr 2020 23:08:13 -0700 (PDT)
+        bh=UZI8JedmnuHToXu7Q/I7xx7S7a3ItUDjPQAoytpljgU=;
+        b=afYmwV7ADvc2BtwsfD8foxJfPE7gskgSsylN1m5eCp3Im5IKEtqnJB/h3FO60x2N9B
+         u/TeGTlNaEfZTqdz6SmUzzem952odSVLfuIuwhKenbKVgAvmdKMqrCCf5V6W4dw95cRD
+         sisW1CtWxeQUiBq8F7r4bpn80o05lsV7LjLVLY/K9QRFl4CNLtOGcHkyFo/VRRn9jsnA
+         35RbAxqpUHTY1dWM1UGRm58/sT8X5r7r78wL14p4a613PxxLLvhT7fZ9mnfzJXeO5gfz
+         MtPMvvGjWBlms6RuhWJRQ4rWJUshGayRZI3F7X/gr9uO2t4oS/PkqXargiMVKhwZxMds
+         gq0Q==
+X-Gm-Message-State: AGi0Puby1ghGGcgx55AcvLX0QRF+7YCHU5P4a7ptF2ZL5zNpz5GPxyax
+        r/IG3GWXxzsGJmgq40HNwg75QPsdVhK9NgUQnAEWzSF3e/gdiYGKaglumYyhonE0i4gg2kFGAc3
+        MX4w1NpwzdPkfR10ak6FtXEgyditE9/hTFjLVlA==
+X-Received: by 2002:aa7:98c9:: with SMTP id e9mr1038783pfm.204.1586239775966;
+        Mon, 06 Apr 2020 23:09:35 -0700 (PDT)
+X-Google-Smtp-Source: APiQypLoN6nnx4YD3X7VJk9A66/0ZEp9elDgbImAvoNuoS7c7bQNoEObS/YpnSfIY6drzOS7Fwmadw==
+X-Received: by 2002:aa7:98c9:: with SMTP id e9mr1038773pfm.204.1586239775668;
+        Mon, 06 Apr 2020 23:09:35 -0700 (PDT)
 Received: from [192.168.1.208] (220-133-187-190.HINET-IP.hinet.net. [220.133.187.190])
-        by smtp.gmail.com with ESMTPSA id 8sm13108207pfv.65.2020.04.06.23.08.12
+        by smtp.gmail.com with ESMTPSA id o128sm12965746pfb.58.2020.04.06.23.09.34
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 06 Apr 2020 23:08:13 -0700 (PDT)
+        Mon, 06 Apr 2020 23:09:35 -0700 (PDT)
 Content-Type: text/plain;
         charset=us-ascii
 Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.80.23.2.2\))
-Subject: Re: [PATCH] ata: ahci: Add sysfs attribute to show remapped NVMe
- device count
+Subject: Re: [PATCH] libata: Return correct rc status in
+ sata_pmp_eh_recover_pm() pwhen ATA_DFLAG_DETACH is set
 From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-In-Reply-To: <D1CCEA35-D7D4-40E3-85C4-E82FD1154AB7@canonical.com>
-Date:   Tue, 7 Apr 2020 14:08:12 +0800
-Cc:     anthony.wong@canonical.com,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
+In-Reply-To: <20190327090254.10365-1-kai.heng.feng@canonical.com>
+Date:   Tue, 7 Apr 2020 14:09:33 +0800
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        stable@vger.kernel.org
 Content-Transfer-Encoding: 8BIT
-Message-Id: <C378B48F-FA41-4ED2-9B94-1E3102C75136@canonical.com>
-References: <20200207100016.32605-1-kai.heng.feng@canonical.com>
- <D1CCEA35-D7D4-40E3-85C4-E82FD1154AB7@canonical.com>
+Message-Id: <A7C20983-8C32-4B63-AAEB-BFA2AE0DBAE9@canonical.com>
+References: <20190327090254.10365-1-kai.heng.feng@canonical.com>
 To:     Jens Axboe <axboe@kernel.dk>
 X-Mailer: Apple Mail (2.3608.80.23.2.2)
 Sender: linux-ide-owner@vger.kernel.org
@@ -75,115 +72,77 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 Hi Jens,
 
-> On Feb 20, 2020, at 13:45, Kai-Heng Feng <kai.heng.feng@canonical.com> wrote:
+> On Mar 27, 2019, at 17:02, Kai-Heng Feng <kai.heng.feng@canonical.com> wrote:
 > 
+> During system resume from suspend, this can be observed on ASM1062 PMP
+> controller:
+> <6>[12007.593358] ata10.01: SATA link down (SStatus 0 SControl 330)
+> <6>[12007.593469] ata10.02: hard resetting link
+> <6>[12007.908353] ata10.02: SATA link down (SStatus 0 SControl 330)
+> <6>[12007.911149] ata10.00: configured for UDMA/133
+> <0>[12007.972508] Kernel panic - not syncing: stack-protector: Kernel
+> stack is corrupted in: sata_pmp_eh_recover+0xa2b/0xa40
+> <0>[12007.972508]
+> <4>[12007.972515] CPU: 2 PID: 230 Comm: scsi_eh_9 Tainted: P OE
+> 4.15.0-46-generic #49-Ubuntu
+> <4>[12007.972517] Hardware name: System manufacturer System Product
+> Name/A320M-C, BIOS 1001 12/10/2017
+> <4>[12007.972518] Call Trace:
+> <4>[12007.972525] dump_stack+0x63/0x8b
+> <4>[12007.972530] panic+0xe4/0x244
+> <4>[12007.972533] ? sata_pmp_eh_recover+0xa2b/0xa40
+> <4>[12007.972536] __stack_chk_fail+0x19/0x20
+> <4>[12007.972538] sata_pmp_eh_recover+0xa2b/0xa40
+> <4>[12007.972543] ? ahci_do_softreset+0x260/0x260 [libahci]
+> <4>[12007.972545] ? ahci_do_hardreset+0x140/0x140 [libahci]
+> <4>[12007.972547] ? ata_phys_link_offline+0x60/0x60
+> <4>[12007.972549] ? ahci_stop_engine+0xc0/0xc0 [libahci]
+> <4>[12007.972552] sata_pmp_error_handler+0x22/0x30
+> <4>[12007.972554] ahci_error_handler+0x45/0x80 [libahci]
+> <4>[12007.972556] ata_scsi_port_error_handler+0x29b/0x770
+> <4>[12007.972558] ? ata_scsi_cmd_error_handler+0x101/0x140
+> <4>[12007.972559] ata_scsi_error+0x95/0xd0
+> <4>[12007.972562] ? scsi_try_target_reset+0x90/0x90
+> <4>[12007.972563] scsi_error_handler+0xd0/0x5b0
+> <4>[12007.972566] kthread+0x121/0x140
+> <4>[12007.972567] ? scsi_eh_get_sense+0x200/0x200
+> <4>[12007.972569] ? kthread_create_worker_on_cpu+0x70/0x70
+> <4>[12007.972572] ret_from_fork+0x22/0x40
+> <0>[12007.972591] Kernel Offset: 0xcc00000 from 0xffffffff81000000
+> (relocation range: 0xffffffff80000000-0xffffffffbfffffff)
 > 
->> On Feb 7, 2020, at 18:00, Kai-Heng Feng <kai.heng.feng@canonical.com> wrote:
->> 
->> Add a new sysfs attribute to show how many NVMe devices are remapped.
->> 
->> Userspace like distro installer can use this info to ask user to change
->> the BIOS setting.
->> 
->> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> Since sata_pmp_eh_recover_pmp() doens't set rc when ATA_DFLAG_DETACH is
+> set, sata_pmp_eh_recover() continues to run. During retry it triggers
+> the stack protector.
 > 
-> A gentle ping...
+> Set correct rc in sata_pmp_eh_recover_pmp() to let sata_pmp_eh_recover()
+> jump to pmp_fail directly.
+> 
+> BugLink: https://bugs.launchpad.net/bugs/1821434
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 
-Any improvement I can make for this patch?
+Any suggestion for this patch?
 
 Kai-Heng
 
+> ---
+> drivers/ata/libata-pmp.c | 1 +
+> 1 file changed, 1 insertion(+)
 > 
->> ---
->> drivers/ata/ahci.c | 28 ++++++++++++++++++++++++----
->> drivers/ata/ahci.h |  1 +
->> 2 files changed, 25 insertions(+), 4 deletions(-)
->> 
->> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
->> index 11ea1aff40db..cdbd995a7a6b 100644
->> --- a/drivers/ata/ahci.c
->> +++ b/drivers/ata/ahci.c
->> @@ -1488,7 +1488,7 @@ static irqreturn_t ahci_thunderx_irq_handler(int irq, void *dev_instance)
->> static void ahci_remap_check(struct pci_dev *pdev, int bar,
->> 		struct ahci_host_priv *hpriv)
->> {
->> -	int i, count = 0;
->> +	int i;
->> 	u32 cap;
->> 
->> 	/*
->> @@ -1509,13 +1509,14 @@ static void ahci_remap_check(struct pci_dev *pdev, int bar,
->> 			continue;
->> 
->> 		/* We've found a remapped device */
->> -		count++;
->> +		hpriv->remapped_nvme++;
->> 	}
->> 
->> -	if (!count)
->> +	if (!hpriv->remapped_nvme)
->> 		return;
->> 
->> -	dev_warn(&pdev->dev, "Found %d remapped NVMe devices.\n", count);
->> +	dev_warn(&pdev->dev, "Found %u remapped NVMe devices.\n",
->> +		 hpriv->remapped_nvme);
->> 	dev_warn(&pdev->dev,
->> 		 "Switch your BIOS from RAID to AHCI mode to use them.\n");
->> 
->> @@ -1635,6 +1636,18 @@ static void ahci_intel_pcs_quirk(struct pci_dev *pdev, struct ahci_host_priv *hp
->> 	}
->> }
->> 
->> +static ssize_t remapped_nvme_show(struct device *dev,
->> +				  struct device_attribute *attr,
->> +				  char *buf)
->> +{
->> +	struct ata_host *host = dev_get_drvdata(dev);
->> +	struct ahci_host_priv *hpriv = host->private_data;
->> +
->> +	return sprintf(buf, "%u\n", hpriv->remapped_nvme);
->> +}
->> +
->> +static DEVICE_ATTR_RO(remapped_nvme);
->> +
->> static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->> {
->> 	unsigned int board_id = ent->driver_data;
->> @@ -1735,6 +1748,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->> 	/* detect remapped nvme devices */
->> 	ahci_remap_check(pdev, ahci_pci_bar, hpriv);
->> 
->> +	sysfs_add_file_to_group(&pdev->dev.kobj,
->> +				&dev_attr_remapped_nvme.attr,
->> +				NULL);
->> +
->> 	/* must set flag prior to save config in order to take effect */
->> 	if (ahci_broken_devslp(pdev))
->> 		hpriv->flags |= AHCI_HFLAG_NO_DEVSLP;
->> @@ -1886,6 +1903,9 @@ static void ahci_shutdown_one(struct pci_dev *pdev)
->> 
->> static void ahci_remove_one(struct pci_dev *pdev)
->> {
->> +	sysfs_remove_file_from_group(&pdev->dev.kobj,
->> +				     &dev_attr_remapped_nvme.attr,
->> +				     NULL);
->> 	pm_runtime_get_noresume(&pdev->dev);
->> 	ata_pci_remove_one(pdev);
->> }
->> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
->> index 3dbf398c92ea..d991dd46e89c 100644
->> --- a/drivers/ata/ahci.h
->> +++ b/drivers/ata/ahci.h
->> @@ -336,6 +336,7 @@ struct ahci_host_priv {
->> 	u32 			em_loc; /* enclosure management location */
->> 	u32			em_buf_sz;	/* EM buffer size in byte */
->> 	u32			em_msg_type;	/* EM message type */
->> +	u32			remapped_nvme;	/* NVMe remapped device count */
->> 	bool			got_runtime_pm; /* Did we do pm_runtime_get? */
->> 	struct clk		*clks[AHCI_MAX_CLKS]; /* Optional */
->> 	struct reset_control	*rsts;		/* Optional */
->> -- 
->> 2.17.1
->> 
+> diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+> index 2ae1799f4992..51eeaea65833 100644
+> --- a/drivers/ata/libata-pmp.c
+> +++ b/drivers/ata/libata-pmp.c
+> @@ -764,6 +764,7 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
+> 
+> 	if (dev->flags & ATA_DFLAG_DETACH) {
+> 		detach = 1;
+> +		rc = -ENODEV;
+> 		goto fail;
+> 	}
+> 
+> -- 
+> 2.17.1
 > 
 
