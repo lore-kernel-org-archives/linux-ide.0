@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1256C2D0EC
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Apr 2020 03:53:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11B60C2BB1D
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Apr 2020 03:54:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A8FEA2137B
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Apr 2020 03:53:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC9E92063A
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Apr 2020 03:54:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586490788;
-	bh=+oGlUz+CV+lq7mrCHPagI7hr2oZZrzfY+Th0EQic/uU=;
+	s=default; t=1586490866;
+	bh=wICh910KxheUFktrdgO5QBel8tCuwHUSsVu+8uJwrsc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=llHf+rEwmkKDcV0Jd5R56T6D+MIZdbtI2fbpCK9p7NdM4hGzmWGjsVzb3JRS/n/sn
-	 zuYk8fkbmbHihjI8AlDWg3IzXWYVXj9xf7G8EZxrT3JJRCCg+3XfzBs1vk6KY3ECz3
-	 6thbvCpkQwY/zY+h+Qdya+gfFMP/pWy1OlxSLPDQ=
+	b=m8vpO5IZKwg7nUG8ecCwpUsZ0w4VpZcjRtjgjIKtqrJ7w72DnpMS+l/GyFTjE6CsY
+	 Mzh3J02GilRt5a0qPqBlLOroBGniBYU3omWrdSt8Ra5hPotxbijtqdkCqodHfc8MNT
+	 o4GoOLqVRbPMxYBiDyFhsakjb859x57LqWjo6vrc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729034AbgDJDu6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 9 Apr 2020 23:50:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35888 "EHLO mail.kernel.org"
+        id S1728881AbgDJDuY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 9 Apr 2020 23:50:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34948 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729026AbgDJDu4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 9 Apr 2020 23:50:56 -0400
+        id S1726822AbgDJDuY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 9 Apr 2020 23:50:24 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 28836215A4;
-        Fri, 10 Apr 2020 03:50:56 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 21CE920936;
+        Fri, 10 Apr 2020 03:50:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586490656;
-        bh=+oGlUz+CV+lq7mrCHPagI7hr2oZZrzfY+Th0EQic/uU=;
+        s=default; t=1586490623;
+        bh=wICh910KxheUFktrdgO5QBel8tCuwHUSsVu+8uJwrsc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Jkf6jp0+9K1/7ZEnpe0vb0qJzum5UHWEvWtZdbTvyCDGvMHaO7GaNsneq+onDJHIC
-         nA6zL6owgRDS3T7r77rfMGf2yOFtEH9xsf91+FSbpfjpLMv9iqeP8/M2Urj/JcTSyV
-         aY2YFXkrFM70A9fRBIvBXMzck2u1ZoFDXt8zfuwQ=
+        b=kH0C6WDz3tiZbYnEE81BJTgiF4wNg6i5A9wEZGYSwCW2bvgoBamT2ZBDuQJnXebH+
+         gwRouUhZrMaM4cY/qPIDBl7I7pjh25NmcYwLJpKqAWT4WNGYEM68cQt75wv4GPTOgf
+         /ruB8s7L/a6BqN9oePFdZmvgjkaEwfgeIQaWuCIc=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     John Garry <john.garry@huawei.com>, Jens Axboe <axboe@kernel.dk>,
         Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 10/22] libata: Remove extra scsi_host_put() in ata_scsi_add_hosts()
-Date:   Thu,  9 Apr 2020 23:50:32 -0400
-Message-Id: <20200410035044.9698-10-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 15/32] libata: Remove extra scsi_host_put() in ata_scsi_add_hosts()
+Date:   Thu,  9 Apr 2020 23:49:48 -0400
+Message-Id: <20200410035005.9371-15-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200410035044.9698-1-sashal@kernel.org>
-References: <20200410035044.9698-1-sashal@kernel.org>
+In-Reply-To: <20200410035005.9371-1-sashal@kernel.org>
+References: <20200410035005.9371-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -178,10 +178,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index eb0c4ee205258..2f81d65342709 100644
+index 3a64fa4aaf7e3..0c1572a1cc5ed 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -4571,22 +4571,19 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
+@@ -4570,22 +4570,19 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
  		 */
  		shost->max_host_blocked = 1;
  
