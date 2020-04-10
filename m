@@ -2,111 +2,211 @@ Return-Path: <SRS0=8d1s=52=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26B94C2BA19
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Apr 2020 01:09:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D642FC2BB1D
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Apr 2020 03:51:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E7E8C2074F
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Apr 2020 01:08:59 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="lTex8KY3"
+	by mail.kernel.org (Postfix) with ESMTP id AE75F206C0
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Apr 2020 03:51:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1586490719;
+	bh=Gk/Czi4m2Tf2En50KfXTdS7aDN51Zm2XDzTUsTdMWx8=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=Zr9SBRC4I+3ZZV+4yRw1JDMjyP0syvCy+/8XAN6C4uqgdZJ9H21psaurUsWw3hXGI
+	 x0IvVFdIHykDsZcBpE4dh3JEcBs5ONT9dVpqcqPaVBUngIWPtL9FMJXvLDJcAiEmtf
+	 8Rhm4SG1pW//L6zT6p5k2Qr7FD/gFUFkCqBuXBYU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726477AbgDJBI7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 9 Apr 2020 21:08:59 -0400
-Received: from mail-pg1-f173.google.com ([209.85.215.173]:37323 "EHLO
-        mail-pg1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726327AbgDJBI6 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Apr 2020 21:08:58 -0400
-Received: by mail-pg1-f173.google.com with SMTP id r4so323541pgg.4
-        for <linux-ide@vger.kernel.org>; Thu, 09 Apr 2020 18:08:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=from:subject:to:cc:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=KfeRNbGADcVsLhmDY1KvOUg8WlCqSZouokcF6WhZTMU=;
-        b=lTex8KY33AjDWXhOXsO1vslYWVZ+gPbYc6N+1/ZjxiGto1ITyd0UzcDpLuXrvxPMdn
-         rFLiuRH0wvDfNTKzWnMW6W0/hRlTkrp62O0FS8QUrKy9m/bLJrQdiP0vLBLh31jaur8w
-         W8vhcdvN9MYR/iGEPB79IBuAvRIgLfIaKfz3r55KlnzUUUH7+YcbEG9JSOJwdi9OzrB1
-         7ZBw6pE+vXtGjWjzIl+++2n5h+BDP5IWVTdIMjIe8uF2PNtvrN6AQdOHvzc/qz0u8LgO
-         2qfKJXnuej6IEHlmRwUPPgigVW4fd9YmYv5lkX+o3xglNpvHoAiqvPN39YedZQYbc35Y
-         A0pA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:subject:to:cc:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=KfeRNbGADcVsLhmDY1KvOUg8WlCqSZouokcF6WhZTMU=;
-        b=DntmncJGdBwDpeW8fJolEeERF/9ea+2dXVOcyeBEVN15FItXr1LOmnvYFIJOiRiMQv
-         qONpPD6liQcYNgO6AGuDIO8AyJhiRMcThDjUE7D8qPAjKEkomB6EXmS2dJq1hW5Qw4VZ
-         4yvHcyPS7DfjFUYOEc/WUQjeh7/hLRdhi70cywvTec0sKAkdPeDkArnQyKYq/PGGXsZw
-         RsfNFDWZ6oypY6C9NtPIQPHy6jeff+aOjIFWs1iyLvqswVhN0dKsaA4VSvj93o1w/+A/
-         ZdaIFNPoTyvlRuiR0TXhq64W+YpckVHb6c19THnAhM1s6Yy9gGq+Q9dRIRB7C68WvoBj
-         DJXw==
-X-Gm-Message-State: AGi0PuavLp/+VV5x6elY+1VIoqYFQmxOojArkSw+seGlJKCVpktoIZQD
-        Es6yhI3hu3cxZy8mY6HdegUFX68PgsiuVQ==
-X-Google-Smtp-Source: APiQypLVulUqW1wgrq3Mj+B5fZrkY1FyQ4M65TayaKEINqqBPlMJL64hWNTU6RppcYiLk9VlviRtTA==
-X-Received: by 2002:a63:5955:: with SMTP id j21mr2098029pgm.16.1586480938383;
-        Thu, 09 Apr 2020 18:08:58 -0700 (PDT)
-Received: from ?IPv6:2605:e000:100e:8c61:70f8:a8e1:daca:d677? ([2605:e000:100e:8c61:70f8:a8e1:daca:d677])
-        by smtp.gmail.com with ESMTPSA id t63sm281645pgc.85.2020.04.09.18.08.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 09 Apr 2020 18:08:57 -0700 (PDT)
-From:   Jens Axboe <axboe@kernel.dk>
-Subject: [GIT PULL] libata fixes for 5.7-rc1
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     IDE/ATA development list <linux-ide@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Message-ID: <9069bb0a-c338-4516-52d7-99d85aca5297@kernel.dk>
-Date:   Thu, 9 Apr 2020 18:08:55 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.1
+        id S1729157AbgDJDv1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 9 Apr 2020 23:51:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36720 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729188AbgDJDv0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 9 Apr 2020 23:51:26 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 38B762166E;
+        Fri, 10 Apr 2020 03:51:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1586490685;
+        bh=Gk/Czi4m2Tf2En50KfXTdS7aDN51Zm2XDzTUsTdMWx8=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=S2EcC6sbrCZGRn0wbkcy7ByR1SloVVw0+kzAu/WawY/J2+5s/gQZpTnjm6JDzsBF1
+         itqyIIg9zbDo96IDSJcyPfP0cNOf3/+nI0xlL7jI4XobmZAIktG91ZAZVNieNye0bZ
+         Xortu/OCss+3KjjHkbXaaQvasWyqlYg7qmQ+NM6A=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     John Garry <john.garry@huawei.com>, Jens Axboe <axboe@kernel.dk>,
+        Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 3/8] libata: Remove extra scsi_host_put() in ata_scsi_add_hosts()
+Date:   Thu,  9 Apr 2020 23:51:16 -0400
+Message-Id: <20200410035122.10065-3-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200410035122.10065-1-sashal@kernel.org>
+References: <20200410035122.10065-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Linus,
+From: John Garry <john.garry@huawei.com>
 
-A few followup changes/fixes for libata for this merge window.
+[ Upstream commit 1d72f7aec3595249dbb83291ccac041a2d676c57 ]
 
-- PMP removal fix (Kai-Heng)
+If the call to scsi_add_host_with_dma() in ata_scsi_add_hosts() fails,
+then we may get use-after-free KASAN warns:
 
-- Add remapped NVMe device attribute to sysfs (Kai-Heng)
+==================================================================
+BUG: KASAN: use-after-free in kobject_put+0x24/0x180
+Read of size 1 at addr ffff0026b8c80364 by task swapper/0/1
+CPU: 1 PID: 1 Comm: swapper/0 Tainted: G        W         5.6.0-rc3-00004-g5a71b206ea82-dirty #1765
+Hardware name: Huawei TaiShan 200 (Model 2280)/BC82AMDD, BIOS 2280-V2 CS V3.B160.01 02/24/2020
+Call trace:
+dump_backtrace+0x0/0x298
+show_stack+0x14/0x20
+dump_stack+0x118/0x190
+print_address_description.isra.9+0x6c/0x3b8
+__kasan_report+0x134/0x23c
+kasan_report+0xc/0x18
+__asan_load1+0x5c/0x68
+kobject_put+0x24/0x180
+put_device+0x10/0x20
+scsi_host_put+0x10/0x18
+ata_devres_release+0x74/0xb0
+release_nodes+0x2d0/0x470
+devres_release_all+0x50/0x78
+really_probe+0x2d4/0x560
+driver_probe_device+0x7c/0x148
+device_driver_attach+0x94/0xa0
+__driver_attach+0xa8/0x110
+bus_for_each_dev+0xe8/0x158
+driver_attach+0x30/0x40
+bus_add_driver+0x220/0x2e0
+driver_register+0xbc/0x1d0
+__pci_register_driver+0xbc/0xd0
+ahci_pci_driver_init+0x20/0x28
+do_one_initcall+0xf0/0x608
+kernel_init_freeable+0x31c/0x384
+kernel_init+0x10/0x118
+ret_from_fork+0x10/0x18
 
-- Remove redundant assignment (Colin)
+Allocated by task 5:
+save_stack+0x28/0xc8
+__kasan_kmalloc.isra.8+0xbc/0xd8
+kasan_kmalloc+0xc/0x18
+__kmalloc+0x1a8/0x280
+scsi_host_alloc+0x44/0x678
+ata_scsi_add_hosts+0x74/0x268
+ata_host_register+0x228/0x488
+ahci_host_activate+0x1c4/0x2a8
+ahci_init_one+0xd18/0x1298
+local_pci_probe+0x74/0xf0
+work_for_cpu_fn+0x2c/0x48
+process_one_work+0x488/0xc08
+worker_thread+0x330/0x5d0
+kthread+0x1c8/0x1d0
+ret_from_fork+0x10/0x18
 
-- Add yet another Comet Lake ID (Jian-Hong)
+Freed by task 5:
+save_stack+0x28/0xc8
+__kasan_slab_free+0x118/0x180
+kasan_slab_free+0x10/0x18
+slab_free_freelist_hook+0xa4/0x1a0
+kfree+0xd4/0x3a0
+scsi_host_dev_release+0x100/0x148
+device_release+0x7c/0xe0
+kobject_put+0xb0/0x180
+put_device+0x10/0x20
+scsi_host_put+0x10/0x18
+ata_scsi_add_hosts+0x210/0x268
+ata_host_register+0x228/0x488
+ahci_host_activate+0x1c4/0x2a8
+ahci_init_one+0xd18/0x1298
+local_pci_probe+0x74/0xf0
+work_for_cpu_fn+0x2c/0x48
+process_one_work+0x488/0xc08
+worker_thread+0x330/0x5d0
+kthread+0x1c8/0x1d0
+ret_from_fork+0x10/0x18
 
-Please pull!
+There is also refcount issue, as well:
+WARNING: CPU: 1 PID: 1 at lib/refcount.c:28 refcount_warn_saturate+0xf8/0x170
 
+The issue is that we make an erroneous extra call to scsi_host_put()
+for that host:
 
-  git://git.kernel.dk/linux-block.git tags/libata-5.7-2020-04-09
+So in ahci_init_one()->ata_host_alloc_pinfo()->ata_host_alloc(), we setup
+a device release method - ata_devres_release() - which intends to release
+the SCSI hosts:
 
+static void ata_devres_release(struct device *gendev, void *res)
+{
+	...
+	for (i = 0; i < host->n_ports; i++) {
+		struct ata_port *ap = host->ports[i];
 
-----------------------------------------------------------------
-Colin Ian King (1):
-      ata: ahci-imx: remove redundant assignment to ret
+		if (!ap)
+			continue;
 
-Jian-Hong Pan (1):
-      ahci: Add Intel Comet Lake PCH RAID PCI ID
+		if (ap->scsi_host)
+			scsi_host_put(ap->scsi_host);
 
-Kai-Heng Feng (2):
-      libata: Return correct status in sata_pmp_eh_recover_pm() when ATA_DFLAG_DETACH is set
-      ata: ahci: Add sysfs attribute to show remapped NVMe device count
+	}
+	...
+}
 
- drivers/ata/ahci.c       | 29 +++++++++++++++++++++++++----
- drivers/ata/ahci.h       |  1 +
- drivers/ata/ahci_imx.c   |  2 +-
- drivers/ata/libata-pmp.c |  1 +
- 4 files changed, 28 insertions(+), 5 deletions(-)
+However in the ata_scsi_add_hosts() error path, we also call
+scsi_host_put() for the SCSI hosts.
 
+Fix by removing the the scsi_host_put() calls in ata_scsi_add_hosts() and
+leave this to ata_devres_release().
+
+Fixes: f31871951b38 ("libata: separate out ata_host_alloc() and ata_host_register()")
+Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/ata/libata-scsi.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index a44aeda571091..59dc033408be7 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3720,22 +3720,19 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
+ 		 */
+ 		shost->max_host_blocked = 1;
+ 
+-		rc = scsi_add_host_with_dma(ap->scsi_host,
+-						&ap->tdev, ap->host->dev);
++		rc = scsi_add_host_with_dma(shost, &ap->tdev, ap->host->dev);
+ 		if (rc)
+-			goto err_add;
++			goto err_alloc;
+ 	}
+ 
+ 	return 0;
+ 
+- err_add:
+-	scsi_host_put(host->ports[i]->scsi_host);
+  err_alloc:
+ 	while (--i >= 0) {
+ 		struct Scsi_Host *shost = host->ports[i]->scsi_host;
+ 
++		/* scsi_host_put() is in ata_devres_release() */
+ 		scsi_remove_host(shost);
+-		scsi_host_put(shost);
+ 	}
+ 	return rc;
+ }
 -- 
-Jens Axboe
+2.20.1
 
