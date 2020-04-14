@@ -2,156 +2,94 @@ Return-Path: <SRS0=Wagi=56=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ED16C2BA19
-	for <linux-ide@archiver.kernel.org>; Tue, 14 Apr 2020 07:43:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74966C2BA19
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Apr 2020 16:52:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E06D72072D
-	for <linux-ide@archiver.kernel.org>; Tue, 14 Apr 2020 07:43:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nD1jFWNX"
+	by mail.kernel.org (Postfix) with ESMTP id 4213920678
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Apr 2020 16:52:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1586883178;
+	bh=pkQRKk4Q3BJwEsZPq9Rvl8GhUQxw4EhOBSPeWUeyTXI=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=tMx/TwBkrA6v13GZitCPJuBDEMXkm6Dvo8whqU1SkNEFw13p0/XEtDVueFodjW9fe
+	 Besh2xlca8mpiBSDvGANuR3o8eoHsN1nFq1XkhvTdXFYI+vZmB0DQ+0UPq9//2u8xo
+	 47Jqa0ETbekMxm48PLmheLLyt0XHOneWWcbWH5Q8=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406817AbgDNHnO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 14 Apr 2020 03:43:14 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:37432 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2406808AbgDNHmj (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Apr 2020 03:42:39 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=Ual/dMzALNy8sA75wgtQ+6CUGk8C9/Ruhu//u9rXiYs=; b=nD1jFWNXBCPAHbKCVLUh/4zZP6
-        aMmoAa2p2OsI8xgMcnB2Cn2pKZLtc9sWDwBKzIOUkA23FTslj2T/Be9JdJ4HQVKaEyXHHQMuW+sfu
-        jn6zfc5VOaCWrYlqGOs25hrYbadm7LCeLtoppuaGtok7dBPU2ONjPtVyzQQ9wf4TGJHdhA/9vW2UH
-        3mLC9RoxUAmaa7Wl/cGJ3jRcIBTrEgaioW3BYA3yXv+djI+7ET76a/vdqROV+H0pVYi8BtA03QTja
-        t8b2rWol0S9WjASVxYfn4Xp9JPF6Qg6Lmv60JIRaPq3EqVTeORW/hap4olwjWqc3pzDjOmLNF2ghk
-        oy8BDYBA==;
-Received: from [2001:4bb8:180:384b:4c21:af7:dd95:e552] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jOGDJ-00078L-FJ; Tue, 14 Apr 2020 07:42:33 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 2/5] block: provide a blk_rq_map_sg variant that returns the last element
-Date:   Tue, 14 Apr 2020 09:42:22 +0200
-Message-Id: <20200414074225.332324-3-hch@lst.de>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200414074225.332324-1-hch@lst.de>
-References: <20200414074225.332324-1-hch@lst.de>
+        id S2502459AbgDNQwc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 14 Apr 2020 12:52:32 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55568 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2440373AbgDNQtR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 14 Apr 2020 12:49:17 -0400
+Received: from mail.kernel.org (ip5f5ad4d8.dynamic.kabel-deutschland.de [95.90.212.216])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3AD4C221EC;
+        Tue, 14 Apr 2020 16:49:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1586882943;
+        bh=pkQRKk4Q3BJwEsZPq9Rvl8GhUQxw4EhOBSPeWUeyTXI=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=rG5nVl1W0Rid3dG6nLfg4tMmA1DCW3FdHWe3eGgKITbBHXDH/TchxjTJtcazKc+3d
+         puylXEIwwgNpsv8d6R8mE+cNxmdX/0dkZO4ZgaMsYW1I6wEaqeDQdbKoWeP2Fh26PN
+         nnj+98DwIsnMxETSV0SYEMQjrN1HycbwkRRrcDsE=
+Received: from mchehab by mail.kernel.org with local (Exim 4.92.3)
+        (envelope-from <mchehab@kernel.org>)
+        id 1jOOk9-0068nE-Fy; Tue, 14 Apr 2020 18:49:01 +0200
+From:   Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+To:     Linux Doc Mailing List <linux-doc@vger.kernel.org>
+Cc:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
+Subject: [PATCH v2 29/33] ata: libata-core: fix a doc warning
+Date:   Tue, 14 Apr 2020 18:48:55 +0200
+Message-Id: <9a21444df75c46095c4b1839d2061d19c9addcff.1586881715.git.mchehab+huawei@kernel.org>
+X-Mailer: git-send-email 2.25.2
+In-Reply-To: <cover.1586881715.git.mchehab+huawei@kernel.org>
+References: <cover.1586881715.git.mchehab+huawei@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-To be able to move some of the special purpose hacks in blk_rq_map_sg
-into the callers we need a variant that returns the last mapped
-S/G list element to the caller.  Add that variant as __blk_rq_map_sg
-and make blk_rq_map_sg a trivial inline wrapper around it.
+The docs toolchain doesn't recognise this pattern:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+	@link->[hw_]sata_spd_limit
+
+As it can't really process it. So, instead, let's mark it with
+a literal block markup:
+
+	``link->[hw_]sata_spd_limit``
+
+in order to get rid of the following warning:
+
+	./drivers/ata/libata-core.c:5974: WARNING: Unknown target name: "hw".
+
+Signed-off-by: Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
 ---
- block/blk-merge.c      | 25 ++++++++++++-------------
- include/linux/blkdev.h | 10 +++++++++-
- 2 files changed, 21 insertions(+), 14 deletions(-)
+ drivers/ata/libata-core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index 99c9759f3a8a..ee618cdb141e 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -519,24 +519,23 @@ static int __blk_bios_map_sg(struct request_queue *q, struct bio *bio,
-  * map a request to scatterlist, return number of sg entries setup. Caller
-  * must make sure sg can hold rq->nr_phys_segments entries
-  */
--int blk_rq_map_sg(struct request_queue *q, struct request *rq,
--		  struct scatterlist *sglist)
-+int __blk_rq_map_sg(struct request_queue *q, struct request *rq,
-+		struct scatterlist *sglist, struct scatterlist **last_sg)
- {
--	struct scatterlist *sg = NULL;
- 	int nsegs = 0;
- 
- 	if (rq->rq_flags & RQF_SPECIAL_PAYLOAD)
--		nsegs = __blk_bvec_map_sg(rq->special_vec, sglist, &sg);
-+		nsegs = __blk_bvec_map_sg(rq->special_vec, sglist, last_sg);
- 	else if (rq->bio && bio_op(rq->bio) == REQ_OP_WRITE_SAME)
--		nsegs = __blk_bvec_map_sg(bio_iovec(rq->bio), sglist, &sg);
-+		nsegs = __blk_bvec_map_sg(bio_iovec(rq->bio), sglist, last_sg);
- 	else if (rq->bio)
--		nsegs = __blk_bios_map_sg(q, rq->bio, sglist, &sg);
-+		nsegs = __blk_bios_map_sg(q, rq->bio, sglist, last_sg);
- 
- 	if (blk_rq_bytes(rq) && (blk_rq_bytes(rq) & q->dma_pad_mask)) {
- 		unsigned int pad_len =
- 			(q->dma_pad_mask & ~blk_rq_bytes(rq)) + 1;
- 
--		sg->length += pad_len;
-+		(*last_sg)->length += pad_len;
- 		rq->extra_len += pad_len;
- 	}
- 
-@@ -544,9 +543,9 @@ int blk_rq_map_sg(struct request_queue *q, struct request *rq,
- 		if (op_is_write(req_op(rq)))
- 			memset(q->dma_drain_buffer, 0, q->dma_drain_size);
- 
--		sg_unmark_end(sg);
--		sg = sg_next(sg);
--		sg_set_page(sg, virt_to_page(q->dma_drain_buffer),
-+		sg_unmark_end(*last_sg);
-+		*last_sg = sg_next(*last_sg);
-+		sg_set_page(*last_sg, virt_to_page(q->dma_drain_buffer),
- 			    q->dma_drain_size,
- 			    ((unsigned long)q->dma_drain_buffer) &
- 			    (PAGE_SIZE - 1));
-@@ -554,8 +553,8 @@ int blk_rq_map_sg(struct request_queue *q, struct request *rq,
- 		rq->extra_len += q->dma_drain_size;
- 	}
- 
--	if (sg)
--		sg_mark_end(sg);
-+	if (*last_sg)
-+		sg_mark_end(*last_sg);
- 
- 	/*
- 	 * Something must have been wrong if the figured number of
-@@ -565,7 +564,7 @@ int blk_rq_map_sg(struct request_queue *q, struct request *rq,
- 
- 	return nsegs;
- }
--EXPORT_SYMBOL(blk_rq_map_sg);
-+EXPORT_SYMBOL(__blk_rq_map_sg);
- 
- static inline int ll_new_hw_segment(struct request *req, struct bio *bio,
- 		unsigned int nr_phys_segs)
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 76da162b6ae9..496dc9491026 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1136,7 +1136,15 @@ static inline unsigned short blk_rq_nr_discard_segments(struct request *rq)
- 	return max_t(unsigned short, rq->nr_phys_segments, 1);
- }
- 
--extern int blk_rq_map_sg(struct request_queue *, struct request *, struct scatterlist *);
-+int __blk_rq_map_sg(struct request_queue *q, struct request *rq,
-+		struct scatterlist *sglist, struct scatterlist **last_sg);
-+static inline int blk_rq_map_sg(struct request_queue *q, struct request *rq,
-+		struct scatterlist *sglist)
-+{
-+	struct scatterlist *last_sg = NULL;
-+
-+	return __blk_rq_map_sg(q, rq, sglist, &last_sg);
-+}
- extern void blk_dump_rq_flags(struct request *, char *);
- extern long nr_blockdev_pages(void);
- 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index beca5f91bb4c..69361ec43db5 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5209,7 +5209,7 @@ void ata_link_init(struct ata_port *ap, struct ata_link *link, int pmp)
+  *	sata_link_init_spd - Initialize link->sata_spd_limit
+  *	@link: Link to configure sata_spd_limit for
+  *
+- *	Initialize @link->[hw_]sata_spd_limit to the currently
++ *	Initialize ``link->[hw_]sata_spd_limit`` to the currently
+  *	configured value.
+  *
+  *	LOCKING:
 -- 
-2.25.1
+2.25.2
 
