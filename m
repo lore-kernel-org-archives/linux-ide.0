@@ -1,70 +1,56 @@
-Return-Path: <SRS0=8d1s=52=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=Wagi=56=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DEE2C2D0EC
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Apr 2020 17:30:43 +0000 (UTC)
-Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 75D322082D
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Apr 2020 17:30:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1586539843;
-	bh=OnM+gj60yVrV4BewUmzpN0FbBrIr6zGDE5biggxrUG0=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=wrVyACel3AehcX8tuBZ02Mz5yVsKEfSugDOgdKbdPL/7CIkf9/IotLCKRKKQwBmnN
-	 RtnaFUxONRjPyu/56G24W3dS4/cnF4rcCVe5IDwS9P98a5AuzAA6exZCZc5DStSllH
-	 +EaXNUPp8D0Fg+ITsNfGBbcyRvQbPfSdRPX6oTWM=
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B8D5C2BA19
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Apr 2020 07:42:36 +0000 (UTC)
+Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
+	by mail.kernel.org (Postfix) with ESMTP id 132E3206B6
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Apr 2020 07:42:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mZGEHRFv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726817AbgDJRa1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Apr 2020 13:30:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58444 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726694AbgDJRa1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 10 Apr 2020 13:30:27 -0400
-Subject: Re: [GIT PULL] libata fixes for 5.7-rc1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1586539827;
-        bh=OnM+gj60yVrV4BewUmzpN0FbBrIr6zGDE5biggxrUG0=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=sHdJhafSCpVA7qZHxNCUaZti/98MiyBl9nrTcmgkj9hWRonzi9VxiJ+Iwcax9nwto
-         WEv8x+vNjGT3Xj9s+FEyuRsvZafiiLuwtVLG2Rp0z7J7U+ttbc1b3XYOhLqHx2IicA
-         KUhR7k8H+mGMuNURnbrPxSOgr+V1GYXZIJcLB9Is=
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <9069bb0a-c338-4516-52d7-99d85aca5297@kernel.dk>
-References: <9069bb0a-c338-4516-52d7-99d85aca5297@kernel.dk>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <9069bb0a-c338-4516-52d7-99d85aca5297@kernel.dk>
-X-PR-Tracked-Remote: git://git.kernel.dk/linux-block.git
- tags/libata-5.7-2020-04-09
-X-PR-Tracked-Commit-Id: 7667e63c8af90e287f9e2d070599024cbabe63f5
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: f8693b3eb59f9055edca86b0789fd6593a57edf4
-Message-Id: <158653982761.6431.708298111896222198.pr-tracker-bot@kernel.org>
-Date:   Fri, 10 Apr 2020 17:30:27 +0000
+        id S2406799AbgDNHme (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 14 Apr 2020 03:42:34 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:37148 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729368AbgDNHm3 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Apr 2020 03:42:29 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=JJ5p+3/4IGSnlDpePvLUhJym9cud2qctPPEa9hKpgOM=; b=mZGEHRFvMVjixYpNm3y0zpmQjV
+        IC9wydu/Xq4lMZvgsrmgMxNkFERUCAjs3f8J0/5wVTNywoZV3uCEIT8qAAtKV0YO94ZgF2FK51m1H
+        vajT4cliScjbIguGiXn2RA8fC+zCjbCIYKn12IP9YpSPdMocRBFokH08fC7Sfko8e0stwbptBPv+e
+        oouFi+80pNZ7tRxPc2lL+SqmxxShS7ZjVQEGdJg/UPhgnHiYCFbAHvkxLFBh160Yh+srwNXcV1Szw
+        lX6vVL3wX1vFWmyhgEB2vCiFI6oXcr6R6Y1BByOGu5shaghfjpinuSyxHNWHysEQHvA50d/TYeVTV
+        l7cg2/xw==;
+Received: from [2001:4bb8:180:384b:4c21:af7:dd95:e552] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jOGDD-00073b-R8; Tue, 14 Apr 2020 07:42:28 +0000
+From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        IDE/ATA development list <linux-ide@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: clean up DMA draining
+Date:   Tue, 14 Apr 2020 09:42:20 +0200
+Message-Id: <20200414074225.332324-1-hch@lst.de>
+X-Mailer: git-send-email 2.25.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The pull request you sent on Thu, 9 Apr 2020 18:08:55 -0700:
+Hi all,
 
-> git://git.kernel.dk/linux-block.git tags/libata-5.7-2020-04-09
-
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/f8693b3eb59f9055edca86b0789fd6593a57edf4
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+currently the dma draining and alignining specific to ATA CDROMs
+and the UFS driver has its ugly hooks in core block code.  Move
+this out into the scsi and ide drivers instead.
