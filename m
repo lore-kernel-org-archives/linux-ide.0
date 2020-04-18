@@ -4,51 +4,51 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 454FBC3A5A0
-	for <linux-ide@archiver.kernel.org>; Sat, 18 Apr 2020 13:50:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C903C38A29
+	for <linux-ide@archiver.kernel.org>; Sat, 18 Apr 2020 14:11:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 23DF4221F4
-	for <linux-ide@archiver.kernel.org>; Sat, 18 Apr 2020 13:50:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D4C521BE5
+	for <linux-ide@archiver.kernel.org>; Sat, 18 Apr 2020 14:11:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587217841;
+	s=default; t=1587219113;
 	bh=KyrpO90/tqR+AI6DpqqySqtXff+7gxIIyn4vDSSV/D4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=AivpAQkDZxTrTsGPB/iI5lHGbjoaYHWoWDWrxhLdY7sejL8gDb3CMsYa675OK23TB
-	 JEFdJj5r2te2GNLVfnfP37p/TJA8SYxgBL4MrKeQHzUIiJPu4EUSv1RVXYQPSpccsS
-	 hXjfkP0pIH3dVm7hIYWp3i+dfGzKFYQRmEu4zIMI=
+	b=ZdPLS2ZokIFAFhUd1Ee0K1xBuAzG8S08SXoc85Cgkn1HAHGWWwN6MjknQCl4OfJ1k
+	 GMMbwMf7f6u1ZnbkFUW3PaeNfCIbXDzf0phJDsa/u0fRTR2QFZIfGRRFD0K8yzKAkV
+	 +CKfNOyvGz+gW6Lz4nEqVl4Hsm+T2EsHPgzrPJEY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727801AbgDRNuZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 18 Apr 2020 09:50:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56564 "EHLO mail.kernel.org"
+        id S1726847AbgDROLw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 18 Apr 2020 10:11:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38416 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726821AbgDRNtb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sat, 18 Apr 2020 09:49:31 -0400
+        id S1726988AbgDROKV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sat, 18 Apr 2020 10:10:21 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3D02722251;
-        Sat, 18 Apr 2020 13:49:30 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id BD82922287;
+        Sat, 18 Apr 2020 14:10:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587217770;
+        s=default; t=1587219020;
         bh=KyrpO90/tqR+AI6DpqqySqtXff+7gxIIyn4vDSSV/D4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=xeePlKd1lYmMwRfd7IenVpde6vH623vq933V0wSlHzQBoY5YbpE+ZwlBlhXGdhG7H
-         q/HvUmBkVtaD9XUuBSsKgzFIwTMa+QVrB3waGUG3Y0TWKhJBxjzrTqCKCPsimZVAEd
-         IKjZSkGjHedEWtRmjIu3/fCGSt0yWidpMkuwmmII=
+        b=GTDLRDuVG+gDlpzdnlqxxRxFbV5OAYsUwbmE3i3vfmNXjArqSSIV+9RyV96Dv8UjP
+         zT0jE3Oa6I3kJGsTosA8cXxliBG5juelFzPOs9rogR9Pk7nL5f9gk5SFp7gqRncleU
+         FnAq3id8VHiHzDYT98I1jrsxlN4H5ekLNalI80XA=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
         Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
         linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.6 60/73] libata: Return correct status in sata_pmp_eh_recover_pm() when ATA_DFLAG_DETACH is set
-Date:   Sat, 18 Apr 2020 09:48:02 -0400
-Message-Id: <20200418134815.6519-60-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.5 56/75] libata: Return correct status in sata_pmp_eh_recover_pm() when ATA_DFLAG_DETACH is set
+Date:   Sat, 18 Apr 2020 10:08:51 -0400
+Message-Id: <20200418140910.8280-56-sashal@kernel.org>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20200418134815.6519-1-sashal@kernel.org>
-References: <20200418134815.6519-1-sashal@kernel.org>
+In-Reply-To: <20200418140910.8280-1-sashal@kernel.org>
+References: <20200418140910.8280-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
