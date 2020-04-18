@@ -1,70 +1,133 @@
-Return-Path: <SRS0=5KCk=6B=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=Vybr=6C=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89DAFC2D0EF
-	for <linux-ide@archiver.kernel.org>; Fri, 17 Apr 2020 17:45:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 454FBC3A5A0
+	for <linux-ide@archiver.kernel.org>; Sat, 18 Apr 2020 13:50:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6E23A2076D
-	for <linux-ide@archiver.kernel.org>; Fri, 17 Apr 2020 17:45:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 23DF4221F4
+	for <linux-ide@archiver.kernel.org>; Sat, 18 Apr 2020 13:50:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587145536;
-	bh=Xh506Zyq34duiBjy5RIJXOsurvZFgmvBuURjJAGZS00=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=KofyV2KbJRFcD04kq8banI4ijuF2wN6Bm3VApAWeKVQCeKuuKDYmqzglbEc51GVyE
-	 ofL4yj5zJIvX1Yz7T7NlJ+37PNOaRh9bimopUUhUg2gTCg0NI5MjxUSfwi6hbXRrnY
-	 PVKdX8a64bF9l2aySelO5MiBgrRKy+rKDcLP75Gg=
+	s=default; t=1587217841;
+	bh=KyrpO90/tqR+AI6DpqqySqtXff+7gxIIyn4vDSSV/D4=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=AivpAQkDZxTrTsGPB/iI5lHGbjoaYHWoWDWrxhLdY7sejL8gDb3CMsYa675OK23TB
+	 JEFdJj5r2te2GNLVfnfP37p/TJA8SYxgBL4MrKeQHzUIiJPu4EUSv1RVXYQPSpccsS
+	 hXjfkP0pIH3dVm7hIYWp3i+dfGzKFYQRmEu4zIMI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730029AbgDQRpZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 17 Apr 2020 13:45:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46076 "EHLO mail.kernel.org"
+        id S1727801AbgDRNuZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 18 Apr 2020 09:50:25 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56564 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729969AbgDQRpY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 17 Apr 2020 13:45:24 -0400
-Subject: Re: [GIT PULL] libata fixes for 5.7-rc
+        id S1726821AbgDRNtb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sat, 18 Apr 2020 09:49:31 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3D02722251;
+        Sat, 18 Apr 2020 13:49:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587145523;
-        bh=Xh506Zyq34duiBjy5RIJXOsurvZFgmvBuURjJAGZS00=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=0U5O93DbxvrUs1w7+zGhDrXf2wznHS6moNEGw5Z1xaSQns5gdqDBjYrhW7z0oGRyV
-         hY171HO2Pfu35L1nNA4FU4Z+jP/nd9Wx89bnzGJ5FactJGnT1gyKczBtoXYuADtN+g
-         QkqvBqKpnh6Op66xZ67/7ODbcuUymC/u34IkRv8I=
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <635fe4ef-c1e1-cba6-f4f6-a0c795b5fac8@kernel.dk>
-References: <635fe4ef-c1e1-cba6-f4f6-a0c795b5fac8@kernel.dk>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <635fe4ef-c1e1-cba6-f4f6-a0c795b5fac8@kernel.dk>
-X-PR-Tracked-Remote: git://git.kernel.dk/linux-block.git
- tags/libata-5.7-2020-04-17
-X-PR-Tracked-Commit-Id: 1f2ef049cb11c68134ce699f749f16ca8d34468e
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 2acbb9e670347879e4815b2010f46ee01f1caf30
-Message-Id: <158714552379.1625.3683346720457595526.pr-tracker-bot@kernel.org>
-Date:   Fri, 17 Apr 2020 17:45:23 +0000
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        IDE/ATA development list <linux-ide@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+        s=default; t=1587217770;
+        bh=KyrpO90/tqR+AI6DpqqySqtXff+7gxIIyn4vDSSV/D4=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=xeePlKd1lYmMwRfd7IenVpde6vH623vq933V0wSlHzQBoY5YbpE+ZwlBlhXGdhG7H
+         q/HvUmBkVtaD9XUuBSsKgzFIwTMa+QVrB3waGUG3Y0TWKhJBxjzrTqCKCPsimZVAEd
+         IKjZSkGjHedEWtRmjIu3/fCGSt0yWidpMkuwmmII=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
+        linux-ide@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.6 60/73] libata: Return correct status in sata_pmp_eh_recover_pm() when ATA_DFLAG_DETACH is set
+Date:   Sat, 18 Apr 2020 09:48:02 -0400
+Message-Id: <20200418134815.6519-60-sashal@kernel.org>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20200418134815.6519-1-sashal@kernel.org>
+References: <20200418134815.6519-1-sashal@kernel.org>
+MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The pull request you sent on Fri, 17 Apr 2020 09:12:01 -0600:
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
 
-> git://git.kernel.dk/linux-block.git tags/libata-5.7-2020-04-17
+[ Upstream commit 8305f72f952cff21ce8109dc1ea4b321c8efc5af ]
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/2acbb9e670347879e4815b2010f46ee01f1caf30
+During system resume from suspend, this can be observed on ASM1062 PMP
+controller:
 
-Thank you!
+ata10.01: SATA link down (SStatus 0 SControl 330)
+ata10.02: hard resetting link
+ata10.02: SATA link down (SStatus 0 SControl 330)
+ata10.00: configured for UDMA/133
+Kernel panic - not syncing: stack-protector: Kernel
+ in: sata_pmp_eh_recover+0xa2b/0xa40
 
+CPU: 2 PID: 230 Comm: scsi_eh_9 Tainted: P OE
+#49-Ubuntu
+Hardware name: System manufacturer System Product
+ 1001 12/10/2017
+Call Trace:
+dump_stack+0x63/0x8b
+panic+0xe4/0x244
+? sata_pmp_eh_recover+0xa2b/0xa40
+__stack_chk_fail+0x19/0x20
+sata_pmp_eh_recover+0xa2b/0xa40
+? ahci_do_softreset+0x260/0x260 [libahci]
+? ahci_do_hardreset+0x140/0x140 [libahci]
+? ata_phys_link_offline+0x60/0x60
+? ahci_stop_engine+0xc0/0xc0 [libahci]
+sata_pmp_error_handler+0x22/0x30
+ahci_error_handler+0x45/0x80 [libahci]
+ata_scsi_port_error_handler+0x29b/0x770
+? ata_scsi_cmd_error_handler+0x101/0x140
+ata_scsi_error+0x95/0xd0
+? scsi_try_target_reset+0x90/0x90
+scsi_error_handler+0xd0/0x5b0
+kthread+0x121/0x140
+? scsi_eh_get_sense+0x200/0x200
+? kthread_create_worker_on_cpu+0x70/0x70
+ret_from_fork+0x22/0x40
+Kernel Offset: 0xcc00000 from 0xffffffff81000000
+(relocation range: 0xffffffff80000000-0xffffffffbfffffff)
+
+Since sata_pmp_eh_recover_pmp() doens't set rc when ATA_DFLAG_DETACH is
+set, sata_pmp_eh_recover() continues to run. During retry it triggers
+the stack protector.
+
+Set correct rc in sata_pmp_eh_recover_pmp() to let sata_pmp_eh_recover()
+jump to pmp_fail directly.
+
+BugLink: https://bugs.launchpad.net/bugs/1821434
+Cc: stable@vger.kernel.org
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/ata/libata-pmp.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+index 3ff14071617cd..79f2aeeb482ab 100644
+--- a/drivers/ata/libata-pmp.c
++++ b/drivers/ata/libata-pmp.c
+@@ -763,6 +763,7 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
+ 
+ 	if (dev->flags & ATA_DFLAG_DETACH) {
+ 		detach = 1;
++		rc = -ENODEV;
+ 		goto fail;
+ 	}
+ 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+2.20.1
+
