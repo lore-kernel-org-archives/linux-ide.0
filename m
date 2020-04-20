@@ -2,89 +2,98 @@ Return-Path: <SRS0=Ota/=6E=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A597EC3815B
-	for <linux-ide@archiver.kernel.org>; Mon, 20 Apr 2020 13:52:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38D6CC55186
+	for <linux-ide@archiver.kernel.org>; Mon, 20 Apr 2020 21:43:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B7E720B1F
-	for <linux-ide@archiver.kernel.org>; Mon, 20 Apr 2020 13:52:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 143E92078C
+	for <linux-ide@archiver.kernel.org>; Mon, 20 Apr 2020 21:43:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728549AbgDTNwR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 20 Apr 2020 09:52:17 -0400
-Received: from cmccmta1.chinamobile.com ([221.176.66.79]:4378 "EHLO
-        cmccmta1.chinamobile.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728018AbgDTNwQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 20 Apr 2020 09:52:16 -0400
-Received: from spf.mail.chinamobile.com (unknown[172.16.121.17]) by rmmx-syy-dmz-app02-12002 (RichMail) with SMTP id 2ee25e9da8f9a32-d6d3e; Mon, 20 Apr 2020 21:51:54 +0800 (CST)
-X-RM-TRANSID: 2ee25e9da8f9a32-d6d3e
-X-RM-TagInfo: emlType=0                                       
-X-RM-SPAM-FLAG: 00000000
-Received: from localhost.localdomain (unknown[112.1.173.179])
-        by rmsmtp-syy-appsvr09-12009 (RichMail) with SMTP id 2ee95e9da8f73fc-c6f20;
-        Mon, 20 Apr 2020 21:51:54 +0800 (CST)
-X-RM-TRANSID: 2ee95e9da8f73fc-c6f20
-From:   Tang Bin <tangbin@cmss.chinamobile.com>
-To:     axboe@kernel.dk, b.zolnierkie@samsung.com
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Tang Bin <tangbin@cmss.chinamobile.com>
-Subject: [PATCH] ata: omit superfluous error message
-Date:   Mon, 20 Apr 2020 21:53:42 +0800
-Message-Id: <20200420135342.11984-1-tangbin@cmss.chinamobile.com>
-X-Mailer: git-send-email 2.20.1.windows.1
+        id S1727924AbgDTVnU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 20 Apr 2020 17:43:20 -0400
+Received: from ms.lwn.net ([45.79.88.28]:53958 "EHLO ms.lwn.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725989AbgDTVnT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 20 Apr 2020 17:43:19 -0400
+Received: from lwn.net (localhost [127.0.0.1])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ms.lwn.net (Postfix) with ESMTPSA id 632E4823;
+        Mon, 20 Apr 2020 21:43:17 +0000 (UTC)
+Date:   Mon, 20 Apr 2020 15:43:16 -0600
+From:   Jonathan Corbet <corbet@lwn.net>
+To:     Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
+Cc:     Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        linux-kernel@vger.kernel.org, Rob Herring <robh@kernel.org>,
+        Maxime Ripard <maxime@cerno.tech>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Yuti Amonkar <yamonkar@cadence.com>,
+        devicetree@vger.kernel.org, linux-arch@vger.kernel.org,
+        kvm@vger.kernel.org, kvm-ppc@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, dri-devel@lists.freedesktop.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-fsdevel@vger.kernel.org, linux-unionfs@vger.kernel.org,
+        linux-mm@kvack.org, linux-rdma@vger.kernel.org,
+        kvmarm@lists.cs.columbia.edu, linux-crypto@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        freedreno@lists.freedesktop.org, linux-afs@lists.infradead.org,
+        ecryptfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
+        ocfs2-devel@oss.oracle.com, linux-pci@vger.kernel.org,
+        linux-edac@vger.kernel.org, linux-spi@vger.kernel.org,
+        Sandeep Maheswaram <sanm@codeaurora.org>,
+        Stephen Boyd <swboyd@chromium.org>,
+        Matthias Kaehlcke <mka@chromium.org>,
+        linux-usb@vger.kernel.org,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Matthias Brugger <mbrugger@suse.com>, netdev@vger.kernel.org,
+        linux-i2c@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        linux-ide@vger.kernel.org, linux1394-devel@lists.sourceforge.net
+Subject: Re: [PATCH v2 00/33] Documentation fixes for Kernel 5.8
+Message-ID: <20200420154316.28e42905@lwn.net>
+In-Reply-To: <cover.1586881715.git.mchehab+huawei@kernel.org>
+References: <cover.1586881715.git.mchehab+huawei@kernel.org>
+Organization: LWN.net
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-In the probe function, when get irq failed, the function
-platform_get_irq() logs an error message, so remove
-redundant message here.
+On Tue, 14 Apr 2020 18:48:26 +0200
+Mauro Carvalho Chehab <mchehab+huawei@kernel.org> wrote:
 
-Signed-off-by: Tang Bin <tangbin@cmss.chinamobile.com>
----
- drivers/ata/pata_rb532_cf.c | 4 +---
- drivers/ata/sata_highbank.c | 4 +---
- 2 files changed, 2 insertions(+), 6 deletions(-)
+> Patches 1 to 5 contain changes to the documentation toolset:
+> 
+> - The first 3 patches help to reduce a lot the number of reported
+>   kernel-doc issues, by making the tool more smart.
+> 
+> - Patches 4 and 5 are meant to partially address the PDF
+>   build, with now requires Sphinx version 2.4 or upper.
+> 
+> The remaining patches fix broken references detected by
+> this tool:
+> 
+>         ./scripts/documentation-file-ref-check
+> 
+> and address other random errors due to tags being mis-interpreted
+> or mis-used.
+> 
+> They are independent each other, but some may depend on
+> the kernel-doc improvements.
+> 
+> PS.: Due to the large number of C/C, I opted to keep a smaller
+> set of C/C at this first e-mail (only e-mails with "L:" tag from
+> MAINTAINERS file).
 
-diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
-index 479c4b29b..dcde84f57 100644
---- a/drivers/ata/pata_rb532_cf.c
-+++ b/drivers/ata/pata_rb532_cf.c
-@@ -115,10 +115,8 @@ static int rb532_pata_driver_probe(struct platform_device *pdev)
- 	}
- 
- 	irq = platform_get_irq(pdev, 0);
--	if (irq <= 0) {
--		dev_err(&pdev->dev, "no IRQ resource found\n");
-+	if (irq <= 0)
- 		return -ENOENT;
--	}
- 
- 	gpiod = devm_gpiod_get(&pdev->dev, NULL, GPIOD_IN);
- 	if (IS_ERR(gpiod)) {
-diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
-index ad3893c62..efd1925a9 100644
---- a/drivers/ata/sata_highbank.c
-+++ b/drivers/ata/sata_highbank.c
-@@ -469,10 +469,8 @@ static int ahci_highbank_probe(struct platform_device *pdev)
- 	}
- 
- 	irq = platform_get_irq(pdev, 0);
--	if (irq <= 0) {
--		dev_err(dev, "no irq\n");
-+	if (irq <= 0)
- 		return -EINVAL;
--	}
- 
- 	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
- 	if (!hpriv) {
--- 
-2.20.1.windows.1
+OK, I've applied this set, minus #17 which was applied elsewhere.
 
+Thanks,
 
-
+jon
