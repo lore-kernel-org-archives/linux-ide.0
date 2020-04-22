@@ -2,95 +2,71 @@ Return-Path: <SRS0=fuJd=6G=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B4F6C55185
-	for <linux-ide@archiver.kernel.org>; Wed, 22 Apr 2020 16:46:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37A7EC54FCB
+	for <linux-ide@archiver.kernel.org>; Wed, 22 Apr 2020 17:02:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3CEDA21473
-	for <linux-ide@archiver.kernel.org>; Wed, 22 Apr 2020 16:46:27 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="vxrw4X12"
+	by mail.kernel.org (Postfix) with ESMTP id 0DCE820776
+	for <linux-ide@archiver.kernel.org>; Wed, 22 Apr 2020 17:02:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726584AbgDVQq0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 22 Apr 2020 12:46:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38846 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726303AbgDVQq0 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 22 Apr 2020 12:46:26 -0400
-Received: from mail-il1-x12d.google.com (mail-il1-x12d.google.com [IPv6:2607:f8b0:4864:20::12d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A56D0C03C1AC
-        for <linux-ide@vger.kernel.org>; Wed, 22 Apr 2020 09:46:24 -0700 (PDT)
-Received: by mail-il1-x12d.google.com with SMTP id b18so2600944ilf.2
-        for <linux-ide@vger.kernel.org>; Wed, 22 Apr 2020 09:46:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=1cV4OuPmkRZ6+zxhfjx8VUKHzAPPELWDKUnr+i1Zl2E=;
-        b=vxrw4X12UbXuE8+hKgIRfqbehXZCbT3g1S5XxQ+LVjc5pBkTlst1hlpCAKpWhhZuRu
-         veFMvmN+TdYJoobKQlAcPw6JABkRX/KE0oY7sokc0O3Ubt/H9HZmiPyMcH7mA95pj6Mv
-         hsbcYkcLl9TIpZJkeOuziDN9U6KahUNlKAIvHBxipbOf4/3GY6HNpcM5h/0atEYHfS1J
-         5TnA8z0aXlRNGp/PDhj068qQJeSm366/rYglsOfDgkjlAbyg23I3BhZcaQGv49KdWiYT
-         nagOCmHMaULGJBLasMsxEUo6OJAP6KBFFCvGx1AX1CdYZDUtp8pnaisywCFpPZkRJfya
-         i9Jg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=1cV4OuPmkRZ6+zxhfjx8VUKHzAPPELWDKUnr+i1Zl2E=;
-        b=oJKi8EftqB7rAVVRhoAB3ByO2LwE5at5bpllRMqgM9tV6ajmBT412jWFV6Mf27eT0I
-         E4H2To0CSNwpE7aHi2xlh4c8HuyESxzxizXDFHag4AszHOuZnNgYoT5zcEKAMoSb6g9g
-         U9+80IfHaHhazL4B35BgIUNXK4q9XyBc0T2aS/4uLJPOeqX4G057vV5FCrQQB5Xj3KbD
-         Um5HYUiO/c0U9sDbdDP3P0tVg41+oyWHdOy8v/WZNIK1I+akNr0J++sPQJXsDzUDsEnF
-         v7uF2GawEymkInPZl+/m45zSwYIVQWYGyL8TBU3EYdFE2ZQUCzdY3diYt4zmXbtoVlJS
-         MU3A==
-X-Gm-Message-State: AGi0Puao2mfDLQDCDccw/OnUl4Bv31CNBu9Hf5VwwAvK6LwYQQv8yis8
-        3+KtFw1c/U+y+RZwN6z92GTU9A==
-X-Google-Smtp-Source: APiQypIBWtVOQSTuiObuI0NSKLZhoSwUm3Bnp61Fd89wZTmPr1Njs/VncynYhJfgmsOlad6tANPNUA==
-X-Received: by 2002:a92:cece:: with SMTP id z14mr26155375ilq.147.1587573983733;
-        Wed, 22 Apr 2020 09:46:23 -0700 (PDT)
-Received: from [192.168.1.159] ([65.144.74.34])
-        by smtp.gmail.com with ESMTPSA id c18sm2251436ilr.37.2020.04.22.09.46.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 22 Apr 2020 09:46:23 -0700 (PDT)
-Subject: Re: clean up DMA draining
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20200414074225.332324-1-hch@lst.de>
- <20200422064151.GA23271@lst.de>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <f969685b-6547-2e93-f288-d2b1d5ec4dc4@kernel.dk>
-Date:   Wed, 22 Apr 2020 10:46:22 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.7.0
-MIME-Version: 1.0
-In-Reply-To: <20200422064151.GA23271@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1726006AbgDVRCu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 22 Apr 2020 13:02:50 -0400
+Received: from mailomta26-re.btinternet.com ([213.120.69.119]:10071 "EHLO
+        re-prd-fep-041.btinternet.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725980AbgDVRCu (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 22 Apr 2020 13:02:50 -0400
+X-Greylist: delayed 10752 seconds by postgrey-1.27 at vger.kernel.org; Wed, 22 Apr 2020 13:02:49 EDT
+Received: from re-prd-rgout-003.btmx-prd.synchronoss.net ([10.2.54.6])
+          by re-prd-fep-048.btinternet.com with ESMTP
+          id <20200422140336.CRWR20795.re-prd-fep-048.btinternet.com@re-prd-rgout-003.btmx-prd.synchronoss.net>;
+          Wed, 22 Apr 2020 15:03:36 +0100
+Authentication-Results: btinternet.com;
+    auth=pass (LOGIN) smtp.auth=j.oldman998@btinternet.com
+X-Originating-IP: [31.51.225.56]
+X-OWM-Source-IP: 31.51.225.56 (GB)
+X-OWM-Env-Sender: j.oldman998@btinternet.com
+X-VadeSecure-score: verdict=clean score=0/300, class=clean
+X-RazorGate-Vade: gggruggvucftvghtrhhoucdtuddrgeduhedrgeejgdeijecutefuodetggdotefrodftvfcurfhrohhfihhlvgemuceutffkvffkuffjvffgnffgvefqofdpqfgfvfenuceurghilhhouhhtmecufedttdenucenucfjughrpefhvffufffkofestddtredtredttdenucfhrhhomheplfhohhhnucfqlhgumhgrnhcuoehjohhhnhdrohhlughmrghnsehpohhlvghhihhllhdrtghordhukheqnecukfhppeefuddrhedurddvvdehrdehieenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhephhgvlhhopehhvghnrhihrdhhohhmvgdpihhnvghtpeefuddrhedurddvvdehrdehiedpmhgrihhlfhhrohhmpeeojhhohhhnrdholhgumhgrnhesphholhgvhhhilhhlrdgtohdruhhkqedprhgtphhtthhopeeorgigsghovgeskhgvrhhnvghlrdgukheqpdhrtghpthhtohepoehjohhhnhdrohhlughmrghnsehpohhlvghhihhllhdrtghordhukheqpdhrtghpthhtohepoehlihhnuhigqdhiuggvsehvghgvrhdrkhgvrhhnvghlrdhorhhgqedprhgtphhtthhopeeolhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgqe
+X-RazorGate-Vade-Verdict: clean 0
+X-RazorGate-Vade-Classification: clean
+Received: from henry.home (31.51.225.56) by re-prd-rgout-003.btmx-prd.synchronoss.net (5.8.340) (authenticated as j.oldman998@btinternet.com)
+        id 5E3A16DE0C89880B; Wed, 22 Apr 2020 15:03:36 +0100
+From:   John Oldman <john.oldman@polehill.co.uk>
+To:     axboe@kernel.dk
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        John Oldman <john.oldman@polehill.co.uk>
+Subject: [PATCH] Staging: ata: sata_inic162x fixed a spelling issue
+Date:   Wed, 22 Apr 2020 15:03:32 +0100
+Message-Id: <20200422140332.22923-1-john.oldman@polehill.co.uk>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 4/22/20 12:41 AM, Christoph Hellwig wrote:
-> On Tue, Apr 14, 2020 at 09:42:20AM +0200, Christoph Hellwig wrote:
->> Hi all,
->>
->> currently the dma draining and alignining specific to ATA CDROMs
->> and the UFS driver has its ugly hooks in core block code.  Move
->> this out into the scsi and ide drivers instead.
-> 
-> Any commens?
+Fixed a warning message spelling issue.
 
-Looks OK to me, and I think the idea is sound.
+Signed-off-by: John Oldman <john.oldman@polehill.co.uk>
+---
+ drivers/ata/sata_inic162x.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
+diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
+index a6b76cc12a66..e517bd8822a5 100644
+--- a/drivers/ata/sata_inic162x.c
++++ b/drivers/ata/sata_inic162x.c
+@@ -145,7 +145,7 @@ enum {
+ 
+ 	/* PORT_IDMA_CTL bits */
+ 	IDMA_CTL_RST_ATA	= (1 << 2),  /* hardreset ATA bus */
+-	IDMA_CTL_RST_IDMA	= (1 << 5),  /* reset IDMA machinary */
++	IDMA_CTL_RST_IDMA	= (1 << 5),  /* reset IDMA machinery */
+ 	IDMA_CTL_GO		= (1 << 7),  /* IDMA mode go */
+ 	IDMA_CTL_ATA_NIEN	= (1 << 8),  /* ATA IRQ disable */
+ 
 -- 
-Jens Axboe
+2.17.1
 
