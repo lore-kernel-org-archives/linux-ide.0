@@ -2,47 +2,95 @@ Return-Path: <SRS0=fuJd=6G=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B508C55181
-	for <linux-ide@archiver.kernel.org>; Wed, 22 Apr 2020 06:42:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B4F6C55185
+	for <linux-ide@archiver.kernel.org>; Wed, 22 Apr 2020 16:46:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E7C2D206E9
-	for <linux-ide@archiver.kernel.org>; Wed, 22 Apr 2020 06:41:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3CEDA21473
+	for <linux-ide@archiver.kernel.org>; Wed, 22 Apr 2020 16:46:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="vxrw4X12"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726547AbgDVGly (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 22 Apr 2020 02:41:54 -0400
-Received: from verein.lst.de ([213.95.11.211]:50470 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726539AbgDVGly (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 22 Apr 2020 02:41:54 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id CE82E68C7B; Wed, 22 Apr 2020 08:41:51 +0200 (CEST)
-Date:   Wed, 22 Apr 2020 08:41:51 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
+        id S1726584AbgDVQq0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 22 Apr 2020 12:46:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38846 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726303AbgDVQq0 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 22 Apr 2020 12:46:26 -0400
+Received: from mail-il1-x12d.google.com (mail-il1-x12d.google.com [IPv6:2607:f8b0:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A56D0C03C1AC
+        for <linux-ide@vger.kernel.org>; Wed, 22 Apr 2020 09:46:24 -0700 (PDT)
+Received: by mail-il1-x12d.google.com with SMTP id b18so2600944ilf.2
+        for <linux-ide@vger.kernel.org>; Wed, 22 Apr 2020 09:46:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=1cV4OuPmkRZ6+zxhfjx8VUKHzAPPELWDKUnr+i1Zl2E=;
+        b=vxrw4X12UbXuE8+hKgIRfqbehXZCbT3g1S5XxQ+LVjc5pBkTlst1hlpCAKpWhhZuRu
+         veFMvmN+TdYJoobKQlAcPw6JABkRX/KE0oY7sokc0O3Ubt/H9HZmiPyMcH7mA95pj6Mv
+         hsbcYkcLl9TIpZJkeOuziDN9U6KahUNlKAIvHBxipbOf4/3GY6HNpcM5h/0atEYHfS1J
+         5TnA8z0aXlRNGp/PDhj068qQJeSm366/rYglsOfDgkjlAbyg23I3BhZcaQGv49KdWiYT
+         nagOCmHMaULGJBLasMsxEUo6OJAP6KBFFCvGx1AX1CdYZDUtp8pnaisywCFpPZkRJfya
+         i9Jg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=1cV4OuPmkRZ6+zxhfjx8VUKHzAPPELWDKUnr+i1Zl2E=;
+        b=oJKi8EftqB7rAVVRhoAB3ByO2LwE5at5bpllRMqgM9tV6ajmBT412jWFV6Mf27eT0I
+         E4H2To0CSNwpE7aHi2xlh4c8HuyESxzxizXDFHag4AszHOuZnNgYoT5zcEKAMoSb6g9g
+         U9+80IfHaHhazL4B35BgIUNXK4q9XyBc0T2aS/4uLJPOeqX4G057vV5FCrQQB5Xj3KbD
+         Um5HYUiO/c0U9sDbdDP3P0tVg41+oyWHdOy8v/WZNIK1I+akNr0J++sPQJXsDzUDsEnF
+         v7uF2GawEymkInPZl+/m45zSwYIVQWYGyL8TBU3EYdFE2ZQUCzdY3diYt4zmXbtoVlJS
+         MU3A==
+X-Gm-Message-State: AGi0Puao2mfDLQDCDccw/OnUl4Bv31CNBu9Hf5VwwAvK6LwYQQv8yis8
+        3+KtFw1c/U+y+RZwN6z92GTU9A==
+X-Google-Smtp-Source: APiQypIBWtVOQSTuiObuI0NSKLZhoSwUm3Bnp61Fd89wZTmPr1Njs/VncynYhJfgmsOlad6tANPNUA==
+X-Received: by 2002:a92:cece:: with SMTP id z14mr26155375ilq.147.1587573983733;
+        Wed, 22 Apr 2020 09:46:23 -0700 (PDT)
+Received: from [192.168.1.159] ([65.144.74.34])
+        by smtp.gmail.com with ESMTPSA id c18sm2251436ilr.37.2020.04.22.09.46.22
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 22 Apr 2020 09:46:23 -0700 (PDT)
+Subject: Re: clean up DMA draining
+To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: clean up DMA draining
-Message-ID: <20200422064151.GA23271@lst.de>
 References: <20200414074225.332324-1-hch@lst.de>
+ <20200422064151.GA23271@lst.de>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <f969685b-6547-2e93-f288-d2b1d5ec4dc4@kernel.dk>
+Date:   Wed, 22 Apr 2020 10:46:22 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200414074225.332324-1-hch@lst.de>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20200422064151.GA23271@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Apr 14, 2020 at 09:42:20AM +0200, Christoph Hellwig wrote:
-> Hi all,
+On 4/22/20 12:41 AM, Christoph Hellwig wrote:
+> On Tue, Apr 14, 2020 at 09:42:20AM +0200, Christoph Hellwig wrote:
+>> Hi all,
+>>
+>> currently the dma draining and alignining specific to ATA CDROMs
+>> and the UFS driver has its ugly hooks in core block code.  Move
+>> this out into the scsi and ide drivers instead.
 > 
-> currently the dma draining and alignining specific to ATA CDROMs
-> and the UFS driver has its ugly hooks in core block code.  Move
-> this out into the scsi and ide drivers instead.
+> Any commens?
 
-Any commens?
+Looks OK to me, and I think the idea is sound.
+
+
+-- 
+Jens Axboe
+
