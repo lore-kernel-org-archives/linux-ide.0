@@ -1,72 +1,59 @@
-Return-Path: <SRS0=fuJd=6G=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=1fB0=6H=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37A7EC54FCB
-	for <linux-ide@archiver.kernel.org>; Wed, 22 Apr 2020 17:02:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 935FBC2BA19
+	for <linux-ide@archiver.kernel.org>; Thu, 23 Apr 2020 06:12:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0DCE820776
-	for <linux-ide@archiver.kernel.org>; Wed, 22 Apr 2020 17:02:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 644E4214AF
+	for <linux-ide@archiver.kernel.org>; Thu, 23 Apr 2020 06:12:42 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KV91X82h"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726006AbgDVRCu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 22 Apr 2020 13:02:50 -0400
-Received: from mailomta26-re.btinternet.com ([213.120.69.119]:10071 "EHLO
-        re-prd-fep-041.btinternet.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725980AbgDVRCu (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 22 Apr 2020 13:02:50 -0400
-X-Greylist: delayed 10752 seconds by postgrey-1.27 at vger.kernel.org; Wed, 22 Apr 2020 13:02:49 EDT
-Received: from re-prd-rgout-003.btmx-prd.synchronoss.net ([10.2.54.6])
-          by re-prd-fep-048.btinternet.com with ESMTP
-          id <20200422140336.CRWR20795.re-prd-fep-048.btinternet.com@re-prd-rgout-003.btmx-prd.synchronoss.net>;
-          Wed, 22 Apr 2020 15:03:36 +0100
-Authentication-Results: btinternet.com;
-    auth=pass (LOGIN) smtp.auth=j.oldman998@btinternet.com
-X-Originating-IP: [31.51.225.56]
-X-OWM-Source-IP: 31.51.225.56 (GB)
-X-OWM-Env-Sender: j.oldman998@btinternet.com
-X-VadeSecure-score: verdict=clean score=0/300, class=clean
-X-RazorGate-Vade: gggruggvucftvghtrhhoucdtuddrgeduhedrgeejgdeijecutefuodetggdotefrodftvfcurfhrohhfihhlvgemuceutffkvffkuffjvffgnffgvefqofdpqfgfvfenuceurghilhhouhhtmecufedttdenucenucfjughrpefhvffufffkofestddtredtredttdenucfhrhhomheplfhohhhnucfqlhgumhgrnhcuoehjohhhnhdrohhlughmrghnsehpohhlvghhihhllhdrtghordhukheqnecukfhppeefuddrhedurddvvdehrdehieenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhephhgvlhhopehhvghnrhihrdhhohhmvgdpihhnvghtpeefuddrhedurddvvdehrdehiedpmhgrihhlfhhrohhmpeeojhhohhhnrdholhgumhgrnhesphholhgvhhhilhhlrdgtohdruhhkqedprhgtphhtthhopeeorgigsghovgeskhgvrhhnvghlrdgukheqpdhrtghpthhtohepoehjohhhnhdrohhlughmrghnsehpohhlvghhihhllhdrtghordhukheqpdhrtghpthhtohepoehlihhnuhigqdhiuggvsehvghgvrhdrkhgvrhhnvghlrdhorhhgqedprhgtphhtthhopeeolhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgqe
-X-RazorGate-Vade-Verdict: clean 0
-X-RazorGate-Vade-Classification: clean
-Received: from henry.home (31.51.225.56) by re-prd-rgout-003.btmx-prd.synchronoss.net (5.8.340) (authenticated as j.oldman998@btinternet.com)
-        id 5E3A16DE0C89880B; Wed, 22 Apr 2020 15:03:36 +0100
-From:   John Oldman <john.oldman@polehill.co.uk>
-To:     axboe@kernel.dk
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        John Oldman <john.oldman@polehill.co.uk>
-Subject: [PATCH] Staging: ata: sata_inic162x fixed a spelling issue
-Date:   Wed, 22 Apr 2020 15:03:32 +0100
-Message-Id: <20200422140332.22923-1-john.oldman@polehill.co.uk>
-X-Mailer: git-send-email 2.17.1
+        id S1725854AbgDWGMm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 23 Apr 2020 02:12:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51104 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725562AbgDWGMl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 23 Apr 2020 02:12:41 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6B4EC03C1AB;
+        Wed, 22 Apr 2020 23:12:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=jfQK2PwAh2C3DIS291PKwmLlhxlhjUsgV0psLy3bMmM=; b=KV91X82hek96DEsT+pDcDJJIGj
+        9GZPqbKo/WUN/60ih1bKKhXiFmYQ5uA1e2rePhyRNR5rybC3qz+UsJC/MPW4X0wEOLJXhmhqmlEN/
+        u+V6l+t8nifGbbIIV2wdhg/BmUa/2Cltiyn4hw5SRuWsmi4KCOWiamn7DG8VdnLPySpoXHUKI2Hrm
+        I06C1qIk6epjtEJYbdnSjmAIr0CJrO2NEgdH8bOxb+ITemuMnO5APHTKYNR1WjBzJhtsxxoUnJKOY
+        UWILe+jOxHNh/rQrDkCazWVD7SglJ+x88Q2Ddmem1Jd2U69tKt6kh9Ua/36lo+zcGG7+FNVZfvU29
+        SITh1RlA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jRV6C-0003IR-Sl; Thu, 23 Apr 2020 06:12:36 +0000
+Date:   Wed, 22 Apr 2020 23:12:36 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     John Oldman <john.oldman@polehill.co.uk>
+Cc:     axboe@kernel.dk, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] Staging: ata: sata_inic162x fixed a spelling issue
+Message-ID: <20200423061236.GA12577@infradead.org>
+References: <20200422140332.22923-1-john.oldman@polehill.co.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200422140332.22923-1-john.oldman@polehill.co.uk>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Fixed a warning message spelling issue.
+On Wed, Apr 22, 2020 at 03:03:32PM +0100, John Oldman wrote:
+> Fixed a warning message spelling issue.
 
-Signed-off-by: John Oldman <john.oldman@polehill.co.uk>
----
- drivers/ata/sata_inic162x.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
-index a6b76cc12a66..e517bd8822a5 100644
---- a/drivers/ata/sata_inic162x.c
-+++ b/drivers/ata/sata_inic162x.c
-@@ -145,7 +145,7 @@ enum {
- 
- 	/* PORT_IDMA_CTL bits */
- 	IDMA_CTL_RST_ATA	= (1 << 2),  /* hardreset ATA bus */
--	IDMA_CTL_RST_IDMA	= (1 << 5),  /* reset IDMA machinary */
-+	IDMA_CTL_RST_IDMA	= (1 << 5),  /* reset IDMA machinery */
- 	IDMA_CTL_GO		= (1 << 7),  /* IDMA mode go */
- 	IDMA_CTL_ATA_NIEN	= (1 << 8),  /* ATA IRQ disable */
- 
--- 
-2.17.1
-
+Why does this say Staging in the subject?
