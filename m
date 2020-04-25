@@ -1,69 +1,133 @@
-Return-Path: <SRS0=v2qC=6I=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=sI2Y=6J=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0117C54FCB
-	for <linux-ide@archiver.kernel.org>; Fri, 24 Apr 2020 20:50:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB1DDC55185
+	for <linux-ide@archiver.kernel.org>; Sat, 25 Apr 2020 07:57:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF20E215A4
-	for <linux-ide@archiver.kernel.org>; Fri, 24 Apr 2020 20:50:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1587761436;
-	bh=dBDW56QaC96bq2qKJgVjwJutpjTd4ij78wfj1ENrzsM=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=E/tgHDefX7+TZfPeb59aWZvcWNlUgCV4/oSwtI1tSfyU4Av9KSjyRY6m7BTcZNhlC
-	 Ikm7MCHpzJ8wy3c2S4K3nskfXJfP1KJluYBaAla3fERpfVh61lxzmhft7AGETAKVRr
-	 PP3/MeNrRSoyYxGZIOOEr6sUzuCBumKWbXC+JbNc=
+	by mail.kernel.org (Postfix) with ESMTP id A103220706
+	for <linux-ide@archiver.kernel.org>; Sat, 25 Apr 2020 07:57:25 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QqBgQzau"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726154AbgDXUuT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 24 Apr 2020 16:50:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46700 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726046AbgDXUuS (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 24 Apr 2020 16:50:18 -0400
-Subject: Re: [GIT PULL] libata fixes for 5.7-rc3
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1587761418;
-        bh=dBDW56QaC96bq2qKJgVjwJutpjTd4ij78wfj1ENrzsM=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=Y1oQ70PwcPcByY9LnBErFQ6Q3hHNu10KCHYFiRAYOhl0tTrI3VDChZBH7IzBI5ffB
-         bLQaYsH6jlVRKiRTY3aX6jgQJ0XuhdUyKEwa8nUlKJrFtu+yn88V6jARFDanJaU3c7
-         2lnpUW2wTVoXjzMiQHYOLZtnD3C/wGHSRYCdz2l4=
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <0c2ac794-edf3-671a-7e6b-3b497e7c36ec@kernel.dk>
-References: <0c2ac794-edf3-671a-7e6b-3b497e7c36ec@kernel.dk>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <0c2ac794-edf3-671a-7e6b-3b497e7c36ec@kernel.dk>
-X-PR-Tracked-Remote: git://git.kernel.dk/linux-block.git
- tags/libata-5.7-2020-04-24
-X-PR-Tracked-Commit-Id: 89e7c85026a0f8522e4017de70f4a87513874520
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 81da3d3c1015e1db8b5fa121d4f6f9172d0299f3
-Message-Id: <158776141849.11860.16327032479189777209.pr-tracker-bot@kernel.org>
-Date:   Fri, 24 Apr 2020 20:50:18 +0000
+        id S1726124AbgDYH5Z (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 25 Apr 2020 03:57:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36716 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1726098AbgDYH5Y (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 25 Apr 2020 03:57:24 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 988F3C09B049;
+        Sat, 25 Apr 2020 00:57:24 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        Content-Type:MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:
+        To:From:Sender:Reply-To:Content-ID:Content-Description;
+        bh=fRRB7Hw/olceB/aYN2JO9ZS8o+tiMugLsMPr0vwHMzw=; b=QqBgQzau0psQY6V+7WQxpmy5PU
+        ajsY2re2MDG11WgmEv5R8G0a/BioSP9tdlDLI5sebNGA3PM9o2nj5FW0KgMosAgCyAiNGLsZjJwWD
+        5hP48gFZo+lE0VsiKSiXoHUc850adImMb5Iwh5HbRgHZqBvKx3zuz8dt8Imwq6SmRuAcGd4sAwBIZ
+        KyXNjbQdtMS9p0ySeuQ2T8LeOV62SQY4USm+i0yhAhVWfVS1rnJLPiH9tu19PLXn54+6GPor1LTqp
+        YQSqctE/qnFyktzPvKiO3VaQ46PTMuYg7o/NGIUPLdpPh+ujf1Ea3GWd4ux5Ygb1qIZMBlok+tpmV
+        RA490WSg==;
+Received: from [2001:4bb8:193:f203:c70:4a89:bc61:2] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jSFgX-00021r-EH; Sat, 25 Apr 2020 07:57:13 +0000
+From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        IDE/ATA development list <linux-ide@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc:     Tim Waugh <tim@cyberelk.net>, Borislav Petkov <bp@alien8.de>,
+        Jan Kara <jack@suse.com>, linux-block@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH 2/7] ide-cd: rename cdrom_read_tocentry
+Date:   Sat, 25 Apr 2020 09:57:01 +0200
+Message-Id: <20200425075706.721917-3-hch@lst.de>
+X-Mailer: git-send-email 2.26.1
+In-Reply-To: <20200425075706.721917-1-hch@lst.de>
+References: <20200425075706.721917-1-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The pull request you sent on Fri, 24 Apr 2020 12:01:48 -0600:
+Give the cdrom_read_tocentry function and ide_ prefix to not conflict
+with the soon to be added generic function.
 
-> git://git.kernel.dk/linux-block.git tags/libata-5.7-2020-04-24
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
+---
+ drivers/ide/ide-cd.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/81da3d3c1015e1db8b5fa121d4f6f9172d0299f3
-
-Thank you!
-
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 40e124eb918aa..7f17f83039888 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -1034,8 +1034,8 @@ static int cdrom_read_capacity(ide_drive_t *drive, unsigned long *capacity,
+ 	return 0;
+ }
+ 
+-static int cdrom_read_tocentry(ide_drive_t *drive, int trackno, int msf_flag,
+-				int format, char *buf, int buflen)
++static int ide_cdrom_read_tocentry(ide_drive_t *drive, int trackno,
++		int msf_flag, int format, char *buf, int buflen)
+ {
+ 	unsigned char cmd[BLK_MAX_CDB];
+ 
+@@ -1104,7 +1104,7 @@ int ide_cd_read_toc(ide_drive_t *drive)
+ 				     sectors_per_frame << SECTOR_SHIFT);
+ 
+ 	/* first read just the header, so we know how long the TOC is */
+-	stat = cdrom_read_tocentry(drive, 0, 1, 0, (char *) &toc->hdr,
++	stat = ide_cdrom_read_tocentry(drive, 0, 1, 0, (char *) &toc->hdr,
+ 				    sizeof(struct atapi_toc_header));
+ 	if (stat)
+ 		return stat;
+@@ -1121,7 +1121,7 @@ int ide_cd_read_toc(ide_drive_t *drive)
+ 		ntracks = MAX_TRACKS;
+ 
+ 	/* now read the whole schmeer */
+-	stat = cdrom_read_tocentry(drive, toc->hdr.first_track, 1, 0,
++	stat = ide_cdrom_read_tocentry(drive, toc->hdr.first_track, 1, 0,
+ 				  (char *)&toc->hdr,
+ 				   sizeof(struct atapi_toc_header) +
+ 				   (ntracks + 1) *
+@@ -1141,7 +1141,7 @@ int ide_cd_read_toc(ide_drive_t *drive)
+ 		 * Heiko Eißfeldt.
+ 		 */
+ 		ntracks = 0;
+-		stat = cdrom_read_tocentry(drive, CDROM_LEADOUT, 1, 0,
++		stat = ide_cdrom_read_tocentry(drive, CDROM_LEADOUT, 1, 0,
+ 					   (char *)&toc->hdr,
+ 					   sizeof(struct atapi_toc_header) +
+ 					   (ntracks + 1) *
+@@ -1181,7 +1181,7 @@ int ide_cd_read_toc(ide_drive_t *drive)
+ 
+ 	if (toc->hdr.first_track != CDROM_LEADOUT) {
+ 		/* read the multisession information */
+-		stat = cdrom_read_tocentry(drive, 0, 0, 1, (char *)&ms_tmp,
++		stat = ide_cdrom_read_tocentry(drive, 0, 0, 1, (char *)&ms_tmp,
+ 					   sizeof(ms_tmp));
+ 		if (stat)
+ 			return stat;
+@@ -1195,7 +1195,7 @@ int ide_cd_read_toc(ide_drive_t *drive)
+ 
+ 	if (drive->atapi_flags & IDE_AFLAG_TOCADDR_AS_BCD) {
+ 		/* re-read multisession information using MSF format */
+-		stat = cdrom_read_tocentry(drive, 0, 1, 1, (char *)&ms_tmp,
++		stat = ide_cdrom_read_tocentry(drive, 0, 1, 1, (char *)&ms_tmp,
+ 					   sizeof(ms_tmp));
+ 		if (stat)
+ 			return stat;
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+2.26.1
+
