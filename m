@@ -2,125 +2,108 @@ Return-Path: <SRS0=yaXm=6S=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E4C0C4725A
-	for <linux-ide@archiver.kernel.org>; Mon,  4 May 2020 14:00:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2997C47257
+	for <linux-ide@archiver.kernel.org>; Mon,  4 May 2020 16:16:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5AA0E20705
-	for <linux-ide@archiver.kernel.org>; Mon,  4 May 2020 14:00:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B280620721
+	for <linux-ide@archiver.kernel.org>; Mon,  4 May 2020 16:16:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="EYo3DNwy"
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="JtB9E0VA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728233AbgEDN74 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 4 May 2020 09:59:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47408 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728050AbgEDN74 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2020 09:59:56 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25832C061A0F;
-        Mon,  4 May 2020 06:59:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=hXlFdNu3uey0NQs9NJqfMf+yPJLzrPPpQ2QUUnXWjJw=; b=EYo3DNwydBHWefKOMPHRub+4nk
-        Aa4WnRZKp7MBW3wUapQTAvBRUzPIqdxd/hCqnCJhRV4reECz9SWm71wBU7h6wtna1W8ThpVLlBOcP
-        BMWJgFiFaHUKO63BSlbEf5e2KupXKMIByRgPNH4hylAd2TcNWb4TzOkieXbnNFvcHjFR8nFhYHekD
-        IxST6t1y0BNY5zT0+KSjexItsiOakAir8ZmafatI/sU3W/khGPztKB2lKG9Y5LBQbdcS5DuE1q+B2
-        6haOc77Jkqqt5bPMLMDRY20X6mALWNw6UXbmFR+YlFk5gF5PXs1LsFW7OZ04wwUaNXD4EwC+sXnxa
-        UPo5JP9Q==;
-Received: from [2001:4bb8:18c:10bd:c70:4a89:bc61:2] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jVbdK-0007a8-0q; Mon, 04 May 2020 13:59:46 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
+        id S1729540AbgEDQQo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 4 May 2020 12:16:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40560 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729584AbgEDQQn (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2020 12:16:43 -0400
+Received: from mail-il1-x143.google.com (mail-il1-x143.google.com [IPv6:2607:f8b0:4864:20::143])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78893C0610D5
+        for <linux-ide@vger.kernel.org>; Mon,  4 May 2020 09:16:42 -0700 (PDT)
+Received: by mail-il1-x143.google.com with SMTP id c16so11787349ilr.3
+        for <linux-ide@vger.kernel.org>; Mon, 04 May 2020 09:16:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=O2NAB+HJ6UzNB91gndqrDrOBWBRRYdtXc0RXwgVqjIU=;
+        b=JtB9E0VAIJLFoltqJ/EHP5uJ1L/CC5gPEHBmZzWmKIrxbjl26Ne5XpvBSLm41xSBIg
+         t1xVdmJvdqBHaspjtVCP0vgnGV8j2MBTNBjG6GfJcM4fXOhB5+xGf03i727pyog2NP6D
+         GccF27GbRs4QZX7lndDIpxFVeOCoMgIl3dOrXZVf+VRPY7WwOdamJ/8xOXsiov24FI4J
+         cg7O0CG65PADdLp8q2dvOrT5ZwuaButnO4gv0VIES92fKah6Zco3/qNsmkTYiehcGMU9
+         Q2MWvAeM0Qng2AHkE9aLevizkhC1L0KUTdxlOLZZymREU3y6Lz7t6E+UeIP0pi9e0AJ9
+         6new==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=O2NAB+HJ6UzNB91gndqrDrOBWBRRYdtXc0RXwgVqjIU=;
+        b=hdFzwcd4rH/9Hc5tFqpcG/0VElE4e3AbnIwP9XUETQp64snUMVxFZ1+uixb0+xsvTs
+         x51ftRvF3QuJWpzcpsq/W0yCBdJVxdQWVJnqC3+gL1+Rff+cbyQn2xmlspTobylDAi6/
+         ZsfxoPnN1JgnWOYxjEiZx7d0wCxTGD4W64AGdi/2xqS9MYJ8VYPaEnrBa7I4Cs/WrMQV
+         CoCxvNvR9Vc9CjSvd2NF/mzjx4ULB89ZI/eTVJuN1YrAJFDX5feg97RnP/lV+K4XJZVr
+         LtU4oPeJgHx0AHPOCsgpkrRGr9zOY2mLAvDKIdyxhXRhkTNJY1tdd/JeuknErC0EVNCl
+         TEew==
+X-Gm-Message-State: AGi0PuYTsghqyj5b3UvwA8mfaW9aWwD72J3epXQrdQvoZIF7Z5uJQDsb
+        wtdgzgmsHkpE9J5bbATBjF2wnQ==
+X-Google-Smtp-Source: APiQypLOM7ihGkQHTNt/pKRC46v+xHKsvR0zC0Gq/TKe4vXwyBmsBEqqQDWLYSJ6GF4HlBlFg2BYoQ==
+X-Received: by 2002:a92:d6c6:: with SMTP id z6mr16340696ilp.32.1588609001697;
+        Mon, 04 May 2020 09:16:41 -0700 (PDT)
+Received: from [192.168.1.159] ([65.144.74.34])
+        by smtp.gmail.com with ESMTPSA id m22sm4250384iow.35.2020.05.04.09.16.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 04 May 2020 09:16:41 -0700 (PDT)
+Subject: Re: [PATCH 5/7] hfsplus: stop using ioctl_by_bdev
+To:     Christoph Hellwig <hch@lst.de>
 Cc:     Tim Waugh <tim@cyberelk.net>, Borislav Petkov <bp@alien8.de>,
         Jan Kara <jack@suse.com>, linux-block@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
         Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH 6/8] hfsplus: stop using ioctl_by_bdev
-Date:   Mon,  4 May 2020 15:59:25 +0200
-Message-Id: <20200504135927.2835750-7-hch@lst.de>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200504135927.2835750-1-hch@lst.de>
-References: <20200504135927.2835750-1-hch@lst.de>
+References: <20200425075706.721917-1-hch@lst.de>
+ <20200425075706.721917-6-hch@lst.de>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <6c47f731-7bff-f186-da55-7ce6cffacdc3@kernel.dk>
+Date:   Mon, 4 May 2020 10:16:40 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.7.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200425075706.721917-6-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Instead just call the CDROM layer functionality directly.
+On 4/25/20 1:57 AM, Christoph Hellwig wrote:
+>  	if (HFSPLUS_SB(sb)->session >= 0) {
+> +		struct cdrom_tocentry te;
+> +
+> +		if (!cdi)
+> +			return -EINVAL;
+> +
+>  		te.cdte_track = HFSPLUS_SB(sb)->session;
+>  		te.cdte_format = CDROM_LBA;
+> -		res = ioctl_by_bdev(sb->s_bdev,
+> -			CDROMREADTOCENTRY, (unsigned long)&te);
+> -		if (!res && (te.cdte_ctrl & CDROM_DATA_TRACK) == 4) {
+> -			*start = (sector_t)te.cdte_addr.lba << 2;
+> -			return 0;
+> +		if (cdrom_read_tocentry(cdi, &te) ||
+> +		    (te.cdte_ctrl & CDROM_DATA_TRACK) != 4) {
+> +			pr_err("invalid session number or type of track\n");
+> +			return -EINVAL;
+>  		}
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de
----
- fs/hfsplus/wrapper.c | 33 ++++++++++++++++++---------------
- 1 file changed, 18 insertions(+), 15 deletions(-)
+I must be missing something obvious from just looking over the patches,
+but how does this work if cdrom is modular and hfsplus is builtin?
 
-diff --git a/fs/hfsplus/wrapper.c b/fs/hfsplus/wrapper.c
-index 08c1580bdf7ad..61eec628805de 100644
---- a/fs/hfsplus/wrapper.c
-+++ b/fs/hfsplus/wrapper.c
-@@ -127,31 +127,34 @@ static int hfsplus_read_mdb(void *bufptr, struct hfsplus_wd *wd)
- static int hfsplus_get_last_session(struct super_block *sb,
- 				    sector_t *start, sector_t *size)
- {
--	struct cdrom_multisession ms_info;
--	struct cdrom_tocentry te;
--	int res;
-+	struct cdrom_device_info *cdi = disk_to_cdi(sb->s_bdev->bd_disk);
- 
- 	/* default values */
- 	*start = 0;
- 	*size = i_size_read(sb->s_bdev->bd_inode) >> 9;
- 
- 	if (HFSPLUS_SB(sb)->session >= 0) {
-+		struct cdrom_tocentry te;
-+
-+		if (!cdi)
-+			return -EINVAL;
-+
- 		te.cdte_track = HFSPLUS_SB(sb)->session;
- 		te.cdte_format = CDROM_LBA;
--		res = ioctl_by_bdev(sb->s_bdev,
--			CDROMREADTOCENTRY, (unsigned long)&te);
--		if (!res && (te.cdte_ctrl & CDROM_DATA_TRACK) == 4) {
--			*start = (sector_t)te.cdte_addr.lba << 2;
--			return 0;
-+		if (cdrom_read_tocentry(cdi, &te) ||
-+		    (te.cdte_ctrl & CDROM_DATA_TRACK) != 4) {
-+			pr_err("invalid session number or type of track\n");
-+			return -EINVAL;
- 		}
--		pr_err("invalid session number or type of track\n");
--		return -EINVAL;
-+		*start = (sector_t)te.cdte_addr.lba << 2;
-+	} else if (cdi) {
-+		struct cdrom_multisession ms_info;
-+
-+		ms_info.addr_format = CDROM_LBA;
-+		if (cdrom_multisession(cdi, &ms_info) == 0 && ms_info.xa_flag)
-+			*start = (sector_t)ms_info.addr.lba << 2;
- 	}
--	ms_info.addr_format = CDROM_LBA;
--	res = ioctl_by_bdev(sb->s_bdev, CDROMMULTISESSION,
--		(unsigned long)&ms_info);
--	if (!res && ms_info.xa_flag)
--		*start = (sector_t)ms_info.addr.lba << 2;
-+
- 	return 0;
- }
- 
 -- 
-2.26.2
+Jens Axboe
 
