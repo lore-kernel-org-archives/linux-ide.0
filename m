@@ -7,46 +7,45 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD2EBC47257
-	for <linux-ide@archiver.kernel.org>; Mon,  4 May 2020 14:00:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 381D1C47257
+	for <linux-ide@archiver.kernel.org>; Mon,  4 May 2020 14:00:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BC30F20705
-	for <linux-ide@archiver.kernel.org>; Mon,  4 May 2020 14:00:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14C6620705
+	for <linux-ide@archiver.kernel.org>; Mon,  4 May 2020 14:00:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="MVJG1YAt"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BL3jxcs7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728718AbgEDOAU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 4 May 2020 10:00:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47422 "EHLO
+        id S1728840AbgEDOAi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 4 May 2020 10:00:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47418 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728191AbgEDN74 (ORCPT
+        by vger.kernel.org with ESMTP id S1728168AbgEDN74 (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2020 09:59:56 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3742BC03C1A7;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 34A2AC061BD3;
         Mon,  4 May 2020 06:59:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=ufRuX5PQbB2jqqbHHg7fvKBAMJcv5Za1TaoOkXdfMXY=; b=MVJG1YAtRinzkEzc77kDCgeBH9
-        E2TBXf7FyyOaRa3T6kJ3Qsyh5BKtEJUDAtTLZlVlO5WuS64bXuyPsePY3iWasACFbZ7Nknf8r3CKu
-        tI4t0xd4bbybZGgj5DWRrcm/2+lJf1IUJ6fFSftIh59RTMhBkvpQFXmiJf+LkIYBWRlxWjNBQZwKT
-        yrV1tsh3pV9MvgsiBOTmL585hMxnuHO9NlgdZ/IXGxMshmRRIH9sTSCS2mma7NaCqFvkMlYwxuc1o
-        bbVFOS/lSiabwEvptHLgwwQAOkQRm7VoN8WleGgZ+ZKD28bQxkiGGteiZAUkAIliy0Nn+/Tx+w/fC
-        pQs+kKYQ==;
+        bh=PThi5otuSmIv87sVwtTG8nfMFGAV/tBkGdHRgwma/LQ=; b=BL3jxcs71vRIL+nXcJX7p3KpN6
+        ZzayRxIQB6ZjYs2/yM5g/kZI1QxtkFtVxM4EliiaqVnQBLnzzGHZVMr3z7nNNVNUipPK9+pS08U7b
+        c3lfxqAp7itiR+nnUk59aT0UfH5Ik9+JNxCHRcTU/hQaEd0vg1gwwlomzR5VTeS5qRVv0gWFxNc9q
+        8Db3JlT2fOfErwjbD4NHyiOFmqs3yO5lgEIFtU1/ZkBHerm/c7DRWklYi9ynLc24RAiM6/ytSdV5Q
+        aPlIgg/Sk9k8/SFTYr6ZeLCzO/8Fh+pZG9R7g/A8+hRNBDVemLC7MnglZUBBTpp6aCUrsFR/mJGF+
+        Jsau9qnQ==;
 Received: from [2001:4bb8:18c:10bd:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jVbdM-0007aP-Dn; Mon, 04 May 2020 13:59:48 +0000
+        id 1jVbdH-0007Zx-Js; Mon, 04 May 2020 13:59:43 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Tim Waugh <tim@cyberelk.net>, Borislav Petkov <bp@alien8.de>,
         Jan Kara <jack@suse.com>, linux-block@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jan Kara <jack@suse.cz>, Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH 7/8] isofs: stop using ioctl_by_bdev
-Date:   Mon,  4 May 2020 15:59:26 +0200
-Message-Id: <20200504135927.2835750-8-hch@lst.de>
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 5/8] hfs: stop using ioctl_by_bdev
+Date:   Mon,  4 May 2020 15:59:24 +0200
+Message-Id: <20200504135927.2835750-6-hch@lst.de>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20200504135927.2835750-1-hch@lst.de>
 References: <20200504135927.2835750-1-hch@lst.de>
@@ -58,89 +57,64 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Instead just call the CDROM layer functionality directly, and turn the
-hot mess in isofs_get_last_session into remotely readable code.
+Instead just call the CDROM layer functionality directly.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de
 ---
- fs/isofs/inode.c | 54 +++++++++++++++++++++++-------------------------
- 1 file changed, 26 insertions(+), 28 deletions(-)
+ fs/hfs/mdb.c | 32 +++++++++++++++++++-------------
+ 1 file changed, 19 insertions(+), 13 deletions(-)
 
-diff --git a/fs/isofs/inode.c b/fs/isofs/inode.c
-index 62c0462dc89f3..276107cdaaf13 100644
---- a/fs/isofs/inode.c
-+++ b/fs/isofs/inode.c
-@@ -544,43 +544,41 @@ static int isofs_show_options(struct seq_file *m, struct dentry *root)
- 
- static unsigned int isofs_get_last_session(struct super_block *sb, s32 session)
+diff --git a/fs/hfs/mdb.c b/fs/hfs/mdb.c
+index 460281b1299eb..cdf0edeeb2781 100644
+--- a/fs/hfs/mdb.c
++++ b/fs/hfs/mdb.c
+@@ -32,29 +32,35 @@
+ static int hfs_get_last_session(struct super_block *sb,
+ 				sector_t *start, sector_t *size)
  {
 -	struct cdrom_multisession ms_info;
--	unsigned int vol_desc_start;
--	struct block_device *bdev = sb->s_bdev;
--	int i;
+-	struct cdrom_tocentry te;
+-	int res;
 +	struct cdrom_device_info *cdi = disk_to_cdi(sb->s_bdev->bd_disk);
-+	unsigned int vol_desc_start = 0;
  
--	vol_desc_start=0;
--	ms_info.addr_format=CDROM_LBA;
- 	if (session > 0) {
--		struct cdrom_tocentry Te;
--		Te.cdte_track=session;
--		Te.cdte_format=CDROM_LBA;
--		i = ioctl_by_bdev(bdev, CDROMREADTOCENTRY, (unsigned long) &Te);
--		if (!i) {
+ 	/* default values */
+ 	*start = 0;
+ 	*size = i_size_read(sb->s_bdev->bd_inode) >> 9;
+ 
+ 	if (HFS_SB(sb)->session >= 0) {
 +		struct cdrom_tocentry te;
-+
++	
 +		if (!cdi)
-+			return 0;
++			return -EINVAL;
 +
-+		te.cdte_track = session;
-+		te.cdte_format = CDROM_LBA;
-+		if (cdrom_read_tocentry(cdi, &te) == 0) {
- 			printk(KERN_DEBUG "ISOFS: Session %d start %d type %d\n",
--				session, Te.cdte_addr.lba,
--				Te.cdte_ctrl&CDROM_DATA_TRACK);
--			if ((Te.cdte_ctrl&CDROM_DATA_TRACK) == 4)
--				return Te.cdte_addr.lba;
-+				session, te.cdte_addr.lba,
-+				te.cdte_ctrl & CDROM_DATA_TRACK);
-+			if ((te.cdte_ctrl & CDROM_DATA_TRACK) == 4)
-+				return te.cdte_addr.lba;
+ 		te.cdte_track = HFS_SB(sb)->session;
+ 		te.cdte_format = CDROM_LBA;
+-		res = ioctl_by_bdev(sb->s_bdev, CDROMREADTOCENTRY, (unsigned long)&te);
+-		if (!res && (te.cdte_ctrl & CDROM_DATA_TRACK) == 4) {
+-			*start = (sector_t)te.cdte_addr.lba << 2;
+-			return 0;
++		if (cdrom_read_tocentry(cdi, &te) ||
++		    (te.cdte_ctrl & CDROM_DATA_TRACK) != 4) {
++			pr_err("invalid session number or type of track\n");
++			return -EINVAL;
  		}
- 
- 		printk(KERN_ERR "ISOFS: Invalid session number or type of track\n");
- 	}
--	i = ioctl_by_bdev(bdev, CDROMMULTISESSION, (unsigned long) &ms_info);
--	if (session > 0)
--		printk(KERN_ERR "ISOFS: Invalid session number\n");
--#if 0
--	printk(KERN_DEBUG "isofs.inode: CDROMMULTISESSION: rc=%d\n",i);
--	if (i==0) {
--		printk(KERN_DEBUG "isofs.inode: XA disk: %s\n",ms_info.xa_flag?"yes":"no");
--		printk(KERN_DEBUG "isofs.inode: vol_desc_start = %d\n", ms_info.addr.lba);
--	}
--#endif
--	if (i==0)
+-		pr_err("invalid session number or type of track\n");
+-		return -EINVAL;
 +
-+	if (cdi) {
++		*start = (sector_t)te.cdte_addr.lba << 2;
++	} else if (cdi) {
 +		struct cdrom_multisession ms_info;
 +
 +		ms_info.addr_format = CDROM_LBA;
-+		if (cdrom_multisession(cdi, &ms_info) == 0) {
- #if WE_OBEY_THE_WRITTEN_STANDARDS
--		if (ms_info.xa_flag) /* necessary for a valid ms_info.addr */
-+			/* necessary for a valid ms_info.addr */
-+			if (ms_info.xa_flag)
- #endif
--			vol_desc_start=ms_info.addr.lba;
-+				vol_desc_start = ms_info.addr.lba;
-+		}
-+	}
++		if (cdrom_multisession(cdi, &ms_info) == 0 && ms_info.xa_flag)
++			*start = (sector_t)ms_info.addr.lba << 2;
+ 	}
+-	ms_info.addr_format = CDROM_LBA;
+-	res = ioctl_by_bdev(sb->s_bdev, CDROMMULTISESSION, (unsigned long)&ms_info);
+-	if (!res && ms_info.xa_flag)
+-		*start = (sector_t)ms_info.addr.lba << 2;
 +
- 	return vol_desc_start;
+ 	return 0;
  }
  
 -- 
