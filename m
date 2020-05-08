@@ -1,125 +1,117 @@
-Return-Path: <SRS0=Rzt2=6V=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=7pxr=6W=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32007C4724C
-	for <linux-ide@archiver.kernel.org>; Thu,  7 May 2020 21:58:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A60FC47247
+	for <linux-ide@archiver.kernel.org>; Fri,  8 May 2020 05:23:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1A75420870
-	for <linux-ide@archiver.kernel.org>; Thu,  7 May 2020 21:58:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B980206D3
+	for <linux-ide@archiver.kernel.org>; Fri,  8 May 2020 05:23:44 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="XDzzOWAz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726480AbgEGV6F (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 7 May 2020 17:58:05 -0400
-Received: from mail-il1-f194.google.com ([209.85.166.194]:38116 "EHLO
-        mail-il1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726437AbgEGV6F (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 7 May 2020 17:58:05 -0400
-Received: by mail-il1-f194.google.com with SMTP id c18so6804683ile.5;
-        Thu, 07 May 2020 14:58:04 -0700 (PDT)
+        id S1726683AbgEHFXl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 8 May 2020 01:23:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47278 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726365AbgEHFXl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 8 May 2020 01:23:41 -0400
+Received: from mail-pl1-x644.google.com (mail-pl1-x644.google.com [IPv6:2607:f8b0:4864:20::644])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EBFA2C05BD0A
+        for <linux-ide@vger.kernel.org>; Thu,  7 May 2020 22:23:40 -0700 (PDT)
+Received: by mail-pl1-x644.google.com with SMTP id f15so232858plr.3
+        for <linux-ide@vger.kernel.org>; Thu, 07 May 2020 22:23:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=0ahYPnFGgIMDjQSfV7hJnYdkOoepBn7h7C04Xu4iOHY=;
+        b=XDzzOWAz1DGuofj463zagNRWU0ERqALCX98vKPku9sqz4LvMcN51P3d72Q1dwPOKug
+         JS2ZhSqvPLLXWGospnhS5fVo7S2dH2pW2MlVcr24w4fcpMs2HN+rnhumjOBAwZ/BpAVT
+         nOlFyscQk06CW/5JRJ+vYsbkJL1hZgohMaJk32ZM8Rgya7RGqAAbXGCwHzIG90eegcso
+         7HRQUlZfrmGDNZHGO7Ggh7w9Ys/EHJ2CP0sXH90fc4UBQf3A7Eq/ySjdtzDbpgMOFbd5
+         lwn/nJ/ZAjJGH94R7bcboH4d3eDRXIPSNhQLaDqvmt7E4fkGT8MHs2V+BQtWPKjS6n7Q
+         FYZw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=GI7tbDeUUOEa56ks8zKfYc4C3uORKh3Rq+YHa4B8fIs=;
-        b=lp5r0bNPyWv3GAesA97nDseDd3FliLrzwb/rNcOECzveb5UExPmBt7/cVbULtfoaln
-         ucmtdQG/+jF4pLZc+T77beljpmyvFQo7bkXmh/pVWQMM7KX7mUbuEfTcSgJOtCD9T9jp
-         +qAjSj7F4tEKvNG4KFUQ8QXeNH3+4AoKQviQNVBTzrlRFa/llrJvY65EjmOCz3mvyQom
-         dYEFe2Jt6yy4VhinChDTi1TyRcRixL2sPMHX4/9Hz0PirI54f4RtYvyLwjYNDjRt+cmv
-         twaZjeYLmD0ETkpah+IxWNz1dM51QXKEL4Ybvuzs5rxgPE2OsLR9ORLuL20t0KCLdlLn
-         JiFg==
-X-Gm-Message-State: AGi0PubJ2vc4y+Jkl2ZdWcAueoVF0hbld2VIxB06VTpakXOwgbEnLNLE
-        QA8OoVcU+4jnvSMFD2qydNc5EMvPO1I=
-X-Google-Smtp-Source: APiQypI+iDElsr2p1ZHpOctO/W21HEtkb++o96IuKTURr/XhzdkfhcqL3CM10Waq1sixCES6+TeJTg==
-X-Received: by 2002:a92:1d4e:: with SMTP id d75mr10484005ild.235.1588888683969;
-        Thu, 07 May 2020 14:58:03 -0700 (PDT)
-Received: from mail-io1-f42.google.com (mail-io1-f42.google.com. [209.85.166.42])
-        by smtp.gmail.com with ESMTPSA id 7sm847683ion.52.2020.05.07.14.58.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 07 May 2020 14:58:03 -0700 (PDT)
-Received: by mail-io1-f42.google.com with SMTP id j8so2243161iog.13;
-        Thu, 07 May 2020 14:58:03 -0700 (PDT)
-X-Received: by 2002:a02:cebb:: with SMTP id z27mr16202135jaq.32.1588888683009;
- Thu, 07 May 2020 14:58:03 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200507112955.23520-1-geert+renesas@glider.be>
-In-Reply-To: <20200507112955.23520-1-geert+renesas@glider.be>
-From:   Li Yang <leoyang.li@nxp.com>
-Date:   Thu, 7 May 2020 16:57:51 -0500
-X-Gmail-Original-Message-ID: <CADRPPNTdv3R4t7JsjGuPP5h5APA7vcSMNK1vJMjzPtGw=Uw9-w@mail.gmail.com>
-Message-ID: <CADRPPNTdv3R4t7JsjGuPP5h5APA7vcSMNK1vJMjzPtGw=Uw9-w@mail.gmail.com>
-Subject: Re: [PATCH 0/4] qoriq: Add platform dependencies
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=0ahYPnFGgIMDjQSfV7hJnYdkOoepBn7h7C04Xu4iOHY=;
+        b=Au/x3CwQJ4Ts+eFnlvsRCXs9GMdGfV3qTiS3cqtkIDm707B5oHj1dqGq/xYahJb/8u
+         vuhka8zNawkP/WN3EAMXZE4rybuLCzba/QIHyvmtqYrghAQgVaUqjmXknaef4jbulyMk
+         Zv26hDRgaepbAgtXmbtuC3jB8KbuzqQxokqvJHvvBd/k9BVMaXQdspYB+ytd20vKlQ8/
+         WD7iLTMTZQ9Z26iQvj7K8UvFnvesWZ+iuFQOLWgVmu7JS4Rq6W527LXPOj0yhZR9KfGO
+         724dsQyL8dYlsluM/BwdHbrJWGIfwyD+QT6ICrM8XCO/6Vswk9ST4MCr1f4EwZkLUWSR
+         M8/Q==
+X-Gm-Message-State: AGi0PuZym78Jm1zB7jxjt5UrTsj1mx/epAbKk0cEsGIJ/+qE2wTipjlU
+        eiRm/EEQ7fxoS1ryyZjfzjtktQ==
+X-Google-Smtp-Source: APiQypLBhp9TJEejGQtByXiKySJX/jdsmq9jhlKhi7eQSSPKRyH4YiAtD9EqAjmvsrH/i3x5jnI3tQ==
+X-Received: by 2002:a17:902:a413:: with SMTP id p19mr766371plq.1.1588915420189;
+        Thu, 07 May 2020 22:23:40 -0700 (PDT)
+Received: from localhost ([122.171.118.46])
+        by smtp.gmail.com with ESMTPSA id w125sm467721pgw.22.2020.05.07.22.23.38
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 07 May 2020 22:23:39 -0700 (PDT)
+Date:   Fri, 8 May 2020 10:53:37 +0530
+From:   Viresh Kumar <viresh.kumar@linaro.org>
 To:     Geert Uytterhoeven <geert+renesas@glider.be>
-Cc:     Shawn Guo <shawnguo@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+Cc:     Shawn Guo <shawnguo@kernel.org>, Li Yang <leoyang.li@nxp.com>,
+        Jens Axboe <axboe@kernel.dk>,
         Michael Turquette <mturquette@baylibre.com>,
         Stephen Boyd <sboyd@kernel.org>,
         "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Viresh Kumar <viresh.kumar@linaro.org>,
         Zhang Rui <rui.zhang@intel.com>,
         Daniel Lezcano <daniel.lezcano@linaro.org>,
         Amit Kucheria <amit.kucheria@verdurent.com>,
         Arnd Bergmann <arnd@arndb.de>, linux-ide@vger.kernel.org,
-        linux-clk <linux-clk@vger.kernel.org>, linux-pm@vger.kernel.org,
-        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        lkml <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        linux-clk@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/4] cpufreq: qoriq: Add platform dependencies
+Message-ID: <20200508052337.spla662td4kge3wm@vireshk-i7>
+References: <20200507112955.23520-1-geert+renesas@glider.be>
+ <20200507112955.23520-3-geert+renesas@glider.be>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200507112955.23520-3-geert+renesas@glider.be>
+User-Agent: NeoMutt/20180716-391-311a52
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, May 7, 2020 at 6:31 AM Geert Uytterhoeven
-<geert+renesas@glider.be> wrote:
->
->         Hi all,
->
-> Several QorIQ blocks are only present on Freescale or NXP SoCs.
-> This series adds platform dependencies to the corresponding config
-> ymbols, to avoid asking the user about them when configuring a kernel
-> without support for these SoCs.
->
-> Most patches in this series are independent, but the third patch may
-> cause some Kconfig warnings when applied before the second patch, and
-> enabling the QorIQ CPU frequency scaling driver in a non-Layerscape
-> kernel.
->
-> Thanks for your comments!
-
-Thanks.  The series looks good to me.
-
-Are we trying to merge them through the various driver subsystems or I
-can also pull them in through the fsl-soc tree.  If we want to go
-through driver subsystems:
-
-Acked-by: Li Yang <leoyang.li@nxp.com>
-
->
-> Geert Uytterhoeven (4):
->   ahci: qoriq: Add platform dependencies
->   cpufreq: qoriq: Add platform dependencies
->   clk: qoriq: Add platform dependencies
->   thermal: qoriq: Add platform dependencies
->
->  drivers/ata/Kconfig     | 1 +
->  drivers/clk/Kconfig     | 3 ++-
+On 07-05-20, 13:29, Geert Uytterhoeven wrote:
+> The Freescale QorIQ clock controller is only present on Freescale E500MC
+> and Layerscape SoCs.  Add platform dependencies to the QORIQ_CPUFREQ
+> config symbol, to avoid asking the user about it when configuring a
+> kernel without E500MC or Layerscape support.
+> 
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> ---
 >  drivers/cpufreq/Kconfig | 3 ++-
->  drivers/thermal/Kconfig | 4 ++--
->  4 files changed, 7 insertions(+), 4 deletions(-)
->
-> --
-> 2.17.1
->
-> Gr{oetje,eeting}s,
->
->                                                 Geert
->
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
->
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
->                                                             -- Linus Torvalds
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/cpufreq/Kconfig b/drivers/cpufreq/Kconfig
+> index c3e6bd59e9208822..e917501325525f16 100644
+> --- a/drivers/cpufreq/Kconfig
+> +++ b/drivers/cpufreq/Kconfig
+> @@ -323,7 +323,8 @@ endif
+>  
+>  config QORIQ_CPUFREQ
+>  	tristate "CPU frequency scaling driver for Freescale QorIQ SoCs"
+> -	depends on OF && COMMON_CLK && (PPC_E500MC || ARM || ARM64)
+> +	depends on OF && COMMON_CLK
+> +	depends on PPC_E500MC || SOC_LS1021A || ARCH_LAYERSCAPE || COMPILE_TEST
+>  	select CLK_QORIQ
+>  	help
+>  	  This adds the CPUFreq driver support for Freescale QorIQ SoCs
+
+Applied. Thanks.
+
+-- 
+viresh
