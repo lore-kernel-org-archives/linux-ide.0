@@ -7,25 +7,25 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B63EC433E6
-	for <linux-ide@archiver.kernel.org>; Fri, 15 May 2020 15:11:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C788AC433E3
+	for <linux-ide@archiver.kernel.org>; Fri, 15 May 2020 15:11:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 58A6C207C3
-	for <linux-ide@archiver.kernel.org>; Fri, 15 May 2020 15:11:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A8501207C3
+	for <linux-ide@archiver.kernel.org>; Fri, 15 May 2020 15:11:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728151AbgEOPKY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 15 May 2020 11:10:24 -0400
-Received: from relmlor2.renesas.com ([210.160.252.172]:32716 "EHLO
-        relmlie6.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726695AbgEOPKX (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 15 May 2020 11:10:23 -0400
+        id S1726504AbgEOPLY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 15 May 2020 11:11:24 -0400
+Received: from relmlor1.renesas.com ([210.160.252.171]:14629 "EHLO
+        relmlie5.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728054AbgEOPKR (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 15 May 2020 11:10:17 -0400
 X-IronPort-AV: E=Sophos;i="5.73,395,1583161200"; 
-   d="scan'208";a="46974880"
+   d="scan'208";a="47188404"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie6.idc.renesas.com with ESMTP; 16 May 2020 00:10:20 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 16 May 2020 00:10:15 +0900
 Received: from localhost.localdomain (unknown [10.226.36.204])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 6F9D640065C1;
-        Sat, 16 May 2020 00:10:16 +0900 (JST)
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 051D6400E8F9;
+        Sat, 16 May 2020 00:10:11 +0900 (JST)
 From:   Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 To:     Geert Uytterhoeven <geert+renesas@glider.be>,
         Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
@@ -41,9 +41,9 @@ Cc:     linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
         linux-renesas-soc@vger.kernel.org, linux-watchdog@vger.kernel.org,
         Prabhakar <prabhakar.csengg@gmail.com>,
         Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Subject: [PATCH 11/17] dt-bindings: net: renesas,ether: Document R8A7742 SoC
-Date:   Fri, 15 May 2020 16:08:51 +0100
-Message-Id: <1589555337-5498-12-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Subject: [PATCH 10/17] dt-bindings: net: renesas,ravb: Add support for r8a7742 SoC
+Date:   Fri, 15 May 2020 16:08:50 +0100
+Message-Id: <1589555337-5498-11-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1589555337-5498-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
 References: <1589555337-5498-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
@@ -57,21 +57,21 @@ Document RZ/G1H (R8A7742) SoC bindings.
 Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
 ---
- Documentation/devicetree/bindings/net/renesas,ether.yaml | 1 +
+ Documentation/devicetree/bindings/net/renesas,ravb.txt | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/Documentation/devicetree/bindings/net/renesas,ether.yaml b/Documentation/devicetree/bindings/net/renesas,ether.yaml
-index c11eeb6..ce307e8 100644
---- a/Documentation/devicetree/bindings/net/renesas,ether.yaml
-+++ b/Documentation/devicetree/bindings/net/renesas,ether.yaml
-@@ -29,6 +29,7 @@ properties:
-               - renesas,rcar-gen1-ether  # a generic R-Car Gen1 device
-       - items:
-           - enum:
-+              - renesas,ether-r8a7742    # device is a part of R8A7742 SoC
-               - renesas,ether-r8a7743    # device is a part of R8A7743 SoC
-               - renesas,ether-r8a7745    # device is a part of R8A7745 SoC
-               - renesas,ether-r8a7790    # device is a part of R8A7790 SoC
+diff --git a/Documentation/devicetree/bindings/net/renesas,ravb.txt b/Documentation/devicetree/bindings/net/renesas,ravb.txt
+index 87dad2d..032b76f 100644
+--- a/Documentation/devicetree/bindings/net/renesas,ravb.txt
++++ b/Documentation/devicetree/bindings/net/renesas,ravb.txt
+@@ -5,6 +5,7 @@ interface contains.
+ 
+ Required properties:
+ - compatible: Must contain one or more of the following:
++      - "renesas,etheravb-r8a7742" for the R8A7742 SoC.
+       - "renesas,etheravb-r8a7743" for the R8A7743 SoC.
+       - "renesas,etheravb-r8a7744" for the R8A7744 SoC.
+       - "renesas,etheravb-r8a7745" for the R8A7745 SoC.
 -- 
 2.7.4
 
