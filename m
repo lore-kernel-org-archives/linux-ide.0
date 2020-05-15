@@ -6,25 +6,25 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D13DEC433E2
-	for <linux-ide@archiver.kernel.org>; Fri, 15 May 2020 15:10:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25DA3C433E1
+	for <linux-ide@archiver.kernel.org>; Fri, 15 May 2020 15:10:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA1BF207CB
-	for <linux-ide@archiver.kernel.org>; Fri, 15 May 2020 15:10:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 008E42076A
+	for <linux-ide@archiver.kernel.org>; Fri, 15 May 2020 15:10:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728110AbgEOPKR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 15 May 2020 11:10:17 -0400
-Received: from relmlor1.renesas.com ([210.160.252.171]:14629 "EHLO
+        id S1728294AbgEOPKp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 15 May 2020 11:10:45 -0400
+Received: from relmlor1.renesas.com ([210.160.252.171]:7888 "EHLO
         relmlie5.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728083AbgEOPKN (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 15 May 2020 11:10:13 -0400
+        by vger.kernel.org with ESMTP id S1728273AbgEOPKj (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 15 May 2020 11:10:39 -0400
 X-IronPort-AV: E=Sophos;i="5.73,395,1583161200"; 
-   d="scan'208";a="47188396"
+   d="scan'208";a="47188452"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie5.idc.renesas.com with ESMTP; 16 May 2020 00:10:11 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 16 May 2020 00:10:38 +0900
 Received: from localhost.localdomain (unknown [10.226.36.204])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 8B94F400E8F3;
-        Sat, 16 May 2020 00:10:07 +0900 (JST)
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 399CE400D4CD;
+        Sat, 16 May 2020 00:10:34 +0900 (JST)
 From:   Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 To:     Geert Uytterhoeven <geert+renesas@glider.be>,
         Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
@@ -40,9 +40,9 @@ Cc:     linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
         linux-renesas-soc@vger.kernel.org, linux-watchdog@vger.kernel.org,
         Prabhakar <prabhakar.csengg@gmail.com>,
         Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Subject: [PATCH 09/17] ARM: dts: r8a7742: Add sata nodes
-Date:   Fri, 15 May 2020 16:08:49 +0100
-Message-Id: <1589555337-5498-10-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Subject: [PATCH 15/17] ARM: dts: r8a7742: Add APMU nodes
+Date:   Fri, 15 May 2020 16:08:55 +0100
+Message-Id: <1589555337-5498-16-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1589555337-5498-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
 References: <1589555337-5498-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
@@ -51,47 +51,46 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add the sata devices nodes to the R8A7742 device tree.
+Add DT nodes for the Advanced Power Management Units (APMU), and use the
+enable-method to point out that the APMU should be used for SMP support.
 
 Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
 ---
- arch/arm/boot/dts/r8a7742.dtsi | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+ arch/arm/boot/dts/r8a7742.dtsi | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
 diff --git a/arch/arm/boot/dts/r8a7742.dtsi b/arch/arm/boot/dts/r8a7742.dtsi
-index ca1a016..553b92f 100644
+index 1fe65f7..da75767 100644
 --- a/arch/arm/boot/dts/r8a7742.dtsi
 +++ b/arch/arm/boot/dts/r8a7742.dtsi
-@@ -809,6 +809,28 @@
- 			max-frequency = <97500000>;
+@@ -18,6 +18,7 @@
+ 	cpus {
+ 		#address-cells = <1>;
+ 		#size-cells = <0>;
++		enable-method = "renesas,apmu";
+ 
+ 		cpu0: cpu@0 {
+ 			device_type = "cpu";
+@@ -305,6 +306,18 @@
+ 			#reset-cells = <1>;
  		};
  
-+		sata0: sata@ee300000 {
-+			compatible = "renesas,sata-r8a7742",
-+				     "renesas,rcar-gen2-sata";
-+			reg = <0 0xee300000 0 0x200000>;
-+			interrupts = <GIC_SPI 105 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&cpg CPG_MOD 815>;
-+			power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
-+			resets = <&cpg 815>;
-+			status = "disabled";
++		apmu@e6151000 {
++			compatible = "renesas,r8a7742-apmu", "renesas,apmu";
++			reg = <0 0xe6151000 0 0x188>;
++			cpus = <&cpu4 &cpu5 &cpu6 &cpu7>;
 +		};
 +
-+		sata1: sata@ee500000 {
-+			compatible = "renesas,sata-r8a7742",
-+				     "renesas,rcar-gen2-sata";
-+			reg = <0 0xee500000 0 0x200000>;
-+			interrupts = <GIC_SPI 106 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&cpg CPG_MOD 814>;
-+			power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
-+			resets = <&cpg 814>;
-+			status = "disabled";
++		apmu@e6152000 {
++			compatible = "renesas,r8a7742-apmu", "renesas,apmu";
++			reg = <0 0xe6152000 0 0x188>;
++			cpus = <&cpu0 &cpu1 &cpu2 &cpu3>;
 +		};
 +
- 		gic: interrupt-controller@f1001000 {
- 			compatible = "arm,gic-400";
- 			#interrupt-cells = <3>;
+ 		rst: reset-controller@e6160000 {
+ 			compatible = "renesas,r8a7742-rst";
+ 			reg = <0 0xe6160000 0 0x0100>;
 -- 
 2.7.4
 
