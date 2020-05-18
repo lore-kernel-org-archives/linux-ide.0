@@ -2,130 +2,103 @@ Return-Path: <SRS0=+9MW=7A=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFEE0C433E0
-	for <linux-ide@archiver.kernel.org>; Mon, 18 May 2020 13:23:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31568C433E1
+	for <linux-ide@archiver.kernel.org>; Mon, 18 May 2020 15:22:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CFAB820709
-	for <linux-ide@archiver.kernel.org>; Mon, 18 May 2020 13:23:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cfcy4DgN"
+	by mail.kernel.org (Postfix) with ESMTP id 0E66620758
+	for <linux-ide@archiver.kernel.org>; Mon, 18 May 2020 15:22:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727040AbgERNXn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 18 May 2020 09:23:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47312 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727003AbgERNXm (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 18 May 2020 09:23:42 -0400
-Received: from mail-oo1-xc41.google.com (mail-oo1-xc41.google.com [IPv6:2607:f8b0:4864:20::c41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94E42C061A0C;
-        Mon, 18 May 2020 06:23:42 -0700 (PDT)
-Received: by mail-oo1-xc41.google.com with SMTP id z6so2022339ooz.3;
-        Mon, 18 May 2020 06:23:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=DBlvsBNo07SGqI/EUYBm242mZ59YuGTGeckJLd8jOpQ=;
-        b=cfcy4DgNDBCTvF7mVRHlNGMhkmacmQXoOEN7xHQW5RByJmQEOZPVAPyo9YID2+ksAi
-         /afPVXSML+4G3Bw1Av627prEUHM1DSfL+K+x7/YDrloQUeRdA0RHZ/Ci8IiVSn06JvxM
-         ERD+F7OU2G0aYA1jm533gAqjJDTSnLWqrFY36parhqgXEhiSPdgqNwQO5fR9KwIhBQHQ
-         YOpKIOz6q+0B0PXG8v4Biq/vO8dKWXEzyeRa0Y9yjaxmh3OejiceK8lNmw23eVKaKsvC
-         ADaynfCq4eIlVTdkVXFTZbxc33D8fvQN23K/LX+Sx2IBxLRkGYZGb+euiCHZkVjhZq4k
-         d+hQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=DBlvsBNo07SGqI/EUYBm242mZ59YuGTGeckJLd8jOpQ=;
-        b=C5iMQe4UU3Tl0hFeiOWzE/StQvqw3Kmh7p8HM5Kkzy1UvxF5PqWz/k7wu4t0rTyzPY
-         CMxoOIf04UWyi68XYs7384GaZ0SDhpamcvEm3DUSeXvXTCSvz8TNuG2WP56smSCovt56
-         LlqUTnVaR1pzC7u533b9RMNGOtMFC53EdchJ8tTGz+X8Pbu2B63z/wB6Cv4WQz4N0awh
-         e3C0lzPdxyXf/MMSZrKtX8mlhLhCgq9UHG3OOHLqnr/cF6btir2AVvf5Fy+kZ9vA3HDe
-         aSP9SRgTWbM0lo0Ff2J+4Hg9k2V29nC2ixYhyQC8MEPefYc472Q2J30Pjz+zm9EdrFRJ
-         ynmw==
-X-Gm-Message-State: AOAM5314CWzbmL/eFVDRRvDaCOQ05xk0e3fqsi6ObjmhfTL0TIsidPmZ
-        51DtjthyxZJynOHhm/5qJ02cGYP78rQsUvYhoDE=
-X-Google-Smtp-Source: ABdhPJxVcUiw42ooaQWea/4dYUB4KCyh0tbeqfXUZvqVqSB4YyCTuhyTbJeCJawG71KxJDG6Rdbo2qnrc9R3IY+DJW4=
-X-Received: by 2002:a4a:b346:: with SMTP id n6mr12858795ooo.18.1589808222002;
- Mon, 18 May 2020 06:23:42 -0700 (PDT)
+        id S1727942AbgERPWW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 18 May 2020 11:22:22 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2220 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727903AbgERPWW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 18 May 2020 11:22:22 -0400
+Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.108])
+        by Forcepoint Email with ESMTP id 5C99EF61AB8168870AB6;
+        Mon, 18 May 2020 16:22:16 +0100 (IST)
+Received: from [127.0.0.1] (10.210.170.146) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Mon, 18 May
+ 2020 16:22:15 +0100
+Subject: Re: [PATCH] libata: Use per port sync for detach
+From:   John Garry <john.garry@huawei.com>
+To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
+CC:     Jens Axboe <axboe@kernel.dk>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <20200515110916.11556-1-kai.heng.feng@canonical.com>
+ <555101fd-71bc-fa0b-98c2-69249bb3eda6@huawei.com>
+ <15CFC20D-B8CB-43D7-8973-60E82DE6B894@canonical.com>
+ <91334913-eac8-c8e0-ced6-f1bb8d8b2507@huawei.com>
+Message-ID: <1470d3de-7785-9f05-2b12-9272ac0005b8@huawei.com>
+Date:   Mon, 18 May 2020 16:21:18 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-References: <1589555337-5498-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <1589555337-5498-18-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <CAMuHMdVV+2HsgmBytCOFg4pri4XinT_SPWT_Ac6n7FMZN3dR3w@mail.gmail.com>
- <CA+V-a8tmG1LKYqbc7feGZQO2Tj5RCpNUHi9e19vPr+bED0KOyQ@mail.gmail.com> <9ab946d2-1076-ed92-0a48-9a95d798d291@cogentembedded.com>
-In-Reply-To: <9ab946d2-1076-ed92-0a48-9a95d798d291@cogentembedded.com>
-From:   "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Date:   Mon, 18 May 2020 14:23:15 +0100
-Message-ID: <CA+V-a8uuP9d6dNeRpn3O0_aOc15CqWoh0bbAfYze1_hn0dCh8g@mail.gmail.com>
-Subject: Re: [PATCH 17/17] ARM: dts: r8a7742: Add RWDT node
-To:     Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
-        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
-        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Wolfram Sang <wsa+renesas@sang-engineering.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Guenter Roeck <linux@roeck-us.net>, linux-ide@vger.kernel.org,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux I2C <linux-i2c@vger.kernel.org>,
-        Linux MMC List <linux-mmc@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        Linux Watchdog Mailing List <linux-watchdog@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <91334913-eac8-c8e0-ced6-f1bb8d8b2507@huawei.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.210.170.146]
+X-ClientProxiedBy: lhreml719-chm.china.huawei.com (10.201.108.70) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Sergei,
+On 18/05/2020 10:06, John Garry wrote:
+> On 15/05/2020 18:48, Kai-Heng Feng wrote:
+>>> 841]  ret_from_fork+0x10/0x1c
+>>> [   28.393400] ---[ end trace 9972785c7052048f ]---
+>>> [   28.435826] ahci 0000:b4:03.0: SSS flag set, parallel bus scan 
+>>> disabled
+>> Can you please test the following patch:
+>>
+>> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+>> index 474c6c34fe02..51ee0cc4d414 100644
+>> --- a/drivers/ata/libata-eh.c
+>> +++ b/drivers/ata/libata-eh.c
+>> @@ -3583,8 +3583,10 @@ int ata_eh_recover(struct ata_port *ap, 
+>> ata_prereset_fn_t prereset,
+>>          rc = 0;
+>>          /* if UNLOADING, finish immediately */
+>> -       if (ap->pflags & ATA_PFLAG_UNLOADING)
+>> +       if (ap->pflags & ATA_PFLAG_UNLOADING) {
+>> +               ap->pflags |= ATA_PFLAG_UNLOADED;
+>>                  goto out;
+>> +       }
+>>
+>> It's only compile-tested, many drivers panic with 
+>> CONFIG_DEBUG_TEST_DRIVER_REMOVE enabled, so the system I have can't 
+>> even boot properly:(
+> 
 
-On Mon, May 18, 2020 at 2:17 PM Sergei Shtylyov
-<sergei.shtylyov@cogentembedded.com> wrote:
->
-> Hello!
->
-> On 18.05.2020 15:27, Lad, Prabhakar wrote:
->
-> >>> Add a device node for the Watchdog Timer (RWDT) controller on the Renesas
-> >>> RZ/G1H (r8a7742) SoC.
-> >>>
-> >>> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> >>> Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
-> >>
-> >> Thanks for your patch!
-> >>
-> >>> --- a/arch/arm/boot/dts/r8a7742.dtsi
-> >>> +++ b/arch/arm/boot/dts/r8a7742.dtsi
-> >>> @@ -201,6 +201,16 @@
-> >>>                  #size-cells = <2>;
-> >>>                  ranges;
-> >>>
-> >>> +               rwdt: watchdog@e6020000 {
-> >>> +                       compatible = "renesas,r8a7742-wdt",
-> >>> +                                    "renesas,rcar-gen2-wdt";
-> >>> +                       reg = <0 0xe6020000 0 0x0c>;
-> >>> +                       clocks = <&cpg CPG_MOD 402>;
-> >>> +                       power-domains = <&sysc R8A7742_PD_ALWAYS_ON>;
-> >>> +                       resets = <&cpg 402>;
-> >>> +                       status = "disabled";
-> >>
-> >> Missing "interrupts" property.
-> >>
-> > "interrupts" property isn't used by rwdt driver  and can be dropped
-> > from bindings file.
->
->     DT describes the hardware, not its driver's abilities.
->
-Agreed will add, I had followed it on similar lines of r8a7743/44.
+According to the comment for async_synchronize_cookie(), we sync upto 
+(but excluding) the cookie:
 
-Cheers,
---Prabhakar
+/**
+  * async_synchronize_cookie - synchronize asynchronous function calls 
+with cookie checkpointing
+  *
+  * This function waits until all asynchronous function calls prior to 
+@cookie
+  * have been done.
+
+So maybe it should be:
+
++	for (i = 0; i < host->n_ports; i++)
++		async_synchronize_cookie(host->ports[i]->cookie + 1);
+
+That is how other callsites use this API, and that change resolves the 
+WARN for me.
+
+Thanks,
+John
