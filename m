@@ -2,126 +2,118 @@ Return-Path: <SRS0=Ew3G=7B=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BC6AC433DF
-	for <linux-ide@archiver.kernel.org>; Tue, 19 May 2020 06:09:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12133C433DF
+	for <linux-ide@archiver.kernel.org>; Tue, 19 May 2020 15:30:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E2F502070A
-	for <linux-ide@archiver.kernel.org>; Tue, 19 May 2020 06:09:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E46C72075F
+	for <linux-ide@archiver.kernel.org>; Tue, 19 May 2020 15:30:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="qL4QXfwK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726859AbgESGJl convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 19 May 2020 02:09:41 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:35112 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726605AbgESGJk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2020 02:09:40 -0400
-Received: from mail-pg1-f198.google.com ([209.85.215.198])
-        by youngberry.canonical.com with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <kai.heng.feng@canonical.com>)
-        id 1javRa-00085d-0x
-        for linux-ide@vger.kernel.org; Tue, 19 May 2020 06:09:38 +0000
-Received: by mail-pg1-f198.google.com with SMTP id v1so9956372pgl.4
-        for <linux-ide@vger.kernel.org>; Mon, 18 May 2020 23:09:37 -0700 (PDT)
+        id S1729160AbgESPab (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 19 May 2020 11:30:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37970 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726203AbgESPab (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2020 11:30:31 -0400
+Received: from mail-ua1-x944.google.com (mail-ua1-x944.google.com [IPv6:2607:f8b0:4864:20::944])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3543C08C5C0
+        for <linux-ide@vger.kernel.org>; Tue, 19 May 2020 08:30:30 -0700 (PDT)
+Received: by mail-ua1-x944.google.com with SMTP id i89so33457uad.5
+        for <linux-ide@vger.kernel.org>; Tue, 19 May 2020 08:30:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=gRtjuUSYT9o98HLxZ4XPAs12lnRhBaPqO3z+DvVbkXQ=;
+        b=qL4QXfwKBZ8jPjCgkPdHLsNzO3/idGDrn4woTx+Iaqn6RAptgipyKH04ujRHYZjG88
+         6h+bcxiTfIwF/L9qvccSvRM1/GxUjlw/HeyNlEcnxKgpivdoDc42/1LeeqUf5xXLBe0j
+         6HqkWM5XX+UIELvR7g8Lwiy37Sng0XHKrYq9WBGrPxdqaFXz+eY2WtwPjjuqh6abGUZj
+         cQuChf+5HtiOSA0tlViPvgzEbmQZFVs5v+qES50lIvTBeC3DvKISZpV9x0QAK0xcnTF0
+         wOd+ah2kE6iBsTcmFxS+uJOaF6E6DEmDVtdq120xhn/50fbY/t1Rmg8uZ5MPsvr0eACC
+         toQQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=DcZBTzbzjTjp7Ciwf677pVVb0h46IoEGoPMmMlLbb5M=;
-        b=tyRt9EpoYFOhRxm5JU9m8L5hDAcnUTAA7NHsukG3FkN9zP8uDPXmxaYmqaFGj2S7s3
-         6UoSWoNqr+niMsdceEgL0m0fT5DtdBiHmxpxrJ0XMXmepUxqa2/IiEH9ovVzBkOKns+R
-         g/EFiATg75HMGd7NYljduXLxIYht0XXw+SzyWyW30Cpe/ysW9vRQZNP6nBquhYyeEQjL
-         ZqxxVZtxyuZc0yTtmBtuEDOw81fl4Ur8LwubbL6nV0lhqLA9HAD0AMDI4QDp3kALha0H
-         N69q46fxZFYmkeEgOo+Nv0VHUoH5KqPTQFdU4RzSOk4h0h/41Kasot7C8lWBeyqnpVvT
-         u/cQ==
-X-Gm-Message-State: AOAM531UvFRkcBW+lzvDGvQwyFveLG2bHlz7nA+CgD3Qq9O7aqtR7gsY
-        y1RSP0oa1V5XG0cZKbm2h18nINphsldvcZT696YYcnRLMxr5uX60HLLfjkdLVb/Rp3ewX6+nRcB
-        GDRmRnTllHJXPxw7TJNyMU0besV2UMRCLiq69Pw==
-X-Received: by 2002:a17:90a:ee91:: with SMTP id i17mr3044258pjz.45.1589868576729;
-        Mon, 18 May 2020 23:09:36 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJynoSVhg5x2eLcaVDrdt7BZjkwwAqw4hmDKS0ppPXDDJayTgx1/jvbxkou6+8x2E+ERpCT/xw==
-X-Received: by 2002:a17:90a:ee91:: with SMTP id i17mr3044238pjz.45.1589868576382;
-        Mon, 18 May 2020 23:09:36 -0700 (PDT)
-Received: from [192.168.1.208] (220-133-187-190.HINET-IP.hinet.net. [220.133.187.190])
-        by smtp.gmail.com with ESMTPSA id z23sm3204439pga.86.2020.05.18.23.09.34
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 18 May 2020 23:09:35 -0700 (PDT)
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 13.4 \(3608.80.23.2.2\))
-Subject: Re: [PATCH] libata: Use per port sync for detach
-From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-In-Reply-To: <1470d3de-7785-9f05-2b12-9272ac0005b8@huawei.com>
-Date:   Tue, 19 May 2020 14:09:33 +0800
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Content-Transfer-Encoding: 8BIT
-Message-Id: <826B8B0D-29EE-4C4F-BBD3-B6442144CA65@canonical.com>
-References: <20200515110916.11556-1-kai.heng.feng@canonical.com>
- <555101fd-71bc-fa0b-98c2-69249bb3eda6@huawei.com>
- <15CFC20D-B8CB-43D7-8973-60E82DE6B894@canonical.com>
- <91334913-eac8-c8e0-ced6-f1bb8d8b2507@huawei.com>
- <1470d3de-7785-9f05-2b12-9272ac0005b8@huawei.com>
-To:     John Garry <john.garry@huawei.com>
-X-Mailer: Apple Mail (2.3608.80.23.2.2)
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=gRtjuUSYT9o98HLxZ4XPAs12lnRhBaPqO3z+DvVbkXQ=;
+        b=oPNsuYgwo4QQdM8cluEnK66TIaJwhiL2FB6YqFQHI2kn9o3e1jXUW1KUenbb1pRV7E
+         +Jd/9g45aVEjbgioWNt+oYHyCv0DgdDRtRegx8ERcTi9TwEoQn6rJHqjC4An47CaS4Tf
+         jnfC3UPxFJv5SJZ+fDPWgga8wJ4UbhJdag75zVM7zCuPoFU1fvVVk9kJ9Pygx0NuejmL
+         hUQFC6a8sye9bBHsIL+l311oh9UE1qdS1D4dfJxC6Dd0PGYVril/iUGGwXuSONvDgfvU
+         7V4hxf3xD9C9k1IxQ4V975VXBh2oZeI54wd7Cb/RQ0qVohMfKcNGn9Y6Cv7PqMmxAD1g
+         k7xQ==
+X-Gm-Message-State: AOAM53252U5AIjHTzHhA1jSBCzFDEmbu9qmUd2yqz2iXN2RSkkrg0chm
+        Uqnk5LkoB0wX/7gsH2+ZJ1Qea+9DFst+QtRqlR08JQ==
+X-Google-Smtp-Source: ABdhPJzPgBQocJHPBpM1TmD4hAcv+eqS/ZghZr75cOL/pxSov9+iNsVjciXOY1ZcKGnnELDE1CIZW7qYNDDgGWRq0RQ=
+X-Received: by 2002:ab0:186d:: with SMTP id j45mr575631uag.104.1589902229726;
+ Tue, 19 May 2020 08:30:29 -0700 (PDT)
+MIME-Version: 1.0
+References: <1589555337-5498-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <1589555337-5498-5-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+In-Reply-To: <1589555337-5498-5-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+From:   Ulf Hansson <ulf.hansson@linaro.org>
+Date:   Tue, 19 May 2020 17:29:52 +0200
+Message-ID: <CAPDyKFobJkEUvqJpKOtpLLyLBbxBukASbKPapt5-gxh_iP=cdA@mail.gmail.com>
+Subject: Re: [PATCH 04/17] dt-bindings: mmc: renesas,sdhi: Document r8a7742 support
+To:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>,
+        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Wim Van Sebroeck <wim@linux-watchdog.org>,
+        Guenter Roeck <linux@roeck-us.net>, linux-ide@vger.kernel.org,
+        DTML <devicetree@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-i2c@vger.kernel.org,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        linux-watchdog@vger.kernel.org,
+        Prabhakar <prabhakar.csengg@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi John,
+On Fri, 15 May 2020 at 17:09, Lad Prabhakar
+<prabhakar.mahadev-lad.rj@bp.renesas.com> wrote:
+>
+> Document SDHI controller for RZ/G1H (R8A7742) SoC, which is compatible
+> with R-Car Gen2 SoC family.
+>
+> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
 
-> On May 18, 2020, at 23:21, John Garry <john.garry@huawei.com> wrote:
-> 
-> On 18/05/2020 10:06, John Garry wrote:
->> On 15/05/2020 18:48, Kai-Heng Feng wrote:
->>>> 841]  ret_from_fork+0x10/0x1c
->>>> [   28.393400] ---[ end trace 9972785c7052048f ]---
->>>> [   28.435826] ahci 0000:b4:03.0: SSS flag set, parallel bus scan disabled
->>> Can you please test the following patch:
->>> 
->>> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
->>> index 474c6c34fe02..51ee0cc4d414 100644
->>> --- a/drivers/ata/libata-eh.c
->>> +++ b/drivers/ata/libata-eh.c
->>> @@ -3583,8 +3583,10 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
->>>          rc = 0;
->>>          /* if UNLOADING, finish immediately */
->>> -       if (ap->pflags & ATA_PFLAG_UNLOADING)
->>> +       if (ap->pflags & ATA_PFLAG_UNLOADING) {
->>> +               ap->pflags |= ATA_PFLAG_UNLOADED;
->>>                  goto out;
->>> +       }
->>> 
->>> It's only compile-tested, many drivers panic with CONFIG_DEBUG_TEST_DRIVER_REMOVE enabled, so the system I have can't even boot properly:(
-> 
-> According to the comment for async_synchronize_cookie(), we sync upto (but excluding) the cookie:
-> 
-> /**
-> * async_synchronize_cookie - synchronize asynchronous function calls with cookie checkpointing
-> *
-> * This function waits until all asynchronous function calls prior to @cookie
-> * have been done.
-> 
-> So maybe it should be:
-> 
-> +	for (i = 0; i < host->n_ports; i++)
-> +		async_synchronize_cookie(host->ports[i]->cookie + 1);
-> 
-> That is how other callsites use this API, and that change resolves the WARN for me.
+Applied for next, thanks!
 
-Thanks for catching this up!
-Let me ask the user to test it, and I'll send v2 base on this.
+Kind regards
+Uffe
 
-Kai-Heng
 
-> 
-> Thanks,
-> John
-
+> ---
+>  Documentation/devicetree/bindings/mmc/renesas,sdhi.txt | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/Documentation/devicetree/bindings/mmc/renesas,sdhi.txt b/Documentation/devicetree/bindings/mmc/renesas,sdhi.txt
+> index e6cc478..0ca9a62 100644
+> --- a/Documentation/devicetree/bindings/mmc/renesas,sdhi.txt
+> +++ b/Documentation/devicetree/bindings/mmc/renesas,sdhi.txt
+> @@ -7,6 +7,7 @@ Required properties:
+>                 "renesas,sdhi-r7s9210" - SDHI IP on R7S9210 SoC
+>                 "renesas,sdhi-r8a73a4" - SDHI IP on R8A73A4 SoC
+>                 "renesas,sdhi-r8a7740" - SDHI IP on R8A7740 SoC
+> +               "renesas,sdhi-r8a7742" - SDHI IP on R8A7742 SoC
+>                 "renesas,sdhi-r8a7743" - SDHI IP on R8A7743 SoC
+>                 "renesas,sdhi-r8a7744" - SDHI IP on R8A7744 SoC
+>                 "renesas,sdhi-r8a7745" - SDHI IP on R8A7745 SoC
+> --
+> 2.7.4
+>
