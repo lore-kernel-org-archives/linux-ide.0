@@ -1,110 +1,123 @@
-Return-Path: <SRS0=Ew3G=7B=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=ewW1=7C=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EF0FC433E1
-	for <linux-ide@archiver.kernel.org>; Tue, 19 May 2020 20:42:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D753BC433E0
+	for <linux-ide@archiver.kernel.org>; Wed, 20 May 2020 07:11:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 223FC207E8
-	for <linux-ide@archiver.kernel.org>; Tue, 19 May 2020 20:42:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="V93UrU4M"
+	by mail.kernel.org (Postfix) with ESMTP id A9B9E207D3
+	for <linux-ide@archiver.kernel.org>; Wed, 20 May 2020 07:11:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726290AbgESUl7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 19 May 2020 16:41:59 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:39272 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726318AbgESUl7 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2020 16:41:59 -0400
-Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 5FB7A30D7F7;
-        Tue, 19 May 2020 13:33:24 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 5FB7A30D7F7
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1589920404;
-        bh=IsUUhtwsD/oh2f/SMvEH2GyEwKF93YifRW5ZmP5F42Q=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=V93UrU4MAVkDGfqd3yGeIFRvw45/OMaRMYSj7RrXDWz9fhSo0txRe0c37BBwsBpRT
-         bTNyKe5FMvFYEaJuCUXNQxN0mJXe4Yi6Ok60s9sOEuG3qEvHn/J+eL0ooyG9Lp55BP
-         LKpP06QS+z6ojuxmjHpsdWH1LTOEwK1rSEx8HSsE=
-Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id CFFB414008B;
-        Tue, 19 May 2020 13:34:45 -0700 (PDT)
-From:   Jim Quinlan <james.quinlan@broadcom.com>
-To:     james.quinlan@broadcom.com,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
-        Parallel ATA drivers)), linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 02/15] ahci_brcm: fix use of BCM7216 reset controller
-Date:   Tue, 19 May 2020 16:34:00 -0400
-Message-Id: <20200519203419.12369-3-james.quinlan@broadcom.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200519203419.12369-1-james.quinlan@broadcom.com>
-References: <20200519203419.12369-1-james.quinlan@broadcom.com>
+        id S1726486AbgETHLO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 20 May 2020 03:11:14 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:41496 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726369AbgETHLO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 20 May 2020 03:11:14 -0400
+Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.58])
+        by Forcepoint Email with ESMTP id 3ADEDEFA8291252DF4B1;
+        Wed, 20 May 2020 15:11:12 +0800 (CST)
+Received: from localhost.localdomain (10.69.192.58) by
+ DGGEMS413-HUB.china.huawei.com (10.3.19.213) with Microsoft SMTP Server id
+ 14.3.487.0; Wed, 20 May 2020 15:11:05 +0800
+From:   chenxiang <chenxiang66@hisilicon.com>
+To:     <tj@kernel.org>, <martin.petersen@oracle.com>, <brking@us.ibm.com>,
+        <john.garry@huawei.com>
+CC:     <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linuxarm@huawei.com>, c00284940 <c00284940@huawei.com>,
+        Xiang Chen <chenxiang66@hisilicon.com>
+Subject: [PATCH] ata: libata: Remove unused parameter in function ata_sas_port_alloc()
+Date:   Wed, 20 May 2020 15:07:22 +0800
+Message-ID: <1589958442-70575-1-git-send-email-chenxiang66@hisilicon.com>
+X-Mailer: git-send-email 2.8.1
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-CFilter-Loop: Reflected
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Jim Quinlan <jquinlan@broadcom.com>
+From: c00284940 <c00284940@huawei.com>
 
-A reset controller "rescal" is shared between the AHCI driver
-and the PCIe driver for the BrcmSTB 7216 chip.  The code is
-modified to allow this sharing and to deassert() properly.
+Input Parameter shost in function ata_sas_port_alloc() is not used, so
+remove it.
 
-Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/ata/ahci_brcm.c | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+ drivers/ata/libata-sata.c     | 4 +---
+ drivers/scsi/ipr.c            | 2 +-
+ drivers/scsi/libsas/sas_ata.c | 2 +-
+ include/linux/libata.h        | 2 +-
+ 4 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
-index 6853dbb4131d..a3c32fc29e9c 100644
---- a/drivers/ata/ahci_brcm.c
-+++ b/drivers/ata/ahci_brcm.c
-@@ -428,7 +428,6 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+index c16423e..a3c83fe 100644
+--- a/drivers/ata/libata-sata.c
++++ b/drivers/ata/libata-sata.c
+@@ -1070,7 +1070,6 @@ EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
+  *	port_alloc - Allocate port for a SAS attached SATA device
+  *	@host: ATA host container for all SAS ports
+  *	@port_info: Information from low-level host driver
+- *	@shost: SCSI host that the scsi device is attached to
+  *
+  *	LOCKING:
+  *	PCI/etc. bus probe sem.
+@@ -1080,8 +1079,7 @@ EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
+  */
+ 
+ struct ata_port *ata_sas_port_alloc(struct ata_host *host,
+-				    struct ata_port_info *port_info,
+-				    struct Scsi_Host *shost)
++				    struct ata_port_info *port_info)
  {
- 	const struct of_device_id *of_id;
- 	struct device *dev = &pdev->dev;
--	const char *reset_name = NULL;
- 	struct brcm_ahci_priv *priv;
- 	struct ahci_host_priv *hpriv;
- 	struct resource *res;
-@@ -452,11 +451,11 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 	struct ata_port *ap;
  
- 	/* Reset is optional depending on platform and named differently */
- 	if (priv->version == BRCM_SATA_BCM7216)
--		reset_name = "rescal";
-+		priv->rcdev = devm_reset_control_get_shared(&pdev->dev,
-+							    "rescal");
- 	else
--		reset_name = "ahci";
--
--	priv->rcdev = devm_reset_control_get_optional(&pdev->dev, reset_name);
-+		priv->rcdev = devm_reset_control_get_optional(&pdev->dev,
-+							      "ahci");
- 	if (IS_ERR(priv->rcdev))
- 		return PTR_ERR(priv->rcdev);
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 7d77997..331c41c 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -4816,7 +4816,7 @@ static int ipr_target_alloc(struct scsi_target *starget)
+ 		if (!sata_port)
+ 			return -ENOMEM;
  
-@@ -479,10 +478,7 @@ static int brcm_ahci_probe(struct platform_device *pdev)
- 		break;
- 	}
+-		ap = ata_sas_port_alloc(&ioa_cfg->ata_host, &sata_port_info, shost);
++		ap = ata_sas_port_alloc(&ioa_cfg->ata_host, &sata_port_info);
+ 		if (ap) {
+ 			spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
+ 			sata_port->ioa_cfg = ioa_cfg;
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 5d716d3..0cdfae9 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -549,7 +549,7 @@ int sas_ata_init(struct domain_device *found_dev)
  
--	if (priv->version == BRCM_SATA_BCM7216)
--		ret = reset_control_reset(priv->rcdev);
--	else
--		ret = reset_control_deassert(priv->rcdev);
-+	ret = reset_control_deassert(priv->rcdev);
- 	if (ret)
- 		return ret;
+ 	ata_host_init(ata_host, ha->dev, &sas_sata_ops);
  
+-	ap = ata_sas_port_alloc(ata_host, &sata_port_info, shost);
++	ap = ata_sas_port_alloc(ata_host, &sata_port_info);
+ 	if (!ap) {
+ 		pr_err("ata_sas_port_alloc failed.\n");
+ 		rc = -ENODEV;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 8bf5e59..5a6fb80 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1228,7 +1228,7 @@ extern int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ extern int ata_slave_link_init(struct ata_port *ap);
+ extern void ata_sas_port_destroy(struct ata_port *);
+ extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
+-					   struct ata_port_info *, struct Scsi_Host *);
++					   struct ata_port_info *);
+ extern void ata_sas_async_probe(struct ata_port *ap);
+ extern int ata_sas_sync_probe(struct ata_port *ap);
+ extern int ata_sas_port_init(struct ata_port *);
 -- 
-2.17.1
+2.8.1
 
