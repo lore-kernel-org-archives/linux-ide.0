@@ -1,145 +1,122 @@
-Return-Path: <SRS0=ewW1=7C=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=/FW4=7D=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B00D8C433E0
-	for <linux-ide@archiver.kernel.org>; Wed, 20 May 2020 16:15:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EA12C433E1
+	for <linux-ide@archiver.kernel.org>; Thu, 21 May 2020 01:21:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F9CF2075F
-	for <linux-ide@archiver.kernel.org>; Wed, 20 May 2020 16:15:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1589991346;
-	bh=h9MTIGPYQzOllbjEkIgnEniE41lTl+OD7Fs3cDvWlC4=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=0beeCoB6Fn1eszesRTt92+S9xJZ94eScuhJ91kBm5982p3U8Qu8aMY0Ox9KuEd/z6
-	 rqL0KWd1g57u58rdeXy7TwZHm+wkREXJQzprJspUPLi2vzLLhsdiXFMxDsU0rvF5NH
-	 WWHBgAHBY+OJa5n+ivc4m6m0c6bNAPgr9VwsRIls=
+	by mail.kernel.org (Postfix) with ESMTP id 84B75207C4
+	for <linux-ide@archiver.kernel.org>; Thu, 21 May 2020 01:21:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726729AbgETQPq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 20 May 2020 12:15:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54374 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726436AbgETQPp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 20 May 2020 12:15:45 -0400
-Received: from localhost (mobile-166-175-190-200.mycingular.net [166.175.190.200])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 4A8C120671;
-        Wed, 20 May 2020 16:15:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1589991344;
-        bh=h9MTIGPYQzOllbjEkIgnEniE41lTl+OD7Fs3cDvWlC4=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=dBQAsnvSt1BuQnO2Uz0LYcXqH8wrzmcE0sMq3dliKDQWy2VD07oQBTPN8C3Xz4q5j
-         EEp4TAFPoo5NVsbBnUlz3FFLpZ4E3P2l4+ULM4f39CP4KxODVhaYOqqg6ZguekD1Z4
-         YSmgsUdQndWtM7LDHv6BuDaL4cZ+TEEM751dZfMc=
-Date:   Wed, 20 May 2020 11:15:41 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Jim Quinlan <james.quinlan@broadcom.com>
-Cc:     Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        "open list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
-        <bcm-kernel-feedback-list@broadcom.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE" 
-        <devicetree@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        "open list:DMA MAPPING HELPERS" <iommu@lists.linux-foundation.org>,
-        Julien Grall <julien.grall@arm.com>,
-        "moderated list:ARM PORT" <linux-arm-kernel@lists.infradead.org>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" 
-        <linux-pci@vger.kernel.org>,
-        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
-        <linux-rpi-kernel@lists.infradead.org>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Rob Herring <robh@kernel.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Saravana Kannan <saravanak@google.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Suzuki K Poulose <suzuki.poulose@arm.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>
-Subject: Re: [PATCH 00/15] PCI: brcmstb: enable PCIe for STB chips
-Message-ID: <20200520161541.GA1089402@bjorn-Precision-5520>
+        id S1727902AbgEUBVb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 20 May 2020 21:21:31 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:4874 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727086AbgEUBVa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 20 May 2020 21:21:30 -0400
+Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id D021E414344D78C5A89F;
+        Thu, 21 May 2020 09:21:28 +0800 (CST)
+Received: from localhost.localdomain (10.69.192.58) by
+ DGGEMS414-HUB.china.huawei.com (10.3.19.214) with Microsoft SMTP Server id
+ 14.3.487.0; Thu, 21 May 2020 09:21:22 +0800
+From:   chenxiang <chenxiang66@hisilicon.com>
+To:     <tj@kernel.org>, <martin.petersen@oracle.com>, <brking@us.ibm.com>,
+        <john.garry@huawei.com>
+CC:     <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linuxarm@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>
+Subject: [PATCH v2] ata: libata: Remove unused parameter in function ata_sas_port_alloc()
+Date:   Thu, 21 May 2020 09:17:32 +0800
+Message-ID: <1590023852-47302-1-git-send-email-chenxiang66@hisilicon.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200519203419.12369-1-james.quinlan@broadcom.com>
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-CFilter-Loop: Reflected
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, May 19, 2020 at 04:33:58PM -0400, Jim Quinlan wrote:
-> This patchset expands the usefulness of the Broadcom Settop Box PCIe
-> controller by building upon the PCIe driver used currently by the
-> Raspbery Pi.  Other forms of this patchset were submitted by me years
-> ago and not accepted; the major sticking point was the code required
-> for the DMA remapping needed for the PCIe driver to work [1].
-> 
-> There have been many changes to the DMA and OF subsystems since that
-> time, making a cleaner and less intrusive patchset possible.  This
-> patchset implements a generalization of "dev->dma_pfn_offset", except
-> that instead of a single scalar offset it provides for multiple
-> offsets via a function which depends upon the "dma-ranges" property of
-> the PCIe host controller.  This is required for proper functionality
-> of the BrcmSTB PCIe controller and possibly some other devices.
-> 
-> [1] https://lore.kernel.org/linux-arm-kernel/1516058925-46522-5-git-send-email-jim2101024@gmail.com/
-> 
-> Jim Quinlan (15):
->   PCI: brcmstb: PCIE_BRCMSTB depends on ARCH_BRCMSTB
->   ahci_brcm: fix use of BCM7216 reset controller
->   dt-bindings: PCI: Add bindings for more Brcmstb chips
->   PCI: brcmstb: Add compatibily of other chips
->   PCI: brcmstb: Add suspend and resume pm_ops
->   PCI: brcmstb: Asserting PERST is different for 7278
->   PCI: brcmstb: Add control of rescal reset
->   of: Include a dev param in of_dma_get_range()
->   device core: Add ability to handle multiple dma offsets
->   dma-direct: Invoke dma offset func if needed
->   arm: dma-mapping: Invoke dma offset func if needed
->   PCI: brcmstb: Set internal memory viewport sizes
->   PCI: brcmstb: Accommodate MSI for older chips
->   PCI: brcmstb: Set bus max burst side by chip type
->   PCI: brcmstb: add compatilbe chips to match list
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-If you have occasion to post a v2 for other reasons,
+Input Parameter shost in function ata_sas_port_alloc() is not used, so
+remove it.
 
-s/PCIE_BRCMSTB depends on ARCH_BRCMSTB/Allow PCIE_BRCMSTB on ARCH_BRCMSTB also/
-s/ahci_brcm: fix use of BCM7216 reset controller/ata: ahci_brcm: Fix .../
-s/Add compatibily of other chips/Add bcm7278 register info/
-s/Asserting PERST is different for 7278/Add bcm7278 PERST support/
-s/Set bus max burst side/Set bus max burst size/
-s/add compatilbe chips.*/Add bcm7211, bcm7216, bcm7445, bcm7278 to match list/
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+---
+ drivers/ata/libata-sata.c     | 4 +---
+ drivers/scsi/ipr.c            | 2 +-
+ drivers/scsi/libsas/sas_ata.c | 2 +-
+ include/linux/libata.h        | 2 +-
+ 4 files changed, 4 insertions(+), 6 deletions(-)
 
-Rewrap commit logs to use full 75 character lines (to allow for the 4
-spaces added by git log).
+diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+index c16423e..a3c83fe 100644
+--- a/drivers/ata/libata-sata.c
++++ b/drivers/ata/libata-sata.c
+@@ -1070,7 +1070,6 @@ EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
+  *	port_alloc - Allocate port for a SAS attached SATA device
+  *	@host: ATA host container for all SAS ports
+  *	@port_info: Information from low-level host driver
+- *	@shost: SCSI host that the scsi device is attached to
+  *
+  *	LOCKING:
+  *	PCI/etc. bus probe sem.
+@@ -1080,8 +1079,7 @@ EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
+  */
+ 
+ struct ata_port *ata_sas_port_alloc(struct ata_host *host,
+-				    struct ata_port_info *port_info,
+-				    struct Scsi_Host *shost)
++				    struct ata_port_info *port_info)
+ {
+ 	struct ata_port *ap;
+ 
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 7d77997..331c41c 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -4816,7 +4816,7 @@ static int ipr_target_alloc(struct scsi_target *starget)
+ 		if (!sata_port)
+ 			return -ENOMEM;
+ 
+-		ap = ata_sas_port_alloc(&ioa_cfg->ata_host, &sata_port_info, shost);
++		ap = ata_sas_port_alloc(&ioa_cfg->ata_host, &sata_port_info);
+ 		if (ap) {
+ 			spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
+ 			sata_port->ioa_cfg = ioa_cfg;
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 5d716d3..0cdfae9 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -549,7 +549,7 @@ int sas_ata_init(struct domain_device *found_dev)
+ 
+ 	ata_host_init(ata_host, ha->dev, &sas_sata_ops);
+ 
+-	ap = ata_sas_port_alloc(ata_host, &sata_port_info, shost);
++	ap = ata_sas_port_alloc(ata_host, &sata_port_info);
+ 	if (!ap) {
+ 		pr_err("ata_sas_port_alloc failed.\n");
+ 		rc = -ENODEV;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 8bf5e59..5a6fb80 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1228,7 +1228,7 @@ extern int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ extern int ata_slave_link_init(struct ata_port *ap);
+ extern void ata_sas_port_destroy(struct ata_port *);
+ extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
+-					   struct ata_port_info *, struct Scsi_Host *);
++					   struct ata_port_info *);
+ extern void ata_sas_async_probe(struct ata_port *ap);
+ extern int ata_sas_sync_probe(struct ata_port *ap);
+ extern int ata_sas_port_init(struct ata_port *);
+-- 
+2.8.1
 
-In commit logs, s/This commit// (use imperative mood instead).
-
-In "Accommodate MSI for older chips" commit log, s/commont/common/.
-
->  .../bindings/pci/brcm,stb-pcie.yaml           |  40 +-
->  arch/arm/include/asm/dma-mapping.h            |  17 +-
->  drivers/ata/ahci_brcm.c                       |  14 +-
->  drivers/of/address.c                          |  54 ++-
->  drivers/of/device.c                           |   2 +-
->  drivers/of/of_private.h                       |   8 +-
->  drivers/pci/controller/Kconfig                |   4 +-
->  drivers/pci/controller/pcie-brcmstb.c         | 403 +++++++++++++++---
->  include/linux/device.h                        |   9 +-
->  include/linux/dma-direct.h                    |  16 +
->  include/linux/dma-mapping.h                   |  44 ++
->  kernel/dma/Kconfig                            |  12 +
->  12 files changed, 542 insertions(+), 81 deletions(-)
-> 
-> -- 
-> 2.17.1
-> 
