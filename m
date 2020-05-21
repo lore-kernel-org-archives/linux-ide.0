@@ -4,119 +4,120 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EA12C433E1
-	for <linux-ide@archiver.kernel.org>; Thu, 21 May 2020 01:21:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D16DC433DF
+	for <linux-ide@archiver.kernel.org>; Thu, 21 May 2020 04:30:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 84B75207C4
-	for <linux-ide@archiver.kernel.org>; Thu, 21 May 2020 01:21:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66B192078B
+	for <linux-ide@archiver.kernel.org>; Thu, 21 May 2020 04:30:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727902AbgEUBVb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 20 May 2020 21:21:31 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:4874 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727086AbgEUBVa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 20 May 2020 21:21:30 -0400
-Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.60])
-        by Forcepoint Email with ESMTP id D021E414344D78C5A89F;
-        Thu, 21 May 2020 09:21:28 +0800 (CST)
-Received: from localhost.localdomain (10.69.192.58) by
- DGGEMS414-HUB.china.huawei.com (10.3.19.214) with Microsoft SMTP Server id
- 14.3.487.0; Thu, 21 May 2020 09:21:22 +0800
-From:   chenxiang <chenxiang66@hisilicon.com>
-To:     <tj@kernel.org>, <martin.petersen@oracle.com>, <brking@us.ibm.com>,
-        <john.garry@huawei.com>
-CC:     <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linuxarm@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>
-Subject: [PATCH v2] ata: libata: Remove unused parameter in function ata_sas_port_alloc()
-Date:   Thu, 21 May 2020 09:17:32 +0800
-Message-ID: <1590023852-47302-1-git-send-email-chenxiang66@hisilicon.com>
-X-Mailer: git-send-email 2.8.1
-MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-CFilter-Loop: Reflected
+        id S1726887AbgEUEaQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 21 May 2020 00:30:16 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:58188 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726282AbgEUEaP (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 21 May 2020 00:30:15 -0400
+Received: from 61-220-137-37.hinet-ip.hinet.net ([61.220.137.37] helo=localhost)
+        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <kai.heng.feng@canonical.com>)
+        id 1jbcqR-0000a7-Vm; Thu, 21 May 2020 04:30:12 +0000
+From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
+To:     axboe@kernel.dk
+Cc:     Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        John Garry <john.garry@huawei.com>,
+        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
+        Parallel ATA drivers)), linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v2] libata: Use per port sync for detach
+Date:   Thu, 21 May 2020 12:30:06 +0800
+Message-Id: <20200521043007.23215-1-kai.heng.feng@canonical.com>
+X-Mailer: git-send-email 2.17.1
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+Commit 130f4caf145c ("libata: Ensure ata_port probe has completed before
+detach") may cause system freeze during suspend.
 
-Input Parameter shost in function ata_sas_port_alloc() is not used, so
-remove it.
+Using async_synchronize_full() in PM callbacks is wrong, since async
+callbacks that are already scheduled may wait for not-yet-scheduled
+callbacks, causes a circular dependency.
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Instead of using big hammer like async_synchronize_full(), use async
+cookie to make sure port probe are synced, without affecting other
+scheduled PM callbacks.
+
+Fixes: 130f4caf145c ("libata: Ensure ata_port probe has completed before detach")
+BugLink: https://bugs.launchpad.net/bugs/1867983
+Suggested-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 ---
- drivers/ata/libata-sata.c     | 4 +---
- drivers/scsi/ipr.c            | 2 +-
- drivers/scsi/libsas/sas_ata.c | 2 +-
- include/linux/libata.h        | 2 +-
- 4 files changed, 4 insertions(+), 6 deletions(-)
+v2:
+ - Sync up to cookie + 1.
+ - Squash the synchronization into the same loop.
 
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index c16423e..a3c83fe 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -1070,7 +1070,6 @@ EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
-  *	port_alloc - Allocate port for a SAS attached SATA device
-  *	@host: ATA host container for all SAS ports
-  *	@port_info: Information from low-level host driver
-- *	@shost: SCSI host that the scsi device is attached to
-  *
-  *	LOCKING:
-  *	PCI/etc. bus probe sem.
-@@ -1080,8 +1079,7 @@ EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
-  */
+ drivers/ata/libata-core.c | 9 ++++-----
+ include/linux/libata.h    | 3 +++
+ 2 files changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index beca5f91bb4c..b6be84f2cecb 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -42,7 +42,6 @@
+ #include <linux/workqueue.h>
+ #include <linux/scatterlist.h>
+ #include <linux/io.h>
+-#include <linux/async.h>
+ #include <linux/log2.h>
+ #include <linux/slab.h>
+ #include <linux/glob.h>
+@@ -5778,7 +5777,7 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+ 	/* perform each probe asynchronously */
+ 	for (i = 0; i < host->n_ports; i++) {
+ 		struct ata_port *ap = host->ports[i];
+-		async_schedule(async_port_probe, ap);
++		ap->cookie = async_schedule(async_port_probe, ap);
+ 	}
  
- struct ata_port *ata_sas_port_alloc(struct ata_host *host,
--				    struct ata_port_info *port_info,
--				    struct Scsi_Host *shost)
-+				    struct ata_port_info *port_info)
- {
- 	struct ata_port *ap;
+ 	return 0;
+@@ -5921,10 +5920,10 @@ void ata_host_detach(struct ata_host *host)
+ 	int i;
  
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 7d77997..331c41c 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -4816,7 +4816,7 @@ static int ipr_target_alloc(struct scsi_target *starget)
- 		if (!sata_port)
- 			return -ENOMEM;
+ 	/* Ensure ata_port probe has completed */
+-	async_synchronize_full();
+-
+-	for (i = 0; i < host->n_ports; i++)
++	for (i = 0; i < host->n_ports; i++) {
++		async_synchronize_cookie(host->ports[i]->cookie + 1);
+ 		ata_port_detach(host->ports[i]);
++	}
  
--		ap = ata_sas_port_alloc(&ioa_cfg->ata_host, &sata_port_info, shost);
-+		ap = ata_sas_port_alloc(&ioa_cfg->ata_host, &sata_port_info);
- 		if (ap) {
- 			spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
- 			sata_port->ioa_cfg = ioa_cfg;
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 5d716d3..0cdfae9 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -549,7 +549,7 @@ int sas_ata_init(struct domain_device *found_dev)
- 
- 	ata_host_init(ata_host, ha->dev, &sas_sata_ops);
- 
--	ap = ata_sas_port_alloc(ata_host, &sata_port_info, shost);
-+	ap = ata_sas_port_alloc(ata_host, &sata_port_info);
- 	if (!ap) {
- 		pr_err("ata_sas_port_alloc failed.\n");
- 		rc = -ENODEV;
+ 	/* the host is dead now, dissociate ACPI */
+ 	ata_acpi_dissociate(host);
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 8bf5e59..5a6fb80 100644
+index cffa4714bfa8..ae6dfc107ea8 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -1228,7 +1228,7 @@ extern int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
- extern int ata_slave_link_init(struct ata_port *ap);
- extern void ata_sas_port_destroy(struct ata_port *);
- extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
--					   struct ata_port_info *, struct Scsi_Host *);
-+					   struct ata_port_info *);
- extern void ata_sas_async_probe(struct ata_port *ap);
- extern int ata_sas_sync_probe(struct ata_port *ap);
- extern int ata_sas_port_init(struct ata_port *);
+@@ -22,6 +22,7 @@
+ #include <linux/acpi.h>
+ #include <linux/cdrom.h>
+ #include <linux/sched.h>
++#include <linux/async.h>
+ 
+ /*
+  * Define if arch has non-standard setup.  This is a _PCI_ standard
+@@ -872,6 +873,8 @@ struct ata_port {
+ 	struct timer_list	fastdrain_timer;
+ 	unsigned long		fastdrain_cnt;
+ 
++	async_cookie_t		cookie;
++
+ 	int			em_message_type;
+ 	void			*private_data;
+ 
 -- 
-2.8.1
+2.17.1
 
