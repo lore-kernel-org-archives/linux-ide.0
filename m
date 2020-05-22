@@ -2,128 +2,111 @@ Return-Path: <SRS0=zvqD=7E=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5E89C433E0
-	for <linux-ide@archiver.kernel.org>; Fri, 22 May 2020 20:17:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB3B0C433E1
+	for <linux-ide@archiver.kernel.org>; Fri, 22 May 2020 21:28:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B88302070A
-	for <linux-ide@archiver.kernel.org>; Fri, 22 May 2020 20:17:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=sang-engineering.com header.i=@sang-engineering.com header.b="Ec8eVWo4"
+	by mail.kernel.org (Postfix) with ESMTP id B50B22078D
+	for <linux-ide@archiver.kernel.org>; Fri, 22 May 2020 21:28:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730986AbgEVURb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 22 May 2020 16:17:31 -0400
-Received: from www.zeus03.de ([194.117.254.33]:44584 "EHLO mail.zeus03.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730979AbgEVURb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 22 May 2020 16:17:31 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple; d=sang-engineering.com; h=
-        date:from:to:cc:subject:message-id:references:mime-version
-        :content-type:in-reply-to; s=k1; bh=Kya5RXx7oQs/zCB1bwTMAzThdfrb
-        CPSEAKSAoDM4i74=; b=Ec8eVWo4lKhBy7z/mkF3YeGr4KLIbg2JWm4ggnbVq53H
-        BSIXQc7krWS0eJnN9yj2CIQmp1LMqs8bWFjSoPlmgCMRJHDAo1DB8pwePXDjFKpQ
-        fqcFX0e99NFqQkjO+jzqW8juYPjBt+mGLEySHdWJdV5fVcAK19ZaVZgMpcGF2ds=
-Received: (qmail 1450736 invoked from network); 22 May 2020 22:17:28 +0200
-Received: by mail.zeus03.de with ESMTPSA (TLS_AES_256_GCM_SHA384 encrypted, authenticated); 22 May 2020 22:17:28 +0200
-X-UD-Smtp-Session: l3s3148p1@kXB2UUKm9tkgAwDPXwlcAL8MbszJrcSX
-Date:   Fri, 22 May 2020 22:17:27 +0200
-From:   Wolfram Sang <wsa+renesas@sang-engineering.com>
-To:     "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
-        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
-        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Guenter Roeck <linux@roeck-us.net>, linux-ide@vger.kernel.org,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
-        Linux I2C <linux-i2c@vger.kernel.org>,
-        Linux MMC List <linux-mmc@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        Linux Watchdog Mailing List <linux-watchdog@vger.kernel.org>
-Subject: Re: [PATCH 03/17] ARM: dts: r8a7742: Add I2C and IIC support
-Message-ID: <20200522201727.GA21376@ninjato>
-References: <1589555337-5498-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <1589555337-5498-4-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20200515171031.GB19423@ninjato>
- <CA+V-a8t6rPs4s8uMCpBQEAUvwsVn7Cte-vX3z2atWRhy_RFLQw@mail.gmail.com>
- <20200518092601.GA3268@ninjato>
- <CAMuHMdVWe1EEAtP64VW+0zXNingM1LiENv_Rfz5qTQ+C0dtGSw@mail.gmail.com>
- <CA+V-a8tVx6D8Vh=rYD2=Z-14GAW0puo009FtjYM++sw8PAtJug@mail.gmail.com>
+        id S1731039AbgEVV2e (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 22 May 2020 17:28:34 -0400
+Received: from mail-il1-f194.google.com ([209.85.166.194]:36632 "EHLO
+        mail-il1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731035AbgEVV2e (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 22 May 2020 17:28:34 -0400
+Received: by mail-il1-f194.google.com with SMTP id 17so12159149ilj.3;
+        Fri, 22 May 2020 14:28:32 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=aeNkqKnvqrQ1R9V6A7mXbyK3G4VemHM61exPIH1obU8=;
+        b=toDixm3r78ob4m1rBDOOq6aEFOX1cMsnnypBr+soAcOLbklCtOcz/y4Q8AJaUNYnFn
+         wcbIHu1EqFqEdfvw820qNELwVJA05OAfCgwWWj0vXqUJVzISsiC0AmaqMTpGkHrwP9WT
+         Ma6hBtNRkir9rLjAEiMiviXc0oDNASGY5RGQTbdW3cFQw5swLBs1n5Gn4zgXgMkuq7aP
+         rqGGB6Ge+Y4+80FOeK8/DQIBIjSW7piLj0CR5M9P1uroj9ZgN8BoVdbvUAdRSBxigiBP
+         l0CZ2L3IT69eX3yUs0d77142YZoSmnb8SSSCFl3Q2dZH3OuluXsOwClTnga9sglyM/N4
+         8HUA==
+X-Gm-Message-State: AOAM533l4ZoILMBigswybeK0pHI3cZE2ImGcFLs8+I54dt9Aofs6QUXZ
+        LgzSmKX8eeU40ONWI84a97DYehVvmWs=
+X-Google-Smtp-Source: ABdhPJxqs7mPKhasfMjw+2Tly2+Y+QUzs6NUQl34JF5bRHWwIbhB/Cbx9lPWfsTZeeLAl+TerA0d1g==
+X-Received: by 2002:a92:914d:: with SMTP id t74mr14383223ild.182.1590182911723;
+        Fri, 22 May 2020 14:28:31 -0700 (PDT)
+Received: from mail-io1-f52.google.com (mail-io1-f52.google.com. [209.85.166.52])
+        by smtp.gmail.com with ESMTPSA id y12sm5450562ilk.16.2020.05.22.14.28.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 22 May 2020 14:28:31 -0700 (PDT)
+Received: by mail-io1-f52.google.com with SMTP id q8so11555333iow.7;
+        Fri, 22 May 2020 14:28:30 -0700 (PDT)
+X-Received: by 2002:a6b:1505:: with SMTP id 5mr4759580iov.198.1590182910435;
+ Fri, 22 May 2020 14:28:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="Qxx1br4bt0+wmkIi"
-Content-Disposition: inline
-In-Reply-To: <CA+V-a8tVx6D8Vh=rYD2=Z-14GAW0puo009FtjYM++sw8PAtJug@mail.gmail.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <20200507112955.23520-1-geert+renesas@glider.be> <20200507112955.23520-4-geert+renesas@glider.be>
+In-Reply-To: <20200507112955.23520-4-geert+renesas@glider.be>
+From:   Li Yang <leoyang.li@nxp.com>
+Date:   Fri, 22 May 2020 16:28:06 -0500
+X-Gmail-Original-Message-ID: <CADRPPNQxRwa2kQj_5K26RcovBhtfxdKitOxBKF8sgoyu9O+W-Q@mail.gmail.com>
+Message-ID: <CADRPPNQxRwa2kQj_5K26RcovBhtfxdKitOxBKF8sgoyu9O+W-Q@mail.gmail.com>
+Subject: Re: [PATCH 3/4] clk: qoriq: Add platform dependencies
+To:     Geert Uytterhoeven <geert+renesas@glider.be>
+Cc:     Shawn Guo <shawnguo@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Stephen Boyd <sboyd@kernel.org>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Amit Kucheria <amit.kucheria@verdurent.com>,
+        Arnd Bergmann <arnd@arndb.de>, linux-ide@vger.kernel.org,
+        linux-clk <linux-clk@vger.kernel.org>, linux-pm@vger.kernel.org,
+        "moderated list:ARM/FREESCALE IMX / MXC ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        lkml <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+On Thu, May 7, 2020 at 6:31 AM Geert Uytterhoeven
+<geert+renesas@glider.be> wrote:
+>
+> The Freescale QorIQ clock controller is only present on Freescale E500MC
+> and Layerscape SoCs.  Add platform dependencies to the CLK_QORIQ config
+> symbol, to avoid asking the user about it when configuring a kernel
+> without E500MC or Layerscape support.
+>
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
---Qxx1br4bt0+wmkIi
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi Michael/Stephen,
 
+Are you applying this patch?  If not I can apply it with your ACK.
 
-> > According to the Hardware User's Manual Rev. 1.00, the registers do exi=
-st
-> > on all RZ/G1, except for RZ/G1E (see below).
-> >
-> >    "(automatic transmission can be used as a hardware function, but thi=
-s is
-> >     not meaningful for actual use cases)."
-> >
-> > (whatever that comment may mean?)
+Regards,
+Leo
 
-Strange comment, in deed. Given the paragraph before, I would guess Gen1
-maybe had a "fitting" PMIC where SoC/PMIC handled DVFS kind of magically
-with this automatic transfer feature? And Gen2 has not.
-
-> > On R-Car E3 and RZ/G2E, which have a single IIC instance, we
-> > handled that by:
-> >
-> >         The r8a77990 (R-Car E3) and r8a774c0 (RZ/G2E)
-> >         controllers are not considered compatible with
-> >         "renesas,rcar-gen3-iic" or "renesas,rmobile-iic"
-> >         due to the absence of automatic transmission registers.
-
-=46rom a "describe the HW" point of view, this still makes sense to me.
-Although, it is unlikely we will add support for the automatic
-transmission feature (maybe famous last words).
-
-> > On R-Car E2 and RZ/G1E, we forgot, and used both SoC-specific and
-> > family-specific compatible values.
-
-Okay, but we can fix DTs when they have bugs, or?
-
-
---Qxx1br4bt0+wmkIi
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCgAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAl7IM1MACgkQFA3kzBSg
-KbavTxAAorpBPKca5mdOGo3gbsj/1JqXSYqq0SnjdWLU6QdlVYuIsv1XCCDaWHzy
-eiJeY2VIMeqdoOHtcqc8W4QF4/Zo6O72JIalnQUzjG6JMs3AWDkbdRQQ8ULF6MMv
-iHd/h+E+GmtklAPGTMlMrC5KAMwRXbp6ot1F9T7J0nv8ET+2Rw741cydM7a7F+Hh
-AaMHRVsJMOD4nGsAd5A6/oF0Vc2LqER4Jki+dkQSw2AJCTvyRpQ5MSpq290HZJHv
-Ln5nGpxzHLznFpbMqLeqRr5mk1QmVH3k76gB6sLYoo0UFfkCn/6aMRXn0OGqgqV/
-DS450PHShO1TdfTgekd5++BCGMFfTB0Ud0uhKSJ3TvLNSeojilWaC0zxaMY84K15
-rcr9tKV35NJxualpbGP8ziWsDOQa36tJXa7x10I5Aetnrle23Sot6k9PbxUh6Bso
-V/VtWKuUyNqe6wsMVXNvVj3WAE5NKCiKf1D8hzzyVYYoNPsp5dra6pzEhMVx+fQk
-+KcYFHNwGnYLYZv/bU3pf8084R4QO1JqqSsHFaba21O6taURty+bBwE7fLeVwlcb
-z1//GXsaHLZGqq++IjfqjrM8KgTZmmSQy8noLOBkD97xbqVnbYCobp5CWsokD6W8
-VNjooWfgi0uj1I3A1AZPa+7ydJiAwB6OvQsAymOS6tm9kukzhd8=
-=QVjR
------END PGP SIGNATURE-----
-
---Qxx1br4bt0+wmkIi--
+> ---
+>  drivers/clk/Kconfig | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/clk/Kconfig b/drivers/clk/Kconfig
+> index bcb257baed06daa0..22bf015610d1724c 100644
+> --- a/drivers/clk/Kconfig
+> +++ b/drivers/clk/Kconfig
+> @@ -232,7 +232,8 @@ config COMMON_CLK_AXI_CLKGEN
+>
+>  config CLK_QORIQ
+>         bool "Clock driver for Freescale QorIQ platforms"
+> -       depends on (PPC_E500MC || ARM || ARM64 || COMPILE_TEST) && OF
+> +       depends on OF
+> +       depends on PPC_E500MC || SOC_LS1021A || ARCH_LAYERSCAPE || COMPILE_TEST
+>         ---help---
+>           This adds the clock driver support for Freescale QorIQ platforms
+>           using common clock framework.
+> --
+> 2.17.1
+>
