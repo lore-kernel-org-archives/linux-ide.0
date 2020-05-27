@@ -1,152 +1,95 @@
-Return-Path: <SRS0=h2e8=7I=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=+Sb9=7J=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3196C433DF
-	for <linux-ide@archiver.kernel.org>; Tue, 26 May 2020 19:19:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC751C433DF
+	for <linux-ide@archiver.kernel.org>; Wed, 27 May 2020 01:31:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9485A2053B
-	for <linux-ide@archiver.kernel.org>; Tue, 26 May 2020 19:19:34 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="kMVkvfh2"
+	by mail.kernel.org (Postfix) with ESMTP id A855E2078C
+	for <linux-ide@archiver.kernel.org>; Wed, 27 May 2020 01:31:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1590543101;
+	bh=O5L4F4wDrTWpLYVOYRUcs9wZVDkdelqF1G7ErYdtyQU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=K5xUPniTJMQUuvo0a1bvHtdFYVIJhFcjZTTwUpg719Zy8WOZtvb2ydjCuXSBxQX12
+	 4PMqpmQ9WAJWSJglLbS72Wa+gxDIp4QkjhfqEwsavFAE4RqoFAZkgcAdD+Tmcfl4BB
+	 ceg5Ig1qAGLucB8Bx37EsbRkNUh4QqAh07lZaGeA=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404238AbgEZTNU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 26 May 2020 15:13:20 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:45826 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2389966AbgEZTNT (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 May 2020 15:13:19 -0400
-Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 3A98130D62B;
-        Tue, 26 May 2020 12:13:16 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 3A98130D62B
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1590520396;
-        bh=+b41cKto7oBml6gbt0P3Uc1iMp9Snf8kHAJBk8ILXSc=;
-        h=From:To:Cc:Subject:Date:From;
-        b=kMVkvfh2RF6stG81DoEIP5rW2Bb1X314UrWcAaVH2vesNfHDGDr6KhshbNA46ZHix
-         7ZwntfMj7r7NDOxK4+O77jSehqnV1xcgzxPORE2AO6ggOOFgMQnDPaBIK+8fl7+mZP
-         rhW1OIwreN8UcomYfGhgxrbXcaiUc4E8Vm+33GjA=
-Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 6F1C914008B;
-        Tue, 26 May 2020 12:13:13 -0700 (PDT)
-From:   Jim Quinlan <james.quinlan@broadcom.com>
-To:     linux-pci@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
-Cc:     Alan Stern <stern@rowland.harvard.edu>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Corey Minyard <minyard@acm.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED
-        DEVICE TREE), Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        iommu@lists.linux-foundation.org (open list:DMA MAPPING HELPERS),
-        Julien Grall <julien.grall@arm.com>,
-        linux-arm-kernel@lists.infradead.org (moderated list:ARM PORT),
-        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
-        Parallel ATA drivers)), linux-kernel@vger.kernel.org (open list),
-        linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM
-        BCM2711/BCM2835 ARM ARCHITECTURE),
-        linux-usb@vger.kernel.org (open list:USB SUBSYSTEM),
-        Mark Brown <broonie@kernel.org>,
-        Oliver Neukum <oneukum@suse.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Rob Herring <robh@kernel.org>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Saravana Kannan <saravanak@google.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Suzuki K Poulose <suzuki.poulose@arm.com>,
+        id S1726036AbgE0Bbl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 26 May 2020 21:31:41 -0400
+Received: from mail-il1-f195.google.com ([209.85.166.195]:45314 "EHLO
+        mail-il1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725287AbgE0Bbl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 May 2020 21:31:41 -0400
+Received: by mail-il1-f195.google.com with SMTP id 9so3988807ilg.12;
+        Tue, 26 May 2020 18:31:38 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=k9Tih4XnsvyNY6esAFQ63eiV+bEtuajcRZUBRdAyvvc=;
+        b=ZrOYu8wV++Ea9KqNlQN7fknl4Pd81KfHqWRahHTkU+uZtDiN5F2qgGxWieHX/v1gLR
+         z/ydCWUG1XOnVF2yMEnD8Z41L0Lxn7WRP1UwsTo8lJP4v+vHQ21kNc8MWiP/sDwPqD1q
+         xozhOw0wFrlyhELIx0cw0cbzwQ+TgX2Dr9l4rjpZVcfJEGsRdCW/qkAUJ2W1SezquEPc
+         IIrjsWfcYpBCqjkdwN6Bd8VlgnulxCcfr4zJzrgTlLAS4mutxIyrsVPk5kVhO5bNXMOQ
+         cZ07Od+zN4Z5GWFO8gNDn8xymkbSCPAp0PaWMJpCi6rq0Rb0mICYXn4gqPGyzp+zHZq6
+         PaJQ==
+X-Gm-Message-State: AOAM5310M/pQEkV3OHnltFX4iS7RMtRj2NzDHP5sX3gY6Oi2s334PffO
+        1gUMpF476+X9A6jcV+dkOQ==
+X-Google-Smtp-Source: ABdhPJwJOyjslkUwLMUCa6L98wpsiVwI3A8D8vv1EsWHGsWdVRUWm3/bwvdmfxReZz4y9VPBwudgAA==
+X-Received: by 2002:a92:7e90:: with SMTP id q16mr13816ill.199.1590543098611;
+        Tue, 26 May 2020 18:31:38 -0700 (PDT)
+Received: from xps15 ([64.188.179.252])
+        by smtp.gmail.com with ESMTPSA id j2sm615491ioo.8.2020.05.26.18.31.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 26 May 2020 18:31:37 -0700 (PDT)
+Received: (nullmailer pid 843489 invoked by uid 1000);
+        Wed, 27 May 2020 01:31:36 -0000
+Date:   Tue, 26 May 2020 19:31:36 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jens Axboe <axboe@kernel.dk>,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>,
         Ulf Hansson <ulf.hansson@linaro.org>,
-        Wolfram Sang <wsa@kernel.org>
-Subject: [PATCH v2 00/14] PCI: brcmstb: enable PCIe for STB chips
-Date:   Tue, 26 May 2020 15:12:39 -0400
-Message-Id: <20200526191303.1492-1-james.quinlan@broadcom.com>
-X-Mailer: git-send-email 2.17.1
+        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Wim Van Sebroeck <wim@linux-watchdog.org>,
+        Guenter Roeck <linux@roeck-us.net>, linux-ide@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-i2c@vger.kernel.org, linux-mmc@vger.kernel.org,
+        netdev@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        linux-watchdog@vger.kernel.org,
+        Prabhakar <prabhakar.csengg@gmail.com>
+Subject: Re: [PATCH 16/17] dt-bindings: watchdog: renesas,wdt: Document
+ r8a7742 support
+Message-ID: <20200527013136.GA838011@bogus>
+References: <1589555337-5498-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <1589555337-5498-17-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1589555337-5498-17-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-v2:
-Commit: "device core: Add ability to handle multiple dma offsets"
-  o Added helper func attach_dma_pfn_offset_map() in address.c (Chistoph)
-  o Helpers funcs added to __phys_to_dma() & __dma_to_phys() (Christoph)
-  o Added warning when multiple offsets are needed and !DMA_PFN_OFFSET_MAP
-  o dev->dma_pfn_map => dev->dma_pfn_offset_map
-  o s/frm/from/ for dma_pfn_offset_frm_{phys,dma}_addr() (Christoph)
-  o In device.h: s/const void */const struct dma_pfn_offset_region */
-  o removed 'unlikely' from unlikely(dev->dma_pfn_offset_map) since
-    guarded by CONFIG_DMA_PFN_OFFSET_MAP (Christoph)
-  o Since dev->dma_pfn_offset is copied in usb/core/{usb,message}.c, now
-    dev->dma_pfn_offset_map is copied as well.
-  o Merged two of the DMA commits into one (Christoph).
+On Fri, May 15, 2020 at 04:08:56PM +0100, Lad Prabhakar wrote:
+> RZ/G1H (R8A7742) watchdog implementation is compatible with R-Car Gen2,
+> therefore add relevant documentation.
+> 
+> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
+> ---
+>  Documentation/devicetree/bindings/watchdog/renesas,wdt.txt | 1 +
+>  1 file changed, 1 insertion(+)
 
-Commit "arm: dma-mapping: Invoke dma offset func if needed":
-  o Use helper functions instead of #if CONFIG_DMA_PFN_OFFSET
+Meanwhile in the DT tree, converting this schema landed. Can you prepare 
+a version based on the schema.
 
-Other commits' changes:
-  o Removed need for carrying of_id var in priv (Nicolas)
-  o Commit message rewordings (Bjorn)
-  o Commit log messages filled to 75 chars (Bjorn)
-  o devm_reset_control_get_shared())
-    => devm_reset_control_get_optional_shared (Philipp)
-  o Add call to reset_control_assert() in PCIe remove routines (Philipp)
-
-v1:
-This patchset expands the usefulness of the Broadcom Settop Box PCIe
-controller by building upon the PCIe driver used currently by the
-Raspbery Pi.  Other forms of this patchset were submitted by me years
-ago and not accepted; the major sticking point was the code required
-for the DMA remapping needed for the PCIe driver to work [1].
-
-There have been many changes to the DMA and OF subsystems since that
-time, making a cleaner and less intrusive patchset possible.  This
-patchset implements a generalization of "dev->dma_pfn_offset", except
-that instead of a single scalar offset it provides for multiple
-offsets via a function which depends upon the "dma-ranges" property of
-the PCIe host controller.  This is required for proper functionality
-of the BrcmSTB PCIe controller and possibly some other devices.
-
-[1] https://lore.kernel.org/linux-arm-kernel/1516058925-46522-5-git-send-email-jim2101024@gmail.com/
-
-Jim Quinlan (14):
-  PCI: brcmstb: PCIE_BRCMSTB depends on ARCH_BRCMSTB
-  ata: ahci_brcm: Fix use of BCM7216 reset controller
-  dt-bindings: PCI: Add bindings for more Brcmstb chips
-  PCI: brcmstb: Add bcm7278 reigister info
-  PCI: brcmstb: Add suspend and resume pm_ops
-  PCI: brcmstb: Add bcm7278 PERST support
-  PCI: brcmstb: Add control of rescal reset
-  of: Include a dev param in of_dma_get_range()
-  device core: Add ability to handle multiple dma offsets
-  arm: dma-mapping: Invoke dma offset func if needed
-  PCI: brcmstb: Set internal memory viewport sizes
-  PCI: brcmstb: Accommodate MSI for older chips
-  PCI: brcmstb: Set bus max burst size by chip type
-  PCI: brcmstb: Add bcm7211, bcm7216, bcm7445, bcm7278 to match list
-
- .../bindings/pci/brcm,stb-pcie.yaml           |  40 +-
- arch/arm/include/asm/dma-mapping.h            |  13 +-
- drivers/ata/ahci_brcm.c                       |  14 +-
- drivers/of/address.c                          |  69 ++-
- drivers/of/device.c                           |   2 +-
- drivers/of/of_private.h                       |   8 +-
- drivers/pci/controller/Kconfig                |   3 +-
- drivers/pci/controller/pcie-brcmstb.c         | 408 +++++++++++++++---
- drivers/usb/core/message.c                    |   3 +
- drivers/usb/core/usb.c                        |   3 +
- include/linux/device.h                        |  10 +-
- include/linux/dma-direct.h                    |  10 +-
- include/linux/dma-mapping.h                   |  46 ++
- kernel/dma/Kconfig                            |  13 +
- 14 files changed, 559 insertions(+), 83 deletions(-)
-
--- 
-2.17.1
-
+Rob
