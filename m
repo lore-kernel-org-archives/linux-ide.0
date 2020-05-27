@@ -2,57 +2,69 @@ Return-Path: <SRS0=+Sb9=7J=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
 	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC751C433DF
-	for <linux-ide@archiver.kernel.org>; Wed, 27 May 2020 01:31:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11707C433E0
+	for <linux-ide@archiver.kernel.org>; Wed, 27 May 2020 11:23:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A855E2078C
-	for <linux-ide@archiver.kernel.org>; Wed, 27 May 2020 01:31:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1590543101;
-	bh=O5L4F4wDrTWpLYVOYRUcs9wZVDkdelqF1G7ErYdtyQU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=K5xUPniTJMQUuvo0a1bvHtdFYVIJhFcjZTTwUpg719Zy8WOZtvb2ydjCuXSBxQX12
-	 4PMqpmQ9WAJWSJglLbS72Wa+gxDIp4QkjhfqEwsavFAE4RqoFAZkgcAdD+Tmcfl4BB
-	 ceg5Ig1qAGLucB8Bx37EsbRkNUh4QqAh07lZaGeA=
+	by mail.kernel.org (Postfix) with ESMTP id DC5E520873
+	for <linux-ide@archiver.kernel.org>; Wed, 27 May 2020 11:23:09 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ihOkLe3N"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726036AbgE0Bbl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 26 May 2020 21:31:41 -0400
-Received: from mail-il1-f195.google.com ([209.85.166.195]:45314 "EHLO
-        mail-il1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725287AbgE0Bbl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 May 2020 21:31:41 -0400
-Received: by mail-il1-f195.google.com with SMTP id 9so3988807ilg.12;
-        Tue, 26 May 2020 18:31:38 -0700 (PDT)
+        id S2388327AbgE0LXJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 27 May 2020 07:23:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43660 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388143AbgE0LXI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 27 May 2020 07:23:08 -0400
+Received: from mail-ot1-x342.google.com (mail-ot1-x342.google.com [IPv6:2607:f8b0:4864:20::342])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 385E0C061A0F;
+        Wed, 27 May 2020 04:23:08 -0700 (PDT)
+Received: by mail-ot1-x342.google.com with SMTP id x22so18878938otq.4;
+        Wed, 27 May 2020 04:23:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Fp0svMZCl7416GUNw4GqWtjLX0o7vCvEcznT00dMb8A=;
+        b=ihOkLe3NKVS7aTB07R2E2Qb7QqfoeyQfissj2+aNNq76WhAxLMb1jn++IJg0TeYVwN
+         gGhfYq9DyZbbOCNfIZlb80PNVr9RwJfsJUiKiQE/kF84HjZkM13HiT8ZvI5P15RboXX2
+         xCMNJYszyXrtIsgNlhQo4ZJ/QtpvbW+6o0VlZHY1CaOYH9+Ofpj6y72R0q4cRcdIzA7B
+         3exfjhEvVihaXfBKWVj9Lx681NdmYAVw2dRS3kz1IGwAiFuHD2hWkbkXE0NRaYitiG/x
+         9yjiRt2gIXW2XQPiymeQIAmBwfiOuck8/eOUScEjcvaCejAYC1a7rPCYIdmDk8m9MynK
+         6+9g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=k9Tih4XnsvyNY6esAFQ63eiV+bEtuajcRZUBRdAyvvc=;
-        b=ZrOYu8wV++Ea9KqNlQN7fknl4Pd81KfHqWRahHTkU+uZtDiN5F2qgGxWieHX/v1gLR
-         z/ydCWUG1XOnVF2yMEnD8Z41L0Lxn7WRP1UwsTo8lJP4v+vHQ21kNc8MWiP/sDwPqD1q
-         xozhOw0wFrlyhELIx0cw0cbzwQ+TgX2Dr9l4rjpZVcfJEGsRdCW/qkAUJ2W1SezquEPc
-         IIrjsWfcYpBCqjkdwN6Bd8VlgnulxCcfr4zJzrgTlLAS4mutxIyrsVPk5kVhO5bNXMOQ
-         cZ07Od+zN4Z5GWFO8gNDn8xymkbSCPAp0PaWMJpCi6rq0Rb0mICYXn4gqPGyzp+zHZq6
-         PaJQ==
-X-Gm-Message-State: AOAM5310M/pQEkV3OHnltFX4iS7RMtRj2NzDHP5sX3gY6Oi2s334PffO
-        1gUMpF476+X9A6jcV+dkOQ==
-X-Google-Smtp-Source: ABdhPJwJOyjslkUwLMUCa6L98wpsiVwI3A8D8vv1EsWHGsWdVRUWm3/bwvdmfxReZz4y9VPBwudgAA==
-X-Received: by 2002:a92:7e90:: with SMTP id q16mr13816ill.199.1590543098611;
-        Tue, 26 May 2020 18:31:38 -0700 (PDT)
-Received: from xps15 ([64.188.179.252])
-        by smtp.gmail.com with ESMTPSA id j2sm615491ioo.8.2020.05.26.18.31.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 May 2020 18:31:37 -0700 (PDT)
-Received: (nullmailer pid 843489 invoked by uid 1000);
-        Wed, 27 May 2020 01:31:36 -0000
-Date:   Tue, 26 May 2020 19:31:36 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Fp0svMZCl7416GUNw4GqWtjLX0o7vCvEcznT00dMb8A=;
+        b=OURr7ZszvVSJO272IshNCUq2jjpBeZgBvfim5iELOac5LT15gLJjkSaBvibvlnbE/V
+         WZWYAGznQwRbEBGZzwlDyHRgbGtQ1ZsbUOX28MlT7Cc3g6V3WrlwpTgRdDhRNpFI4tcw
+         FuGAH9TKQ3AjQwBS0m9w6abMqwQ8fuJkpAqVSQ8lm2RxGYy+J47ibBJoApvqT7ITFdYl
+         pBYAqEGLcLvji/fxW6Rdi+o9TLUF3r5zeZgFabZoDednar+IsIq1BK22RjJRba6KQcfm
+         9F/lw3InI9p8BIZzM132liLmtgiR7qFKhUbuBq2G912ZRrsfIybmK6CPZMd2061VIB1M
+         jJaQ==
+X-Gm-Message-State: AOAM531hPpHB54kC7T7cI7mADJYS6s+Uf8lQxtOyeSqq+jmElrC0LT3e
+        jGBTGUaRbmYz+1sGF1lPztVtIqLXAg8v5uqa3b0=
+X-Google-Smtp-Source: ABdhPJwRs0irm8ujT4wRDJ1yNMXOLkQGDLfhS4wYsUks2EzBi7aBEZfzFaiACJYFXZ647Iot246VfuxQuYwM1M8Tfxw=
+X-Received: by 2002:a9d:d83:: with SMTP id 3mr4102738ots.365.1590578587535;
+ Wed, 27 May 2020 04:23:07 -0700 (PDT)
+MIME-Version: 1.0
+References: <1589555337-5498-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <1589555337-5498-17-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com> <20200527013136.GA838011@bogus>
+In-Reply-To: <20200527013136.GA838011@bogus>
+From:   "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+Date:   Wed, 27 May 2020 12:22:41 +0100
+Message-ID: <CA+V-a8t6mXkTUac69V=T8_27r_sdN+=MktDTM1mmtbXRn8SSQQ@mail.gmail.com>
+Subject: Re: [PATCH 16/17] dt-bindings: watchdog: renesas,wdt: Document
+ r8a7742 support
+To:     Rob Herring <robh@kernel.org>
+Cc:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
         Jens Axboe <axboe@kernel.dk>,
         Wolfram Sang <wsa+renesas@sang-engineering.com>,
         Ulf Hansson <ulf.hansson@linaro.org>,
@@ -60,36 +72,41 @@ Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
         "David S. Miller" <davem@davemloft.net>,
         Wim Van Sebroeck <wim@linux-watchdog.org>,
         Guenter Roeck <linux@roeck-us.net>, linux-ide@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-i2c@vger.kernel.org, linux-mmc@vger.kernel.org,
-        netdev@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        linux-watchdog@vger.kernel.org,
-        Prabhakar <prabhakar.csengg@gmail.com>
-Subject: Re: [PATCH 16/17] dt-bindings: watchdog: renesas,wdt: Document
- r8a7742 support
-Message-ID: <20200527013136.GA838011@bogus>
-References: <1589555337-5498-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <1589555337-5498-17-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1589555337-5498-17-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+        Linux I2C <linux-i2c@vger.kernel.org>,
+        Linux MMC List <linux-mmc@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        Linux Watchdog Mailing List <linux-watchdog@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, May 15, 2020 at 04:08:56PM +0100, Lad Prabhakar wrote:
-> RZ/G1H (R8A7742) watchdog implementation is compatible with R-Car Gen2,
-> therefore add relevant documentation.
-> 
-> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
-> ---
->  Documentation/devicetree/bindings/watchdog/renesas,wdt.txt | 1 +
->  1 file changed, 1 insertion(+)
+Hi Rob,
 
-Meanwhile in the DT tree, converting this schema landed. Can you prepare 
-a version based on the schema.
+On Wed, May 27, 2020 at 2:31 AM Rob Herring <robh@kernel.org> wrote:
+>
+> On Fri, May 15, 2020 at 04:08:56PM +0100, Lad Prabhakar wrote:
+> > RZ/G1H (R8A7742) watchdog implementation is compatible with R-Car Gen2,
+> > therefore add relevant documentation.
+> >
+> > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> > Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
+> > ---
+> >  Documentation/devicetree/bindings/watchdog/renesas,wdt.txt | 1 +
+> >  1 file changed, 1 insertion(+)
+>
+> Meanwhile in the DT tree, converting this schema landed. Can you prepare
+> a version based on the schema.
+>
+This was kindly taken care by Stephen during merge in linux-next [1].
 
-Rob
+[1] https://lkml.org/lkml/2020/5/26/32
+
+Cheers,
+--Prabhakar
+
+> Rob
