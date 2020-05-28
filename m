@@ -1,109 +1,92 @@
-Return-Path: <SRS0=+Sb9=7J=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=ltlR=7K=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CD8FC433DF
-	for <linux-ide@archiver.kernel.org>; Wed, 27 May 2020 23:57:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 516FDC433E1
+	for <linux-ide@archiver.kernel.org>; Thu, 28 May 2020 20:03:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 06092206A1
-	for <linux-ide@archiver.kernel.org>; Wed, 27 May 2020 23:57:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="seQt8YDn"
+	by mail.kernel.org (Postfix) with ESMTP id 23B0F208B8
+	for <linux-ide@archiver.kernel.org>; Thu, 28 May 2020 20:03:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1590696224;
+	bh=NIw5Btq0dmzq0CVYiZD6rRZc1lg4X7QFAZgo/5sBZYE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=LpgwAlRFmIFZZfGUEwGGF7tjcPMruN8/rbNr/RW+JaxvAgGKzTN43cTaVQ8FmSM4L
+	 R3IbQg7isOFcyectNTdC0gByxdefUvAXZHLWBGg9bbWodWyrTyuoFdcxSN++AnTyzG
+	 zVLmWdaJYkCDgRIk/znONsyXqpmSD1o+tn3EQwLg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725780AbgE0X5z (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 27 May 2020 19:57:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48274 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725681AbgE0X5y (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 27 May 2020 19:57:54 -0400
-Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F70FC08C5C1;
-        Wed, 27 May 2020 16:57:54 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id x6so12417592wrm.13;
-        Wed, 27 May 2020 16:57:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=yJsIOGrYqyMlsvGZvuDbQbpz5zHJ2Al+1mhnUHoBcsg=;
-        b=seQt8YDnOilGUARCihyoOHCAGFCt1PoRnotjOt68VWlMAGYTkZ97TNw3kUZ4L6Zeqw
-         7Z3jgRR7Ub8E1ls+7A/Lzs2hut49rXXD0RzwaFRW7ZeuNpuuOa6LD1RYSIwlgzEhC3vu
-         GNNPmaxCb50xP7fVb1E+NXrvQdqq6CP2qSbcMwvsyMzYsA6MtrsKhbKt1hRpyKLyD7hW
-         488L33dDlSmEngnC8vsdVHlVO39jvyU7QZ4+11N9zyaZtXFz88U5/s1Nv01VHAvxjkA2
-         zT8uPVPDmbkRvlggcL1sSQT6U3/BJpS+8d0izhc9Z3s6x4c3lX8t9QmHl28jkrogYmEg
-         Me6w==
+        id S2406837AbgE1UDf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 28 May 2020 16:03:35 -0400
+Received: from mail-io1-f68.google.com ([209.85.166.68]:44275 "EHLO
+        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2406768AbgE1UDc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 28 May 2020 16:03:32 -0400
+Received: by mail-io1-f68.google.com with SMTP id p20so18110717iop.11;
+        Thu, 28 May 2020 13:03:31 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=yJsIOGrYqyMlsvGZvuDbQbpz5zHJ2Al+1mhnUHoBcsg=;
-        b=ahKpza7qAY7xPSDVEqOMY7rObPF70aNlzgqOEkybSHJFm6CmztkH+4M0rPJKmT6e4X
-         9mt743nyJ9uDXcjduYsqcn7/PozUm52LtyymmJGr7i+kmW9/Fdrel2VTM+EKsDWyJ0IU
-         2AJa6KF0RgyOYJOnRnxYY+4Th5BGoXcTcG6NOwHRuAWxt0WTGI3LDyaTeAT89gRS7K+O
-         SuMULy4g7xQ1hJD2Qfq1WYXB8ot+zCY+i264t5tQQ3xwi2r3GCD0wSThls3e84NURMJd
-         SRl5C95Qbo3h+vIAIOmNb78pw7h17UUAEvstOPxwSlJ2vpyoSuVd1vIVqax5ke3mJh/3
-         RwcA==
-X-Gm-Message-State: AOAM533fw4aWq5Y1Y+0HgXyA/PP80N1Gc+9aMyB8fBw+x2lRpuM8GuVC
-        J57Tks0Du2dIqKKHKwj14JT/p3iB
-X-Google-Smtp-Source: ABdhPJymbkfbuQSQVgegw9QxVZPM3gIUz9DOYYhBvFmcNqX4KpQy+La0Vqi9v2C/pyHSM/AXtB9miw==
-X-Received: by 2002:a5d:6789:: with SMTP id v9mr758483wru.124.1590623872596;
-        Wed, 27 May 2020 16:57:52 -0700 (PDT)
-Received: from [192.168.1.3] (ip68-111-84-250.oc.oc.cox.net. [68.111.84.250])
-        by smtp.gmail.com with ESMTPSA id h196sm4445137wme.22.2020.05.27.16.57.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 27 May 2020 16:57:51 -0700 (PDT)
-Subject: Re: [PATCH v2 02/14] ata: ahci_brcm: Fix use of BCM7216 reset
- controller
-To:     Jim Quinlan <james.quinlan@broadcom.com>,
-        linux-pci@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        bcm-kernel-feedback-list@broadcom.com
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <20200526191303.1492-1-james.quinlan@broadcom.com>
- <20200526191303.1492-3-james.quinlan@broadcom.com>
-From:   Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <7dc691ee-78cc-b6fd-78c2-567680e431c8@gmail.com>
-Date:   Wed, 27 May 2020 16:57:48 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Firefox/68.0 Thunderbird/68.8.1
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=WOZJJYcxACXW/f86CWGzaIWG9UVyWDM2VBeq6ibxzFA=;
+        b=faJNQ/AMpjNpyEqqNZ6VWKJDQzjwOpCUerNO/r9v3nkLHNsvHlMnEzDbhHlq/rkXPi
+         /FHxFKJj8LXCX9+GT51wXmhXc4xUPu1QGeG2dvAfyTrivimr6IL7FZLRLcJpZLC1x0IR
+         SZ+QiHRgrrrz1c9RmiAs+yvuE15/oL7+dmqPZWfCxHVnGGaDKdwfAmPtC//etQm5gUNG
+         ko8+xR/wsL4/g8sIk1dLadaxvzpatJ5Ko2gHs5IoPUMZuteE/2gS50IUAhxDSBqWj+XI
+         KlWLTw0XoTbtoOiR9+/CC1kQuYS9csG/9sEOdIyZRq33yBbyumVhmBvXmd5CqF/g0fAK
+         G8+A==
+X-Gm-Message-State: AOAM5316ZiHeGm1kXkgEsY3PBD7GjI1lj5+R04mn1SG/JEWBYpFYIZst
+        Ct6949y/2CqiooLkG6hACA==
+X-Google-Smtp-Source: ABdhPJy6bw+eVdj/3BkqQEG8iWgPJd3s+TdcOk/LXrCK3tBxvHyGnDNQ1TXnU6AiW/ROgs77w1FZzg==
+X-Received: by 2002:a02:c8d2:: with SMTP id q18mr4157449jao.127.1590696211401;
+        Thu, 28 May 2020 13:03:31 -0700 (PDT)
+Received: from xps15 ([64.188.179.252])
+        by smtp.gmail.com with ESMTPSA id n22sm2921088ioh.46.2020.05.28.13.03.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 28 May 2020 13:03:30 -0700 (PDT)
+Received: (nullmailer pid 589004 invoked by uid 1000);
+        Thu, 28 May 2020 20:03:29 -0000
+Date:   Thu, 28 May 2020 14:03:29 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>, linux-mmc@vger.kernel.org,
+        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        Wolfram Sang <wsa+renesas@sang-engineering.com>,
+        Wim Van Sebroeck <wim@linux-watchdog.org>,
+        devicetree@vger.kernel.org, Prabhakar <prabhakar.csengg@gmail.com>,
+        Rob Herring <robh+dt@kernel.org>, linux-i2c@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-watchdog@vger.kernel.org,
+        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 01/17] dt-bindings: i2c: renesas,i2c: Document r8a7742
+ support
+Message-ID: <20200528200329.GA588958@bogus>
+References: <1589555337-5498-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <1589555337-5498-2-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
 MIME-Version: 1.0
-In-Reply-To: <20200526191303.1492-3-james.quinlan@broadcom.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1589555337-5498-2-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-
-
-On 5/26/2020 12:12 PM, Jim Quinlan wrote:
-> From: Jim Quinlan <jquinlan@broadcom.com>
+On Fri, 15 May 2020 16:08:41 +0100, Lad Prabhakar wrote:
+> Document i2c controller for RZ/G1H (R8A7742) SoC, which is compatible
+> with R-Car Gen2 SoC family.
 > 
-> A reset controller "rescal" is shared between the AHCI driver and the PCIe
-> driver for the BrcmSTB 7216 chip.  The code is modified to allow this
-> sharing and to deassert() properly.
+> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
+> ---
+>  Documentation/devicetree/bindings/i2c/renesas,i2c.txt | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
 
-This patch is actually a bug fix and should have:
-
-Fixes: 272ecd60a636 ("ata: ahci_brcm: BCM7216 reset is self de-asserting")
-Fixes: c345ec6a50e9 ("ata: ahci_brcm: Support BCM7216 reset controller
-name")
-
-and it could probably be merged out of this patch series I believe.
--- 
-Florian
+Applied, thanks!
