@@ -2,68 +2,140 @@ Return-Path: <SRS0=Z+II=7L=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B031AC433DF
-	for <linux-ide@archiver.kernel.org>; Fri, 29 May 2020 12:48:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62123C433E3
+	for <linux-ide@archiver.kernel.org>; Fri, 29 May 2020 17:49:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8AD3A20721
-	for <linux-ide@archiver.kernel.org>; Fri, 29 May 2020 12:48:10 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="aD44otZj"
+	by mail.kernel.org (Postfix) with ESMTP id 3A517206A4
+	for <linux-ide@archiver.kernel.org>; Fri, 29 May 2020 17:49:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1590774545;
+	bh=P0UfxUn59TBgODAkkR1p5Fu2q/qr2hoNA6PpLGpZCd0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=KCnfAXmL/lE9GeBcwPRlmwQ8ZM7vJFik45+iVRzipOgIvdZqRsVW3o8X4jEEBRPc0
+	 2x8Gr3yxBwTPV9S7lFyQ54iyegQhZPj2SUi2vIvKOT4vYXcl2lILTEaqzVwZg6D2l7
+	 wpmEjMtGAHugXhh26ahCYfI3Nrs+/U1WgGm2e9Lc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726476AbgE2MsK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 29 May 2020 08:48:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52930 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726467AbgE2MsJ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 29 May 2020 08:48:09 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A7C1C03E969
-        for <linux-ide@vger.kernel.org>; Fri, 29 May 2020 05:48:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=dE6hNmPTz4KD7BpDENqr2I/HQlC31bZvgcv61xeAmXA=; b=aD44otZjiy4TnCKAjIl1DXJiqV
-        MHmqhKx+GlGhVtORlcRiVkaNLQL+Dp7FAyaGcQsDL/pNkoDAZJfUsfecj32mneZjUnIBzVmsVWjto
-        y/NvuT32pB0TnMzvoS47ql7Tdf+FJAH/jrqCAABWTk4yxzZ8fK/b5REa80OIPDE8oqVZwLwytH0LX
-        gSTX1CujdkX4vETQG0605NA4smGl15UYSdYXN+fNfxwCBgMWKyyi1GBlU0PPii9jv95Ydv1mwCkth
-        g3miCQZ7w3I4lvKTzyzVdNqjgXvMnNixdylWya1xyEElEhtXgcB6AxDPMkcqY0fTks8WjtvSQ6t4K
-        R7evQpKQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1jeeQh-0006YQ-LU; Fri, 29 May 2020 12:48:07 +0000
-Date:   Fri, 29 May 2020 05:48:07 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Ye Bin <yebin10@huawei.com>
-Cc:     linux-ide@vger.kernel.org, axboe@kernel.dk,
-        Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH] scsi/libata: Fix usage of page address by page_address
- in ata_scsi_mode_select_xlat function
-Message-ID: <20200529124807.GA23222@infradead.org>
-References: <20200529063251.14665-1-yebin10@huawei.com>
+        id S1726943AbgE2RtC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 29 May 2020 13:49:02 -0400
+Received: from mail-io1-f65.google.com ([209.85.166.65]:39959 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725601AbgE2RtC (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 29 May 2020 13:49:02 -0400
+Received: by mail-io1-f65.google.com with SMTP id q8so233545iow.7;
+        Fri, 29 May 2020 10:49:01 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=BLn5568WhOcT6+u2ym9/jBhSyqxnYH4n/L9rj2t60QE=;
+        b=d54Y283E1oQ+RjivvIpjdY9uNABr5wdispcYRSKOHcKa9/rUU34cTLD3XdajfnzzhS
+         FDFS/frsja7WGqBBmoDx9cvAp/dh+A9b504SX8x3NwTQJcGDnOoI5tU3AA5Nb6HvUvQy
+         QlJ0a578sr6ytgdqOzjJ2VyU7DUAwz5FNQOgQPuyy55+kdT5gYl64R8oB7BI+SIbsJDh
+         Fn4HG7ms2wSFzurdV6NebxCkPVzOI3HUPUZkHnya7L93gsW6w57D7iJeIBYnoLfxaYVD
+         4+yScvvXkk5+NO6LukXr9A1qjTJYWg7XJUryX0UOxCdjzquhBvW46DLWD1Z+pjd/liYF
+         NyiA==
+X-Gm-Message-State: AOAM53259brQHbu8tkTd9wo8PEiTLcvulzL/TY3G9AXUwJ3Ct+a1SEk9
+        JP1MuK57hR+lwPpywtMsxg==
+X-Google-Smtp-Source: ABdhPJy7YUF3lpxrD7YMnpI0UvB3HdDPYFVO6rRfufgNQwXAXOB9FeWO8U/8UblJM9K1CPtEmWfdwQ==
+X-Received: by 2002:a02:1443:: with SMTP id 64mr2603674jag.43.1590774540749;
+        Fri, 29 May 2020 10:49:00 -0700 (PDT)
+Received: from xps15 ([64.188.179.252])
+        by smtp.gmail.com with ESMTPSA id t22sm4001987iom.49.2020.05.29.10.48.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 29 May 2020 10:49:00 -0700 (PDT)
+Received: (nullmailer pid 2643995 invoked by uid 1000);
+        Fri, 29 May 2020 17:48:58 -0000
+Date:   Fri, 29 May 2020 11:48:58 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Jim Quinlan <james.quinlan@broadcom.com>
+Cc:     linux-pci@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Corey Minyard <minyard@acm.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE" 
+        <devicetree@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+        "open list:DMA MAPPING HELPERS" <iommu@lists.linux-foundation.org>,
+        Julien Grall <julien.grall@arm.com>,
+        "moderated list:ARM PORT" <linux-arm-kernel@lists.infradead.org>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        "open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>,
+        Mark Brown <broonie@kernel.org>,
+        Oliver Neukum <oneukum@suse.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Saravana Kannan <saravanak@google.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Suzuki K Poulose <suzuki.poulose@arm.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Wolfram Sang <wsa@kernel.org>
+Subject: Re: [PATCH v2 00/14] PCI: brcmstb: enable PCIe for STB chips
+Message-ID: <20200529174858.GA2640397@bogus>
+References: <20200526191303.1492-1-james.quinlan@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20200529063251.14665-1-yebin10@huawei.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20200526191303.1492-1-james.quinlan@broadcom.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, May 29, 2020 at 02:32:51PM +0800, Ye Bin wrote:
-> index 435781a16875..d674184ed835 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -3723,7 +3723,7 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
->  	if (!scsi_sg_count(scmd) || scsi_sglist(scmd)->length < len)
->  		goto invalid_param_len;
->  
-> -	p = page_address(sg_page(scsi_sglist(scmd)));
-> +	p = page_address(sg_page(scsi_sglist(scmd))) + scsi_sglist(scmd)->offset;
+On Tue, May 26, 2020 at 03:12:39PM -0400, Jim Quinlan wrote:
+> v2:
+> Commit: "device core: Add ability to handle multiple dma offsets"
+>   o Added helper func attach_dma_pfn_offset_map() in address.c (Chistoph)
+>   o Helpers funcs added to __phys_to_dma() & __dma_to_phys() (Christoph)
+>   o Added warning when multiple offsets are needed and !DMA_PFN_OFFSET_MAP
+>   o dev->dma_pfn_map => dev->dma_pfn_offset_map
+>   o s/frm/from/ for dma_pfn_offset_frm_{phys,dma}_addr() (Christoph)
+>   o In device.h: s/const void */const struct dma_pfn_offset_region */
+>   o removed 'unlikely' from unlikely(dev->dma_pfn_offset_map) since
+>     guarded by CONFIG_DMA_PFN_OFFSET_MAP (Christoph)
+>   o Since dev->dma_pfn_offset is copied in usb/core/{usb,message}.c, now
+>     dev->dma_pfn_offset_map is copied as well.
+>   o Merged two of the DMA commits into one (Christoph).
+> 
+> Commit "arm: dma-mapping: Invoke dma offset func if needed":
+>   o Use helper functions instead of #if CONFIG_DMA_PFN_OFFSET
+> 
+> Other commits' changes:
+>   o Removed need for carrying of_id var in priv (Nicolas)
+>   o Commit message rewordings (Bjorn)
+>   o Commit log messages filled to 75 chars (Bjorn)
+>   o devm_reset_control_get_shared())
+>     => devm_reset_control_get_optional_shared (Philipp)
+>   o Add call to reset_control_assert() in PCIe remove routines (Philipp)
+> 
+> v1:
+> This patchset expands the usefulness of the Broadcom Settop Box PCIe
+> controller by building upon the PCIe driver used currently by the
+> Raspbery Pi.  Other forms of this patchset were submitted by me years
+> ago and not accepted; the major sticking point was the code required
+> for the DMA remapping needed for the PCIe driver to work [1].
+> 
+> There have been many changes to the DMA and OF subsystems since that
+> time, making a cleaner and less intrusive patchset possible.  This
+> patchset implements a generalization of "dev->dma_pfn_offset", except
+> that instead of a single scalar offset it provides for multiple
+> offsets via a function which depends upon the "dma-ranges" property of
+> the PCIe host controller.  This is required for proper functionality
+> of the BrcmSTB PCIe controller and possibly some other devices.
 
-This also looks completely buggy on highmem systems and really needs to
-use a kmap_atomic.
+If you can enable the h/w support without the multiple offset support, 
+then I'd split up this series. The latter part might take a bit more 
+time.
+
+Rob
