@@ -1,70 +1,157 @@
-Return-Path: <SRS0=gGcN=7M=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=rdUf=7N=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41D87C433E0
-	for <linux-ide@archiver.kernel.org>; Sat, 30 May 2020 06:18:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F8C2C433DF
+	for <linux-ide@archiver.kernel.org>; Sun, 31 May 2020 19:31:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 228AE2073B
-	for <linux-ide@archiver.kernel.org>; Sat, 30 May 2020 06:18:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 402612074A
+	for <linux-ide@archiver.kernel.org>; Sun, 31 May 2020 19:31:18 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=baylibre-com.20150623.gappssmtp.com header.i=@baylibre-com.20150623.gappssmtp.com header.b="yoeFpNJ+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728765AbgE3GSd (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 30 May 2020 02:18:33 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:59282 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728657AbgE3GSd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sat, 30 May 2020 02:18:33 -0400
-Received: from DGGEMS411-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id AC5D7FB11EB59DE3554F;
-        Sat, 30 May 2020 14:18:30 +0800 (CST)
-Received: from [127.0.0.1] (10.166.215.224) by DGGEMS411-HUB.china.huawei.com
- (10.3.19.211) with Microsoft SMTP Server id 14.3.487.0; Sat, 30 May 2020
- 14:18:28 +0800
-Subject: Re: [PATCH] scsi/libata: Fix usage of page address by page_address in
- ata_scsi_mode_select_xlat function
-To:     Christoph Hellwig <hch@infradead.org>
-References: <20200529063251.14665-1-yebin10@huawei.com>
- <20200529124807.GA23222@infradead.org>
-CC:     <linux-ide@vger.kernel.org>, <axboe@kernel.dk>,
-        Paolo Bonzini <pbonzini@redhat.com>
-From:   yebin <yebin10@huawei.com>
-Message-ID: <5ED1FAB3.6020609@huawei.com>
-Date:   Sat, 30 May 2020 14:18:27 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:38.0) Gecko/20100101
- Thunderbird/38.1.0
+        id S1727050AbgEaTbR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 31 May 2020 15:31:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53384 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725991AbgEaTbR (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 31 May 2020 15:31:17 -0400
+Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB253C061A0E
+        for <linux-ide@vger.kernel.org>; Sun, 31 May 2020 12:31:16 -0700 (PDT)
+Received: by mail-wr1-x443.google.com with SMTP id l10so9336727wrr.10
+        for <linux-ide@vger.kernel.org>; Sun, 31 May 2020 12:31:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=baylibre-com.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=K7gaS/RyXysP8XSZO8VW4EjVKZZX26nytji80U6hsMY=;
+        b=yoeFpNJ+AseffVizMDPduAqqWvYGR7BQmrl+MDzHjoDY9K2v+cLFgirieqtS0PqQ3a
+         +VTIvLQAs/SVxvOr/kdurO4JmFDfV8609wIJad9ybEr7Ihc3UGy9F8znq3h6nVmtkxNh
+         xCfXfyQrBkcRGkECDMCx+uwAHLBt8iVW8XwCpAPfQf77EBK6ZHchoOiLmzueaKvUSyYA
+         y9TOu86u+HGIsoGdnYdCLNKnAGmhLCmOnzMD/jkfb1u5cXqQGxa9agYoi9qa21agPqWI
+         x/BuLafgYeI0HFQM3inFbeXY2/f87wM4LmQyYfWgKekm+g621FpzRNucUFIs82/eOYmt
+         iuVA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=K7gaS/RyXysP8XSZO8VW4EjVKZZX26nytji80U6hsMY=;
+        b=Ryfb7mgdPGb0i49Tg19WOR3AQdpQpjy3VI698qQM+/BustmqroKuEMGYhRnXcSJMvK
+         erY34DNqPcDdvr2vlumdqTnuRlrQ44CPfrF2GvQQE9dutYSMSAyAT/Lt4jeZ+UyddsrR
+         PeR8HsQPtUsUPsqYMw/92c0RRy6bzWUOaxIG4bsB5WD4rjfL+X5/77XGd2Y4WvkeDM1k
+         Wcj4Ld9nw/qhboX/TL0o+4XT005SF/4CnDZj+mAG1sP3/bZiyLO0SSIImC4orALWDaIt
+         pwlpjaXYvbchcJxPLrAOV2q+A4kBqO/gdr4PdTWZmPeaRL6mI5ciJOimsWwST2bArJLw
+         W4ZQ==
+X-Gm-Message-State: AOAM532RMEqzYLKiW6biENKESMihyTkOnw5BvuCdaMAkeUECclf0/Ehu
+        pMzKuD05xk6ZoFkcBIoFbQw4HA==
+X-Google-Smtp-Source: ABdhPJytocb9A9TtDKbdZE0MZ2PiWgscC7HCd7dwvCd7A/ytwz5tGlXtyT8nR8tVO74J9u9xjXE06w==
+X-Received: by 2002:adf:9106:: with SMTP id j6mr17964678wrj.216.1590953475177;
+        Sun, 31 May 2020 12:31:15 -0700 (PDT)
+Received: from Red ([2a01:cb1d:3d5:a100:2e56:dcff:fed2:c6d6])
+        by smtp.googlemail.com with ESMTPSA id o10sm18189197wrq.40.2020.05.31.12.31.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 31 May 2020 12:31:14 -0700 (PDT)
+Date:   Sun, 31 May 2020 21:31:11 +0200
+From:   LABBE Corentin <clabbe@baylibre.com>
+To:     thierry.reding@gmail.com, jonathanh@nvidia.com,
+        pgaikwad@nvidia.com, pdeschrijver@nvidia.com,
+        mturquette@baylibre.com, sboyd@kernel.org, axboe@kernel.dk
+Cc:     linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-clk@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: Re: tegra124-jetson-tk1: sata doesnt work since 5.2
+Message-ID: <20200531193111.GA15331@Red>
+References: <20200319074401.GA4116@Red>
 MIME-Version: 1.0
-In-Reply-To: <20200529124807.GA23222@infradead.org>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.166.215.224]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200319074401.GA4116@Red>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2020/5/29 20:48, Christoph Hellwig wrote:
-> On Fri, May 29, 2020 at 02:32:51PM +0800, Ye Bin wrote:
->> index 435781a16875..d674184ed835 100644
->> --- a/drivers/ata/libata-scsi.c
->> +++ b/drivers/ata/libata-scsi.c
->> @@ -3723,7 +3723,7 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
->>   	if (!scsi_sg_count(scmd) || scsi_sglist(scmd)->length < len)
->>   		goto invalid_param_len;
->>   
->> -	p = page_address(sg_page(scsi_sglist(scmd)));
->> +	p = page_address(sg_page(scsi_sglist(scmd))) + scsi_sglist(scmd)->offset;
-> This also looks completely buggy on highmem systems and really needs to
-> use a kmap_atomic.
-> .
-Thank you  for your reply.
-  As in sg_scsi_ioctl  function allocate bio memory by kzalloc. Maybe 
-it's better to give
-the caller more freedom, and at the same time, it's more robust.
->
+On Thu, Mar 19, 2020 at 08:44:01AM +0100, LABBE Corentin wrote:
+> Hello
+> 
+> sata doesnt work on tegra124-jetson-tk1 on next and master and at least since 5.2 (but 5.1 works).
+> [    0.492810] +5V_SATA: supplied by +5V_SYS
+> [    0.493230] +12V_SATA: supplied by +VDD_MUX
+> [    2.088675] tegra-ahci 70027000.sata: 70027000.sata supply ahci not found, using dummy regulator
+> [    2.097643] tegra-ahci 70027000.sata: 70027000.sata supply phy not found, using dummy regulator
+> [    3.314776] tegra-ahci 70027000.sata: 70027000.sata supply ahci not found, using dummy regulator
+> [    3.323658] tegra-ahci 70027000.sata: 70027000.sata supply phy not found, using dummy regulator
+> [    5.236964] tegra-ahci 70027000.sata: 70027000.sata supply ahci not found, using dummy regulator
+> [    5.245867] tegra-ahci 70027000.sata: 70027000.sata supply phy not found, using dummy regulator
+> [    5.254706] tegra-ahci 70027000.sata: 70027000.sata supply target not found, using dummy regulator
+> [    5.310270] phy phy-sata.6: phy poweron failed --> -110
+> [    5.315604] tegra-ahci 70027000.sata: failed to power on AHCI controller: -110
+> [    5.323022] tegra-ahci: probe of 70027000.sata failed with error -110
+> [   35.694269] +5V_SATA: disabling
+> [   35.697438] +12V_SATA: disabling
+> 
+> I have bisected this problem:
+> git bisect start
+> # bad: [22c58fd70ca48a29505922b1563826593b08cc00] Merge tag 'armsoc-soc' of git://git.kernel.org/pub/scm/linux/kernel/git/soc/soc
+> git bisect bad 22c58fd70ca48a29505922b1563826593b08cc00
+> # good: [67e38f578aaebf34fc1278bbe45a78ee8c73dd33] ARM: ep93xx: move pinctrl interfaces into include/linux/soc
+> git bisect good 67e38f578aaebf34fc1278bbe45a78ee8c73dd33
+> # good: [80f232121b69cc69a31ccb2b38c1665d770b0710] Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next
+> git bisect good 80f232121b69cc69a31ccb2b38c1665d770b0710
+> # good: [e57ccca1ba33e1d92cc3bbf8b6304a46948844b0] Merge tag 'sound-5.2-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/tiwai/sound
+> git bisect good e57ccca1ba33e1d92cc3bbf8b6304a46948844b0
+> # bad: [983dfa4b6ee556563f7963348e4e2f97fc8a15b8] Merge tag 'for-linus-5.2-rc1' of ssh://gitolite.kernel.org/pub/scm/linux/kernel/git/rw/uml
+> git bisect bad 983dfa4b6ee556563f7963348e4e2f97fc8a15b8
+> # good: [8e4ff713ce313dcabbb60e6ede1ffc193e67631f] Merge tag 'rtc-5.2' of git://git.kernel.org/pub/scm/linux/kernel/git/abelloni/linux
+> git bisect good 8e4ff713ce313dcabbb60e6ede1ffc193e67631f
+> # bad: [b970afcfcabd63cd3832e95db096439c177c3592] Merge tag 'powerpc-5.2-1' of ssh://gitolite.kernel.org/pub/scm/linux/kernel/git/powerpc/linux
+> git bisect bad b970afcfcabd63cd3832e95db096439c177c3592
+> # bad: [601e6bcc4ef02bda2831d5ac8133947b5edf597b] Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net
+> git bisect bad 601e6bcc4ef02bda2831d5ac8133947b5edf597b
+> # good: [7e9c62bdb41af76974d594da89854a6aba645e58] Merge branches 'clk-sa', 'clk-aspeed', 'clk-samsung', 'clk-ingenic' and 'clk-zynq' into clk-next
+> git bisect good 7e9c62bdb41af76974d594da89854a6aba645e58
+> # bad: [0caf000817353cfc5db22363ecdac63b83d3a3f9] Merge branch 'clk-ti' into clk-next
+> git bisect bad 0caf000817353cfc5db22363ecdac63b83d3a3f9
+> # good: [5816b74581b45cf086a84ab14e13354a65e8e22c] Merge branches 'clk-hisi', 'clk-lochnagar', 'clk-allwinner', 'clk-rockchip' and 'clk-qoriq' into clk-next
+> git bisect good 5816b74581b45cf086a84ab14e13354a65e8e22c
+> # good: [7b4c162e03d47e037f8ee773c3e300eefb599a83] clk: at91: Mark struct clk_range as const
+> git bisect good 7b4c162e03d47e037f8ee773c3e300eefb599a83
+> # bad: [e71f4d385878671991e200083c7d30eb4ca8e99a] clk: tegra: divider: Mark Memory Controller clock as read-only
+> git bisect bad e71f4d385878671991e200083c7d30eb4ca8e99a
+> # bad: [924ee3d551c9deb16090230b824988bd37e72aa8] clk: tegra: emc: Don't enable EMC clock manually
+> git bisect bad 924ee3d551c9deb16090230b824988bd37e72aa8
+> # bad: [40db569d6769ffa3864fd1b89616b1a7323568a8] clk: tegra: Fix PLLM programming on Tegra124+ when PMC overrides divider
+> git bisect bad 40db569d6769ffa3864fd1b89616b1a7323568a8
+> # bad: [bff1cef5f23afbe49f5ebd766980dc612f5e9d0a] clk: tegra: Don't enable already enabled PLLs
+> git bisect bad bff1cef5f23afbe49f5ebd766980dc612f5e9d0a
+> # first bad commit: [bff1cef5f23afbe49f5ebd766980dc612f5e9d0a] clk: tegra: Don't enable already enabled PLLs
+> 
 
+Hello
 
+I have digged a bit more and with the following "patch" I have now access to sata again
+diff --git a/drivers/clk/tegra/clk-pll.c b/drivers/clk/tegra/clk-pll.c
+index 0b212cf2e794..b4e2020051d5 100644
+--- a/drivers/clk/tegra/clk-pll.c
++++ b/drivers/clk/tegra/clk-pll.c
+@@ -1602,7 +1603,7 @@ static int clk_plle_tegra114_enable(struct clk_hw *hw)
+        unsigned long input_rate;
+ 
+        if (clk_pll_is_enabled(hw))
+-               return 0;
++               pr_info("%s %s\n", __func__, clk_hw_get_name(&pll->hw));
+ 
+        input_rate = clk_hw_get_rate(clk_hw_get_parent(hw));
+
+This patch lead to a probed ahci, and I can see "clk_plle_tegra114_enable pll_e" in messages.
+
+So the bad part of bff1cef5f23afbe49f5ebd766980dc612f5e9d0a is found.
+As additional information, my previous kernel has CONFIG_PHY_TEGRA_XUSB=m (since firmware is on rootfs which is on sata)
+but with this sata fail the same, having CONFIG_PHY_TEGRA_XUSB=y (and so xusb firmware in kernel) seems "necessary" for having SATA working.
+
+Regards
