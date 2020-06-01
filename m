@@ -1,157 +1,171 @@
-Return-Path: <SRS0=rdUf=7N=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=gVoV=7O=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F8C2C433DF
-	for <linux-ide@archiver.kernel.org>; Sun, 31 May 2020 19:31:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A3F5C433DF
+	for <linux-ide@archiver.kernel.org>; Mon,  1 Jun 2020 10:13:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 402612074A
-	for <linux-ide@archiver.kernel.org>; Sun, 31 May 2020 19:31:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 32D45206A4
+	for <linux-ide@archiver.kernel.org>; Mon,  1 Jun 2020 10:13:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre-com.20150623.gappssmtp.com header.i=@baylibre-com.20150623.gappssmtp.com header.b="yoeFpNJ+"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="mv9J7U/d"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727050AbgEaTbR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 31 May 2020 15:31:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53384 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725991AbgEaTbR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 31 May 2020 15:31:17 -0400
-Received: from mail-wr1-x443.google.com (mail-wr1-x443.google.com [IPv6:2a00:1450:4864:20::443])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB253C061A0E
-        for <linux-ide@vger.kernel.org>; Sun, 31 May 2020 12:31:16 -0700 (PDT)
-Received: by mail-wr1-x443.google.com with SMTP id l10so9336727wrr.10
-        for <linux-ide@vger.kernel.org>; Sun, 31 May 2020 12:31:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre-com.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=K7gaS/RyXysP8XSZO8VW4EjVKZZX26nytji80U6hsMY=;
-        b=yoeFpNJ+AseffVizMDPduAqqWvYGR7BQmrl+MDzHjoDY9K2v+cLFgirieqtS0PqQ3a
-         +VTIvLQAs/SVxvOr/kdurO4JmFDfV8609wIJad9ybEr7Ihc3UGy9F8znq3h6nVmtkxNh
-         xCfXfyQrBkcRGkECDMCx+uwAHLBt8iVW8XwCpAPfQf77EBK6ZHchoOiLmzueaKvUSyYA
-         y9TOu86u+HGIsoGdnYdCLNKnAGmhLCmOnzMD/jkfb1u5cXqQGxa9agYoi9qa21agPqWI
-         x/BuLafgYeI0HFQM3inFbeXY2/f87wM4LmQyYfWgKekm+g621FpzRNucUFIs82/eOYmt
-         iuVA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=K7gaS/RyXysP8XSZO8VW4EjVKZZX26nytji80U6hsMY=;
-        b=Ryfb7mgdPGb0i49Tg19WOR3AQdpQpjy3VI698qQM+/BustmqroKuEMGYhRnXcSJMvK
-         erY34DNqPcDdvr2vlumdqTnuRlrQ44CPfrF2GvQQE9dutYSMSAyAT/Lt4jeZ+UyddsrR
-         PeR8HsQPtUsUPsqYMw/92c0RRy6bzWUOaxIG4bsB5WD4rjfL+X5/77XGd2Y4WvkeDM1k
-         Wcj4Ld9nw/qhboX/TL0o+4XT005SF/4CnDZj+mAG1sP3/bZiyLO0SSIImC4orALWDaIt
-         pwlpjaXYvbchcJxPLrAOV2q+A4kBqO/gdr4PdTWZmPeaRL6mI5ciJOimsWwST2bArJLw
-         W4ZQ==
-X-Gm-Message-State: AOAM532RMEqzYLKiW6biENKESMihyTkOnw5BvuCdaMAkeUECclf0/Ehu
-        pMzKuD05xk6ZoFkcBIoFbQw4HA==
-X-Google-Smtp-Source: ABdhPJytocb9A9TtDKbdZE0MZ2PiWgscC7HCd7dwvCd7A/ytwz5tGlXtyT8nR8tVO74J9u9xjXE06w==
-X-Received: by 2002:adf:9106:: with SMTP id j6mr17964678wrj.216.1590953475177;
-        Sun, 31 May 2020 12:31:15 -0700 (PDT)
-Received: from Red ([2a01:cb1d:3d5:a100:2e56:dcff:fed2:c6d6])
-        by smtp.googlemail.com with ESMTPSA id o10sm18189197wrq.40.2020.05.31.12.31.13
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 31 May 2020 12:31:14 -0700 (PDT)
-Date:   Sun, 31 May 2020 21:31:11 +0200
-From:   LABBE Corentin <clabbe@baylibre.com>
-To:     thierry.reding@gmail.com, jonathanh@nvidia.com,
-        pgaikwad@nvidia.com, pdeschrijver@nvidia.com,
-        mturquette@baylibre.com, sboyd@kernel.org, axboe@kernel.dk
-Cc:     linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-clk@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: Re: tegra124-jetson-tk1: sata doesnt work since 5.2
-Message-ID: <20200531193111.GA15331@Red>
-References: <20200319074401.GA4116@Red>
+        id S1725972AbgFAKN0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 1 Jun 2020 06:13:26 -0400
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:43315 "EHLO
+        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725946AbgFAKN0 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 1 Jun 2020 06:13:26 -0400
+Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200601101324euoutp020d9967466f2855c7cb25794e0e6cd952~UY_U83a5u3021830218euoutp028
+        for <linux-ide@vger.kernel.org>; Mon,  1 Jun 2020 10:13:24 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200601101324euoutp020d9967466f2855c7cb25794e0e6cd952~UY_U83a5u3021830218euoutp028
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1591006404;
+        bh=OHPpvFiZE34wyuaajTiViUqmeZXVmXg2EsQc6ds9wOQ=;
+        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
+        b=mv9J7U/d73ZUz19tReRboQNpB/izF7iF9yw4kTGhXwdzUCvgYQtNAVGmLkG/Lj8/d
+         EL25ZRDfA4uwGOESzba2VOxCvIBUHbLmdy2cKAIpPJ+PLIyMEhozreU59VWUSM3w8B
+         G+p/9ZdH2xPPdjkocXWeoijkTQooIENhGPfoQZgQ=
+Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+        20200601101324eucas1p2ae7ab4c7b9378ec6e04f1f7a3359a371~UY_U1BqEt2675526755eucas1p27;
+        Mon,  1 Jun 2020 10:13:24 +0000 (GMT)
+Received: from eucas1p2.samsung.com ( [182.198.249.207]) by
+        eusmges3new.samsung.com (EUCPMTA) with SMTP id 02.80.60698.4C4D4DE5; Mon,  1
+        Jun 2020 11:13:24 +0100 (BST)
+Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
+        20200601101324eucas1p16837835ff355d5b42c8099c29270722d~UY_UhvFxF2001920019eucas1p1J;
+        Mon,  1 Jun 2020 10:13:24 +0000 (GMT)
+Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
+        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200601101324eusmtrp263c67fd0180586027f1ce6e6b16fc016~UY_UhLpRQ2432024320eusmtrp2K;
+        Mon,  1 Jun 2020 10:13:24 +0000 (GMT)
+X-AuditID: cbfec7f5-a29ff7000001ed1a-e2-5ed4d4c44590
+Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id 31.51.07950.4C4D4DE5; Mon,  1
+        Jun 2020 11:13:24 +0100 (BST)
+Received: from [106.120.51.71] (unknown [106.120.51.71]) by
+        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20200601101323eusmtip182101ceb7f0eb212baafb1a6e4a21fe5~UY_UN6HOb1231112311eusmtip1d;
+        Mon,  1 Jun 2020 10:13:23 +0000 (GMT)
+Subject: Re: [PATCH] ata: omit superfluous error message
+To:     Tang Bin <tangbin@cmss.chinamobile.com>
+Cc:     axboe@kernel.dk, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Message-ID: <7c2974bd-5aa5-b423-ebb4-2fdf8a41f6ca@samsung.com>
+Date:   Mon, 1 Jun 2020 12:13:23 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+        Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200319074401.GA4116@Red>
+In-Reply-To: <20200420135342.11984-1-tangbin@cmss.chinamobile.com>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprEKsWRmVeSWpSXmKPExsWy7djP87pHrlyJM/jWI26x+m4/m8WxHY+Y
+        LC7vmsNm8fF/M7MDi8f56b1sHpfPlnp83iQXwBzFZZOSmpNZllqkb5fAlfG2Zw1TwQW+iqXX
+        ZjI2ML7m7mLk5JAQMJG483EBexcjF4eQwApGiXezzrJCOF8YJfa92sUM4XxmlFi3bAMLTMvV
+        5nNQieWMEocfTmKCcN4ySjxYPpUNpEpYwELiwcPZzCC2iIC2xOZJEN3MAj4SJ+Z3M4LYbAJW
+        EhPbV4HZvAJ2EtcvbgWrYRFQkfi9rZsJxBYViJD49OAwK0SNoMTJmU/AajgFnCROTN3FDjFT
+        XOLWk/lMELa8xPa3c8CukxDoZpdo2f2AEeJsF4kbnZOgXhCWeHV8CzuELSPxf+d8JoiGdYwS
+        fzteQHVvZ5RYPvkfG0SVtcSdc7+AbA6gFZoS63fpQ4QdJX7PWMoKEpYQ4JO48VYQ4gg+iUnb
+        pjNDhHklOtqEIKrVJDYs28AGs7Zr50rmCYxKs5C8NgvJO7OQvDMLYe8CRpZVjOKppcW56anF
+        xnmp5XrFibnFpXnpesn5uZsYgSnl9L/jX3cw7vuTdIhRgINRiYdX49LlOCHWxLLiytxDjBIc
+        zEoivE5nT8cJ8aYkVlalFuXHF5XmpBYfYpTmYFES5zVe9DJWSCA9sSQ1OzW1ILUIJsvEwSnV
+        wGgjEJ6xOy/06qsLxzL7z7WsEdu88/xxGaZkw/6b/S/cl06aaqC1e8aftBccO5m+JJkFaWhL
+        zUiYHf1o8tE7ccL26z6q/zn64GnmhMAJm9qZShgEz7JaLervfSb53uUV29UdksfE93/vVJar
+        9F94t3Dr/rjvHuvmOi1k37p8/kT+1/K/s7kWRxUrsRRnJBpqMRcVJwIAPqV8sCUDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrMIsWRmVeSWpSXmKPExsVy+t/xu7pHrlyJM3i1ksVi9d1+NotjOx4x
+        WVzeNYfN4uP/ZmYHFo/z03vZPC6fLfX4vEkugDlKz6Yov7QkVSEjv7jEVina0MJIz9DSQs/I
+        xFLP0Ng81srIVEnfziYlNSezLLVI3y5BL+Ntzxqmggt8FUuvzWRsYHzN3cXIySEhYCJxtfkc
+        cxcjF4eQwFJGiUUzfwA5HEAJGYnj68sgaoQl/lzrYoOoec0o8WLfFVaQhLCAhcSDh7OZQWwR
+        AW2JzZM2sIDYzAI+EifmdzNCNExllFh36hNYA5uAlcTE9lWMIDavgJ3E9YtbwRpYBFQkfm/r
+        ZgKxRQUiJA7vmAVVIyhxcuYTsBpOASeJE1N3sUMsUJf4M+8SM4QtLnHryXwmCFteYvvbOcwT
+        GIVmIWmfhaRlFpKWWUhaFjCyrGIUSS0tzk3PLTbSK07MLS7NS9dLzs/dxAiMoG3Hfm7Zwdj1
+        LvgQowAHoxIP74Xzl+OEWBPLiitzDzFKcDArifA6nT0dJ8SbklhZlVqUH19UmpNafIjRFOi5
+        icxSosn5wOjOK4k3NDU0t7A0NDc2NzazUBLn7RA4GCMkkJ5YkpqdmlqQWgTTx8TBKdXAyH55
+        WfWrOS+tni1uCl8QscjiYerrzslFyyJDJml+nfkn7dS3m8FNRxN/imqc7dCJLrLuUgycsPDa
+        BJv6d2JbHXWDX2w57vIm88PWqRan175SenhZj9v+MLd44tOIXR2fqwUCtUJaTFpfvwl72BWU
+        8yJ2WdKBqT9Vvxie0OreaBtleOiO6CvGuUosxRmJhlrMRcWJAGmP0wG2AgAA
+X-CMS-MailID: 20200601101324eucas1p16837835ff355d5b42c8099c29270722d
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-RootMTR: 20200420135215eucas1p2f807c43a232564804dc864db55bd09a8
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20200420135215eucas1p2f807c43a232564804dc864db55bd09a8
+References: <CGME20200420135215eucas1p2f807c43a232564804dc864db55bd09a8@eucas1p2.samsung.com>
+        <20200420135342.11984-1-tangbin@cmss.chinamobile.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Mar 19, 2020 at 08:44:01AM +0100, LABBE Corentin wrote:
-> Hello
+
+Hi,
+
+On 4/20/20 3:53 PM, Tang Bin wrote:
+> In the probe function, when get irq failed, the function
+> platform_get_irq() logs an error message, so remove
+> redundant message here.
+
+platform_get_irq() doesn't log an error message for -EPROBE_DEFER
+case so the conversion shouldn't be done automatically for device
+drivers which don't support deferred probing (i.e. pata_rb532_cf &
+sata_highbank).
+
+Unless there is a proof that -PROBE_DEFER can't happen for these
+two drivers this patch shouldn't be applied.
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
+
+> Signed-off-by: Tang Bin <tangbin@cmss.chinamobile.com>
+> ---
+>  drivers/ata/pata_rb532_cf.c | 4 +---
+>  drivers/ata/sata_highbank.c | 4 +---
+>  2 files changed, 2 insertions(+), 6 deletions(-)
 > 
-> sata doesnt work on tegra124-jetson-tk1 on next and master and at least since 5.2 (but 5.1 works).
-> [    0.492810] +5V_SATA: supplied by +5V_SYS
-> [    0.493230] +12V_SATA: supplied by +VDD_MUX
-> [    2.088675] tegra-ahci 70027000.sata: 70027000.sata supply ahci not found, using dummy regulator
-> [    2.097643] tegra-ahci 70027000.sata: 70027000.sata supply phy not found, using dummy regulator
-> [    3.314776] tegra-ahci 70027000.sata: 70027000.sata supply ahci not found, using dummy regulator
-> [    3.323658] tegra-ahci 70027000.sata: 70027000.sata supply phy not found, using dummy regulator
-> [    5.236964] tegra-ahci 70027000.sata: 70027000.sata supply ahci not found, using dummy regulator
-> [    5.245867] tegra-ahci 70027000.sata: 70027000.sata supply phy not found, using dummy regulator
-> [    5.254706] tegra-ahci 70027000.sata: 70027000.sata supply target not found, using dummy regulator
-> [    5.310270] phy phy-sata.6: phy poweron failed --> -110
-> [    5.315604] tegra-ahci 70027000.sata: failed to power on AHCI controller: -110
-> [    5.323022] tegra-ahci: probe of 70027000.sata failed with error -110
-> [   35.694269] +5V_SATA: disabling
-> [   35.697438] +12V_SATA: disabling
-> 
-> I have bisected this problem:
-> git bisect start
-> # bad: [22c58fd70ca48a29505922b1563826593b08cc00] Merge tag 'armsoc-soc' of git://git.kernel.org/pub/scm/linux/kernel/git/soc/soc
-> git bisect bad 22c58fd70ca48a29505922b1563826593b08cc00
-> # good: [67e38f578aaebf34fc1278bbe45a78ee8c73dd33] ARM: ep93xx: move pinctrl interfaces into include/linux/soc
-> git bisect good 67e38f578aaebf34fc1278bbe45a78ee8c73dd33
-> # good: [80f232121b69cc69a31ccb2b38c1665d770b0710] Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next
-> git bisect good 80f232121b69cc69a31ccb2b38c1665d770b0710
-> # good: [e57ccca1ba33e1d92cc3bbf8b6304a46948844b0] Merge tag 'sound-5.2-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/tiwai/sound
-> git bisect good e57ccca1ba33e1d92cc3bbf8b6304a46948844b0
-> # bad: [983dfa4b6ee556563f7963348e4e2f97fc8a15b8] Merge tag 'for-linus-5.2-rc1' of ssh://gitolite.kernel.org/pub/scm/linux/kernel/git/rw/uml
-> git bisect bad 983dfa4b6ee556563f7963348e4e2f97fc8a15b8
-> # good: [8e4ff713ce313dcabbb60e6ede1ffc193e67631f] Merge tag 'rtc-5.2' of git://git.kernel.org/pub/scm/linux/kernel/git/abelloni/linux
-> git bisect good 8e4ff713ce313dcabbb60e6ede1ffc193e67631f
-> # bad: [b970afcfcabd63cd3832e95db096439c177c3592] Merge tag 'powerpc-5.2-1' of ssh://gitolite.kernel.org/pub/scm/linux/kernel/git/powerpc/linux
-> git bisect bad b970afcfcabd63cd3832e95db096439c177c3592
-> # bad: [601e6bcc4ef02bda2831d5ac8133947b5edf597b] Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net
-> git bisect bad 601e6bcc4ef02bda2831d5ac8133947b5edf597b
-> # good: [7e9c62bdb41af76974d594da89854a6aba645e58] Merge branches 'clk-sa', 'clk-aspeed', 'clk-samsung', 'clk-ingenic' and 'clk-zynq' into clk-next
-> git bisect good 7e9c62bdb41af76974d594da89854a6aba645e58
-> # bad: [0caf000817353cfc5db22363ecdac63b83d3a3f9] Merge branch 'clk-ti' into clk-next
-> git bisect bad 0caf000817353cfc5db22363ecdac63b83d3a3f9
-> # good: [5816b74581b45cf086a84ab14e13354a65e8e22c] Merge branches 'clk-hisi', 'clk-lochnagar', 'clk-allwinner', 'clk-rockchip' and 'clk-qoriq' into clk-next
-> git bisect good 5816b74581b45cf086a84ab14e13354a65e8e22c
-> # good: [7b4c162e03d47e037f8ee773c3e300eefb599a83] clk: at91: Mark struct clk_range as const
-> git bisect good 7b4c162e03d47e037f8ee773c3e300eefb599a83
-> # bad: [e71f4d385878671991e200083c7d30eb4ca8e99a] clk: tegra: divider: Mark Memory Controller clock as read-only
-> git bisect bad e71f4d385878671991e200083c7d30eb4ca8e99a
-> # bad: [924ee3d551c9deb16090230b824988bd37e72aa8] clk: tegra: emc: Don't enable EMC clock manually
-> git bisect bad 924ee3d551c9deb16090230b824988bd37e72aa8
-> # bad: [40db569d6769ffa3864fd1b89616b1a7323568a8] clk: tegra: Fix PLLM programming on Tegra124+ when PMC overrides divider
-> git bisect bad 40db569d6769ffa3864fd1b89616b1a7323568a8
-> # bad: [bff1cef5f23afbe49f5ebd766980dc612f5e9d0a] clk: tegra: Don't enable already enabled PLLs
-> git bisect bad bff1cef5f23afbe49f5ebd766980dc612f5e9d0a
-> # first bad commit: [bff1cef5f23afbe49f5ebd766980dc612f5e9d0a] clk: tegra: Don't enable already enabled PLLs
+> diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
+> index 479c4b29b..dcde84f57 100644
+> --- a/drivers/ata/pata_rb532_cf.c
+> +++ b/drivers/ata/pata_rb532_cf.c
+> @@ -115,10 +115,8 @@ static int rb532_pata_driver_probe(struct platform_device *pdev)
+>  	}
+>  
+>  	irq = platform_get_irq(pdev, 0);
+> -	if (irq <= 0) {
+> -		dev_err(&pdev->dev, "no IRQ resource found\n");
+> +	if (irq <= 0)
+>  		return -ENOENT;
+> -	}
+>  
+>  	gpiod = devm_gpiod_get(&pdev->dev, NULL, GPIOD_IN);
+>  	if (IS_ERR(gpiod)) {
+> diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
+> index ad3893c62..efd1925a9 100644
+> --- a/drivers/ata/sata_highbank.c
+> +++ b/drivers/ata/sata_highbank.c
+> @@ -469,10 +469,8 @@ static int ahci_highbank_probe(struct platform_device *pdev)
+>  	}
+>  
+>  	irq = platform_get_irq(pdev, 0);
+> -	if (irq <= 0) {
+> -		dev_err(dev, "no irq\n");
+> +	if (irq <= 0)
+>  		return -EINVAL;
+> -	}
+>  
+>  	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
+>  	if (!hpriv) {
 > 
 
-Hello
-
-I have digged a bit more and with the following "patch" I have now access to sata again
-diff --git a/drivers/clk/tegra/clk-pll.c b/drivers/clk/tegra/clk-pll.c
-index 0b212cf2e794..b4e2020051d5 100644
---- a/drivers/clk/tegra/clk-pll.c
-+++ b/drivers/clk/tegra/clk-pll.c
-@@ -1602,7 +1603,7 @@ static int clk_plle_tegra114_enable(struct clk_hw *hw)
-        unsigned long input_rate;
- 
-        if (clk_pll_is_enabled(hw))
--               return 0;
-+               pr_info("%s %s\n", __func__, clk_hw_get_name(&pll->hw));
- 
-        input_rate = clk_hw_get_rate(clk_hw_get_parent(hw));
-
-This patch lead to a probed ahci, and I can see "clk_plle_tegra114_enable pll_e" in messages.
-
-So the bad part of bff1cef5f23afbe49f5ebd766980dc612f5e9d0a is found.
-As additional information, my previous kernel has CONFIG_PHY_TEGRA_XUSB=m (since firmware is on rootfs which is on sata)
-but with this sata fail the same, having CONFIG_PHY_TEGRA_XUSB=y (and so xusb firmware in kernel) seems "necessary" for having SATA working.
-
-Regards
