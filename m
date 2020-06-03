@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06DC2C433E0
-	for <linux-ide@archiver.kernel.org>; Wed,  3 Jun 2020 23:32:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2B6DC433E8
+	for <linux-ide@archiver.kernel.org>; Wed,  3 Jun 2020 23:33:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CEBE020734
-	for <linux-ide@archiver.kernel.org>; Wed,  3 Jun 2020 23:32:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BBDE4207D0
+	for <linux-ide@archiver.kernel.org>; Wed,  3 Jun 2020 23:33:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="BLpfxw/6"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="YTEneSOL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726649AbgFCXcf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 3 Jun 2020 19:32:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55632 "EHLO
+        id S1726189AbgFCXdO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 3 Jun 2020 19:33:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726625AbgFCXc1 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 3 Jun 2020 19:32:27 -0400
-Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2898BC008639
-        for <linux-ide@vger.kernel.org>; Wed,  3 Jun 2020 16:32:21 -0700 (PDT)
-Received: by mail-pl1-x642.google.com with SMTP id m7so1379545plt.5
-        for <linux-ide@vger.kernel.org>; Wed, 03 Jun 2020 16:32:21 -0700 (PDT)
+        with ESMTP id S1725863AbgFCXcU (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 3 Jun 2020 19:32:20 -0400
+Received: from mail-pf1-x441.google.com (mail-pf1-x441.google.com [IPv6:2607:f8b0:4864:20::441])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADE22C0085C4
+        for <linux-ide@vger.kernel.org>; Wed,  3 Jun 2020 16:32:18 -0700 (PDT)
+Received: by mail-pf1-x441.google.com with SMTP id 64so2485480pfg.8
+        for <linux-ide@vger.kernel.org>; Wed, 03 Jun 2020 16:32:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=AV3zPGZvUQ01fJNeRdN9RcESkWzhMr4mEDUODLN9pLA=;
-        b=BLpfxw/6wXWpxKYLlCAZ21WRkm9IiS+h8QcGOpAouQszh1iMLWmw9T4KLc9TZj8hYc
-         dx6tovtKtkGDVrQF1aoFfpozdX8eHpFDTKu0YVHCTw220bEnL7QHVusBdzlPQyI7mtxq
-         CBiuNg7P/T3Joe2o1yRIOs+RMoUmvb0p/GaJk=
+        bh=3Hqe0fSnXDR9BQhToHGwDvWeXmOn6wXlTM1ZNtQBNo0=;
+        b=YTEneSOLG0G03VL7npO7bUdyovAOz/rWIhWyhFR63irmezy8TdYcAkK240HUiwVQWE
+         l1+wS3Zsf9sMrntm2h4pD25VpYQ6IwLesvsppd1RMdvcr3jcMToX3FgASNyJIcm+17M+
+         RgKR5xqROZSaXLSFW/JQA7YcOaR/t1jFVii4U=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=AV3zPGZvUQ01fJNeRdN9RcESkWzhMr4mEDUODLN9pLA=;
-        b=bIndK56hbD72K1YJR6BRLNNTKDziPc+Rtx5fngLfg7oGvptucKsYtBlK7yuWam5lOU
-         v9+8aLo9NcJlAa5AnvTRbxDe3RXQ6XD4Kbs9KL27iF6BxF9ygs4e7WxcHb6wcCJp2aTw
-         S1Tme2erQKSi9h1k42evr6qVRLl4kbmMXVaI6h1pCxUH5/3iFYrqolMsrZheBtU0k65j
-         vxHTVyFTB4oeeCgxu9cKOLpLX/nZ2lN+Yp6LGl10NkuRmGFEwSIkzj3jgVEW034+P/DC
-         W3U8m9RS88OODTB2+LKG5E9MvLMslYlifdtC2nfmwOzn3QgGGlOxPq7n671ie9dnrohG
-         WJ9Q==
-X-Gm-Message-State: AOAM531LkOi/r5kmZzGOBl0WBejv5FX582CB9erA+RBw8Ie6/YOr1uXh
-        4T6qbZp4ic06Dk2QbvB3Kx7plQ==
-X-Google-Smtp-Source: ABdhPJwKQWXIp6h2GXr8CdJrjHWBz+VhwNoB6SucfRbGarsMlcrgSptDV/HFlzDMl3tG4M3PfRVvsQ==
-X-Received: by 2002:a17:90a:36aa:: with SMTP id t39mr2389819pjb.185.1591227140733;
-        Wed, 03 Jun 2020 16:32:20 -0700 (PDT)
+        bh=3Hqe0fSnXDR9BQhToHGwDvWeXmOn6wXlTM1ZNtQBNo0=;
+        b=V4TsVWUjIjs+W46z4WiiR6UGHcjytIKiITZp1UzGD0XUZZmXCWMHmCttY00oaYVyw4
+         cxYSisgC1s4Tfzgjp4URu0Un+PNCtW8jNClfnXalqCavGEw1zsRVdBRHpRlSAJZz7tDA
+         cWzsgwvIvbvZhCLPB2yyU+uYSsW9lAtDLkMW95WjBUIxxZdw509DtHSaSSC878POc1Hu
+         0rb9jreDpXs7lBKN32rkI4qQ1epgYla6kPkQW6i3YpOw2ert3k78FVQoPiO/OWGAjMbL
+         Y6YFCz6nXD+lbdvbCM/sKB2EucyXWdVpuRXmU6yyk2bI+gN3e6bx1R3FW6h7E6BWkCnR
+         Fihw==
+X-Gm-Message-State: AOAM530gMmGMDWqf46OX6qSGFtCY9h4k6gOD7BbNA7FaBuHtAfDb2EHC
+        I3YVliWi+YbAtKY4AX4USeGfyw==
+X-Google-Smtp-Source: ABdhPJyfJH3U7PUxTmeWYwI+KnsyVJ3CXtEz238mctrUyUOZNrrAJx63byFxfj5FXVnOwJj3WTFGgg==
+X-Received: by 2002:a65:41c8:: with SMTP id b8mr1632114pgq.265.1591227138290;
+        Wed, 03 Jun 2020 16:32:18 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id c123sm2738945pfb.102.2020.06.03.16.32.15
+        by smtp.gmail.com with ESMTPSA id l3sm3402369pju.43.2020.06.03.16.32.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Wed, 03 Jun 2020 16:32:16 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
@@ -67,14 +67,13 @@ Cc:     Kees Cook <keescook@chromium.org>,
         linux-wireless@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-clk@vger.kernel.org, linux-spi@vger.kernel.org,
         linux-mm@kvack.org, clang-built-linux@googlegroups.com
-Subject: [PATCH 07/10] spi: davinci: Remove uninitialized_var() usage
-Date:   Wed,  3 Jun 2020 16:32:00 -0700
-Message-Id: <20200603233203.1695403-8-keescook@chromium.org>
+Subject: [PATCH 05/10] ide: Remove uninitialized_var() usage
+Date:   Wed,  3 Jun 2020 16:31:58 -0700
+Message-Id: <20200603233203.1695403-6-keescook@chromium.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200603233203.1695403-1-keescook@chromium.org>
 References: <20200603233203.1695403-1-keescook@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
@@ -88,10 +87,9 @@ simply initialize the variable or make compiler changes. As a precursor
 to removing[2] this[3] macro[4], just remove this variable since it was
 actually unused:
 
-drivers/spi/spi-davinci.c: In function ‘davinci_spi_bufs’:
-drivers/spi/spi-davinci.c:579:11: warning: unused variable ‘rx_buf_count’ [-Wunused-variable]
-  579 |  unsigned rx_buf_count;
-      |           ^~~~~~~~~~~~
+drivers/ide/ide-taskfile.c:232:34: warning: unused variable 'flags' [-Wunused-variable]
+        unsigned long uninitialized_var(flags);
+                                        ^
 
 [1] https://lore.kernel.org/lkml/20200603174714.192027-1-glider@google.com/
 [2] https://lore.kernel.org/lkml/CA+55aFw+Vbj0i=1TGqCR5vQkCzWJ0QxK6CernOU6eedsudAixw@mail.gmail.com/
@@ -100,21 +98,21 @@ drivers/spi/spi-davinci.c:579:11: warning: unused variable ‘rx_buf_count’ [-
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/spi/spi-davinci.c | 1 -
+ drivers/ide/ide-taskfile.c | 1 -
  1 file changed, 1 deletion(-)
 
-diff --git a/drivers/spi/spi-davinci.c b/drivers/spi/spi-davinci.c
-index f71c497393a6..f50c0c79cbdf 100644
---- a/drivers/spi/spi-davinci.c
-+++ b/drivers/spi/spi-davinci.c
-@@ -576,7 +576,6 @@ static int davinci_spi_bufs(struct spi_device *spi, struct spi_transfer *t)
- 	u32 errors = 0;
- 	struct davinci_spi_config *spicfg;
- 	struct davinci_spi_platform_data *pdata;
--	unsigned uninitialized_var(rx_buf_count);
- 
- 	dspi = spi_master_get_devdata(spi->master);
- 	pdata = &dspi->pdata;
+diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
+index aab6a10435b6..a26f85ab58a9 100644
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -229,7 +229,6 @@ void ide_pio_bytes(ide_drive_t *drive, struct ide_cmd *cmd,
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct scatterlist *sg = hwif->sg_table;
+ 	struct scatterlist *cursg = cmd->cursg;
+-	unsigned long uninitialized_var(flags);
+ 	struct page *page;
+ 	unsigned int offset;
+ 	u8 *buf;
 -- 
 2.25.1
 
