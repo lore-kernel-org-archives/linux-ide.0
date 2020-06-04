@@ -2,156 +2,126 @@ Return-Path: <SRS0=h3CG=7R=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 435DBC433DF
-	for <linux-ide@archiver.kernel.org>; Thu,  4 Jun 2020 14:56:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B208CC433DF
+	for <linux-ide@archiver.kernel.org>; Thu,  4 Jun 2020 14:59:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 22D7B207D8
-	for <linux-ide@archiver.kernel.org>; Thu,  4 Jun 2020 14:56:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F889207D8
+	for <linux-ide@archiver.kernel.org>; Thu,  4 Jun 2020 14:59:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="S90pbrXY"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="TupHTdyg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729082AbgFDO4n (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 4 Jun 2020 10:56:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57666 "EHLO
+        id S1729216AbgFDO7n (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 4 Jun 2020 10:59:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729100AbgFDO4n (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 4 Jun 2020 10:56:43 -0400
-Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38A82C08C5C2
-        for <linux-ide@vger.kernel.org>; Thu,  4 Jun 2020 07:56:43 -0700 (PDT)
-Received: by mail-pf1-x442.google.com with SMTP id x22so3371285pfn.3
-        for <linux-ide@vger.kernel.org>; Thu, 04 Jun 2020 07:56:43 -0700 (PDT)
+        with ESMTP id S1729203AbgFDO7n (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 4 Jun 2020 10:59:43 -0400
+Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3EE0C08C5C4
+        for <linux-ide@vger.kernel.org>; Thu,  4 Jun 2020 07:59:42 -0700 (PDT)
+Received: by mail-pf1-x444.google.com with SMTP id 64so3360737pfg.8
+        for <linux-ide@vger.kernel.org>; Thu, 04 Jun 2020 07:59:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=B0VRWP1UqHBzaSQ/0VAH8ROzdZmpnLpk8DQEvJRbm6g=;
-        b=S90pbrXYQvAWuisADwIVqFJze1Gn3O7VI3b7ci34HlxsFIiSm55Agl3HtXdIfOtlj1
-         kFuWBlQoujZfnla0pnjl4P9hL71UlfgA047f6CDtcKWtqp78Vi3ktMNpDFcArsvn0Aa4
-         7gBNWjkF+L6ja8DfU5D6aFyeEosVd+IcgieMM=
+        bh=xZR3lWkoYpLFg4eE+Etif6ukCUL5ApBdi/GoHnvWaEk=;
+        b=TupHTdygAigywhS3pB8tAlBUKta4lXvoAYH4dzNzhrASd2l3DGn01fOXPA/fx+ddwx
+         e63Z0EnMX9EmBApvSxhudimZg0Kyu1Ran7gh+CyYHPG3fZ0CjgSq6NhbXpLphCrF+Ouq
+         t2GxHonz+RRUwsB+KYTkj8rNjo2/BKZIMEe8c=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=B0VRWP1UqHBzaSQ/0VAH8ROzdZmpnLpk8DQEvJRbm6g=;
-        b=fALfHYJ0rHx6kEOhXkUK3FIfSUtzvxaq3Cm3fSKuD0Hdej1DWx6Yh5AUXYfC3yiiOg
-         x5TD8VMsf8fO6bVh5iECEJ7a7OYgX/sgwjImCwb6RPgxD1KTAw83SMUG4En4SEL+Lkao
-         o/NajQUKCJnWzMp4KyjFOQyUo7CYYsnsG4VbOmxX2IRZSVF639ZmLThn8MCT4Fo4F8V+
-         qSge0SgNHVhB5LnMZS5oNRNZYxIrdOICmkJcoenkSeoieX2ST3Hq8Iy5TPw53JDXdJ3a
-         5lSDdwizW/sQox3lGmw+mITxeoMfl/0s3SiqS0qnJetR3/n5QRaSfQ1ifnIc091qwWJD
-         gEFQ==
-X-Gm-Message-State: AOAM531jpwUv8yIPxgB+z2X5f9c8oBrSQJlzSDgcl2NoJWzBl2ZOs4Kn
-        jM8hBwCzYDM+luVzZN8R+XYuDQ==
-X-Google-Smtp-Source: ABdhPJwHMeBMoXoJ1oKRiY6CcT/MXQQ3/6BvMK96dAo5+DFFc+3InZktMIE/4pit2W9doT6CJHJfvw==
-X-Received: by 2002:a63:de18:: with SMTP id f24mr4660948pgg.415.1591282602661;
-        Thu, 04 Jun 2020 07:56:42 -0700 (PDT)
+        bh=xZR3lWkoYpLFg4eE+Etif6ukCUL5ApBdi/GoHnvWaEk=;
+        b=BOvOuehZ6bXcYGaepBGvA8VFPDuIQxXHLaJmmgyojckiKsKF02Q6b6u+WmMY+KVD3g
+         emKyRQ91cNEzMeW90OYwEbM3whorycbSfelKscFv8tyvLP+SFWsoGa466THKr9mr01Ac
+         KQWHs9gGdFyudQEXQfAWes/fTZhpRIWMFUbgXtrUIF9E44Khy7zDrd1loYxQgyx/Dl58
+         i1PPthJfOzcV+q1jJ+AHXq9nrGI6phs27vaxk91hwHcWH4aVtr4SQLDpK6Z7WYXkG5AS
+         1bIt8Lu+3NNRqG0ujZg6r5fHoImPSNIDIlrZsB+Cx3yxaBZ0+7S7lUI4H7g9ZCRSGg+M
+         lJzg==
+X-Gm-Message-State: AOAM532oyoxpSIuEgmZ8KJeQsoHbE7VqalCMJzQVdRInrI/MfDAFkCDi
+        nHD2lyki4vfBFrH+dSTqdsSRWA==
+X-Google-Smtp-Source: ABdhPJwvM5Okdp4t/lqPdqt9FJOxz3H8PoeKTiCxL62lJBkvY0bVXGWNEvmo0e7yAT0Y8leJzLPW1g==
+X-Received: by 2002:a63:d544:: with SMTP id v4mr4979382pgi.60.1591282782325;
+        Thu, 04 Jun 2020 07:59:42 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id y10sm4390985pgi.54.2020.06.04.07.56.41
+        by smtp.gmail.com with ESMTPSA id w65sm4752697pfb.160.2020.06.04.07.59.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Jun 2020 07:56:41 -0700 (PDT)
-Date:   Thu, 4 Jun 2020 07:56:40 -0700
+        Thu, 04 Jun 2020 07:59:41 -0700 (PDT)
+Date:   Thu, 4 Jun 2020 07:59:40 -0700
 From:   Kees Cook <keescook@chromium.org>
-To:     Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Cc:     Thomas Gleixner <tglx@linutronix.de>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
+To:     Jason Gunthorpe <jgg@ziepe.ca>
+Cc:     linux-kernel@vger.kernel.org,
         Linus Torvalds <torvalds@linux-foundation.org>,
+        Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>,
         Alexander Potapenko <glider@google.com>,
         Joe Perches <joe@perches.com>,
-        Andy Whitcroft <apw@canonical.com>,
-        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
+        Andy Whitcroft <apw@canonical.com>, x86@kernel.org,
         drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
-        b43-dev@lists.infradead.org,
-        Network Development <netdev@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linux-ide@vger.kernel.org, linux-clk@vger.kernel.org,
-        linux-spi@vger.kernel.org, Linux-MM <linux-mm@kvack.org>,
-        clang-built-linux <clang-built-linux@googlegroups.com>
-Subject: Re: [PATCH 01/10] x86/mm/numa: Remove uninitialized_var() usage
-Message-ID: <202006040745.525ECD1@keescook>
-References: <20200603233203.1695403-2-keescook@chromium.org>
- <874krr8dps.fsf@nanos.tec.linutronix.de>
- <CANiq72kLqvriYmMkdD3yU+xJwbn-68Eiu-fTNtC+Lb+1ZRM75g@mail.gmail.com>
+        b43-dev@lists.infradead.org, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-clk@vger.kernel.org, linux-spi@vger.kernel.org,
+        linux-mm@kvack.org, clang-built-linux@googlegroups.com
+Subject: Re: [PATCH 09/10] treewide: Remove uninitialized_var() usage
+Message-ID: <202006040757.0DFC3F28E@keescook>
+References: <20200603233203.1695403-1-keescook@chromium.org>
+ <20200603233203.1695403-10-keescook@chromium.org>
+ <20200604132306.GO6578@ziepe.ca>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CANiq72kLqvriYmMkdD3yU+xJwbn-68Eiu-fTNtC+Lb+1ZRM75g@mail.gmail.com>
+In-Reply-To: <20200604132306.GO6578@ziepe.ca>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Jun 04, 2020 at 01:41:07PM +0200, Miguel Ojeda wrote:
-> On Thu, Jun 4, 2020 at 9:58 AM Thomas Gleixner <tglx@linutronix.de> wrote:
-> >
-> > but if we ever lose the 1 then the above will silently compile the code
-> > within the IS_ENABLED() section out.
+On Thu, Jun 04, 2020 at 10:23:06AM -0300, Jason Gunthorpe wrote:
+> On Wed, Jun 03, 2020 at 04:32:02PM -0700, Kees Cook wrote:
+> > Using uninitialized_var() is dangerous as it papers over real bugs[1]
+> > (or can in the future), and suppresses unrelated compiler warnings
+> > (e.g. "unused variable"). If the compiler thinks it is uninitialized,
+> > either simply initialize the variable or make compiler changes.
+> > 
+> > I preparation for removing[2] the[3] macro[4], remove all remaining
+> > needless uses with the following script:
+> > 
+> > git grep '\buninitialized_var\b' | cut -d: -f1 | sort -u | \
+> > 	xargs perl -pi -e \
+> > 		's/\buninitialized_var\(([^\)]+)\)/\1/g;
+> > 		 s:\s*/\* (GCC be quiet|to make compiler happy) \*/$::g;'
+> > 
+> > drivers/video/fbdev/riva/riva_hw.c was manually tweaked to avoid
+> > pathological white-space.
+> > 
+> > No outstanding warnings were found building allmodconfig with GCC 9.3.0
+> > for x86_64, i386, arm64, arm, powerpc, powerpc64le, s390x, mips, sparc64,
+> > alpha, and m68k.
 > 
-> Yeah, I believe `IS_ENABLED()` is only meant for Kconfig symbols, not
-> macro defs in general. A better option would be `__is_defined()` which
-> works for defined-to-nothing too.
+> At least in the infiniband part I'm confident that old gcc versions
+> will print warnings after this patch.
+> 
+> As the warnings are wrong, do we care? Should old gcc maybe just -Wno-
+> the warning?
 
-Er? That's not what it looked like to me:
+I *think* a lot of those are from -Wmaybe-uninitialized, but Linus just
+turned that off unconditionally in v5.7:
+78a5255ffb6a ("Stop the ad-hoc games with -Wno-maybe-initialized")
 
-#define IS_BUILTIN(option) __is_defined(option)
-#define IS_ENABLED(option) __or(IS_BUILTIN(option), IS_MODULE(option))
+I'll try to double-check with some older gcc versions. My compiler
+collection is mostly single-axis: lots of arches, not lots of versions. ;)
 
-But just to be sure, I just tested in with a real build:
+> Otherwise the IB bits look ok to me
+> 
+> Acked-by: Jason Gunthorpe <jgg@mellanox.com>
 
-[    3.242160] IS_ENABLED(TEST_UNDEF) false
-[    3.242691] __is_defined(TEST_UNDEF) false
-[    3.243240] IS_ENABLED(TEST_VALUE_EMPTY) false
-[    3.243794] __is_defined(TEST_VALUE_EMPTY) false
-[    3.244353] IS_ENABLED(TEST_VALUE_1) true
-[    3.244848] __is_defined(TEST_VALUE_1) true
-
-and nope, it only works with a defined value present.
-
-diff --git a/init/main.c b/init/main.c
-index 03371976d387..378a9e54b6dc 100644
---- a/init/main.c
-+++ b/init/main.c
-@@ -1406,6 +1406,34 @@ static int __ref kernel_init(void *unused)
- 	 */
- 	pti_finalize();
- 
-+#undef TEST_UNDEF
-+	if (IS_ENABLED(TEST_UNDEF))
-+		pr_info("IS_ENABLED(TEST_UNDEF) true\n");
-+	else
-+		pr_info("IS_ENABLED(TEST_UNDEF) false\n");
-+	if (__is_defined(TEST_UNDEF))
-+		pr_info("__is_defined(TEST_UNDEF) true\n");
-+	else
-+		pr_info("__is_defined(TEST_UNDEF) false\n");
-+#define TEST_VALUE_EMPTY
-+	if (IS_ENABLED(TEST_VALUE_EMPTY))
-+		pr_info("IS_ENABLED(TEST_VALUE_EMPTY) true\n");
-+	else
-+		pr_info("IS_ENABLED(TEST_VALUE_EMPTY) false\n");
-+	if (__is_defined(TEST_VALUE_EMPTY))
-+		pr_info("__is_defined(TEST_VALUE_EMPTY) true\n");
-+	else
-+		pr_info("__is_defined(TEST_VALUE_EMPTY) false\n");
-+#define TEST_VALUE_1 1
-+	if (IS_ENABLED(TEST_VALUE_1))
-+		pr_info("IS_ENABLED(TEST_VALUE_1) true\n");
-+	else
-+		pr_info("IS_ENABLED(TEST_VALUE_1) false\n");
-+	if (__is_defined(TEST_VALUE_1))
-+		pr_info("__is_defined(TEST_VALUE_1) true\n");
-+	else
-+		pr_info("__is_defined(TEST_VALUE_1) false\n");
-+
- 	system_state = SYSTEM_RUNNING;
- 	numa_default_policy();
- 
-
-which means a few other __is_defined() users are not correct too...
+Thanks!
 
 -- 
 Kees Cook
