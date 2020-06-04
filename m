@@ -2,125 +2,124 @@ Return-Path: <SRS0=h3CG=7R=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BE3BC433E1
-	for <linux-ide@archiver.kernel.org>; Thu,  4 Jun 2020 17:58:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03F62C433DF
+	for <linux-ide@archiver.kernel.org>; Thu,  4 Jun 2020 18:08:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 69BAB206DC
-	for <linux-ide@archiver.kernel.org>; Thu,  4 Jun 2020 17:58:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7940206C3
+	for <linux-ide@archiver.kernel.org>; Thu,  4 Jun 2020 18:08:42 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="dp1MW0oL"
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="06i4UKNb"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730387AbgFDR6B (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 4 Jun 2020 13:58:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57560 "EHLO
+        id S1730174AbgFDSIm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 4 Jun 2020 14:08:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730384AbgFDR6B (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 4 Jun 2020 13:58:01 -0400
-Received: from mail-qk1-x743.google.com (mail-qk1-x743.google.com [IPv6:2607:f8b0:4864:20::743])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CC08C08C5C5
-        for <linux-ide@vger.kernel.org>; Thu,  4 Jun 2020 10:58:01 -0700 (PDT)
-Received: by mail-qk1-x743.google.com with SMTP id c14so6965013qka.11
-        for <linux-ide@vger.kernel.org>; Thu, 04 Jun 2020 10:58:01 -0700 (PDT)
+        with ESMTP id S1730008AbgFDSIm (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 4 Jun 2020 14:08:42 -0400
+Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25FCAC08C5C0
+        for <linux-ide@vger.kernel.org>; Thu,  4 Jun 2020 11:08:41 -0700 (PDT)
+Received: by mail-pj1-x1043.google.com with SMTP id q24so1548359pjd.1
+        for <linux-ide@vger.kernel.org>; Thu, 04 Jun 2020 11:08:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=ylFM7xcrRPttXnSFsxxMsniM496bjo9TahOp0BQ4KWQ=;
-        b=dp1MW0oLsIVpf8P1GqlJ7ywKbTALgi380UyzwJhLZxxjLZbExXSS3+DNraBRJx+RxA
-         2YNRIqPWKCJwUAt2Ionyk91M424aXFCth771TTbwhKuAi/5z09C6/Wr39Wytw6IFYat4
-         ROGMU+gTfjKOfKx/KnMfK4lHl61/+H90NG+NU9ft1Ad329Ugd8oNWQRmnDyTDrH84VcG
-         NHqJ/pa7Z8WtA7tv5ssR9OBolcmhh/Z0Chu/DqhjQRZD68jbMjVitMLn9/18eeVfDBtl
-         W6iFo32dBc0/Xz9TBC1xS9lWFSwriSPTsiMKkjJI2/Fy1v0kJA0h8NiDLZa3m0zxOiRF
-         iMLw==
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:references:from:message-id:date:user-agent:mime-version
+         :in-reply-to:content-language:content-transfer-encoding;
+        bh=Utq11x2uKxbCzxgHksRIVgWDDkHVtuQb7xXSLVuMZwk=;
+        b=06i4UKNbG5LM0hOp++7xIfD0DCaXgWQVynTa8qz7V5W0QLI2xmeU7Nehb6bU7r8RL8
+         /rAXjIXf9G/dusutcIbwJTzrcNOi395yGXZt8VN4DIUlWC4tyQdS6PLv61zudA7cwdYl
+         lQJPRBJ9y4d5NalXZx1pOBDMsUkj+31NAGRrUupRnsrZH2Qtdpepqwk9yqSgCNiChYEt
+         20Qk2WK1OGfWt2N+1L8rsa7cDZ9O/QFvwU+N2fBz2FmF4roOQJSJijJ+Ckm+jE4pZXJh
+         uDYL0ec8O1FIPu4N6WYIqcJm3jkPE6X5YVTn2b1Qg8G5VmUN/jjUgNpDzRbv5DQpv3tn
+         C6eA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=ylFM7xcrRPttXnSFsxxMsniM496bjo9TahOp0BQ4KWQ=;
-        b=gu+biN5kpldo1KAnRZlbaUNqtKiEV8sas5rWO+UY3BZe8L20ZO+05vXfJfv3fKN22B
-         sFjhsPKAamD1FXGwVFXgkzhfQZjBY9gQ2ktCP7rUexiZg1qAMXk/K0gt+eCHzVTV3tNB
-         hpbqnEL5lQDMMilOYzC5cPmMe8WMQW2Fu6cfbLXNBcIzbbbo7j6gqDTZO2cNATCfEN9w
-         QyyC278SUcvuQhzUXE/iqVnD27vZz3w5iHirZFdHn3In3KIi1eHRMsTTJFuQ/CGecGo3
-         oGUvM+mKqLb0fx4Hb+aW24x+l58MLPBNnohN+zvRm03Hgsp5Gq2xfHpUJ2guQPC4EEDK
-         4a2A==
-X-Gm-Message-State: AOAM530TqXIsTFauhU5+PYO4QEGDFEZWbxQ2eKGRTKTfwezp1rXfzPBR
-        ul8t41eZx9TQAVd9L+B8FuLbhg==
-X-Google-Smtp-Source: ABdhPJzYt2lslt13YiEsonKEZ+jBx4HFt1d65mCYXH6vxqHPQIS81ppOdKBUfUx77lLK8R8poNgzug==
-X-Received: by 2002:ae9:ebd2:: with SMTP id b201mr5788109qkg.409.1591293480332;
-        Thu, 04 Jun 2020 10:58:00 -0700 (PDT)
-Received: from ziepe.ca (hlfxns017vw-156-34-48-30.dhcp-dynamic.fibreop.ns.bellaliant.net. [156.34.48.30])
-        by smtp.gmail.com with ESMTPSA id t43sm5788444qtj.85.2020.06.04.10.57.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Jun 2020 10:57:59 -0700 (PDT)
-Received: from jgg by mlx with local (Exim 4.93)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1jgu7r-001H95-GE; Thu, 04 Jun 2020 14:57:59 -0300
-Date:   Thu, 4 Jun 2020 14:57:59 -0300
-From:   Jason Gunthorpe <jgg@ziepe.ca>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     linux-kernel@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>,
-        Alexander Potapenko <glider@google.com>,
-        Joe Perches <joe@perches.com>,
-        Andy Whitcroft <apw@canonical.com>, x86@kernel.org,
-        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
-        b43-dev@lists.infradead.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-clk@vger.kernel.org, linux-spi@vger.kernel.org,
-        linux-mm@kvack.org, clang-built-linux@googlegroups.com
-Subject: Re: [PATCH 09/10] treewide: Remove uninitialized_var() usage
-Message-ID: <20200604175759.GQ6578@ziepe.ca>
-References: <20200603233203.1695403-1-keescook@chromium.org>
- <20200603233203.1695403-10-keescook@chromium.org>
- <20200604132306.GO6578@ziepe.ca>
- <202006040757.0DFC3F28E@keescook>
+        h=x-gm-message-state:subject:to:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Utq11x2uKxbCzxgHksRIVgWDDkHVtuQb7xXSLVuMZwk=;
+        b=bfNAU6YdliqdcE9GaSTxFDE8dMiygncXUGtLBZuJKVdfz0ybsuu0QZqmRQRje2zvCO
+         rsfOG/+bJ7DxyllQB4twvQpT+VuAKnsyIVzHvc2JvuexBaQZj4wQBibIxtQbvVICTtWZ
+         ZVtEjMWHxUlltGmXUjjTm15lb1p95E7oqEkuepid93GSbeezQiCtvMpjqYJUjDzU/XhI
+         Stqqt7C6+2upJp5JBoetnNhczVmBf8zTXjNx0pOiQ2l3i1LJBzYqO0JX8jXLXDfPa4xz
+         g15qMOLOFrzp/mcvar5TgdQ85uZpSbz84aysJ1EAC0HDhmGVMVe0Ch30weq9EHJFcNJV
+         luTQ==
+X-Gm-Message-State: AOAM532vsKC1/LTo6N1d2XRdzptPe1WQLBYj8wcuoqqoiIW7/0tg1yXO
+        dMRRLxzYIkahTJGBVGdnTZAUH0yqduNe0g==
+X-Google-Smtp-Source: ABdhPJyqIO7alMhU50wnp1Kkh2Z84vuzSql+syYIWoMcBZm1mi9HowY35qwJCE2q6PC873D8sVyMzg==
+X-Received: by 2002:a17:902:a711:: with SMTP id w17mr5933181plq.173.1591294120005;
+        Thu, 04 Jun 2020 11:08:40 -0700 (PDT)
+Received: from [192.168.1.159] ([65.144.74.34])
+        by smtp.gmail.com with ESMTPSA id mu17sm7334565pjb.53.2020.06.04.11.08.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 04 Jun 2020 11:08:39 -0700 (PDT)
+Subject: Re: [PATCH v3] ata/libata: Fix usage of page address by page_address
+ in ata_scsi_mode_select_xlat function
+To:     Paolo Bonzini <pbonzini@redhat.com>, Ye Bin <yebin10@huawei.com>,
+        hch@infradead.org, linux-ide@vger.kernel.org
+References: <20200604093109.134949-1-yebin10@huawei.com>
+ <882cdc0e-6468-d171-28aa-bd90969562cf@redhat.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <ce4440a8-4d8b-3f47-7ce3-492289dcbb32@kernel.dk>
+Date:   Thu, 4 Jun 2020 12:08:37 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <202006040757.0DFC3F28E@keescook>
+In-Reply-To: <882cdc0e-6468-d171-28aa-bd90969562cf@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Jun 04, 2020 at 07:59:40AM -0700, Kees Cook wrote:
-> On Thu, Jun 04, 2020 at 10:23:06AM -0300, Jason Gunthorpe wrote:
-> > On Wed, Jun 03, 2020 at 04:32:02PM -0700, Kees Cook wrote:
-> > > Using uninitialized_var() is dangerous as it papers over real bugs[1]
-> > > (or can in the future), and suppresses unrelated compiler warnings
-> > > (e.g. "unused variable"). If the compiler thinks it is uninitialized,
-> > > either simply initialize the variable or make compiler changes.
-> > > 
-> > > I preparation for removing[2] the[3] macro[4], remove all remaining
-> > > needless uses with the following script:
-> > > 
-> > > git grep '\buninitialized_var\b' | cut -d: -f1 | sort -u | \
-> > > 	xargs perl -pi -e \
-> > > 		's/\buninitialized_var\(([^\)]+)\)/\1/g;
-> > > 		 s:\s*/\* (GCC be quiet|to make compiler happy) \*/$::g;'
-> > > 
-> > > drivers/video/fbdev/riva/riva_hw.c was manually tweaked to avoid
-> > > pathological white-space.
-> > > 
-> > > No outstanding warnings were found building allmodconfig with GCC 9.3.0
-> > > for x86_64, i386, arm64, arm, powerpc, powerpc64le, s390x, mips, sparc64,
-> > > alpha, and m68k.
-> > 
-> > At least in the infiniband part I'm confident that old gcc versions
-> > will print warnings after this patch.
-> > 
-> > As the warnings are wrong, do we care? Should old gcc maybe just -Wno-
-> > the warning?
+On 6/4/20 5:04 AM, Paolo Bonzini wrote:
+> On 04/06/20 11:31, Ye Bin wrote:
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index 435781a16875..03dd265c30be 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+>> @@ -3684,12 +3684,13 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
+>>  {
+>>  	struct scsi_cmnd *scmd = qc->scsicmd;
+>>  	const u8 *cdb = scmd->cmnd;
+>> -	const u8 *p;
+>>  	u8 pg, spg;
+>>  	unsigned six_byte, pg_len, hdr_len, bd_len;
+>>  	int len;
+>>  	u16 fp = (u16)-1;
+>>  	u8 bp = 0xff;
+>> +	u8 buffer[64];
+>> +	const u8 *p = buffer;
+>>  
+>>  	VPRINTK("ENTER\n");
+>>  
+>> @@ -3723,12 +3724,14 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
+>>  	if (!scsi_sg_count(scmd) || scsi_sglist(scmd)->length < len)
+>>  		goto invalid_param_len;
+>>  
+>> -	p = page_address(sg_page(scsi_sglist(scmd)));
+>> -
+>>  	/* Move past header and block descriptors.  */
+>>  	if (len < hdr_len)
+>>  		goto invalid_param_len;
+>>  
+>> +	if (!sg_copy_to_buffer(scsi_sglist(scmd), scsi_sg_count(scmd),
+>> +			       buffer, 64))
 > 
-> I *think* a lot of those are from -Wmaybe-uninitialized, but Linus just
-> turned that off unconditionally in v5.7:
-> 78a5255ffb6a ("Stop the ad-hoc games with -Wno-maybe-initialized")
+> sizeof(buffer) would be better.  But anyway:
+> 
+> Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
+> 
+> Perhaps the maintainer can fix it up on commit.
 
-Yah, that alone is justification enough to do this purge.
+Please resend it it, thanks.
 
-Jason
+-- 
+Jens Axboe
+
