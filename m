@@ -2,174 +2,123 @@ Return-Path: <SRS0=h3CG=7R=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB67EC433E0
-	for <linux-ide@archiver.kernel.org>; Thu,  4 Jun 2020 02:53:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBB0BC433E0
+	for <linux-ide@archiver.kernel.org>; Thu,  4 Jun 2020 02:57:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 93E19206C3
-	for <linux-ide@archiver.kernel.org>; Thu,  4 Jun 2020 02:53:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96A49206C3
+	for <linux-ide@archiver.kernel.org>; Thu,  4 Jun 2020 02:57:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gV3DINCK"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FcD1vFhL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726716AbgFDCxr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 3 Jun 2020 22:53:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58474 "EHLO
+        id S1726704AbgFDC5i (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 3 Jun 2020 22:57:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59296 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725951AbgFDCxr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 3 Jun 2020 22:53:47 -0400
-Received: from mail-io1-xd42.google.com (mail-io1-xd42.google.com [IPv6:2607:f8b0:4864:20::d42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D81E0C03E96D;
-        Wed,  3 Jun 2020 19:53:46 -0700 (PDT)
-Received: by mail-io1-xd42.google.com with SMTP id d5so4673723ios.9;
-        Wed, 03 Jun 2020 19:53:46 -0700 (PDT)
+        with ESMTP id S1725951AbgFDC5i (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 3 Jun 2020 22:57:38 -0400
+Received: from mail-ed1-x544.google.com (mail-ed1-x544.google.com [IPv6:2a00:1450:4864:20::544])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCFB9C03E96D;
+        Wed,  3 Jun 2020 19:57:37 -0700 (PDT)
+Received: by mail-ed1-x544.google.com with SMTP id ce8so3420701edb.8;
+        Wed, 03 Jun 2020 19:57:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
-         :subject:to:cc;
-        bh=iPa6WDxkXnezV97Gv8ktsN2vMvnblioziS1zAvyim80=;
-        b=gV3DINCKuZMpDCcJsHDr9sszAXGMneIMI9KCtZ/1A8KL8Ro8YmZMB8pbOf6XvwEEzL
-         3s/WZ64Ad1THwC1yIcoFtMfrjuy9MChcgCUeVc2yt6Fhqv5YnQlKfybyJa868B56C64R
-         SpWLnoPhud5yWqrZVnmnqlgYyhjIfWw9LqP/fxle2AdjsoTo956wTTJnEH2/k/fpJpV8
-         AlEmkB8V6/jcUVOOJnMZ+E5Zm/eCneQHSejIbdNntpH48J0GSb9f7+yK1rM1n2Ds+iYc
-         oegcVR8oOw7YMCXmQJAWTc+Zqvl8pQBXc+Tu4Mxm/lQXO2FR+n8tx0M6aLA2yfHxQbwF
-         EZTA==
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=Xh7btXBNMEYUZq0LZjljkkYADCcryAmArXqL32iifI0=;
+        b=FcD1vFhLChf77HXzWJ4t/9ekQz0DXQqA8VSMkM5Jdws1lSqWaS/dUvTrEqZWKiSQWT
+         aLVVkzAiv6ySw2r0AVfidd9VT55sQDb/T18QRUOomJnucuFymwwAFLbVkXN3LRTGb32G
+         QBzUrS9LqsJv78rkT0VaHOZfTsdppu8Xug+rfpR0eO1lGvpb0ZK7tqOVmrmZoTao5rme
+         N5kW1IN+qIksTGf5N+H56U0y7M3EjvHiizQxyjk63QCkZZxbnA4NaJJRXjF185PtzFlw
+         vmN7KFrdKfKtVt+0grkvdOHLqcHtdQrbWSgrRgItP3mu2GuoWWZ4pg4IGj4z14IzDMhR
+         oZ2A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
-         :from:date:message-id:subject:to:cc;
-        bh=iPa6WDxkXnezV97Gv8ktsN2vMvnblioziS1zAvyim80=;
-        b=iqaKh9GqlRIdw6Q1Oog/DmwRsqEYT1GkWFBgBgnMreReAmfj8DtuBdf+t/MAaUNF/V
-         O/0h66BhgOlPUAzcmUD2r7n9Oiku4RaBVqUO3UKoOV91Gx2KnF0I/0N9BzbGWHL/qgDA
-         lMe1hgFwuh59Bg6QHybLtpdE3W62Li9np6N+VoC9KlmhOzvPlvFL+RpAD9C6uGdmiDHJ
-         kfV5/GFwa2Pzpg+W02p3Xo7PLRFPmJhXuf0yRxiQU7JDgiZ/nGIX9PMh163izR8Gdt5u
-         q4io2MV65S+8NEJqyuHODi1Aodbd2oc2K6ZZxmzr3XoALIqm2Cdqy8iAp3R2WZbIdMMH
-         Xa4Q==
-X-Gm-Message-State: AOAM531reE8KCPcUUcuxK3DoM9pYUF9aK7ptbTQfOoQbx29Ok/85DnzJ
-        tNqgDuE0Tm8lLlWxAI8XkvxWzEbkZK0BGzKe6Q8=
-X-Google-Smtp-Source: ABdhPJySRKD1t147Rxyby0Eo8wAO+qnFmJBtx6pTIjJ6uS6L8CSs9GvotZtKdMSuFL1kS3zXMhEH8p9JZsy+Uo4RRkU=
-X-Received: by 2002:a05:6602:1616:: with SMTP id x22mr2465452iow.70.1591239226196;
- Wed, 03 Jun 2020 19:53:46 -0700 (PDT)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Xh7btXBNMEYUZq0LZjljkkYADCcryAmArXqL32iifI0=;
+        b=nUKhvqxqDPJrWZhG8evzerL2S827q5jZj635o+N3qfURfe24IfDX1BnUvAKXu8BQgk
+         YOSzNp3JyX4HhrS0+AyIf4Ot0HyJ63raq46OJWP2qGxttjfhjDYlqOi/2dEZK02UjkR6
+         8szwW65DxO73OQX0YKaIdYcXgXqvpSx1RNPbmafDSAW1nEZzwkwwVHg4P51mqbgf3bre
+         jukHXHhvyEmgyTKj58m5WjJA+VbXFb55ZoCWtHH35uZL7Uzfmou5eB4m00z5a81YgOJv
+         4GYqhgT3N+y84l+G1TKHKfJkLueCxPoDkmtrpQ8O+CgG5BTUv/wrbn8PtA1YRcy7ML+l
+         uLsw==
+X-Gm-Message-State: AOAM530NOZFpPe9EQV5UJoKjcuuO67JFLf34xo7ktmsLncByoNR8FRmT
+        wl8/DrjtF6N9R29GBNvsAiJhAi3B
+X-Google-Smtp-Source: ABdhPJz93uAL6tcuQXE2UNXeoTpLyVZC9g3cixCoeqjvZQuJY0pGnc3zKMSla4w2+Ge2+QuUtidMGA==
+X-Received: by 2002:a50:8467:: with SMTP id 94mr2255361edp.249.1591239455567;
+        Wed, 03 Jun 2020 19:57:35 -0700 (PDT)
+Received: from [192.168.1.3] (ip68-111-84-250.oc.oc.cox.net. [68.111.84.250])
+        by smtp.gmail.com with ESMTPSA id fw16sm862160ejb.55.2020.06.03.19.57.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 03 Jun 2020 19:57:34 -0700 (PDT)
+Subject: Re: [PATCH v3 02/13] ata: ahci_brcm: Fix use of BCM7216 reset
+ controller
+To:     Jim Quinlan <james.quinlan@broadcom.com>,
+        linux-pci@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        bcm-kernel-feedback-list@broadcom.com
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <20200603192058.35296-1-james.quinlan@broadcom.com>
+ <20200603192058.35296-3-james.quinlan@broadcom.com>
+From:   Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <90c04979-5510-ee9e-2edf-aa45119f1a92@gmail.com>
+Date:   Wed, 3 Jun 2020 19:57:30 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Firefox/68.0 Thunderbird/68.8.1
 MIME-Version: 1.0
-References: <20200603233203.1695403-1-keescook@chromium.org>
- <20200603233203.1695403-9-keescook@chromium.org> <ff9087b0571e1fc499bd8a4c9fd99bfc0357f245.camel@perches.com>
- <202006031838.55722640DC@keescook> <6f921002478544217903ee4bfbe3c400e169687f.camel@perches.com>
- <202006031944.9551FAA68E@keescook>
-In-Reply-To: <202006031944.9551FAA68E@keescook>
-Reply-To: sedat.dilek@gmail.com
-From:   Sedat Dilek <sedat.dilek@gmail.com>
-Date:   Thu, 4 Jun 2020 04:53:34 +0200
-Message-ID: <CA+icZUVg24VrpPgMdfsgPa+Wckci9XkzKUdtwhVB3ZW96uZOWw@mail.gmail.com>
-Subject: Re: [PATCH 08/10] checkpatch: Remove awareness of uninitialized_var() macro
-To:     Kees Cook <keescook@chromium.org>
-Cc:     Joe Perches <joe@perches.com>, linux-kernel@vger.kernel.org,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>,
-        Alexander Potapenko <glider@google.com>,
-        Andy Whitcroft <apw@canonical.com>, x86@kernel.org,
-        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
-        b43-dev@lists.infradead.org, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-clk@vger.kernel.org, linux-spi@vger.kernel.org,
-        linux-mm@kvack.org,
-        Clang-Built-Linux ML <clang-built-linux@googlegroups.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20200603192058.35296-3-james.quinlan@broadcom.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Kees,
 
-can you push that change also to kees/linux.git#kspp/uninit/v5.7/macro ?
 
-Thanks in advance.
+On 6/3/2020 12:20 PM, Jim Quinlan wrote:
+> From: Jim Quinlan <jquinlan@broadcom.com>
+> 
+> A reset controller "rescal" is shared between the AHCI driver and the PCIe
+> driver for the BrcmSTB 7216 chip.  The code is modified to allow this
+> sharing and to deassert() properly.
+> 
+> Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
+> 
+> Fixes: 272ecd60a636 ("ata: ahci_brcm: BCM7216 reset is self de-asserting")
+> Fixes: c345ec6a50e9 ("ata: ahci_brcm: Support BCM7216 reset controller
+> name")
+> ---
 
-Regards,
-- Sedat -
+[snip]
 
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/kees/linux.git/log/?h=kspp/uninit/v5.7/macro
+> @@ -479,10 +478,7 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+>  		break;
+>  	}
+>  
+> -	if (priv->version == BRCM_SATA_BCM7216)
+> -		ret = reset_control_reset(priv->rcdev);
+> -	else
+> -		ret = reset_control_deassert(priv->rcdev);
+> +	ret = reset_control_deassert(priv->rcdev);
+>  	if (ret)
+>  		return ret;
 
-On Thu, Jun 4, 2020 at 4:44 AM Kees Cook <keescook@chromium.org> wrote:
->
-> On Wed, Jun 03, 2020 at 06:47:13PM -0700, Joe Perches wrote:
-> > On Wed, 2020-06-03 at 18:40 -0700, Kees Cook wrote:
-> > > On Wed, Jun 03, 2020 at 05:02:29PM -0700, Joe Perches wrote:
-> > > > On Wed, 2020-06-03 at 16:32 -0700, Kees Cook wrote:
-> > > > > Using uninitialized_var() is dangerous as it papers over real bugs[1]
-> > > > > (or can in the future), and suppresses unrelated compiler warnings
-> > > > > (e.g. "unused variable"). If the compiler thinks it is uninitialized,
-> > > > > either simply initialize the variable or make compiler changes.
-> > > > >
-> > > > > In preparation for removing[2] the[3] macro[4], effectively revert
-> > > > > commit 16b7f3c89907 ("checkpatch: avoid warning about uninitialized_var()")
-> > > > > and remove all remaining mentions of uninitialized_var().
-> > > > >
-> > > > > [1] https://lore.kernel.org/lkml/20200603174714.192027-1-glider@google.com/
-> > > > > [2] https://lore.kernel.org/lkml/CA+55aFw+Vbj0i=1TGqCR5vQkCzWJ0QxK6CernOU6eedsudAixw@mail.gmail.com/
-> > > > > [3] https://lore.kernel.org/lkml/CA+55aFwgbgqhbp1fkxvRKEpzyR5J8n1vKT1VZdz9knmPuXhOeg@mail.gmail.com/
-> > > > > [4] https://lore.kernel.org/lkml/CA+55aFz2500WfbKXAx8s67wrm9=yVJu65TpLgN_ybYNv0VEOKA@mail.gmail.com/
-> > > >
-> > > > nack.  see below.
-> > > >
-> > > > I'd prefer a simple revert, but it shouldn't
-> > > > be done here.
-> > >
-> > > What do you mean? (I can't understand this and "fine by me" below?)
-> >
-> > I did write "other than that"...
-> >
-> > I mean that the original commit fixed 2 issues,
-> > one with the uninitialized_var addition, and
-> > another with the missing void function declaration.
-> >
-> > I think I found the missing void function bit because
-> > the uninitialized_var use looked like a function so I
-> > fixed both things at the same time.
-> >
-> > If you change it, please just remove the bit that
-> > checks for uninitialized_var.
->
-> Ah! Gotcha. Thanks; I will update it.
->
-> -Kees
->
-> >
-> > Thanks, Joe
-> >
-> > > > > diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
-> > > > []
-> > > > > @@ -4075,7 +4074,7 @@ sub process {
-> > > > >                 }
-> > > > >
-> > > > >  # check for function declarations without arguments like "int foo()"
-> > > > > -               if ($line =~ /(\b$Type\s*$Ident)\s*\(\s*\)/) {
-> > > > > +               if ($line =~ /(\b$Type\s+$Ident)\s*\(\s*\)/) {
-> > > >
-> > > > This isn't right because $Type includes a possible trailing *
-> > > > where there isn't a space between $Type and $Ident
-> > >
-> > > Ah, hm, that was changed in the mentioned commit:
-> > >
-> > > -               if ($line =~ /(\b$Type\s+$Ident)\s*\(\s*\)/) {
-> > > +               if ($line =~ /(\b$Type\s*$Ident)\s*\(\s*\)/) {
-> > >
-> > > > e.g.:     int *bar(void);
-> > > >
-> > > > Other than that, fine by me...
-> > >
-> > > Thanks for looking it over! I'll adjust it however you'd like. :)
-> > >
-> >
->
-> --
-> Kees Cook
->
-> --
-> You received this message because you are subscribed to the Google Groups "Clang Built Linux" group.
-> To unsubscribe from this group and stop receiving emails from it, send an email to clang-built-linux+unsubscribe@googlegroups.com.
-> To view this discussion on the web visit https://groups.google.com/d/msgid/clang-built-linux/202006031944.9551FAA68E%40keescook.
+Do we need a similar change for brcm_ahci_resume()?
+-- 
+Florian
