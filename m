@@ -1,117 +1,82 @@
-Return-Path: <SRS0=C8TE=7S=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=5VLF=7W=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B98E2C433DF
-	for <linux-ide@archiver.kernel.org>; Fri,  5 Jun 2020 21:27:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F5F6C433DF
+	for <linux-ide@archiver.kernel.org>; Tue,  9 Jun 2020 09:17:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8DF372065C
-	for <linux-ide@archiver.kernel.org>; Fri,  5 Jun 2020 21:27:21 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="RHT0AR+W"
+	by mail.kernel.org (Postfix) with ESMTP id 5CD1F207ED
+	for <linux-ide@archiver.kernel.org>; Tue,  9 Jun 2020 09:17:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726664AbgFEV1U (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 5 Jun 2020 17:27:20 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:38376 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728475AbgFEV1T (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 5 Jun 2020 17:27:19 -0400
-Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 4446830D85B;
-        Fri,  5 Jun 2020 14:27:18 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 4446830D85B
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1591392438;
-        bh=ghQG1exvCaXXlRvSsLKTAcuAVtnxwVxDWUkAuQvaBmQ=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RHT0AR+WZfx7zFfSi2yPAnNK551GiGwds36BPyt5Lr/9w5BYp7oqYmI/59J1abpCZ
-         ZN4UY3/CbmBXfub2USgWCbnE6k0j8VWkjSIc3F0cQk/34yBRGs3HWv/IZViUZ6d2U5
-         6zdjwY/xzLgIbVeVe1E3fnEUY9kl1iZCSAXZWtYc=
-Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id C615D14008B;
-        Fri,  5 Jun 2020 14:27:16 -0700 (PDT)
-From:   Jim Quinlan <james.quinlan@broadcom.com>
-To:     linux-pci@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
-Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
+        id S1728306AbgFIJRR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 9 Jun 2020 05:17:17 -0400
+Received: from mga09.intel.com ([134.134.136.24]:23588 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727941AbgFIJRQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 9 Jun 2020 05:17:16 -0400
+IronPort-SDR: LAP8rWwxODkyBVO1UwgnqQALfAmrg8NIop5MpltPduc56x4qCAtgNcQhCricP0Cp5CVZQ4/ntG
+ 44hWOPLEkbXQ==
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jun 2020 02:17:16 -0700
+IronPort-SDR: 7cluu1AJqmlLsVdBgUdaomWUS4wfBrnR/7XQqSWOrWqQqGI3r3Sp5GIcqS7x7Ojdke7kdoxDtD
+ hE5DknQ8/NaQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.73,491,1583222400"; 
+   d="scan'208";a="306123608"
+Received: from gklab-125-110.igk.intel.com ([10.91.125.110])
+  by fmsmga002.fm.intel.com with ESMTP; 09 Jun 2020 02:17:13 -0700
+From:   Piotr Stankiewicz <piotr.stankiewicz@intel.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc:     Piotr Stankiewicz <piotr.stankiewicz@intel.com>,
         Jens Axboe <axboe@kernel.dk>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
-        Parallel ATA drivers)), linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v4 02/12] ata: ahci_brcm: Fix use of BCM7216 reset controller
-Date:   Fri,  5 Jun 2020 17:26:42 -0400
-Message-Id: <20200605212706.7361-3-james.quinlan@broadcom.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200605212706.7361-1-james.quinlan@broadcom.com>
-References: <20200605212706.7361-1-james.quinlan@broadcom.com>
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Andy Shevchenko <andriy.shevchenko@intel.com>,
+        Tiezhu Yang <yangtiezhu@loongson.cn>,
+        Prabhakar Kushwaha <pkushwaha@marvell.com>,
+        Hanna Hawa <hhhawa@amazon.com>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v3 04/15] ahci: Use PCI_IRQ_MSI_TYPES where appropriate
+Date:   Tue,  9 Jun 2020 11:17:09 +0200
+Message-Id: <20200609091711.892-1-piotr.stankiewicz@intel.com>
+X-Mailer: git-send-email 2.17.2
+In-Reply-To: <20200609091148.32749-1-piotr.stankiewicz@intel.com>
+References: <20200609091148.32749-1-piotr.stankiewicz@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Jim Quinlan <jquinlan@broadcom.com>
+Seeing as there is shorthand available to use when asking for any type
+of interrupt, or any type of message signalled interrupt, leverage it.
 
-A reset controller "rescal" is shared between the AHCI driver and the PCIe
-driver for the BrcmSTB 7216 chip.  The code is modified to allow this
-sharing and to deassert() properly.
-
-Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
-
-Fixes: 272ecd60a636 ("ata: ahci_brcm: BCM7216 reset is self de-asserting")
-Fixes: c345ec6a50e9 ("ata: ahci_brcm: Support BCM7216 reset controller
-name")
+Signed-off-by: Piotr Stankiewicz <piotr.stankiewicz@intel.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@intel.com>
 ---
- drivers/ata/ahci_brcm.c | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+ drivers/ata/ahci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
-index 6853dbb4131d..c4ea555573dd 100644
---- a/drivers/ata/ahci_brcm.c
-+++ b/drivers/ata/ahci_brcm.c
-@@ -428,7 +428,6 @@ static int brcm_ahci_probe(struct platform_device *pdev)
- {
- 	const struct of_device_id *of_id;
- 	struct device *dev = &pdev->dev;
--	const char *reset_name = NULL;
- 	struct brcm_ahci_priv *priv;
- 	struct ahci_host_priv *hpriv;
- 	struct resource *res;
-@@ -452,11 +451,11 @@ static int brcm_ahci_probe(struct platform_device *pdev)
- 
- 	/* Reset is optional depending on platform and named differently */
- 	if (priv->version == BRCM_SATA_BCM7216)
--		reset_name = "rescal";
-+		priv->rcdev = devm_reset_control_get_optional_shared(&pdev->dev,
-+								     "rescal");
- 	else
--		reset_name = "ahci";
--
--	priv->rcdev = devm_reset_control_get_optional(&pdev->dev, reset_name);
-+		priv->rcdev = devm_reset_control_get_optional(&pdev->dev,
-+							      "ahci");
- 	if (IS_ERR(priv->rcdev))
- 		return PTR_ERR(priv->rcdev);
- 
-@@ -479,10 +478,7 @@ static int brcm_ahci_probe(struct platform_device *pdev)
- 		break;
- 	}
- 
--	if (priv->version == BRCM_SATA_BCM7216)
--		ret = reset_control_reset(priv->rcdev);
--	else
--		ret = reset_control_deassert(priv->rcdev);
-+	ret = reset_control_deassert(priv->rcdev);
- 	if (ret)
- 		return ret;
- 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 0c0a736eb861..ca1bf4ef0f17 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1556,7 +1556,7 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
+ 	 */
+ 	if (n_ports > 1) {
+ 		nvec = pci_alloc_irq_vectors(pdev, n_ports, INT_MAX,
+-				PCI_IRQ_MSIX | PCI_IRQ_MSI);
++				PCI_IRQ_MSI_TYPES);
+ 		if (nvec > 0) {
+ 			if (!(readl(hpriv->mmio + HOST_CTL) & HOST_MRSM)) {
+ 				hpriv->get_irq_vector = ahci_get_irq_vector;
 -- 
-2.17.1
+2.17.2
 
