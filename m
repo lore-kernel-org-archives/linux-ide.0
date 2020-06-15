@@ -2,86 +2,85 @@ Return-Path: <SRS0=PzfI=74=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.7 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FD23C433DF
-	for <linux-ide@archiver.kernel.org>; Mon, 15 Jun 2020 04:01:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE826C433DF
+	for <linux-ide@archiver.kernel.org>; Mon, 15 Jun 2020 06:46:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4CB48207BC
-	for <linux-ide@archiver.kernel.org>; Mon, 15 Jun 2020 04:01:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A579C2067B
+	for <linux-ide@archiver.kernel.org>; Mon, 15 Jun 2020 06:46:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="r7yyv8M7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727971AbgFOEBb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 15 Jun 2020 00:01:31 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:5887 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725294AbgFOEBa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 15 Jun 2020 00:01:30 -0400
-Received: from DGGEMS408-HUB.china.huawei.com (unknown [172.30.72.58])
-        by Forcepoint Email with ESMTP id 331B8FD817FCBAC1C319;
-        Mon, 15 Jun 2020 12:01:27 +0800 (CST)
-Received: from huawei.com (10.175.127.227) by DGGEMS408-HUB.china.huawei.com
- (10.3.19.208) with Microsoft SMTP Server id 14.3.487.0; Mon, 15 Jun 2020
- 12:01:20 +0800
-From:   Jason Yan <yanaijie@huawei.com>
-To:     <axboe@kernel.dk>, <b.zolnierkie@samsung.com>,
-        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     <kernel-hardening@lists.openwall.com>,
-        Jason Yan <yanaijie@huawei.com>,
-        Kees Cook <keescook@chromium.org>
-Subject: [PATCH] ata: Eliminate usage of uninitialized_var() macro
-Date:   Mon, 15 Jun 2020 12:02:36 +0800
-Message-ID: <20200615040236.3720734-1-yanaijie@huawei.com>
-X-Mailer: git-send-email 2.25.4
+        id S1728210AbgFOGql (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 15 Jun 2020 02:46:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51132 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728162AbgFOGqk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 15 Jun 2020 02:46:40 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1E4BC061A0E;
+        Sun, 14 Jun 2020 23:46:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=xtyx9uoKMYq+HMFU16+7Gs+ZbH0KWY7ZWnCdcrwcIb8=; b=r7yyv8M74ozs+RSHz6+EEeqA8/
+        vo2BHajJ3VH0/9RAeQeSN4pg7EyfkqrmtDugvYBB9FE2Xjj6EttYrzmHyK6QT+w/0HrSJFwSecwBZ
+        TZQyi9VkwrtT+La5/NdY5kDHVaflSLDkjzVn9gcd7sJWFytgT8d+I2zfr3C/vN9rbSp61pGRphcjV
+        yGIwR29ZU+M2kd14lZNx2PnylncFbFa1PO5HiMeo3uX1SH9GPGKq6rjKOmGKtwlY2VTLDcVy1FDtj
+        vK17oIrGDAOzk+xYcgOpBuA3jh+RLgYn3HazTp/j0vEJwinzEPqn8pkT1QtknBGna0nf6H8poT96Z
+        fumQ5GEw==;
+Received: from 195-192-102-148.dyn.cablelink.at ([195.192.102.148] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jkit4-0001W1-3B; Mon, 15 Jun 2020 06:46:30 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     martin.petersen@oracle.com
+Cc:     brking@us.ibm.com, jinpu.wang@cloud.ionos.com,
+        John Garry <john.garry@huawei.com>, mpe@ellerman.id.au,
+        linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: [PATCH 1/2] libata: provide a ata_scsi_dma_need_drain stub for !CONFIG_ATA
+Date:   Mon, 15 Jun 2020 08:46:23 +0200
+Message-Id: <20200615064624.37317-2-hch@lst.de>
+X-Mailer: git-send-email 2.26.2
+In-Reply-To: <20200615064624.37317-1-hch@lst.de>
+References: <20200615064624.37317-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.127.227]
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-This is an effort to eliminate the uninitialized_var() macro[1].
+SAS drivers can be compiled with ata support disabled.  Provide a
+stub so that the drivers don't have to ifdef around wiring up
+ata_scsi_dma_need_drain.
 
-The use of this macro is the wrong solution because it forces off ANY
-analysis by the compiler for a given variable. It even masks "unused
-variable" warnings.
-
-Quoted from Linus[2]:
-
-"It's a horrible thing to use, in that it adds extra cruft to the
-source code, and then shuts up a compiler warning (even the _reliable_
-warnings from gcc)."
-
-The gcc option "-Wmaybe-uninitialized" has been disabled and this change
-will not produce any warnnings even with "make W=1".
-
-[1] https://github.com/KSPP/linux/issues/81
-[2] https://lore.kernel.org/lkml/CA+55aFz2500WfbKXAx8s67wrm9=yVJu65TpLgN_ybYNv0VEOKA@mail.gmail.com/
-
-Cc: Kees Cook <keescook@chromium.org>
-Signed-off-by: Jason Yan <yanaijie@huawei.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/ata/libata-scsi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/libata.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 435781a16875..fcb00f2825fe 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -93,7 +93,7 @@ static ssize_t ata_scsi_park_show(struct device *device,
- 	struct ata_link *link;
- 	struct ata_device *dev;
- 	unsigned long now;
--	unsigned int uninitialized_var(msecs);
-+	unsigned int msecs;
- 	int rc = 0;
- 
- 	ap = ata_shost_to_port(sdev->host);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index af832852e62044..042e584daca73e 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1092,7 +1092,11 @@ extern int ata_scsi_ioctl(struct scsi_device *dev, unsigned int cmd,
+ #define ATA_SCSI_COMPAT_IOCTL /* empty */
+ #endif
+ extern int ata_scsi_queuecmd(struct Scsi_Host *h, struct scsi_cmnd *cmd);
++#if IS_ENABLED(CONFIG_ATA)
+ bool ata_scsi_dma_need_drain(struct request *rq);
++#else
++#define ata_scsi_dma_need_drain NULL
++#endif
+ extern int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *dev,
+ 			    unsigned int cmd, void __user *arg);
+ extern bool ata_link_online(struct ata_link *link);
 -- 
-2.25.4
+2.26.2
 
