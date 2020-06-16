@@ -2,96 +2,114 @@ Return-Path: <SRS0=vHbX=75=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF1CCC433E0
-	for <linux-ide@archiver.kernel.org>; Tue, 16 Jun 2020 03:48:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 249D8C433E2
+	for <linux-ide@archiver.kernel.org>; Tue, 16 Jun 2020 20:56:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8641A206D7
-	for <linux-ide@archiver.kernel.org>; Tue, 16 Jun 2020 03:48:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0015721508
+	for <linux-ide@archiver.kernel.org>; Tue, 16 Jun 2020 20:56:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bs4Cbg3v"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="P50FTVBO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726134AbgFPDso (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 15 Jun 2020 23:48:44 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:60916 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725985AbgFPDsn (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 15 Jun 2020 23:48:43 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05G3foSZ186488;
-        Tue, 16 Jun 2020 03:48:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=corp-2020-01-29;
- bh=XgO9rozhzUb4b1RJT0FSSZ2lSj+Tsv9oHAVRK4CoEjo=;
- b=bs4Cbg3vVEmK2ks7O2GpJesNeGyTQfc/FRhuxRXlET/MBWhgC87d1+4b+O+/oj06zOr5
- G1uDDj0AGGwM7JH84lU1buqu+BSVB9jeLUapEsHrtm2EEwRqVxBzPFCsRwsyFF27FeGM
- Lsu2Rshw6kfpjKPjl4/ZoB8gJ040JDhrQjENbdgt2MOa9YCnSH3HOr/Gbj/Fv/ZUxScd
- WItajTxODnbjgLtP8QB3i1zz3b5e6O6V1gKsGY+Ssyzp0gMX/pBry2V7IKiDDvJajknb
- zfc3mA7Lxi9LHByVE2coP8zPplDLd6jV2d/AoPSCc9gesclEcTEEVrModpeEQK3ZGp5c qw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 31p6s249h6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 16 Jun 2020 03:48:26 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 05G3h22d185023;
-        Tue, 16 Jun 2020 03:46:26 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 31p6s6hb3w-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 16 Jun 2020 03:46:26 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 05G3kM2L015942;
-        Tue, 16 Jun 2020 03:46:22 GMT
-Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 15 Jun 2020 20:46:21 -0700
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
-        brking@us.ibm.com, jinpu.wang@cloud.ionos.com, mpe@ellerman.id.au,
-        linux-ide@vger.kernel.org
-Subject: Re: [PATCH 1/2] libata: provide a ata_scsi_dma_need_drain stub for !CONFIG_ATA
-Date:   Mon, 15 Jun 2020 23:46:19 -0400
-Message-Id: <159227896596.21874.13848984426600233866.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20200615064624.37317-2-hch@lst.de>
-References: <20200615064624.37317-1-hch@lst.de> <20200615064624.37317-2-hch@lst.de>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9653 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 mlxscore=0
- suspectscore=0 mlxlogscore=999 phishscore=0 bulkscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2004280000
- definitions=main-2006160025
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9653 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 lowpriorityscore=0 impostorscore=0
- clxscore=1011 mlxscore=0 mlxlogscore=999 priorityscore=1501 phishscore=0
- malwarescore=0 suspectscore=0 spamscore=0 cotscore=-2147483648 bulkscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2004280000 definitions=main-2006160025
+        id S1729862AbgFPUzx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 16 Jun 2020 16:55:53 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:33856 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729782AbgFPUzu (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 16 Jun 2020 16:55:50 -0400
+Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id C88EC30C411;
+        Tue, 16 Jun 2020 13:55:49 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com C88EC30C411
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
+        s=dkimrelay; t=1592340949;
+        bh=E+oR6RUpkd74pPU6ifizwLK9TZk6TKCJeZjFJcFRzhU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=P50FTVBO/zMIXbpuFhLWBQyyxqB6Ez7qcHg2PyDMIUTBvbicO3MBn8YVoFTTHxhoM
+         RBWPLfTCyCLIvr08m3yurRLhq3MwXv6uaaafhHqvVzoVdCSUIXaStm9O4CRr/eVNaC
+         tmX2OtKj+IWrgddEP+43cogwIodYgi4yaKsKyA1Y=
+Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 4E0CD14008C;
+        Tue, 16 Jun 2020 13:55:48 -0700 (PDT)
+From:   Jim Quinlan <james.quinlan@broadcom.com>
+To:     linux-pci@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
+Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
+        Parallel ATA drivers)), linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v5 02/12] ata: ahci_brcm: Fix use of BCM7216 reset controller
+Date:   Tue, 16 Jun 2020 16:55:09 -0400
+Message-Id: <20200616205533.3513-3-james.quinlan@broadcom.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200616205533.3513-1-james.quinlan@broadcom.com>
+References: <20200616205533.3513-1-james.quinlan@broadcom.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, 15 Jun 2020 08:46:23 +0200, Christoph Hellwig wrote:
+From: Jim Quinlan <jquinlan@broadcom.com>
 
-> SAS drivers can be compiled with ata support disabled.  Provide a
-> stub so that the drivers don't have to ifdef around wiring up
-> ata_scsi_dma_need_drain.
+A reset controller "rescal" is shared between the AHCI driver and the PCIe
+driver for the BrcmSTB 7216 chip.  The code is modified to allow this
+sharing and to deassert() properly.
 
-Applied to 5.8/scsi-fixes, thanks!
+Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
 
-[1/2] scsi: libata: Provide an ata_scsi_dma_need_drain stub for !CONFIG_ATA
-      https://git.kernel.org/mkp/scsi/c/7bb7ee8704fe
-[2/2] scsi: Wire up ata_scsi_dma_need_drain for SAS HBA drivers
-      https://git.kernel.org/mkp/scsi/c/b8f1d1e05817
+Fixes: 272ecd60a636 ("ata: ahci_brcm: BCM7216 reset is self de-asserting")
+Fixes: c345ec6a50e9 ("ata: ahci_brcm: Support BCM7216 reset controller
+name")
+---
+ drivers/ata/ahci_brcm.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+index 6853dbb4131d..d6115bc04b09 100644
+--- a/drivers/ata/ahci_brcm.c
++++ b/drivers/ata/ahci_brcm.c
+@@ -428,7 +428,6 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ {
+ 	const struct of_device_id *of_id;
+ 	struct device *dev = &pdev->dev;
+-	const char *reset_name = NULL;
+ 	struct brcm_ahci_priv *priv;
+ 	struct ahci_host_priv *hpriv;
+ 	struct resource *res;
+@@ -452,11 +451,10 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 
+ 	/* Reset is optional depending on platform and named differently */
+ 	if (priv->version == BRCM_SATA_BCM7216)
+-		reset_name = "rescal";
++		priv->rcdev = devm_reset_control_get_optional_shared(&pdev->dev, "rescal");
+ 	else
+-		reset_name = "ahci";
++		priv->rcdev = devm_reset_control_get_optional(&pdev->dev, "ahci");
+ 
+-	priv->rcdev = devm_reset_control_get_optional(&pdev->dev, reset_name);
+ 	if (IS_ERR(priv->rcdev))
+ 		return PTR_ERR(priv->rcdev);
+ 
+@@ -479,10 +477,7 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 		break;
+ 	}
+ 
+-	if (priv->version == BRCM_SATA_BCM7216)
+-		ret = reset_control_reset(priv->rcdev);
+-	else
+-		ret = reset_control_deassert(priv->rcdev);
++	ret = reset_control_deassert(priv->rcdev);
+ 	if (ret)
+ 		return ret;
+ 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.17.1
+
