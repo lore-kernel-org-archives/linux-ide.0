@@ -7,56 +7,57 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 428E0C433E7
-	for <linux-ide@archiver.kernel.org>; Sat, 20 Jun 2020 03:31:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F265FC433E0
+	for <linux-ide@archiver.kernel.org>; Sat, 20 Jun 2020 03:31:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E6C42312F
-	for <linux-ide@archiver.kernel.org>; Sat, 20 Jun 2020 03:31:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D493F21D7A
+	for <linux-ide@archiver.kernel.org>; Sat, 20 Jun 2020 03:31:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="hXEDT+oQ"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="nLZb9q5M"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733103AbgFTDbC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 19 Jun 2020 23:31:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58248 "EHLO
+        id S1733071AbgFTDbM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 19 Jun 2020 23:31:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733021AbgFTDay (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 19 Jun 2020 23:30:54 -0400
-Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92617C0619E5
-        for <linux-ide@vger.kernel.org>; Fri, 19 Jun 2020 20:30:24 -0700 (PDT)
-Received: by mail-pf1-x442.google.com with SMTP id j12so3153973pfn.10
-        for <linux-ide@vger.kernel.org>; Fri, 19 Jun 2020 20:30:24 -0700 (PDT)
+        with ESMTP id S1733063AbgFTDbB (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 19 Jun 2020 23:31:01 -0400
+Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 393F1C0619F0
+        for <linux-ide@vger.kernel.org>; Fri, 19 Jun 2020 20:30:25 -0700 (PDT)
+Received: by mail-pl1-x642.google.com with SMTP id n2so4793314pld.13
+        for <linux-ide@vger.kernel.org>; Fri, 19 Jun 2020 20:30:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=53EFvIpvLtL19VTcgKVkwQhb1JNYVFCG8WLiohIrzpg=;
-        b=hXEDT+oQwZV/0j93NEptSD6lkCmisgOBhpbn5Vp8lS7WhqstyLUjYh8/pubGfJlegl
-         cIZZuP2lTlcYx/X9xdQps0HcFapdlSQ3sZeyQSQTzkk3YYv8X66EUy9+bLD5pYpGJ7K8
-         f/p23iF9Lj5ZdC2ePxyPtJFko+YDM3iaXqXxg=
+        bh=TsJU39le/9mzUUvkg/vEQ1ejtljvEC7MElEcoRxU/hs=;
+        b=nLZb9q5MNXSO30mRLC8p+Z6tp7SeKI4c8mbyilFhnvlC39t+V3j0iQJ4vfU5EbJ/Ge
+         yJs0yUXWykR2+lKlShzU2CG/atXeM++8u60h/nbziIo1McpvPT8URV5HcgXBrobq0ydJ
+         LtCik9CXYKbYzZN1wG1+1XbNp5/sueNlWfLSk=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=53EFvIpvLtL19VTcgKVkwQhb1JNYVFCG8WLiohIrzpg=;
-        b=Tf+Pj0AJWcspZ4n7dXZiDfFTdBGtDWdJecqcYW4Mo5YZ9HMn9IOm8II/eM7YR11l4m
-         4tZa1Y9gJe9UsydQ70BrVd7/NJsX7JnRxxCfjW/0W9Q0czTVTcaSVd1QtjZijE6vedLo
-         ZZnOmvXC4DJirntBDis7PPBzS9YYstfddOgV0Vnw76y0QCDk7gThr4t66zQVNvxzVSEQ
-         pszLbhHlwU3cL0yNzv1l+DI48wY9OLl9CKtClZGUC2tleNzYF3JHpTr+FMNb2OUATJbY
-         TFZ/Ygjhoztc9pV0Dm1rpL4kRFeA4QEUJhhlgf5aFRcgg09t61ESaBDo0zIN96APsP5i
-         OM7A==
-X-Gm-Message-State: AOAM530c1+25J0dBec5gyk5+F9Dl0E7ZjAlWMARA9F/V6IwMdayjd5wC
-        ok8Ug4LidNhRNWkfXNZ37HAH9Q==
-X-Google-Smtp-Source: ABdhPJzWWDTo3fA3qlpxXPt9t+m0l3tQUgBSNT3cCPjCzr+IkMUIJTgiw4SJHjx8tKw0+dOG4rlAaQ==
-X-Received: by 2002:aa7:9f10:: with SMTP id g16mr10814981pfr.47.1592623824106;
+        bh=TsJU39le/9mzUUvkg/vEQ1ejtljvEC7MElEcoRxU/hs=;
+        b=QbpMiW8cAa5I2FQ7HNGki3YPiglryeubi7ePfZJaIs/mxMjbqK2aPkgeIMusuOH/p/
+         gGa2jPLwqUvJPg2yXSFj/52PEwwM5YFhl3A6xzaCVEZ2h5AdImrRTKf7OKT7utR+2dLd
+         Mm+9CU14sZ00mX9y9uD3d5dNMEKKd46NZCCQzTFOA+gDTS06x51fKpk694Fh/qtyXHov
+         WBoyAuSp8ONIHSaIpXHyj833WBb6hRraRMxOuHr+bY15ecQHUOWbIOvDWvTFy2Ao5fUx
+         XhAKLHt4eIE0c945NW4xAU2bP46UzkOe1VIPhxx7/TLvapdFD5LCBhA9ivEG2dyo/kUl
+         ZjIA==
+X-Gm-Message-State: AOAM530tsbW/+naZ6FyCiP04qz7Q99CxTPkbqv5uKLN/UsM2XmlM5j/4
+        R3HYuzJkpGCFno83HJYDgWoRIw==
+X-Google-Smtp-Source: ABdhPJx/5DcfB27JAL/c3SFwGw95qhIKfr9dnkeTlJXy/0XzMHLMuVPklbRvet5f9iLDNbeJ3PiIXQ==
+X-Received: by 2002:a17:902:8f83:: with SMTP id z3mr10333002plo.203.1592623824777;
         Fri, 19 Jun 2020 20:30:24 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id w77sm7615693pff.126.2020.06.19.20.30.19
+        by smtp.gmail.com with ESMTPSA id ev20sm6238855pjb.8.2020.06.19.20.30.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Fri, 19 Jun 2020 20:30:20 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
+        Nathan Chancellor <natechancellor@gmail.com>,
         Linus Torvalds <torvalds@linux-foundation.org>,
         Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>,
         Alexander Potapenko <glider@google.com>,
@@ -68,14 +69,13 @@ Cc:     Kees Cook <keescook@chromium.org>,
         linux-ide@vger.kernel.org, linux-clk@vger.kernel.org,
         linux-spi@vger.kernel.org, linux-mm@kvack.org,
         clang-built-linux@googlegroups.com
-Subject: [PATCH v2 07/16] clk: st: Remove uninitialized_var() usage
-Date:   Fri, 19 Jun 2020 20:29:58 -0700
-Message-Id: <20200620033007.1444705-8-keescook@chromium.org>
+Subject: [PATCH v2 10/16] KVM: PPC: Book3S PR: Remove uninitialized_var() usage
+Date:   Fri, 19 Jun 2020 20:30:01 -0700
+Message-Id: <20200620033007.1444705-11-keescook@chromium.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200620033007.1444705-1-keescook@chromium.org>
 References: <20200620033007.1444705-1-keescook@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
@@ -89,34 +89,36 @@ simply initialize the variable or make compiler changes. As a precursor
 to removing[2] this[3] macro[4], just remove this variable since it was
 actually unused:
 
-drivers/clk/st/clkgen-fsyn.c: In function ‘quadfs_set_rate’:
-drivers/clk/st/clkgen-fsyn.c:793:6: warning: unused variable ‘i’ [-Wunused-variable]
-  793 |  int i;
-      |      ^
+arch/powerpc/kvm/book3s_pr.c:1832:16: warning: unused variable 'vrsave' [-Wunused-variable]
+        unsigned long vrsave;
+                      ^
 
 [1] https://lore.kernel.org/lkml/20200603174714.192027-1-glider@google.com/
 [2] https://lore.kernel.org/lkml/CA+55aFw+Vbj0i=1TGqCR5vQkCzWJ0QxK6CernOU6eedsudAixw@mail.gmail.com/
 [3] https://lore.kernel.org/lkml/CA+55aFwgbgqhbp1fkxvRKEpzyR5J8n1vKT1VZdz9knmPuXhOeg@mail.gmail.com/
 [4] https://lore.kernel.org/lkml/CA+55aFz2500WfbKXAx8s67wrm9=yVJu65TpLgN_ybYNv0VEOKA@mail.gmail.com/
 
-Fixes: 5f7aa9071e93 ("clk: st: Support for QUADFS inside ClockGenB/C/D/E/F")
+Suggested-by: Nathan Chancellor <natechancellor@gmail.com>
+Fixes: f05ed4d56e9c ("KVM: PPC: Split out code from book3s.c into book3s_pr.c")
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/clk/st/clkgen-fsyn.c | 1 -
- 1 file changed, 1 deletion(-)
+ arch/powerpc/kvm/book3s_pr.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/clk/st/clkgen-fsyn.c b/drivers/clk/st/clkgen-fsyn.c
-index a156bd0c6af7..f1adc858b590 100644
---- a/drivers/clk/st/clkgen-fsyn.c
-+++ b/drivers/clk/st/clkgen-fsyn.c
-@@ -790,7 +790,6 @@ static int quadfs_set_rate(struct clk_hw *hw, unsigned long rate,
- 	struct st_clk_quadfs_fsynth *fs = to_quadfs_fsynth(hw);
- 	struct stm_fs params;
- 	long hwrate;
--	int uninitialized_var(i);
+diff --git a/arch/powerpc/kvm/book3s_pr.c b/arch/powerpc/kvm/book3s_pr.c
+index ef54f917bdaf..ed12dfbf9bb5 100644
+--- a/arch/powerpc/kvm/book3s_pr.c
++++ b/arch/powerpc/kvm/book3s_pr.c
+@@ -1828,9 +1828,6 @@ static int kvmppc_vcpu_run_pr(struct kvm_vcpu *vcpu)
+ {
+ 	struct kvm_run *run = vcpu->run;
+ 	int ret;
+-#ifdef CONFIG_ALTIVEC
+-	unsigned long uninitialized_var(vrsave);
+-#endif
  
- 	if (!rate || !parent_rate)
- 		return -EINVAL;
+ 	/* Check if we can run the vcpu at all */
+ 	if (!vcpu->arch.sane) {
 -- 
 2.25.1
 
