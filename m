@@ -5,59 +5,58 @@ X-Spam-Level:
 X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EE73C433E1
-	for <linux-ide@archiver.kernel.org>; Sat, 20 Jun 2020 03:33:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E13A8C433E2
+	for <linux-ide@archiver.kernel.org>; Sat, 20 Jun 2020 03:33:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E3A923384
-	for <linux-ide@archiver.kernel.org>; Sat, 20 Jun 2020 03:33:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCAD623384
+	for <linux-ide@archiver.kernel.org>; Sat, 20 Jun 2020 03:33:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="fzu/PCWh"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="gTDQzS0R"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732861AbgFTDdI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 19 Jun 2020 23:33:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58208 "EHLO
+        id S1732968AbgFTDam (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 19 Jun 2020 23:30:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732874AbgFTDam (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 19 Jun 2020 23:30:42 -0400
-Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24425C0619D4
-        for <linux-ide@vger.kernel.org>; Fri, 19 Jun 2020 20:30:23 -0700 (PDT)
-Received: by mail-pf1-x444.google.com with SMTP id 64so5364834pfv.11
-        for <linux-ide@vger.kernel.org>; Fri, 19 Jun 2020 20:30:23 -0700 (PDT)
+        with ESMTP id S1732883AbgFTDa1 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 19 Jun 2020 23:30:27 -0400
+Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42DF8C0619C1
+        for <linux-ide@vger.kernel.org>; Fri, 19 Jun 2020 20:30:21 -0700 (PDT)
+Received: by mail-pj1-x1043.google.com with SMTP id i4so5296981pjd.0
+        for <linux-ide@vger.kernel.org>; Fri, 19 Jun 2020 20:30:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=RzFNSuLALDDrnyEKhGNtGgKFtIzldBQWpd31RJVV1bk=;
-        b=fzu/PCWhtk9lQC+R9MKh2Me02oxRal6DiRCuEURCWK9sXWB/CpSiB5Uv2tVNAE/CrC
-         pGWzf/0loKr3cRxZRQNqF3uIOTSAInn1Kw7+AX1oW2pUGkJe0aav9Q03vOKBlLqHKkBU
-         gGXsmhzRkdIhnbv/YLNgb64tFfCa2ZymPC9BU=
+        bh=KtJf1eB0YMlrdncO0Lr6J725DqMYoYaHrhw5Cgkkruw=;
+        b=gTDQzS0R9OidQMG5e9+VmFfSSG04SBfqJ4unRxfvhHa8h+BRhqOurGCqtRjRXbtwmM
+         6qHaq3suirfdF4p2vTK9nVPvab/ze983kHVbVbdpqZ9jzfmQ209tdPY06qFcE4o+7kX3
+         tZECKumwZls9OBAgYV/KhQ2bgAnw8dWiC5t0A=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=RzFNSuLALDDrnyEKhGNtGgKFtIzldBQWpd31RJVV1bk=;
-        b=tscCnF3otokhGrSeV+0c5NJmqjYaP/ILb4jKMIyj7nkai4jlihG9/GaTh2eLJuBv3N
-         jzOSb+ixolJv8Sv1HkRgKgrKWN+qMzorTXGF3jHWE7wRmvXM5pIxIai31HFkplQeYUv8
-         BzuLPrM50oT3AgrbFPr+D2P1vNP3/SP3JCFWYCWpgHthQLSs+8Nc46ilyjZsgPZ91qZu
-         fnikvC2sH6ehH/lWzH3sb9IF3E25E0iZ4+AhH5idLbwnfCC6ryhdNtqYdpdknXXHxSjc
-         12QDov5xA2ltJ2rQyXL5MIZPD0xvB2HIv5EkEuwdulHB1MBksXA4VmC7+blQlWf67dJj
-         SWeA==
-X-Gm-Message-State: AOAM532yeGAowywi7GnteJq3PrXoYYBqrAxkJrreTZaZvN7xTbGzq4gc
-        oYZKozrWMmk3KA7CCpAxnvwraQ==
-X-Google-Smtp-Source: ABdhPJxH7/9V1MTULJxl6mnEJxFeDjiakGfZWrFzazGy+IRxsSCrDXTNem0tGYNNX/5vbkAV8ntgLg==
-X-Received: by 2002:a63:7c51:: with SMTP id l17mr5231899pgn.303.1592623822618;
-        Fri, 19 Jun 2020 20:30:22 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id 1sm7140732pfx.210.2020.06.19.20.30.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        bh=KtJf1eB0YMlrdncO0Lr6J725DqMYoYaHrhw5Cgkkruw=;
+        b=KBNaWSm/EaopK/B+7nvOg38bP8XSO9P6LGG5C4sygaY7XqG73VkgdZ7qEUPe4qvMNL
+         ZDV8XycRcMsAAERQs2p68htGmgy96YPz3Aj1lg4BDB9ryr3pllslCAZrKNKjffAAFanv
+         7Ddy5NNKOmE/8Y9RjaIdYZ6oLlAT/zcvcaQVbrTZmFqDbLAN6ilqaNy0bFjFaVBRwYB7
+         dDqDMVX/gIR/fsPUqjcas0C+yL3zNWSlw2+ZgkR6s6P3ZeNDE1WjU2/O027ANza6bnJ6
+         s40DIhiJsBdUOhBB7nolMSpCVKyuOUHo0zFneV92Xz8qPF1pOs3bg06EWHwwL4qGKytk
+         fEBA==
+X-Gm-Message-State: AOAM532XNBIIFE/+32NN8eR1hkHB5k4i+YNPgJMkraSV6yIiVMsxhq0h
+        IRUMkimKBYnKdXd/5cZP4Y96qQ==
+X-Google-Smtp-Source: ABdhPJwKgmzNQXi/vbnAMFC7g+mel4lUeVcAQfzdBe9z4BUHWp/ZcsnxA9mdYSIljSqJHt1Xu1z0+Q==
+X-Received: by 2002:a17:902:760c:: with SMTP id k12mr806735pll.129.1592623820805;
         Fri, 19 Jun 2020 20:30:20 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id 137sm6119819pgg.72.2020.06.19.20.30.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 19 Jun 2020 20:30:17 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Kees Cook <keescook@chromium.org>,
-        Nick Desaulniers <ndesaulniers@google.com>,
         Linus Torvalds <torvalds@linux-foundation.org>,
         Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>,
         Alexander Potapenko <glider@google.com>,
@@ -69,14 +68,13 @@ Cc:     Kees Cook <keescook@chromium.org>,
         linux-ide@vger.kernel.org, linux-clk@vger.kernel.org,
         linux-spi@vger.kernel.org, linux-mm@kvack.org,
         clang-built-linux@googlegroups.com
-Subject: [PATCH v2 08/16] spi: davinci: Remove uninitialized_var() usage
-Date:   Fri, 19 Jun 2020 20:29:59 -0700
-Message-Id: <20200620033007.1444705-9-keescook@chromium.org>
+Subject: [PATCH v2 02/16] x86/mm/numa: Remove uninitialized_var() usage
+Date:   Fri, 19 Jun 2020 20:29:53 -0700
+Message-Id: <20200620033007.1444705-3-keescook@chromium.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20200620033007.1444705-1-keescook@chromium.org>
 References: <20200620033007.1444705-1-keescook@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
@@ -87,38 +85,79 @@ Using uninitialized_var() is dangerous as it papers over real bugs[1]
 (or can in the future), and suppresses unrelated compiler warnings (e.g.
 "unused variable"). If the compiler thinks it is uninitialized, either
 simply initialize the variable or make compiler changes. As a precursor
-to removing[2] this[3] macro[4], just remove this variable since it was
-actually unused:
+to removing[2] this[3] macro[4], refactor code to avoid its need.
 
-drivers/spi/spi-davinci.c: In function ‘davinci_spi_bufs’:
-drivers/spi/spi-davinci.c:579:11: warning: unused variable ‘rx_buf_count’ [-Wunused-variable]
-  579 |  unsigned rx_buf_count;
-      |           ^~~~~~~~~~~~
+The original reason for its use here was to work around the #ifdef
+being the only place the variable was used. This is better expressed
+using IS_ENABLED() and a new code block where the variable can be used
+unconditionally.
 
 [1] https://lore.kernel.org/lkml/20200603174714.192027-1-glider@google.com/
 [2] https://lore.kernel.org/lkml/CA+55aFw+Vbj0i=1TGqCR5vQkCzWJ0QxK6CernOU6eedsudAixw@mail.gmail.com/
 [3] https://lore.kernel.org/lkml/CA+55aFwgbgqhbp1fkxvRKEpzyR5J8n1vKT1VZdz9knmPuXhOeg@mail.gmail.com/
 [4] https://lore.kernel.org/lkml/CA+55aFz2500WfbKXAx8s67wrm9=yVJu65TpLgN_ybYNv0VEOKA@mail.gmail.com/
 
-Fixes: 048177ce3b39 ("spi: spi-davinci: convert to DMA engine API")
-Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
+Fixes: 1e01979c8f50 ("x86, numa: Implement pfn -> nid mapping granularity check")
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/spi/spi-davinci.c | 1 -
- 1 file changed, 1 deletion(-)
+ arch/x86/mm/numa.c                | 18 +++++++++---------
+ include/linux/page-flags-layout.h |  4 +++-
+ 2 files changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/spi/spi-davinci.c b/drivers/spi/spi-davinci.c
-index f71c497393a6..f50c0c79cbdf 100644
---- a/drivers/spi/spi-davinci.c
-+++ b/drivers/spi/spi-davinci.c
-@@ -576,7 +576,6 @@ static int davinci_spi_bufs(struct spi_device *spi, struct spi_transfer *t)
- 	u32 errors = 0;
- 	struct davinci_spi_config *spicfg;
- 	struct davinci_spi_platform_data *pdata;
--	unsigned uninitialized_var(rx_buf_count);
+diff --git a/arch/x86/mm/numa.c b/arch/x86/mm/numa.c
+index 8ee952038c80..b05f45e5e8e2 100644
+--- a/arch/x86/mm/numa.c
++++ b/arch/x86/mm/numa.c
+@@ -543,7 +543,6 @@ static void __init numa_clear_kernel_node_hotplug(void)
  
- 	dspi = spi_master_get_devdata(spi->master);
- 	pdata = &dspi->pdata;
+ static int __init numa_register_memblks(struct numa_meminfo *mi)
+ {
+-	unsigned long uninitialized_var(pfn_align);
+ 	int i, nid;
+ 
+ 	/* Account for nodes with cpus and no memory */
+@@ -571,15 +570,16 @@ static int __init numa_register_memblks(struct numa_meminfo *mi)
+ 	 * If sections array is gonna be used for pfn -> nid mapping, check
+ 	 * whether its granularity is fine enough.
+ 	 */
+-#ifdef NODE_NOT_IN_PAGE_FLAGS
+-	pfn_align = node_map_pfn_alignment();
+-	if (pfn_align && pfn_align < PAGES_PER_SECTION) {
+-		printk(KERN_WARNING "Node alignment %LuMB < min %LuMB, rejecting NUMA config\n",
+-		       PFN_PHYS(pfn_align) >> 20,
+-		       PFN_PHYS(PAGES_PER_SECTION) >> 20);
+-		return -EINVAL;
++	if (IS_ENABLED(NODE_NOT_IN_PAGE_FLAGS)) {
++		unsigned long pfn_align = node_map_pfn_alignment();
++
++		if (pfn_align && pfn_align < PAGES_PER_SECTION) {
++			pr_warn("Node alignment %LuMB < min %LuMB, rejecting NUMA config\n",
++				PFN_PHYS(pfn_align) >> 20,
++				PFN_PHYS(PAGES_PER_SECTION) >> 20);
++			return -EINVAL;
++		}
+ 	}
+-#endif
+ 	if (!numa_meminfo_cover_memory(mi))
+ 		return -EINVAL;
+ 
+diff --git a/include/linux/page-flags-layout.h b/include/linux/page-flags-layout.h
+index 71283739ffd2..e200eef6a7fd 100644
+--- a/include/linux/page-flags-layout.h
++++ b/include/linux/page-flags-layout.h
+@@ -98,9 +98,11 @@
+ /*
+  * We are going to use the flags for the page to node mapping if its in
+  * there.  This includes the case where there is no node, so it is implicit.
++ * Note that this #define MUST have a value so that it can be tested with
++ * the IS_ENABLED() macro.
+  */
+ #if !(NODES_WIDTH > 0 || NODES_SHIFT == 0)
+-#define NODE_NOT_IN_PAGE_FLAGS
++#define NODE_NOT_IN_PAGE_FLAGS 1
+ #endif
+ 
+ #if defined(CONFIG_NUMA_BALANCING) && LAST_CPUPID_WIDTH == 0
 -- 
 2.25.1
 
