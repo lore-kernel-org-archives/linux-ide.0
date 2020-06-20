@@ -2,93 +2,130 @@ Return-Path: <SRS0=2JnX=AB=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE969C433E0
-	for <linux-ide@archiver.kernel.org>; Sat, 20 Jun 2020 08:22:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E904C433DF
+	for <linux-ide@archiver.kernel.org>; Sat, 20 Jun 2020 15:57:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BFBB623A31
-	for <linux-ide@archiver.kernel.org>; Sat, 20 Jun 2020 08:22:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1EAED23B4B
+	for <linux-ide@archiver.kernel.org>; Sat, 20 Jun 2020 15:57:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=cogentembedded-com.20150623.gappssmtp.com header.i=@cogentembedded-com.20150623.gappssmtp.com header.b="BDlK19t7"
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="QDUi4+cS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726950AbgFTIWB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 20 Jun 2020 04:22:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46298 "EHLO
+        id S1726065AbgFTP5Q (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 20 Jun 2020 11:57:16 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59080 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726838AbgFTIWB (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 20 Jun 2020 04:22:01 -0400
-Received: from mail-lj1-x244.google.com (mail-lj1-x244.google.com [IPv6:2a00:1450:4864:20::244])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56041C0613EE
-        for <linux-ide@vger.kernel.org>; Sat, 20 Jun 2020 01:22:00 -0700 (PDT)
-Received: by mail-lj1-x244.google.com with SMTP id a9so14031213ljn.6
-        for <linux-ide@vger.kernel.org>; Sat, 20 Jun 2020 01:22:00 -0700 (PDT)
+        with ESMTP id S1726919AbgFTP5J (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 20 Jun 2020 11:57:09 -0400
+Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B1AFC061795
+        for <linux-ide@vger.kernel.org>; Sat, 20 Jun 2020 08:57:08 -0700 (PDT)
+Received: by mail-pl1-x643.google.com with SMTP id y18so5392148plr.4
+        for <linux-ide@vger.kernel.org>; Sat, 20 Jun 2020 08:57:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cogentembedded-com.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=c/y32/xmjS/dZ8Lr7ipeYZOIjniqsMezUi4gC5eLVRo=;
-        b=BDlK19t7jg+V/ha+/QAXVxZc3ydnHHYPY9GAQPZJGRizRatdOZ79z4BZ8PeCIRqNk/
-         bFJj6vISllTC1CuJj51AaN7gd91J7TBKYzix06G/wviDvs5dwMZHlnsUsvFeRknLdlVx
-         jswGNmPpNbCeuvhmwXDeG/UWhcjOs8hi9eO1PPBY7CQLEG2qN1M6uwthXVCqzNxQOjuw
-         AKFFMG7LJ7IXaPPuxezpV8MZWH/9hidRYDst28apbVtuHdthY9nBkcP+MnhFb1cjfH7q
-         IGczZCnqkr2uV7XtUsoC9baJPSkxB1aZgUWwdGjoW+ctJP6SVvpJlcmkvL/vMK1Nb2eH
-         SCEA==
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=9tYajToBSjCKrMeO3oPfRpy8eb8n4thx7RWSAT9gnU0=;
+        b=QDUi4+cS/+VkJarQJer8i54NB6wrYUApoWkctsr63KwWXWXArOZDidsHLokQDZp1dW
+         eZ4mUUVqPLdtc98QdwYojIxlVjsSvdT6uJdK2Pr6SfHfX+CS5ufDjNUbv4fBIhf1Kcxv
+         MQ/YY9T6qSNqLt4/98fJo5BCZXSyE37vzBS0w=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=c/y32/xmjS/dZ8Lr7ipeYZOIjniqsMezUi4gC5eLVRo=;
-        b=Ap8pR6Pr/pCIWhkOxmT7fpJTPrLjNVBUJrmVBUZ9fjjNtR5ROUE8A9KnNntlX3rajo
-         50rR7rEVTfKuvJjL90V/PHtzVvornPH63VZ6BZ96nPsFmeuKrf6PGZ4HGaUzaMw792na
-         NE5ECbkanZM4vWYSvfCWiEa0XDwZgSV6vrTE8gl0IzNev9uSTkX8lKxDs2NAWRtNv3a3
-         cIG6sfpPtaDdrBf8od4N4me5OZFBWZvPCk5c+3xqP2d1mZqcHyh73iAjU7oWTCe8DMf3
-         +JhGxFLqnFlHUZq5ygsaQwWQFbJ5qPXMOK8jH44s4GNzBgag2v5xFX73zdiFZsenOqqM
-         zlZw==
-X-Gm-Message-State: AOAM5336mWNhc4Sl4pQyUehB0tpuK38GTw8tRHjMXz4THrtpFAiuqpFE
-        v7kioS9NKSBk2VqJzviTm4cYm6WCt3teCA==
-X-Google-Smtp-Source: ABdhPJzGszEfHPHtuah+MwhskgNx1h5qBNcVuyKWUU8C2TMGazLJVqq0dkOJm0p6+P90J15YIOJICA==
-X-Received: by 2002:a2e:858c:: with SMTP id b12mr3517769lji.275.1592641318569;
-        Sat, 20 Jun 2020 01:21:58 -0700 (PDT)
-Received: from ?IPv6:2a00:1fa0:851:68cb:a8e4:b8:8a04:e903? ([2a00:1fa0:851:68cb:a8e4:b8:8a04:e903])
-        by smtp.gmail.com with ESMTPSA id s25sm1581428ljj.119.2020.06.20.01.21.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 20 Jun 2020 01:21:57 -0700 (PDT)
-Subject: Re: [PATCH] libata: fix the ata_scsi_dma_need_drain stub
-To:     Christoph Hellwig <hch@lst.de>, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
-References: <20200620071302.462974-1-hch@lst.de>
- <20200620071302.462974-2-hch@lst.de>
-From:   Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Message-ID: <3148ace5-2733-5d66-7c2f-6a967666ea79@cogentembedded.com>
-Date:   Sat, 20 Jun 2020 11:21:41 +0300
-User-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=9tYajToBSjCKrMeO3oPfRpy8eb8n4thx7RWSAT9gnU0=;
+        b=iuBdl+rXuikX2wvq3RGL2Of/JK2++ZPuaK/gbvVYwHctAaGjua1abq0pub3uytFOrE
+         /YC8ojUTjmV6f2GH9dZIBw+9gCZJ25JKxplGZtv0hnXjARHum9UmJOiw2qFjcGxqpNVG
+         QkPfC18wB43QuwGOde3eGJxtHG0gwwBaRW1LVdyUTLjJF2WL92a/DTEZu2NKYrykXMpt
+         DQ5RuPK3KxNTdinNPZNxEtyo9cwprkytxM+/32P/O8Y6lKH11ngzxyWuIaEhHyKoysaC
+         rGibR+ZHc39jWIa4/75VvladwlDn4dUGz8VoyitfJqxwctO4BiHyn9Kp+a4l374sN8FT
+         fjzw==
+X-Gm-Message-State: AOAM533YzaeChz4q3wxND84cWxAFvGYJFpLslS0xkx5NQtYVR1NwQg9/
+        IIRdawV66oO+qDdgAES3d3rPNQ==
+X-Google-Smtp-Source: ABdhPJxL62JhXi8o+nSID6QHqBiLZ4YAHSAeaQKUwiACFjUcLS2k4S/MAlD8WL4T8tKBotrZuujIYg==
+X-Received: by 2002:a17:902:b78a:: with SMTP id e10mr12682612pls.201.1592668627259;
+        Sat, 20 Jun 2020 08:57:07 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id y4sm8954278pfr.182.2020.06.20.08.57.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 20 Jun 2020 08:57:06 -0700 (PDT)
+Date:   Sat, 20 Jun 2020 08:57:04 -0700
+From:   Kees Cook <keescook@chromium.org>
+To:     Sedat Dilek <sedat.dilek@gmail.com>
+Cc:     linux-kernel@vger.kernel.org,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>,
+        Alexander Potapenko <glider@google.com>,
+        Joe Perches <joe@perches.com>,
+        Andy Whitcroft <apw@canonical.com>, x86@kernel.org,
+        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
+        b43-dev@lists.infradead.org, netdev@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-clk@vger.kernel.org,
+        linux-spi@vger.kernel.org, linux-mm@kvack.org,
+        Clang-Built-Linux ML <clang-built-linux@googlegroups.com>
+Subject: Re: [PATCH v2 00/16] Remove uninitialized_var() macro
+Message-ID: <202006200854.B2D8F21@keescook>
+References: <20200620033007.1444705-1-keescook@chromium.org>
+ <CA+icZUWpHRR7ukyepiUH1dR3r4GMi-s2crfwR5vTszdt1SUTQw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20200620071302.462974-2-hch@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+icZUWpHRR7ukyepiUH1dR3r4GMi-s2crfwR5vTszdt1SUTQw@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 20.06.2020 10:13, Christoph Hellwig wrote:
-
-> We don't only need the stub when libata is disable, but also if it
-
-    Disabled. :-)
-
-> is modular and there are built-in SAS drivers (which can happen when
-> SCSI_SAS_ATA is disabled).
+On Sat, Jun 20, 2020 at 09:03:34AM +0200, Sedat Dilek wrote:
+> On Sat, Jun 20, 2020 at 5:30 AM Kees Cook <keescook@chromium.org> wrote:
+> >
+> > v2:
+> > - more special-cased fixes
+> > - add reviews
+> > v1: https://lore.kernel.org/lkml/20200603233203.1695403-1-keescook@chromium.org
+> >
+> > Using uninitialized_var() is dangerous as it papers over real bugs[1]
+> > (or can in the future), and suppresses unrelated compiler warnings
+> > (e.g. "unused variable"). If the compiler thinks it is uninitialized,
+> > either simply initialize the variable or make compiler changes.
+> >
+> > As recommended[2] by[3] Linus[4], remove the macro.
+> >
+> > Most of the 300 uses don't cause any warnings on gcc 9.3.0, so they're in
+> > a single treewide commit in this series. A few others needed to actually
+> > get cleaned up, and I broke those out into individual patches.
+> >
+> > The tree is:
+> > https://git.kernel.org/pub/scm/linux/kernel/git/kees/linux.git/log/?h=kspp/uninit/macro
+> >
+> > -Kees
+> >
 > 
-> Fixes: b8f1d1e05817 ("scsi: Wire up ata_scsi_dma_need_drain for SAS HBA drivers")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-[...]
+> Hi Kees,
+> 
+> thanks for doing a v2 of your patchset.
+> 
+> As I saw Jason Yan providing some "uninitialized_var() macro" patches
+> to the MLs I pointen him to your tree "v1".
 
-MBR, Sergei
+Thanks!
+
+> BTW, I have tested your "v1" against Linux v5.7 (see [1]) - just
+> yesterday with Linux v5.7.5-rc1.
+> 
+> Is it possible to have a v2 of this patchset on top od Linux v5.7 - if
+> you do not mind.
+
+Since it's only going to be for post-v5.8, I'm fine skipping the v5.7
+testing. Mainly I'm looking at v5.8 and linux-next.
+
+Thanks for looking at it!
+
+-- 
+Kees Cook
