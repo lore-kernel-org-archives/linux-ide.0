@@ -4,62 +4,62 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-14.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_IN_DEF_DKIM_WL autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FE5DC433E1
-	for <linux-ide@archiver.kernel.org>; Mon, 22 Jun 2020 17:27:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19BD1C433E0
+	for <linux-ide@archiver.kernel.org>; Mon, 22 Jun 2020 18:39:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 81B192073E
-	for <linux-ide@archiver.kernel.org>; Mon, 22 Jun 2020 17:27:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E327F20738
+	for <linux-ide@archiver.kernel.org>; Mon, 22 Jun 2020 18:39:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="Sj/LDxGl"
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="g47As6pT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729808AbgFVR1n (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 22 Jun 2020 13:27:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56488 "EHLO
+        id S1730430AbgFVSjO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 22 Jun 2020 14:39:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39482 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729913AbgFVR1j (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jun 2020 13:27:39 -0400
-Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C53B4C061795
-        for <linux-ide@vger.kernel.org>; Mon, 22 Jun 2020 10:27:38 -0700 (PDT)
-Received: by mail-pl1-x642.google.com with SMTP id j4so7844858plk.3
-        for <linux-ide@vger.kernel.org>; Mon, 22 Jun 2020 10:27:38 -0700 (PDT)
+        with ESMTP id S1730418AbgFVSjN (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jun 2020 14:39:13 -0400
+Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA021C061796
+        for <linux-ide@vger.kernel.org>; Mon, 22 Jun 2020 11:39:13 -0700 (PDT)
+Received: by mail-pl1-x641.google.com with SMTP id d12so1951726ply.1
+        for <linux-ide@vger.kernel.org>; Mon, 22 Jun 2020 11:39:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=+qKZonIXzYkaE7j6NEmUZDll/lqh82KFC5lIzFFAexA=;
-        b=Sj/LDxGlqLLpaYA2HKS0ir72xSJDRvaawqW+y795XoJdbq1kchLvUQjgrJjOWfC+JH
-         gMsIKbShjnjcr2+KurZsh+8EWYtYNU6dksMeefHdh4+cSoDABbcpnRo4yMlqaxI1JeEd
-         5qoKcloOnFj249PSJkejK7fhAoJHjyymcZD75f7CrBTO9t5sVpKl4/w+l4aq3WNsnfUb
-         TRIDN1c/Dh1iY2rXYeGbxfUZ5LId9P8gQ9pTJRcf4rlFnODdx/9TAPxwlPJJIL5rw7gS
-         qkWxI0tT2V94QPHexmwPKfAygvTNhIxMLj1Lstg8dOiTztKRbwGZVv2oVu9k5+oOpdUQ
-         n93w==
+        bh=Gb+JetmJfxvfJpxHC8m6WwdUvvjtG/PEO/NrvZ7SUq0=;
+        b=g47As6pTItcLFTPBKcE7GoqTMDitRniLcUVZb/sgo6Z6hU1SBXf3XA30MossVWhFm+
+         WrZs8HM7KrKN7vIEe4hAi7PM9veaLBUBzmO1d6hg/ZrKjGDYlC+J8mnlzIu7m8jCiDVX
+         oUMZ6YXzkXP7P/9ND3v2M3GdghI0Eiq5bwNDzgs5cWvWuZbpdd3bSkITbG7/ShPdrwrX
+         oq7EH8OJ65SqfDB5bRXrhOWPzVNj9lb6ggrqKdEFfG/SWqJeDT88TfoVD+co4a3hK8cD
+         TZxZzP6pibR5VmEHPFJiQguXyVlIy2oApu1xDzwGn7gtMfXUFW3LNOourTReEdtotVmu
+         1u6A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=+qKZonIXzYkaE7j6NEmUZDll/lqh82KFC5lIzFFAexA=;
-        b=ZnOiUa/FBdNFvG3/H7cKlNuFhD3ElfpCCVV90KfJNRq1kJUspiFtigd3GKpjbsZAe/
-         za3NjA5/pf+rjKoqQTGaUc9ofgb1RaDCqQQU4Lxoj3ihiQOGVI9IURnD7U05cMpEU5Br
-         cjDnuMmkNhpejHwhyi6n2WSWzd2ZQIxMd440pqSBHlMPXof5V5asel1JKzl1hNgiky3U
-         f5BUPB4Lf07GCbMHvW1NSBTuTRsiNnH3CmtXs2SdOkQZnei0qVcM5CBPQG4ZPrO2/OXm
-         ZqQftXb+7DR8z0zQNyeej96qU2PfZDPQYOOonM344HjW93Cy6UT9V35fxX7jdOuOcgn8
-         Tp+Q==
-X-Gm-Message-State: AOAM531MEgVyTAYmQpf970n+ZlY1SkdZGEF02FbBu6R+f64/sljdAset
-        kGueGK+9yLcqElMAXt8is97RdrtxwgmfGxdvnEHBCA==
-X-Google-Smtp-Source: ABdhPJwAJxd3TbD1t00Y40e3G8EKfLPlkBmqQvCE355+9C0tlqa2OCw7GjEjFlFvPeiUto0aRyH3uyXx9jYG3D/uAag=
-X-Received: by 2002:a17:902:b698:: with SMTP id c24mr20096772pls.223.1592846858031;
- Mon, 22 Jun 2020 10:27:38 -0700 (PDT)
+        bh=Gb+JetmJfxvfJpxHC8m6WwdUvvjtG/PEO/NrvZ7SUq0=;
+        b=aL0C3ytRbXs35qBNqv1Lq6dZjnsdhYjuHZANERSXaBn1RuzdVDwHKnRHSM6yiOf0xs
+         H1u11NWqRNrhkG7i0kgOFQheIZLRWwl+QwrS0p212GK+zazY5fpuULu0k4/mAPBmBpeo
+         f2BN8RDo7M3Py2k7GQuvOpdb23Th1MRkYD/nlG4kTqHnbyGOa+IBbczIP9sNQVT3CJ2O
+         TZm1Tfzr05TXNfcvaDxz/I/XRJQp05Sh9TCzoj/o3tgZ36z1krRFC1RxdM+iTazPZKx1
+         YJzwzWn4OWdLYE4+fQ8pdB477gMzBP9B8s+41IdQ8LQU+ruQFqzwWpV24B5V4Nu54q5H
+         Avig==
+X-Gm-Message-State: AOAM530QLUVl2rFfyjt1GXUay13JCeD/hl83Z/1tw3AmsheIKuxlQpgu
+        yBiV5c51xSxCL4k9GAKiUnScvprmMW49x4GaaLTz+Q==
+X-Google-Smtp-Source: ABdhPJxjYmvT3fQkCRcyhTKfiFZOdTkx+4rML9Oc+LRvsn6ucoVJwJ7PtyGZkVKmwrq2pv/vivr0Qr/enJgVlPaAiao=
+X-Received: by 2002:a17:902:fe8b:: with SMTP id x11mr20457257plm.179.1592851152937;
+ Mon, 22 Jun 2020 11:39:12 -0700 (PDT)
 MIME-Version: 1.0
-References: <20200620033007.1444705-1-keescook@chromium.org> <20200620033007.1444705-17-keescook@chromium.org>
-In-Reply-To: <20200620033007.1444705-17-keescook@chromium.org>
+References: <20200620033007.1444705-1-keescook@chromium.org> <20200620033007.1444705-12-keescook@chromium.org>
+In-Reply-To: <20200620033007.1444705-12-keescook@chromium.org>
 From:   Nick Desaulniers <ndesaulniers@google.com>
-Date:   Mon, 22 Jun 2020 10:27:26 -0700
-Message-ID: <CAKwvOdmzYXGL2NVZqBkzyMzc-fLm_UgVCsB3aHW2GmFi3zyf9Q@mail.gmail.com>
-Subject: Re: [PATCH v2 13/16] mm/debug_vm_pgtable: Remove uninitialized_var() usage
+Date:   Mon, 22 Jun 2020 11:39:01 -0700
+Message-ID: <CAKwvOdm7+8xhbMZRPq0+2X1hez=cNGf=psX7ofNUfqq9iY5ScA@mail.gmail.com>
+Subject: Re: [PATCH v2 11/16] media: sur40: Remove uninitialized_var() usage
 To:     Kees Cook <keescook@chromium.org>
 Cc:     LKML <linux-kernel@vger.kernel.org>,
         Linus Torvalds <torvalds@linux-foundation.org>,
@@ -89,40 +89,64 @@ On Fri, Jun 19, 2020 at 8:30 PM Kees Cook <keescook@chromium.org> wrote:
 > (or can in the future), and suppresses unrelated compiler warnings (e.g.
 > "unused variable"). If the compiler thinks it is uninitialized, either
 > simply initialize the variable or make compiler changes. As a precursor
-> to removing[2] this[3] macro[4], just initialize this variable to NULL.
+> to removing[2] this[3] macro[4], just remove this variable since it was
+> actually unused:
+>
+> drivers/input/touchscreen/sur40.c:459:6: warning: variable 'packet_id' set but not used [-Wunused-but-set-variable]
+>   459 |  u32 packet_id;
+>       |      ^~~~~~~~~
+>
+> However, in keeping with the documentation desires outlined in commit
+> 335abaea7a27 ("Input: sur40 - silence unnecessary noisy debug output"),
+> comment out the assignment instead of removing it.
 >
 > [1] https://lore.kernel.org/lkml/20200603174714.192027-1-glider@google.com/
 > [2] https://lore.kernel.org/lkml/CA+55aFw+Vbj0i=1TGqCR5vQkCzWJ0QxK6CernOU6eedsudAixw@mail.gmail.com/
 > [3] https://lore.kernel.org/lkml/CA+55aFwgbgqhbp1fkxvRKEpzyR5J8n1vKT1VZdz9knmPuXhOeg@mail.gmail.com/
 > [4] https://lore.kernel.org/lkml/CA+55aFz2500WfbKXAx8s67wrm9=yVJu65TpLgN_ybYNv0VEOKA@mail.gmail.com/
 >
-> Fixes: 399145f9eb6c ("mm/debug: add tests validating architecture page table helpers")
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> ---
->  mm/debug_vm_pgtable.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/mm/debug_vm_pgtable.c b/mm/debug_vm_pgtable.c
-> index e45623016aea..83c9e88a052a 100644
-> --- a/mm/debug_vm_pgtable.c
-> +++ b/mm/debug_vm_pgtable.c
-> @@ -307,7 +307,7 @@ static int __init debug_vm_pgtable(void)
->         phys_addr_t paddr;
->         unsigned long vaddr, pte_aligned, pmd_aligned;
->         unsigned long pud_aligned, p4d_aligned, pgd_aligned;
-> -       spinlock_t *uninitialized_var(ptl);
-> +       spinlock_t *ptl = NULL;
+> Fixes: 335abaea7a27 ("Input: sur40 - silence unnecessary noisy debug output")
 
-It looks like the address of ptl is passed to pte_alloc_map_lock.  It
-looks like pte_offset_map_lock unconditionally assigns through that
-pointer before reading.  So this could be left uninitialized, but
-initializing it doesn't hurt.
+Probably should comment out `/* u32 packet_id */` rather than removing
+it then, but that doesn't really matter. Either way,
 Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
 
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
+>  drivers/input/touchscreen/sur40.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
 >
->         pr_info("Validating architecture page table helpers\n");
->         prot = vm_get_page_prot(VMFLAGS);
+> diff --git a/drivers/input/touchscreen/sur40.c b/drivers/input/touchscreen/sur40.c
+> index 34d31c7ec8ba..620cdd7d214a 100644
+> --- a/drivers/input/touchscreen/sur40.c
+> +++ b/drivers/input/touchscreen/sur40.c
+> @@ -456,8 +456,6 @@ static void sur40_poll(struct input_dev *input)
+>  {
+>         struct sur40_state *sur40 = input_get_drvdata(input);
+>         int result, bulk_read, need_blobs, packet_blobs, i;
+> -       u32 uninitialized_var(packet_id);
+> -
+>         struct sur40_header *header = &sur40->bulk_in_buffer->header;
+>         struct sur40_blob *inblob = &sur40->bulk_in_buffer->blobs[0];
+>
+> @@ -491,7 +489,7 @@ static void sur40_poll(struct input_dev *input)
+>                 if (need_blobs == -1) {
+>                         need_blobs = le16_to_cpu(header->count);
+>                         dev_dbg(sur40->dev, "need %d blobs\n", need_blobs);
+> -                       packet_id = le32_to_cpu(header->packet_id);
+> +                       /* packet_id = le32_to_cpu(header->packet_id); */
+>                 }
+>
+>                 /*
 > --
+> 2.25.1
+>
+> --
+> You received this message because you are subscribed to the Google Groups "Clang Built Linux" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to clang-built-linux+unsubscribe@googlegroups.com.
+> To view this discussion on the web visit https://groups.google.com/d/msgid/clang-built-linux/20200620033007.1444705-12-keescook%40chromium.org.
+
+
 
 -- 
 Thanks,
