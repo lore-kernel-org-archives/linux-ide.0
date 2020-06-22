@@ -1,63 +1,50 @@
-Return-Path: <SRS0=2JnX=AB=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=6nws=AD=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E904C433DF
-	for <linux-ide@archiver.kernel.org>; Sat, 20 Jun 2020 15:57:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D769C433DF
+	for <linux-ide@archiver.kernel.org>; Mon, 22 Jun 2020 09:03:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1EAED23B4B
-	for <linux-ide@archiver.kernel.org>; Sat, 20 Jun 2020 15:57:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="QDUi4+cS"
+	by mail.kernel.org (Postfix) with ESMTP id 0C5AE206D7
+	for <linux-ide@archiver.kernel.org>; Mon, 22 Jun 2020 09:03:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1592816629;
+	bh=dfPq2bWzwrh5d/nPvytI9Z/3m/amVEV2Rcw1LlZyQmc=;
+	h=In-Reply-To:References:Subject:From:Cc:To:Date:List-ID:From;
+	b=yE2LlBF3G/whkEIzDIMEOzhgi+pmTiUHrA5FOSXxG4vG1QX3CPjOlIhIr2w2c6s8S
+	 ynPkmdUEqsQy4KfzTJfsgUulE6A+nRxc8+2hMiCQa7DywgTdR9lHprYFOmiOlv2VbC
+	 9HiAaylB7+omNfypoL3ylmEi+zjlXJMaf/dafYqo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726065AbgFTP5Q (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 20 Jun 2020 11:57:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59080 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726919AbgFTP5J (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 20 Jun 2020 11:57:09 -0400
-Received: from mail-pl1-x643.google.com (mail-pl1-x643.google.com [IPv6:2607:f8b0:4864:20::643])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B1AFC061795
-        for <linux-ide@vger.kernel.org>; Sat, 20 Jun 2020 08:57:08 -0700 (PDT)
-Received: by mail-pl1-x643.google.com with SMTP id y18so5392148plr.4
-        for <linux-ide@vger.kernel.org>; Sat, 20 Jun 2020 08:57:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=9tYajToBSjCKrMeO3oPfRpy8eb8n4thx7RWSAT9gnU0=;
-        b=QDUi4+cS/+VkJarQJer8i54NB6wrYUApoWkctsr63KwWXWXArOZDidsHLokQDZp1dW
-         eZ4mUUVqPLdtc98QdwYojIxlVjsSvdT6uJdK2Pr6SfHfX+CS5ufDjNUbv4fBIhf1Kcxv
-         MQ/YY9T6qSNqLt4/98fJo5BCZXSyE37vzBS0w=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=9tYajToBSjCKrMeO3oPfRpy8eb8n4thx7RWSAT9gnU0=;
-        b=iuBdl+rXuikX2wvq3RGL2Of/JK2++ZPuaK/gbvVYwHctAaGjua1abq0pub3uytFOrE
-         /YC8ojUTjmV6f2GH9dZIBw+9gCZJ25JKxplGZtv0hnXjARHum9UmJOiw2qFjcGxqpNVG
-         QkPfC18wB43QuwGOde3eGJxtHG0gwwBaRW1LVdyUTLjJF2WL92a/DTEZu2NKYrykXMpt
-         DQ5RuPK3KxNTdinNPZNxEtyo9cwprkytxM+/32P/O8Y6lKH11ngzxyWuIaEhHyKoysaC
-         rGibR+ZHc39jWIa4/75VvladwlDn4dUGz8VoyitfJqxwctO4BiHyn9Kp+a4l374sN8FT
-         fjzw==
-X-Gm-Message-State: AOAM533YzaeChz4q3wxND84cWxAFvGYJFpLslS0xkx5NQtYVR1NwQg9/
-        IIRdawV66oO+qDdgAES3d3rPNQ==
-X-Google-Smtp-Source: ABdhPJxL62JhXi8o+nSID6QHqBiLZ4YAHSAeaQKUwiACFjUcLS2k4S/MAlD8WL4T8tKBotrZuujIYg==
-X-Received: by 2002:a17:902:b78a:: with SMTP id e10mr12682612pls.201.1592668627259;
-        Sat, 20 Jun 2020 08:57:07 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id y4sm8954278pfr.182.2020.06.20.08.57.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 20 Jun 2020 08:57:06 -0700 (PDT)
-Date:   Sat, 20 Jun 2020 08:57:04 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     Sedat Dilek <sedat.dilek@gmail.com>
-Cc:     linux-kernel@vger.kernel.org,
+        id S1726511AbgFVJDn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 22 Jun 2020 05:03:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40434 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725907AbgFVJDm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 22 Jun 2020 05:03:42 -0400
+Received: from kernel.org (unknown [104.132.0.74])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id C351B206D7;
+        Mon, 22 Jun 2020 09:03:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1592816621;
+        bh=dfPq2bWzwrh5d/nPvytI9Z/3m/amVEV2Rcw1LlZyQmc=;
+        h=In-Reply-To:References:Subject:From:Cc:To:Date:From;
+        b=vhvP7fE2MPNiHbfOeqUpBKYvYHUd3trLSwHmotHtfbD0VQFAa3Kwf3asD6snmMfVn
+         7p1K872LOY3D+lW5N2LJm3deS04WJDM10Qxgq0hfBEHc7pew9hlgtznyNjzvlDqDoI
+         hWZw7i2g7uSA8PFpTf60IR4oph7Kn4ltUnLQO8vI=
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20200620033007.1444705-8-keescook@chromium.org>
+References: <20200620033007.1444705-1-keescook@chromium.org> <20200620033007.1444705-8-keescook@chromium.org>
+Subject: Re: [PATCH v2 07/16] clk: st: Remove uninitialized_var() usage
+From:   Stephen Boyd <sboyd@kernel.org>
+Cc:     Kees Cook <keescook@chromium.org>,
         Linus Torvalds <torvalds@linux-foundation.org>,
         Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>,
         Alexander Potapenko <glider@google.com>,
@@ -68,64 +55,42 @@ Cc:     linux-kernel@vger.kernel.org,
         linux-doc@vger.kernel.org, linux-wireless@vger.kernel.org,
         linux-ide@vger.kernel.org, linux-clk@vger.kernel.org,
         linux-spi@vger.kernel.org, linux-mm@kvack.org,
-        Clang-Built-Linux ML <clang-built-linux@googlegroups.com>
-Subject: Re: [PATCH v2 00/16] Remove uninitialized_var() macro
-Message-ID: <202006200854.B2D8F21@keescook>
-References: <20200620033007.1444705-1-keescook@chromium.org>
- <CA+icZUWpHRR7ukyepiUH1dR3r4GMi-s2crfwR5vTszdt1SUTQw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CA+icZUWpHRR7ukyepiUH1dR3r4GMi-s2crfwR5vTszdt1SUTQw@mail.gmail.com>
+        clang-built-linux@googlegroups.com
+To:     Kees Cook <keescook@chromium.org>, linux-kernel@vger.kernel.org
+Date:   Mon, 22 Jun 2020 02:03:41 -0700
+Message-ID: <159281662109.62212.9073761737183602994@swboyd.mtv.corp.google.com>
+User-Agent: alot/0.9
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sat, Jun 20, 2020 at 09:03:34AM +0200, Sedat Dilek wrote:
-> On Sat, Jun 20, 2020 at 5:30 AM Kees Cook <keescook@chromium.org> wrote:
-> >
-> > v2:
-> > - more special-cased fixes
-> > - add reviews
-> > v1: https://lore.kernel.org/lkml/20200603233203.1695403-1-keescook@chromium.org
-> >
-> > Using uninitialized_var() is dangerous as it papers over real bugs[1]
-> > (or can in the future), and suppresses unrelated compiler warnings
-> > (e.g. "unused variable"). If the compiler thinks it is uninitialized,
-> > either simply initialize the variable or make compiler changes.
-> >
-> > As recommended[2] by[3] Linus[4], remove the macro.
-> >
-> > Most of the 300 uses don't cause any warnings on gcc 9.3.0, so they're in
-> > a single treewide commit in this series. A few others needed to actually
-> > get cleaned up, and I broke those out into individual patches.
-> >
-> > The tree is:
-> > https://git.kernel.org/pub/scm/linux/kernel/git/kees/linux.git/log/?h=kspp/uninit/macro
-> >
-> > -Kees
-> >
-> 
-> Hi Kees,
-> 
-> thanks for doing a v2 of your patchset.
-> 
-> As I saw Jason Yan providing some "uninitialized_var() macro" patches
-> to the MLs I pointen him to your tree "v1".
+Quoting Kees Cook (2020-06-19 20:29:58)
+> Using uninitialized_var() is dangerous as it papers over real bugs[1]
+> (or can in the future), and suppresses unrelated compiler warnings (e.g.
+> "unused variable"). If the compiler thinks it is uninitialized, either
+> simply initialize the variable or make compiler changes. As a precursor
+> to removing[2] this[3] macro[4], just remove this variable since it was
+> actually unused:
+>=20
+> drivers/clk/st/clkgen-fsyn.c: In function \u2018quadfs_set_rate\u2019:
+> drivers/clk/st/clkgen-fsyn.c:793:6: warning: unused variable \u2018i\u201=
+9 [-Wunused-variable]
+>   793 |  int i;
+>       |      ^
+>=20
+> [1] https://lore.kernel.org/lkml/20200603174714.192027-1-glider@google.co=
+m/
+> [2] https://lore.kernel.org/lkml/CA+55aFw+Vbj0i=3D1TGqCR5vQkCzWJ0QxK6Cern=
+OU6eedsudAixw@mail.gmail.com/
+> [3] https://lore.kernel.org/lkml/CA+55aFwgbgqhbp1fkxvRKEpzyR5J8n1vKT1VZdz=
+9knmPuXhOeg@mail.gmail.com/
+> [4] https://lore.kernel.org/lkml/CA+55aFz2500WfbKXAx8s67wrm9=3DyVJu65TpLg=
+N_ybYNv0VEOKA@mail.gmail.com/
+>=20
+> Fixes: 5f7aa9071e93 ("clk: st: Support for QUADFS inside ClockGenB/C/D/E/=
+F")
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> ---
 
-Thanks!
-
-> BTW, I have tested your "v1" against Linux v5.7 (see [1]) - just
-> yesterday with Linux v5.7.5-rc1.
-> 
-> Is it possible to have a v2 of this patchset on top od Linux v5.7 - if
-> you do not mind.
-
-Since it's only going to be for post-v5.8, I'm fine skipping the v5.7
-testing. Mainly I'm looking at v5.8 and linux-next.
-
-Thanks for looking at it!
-
--- 
-Kees Cook
+Acked-by: Stephen Boyd <sboyd@kernel.org>
