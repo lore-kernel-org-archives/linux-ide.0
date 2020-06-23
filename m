@@ -4,47 +4,47 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B4EAC433DF
-	for <linux-ide@archiver.kernel.org>; Tue, 23 Jun 2020 17:38:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63E51C433DF
+	for <linux-ide@archiver.kernel.org>; Tue, 23 Jun 2020 17:38:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2832E207FB
-	for <linux-ide@archiver.kernel.org>; Tue, 23 Jun 2020 17:38:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E57D20706
+	for <linux-ide@archiver.kernel.org>; Tue, 23 Jun 2020 17:38:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592933881;
-	bh=YysgsPNm2TWnOYKtFlFI4M81gTU4d5l7bYC5CbnM2ms=;
+	s=default; t=1592933902;
+	bh=zV13Z/VwWJQ8fHvGZGGb+IWqtbJN6UljGUIXqPq8WJE=;
 	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=p8zmrEeiO/V5mYxCmUDQ9qOdbt3NzZo/oJ7rBW611VCuHTw2CLS36duiI3eGXjBQ7
-	 wl0M2JJReX4jrDYt/X0Snha4XQ9kJGNFgU0t6hMNBdgOJy9lf7uqt2P489UVnYu/XP
-	 SMgjjTT3HfX6zvUsskCWJmkeywZ+aiCdNZ2doZnE=
+	b=k9fbta5J7o+SWcsFjLsgW5q7e1nbKNrz6Pdq05U2Z2tYhFn51/rOv6sxdX8XxCUGn
+	 7QCIymlRGvzDxt2hP7CP+nO0YA/WfK8qrlc01fE8EjQ9EgBprOBUrix68xgdBnN2+s
+	 F5abSjpT44vNJ0ELYKiSV0V44ss+UfBViag7jnTw=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733186AbgFWRhz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 23 Jun 2020 13:37:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34660 "EHLO mail.kernel.org"
+        id S1733277AbgFWRiT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 23 Jun 2020 13:38:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34368 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387712AbgFWRhB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 23 Jun 2020 13:37:01 -0400
+        id S2387670AbgFWRgw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 23 Jun 2020 13:36:52 -0400
 Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 81DF020780;
-        Tue, 23 Jun 2020 17:36:59 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 091E620780;
+        Tue, 23 Jun 2020 17:36:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592933820;
-        bh=YysgsPNm2TWnOYKtFlFI4M81gTU4d5l7bYC5CbnM2ms=;
+        s=default; t=1592933811;
+        bh=zV13Z/VwWJQ8fHvGZGGb+IWqtbJN6UljGUIXqPq8WJE=;
         h=From:To:Cc:Subject:Date:From;
-        b=QYWAlCSk55BkLmh8IW4cdRBx7z51/fcXSTneSD4I9x0UAv9zYWFn0qxsFRcqkuJHU
-         iLU6L/crlAwFpMV0qThYxS0Slsq5k42xj2eqPe6X71OVfsIZ2hQmx7J6e8HO+0R1GB
-         gZEBYoB29GFo8bbeLXZb7j+1yw7S6uzfEe6yjRWo=
+        b=L0YyCqKhXaCY5aAjGsZ0oJBTY3CpuqtAKy9TyDgLBLLkiRheU1PpFlVUE1Ts4Sxb2
+         s+Fjv/uGMehbjDZ4cZRQPMCbnlg2RpLGZIUzsZLAKQIptPhxCBwN/PtA7ABIKyqYt/
+         1H6+nTuH/u8bQYWMq047wGq4hs6TSmb+12mD2Iqs=
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Ye Bin <yebin10@huawei.com>, Jens Axboe <axboe@kernel.dk>,
         Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 1/6] ata/libata: Fix usage of page address by page_address in ata_scsi_mode_select_xlat function
-Date:   Tue, 23 Jun 2020 13:36:53 -0400
-Message-Id: <20200623173658.1356241-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 1/6] ata/libata: Fix usage of page address by page_address in ata_scsi_mode_select_xlat function
+Date:   Tue, 23 Jun 2020 13:36:44 -0400
+Message-Id: <20200623173649.1356142-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 X-stable: review
@@ -193,10 +193,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index c4f2b563c9f03..f4b38adb9d8a7 100644
+index 2f81d65342709..bc2c27f0493fc 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -3967,12 +3967,13 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
+@@ -3996,12 +3996,13 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
  {
  	struct scsi_cmnd *scmd = qc->scsicmd;
  	const u8 *cdb = scmd->cmnd;
@@ -211,7 +211,7 @@ index c4f2b563c9f03..f4b38adb9d8a7 100644
  
  	VPRINTK("ENTER\n");
  
-@@ -4006,12 +4007,14 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
+@@ -4035,12 +4036,14 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
  	if (!scsi_sg_count(scmd) || scsi_sglist(scmd)->length < len)
  		goto invalid_param_len;
  
