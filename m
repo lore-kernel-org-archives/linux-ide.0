@@ -1,144 +1,86 @@
-Return-Path: <SRS0=6nws=AD=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=yu+U=AE=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F1D0C433DF
-	for <linux-ide@archiver.kernel.org>; Mon, 22 Jun 2020 21:04:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DB94C433DF
+	for <linux-ide@archiver.kernel.org>; Tue, 23 Jun 2020 11:46:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7795C2073E
-	for <linux-ide@archiver.kernel.org>; Mon, 22 Jun 2020 21:04:11 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="ILThu+fB"
+	by mail.kernel.org (Postfix) with ESMTP id F2CAC20768
+	for <linux-ide@archiver.kernel.org>; Tue, 23 Jun 2020 11:46:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730509AbgFVVEH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 22 Jun 2020 17:04:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33988 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730494AbgFVVEH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jun 2020 17:04:07 -0400
-Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2905C061798
-        for <linux-ide@vger.kernel.org>; Mon, 22 Jun 2020 14:04:06 -0700 (PDT)
-Received: by mail-pl1-x641.google.com with SMTP id x11so8109843plo.7
-        for <linux-ide@vger.kernel.org>; Mon, 22 Jun 2020 14:04:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=XaQAHgI/fJz5n4PH9+AAQxpUaFNfDOAFJjIvvuWc6mg=;
-        b=ILThu+fBeQLbDkY3Saa7Zr6fXvZla6p/mhaacfaAod5Ou2LCXGVY9rmI/SQ12/gRGw
-         0OyvuZwHPdhHMhqZNfaygaAuqkjJxQw9ecwhpY877rYeLJOYo7K1LFnWVKMlDLVDvRVU
-         aO7im+xhoBSS7Rfzh9EnHnbqHF0AGGKdOIZCs=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=XaQAHgI/fJz5n4PH9+AAQxpUaFNfDOAFJjIvvuWc6mg=;
-        b=K6ukKwl2ahZ1s2zSoJNIB+iBDrDNM17WEpzYMoQDPQk5NjdVyuUSjnItG2sZQ/wOdO
-         Emb0PZ2c3yWYo/AXjCMg4k7+vump0cQKVGuLW0v/bvVLOaFAJ5os2cvJw7Dijd0vlDtV
-         hxTg9snByK2KnIMGO9RcGj0niw8buZAcyLvMamJ16AatavWXfOTYCTsKKY3LoADghpk2
-         +fhET7/g2Z/pWda9jt5YuKpQTixAvWVQfEpBgQly8tbakAlsSIOmtWe+T98Apr8UgU8g
-         gut3xfVgJARt6oZabv4m7fkdsRGkAkj3BbE6Nch+w88Ih4tvP6VNvathUbkh360wk056
-         312w==
-X-Gm-Message-State: AOAM533VPBjBgx1d7i6Jh9k1A8bZnT4nyyUPlbV9rL3v9sqZYc76I9I3
-        q87nz/ELXrHdS6UEhwOyaEej7A==
-X-Google-Smtp-Source: ABdhPJxa2RKG+txMKUm/MEMBUFpa2Kv9XKoAQ0+Lw2FAoqT0JOWKLV1rtyBoAVQcAiWWStDNJ+p+nQ==
-X-Received: by 2002:a17:902:b942:: with SMTP id h2mr20581705pls.163.1592859846012;
-        Mon, 22 Jun 2020 14:04:06 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id d2sm10586968pfc.1.2020.06.22.14.04.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 22 Jun 2020 14:04:05 -0700 (PDT)
-Date:   Mon, 22 Jun 2020 14:04:04 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     Nick Desaulniers <ndesaulniers@google.com>
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>,
-        Alexander Potapenko <glider@google.com>,
-        Joe Perches <joe@perches.com>,
-        Andy Whitcroft <apw@canonical.com>,
-        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
-        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
-        b43-dev@lists.infradead.org,
-        Network Development <netdev@vger.kernel.org>,
-        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        linux-ide@vger.kernel.org, linux-clk@vger.kernel.org,
-        linux-spi@vger.kernel.org,
-        Linux Memory Management List <linux-mm@kvack.org>,
-        clang-built-linux <clang-built-linux@googlegroups.com>
-Subject: Re: [PATCH v2 04/16] b43: Remove uninitialized_var() usage
-Message-ID: <202006221403.EEAD37E94B@keescook>
-References: <20200620033007.1444705-1-keescook@chromium.org>
- <20200620033007.1444705-5-keescook@chromium.org>
- <CAKwvOdmsXuqx-3Rt_KNFq4psAeFjG2-7qQaqkJ7dDqqmscUFNw@mail.gmail.com>
+        id S1732487AbgFWLqL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 23 Jun 2020 07:46:11 -0400
+Received: from lhrrgout.huawei.com ([185.176.76.210]:2358 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1732245AbgFWLqK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 23 Jun 2020 07:46:10 -0400
+Received: from lhreml724-chm.china.huawei.com (unknown [172.18.7.107])
+        by Forcepoint Email with ESMTP id 809C446CFF0D20FDCD46;
+        Tue, 23 Jun 2020 12:46:08 +0100 (IST)
+Received: from [127.0.0.1] (10.47.2.88) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.1913.5; Tue, 23 Jun
+ 2020 12:46:07 +0100
+Subject: Re: fix ATAPI support for libsas drivers
+To:     Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
+CC:     <martin.petersen@oracle.com>, <brking@us.ibm.com>,
+        <jinpu.wang@cloud.ionos.com>, <mpe@ellerman.id.au>,
+        <linux-scsi@vger.kernel.org>, <linux-ide@vger.kernel.org>
+References: <20200615064624.37317-1-hch@lst.de>
+ <d3459f71-501e-3fea-d5dc-a5599758459d@huawei.com>
+ <20200618152848.GA30919@lst.de>
+ <bed58e53-2019-cbb6-2ebe-93d0e404c90a@suse.de>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <2bcf7cc7-f3e0-de41-8bf2-b8c5979fe927@huawei.com>
+Date:   Tue, 23 Jun 2020 12:44:38 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAKwvOdmsXuqx-3Rt_KNFq4psAeFjG2-7qQaqkJ7dDqqmscUFNw@mail.gmail.com>
+In-Reply-To: <bed58e53-2019-cbb6-2ebe-93d0e404c90a@suse.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.47.2.88]
+X-ClientProxiedBy: lhreml730-chm.china.huawei.com (10.201.108.81) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, Jun 22, 2020 at 10:04:18AM -0700, Nick Desaulniers wrote:
-> On Fri, Jun 19, 2020 at 8:30 PM Kees Cook <keescook@chromium.org> wrote:
-> >
-> > Using uninitialized_var() is dangerous as it papers over real bugs[1]
-> > (or can in the future), and suppresses unrelated compiler warnings (e.g.
-> > "unused variable"). If the compiler thinks it is uninitialized, either
-> > simply initialize the variable or make compiler changes. As a precursor
-> > to removing[2] this[3] macro[4], just initialize this variable to NULL.
-> > No later NULL deref is possible due to the early returns outside of the
-> > (phy->rev >= 7 && phy->rev < 19) case, which explicitly tests for NULL.
-> >
-> > [1] https://lore.kernel.org/lkml/20200603174714.192027-1-glider@google.com/
-> > [2] https://lore.kernel.org/lkml/CA+55aFw+Vbj0i=1TGqCR5vQkCzWJ0QxK6CernOU6eedsudAixw@mail.gmail.com/
-> > [3] https://lore.kernel.org/lkml/CA+55aFwgbgqhbp1fkxvRKEpzyR5J8n1vKT1VZdz9knmPuXhOeg@mail.gmail.com/
-> > [4] https://lore.kernel.org/lkml/CA+55aFz2500WfbKXAx8s67wrm9=yVJu65TpLgN_ybYNv0VEOKA@mail.gmail.com/
-> >
-> > Fixes: 58619b14d106 ("b43: move under broadcom vendor directory")
-> > Signed-off-by: Kees Cook <keescook@chromium.org>
-> 
-> I see three total uses of uninitialized_var() in this file, do we want
-> to eliminate all of them?
+On 22/06/2020 07:28, Hannes Reinecke wrote:
+> On 6/18/20 5:28 PM, Christoph Hellwig wrote:
+>> On Thu, Jun 18, 2020 at 10:02:58AM +0100, John Garry wrote:
+>>> On 15/06/2020 07:46, Christoph Hellwig wrote:
+>>>> Hi all,
+>>>>
+>>>> this series fixes the ATAPI DMA drain refactoring for SAS HBAs that
+>>>> use libsas.
+>>>> .
+>>>>
+>>>
+>>> Something I meant to ask before and was curious about, specifically 
+>>> since
+>>> ipr doesn't actually use libsas: Why not wire up other SAS HBAs, like
+>>> megaraid_sas?
+>>
+>> megaraid_sas and mpt3sas don't use the libata code at all.  ipr actually
+>> is a special case and uses libata directly instead of libsas (something
+>> I hadn't realized, but which doesn't change anything for the patches
+>> itself, just possibly the commit log).
+>>
+> More to the point, megaraid_sas and mpt3sas have their own SATL in 
+> firmware so there is no need to use libata here.
 
-This is the only one that needed an explicit initialization -- all the
-others are handled in the treewide patch. I *could* split it out here,
-but I found it easier to keep the "no op" changes together in the
-treewide patch.
+ok.
 
--Kees
+BTW, @Christoph, I have no setup to verify this refactoring for anything 
+which uses libsas (that I know about, anyway).
 
-> 
-> > ---
-> >  drivers/net/wireless/broadcom/b43/phy_n.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c b/drivers/net/wireless/broadcom/b43/phy_n.c
-> > index c33b4235839d..46db91846007 100644
-> > --- a/drivers/net/wireless/broadcom/b43/phy_n.c
-> > +++ b/drivers/net/wireless/broadcom/b43/phy_n.c
-> > @@ -4222,7 +4222,7 @@ static void b43_nphy_tx_gain_table_upload(struct b43_wldev *dev)
-> >         u32 rfpwr_offset;
-> >         u8 pga_gain, pad_gain;
-> >         int i;
-> > -       const s16 *uninitialized_var(rf_pwr_offset_table);
-> > +       const s16 *rf_pwr_offset_table = NULL;
-> >
-> >         table = b43_nphy_get_tx_gain_table(dev);
-> >         if (!table)
-> > --
-> 
-> -- 
-> Thanks,
-> ~Nick Desaulniers
+Thanks
 
--- 
-Kees Cook
