@@ -2,120 +2,153 @@ Return-Path: <SRS0=yu+U=AE=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.6 required=3.0 tests=DKIMWL_WL_MED,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B73D3C433DF
-	for <linux-ide@archiver.kernel.org>; Tue, 23 Jun 2020 17:44:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72969C433E3
+	for <linux-ide@archiver.kernel.org>; Tue, 23 Jun 2020 18:29:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8DA3D2078C
-	for <linux-ide@archiver.kernel.org>; Tue, 23 Jun 2020 17:44:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1592934288;
-	bh=rddvpDfFVekss7/Pg3s+lxXRzrKvxWRTL8sw+yvTBNE=;
-	h=From:To:Cc:Subject:Date:List-ID:From;
-	b=cWtGAamPFIC3OGFdFh+SpADpc+mKKpW2edNtKSJ28VlGqqgZZmnmVscM49RY8hWur
-	 BXu5zJC9/RPm8qsl7WdjosFKNPmZ3R+cFIUURPZjezcFevpzc5GOkaZGidCqrXmhVg
-	 L0ttapBclUZEy68/g2+Vj5PKCt6PBmhAimbgWnTg=
+	by mail.kernel.org (Postfix) with ESMTP id 45C9020809
+	for <linux-ide@archiver.kernel.org>; Tue, 23 Jun 2020 18:29:59 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="VRPOqKgX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733263AbgFWRoj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 23 Jun 2020 13:44:39 -0400
-Received: from mail.kernel.org ([198.145.29.99]:59936 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733153AbgFWRfZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 23 Jun 2020 13:35:25 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 892AB20774;
-        Tue, 23 Jun 2020 17:35:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1592933725;
-        bh=rddvpDfFVekss7/Pg3s+lxXRzrKvxWRTL8sw+yvTBNE=;
-        h=From:To:Cc:Subject:Date:From;
-        b=0poEAU+iLCFJpeQ1zms+YPfpUUd1elRRkx+EcDDwo8aNtHVdmJO65pIT1CACkahAO
-         I///GMi1Cf/Z/Uhy24zYGlFqEwGj32u21seozwBiMFV55g4qpSU3kiVDANVc/mV6/3
-         QDqkXcgW+xC9ovZU3UvGHh+XtGVNzUtlWDhpY6Oo=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Navid Emamdoost <navid.emamdoost@gmail.com>,
-        Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
-        linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.7 01/28] sata_rcar: handle pm_runtime_get_sync failure cases
-Date:   Tue, 23 Jun 2020 13:34:56 -0400
-Message-Id: <20200623173523.1355411-1-sashal@kernel.org>
-X-Mailer: git-send-email 2.25.1
+        id S2387566AbgFWS3v (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 23 Jun 2020 14:29:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35254 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387555AbgFWS3u (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2020 14:29:50 -0400
+Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48004C061799
+        for <linux-ide@vger.kernel.org>; Tue, 23 Jun 2020 11:29:49 -0700 (PDT)
+Received: by mail-pj1-x1043.google.com with SMTP id i4so1938334pjd.0
+        for <linux-ide@vger.kernel.org>; Tue, 23 Jun 2020 11:29:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=JXkDSAr5/uPdypFT+vPhb9QM0XECCw1QogkIjza9trI=;
+        b=VRPOqKgXBbe1omCau4oEOar/p3bhX1hnmkDK5oo6kzWoboZd6SthW3HQ/fnF48E5Ad
+         TFy6wVC1Zt0tVzcHOtTOw47hdeOauaMgmaZ6zltDMfNdLob+S/bzF8RmsABX4aqnrS72
+         FqSw42FCWi78K/1FW37NBnAtRs40JSIujuQZ/C35kNhgObkKHAK+mu644bPs+DnywUvm
+         fYYXdKXmrR/Epl78LsQPaZhh4kpgqCqvEbEKQBq3LNEoOjFO3Gb/VXUTw5HcjdoODVkn
+         jAQBGKwdodjJ4m51Dq2h17KJmJpx4MvyUs2jS+Pi8XwYstLDwRvgem5B+kNI/TaA60cZ
+         bdTA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=JXkDSAr5/uPdypFT+vPhb9QM0XECCw1QogkIjza9trI=;
+        b=sUh1/f8ceMaB95NrxEOJYEnhspexnZdXrTQGq5svBos1IGlB85BUCfouRqVtDmZ2QA
+         oiQ5pZeXfHDK5mrGix0citanFC5kNvHMbNDK1KOdZWcH+MZ5/gQdb5xz3MJPtHK8dyoZ
+         i2qW03nvaE7j85wGIEhQvL6XTgPK6bNrlEpsE4l6NQSe5ve/xNfu/qpx5rV0QjWanqqz
+         RSueP2kQISrZTNz8RLjpwUfgdNOl9biygAqBdFq/nuxOOYDosXMM2RimdoQoLerozxT3
+         gXcBBYPaNWuqPq4rnZZrWZQ4hy+DuyQPTDWyOjK8ziyxYBNNjo3OeA1TZ1/0Y85AAs1Q
+         kYnQ==
+X-Gm-Message-State: AOAM533l0OErCmObGcIz3YxXcUxi7eROAxsoXA1yFl/PmQEeHL7eZrzW
+        vhHlycu3g6VEQ94JVUqTd3V2PEpMPANcCV5gq+3TKQ==
+X-Google-Smtp-Source: ABdhPJwFYRuJg9EUbjSytVc+yfQjuDOMjwE4SVCIBy3rni20OvAXlm0XdI+2Z8txK6JARtyDXhDgAzhgcWbhIpdXKAY=
+X-Received: by 2002:a17:902:fe8b:: with SMTP id x11mr24842368plm.179.1592936988375;
+ Tue, 23 Jun 2020 11:29:48 -0700 (PDT)
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+References: <20200620033007.1444705-1-keescook@chromium.org>
+ <20200620033007.1444705-5-keescook@chromium.org> <CAKwvOdmsXuqx-3Rt_KNFq4psAeFjG2-7qQaqkJ7dDqqmscUFNw@mail.gmail.com>
+ <202006221403.EEAD37E94B@keescook>
+In-Reply-To: <202006221403.EEAD37E94B@keescook>
+From:   Nick Desaulniers <ndesaulniers@google.com>
+Date:   Tue, 23 Jun 2020 11:29:38 -0700
+Message-ID: <CAKwvOdmr0dmC7UtL9Qcgm9Ue_Q2mhKzYiHcXpaB=LpMKpYeYqA@mail.gmail.com>
+Subject: Re: [PATCH v2 04/16] b43: Remove uninitialized_var() usage
+To:     Kees Cook <keescook@chromium.org>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>,
+        Alexander Potapenko <glider@google.com>,
+        Joe Perches <joe@perches.com>,
+        Andy Whitcroft <apw@canonical.com>,
+        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
+        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
+        b43-dev@lists.infradead.org,
+        Network Development <netdev@vger.kernel.org>,
+        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        linux-ide@vger.kernel.org, linux-clk@vger.kernel.org,
+        linux-spi@vger.kernel.org,
+        Linux Memory Management List <linux-mm@kvack.org>,
+        clang-built-linux <clang-built-linux@googlegroups.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Navid Emamdoost <navid.emamdoost@gmail.com>
+On Mon, Jun 22, 2020 at 2:04 PM Kees Cook <keescook@chromium.org> wrote:
+>
+> On Mon, Jun 22, 2020 at 10:04:18AM -0700, Nick Desaulniers wrote:
+> > On Fri, Jun 19, 2020 at 8:30 PM Kees Cook <keescook@chromium.org> wrote:
+> > >
+> > > Using uninitialized_var() is dangerous as it papers over real bugs[1]
+> > > (or can in the future), and suppresses unrelated compiler warnings (e.g.
+> > > "unused variable"). If the compiler thinks it is uninitialized, either
+> > > simply initialize the variable or make compiler changes. As a precursor
+> > > to removing[2] this[3] macro[4], just initialize this variable to NULL.
+> > > No later NULL deref is possible due to the early returns outside of the
+> > > (phy->rev >= 7 && phy->rev < 19) case, which explicitly tests for NULL.
+> > >
+> > > [1] https://lore.kernel.org/lkml/20200603174714.192027-1-glider@google.com/
+> > > [2] https://lore.kernel.org/lkml/CA+55aFw+Vbj0i=1TGqCR5vQkCzWJ0QxK6CernOU6eedsudAixw@mail.gmail.com/
+> > > [3] https://lore.kernel.org/lkml/CA+55aFwgbgqhbp1fkxvRKEpzyR5J8n1vKT1VZdz9knmPuXhOeg@mail.gmail.com/
+> > > [4] https://lore.kernel.org/lkml/CA+55aFz2500WfbKXAx8s67wrm9=yVJu65TpLgN_ybYNv0VEOKA@mail.gmail.com/
+> > >
+> > > Fixes: 58619b14d106 ("b43: move under broadcom vendor directory")
+> > > Signed-off-by: Kees Cook <keescook@chromium.org>
+> >
+> > I see three total uses of uninitialized_var() in this file, do we want
+> > to eliminate all of them?
+>
+> This is the only one that needed an explicit initialization -- all the
+> others are handled in the treewide patch. I *could* split it out here,
+> but I found it easier to keep the "no op" changes together in the
+> treewide patch.
 
-[ Upstream commit eea1238867205b9e48a67c1a63219529a73c46fd ]
+Ah, got it.
+Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
 
-Calling pm_runtime_get_sync increments the counter even in case of
-failure, causing incorrect ref count. Call pm_runtime_put if
-pm_runtime_get_sync fails.
+>
+> -Kees
+>
+> >
+> > > ---
+> > >  drivers/net/wireless/broadcom/b43/phy_n.c | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > >
+> > > diff --git a/drivers/net/wireless/broadcom/b43/phy_n.c b/drivers/net/wireless/broadcom/b43/phy_n.c
+> > > index c33b4235839d..46db91846007 100644
+> > > --- a/drivers/net/wireless/broadcom/b43/phy_n.c
+> > > +++ b/drivers/net/wireless/broadcom/b43/phy_n.c
+> > > @@ -4222,7 +4222,7 @@ static void b43_nphy_tx_gain_table_upload(struct b43_wldev *dev)
+> > >         u32 rfpwr_offset;
+> > >         u8 pga_gain, pad_gain;
+> > >         int i;
+> > > -       const s16 *uninitialized_var(rf_pwr_offset_table);
+> > > +       const s16 *rf_pwr_offset_table = NULL;
+> > >
+> > >         table = b43_nphy_get_tx_gain_table(dev);
+> > >         if (!table)
+> > > --
+> >
+> > --
+> > Thanks,
+> > ~Nick Desaulniers
+>
+> --
+> Kees Cook
 
-Signed-off-by: Navid Emamdoost <navid.emamdoost@gmail.com>
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/ata/sata_rcar.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
-index 980aacdbcf3b4..141ac600b64c8 100644
---- a/drivers/ata/sata_rcar.c
-+++ b/drivers/ata/sata_rcar.c
-@@ -907,7 +907,7 @@ static int sata_rcar_probe(struct platform_device *pdev)
- 	pm_runtime_enable(dev);
- 	ret = pm_runtime_get_sync(dev);
- 	if (ret < 0)
--		goto err_pm_disable;
-+		goto err_pm_put;
- 
- 	host = ata_host_alloc(dev, 1);
- 	if (!host) {
-@@ -937,7 +937,6 @@ static int sata_rcar_probe(struct platform_device *pdev)
- 
- err_pm_put:
- 	pm_runtime_put(dev);
--err_pm_disable:
- 	pm_runtime_disable(dev);
- 	return ret;
- }
-@@ -991,8 +990,10 @@ static int sata_rcar_resume(struct device *dev)
- 	int ret;
- 
- 	ret = pm_runtime_get_sync(dev);
--	if (ret < 0)
-+	if (ret < 0) {
-+		pm_runtime_put(dev);
- 		return ret;
-+	}
- 
- 	if (priv->type == RCAR_GEN3_SATA) {
- 		sata_rcar_init_module(priv);
-@@ -1017,8 +1018,10 @@ static int sata_rcar_restore(struct device *dev)
- 	int ret;
- 
- 	ret = pm_runtime_get_sync(dev);
--	if (ret < 0)
-+	if (ret < 0) {
-+		pm_runtime_put(dev);
- 		return ret;
-+	}
- 
- 	sata_rcar_setup_port(host);
- 
+
 -- 
-2.25.1
-
+Thanks,
+~Nick Desaulniers
