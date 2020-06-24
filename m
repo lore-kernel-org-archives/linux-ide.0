@@ -2,162 +2,135 @@ Return-Path: <SRS0=5ANp=AF=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE3F8C433E1
-	for <linux-ide@archiver.kernel.org>; Wed, 24 Jun 2020 15:16:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D200C433DF
+	for <linux-ide@archiver.kernel.org>; Wed, 24 Jun 2020 17:30:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BDF8A20B1F
-	for <linux-ide@archiver.kernel.org>; Wed, 24 Jun 2020 15:16:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F329A20768
+	for <linux-ide@archiver.kernel.org>; Wed, 24 Jun 2020 17:30:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="c9E6DEHo"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tJ/G2+Zt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404520AbgFXPQX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 24 Jun 2020 11:16:23 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:39883 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2404529AbgFXPQL (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jun 2020 11:16:11 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1593011768;
-        h=from:from:reply-to:reply-to:subject:subject:date:date:
-         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
-         content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=6SksW3aU3D2PMOgemCe/PL6jOgFjOnbGQFc7Y/at9zM=;
-        b=c9E6DEHoUDLuKZlN1rXpNsppn8p8YY1PEN/64fgMYlbICqY/QQlVQRSgUXtHEJRlfoyfXY
-        2ZiIPfwnWHkcimMP31De4yzjt7dOAwwOSMe/+UBsqoGce16ln2ea/6HjQcfzO+DK193xap
-        cWcdYS6DESaO+txpwrw4eHle19dWcwA=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-504-Ft8miOGiPE2GsiUiCt6jNQ-1; Wed, 24 Jun 2020 11:15:57 -0400
-X-MC-Unique: Ft8miOGiPE2GsiUiCt6jNQ-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B0B1991138;
-        Wed, 24 Jun 2020 15:15:46 +0000 (UTC)
-Received: from [10.3.128.20] (unknown [10.3.128.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 8299A619D0;
-        Wed, 24 Jun 2020 15:15:45 +0000 (UTC)
-Reply-To: tasleson@redhat.com
-Subject: Re: [RFC PATCH v3 5/8] ata_dev_printk: Use dev_printk
-To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org
-References: <20200623191749.115200-1-tasleson@redhat.com>
- <20200623191749.115200-6-tasleson@redhat.com>
- <CGME20200624103532eucas1p2c0988207e4dfc2f992d309b75deac3ee@eucas1p2.samsung.com>
- <d817c9dd-6852-9233-5f61-1c0bc0f65ca4@samsung.com>
-From:   Tony Asleson <tasleson@redhat.com>
-Organization: Red Hat
-Message-ID: <33577b4f-6ee1-f054-8853-b61ca800e10a@redhat.com>
-Date:   Wed, 24 Jun 2020 10:15:44 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+        id S2405429AbgFXRaR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 24 Jun 2020 13:30:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50550 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2405427AbgFXRaR (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jun 2020 13:30:17 -0400
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AA17C061573;
+        Wed, 24 Jun 2020 10:30:17 -0700 (PDT)
+Received: by mail-pg1-x541.google.com with SMTP id e9so1723207pgo.9;
+        Wed, 24 Jun 2020 10:30:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Q15/TzuCJicAE8EEZy+jtFuuq+UiSpYK9IL1usdFcPE=;
+        b=tJ/G2+ZtCC01Paj/JN3QoUPDLqFBcKO79I6h3o8CyYHSnd9q1OEH5PLyE6x9Cm/JWu
+         SAhBPOwaLdcbgKSRCSSUI/nfL7Hz83CWPP1GP7dOBUlj/hTPcM7vTvHXE+bFml2SFgJ3
+         mAYj7idtIZ3c7oWjrai/yX6P5+dr0+NzeoSqkHl6xpk4EIvd+alSV2NQLgRuwomJ7qjJ
+         OXWqJ/4T3A58dCuAU6RYhADwClA5QxRJJ04WzB2F6zQEcPIMoAZvPslAnptjrMPsUBY7
+         4gilpfPeFkzLKfLG1DBZl34eykw1orox/alt09ttTli8mgB5rl7wBr1/LppjpwxI25dn
+         SycA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=Q15/TzuCJicAE8EEZy+jtFuuq+UiSpYK9IL1usdFcPE=;
+        b=QociScsDX41sARUPYXAConAJUwHyiiSYy3whS6TwRj+ktOs60qzXU7wKn/XvhVFt/Z
+         wcKmVAOe0fOoB5vdOA4/Xnz+eij/ji2FtUwi/LBW/kAlInMoqdO88qwiO3rlSRTk/wR/
+         jFBUWG9dQ3aXQT1VMFCPvtnvoSI1zdEcREMSoSc3abxd9VYz+mpKAqi1D3C1z6EZ4k+J
+         62ClDYwIHK4Ky69zCzTo/TGz0ywE6vZUQZl2sEuEF75iEJQ1/DdwUMSLLHUUW7AFP2uZ
+         YAszGYH5uWDD9t5hmNfoNDDxku5u0BAwZ1TBo48Ce9gmUVOKuP0CX1hPIZ4E2Yb5Kwh7
+         BuLA==
+X-Gm-Message-State: AOAM530Klcji0GMupdqxjHZEJhg+0ETIJjmKwbzz8liMM2JcQPAfHv2f
+        9brfyh5jHutTNjW+KCbmSXQ=
+X-Google-Smtp-Source: ABdhPJyqvWmyEtSNhauUsBE5HJ97LsiACvw4Ii9Hd2so69stSp1QeaQb5AVx7KKSl3+Uqic19cio4Q==
+X-Received: by 2002:a63:1312:: with SMTP id i18mr23039279pgl.142.1593019816511;
+        Wed, 24 Jun 2020 10:30:16 -0700 (PDT)
+Received: from varodek.iballbatonwifi.com ([103.105.153.57])
+        by smtp.gmail.com with ESMTPSA id z11sm21187215pfk.141.2020.06.24.10.30.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 24 Jun 2020 10:30:15 -0700 (PDT)
+From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, bjorn@helgaas.com,
+        Vaibhav Gupta <vaibhav.varodek@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>
+Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>,
+        linux-kernel@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        skhan@linuxfoundation.org, linux-ide@vger.kernel.org
+Subject: [PATCH v1 0/4] drivers: ide: use generic power management
+Date:   Wed, 24 Jun 2020 22:58:53 +0530
+Message-Id: <20200624172857.60915-1-vaibhavgupta40@gmail.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-In-Reply-To: <d817c9dd-6852-9233-5f61-1c0bc0f65ca4@samsung.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/24/20 5:35 AM, Bartlomiej Zolnierkiewicz wrote:
-> 
-> [ added linux-ide ML to Cc: ]
-> 
-> Hi,
+Linux Kernel Mentee: Remove Legacy Power Management.
 
-Hello,
+The purpose of this patch series is to remove legacy power management callbacks
+from ide drivers.
 
-> 
-> On 6/23/20 9:17 PM, Tony Asleson wrote:
->> Utilize the dev_printk function which will add structured data
->> to the log message.
->>
->> Signed-off-by: Tony Asleson <tasleson@redhat.com>
->> ---
->>  drivers/ata/libata-core.c | 10 +++++++---
->>  1 file changed, 7 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->> index beca5f91bb4c..44c874367fe3 100644
->> --- a/drivers/ata/libata-core.c
->> +++ b/drivers/ata/libata-core.c
->> @@ -6475,6 +6475,7 @@ EXPORT_SYMBOL(ata_link_printk);
->>  void ata_dev_printk(const struct ata_device *dev, const char *level,
->>  		    const char *fmt, ...)
->>  {
->> +	const struct device *gendev;
->>  	struct va_format vaf;
->>  	va_list args;
->>  
->> @@ -6483,9 +6484,12 @@ void ata_dev_printk(const struct ata_device *dev, const char *level,
->>  	vaf.fmt = fmt;
->>  	vaf.va = &args;
->>  
->> -	printk("%sata%u.%02u: %pV",
->> -	       level, dev->link->ap->print_id, dev->link->pmp + dev->devno,
->> -	       &vaf);
->> +	gendev = (dev->sdev) ? &dev->sdev->sdev_gendev : &dev->tdev;
->> +
->> +	dev_printk(level, gendev, "ata%u.%02u: %pV",
->> +			dev->link->ap->print_id,
-> 
-> This duplicates the device information and breaks integrity of
-> libata logging functionality (ata_{dev,link,port}_printk() should
-> be all converted to use dev_printk() at the same time).
-> 
-> The root source of problem is that libata transport uses different
-> naming scheme for ->tdev devices (please see dev_set_name() in
-> ata_t{dev,link,port}_add()) than libata core for its logging
-> functionality (ata_{dev,link,port}_printk()).
-> 
-> Since libata transport is part of sysfs ABI we should be careful
-> to not break it so one idea for solving the issue is to convert
-> ata_t{dev,link,port}_add() to use libata logging naming scheme and
-> at the same time add sysfs symlinks for the old libata transport
-> naming scheme.
-> 
-> dev->sdev usage is not required for dev_printk() conversion and
-> should be considered as a separate change (since it also breaks
-> integrity of libata logging and can be considered as a mild
-> "layering violation" I don't think that it should be applied).
+The suspend() and resume() callbacks operations are still invoking
+pci_save/restore_state(), pci_set_power_state(), pci_enable/disable_state(),
+etc. and handling the power management themselves, which is not recommended.
 
-The point of this patch series is to attach a device unique identifier
-to the storage device log messages as structured data.  Originally I
-resurrected and used printk_emit, but it was suggested I leverage
-dev_printk.  dev_printk does change the output of the log message to
-include duplicate information if the message isn't changed. You are not
-the first person to raise that concern.  I listed this as an open
-question in the cover letter.  I've wanted to preserve the original log
-message, so as to not break user space mining tools and I've been
-concerned that dev_printk prefixing with an id may already do that.
-Adding structured data is invisible to them, or at the least shouldn't
-break them, eg. adding a new key-value pair.
+The conversion requires the removal of the those function calls and change the
+callback definition accordingly and make use of dev_pm_ops structure.
 
-I can understand the desire to make all the ata logging functions
-consistent, and use dev_printk if we go this way.  However, for this
-change it wasn't really the goal to refactor all the logging everywhere
-to use dev_printk, although that may be a good change in general.  This
-is especially true that if at the end of the refactor to use dev_printk
-we consider it a layering violation to call into the existing
-functionality to return the vpd ID for the device and reject that part
-of the change.
+All patches are compile-tested only.
 
-What I am hoping is that we can all agree that having a persistent
-identifier associated to storage related log messages is indeed useful.
-If we can agree on that, then I would like to have the discussion on
-what's the best way to achieve that.
+Vaibhav Gupta (4):
+  ide: use generic power management
+  ide: triflex: use generic power management
+  ide: sc1200: use generic power management
+  ide: delkin_cb: use generic power management
 
-Thanks,
-Tony
+ drivers/ide/aec62xx.c         |  3 +--
+ drivers/ide/alim15x3.c        |  3 +--
+ drivers/ide/amd74xx.c         |  3 +--
+ drivers/ide/atiixp.c          |  3 +--
+ drivers/ide/cmd64x.c          |  3 +--
+ drivers/ide/cs5520.c          |  3 +--
+ drivers/ide/cs5530.c          |  3 +--
+ drivers/ide/cs5535.c          |  3 +--
+ drivers/ide/cs5536.c          |  3 +--
+ drivers/ide/cy82c693.c        |  3 +--
+ drivers/ide/delkin_cb.c       | 35 ++++++----------------------
+ drivers/ide/hpt366.c          |  3 +--
+ drivers/ide/ide-pci-generic.c |  3 +--
+ drivers/ide/it8172.c          |  3 +--
+ drivers/ide/it8213.c          |  3 +--
+ drivers/ide/it821x.c          |  3 +--
+ drivers/ide/jmicron.c         |  3 +--
+ drivers/ide/ns87415.c         |  3 +--
+ drivers/ide/opti621.c         |  3 +--
+ drivers/ide/pdc202xx_new.c    |  3 +--
+ drivers/ide/pdc202xx_old.c    |  3 +--
+ drivers/ide/piix.c            |  3 +--
+ drivers/ide/sc1200.c          | 43 ++++++++++++-----------------------
+ drivers/ide/serverworks.c     |  3 +--
+ drivers/ide/setup-pci.c       | 28 ++++-------------------
+ drivers/ide/siimage.c         |  3 +--
+ drivers/ide/sis5513.c         |  3 +--
+ drivers/ide/sl82c105.c        |  3 +--
+ drivers/ide/slc90e66.c        |  3 +--
+ drivers/ide/triflex.c         | 24 +++++++++----------
+ drivers/ide/via82cxxx.c       |  3 +--
+ include/linux/ide.h           |  8 +------
+ 32 files changed, 65 insertions(+), 154 deletions(-)
+
+-- 
+2.27.0
 
