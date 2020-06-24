@@ -8,56 +8,56 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BE1EC433DF
-	for <linux-ide@archiver.kernel.org>; Wed, 24 Jun 2020 17:30:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A304C433E1
+	for <linux-ide@archiver.kernel.org>; Wed, 24 Jun 2020 17:30:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1881220768
-	for <linux-ide@archiver.kernel.org>; Wed, 24 Jun 2020 17:30:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CC5820768
+	for <linux-ide@archiver.kernel.org>; Wed, 24 Jun 2020 17:30:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UnLb42tQ"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OG9nr2JY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405573AbgFXRab (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 24 Jun 2020 13:30:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50578 "EHLO
+        id S2405584AbgFXRaf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 24 Jun 2020 13:30:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50598 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2405412AbgFXRa1 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jun 2020 13:30:27 -0400
-Received: from mail-pg1-x543.google.com (mail-pg1-x543.google.com [IPv6:2607:f8b0:4864:20::543])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77E42C061573;
-        Wed, 24 Jun 2020 10:30:27 -0700 (PDT)
-Received: by mail-pg1-x543.google.com with SMTP id p3so1738028pgh.3;
-        Wed, 24 Jun 2020 10:30:27 -0700 (PDT)
+        with ESMTP id S2405412AbgFXRae (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 24 Jun 2020 13:30:34 -0400
+Received: from mail-pl1-x641.google.com (mail-pl1-x641.google.com [IPv6:2607:f8b0:4864:20::641])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0266DC061573;
+        Wed, 24 Jun 2020 10:30:33 -0700 (PDT)
+Received: by mail-pl1-x641.google.com with SMTP id 35so1328686ple.0;
+        Wed, 24 Jun 2020 10:30:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=UL6+9R7vje0BZ0kQ5AFUpy2CeEkUyuEVadPnyq+JkCk=;
-        b=UnLb42tQPS9hg3JnXZozz25v4pvQoNS34zoJ56oVVYBz5nVC87FFf+Oi1z1AtOuUMZ
-         cMfElNuuN4O4g0UTxzLVbpaW1GykIvKhAGguR6BaKiSRK0Rf83kO/QQywLDrboW0br8M
-         oyFzrZ8nwauun68VrBVUyuLt2qj9bLUI1ivbYVxjXuVSoWYRIeqlFdiGKNfLWjX5kAXL
-         qjofIkJIUOwwyb9MSiGOTA9wAgXJszozSZWzK0og6tWSRvfWFJi766qdcAMlTbaYq4Ef
-         q7hZ/fxUWSXKGH0sAcKeL4jGARM9UDwBw8IHQLu6GxnrJVJv97WZPQnwhwdzjv09Rv+s
-         lMww==
+        bh=xJozJ1j72j2TPhbNEWh15qJXYyA6M4xq/pVyTeWMQoY=;
+        b=OG9nr2JYFkHQeALLtyTKcxsbgE7wCbLEiBdPfxHp10CmN1aBLQERA1m+bNX5N4F3Pg
+         m7y5Esmy4AXqqIj6ynXenmNmWaZKi6lZJZgnKwPPr06VZXfgvDhEwBfIpts8Q/J9EFvy
+         ajgp9LX83oXGuRoLijPkz4SM7zvdMb/zuga4Wnga7fvnUeibCRAOO4hmbNdHgiDiISO+
+         YugxogygMh9AmaRiQzsnBe+jPQY1a4+fbDP0VE8A6NEv8WK/PHfgEm+VxHjq2z4b3P7K
+         NjMRsZZFfnWrmGkvk7/Y6No11mxjPkQSk/L0GHqUsSopN4EhKYSfw3hDVfaQ8h//WSQ9
+         om2w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=UL6+9R7vje0BZ0kQ5AFUpy2CeEkUyuEVadPnyq+JkCk=;
-        b=jR2QEzhPmA+q34as1lxvEuwPqTxlMtMSrm2UI5HNA/TbVI32Pav31pApk7rEMswDN9
-         TKRUnP7VgBR71v7eInXadEtykPuKq67NQoIAftZzFXKbV3MIAzpo5Xj5TxCbZi0dbEtF
-         u4LeKr7V0evpvpZ4+8dZe9h1GsRkJ0kG4X1bHYs3BMFhZncyeGytNpEjDyBOzipSUMw7
-         Ocr+cFS2w1nG0EwCqKeBDkR3amXboN4qicpyofK0U7UUKAeKksfaHT8zGNThx5EhH015
-         RX7juJI1egCMS09vtr0H4ukkhy0WzMlqn7DWqn7o3xaAjBaGYPFqmqhklZPAx2rqDisx
-         02Lg==
-X-Gm-Message-State: AOAM531hrIxedcqfkXDA1ED7Oz5eVToOiTzzWX+YWzsSopvwHlQJXo4W
-        DucpZ6JDFkICbYCOvMemMhA=
-X-Google-Smtp-Source: ABdhPJyfmfN0NevwIeJlwy0n0TdrqsSRHkuPtL4isO/xRnzAtczF8CVudTR+uCdC/389p0ioTL2aMQ==
-X-Received: by 2002:a65:6799:: with SMTP id e25mr17316445pgr.364.1593019826946;
-        Wed, 24 Jun 2020 10:30:26 -0700 (PDT)
+        bh=xJozJ1j72j2TPhbNEWh15qJXYyA6M4xq/pVyTeWMQoY=;
+        b=TgcIcrTSBfaPIA6cKGLVRKI17FsKXaTV0Dk4UWUmjmflp9t01PI52tVIXZwp8zVP+p
+         vCl+HpLocY7TDA7WDqzqwUO4uqCs3p0D1vRpzL7h6ozM1iyyDHworVtIT8n69YxSx4Ah
+         M9hEi2ius8hU7uRQrsfkbFh1S8Y6DSERrip0z42E3eBxFmRkIXQnckO2ZDVIHENkts1e
+         +yDKDmHtzRYqjMi7KXc8z7opRtAGBeAS3EpXnNaRdBNgywkzYufNIMHTPBpFmZ+3JPG6
+         RPtJ89BR5BgYTMK/LWBcMwXTocjkXHr9QVlFNjNLDFbRY+inIpNuMNxPQMe5NRQtL2tb
+         tBJg==
+X-Gm-Message-State: AOAM533ErpqmnxF7c5EBTJqxYp6SsoB2Yc0xFy9FDcxr4UHc/HDEr8Jy
+        O7aCXbUkVJbverBuUO9dPvc=
+X-Google-Smtp-Source: ABdhPJz239rrFDKODjZnmMjv567clz1XhGbUtxzIf/rRXiatnuQRf92A5OuBWGvTApB3hN+B8cU1JA==
+X-Received: by 2002:a17:902:a60e:: with SMTP id u14mr4275213plq.238.1593019832464;
+        Wed, 24 Jun 2020 10:30:32 -0700 (PDT)
 Received: from varodek.iballbatonwifi.com ([103.105.153.57])
-        by smtp.gmail.com with ESMTPSA id z11sm21187215pfk.141.2020.06.24.10.30.23
+        by smtp.gmail.com with ESMTPSA id z11sm21187215pfk.141.2020.06.24.10.30.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 24 Jun 2020 10:30:26 -0700 (PDT)
+        Wed, 24 Jun 2020 10:30:31 -0700 (PDT)
 From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>, bjorn@helgaas.com,
@@ -67,9 +67,9 @@ Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>,
         linux-kernel@vger.kernel.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
         skhan@linuxfoundation.org, linux-ide@vger.kernel.org
-Subject: [PATCH v1 2/4] ide: triflex: use generic power management
-Date:   Wed, 24 Jun 2020 22:58:55 +0530
-Message-Id: <20200624172857.60915-3-vaibhavgupta40@gmail.com>
+Subject: [PATCH v1 3/4] ide: sc1200: use generic power management
+Date:   Wed, 24 Jun 2020 22:58:56 +0530
+Message-Id: <20200624172857.60915-4-vaibhavgupta40@gmail.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20200624172857.60915-1-vaibhavgupta40@gmail.com>
 References: <20200624172857.60915-1-vaibhavgupta40@gmail.com>
@@ -80,87 +80,107 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-While upgrading ide_pci_suspend() and ide_pci_resume(), all other source
-files, using same callbacks, were also updated except
-drivers/ide/triflex.c. This is because the driver does not want to power
-off the device during suspend. A quirk was required for the same.
-
-This patch provides the fix. Another driver,
-drivers/staging/media/atomisp/pci/atomisp_gmin_platform.c, makes use of
-a quirk for similar goal. Hence a similar quirk has been applied for
-triflex.
+With the support of generic PM callbacks, drivers no longer need to use
+legacy .suspend() and .resume() in which they had to maintain PCI states
+changes and device's power state themselves. The required operations are
+done by PCI core.
 
 Compile-tested only.
 
 Signed-off-by: Vaibhav Gupta <vaibhavgupta40@gmail.com>
 ---
- drivers/ide/triflex.c | 45 +++++++++++--------------------------------
- 1 file changed, 11 insertions(+), 34 deletions(-)
+ drivers/ide/sc1200.c | 43 ++++++++++++++-----------------------------
+ 1 file changed, 14 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/ide/triflex.c b/drivers/ide/triflex.c
-index 1886bbfb9e5d..f707f11c296d 100644
---- a/drivers/ide/triflex.c
-+++ b/drivers/ide/triflex.c
-@@ -100,48 +100,25 @@ static const struct pci_device_id triflex_pci_tbl[] = {
- };
- MODULE_DEVICE_TABLE(pci, triflex_pci_tbl);
+diff --git a/drivers/ide/sc1200.c b/drivers/ide/sc1200.c
+index a5b701818405..91a197832d1f 100644
+--- a/drivers/ide/sc1200.c
++++ b/drivers/ide/sc1200.c
+@@ -222,46 +222,33 @@ static void sc1200_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+ 	sc1200_tunepio(drive, pio);
+ }
  
 -#ifdef CONFIG_PM
--static int triflex_ide_pci_suspend(struct pci_dev *dev, pm_message_t state)
--{
--	/*
--	 * We must not disable or powerdown the device.
--	 * APM bios refuses to suspend if IDE is not accessible.
--	 */
--	pci_save_state(dev);
--	return 0;
--}
--
--static int triflex_ide_pci_resume(struct pci_dev *dev)
-+/*
-+ * We must not disable or powerdown the device.
-+ * APM bios refuses to suspend if IDE is not accessible.
-+ */
-+static void triflex_pci_pm_cap_fixup(struct pci_dev *pdev)
- {
--	struct ide_host *host = pci_get_drvdata(dev);
--	int rc;
--
--	pci_set_power_state(dev, PCI_D0);
--
--	rc = pci_enable_device(dev);
--	if (rc)
--		return rc;
--
--	pci_restore_state(dev);
--	pci_set_master(dev);
--
--	if (host->init_chipset)
--		host->init_chipset(dev);
--
--	return 0;
-+	dev_info(&pdev->dev, "Disable triflex to be turned off by PCI CORE\n");
-+	pdev->pm_cap = 0;
- }
--#else
--#define triflex_ide_pci_suspend NULL
--#define triflex_ide_pci_resume NULL
--#endif
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_COMPAQ,
-+			PCI_DEVICE_ID_COMPAQ_TRIFLEX_IDE,
-+			triflex_pci_pm_cap_fixup);
- 
- static struct pci_driver triflex_pci_driver = {
- 	.name		= "TRIFLEX_IDE",
- 	.id_table	= triflex_pci_tbl,
- 	.probe		= triflex_init_one,
- 	.remove		= ide_pci_remove,
--	.suspend	= triflex_ide_pci_suspend,
--	.resume		= triflex_ide_pci_resume,
-+	.driver.pm	= &ide_pci_pm_ops,
+ struct sc1200_saved_state {
+ 	u32 regs[8];
  };
  
- static int __init triflex_ide_init(void)
+-static int sc1200_suspend (struct pci_dev *dev, pm_message_t state)
++static int __maybe_unused sc1200_suspend(struct device *dev_d)
+ {
+-	printk("SC1200: suspend(%u)\n", state.event);
++	struct pci_dev *dev = to_pci_dev(dev_d);
++	struct ide_host *host = pci_get_drvdata(dev);
++	struct sc1200_saved_state *ss = host->host_priv;
++	unsigned int r;
+ 
+ 	/*
+-	 * we only save state when going from full power to less
++	 * save timing registers
++	 * (this may be unnecessary if BIOS also does it)
+ 	 */
+-	if (state.event == PM_EVENT_ON) {
+-		struct ide_host *host = pci_get_drvdata(dev);
+-		struct sc1200_saved_state *ss = host->host_priv;
+-		unsigned int r;
+-
+-		/*
+-		 * save timing registers
+-		 * (this may be unnecessary if BIOS also does it)
+-		 */
+-		for (r = 0; r < 8; r++)
+-			pci_read_config_dword(dev, 0x40 + r * 4, &ss->regs[r]);
+-	}
++	for (r = 0; r < 8; r++)
++		pci_read_config_dword(dev, 0x40 + r * 4, &ss->regs[r]);
+ 
+-	pci_disable_device(dev);
+-	pci_set_power_state(dev, pci_choose_state(dev, state));
+ 	return 0;
+ }
+ 
+-static int sc1200_resume (struct pci_dev *dev)
++static int __maybe_unused sc1200_resume(struct device *dev_d)
+ {
++	struct pci_dev *dev = to_pci_dev(dev_d);
+ 	struct ide_host *host = pci_get_drvdata(dev);
+ 	struct sc1200_saved_state *ss = host->host_priv;
+ 	unsigned int r;
+-	int i;
+-
+-	i = pci_enable_device(dev);
+-	if (i)
+-		return i;
+ 
+ 	/*
+ 	 * restore timing registers
+@@ -272,7 +259,6 @@ static int sc1200_resume (struct pci_dev *dev)
+ 
+ 	return 0;
+ }
+-#endif
+ 
+ static const struct ide_port_ops sc1200_port_ops = {
+ 	.set_pio_mode		= sc1200_set_pio_mode,
+@@ -326,15 +312,14 @@ static const struct pci_device_id sc1200_pci_tbl[] = {
+ };
+ MODULE_DEVICE_TABLE(pci, sc1200_pci_tbl);
+ 
++static SIMPLE_DEV_PM_OPS(sc1200_pm_ops, sc1200_suspend, sc1200_resume);
++
+ static struct pci_driver sc1200_pci_driver = {
+ 	.name		= "SC1200_IDE",
+ 	.id_table	= sc1200_pci_tbl,
+ 	.probe		= sc1200_init_one,
+ 	.remove		= ide_pci_remove,
+-#ifdef CONFIG_PM
+-	.suspend	= sc1200_suspend,
+-	.resume		= sc1200_resume,
+-#endif
++	.driver.pm	= &sc1200_pm_ops,
+ };
+ 
+ static int __init sc1200_ide_init(void)
 -- 
 2.27.0
 
