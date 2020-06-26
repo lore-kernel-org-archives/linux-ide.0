@@ -2,99 +2,114 @@ Return-Path: <SRS0=iqsp=AH=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 157DAC433E0
-	for <linux-ide@archiver.kernel.org>; Fri, 26 Jun 2020 13:54:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74C32C433DF
+	for <linux-ide@archiver.kernel.org>; Fri, 26 Jun 2020 15:35:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D652A20663
-	for <linux-ide@archiver.kernel.org>; Fri, 26 Jun 2020 13:54:18 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="TjNN5jgP"
+	by mail.kernel.org (Postfix) with ESMTP id 4FBEA20706
+	for <linux-ide@archiver.kernel.org>; Fri, 26 Jun 2020 15:35:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1593185705;
+	bh=61Aafhz/sebn21egwsMMGm+NbOzYRY3lUCbjT6P131s=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
+	b=c5Hua+Vm2FeYb25V7ogxnNeo1BZww5jom0vig2Sq7bJXspzLZ2BXzkXAotWkzLbtg
+	 63LXd71eFo52pX2/WWSoCABkDho1rMCUSYuKwgE8lBPnSFMv6qSJ8/MhynUP3+w0Rp
+	 nCdnthPZUuYS9dHC6wq/AA8tKw2M/2HvLyREedgM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728811AbgFZNyS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 26 Jun 2020 09:54:18 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:35206 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725864AbgFZNyS (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 26 Jun 2020 09:54:18 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1593179656;
-        h=from:from:reply-to:reply-to:subject:subject:date:date:
-         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
-         content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=qAa3Wq/vh65NUIYLyLFHRH17KzUhwrUI7z4a1cwWymE=;
-        b=TjNN5jgPZDjV9+QxfJ335T6gZDQW6J4fJrUtPLWWXNdjVi1xjVXt47qd63jnYStTtbT/pF
-        DQcJbkKAyYPKlXLmJ6/Z0wL490l3AXAJ3BMC0T9osjmuykyowfqnkahyZkOLDBtphWDvSG
-        TzERCROIY9go0qOLtWkUr59h8jyyCzI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-495-E2p2rOaZNRKMT0qRNvnU9g-1; Fri, 26 Jun 2020 09:54:15 -0400
-X-MC-Unique: E2p2rOaZNRKMT0qRNvnU9g-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1729537AbgFZPfD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 26 Jun 2020 11:35:03 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48872 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726296AbgFZPfD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 26 Jun 2020 11:35:03 -0400
+Received: from localhost (mobile-166-170-222-206.mycingular.net [166.170.222.206])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D1CB1BFC8;
-        Fri, 26 Jun 2020 13:54:13 +0000 (UTC)
-Received: from [10.3.128.20] (unknown [10.3.128.20])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id B9FE319C4F;
-        Fri, 26 Jun 2020 13:54:12 +0000 (UTC)
-Reply-To: tasleson@redhat.com
-Subject: Re: [RFC PATCH v3 5/8] ata_dev_printk: Use dev_printk
-To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org
-References: <20200623191749.115200-1-tasleson@redhat.com>
- <20200623191749.115200-6-tasleson@redhat.com>
- <CGME20200624103532eucas1p2c0988207e4dfc2f992d309b75deac3ee@eucas1p2.samsung.com>
- <d817c9dd-6852-9233-5f61-1c0bc0f65ca4@samsung.com>
- <33577b4f-6ee1-f054-8853-b61ca800e10a@redhat.com>
- <9e45d126-f1ac-48b9-56c3-ec0686e38503@samsung.com>
-From:   Tony Asleson <tasleson@redhat.com>
-Organization: Red Hat
-Message-ID: <780b9a02-eca6-6e53-638a-a9638425a863@redhat.com>
-Date:   Fri, 26 Jun 2020 08:54:11 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.8.0
+        by mail.kernel.org (Postfix) with ESMTPSA id 44D4B20706;
+        Fri, 26 Jun 2020 15:35:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1593185702;
+        bh=61Aafhz/sebn21egwsMMGm+NbOzYRY3lUCbjT6P131s=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=Occ0hBEswS0KfEiDUn8Ab9ZytNfsRzopQVvidPVjfnoprbdKkxEYtVtiv7AB4u+7x
+         rRslWJ6ZC1NEieDYKoiNI4ymI0qRxj0rhzBhDmIHlZhZylzJhDQHb6DkmqSoTYsRRJ
+         Af7htNBpqd23xDGDeNA5qJUnVKXGwRseDDT/bess=
+Date:   Fri, 26 Jun 2020 10:35:00 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     kernel test robot <lkp@intel.com>
+Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>, bjorn@helgaas.com,
+        Vaibhav Gupta <vaibhav.varodek@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>, kbuild-all@lists.01.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        skhan@linuxfoundation.org, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v1 1/4] ide: use generic power management
+Message-ID: <20200626153500.GA2895752@bjorn-Precision-5520>
 MIME-Version: 1.0
-In-Reply-To: <9e45d126-f1ac-48b9-56c3-ec0686e38503@samsung.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <202006250611.HDgpcjeu%lkp@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 6/26/20 7:45 AM, Bartlomiej Zolnierkiewicz wrote:
-> Of course I agree that having a persistent identifier associated to
-> storage related log messages is useful and my previous mail was exactly
-> a part of discussion on the best way to achieving it. :-)
+On Thu, Jun 25, 2020 at 06:14:09AM +0800, kernel test robot wrote:
+> Hi Vaibhav,
 > 
-> I agree with James that dev_printk() usage is preferred over legacy
-> printk_emit() and I've described a way to do it correctly for libata.
+> Thank you for the patch! Yet something to improve:
 > 
-> Unfortunately it means additional work for getting the new feature 
-> merged so if you don't agree with doing it you need to convince:
+> [auto build test ERROR on ide/master]
+> [If your patch is applied to the wrong git tree, kindly drop us a note.
+> And when submitting patch, we suggest to use  as documented in
+> https://git-scm.com/docs/git-format-patch]
 > 
-> - Jens (libata Maintainer) to accept libata patch as it is
-> 
-> or
-> 
-> - James (& other higher level Maintainers) to use printk_emit() instead
-> 
-> Ultimately they will be the ones merging/long-term supporting proposed
-> patches and not me..
+> url:    https://github.com/0day-ci/linux/commits/Vaibhav-Gupta/drivers-ide-use-generic-power-management/20200625-013242
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git master
+> config: x86_64-randconfig-a004-20200624 (attached as .config)
 
-Thank you for the helpful response, I appreciate it.  I'll take a look
-at the information you've provided and re-work the patch series.  I may
-have additional question(s) :-)
+This auto build testing is a great service, but is there any way to
+tweak the info above to make it easier to reproduce the problem?
 
--Tony
+I tried to checkout the source that caused these errors, but failed.
+This is probably because I'm not a git expert, but maybe others are in
+the same boat.  For example, I tried:
+
+  $ git remote add kbuild https://github.com/0day-ci/linux/commits/Vaibhav-Gupta/drivers-ide-use-generic-power-management/20200625-013242
+  $ git fetch kbuild
+  fatal: repository 'https://github.com/0day-ci/linux/commits/Vaibhav-Gupta/drivers-ide-use-generic-power-management/20200625-013242/' not found
+
+I also visited the github URL in a browser, and I'm sure there must be
+information there that would let me fetch the source, but I don't know
+enough about github to find it.
+
+The report doesn't include a SHA1, so even if I *did* manage to fetch
+the sources, I wouldn't be able to validate they were the *correct*
+ones.
+
+> compiler: gcc-9 (Debian 9.3.0-13) 9.3.0
+> reproduce (this is a W=1 build):
+>         # save the attached .config to linux build tree
+>         make W=1 ARCH=x86_64 
+> 
+> If you fix the issue, kindly add following tag as appropriate
+> Reported-by: kernel test robot <lkp@intel.com>
+> 
+> All errors (new ones prefixed by >>, old ones prefixed by <<):
+> 
+> >> ERROR: modpost: "ide_pci_pm_ops" [drivers/ide/ide-pci-generic.ko] undefined!
+> >> ERROR: modpost: "ide_pci_pm_ops" [drivers/ide/serverworks.ko] undefined!
+> >> ERROR: modpost: "ide_pci_pm_ops" [drivers/ide/piix.ko] undefined!
+> >> ERROR: modpost: "ide_pci_pm_ops" [drivers/ide/pdc202xx_old.ko] undefined!
+> >> ERROR: modpost: "ide_pci_pm_ops" [drivers/ide/ns87415.ko] undefined!
+> >> ERROR: modpost: "ide_pci_pm_ops" [drivers/ide/hpt366.ko] undefined!
+> 
+> ---
+> 0-DAY CI Kernel Test Service, Intel Corporation
+> https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+
 
