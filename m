@@ -2,103 +2,113 @@ Return-Path: <SRS0=e/ZE=AM=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB542C433E2
-	for <linux-ide@archiver.kernel.org>; Wed,  1 Jul 2020 20:39:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55B54C433DF
+	for <linux-ide@archiver.kernel.org>; Wed,  1 Jul 2020 21:22:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B1F9720853
-	for <linux-ide@archiver.kernel.org>; Wed,  1 Jul 2020 20:39:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1593635971;
-	bh=Mv90pdTDmmCVPBQ+ilKuLGK6rDI94hGPVOU6z7qxgNo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=HtYNMt7FqQGG2ph1EmtKDLawmiwV6K0eegoNc5Xy4O7rcCn5gc883Flo6RPFVyLBM
-	 zcuTgmA9OHRyCBLBKQMu09CFtbF4DBQyDBYVTBjOznbB+/LW5a0ttmg8ym4Xuw/GiU
-	 mfy9rfOxDjb26IalarkTDdoVOSmz5YvFDbVLJYjc=
+	by mail.kernel.org (Postfix) with ESMTP id 34D842085B
+	for <linux-ide@archiver.kernel.org>; Wed,  1 Jul 2020 21:22:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="VtYg1I3H"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726144AbgGAUjX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 1 Jul 2020 16:39:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54896 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725535AbgGAUjX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 1 Jul 2020 16:39:23 -0400
-Received: from localhost (fw-tnat.cambridge.arm.com [217.140.96.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 395DA20760;
-        Wed,  1 Jul 2020 20:39:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1593635962;
-        bh=Mv90pdTDmmCVPBQ+ilKuLGK6rDI94hGPVOU6z7qxgNo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=vn7yonK6UORJ8OJ5CLMTZ2+x/gvdycGSabhl28wLOeWEfNZZtkdKMc0I9L12/I0dk
-         bB9jRJM9ZAsrHrmNUN0Xe9QCw5cG+b24CXLz5B4CAtKfE3rFp/wnozWmeRUhlpAwyP
-         D81gDHxv1SI3ntiRTx4ygWm8AtJKSXVEdFaatGao=
-Date:   Wed, 1 Jul 2020 21:39:20 +0100
-From:   Mark Brown <broonie@kernel.org>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     linux-kernel@vger.kernel.org,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>,
-        Alexander Potapenko <glider@google.com>,
-        Joe Perches <joe@perches.com>,
-        Andy Whitcroft <apw@canonical.com>, x86@kernel.org,
-        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
-        b43-dev@lists.infradead.org, netdev@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-clk@vger.kernel.org,
-        linux-spi@vger.kernel.org, linux-mm@kvack.org,
-        clang-built-linux@googlegroups.com
-Subject: Re: [PATCH v2 08/16] spi: davinci: Remove uninitialized_var() usage
-Message-ID: <20200701203920.GC3776@sirena.org.uk>
-References: <20200620033007.1444705-1-keescook@chromium.org>
- <20200620033007.1444705-9-keescook@chromium.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="/Uq4LBwYP4y1W6pO"
-Content-Disposition: inline
-In-Reply-To: <20200620033007.1444705-9-keescook@chromium.org>
-X-Cookie: "Ahead warp factor 1"
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        id S1727069AbgGAVWN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 1 Jul 2020 17:22:13 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:43222 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727124AbgGAVWM (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 1 Jul 2020 17:22:12 -0400
+Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 9813B30C0C1;
+        Wed,  1 Jul 2020 14:22:10 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 9813B30C0C1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
+        s=dkimrelay; t=1593638530;
+        bh=wMcRiDP4Wvw9D413aeqotR4mafwEoV1r2WAiCdjiDuM=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=VtYg1I3HXbWRf1pKA483kdaLgh+ENkGe2dAend1U2Rn3CNBYYmRlcKAwRrqHinqeh
+         +OytabA/cOt6C4RwlcP6pCJ43Gugjoboh3WJquCcj0/1KV4qF45jGsWTwnnF7q4Cuj
+         0CYIPxBoUvI09X6qyRhLu1whX3vqtUdkMJ8PglWM=
+Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id CCE2F140069;
+        Wed,  1 Jul 2020 14:22:08 -0700 (PDT)
+From:   Jim Quinlan <james.quinlan@broadcom.com>
+To:     linux-pci@vger.kernel.org,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
+Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
+        Parallel ATA drivers)), linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v6 02/12] ata: ahci_brcm: Fix use of BCM7216 reset controller
+Date:   Wed,  1 Jul 2020 17:21:32 -0400
+Message-Id: <20200701212155.37830-3-james.quinlan@broadcom.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200701212155.37830-1-james.quinlan@broadcom.com>
+References: <20200701212155.37830-1-james.quinlan@broadcom.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+From: Jim Quinlan <jquinlan@broadcom.com>
 
---/Uq4LBwYP4y1W6pO
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+A reset controller "rescal" is shared between the AHCI driver and the PCIe
+driver for the BrcmSTB 7216 chip.  Use
+devm_reset_control_get_optional_shared control() to handle this sharing.
 
-On Fri, Jun 19, 2020 at 08:29:59PM -0700, Kees Cook wrote:
-> Using uninitialized_var() is dangerous as it papers over real bugs[1]
-> (or can in the future), and suppresses unrelated compiler warnings (e.g.
-> "unused variable"). If the compiler thinks it is uninitialized, either
-> simply initialize the variable or make compiler changes. As a precursor
-> to removing[2] this[3] macro[4], just remove this variable since it was
-> actually unused:
+Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
 
-Please copy maintainers on patches :(
+Fixes: 272ecd60a636 ("ata: ahci_brcm: BCM7216 reset is self de-asserting")
+Fixes: c345ec6a50e9 ("ata: ahci_brcm: Support BCM7216 reset controller name")
+---
+ drivers/ata/ahci_brcm.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-Acked-by: Mark Brown <broonie@kernel.org>
+diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+index 6853dbb4131d..d6115bc04b09 100644
+--- a/drivers/ata/ahci_brcm.c
++++ b/drivers/ata/ahci_brcm.c
+@@ -428,7 +428,6 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ {
+ 	const struct of_device_id *of_id;
+ 	struct device *dev = &pdev->dev;
+-	const char *reset_name = NULL;
+ 	struct brcm_ahci_priv *priv;
+ 	struct ahci_host_priv *hpriv;
+ 	struct resource *res;
+@@ -452,11 +451,10 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 
+ 	/* Reset is optional depending on platform and named differently */
+ 	if (priv->version == BRCM_SATA_BCM7216)
+-		reset_name = "rescal";
++		priv->rcdev = devm_reset_control_get_optional_shared(&pdev->dev, "rescal");
+ 	else
+-		reset_name = "ahci";
++		priv->rcdev = devm_reset_control_get_optional(&pdev->dev, "ahci");
+ 
+-	priv->rcdev = devm_reset_control_get_optional(&pdev->dev, reset_name);
+ 	if (IS_ERR(priv->rcdev))
+ 		return PTR_ERR(priv->rcdev);
+ 
+@@ -479,10 +477,7 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 		break;
+ 	}
+ 
+-	if (priv->version == BRCM_SATA_BCM7216)
+-		ret = reset_control_reset(priv->rcdev);
+-	else
+-		ret = reset_control_deassert(priv->rcdev);
++	ret = reset_control_deassert(priv->rcdev);
+ 	if (ret)
+ 		return ret;
+ 
+-- 
+2.17.1
 
---/Uq4LBwYP4y1W6pO
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAl789HcACgkQJNaLcl1U
-h9AfDgf/RKZyImjLhB9HvSTTPElSdnVo2uGyMkLMGX5E2rrBkIm+JRHNqfloV/46
-Mx7zbEttRmKiYixfSdmsDpbg56ljycPfGBLHIZxfW4p4HDkXI2rwNl6yNQwAFGfS
-xREw+xp//6eFOklwHHWspFdXjwvYVwxwCJbntC3mxtA44GrP1RcSNdlYSRlLMUqE
-b4V1aHQtulWHWcA6qc3e7e3VH7t/F4vy9AftF3S8ckIbrmZO6+HfcvGjITyILn0T
-0ReKIdfQ/UEHEeGXnai1E9efkWymKRW43Frx6JRO6Sd4KhBeHGohovlQ3mhKLfdg
-vH1jBuQdhXfJWc+yprXAcHmpsHpQZw==
-=XnWw
------END PGP SIGNATURE-----
-
---/Uq4LBwYP4y1W6pO--
