@@ -1,102 +1,142 @@
-Return-Path: <SRS0=swEm=AN=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=r3tH=AO=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0042DC433E3
-	for <linux-ide@archiver.kernel.org>; Thu,  2 Jul 2020 16:23:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53942C433E0
+	for <linux-ide@archiver.kernel.org>; Fri,  3 Jul 2020 08:16:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE61720720
-	for <linux-ide@archiver.kernel.org>; Thu,  2 Jul 2020 16:23:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2BF89207DA
+	for <linux-ide@archiver.kernel.org>; Fri,  3 Jul 2020 08:16:15 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HY9dYLnm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726416AbgGBQXO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 2 Jul 2020 12:23:14 -0400
-Received: from smtprelay0229.hostedemail.com ([216.40.44.229]:53202 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726140AbgGBQXN (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 2 Jul 2020 12:23:13 -0400
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay04.hostedemail.com (Postfix) with ESMTP id 53EF6180A813A;
-        Thu,  2 Jul 2020 16:23:11 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: eggs64_191235726e8a
-X-Filterd-Recvd-Size: 3163
-Received: from XPS-9350.home (unknown [47.151.133.149])
-        (Authenticated sender: joe@perches.com)
-        by omf06.hostedemail.com (Postfix) with ESMTPA;
-        Thu,  2 Jul 2020 16:23:08 +0000 (UTC)
-Message-ID: <f65392bbd1732eff72d5b24c5ba3ea230ab2a3ae.camel@perches.com>
-Subject: Re: [PATCH v2 08/16] spi: davinci: Remove uninitialized_var() usage
-From:   Joe Perches <joe@perches.com>
-To:     Kees Cook <keescook@chromium.org>, Mark Brown <broonie@kernel.org>
-Cc:     linux-kernel@vger.kernel.org,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>,
-        Alexander Potapenko <glider@google.com>,
-        Andy Whitcroft <apw@canonical.com>, x86@kernel.org,
-        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
-        b43-dev@lists.infradead.org, netdev@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-clk@vger.kernel.org,
-        linux-spi@vger.kernel.org, linux-mm@kvack.org,
-        clang-built-linux@googlegroups.com
-Date:   Thu, 02 Jul 2020 09:23:07 -0700
-In-Reply-To: <202007020839.545A571CA4@keescook>
-References: <20200620033007.1444705-1-keescook@chromium.org>
-         <20200620033007.1444705-9-keescook@chromium.org>
-         <20200701203920.GC3776@sirena.org.uk> <202007020819.318824DA@keescook>
-         <20200702152335.GJ4483@sirena.org.uk> <202007020839.545A571CA4@keescook>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.36.3-0ubuntu1 
+        id S1726371AbgGCIQO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 3 Jul 2020 04:16:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42250 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725648AbgGCIQN (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 3 Jul 2020 04:16:13 -0400
+Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6ABFC08C5C1;
+        Fri,  3 Jul 2020 01:16:13 -0700 (PDT)
+Received: by mail-pl1-x642.google.com with SMTP id bj10so7149990plb.11;
+        Fri, 03 Jul 2020 01:16:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=dX1y3EZXLwuCJAuG+s638H9srGw+Bv0i5V3KBJVUxbU=;
+        b=HY9dYLnm3ErI+evPVxOOELTSXIrSfRXLyBecauxWz+4akfnnMTqeBHYlJ451fUPJJN
+         nWCJDx0OyqnWliWCFUyRi2agBVfLxFPIJyaD57p1oPUynCuMYU/01uIWxkyPhwPhnYL3
+         Oy0kE9SGnQEl4LcpTR4JIpYR/QncK76BYew3gOH2XMWDwOssy1obyTQqdoFiuQuD0q9Z
+         qDK91+lQS5p8fTYJBsShymdiKb4+L/Fpyzi7Sipw+4WMVGLSOVyxCKgNMblxZ4BiR7YO
+         2ty+ZbQ19OCGlOIB7idbdZS6JjgLj/ydJZ8dCvRP6JVnaphdtqIn+13rO8+zvJHuEuC/
+         9W1w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=dX1y3EZXLwuCJAuG+s638H9srGw+Bv0i5V3KBJVUxbU=;
+        b=kSLtJJ6rhTgwdKxiYP1t2xU1QPJSWZMmUCJvifDZKFRZ/XJN5+lZ98spHVG/DuPKCs
+         441FT1Y+Ns69tS9y9P+IzlfxUN/mFxy19APe2PjWx7oPR5wwIDMsr5byVa6lZeZ6nHHt
+         sGBvKI3bltDp1quPpB29qeAqLHfChOGFwrMKJk/uSsul2Tf4XP75gGtgZB0eo71fhDes
+         ioyK0T52wDj0ujLzyheMhwH7IAyqoar0hpcjUWde/WHri1cfNBzEK8LQLVqSvSEu0rJN
+         aIlRVKnekwjw50HEtjmVGZ1xuoB/QxpRcVqSkolAlauVoUxyp7AOwqbkqsplD6OlhFSg
+         MHYg==
+X-Gm-Message-State: AOAM533D+EJIruRhe5UGaavjcV9VxaGxsgDSU5m5BZYOcLr4K/BYzeRt
+        SH6WgI8EVi2VBtMpLc9r8GA=
+X-Google-Smtp-Source: ABdhPJyu7elHooqc3ZPVMwTGcHHv784cEG5qJZel5gkB1yqKLwT51/PoIU1mh380wOPhTtCkGk/CIQ==
+X-Received: by 2002:a17:90a:728d:: with SMTP id e13mr22595947pjg.51.1593764173155;
+        Fri, 03 Jul 2020 01:16:13 -0700 (PDT)
+Received: from varodek.iballbatonwifi.com ([103.105.153.57])
+        by smtp.gmail.com with ESMTPSA id y198sm8437085pfg.116.2020.07.03.01.16.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 03 Jul 2020 01:16:12 -0700 (PDT)
+From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, bjorn@helgaas.com,
+        Vaibhav Gupta <vaibhav.varodek@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>
+Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>,
+        linux-kernel@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        skhan@linuxfoundation.org, linux-ide@vger.kernel.org
+Subject: [PATCH v2 0/4] drivers: ide: use generic power management
+Date:   Fri,  3 Jul 2020 13:44:24 +0530
+Message-Id: <20200703081428.1011527-1-vaibhavgupta40@gmail.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, 2020-07-02 at 08:42 -0700, Kees Cook wrote:
-> On Thu, Jul 02, 2020 at 04:23:35PM +0100, Mark Brown wrote:
-> > On Thu, Jul 02, 2020 at 08:21:40AM -0700, Kees Cook wrote:
-> > > On Wed, Jul 01, 2020 at 09:39:20PM +0100, Mark Brown wrote:
-> > > > Please copy maintainers on patches :(
-> > > Hi! Sorry about that; the CC list was giant, so I had opted for using
-> > > subsystem mailing lists where possible.
-> > 
-> > If you're going to err in a direction there I'd err in the direction of
-> > CCing the people not the list - I only saw this since I was looking for
-> > something else, I don't normally see stuff in the mailing list folder.
-> 
-> Yeah, I've gotten conflicting feedback on treewide changes:
-> - please CC me on only the one patch, I don't want to see everything else
-> - please CC me on the whole series, I want the full context for the change
-> 
-> I opted toward "CC me on this series", but then I get stuck when the CC
-> is giant. I think I may switch back to individual CCs for specific
-> patches, and point people to lore if they want greater context. (lore
-> didn't exist before...)
+Linux Kernel Mentee: Remove Legacy Power Management.
 
-IMO:
+The purpose of this patch series is to remove legacy power management callbacks
+from ide drivers.
 
-For a patch series that spans multiple subsystems,
-each patch should always CC any specific subsystem
-maintainers..
+The suspend() and resume() callbacks operations are still invoking
+pci_save/restore_state(), pci_set_power_state(), pci_enable/disable_state(),
+etc. and handling the power management themselves, which is not recommended.
 
-A good trick would be to use the cover letter
-message-id: and have each individual patch in the
-series reference the cover letter id below the
---- line so any reviewer doesn't have to find the
-in-reply-to: message id and then reference the
-lore link.
+The conversion requires the removal of the those function calls and change the
+callback definition accordingly and make use of dev_pm_ops structure.
 
-Something like:
+All patches are compile-tested only.
 
----
+V2: Kbuild had modpost error for undefined reference in v1.
 
-For complete series see: https://lore.kernel.org/r/<cover_letter_message_id>
+Testing by:
+  Compiler: gcc (GCC) 10.1.0
+  Build: make -j$(nproc) W=1 all
 
+Vaibhav Gupta (4):
+  ide: use generic power management
+  ide: triflex: use generic power management
+  ide: sc1200: use generic power management
+  ide: delkin_cb: use generic power management
+
+ drivers/ide/aec62xx.c         |  3 +--
+ drivers/ide/alim15x3.c        |  3 +--
+ drivers/ide/amd74xx.c         |  3 +--
+ drivers/ide/atiixp.c          |  3 +--
+ drivers/ide/cmd64x.c          |  3 +--
+ drivers/ide/cs5520.c          |  3 +--
+ drivers/ide/cs5530.c          |  3 +--
+ drivers/ide/cs5535.c          |  3 +--
+ drivers/ide/cs5536.c          |  3 +--
+ drivers/ide/cy82c693.c        |  3 +--
+ drivers/ide/delkin_cb.c       | 30 +++++-------------------
+ drivers/ide/hpt366.c          |  3 +--
+ drivers/ide/ide-pci-generic.c |  3 +--
+ drivers/ide/it8172.c          |  3 +--
+ drivers/ide/it8213.c          |  3 +--
+ drivers/ide/it821x.c          |  3 +--
+ drivers/ide/jmicron.c         |  3 +--
+ drivers/ide/ns87415.c         |  3 +--
+ drivers/ide/opti621.c         |  3 +--
+ drivers/ide/pdc202xx_new.c    |  3 +--
+ drivers/ide/pdc202xx_old.c    |  3 +--
+ drivers/ide/piix.c            |  3 +--
+ drivers/ide/sc1200.c          | 43 ++++++++++++-----------------------
+ drivers/ide/serverworks.c     |  3 +--
+ drivers/ide/setup-pci.c       | 29 +++++------------------
+ drivers/ide/siimage.c         |  3 +--
+ drivers/ide/sis5513.c         |  3 +--
+ drivers/ide/sl82c105.c        |  3 +--
+ drivers/ide/slc90e66.c        |  3 +--
+ drivers/ide/triflex.c         | 24 +++++++++----------
+ drivers/ide/via82cxxx.c       |  3 +--
+ include/linux/ide.h           |  8 +------
+ 32 files changed, 65 insertions(+), 150 deletions(-)
+
+-- 
+2.27.0
 
