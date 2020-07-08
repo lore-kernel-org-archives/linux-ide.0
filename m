@@ -1,149 +1,114 @@
-Return-Path: <SRS0=Dme/=AS=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=emgp=AT=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF215C433DF
-	for <linux-ide@archiver.kernel.org>; Tue,  7 Jul 2020 21:15:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6CDDC433DF
+	for <linux-ide@archiver.kernel.org>; Wed,  8 Jul 2020 19:32:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C6CB920771
-	for <linux-ide@archiver.kernel.org>; Tue,  7 Jul 2020 21:15:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594156523;
-	bh=1s/robryCgQa82sfCBKNWG/m6UpXwTxp0ZAypBuWLWk=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:List-ID:From;
-	b=07STCDDv/wWX0FOC6iL7KbCjZy7EZ8hXYGSHMAHt20yVBL7bCOjkabL/WtBRQzSns
-	 bw8hHaVzVFAqa8DP5xX6Ddv4IOUk+d9JfrrTvpcm4w6lTs8X/EkbMpXbziwTmyJUNg
-	 Y0Ilu3JqNIIK/CM8/FeBJ40aVgS41GYOcQE+ELnw=
+	by mail.kernel.org (Postfix) with ESMTP id 9E2D2206E2
+	for <linux-ide@archiver.kernel.org>; Wed,  8 Jul 2020 19:32:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="aT3IEU4K"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729112AbgGGVPT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 7 Jul 2020 17:15:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60074 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728201AbgGGVPT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 7 Jul 2020 17:15:19 -0400
-Received: from localhost (mobile-166-175-191-139.mycingular.net [166.175.191.139])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1D5CB2075B;
-        Tue,  7 Jul 2020 21:15:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1594156518;
-        bh=1s/robryCgQa82sfCBKNWG/m6UpXwTxp0ZAypBuWLWk=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=IchCb4hb83xx8DKThJRMTwMstsiVfgZEEeFqqBFOG3C+1Aq2rpPYsuBLaobwTaGPD
-         bUInFODWCspThMhVQdtN1Z3lDOA6mY5VhF9TYuSKt3+kj4zksrutjtbZRUBzalqVBC
-         oObl6DpyIhX9E+DIYsSFxTQ9kHSrJ8iooI3ls+6k=
-Date:   Tue, 7 Jul 2020 16:15:16 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Vaibhav Gupta <vaibhav.varodek@gmail.com>
-Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, bjorn@helgaas.com,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-kernel@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        skhan@linuxfoundation.org, linux-ide@vger.kernel.org
-Subject: Re: [PATCH v2 2/4] ide: triflex: use generic power management
-Message-ID: <20200707211516.GA385934@bjorn-Precision-5520>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAPBsFfCdJkXO-V16yO2eTeAwnQnKJZ49yaJepbsF2dNZjLZFhw@mail.gmail.com>
+        id S1726297AbgGHTc3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 8 Jul 2020 15:32:29 -0400
+Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:60802 "EHLO
+        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726107AbgGHTc2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Jul 2020 15:32:28 -0400
+Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
+        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 39DE530C095;
+        Wed,  8 Jul 2020 12:32:28 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 39DE530C095
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
+        s=dkimrelay; t=1594236748;
+        bh=8GSFboYK0oeAhy/qjD7k9hQDV9Eog0D9xn/mkZHz9sM=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=aT3IEU4KyD1i8ZkZSNq4l3M5YLVS0/PJpAqX19o9ia4jeIe1px3TkHWRHF7ry7rw9
+         Iq4eBP9eiCBcxFTgnBGhcMHW9KGgZlepQ8bWo2MmHF7Y5lf6p7taEV18aMff/kByf3
+         11Jvp8MwEPuCj7Qvt7lsFcCwyC84zyrCyLLzDcq0=
+Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
+        by mail-irv-17.broadcom.com (Postfix) with ESMTP id C0782140069;
+        Wed,  8 Jul 2020 12:32:26 -0700 (PDT)
+From:   Jim Quinlan <james.quinlan@broadcom.com>
+To:     linux-pci@vger.kernel.org,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
+Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
+        Parallel ATA drivers)), linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v7 02/12] ata: ahci_brcm: Fix use of BCM7216 reset controller
+Date:   Wed,  8 Jul 2020 15:31:55 -0400
+Message-Id: <20200708193219.47134-3-james.quinlan@broadcom.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20200708193219.47134-1-james.quinlan@broadcom.com>
+References: <20200708193219.47134-1-james.quinlan@broadcom.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, Jul 08, 2020 at 02:23:22AM +0530, Vaibhav Gupta wrote:
-> On Wed, Jul 8, 2020, 2:12 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Fri, Jul 03, 2020 at 01:44:26PM +0530, Vaibhav Gupta wrote:
+From: Jim Quinlan <jquinlan@broadcom.com>
 
-> > > -static int triflex_ide_pci_resume(struct pci_dev *dev)
-> > > +/*
-> > > + * We must not disable or powerdown the device.
-> > > + * APM bios refuses to suspend if IDE is not accessible.
-> > > + */
-> > > +static void triflex_pci_pm_cap_fixup(struct pci_dev *pdev)
-> > >  {
-> > > -     struct ide_host *host = pci_get_drvdata(dev);
-> > > -     int rc;
-> > > -
-> > > -     pci_set_power_state(dev, PCI_D0);
-> > > -
-> > > -     rc = pci_enable_device(dev);
-> > > -     if (rc)
-> > > -             return rc;
-> > > -
-> > > -     pci_restore_state(dev);
-> > > -     pci_set_master(dev);
-> > > -
-> > > -     if (host->init_chipset)
-> > > -             host->init_chipset(dev);
-> > > -
-> > > -     return 0;
-> > > +     dev_info(&pdev->dev, "Disable triflex to be turned off by PCI
-> > CORE\n");
-> >
-> > I would change this message to "Disabling PCI power management" to be
-> > more like existing messages:
-> >
-> >   "PM disabled\n"
-> >   "Disabling PCI power management to avoid bug\n"
-> >   "Disabling PCI power management on camera ISP\n"
-> >
-> > > +     pdev->pm_cap = 0;
-> > >  }
-> > > -#else
-> > > -#define triflex_ide_pci_suspend NULL
-> > > -#define triflex_ide_pci_resume NULL
-> > > -#endif
-> > > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_COMPAQ,
-> > > +                     PCI_DEVICE_ID_COMPAQ_TRIFLEX_IDE,
-> > > +                     triflex_pci_pm_cap_fixup);
-> >
-> > I don't think this needs to be a fixup.  This could be done in the
-> > probe routine (triflex_init_one()).
-> >
-> > Doing it as a fixup means the PCI core will check every PCI device
-> > to see if it matches PCI_DEVICE_ID_COMPAQ_TRIFLEX_IDE, which is a
-> > little extra useless overhead and quirks are a little bit magic
-> > because it's not as obvious how they're called.
-> >
-> > But since triflex_init_one() is called only for the devices we care
-> > about, you can just do:
-> >
-> >   static int triflex_init_one(struct pci_dev *dev, const struct
-> > pci_device_id *id)
-> >   {
-> >         dev->pm_cap = 0;
-> >         dev_info(...);
-> >         return ide_pci_init_one(dev, &triflex_device, NULL);
-> >   }
-> >
-> Seems a better approach. And in that case I won't need this extra patch
-> just for triflex. I can put dev->pm_cap=0 change
-> in [Patch 1/1] along with other ide drivers.
+A reset controller "rescal" is shared between the AHCI driver and the PCIe
+driver for the BrcmSTB 7216 chip.  Use
+devm_reset_control_get_optional_shared() to handle this sharing.
 
-Hmm, I just noticed that there are actually *two* drivers (triflex.c
-and pata_triflex.c) for this same device, and they both have this
-comment about "APM BIOS refusing to suspend if IDE is not accessible"
-and therefore preventing suspend of IDE.
+Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
 
-At least, the comment seems to imply that calling pci_save_state() is
-a way to prevent suspend of the device.  That seems like a strange way
-to do it, but ...
+Fixes: 272ecd60a636 ("ata: ahci_brcm: BCM7216 reset is self de-asserting")
+Fixes: c345ec6a50e9 ("ata: ahci_brcm: Support BCM7216 reset controller name")
+---
+ drivers/ata/ahci_brcm.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-Anyway, I wonder if a single quirk in drivers/pci/quirks.c would be
-better.  A preliminary patch could add a quirk (keeping the comment)
-and remove the pci_save_state() from both triflex_ide_pci_suspend()
-and triflex_ata_pci_device_suspend().
+diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+index 6853dbb4131d..d6115bc04b09 100644
+--- a/drivers/ata/ahci_brcm.c
++++ b/drivers/ata/ahci_brcm.c
+@@ -428,7 +428,6 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ {
+ 	const struct of_device_id *of_id;
+ 	struct device *dev = &pdev->dev;
+-	const char *reset_name = NULL;
+ 	struct brcm_ahci_priv *priv;
+ 	struct ahci_host_priv *hpriv;
+ 	struct resource *res;
+@@ -452,11 +451,10 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 
+ 	/* Reset is optional depending on platform and named differently */
+ 	if (priv->version == BRCM_SATA_BCM7216)
+-		reset_name = "rescal";
++		priv->rcdev = devm_reset_control_get_optional_shared(&pdev->dev, "rescal");
+ 	else
+-		reset_name = "ahci";
++		priv->rcdev = devm_reset_control_get_optional(&pdev->dev, "ahci");
+ 
+-	priv->rcdev = devm_reset_control_get_optional(&pdev->dev, reset_name);
+ 	if (IS_ERR(priv->rcdev))
+ 		return PTR_ERR(priv->rcdev);
+ 
+@@ -479,10 +477,7 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 		break;
+ 	}
+ 
+-	if (priv->version == BRCM_SATA_BCM7216)
+-		ret = reset_control_reset(priv->rcdev);
+-	else
+-		ret = reset_control_deassert(priv->rcdev);
++	ret = reset_control_deassert(priv->rcdev);
+ 	if (ret)
+ 		return ret;
+ 
+-- 
+2.17.1
 
-Then you could proceed with these generic PM changes on top of that.
-
-Maybe make the dev_info() mention that you're disabling PM to avoid an
-APM BIOS suspend defect so users have a clue about why.
-
-Bjorn
