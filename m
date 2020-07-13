@@ -1,211 +1,144 @@
-Return-Path: <SRS0=Lg77=AV=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=Kv9U=AY=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C9FCC433DF
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Jul 2020 06:40:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F19C8C433E1
+	for <linux-ide@archiver.kernel.org>; Mon, 13 Jul 2020 17:39:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6138A2064B
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Jul 2020 06:40:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CDF1D2075D
+	for <linux-ide@archiver.kernel.org>; Mon, 13 Jul 2020 17:39:28 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="DiAjnY2U"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725966AbgGJGki (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Jul 2020 02:40:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56080 "EHLO
+        id S1729902AbgGMRj2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 13 Jul 2020 13:39:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725851AbgGJGkh (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jul 2020 02:40:37 -0400
-Received: from smtp.al2klimov.de (smtp.al2klimov.de [IPv6:2a01:4f8:c0c:1465::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78306C08C5CE;
-        Thu,  9 Jul 2020 23:40:37 -0700 (PDT)
-Received: from authenticated-user (PRIMARY_HOSTNAME [PUBLIC_IP])
-        by smtp.al2klimov.de (Postfix) with ESMTPA id 18B96BC078;
-        Fri, 10 Jul 2020 06:40:34 +0000 (UTC)
-From:   "Alexander A. Klimov" <grandmaster@al2klimov.de>
-To:     axboe@kernel.dk, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     "Alexander A. Klimov" <grandmaster@al2klimov.de>
-Subject: [PATCH] LIBATA SUBSYSTEM (Serial and Parallel ATA drivers): Replace HTTP links with HTTPS ones
-Date:   Fri, 10 Jul 2020 08:40:28 +0200
-Message-Id: <20200710064028.28976-1-grandmaster@al2klimov.de>
+        with ESMTP id S1729703AbgGMRj2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Jul 2020 13:39:28 -0400
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20F07C061755;
+        Mon, 13 Jul 2020 10:39:28 -0700 (PDT)
+Received: by mail-pg1-x541.google.com with SMTP id z5so6330832pgb.6;
+        Mon, 13 Jul 2020 10:39:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=dsCSO99ajVdezhsvt46VhG304K0QmMvZ1SLvNQqxCN4=;
+        b=DiAjnY2UF2Ft32HWCeObIacUewyoVucUpWt+zmCyKymcSy2Tsolq8SL/ZuwMUcdXYF
+         UAJkTypS/GsEjJgsC2LuQCTmrKn4t6KBviNwNFx0SI861QbQSPRRWobmEMzGwcWG302T
+         4QTnwskLtNwxZbO1x01R/YlaygK2dcZ/UeGLpA8tFJkFw30Qwwet8GEYzZYtZRVQ0MLa
+         C9Vft6vQXPd83Bx7mDHuSucaH0to/LlDYAb7Jfw+HxeJrzZpt4hUGMixo5DbkqJTiuQv
+         qRHEQgpzANLRtDvZHx4k7URY7br2LHqFeOYS3qO4XyjxEKGF8mI0GOaNaZcOKDcYZMe7
+         0YnQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=dsCSO99ajVdezhsvt46VhG304K0QmMvZ1SLvNQqxCN4=;
+        b=hGFUMWcqSh4Zl5yNO/M73bB/BTHc4P9c3sI4r+x8rANAtqMgqjN0Oib2Pjse27Lcun
+         NOhofXhkUEj64b3Rdle+lGmOiFwQfR0H/LI388igNBdIHsGyoAeb5zjYtc4hvdDQq3YC
+         RVS1Xrt3IAygHmKOZRn4fZOKGiALcYaVo5AXj4E4RPWnUOqFcgyMLHPQKXdszb0uE56V
+         nDvKWwBv/9GsIe5UHIHXtFCRBjHZD/aWa4BfdHpbPSk1rsSNgV6O0U5xV7WgQBv8rPXY
+         O6HnX/tTBaVSocVTE2B+CkRK3MKrAOVbVPOt1eVFUA72qN6L8cmnz9Yj4QVdjslHh8qK
+         hNhg==
+X-Gm-Message-State: AOAM533+ddzk9roarDao2skFavIc+A5lzg1wEYje7y3H3QX6NgTmPMzD
+        k+6OVb/szZK42w4gJTmN0E0=
+X-Google-Smtp-Source: ABdhPJxLjkfeTM6u2EPFb0xNzbO7HD66zJ2C9DTOFC/K2UT2od5SKnwJX1jfcQRUGjEjdIYTXhMKFg==
+X-Received: by 2002:a62:1716:: with SMTP id 22mr797676pfx.99.1594661967413;
+        Mon, 13 Jul 2020 10:39:27 -0700 (PDT)
+Received: from varodek.iballbatonwifi.com ([103.105.153.67])
+        by smtp.gmail.com with ESMTPSA id w9sm186540pja.39.2020.07.13.10.39.22
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 13 Jul 2020 10:39:26 -0700 (PDT)
+From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, bjorn@helgaas.com,
+        Vaibhav Gupta <vaibhav.varodek@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>
+Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>,
+        linux-kernel@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        skhan@linuxfoundation.org, linux-ide@vger.kernel.org
+Subject: [PATCH v3 0/3] drivers: ide: use generic power management
+Date:   Mon, 13 Jul 2020 23:06:10 +0530
+Message-Id: <20200713173613.2095-1-vaibhavgupta40@gmail.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Spamd-Bar: +++++
-Authentication-Results: smtp.al2klimov.de;
-        auth=pass smtp.auth=aklimov@al2klimov.de smtp.mailfrom=grandmaster@al2klimov.de
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Rationale:
-Reduces attack surface on kernel devs opening the links for MITM
-as HTTPS traffic is much harder to manipulate.
+Linux Kernel Mentee: Remove Legacy Power Management.
 
-Deterministic algorithm:
-For each file:
-  If not .svg:
-    For each line:
-      If doesn't contain `\bxmlns\b`:
-        For each link, `\bhttp://[^# \t\r\n]*(?:\w|/)`:
-	  If neither `\bgnu\.org/license`, nor `\bmozilla\.org/MPL\b`:
-            If both the HTTP and HTTPS versions
-            return 200 OK and serve the same content:
-              Replace HTTP with HTTPS.
+The purpose of this patch series is to remove legacy power management callbacks
+from ide drivers.
 
-Signed-off-by: Alexander A. Klimov <grandmaster@al2klimov.de>
----
- Continuing my work started at 93431e0607e5.
- See also: git log --oneline '--author=Alexander A. Klimov <grandmaster@al2klimov.de>' v5.7..master
- (Actually letting a shell for loop submit all this stuff for me.)
+The suspend() and resume() callbacks operations are still invoking
+pci_save/restore_state(), pci_set_power_state(), pci_enable/disable_state(),
+etc. and handling the power management themselves, which is not recommended.
 
- If there are any URLs to be removed completely or at least not HTTPSified:
- Just clearly say so and I'll *undo my change*.
- See also: https://lkml.org/lkml/2020/6/27/64
+The conversion requires the removal of the those function calls and change the
+callback definition accordingly and make use of dev_pm_ops structure.
 
- If there are any valid, but yet not changed URLs:
- See: https://lkml.org/lkml/2020/6/26/837
+All patches are compile-tested only.
 
- If you apply the patch, please let me know.
+v3:
+    - Modpost error for undefined reference by Kbuild in v1.
+    - Another approach to disable PM in drivers/ide/triflex.c suggested by
+      Bjorn Helgaas in v2.
 
+Test tools:
+    - Compiler: gcc (GCC) 10.1.0
+    - allmodconfig build: make -j$(nproc) W=1 all
 
- drivers/ata/acard-ahci.c  |  4 ++--
- drivers/ata/ahci.c        |  4 ++--
- drivers/ata/ahci.h        |  4 ++--
- drivers/ata/libahci.c     |  4 ++--
- drivers/ata/libata-core.c | 10 +++++-----
- drivers/ata/libata-eh.c   |  2 +-
- drivers/ata/libata-scsi.c |  2 +-
- drivers/ata/libata-sff.c  |  2 +-
- 8 files changed, 16 insertions(+), 16 deletions(-)
+Vaibhav Gupta (3):
+  ide: use generic power management
+  ide: sc1200: use generic power management
+  ide: delkin_cb: use generic power management
 
-diff --git a/drivers/ata/acard-ahci.c b/drivers/ata/acard-ahci.c
-index 2a04e8abd397..516d2139c7e0 100644
---- a/drivers/ata/acard-ahci.c
-+++ b/drivers/ata/acard-ahci.c
-@@ -13,8 +13,8 @@
-  * as Documentation/driver-api/libata.rst
-  *
-  * AHCI hardware documentation:
-- * http://www.intel.com/technology/serialata/pdf/rev1_0.pdf
-- * http://www.intel.com/technology/serialata/pdf/rev1_1.pdf
-+ * https://www.intel.com/technology/serialata/pdf/rev1_0.pdf
-+ * https://www.intel.com/technology/serialata/pdf/rev1_1.pdf
-  */
- 
- #include <linux/kernel.h>
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 0c0a736eb861..e806a8547dd8 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -12,8 +12,8 @@
-  * as Documentation/driver-api/libata.rst
-  *
-  * AHCI hardware documentation:
-- * http://www.intel.com/technology/serialata/pdf/rev1_0.pdf
-- * http://www.intel.com/technology/serialata/pdf/rev1_1.pdf
-+ * https://www.intel.com/technology/serialata/pdf/rev1_0.pdf
-+ * https://www.intel.com/technology/serialata/pdf/rev1_1.pdf
-  */
- 
- #include <linux/kernel.h>
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index d991dd46e89c..a3b7145632bc 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -12,8 +12,8 @@
-  * as Documentation/driver-api/libata.rst
-  *
-  * AHCI hardware documentation:
-- * http://www.intel.com/technology/serialata/pdf/rev1_0.pdf
-- * http://www.intel.com/technology/serialata/pdf/rev1_1.pdf
-+ * https://www.intel.com/technology/serialata/pdf/rev1_0.pdf
-+ * https://www.intel.com/technology/serialata/pdf/rev1_1.pdf
-  */
- 
- #ifndef _AHCI_H
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index ea5bf5f4cbed..1b050d137d80 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -12,8 +12,8 @@
-  * as Documentation/driver-api/libata.rst
-  *
-  * AHCI hardware documentation:
-- * http://www.intel.com/technology/serialata/pdf/rev1_0.pdf
-- * http://www.intel.com/technology/serialata/pdf/rev1_1.pdf
-+ * https://www.intel.com/technology/serialata/pdf/rev1_0.pdf
-+ * https://www.intel.com/technology/serialata/pdf/rev1_1.pdf
-  */
- 
- #include <linux/kernel.h>
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index b1cd4d97bc2a..d86ce48b01f2 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -9,15 +9,15 @@
-  *  as Documentation/driver-api/libata.rst
-  *
-  *  Hardware documentation available from http://www.t13.org/ and
-- *  http://www.sata-io.org/
-+ *  https://www.sata-io.org/
-  *
-  *  Standards documents from:
-  *	http://www.t13.org (ATA standards, PCI DMA IDE spec)
-- *	http://www.t10.org (SCSI MMC - for ATAPI MMC)
-- *	http://www.sata-io.org (SATA)
-+ *	https://www.t10.org (SCSI MMC - for ATAPI MMC)
-+ *	https://www.sata-io.org (SATA)
-  *	http://www.compactflash.org (CF)
-- *	http://www.qic.org (QIC157 - Tape and DSC)
-- *	http://www.ce-ata.org (CE-ATA: not supported)
-+ *	https://www.qic.org (QIC157 - Tape and DSC)
-+ *	https://www.ce-ata.org (CE-ATA: not supported)
-  *
-  * libata is essentially a library of internal helper functions for
-  * low-level ATA host controller drivers.  As such, the API/ABI is
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 474c6c34fe02..63a9b893d83a 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -8,7 +8,7 @@
-  *  as Documentation/driver-api/libata.rst
-  *
-  *  Hardware documentation available from http://www.t13.org/ and
-- *  http://www.sata-io.org/
-+ *  https://www.sata-io.org/
-  */
- 
- #include <linux/kernel.h>
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 46336084b1a9..854c6dc4c449 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -9,7 +9,7 @@
-  *  as Documentation/driver-api/libata.rst
-  *
-  *  Hardware documentation available from
-- *  - http://www.t10.org/
-+ *  - https://www.t10.org/
-  *  - http://www.t13.org/
-  */
- 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index ae7189d1a568..18cba8c77a63 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -9,7 +9,7 @@
-  *  as Documentation/driver-api/libata.rst
-  *
-  *  Hardware documentation available from http://www.t13.org/ and
-- *  http://www.sata-io.org/
-+ *  https://www.sata-io.org/
-  */
- 
- #include <linux/kernel.h>
+ drivers/ide/aec62xx.c         |  3 +--
+ drivers/ide/alim15x3.c        |  3 +--
+ drivers/ide/amd74xx.c         |  3 +--
+ drivers/ide/atiixp.c          |  3 +--
+ drivers/ide/cmd64x.c          |  3 +--
+ drivers/ide/cs5520.c          |  3 +--
+ drivers/ide/cs5530.c          |  3 +--
+ drivers/ide/cs5535.c          |  3 +--
+ drivers/ide/cs5536.c          |  3 +--
+ drivers/ide/cy82c693.c        |  3 +--
+ drivers/ide/delkin_cb.c       | 32 +++++---------------------
+ drivers/ide/hpt366.c          |  3 +--
+ drivers/ide/ide-pci-generic.c |  3 +--
+ drivers/ide/it8172.c          |  3 +--
+ drivers/ide/it8213.c          |  3 +--
+ drivers/ide/it821x.c          |  3 +--
+ drivers/ide/jmicron.c         |  3 +--
+ drivers/ide/ns87415.c         |  3 +--
+ drivers/ide/opti621.c         |  3 +--
+ drivers/ide/pdc202xx_new.c    |  3 +--
+ drivers/ide/pdc202xx_old.c    |  3 +--
+ drivers/ide/piix.c            |  3 +--
+ drivers/ide/sc1200.c          | 43 ++++++++++++-----------------------
+ drivers/ide/serverworks.c     |  3 +--
+ drivers/ide/setup-pci.c       | 29 +++++------------------
+ drivers/ide/siimage.c         |  3 +--
+ drivers/ide/sis5513.c         |  3 +--
+ drivers/ide/sl82c105.c        |  3 +--
+ drivers/ide/slc90e66.c        |  3 +--
+ drivers/ide/triflex.c         | 24 +++++++------------
+ drivers/ide/via82cxxx.c       |  3 +--
+ include/linux/ide.h           |  8 +------
+ 32 files changed, 62 insertions(+), 155 deletions(-)
+
 -- 
 2.27.0
 
