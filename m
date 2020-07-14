@@ -1,164 +1,198 @@
-Return-Path: <SRS0=Kv9U=AY=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=ghXF=AZ=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A236C433E1
-	for <linux-ide@archiver.kernel.org>; Mon, 13 Jul 2020 17:39:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 737C7C433E2
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Jul 2020 07:33:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C18D2075D
-	for <linux-ide@archiver.kernel.org>; Mon, 13 Jul 2020 17:39:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4AA7F204EC
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Jul 2020 07:33:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="pWthblwx"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="hdBHGgcX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730182AbgGMRj6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 13 Jul 2020 13:39:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59176 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729703AbgGMRj6 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Jul 2020 13:39:58 -0400
-Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 02858C061755;
-        Mon, 13 Jul 2020 10:39:58 -0700 (PDT)
-Received: by mail-pj1-x1043.google.com with SMTP id ls15so211698pjb.1;
-        Mon, 13 Jul 2020 10:39:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=o79HY/YJ97Muwh9uDvJ9rHuVKiZwBdetcBhADyrjYKw=;
-        b=pWthblwx4XS1nTxr4C2EivA/n5vv+TetehgxG5VGGx9WqnFEWfMCBfc0TnNl8a6oTs
-         L3u03MGf06on2PbEQEZWSOI0dG94IDHDfXJRjGW9GeBTbpgUdaGRHtvVGfonR50uo074
-         +x1A7PJp/jcmMqede3M99hONPcWyW0Wx9qATi6QChEEWYMqIuUhH1j8zgDgnu1kcE8oj
-         Nwy3nqR6yzT7vxGUz4koXImCaaHxMyBU5aZo70/4Saz8IHhuVGMZjIdO2kJPklUc78Or
-         EjOcY2VUetIeMyOywIeIKuyWWHsYHfK2Q7mH58ZxVIDSJGD61ZeRWT8LpUV6Hc0W5XOw
-         U9Aw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=o79HY/YJ97Muwh9uDvJ9rHuVKiZwBdetcBhADyrjYKw=;
-        b=DQHl7rtbmF8ENY0K/B1KNHNEbuGIj7jBMIrLG+niL1htVV7HXv0HzKViNewU8mhGyK
-         uzi1shucv1rEplRwGZa3EjttfhKGl0AlZzh3TWxr4wueWRraYtP6xGkufRZuxZOoklem
-         U9KvX5AKqU3OXt6iNM8MbIj+QvWRd78Fi0rtzqVji9W2RGZpqzLu/AtJQBsdiI6PGAtw
-         xKm3Ue1BAuu4TkrvYllr6awcZlCwXMqIGxTUDqwdngWPqBDm3r9UBebmcyx27HNidx8t
-         dWQlErTkbzwO2OvDUxecMuR/u5aodihSb11XmIeTXZoXZGcZnQwfzXBjXtDx+4bmqGJi
-         fbXQ==
-X-Gm-Message-State: AOAM53286xbZCBqhX+YXWOk/x0/aWZK6Qf4bv46Pw8MbF2JESpwg/eQO
-        2OS50UrsakC9oW1ba7e6oH0=
-X-Google-Smtp-Source: ABdhPJwFpk4uhnBWldMu3apGnerq6DPfo3aCG0/+xTt75ei2oqKCcpBQCcfgWekDts+hfCPSNpLScQ==
-X-Received: by 2002:a17:902:7008:: with SMTP id y8mr605240plk.85.1594661997540;
-        Mon, 13 Jul 2020 10:39:57 -0700 (PDT)
-Received: from varodek.iballbatonwifi.com ([103.105.153.67])
-        by smtp.gmail.com with ESMTPSA id w9sm186540pja.39.2020.07.13.10.39.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Jul 2020 10:39:57 -0700 (PDT)
-From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>,
+        id S1725801AbgGNHdA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 14 Jul 2020 03:33:00 -0400
+Received: from mailout1.w1.samsung.com ([210.118.77.11]:39474 "EHLO
+        mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725306AbgGNHc7 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jul 2020 03:32:59 -0400
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+        by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20200714073257euoutp0122ba8fc3c353174ff72e4a4468a4c839~hjhgtm5jG2314723147euoutp01Q
+        for <linux-ide@vger.kernel.org>; Tue, 14 Jul 2020 07:32:57 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20200714073257euoutp0122ba8fc3c353174ff72e4a4468a4c839~hjhgtm5jG2314723147euoutp01Q
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1594711977;
+        bh=iw0HeiMRpihqbVCSNrmwScv7BrswpTC0PE3gJ25M4go=;
+        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
+        b=hdBHGgcXcu7jb4Wd204Xe+ZFxIwLbr1u7/lX9MJOSUnRQGsdM1hfiJBGnVvYLI0Zo
+         f+Iv4Yl0/PAJUoQRbSOoMTG/5/QmQIOqpOxgADG+5NOPeMmXKldgh3pwDbXUqrE0fJ
+         cT7CycX997widcuVptxXk0sJJtLxwfIBDY5wLFdY=
+Received: from eusmges2new.samsung.com (unknown [203.254.199.244]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+        20200714073257eucas1p21ef036b4a814be1f9b5147dac7013aa1~hjhgX_8AK1514215142eucas1p2E;
+        Tue, 14 Jul 2020 07:32:57 +0000 (GMT)
+Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
+        eusmges2new.samsung.com (EUCPMTA) with SMTP id 24.8A.05997.9AF5D0F5; Tue, 14
+        Jul 2020 08:32:57 +0100 (BST)
+Received: from eusmtrp2.samsung.com (unknown [182.198.249.139]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
+        20200714073256eucas1p13ebe9585c29b766e48506400ba91a8ed~hjhgFvVYd2093720937eucas1p1m;
+        Tue, 14 Jul 2020 07:32:56 +0000 (GMT)
+Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
+        eusmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20200714073256eusmtrp220c20a2722452484e6af4300f87aa0c8~hjhgFDwRJ2064020640eusmtrp2I;
+        Tue, 14 Jul 2020 07:32:56 +0000 (GMT)
+X-AuditID: cbfec7f4-677ff7000000176d-01-5f0d5fa9f24a
+Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
+        eusmgms1.samsung.com (EUCPMTA) with SMTP id 2C.FC.06314.8AF5D0F5; Tue, 14
+        Jul 2020 08:32:56 +0100 (BST)
+Received: from [106.120.51.71] (unknown [106.120.51.71]) by
+        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200714073256eusmtip2ff5b743b8bba026dd992b40f53351ec0~hjhfnSMES1117911179eusmtip2q;
+        Tue, 14 Jul 2020 07:32:56 +0000 (GMT)
+Subject: Re: [PATCH v3 0/3] drivers: ide: use generic power management
+To:     Vaibhav Gupta <vaibhavgupta40@gmail.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>, bjorn@helgaas.com,
         Vaibhav Gupta <vaibhav.varodek@gmail.com>,
-        "David S. Miller" <davem@davemloft.net>
-Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
         linux-kernel@vger.kernel.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
         skhan@linuxfoundation.org, linux-ide@vger.kernel.org
-Subject: [PATCH v3 3/3] ide: delkin_cb: use generic power management
-Date:   Mon, 13 Jul 2020 23:06:13 +0530
-Message-Id: <20200713173613.2095-4-vaibhavgupta40@gmail.com>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20200713173613.2095-1-vaibhavgupta40@gmail.com>
-References: <20200713173613.2095-1-vaibhavgupta40@gmail.com>
+From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Message-ID: <3b26bfff-7a42-7bbe-2050-51fe1ce96d4e@samsung.com>
+Date:   Tue, 14 Jul 2020 09:32:56 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+        Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20200713173613.2095-1-vaibhavgupta40@gmail.com>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrBKsWRmVeSWpSXmKPExsWy7djPc7or43njDa62cVgsacqwaLx/kdFi
+        zvkWFotXZ9ayWRzb8YjJouvxCxaLy7vmsFnsnb6M1WLHnU4miyV73rM6cHlsWXmTyWPnrLvs
+        Hgs2lXpsO3SNxWPTqk42j/1z17B7/P4xmdHj8ya5AI4oLpuU1JzMstQifbsEroxbR9tYCw5K
+        VFyZ+pq5gbFFqIuRk0NCwERi6qV5jF2MXBxCAisYJT5dWsYC4XxhlOh59hEq85lR4u+Wy+ww
+        Ld1zrjJDJJYzStx52QBV9ZZR4ujmKWBVwgJuEmfW/WEBsUUEdCQuHZ3FBGIzC+xjkti01BXE
+        ZhOwkpjYvooRxOYVsJPYv/AHWC+LgKrE353HmEFsUYEIiU8PDrNC1AhKnJz5BGwmp4CtxNS5
+        x9ggZopL3HoyH2q+vMT2t3PArpMQeMQu8WXHUiaIs10kOreeYIawhSVeHd8C9Y6MxP+dIM0g
+        DeuA/ux4AdW9nVFi+eR/bBBV1hJ3zv0CsjmAVmhKrN+lDxF2lNhx5CILSFhCgE/ixltBiCP4
+        JCZtm84MEeaV6GiDBraaxIZlG9hg1nbtXMk8gVFpFpLXZiF5ZxaSd2Yh7F3AyLKKUTy1tDg3
+        PbXYKC+1XK84Mbe4NC9dLzk/dxMjMH2d/nf8yw7GXX+SDjEKcDAq8fBK+PPEC7EmlhVX5h5i
+        lOBgVhLhdTp7Ok6INyWxsiq1KD++qDQntfgQozQHi5I4r/Gil7FCAumJJanZqakFqUUwWSYO
+        TqkGxllGK1T+t02snX+kTVgs3f33Lp7wt0uOHLtVsuCebuSixV5dy+6bfl3+69ddo/4JK4Us
+        qpLtPA+uNZ+wI8l4jnQ335sfIdnhVUFNyZ4T4l1cQ93TpeTWfQwWibVMvTPr+tk7UzlPNU0u
+        viLP/Kj3ibxqW0L2teLlhjo2oV0/1zdufFPmnP5FSomlOCPRUIu5qDgRAPKpCiJbAwAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrJIsWRmVeSWpSXmKPExsVy+t/xe7or4nnjDY6tNLFY0pRh0Xj/IqPF
+        nPMtLBavzqxlszi24xGTRdfjFywWl3fNYbPYO30Zq8WOO51MFkv2vGd14PLYsvImk8fOWXfZ
+        PRZsKvXYdugai8emVZ1sHvvnrmH3+P1jMqPH501yARxRejZF+aUlqQoZ+cUltkrRhhZGeoaW
+        FnpGJpZ6hsbmsVZGpkr6djYpqTmZZalF+nYJehm3jraxFhyUqLgy9TVzA2OLUBcjJ4eEgIlE
+        95yrzF2MXBxCAksZJa4dbmHsYuQASshIHF9fBlEjLPHnWhcbRM1rRonje18zgSSEBdwkzqz7
+        wwJiiwjoSFw6OosJpIhZYB+TxPmFj8ASQgI2Ejs27QJrYBOwkpjYvooRxOYVsJPYv/AHO4jN
+        IqAq8XfnMWYQW1QgQuLwjllQNYISJ2c+AZvDKWArMXXuMTYQm1lAXeLPvEvMELa4xK0n85kg
+        bHmJ7W/nME9gFJqFpH0WkpZZSFpmIWlZwMiyilEktbQ4Nz232FCvODG3uDQvXS85P3cTIzBa
+        tx37uXkH46WNwYcYBTgYlXh4Jfx54oVYE8uKK3MPMUpwMCuJ8DqdPR0nxJuSWFmVWpQfX1Sa
+        k1p8iNEU6LmJzFKiyfnARJJXEm9oamhuYWlobmxubGahJM7bIXAwRkggPbEkNTs1tSC1CKaP
+        iYNTqoHRwnDzPIbH5vtKFALM2F6vctJa0XDI4u172SebLok+7vfXUdc+P8dibYCgqLXTlb8v
+        J3zT+lXgrHQ05d0qn3IHzVjurnbP/yE76/knHdGqn/btqkGJRefMDZNEw6pcEp0/8T7j+uRd
+        7rKSKXf/l545/dUXNX3/10w01a3Y/b+CaelDuYsLyjqVWIozEg21mIuKEwGKiYcV7AIAAA==
+X-CMS-MailID: 20200714073256eucas1p13ebe9585c29b766e48506400ba91a8ed
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-RootMTR: 20200714073256eucas1p13ebe9585c29b766e48506400ba91a8ed
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20200714073256eucas1p13ebe9585c29b766e48506400ba91a8ed
+References: <20200713173613.2095-1-vaibhavgupta40@gmail.com>
+        <CGME20200714073256eucas1p13ebe9585c29b766e48506400ba91a8ed@eucas1p1.samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-With the support of generic PM callbacks, drivers no longer need to use
-legacy .suspend() and .resume() in which they had to maintain PCI states
-changes and device's power state themselves. All required operations are
-done by PCI core.
 
-After converting it into generic model, suspend() became an empty function.
-Hence, it is defined as NULL.
+Hi,
 
-Compile-tested only.
+On 7/13/20 7:36 PM, Vaibhav Gupta wrote:
+> Linux Kernel Mentee: Remove Legacy Power Management.
+> 
+> The purpose of this patch series is to remove legacy power management callbacks
+> from ide drivers.
+> 
+> The suspend() and resume() callbacks operations are still invoking
+> pci_save/restore_state(), pci_set_power_state(), pci_enable/disable_state(),
+> etc. and handling the power management themselves, which is not recommended.
+> 
+> The conversion requires the removal of the those function calls and change the
+> callback definition accordingly and make use of dev_pm_ops structure.
 
-Signed-off-by: Vaibhav Gupta <vaibhavgupta40@gmail.com>
----
- drivers/ide/delkin_cb.c | 32 ++++++--------------------------
- 1 file changed, 6 insertions(+), 26 deletions(-)
+IDE subsystem (drivers/ide/) is deprecated and has been superseded by libata
+subsystem (drivers/ata/).
 
-diff --git a/drivers/ide/delkin_cb.c b/drivers/ide/delkin_cb.c
-index 300daabaa575..a711b64dbd1c 100644
---- a/drivers/ide/delkin_cb.c
-+++ b/drivers/ide/delkin_cb.c
-@@ -123,39 +123,18 @@ delkin_cb_remove (struct pci_dev *dev)
- 	pci_disable_device(dev);
- }
- 
--#ifdef CONFIG_PM
--static int delkin_cb_suspend(struct pci_dev *dev, pm_message_t state)
--{
--	pci_save_state(dev);
--	pci_disable_device(dev);
--	pci_set_power_state(dev, pci_choose_state(dev, state));
--
--	return 0;
--}
-+#define delkin_cb_suspend NULL
- 
--static int delkin_cb_resume(struct pci_dev *dev)
-+static int __maybe_unused delkin_cb_resume(struct device *dev_d)
- {
-+	struct pci_dev *dev = to_pci_dev(dev_d);
- 	struct ide_host *host = pci_get_drvdata(dev);
--	int rc;
--
--	pci_set_power_state(dev, PCI_D0);
--
--	rc = pci_enable_device(dev);
--	if (rc)
--		return rc;
--
--	pci_restore_state(dev);
--	pci_set_master(dev);
- 
- 	if (host->init_chipset)
- 		host->init_chipset(dev);
- 
- 	return 0;
- }
--#else
--#define delkin_cb_suspend NULL
--#define delkin_cb_resume NULL
--#endif
- 
- static struct pci_device_id delkin_cb_pci_tbl[] = {
- 	{ 0x1145, 0xf021, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-@@ -164,13 +143,14 @@ static struct pci_device_id delkin_cb_pci_tbl[] = {
- };
- MODULE_DEVICE_TABLE(pci, delkin_cb_pci_tbl);
- 
-+static SIMPLE_DEV_PM_OPS(delkin_cb_pm_ops, delkin_cb_suspend, delkin_cb_resume);
-+
- static struct pci_driver delkin_cb_pci_driver = {
- 	.name		= "Delkin-ASKA-Workbit Cardbus IDE",
- 	.id_table	= delkin_cb_pci_tbl,
- 	.probe		= delkin_cb_probe,
- 	.remove		= delkin_cb_remove,
--	.suspend	= delkin_cb_suspend,
--	.resume		= delkin_cb_resume,
-+	.driver.pm	= &delkin_cb_pm_ops,
- };
- 
- module_pci_driver(delkin_cb_pci_driver);
--- 
-2.27.0
+libata drivers have the same issue so please concentrate on fixing them
+first. Later (if desirable) changes can be back-ported to drivers/ide/.
+
+> All patches are compile-tested only.
+
+This patchset needs (at least) some basic testing. It should be easier with
+libata subsystem as it also support SATA controllers and devices.
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
+
+> v3:
+>     - Modpost error for undefined reference by Kbuild in v1.
+>     - Another approach to disable PM in drivers/ide/triflex.c suggested by
+>       Bjorn Helgaas in v2.
+> 
+> Test tools:
+>     - Compiler: gcc (GCC) 10.1.0
+>     - allmodconfig build: make -j$(nproc) W=1 all
+> 
+> Vaibhav Gupta (3):
+>   ide: use generic power management
+>   ide: sc1200: use generic power management
+>   ide: delkin_cb: use generic power management
+> 
+>  drivers/ide/aec62xx.c         |  3 +--
+>  drivers/ide/alim15x3.c        |  3 +--
+>  drivers/ide/amd74xx.c         |  3 +--
+>  drivers/ide/atiixp.c          |  3 +--
+>  drivers/ide/cmd64x.c          |  3 +--
+>  drivers/ide/cs5520.c          |  3 +--
+>  drivers/ide/cs5530.c          |  3 +--
+>  drivers/ide/cs5535.c          |  3 +--
+>  drivers/ide/cs5536.c          |  3 +--
+>  drivers/ide/cy82c693.c        |  3 +--
+>  drivers/ide/delkin_cb.c       | 32 +++++---------------------
+>  drivers/ide/hpt366.c          |  3 +--
+>  drivers/ide/ide-pci-generic.c |  3 +--
+>  drivers/ide/it8172.c          |  3 +--
+>  drivers/ide/it8213.c          |  3 +--
+>  drivers/ide/it821x.c          |  3 +--
+>  drivers/ide/jmicron.c         |  3 +--
+>  drivers/ide/ns87415.c         |  3 +--
+>  drivers/ide/opti621.c         |  3 +--
+>  drivers/ide/pdc202xx_new.c    |  3 +--
+>  drivers/ide/pdc202xx_old.c    |  3 +--
+>  drivers/ide/piix.c            |  3 +--
+>  drivers/ide/sc1200.c          | 43 ++++++++++++-----------------------
+>  drivers/ide/serverworks.c     |  3 +--
+>  drivers/ide/setup-pci.c       | 29 +++++------------------
+>  drivers/ide/siimage.c         |  3 +--
+>  drivers/ide/sis5513.c         |  3 +--
+>  drivers/ide/sl82c105.c        |  3 +--
+>  drivers/ide/slc90e66.c        |  3 +--
+>  drivers/ide/triflex.c         | 24 +++++++------------
+>  drivers/ide/via82cxxx.c       |  3 +--
+>  include/linux/ide.h           |  8 +------
+>  32 files changed, 62 insertions(+), 155 deletions(-)
+> 
 
