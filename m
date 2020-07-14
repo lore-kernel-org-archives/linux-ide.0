@@ -2,134 +2,159 @@ Return-Path: <SRS0=ghXF=AZ=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FF5FC433E4
-	for <linux-ide@archiver.kernel.org>; Tue, 14 Jul 2020 08:25:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC244C433E7
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Jul 2020 08:50:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4DE5E21835
-	for <linux-ide@archiver.kernel.org>; Tue, 14 Jul 2020 08:25:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD30D21D6C
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Jul 2020 08:50:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Darf2Q0a"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="XYw1XUIH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726660AbgGNIZx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 14 Jul 2020 04:25:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54168 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726510AbgGNIZw (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jul 2020 04:25:52 -0400
-Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1AD0C061755;
-        Tue, 14 Jul 2020 01:25:52 -0700 (PDT)
-Received: by mail-pg1-x541.google.com with SMTP id k27so7291378pgm.2;
-        Tue, 14 Jul 2020 01:25:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=ZWUwJu20ntegLxeLLUqqY9GoM4PIf6WDr0U1QRPCyz8=;
-        b=Darf2Q0a0jpRgttYMoFvMgwq+LwapC98MDClJbfjYU8niFJTsvIYg6qqG7+YyGSl4g
-         BVANOvMGHizpFJIsXFlORc9YkqZfSREZPfQLDljPrd7WdN//n51wc8ZJ2z6bJZCuYdP4
-         JfhNJ7sK5U/fsWuDuMkaknhLm0fmeiLZrOhJl5rer8nGCqprfezgCAsgCaP86lWGd/RD
-         rz5h0+PEC7Fnob8KbAu/ELHee03RVnZHqTaarQbQcpTjzIm7dXudutq+AT812XR4rye2
-         JWfMWoZkhXeBCrKavWJswfO1LkV6ma0ssNQxlxNEG8NPUQBYt5v9y459teksLszUzRjl
-         yrVg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=ZWUwJu20ntegLxeLLUqqY9GoM4PIf6WDr0U1QRPCyz8=;
-        b=Vp1qHrWE7u27JgmPkKDYhJdYiyJtDX7CDTmoqDRFOCnMIL/lEaxIWp4wCi8/LiVZ5n
-         D9krTzUSGt1vPq4THjGo6XwjpeFMHmxwzWqh1D4YAQha3IWQsQ6DlqRoJ4BCFw0dnl/H
-         l6qvntsytDvvwX0fA7/BYrM/bhYVpAsAm4czbpfECBbplnaXYVvvOfUt/LSoBLIUSkLT
-         Z02+xoUdbayL7wyRW5DVtGX6zMxpFr2EZK8yg8M0ICyArAMCaZVSKBr06ojQyW5M1aSo
-         b4QR7elzQEfkMlOJjj3+Qb0b+egYhYf+4B3+d7E2WTvMw6/NDeohVE+rynTjmVh832Qj
-         qRIQ==
-X-Gm-Message-State: AOAM531dFlJpMTi0hLC2QBcaskf9dRnJnny6L5bS0DqYrmzPa+Sk0QYY
-        jyVuWOjfT1khO1wp8T13dV1LcTg5aMs=
-X-Google-Smtp-Source: ABdhPJygF5X1M5e9T6GC2BhRd2ugrdwtEBpQe4L+h8fYZn97BoUouscBcjxQDAIzI2+9+Tnii+xgvQ==
-X-Received: by 2002:a63:9342:: with SMTP id w2mr2554954pgm.20.1594715152238;
-        Tue, 14 Jul 2020 01:25:52 -0700 (PDT)
-Received: from gmail.com ([103.105.153.67])
-        by smtp.gmail.com with ESMTPSA id i21sm16683167pfa.18.2020.07.14.01.25.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 14 Jul 2020 01:25:51 -0700 (PDT)
-Date:   Tue, 14 Jul 2020 13:54:26 +0530
-From:   Vaibhav Gupta <vaibhav.varodek@gmail.com>
-To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, bjorn@helgaas.com,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-kernel@vger.kernel.org,
-        linux-kernel-mentees@lists.linuxfoundation.org,
-        skhan@linuxfoundation.org, linux-ide@vger.kernel.org
-Subject: Re: [PATCH v3 0/3] drivers: ide: use generic power management
-Message-ID: <20200714082426.GA5817@gmail.com>
-References: <20200713173613.2095-1-vaibhavgupta40@gmail.com>
- <CGME20200714073256eucas1p13ebe9585c29b766e48506400ba91a8ed@eucas1p1.samsung.com>
- <3b26bfff-7a42-7bbe-2050-51fe1ce96d4e@samsung.com>
- <20200714075247.GA4859@gmail.com>
- <834eb293-bd4f-626c-4558-fbf71a5999f0@samsung.com>
+        id S1726845AbgGNIuv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 14 Jul 2020 04:50:51 -0400
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:52598 "EHLO
+        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726472AbgGNIun (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jul 2020 04:50:43 -0400
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200714085041euoutp02832e7574fcdaec2e94eb42fc108548b6~hklYYYh3D0956609566euoutp02B
+        for <linux-ide@vger.kernel.org>; Tue, 14 Jul 2020 08:50:41 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200714085041euoutp02832e7574fcdaec2e94eb42fc108548b6~hklYYYh3D0956609566euoutp02B
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1594716641;
+        bh=VLFLNyWnSpIRJnk0XeNogmxEcT9OMWW6Yb73NwYw8Y8=;
+        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
+        b=XYw1XUIHm5U031DLpMWPTb5L2/uFSHBOawwlx12SaAN0iyuTQ8+SVhRl/gHIOa3KK
+         wOw0vSe94ENPuu+pllU/598yZqjVR0D9BCjtj0jMG60dd+DuOMxeW2jf4Okg2jTDpL
+         mq88yy8pDJIKHCw3SwCzK0z5d/wkAv+ba2WgiB48=
+Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+        20200714085040eucas1p2aaa79e2d5dc64673223ccf2a51b0ef18~hklX3OkFv0510105101eucas1p2H;
+        Tue, 14 Jul 2020 08:50:40 +0000 (GMT)
+Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
+        eusmges3new.samsung.com (EUCPMTA) with SMTP id 73.4E.06318.0E17D0F5; Tue, 14
+        Jul 2020 09:50:40 +0100 (BST)
+Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
+        eucas1p1.samsung.com (KnoxPortal) with ESMTPA id
+        20200714085040eucas1p1466b8ae92a0931477aa7e7896782bb75~hklXZqd-60985509855eucas1p1J;
+        Tue, 14 Jul 2020 08:50:40 +0000 (GMT)
+Received: from eusmgms1.samsung.com (unknown [182.198.249.179]) by
+        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20200714085040eusmtrp16a8ff47070fcb695f8df8e4225a46c9f~hklXZEA4n1070310703eusmtrp1a;
+        Tue, 14 Jul 2020 08:50:40 +0000 (GMT)
+X-AuditID: cbfec7f5-371ff700000018ae-27-5f0d71e09d70
+Received: from eusmtip1.samsung.com ( [203.254.199.221]) by
+        eusmgms1.samsung.com (EUCPMTA) with SMTP id 44.49.06314.0E17D0F5; Tue, 14
+        Jul 2020 09:50:40 +0100 (BST)
+Received: from [106.120.51.71] (unknown [106.120.51.71]) by
+        eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
+        20200714085040eusmtip1096180abd51ac9e3b88b39447902e762~hklXAJcP60922009220eusmtip1d;
+        Tue, 14 Jul 2020 08:50:40 +0000 (GMT)
+Subject: Re: [RFC PATCH v3 5/8] ata_dev_printk: Use dev_printk
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     tasleson@redhat.com, linux-ide@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Message-ID: <dff66d00-e6c3-f9ef-3057-27c60e0bfc11@samsung.com>
+Date:   Tue, 14 Jul 2020 10:50:39 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+        Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <834eb293-bd4f-626c-4558-fbf71a5999f0@samsung.com>
+In-Reply-To: <20200714081750.GB862637@kroah.com>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprIKsWRmVeSWpSXmKPExsWy7djPc7oPCnnjDa59t7JoXryezWLvLW2L
+        YzseMVl0X9/BZnHx3k12B1aP/XPXsHu833eVzePzJrkA5igum5TUnMyy1CJ9uwSujNZzYQVP
+        eCs+T7rM2MC4hLuLkYNDQsBE4k2rQBcjF4eQwApGibOPJzN1MXICOV8YJXbs0oKwPzNKPD7o
+        AWKD1O94cYQVomE5o8TJCZNYIJy3jBLbV15kBJkqLGAnsfhnIUiDiICxRP/ZWewgNrNArsTF
+        6w0sIDabgJXExPZVjCA2L1D5m4/3weIsAqoSBw9sAKsXFYiQ+PTgMCtEjaDEyZlPwGo4BQwk
+        DretZYWYKS5x68l8JghbXmL72znMEIdOZpc4/YwPwnaR+P7zMzuELSzx6vgWKFtG4vTkHrD7
+        JQTWMUr87XjBDOFsZ5RYPvkfG0SVtcSdc7/YQB5jFtCUWL9LHyLsKHH3yDsWSCjySdx4Kwhx
+        A5/EpG3TmSHCvBIdbUIQ1WoSG5ZtYINZ27VzJfMERqVZSD6bheSbWUi+mYWwdwEjyypG8dTS
+        4tz01GLjvNRyveLE3OLSvHS95PzcTYzAhHL63/GvOxj3/Uk6xCjAwajEwyvhzxMvxJpYVlyZ
+        e4hRgoNZSYTX6ezpOCHelMTKqtSi/Pii0pzU4kOM0hwsSuK8xotexgoJpCeWpGanphakFsFk
+        mTg4pRoYszeLGAi8ruDYuHHXl7WF3JwN09+mZ9llzzku7sSwMDtBs+GwufH6zQ5KotI+Dz4v
+        7HmWvkGrJ87CKfZE67xH33vn5HP8FH/8oe7Bze33nidbsm7nZpoxi+3dfBGbIMNA1d/B5z/c
+        v+JRGL0xqH8X8/mGUNmDXOxJXretz5oW11xqSTbewMOlxFKckWioxVxUnAgAMqAYaSQDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrGIsWRmVeSWpSXmKPExsVy+t/xu7oPCnnjDdbfkLBoXryezWLvLW2L
+        YzseMVl0X9/BZnHx3k12B1aP/XPXsHu833eVzePzJrkA5ig9m6L80pJUhYz84hJbpWhDCyM9
+        Q0sLPSMTSz1DY/NYKyNTJX07m5TUnMyy1CJ9uwS9jNZzYQVPeCs+T7rM2MC4hLuLkZNDQsBE
+        YseLI6xdjFwcQgJLGSWO/n3O1sXIAZSQkTi+vgyiRljiz7UuNoia14wSRz5MAasRFrCTWPyz
+        EKRGRMBYov/sLHYQm1kgV+L9gTnMEPWNzBJzNnQxgyTYBKwkJravYgSxeYF633y8zwJiswio
+        Shw8sAGsWVQgQuLwjllQNYISJ2c+AavhFDCQONy2lhVigbrEn3mXmCFscYlbT+YzQdjyEtvf
+        zmGewCg0C0n7LCQts5C0zELSsoCRZRWjSGppcW56brGhXnFibnFpXrpecn7uJkZgHG079nPz
+        DsZLG4MPMQpwMCrx8Er488QLsSaWFVfmHmKU4GBWEuF1Ons6Tog3JbGyKrUoP76oNCe1+BCj
+        KdBzE5mlRJPzgTGeVxJvaGpobmFpaG5sbmxmoSTO2yFwMEZIID2xJDU7NbUgtQimj4mDU6qB
+        0eRTOu/X1UpM33b/dXs+8VeOj9zZS+FnNyzbeGLmdF2GE52eW3kZ3zy/dsKc4ZjHrJKi+qWt
+        hnwcxh3feD6YP7See7lvit7KxvpbEwOlff5Y9u6ds7HCbN+nw1fzF+RbPXijZ7EjuP5Owv/n
+        3TVpHm8elbne4jgZdGeJua7dYVNd1lkrH+Vx1imxFGckGmoxFxUnAgB3pXUJuQIAAA==
+X-CMS-MailID: 20200714085040eucas1p1466b8ae92a0931477aa7e7896782bb75
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-RootMTR: 20200624103532eucas1p2c0988207e4dfc2f992d309b75deac3ee
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20200624103532eucas1p2c0988207e4dfc2f992d309b75deac3ee
+References: <20200623191749.115200-1-tasleson@redhat.com>
+        <20200623191749.115200-6-tasleson@redhat.com>
+        <CGME20200624103532eucas1p2c0988207e4dfc2f992d309b75deac3ee@eucas1p2.samsung.com>
+        <d817c9dd-6852-9233-5f61-1c0bc0f65ca4@samsung.com>
+        <7ed08b94-755f-baab-0555-b4e454405729@redhat.com>
+        <cfff719b-dc12-a06a-d0ee-4165323171de@samsung.com>
+        <20200714081750.GB862637@kroah.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Jul 14, 2020 at 10:19:06AM +0200, Bartlomiej Zolnierkiewicz wrote:
-> 
-> On 7/14/20 9:52 AM, Vaibhav Gupta wrote:
-> > On Tue, Jul 14, 2020 at 09:32:56AM +0200, Bartlomiej Zolnierkiewicz wrote:
-> >>
-> >>
-> >> IDE subsystem (drivers/ide/) is deprecated and has been superseded by libata
-> >> subsystem (drivers/ata/).
-> >>
-> >> libata drivers have the same issue so please concentrate on fixing them
-> >> first. Later (if desirable) changes can be back-ported to drivers/ide/.
-> >>
-> > Hello, (drivers/ide) and (drivers/ata) are the two major families, I am working
-> > on, for generic PM upgradation. I was bit unaware about priority, and also in
-> > the last, both ide and ata drivers have to be upgraded.
-> 
-> Well, drivers/ide/ is scheduled for removal in 2021
-> (it even prints the warning during initialization of
-> every host driver)..
-Okay then, I will start with ata family.
 
-Thanks,
-Vaibhav Gupta
+On 7/14/20 10:17 AM, Greg Kroah-Hartman wrote:
+> On Tue, Jul 14, 2020 at 10:06:05AM +0200, Bartlomiej Zolnierkiewicz wrote:
+>>
+>> Hi Tony,
+>>
+>> On 7/9/20 11:18 PM, Tony Asleson wrote:
+>>> Hi Bartlomiej,
+>>>
+>>> On 6/24/20 5:35 AM, Bartlomiej Zolnierkiewicz wrote:
+>>>> The root source of problem is that libata transport uses different
+>>>> naming scheme for ->tdev devices (please see dev_set_name() in
+>>>> ata_t{dev,link,port}_add()) than libata core for its logging
+>>>> functionality (ata_{dev,link,port}_printk()).
+>>>>
+>>>> Since libata transport is part of sysfs ABI we should be careful
+>>>> to not break it so one idea for solving the issue is to convert
+>>>> ata_t{dev,link,port}_add() to use libata logging naming scheme and
+>>>> at the same time add sysfs symlinks for the old libata transport
+>>>> naming scheme.
 > 
-> Best regards,
-> --
-> Bartlomiej Zolnierkiewicz
-> Samsung R&D Institute Poland
-> Samsung Electronics
-> 
-> >>> All patches are compile-tested only.
-> >>
-> >> This patchset needs (at least) some basic testing. It should be easier with
-> >> libata subsystem as it also support SATA controllers and devices.
-> > To upgrade PM in (drivers/ide) I have made .suspend() and .resume() static. Then
-> > bind them in "struct dev_pm_ops" variable (ide_pci_pm_ops) and expose it using
-> > EXPORT_SYMBOL_GPL(). This has affected 30 drivers. I was hoping if ide changes
-> > can be tested/verified, specially [PATCH 1/3]. As then, I will be sure about
-> > similar change in ata, as it also requires similar alteration.
-> > 
-> > Thanks
-> > Vaibhav Gupta
-> > 
-> >>
-> >> Best regards,
-> >> --
-> >> Bartlomiej Zolnierkiewicz
-> >> Samsung R&D Institute Poland
-> >> Samsung Electronics
-> >>
+> Given the age of the current implementation, what suddenly broke that
+> requires this to change at this point in time?
+
+Unfortunately when adding libata transport classes (+ at the same
+time embedding struct device-s in libata dev/link/port objects) in
+the past someone has decided to use different naming scheme than
+the one used for standard libata log messages (which use printk()
+without any reference to struct device-s in libata dev/link/port
+objects).
+
+Now we would like to use dev_printk() for standard libata logging
+functionality as this is required for 2 pending patchsets:
+
+- move DPRINTK to dynamic debugging (from Hannes Reinecke)
+
+- add persistent durable identifier storage log messages (from Tony)
+
+but we don't want to change standard libata log messages and
+confuse users..
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
