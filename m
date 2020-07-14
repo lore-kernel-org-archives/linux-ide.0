@@ -2,136 +2,228 @@ Return-Path: <SRS0=ghXF=AZ=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD07DC433E2
-	for <linux-ide@archiver.kernel.org>; Tue, 14 Jul 2020 08:17:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 390DCC433DF
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Jul 2020 08:19:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B1D521835
-	for <linux-ide@archiver.kernel.org>; Tue, 14 Jul 2020 08:17:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1594714673;
-	bh=nKnSg22CPcnQVI12S7+deTddw0rpP4aIXgukl5B6K8c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=bW+7MndDlo9cTVWDzpECtHz/PiQUnSxtYPAFSW+dFhn4/Q/0BUPcz00MX/FHvxMld
-	 gaxl9jzCVn2ea2Jg06WKvCmuPrp+XvFF2mYhVEjQ62NvVhkp6N8n9lg237gHX1pgt8
-	 Oe8CUj0pTNXYkwDEZ/FcjE5zuqyzeg+O0QnitCx8=
+	by mail.kernel.org (Postfix) with ESMTP id 0E10921841
+	for <linux-ide@archiver.kernel.org>; Tue, 14 Jul 2020 08:19:11 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="hRaITEAB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725884AbgGNIRx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 14 Jul 2020 04:17:53 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53936 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725793AbgGNIRw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 14 Jul 2020 04:17:52 -0400
-Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5CCE9217D9;
-        Tue, 14 Jul 2020 08:17:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1594714672;
-        bh=nKnSg22CPcnQVI12S7+deTddw0rpP4aIXgukl5B6K8c=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=neXZydRlXLz7DfZ8j/UJVAIIskDRuG7kJMLKPa0EYkaGKPubLxQe+dQBcID3DGO71
-         3It0lqY3c9Wnh5tSKKizV6le0JpE3C5QW4M9+iN/0N23WtQdVIt3PtI921hwKT3ejb
-         w9wmqQicGyMWWU+f2EudgKvyQCOZJQ8bt1ebCLgs=
-Date:   Tue, 14 Jul 2020 10:17:50 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc:     tasleson@redhat.com, linux-ide@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Subject: Re: [RFC PATCH v3 5/8] ata_dev_printk: Use dev_printk
-Message-ID: <20200714081750.GB862637@kroah.com>
-References: <20200623191749.115200-1-tasleson@redhat.com>
- <20200623191749.115200-6-tasleson@redhat.com>
- <CGME20200624103532eucas1p2c0988207e4dfc2f992d309b75deac3ee@eucas1p2.samsung.com>
- <d817c9dd-6852-9233-5f61-1c0bc0f65ca4@samsung.com>
- <7ed08b94-755f-baab-0555-b4e454405729@redhat.com>
- <cfff719b-dc12-a06a-d0ee-4165323171de@samsung.com>
+        id S1725833AbgGNITK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 14 Jul 2020 04:19:10 -0400
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:39642 "EHLO
+        mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725820AbgGNITK (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jul 2020 04:19:10 -0400
+Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
+        by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20200714081907euoutp025eff9d77e35d18114cc8170581f69749~hkJ0juing1989619896euoutp02w
+        for <linux-ide@vger.kernel.org>; Tue, 14 Jul 2020 08:19:07 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20200714081907euoutp025eff9d77e35d18114cc8170581f69749~hkJ0juing1989619896euoutp02w
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1594714747;
+        bh=3W48R5JZdOlotY4kDUq6GDCqsDBg3zDBeQZwRffH5cQ=;
+        h=Subject:To:Cc:From:Date:In-Reply-To:References:From;
+        b=hRaITEABU3SBPZEGubCdXFsCDoUyWDD7rOB02/zLfRreB8ulARj898kR7N2NpM323
+         A/10w0hCCieJgnIcQlR/VMZj7YUKvoT18f+6MheJsmIdX40Odqy42AvwQkKMHtsVxU
+         NDTn9lADp4CDjKbIJWus38iTd1uKTHzKfluajA/E=
+Received: from eusmges3new.samsung.com (unknown [203.254.199.245]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTP id
+        20200714081907eucas1p282d94245ef1c7790fa31b2383110eb27~hkJ0WjwWm2453224532eucas1p2T;
+        Tue, 14 Jul 2020 08:19:07 +0000 (GMT)
+Received: from eucas1p1.samsung.com ( [182.198.249.206]) by
+        eusmges3new.samsung.com (EUCPMTA) with SMTP id D2.29.06318.B7A6D0F5; Tue, 14
+        Jul 2020 09:19:07 +0100 (BST)
+Received: from eusmtrp1.samsung.com (unknown [182.198.249.138]) by
+        eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
+        20200714081906eucas1p2da1533c2e4e8983bb42b20199dc1f977~hkJz17urA2902729027eucas1p2I;
+        Tue, 14 Jul 2020 08:19:06 +0000 (GMT)
+Received: from eusmgms2.samsung.com (unknown [182.198.249.180]) by
+        eusmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20200714081906eusmtrp1546fb7b152d27cdb0d5186fda9460044~hkJz1S4Oo2221422214eusmtrp10;
+        Tue, 14 Jul 2020 08:19:06 +0000 (GMT)
+X-AuditID: cbfec7f5-38bff700000018ae-4c-5f0d6a7b0c0a
+Received: from eusmtip2.samsung.com ( [203.254.199.222]) by
+        eusmgms2.samsung.com (EUCPMTA) with SMTP id 31.A4.06017.A7A6D0F5; Tue, 14
+        Jul 2020 09:19:06 +0100 (BST)
+Received: from [106.120.51.71] (unknown [106.120.51.71]) by
+        eusmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20200714081906eusmtip2f23c200b846080fe8f5e3023cef37df5~hkJzT_jxK0594905949eusmtip2X;
+        Tue, 14 Jul 2020 08:19:06 +0000 (GMT)
+Subject: Re: [PATCH v3 0/3] drivers: ide: use generic power management
+To:     Vaibhav Gupta <vaibhav.varodek@gmail.com>
+Cc:     Vaibhav Gupta <vaibhavgupta40@gmail.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, bjorn@helgaas.com,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-kernel@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        skhan@linuxfoundation.org, linux-ide@vger.kernel.org
+From:   Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Message-ID: <834eb293-bd4f-626c-4558-fbf71a5999f0@samsung.com>
+Date:   Tue, 14 Jul 2020 10:19:06 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+        Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cfff719b-dc12-a06a-d0ee-4165323171de@samsung.com>
+In-Reply-To: <20200714075247.GA4859@gmail.com>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA02SbUhTYRTHeXbv7q7LK4/T2Kkka9A7aWXIpUIqQuaX3ijSyGzlbZabxa6z
+        rC+lsekQ1CyspWUyX0krMVtWFlOUnJlSiG5qokKmDiWN3pbmdpX89nvO+f+f/zlwaELWIl5O
+        n0tK5nRJKo2CkpJ1zb/aN189z8RtGRtbylrSEtjrnzsRW/DhBsmOtlVRbLN1UMSahkZI9mN9
+        AcW+zi8Vs9beTBFreTUh3i1V1lb0iJQvzH0SZVGNXlln6yKVNZWZlPJN4SOJ8s/PPKScqll5
+        kD4u3RXPac6lcLrQiFPShJHqenRxaPXl8ZxJ8hrqXmZCPjTg7WCdzBeZkJSW4XIEPSUPkfCY
+        RtBidFAelQxPIRjrWL/g6CvsnXeUIchyOQhB5EJw+1eqhwNwJLRVu0kPB+LNYGgwUh4Dgd+I
+        wP20C3kaFN4BucZKLzM4Atx3Z71pJF4Dt2ayvbwUR8O3gUaxoPGHd3eHvZ/64BBwPP3i1RBY
+        Do7hByKBg+G5q4DwhAHul4CpJE8sjL0PqiyDlMABMNpSKxE4COx5WaRgqEbwN2Nk3v0cQVne
+        zLxjJ/S2/55jei5iAzyuDxXKe8Da1El6yoD9oNvlLwzhBzfr8gmhzECGQSao18KT0ifUQqzp
+        RQWRgxTmRauZF61jXrSO+X9uESIrkZzT81o1x4clcZdCeJWW1yepQ85c0NagufOyz7R8t6IG
+        92kbwjRS+DJwwDdOJlal8KlaGwKaUAQye9/bT8qYeFXqFU53IU6n13C8Da2gSYWcCSv+GivD
+        alUyl8hxFzndQldE+yy/hsio0Y1tTK5huin2mPOM5qzTog2I2ZG76YdO1Kp5qQ78FG6UdhYP
+        hO9fdfjjifTrz97Z+3lmnQylMZsae6LlvdsiO8TliTiKG7edLg82SCpnj6odfUtKf7e1y20d
+        XHx7R8WdTqdvq4KauA87LxdONZiy+w+9jTlyL3FwOsiZriD5BNXWjYSOV/0DK4o4sFoDAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrJIsWRmVeSWpSXmKPExsVy+t/xe7pVWbzxBl+PGlssacqwaLx/kdFi
+        zvkWFotXZ9ayWRzb8YjJouvxCxaLy7vmsFnsnb6M1WLHnU4miyV73rM6cHlsWXmTyWPnrLvs
+        Hgs2lXpsO3SNxWPTqk42j/1z17B7/P4xmdHj8ya5AI4oPZui/NKSVIWM/OISW6VoQwsjPUNL
+        Cz0jE0s9Q2PzWCsjUyV9O5uU1JzMstQifbsEvYwX63YxFjxWrHgz4QNLA+MNyS5GTg4JAROJ
+        u3PvMHUxcnEICSxllDjwugfI4QBKyEgcX18GUSMs8edaFxtEzWtGiTdfW9lBEsICbhJn1v1h
+        AbFFBHQl2va1gxUxC+xnkng67x8zSEJI4CWjRNsDBRCbTcBKYmL7KkYQm1fATuLPzP9sIDaL
+        gKrElH/9YLaoQITE4R2zoGoEJU7OfAK2gFNAT+LWxudgNcwC6hJ/5l1ihrDFJW49mc8EYctL
+        bH87h3kCo9AsJO2zkLTMQtIyC0nLAkaWVYwiqaXFuem5xUZ6xYm5xaV56XrJ+bmbGIHRuu3Y
+        zy07GLveBR9iFOBgVOLhlfDniRdiTSwrrsw9xCjBwawkwut09nScEG9KYmVValF+fFFpTmrx
+        IUZToOcmMkuJJucDE0leSbyhqaG5haWhubG5sZmFkjhvh8DBGCGB9MSS1OzU1ILUIpg+Jg5O
+        qQbGvYt4i63iCxtUzJfocCrzuVyS+2C8duNVvzP2Wr+nPVumuVtG8O0F3g3Wn7Z2v1/4maO1
+        2aA4RGJ+FiffhEU2Nysc23dlNbU8mhpo/YBlr1tkE/Mel+ioq99eGFbWHj29ne/W28U/Mk0v
+        FApuOLfqXIOxXPyaM8+7tpXHlOzpkTe4FqpYW5GmxFKckWioxVxUnAgA/LvsgewCAAA=
+X-CMS-MailID: 20200714081906eucas1p2da1533c2e4e8983bb42b20199dc1f977
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-RootMTR: 20200714073256eucas1p13ebe9585c29b766e48506400ba91a8ed
+X-EPHeader: CA
+CMS-TYPE: 201P
+X-CMS-RootMailID: 20200714073256eucas1p13ebe9585c29b766e48506400ba91a8ed
+References: <20200713173613.2095-1-vaibhavgupta40@gmail.com>
+        <CGME20200714073256eucas1p13ebe9585c29b766e48506400ba91a8ed@eucas1p1.samsung.com>
+        <3b26bfff-7a42-7bbe-2050-51fe1ce96d4e@samsung.com>
+        <20200714075247.GA4859@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Jul 14, 2020 at 10:06:05AM +0200, Bartlomiej Zolnierkiewicz wrote:
+
+On 7/14/20 9:52 AM, Vaibhav Gupta wrote:
+> On Tue, Jul 14, 2020 at 09:32:56AM +0200, Bartlomiej Zolnierkiewicz wrote:
+>>
+>> Hi,
+>>
+>> On 7/13/20 7:36 PM, Vaibhav Gupta wrote:
+>>> Linux Kernel Mentee: Remove Legacy Power Management.
+>>>
+>>> The purpose of this patch series is to remove legacy power management callbacks
+>>> from ide drivers.
+>>>
+>>> The suspend() and resume() callbacks operations are still invoking
+>>> pci_save/restore_state(), pci_set_power_state(), pci_enable/disable_state(),
+>>> etc. and handling the power management themselves, which is not recommended.
+>>>
+>>> The conversion requires the removal of the those function calls and change the
+>>> callback definition accordingly and make use of dev_pm_ops structure.
+>>
+>> IDE subsystem (drivers/ide/) is deprecated and has been superseded by libata
+>> subsystem (drivers/ata/).
+>>
+>> libata drivers have the same issue so please concentrate on fixing them
+>> first. Later (if desirable) changes can be back-ported to drivers/ide/.
+>>
+> Hello, (drivers/ide) and (drivers/ata) are the two major families, I am working
+> on, for generic PM upgradation. I was bit unaware about priority, and also in
+> the last, both ide and ata drivers have to be upgraded.
+
+Well, drivers/ide/ is scheduled for removal in 2021
+(it even prints the warning during initialization of
+every host driver)..
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
+
+>>> All patches are compile-tested only.
+>>
+>> This patchset needs (at least) some basic testing. It should be easier with
+>> libata subsystem as it also support SATA controllers and devices.
+> To upgrade PM in (drivers/ide) I have made .suspend() and .resume() static. Then
+> bind them in "struct dev_pm_ops" variable (ide_pci_pm_ops) and expose it using
+> EXPORT_SYMBOL_GPL(). This has affected 30 drivers. I was hoping if ide changes
+> can be tested/verified, specially [PATCH 1/3]. As then, I will be sure about
+> similar change in ata, as it also requires similar alteration.
 > 
-> Hi Tony,
+> Thanks
+> Vaibhav Gupta
 > 
-> On 7/9/20 11:18 PM, Tony Asleson wrote:
-> > Hi Bartlomiej,
-> > 
-> > On 6/24/20 5:35 AM, Bartlomiej Zolnierkiewicz wrote:
-> >> The root source of problem is that libata transport uses different
-> >> naming scheme for ->tdev devices (please see dev_set_name() in
-> >> ata_t{dev,link,port}_add()) than libata core for its logging
-> >> functionality (ata_{dev,link,port}_printk()).
-> >>
-> >> Since libata transport is part of sysfs ABI we should be careful
-> >> to not break it so one idea for solving the issue is to convert
-> >> ata_t{dev,link,port}_add() to use libata logging naming scheme and
-> >> at the same time add sysfs symlinks for the old libata transport
-> >> naming scheme.
+>>
+>> Best regards,
+>> --
+>> Bartlomiej Zolnierkiewicz
+>> Samsung R&D Institute Poland
+>> Samsung Electronics
+>>
+>>> v3:
+>>>     - Modpost error for undefined reference by Kbuild in v1.
+>>>     - Another approach to disable PM in drivers/ide/triflex.c suggested by
+>>>       Bjorn Helgaas in v2.
+>>>
+>>> Test tools:
+>>>     - Compiler: gcc (GCC) 10.1.0
+>>>     - allmodconfig build: make -j$(nproc) W=1 all
+>>>
+>>> Vaibhav Gupta (3):
+>>>   ide: use generic power management
+>>>   ide: sc1200: use generic power management
+>>>   ide: delkin_cb: use generic power management
+>>>
+>>>  drivers/ide/aec62xx.c         |  3 +--
+>>>  drivers/ide/alim15x3.c        |  3 +--
+>>>  drivers/ide/amd74xx.c         |  3 +--
+>>>  drivers/ide/atiixp.c          |  3 +--
+>>>  drivers/ide/cmd64x.c          |  3 +--
+>>>  drivers/ide/cs5520.c          |  3 +--
+>>>  drivers/ide/cs5530.c          |  3 +--
+>>>  drivers/ide/cs5535.c          |  3 +--
+>>>  drivers/ide/cs5536.c          |  3 +--
+>>>  drivers/ide/cy82c693.c        |  3 +--
+>>>  drivers/ide/delkin_cb.c       | 32 +++++---------------------
+>>>  drivers/ide/hpt366.c          |  3 +--
+>>>  drivers/ide/ide-pci-generic.c |  3 +--
+>>>  drivers/ide/it8172.c          |  3 +--
+>>>  drivers/ide/it8213.c          |  3 +--
+>>>  drivers/ide/it821x.c          |  3 +--
+>>>  drivers/ide/jmicron.c         |  3 +--
+>>>  drivers/ide/ns87415.c         |  3 +--
+>>>  drivers/ide/opti621.c         |  3 +--
+>>>  drivers/ide/pdc202xx_new.c    |  3 +--
+>>>  drivers/ide/pdc202xx_old.c    |  3 +--
+>>>  drivers/ide/piix.c            |  3 +--
+>>>  drivers/ide/sc1200.c          | 43 ++++++++++++-----------------------
+>>>  drivers/ide/serverworks.c     |  3 +--
+>>>  drivers/ide/setup-pci.c       | 29 +++++------------------
+>>>  drivers/ide/siimage.c         |  3 +--
+>>>  drivers/ide/sis5513.c         |  3 +--
+>>>  drivers/ide/sl82c105.c        |  3 +--
+>>>  drivers/ide/slc90e66.c        |  3 +--
+>>>  drivers/ide/triflex.c         | 24 +++++++------------
+>>>  drivers/ide/via82cxxx.c       |  3 +--
+>>>  include/linux/ide.h           |  8 +------
+>>>  32 files changed, 62 insertions(+), 155 deletions(-)
+>>>
+>>
+> 
+> 
 
-Given the age of the current implementation, what suddenly broke that
-requires this to change at this point in time?
-
-> > 
-> > I tried doing as you suggested.  I've included what I've done so far.  I
-> > haven't been able to get all the needed parts for the symlinks to
-> > maintain compatibility.
-> > 
-> > The /sys/class/.. seems OK, eg.
-> > 
-> > $  ls -x -w 70 /sys/class/ata_[dl]*
-> > /sys/class/ata_device:
-> > ata1.00  ata2.00  ata3.00  ata4.00  ata5.00  ata6.00  ata7.00
-> > ata7.01  ata8.00  ata8.01  dev1.0   dev2.0   dev3.0   dev4.0
-> > dev5.0   dev6.0   dev7.0   dev7.1   dev8.0   dev8.1
-> > 
-> > /sys/class/ata_link:
-> > ata1   ata2   ata3   ata4   ata5   ata6   ata7  ata8  link1  link2
-> > link3  link4  link5  link6  link7  link8
-
-A link class?  Ick ick ick.
-
-> > but the implementation is a hack, see device.h, core.c changes.  There
-> > must be a better way?
-> > 
-> > Also I'm missing part of the full path, eg.
-> > 
-> > /sys/devices/pci0000:00/0000:00:01.1/ata7/link7/dev7.0/ata_device/dev7.0/gscr
-> > 
-> > becomes
-> > 
-> > /sys/devices/pci0000:00/0000:00:01.1/ata7/ata7/ata7.01/ata_device/ata7.01/gscr
-> > 
-> > but the compatibility symlinks added only get me to
-> > 
-> > /sys/devices/pci0000:00/0000:00:01.1/ata7/link7/dev7.0/ata_device/
-> > 
-> > I haven't found the right spot to get the last symlink included.
-> > 
-> > If you or anyone else has suggestions to correct the incomplete symlink
-> > and/or correct the implementation to set the
-> > /sys/class/ata_device it would be greatly appreciated.
-
-I can't understand what you are trying to do here.
-
-What do you want to represent in sysfs with a symlink that you can't
-just have in a single sysfs file like "name" or "new_name" or
-"name_because_we_didnt_think_about_this_10_years_ago" that shows you the
-other "name" that you are trying to look up here?
-
-Why abuse symlinks like this at all?
-
-And no, the device.h and core.c changes aren't ok :)
-
-thanks,
-
-greg k-h
