@@ -2,106 +2,109 @@ Return-Path: <SRS0=C1w+=A2=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EF7CC433E0
-	for <linux-ide@archiver.kernel.org>; Wed, 15 Jul 2020 20:53:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B6A7C433DF
+	for <linux-ide@archiver.kernel.org>; Wed, 15 Jul 2020 21:21:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1670C2065D
-	for <linux-ide@archiver.kernel.org>; Wed, 15 Jul 2020 20:53:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E894620672
+	for <linux-ide@archiver.kernel.org>; Wed, 15 Jul 2020 21:21:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HDRUmGjV"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=octiron.net header.i=@octiron.net header.b="ecj/kQR7";
+	dkim=pass (2048-bit key) header.d=octiron.net header.i=@octiron.net header.b="ylJXN1zV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726370AbgGOUxp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 15 Jul 2020 16:53:45 -0400
-Received: from aserp2130.oracle.com ([141.146.126.79]:57780 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726356AbgGOUxo (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jul 2020 16:53:44 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FKW2Du147198;
-        Wed, 15 Jul 2020 20:53:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : mime-version :
- content-type; s=corp-2020-01-29;
- bh=62GDuwaaSfc70sN5qjgMF0+16PJauklzFTdwCeP+NQA=;
- b=HDRUmGjVogNoQNaF+paYq4QBogeS4Nvz/WFgY2AlLrnKaRn68pmjTe/94QxXbdL534Wm
- mOzej0+qFCf/s8EPSOfzAggfn4ikBqaZzn+bBbAfQnduIEDJt7tXibQL52J9rTnVYYB/
- xZ5cYOU09PDzkm3jQmhKc4y2PmxflfN6i+UgHrsqLE4cBJRwGBx5sF5o/A/1Crbrkirp
- hu+omEEhvOgh3SWEuxHMRcAfWwbnqfXWTUWEdzM8+kSdsZIJbX8jh+CCIqCTr3RucH2R
- RWH0M/TIyduSk2tyBa9sdtBWly3o5sOrYm4LMnArsuAWvCokH8+CtACW3pTempPpKk8+ 2w== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2130.oracle.com with ESMTP id 327s65m17y-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 15 Jul 2020 20:53:18 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FKXeeZ059197;
-        Wed, 15 Jul 2020 20:53:18 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 327qb8thdq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Jul 2020 20:53:18 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06FKrHXb031054;
-        Wed, 15 Jul 2020 20:53:17 GMT
-Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 15 Jul 2020 13:53:17 -0700
-To:     Simon Arlott <simon@octiron.net>
+        id S1726370AbgGOVVp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 15 Jul 2020 17:21:45 -0400
+Received: from djelibeybi.uuid.uk ([45.91.101.70]:53820 "EHLO
+        djelibeybi.uuid.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725917AbgGOVVp (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jul 2020 17:21:45 -0400
+X-Greylist: delayed 529 seconds by postgrey-1.27 at vger.kernel.org; Wed, 15 Jul 2020 17:21:44 EDT
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=octiron.net
+        ; s=20180214; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender:Reply-To:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:List-Unsubscribe:
+        List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=EhgG2CTQfcvprQjhPT7XeqhEzStobaQ7jP786fGmLKY=; b=ecj/kQR7Z70erhemGvXu4P1wac
+        FrdBrZo2hm4RJgYaWBumHD6y6PPBslakIDNWE1jBYowKPGzO2QvkY8xa3cDtcjo5ORYYokRW/4IRB
+        PQyENqCxANS3GY7cyi3uO3CSAFO75oel29TJINAs55gKJNlXB0hkErgaRZwACcpRwTUkiT4MgaMxd
+        6K+ddxICXUOeNkRkqWA7zj0Hy1jPyuBr2ryTMK8waGoag3trr3PUpL/rcyq/7WcW74reRU08J8E2M
+        TZcDfXnNWLNVPUUYL8lJz4SHE97VAh/gflLyQHZ9xLXg3bXThfmHRAfPp9JRXZbzMSIUhnxB1Rcc7
+        REwfLN9w==;
+Received: by djelibeybi.uuid.uk with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.90_1)
+        (envelope-from <simon@octiron.net>)
+        id 1jvohp-0005vV-Rx; Wed, 15 Jul 2020 22:12:52 +0100
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=octiron.net
+        ; s=20180214; h=Content-Transfer-Encoding:Content-Type:In-Reply-To:
+        MIME-Version:Date:Message-ID:From:References:Cc:To:Subject;
+        bh=EhgG2CTQfcvprQjhPT7XeqhEzStobaQ7jP786fGmLKY=; b=ylJXN1zVTcXtEUvEGvkox9xu9i
+        tyvpJWVYWnL8ErM+Bqe1FHnNZGBJaSpN3xUwnv7uMdmeSPzrfNl0nfTLXqX9wYKRlp4kX2PanCJb9
+        fWrqk4HxWdX+kR3fJPgUlKyEYlM7CUw6hfkGuhWwzdJUk1lL60FXatLkLzN5xvQSDvQuGymhsLL60
+        B7kO7/Xa8dWys2KB13+xnMXH46LTZ5ZCIrgX8g2R92TGrJXVJVZe0njteSqYQ9rGzUEUXSEM8FGpv
+        bLsjD/utnPizQp6PU1vuPJSF7HDwLaisPDOB1lHVgGbB4g9rB0hjFWMtmQHC7aP0sOhOvv8nHDl3w
+        qEw+mXcQ==;
+Received: by tsort.uuid.uk with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <simon@octiron.net>)
+        id 1jvohn-0008II-40; Wed, 15 Jul 2020 22:12:43 +0100
+Subject: Re: [PATCH] ata: Disable queued TRIM for Samsung 860 SSDs
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
         Park Ju Hyung <qkrwngud825@gmail.com>,
         Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: Disable queued TRIM for Samsung 860 SSDs
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1blkgo6y0.fsf@ca-mkp.ca.oracle.com>
 References: <9324ef33-eedd-b965-37e8-b82e06778aab@0882a8b5-c6c3-11e9-b005-00805fc181fe>
-Date:   Wed, 15 Jul 2020 16:53:14 -0400
-In-Reply-To: <9324ef33-eedd-b965-37e8-b82e06778aab@0882a8b5-c6c3-11e9-b005-00805fc181fe>
-        (Simon Arlott's message of "Wed, 15 Jul 2020 12:13:24 +0100")
+ <yq1blkgo6y0.fsf@ca-mkp.ca.oracle.com>
+From:   Simon Arlott <simon@octiron.net>
+Message-ID: <5059c002-2452-f427-76da-7b08a02748dc@0882a8b5-c6c3-11e9-b005-00805fc181fe>
+Date:   Wed, 15 Jul 2020 22:12:43 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=921 malwarescore=0
- mlxscore=0 spamscore=0 phishscore=0 suspectscore=0 bulkscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2007150158
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
- phishscore=0 mlxscore=0 priorityscore=1501 lowpriorityscore=0 spamscore=0
- clxscore=1011 bulkscore=0 mlxlogscore=931 impostorscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2007150158
+In-Reply-To: <yq1blkgo6y0.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-GB
+Content-Transfer-Encoding: 7bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+On 15/07/2020 21:53, Martin K. Petersen wrote:
+>> Despite the unsubstantiated claim from Samsung that "the improved
+>> queued trim enhances Linux compatibility" this does not appear to be
+>> true, even on Intel SATA controllers:
+> 
+> I am aware of several people using 860 drives with queued TRIM. And I
+> haven't heard any complaints outside of the bug you referenced.
+> 
+> Also, I have tested both 860 2.5" Pro and 860 mSATA EVO on a few
+> different systems in my lab without any problems. See:
+> 
+>     https://lore.kernel.org/stable/yq1h87du82d.fsf@oracle.com/T/
 
-Hi Simon!
+I've just checked and it happens on both my SATA 860s:
+  860 EVO 2TB (RVT04B6Q) on Intel Z170
+  860 PRO 1TB (RVM02B6Q) on Intel H170
 
-> Despite the unsubstantiated claim from Samsung that "the improved
-> queued trim enhances Linux compatibility" this does not appear to be
-> true, even on Intel SATA controllers:
+> I really wish we had some more data to work with :(
 
-I am aware of several people using 860 drives with queued TRIM. And I
-haven't heard any complaints outside of the bug you referenced.
+Is there a reliable way of reproducing this?
 
-Also, I have tested both 860 2.5" Pro and 860 mSATA EVO on a few
-different systems in my lab without any problems. See:
+I have a Marvell 88SE9235 that I could try with the EVO.
 
-    https://lore.kernel.org/stable/yq1h87du82d.fsf@oracle.com/T/
+> Lacking a proper heuristic I guess we don't have any choice to disable
+> the feature. But that's sad news for the people who currently don't have
+> problems since their performance will inevitably suffer.
 
-I really wish we had some more data to work with :(
-
-Lacking a proper heuristic I guess we don't have any choice to disable
-the feature. But that's sad news for the people who currently don't have
-problems since their performance will inevitably suffer.
+Samsung need to identify what the problem is before claiming that their
+Linux support is better, especially if specific chipsets are known to
+have issues...
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Simon Arlott
