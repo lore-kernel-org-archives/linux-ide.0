@@ -2,114 +2,126 @@ Return-Path: <SRS0=C1w+=A2=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,HK_RANDOM_FROM,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D14FAC433E6
-	for <linux-ide@archiver.kernel.org>; Wed, 15 Jul 2020 14:36:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7D15C433DF
+	for <linux-ide@archiver.kernel.org>; Wed, 15 Jul 2020 17:37:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A9C3520720
-	for <linux-ide@archiver.kernel.org>; Wed, 15 Jul 2020 14:36:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7DA5720663
+	for <linux-ide@archiver.kernel.org>; Wed, 15 Jul 2020 17:37:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="MskEZFjF"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UDyhtwgW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729192AbgGOOgX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 15 Jul 2020 10:36:23 -0400
-Received: from rnd-relay.smtp.broadcom.com ([192.19.229.170]:44974 "EHLO
-        rnd-relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728123AbgGOOfk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jul 2020 10:35:40 -0400
-Received: from mail-irv-17.broadcom.com (mail-irv-17.lvn.broadcom.net [10.75.242.48])
-        by rnd-relay.smtp.broadcom.com (Postfix) with ESMTP id 7E2BC30C03C;
-        Wed, 15 Jul 2020 07:35:27 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 rnd-relay.smtp.broadcom.com 7E2BC30C03C
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1594823727;
-        bh=8GSFboYK0oeAhy/qjD7k9hQDV9Eog0D9xn/mkZHz9sM=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MskEZFjF36P4mPTcaL2NsG9SgaIRP/KV7gU7nuchSeztVPLkK1pBxqgveRYXdzySd
-         OS034OT2Af78P15H0BUjefztSkfIJO1lxPPa4hbEuY85IH6m0PrRNZr5ra+bdLqMzA
-         gAHqmxXKTsxroo1nL5ZXbS5Mtjnmw97sC4fhQBfI=
-Received: from stbsrv-and-01.and.broadcom.net (stbsrv-and-01.and.broadcom.net [10.28.16.211])
-        by mail-irv-17.broadcom.com (Postfix) with ESMTP id 67BA914008D;
-        Wed, 15 Jul 2020 07:35:37 -0700 (PDT)
-From:   Jim Quinlan <james.quinlan@broadcom.com>
-To:     linux-pci@vger.kernel.org,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        Christoph Hellwig <hch@lst.de>,
-        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
-Cc:     Jim Quinlan <james.quinlan@broadcom.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
-        Parallel ATA drivers)), linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v8 02/12] ata: ahci_brcm: Fix use of BCM7216 reset controller
-Date:   Wed, 15 Jul 2020 10:35:05 -0400
-Message-Id: <20200715143530.9702-3-james.quinlan@broadcom.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20200715143530.9702-1-james.quinlan@broadcom.com>
-References: <20200715143530.9702-1-james.quinlan@broadcom.com>
+        id S1725909AbgGORhg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 15 Jul 2020 13:37:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52400 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725882AbgGORhf (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jul 2020 13:37:35 -0400
+Received: from mail-ua1-x943.google.com (mail-ua1-x943.google.com [IPv6:2607:f8b0:4864:20::943])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0893C061755;
+        Wed, 15 Jul 2020 10:37:35 -0700 (PDT)
+Received: by mail-ua1-x943.google.com with SMTP id c7so900933uap.0;
+        Wed, 15 Jul 2020 10:37:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ZhW8t1MHdrxQztXKi30mBa7dx42Iv336zQjUMRVbNW4=;
+        b=UDyhtwgWCHILCK7g1nuQJQ2moHB76sniPWrU1cxiqCgaW6EG32K1mtl9yJOc0QBn3s
+         n0CidgEWy9usOSSeX0j9U7yrL0ZEXC252AtWKwZUgJ0EAlM8G+HgVPiOr6cGPzewqKZ4
+         4999bHCK8PN1UQ9BvzBpEu97ZODZ4MvKnWodt+e/iRWgnSQ0VPZUcYElgj3L3ZrVMigE
+         5D4tDEG7idrxtSFR0rmNr+FLbbh9ZsaR73t8Po27sG1uhMVEPGBw+ESJw7zXHY+NsCcZ
+         T8/4z7QBZrHXWMeSP5Jb0zt6dZvH4SPLNjiGWCs9+gTpB5YXeLBsVgEVzp3P3PSj24/N
+         YUpw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ZhW8t1MHdrxQztXKi30mBa7dx42Iv336zQjUMRVbNW4=;
+        b=JjtTpvFGJeelpTk67NBp+NQht0Vb3haw2DKSqmObLEv887yQ34JaoXhdoX+Yk2M8Ot
+         Zrm4s9Yhrrvf6zz9pXi1edGLmPokAGoWku/yf3TIDWv0Rh55DKxQ47Gait37va2MRLEc
+         9Mme3S2XaH5USIaGR3RGLYkla3zKwi8G1nwn08HaCW7ocJX4l/kO9tCsF+w59XAsA6ri
+         lV2iA5RqEyEVU7Xb/sl9u+ofAK4q7SjvX1LjETscM4H5gGvmStKoqJMCHbMudfKqBk+J
+         nDqbTeDagnKGlaLI3SuNXwOLi9wPYMD4yqPVcc4P/9kn5KgUdKXmnsk3BJp4M7g35Tzx
+         EIbA==
+X-Gm-Message-State: AOAM531HwXWmsXCxywGWXj/WlcgZqiJJp4B24mSsDhiwNK2RrP0GOZCn
+        uHhgJLMBqMedQF3LWLR9xaxNLdt9CzDSJCgeJkE=
+X-Google-Smtp-Source: ABdhPJyjIUHyusFG66XD1xnNw7EnAyakpvIShBADAzUne1f+v4qVvqB6GbOyAAWrXGaOohn+PPyRzuCscgejYWxcVvE=
+X-Received: by 2002:ab0:6510:: with SMTP id w16mr431695uam.97.1594834654617;
+ Wed, 15 Jul 2020 10:37:34 -0700 (PDT)
+MIME-Version: 1.0
+References: <9324ef33-eedd-b965-37e8-b82e06778aab@0882a8b5-c6c3-11e9-b005-00805fc181fe>
+In-Reply-To: <9324ef33-eedd-b965-37e8-b82e06778aab@0882a8b5-c6c3-11e9-b005-00805fc181fe>
+From:   Ju Hyung Park <qkrwngud825@gmail.com>
+Date:   Thu, 16 Jul 2020 02:37:22 +0900
+Message-ID: <CAD14+f0CVzRCJUJBBM=+jQ=UtOhxVJu9naQ9SpgqMqbbaeamiQ@mail.gmail.com>
+Subject: Re: [PATCH] ata: Disable queued TRIM for Samsung 860 SSDs
+To:     Simon Arlott <simon@octiron.net>, linux-ide@vger.kernel.org
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        open list <linux-kernel@vger.kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Jim Quinlan <jquinlan@broadcom.com>
+Hi Simon,
 
-A reset controller "rescal" is shared between the AHCI driver and the PCIe
-driver for the BrcmSTB 7216 chip.  Use
-devm_reset_control_get_optional_shared() to handle this sharing.
+On Wed, Jul 15, 2020 at 8:13 PM Simon Arlott <simon@octiron.net> wrote:
+> the original justification for
+> enabling appears to be based on marketing material with no explanation
+> of what has been changed to make the 860 work properly when the earlier
+> 840 and 850 both have the same issue.
 
-Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
+Yes, this was why I sent out the patch.
 
-Fixes: 272ecd60a636 ("ata: ahci_brcm: BCM7216 reset is self de-asserting")
-Fixes: c345ec6a50e9 ("ata: ahci_brcm: Support BCM7216 reset controller name")
----
- drivers/ata/ahci_brcm.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+With that said though, I've tested 860 EVO at that time(on i5-6200U,
+so it's an Intel SATA controller) for a few weeks both with
+asynchronous trim via f2fs and manual synchronous trim via fstrim.
+(Since I was also using TLP, the SATA controller and the SSD was
+constantly switching between LPM mode and non-LPM.)
+My unit did not have any problem whereas both my previous 850 PRO and
+850 EVO suffered from issues.
 
-diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
-index 6853dbb4131d..d6115bc04b09 100644
---- a/drivers/ata/ahci_brcm.c
-+++ b/drivers/ata/ahci_brcm.c
-@@ -428,7 +428,6 @@ static int brcm_ahci_probe(struct platform_device *pdev)
- {
- 	const struct of_device_id *of_id;
- 	struct device *dev = &pdev->dev;
--	const char *reset_name = NULL;
- 	struct brcm_ahci_priv *priv;
- 	struct ahci_host_priv *hpriv;
- 	struct resource *res;
-@@ -452,11 +451,10 @@ static int brcm_ahci_probe(struct platform_device *pdev)
- 
- 	/* Reset is optional depending on platform and named differently */
- 	if (priv->version == BRCM_SATA_BCM7216)
--		reset_name = "rescal";
-+		priv->rcdev = devm_reset_control_get_optional_shared(&pdev->dev, "rescal");
- 	else
--		reset_name = "ahci";
-+		priv->rcdev = devm_reset_control_get_optional(&pdev->dev, "ahci");
- 
--	priv->rcdev = devm_reset_control_get_optional(&pdev->dev, reset_name);
- 	if (IS_ERR(priv->rcdev))
- 		return PTR_ERR(priv->rcdev);
- 
-@@ -479,10 +477,7 @@ static int brcm_ahci_probe(struct platform_device *pdev)
- 		break;
- 	}
- 
--	if (priv->version == BRCM_SATA_BCM7216)
--		ret = reset_control_reset(priv->rcdev);
--	else
--		ret = reset_control_deassert(priv->rcdev);
-+	ret = reset_control_deassert(priv->rcdev);
- 	if (ret)
- 		return ret;
- 
--- 
-2.17.1
+My 860 EVO was just fine with no problem for about 1.5 year until
+later I switched to NVMe.
 
+Given how late the bug reports were made after my patch went into
+mainline, I wonder if this is firmware-specific.
+
+Thanks.
+
+>
+> Signed-off-by: Simon Arlott <simon@octiron.net>
+> Cc: Park Ju Hyung <qkrwngud825@gmail.com>
+> Cc: stable@vger.kernel.org
+> Fixes: ca6bfcb2f6d9 ("libata: Enable queued TRIM for Samsung SSD 860")
+> ---
+>  drivers/ata/libata-core.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index b1cd4d97bc2a..02e861aac5ec 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -3951,6 +3951,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+>                                                 ATA_HORKAGE_ZERO_AFTER_TRIM, },
+>         { "Samsung SSD 850*",           NULL,   ATA_HORKAGE_NO_NCQ_TRIM |
+>                                                 ATA_HORKAGE_ZERO_AFTER_TRIM, },
+> +       { "Samsung SSD 860*",           NULL,   ATA_HORKAGE_NO_NCQ_TRIM |
+> +                                               ATA_HORKAGE_ZERO_AFTER_TRIM, },
+>         { "FCCT*M500*",                 NULL,   ATA_HORKAGE_NO_NCQ_TRIM |
+>                                                 ATA_HORKAGE_ZERO_AFTER_TRIM, },
+>
+> --
+> 2.17.1
+>
+> --
+> Simon Arlott
