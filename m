@@ -2,104 +2,112 @@ Return-Path: <SRS0=C1w+=A2=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4196BC433EC
-	for <linux-ide@archiver.kernel.org>; Wed, 15 Jul 2020 10:37:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20B83C433E3
+	for <linux-ide@archiver.kernel.org>; Wed, 15 Jul 2020 11:23:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 22C8D20656
-	for <linux-ide@archiver.kernel.org>; Wed, 15 Jul 2020 10:37:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F29B520658
+	for <linux-ide@archiver.kernel.org>; Wed, 15 Jul 2020 11:23:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=mg.codeaurora.org header.i=@mg.codeaurora.org header.b="WnYcyc++"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=octiron.net header.i=@octiron.net header.b="ClPUNCrp";
+	dkim=pass (2048-bit key) header.d=octiron.net header.i=@octiron.net header.b="ZZCOflpN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731201AbgGOKhN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 15 Jul 2020 06:37:13 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:14353 "EHLO m43-7.mailgun.net"
+        id S1726916AbgGOLXP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 15 Jul 2020 07:23:15 -0400
+Received: from chalk.uuid.uk ([51.68.227.198]:52662 "EHLO chalk.uuid.uk"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731203AbgGOKhL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 15 Jul 2020 06:37:11 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1594809430; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=pYgx74LtrBLVD12x3ELyZuAqEdnOVxhRlDanXsj1kC8=;
- b=WnYcyc++kNhZ2ZBA1mqAZukvPRckqQ0S5MkPeXwSaY7hrYzv3/69EHnSIPqXNYcykjrxUD0Z
- qR3B48opiT+cS+xAiaJDN83WwilgAFRvwmuXMA5TN+8JvikjHwW/7cQTWcXb97KENoFsywSN
- qwVKE1+ac2WuStYGSO1GDD+Tjf8=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlZjQyYSIsICJsaW51eC1pZGVAdmdlci5rZXJuZWwub3JnIiwgImJlOWU0YSJd
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
- 5f0edc4db35196d59d5e52fd (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 15 Jul 2020 10:37:01
- GMT
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 5B429C43449; Wed, 15 Jul 2020 10:37:01 +0000 (UTC)
-Received: from potku.adurom.net (88-114-240-156.elisa-laajakaista.fi [88.114.240.156])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 639D1C433CA;
-        Wed, 15 Jul 2020 10:36:56 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 639D1C433CA
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=none smtp.mailfrom=kvalo@codeaurora.org
-Content-Type: text/plain; charset="utf-8"
+        id S1725811AbgGOLXP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 15 Jul 2020 07:23:15 -0400
+X-Greylist: delayed 576 seconds by postgrey-1.27 at vger.kernel.org; Wed, 15 Jul 2020 07:23:14 EDT
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=octiron.net
+        ; s=20180214; h=Content-Transfer-Encoding:Content-Type:MIME-Version:Date:
+        Message-ID:Subject:From:Cc:To:Sender:Reply-To:Content-ID:Content-Description:
+        Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:
+        In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:
+        List-Post:List-Owner:List-Archive;
+        bh=BNbPwFNjGOZuIyTmfC1KF3tsumtB45tKs1PO9XQlp80=; b=ClPUNCrpsVyHg5X8jnMvD9oZKH
+        FhrWrjk+VLs06Grjai4jAkyxcq/If8dMqmfJRN7ks8gx5zlkY2ItfJrAjvEv/y7dBeBC8rty2LXwa
+        R3xlla8YBYjLvcsgJ+8aMZgZ/sAlvYnCaOvAS3Zmns/mcYpNX+rOzgXVbV0wH5B7uCPpQAGgLGT/H
+        +fGog4RZuW5TSV+CsqnYwonNGr3pW75peYxPAFkMEsAU6XyY4d9pWnI/6SaksOUlvrFUa++MlZHDG
+        xkEujtSfgerxVbi9n0iGZZvgNGc6+jmZ50/Tj7CYVERPCo9HEdTIghvczN99pbsMo/SVfffHAndKM
+        KzIQFNjw==;
+Received: by chalk.uuid.uk with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.90_1)
+        (envelope-from <simon@octiron.net>)
+        id 1jvfLr-0001yH-N0; Wed, 15 Jul 2020 12:13:34 +0100
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=octiron.net
+        ; s=20180214; h=Content-Transfer-Encoding:Content-Type:MIME-Version:Date:
+        Message-ID:Subject:From:Cc:To;
+        bh=BNbPwFNjGOZuIyTmfC1KF3tsumtB45tKs1PO9XQlp80=; b=ZZCOflpNYv1VZQPRBAzdREp386
+        1JrKmZnbPQB4nFbETmFCFcurWi0O+qkMWhH//GXeb4DD0OpTHtN713EIVh/dOuF2YXOHhsj0DH0Ah
+        hlu1MulypgZe22eO3n+Fm2hRuJaWxmnD6ohsehVRi0uVUAibV4/mA3nZ6lP/rj2vxDAoVIcKvHm/x
+        YrRmzS3SGuFGWjx6FZUtF9kkftTgn24IRrCRt3OKo93sBA4mA0gUbWLP0v3UFm2gDwOXlnLc+gMn6
+        8odnar77qLhC8/Mzfui8PrfR0RMuC/Ov2jP01gNhUnL6Yb2d2S5tluEqS0peC963JzATEKV0BGzwv
+        eS8+lx5w==;
+Received: by tsort.uuid.uk with esmtps (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
+        (Exim 4.86_2)
+        (envelope-from <simon@octiron.net>)
+        id 1jvfLp-0006wK-Cc; Wed, 15 Jul 2020 12:13:25 +0100
+To:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Park Ju Hyung <qkrwngud825@gmail.com>,
+        Tejun Heo <tj@kernel.org>
+From:   Simon Arlott <simon@octiron.net>
+Subject: [PATCH] ata: Disable queued TRIM for Samsung 860 SSDs
+Message-ID: <9324ef33-eedd-b965-37e8-b82e06778aab@0882a8b5-c6c3-11e9-b005-00805fc181fe>
+Date:   Wed, 15 Jul 2020 12:13:24 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-GB
 Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH v2 04/16] b43: Remove uninitialized_var() usage
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20200620033007.1444705-5-keescook@chromium.org>
-References: <20200620033007.1444705-5-keescook@chromium.org>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     linux-kernel@vger.kernel.org, Kees Cook <keescook@chromium.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>,
-        Alexander Potapenko <glider@google.com>,
-        Joe Perches <joe@perches.com>,
-        Andy Whitcroft <apw@canonical.com>, x86@kernel.org,
-        drbd-dev@lists.linbit.com, linux-block@vger.kernel.org,
-        b43-dev@lists.infradead.org, netdev@vger.kernel.org,
-        linux-doc@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-clk@vger.kernel.org,
-        linux-spi@vger.kernel.org, linux-mm@kvack.org,
-        clang-built-linux@googlegroups.com
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.5.2
-Message-Id: <20200715103701.5B429C43449@smtp.codeaurora.org>
-Date:   Wed, 15 Jul 2020 10:37:01 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Kees Cook <keescook@chromium.org> wrote:
+Despite the unsubstantiated claim from Samsung that "the improved
+queued trim enhances Linux compatibility" this does not appear to be
+true, even on Intel SATA controllers:
 
-> Using uninitialized_var() is dangerous as it papers over real bugs[1]
-> (or can in the future), and suppresses unrelated compiler warnings (e.g.
-> "unused variable"). If the compiler thinks it is uninitialized, either
-> simply initialize the variable or make compiler changes. As a precursor
-> to removing[2] this[3] macro[4], just initialize this variable to NULL.
-> No later NULL deref is possible due to the early returns outside of the
-> (phy->rev >= 7 && phy->rev < 19) case, which explicitly tests for NULL.
-> 
-> [1] https://lore.kernel.org/lkml/20200603174714.192027-1-glider@google.com/
-> [2] https://lore.kernel.org/lkml/CA+55aFw+Vbj0i=1TGqCR5vQkCzWJ0QxK6CernOU6eedsudAixw@mail.gmail.com/
-> [3] https://lore.kernel.org/lkml/CA+55aFwgbgqhbp1fkxvRKEpzyR5J8n1vKT1VZdz9knmPuXhOeg@mail.gmail.com/
-> [4] https://lore.kernel.org/lkml/CA+55aFz2500WfbKXAx8s67wrm9=yVJu65TpLgN_ybYNv0VEOKA@mail.gmail.com/
-> 
-> Fixes: 58619b14d106 ("b43: move under broadcom vendor directory")
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Reviewed-by: Nick Desaulniers <ndesaulniers@google.com>
+Bug 203475 - Samsung 860 EVO queued TRIM issues
+https://bugzilla.kernel.org/show_bug.cgi?id=203475
 
-2 patches applied to wireless-drivers-next.git, thanks.
+Disable queued TRIM for all Samsung 860 SSDs. Only the EVO has been
+reported as having this problem, but the original justification for
+enabling appears to be based on marketing material with no explanation
+of what has been changed to make the 860 work properly when the earlier
+840 and 850 both have the same issue.
 
-800e7a205a0f b43: Remove uninitialized_var() usage
-f8279dad4e36 rtlwifi: rtl8192cu: Remove uninitialized_var() usage
+Signed-off-by: Simon Arlott <simon@octiron.net>
+Cc: Park Ju Hyung <qkrwngud825@gmail.com>
+Cc: stable@vger.kernel.org
+Fixes: ca6bfcb2f6d9 ("libata: Enable queued TRIM for Samsung SSD 860")
+---
+ drivers/ata/libata-core.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index b1cd4d97bc2a..02e861aac5ec 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3951,6 +3951,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+ 	{ "Samsung SSD 850*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
++	{ "Samsung SSD 860*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
++						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+ 	{ "FCCT*M500*",			NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+ 
+-- 
+2.17.1
 
 -- 
-https://patchwork.kernel.org/patch/11615573/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-
+Simon Arlott
