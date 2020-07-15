@@ -2,126 +2,106 @@ Return-Path: <SRS0=C1w+=A2=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,HK_RANDOM_FROM,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7D15C433DF
-	for <linux-ide@archiver.kernel.org>; Wed, 15 Jul 2020 17:37:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EF7CC433E0
+	for <linux-ide@archiver.kernel.org>; Wed, 15 Jul 2020 20:53:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7DA5720663
-	for <linux-ide@archiver.kernel.org>; Wed, 15 Jul 2020 17:37:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1670C2065D
+	for <linux-ide@archiver.kernel.org>; Wed, 15 Jul 2020 20:53:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UDyhtwgW"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HDRUmGjV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725909AbgGORhg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 15 Jul 2020 13:37:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52400 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725882AbgGORhf (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jul 2020 13:37:35 -0400
-Received: from mail-ua1-x943.google.com (mail-ua1-x943.google.com [IPv6:2607:f8b0:4864:20::943])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0893C061755;
-        Wed, 15 Jul 2020 10:37:35 -0700 (PDT)
-Received: by mail-ua1-x943.google.com with SMTP id c7so900933uap.0;
-        Wed, 15 Jul 2020 10:37:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ZhW8t1MHdrxQztXKi30mBa7dx42Iv336zQjUMRVbNW4=;
-        b=UDyhtwgWCHILCK7g1nuQJQ2moHB76sniPWrU1cxiqCgaW6EG32K1mtl9yJOc0QBn3s
-         n0CidgEWy9usOSSeX0j9U7yrL0ZEXC252AtWKwZUgJ0EAlM8G+HgVPiOr6cGPzewqKZ4
-         4999bHCK8PN1UQ9BvzBpEu97ZODZ4MvKnWodt+e/iRWgnSQ0VPZUcYElgj3L3ZrVMigE
-         5D4tDEG7idrxtSFR0rmNr+FLbbh9ZsaR73t8Po27sG1uhMVEPGBw+ESJw7zXHY+NsCcZ
-         T8/4z7QBZrHXWMeSP5Jb0zt6dZvH4SPLNjiGWCs9+gTpB5YXeLBsVgEVzp3P3PSj24/N
-         YUpw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ZhW8t1MHdrxQztXKi30mBa7dx42Iv336zQjUMRVbNW4=;
-        b=JjtTpvFGJeelpTk67NBp+NQht0Vb3haw2DKSqmObLEv887yQ34JaoXhdoX+Yk2M8Ot
-         Zrm4s9Yhrrvf6zz9pXi1edGLmPokAGoWku/yf3TIDWv0Rh55DKxQ47Gait37va2MRLEc
-         9Mme3S2XaH5USIaGR3RGLYkla3zKwi8G1nwn08HaCW7ocJX4l/kO9tCsF+w59XAsA6ri
-         lV2iA5RqEyEVU7Xb/sl9u+ofAK4q7SjvX1LjETscM4H5gGvmStKoqJMCHbMudfKqBk+J
-         nDqbTeDagnKGlaLI3SuNXwOLi9wPYMD4yqPVcc4P/9kn5KgUdKXmnsk3BJp4M7g35Tzx
-         EIbA==
-X-Gm-Message-State: AOAM531HwXWmsXCxywGWXj/WlcgZqiJJp4B24mSsDhiwNK2RrP0GOZCn
-        uHhgJLMBqMedQF3LWLR9xaxNLdt9CzDSJCgeJkE=
-X-Google-Smtp-Source: ABdhPJyjIUHyusFG66XD1xnNw7EnAyakpvIShBADAzUne1f+v4qVvqB6GbOyAAWrXGaOohn+PPyRzuCscgejYWxcVvE=
-X-Received: by 2002:ab0:6510:: with SMTP id w16mr431695uam.97.1594834654617;
- Wed, 15 Jul 2020 10:37:34 -0700 (PDT)
-MIME-Version: 1.0
-References: <9324ef33-eedd-b965-37e8-b82e06778aab@0882a8b5-c6c3-11e9-b005-00805fc181fe>
-In-Reply-To: <9324ef33-eedd-b965-37e8-b82e06778aab@0882a8b5-c6c3-11e9-b005-00805fc181fe>
-From:   Ju Hyung Park <qkrwngud825@gmail.com>
-Date:   Thu, 16 Jul 2020 02:37:22 +0900
-Message-ID: <CAD14+f0CVzRCJUJBBM=+jQ=UtOhxVJu9naQ9SpgqMqbbaeamiQ@mail.gmail.com>
-Subject: Re: [PATCH] ata: Disable queued TRIM for Samsung 860 SSDs
-To:     Simon Arlott <simon@octiron.net>, linux-ide@vger.kernel.org
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        open list <linux-kernel@vger.kernel.org>,
+        id S1726370AbgGOUxp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 15 Jul 2020 16:53:45 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:57780 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726356AbgGOUxo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jul 2020 16:53:44 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FKW2Du147198;
+        Wed, 15 Jul 2020 20:53:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : mime-version :
+ content-type; s=corp-2020-01-29;
+ bh=62GDuwaaSfc70sN5qjgMF0+16PJauklzFTdwCeP+NQA=;
+ b=HDRUmGjVogNoQNaF+paYq4QBogeS4Nvz/WFgY2AlLrnKaRn68pmjTe/94QxXbdL534Wm
+ mOzej0+qFCf/s8EPSOfzAggfn4ikBqaZzn+bBbAfQnduIEDJt7tXibQL52J9rTnVYYB/
+ xZ5cYOU09PDzkm3jQmhKc4y2PmxflfN6i+UgHrsqLE4cBJRwGBx5sF5o/A/1Crbrkirp
+ hu+omEEhvOgh3SWEuxHMRcAfWwbnqfXWTUWEdzM8+kSdsZIJbX8jh+CCIqCTr3RucH2R
+ RWH0M/TIyduSk2tyBa9sdtBWly3o5sOrYm4LMnArsuAWvCokH8+CtACW3pTempPpKk8+ 2w== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2130.oracle.com with ESMTP id 327s65m17y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 15 Jul 2020 20:53:18 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 06FKXeeZ059197;
+        Wed, 15 Jul 2020 20:53:18 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 327qb8thdq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 15 Jul 2020 20:53:18 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 06FKrHXb031054;
+        Wed, 15 Jul 2020 20:53:17 GMT
+Received: from ca-mkp.ca.oracle.com (/10.159.214.123)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 15 Jul 2020 13:53:17 -0700
+To:     Simon Arlott <simon@octiron.net>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Park Ju Hyung <qkrwngud825@gmail.com>,
         Tejun Heo <tj@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH] ata: Disable queued TRIM for Samsung 860 SSDs
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1blkgo6y0.fsf@ca-mkp.ca.oracle.com>
+References: <9324ef33-eedd-b965-37e8-b82e06778aab@0882a8b5-c6c3-11e9-b005-00805fc181fe>
+Date:   Wed, 15 Jul 2020 16:53:14 -0400
+In-Reply-To: <9324ef33-eedd-b965-37e8-b82e06778aab@0882a8b5-c6c3-11e9-b005-00805fc181fe>
+        (Simon Arlott's message of "Wed, 15 Jul 2020 12:13:24 +0100")
+MIME-Version: 1.0
+Content-Type: text/plain
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=921 malwarescore=0
+ mlxscore=0 spamscore=0 phishscore=0 suspectscore=0 bulkscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2007150158
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9683 signatures=668680
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
+ phishscore=0 mlxscore=0 priorityscore=1501 lowpriorityscore=0 spamscore=0
+ clxscore=1011 bulkscore=0 mlxlogscore=931 impostorscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2007150158
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Simon,
 
-On Wed, Jul 15, 2020 at 8:13 PM Simon Arlott <simon@octiron.net> wrote:
-> the original justification for
-> enabling appears to be based on marketing material with no explanation
-> of what has been changed to make the 860 work properly when the earlier
-> 840 and 850 both have the same issue.
+Hi Simon!
 
-Yes, this was why I sent out the patch.
+> Despite the unsubstantiated claim from Samsung that "the improved
+> queued trim enhances Linux compatibility" this does not appear to be
+> true, even on Intel SATA controllers:
 
-With that said though, I've tested 860 EVO at that time(on i5-6200U,
-so it's an Intel SATA controller) for a few weeks both with
-asynchronous trim via f2fs and manual synchronous trim via fstrim.
-(Since I was also using TLP, the SATA controller and the SSD was
-constantly switching between LPM mode and non-LPM.)
-My unit did not have any problem whereas both my previous 850 PRO and
-850 EVO suffered from issues.
+I am aware of several people using 860 drives with queued TRIM. And I
+haven't heard any complaints outside of the bug you referenced.
 
-My 860 EVO was just fine with no problem for about 1.5 year until
-later I switched to NVMe.
+Also, I have tested both 860 2.5" Pro and 860 mSATA EVO on a few
+different systems in my lab without any problems. See:
 
-Given how late the bug reports were made after my patch went into
-mainline, I wonder if this is firmware-specific.
+    https://lore.kernel.org/stable/yq1h87du82d.fsf@oracle.com/T/
 
-Thanks.
+I really wish we had some more data to work with :(
 
->
-> Signed-off-by: Simon Arlott <simon@octiron.net>
-> Cc: Park Ju Hyung <qkrwngud825@gmail.com>
-> Cc: stable@vger.kernel.org
-> Fixes: ca6bfcb2f6d9 ("libata: Enable queued TRIM for Samsung SSD 860")
-> ---
->  drivers/ata/libata-core.c | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index b1cd4d97bc2a..02e861aac5ec 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -3951,6 +3951,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
->                                                 ATA_HORKAGE_ZERO_AFTER_TRIM, },
->         { "Samsung SSD 850*",           NULL,   ATA_HORKAGE_NO_NCQ_TRIM |
->                                                 ATA_HORKAGE_ZERO_AFTER_TRIM, },
-> +       { "Samsung SSD 860*",           NULL,   ATA_HORKAGE_NO_NCQ_TRIM |
-> +                                               ATA_HORKAGE_ZERO_AFTER_TRIM, },
->         { "FCCT*M500*",                 NULL,   ATA_HORKAGE_NO_NCQ_TRIM |
->                                                 ATA_HORKAGE_ZERO_AFTER_TRIM, },
->
-> --
-> 2.17.1
->
-> --
-> Simon Arlott
+Lacking a proper heuristic I guess we don't have any choice to disable
+the feature. But that's sad news for the people who currently don't have
+problems since their performance will inevitably suffer.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
