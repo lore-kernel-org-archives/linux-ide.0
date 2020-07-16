@@ -1,124 +1,112 @@
-Return-Path: <SRS0=C1w+=A2=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=cV22=A3=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,HK_RANDOM_FROM,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55660C433E4
-	for <linux-ide@archiver.kernel.org>; Wed, 15 Jul 2020 22:03:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CF42C433E6
+	for <linux-ide@archiver.kernel.org>; Thu, 16 Jul 2020 17:18:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 34FF0206F4
-	for <linux-ide@archiver.kernel.org>; Wed, 15 Jul 2020 22:03:59 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="o45vpIlb"
+	by mail.kernel.org (Postfix) with ESMTP id 87F9B2076D
+	for <linux-ide@archiver.kernel.org>; Thu, 16 Jul 2020 17:18:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727119AbgGOWD6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 15 Jul 2020 18:03:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36946 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727042AbgGOWD4 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jul 2020 18:03:56 -0400
-Received: from mail-vk1-xa42.google.com (mail-vk1-xa42.google.com [IPv6:2607:f8b0:4864:20::a42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C11D6C061755;
-        Wed, 15 Jul 2020 15:03:55 -0700 (PDT)
-Received: by mail-vk1-xa42.google.com with SMTP id h190so846213vkh.6;
-        Wed, 15 Jul 2020 15:03:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=KI9Mde07pxk4goJz9fnrbNuMJ5Nwi3EajcG9yYLG+m4=;
-        b=o45vpIlbigNauT/xzIHQ1p7d1Blxc0cUFIEu5F4vCfolJeRszhwNqo1DLkfIjSxMaB
-         yrv7Wj8Jyp6ew+il2xDyqaB0hbB/opH/UCycK6qecxKpDN34G3YDxis5atxFLDOe2QVD
-         CZ10+gSLvOmAlqnqlu0qHhQ9iyaHRz+M9zKGLQ84I3BfupbM9gr1slhno5rvZmyUcmUJ
-         5WviwD7Rzf6gyPHZVQBcjMChMTjrd59MIUTrkBbk1Y9R6LZyHr/Zabh4h3NYZJ49fR+3
-         7Xpelf2nXEC86SuOEBrCp2SFFrUY1BPBGU7T2+OHBLF7fpYly6emsos71DruFRQ4J8Ez
-         AqWg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=KI9Mde07pxk4goJz9fnrbNuMJ5Nwi3EajcG9yYLG+m4=;
-        b=E2wQhijmvt1oLLco2yGvc3T1fZ9/gI3nO6kJ3iT6MpE/sr0b0BUAuKRCa5W7Mx98kb
-         I4BiF0XhtKZ8D8EJYisg7cTfZryT5xDy9X1tsgw9yeosXHxm99fYi+CjdzQlU21Q9ZCA
-         skONYxfTRFJBMCfy10+lb6FKXfAhzvDPK7vHRyXGU43tXuAt1f6ZiMaJjkHN2OESipuL
-         cIjNUp9gcAaTA/em4KRIIjBKzx9jDHk2E1qtpavVv9gFkTydHARAYrivLvO9PsuCTvhG
-         C5EIUGSEv7ph2O3o8txujykf0PiM9Wyon0XY74t6SyVHs7IktkJ+0iUiDmcZBgkl7Tw2
-         qxAA==
-X-Gm-Message-State: AOAM530SvLNXvqpeKEGM7Dann0boEp1Tl0LFwRLfujiRHeZYPckj/HIJ
-        7HHcAyUWS8NFSrPFUBYcugaUaxwxCQHYDiSWdA4=
-X-Google-Smtp-Source: ABdhPJw/P79FzpGlgS3RQuq3c7IwTh9oXZtHQJTWKgvTacZzW+jF/Ju7r2S4vvudBnzdz44PBQmy8DWIUbWEiN93rLU=
-X-Received: by 2002:a1f:eec8:: with SMTP id m191mr999635vkh.47.1594850634903;
- Wed, 15 Jul 2020 15:03:54 -0700 (PDT)
-MIME-Version: 1.0
-References: <9324ef33-eedd-b965-37e8-b82e06778aab@0882a8b5-c6c3-11e9-b005-00805fc181fe>
- <yq1blkgo6y0.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1blkgo6y0.fsf@ca-mkp.ca.oracle.com>
-From:   Ju Hyung Park <qkrwngud825@gmail.com>
-Date:   Thu, 16 Jul 2020 07:03:43 +0900
-Message-ID: <CAD14+f1BjqmzGXnt_ha04gD-WpSu7spq93hVMDqnoO60MX3zEg@mail.gmail.com>
-Subject: Re: [PATCH] ata: Disable queued TRIM for Samsung 860 SSDs
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Simon Arlott <simon@octiron.net>, Jens Axboe <axboe@kernel.dk>,
-        linux-ide@vger.kernel.org,
-        open list <linux-kernel@vger.kernel.org>,
-        Tejun Heo <tj@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        id S1728807AbgGPRSo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 16 Jul 2020 13:18:44 -0400
+Received: from relmlor2.renesas.com ([210.160.252.172]:52329 "EHLO
+        relmlie6.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728182AbgGPRSn (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 16 Jul 2020 13:18:43 -0400
+X-IronPort-AV: E=Sophos;i="5.75,360,1589209200"; 
+   d="scan'208";a="52107158"
+Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
+  by relmlie6.idc.renesas.com with ESMTP; 17 Jul 2020 02:18:41 +0900
+Received: from localhost.localdomain (unknown [10.226.36.204])
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 75C8B40B5142;
+        Fri, 17 Jul 2020 02:18:36 +0900 (JST)
+From:   Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+To:     Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Mark Brown <broonie@kernel.org>,
+        Niklas <niklas.soderlund@ragnatech.se>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Magnus Damm <magnus.damm@gmail.com>, devicetree@vger.kernel.org
+Cc:     linux-ide@vger.kernel.org, dmaengine@vger.kernel.org,
+        linux-i2c@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
+        alsa-devel@alsa-project.org, linux-renesas-soc@vger.kernel.org,
+        linux-usb@vger.kernel.org, Prabhakar <prabhakar.csengg@gmail.com>,
+        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Subject: [PATCH 00/20] Add support for SATA/PCIe/USB2[3]/VIN/CSI on R8A774E1
+Date:   Thu, 16 Jul 2020 18:18:15 +0100
+Message-Id: <1594919915-5225-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Martin,
+Hi All,
 
-On Thu, Jul 16, 2020 at 5:53 AM Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
-> I really wish we had some more data to work with :(
->
-> Lacking a proper heuristic I guess we don't have any choice to disable
-> the feature. But that's sad news for the people who currently don't have
-> problems since their performance will inevitably suffer.
+This patch series adds support for the following peripherals on RZ/G2H SoC
+ * PCIe
+ * SATA
+ * USB2
+ * USB3
+ * Audio
+ * VIN
+ * CSI
 
-It seems like the latest 860 EVO's firmware, RVT24B6Q, is fairly recent.
-The earliest reference that I could find on Google is this from Jan,
-2020: https://smarthdd.com/database/Samsung-SSD-860-EVO-M.2-500GB/RVT24B6Q/
-and an Amazon review.
+Cheers,
+Prabhakar
 
-Earlier reports seem to be related to ASMedia's chipsets and NCQ quirks.
+Lad Prabhakar (20):
+  dt-bindings: pci: rcar-pci: Add device tree support for r8a774e1
+  arm64: dts: renesas: r8a774e1: Add PCIe device nodes
+  dt-bindings: ata: renesas,rcar-sata: Add r8a774e1 support
+  arm64: dts: renesas: r8a774e1: Add SATA controller node
+  dt-bindings: phy: renesas,usb2-phy: Add r8a774e1 support
+  arm64: dts: renesas: r8a774e1: Add USB2.0 phy and host (EHCI/OHCI)
+    device nodes
+  dt-bindings: usb: renesas,usb3-peri: Document r8a774e1 support
+  dt-bindings: usb: usb-xhci: Document r8a774e1 support
+  dt-bindings: phy: renesas,usb3-phy: Add r8a774e1 support
+  arm64: dts: renesas: r8a774e1: Add USB3.0 device nodes
+  dt-bindings: usb: renesas,usbhs: Add r8a774e1 support
+  dt-bindings: dma: renesas,usb-dmac: Add binding for r8a774e1
+  arm64: dts: renesas: r8a774e1: Add USB-DMAC and HSUSB device nodes
+  dt-bindings: sound: renesas,rsnd: Document r8a774e1 bindings
+  arm64: dts: renesas: r8a774e1: Add audio support
+  dt-bindings: media: renesas,csi2: Add R8A774E1 support
+  dt-bindings: media: renesas,vin: Add R8A774E1 support
+  media: rcar-csi2: Enable support for R8A774E1
+  media: rcar-vin: Enable support for R8A774E1
+  arm64: dts: renesas: r8a774e1: Add VIN and CSI-2 nodes
 
-AFAIK, no reports were made in 2018.
-IIRC the last time we went through this with the 850 series, a bunch
-of people reported data corruptions, sometimes even filesystem's
-superblock.
-Surely, we would have gotten reports of it pretty soon if the drives
-were indeed faulty.
+ .../bindings/ata/renesas,rcar-sata.yaml       |   1 +
+ .../bindings/dma/renesas,usb-dmac.yaml        |   1 +
+ .../bindings/media/renesas,csi2.yaml          |   1 +
+ .../bindings/media/renesas,vin.yaml           |   1 +
+ .../devicetree/bindings/pci/rcar-pci.txt      |   1 +
+ .../bindings/phy/renesas,usb2-phy.yaml        |   1 +
+ .../bindings/phy/renesas,usb3-phy.yaml        |   1 +
+ .../bindings/sound/renesas,rsnd.txt           |   1 +
+ .../bindings/usb/renesas,usb3-peri.yaml       |   1 +
+ .../bindings/usb/renesas,usbhs.yaml           |   1 +
+ .../devicetree/bindings/usb/usb-xhci.txt      |   1 +
+ arch/arm64/boot/dts/renesas/r8a774e1.dtsi     | 989 +++++++++++++++++-
+ drivers/media/platform/rcar-vin/rcar-core.c   |  40 +
+ drivers/media/platform/rcar-vin/rcar-csi2.c   |   4 +
+ 14 files changed, 1022 insertions(+), 22 deletions(-)
 
-Maybe the latest firmware is to blame?
+-- 
+2.17.1
 
-Also, I don't think queued trim is all that crucial to performance
-imho, at least in the context of Linux.
-
-In my experience, regular R/W I/Os were still severely blocked when
-fstrim is undergoing even with queued trim was in use(which, to my
-understanding, is exactly what queued trim tried to resolve in the
-first place?). Probably file-system's implementation is at partial
-fault too with it sending ERASE commands with too big granularity. I
-believe f2fs' default discard_granularity of 4KB is what tries to
-mitigate this.
-
-Linux distros are not using the "discard" mount flag by default and
-defers to periodic fstrim on idle.
-Android has been doing this since 4.3(2013), and doesn't even use SATA.
-f2fs avoids this problem entirely by sending ERASE commands only when
-the drive is idle.
-
-All in all, I don't think we should pull out hairs trying to figure
-out how to do this properly.
-I'm yet to be convinced that queued trim solves practical performance issues.
-
-If we can't figure this out quickly, I agree on blacklisting 860s again.
-
-Thanks.
