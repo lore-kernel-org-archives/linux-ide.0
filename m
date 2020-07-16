@@ -7,25 +7,25 @@ X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97677C433FE
-	for <linux-ide@archiver.kernel.org>; Thu, 16 Jul 2020 17:19:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04B4BC4345F
+	for <linux-ide@archiver.kernel.org>; Thu, 16 Jul 2020 17:19:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 78B2A2076D
-	for <linux-ide@archiver.kernel.org>; Thu, 16 Jul 2020 17:19:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D975F2082F
+	for <linux-ide@archiver.kernel.org>; Thu, 16 Jul 2020 17:19:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729376AbgGPRSz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 16 Jul 2020 13:18:55 -0400
-Received: from relmlor2.renesas.com ([210.160.252.172]:52329 "EHLO
-        relmlie6.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1729364AbgGPRSy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 16 Jul 2020 13:18:54 -0400
+        id S1729481AbgGPRTM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 16 Jul 2020 13:19:12 -0400
+Received: from relmlor1.renesas.com ([210.160.252.171]:6141 "EHLO
+        relmlie5.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728867AbgGPRTL (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 16 Jul 2020 13:19:11 -0400
 X-IronPort-AV: E=Sophos;i="5.75,360,1589209200"; 
-   d="scan'208";a="52107174"
+   d="scan'208";a="52318916"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 17 Jul 2020 02:18:52 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 17 Jul 2020 02:19:08 +0900
 Received: from localhost.localdomain (unknown [10.226.36.204])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 5954B40B5142;
-        Fri, 17 Jul 2020 02:18:47 +0900 (JST)
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id A909340B55ED;
+        Fri, 17 Jul 2020 02:19:03 +0900 (JST)
 From:   Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 To:     Geert Uytterhoeven <geert+renesas@glider.be>,
         Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
@@ -46,9 +46,9 @@ Cc:     linux-ide@vger.kernel.org, dmaengine@vger.kernel.org,
         alsa-devel@alsa-project.org, linux-renesas-soc@vger.kernel.org,
         linux-usb@vger.kernel.org, Prabhakar <prabhakar.csengg@gmail.com>,
         Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Subject: [PATCH 02/20] arm64: dts: renesas: r8a774e1: Add PCIe device nodes
-Date:   Thu, 16 Jul 2020 18:18:17 +0100
-Message-Id: <1594919915-5225-3-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Subject: [PATCH 05/20] dt-bindings: phy: renesas,usb2-phy: Add r8a774e1 support
+Date:   Thu, 16 Jul 2020 18:18:20 +0100
+Message-Id: <1594919915-5225-6-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1594919915-5225-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
 References: <1594919915-5225-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
@@ -57,77 +57,26 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add PCIe{0,1} device nodes for R8A774E1 SoC.
+Document SoC specific bindings for RZ/G2H (r8a774e1) SoC.
 
 Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
 ---
- arch/arm64/boot/dts/renesas/r8a774e1.dtsi | 47 ++++++++++++++++++++++-
- 1 file changed, 46 insertions(+), 1 deletion(-)
+ Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm64/boot/dts/renesas/r8a774e1.dtsi b/arch/arm64/boot/dts/renesas/r8a774e1.dtsi
-index 001874af8cf2..5805541b7882 100644
---- a/arch/arm64/boot/dts/renesas/r8a774e1.dtsi
-+++ b/arch/arm64/boot/dts/renesas/r8a774e1.dtsi
-@@ -1517,12 +1517,57 @@
- 		};
- 
- 		pciec0: pcie@fe000000 {
-+			compatible = "renesas,pcie-r8a774e1",
-+				     "renesas,pcie-rcar-gen3";
- 			reg = <0 0xfe000000 0 0x80000>;
- 			#address-cells = <3>;
- 			#size-cells = <2>;
-+			bus-range = <0x00 0xff>;
-+			device_type = "pci";
-+			ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000>,
-+				 <0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000>,
-+				 <0x02000000 0 0x30000000 0 0x30000000 0 0x08000000>,
-+				 <0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
-+			/* Map all possible DDR as inbound ranges */
-+			dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x80000000>;
-+			interrupts = <GIC_SPI 116 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 117 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 118 IRQ_TYPE_LEVEL_HIGH>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0>;
-+			interrupt-map = <0 0 0 0 &gic GIC_SPI 116 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&cpg CPG_MOD 319>, <&pcie_bus_clk>;
-+			clock-names = "pcie", "pcie_bus";
-+			power-domains = <&sysc R8A774E1_PD_ALWAYS_ON>;
-+			resets = <&cpg 319>;
- 			status = "disabled";
-+		};
- 
--			/* placeholder */
-+		pciec1: pcie@ee800000 {
-+			compatible = "renesas,pcie-r8a774e1",
-+				     "renesas,pcie-rcar-gen3";
-+			reg = <0 0xee800000 0 0x80000>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			bus-range = <0x00 0xff>;
-+			device_type = "pci";
-+			ranges = <0x01000000 0 0x00000000 0 0xee900000 0 0x00100000>,
-+				 <0x02000000 0 0xeea00000 0 0xeea00000 0 0x00200000>,
-+				 <0x02000000 0 0xc0000000 0 0xc0000000 0 0x08000000>,
-+				 <0x42000000 0 0xc8000000 0 0xc8000000 0 0x08000000>;
-+			/* Map all possible DDR as inbound ranges */
-+			dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x80000000>;
-+			interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 149 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 150 IRQ_TYPE_LEVEL_HIGH>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0>;
-+			interrupt-map = <0 0 0 0 &gic GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&cpg CPG_MOD 318>, <&pcie_bus_clk>;
-+			clock-names = "pcie", "pcie_bus";
-+			power-domains = <&sysc R8A774E1_PD_ALWAYS_ON>;
-+			resets = <&cpg 318>;
-+			status = "disabled";
- 		};
- 
- 		hdmi0: hdmi@fead0000 {
+diff --git a/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml b/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml
+index 440f09fddf93..829e8c7e467a 100644
+--- a/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml
+@@ -21,6 +21,7 @@ properties:
+               - renesas,usb2-phy-r8a774a1 # RZ/G2M
+               - renesas,usb2-phy-r8a774b1 # RZ/G2N
+               - renesas,usb2-phy-r8a774c0 # RZ/G2E
++              - renesas,usb2-phy-r8a774e1 # RZ/G2H
+               - renesas,usb2-phy-r8a7795  # R-Car H3
+               - renesas,usb2-phy-r8a7796  # R-Car M3-W
+               - renesas,usb2-phy-r8a77961 # R-Car M3-W+
 -- 
 2.17.1
 
