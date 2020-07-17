@@ -1,82 +1,114 @@
-Return-Path: <SRS0=cV22=A3=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=x0Ql=A4=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD640C4347E
-	for <linux-ide@archiver.kernel.org>; Thu, 16 Jul 2020 17:21:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B90CC433E0
+	for <linux-ide@archiver.kernel.org>; Fri, 17 Jul 2020 10:06:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 89D972070E
-	for <linux-ide@archiver.kernel.org>; Thu, 16 Jul 2020 17:21:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56C572076A
+	for <linux-ide@archiver.kernel.org>; Fri, 17 Jul 2020 10:06:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1594980381;
+	bh=JbyDqpmt2sPD/UxN3Y83aUYetjdoycCBc3mkCb5lonQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=sii2ZCCBmMTnz2pwP39A9XN6yz0prXwDssFuu3Q0INKcS45mqaAW8lC2IODLIpH9S
+	 Q30UZ+zAYozFYaJ/weDVeXvjZ7veckYzCMbk+D2Rusn8/3HdqNdDF9GdCsRzuNATDt
+	 pLk6QSHNWVITidGJXbxiRItf9HXDdrakfhhcBISg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729322AbgGPRSu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 16 Jul 2020 13:18:50 -0400
-Received: from relmlor2.renesas.com ([210.160.252.172]:52329 "EHLO
-        relmlie6.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728182AbgGPRSt (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 16 Jul 2020 13:18:49 -0400
-X-IronPort-AV: E=Sophos;i="5.75,360,1589209200"; 
-   d="scan'208";a="52107166"
-Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 17 Jul 2020 02:18:46 +0900
-Received: from localhost.localdomain (unknown [10.226.36.204])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id E13F940B55DE;
-        Fri, 17 Jul 2020 02:18:41 +0900 (JST)
-From:   Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-To:     Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Vinod Koul <vkoul@kernel.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Mark Brown <broonie@kernel.org>,
-        Niklas <niklas.soderlund@ragnatech.se>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Magnus Damm <magnus.damm@gmail.com>, devicetree@vger.kernel.org
-Cc:     linux-ide@vger.kernel.org, dmaengine@vger.kernel.org,
-        linux-i2c@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
-        alsa-devel@alsa-project.org, linux-renesas-soc@vger.kernel.org,
-        linux-usb@vger.kernel.org, Prabhakar <prabhakar.csengg@gmail.com>,
-        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Subject: [PATCH 01/20] dt-bindings: pci: rcar-pci: Add device tree support for r8a774e1
-Date:   Thu, 16 Jul 2020 18:18:16 +0100
-Message-Id: <1594919915-5225-2-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1594919915-5225-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
-References: <1594919915-5225-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+        id S1726059AbgGQKGV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 17 Jul 2020 06:06:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35880 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725864AbgGQKGU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 17 Jul 2020 06:06:20 -0400
+Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5C2C22063A;
+        Fri, 17 Jul 2020 10:06:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1594980378;
+        bh=JbyDqpmt2sPD/UxN3Y83aUYetjdoycCBc3mkCb5lonQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=b4vI/unL9mzCnUrhkILocriCxzMcWN/IBsmvvfkg0pVfilr//N/UGySLWP/PMZgcZ
+         niis0Q1Rz7TvGRkDaaY9Cq+6E3rQ+DSx0OQlb1uWXtopx8kIWFkx9PW9e6LnvgNyuB
+         jD0Jml31eD6fF9mz+UqNFXup1VYel/JqYYMMsyBo=
+Date:   Fri, 17 Jul 2020 12:06:10 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc:     tasleson@redhat.com, linux-ide@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Subject: Re: [RFC PATCH v3 5/8] ata_dev_printk: Use dev_printk
+Message-ID: <20200717100610.GA2667456@kroah.com>
+References: <20200623191749.115200-1-tasleson@redhat.com>
+ <20200623191749.115200-6-tasleson@redhat.com>
+ <CGME20200624103532eucas1p2c0988207e4dfc2f992d309b75deac3ee@eucas1p2.samsung.com>
+ <d817c9dd-6852-9233-5f61-1c0bc0f65ca4@samsung.com>
+ <7ed08b94-755f-baab-0555-b4e454405729@redhat.com>
+ <cfff719b-dc12-a06a-d0ee-4165323171de@samsung.com>
+ <20200714081750.GB862637@kroah.com>
+ <dff66d00-e6c3-f9ef-3057-27c60e0bfc11@samsung.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <dff66d00-e6c3-f9ef-3057-27c60e0bfc11@samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add PCIe support for the RZ/G2H (a.k.a. R8A774E1).
+On Tue, Jul 14, 2020 at 10:50:39AM +0200, Bartlomiej Zolnierkiewicz wrote:
+> 
+> On 7/14/20 10:17 AM, Greg Kroah-Hartman wrote:
+> > On Tue, Jul 14, 2020 at 10:06:05AM +0200, Bartlomiej Zolnierkiewicz wrote:
+> >>
+> >> Hi Tony,
+> >>
+> >> On 7/9/20 11:18 PM, Tony Asleson wrote:
+> >>> Hi Bartlomiej,
+> >>>
+> >>> On 6/24/20 5:35 AM, Bartlomiej Zolnierkiewicz wrote:
+> >>>> The root source of problem is that libata transport uses different
+> >>>> naming scheme for ->tdev devices (please see dev_set_name() in
+> >>>> ata_t{dev,link,port}_add()) than libata core for its logging
+> >>>> functionality (ata_{dev,link,port}_printk()).
+> >>>>
+> >>>> Since libata transport is part of sysfs ABI we should be careful
+> >>>> to not break it so one idea for solving the issue is to convert
+> >>>> ata_t{dev,link,port}_add() to use libata logging naming scheme and
+> >>>> at the same time add sysfs symlinks for the old libata transport
+> >>>> naming scheme.
+> > 
+> > Given the age of the current implementation, what suddenly broke that
+> > requires this to change at this point in time?
+> 
+> Unfortunately when adding libata transport classes (+ at the same
+> time embedding struct device-s in libata dev/link/port objects) in
+> the past someone has decided to use different naming scheme than
+> the one used for standard libata log messages (which use printk()
+> without any reference to struct device-s in libata dev/link/port
+> objects).
+> 
+> Now we would like to use dev_printk() for standard libata logging
+> functionality as this is required for 2 pending patchsets:
+> 
+> - move DPRINTK to dynamic debugging (from Hannes Reinecke)
+> 
+> - add persistent durable identifier storage log messages (from Tony)
+> 
+> but we don't want to change standard libata log messages and
+> confuse users..
 
-Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
----
- Documentation/devicetree/bindings/pci/rcar-pci.txt | 1 +
- 1 file changed, 1 insertion(+)
+All of that mess with symlinks just for a common debug printk?  That
+seems excessive :)
 
-diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-index 1041c44a614f..64bb87e7dd06 100644
---- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-@@ -6,6 +6,7 @@ compatible: "renesas,pcie-r8a7743" for the R8A7743 SoC;
- 	    "renesas,pcie-r8a774a1" for the R8A774A1 SoC;
- 	    "renesas,pcie-r8a774b1" for the R8A774B1 SoC;
- 	    "renesas,pcie-r8a774c0" for the R8A774C0 SoC;
-+	    "renesas,pcie-r8a774e1" for the R8A774E1 SoC;
- 	    "renesas,pcie-r8a7779" for the R8A7779 SoC;
- 	    "renesas,pcie-r8a7790" for the R8A7790 SoC;
- 	    "renesas,pcie-r8a7791" for the R8A7791 SoC;
--- 
-2.17.1
+Just use the device name and don't worry about it, I doubt anyone will
+notice, unless the name is _really_ different.
 
+thanks,
+
+greg k-h
