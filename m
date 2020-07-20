@@ -6,38 +6,38 @@ X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
 	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0502C433EC
-	for <linux-ide@archiver.kernel.org>; Mon, 20 Jul 2020 06:35:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8B2EC43457
+	for <linux-ide@archiver.kernel.org>; Mon, 20 Jul 2020 06:36:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A729C22482
-	for <linux-ide@archiver.kernel.org>; Mon, 20 Jul 2020 06:35:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F49D20709
+	for <linux-ide@archiver.kernel.org>; Mon, 20 Jul 2020 06:36:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1595226937;
-	bh=nOyt9zgAM348tGfcEVMGIE0son8XaFt62InAZ5uCd0E=;
+	s=default; t=1595227009;
+	bh=G8QKIIPp5D4K8kA/4r2aQzDTcpoqiOLy2Z0bz9pLapc=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=Kqfu1R1Wb/npu6j0d0QwtCdq8gRz9mY6EFx2vkHCoxLORRBBWjpMngzs992DrFX7w
-	 xTzc/yyg86Ems5WgUt88jwhX+CECFlmTgJ96YUoKRxR9bJY2YwuVf5wTHiPStoH/H3
-	 387NL2Q9IK6o70tXbQnlW8gMGaVBoU8CrsX6Yss0=
+	b=UVICZgC5PxXHoy8TYGUjmmIsvXNpExjzNNF0Cj6pCt/dnb+V7X0NIy+kA6CGPaerb
+	 AkSsUFlIcdVciWzZt19JCn2d/SpVrETAwGo/ycw/TfF3low1hdTqi9Mt5WL3e0kM6F
+	 oD8kKopNGPBXEyfQ3Le1bL1H8OGICx8k3vtEEthQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726938AbgGTGfb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 20 Jul 2020 02:35:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52636 "EHLO mail.kernel.org"
+        id S1727931AbgGTGga (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 20 Jul 2020 02:36:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53808 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725805AbgGTGfb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 20 Jul 2020 02:35:31 -0400
+        id S1726084AbgGTGg3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 20 Jul 2020 02:36:29 -0400
 Received: from localhost (unknown [122.171.202.192])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id CA5EB207EA;
-        Mon, 20 Jul 2020 06:35:29 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id C195920709;
+        Mon, 20 Jul 2020 06:36:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1595226931;
-        bh=nOyt9zgAM348tGfcEVMGIE0son8XaFt62InAZ5uCd0E=;
+        s=default; t=1595226988;
+        bh=G8QKIIPp5D4K8kA/4r2aQzDTcpoqiOLy2Z0bz9pLapc=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=HFfNFxfI4ChTAIt4t2cNiUemslZVtxxW9AM0ma54l9O1SBKh8md97FQ7ykOtaZCQQ
-         VQD+Y5M1dJaHvNsLphLOegIi7w826j/SnB0jmaVpmpJg7c2ua0pMYv1i4HzD6R8dg4
-         0luUXfPuRau+Yl2wL5nQaMqshgLDKopXoCCQKYA0=
-Date:   Mon, 20 Jul 2020 12:05:27 +0530
+        b=nBFRWN4wCbNdNNdFP/mf6w4VUKv5HBcMFBn5nomZjwH+fumLcehyvFrJ6jH9JQvHR
+         JxFsvy4D00XgAwF0QS/XApUT+dv74ujDXrAukRJo3IeT3yyY2TpWTHco5oBmJ9MuDz
+         1+QKf3jQpAbOuSmZbWpaisjBmBLnXMbycc7bj4oQ=
+Date:   Mon, 20 Jul 2020 12:06:25 +0530
 From:   Vinod Koul <vkoul@kernel.org>
 To:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
@@ -58,22 +58,22 @@ Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
         linux-pci@vger.kernel.org, alsa-devel@alsa-project.org,
         linux-renesas-soc@vger.kernel.org, linux-usb@vger.kernel.org,
         Prabhakar <prabhakar.csengg@gmail.com>
-Subject: Re: [PATCH 09/20] dt-bindings: phy: renesas,usb3-phy: Add r8a774e1
- support
-Message-ID: <20200720063527.GF12965@vkoul-mobl>
+Subject: Re: [PATCH 12/20] dt-bindings: dma: renesas,usb-dmac: Add binding
+ for r8a774e1
+Message-ID: <20200720063625.GG12965@vkoul-mobl>
 References: <1594919915-5225-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <1594919915-5225-10-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <1594919915-5225-13-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1594919915-5225-10-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+In-Reply-To: <1594919915-5225-13-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 On 16-07-20, 18:18, Lad Prabhakar wrote:
-> Document RZ/G2H (R8A774E1) SoC bindings.
+> Add binding for R8A774E1 SoC (RZ/G2H).
 
 Applied, thanks
 
