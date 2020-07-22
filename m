@@ -1,98 +1,116 @@
-Return-Path: <SRS0=4X/E=BA=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=MRn8=BB=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED39EC433FC
-	for <linux-ide@archiver.kernel.org>; Tue, 21 Jul 2020 03:36:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3FA7C433DF
+	for <linux-ide@archiver.kernel.org>; Wed, 22 Jul 2020 08:50:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C48D9207DD
-	for <linux-ide@archiver.kernel.org>; Tue, 21 Jul 2020 03:36:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9AA9920709
+	for <linux-ide@archiver.kernel.org>; Wed, 22 Jul 2020 08:50:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1595302591;
-	bh=66esNYNQdR8zRUAUWKaqOVWSF/r9QbOCqiD9gADqXjg=;
+	s=default; t=1595407824;
+	bh=KBex7YObWFkv3ZED+tckY/19Y0OC0cIjEMo2Ccpv9Bg=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=N46mLYTQ+qSOPN+jWawylGYiN5gs66o2tMlRLdNJ39J2cwzhoWprojLlCLf2gi+CD
-	 NfL+dQggtPN1b3nkhlVGQwTQvHDaIrGCTWi153FRCdeQPSvwLxU+wOcAdQkvkEkjJg
-	 mQyMn+kkZvq/CH5L/IIsAi7biGRYOaXDlsIZb8AU=
+	b=dvIWMaZ19dZZwdXnN0aXcQy7X0xDVwJg9hd1hB2s+NwbG0wYExs/qnK+XObmZWr/D
+	 V76OTMyZS3Vk++nOmM5Zsc7OM6L/JGB6owHuQeo48Ju/u3OrkLY+1wwNo2OHVc1Bd7
+	 Rh534F1mQl5U0V0O2b1liIqnmxJ7HKg1+spDYvIY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726891AbgGUDg0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 20 Jul 2020 23:36:26 -0400
-Received: from mail-io1-f65.google.com ([209.85.166.65]:34388 "EHLO
-        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726016AbgGUDgZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jul 2020 23:36:25 -0400
-Received: by mail-io1-f65.google.com with SMTP id q74so19947827iod.1;
-        Mon, 20 Jul 2020 20:36:24 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=SAsJo8xERfHGR71VJmv3ZbMcHE9rd42Dv9/4mhEH3Wg=;
-        b=bwK2mw4Ei53ZBufB/1sduVVmhIIXAHbVVIBDin9Spn02QyL9jH/wfo7ZG9Erhx9By0
-         89N40erlQ5yai3L+qbpgGpqVUp94M5+Wj41zCYibx+4uOtlFzh2nAm2VT2ioh6GqjG25
-         hAIBzm57oPgvnTkwjPEE3UOUansiVgCE1SjRH329vvehwCp4Ph8vvPWF2ZY2FaeAJBi3
-         tBHbAtv35nBPN9mRvvducKRxZRWg5hjiT9VW0OrkyHa7fPNUCh+js17xOyUiwZJ7eKBs
-         tqyO26nNsBEgCvjFxd+gVXavPQbVV1R+bovGS4Vm9VIO1bR2b+nMI0H/Bbpe1blJtfAf
-         /uxg==
-X-Gm-Message-State: AOAM533ssalTH+rArNmhuK4Ds26X3YSu6RmRW5/PMRHUMqzm1UG/YnAe
-        LLxAiyImF9xSUc0fNrgYLg==
-X-Google-Smtp-Source: ABdhPJzrFvJ20jW1Hp+YduXO4PyNsJdhSWfFUkY4PyKiuJTBmQeBTZsE38InZe1NYreyyZDeINhX4g==
-X-Received: by 2002:a5d:8f04:: with SMTP id f4mr26176444iof.33.1595302584271;
-        Mon, 20 Jul 2020 20:36:24 -0700 (PDT)
-Received: from xps15 ([64.188.179.252])
-        by smtp.gmail.com with ESMTPSA id m6sm10272866ilb.39.2020.07.20.20.36.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 20 Jul 2020 20:36:23 -0700 (PDT)
-Received: (nullmailer pid 3507107 invoked by uid 1000);
-        Tue, 21 Jul 2020 03:36:21 -0000
-Date:   Mon, 20 Jul 2020 21:36:21 -0600
-From:   Rob Herring <robh@kernel.org>
+        id S1730120AbgGVIuY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 22 Jul 2020 04:50:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45574 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726526AbgGVIuX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 22 Jul 2020 04:50:23 -0400
+Received: from localhost (p54b33083.dip0.t-ipconnect.de [84.179.48.131])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 6785D2065E;
+        Wed, 22 Jul 2020 08:50:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1595407823;
+        bh=KBex7YObWFkv3ZED+tckY/19Y0OC0cIjEMo2Ccpv9Bg=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=iJzPYASLrtpyTXcRKDvZ/DG2+ITva/hZLilKwxh9W9WVvDgyr+Jf7zCm98iQodmP0
+         wXVnB3cdXiMmbV1Db++NNRZ35/pzumvSy/HpvIrhnm2t9ibHKi+f3AnTAYeoWSJnFY
+         yAsS1ll5wCriS7wGUkQlq5BljvfR5NCn3mALKCKs=
+Date:   Wed, 22 Jul 2020 10:50:20 +0200
+From:   Wolfram Sang <wsa@kernel.org>
 To:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Cc:     Jens Axboe <axboe@kernel.dk>,
+Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
+        Vinod Koul <vkoul@kernel.org>,
         Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        linux-ide@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-i2c@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Niklas <niklas.soderlund@ragnatech.se>,
-        Magnus Damm <magnus.damm@gmail.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, Vinod Koul <vkoul@kernel.org>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Mark Brown <broonie@kernel.org>, alsa-devel@alsa-project.org,
-        linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org,
         Marek Vasut <marek.vasut+renesas@gmail.com>,
-        dmaengine@vger.kernel.org, Prabhakar <prabhakar.csengg@gmail.com>,
-        Rob Herring <robh+dt@kernel.org>, linux-media@vger.kernel.org
-Subject: Re: [PATCH 17/20] dt-bindings: media: renesas,vin: Add R8A774E1
- support
-Message-ID: <20200721033621.GA3507062@bogus>
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Mark Brown <broonie@kernel.org>,
+        Niklas <niklas.soderlund@ragnatech.se>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        devicetree@vger.kernel.org, linux-ide@vger.kernel.org,
+        dmaengine@vger.kernel.org, linux-i2c@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-pci@vger.kernel.org, alsa-devel@alsa-project.org,
+        linux-renesas-soc@vger.kernel.org, linux-usb@vger.kernel.org,
+        Prabhakar <prabhakar.csengg@gmail.com>
+Subject: Re: [PATCH 00/20] Add support for SATA/PCIe/USB2[3]/VIN/CSI on
+ R8A774E1
+Message-ID: <20200722085020.GD1030@ninjato>
 References: <1594919915-5225-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <1594919915-5225-18-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="C1iGAkRnbeBonpVg"
 Content-Disposition: inline
-In-Reply-To: <1594919915-5225-18-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+In-Reply-To: <1594919915-5225-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, 16 Jul 2020 18:18:32 +0100, Lad Prabhakar wrote:
-> Document support for the VIN module in the Renesas RZ/G2H (R8A774E1) SoC.
-> 
-> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
-> ---
->  Documentation/devicetree/bindings/media/renesas,vin.yaml | 1 +
->  1 file changed, 1 insertion(+)
-> 
 
-Acked-by: Rob Herring <robh@kernel.org>
+--C1iGAkRnbeBonpVg
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+
+> This patch series adds support for the following peripherals on RZ/G2H SoC
+>  * PCIe
+>  * SATA
+>  * USB2
+>  * USB3
+>  * Audio
+>  * VIN
+>  * CSI
+
+Nice. But please update your recipients list. No need to have the i2c
+mailing list in there.
+
+
+--C1iGAkRnbeBonpVg
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCgAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAl8X/cwACgkQFA3kzBSg
+KbbCjg/9EwkGut+pjFLsSqqQcdsIzTD9kym4OTeB/bHTnHu+yCKyYJ0Sa6ytd/+O
+J9JLAahz7QkGnfOSFkz17HGK29XcNocub/8bIAuUBuydV8yQrleXLt/3oOKWOWrt
+FC9p8gGr1q0/DLKeCOeIG1ftIaOe22L6bJsuxCzhJG8DetJY0If4fZ+nZc08r6Af
+qMClhrnXZDqG7mYhLiWkeeKoiootXREJ8b2NozWKGLkQF0zMpSzQ0H+IwNrj6ElB
+OCZHdbRrRLc1oIHmNWosZiFrH20DmVdjRUaZhvP1sBiw7/CdjZAf10OedOF8fv48
+PGMhu3HM2FsqzPncnYAiNtTJrwESnDDROinJW8D+mAjFToABbnr1Nhc5iC38elIl
+HTsJgC03NEZfZ1k6rvr1t/cYGcHePKzXod1ftEvvmT9093mGLlArZhMmKDFcXiDU
+4g01TTz4SetHaOqdzZlPdxu5cJ1YGyMcOQQgBAC1C2vOLGg2Fsqs8VBI/ud/VAG2
+XYAILg0D7wbFUd1fMYkG1W4x9HNdVlNXd4cCZWr4Geqc51B/9CQyJPhPJfCMK8py
+KNcd8JmzsXN1oXW9E7K1VjHiMCb9TsBswsXXz8nnsfUuE09CpVQGfFqtmS+2nMjV
+4VyHziCHbgqRqmlFlzwkGp7gcBcxBywyBwhRobKdGCTwFF+J7VE=
+=oXte
+-----END PGP SIGNATURE-----
+
+--C1iGAkRnbeBonpVg--
