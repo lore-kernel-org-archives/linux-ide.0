@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95445C4345B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BA16C4345A
 	for <linux-ide@archiver.kernel.org>; Fri, 24 Jul 2020 17:17:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C99A20658
+	by mail.kernel.org (Postfix) with ESMTP id 29C7520658
 	for <linux-ide@archiver.kernel.org>; Fri, 24 Jul 2020 17:17:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bz9Pd7oI"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GDrDVWQ/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726953AbgGXRR0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 24 Jul 2020 13:17:26 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:55462 "EHLO
+        id S1726891AbgGXRRZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 24 Jul 2020 13:17:25 -0400
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:49656 "EHLO
         us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726962AbgGXRRX (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 24 Jul 2020 13:17:23 -0400
+        with ESMTP id S1726969AbgGXRRY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 24 Jul 2020 13:17:24 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1595611042;
+        s=mimecast20190719; t=1595611043;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=mODc3efTkpI2zf5Pknz9bXgNLlzTp1vYCCFGuMMO6Cs=;
-        b=bz9Pd7oIe0RNM4oOaPIwB/yxCT/PLlz1A7zzLxfAWYog4obJsPkFYFwZA380gANnzzOE58
-        2S8Chw3qSqu7Gr6cDpY2Mea4Cc6kuMV9s2RLMtfI33IYaBLsuc9UvEcdpxGHK9S37kl2am
-        rTr9PpR+4qRiNiZU48u6Cpnk9E+mKpE=
+        bh=oSlX4q9qPcgrYzkVhKJS1bSnP7QaRJh6k1RERLvLpgM=;
+        b=GDrDVWQ/Vk96/IvPhxGDy/HUjRqhA3p787POjFAYWRkQ+Znl6h7Sn4rj/CL8NCgLZzO2Uy
+        ErzBcKMk3Ko3fOIAYUv5/LV+uC2XwUrJi9MTVR2nqLpaH4dqRubTCrprj5PDCqwUcq2FrQ
+        4KNGyvFVjPTLV+D9/FaRVdi8rKpTenU=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-281-AFtHj5L7PQmK2wkqzuSOOA-1; Fri, 24 Jul 2020 13:17:18 -0400
-X-MC-Unique: AFtHj5L7PQmK2wkqzuSOOA-1
+ us-mta-223-9AoSTa1sNEaDeNxosstYRQ-1; Fri, 24 Jul 2020 13:17:21 -0400
+X-MC-Unique: 9AoSTa1sNEaDeNxosstYRQ-1
 Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7099318FF662;
-        Fri, 24 Jul 2020 17:17:17 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7EEE958;
+        Fri, 24 Jul 2020 17:17:20 +0000 (UTC)
 Received: from sulaco.redhat.com (unknown [10.3.128.8])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 33D8474F64;
-        Fri, 24 Jul 2020 17:17:16 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 4389674F64;
+        Fri, 24 Jul 2020 17:17:19 +0000 (UTC)
 From:   Tony Asleson <tasleson@redhat.com>
 To:     linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-scsi@vger.kernel.org, b.zolnierkie@samsung.com,
         axboe@kernel.dk
-Subject: [v4 05/11] nvme: Add durable name for dev_printk
-Date:   Fri, 24 Jul 2020 12:17:00 -0500
-Message-Id: <20200724171706.1550403-6-tasleson@redhat.com>
+Subject: [v4 07/11] Add durable_name_printk
+Date:   Fri, 24 Jul 2020 12:17:02 -0500
+Message-Id: <20200724171706.1550403-8-tasleson@redhat.com>
 In-Reply-To: <20200724171706.1550403-1-tasleson@redhat.com>
 References: <20200724171706.1550403-1-tasleson@redhat.com>
 MIME-Version: 1.0
@@ -60,49 +60,62 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Corrections from Keith Busch review comments.
+Ideally block related code would standardize on using dev_printk,
+but dev_printk does change the user visible messages which is
+questionable.  Adding this function which adds the structured
+key/value durable name to the log entry.  It has the
+same signature as dev_printk.  In the future, code that
+is using this could easily transition to dev_printk when that
+becomes workable.
 
 Signed-off-by: Tony Asleson <tasleson@redhat.com>
 ---
- drivers/nvme/host/core.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+ drivers/base/core.c        | 15 +++++++++++++++
+ include/linux/dev_printk.h |  5 +++++
+ 2 files changed, 20 insertions(+)
 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index f3c037f5a9ba..f2e5b91668a1 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -2667,6 +2667,22 @@ static bool nvme_validate_cntlid(struct nvme_subsystem *subsys,
- 	return true;
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index c2439d12608d..aaf7b8256712 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -3865,6 +3865,21 @@ void dev_printk(const char *level, const struct device *dev,
  }
+ EXPORT_SYMBOL(dev_printk);
  
-+static ssize_t wwid_show(struct device *dev, struct device_attribute *attr,
-+			char *buf);
-+
-+static int dev_to_nvme_durable_name(const struct device *dev, char *buf, size_t len)
++void durable_name_printk(const char *level, const struct device *dev,
++		const char *fmt, ...)
 +{
-+	char serial[144];	/* Max 141 for wwid_show */
-+	ssize_t serial_len = wwid_show((struct device *)dev, NULL, serial);
++	size_t dictlen;
++	va_list args;
++	char dict[288];
 +
-+	if (serial_len > 0 && serial_len < len) {
-+		serial_len -= 1;  /* Remove the '\n' from the string */
-+		strncpy(buf, serial, serial_len);
-+		return serial_len;
-+	}
-+	return 0;
++	dictlen = dev_durable_name(dev, dict, sizeof(dict));
++
++	va_start(args, fmt);
++	vprintk_emit(0, level[1] - '0', dict, dictlen, fmt, args);
++	va_end(args);
 +}
++EXPORT_SYMBOL(durable_name_printk);
 +
- static int nvme_init_subsystem(struct nvme_ctrl *ctrl, struct nvme_id_ctrl *id)
- {
- 	struct nvme_subsystem *subsys, *found;
-@@ -3616,6 +3632,8 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid)
- 	disk->queue = ns->queue;
- 	disk->flags = flags;
- 	memcpy(disk->disk_name, disk_name, DISK_NAME_LEN);
-+	disk_to_dev(disk)->durable_name = dev_to_nvme_durable_name;
+ #define define_dev_printk_level(func, kern_level)		\
+ void func(const struct device *dev, const char *fmt, ...)	\
+ {								\
+diff --git a/include/linux/dev_printk.h b/include/linux/dev_printk.h
+index 5aad06b4ca7b..502cf9fd7fe7 100644
+--- a/include/linux/dev_printk.h
++++ b/include/linux/dev_printk.h
+@@ -32,6 +32,11 @@ int dev_printk_emit(int level, const struct device *dev, const char *fmt, ...);
+ __printf(3, 4) __cold
+ void dev_printk(const char *level, const struct device *dev,
+ 		const char *fmt, ...);
 +
- 	ns->disk = disk;
- 
- 	__nvme_revalidate_disk(disk, id);
++__printf(3, 4) __cold
++void durable_name_printk(const char *level, const struct device *dev,
++			const char *fmt, ...);
++
+ __printf(2, 3) __cold
+ void _dev_emerg(const struct device *dev, const char *fmt, ...);
+ __printf(2, 3) __cold
 -- 
 2.26.2
 
