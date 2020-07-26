@@ -1,107 +1,61 @@
-Return-Path: <SRS0=MTVe=BE=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=h/kw=BF=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A339BC433DF
-	for <linux-ide@archiver.kernel.org>; Sat, 25 Jul 2020 10:29:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89E42C433DF
+	for <linux-ide@archiver.kernel.org>; Sun, 26 Jul 2020 15:10:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 718AD206EB
-	for <linux-ide@archiver.kernel.org>; Sat, 25 Jul 2020 10:29:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 653432065F
+	for <linux-ide@archiver.kernel.org>; Sun, 26 Jul 2020 15:10:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QrvbgmPC"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ultu3nd1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726593AbgGYK3q (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 25 Jul 2020 06:29:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35946 "EHLO
+        id S1726292AbgGZPKh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 26 Jul 2020 11:10:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726572AbgGYK3p (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 25 Jul 2020 06:29:45 -0400
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A29B9C0619D3;
-        Sat, 25 Jul 2020 03:29:45 -0700 (PDT)
-Received: by mail-pl1-x630.google.com with SMTP id x9so5835484plr.2;
-        Sat, 25 Jul 2020 03:29:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=5iiobHJC3O2IChZKdVtcb9SVSJs7fTb/PaPBRVV381I=;
-        b=QrvbgmPCB44/PtF+dfEMgm6KzsPzjZ4gJzJwcOv/e+Q+kmmqiwku3f5KsveJ6tNkSO
-         iBPd27ixdWLcPUZOj8OPhywq/BYLv1AtMB6mzvdKHC/SJCSOQanYy8qGa1I5AwsYMI0V
-         hqqTpPtUYHkzauLHaCGeizRhwc5PMfBpb+rJzsZ8Rz7BCN6/T7/1AUf1WWBDlFiA2pJX
-         LDwiTp7eYkZp9MiqJjImyPDBFHlk/uNOMAZePvGHoHumZB7Cymup+Y/V4AbS0ClIxvM1
-         qeNp/XE+6bn0Oz8adsCPUVNFEB0vxhvie9O+oJt6BZ7gsu6gJsWew0QOAYnzLO/ILMK4
-         Es9Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=5iiobHJC3O2IChZKdVtcb9SVSJs7fTb/PaPBRVV381I=;
-        b=K3dBx9wd1KYEP7Z6DKzGuObt6YnQoZJzMwIehtiXHM64xGwDiQMOoQLrBZLP0Ht28l
-         HXaM8+oYUY0Ybi6B4iIUpLRkqg/0yGqVuTGcHx+MT69czTeHXEdptTps2iyjfQj9hq8j
-         PnMMYX0rrcZvVp/FrV37IogLzBRiQgsbwQBVb0794fqyX9C9+G0EFadNXCA+XCn6JSU9
-         CeGbOnHBKCZjTVmjMXO3HKD3/y+cmV4ytITxqZaLx2umKG89ye12RISOxT+snOpwYJFt
-         fbkzIk0fzSo11z5/BGE5ljeVJAtseB3kGdLcPy2YBcC/6d1eswojqCvOjArNsRQUmrtK
-         xyGg==
-X-Gm-Message-State: AOAM530F9iX688T3nGbqITcoeY+lt7GGcTV8Iko9Ma0KHjUsbmLEXxa4
-        QmJgHQNSRolDJOy2rkwoRjUBrnaHnijDJYcKf1tlDFjF
-X-Google-Smtp-Source: ABdhPJwQV5hQSViTB/TcdBE4vtYE2CsMSC0ic/lA5AGomE7JF336tMBGTG/H4psobnqk+RIgItE7FclooWFBaTTeOuE=
-X-Received: by 2002:a17:902:b098:: with SMTP id p24mr12097167plr.18.1595672984994;
- Sat, 25 Jul 2020 03:29:44 -0700 (PDT)
-MIME-Version: 1.0
-References: <20200724171706.1550403-1-tasleson@redhat.com> <20200724171706.1550403-12-tasleson@redhat.com>
-In-Reply-To: <20200724171706.1550403-12-tasleson@redhat.com>
-From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Sat, 25 Jul 2020 13:29:28 +0300
-Message-ID: <CAHp75VeRzY9wrLpEgi73p=7PEaG9N5iiBAuuys1nY6n4_arFCQ@mail.gmail.com>
-Subject: Re: [v4 11/11] buffer_io_error: Use durable_name_printk_ratelimited
+        with ESMTP id S1725978AbgGZPKh (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 26 Jul 2020 11:10:37 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89795C0619D2;
+        Sun, 26 Jul 2020 08:10:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=kcuMXgFNFtIkl0GDj0p20pjT96YpQLVHcMeUCcbH19o=; b=ultu3nd1Zhi8vL8FqmXKkj+BID
+        BNIjw/hg0UdljRqFd7Rt8DJFCCNdkCL2ihNeIiatBgZyRIqxDR6Ba/cDaTgqG1bMdFY31yVUv6uil
+        SdZoK9WXeKq9uleEJF7W/Acu6G4jvO2q3dj304dy28OndAm0VqiftzEVfBiOQEAamCdfAihZ4Xko0
+        y7eWnsGb6A1EqyThHab2Qv2VtpG+i6dvEISnNqdeayq4QgK5HeozbiGbHKnXcbIQKX6l+tNF/0qDQ
+        Aym2A8NtFTDoCKCd0/Z/gjFWYb7xaeUEU3/pu2dUNJ0vgXWvonCEyRcxlMWnVIJAhCYP674xLg9Xm
+        j2LQEwfg==;
+Received: from hch by casper.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1jziIN-0006JY-E5; Sun, 26 Jul 2020 15:10:35 +0000
+Date:   Sun, 26 Jul 2020 16:10:35 +0100
+From:   Christoph Hellwig <hch@infradead.org>
 To:     Tony Asleson <tasleson@redhat.com>
 Cc:     linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        Jens Axboe <axboe@kernel.dk>
-Content-Type: text/plain; charset="UTF-8"
+        linux-scsi@vger.kernel.org, b.zolnierkie@samsung.com,
+        axboe@kernel.dk
+Subject: Re: [v4 00/11] Add persistent durable identifier to storage log
+ messages
+Message-ID: <20200726151035.GC20628@infradead.org>
+References: <20200724171706.1550403-1-tasleson@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20200724171706.1550403-1-tasleson@redhat.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Jul 24, 2020 at 8:19 PM Tony Asleson <tasleson@redhat.com> wrote:
->
-> Replace printk_ratelimited with one that adds the key/value
-> durable name to log entry.
+FYI, I think these identifiers are absolutely horrible and have no
+business in dmesg:
 
->  static void buffer_io_error(struct buffer_head *bh, char *msg)
->  {
-> -       if (!test_bit(BH_Quiet, &bh->b_state))
-> -               printk_ratelimited(KERN_ERR
-> +       if (!test_bit(BH_Quiet, &bh->b_state)) {
-> +               struct device *gendev;
-> +
-> +               gendev = (bh->b_bdev->bd_disk) ?
-> +                       disk_to_dev(bh->b_bdev->bd_disk) : NULL;
-
-Besides unneeded parentheses as Sergey noticed...
-
-> +
-> +               durable_name_printk_ratelimited(KERN_ERR, gendev,
->                         "Buffer I/O error on dev %pg, logical block %llu%s\n",
->                         bh->b_bdev, (unsigned long long)bh->b_blocknr, msg);
-> +       }
-
-...can we drop indentation level?
-
-  if (test_bit(...))
-   return;
-  ...
-
->  }
-
--- 
-With Best Regards,
-Andy Shevchenko
+Nacked-by: Christoph Hellwig <hch@lst.de>
