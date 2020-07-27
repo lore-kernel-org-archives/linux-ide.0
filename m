@@ -2,129 +2,151 @@ Return-Path: <SRS0=uzjf=BG=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
 	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBF81C433E8
-	for <linux-ide@archiver.kernel.org>; Mon, 27 Jul 2020 06:58:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BEE9C433E1
+	for <linux-ide@archiver.kernel.org>; Mon, 27 Jul 2020 07:20:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C32E12072E
-	for <linux-ide@archiver.kernel.org>; Mon, 27 Jul 2020 06:58:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE27F2075D
+	for <linux-ide@archiver.kernel.org>; Mon, 27 Jul 2020 07:20:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="EDK8obBO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726278AbgG0G6Y convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 27 Jul 2020 02:58:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52634 "EHLO
+        id S1726739AbgG0HUf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 27 Jul 2020 03:20:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56072 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726116AbgG0G6Y (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 27 Jul 2020 02:58:24 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4001EC0619D2
-        for <linux-ide@vger.kernel.org>; Sun, 26 Jul 2020 23:58:24 -0700 (PDT)
-Received: from lupine.hi.pengutronix.de ([2001:67c:670:100:3ad5:47ff:feaf:1a17] helo=lupine)
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <p.zabel@pengutronix.de>)
-        id 1jzx5W-0006HG-KR; Mon, 27 Jul 2020 08:58:18 +0200
-Received: from pza by lupine with local (Exim 4.92)
-        (envelope-from <p.zabel@pengutronix.de>)
-        id 1jzx5U-0004Sa-7O; Mon, 27 Jul 2020 08:58:16 +0200
-Message-ID: <00892cf87c3da679d76c4632109ebcf21059d556.camel@pengutronix.de>
-Subject: Re: [PATCH v9 02/12] ata: ahci_brcm: Fix use of BCM7216 reset
- controller
-From:   Philipp Zabel <p.zabel@pengutronix.de>
-To:     Jim Quinlan <james.quinlan@broadcom.com>,
-        linux-pci@vger.kernel.org,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        Christoph Hellwig <hch@lst.de>,
-        Robin Murphy <robin.murphy@arm.com>,
-        bcm-kernel-feedback-list@broadcom.com
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Date:   Mon, 27 Jul 2020 08:58:16 +0200
-In-Reply-To: <20200724203407.16972-3-james.quinlan@broadcom.com>
-References: <20200724203407.16972-1-james.quinlan@broadcom.com>
-         <20200724203407.16972-3-james.quinlan@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-User-Agent: Evolution 3.30.5-1.1 
+        with ESMTP id S1726433AbgG0HUf (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 27 Jul 2020 03:20:35 -0400
+Received: from mail-pf1-x442.google.com (mail-pf1-x442.google.com [IPv6:2607:f8b0:4864:20::442])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40ED2C0619D2;
+        Mon, 27 Jul 2020 00:20:35 -0700 (PDT)
+Received: by mail-pf1-x442.google.com with SMTP id z188so728051pfc.6;
+        Mon, 27 Jul 2020 00:20:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=YJXjh4GmMEW7XN5/tplqsYhfZdl3H6taMH5axLntfAw=;
+        b=EDK8obBOfKHNTjFkgxYJ9+5FEXC9QIaLLHJwM0UjYRXgbOW/WYsNnkfJKS0zWMKRBl
+         5G+RoaiMjvm8LFeedDpWGTIR/HiNGJAhklG0TJk6dIgJOkeY9HZqlYV4DmrwKNByys3P
+         Elrq6P9TpGDjVCIsjqjmlSQSNhqePcgaXZ2gp2jdGvOjgzFlD1EPa0Ew4mslTyOCTsbc
+         RxP6CfefjoGYcqCDH7LsOEVFU1yVVSZIft1lpudYstiGuLQmnhN6Q+bMVFtx7HH+PYgn
+         CJO0YLupfA5nXjCK/E5cpOjpZeLw9avWbMDPZSOU24yLLKwOvFteoZ0YEZYH5WRFPh6l
+         NuQQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=YJXjh4GmMEW7XN5/tplqsYhfZdl3H6taMH5axLntfAw=;
+        b=bQ89a4W1VSSAR98Qlk6uc/1W4U3bX6i75C3XSoPKDsCZGUxEpJRiiS8uNfQVaCCYix
+         +o64u82aVN4W6wi5t4MQ7zKw+6rSRz45FCKRpvU4nu7mNZ6Ost/A1FaHh4tJqNN68Xcm
+         8o5fY/C4r3Unhsy0yQLa0Xkk0OEoBz7Da3/oIC/q6AJqmA9zzka61UWlT/T3eCK8mbMb
+         F9Nd1NSvh1EAoFfJnL9+m59CyK3SUdHHN47+qmS7NBh0WBBcPq8AqGojeGtLJQYpaAkd
+         W6o+UHwvfEIi18UPS4zijvIMDba8neidA8+toGG0v7Bg5BfCHAQ6mFiLgo64d7KdrMri
+         CCPw==
+X-Gm-Message-State: AOAM53374Du1DvFLjQ4RaWZ40xWhUtYegE/RmnRVLPPqbhpX8H0CHiJF
+        fCnn5vxnpzSPtOn4l8Nm32I=
+X-Google-Smtp-Source: ABdhPJzo4zlFjXMsAfOgM4X3zAg74cxBAhosgrhd7WC+wNNgCrrv4S9sv/p1zxTGJSCjmjnxOwQ/tg==
+X-Received: by 2002:aa7:8e0c:: with SMTP id c12mr18974880pfr.38.1595834434715;
+        Mon, 27 Jul 2020 00:20:34 -0700 (PDT)
+Received: from gmail.com ([103.105.152.86])
+        by smtp.gmail.com with ESMTPSA id lb13sm7971701pjb.9.2020.07.27.00.20.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 27 Jul 2020 00:20:34 -0700 (PDT)
+Date:   Mon, 27 Jul 2020 12:49:10 +0530
+From:   Vaibhav Gupta <vaibhavgupta40@gmail.com>
+To:     kernel test robot <lkp@intel.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Vaibhav Gupta <vaibhav.varodek@gmail.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        kbuild-all@lists.01.org, clang-built-linux@googlegroups.com,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        Shuah Khan <skhan@linuxfoundation.org>
+Subject: Re: [PATCH v1] ata: use generic power management
+Message-ID: <20200727071910.GA6368@gmail.com>
+References: <20200724110630.1219882-1-vaibhavgupta40@gmail.com>
+ <202007250808.yhgHBmpJ%lkp@intel.com>
 MIME-Version: 1.0
-X-SA-Exim-Connect-IP: 2001:67c:670:100:3ad5:47ff:feaf:1a17
-X-SA-Exim-Mail-From: p.zabel@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <202007250808.yhgHBmpJ%lkp@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Jim,
-
-On Fri, 2020-07-24 at 16:33 -0400, Jim Quinlan wrote:
-> From: Jim Quinlan <jquinlan@broadcom.com>
+On Sat, Jul 25, 2020 at 09:00:12AM +0800, kernel test robot wrote:
+> Hi Vaibhav,
 > 
-> A reset controller "rescal" is shared between the AHCI driver and the PCIe
-> driver for the BrcmSTB 7216 chip.  Use
-> devm_reset_control_get_optional_shared() to handle this sharing.
+> Thank you for the patch! Perhaps something to improve:
 > 
-> Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
+> [auto build test WARNING on block/for-next]
+> [also build test WARNING on v5.8-rc6 next-20200724]
+> [If your patch is applied to the wrong git tree, kindly drop us a note.
+> And when submitting patch, we suggest to use '--base' as documented in
+> https://git-scm.com/docs/git-format-patch]
 > 
-> Fixes: 272ecd60a636 ("ata: ahci_brcm: BCM7216 reset is self de-asserting")
-> Fixes: c345ec6a50e9 ("ata: ahci_brcm: Support BCM7216 reset controller name")
+> url:    https://github.com/0day-ci/linux/commits/Vaibhav-Gupta/ata-use-generic-power-management/20200724-190929
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git for-next
+> config: x86_64-allyesconfig (attached as .config)
+> compiler: clang version 12.0.0 (https://github.com/llvm/llvm-project 1d09ecf36175f7910ffedd6d497c07b5c74c22fb)
+> reproduce (this is a W=1 build):
+>         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         # install x86_64 cross compiling tool for clang build
+>         # apt-get install binutils-x86-64-linux-gnu
+>         # save the attached .config to linux build tree
+>         COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross ARCH=x86_64 
+> 
+> If you fix the issue, kindly add following tag as appropriate
+> Reported-by: kernel test robot <lkp@intel.com>
+> 
+> All warnings (new ones prefixed by >>):
+> 
+> >> drivers/ata/pata_triflex.c:186:36: warning: ISO C90 forbids mixing declarations and code [-Wdeclaration-after-statement]
+>            static const struct ata_port_info info = {
+>                                              ^
+>    1 warning generated.
+> 
+> vim +186 drivers/ata/pata_triflex.c
+> 
+> 669a5db411d85a Jeff Garzik     2006-08-29  176  
+> 669a5db411d85a Jeff Garzik     2006-08-29  177  static int triflex_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+> 669a5db411d85a Jeff Garzik     2006-08-29  178  {
+> 5acd74b592933f Vaibhav Gupta   2020-07-24  179  	/*
+> 5acd74b592933f Vaibhav Gupta   2020-07-24  180  	 * We must not disable or powerdown the device.
+> 5acd74b592933f Vaibhav Gupta   2020-07-24  181  	 * APM bios refuses to suspend if IDE is not accessible.
+> 5acd74b592933f Vaibhav Gupta   2020-07-24  182  	 */
+> 5acd74b592933f Vaibhav Gupta   2020-07-24  183  	dev->pm_cap = 0;
+> 5acd74b592933f Vaibhav Gupta   2020-07-24  184  	dev_info(&dev->dev, "Disable triflex to be turned off by PCI CORE\n");
+> 5acd74b592933f Vaibhav Gupta   2020-07-24  185  
+> 1626aeb881236c Tejun Heo       2007-05-04 @186  	static const struct ata_port_info info = {
+> 1d2808fd3d2d5d Jeff Garzik     2007-05-28  187  		.flags = ATA_FLAG_SLAVE_POSS,
+> 14bdef982caeda Erik Inge Bolsø 2009-03-14  188  		.pio_mask = ATA_PIO4,
+> 14bdef982caeda Erik Inge Bolsø 2009-03-14  189  		.mwdma_mask = ATA_MWDMA2,
+> 669a5db411d85a Jeff Garzik     2006-08-29  190  		.port_ops = &triflex_port_ops
+> 669a5db411d85a Jeff Garzik     2006-08-29  191  	};
+> 1626aeb881236c Tejun Heo       2007-05-04  192  	const struct ata_port_info *ppi[] = { &info, NULL };
+> 669a5db411d85a Jeff Garzik     2006-08-29  193  
+> 06296a1e684bcd Joe Perches     2011-04-15  194  	ata_print_version_once(&dev->dev, DRV_VERSION);
+> 669a5db411d85a Jeff Garzik     2006-08-29  195  
+> 1c5afdf7a629d2 Tejun Heo       2010-05-19  196  	return ata_pci_bmdma_init_one(dev, ppi, &triflex_sht, NULL, 0);
+> 669a5db411d85a Jeff Garzik     2006-08-29  197  }
+> 669a5db411d85a Jeff Garzik     2006-08-29  198  
+> 
 > ---
->  drivers/ata/ahci_brcm.c | 11 +++--------
->  1 file changed, 3 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
-> index 6853dbb4131d..d6115bc04b09 100644
-> --- a/drivers/ata/ahci_brcm.c
-> +++ b/drivers/ata/ahci_brcm.c
-> @@ -428,7 +428,6 @@ static int brcm_ahci_probe(struct platform_device *pdev)
->  {
->  	const struct of_device_id *of_id;
->  	struct device *dev = &pdev->dev;
-> -	const char *reset_name = NULL;
->  	struct brcm_ahci_priv *priv;
->  	struct ahci_host_priv *hpriv;
->  	struct resource *res;
-> @@ -452,11 +451,10 @@ static int brcm_ahci_probe(struct platform_device *pdev)
->  
->  	/* Reset is optional depending on platform and named differently */
->  	if (priv->version == BRCM_SATA_BCM7216)
-> -		reset_name = "rescal";
-> +		priv->rcdev = devm_reset_control_get_optional_shared(&pdev->dev, "rescal");
->  	else
-> -		reset_name = "ahci";
-> +		priv->rcdev = devm_reset_control_get_optional(&pdev->dev, "ahci");
+> 0-DAY CI Kernel Test Service, Intel Corporation
+> https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
 
-Please use devm_reset_control_get_optional_exclusive() here.
+Fixed in v2. Will float v2 after few more checks.
 
->  
-> -	priv->rcdev = devm_reset_control_get_optional(&pdev->dev, reset_name);
->  	if (IS_ERR(priv->rcdev))
->  		return PTR_ERR(priv->rcdev);
->  
-> @@ -479,10 +477,7 @@ static int brcm_ahci_probe(struct platform_device *pdev)
->  		break;
->  	}
->  
-> -	if (priv->version == BRCM_SATA_BCM7216)
-> -		ret = reset_control_reset(priv->rcdev);
-> -	else
-> -		ret = reset_control_deassert(priv->rcdev);
-> +	ret = reset_control_deassert(priv->rcdev);
->  	if (ret)
->  		return ret;
->  
-
-Since you switch from _reset to _deassert/_assert here, I suspect you
-should also change the out_reset error path, and the suspend/resume
-functions accordingly.
-
-regards
-Philipp
+Thanks
+Vaibhav Gupta
