@@ -1,79 +1,210 @@
-Return-Path: <SRS0=8fsn=BJ=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=3jvR=BL=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49550C433E0
-	for <linux-ide@archiver.kernel.org>; Thu, 30 Jul 2020 16:10:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0A1DC433DF
+	for <linux-ide@archiver.kernel.org>; Sat,  1 Aug 2020 12:25:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D0FF20829
-	for <linux-ide@archiver.kernel.org>; Thu, 30 Jul 2020 16:10:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF9202076A
+	for <linux-ide@archiver.kernel.org>; Sat,  1 Aug 2020 12:25:08 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ncnCAE+5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729459AbgG3QKu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 30 Jul 2020 12:10:50 -0400
-Received: from mga17.intel.com ([192.55.52.151]:41509 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729387AbgG3QKt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 30 Jul 2020 12:10:49 -0400
-IronPort-SDR: wMFzm5+JdSiWPFJ5rvBJ8M/j0epBUpuqYajn2gfC4Idj1AHe3JqwdTR+JGaRcB6YsPGZ58UNnp
- Ooa156Mer5pA==
-X-IronPort-AV: E=McAfee;i="6000,8403,9698"; a="131698927"
-X-IronPort-AV: E=Sophos;i="5.75,415,1589266800"; 
-   d="scan'208";a="131698927"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jul 2020 09:10:46 -0700
-IronPort-SDR: SauiCJzHrcqnkcbEQT5pRUkuaSYCy1JFy1mITJiVvNzSlUt0WNre9568a5hMxBPm6USYfRp50H
- N3klzR81n+cw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.75,415,1589266800"; 
-   d="scan'208";a="330790504"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga007.jf.intel.com with ESMTP; 30 Jul 2020 09:10:43 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1003)
-        id E9C9D119; Thu, 30 Jul 2020 19:10:42 +0300 (EEST)
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
-Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1] ide-acpi: use %*ph to print small buffer
-Date:   Thu, 30 Jul 2020 19:10:42 +0300
-Message-Id: <20200730161042.41392-1-andriy.shevchenko@linux.intel.com>
-X-Mailer: git-send-email 2.27.0
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S1729096AbgHAMYp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 1 Aug 2020 08:24:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54240 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729086AbgHAMYm (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 1 Aug 2020 08:24:42 -0400
+Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75837C061757;
+        Sat,  1 Aug 2020 05:24:42 -0700 (PDT)
+Received: by mail-ej1-x642.google.com with SMTP id bo3so11390591ejb.11;
+        Sat, 01 Aug 2020 05:24:42 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=f7EHkSWbrjhplB2d+YIJIh5vLQH5GmykUiEqLTIStB4=;
+        b=ncnCAE+5L7BB5/YjIaWKdov1rz6HP5TvXA9nZA3PXndUUW1xK5+ufbrRdCYCwHcqHm
+         t1EMuhi4tuEBdBJ5YsN9BB5sxWFTI0+q//E8z9o5Ck0ZyU+V5BrrZ5nZXdtol4sWPkxZ
+         b9MIFjQEbPFh3ySpTdLCOFWSkzspCjS2kD4irjY0YxXuW38z5ndkVpebr288Yek4HTE7
+         +2vr3ZHRUJaZVRsq+jCq8P6pvvPOtSBdlH0LEq1DjZSQP5YlhLmDT7iewerLkZWaqc/g
+         VR8PYab69Ni5ovDIAYK7FvMde3VGmx+R28fsxL9Zyq9QmFLaLLeo+1pPbnbJL/G3y8oR
+         c/IA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=f7EHkSWbrjhplB2d+YIJIh5vLQH5GmykUiEqLTIStB4=;
+        b=Bhcu03CrvCaJhpZJX2C9eo2m2HsoOPftZ8cNgV+Fpwzv9tOYt2Lzi0CQJbhEnNsJWB
+         mQn+d4uy3gJpjwI3gnqRiCkvH4Sxd1F86PvRUy9PtXUtxlYXMMWic9/ovyNXAXfAFoA+
+         zneJIJCCt3/iT6OL4RBFM43GL9CLgFQ7BzHBAQVS0Q8fH62lVCpofXQQJI/ZNirhZu3G
+         uhKsLjuz5cGZ3NfarXidsdCrI9oWLnSdfjgk3VoytxVYGBGIUiB+HI3FD/YrjkwDgqRz
+         Upa+A1kCJS28fXBakfA1n3HjwICaA6S4UEQcfvTV2cDSmwvZV3nCjn1YuwRjWenOG0jW
+         QYbA==
+X-Gm-Message-State: AOAM531PtDbv4Hr3UCV4hSRBN4RQ1xhyaKmBGXFdg76c0H+8JBoFaP6u
+        GJK+ARPilP/Ut1874jMXHaI=
+X-Google-Smtp-Source: ABdhPJxK6QsCLubg/13FQ7axRtOuPxj8lfRiykbHYiquSlkMilSMcUUDzaC4VkaClUghhqDZwK4BZw==
+X-Received: by 2002:a17:906:c002:: with SMTP id e2mr8812396ejz.244.1596284681233;
+        Sat, 01 Aug 2020 05:24:41 -0700 (PDT)
+Received: from net.saheed (95C84E0A.dsl.pool.telekom.hu. [149.200.78.10])
+        by smtp.gmail.com with ESMTPSA id a101sm12083131edf.76.2020.08.01.05.24.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 01 Aug 2020 05:24:40 -0700 (PDT)
+From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
+To:     helgaas@kernel.org, "David S. Miller" <davem@davemloft.net>
+Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
+        bjorn@helgaas.com, skhan@linuxfoundation.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org
+Subject: [RFC PATCH 13/17] ide: Drop uses of pci_read_config_*() return value
+Date:   Sat,  1 Aug 2020 13:24:42 +0200
+Message-Id: <20200801112446.149549-14-refactormyself@gmail.com>
+X-Mailer: git-send-email 2.18.4
+In-Reply-To: <20200801112446.149549-1-refactormyself@gmail.com>
+References: <20200801112446.149549-1-refactormyself@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Use %*ph format to print small buffer as hex string.
+The return value of pci_read_config_*() may not indicate a device error.
+However, the value read by these functions is more likely to indicate
+this kind of error. This presents two overlapping ways of reporting
+errors and complicates error checking.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+It is possible to move to one single way of checking for error if the
+dependency on the return value of these functions is removed, then it
+can later be made to return void.
+
+Remove all uses of the return value of pci_read_config_*().
+Check the actual value read for ~0. In this case, ~0 is an invalid value
+thus it indicates some kind of error.
+
+drivers/ide/cs5536.c cs5536_read() :
+None of the callers of cs5536_read() uses the return value. The obtained
+value can be checked for validity to confirm success.
+
+Change the return type of cs5536_read() to void.
+
+Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
+Signed-off-by: Saheed O. Bolarinwa <refactormyself@gmail.com>
 ---
- drivers/ide/ide-acpi.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/ide/cs5536.c    |  6 +++---
+ drivers/ide/rz1000.c    |  3 ++-
+ drivers/ide/setup-pci.c | 26 ++++++++++++++++----------
+ 3 files changed, 21 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/ide/ide-acpi.c b/drivers/ide/ide-acpi.c
-index 05e18d658141..9a4ec281b985 100644
---- a/drivers/ide/ide-acpi.c
-+++ b/drivers/ide/ide-acpi.c
-@@ -320,10 +320,7 @@ static int do_drive_set_taskfiles(ide_drive_t *drive,
- 		u8 *gtf = (u8 *)(gtf_address + ix * REGS_PER_GTF);
- 		struct ide_cmd cmd;
+diff --git a/drivers/ide/cs5536.c b/drivers/ide/cs5536.c
+index 8b5ca145191b..58d1cf37c013 100644
+--- a/drivers/ide/cs5536.c
++++ b/drivers/ide/cs5536.c
+@@ -55,16 +55,16 @@ enum {
  
--		DEBPRINT("(0x1f1-1f7): "
--			 "hex: %02x %02x %02x %02x %02x %02x %02x\n",
--			 gtf[0], gtf[1], gtf[2],
--			 gtf[3], gtf[4], gtf[5], gtf[6]);
-+		DEBPRINT("(0x1f1-1f7): hex: %7ph\n", gtf);
+ static int use_msr;
  
- 		if (!ide_acpigtf) {
- 			DEBPRINT("_GTF execution disabled\n");
+-static int cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
++static void cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
+ {
+ 	if (unlikely(use_msr)) {
+ 		u32 dummy;
+ 
+ 		rdmsr(MSR_IDE_CFG + reg, *val, dummy);
+-		return 0;
++		return;
+ 	}
+ 
+-	return pci_read_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
++	pci_read_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
+ }
+ 
+ static int cs5536_write(struct pci_dev *pdev, int reg, int val)
+diff --git a/drivers/ide/rz1000.c b/drivers/ide/rz1000.c
+index fce2b7de5a19..19ac4328e707 100644
+--- a/drivers/ide/rz1000.c
++++ b/drivers/ide/rz1000.c
+@@ -27,7 +27,8 @@ static int rz1000_disable_readahead(struct pci_dev *dev)
+ {
+ 	u16 reg;
+ 
+-	if (!pci_read_config_word (dev, 0x40, &reg) &&
++	pci_read_config_word(dev, 0x40, &reg);
++	if ((reg != (u16)~0) &&
+ 	    !pci_write_config_word(dev, 0x40, reg & 0xdfff)) {
+ 		printk(KERN_INFO "%s: disabled chipset read-ahead "
+ 			"(buggy RZ1000/RZ1001)\n", pci_name(dev));
+diff --git a/drivers/ide/setup-pci.c b/drivers/ide/setup-pci.c
+index fdc8e813170c..a7b93ccd55d1 100644
+--- a/drivers/ide/setup-pci.c
++++ b/drivers/ide/setup-pci.c
+@@ -37,7 +37,8 @@ static int ide_setup_pci_baseregs(struct pci_dev *dev, const char *name)
+ 	/*
+ 	 * Place both IDE interfaces into PCI "native" mode:
+ 	 */
+-	if (pci_read_config_byte(dev, PCI_CLASS_PROG, &progif) ||
++	pci_read_config_byte(dev, PCI_CLASS_PROG, &progif);
++	if ((progif == (u8)~0) ||
+ 			 (progif & 5) != 5) {
+ 		if ((progif & 0xa) != 0xa) {
+ 			printk(KERN_INFO "%s %s: device not capable of full "
+@@ -47,7 +48,8 @@ static int ide_setup_pci_baseregs(struct pci_dev *dev, const char *name)
+ 		printk(KERN_INFO "%s %s: placing both ports into native PCI "
+ 			"mode\n", name, pci_name(dev));
+ 		(void) pci_write_config_byte(dev, PCI_CLASS_PROG, progif|5);
+-		if (pci_read_config_byte(dev, PCI_CLASS_PROG, &progif) ||
++		pci_read_config_byte(dev, PCI_CLASS_PROG, &progif);
++		if ((progif == (u8)~0) ||
+ 		    (progif & 5) != 5) {
+ 			printk(KERN_ERR "%s %s: rewrite of PROGIF failed, "
+ 				"wanted 0x%04x, got 0x%04x\n",
+@@ -251,7 +253,8 @@ static int ide_pci_configure(struct pci_dev *dev, const struct ide_port_info *d)
+ 			d->name, pci_name(dev));
+ 		return -ENODEV;
+ 	}
+-	if (pci_read_config_word(dev, PCI_COMMAND, &pcicmd)) {
++	pci_read_config_word(dev, PCI_COMMAND, &pcicmd);
++	if (pcicmd == (u16)~0) {
+ 		printk(KERN_ERR "%s %s: error accessing PCI regs\n",
+ 			d->name, pci_name(dev));
+ 		return -EIO;
+@@ -415,8 +418,8 @@ static int ide_setup_pci_controller(struct pci_dev *dev, int bars,
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	ret = pci_read_config_word(dev, PCI_COMMAND, &pcicmd);
+-	if (ret < 0) {
++	pci_read_config_word(dev, PCI_COMMAND, &pcicmd);
++	if (pcicmd == (u16)~0) {
+ 		printk(KERN_ERR "%s %s: error accessing PCI regs\n",
+ 			d->name, pci_name(dev));
+ 		goto out_free_bars;
+@@ -466,11 +469,14 @@ void ide_pci_setup_ports(struct pci_dev *dev, const struct ide_port_info *d,
+ 	for (port = 0; port < channels; ++port) {
+ 		const struct ide_pci_enablebit *e = &d->enablebits[port];
+ 
+-		if (e->reg && (pci_read_config_byte(dev, e->reg, &tmp) ||
+-		    (tmp & e->mask) != e->val)) {
+-			printk(KERN_INFO "%s %s: IDE port disabled\n",
+-				d->name, pci_name(dev));
+-			continue;	/* port not enabled */
++		if (e->reg) {
++			pci_read_config_byte(dev, e->reg, &tmp);
++
++			if ((tmp == (u8)~0) || ((tmp & e->mask) != e->val)) {
++				printk(KERN_INFO "%s %s: IDE port disabled\n",
++					d->name, pci_name(dev));
++				continue;	/* port not enabled */
++			}
+ 		}
+ 
+ 		if (ide_hw_configure(dev, d, port, hw + port))
 -- 
-2.27.0
+2.18.4
 
