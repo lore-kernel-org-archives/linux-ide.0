@@ -8,65 +8,65 @@ X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0A1DC433DF
-	for <linux-ide@archiver.kernel.org>; Sat,  1 Aug 2020 12:25:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0FD0C433E0
+	for <linux-ide@archiver.kernel.org>; Sat,  1 Aug 2020 12:25:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF9202076A
-	for <linux-ide@archiver.kernel.org>; Sat,  1 Aug 2020 12:25:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D02DB2076A
+	for <linux-ide@archiver.kernel.org>; Sat,  1 Aug 2020 12:25:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ncnCAE+5"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QHi5Tbht"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729096AbgHAMYp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 1 Aug 2020 08:24:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54240 "EHLO
+        id S1729155AbgHAMZn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 1 Aug 2020 08:25:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54176 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729086AbgHAMYm (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 1 Aug 2020 08:24:42 -0400
-Received: from mail-ej1-x642.google.com (mail-ej1-x642.google.com [IPv6:2a00:1450:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75837C061757;
-        Sat,  1 Aug 2020 05:24:42 -0700 (PDT)
-Received: by mail-ej1-x642.google.com with SMTP id bo3so11390591ejb.11;
-        Sat, 01 Aug 2020 05:24:42 -0700 (PDT)
+        with ESMTP id S1728949AbgHAMY0 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 1 Aug 2020 08:24:26 -0400
+Received: from mail-ej1-x643.google.com (mail-ej1-x643.google.com [IPv6:2a00:1450:4864:20::643])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71499C06174A;
+        Sat,  1 Aug 2020 05:24:26 -0700 (PDT)
+Received: by mail-ej1-x643.google.com with SMTP id o23so6562719ejr.1;
+        Sat, 01 Aug 2020 05:24:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=f7EHkSWbrjhplB2d+YIJIh5vLQH5GmykUiEqLTIStB4=;
-        b=ncnCAE+5L7BB5/YjIaWKdov1rz6HP5TvXA9nZA3PXndUUW1xK5+ufbrRdCYCwHcqHm
-         t1EMuhi4tuEBdBJ5YsN9BB5sxWFTI0+q//E8z9o5Ck0ZyU+V5BrrZ5nZXdtol4sWPkxZ
-         b9MIFjQEbPFh3ySpTdLCOFWSkzspCjS2kD4irjY0YxXuW38z5ndkVpebr288Yek4HTE7
-         +2vr3ZHRUJaZVRsq+jCq8P6pvvPOtSBdlH0LEq1DjZSQP5YlhLmDT7iewerLkZWaqc/g
-         VR8PYab69Ni5ovDIAYK7FvMde3VGmx+R28fsxL9Zyq9QmFLaLLeo+1pPbnbJL/G3y8oR
-         c/IA==
+        bh=BywL0jlhvMnVFDfC0ze8h5LlMNFaT8aAv2rtyExEJSw=;
+        b=QHi5Tbht062uQl2CgFExEPFUSOMEeggyKWMdFMaxe6+Ih4MGawd4RuVAGo9gayKr/D
+         2yHM3GwaZiead9mkPgX6CmWqtJbVMVrs1ivY/NsgsQYDy259Sl3XZbv/YgzUgCEEqs/l
+         1wsrUeMhNsz49YAxVBQhfhiIj9RG9ULztEQd4Q8H0R1duiNIIlpXMswb/m7QfOuNR+W7
+         PzhiKRCjDzvqB1woNt4nMSfQ4i7ZYPwKrKGD1c4qVxpaPGDRJJa1GAWZwDRByPlEFt8o
+         ZwW6DJ21TN+PbO9dKjKlAV0aNVKmWm6tq8l2jd4PPsh2rNZxPgV7qhiiUwBiy6U/4PQq
+         iFbw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=f7EHkSWbrjhplB2d+YIJIh5vLQH5GmykUiEqLTIStB4=;
-        b=Bhcu03CrvCaJhpZJX2C9eo2m2HsoOPftZ8cNgV+Fpwzv9tOYt2Lzi0CQJbhEnNsJWB
-         mQn+d4uy3gJpjwI3gnqRiCkvH4Sxd1F86PvRUy9PtXUtxlYXMMWic9/ovyNXAXfAFoA+
-         zneJIJCCt3/iT6OL4RBFM43GL9CLgFQ7BzHBAQVS0Q8fH62lVCpofXQQJI/ZNirhZu3G
-         uhKsLjuz5cGZ3NfarXidsdCrI9oWLnSdfjgk3VoytxVYGBGIUiB+HI3FD/YrjkwDgqRz
-         Upa+A1kCJS28fXBakfA1n3HjwICaA6S4UEQcfvTV2cDSmwvZV3nCjn1YuwRjWenOG0jW
-         QYbA==
-X-Gm-Message-State: AOAM531PtDbv4Hr3UCV4hSRBN4RQ1xhyaKmBGXFdg76c0H+8JBoFaP6u
-        GJK+ARPilP/Ut1874jMXHaI=
-X-Google-Smtp-Source: ABdhPJxK6QsCLubg/13FQ7axRtOuPxj8lfRiykbHYiquSlkMilSMcUUDzaC4VkaClUghhqDZwK4BZw==
-X-Received: by 2002:a17:906:c002:: with SMTP id e2mr8812396ejz.244.1596284681233;
-        Sat, 01 Aug 2020 05:24:41 -0700 (PDT)
+        bh=BywL0jlhvMnVFDfC0ze8h5LlMNFaT8aAv2rtyExEJSw=;
+        b=WwMuk4MJhSn/Z5RPIZ57fVWY8yEB4a8yze6sf0DNdA+h1WurNiHWkzxpXodZrLxxAR
+         yM3UkKhLkjW6kKkqN3ysA8Gi8h0CwZ+rTBUscqSuGsBqewK+tL89k6rf4T88ek+CaNIC
+         HerMYnHx3/hFoMFExtWL0cDfGx8PEMjrSMc/jxra72kDuKNNoNdwUQYXngIGFtMfj8DE
+         hUKW+vwyVHNfN/u9PeibbnYaOi7LkuvA5XO5TLpAiwpUwAcWb6AmANqLL9KIVOHT9JFb
+         8wcHjuytOOjeIBkS7PnmetfIHwV47/yzNNTXvcKg/dpffrWKCfXG6WMRMCMUfvUvRxPc
+         ihJQ==
+X-Gm-Message-State: AOAM533cb3gYLjraMelXrRdK3j7o/WQZJoaO68aW2kJI3SRkWyNPxdRR
+        ZGBAf0OJbjNr12dtWn3Sm+E=
+X-Google-Smtp-Source: ABdhPJz7rYxC2q7EJUBMGW38zssfKtQqC5IyJS7xjTc/otiniFOliqfObCiKTOcL0cPPw/LW53NfQw==
+X-Received: by 2002:a17:906:1756:: with SMTP id d22mr8343053eje.29.1596284665171;
+        Sat, 01 Aug 2020 05:24:25 -0700 (PDT)
 Received: from net.saheed (95C84E0A.dsl.pool.telekom.hu. [149.200.78.10])
-        by smtp.gmail.com with ESMTPSA id a101sm12083131edf.76.2020.08.01.05.24.39
+        by smtp.gmail.com with ESMTPSA id a101sm12083131edf.76.2020.08.01.05.24.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 01 Aug 2020 05:24:40 -0700 (PDT)
+        Sat, 01 Aug 2020 05:24:24 -0700 (PDT)
 From:   "Saheed O. Bolarinwa" <refactormyself@gmail.com>
-To:     helgaas@kernel.org, "David S. Miller" <davem@davemloft.net>
+To:     helgaas@kernel.org, Jens Axboe <axboe@kernel.dk>
 Cc:     "Saheed O. Bolarinwa" <refactormyself@gmail.com>,
         bjorn@helgaas.com, skhan@linuxfoundation.org,
         linux-kernel-mentees@lists.linuxfoundation.org,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-ide@vger.kernel.org
-Subject: [RFC PATCH 13/17] ide: Drop uses of pci_read_config_*() return value
-Date:   Sat,  1 Aug 2020 13:24:42 +0200
-Message-Id: <20200801112446.149549-14-refactormyself@gmail.com>
+Subject: [RFC PATCH 01/17] ata: Drop uses of pci_read_config_*() return value
+Date:   Sat,  1 Aug 2020 13:24:30 +0200
+Message-Id: <20200801112446.149549-2-refactormyself@gmail.com>
 X-Mailer: git-send-email 2.18.4
 In-Reply-To: <20200801112446.149549-1-refactormyself@gmail.com>
 References: <20200801112446.149549-1-refactormyself@gmail.com>
@@ -88,7 +88,7 @@ Remove all uses of the return value of pci_read_config_*().
 Check the actual value read for ~0. In this case, ~0 is an invalid value
 thus it indicates some kind of error.
 
-drivers/ide/cs5536.c cs5536_read() :
+drivers/ata/pata_cs5536.c cs5536_read() :
 None of the callers of cs5536_read() uses the return value. The obtained
 value can be checked for validity to confirm success.
 
@@ -97,24 +97,23 @@ Change the return type of cs5536_read() to void.
 Suggested-by: Bjorn Helgaas <bjorn@helgaas.com>
 Signed-off-by: Saheed O. Bolarinwa <refactormyself@gmail.com>
 ---
- drivers/ide/cs5536.c    |  6 +++---
- drivers/ide/rz1000.c    |  3 ++-
- drivers/ide/setup-pci.c | 26 ++++++++++++++++----------
- 3 files changed, 21 insertions(+), 14 deletions(-)
+ drivers/ata/pata_cs5536.c | 6 +++---
+ drivers/ata/pata_rz1000.c | 3 ++-
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ide/cs5536.c b/drivers/ide/cs5536.c
-index 8b5ca145191b..58d1cf37c013 100644
---- a/drivers/ide/cs5536.c
-+++ b/drivers/ide/cs5536.c
-@@ -55,16 +55,16 @@ enum {
- 
- static int use_msr;
+diff --git a/drivers/ata/pata_cs5536.c b/drivers/ata/pata_cs5536.c
+index 760ac6e65216..c204215e239f 100644
+--- a/drivers/ata/pata_cs5536.c
++++ b/drivers/ata/pata_cs5536.c
+@@ -83,16 +83,16 @@ static const struct dmi_system_id udma_quirk_dmi_table[] = {
+ 	{ }
+ };
  
 -static int cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
 +static void cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
  {
  	if (unlikely(use_msr)) {
- 		u32 dummy;
+ 		u32 dummy __maybe_unused;
  
  		rdmsr(MSR_IDE_CFG + reg, *val, dummy);
 -		return 0;
@@ -126,85 +125,20 @@ index 8b5ca145191b..58d1cf37c013 100644
  }
  
  static int cs5536_write(struct pci_dev *pdev, int reg, int val)
-diff --git a/drivers/ide/rz1000.c b/drivers/ide/rz1000.c
-index fce2b7de5a19..19ac4328e707 100644
---- a/drivers/ide/rz1000.c
-+++ b/drivers/ide/rz1000.c
-@@ -27,7 +27,8 @@ static int rz1000_disable_readahead(struct pci_dev *dev)
+diff --git a/drivers/ata/pata_rz1000.c b/drivers/ata/pata_rz1000.c
+index 3722a67083fd..e0b3de376357 100644
+--- a/drivers/ata/pata_rz1000.c
++++ b/drivers/ata/pata_rz1000.c
+@@ -64,7 +64,8 @@ static int rz1000_fifo_disable(struct pci_dev *pdev)
  {
  	u16 reg;
- 
--	if (!pci_read_config_word (dev, 0x40, &reg) &&
-+	pci_read_config_word(dev, 0x40, &reg);
-+	if ((reg != (u16)~0) &&
- 	    !pci_write_config_word(dev, 0x40, reg & 0xdfff)) {
- 		printk(KERN_INFO "%s: disabled chipset read-ahead "
- 			"(buggy RZ1000/RZ1001)\n", pci_name(dev));
-diff --git a/drivers/ide/setup-pci.c b/drivers/ide/setup-pci.c
-index fdc8e813170c..a7b93ccd55d1 100644
---- a/drivers/ide/setup-pci.c
-+++ b/drivers/ide/setup-pci.c
-@@ -37,7 +37,8 @@ static int ide_setup_pci_baseregs(struct pci_dev *dev, const char *name)
- 	/*
- 	 * Place both IDE interfaces into PCI "native" mode:
- 	 */
--	if (pci_read_config_byte(dev, PCI_CLASS_PROG, &progif) ||
-+	pci_read_config_byte(dev, PCI_CLASS_PROG, &progif);
-+	if ((progif == (u8)~0) ||
- 			 (progif & 5) != 5) {
- 		if ((progif & 0xa) != 0xa) {
- 			printk(KERN_INFO "%s %s: device not capable of full "
-@@ -47,7 +48,8 @@ static int ide_setup_pci_baseregs(struct pci_dev *dev, const char *name)
- 		printk(KERN_INFO "%s %s: placing both ports into native PCI "
- 			"mode\n", name, pci_name(dev));
- 		(void) pci_write_config_byte(dev, PCI_CLASS_PROG, progif|5);
--		if (pci_read_config_byte(dev, PCI_CLASS_PROG, &progif) ||
-+		pci_read_config_byte(dev, PCI_CLASS_PROG, &progif);
-+		if ((progif == (u8)~0) ||
- 		    (progif & 5) != 5) {
- 			printk(KERN_ERR "%s %s: rewrite of PROGIF failed, "
- 				"wanted 0x%04x, got 0x%04x\n",
-@@ -251,7 +253,8 @@ static int ide_pci_configure(struct pci_dev *dev, const struct ide_port_info *d)
- 			d->name, pci_name(dev));
- 		return -ENODEV;
- 	}
--	if (pci_read_config_word(dev, PCI_COMMAND, &pcicmd)) {
-+	pci_read_config_word(dev, PCI_COMMAND, &pcicmd);
-+	if (pcicmd == (u16)~0) {
- 		printk(KERN_ERR "%s %s: error accessing PCI regs\n",
- 			d->name, pci_name(dev));
- 		return -EIO;
-@@ -415,8 +418,8 @@ static int ide_setup_pci_controller(struct pci_dev *dev, int bars,
- 	if (ret < 0)
- 		goto out;
- 
--	ret = pci_read_config_word(dev, PCI_COMMAND, &pcicmd);
--	if (ret < 0) {
-+	pci_read_config_word(dev, PCI_COMMAND, &pcicmd);
-+	if (pcicmd == (u16)~0) {
- 		printk(KERN_ERR "%s %s: error accessing PCI regs\n",
- 			d->name, pci_name(dev));
- 		goto out_free_bars;
-@@ -466,11 +469,14 @@ void ide_pci_setup_ports(struct pci_dev *dev, const struct ide_port_info *d,
- 	for (port = 0; port < channels; ++port) {
- 		const struct ide_pci_enablebit *e = &d->enablebits[port];
- 
--		if (e->reg && (pci_read_config_byte(dev, e->reg, &tmp) ||
--		    (tmp & e->mask) != e->val)) {
--			printk(KERN_INFO "%s %s: IDE port disabled\n",
--				d->name, pci_name(dev));
--			continue;	/* port not enabled */
-+		if (e->reg) {
-+			pci_read_config_byte(dev, e->reg, &tmp);
-+
-+			if ((tmp == (u8)~0) || ((tmp & e->mask) != e->val)) {
-+				printk(KERN_INFO "%s %s: IDE port disabled\n",
-+					d->name, pci_name(dev));
-+				continue;	/* port not enabled */
-+			}
- 		}
- 
- 		if (ide_hw_configure(dev, d, port, hw + port))
+ 	/* Be exceptionally paranoid as we must be sure to apply the fix */
+-	if (pci_read_config_word(pdev, 0x40, &reg) != 0)
++	pci_read_config_word(pdev, 0x40, &reg);
++	if (reg == (u16)~0)
+ 		return -1;
+ 	reg &= 0xDFFF;
+ 	if (pci_write_config_word(pdev, 0x40, reg) != 0)
 -- 
 2.18.4
 
