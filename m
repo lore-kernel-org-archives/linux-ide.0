@@ -2,165 +2,192 @@ Return-Path: <SRS0=g8lw=BU=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-10.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF886C433E5
-	for <linux-ide@archiver.kernel.org>; Mon, 10 Aug 2020 08:50:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61595C433E0
+	for <linux-ide@archiver.kernel.org>; Mon, 10 Aug 2020 16:49:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9BBC220729
-	for <linux-ide@archiver.kernel.org>; Mon, 10 Aug 2020 08:50:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0CE8722D72
+	for <linux-ide@archiver.kernel.org>; Mon, 10 Aug 2020 16:49:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RVXduCsj"
+	dkim=pass (1024-bit key) header.d=renesasgroup.onmicrosoft.com header.i=@renesasgroup.onmicrosoft.com header.b="MLyw524v"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726108AbgHJIub (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 10 Aug 2020 04:50:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59968 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725857AbgHJIub (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 10 Aug 2020 04:50:31 -0400
-Received: from mail-lj1-x243.google.com (mail-lj1-x243.google.com [IPv6:2a00:1450:4864:20::243])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7599C061756;
-        Mon, 10 Aug 2020 01:50:30 -0700 (PDT)
-Received: by mail-lj1-x243.google.com with SMTP id w14so8675587ljj.4;
-        Mon, 10 Aug 2020 01:50:30 -0700 (PDT)
+        id S1727771AbgHJQt4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 10 Aug 2020 12:49:56 -0400
+Received: from mail-eopbgr1400107.outbound.protection.outlook.com ([40.107.140.107]:49760
+        "EHLO JPN01-TY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726942AbgHJQt4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 10 Aug 2020 12:49:56 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=nviNp9nY8X0VQBGxSFFLPDxONA1t+cHHSm1BQc0OdCtA9IudKnReko8pbW1SzNTYVw7Z4MbSfkH0gBAvTcyfmXXQqpOQD8LARQhPd2+85dXL8COW6ENEdxGqe59WPbfGrFyOfgWgXKeugtFwZQSMDKvy894GsBM/F9V1QmXDiCTzO+QwFsFkGw/EusM+U0qjYeVyIpaVewF89yzqER+J+fUCswaveyneRr7wMf9OEjo0A0bLZRwtuyWjafVgI6ZWWfqn/2+aZ66tzHmT/yKPunIJ1XAJjh5weqqdlGWWKrZDObCWHvTN6oM2rG9VtjiEtnCd5RxhtfxfdWbfQopjpg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=WvVbWXw9plxDSSP2AabnReitHuwCz47hLCdapWLejdY=;
+ b=RgMtSA+aquOOR/0pJKoFeZdqUMnKGtagW6+tN3vMivN0b3MH/h33hE98SQAAvngFF0keuy+llefH86hr/E1k3F2As1SLv3YnDJ39M+rkcQANvgELH1buK4vjrW9S8SEes5kWPOVUtVoy6cyXtP1ENQfXJ4S7QMKSEiMu+CCWUI4A7QQaEqcGRtlz8UwPLlQI7zWjbskAaPu+jb5cw+X4VpGyRoY1tgQknpsW7WiEg3DRZ61cidKFeQy41Z474SRE7QEnojrewt09v1xwLU7uYBdPAtHlAFlvUiF/pHrf5BFzkIYs5vM6hQcWCHOAtxfNnijHq2WkTWBxZ3WMNukvfg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=bp.renesas.com; dmarc=pass action=none
+ header.from=bp.renesas.com; dkim=pass header.d=bp.renesas.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:organization:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=2vy5WK0/lZz1ewdjEJ/g1nZeGw5MBX8oCLLIJ1fU9Bo=;
-        b=RVXduCsjsI1KO/t7jAETjHGfpJeIfBkNLlUdPZQLbIvZJXw1A7nNDa7rQ3p6FXYjhG
-         TNaAfEriRKSt6fTkDhNBKJS4Ye72JJuXQggjStSGEVPwDw25sN8BYj2yNNZhH7R9FK8L
-         2OlOYujONBOc43ByZbz646sekkhZliKDQF6bdQXePc7kxBD+kCr3jlqzOkaasB+gcIs5
-         qll9KEywhbWs6TUmlhTxOtVBlEe5Wn4oyl7fTUmiSVO/l4GauqgmJkPhpalzxIusIn79
-         YzBZf+M88uBOYHw2rmonuNOdMGzTmoiUHda5qzBlNGXGXl6P9pGuTn6FX9rrlkDEoJ0k
-         SrIA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:organization
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=2vy5WK0/lZz1ewdjEJ/g1nZeGw5MBX8oCLLIJ1fU9Bo=;
-        b=eg2cpGNBTSmz/+XktP1b2Wl0PRwQAquFq/+a+pClsjs2Ym7i4QAEz4Y6AzqNAcrfpd
-         7V4qVKaKeHXVrfoVR6XsE8g4+iwr5FN0lVdBFileCpDw4b9/8lCaX6h0nx83Jb/Zhtfl
-         eJV/lplEUjIwGQcF9U8w4+5jAeuSSUK+lNk3lyan+M7tgyyLMXXS6v8ur+FCEaqTceIl
-         E2abELiGz8Jkc+EEJxSVEMFgo0Q+Zc87zEkAUFybo0DZgWAtjdoa++CISSb6G+Rm5nlh
-         xjNVOMjA+Pd/vUI2n4EdlYvzqNCJ5uLOxHgZvSSnsRslxyjJqwgN/bLfhvo8xGj2i6L3
-         UiNg==
-X-Gm-Message-State: AOAM530M5FKF9SJYYPwXpyNJLzexCNmqxfDt6Gxr/TAtVnE929lBIOX/
-        I3yE7JE7qv/owQc/QdXDWPz85fVR
-X-Google-Smtp-Source: ABdhPJzAKqKsxBUQ6dMvRHeeew+CCTavJevMHcIrxLQGzCgyq6bCmkzedAvzc2gB+iPcDqXEXN7ggQ==
-X-Received: by 2002:a2e:5018:: with SMTP id e24mr34551ljb.261.1597049429209;
-        Mon, 10 Aug 2020 01:50:29 -0700 (PDT)
-Received: from ?IPv6:2a00:1fa0:656:4d4d:4047:314a:a423:d91? ([2a00:1fa0:656:4d4d:4047:314a:a423:d91])
-        by smtp.gmail.com with ESMTPSA id o16sm8976071ljc.66.2020.08.10.01.50.28
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 10 Aug 2020 01:50:28 -0700 (PDT)
-Subject: Re: [PATCH 3/3] drivers/clk/clk-asm9260.c
-To:     YourName <argoz1701@gmail.com>, marcel@holtmann.org,
-        johan.hedberg@gmail.com
-Cc:     mturquette@baylibre.com, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-bluetooth@vger.kernel.org,
-        linux-clk@vger.kernel.org
-References: <20200810005941.20581-1-argoz1701@gmail.com>
-From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Organization: Brain-dead Software
-Message-ID: <bdab839e-1aba-5b0f-e5de-52ddebc8b9ed@gmail.com>
-Date:   Mon, 10 Aug 2020 11:50:26 +0300
-User-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
-MIME-Version: 1.0
-In-Reply-To: <20200810005941.20581-1-argoz1701@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+ d=renesasgroup.onmicrosoft.com; s=selector2-renesasgroup-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=WvVbWXw9plxDSSP2AabnReitHuwCz47hLCdapWLejdY=;
+ b=MLyw524vjFmC24lb7X81lxMCCPatF5IQTnjz9y9oN3DsizFJMB+AQs/11P2pQSbOGhEBC/DEC91AUTWz66efKhYoqzbJAB83aylMo4pmHmPKl/6wZfbggCFgMDQ62xYrLfiWT5L5FtudWxs3RpWt/sX+UxvDpLLQTkysHTHiaFA=
+Received: from OSBPR01MB5048.jpnprd01.prod.outlook.com (2603:1096:604:38::10)
+ by OSAPR01MB2098.jpnprd01.prod.outlook.com (2603:1096:603:15::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3261.22; Mon, 10 Aug
+ 2020 16:49:50 +0000
+Received: from OSBPR01MB5048.jpnprd01.prod.outlook.com
+ ([fe80::3c9a:53d7:17c4:4ce9]) by OSBPR01MB5048.jpnprd01.prod.outlook.com
+ ([fe80::3c9a:53d7:17c4:4ce9%3]) with mapi id 15.20.3261.025; Mon, 10 Aug 2020
+ 16:49:50 +0000
+From:   Prabhakar Mahadev Lad <prabhakar.mahadev-lad.rj@bp.renesas.com>
+To:     Geert Uytterhoeven <geert+renesas@glider.be>
+CC:     Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Christoph Hellwig <hch@lst.de>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-renesas-soc@vger.kernel.org" 
+        <linux-renesas-soc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] ata: sata_rcar: Fix DMA boundary mask
+Thread-Topic: RE: [PATCH] ata: sata_rcar: Fix DMA boundary mask
+Thread-Index: AdZvNQA3VsJu6Uz4RN+G1lZzO7isEA==
+Date:   Mon, 10 Aug 2020 16:49:50 +0000
+Message-ID: <OSBPR01MB5048FE40232F201D49C18887AA440@OSBPR01MB5048.jpnprd01.prod.outlook.com>
+Accept-Language: en-GB, en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: glider.be; dkim=none (message not signed)
+ header.d=none;glider.be; dmarc=none action=none header.from=bp.renesas.com;
+x-originating-ip: [193.141.220.21]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 52098fa1-ad0e-4689-9bee-08d83d4d6601
+x-ms-traffictypediagnostic: OSAPR01MB2098:
+x-microsoft-antispam-prvs: <OSAPR01MB2098BF4BA10E7AF96568AA48AA440@OSAPR01MB2098.jpnprd01.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:4941;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: BcOzRFLOEYL++qG0uaUgKknEjPrSjhXz6ySm8VG44MCGboMcW3KIua0rpglbIbuAPoNGZKm11W3x4D29POGPrCI+IVmYSL6r6MsavVJM8obXXfWSnugN01HITUqsUvnUDfqEUZ2MotWYMIJnwMS+ChCY1mmm02gD2SYvlOlvzMhT1rM3wc/C5ZzgGMW6B+R9ez7Bmdo2Z1hQ+K29mque98rQpLcTYRsTWsGtbIh/BfM+j9HldrC9+4IB2XuAtyy3y2urQxy6OSrCumYYkfIUuKeGe7qB12VVqmP2uuXQ9nrUqgpn9JtXEYoE/rhO5HUu1hD7Pn2LM/1/LKNvbmIdlA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:OSBPR01MB5048.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFTY:;SFS:(4636009)(39860400002)(346002)(366004)(136003)(396003)(376002)(2906002)(186003)(83380400001)(52536014)(4326008)(86362001)(26005)(5660300002)(66476007)(66946007)(66446008)(7696005)(53546011)(6506007)(8936002)(64756008)(66556008)(33656002)(478600001)(316002)(8676002)(76116006)(54906003)(55016002)(7416002)(9686003)(71200400001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: 84ZbaLn/z6zP3zBGwZOYwyup6KROjX9IWAmcONRXW64ssXBLwztmPJpQmhf+p2ioUU2oskgqgO6tRrEnEvICLhI7gyd1wwgmOuB/Evb3e48ewZgbYou9MgY7MnjzyWI56PHqjHtYQTrc0YQvo9W8YnAdn6tS2SsQlL1MZKIOZP58O+LJho0YMVvxR4EaZXrDnkopbFShNoMc/lF3/0T/qyrDxXl/V3E71X4WXsJvHUKWCj40+JNR76TrjZCuuMvrPt/M2+G9VoSXFNbXd+3XukuOOjleyz5ZaNWx7tj8LO5BLuJk9FKC2oit4nr4MOayL/WxsXPBCGTjgVoNgswPevtzb1hm5zAiMYA1T120sK2t5HrvTNyWjG+wqxZZvaWhqwy4MWgSoC8Ncw653mRmUR9kX1kESdR4DVsWQ5oBvgY+3fwqg/dE19fVcqQLFu3X0z9Sqw0qmFNZSuOVcKmzMpcgQR6ycr2/dtjv2qaXVSqIYHzfFksXQNlSshGlxAvw4uqsG1pcv4fYRs9qxzyytBaN4KbLB2NHHnuY4Dat9X/TW8vdFa0PwOdx7wUz+7UpsAOlLwh15i7ZcfkUsSwtuzFmFmm5HLMXTQhg7+FLW1BkiDq6ZyV7jP3gR6J5sbdWdaN8FJ0ZFt1ialtiGspsjA==
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: bp.renesas.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: OSBPR01MB5048.jpnprd01.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 52098fa1-ad0e-4689-9bee-08d83d4d6601
+X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Aug 2020 16:49:50.4793
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 53d82571-da19-47e4-9cb4-625a166a4a2a
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: yhKP1l8m39/klOhzqeOhLqKKGFRBMxekeqiEWG7C+5Z9RVZmrgVcSwdRoUqzpMQCj+cjE40bKO0Qn9999llDR0y3zfR1c7sEnF+wV0l28WlabYapGmsbQEECKcsCTwv1
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OSAPR01MB2098
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello!
+Hi Geert,
 
-On 10.08.2020 3:59, YourName wrote:
+Thank you for the patch.
 
-> From: Daniel <argoz1701@gmail.com>
-
-    Full name needed here.
-
+> -----Original Message-----
+> From: linux-ide-owner@vger.kernel.org <linux-ide-owner@vger.kernel.org> O=
+n Behalf Of Geert Uytterhoeven <geert+renesas@glider.be>
+> Sent: 13 May 2020 12:04
+> To: Jens Axboe <axboe@kernel.dk>; Ulf Hansson <ulf.hansson@linaro.org>; G=
+reg Kroah-Hartman <gregkh@linuxfoundation.org>;
+> Christoph Hellwig <hch@lst.de>
+> Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>; linux-ide@vger.=
+kernel.org; linux-renesas-soc@vger.kernel.org; linux-
+> scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Geert Uytterhoeven <g=
+eert+renesas@glider.be>
+> Subject: [PATCH] ata: sata_rcar: Fix DMA boundary mask
+>
+> Before commit 9495b7e92f716ab2 ("driver core: platform: Initialize
+> dma_parms for platform devices"), the R-Car SATA device didn't have DMA
+> parameters.  Hence the DMA boundary mask supplied by its driver was
+> silently ignored, as __scsi_init_queue() doesn't check the return value
+> of dma_set_seg_boundary(), and the default value of 0xffffffff was used.
+>
+> Now the device has gained DMA parameters, the driver-supplied value is
+> used, and the following warning is printed on Salvator-XS:
+>
+>     DMA-API: sata_rcar ee300000.sata: mapping sg segment across boundary =
+[start=3D0x00000000ffffe000] [end=3D0x00000000ffffefff]
+> [boundary=3D0x000000001ffffffe]
+>     WARNING: CPU: 5 PID: 38 at kernel/dma/debug.c:1233 debug_dma_map_sg+0=
+x298/0x300
+>
+> (the range of start/end values depend on whether IOMMU support is
+>  enabled or not)
+>
+> The issue here is that SATA_RCAR_DMA_BOUNDARY doesn't have bit 0 set, so
+> any typical end value, which is odd, will trigger the check.
+>
+> Fix this by increasing the DMA boundary value by 1.
+>
+> Fixes: 8bfbeed58665dbbf ("sata_rcar: correct 'sata_rcar_sht'")
+> Fixes: 9495b7e92f716ab2 ("driver core: platform: Initialize dma_parms for=
+ platform devices")
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 > ---
->   drivers/ata/acard-ahci.c  |  6 +++---
->   drivers/bluetooth/bfusb.c |  5 ++---
->   drivers/clk/clk-asm9260.c | 12 ++++++------
->   3 files changed, 11 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/ata/acard-ahci.c b/drivers/ata/acard-ahci.c
-> index 2a04e8abd397..3ffb21f3e88b 100644
-> --- a/drivers/ata/acard-ahci.c
-> +++ b/drivers/ata/acard-ahci.c
-> @@ -79,10 +79,10 @@ static struct ata_port_operations acard_ops = {
->   
->   #define AHCI_HFLAGS(flags)	.private_data	= (void *)(flags)
->   
-> -static const struct ata_port_info acard_ahci_port_info[] = {
-> +static const struct ata_port_info acard_ahci_port_info[] ={
->   	[board_acard_ahci] =
-> -	{
-> -		AHCI_HFLAGS	(AHCI_HFLAG_NO_NCQ),
-> +	
-> +        {       AHCI_HFLAGS	(AHCI_HFLAG_NO_NCQ),
+> As by default the DMA debug code prints the first error only, this issue
+> may be hidden on plain v5.7-rc5, where the FCP driver triggers a similar
+> warning.  Merging commit dd844fb8e50b12e6 ("media: platform: fcp: Set
+> appropriate DMA parameters") from the media tree fixes the FCP issue,
+> and exposes the SATA issue.
+>
+> I added the second fixes tag because that commit is already being
+> backported to stable kernels, and this patch thus needs backporting,
+> too.
+> ---
+>  drivers/ata/sata_rcar.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+Without this patch I see SATA link being reset while doing a dd (dd if=3D/d=
+ev/urandom of=3Drandom-data bs=3D1M count=3D1000)
 
-    This does nothing except ruining the valid code formatting.
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 
->   		.flags		= AHCI_FLAG_COMMON,
->   		.pio_mask	= ATA_PIO4,
->   		.udma_mask	= ATA_UDMA6,
-> diff --git a/drivers/bluetooth/bfusb.c b/drivers/bluetooth/bfusb.c
-> index 5a321b4076aa..dc6a62cb1941 100644
-> --- a/drivers/bluetooth/bfusb.c
-> +++ b/drivers/bluetooth/bfusb.c
-> @@ -355,15 +355,14 @@ static void bfusb_rx_complete(struct urb *urb)
->   	while (count) {
->   		hdr = buf[0] | (buf[1] << 8);
->   
-> -		if (hdr & 0x4000) {
-> +		if (hdr & 0x4000)
->   			len = 0;
->   			count -= 2;
->   			buf   += 2;
-> -		} else {
-> +		 else {
->   			len = (buf[2] == 0) ? 256 : buf[2];
->   			count -= 3;
->   			buf   += 3;
-> -		}
+Cheers,
+Prabhakar
 
-    This just ruins the code.
+> diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+> index 980aacdbcf3b42b9..752db75b611e8f8a 100644
+> --- a/drivers/ata/sata_rcar.c
+> +++ b/drivers/ata/sata_rcar.c
+> @@ -120,7 +120,7 @@
+>  /* Descriptor table word 0 bit (when DTA32M =3D 1) */
+>  #define SATA_RCAR_DTENDBIT(0)
+>
+> -#define SATA_RCAR_DMA_BOUNDARY0x1FFFFFFEUL
+> +#define SATA_RCAR_DMA_BOUNDARY0x1FFFFFFFUL
+>
+>  /* Gen2 Physical Layer Control Registers */
+>  #define RCAR_GEN2_PHY_CTL1_REG0x1704
+> --
+> 2.17.1
+>
 
->   
->   		if (count < len) {
->   			bt_dev_err(data->hdev, "block extends over URB buffer ranges");
-> diff --git a/drivers/clk/clk-asm9260.c b/drivers/clk/clk-asm9260.c
-> index bacebd457e6f..4e608807a00a 100644
-> --- a/drivers/clk/clk-asm9260.c
-> +++ b/drivers/clk/clk-asm9260.c
-> @@ -92,8 +92,8 @@ static const struct asm9260_div_clk asm9260_div_clks[] __initconst = {
->   	{ CLKID_SYS_CPU,	"cpu_div", "main_gate", HW_CPUCLKDIV },
->   	{ CLKID_SYS_AHB,	"ahb_div", "cpu_div", HW_SYSAHBCLKDIV },
->   
-> -	/* i2s has two deviders: one for only external mclk and internal
-> -	 * devider for all clks. */
-> +	//i2s has two deviders: one for only external mclk and internal
-> +	//devider for all clks.
 
-    Divider. :-) This is not the preferred multi-line comment formatting anyway.
 
->   	{ CLKID_SYS_I2S0M,	"i2s0m_div", "i2s0_mclk",  HW_I2S0MCLKDIV },
->   	{ CLKID_SYS_I2S1M,	"i2s1m_div", "i2s1_mclk",  HW_I2S1MCLKDIV },
->   	{ CLKID_SYS_I2S0S,	"i2s0s_div", "i2s0_gate",  HW_I2S0SCLKDIV },
-[...]
-
-MBR, Sergei
+Renesas Electronics Europe GmbH, Geschaeftsfuehrer/President: Carsten Jauch=
+, Sitz der Gesellschaft/Registered office: Duesseldorf, Arcadiastrasse 10, =
+40472 Duesseldorf, Germany, Handelsregister/Commercial Register: Duesseldor=
+f, HRB 3708 USt-IDNr./Tax identification no.: DE 119353406 WEEE-Reg.-Nr./WE=
+EE reg. no.: DE 14978647
