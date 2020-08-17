@@ -2,87 +2,129 @@ Return-Path: <SRS0=rcVg=B3=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 209DDC433E1
-	for <linux-ide@archiver.kernel.org>; Mon, 17 Aug 2020 03:45:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 170C7C433E1
+	for <linux-ide@archiver.kernel.org>; Mon, 17 Aug 2020 08:29:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA9682072E
-	for <linux-ide@archiver.kernel.org>; Mon, 17 Aug 2020 03:45:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="vs8KGi9W"
+	by mail.kernel.org (Postfix) with ESMTP id F15A920658
+	for <linux-ide@archiver.kernel.org>; Mon, 17 Aug 2020 08:29:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726731AbgHQDpy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 16 Aug 2020 23:45:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37778 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726385AbgHQDpx (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 16 Aug 2020 23:45:53 -0400
-Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E76C2C061388
-        for <linux-ide@vger.kernel.org>; Sun, 16 Aug 2020 20:45:51 -0700 (PDT)
-Received: by mail-pl1-x642.google.com with SMTP id u10so6833182plr.7
-        for <linux-ide@vger.kernel.org>; Sun, 16 Aug 2020 20:45:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=MA/9gHI0V+yftTzDrDx3504zFpgx5aUeDq1OIejihpQ=;
-        b=vs8KGi9WejCWcKWcxD6bsXKCrIcM0+m4Bw8FfFf3Og83i3+KSRNNLWCD4ty/tof3Nr
-         4iKnYwHGhQzW/DLjCAlrjRt/VjAL+bRx0t7QGSPZMmnAXHZOjye2Zh5oghknrvL2Juco
-         gLVkZFd1cJAMCWC0w9qW8GeKTVfXiaxcIGi98sOYGm5cyiAGdgVeSkRwWjbVZjQsubmy
-         yheIf4xhYRDJCIa8y8TNxAB6L0U8GwS+VMZV2+VtMq95iBnPmBxmt91jPbSaizfLN4uY
-         Guo9phQx+7+J6PPgpTaUcKFvTetyfEm652SAIY3I5MsWNCtyDZDR4wIPrnloFWg9Y8gS
-         xnZQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=MA/9gHI0V+yftTzDrDx3504zFpgx5aUeDq1OIejihpQ=;
-        b=IJBp5zOmCVMcI3cvjZIEqxTD+2/i+ue/KJiE7CfH9M7K5G5hwPSeFYXyt/Ocjc1bU/
-         gZLdm5iYoeQlYhMSdr28SqMIOIwHBeYEc2l5paFUud8w9CI4SRAJJ3rva5EDviKVpbo+
-         0UdHC6cptvQXojyC0zjYUwwoxoRvFp2Dkg0u7uqxgr1VeTzpS4+VwAokCldrnM55aIWx
-         MATrhy9PkMwQe50p1JWe1vgveYN61S50OqxkUFNQMlVhKY15CX0tiz0hsEb92bhBwCDC
-         s5HhB1M+HR55TeUsrag6dDYTcD7z7QM6Exd48VQfCkyVA/WdV7CTClNCsX+2pX57JWWt
-         pr+w==
-X-Gm-Message-State: AOAM531fB2ShKt99MN8mr4WRXDh4kl+RGntkVDzynXcGxS2/6ZeiAChQ
-        BYCConvAWZml10Jng8Be6MaWChAZqSAKxg==
-X-Google-Smtp-Source: ABdhPJziFq7DHhuHPYkQ5rKF4HfMbh/cUrsPSHGpavzCqwuHvA591aVIa0+v1ku33lFfVV8TOVUIXQ==
-X-Received: by 2002:a17:90b:8e:: with SMTP id bb14mr11493068pjb.170.1597635951325;
-        Sun, 16 Aug 2020 20:45:51 -0700 (PDT)
-Received: from ?IPv6:2605:e000:100e:8c61:ea1b:63b0:364:3a3b? ([2605:e000:100e:8c61:ea1b:63b0:364:3a3b])
-        by smtp.gmail.com with ESMTPSA id s24sm15332095pjp.1.2020.08.16.20.45.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 16 Aug 2020 20:45:50 -0700 (PDT)
-Subject: Re: [PATCH] ata: ahci: use ata_link_info() instead of
- ata_link_printk()
-To:     Xu Wang <vulab@iscas.ac.cn>, linux-ide@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org
-References: <20200817032913.10173-1-vulab@iscas.ac.cn>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <de66f1e7-9ac6-b8be-a243-0fe68419bc24@kernel.dk>
-Date:   Sun, 16 Aug 2020 20:45:49 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-In-Reply-To: <20200817032913.10173-1-vulab@iscas.ac.cn>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1728538AbgHQI3Z (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 17 Aug 2020 04:29:25 -0400
+Received: from inva020.nxp.com ([92.121.34.13]:45170 "EHLO inva020.nxp.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728230AbgHQI3X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 17 Aug 2020 04:29:23 -0400
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 451011A0078;
+        Mon, 17 Aug 2020 10:29:21 +0200 (CEST)
+Received: from invc005.ap-rdc01.nxp.com (invc005.ap-rdc01.nxp.com [165.114.16.14])
+        by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id D409F1A0CB3;
+        Mon, 17 Aug 2020 10:29:18 +0200 (CEST)
+Received: from localhost.localdomain (mega.ap.freescale.net [10.192.208.232])
+        by invc005.ap-rdc01.nxp.com (Postfix) with ESMTP id 7B9A6402BE;
+        Mon, 17 Aug 2020 10:29:15 +0200 (CEST)
+From:   andy.tang@nxp.com
+To:     axboe@kernel.dk
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yuantian Tang <andy.tang@nxp.com>,
+        Udit Kumar <udit.kumar@nxp.com>
+Subject: [PATCH] ahci: qoriq: enable acpi support in qoriq ahci driver
+Date:   Mon, 17 Aug 2020 16:22:04 +0800
+Message-Id: <20200817082204.13523-1-andy.tang@nxp.com>
+X-Mailer: git-send-email 2.17.1
+X-Virus-Scanned: ClamAV using ClamSMTP
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 8/16/20 8:29 PM, Xu Wang wrote:
-> Using ata_link_info() instead of ata_link_printk().
+From: Yuantian Tang <andy.tang@nxp.com>
 
-Applied, thanks.
+This patch enables ACPI support in qoriq ahci driver.
 
+Signed-off-by: Udit Kumar <udit.kumar@nxp.com>
+Signed-off-by: Yuantian Tang <andy.tang@nxp.com>
+---
+ drivers/ata/ahci_qoriq.c | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
+index a330307d3201..5b46fc9aeb4a 100644
+--- a/drivers/ata/ahci_qoriq.c
++++ b/drivers/ata/ahci_qoriq.c
+@@ -6,6 +6,7 @@
+  *   Tang Yuantian <Yuantian.Tang@freescale.com>
+  */
+ 
++#include <linux/acpi.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/pm.h>
+@@ -80,6 +81,12 @@ static const struct of_device_id ahci_qoriq_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, ahci_qoriq_of_match);
+ 
++static const struct acpi_device_id ahci_qoriq_acpi_match[] = {
++	{"NXP0004", .driver_data = (kernel_ulong_t)AHCI_LX2160A},
++	{ }
++};
++MODULE_DEVICE_TABLE(acpi, ahci_qoriq_acpi_match);
++
+ static int ahci_qoriq_hardreset(struct ata_link *link, unsigned int *class,
+ 			  unsigned long deadline)
+ {
+@@ -255,6 +262,7 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
+ static int ahci_qoriq_probe(struct platform_device *pdev)
+ {
+ 	struct device_node *np = pdev->dev.of_node;
++	const struct acpi_device_id *acpi_id;
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_host_priv *hpriv;
+ 	struct ahci_qoriq_priv *qoriq_priv;
+@@ -267,14 +275,18 @@ static int ahci_qoriq_probe(struct platform_device *pdev)
+ 		return PTR_ERR(hpriv);
+ 
+ 	of_id = of_match_node(ahci_qoriq_of_match, np);
+-	if (!of_id)
++	acpi_id = acpi_match_device(ahci_qoriq_acpi_match, &pdev->dev);
++	if (!(of_id || acpi_id))
+ 		return -ENODEV;
+ 
+ 	qoriq_priv = devm_kzalloc(dev, sizeof(*qoriq_priv), GFP_KERNEL);
+ 	if (!qoriq_priv)
+ 		return -ENOMEM;
+ 
+-	qoriq_priv->type = (enum ahci_qoriq_type)of_id->data;
++	if (of_id)
++		qoriq_priv->type = (enum ahci_qoriq_type)of_id->data;
++	else
++		qoriq_priv->type = (enum ahci_qoriq_type)acpi_id->driver_data;
+ 
+ 	if (unlikely(!ecc_initialized)) {
+ 		res = platform_get_resource_byname(pdev,
+@@ -288,7 +300,8 @@ static int ahci_qoriq_probe(struct platform_device *pdev)
+ 		}
+ 	}
+ 
+-	qoriq_priv->is_dmacoherent = of_dma_is_coherent(np);
++	if (device_get_dma_attr(&pdev->dev) == DEV_DMA_COHERENT)
++		qoriq_priv->is_dmacoherent = true;
+ 
+ 	rc = ahci_platform_enable_resources(hpriv);
+ 	if (rc)
+@@ -354,6 +367,7 @@ static struct platform_driver ahci_qoriq_driver = {
+ 	.driver = {
+ 		.name = DRV_NAME,
+ 		.of_match_table = ahci_qoriq_of_match,
++		.acpi_match_table = ahci_qoriq_acpi_match,
+ 		.pm = &ahci_qoriq_pm_ops,
+ 	},
+ };
 -- 
-Jens Axboe
+2.17.1
 
