@@ -2,116 +2,151 @@ Return-Path: <SRS0=SRgV=B5=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_IN_DEF_DKIM_WL autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 908F8C433E1
-	for <linux-ide@archiver.kernel.org>; Wed, 19 Aug 2020 04:12:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33D40C433DF
+	for <linux-ide@archiver.kernel.org>; Wed, 19 Aug 2020 18:40:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7292520738
-	for <linux-ide@archiver.kernel.org>; Wed, 19 Aug 2020 04:12:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F32B420658
+	for <linux-ide@archiver.kernel.org>; Wed, 19 Aug 2020 18:40:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="c0JvyFa4"
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="e+mMmkTZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725280AbgHSEMa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 19 Aug 2020 00:12:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39442 "EHLO
+        id S1726609AbgHSSk1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 19 Aug 2020 14:40:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725788AbgHSEM1 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Aug 2020 00:12:27 -0400
-Received: from mail-io1-xd32.google.com (mail-io1-xd32.google.com [IPv6:2607:f8b0:4864:20::d32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4F035C061342
-        for <linux-ide@vger.kernel.org>; Tue, 18 Aug 2020 21:12:26 -0700 (PDT)
-Received: by mail-io1-xd32.google.com with SMTP id g14so23502611iom.0
-        for <linux-ide@vger.kernel.org>; Tue, 18 Aug 2020 21:12:26 -0700 (PDT)
+        with ESMTP id S1725997AbgHSSkZ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Aug 2020 14:40:25 -0400
+Received: from mail-pj1-x1043.google.com (mail-pj1-x1043.google.com [IPv6:2607:f8b0:4864:20::1043])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7403BC061757
+        for <linux-ide@vger.kernel.org>; Wed, 19 Aug 2020 11:40:25 -0700 (PDT)
+Received: by mail-pj1-x1043.google.com with SMTP id e4so1514770pjd.0
+        for <linux-ide@vger.kernel.org>; Wed, 19 Aug 2020 11:40:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=OcTKziOEwEGUuJmD0iWVrbsTAPHF8MYSOhMtKY97SCo=;
-        b=c0JvyFa4FCkSm6zF0t8gmScQUMLHHKA7+kvhFQFD3fSyXgLZvdxoSWsvtxKw13lwqU
-         Eq/f7FQ54BR2IVfb5610WB9p61+pfbg0QPN1Hxu37E+JSZyeZ3cSw+4UNreohN+ZjBGi
-         NEF8oUCm9C6iIkodm9VYb3C2ONkdQ1P3uxUcasJAXOUg6Pe8FwqjMDZnV/rP86vq0Enu
-         m2hF8C03fxVJcsRZHTDLwqJVOKPr2c36Zv6Z97Lyx5fS1BV0OKFu7BgDmx9KUdvYm5Fu
-         rXwnCKUHt071wlw1A387mi/fBxfym464x7MRcXzPsXFv2B9zDlFSVD3UFsB/8nid9wVY
-         AkAg==
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=S1EUhordtUMjel9FzBtn8TtSvL9SVNZ9uwAnsm6qFvw=;
+        b=e+mMmkTZHdUnOzUeVKsZZ9CczIEu12TU8Kve2CC8dc6MqNmTEWTaZ348q66vWBSfQF
+         GIklVGsrgvsTEi1Qo4eoBoX6yS36bEKuwLEDTe9RkBCSPbDnBBXP6W0qOW5001XEK0Qt
+         BkCV9STVWZ3StfyFgDVToDTKDhXjLPEHSiqjoDG8SYkTzLcjxMH4/00xiBfEgzz2mUTW
+         +JK9+Bh7w2UX6zSUKJnkIqT8hbNPAph1a/yxm3dqaYY30/wyoRpifLbnVPoVYkVOUGQD
+         v7S+6t27MltFWBp/vody+r29b/EGImRaMm5d0kwzHa/ke2SzSzF7lV3zpxK7bhO/2nf2
+         6Emw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=OcTKziOEwEGUuJmD0iWVrbsTAPHF8MYSOhMtKY97SCo=;
-        b=Q5TSTLVB3VkybZPo8pMH+/zF69B2bO/3GCMGtQ2/uBli3H3tMvSJq4CWs9tRm3RNpG
-         yTcZ2Qf5E5Nk5M5TGHfyo3FJG0e5dzQRVz7vGP1TlK09fbKuvqI8vPfRI9UmIWeikgP8
-         OFdMOqrLAR1C/E8IIpiAu9xI+rbjH3hCRQtL58dln+JJRyLlanmOWizV+thX9yEZTvy8
-         8pmrHJobobgsvt/qxMhS0uHi3Cz10rNk100/6SlB0zLESywapCOe2O6v0ouMfsGsnu56
-         +SbWghX6VA0G3c/cLRREgzdL4H308y4ddUyN4ZSy4ID6JAcmE5hkpFBvH5ZzQO3bz6hW
-         E1tA==
-X-Gm-Message-State: AOAM532J5gwjucNv6BH/5pMP362/rPWJuV1h48SlnkctkW3yuHV0qhsO
-        LK47SQDCNwvEoEavGQiN9t9QQvq3w4jtkU4eOVFdxw==
-X-Google-Smtp-Source: ABdhPJz4sbg+830QpHm7VA/vsS536DBf55fY9I2bU1QJ14Edyy0y79HRAv3W0nS42bX0nJRh4lwy9Kj89D/vNZ0fwIw=
-X-Received: by 2002:a6b:b5c1:: with SMTP id e184mr18823994iof.208.1597810344130;
- Tue, 18 Aug 2020 21:12:24 -0700 (PDT)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=S1EUhordtUMjel9FzBtn8TtSvL9SVNZ9uwAnsm6qFvw=;
+        b=HguBvuTp3YIOpwgTk+Lkd8GGTImg5MOHnxm/RkwSWvI8VMK4KrZwj9QCihtPa8ymPI
+         TFKhj7WiTuXw33yhi/8YiWqbV2n+eqEA2Qchz0DTy6Ms4SRoWppMB2zeU/GAVOhqxbX1
+         RRGWUgDPT/dtX7KzDOAcAw4nbgMmnIwN65hkdzvLsFb3C/Hvn3g4pisYoLIbDhdNUJcx
+         qkGN/P6c2vaP6pojkBnRovOLJfii4IXzocat+DZkIZUqpPMhRoiyaXStk0iNzORJuoge
+         mVVp28+iw9qN7WL3wkcr62Nmeh6LxgEcbq51ohykQWLjra58iXttRL+rU62tpU6Zw+WK
+         0tlA==
+X-Gm-Message-State: AOAM533Ivi/d0D94XER4naVnx8Hvd/6tgqGQURa6mUFB9BC/PYxMReW9
+        6+g/91HCSzZq/dIlZB3Aztzm0g==
+X-Google-Smtp-Source: ABdhPJxp72MaH2m2nPgfUrred95nj+8zIrU+NNhgrwSD/P/pZgzig9Z2qyQTh3Wm88TgTsloY+2vBg==
+X-Received: by 2002:a17:90a:ab96:: with SMTP id n22mr5132823pjq.52.1597862424863;
+        Wed, 19 Aug 2020 11:40:24 -0700 (PDT)
+Received: from [192.168.1.182] ([66.219.217.173])
+        by smtp.gmail.com with ESMTPSA id y79sm28201877pfb.65.2020.08.19.11.40.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 19 Aug 2020 11:40:23 -0700 (PDT)
+Subject: Re: [PATCH v3] ata: use generic power management
+To:     Vaibhav Gupta <vaibhavgupta40@gmail.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Bjorn Helgaas <bjorn@helgaas.com>,
+        Vaibhav Gupta <vaibhav.varodek@gmail.com>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Gustavo A . R . Silva" <gustavoars@kernel.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Prabhakar Kushwaha <pkushwaha@marvell.com>,
+        Alex Shi <alex.shi@linux.alibaba.com>,
+        =?UTF-8?B?TWljaGHFgiBNaXJvc8WCYXc=?= <mirq-linux@rere.qmqm.pl>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Jiri Slaby <jslaby@suse.cz>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
+        Javier Martinez Canillas <javier@osg.samsung.com>,
+        Zhang Rui <rui.zhang@intel.com>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        linux-kernel-mentees@lists.linuxfoundation.org,
+        Shuah Khan <skhan@linuxfoundation.org>
+References: <20200817092245.10478-1-vaibhavgupta40@gmail.com>
+ <20200817092511.GA10566@gmail.com>
+ <11190a0b-1009-caf8-9cbe-6cf296b614bf@kernel.dk>
+ <20200818130329.GA39194@gmail.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <a1937b38-055f-0fc7-0d08-16af7c42660b@kernel.dk>
+Date:   Wed, 19 Aug 2020 12:40:20 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-References: <CACqKpR-5=bDwODQFfMY+o8-XJMCQmtLVAOiCEY8ApFwQr04A8A@mail.gmail.com>
- <20200817174215.GB4230@mtj.thefacebook.com>
-In-Reply-To: <20200817174215.GB4230@mtj.thefacebook.com>
-From:   Akshat Jain <akshatzen@google.com>
-Date:   Tue, 18 Aug 2020 21:12:13 -0700
-Message-ID: <CACqKpR8i=9A6kb05yCyh39HMZ8aEhEGacXTCvQKyUS=nYkqRiQ@mail.gmail.com>
-Subject: Re: Question on ata_gen_passthru_sense interpretation of fixed format
- sense buffer
-To:     Tejun Heo <tj@kernel.org>
-Cc:     Vishakha Channapattan <vishakhavc@google.com>,
-        linux-ide@vger.kernel.org, John Grass <jgrass@google.com>,
-        Thieu Le <thieule@google.com>, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20200818130329.GA39194@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello Tejun,
-Thank you very much for your reply.
+On 8/18/20 6:03 AM, Vaibhav Gupta wrote:
+> On Mon, Aug 17, 2020 at 07:06:03AM -0700, Jens Axboe wrote:
+>> On 8/17/20 2:25 AM, Vaibhav Gupta wrote:
+>>> Hello,
+>>>
+>>> I am working to upgrade power management framework support for PCI drivers, as
+>>> my project under the Linux Kernel Mentorship Program.
+>>>
+>>> The ultimate goal is to completely remove the legacy framework. And for this we
+>>> need to remove ".suspend" and ".resume" pointers from "struct pci_driver".
+>>>
+>>> The patch is doing the change for the same. The actual suspend() and
+>>> resume() callbacks are defined in drivers/ata/libata-core.c and are exported.
+>>> Which are then used by other files.
+>>>
+>>> Thus removing those pointers, included 54 files in this patch. Although, the
+>>> actual changes are done in few files only. The changes should work fine as I
+>>> have done similar changes for other drivers too which made their way into the
+>>> kernel. Still, tests on few ata devices are necessary.
+>>
+>> Didn't we agree to split this up into separate patches??
+>>
+>>> I tried but unfortunately, I couldn't find or arrange devices to test upon. I
+>>> have added the authors of the previous commit(s) for respective drivers as
+>>> recipients. It would be very helpful if someone can test it on a device.
+>>
+>> Does qemu support any of the affected drivers?
+>>
+> Hello Jens,
+> Yes we discussed about splitting it and I will surely do it. I just thought that
+> still it has not got tested and in that case keeping check on patch-series with
+> 55+ patches may become somewhat messy. Moreover, to test any driver one will
+> have to apply the patch for libata-core and then that of the driver.
+> So, I sent this v3 in order to get some help for the testing purpose. Once it
+> goes successful, I can split it and send it for the submission.
+> 
+> I am not sure about qemu, I haven't checked for it. Qemu will be appropriate
+> for testing power management for .suspend() and .resume() callbacks?
 
-To answer your question:
-1. Yes we will start working on a patch and send it for review.
-2. We found this issue during our code review.
+Well, that's your homework then, it seems pretty ideal for testing that
+kind of thing and way easier than getting your hands on hardware. It
+won't have support for everything, but so far you are at 0 things
+tested, so any piix and ahci testing would be a win as far as I'm
+concerned.
 
-Another information I need to bring to your attention is that many
-user libraries today decode the fixed format sense block based on the
-format today's kernel (ata_gen_passthru_sense) provides. Rather than
-the format specified in the SCSI Primary commands - 4 specification.
-If we were to correct the field offsets for the fixed format sense block.
-It may break such libraries. How do you assess the impact
-of such a change?
+-- 
+Jens Axboe
 
-Regards,
-Akshat
-
-On Mon, Aug 17, 2020 at 10:42 AM Tejun Heo <tj@kernel.org> wrote:
->
-> Hello,
->
-> On Mon, Aug 03, 2020 at 09:44:26AM -0700, Akshat Jain wrote:
-> > Hello Jens Tejun,
-> > I have a question regarding the ata_gen_passthru_sense function (libata-scsi.c).
-> >
-> > This function while generating fixed format sense blocks, puts the
-> > INFORMATION field at offset 8 and COMMAND-SPECIFIC-INFORMATION at
-> > offset 16.
-> > While as per SCSI Primary commands - 4 specification, section 4.5.3
-> > Fixed format sense data Table 53, the INFORMATION field is at offset 3
-> > and COMMAND-SPECIFIC-INFORMATION is at offset 8.
->
-> Sorry about the late reply. I could have been easily mistaken and don't
-> think the path has been under any kind of scrutiny. The best way to proceed
-> would be submitting a patch referencing the spec cc'ing linux-ide and
-> linux-scsi. Have you guys got bitten by this or is this discovered through
-> code review?
->
-> Thanks.
->
-> --
-> tejun
