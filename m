@@ -2,63 +2,109 @@ Return-Path: <SRS0=6gzU=CF=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C8E9C433E1
-	for <linux-ide@archiver.kernel.org>; Thu, 27 Aug 2020 09:39:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AAC3C433DF
+	for <linux-ide@archiver.kernel.org>; Thu, 27 Aug 2020 17:08:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E6B7207CD
-	for <linux-ide@archiver.kernel.org>; Thu, 27 Aug 2020 09:39:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F23820737
+	for <linux-ide@archiver.kernel.org>; Thu, 27 Aug 2020 17:08:52 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="phVYQvV+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728030AbgH0Jjw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 27 Aug 2020 05:39:52 -0400
-Received: from verein.lst.de ([213.95.11.211]:37505 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726157AbgH0Jjw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 27 Aug 2020 05:39:52 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 386C568B02; Thu, 27 Aug 2020 11:39:48 +0200 (CEST)
-Date:   Thu, 27 Aug 2020 11:39:48 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Denis Efremov <efremov@linux.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
-Subject: Re: [PATCH 01/19] char_dev: replace cdev_map with an xarray
-Message-ID: <20200827093947.GA15976@lst.de>
-References: <20200826062446.31860-1-hch@lst.de> <20200826062446.31860-2-hch@lst.de> <20200826081905.GB1796103@kroah.com> <20200827085353.GA12111@lst.de> <20200827091859.GA393660@kroah.com>
+        id S1726867AbgH0RIv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 27 Aug 2020 13:08:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54920 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726009AbgH0RIv (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 27 Aug 2020 13:08:51 -0400
+Received: from mail-yb1-xb44.google.com (mail-yb1-xb44.google.com [IPv6:2607:f8b0:4864:20::b44])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 340C6C061264;
+        Thu, 27 Aug 2020 10:08:50 -0700 (PDT)
+Received: by mail-yb1-xb44.google.com with SMTP id m200so3346716ybf.10;
+        Thu, 27 Aug 2020 10:08:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=mHniHlKDMaeGQOVA7wYMtzU65VERCv+oHJvfRmraXqc=;
+        b=phVYQvV+p1qAm0gsfY1toQgMji8hPquXZHym9pN14Y2rco5aiKlsT1Gx6zVh2XPdIs
+         t2lqa76eF8xs83b9Y54L5hMJo7WCFO2fbUSk+GIfX8iqVvRbExWIpBc7OTj5+vOG4I2P
+         JMlFP6YynzTlq7xlgz3eMXxGGT5QMTkUMER9bFTWUu5AQF/UoGISrTL9tqBcLf6hoJk6
+         37MLl/pmsybfeZDTrQ+3wnhfTSeXIU6+Q51facRmWQ5yyjSZuiQstgngF0UVxzXRP/21
+         X486CABykcDT9yvbgwMMOekgteTdYZM9T9v9hlx2QNelhA/SoEvmBsVsRsEJBl3dLeze
+         +W3Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=mHniHlKDMaeGQOVA7wYMtzU65VERCv+oHJvfRmraXqc=;
+        b=alMi6JrDldOXZ3waYVZCRbVX+TIlmAaSGPrHojLalKfR934zW216I4mqFloP/oDaAw
+         CVyb/uBXS87QqLLovo1u/LgZJ/LpzrSaoaADqZeAG98QlKLHv0liNPtn0EqpWLWnivt9
+         WIg18GdU0SE4uf/7v24HGHs4mkdypAkp6uAjMYtqQ7ReTmcMOUupuB9W+nLoiDPnVwFc
+         YUBWkQ2IBP9NRDFsvbthaJaWzYd1UmLrfjs1ngNj/bYkijUqLmBUOM3tieq6mU0gmRa3
+         Iud5pvhxqEx3sHG0KQLxUflbQ8ArB4htL4inxkl3egS+GOjRWmFBH6a/OlFi6RCRxI/I
+         CfbA==
+X-Gm-Message-State: AOAM531Vnm4yuLxDzlrZsOhMr0EHfTYVYJjc/0u9ME3rPfTmueBwcTxV
+        tLWhIWd7NBHgezN5GZdIjvJyqMEKa5ZbuanWcsE=
+X-Google-Smtp-Source: ABdhPJynyRKB2vFyMBE3ZSJ4B1YetYq7rZ1URcR+oH1Mlp82FYbmnw++2Z+nCtikyiYgdGx4q742m6zdB4fkuZ+CzIE=
+X-Received: by 2002:a25:8149:: with SMTP id j9mr31275854ybm.214.1598548129529;
+ Thu, 27 Aug 2020 10:08:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200827091859.GA393660@kroah.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+References: <1594919915-5225-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <1594919915-5225-12-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+In-Reply-To: <1594919915-5225-12-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+From:   "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+Date:   Thu, 27 Aug 2020 18:08:23 +0100
+Message-ID: <CA+V-a8t9p9U5oeTp-QNmp2uGHMOvXpo+VhRvp5hv5oDEWUh5QA@mail.gmail.com>
+Subject: Re: [PATCH 11/20] dt-bindings: usb: renesas,usbhs: Add r8a774e1 support
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Mark Brown <broonie@kernel.org>,
+        Niklas <niklas.soderlund@ragnatech.se>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>, linux-ide@vger.kernel.org,
+        dmaengine <dmaengine@vger.kernel.org>,
+        Linux I2C <linux-i2c@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-media <linux-media@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        alsa-devel <alsa-devel@alsa-project.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        USB list <linux-usb@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Aug 27, 2020 at 11:18:59AM +0200, Greg Kroah-Hartman wrote:
-> > I looked at it, but it does get registered and shows up in sysfs.
-> 
-> It does?  Where does that happen?  I see a bunch of kobject_init()
-> calls, but nothing that registers it in sysfs that I can see.
+Hi Greg,
 
-Hmm, true.
+On Thu, Jul 16, 2020 at 6:19 PM Lad Prabhakar
+<prabhakar.mahadev-lad.rj@bp.renesas.com> wrote:
+>
+> Document RZ/G2H (R8A774E1) SoC bindings.
+>
+> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
+> ---
+>  Documentation/devicetree/bindings/usb/renesas,usbhs.yaml | 1 +
+>  1 file changed, 1 insertion(+)
+>
+Gentle ping.
 
-> 
-> Note, this is not the kobject that shows up in /sys/dev/char/ as a
-> symlink, that comes from the driver core logic and is independent of the
-> cdev code.
-> 
-> The kobject does handle the structure lifetime rules, but that should be
-> able to be replaced with a simple kref instead.
-
-Yeah.  I'll let you handle this stuff, as you obviously know the area
-better than I do.
+Cheers,
+Prabhakar
