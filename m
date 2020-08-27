@@ -2,110 +2,72 @@ Return-Path: <SRS0=6gzU=CF=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2BCFC433DF
-	for <linux-ide@archiver.kernel.org>; Thu, 27 Aug 2020 17:34:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44026C433E6
+	for <linux-ide@archiver.kernel.org>; Thu, 27 Aug 2020 23:21:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 975F022CB3
-	for <linux-ide@archiver.kernel.org>; Thu, 27 Aug 2020 17:34:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lkTRJ1mK"
+	by mail.kernel.org (Postfix) with ESMTP id 2DF5520872
+	for <linux-ide@archiver.kernel.org>; Thu, 27 Aug 2020 23:21:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726912AbgH0Rep (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 27 Aug 2020 13:34:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58988 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726217AbgH0Rep (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 27 Aug 2020 13:34:45 -0400
-Received: from mail-yb1-xb41.google.com (mail-yb1-xb41.google.com [IPv6:2607:f8b0:4864:20::b41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 023AEC061264;
-        Thu, 27 Aug 2020 10:34:45 -0700 (PDT)
-Received: by mail-yb1-xb41.google.com with SMTP id h20so2983637ybj.8;
-        Thu, 27 Aug 2020 10:34:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=GxmsvrLcpOeXkCsHlYXOAwY7VKh0UFsLAGO+5hEpk1Q=;
-        b=lkTRJ1mKgk4cIPuJ5IMvWG7ijG3umHYB9nYkL+oAJE0t4OsJ46F+wrtWGJyoATCPDe
-         VgjH7PdTEqWZlvirOE9s9TVibxiJkkuQ6kXyEKqIMRpTeuPee5ss5QhmULBlaR1vuwey
-         XxS5NHbuxWiLkMAHuN/JURh/tsxhhFe/K8KNqu+Qzax9sHpZQmbIDX8O/jFU+Y0Od+1e
-         W+h5Z0Xk41k+qJEnvjnCG47zj4+oe+aLNkKv+y40anEwRnpVhdFU2OhpFC/f1n1D5KSs
-         VIeIMfApZ/AOVKQ3UA5neQ3owEIe4rKaJR8UoqRGR+0wBAaEOIUDt3IUif5ANx5IkZy9
-         YGOA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=GxmsvrLcpOeXkCsHlYXOAwY7VKh0UFsLAGO+5hEpk1Q=;
-        b=uUKFCl0BiS4ma1xTAEAj9eYp/xmmqQ0xiw1P7eNYM61ZEDZ0XZmdJYP6TzbafE1GVp
-         pvbHf98Qm5LWbQtS+Ken/SBDAYU/q+LJfrGd71OCXMb0cP+KqqeJFrEETTm9RjGlkgew
-         DxK3khucCbSZrNXp4dr9gSLo5Hti5nb0zFPHKlBCUxlh2yMe5OM6gpUSBNOwgiU/61bi
-         +Z3PRUhFJVD+Xs8qDTk+Qb8ppbqAXFFECT2K8rLZbWaGoA8/Vtk8Eqb8ucydwFJCKgHP
-         ASkWelP22O4l4G2tmvG2TA89xpLHIQanSxlh/IcrTdmRcnIPDixWgsxiRtz0zbYH0nuj
-         IW3g==
-X-Gm-Message-State: AOAM5308HyJkvGyMJV2nLveWfBQ89AAikRHtbl82K4C9hg8O7a+7T4U5
-        RN42zJP8kUezcf0/8mEB5EDztUXT3enIFgJA2Wk=
-X-Google-Smtp-Source: ABdhPJxYWuCSYXqkPcWE01ctXjzSlgjHoDui1b/Nonl6BZbG1ITby8r+A827hGsYXxn7sV4XEbLGCqrkeleiozi355w=
-X-Received: by 2002:a25:2f4d:: with SMTP id v74mr28532113ybv.401.1598549684365;
- Thu, 27 Aug 2020 10:34:44 -0700 (PDT)
-MIME-Version: 1.0
-References: <1594919915-5225-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <1594919915-5225-2-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
-In-Reply-To: <1594919915-5225-2-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
-From:   "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Date:   Thu, 27 Aug 2020 18:34:18 +0100
-Message-ID: <CA+V-a8sn1_fKbHt6cy-27+j2HWFp7Fjt8XBRZPLpvN47C3E3hQ@mail.gmail.com>
-Subject: Re: [PATCH 01/20] dt-bindings: pci: rcar-pci: Add device tree support
- for r8a774e1
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
-        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
-        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Vinod Koul <vkoul@kernel.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Mark Brown <broonie@kernel.org>,
-        Niklas <niklas.soderlund@ragnatech.se>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
+        id S1727932AbgH0XVO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 27 Aug 2020 19:21:14 -0400
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:52844 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727909AbgH0XVO (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 27 Aug 2020 19:21:14 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by kvm5.telegraphics.com.au (Postfix) with ESMTP id 18C9129D96;
+        Thu, 27 Aug 2020 19:21:10 -0400 (EDT)
+Date:   Fri, 28 Aug 2020 09:21:22 +1000 (AEST)
+From:   Finn Thain <fthain@telegraphics.com.au>
+To:     Joe Perches <joe@perches.com>
+cc:     John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Magnus Damm <magnus.damm@gmail.com>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>, linux-ide@vger.kernel.org,
-        dmaengine <dmaengine@vger.kernel.org>,
-        Linux I2C <linux-i2c@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-media <linux-media@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        alsa-devel <alsa-devel@alsa-project.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        USB list <linux-usb@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Denis Efremov <efremov@linux.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Song Liu <song@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
+Subject: Re: [PATCH 17/19] z2ram: reindent
+In-Reply-To: <b88538f92386f41b938c502ae2daec5800a85dcf.camel@perches.com>
+Message-ID: <alpine.LNX.2.23.453.2008280859300.10@nippy.intranet>
+References: <8570915f668159f93ba2eb845a3bbc05f8ee3a99.camel@perches.com>         <EF673A30-F88D-4E4E-8A2B-E942153830AC@physik.fu-berlin.de> <b88538f92386f41b938c502ae2daec5800a85dcf.camel@perches.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Bjorn,
 
-On Thu, Jul 16, 2020 at 6:18 PM Lad Prabhakar
-<prabhakar.mahadev-lad.rj@bp.renesas.com> wrote:
->
-> Add PCIe support for the RZ/G2H (a.k.a. R8A774E1).
->
-> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
-> ---
->  Documentation/devicetree/bindings/pci/rcar-pci.txt | 1 +
->  1 file changed, 1 insertion(+)
->
-Gentle ping.
+> @@ -109,34 +111,28 @@ static void get_z2ram(void)
+...
+>  	}
+> -
+> -	return;
+>  }
+>  
 
-Cheers,
-Prabhakar
+It would be good to have a semantic patch for that change.
+
+>  
+> -		if (z2ram_map[z2ram_size] == 0) {
+> +		if (z2ram_map[z2ram_size] == 0)
+>  			break;
+> -		}
+>  
+
+And that one.
+
+Reason being, a semantic patch only has to be debugged once, whereas 
+manual churn has to be done correctly over and over again.
+
+TBH, this kind of transformation can happen when code is displayed.
+It doesn't have to involve git at all. Otherwise, why have 5 billion 
+transistors? You'd be better off with an Amiga.
