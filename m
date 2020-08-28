@@ -2,77 +2,130 @@ Return-Path: <SRS0=HpzG=CG=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7FF7C433E2
-	for <linux-ide@archiver.kernel.org>; Fri, 28 Aug 2020 07:08:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04456C433E6
+	for <linux-ide@archiver.kernel.org>; Fri, 28 Aug 2020 07:52:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 78E2B208C9
-	for <linux-ide@archiver.kernel.org>; Fri, 28 Aug 2020 07:08:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1598598514;
-	bh=ZvYOOOLLhxM1hflSpZB75b7Lg8qtxAvJHgbIokXn4jw=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=D4ud30+scdOOO1mw81eyjUBSbOed9UwFddlwHFJedWNyOBC8l60HRcgV4smb+pNAd
-	 CmKx+PApKwDiDPVgnHR/SB1WMH3zVDVY5yPog+jn4OTOcpBrhqjTzINeEBbAIawSKv
-	 Yj08ao87D7wcAKqfOUvEov+Vam9xrQuskXmUMzUQ=
+	by mail.kernel.org (Postfix) with ESMTP id C385E2078A
+	for <linux-ide@archiver.kernel.org>; Fri, 28 Aug 2020 07:52:36 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ce1e8K/c"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728360AbgH1HI1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 28 Aug 2020 03:08:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60604 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728320AbgH1HIZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 28 Aug 2020 03:08:25 -0400
-Received: from mail-lj1-f172.google.com (mail-lj1-f172.google.com [209.85.208.172])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 3AF3F208C9;
-        Fri, 28 Aug 2020 07:08:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1598598504;
-        bh=ZvYOOOLLhxM1hflSpZB75b7Lg8qtxAvJHgbIokXn4jw=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=MrpZP9sPl3pous88EkRmY3yTSpWSvUUC5YeJANAq8ckaIlm1RQmHNUpeakTgx/zAs
-         5bEFHU+SWHVm0l2EZ/LMKJXPnh7FTgP0Pew+/mIYlU84amOdvkW716KOLoF6zlPwr3
-         j4uJ6bxLirJEyq2ci3jNFFAQdZISFl3n4Tb1EYPs=
-Received: by mail-lj1-f172.google.com with SMTP id w14so166663ljj.4;
-        Fri, 28 Aug 2020 00:08:24 -0700 (PDT)
-X-Gm-Message-State: AOAM530nlsvbbLAYKnO43fCqJxhdpxcjdxUavgzzhpca7u3dnjmeK05f
-        uqdl6uICbFs4NQ4SrQb8DwfKYBoHNbakdyUl/O4=
-X-Google-Smtp-Source: ABdhPJwDxwnTegqkGcim7YBtcif4W/XgOp/pZ2Mqt5pw3/OWQc7tRq9NrRCJraTuvVs/Zn6bXxCKz9TpF2uvlyIvdB4=
-X-Received: by 2002:a2e:7504:: with SMTP id q4mr222246ljc.41.1598598502529;
- Fri, 28 Aug 2020 00:08:22 -0700 (PDT)
+        id S1728357AbgH1Hwg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 28 Aug 2020 03:52:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50576 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727971AbgH1Hwg (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 28 Aug 2020 03:52:36 -0400
+Received: from mail-yb1-xb43.google.com (mail-yb1-xb43.google.com [IPv6:2607:f8b0:4864:20::b43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4D0AC061264;
+        Fri, 28 Aug 2020 00:52:35 -0700 (PDT)
+Received: by mail-yb1-xb43.google.com with SMTP id e14so52432ybf.4;
+        Fri, 28 Aug 2020 00:52:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=03SA6QLBtK3IQ4zuCDRLpEPFR1JjLUS7ypF2jRpTUus=;
+        b=Ce1e8K/caM4JvW4I6IlYWAdAdDrcDJjdidgiSSw3u1U2l7HQ3a2kOmczvvbkYGVOq4
+         erB9J73UZGJvV7XHy/RkrrCUhQw7V1lydp0AdbQo+pNvzOBgNLswc2RgdPqsMF58aheA
+         9Lrv0ex7Uj91QMqENp5Yv4cuToIFPSGWs2lkiKSxnpsSTe7Eq5ZlVjBnVhNFGFh4cIr2
+         jpoD9oU/YgAXieicPCZprdmCdMY/V0jc1YbWHaplTsQgOGXc03HEMZkGKzhEBMjjUyat
+         1huT8whAgyVZhNrXbK4bevxXwjsD6gaR28Big84Mi8vP/bi7JfPYO85puDNU0UBxCGih
+         WPdQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=03SA6QLBtK3IQ4zuCDRLpEPFR1JjLUS7ypF2jRpTUus=;
+        b=EX4UI+f/S84rGP2WHMLxM04koDaErZ9EPWQ5qOUoJclQtR2QI0O5Q//jDGUd6nqcnS
+         V1gJGij/1W0ILzC8lwwYZvKQhxBrSpHG5TOdXb93Aeo8RnLenRphVgVQQ/iDAnS4Q7dO
+         ZyQW+qCWl/n1l7r5/83xDdn4HYF83xAh/gVkTesWaaLP3xo97H+otrQIZn8BI3f3pvZD
+         8WI16IcR7knuyNBT2YKoVqdqYOOGiEr9ZChfkbTlkJmK0FUvja2mmmz42rVhoJ+IIuZp
+         5XlCvQx6Q7eZt57nk6hhy7wtYPGRQF4qmRa2qfJlIKw601eF+mF7vCslyMPe8sq59XA3
+         i1rw==
+X-Gm-Message-State: AOAM533xsc1R/mFDOL702DqBJ59U3h2gmJkARR833VqNC7Wifg1I9O3H
+        BmrOAtYSEtPpa/igou+OzMr0YIavOypV8x70Ios=
+X-Google-Smtp-Source: ABdhPJxKaH3Rnxdft6nzQd34AAzAxueOyLTpZiz6Sebv+w7rBi0ECVdDr/vmwjJ5qeTeRA2GnUZW3Taq1UeJFdtPzj4=
+X-Received: by 2002:a25:2f4d:: with SMTP id v74mr720966ybv.401.1598601154899;
+ Fri, 28 Aug 2020 00:52:34 -0700 (PDT)
 MIME-Version: 1.0
-References: <20200826062446.31860-1-hch@lst.de> <20200826062446.31860-13-hch@lst.de>
-In-Reply-To: <20200826062446.31860-13-hch@lst.de>
-From:   Song Liu <song@kernel.org>
-Date:   Fri, 28 Aug 2020 00:08:11 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW46Wg5Ju6coY73z7U6tr6hzcpnvMbj7tuxmVNsoH9NVxw@mail.gmail.com>
-Message-ID: <CAPhsuW46Wg5Ju6coY73z7U6tr6hzcpnvMbj7tuxmVNsoH9NVxw@mail.gmail.com>
-Subject: Re: [PATCH 12/19] md: use __register_blkdev to allocate devices on demand
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Denis Efremov <efremov@linux.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Al Viro <viro@zeniv.linux.org.uk>, linux-block@vger.kernel.org,
-        open list <linux-kernel@vger.kernel.org>,
-        linux-ide@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>,
-        linux-scsi@vger.kernel.org, linux-m68k@lists.linux-m68k.org
+References: <1594919915-5225-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <1594919915-5225-9-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <CA+V-a8t-HHWeo4zwnTuyZHnhc8u_aXqt_KZHr1trnXQB15Jj6A@mail.gmail.com> <TY2PR01MB36923A0548AAE7E0249042AFD8520@TY2PR01MB3692.jpnprd01.prod.outlook.com>
+In-Reply-To: <TY2PR01MB36923A0548AAE7E0249042AFD8520@TY2PR01MB3692.jpnprd01.prod.outlook.com>
+From:   "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+Date:   Fri, 28 Aug 2020 08:52:08 +0100
+Message-ID: <CA+V-a8v5sFVGVxNKDXvg8w=FeZnGdyV8q9deBuAaVMsx0bDcwg@mail.gmail.com>
+Subject: Re: [PATCH 08/20] dt-bindings: usb: usb-xhci: Document r8a774e1 support
+To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Prabhakar Mahadev Lad <prabhakar.mahadev-lad.rj@bp.renesas.com>,
+        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Mark Brown <broonie@kernel.org>,
+        Niklas <niklas.soderlund@ragnatech.se>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        dmaengine <dmaengine@vger.kernel.org>,
+        Linux I2C <linux-i2c@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-media <linux-media@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        alsa-devel <alsa-devel@alsa-project.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        USB list <linux-usb@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Aug 25, 2020 at 11:53 PM Christoph Hellwig <hch@lst.de> wrote:
->
-> Use the simpler mechanism attached to major_name to allocate a brd device
-> when a currently unregistered minor is accessed.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Hi Shimoda-san
 
-Acked-by: Song Liu <song@kernel.org>
+On Fri, Aug 28, 2020 at 2:11 AM Yoshihiro Shimoda
+<yoshihiro.shimoda.uh@renesas.com> wrote:
+>
+> Hi Lad-san,
+>
+> > From: Lad, Prabhakar, Sent: Friday, August 28, 2020 2:15 AM
+> >
+> > Hi Greg,
+> >
+> > On Thu, Jul 16, 2020 at 6:19 PM Lad Prabhakar
+> > <prabhakar.mahadev-lad.rj@bp.renesas.com> wrote:
+> > >
+> > > Document r8a774e1 xhci support. The driver will use the fallback
+> > > compatible string "renesas,rcar-gen3-xhci", therefore no driver
+> > > change is needed.
+> > >
+> > > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> > > Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
+> > > ---
+> > >  Documentation/devicetree/bindings/usb/usb-xhci.txt | 1 +
+> > >  1 file changed, 1 insertion(+)
+> > >
+> > Gentle ping.
+>
+> Thank you for the ping. However, since the latest kernel has renesas,usb-xhci.yaml,
+> would you fix the patch?
+>
+Thank you for pointing out, I have now posted a v2 [1] now. (I missed
+out Geert's comment earlier for this patch)
+
+[1] https://patchwork.kernel.org/patch/11742289/
+
+Cheers,
+Prabhakar
