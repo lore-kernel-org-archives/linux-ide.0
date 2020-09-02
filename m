@@ -2,127 +2,151 @@ Return-Path: <SRS0=9WFx=CL=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44A0AC433E7
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Sep 2020 16:19:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFC53C433E2
+	for <linux-ide@archiver.kernel.org>; Wed,  2 Sep 2020 16:32:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1D597208B3
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Sep 2020 16:19:35 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tBR2n6hv"
+	by mail.kernel.org (Postfix) with ESMTP id 9C2CC20758
+	for <linux-ide@archiver.kernel.org>; Wed,  2 Sep 2020 16:32:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1599064373;
+	bh=phKkQQ1aN7O/ugGWoKkTDxN5bLWId9pkfkFu8neVP2M=;
+	h=Date:From:To:Cc:Subject:List-ID:From;
+	b=KHDfeN/lAyX2R919JScHEhw1oGUpUmdvdPJ1CixbGaFE7fgaxzGUEYolI1lr7q5uU
+	 11qZbWhU9f1i3Hg+tZwSTxMr7tLFBG01VlyWu0PJiauIAo7R+dTxS86FpLR8x+boUb
+	 VjkYNM1Xa0r1QAbjo456xA3oqe1kKJxSE7BrLh4g=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728778AbgIBQTY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 2 Sep 2020 12:19:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57664 "EHLO
+        id S1726821AbgIBQcx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 2 Sep 2020 12:32:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726814AbgIBQTV (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Sep 2020 12:19:21 -0400
-Received: from mail-lf1-x143.google.com (mail-lf1-x143.google.com [IPv6:2a00:1450:4864:20::143])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D9CEC061244;
-        Wed,  2 Sep 2020 09:19:21 -0700 (PDT)
-Received: by mail-lf1-x143.google.com with SMTP id f127so107414lfd.7;
-        Wed, 02 Sep 2020 09:19:21 -0700 (PDT)
+        with ESMTP id S1726247AbgIBQcv (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Sep 2020 12:32:51 -0400
+Received: from mail-qt1-x844.google.com (mail-qt1-x844.google.com [IPv6:2607:f8b0:4864:20::844])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA940C061244
+        for <linux-ide@vger.kernel.org>; Wed,  2 Sep 2020 09:32:50 -0700 (PDT)
+Received: by mail-qt1-x844.google.com with SMTP id t20so4032021qtr.8
+        for <linux-ide@vger.kernel.org>; Wed, 02 Sep 2020 09:32:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=A4Ns4FXyKzBbQIQFhXeIN99gK1TEB4bN7K2rZb3tfqs=;
-        b=tBR2n6hvrbBmXRV3KYYvZLMZe1zksCcBHJSuVij9v/Mfx0mjvXpvKQv+n2NjGjB5+7
-         FUlvE06p5sp9p7lyyIWi2rgXvbZt8LHbpMfb31wmHq2MfE2dN19KZjip4hM9j1mjci7b
-         4ne3Nb7NNiRJSUh+wLALVk4vZsU1Ajv1tiTjTq6NzgX7BjYPwRrhcbzY0D+CobKQFM5v
-         8XGrSnvqb5C7xMnlLSeEs0UBZ29+9TXxGbshDEYoHp3P1wd6/6YZ2fziqnj3SZstZtRE
-         x6ZYyh15XZdwqOUWKRSnXUgcM7FViI71QM9cYJmMkibTmGfYjd+IhDtQgPUPE8dXMjn3
-         7Q8Q==
+        h=sender:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition;
+        bh=YtdCrq9IL3YvWGWpLFHgunxhN3nTePzTmcFQohfU8YE=;
+        b=Kqd0ks6cmslbdSJX3k32gmCWjHYXRSyhpIaVZR4oIkmZ9f/4voBEUTWZ6xxt8SkWCL
+         L60uXe3VmtjknMTFL0vlQtD0+kvMVE0Fj2DOJsl4RBEsF1fP6CT9UFarVhHpOULx2fdY
+         zxRmDo9Z/D0pXzC2vlDEWGRzObOrl+/m7nefLnvwwddx/64KUnYFqwmLoXLfYYOmNd+v
+         PrsgjFhEoec02Lcs94Y+VQTU9iw+EEu2re6oWUIhR+f1U3eKjPBhxMwrTvEV1YGulEFU
+         Xt4duS3jQgV2GMdZws/yCdTCyNPR9xaONeYiV7beyrS3VA4YBbmf4RXez1u1Gd6wU/WR
+         BbPg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=A4Ns4FXyKzBbQIQFhXeIN99gK1TEB4bN7K2rZb3tfqs=;
-        b=MUgVFGcsjmr0W425VRqQi7lYsvMYVVwTk+Yj3+3b+DBfnXGrqZ66LwYYb1Tqfkmc7j
-         wsTpownH38me6I7YoR1apJZ5AZWuT/rHrEDz/DbokHypcht0GSgMXLsW/TQd+F4iMbSe
-         qPxofvaLCQSgxg8xCaBzuX8mgFz/sfNyJ8lHOOqXK3F7rgD/txrQQL4pnLbBoqQxR0G1
-         woaSlUfevydf5eLuE3odqFVaUSJZ8Fh0cKPgRv2aLC69D+x95ujEDdd7p6urUX5YlWtU
-         Q3t1W5+7B9rmYPPw9Jl1D4+svDwu0MHG3dBq50MeefFNMKqeIGuGQV6n4TxZs3JWblrr
-         oJ7w==
-X-Gm-Message-State: AOAM533ik1s+alzTKp5THuIQ7Nk2WWivCwHlW6OzdGMk316OfJEew5Tb
-        DtCXuISmG/A6H7GNMwVWueDVd5O1JyZYwQ==
-X-Google-Smtp-Source: ABdhPJxorOuMt+fF1q/dzHdE2W3hPAzBwNmMujGF4eljWGZI3dJVEHHttghNXMYbfHt9AmKOTnf+bg==
-X-Received: by 2002:a19:dcb:: with SMTP id 194mr3481675lfn.25.1599063559361;
-        Wed, 02 Sep 2020 09:19:19 -0700 (PDT)
-Received: from wasted.omprussia.ru ([2a00:1fa0:44ba:bd37:6990:9f35:8864:71b0])
-        by smtp.gmail.com with ESMTPSA id d6sm19235ljg.25.2020.09.02.09.19.17
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 02 Sep 2020 09:19:18 -0700 (PDT)
-Subject: Re: [PATCH 16/19] sd: use bdev_check_media_change
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Borislav Petkov <bp@alien8.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Song Liu <song@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Finn Thain <fthain@telegraphics.com.au>,
-        Michael Schmitz <schmitzmic@gmail.com>,
-        linux-m68k@lists.linux-m68k.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-References: <20200902141218.212614-1-hch@lst.de>
- <20200902141218.212614-17-hch@lst.de>
-From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Message-ID: <1b972d93-e8e3-8f32-86de-76792948e20b@gmail.com>
-Date:   Wed, 2 Sep 2020 19:19:17 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.11.0
+        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
+         :mime-version:content-disposition;
+        bh=YtdCrq9IL3YvWGWpLFHgunxhN3nTePzTmcFQohfU8YE=;
+        b=Uw/Wva2ZdeZMMyCOmbNjnMavUHpNTkeuTtN0scuoOndcAXOlBCnEGGeGZTHBcS9byn
+         AEA9PUwbNph35I4bmB7uh+1ZqT+Db6xgsVJ8E+2FocAztJ3oj/+7P7lYy5Fqny9DQqZx
+         E3DsZVzVDDMC1BuAvzBPjNgQp2xGt0jbnsqAGEqqIBNITro9+rSpPhNZnWn57/F7ewGT
+         DO/SlWjge85sO6he/VFVyHELFGnzcLn/xPHz2R65IR1XNRJ1UaVnC8RNtEvveFwafq0k
+         97SbLGzujaujET6BfvhMC3fgSGwr+38FejDZPNXh/5iijCdkPle6UjLl2GYCr3JIhSog
+         61mA==
+X-Gm-Message-State: AOAM5323Ll6fWUZYxBlfoqZaN5YNT1urQ5WwEjXqhnaWFchxSX+1ckwL
+        73aWYD6ajPTsTgAjFXdk+PfDILpEvgOaLw==
+X-Google-Smtp-Source: ABdhPJzNMOwvKs7Wg093+73undE72TomNNJuan2r7ONCdRwoTB84CEQrSeASnHuca8ip0OIggHuEQA==
+X-Received: by 2002:ac8:4d07:: with SMTP id w7mr7520556qtv.243.1599064370056;
+        Wed, 02 Sep 2020 09:32:50 -0700 (PDT)
+Received: from localhost ([2620:10d:c091:480::1:a198])
+        by smtp.gmail.com with ESMTPSA id e90sm4542688qtd.4.2020.09.02.09.32.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Sep 2020 09:32:49 -0700 (PDT)
+Date:   Wed, 2 Sep 2020 12:32:45 -0400
+From:   Tejun Heo <tj@kernel.org>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-ide@vger.kernel.org, kernel-team@fb.com, karthikgs@fb.com
+Subject: [libata-5.9] libata: implement ATA_HORKAGE_MAX_TRIM_128M and apply
+ to Sandisks
+Message-ID: <20200902163245.GH4230@mtj.thefacebook.com>
 MIME-Version: 1.0
-In-Reply-To: <20200902141218.212614-17-hch@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/2/20 5:12 PM, Christoph Hellwig wrote:
+All three generations of Sandisk SSDs lock up hard intermittently.
+Experiments showed that disabling NCQ lowered the failure rate significantly
+and the kernel has been disabling NCQ for some models of SD7's and 8's,
+which is obviously undesirable.
 
-> Switch to use bdev_check_media_change instead of check_disk_change and
-> call cd_revalidate_disk manually.  As sd also calls sd_revalidate_disk
+Karthik worked with Sandisk to root cause the hard lockups to trim commands
+larger than 128M. This patch implements ATA_HORKAGE_MAX_TRIM_128M which
+limits max trim size to 128M and applies it to all three generations of
+Sandisk SSDs.
 
-   s/cd/sd/?
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Karthik Shivaram <karthikgs@fb.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/ata/libata-core.c |    5 ++---
+ drivers/ata/libata-scsi.c |    8 +++++++-
+ include/linux/libata.h    |    1 +
+ 3 files changed, 10 insertions(+), 4 deletions(-)
 
-> manually during probe and open, , the extra call into ->revalidate_disk
-> from bdev_disk_changed is not required either, so stop wiring up the
-> method.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/scsi/sd.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 2bec8cd526164d..d020639c28c6ca 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -1381,8 +1381,10 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
->  	if (!scsi_block_when_processing_errors(sdev))
->  		goto error_out;
->  
-> -	if (sdev->removable || sdkp->write_prot)
-> -		check_disk_change(bdev);
-> +	if (sdev->removable || sdkp->write_prot) {
-> +		if (bdev_check_media_change(bdev))
-> +			sd_revalidate_disk(bdev->bd_disk);
-> +	}
->  
->  	/*
->  	 * If the drive is empty, just let the open fail.
-[...]
-
-MBR, Sergei
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 1a82058defdb6..f546a5761c4f2 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -3868,9 +3868,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	/* https://bugzilla.kernel.org/show_bug.cgi?id=15573 */
+ 	{ "C300-CTFDDAC128MAG",	"0001",		ATA_HORKAGE_NONCQ, },
+ 
+-	/* Some Sandisk SSDs lock up hard with NCQ enabled.  Reported on
+-	   SD7SN6S256G and SD8SN8U256G */
+-	{ "SanDisk SD[78]SN*G",	NULL,		ATA_HORKAGE_NONCQ, },
++	/* Sandisk SD7/8/9s lock up hard on large trims */
++	{ "SanDisk SD[789]*",	NULL,		ATA_HORKAGE_MAX_TRIM_128M, },
+ 
+ 	/* devices which puke on READ_NATIVE_MAX */
+ 	{ "HDS724040KLSA80",	"KFAOA20N",	ATA_HORKAGE_BROKEN_HPA, },
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 4ce4cd32508ce..70431912dc635 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2080,6 +2080,7 @@ static unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf)
+ 
+ static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
+ {
++	struct ata_device *dev = args->dev;
+ 	u16 min_io_sectors;
+ 
+ 	rbuf[1] = 0xb0;
+@@ -2105,7 +2106,12 @@ static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
+ 	 * with the unmap bit set.
+ 	 */
+ 	if (ata_id_has_trim(args->id)) {
+-		put_unaligned_be64(65535 * ATA_MAX_TRIM_RNUM, &rbuf[36]);
++		u64 max_blocks = 65535 * ATA_MAX_TRIM_RNUM;
++
++		if (dev->horkage & ATA_HORKAGE_MAX_TRIM_128M)
++			max_blocks = 128 << (20 - SECTOR_SHIFT);
++
++		put_unaligned_be64(max_blocks, &rbuf[36]);
+ 		put_unaligned_be32(1, &rbuf[28]);
+ 	}
+ 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 77ccf040a128b..5f550eb27f811 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -421,6 +421,7 @@ enum {
+ 	ATA_HORKAGE_NO_DMA_LOG	= (1 << 23),	/* don't use DMA for log read */
+ 	ATA_HORKAGE_NOTRIM	= (1 << 24),	/* don't use TRIM */
+ 	ATA_HORKAGE_MAX_SEC_1024 = (1 << 25),	/* Limit max sects to 1024 */
++	ATA_HORKAGE_MAX_TRIM_128M = (1 << 26),	/* Limit max trim size to 128M */
+ 
+ 	 /* DMA mask for user DMA control: User visible values; DO NOT
+ 	    renumber */
