@@ -4,39 +4,39 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF157C433E7
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Sep 2020 14:20:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 914E9C433E2
+	for <linux-ide@archiver.kernel.org>; Wed,  2 Sep 2020 14:24:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A8F520773
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Sep 2020 14:20:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6CABC20773
+	for <linux-ide@archiver.kernel.org>; Wed,  2 Sep 2020 14:24:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ITty+HZw"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="EzvW+WRU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727895AbgIBOUk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 2 Sep 2020 10:20:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38228 "EHLO
+        id S1728037AbgIBOYL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 2 Sep 2020 10:24:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726967AbgIBONl (ORCPT
+        with ESMTP id S1726984AbgIBONl (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Sep 2020 10:13:41 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5B2F1C06123B;
-        Wed,  2 Sep 2020 07:13:01 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6EEB5C061231;
+        Wed,  2 Sep 2020 07:13:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=Ufs4jqrq2CjjNQvDZ6kR6VBVekEg4Xvc6ncOR2IVqF0=; b=ITty+HZwZMS3zp0/fym+fo7jey
-        NxrNIF6rwUyyue6j5V1YYbYZWUGNJASJ6i5+gw3N93c2GwQeqAOBfbz3YaZB3b7TlPD2r3BAElZ7Z
-        +Whek0B0aASyCuHi2aMs/vo97lGhVUoDMSzRQ/Y/+viuXFh1zj/lDkgvShxh+FDLlmPmT24Nq4wJI
-        0MNL6Q0upqhWjl9G1mG+TdHH4Z/OCg6I7DV1HYkiFPLTmkj8RA32tn6pWWEsg3GoEoTvZKQ5ZzjAG
-        Q33OKseKi1KpzripqiqZCDGi4ktnB4yXMgQCiximn0syUsFP8YSA45NpFiinClAbBlU7fzlcA+BZO
-        OEp8+hOA==;
+        bh=JsmSEHqUTPHzIdiuujgytMYVmaPLDkPMtqBFsN746VA=; b=EzvW+WRU6ocqroaF91GmMLKtwY
+        nTHpPcnlF9niVs+7RjtJZeCQxp9v5fF0wGWanEjySq1iFFZJDMZKzPCqtyKrSQTbWAkyTsqjVT55Q
+        iD/n2seyc/esMFg4wQO5m3F72Mwva4oG37BI1mEQ4gESiyggBoHE0cZAegPOy6vyED9ZhEWbCiVgT
+        Ys8Wi2PNgTCN/rHxeRVjAIvzNNpREuSn4i/ikZs+x/ZDO9ofVpQmJ7ld/bWo2F83N3CjGGsx3JHJv
+        Hl2OAV7Tbs9yDOCOr0rXsb0f53R+j06c53vCxpYfinFl+LSPeDGn2hvVwJCIIdnTQON4fRKP+bbLs
+        Zl0N0jOA==;
 Received: from [2001:4bb8:184:af1:6a63:7fdb:a80e:3b0b] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kDTVC-0005g0-6p; Wed, 02 Sep 2020 14:12:42 +0000
+        id 1kDTVG-0005hA-83; Wed, 02 Sep 2020 14:12:46 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
@@ -51,9 +51,9 @@ Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [PATCH 16/19] sd: use bdev_check_media_change
-Date:   Wed,  2 Sep 2020 16:12:15 +0200
-Message-Id: <20200902141218.212614-17-hch@lst.de>
+Subject: [PATCH 19/19] block: remove check_disk_change
+Date:   Wed,  2 Sep 2020 16:12:18 +0200
+Message-Id: <20200902141218.212614-20-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200902141218.212614-1-hch@lst.de>
 References: <20200902141218.212614-1-hch@lst.de>
@@ -65,42 +65,57 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Switch to use bdev_check_media_change instead of check_disk_change and
-call cd_revalidate_disk manually.  As sd also calls sd_revalidate_disk
-manually during probe and open, , the extra call into ->revalidate_disk
-from bdev_disk_changed is not required either, so stop wiring up the
-method.
+Remove the now unused check_disk_change helper.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/sd.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ fs/block_dev.c        | 20 --------------------
+ include/linux/genhd.h |  1 -
+ 2 files changed, 21 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 2bec8cd526164d..d020639c28c6ca 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1381,8 +1381,10 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
- 	if (!scsi_block_when_processing_errors(sdev))
- 		goto error_out;
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 37cb809b217926..c6baae5b85060c 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -1339,26 +1339,6 @@ void revalidate_disk_size(struct gendisk *disk, bool verbose)
+ }
+ EXPORT_SYMBOL(revalidate_disk_size);
  
--	if (sdev->removable || sdkp->write_prot)
--		check_disk_change(bdev);
-+	if (sdev->removable || sdkp->write_prot) {
-+		if (bdev_check_media_change(bdev))
-+			sd_revalidate_disk(bdev->bd_disk);
-+	}
+-/*
+- * This routine checks whether a removable media has been changed,
+- * and invalidates all buffer-cache-entries in that case. This
+- * is a relatively slow routine, so we have to try to minimize using
+- * it. Thus it is called only upon a 'mount' or 'open'. This
+- * is the best way of combining speed and utility, I think.
+- * People changing diskettes in the middle of an operation deserve
+- * to lose :-)
+- */
+-int check_disk_change(struct block_device *bdev)
+-{
+-	if (!bdev_check_media_change(bdev))
+-		return 0;
+-	if (bdev->bd_disk->fops->revalidate_disk)
+-		bdev->bd_disk->fops->revalidate_disk(bdev->bd_disk);
+-	return 1;
+-}
+-
+-EXPORT_SYMBOL(check_disk_change);
+-
+ void bd_set_nr_sectors(struct block_device *bdev, sector_t sectors)
+ {
+ 	spin_lock(&bdev->bd_size_lock);
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index 322d48a207728a..1c97cf84f011a7 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -370,7 +370,6 @@ int register_blkdev(unsigned int major, const char *name);
+ void unregister_blkdev(unsigned int major, const char *name);
  
- 	/*
- 	 * If the drive is empty, just let the open fail.
-@@ -1843,7 +1845,6 @@ static const struct block_device_operations sd_fops = {
- 	.compat_ioctl		= sd_compat_ioctl,
- #endif
- 	.check_events		= sd_check_events,
--	.revalidate_disk	= sd_revalidate_disk,
- 	.unlock_native_capacity	= sd_unlock_native_capacity,
- 	.report_zones		= sd_zbc_report_zones,
- 	.pr_ops			= &sd_pr_ops,
+ void revalidate_disk_size(struct gendisk *disk, bool verbose);
+-int check_disk_change(struct block_device *bdev);
+ bool bdev_check_media_change(struct block_device *bdev);
+ int __invalidate_device(struct block_device *bdev, bool kill_dirty);
+ void bd_set_nr_sectors(struct block_device *bdev, sector_t sectors);
 -- 
 2.28.0
 
