@@ -2,107 +2,68 @@ Return-Path: <SRS0=qdst=CN=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BE19C433E2
-	for <linux-ide@archiver.kernel.org>; Fri,  4 Sep 2020 18:10:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F65FC43461
+	for <linux-ide@archiver.kernel.org>; Fri,  4 Sep 2020 20:49:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F1E124875
-	for <linux-ide@archiver.kernel.org>; Fri,  4 Sep 2020 18:03:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5BD020C56
+	for <linux-ide@archiver.kernel.org>; Fri,  4 Sep 2020 20:49:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599242630;
-	bh=L+IaHSGdBw9KUoLImRwoPA6TdKHrTD9HEZwevJ1mrhE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=wylms29T0wfUWBiSSHJXVPsQzG1skhUx9YqTJC+XvpmJ8mcKSHvxEBYyIVKMY245l
-	 CfoQ5XbZZN+oDy00O9m6jWIqZn3sTlPbQrRmZoifpTtZ4fWm0/ZTHu9rwiAVSd4z5e
-	 fpZ30JpCwTrF+AmU7jINGy/And4YnWQtwI9dsUT8=
+	s=default; t=1599252552;
+	bh=SHzPNAJPdsFXsZpClmW+/wuOVTP6VHyCAmnWcwO7gSI=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
+	b=xUb+ecjEC3OrzT13kjVE7uXch/TRoYUBV9BmW7Y72BpU6y+u1wYJQdHaddkC5Nghy
+	 FJ9Np0YGXa2f4GB7m1UG2BcHAtn4qPAfZm9TSkmyRdgB2T/mKh2AuhAFWgXvNa2Qj1
+	 5zCKKlQq/TzEGeHUXLgLfEvNc4oZKRFYdGg4+PwQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726184AbgIDRIB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 4 Sep 2020 13:08:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56586 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725966AbgIDRIA (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 4 Sep 2020 13:08:00 -0400
-Received: from mail-qv1-xf32.google.com (mail-qv1-xf32.google.com [IPv6:2607:f8b0:4864:20::f32])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52BCDC061244;
-        Fri,  4 Sep 2020 10:08:00 -0700 (PDT)
-Received: by mail-qv1-xf32.google.com with SMTP id j10so3330134qvk.11;
-        Fri, 04 Sep 2020 10:08:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=918xF9/TxEdi5FKvlN1Hc01QrtvkdS/H0R8ZEDh1m/w=;
-        b=Y+l+zXkj3iZuqa7nZb8fCT0usDu58TsmwrbKiLnARLXhpx48LTNUg1vzSWZYgs/13+
-         c1SW4HWkRuzguFhcVaFubEzMo5JXetRpeb5IaKJOis3Lc5y9CwOET924hMWP2Vria8nd
-         lvYqy0/NenC9vVpu/Yp1rWyHWoprju0xCwWUlf1mTx/o9Qlbcgxj1lElbOEp/dFdt8+Z
-         BGaY4GUaBVJUZsazZYrwxDJExUCqoGF7BDCUdmm2aARQzGWk5MuT3kglx8jdUMvuyY7l
-         WejixWyeWg1d4quZafz/tyWtoFfO7ikEoRS/oCUdYDVmPmpvif1r+0wTn3/t+wi9jFPm
-         HbKA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :references:mime-version:content-disposition:in-reply-to;
-        bh=918xF9/TxEdi5FKvlN1Hc01QrtvkdS/H0R8ZEDh1m/w=;
-        b=V7hafMwmvMIeYgH9CTFN841qa5j+f9rTlAlZj71oloSzqcZDhuFy7MPkQJLrGvHwEZ
-         l6SmfKNfcWkykRDhfMUtNQxqwki7p+3ciiOhm1Znp7ODIfdpb5oAw6MzIyw/I2IhfjQv
-         epDPLzm6o7j3c2j+k7mT41V0VcaxKJ/Mr4bIvKiQ6EXcl31B/MNNZIWuk780bKmIcwFQ
-         cy1qH+zuSICgf1g56HuGxas+rcL+BTDMeHYqgoER8ImqAbRJyma7+KfUJoXNnCXgOEW6
-         hIQ+YjRCgrNS3k5VllIGvNmdG1J0tiktFGa4byjfQe9Yd9iJjSBIb50d8JKM9cTZeB01
-         SuMg==
-X-Gm-Message-State: AOAM531Xcz2pfqh5KuD8mUxmUYL3AF8xngJAFo4K1IePYVp3dVTDn4c9
-        iCkZLeMxh33azDjGPRJbVVRAFv4nO9cCzA==
-X-Google-Smtp-Source: ABdhPJz64ED1455jnMV0eSDG6iae1M9P2FH5Z/qtI61QyZxv8e+JfUDQeaVwUy8YmSVR4hm6jbnxYw==
-X-Received: by 2002:a0c:e981:: with SMTP id z1mr8597033qvn.15.1599239278260;
-        Fri, 04 Sep 2020 10:07:58 -0700 (PDT)
-Received: from localhost ([2620:10d:c091:480::1:f2f5])
-        by smtp.gmail.com with ESMTPSA id c185sm4950309qkb.135.2020.09.04.10.07.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Sep 2020 10:07:57 -0700 (PDT)
-Date:   Fri, 4 Sep 2020 13:07:56 -0400
-From:   Tejun Heo <tj@kernel.org>
-To:     Akshat Jain <akshatzen@google.com>
-Cc:     Vishakha Channapattan <vishakhavc@google.com>,
-        linux-ide@vger.kernel.org, John Grass <jgrass@google.com>,
-        Thieu Le <thieule@google.com>, linux-scsi@vger.kernel.org
-Subject: Re: Question on ata_gen_passthru_sense interpretation of fixed
- format sense buffer
-Message-ID: <20200904170756.GC4295@mtj.thefacebook.com>
-References: <CACqKpR-5=bDwODQFfMY+o8-XJMCQmtLVAOiCEY8ApFwQr04A8A@mail.gmail.com>
- <20200817174215.GB4230@mtj.thefacebook.com>
- <CACqKpR8i=9A6kb05yCyh39HMZ8aEhEGacXTCvQKyUS=nYkqRiQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CACqKpR8i=9A6kb05yCyh39HMZ8aEhEGacXTCvQKyUS=nYkqRiQ@mail.gmail.com>
+        id S1727990AbgIDUtK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 4 Sep 2020 16:49:10 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60966 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726842AbgIDUtK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 4 Sep 2020 16:49:10 -0400
+Subject: Re: [GIT PULL] libata fixes for 5.9-rc4
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1599252549;
+        bh=SHzPNAJPdsFXsZpClmW+/wuOVTP6VHyCAmnWcwO7gSI=;
+        h=From:In-Reply-To:References:Date:To:Cc:From;
+        b=y6c8Lc5d9pK6pnGBlV8I3TO5CMWcl5VvK+eaNBGCeCeSdvm6NNUeyasBp4Jk1OWPq
+         6uxpsy5toulFcD8CzNSU5KGMkhTP9ubq49ZkLYeBngIMzIa4M7F0KyhIFmWiaLKrpq
+         2AVIcPlCv3I5PuPmUZHiuTXY3PCm4rxWzIUcF6+M=
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <ecf36c20-0cfd-9010-84f7-334e3ea3b67d@kernel.dk>
+References: <ecf36c20-0cfd-9010-84f7-334e3ea3b67d@kernel.dk>
+X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
+X-PR-Tracked-Message-Id: <ecf36c20-0cfd-9010-84f7-334e3ea3b67d@kernel.dk>
+X-PR-Tracked-Remote: git://git.kernel.dk/linux-block.git tags/libata-5.9-2020-09-04
+X-PR-Tracked-Commit-Id: 3b5455636fe26ea21b4189d135a424a6da016418
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: d824e0809ce3c9e935f3aa37381cda7fd4184f12
+Message-Id: <159925254982.25529.1538564870537095655.pr-tracker-bot@kernel.org>
+Date:   Fri, 04 Sep 2020 20:49:09 +0000
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        IDE/ATA development list <linux-ide@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello,
+The pull request you sent on Fri, 4 Sep 2020 09:26:04 -0600:
 
-On Tue, Aug 18, 2020 at 09:12:13PM -0700, Akshat Jain wrote:
-> To answer your question:
-> 1. Yes we will start working on a patch and send it for review.
-> 2. We found this issue during our code review.
-> 
-> Another information I need to bring to your attention is that many
-> user libraries today decode the fixed format sense block based on the
-> format today's kernel (ata_gen_passthru_sense) provides. Rather than
-> the format specified in the SCSI Primary commands - 4 specification.
-> If we were to correct the field offsets for the fixed format sense block.
-> It may break such libraries. How do you assess the impact
-> of such a change?
+> git://git.kernel.dk/linux-block.git tags/libata-5.9-2020-09-04
 
-So, I don't know. Given that nobody tripped over it till now, I doubt fixing
-it would cause a lot of trouble but at the same time it isn't a real
-problem, again, given that nobody has tripped over it yet. Maybe just fix it
-and see how it goes?
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/d824e0809ce3c9e935f3aa37381cda7fd4184f12
 
-Thanks.
+Thank you!
 
 -- 
-tejun
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
