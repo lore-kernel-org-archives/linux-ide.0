@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4824C43461
-	for <linux-ide@archiver.kernel.org>; Tue,  8 Sep 2020 19:28:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 590F8C43461
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Sep 2020 19:44:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 884EC2078B
-	for <linux-ide@archiver.kernel.org>; Tue,  8 Sep 2020 19:28:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1EBCC20578
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Sep 2020 19:44:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Jo4ghawc"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GIpniUBI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730938AbgIHQAD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 8 Sep 2020 12:00:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54392 "EHLO
+        id S1732405AbgIHToW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 8 Sep 2020 15:44:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53124 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731020AbgIHP6U (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Sep 2020 11:58:20 -0400
+        with ESMTP id S1730760AbgIHPvm (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Sep 2020 11:51:42 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD68DC0A3BF4;
-        Tue,  8 Sep 2020 07:55:13 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 304B6C0A3BEA;
+        Tue,  8 Sep 2020 07:55:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=XebGuej3xK5XjUIiTqbUvyFcyDyWl1r5Hy6xhDXcn70=; b=Jo4ghawcy8JBg+Rvq73LY38/vm
-        H0E/3JTxgUCzhUOeO6oPYKDq7jMdH0z8pdJiLjtntbizJIeFY7HTlaT+xFliSk4fvXVQUDomQKfPA
-        xJbsw3eb0QZfnCk+QgyEv3caVYnmiw7OGLSn+hJs0xwGElk8VP+tw0kxmVPowxAtzAU1Bgy1JQHmc
-        Hd8BwUSmYB9t/lgMcdPlNhwsynwcum09GA/F41DqA2uku86jqdlDH5sIRTro5NJnEBpBaTJwjbm4R
-        508Zzt5cVLp/Xz02AavSx98OqojF975Rx0eHcnral1/R//khH3OwdlGiu2pymRQTNhe3RCXnbpUVZ
-        IvG6zcGg==;
+        bh=AIbdaWqDOZXyI97EfNIUO6cOxzS/iRi/fiJ/sz/ZAL8=; b=GIpniUBInLXgvz98qrm3XEFBUU
+        jI7kZn/WrtbX4474Skgn5Iwip5HLeqPsKx5DEn4psj2SQF9WbRQFr6hKKl3VF9Ii5a+mcgkre1Sza
+        LvVllN82PZVtFinvq56fIrZ+RrfX3jfJo2TnUV32FrYcLzR4jFJCrT6NEMboJtHMh3kzEw0gcMwMo
+        kjJpuGwfTeKms3eK/8v1oiodNb55XfT3nmCYDptXrSPYQqqabbpKVI0KcHMhN7OEQmG5UydppiZWH
+        7B0QIIZZTgk9Gy3y1V11t3QVuwPYZecByMco+KFniEh8KoEeAjHYCnn8GTwF55IekYLSdRaFbpzFI
+        XKaiiNDg==;
 Received: from [2001:4bb8:184:af1:3dc3:9c83:fc6c:e0f] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kFf1C-0002zh-Fx; Tue, 08 Sep 2020 14:54:46 +0000
+        id 1kFf0u-0002xt-QY; Tue, 08 Sep 2020 14:54:30 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
@@ -52,9 +52,9 @@ Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-fsdevel@vger.kernel.org,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH 16/19] sd: use bdev_check_media_change
-Date:   Tue,  8 Sep 2020 16:53:44 +0200
-Message-Id: <20200908145347.2992670-17-hch@lst.de>
+Subject: [PATCH 08/19] xsysace: use bdev_check_media_change
+Date:   Tue,  8 Sep 2020 16:53:36 +0200
+Message-Id: <20200908145347.2992670-9-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200908145347.2992670-1-hch@lst.de>
 References: <20200908145347.2992670-1-hch@lst.de>
@@ -67,42 +67,39 @@ List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 Switch to use bdev_check_media_change instead of check_disk_change and
-call sd_revalidate_disk manually.  As sd also calls sd_revalidate_disk
-manually during probe and open, , the extra call into ->revalidate_disk
+call ace_revalidate_disk manually.  Given that ace_revalidate_disk only
+deals with media change events, the extra call into ->revalidate_disk
 from bdev_disk_changed is not required either, so stop wiring up the
 method.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- drivers/scsi/sd.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/block/xsysace.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 2bec8cd526164d..d020639c28c6ca 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1381,8 +1381,10 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
- 	if (!scsi_block_when_processing_errors(sdev))
- 		goto error_out;
+diff --git a/drivers/block/xsysace.c b/drivers/block/xsysace.c
+index 5d8e0ab3f054f5..eefe542f2d9fff 100644
+--- a/drivers/block/xsysace.c
++++ b/drivers/block/xsysace.c
+@@ -922,7 +922,8 @@ static int ace_open(struct block_device *bdev, fmode_t mode)
+ 	ace->users++;
+ 	spin_unlock_irqrestore(&ace->lock, flags);
  
--	if (sdev->removable || sdkp->write_prot)
--		check_disk_change(bdev);
-+	if (sdev->removable || sdkp->write_prot) {
-+		if (bdev_check_media_change(bdev))
-+			sd_revalidate_disk(bdev->bd_disk);
-+	}
+-	check_disk_change(bdev);
++	if (bdev_check_media_change(bdev))
++		ace_revalidate_disk(bdev->bd_disk);
+ 	mutex_unlock(&xsysace_mutex);
  
- 	/*
- 	 * If the drive is empty, just let the open fail.
-@@ -1843,7 +1845,6 @@ static const struct block_device_operations sd_fops = {
- 	.compat_ioctl		= sd_compat_ioctl,
- #endif
- 	.check_events		= sd_check_events,
--	.revalidate_disk	= sd_revalidate_disk,
- 	.unlock_native_capacity	= sd_unlock_native_capacity,
- 	.report_zones		= sd_zbc_report_zones,
- 	.pr_ops			= &sd_pr_ops,
+ 	return 0;
+@@ -966,7 +967,6 @@ static const struct block_device_operations ace_fops = {
+ 	.open = ace_open,
+ 	.release = ace_release,
+ 	.check_events = ace_check_events,
+-	.revalidate_disk = ace_revalidate_disk,
+ 	.getgeo = ace_getgeo,
+ };
+ 
 -- 
 2.28.0
 
