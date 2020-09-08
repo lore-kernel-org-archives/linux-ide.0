@@ -2,41 +2,40 @@ Return-Path: <SRS0=FQ2W=CR=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D5D6C433E2
-	for <linux-ide@archiver.kernel.org>; Tue,  8 Sep 2020 20:05:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49AEEC433E2
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Sep 2020 20:06:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DAF0A204FD
-	for <linux-ide@archiver.kernel.org>; Tue,  8 Sep 2020 20:05:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 060DB204FD
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Sep 2020 20:06:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="J+m1dnyx"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="YL8Ksrxe"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731793AbgIHUFq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S1732455AbgIHUFq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Tue, 8 Sep 2020 16:05:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47258 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729670AbgIHPV5 (ORCPT
+        with ESMTP id S1730214AbgIHPV5 (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Sep 2020 11:21:57 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 17286C0A3BF6;
-        Tue,  8 Sep 2020 07:55:35 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 12F3EC0A3BE8;
+        Tue,  8 Sep 2020 07:55:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=ijISDI3+FEAsJRrVv6gnkByyFtP6B2mrzNMrQzqv2GQ=; b=J+m1dnyxZ/PYz+dryLUb8kif20
-        f3x71W6Ej8XzEJbIhNcB1LU+pAraLcrDpiJOM3NnpmYpYXwpbb4jZrKnjGUqtCDjw0l/Gckp5OpHr
-        Uk5Rp2b6SktC1LZfPQicf8DGNlPllrYbKDLXTyGrG29Q2mDpWHLSd3omK0MmWaZR+lBsOaWw+0SVz
-        NPcujQr7rhEe+AaInu3x3iq2l3FxacJkiRd7o0r79Fqsdj4RnuRMukoTInM8ugORJ6teWIt+mwTXr
-        4xwoLOR3XK5qR6atnqMJJlNmizV9bCrJJSgSjhYsxYWzQLDBwuijgB1bNklCB3ytmV7LkYy0UbDNh
-        BTy8u2Rg==;
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=Ik1nskp4UUIa9huUq3TidG8Ju0niiHJiTpvYtnudikY=; b=YL8KsrxeI7tCv1WURY1i6FflSc
+        VTi648vPAzQ2Ypf02N1dEmIcx1t2yDB42y9xiUgMitpsB1OEiuFGxCevytdkUOxIG1/wcIZD2bnkq
+        ZhfB9q4LMCP/w4rBQA1KF0gn2t5nZY4TuHfRNVqxrWx53WmCmveXWp283Ar4ZqC+zil0ns44UWPHw
+        bDIUoWAw+V2Aizmn2VPcI8i/nzzirrGOMTLrx5uuZZ4antZmpqtoKfODJe/rD8bS5DTrwPRXYxz1R
+        lFH5Qf8Wf78PPBfMXySfdLM8CwFqMgOdxY7ZzSVkPykoaWl7vlvWrsIJvwKag1t8QeusFKcjgP94A
+        lMMA01bg==;
 Received: from [2001:4bb8:184:af1:3dc3:9c83:fc6c:e0f] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kFf1E-0002zv-1m; Tue, 08 Sep 2020 14:54:50 +0000
+        id 1kFf0H-0002uU-Kp; Tue, 08 Sep 2020 14:53:51 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
@@ -50,14 +49,11 @@ Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         linux-m68k@lists.linux-m68k.org, linux-block@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH 17/19] sr: use bdev_check_media_change
-Date:   Tue,  8 Sep 2020 16:53:45 +0200
-Message-Id: <20200908145347.2992670-18-hch@lst.de>
+        linux-fsdevel@vger.kernel.org
+Subject: rework check_disk_change() v2
+Date:   Tue,  8 Sep 2020 16:53:28 +0200
+Message-Id: <20200908145347.2992670-1-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200908145347.2992670-1-hch@lst.de>
-References: <20200908145347.2992670-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
@@ -66,56 +62,34 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Switch to use bdev_check_media_change instead of check_disk_change and
-call sr_block_revalidate_disk manually.  Also add an explicit call to
-sr_block_revalidate_disk just before disk_add() to ensure we always
-read check for a ready unit and read the TOC and then stop wiring up
-->revalidate_disk.
+Hi Jens,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
----
- drivers/scsi/sr.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+this series replaced the not very nice check_disk_change() function with
+a new bdev_media_changed that avoids having the ->revalidate_disk call
+at its end.  As a result ->revalidate_disk can be removed from a lot of
+drivers.
 
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 3b3a53c6a0de53..34be94b62523fa 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -86,6 +86,7 @@ static int sr_remove(struct device *);
- static blk_status_t sr_init_command(struct scsi_cmnd *SCpnt);
- static int sr_done(struct scsi_cmnd *);
- static int sr_runtime_suspend(struct device *dev);
-+static int sr_block_revalidate_disk(struct gendisk *disk);
- 
- static const struct dev_pm_ops sr_pm_ops = {
- 	.runtime_suspend	= sr_runtime_suspend,
-@@ -529,7 +530,8 @@ static int sr_block_open(struct block_device *bdev, fmode_t mode)
- 
- 	sdev = cd->device;
- 	scsi_autopm_get_device(sdev);
--	check_disk_change(bdev);
-+	if (bdev_check_media_change(bdev))
-+		sr_block_revalidate_disk(bdev->bd_disk);
- 
- 	mutex_lock(&cd->lock);
- 	ret = cdrom_open(&cd->cdi, bdev, mode);
-@@ -688,7 +690,6 @@ static const struct block_device_operations sr_bdops =
- 	.compat_ioctl	= sr_block_compat_ioctl,
- #endif
- 	.check_events	= sr_block_check_events,
--	.revalidate_disk = sr_block_revalidate_disk,
- };
- 
- static int sr_open(struct cdrom_device_info *cdi, int purpose)
-@@ -802,6 +803,7 @@ static int sr_probe(struct device *dev)
- 
- 	dev_set_drvdata(dev, cd);
- 	disk->flags |= GENHD_FL_REMOVABLE;
-+	sr_block_revalidate_disk(disk);
- 	device_add_disk(&sdev->sdev_gendev, disk, NULL);
- 
- 	sdev_printk(KERN_DEBUG, sdev,
--- 
-2.28.0
+Changes since v1:
+ - minor changelog spelling fixes
 
+Diffstat:
+ block/genhd.c              |   29 ++++++++++++++++++++++++++-
+ drivers/block/amiflop.c    |    2 -
+ drivers/block/ataflop.c    |    7 +++---
+ drivers/block/floppy.c     |    8 ++++---
+ drivers/block/paride/pcd.c |    2 -
+ drivers/block/swim.c       |   22 +-------------------
+ drivers/block/swim3.c      |    4 +--
+ drivers/block/xsysace.c    |   26 +++++++++---------------
+ drivers/cdrom/gdrom.c      |    2 -
+ drivers/ide/ide-cd.c       |   16 ++++-----------
+ drivers/ide/ide-disk.c     |    5 ----
+ drivers/ide/ide-floppy.c   |    2 -
+ drivers/ide/ide-gd.c       |   48 +++++----------------------------------------
+ drivers/md/md.c            |    2 -
+ drivers/scsi/sd.c          |    7 +++---
+ drivers/scsi/sr.c          |   36 +++++++++++++--------------------
+ fs/block_dev.c             |   31 -----------------------------
+ include/linux/genhd.h      |    3 --
+ include/linux/ide.h        |    2 -
+ 19 files changed, 86 insertions(+), 168 deletions(-)
