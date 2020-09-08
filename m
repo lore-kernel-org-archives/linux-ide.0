@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD435C433E2
-	for <linux-ide@archiver.kernel.org>; Tue,  8 Sep 2020 20:07:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC2D0C2D0A7
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Sep 2020 20:08:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 780CE204FD
-	for <linux-ide@archiver.kernel.org>; Tue,  8 Sep 2020 20:07:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 81081207DE
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Sep 2020 20:08:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TDmZ2xXc"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ULEEX4pq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730480AbgIHUG6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 8 Sep 2020 16:06:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47038 "EHLO
+        id S1730885AbgIHUIt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 8 Sep 2020 16:08:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47062 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730285AbgIHPUw (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Sep 2020 11:20:52 -0400
+        with ESMTP id S1730200AbgIHPTN (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Sep 2020 11:19:13 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57790C0A3BEB;
-        Tue,  8 Sep 2020 07:55:00 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF6FCC0A3BF0;
+        Tue,  8 Sep 2020 07:55:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=0u/YkNfz2765ChTMinGG6JPDmCovYyDZgG3vdcYFHY8=; b=TDmZ2xXcoGXTNzeEqQje2OrEN0
-        tJUThZVnfY/+jhjr38EK96Z6+YKRTzvma5UyzgPRh7rBnLiAu6smazcTVNJL2GUjYgU7SSuo5FIw6
-        ERtmOFoZpr7EQQI3bN2vMCSGQGLPSa+ULL/d8fd1NvqvHE3KiRksaH+l+G4xV02UIbqrEUT0c6KfV
-        /DcNDGhvUUpyOAbq99PireHT06M1bGrqd1ltn3XFKabhDWF5aF5O+rBgoyOMniVhgb5m91e+98+5x
-        R2Uz/l6Kpebqi65qaI5JfVFusWp6YoZ0lNkou9FjXFNtR3vHrdDKCJXc/offPT0YF6vZp3YRLxPD9
-        8qka3LmA==;
+        bh=e8UHu128BOucpF3Nt3G76NBwCQdX+XymqNnsSMwHxZQ=; b=ULEEX4pqiG0rpUIcfCQiiH99la
+        0zqHLiRmorEWRz3YaTpL5W/sFi0/Zv9L1qH5VnRIzVggbwz+MIu2EJywgEE4vOmpkf3VgvA9A6uTF
+        BGbhuaQVQ45BvFItW8hPcDX9RBUx2lonpU781IaOo/EeON4VIX1JEIi2CA7BKPMisiR/HD7j87J5e
+        X2vB8KoUkr8T43SpK5vCMoBk4fXayWzO/7Et49o9ZYAR92y0YOVyXkkhUTa3u8NXgUosSEgmfOb6y
+        IS72enXK/zrLXMeQw/9wEM8iCmsLQGXMzx4fRNbc9V2lfNmtq6ApMFTs6cT1b4ocoyQ2/kfkO7EPt
+        67W1vvkw==;
 Received: from [2001:4bb8:184:af1:3dc3:9c83:fc6c:e0f] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kFf0L-0002um-9p; Tue, 08 Sep 2020 14:53:54 +0000
+        id 1kFf14-0002yj-Ly; Tue, 08 Sep 2020 14:54:38 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
@@ -52,9 +52,9 @@ Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-fsdevel@vger.kernel.org,
         Johannes Thumshirn <johannes.thumshirn@wdc.com>
-Subject: [PATCH 01/19] block: add a bdev_check_media_change helper
-Date:   Tue,  8 Sep 2020 16:53:29 +0200
-Message-Id: <20200908145347.2992670-2-hch@lst.de>
+Subject: [PATCH 12/19] ide-cd: use bdev_check_media_changed
+Date:   Tue,  8 Sep 2020 16:53:40 +0200
+Message-Id: <20200908145347.2992670-13-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200908145347.2992670-1-hch@lst.de>
 References: <20200908145347.2992670-1-hch@lst.de>
@@ -66,113 +66,48 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Like check_disk_changed, except that it does not call ->revalidate_disk
-but leaves that to the caller.
+Switch to use bdev_check_media_changed instead of check_disk_change and
+call idecd_revalidate_disk manually.  Given that idecd_revalidate_disk
+only re-reads the TOC, and we already do the same at probe time, the
+extra call into ->revalidate_disk from bdev_disk_changed is not required
+either, so stop wiring up the method.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 ---
- block/genhd.c         | 29 ++++++++++++++++++++++++++++-
- fs/block_dev.c        | 17 +++--------------
- include/linux/genhd.h |  2 +-
- 3 files changed, 32 insertions(+), 16 deletions(-)
+ drivers/ide/ide-cd.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/block/genhd.c b/block/genhd.c
-index 081f1039d9367f..9d060e79eb31d8 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -2052,7 +2052,7 @@ void disk_flush_events(struct gendisk *disk, unsigned int mask)
-  * CONTEXT:
-  * Might sleep.
-  */
--unsigned int disk_clear_events(struct gendisk *disk, unsigned int mask)
-+static unsigned int disk_clear_events(struct gendisk *disk, unsigned int mask)
+diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
+index 212bb2d8bf346a..6a38cbc80aea0d 100644
+--- a/drivers/ide/ide-cd.c
++++ b/drivers/ide/ide-cd.c
+@@ -56,6 +56,7 @@ static DEFINE_MUTEX(ide_cd_mutex);
+ static DEFINE_MUTEX(idecd_ref_mutex);
+ 
+ static void ide_cd_release(struct device *);
++static int idecd_revalidate_disk(struct gendisk *disk);
+ 
+ static struct cdrom_info *ide_cd_get(struct gendisk *disk)
  {
- 	struct disk_events *ev = disk->ev;
- 	unsigned int pending;
-@@ -2090,6 +2090,33 @@ unsigned int disk_clear_events(struct gendisk *disk, unsigned int mask)
- 	return pending;
- }
+@@ -1611,7 +1612,8 @@ static int idecd_open(struct block_device *bdev, fmode_t mode)
+ 	struct cdrom_info *info;
+ 	int rc = -ENXIO;
  
-+/**
-+ * bdev_check_media_change - check if a removable media has been changed
-+ * @bdev: block device to check
-+ *
-+ * Check whether a removable media has been changed, and attempt to free all
-+ * dentries and inodes and invalidates all block device page cache entries in
-+ * that case.
-+ *
-+ * Returns %true if the block device changed, or %false if not.
-+ */
-+bool bdev_check_media_change(struct block_device *bdev)
-+{
-+	unsigned int events;
-+
-+	events = disk_clear_events(bdev->bd_disk, DISK_EVENT_MEDIA_CHANGE |
-+				   DISK_EVENT_EJECT_REQUEST);
-+	if (!(events & DISK_EVENT_MEDIA_CHANGE))
-+		return false;
-+
-+	if (__invalidate_device(bdev, true))
-+		pr_warn("VFS: busy inodes on changed media %s\n",
-+			bdev->bd_disk->disk_name);
-+	set_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags);
-+	return true;
-+}
-+EXPORT_SYMBOL(bdev_check_media_change);
-+
- /*
-  * Separate this part out so that a different pointer for clearing_ptr can be
-  * passed in for disk_clear_events.
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index c70c41ecba4872..c6ac0bd22eca70 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -1379,21 +1379,10 @@ EXPORT_SYMBOL(revalidate_disk_size);
-  */
- int check_disk_change(struct block_device *bdev)
- {
--	struct gendisk *disk = bdev->bd_disk;
--	const struct block_device_operations *bdops = disk->fops;
--	unsigned int events;
--
--	events = disk_clear_events(disk, DISK_EVENT_MEDIA_CHANGE |
--				   DISK_EVENT_EJECT_REQUEST);
--	if (!(events & DISK_EVENT_MEDIA_CHANGE))
-+	if (!bdev_check_media_change(bdev))
- 		return 0;
--
--	if (__invalidate_device(bdev, true))
--		pr_warn("VFS: busy inodes on changed media %s\n",
--			disk->disk_name);
--	set_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags);
--	if (bdops->revalidate_disk)
--		bdops->revalidate_disk(bdev->bd_disk);
-+	if (bdev->bd_disk->fops->revalidate_disk)
-+		bdev->bd_disk->fops->revalidate_disk(bdev->bd_disk);
- 	return 1;
- }
+-	check_disk_change(bdev);
++	if (bdev_check_media_change(bdev))
++		idecd_revalidate_disk(bdev->bd_disk);
  
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index c618b27292fcc8..322d48a207728a 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -315,7 +315,6 @@ extern void disk_unblock_events(struct gendisk *disk);
- extern void disk_flush_events(struct gendisk *disk, unsigned int mask);
- void set_capacity_revalidate_and_notify(struct gendisk *disk, sector_t size,
- 		bool update_bdev);
--extern unsigned int disk_clear_events(struct gendisk *disk, unsigned int mask);
+ 	mutex_lock(&ide_cd_mutex);
+ 	info = ide_cd_get(bdev->bd_disk);
+@@ -1770,7 +1772,6 @@ static const struct block_device_operations idecd_ops = {
+ 	.compat_ioctl		= IS_ENABLED(CONFIG_COMPAT) ?
+ 				  idecd_compat_ioctl : NULL,
+ 	.check_events		= idecd_check_events,
+-	.revalidate_disk	= idecd_revalidate_disk
+ };
  
- /* drivers/char/random.c */
- extern void add_disk_randomness(struct gendisk *disk) __latent_entropy;
-@@ -372,6 +371,7 @@ void unregister_blkdev(unsigned int major, const char *name);
- 
- void revalidate_disk_size(struct gendisk *disk, bool verbose);
- int check_disk_change(struct block_device *bdev);
-+bool bdev_check_media_change(struct block_device *bdev);
- int __invalidate_device(struct block_device *bdev, bool kill_dirty);
- void bd_set_nr_sectors(struct block_device *bdev, sector_t sectors);
- 
+ /* module options */
 -- 
 2.28.0
 
