@@ -2,110 +2,171 @@ Return-Path: <SRS0=nx08=CS=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75A6EC433E2
-	for <linux-ide@archiver.kernel.org>; Wed,  9 Sep 2020 00:56:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A13BC2BC11
+	for <linux-ide@archiver.kernel.org>; Wed,  9 Sep 2020 02:12:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 42CCB21D41
-	for <linux-ide@archiver.kernel.org>; Wed,  9 Sep 2020 00:56:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1599612975;
-	bh=RvzjuGzz/kTSEdxXHggSfWjCrdq+3b4CqDYSDYaXs48=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
-	b=ny1Z0XEEitTKiyIl/KZZaip9ENfEtYnJ7vQrBIPOUNlCocBM2ChZhd7nB618Cfsfb
-	 VVio129lZl8danvZuC1OS21SGQznVUaUq3GG+G4zHti94jSPheEiRCm9GxRwrmJv0N
-	 BiSOsT26oE8n2jNySQ+fanym8iukICJ+AK0oiY80=
+	by mail.kernel.org (Postfix) with ESMTP id E8D5A20758
+	for <linux-ide@archiver.kernel.org>; Wed,  9 Sep 2020 02:12:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="xBu1bvtf"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729753AbgIIA4C (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 8 Sep 2020 20:56:02 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52378 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726489AbgIIA4B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 8 Sep 2020 20:56:01 -0400
-Received: from mail-lj1-f173.google.com (mail-lj1-f173.google.com [209.85.208.173])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9626421D40;
-        Wed,  9 Sep 2020 00:56:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1599612960;
-        bh=RvzjuGzz/kTSEdxXHggSfWjCrdq+3b4CqDYSDYaXs48=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=QCrNHxqhyTNUbEUBWg7m5RppKYxhztDiw//6ubU7/VQofyzcTv22t1N98zavCtLup
-         QysnOQsfy4G3tScSXrtRl0tR2KP2W+WLMdIRlzmAp5TUK0MJw/rxTcC/h816xb25+8
-         K183C1Rs3MqMJKmfCbVj974g3dCS/0aa3QBb0zJU=
-Received: by mail-lj1-f173.google.com with SMTP id a15so1304276ljk.2;
-        Tue, 08 Sep 2020 17:56:00 -0700 (PDT)
-X-Gm-Message-State: AOAM532WrJ4gIibYUTQl9nOlAcrxw9EtcERfolk57Gmhgq+WaeAMceDL
-        0x38q0EWLgveQT4DskbpHXZ+OS3051v6kqNMutM=
-X-Google-Smtp-Source: ABdhPJxM7jCblK+I3K12WYnFdTKastGkaOpZLr2TCZ6RdAZ0LK1RcX7wDsfx2yoNcvq/FpYJy3EsInbbGExnKObCwTE=
-X-Received: by 2002:a2e:9c8d:: with SMTP id x13mr523960lji.392.1599612958934;
- Tue, 08 Sep 2020 17:55:58 -0700 (PDT)
+        id S1729990AbgIICMV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 8 Sep 2020 22:12:21 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:43174 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727804AbgIICMS (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Sep 2020 22:12:18 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0892AS5c094075;
+        Wed, 9 Sep 2020 02:11:40 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-transfer-encoding; s=corp-2020-01-29;
+ bh=vtum29krzlUsLIvRnyVxjLuvhWBtLTr/qnU9AvnGbCE=;
+ b=xBu1bvtfDZ9503xniraz9muXI2Eg0qhYCYcOf6RobuyNUO3o1Po7XLCiySpH1j3NqLzx
+ 2jgXXHktcetcwXVddyuNr8Y2tEFe3S1Fic84p/c7b/8cWZhzNvssHJn72rt+zNyDQI3g
+ W6nGbDQrnBPjzFv3JHhmeBC2Lng7TyLH4twd3n8hvyY34Y8B6srBiufkC1dha4TbTt8U
+ iYM7VJ+79F4uaHjvVJydS3mD7NcVtBky/+GEZFGwxEWNcRrsg0F0s6PbT0Xh+BU3JioS
+ 8YO2a/M76MlnuYxeGIlhqTuBmwNwX5juOavRg+aCtHeGvwObjWNA43YKkCVKSbI3nWmM bw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 33c2mkxvtd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 09 Sep 2020 02:11:40 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 089252Ah095301;
+        Wed, 9 Sep 2020 02:09:40 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 33cmk53euj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 09 Sep 2020 02:09:40 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08929Zlw022818;
+        Wed, 9 Sep 2020 02:09:35 GMT
+Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 08 Sep 2020 19:09:35 -0700
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-hwmon@vger.kernel.org,
+        Joe Perches <joe@perches.com>, oprofile-list@lists.sf.net,
+        linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org,
+        linaro-mm-sig@lists.linaro.org, drbd-dev@tron.linbit.com,
+        intel-gfx@lists.freedesktop.org,
+        linux-arm-kernel@lists.infradead.org, linux-input@vger.kernel.org,
+        linux-nfs@vger.kernel.org, netdev@vger.kernel.org,
+        reiserfs-devel@vger.kernel.org, linux-bcache@vger.kernel.org,
+        Jiri Kosina <trivial@kernel.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        sparclinux@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-s390@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-ia64@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-kselftest@vger.kernel.org,
+        linux-fbdev@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-scsi@vger.kernel.org, linux-alpha@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 00/29] treewide: Convert comma separated statements
+Date:   Tue,  8 Sep 2020 22:09:14 -0400
+Message-Id: <159961731707.5787.13988542229153933257.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <cover.1598331148.git.joe@perches.com>
+References: <cover.1598331148.git.joe@perches.com>
 MIME-Version: 1.0
-References: <20200903054104.228829-1-hch@lst.de> <20200903054104.228829-5-hch@lst.de>
-In-Reply-To: <20200903054104.228829-5-hch@lst.de>
-From:   Song Liu <song@kernel.org>
-Date:   Tue, 8 Sep 2020 17:55:48 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW62Cd329s-LUR9uQVcFvn4pbOj7H0434P7zwRhbNVScgA@mail.gmail.com>
-Message-ID: <CAPhsuW62Cd329s-LUR9uQVcFvn4pbOj7H0434P7zwRhbNVScgA@mail.gmail.com>
-Subject: Re: [PATCH 4/9] md: don't detour through bd_contains for the gendisk
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, dm-devel@redhat.com,
-        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        linux-block@vger.kernel.org, drbd-dev@lists.linbit.com,
-        linux-ide@vger.kernel.org, linux-raid <linux-raid@vger.kernel.org>,
-        linux-mmc@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9738 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 phishscore=0
+ mlxlogscore=999 bulkscore=0 adultscore=0 mlxscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
+ definitions=main-2009090018
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9738 signatures=668679
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 priorityscore=1501
+ phishscore=0 adultscore=0 bulkscore=0 clxscore=1011 mlxlogscore=999
+ malwarescore=0 suspectscore=0 lowpriorityscore=0 spamscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009090018
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, Sep 2, 2020 at 10:43 PM Christoph Hellwig <hch@lst.de> wrote:
->
-> bd_disk is set on all block devices, including those for partitions.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Mon, 24 Aug 2020 21:55:57 -0700, Joe Perches wrote:
 
-Acked-by: Song Liu <song@kernel.org>
+> There are many comma separated statements in the kernel.
+> See:https://lore.kernel.org/lkml/alpine.DEB.2.22.394.2008201856110.2524@hadrien/
+> 
+> Convert the comma separated statements that are in if/do/while blocks
+> to use braces and semicolons.
+> 
+> Many comma separated statements still exist but those are changes for
+> another day.
+> 
+> [...]
 
-> ---
->  drivers/md/md.c | 2 +-
->  drivers/md/md.h | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/md/md.c b/drivers/md/md.c
-> index 3f33562d10d6f5..5a0fd93769a70e 100644
-> --- a/drivers/md/md.c
-> +++ b/drivers/md/md.c
-> @@ -8444,7 +8444,7 @@ static int is_mddev_idle(struct mddev *mddev, int init)
->         idle = 1;
->         rcu_read_lock();
->         rdev_for_each_rcu(rdev, mddev) {
-> -               struct gendisk *disk = rdev->bdev->bd_contains->bd_disk;
-> +               struct gendisk *disk = rdev->bdev->bd_disk;
->                 curr_events = (int)part_stat_read_accum(&disk->part0, sectors) -
->                               atomic_read(&disk->sync_io);
->                 /* sync IO will cause sync_io to increase before the disk_stats
-> diff --git a/drivers/md/md.h b/drivers/md/md.h
-> index f9e2ccdd22c478..2175a5ac4f7c68 100644
-> --- a/drivers/md/md.h
-> +++ b/drivers/md/md.h
-> @@ -551,7 +551,7 @@ extern void mddev_unlock(struct mddev *mddev);
->
->  static inline void md_sync_acct(struct block_device *bdev, unsigned long nr_sectors)
->  {
-> -       atomic_add(nr_sectors, &bdev->bd_contains->bd_disk->sync_io);
-> +       atomic_add(nr_sectors, &bdev->bd_disk->sync_io);
->  }
->
->  static inline void md_sync_acct_bio(struct bio *bio, unsigned long nr_sectors)
-> --
-> 2.28.0
->
+Applied to 5.10/scsi-queue, thanks!
+
+[01/29] coding-style.rst: Avoid comma statements
+        (no commit info)
+[02/29] alpha: Avoid comma separated statements
+        (no commit info)
+[03/29] ia64: Avoid comma separated statements
+        (no commit info)
+[04/29] sparc: Avoid comma separated statements
+        (no commit info)
+[05/29] ata: Avoid comma separated statements
+        (no commit info)
+[06/29] drbd: Avoid comma separated statements
+        (no commit info)
+[07/29] lp: Avoid comma separated statements
+        (no commit info)
+[08/29] dma-buf: Avoid comma separated statements
+        (no commit info)
+[09/29] drm/gma500: Avoid comma separated statements
+        (no commit info)
+[10/29] drm/i915: Avoid comma separated statements
+        (no commit info)
+[11/29] hwmon: (scmi-hwmon): Avoid comma separated statements
+        (no commit info)
+[12/29] Input: MT - Avoid comma separated statements
+        (no commit info)
+[13/29] bcache: Avoid comma separated statements
+        (no commit info)
+[14/29] media: Avoid comma separated statements
+        (no commit info)
+[15/29] mtd: Avoid comma separated statements
+        (no commit info)
+[16/29] 8390: Avoid comma separated statements
+        (no commit info)
+[17/29] fs_enet: Avoid comma separated statements
+        (no commit info)
+[18/29] wan: sbni: Avoid comma separated statements
+        (no commit info)
+[19/29] s390/tty3270: Avoid comma separated statements
+        (no commit info)
+[20/29] scsi: arm: Avoid comma separated statements
+        https://git.kernel.org/mkp/scsi/c/a08a07326510
+[21/29] media: atomisp: Avoid comma separated statements
+        (no commit info)
+[22/29] video: fbdev: Avoid comma separated statements
+        (no commit info)
+[23/29] fuse: Avoid comma separated statements
+        (no commit info)
+[24/29] reiserfs: Avoid comma separated statements
+        (no commit info)
+[25/29] lib/zlib: Avoid comma separated statements
+        (no commit info)
+[26/29] lib: zstd: Avoid comma separated statements
+        (no commit info)
+[27/29] ipv6: fib6: Avoid comma separated statements
+        (no commit info)
+[28/29] sunrpc: Avoid comma separated statements
+        (no commit info)
+[29/29] tools: Avoid comma separated statements
+        (no commit info)
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
