@@ -2,171 +2,133 @@ Return-Path: <SRS0=nx08=CS=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A13BC2BC11
-	for <linux-ide@archiver.kernel.org>; Wed,  9 Sep 2020 02:12:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56AE2C43461
+	for <linux-ide@archiver.kernel.org>; Wed,  9 Sep 2020 06:53:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E8D5A20758
-	for <linux-ide@archiver.kernel.org>; Wed,  9 Sep 2020 02:12:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17BC421741
+	for <linux-ide@archiver.kernel.org>; Wed,  9 Sep 2020 06:53:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="xBu1bvtf"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="fBz7/axA";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="mmeO5Eo0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729990AbgIICMV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 8 Sep 2020 22:12:21 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:43174 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727804AbgIICMS (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Sep 2020 22:12:18 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0892AS5c094075;
-        Wed, 9 Sep 2020 02:11:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=corp-2020-01-29;
- bh=vtum29krzlUsLIvRnyVxjLuvhWBtLTr/qnU9AvnGbCE=;
- b=xBu1bvtfDZ9503xniraz9muXI2Eg0qhYCYcOf6RobuyNUO3o1Po7XLCiySpH1j3NqLzx
- 2jgXXHktcetcwXVddyuNr8Y2tEFe3S1Fic84p/c7b/8cWZhzNvssHJn72rt+zNyDQI3g
- W6nGbDQrnBPjzFv3JHhmeBC2Lng7TyLH4twd3n8hvyY34Y8B6srBiufkC1dha4TbTt8U
- iYM7VJ+79F4uaHjvVJydS3mD7NcVtBky/+GEZFGwxEWNcRrsg0F0s6PbT0Xh+BU3JioS
- 8YO2a/M76MlnuYxeGIlhqTuBmwNwX5juOavRg+aCtHeGvwObjWNA43YKkCVKSbI3nWmM bw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 33c2mkxvtd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Wed, 09 Sep 2020 02:11:40 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 089252Ah095301;
-        Wed, 9 Sep 2020 02:09:40 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 33cmk53euj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 09 Sep 2020 02:09:40 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 08929Zlw022818;
-        Wed, 9 Sep 2020 02:09:35 GMT
-Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 08 Sep 2020 19:09:35 -0700
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-hwmon@vger.kernel.org,
-        Joe Perches <joe@perches.com>, oprofile-list@lists.sf.net,
-        linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org,
-        linaro-mm-sig@lists.linaro.org, drbd-dev@tron.linbit.com,
-        intel-gfx@lists.freedesktop.org,
-        linux-arm-kernel@lists.infradead.org, linux-input@vger.kernel.org,
-        linux-nfs@vger.kernel.org, netdev@vger.kernel.org,
-        reiserfs-devel@vger.kernel.org, linux-bcache@vger.kernel.org,
-        Jiri Kosina <trivial@kernel.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        sparclinux@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-s390@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-ia64@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-kselftest@vger.kernel.org,
-        linux-fbdev@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-scsi@vger.kernel.org, linux-alpha@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 00/29] treewide: Convert comma separated statements
-Date:   Tue,  8 Sep 2020 22:09:14 -0400
-Message-Id: <159961731707.5787.13988542229153933257.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <cover.1598331148.git.joe@perches.com>
-References: <cover.1598331148.git.joe@perches.com>
+        id S1726811AbgIIGw5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 9 Sep 2020 02:52:57 -0400
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:62837 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725840AbgIIGwx (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 9 Sep 2020 02:52:53 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1599634372; x=1631170372;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
+  b=fBz7/axARZc7T9KRDWht484/hbFKScOv6F6ePe487Wv0E0lK2Op1OrYF
+   NjKfnoE/UXqZbwBODyU9YzDZy6WUIaPSMXGtvhp4Lnkb/TVWLcXQKRP7p
+   VY2cQSjJnGhPEEdlc6BCrSGQ66JV2naIar4DR9+X4eqUmgz2UKb4u+MuA
+   LdrORJOUR+IOxioITphZbdgvMUSwTdn4WieIagmZb89Tq1/elboBirjp0
+   srBJmzY8p4hHw4zXHY1ylgsFHkEXYavvifWDCCXAYskGOIzqbCuP2U45a
+   MLEl0JrcBiqbPu9/zP9Gf0kg4Kdq60FjJsasGetbAHmm2n1g8AHujEZFw
+   Q==;
+IronPort-SDR: CWKV5ORr0aW8aM85R+SWsbX+IY3j2ML2KEy1BKyN3cGR2h4jxuOLhzQ4+4ZwAwXabbM+bnXX9S
+ z9oqIKjx7UENziy1UyBKpfsituJY6e96iZeCYElDmkFe6Wv+jHgEX2xyDBQeu7cdTTwhaLQg9O
+ Hv7zw0JOE27OzkGtLn80MrkfZhhFDANPVvQU6ejijxptRwiFRchgA9zS0NHinQY6ZTR2+KbOQe
+ 6fbEUNIa0psmBQ+he1ahnrklquKstDkbCudlyV+mXR/oaM/zh3JpcyZ1kt9i6BmKqA21OluhzR
+ +9Y=
+X-IronPort-AV: E=Sophos;i="5.76,408,1592841600"; 
+   d="scan'208";a="146826324"
+Received: from mail-dm6nam08lp2041.outbound.protection.outlook.com (HELO NAM04-DM6-obe.outbound.protection.outlook.com) ([104.47.73.41])
+  by ob1.hgst.iphmx.com with ESMTP; 09 Sep 2020 14:52:50 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=edTJiZaLqD8W/PKWVRXX6V7lk1ZfigMqaTeimGp44LRCRolhT9Im9A9TLA+YXRZtko7tdEe4ymI9itv1MIdzt+a5JMQMXso5ER1gHeqtT1BRlu0lIEpLIY2hFECFm3PCUd4w20mT5IXGLUOf3k/ONsufV1M0B8kMriSP2iXdheYt6alLsHBXf4v/Y44Bnj3dpeo2xf+un27uBg5hf/46E3ghGasgOqzI2mrdHhkSjXAi9WSORfx42o4pQfyUKw5IMIrSLRq9dIPZAH9Yi1IekFfMdxtQ2ULtvqlBDak5fN7yG+O9yCVmSRBOe8tH2ibR0rcJSs1xitX8jNdTz+hjyg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
+ b=VwDFmvjyOqsnHZTZC2OEHmG+2C43XZjOBtZykuo6qt118Ua6G5nKuUP+dBEHYjxJZwKnzghd4+dovmuxt6MOKFGG7ZAjaFxOLiC2hJmCQniAdP1Gpfi6C4ARq8Hn5cJUuSksZ15zuLP1/v/qF+nDGofWPPiHBdRuA+jGroH5Soz9jUzRMLYAAfiXfLzhOzm61jxYfwWDvmpPtKerIk0jguvMkpvU+hcucLDsGJ7tAOIi8pqvAhTF/UDSraCwFyKEtpkLHxiut/VJzSR2UtY0vVpB/xpp0Wtq+lD3mqHnEuQz8erYaIGlnGEsv3Aagi+t6Gd2UGBslDAe00jWBSsRig==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=G8FZ0D3PP/OudJ5uuxCAz/C/vBHo8wESZoPwxTWqVEI=;
+ b=mmeO5Eo01Ac05IhEkRfMaDjVvGFphdoOINT5EmWtMyLTA4qy4TNvj4A/Xbxo44i3FVGCZrTWmTffd0GbWbLBUQNO1GSvdKHCl9KuGuwNz4madzsRTiT2dvVCP04Ov+d1WoehldKuKCXRrHDu1fejAnNmoAE+JH8IRImPeBPHOlQ=
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ (2603:10b6:803:47::21) by SN2PR04MB2318.namprd04.prod.outlook.com
+ (2603:10b6:804:17::9) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3348.19; Wed, 9 Sep
+ 2020 06:52:49 +0000
+Received: from SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::457e:5fe9:2ae3:e738]) by SN4PR0401MB3598.namprd04.prod.outlook.com
+ ([fe80::457e:5fe9:2ae3:e738%7]) with mapi id 15.20.3348.019; Wed, 9 Sep 2020
+ 06:52:49 +0000
+From:   Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+CC:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Borislav Petkov <bp@alien8.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Song Liu <song@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        "linux-m68k@lists.linux-m68k.org" <linux-m68k@lists.linux-m68k.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+Subject: Re: [PATCH 04/19] floppy: use bdev_check_media_change
+Thread-Topic: [PATCH 04/19] floppy: use bdev_check_media_change
+Thread-Index: AQHWhhiAcGP3UdSVIUmIdasmUqfYBA==
+Date:   Wed, 9 Sep 2020 06:52:48 +0000
+Message-ID: <SN4PR0401MB35989A8FE1EFDBDD18EDDA429B260@SN4PR0401MB3598.namprd04.prod.outlook.com>
+References: <20200908145347.2992670-1-hch@lst.de>
+ <20200908145347.2992670-5-hch@lst.de>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: lst.de; dkim=none (message not signed)
+ header.d=none;lst.de; dmarc=none action=none header.from=wdc.com;
+x-originating-ip: [62.216.205.181]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-ht: Tenant
+x-ms-office365-filtering-correlation-id: 2c580840-1dc4-4abd-f50b-08d8548cf712
+x-ms-traffictypediagnostic: SN2PR04MB2318:
+x-microsoft-antispam-prvs: <SN2PR04MB2318FEAACA7A9DFD8770B6779B260@SN2PR04MB2318.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:1728;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: W5rMWm3wGZp+beSBFXDNZADtw0PA9VVpp2R+eulmZ0OiJ6tf1wUmGU35Uzi8o7d0LiS+d7oYkTajLpLlHaiRBaeo59ji/IQ9lVf01vA/vg+JnoXPEFFO49jW+lhHv4iRaYN1XVfMGwHyqweF+zRWQNSRhVsDfBJokFu7OH1L6JgxaLLg1QtPS0UMk2Uo6BO3021like26bnF4VQqPnOVgGiUIH9xjQYkwmARMvvD00JFuXM2Sadc2MpTU8UI8Rh5kjkBAX7c6XAbVdytRBVHZi9BXkyOSC8UMXMYxNf1YNbDq8uL7+y4ItSDM+BnV75BddACqQNeggUwI8QD97mYOA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN4PR0401MB3598.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39860400002)(346002)(376002)(366004)(396003)(136003)(4326008)(8676002)(558084003)(8936002)(19618925003)(33656002)(91956017)(66476007)(52536014)(64756008)(66946007)(5660300002)(76116006)(71200400001)(66446008)(86362001)(66556008)(2906002)(7696005)(7416002)(110136005)(54906003)(4270600006)(316002)(6506007)(9686003)(26005)(478600001)(55016002)(186003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata: 0VfZxJ0OZAbIo8CJ9j6lq0HTYiTCwh5Ker3DWmDbeQROKUrMZvk9OvCrsdXVa0Rxqx7uE82fIas0g97HMKH43JDbkG62zKtPeB/oD06HsHoOjPQGgZmjeLhSuIxgD1wk1Nu5dRGHm/d5DFQvo1HIcumRUv/srcRkyigz80EJq3mATd/ZxxYLAJUFoTx8W2uPrySp6Ccl7tdgFP443FRh/SeUtMgQt/EGAwwzx04meSfu4mWjB4YEvclq0xfbUvHS8/5XQQL7kUf27np3AoW7JVPDsmXy4eVx5ahs4n5icJuYniKxB8Vg/fw/AfHtj/PZC/Y6airxkUhx9IQmT3zdd6mVjv7kkW+eQAF6qmxriL6bGlnxDEx+gYBnmTeQF4Fwe1MQ/7tP2UY4T6jEt+jG9B0E+9mz23WJBIJmxYfR0WCDQ5eI8g2DPIS3rX2ANbRScJCZxs6uw2zwWH1Y1K1WS2mPxKG1+ds7F0qNRq/dk5GaVUMo+8aGK0+3A+cYKjRmd/0kEx/fYzhePBQVoXD7nDKxK8UsUW3Kpq8NYq8yBCs3rJPtuAsjpRUWVtalXc46/5OrOEqFM+HX8kvMpaF2fIce2sH7bR7rVrMP1YDm7Ine7Mo5tnANElq+hqyK0/LZGwWKEZYxCuxvklUz1ju1/g==
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9738 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 phishscore=0
- mlxlogscore=999 bulkscore=0 adultscore=0 mlxscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2006250000
- definitions=main-2009090018
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9738 signatures=668679
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 priorityscore=1501
- phishscore=0 adultscore=0 bulkscore=0 clxscore=1011 mlxlogscore=999
- malwarescore=0 suspectscore=0 lowpriorityscore=0 spamscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2006250000 definitions=main-2009090018
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN4PR0401MB3598.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2c580840-1dc4-4abd-f50b-08d8548cf712
+X-MS-Exchange-CrossTenant-originalarrivaltime: 09 Sep 2020 06:52:48.9445
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: h98h5sIzX5RfClA98aYqBCej6ApCvwDTamNQ8ZPTWhVdp69Kg0nPXAt+ruQOup6fNDOAS1Rcj0rMRuwuAokdauxn5nmJyCylgcQCh9nRVhg=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN2PR04MB2318
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, 24 Aug 2020 21:55:57 -0700, Joe Perches wrote:
-
-> There are many comma separated statements in the kernel.
-> See:https://lore.kernel.org/lkml/alpine.DEB.2.22.394.2008201856110.2524@hadrien/
-> 
-> Convert the comma separated statements that are in if/do/while blocks
-> to use braces and semicolons.
-> 
-> Many comma separated statements still exist but those are changes for
-> another day.
-> 
-> [...]
-
-Applied to 5.10/scsi-queue, thanks!
-
-[01/29] coding-style.rst: Avoid comma statements
-        (no commit info)
-[02/29] alpha: Avoid comma separated statements
-        (no commit info)
-[03/29] ia64: Avoid comma separated statements
-        (no commit info)
-[04/29] sparc: Avoid comma separated statements
-        (no commit info)
-[05/29] ata: Avoid comma separated statements
-        (no commit info)
-[06/29] drbd: Avoid comma separated statements
-        (no commit info)
-[07/29] lp: Avoid comma separated statements
-        (no commit info)
-[08/29] dma-buf: Avoid comma separated statements
-        (no commit info)
-[09/29] drm/gma500: Avoid comma separated statements
-        (no commit info)
-[10/29] drm/i915: Avoid comma separated statements
-        (no commit info)
-[11/29] hwmon: (scmi-hwmon): Avoid comma separated statements
-        (no commit info)
-[12/29] Input: MT - Avoid comma separated statements
-        (no commit info)
-[13/29] bcache: Avoid comma separated statements
-        (no commit info)
-[14/29] media: Avoid comma separated statements
-        (no commit info)
-[15/29] mtd: Avoid comma separated statements
-        (no commit info)
-[16/29] 8390: Avoid comma separated statements
-        (no commit info)
-[17/29] fs_enet: Avoid comma separated statements
-        (no commit info)
-[18/29] wan: sbni: Avoid comma separated statements
-        (no commit info)
-[19/29] s390/tty3270: Avoid comma separated statements
-        (no commit info)
-[20/29] scsi: arm: Avoid comma separated statements
-        https://git.kernel.org/mkp/scsi/c/a08a07326510
-[21/29] media: atomisp: Avoid comma separated statements
-        (no commit info)
-[22/29] video: fbdev: Avoid comma separated statements
-        (no commit info)
-[23/29] fuse: Avoid comma separated statements
-        (no commit info)
-[24/29] reiserfs: Avoid comma separated statements
-        (no commit info)
-[25/29] lib/zlib: Avoid comma separated statements
-        (no commit info)
-[26/29] lib: zstd: Avoid comma separated statements
-        (no commit info)
-[27/29] ipv6: fib6: Avoid comma separated statements
-        (no commit info)
-[28/29] sunrpc: Avoid comma separated statements
-        (no commit info)
-[29/29] tools: Avoid comma separated statements
-        (no commit info)
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Looks good,=0A=
+Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>=0A=
