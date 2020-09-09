@@ -4,26 +4,26 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7B24C433E2
-	for <linux-ide@archiver.kernel.org>; Wed,  9 Sep 2020 07:09:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E78C9C10DAA
+	for <linux-ide@archiver.kernel.org>; Wed,  9 Sep 2020 07:11:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E51B21919
-	for <linux-ide@archiver.kernel.org>; Wed,  9 Sep 2020 07:09:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B0F3B21D79
+	for <linux-ide@archiver.kernel.org>; Wed,  9 Sep 2020 07:11:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726426AbgIIHJl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 9 Sep 2020 03:09:41 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60270 "EHLO mx2.suse.de"
+        id S1729822AbgIIHLB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 9 Sep 2020 03:11:01 -0400
+Received: from mx2.suse.de ([195.135.220.15]:33654 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725877AbgIIHJi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 9 Sep 2020 03:09:38 -0400
+        id S1729781AbgIIHK5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 9 Sep 2020 03:10:57 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id B6C46AC68;
-        Wed,  9 Sep 2020 07:09:36 +0000 (UTC)
-Subject: Re: [PATCH 06/19] swim: simplify media change handling
+        by mx2.suse.de (Postfix) with ESMTP id 903A4B588;
+        Wed,  9 Sep 2020 07:10:55 +0000 (UTC)
+Subject: Re: [PATCH 09/19] xsysace: simplify media change handling
 To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         Michal Simek <michal.simek@xilinx.com>,
@@ -36,10 +36,9 @@ Cc:     Denis Efremov <efremov@linux.com>, Tim Waugh <tim@cyberelk.net>,
         linux-m68k@lists.linux-m68k.org, linux-block@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
         linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org,
-        Johannes Thumshirn <johannes.thumshirn@wdc.com>
+        linux-fsdevel@vger.kernel.org
 References: <20200908145347.2992670-1-hch@lst.de>
- <20200908145347.2992670-7-hch@lst.de>
+ <20200908145347.2992670-10-hch@lst.de>
 From:   Hannes Reinecke <hare@suse.de>
 Openpgp: preference=signencrypt
 Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
@@ -85,12 +84,12 @@ Autocrypt: addr=hare@suse.de; prefer-encrypt=mutual; keydata=
  ZtWlhGRERnDH17PUXDglsOA08HCls0PHx8itYsjYCAyETlxlLApXWdVl9YVwbQpQ+i693t/Y
  PGu8jotn0++P19d3JwXW8t6TVvBIQ1dRZHx1IxGLMn+CkDJMOmHAUMWTAXX2rf5tUjas8/v2
  azzYF4VRJsdl+d0MCaSy8mUh
-Message-ID: <ba0fb6cb-5703-6b42-2669-4aaf3554d4df@suse.de>
-Date:   Wed, 9 Sep 2020 09:09:34 +0200
+Message-ID: <6fcc6e53-45e3-30e7-9972-e000d7155c53@suse.de>
+Date:   Wed, 9 Sep 2020 09:10:53 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.7.2
 MIME-Version: 1.0
-In-Reply-To: <20200908145347.2992670-7-hch@lst.de>
+In-Reply-To: <20200908145347.2992670-10-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -100,18 +99,15 @@ List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 On 9/8/20 4:53 PM, Christoph Hellwig wrote:
-> floppy_revalidate mostly duplicates work already done in floppy_open
-> despite only beeing called from floppy_open.  Remove the function and
-> just clear the ->ejected flag directly under the right condition.
+> Pass a struct ace_device to ace_revalidate_disk, move the media changed
+> check into the one caller that needs it, and give the routine a better
+> name.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
 > ---
->  drivers/block/swim.c | 24 ++----------------------
->  1 file changed, 2 insertions(+), 22 deletions(-)
+>  drivers/block/xsysace.c | 26 ++++++++++----------------
+>  1 file changed, 10 insertions(+), 16 deletions(-)
 > 
-What a convoluted driver.
-
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
