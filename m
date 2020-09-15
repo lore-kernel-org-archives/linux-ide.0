@@ -1,112 +1,152 @@
-Return-Path: <SRS0=CJGR=CX=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=lv1h=CY=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4541C43461
-	for <linux-ide@archiver.kernel.org>; Mon, 14 Sep 2020 20:08:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78B2BC433E2
+	for <linux-ide@archiver.kernel.org>; Tue, 15 Sep 2020 01:17:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 89C04208DB
-	for <linux-ide@archiver.kernel.org>; Mon, 14 Sep 2020 20:08:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600114126;
-	bh=96Cy6UzWS4VBKoN0/0O8Rx4BqVzDIqyUALjQWgoAkFc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=IdXFa+LBWxqsqng4vWdUwZm3yC9oG5XuLH9j62kq0d1mofb5OKRUd6A9916OrAsAr
-	 1tqh2sWL+h3B9LMnH8iNVlaPjs1sXaEcAsMvm5ZczqOX50c8njsdTkkiAHVVwiGCsT
-	 qwPsOpgZIj1CP7lXwtGMjGlJCLcA8m4KRijv2WdA=
+	by mail.kernel.org (Postfix) with ESMTP id 3EFA820732
+	for <linux-ide@archiver.kernel.org>; Tue, 15 Sep 2020 01:17:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725989AbgINUIp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 14 Sep 2020 16:08:45 -0400
-Received: from mail-il1-f195.google.com ([209.85.166.195]:33774 "EHLO
-        mail-il1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725984AbgINUIn (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 14 Sep 2020 16:08:43 -0400
-Received: by mail-il1-f195.google.com with SMTP id x2so843381ilm.0;
-        Mon, 14 Sep 2020 13:08:42 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=N1DsB/R9jQHz/25EsMKCSZRYLqR+pPmt2zfdCCxJ2fM=;
-        b=JzG6IXJrAZytnk/IjvfDI0jW6c4fvWybrHtTMKDfkKxHmdCQ8ifbGZxffKpTjEOUqh
-         YfCM6dVZpZXadLoJn62gzQVcAwi4gve3aolZzS3bf5aFr5u7yJVkbTOrENqZjqWZJEaK
-         K8YaS2WYL5eRV9+N0GmbWncd5wA77Qv9nc+2YrV5XowyJUGpF+S1idSqxLxUxmeRS6qP
-         Qj2oUCPjVV6iby6QfUZzFaE7iptFCePpZscPJbU/HpEJX2sZGCCIX32EzivZJU8bX9du
-         aVOFJEF6zkeKZlrufJTOyr6gqLmK+AWFWeD/WfzsOB654JN5Ox3zU6JV+iw5AyTXvtKJ
-         iMAw==
-X-Gm-Message-State: AOAM531PVuQEypjpRbs8YxJIvkwIa4wbBjDb1kf5lWYcCJD0RdwVbgZA
-        Ftme2X3ncgOFzIlZvzHcOy9PEzqFbZIk
-X-Google-Smtp-Source: ABdhPJwp6hmW8+H8XZH0rWXq5dRp3lZ60quV/J0n0opUPCzyzhNHiWUdgFXB4hBEscxnFolEWbuCOA==
-X-Received: by 2002:a92:9a92:: with SMTP id c18mr14090572ill.265.1600114122076;
-        Mon, 14 Sep 2020 13:08:42 -0700 (PDT)
-Received: from xps15 ([64.188.179.253])
-        by smtp.gmail.com with ESMTPSA id t8sm7650982ild.21.2020.09.14.13.08.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Sep 2020 13:08:41 -0700 (PDT)
-Received: (nullmailer pid 154651 invoked by uid 1000);
-        Mon, 14 Sep 2020 20:08:40 -0000
-Date:   Mon, 14 Sep 2020 14:08:40 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Piyush Mehta <piyush.mehta@xilinx.com>
-Cc:     axboe@kernel.dk, p.zabel@pengutronix.de, linux-ide@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        git@xilinx.com, sgoud@xilinx.com, michal.simek@xilinx.com
-Subject: Re: [PATCH 2/2] dt-bindings: ata: achi: ceva: Update documentation
- for CEVA Controller
-Message-ID: <20200914200840.GA152914@bogus>
-References: <1599030348-3334-1-git-send-email-piyush.mehta@xilinx.com>
- <1599030348-3334-3-git-send-email-piyush.mehta@xilinx.com>
+        id S1725999AbgIOBRu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 14 Sep 2020 21:17:50 -0400
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:52064 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726019AbgIOBRt (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 14 Sep 2020 21:17:49 -0400
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by kvm5.telegraphics.com.au (Postfix) with ESMTP id CA72D2A026;
+        Mon, 14 Sep 2020 21:17:43 -0400 (EDT)
+Date:   Tue, 15 Sep 2020 11:17:43 +1000 (AEST)
+From:   Finn Thain <fthain@telegraphics.com.au>
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+cc:     "David S. Miller" <davem@davemloft.net>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Joshua Thompson <funaho@jurai.org>,
+        linux-m68k <linux-m68k@lists.linux-m68k.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2] ide/macide: Convert Mac IDE driver to platform
+ driver
+In-Reply-To: <CAMuHMdUOdOkBE72ouk0W_bXnoSTFqLsLKag+2LSRz+Qox6MoxQ@mail.gmail.com>
+Message-ID: <alpine.LNX.2.23.453.2009150945480.6@nippy.intranet>
+References: <3cf40b9df80a99a3eee6d3af79437016038f0a44.1600051331.git.fthain@telegraphics.com.au> <CAMuHMdUOdOkBE72ouk0W_bXnoSTFqLsLKag+2LSRz+Qox6MoxQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1599030348-3334-3-git-send-email-piyush.mehta@xilinx.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, Sep 02, 2020 at 12:35:48PM +0530, Piyush Mehta wrote:
-> This patch updates the documentation for the CEVA controller for adding
-> the required properties for 'phys' and 'resets'.
-> 
-> Signed-off-by: Piyush Mehta <piyush.mehta@xilinx.com>
-> ---
->  Documentation/devicetree/bindings/ata/ahci-ceva.txt | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/ata/ahci-ceva.txt b/Documentation/devicetree/bindings/ata/ahci-ceva.txt
-> index 7561cc4..f01d317 100644
-> --- a/Documentation/devicetree/bindings/ata/ahci-ceva.txt
-> +++ b/Documentation/devicetree/bindings/ata/ahci-ceva.txt
-> @@ -35,6 +35,10 @@ Required properties:
->  			ceva,pN-retry-params = /bits/ 16 <RIT RCT>;
->  			RIT:  Retry Interval Timer.
->  			RCT:  Rate Change Timer.
-> +  - phys: phandle for the PHY device
-> +  - phy-names: Should be "sata-phy"
-> +  - resets: phandle to the reset controller for the SATA IP
-> +  - reset-names: Should be "sata_rst".
+On Mon, 14 Sep 2020, Geert Uytterhoeven wrote:
 
-The names here are rather pointless. You don't really need them if only 
-1 entry.
-
->  
->  Optional properties:
->    - ceva,broken-gen2: limit to gen1 speed instead of gen2.
-> @@ -56,4 +60,8 @@ Examples:
->  		ceva,p1-burst-params = /bits/ 8 <0x0A 0x08 0x4A 0x06>;
->  		ceva,p1-retry-params = /bits/ 16 <0x0216 0x7F06>;
->  		ceva,broken-gen2;
-> +		phy-names = "sata-phy";
-> +		phys = <&psgtr 1 PHY_TYPE_SATA 1 1>;
-> +		reset-names = "sata_rst";
-> +		resets = <&zynqmp_reset ZYNQMP_RESET_SATA>;
->  	};
-> -- 
-> 2.7.4
+> Hi Finn,
 > 
+> On Mon, Sep 14, 2020 at 4:47 AM Finn Thain <fthain@telegraphics.com.au> wrote:
+> > Add platform devices for the Mac IDE controller variants. Convert the
+> > macide module into a platform driver to support two of those variants.
+> > For the third, use a generic "pata_platform" driver instead.
+> > This enables automatic loading of the appropriate module and begins
+> > the process of replacing the driver with libata alternatives.
+> >
+> > Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+> > Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+> > Cc: Joshua Thompson <funaho@jurai.org>
+> > References: commit 5ed0794cde593 ("m68k/atari: Convert Falcon IDE drivers to platform drivers")
+> > References: commit 7ad19a99ad431 ("ide: officially deprecated the legacy IDE driver")
+> > Tested-by: Stan Johnson <userm57@yahoo.com>
+> > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+> > ---
+> > This patch was tested successfully on a Powerbook 190 (MAC_IDE_BABOON)
+> > using both pata_platform and ide_platform drivers.
+> > The next step will be to try using these generic drivers with the other
+> > IDE controller variants (MAC_IDE_QUADRA or MAC_IDE_PB) so that the macide
+> > driver can be entirely replaced with libata drivers.
+> >
+> > Changed since v1:
+> >  - Adopted DEFINE_RES_MEM and DEFINE_RES_IRQ macros.
+> >  - Dropped IORESOURCE_IRQ_SHAREABLE flag as it is ignored by pata_platform.c
+> >    and IRQF_SHARED makes no difference in this case.
+> >  - Removed redundant release_mem_region() call.
+> >  - Enabled CONFIG_BLK_DEV_PLATFORM in mac_defconfig. We might also enable
+> >    CONFIG_PATA_PLATFORM but IMO migration to libata should be a separate
+> >    patch (as this patch has some unrelated benefits).
+> 
+> Thanks for the update!
+> 
+> BTW, who do you envision taking this (or the next version)? IDE or m68k?
+> 
+
+It's unclear from the diff stat. But the focus is on the platform which 
+probably means it is more interesting to you, as the arch maintainer.
+
+> > --- a/arch/m68k/configs/mac_defconfig
+> > +++ b/arch/m68k/configs/mac_defconfig
+> > @@ -317,6 +317,7 @@ CONFIG_DUMMY_IRQ=m
+> >  CONFIG_IDE=y
+> >  CONFIG_IDE_GD_ATAPI=y
+> >  CONFIG_BLK_DEV_IDECD=y
+> > +CONFIG_BLK_DEV_PLATFORM=y
+> 
+> I guess we want this in multi_defconfig, too?
+> 
+
+Right. I'll add that in v3.
+
+> >  CONFIG_BLK_DEV_MAC_IDE=y
+> >  CONFIG_RAID_ATTRS=m
+> >  CONFIG_SCSI=y
+> 
+> > --- a/drivers/ide/macide.c
+> > +++ b/drivers/ide/macide.c
+> 
+> > @@ -109,42 +110,61 @@ static const char *mac_ide_name[] =
+> >   * Probe for a Macintosh IDE interface
+> >   */
+> >
+> > -static int __init macide_init(void)
+> > +static int mac_ide_probe(struct platform_device *pdev)
+> >  {
+> 
+> >         printk(KERN_INFO "ide: Macintosh %s IDE controller\n",
+> >                          mac_ide_name[macintosh_config->ide_type - 1]);
+> >
+> > -       macide_setup_ports(&hw, base, irq);
+> > +       macide_setup_ports(&hw, mem->start, irq->start);
+> >
+> > -       return ide_host_add(&d, hws, 1, NULL);
+> > +       rc = ide_host_add(&d, hws, 1, &host);
+> > +       if (rc)
+> > +               return rc;
+> > +
+> > +       platform_set_drvdata(pdev, host);
+> 
+> Move one up, to play it safe?
+> 
+
+You mean, before calling ide_host_add? The 'host' pointer is uninitialized 
+prior to that call.
+
+> > +       return 0;
+> >  }
+> >
+> > -module_init(macide_init);
+> > +static int mac_ide_remove(struct platform_device *pdev)
+> > +{
+> > +       struct ide_host *host = dev_get_drvdata(&pdev->dev);
+> 
+> As you use platform_set_drvdata() above, you might as well use the
+> platform_get_drvdata() helper here, for symmetry.
+> 
+
+Will do.
+
+Thanks for your review.
+
+> Gr{oetje,eeting}s,
+> 
+>                         Geert
