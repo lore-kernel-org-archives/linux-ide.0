@@ -1,93 +1,119 @@
-Return-Path: <SRS0=lv1h=CY=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=oWxJ=CZ=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27549C433E2
-	for <linux-ide@archiver.kernel.org>; Tue, 15 Sep 2020 22:57:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BBA02C433E2
+	for <linux-ide@archiver.kernel.org>; Wed, 16 Sep 2020 09:26:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E9F6C20872
-	for <linux-ide@archiver.kernel.org>; Tue, 15 Sep 2020 22:57:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 880BD2080C
+	for <linux-ide@archiver.kernel.org>; Wed, 16 Sep 2020 09:26:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727461AbgIOW5E (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 15 Sep 2020 18:57:04 -0400
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:46572 "EHLO
-        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727419AbgIOW5E (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Sep 2020 18:57:04 -0400
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by kvm5.telegraphics.com.au (Postfix) with ESMTP id 9B1CF272F2;
-        Tue, 15 Sep 2020 18:56:57 -0400 (EDT)
-Date:   Wed, 16 Sep 2020 08:56:58 +1000 (AEST)
-From:   Finn Thain <fthain@telegraphics.com.au>
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-cc:     "David S. Miller" <davem@davemloft.net>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        Joshua Thompson <funaho@jurai.org>,
-        linux-m68k <linux-m68k@lists.linux-m68k.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-ide@vger.kernel.org
-Subject: Re: [PATCH v2] ide/macide: Convert Mac IDE driver to platform
- driver
-In-Reply-To: <CAMuHMdX1GXMGg1mviE_msM1vx0ZLEKEPT4AacSBjYDzN6sZVmw@mail.gmail.com>
-Message-ID: <alpine.LNX.2.23.453.2009160758350.6@nippy.intranet>
-References: <3cf40b9df80a99a3eee6d3af79437016038f0a44.1600051331.git.fthain@telegraphics.com.au> <CAMuHMdUOdOkBE72ouk0W_bXnoSTFqLsLKag+2LSRz+Qox6MoxQ@mail.gmail.com> <alpine.LNX.2.23.453.2009150945480.6@nippy.intranet>
- <CAMuHMdX1GXMGg1mviE_msM1vx0ZLEKEPT4AacSBjYDzN6sZVmw@mail.gmail.com>
+        id S1726302AbgIPJ0K (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 16 Sep 2020 05:26:10 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:42074 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726129AbgIPJ0J (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 16 Sep 2020 05:26:09 -0400
+Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 140C35C3305AFC5874C1;
+        Wed, 16 Sep 2020 17:26:07 +0800 (CST)
+Received: from huawei.com (10.175.112.208) by DGGEMS414-HUB.china.huawei.com
+ (10.3.19.214) with Microsoft SMTP Server id 14.3.487.0; Wed, 16 Sep 2020
+ 17:26:05 +0800
+From:   Wang Wensheng <wangwensheng4@huawei.com>
+To:     <mpe@ellerman.id.au>, <davem@davemloft.net>,
+        <benh@kernel.crashing.org>, <paulus@samba.org>,
+        <linux-ide@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH -next] ide: Fix symbol undeclared warnings
+Date:   Wed, 16 Sep 2020 09:23:33 +0000
+Message-ID: <20200916092333.77158-1-wangwensheng4@huawei.com>
+X-Mailer: git-send-email 2.25.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.112.208]
+X-CFilter-Loop: Reflected
 Sender: linux-ide-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, 15 Sep 2020, Geert Uytterhoeven wrote:
+Build the object file with `C=2` and get the following warnings:
+make allmodconfig ARCH=powerpc CROSS_COMPILE=powerpc64-linux-gnu-
+make C=2 drivers/ide/pmac.o ARCH=powerpc64
+CROSS_COMPILE=powerpc64-linux-gnu-
 
-> > > > --- a/drivers/ide/macide.c
-> > > > +++ b/drivers/ide/macide.c
-> > >
-> > > > @@ -109,42 +110,61 @@ static const char *mac_ide_name[] =
-> > > >   * Probe for a Macintosh IDE interface
-> > > >   */
-> > > >
-> > > > -static int __init macide_init(void)
-> > > > +static int mac_ide_probe(struct platform_device *pdev)
-> > > >  {
-> > >
-> > > >         printk(KERN_INFO "ide: Macintosh %s IDE controller\n",
-> > > >                          mac_ide_name[macintosh_config->ide_type - 1]);
-> > > >
-> > > > -       macide_setup_ports(&hw, base, irq);
-> > > > +       macide_setup_ports(&hw, mem->start, irq->start);
-> > > >
-> > > > -       return ide_host_add(&d, hws, 1, NULL);
-> > > > +       rc = ide_host_add(&d, hws, 1, &host);
-> > > > +       if (rc)
-> > > > +               return rc;
-> > > > +
-> > > > +       platform_set_drvdata(pdev, host);
-> > >
-> > > Move one up, to play it safe?
-> > >
-> >
-> > You mean, before calling ide_host_add? The 'host' pointer is uninitialized
-> > prior to that call.
-> 
-> Oh right, so the IDE subsystem doesn't let you use the drvdata inside 
-> your driver (besides in remove()) in a safe way :-(
-> 
+drivers/ide/pmac.c:228:23: warning: symbol 'mdma_timings_33' was not
+declared. Should it be static?
+drivers/ide/pmac.c:241:23: warning: symbol 'mdma_timings_33k' was not
+declared. Should it be static?
+drivers/ide/pmac.c:254:23: warning: symbol 'mdma_timings_66' was not
+declared. Should it be static?
+drivers/ide/pmac.c:272:3: warning: symbol 'kl66_udma_timings' was not
+declared. Should it be static?
+drivers/ide/pmac.c:1418:12: warning: symbol 'pmac_ide_probe' was not
+declared. Should it be static?
 
-The IDE subsystem does allow other patterns here. I could have changed 
-ide_host_alloc() into ide_host_register() followed by ide_host_add() but I 
-could not see any benefit from that change.
+Signed-off-by: Wang Wensheng <wangwensheng4@huawei.com>
+---
+ drivers/ide/pmac.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-A quick search for "platform_device" shows that the driver does not use 
-any uninitialized driver_data pointer (because ide_ifr is a global). In 
-your message of September 9th you readily reached the same conclusion when 
-you reviewed v1.
+diff --git a/drivers/ide/pmac.c b/drivers/ide/pmac.c
+index ea0b064b5f56..6bb2fc6755c2 100644
+--- a/drivers/ide/pmac.c
++++ b/drivers/ide/pmac.c
+@@ -225,7 +225,7 @@ struct mdma_timings_t {
+ 	int	cycleTime;
+ };
+ 
+-struct mdma_timings_t mdma_timings_33[] =
++static struct mdma_timings_t mdma_timings_33[] =
+ {
+     { 240, 240, 480 },
+     { 180, 180, 360 },
+@@ -238,7 +238,7 @@ struct mdma_timings_t mdma_timings_33[] =
+     {   0,   0,   0 }
+ };
+ 
+-struct mdma_timings_t mdma_timings_33k[] =
++static struct mdma_timings_t mdma_timings_33k[] =
+ {
+     { 240, 240, 480 },
+     { 180, 180, 360 },
+@@ -251,7 +251,7 @@ struct mdma_timings_t mdma_timings_33k[] =
+     {   0,   0,   0 }
+ };
+ 
+-struct mdma_timings_t mdma_timings_66[] =
++static struct mdma_timings_t mdma_timings_66[] =
+ {
+     { 240, 240, 480 },
+     { 180, 180, 360 },
+@@ -265,7 +265,7 @@ struct mdma_timings_t mdma_timings_66[] =
+ };
+ 
+ /* KeyLargo ATA-4 Ultra DMA timings (rounded) */
+-struct {
++static struct {
+ 	int	addrSetup; /* ??? */
+ 	int	rdy2pause;
+ 	int	wrDataSetup;
+@@ -1415,7 +1415,7 @@ static struct pci_driver pmac_ide_pci_driver = {
+ };
+ MODULE_DEVICE_TABLE(pci, pmac_ide_pci_match);
+ 
+-int __init pmac_ide_probe(void)
++static int __init pmac_ide_probe(void)
+ {
+ 	int error;
+ 
+-- 
+2.25.0
 
-If mac_ide_probe() followed the usual pattern it might make review easier 
-(as reviewers may not wish to consider the entire driver) but does that 
-really make the code more "safe"?
