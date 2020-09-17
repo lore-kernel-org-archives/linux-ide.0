@@ -2,138 +2,122 @@ Return-Path: <SRS0=B3X7=C2=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41B30C433E2
-	for <linux-ide@archiver.kernel.org>; Thu, 17 Sep 2020 12:12:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78C55C43461
+	for <linux-ide@archiver.kernel.org>; Thu, 17 Sep 2020 13:09:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CE7EB2087D
-	for <linux-ide@archiver.kernel.org>; Thu, 17 Sep 2020 12:12:39 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="K1UY89jC"
+	by mail.kernel.org (Postfix) with ESMTP id 3CDEC21582
+	for <linux-ide@archiver.kernel.org>; Thu, 17 Sep 2020 13:09:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726767AbgIQMMh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 17 Sep 2020 08:12:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35902 "EHLO
+        id S1726955AbgIQNJl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 17 Sep 2020 09:09:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46348 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726958AbgIQMB4 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Sep 2020 08:01:56 -0400
-Received: from ozlabs.org (bilbo.ozlabs.org [IPv6:2401:3900:2:1::2])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE24EC06178B
-        for <linux-ide@vger.kernel.org>; Thu, 17 Sep 2020 05:01:54 -0700 (PDT)
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4BsbCK5G3Rz9sS8;
-        Thu, 17 Sep 2020 22:01:01 +1000 (AEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=ellerman.id.au;
-        s=201909; t=1600344062;
-        bh=drKiJPh6uUahqNiKyElUeAZk2wIXu3ZhA3NKB9nCYcw=;
-        h=From:To:Subject:In-Reply-To:References:Date:From;
-        b=K1UY89jCixp72jlWeIPSfpOB7vyiQ2pwGnUFVvsf0B2FOmy7/yaCzh6UCT7p5W/Yw
-         70F9JkRP1E9jKlutDTKywLjjzj6Z7rg+8fYmE/G3k7D7HgEbb3MZ+NwOlLDgTRQYUZ
-         1EkTImlGWMYYzoDYOlmr87dXl+80hpg4SFZC85Sh4waowIocEYUUT+DLl8FpyH4Lg3
-         7gvv3s+HIp1yRZ6pXo3wGCKVhpn7poXOIMnY9q3+HVTGh4Fj4eGnUUF3YyPN+AEAHi
-         HPh+GRDX7d+HzQwYacuaSKo1D3gk/4OVThEvPTzsv/53OHblkyoZq4enad7HsrK5Ys
-         CKSIckbWyg/Gw==
-From:   Michael Ellerman <mpe@ellerman.id.au>
-To:     Wang Wensheng <wangwensheng4@huawei.com>, davem@davemloft.net,
-        benh@kernel.crashing.org, paulus@samba.org,
-        linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH -next] ide: Fix symbol undeclared warnings
-In-Reply-To: <20200916092333.77158-1-wangwensheng4@huawei.com>
-References: <20200916092333.77158-1-wangwensheng4@huawei.com>
-Date:   Thu, 17 Sep 2020 22:01:00 +1000
-Message-ID: <87zh5oobnn.fsf@mpe.ellerman.id.au>
-MIME-Version: 1.0
-Content-Type: text/plain
+        with ESMTP id S1726756AbgIQNJd (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Sep 2020 09:09:33 -0400
+Received: from andre.telenet-ops.be (andre.telenet-ops.be [IPv6:2a02:1800:120:4::f00:15])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5DB6CC061756
+        for <linux-ide@vger.kernel.org>; Thu, 17 Sep 2020 06:09:30 -0700 (PDT)
+Received: from ramsan ([84.195.186.194])
+        by andre.telenet-ops.be with bizsmtp
+        id V19N230014C55Sk0119NN1; Thu, 17 Sep 2020 15:09:24 +0200
+Received: from rox.of.borg ([192.168.97.57])
+        by ramsan with esmtp (Exim 4.90_1)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1kItf7-0000ND-Vf; Thu, 17 Sep 2020 15:09:21 +0200
+Received: from geert by rox.of.borg with local (Exim 4.90_1)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1kItf7-0001kc-Sy; Thu, 17 Sep 2020 15:09:21 +0200
+From:   Geert Uytterhoeven <geert+renesas@glider.be>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        Sergei Shtylyov <sergei.shtylyov@gmail.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        linux-ide@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, stable <stable@vger.kernel.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>
+Subject: [PATCH v3] ata: sata_rcar: Fix DMA boundary mask
+Date:   Thu, 17 Sep 2020 15:09:20 +0200
+Message-Id: <20200917130920.6689-1-geert+renesas@glider.be>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Wang Wensheng <wangwensheng4@huawei.com> writes:
-> Build the object file with `C=2` and get the following warnings:
-> make allmodconfig ARCH=powerpc CROSS_COMPILE=powerpc64-linux-gnu-
-> make C=2 drivers/ide/pmac.o ARCH=powerpc64
-> CROSS_COMPILE=powerpc64-linux-gnu-
->
-> drivers/ide/pmac.c:228:23: warning: symbol 'mdma_timings_33' was not
-> declared. Should it be static?
-> drivers/ide/pmac.c:241:23: warning: symbol 'mdma_timings_33k' was not
-> declared. Should it be static?
-> drivers/ide/pmac.c:254:23: warning: symbol 'mdma_timings_66' was not
-> declared. Should it be static?
-> drivers/ide/pmac.c:272:3: warning: symbol 'kl66_udma_timings' was not
-> declared. Should it be static?
-> drivers/ide/pmac.c:1418:12: warning: symbol 'pmac_ide_probe' was not
-> declared. Should it be static?
->
-> Signed-off-by: Wang Wensheng <wangwensheng4@huawei.com>
-> ---
->  drivers/ide/pmac.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
+Before commit 9495b7e92f716ab2 ("driver core: platform: Initialize
+dma_parms for platform devices"), the R-Car SATA device didn't have DMA
+parameters.  Hence the DMA boundary mask supplied by its driver was
+silently ignored, as __scsi_init_queue() doesn't check the return value
+of dma_set_seg_boundary(), and the default value of 0xffffffff was used.
 
-TIL davem maintains IDE?
+Now the device has gained DMA parameters, the driver-supplied value is
+used, and the following warning is printed on Salvator-XS:
 
-But I suspect he isn't that interested in this powerpc only driver, so
-I'll grab this.
+    DMA-API: sata_rcar ee300000.sata: mapping sg segment across boundary [start=0x00000000ffffe000] [end=0x00000000ffffefff] [boundary=0x000000001ffffffe]
+    WARNING: CPU: 5 PID: 38 at kernel/dma/debug.c:1233 debug_dma_map_sg+0x298/0x300
 
-cheers
+(the range of start/end values depend on whether IOMMU support is
+ enabled or not)
 
+The issue here is that SATA_RCAR_DMA_BOUNDARY doesn't have bit 0 set, so
+any typical end value, which is odd, will trigger the check.
 
-> diff --git a/drivers/ide/pmac.c b/drivers/ide/pmac.c
-> index ea0b064b5f56..6bb2fc6755c2 100644
-> --- a/drivers/ide/pmac.c
-> +++ b/drivers/ide/pmac.c
-> @@ -225,7 +225,7 @@ struct mdma_timings_t {
->  	int	cycleTime;
->  };
->  
-> -struct mdma_timings_t mdma_timings_33[] =
-> +static struct mdma_timings_t mdma_timings_33[] =
->  {
->      { 240, 240, 480 },
->      { 180, 180, 360 },
-> @@ -238,7 +238,7 @@ struct mdma_timings_t mdma_timings_33[] =
->      {   0,   0,   0 }
->  };
->  
-> -struct mdma_timings_t mdma_timings_33k[] =
-> +static struct mdma_timings_t mdma_timings_33k[] =
->  {
->      { 240, 240, 480 },
->      { 180, 180, 360 },
-> @@ -251,7 +251,7 @@ struct mdma_timings_t mdma_timings_33k[] =
->      {   0,   0,   0 }
->  };
->  
-> -struct mdma_timings_t mdma_timings_66[] =
-> +static struct mdma_timings_t mdma_timings_66[] =
->  {
->      { 240, 240, 480 },
->      { 180, 180, 360 },
-> @@ -265,7 +265,7 @@ struct mdma_timings_t mdma_timings_66[] =
->  };
->  
->  /* KeyLargo ATA-4 Ultra DMA timings (rounded) */
-> -struct {
-> +static struct {
->  	int	addrSetup; /* ??? */
->  	int	rdy2pause;
->  	int	wrDataSetup;
-> @@ -1415,7 +1415,7 @@ static struct pci_driver pmac_ide_pci_driver = {
->  };
->  MODULE_DEVICE_TABLE(pci, pmac_ide_pci_match);
->  
-> -int __init pmac_ide_probe(void)
-> +static int __init pmac_ide_probe(void)
->  {
->  	int error;
->  
-> -- 
-> 2.25.0
+Fix this by increasing the DMA boundary value by 1.
+
+This also fixes the following WRITE DMA EXT timeout issue:
+
+    # dd if=/dev/urandom of=/mnt/de1/file1-1024M bs=1M count=1024
+    ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+    ata1.00: failed command: WRITE DMA EXT
+    ata1.00: cmd 35/00:00:00:e6:0c/00:0a:00:00:00/e0 tag 0 dma 1310720 out
+    res 40/00:01:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+    ata1.00: status: { DRDY }
+
+as seen by Shimoda-san since commit 429120f3df2dba2b ("block: fix
+splitting segments on boundary masks").
+
+Fixes: 8bfbeed58665dbbf ("sata_rcar: correct 'sata_rcar_sht'")
+Fixes: 9495b7e92f716ab2 ("driver core: platform: Initialize dma_parms for platform devices")
+Fixes: 429120f3df2dba2b ("block: fix splitting segments on boundary masks")
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Reviewed-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
+Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Tested-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc: stable <stable@vger.kernel.org>
+---
+v3:
+  - Add Reviewed-by, Tested-by,
+  - Augment description and Fixes: with Shimoda-san's problem report
+    https://lore.kernel.org/r/1600255098-21411-1-git-send-email-yoshihiro.shimoda.uh@renesas.com,
+
+v2:
+  - Add Reviewed-by, Tested-by, Cc.
+---
+ drivers/ata/sata_rcar.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+index 141ac600b64c87ef..44b0ed8f6bb8a120 100644
+--- a/drivers/ata/sata_rcar.c
++++ b/drivers/ata/sata_rcar.c
+@@ -120,7 +120,7 @@
+ /* Descriptor table word 0 bit (when DTA32M = 1) */
+ #define SATA_RCAR_DTEND			BIT(0)
+ 
+-#define SATA_RCAR_DMA_BOUNDARY		0x1FFFFFFEUL
++#define SATA_RCAR_DMA_BOUNDARY		0x1FFFFFFFUL
+ 
+ /* Gen2 Physical Layer Control Registers */
+ #define RCAR_GEN2_PHY_CTL1_REG		0x1704
+-- 
+2.17.1
+
