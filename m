@@ -2,119 +2,137 @@ Return-Path: <SRS0=B3X7=C2=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD122C2D0E3
-	for <linux-ide@archiver.kernel.org>; Thu, 17 Sep 2020 08:10:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AC25C433E2
+	for <linux-ide@archiver.kernel.org>; Thu, 17 Sep 2020 08:10:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A040B21D90
-	for <linux-ide@archiver.kernel.org>; Thu, 17 Sep 2020 08:10:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D68B82065D
+	for <linux-ide@archiver.kernel.org>; Thu, 17 Sep 2020 08:10:55 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=netronome-com.20150623.gappssmtp.com header.i=@netronome-com.20150623.gappssmtp.com header.b="Xm9muXpL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726198AbgIQIIp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 17 Sep 2020 04:08:45 -0400
-Received: from mail-ot1-f65.google.com ([209.85.210.65]:35981 "EHLO
-        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726335AbgIQIGh (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Sep 2020 04:06:37 -0400
-Received: by mail-ot1-f65.google.com with SMTP id 60so1112308otw.3;
-        Thu, 17 Sep 2020 01:05:26 -0700 (PDT)
+        id S1726378AbgIQIKy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 17 Sep 2020 04:10:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55542 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726415AbgIQIFJ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Sep 2020 04:05:09 -0400
+Received: from mail-wm1-x343.google.com (mail-wm1-x343.google.com [IPv6:2a00:1450:4864:20::343])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45BB5C061221
+        for <linux-ide@vger.kernel.org>; Thu, 17 Sep 2020 01:03:40 -0700 (PDT)
+Received: by mail-wm1-x343.google.com with SMTP id y15so1052114wmi.0
+        for <linux-ide@vger.kernel.org>; Thu, 17 Sep 2020 01:03:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=netronome-com.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=TUShtxADeMIRUv08jDyFnIdO2h4AVdi1g89uLOtrWXw=;
+        b=Xm9muXpLMfdw+3JTaQ5+6nxJDSneO0K8th2wgQ0VLh2VI2BmK+XWoQ9cDtIn8+KaRJ
+         B45Xbntr5JjNU8mF7nIZd8VP+CTHviEtF1Um5VazOhr6GEQCgh9bbRNIM6C+XWioNjmk
+         ImuOo8Gi8eD0FtSQ7hHZ1yPAo82BLFHJwGGg0UxKCYs0oMSSpMWIe45dJUN+DzUELaKQ
+         JzvvcS8KVPQMZJTfgm/lLBewbBl9UGKGHM3XV6hYGQwunOqgCSfJKO8sQaLl1M6X9BRD
+         K+XM2hJttDJQqNZl5Xftk9yd2fnhmTZR2ol6vfSH0itoQkT2+o/FcX7saxpuLl0f47l5
+         EzpA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=c5dLo9Kgntqb2r7/kw4ayfhfchq2BsY83K9yWHWtwYg=;
-        b=JG1PE4Ud/q3wwVD+BPsrSM/E284sfXjY2F2y2fyHvp9tRbR1kelKB4ZlvxLB17dOca
-         7Mv4i4l2LeLGVre7CsxK5Kp6rkvoV4gp6nwfhXyJWCNIYzsC3oAGN/3T/rz7NQQDlF3H
-         GjwyyftZaZ4Px4AZrmeL5cUuI2spNjiXNHoNgIddvluFRjmW83KA7v3AWc5iePGYiwgG
-         J7O9nyZit8sV5Vqv8qqHURCwCluiBwslNQ7JNAYXku1WI6ZV5r+VwvGOmnOtkTzF2OYC
-         GWC4CKHD29Zi4dwsqzapDrkpKhOA4uWDrNVJB29rx9ZUqcZHBaa7ecWaAnu6YzPJ+Sn1
-         dHdA==
-X-Gm-Message-State: AOAM533QghB1/71E6C42gltaza/OLyZ2lncu0H+Rnzwpb5IvDB6K+KSL
-        AH28lHOibZ0DkVzXYysmAAnjCMZE5DNIEI5WVAs=
-X-Google-Smtp-Source: ABdhPJxj7P2HrhjOvh4TG5v9UOpymbOx9ps2COHNP9nEXuV1eIH9lwZzeqWhi9pNEP1wyeafL0OLbh6Ui8XT+9f26/Q=
-X-Received: by 2002:a05:6830:1008:: with SMTP id a8mr17597554otp.107.1600329926543;
- Thu, 17 Sep 2020 01:05:26 -0700 (PDT)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=TUShtxADeMIRUv08jDyFnIdO2h4AVdi1g89uLOtrWXw=;
+        b=AJJqSdzjhxZmSYSOFWeicpeLS9tSjCHNDxKdSF9pZTPava5U1fpV3Xmy+fverpizef
+         CYpTlhpq/EeGTdzfBZM0AgG9mi57crxcq2gNF8iFj9fftA6IsuuQpuBYN09QdObagNmp
+         FDj1tpA43jhn+RPukPeOLLUbDDemFtfe+G3EtjeLviHMH0xiU1AVfz7evhBPinbm9jsS
+         tRC1CXngz/fR+0jUPPgjqOSPSau/2jnLJY9AXYWd/DTibacz/UFI8IpmurItpKaatrr3
+         Cmy3VkbK6QuEGSsqm+gl9+YYPzy7iNjXFMQ4oeFFh0L0StvnyDLMcZ80HN60uJOGxfiR
+         Kv7g==
+X-Gm-Message-State: AOAM532l3yccVLrD+bBDEw5DgxTo3s8qAfr8XK84qJz7fEbSMleEU9Hs
+        QEeeQiLhxeAsd1PkntlG7T2JOw==
+X-Google-Smtp-Source: ABdhPJzTwzfeJOnCQh65prZummqH9JR09Yxja+zvv2OTSAZpPcom4k7xuvXSyH3Yv50qn/8+2aIWyQ==
+X-Received: by 2002:a1c:e256:: with SMTP id z83mr8793930wmg.33.1600329817598;
+        Thu, 17 Sep 2020 01:03:37 -0700 (PDT)
+Received: from netronome.com ([2001:982:756:703:d63d:7eff:fe99:ac9d])
+        by smtp.gmail.com with ESMTPSA id a13sm9836030wme.26.2020.09.17.01.03.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 17 Sep 2020 01:03:36 -0700 (PDT)
+Date:   Thu, 17 Sep 2020 10:03:35 +0200
+From:   Simon Horman <simon.horman@netronome.com>
+To:     Joe Perches <joe@perches.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Jiri Kosina <trivial@kernel.org>,
+        Kees Cook <kees.cook@canonical.com>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        linux-arm-kernel@lists.infradead.org, kvmarm@lists.cs.columbia.edu,
+        linux-mips@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-crypto@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org,
+        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        nouveau@lists.freedesktop.org, linux-input@vger.kernel.org,
+        linux-i2c@vger.kernel.org, linux-rdma@vger.kernel.org,
+        iommu@lists.linux-foundation.org, dm-devel@redhat.com,
+        linux-media@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-mtd@lists.infradead.org, intel-wired-lan@lists.osuosl.org,
+        oss-drivers@netronome.com, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        linux-nvme@lists.infradead.org, linux-pm@vger.kernel.org,
+        linux-rtc@vger.kernel.org, linux-scsi@vger.kernel.org,
+        storagedev@microchip.com, sparclinux@vger.kernel.org,
+        linux-serial@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-parisc@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        linux-afs@lists.infradead.org, ceph-devel@vger.kernel.org,
+        linux-nfs@vger.kernel.org, bpf@vger.kernel.org,
+        dccp@vger.kernel.org, netfilter-devel@vger.kernel.org,
+        coreteam@netfilter.org, linux-sctp@vger.kernel.org,
+        alsa-devel <alsa-devel@alsa-project.org>
+Subject: Re: [oss-drivers] [trivial PATCH] treewide: Convert switch/case
+ fallthrough; to break;
+Message-ID: <20200917080334.GB5769@netronome.com>
+References: <e6387578c75736d61b2fe70d9783d91329a97eb4.camel@perches.com>
 MIME-Version: 1.0
-References: <1600255098-21411-1-git-send-email-yoshihiro.shimoda.uh@renesas.com>
- <CAMuHMdXo6nRhR0hUB0iNvdZSsg1BCb9gDH7u+Z5+SNvmEfdtJg@mail.gmail.com> <TY2PR01MB36924032D54CCB7718F950EFD83E0@TY2PR01MB3692.jpnprd01.prod.outlook.com>
-In-Reply-To: <TY2PR01MB36924032D54CCB7718F950EFD83E0@TY2PR01MB3692.jpnprd01.prod.outlook.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Thu, 17 Sep 2020 10:05:15 +0200
-Message-ID: <CAMuHMdVje8bjH0E4pVUMs7+Q0QhCRw86WAiKGwBBW3G-NxrEDg@mail.gmail.com>
-Subject: Re: [PATCH RFC] ata: sata-rcar: Fix .dma_boundary for WRITE DMA EXT
- timeout issue
-To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        Sergei Shtylyov <sergei.shtylyov@gmail.com>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e6387578c75736d61b2fe70d9783d91329a97eb4.camel@perches.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Shimoda-san,
+On Wed, Sep 09, 2020 at 01:06:39PM -0700, Joe Perches wrote:
+> fallthrough to a separate case/default label break; isn't very readable.
+> 
+> Convert pseudo-keyword fallthrough; statements to a simple break; when
+> the next label is case or default and the only statement in the next
+> label block is break;
+> 
+> Found using:
+> 
+> $ grep-2.5.4 -rP --include=*.[ch] -n "fallthrough;(\s*(case\s+\w+|default)\s*:\s*){1,7}break;" *
+> 
+> Miscellanea:
+> 
+> o Move or coalesce a couple label blocks above a default: block.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-On Thu, Sep 17, 2020 at 10:00 AM Yoshihiro Shimoda
-<yoshihiro.shimoda.uh@renesas.com> wrote:
-> > From: Geert Uytterhoeven, Sent: Wednesday, September 16, 2020 8:48 PM
-> > On Wed, Sep 16, 2020 at 1:27 PM Yoshihiro Shimoda
-> > <yoshihiro.shimoda.uh@renesas.com> wrote:
-> > > When we wrote data to an SATA HDD, the following timeout issue
-> > > happened after the commit 429120f3df2d ("block: fix splitting
-> > > segments on boundary masks") was applied:
-> > >
-> > >     # dd if=/dev/urandom of=/mnt/de1/file1-1024M bs=1M count=1024
-> > >     ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-> > >     ata1.00: failed command: WRITE DMA EXT
-> > >     ata1.00: cmd 35/00:00:00:e6:0c/00:0a:00:00:00/e0 tag 0 dma 1310720 out
-> > >     res 40/00:01:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> > >     ata1.00: status: { DRDY }
-> > >
-> > > Since the commit changed get_max_segment_size()'s behavior,
-> > > unexpected behavior happens if .dma_boundary of this sata-rcar driver
-> > > is 0x1ffffffe in somewhere (my guess).
-> > >
-> > > By the way, the commit 8bfbeed58665 ("sata_rcar: correct
-> > > 'sata_rcar_sht'") changed the .dma_boundary as 0x1ffffffe, but this
-> > > number is related to ATAPI_DMA_TRANS_CNT register. So, we should set
-> > > the .dma_boundary as ATA_DMA_BOUNDARY (0xffff), and set
-> > > .max_segment_size to min(0x1ffffffe, dma_max_mapping_size()).
-> > >
-> > > After applied this, the timeout issue disappeared.
-> > >
-> > > Fixes: 8bfbeed58665 ("sata_rcar: correct 'sata_rcar_sht'")
-> > > Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> >
-> > Thanks for your patch!
-> >
-> > > ---
-> > >  As I wrote the commit description, I couldn't find why the issue
-> > > was related to the .dma_boundary. So, I marked RFC on this patch.
-> > > I would appreciate it if you would give me some advice.
-> >
-> > There's also "[PATCH v2] ata: sata_rcar: Fix DMA boundary mask"
-> > (https://lore.kernel.org/linux-ide/20200811081712.4981-1-geert+renesas@glider.be/)
-> >
-> > Is this related?
-> > Does my patch fix your issue, too?
->
-> Thank you for the information!
-> Your patch fixed my issue too. So, I think my patch should be dropped.
+...
 
-Thanks for testing!
+> diff --git a/drivers/net/ethernet/netronome/nfp/nfpcore/nfp6000_pcie.c b/drivers/net/ethernet/netronome/nfp/nfpcore/nfp6000_pcie.c
+> index 252fe06f58aa..1d5b87079104 100644
+> --- a/drivers/net/ethernet/netronome/nfp/nfpcore/nfp6000_pcie.c
+> +++ b/drivers/net/ethernet/netronome/nfp/nfpcore/nfp6000_pcie.c
+> @@ -345,7 +345,7 @@ static int matching_bar(struct nfp_bar *bar, u32 tgt, u32 act, u32 tok,
+>  		baract = NFP_CPP_ACTION_RW;
+>  		if (act == 0)
+>  			act = NFP_CPP_ACTION_RW;
+> -		fallthrough;
+> +		break;
+>  	case NFP_PCIE_BAR_PCIE2CPP_MapType_FIXED:
+>  		break;
+>  	default:
 
-Can I add your Tested-by?
+This is a cascading fall-through handling all map types.
+I don't think this change improves readability.
 
-Gr{oetje,eeting}s,
-
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+...
