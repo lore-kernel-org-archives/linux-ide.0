@@ -1,106 +1,112 @@
-Return-Path: <SRS0=B3X7=C2=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=E8D3=C3=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C4A7C43468
-	for <linux-ide@archiver.kernel.org>; Thu, 17 Sep 2020 20:05:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8D1BC43463
+	for <linux-ide@archiver.kernel.org>; Fri, 18 Sep 2020 02:23:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6837120665
-	for <linux-ide@archiver.kernel.org>; Thu, 17 Sep 2020 20:05:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9038823119
+	for <linux-ide@archiver.kernel.org>; Fri, 18 Sep 2020 02:23:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600395821;
+	bh=3YycbV/jtxrHb7pwKbGEgjIF8VqDjyWqUTo7sE4e3jk=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=W7qqmLgZ2D+Kkm54nQOBp23uJgKgQx/DWN6n2AeqFMj34JEn6df0THx62ms7otKdG
+	 bSbhEk0FCE32lYGsmfbHdtF76Se4bu1Hr4mMgbHuIp27ubabeatua2bsHefZtx/qqi
+	 PtfRvBD3MzwgOPW5ODzDNIUiHcpHj8MbS0TOAi90=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726548AbgIQUFe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 17 Sep 2020 16:05:34 -0400
-Received: from mga06.intel.com ([134.134.136.31]:35244 "EHLO mga06.intel.com"
+        id S1726333AbgIRCXl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 17 Sep 2020 22:23:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46880 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726438AbgIQUFc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 17 Sep 2020 16:05:32 -0400
-IronPort-SDR: 1EqDDV9SWySMMXQjgrHW1/Tq43ZTXe22s50bgNybd15hjg4bWdlaVn0ZUNNKZFGLILKPh0ZVw+
- 9up+rZjLo4DQ==
-X-IronPort-AV: E=McAfee;i="6000,8403,9747"; a="221336979"
-X-IronPort-AV: E=Sophos;i="5.77,271,1596524400"; 
-   d="scan'208";a="221336979"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Sep 2020 12:40:16 -0700
-IronPort-SDR: OJtaUmUU2VRk9KtKnU2JOdZ0Wx6lNOu+0+CFBjlBeB4odozE5Gxp9wTpGmmaUJi2k6Nfsj2iiR
- 1ryN5FpIrCvQ==
-X-IronPort-AV: E=Sophos;i="5.77,271,1596524400"; 
-   d="scan'208";a="483882946"
-Received: from jekeller-mobl1.amr.corp.intel.com (HELO [10.212.151.155]) ([10.212.151.155])
-  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Sep 2020 12:40:13 -0700
-Subject: Re: [trivial PATCH] treewide: Convert switch/case fallthrough; to
- break;
-To:     Keith Busch <kbusch@kernel.org>, Joe Perches <joe@perches.com>
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        Jiri Kosina <trivial@kernel.org>,
-        Kees Cook <kees.cook@canonical.com>,
-        Nick Desaulniers <ndesaulniers@google.com>,
-        linux-arm-kernel@lists.infradead.org, kvmarm@lists.cs.columbia.edu,
-        linux-mips@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org,
-        intel-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-        nouveau@lists.freedesktop.org, linux-input@vger.kernel.org,
-        linux-i2c@vger.kernel.org, linux-rdma@vger.kernel.org,
-        iommu@lists.linux-foundation.org, dm-devel@redhat.com,
-        linux-media@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-mtd@lists.infradead.org, intel-wired-lan@lists.osuosl.org,
-        oss-drivers@netronome.com, linux-usb@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org,
-        linux-nvme@lists.infradead.org, linux-pm@vger.kernel.org,
-        linux-rtc@vger.kernel.org, linux-scsi@vger.kernel.org,
-        storagedev@microchip.com, sparclinux@vger.kernel.org,
-        linux-serial@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-parisc@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        linux-afs@lists.infradead.org, ceph-devel@vger.kernel.org,
-        linux-nfs@vger.kernel.org, bpf@vger.kernel.org,
-        dccp@vger.kernel.org, netfilter-devel@vger.kernel.org,
-        coreteam@netfilter.org, linux-sctp@vger.kernel.org,
-        alsa-devel <alsa-devel@alsa-project.org>
-References: <e6387578c75736d61b2fe70d9783d91329a97eb4.camel@perches.com>
- <20200909205558.GA3384631@dhcp-10-100-145-180.wdl.wdc.com>
-From:   Jacob Keller <jacob.e.keller@intel.com>
-Organization: Intel Corporation
-Message-ID: <321069c8-a4c1-56ff-49fb-4c2bce1e6352@intel.com>
-Date:   Thu, 17 Sep 2020 12:40:13 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.2.2
+        id S1728928AbgIRCQu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 17 Sep 2020 22:16:50 -0400
+Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2E4F22396E;
+        Fri, 18 Sep 2020 02:16:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600395409;
+        bh=3YycbV/jtxrHb7pwKbGEgjIF8VqDjyWqUTo7sE4e3jk=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=hFKO6VQ1mZ8S9gz2aDZTxDCuMPCim06M00DZPPeyDF6xYUGwPuw0tCQPcVLe63OvL
+         m6vAdcx+9b/b61Ns+/I7DIDu9o2RpHsIbUMo/ZEhhV4fPx/aPXg50s72eF4rOvW1tj
+         qLa6XNiu1E9HnFC7FXM98IFhtVq5mxU56qWqJOBE=
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Jiri Slaby <jslaby@suse.cz>, Jens Axboe <axboe@kernel.dk>,
+        linux-ide@vger.kernel.org,
+        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+        Sasha Levin <sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 05/64] ata: sata_mv, avoid trigerrable BUG_ON
+Date:   Thu, 17 Sep 2020 22:15:44 -0400
+Message-Id: <20200918021643.2067895-5-sashal@kernel.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20200918021643.2067895-1-sashal@kernel.org>
+References: <20200918021643.2067895-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20200909205558.GA3384631@dhcp-10-100-145-180.wdl.wdc.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+From: Jiri Slaby <jslaby@suse.cz>
 
+[ Upstream commit e9f691d899188679746eeb96e6cb520459eda9b4 ]
 
-On 9/9/2020 1:55 PM, Keith Busch wrote:
-> On Wed, Sep 09, 2020 at 01:06:39PM -0700, Joe Perches wrote:
->> diff --git a/crypto/tcrypt.c b/crypto/tcrypt.c
->> index eea0f453cfb6..8aac5bc60f4c 100644
->> --- a/crypto/tcrypt.c
->> +++ b/crypto/tcrypt.c
->> @@ -2464,7 +2464,7 @@ static int do_test(const char *alg, u32 type, u32 mask, int m, u32 num_mb)
->>  		test_hash_speed("streebog512", sec,
->>  				generic_hash_speed_template);
->>  		if (mode > 300 && mode < 400) break;
->> -		fallthrough;
->> +		break;
->>  	case 399:
->>  		break;
-> 
-> Just imho, this change makes the preceding 'if' look even more
-> pointless. Maybe the fallthrough was a deliberate choice? Not that my
-> opinion matters here as I don't know this module, but it looked a bit
-> odd to me.
-> 
+There are several reports that the BUG_ON on unsupported command in
+mv_qc_prep can be triggered under some circumstances:
+https://bugzilla.suse.com/show_bug.cgi?id=1110252
+https://serverfault.com/questions/888897/raid-problems-after-power-outage
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1652185
+https://bugs.centos.org/view.php?id=14998
 
-Yea this does look very odd..
+Let sata_mv handle the failure gracefully: warn about that incl. the
+failed command number and return an AC_ERR_INVALID error. We can do that
+now thanks to the previous patch.
+
+Remove also the long-standing FIXME.
+
+[v2] use %.2x as commands are defined as hexa.
+
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: linux-ide@vger.kernel.org
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/ata/sata_mv.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 729f26322095e..c24bbdb3f76c8 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -2113,12 +2113,10 @@ static void mv_qc_prep(struct ata_queued_cmd *qc)
+ 		 * non-NCQ mode are: [RW] STREAM DMA and W DMA FUA EXT, none
+ 		 * of which are defined/used by Linux.  If we get here, this
+ 		 * driver needs work.
+-		 *
+-		 * FIXME: modify libata to give qc_prep a return value and
+-		 * return error here.
+ 		 */
+-		BUG_ON(tf->command);
+-		break;
++		ata_port_err(ap, "%s: unsupported command: %.2x\n", __func__,
++				tf->command);
++		return AC_ERR_INVALID;
+ 	}
+ 	mv_crqb_pack_cmd(cw++, tf->nsect, ATA_REG_NSECT, 0);
+ 	mv_crqb_pack_cmd(cw++, tf->hob_lbal, ATA_REG_LBAL, 0);
+-- 
+2.25.1
+
