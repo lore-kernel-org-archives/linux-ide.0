@@ -2,91 +2,129 @@ Return-Path: <SRS0=E8D3=C3=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDF1DC43463
-	for <linux-ide@archiver.kernel.org>; Fri, 18 Sep 2020 06:26:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C65BC43463
+	for <linux-ide@archiver.kernel.org>; Fri, 18 Sep 2020 08:53:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5374020DD4
-	for <linux-ide@archiver.kernel.org>; Fri, 18 Sep 2020 06:26:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E76D621973
+	for <linux-ide@archiver.kernel.org>; Fri, 18 Sep 2020 08:53:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="cNndsfLt"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="W/z/lqMI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726149AbgIRG0d (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 18 Sep 2020 02:26:33 -0400
-Received: from ozlabs.org ([203.11.71.1]:50781 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725886AbgIRG0c (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 18 Sep 2020 02:26:32 -0400
-X-Greylist: delayed 66312 seconds by postgrey-1.27 at vger.kernel.org; Fri, 18 Sep 2020 02:26:31 EDT
-Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mail.ozlabs.org (Postfix) with ESMTPSA id 4Bt3ks3H7qz9sRK;
-        Fri, 18 Sep 2020 16:26:28 +1000 (AEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=ellerman.id.au;
-        s=201909; t=1600410390;
-        bh=66IDvfqYhq/cJ6uDCcpX38A3C0anTkFpn4s2F7mfs2w=;
-        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-        b=cNndsfLtGUdLGgOoCrinazk+VMr1KXMXy9dd2TGqt3E9JdBOhBYJ9X5DDzGCzTxw/
-         QIBS9Cqga2ubKLdDl76EuVj5250J8LufnfWTYIeNCmT4Jz9rV28Vg5Uin5Bz6v+0nN
-         +KmaGQDIox/B7y/w4B5YVcuVN8slvuESXvFFkTWIyHM3we4F+F8Hg1uU57M9LaK9XG
-         b6vTgFe5FzONVQJC1b2aDgb3L7MJqhX3VvYWYqsnmy4ivzdESlYSSb4VvSsLjLe+Pq
-         ilMpwno0Ic1x6jOw275XLuzCUUyx6rVicKSbOW/lkIof4m14Pp8g0PMDemepiLYQJI
-         xLwZlysNogciQ==
-From:   Michael Ellerman <mpe@ellerman.id.au>
-To:     David Miller <davem@davemloft.net>
-Cc:     wangwensheng4@huawei.com, benh@kernel.crashing.org,
-        paulus@samba.org, linux-ide@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH -next] ide: Fix symbol undeclared warnings
-In-Reply-To: <20200917.124445.1786301672047605176.davem@davemloft.net>
-References: <20200916092333.77158-1-wangwensheng4@huawei.com> <87zh5oobnn.fsf@mpe.ellerman.id.au> <20200917.124445.1786301672047605176.davem@davemloft.net>
-Date:   Fri, 18 Sep 2020 16:26:28 +1000
-Message-ID: <87ft7fob1n.fsf@mpe.ellerman.id.au>
+        id S1726306AbgIRIw6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 18 Sep 2020 04:52:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60346 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726009AbgIRIw6 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 18 Sep 2020 04:52:58 -0400
+Received: from mail-lj1-x244.google.com (mail-lj1-x244.google.com [IPv6:2a00:1450:4864:20::244])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8562C06174A;
+        Fri, 18 Sep 2020 01:52:57 -0700 (PDT)
+Received: by mail-lj1-x244.google.com with SMTP id n25so4442122ljj.4;
+        Fri, 18 Sep 2020 01:52:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:organization:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=asjClMEVQUugwRnuiCaRpILyUTB6qCyLua353zU0XaA=;
+        b=W/z/lqMIRm38/rH5hoC1y6v6zRQO1N/LODV5dyUEiJu3Z0Ysqlp/3+8L1e9rLDMk2m
+         sBItJh8qIyGYm03eIK0hTdBoxXVBw4cghdDiPSwhWAZoWgfzs33gNea15pJClLwx2PyP
+         hHZXDHkjh03U3WZVcKBTqEHufGASOVouVB4m7BE5RIoKEh2joN3kIYcDTDJq0Chrbk2i
+         J/NdgDEshJe1yWvUgaAnM4jfYus4kL1oPcAFg4fuHOSe5l7mwswJJ6COScNBGhNcGGPN
+         q/gR4vXJlWd2ZXlKnLgsRNsC12UFA86our5/zZc8O5yxXBZ6W0BJN8M0aPB9fejtttXs
+         Ecww==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:organization
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=asjClMEVQUugwRnuiCaRpILyUTB6qCyLua353zU0XaA=;
+        b=bPGMdLSNGpN+eR9u0Fl1QDq/0v79LoG8B97Tw1jVC8CNpOvFs8jWZuY4atGcXXcyfe
+         s+OFC8sn/4DOnzifzBczsa9rC7ZwEf7pMNEbAN545w2VVBbQbqwPGMPw2t4clTNFPw5I
+         eQFp30PFhmnGQGoa0vKzhwfFyH1HhmjcEdSXBonhaAF8IrA82MvORwueUdl9vvZKpt+4
+         YY47lzll5sQ8CMO78s7UKjRthA9CvUd9hfOmHfZzOaxIZwHekwL0HnjFhhv0xEAnO32k
+         H8XAs3VNwCgraBWmrfu1RUgQoavdjfXdg8P0DEen5FuWug1pLvdKHJbrmIibj1Oxp8hh
+         hStg==
+X-Gm-Message-State: AOAM531X8clfpj3CiIKTNYJmczYVSI3k8dz6gF1VICKfVCd9QRKmjQNq
+        xV7PQ9i9jXLH3TM78Jk8AEo1eJ2NV4BV+A==
+X-Google-Smtp-Source: ABdhPJy1RlFuj0xDkan2bS2ZV4OPmRHWdA9YyD0WopBAfX+NGu2O9O4BkfmuLbcTQkb9zURbzOO0Aw==
+X-Received: by 2002:a2e:a48c:: with SMTP id h12mr12544381lji.221.1600419176113;
+        Fri, 18 Sep 2020 01:52:56 -0700 (PDT)
+Received: from ?IPv6:2a00:1fa0:44fb:767f:35b0:3244:6cdc:c4a2? ([2a00:1fa0:44fb:767f:35b0:3244:6cdc:c4a2])
+        by smtp.gmail.com with ESMTPSA id u1sm459692lfu.24.2020.09.18.01.52.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 18 Sep 2020 01:52:55 -0700 (PDT)
+Subject: Re: [PATCH 02/14] block: switch register_disk to use
+ blkdev_get_by_dev
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     Josef Bacik <josef@toxicpanda.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Stefan Haberland <sth@linux.ibm.com>,
+        Jan Hoeppner <hoeppner@linux.ibm.com>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Pavel Machek <pavel@ucw.cz>, Len Brown <len.brown@intel.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-kernel@vger.kernel.org, nbd@other.debian.org,
+        linux-ide@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com,
+        linux-pm@vger.kernel.org, linux-mm@kvack.org,
+        linux-block@vger.kernel.org
+References: <20200917165720.3285256-1-hch@lst.de>
+ <20200917165720.3285256-3-hch@lst.de>
+From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Organization: Brain-dead Software
+Message-ID: <091931b1-eb9c-e45e-c9e8-501554618508@gmail.com>
+Date:   Fri, 18 Sep 2020 11:52:39 +0300
+User-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20200917165720.3285256-3-hch@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-David Miller <davem@davemloft.net> writes:
-> From: Michael Ellerman <mpe@ellerman.id.au>
-> Date: Thu, 17 Sep 2020 22:01:00 +1000
->
->> Wang Wensheng <wangwensheng4@huawei.com> writes:
->>> Build the object file with `C=2` and get the following warnings:
->>> make allmodconfig ARCH=powerpc CROSS_COMPILE=powerpc64-linux-gnu-
->>> make C=2 drivers/ide/pmac.o ARCH=powerpc64
->>> CROSS_COMPILE=powerpc64-linux-gnu-
->>>
->>> drivers/ide/pmac.c:228:23: warning: symbol 'mdma_timings_33' was not
->>> declared. Should it be static?
->>> drivers/ide/pmac.c:241:23: warning: symbol 'mdma_timings_33k' was not
->>> declared. Should it be static?
->>> drivers/ide/pmac.c:254:23: warning: symbol 'mdma_timings_66' was not
->>> declared. Should it be static?
->>> drivers/ide/pmac.c:272:3: warning: symbol 'kl66_udma_timings' was not
->>> declared. Should it be static?
->>> drivers/ide/pmac.c:1418:12: warning: symbol 'pmac_ide_probe' was not
->>> declared. Should it be static?
->>>
->>> Signed-off-by: Wang Wensheng <wangwensheng4@huawei.com>
->>> ---
->>>  drivers/ide/pmac.c | 10 +++++-----
->>>  1 file changed, 5 insertions(+), 5 deletions(-)
->> 
->> TIL davem maintains IDE?
->> 
->> But I suspect he isn't that interested in this powerpc only driver, so
->> I'll grab this.
->
-> I did have it in my queue, but if you want to take it that's fine too :)
+Hello!
 
-That's OK, if you've got it already you take it. Thanks.
+On 17.09.2020 19:57, Christoph Hellwig wrote:
 
-cheers
+> Use blkdev_get_by_dev instead of open coding it using bdget_disk +
+> blkdev_get.
+
+    I don't see where you are removing bdget_disk() call (situated just before
+the below code?)...
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>   block/genhd.c | 7 +++----
+>   1 file changed, 3 insertions(+), 4 deletions(-)
+> 
+> diff --git a/block/genhd.c b/block/genhd.c
+> index 7b56203c90a303..f778716fac6cde 100644
+> --- a/block/genhd.c
+> +++ b/block/genhd.c
+> @@ -732,10 +732,9 @@ static void register_disk(struct device *parent, struct gendisk *disk,
+>   		goto exit;
+>   
+>   	set_bit(GD_NEED_PART_SCAN, &disk->state);
+> -	err = blkdev_get(bdev, FMODE_READ, NULL);
+> -	if (err < 0)
+> -		goto exit;
+> -	blkdev_put(bdev, FMODE_READ);
+> +	bdev = blkdev_get_by_dev(disk_devt(disk), FMODE_READ, NULL);
+> +	if (!IS_ERR(bdev))
+> +		blkdev_put(bdev, FMODE_READ);
+>   
+>   exit:
+>   	/* announce disk after possible partitions are created */
+
+MBR, Sergei
