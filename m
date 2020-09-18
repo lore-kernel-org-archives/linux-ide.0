@@ -2,72 +2,110 @@ Return-Path: <SRS0=E8D3=C3=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2C13C43463
-	for <linux-ide@archiver.kernel.org>; Fri, 18 Sep 2020 12:49:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6518C43464
+	for <linux-ide@archiver.kernel.org>; Fri, 18 Sep 2020 16:02:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A01B12311A
-	for <linux-ide@archiver.kernel.org>; Fri, 18 Sep 2020 12:49:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 926322388B
+	for <linux-ide@archiver.kernel.org>; Fri, 18 Sep 2020 16:02:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600444936;
+	bh=uFY2Z4rDMFVgVfrtk/yGyKngm39+CPRRFFq+wyIxitM=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=uNQ3BTXJGS1DS6Lgd23WwRvc9QYkC3ZPpK0bqbLENN6l8mPlEHPXHUnB4yHf7k/E9
+	 B8cDwRuq9jx8OxJ/0yUD6joO+Af5/DwJX7FZmqXdXTg2/0qeN7nRQYTplKl3j6Tuo8
+	 Tcu9J3nqd8W6ZGz13+L4TslTbXY3htJtex8qCKEs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726121AbgIRMt5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 18 Sep 2020 08:49:57 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:55596 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726064AbgIRMt5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 18 Sep 2020 08:49:57 -0400
-Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 1535C833ACD271E2DAB4;
-        Fri, 18 Sep 2020 20:49:55 +0800 (CST)
-Received: from huawei.com (10.90.53.225) by DGGEMS409-HUB.china.huawei.com
- (10.3.19.209) with Microsoft SMTP Server id 14.3.487.0; Fri, 18 Sep 2020
- 20:49:51 +0800
-From:   Qilong Zhang <zhangqilong3@huawei.com>
-To:     <davem@davemloft.net>
-CC:     <linux-ide@vger.kernel.org>
-Subject: [PATCH -next] ide: add the return pointer check for plat_ide_probe
-Date:   Fri, 18 Sep 2020 20:56:45 +0800
-Message-ID: <20200918125645.17309-1-zhangqilong3@huawei.com>
-X-Mailer: git-send-email 2.26.0.106.g9fadedd
+        id S1726168AbgIRQCM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 18 Sep 2020 12:02:12 -0400
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:33602 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726115AbgIRQCL (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 18 Sep 2020 12:02:11 -0400
+Received: by mail-oi1-f196.google.com with SMTP id m7so7616436oie.0;
+        Fri, 18 Sep 2020 09:02:11 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=CLWLadygFzbacUrStlzsUwiQts54prWGYIH+pDEwe0A=;
+        b=dYrQVj2rSXLlWEWNr3I6U+LMUuW6xJDLNKqC4E7FszQEKpmQFodheM4yINYXSj//4h
+         NM1YRX+jum28PBQ41gM6/AMWC6ktoTFS+vbC0ZsBf0C4IZ81/JqC5U2qN3teCiFXUYF5
+         aMclzO4ylo+9ObumQp7O9zxoLga6nGnBAjVLRmBYZpb/W4WDJqFpCAqekLFudl8uIdrm
+         iZUoM+rZjj0dL8lXgqx86r2BiWszlUMFR0hF+gMXinVjoY1ajYGpU2/qz0vmVrtWtfIe
+         8vjRzXOjFrQek3EfiMKb3Z/THPKF02ZimCEIjh1aIrjZpTT3i80ps+NArBlU9whzMuCi
+         Hx5A==
+X-Gm-Message-State: AOAM532srrIyMv6hz9hJYp9Xi/nPRaCXHbVFToX9G1562zLHtuxhlyrr
+        u1M6ZZNVFkSe2LSw/75VDYwvB4h7zT4a159QT1I=
+X-Google-Smtp-Source: ABdhPJygTxTyjBXaRmjiZjnzUB9+LiiCBE3DDYWxmdEXB/AZO3s12ola6t96FwD5p8jaLrRmcTTRjtSYPzdoh/tzvoc=
+X-Received: by 2002:aca:df84:: with SMTP id w126mr10401882oig.103.1600444930764;
+ Fri, 18 Sep 2020 09:02:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.90.53.225]
-X-CFilter-Loop: Reflected
+References: <20200917165720.3285256-1-hch@lst.de> <20200917165720.3285256-14-hch@lst.de>
+In-Reply-To: <20200917165720.3285256-14-hch@lst.de>
+From:   "Rafael J. Wysocki" <rafael@kernel.org>
+Date:   Fri, 18 Sep 2020 18:01:59 +0200
+Message-ID: <CAJZ5v0jAQnEHedZs7kQmfHx4KTw9G1wrObuEpid_m5uVk5qoJQ@mail.gmail.com>
+Subject: Re: [PATCH 13/14] PM: mm: cleanup swsusp_swap_check
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Josef Bacik <josef@toxicpanda.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Stefan Haberland <sth@linux.ibm.com>,
+        Jan Hoeppner <hoeppner@linux.ibm.com>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Pavel Machek <pavel@ucw.cz>, Len Brown <len.brown@intel.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        nbd@other.debian.org,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>, linux-s390@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Linux Memory Management List <linux-mm@kvack.org>,
+        linux-block@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Zhang Qilong <zhangqilong3@huawei.com>
+On Thu, Sep 17, 2020 at 7:39 PM Christoph Hellwig <hch@lst.de> wrote:
+>
+> Use blkdev_get_by_dev instead of bdget + blkdev_get.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-If io map failed in devm_ioremap/devm_ioport_map, base
-or alt_base will be null, it will cause setup port error
-later but it won't be found out in plat_ide_setup_ports.
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Zhang Qilong <zhangqilong3@huawei.com>
----
- drivers/ide/ide_platform.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/ide/ide_platform.c b/drivers/ide/ide_platform.c
-index 91639fd6c276..fdbc565ef142 100644
---- a/drivers/ide/ide_platform.c
-+++ b/drivers/ide/ide_platform.c
-@@ -86,6 +86,11 @@ static int plat_ide_probe(struct platform_device *pdev)
- 			res_alt->start, resource_size(res_alt));
- 	}
- 
-+	if (!base || !alt_base) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
- 	memset(&hw, 0, sizeof(hw));
- 	plat_ide_setup_ports(&hw, base, alt_base, pdata, res_irq->start);
- 	hw.dev = &pdev->dev;
--- 
-2.17.1
-
+> ---
+>  kernel/power/swap.c | 10 ++++------
+>  1 file changed, 4 insertions(+), 6 deletions(-)
+>
+> diff --git a/kernel/power/swap.c b/kernel/power/swap.c
+> index 9d3ffbfe08dbf6..71385bedcc3a49 100644
+> --- a/kernel/power/swap.c
+> +++ b/kernel/power/swap.c
+> @@ -343,12 +343,10 @@ static int swsusp_swap_check(void)
+>                 return res;
+>         root_swap = res;
+>
+> -       hib_resume_bdev = bdget(swsusp_resume_device);
+> -       if (!hib_resume_bdev)
+> -               return -ENOMEM;
+> -       res = blkdev_get(hib_resume_bdev, FMODE_WRITE, NULL);
+> -       if (res)
+> -               return res;
+> +       hib_resume_bdev = blkdev_get_by_dev(swsusp_resume_device, FMODE_WRITE,
+> +                       NULL);
+> +       if (IS_ERR(hib_resume_bdev))
+> +               return PTR_ERR(hib_resume_bdev);
+>
+>         res = set_blocksize(hib_resume_bdev, PAGE_SIZE);
+>         if (res < 0)
+> --
+> 2.28.0
+>
