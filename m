@@ -2,111 +2,91 @@ Return-Path: <SRS0=E8D3=C3=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2379C43465
-	for <linux-ide@archiver.kernel.org>; Fri, 18 Sep 2020 03:14:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDF1DC43463
+	for <linux-ide@archiver.kernel.org>; Fri, 18 Sep 2020 06:26:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A974220678
-	for <linux-ide@archiver.kernel.org>; Fri, 18 Sep 2020 03:14:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600398891;
-	bh=jvnfPHDdaPxwAHl20Cw3pe671NfvaVyJK2dOZjAF6jc=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=0CnOBfDf84tuozlPbnyrlRcjhmYB++gVT/kZvEGSEx1nCu79iyH/0FmObMljcyJ8K
-	 E2oOn0xMVBsKarM+dOEjDNP0R49+AqKISK8m2CJ0PP8F5ay5JSTBAI5cuAwFTEZCms
-	 4icXaJLi6qeCGV+NeDPHdqXk4U7e3qqtla54oB5I=
+	by mail.kernel.org (Postfix) with ESMTP id 5374020DD4
+	for <linux-ide@archiver.kernel.org>; Fri, 18 Sep 2020 06:26:33 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=ellerman.id.au header.i=@ellerman.id.au header.b="cNndsfLt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726868AbgIRDOj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 17 Sep 2020 23:14:39 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46008 "EHLO mail.kernel.org"
+        id S1726149AbgIRG0d (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 18 Sep 2020 02:26:33 -0400
+Received: from ozlabs.org ([203.11.71.1]:50781 "EHLO ozlabs.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726481AbgIRCBo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 17 Sep 2020 22:01:44 -0400
-Received: from sasha-vm.mshome.net (c-73-47-72-35.hsd1.nh.comcast.net [73.47.72.35])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1725886AbgIRG0c (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 18 Sep 2020 02:26:32 -0400
+X-Greylist: delayed 66312 seconds by postgrey-1.27 at vger.kernel.org; Fri, 18 Sep 2020 02:26:31 EDT
+Received: from authenticated.ozlabs.org (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5761F2311A;
-        Fri, 18 Sep 2020 02:01:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600394500;
-        bh=jvnfPHDdaPxwAHl20Cw3pe671NfvaVyJK2dOZjAF6jc=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=loJ1mXslE91oVsGJ3XmPNthlJtFOhYVu4BSvXYBsy5hDHlrgjW3Q0FCMdBMZFokw5
-         oAE7CHAdH15VbSjgQXPusVqs7xvKNwl6OFKly5XpRbTLA/UG+ByxUxfSpfZ9QEsROP
-         ip/WWQb47pTr3Njg4eGj7CmtYRou67A7DhWWSlNg=
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Jiri Slaby <jslaby@suse.cz>, Jens Axboe <axboe@kernel.dk>,
-        linux-ide@vger.kernel.org,
-        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-        Sasha Levin <sashal@kernel.org>
-Subject: [PATCH AUTOSEL 5.4 024/330] ata: sata_mv, avoid trigerrable BUG_ON
-Date:   Thu, 17 Sep 2020 21:56:04 -0400
-Message-Id: <20200918020110.2063155-24-sashal@kernel.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20200918020110.2063155-1-sashal@kernel.org>
-References: <20200918020110.2063155-1-sashal@kernel.org>
+        by mail.ozlabs.org (Postfix) with ESMTPSA id 4Bt3ks3H7qz9sRK;
+        Fri, 18 Sep 2020 16:26:28 +1000 (AEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=ellerman.id.au;
+        s=201909; t=1600410390;
+        bh=66IDvfqYhq/cJ6uDCcpX38A3C0anTkFpn4s2F7mfs2w=;
+        h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+        b=cNndsfLtGUdLGgOoCrinazk+VMr1KXMXy9dd2TGqt3E9JdBOhBYJ9X5DDzGCzTxw/
+         QIBS9Cqga2ubKLdDl76EuVj5250J8LufnfWTYIeNCmT4Jz9rV28Vg5Uin5Bz6v+0nN
+         +KmaGQDIox/B7y/w4B5YVcuVN8slvuESXvFFkTWIyHM3we4F+F8Hg1uU57M9LaK9XG
+         b6vTgFe5FzONVQJC1b2aDgb3L7MJqhX3VvYWYqsnmy4ivzdESlYSSb4VvSsLjLe+Pq
+         ilMpwno0Ic1x6jOw275XLuzCUUyx6rVicKSbOW/lkIof4m14Pp8g0PMDemepiLYQJI
+         xLwZlysNogciQ==
+From:   Michael Ellerman <mpe@ellerman.id.au>
+To:     David Miller <davem@davemloft.net>
+Cc:     wangwensheng4@huawei.com, benh@kernel.crashing.org,
+        paulus@samba.org, linux-ide@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH -next] ide: Fix symbol undeclared warnings
+In-Reply-To: <20200917.124445.1786301672047605176.davem@davemloft.net>
+References: <20200916092333.77158-1-wangwensheng4@huawei.com> <87zh5oobnn.fsf@mpe.ellerman.id.au> <20200917.124445.1786301672047605176.davem@davemloft.net>
+Date:   Fri, 18 Sep 2020 16:26:28 +1000
+Message-ID: <87ft7fob1n.fsf@mpe.ellerman.id.au>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Jiri Slaby <jslaby@suse.cz>
+David Miller <davem@davemloft.net> writes:
+> From: Michael Ellerman <mpe@ellerman.id.au>
+> Date: Thu, 17 Sep 2020 22:01:00 +1000
+>
+>> Wang Wensheng <wangwensheng4@huawei.com> writes:
+>>> Build the object file with `C=2` and get the following warnings:
+>>> make allmodconfig ARCH=powerpc CROSS_COMPILE=powerpc64-linux-gnu-
+>>> make C=2 drivers/ide/pmac.o ARCH=powerpc64
+>>> CROSS_COMPILE=powerpc64-linux-gnu-
+>>>
+>>> drivers/ide/pmac.c:228:23: warning: symbol 'mdma_timings_33' was not
+>>> declared. Should it be static?
+>>> drivers/ide/pmac.c:241:23: warning: symbol 'mdma_timings_33k' was not
+>>> declared. Should it be static?
+>>> drivers/ide/pmac.c:254:23: warning: symbol 'mdma_timings_66' was not
+>>> declared. Should it be static?
+>>> drivers/ide/pmac.c:272:3: warning: symbol 'kl66_udma_timings' was not
+>>> declared. Should it be static?
+>>> drivers/ide/pmac.c:1418:12: warning: symbol 'pmac_ide_probe' was not
+>>> declared. Should it be static?
+>>>
+>>> Signed-off-by: Wang Wensheng <wangwensheng4@huawei.com>
+>>> ---
+>>>  drivers/ide/pmac.c | 10 +++++-----
+>>>  1 file changed, 5 insertions(+), 5 deletions(-)
+>> 
+>> TIL davem maintains IDE?
+>> 
+>> But I suspect he isn't that interested in this powerpc only driver, so
+>> I'll grab this.
+>
+> I did have it in my queue, but if you want to take it that's fine too :)
 
-[ Upstream commit e9f691d899188679746eeb96e6cb520459eda9b4 ]
+That's OK, if you've got it already you take it. Thanks.
 
-There are several reports that the BUG_ON on unsupported command in
-mv_qc_prep can be triggered under some circumstances:
-https://bugzilla.suse.com/show_bug.cgi?id=1110252
-https://serverfault.com/questions/888897/raid-problems-after-power-outage
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1652185
-https://bugs.centos.org/view.php?id=14998
-
-Let sata_mv handle the failure gracefully: warn about that incl. the
-failed command number and return an AC_ERR_INVALID error. We can do that
-now thanks to the previous patch.
-
-Remove also the long-standing FIXME.
-
-[v2] use %.2x as commands are defined as hexa.
-
-Signed-off-by: Jiri Slaby <jslaby@suse.cz>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: linux-ide@vger.kernel.org
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/ata/sata_mv.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index bde695a320973..0229b618d0eee 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -2098,12 +2098,10 @@ static void mv_qc_prep(struct ata_queued_cmd *qc)
- 		 * non-NCQ mode are: [RW] STREAM DMA and W DMA FUA EXT, none
- 		 * of which are defined/used by Linux.  If we get here, this
- 		 * driver needs work.
--		 *
--		 * FIXME: modify libata to give qc_prep a return value and
--		 * return error here.
- 		 */
--		BUG_ON(tf->command);
--		break;
-+		ata_port_err(ap, "%s: unsupported command: %.2x\n", __func__,
-+				tf->command);
-+		return AC_ERR_INVALID;
- 	}
- 	mv_crqb_pack_cmd(cw++, tf->nsect, ATA_REG_NSECT, 0);
- 	mv_crqb_pack_cmd(cw++, tf->hob_lbal, ATA_REG_LBAL, 0);
--- 
-2.25.1
-
+cheers
