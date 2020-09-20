@@ -1,68 +1,46 @@
-Return-Path: <SRS0=OQsZ=C4=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=pqlp=C5=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 890D1C43464
-	for <linux-ide@archiver.kernel.org>; Sat, 19 Sep 2020 10:54:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D100EC43463
+	for <linux-ide@archiver.kernel.org>; Sun, 20 Sep 2020 14:08:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C14D208C3
-	for <linux-ide@archiver.kernel.org>; Sat, 19 Sep 2020 10:54:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="q3aT5V6E"
+	by mail.kernel.org (Postfix) with ESMTP id 9678921789
+	for <linux-ide@archiver.kernel.org>; Sun, 20 Sep 2020 14:08:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1600610886;
+	bh=5Nu/Q5V28hWJU3Crt7+FLHDN+lSqZIJn2t8MycJ4Kfc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=eSkqyE9/pBNz3JnrgZhch5NM4Iyvh00nKVfjMNmnAYb0Vetc1sBnN+HyXIFz7ni9Y
+	 i3pILAar4ypjGBUtmKb2qfIcv8MIKPjmikKXOknr3W8XHfaEny8f4Gy7uc7SMlNhu6
+	 4D+jkcIOhWF78KyMJsS9dPVhNzPHIUgAiIZoYKRQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726129AbgISKyc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 19 Sep 2020 06:54:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47338 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726041AbgISKyc (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 19 Sep 2020 06:54:32 -0400
-Received: from mail-yb1-xb41.google.com (mail-yb1-xb41.google.com [IPv6:2607:f8b0:4864:20::b41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D683C0613CE;
-        Sat, 19 Sep 2020 03:54:32 -0700 (PDT)
-Received: by mail-yb1-xb41.google.com with SMTP id s19so6353848ybc.5;
-        Sat, 19 Sep 2020 03:54:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=pzSAC77KGj3b71DFM8b51B+fZYfC1Bsciu342riUU+I=;
-        b=q3aT5V6EYpJSrJl/fZxvehZ9OLp1zFUW4vS7anYCIVy32j7NWiA6qEyJPp+k82RqFP
-         0RcCLeEvdynv7ZL1KsxKuAPjJ3CmL385W0hTKZR3Svfxfq64HyLGOZv7XUxG1gVPiKY4
-         OcxFH/huz5+ZJwenNgGrJiujfVF077N5O7y/pTAEqSD5fVfPZDg0r3vfztI1xzKMhn27
-         /fFkHqgw4wyFop0l/J0qOegfFQsObv+T9uhO1opjkrdYtDjIzInwNF97zfNG12gyugE6
-         rPZISBt5qEfy55VNNc4dP4clg7dPo0hdPZolHWAEWcaS94b//yBekPMElBwzBVvlUdTm
-         GmIA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=pzSAC77KGj3b71DFM8b51B+fZYfC1Bsciu342riUU+I=;
-        b=itS3dXbvk4S1Ldnp/IIMacECrNyZW/WmgOk4BJlkRnhj31zd3fIisrWlb7sa2Tq7D0
-         XezdpcZ8wE7r9azt5c5gvYwFAmsEpdKTWJKagaIjmHtW9XkuuTVbhysf8Q2pSimjzc5e
-         WHzl+gq1iGQQhypALmnVRbpPGYEEZpiVfai52LS2x7hM7ttKwlIF7t3iolaTagj367uG
-         kgbIWlKHevrvD6xjwGIarmMCVhHrxXaSmxecrZhpdLVa3MI3pnOUzyCA76U5AdwZtbka
-         jPiabqUMKmfBMBaacWtxE8JJkYM4dIIAHvixIdGdrxqtOpP5haG7PEWQfEjc+pGC1+ji
-         JfuQ==
-X-Gm-Message-State: AOAM531XdgWFPWEOTN/3l75PFwNKJjjBwgv6lxNpFjBcJL1G0s2iotAp
-        TrLVy4dZ9CAd4Pkac9cOaZCF1BO01avuPhF/o48=
-X-Google-Smtp-Source: ABdhPJw5efc5NhFkTetrZgcf7Z8DzfCZh/tmjP6pUg93tWkSjNZlODD1MWwUBtozQzW7FY/5hEpct+waFEd5OOBoI4k=
-X-Received: by 2002:a25:e811:: with SMTP id k17mr45613290ybd.401.1600512871413;
- Sat, 19 Sep 2020 03:54:31 -0700 (PDT)
-MIME-Version: 1.0
-References: <1594919915-5225-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <1594919915-5225-12-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
-In-Reply-To: <1594919915-5225-12-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
-From:   "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Date:   Sat, 19 Sep 2020 11:54:05 +0100
-Message-ID: <CA+V-a8vuR-7vqxNnrqQ5Ysf3Xjvhp3xRZ33i8+6nEGFLJciT3A@mail.gmail.com>
-Subject: Re: [PATCH 11/20] dt-bindings: usb: renesas,usbhs: Add r8a774e1 support
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+        id S1726311AbgITOIA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 20 Sep 2020 10:08:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34010 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726290AbgITOIA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sun, 20 Sep 2020 10:08:00 -0400
+Received: from localhost (83-86-74-64.cable.dynamic.v4.ziggo.nl [83.86.74.64])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id C05FC21531;
+        Sun, 20 Sep 2020 14:07:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1600610879;
+        bh=5Nu/Q5V28hWJU3Crt7+FLHDN+lSqZIJn2t8MycJ4Kfc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=my7AamuI0IRhPPpTH8LoiNnx+5ToKW4tisR+RYX62c0lCpubPnNVu35GdWXBc2RqE
+         BncX3ahljtB9G9+fJyoK6vnft7jC2L8PKTHeIHBUJ0hLizAQty/w7wk5tOL0RQd562
+         xvfzpRl+X/f0CbrhiyMVi/j5k1OB0ObMhpYkNLEE=
+Date:   Sun, 20 Sep 2020 16:08:24 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
 Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
         Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
         Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
@@ -86,41 +64,38 @@ Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
         alsa-devel <alsa-devel@alsa-project.org>,
         Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
         USB list <linux-usb@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Subject: Re: [PATCH 07/20] dt-bindings: usb: renesas,usb3-peri: Document
+ r8a774e1 support
+Message-ID: <20200920140824.GA2915460@kroah.com>
+References: <1594919915-5225-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <1594919915-5225-8-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <CA+V-a8vJ2n3KEL8P+XmVob2zjoWaX+s4a6c1TV_WoPFkwdkZmA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CA+V-a8vJ2n3KEL8P+XmVob2zjoWaX+s4a6c1TV_WoPFkwdkZmA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Greg,
+On Sat, Sep 19, 2020 at 11:50:07AM +0100, Lad, Prabhakar wrote:
+> Hi Greg,
+> 
+> On Thu, Jul 16, 2020 at 6:19 PM Lad Prabhakar
+> <prabhakar.mahadev-lad.rj@bp.renesas.com> wrote:
+> >
+> > Document RZ/G2H (R8A774E1) SoC bindings.
+> >
+> > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> > Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
+> > ---
+> >  Documentation/devicetree/bindings/usb/renesas,usb3-peri.yaml | 1 +
+> >  1 file changed, 1 insertion(+)
+> >
+> Could you please pick this patch.
 
-On Thu, Jul 16, 2020 at 6:19 PM Lad Prabhakar
-<prabhakar.mahadev-lad.rj@bp.renesas.com> wrote:
->
-> Document RZ/G2H (R8A774E1) SoC bindings.
->
-> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
-> ---
->  Documentation/devicetree/bindings/usb/renesas,usbhs.yaml | 1 +
->  1 file changed, 1 insertion(+)
->
-Could you please pick this patch.
+Don't DT patches have to be acked by a DT maintainer first?
 
-Cheers,
-Prabhakar
+thanks,
 
-> diff --git a/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml b/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml
-> index af4826fb6824..737c1f47b7de 100644
-> --- a/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml
-> +++ b/Documentation/devicetree/bindings/usb/renesas,usbhs.yaml
-> @@ -39,6 +39,7 @@ properties:
->                - renesas,usbhs-r8a774a1 # RZ/G2M
->                - renesas,usbhs-r8a774b1 # RZ/G2N
->                - renesas,usbhs-r8a774c0 # RZ/G2E
-> +              - renesas,usbhs-r8a774e1 # RZ/G2H
->                - renesas,usbhs-r8a7795  # R-Car H3
->                - renesas,usbhs-r8a7796  # R-Car M3-W
->                - renesas,usbhs-r8a77961 # R-Car M3-W+
-> --
-> 2.17.1
->
+greg k-h
