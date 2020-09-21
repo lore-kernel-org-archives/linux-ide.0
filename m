@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E42D0C43466
-	for <linux-ide@archiver.kernel.org>; Mon, 21 Sep 2020 07:21:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 661A1C43464
+	for <linux-ide@archiver.kernel.org>; Mon, 21 Sep 2020 07:21:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A935A206B2
-	for <linux-ide@archiver.kernel.org>; Mon, 21 Sep 2020 07:21:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B1BB206B2
+	for <linux-ide@archiver.kernel.org>; Mon, 21 Sep 2020 07:21:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nPdCKsa1"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nJyzwICo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726365AbgIUHVD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 21 Sep 2020 03:21:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59398 "EHLO
+        id S1726713AbgIUHVN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 21 Sep 2020 03:21:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59344 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726547AbgIUHUR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 21 Sep 2020 03:20:17 -0400
+        with ESMTP id S1726244AbgIUHUF (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 21 Sep 2020 03:20:05 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19D3FC061755;
-        Mon, 21 Sep 2020 00:20:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A877EC061755;
+        Mon, 21 Sep 2020 00:20:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=aWpQMjG3K8ZDoYTgVEFk+u0gKdJASH29rDnXXsv40lc=; b=nPdCKsa1AKYRb5HoCWLpMWnHZ2
-        WCzoTP4XCD0vyRaLIMn5iDFyYAA8Xb8Yddn7TOP2uVGBRq5AP3wK3vqVJFCaxhLv4Kt7Alp2qbVuS
-        tMAx1+5VCDlAsg7CXEFh2DA26uSrVwWRbVDQBrJ9zo8doVfGJfAhpINmK98BIZyZUGrC+K0x32iwX
-        LYBk5b1gPP3CeKR/yE/3rZTm2osd3al6VncOcoX/Ji3imqTpOVc8wf6lO72NvI5Rm+BOqOjrpAnmf
-        Qyb8TYf1JgO1QiDHTK29wr3DOXIzknAMqf5iWxna1LDXl9q6kzsxGQ8z64z9kpKzWizW5DRXA03qw
-        ZdXiB9DQ==;
+        bh=4c25EWJSxFzOYhIibdL7mqfc9EKW4o438wOYFv3WSIE=; b=nJyzwICoscMS1OnpUtBtYQ7nFX
+        zrOubTnDIQpTG4wIJOXTVFCBpFq8F8DcdEYR5X5hbmXv4qjfC/xrg+MFt7A/NeVci81quFPWkJEf4
+        gFXr/UxMIk48XT5dDO+CQyWUijWbcN2zc8mezqQo+ZlTflyQqlvjObLt/hQTkKdKgGDhXxkghJ8Mf
+        OzIFySJIvM9W/cSQfh0s09S/oi7sGjFeMG29gA3JF1RuR/+btHXR0upA+X3f0tfjvkepVtXhNAr7+
+        AQGqPQxQmHzHU6fqfz4NigWmmCCF7oVO6C1w7m2zkq9ciuNoe1T+KiswfBUH+Z7xk+5BlChoMTuWf
+        9cN+jU5A==;
 Received: from p4fdb0c34.dip0.t-ipconnect.de ([79.219.12.52] helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1kKG7J-0003JK-J0; Mon, 21 Sep 2020 07:20:05 +0000
+        id 1kKG78-0003Ed-HS; Mon, 21 Sep 2020 07:19:54 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Josef Bacik <josef@toxicpanda.com>,
@@ -52,9 +52,9 @@ Cc:     Josef Bacik <josef@toxicpanda.com>,
         linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com,
         linux-pm@vger.kernel.org, linux-mm@kvack.org,
         linux-block@vger.kernel.org
-Subject: [PATCH 14/14] block: mark blkdev_get static
-Date:   Mon, 21 Sep 2020 09:19:58 +0200
-Message-Id: <20200921071958.307589-15-hch@lst.de>
+Subject: [PATCH 04/14] pktcdvd: remove the if 0'ed pkt_start_recovery function
+Date:   Mon, 21 Sep 2020 09:19:48 +0200
+Message-Id: <20200921071958.307589-5-hch@lst.de>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200921071958.307589-1-hch@lst.de>
 References: <20200921071958.307589-1-hch@lst.de>
@@ -65,47 +65,98 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-There are no users outside the core block code left now.
+Remove code which has been dead since the initial commit.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/block_dev.c         | 3 +--
- include/linux/blkdev.h | 1 -
- 2 files changed, 1 insertion(+), 3 deletions(-)
+ drivers/block/pktcdvd.c | 67 ++---------------------------------------
+ 1 file changed, 2 insertions(+), 65 deletions(-)
 
-diff --git a/fs/block_dev.c b/fs/block_dev.c
-index 2898d69be6b3e4..6b9d19ffa5af7b 100644
---- a/fs/block_dev.c
-+++ b/fs/block_dev.c
-@@ -1616,7 +1616,7 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, void *holder,
-  * RETURNS:
-  * 0 on success, -errno on failure.
-  */
--int blkdev_get(struct block_device *bdev, fmode_t mode, void *holder)
-+static int blkdev_get(struct block_device *bdev, fmode_t mode, void *holder)
- {
- 	int ret, perm = 0;
- 
-@@ -1637,7 +1637,6 @@ int blkdev_get(struct block_device *bdev, fmode_t mode, void *holder)
- 	bdput(bdev);
- 	return ret;
+diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
+index 17f2e6ff122314..bc870a5f15f77b 100644
+--- a/drivers/block/pktcdvd.c
++++ b/drivers/block/pktcdvd.c
+@@ -1082,65 +1082,6 @@ static void pkt_put_packet_data(struct pktcdvd_device *pd, struct packet_data *p
+ 	}
  }
--EXPORT_SYMBOL(blkdev_get);
  
- /**
-  * blkdev_get_by_path - open a block device by name
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 5bd96fbab9b4c8..14117995091224 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -1975,7 +1975,6 @@ void blkdev_show(struct seq_file *seqf, off_t offset);
- #define BLKDEV_MAJOR_MAX	0
- #endif
+-/*
+- * recover a failed write, query for relocation if possible
+- *
+- * returns 1 if recovery is possible, or 0 if not
+- *
+- */
+-static int pkt_start_recovery(struct packet_data *pkt)
+-{
+-	/*
+-	 * FIXME. We need help from the file system to implement
+-	 * recovery handling.
+-	 */
+-	return 0;
+-#if 0
+-	struct request *rq = pkt->rq;
+-	struct pktcdvd_device *pd = rq->rq_disk->private_data;
+-	struct block_device *pkt_bdev;
+-	struct super_block *sb = NULL;
+-	unsigned long old_block, new_block;
+-	sector_t new_sector;
+-
+-	pkt_bdev = bdget(kdev_t_to_nr(pd->pkt_dev));
+-	if (pkt_bdev) {
+-		sb = get_super(pkt_bdev);
+-		bdput(pkt_bdev);
+-	}
+-
+-	if (!sb)
+-		return 0;
+-
+-	if (!sb->s_op->relocate_blocks)
+-		goto out;
+-
+-	old_block = pkt->sector / (CD_FRAMESIZE >> 9);
+-	if (sb->s_op->relocate_blocks(sb, old_block, &new_block))
+-		goto out;
+-
+-	new_sector = new_block * (CD_FRAMESIZE >> 9);
+-	pkt->sector = new_sector;
+-
+-	bio_reset(pkt->bio);
+-	bio_set_dev(pkt->bio, pd->bdev);
+-	bio_set_op_attrs(pkt->bio, REQ_OP_WRITE, 0);
+-	pkt->bio->bi_iter.bi_sector = new_sector;
+-	pkt->bio->bi_iter.bi_size = pkt->frames * CD_FRAMESIZE;
+-	pkt->bio->bi_vcnt = pkt->frames;
+-
+-	pkt->bio->bi_end_io = pkt_end_io_packet_write;
+-	pkt->bio->bi_private = pkt;
+-
+-	drop_super(sb);
+-	return 1;
+-
+-out:
+-	drop_super(sb);
+-	return 0;
+-#endif
+-}
+-
+ static inline void pkt_set_state(struct packet_data *pkt, enum packet_data_state state)
+ {
+ #if PACKET_DEBUG > 1
+@@ -1357,12 +1298,8 @@ static void pkt_run_state_machine(struct pktcdvd_device *pd, struct packet_data
+ 			break;
  
--int blkdev_get(struct block_device *bdev, fmode_t mode, void *holder);
- struct block_device *blkdev_get_by_path(const char *path, fmode_t mode,
- 		void *holder);
- struct block_device *blkdev_get_by_dev(dev_t dev, fmode_t mode, void *holder);
+ 		case PACKET_RECOVERY_STATE:
+-			if (pkt_start_recovery(pkt)) {
+-				pkt_start_write(pd, pkt);
+-			} else {
+-				pkt_dbg(2, pd, "No recovery possible\n");
+-				pkt_set_state(pkt, PACKET_FINISHED_STATE);
+-			}
++			pkt_dbg(2, pd, "No recovery possible\n");
++			pkt_set_state(pkt, PACKET_FINISHED_STATE);
+ 			break;
+ 
+ 		case PACKET_FINISHED_STATE:
 -- 
 2.28.0
 
