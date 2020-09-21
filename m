@@ -1,101 +1,226 @@
-Return-Path: <SRS0=pqlp=C5=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=ytJ1=C6=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BEB0C43465
-	for <linux-ide@archiver.kernel.org>; Sun, 20 Sep 2020 14:08:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA108C43466
+	for <linux-ide@archiver.kernel.org>; Mon, 21 Sep 2020 07:20:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 270782220C
-	for <linux-ide@archiver.kernel.org>; Sun, 20 Sep 2020 14:08:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1600610903;
-	bh=lu9h9XynfWiHeNchuTVq0VmpBRgsLcjroJ08RriK6FQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=PLpTX73cC6Q89QfZMJr9wb3PRvE9rvcTf9zzqVln4ppDxi7fsLrF45YZuXQGoU/cX
-	 aBmLQ/Sud8TBGHFWt12vVYWyKSyqUoCEKmILqAt1CHPNAu/mVkVlxI1iU3dXHKhM6n
-	 ylRaSBeEDjbPCaejcHxxgnsdNHXBA0KcOu9Xgk9M=
+	by mail.kernel.org (Postfix) with ESMTP id 91FDA207DE
+	for <linux-ide@archiver.kernel.org>; Mon, 21 Sep 2020 07:20:09 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fSYHFcPs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726448AbgITOIW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 20 Sep 2020 10:08:22 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34276 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726290AbgITOIV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sun, 20 Sep 2020 10:08:21 -0400
-Received: from localhost (83-86-74-64.cable.dynamic.v4.ziggo.nl [83.86.74.64])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 0AC2621531;
-        Sun, 20 Sep 2020 14:08:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1600610900;
-        bh=lu9h9XynfWiHeNchuTVq0VmpBRgsLcjroJ08RriK6FQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=tLu+eCAhLmynwau/OgjdgXITj8Uu3Ajyw7j6L6WMWTBtOCQUoxWo96pINqGo/ITMB
-         iLoj0ieZJon4iv+bsf0rstdavCuZDRNOCuxN4mFQi7hrQT+zsjVJE3jrAAC9dKoSX8
-         Rim6zO4acLR631zEPonMI5FK/X8l5Rf9YUot6uBQ=
-Date:   Sun, 20 Sep 2020 16:08:46 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
-        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
-        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Vinod Koul <vkoul@kernel.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Marek Vasut <marek.vasut+renesas@gmail.com>,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Mark Brown <broonie@kernel.org>,
-        Niklas <niklas.soderlund@ragnatech.se>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Magnus Damm <magnus.damm@gmail.com>,
-        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>, linux-ide@vger.kernel.org,
-        dmaengine <dmaengine@vger.kernel.org>,
-        Linux I2C <linux-i2c@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-media <linux-media@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        alsa-devel <alsa-devel@alsa-project.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        USB list <linux-usb@vger.kernel.org>
-Subject: Re: [PATCH 11/20] dt-bindings: usb: renesas,usbhs: Add r8a774e1
- support
-Message-ID: <20200920140846.GB2915460@kroah.com>
-References: <1594919915-5225-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <1594919915-5225-12-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <CA+V-a8vuR-7vqxNnrqQ5Ysf3Xjvhp3xRZ33i8+6nEGFLJciT3A@mail.gmail.com>
+        id S1726495AbgIUHUJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 21 Sep 2020 03:20:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59338 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726297AbgIUHUD (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 21 Sep 2020 03:20:03 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 57681C0613CE;
+        Mon, 21 Sep 2020 00:20:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=ezfq9/HhvT27qSext7o43eb8FqswuribWTEc7lyTkRU=; b=fSYHFcPs1xBTx6DlCTN+c0UOeW
+        9H7k/RWEK8Imd0eiA48EYchqL7yNYPMiHKCsGVCNike9dWCd8Trtri0xrUaSxBkBVyR91kWkFBMJP
+        SslT8GEhgCitfbLj8S1wkOXVSko+xuILWy+zENOdi8z7ABVwnxZyBztMC+Vh7nXE/Ovsa2kK5eTbW
+        rcgqLt/aebYwHsQLXZXX4nqeYcNLJ3CudJnCesUM6qNboCepBAZZdf90bSJd4700MmetfjtIQpqzc
+        F6HDqTV+dK3ORWhs3RoEfO2rxovqjq44xjGAS/hsB6GuhKXHtLZb7HEpdZHOmvEWet+2+9N+qm9yy
+        HCVlLMNA==;
+Received: from p4fdb0c34.dip0.t-ipconnect.de ([79.219.12.52] helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1kKG74-0003EH-OZ; Mon, 21 Sep 2020 07:19:50 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Josef Bacik <josef@toxicpanda.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Stefan Haberland <sth@linux.ibm.com>,
+        Jan Hoeppner <hoeppner@linux.ibm.com>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Pavel Machek <pavel@ucw.cz>, Len Brown <len.brown@intel.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-kernel@vger.kernel.org, nbd@other.debian.org,
+        linux-ide@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com,
+        linux-pm@vger.kernel.org, linux-mm@kvack.org,
+        linux-block@vger.kernel.org
+Subject: [PATCH 01/14] block: move the NEED_PART_SCAN flag to struct gendisk
+Date:   Mon, 21 Sep 2020 09:19:45 +0200
+Message-Id: <20200921071958.307589-2-hch@lst.de>
+X-Mailer: git-send-email 2.28.0
+In-Reply-To: <20200921071958.307589-1-hch@lst.de>
+References: <20200921071958.307589-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CA+V-a8vuR-7vqxNnrqQ5Ysf3Xjvhp3xRZ33i8+6nEGFLJciT3A@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sat, Sep 19, 2020 at 11:54:05AM +0100, Lad, Prabhakar wrote:
-> Hi Greg,
-> 
-> On Thu, Jul 16, 2020 at 6:19 PM Lad Prabhakar
-> <prabhakar.mahadev-lad.rj@bp.renesas.com> wrote:
-> >
-> > Document RZ/G2H (R8A774E1) SoC bindings.
-> >
-> > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> > Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
-> > ---
-> >  Documentation/devicetree/bindings/usb/renesas,usbhs.yaml | 1 +
-> >  1 file changed, 1 insertion(+)
-> >
-> Could you please pick this patch.
+We can only scan for partitions on the whole disk, so move the flag
+from struct block_device to struct gendisk.
 
-Same here, doesn't a DT maintainer have to ack this?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/genhd.c             | 4 ++--
+ drivers/block/nbd.c       | 8 ++++----
+ drivers/ide/ide-gd.c      | 2 +-
+ fs/block_dev.c            | 7 +++----
+ include/linux/blk_types.h | 4 +---
+ include/linux/genhd.h     | 2 ++
+ 6 files changed, 13 insertions(+), 14 deletions(-)
 
-thanks,
+diff --git a/block/genhd.c b/block/genhd.c
+index 9d060e79eb31d8..7b56203c90a303 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -731,7 +731,7 @@ static void register_disk(struct device *parent, struct gendisk *disk,
+ 	if (!bdev)
+ 		goto exit;
+ 
+-	set_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags);
++	set_bit(GD_NEED_PART_SCAN, &disk->state);
+ 	err = blkdev_get(bdev, FMODE_READ, NULL);
+ 	if (err < 0)
+ 		goto exit;
+@@ -2112,7 +2112,7 @@ bool bdev_check_media_change(struct block_device *bdev)
+ 	if (__invalidate_device(bdev, true))
+ 		pr_warn("VFS: busy inodes on changed media %s\n",
+ 			bdev->bd_disk->disk_name);
+-	set_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags);
++	set_bit(GD_NEED_PART_SCAN, &bdev->bd_disk->state);
+ 	return true;
+ }
+ EXPORT_SYMBOL(bdev_check_media_change);
+diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
+index 15eed210feeff4..2dca0aab0a9a25 100644
+--- a/drivers/block/nbd.c
++++ b/drivers/block/nbd.c
+@@ -315,7 +315,7 @@ static void nbd_size_update(struct nbd_device *nbd)
+ 			bd_set_nr_sectors(bdev, nr_sectors);
+ 			set_blocksize(bdev, config->blksize);
+ 		} else
+-			set_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags);
++			set_bit(GD_NEED_PART_SCAN, &nbd->disk->state);
+ 		bdput(bdev);
+ 	}
+ 	kobject_uevent(&nbd_to_dev(nbd)->kobj, KOBJ_CHANGE);
+@@ -1322,7 +1322,7 @@ static int nbd_start_device_ioctl(struct nbd_device *nbd, struct block_device *b
+ 		return ret;
+ 
+ 	if (max_part)
+-		set_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags);
++		set_bit(GD_NEED_PART_SCAN, &nbd->disk->state);
+ 	mutex_unlock(&nbd->config_lock);
+ 	ret = wait_event_interruptible(config->recv_wq,
+ 					 atomic_read(&config->recv_threads) == 0);
+@@ -1500,9 +1500,9 @@ static int nbd_open(struct block_device *bdev, fmode_t mode)
+ 		refcount_set(&nbd->config_refs, 1);
+ 		refcount_inc(&nbd->refs);
+ 		mutex_unlock(&nbd->config_lock);
+-		set_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags);
++		set_bit(GD_NEED_PART_SCAN, &bdev->bd_disk->state);
+ 	} else if (nbd_disconnected(nbd->config)) {
+-		set_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags);
++		set_bit(GD_NEED_PART_SCAN, &bdev->bd_disk->state);
+ 	}
+ out:
+ 	mutex_unlock(&nbd_index_mutex);
+diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
+index 661e2aa9c96784..e2b6c82586ce8b 100644
+--- a/drivers/ide/ide-gd.c
++++ b/drivers/ide/ide-gd.c
+@@ -230,7 +230,7 @@ static int ide_gd_open(struct block_device *bdev, fmode_t mode)
+ 				bdev->bd_disk->disk_name);
+ 		drive->disk_ops->get_capacity(drive);
+ 		set_capacity(disk, ide_gd_capacity(drive));
+-		set_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags);
++		set_bit(GD_NEED_PART_SCAN, &disk->state);
+ 	} else if (drive->dev_flags & IDE_DFLAG_FORMAT_IN_PROGRESS) {
+ 		ret = -EBUSY;
+ 		goto out_put_idkp;
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index 0b34955b9e360f..1a9325f4315769 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -910,7 +910,6 @@ struct block_device *bdget(dev_t dev)
+ 		bdev->bd_super = NULL;
+ 		bdev->bd_inode = inode;
+ 		bdev->bd_part_count = 0;
+-		bdev->bd_flags = 0;
+ 		inode->i_mode = S_IFBLK;
+ 		inode->i_rdev = dev;
+ 		inode->i_bdev = bdev;
+@@ -1385,7 +1384,7 @@ int bdev_disk_changed(struct block_device *bdev, bool invalidate)
+ 
+ 	lockdep_assert_held(&bdev->bd_mutex);
+ 
+-	clear_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags);
++	clear_bit(GD_NEED_PART_SCAN, &bdev->bd_disk->state);
+ 
+ rescan:
+ 	ret = blk_drop_partitions(bdev);
+@@ -1509,7 +1508,7 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, void *holder,
+ 			 * The latter is necessary to prevent ghost
+ 			 * partitions on a removed medium.
+ 			 */
+-			if (test_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags) &&
++			if (test_bit(GD_NEED_PART_SCAN, &disk->state) &&
+ 			    (!ret || ret == -ENOMEDIUM))
+ 				bdev_disk_changed(bdev, ret == -ENOMEDIUM);
+ 
+@@ -1539,7 +1538,7 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, void *holder,
+ 			if (bdev->bd_disk->fops->open)
+ 				ret = bdev->bd_disk->fops->open(bdev, mode);
+ 			/* the same as first opener case, read comment there */
+-			if (test_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags) &&
++			if (test_bit(GD_NEED_PART_SCAN, &disk->state) &&
+ 			    (!ret || ret == -ENOMEDIUM))
+ 				bdev_disk_changed(bdev, ret == -ENOMEDIUM);
+ 			if (ret)
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index 6ffa783e16335e..eb20e28184ab19 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -19,8 +19,6 @@ struct cgroup_subsys_state;
+ typedef void (bio_end_io_t) (struct bio *);
+ struct bio_crypt_ctx;
+ 
+-#define BDEV_NEED_PART_SCAN		0
+-
+ struct block_device {
+ 	dev_t			bd_dev;
+ 	int			bd_openers;
+@@ -39,7 +37,7 @@ struct block_device {
+ 	struct hd_struct *	bd_part;
+ 	/* number of times partitions within this device have been opened. */
+ 	unsigned		bd_part_count;
+-	unsigned long		bd_flags;
++
+ 	spinlock_t		bd_size_lock; /* for bd_inode->i_size updates */
+ 	struct gendisk *	bd_disk;
+ 	struct backing_dev_info *bd_bdi;
+diff --git a/include/linux/genhd.h b/include/linux/genhd.h
+index 1c97cf84f011a7..38f23d75701379 100644
+--- a/include/linux/genhd.h
++++ b/include/linux/genhd.h
+@@ -191,6 +191,8 @@ struct gendisk {
+ 	void *private_data;
+ 
+ 	int flags;
++	unsigned long state;
++#define GD_NEED_PART_SCAN		0
+ 	struct rw_semaphore lookup_sem;
+ 	struct kobject *slave_dir;
+ 
+-- 
+2.28.0
 
-greg k-h
