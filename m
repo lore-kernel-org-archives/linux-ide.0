@@ -2,84 +2,108 @@ Return-Path: <SRS0=ytJ1=C6=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 378DCC43464
-	for <linux-ide@archiver.kernel.org>; Mon, 21 Sep 2020 07:27:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A31DFC43466
+	for <linux-ide@archiver.kernel.org>; Mon, 21 Sep 2020 07:29:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F156D20709
-	for <linux-ide@archiver.kernel.org>; Mon, 21 Sep 2020 07:27:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7947D20709
+	for <linux-ide@archiver.kernel.org>; Mon, 21 Sep 2020 07:29:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726333AbgIUH1S (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 21 Sep 2020 03:27:18 -0400
-Received: from relmlor2.renesas.com ([210.160.252.172]:42950 "EHLO
-        relmlie6.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726211AbgIUH1S (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 21 Sep 2020 03:27:18 -0400
-X-Greylist: delayed 303 seconds by postgrey-1.27 at vger.kernel.org; Mon, 21 Sep 2020 03:27:18 EDT
-X-IronPort-AV: E=Sophos;i="5.77,285,1596466800"; 
-   d="scan'208";a="57556396"
-Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 21 Sep 2020 16:22:13 +0900
-Received: from localhost.localdomain (unknown [10.226.36.204])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id C4BF741C23B7;
-        Mon, 21 Sep 2020 16:22:11 +0900 (JST)
-From:   Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Rob Herring <robh+dt@kernel.org>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        id S1726441AbgIUH3x (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 21 Sep 2020 03:29:53 -0400
+Received: from mail-oi1-f196.google.com ([209.85.167.196]:34007 "EHLO
+        mail-oi1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726211AbgIUH3t (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 21 Sep 2020 03:29:49 -0400
+Received: by mail-oi1-f196.google.com with SMTP id n2so15912143oij.1;
+        Mon, 21 Sep 2020 00:29:48 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=90EhcBzbpe2vvxa0ohP9B+Dh75rNdKfJSEph9k8z+pM=;
+        b=oDxmAMrxklOt/M1PIBJ5wlCKOryJNHL6AbIYPH+ts2Lf+weJo36Jgt+bVQOExMcli/
+         jiWAN8cEm7riKMtO6toa0Hx0xWPSloclKNkFI9FKjLVvO3WYBCq+Fcx0aWltBb3wyf4H
+         q6fmmWF6uwQUuaRw08Wqxk3LY9f4yFJav2NhRK7RyUo6Ic4yedLOXAI2TmnJUuVe7UGW
+         JR1pV6KTHJoP4l89nLJ28eCmiR0RmeCgM97DWOGh6phfp22P1Ya9VGn7X2FsSWz5i4Zi
+         6UxOnQK+nUVQd1gOcf4ZD8LZ3drWt9JzHGpzSqVlbYYaLUUKhm4QeSNWwx6BuumBUZ58
+         sXjg==
+X-Gm-Message-State: AOAM532QkC0NnNgDqUqt5rxvuMWnDVian6HtUJnXijdAfqkSTVlv4aVN
+        IHydqKWornGVvoiZsvST52amKfF+RKojBPiJ3Ao=
+X-Google-Smtp-Source: ABdhPJyf/sKRes03lyRebHMYTTNhwUI3iObyZWkgpxFfbC1QJaXNYOyLYBpf0EYemOiZ0DhKCpWF7uMdeYorWHg/2u4=
+X-Received: by 2002:aca:52d6:: with SMTP id g205mr16832418oib.54.1600673388389;
+ Mon, 21 Sep 2020 00:29:48 -0700 (PDT)
+MIME-Version: 1.0
+References: <1594919915-5225-1-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <1594919915-5225-12-git-send-email-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <CA+V-a8vuR-7vqxNnrqQ5Ysf3Xjvhp3xRZ33i8+6nEGFLJciT3A@mail.gmail.com> <20200920140846.GB2915460@kroah.com>
+In-Reply-To: <20200920140846.GB2915460@kroah.com>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Mon, 21 Sep 2020 09:29:36 +0200
+Message-ID: <CAMuHMdUNvODmaJDaLi45Q8wpCaZaTA4HnmW_Y0BLwkXw8UxgEQ@mail.gmail.com>
+Subject: Re: [PATCH 11/20] dt-bindings: usb: renesas,usbhs: Add r8a774e1 support
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     "Lad, Prabhakar" <prabhakar.csengg@gmail.com>,
         Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
-        Prabhakar <prabhakar.csengg@gmail.com>
-Subject: [RESEND PATCH] dt-bindings: ata: renesas,rcar-sata: Add r8a774e1 support
-Date:   Mon, 21 Sep 2020 08:22:06 +0100
-Message-Id: <20200921072206.15182-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
-X-Mailer: git-send-email 2.17.1
+        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
+        Vinod Koul <vkoul@kernel.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Marek Vasut <marek.vasut+renesas@gmail.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Mark Brown <broonie@kernel.org>,
+        Niklas <niklas.soderlund@ragnatech.se>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Magnus Damm <magnus.damm@gmail.com>,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>, linux-ide@vger.kernel.org,
+        dmaengine <dmaengine@vger.kernel.org>,
+        Linux I2C <linux-i2c@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-media <linux-media@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        alsa-devel <alsa-devel@alsa-project.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        USB list <linux-usb@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Document SATA support for the RZ/G2H, no driver change required.
+Hi Greg,
 
-Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
-Acked-by: Rob Herring <robh@kernel.org>
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
----
-Hi All,
+On Sun, Sep 20, 2020 at 4:08 PM Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+> On Sat, Sep 19, 2020 at 11:54:05AM +0100, Lad, Prabhakar wrote:
+> > On Thu, Jul 16, 2020 at 6:19 PM Lad Prabhakar
+> > <prabhakar.mahadev-lad.rj@bp.renesas.com> wrote:
+> > >
+> > > Document RZ/G2H (R8A774E1) SoC bindings.
+> > >
+> > > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> > > Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
+> > > ---
+> > >  Documentation/devicetree/bindings/usb/renesas,usbhs.yaml | 1 +
+> > >  1 file changed, 1 insertion(+)
+> > >
+> > Could you please pick this patch.
+>
+> Same here, doesn't a DT maintainer have to ack this?
 
-This patch is part of series [1] (orignal patch [2]) where rest of the
-patches have been picked up by the respective maintainers so just
-resending this patch.
+And so *he did:
+https://lore.kernel.org/r/20200721033544.GA3505976@bogus
 
-I have included the Acks' from the maintainers.
+Gr{oetje,eeting}s,
 
-[1] https://patchwork.kernel.org/project/linux-renesas-soc/
-    list/?series=319563
-[2] https://patchwork.kernel.org/patch/11668061/
+                        Geert
 
-Cheers,
-Prabhakar
----
- Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml b/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
-index d06096a7ba4b..2ad2444f1042 100644
---- a/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
-+++ b/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
-@@ -26,6 +26,7 @@ properties:
-       - items:
-           - enum:
-               - renesas,sata-r8a774b1     # RZ/G2N
-+              - renesas,sata-r8a774e1     # RZ/G2H
-               - renesas,sata-r8a7795      # R-Car H3
-               - renesas,sata-r8a77965     # R-Car M3-N
-           - const: renesas,rcar-gen3-sata # generic R-Car Gen3 or RZ/G2
 -- 
-2.17.1
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
