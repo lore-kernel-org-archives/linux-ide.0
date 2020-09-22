@@ -2,172 +2,188 @@ Return-Path: <SRS0=jz0E=C7=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DE7AC4727E
-	for <linux-ide@archiver.kernel.org>; Tue, 22 Sep 2020 12:05:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38EBCC4727C
+	for <linux-ide@archiver.kernel.org>; Tue, 22 Sep 2020 15:20:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DFB162388B
-	for <linux-ide@archiver.kernel.org>; Tue, 22 Sep 2020 12:05:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E068720936
+	for <linux-ide@archiver.kernel.org>; Tue, 22 Sep 2020 15:20:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="fNQUiQQj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726531AbgIVMFv convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 22 Sep 2020 08:05:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43898 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726518AbgIVMFv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 22 Sep 2020 08:05:51 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CA2CC061755
-        for <linux-ide@vger.kernel.org>; Tue, 22 Sep 2020 05:05:51 -0700 (PDT)
-Received: from lupine.hi.pengutronix.de ([2001:67c:670:100:3ad5:47ff:feaf:1a17] helo=lupine)
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <p.zabel@pengutronix.de>)
-        id 1kKh3N-0006tH-G1; Tue, 22 Sep 2020 14:05:49 +0200
-Received: from pza by lupine with local (Exim 4.92)
-        (envelope-from <p.zabel@pengutronix.de>)
-        id 1kKh3M-0008Fc-IZ; Tue, 22 Sep 2020 14:05:48 +0200
-Message-ID: <cf79a03117f4886dd91a624fd0081222ae87fea0.camel@pengutronix.de>
-Subject: Re: [PATCH V2 2/2] ata: ahci: ceva: Update the driver to support
- xilinx GT phy
-From:   Philipp Zabel <p.zabel@pengutronix.de>
-To:     Piyush Mehta <piyush.mehta@xilinx.com>, axboe@kernel.dk,
-        robh+dt@kernel.org
-Cc:     linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, git@xilinx.com, sgoud@xilinx.com,
-        michal.simek@xilinx.com
-Date:   Tue, 22 Sep 2020 14:05:48 +0200
-In-Reply-To: <1600769713-944-3-git-send-email-piyush.mehta@xilinx.com>
-References: <1600769713-944-1-git-send-email-piyush.mehta@xilinx.com>
-         <1600769713-944-3-git-send-email-piyush.mehta@xilinx.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-User-Agent: Evolution 3.30.5-1.1 
+        id S1726646AbgIVPUc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 22 Sep 2020 11:20:32 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:7725 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726643AbgIVPUb (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 22 Sep 2020 11:20:31 -0400
+Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.42/8.16.0.42) with SMTP id 08MFI9C6002529;
+        Tue, 22 Sep 2020 11:19:15 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=s7b0G9lisUfCrCNxaUFmc71Hbq6lYd3xM2O0ZMyJbVU=;
+ b=fNQUiQQjJ0O5RSJT3y1fx+etwvA15nMBC5V5JgxKwHs06zE3C6vupZyyi+OuN6tL45bI
+ 1pHqyK4HANqAFdynEtxHFiGAQA4HZkIUq2lq32AKF55q9+hBYrTvnP43Kh8xkLl+ticB
+ iQty6dX6it0Qgwj3rxk8xee7nDY7h79H/j5eXPu4LbmuNqKQFc03OncT9GbrTOUWW5Y8
+ pvnlW1qj1A8XEr8bnrvC4vSK+oXRFDkzVfoYmps/YsGYh7XzaJDyln87jDOJK5BEqVuw
+ +f9GiyqWVmzWQQxAR0jZPUme45PCu5WpV9Wko+qwYDmGCbkxRpudRNsyw6jonoFNtsLU 7w== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 33qjj1a9n9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 22 Sep 2020 11:19:13 -0400
+Received: from m0127361.ppops.net (m0127361.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 08MFIPF6003571;
+        Tue, 22 Sep 2020 11:19:07 -0400
+Received: from ppma02fra.de.ibm.com (47.49.7a9f.ip4.static.sl-reverse.com [159.122.73.71])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 33qjj1a9kr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 22 Sep 2020 11:19:07 -0400
+Received: from pps.filterd (ppma02fra.de.ibm.com [127.0.0.1])
+        by ppma02fra.de.ibm.com (8.16.0.42/8.16.0.42) with SMTP id 08MFCBYk017630;
+        Tue, 22 Sep 2020 15:19:03 GMT
+Received: from b06avi18878370.portsmouth.uk.ibm.com (b06avi18878370.portsmouth.uk.ibm.com [9.149.26.194])
+        by ppma02fra.de.ibm.com with ESMTP id 33n9m81nnf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 22 Sep 2020 15:19:03 +0000
+Received: from d06av24.portsmouth.uk.ibm.com (d06av24.portsmouth.uk.ibm.com [9.149.105.60])
+        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 08MFIweT23265540
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 22 Sep 2020 15:18:58 GMT
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 3BA144203F;
+        Tue, 22 Sep 2020 15:19:00 +0000 (GMT)
+Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 81EB64204B;
+        Tue, 22 Sep 2020 15:18:59 +0000 (GMT)
+Received: from linux.fritz.box (unknown [9.145.169.80])
+        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Tue, 22 Sep 2020 15:18:59 +0000 (GMT)
+Subject: Re: [PATCH 08/14] dasd: cleanup dasd_scan_partitions
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     Josef Bacik <josef@toxicpanda.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Jan Hoeppner <hoeppner@linux.ibm.com>,
+        Joseph Qi <joseph.qi@linux.alibaba.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Pavel Machek <pavel@ucw.cz>, Len Brown <len.brown@intel.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-kernel@vger.kernel.org, nbd@other.debian.org,
+        linux-ide@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com,
+        linux-pm@vger.kernel.org, linux-mm@kvack.org,
+        linux-block@vger.kernel.org
+References: <20200921071958.307589-1-hch@lst.de>
+ <20200921071958.307589-9-hch@lst.de>
+From:   Stefan Haberland <sth@linux.ibm.com>
+Autocrypt: addr=sth@linux.ibm.com; keydata=
+ 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
+ cH4TNHyhiR0KAbxE8qKx3Jc=
+Message-ID: <88ca251c-c417-cd92-3d47-653dff346d7c@linux.ibm.com>
+Date:   Tue, 22 Sep 2020 17:18:59 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-X-SA-Exim-Connect-IP: 2001:67c:670:100:3ad5:47ff:feaf:1a17
-X-SA-Exim-Mail-From: p.zabel@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-ide@vger.kernel.org
+In-Reply-To: <20200921071958.307589-9-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-TM-AS-GCONF: 00
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.235,18.0.687
+ definitions=2020-09-22_13:2020-09-21,2020-09-22 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ suspectscore=0 mlxlogscore=999 phishscore=0 impostorscore=0 adultscore=0
+ clxscore=1011 spamscore=0 mlxscore=0 malwarescore=0 bulkscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2006250000 definitions=main-2009220116
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, 2020-09-22 at 15:45 +0530, Piyush Mehta wrote:
-> SATA controller used in Xilinx ZynqMP platform uses xilinx GT phy
-> which has 4 GT lanes and can used by 4 peripherals at a time.
-> SATA controller uses 1 GT phy lane among the 4 GT lanes. To configure
-> the GT lane for SATA controller, the below sequence is expected.
-> 
-> 1. Assert the SATA controller reset.
-> 2. Configure the xilinx GT phy lane for SATA controller (phy_init).
-> 3. De-assert the SATA controller reset.
-> 4. Wait for PLL of the GT lane used by SATA to be locked (phy_power_on).
-> 
-> The ahci_platform_enable_resources() by default does the phy_init()
-> and phy_power_on() but the default sequence doesn't work with Xilinx
-> platforms. Because of this reason, updated the driver to support the
-> new sequence.
-> 
-> Added is_rst_ctrl flag, for backward compatibility with the older
-> sequence. If the reset controller is not available, then the SATA
-> controller will configure with the older sequences.
-> 
-> Signed-off-by: Piyush Mehta <piyush.mehta@xilinx.com>
+Am 21.09.20 um 09:19 schrieb Christoph Hellwig:
+> Use blkdev_get_by_dev instead of bdget_disk + blkdev_get.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Beside what Sergei mentioned...
+
+Reviewed-by: Stefan Haberland <sth@linux.ibm.com>
+
+
 > ---
->  drivers/ata/ahci_ceva.c | 39 +++++++++++++++++++++++++++++++++++++--
->  1 file changed, 37 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
-> index b10fd4c..c704906 100644
-> --- a/drivers/ata/ahci_ceva.c
-> +++ b/drivers/ata/ahci_ceva.c
-> @@ -12,6 +12,7 @@
->  #include <linux/module.h>
->  #include <linux/of_device.h>
->  #include <linux/platform_device.h>
-> +#include <linux/reset.h>
->  #include "ahci.h"
+>  drivers/s390/block/dasd_genhd.c | 15 ++++-----------
+>  1 file changed, 4 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/s390/block/dasd_genhd.c b/drivers/s390/block/dasd_genhd.c
+> index af5b0ecb8f8923..a9698fba9b76ce 100644
+> --- a/drivers/s390/block/dasd_genhd.c
+> +++ b/drivers/s390/block/dasd_genhd.c
+> @@ -101,18 +101,11 @@ int dasd_scan_partitions(struct dasd_block *block)
+>  	struct block_device *bdev;
+>  	int rc;
 >  
->  /* Vendor Specific Register Offsets */
-> @@ -87,6 +88,7 @@ struct ceva_ahci_priv {
->  	u32 axicc;
->  	bool is_cci_enabled;
->  	int flags;
-> +	struct reset_control *rst;
->  };
->  
->  static unsigned int ceva_ahci_read_id(struct ata_device *dev,
-> @@ -194,7 +196,7 @@ static int ceva_ahci_probe(struct platform_device *pdev)
->  	struct ahci_host_priv *hpriv;
->  	struct ceva_ahci_priv *cevapriv;
->  	enum dev_dma_attr attr;
-> -	int rc;
-> +	int rc, i, is_rst_ctrl = 1;
->  
->  	cevapriv = devm_kzalloc(dev, sizeof(*cevapriv), GFP_KERNEL);
->  	if (!cevapriv)
-> @@ -202,14 +204,47 @@ static int ceva_ahci_probe(struct platform_device *pdev)
->  
->  	cevapriv->ahci_pdev = pdev;
->  
-> +	cevapriv->rst = devm_reset_control_get(&pdev->dev, NULL);
-
-Please use devm_reset_control_get_optional_exclusive()
-
-> +	if (IS_ERR(cevapriv->rst)) {
-> +		if (PTR_ERR(cevapriv->rst) != -EPROBE_DEFER)
-> +			dev_err(&pdev->dev, "failed to get reset: %ld\n",
-> +				PTR_ERR(cevapriv->rst));
-> +		is_rst_ctrl = 0;
-
-is_rst_ctrl will not be required then.
-
-> +	}
-> +
->  	hpriv = ahci_platform_get_resources(pdev, 0);
->  	if (IS_ERR(hpriv))
->  		return PTR_ERR(hpriv);
-> +	if (is_rst_ctrl)
-> +		rc = ahci_platform_enable_clks(hpriv);
-> +	else
-> +		rc = ahci_platform_enable_resources(hpriv);
->  
-> -	rc = ahci_platform_enable_resources(hpriv);
->  	if (rc)
->  		return rc;
->  
-> +	if (is_rst_ctrl) {
-
-This can just be "if (cevapriv->rst)"
-
-> +		/* Assert the controller reset */
-> +		reset_control_assert(cevapriv->rst);
-> +
-> +		for (i = 0; i < hpriv->nports; i++) {
-> +			rc = phy_init(hpriv->phys[i]);
-> +			if (rc)
-> +				return rc;
-> +		}
-> +
-> +		/* De-assert the controller reset */
-> +		reset_control_deassert(cevapriv->rst);
-> +
-> +		for (i = 0; i < hpriv->nports; i++) {
-> +			rc = phy_power_on(hpriv->phys[i]);
-> +			if (rc) {
-> +				phy_exit(hpriv->phys[i]);
-> +				return rc;
-> +			}
-> +		}
-> +	}
-> +
->  	if (of_property_read_bool(np, "ceva,broken-gen2"))
->  		cevapriv->flags = CEVA_FLAG_BROKEN_GEN2;
+> -	bdev = bdget_disk(block->gdp, 0);
+> -	if (!bdev) {
+> -		DBF_DEV_EVENT(DBF_ERR, block->base, "%s",
+> -			      "scan partitions error, bdget returned NULL");
+> -		return -ENODEV;
+> -	}
+> -
+> -	rc = blkdev_get(bdev, FMODE_READ, NULL);
+> -	if (rc < 0) {
+> +	bdev = blkdev_get_by_dev(disk_devt(block->gdp), FMODE_READ, NULL);
+> +	if (IS_ERR(bdev)) {
+>  		DBF_DEV_EVENT(DBF_ERR, block->base,
+> -			      "scan partitions error, blkdev_get returned %d",
+> -			      rc);
+> +			      "scan partitions error, blkdev_get returned %ld",
+> +			      PTR_ERR(bdev));
+>  		return -ENODEV;
+>  	}
 >  
 
-regards
-Philipp
