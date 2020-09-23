@@ -2,109 +2,291 @@ Return-Path: <SRS0=PpZ6=DA=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6281DC4727F
-	for <linux-ide@archiver.kernel.org>; Wed, 23 Sep 2020 16:44:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7632FC4727E
+	for <linux-ide@archiver.kernel.org>; Wed, 23 Sep 2020 23:23:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 03B23208E4
-	for <linux-ide@archiver.kernel.org>; Wed, 23 Sep 2020 16:44:01 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="wo1HxCm5"
+	by mail.kernel.org (Postfix) with ESMTP id 409D020C09
+	for <linux-ide@archiver.kernel.org>; Wed, 23 Sep 2020 23:23:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726761AbgIWQoA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 23 Sep 2020 12:44:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54146 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726130AbgIWQoA (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Sep 2020 12:44:00 -0400
-Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CFA4BC0613D2
-        for <linux-ide@vger.kernel.org>; Wed, 23 Sep 2020 09:43:59 -0700 (PDT)
-Received: by mail-pf1-x444.google.com with SMTP id d6so5329pfn.9
-        for <linux-ide@vger.kernel.org>; Wed, 23 Sep 2020 09:43:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=9kKVBm2QDcEhoI7VNH0u9uwqsgFbX84K7to4q+EvAF8=;
-        b=wo1HxCm5bKIVa9so0OH72jUPeuxpy0gBmSztrnAMX5SSm8gqDsd/uDbJD7n0nTY7Hv
-         CKJoObg/EBB1JCvStmCq+2DKeNopjuTxhY6T7yv5TlzOVOSgvtBEy4neG07it4ARoA4J
-         WHOi+7obrEMIUDmzT3kBBEHLDf0ZbrbNxMoUwtAnQnNZ4qwV/A1Mq5PJhKVbgpJ/Rod5
-         V4wdCnvNPJU0KSWHIs05KbU5DxoLhNDG93YaWxwBm6g7XccmnyHw+ixRtSpxeaSGMhwd
-         mx1/GOsS6pG7kDo6kprXjUbJ/6H+1rzHGTrQ7trw2dp1Uk7jyzCH8F6put7clvS8xmh3
-         DueQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=9kKVBm2QDcEhoI7VNH0u9uwqsgFbX84K7to4q+EvAF8=;
-        b=kq7YWg+Qs4bDIUzHqoqI+IZAR1+6+lbhCRaMW8kevgAiW1++wH19tkAPRf2ThZXObQ
-         CyGcqg3isxcaXXCxz12JheRP873T3tg7tmZz4WYhTqDb7o4VHMdb5IiTe6Cc6foE20td
-         b3TtfEVZrN074iBAIenQZ4h3E0+R7bZEMvNbgRgmoQDD18k4iy+rU6JsOuRPAllNl2d7
-         iT45rsDDhWARNsikuCLncclVl9y6Sks28kPdvmYxUdDG3HwSZIeiv4+fB+kxbKS4nsTd
-         LXJrvJYHlk26Ir3pPztF2SDpcJ6e8KWIL8sR7mVqpMllKSNb5kiPtZNCR/zxVxqaGO2S
-         FflA==
-X-Gm-Message-State: AOAM530zLfyQQ8JU778xVbzkovSP2zitvox75S2K8gmmF+G69fN5V2DB
-        EvmIGDUuT9AkwzjxFBu6biHpEHZiiiusQw==
-X-Google-Smtp-Source: ABdhPJzQnxjNRw3M1n4lJU3pDIkemY3ZCQKnOQ7VywhFrMYRm0itMgYfj3gWdktm3tes58COiW8SXA==
-X-Received: by 2002:a62:2b52:0:b029:142:2501:39e9 with SMTP id r79-20020a622b520000b0290142250139e9mr746426pfr.56.1600879439083;
-        Wed, 23 Sep 2020 09:43:59 -0700 (PDT)
-Received: from [192.168.1.30] ([65.144.74.34])
-        by smtp.gmail.com with ESMTPSA id q190sm241046pfq.99.2020.09.23.09.43.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 23 Sep 2020 09:43:58 -0700 (PDT)
-Subject: Re: remove blkdev_get as a public API v2
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Josef Bacik <josef@toxicpanda.com>,
-        Minchan Kim <minchan@kernel.org>,
-        Stefan Haberland <sth@linux.ibm.com>,
-        Jan Hoeppner <hoeppner@linux.ibm.com>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Pavel Machek <pavel@ucw.cz>, Len Brown <len.brown@intel.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-kernel@vger.kernel.org, nbd@other.debian.org,
-        linux-ide@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com,
-        linux-pm@vger.kernel.org, linux-mm@kvack.org,
-        linux-block@vger.kernel.org
-References: <20200921071958.307589-1-hch@lst.de>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <d23e5bd4-4d69-f909-eb8b-10c489b67f8b@kernel.dk>
-Date:   Wed, 23 Sep 2020 10:43:57 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-In-Reply-To: <20200921071958.307589-1-hch@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1726662AbgIWXX3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 23 Sep 2020 19:23:29 -0400
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:44166 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726596AbgIWXX3 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Sep 2020 19:23:29 -0400
+Received: by kvm5.telegraphics.com.au (Postfix, from userid 502)
+        id C827229F72; Wed, 23 Sep 2020 19:17:53 -0400 (EDT)
+To:     "David S. Miller" <davem@davemloft.net>
+Cc:     "Bartlomiej Zolnierkiewicz" <b.zolnierkie@samsung.com>,
+        "Geert Uytterhoeven" <geert@linux-m68k.org>,
+        "Joshua Thompson" <funaho@jurai.org>,
+        linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org
+Message-Id: <edd106dad1bbea32500601c6071f37a9f02a8004.1600901284.git.fthain@telegraphics.com.au>
+From:   Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH v4] ide/macide: Convert Mac IDE driver to platform driver
+Date:   Thu, 24 Sep 2020 08:48:04 +1000
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/21/20 1:19 AM, Christoph Hellwig wrote:
-> Hi Jens,
-> 
-> this series removes blkdev_get as a public API, leaving it as just an
-> implementation detail of blkdev_get_by_path and blkdev_get_by_dev.  The
-> reason for that is that blkdev_get is a very confusing API that requires
-> a struct block_device to be fed in, but then actually consumes the
-> reference.  And it turns out just using the two above mentioned APIs
-> actually significantly simplifies the code as well.
-> 
-> Changes since v1:
->  - fix a mismerged that left a stray bdget_disk around
->  - factour the partition scan at registration time code into a new
->    helper.
+Add platform devices for the Mac IDE controller variants. Convert the
+macide module into a platform driver to support two of those variants.
+For the third, use a generic "pata_platform" driver instead.
+This enables automatic loading of the appropriate module and begins
+the process of replacing the driver with libata alternatives.
 
-Applied for 5.10, thanks.
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Joshua Thompson <funaho@jurai.org>
+References: commit 5ed0794cde593 ("m68k/atari: Convert Falcon IDE drivers to platform drivers")
+References: commit 7ad19a99ad431 ("ide: officially deprecated the legacy IDE driver")
+Tested-by: Stan Johnson <userm57@yahoo.com>
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+---
+This patch was tested successfully on a Powerbook 190 (MAC_IDE_BABOON)
+using both pata_platform and ide_platform drivers.
+The next step will be to try using these generic drivers with the other
+IDE controller variants (MAC_IDE_QUADRA or MAC_IDE_PB) so that the macide
+driver can be entirely replaced with libata drivers.
 
+Changed since v3:
+ - Updated Kconfig help text.
+
+Changed since v2:
+ - Enabled CONFIG_BLK_DEV_PLATFORM in multi_defconfig.
+ - Replaced dev_get_drvdata() with platform_get_drvdata().
+
+Changed since v1:
+ - Adopted DEFINE_RES_MEM and DEFINE_RES_IRQ macros.
+ - Dropped IORESOURCE_IRQ_SHAREABLE flag as it is ignored by pata_platform.c
+   and IRQF_SHARED makes no difference in this case.
+ - Removed redundant release_mem_region() call.
+ - Enabled CONFIG_BLK_DEV_PLATFORM in mac_defconfig. We might also enable
+   CONFIG_PATA_PLATFORM but IMO migration to libata should be a separate
+   patch (as this patch has some unrelated benefits).
+---
+ arch/m68k/configs/mac_defconfig   |  1 +
+ arch/m68k/configs/multi_defconfig |  1 +
+ arch/m68k/mac/config.c            | 41 +++++++++++++++++++
+ drivers/ide/Kconfig               |  7 ++--
+ drivers/ide/macide.c              | 66 ++++++++++++++++++++-----------
+ 5 files changed, 90 insertions(+), 26 deletions(-)
+
+diff --git a/arch/m68k/configs/mac_defconfig b/arch/m68k/configs/mac_defconfig
+index 6087798662601..f770970fe4e99 100644
+--- a/arch/m68k/configs/mac_defconfig
++++ b/arch/m68k/configs/mac_defconfig
+@@ -317,6 +317,7 @@ CONFIG_DUMMY_IRQ=m
+ CONFIG_IDE=y
+ CONFIG_IDE_GD_ATAPI=y
+ CONFIG_BLK_DEV_IDECD=y
++CONFIG_BLK_DEV_PLATFORM=y
+ CONFIG_BLK_DEV_MAC_IDE=y
+ CONFIG_RAID_ATTRS=m
+ CONFIG_SCSI=y
+diff --git a/arch/m68k/configs/multi_defconfig b/arch/m68k/configs/multi_defconfig
+index 0abb53c38c20d..f93c3021f20d4 100644
+--- a/arch/m68k/configs/multi_defconfig
++++ b/arch/m68k/configs/multi_defconfig
+@@ -346,6 +346,7 @@ CONFIG_DUMMY_IRQ=m
+ CONFIG_IDE=y
+ CONFIG_IDE_GD_ATAPI=y
+ CONFIG_BLK_DEV_IDECD=y
++CONFIG_BLK_DEV_PLATFORM=y
+ CONFIG_BLK_DEV_GAYLE=y
+ CONFIG_BLK_DEV_BUDDHA=y
+ CONFIG_BLK_DEV_FALCON_IDE=y
+diff --git a/arch/m68k/mac/config.c b/arch/m68k/mac/config.c
+index 5c9f3a2d65388..43fc29180cb58 100644
+--- a/arch/m68k/mac/config.c
++++ b/arch/m68k/mac/config.c
+@@ -24,6 +24,7 @@
+ #include <linux/init.h>
+ #include <linux/vt_kern.h>
+ #include <linux/platform_device.h>
++#include <linux/ata_platform.h>
+ #include <linux/adb.h>
+ #include <linux/cuda.h>
+ #include <linux/pmu.h>
+@@ -940,6 +941,26 @@ static const struct resource mac_scsi_ccl_rsrc[] __initconst = {
+ 	},
+ };
+ 
++static const struct resource mac_ide_quadra_rsrc[] __initconst = {
++	DEFINE_RES_MEM(0x50F1A000, 0x104),
++	DEFINE_RES_IRQ(IRQ_NUBUS_F),
++};
++
++static const struct resource mac_ide_pb_rsrc[] __initconst = {
++	DEFINE_RES_MEM(0x50F1A000, 0x104),
++	DEFINE_RES_IRQ(IRQ_NUBUS_C),
++};
++
++static const struct resource mac_pata_baboon_rsrc[] __initconst = {
++	DEFINE_RES_MEM(0x50F1A000, 0x38),
++	DEFINE_RES_MEM(0x50F1A038, 0x04),
++	DEFINE_RES_IRQ(IRQ_BABOON_1),
++};
++
++static const struct pata_platform_info mac_pata_baboon_data __initconst = {
++	.ioport_shift = 2,
++};
++
+ int __init mac_platform_init(void)
+ {
+ 	phys_addr_t swim_base = 0;
+@@ -1048,6 +1069,26 @@ int __init mac_platform_init(void)
+ 		break;
+ 	}
+ 
++	/*
++	 * IDE device
++	 */
++
++	switch (macintosh_config->ide_type) {
++	case MAC_IDE_QUADRA:
++		platform_device_register_simple("mac_ide", -1,
++			mac_ide_quadra_rsrc, ARRAY_SIZE(mac_ide_quadra_rsrc));
++		break;
++	case MAC_IDE_PB:
++		platform_device_register_simple("mac_ide", -1,
++			mac_ide_pb_rsrc, ARRAY_SIZE(mac_ide_pb_rsrc));
++		break;
++	case MAC_IDE_BABOON:
++		platform_device_register_resndata(NULL, "pata_platform", -1,
++			mac_pata_baboon_rsrc, ARRAY_SIZE(mac_pata_baboon_rsrc),
++			&mac_pata_baboon_data, sizeof(mac_pata_baboon_data));
++		break;
++	}
++
+ 	/*
+ 	 * Ethernet device
+ 	 */
+diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
+index 973ed4b684cec..19abf11c84c8a 100644
+--- a/drivers/ide/Kconfig
++++ b/drivers/ide/Kconfig
+@@ -744,9 +744,10 @@ config BLK_DEV_MAC_IDE
+ 	depends on MAC
+ 	help
+ 	  This is the IDE driver for the on-board IDE interface on some m68k
+-	  Macintosh models. It supports both the `Quadra style' (used in
+-	  Quadra/ Centris 630 and Performa 588 models) and `Powerbook style'
+-	  (used in the Powerbook 150 and 190 models) IDE interface.
++	  Macintosh models, namely Quadra/Centris 630, Performa 588 and
++	  Powerbook 150. The IDE interface on the Powerbook 190 is not
++	  supported by this driver and requires BLK_DEV_PLATFORM or
++	  PATA_PLATFORM.
+ 
+ 	  Say Y if you have such an Macintosh model and want to use IDE
+ 	  devices (hard disks, CD-ROM drives, etc.) that are connected to the
+diff --git a/drivers/ide/macide.c b/drivers/ide/macide.c
+index 3c6bb8599303b..8a201a467886b 100644
+--- a/drivers/ide/macide.c
++++ b/drivers/ide/macide.c
+@@ -18,10 +18,11 @@
+ #include <linux/delay.h>
+ #include <linux/ide.h>
+ #include <linux/module.h>
++#include <linux/platform_device.h>
+ 
+ #include <asm/macintosh.h>
+-#include <asm/macints.h>
+-#include <asm/mac_baboon.h>
++
++#define DRV_NAME "mac_ide"
+ 
+ #define IDE_BASE 0x50F1A000	/* Base address of IDE controller */
+ 
+@@ -109,42 +110,61 @@ static const char *mac_ide_name[] =
+  * Probe for a Macintosh IDE interface
+  */
+ 
+-static int __init macide_init(void)
++static int mac_ide_probe(struct platform_device *pdev)
+ {
+-	unsigned long base;
+-	int irq;
++	struct resource *mem, *irq;
+ 	struct ide_hw hw, *hws[] = { &hw };
+ 	struct ide_port_info d = macide_port_info;
++	struct ide_host *host;
++	int rc;
+ 
+ 	if (!MACH_IS_MAC)
+ 		return -ENODEV;
+ 
+-	switch (macintosh_config->ide_type) {
+-	case MAC_IDE_QUADRA:
+-		base = IDE_BASE;
+-		irq = IRQ_NUBUS_F;
+-		break;
+-	case MAC_IDE_PB:
+-		base = IDE_BASE;
+-		irq = IRQ_NUBUS_C;
+-		break;
+-	case MAC_IDE_BABOON:
+-		base = BABOON_BASE;
+-		d.port_ops = NULL;
+-		irq = IRQ_BABOON_1;
+-		break;
+-	default:
++	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!mem)
++		return -ENODEV;
++
++	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
++	if (!irq)
+ 		return -ENODEV;
++
++	if (!devm_request_mem_region(&pdev->dev, mem->start,
++				     resource_size(mem), DRV_NAME)) {
++		dev_err(&pdev->dev, "resources busy\n");
++		return -EBUSY;
+ 	}
+ 
+ 	printk(KERN_INFO "ide: Macintosh %s IDE controller\n",
+ 			 mac_ide_name[macintosh_config->ide_type - 1]);
+ 
+-	macide_setup_ports(&hw, base, irq);
++	macide_setup_ports(&hw, mem->start, irq->start);
+ 
+-	return ide_host_add(&d, hws, 1, NULL);
++	rc = ide_host_add(&d, hws, 1, &host);
++	if (rc)
++		return rc;
++
++	platform_set_drvdata(pdev, host);
++	return 0;
+ }
+ 
+-module_init(macide_init);
++static int mac_ide_remove(struct platform_device *pdev)
++{
++	struct ide_host *host = platform_get_drvdata(pdev);
++
++	ide_host_remove(host);
++	return 0;
++}
++
++static struct platform_driver mac_ide_driver = {
++	.driver = {
++		.name = DRV_NAME,
++	},
++	.probe  = mac_ide_probe,
++	.remove = mac_ide_remove,
++};
++
++module_platform_driver(mac_ide_driver);
+ 
++MODULE_ALIAS("platform:" DRV_NAME);
+ MODULE_LICENSE("GPL");
 -- 
-Jens Axboe
+2.26.2
 
