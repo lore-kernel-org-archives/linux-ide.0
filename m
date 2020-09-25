@@ -1,227 +1,121 @@
-Return-Path: <SRS0=07Tt=DB=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=DroY=DC=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=BAYES_00,DATE_IN_PAST_03_06,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7155DC47423
-	for <linux-ide@archiver.kernel.org>; Thu, 24 Sep 2020 13:40:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D613C4727E
+	for <linux-ide@archiver.kernel.org>; Fri, 25 Sep 2020 01:43:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 21F122344C
-	for <linux-ide@archiver.kernel.org>; Thu, 24 Sep 2020 13:40:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 042562084C
+	for <linux-ide@archiver.kernel.org>; Fri, 25 Sep 2020 01:43:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728109AbgIXNkm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 24 Sep 2020 09:40:42 -0400
-Received: from mx2.suse.de ([195.135.220.15]:55300 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727898AbgIXNkl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 24 Sep 2020 09:40:41 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id E5D67B0E6;
-        Thu, 24 Sep 2020 13:40:38 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id A00AC1E12F3; Thu, 24 Sep 2020 10:56:33 +0200 (CEST)
-Date:   Thu, 24 Sep 2020 10:56:33 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Josef Bacik <josef@toxicpanda.com>,
-        Minchan Kim <minchan@kernel.org>,
-        Stefan Haberland <sth@linux.ibm.com>,
-        Jan Hoeppner <hoeppner@linux.ibm.com>,
-        Joseph Qi <joseph.qi@linux.alibaba.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Pavel Machek <pavel@ucw.cz>, Len Brown <len.brown@intel.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-kernel@vger.kernel.org, nbd@other.debian.org,
-        linux-ide@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, ocfs2-devel@oss.oracle.com,
-        linux-pm@vger.kernel.org, linux-mm@kvack.org,
-        linux-block@vger.kernel.org
-Subject: Re: [PATCH 01/14] block: move the NEED_PART_SCAN flag to struct
- gendisk
-Message-ID: <20200924085633.GD27019@quack2.suse.cz>
-References: <20200917165720.3285256-1-hch@lst.de>
- <20200917165720.3285256-2-hch@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20200917165720.3285256-2-hch@lst.de>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        id S1726718AbgIYBnt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 24 Sep 2020 21:43:49 -0400
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:40396 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726704AbgIYBnt (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 24 Sep 2020 21:43:49 -0400
+Received: by kvm5.telegraphics.com.au (Postfix, from userid 502)
+        id 6C1962A7EA; Thu, 24 Sep 2020 21:43:48 -0400 (EDT)
+To:     "David S. Miller" <davem@davemloft.net>,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     "Michael Schmitz" <schmitzmic@gmail.com>,
+        "Bartlomiej Zolnierkiewicz" <b.zolnierkie@samsung.com>,
+        linux-m68k@lists.linux-m68k.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <df121aff561c73f3ff7d83f906942ed0d954d737.1600997998.git.fthain@telegraphics.com.au>
+From:   Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH] ide/falconide: Fix module unload
+Date:   Fri, 25 Sep 2020 11:39:58 +1000
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu 17-09-20 18:57:07, Christoph Hellwig wrote:
-> We can only scan for partitions on the whole disk, so move the flag
-> from struct block_device to struct gendisk.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Unloading the falconide module results in a crash:
 
-Makes sense. You can add:
+Unable to handle kernel NULL pointer dereference at virtual address 00000000
+Oops: 00000000
+Modules linked in: falconide(-)
+PC: [<002930b2>] ide_host_remove+0x2e/0x1d2
+SR: 2000  SP: 00b49e28  a2: 009b0f90
+d0: 00000000    d1: 009b0f90    d2: 00000000    d3: 00b48000
+d4: 003cef32    d5: 00299188    a0: 0086d000    a1: 0086d000
+Process rmmod (pid: 322, task=009b0f90)
+Frame format=7 eff addr=00000000 ssw=0505 faddr=00000000
+wb 1 stat/addr/data: 0000 00000000 00000000
+wb 2 stat/addr/data: 0000 00000000 00000000
+wb 3 stat/addr/data: 0000 00000000 00018da9
+push data: 00000000 00000000 00000000 00000000
+Stack from 00b49e90:
+        004c456a 0027f176 0027cb0a 0027cb9e 00000000 0086d00a 2187d3f0 0027f0e0
+        00b49ebc 2187d1f6 00000000 00b49ec8 002811e8 0086d000 00b49ef0 0028024c
+        0086d00a 002800d6 00279a1a 00000001 00000001 0086d00a 2187d3f0 00279a58
+        00b49f1c 002802e0 0086d00a 2187d3f0 004c456a 0086d00a ef96af74 00000000
+        2187d3f0 002805d2 800de064 00b49f44 0027f088 2187d3f0 00ac1cf4 2187d3f0
+        004c43be 2187d3f0 00000000 2187d3f0 800b66a8 00b49f5c 00280776 2187d3f0
+Call Trace: [<0027f176>] __device_driver_unlock+0x0/0x48
+ [<0027cb0a>] device_links_busy+0x0/0x94
+ [<0027cb9e>] device_links_unbind_consumers+0x0/0x130
+ [<0027f0e0>] __device_driver_lock+0x0/0x5a
+ [<2187d1f6>] falconide_remove+0x12/0x18 [falconide]
+ [<002811e8>] platform_drv_remove+0x1c/0x28
+ [<0028024c>] device_release_driver_internal+0x176/0x17c
+ [<002800d6>] device_release_driver_internal+0x0/0x17c
+ [<00279a1a>] get_device+0x0/0x22
+ [<00279a58>] put_device+0x0/0x18
+ [<002802e0>] driver_detach+0x56/0x82
+ [<002805d2>] driver_remove_file+0x0/0x24
+ [<0027f088>] bus_remove_driver+0x4c/0xa4
+ [<00280776>] driver_unregister+0x28/0x5a
+ [<00281a00>] platform_driver_unregister+0x12/0x18
+ [<2187d2a0>] ide_falcon_driver_exit+0x10/0x16 [falconide]
+ [<000764f0>] sys_delete_module+0x110/0x1f2
+ [<000e83ea>] sys_rename+0x1a/0x1e
+ [<00002e0c>] syscall+0x8/0xc
+ [<00188004>] ext4_multi_mount_protect+0x35a/0x3ce
+Code: 0029 9188 4bf9 0027 aa1c 283c 003c ef32 <265c> 4a8b 6700 00b8 2043 2028 000c 0280 00ff ff00 6600 0176 40c0 7202 b2b9 004c
+Disabling lock debugging due to kernel taint
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+This happens because the driver_data pointer is uninitialized.
+Add the missing platform_set_drvdata() call. For clarity, use the
+matching platform_get_drvdata() as well.
 
-								Honza
+Cc: Michael Schmitz <schmitzmic@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: linux-m68k@lists.linux-m68k.org
+Fixes: 5ed0794cde593 ("m68k/atari: Convert Falcon IDE drivers to platform drivers")
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+---
+This patch was tested using Aranym.
+---
+ drivers/ide/falconide.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> ---
->  block/genhd.c             | 4 ++--
->  drivers/block/nbd.c       | 8 ++++----
->  drivers/ide/ide-gd.c      | 2 +-
->  fs/block_dev.c            | 7 +++----
->  include/linux/blk_types.h | 4 +---
->  include/linux/genhd.h     | 2 ++
->  6 files changed, 13 insertions(+), 14 deletions(-)
-> 
-> diff --git a/block/genhd.c b/block/genhd.c
-> index 9d060e79eb31d8..7b56203c90a303 100644
-> --- a/block/genhd.c
-> +++ b/block/genhd.c
-> @@ -731,7 +731,7 @@ static void register_disk(struct device *parent, struct gendisk *disk,
->  	if (!bdev)
->  		goto exit;
->  
-> -	set_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags);
-> +	set_bit(GD_NEED_PART_SCAN, &disk->state);
->  	err = blkdev_get(bdev, FMODE_READ, NULL);
->  	if (err < 0)
->  		goto exit;
-> @@ -2112,7 +2112,7 @@ bool bdev_check_media_change(struct block_device *bdev)
->  	if (__invalidate_device(bdev, true))
->  		pr_warn("VFS: busy inodes on changed media %s\n",
->  			bdev->bd_disk->disk_name);
-> -	set_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags);
-> +	set_bit(GD_NEED_PART_SCAN, &bdev->bd_disk->state);
->  	return true;
->  }
->  EXPORT_SYMBOL(bdev_check_media_change);
-> diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
-> index 15eed210feeff4..2dca0aab0a9a25 100644
-> --- a/drivers/block/nbd.c
-> +++ b/drivers/block/nbd.c
-> @@ -315,7 +315,7 @@ static void nbd_size_update(struct nbd_device *nbd)
->  			bd_set_nr_sectors(bdev, nr_sectors);
->  			set_blocksize(bdev, config->blksize);
->  		} else
-> -			set_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags);
-> +			set_bit(GD_NEED_PART_SCAN, &nbd->disk->state);
->  		bdput(bdev);
->  	}
->  	kobject_uevent(&nbd_to_dev(nbd)->kobj, KOBJ_CHANGE);
-> @@ -1322,7 +1322,7 @@ static int nbd_start_device_ioctl(struct nbd_device *nbd, struct block_device *b
->  		return ret;
->  
->  	if (max_part)
-> -		set_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags);
-> +		set_bit(GD_NEED_PART_SCAN, &nbd->disk->state);
->  	mutex_unlock(&nbd->config_lock);
->  	ret = wait_event_interruptible(config->recv_wq,
->  					 atomic_read(&config->recv_threads) == 0);
-> @@ -1500,9 +1500,9 @@ static int nbd_open(struct block_device *bdev, fmode_t mode)
->  		refcount_set(&nbd->config_refs, 1);
->  		refcount_inc(&nbd->refs);
->  		mutex_unlock(&nbd->config_lock);
-> -		set_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags);
-> +		set_bit(GD_NEED_PART_SCAN, &bdev->bd_disk->state);
->  	} else if (nbd_disconnected(nbd->config)) {
-> -		set_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags);
-> +		set_bit(GD_NEED_PART_SCAN, &bdev->bd_disk->state);
->  	}
->  out:
->  	mutex_unlock(&nbd_index_mutex);
-> diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
-> index 661e2aa9c96784..e2b6c82586ce8b 100644
-> --- a/drivers/ide/ide-gd.c
-> +++ b/drivers/ide/ide-gd.c
-> @@ -230,7 +230,7 @@ static int ide_gd_open(struct block_device *bdev, fmode_t mode)
->  				bdev->bd_disk->disk_name);
->  		drive->disk_ops->get_capacity(drive);
->  		set_capacity(disk, ide_gd_capacity(drive));
-> -		set_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags);
-> +		set_bit(GD_NEED_PART_SCAN, &disk->state);
->  	} else if (drive->dev_flags & IDE_DFLAG_FORMAT_IN_PROGRESS) {
->  		ret = -EBUSY;
->  		goto out_put_idkp;
-> diff --git a/fs/block_dev.c b/fs/block_dev.c
-> index 0b34955b9e360f..1a9325f4315769 100644
-> --- a/fs/block_dev.c
-> +++ b/fs/block_dev.c
-> @@ -910,7 +910,6 @@ struct block_device *bdget(dev_t dev)
->  		bdev->bd_super = NULL;
->  		bdev->bd_inode = inode;
->  		bdev->bd_part_count = 0;
-> -		bdev->bd_flags = 0;
->  		inode->i_mode = S_IFBLK;
->  		inode->i_rdev = dev;
->  		inode->i_bdev = bdev;
-> @@ -1385,7 +1384,7 @@ int bdev_disk_changed(struct block_device *bdev, bool invalidate)
->  
->  	lockdep_assert_held(&bdev->bd_mutex);
->  
-> -	clear_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags);
-> +	clear_bit(GD_NEED_PART_SCAN, &bdev->bd_disk->state);
->  
->  rescan:
->  	ret = blk_drop_partitions(bdev);
-> @@ -1509,7 +1508,7 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, void *holder,
->  			 * The latter is necessary to prevent ghost
->  			 * partitions on a removed medium.
->  			 */
-> -			if (test_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags) &&
-> +			if (test_bit(GD_NEED_PART_SCAN, &disk->state) &&
->  			    (!ret || ret == -ENOMEDIUM))
->  				bdev_disk_changed(bdev, ret == -ENOMEDIUM);
->  
-> @@ -1539,7 +1538,7 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, void *holder,
->  			if (bdev->bd_disk->fops->open)
->  				ret = bdev->bd_disk->fops->open(bdev, mode);
->  			/* the same as first opener case, read comment there */
-> -			if (test_bit(BDEV_NEED_PART_SCAN, &bdev->bd_flags) &&
-> +			if (test_bit(GD_NEED_PART_SCAN, &disk->state) &&
->  			    (!ret || ret == -ENOMEDIUM))
->  				bdev_disk_changed(bdev, ret == -ENOMEDIUM);
->  			if (ret)
-> diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-> index 6ffa783e16335e..eb20e28184ab19 100644
-> --- a/include/linux/blk_types.h
-> +++ b/include/linux/blk_types.h
-> @@ -19,8 +19,6 @@ struct cgroup_subsys_state;
->  typedef void (bio_end_io_t) (struct bio *);
->  struct bio_crypt_ctx;
->  
-> -#define BDEV_NEED_PART_SCAN		0
-> -
->  struct block_device {
->  	dev_t			bd_dev;
->  	int			bd_openers;
-> @@ -39,7 +37,7 @@ struct block_device {
->  	struct hd_struct *	bd_part;
->  	/* number of times partitions within this device have been opened. */
->  	unsigned		bd_part_count;
-> -	unsigned long		bd_flags;
-> +
->  	spinlock_t		bd_size_lock; /* for bd_inode->i_size updates */
->  	struct gendisk *	bd_disk;
->  	struct backing_dev_info *bd_bdi;
-> diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-> index 1c97cf84f011a7..38f23d75701379 100644
-> --- a/include/linux/genhd.h
-> +++ b/include/linux/genhd.h
-> @@ -191,6 +191,8 @@ struct gendisk {
->  	void *private_data;
->  
->  	int flags;
-> +	unsigned long state;
-> +#define GD_NEED_PART_SCAN		0
->  	struct rw_semaphore lookup_sem;
->  	struct kobject *slave_dir;
->  
-> -- 
-> 2.28.0
-> 
+diff --git a/drivers/ide/falconide.c b/drivers/ide/falconide.c
+index dbeb2605e5f6e..607c44bc50f1b 100644
+--- a/drivers/ide/falconide.c
++++ b/drivers/ide/falconide.c
+@@ -166,6 +166,7 @@ static int __init falconide_init(struct platform_device *pdev)
+ 	if (rc)
+ 		goto err_free;
+ 
++	platform_set_drvdata(pdev, host);
+ 	return 0;
+ err_free:
+ 	ide_host_free(host);
+@@ -176,7 +177,7 @@ static int __init falconide_init(struct platform_device *pdev)
+ 
+ static int falconide_remove(struct platform_device *pdev)
+ {
+-	struct ide_host *host = dev_get_drvdata(&pdev->dev);
++	struct ide_host *host = platform_get_drvdata(pdev);
+ 
+ 	ide_host_remove(host);
+ 
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+2.26.2
+
