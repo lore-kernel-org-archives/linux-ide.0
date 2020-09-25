@@ -4,22 +4,22 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 996A6C47425
-	for <linux-ide@archiver.kernel.org>; Fri, 25 Sep 2020 16:19:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C0B9C47427
+	for <linux-ide@archiver.kernel.org>; Fri, 25 Sep 2020 16:19:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6177B2076B
-	for <linux-ide@archiver.kernel.org>; Fri, 25 Sep 2020 16:19:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C78F20809
+	for <linux-ide@archiver.kernel.org>; Fri, 25 Sep 2020 16:19:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="d8DpOf+w"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iiYkcpj1"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729531AbgIYQTv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 25 Sep 2020 12:19:51 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:44495 "EHLO
+        id S1729543AbgIYQTs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 25 Sep 2020 12:19:48 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:59779 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729533AbgIYQTr (ORCPT
+        by vger.kernel.org with ESMTP id S1729529AbgIYQTr (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Fri, 25 Sep 2020 12:19:47 -0400
 Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
         s=mimecast20190719; t=1601050786;
@@ -27,28 +27,28 @@ Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=36St5Oeqqpx9UTR9cd+r4hzn7jyQrQgdXE6WFtjZ9NY=;
-        b=d8DpOf+wxiLFIzDok497bSG+hr17mrL4ah26onXo/cxMbdmvLAxi5nTih/Hynm3wMMV4g3
-        QSuop1zg5H8PuCn0xxC43YpQY/NlJ4+HQpMbZFSxa2rQRGogkQL+sYdR3zP+5qCFS/Bhr1
-        ULoP+vo+P+8czWbsygfBwJzpw6E4Edg=
+        bh=6namRKwyl41y70rGoFYuQn74j+aa0S3vYKcYpbMpaLA=;
+        b=iiYkcpj1vCQCM+yAXD93O4RZhehrO6GvVd7ZmOknghKCRGX8NyOMuidxy61QXCtqswku9l
+        65HsZ8jJvIHiDbO2buvePQfVivsFigzSPV06kU3qMxyyXOhKST1jdqF402igqaRM1T33f9
+        uXp3PS24LWhD6E9BEZq03Q4TJfpWYnI=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-505-zhfDJ7mRODmiJN2qUJywsg-1; Fri, 25 Sep 2020 12:19:44 -0400
-X-MC-Unique: zhfDJ7mRODmiJN2qUJywsg-1
+ us-mta-252-716peKunOrer45eL0-rxew-1; Fri, 25 Sep 2020 12:19:42 -0400
+X-MC-Unique: 716peKunOrer45eL0-rxew-1
 Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5153810BBECD;
-        Fri, 25 Sep 2020 16:19:43 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1EDFD87130C;
+        Fri, 25 Sep 2020 16:19:41 +0000 (UTC)
 Received: from sulaco.redhat.com (unknown [10.10.110.11])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 833095D9DC;
-        Fri, 25 Sep 2020 16:19:42 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 524465D9DC;
+        Fri, 25 Sep 2020 16:19:40 +0000 (UTC)
 From:   Tony Asleson <tasleson@redhat.com>
 To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
         linux-ide@vger.kernel.org
-Subject: [v5 11/12] print_req_error: Use durable_name_printk_ratelimited
-Date:   Fri, 25 Sep 2020 11:19:28 -0500
-Message-Id: <20200925161929.1136806-12-tasleson@redhat.com>
+Subject: [v5 09/12] libata: use durable_name_printk
+Date:   Fri, 25 Sep 2020 11:19:26 -0500
+Message-Id: <20200925161929.1136806-10-tasleson@redhat.com>
 In-Reply-To: <20200925161929.1136806-1-tasleson@redhat.com>
 References: <20200925161929.1136806-1-tasleson@redhat.com>
 MIME-Version: 1.0
@@ -58,35 +58,58 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Replace printk_ratelimited with one that adds the key/value
-durable name to log entry.
+Utilize durable_name_printk to associate the durable name
+with the log message via structured data.  The user visible
+portion of the log message is unchanged.
 
 Signed-off-by: Tony Asleson <tasleson@redhat.com>
 ---
- block/blk-core.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/ata/libata-core.c | 17 +++++++++--------
+ 1 file changed, 9 insertions(+), 8 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 03252af8c82c..59e0ff583eb6 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -218,12 +218,15 @@ EXPORT_SYMBOL_GPL(blk_status_to_errno);
- static void print_req_error(struct request *req, blk_status_t status,
- 		const char *caller)
- {
-+	struct device *dev;
- 	int idx = (__force int)status;
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index b1cd4d97bc2a..11200b861ce8 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6443,7 +6443,8 @@ void ata_port_printk(const struct ata_port *ap, const char *level,
+ 	vaf.fmt = fmt;
+ 	vaf.va = &args;
  
- 	if (WARN_ON_ONCE(idx >= ARRAY_SIZE(blk_errors)))
- 		return;
+-	printk("%sata%u: %pV", level, ap->print_id, &vaf);
++	durable_name_printk(level, &ap->tdev, "ata%u: %pV",
++		ap->print_id, &vaf);
  
--	printk_ratelimited(KERN_ERR
-+	dev = req->rq_disk ? disk_to_dev(req->rq_disk) : NULL;
-+
-+	durable_name_printk_ratelimited(KERN_ERR, dev,
- 		"%s: %s error, dev %s, sector %llu op 0x%x:(%s) flags 0x%x "
- 		"phys_seg %u prio class %u\n",
- 		caller, blk_errors[idx].name,
+ 	va_end(args);
+ }
+@@ -6461,11 +6462,11 @@ void ata_link_printk(const struct ata_link *link, const char *level,
+ 	vaf.va = &args;
+ 
+ 	if (sata_pmp_attached(link->ap) || link->ap->slave_link)
+-		printk("%sata%u.%02u: %pV",
+-		       level, link->ap->print_id, link->pmp, &vaf);
++		durable_name_printk(level, &link->tdev, "ata%u.%02u: %pV",
++		       link->ap->print_id, link->pmp, &vaf);
+ 	else
+-		printk("%sata%u: %pV",
+-		       level, link->ap->print_id, &vaf);
++		durable_name_printk(level, &link->tdev, "ata%u: %pV",
++		       link->ap->print_id, &vaf);
+ 
+ 	va_end(args);
+ }
+@@ -6482,9 +6483,9 @@ void ata_dev_printk(const struct ata_device *dev, const char *level,
+ 	vaf.fmt = fmt;
+ 	vaf.va = &args;
+ 
+-	printk("%sata%u.%02u: %pV",
+-	       level, dev->link->ap->print_id, dev->link->pmp + dev->devno,
+-	       &vaf);
++	durable_name_printk(level, &dev->tdev, "ata%u.%02u: %pV",
++		dev->link->ap->print_id, dev->link->pmp + dev->devno,
++		&vaf);
+ 
+ 	va_end(args);
+ }
 -- 
 2.26.2
 
