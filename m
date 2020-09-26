@@ -1,115 +1,107 @@
-Return-Path: <SRS0=DroY=DC=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=xPXv=DD=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C0B9C47427
-	for <linux-ide@archiver.kernel.org>; Fri, 25 Sep 2020 16:19:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D350BC2D0A8
+	for <linux-ide@archiver.kernel.org>; Sat, 26 Sep 2020 08:40:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C78F20809
-	for <linux-ide@archiver.kernel.org>; Fri, 25 Sep 2020 16:19:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C58621D94
+	for <linux-ide@archiver.kernel.org>; Sat, 26 Sep 2020 08:40:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iiYkcpj1"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XAjmp//N"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729543AbgIYQTs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 25 Sep 2020 12:19:48 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([63.128.21.124]:59779 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729529AbgIYQTr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 25 Sep 2020 12:19:47 -0400
-Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1601050786;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=6namRKwyl41y70rGoFYuQn74j+aa0S3vYKcYpbMpaLA=;
-        b=iiYkcpj1vCQCM+yAXD93O4RZhehrO6GvVd7ZmOknghKCRGX8NyOMuidxy61QXCtqswku9l
-        65HsZ8jJvIHiDbO2buvePQfVivsFigzSPV06kU3qMxyyXOhKST1jdqF402igqaRM1T33f9
-        uXp3PS24LWhD6E9BEZq03Q4TJfpWYnI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-252-716peKunOrer45eL0-rxew-1; Fri, 25 Sep 2020 12:19:42 -0400
-X-MC-Unique: 716peKunOrer45eL0-rxew-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1EDFD87130C;
-        Fri, 25 Sep 2020 16:19:41 +0000 (UTC)
-Received: from sulaco.redhat.com (unknown [10.10.110.11])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 524465D9DC;
-        Fri, 25 Sep 2020 16:19:40 +0000 (UTC)
-From:   Tony Asleson <tasleson@redhat.com>
-To:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org
-Subject: [v5 09/12] libata: use durable_name_printk
-Date:   Fri, 25 Sep 2020 11:19:26 -0500
-Message-Id: <20200925161929.1136806-10-tasleson@redhat.com>
-In-Reply-To: <20200925161929.1136806-1-tasleson@redhat.com>
+        id S1726309AbgIZIkH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 26 Sep 2020 04:40:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53024 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726305AbgIZIkH (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 26 Sep 2020 04:40:07 -0400
+Received: from mail-lf1-x141.google.com (mail-lf1-x141.google.com [IPv6:2a00:1450:4864:20::141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BC97C0613CE;
+        Sat, 26 Sep 2020 01:40:07 -0700 (PDT)
+Received: by mail-lf1-x141.google.com with SMTP id m5so5429826lfp.7;
+        Sat, 26 Sep 2020 01:40:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:references:from:organization:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=pPUPKOAJ7Ev2nJbdIQQ6RKeN+shYKl1n/l4jnQBOK44=;
+        b=XAjmp//NmcL1D27RAZkZiGabBTVQHMVxsgqq8SKmjOuZsrT53Nhxv9s2wTTmEdupzM
+         n0e8xzR25e+V4cXKmKnyBb7FAtW93zvkEwrQ0qprir9XVTzkr3cb9fr4ZxiYLFLwnP+S
+         buiYmdVozTTlVcFSGsDJ3dVx/ZS46k7Ko/A4gsYIVJHWXMYGNgLpdsUb4/Ykcas3c5dc
+         koA7SeyPSfcJpAKfmclD674ExY1rCU1qbcs5qyVmYluCmKAVv8eaIVDmJkWJBILSsXPG
+         Fldqydq+AI81soT6AxI9XDe02irGTk10GKcQV7X30dvBNNZlaTPraxEWI6LNrJjIHVYs
+         tJAw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:from:organization
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=pPUPKOAJ7Ev2nJbdIQQ6RKeN+shYKl1n/l4jnQBOK44=;
+        b=TnxrwN5QPL3RHApg/tK8x1Vdpcad+LSx26xwVKLLEUwor6VzCvKovXgult3bxvcHCn
+         EoC8E51xfXALiOqOamqIBPUQt7d0rgrj6gYHJvlKqbeComp89uvHYMBX+InCRArIcdXX
+         +dGHBNPl91aGG7sjzXh85hp6vVGjmn9Xwt4jyoUpIveacHVEMYxOTiMdldaGxuaHGHUR
+         R/5/d8OOr8zxlcbn7B/Qm/+jTZEJZFrYSAUHGJvb7+XNpkzBqP1ZhBCEvsh0HZLS1Igq
+         ltdPLYrTfzCF+kAMOuQAo4JbmfNiL0jz/ll8ei/XCnJn3i0CvxlEJia6Fh5tf9X94isu
+         f8Dg==
+X-Gm-Message-State: AOAM532Gu8/0MLpxL4D7X3RsVENmcJs/YCPyBHjMeyljd+ES+65JJqdv
+        T1MN4aod2uDF1aVtvanZMIvUb0m8kEM=
+X-Google-Smtp-Source: ABdhPJw39c4l34BMEWXp5xkK60eUXP/tQEvQQ0VYmLMWQ1eTvtTNq95/HUiqia+X5RLHNx7m/Vtqzg==
+X-Received: by 2002:ac2:4d10:: with SMTP id r16mr813784lfi.58.1601109605622;
+        Sat, 26 Sep 2020 01:40:05 -0700 (PDT)
+Received: from ?IPv6:2a00:1fa0:4850:6d74:c94:bdc6:ff06:f208? ([2a00:1fa0:4850:6d74:c94:bdc6:ff06:f208])
+        by smtp.gmail.com with ESMTPSA id n3sm1174267lfq.274.2020.09.26.01.40.04
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 26 Sep 2020 01:40:05 -0700 (PDT)
+Subject: Re: [v5 07/12] libata: Make ata_scsi_durable_name static
+To:     Tony Asleson <tasleson@redhat.com>, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-ide@vger.kernel.org
 References: <20200925161929.1136806-1-tasleson@redhat.com>
+ <20200925161929.1136806-8-tasleson@redhat.com>
+From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Organization: Brain-dead Software
+Message-ID: <ec0479bf-e5ac-58f1-248a-2d4c29ae3efa@gmail.com>
+Date:   Sat, 26 Sep 2020 11:40:04 +0300
+User-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+In-Reply-To: <20200925161929.1136806-8-tasleson@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Utilize durable_name_printk to associate the durable name
-with the log message via structured data.  The user visible
-portion of the log message is unchanged.
+Hello!
 
-Signed-off-by: Tony Asleson <tasleson@redhat.com>
----
- drivers/ata/libata-core.c | 17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+On 25.09.2020 19:19, Tony Asleson wrote:
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index b1cd4d97bc2a..11200b861ce8 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6443,7 +6443,8 @@ void ata_port_printk(const struct ata_port *ap, const char *level,
- 	vaf.fmt = fmt;
- 	vaf.va = &args;
- 
--	printk("%sata%u: %pV", level, ap->print_id, &vaf);
-+	durable_name_printk(level, &ap->tdev, "ata%u: %pV",
-+		ap->print_id, &vaf);
- 
- 	va_end(args);
- }
-@@ -6461,11 +6462,11 @@ void ata_link_printk(const struct ata_link *link, const char *level,
- 	vaf.va = &args;
- 
- 	if (sata_pmp_attached(link->ap) || link->ap->slave_link)
--		printk("%sata%u.%02u: %pV",
--		       level, link->ap->print_id, link->pmp, &vaf);
-+		durable_name_printk(level, &link->tdev, "ata%u.%02u: %pV",
-+		       link->ap->print_id, link->pmp, &vaf);
- 	else
--		printk("%sata%u: %pV",
--		       level, link->ap->print_id, &vaf);
-+		durable_name_printk(level, &link->tdev, "ata%u: %pV",
-+		       link->ap->print_id, &vaf);
- 
- 	va_end(args);
- }
-@@ -6482,9 +6483,9 @@ void ata_dev_printk(const struct ata_device *dev, const char *level,
- 	vaf.fmt = fmt;
- 	vaf.va = &args;
- 
--	printk("%sata%u.%02u: %pV",
--	       level, dev->link->ap->print_id, dev->link->pmp + dev->devno,
--	       &vaf);
-+	durable_name_printk(level, &dev->tdev, "ata%u.%02u: %pV",
-+		dev->link->ap->print_id, dev->link->pmp + dev->devno,
-+		&vaf);
- 
- 	va_end(args);
- }
--- 
-2.26.2
+> Signed-off-by: Tony Asleson <tasleson@redhat.com>
+> Signed-off-by: kernel test robot <lkp@intel.com>
+> ---
+>   drivers/ata/libata-scsi.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 194dac7dbdca..13a58ed7184c 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1086,7 +1086,7 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
+>   	return 0;
+>   }
+>   
+> -int ata_scsi_durable_name(const struct device *dev, char *buf, size_t len)
+> +static int ata_scsi_durable_name(const struct device *dev, char *buf, size_t len)
 
+    Why not do it in patch #6 -- when introducing the function?
+
+[...]
+
+MBR, Sergei
