@@ -2,93 +2,201 @@ Return-Path: <SRS0=bu0D=DE=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DA9AC4727F
-	for <linux-ide@archiver.kernel.org>; Sun, 27 Sep 2020 20:02:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FF14C4727E
+	for <linux-ide@archiver.kernel.org>; Sun, 27 Sep 2020 20:02:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E399122207
-	for <linux-ide@archiver.kernel.org>; Sun, 27 Sep 2020 20:02:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE0D622207
+	for <linux-ide@archiver.kernel.org>; Sun, 27 Sep 2020 20:02:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726634AbgI0UCX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 27 Sep 2020 16:02:23 -0400
+        id S1726977AbgI0UC2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 27 Sep 2020 16:02:28 -0400
 Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:14476
         "EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726424AbgI0UCX (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 27 Sep 2020 16:02:23 -0400
-X-Greylist: delayed 427 seconds by postgrey-1.27 at vger.kernel.org; Sun, 27 Sep 2020 16:02:22 EDT
+        by vger.kernel.org with ESMTP id S1726697AbgI0UC2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 27 Sep 2020 16:02:28 -0400
+X-Greylist: delayed 431 seconds by postgrey-1.27 at vger.kernel.org; Sun, 27 Sep 2020 16:02:25 EDT
 X-IronPort-AV: E=Sophos;i="5.77,311,1596492000"; 
-   d="scan'208";a="360169489"
+   d="scan'208";a="360169486"
 Received: from palace.rsr.lip6.fr (HELO palace.lip6.fr) ([132.227.105.202])
   by mail3-relais-sop.national.inria.fr with ESMTP/TLS/AES256-SHA256; 27 Sep 2020 21:55:11 +0200
 From:   Julia Lawall <Julia.Lawall@inria.fr>
-To:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+To:     linux-iio@vger.kernel.org
 Cc:     =?UTF-8?q?Valdis=20Kl=C4=93tnieks?= <valdis.kletnieks@vt.edu>,
         Joe Perches <joe@perches.com>,
         Thomas Gleixner <tglx@linutronix.de>,
-        kernel-janitors@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 03/18] [ARM] pata_icside: use semicolons rather than commas to separate statements
-Date:   Sun, 27 Sep 2020 21:12:13 +0200
-Message-Id: <1601233948-11629-4-git-send-email-Julia.Lawall@inria.fr>
+        kernel-janitors@vger.kernel.org,
+        David Lechner <david@lechnology.com>,
+        linux-wireless@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-clk@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        openipmi-developer@lists.sourceforge.net,
+        linux-crypto@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        Neil Armstrong <narmstrong@baylibre.com>,
+        Jerome Brunet <jbrunet@baylibre.com>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        linux-amlogic@lists.infradead.org, linux-acpi@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael@kernel.org>, drbd-dev@lists.linbit.com,
+        linux-block@vger.kernel.org
+Subject: [PATCH 00/18] use semicolons rather than commas to separate statements
+Date:   Sun, 27 Sep 2020 21:12:10 +0200
+Message-Id: <1601233948-11629-1-git-send-email-Julia.Lawall@inria.fr>
 X-Mailer: git-send-email 1.9.1
-In-Reply-To: <1601233948-11629-1-git-send-email-Julia.Lawall@inria.fr>
-References: <1601233948-11629-1-git-send-email-Julia.Lawall@inria.fr>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Replace commas with semicolons.  What is done is essentially described by
-the following Coccinelle semantic patch (http://coccinelle.lip6.fr/):
+These patches replace commas by semicolons.  This was done using the
+Coccinelle semantic patch (http://coccinelle.lip6.fr/) shown below.
+
+This semantic patch ensures that commas inside for loop headers will not be
+transformed.  It also doesn't touch macro definitions.
+
+Coccinelle ensures that braces are added as needed when a single-statement
+branch turns into a multi-statement one.
+
+This semantic patch has a few false positives, for variable delcarations
+such as:
+
+LIST_HEAD(x), *y;
+
+The semantic patch could be improved to avoid these, but for the moment
+they have been removed manually (2 occurrences).
 
 // <smpl>
-@@ expression e1,e2; @@
-e1
--,
+@initialize:ocaml@
+@@
+
+let infunction p =
+  (* avoid macros *)
+  (List.hd p).current_element <> "something_else"
+
+let combined p1 p2 =
+  (List.hd p1).line_end = (List.hd p2).line ||
+  (((List.hd p1).line_end < (List.hd p2).line) &&
+   ((List.hd p1).col < (List.hd p2).col))
+
+@bad@
+statement S;
+declaration d;
+position p;
+@@
+
+S@p
+d
+
+// special cases where newlines are needed (hope for no more than 5)
+@@
+expression e1,e2;
+statement S;
+position p != bad.p;
+position p1;
+position p2 :
+    script:ocaml(p1) { infunction p1 && combined p1 p2 };
+@@
+
+- e1@p1,@S@p e2@p2;
++ e1; e2;
+
+@@
+expression e1,e2;
+statement S;
+position p != bad.p;
+position p1;
+position p2 :
+    script:ocaml(p1) { infunction p1 && combined p1 p2 };
+@@
+
+- e1@p1,@S@p e2@p2;
++ e1; e2;
+
+@@
+expression e1,e2;
+statement S;
+position p != bad.p;
+position p1;
+position p2 :
+    script:ocaml(p1) { infunction p1 && combined p1 p2 };
+@@
+
+- e1@p1,@S@p e2@p2;
++ e1; e2;
+
+@@
+expression e1,e2;
+statement S;
+position p != bad.p;
+position p1;
+position p2 :
+    script:ocaml(p1) { infunction p1 && combined p1 p2 };
+@@
+
+- e1@p1,@S@p e2@p2;
++ e1; e2;
+
+@@
+expression e1,e2;
+statement S;
+position p != bad.p;
+position p1;
+position p2 :
+    script:ocaml(p1) { infunction p1 && combined p1 p2 };
+@@
+
+- e1@p1,@S@p e2@p2;
++ e1; e2;
+
+@r@
+expression e1,e2;
+statement S;
+position p != bad.p;
+@@
+
+e1 ,@S@p e2;
+
+@@
+expression e1,e2;
+position p1;
+position p2 :
+    script:ocaml(p1) { infunction p1 && not(combined p1 p2) };
+statement S;
+position r.p;
+@@
+
+e1@p1
+-,@S@p
 +;
-e2
+e2@p2
 ... when any
 // </smpl>
 
-Signed-off-by: Julia Lawall <Julia.Lawall@inria.fr>
-
 ---
- drivers/ata/pata_icside.c |   21 +++++++++++++--------
- 1 file changed, 13 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/ata/pata_icside.c b/drivers/ata/pata_icside.c
-index 08543aeb0093..498383cb6e29 100644
---- a/drivers/ata/pata_icside.c
-+++ b/drivers/ata/pata_icside.c
-@@ -202,14 +202,19 @@ static void pata_icside_set_dmamode(struct ata_port *ap, struct ata_device *adev
- 	 * Choose the IOMD cycle timing which ensure that the interface
- 	 * satisfies the measured active, recovery and cycle times.
- 	 */
--	if (t.active <= 50 && t.recover <= 375 && t.cycle <= 425)
--		iomd_type = 'D', cycle = 187;
--	else if (t.active <= 125 && t.recover <= 375 && t.cycle <= 500)
--		iomd_type = 'C', cycle = 250;
--	else if (t.active <= 200 && t.recover <= 550 && t.cycle <= 750)
--		iomd_type = 'B', cycle = 437;
--	else
--		iomd_type = 'A', cycle = 562;
-+	if (t.active <= 50 && t.recover <= 375 && t.cycle <= 425) {
-+		iomd_type = 'D';
-+		cycle = 187;
-+	} else if (t.active <= 125 && t.recover <= 375 && t.cycle <= 500) {
-+		iomd_type = 'C';
-+		cycle = 250;
-+	} else if (t.active <= 200 && t.recover <= 550 && t.cycle <= 750) {
-+		iomd_type = 'B';
-+		cycle = 437;
-+	} else {
-+		iomd_type = 'A';
-+		cycle = 562;
-+	}
- 
- 	ata_dev_info(adev, "timings: act %dns rec %dns cyc %dns (%c)\n",
- 		     t.active, t.recover, t.cycle, iomd_type);
-
+ drivers/acpi/processor_idle.c               |    4 +++-
+ drivers/ata/pata_icside.c                   |   21 +++++++++++++--------
+ drivers/base/regmap/regmap-debugfs.c        |    2 +-
+ drivers/bcma/driver_pci_host.c              |    4 ++--
+ drivers/block/drbd/drbd_receiver.c          |    6 ++++--
+ drivers/char/agp/amd-k7-agp.c               |    2 +-
+ drivers/char/agp/nvidia-agp.c               |    2 +-
+ drivers/char/agp/sworks-agp.c               |    2 +-
+ drivers/char/hw_random/iproc-rng200.c       |    8 ++++----
+ drivers/char/hw_random/mxc-rnga.c           |    6 +++---
+ drivers/char/hw_random/stm32-rng.c          |    8 ++++----
+ drivers/char/ipmi/bt-bmc.c                  |    6 +++---
+ drivers/clk/meson/meson-aoclk.c             |    2 +-
+ drivers/clk/mvebu/ap-cpu-clk.c              |    2 +-
+ drivers/clk/uniphier/clk-uniphier-cpugear.c |    2 +-
+ drivers/clk/uniphier/clk-uniphier-mux.c     |    2 +-
+ drivers/clocksource/mps2-timer.c            |    6 +++---
+ drivers/clocksource/timer-armada-370-xp.c   |    8 ++++----
+ drivers/counter/ti-eqep.c                   |    2 +-
+ drivers/crypto/amcc/crypto4xx_alg.c         |    2 +-
+ drivers/crypto/atmel-tdes.c                 |    2 +-
+ drivers/crypto/hifn_795x.c                  |    4 ++--
+ drivers/crypto/talitos.c                    |    8 ++++----
+ 23 files changed, 60 insertions(+), 51 deletions(-)
