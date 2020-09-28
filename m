@@ -2,127 +2,78 @@ Return-Path: <SRS0=nj0s=DF=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C6C8C4727E
-	for <linux-ide@archiver.kernel.org>; Mon, 28 Sep 2020 17:57:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C222C4741F
+	for <linux-ide@archiver.kernel.org>; Mon, 28 Sep 2020 20:35:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CEE68214D8
-	for <linux-ide@archiver.kernel.org>; Mon, 28 Sep 2020 17:57:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 252112080A
+	for <linux-ide@archiver.kernel.org>; Mon, 28 Sep 2020 20:35:28 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="hcR14GhG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726328AbgI1R51 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 28 Sep 2020 13:57:27 -0400
-Received: from smtprelay0134.hostedemail.com ([216.40.44.134]:48790 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726327AbgI1R50 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Sep 2020 13:57:26 -0400
-Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay08.hostedemail.com (Postfix) with ESMTP id 387CF182CF665;
-        Mon, 28 Sep 2020 17:57:25 +0000 (UTC)
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-HE-Tag: smell94_24172cc27183
-X-Filterd-Recvd-Size: 3389
-Received: from XPS-9350.home (unknown [47.151.133.149])
-        (Authenticated sender: joe@perches.com)
-        by omf06.hostedemail.com (Postfix) with ESMTPA;
-        Mon, 28 Sep 2020 17:57:23 +0000 (UTC)
-Message-ID: <25aa56e1f7943f9ac535fa184465a752aa00a4b4.camel@perches.com>
-Subject: Re: [PATCH 03/18] [ARM] pata_icside: use semicolons rather than
- commas to separate statements
-From:   Joe Perches <joe@perches.com>
-To:     Julia Lawall <julia.lawall@inria.fr>
-Cc:     Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        Valdis =?UTF-8?Q?Kl=C4=93tnieks?= <valdis.kletnieks@vt.edu>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        kernel-janitors@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Date:   Mon, 28 Sep 2020 10:57:22 -0700
-In-Reply-To: <alpine.DEB.2.22.394.2009281909000.2650@hadrien>
-References: <1601233948-11629-1-git-send-email-Julia.Lawall@inria.fr>
-         <1601233948-11629-4-git-send-email-Julia.Lawall@inria.fr>
-         <8cf2fad1659acd756703deb106d55483bd1e1eb9.camel@perches.com>
-         <alpine.DEB.2.22.394.2009281909000.2650@hadrien>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.36.4-0ubuntu1 
+        id S1726565AbgI1Uf1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 28 Sep 2020 16:35:27 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:41873 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726281AbgI1Uf1 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Sep 2020 16:35:27 -0400
+Dkim-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1601325326;
+        h=from:from:reply-to:reply-to:subject:subject:date:date:
+         message-id:message-id:to:to:cc:mime-version:mime-version:
+         content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=0pAaRMLcPsQC2zisk13ceWf79SQ4euWeqjMCzzYsmF0=;
+        b=hcR14GhGh8frWKWI5QTrLOiOma8yjOTE8b1xHlIy9myW+hhK0EMzNSJTXc3vZfq1lMD/rF
+        7odLTiY4o1THYkRP/l4E2Katq5x4QD9nOMQ8RyhOvN9YD086zalB+b57IgcR08xO6s130w
+        2u/McQWCzF2kSZ4NWc/fCPDD18/O3ng=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-291-yNA4Wfm_P4y0hxZP5CDxPg-1; Mon, 28 Sep 2020 16:35:22 -0400
+X-MC-Unique: yNA4Wfm_P4y0hxZP5CDxPg-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E57321868403;
+        Mon, 28 Sep 2020 20:35:20 +0000 (UTC)
+Received: from [10.10.110.11] (unknown [10.10.110.11])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 0ADCA5C1C4;
+        Mon, 28 Sep 2020 20:35:19 +0000 (UTC)
+Reply-To: tasleson@redhat.com
+Subject: Re: [v5 07/12] libata: Make ata_scsi_durable_name static
+To:     Sergei Shtylyov <sergei.shtylyov@gmail.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-ide@vger.kernel.org
+References: <20200925161929.1136806-1-tasleson@redhat.com>
+ <20200925161929.1136806-8-tasleson@redhat.com>
+ <ec0479bf-e5ac-58f1-248a-2d4c29ae3efa@gmail.com>
+From:   Tony Asleson <tasleson@redhat.com>
+Organization: Red Hat
+Message-ID: <b1e0f0a5-e8b3-1e11-26c5-d0b9e4d518d7@redhat.com>
+Date:   Mon, 28 Sep 2020 15:35:19 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.11.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <ec0479bf-e5ac-58f1-248a-2d4c29ae3efa@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, 2020-09-28 at 19:11 +0200, Julia Lawall wrote:
+On 9/26/20 3:40 AM, Sergei Shtylyov wrote:
 > 
-> On Mon, 28 Sep 2020, Joe Perches wrote:
-> 
-> > On Sun, 2020-09-27 at 21:12 +0200, Julia Lawall wrote:
-> > > Replace commas with semicolons.  What is done is essentially described by
-> > > the following Coccinelle semantic patch (http://coccinelle.lip6.fr/):
-> > 
-> > Hi Julia.
-> > 
-> > How did you decide on this patch subject header line?
-> > 
-> > It's certainly reasonable, but not what I would expect
-> > from any automation.
-> 
-> Most of the patches on this file touch other files as well.  There are
-> four that only touch this file.  One has no subsystem.  One has dma as the
-> subsystem.  Two have pata_icside, so that was chosen.
+>    Why not do it in patch #6 -- when introducing the function?
 
-So did you select the patch subject without any automation
-or did you create a tool that looks only at commits for
-individual files?
+Re-working patch series, will do as you suggest and as outlined
+in the submitting-patches.rst referenced by James.
 
-> > $ git log --no-merges --format='%s' drivers/ata/pata_icside.c | \
-> >   cut -f1 -d":" | sort | uniq -c | sort -rn
-> >      10 libata
-> >       5 libata-sff
-> >       2 [ARM] pata_icside
-> >       2 [ARM] ecard
-> >       2 [ARM] dma
-
-Yeah...
-
-Something like the script below and some examples of its use?
-
-$ cat find_best_header.sh
-#!/bin/bash
-
-# Show possible patch subject prefixes for a file in git
-
-# use commits that modify only the single file argument and
-# emit up to the 5 most common commit prefixes
-
-git log --no-merges --format='%h' -- $1 |
-    while read commit ; do
-	if [[ $(git log --format='%h' --name-only -1 $commit | wc -l) == 3 ]] ; then
-	    git log --format='%s' -1 $commit
-	fi
-    done |
-    cut -f1 -d":" | cut -f1-3 -d" " | sort | uniq -c | sort -rn | head -5
-
-$ ./find_best_header.sh drivers/ata/pata_icside.c
-      2 [ARM] pata_icside
-      1 Fix pata_icside build
-      1 [ARM] dma
-
-$ ./find_best_header.sh kernel/fork.c
-     36 fork
-     14 kernel/fork.c
-      6 mm
-      4 pidns
-      4 [PATCH] unshare system
-
-$ ./find_best_header.sh kernel/sched/core.c
-    150 sched
-    110 sched/core
-     12 sched/uclamp
-     12 sched/debug
-     10 sched/deadline
-
-$ ./find_best_header.sh drivers/iio/pressure/mpl115.c
-      3 iio
-
+Thanks
 
