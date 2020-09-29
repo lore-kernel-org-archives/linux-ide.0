@@ -2,109 +2,242 @@ Return-Path: <SRS0=lnsX=DG=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6B92C4727C
-	for <linux-ide@archiver.kernel.org>; Tue, 29 Sep 2020 12:18:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EACDC47423
+	for <linux-ide@archiver.kernel.org>; Tue, 29 Sep 2020 12:20:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 597452075A
-	for <linux-ide@archiver.kernel.org>; Tue, 29 Sep 2020 12:18:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ECB7A2075A
+	for <linux-ide@archiver.kernel.org>; Tue, 29 Sep 2020 12:20:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1601381933;
-	bh=jsNYaKVgFHpLC/ktuWsKIVg7iwR9LxHLmxcBHAgJsHI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=WQFJ6nt2KxRLRAkPkJSKSiVwsIGURApF4pR2Pokse1x69gNWH2mNMpmBrEku4v9Qw
-	 Sb8P4f3iNDZlpyKv+5l5GB5BkPdJGC/a6m8wm4W2Kb7xo044KUv9y4YdCebD87cQaY
-	 TC0+perzM+bEzvYhj91DQjK+oGdlI5aLzzNJBW48=
+	s=default; t=1601382053;
+	bh=ov1elNoAqvpAgkFdDCEUFjYQTLHr/ttO0TQvEJAVa9I=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:List-ID:From;
+	b=buupXANVUg0DJOCqfSYxGQSKG2CmFTc4U5fUKrB9Lj4uuSJ0SRu690kMxeWKkUVbs
+	 uxA1NMSjqYAvxpglsQduLi7J5SQbDhEPG7KL0ydxC0UU91VUJw2hbKRHcudpkeb4lB
+	 uun2ON9zWz38ZMZRLKWY1HDNqsbngAVWzpImBcRM=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732062AbgI2MS1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 29 Sep 2020 08:18:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49134 "EHLO mail.kernel.org"
+        id S1730836AbgI2MUj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 29 Sep 2020 08:20:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33994 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729969AbgI2LgV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 29 Sep 2020 07:36:21 -0400
-Received: from localhost (83-86-74-64.cable.dynamic.v4.ziggo.nl [83.86.74.64])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1732483AbgI2MUO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 29 Sep 2020 08:20:14 -0400
+Received: from mail-oi1-f176.google.com (mail-oi1-f176.google.com [209.85.167.176])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 981BD23E1E;
-        Tue, 29 Sep 2020 11:31:23 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id A14A621D7F;
+        Tue, 29 Sep 2020 12:20:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1601379084;
-        bh=jsNYaKVgFHpLC/ktuWsKIVg7iwR9LxHLmxcBHAgJsHI=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=y7sVl2gtkDfIGkUzlHUufeIhSVOBELmUaUUJgDQJISl9KUnMBU3rQlZuaSiFTEplJ
-         eSeRaFX9s7vYSd2fjW8toh5wC0Z9/VQKmTtkIOS0LsLM7G8blIfdLhALMRpJiTp/6V
-         MkpZK0cunFJdUMEi0zkVg1XlzaJOA3inj9E789Do=
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable@vger.kernel.org, Jiri Slaby <jslaby@suse.cz>,
-        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
-        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: [PATCH 4.19 244/245] ata: sata_mv, avoid trigerrable BUG_ON
-Date:   Tue, 29 Sep 2020 13:01:35 +0200
-Message-Id: <20200929105958.878335927@linuxfoundation.org>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200929105946.978650816@linuxfoundation.org>
-References: <20200929105946.978650816@linuxfoundation.org>
-User-Agent: quilt/0.66
+        s=default; t=1601382012;
+        bh=ov1elNoAqvpAgkFdDCEUFjYQTLHr/ttO0TQvEJAVa9I=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=jvmD222GUH8GXZXMqLgvR5A2+dOAEZWZqu4PegoCrdYQdzBlMInSen1U/TUqJEq8O
+         ceT34IkdoHIcZvgHpI88n6jirXc5UQcpO8Qz6F77lDrlzzwk0iFCge1wnf1OTx3Elx
+         zfbRYdhsjG0Yv1fzcUprrD5yQS1C84H7eKuBhHBY=
+Received: by mail-oi1-f176.google.com with SMTP id a3so5198773oib.4;
+        Tue, 29 Sep 2020 05:20:12 -0700 (PDT)
+X-Gm-Message-State: AOAM532QKK1BHU4WxK1BJVspA7x+C1SlGo5/J3No/cuXOfmtLVklTk/K
+        7Dv8Oy6tO8uo+LlkeIclcQ3DhS0edShwRiXt+ZY=
+X-Google-Smtp-Source: ABdhPJxHjqLRU0igLQr7uKep0t1UD6JefrmIRI4HIWmkx+yCU9/FWYtVU2YD0jwBcbkAVEkIIOoN6IXn5rWs3UBmGUQ=
+X-Received: by 2002:a54:4517:: with SMTP id l23mr2509374oil.174.1601382011805;
+ Tue, 29 Sep 2020 05:20:11 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <1601233948-11629-1-git-send-email-Julia.Lawall@inria.fr>
+In-Reply-To: <1601233948-11629-1-git-send-email-Julia.Lawall@inria.fr>
+From:   Ard Biesheuvel <ardb@kernel.org>
+Date:   Tue, 29 Sep 2020 14:20:00 +0200
+X-Gmail-Original-Message-ID: <CAMj1kXGh+CzuXkAnqsoMO2A3T1p=D6uFOV347Ym5+VFn5U1gWg@mail.gmail.com>
+Message-ID: <CAMj1kXGh+CzuXkAnqsoMO2A3T1p=D6uFOV347Ym5+VFn5U1gWg@mail.gmail.com>
+Subject: Re: [PATCH 00/18] use semicolons rather than commas to separate statements
+To:     Julia Lawall <Julia.Lawall@inria.fr>
+Cc:     linux-iio@vger.kernel.org, drbd-dev@lists.linbit.com,
+        =?UTF-8?Q?Valdis_Kl=C4=93tnieks?= <valdis.kletnieks@vt.edu>,
+        David Lechner <david@lechnology.com>,
+        Neil Armstrong <narmstrong@baylibre.com>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        linux-wireless@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        kernel-janitors@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        Joe Perches <joe@perches.com>,
+        linux-amlogic@lists.infradead.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        openipmi-developer@lists.sourceforge.net,
+        linux-clk@vger.kernel.org,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        Jerome Brunet <jbrunet@baylibre.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Jiri Slaby <jslaby@suse.cz>
-
-commit e9f691d899188679746eeb96e6cb520459eda9b4 upstream.
-
-There are several reports that the BUG_ON on unsupported command in
-mv_qc_prep can be triggered under some circumstances:
-https://bugzilla.suse.com/show_bug.cgi?id=1110252
-https://serverfault.com/questions/888897/raid-problems-after-power-outage
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1652185
-https://bugs.centos.org/view.php?id=14998
-
-Let sata_mv handle the failure gracefully: warn about that incl. the
-failed command number and return an AC_ERR_INVALID error. We can do that
-now thanks to the previous patch.
-
-Remove also the long-standing FIXME.
-
-[v2] use %.2x as commands are defined as hexa.
-
-Signed-off-by: Jiri Slaby <jslaby@suse.cz>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: linux-ide@vger.kernel.org
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- drivers/ata/sata_mv.c |    8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
-
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -2111,12 +2111,10 @@ static enum ata_completion_errors mv_qc_
- 		 * non-NCQ mode are: [RW] STREAM DMA and W DMA FUA EXT, none
- 		 * of which are defined/used by Linux.  If we get here, this
- 		 * driver needs work.
--		 *
--		 * FIXME: modify libata to give qc_prep a return value and
--		 * return error here.
- 		 */
--		BUG_ON(tf->command);
--		break;
-+		ata_port_err(ap, "%s: unsupported command: %.2x\n", __func__,
-+				tf->command);
-+		return AC_ERR_INVALID;
- 	}
- 	mv_crqb_pack_cmd(cw++, tf->nsect, ATA_REG_NSECT, 0);
- 	mv_crqb_pack_cmd(cw++, tf->hob_lbal, ATA_REG_LBAL, 0);
+On Sun, 27 Sep 2020 at 21:56, Julia Lawall <Julia.Lawall@inria.fr> wrote:
+>
+> These patches replace commas by semicolons.
 
 
+Why?
+
+
+> This was done using the
+> Coccinelle semantic patch (http://coccinelle.lip6.fr/) shown below.
+>
+> This semantic patch ensures that commas inside for loop headers will not be
+> transformed.  It also doesn't touch macro definitions.
+>
+> Coccinelle ensures that braces are added as needed when a single-statement
+> branch turns into a multi-statement one.
+>
+> This semantic patch has a few false positives, for variable delcarations
+> such as:
+>
+> LIST_HEAD(x), *y;
+>
+> The semantic patch could be improved to avoid these, but for the moment
+> they have been removed manually (2 occurrences).
+>
+> // <smpl>
+> @initialize:ocaml@
+> @@
+>
+> let infunction p =
+>   (* avoid macros *)
+>   (List.hd p).current_element <> "something_else"
+>
+> let combined p1 p2 =
+>   (List.hd p1).line_end = (List.hd p2).line ||
+>   (((List.hd p1).line_end < (List.hd p2).line) &&
+>    ((List.hd p1).col < (List.hd p2).col))
+>
+> @bad@
+> statement S;
+> declaration d;
+> position p;
+> @@
+>
+> S@p
+> d
+>
+> // special cases where newlines are needed (hope for no more than 5)
+> @@
+> expression e1,e2;
+> statement S;
+> position p != bad.p;
+> position p1;
+> position p2 :
+>     script:ocaml(p1) { infunction p1 && combined p1 p2 };
+> @@
+>
+> - e1@p1,@S@p e2@p2;
+> + e1; e2;
+>
+> @@
+> expression e1,e2;
+> statement S;
+> position p != bad.p;
+> position p1;
+> position p2 :
+>     script:ocaml(p1) { infunction p1 && combined p1 p2 };
+> @@
+>
+> - e1@p1,@S@p e2@p2;
+> + e1; e2;
+>
+> @@
+> expression e1,e2;
+> statement S;
+> position p != bad.p;
+> position p1;
+> position p2 :
+>     script:ocaml(p1) { infunction p1 && combined p1 p2 };
+> @@
+>
+> - e1@p1,@S@p e2@p2;
+> + e1; e2;
+>
+> @@
+> expression e1,e2;
+> statement S;
+> position p != bad.p;
+> position p1;
+> position p2 :
+>     script:ocaml(p1) { infunction p1 && combined p1 p2 };
+> @@
+>
+> - e1@p1,@S@p e2@p2;
+> + e1; e2;
+>
+> @@
+> expression e1,e2;
+> statement S;
+> position p != bad.p;
+> position p1;
+> position p2 :
+>     script:ocaml(p1) { infunction p1 && combined p1 p2 };
+> @@
+>
+> - e1@p1,@S@p e2@p2;
+> + e1; e2;
+>
+> @r@
+> expression e1,e2;
+> statement S;
+> position p != bad.p;
+> @@
+>
+> e1 ,@S@p e2;
+>
+> @@
+> expression e1,e2;
+> position p1;
+> position p2 :
+>     script:ocaml(p1) { infunction p1 && not(combined p1 p2) };
+> statement S;
+> position r.p;
+> @@
+>
+> e1@p1
+> -,@S@p
+> +;
+> e2@p2
+> ... when any
+> // </smpl>
+>
+> ---
+>
+>  drivers/acpi/processor_idle.c               |    4 +++-
+>  drivers/ata/pata_icside.c                   |   21 +++++++++++++--------
+>  drivers/base/regmap/regmap-debugfs.c        |    2 +-
+>  drivers/bcma/driver_pci_host.c              |    4 ++--
+>  drivers/block/drbd/drbd_receiver.c          |    6 ++++--
+>  drivers/char/agp/amd-k7-agp.c               |    2 +-
+>  drivers/char/agp/nvidia-agp.c               |    2 +-
+>  drivers/char/agp/sworks-agp.c               |    2 +-
+>  drivers/char/hw_random/iproc-rng200.c       |    8 ++++----
+>  drivers/char/hw_random/mxc-rnga.c           |    6 +++---
+>  drivers/char/hw_random/stm32-rng.c          |    8 ++++----
+>  drivers/char/ipmi/bt-bmc.c                  |    6 +++---
+>  drivers/clk/meson/meson-aoclk.c             |    2 +-
+>  drivers/clk/mvebu/ap-cpu-clk.c              |    2 +-
+>  drivers/clk/uniphier/clk-uniphier-cpugear.c |    2 +-
+>  drivers/clk/uniphier/clk-uniphier-mux.c     |    2 +-
+>  drivers/clocksource/mps2-timer.c            |    6 +++---
+>  drivers/clocksource/timer-armada-370-xp.c   |    8 ++++----
+>  drivers/counter/ti-eqep.c                   |    2 +-
+>  drivers/crypto/amcc/crypto4xx_alg.c         |    2 +-
+>  drivers/crypto/atmel-tdes.c                 |    2 +-
+>  drivers/crypto/hifn_795x.c                  |    4 ++--
+>  drivers/crypto/talitos.c                    |    8 ++++----
+>  23 files changed, 60 insertions(+), 51 deletions(-)
+>
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
