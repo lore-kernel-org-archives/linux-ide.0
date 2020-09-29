@@ -7,46 +7,45 @@ X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BBA4C4727F
-	for <linux-ide@archiver.kernel.org>; Tue, 29 Sep 2020 11:46:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 750B0C4741F
+	for <linux-ide@archiver.kernel.org>; Tue, 29 Sep 2020 11:46:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 48C4221924
-	for <linux-ide@archiver.kernel.org>; Tue, 29 Sep 2020 11:46:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43D22206E5
+	for <linux-ide@archiver.kernel.org>; Tue, 29 Sep 2020 11:46:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1601379992;
-	bh=QNd/mNtDUlryYCwCxDvovtIW4k86maIz4Dt1ByuNfgo=;
+	s=default; t=1601380009;
+	bh=vn4Ck3Nqhb03MhKlGuMww4Bjj3An/RLjc+LKuvoAhps=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=IKiGsherXBNstVxynngQ+ZFxFNkBHKXNDh89YMCmS4njpee6EUUegTpi7d1/y4Kmr
-	 jAdy0FXJk2z5MBM1ydC0L0W3ucZNa77cTfUkwIpFrYnirph9W2LduxBCr5E8rEaGjy
-	 AZzwb82jElFuA2YnnFMkB5AMYY02Zvs3c+T/8mRc=
+	b=KdPWFRqgcJc0tb6KJyQWqMBn+rib0NLy2uRgGaZhlrAymsJQOejKEb+ZH1KdxPk6n
+	 lmr7u2/Npo/dy7NPvzuokTIQVzJoIBwT+5uLBBOCKEi/6YD5MPfvjqNXLrEJxvFW0i
+	 rbYrSLTzADomaVKonNfBoek1Ln/VspWIic4SOQo0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729804AbgI2Lq0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 29 Sep 2020 07:46:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46400 "EHLO mail.kernel.org"
+        id S1731010AbgI2Lqe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 29 Sep 2020 07:46:34 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46190 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730995AbgI2LqF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 29 Sep 2020 07:46:05 -0400
+        id S1730820AbgI2LqA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 29 Sep 2020 07:46:00 -0400
 Received: from localhost (83-86-74-64.cable.dynamic.v4.ziggo.nl [83.86.74.64])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5B235206E5;
-        Tue, 29 Sep 2020 11:46:04 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id AD0912075F;
+        Tue, 29 Sep 2020 11:45:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1601379964;
-        bh=QNd/mNtDUlryYCwCxDvovtIW4k86maIz4Dt1ByuNfgo=;
+        s=default; t=1601379960;
+        bh=vn4Ck3Nqhb03MhKlGuMww4Bjj3An/RLjc+LKuvoAhps=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=tggFKSNpmR7BV0PZrweNOwEMA8KJVM/eHPl3Ay9+K7CV0uXGPAqMlBOcrlgvNtPE+
-         sp++6zaA+F6EfSf13fiywehLYk4Hkb3O9tIhIB5djW3JMjuSRSakgXHRRpk+SR/D26
-         RmGlrdHGMvk+CYPGl8F3JEOsfTFQSXaEUMCOMmeE=
+        b=HQ2vGsHhMDZM8GzEhTDOK+HOZEduLJ1pexm9E0+gifbZ2rIaSmrSBDkiRQ9bUqKr8
+         CjN4XhpAOruKj1bqD26UGNDAFrARAhS5QjwglJhjkSV/dnAIgdhORq4Mvzw2S+R6ob
+         OEFYifoLetIbPr6xR/1AKYW5GEBx0VtOEcHCvakU=
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         stable@vger.kernel.org, Jiri Slaby <jslaby@suse.cz>,
-        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
-        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: [PATCH 5.4 388/388] ata: sata_mv, avoid trigerrable BUG_ON
-Date:   Tue, 29 Sep 2020 13:01:59 +0200
-Message-Id: <20200929110029.243572359@linuxfoundation.org>
+        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
+Subject: [PATCH 5.4 386/388] ata: define AC_ERR_OK
+Date:   Tue, 29 Sep 2020 13:01:57 +0200
+Message-Id: <20200929110029.150908256@linuxfoundation.org>
 X-Mailer: git-send-email 2.28.0
 In-Reply-To: <20200929110010.467764689@linuxfoundation.org>
 References: <20200929110010.467764689@linuxfoundation.org>
@@ -60,51 +59,30 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 From: Jiri Slaby <jslaby@suse.cz>
 
-commit e9f691d899188679746eeb96e6cb520459eda9b4 upstream.
+commit 25937580a5065d6fbd92d9c8ebd47145ad80052e upstream.
 
-There are several reports that the BUG_ON on unsupported command in
-mv_qc_prep can be triggered under some circumstances:
-https://bugzilla.suse.com/show_bug.cgi?id=1110252
-https://serverfault.com/questions/888897/raid-problems-after-power-outage
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1652185
-https://bugs.centos.org/view.php?id=14998
-
-Let sata_mv handle the failure gracefully: warn about that incl. the
-failed command number and return an AC_ERR_INVALID error. We can do that
-now thanks to the previous patch.
-
-Remove also the long-standing FIXME.
-
-[v2] use %.2x as commands are defined as hexa.
+Since we will return enum ata_completion_errors from qc_prep in the next
+patch, let's define AC_ERR_OK to mark the OK status.
 
 Signed-off-by: Jiri Slaby <jslaby@suse.cz>
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: linux-ide@vger.kernel.org
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Signed-off-by: Jens Axboe <axboe@kernel.dk>
 Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
 ---
- drivers/ata/sata_mv.c |    8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ include/linux/libata.h |    1 +
+ 1 file changed, 1 insertion(+)
 
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -2098,12 +2098,10 @@ static enum ata_completion_errors mv_qc_
- 		 * non-NCQ mode are: [RW] STREAM DMA and W DMA FUA EXT, none
- 		 * of which are defined/used by Linux.  If we get here, this
- 		 * driver needs work.
--		 *
--		 * FIXME: modify libata to give qc_prep a return value and
--		 * return error here.
- 		 */
--		BUG_ON(tf->command);
--		break;
-+		ata_port_err(ap, "%s: unsupported command: %.2x\n", __func__,
-+				tf->command);
-+		return AC_ERR_INVALID;
- 	}
- 	mv_crqb_pack_cmd(cw++, tf->nsect, ATA_REG_NSECT, 0);
- 	mv_crqb_pack_cmd(cw++, tf->hob_lbal, ATA_REG_LBAL, 0);
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -486,6 +486,7 @@ enum hsm_task_states {
+ };
+ 
+ enum ata_completion_errors {
++	AC_ERR_OK		= 0,	    /* no error */
+ 	AC_ERR_DEV		= (1 << 0), /* device reported error */
+ 	AC_ERR_HSM		= (1 << 1), /* host state machine violation */
+ 	AC_ERR_TIMEOUT		= (1 << 2), /* timeout */
 
 
