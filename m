@@ -2,87 +2,247 @@ Return-Path: <SRS0=lnsX=DG=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03EF6C4741F
-	for <linux-ide@archiver.kernel.org>; Tue, 29 Sep 2020 12:33:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D544C4741F
+	for <linux-ide@archiver.kernel.org>; Tue, 29 Sep 2020 12:37:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B404320759
-	for <linux-ide@archiver.kernel.org>; Tue, 29 Sep 2020 12:33:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1601382834;
-	bh=meO6ORAQIfHcxRMg2SQvD3XfCqWBal3sr5orOsOVaps=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=S6PemZz6mCNdetaujTyJNyec6EEXpxCvFAiJas4cRR2q+0rZl6lHwKj4q0cMx1S/t
-	 KNtsUID7hD6bemOsC+hErw6j37r0NFtXAB7dPw8odJKOxAif0ebizQ1rQg27I1m3eV
-	 919ZHA8ExvP4XG6TGvruG/jGWfnSL1Iy8iiFUwHI=
+	by mail.kernel.org (Postfix) with ESMTP id 55DE620789
+	for <linux-ide@archiver.kernel.org>; Tue, 29 Sep 2020 12:37:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729398AbgI2Mdx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 29 Sep 2020 08:33:53 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37336 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728786AbgI2LW5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 29 Sep 2020 07:22:57 -0400
-Received: from localhost (83-86-74-64.cable.dynamic.v4.ziggo.nl [83.86.74.64])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 53BB923A5C;
-        Tue, 29 Sep 2020 11:19:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1601378390;
-        bh=meO6ORAQIfHcxRMg2SQvD3XfCqWBal3sr5orOsOVaps=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QOXLOmeWSm5AG/iVHAzURCCf9l+ZVIS88iu20l/gzfcV60mWCIdRY921E7bAB6Nfx
-         N9IibquYSPAk9qf17lbk27o8ektdL3T9lVLrqHUWH2sOE5C1nBAwc7VUhtm13KJJBo
-         sO8irhcM20hY/I14PIWyatJnWdzfibPAZx8GZ0M8=
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable@vger.kernel.org, Jiri Slaby <jslaby@suse.cz>,
-        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
-Subject: [PATCH 4.14 164/166] ata: define AC_ERR_OK
-Date:   Tue, 29 Sep 2020 13:01:16 +0200
-Message-Id: <20200929105943.386146288@linuxfoundation.org>
-X-Mailer: git-send-email 2.28.0
-In-Reply-To: <20200929105935.184737111@linuxfoundation.org>
-References: <20200929105935.184737111@linuxfoundation.org>
-User-Agent: quilt/0.66
+        id S1733192AbgI2MhM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 29 Sep 2020 08:37:12 -0400
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:8965 "EHLO
+        mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728786AbgI2MhF (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 29 Sep 2020 08:37:05 -0400
+X-IronPort-AV: E=Sophos;i="5.77,318,1596492000"; 
+   d="scan'208";a="360346486"
+Received: from abo-173-121-68.mrs.modulonet.fr (HELO hadrien) ([85.68.121.173])
+  by mail3-relais-sop.national.inria.fr with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 29 Sep 2020 14:36:52 +0200
+Date:   Tue, 29 Sep 2020 14:36:52 +0200 (CEST)
+From:   Julia Lawall <julia.lawall@inria.fr>
+X-X-Sender: jll@hadrien
+To:     Ard Biesheuvel <ardb@kernel.org>
+cc:     linux-iio@vger.kernel.org, drbd-dev@lists.linbit.com,
+        =?UTF-8?Q?Valdis_Kl=C4=93tnieks?= <valdis.kletnieks@vt.edu>,
+        David Lechner <david@lechnology.com>,
+        Neil Armstrong <narmstrong@baylibre.com>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        linux-wireless@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        kernel-janitors@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        Joe Perches <joe@perches.com>,
+        linux-amlogic@lists.infradead.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        openipmi-developer@lists.sourceforge.net,
+        linux-clk@vger.kernel.org,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        Jerome Brunet <jbrunet@baylibre.com>
+Subject: Re: [PATCH 00/18] use semicolons rather than commas to separate
+ statements
+In-Reply-To: <CAMj1kXGh+CzuXkAnqsoMO2A3T1p=D6uFOV347Ym5+VFn5U1gWg@mail.gmail.com>
+Message-ID: <alpine.DEB.2.22.394.2009291428020.2808@hadrien>
+References: <1601233948-11629-1-git-send-email-Julia.Lawall@inria.fr> <CAMj1kXGh+CzuXkAnqsoMO2A3T1p=D6uFOV347Ym5+VFn5U1gWg@mail.gmail.com>
+User-Agent: Alpine 2.22 (DEB 394 2020-01-19)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Jiri Slaby <jslaby@suse.cz>
-
-commit 25937580a5065d6fbd92d9c8ebd47145ad80052e upstream.
-
-Since we will return enum ata_completion_errors from qc_prep in the next
-patch, let's define AC_ERR_OK to mark the OK status.
-
-Signed-off-by: Jiri Slaby <jslaby@suse.cz>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: linux-ide@vger.kernel.org
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- include/linux/libata.h |    1 +
- 1 file changed, 1 insertion(+)
-
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -504,6 +504,7 @@ enum hsm_task_states {
- };
- 
- enum ata_completion_errors {
-+	AC_ERR_OK		= 0,	    /* no error */
- 	AC_ERR_DEV		= (1 << 0), /* device reported error */
- 	AC_ERR_HSM		= (1 << 1), /* host state machine violation */
- 	AC_ERR_TIMEOUT		= (1 << 2), /* timeout */
 
 
+On Tue, 29 Sep 2020, Ard Biesheuvel wrote:
+
+> On Sun, 27 Sep 2020 at 21:56, Julia Lawall <Julia.Lawall@inria.fr> wrote:
+> >
+> > These patches replace commas by semicolons.
+>
+>
+> Why?
+
+Among the complete 5000 lines of changes there is one probable bug where
+an if branch ends with a comma and thus pulls the subsequent statement
+under the if branch, in contradiction to what is indicated by the
+indentation.
+
+The use of comma often appears to be random, with a sequence of similar
+statements where some have commas and some don't.
+
+From a self-interested point of view, commas are not good for Coccinelle,
+because multiple statements are put into one.  Any problems involving them
+are thus likely to be overlooked unless one thinks of looking for them
+explicitly.  As an example, Christophe Jaillet noticed that one sequence
+of comma assignments would be better written using swap.  If one looked
+for opportunities for using swap in the most obvious way, one wouldn't
+find it.
+
+julia
+
+
+>
+>
+> > This was done using the
+> > Coccinelle semantic patch (http://coccinelle.lip6.fr/) shown below.
+> >
+> > This semantic patch ensures that commas inside for loop headers will not be
+> > transformed.  It also doesn't touch macro definitions.
+> >
+> > Coccinelle ensures that braces are added as needed when a single-statement
+> > branch turns into a multi-statement one.
+> >
+> > This semantic patch has a few false positives, for variable delcarations
+> > such as:
+> >
+> > LIST_HEAD(x), *y;
+> >
+> > The semantic patch could be improved to avoid these, but for the moment
+> > they have been removed manually (2 occurrences).
+> >
+> > // <smpl>
+> > @initialize:ocaml@
+> > @@
+> >
+> > let infunction p =
+> >   (* avoid macros *)
+> >   (List.hd p).current_element <> "something_else"
+> >
+> > let combined p1 p2 =
+> >   (List.hd p1).line_end = (List.hd p2).line ||
+> >   (((List.hd p1).line_end < (List.hd p2).line) &&
+> >    ((List.hd p1).col < (List.hd p2).col))
+> >
+> > @bad@
+> > statement S;
+> > declaration d;
+> > position p;
+> > @@
+> >
+> > S@p
+> > d
+> >
+> > // special cases where newlines are needed (hope for no more than 5)
+> > @@
+> > expression e1,e2;
+> > statement S;
+> > position p != bad.p;
+> > position p1;
+> > position p2 :
+> >     script:ocaml(p1) { infunction p1 && combined p1 p2 };
+> > @@
+> >
+> > - e1@p1,@S@p e2@p2;
+> > + e1; e2;
+> >
+> > @@
+> > expression e1,e2;
+> > statement S;
+> > position p != bad.p;
+> > position p1;
+> > position p2 :
+> >     script:ocaml(p1) { infunction p1 && combined p1 p2 };
+> > @@
+> >
+> > - e1@p1,@S@p e2@p2;
+> > + e1; e2;
+> >
+> > @@
+> > expression e1,e2;
+> > statement S;
+> > position p != bad.p;
+> > position p1;
+> > position p2 :
+> >     script:ocaml(p1) { infunction p1 && combined p1 p2 };
+> > @@
+> >
+> > - e1@p1,@S@p e2@p2;
+> > + e1; e2;
+> >
+> > @@
+> > expression e1,e2;
+> > statement S;
+> > position p != bad.p;
+> > position p1;
+> > position p2 :
+> >     script:ocaml(p1) { infunction p1 && combined p1 p2 };
+> > @@
+> >
+> > - e1@p1,@S@p e2@p2;
+> > + e1; e2;
+> >
+> > @@
+> > expression e1,e2;
+> > statement S;
+> > position p != bad.p;
+> > position p1;
+> > position p2 :
+> >     script:ocaml(p1) { infunction p1 && combined p1 p2 };
+> > @@
+> >
+> > - e1@p1,@S@p e2@p2;
+> > + e1; e2;
+> >
+> > @r@
+> > expression e1,e2;
+> > statement S;
+> > position p != bad.p;
+> > @@
+> >
+> > e1 ,@S@p e2;
+> >
+> > @@
+> > expression e1,e2;
+> > position p1;
+> > position p2 :
+> >     script:ocaml(p1) { infunction p1 && not(combined p1 p2) };
+> > statement S;
+> > position r.p;
+> > @@
+> >
+> > e1@p1
+> > -,@S@p
+> > +;
+> > e2@p2
+> > ... when any
+> > // </smpl>
+> >
+> > ---
+> >
+> >  drivers/acpi/processor_idle.c               |    4 +++-
+> >  drivers/ata/pata_icside.c                   |   21 +++++++++++++--------
+> >  drivers/base/regmap/regmap-debugfs.c        |    2 +-
+> >  drivers/bcma/driver_pci_host.c              |    4 ++--
+> >  drivers/block/drbd/drbd_receiver.c          |    6 ++++--
+> >  drivers/char/agp/amd-k7-agp.c               |    2 +-
+> >  drivers/char/agp/nvidia-agp.c               |    2 +-
+> >  drivers/char/agp/sworks-agp.c               |    2 +-
+> >  drivers/char/hw_random/iproc-rng200.c       |    8 ++++----
+> >  drivers/char/hw_random/mxc-rnga.c           |    6 +++---
+> >  drivers/char/hw_random/stm32-rng.c          |    8 ++++----
+> >  drivers/char/ipmi/bt-bmc.c                  |    6 +++---
+> >  drivers/clk/meson/meson-aoclk.c             |    2 +-
+> >  drivers/clk/mvebu/ap-cpu-clk.c              |    2 +-
+> >  drivers/clk/uniphier/clk-uniphier-cpugear.c |    2 +-
+> >  drivers/clk/uniphier/clk-uniphier-mux.c     |    2 +-
+> >  drivers/clocksource/mps2-timer.c            |    6 +++---
+> >  drivers/clocksource/timer-armada-370-xp.c   |    8 ++++----
+> >  drivers/counter/ti-eqep.c                   |    2 +-
+> >  drivers/crypto/amcc/crypto4xx_alg.c         |    2 +-
+> >  drivers/crypto/atmel-tdes.c                 |    2 +-
+> >  drivers/crypto/hifn_795x.c                  |    4 ++--
+> >  drivers/crypto/talitos.c                    |    8 ++++----
+> >  23 files changed, 60 insertions(+), 51 deletions(-)
+> >
+> > _______________________________________________
+> > linux-arm-kernel mailing list
+> > linux-arm-kernel@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>
