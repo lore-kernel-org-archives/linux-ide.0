@@ -2,78 +2,159 @@ Return-Path: <SRS0=wLrF=DJ=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 211ECC4363D
-	for <linux-ide@archiver.kernel.org>; Fri,  2 Oct 2020 09:40:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8859C4363C
+	for <linux-ide@archiver.kernel.org>; Fri,  2 Oct 2020 16:47:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E3B99206DD
-	for <linux-ide@archiver.kernel.org>; Fri,  2 Oct 2020 09:40:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B5CF520719
+	for <linux-ide@archiver.kernel.org>; Fri,  2 Oct 2020 16:47:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1601657246;
+	bh=C5WPK5CZPKLO2lWVgIHLaU7b38EYaryCUeyxv2/Hv/I=;
+	h=Subject:To:Cc:References:From:Date:In-Reply-To:List-ID:From;
+	b=dTY8I3Qo+gpMxuYLZ3IMbmjOolaW2QXPeQ9Vbl7LQz8Ifdk6/6Q5AF5BZkZNZMd+j
+	 sM1CsmS1b9IqxGnO3TP3RSyWAAZrMI96sq5184Q2HJ2zzQTBSRAC3l4AgvYqKOrEGt
+	 prEDN09feXaib2XQZMxEghP7/ODlIeOD9HDdIVjc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725993AbgJBJkk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 2 Oct 2020 05:40:40 -0400
-Received: from mga14.intel.com ([192.55.52.115]:18117 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726181AbgJBJkj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 2 Oct 2020 05:40:39 -0400
-IronPort-SDR: FcUhJndXYmVSCPI6afC8lg1vrrexNiP6DoEPiJ6VcnkIgOO1ltVuNxXx8PkqsPytGCilUuitpk
- s3SxuSlXKqKg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9761"; a="162191312"
-X-IronPort-AV: E=Sophos;i="5.77,327,1596524400"; 
-   d="scan'208";a="162191312"
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Oct 2020 02:40:37 -0700
-IronPort-SDR: EdfO4x51+338IEfWgxVSCdJ6y0fvUAt0XKF8Ie5ZGOrQVB4zB7/vyWoyTWKuNPVIPh6z52s6MX
- 6nr7iyRdM7kg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.77,327,1596524400"; 
-   d="scan'208";a="346421538"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga002.fm.intel.com with ESMTP; 02 Oct 2020 02:40:36 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id B8366320; Fri,  2 Oct 2020 12:40:35 +0300 (EEST)
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-ide@vger.kernel.org
-Subject: [PATCH] ahci: Add Intel Rocket Lake PCH-H RAID PCI IDs
-Date:   Fri,  2 Oct 2020 12:40:35 +0300
-Message-Id: <20201002094035.57329-1-mika.westerberg@linux.intel.com>
-X-Mailer: git-send-email 2.28.0
+        id S2388174AbgJBQrR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 2 Oct 2020 12:47:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47612 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387789AbgJBQrR (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 2 Oct 2020 12:47:17 -0400
+Received: from mail-io1-xd42.google.com (mail-io1-xd42.google.com [IPv6:2607:f8b0:4864:20::d42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE5E1C0613E2
+        for <linux-ide@vger.kernel.org>; Fri,  2 Oct 2020 09:47:16 -0700 (PDT)
+Received: by mail-io1-xd42.google.com with SMTP id y74so2209122iof.12
+        for <linux-ide@vger.kernel.org>; Fri, 02 Oct 2020 09:47:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linuxfoundation.org; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=Li4M3GK5y6x0SzTfqjxLLA9AT+ROiUGVRcFqRzm5Djg=;
+        b=a1gXL5toNpXLmacnL7yhtJtYu+HmO+zq2HSfVRcyZ9z5aGYPOUMcOsxSjRxLjTiwhj
+         zJBgESeE1qI3ToOAsK8MZWwKmHt51a3nMoD6FLDGupRKEjHEktpPC4yX8sNz7w/nKYtr
+         hL0t3LhSNNDXOlNOrlInWA796iaMFGVw4FjQQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Li4M3GK5y6x0SzTfqjxLLA9AT+ROiUGVRcFqRzm5Djg=;
+        b=kO8lVlZ/vFQwK/tuWR3/PsQ2pSW2J4VIP1boI3kW0IdPag9U6JDuoxwBycCla1Go0Z
+         IH2dttANjPELaYODbopxmvSxAx7E03r8tlpRJ4ftv/GB+ZfiCOjXh+IkjMqtYej0SBHj
+         xn8oAycz+OPYphwhR4/DXy+odMbSpJZlhjZyq3HNmZblTKaqw2eJuH/7+459tOHFKlpp
+         JN+bn6oE28Jyrw+xh6Oif2tkI6m1QPSuYltPtK52/rz/4BzSWaw8gQqJrmC0k6+yRcHk
+         CFJZEKCarLpaHzGXml9z6AJjfa7Oy7fr7qAkyx0UhSIeVJXFUOnqE5Ml8pHYPV+kMVgK
+         YreQ==
+X-Gm-Message-State: AOAM53390lcG9wlXua1kILEI5FoamdXuCetPeQZ59fZWxJYdgBovJTZf
+        k9JG6YVPG6S2UbR+2TTp2CPVNQ==
+X-Google-Smtp-Source: ABdhPJzrfRpNIYzV2uFrhJdCHt/QTSYBKDnpK2pS6zKI5Da6BP91uaqOQt3S2LEYZ+yKmaDKjo66AQ==
+X-Received: by 2002:a05:6638:10e9:: with SMTP id g9mr2960820jae.139.1601657236070;
+        Fri, 02 Oct 2020 09:47:16 -0700 (PDT)
+Received: from [192.168.1.112] (c-24-9-64-241.hsd1.co.comcast.net. [24.9.64.241])
+        by smtp.gmail.com with ESMTPSA id h2sm932771ioj.5.2020.10.02.09.47.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 02 Oct 2020 09:47:15 -0700 (PDT)
+Subject: Re: [PATCH 00/18] use semicolons rather than commas to separate
+ statements
+To:     Joe Perches <joe@perches.com>,
+        Julia Lawall <julia.lawall@inria.fr>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Shuah Khan <shuah@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>
+Cc:     Ard Biesheuvel <ardb@kernel.org>, linux-iio@vger.kernel.org,
+        drbd-dev@tron.linbit.com,
+        =?UTF-8?Q?Valdis_Kl=c4=93tnieks?= <valdis.kletnieks@vt.edu>,
+        David Lechner <david@lechnology.com>,
+        Neil Armstrong <narmstrong@baylibre.com>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        linux-amlogic@lists.infradead.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        openipmi-developer@lists.sourceforge.net,
+        linux-clk@vger.kernel.org,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        Jerome Brunet <jbrunet@baylibre.com>
+References: <1601233948-11629-1-git-send-email-Julia.Lawall@inria.fr>
+ <CAMj1kXGh+CzuXkAnqsoMO2A3T1p=D6uFOV347Ym5+VFn5U1gWg@mail.gmail.com>
+ <20200929124108.GY4282@kadam>
+ <alpine.DEB.2.22.394.2009291445050.2808@hadrien>
+ <5f0d2b20f5088281363bb4a35c5652a2c087f159.camel@perches.com>
+ <cd75e2d1-9923-b725-78cd-fd5611431584@linuxfoundation.org>
+From:   Shuah Khan <skhan@linuxfoundation.org>
+Message-ID: <81b94c3a-43d6-c9f5-0bc0-43bf65b3d5fc@linuxfoundation.org>
+Date:   Fri, 2 Oct 2020 10:47:13 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
+In-Reply-To: <cd75e2d1-9923-b725-78cd-fd5611431584@linuxfoundation.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add Intel Rocket Lake PCH-H RAID PCI IDs to the list of supported
-controllers.
+On 9/29/20 7:42 AM, Shuah Khan wrote:
+> On 9/29/20 7:34 AM, Joe Perches wrote:
+>> On Tue, 2020-09-29 at 14:47 +0200, Julia Lawall wrote:
+>>> On Tue, 29 Sep 2020, Dan Carpenter wrote:
+>>>> The times where commas are used deliberately to replace curly braces 
+>>>> are
+>>>> just evil.  Either way the code is cleaner with semi-colons.
+>>>
+>>> I also found exaamples like the following to be particularly unforunate:
+>>>
+>>>                                  fprintf(stderr,
+>>>                                          "page_nr %lu wrong count %Lu 
+>>> %Lu\n",
+>>>                                         page_nr, count,
+>>>                                         count_verify[page_nr]), exit(1);
+>>>
+>>> The exit is very hard to see, unless you know to look for it.
+>>
+>> I sent that patch last month.
+>> https://patchwork.kernel.org/patch/11734877/
+>>
+> 
+> I see what happened. This patch touches lib, cpupower, and selftests.
+> Guess lost in the limbo of who takes it.
+> 
+>   tools/lib/subcmd/help.c                    |  10 +-
+>   tools/power/cpupower/utils/cpufreq-set.c   |  14 +-
+>   tools/testing/selftests/vm/gup_benchmark.c |  18 +-
+>   tools/testing/selftests/vm/userfaultfd.c   | 296 +++++++++++++--------
+>   4 files changed, 210 insertions(+), 128 deletions(-)
+> 
+> I can take it through one of my trees.
+> 
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/ata/ahci.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Rafael, Andrew,
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index fbd8eaa32d32..00ba8e5a1ccc 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -360,6 +360,10 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x1f3f), board_ahci_avn }, /* Avoton RAID */
- 	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Wellsburg RAID */
- 	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci }, /* Wellsburg RAID */
-+	{ PCI_VDEVICE(INTEL, 0x43d4), board_ahci }, /* Rocket Lake PCH-H RAID */
-+	{ PCI_VDEVICE(INTEL, 0x43d5), board_ahci }, /* Rocket Lake PCH-H RAID */
-+	{ PCI_VDEVICE(INTEL, 0x43d6), board_ahci }, /* Rocket Lake PCH-H RAID */
-+	{ PCI_VDEVICE(INTEL, 0x43d7), board_ahci }, /* Rocket Lake PCH-H RAID */
- 	{ PCI_VDEVICE(INTEL, 0x8d02), board_ahci }, /* Wellsburg AHCI */
- 	{ PCI_VDEVICE(INTEL, 0x8d04), board_ahci }, /* Wellsburg RAID */
- 	{ PCI_VDEVICE(INTEL, 0x8d06), board_ahci }, /* Wellsburg RAID */
--- 
-2.28.0
+This patch is now applied to
+https://git.kernel.org/pub/scm/linux/kernel/git/shuah/linux-kselftest.git 
+fixes branch.
+
+This spans pm, kselftest-mm tests and tools/lib and has been
+in limbo for a few weeks for that reason.
+
+I decided to take this through kselftest tree to avoid having
+Joe split the patches.
+
+thanks,
+-- Shuah
+
+
+
 
