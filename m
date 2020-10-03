@@ -1,91 +1,175 @@
-Return-Path: <SRS0=wLrF=DJ=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=uTHP=DK=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79B2FC46466
-	for <linux-ide@archiver.kernel.org>; Fri,  2 Oct 2020 23:52:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 008A5C47420
+	for <linux-ide@archiver.kernel.org>; Sat,  3 Oct 2020 18:41:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 43204206A4
-	for <linux-ide@archiver.kernel.org>; Fri,  2 Oct 2020 23:52:37 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="ks+IR8q3"
+	by mail.kernel.org (Postfix) with ESMTP id CA777206DD
+	for <linux-ide@archiver.kernel.org>; Sat,  3 Oct 2020 18:41:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725794AbgJBXwg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 2 Oct 2020 19:52:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57382 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725283AbgJBXwf (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 2 Oct 2020 19:52:35 -0400
-Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A083AC0613E2
-        for <linux-ide@vger.kernel.org>; Fri,  2 Oct 2020 16:52:34 -0700 (PDT)
-Received: by mail-pg1-x536.google.com with SMTP id 34so1849713pgo.13
-        for <linux-ide@vger.kernel.org>; Fri, 02 Oct 2020 16:52:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=0DJfVPYB+sVtt5O1Oa8Zekpgikluk6DkPQtGUjAgJlA=;
-        b=ks+IR8q3r+6/HLVgizvYpFbU+qnF/X4yPlu/67dItSrGoLaiBgypQx8xGSk2y3QL3C
-         g/wn8tvlFnwHQNBn3lU7NupfGmOfXUy64ZKyNzVqMJVPAohEKvDvFHEqB58LQVLV0IZc
-         GsR+MGvfzF7asnMMZb7iOhar7Zf9fFubiXddL6lODcZIA4PXw2XhWow70F4rhQcQvnDD
-         47mGZcUXyMQS7z1KQpVXY3EnR+G9q4p3byrjW+MMqJ4hf4uOVPmG6b//o0P9EIQYuwqw
-         wmqjNz7nW9F7eIKdo2aEuIK0zINsb+qSP6VZdp2lJ5TRTJucT/he1mA3td/PZJtX1VeF
-         N+rw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=0DJfVPYB+sVtt5O1Oa8Zekpgikluk6DkPQtGUjAgJlA=;
-        b=AKRq5OV0SsBRXAkn2GC99xHhmbht6YyIi6A1gwkzl4mDU815EZ6KQlS6ldN5d7+gSi
-         9PEb346PpIAcSLl349AOG/9eKaRMpN5vWOLptoNAHh9BRqZG4sxRWZUY0/steIu/0NUt
-         i/lepXzaLOkr3fOcOJXJ88aXASJ4Vm2iFF3XlHnHSO5q+TG21CTws7Pwo0HmwRqDphfn
-         /1ah746d1rhWO6XNpeWSvhH2YNMGuix8afhSRgiNXKAGgjPMOYYhEL6skLQP6F7GVkxK
-         cJDk7rc/i8xac5BpWtFhlYwm+mEzlMIb13SHq34OYdR23pL8+luBc4/rH7wP0tE0MxaY
-         eqnQ==
-X-Gm-Message-State: AOAM5304Q5ORnBK96UoCi4MxJMbUnqLPpXNMRRrWGEfsCJ9CMEKBHOlJ
-        893Xx5TATWzpplVpoKti4eOvKA==
-X-Google-Smtp-Source: ABdhPJy7K+Q8r0RzR7rSAzeX3kKVhmlq4kUYPcbn7wh1uB/vDrsgSEnR4qhfNLKOa5/U01XewwtSSg==
-X-Received: by 2002:aa7:9ac9:0:b029:13e:d13d:a133 with SMTP id x9-20020aa79ac90000b029013ed13da133mr5067023pfp.27.1601682753874;
-        Fri, 02 Oct 2020 16:52:33 -0700 (PDT)
-Received: from [192.168.1.134] ([66.219.217.173])
-        by smtp.gmail.com with ESMTPSA id x140sm3270606pfc.211.2020.10.02.16.52.32
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 02 Oct 2020 16:52:33 -0700 (PDT)
-Subject: Re: [PATCH][next] pata_cmd64x: Use fallthrough pseudo-keyword
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-References: <20201002224852.GA463@embeddedor>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <8cad7d36-b5d5-41bb-0f40-502720dc2e53@kernel.dk>
-Date:   Fri, 2 Oct 2020 17:52:32 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S1725830AbgJCSk4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 3 Oct 2020 14:40:56 -0400
+Received: from smtprelay0046.hostedemail.com ([216.40.44.46]:41004 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725816AbgJCSkz (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 3 Oct 2020 14:40:55 -0400
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay05.hostedemail.com (Postfix) with ESMTP id 9054F18029210;
+        Sat,  3 Oct 2020 18:40:53 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: stop55_5311f74271af
+X-Filterd-Recvd-Size: 6242
+Received: from XPS-9350.home (unknown [47.151.133.149])
+        (Authenticated sender: joe@perches.com)
+        by omf13.hostedemail.com (Postfix) with ESMTPA;
+        Sat,  3 Oct 2020 18:40:49 +0000 (UTC)
+Message-ID: <f44d19ad596f261c0287c9ab18c45161003efb43.camel@perches.com>
+Subject: Re: [PATCH 00/18] use semicolons rather than commas to separate
+ statements
+From:   Joe Perches <joe@perches.com>
+To:     Mark Brown <broonie@kernel.org>, tools@linux.kernel.org,
+        Konstantin Ryabitsev <konstantin@linuxfoundation.org>
+Cc:     linux-iio@vger.kernel.org, Julia Lawall <Julia.Lawall@inria.fr>,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-crypto@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jerome Brunet <jbrunet@baylibre.com>,
+        linux-acpi@vger.kernel.org, David Lechner <david@lechnology.com>,
+        Valdis =?UTF-8?Q?Kl=C4=93tnieks?= <valdis.kletnieks@vt.edu>,
+        kernel-janitors@vger.kernel.org, drbd-dev@lists.linbit.com,
+        openipmi-developer@lists.sourceforge.net,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        linux-ide@vger.kernel.org, linux-amlogic@lists.infradead.org,
+        linux-clk@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-wireless@vger.kernel.org,
+        Neil Armstrong <narmstrong@baylibre.com>
+Date:   Sat, 03 Oct 2020 11:40:48 -0700
+In-Reply-To: <20201001110150.GA6715@sirena.org.uk>
+References: <1601233948-11629-1-git-send-email-Julia.Lawall@inria.fr>
+         <160132172369.55460.9237357219623604216.b4-ty@kernel.org>
+         <b1174f9be2ce65f6b5ebefcba0b48e792926abbc.camel@perches.com>
+         <20200929113745.GB4799@sirena.org.uk>
+         <db26d49401dc0bd6b9013a603a155f9827f404a4.camel@perches.com>
+         <20201001110150.GA6715@sirena.org.uk>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.36.4-0ubuntu1 
 MIME-Version: 1.0
-In-Reply-To: <20201002224852.GA463@embeddedor>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 10/2/20 4:48 PM, Gustavo A. R. Silva wrote:
-> Replace /* FALL THRU */ comment with the new pseudo-keyword macro
-> fallthrough[1].
+(Adding tools and Konstantin Ryabitsev)
+
+There seems to be some mismatch between b4's use of the
+cover letter to a patch series and what maintainers that
+apply a subset of the patches in the patch series.
+
+The merge description shows the entire patch series as
+applied, but the actual merge is only a subset of the
+series.
+
+Can this be improved in b4?
+
+For example, regarding:
+
+https://lore.kernel.org/linux-amlogic/160132172369.55460.9237357219623604216.b4-ty@kernel.org/
+https://lore.kernel.org/lkml/b1174f9be2ce65f6b5ebefcba0b48e792926abbc.camel@perches.com/#t
+
+On Thu, 2020-10-01 at 12:01 +0100, Mark Brown wrote:
+> On Wed, Sep 30, 2020 at 12:33:39PM -0700, Joe Perches wrote:
+> > On Tue, 2020-09-29 at 12:37 +0100, Mark Brown wrote:
+> > > Feel free to submit patches to b4.
+> > Have you tried the existing option to send
+> > thank you's on a specific ranges of patches?
 > 
-> [1] https://www.kernel.org/doc/html/v5.7/process/deprecated.html?highlight=fallthrough#implicit-switch-case-fall-through
+> I am relying on b4 to identify which patches that I've downloaded are in
+> the pushed branches.  Given that it explicitly lists the patches that
+> are applied it appears to be doing an OK job here.
 
-Applied, thanks.
+I'm not so sure about that.
 
--- 
-Jens Axboe
+The commit merge description in -next shows 23 files
+modified but the commit range shown in the merge shows
+only a single patch applied:
+
+From next-20201002:
+
+(I've removed some of the commit description below)
+
+$ git log --stat -1 2defc3fa18a68963a330187f5386968e50832d06
+commit 2defc3fa18a68963a330187f5386968e50832d06
+Merge: eb45df24fe82 7f4a122d0b50
+Author: Mark Brown <broonie@kernel.org>
+Date:   Mon Sep 28 18:28:48 2020 +0100
+
+    Merge series "use semicolons rather than commas to separate statements" from Julia Lawall <Julia.Lawall@inria.fr>:
+    
+    These patches replace commas by semicolons.  This was done using the
+    Coccinelle semantic patch (http://coccinelle.lip6.fr/) shown below.
+
+[some of the long description elided]
+
+        ---
+    
+     drivers/acpi/processor_idle.c               |    4 +++-
+     drivers/ata/pata_icside.c                   |   21 +++++++++++++--------
+     drivers/base/regmap/regmap-debugfs.c        |    2 +-
+     drivers/bcma/driver_pci_host.c              |    4 ++--
+     drivers/block/drbd/drbd_receiver.c          |    6 ++++--
+     drivers/char/agp/amd-k7-agp.c               |    2 +-
+     drivers/char/agp/nvidia-agp.c               |    2 +-
+     drivers/char/agp/sworks-agp.c               |    2 +-
+     drivers/char/hw_random/iproc-rng200.c       |    8 ++++----
+     drivers/char/hw_random/mxc-rnga.c           |    6 +++---
+     drivers/char/hw_random/stm32-rng.c          |    8 ++++----
+     drivers/char/ipmi/bt-bmc.c                  |    6 +++---
+     drivers/clk/meson/meson-aoclk.c             |    2 +-
+     drivers/clk/mvebu/ap-cpu-clk.c              |    2 +-
+     drivers/clk/uniphier/clk-uniphier-cpugear.c |    2 +-
+     drivers/clk/uniphier/clk-uniphier-mux.c     |    2 +-
+     drivers/clocksource/mps2-timer.c            |    6 +++---
+     drivers/clocksource/timer-armada-370-xp.c   |    8 ++++----
+     drivers/counter/ti-eqep.c                   |    2 +-
+     drivers/crypto/amcc/crypto4xx_alg.c         |    2 +-
+     drivers/crypto/atmel-tdes.c                 |    2 +-
+     drivers/crypto/hifn_795x.c                  |    4 ++--
+     drivers/crypto/talitos.c                    |    8 ++++----
+     23 files changed, 60 insertions(+), 51 deletions(-)
+
+But the commit range of the merge shows only the single commit:
+
+$ git log --stat eb45df24fe82..7f4a122d0b50
+commit 7f4a122d0b50b40c64d24a5cf7aafe26dd9487ee
+Author: Julia Lawall <Julia.Lawall@inria.fr>
+Date:   Sun Sep 27 21:12:24 2020 +0200
+
+    regmap: debugfs: use semicolons rather than commas to separate statements
+    
+    Replace commas with semicolons.  What is done is essentially described by
+    the following Coccinelle semantic patch (http://coccinelle.lip6.fr/):
+    
+    // <smpl>
+    @@ expression e1,e2; @@
+    e1
+    -,
+    +;
+    e2
+    ... when any
+    // </smpl>
+    
+    Signed-off-by: Julia Lawall <Julia.Lawall@inria.fr>
+    Link: https://lore.kernel.org/r/1601233948-11629-15-git-send-email-Julia.La>
+    Signed-off-by: Mark Brown <broonie@kernel.org>
+
+ drivers/base/regmap/regmap-debugfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
 
