@@ -2,123 +2,297 @@ Return-Path: <SRS0=HNFi=DO=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28971C47095
-	for <linux-ide@archiver.kernel.org>; Wed,  7 Oct 2020 16:03:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 541F8C4727E
+	for <linux-ide@archiver.kernel.org>; Wed,  7 Oct 2020 20:10:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA2CA216C4
-	for <linux-ide@archiver.kernel.org>; Wed,  7 Oct 2020 16:03:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0783A207EA
+	for <linux-ide@archiver.kernel.org>; Wed,  7 Oct 2020 20:10:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=voleatech.de header.i=@voleatech.de header.b="A5eGA+Qg"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QysUbag6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728289AbgJGQDH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 7 Oct 2020 12:03:07 -0400
-Received: from mail-eopbgr80101.outbound.protection.outlook.com ([40.107.8.101]:59394
-        "EHLO EUR04-VI1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728984AbgJGQDF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 7 Oct 2020 12:03:05 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=oOi0DG10IVKjh4YGmCKOF50dxQ/0TJjVCgBqLCE51iBXcaH42YYoRQXykEYZlZ6/TO7cK1miNsxWk0v9gtf9Ora4le4LKV+5IuUx+/c0bIEN/PaDET4JkeuMakq9hp5lR3rzin+dtCft15dwqgu9Ncw9jNIumVReDvTmM0FTIQyJaZHi/znP+pl0AmtmNSqzd6UsZrfz3d31vIpBAL5NfC83ZD+LQwjhGvSgBTL3DsYbSb6sSLSjUaHxREBzhECbwAdcHSFTCh3+R57gJYgGwxDxi4n1uRdDCtpqeXBihg8JOJMzhSe+LIZXKPQ6Yk34zN4Or+NydLU80QMC6cQ6jA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=n6kQpsKs2LExf4IY+Sn5wn2rN5eXiYd8aUOnC22Aas8=;
- b=jy4G5cWAOMdhVP/20QEovjTnBiko6j3Bw+277H3GD86v45yy0yxqv4zIm/tEPcJEh0jmKAYiLcoyJwfxnYtZeGoqsX2grUfR8eJhvurbXeqKkR2fvgzaf5ZQKobZXe0miI+q5bDRTu0PYJjYz4uLxRtJgRo3/JYxCDeIlVjRmw8KuNeQURfewLbej4N9Fn7WmDBMCDkSA3Q8uPNv90uNAsBDnls++uSxYJNQLgsPeLhIFIwXhst2wYeSwamO02fNYu8SdYfGbSG+OFqWyjdhVE4JCfJpqwWlNXlOVOjCdWj5h8rnkHQz1jkdKm28ZdQyQrzrp5I5Ig0LjBJanILK6A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=voleatech.de; dmarc=pass action=none header.from=voleatech.de;
- dkim=pass header.d=voleatech.de; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=voleatech.de;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=n6kQpsKs2LExf4IY+Sn5wn2rN5eXiYd8aUOnC22Aas8=;
- b=A5eGA+QggvrqE5YDgxgyGFqykE6czAe4crbP7d+y+zQVUloSW/uFyPGklPZbAOeQ/ewtKAAqwGx/e7KcQssiauge29xOeLCoUv1AITILTB2Dvis6XGD7fPCZaQrxkJLGm85dhIIhzaXfKlglWsu0vTf/KphgyUP5vVEq306816k=
-Authentication-Results: kernel.org; dkim=none (message not signed)
- header.d=none;kernel.org; dmarc=none action=none header.from=voleatech.de;
-Received: from AM8PR05MB7251.eurprd05.prod.outlook.com (2603:10a6:20b:1d4::23)
- by AM8PR05MB7268.eurprd05.prod.outlook.com (2603:10a6:20b:1dd::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3455.23; Wed, 7 Oct
- 2020 16:03:01 +0000
-Received: from AM8PR05MB7251.eurprd05.prod.outlook.com
- ([fe80::f132:2cc:34f2:5e4]) by AM8PR05MB7251.eurprd05.prod.outlook.com
- ([fe80::f132:2cc:34f2:5e4%7]) with mapi id 15.20.3433.045; Wed, 7 Oct 2020
- 16:03:01 +0000
-Date:   Wed, 7 Oct 2020 18:02:59 +0200
-From:   Sven Auhagen <sven.auhagen@voleatech.de>
-To:     Marc Zyngier <maz@kernel.org>
-Cc:     axboe@kernel.dk, hdegoede@redhat.com, robh+dt@kernel.org,
-        tglx@linutronix.de, gregory.clement@bootlin.com,
-        linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        devicetree@vger.kernel.org, jason@lakedaemon.net, andrew@lunn.ch,
-        rjw@rjwysocki.net, viresh.kumar@linaro.org,
-        antoine.tenart@bootlin.com, maxime.chevallier@bootlin.com,
-        thomas.petazzoni@bootlin.com, miquel.raynal@bootlin.com
-Subject: Re: [PATCH 1/7] ata: ahci: mvebu: Rename a platform data flag
-Message-ID: <20201007160259.y3jblrt5b6b5ygqp@svensmacbookair.sven.lan>
-References: <20201007154554.66650-1-sven.auhagen@voleatech.de>
- <20201007154554.66650-2-sven.auhagen@voleatech.de>
- <5f24cd5774b5e68681fc9c460cc44bec@kernel.org>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5f24cd5774b5e68681fc9c460cc44bec@kernel.org>
-X-Originating-IP: [109.193.235.168]
-X-ClientProxiedBy: AM4PR0302CA0035.eurprd03.prod.outlook.com
- (2603:10a6:205:2::48) To AM8PR05MB7251.eurprd05.prod.outlook.com
- (2603:10a6:20b:1d4::23)
+        id S1728156AbgJGUKb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 7 Oct 2020 16:10:31 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:33030 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728163AbgJGUKb (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 7 Oct 2020 16:10:31 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1602101428;
+        h=from:from:reply-to:reply-to:subject:subject:date:date:
+         message-id:message-id:to:to:cc:cc:mime-version:mime-version:
+         content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=BVhXhk+iF6o3RlOlKVnrK9GRKRrzsNTDLNFpzDWY1gw=;
+        b=QysUbag67WNfOVsexGWZg+8I920WyGJc0UyiZh4HcD+DFsqOVAyil4ZEPhbXMMCD7VDaVv
+        DOvheAHc8A7M340v3sF8QJXH3YvxQxzL6Jug/NzRyleh+5VkTAJeP43yS5XMpfrDx0qJo+
+        FghL8+8KZyC8iBwzgm+XPq+Ea9wxWVg=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-425-FhXR8f0oOuC8yvhwtOO24Q-1; Wed, 07 Oct 2020 16:10:24 -0400
+X-MC-Unique: FhXR8f0oOuC8yvhwtOO24Q-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9DD4957050;
+        Wed,  7 Oct 2020 20:10:21 +0000 (UTC)
+Received: from [10.10.110.48] (unknown [10.10.110.48])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 09D7F1002C01;
+        Wed,  7 Oct 2020 20:10:17 +0000 (UTC)
+Reply-To: tasleson@redhat.com
+Subject: Re: [v5 01/12] struct device: Add function callback durable_name
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>, pmladek@suse.com,
+        David Lehman <dlehman@redhat.com>,
+        sergey.senozhatsky@gmail.com, jbaron@akamai.com,
+        James.Bottomley@HansenPartnership.com,
+        linux-kernel@vger.kernel.org, rafael@kernel.org,
+        martin.petersen@oracle.com, kbusch@kernel.org, axboe@fb.com,
+        sagi@grimberg.me, akpm@linux-foundation.org, orson.zhai@unisoc.com,
+        viro@zeniv.linux.org.uk
+References: <20200925161929.1136806-1-tasleson@redhat.com>
+ <20200925161929.1136806-2-tasleson@redhat.com>
+ <20200929175102.GA1613@infradead.org> <20200929180415.GA1400445@kroah.com>
+ <20e220a6-4bde-2331-6e5e-24de39f9aa3b@redhat.com>
+ <20200930073859.GA1509708@kroah.com>
+ <c6b031b8-f617-0580-52a5-26532da4ee03@redhat.com>
+ <20201001114832.GC2368232@kroah.com>
+From:   Tony Asleson <tasleson@redhat.com>
+Organization: Red Hat
+Message-ID: <72be0597-a3e2-bf7b-90b2-799d10fdf56c@redhat.com>
+Date:   Wed, 7 Oct 2020 15:10:17 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.3.1
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from svensmacbookair.sven.lan (109.193.235.168) by AM4PR0302CA0035.eurprd03.prod.outlook.com (2603:10a6:205:2::48) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3455.23 via Frontend Transport; Wed, 7 Oct 2020 16:03:00 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 1ea9aba9-a9f7-4236-8488-08d86ada7784
-X-MS-TrafficTypeDiagnostic: AM8PR05MB7268:
-X-Microsoft-Antispam-PRVS: <AM8PR05MB7268D72CFF1BED3A6F9BE901EF0A0@AM8PR05MB7268.eurprd05.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:669;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: V7qWKIlXElGjkFa6b+QRmLTf0NYPYUBlE3RB/wcSaEfbL1Jb/YhBT+jxMR1ocr7/zb2AWn8S7mKTKph3UALxwNzGpH3vIxAtGgn87eKV/fylzYN+5BohrqHjJmShW2Q0Ay2iC+ZyN9Oeb8V5zAz3tLE2rQFpN9VuhOqJY3g5esvWaHfQifdj8HTJ7fYln4qE+eoMb3BZefvJISOZkc/17aDn9Zb/enCcrxu6jKf7CQ0pDgA028xeYhDjN5ibS4jSMJQBob4fgnSN1JFsJXCv1kq0BrTJ865EuHCA4T2yiTMfpLFCH9goYAALbIbzqZJ4
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM8PR05MB7251.eurprd05.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(396003)(366004)(39840400004)(376002)(346002)(478600001)(956004)(4744005)(7416002)(55016002)(6916009)(44832011)(186003)(4326008)(16526019)(53546011)(2906002)(7696005)(6506007)(52116002)(66556008)(66946007)(66476007)(8676002)(9686003)(316002)(8936002)(5660300002)(86362001)(1076003)(26005);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData: lE49RkgnWLvRee+ZqQe307wMbwvHGEfCxN8KP86GDY+JhwjRdMmJDE4m6we7qEJ62jIXKMqcH711XisI9RrpAY8Znv1BK4yCCU0GE2ADwS2ChHJoOlVkgQB7wUDcC1uMfkADeXBZRQi0H2Z6DowuqWG/2OCuQhFJJZWYMt/tZAbn3uG+CxBEFC+ZKY07fh9/9FeMZRVnCHw3yYMs08F81x5SZSrb4gbg3yDT2NX7mI2wDrjgf10WlQ64p23H4vbj2t5t317p/qupq720X21aYRLE3Gf5z4ONDU2LAIqpBEmzL1EobTeE87Y8XHk3clv19ui+iDTE3E/cHJ20Y8OGUNz5vO8SdLVAViFv0Z7/ac1yaLno+OjO+abf+FphIfDE3tCJ7BfifRbwUjqrkWyfp3aiVuYdX0oGIbIsL/bJMFu0T2s6Yuxl6ahArPC0qHFZtqIWfWYRVupXybUzA1xn3c+GvcKnDHU88jVO44jddIwnplpKBhdRXkbAVXuTmmlV7JNeBgFMnslQcIXjKI5EsxqBWUQL4qMqEuleofLHBBaTnZJXzbbCkSKZxfuL17/dGau42CGKZ8pks447/mWEg9o86aLoUW1GQ+rkHaPLdhJHAh5CDHkkNQdDJL4Nsl+4MAlUVRFxMXrNnInlZscu3Q==
-X-OriginatorOrg: voleatech.de
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1ea9aba9-a9f7-4236-8488-08d86ada7784
-X-MS-Exchange-CrossTenant-AuthSource: AM8PR05MB7251.eurprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Oct 2020 16:03:01.5385
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: b82a99f6-7981-4a72-9534-4d35298f847b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 2nXM6RJKBw9e2uyVtM7+kGWrDklc5YZKFZ9Mh9ywnABglkyjg1/93td5jwlOgoo2PYVQOewuQhc+7YZE1J3iVIBJxdziWdcCtU71ofc80Mo=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8PR05MB7268
+In-Reply-To: <20201001114832.GC2368232@kroah.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, Oct 07, 2020 at 05:01:15PM +0100, Marc Zyngier wrote:
-> On 2020-10-07 16:45, sven.auhagen@voleatech.de wrote:
-> > From: Miquel Raynal <miquel.raynal@bootlin.com>
-> > 
-> > Before adding more entries in the platform data structure, rename the
-> > flags entry to be more precise and name it host_flags.
-> > 
-> > Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
+On 10/1/20 6:48 AM, Greg Kroah-Hartman wrote:
+> On Wed, Sep 30, 2020 at 09:35:52AM -0500, Tony Asleson wrote:
+>> On 9/30/20 2:38 AM, Greg Kroah-Hartman wrote:
+>>> On Tue, Sep 29, 2020 at 05:04:32PM -0500, Tony Asleson wrote:
+>>>> I'm trying to figure out a way to positively identify which storage
+>>>> device an error belongs to over time.
+>>>
+>>> "over time" is not the kernel's responsibility.
+>>>
+>>> This comes up every 5 years or so. The kernel provides you, at runtime,
+>>> a mapping between a hardware device and a "logical" device.  It can
+>>> provide information to userspace about this mapping, but once that
+>>> device goes away, the kernel is free to reuse that logical device again.
+>>>
+>>> If you want to track what logical devices match up to what physical
+>>> device, then do it in userspace, by parsing the log files.
+>>
+>> I don't understand why people think it's acceptable to ask user space to
+>> parse text that is subject to change.
 > 
-> You are missing your own sign-off, as you are posting someone
-> else's patch.
+> What text is changing? The format of of the prefix of dev_*() is well
+> known and has been stable for 15+ years now, right?  What is difficult
+> in parsing it?
 
-Ah, I did not know that it was necessary.
-I used the patch without any changes.
+Many of the storage layer messages are using printk, not dev_printk.
 
-I will add it for the next version, thanks.
-
-Best
-Sven
-
+>>>> Thank you for supplying some feedback and asking questions.  I've been
+>>>> asking for suggestions and would very much like to have a discussion on
+>>>> how this issue is best solved.  I'm not attached to what I've provided.
+>>>> I'm just trying to get towards a solution.
+>>>
+>>> Again, solve this in userspace, you have the information there at
+>>> runtime, why not use it?
+>>
+>> We usually don't have the needed information if you remove the
+>> expectation that user space should parse the human readable portion of
+>> the error message.
 > 
->         M.
-> -- 
-> Jazz is not dead. It just smells funny...
+> I don't expect that userspace should have to parse any human readable
+> portion, if they don't want to.  But if you do want it to, it is pretty
+> trivial to parse what you have today:
+> 
+> 	scsi 2:0:0:0: Direct-Access     Generic  STORAGE DEVICE   1531 PQ: 0 ANSI: 6
+> 
+> If you really have a unique identifier, then great, parse it today:
+> 
+> 	usb 4-1.3.1: Product: USB3.0 Card Reader
+> 	usb 4-1.3.1: Manufacturer: Generic
+> 	usb 4-1.3.1: SerialNumber: 000000001531
+> 
+> What's keeping that from working now?
+
+I believe these examples are using dev_printk.  With dev_printk we don't
+need to parse the text, we can use the meta data.
+
+> In fact, I would argue that it does seem to work, as there are many
+> commercial tools out there that seem to handle it just fine...
+
+I'm trying to get something that's works for journalctl.
+
+>>>> We've looked at user space quite a bit and there is an inherit race
+>>>> condition with trying to fetch the unique hardware id for a message when
+>>>> it gets emitted from the kernel as udev rules haven't even run (assuming
+>>>> we even have the meta-data to make the association).
+>>>
+>>> But one moment later you do have the information, so you can properly
+>>> correlate it, right?
+>>
+>> We could have the information if all the storage paths went through
+>> dev_printk.  Here is what we get today when we encounter a read error
+>> which uses printk in the block layer:
+>>
+>> {
+>>         "_HOSTNAME" : "pn",
+>>         "_TRANSPORT" : "kernel",
+>>         "__MONOTONIC_TIMESTAMP" : "1806379233",
+>>         "SYSLOG_IDENTIFIER" : "kernel",
+>>         "_SOURCE_MONOTONIC_TIMESTAMP" : "1805611354",
+>>         "SYSLOG_FACILITY" : "0",
+>>         "MESSAGE" : "blk_update_request: critical medium error, dev
+>> nvme0n1, sector 10000 op 0x0:(READ) flags 0x80700 phys_seg 3 prio class 0",
+>>         "PRIORITY" : "3",
+>>         "_MACHINE_ID" : "3f31a0847cea4c95b7a9cec13d07deeb",
+>>         "__REALTIME_TIMESTAMP" : "1601471260802301",
+>>         "_BOOT_ID" : "b03ed610f21d46ab8243a495ba5a0058",
+>>         "__CURSOR" :
+>> "s=a063a22bbb384da0b0412e8f652deabb;i=23c2;b=b03ed610f21d46ab8243a495ba5a0058;m=6bab28e1;t=5b087959e3cfd;x=20528862f8f765c9"
+>> }
+> 
+> Ok, messy stuff, don't do that :)
+> 
+>> Unless you parse the message text you cannot make the association.  If
+>> the same message was changed to dev_printk we would get:
+>>
+>>
+>> {
+>>         "__REALTIME_TIMESTAMP" : "1589401901093443",
+>>         "__CURSOR" :
+>> "s=caac9703b34a48fd92f7875adae55a2f;i=1c713;b=e2ae14a9def345aa803a13648b95429c;m=7d25b4f;t=5a58d77b85243;x=b034c2d3fb853870",
+>>         "SYSLOG_IDENTIFIER" : "kernel",
+>>         "_KERNEL_DEVICE" : "b259:917504",
+>>         "__MONOTONIC_TIMESTAMP" : "131226447",
+>>         "_UDEV_SYSNAME" : "nvme0n1",
+>>         "PRIORITY" : "3",
+>>         "_KERNEL_SUBSYSTEM" : "block",
+>>         "_SOURCE_MONOTONIC_TIMESTAMP" : "130941917",
+>>         "_TRANSPORT" : "kernel",
+>>         "_MACHINE_ID" : "3f31a0847cea4c95b7a9cec13d07deeb",
+>>         "_HOSTNAME" : "pn",
+>>         "SYSLOG_FACILITY" : "0",
+>>         "_BOOT_ID" : "e2ae14a9def345aa803a13648b95429c",
+>>         "_UDEV_DEVLINK" : [
+>>                 "/dev/disk/by-uuid/22fc262a-d621-452a-a951-7761d9fcf0dc",
+>>                 "/dev/disk/by-path/pci-0000:00:05.0-nvme-1",
+>>
+>> "/dev/disk/by-id/nvme-nvme.8086-4445414442454546-51454d55204e564d65204374726c-00000001",
+>>                 "/dev/disk/by-id/nvme-QEMU_NVMe_Ctrl_DEADBEEF"
+>>         ],
+>>         "MESSAGE" : "block nvme0n1: blk_update_request: critical medium
+>> error, dev nvme0n1, sector 10000 op 0x0:(READ) flags 0x0 phys_seg 1 prio
+>> class 0",
+>>         "_UDEV_DEVNODE" : "/dev/nvme0n1"
+>> }
+> 
+> Great, you have a udev sysname, a kernel subsystem and a way to
+> associate that with a real device, what more are you wanting?
+
+Did you miss in my example where it's currently a printk?  I showed what
+it would look like if it was a dev_printk.
+
+Journald is using _KERNEL_DEVICE to add the _UDEV_DEVLINK information to
+the journal entry, it's not parsing the prefix of the message.
+
+The above json is outputted from journalctl when you specify "-o
+json-pretty".
+
+>> Journald already knows how to utilize the dev_printk meta data.
+> 
+> And if you talk to the printk developers (which you seem to be keeping
+> out of the loop here), they are ripping out the meta data facility as
+> fast as possible.  So don't rely on extending that please.
+
+Again, I'm not trying to keep anyone out of the loop.  Last I knew the
+meta data capability wasn't being removed, maybe this has changed?
+
+Ref.
+
+https://lore.kernel.org/lkml/20191007120134.ciywr3wale4gxa6v@pathway.suse.cz/
+
+
+>> One idea that I've suggested along the way is creating a dev_printk
+>> function that doesn't change the message text.  We then avoid breaking
+>> people that are parsing.  Is this something that would be acceptable to
+>> folks?  It doesn't solve early boot where udev rules haven't even run,
+>> but it's better.
+> 
+> I still fail to understand the root problem here.
+
+IMHO one of the root problems is that many storage messages are still
+using printk.  Changing messages to dev_printk has been met with resistance.
+
+
+> Ok, no, I think I understand what you think the problem is, I just don't
+> see why it is up to the kernel to change what we have today when there
+> are lots of tools out there working just fine without any kernel changes
+> needed.
+> 
+> So try explaining the problem as you see it please, so we all know where
+> to work from.
+
+To me the problem today is the kernel logs information to identify how a
+storage device is attached, not what is attached.  I think you agree
+with this statement.  The log information is not helpful without the
+information to correlate to the actual device.  I think you also agree
+with this too as you have mentioned it's user space's responsibility to
+collect this so that the correlation can be done.
+
+If the following are *both* true, we have a usable message that has the
+correlated data with it in the journal.
+
+1. The storage related kernel message goes through dev_printk
+2. At the time of the message being emitted the device symlinks are present.
+
+When those two things are both true, journalctl can do the following
+(today):
+
+$ journalctl /dev/disk/by-id/wwn-0x5002538844584d30
+
+
+However, it usually can't because the above two things are rarely both
+true at the same time for a given message for journald when it logs to
+the journal.
+
+You keep saying this is a user space issue, but I believe we still need
+a bit of help from the kernel at the very least by migrating to
+dev_printk or something similar that adds the same meta data without
+changing the message text.
+
+Yes, my patch series went one step further and added the device ID as
+structured data to the log message, but I was also trying to minimize
+the race condition between the kernel emitting a message and journald
+not having the information to associate it to the hardware device.
+
+If people have other suggestions please let them be known.
+
+> But again, cutting out the developers of the subsystems you were wanting
+> to modify might just be making me really grumpy about this whole
+> thing...
+
+Again, I'm sorry I didn't reach out to the correct people.  Hopefully
+I've CC'd everyone that is appropriate for this discussion.
+
+
+Thanks,
+Tony
+
