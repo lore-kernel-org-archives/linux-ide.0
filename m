@@ -1,138 +1,109 @@
-Return-Path: <SRS0=HNFi=DO=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=Ne7x=DP=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9027C4363D
-	for <linux-ide@archiver.kernel.org>; Wed,  7 Oct 2020 22:48:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC455C4363C
+	for <linux-ide@archiver.kernel.org>; Thu,  8 Oct 2020 04:48:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D86B21531
-	for <linux-ide@archiver.kernel.org>; Wed,  7 Oct 2020 22:48:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 40F002087D
+	for <linux-ide@archiver.kernel.org>; Thu,  8 Oct 2020 04:48:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1602132488;
+	bh=l0qrHjPVsW78fE4iMqd/aK426rQMlUvVabMpWWXIv5g=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=tgfd7Te0gyKtnaARAqRNosywsZ93UJlAmlSsDXQZhXjDFuOKYGCZ+p9b2zZzszZZx
+	 TG1d2tAQhZqnHW50MGy6YBQgHnGk3N2cCTuH9tWz+pJ3NeZxOC/J3LGCfRweaphgSp
+	 autXTW60BTKxUCI+2hOXOEforH1BLtlD9vS32Sa0=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728918AbgJGWsj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 7 Oct 2020 18:48:39 -0400
-Received: from relay8-d.mail.gandi.net ([217.70.183.201]:38265 "EHLO
-        relay8-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727353AbgJGWsi (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 7 Oct 2020 18:48:38 -0400
-X-Greylist: delayed 500 seconds by postgrey-1.27 at vger.kernel.org; Wed, 07 Oct 2020 18:48:33 EDT
-X-Originating-IP: 90.65.88.165
-Received: from localhost (lfbn-lyo-1-1908-165.w90-65.abo.wanadoo.fr [90.65.88.165])
-        (Authenticated sender: alexandre.belloni@bootlin.com)
-        by relay8-d.mail.gandi.net (Postfix) with ESMTPSA id D577D1BF203;
-        Wed,  7 Oct 2020 22:48:27 +0000 (UTC)
-Date:   Thu, 8 Oct 2020 00:48:27 +0200
-From:   Alexandre Belloni <alexandre.belloni@bootlin.com>
-To:     Rob Herring <robh@kernel.org>
-Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        Alessandro Zummo <a.zummo@towertech.it>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Chanwoo Choi <cw00.choi@samsung.com>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        "David S. Miller" <davem@davemloft.net>, dmaengine@vger.kernel.org,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        dri-devel@lists.freedesktop.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Heiner Kallweit <hkallweit1@gmail.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Jens Axboe <axboe@kernel.dk>,
-        Jonathan Cameron <jic23@kernel.org>,
-        Krzysztof Kozlowski <krzk@kernel.org>,
-        Lars-Peter Clausen <lars@metafoo.de>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Marc Kleine-Budde <mkl@pengutronix.de>,
-        Marc Zyngier <maz@kernel.org>, Mark Brown <broonie@kernel.org>,
-        Mathieu Poirier <mathieu.poirier@linaro.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        MyungJoo Ham <myungjoo.ham@samsung.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Pavel Machek <pavel@ucw.cz>,
-        Peter Meerwald-Stadler <pmeerw@pmeerw.net>,
-        Richard Weinberger <richard@nod.at>,
-        Sam Ravnborg <sam@ravnborg.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Viresh Kumar <vireshk@kernel.org>,
-        Vivien Didelot <vivien.didelot@gmail.com>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Wolfgang Grandegger <wg@grandegger.com>,
-        Zhang Rui <rui.zhang@intel.com>,
-        linux-arm-kernel@lists.infradead.org, linux-can@vger.kernel.org,
-        linux-clk@vger.kernel.org, linux-gpio@vger.kernel.org,
-        linux-hwmon@vger.kernel.org, linux-i2c@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-input@vger.kernel.org, linux-leds@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-mips@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-pwm@vger.kernel.org, linux-riscv@lists.infradead.org,
-        linux-rtc@vger.kernel.org, linux-serial@vger.kernel.org,
-        linux-spi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-watchdog@vger.kernel.org
-Subject: Re: [PATCH 1/4] dt-bindings: Add missing 'unevaluatedProperties'
-Message-ID: <20201007224827.GK2804081@piout.net>
-References: <20201005183830.486085-1-robh@kernel.org>
- <20201005183830.486085-2-robh@kernel.org>
+        id S1728111AbgJHEsH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 8 Oct 2020 00:48:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36392 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726216AbgJHEsH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 8 Oct 2020 00:48:07 -0400
+Received: from localhost (83-86-74-64.cable.dynamic.v4.ziggo.nl [83.86.74.64])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id AC2E820789;
+        Thu,  8 Oct 2020 04:48:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1602132485;
+        bh=l0qrHjPVsW78fE4iMqd/aK426rQMlUvVabMpWWXIv5g=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=ABpoieSTLK2pGJRb7l8G+YYhkXZSdwzaOO/m7N+bSzrNFB4q+2EV+X0dRaOM4KHvd
+         lHvfyyomiEY6Rc4IP3GqgBefL4UfaSAJ++GoZhbeQ96L4yo/sgkCfwO/j9RRJpm5U1
+         SIK+0EYkm1skyFjC7mAvrEH0SyCMpX9GcNjisLow=
+Date:   Thu, 8 Oct 2020 06:48:49 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Tony Asleson <tasleson@redhat.com>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>, pmladek@suse.com,
+        David Lehman <dlehman@redhat.com>,
+        sergey.senozhatsky@gmail.com, jbaron@akamai.com,
+        James.Bottomley@hansenpartnership.com,
+        linux-kernel@vger.kernel.org, rafael@kernel.org,
+        martin.petersen@oracle.com, kbusch@kernel.org, axboe@fb.com,
+        sagi@grimberg.me, akpm@linux-foundation.org, orson.zhai@unisoc.com,
+        viro@zeniv.linux.org.uk
+Subject: Re: [v5 01/12] struct device: Add function callback durable_name
+Message-ID: <20201008044849.GA163423@kroah.com>
+References: <20200925161929.1136806-1-tasleson@redhat.com>
+ <20200925161929.1136806-2-tasleson@redhat.com>
+ <20200929175102.GA1613@infradead.org>
+ <20200929180415.GA1400445@kroah.com>
+ <20e220a6-4bde-2331-6e5e-24de39f9aa3b@redhat.com>
+ <20200930073859.GA1509708@kroah.com>
+ <c6b031b8-f617-0580-52a5-26532da4ee03@redhat.com>
+ <20201001114832.GC2368232@kroah.com>
+ <72be0597-a3e2-bf7b-90b2-799d10fdf56c@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201005183830.486085-2-robh@kernel.org>
+In-Reply-To: <72be0597-a3e2-bf7b-90b2-799d10fdf56c@redhat.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi,
+On Wed, Oct 07, 2020 at 03:10:17PM -0500, Tony Asleson wrote:
+> On 10/1/20 6:48 AM, Greg Kroah-Hartman wrote:
+> > On Wed, Sep 30, 2020 at 09:35:52AM -0500, Tony Asleson wrote:
+> >> On 9/30/20 2:38 AM, Greg Kroah-Hartman wrote:
+> >>> On Tue, Sep 29, 2020 at 05:04:32PM -0500, Tony Asleson wrote:
+> >>>> I'm trying to figure out a way to positively identify which storage
+> >>>> device an error belongs to over time.
+> >>>
+> >>> "over time" is not the kernel's responsibility.
+> >>>
+> >>> This comes up every 5 years or so. The kernel provides you, at runtime,
+> >>> a mapping between a hardware device and a "logical" device.  It can
+> >>> provide information to userspace about this mapping, but once that
+> >>> device goes away, the kernel is free to reuse that logical device again.
+> >>>
+> >>> If you want to track what logical devices match up to what physical
+> >>> device, then do it in userspace, by parsing the log files.
+> >>
+> >> I don't understand why people think it's acceptable to ask user space to
+> >> parse text that is subject to change.
+> > 
+> > What text is changing? The format of of the prefix of dev_*() is well
+> > known and has been stable for 15+ years now, right?  What is difficult
+> > in parsing it?
+> 
+> Many of the storage layer messages are using printk, not dev_printk.
 
-On 05/10/2020 13:38:27-0500, Rob Herring wrote:
-> diff --git a/Documentation/devicetree/bindings/rtc/ingenic,rtc.yaml b/Documentation/devicetree/bindings/rtc/ingenic,rtc.yaml
-> index bc2c7e53a28e..60e93e86ad9d 100644
-> --- a/Documentation/devicetree/bindings/rtc/ingenic,rtc.yaml
-> +++ b/Documentation/devicetree/bindings/rtc/ingenic,rtc.yaml
-> @@ -68,6 +68,8 @@ required:
->    - clocks
->    - clock-names
->  
-> +unevaluatedProperties: false
+Ok, then stop right there.  Fix that up.  Don't try to route around the
+standard way of displaying log messages by creating a totally different
+way of doing things.
 
-This one could be additionalProperties: false after adding start-year to
-the properties
+Just use the dev_*() calls, and all will be fine.  Kernel log messages
+are not "ABI" in that they have to be preserved in any specific way, so
+adding a prefix to them as dev_*() does, will be fine.
 
-> +
->  examples:
->    - |
->      #include <dt-bindings/clock/jz4740-cgu.h>
-> diff --git a/Documentation/devicetree/bindings/rtc/s3c-rtc.yaml b/Documentation/devicetree/bindings/rtc/s3c-rtc.yaml
-> index 76bbf8b7555b..d51b236939bf 100644
-> --- a/Documentation/devicetree/bindings/rtc/s3c-rtc.yaml
-> +++ b/Documentation/devicetree/bindings/rtc/s3c-rtc.yaml
-> @@ -74,6 +74,8 @@ allOf:
->            items:
->              - const: rtc
->  
-> +unevaluatedProperties: false
+thanks,
 
-This one can be simply additionalProperties: false
-
-
--- 
-Alexandre Belloni, Bootlin
-Embedded Linux and Kernel engineering
-https://bootlin.com
+greg k-h
