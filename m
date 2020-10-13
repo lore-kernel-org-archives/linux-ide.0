@@ -1,131 +1,68 @@
-Return-Path: <SRS0=wIqw=DT=vger.kernel.org=linux-ide-owner@kernel.org>
+Return-Path: <SRS0=uILu=DU=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PULL_REQUEST,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B6B8C433DF
-	for <linux-ide@archiver.kernel.org>; Mon, 12 Oct 2020 13:51:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72723C433E7
+	for <linux-ide@archiver.kernel.org>; Tue, 13 Oct 2020 20:33:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 326AE2074F
-	for <linux-ide@archiver.kernel.org>; Mon, 12 Oct 2020 13:51:01 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="ykM40YuL"
+	by mail.kernel.org (Postfix) with ESMTP id 1EB8820872
+	for <linux-ide@archiver.kernel.org>; Tue, 13 Oct 2020 20:33:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1602621189;
+	bh=hnx7FIvvdB6yf4j34gYOIXG5pjBEj4DxUn+1UxgBVtc=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
+	b=Mj2mcNgUDO0z63DmboDeHCoprmhxgD3llyXAMdTcFFoHyA9zxyERxCbsgtZA5G7C5
+	 hWzK/tTdqPprR3PanlsSETbgVAJK4jibtapdZTirjF85K02ukMlJT0GJiVvt+WoPXq
+	 yFXV90vjUEYI72hOIXOZT+mvSDE9UgDlkliMnjIg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390083AbgJLNul (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 12 Oct 2020 09:50:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60516 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731886AbgJLNsR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Oct 2020 09:48:17 -0400
-Received: from mail-il1-x141.google.com (mail-il1-x141.google.com [IPv6:2607:f8b0:4864:20::141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FB06C0613D0
-        for <linux-ide@vger.kernel.org>; Mon, 12 Oct 2020 06:48:17 -0700 (PDT)
-Received: by mail-il1-x141.google.com with SMTP id o18so16017081ill.2
-        for <linux-ide@vger.kernel.org>; Mon, 12 Oct 2020 06:48:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=to:cc:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=yfRoKaqmRgeR+8jopqBpSvNrANdCePtVj0jbsp9eEUo=;
-        b=ykM40YuLL1xQWSUN6QiiXycTN9V8U+sojtx8g+EpoEFiknICOX2RZvhPtbOYJ13OLk
-         Y4OnzpGsXHUjvJltUBBDau0a9FytMoYcqreIJU6RuqWnhgkM0KH4olQjdbvKKvhbcxp9
-         ns2TAZRbP/y0apHiyCweTiku1zvcikn4WCQkAP08GDSYKW/+ksy3yvxNn7ExmmCroLrY
-         2BF+MR6g65e5R89oascw+AJzE145Re/5abs0D+t59cCHCSAYpkrqi4iPT0jZtleXTWCO
-         dTGVQHESTOjYkE6ROet2osxyB87WKzGmNzJJFdAHg3VzgJQ3XbAe03jMpj4iL8Q8T+3e
-         494g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=yfRoKaqmRgeR+8jopqBpSvNrANdCePtVj0jbsp9eEUo=;
-        b=Jcgh6FrBAVyjiLp0Os8Bv6EP8VdOgObUxj2XQLtFZULGmcdy+xTpueTABdKv86YbZN
-         8uGIeICrL7GztL3AzPPYfmKumc015PhVFwUSSVw2SJaG71JJX5CKujv9yjmYZGQOH9Ka
-         EiOnLn6nb0sBLCedc1FqfQq0IBIHLQJXAvyRmk67WB0O5Rcx6ZgCyIB9/V8sNRRHG66U
-         bFpym7gjtUZb3bpgLbaOn7jUvcCcjy/GbeAe0I6+Z7HwTXGLq3Q8uqXBFIgyhs/DInlN
-         L9iu9cugQZMldnX31S/QZbBlCunxxmC1fWDUZHgNGbpfns+ay2gBwMlwEcnLyNDToxk1
-         48lw==
-X-Gm-Message-State: AOAM532smFvA0M6QKHfMGbtLuhxg4F59qd517znyRfH1bhDV6G3Wzn1P
-        hlEgkYbKBk5DD8LYN5tCqIKE6N4AOcpQgw==
-X-Google-Smtp-Source: ABdhPJzXKR43snLCYU9HEqNgWLsb1aJQXTQVI1R9BZTLmoyh/zsSR0adYgFcMfuyWUVLSQgkmjtUuA==
-X-Received: by 2002:a92:c507:: with SMTP id r7mr20050416ilg.52.1602510496739;
-        Mon, 12 Oct 2020 06:48:16 -0700 (PDT)
-Received: from [192.168.1.30] ([65.144.74.34])
-        by smtp.gmail.com with ESMTPSA id k198sm9383648ilk.80.2020.10.12.06.48.15
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 12 Oct 2020 06:48:15 -0700 (PDT)
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     IDE/ATA development list <linux-ide@vger.kernel.org>,
+        id S1726043AbgJMUdI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 13 Oct 2020 16:33:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56936 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725977AbgJMUdI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 13 Oct 2020 16:33:08 -0400
+Subject: Re: [GIT PULL] libata updates for 5.10-rc1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1602621187;
+        bh=hnx7FIvvdB6yf4j34gYOIXG5pjBEj4DxUn+1UxgBVtc=;
+        h=From:In-Reply-To:References:Date:To:Cc:From;
+        b=WJ9RyjQFPqrVt1+3T9ByEyyagUrEOIpnJRWkITj2Y4XunN4sFHBcTtIp4YFSTnD5N
+         GNvOzPjn2ffeGgz7cN3v6iqT5N/OfgfvAD2PikClyW0XvzuW3p5JwQTQ4OgF5nOFvY
+         NlqAU134lfKZlGKfxrp4jmT0kge/o2AhAJCj2F34=
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <d4e07ddd-092a-256a-5b25-841e95fa3fcc@kernel.dk>
+References: <d4e07ddd-092a-256a-5b25-841e95fa3fcc@kernel.dk>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <d4e07ddd-092a-256a-5b25-841e95fa3fcc@kernel.dk>
+X-PR-Tracked-Remote: git://git.kernel.dk/linux-block.git tags/libata-5.10-2020-10-12
+X-PR-Tracked-Commit-Id: 45aefe3d2251e4e229d7662052739f96ad1d08d9
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 79ec6d9cac46d59db9b006bc9cde2811ef365292
+Message-Id: <160262118790.22802.10133242985400694711.pr-tracker-bot@kernel.org>
+Date:   Tue, 13 Oct 2020 20:33:07 +0000
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        IDE/ATA development list <linux-ide@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-From:   Jens Axboe <axboe@kernel.dk>
-Subject: [GIT PULL] libata updates for 5.10-rc1
-Message-ID: <d4e07ddd-092a-256a-5b25-841e95fa3fcc@kernel.dk>
-Date:   Mon, 12 Oct 2020 07:48:15 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Linus,
+The pull request you sent on Mon, 12 Oct 2020 07:48:15 -0600:
 
-Nothing major in here, just fixes or improvements collected over the
-last few months.
+> git://git.kernel.dk/linux-block.git tags/libata-5.10-2020-10-12
 
-Please pull!
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/79ec6d9cac46d59db9b006bc9cde2811ef365292
 
-
-The following changes since commit a1b8638ba1320e6684aa98233c15255eb803fac7:
-
-  Linux 5.9-rc7 (2020-09-27 14:38:10 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.dk/linux-block.git tags/libata-5.10-2020-10-12
-
-for you to fetch changes up to 45aefe3d2251e4e229d7662052739f96ad1d08d9:
-
-  ata: ahci: mvebu: Make SATA PHY optional for Armada 3720 (2020-10-09 12:47:56 -0600)
-
-----------------------------------------------------------------
-libata-5.10-2020-10-12
-
-----------------------------------------------------------------
-Bartlomiej Zolnierkiewicz (1):
-      MAINTAINERS: remove LIBATA PATA DRIVERS entry
-
-Gustavo A. R. Silva (1):
-      pata_cmd64x: Use fallthrough pseudo-keyword
-
-Liu Shixin (1):
-      sata, highbank: simplify the return expression of ahci_highbank_suspend
-
-Mika Westerberg (1):
-      ahci: Add Intel Rocket Lake PCH-H RAID PCI IDs
-
-Pali Rohár (1):
-      ata: ahci: mvebu: Make SATA PHY optional for Armada 3720
-
-Yuantian Tang (1):
-      ahci: qoriq: enable acpi support in qoriq ahci driver
-
- MAINTAINERS                    |  9 ---------
- drivers/ata/ahci.c             |  4 ++++
- drivers/ata/ahci.h             |  2 ++
- drivers/ata/ahci_mvebu.c       |  2 +-
- drivers/ata/ahci_qoriq.c       | 20 +++++++++++++++++---
- drivers/ata/libahci_platform.c |  2 +-
- drivers/ata/pata_cmd64x.c      |  2 +-
- drivers/ata/sata_highbank.c    |  7 +------
- 8 files changed, 27 insertions(+), 21 deletions(-)
+Thank you!
 
 -- 
-Jens Axboe
-
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
