@@ -2,130 +2,151 @@ Return-Path: <SRS0=uckR=DW=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 817D7C433DF
-	for <linux-ide@archiver.kernel.org>; Thu, 15 Oct 2020 02:01:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A32AFC43457
+	for <linux-ide@archiver.kernel.org>; Thu, 15 Oct 2020 18:34:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2877F22257
-	for <linux-ide@archiver.kernel.org>; Thu, 15 Oct 2020 02:01:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4BCD32073A
+	for <linux-ide@archiver.kernel.org>; Thu, 15 Oct 2020 18:34:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727445AbgJOCB0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 14 Oct 2020 22:01:26 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:39742 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726121AbgJOCBZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 14 Oct 2020 22:01:25 -0400
-Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id D26F28961CDC29D3AF2C;
-        Thu, 15 Oct 2020 10:01:23 +0800 (CST)
-Received: from localhost.localdomain (10.69.192.58) by
- DGGEMS401-HUB.china.huawei.com (10.3.19.201) with Microsoft SMTP Server id
- 14.3.487.0; Thu, 15 Oct 2020 10:01:14 +0800
-From:   chenxiang <chenxiang66@hisilicon.com>
-To:     <axboe@kernel.dk>, <tj@kernel.org>
-CC:     <john.garry@huawei.com>, <linux-ide@vger.kernel.org>,
-        <linuxarm@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>
-Subject: [PATCH] libata: Increase the timeout of command ATA_CMD_READ_LOG_DMA_EXT
-Date:   Thu, 15 Oct 2020 09:57:40 +0800
-Message-ID: <1602727060-200435-1-git-send-email-chenxiang66@hisilicon.com>
-X-Mailer: git-send-email 2.8.1
+        id S2387851AbgJOSeb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 15 Oct 2020 14:34:31 -0400
+Received: from mail-ot1-f66.google.com ([209.85.210.66]:41539 "EHLO
+        mail-ot1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731154AbgJOSea (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 15 Oct 2020 14:34:30 -0400
+Received: by mail-ot1-f66.google.com with SMTP id n15so100621otl.8;
+        Thu, 15 Oct 2020 11:34:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=3ViFRyZzY3eGmlGkyoQ+/ZMsox3DeqWihB59/NTmtCI=;
+        b=XS5M5DlgXa4bBn61yuhMdvhhawnidmP9EokN+KUGooOsp91Jeh6yESJVEht7kU5sqP
+         gRSXkEiJPCul1UE33N7FEOntLg69PQktz5lII/0c/uwCziNscz/E3Kjw9DdbaMhznMbE
+         czyiIj/WX+1g7N+WHPBcLfScVGissDJ0GGjCBm/2Ul7jEbrpPUtga/ZDBlzQGHl8yhBP
+         viNvQi3zHfaNWf/0IlXu9yTbFcsLHKMz87SK0JXHmBtVJdh0wTT0ODHwVlSFFWznQg7p
+         U6GHE6O1XkxTSHyX+6EHtY6FzsdMfW3kUFJ/vpjG4ujFAHsoO77sNSTr1wqLEXy25rXV
+         nYRA==
+X-Gm-Message-State: AOAM5316AgVUlBY6pCk2MurQbaojMvSKv3D+nRIQoAyqj6eVBmHl6gdr
+        I1R3WW5EeJbdQ62do4iwTkyWYEqsQS3YF5pLbtHFJiKn
+X-Google-Smtp-Source: ABdhPJyHuxCI9aoRbG13Q6VQq8OqvTueuQIKvxr282I/izVF0CXUgnos0ZEm+ZHjPF0prbKDvqSeGnMtIwjLcPeSj5w=
+X-Received: by 2002:a9d:5e14:: with SMTP id d20mr3390096oti.107.1602786869473;
+ Thu, 15 Oct 2020 11:34:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-CFilter-Loop: Reflected
+References: <20200917130920.6689-1-geert+renesas@glider.be>
+In-Reply-To: <20200917130920.6689-1-geert+renesas@glider.be>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Thu, 15 Oct 2020 20:34:17 +0200
+Message-ID: <CAMuHMdWQapEyvd=rpdfW5XHbwLtaiyLsnAXn5dM8zGCpc9VSFA@mail.gmail.com>
+Subject: Re: [PATCH v3] ata: sata_rcar: Fix DMA boundary mask
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Ulf Hansson <ulf.hansson@linaro.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        Sergei Shtylyov <sergei.shtylyov@gmail.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        linux-ide@vger.kernel.org,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        stable <stable@vger.kernel.org>,
+        "Lad, Prabhakar" <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
+Hi Jens,
 
-ATA_CMD_READ_LOG_DMA_EXT command normally uses the common internal command
-default timeout (5s), and it is adequate in most situations. But it is not 
-enough for some disks such as ST4000NM0035 which causes qc timeout 
-sometimes as follows:
-...
-[  157.284284] sas: Enter sas_scsi_recover_host busy: 0 failed: 0
-[  157.290124] sas: ata8: end_device-4:0:2: dev error handler
-[  157.290128] sas: ata9: end_device-4:0:8: dev error handler
-[  157.290131] sas: ata10: end_device-4:0:11: dev error handler
-[  164.588391] ata9.00: qc timeout (cmd 0x47)
-[  164.588393] ata8.00: qc timeout (cmd 0x47)
-[  164.588395] ata10.00: qc timeout (cmd 0x47)
-[  166.582572] ata10.00: READ LOG DMA EXT failed, trying PIO
-[  166.587960] ata10.00: NCQ Send/Recv Log not supported
-[  166.592997] ata10.00: ATA-10: ST4000NM0035-1V4107, TN03, max UDMA/133
-[  166.599414] ata10.00: 7814037168 sectors, multi 0: LBA48 NCQ (depth 32)
-[  166.606011] ata10.00: failed to set xfermode (err_mask=0x40)
-[  166.659253] ata8.00: READ LOG DMA EXT failed, trying PIO
-[  166.664559] ata8.00: NCQ Send/Recv Log not supported
-[  166.669506] ata8.00: ATA-10: ST4000NM0035-1V4107, TN03, max UDMA/133
-[  166.675837] ata8.00: 7814037168 sectors, multi 0: LBA48 NCQ (depth 32)
-[  166.682343] ata8.00: failed to set xfermode (err_mask=0x40)
-[  166.743458] ata9.00: READ LOG DMA EXT failed, trying PIO
-[  166.748765] ata9.00: NCQ Send/Recv Log not supported
-[  166.753713] ata9.00: ATA-10: ST4000NM0035-1V4107, TN03, max UDMA/133
-[  166.760045] ata9.00: 7814037168 sectors, multi 0: LBA48 NCQ (depth 32)
-[  166.766553] ata9.00: failed to set xfermode (err_mask=0x40)
-[  168.886378] ata10.00: configured for UDMA/133
-[  168.999943] ata8.00: configured for UDMA/133
-[  169.050801] ata9.00: configured for UDMA/133
-[  169.055071] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0 tries: 1
-...
-Actually it may takes about 9s to complete the command for disk ST4000NM0035
-sometimes. So to avoid the issue, increase the timeout of command
-ATA_CMD_READ_LOG_DMA_EXT from 5s to 15s.
+On Thu, Sep 17, 2020 at 3:09 PM Geert Uytterhoeven
+<geert+renesas@glider.be> wrote:
+> Before commit 9495b7e92f716ab2 ("driver core: platform: Initialize
+> dma_parms for platform devices"), the R-Car SATA device didn't have DMA
+> parameters.  Hence the DMA boundary mask supplied by its driver was
+> silently ignored, as __scsi_init_queue() doesn't check the return value
+> of dma_set_seg_boundary(), and the default value of 0xffffffff was used.
+>
+> Now the device has gained DMA parameters, the driver-supplied value is
+> used, and the following warning is printed on Salvator-XS:
+>
+>     DMA-API: sata_rcar ee300000.sata: mapping sg segment across boundary [start=0x00000000ffffe000] [end=0x00000000ffffefff] [boundary=0x000000001ffffffe]
+>     WARNING: CPU: 5 PID: 38 at kernel/dma/debug.c:1233 debug_dma_map_sg+0x298/0x300
+>
+> (the range of start/end values depend on whether IOMMU support is
+>  enabled or not)
+>
+> The issue here is that SATA_RCAR_DMA_BOUNDARY doesn't have bit 0 set, so
+> any typical end value, which is odd, will trigger the check.
+>
+> Fix this by increasing the DMA boundary value by 1.
+>
+> This also fixes the following WRITE DMA EXT timeout issue:
+>
+>     # dd if=/dev/urandom of=/mnt/de1/file1-1024M bs=1M count=1024
+>     ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+>     ata1.00: failed command: WRITE DMA EXT
+>     ata1.00: cmd 35/00:00:00:e6:0c/00:0a:00:00:00/e0 tag 0 dma 1310720 out
+>     res 40/00:01:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+>     ata1.00: status: { DRDY }
+>
+> as seen by Shimoda-san since commit 429120f3df2dba2b ("block: fix
+> splitting segments on boundary masks").
+>
+> Fixes: 8bfbeed58665dbbf ("sata_rcar: correct 'sata_rcar_sht'")
+> Fixes: 9495b7e92f716ab2 ("driver core: platform: Initialize dma_parms for platform devices")
+> Fixes: 429120f3df2dba2b ("block: fix splitting segments on boundary masks")
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Reviewed-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+> Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
+> Tested-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> Tested-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> Cc: stable <stable@vger.kernel.org>
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Reviewed-by: John Garry <john.garry@huawei.com>
----
- drivers/ata/libata-eh.c | 9 +++++++++
- include/linux/libata.h  | 2 +-
- 2 files changed, 10 insertions(+), 1 deletion(-)
+Can you please apply this patch?
+This is a fix for a regression in v5.7-rc5, and was first posted almost
+5 months ago.
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 474c6c3..6db9474 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -100,6 +100,13 @@ static const unsigned long ata_eh_flush_timeouts[] = {
- 	ULONG_MAX,
- };
- 
-+static const unsigned long ata_eh_read_log_ext_timeouts[] = {
-+	15000,
-+	15000,
-+	30000,
-+	ULONG_MAX,
-+};
-+
- static const unsigned long ata_eh_other_timeouts[] = {
- 	 5000,	/* same rationale as identify timeout */
- 	10000,	/* ditto */
-@@ -139,6 +146,8 @@ ata_eh_cmd_timeout_table[ATA_EH_CMD_TIMEOUT_TABLE_SIZE] = {
- 	  .timeouts = ata_eh_other_timeouts, },
- 	{ .commands = CMDS(ATA_CMD_FLUSH, ATA_CMD_FLUSH_EXT),
- 	  .timeouts = ata_eh_flush_timeouts },
-+	{ .commands = CMDS(ATA_CMD_READ_LOG_DMA_EXT, ATA_CMD_READ_LOG_EXT),
-+	  .timeouts = ata_eh_read_log_ext_timeouts },
- };
- #undef CMDS
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index b0bd30e..bcc68b3 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -390,7 +390,7 @@ enum {
- 	/* This should match the actual table size of
- 	 * ata_eh_cmd_timeout_table in libata-eh.c.
- 	 */
--	ATA_EH_CMD_TIMEOUT_TABLE_SIZE = 6,
-+	ATA_EH_CMD_TIMEOUT_TABLE_SIZE = 7,
- 
- 	/* Horkage types. May be set by libata or controller on drives
- 	   (some horkage may be drive/controller pair dependent */
+Thanks!
+
+> ---
+> v3:
+>   - Add Reviewed-by, Tested-by,
+>   - Augment description and Fixes: with Shimoda-san's problem report
+>     https://lore.kernel.org/r/1600255098-21411-1-git-send-email-yoshihiro.shimoda.uh@renesas.com,
+>
+> v2:
+>   - Add Reviewed-by, Tested-by, Cc.
+> ---
+>  drivers/ata/sata_rcar.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+> index 141ac600b64c87ef..44b0ed8f6bb8a120 100644
+> --- a/drivers/ata/sata_rcar.c
+> +++ b/drivers/ata/sata_rcar.c
+> @@ -120,7 +120,7 @@
+>  /* Descriptor table word 0 bit (when DTA32M = 1) */
+>  #define SATA_RCAR_DTEND                        BIT(0)
+>
+> -#define SATA_RCAR_DMA_BOUNDARY         0x1FFFFFFEUL
+> +#define SATA_RCAR_DMA_BOUNDARY         0x1FFFFFFFUL
+>
+>  /* Gen2 Physical Layer Control Registers */
+>  #define RCAR_GEN2_PHY_CTL1_REG         0x1704
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
 -- 
-2.8.1
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
