@@ -5,50 +5,49 @@ X-Spam-Level:
 X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1010DC4742C
-	for <linux-ide@archiver.kernel.org>; Wed,  4 Nov 2020 15:56:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD715C388F9
+	for <linux-ide@archiver.kernel.org>; Wed,  4 Nov 2020 15:56:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C1C3422280
-	for <linux-ide@archiver.kernel.org>; Wed,  4 Nov 2020 15:56:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8EC91205ED
+	for <linux-ide@archiver.kernel.org>; Wed,  4 Nov 2020 15:56:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=voleatech.de header.i=@voleatech.de header.b="NshuNQiG"
+	dkim=pass (1024-bit key) header.d=voleatech.de header.i=@voleatech.de header.b="SdBhv5wT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730395AbgKDP4L (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 4 Nov 2020 10:56:11 -0500
-Received: from mail-eopbgr10117.outbound.protection.outlook.com ([40.107.1.117]:28320
-        "EHLO EUR02-HE1-obe.outbound.protection.outlook.com"
+        id S1730525AbgKDP4R (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 4 Nov 2020 10:56:17 -0500
+Received: from mail-db8eur05on2122.outbound.protection.outlook.com ([40.107.20.122]:47808
+        "EHLO EUR05-DB8-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730975AbgKDPwy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 4 Nov 2020 10:52:54 -0500
+        id S1730972AbgKDPwv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 4 Nov 2020 10:52:51 -0500
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Qwwn+iKCdIadtIrbUzWUBHCk4GRAsB2b24giNsJu21FgzADI3x0wTGB86YCoE6AFHB/LlTeBoSP/oYz1GW20wqdXd0DgqJBJMW3VCjMeU5asL5saxowgQAgQv8l5RLHHRSijazqgR9jZDD4X1RkOfNek22h5b44+C1P93FcnfUXCrFt0RlYcfDV8EkskKD/ztgR8CEV05L4waCbqCbbxwJb0OMMkI+mlbqOP2AcgodPd/9P26RHy6zDt1kA3GkO9VU6299Ar0oBRklLnqhAM4EF/PwH469NXaS5NkAOoLOdEfI1WbzFXtRip09pcKahtK0uemzQEx6amF9ewDvoJkw==
+ b=O8m82ojk4T2qbgtzrNlpwOZMVqbJq9vOaDEdUPuj1m0lvXCncRXaQ0YL0ZsSW6PgN0WQ1hheRPH+RZ18yARkcGR5S75WHwRUx0fpUaQmtsnxVt0WdjDYrU3iS2tsDyiahGW88CZaxuFJoteIF9jvMHaj+0G6E+mBmuTio1yfu/QmcnV4glzduFvjGpS6qU9wW3XgoY9byzwHVYZrJBLI6ZuhbcakhBXV/WJE3kY6pHEcmjNi03fmrKVKKLdGtHQhurxM+VkybCGFc4AHOl8qwoh7/NRiyFSm9XEWDfU9peklL9KM/tPk+W/+LTjPsqosTI3psR10xv7zOwB0Qjw51w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=+/3aCpme5/jOiY35WdC6yZmN76DTALab744ujxwEEUk=;
- b=JMER1w/EdUYxSzYXHu/RwRocGV4uWmWAPaeZDx/ITauOefMHVX/Wqpm0BTULk/utKr5l6QU4hfi1gdmXDTUkB3/FlahnNMzBAGFLJo8iZI23XCj4t5dq5badS4WKgKwf5cx1JtQOJ7WHgD8TZuLRYgaDFKNSrITTbJfU5PI7sr8KVxDKMUjw91NKosTq+ZQbRR6RP8rg63oBR5YDiaWW0HHqeAB60+h/MVL+WVf41xLUqz6AZTEPtso747pg/koGZHbupSsdIATanEYLvTykEvli4/ly3gjRuL9ObHmDbYDppa+g6NCaF0O9Ch+GRWXcEw803rqN6Dkvayuj31A6NQ==
+ bh=wGh8gm4fxG7CPEVbuaNZ529cl9J5n29Ky6yFdYxE6JI=;
+ b=EEWnHyHvGz1Z0pD5QrB3hRlQpYqtPEYQ4G3JAv/EsVN0e+vPlDqVKcrcp1X/2U3SGGYPdq1MGFlL9DOeENmNwLMJACMFo2kC97bFOsp//9pTVlICeiKbbKYAj+Mm9OjL13vDMuk665bLbBMQkZkPqDrbVyvafiRFwJ6+SxVFBCMBqJAhSrJJzYtCvZjP7ZxPg4DnUEEZ6xVvEIIEtBnqUZ8fbNb2zFAi1+U8YrQ6A7EPQfrB/46zVpAL7WfQ/TgW3BvfRZPoquxcqT4r8qSzcXVFEIsrYb+mFcuKURfMqv+8gk5nCgf7zeNS9tz86/sH2VGrkBSQ4oI3YRTwtNdgbQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=voleatech.de; dmarc=pass action=none header.from=voleatech.de;
  dkim=pass header.d=voleatech.de; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=voleatech.de;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=+/3aCpme5/jOiY35WdC6yZmN76DTALab744ujxwEEUk=;
- b=NshuNQiGGbIFhka1nWtPSLciYdU3iTbrexlNxWSGB5zHD6enG2lsmo5HY/PprSw6alY9qwjvFujBh0c0V0NMZQW/HEVnS4fcwvjnPnuHiMXPnpeyRFnWaZ2eEJt12fLaC9S33gnZX3EyOBJ2GLJlTyVPP5q/pWXgVd+g933xW3Y=
+ bh=wGh8gm4fxG7CPEVbuaNZ529cl9J5n29Ky6yFdYxE6JI=;
+ b=SdBhv5wTiEGKMt+xFj5+Z8RJsLSrLAS90T5YKiImIWTLcuRRcQVFeNkDD6FjpfRPIcRofizRZUzoRnErmMhsKo7V1P/lekBrSELdCzEhffW8iAyJkBPrNQZbyOTgQutGHzIQ8vBpA0UwaNz0c9QHa3pVg2CRl9/AG4yIucXxGek=
 Authentication-Results: kernel.dk; dkim=none (message not signed)
  header.d=none;kernel.dk; dmarc=none action=none header.from=voleatech.de;
 Received: from AM8PR05MB7251.eurprd05.prod.outlook.com (2603:10a6:20b:1d4::23)
- by AM0PR05MB5075.eurprd05.prod.outlook.com (2603:10a6:208:d0::14) with
+ by AM8PR05MB7522.eurprd05.prod.outlook.com (2603:10a6:20b:1c4::10) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3499.29; Wed, 4 Nov
- 2020 15:52:44 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3499.27; Wed, 4 Nov
+ 2020 15:52:43 +0000
 Received: from AM8PR05MB7251.eurprd05.prod.outlook.com
  ([fe80::f132:2cc:34f2:5e4]) by AM8PR05MB7251.eurprd05.prod.outlook.com
  ([fe80::f132:2cc:34f2:5e4%7]) with mapi id 15.20.3499.032; Wed, 4 Nov 2020
- 15:52:44 +0000
+ 15:52:43 +0000
 From:   sven.auhagen@voleatech.de
 To:     axboe@kernel.dk, hdegoede@redhat.com, robh+dt@kernel.org,
         tglx@linutronix.de, maz@kernel.org, gregory.clement@bootlin.com
@@ -57,9 +56,9 @@ Cc:     linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         rjw@rjwysocki.net, viresh.kumar@linaro.org,
         antoine.tenart@bootlin.com, maxime.chevallier@bootlin.com,
         thomas.petazzoni@bootlin.com, miquel.raynal@bootlin.com
-Subject: [PATCH v2 4/9] ata: ahci: add ack callback to multi irq handler
-Date:   Wed,  4 Nov 2020 16:52:32 +0100
-Message-Id: <20201104155237.77772-5-sven.auhagen@voleatech.de>
+Subject: [PATCH v2 3/9] ata: ahci: custom irq init for host init
+Date:   Wed,  4 Nov 2020 16:52:31 +0100
+Message-Id: <20201104155237.77772-4-sven.auhagen@voleatech.de>
 X-Mailer: git-send-email 2.24.3 (Apple Git-128)
 In-Reply-To: <20201104155237.77772-1-sven.auhagen@voleatech.de>
 References: <20201104155237.77772-1-sven.auhagen@voleatech.de>
@@ -71,79 +70,72 @@ X-ClientProxiedBy: AM8P190CA0030.EURP190.PROD.OUTLOOK.COM
  (2603:10a6:20b:1d4::23)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (109.193.235.168) by AM8P190CA0030.EURP190.PROD.OUTLOOK.COM (2603:10a6:20b:219::35) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3499.19 via Frontend Transport; Wed, 4 Nov 2020 15:52:43 +0000
+Received: from localhost.localdomain (109.193.235.168) by AM8P190CA0030.EURP190.PROD.OUTLOOK.COM (2603:10a6:20b:219::35) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3499.19 via Frontend Transport; Wed, 4 Nov 2020 15:52:42 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: ccbed9be-2453-45ee-1208-08d880d9ab0b
-X-MS-TrafficTypeDiagnostic: AM0PR05MB5075:
-X-Microsoft-Antispam-PRVS: <AM0PR05MB5075A631FEFD542BC54B9CA9EFEF0@AM0PR05MB5075.eurprd05.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:6790;
+X-MS-Office365-Filtering-Correlation-Id: 8035cf02-f4b0-43f0-bf36-08d880d9aa80
+X-MS-TrafficTypeDiagnostic: AM8PR05MB7522:
+X-Microsoft-Antispam-PRVS: <AM8PR05MB7522FDD9DAD73E21CEBC3307EFEF0@AM8PR05MB7522.eurprd05.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:3631;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: eOrwWKI0+0M8Q/c5JsVeendS4jMa26u08jVZHb8tfaTho/tzS6sRUs7yWFQljCjRGG77QIf5tMdvWw/bJc9Uc9oP45/uQr82HruqK/XZgiVQjeLhzsHnezyrzJCWBd0GpXR6pvmIvZM7rLRkh1f0gmSPMfNtDQXWRzRltAEv6kWKlcP94Lsd5WF5ojw7XO8dFu9052Z3skwzhjR7idk6iOSvgVvDoUK/ZwslfdWZ35qOg5apZHgXYle8/1gYqezlh0gM0EoYguNQQ7Q8m+DeEnXCJSvfxxsi1HV24wDxT8Py4vD01dcE8DYFzqkMZpyo66jmNY7dI23oIsma2Dqxp2Pz10wFe5+GBlbbR6b7utEp2yIjilNJn3jgnu6kzJri
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM8PR05MB7251.eurprd05.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39830400003)(346002)(376002)(136003)(396003)(366004)(8676002)(956004)(2906002)(52116002)(6666004)(316002)(4326008)(2616005)(5660300002)(8936002)(1076003)(6486002)(478600001)(66476007)(66556008)(6512007)(83380400001)(9686003)(66946007)(86362001)(186003)(36756003)(7416002)(16526019)(26005)(69590400008)(6506007);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData: v7u1a3W3RGIvQW/gXvRs3tA8GPpbaCYGC/LRhePGItkaZE6YN+s66dq6zxl8AuFHYM/Pv3brH4wSFbp2oFToFl4+TcA64yK69uqBS3tJgQQz3P8xGKWxF6V+HSQK9VLrtrLKy4pbRA3DRU9eFYDK6dBKfJMpegA0fqRO+Ex+uaX0Byzd053p7f2xxQfHgqOq6abn97bdeugRWXgjCnQdTvXOxZ5EgjQK+HPLcey16eRvyLk18YrDvm/nIlIo8r506Kcs7y0KpuoJu4LimDjaUPuF7DJvBuajIHPZqDYNpeOA7Z5inFB/ZCKqK8LBRIU6He1DOCEYOmhzNbTHyDKBsRzxVWGXi12tChlStu+QBxm79mlbvLm6zSndKHKSY78lG4pfKS3hJQPC1KjnWyD+C5uVdk+3E/rmiz77O1BNKt2c3nYnne1EBWorW/xZSl6Cz8wtTUi4QooICSQULxZjUWuoAvlr+W5urk9AbRlCVwWkCnPnuuerIqyD1ye91YtRFnRO7q2pChEfKlQTwV+Z11gHc9dKXIN9mc4+6iawyF/SdfUIZkzteljxFUusidX0SGDbHcXW1n/Cs68O0BJHrreS08CNpbjkoIEwkpPqzE9igROvOmZBOXo4s/bzOXKsS10jz4RPl+tPIkt3oQ8h8A==
+X-Microsoft-Antispam-Message-Info: agSk88d3ncHcPqM15aGwdqetfa8bm1UrFdIpuCCSHSoKcy9VJJzLMJxFtkaFtOVLui2Cs6vO3l2mBdLR1ydEVGzc1JJKuQP5ZNfgEnHywmyayFmHuXO0nllFUtXVdG6nqKlJQ4UPLkRdmifUILY435LK413a3n4IrhX0fv2UasVDTPniqQoWigPiLNYTdNrpfeFN/Y9kTeIZMM7P/sZcpVcPe0GO6qVX25oPZPqH9gkF3DMBvVu1NurwIACTd3L6Qo/YO1qjKhRgJNPVPZqpCLlyrtHpQHNWFbgTfZjVnzivMDWxzGLy/Y4ZvTFiOBcv58g0CXNR/c8sKMIig6/aF4PG6NbyP4naazucMaAjG+QeCeKluF668jhNZayTJ9i0
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM8PR05MB7251.eurprd05.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(396003)(376002)(346002)(136003)(39830400003)(26005)(8676002)(36756003)(956004)(83380400001)(2616005)(86362001)(186003)(69590400008)(16526019)(1076003)(4326008)(66476007)(66556008)(52116002)(2906002)(6506007)(6666004)(316002)(8936002)(5660300002)(9686003)(478600001)(6512007)(7416002)(66946007)(6486002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData: EVs8g/cjZOlpRSnUX5qBClmf/bb3q9K4oA5Pz88We3sdBqLhzdl70wGayltiPD/dacKIij11IdGmA0Eofkw8JgXh8lKiU1aCZTwM+aPS++MacU/6+EEDdgk8Iiuho13UW8OcmP9gOaa3EZ9XVPLX30btNOnLvEiRba3kI8EC32VVffT+5CjP243U1REaP56GniKl992AKcKmWo2/YgvNqeR/c759BtsC3YN1sDf+xJ7sZJXdsPdEChW7Y5zpCc+g+OqXgfM+KDl20uywEUiReIYj97hNZXRaggvqO5KhQ/wVymDU9K0ATyWO4eeNnKLl6H1sgYsKvcevpRZIKNBe4cYkCMCENc7ib0m/tz5+6Ni4JhFud5cKtFckyIKKKKpdRQu6ij0DHLna1kDn9/8OPtMnCFfxoL+Saq83agrrIsbbU5o8qU63Mjgdru6K1uBQU1clUJ9dQeChCYmtcL+GxMuZ/Y+jLqqZZBzFiWLoImMhZtt9J/mV07SbXlz4g23mgnYFp3wpPue7BdQkxfHIcT0+kqUX//k+GoQ2IXO9CzFrMTuGnis9EqdkYPSserJwshk/wWg6+GceP7xqCwCAXssVj8HrrTgBn2Z1N1aM5u+wsuyGbDdwrLJiXko2QaA4SQYbkdEKEdc8ph28Hgf6eQ==
 X-OriginatorOrg: voleatech.de
-X-MS-Exchange-CrossTenant-Network-Message-Id: ccbed9be-2453-45ee-1208-08d880d9ab0b
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8035cf02-f4b0-43f0-bf36-08d880d9aa80
 X-MS-Exchange-CrossTenant-AuthSource: AM8PR05MB7251.eurprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Nov 2020 15:52:43.9863
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Nov 2020 15:52:43.0992
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: b82a99f6-7981-4a72-9534-4d35298f847b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: em8+jt/aqsoaxOK1j614FfxGLJesvV+jiSORWz02+AoX0jlW3BH3OZZDSTh5RSrhGeg+SHTpIkDs59RLxX6Bj8MRDr9B7ZGGRIfCvZ76Zqo=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR05MB5075
+X-MS-Exchange-CrossTenant-UserPrincipalName: dfC8YBeqOernBWwy8I8X9wMAxsyr6SFXJZFPR1qSGcFykNPEwBPzRot9xPnMSevjqi/rD0Vqfip+sTxsI9SwMFoj2pbSstT/lS5TjVhu4no=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8PR05MB7522
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 From: Sven Auhagen <sven.auhagen@voleatech.de>
 
-In order to support custom actions at the end of the irq handler
-a multi_irq_host_ack callback is added to the struct ahci_host_priv.
+Disable the platform irq init in ahci init platform host
+if it was initiated by a custom function.
+To check for it I am using the AHCI_HFLAG_MULTI_MSI flag.
 
 Suggested-by: Hans de Goede <hdegoede@redhat.com>
 Signed-off-by: Sven Auhagen <sven.auhagen@voleatech.de>
 ---
- drivers/ata/ahci.h    | 2 ++
- drivers/ata/libahci.c | 4 ++++
- 2 files changed, 6 insertions(+)
+ drivers/ata/libahci_platform.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 98b8baa47dc5..d8109e06794c 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -371,6 +371,8 @@ struct ahci_host_priv {
- 	/* only required for per-port MSI(-X) support */
- 	int			(*get_irq_vector)(struct ata_host *host,
- 						  int port);
-+
-+	int			(*multi_irq_host_ack)(int irq, struct ata_port *ap);
- };
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index de638dafce21..f6f2a111d226 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -581,14 +581,16 @@ int ahci_platform_init_host(struct platform_device *pdev,
+ 	struct ata_host *host;
+ 	int i, irq, n_ports, rc;
  
- extern int ahci_ignore_sss;
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index ea5bf5f4cbed..cf9839135a57 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1897,6 +1897,7 @@ static void ahci_port_intr(struct ata_port *ap)
- static irqreturn_t ahci_multi_irqs_intr_hard(int irq, void *dev_instance)
- {
- 	struct ata_port *ap = dev_instance;
-+	struct ahci_host_priv *hpriv = ap->host->private_data;
- 	void __iomem *port_mmio = ahci_port_base(ap);
- 	u32 status;
+-	irq = platform_get_irq(pdev, 0);
+-	if (irq <= 0) {
+-		if (irq != -EPROBE_DEFER)
+-			dev_err(dev, "no irq\n");
+-		return irq;
+-	}
++	if (!(hpriv->flags & AHCI_HFLAG_MULTI_MSI)) {
++		irq = platform_get_irq(pdev, 0);
++		if (irq <= 0) {
++			if (irq != -EPROBE_DEFER)
++				dev_err(dev, "no irq\n");
++			return irq;
++		}
  
-@@ -1909,6 +1910,9 @@ static irqreturn_t ahci_multi_irqs_intr_hard(int irq, void *dev_instance)
- 	ahci_handle_port_interrupt(ap, port_mmio, status);
- 	spin_unlock(ap->lock);
+-	hpriv->irq = irq;
++		hpriv->irq = irq;
++	}
  
-+	if (hpriv->multi_irq_host_ack)
-+		hpriv->multi_irq_host_ack(irq, ap);
-+
- 	VPRINTK("EXIT\n");
- 
- 	return IRQ_HANDLED;
+ 	/* prepare host */
+ 	pi.private_data = (void *)(unsigned long)hpriv->flags;
 -- 
 2.20.1
 
