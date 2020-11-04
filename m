@@ -2,349 +2,152 @@ Return-Path: <SRS0=Oljn=EK=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C8F4C2D0A3
-	for <linux-ide@archiver.kernel.org>; Wed,  4 Nov 2020 10:06:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08C27C5517A
+	for <linux-ide@archiver.kernel.org>; Wed,  4 Nov 2020 15:52:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 17DAC207BB
-	for <linux-ide@archiver.kernel.org>; Wed,  4 Nov 2020 10:06:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6F9D20780
+	for <linux-ide@archiver.kernel.org>; Wed,  4 Nov 2020 15:52:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mEKTFHG5"
+	dkim=pass (1024-bit key) header.d=voleatech.de header.i=@voleatech.de header.b="N/8dwyMq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728522AbgKDKGZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 4 Nov 2020 05:06:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60420 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728066AbgKDKGZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 4 Nov 2020 05:06:25 -0500
-Received: from mail-io1-xd35.google.com (mail-io1-xd35.google.com [IPv6:2607:f8b0:4864:20::d35])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDA41C0613D3
-        for <linux-ide@vger.kernel.org>; Wed,  4 Nov 2020 02:06:24 -0800 (PST)
-Received: by mail-io1-xd35.google.com with SMTP id r9so21615491ioo.7
-        for <linux-ide@vger.kernel.org>; Wed, 04 Nov 2020 02:06:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to:cc
-         :content-transfer-encoding;
-        bh=QAzmKD/KL9lLJWbEU2h+TuELpjYFjjcQoXkre/kpTzo=;
-        b=mEKTFHG5p5EOrYxUvCVvzcI8WCdhdfqujdKq4jgdI5xXK+IWOBurM5A9Ko9ziI1wtK
-         PvPHyq2iwOIng+N/n5RLqyTOWt3TkiZkEXG7vIoAJdNnQ+gFu0+1As4AXwO+SJLDuiHr
-         lIupbUKIh0o+/hvDkeJyNYRe4QBAHjiSX6FFe1j5JkFU9P27g0fJ8V2QW1xBiNBRK+Ds
-         AsAwYar9l6siPGMs7dnGmONBIZYeQXM7BCeJJ6mZcM5hVwC2w0dE/R4VYHBW6H8OmDmY
-         ZS4RhVlcoatDpSn0OCTPR5sFKUWrifyJR7+eaqefv0uQb42Y83WqT9XD7993opKNOOuH
-         mkyg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc
-         :content-transfer-encoding;
-        bh=QAzmKD/KL9lLJWbEU2h+TuELpjYFjjcQoXkre/kpTzo=;
-        b=MY0OX2EzNxWpfaGXDs9e/7XbaXgTfFH+qz4jNO/h2PRjSIYc4uTJsTMeZXz4/GnpS0
-         C4Iki6+PwF67KMIdmbHlbxxjcKKcO3LyqpWgD/cnFwk3oloR7nmJM+cM9qT7roPi/WvT
-         atzGXt6OpcgOcTTig84KbGlj4pP4RdKInzG4dBLiVLbij3F3ac7En1t3eBCTzPgE4ei5
-         AsE05V7Z6c1NX+ytgLg03bPv5DAzOok8KC4pSdEuVwopH4vzRPRakmnf4lVl/tNvqhAf
-         TsPAAxxwN9Lu121MSBBZxFBPlfIcFjCC4yp+neMV6JQ2gbRDumBvV91JQ6XKVJSm/t9L
-         KO+g==
-X-Gm-Message-State: AOAM530USWKJjw8YGSnBnhHt8AEQ5jKqYIDGYcFZzbOZ+amUAMZZiOj9
-        8QAx9jKJAfPuK2dKsQOLBnzl4t1Ith2cJB1ki1E=
-X-Google-Smtp-Source: ABdhPJxGpcS46yvvDENgRPaP9hfJvs7Ecvdf+RqzM8IUYLIq7WZgzVZiZCotRLeWhxb2A/1gk+WnUhAYLHy7vIe6nq4=
-X-Received: by 2002:a6b:148e:: with SMTP id 136mr17311716iou.60.1604484384189;
- Wed, 04 Nov 2020 02:06:24 -0800 (PST)
+        id S1730976AbgKDPwt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 4 Nov 2020 10:52:49 -0500
+Received: from mail-db8eur05on2122.outbound.protection.outlook.com ([40.107.20.122]:47808
+        "EHLO EUR05-DB8-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730948AbgKDPws (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 4 Nov 2020 10:52:48 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=XnrtbvusQpGFsQRyyiZXPUpVJq6KqL8DBBAlNxIiQ+/P21L6GyLIIJt3+2dqaRG87Ttfh0wIaIQYc4VtQ6hBnzvl8aYQ55/A11ORC83HCk2xiBx7zl5mEYSgV/NEeUfNRr2shb1ldzbWPiMluUYYCLxCkIINHTjh3jjQdpWxW409dfgco0wJYbre3kag57VR45T3dYBiHbQjyZ4TMaC7L0NqpKyEt9Ve3XucVpfAoUf4tN/BditgyF/JxuUFrNXgBmy1TL1jUl4l6ryWvwol5s0S2SfpOwSQDW9eoo4FjQD9OU1rMF+0mlnyT/8j/E2fDQvcpLORm/8Ni8aHUq8DZw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=mj1Yu68StHzQhJMmJfnXSW8cIOerkdvHJ9nucUCe4tc=;
+ b=UJZEE9bg5xwdLAVI2ZVCW4YXqIQtHLTvGn36bU3OTWz4yymJQMi9dzojKaRjF+bSeWcbzDk/J34y211ragWLJcpQE1L1rEUuthotUe/AScmEYBhXMM9VzlAyrZhVZd5Z0Ss0Cqd2ptfF5N2dHoyvHXf0Suj8p7i4TYRbpVYgSDwDCrrGtXrEcGZeRZY7i6wPVcKUWsqCejKdTLlk481IC6gQDjV8/yVohgWKhqNgB+8I+EeTpornpdrConk5KeB7vawywNaBCyEp6YXtOFgzOyYGuRGGvv5seQNsl2kYn9GAKIf2Z0vxkuv+vyyraAvuinIHt8RHT6CCwjwaF2npVg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=voleatech.de; dmarc=pass action=none header.from=voleatech.de;
+ dkim=pass header.d=voleatech.de; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=voleatech.de;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=mj1Yu68StHzQhJMmJfnXSW8cIOerkdvHJ9nucUCe4tc=;
+ b=N/8dwyMqwXrMZJG9hxO7WbhaINQ9+n0d0r0pW9JBVDwIFfk6smCBuI8tAQxaccObcHo7YYSu+iO2aDaXkyNVG+A6u/GochcQbkZyOqYJirPADS3ygNXAmOqzv6qhn4JECGdRA0YuPS7OA9S6JuqH26tw0mR1s+zpXGlcFLelO48=
+Authentication-Results: kernel.dk; dkim=none (message not signed)
+ header.d=none;kernel.dk; dmarc=none action=none header.from=voleatech.de;
+Received: from AM8PR05MB7251.eurprd05.prod.outlook.com (2603:10a6:20b:1d4::23)
+ by AM8PR05MB7522.eurprd05.prod.outlook.com (2603:10a6:20b:1c4::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3499.27; Wed, 4 Nov
+ 2020 15:52:42 +0000
+Received: from AM8PR05MB7251.eurprd05.prod.outlook.com
+ ([fe80::f132:2cc:34f2:5e4]) by AM8PR05MB7251.eurprd05.prod.outlook.com
+ ([fe80::f132:2cc:34f2:5e4%7]) with mapi id 15.20.3499.032; Wed, 4 Nov 2020
+ 15:52:42 +0000
+From:   sven.auhagen@voleatech.de
+To:     axboe@kernel.dk, hdegoede@redhat.com, robh+dt@kernel.org,
+        tglx@linutronix.de, maz@kernel.org, gregory.clement@bootlin.com
+Cc:     linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        devicetree@vger.kernel.org, jason@lakedaemon.net, andrew@lunn.ch,
+        rjw@rjwysocki.net, viresh.kumar@linaro.org,
+        antoine.tenart@bootlin.com, maxime.chevallier@bootlin.com,
+        thomas.petazzoni@bootlin.com, miquel.raynal@bootlin.com
+Subject: [PATCH v2 2/9] ata: ahci: mvebu: Support A8k compatible
+Date:   Wed,  4 Nov 2020 16:52:30 +0100
+Message-Id: <20201104155237.77772-3-sven.auhagen@voleatech.de>
+X-Mailer: git-send-email 2.24.3 (Apple Git-128)
+In-Reply-To: <20201104155237.77772-1-sven.auhagen@voleatech.de>
+References: <20201104155237.77772-1-sven.auhagen@voleatech.de>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [109.193.235.168]
+X-ClientProxiedBy: AM8P190CA0030.EURP190.PROD.OUTLOOK.COM
+ (2603:10a6:20b:219::35) To AM8PR05MB7251.eurprd05.prod.outlook.com
+ (2603:10a6:20b:1d4::23)
 MIME-Version: 1.0
-From:   Sam Sankoorikal <sam.ks.2000@gmail.com>
-Date:   Wed, 4 Nov 2020 15:36:08 +0530
-Message-ID: <CAAjC+DoQ12oB39y=G99PvQ9rWrWJRFmdw4ox4QHRsnOqTsFgRw@mail.gmail.com>
-Subject: [Query] Help understanding logs from libata-eh.c
-To:     tj@kernel.org, htejun@gmail.com
-Cc:     linux-ide@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from localhost.localdomain (109.193.235.168) by AM8P190CA0030.EURP190.PROD.OUTLOOK.COM (2603:10a6:20b:219::35) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3499.19 via Frontend Transport; Wed, 4 Nov 2020 15:52:41 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: a84d3b52-653f-4176-eae2-08d880d9a9f9
+X-MS-TrafficTypeDiagnostic: AM8PR05MB7522:
+X-Microsoft-Antispam-PRVS: <AM8PR05MB75221821BD3D0B0F4BFE211FEFEF0@AM8PR05MB7522.eurprd05.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:6790;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: nXNjcrtctgz+dhyNTYo4PzACXQbdBWDgki1JjIsqMVwimqTwh3jvTsDqXcY9T+EjjGJJXG7hrRShQWXVI3KcYypjrbIVneARu3TpZCyQ0eAQQehv7GQlRSg+ss12+C+W+pcTQTJ8kuvuYdfQNvJBclVZSy1wsege6uAGtEt6bfmz3kSHvow/5Z+6Bo1fTTvbfUcOia2GcAM/XFynMe2gXFADbs9A5SXe88+y0tb/7oKUBVevKGLbBDBJk9eJrtWDmiu8lhWylfkcUtlDhI4rOhN1oJNvTJY/2GKhbonS6TSnj7UTQsC/YTQ57j0b5LKt5aPoMuOuGhyBsA7lZI5N46I35Wq4KUFzvzc4mMvS7S/n1d92ZoKtfc7yUVAlP/Nz
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM8PR05MB7251.eurprd05.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(396003)(376002)(346002)(136003)(39830400003)(26005)(8676002)(36756003)(956004)(83380400001)(2616005)(86362001)(186003)(69590400008)(16526019)(1076003)(4326008)(66476007)(66556008)(52116002)(2906002)(6506007)(6666004)(316002)(8936002)(5660300002)(9686003)(478600001)(6512007)(7416002)(66946007)(6486002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData: qMSnk/K+a/3BAVoTmwr1oh+i0iOA+zLbisavU8HeenbPBkLxG34cdpSIkAbdb7YlDA1mqAL+PfdMOQ8cuyAuCopTnE4MPSMGwCfApKJprAlR2y7LfqqhanGSwjw4TezKYk2OOp18KtUjMhP4McvIpXTor5uSEmvHbG1cjwU0WuBSdoYGhDFFZWHcL8sIG65NObcjpvdmUyz1OxxYSxu2UXv9zyTAZgFS3vrP3D03w7l2aIltOXRzv02qP/mJFmGdJjVgIuxFEU33Wo6QmenZQW2GQEINOnTIq+Rjz7lerONQRpQH5iflV2E6niVZvfudz0r4fuCnBOhFXxF0oNCIdP2ZwAcCK/8QQMH+e/XE5AOdJSC6tnas83v7B8qHkS8hN2vykulVmIb7nSuSJuYOrrh7Y2aIA0fP+jyvngrS7L/OdbOJeDtV9Zoju+On6d0NWLayqQQNglAAzXvZsuOIoERzDtTIQxmc03B7LcQ+oCMc95yyvsELEYhECuwmONC5K5Fw3ekBKHEyGUI6of+zVkKMykuv9uAyZfoAeNYkPasuTO0QOQQT6fsHRr4pCYf7fskDS8m/11TslwfXLp+NFOQgl8CPwwYFouq+8TMPoX61KDRamtSLjugLgZq7X1eumVbVIy/GPrbPp2kb/rBGBA==
+X-OriginatorOrg: voleatech.de
+X-MS-Exchange-CrossTenant-Network-Message-Id: a84d3b52-653f-4176-eae2-08d880d9a9f9
+X-MS-Exchange-CrossTenant-AuthSource: AM8PR05MB7251.eurprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Nov 2020 15:52:42.2639
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: b82a99f6-7981-4a72-9534-4d35298f847b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: gbyBPo+iXnh/NQvZUknEwCOu/10DQy91bKX8jOkIpUeWUMkrxL6unMfQjA3YKjHP7YGh90jems4Q9Pz2LtdgY9eogiv1IVHB1wu+7rslwLk=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM8PR05MB7522
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Folks,
+From: Miquel Raynal <miquel.raynal@bootlin.com>
+
+The ahci_platform.c driver was historically the one bound to the A8k
+AHCI compatible string, but before adding a quirk for this compatible,
+it is probably cleaner to put all Marvell EBU code in one place: the
+ahci_mvebu.c driver.
+
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+Signed-off-by: Sven Auhagen <sven.auhagen@voleatech.de>
+Signed-off-by: Miquel Raynal <miquel.raynal@bootlin.com>
+---
+ drivers/ata/ahci_mvebu.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/drivers/ata/ahci_mvebu.c b/drivers/ata/ahci_mvebu.c
+index 563cc4c64d96..ed82381dc4a7 100644
+--- a/drivers/ata/ahci_mvebu.c
++++ b/drivers/ata/ahci_mvebu.c
+@@ -96,6 +96,11 @@ static int ahci_mvebu_armada_3700_config(struct ahci_host_priv *hpriv)
+ 	return 0;
+ }
+ 
++static int ahci_mvebu_armada_8k_config(struct ahci_host_priv *hpriv)
++{
++	return 0;
++}
++
+ /**
+  * ahci_mvebu_stop_engine
+  *
+@@ -230,6 +235,10 @@ static const struct ahci_mvebu_plat_data ahci_mvebu_armada_3700_plat_data = {
+ 	.host_flags = AHCI_HFLAG_SUSPEND_PHYS | AHCI_HFLAG_IGN_NOTSUPP_POWER_ON,
+ };
+ 
++static const struct ahci_mvebu_plat_data ahci_mvebu_armada_8k_plat_data = {
++	.plat_config = ahci_mvebu_armada_8k_config,
++};
++
+ static const struct of_device_id ahci_mvebu_of_match[] = {
+ 	{
+ 		.compatible = "marvell,armada-380-ahci",
+@@ -239,6 +248,10 @@ static const struct of_device_id ahci_mvebu_of_match[] = {
+ 		.compatible = "marvell,armada-3700-ahci",
+ 		.data = &ahci_mvebu_armada_3700_plat_data,
+ 	},
++	{
++		.compatible = "marvell,armada-8k-ahci",
++		.data = &ahci_mvebu_armada_8k_plat_data,
++	},
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(of, ahci_mvebu_of_match);
+-- 
+2.20.1
 
-I'm trying to understand the following logs for my sata drive. These
-logs are seen immediately after 'reboot -f'. This is not seen
-everytime a reboot is performed. A power-cycle ensures that it is
-boots up fine.
-Please help explain the reason for the 'timeout'. Please suggest what
-needs to be done to ensure that reboot succeeds without hitting this
-error?
-
--x-
-
-reboot -f
-
-Failed to read reboot parameter file: No such file or directory
-
-Rebooting.
-
-[  929.916076] ata6.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x6 fr=
-ozen
-
-[  930.007059] ata6.00: failed command: READ FPDMA QUEUED
-
-[  930.072375] ata6.00: cmd 60/20:00:00:08:00/00:00:00:00:00/40 tag 0
-ncq dma 16384 in
-
-[  930.072375]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
-0x4 (timeout)
-
-[  930.264519] ata6.00: status: { DRDY }
-
-[  930.312264] ata1.00: exception Emask 0x0 SAct 0x6fffffff SErr 0x0
-action 0x6 frozen
-
-[  930.409971] ata1.00: failed command: WRITE FPDMA QUEUED
-
-[  930.476424] ata1.00: cmd 61/08:00:fc:d5:82/00:00:05:00:00/40 tag 0
-ncq dma 4096 out
-
-[  930.476424]          res 40/00:01:00:00:00/00:00:00:00:00/00 Emask
-0x4 (timeout)
-
-[  930.668747] ata1.00: status: { DRDY }
-
-
-
-=E2=80=A6
-
-[  930.668747] ata1.00: status: { DRDY }
-
-[  930.716506] ata1.00: failed command: WRITE FPDMA QUEUED
-
-[  930.782810] ata1.00: cmd 61/08:08:8c:d9:82/00:00:05:00:00/40 tag 1
-ncq dma 4096 out
-
-[  930.782810]          res 40/00:01:00:00:00/00:00:00:00:00/00 Emask
-0x4 (timeout)
-
-[  930.975100] ata1.00: status: { DRDY }
-
-[  931.022813] ata1.00: failed command: WRITE FPDMA QUEUED
-
-[  931.089110] ata1.00: cmd 61/08:10:e4:d9:82/00:00:05:00:00/40 tag 2
-ncq dma 4096 out
-
-[  931.089110]          res 40/00:01:00:4f:c2/00:00:00:00:00/00 Emask
-0x4 (timeout)
-
-[  931.281454] ata1.00: status: { DRDY }
-
-[  931.329235] ata1.00: failed command: WRITE FPDMA QUEUED
-
-[  931.395489] ata1.00: cmd 61/08:18:9c:da:82/00:00:05:00:00/40 tag 3
-ncq dma 4096 out
-
-[  931.395489]          res 40/00:01:09:4f:c2/00:00:00:00:00/00 Emask
-0x4 (timeout)
-
-[  931.587634] ata1.00: status: { DRDY }
-
-[  931.635372] ata1.00: failed command: WRITE FPDMA QUEUED
-
-[  931.701645] ata1.00: cmd 61/08:20:34:db:82/00:00:05:00:00/40 tag 4
-ncq dma 4096 out
-
-[  931.701645]          res 40/00:01:00:00:00/00:00:00:00:00/00 Emask
-0x4 (timeout)
-
-[  931.893804] ata1.00: status: { DRDY }
-
-[  931.941531] ata1.00: failed command: WRITE FPDMA QUEUED
-
-[  932.007820] ata1.00: cmd 61/08:28:4c:e0:82/00:00:05:00:00/40 tag 5
-ncq dma 4096 out
-
-[  932.007820]          res 40/00:01:00:00:00/00:00:00:00:00/00 Emask
-0x4 (timeout)
-
-[  932.199990] ata1.00: status: { DRDY }
-
-[  932.247731] ata1.00: failed command: WRITE FPDMA QUEUED
-
-
-
-=E2=80=A6
-
-
-
-[  939.308610] ata1.00: failed command: WRITE FPDMA QUEUED
-
-[  939.374853] ata1.00: cmd 61/08:f0:2c:d2:82/00:00:05:00:00/40 tag 30
-ncq dma 4096 out
-
-[  939.374853]          res 40/00:01:06:4f:c2/00:00:00:00:00/00 Emask
-0x4 (timeout)
-
-[  939.567957] ata1.00: status: { DRDY }
-
-[  945.265210] ata6.00: revalidation failed (errno=3D-5)
-
-[  945.327849] ata1.00: revalidation failed (errno=3D-5)
-
-[  956.017398] ata1.00: revalidation failed (errno=3D-5)
-
-[  956.080070] ata6.00: revalidation failed (errno=3D-5)
-
-[  986.737616] ata6.00: revalidation failed (errno=3D-5)
-
-[  986.800288] ata1.00: revalidation failed (errno=3D-5)
-
-[  987.167188] blk_update_request: I/O error, dev sdb, sector 2048
-
-[  987.167265] blk_update_request: I/O error, dev sda, sector 92459564
-
-
-
-lspci -vvv | grep -i sata
-00:1f.2 SATA controller: Intel Corporation C610/X99 series chipset
-6-Port SATA Controller [AHCI mode] (rev 05) (prog-if 01 [AHCI 1.0])
-        Subsystem: Intel Corporation C610/X99 series chipset 6-Port
-SATA Controller [AHCI mode]
-        Capabilities: [a8] SATA HBA v1.0 BAR4 Offset=3D00000004
-pcilib: sysfs_read_vpd: read failed: Input/output error
-
-smartctl -a /dev/sda
-smartctl 6.5 2016-05-07 r4318
-[x86_64-linux-4.8.28-WR2.2.1_standard-gf2ab372] (local build)
-Copyright (C) 2002-16, Bruce Allen, Christian Franke, www.smartmontools.org
-
-=3D=3D=3D START OF INFORMATION SECTION =3D=3D=3D
-Device Model:     StorFly VSFBM8CC200G-JUN
-Serial Number:    P1T14005214001280074
-Firmware Version: 0202-000
-User Capacity:    200,049,647,616 bytes [200 GB]
-Sector Size:      512 bytes logical/physical
-Rotation Rate:    Solid State Device
-Device is:        Not in smartctl database [for details use: -P showall]
-ATA Version is:   ACS-2 (minor revision not indicated)
-SATA Version is:  SATA 3.1, 6.0 Gb/s (current: 6.0 Gb/s)
-Local Time is:    Wed Nov  4 01:59:20 2020 PST
-SMART support is: Available - device has SMART capability.
-SMART support is: Enabled
-
-=3D=3D=3D START OF READ SMART DATA SECTION =3D=3D=3D
-SMART overall-health self-assessment test result: PASSED
-
-General SMART Values:
-Offline data collection status:  (0x00) Offline data collection activity
-                                        was never started.
-                                        Auto Offline Data Collection: Disab=
-led.
-Self-test execution status:      (   0) The previous self-test routine comp=
-leted
-                                        without error or no self-test has e=
-ver
-                                        been run.
-Total time to complete Offline
-data collection:                (    0) seconds.
-Offline data collection
-capabilities:                    (0x71) SMART execute Offline immediate.
-                                        No Auto Offline data collection sup=
-port.
-                                        Suspend Offline collection upon new
-                                        command.
-                                        No Offline surface scan supported.
-                                        Self-test supported.
-                                        Conveyance Self-test supported.
-                                        Selective Self-test supported.
-SMART capabilities:            (0x0002) Does not save SMART data before
-                                        entering power-saving mode.
-                                        Supports SMART auto save timer.
-Error logging capability:        (0x01) Error logging supported.
-                                        General Purpose Logging supported.
-Short self-test routine
-recommended polling time:        (   1) minutes.
-Extended self-test routine
-recommended polling time:        (   1) minutes.
-Conveyance self-test routine
-recommended polling time:        (   1) minutes.
-
-SMART Attributes Data Structure revision number: 1
-Vendor Specific SMART Attributes with Thresholds:
-ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE
-UPDATED  WHEN_FAILED RAW_VALUE
-  1 Raw_Read_Error_Rate     0x0000   100   100   070    Old_age
-Offline      -       0
-  5 Reallocated_Sector_Ct   0x0000   100   100   000    Old_age
-Offline      -       0
-  9 Power_On_Hours          0x0000   100   100   000    Old_age
-Offline      -       240
- 12 Power_Cycle_Count       0x0000   100   100   000    Old_age
-Offline      -       88
-160 Unknown_Attribute       0x0000   100   100   000    Old_age
-Offline      -       0
-161 Unknown_Attribute       0x0000   100   100   000    Old_age
-Offline      -       537
-163 Unknown_Attribute       0x0000   100   100   000    Old_age
-Offline      -       49
-164 Unknown_Attribute       0x0000   100   100   000    Old_age
-Offline      -       249797
-165 Unknown_Attribute       0x0000   100   100   000    Old_age
-Offline      -       156
-166 Unknown_Attribute       0x0000   100   100   000    Old_age
-Offline      -       54
-167 Unknown_Attribute       0x0000   100   100   000    Old_age
-Offline      -       121
-168 Unknown_Attribute       0x0000   100   100   000    Old_age
-Offline      -       3000
-177 Wear_Leveling_Count     0x0000   100   100   050    Old_age
-Offline      -       114
-178 Used_Rsvd_Blk_Cnt_Chip  0x0000   100   100   000    Old_age
-Offline      -       0
-181 Program_Fail_Cnt_Total  0x0000   100   100   000    Old_age
-Offline      -       0
-182 Erase_Fail_Count_Total  0x0000   100   100   000    Old_age
-Offline      -       0
-187 Reported_Uncorrect      0x0000   100   100   000    Old_age
-Offline      -       0
-192 Power-Off_Retract_Count 0x0000   100   100   000    Old_age
-Offline      -       48
-194 Temperature_Celsius     0x0000   100   100   000    Old_age
-Offline      -       31
-195 Hardware_ECC_Recovered  0x0000   100   100   000    Old_age
-Offline      -       322712
-196 Reallocated_Event_Count 0x0000   100   100   016    Old_age
-Offline      -       0
-198 Offline_Uncorrectable   0x0000   100   100   000    Old_age
-Offline      -       0
-199 UDMA_CRC_Error_Count    0x0000   100   100   050    Old_age
-Offline      -       0
-232 Available_Reservd_Space 0x0000   100   100   000    Old_age
-Offline      -       100
-241 Total_LBAs_Written      0x0000   100   100   000    Old_age
-Offline      -       541894
-242 Total_LBAs_Read         0x0000   100   100   000    Old_age
-Offline      -       68407
-248 Unknown_Attribute       0x0000   100   100   000    Old_age
-Offline      -       96
-249 Unknown_Attribute       0x0000   100   100   000    Old_age
-Offline      -       100
-
-SMART Error Log Version: 1
-No Errors Logged
-
-SMART Self-test log structure revision number 1
-No self-tests have been logged.  [To run self-tests, use: smartctl -t]
-
-SMART Selective self-test log data structure revision number 1
- SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
-    1        0        0  Not_testing
-    2        0        0  Not_testing
-    3        0        0  Not_testing
-    4        0        0  Not_testing
-    5        0        0  Not_testing
-    6        0    65535  Read_scanning was never started
-Selective self-test flags (0x0):
-  After scanning selected spans, do NOT read-scan remainder of disk.
-If Selective self-test is pending on power-up, resume after 0 minute delay.
--x-
-
-Regards.
--sam
