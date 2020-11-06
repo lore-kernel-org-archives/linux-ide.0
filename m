@@ -2,100 +2,199 @@ Return-Path: <SRS0=A6T3=EM=vger.kernel.org=linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,MIME_NO_TEXT,SPF_HELO_NONE,SPF_PASS,
-	T_TVD_MIME_NO_HEADERS,USER_AGENT_GIT autolearn=no autolearn_force=no
-	version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4773C388F2
-	for <linux-ide@archiver.kernel.org>; Fri,  6 Nov 2020 19:17:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D6FCC2D0A3
+	for <linux-ide@archiver.kernel.org>; Fri,  6 Nov 2020 19:18:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E56A21556
-	for <linux-ide@archiver.kernel.org>; Fri,  6 Nov 2020 19:17:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2ED32151B
+	for <linux-ide@archiver.kernel.org>; Fri,  6 Nov 2020 19:18:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="c2Dtw/DH"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="RqF7EMVJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728116AbgKFTRt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 6 Nov 2020 14:17:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33218 "EHLO
+        id S1728179AbgKFTRy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 6 Nov 2020 14:17:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33238 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728070AbgKFTRt (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 6 Nov 2020 14:17:49 -0500
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01598C0613CF
-        for <linux-ide@vger.kernel.org>; Fri,  6 Nov 2020 11:17:49 -0800 (PST)
-Received: by mail-pl1-x634.google.com with SMTP id t22so1098083plr.9
-        for <linux-ide@vger.kernel.org>; Fri, 06 Nov 2020 11:17:48 -0800 (PST)
+        with ESMTP id S1728177AbgKFTRx (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 6 Nov 2020 14:17:53 -0500
+Received: from mail-pg1-x542.google.com (mail-pg1-x542.google.com [IPv6:2607:f8b0:4864:20::542])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B0B7C0613CF
+        for <linux-ide@vger.kernel.org>; Fri,  6 Nov 2020 11:17:53 -0800 (PST)
+Received: by mail-pg1-x542.google.com with SMTP id 62so1668128pgg.12
+        for <linux-ide@vger.kernel.org>; Fri, 06 Nov 2020 11:17:53 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=eQOLnkL4gD0JyZQOaHSVwu7eRAvOSB0zIoLyxZin3tU=;
-        b=c2Dtw/DHYN/mc2PsLvMZ5AV3UCpSZ9qnxzh3IN0M9GmU1nvJVn8E33tdAjrPit2WXZ
-         fUFGI2ulmeTHeOTTYjv3ZuYc3HeUdWlpIJ3O4BnxLdvl102pHTaHxluf/1tXreoHyclM
-         EWaTclwr0gHhpuXOZ+3ctvfi19WP/qsAcexDM=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=SAHP7iNnu6OXKX7xRIXQxdQq5d1hj2hbL+bQHy20wH8=;
+        b=RqF7EMVJF2342H8iQbygi4qsrkJpMpw0htN7LVsvKLQLJdQZ0ptNzEceUJ1xVlyUjV
+         lf/2iFprgOKNMiXyF+HAYx2IDkwooaf8K9m0pek2m6onGYNkpSQ+X774FaIFDa2Ys99/
+         Z9pVTqBMBkWI2lc14ITANlcDfRFf6T1i9JFm4=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=eQOLnkL4gD0JyZQOaHSVwu7eRAvOSB0zIoLyxZin3tU=;
-        b=JRBnVkyIpwxninEk5p8eWcQGOngOhRdm7L22m0cHYTr1UY0XPPY4RoJ5+kIlmLdi8n
-         jgqKNWiYmiqvCJHU4nXbgHnffx4UX8vicoZud13+m3SFOslKRPNpBHHaxYCTJjuyisFA
-         yJmjI6RPc5jCUDijMOHQZLAfu7QrjM2Wso7XjT9h6Klpv5z1R5dYfb30vZuPYs8L+DOu
-         98K0GSx5lFv1/uyN1tUjre4aH36AaZ0lFJ09XqBCJ/fp4tF33F+VyMPd0vkLbRVlKmlt
-         4c+xX3FLtG/fZhMOqGe3L3fE1UWZl7ay7IvWoe1ZPpvazLzf/VImEB+N5+11HcPaDYC6
-         ixQw==
-X-Gm-Message-State: AOAM531cmVuF2nGWWlHovPvWJwGtRqNlUXitAcQ2PVmfo6Vmy+OkoLCT
-        PMAWwujLagk/RpbiIR0H8OcBlQ==
-X-Google-Smtp-Source: ABdhPJxj/c/Whhp8FHQmEoh32VuBam3HXNir3Ubs0Q7vrtaA9TeOUYWUcjcsDgFWfAgzAt4DTCjldQ==
-X-Received: by 2002:a17:902:684b:b029:d6:e482:9fee with SMTP id f11-20020a170902684bb02900d6e4829feemr2923000pln.10.1604690268270;
-        Fri, 06 Nov 2020 11:17:48 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=SAHP7iNnu6OXKX7xRIXQxdQq5d1hj2hbL+bQHy20wH8=;
+        b=hoK5bLxYb4mtpfb43hIQfeP/oY1k4m4xRWWpy/IZTziITpDUIfUU8OvXIand6rhVw7
+         LZmrEnjWgBDQEnS0u05MaRlJxTu2zcWwX6WWDUdsyHIbsrjvrETDED3tejs/6/6KfSvZ
+         l/kLRUgYfgfPBzRoSW+va/45SzulKzjAqfR1K+V+3HyHRZFnKsGTEKJNjmp0IdoO1FY5
+         a8DmvZbM0ZXyd+IPsfwh2tyH7N2o0Q84jk+hAnQ1uEdOvrJyfBOO8JoaaK+l0nbYGrk2
+         t9IyrJsUbDoKWF4noBqznyBMkGNFwHQ+LFQNNW5DWHyj3b5xgacqutMGzV0GZUsXmvnu
+         GtrA==
+X-Gm-Message-State: AOAM5329sH9IFzS24qw4N/0AlzolSFc3u1HYzvMPLBBlDt3ilIGQw6xH
+        hwajnLHm6XEhMURFsOWdyTjmaw==
+X-Google-Smtp-Source: ABdhPJyzbcHhSbYDvyZDY3U9jPJ5MNABEP4GIw3YZ/BZKUm2DinlbRt/fazoNveCP4Mi0sFXh39mwQ==
+X-Received: by 2002:aa7:9d81:0:b029:18b:4489:1e59 with SMTP id f1-20020aa79d810000b029018b44891e59mr3343227pfq.62.1604690272738;
+        Fri, 06 Nov 2020 11:17:52 -0800 (PST)
 Received: from stbsrv-and-01.and.broadcom.net ([192.19.231.250])
-        by smtp.gmail.com with ESMTPSA id m3sm3302207pjv.52.2020.11.06.11.17.46
+        by smtp.gmail.com with ESMTPSA id m3sm3302207pjv.52.2020.11.06.11.17.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 Nov 2020 11:17:47 -0800 (PST)
+        Fri, 06 Nov 2020 11:17:52 -0800 (PST)
 From:   Jim Quinlan <james.quinlan@broadcom.com>
 To:     Philipp Zabel <p.zabel@pengutronix.de>,
         Hans de Goede <hdegoede@redhat.com>,
         Jens Axboe <axboe@kernel.dk>,
         bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
-Cc:     Florian Fainelli <f.fainelli@gmail.com>,
-        linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM BCM7XXX
-        ARM ARCHITECTURE),
+Cc:     Jim Quinlan <jquinlan@broadcom.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
         linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
         Parallel ATA drivers)), linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2 0/2] ata: ahci_brcm: Fix use of BCM7216 reset controller
-Date:   Fri,  6 Nov 2020 14:17:41 -0500
-Message-Id: <20201106191743.40457-1-james.quinlan@broadcom.com>
+Subject: [PATCH v2 2/2] ata: ahci_brcm: Fix use of BCM7216 reset controller
+Date:   Fri,  6 Nov 2020 14:17:43 -0500
+Message-Id: <20201106191743.40457-3-james.quinlan@broadcom.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20201106191743.40457-1-james.quinlan@broadcom.com>
+References: <20201106191743.40457-1-james.quinlan@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000071ad6f05b3751110"
+        boundary="000000000000b38d1b05b3751116"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
---00000000000071ad6f05b3751110
+--000000000000b38d1b05b3751116
 
-v2 -- refactor rescal-reset driver to implement assert/deassert rather than
-      reset because the reset call only fires once per lifetime and we need
-      to reset after every resume from S2 or S3.
-   -- Split the use of "ahci" and "rescal" controllers in separate fields
-      to keep things simple.
+From: Jim Quinlan <jquinlan@broadcom.com>
 
-v1 -- original
+This driver may use one of two resets controllers.  Keep them in separate
+variables to keep things simple.  The reset controller "rescal" is shared
+between the AHCI driver and the PCIe driver for the BrcmSTB 7216 chip.  Use
+devm_reset_control_get_optional_shared() to handle this sharing.
 
-Jim Quinlan (2):
-  reset: brcmstb rescal: implement {de}assert() instead of reset()
-  ata: ahci_brcm: Fix use of BCM7216 reset controller
+Fixes: 272ecd60a636 ("ata: ahci_brcm: BCM7216 reset is self de-asserting")
+Fixes: c345ec6a50e9 ("ata: ahci_brcm: Support BCM7216 reset controller name")
+Signed-off-by: Jim Quinlan <jquinlan@broadcom.com>
+---
+ drivers/ata/ahci_brcm.c | 46 ++++++++++++++++++++---------------------
+ 1 file changed, 23 insertions(+), 23 deletions(-)
 
- drivers/ata/ahci_brcm.c              | 46 ++++++++++++++--------------
- drivers/reset/reset-brcmstb-rescal.c | 13 ++++++--
- 2 files changed, 33 insertions(+), 26 deletions(-)
-
+diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+index 49f7acbfcf01..58eae075d790 100644
+--- a/drivers/ata/ahci_brcm.c
++++ b/drivers/ata/ahci_brcm.c
+@@ -86,7 +86,8 @@ struct brcm_ahci_priv {
+ 	u32 port_mask;
+ 	u32 quirks;
+ 	enum brcm_ahci_version version;
+-	struct reset_control *rcdev;
++	struct reset_control *rcdev_rescal;
++	struct reset_control *rcdev_ahci;
+ };
+ 
+ static inline u32 brcm_sata_readreg(void __iomem *addr)
+@@ -352,8 +353,8 @@ static int brcm_ahci_suspend(struct device *dev)
+ 	else
+ 		ret = 0;
+ 
+-	if (priv->version != BRCM_SATA_BCM7216)
+-		reset_control_assert(priv->rcdev);
++	reset_control_assert(priv->rcdev_ahci);
++	reset_control_assert(priv->rcdev_rescal);
+ 
+ 	return ret;
+ }
+@@ -365,10 +366,10 @@ static int __maybe_unused brcm_ahci_resume(struct device *dev)
+ 	struct brcm_ahci_priv *priv = hpriv->plat_data;
+ 	int ret = 0;
+ 
+-	if (priv->version == BRCM_SATA_BCM7216)
+-		ret = reset_control_reset(priv->rcdev);
+-	else
+-		ret = reset_control_deassert(priv->rcdev);
++	ret = reset_control_deassert(priv->rcdev_ahci);
++	if (ret)
++		return ret;
++	ret = reset_control_deassert(priv->rcdev_rescal);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -428,7 +429,6 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ {
+ 	const struct of_device_id *of_id;
+ 	struct device *dev = &pdev->dev;
+-	const char *reset_name = NULL;
+ 	struct brcm_ahci_priv *priv;
+ 	struct ahci_host_priv *hpriv;
+ 	struct resource *res;
+@@ -450,15 +450,15 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 	if (IS_ERR(priv->top_ctrl))
+ 		return PTR_ERR(priv->top_ctrl);
+ 
+-	/* Reset is optional depending on platform and named differently */
+-	if (priv->version == BRCM_SATA_BCM7216)
+-		reset_name = "rescal";
+-	else
+-		reset_name = "ahci";
+-
+-	priv->rcdev = devm_reset_control_get_optional(&pdev->dev, reset_name);
+-	if (IS_ERR(priv->rcdev))
+-		return PTR_ERR(priv->rcdev);
++	if (priv->version == BRCM_SATA_BCM7216) {
++		priv->rcdev_rescal = devm_reset_control_get_optional_shared(
++			&pdev->dev, "rescal");
++		if (IS_ERR(priv->rcdev_rescal))
++			return PTR_ERR(priv->rcdev_rescal);
++	}
++	priv->rcdev_ahci = devm_reset_control_get_optional(&pdev->dev, "ahci");
++	if (IS_ERR(priv->rcdev_ahci))
++		return PTR_ERR(priv->rcdev_ahci);
+ 
+ 	hpriv = ahci_platform_get_resources(pdev, 0);
+ 	if (IS_ERR(hpriv))
+@@ -479,10 +479,10 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 		break;
+ 	}
+ 
+-	if (priv->version == BRCM_SATA_BCM7216)
+-		ret = reset_control_reset(priv->rcdev);
+-	else
+-		ret = reset_control_deassert(priv->rcdev);
++	ret = reset_control_deassert(priv->rcdev_rescal);
++	if (ret)
++		return ret;
++	ret = reset_control_deassert(priv->rcdev_ahci);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -527,8 +527,8 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ out_disable_clks:
+ 	ahci_platform_disable_clks(hpriv);
+ out_reset:
+-	if (priv->version != BRCM_SATA_BCM7216)
+-		reset_control_assert(priv->rcdev);
++	reset_control_assert(priv->rcdev_ahci);
++	reset_control_assert(priv->rcdev_rescal);
+ 	return ret;
+ }
+ 
 -- 
 2.17.1
 
 
---00000000000071ad6f05b3751110
+--000000000000b38d1b05b3751116
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -165,14 +264,14 @@ V6GuAMmRknrzeTlxPy40UhUcRKk6Nm8mxl3Jh4KB68z7NFVpIx8G5w5I7S5ar1mLGNRjtFZ0RE4O
 lcCwKVGUXRaZMgQGrIhxGVelVgrcBh2vjpndlv733VI2VKE/TvV5MxMGU18RnogYSm66AEFA/Zb+
 5ztz1AtIMYICbzCCAmsCAQEwbTBdMQswCQYDVQQGEwJCRTEZMBcGA1UEChMQR2xvYmFsU2lnbiBu
 di1zYTEzMDEGA1UEAxMqR2xvYmFsU2lnbiBQZXJzb25hbFNpZ24gMiBDQSAtIFNIQTI1NiAtIEcz
-AgwTv2xmtR4KOmK4QvMwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIDQTw56nhalc
-AnKrnUHYXMbm5tGgS8T3SNDgXf0pHhkEMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZI
-hvcNAQkFMQ8XDTIwMTEwNjE5MTc0OFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJ
+AgwTv2xmtR4KOmK4QvMwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINOn0id6p6xZ
+qVtn4qlaUBkjSCYjgE7pZbN2IL+k1h+rMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZI
+hvcNAQkFMQ8XDTIwMTEwNjE5MTc1M1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJ
 YIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcN
-AQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCwA4PYaTlcjF53ERFzVtzWN6JuS5vN
-/VqGCd9sh8IBrCkx0ZYON9B1P0l1eRZt4eVagM7JZdwWsR4h6C1zNR4fwzsFr8IL6UswzXfKUgur
-pqaGyQpG1wIKbnVHTEkG8UB/KgFcdkXBxt2kFM6zuZSqRvQdU/poDZb9VKKQEZUKIMThNFznk9Jx
-gHhjNw+zVnWyoSmxmhIAuiPsBQN66I3mObDrd0RY02z8vHg/DN4I9CUgba+08gR/yatrd/oxDjvh
-coUxKWnruGVcYz2TGnNo1hXYEffM8u8q5Jn+SisBlpbvEunWQFRpkDrwovTwEJK4RIqFJzeZQ/tk
-IBKbKk4d
---00000000000071ad6f05b3751110--
+AQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBfLVxFzl0FiOT2vPCqwq36SyMz9Juf
+SvrqYmLGAqCoDYqQYFJQNwFQ7fGchoccTxnKibOt0+pRk70WUM/UUo5ykKUcF7X7IIfrzTXehxMp
+DBB2EdvGVANpqwL+3HHpa4Ov+P1667iDZcooLcOZ70Ng0ZuslRyQ0cGqkf7ZSV/P4UQ9gKGV1MAu
+4jhdKZ5f05E1NxLZsy3kPzFaUIby/K14aajyHJ5wf2C3ltXnXpRgIl+k0ouodAYi9OTfnvfNtlRv
+MQ+eRTEdTsx46v3z1hQGYeOR04xBaUIHOVvFfd8D0hmv3KxCo0k/HgoS7Dgk7JkItEfgDtXL0gGY
+5FbEeAlK
+--000000000000b38d1b05b3751116--
