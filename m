@@ -2,179 +2,171 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 401C8C2D0A3
-	for <linux-ide@archiver.kernel.org>; Mon,  9 Nov 2020 17:25:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83C5EC388F7
+	for <linux-ide@archiver.kernel.org>; Mon,  9 Nov 2020 17:39:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9C7CC2083B
-	for <linux-ide@archiver.kernel.org>; Mon,  9 Nov 2020 17:25:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 149FA216C4
+	for <linux-ide@archiver.kernel.org>; Mon,  9 Nov 2020 17:39:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=voleatech.de header.i=@voleatech.de header.b="Ass338dJ"
+	dkim=pass (1024-bit key) header.d=voleatech.de header.i=@voleatech.de header.b="b/CyjaST"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731703AbgKIRZ6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 9 Nov 2020 12:25:58 -0500
-Received: from mail-eopbgr70115.outbound.protection.outlook.com ([40.107.7.115]:3407
-        "EHLO EUR04-HE1-obe.outbound.protection.outlook.com"
+        id S1731491AbgKIRjz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 9 Nov 2020 12:39:55 -0500
+Received: from mail-db8eur05on2090.outbound.protection.outlook.com ([40.107.20.90]:23136
+        "EHLO EUR05-DB8-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1731754AbgKIRZ5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 9 Nov 2020 12:25:57 -0500
+        id S1730330AbgKIRjz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 9 Nov 2020 12:39:55 -0500
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=OF5uJvDAukgc+GU/6IKoXtua3TS3IRLZvEVxpLhOkaxnUHVMxhXTH4gsNxgWiCVrmCHC6BCg5/uIVNXV47MZ8XtMo4FiCh1FYXGPT2ftAGTMhDnndGToqmHAEonU0BF0fmbWGEWwiQUB9g/X6G3t74Tpz4ej8l2pWZ4hsAWKvBgdj8iHiNnrUJSzZtSWjSrPmSpMJqSLsYuHaYskg3PLI0Mbs0ie/TNx3V85opnIFMmKuFKSWV2i5nfbbIBA0luwpxe0weXrPaVLC271yZ4cMOxY/rfv08MOkSxrme1NFuxvU+DeUhD2v3X9JTkOBmZ5t5aSNooeNDm5lEvvsiQPDw==
+ b=AG4TnV/Sonnbmunww/G57lWsunZ3Gd/9NVj50fUyAx+mzl/9EBeHjRUTS3rP7U88k2B8XGYaQK5PsfgZTZWhY4w44mu8zA+j4Pwsdt/2FHwk4Xu6Lp3zNA3Eber5om6tPjg5x4vww19611z7vgm9Qipoa6ewg02L3byfqpR/YCPAs738Rgsx9IRMRWzVZkxqXDFCkhtFTZ29RVOxs6+E+Ks2eNhNo5UpabdUa/PmXYn3mAN6+aIDnX++iWgFovSHU50z8cxZahCaCQQUvN3ufVP3WSGdUv3n47JpFDah0e8mtZNHoILyZ7XL1o60p+uUefe9Ku5B4KDrGvGq/YcRvg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=MuZRyLvEJ2YA0fcwaxu02Q+kf+QkSqm3KgBTwEC76DQ=;
- b=BApRleLMj8uOeM4ncVkKFqtxl0AzOgMRWOt+9xgXn5RehJvXcUWfxz56GijrtrqdXJEgwjvg7LubOErVo+kkaO/a66Me4MpN3olpC17DcFCqVEMB/7/90jJ21WSKKDw3TGE4sTzFoI+Iig+4gUeZf4XAuQZp5y9LDDwHBZbIO1weEOHUz7SDdTc+ukpMkGdqz+1E4oMuJax20/ES8ZvsZHi3sm9LHsYzL4YDJqTJoQqO+IpHc7zytXfHkYJmfla4JMV5c7ywP934ByyCHUSY/PhKw158h+y7l10q7a//a5Uu9MDTHjMZWjBcF12PguiLQOzINtbpo0sCiD5zyezMrQ==
+ bh=7VoXS8Ae5uMaF7YdmY4F9ejMbHg0XaCmFz1xRyYDknI=;
+ b=YNZyxAEzWrTRGKaCmNnZZof9r2wphPDsddIkPPdgQhN26FVG1FswmvqcSIvY5C1XszAx9rJolWEq87jWcWj5mrO8t+JA5vsP9rTvK+5/XpkPw2JjlmQDMCgyObV86zz1QtUpxPnaRGJDZG6NA3nFdeI/LoAF5G1PXrr4puklq0UwwUCPImMoLOOnTQQwUua5yPghmTB7XDfRuKT0Rr0152FUlxBPL2AxaWNBLONFLzOM0f71G+zwe/e1k7Dzkc2ZhvkeItTfZLAGcCBSfbbtyseb9Zhy89nAHiysYkcD4cEuxvFZCTr1JZ4VH0KPlvRMGUardTH79OoP6Z0QI2Qbig==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=voleatech.de; dmarc=pass action=none header.from=voleatech.de;
  dkim=pass header.d=voleatech.de; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=voleatech.de;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=MuZRyLvEJ2YA0fcwaxu02Q+kf+QkSqm3KgBTwEC76DQ=;
- b=Ass338dJM1xJNul8iH5ZMB6eA94t9hpQ0YFPMAONNdT8sLn2typdO0a0Y6k2ZAkwlSgJDiNNsU2J1QS/PpqWFnDfjOUxgxOiEsdqURJIq/+GqxmoxdKo0KTt01GFTl+IzlDUkN6mjM6EFP2GaMavv/bGWnfd2CrkV03j8Rvj2Go=
-Authentication-Results: redhat.com; dkim=none (message not signed)
- header.d=none;redhat.com; dmarc=none action=none header.from=voleatech.de;
+ bh=7VoXS8Ae5uMaF7YdmY4F9ejMbHg0XaCmFz1xRyYDknI=;
+ b=b/CyjaST/q0CJybrRbedOd+u7kKU535NpNpX2IbNtgIJi4/4DDmfAeRSb0MMSi5w8RBvLbcu0ntGiakHpdi7VigC+cxIPZFB/kGN0le6h9bRG5Qy/oRp5RvAEAdI45Rvkq2Xqllm52cRvB/RmZWlkzzslPCh06fPQ67FoB3ajEk=
+Authentication-Results: kernel.dk; dkim=none (message not signed)
+ header.d=none;kernel.dk; dmarc=none action=none header.from=voleatech.de;
 Received: from AM8PR05MB7251.eurprd05.prod.outlook.com (2603:10a6:20b:1d4::23)
- by AM0PR05MB5363.eurprd05.prod.outlook.com (2603:10a6:208:f6::21) with
+ by AM0PR05MB5362.eurprd05.prod.outlook.com (2603:10a6:208:ea::20) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3499.29; Mon, 9 Nov
- 2020 17:25:51 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3541.21; Mon, 9 Nov
+ 2020 17:39:51 +0000
 Received: from AM8PR05MB7251.eurprd05.prod.outlook.com
  ([fe80::f132:2cc:34f2:5e4]) by AM8PR05MB7251.eurprd05.prod.outlook.com
  ([fe80::f132:2cc:34f2:5e4%7]) with mapi id 15.20.3541.025; Mon, 9 Nov 2020
- 17:25:51 +0000
-Date:   Mon, 9 Nov 2020 18:25:49 +0100
-From:   Sven Auhagen <sven.auhagen@voleatech.de>
-To:     Hans de Goede <hdegoede@redhat.com>
-Cc:     axboe@kernel.dk, robh+dt@kernel.org, tglx@linutronix.de,
-        maz@kernel.org, gregory.clement@bootlin.com,
-        linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ 17:39:51 +0000
+From:   sven.auhagen@voleatech.de
+To:     axboe@kernel.dk, hdegoede@redhat.com, robh+dt@kernel.org,
+        tglx@linutronix.de, maz@kernel.org, gregory.clement@bootlin.com
+Cc:     linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         devicetree@vger.kernel.org, jason@lakedaemon.net, andrew@lunn.ch,
         rjw@rjwysocki.net, viresh.kumar@linaro.org,
         antoine.tenart@bootlin.com, maxime.chevallier@bootlin.com,
         thomas.petazzoni@bootlin.com, miquel.raynal@bootlin.com
-Subject: Re: [PATCH v2 3/9] ata: ahci: custom irq init for host init
-Message-ID: <20201109172549.fetoe2jbqlw5itab@svensmacbookair.sven.lan>
-References: <20201104155237.77772-1-sven.auhagen@voleatech.de>
- <20201104155237.77772-4-sven.auhagen@voleatech.de>
- <db4c68b0-d5c3-c410-052a-99a9decef552@redhat.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <db4c68b0-d5c3-c410-052a-99a9decef552@redhat.com>
+Subject: [PATCH v3 0/9] Armada8k enable per-port SATA interrupts and drop a hack in the IRQ subsystem
+Date:   Mon,  9 Nov 2020 18:39:39 +0100
+Message-Id: <20201109173948.96663-1-sven.auhagen@voleatech.de>
+X-Mailer: git-send-email 2.24.3 (Apple Git-128)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 X-Originating-IP: [109.193.235.168]
-X-ClientProxiedBy: AM9P191CA0023.EURP191.PROD.OUTLOOK.COM
- (2603:10a6:20b:21c::28) To AM8PR05MB7251.eurprd05.prod.outlook.com
+X-ClientProxiedBy: AM0PR04CA0135.eurprd04.prod.outlook.com
+ (2603:10a6:208:55::40) To AM8PR05MB7251.eurprd05.prod.outlook.com
  (2603:10a6:20b:1d4::23)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from svensmacbookair.sven.lan (109.193.235.168) by AM9P191CA0023.EURP191.PROD.OUTLOOK.COM (2603:10a6:20b:21c::28) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3541.21 via Frontend Transport; Mon, 9 Nov 2020 17:25:50 +0000
+Received: from localhost.localdomain (109.193.235.168) by AM0PR04CA0135.eurprd04.prod.outlook.com (2603:10a6:208:55::40) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3541.21 via Frontend Transport; Mon, 9 Nov 2020 17:39:50 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 0edfe104-cb04-4ba4-7ba1-08d884d48165
-X-MS-TrafficTypeDiagnostic: AM0PR05MB5363:
-X-Microsoft-Antispam-PRVS: <AM0PR05MB53639F66CC989DB9340CFB5CEFEA0@AM0PR05MB5363.eurprd05.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:2733;
+X-MS-Office365-Filtering-Correlation-Id: 8d357c0a-6302-4ff0-aedc-08d884d675f5
+X-MS-TrafficTypeDiagnostic: AM0PR05MB5362:
+X-Microsoft-Antispam-PRVS: <AM0PR05MB5362055521638EB8CBBAC18BEFEA0@AM0PR05MB5362.eurprd05.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:3276;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: eUdXRCIUYhAV2n8ou8DWEZENjUl9HYLOiwImxCSqfp7FutyzV8itWDVh0U8Vg/w4eGJ/C9smNL4sAeC4ugjbJBenSC4qw1Ksjyv0eX5CLpQ8oi0GgGugoKtUNhi62F65RogqXadOklFiDmsXBvkjZCvnoEZg1C2cs4/SphbqTr9FXRtibHWlOW2op+6Mc56gfjQ/pQovVJbShBrK3KQ9TWrV9QK5JfxJYOTfUu2TqY5U62jeittwgH3S1xLW40hKy9ZfIX3LQ9P69rxBkaOv41zOcAI0ureS/FZVX+X93DsdPj+Tw5WW9TElRNOmzAED
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM8PR05MB7251.eurprd05.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(376002)(39830400003)(366004)(136003)(396003)(26005)(186003)(1076003)(478600001)(66946007)(956004)(66476007)(66556008)(16526019)(83380400001)(53546011)(6916009)(7696005)(52116002)(6506007)(86362001)(55016002)(9686003)(316002)(4326008)(8936002)(44832011)(2906002)(7416002)(8676002)(5660300002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData: Itm4vgSbkH5X/sh0Ca9AO5U1wcrCiGxJJ9Ny3CRWFCBoqfBQq7IzWZGuIRlna2iAgNdxF61AlRWwWP58MuNW+ft0kjxLINrnQ0nBlZ6kuVBU0k6qTt9pukT3WxbHcqyochjrWdaeMLh08BfSyCRoLWZ7TO2l0j1Mo7sevKtH3QVFAqfanMuR4rLullvO0FnwrG73RKhBCj4sOsd1H+UnoUqxnTtT4t0y5+A2749jgxVGd33DXXuhOK+aOT2McRPht+0nnpAoWHCWdp6Wda6wI7ikYlRyGIVxDvXelufcMaqE+HSYrly5TB6uYWSh4e7D8q6k59IQNVEPw684IWIgYRUU6E8jC97E1FjdcYB/jjzEnKUyv2GkEcpXktePRh4qZslmh4nxsVZVM9xrArpysYw57dMzdTy4avaM8AU735xDsS4Czr2AYaPtlgXANnvzNlSqIVSCqCwvFslg5CxN2OTerV23OtQNXunVFFL8x5XzekHrHDHIHcs8z4Q1KMz6wLs7h1ggUkM8NlovIkA5icxkVE5NZiYi7mHX3b7h4SpkwZbrmmaQFm0PhdceT8prkaACOgk7xY9XHIpYjFrg6mfdmMt8smJ19/Xq8VTjseQyK2J17j3Ugh23g8u036RxZKUNWk1DR6jE8b0msN3cDQ==
+X-Microsoft-Antispam-Message-Info: tEdYQdODy/fuWUNo7Sxn35mBYgkhObeVqZJgr0He+8S7YQV7LzC5JiqjLF0b27EQ886Sg0mrpudbUug8FI8XevjVx4zA9K0aUabgsqP3sF7MQxngwJ4RxOFiK+22a3G7SZkw8D/IxQHHCcHHMIHoenhFOxNeY3hmqLFjjqjCT2MfhAj5WclK7xVcnhLh9AFf61ipP4Mj7JhrGlkSupyJCv8SGOhrWUJVH9k36E/oZKRQMPPwT68EO/PnvlXA3//zMe6fy+h6QY6sjbodlzmYHL2eeKb5yKXe6W7etS7fEeIzHFKmfgjsdMHIRhI2gCLUxCmrvi5ty7qL+cCxqWhRJB94PasbINT/tbdp0CArekoKSUvPW9NA38+oblIped/T
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM8PR05MB7251.eurprd05.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(346002)(396003)(136003)(366004)(39830400003)(52116002)(66946007)(5660300002)(1076003)(66476007)(66556008)(26005)(2906002)(478600001)(316002)(9686003)(6506007)(66574015)(6512007)(86362001)(6666004)(16526019)(8936002)(956004)(4326008)(36756003)(7416002)(186003)(83380400001)(2616005)(8676002)(6486002)(32563001);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData: 0DRvAu29Rkqm7FL62I5hF1PUlotTY9HUb1HvYTeSmOkx0+Zxb8xCAfElsCBV5tiNS42Gn6iYB8wHKotW/+iBEl8Xy56ygCj+EhokFx6wajmVSMHHasOlsWbietN9nT39bjgO3h53Vx14gmOGb9YxXfEMip/olHCid2l4A7Ul5LV1yvmg4kOD7ndL5Zcd9+owNsFWGjoEmO2iCCRnGidIUOgnFVx9BW+Mf+9WLTTIiFBeEBzx2UXmuTeDABMWXiuFeAa+Irla4xMr7JEf3BNRAtenZOnxSqJ9ecF848f6O8SNbkso4olWHV4yKU/iezLHrxSHZ44JFQqqnE5ljVA46/2NNZDrRNDmf80yTinqK4IsYh7eG71hFMhOohwLyqBmHO68xffQDNgS1TJ0Se9tKHghHX6g8UvY26BuAG9160vrLrwcp3lj8UC4aMwOeLZwBb1CnR2bCeCZ719gDjv1ZYjJP2dOsge3OZ06I2bUsJwdcIdDAl2CItHDxgUujfdsjlk89YfmXzVYwf7QPfNOjLHDN5ez2K0EfW41AbHzJINlxy36bachUVT41r0uR+cc6r1Yv6XwoF6R6VWbyn/15Chirh+7Kk8OQHw8iwcoK6vegVITayZBWo+4UY/VDoVkrU2IU1HFknumnaFxw6YbaQ==
 X-OriginatorOrg: voleatech.de
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0edfe104-cb04-4ba4-7ba1-08d884d48165
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8d357c0a-6302-4ff0-aedc-08d884d675f5
 X-MS-Exchange-CrossTenant-AuthSource: AM8PR05MB7251.eurprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Nov 2020 17:25:51.5264
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Nov 2020 17:39:51.0823
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: b82a99f6-7981-4a72-9534-4d35298f847b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: k28hEJtbrL/bz6CXapjhzn5OxAHWggP5xKxIa1hazuiemfag12eFxwL9csj1zAfNzbPK8312XLuoqqd4cUZDDgI1eH72JtYELIo5EhXX02Y=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR05MB5363
+X-MS-Exchange-CrossTenant-UserPrincipalName: rqL/A1WpMyQBtZlZjUKDtAkRmCVcHjMFcd6512B4VUTzdJUJZGLEF8l/UOkq1Y9sglOds+we6W1c2914ewa7Hw62LMn4OENYMJ6AafWV1sU=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM0PR05MB5362
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, Nov 09, 2020 at 03:00:58PM +0100, Hans de Goede wrote:
-> Hi,
-> 
-> On 11/4/20 4:52 PM, sven.auhagen@voleatech.de wrote:
-> > From: Sven Auhagen <sven.auhagen@voleatech.de>
-> > 
-> > Disable the platform irq init in ahci init platform host
-> > if it was initiated by a custom function.
-> > To check for it I am using the AHCI_HFLAG_MULTI_MSI flag.
-> > 
-> > Suggested-by: Hans de Goede <hdegoede@redhat.com>
-> > Signed-off-by: Sven Auhagen <sven.auhagen@voleatech.de>
-> 
-> The code is fine here. But I'm not entirely happy with
-> the commit message how about:
-> 
-> """
-> ata: libahci_platform: Do not try to get an IRQ when AHCI_HFLAG_MULTI_MSI is set
-> 
-> When the ahci-host AHCI_HFLAG_MULTI_MSI flag is set then the driver must provide
-> a get_irq_vector callback and take care of getting the IRQs itself. So in this
-> case ahci_platform_init_host() should not try to get an IRQ itself.
-> """
-> 
-> With the commit message updated to the above (or something similar) you
-> may add my:
-> 
-> Reviewed-by: Hans de Goede <hdegoede@redhat.com>
-> 
-> I've also just given you my Reviewed-by for patch 4 and 5, and the
-> result already has a Reviewed-by.
-> 
-> So if you can sendout a v3 of this series with the commit message for
-> this patch fixed, then it is ready for merging from my pov.
+From: Sven Auhagen <sven.auhagen@voleatech.de>
 
-Thank you, I will change the commit message and send a v3.
+Hello,
+
+There were already 4 versions of this series from Miquèl.
+I talked to Miquèl and I fixed up the last comments from v4.
+I am looking for feedback if this patch series is now ready to be merged
+and what should be further changed.
+
+Here is the original cover letter:
+
+Some time ago, when the initial support for Armada CP110 was
+contributed, the SATA core was not able to handle per-port
+interrupts. Despite the hardware reality, the device tree only
+represents one main interrupt for the two ports. Having both SATA
+ports enabled at the same time has been achieved by a hack in the ICU
+driver(1) that faked the use of the two interrupts, no matter which
+SATA port was in use.
+
+Now that the SATA core is ready to handle more than one interrupt,
+this series adds support for it in the libahci_platform code. The
+CP110 device tree must be updated to reflect the two SATA ports
+available and their respective interrupts. To do not break DT backward
+compatibility, the ahci_platform driver now embeds a special quirk
+which checks if the DT is valid (only for A8k compatible) and, if
+needed, creates the two missing sub-nodes, and assign them the
+relevant "reg" and "interrupts" properties, before removing the main
+SATA node "interrupts" one.
+
+(1) The ICU is an irqchip aggregating the CP110 (south-bridge)
+interrupts into MSIs for the AP806 (north-bridge).
 
 Best
 Sven
 
-> 
-> Regards,
-> 
-> Hans
-> 
-> 
-> > ---
-> >  drivers/ata/libahci_platform.c | 16 +++++++++-------
-> >  1 file changed, 9 insertions(+), 7 deletions(-)
-> > 
-> > diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-> > index de638dafce21..f6f2a111d226 100644
-> > --- a/drivers/ata/libahci_platform.c
-> > +++ b/drivers/ata/libahci_platform.c
-> > @@ -581,14 +581,16 @@ int ahci_platform_init_host(struct platform_device *pdev,
-> >  	struct ata_host *host;
-> >  	int i, irq, n_ports, rc;
-> >  
-> > -	irq = platform_get_irq(pdev, 0);
-> > -	if (irq <= 0) {
-> > -		if (irq != -EPROBE_DEFER)
-> > -			dev_err(dev, "no irq\n");
-> > -		return irq;
-> > -	}
-> > +	if (!(hpriv->flags & AHCI_HFLAG_MULTI_MSI)) {
-> > +		irq = platform_get_irq(pdev, 0);
-> > +		if (irq <= 0) {
-> > +			if (irq != -EPROBE_DEFER)
-> > +				dev_err(dev, "no irq\n");
-> > +			return irq;
-> > +		}
-> >  
-> > -	hpriv->irq = irq;
-> > +		hpriv->irq = irq;
-> > +	}
-> >  
-> >  	/* prepare host */
-> >  	pi.private_data = (void *)(unsigned long)hpriv->flags;
-> > 
-> 
+Change from v2:
+  * Fix commit message of custom irq init for host init
+
+Change from v1:
+  * Add a patch to enable custom irq initialization in 
+    plattform init host
+  * Add multi_irq_host_ack callback for the msi irq handler
+  * Rework the ahci mvebu patch to initiate the irq and use
+    the new multi_irq_host_ack to handle the custom irq code.
+    Remove the custom irq handler and duplicate code.
+  * Fix the armada8k backwards compatibility code
+  * Rename AHCI_PLATFORM_A8K_QUIRK to AHCI_PLATFORM_ARMADA8K_QUIRK
+
+Miquel Raynal (5):
+  ata: ahci: mvebu: Rename a platform data flag
+  ata: ahci: mvebu: Support A8k compatible
+  irqchip/irq-mvebu-icu: Remove the double SATA ports interrupt hack
+  dt-bindings: ata: Update ahci bindings with possible per-port
+    interrupts
+  dt-bindings: ata: Update ahci_mvebu bindings
+
+Sven Auhagen (4):
+  ata: libahci_platform: Do not try to get an IRQ when
+    AHCI_HFLAG_MULTI_MSI is set
+  ata: ahci: add ack callback to multi irq handler
+  ata: ahci: mvebu: Add support for A8k legacy DT bindings
+  arm64: dts: marvell: armada-cp110: Switch to per-port SATA interrupts
+
+ .../devicetree/bindings/ata/ahci-platform.txt |   7 +
+ arch/arm64/boot/dts/marvell/armada-cp11x.dtsi |   6 +-
+ drivers/ata/ahci.h                            |   2 +
+ drivers/ata/ahci_mvebu.c                      | 143 ++++++++++++++++--
+ drivers/ata/libahci.c                         |   4 +
+ drivers/ata/libahci_platform.c                |  19 ++-
+ drivers/irqchip/irq-mvebu-icu.c               |  18 ---
+ include/linux/ahci_platform.h                 |   1 +
+ 8 files changed, 160 insertions(+), 40 deletions(-)
+
+-- 
+2.20.1
+
