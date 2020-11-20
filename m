@@ -7,123 +7,222 @@ X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9992EC56202
-	for <linux-ide@archiver.kernel.org>; Fri, 20 Nov 2020 20:14:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 802F9C2D0E4
+	for <linux-ide@archiver.kernel.org>; Fri, 20 Nov 2020 20:18:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 43E2C2245F
-	for <linux-ide@archiver.kernel.org>; Fri, 20 Nov 2020 20:14:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17F6322464
+	for <linux-ide@archiver.kernel.org>; Fri, 20 Nov 2020 20:18:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="X7YZqLn8"
+	dkim=pass (1024-bit key) header.d=kernel.org header.i=@kernel.org header.b="o5BLtccF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728629AbgKTUO3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 20 Nov 2020 15:14:29 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52010 "EHLO mail.kernel.org"
+        id S1730413AbgKTURs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 20 Nov 2020 15:17:48 -0500
+Received: from mail.kernel.org ([198.145.29.99]:52682 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728360AbgKTUO2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 20 Nov 2020 15:14:28 -0500
-Received: from mail-oo1-f48.google.com (mail-oo1-f48.google.com [209.85.161.48])
+        id S1728863AbgKTURs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 20 Nov 2020 15:17:48 -0500
+Received: from mail-ot1-f44.google.com (mail-ot1-f44.google.com [209.85.210.44])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 5A08B2245F;
-        Fri, 20 Nov 2020 20:14:27 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5C9DC22470;
+        Fri, 20 Nov 2020 20:17:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1605903267;
-        bh=0nud5UudYzSYvDSjDSOinOA5/um3v/zH6Z3ObsR97t0=;
+        s=default; t=1605903467;
+        bh=uWTGUzgFAc+UqdPUOqq1dMU2NKZmh/ALeOWAOSfEWxo=;
         h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=X7YZqLn81wr4ibPUvpJWPzA3kGKLbasHaVS4KtSQmYUQnH68lLC7ujEc5DjefZsaW
-         +m1xZUVK8iLR7Gzbu2YLCTVhc+BFyifNYAoRwxopZ3LpX/a//pC2yV6B3uIGSxO2PS
-         +XdiVjSJCWLkwUFueS1fXEJfmoLeSAgZC4bz8cTE=
-Received: by mail-oo1-f48.google.com with SMTP id f8so2493447oou.0;
-        Fri, 20 Nov 2020 12:14:27 -0800 (PST)
-X-Gm-Message-State: AOAM531JiQqiLNPDlQUg/S4DDidhC/jOEMhxO6LExQRLvbEaMI12O9Xh
-        GqXumnDo8IrURRJC9pnQ0osdk4aqfYeU+EkQRA==
-X-Google-Smtp-Source: ABdhPJxDvHVEata44WRWpNmiCQnyKriXlGsKwYVrArhwm4ftDB2DYLVCk4f1155CAu3m4tuYyebCjMNfsVT0OAY28Yw=
-X-Received: by 2002:a4a:c4c7:: with SMTP id g7mr14542347ooq.50.1605903266545;
- Fri, 20 Nov 2020 12:14:26 -0800 (PST)
+        b=o5BLtccF0lkEAzS1H/+TaidpLCrlIhMB4mk3NIRkCobB7ZXX1/e1r8kbnCDO6dxF2
+         xUNsPhZmoTGMm3tIq28WywQIt8LarTUTfDzYrmw6KNZf8/f5tAShYmTEDqzqukCSRE
+         qOpC9/imkVc83nUeoRRWwMqi4lRO1Zy6DOh0tLws=
+Received: by mail-ot1-f44.google.com with SMTP id l36so9925979ota.4;
+        Fri, 20 Nov 2020 12:17:47 -0800 (PST)
+X-Gm-Message-State: AOAM531hM9mBjvTKboX93Ed3BWdyXSptmlI+ShHVe+ajmVAt1Db+gewC
+        rtjuSTu7R4LqxNOoKCic1Y7d+MkltcJDTU8KoA==
+X-Google-Smtp-Source: ABdhPJxVGntrT4U2oBT5LKIQMam1ZvVfO8lKUlhSLLMDZ45/h9Pq8b8ZF6Zy4lAbMpdzw0rEpS/DIgfqekUVwN3w7xk=
+X-Received: by 2002:a05:6830:2259:: with SMTP id t25mr15315926otd.192.1605903466581;
+ Fri, 20 Nov 2020 12:17:46 -0800 (PST)
 MIME-Version: 1.0
-References: <1605296218-2510-1-git-send-email-skomatineni@nvidia.com>
- <1605296218-2510-4-git-send-email-skomatineni@nvidia.com> <20201116150022.GA1642318@bogus>
- <4b1d90b7-63e7-8b32-16f8-a1020827f207@nvidia.com>
-In-Reply-To: <4b1d90b7-63e7-8b32-16f8-a1020827f207@nvidia.com>
-From:   Rob Herring <robh@kernel.org>
-Date:   Fri, 20 Nov 2020 14:14:15 -0600
-X-Gmail-Original-Message-ID: <CAL_JsqLga9TDm_9g6gO54Upzcw8rwqFm-9E1K05FqPHB43kbkg@mail.gmail.com>
-Message-ID: <CAL_JsqLga9TDm_9g6gO54Upzcw8rwqFm-9E1K05FqPHB43kbkg@mail.gmail.com>
+References: <1605296218-2510-1-git-send-email-skomatineni@nvidia.com> <1605296218-2510-4-git-send-email-skomatineni@nvidia.com>
+In-Reply-To: <1605296218-2510-4-git-send-email-skomatineni@nvidia.com>
+From:   Rob Herring <robh+dt@kernel.org>
+Date:   Fri, 20 Nov 2020 14:17:35 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqKkGmRwsv48xdX7xMSEaTSqdEnWuy0E19eohBxJKMywJg@mail.gmail.com>
+Message-ID: <CAL_JsqKkGmRwsv48xdX7xMSEaTSqdEnWuy0E19eohBxJKMywJg@mail.gmail.com>
 Subject: Re: [PATCH v2 3/6] dt-bindings: ata: tegra: Convert binding
  documentation to YAML
 To:     Sowjanya Komatineni <skomatineni@nvidia.com>
-Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-tegra <linux-tegra@vger.kernel.org>,
+Cc:     Thierry Reding <thierry.reding@gmail.com>,
+        Jon Hunter <jonathanh@nvidia.com>, devicetree@vger.kernel.org,
         "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
         <linux-ide@vger.kernel.org>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        devicetree@vger.kernel.org, Jon Hunter <jonathanh@nvidia.com>
+        linux-tegra <linux-tegra@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Nov 17, 2020 at 10:15 AM Sowjanya Komatineni
+On Fri, Nov 13, 2020 at 1:36 PM Sowjanya Komatineni
 <skomatineni@nvidia.com> wrote:
 >
+> This patch converts text based dt-binding document to YAML based
+> dt-binding document.
 >
-> On 11/16/20 7:00 AM, Rob Herring wrote:
-> > On Fri, 13 Nov 2020 11:36:55 -0800, Sowjanya Komatineni wrote:
-> >> This patch converts text based dt-binding document to YAML based
-> >> dt-binding document.
-> >>
-> >> Signed-off-by: Sowjanya Komatineni <skomatineni@nvidia.com>
-> >> ---
-> >>   .../devicetree/bindings/ata/nvidia,tegra-ahci.yaml | 137 +++++++++++++++++++++
-> >>   .../bindings/ata/nvidia,tegra124-ahci.txt          |  44 -------
-> >>   2 files changed, 137 insertions(+), 44 deletions(-)
-> >>   create mode 100644 Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml
-> >>   delete mode 100644 Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt
-> >>
-> >
-> > My bot found errors running 'make dt_binding_check' on your patch:
-> >
-> > yamllint warnings/errors:
-> >
-> > dtschema/dtc warnings/errors:
-> > Error: Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.example.dts:27.31-32 syntax error
-> > FATAL ERROR: Unable to parse input tree
-> > make[1]: *** [scripts/Makefile.lib:342: Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.example.dt.yaml] Error 1
-> > make[1]: *** Waiting for unfinished jobs....
-> > make: *** [Makefile:1364: dt_binding_check] Error 2
-> >
-> >
-> > See https://patchwork.ozlabs.org/patch/1400065
-> >
-> > The base for the patch is generally the last rc1. Any dependencies
-> > should be noted.
-> >
-> > If you already ran 'make dt_binding_check' and didn't see the above
-> > error(s), then make sure 'yamllint' is installed and dt-schema is up to
-> > date:
-> >
-> > pip3 install dtschema --upgrade
-> >
-> > Please check and re-submit.
+> Signed-off-by: Sowjanya Komatineni <skomatineni@nvidia.com>
+> ---
+>  .../devicetree/bindings/ata/nvidia,tegra-ahci.yaml | 137 +++++++++++++++++++++
+>  .../bindings/ata/nvidia,tegra124-ahci.txt          |  44 -------
+>  2 files changed, 137 insertions(+), 44 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml
+>  delete mode 100644 Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt
 >
-> Hi Rob,
->
-> make dt_binding_check shows other yaml warmings and didn't go thru
-> tegra-ahci.yaml even with specifying DT_SHHEMA_FILES
+> diff --git a/Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml b/Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml
+> new file mode 100644
+> index 0000000..dbbe460
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml
+> @@ -0,0 +1,137 @@
+> +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/ata/nvidia,tegra-ahci.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: Tegra AHCI SATA Controller
+> +
+> +maintainers:
+> +  - Thierry Reding <thierry.reding@gmail.com>
+> +  - Jonathan Hunter <jonathanh@nvidia.com>
+> +
+> +properties:
+> +  compatible:
+> +    enum:
+> +      - nvidia,tegra124-ahci
+> +      - nvidia,tegra132-ahci
+> +      - nvidia,tegra210-ahci
+> +
+> +  reg:
+> +    minItems: 2
+> +    maxItems: 3
+> +    items:
+> +      - description: AHCI registers
+> +      - description: SATA configuration and IPFS registers
+> +      - description: SATA AUX registers
+> +
+> +  interrupts:
+> +    maxItems: 1
+> +
+> +  clock-names:
+> +    items:
+> +      - const: sata
+> +      - const: sata-oob
+> +
+> +  clocks:
+> +    maxItems: 2
+> +
+> +  reset-names:
+> +    items:
+> +      - const: sata
+> +      - const: sata-cold
+> +      - const: sata-oob
+> +
+> +  resets:
+> +    maxItems: 3
+> +
+> +  phy-names:
+> +    items:
+> +      - const: sata-0
+> +
+> +  phys:
+> +    maxItems: 1
+> +
+> +  hvdd-supply:
+> +    description: SATA HVDD regulator supply.
+> +
+> +  vddio-supply:
+> +    description: SATA VDDIO regulator supply.
+> +
+> +  avdd-supply:
+> +    description: SATA AVDD regulator supply.
+> +
+> +  target-5v-supply:
+> +    description: SATA 5V power regulator supply.
+> +
+> +  target-12v-supply:
+> +    description: SATA 12V power regulator supply.
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - interrupts
+> +  - clock-names
+> +  - clocks
+> +  - reset-names
+> +  - resets
+> +
+> +allOf:
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            enum:
+> +              - nvidia,tegra124-ahci
+> +              - nvidia,tegra132-ahci
+> +    then:
+> +      properties:
+> +        reg:
+> +          maxItems: 2
+> +        reset-names:
+> +          minItems: 3
+> +        resets:
+> +          minItems: 3
+> +      required:
+> +        - phys
+> +        - phy-names
+> +        - hvdd-supply
+> +        - vddio-supply
+> +        - avdd-supply
+> +
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            enum:
+> +              - nvidia,tegra210-ahci
+> +    then:
+> +      properties:
+> +        reg:
+> +          minItems: 3
+> +        reset-names:
+> +          minItems: 3
+> +        resets:
+> +          minItems: 3
+> +
+> +additionalProperties: true
+> +
+> +examples:
+> +  - |
+> +    #include <dt-bindings/clock/tegra210-car.h>
+> +    #include <dt-bindings/reset/tegra210-car.h>
+> +
+> +    sata@70020000 {
+> +            compatible = "nvidia,tegra210-ahci";
+> +            reg = <0x0 0x70027000 0x0 0x00002000>, /* AHCI */
+> +                  <0x0 0x70020000 0x0 0x00007000>, /* SATA */
+> +                  <0x0 0x70001100 0x0 0x00010000>; /* SATA AUX */
 
-rc1 and rc3 were broken, so you need to use rc2.
+The default sizes are 1 cell for address and size, so this will give
+you warnings. You either need to adjust the entries here or add a
+parent node setting the sizes to 2 cells.
 
-> But, When I do dtbs_check, I see
-> Documentation/devicetree/bindings/processed-schema.json generated and
-> also it passes for tegra-ahci.yaml
->
->
-> In v1 feedback discussion, you mentioned it should be good if dtbs_check
-> passes.
+> +            interrupts = <GIC_SPI 23 IRQ_TYPE_LEVEL_HIGH>;
 
-dt_binding_check must pass without introducing errors/warnings. That's
-not yet a requirement for dtbs_check, but it is a good idea to run
-that and make sure any warnings are things that should be fixed in dts
-files rather than the binding schema.
+The error is because you need the include files for these defines.
 
-Rob
+> +            clocks = <&tegra_car TEGRA210_CLK_SATA>,
+> +                     <&tegra_car TEGRA210_CLK_SATA_OOB>;
+> +            clock-names = "sata", "sata-oob";
+> +            resets = <&tegra_car 124>,
+> +                     <&tegra_car 129>,
+> +                     <&tegra_car 123>;
+> +            reset-names = "sata", "sata-cold", "sata-oob";
+> +    };
