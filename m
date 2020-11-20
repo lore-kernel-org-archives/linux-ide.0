@@ -2,74 +2,120 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B0F9C63697
-	for <linux-ide@archiver.kernel.org>; Fri, 20 Nov 2020 01:26:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59903C8300E
+	for <linux-ide@archiver.kernel.org>; Fri, 20 Nov 2020 04:52:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AE40F22255
-	for <linux-ide@archiver.kernel.org>; Fri, 20 Nov 2020 01:26:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="L+6VzVpJ"
+	by mail.kernel.org (Postfix) with ESMTP id 260E6223AC
+	for <linux-ide@archiver.kernel.org>; Fri, 20 Nov 2020 04:52:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726560AbgKTB0i (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 19 Nov 2020 20:26:38 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35582 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726295AbgKTB0i (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 19 Nov 2020 20:26:38 -0500
-Received: from localhost.localdomain (c-73-231-172-41.hsd1.ca.comcast.net [73.231.172.41])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C3D8222259;
-        Fri, 20 Nov 2020 01:26:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linux-foundation.org;
-        s=korg; t=1605835598;
-        bh=mn1FbsjHnA13XZYiCSQwPlA488OOiEN3dfzdemkpFEw=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=L+6VzVpJq7hG7W9YyWL/jEBnXcgl6FDWkfXTcCrqG7kzMsOo7/z7c5GQw8OW8Reju
-         gP+O5gz/qJXTIAwm7eBdPVH6Ht0X+Q6dpBnZk8n0EYETKNpBv1/tmkO5mtAqxkaTlX
-         cNqE1+TG3vF2bAErH+EbOeQI7NctErqzEXh0DfUg=
-Date:   Thu, 19 Nov 2020 17:26:37 -0800
-From:   Andrew Morton <akpm@linux-foundation.org>
-To:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
-        Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [PATCH 0/2] ide: Remove in_interrupt()
-Message-Id: <20201119172637.7e7fc6679dd5766526de27b9@linux-foundation.org>
-In-Reply-To: <20201119165133.oqjnlxvcry64jjsv@linutronix.de>
-References: <20201113161021.2217361-1-bigeasy@linutronix.de>
-        <81acdb73-be79-98ae-f736-ae70f14f02f7@kernel.dk>
-        <20201119165133.oqjnlxvcry64jjsv@linutronix.de>
-X-Mailer: Sylpheed 3.5.1 (GTK+ 2.24.31; x86_64-pc-linux-gnu)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+        id S1726200AbgKTEvz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 19 Nov 2020 23:51:55 -0500
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:52646 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726094AbgKTEvg (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 19 Nov 2020 23:51:36 -0500
+Received: by kvm5.telegraphics.com.au (Postfix, from userid 502)
+        id 329F927C1B; Thu, 19 Nov 2020 23:51:34 -0500 (EST)
+To:     "David S. Miller" <davem@davemloft.net>,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     "Michael Schmitz" <schmitzmic@gmail.com>,
+        "Bartlomiej Zolnierkiewicz" <b.zolnierkie@samsung.com>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <63369c9b96673442a4bd653fe92acda99172123a.1605847196.git.fthain@telegraphics.com.au>
+From:   Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH RESEND] ide/falconide: Fix module unload
+Date:   Fri, 20 Nov 2020 15:39:56 +1100
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, 19 Nov 2020 17:51:33 +0100 Sebastian Andrzej Siewior <bigeasy@linutronix.de> wrote:
+Unloading the falconide module results in a crash:
 
-> On 2020-11-13 09:25:08 [-0700], Jens Axboe wrote:
-> > On 11/13/20 9:10 AM, Sebastian Andrzej Siewior wrote:
-> > > In the discussion about preempt count consistency across kernel
-> > > configurations:
-> > > 
-> > >  https://lore.kernel.org/r/20200914204209.256266093@linutronix.de/
-> > > 
-> > > it was concluded that the usage of in_interrupt() and related context
-> > > checks should be removed from non-core code.
-> > > 
-> > > This ide subsystem has two in_interrupts() checks before mutex/wait-event
-> > > invocations.
-> > 
-> > Acked-by: Jens Axboe <axboe@kernel.dk>
-> 
-> Andrew, are you okay with routing these two patches via your tree?
+Unable to handle kernel NULL pointer dereference at virtual address 00000000
+Oops: 00000000
+Modules linked in: falconide(-)
+PC: [<002930b2>] ide_host_remove+0x2e/0x1d2
+SR: 2000  SP: 00b49e28  a2: 009b0f90
+d0: 00000000    d1: 009b0f90    d2: 00000000    d3: 00b48000
+d4: 003cef32    d5: 00299188    a0: 0086d000    a1: 0086d000
+Process rmmod (pid: 322, task=009b0f90)
+Frame format=7 eff addr=00000000 ssw=0505 faddr=00000000
+wb 1 stat/addr/data: 0000 00000000 00000000
+wb 2 stat/addr/data: 0000 00000000 00000000
+wb 3 stat/addr/data: 0000 00000000 00018da9
+push data: 00000000 00000000 00000000 00000000
+Stack from 00b49e90:
+        004c456a 0027f176 0027cb0a 0027cb9e 00000000 0086d00a 2187d3f0 0027f0e0
+        00b49ebc 2187d1f6 00000000 00b49ec8 002811e8 0086d000 00b49ef0 0028024c
+        0086d00a 002800d6 00279a1a 00000001 00000001 0086d00a 2187d3f0 00279a58
+        00b49f1c 002802e0 0086d00a 2187d3f0 004c456a 0086d00a ef96af74 00000000
+        2187d3f0 002805d2 800de064 00b49f44 0027f088 2187d3f0 00ac1cf4 2187d3f0
+        004c43be 2187d3f0 00000000 2187d3f0 800b66a8 00b49f5c 00280776 2187d3f0
+Call Trace: [<0027f176>] __device_driver_unlock+0x0/0x48
+ [<0027cb0a>] device_links_busy+0x0/0x94
+ [<0027cb9e>] device_links_unbind_consumers+0x0/0x130
+ [<0027f0e0>] __device_driver_lock+0x0/0x5a
+ [<2187d1f6>] falconide_remove+0x12/0x18 [falconide]
+ [<002811e8>] platform_drv_remove+0x1c/0x28
+ [<0028024c>] device_release_driver_internal+0x176/0x17c
+ [<002800d6>] device_release_driver_internal+0x0/0x17c
+ [<00279a1a>] get_device+0x0/0x22
+ [<00279a58>] put_device+0x0/0x18
+ [<002802e0>] driver_detach+0x56/0x82
+ [<002805d2>] driver_remove_file+0x0/0x24
+ [<0027f088>] bus_remove_driver+0x4c/0xa4
+ [<00280776>] driver_unregister+0x28/0x5a
+ [<00281a00>] platform_driver_unregister+0x12/0x18
+ [<2187d2a0>] ide_falcon_driver_exit+0x10/0x16 [falconide]
+ [<000764f0>] sys_delete_module+0x110/0x1f2
+ [<000e83ea>] sys_rename+0x1a/0x1e
+ [<00002e0c>] syscall+0x8/0xc
+ [<00188004>] ext4_multi_mount_protect+0x35a/0x3ce
+Code: 0029 9188 4bf9 0027 aa1c 283c 003c ef32 <265c> 4a8b 6700 00b8 2043 2028 000c 0280 00ff ff00 6600 0176 40c0 7202 b2b9 004c
+Disabling lock debugging due to kernel taint
 
-Sure, but I'm not subscribed to linux-ide.  Please resend, cc myself
-and linux-kernel?
+This happens because the driver_data pointer is uninitialized.
+Add the missing platform_set_drvdata() call. For clarity, use the
+matching platform_get_drvdata() as well.
+
+Cc: Michael Schmitz <schmitzmic@gmail.com>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Fixes: 5ed0794cde593 ("m68k/atari: Convert Falcon IDE drivers to platform drivers")
+Reviewed-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Reviewed-by: Michael Schmitz <schmitzmic@gmail.com>
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+---
+This patch was tested using Aranym.
+---
+ drivers/ide/falconide.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ide/falconide.c b/drivers/ide/falconide.c
+index dbeb2605e5f6..607c44bc50f1 100644
+--- a/drivers/ide/falconide.c
++++ b/drivers/ide/falconide.c
+@@ -166,6 +166,7 @@ static int __init falconide_init(struct platform_device *pdev)
+ 	if (rc)
+ 		goto err_free;
+ 
++	platform_set_drvdata(pdev, host);
+ 	return 0;
+ err_free:
+ 	ide_host_free(host);
+@@ -176,7 +177,7 @@ static int __init falconide_init(struct platform_device *pdev)
+ 
+ static int falconide_remove(struct platform_device *pdev)
+ {
+-	struct ide_host *host = dev_get_drvdata(&pdev->dev);
++	struct ide_host *host = platform_get_drvdata(pdev);
+ 
+ 	ide_host_remove(host);
+ 
+-- 
+2.26.2
+
