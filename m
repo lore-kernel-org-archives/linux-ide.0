@@ -2,107 +2,74 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 14CADC63697
-	for <linux-ide@archiver.kernel.org>; Sat, 21 Nov 2020 12:44:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 764F8C388F9
+	for <linux-ide@archiver.kernel.org>; Sat, 21 Nov 2020 14:05:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C934C2245F
-	for <linux-ide@archiver.kernel.org>; Sat, 21 Nov 2020 12:44:33 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="vVIaU4KT";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="HTbQbhST"
+	by mail.kernel.org (Postfix) with ESMTP id 49A1D22210
+	for <linux-ide@archiver.kernel.org>; Sat, 21 Nov 2020 14:05:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727813AbgKUMoa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 21 Nov 2020 07:44:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40468 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727699AbgKUMoa (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 21 Nov 2020 07:44:30 -0500
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF8AAC0613CF;
-        Sat, 21 Nov 2020 04:44:29 -0800 (PST)
-Date:   Sat, 21 Nov 2020 13:44:24 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1605962665;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=3JgvCM546ovpbDedKqjj0qgeJF/wEzSc2VuDzZWEIeg=;
-        b=vVIaU4KTYY0QZAbC0UQweTZrK+ugmnFDqAdG4pVkcxdcHMsf6Ncdoj4KmyIT7aMLNhZsL3
-        Af7Yd95iylfsUQTtfG5I+QustBmbd4dr07s99L2tioQ800NY9ZH3Vsr0u6UqjZ4ALblvMi
-        FbuOkP+1hiizgdM9j7DpnhU9NqouiVMkmyprkDzc+jOEZ2r2zVYDNB3toPe6QY2YsC5a1Y
-        6jC0KZ8SOyfeyfiUle1o9kdInKOMQXwMDKFIBXaxP3oNMFJ4oZpS6rQ/9JmO9NtUCZFetn
-        AToqdKGGBxjbwk1qnOhEDJv9aI6SliYMyMvoaX7oX6pxOSXgoTvbxdx0jlTx4g==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1605962665;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=3JgvCM546ovpbDedKqjj0qgeJF/wEzSc2VuDzZWEIeg=;
-        b=HTbQbhSTYSAdAh2GB/XgYDeewKXgX/cBppUU2j1e+UxdY3XTrRrLuDNzcJNzBBImyrFZyo
-        rBQ3G9BSdnwbpdDQ==
-From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To:     Andrew Morton <akpm@linux-foundation.org>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        "David S. Miller" <davem@davemloft.net>,
-        Jens Axboe <axboe@kernel.dk>, tglx@linutronix.de
-Subject: Re: [PATCH v2 1/2] ide/Falcon: Remove in_interrupt() usage.
-Message-ID: <20201121124424.oyr74bwxvwmvxln2@linutronix.de>
-References: <20201120092421.1023428-1-bigeasy@linutronix.de>
- <20201120092421.1023428-2-bigeasy@linutronix.de>
- <20201120143535.fa533caeb5486f8c3abd605a@linux-foundation.org>
+        id S1727880AbgKUOEw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 21 Nov 2020 09:04:52 -0500
+Received: from mail-qk1-f195.google.com ([209.85.222.195]:41996 "EHLO
+        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727741AbgKUOEw (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 21 Nov 2020 09:04:52 -0500
+Received: by mail-qk1-f195.google.com with SMTP id z188so422624qke.9;
+        Sat, 21 Nov 2020 06:04:51 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=wwSyffURhFDeBnrx6J6OeK2E2lbKIqJMz9PrJJH/RC0=;
+        b=KfF7C+61OQ5acci9uhIeITn7Weo+a5/kN9rT0EMmmEJYpPpwt4bl07YfvpR6TVqdK5
+         Vex0/MsDI1SDKChWwHxTm/bDgcvYuo9HRgPvP696PGWTEFgs7VpUuVvzisysJGYMT1hB
+         gTRDZMXPlAlAxtFNgpM6huLkzAmELID9m7HD8tdFirLNKFG4KIZmf5GJuBHtXJD0uCK6
+         70ii5Y5nuGKqFNbWapLpiaxinN5hpp0RI5GmHjdJFxU6He2RaNfS6S26pVrGd1RL7ud6
+         6bjgpBJj149ZCEWWgo/isb9O3+eK+nh9eru/PfAmWno/enZpKDfHyxAQGlSLPXwKACfQ
+         h+JQ==
+X-Gm-Message-State: AOAM530x7OAiDQ0cb2V56mC4JyHTNwnk/xdklh5cwukh8eRJNo+aHL7m
+        lsCQLXlNOF/XEsYKrpj99Q==
+X-Google-Smtp-Source: ABdhPJynrIKv2Ye3GvsMlDEoJ/XAMOUbvNz3bmZkSg/xPEZNu9UzBQz8diHoAS1DsNu0usRPer7Pbw==
+X-Received: by 2002:a37:5242:: with SMTP id g63mr22162778qkb.317.1605967491394;
+        Sat, 21 Nov 2020 06:04:51 -0800 (PST)
+Received: from xps15 ([172.58.99.230])
+        by smtp.gmail.com with ESMTPSA id w192sm4131343qka.68.2020.11.21.06.04.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 21 Nov 2020 06:04:50 -0800 (PST)
+Received: (nullmailer pid 2173568 invoked by uid 1000);
+        Sat, 21 Nov 2020 14:04:47 -0000
+Date:   Sat, 21 Nov 2020 08:04:47 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Sowjanya Komatineni <skomatineni@nvidia.com>
+Cc:     robh+dt@kernel.org, devicetree@vger.kernel.org,
+        linux-tegra@vger.kernel.org, thierry.reding@gmail.com,
+        linux-kernel@vger.kernel.org, jonathanh@nvidia.com,
+        linux-ide@vger.kernel.org
+Subject: Re: [PATCH v2 4/6] dt-binding: ata: tegra: Add dt-binding
+ documentation for Tegra186
+Message-ID: <20201121140447.GA2173518@robh.at.kernel.org>
+References: <1605296218-2510-1-git-send-email-skomatineni@nvidia.com>
+ <1605296218-2510-5-git-send-email-skomatineni@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20201120143535.fa533caeb5486f8c3abd605a@linux-foundation.org>
+In-Reply-To: <1605296218-2510-5-git-send-email-skomatineni@nvidia.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2020-11-20 14:35:35 [-0800], Andrew Morton wrote:
-> On Fri, 20 Nov 2020 10:24:20 +0100 Sebastian Andrzej Siewior <bigeasy@linutronix.de> wrote:
+On Fri, 13 Nov 2020 11:36:56 -0800, Sowjanya Komatineni wrote:
+> This patch adds dt-bindings documentation for Tegra186 AHCI
+> controller.
 > 
-> > falconide_get_lock() is called by ide_lock_host() and its caller
-> > (ide_issue_rq()) has already a might_sleep() check.
-> > 
-> > stdma_lock() has wait_event() which also has a might_sleep() check.
-> > 
-> > Remove the in_interrupt() check.
-> > 
-> > ...
-> >
-> > --- a/drivers/ide/falconide.c
-> > +++ b/drivers/ide/falconide.c
-> > @@ -51,8 +51,6 @@ static void falconide_release_lock(void)
-> >  static void falconide_get_lock(irq_handler_t handler, void *data)
-> >  {
-> >  	if (falconide_intr_lock == 0) {
-> > -		if (in_interrupt() > 0)
-> > -			panic("Falcon IDE hasn't ST-DMA lock in interrupt");
-> >  		stdma_lock(handler, data);
-> >  		falconide_intr_lock = 1;
-> >  	}
+> Signed-off-by: Sowjanya Komatineni <skomatineni@nvidia.com>
+> ---
+>  .../devicetree/bindings/ata/nvidia,tegra-ahci.yaml | 38 ++++++++++++++++++++++
+>  1 file changed, 38 insertions(+)
 > 
-> The current mainline falconide_get_lock() is very different:
 
-I have this patch on-top of next-20201120 so it should apply. You
-realize that the above hunk is against falconide_get_lock() while
-the below is falconide_release_lock().
-If there is something wrong with the patch (or its commit message) I'm
-sorry but I don't understand your signal :)
-
-> static void falconide_release_lock(void)
-> {
-> 	if (falconide_intr_lock == 0) {
-> 		printk(KERN_ERR "%s: bug\n", __func__);
-> 		return;
-> 	}
-> 	falconide_intr_lock = 0;
-> 	stdma_release();
-> }
-
-Sebastian
+Reviewed-by: Rob Herring <robh@kernel.org>
