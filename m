@@ -2,74 +2,158 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 764F8C388F9
-	for <linux-ide@archiver.kernel.org>; Sat, 21 Nov 2020 14:05:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3419DC63798
+	for <linux-ide@archiver.kernel.org>; Sun, 22 Nov 2020 16:17:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 49A1D22210
-	for <linux-ide@archiver.kernel.org>; Sat, 21 Nov 2020 14:05:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D84E42080A
+	for <linux-ide@archiver.kernel.org>; Sun, 22 Nov 2020 16:17:08 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="ECdUiFoz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727880AbgKUOEw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 21 Nov 2020 09:04:52 -0500
-Received: from mail-qk1-f195.google.com ([209.85.222.195]:41996 "EHLO
-        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727741AbgKUOEw (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 21 Nov 2020 09:04:52 -0500
-Received: by mail-qk1-f195.google.com with SMTP id z188so422624qke.9;
-        Sat, 21 Nov 2020 06:04:51 -0800 (PST)
+        id S1727983AbgKVQRG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 22 Nov 2020 11:17:06 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39288 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727317AbgKVQRF (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 22 Nov 2020 11:17:05 -0500
+Received: from mail-pf1-x444.google.com (mail-pf1-x444.google.com [IPv6:2607:f8b0:4864:20::444])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D59A8C0613D3
+        for <linux-ide@vger.kernel.org>; Sun, 22 Nov 2020 08:17:05 -0800 (PST)
+Received: by mail-pf1-x444.google.com with SMTP id y7so12553041pfq.11
+        for <linux-ide@vger.kernel.org>; Sun, 22 Nov 2020 08:17:05 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=9LoGd3XD212DnUOzzxWdBwAHKcFiABUM1eku/Z5s9PQ=;
+        b=ECdUiFozoGotedNMltHxGvt7ELeQp/og9KGaJat0+erwcdPPWVCrU8KkW+JV4RYPeo
+         GTWUobzmr0s313q/lzhn4jF5RxJP4nhZO/aj20hZaH8d/g/a456RbO+LKniOS4LntN7M
+         GHx9cYZv8xWYKIg8n9C3ZJn+Q+L/6/s35hbx0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=wwSyffURhFDeBnrx6J6OeK2E2lbKIqJMz9PrJJH/RC0=;
-        b=KfF7C+61OQ5acci9uhIeITn7Weo+a5/kN9rT0EMmmEJYpPpwt4bl07YfvpR6TVqdK5
-         Vex0/MsDI1SDKChWwHxTm/bDgcvYuo9HRgPvP696PGWTEFgs7VpUuVvzisysJGYMT1hB
-         gTRDZMXPlAlAxtFNgpM6huLkzAmELID9m7HD8tdFirLNKFG4KIZmf5GJuBHtXJD0uCK6
-         70ii5Y5nuGKqFNbWapLpiaxinN5hpp0RI5GmHjdJFxU6He2RaNfS6S26pVrGd1RL7ud6
-         6bjgpBJj149ZCEWWgo/isb9O3+eK+nh9eru/PfAmWno/enZpKDfHyxAQGlSLPXwKACfQ
-         h+JQ==
-X-Gm-Message-State: AOAM530x7OAiDQ0cb2V56mC4JyHTNwnk/xdklh5cwukh8eRJNo+aHL7m
-        lsCQLXlNOF/XEsYKrpj99Q==
-X-Google-Smtp-Source: ABdhPJynrIKv2Ye3GvsMlDEoJ/XAMOUbvNz3bmZkSg/xPEZNu9UzBQz8diHoAS1DsNu0usRPer7Pbw==
-X-Received: by 2002:a37:5242:: with SMTP id g63mr22162778qkb.317.1605967491394;
-        Sat, 21 Nov 2020 06:04:51 -0800 (PST)
-Received: from xps15 ([172.58.99.230])
-        by smtp.gmail.com with ESMTPSA id w192sm4131343qka.68.2020.11.21.06.04.48
+        bh=9LoGd3XD212DnUOzzxWdBwAHKcFiABUM1eku/Z5s9PQ=;
+        b=oatMWW6vxAckjtITRwiLBIx2V3Hl0PZ1OFDiY7T8NOwDx3CiVLX/M6bJg47GM40CYM
+         RH/uBLdYDOLP1JO+SEnAgc1cwVjgg8g20uPt/smUg+ps4Q2mV608NFgNCHRa3wlm1ST2
+         0OxW8fnyHycQGF0clmO5NCXPWgvO2dihsBH0a1zdjSjfIg3mEsNhofgVerihO7sSJsqI
+         OviX3Hf+ma4vUweVKv2vCwZ6Th1AV/IWhQLsQefHZupzFgXb1gu12ufbK0lKQDR4Nppj
+         XQF55VTLgapCJ/iiACXNHlDiX9IuSNoeSuSngqT5OEzX8ypzAEmeJ3lrPJ4MlnKguH2i
+         c1Hw==
+X-Gm-Message-State: AOAM532inG4YPzIrMbOiA3iDSlj7gYWLvhS2OR42KTOWDF/0qc1mSwzk
+        oheG5XxBJplzW3p57NrZPYkibg==
+X-Google-Smtp-Source: ABdhPJwZLmFbbTaRxBkTtuJWbjEgTUtKMFpd77L8KmHflX2OUVWZyNqpGNaeYR87Y149sjgotBbRUA==
+X-Received: by 2002:a62:790f:0:b029:18a:ae57:353f with SMTP id u15-20020a62790f0000b029018aae57353fmr22300068pfc.78.1606061825417;
+        Sun, 22 Nov 2020 08:17:05 -0800 (PST)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id t5sm10642660pjj.31.2020.11.22.08.17.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 21 Nov 2020 06:04:50 -0800 (PST)
-Received: (nullmailer pid 2173568 invoked by uid 1000);
-        Sat, 21 Nov 2020 14:04:47 -0000
-Date:   Sat, 21 Nov 2020 08:04:47 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Sowjanya Komatineni <skomatineni@nvidia.com>
-Cc:     robh+dt@kernel.org, devicetree@vger.kernel.org,
-        linux-tegra@vger.kernel.org, thierry.reding@gmail.com,
-        linux-kernel@vger.kernel.org, jonathanh@nvidia.com,
-        linux-ide@vger.kernel.org
-Subject: Re: [PATCH v2 4/6] dt-binding: ata: tegra: Add dt-binding
- documentation for Tegra186
-Message-ID: <20201121140447.GA2173518@robh.at.kernel.org>
-References: <1605296218-2510-1-git-send-email-skomatineni@nvidia.com>
- <1605296218-2510-5-git-send-email-skomatineni@nvidia.com>
+        Sun, 22 Nov 2020 08:17:04 -0800 (PST)
+Date:   Sun, 22 Nov 2020 08:17:03 -0800
+From:   Kees Cook <keescook@chromium.org>
+To:     Jakub Kicinski <kuba@kernel.org>
+Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-kernel@vger.kernel.org, alsa-devel@alsa-project.org,
+        amd-gfx@lists.freedesktop.org, bridge@lists.linux-foundation.org,
+        ceph-devel@vger.kernel.org, cluster-devel@redhat.com,
+        coreteam@netfilter.org, devel@driverdev.osuosl.org,
+        dm-devel@redhat.com, drbd-dev@lists.linbit.com,
+        dri-devel@lists.freedesktop.org, GR-everest-linux-l2@marvell.com,
+        GR-Linux-NIC-Dev@marvell.com, intel-gfx@lists.freedesktop.org,
+        intel-wired-lan@lists.osuosl.org, keyrings@vger.kernel.org,
+        linux1394-devel@lists.sourceforge.net, linux-acpi@vger.kernel.org,
+        linux-afs@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org,
+        linux-atm-general@lists.sourceforge.net,
+        linux-block@vger.kernel.org, linux-can@vger.kernel.org,
+        linux-cifs@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-decnet-user@lists.sourceforge.net,
+        linux-ext4@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        linux-geode@lists.infradead.org, linux-gpio@vger.kernel.org,
+        linux-hams@vger.kernel.org, linux-hwmon@vger.kernel.org,
+        linux-i3c@lists.infradead.org, linux-ide@vger.kernel.org,
+        linux-iio@vger.kernel.org, linux-input@vger.kernel.org,
+        linux-integrity@vger.kernel.org,
+        linux-mediatek@lists.infradead.org, linux-media@vger.kernel.org,
+        linux-mmc@vger.kernel.org, linux-mm@kvack.org,
+        linux-mtd@lists.infradead.org, linux-nfs@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-sctp@vger.kernel.org,
+        linux-security-module@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com,
+        linux-usb@vger.kernel.org, linux-watchdog@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        netfilter-devel@vger.kernel.org, nouveau@lists.freedesktop.org,
+        op-tee@lists.trustedfirmware.org, oss-drivers@netronome.com,
+        patches@opensource.cirrus.com, rds-devel@oss.oracle.com,
+        reiserfs-devel@vger.kernel.org, samba-technical@lists.samba.org,
+        selinux@vger.kernel.org, target-devel@vger.kernel.org,
+        tipc-discussion@lists.sourceforge.net,
+        usb-storage@lists.one-eyed-alien.net,
+        virtualization@lists.linux-foundation.org,
+        wcn36xx@lists.infradead.org, x86@kernel.org,
+        xen-devel@lists.xenproject.org, linux-hardening@vger.kernel.org,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Nathan Chancellor <natechancellor@gmail.com>,
+        Miguel Ojeda <ojeda@kernel.org>, Joe Perches <joe@perches.com>
+Subject: Re: [PATCH 000/141] Fix fall-through warnings for Clang
+Message-ID: <202011220816.8B6591A@keescook>
+References: <cover.1605896059.git.gustavoars@kernel.org>
+ <20201120105344.4345c14e@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+ <202011201129.B13FDB3C@keescook>
+ <20201120115142.292999b2@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1605296218-2510-5-git-send-email-skomatineni@nvidia.com>
+In-Reply-To: <20201120115142.292999b2@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, 13 Nov 2020 11:36:56 -0800, Sowjanya Komatineni wrote:
-> This patch adds dt-bindings documentation for Tegra186 AHCI
-> controller.
+On Fri, Nov 20, 2020 at 11:51:42AM -0800, Jakub Kicinski wrote:
+> On Fri, 20 Nov 2020 11:30:40 -0800 Kees Cook wrote:
+> > On Fri, Nov 20, 2020 at 10:53:44AM -0800, Jakub Kicinski wrote:
+> > > On Fri, 20 Nov 2020 12:21:39 -0600 Gustavo A. R. Silva wrote:  
+> > > > This series aims to fix almost all remaining fall-through warnings in
+> > > > order to enable -Wimplicit-fallthrough for Clang.
+> > > > 
+> > > > In preparation to enable -Wimplicit-fallthrough for Clang, explicitly
+> > > > add multiple break/goto/return/fallthrough statements instead of just
+> > > > letting the code fall through to the next case.
+> > > > 
+> > > > Notice that in order to enable -Wimplicit-fallthrough for Clang, this
+> > > > change[1] is meant to be reverted at some point. So, this patch helps
+> > > > to move in that direction.
+> > > > 
+> > > > Something important to mention is that there is currently a discrepancy
+> > > > between GCC and Clang when dealing with switch fall-through to empty case
+> > > > statements or to cases that only contain a break/continue/return
+> > > > statement[2][3][4].  
+> > > 
+> > > Are we sure we want to make this change? Was it discussed before?
+> > > 
+> > > Are there any bugs Clangs puritanical definition of fallthrough helped
+> > > find?
+> > > 
+> > > IMVHO compiler warnings are supposed to warn about issues that could
+> > > be bugs. Falling through to default: break; can hardly be a bug?!  
+> > 
+> > It's certainly a place where the intent is not always clear. I think
+> > this makes all the cases unambiguous, and doesn't impact the machine
+> > code, since the compiler will happily optimize away any behavioral
+> > redundancy.
 > 
-> Signed-off-by: Sowjanya Komatineni <skomatineni@nvidia.com>
-> ---
->  .../devicetree/bindings/ata/nvidia,tegra-ahci.yaml | 38 ++++++++++++++++++++++
->  1 file changed, 38 insertions(+)
-> 
+> If none of the 140 patches here fix a real bug, and there is no change
+> to machine code then it sounds to me like a W=2 kind of a warning.
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+FWIW, this series has found at least one bug so far:
+https://lore.kernel.org/lkml/CAFCwf11izHF=g1mGry1fE5kvFFFrxzhPSM6qKAO8gxSp=Kr_CQ@mail.gmail.com/
+
+-- 
+Kees Cook
