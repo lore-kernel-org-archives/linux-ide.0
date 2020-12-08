@@ -2,77 +2,141 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2827C4361B
-	for <linux-ide@archiver.kernel.org>; Mon,  7 Dec 2020 22:52:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7E10C193FE
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Dec 2020 04:54:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8DC77239EF
-	for <linux-ide@archiver.kernel.org>; Mon,  7 Dec 2020 22:52:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F9A523A62
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Dec 2020 04:54:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727832AbgLGWwC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 7 Dec 2020 17:52:02 -0500
-Received: from mail-ot1-f65.google.com ([209.85.210.65]:45839 "EHLO
-        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726605AbgLGWwB (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Dec 2020 17:52:01 -0500
-Received: by mail-ot1-f65.google.com with SMTP id h18so10172377otq.12;
-        Mon, 07 Dec 2020 14:51:46 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=oGKTxegR211Y4pxTw/c6D3ElM1Y9Rkhy1L6nJUtWY5o=;
-        b=dLwmYPkhqETrGNPB/OkWivsDqSFvxqzzlf55ESlapw83I0jhy4zt9GYEG4sPa1mjFK
-         1wAixU9EnA1b4+pXEDuaWCC9wb4Y1ruJ/cT3g+Znmm2Th+Nwaurvxr6UP3Q8LL7FTutv
-         mQP8dQoMGZXQhrZ/pysj+qnlQhlZjd1R97SQnMpV174Aj/Lipx6BE7Fu5HcrEFHWwuVL
-         k9ZcFdsl6RXPMrlLNZxX8GOnJxd040VN+s/MKf/q1sr6lefg6G0XfILEZbM0UO+hpwdE
-         Dse2pLPczMXHmT92eyS/VsFtjP8SGRoOqiUSoqxg1dLe69eNL9/bz9Ki+20GolMgUy6C
-         t/+A==
-X-Gm-Message-State: AOAM531XRLcIQOg5WvmxePlNWEn15lq9lhE1nXYxixeJixUElFprnfhg
-        xExdEgxvxRacTShxuxANsTM83RnQ3w==
-X-Google-Smtp-Source: ABdhPJzAEyFWBw8aRWodf+kbRFrizaA2A6sKnSxzif1vg6tYA4do5tJjEUn6/sY2OabGg1xZ8r/f8g==
-X-Received: by 2002:a9d:7411:: with SMTP id n17mr14433439otk.262.1607381480806;
-        Mon, 07 Dec 2020 14:51:20 -0800 (PST)
-Received: from xps15 (24-155-109-49.dyn.grandenetworks.net. [24.155.109.49])
-        by smtp.gmail.com with ESMTPSA id u10sm2993855otj.31.2020.12.07.14.51.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Dec 2020 14:51:19 -0800 (PST)
-Received: (nullmailer pid 991883 invoked by uid 1000);
-        Mon, 07 Dec 2020 22:51:18 -0000
-Date:   Mon, 7 Dec 2020 16:51:18 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Sowjanya Komatineni <skomatineni@nvidia.com>
-Cc:     linux-ide@vger.kernel.org, robh+dt@kernel.org,
-        thierry.reding@gmail.com, linux-kernel@vger.kernel.org,
-        pchandru@nvidia.com, linux-tegra@vger.kernel.org,
-        jonathanh@nvidia.com, devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 3/6] dt-bindings: ata: tegra: Convert binding
- documentation to YAML
-Message-ID: <20201207225118.GA991823@robh.at.kernel.org>
-References: <1606162645-22326-1-git-send-email-skomatineni@nvidia.com>
- <1606162645-22326-4-git-send-email-skomatineni@nvidia.com>
+        id S1726055AbgLHEyB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 7 Dec 2020 23:54:01 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:58180 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727451AbgLHEyB (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Dec 2020 23:54:01 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B84nxYX064111;
+        Tue, 8 Dec 2020 04:52:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2020-01-29;
+ bh=1e3cV7XKyt5cBPHNeWYhYMHu3W87CKppja6U1Jvw5F4=;
+ b=V+G180Fh0lHbcmydQJqS5i+cerb42SoRrRI9QCXlQMjyWKKfj0acXqExTQUiK+7OEtft
+ OuMy/8L57grCegXY4FPi2mfpdUD9NETOrjU6XyLEGnB6yCKU9e30d2WSgQTsYBxq/cMN
+ 5junVfgiRpfFB5rc1EfDtZHP43anCs3FIrUtz16u4yPsKG0NCInMT5yeMTaPCX1MMJeq
+ qZ1GHIcbwNatFRQ/tELhwJDJybfqjlIskC/pDoCLpTPJ2KTrod7PX9rst5aaRTC3xIQA
+ veh/+mbPHLjYXfePq5oiUCHv2+7Gowf8M2KKiHFzojpZKSSSQD2meZy2nTRpI8CVh6TQ Yg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 35825m0srp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 08 Dec 2020 04:52:35 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 0B84ocFe155422;
+        Tue, 8 Dec 2020 04:52:34 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by userp3020.oracle.com with ESMTP id 358kys9m8t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 08 Dec 2020 04:52:34 +0000
+Received: from userp3020.oracle.com (userp3020.oracle.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 0B84qX4M159553;
+        Tue, 8 Dec 2020 04:52:33 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 358kys9m7s-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 08 Dec 2020 04:52:33 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 0B84qDZf015901;
+        Tue, 8 Dec 2020 04:52:15 GMT
+Received: from ca-mkp.ca.oracle.com (/10.156.108.201)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 07 Dec 2020 20:52:13 -0800
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        coreteam@netfilter.org, selinux@vger.kernel.org,
+        Miguel Ojeda <ojeda@kernel.org>, Joe Perches <joe@perches.com>,
+        linux-hardening@vger.kernel.org, reiserfs-devel@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, patches@opensource.cirrus.com,
+        linux-fbdev@vger.kernel.org, keyrings@vger.kernel.org,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        linux-geode@lists.infradead.org, linux-gpio@vger.kernel.org,
+        linux-hams@vger.kernel.org, linux-ext4@vger.kernel.org,
+        wcn36xx@lists.infradead.org, GR-everest-linux-l2@marvell.com,
+        x86@kernel.org, linux-watchdog@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-cifs@vger.kernel.org,
+        linux-nfs@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-usb@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-atm-general@lists.sourceforge.net,
+        linux-wireless@vger.kernel.org, linux-crypto@vger.kernel.org,
+        linux-decnet-user@lists.sourceforge.net,
+        Nathan Chancellor <natechancellor@gmail.com>,
+        netfilter-devel@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-integrity@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-mediatek@lists.infradead.org,
+        Kees Cook <keescook@chromium.org>,
+        samba-technical@lists.samba.org, ceph-devel@vger.kernel.org,
+        drbd-dev@tron.linbit.com, intel-gfx@lists.freedesktop.org,
+        dm-devel@redhat.com, linux-acpi@vger.kernel.org,
+        linux-ide@vger.kernel.org, xen-devel@lists.xenproject.org,
+        op-tee@lists.trustedfirmware.org, linux-hwmon@vger.kernel.org,
+        linux-sctp@vger.kernel.org, bridge@lists.linux-foundation.org,
+        linux-mtd@lists.infradead.org, linux-input@vger.kernel.org,
+        linux-can@vger.kernel.org, rds-devel@oss.oracle.com,
+        oss-drivers@netronome.com, tipc-discussion@lists.sourceforge.net,
+        cluster-devel@redhat.com, linux-rdma@vger.kernel.org,
+        dri-devel@lists.freedesktop.org,
+        linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org,
+        usb-storage@lists.one-eyed-alien.net,
+        linux1394-devel@lists.sourceforge.net, alsa-devel@alsa-project.org,
+        linux-i3c@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+        linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-afs@lists.infradead.org, nouveau@lists.freedesktop.org,
+        GR-Linux-NIC-Dev@marvell.com, netdev@vger.kernel.org,
+        linux-security-module@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com, linux-mm@kvack.org,
+        intel-wired-lan@lists.osuosl.org, linux-renesas-soc@vger.kernel.org
+Subject: Re: (subset) [PATCH 000/141] Fix fall-through warnings for Clang
+Date:   Mon,  7 Dec 2020 23:52:01 -0500
+Message-Id: <160740299787.710.4201881220590518200.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <cover.1605896059.git.gustavoars@kernel.org>
+References: <cover.1605896059.git.gustavoars@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1606162645-22326-4-git-send-email-skomatineni@nvidia.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9828 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 adultscore=0 bulkscore=0
+ phishscore=0 mlxlogscore=740 clxscore=1015 priorityscore=1501 mlxscore=0
+ spamscore=0 lowpriorityscore=0 malwarescore=0 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2009150000
+ definitions=main-2012080029
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, 23 Nov 2020 12:17:22 -0800, Sowjanya Komatineni wrote:
-> This patch converts text based dt-binding document to YAML based
-> dt-binding document.
-> 
-> Signed-off-by: Sowjanya Komatineni <skomatineni@nvidia.com>
-> ---
->  .../devicetree/bindings/ata/nvidia,tegra-ahci.yaml | 138 +++++++++++++++++++++
->  .../bindings/ata/nvidia,tegra124-ahci.txt          |  44 -------
->  2 files changed, 138 insertions(+), 44 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml
->  delete mode 100644 Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt
-> 
+On Fri, 20 Nov 2020 12:21:39 -0600, Gustavo A. R. Silva wrote:
 
-Reviewed-by: Rob Herring <robh@kernel.org>
+> This series aims to fix almost all remaining fall-through warnings in
+> order to enable -Wimplicit-fallthrough for Clang.
+> 
+> In preparation to enable -Wimplicit-fallthrough for Clang, explicitly
+> add multiple break/goto/return/fallthrough statements instead of just
+> letting the code fall through to the next case.
+> 
+> [...]
+
+Applied to 5.11/scsi-queue, thanks!
+
+[054/141] target: Fix fall-through warnings for Clang
+          https://git.kernel.org/mkp/scsi/c/492096ecfa39
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
