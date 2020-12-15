@@ -2,68 +2,101 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49917C433FE
-	for <linux-ide@archiver.kernel.org>; Sat, 12 Dec 2020 13:01:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4D0BC2BB48
+	for <linux-ide@archiver.kernel.org>; Tue, 15 Dec 2020 10:55:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1677322D04
-	for <linux-ide@archiver.kernel.org>; Sat, 12 Dec 2020 13:01:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 914A82222A
+	for <linux-ide@archiver.kernel.org>; Tue, 15 Dec 2020 10:55:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2438898AbgLLNBC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 12 Dec 2020 08:01:02 -0500
-Received: from smtp01.smtpout.orange.fr ([80.12.242.123]:17003 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2438988AbgLLNAu (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 12 Dec 2020 08:00:50 -0500
-Received: from localhost.localdomain ([93.22.36.60])
-        by mwinf5d19 with ME
-        id 3KxH2400D1HrHD103KxJ4V; Sat, 12 Dec 2020 08:57:19 +0100
-X-ME-Helo: localhost.localdomain
-X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Sat, 12 Dec 2020 08:57:19 +0100
-X-ME-IP: 93.22.36.60
-From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To:     axboe@kernel.dk, qiang.liu@freescale.com, jgarzik@redhat.com
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kernel-janitors@vger.kernel.org,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] sata_fsl: Fix a resource leak in an error handling path in the probe function
-Date:   Sat, 12 Dec 2020 08:57:16 +0100
-Message-Id: <20201212075716.78986-1-christophe.jaillet@wanadoo.fr>
-X-Mailer: git-send-email 2.27.0
+        id S1728292AbgLOKzX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 15 Dec 2020 05:55:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37380 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727914AbgLOKzR (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Dec 2020 05:55:17 -0500
+Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFE8DC06179C;
+        Tue, 15 Dec 2020 02:54:36 -0800 (PST)
+Received: by mail-pl1-x642.google.com with SMTP id x12so10354948plr.10;
+        Tue, 15 Dec 2020 02:54:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=JMJn4WueT4E0rHp/hcFMMf2nSPTGv/vUW9tNOsgvr4g=;
+        b=HdhBMBJW7JnM9qt75gYLEMGH8DcG4Cj6D2L1miXChxgCvcfH9Cad5vGvTChRV1FIBI
+         zwJRfct5v2bb/1a1Lg2vfcFT7+7f+yRZqmdyP8jE+cDgAyaeHjrsamRGa+MyS6F4M43L
+         L53mOzyQeJn9T27bE5W8GuoyHdv6rc12CeKbFIdRC35B69ur5m2sE6XCCdC5ohr3JZrS
+         q/hsT3OMePDGu3U04fh3+P1rBgJgAxstJueM7T7Lc4rzrMAV8MlWnPFrqFcI3PASAAzp
+         SEu64FYjrpOJnta/6cI28R7NUTGHP/+AiAqjAdDS65ppGAB27HV7xC4xgiTpS5QufCQt
+         FjgQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=JMJn4WueT4E0rHp/hcFMMf2nSPTGv/vUW9tNOsgvr4g=;
+        b=QVOyL0M+GBLXj/4NpMUHsSWepPbx3bzeiqF8/UyssXhSNJ3XXQ1l0iorLGfnAXq9Mk
+         6RVvYTc8cwDKAp7eh1bCQVTViOjSSzSDpSNJdiQITBTVxNWsqzPRWHNWHH5RK3Qr0crq
+         jdoTfU6rJamQVA+CWSEl3D+gNXXJIL/CxJrwfYWUUFyZALoLBRI4A6N10nF8e3fvAhDo
+         /fKtu81LaliRRtqk3RqpUOqhzssAtqmlPxqEDdAqr8d0eCVwX25FZ1RVe+ryOIENDN/s
+         9ZVqqeesXt/VjlFoyXk6cw7w8eUuUj4Eh8+KZw0+xhQT6OvgyMWXU2KzuaxDis8lncvH
+         fCaA==
+X-Gm-Message-State: AOAM532lA9bxd9Dy33TniIZ/q30kSuS8UCaUsNT2jVXMTEXi3u9rQp93
+        vWm6v9HiIid72l36b3NePht0ZEJ6G/w=
+X-Google-Smtp-Source: ABdhPJyeSNZhH0DfbJJ3D3oSZKAADqYrxi1E1BFqyQUHLJawAEuVEBatwjl+W/3WhcdMuyEnEzgQCg==
+X-Received: by 2002:a17:90a:9e5:: with SMTP id 92mr29832816pjo.176.1608029676281;
+        Tue, 15 Dec 2020 02:54:36 -0800 (PST)
+Received: from archlinux.. ([161.81.68.216])
+        by smtp.gmail.com with ESMTPSA id x15sm7682247pfa.80.2020.12.15.02.54.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 15 Dec 2020 02:54:35 -0800 (PST)
+From:   Tom Yan <tom.ty89@gmail.com>
+To:     linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Cc:     Tom Yan <tom.ty89@gmail.com>
+Subject: [PATCH] block: Avoid fragmented discard splits for ATA drives
+Date:   Tue, 15 Dec 2020 18:54:15 +0800
+Message-Id: <20201215105415.5219-1-tom.ty89@gmail.com>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-'irq_dispose_mapping()' should be called in the error handling path of the
-probe function, as already done in the remove function.
+When 0xffffffff >> 9 are splited by 0xffff * 64, there will be a
+remainder of 127. Avoid these small fragments by aligning the split
+to 128.
 
-Fixes: 6b4b8fc87dc5 ("sata_fsl: add support for interrupt coalsecing feature")
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 ---
- drivers/ata/sata_fsl.c | 3 +++
- 1 file changed, 3 insertions(+)
+ block/blk.h | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index d55ee244d693..49ecbc55a804 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -1540,6 +1540,9 @@ static int sata_fsl_probe(struct platform_device *ofdev)
- 	if (host)
- 		ata_host_detach(host);
+diff --git a/block/blk.h b/block/blk.h
+index dfab98465db9..1dc12fc86de8 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -281,8 +281,11 @@ static inline unsigned int bio_allowed_max_sectors(struct request_queue *q)
+ static inline unsigned int bio_aligned_discard_max_sectors(
+ 					struct request_queue *q)
+ {
+-	return round_down(UINT_MAX, q->limits.discard_granularity) >>
+-			SECTOR_SHIFT;
++	unsigned int granularity = q->limits.discard_granularity;
++	/* Avoid fragmented splits for ATA drives */
++	if (128 % granularity == 0)
++		granularity = 128;
++	return round_down(UINT_MAX, granularity) >> SECTOR_SHIFT;
+ }
  
-+	if (host_priv && host_priv->irq)
-+		irq_dispose_mapping(host_priv->irq);
-+
- 	if (hcr_base)
- 		iounmap(hcr_base);
- 	kfree(host_priv);
+ /*
 -- 
-2.27.0
+2.29.2
 
