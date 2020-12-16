@@ -2,81 +2,108 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A027DC2BBCD
-	for <linux-ide@archiver.kernel.org>; Wed, 16 Dec 2020 12:36:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18B41C0018C
+	for <linux-ide@archiver.kernel.org>; Wed, 16 Dec 2020 21:42:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 30A51233A0
-	for <linux-ide@archiver.kernel.org>; Wed, 16 Dec 2020 12:36:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C772623719
+	for <linux-ide@archiver.kernel.org>; Wed, 16 Dec 2020 21:42:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725954AbgLPMgr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 16 Dec 2020 07:36:47 -0500
-Received: from mga06.intel.com ([134.134.136.31]:25229 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725385AbgLPMgr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 16 Dec 2020 07:36:47 -0500
-IronPort-SDR: EX96RDQ5FDQbDvPNdcWB3cXQVNKjdF6m22fa6Ob+KFJq95r6t3QIaf9mcBGwDX9BX/8sn+nMu3
- oFZDwdOEf1sg==
-X-IronPort-AV: E=McAfee;i="6000,8403,9836"; a="236635940"
-X-IronPort-AV: E=Sophos;i="5.78,424,1599548400"; 
-   d="scan'208";a="236635940"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2020 04:35:01 -0800
-IronPort-SDR: Vq6mKOB6FZE/9rU8Qgve1m+pUAmJ/Fz+5yHKkNzAlUEVTvXHDKvX+miZDdl/U+wgYjkflilkoC
- utRH4ms5Qvcw==
-X-IronPort-AV: E=Sophos;i="5.78,424,1599548400"; 
-   d="scan'208";a="391699633"
-Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.163])
-  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2020 04:34:59 -0800
-Received: by lahna (sSMTP sendmail emulation); Wed, 16 Dec 2020 14:34:56 +0200
-Date:   Wed, 16 Dec 2020 14:34:56 +0200
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     linux-ide@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] ahci: Add Intel Emmitsburg PCH RAID PCI IDs
-Message-ID: <20201216123456.GW5246@lahna.fi.intel.com>
-References: <20201119104318.79297-1-mika.westerberg@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20201119104318.79297-1-mika.westerberg@linux.intel.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+        id S1726642AbgLPVmE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 16 Dec 2020 16:42:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50760 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725601AbgLPVmE (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 16 Dec 2020 16:42:04 -0500
+Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E945BC0617A7;
+        Wed, 16 Dec 2020 13:41:23 -0800 (PST)
+Received: by mail-pl1-x632.google.com with SMTP id b8so7713274plx.0;
+        Wed, 16 Dec 2020 13:41:23 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=Vhacog6KROuyOaHV1Tr5IvYiaSiTEZ/jBTR7momdi4s=;
+        b=SMuMHPx/ou/Vs5E0SDjgi/9jfTQstyVjL+/103JosBLXROYFInJulUGM1xLSifrkWm
+         u0upz+Wi2/wmvhBHY/w7nuj7IQ/90TzebBtmk4GFMyU9kBQbqXkYLbktsHLGZB5OThaZ
+         Q4oG14rRXEg/NsAHzQm2dIjkq2+fDEWTsAnF+HKABrggyWcjMxl2+tkagWSztSfClm94
+         KXRSLkglMkk1m5zxFsCOB43MOvVQAzToqCFcHr/VI9eHBjfvqqriUCTGoPAA8/aEakfd
+         kTvP0q36lAINMlooUISU/HrOzCi4b8vIYZpAOg9qXBbW4SQEIuvn3EL6GzYjRaGKQ+vW
+         I3Eg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=Vhacog6KROuyOaHV1Tr5IvYiaSiTEZ/jBTR7momdi4s=;
+        b=KtBTJz75/3H2zTF2EmOvG0F1ocjcudHTWB5T5l+15tB+SOA5vZ9GKXVikJwwkPvcgx
+         ieGKLWZ5TNNb3fJjm2xytCm7JBVd+ABBOTKU7Po53ycksKrbkOMqIYcxgNSJKICJWiLR
+         dro+4YqH5GqCNZELDOfCkyq4/e3lQYGiD3ep7fHzYgWz+20doWcE5qCF1Z85jUKpUwLH
+         AWwLNUVoxvtg/e+7FJWBn308TYN/GXMXkn69qZXbq215/AWU5JRNWKk3aG7PZYg2gtBB
+         SMx7dsMKdzy9j0yEtHQTmjZ3UFLXqIJeHcS6gkJIevJfpagTiOuBkerb8ZmUfDRGdCKp
+         UTNw==
+X-Gm-Message-State: AOAM530NxzwFkShLdbuurnph5sjjPetnZTnC18o9/yL2B5Nuv8wvgcbg
+        We2+dqnIyiOJ00KXV6vTX8c=
+X-Google-Smtp-Source: ABdhPJw1lb1XyiwPYoN7f38+SCpOt5IXR9Tx93iWOB10VFZ3A7Q/VWdIc2y7/gQlCmEFRhWl/EexXQ==
+X-Received: by 2002:a17:90b:1249:: with SMTP id gx9mr4870853pjb.146.1608154883571;
+        Wed, 16 Dec 2020 13:41:23 -0800 (PST)
+Received: from stbsrv-and-01.and.broadcom.net ([192.19.231.250])
+        by smtp.gmail.com with ESMTPSA id h12sm3612237pgf.49.2020.12.16.13.41.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 16 Dec 2020 13:41:23 -0800 (PST)
+From:   Jim Quinlan <jim2101024@gmail.com>
+X-Google-Original-From: Jim Quinlan <james.quinlan@broadcom.com>
+To:     Philipp Zabel <p.zabel@pengutronix.de>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
+Cc:     Florian Fainelli <f.fainelli@gmail.com>,
+        linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM
+        BCM2711/BCM2835 ARM ARCHITECTURE),
+        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
+        Parallel ATA drivers)), linux-kernel@vger.kernel.org (open list),
+        linux-pci@vger.kernel.org (open list:PCI NATIVE HOST BRIDGE AND
+        ENDPOINT DRIVERS),
+        linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM
+        BCM2711/BCM2835 ARM ARCHITECTURE), Rob Herring <robh@kernel.org>
+Subject: [RESEND PATCH v3 0/2] ata: ahci_brcm: Fix use of BCM7216 reset controller
+Date:   Wed, 16 Dec 2020 16:41:03 -0500
+Message-Id: <20201216214106.32851-1-james.quinlan@broadcom.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Jens,
+v3 -- discard commit from v2; instead rely on the new function
+      reset_control_rearm provided in a recent commit [1] applied
+      to reset/next.
+   -- New commit to correct pcie-brcmstb.c usage of a reset controller
+      to use reset/rearm verses deassert/assert.
 
-On Thu, Nov 19, 2020 at 01:43:18PM +0300, Mika Westerberg wrote:
-> Add Intel Emmitsburg PCH RAID PCI IDs to the list of supported
-> controllers.
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+v2 -- refactor rescal-reset driver to implement assert/deassert rather than
+      reset because the reset call only fires once per lifetime and we need
+      to reset after every resume from S2 or S3.
+   -- Split the use of "ahci" and "rescal" controllers in separate fields
+      to keep things simple.
 
-Would it be possible to get this one merged for v5.11?
+v1 -- original
 
-Thanks!
 
-> ---
->  drivers/ata/ahci.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 00ba8e5a1ccc..0b39f0e7fd8f 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -398,6 +398,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->  	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Lewisburg AHCI*/
->  	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci }, /* Lewisburg RAID*/
->  	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci }, /* Lewisburg RAID*/
-> +	{ PCI_VDEVICE(INTEL, 0x282b), board_ahci }, /* Emmitsburg RAID */
-> +	{ PCI_VDEVICE(INTEL, 0x282f), board_ahci }, /* Emmitsburg RAID */
->  	{ PCI_VDEVICE(INTEL, 0xa182), board_ahci }, /* Lewisburg AHCI*/
->  	{ PCI_VDEVICE(INTEL, 0xa186), board_ahci }, /* Lewisburg RAID*/
->  	{ PCI_VDEVICE(INTEL, 0xa1d2), board_ahci }, /* Lewisburg RAID*/
-> -- 
-> 2.29.2
+[1] Applied commit "reset: make shared pulsed reset controls re-triggerable"
+    found at git://git.pengutronix.de/git/pza/linux.git
+    branch reset/shared-retrigger
+
+Jim Quinlan (2):
+  ata: ahci_brcm: Fix use of BCM7216 reset controller
+  PCI: brcmstb: use reset/rearm instead of deassert/assert
+
+ drivers/ata/ahci_brcm.c               | 46 +++++++++++++--------------
+ drivers/pci/controller/pcie-brcmstb.c | 19 +++++++----
+ 2 files changed, 36 insertions(+), 29 deletions(-)
+
+-- 
+2.17.1
+
