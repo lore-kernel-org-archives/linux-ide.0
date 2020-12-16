@@ -2,101 +2,81 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4D0BC2BB48
-	for <linux-ide@archiver.kernel.org>; Tue, 15 Dec 2020 10:55:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A027DC2BBCD
+	for <linux-ide@archiver.kernel.org>; Wed, 16 Dec 2020 12:36:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 914A82222A
-	for <linux-ide@archiver.kernel.org>; Tue, 15 Dec 2020 10:55:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 30A51233A0
+	for <linux-ide@archiver.kernel.org>; Wed, 16 Dec 2020 12:36:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728292AbgLOKzX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 15 Dec 2020 05:55:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37380 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727914AbgLOKzR (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Dec 2020 05:55:17 -0500
-Received: from mail-pl1-x642.google.com (mail-pl1-x642.google.com [IPv6:2607:f8b0:4864:20::642])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFE8DC06179C;
-        Tue, 15 Dec 2020 02:54:36 -0800 (PST)
-Received: by mail-pl1-x642.google.com with SMTP id x12so10354948plr.10;
-        Tue, 15 Dec 2020 02:54:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=JMJn4WueT4E0rHp/hcFMMf2nSPTGv/vUW9tNOsgvr4g=;
-        b=HdhBMBJW7JnM9qt75gYLEMGH8DcG4Cj6D2L1miXChxgCvcfH9Cad5vGvTChRV1FIBI
-         zwJRfct5v2bb/1a1Lg2vfcFT7+7f+yRZqmdyP8jE+cDgAyaeHjrsamRGa+MyS6F4M43L
-         L53mOzyQeJn9T27bE5W8GuoyHdv6rc12CeKbFIdRC35B69ur5m2sE6XCCdC5ohr3JZrS
-         q/hsT3OMePDGu3U04fh3+P1rBgJgAxstJueM7T7Lc4rzrMAV8MlWnPFrqFcI3PASAAzp
-         SEu64FYjrpOJnta/6cI28R7NUTGHP/+AiAqjAdDS65ppGAB27HV7xC4xgiTpS5QufCQt
-         FjgQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=JMJn4WueT4E0rHp/hcFMMf2nSPTGv/vUW9tNOsgvr4g=;
-        b=QVOyL0M+GBLXj/4NpMUHsSWepPbx3bzeiqF8/UyssXhSNJ3XXQ1l0iorLGfnAXq9Mk
-         6RVvYTc8cwDKAp7eh1bCQVTViOjSSzSDpSNJdiQITBTVxNWsqzPRWHNWHH5RK3Qr0crq
-         jdoTfU6rJamQVA+CWSEl3D+gNXXJIL/CxJrwfYWUUFyZALoLBRI4A6N10nF8e3fvAhDo
-         /fKtu81LaliRRtqk3RqpUOqhzssAtqmlPxqEDdAqr8d0eCVwX25FZ1RVe+ryOIENDN/s
-         9ZVqqeesXt/VjlFoyXk6cw7w8eUuUj4Eh8+KZw0+xhQT6OvgyMWXU2KzuaxDis8lncvH
-         fCaA==
-X-Gm-Message-State: AOAM532lA9bxd9Dy33TniIZ/q30kSuS8UCaUsNT2jVXMTEXi3u9rQp93
-        vWm6v9HiIid72l36b3NePht0ZEJ6G/w=
-X-Google-Smtp-Source: ABdhPJyeSNZhH0DfbJJ3D3oSZKAADqYrxi1E1BFqyQUHLJawAEuVEBatwjl+W/3WhcdMuyEnEzgQCg==
-X-Received: by 2002:a17:90a:9e5:: with SMTP id 92mr29832816pjo.176.1608029676281;
-        Tue, 15 Dec 2020 02:54:36 -0800 (PST)
-Received: from archlinux.. ([161.81.68.216])
-        by smtp.gmail.com with ESMTPSA id x15sm7682247pfa.80.2020.12.15.02.54.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Dec 2020 02:54:35 -0800 (PST)
-From:   Tom Yan <tom.ty89@gmail.com>
-To:     linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Cc:     Tom Yan <tom.ty89@gmail.com>
-Subject: [PATCH] block: Avoid fragmented discard splits for ATA drives
-Date:   Tue, 15 Dec 2020 18:54:15 +0800
-Message-Id: <20201215105415.5219-1-tom.ty89@gmail.com>
-X-Mailer: git-send-email 2.29.2
+        id S1725954AbgLPMgr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 16 Dec 2020 07:36:47 -0500
+Received: from mga06.intel.com ([134.134.136.31]:25229 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725385AbgLPMgr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 16 Dec 2020 07:36:47 -0500
+IronPort-SDR: EX96RDQ5FDQbDvPNdcWB3cXQVNKjdF6m22fa6Ob+KFJq95r6t3QIaf9mcBGwDX9BX/8sn+nMu3
+ oFZDwdOEf1sg==
+X-IronPort-AV: E=McAfee;i="6000,8403,9836"; a="236635940"
+X-IronPort-AV: E=Sophos;i="5.78,424,1599548400"; 
+   d="scan'208";a="236635940"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2020 04:35:01 -0800
+IronPort-SDR: Vq6mKOB6FZE/9rU8Qgve1m+pUAmJ/Fz+5yHKkNzAlUEVTvXHDKvX+miZDdl/U+wgYjkflilkoC
+ utRH4ms5Qvcw==
+X-IronPort-AV: E=Sophos;i="5.78,424,1599548400"; 
+   d="scan'208";a="391699633"
+Received: from lahna.fi.intel.com (HELO lahna) ([10.237.72.163])
+  by fmsmga003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2020 04:34:59 -0800
+Received: by lahna (sSMTP sendmail emulation); Wed, 16 Dec 2020 14:34:56 +0200
+Date:   Wed, 16 Dec 2020 14:34:56 +0200
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-ide@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] ahci: Add Intel Emmitsburg PCH RAID PCI IDs
+Message-ID: <20201216123456.GW5246@lahna.fi.intel.com>
+References: <20201119104318.79297-1-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201119104318.79297-1-mika.westerberg@linux.intel.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-When 0xffffffff >> 9 are splited by 0xffff * 64, there will be a
-remainder of 127. Avoid these small fragments by aligning the split
-to 128.
+Hi Jens,
 
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
----
- block/blk.h | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+On Thu, Nov 19, 2020 at 01:43:18PM +0300, Mika Westerberg wrote:
+> Add Intel Emmitsburg PCH RAID PCI IDs to the list of supported
+> controllers.
+> 
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-diff --git a/block/blk.h b/block/blk.h
-index dfab98465db9..1dc12fc86de8 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -281,8 +281,11 @@ static inline unsigned int bio_allowed_max_sectors(struct request_queue *q)
- static inline unsigned int bio_aligned_discard_max_sectors(
- 					struct request_queue *q)
- {
--	return round_down(UINT_MAX, q->limits.discard_granularity) >>
--			SECTOR_SHIFT;
-+	unsigned int granularity = q->limits.discard_granularity;
-+	/* Avoid fragmented splits for ATA drives */
-+	if (128 % granularity == 0)
-+		granularity = 128;
-+	return round_down(UINT_MAX, granularity) >> SECTOR_SHIFT;
- }
- 
- /*
--- 
-2.29.2
+Would it be possible to get this one merged for v5.11?
 
+Thanks!
+
+> ---
+>  drivers/ata/ahci.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 00ba8e5a1ccc..0b39f0e7fd8f 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -398,6 +398,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+>  	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Lewisburg AHCI*/
+>  	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci }, /* Lewisburg RAID*/
+>  	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci }, /* Lewisburg RAID*/
+> +	{ PCI_VDEVICE(INTEL, 0x282b), board_ahci }, /* Emmitsburg RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x282f), board_ahci }, /* Emmitsburg RAID */
+>  	{ PCI_VDEVICE(INTEL, 0xa182), board_ahci }, /* Lewisburg AHCI*/
+>  	{ PCI_VDEVICE(INTEL, 0xa186), board_ahci }, /* Lewisburg RAID*/
+>  	{ PCI_VDEVICE(INTEL, 0xa1d2), board_ahci }, /* Lewisburg RAID*/
+> -- 
+> 2.29.2
