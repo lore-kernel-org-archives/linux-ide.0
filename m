@@ -2,93 +2,121 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77221C3526C
-	for <linux-ide@archiver.kernel.org>; Sun, 20 Dec 2020 07:14:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FFDDC433E0
+	for <linux-ide@archiver.kernel.org>; Mon, 21 Dec 2020 06:32:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 453C923A82
-	for <linux-ide@archiver.kernel.org>; Sun, 20 Dec 2020 07:14:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D65B22BF3
+	for <linux-ide@archiver.kernel.org>; Mon, 21 Dec 2020 06:32:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727109AbgLTHOf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 20 Dec 2020 02:14:35 -0500
-Received: from spam.zju.edu.cn ([61.164.42.155]:36276 "EHLO zju.edu.cn"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726996AbgLTHOf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sun, 20 Dec 2020 02:14:35 -0500
-X-Greylist: delayed 459 seconds by postgrey-1.27 at vger.kernel.org; Sun, 20 Dec 2020 02:14:31 EST
-Received: from localhost.localdomain (unknown [10.192.85.18])
-        by mail-app4 (Coremail) with SMTP id cS_KCgAHz3DF995fUqhSAA--.51071S4;
-        Sun, 20 Dec 2020 15:05:47 +0800 (CST)
-From:   Dinghao Liu <dinghao.liu@zju.edu.cn>
-To:     dinghao.liu@zju.edu.cn, kjlu@umn.edu
-Cc:     "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] ide: pci: Fix memleak in ide_pci_init_two
-Date:   Sun, 20 Dec 2020 15:05:40 +0800
-Message-Id: <20201220070541.7515-1-dinghao.liu@zju.edu.cn>
-X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID: cS_KCgAHz3DF995fUqhSAA--.51071S4
-X-Coremail-Antispam: 1UD129KBjvdXoWrKFyUCry5tF48GF1fJrWrZrb_yoWDAwcEk3
-        93Zrs8XrW8uFyUJr47Cr17ZryvkFZ0vrWv9wsFyr4fWasxZa4Durn7AF43CF4UWa1UZFyU
-        Ar4DXr4rZryjyjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-        9fnUUIcSsGvfJTRUUUb2kFc2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AK
-        wVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20x
-        vE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26F4UJVW0owA2z4x0Y4vEx4A2
-        jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq3wAS0I0E0xvYzxvE52
-        x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWU
-        GwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI4
-        8JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwCF04k20xvY0x0EwIxGrwCF04k20xvE74AGY7Cv
-        6cx26r4fKr1UJr1l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGw
-        C20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r126r1DMIIYrxkI7VAKI48J
-        MIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r1j6r4UMI
-        IF0xvE42xK8VAvwI8IcIk0rVWrZr1j6s0DMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvE
-        x4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7VUbXdbUUUUUU==
-X-CM-SenderInfo: qrrzjiaqtzq6lmxovvfxof0/1tbiAgUMBlZdtRf+rwAFsw
+        id S1727378AbgLUGci (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 21 Dec 2020 01:32:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53898 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727211AbgLUGci (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 21 Dec 2020 01:32:38 -0500
+Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 506C2C0613D3;
+        Sun, 20 Dec 2020 22:31:57 -0800 (PST)
+Received: by mail-ed1-x532.google.com with SMTP id c7so8503137edv.6;
+        Sun, 20 Dec 2020 22:31:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=upGN1dBVZ/btBdBBPeURAqi5iKi4W8RMHZ52S9FrN+g=;
+        b=f//lnvun2qaI2b2XF05irRBMFR0/xFM8ZlFjdmAkLPMpOeF8Pgv70DgDp8TbunYqZT
+         +cv36wy/8zLg02Gtz12XmbbbuSuA28nxEDmJoiLwI3BTJgHYmRlj6knCWNDmtsnEjkPV
+         RQcUhCMwt9qP8SJJ32kqOeYioj3UClqalDVGxsi5xKSRgL9R91ZSj0vyrGdt+mij3H1H
+         vcPqc1tUeGT9OUpPtMhiKl8z0aOYEHE4gI197kA+svK5FJ5/Jfnk8PSzTEshQvpVhWbv
+         et0gvNOXxXjSypfOvvbbCPxdvaYbNvV7B4mJeNJuq/dbHaf4sID+w5Wv6q8aKP5VH2hU
+         DdtA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=upGN1dBVZ/btBdBBPeURAqi5iKi4W8RMHZ52S9FrN+g=;
+        b=NVyWdvDMn+XBvOlUxXsp0eo48f9XjrX23Z8hR31BA84l1DWTkxx3rtepS6RT8ZzeiT
+         DWNejQ1CPf0IDfSFZTCYwu7sTTUOsXe3nhDdWStgQ4QG3l5oKkrqEjpd4upWiIjrLbJ3
+         XNLj4LCrHAxjMqDE1w2mtcRgCSft0NQ79U/AVwibDcnv4lOFUw7jKpZ4VWsuqL35vKr9
+         SXXGAAaGv4wciIv8EEH0D+j5/xhx/+k5soe1XCgzETJmI0+W3kyQG5r1uAAc3A30TEQj
+         N2ipr0r/l8q49JC3aSw5ayDAxYVJUVam0GkzBQzcIekcAxGjybxE5gA1mH0lSbBRSytJ
+         fDuw==
+X-Gm-Message-State: AOAM532ghJ6nMDsF0QgDh/Epy4NgSprzdbyYRqGSPfdv0HvreCXOxng2
+        uypH/MX1CDFlhe1Jc5SHWqyloQyIFqPmEw==
+X-Google-Smtp-Source: ABdhPJzkanZ/GzLadDBfPDG5a7XQywIW2Otp1yk1ztP6juHx1KH1AX/SUNLY/Dm4lbUI4J/gb9pzAQ==
+X-Received: by 2002:a05:6512:368d:: with SMTP id d13mr5150213lfs.414.1608493836961;
+        Sun, 20 Dec 2020 11:50:36 -0800 (PST)
+Received: from kari-VirtualBox (87-95-193-210.bb.dnainternet.fi. [87.95.193.210])
+        by smtp.gmail.com with ESMTPSA id k21sm1907262ljb.43.2020.12.20.11.50.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 20 Dec 2020 11:50:36 -0800 (PST)
+Date:   Sun, 20 Dec 2020 21:50:33 +0200
+From:   Kari Argillander <kari.argillander@gmail.com>
+To:     Dinghao Liu <dinghao.liu@zju.edu.cn>
+Cc:     kjlu@umn.edu, "David S. Miller" <davem@davemloft.net>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ide: pci: Fix memleak in ide_pci_init_two
+Message-ID: <20201220195033.due2e4ukijaah23a@kari-VirtualBox>
+References: <20201220070541.7515-1-dinghao.liu@zju.edu.cn>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20201220070541.7515-1-dinghao.liu@zju.edu.cn>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-When do_ide_setup_pci_device() fails, host allocated
-by ide_host_alloc() may not have been freed, which
-leads to memleak.
+On Sun, Dec 20, 2020 at 03:05:40PM +0800, Dinghao Liu wrote:
+> When do_ide_setup_pci_device() fails, host allocated
+> by ide_host_alloc() may not have been freed, which
+> leads to memleak.
+> 
+> Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
+> ---
+>  drivers/ide/setup-pci.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/ide/setup-pci.c b/drivers/ide/setup-pci.c
+> index fdc8e813170c..c7da5368fcd4 100644
+> --- a/drivers/ide/setup-pci.c
+> +++ b/drivers/ide/setup-pci.c
+> @@ -586,7 +586,7 @@ int ide_pci_init_two(struct pci_dev *dev1, struct pci_dev *dev2,
+>  		 * do_ide_setup_pci_device() on the first device!
+>  		 */
+>  		if (ret < 0)
+> -			goto out_free_bars;
+> +			goto out_free_host;
+>  
+>  		/* fixup IRQ */
+>  		if (ide_pci_is_in_compatibility_mode(pdev[i])) {
+> @@ -597,11 +597,11 @@ int ide_pci_init_two(struct pci_dev *dev1, struct pci_dev *dev2,
+>  	}
+>  
+>  	ret = ide_host_register(host, d, hws);
+> -	if (ret)
+> -		ide_host_free(host);
+> -	else
+> +	if (!ret)
+>  		goto out;
 
-Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
----
- drivers/ide/setup-pci.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Maybe 
+	if (ret)
+		goto out_free_host;
 
-diff --git a/drivers/ide/setup-pci.c b/drivers/ide/setup-pci.c
-index fdc8e813170c..c7da5368fcd4 100644
---- a/drivers/ide/setup-pci.c
-+++ b/drivers/ide/setup-pci.c
-@@ -586,7 +586,7 @@ int ide_pci_init_two(struct pci_dev *dev1, struct pci_dev *dev2,
- 		 * do_ide_setup_pci_device() on the first device!
- 		 */
- 		if (ret < 0)
--			goto out_free_bars;
-+			goto out_free_host;
- 
- 		/* fixup IRQ */
- 		if (ide_pci_is_in_compatibility_mode(pdev[i])) {
-@@ -597,11 +597,11 @@ int ide_pci_init_two(struct pci_dev *dev1, struct pci_dev *dev2,
- 	}
- 
- 	ret = ide_host_register(host, d, hws);
--	if (ret)
--		ide_host_free(host);
--	else
-+	if (!ret)
- 		goto out;
- 
-+out_free_host:
-+	ide_host_free(host);
- out_free_bars:
- 	i = n_ports / 2;
- 	while (i--)
--- 
-2.17.1
+	return 0;
+
+would be more clear here. But this is just small nit.
+
+>  
+> +out_free_host:
+> +	ide_host_free(host);
+>  out_free_bars:
+>  	i = n_ports / 2;
+>  	while (i--)
 
