@@ -2,124 +2,134 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C8BEC433E6
-	for <linux-ide@archiver.kernel.org>; Thu, 24 Dec 2020 00:06:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06BE8C433DB
+	for <linux-ide@archiver.kernel.org>; Sat,  2 Jan 2021 23:30:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E252F229CA
-	for <linux-ide@archiver.kernel.org>; Thu, 24 Dec 2020 00:06:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD10820798
+	for <linux-ide@archiver.kernel.org>; Sat,  2 Jan 2021 23:30:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727410AbgLXAGE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 23 Dec 2020 19:06:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38428 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727134AbgLXAGE (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Dec 2020 19:06:04 -0500
-Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D33FC06179C;
-        Wed, 23 Dec 2020 16:05:24 -0800 (PST)
-Received: by mail-pj1-x102e.google.com with SMTP id z12so236052pjn.1;
-        Wed, 23 Dec 2020 16:05:24 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=RhZlddu07uH3DLklMw0cBddTSdM+bobz0Y1cqIi2B9g=;
-        b=BoLGCo1YoGlKEnaXPlQNCxQ/u0PB0gs67txWhm79Ddo51R2SS02sccAA7P/B5JnW2N
-         6M58LLKJHBColG9D8zykXo4z2CIvap1umNT8bnLu8PS4NnfLGJajS7pOZ3xWEU1BcJxg
-         C2CEdIjHg7o0BBxIfK8uxnA4xTQIZzty/G5nWnE7x9l6qLuGMlgINt7G488Qs1ZUyxn1
-         UBv7BfsqCBAQR48tyX0Q/lUa4oM6OSq9FMQl9PPHVAkpu0gHpUkxxaSBe0YKxD3RKQdD
-         P7HruDmRLAqHqWjHrS70Wtbx4we45d6A0hH2mkpWeK4FxomAyKD9raDUvF3oS3W7q6jG
-         RrUA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=RhZlddu07uH3DLklMw0cBddTSdM+bobz0Y1cqIi2B9g=;
-        b=QE+1fr6UR9b79/o8n/cSYk+jZfWVCYlXjvz7K4JR2OzNvXmhabGJOhdTN+HjmWqEPw
-         ESSy96CPT8i/bPPWHnhSqfi6SELcKHM8af76oh9IaQ6KMpmTcmPfK7VjifTjsWSwzOk/
-         drq23Tp65bxhtaNJh7kTNjNHoNSIWF+yiXC8HWnkZ5yYKDfKlwWmtyM8OoFYDYZZ0rzI
-         iG6PdpV75Rb0dws/OAeg1KNiqrArRCl7VnnB7CAK6krEOG1xHnR4o53rIB4yVcEa7WFx
-         Aqpgo7EmdZPb05KDX8TcAMIy5gLlAofKz2UTfJObzDXp47GQa6BtnSX/6YcFxByiKFAZ
-         s+5A==
-X-Gm-Message-State: AOAM531F711AD3l1lK7Z7MhJ42RxaXgmJB+jweGEo7y4KLQZEb3utq6v
-        BTLULE+4DB72t04oo6c4aL8=
-X-Google-Smtp-Source: ABdhPJxujcHk5jTktWJsfdUCcIHT46rpxPni05SSBnh/KI9n6TsNOAdATpq3I6FAPpO4G3brj+JxoA==
-X-Received: by 2002:a17:90a:4689:: with SMTP id z9mr1826941pjf.87.1608768323630;
-        Wed, 23 Dec 2020 16:05:23 -0800 (PST)
-Received: from [10.230.29.27] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id f126sm24006772pfa.58.2020.12.23.16.05.21
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 23 Dec 2020 16:05:22 -0800 (PST)
-Subject: Re: [RESEND PATCH v3 0/2] ata: ahci_brcm: Fix use of BCM7216 reset
- controller
-To:     Jim Quinlan <jim2101024@gmail.com>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
-Cc:     Florian Fainelli <f.fainelli@gmail.com>,
-        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" 
-        <linux-pci@vger.kernel.org>,
-        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
-        <linux-rpi-kernel@lists.infradead.org>,
-        Rob Herring <robh@kernel.org>
-References: <20201216214106.32851-1-james.quinlan@broadcom.com>
-From:   Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <92084293-d2fd-1663-0f6a-a10f01e23066@gmail.com>
-Date:   Wed, 23 Dec 2020 16:05:18 -0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Firefox/78.0 Thunderbird/78.6.0
+        id S1726766AbhABXaY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 2 Jan 2021 18:30:24 -0500
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:47780 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726678AbhABXaX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 2 Jan 2021 18:30:23 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by kvm5.telegraphics.com.au (Postfix) with ESMTP id 6BD7429A95;
+        Sat,  2 Jan 2021 18:29:41 -0500 (EST)
+Date:   Sun, 3 Jan 2021 10:29:39 +1100 (AEDT)
+From:   Finn Thain <fthain@telegraphics.com.au>
+To:     "David S. Miller" <davem@davemloft.net>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+cc:     Michael Schmitz <schmitzmic@gmail.com>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH RESEND] ide/falconide: Fix module unload
+In-Reply-To: <63369c9b96673442a4bd653fe92acda99172123a.1605847196.git.fthain@telegraphics.com.au>
+Message-ID: <alpine.LNX.2.23.453.2101031017290.12@nippy.intranet>
+References: <63369c9b96673442a4bd653fe92acda99172123a.1605847196.git.fthain@telegraphics.com.au>
 MIME-Version: 1.0
-In-Reply-To: <20201216214106.32851-1-james.quinlan@broadcom.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+Hi All,
 
+This patch was sent in September and subsequently resent in November. I've 
+since learned that the maintainer has been ill. What's the best way 
+forward for fixes like this?
 
-On 12/16/2020 1:41 PM, Jim Quinlan wrote:
-> v3 -- discard commit from v2; instead rely on the new function
->       reset_control_rearm provided in a recent commit [1] applied
->       to reset/next.
->    -- New commit to correct pcie-brcmstb.c usage of a reset controller
->       to use reset/rearm verses deassert/assert.
+Regards,
+Finn
+
+On Fri, 20 Nov 2020, Finn Thain wrote:
+
+> Unloading the falconide module results in a crash:
 > 
-> v2 -- refactor rescal-reset driver to implement assert/deassert rather than
->       reset because the reset call only fires once per lifetime and we need
->       to reset after every resume from S2 or S3.
->    -- Split the use of "ahci" and "rescal" controllers in separate fields
->       to keep things simple.
+> Unable to handle kernel NULL pointer dereference at virtual address 00000000
+> Oops: 00000000
+> Modules linked in: falconide(-)
+> PC: [<002930b2>] ide_host_remove+0x2e/0x1d2
+> SR: 2000  SP: 00b49e28  a2: 009b0f90
+> d0: 00000000    d1: 009b0f90    d2: 00000000    d3: 00b48000
+> d4: 003cef32    d5: 00299188    a0: 0086d000    a1: 0086d000
+> Process rmmod (pid: 322, task=009b0f90)
+> Frame format=7 eff addr=00000000 ssw=0505 faddr=00000000
+> wb 1 stat/addr/data: 0000 00000000 00000000
+> wb 2 stat/addr/data: 0000 00000000 00000000
+> wb 3 stat/addr/data: 0000 00000000 00018da9
+> push data: 00000000 00000000 00000000 00000000
+> Stack from 00b49e90:
+>         004c456a 0027f176 0027cb0a 0027cb9e 00000000 0086d00a 2187d3f0 0027f0e0
+>         00b49ebc 2187d1f6 00000000 00b49ec8 002811e8 0086d000 00b49ef0 0028024c
+>         0086d00a 002800d6 00279a1a 00000001 00000001 0086d00a 2187d3f0 00279a58
+>         00b49f1c 002802e0 0086d00a 2187d3f0 004c456a 0086d00a ef96af74 00000000
+>         2187d3f0 002805d2 800de064 00b49f44 0027f088 2187d3f0 00ac1cf4 2187d3f0
+>         004c43be 2187d3f0 00000000 2187d3f0 800b66a8 00b49f5c 00280776 2187d3f0
+> Call Trace: [<0027f176>] __device_driver_unlock+0x0/0x48
+>  [<0027cb0a>] device_links_busy+0x0/0x94
+>  [<0027cb9e>] device_links_unbind_consumers+0x0/0x130
+>  [<0027f0e0>] __device_driver_lock+0x0/0x5a
+>  [<2187d1f6>] falconide_remove+0x12/0x18 [falconide]
+>  [<002811e8>] platform_drv_remove+0x1c/0x28
+>  [<0028024c>] device_release_driver_internal+0x176/0x17c
+>  [<002800d6>] device_release_driver_internal+0x0/0x17c
+>  [<00279a1a>] get_device+0x0/0x22
+>  [<00279a58>] put_device+0x0/0x18
+>  [<002802e0>] driver_detach+0x56/0x82
+>  [<002805d2>] driver_remove_file+0x0/0x24
+>  [<0027f088>] bus_remove_driver+0x4c/0xa4
+>  [<00280776>] driver_unregister+0x28/0x5a
+>  [<00281a00>] platform_driver_unregister+0x12/0x18
+>  [<2187d2a0>] ide_falcon_driver_exit+0x10/0x16 [falconide]
+>  [<000764f0>] sys_delete_module+0x110/0x1f2
+>  [<000e83ea>] sys_rename+0x1a/0x1e
+>  [<00002e0c>] syscall+0x8/0xc
+>  [<00188004>] ext4_multi_mount_protect+0x35a/0x3ce
+> Code: 0029 9188 4bf9 0027 aa1c 283c 003c ef32 <265c> 4a8b 6700 00b8 2043 2028 000c 0280 00ff ff00 6600 0176 40c0 7202 b2b9 004c
+> Disabling lock debugging due to kernel taint
 > 
-> v1 -- original
+> This happens because the driver_data pointer is uninitialized.
+> Add the missing platform_set_drvdata() call. For clarity, use the
+> matching platform_get_drvdata() as well.
 > 
+> Cc: Michael Schmitz <schmitzmic@gmail.com>
+> Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+> Fixes: 5ed0794cde593 ("m68k/atari: Convert Falcon IDE drivers to platform drivers")
+> Reviewed-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> Reviewed-by: Michael Schmitz <schmitzmic@gmail.com>
+> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+> ---
+> This patch was tested using Aranym.
+> ---
+>  drivers/ide/falconide.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> [1] Applied commit "reset: make shared pulsed reset controls re-triggerable"
->     found at git://git.pengutronix.de/git/pza/linux.git
->     branch reset/shared-retrigger
-
-The changes in that branch above have now landed in Linus' tree with:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=557acb3d2cd9c82de19f944f6cc967a347735385
-
-It would be good if we could get both patches applied via the same tree
-or within the same cycle to avoid having either PCIe or SATA broken on
-these platforms.
-
-Thanks!
--- 
-Florian
+> diff --git a/drivers/ide/falconide.c b/drivers/ide/falconide.c
+> index dbeb2605e5f6..607c44bc50f1 100644
+> --- a/drivers/ide/falconide.c
+> +++ b/drivers/ide/falconide.c
+> @@ -166,6 +166,7 @@ static int __init falconide_init(struct platform_device *pdev)
+>  	if (rc)
+>  		goto err_free;
+>  
+> +	platform_set_drvdata(pdev, host);
+>  	return 0;
+>  err_free:
+>  	ide_host_free(host);
+> @@ -176,7 +177,7 @@ static int __init falconide_init(struct platform_device *pdev)
+>  
+>  static int falconide_remove(struct platform_device *pdev)
+>  {
+> -	struct ide_host *host = dev_get_drvdata(&pdev->dev);
+> +	struct ide_host *host = platform_get_drvdata(pdev);
+>  
+>  	ide_host_remove(host);
+>  
+> 
