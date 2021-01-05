@@ -2,168 +2,179 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	FREEMAIL_REPLYTO_END_DIGIT,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CF05C43381
-	for <linux-ide@archiver.kernel.org>; Tue,  5 Jan 2021 20:49:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E057C433E6
+	for <linux-ide@archiver.kernel.org>; Tue,  5 Jan 2021 21:23:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DFE8A23121
-	for <linux-ide@archiver.kernel.org>; Tue,  5 Jan 2021 20:49:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D80A22D5A
+	for <linux-ide@archiver.kernel.org>; Tue,  5 Jan 2021 21:23:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729586AbhAEUtN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 5 Jan 2021 15:49:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60036 "EHLO
+        id S1731397AbhAEVXB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 5 Jan 2021 16:23:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37038 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729094AbhAEUtK (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jan 2021 15:49:10 -0500
-Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD69EC061796;
-        Tue,  5 Jan 2021 12:48:29 -0800 (PST)
-Received: by mail-lf1-x12b.google.com with SMTP id o13so1666280lfr.3;
-        Tue, 05 Jan 2021 12:48:29 -0800 (PST)
+        with ESMTP id S1731396AbhAEVXB (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jan 2021 16:23:01 -0500
+Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AB3AC061574;
+        Tue,  5 Jan 2021 13:22:21 -0800 (PST)
+Received: by mail-pf1-x433.google.com with SMTP id h186so498028pfe.0;
+        Tue, 05 Jan 2021 13:22:20 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:reply-to:from:date:message-id
-         :subject:to:cc;
-        bh=VI6nFNhOrDBsKOeartd6J0bcnx10OA5inX4UBRpL4qE=;
-        b=XMzvAK1uTDP9sqD7pLv4Wz7WB5ahyaA4m6Kusb5//KKj6ORucbf4DEkHedVG2WYchx
-         ww5E+S2pe/MVFqDwCWn3GDiS2f5riKTPoV75h71RVrW0K2vBiy9ckj/U7dA9PWNjyCNI
-         nX5bomPKCcbVJeOgp/Cj7QeOBmzBoXkvbgT+W8lDuSsHgW8SMCpsK5rlGY82XsKP7qkx
-         a29IAV41Ls1xim5un7jcVMha0ymLBu7etMhtRuauiNm4Zo6NPbxuUdxGaFB5dXcGICKr
-         V9gREmCqoUjAr+3BJU51evd6QVFkDSbGIsK3A3GwKvAN8OhPsBEmC8Moy5N8LCKzSIDI
-         qz8g==
+        h=subject:to:cc:references:from:autocrypt:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=Zw3RLHkeAMwYAmp8KhE/+y7g6I4ZUyQXO2JJVOK934A=;
+        b=XIgztlfGyWjnmzXoT3jO+ISQQanZFK7nd3V9MnM49XngLj2CQytAuZ8x+G6HlOnBf/
+         MxQPxLiYtaxc902NBvYyIwJH+sPYSXbejX+3i1w9UAR7q+ijaU8Iwm/ldExigE/UWqk4
+         /HrVYWmMu/9sjwzMvbI4+b70sthjW0Gc+IPwk7Rxj19NXdFri7R4We0QJC32RiN6rTQh
+         m2RoCUqip3RtlTx7M4USXeP1FSaBLaqpsASs/oTYPnaVFzCUkEmCDAfDTvBy5FQxr44r
+         czZwckH4JNax3u9VR5RgxBChNTaHDPcmS99YXKDRhiLIotbz7XBd6sTkZ1hMsGcSFiLl
+         4yUA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:reply-to
-         :from:date:message-id:subject:to:cc;
-        bh=VI6nFNhOrDBsKOeartd6J0bcnx10OA5inX4UBRpL4qE=;
-        b=FG6SNthz8P94I2FoXGzya5sRVgOPbypbkHtVdcNSFG+DgmibLQoPKra/TvrVh2Vdv2
-         leFN9mNc/tZ6Z4UUKldJnV85Us0eDPB13bP3XeE9gH/lmc3DkevR11UZd9LSJoXTffDe
-         RyicTBGoSPEGcw2FX1g47y0pym2m16A6Qx0hlHeuo0U5WFKzIdNGhGe/qLvRnC93YuOh
-         Eydg2fpeDYwxsB8C0dPUirx7huBeiVBTxGmuuB6L3ChsVSv84N7XjF602qo0pRsH0O6q
-         hli3IB4JvZYYOMjNrjEOHG/depgPQofXFEsga2m4M0bdWml3wvU2pnUloW3Zd9iOnjsZ
-         ux9g==
-X-Gm-Message-State: AOAM5305RrdE0AAtjoTNIhMuTR3cWMeBHvXkoyTtwcA7X2xnyV0sBVOx
-        5IzuPqY/Y3bZU7VBY3YC8bLFZ/Ojoxos58UUjcE=
-X-Google-Smtp-Source: ABdhPJxu0obS2EF+VNsGTCaRCOLzZxvocXJO+DOkx1q/eD1CrMCNDr6ayRfy6f/783TFKHGmdZ4OqMWe5HwKjoHK0HI=
-X-Received: by 2002:a2e:8084:: with SMTP id i4mr635086ljg.291.1609879708350;
- Tue, 05 Jan 2021 12:48:28 -0800 (PST)
+        h=x-gm-message-state:subject:to:cc:references:from:autocrypt
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=Zw3RLHkeAMwYAmp8KhE/+y7g6I4ZUyQXO2JJVOK934A=;
+        b=T16e941enQa9ouu8TBU7MlrHsz16p4J+Rc6tcVgWiuRYcRQCpzfl26ok+rW0vsGFbw
+         qNLoIZO9Q4LHkDkMUDfYO2G/G1AStQC2dOpPcPHxYcOfzPmiQCmooDGd+mhcZLCutlIk
+         /+gZjI9OqkowKzY4plr0XyV9vG3MrPZXk0nzq0yGBBGk0CTtup+f4Q1Cq5weI1eAdZNG
+         H0Kd/rjQZN3WQdS0TalBh77eJUqIaXrnk9DTSk1zAHCVBHaBcnncRop2yjN9xz1DXKRD
+         ORMJ9h/2ZH3WNpdWGcVImB5wzCPkj1OKbH/ZJvim6B+xElJBm+5NzV255b1eNCuQhvzs
+         torA==
+X-Gm-Message-State: AOAM5305Vv1F6+E3Zj9Q+kKqEWMSoBq1bJXqbwWlzcjs2VpeqBnGjYO6
+        FQz4roCy8mTJeg225MXAV3k=
+X-Google-Smtp-Source: ABdhPJyDhChmXqg6DIJZxriAaY4XdIOlbp9gcLMpwQGNu5si28qxyuzN6SatCJTAdpUhyIEI4BQbbw==
+X-Received: by 2002:a63:dd53:: with SMTP id g19mr1086449pgj.291.1609881740482;
+        Tue, 05 Jan 2021 13:22:20 -0800 (PST)
+Received: from [10.67.48.230] ([192.19.223.252])
+        by smtp.googlemail.com with ESMTPSA id d8sm154564pjv.3.2021.01.05.13.22.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 05 Jan 2021 13:22:19 -0800 (PST)
+Subject: Re: [RESEND PATCH v3 0/2] ata: ahci_brcm: Fix use of BCM7216 reset
+ controller
+To:     Jim Quinlan <jim2101024@gmail.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
+Cc:     "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" 
+        <linux-pci@vger.kernel.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        Rob Herring <robh@kernel.org>
+References: <20201216214106.32851-1-james.quinlan@broadcom.com>
+ <92084293-d2fd-1663-0f6a-a10f01e23066@gmail.com>
+From:   Florian Fainelli <f.fainelli@gmail.com>
+Autocrypt: addr=f.fainelli@gmail.com; prefer-encrypt=mutual; keydata=
+ mQGiBEjPuBIRBACW9MxSJU9fvEOCTnRNqG/13rAGsj+vJqontvoDSNxRgmafP8d3nesnqPyR
+ xGlkaOSDuu09rxuW+69Y2f1TzjFuGpBk4ysWOR85O2Nx8AJ6fYGCoeTbovrNlGT1M9obSFGQ
+ X3IzRnWoqlfudjTO5TKoqkbOgpYqIo5n1QbEjCCwCwCg3DOH/4ug2AUUlcIT9/l3pGvoRJ0E
+ AICDzi3l7pmC5IWn2n1mvP5247urtHFs/uusE827DDj3K8Upn2vYiOFMBhGsxAk6YKV6IP0d
+ ZdWX6fqkJJlu9cSDvWtO1hXeHIfQIE/xcqvlRH783KrihLcsmnBqOiS6rJDO2x1eAgC8meAX
+ SAgsrBhcgGl2Rl5gh/jkeA5ykwbxA/9u1eEuL70Qzt5APJmqVXR+kWvrqdBVPoUNy/tQ8mYc
+ nzJJ63ng3tHhnwHXZOu8hL4nqwlYHRa9eeglXYhBqja4ZvIvCEqSmEukfivk+DlIgVoOAJbh
+ qIWgvr3SIEuR6ayY3f5j0f2ejUMYlYYnKdiHXFlF9uXm1ELrb0YX4GMHz7QnRmxvcmlhbiBG
+ YWluZWxsaSA8Zi5mYWluZWxsaUBnbWFpbC5jb20+iGYEExECACYCGyMGCwkIBwMCBBUCCAME
+ FgIDAQIeAQIXgAUCVF/S8QUJHlwd3wAKCRBhV5kVtWN2DvCVAJ4u4/bPF4P3jxb4qEY8I2gS
+ 6hG0gACffNWlqJ2T4wSSn+3o7CCZNd7SLSC5BA0ESM+4EhAQAL/o09boR9D3Vk1Tt7+gpYr3
+ WQ6hgYVON905q2ndEoA2J0dQxJNRw3snabHDDzQBAcqOvdi7YidfBVdKi0wxHhSuRBfuOppu
+ pdXkb7zxuPQuSveCLqqZWRQ+Cc2QgF7SBqgznbe6Ngout5qXY5Dcagk9LqFNGhJQzUGHAsIs
+ hap1f0B1PoUyUNeEInV98D8Xd/edM3mhO9nRpUXRK9Bvt4iEZUXGuVtZLT52nK6Wv2EZ1TiT
+ OiqZlf1P+vxYLBx9eKmabPdm3yjalhY8yr1S1vL0gSA/C6W1o/TowdieF1rWN/MYHlkpyj9c
+ Rpc281gAO0AP3V1G00YzBEdYyi0gaJbCEQnq8Vz1vDXFxHzyhgGz7umBsVKmYwZgA8DrrB0M
+ oaP35wuGR3RJcaG30AnJpEDkBYHznI2apxdcuTPOHZyEilIRrBGzDwGtAhldzlBoBwE3Z3MY
+ 31TOpACu1ZpNOMysZ6xiE35pWkwc0KYm4hJA5GFfmWSN6DniimW3pmdDIiw4Ifcx8b3mFrRO
+ BbDIW13E51j9RjbO/nAaK9ndZ5LRO1B/8Fwat7bLzmsCiEXOJY7NNpIEpkoNoEUfCcZwmLrU
+ +eOTPzaF6drw6ayewEi5yzPg3TAT6FV3oBsNg3xlwU0gPK3v6gYPX5w9+ovPZ1/qqNfOrbsE
+ FRuiSVsZQ5s3AAMFD/9XjlnnVDh9GX/r/6hjmr4U9tEsM+VQXaVXqZuHKaSmojOLUCP/YVQo
+ 7IiYaNssCS4FCPe4yrL4FJJfJAsbeyDykMN7wAnBcOkbZ9BPJPNCbqU6dowLOiy8AuTYQ48m
+ vIyQ4Ijnb6GTrtxIUDQeOBNuQC/gyyx3nbL/lVlHbxr4tb6YkhkO6shjXhQh7nQb33FjGO4P
+ WU11Nr9i/qoV8QCo12MQEo244RRA6VMud06y/E449rWZFSTwGqb0FS0seTcYNvxt8PB2izX+
+ HZA8SL54j479ubxhfuoTu5nXdtFYFj5Lj5x34LKPx7MpgAmj0H7SDhpFWF2FzcC1bjiW9mjW
+ HaKaX23Awt97AqQZXegbfkJwX2Y53ufq8Np3e1542lh3/mpiGSilCsaTahEGrHK+lIusl6mz
+ Joil+u3k01ofvJMK0ZdzGUZ/aPMZ16LofjFA+MNxWrZFrkYmiGdv+LG45zSlZyIvzSiG2lKy
+ kuVag+IijCIom78P9jRtB1q1Q5lwZp2TLAJlz92DmFwBg1hyFzwDADjZ2nrDxKUiybXIgZp9
+ aU2d++ptEGCVJOfEW4qpWCCLPbOT7XBr+g/4H3qWbs3j/cDDq7LuVYIe+wchy/iXEJaQVeTC
+ y5arMQorqTFWlEOgRA8OP47L9knl9i4xuR0euV6DChDrguup2aJVU4hPBBgRAgAPAhsMBQJU
+ X9LxBQkeXB3fAAoJEGFXmRW1Y3YOj4UAn3nrFLPZekMeqX5aD/aq/dsbXSfyAKC45Go0YyxV
+ HGuUuzv+GKZ6nsysJ7kCDQRXG8fwARAA6q/pqBi5PjHcOAUgk2/2LR5LjjesK50bCaD4JuNc
+ YDhFR7Vs108diBtsho3w8WRd9viOqDrhLJTroVckkk74OY8r+3t1E0Dd4wHWHQZsAeUvOwDM
+ PQMqTUBFuMi6ydzTZpFA2wBR9x6ofl8Ax+zaGBcFrRlQnhsuXLnM1uuvS39+pmzIjasZBP2H
+ UPk5ifigXcpelKmj6iskP3c8QN6x6GjUSmYx+xUfs/GNVSU1XOZn61wgPDbgINJd/THGdqiO
+ iJxCLuTMqlSsmh1+E1dSdfYkCb93R/0ZHvMKWlAx7MnaFgBfsG8FqNtZu3PCLfizyVYYjXbV
+ WO1A23riZKqwrSJAATo5iTS65BuYxrFsFNPrf7TitM8E76BEBZk0OZBvZxMuOs6Z1qI8YKVK
+ UrHVGFq3NbuPWCdRul9SX3VfOunr9Gv0GABnJ0ET+K7nspax0xqq7zgnM71QEaiaH17IFYGS
+ sG34V7Wo3vyQzsk7qLf9Ajno0DhJ+VX43g8+AjxOMNVrGCt9RNXSBVpyv2AMTlWCdJ5KI6V4
+ KEzWM4HJm7QlNKE6RPoBxJVbSQLPd9St3h7mxLcne4l7NK9eNgNnneT7QZL8fL//s9K8Ns1W
+ t60uQNYvbhKDG7+/yLcmJgjF74XkGvxCmTA1rW2bsUriM533nG9gAOUFQjURkwI8jvMAEQEA
+ AYkCaAQYEQIACQUCVxvH8AIbAgIpCRBhV5kVtWN2DsFdIAQZAQIABgUCVxvH8AAKCRCH0Jac
+ RAcHBIkHD/9nmfog7X2ZXMzL9ktT++7x+W/QBrSTCTmq8PK+69+INN1ZDOrY8uz6htfTLV9+
+ e2W6G8/7zIvODuHk7r+yQ585XbplgP0V5Xc8iBHdBgXbqnY5zBrcH+Q/oQ2STalEvaGHqNoD
+ UGyLQ/fiKoLZTPMur57Fy1c9rTuKiSdMgnT0FPfWVDfpR2Ds0gpqWePlRuRGOoCln5GnREA/
+ 2MW2rWf+CO9kbIR+66j8b4RUJqIK3dWn9xbENh/aqxfonGTCZQ2zC4sLd25DQA4w1itPo+f5
+ V/SQxuhnlQkTOCdJ7b/mby/pNRz1lsLkjnXueLILj7gNjwTabZXYtL16z24qkDTI1x3g98R/
+ xunb3/fQwR8FY5/zRvXJq5us/nLvIvOmVwZFkwXc+AF+LSIajqQz9XbXeIP/BDjlBNXRZNdo
+ dVuSU51ENcMcilPr2EUnqEAqeczsCGpnvRCLfVQeSZr2L9N4svNhhfPOEscYhhpHTh0VPyxI
+ pPBNKq+byuYPMyk3nj814NKhImK0O4gTyCK9b+gZAVvQcYAXvSouCnTZeJRrNHJFTgTgu6E0
+ caxTGgc5zzQHeX67eMzrGomG3ZnIxmd1sAbgvJUDaD2GrYlulfwGWwWyTNbWRvMighVdPkSF
+ 6XFgQaosWxkV0OELLy2N485YrTr2Uq64VKyxpncLh50e2RnyAJ9Za0Dx0yyp44iD1OvHtkEI
+ M5kY0ACeNhCZJvZ5g4C2Lc9fcTHu8jxmEkI=
+Message-ID: <ece90017-4b7d-d5bb-e868-9b63909be5f3@gmail.com>
+Date:   Tue, 5 Jan 2021 13:22:11 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-References: <20210104230253.2805217-1-robh@kernel.org>
-In-Reply-To: <20210104230253.2805217-1-robh@kernel.org>
-Reply-To: cwchoi00@gmail.com
-From:   Chanwoo Choi <cwchoi00@gmail.com>
-Date:   Wed, 6 Jan 2021 05:47:51 +0900
-Message-ID: <CAGTfZH11n8cRbrNB6XbzCydR4387d7V-gmRWou8hFFXbFBgvHQ@mail.gmail.com>
-Subject: Re: [PATCH] dt-bindings: Add missing array size constraints
-To:     Rob Herring <robh@kernel.org>
-Cc:     devicetree <devicetree@vger.kernel.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        linux-usb@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, alsa-devel@alsa-project.org,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        linux-ide@vger.kernel.org,
-        Thierry Reding <thierry.reding@gmail.com>,
-        netdev@vger.kernel.org, linux-clk@vger.kernel.org,
-        Chanwoo Choi <cw00.choi@samsung.com>,
-        Marc Zyngier <maz@kernel.org>, linux-riscv@lists.infradead.org,
-        Bartosz Golaszewski <bgolaszewski@baylibre.com>,
-        Chen-Yu Tsai <wens@csie.org>,
-        MyungJoo Ham <myungjoo.ham@samsung.com>,
-        linux-serial@vger.kernel.org, linux-input@vger.kernel.org,
-        Jakub Kicinski <kuba@kernel.org>, linux-media@vger.kernel.org,
-        Ohad Ben-Cohen <ohad@wizery.com>,
-        Linux PM list <linux-pm@vger.kernel.org>,
-        linux-gpio@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-        Jens Axboe <axboe@kernel.dk>, Stephen Boyd <sboyd@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        linux-mmc@vger.kernel.org,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        linux-spi@vger.kernel.org, Sebastian Reichel <sre@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jonathan Cameron <jic23@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <92084293-d2fd-1663-0f6a-a10f01e23066@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Rob,
+On 12/23/20 4:05 PM, Florian Fainelli wrote:
+> 
+> 
+> On 12/16/2020 1:41 PM, Jim Quinlan wrote:
+>> v3 -- discard commit from v2; instead rely on the new function
+>>       reset_control_rearm provided in a recent commit [1] applied
+>>       to reset/next.
+>>    -- New commit to correct pcie-brcmstb.c usage of a reset controller
+>>       to use reset/rearm verses deassert/assert.
+>>
+>> v2 -- refactor rescal-reset driver to implement assert/deassert rather than
+>>       reset because the reset call only fires once per lifetime and we need
+>>       to reset after every resume from S2 or S3.
+>>    -- Split the use of "ahci" and "rescal" controllers in separate fields
+>>       to keep things simple.
+>>
+>> v1 -- original
+>>
+>>
+>> [1] Applied commit "reset: make shared pulsed reset controls re-triggerable"
+>>     found at git://git.pengutronix.de/git/pza/linux.git
+>>     branch reset/shared-retrigger
+> 
+> The changes in that branch above have now landed in Linus' tree with:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=557acb3d2cd9c82de19f944f6cc967a347735385
+> 
+> It would be good if we could get both patches applied via the same tree
+> or within the same cycle to avoid having either PCIe or SATA broken on
+> these platforms.
 
-On Tue, Jan 5, 2021 at 8:03 AM Rob Herring <robh@kernel.org> wrote:
->
-> DT properties which can have multiple entries need to specify what the
-> entries are and define how many entries there can be. In the case of
-> only a single entry, just 'maxItems: 1' is sufficient.
->
-> Add the missing entry constraints. These were found with a modified
-> meta-schema. Unfortunately, there are a few cases where the size
-> constraints are not defined such as common bindings, so the meta-schema
-> can't be part of the normal checks.
->
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Cc: Stephen Boyd <sboyd@kernel.org>
-> Cc: Thierry Reding <thierry.reding@gmail.com>
-> Cc: MyungJoo Ham <myungjoo.ham@samsung.com>
-> Cc: Chanwoo Choi <cw00.choi@samsung.com>
-> Cc: Linus Walleij <linus.walleij@linaro.org>
-> Cc: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-> Cc: Jonathan Cameron <jic23@kernel.org>
-> Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Marc Zyngier <maz@kernel.org>
-> Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
-> Cc: Chen-Yu Tsai <wens@csie.org>
-> Cc: Ulf Hansson <ulf.hansson@linaro.org>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Jakub Kicinski <kuba@kernel.org>
-> Cc: Sebastian Reichel <sre@kernel.org>
-> Cc: Ohad Ben-Cohen <ohad@wizery.com>
-> Cc: Bjorn Andersson <bjorn.andersson@linaro.org>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Signed-off-by: Rob Herring <robh@kernel.org>
-> ---
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: linux-ide@vger.kernel.org
-> Cc: linux-clk@vger.kernel.org
-> Cc: dri-devel@lists.freedesktop.org
-> Cc: linux-gpio@vger.kernel.org
-> Cc: linux-iio@vger.kernel.org
-> Cc: linux-input@vger.kernel.org
-> Cc: linux-media@vger.kernel.org
-> Cc: linux-mmc@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Cc: linux-pm@vger.kernel.org
-> Cc: linux-remoteproc@vger.kernel.org
-> Cc: linux-riscv@lists.infradead.org
-> Cc: linux-serial@vger.kernel.org
-> Cc: alsa-devel@alsa-project.org
-> Cc: linux-spi@vger.kernel.org
-> Cc: linux-usb@vger.kernel.org
-> ---
->  .../socionext,uniphier-system-cache.yaml      |  4 ++--
->  .../bindings/ata/sata_highbank.yaml           |  1 +
->  .../bindings/clock/canaan,k210-clk.yaml       |  1 +
->  .../bindings/display/brcm,bcm2711-hdmi.yaml   |  1 +
->  .../bindings/display/brcm,bcm2835-hdmi.yaml   |  1 +
->  .../display/panel/jdi,lt070me05000.yaml       |  1 +
->  .../display/panel/mantix,mlaf057we51-x.yaml   |  3 ++-
->  .../display/panel/novatek,nt36672a.yaml       |  1 +
->  .../devicetree/bindings/dsp/fsl,dsp.yaml      |  2 +-
->  .../devicetree/bindings/eeprom/at25.yaml      |  3 +--
->  .../bindings/extcon/extcon-ptn5150.yaml       |  2 ++
-
-For extcon part,
-Acked-by: Chanwoo Choi <cw00.choi@samsung.com>
-
-(snip)
-
-Best Regards,
-Chanwoo Choi
+Ping? Can someone apply those patches if you are happy with them? Thank you.
+-- 
+Florian
