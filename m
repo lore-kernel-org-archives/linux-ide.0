@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD397C433DB
-	for <linux-ide@archiver.kernel.org>; Tue,  5 Jan 2021 01:04:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22960C4321A
+	for <linux-ide@archiver.kernel.org>; Tue,  5 Jan 2021 01:05:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7BE8A229F0
-	for <linux-ide@archiver.kernel.org>; Tue,  5 Jan 2021 01:04:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EEAD722573
+	for <linux-ide@archiver.kernel.org>; Tue,  5 Jan 2021 01:05:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726605AbhAEBDG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 4 Jan 2021 20:03:06 -0500
-Received: from mail.kernel.org ([198.145.29.99]:40000 "EHLO mail.kernel.org"
+        id S1728354AbhAEBBL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 4 Jan 2021 20:01:11 -0500
+Received: from mail.kernel.org ([198.145.29.99]:39206 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728461AbhAEBBY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 4 Jan 2021 20:01:24 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id EA84422582;
-        Tue,  5 Jan 2021 01:00:03 +0000 (UTC)
+        id S1728350AbhAEBBK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 4 Jan 2021 20:01:10 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C5DB522B2C;
+        Tue,  5 Jan 2021 01:00:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1609808405;
-        bh=WfWOdvixaL7PMa865MGcKoM8DolWpq728REn/AuPaYQ=;
+        s=k20201202; t=1609808417;
+        bh=LugGHd7ltLq+WkkwWzw7146Hilpdqkmwi/xui8yO2Co=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=dEnKyc97TIUF3oqf49aZAhu0hmuRciHyBAbNU+VJkLVoa8gdG7g3Gw8/cKiJcc5YT
-         lPwCgh9WuioAC/uWKRM1Zs5CSKF9nbiWYzuim/9nEOcEofCPI/Emd0VGQlbnl77+ft
-         wRmp8ZXx+GIR9uTC2+SsQ2E5OL+MMPQLBwZukZbJ6UR4dnUOX4sgZ8vV7s69Ee4ys9
-         NYv//hqOFg8dk90s6QizUw3raRTaPq8Fgb4cKUIZQOJs/MfOj0C3QzCduT39NhfGZd
-         5LvhFHJ8LJgm/pzy8tzQLrJBjh/SmTAQJVg6cQcmuwINNYmGmbcooPyzt00tOAV/T/
-         v7giLrsi0qoFA==
+        b=LyP6tsI26EVMtzOiJRm0y3OrdB/+mBoB3eoqnMMXwrBrTM78eHCYzSd9Ck0vavExK
+         ci17VF4k6ocCGPNYlThhFUcO66v0inDRgC67k1f4hxovLXdK4RzfM+b4b7WlgUXbvL
+         FnJJS6EQLRSnRTRTXshrMLiO2qNLJ1YiL23ztqxErYzYbg6JCm2fDVaBJybhDjOpOE
+         0CkO4MW9nY6VbUSTdk/sZqAMGkvwoR5Yl2E08Wtp+FQUodIAk6xw0QKiOEwkm8qm2b
+         ichOY2Y8oYVD5bcSdBV+AdaQ+qkKeOgo3AizGoCSsf+tBHlYRjWB7MTG1krWo4rSHV
+         NK96Ki1swO+6g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Bart Van Assche <bvanassche@acm.org>,
@@ -46,12 +46,12 @@ Cc:     Bart Van Assche <bvanassche@acm.org>,
         Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org,
         linux-arm-kernel@lists.infradead.org,
         linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 4.19 4/8] scsi: ide: Do not set the RQF_PREEMPT flag for sense requests
-Date:   Mon,  4 Jan 2021 19:59:55 -0500
-Message-Id: <20210105005959.3954510-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 3/6] scsi: ide: Do not set the RQF_PREEMPT flag for sense requests
+Date:   Mon,  4 Jan 2021 20:00:09 -0500
+Message-Id: <20210105010012.3954626-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210105005959.3954510-1-sashal@kernel.org>
-References: <20210105005959.3954510-1-sashal@kernel.org>
+In-Reply-To: <20210105010012.3954626-1-sashal@kernel.org>
+References: <20210105010012.3954626-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -113,7 +113,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 6 deletions(-)
 
 diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-index 8b2b72b938857..4224c4dd89635 100644
+index 0e6bc631a1caf..215558c947def 100644
 --- a/drivers/ide/ide-atapi.c
 +++ b/drivers/ide/ide-atapi.c
 @@ -213,7 +213,6 @@ void ide_prep_sense(ide_drive_t *drive, struct request *rq)
@@ -125,10 +125,10 @@ index 8b2b72b938857..4224c4dd89635 100644
  	req->cmd[0] = GPCMD_REQUEST_SENSE;
  	req->cmd[4] = cmd_len;
 diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-index 0d93e0cfbeaf9..4381760846109 100644
+index 3a234701d92c4..7f34dc49c9b5f 100644
 --- a/drivers/ide/ide-io.c
 +++ b/drivers/ide/ide-io.c
-@@ -527,11 +527,6 @@ void do_ide_request(struct request_queue *q)
+@@ -531,11 +531,6 @@ void do_ide_request(struct request_queue *q)
  		 * above to return us whatever is in the queue. Since we call
  		 * ide_do_request() ourselves, we end up taking requests while
  		 * the queue is blocked...
