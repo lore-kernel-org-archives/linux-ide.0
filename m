@@ -2,103 +2,195 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F063C433E9
-	for <linux-ide@archiver.kernel.org>; Tue,  5 Jan 2021 16:09:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04CCBC433E0
+	for <linux-ide@archiver.kernel.org>; Tue,  5 Jan 2021 17:41:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EBEBE22C9E
-	for <linux-ide@archiver.kernel.org>; Tue,  5 Jan 2021 16:09:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC5E822D06
+	for <linux-ide@archiver.kernel.org>; Tue,  5 Jan 2021 17:41:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729125AbhAEQJ2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 5 Jan 2021 11:09:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:37918 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726571AbhAEQJ2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 5 Jan 2021 11:09:28 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 519B722C9F;
-        Tue,  5 Jan 2021 16:08:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1609862927;
-        bh=wJQJGEVMiFp+U9i3KB68KovC4I4ZjyrsTucyHvp+mYU=;
-        h=From:To:In-Reply-To:References:Subject:Date:From;
-        b=RAq1XL/BRN8XRTSri4cXSrqvujM81ioR4+GUq1AHhXecaj7QiUWiQ88dIVugFlchl
-         PLj0Tjq2k++ZbgqOoM47jhkKnKK69EB4dWwbb4SWWCCEgHFfJaIdqiA9j1o8CIDFGb
-         VmlHy1C+y878dkjkF4kZd8pHUgF6pphBI9JLc1TNqEr7Y5H/GxrnO2q9j6hXU6/0O6
-         F/BC+FOE5W7Pq7VFBMxUdC2Yx5x5dsQz87UyJo6xH3cai7eqArOI3dLNh6M9KIfFCe
-         bMnxRc9j/jnfB58g5Lt3IlL35kE9dM38IFdhf5NXVGmzl9LHHUkqI+ApfU/oQDMsjA
-         e2FHKR5qKJKMQ==
-From:   Mark Brown <broonie@kernel.org>
-To:     linux-rtc@vger.kernel.org, Matt Mackall <mpm@selenic.com>,
-        linux-mtd@lists.infradead.org, linux-crypto@vger.kernel.org,
-        netdev@vger.kernel.org, alsa-devel@alsa-project.org,
-        dmaengine@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Dan Williams <dan.j.williams@intel.com>,
+        id S1730592AbhAERk4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 5 Jan 2021 12:40:56 -0500
+Received: from mail-io1-f47.google.com ([209.85.166.47]:38559 "EHLO
+        mail-io1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729802AbhAERk4 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jan 2021 12:40:56 -0500
+Received: by mail-io1-f47.google.com with SMTP id y5so121844iow.5;
+        Tue, 05 Jan 2021 09:40:39 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=8QCUqXr2bzGc5ddkxZAj8Vxc5oTvsGwo9juSuaK/DNc=;
+        b=dpiv0CpJakEgMYIkHp0lhaNf0d461HGJWH+aCceAtiK06rRDsTcTMmlKY49hvYeBLh
+         7Ty71HBKHYeiO7tR4vDt/nbyfS3So6W770LrQdh92+7tJttY7v6bNEPz9K6DyPt4FMLd
+         PIt1LLKtkEtRi0UIF/SrTqyc8+lLr/NyjHzBXZIkwKKYOWTnsle1FsD/3tdAJzYQHLJ8
+         5Wa4nrxHRmF4wbzaj7iiS8vhXcoFeE1qz694yyOGkLCUx5hT7HoR59vm5/MhqoPl6WyI
+         nwHivuhmthkX8gk5c3+LEXbUBtsKZCYBaNRO66SiQA1AkHaiy4ksJgdTlgLtAmm1z8Vq
+         VM5g==
+X-Gm-Message-State: AOAM5321qcVRq9N6s7VVvE3mTC6HsP7wLE0n3Y4SZ+nWozJ+Mbu4gJm/
+        A2rP/pRkkVNdQnfCttBO7A==
+X-Google-Smtp-Source: ABdhPJxCW42aLPbGC5oVtd7TRg3rkrFk+Qrm1SC6TjLARKSfiB9JNiyQ7YL2gLDjCHBjUScpozxZgA==
+X-Received: by 2002:a02:7692:: with SMTP id z140mr666018jab.21.1609868414264;
+        Tue, 05 Jan 2021 09:40:14 -0800 (PST)
+Received: from robh.at.kernel.org ([64.188.179.253])
+        by smtp.gmail.com with ESMTPSA id y15sm121208ili.65.2021.01.05.09.40.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 05 Jan 2021 09:40:13 -0800 (PST)
+Received: (nullmailer pid 426116 invoked by uid 1000);
+        Tue, 05 Jan 2021 17:40:08 -0000
+Date:   Tue, 5 Jan 2021 10:40:08 -0700
+From:   Rob Herring <robh@kernel.org>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>, Stephen Boyd <sboyd@kernel.org>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        MyungJoo Ham <myungjoo.ham@samsung.com>,
+        Chanwoo Choi <cw00.choi@samsung.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <bgolaszewski@baylibre.com>,
+        Jonathan Cameron <jic23@kernel.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Marc Zyngier <maz@kernel.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Chen-Yu Tsai <wens@csie.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
         "David S. Miller" <davem@davemloft.net>,
-        linux-mips@vger.kernel.org, Takashi Iwai <tiwai@suse.com>,
-        Alessandro Zummo <a.zummo@towertech.it>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
         Jakub Kicinski <kuba@kernel.org>,
-        linux-watchdog@vger.kernel.org,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Vinod Koul <vkoul@kernel.org>,
-        Liam Girdwood <lgirdwood@gmail.com>, linux-spi@vger.kernel.org
-In-Reply-To: <20210105140305.141401-1-tsbogend@alpha.franken.de>
-References: <20210105140305.141401-1-tsbogend@alpha.franken.de>
-Subject: Re: (subset) [PATCH 00/10] Remove support for TX49xx
-Message-Id: <160986289007.50207.17900821173530027212.b4-ty@kernel.org>
-Date:   Tue, 05 Jan 2021 16:08:10 +0000
+        Sebastian Reichel <sre@kernel.org>,
+        Ohad Ben-Cohen <ohad@wizery.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org,
+        linux-clk@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-gpio@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-mmc@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-remoteproc@vger.kernel.org,
+        linux-riscv@lists.infradead.org, linux-serial@vger.kernel.org,
+        alsa-devel@alsa-project.org, linux-spi@vger.kernel.org,
+        linux-usb@vger.kernel.org
+Subject: Re: [PATCH] dt-bindings: Add missing array size constraints
+Message-ID: <20210105174008.GB1875909@robh.at.kernel.org>
+References: <20210104230253.2805217-1-robh@kernel.org>
+ <X/RjziK30y56uZUj@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <X/RjziK30y56uZUj@kroah.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, 5 Jan 2021 15:02:45 +0100, Thomas Bogendoerfer wrote:
-> I couldn't find any buyable product other than reference boards using
-> TX49xx CPUs. And since nobody showed interest in keeping support for
-> it, it's time to remove it.
+On Tue, Jan 05, 2021 at 02:04:14PM +0100, Greg Kroah-Hartman wrote:
+> On Mon, Jan 04, 2021 at 04:02:53PM -0700, Rob Herring wrote:
+> > DT properties which can have multiple entries need to specify what the
+> > entries are and define how many entries there can be. In the case of
+> > only a single entry, just 'maxItems: 1' is sufficient.
+> > 
+> > Add the missing entry constraints. These were found with a modified
+> > meta-schema. Unfortunately, there are a few cases where the size
+> > constraints are not defined such as common bindings, so the meta-schema
+> > can't be part of the normal checks.
+> > 
+> > Cc: Jens Axboe <axboe@kernel.dk>
+> > Cc: Stephen Boyd <sboyd@kernel.org>
+> > Cc: Thierry Reding <thierry.reding@gmail.com>
+> > Cc: MyungJoo Ham <myungjoo.ham@samsung.com>
+> > Cc: Chanwoo Choi <cw00.choi@samsung.com>
+> > Cc: Linus Walleij <linus.walleij@linaro.org>
+> > Cc: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+> > Cc: Jonathan Cameron <jic23@kernel.org>
+> > Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+> > Cc: Thomas Gleixner <tglx@linutronix.de>
+> > Cc: Marc Zyngier <maz@kernel.org>
+> > Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
+> > Cc: Chen-Yu Tsai <wens@csie.org>
+> > Cc: Ulf Hansson <ulf.hansson@linaro.org>
+> > Cc: "David S. Miller" <davem@davemloft.net>
+> > Cc: Jakub Kicinski <kuba@kernel.org>
+> > Cc: Sebastian Reichel <sre@kernel.org>
+> > Cc: Ohad Ben-Cohen <ohad@wizery.com>
+> > Cc: Bjorn Andersson <bjorn.andersson@linaro.org>
+> > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > Signed-off-by: Rob Herring <robh@kernel.org>
 > 
-> I've split up the removal into seperate parts for different maintainers.
-> So if the patch fits your needs, please take it via your tree or
-> give me an ack so I can apply them  the mips-next tree.
+> <snip>
 > 
-> [...]
+> > diff --git a/Documentation/devicetree/bindings/usb/generic-ehci.yaml b/Documentation/devicetree/bindings/usb/generic-ehci.yaml
+> > index 247ef00381ea..f76b25f7fc7a 100644
+> > --- a/Documentation/devicetree/bindings/usb/generic-ehci.yaml
+> > +++ b/Documentation/devicetree/bindings/usb/generic-ehci.yaml
+> > @@ -83,6 +83,7 @@ properties:
+> >        Phandle of a companion.
+> >  
+> >    phys:
+> > +    maxItems: 1
+> >      description: PHY specifier for the USB PHY
+> >  
+> >    phy-names:
+> > diff --git a/Documentation/devicetree/bindings/usb/generic-ohci.yaml b/Documentation/devicetree/bindings/usb/generic-ohci.yaml
+> > index 2178bcc401bc..8e2bd61f2075 100644
+> > --- a/Documentation/devicetree/bindings/usb/generic-ohci.yaml
+> > +++ b/Documentation/devicetree/bindings/usb/generic-ohci.yaml
+> > @@ -71,6 +71,7 @@ properties:
+> >        Overrides the detected port count
+> >  
+> >    phys:
+> > +    maxItems: 1
+> >      description: PHY specifier for the USB PHY
+> >  
+> >    phy-names:
+> > diff --git a/Documentation/devicetree/bindings/usb/ingenic,musb.yaml b/Documentation/devicetree/bindings/usb/ingenic,musb.yaml
+> > index 678396eeeb78..f506225a4d57 100644
+> > --- a/Documentation/devicetree/bindings/usb/ingenic,musb.yaml
+> > +++ b/Documentation/devicetree/bindings/usb/ingenic,musb.yaml
+> > @@ -40,7 +40,7 @@ properties:
+> >        - const: mc
+> >  
+> >    phys:
+> > -    description: PHY specifier for the USB PHY
+> > +    maxItems: 1
+> >  
+> >    usb-role-switch:
+> >      type: boolean
+> 
+> Any reason you dropped the description for this entry, but not the other
+> ones above?
 
-Applied to
+No, I should have dropped those too. I dropped cases of genericish 
+descriptions on common properties. There's nothing specific to this 
+binding here really.
 
-   https://git.kernel.org/pub/scm/linux/kernel/git/broonie/spi.git for-next
+> 
+> > diff --git a/Documentation/devicetree/bindings/usb/ti,j721e-usb.yaml b/Documentation/devicetree/bindings/usb/ti,j721e-usb.yaml
+> > index 388245b91a55..adce36e48bc9 100644
+> > --- a/Documentation/devicetree/bindings/usb/ti,j721e-usb.yaml
+> > +++ b/Documentation/devicetree/bindings/usb/ti,j721e-usb.yaml
+> > @@ -15,13 +15,14 @@ properties:
+> >        - const: ti,j721e-usb
+> >  
+> >    reg:
+> > -    description: module registers
+> > +    maxItems: 1
+> >  
+> >    power-domains:
+> >      description:
+> >        PM domain provider node and an args specifier containing
+> >        the USB device id value. See,
+> >        Documentation/devicetree/bindings/soc/ti/sci-pm-domain.txt
+> > +    maxItems: 1
+> >  
+> >    clocks:
+> >      description: Clock phandles to usb2_refclk and lpm_clk
+> 
+> Same here, why remove the description?
 
-Thanks!
+Really, the question is why keep 'description' on power-domains. Perhaps 
+there's a little value in the reference to sci-pm-domain.txt, so I left 
+it.
 
-[04/10] spi: txx9: Remove driver
-        commit: 74523a5dae0c96d6503fe72da66ee37fd23eb8f5
-
-All being well this means that it will be integrated into the linux-next
-tree (usually sometime in the next 24 hours) and sent to Linus during
-the next merge window (or sooner if it is a bug fix), however if
-problems are discovered then the patch may be dropped or reverted.
-
-You may get further e-mails resulting from automated or manual testing
-and review of the tree, please engage with people reporting problems and
-send followup patches addressing any issues that are reported if needed.
-
-If any updates are required or you are submitting further changes they
-should be sent as incremental updates against current git, existing
-patches will not be replaced.
-
-Please add any relevant lists and maintainers to the CCs when replying
-to this mail.
-
-Thanks,
-Mark
+Rob
