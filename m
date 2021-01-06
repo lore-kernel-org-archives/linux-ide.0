@@ -2,130 +2,114 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E5E3C433DB
-	for <linux-ide@archiver.kernel.org>; Wed,  6 Jan 2021 07:15:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CF08C433E6
+	for <linux-ide@archiver.kernel.org>; Wed,  6 Jan 2021 08:38:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3573623102
-	for <linux-ide@archiver.kernel.org>; Wed,  6 Jan 2021 07:15:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F7852310B
+	for <linux-ide@archiver.kernel.org>; Wed,  6 Jan 2021 08:38:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726125AbhAFHPB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 6 Jan 2021 02:15:01 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45404 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725837AbhAFHPA (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jan 2021 02:15:00 -0500
-Received: from mail-ej1-x62e.google.com (mail-ej1-x62e.google.com [IPv6:2a00:1450:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1869C06135D
-        for <linux-ide@vger.kernel.org>; Tue,  5 Jan 2021 23:13:39 -0800 (PST)
-Received: by mail-ej1-x62e.google.com with SMTP id q22so3836809eja.2
-        for <linux-ide@vger.kernel.org>; Tue, 05 Jan 2021 23:13:39 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=rT4Dc8swlK31/4OXAMfRD8Dy9QIvv8YpGOiKzBJjVS0=;
-        b=kW/FIQ9UMgiQ4U+TkdADVoEYk5gZPV3uhWmFEaBISm60k6X7HKncaLJMcm7Te12ixW
-         DmozTsbCxinSR4kw60jnPkTRpJcI2yoqWEX3PsYD1Gobe1MgtRCRsAYMvDuT6a2OmRZe
-         JA5aIaNzC2Qz1QI2pjKK7hj+qAEnukuAv07b9W7M8pBoGmUjZmXbHaL5522RR1fvjBcC
-         aUOByaCkN/CFtegf2L0lfAhcsuMiZ+e/Z0kGD0hJrq1CBcozlTfyZi2pX2qyg5tLtp5K
-         qfoj7U94CqKy1yfDXJToNFtVkn5zEBI7/9XBDJd/bwiyCn1gMrTQ4lsyGmJDatnR3P5D
-         m6RA==
+        id S1726572AbhAFIiE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 6 Jan 2021 03:38:04 -0500
+Received: from mail-oo1-f48.google.com ([209.85.161.48]:42963 "EHLO
+        mail-oo1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726074AbhAFIiE (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jan 2021 03:38:04 -0500
+Received: by mail-oo1-f48.google.com with SMTP id x203so586896ooa.9;
+        Wed, 06 Jan 2021 00:37:48 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=rT4Dc8swlK31/4OXAMfRD8Dy9QIvv8YpGOiKzBJjVS0=;
-        b=T4omLdQKO1lqoKkLZr84//BqYKBpWuEqJwVnU6+LAnFX+mbqND4abSHaM0N+5LR8pN
-         4zCzV8uLWF6psboB7mQL/k9Lf96xovn/W90gIkkjMyf/HDsOs8d+ctJS3QPrtYZz6Iki
-         hK7coMHCtGnySJKO0KgMqM5zp7XO5DY7Um5zOoNpTM/+qC1Ym+ueD1V2IwAnRWO2Llh/
-         TK7f0dukjjxu0scYzfjUlzkMNGRwOj+SW3CWg7VilvYQrbk8d1zsOL/QEMNAm+xdhBG/
-         2O/ff0S3rG2EnEQebVEK6nEAlvEtQq9Q67+xVeBk/WFFAa030S9ba4qFNwQzrkiasoAO
-         FYCw==
-X-Gm-Message-State: AOAM53018H+yNBjNbOxD2DrlqNgXYHQYOqPFV0usnr0JcJl6tqUDD51m
-        cXtGxvIxID4aGEVOhSI/rXZBVEiTLkLjb+r/R9j23w==
-X-Google-Smtp-Source: ABdhPJz7NZsjb4UgOGiErAdqwk42sh/yXenAjVlhxnzAVaOFNfM5U6i5Q3E7GI/VvU/IA448wOjGCY/95IeDdC3rxz4=
-X-Received: by 2002:a17:906:8594:: with SMTP id v20mr1986708ejx.470.1609917218321;
- Tue, 05 Jan 2021 23:13:38 -0800 (PST)
+        bh=7OzcDXMwatEtiJomNBi1fhi3zuuxEWhyROAP2OwThNY=;
+        b=EQ71xKWn6jEzk16xLKPw5tpURAioSNiH1WBf7m9kaDOShUYzWqDQ2s2wBGAg4P9H3J
+         Mn4cea36V3yDJZZrvHcNzPWnFPRSJt/NLvTmeFnFgsH0whYPMW6IM5yqwm8jTr01KMl9
+         ZZEi8CE6gy5fRn7AkvD+pvWO05miEnxQilI78QQh7PLj6v+I+0jCuNrUcUv+dhGZEZiv
+         v0c6RD3T94Qw07f4jhO5ADNuzjlIEToYcUiiqj4wivYB6ei9N9PpupqdcyyFF4eRsE0X
+         6gjpUPUB00Jm1SxknefDlc66XhPGX55zcpbDjCYhJR+gAdb4eHo6ri1rjep5ilymjGKm
+         mnxQ==
+X-Gm-Message-State: AOAM530lsAiSTA+Tt8ZbOkvKTVNeR7z6UzFGVNcIKOS+9jJv/Yr6Dj3n
+        xMVsCDhZjaRef2yEGQJb1xW7zzukJ5CfJtulSPc=
+X-Google-Smtp-Source: ABdhPJz+riLQ42T+q9EFB1XsbUqjCK7bS2nCYCFI4IXj5lNnjzpQBlfNrLzEuiXe37snmeLQrap5l7udgxcoLsEDH3o=
+X-Received: by 2002:a4a:8353:: with SMTP id q19mr2071403oog.40.1609922242555;
+ Wed, 06 Jan 2021 00:37:22 -0800 (PST)
 MIME-Version: 1.0
-References: <20210104230253.2805217-1-robh@kernel.org>
-In-Reply-To: <20210104230253.2805217-1-robh@kernel.org>
-From:   Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Date:   Wed, 6 Jan 2021 08:13:27 +0100
-Message-ID: <CAMpxmJVFFu6q53-O_iWCyhY3M3up2Hg1TMY_DpmOvED4eN8bJQ@mail.gmail.com>
-Subject: Re: [PATCH] dt-bindings: Add missing array size constraints
-To:     Rob Herring <robh@kernel.org>
-Cc:     linux-devicetree <devicetree@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Jens Axboe <axboe@kernel.dk>, Stephen Boyd <sboyd@kernel.org>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        MyungJoo Ham <myungjoo.ham@samsung.com>,
-        Chanwoo Choi <cw00.choi@samsung.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Jonathan Cameron <jic23@kernel.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Marc Zyngier <maz@kernel.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Chen-Yu Tsai <wens@csie.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
+References: <20210105140305.141401-1-tsbogend@alpha.franken.de>
+In-Reply-To: <20210105140305.141401-1-tsbogend@alpha.franken.de>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Wed, 6 Jan 2021 09:37:11 +0100
+Message-ID: <CAMuHMdX=trGqj8RzV7r1iTneqDjWOc4e1T-X+R_B34rxxhJpbg@mail.gmail.com>
+Subject: Re: [PATCH 00/10] Remove support for TX49xx
+To:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+Cc:     Matt Mackall <mpm@selenic.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vinod Koul <vkoul@kernel.org>,
         "David S. Miller" <davem@davemloft.net>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
         Jakub Kicinski <kuba@kernel.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Ohad Ben-Cohen <ohad@wizery.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        arm-soc <linux-arm-kernel@lists.infradead.org>,
-        linux-ide@vger.kernel.org, linux-clk <linux-clk@vger.kernel.org>,
-        linux-drm <dri-devel@lists.freedesktop.org>,
-        linux-gpio <linux-gpio@vger.kernel.org>,
-        linux-iio <linux-iio@vger.kernel.org>,
-        Linux Input <linux-input@vger.kernel.org>,
-        linux-media <linux-media@vger.kernel.org>,
-        linux-mmc@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-        linux-pm <linux-pm@vger.kernel.org>,
-        linux-remoteproc@vger.kernel.org, linux-riscv@lists.infradead.org,
-        linux-serial@vger.kernel.org,
-        Linux-ALSA <alsa-devel@alsa-project.org>,
-        linux-spi@vger.kernel.org, USB list <linux-usb@vger.kernel.org>
+        Alessandro Zummo <a.zummo@towertech.it>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Mark Brown <broonie@kernel.org>,
+        Wim Van Sebroeck <wim@linux-watchdog.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>,
+        "open list:BROADCOM NVRAM DRIVER" <linux-mips@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        dmaengine <dmaengine@vger.kernel.org>, linux-ide@vger.kernel.org,
+        MTD Maling List <linux-mtd@lists.infradead.org>,
+        netdev <netdev@vger.kernel.org>, linux-rtc@vger.kernel.org,
+        linux-spi <linux-spi@vger.kernel.org>,
+        Linux Watchdog Mailing List <linux-watchdog@vger.kernel.org>,
+        ALSA Development Mailing List <alsa-devel@alsa-project.org>,
+        Atsushi Nemoto <anemo@mba.ocn.ne.jp>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Jan 5, 2021 at 12:03 AM Rob Herring <robh@kernel.org> wrote:
->
-> DT properties which can have multiple entries need to specify what the
-> entries are and define how many entries there can be. In the case of
-> only a single entry, just 'maxItems: 1' is sufficient.
->
-> Add the missing entry constraints. These were found with a modified
-> meta-schema. Unfortunately, there are a few cases where the size
-> constraints are not defined such as common bindings, so the meta-schema
-> can't be part of the normal checks.
->
+Hi Thomas,
 
-[snip!]
+CC Nemoto-san (de-facto TX49XX maintainer)
 
->  .../bindings/gpio/gpio-pca95xx.yaml           |  1 +
+On Tue, Jan 5, 2021 at 3:03 PM Thomas Bogendoerfer
+<tsbogend@alpha.franken.de> wrote:
+> I couldn't find any buyable product other than reference boards using
+> TX49xx CPUs. And since nobody showed interest in keeping support for
+> it, it's time to remove it.
 
-[snip!]
+I have an RBTX4927 development board in my board farm, boot-test every
+bi-weekly renesas-drivers release on it, and fix kernel issues when they
+appear.
 
-> diff --git a/Documentation/devicetree/bindings/gpio/gpio-pca95xx.yaml b/Documentation/devicetree/bindings/gpio/gpio-pca95xx.yaml
-> index f5ee23c2df60..57cdcfd4ff3c 100644
-> --- a/Documentation/devicetree/bindings/gpio/gpio-pca95xx.yaml
-> +++ b/Documentation/devicetree/bindings/gpio/gpio-pca95xx.yaml
-> @@ -81,6 +81,7 @@ properties:
->      const: 2
->
->    reset-gpios:
-> +    maxItems: 1
->      description:
->        GPIO specification for the RESET input. This is an active low signal to
->        the PCA953x.  Not valid for Maxim MAX732x devices.
+Is that sufficient to keep it?
 
-Acked-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+TX49xx SoCs were used in Sony LocationFree base stations, running
+VxWorks. You can no longer buy them.
+I'm not aware of anyone ever porting Linux to them.
+https://en.wikipedia.org/wiki/LocationFree_Player
+
+>   spi: txx9: Remove driver
+
+I only noticed the planned removal when I saw the SPI patch was applied.
+Doesn't matter for me, as SPI is only present on TX4938, not on TX4927 ;-)
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
