@@ -2,107 +2,62 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49651C4332B
-	for <linux-ide@archiver.kernel.org>; Fri,  8 Jan 2021 08:28:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DC05C433DB
+	for <linux-ide@archiver.kernel.org>; Mon, 11 Jan 2021 09:38:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0973623447
-	for <linux-ide@archiver.kernel.org>; Fri,  8 Jan 2021 08:28:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF72C22C9C
+	for <linux-ide@archiver.kernel.org>; Mon, 11 Jan 2021 09:38:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727489AbhAHI2k (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 8 Jan 2021 03:28:40 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59414 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727418AbhAHI2k (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 8 Jan 2021 03:28:40 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0CC7A23435;
-        Fri,  8 Jan 2021 08:27:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1610094479;
-        bh=SAoDiXJG+49pPIJcmLEdT3YdpudMLb3tXzuV+M1ddMg=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=EnEKOJIN+WnD4u6lFgo77faKCj54N+d/pFKhcGzW/Y3/Ccl68siuEONd2+MQVmWwA
-         g8i5J1Jp9PRFqP+bjh1UVHmW6ZNZoM79Em/nHN5DHOG6ps9hEvQuax6LdoYTVQba6R
-         W0M3rPvSPrbm/vYAaPU9CsppYeuXAhSoIAN8UGVK69VCDMDjU1FlkyeISfeCHTf0Cp
-         UrPLrlJpGz0S4tUYkZu+D7Yp8uZm4/13PvNs53jDnTG1yuR/TZx3S6Q2A5kjWrfu5R
-         w1MefWO2hD7veYyvb2xtc7eB2pAO3ZpInFWl5OgE2Cy2VRAsn/olPyc/xhF+bAgyze
-         9qY+rCVqge15w==
-Date:   Fri, 8 Jan 2021 13:57:54 +0530
-From:   Vinod Koul <vkoul@kernel.org>
-To:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Cc:     Joe Perches <joe@perches.com>, Matt Mackall <mpm@selenic.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Alessandro Zummo <a.zummo@towertech.it>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        Mark Brown <broonie@kernel.org>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>, linux-mips@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org,
-        dmaengine@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-mtd@lists.infradead.org, netdev@vger.kernel.org,
-        linux-rtc@vger.kernel.org, linux-spi@vger.kernel.org,
-        linux-watchdog@vger.kernel.org, alsa-devel@alsa-project.org
-Subject: Re: [PATCH 05/10] dma: tx49 removal
-Message-ID: <20210108082754.GW2771@vkoul-mobl>
-References: <20210105140305.141401-1-tsbogend@alpha.franken.de>
- <20210105140305.141401-6-tsbogend@alpha.franken.de>
- <b84dadc2e98b1986dc800c5f6f202880ed905b38.camel@perches.com>
- <20210107164015.GA12533@alpha.franken.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210107164015.GA12533@alpha.franken.de>
+        id S1728515AbhAKJhu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 11 Jan 2021 04:37:50 -0500
+Received: from out4436.biz.mail.alibaba.com ([47.88.44.36]:44550 "EHLO
+        out4436.biz.mail.alibaba.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728062AbhAKJhr (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Jan 2021 04:37:47 -0500
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R671e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=e01e04357;MF=abaci-bugfix@linux.alibaba.com;NM=1;PH=DS;RN=4;SR=0;TI=SMTPD_---0ULL1QpG_1610357816;
+Received: from j63c13417.sqa.eu95.tbsite.net(mailfrom:abaci-bugfix@linux.alibaba.com fp:SMTPD_---0ULL1QpG_1610357816)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Mon, 11 Jan 2021 17:37:02 +0800
+From:   YANG LI <abaci-bugfix@linux.alibaba.com>
+To:     axboe@kernel.dk
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        YANG LI <abaci-bugfix@linux.alibaba.com>
+Subject: [PATCH] ata: style: Simplify bool comparison
+Date:   Mon, 11 Jan 2021 17:36:55 +0800
+Message-Id: <1610357815-69958-1-git-send-email-abaci-bugfix@linux.alibaba.com>
+X-Mailer: git-send-email 1.8.3.1
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 07-01-21, 17:40, Thomas Bogendoerfer wrote:
-> On Wed, Jan 06, 2021 at 11:10:38AM -0800, Joe Perches wrote:
-> > On Tue, 2021-01-05 at 15:02 +0100, Thomas Bogendoerfer wrote:
-> > > Signed-off-by: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-> > []
-> > > diff --git a/drivers/dma/txx9dmac.h b/drivers/dma/txx9dmac.h
-> > []
-> > > @@ -26,11 +26,6 @@
-> > >   * DMA channel.
-> > >   */
-> > >  
-> > > 
-> > > -#ifdef CONFIG_MACH_TX49XX
-> > > -static inline bool txx9_dma_have_SMPCHN(void)
-> > > -{
-> > > -	return true;
-> > > -}
-> > >  #define TXX9_DMA_USE_SIMPLE_CHAIN
-> > >  #else
-> > >  static inline bool txx9_dma_have_SMPCHN(void)
-> > 
-> > This doesn't look like it compiles as there's now an #else
-> > without an #if
-> 
-> you are right, no idea what I had in mind while doing that.
-> 
-> Vinod,
-> 
-> as this patch series found a still active user of the platform,
-> could you drop the patch from your tree, or do you want a revert
-> from me ?
+Fix the following coccicheck warning:
+./include/linux/ata.h:621:5-25: WARNING: Comparison of 0/1 to bool
+variable
 
-Dropped now
+Signed-off-by: YANG LI <abaci-bugfix@linux.alibaba.com>
+Reported-by: Abaci Robot<abaci@linux.alibaba.com>
+---
+ include/linux/ata.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 6e67ade..89245f3 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -618,7 +618,7 @@ static inline bool ata_id_has_flush(const u16 *id)
+ 
+ static inline bool ata_id_flush_enabled(const u16 *id)
+ {
+-	if (ata_id_has_flush(id) == 0)
++	if (!ata_id_has_flush(id))
+ 		return false;
+ 	if ((id[ATA_ID_CSF_DEFAULT] & 0xC000) != 0x4000)
+ 		return false;
 -- 
-~Vinod
+1.8.3.1
+
