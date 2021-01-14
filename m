@@ -2,92 +2,119 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-14.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BF1DC433E0
-	for <linux-ide@archiver.kernel.org>; Thu, 14 Jan 2021 14:54:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48A21C433DB
+	for <linux-ide@archiver.kernel.org>; Thu, 14 Jan 2021 15:50:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D70BD23A52
-	for <linux-ide@archiver.kernel.org>; Thu, 14 Jan 2021 14:54:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C86623A50
+	for <linux-ide@archiver.kernel.org>; Thu, 14 Jan 2021 15:50:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726236AbhANOyl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 14 Jan 2021 09:54:41 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42078 "EHLO
+        id S1728578AbhANPud (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 14 Jan 2021 10:50:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54220 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725878AbhANOyl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jan 2021 09:54:41 -0500
-Received: from mail-lf1-x144.google.com (mail-lf1-x144.google.com [IPv6:2a00:1450:4864:20::144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69ED3C061574;
-        Thu, 14 Jan 2021 06:54:00 -0800 (PST)
-Received: by mail-lf1-x144.google.com with SMTP id o10so8357172lfl.13;
-        Thu, 14 Jan 2021 06:54:00 -0800 (PST)
+        with ESMTP id S1727637AbhANPuc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jan 2021 10:50:32 -0500
+Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CE1CC061574;
+        Thu, 14 Jan 2021 07:49:52 -0800 (PST)
+Received: by mail-lf1-x12a.google.com with SMTP id v67so8704200lfa.0;
+        Thu, 14 Jan 2021 07:49:52 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=H43AsPC1Ol3zcrpDjCexwQNmz+Osl0+OhlXoSr96dXA=;
-        b=ryn9lPb9TmLcWhM8xLI6KEhUnVTuyMNs1BPg+7zNtMckZh3te89f7IIxpRDAtkARSi
-         vtmBTryduHnZyG8gxO00pwyKUMLQGNbdDv8cN2dpm1nqGWSXmZPsUKpibpF/5gXFaZCQ
-         8LDk7bGkdBbNWNM5WkK8ZKTsBgFDtsNgzq2NtPWbx4bqosdBxM9KxZ4O7L4PewFKzKVz
-         GV2kpmQiI8dJWtwJJ1qQp/rTVvGWGKnzNVz+WAroQCvWR9VJLcEC9uisTD4nRYSMx2PZ
-         atbHuoHBVqN4vNF+VQzHc7Qqn/EZHu/qBGCzayKLvsc4FT5rQtjZZP6nlmFyIQu46fsq
-         Xyhw==
+        h=subject:from:to:cc:references:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=HsYb3ISmwqcZYohpIUCu38MljjWZZ4dkXVTquIJzHZM=;
+        b=NIwYlP6CuqvXWqR/JtiP24TUaUTdSrV7XbEJH70mRLVASYG7oo+K3aJLKzV29jd6L2
+         Ctn7RmRPom4fJNFQ0IfqSJ3GBOU1FIyA6RC+qDr+DZF75h9L07FUeiphLPn5FCQc7N++
+         TFxdmC+d1wJxkFOeJhHGqNc8n7QN1EUlSptf8IyDCOyusf12IIPY3AtZkONN3AjemEpD
+         9bylPWnmrrwC5jt779ufPtk3h4169aqlIv41nHRGWWaKdDRWIVHYXCRFs/mmCKf65MdV
+         +PrEvItdPSfrDfSIDhQVLj0uya/3kqMPeHvStC94EQHTShsAHFozJKpaSUDhzKcoYgnz
+         7o9Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=H43AsPC1Ol3zcrpDjCexwQNmz+Osl0+OhlXoSr96dXA=;
-        b=DJA9oXUZbA9d1rg5o8L/Ozjkv3/7B2nRqrZuSX4bBAE60ZRVQeAyead+DHC7x5rhHZ
-         cdtwznQB2rrPy3fhQ+LQ07vIAqfVWOj2otzDWdjawM8uzL5SGs+AsQvup/7HmxNHKbtS
-         bQkf0WuOHFzw9p0m5kVLMMwwQ/RmBQ5JAnqsT1LVXENRNQhBvZAdiftcUXWR611Sv4uY
-         ollk5o2lmesYJbrOfcGFbI24PgkcWgJpb3i/IGkVsJU5LRUUYkUpmIzAcefnZ57A36+M
-         Ggkd1I5eLErw6riVQIwHSSEqt1o7BaWAKUDnMK3MtomsFBugsqvsomYQYCUYMb8T5B2A
-         WTQw==
-X-Gm-Message-State: AOAM5339S2fHIWNNbCHOEGudJBcTF/rPDdKMhPUWqcLlnRMO47iPrb6i
-        1vVXHBm+ow8sOE8VLIu7nfrYuggz5BUfU9AYYbFKPvsGNQQ=
-X-Google-Smtp-Source: ABdhPJyJTBDUpTXVX/OpGZmgZzRX+iCpQZAOGyNR00VXpqIZmMuCulUlQV4/lclmUTTaf2Id4xYhcULwVj54ElE/xPc=
-X-Received: by 2002:ac2:4146:: with SMTP id c6mr3740962lfi.477.1610636037447;
- Thu, 14 Jan 2021 06:53:57 -0800 (PST)
-MIME-Version: 1.0
-References: <20210112023619.5713-1-dong.menglong@zte.com.cn>
- <33bb1cd2-c202-0fd5-733d-b44e7e8fa92c@gmail.com> <CADxym3bzFPeCXzkO1iFy+Sx7GhwRGo=VkOUzrDE4KMCjMx0v-w@mail.gmail.com>
- <2b6dcfbf-d534-4a2a-53e0-c942a9120a0f@gmail.com>
-In-Reply-To: <2b6dcfbf-d534-4a2a-53e0-c942a9120a0f@gmail.com>
-From:   Menglong Dong <menglong8.dong@gmail.com>
-Date:   Thu, 14 Jan 2021 22:53:46 +0800
-Message-ID: <CADxym3Z088OCMpFvUMG8Ggx3yQXVL0N9=yJ4+CUgxgnTwkEysw@mail.gmail.com>
-Subject: Re: [PATCH] ata: remove redundant error print in rb532_pata_driver_probe
-To:     Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Cc:     axboe@kernel.dk, linux-ide@vger.kernel.org,
-        LKML <linux-kernel@vger.kernel.org>,
+        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=HsYb3ISmwqcZYohpIUCu38MljjWZZ4dkXVTquIJzHZM=;
+        b=ICPrG68Jtw5ALOBVI3K/zNeLTVHO/GVARcTCbeAiS2cvYW1W8kIn31HLMTgKFeJiSe
+         IeJ8KcCr1KIfuHRF/1pIEYFHb1M1jnBfxHv6XK/Q9qJ+mlJ3QKPAFBiKpQBjC0j+DQT9
+         DU/eQdnH/fWa7AoLHD2nSujTVUjPZa7/sFDEHCiDkR4ukjvD8I3yvBLLnzFpHKZnPe7V
+         gHjljOmF3FBNGXT3d8gl+/3ivg1SFU6EPzDAnd81dc4qwtsdnCJbJhA/elHEFuzLUz3q
+         bo1+o3L5aZUOdTSInjcyf143XnZxXx0BBXn7uEC1rNKS5odIheDVUpKANXwnqCbbB714
+         9qWw==
+X-Gm-Message-State: AOAM531+mhk0LnHERGSKTu1e+Hl4/JjVFwecSbdknE+h/NBpghINcCkM
+        y8tIUYYPu1wVqQUWj3LYJ50=
+X-Google-Smtp-Source: ABdhPJwo9oVXjah7NnQ1zOABnQ0HZUZbeISWJjKo5Pe+t4Kk82UHcevH1dt0nRpp2K8MjW2ug8BWWw==
+X-Received: by 2002:a19:c3cb:: with SMTP id t194mr3348315lff.599.1610639390391;
+        Thu, 14 Jan 2021 07:49:50 -0800 (PST)
+Received: from [192.168.1.101] ([178.176.75.106])
+        by smtp.gmail.com with ESMTPSA id n20sm584377lfh.133.2021.01.14.07.49.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 14 Jan 2021 07:49:49 -0800 (PST)
+Subject: Re: [PATCH] ata: remove redundant error print in
+ rb532_pata_driver_probe
+From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
+To:     menglong8.dong@gmail.com, axboe@kernel.dk
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
         Menglong Dong <dong.menglong@zte.com.cn>
-Content-Type: text/plain; charset="UTF-8"
+References: <20210112023619.5713-1-dong.menglong@zte.com.cn>
+ <33bb1cd2-c202-0fd5-733d-b44e7e8fa92c@gmail.com>
+Message-ID: <d9ce7fd8-00fc-c42d-5086-20aa0592213e@gmail.com>
+Date:   Thu, 14 Jan 2021 18:49:48 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.6.0
+MIME-Version: 1.0
+In-Reply-To: <33bb1cd2-c202-0fd5-733d-b44e7e8fa92c@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Jan 14, 2021 at 4:30 PM Sergei Shtylyov
-<sergei.shtylyov@gmail.com> wrote:
+On 1/12/21 2:15 PM, Sergei Shtylyov wrote:
+
 [...]
-> >
-> > What does this 'MBR' mean? I am a novice~~~
->
->     Generally speaking, Master Boot Record. But I also use it to send you My
-> Best Regards. :-)
+>> From: Menglong Dong <dong.menglong@zte.com.cn>
+>>
+>> Coccinelle reports a redundant error print in rb532_pata_driver_probe.
+>> As 'platform_get_irq' already prints the error message, error print
+>> here is redundant and can be removed.
+>>
+>> Signed-off-by: Menglong Dong <dong.menglong@zte.com.cn>
+>> ---
+>>  drivers/ata/pata_rb532_cf.c | 4 +---
+>>  1 file changed, 1 insertion(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
+>> index 479c4b29b856..dcde84f571c4 100644
+>> --- a/drivers/ata/pata_rb532_cf.c
+>> +++ b/drivers/ata/pata_rb532_cf.c
+>> @@ -115,10 +115,8 @@ static int rb532_pata_driver_probe(struct platform_device *pdev)
+>>  	}
+>>  
+>>  	irq = platform_get_irq(pdev, 0);
+>> -	if (irq <= 0) {
+>> -		dev_err(&pdev->dev, "no IRQ resource found\n");
+>> +	if (irq <= 0)
+>>  		return -ENOENT;
+> 
+>    This still beaks the probe deferral. :-(
+>    But that's another problem...
 
-Haha~,
+   BTW, your patch summary looks quite wrong -- we need the prefix to specify the patch locus,
+like this:
 
-> > So, is it better to replace 'platform_get_irq' with
-> > 'platform_get_irq_optional' here?
->
->     No. You should stop overriding the result to -ENOENT and pass the result
-> up the call chain instead. In order to do it, you should only check for (irq < 0).
+pata_rb532_cf: remove redundant error printing in the probe() method
 
-Well, I didn't even notice this. It does seem to be another problem...
+   I.e. "ata: " may even be omitted (your choise though).
 
----
- Best Regards
- Menglong Dong
+> [...]
+
+MBR, Sergei
