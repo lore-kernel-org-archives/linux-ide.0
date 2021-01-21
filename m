@@ -2,77 +2,89 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94839C433DB
-	for <linux-ide@archiver.kernel.org>; Thu, 21 Jan 2021 20:48:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3012C433E0
+	for <linux-ide@archiver.kernel.org>; Thu, 21 Jan 2021 20:49:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5ADD5239D1
-	for <linux-ide@archiver.kernel.org>; Thu, 21 Jan 2021 20:48:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 97ABC23A5A
+	for <linux-ide@archiver.kernel.org>; Thu, 21 Jan 2021 20:49:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725911AbhAUUsV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 21 Jan 2021 15:48:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49572 "EHLO
+        id S1726296AbhAUUtF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 21 Jan 2021 15:49:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49708 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727264AbhAUUsQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jan 2021 15:48:16 -0500
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66102C06174A;
-        Thu, 21 Jan 2021 12:47:34 -0800 (PST)
-Received: by mail-pl1-x634.google.com with SMTP id g3so1988986plp.2;
-        Thu, 21 Jan 2021 12:47:34 -0800 (PST)
+        with ESMTP id S1725819AbhAUUsv (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jan 2021 15:48:51 -0500
+Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A9C48C0613ED;
+        Thu, 21 Jan 2021 12:48:10 -0800 (PST)
+Received: by mail-pj1-x1036.google.com with SMTP id cq1so2400325pjb.4;
+        Thu, 21 Jan 2021 12:48:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
+        h=subject:from:to:cc:references:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=ELInXzZ8TUNTAEej3drCLWmZEdzDmk8Uo5iybhZjGao=;
-        b=vHaK+CWc4FOZ/kNe0O/IZNq9yw29fH+NxREotadYV1JNSgdz6wK16XJXlSbizorJDn
-         N8mZljdnEYxfZb8CFKjefuuyUb90v35A2CRrebI3iLY76q7lO3NGp5+v6gm7EPkX0tl9
-         hyDuNXSEduFml9z74kru9YbM6Pe1WMhRHFAvSyDF3GRvl1QzxO4BCmAmUT2CxBotg95k
-         IkIz5m11SGBtftNddCoJgOJ8TaDT3OZpRjpL8FsdX4Bt5KqZ4KAGmm1ZrXRD5XNX2PMc
-         l4BHLjhfkhe8cK4CKXE0f5NDOkA8YD0FidBjvioPNGopCWAZTiVI3/QKi3sImt/U/2vI
-         0WHA==
+        bh=Jg+KbBGSyqt1CGC6UoXAGyoLxjVy4wU+kcvWer3I0k8=;
+        b=Qj59WwB7YE/QrrQ/dQefmdtpy7U/8IfLfbxMTekC7iYTjuJtZ5WcbeV9CKLnbt4hVl
+         m9QCp04aV3kJtoFWXe1iTMLGVQHvlUW732clsAkoiXHV/UHBKPjoXhYmH/vT8eFJ1BmW
+         RbIuJDo6wxwFkcTv12YzqiJTPloaJppW/hQG6KJ4i8nJJy6jt2sRaU9fy/HYz9devP68
+         FowuKaETXtENqhQoTQcqLm+4Y5frMT7PB3Bt41QiSen30MPe3AsEOYV55Sgnp3r9Xy/u
+         BLNwO/M8kxmxufuQsDUSmBXCj+i/U84szUYpOJEZwSGpabfR3AQmd1zleuTqUDFmexz7
+         5W+g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=ELInXzZ8TUNTAEej3drCLWmZEdzDmk8Uo5iybhZjGao=;
-        b=fi6C8zi1UHOqZ/3OhHYfaTJY101qXi6wD/+QyjOsP/zM52qjoeVpvP6hil6hIICv2l
-         vMTaPX6tQJ7AHIL6mSNCMfnST8UCME2n9LyzOgInJ0ZUSBwRS7PXPMNo81G7/dZI4fEM
-         gx6udxq8fy3jqScDVuHXZF0YadBzD9KoUMxCLOB6wr5eM+Ta2LdUp6QAi4rd2AjSeyJL
-         WFZp6aaw1uBC1Cm2H93nLRYSOEFkGxcxYH0gvEvYG1LrjOxgqcvKxKsCi13s0kiUeYib
-         /Y50FL3d2TAZHNBt5lUhX8sR2v7CV75B8tlzek0VFk7er3/gR+jF97lrtkwKq44YgqSW
-         JWGw==
-X-Gm-Message-State: AOAM5325QKkVcgfqCsViChsyWML2YD0R6CHxsLjZCZ6mRQYTALrW7mNX
-        LD24Lz/i9bgdSfxxwVrzSDbEW6eod8E=
-X-Google-Smtp-Source: ABdhPJyjsdFeLHVJHwq5y1JgXapjXbM770ZwENnHCMpH6PDrGPswomhz8Dbfjqep5tUiMlu/5e8SVg==
-X-Received: by 2002:a17:902:e750:b029:de:8c17:fd64 with SMTP id p16-20020a170902e750b02900de8c17fd64mr1136847plf.54.1611262053535;
-        Thu, 21 Jan 2021 12:47:33 -0800 (PST)
+        bh=Jg+KbBGSyqt1CGC6UoXAGyoLxjVy4wU+kcvWer3I0k8=;
+        b=lwElhVyILdJ18xMPGDLgkuXWmEmBihC2BltMyFnAqKABjtW/y/M8QZpOSaJrZr1y2Q
+         113D+w0LL3niH33Tz+KP75QRRYpu9xwSClFEjf4NHspzkvNfZm4FPy1YT6x0qsOj25He
+         UhfbZddKM+8mhBtY/b7/9UZ+Rq6l1HCMgUgMaDeFsFADlGqF+tdd8egBfoPM6DubZIVP
+         kdyHXCwLYbSzbGZs4mDYxVCKal+m6AmHA6rKU7w75LQRoeR3vLkLLAQIDJHAxJthOLkn
+         +eW78X68zXSRTyb4AYSfOa7PTblhPl6pmyybQ9WzuO2/Z1TA5uVqccZegMUdRhzmadfR
+         Qi8w==
+X-Gm-Message-State: AOAM531FBNs5ZMEhKaAH+l/UGevrJ2jDfgXkkW0caEPjBDm2m8lVsgVp
+        9C5Qd69BXMVQptscXL2ZKvE=
+X-Google-Smtp-Source: ABdhPJxe8Zg6phmzTtTUGD6Zu3dAA4XEnbHG62NuMKugNIdXP4kiUmntQxY3s5K8P43bAbVQclKMgA==
+X-Received: by 2002:a17:90a:af88:: with SMTP id w8mr1327762pjq.91.1611262090190;
+        Thu, 21 Jan 2021 12:48:10 -0800 (PST)
 Received: from [10.230.29.30] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id c189sm6611473pfb.175.2021.01.21.12.47.31
+        by smtp.gmail.com with ESMTPSA id h19sm6367622pfq.151.2021.01.21.12.48.08
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 21 Jan 2021 12:47:32 -0800 (PST)
-Subject: Re: [PATCH] ata: ahci_brcm: Add back regulators management
-To:     Florian Fainelli <f.fainelli@gmail.com>,
-        linux-kernel@vger.kernel.org, axboe@kernel.dk
-Cc:     bcm-kernel-feedback-list@broadcom.com,
-        Hans de Goede <hdegoede@redhat.com>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>
-References: <20201223224130.738590-1-f.fainelli@gmail.com>
- <057c3619-022f-1d79-6c9d-51f9085ea963@gmail.com>
+        Thu, 21 Jan 2021 12:48:09 -0800 (PST)
+Subject: Re: [RESEND PATCH v3 0/2] ata: ahci_brcm: Fix use of BCM7216 reset
+ controller
 From:   Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <1cc0cacd-7ab2-c11e-db5c-363c69991f1e@gmail.com>
-Date:   Thu, 21 Jan 2021 12:47:30 -0800
+To:     Jim Quinlan <jim2101024@gmail.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com
+Cc:     "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" 
+        <linux-pci@vger.kernel.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        Rob Herring <robh@kernel.org>
+References: <20201216214106.32851-1-james.quinlan@broadcom.com>
+ <92084293-d2fd-1663-0f6a-a10f01e23066@gmail.com>
+ <ece90017-4b7d-d5bb-e868-9b63909be5f3@gmail.com>
+ <05ac4282-5ff4-8294-1cfc-da05212acffe@gmail.com>
+Message-ID: <4b1cec20-679f-783c-159f-fa6aa9b1d568@gmail.com>
+Date:   Thu, 21 Jan 2021 12:48:07 -0800
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Firefox/78.0 Thunderbird/78.6.1
 MIME-Version: 1.0
-In-Reply-To: <057c3619-022f-1d79-6c9d-51f9085ea963@gmail.com>
+In-Reply-To: <05ac4282-5ff4-8294-1cfc-da05212acffe@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -83,24 +95,43 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 
 On 1/14/2021 12:46 PM, Florian Fainelli wrote:
-> On 12/23/20 2:41 PM, Florian Fainelli wrote:
->> While reworking the resources management and departing from using
->> ahci_platform_enable_resources() which did not allow a proper step
->> separation like we need, we unfortunately lost the ability to control
->> AHCI regulators. This broke some Broadcom STB systems that do expect
->> regulators to be turned on to link up with attached hard drives.
+> On 1/5/21 1:22 PM, Florian Fainelli wrote:
+>> On 12/23/20 4:05 PM, Florian Fainelli wrote:
+>>>
+>>>
+>>> On 12/16/2020 1:41 PM, Jim Quinlan wrote:
+>>>> v3 -- discard commit from v2; instead rely on the new function
+>>>>       reset_control_rearm provided in a recent commit [1] applied
+>>>>       to reset/next.
+>>>>    -- New commit to correct pcie-brcmstb.c usage of a reset controller
+>>>>       to use reset/rearm verses deassert/assert.
+>>>>
+>>>> v2 -- refactor rescal-reset driver to implement assert/deassert rather than
+>>>>       reset because the reset call only fires once per lifetime and we need
+>>>>       to reset after every resume from S2 or S3.
+>>>>    -- Split the use of "ahci" and "rescal" controllers in separate fields
+>>>>       to keep things simple.
+>>>>
+>>>> v1 -- original
+>>>>
+>>>>
+>>>> [1] Applied commit "reset: make shared pulsed reset controls re-triggerable"
+>>>>     found at git://git.pengutronix.de/git/pza/linux.git
+>>>>     branch reset/shared-retrigger
+>>>
+>>> The changes in that branch above have now landed in Linus' tree with:
+>>>
+>>> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=557acb3d2cd9c82de19f944f6cc967a347735385
+>>>
+>>> It would be good if we could get both patches applied via the same tree
+>>> or within the same cycle to avoid having either PCIe or SATA broken on
+>>> these platforms.
 >>
->> Fixes: c0cdf2ac4b5b ("ata: ahci_brcm: Fix AHCI resources management")
->> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
->> ---
->> Jens,
->>
->> This is based on your for-next branch, let me know if you need me to
->> rebase to a different branch. Thanks!
+>> Ping? Can someone apply those patches if you are happy with them? Thank you.
 > 
-> Jens, this is a bug fix so it would be nice to get this applied at some> point. Thank you
+> Ping? Can we review and ideally also apply these patches? Thanks
 
-Jens, can you apply this patch or let me know if you need me to change
-something? Thanks
+Is there something going on preventing these patches from being reviewed
+and/or applied?
 -- 
 Florian
