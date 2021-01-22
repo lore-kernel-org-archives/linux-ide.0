@@ -2,95 +2,105 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7480FC433E0
-	for <linux-ide@archiver.kernel.org>; Fri, 22 Jan 2021 07:37:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D3AEC433E6
+	for <linux-ide@archiver.kernel.org>; Fri, 22 Jan 2021 10:03:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3961822DBF
-	for <linux-ide@archiver.kernel.org>; Fri, 22 Jan 2021 07:37:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 446B7235E4
+	for <linux-ide@archiver.kernel.org>; Fri, 22 Jan 2021 10:03:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727080AbhAVHhz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 22 Jan 2021 02:37:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47916 "EHLO
+        id S1727763AbhAVKCz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 22 Jan 2021 05:02:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50718 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726839AbhAVHhx (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jan 2021 02:37:53 -0500
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 167D2C061786
-        for <linux-ide@vger.kernel.org>; Thu, 21 Jan 2021 23:37:12 -0800 (PST)
-Received: by mail-pf1-x434.google.com with SMTP id q20so3155359pfu.8
-        for <linux-ide@vger.kernel.org>; Thu, 21 Jan 2021 23:37:12 -0800 (PST)
+        with ESMTP id S1727728AbhAVKBA (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jan 2021 05:01:00 -0500
+Received: from mail-vs1-xe2a.google.com (mail-vs1-xe2a.google.com [IPv6:2607:f8b0:4864:20::e2a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 08FAFC0617AB
+        for <linux-ide@vger.kernel.org>; Fri, 22 Jan 2021 01:50:56 -0800 (PST)
+Received: by mail-vs1-xe2a.google.com with SMTP id w187so2683670vsw.5
+        for <linux-ide@vger.kernel.org>; Fri, 22 Jan 2021 01:50:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=cloud.ionos.com; s=google;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=xnObBx7qCVcq4Xmng0HzOiOYW//hrsobDgYRbXW2qoA=;
-        b=dfhsrZgi1qJDI2m/ilO0UZ7ihv26w0btzlf1zmTicpi6ZJPqGMSAzlb7G4wGiF0FW3
-         Gijmj6YCtu3PwTEsxPDNKVLwzNJfoZ+kzsARJbaXfKhjIPk0hIdEI6k7+iABd3J0Ge6o
-         E21BaI1DVfxYzhQmtffSyiTWTX0ggTKcY1OLoksddvORRrvfQMQGbsphmp1xU/IKzC+G
-         sD/zie7QvCQK1vih68EwWOxT3P4AOnndd/VBNtbw7iZsbzo+OPZQFBdc76x6uF8HLA4t
-         egiWvXKCvt0EJ4zf4Nru3997s4IFCMrrcBcXNTQ8OpxxqBRXA3kIBOHmAEsIKhM9WxEA
-         fFbw==
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=HqmXNnhOvww/se+uqGpbG2r6Wj6LjG3RtqIoCGkH17k=;
+        b=Bqt3b8b7kp2zQsjWv07hRffU5ZdsKDvLLb7CTBAQdsqsw2qRHDDv257TenVn8PQ0eh
+         7Faa1tfN668wJ7fnNrENLH7AoZ+Yz7eIgCNhVFIajtS786Ovqkv97Wr+V6k7E2k62MxY
+         +zFfZILJZPCMb2mgb5PIp7UG3mhyPOfuQoIscUoL7KcMmyArbnUdaC0O1T1v40yAIWCH
+         kb3Y/uHtCaFYyztgZ4c9IexZUktiJQ8TjmoyT1uO1aGHIVI3c5zzudaDyrdeK9RYpTX9
+         cIrmQQoHomR+23NhDIIBOqW/csi0rItWAjz9B7IdKkogQi35H0szd9iVKvGtnr3lgOid
+         vpug==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=xnObBx7qCVcq4Xmng0HzOiOYW//hrsobDgYRbXW2qoA=;
-        b=Q1UH14xGmmbn3imOElaXIwry1SOh4JAAJvPMXRXGsjNOQaNO+MYeTfF9gMsur6r/H/
-         LTkOAmv8agxpqDvL02m7MieLlOnDtb0mmfiGfeYjJlNTePYQp8U8e2reC8DU59KBElCq
-         QpYU5H969ep+DyQiDvwWByrnFjanIQh5AnD2J3cb1q+xlyI5ZyF9Q2hPzePPv90lrmCm
-         uKm7BYxLq6lmn0G1AEgdI6dRgCFLN0EnbJGbqaYWuJWYpzE8SfRbjOizwPpUZ+0DHrJA
-         IPJO3mwHmHgskhAsEz0m8tetdt8dKHJBowgcVvhNBkw5rNOF+sLItbcXhNWc5E/NBTpM
-         o6Nw==
-X-Gm-Message-State: AOAM530iNJFajPtrZFUxQDcaH+EiwvTOLma0AGcQm7YPTwaWUU1ovkQZ
-        eZGHyydj9lTU2L1NWaHpVCl1xQ==
-X-Google-Smtp-Source: ABdhPJwPLaEjEPKwC34UrAC2gsulKg3s4j7+J97bZTNNIKaoZ/lJu48wNw2Iwm4BkDrJnbbca6y71A==
-X-Received: by 2002:a63:1f18:: with SMTP id f24mr3506723pgf.133.1611301030526;
-        Thu, 21 Jan 2021 23:37:10 -0800 (PST)
-Received: from [10.8.0.116] ([196.245.9.36])
-        by smtp.gmail.com with ESMTPSA id fh7sm7835085pjb.43.2021.01.21.23.37.01
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 21 Jan 2021 23:37:09 -0800 (PST)
-Subject: Re: [PATCH 1/2] block: remove unnecessary argument from
- blk_execute_rq_nowait
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     axboe@kernel.dk, linux-block@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-ide@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-nfs@vger.kernel.org
-References: <20210121142905.13089-1-guoqing.jiang@cloud.ionos.com>
- <20210121142905.13089-2-guoqing.jiang@cloud.ionos.com>
- <20210121170257.GA4120717@infradead.org>
-From:   Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Message-ID: <b87591b9-e598-6436-d41f-80cc56640549@cloud.ionos.com>
-Date:   Fri, 22 Jan 2021 08:36:45 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=HqmXNnhOvww/se+uqGpbG2r6Wj6LjG3RtqIoCGkH17k=;
+        b=bBiHSxPbg+MI61NCDoJiLfXGgjgBv+o61vgC+RWSFf8NKY9v5U1L/CRhb8x6/TGhdl
+         Ov39CHYo4DXkONgzESuAfRawiQZBpWVSP8Mua59ziiBXRj2fS5JjqLiI+W28rPGwZRR6
+         5IDiQaklw2AFg1QU+00l0IwrXR1hMUvIySuFhMXD6VOjalD+0GyrFP9/R7PlXYhCba1f
+         SfHlyF+lxygLoutzNxAcUBFPNhGVwp3+QdjsqVLgGyyrXP+0JsOLPW2R7Hat6HVkHU58
+         5pWE1Wqof3zbbIr+PZshDvP43jTNSKynRxxasuaJhSfrnDe2/JqLR8oniONebXzXVidR
+         qo/g==
+X-Gm-Message-State: AOAM530WhEAi++GplVtMYnsrDxaoyXruVbUOS7M1k+bEH3Ur31jejzq7
+        m+YUg9EnMn/QeFCf10hP4IH+0AXUgHzqevXtlif2RuTWzhxu0Q==
+X-Google-Smtp-Source: ABdhPJzQkvbtXPAnaOXaJNiT2RO7BkT9eaJIQxnmfKyCTkaPtmRekmQxRuUvkDQuHQpmYuEkgvFe4kOJ3FrZfm16N6Y=
+X-Received: by 2002:a67:f997:: with SMTP id b23mr235525vsq.34.1611309056136;
+ Fri, 22 Jan 2021 01:50:56 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20210121170257.GA4120717@infradead.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20210122092824.20971-1-guoqing.jiang@cloud.ionos.com> <20210122092824.20971-3-guoqing.jiang@cloud.ionos.com>
+In-Reply-To: <20210122092824.20971-3-guoqing.jiang@cloud.ionos.com>
+From:   Ulf Hansson <ulf.hansson@linaro.org>
+Date:   Fri, 22 Jan 2021 10:50:20 +0100
+Message-ID: <CAPDyKFoPL4drfh3efKXyhXLp6Ce+j=oHwNd9VnVP4aaKQ0zmDQ@mail.gmail.com>
+Subject: Re: [PATCH V2 2/2] block: remove unnecessary argument from blk_execute_rq
+To:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>,
+        Jens Axboe <axboe@kernel.dk>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-nfs@vger.kernel.org,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        linux-nvme@lists.infradead.org,
+        virtualization@lists.linux-foundation.org,
+        linux-block <linux-block@vger.kernel.org>,
+        linux-ide@vger.kernel.org, target-devel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-
-
-On 1/21/21 18:02, Christoph Hellwig wrote:
-> On Thu, Jan 21, 2021 at 03:29:04PM +0100, Guoqing Jiang wrote:
->> The 'q' is not used since commit a1ce35fa4985 ("block: remove dead
->> elevator code"), also update the comment of the function.
-> 
+On Fri, 22 Jan 2021 at 10:28, Guoqing Jiang
+<guoqing.jiang@cloud.ionos.com> wrote:
+>
+> We can remove 'q' from blk_execute_rq as well after the previous change
+> in blk_execute_rq_nowait.
+>
 > And more importantly it never really was needed to start with given
-> that we can triviall derive it from struct request.
+> that we can trivial derive it from struct request.
+>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: virtualization@lists.linux-foundation.org
+> Cc: linux-ide@vger.kernel.org
+> Cc: linux-mmc@vger.kernel.org
+> Cc: linux-nvme@lists.infradead.org
+> Cc: linux-nfs@vger.kernel.org
+> Signed-off-by: Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
 
-Thanks Christoph, will add the above to header and send new version.
+[...]
 
-Guoqing
+>  drivers/mmc/core/block.c          | 10 +++++-----
+
+[...]
+
+From mmc point of view, please add:
+
+Acked-by: Ulf Hansson <ulf.hansson@linaro.org>
+
+At the moment I don't think this will conflict with any changes to
+mmc, but if that happens let's sort it then...
+
+Kind regards
+Uffe
