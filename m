@@ -2,124 +2,95 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D7BEC433DB
-	for <linux-ide@archiver.kernel.org>; Fri, 22 Jan 2021 00:21:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7480FC433E0
+	for <linux-ide@archiver.kernel.org>; Fri, 22 Jan 2021 07:37:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C78F23A33
-	for <linux-ide@archiver.kernel.org>; Fri, 22 Jan 2021 00:21:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3961822DBF
+	for <linux-ide@archiver.kernel.org>; Fri, 22 Jan 2021 07:37:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726205AbhAVAVd (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 21 Jan 2021 19:21:33 -0500
-Received: from mail.kernel.org ([198.145.29.99]:35126 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725823AbhAVAVb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 21 Jan 2021 19:21:31 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CE52A23A53;
-        Fri, 22 Jan 2021 00:20:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1611274851;
-        bh=WPng+ElD3o5SfxZA7J66qTO2rUx0+cjpLBoZzBFKzC0=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=DjRYlDfbj0DdEIJiWdH9iRyOH2UJLthVooVrgUBbU892GvsUbtaV+L0jy+jJX+YDa
-         1gpZXwZXh2ChIK+IrWo5ZncfxOa52O3/hxysGqliciSwCJyTAJe/sxJguGEJJQDjNc
-         SoUZU4GvVl3scHIBPtyWdHzoqaoX7Hhx3bD2VNzbHSkiErLZ8rN7r2hXjX1Rz/YCP3
-         x3a37iI1y97UJR3gEvfhgR2aP+y5m56/8SejTfMBDEVSSmYdzZjwdWyikTqbPwmss7
-         qRpK5CmIryRYGl4JriuPG6UTTi5C7mQXp2cr5+RQ8bCFKglUtnR4lNH7AHngqeqto6
-         OjQfGVj989YJw==
-Date:   Thu, 21 Jan 2021 18:20:49 -0600
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Florian Fainelli <f.fainelli@gmail.com>
-Cc:     Jim Quinlan <jim2101024@gmail.com>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com,
-        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" 
-        <linux-pci@vger.kernel.org>,
-        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
-        <linux-rpi-kernel@lists.infradead.org>,
-        Rob Herring <robh@kernel.org>
-Subject: Re: [RESEND PATCH v3 0/2] ata: ahci_brcm: Fix use of BCM7216 reset
- controller
-Message-ID: <20210122002049.GA2708505@bjorn-Precision-5520>
+        id S1727080AbhAVHhz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 22 Jan 2021 02:37:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47916 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726839AbhAVHhx (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 22 Jan 2021 02:37:53 -0500
+Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 167D2C061786
+        for <linux-ide@vger.kernel.org>; Thu, 21 Jan 2021 23:37:12 -0800 (PST)
+Received: by mail-pf1-x434.google.com with SMTP id q20so3155359pfu.8
+        for <linux-ide@vger.kernel.org>; Thu, 21 Jan 2021 23:37:12 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=cloud.ionos.com; s=google;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=xnObBx7qCVcq4Xmng0HzOiOYW//hrsobDgYRbXW2qoA=;
+        b=dfhsrZgi1qJDI2m/ilO0UZ7ihv26w0btzlf1zmTicpi6ZJPqGMSAzlb7G4wGiF0FW3
+         Gijmj6YCtu3PwTEsxPDNKVLwzNJfoZ+kzsARJbaXfKhjIPk0hIdEI6k7+iABd3J0Ge6o
+         E21BaI1DVfxYzhQmtffSyiTWTX0ggTKcY1OLoksddvORRrvfQMQGbsphmp1xU/IKzC+G
+         sD/zie7QvCQK1vih68EwWOxT3P4AOnndd/VBNtbw7iZsbzo+OPZQFBdc76x6uF8HLA4t
+         egiWvXKCvt0EJ4zf4Nru3997s4IFCMrrcBcXNTQ8OpxxqBRXA3kIBOHmAEsIKhM9WxEA
+         fFbw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=xnObBx7qCVcq4Xmng0HzOiOYW//hrsobDgYRbXW2qoA=;
+        b=Q1UH14xGmmbn3imOElaXIwry1SOh4JAAJvPMXRXGsjNOQaNO+MYeTfF9gMsur6r/H/
+         LTkOAmv8agxpqDvL02m7MieLlOnDtb0mmfiGfeYjJlNTePYQp8U8e2reC8DU59KBElCq
+         QpYU5H969ep+DyQiDvwWByrnFjanIQh5AnD2J3cb1q+xlyI5ZyF9Q2hPzePPv90lrmCm
+         uKm7BYxLq6lmn0G1AEgdI6dRgCFLN0EnbJGbqaYWuJWYpzE8SfRbjOizwPpUZ+0DHrJA
+         IPJO3mwHmHgskhAsEz0m8tetdt8dKHJBowgcVvhNBkw5rNOF+sLItbcXhNWc5E/NBTpM
+         o6Nw==
+X-Gm-Message-State: AOAM530iNJFajPtrZFUxQDcaH+EiwvTOLma0AGcQm7YPTwaWUU1ovkQZ
+        eZGHyydj9lTU2L1NWaHpVCl1xQ==
+X-Google-Smtp-Source: ABdhPJwPLaEjEPKwC34UrAC2gsulKg3s4j7+J97bZTNNIKaoZ/lJu48wNw2Iwm4BkDrJnbbca6y71A==
+X-Received: by 2002:a63:1f18:: with SMTP id f24mr3506723pgf.133.1611301030526;
+        Thu, 21 Jan 2021 23:37:10 -0800 (PST)
+Received: from [10.8.0.116] ([196.245.9.36])
+        by smtp.gmail.com with ESMTPSA id fh7sm7835085pjb.43.2021.01.21.23.37.01
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 21 Jan 2021 23:37:09 -0800 (PST)
+Subject: Re: [PATCH 1/2] block: remove unnecessary argument from
+ blk_execute_rq_nowait
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     axboe@kernel.dk, linux-block@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-ide@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-nfs@vger.kernel.org
+References: <20210121142905.13089-1-guoqing.jiang@cloud.ionos.com>
+ <20210121142905.13089-2-guoqing.jiang@cloud.ionos.com>
+ <20210121170257.GA4120717@infradead.org>
+From:   Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
+Message-ID: <b87591b9-e598-6436-d41f-80cc56640549@cloud.ionos.com>
+Date:   Fri, 22 Jan 2021 08:36:45 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4b1cec20-679f-783c-159f-fa6aa9b1d568@gmail.com>
+In-Reply-To: <20210121170257.GA4120717@infradead.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Jan 21, 2021 at 12:48:07PM -0800, Florian Fainelli wrote:
-> On 1/14/2021 12:46 PM, Florian Fainelli wrote:
-> > On 1/5/21 1:22 PM, Florian Fainelli wrote:
-> >> On 12/23/20 4:05 PM, Florian Fainelli wrote:
-> >>>
-> >>>
-> >>> On 12/16/2020 1:41 PM, Jim Quinlan wrote:
-> >>>> v3 -- discard commit from v2; instead rely on the new function
-> >>>>       reset_control_rearm provided in a recent commit [1] applied
-> >>>>       to reset/next.
-> >>>>    -- New commit to correct pcie-brcmstb.c usage of a reset controller
-> >>>>       to use reset/rearm verses deassert/assert.
-> >>>>
-> >>>> v2 -- refactor rescal-reset driver to implement assert/deassert rather than
-> >>>>       reset because the reset call only fires once per lifetime and we need
-> >>>>       to reset after every resume from S2 or S3.
-> >>>>    -- Split the use of "ahci" and "rescal" controllers in separate fields
-> >>>>       to keep things simple.
-> >>>>
-> >>>> v1 -- original
-> >>>>
-> >>>>
-> >>>> [1] Applied commit "reset: make shared pulsed reset controls re-triggerable"
-> >>>>     found at git://git.pengutronix.de/git/pza/linux.git
-> >>>>     branch reset/shared-retrigger
-> >>>
-> >>> The changes in that branch above have now landed in Linus' tree with:
-> >>>
-> >>> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=557acb3d2cd9c82de19f944f6cc967a347735385
-> >>>
-> >>> It would be good if we could get both patches applied via the same tree
-> >>> or within the same cycle to avoid having either PCIe or SATA broken on
-> >>> these platforms.
-> >>
-> >> Ping? Can someone apply those patches if you are happy with them? Thank you.
-> > 
-> > Ping? Can we review and ideally also apply these patches? Thanks
+
+
+On 1/21/21 18:02, Christoph Hellwig wrote:
+> On Thu, Jan 21, 2021 at 03:29:04PM +0100, Guoqing Jiang wrote:
+>> The 'q' is not used since commit a1ce35fa4985 ("block: remove dead
+>> elevator code"), also update the comment of the function.
 > 
-> Is there something going on preventing these patches from being reviewed
-> and/or applied?
+> And more importantly it never really was needed to start with given
+> that we can triviall derive it from struct request.
 
-It mentions a dependency, which makes it harder to apply.  I see that
-dependency seems to have been applied, so maybe post an updated
-version of the series, including both patches.
+Thanks Christoph, will add the above to header and send new version.
 
-The series touches both ATA and PCI, so not immediately obvious where
-it should go.  It looks like the ATA part is bigger, but only 2/2 went
-to linux-pci, so it's harder to figure this out than it should be.  I
-poked around a bit on lore, but I can't find 1/2 at all:
-
-  https://lore.kernel.org/linux-arm-kernel/20201216214106.32851-1-james.quinlan@broadcom.com/
-
-Maybe also include Nicolas Saenz Julienne <nsaenzjulienne@suse.de>
-directly in "To:".  I know I look at stuff addressed directly to me
-first; the "CC:" flood gets overwhelming fast.  I assume Lorenzo will
-look for at least an ack from Nicolas before doing anything.
-
-If you repost, it's nice if you match existing style, e.g.,
-
-  - PCI: brcmstb: use reset/rearm instead of deassert/assert
-  + PCI: brcmstb: Use reset/rearm instead of deassert/assert
-
-Bjorn
+Guoqing
