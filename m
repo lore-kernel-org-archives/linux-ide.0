@@ -2,99 +2,71 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+X-Spam-Status: No, score=0.8 required=3.0 tests=BAYES_50,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EE31C4332B
-	for <linux-ide@archiver.kernel.org>; Mon, 25 Jan 2021 04:54:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21CF7C433E0
+	for <linux-ide@archiver.kernel.org>; Tue, 26 Jan 2021 16:39:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3189D22D05
-	for <linux-ide@archiver.kernel.org>; Mon, 25 Jan 2021 04:54:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DDFDF22473
+	for <linux-ide@archiver.kernel.org>; Tue, 26 Jan 2021 16:39:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727128AbhAYEyU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 24 Jan 2021 23:54:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34112 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727068AbhAYEyN (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 24 Jan 2021 23:54:13 -0500
-Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D15C7C061756
-        for <linux-ide@vger.kernel.org>; Sun, 24 Jan 2021 20:53:32 -0800 (PST)
-Received: by mail-pj1-x1032.google.com with SMTP id e9so421618pjj.0
-        for <linux-ide@vger.kernel.org>; Sun, 24 Jan 2021 20:53:32 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=yCVXNmnkbukJI6FbnBMkRVDM8J/Lut2yGB3GCl5tMhk=;
-        b=mUc+2GmhUCQFtGXsbDdMUePaHUC70SqcjIvNUGzmQAMRmDih05IYA/pLKTv5cpBUJg
-         8D4F5NWSJKzdXYHX3tUo/gpur6bsvJgO0jl+aDqenyGk4M3crlQnK9+R3fse9TDvl9Kg
-         PDvjAjdRxv7sEQky3VyreBHgThr+GzpCJW1XuWOAUmcO51X0t91JXgwFck88xc5IXzZ7
-         kcZMpDwGdq/6TX1yaFTbsmRuAy8Q+Bd9qAymHynKCsDAhhvlHsCRTzF+gutiHWy4k037
-         tg1DroGlhRJAHLuCAeOG6dOO/t8s4/8RlUz8Nd7VLJNZUmhsSiwItgtDZcoPgaKB9O6D
-         PMFQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=yCVXNmnkbukJI6FbnBMkRVDM8J/Lut2yGB3GCl5tMhk=;
-        b=cSrjl8r6+aYT9rOKx0Wwx8ue1gy2XvVx0MWWI439JPCW3OBqi8TtFregdivKAciXP3
-         gMIL2RvJgGEGjeKOnt+aZLvK5PJrZ2Nv3Gm3z9XpEeHGsTAF5MoKWx1E9qaouA0jfTjz
-         yO0IxG1FDzPU+sC7imua22Pjbi2Whit8xweeiuNZyI0GyXfRcEkyisWzfCMStwdPI/6x
-         y2rsHggo/pLGSl2Rju67t090LkqgkdmFDTz/BjmvffNa1xd+LKckLp5zydywS0EzzJpC
-         pPxji1RJwvMKA9W8PssvwNNeVBj5w4e+ou/EkIFLVEurIIUB6ieeWyMSegKjWVYo5Ugm
-         M1GA==
-X-Gm-Message-State: AOAM533yi4wHJw82/c+LXmRNFCf+iKcm/7Q/E/NfQ4Iq1/MrUFpGVp94
-        UQNVjqrKPIxmye8eUBp5+O6/1A==
-X-Google-Smtp-Source: ABdhPJxH9fkoQGdpf2yTn0S6RVjDGgTIT95lILem9Ftm+wTQRagGEoMXbOUbGd2ZD+OyyhreIN7wUA==
-X-Received: by 2002:a17:902:b285:b029:de:a0a3:f3b9 with SMTP id u5-20020a170902b285b02900dea0a3f3b9mr336676plr.34.1611550412389;
-        Sun, 24 Jan 2021 20:53:32 -0800 (PST)
-Received: from [192.168.4.41] (cpe-72-132-29-68.dc.res.rr.com. [72.132.29.68])
-        by smtp.gmail.com with ESMTPSA id 68sm14877443pfe.33.2021.01.24.20.53.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 24 Jan 2021 20:53:31 -0800 (PST)
-Subject: Re: [PATCH V3 0/2] remove unused argument from blk_execute_rq_nowait
- and blk_execute_rq
-To:     Guoqing Jiang <guoqing.jiang@cloud.ionos.com>
-Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-ide@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-nfs@vger.kernel.org,
-        hch@infradead.org
-References: <1611550198-17142-1-git-send-email-guoqing.jiang@cloud.ionos.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <50c4cdb5-b5ea-5431-c319-a6784f33f8b6@kernel.dk>
-Date:   Sun, 24 Jan 2021 21:53:29 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S2389717AbhAZJZE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 26 Jan 2021 04:25:04 -0500
+Received: from mail.functiononline.eu ([5.249.150.27]:39136 "EHLO
+        mail.functiononline.eu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390445AbhAZJU5 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 26 Jan 2021 04:20:57 -0500
+X-Greylist: delayed 506 seconds by postgrey-1.27 at vger.kernel.org; Tue, 26 Jan 2021 04:20:56 EST
+Received: by mail.functiononline.eu (Postfix, from userid 1001)
+        id 99AF0A2136; Tue, 26 Jan 2021 09:11:29 +0000 (GMT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=functiononline.eu;
+        s=mail; t=1611652298;
+        bh=ZvuZ8OLE7SBqxzcxkARIRHarPXuf9OR+Y+vX0FuHtdY=;
+        h=Date:From:To:Subject:From;
+        b=jV2vUbcpgM5skqTw1w7uUvuTV1js3EYHvLqPaDB92k9Jxgh8sC8DBjouEljvbVqDV
+         h4RPgRea2GTrvpsBF2I7Z4FCZlngHfDRfrnVdEbxmOH5SYW/CaJPoDTK6emlx5CsEw
+         i+1Xy0e7N4o3kMB37JtbMCZwBUFbVojhAlA9KYqZOlMZ+XdCtKZzlWi5qzmTIVFRWe
+         NEQnHb/NNhcauYwDC1dIJ7353fOocTG9seK3dHu8vjtTxDbmFZHgqLJc7YYjF4iSVQ
+         7Ktcm6KjJvLhbOGtPddzib9ACqugB2/IsS7WmW3UdvE2/HAmaTu+IB3fLEAEoNTg10
+         Yxv/jCDe6QOYg==
+Received: by mail.functiononline.eu for <linux-ide@vger.kernel.org>; Tue, 26 Jan 2021 09:11:25 GMT
+Message-ID: <20210126074500-0.1.e.qqq.0.1s2az5gzuv@functiononline.eu>
+Date:   Tue, 26 Jan 2021 09:11:25 GMT
+From:   "Pierre Musso" <pierre.musso@functiononline.eu>
+To:     <linux-ide@vger.kernel.org>
+Subject: Projet informatique
+X-Mailer: mail.functiononline.eu
 MIME-Version: 1.0
-In-Reply-To: <1611550198-17142-1-git-send-email-guoqing.jiang@cloud.ionos.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/24/21 9:49 PM, Guoqing Jiang wrote:
-> V3 changes:
-> 1. rebase with for-5.12/block branch.
-> 2. add Ulf's Acked-by.
-> 
-> V2 changes:
-> 1. update commit header per Christoph's comment.
-> 
-> Hi Jens,
-> 
-> This series remove unused 'q' from blk_execute_rq_nowait and blk_execute_rq.
-> Also update the comment for blk_execute_rq_nowait.
-> 
+Bonjour,
+=20
+Avez-vous besoin d'aide pour d=C3=A9velopper votre capacit=C3=A9 de d=C3=A9=
+veloppement logiciel?
+=20
+Nous sommes la huiti=C3=A8me soci=C3=A9t=C3=A9 d'externalisation informat=
+ique en Pologne. Nous avons plus de 500 d=C3=A9veloppeurs de logiciels =C3=
+=A0 bord. Nous construisons des =C3=A9quipes de d=C3=A9veloppement enti=C3=
+=A8res pour accompagner la croissance de nos clients et projets logiciels=
+=2E
+=20
+Nos d=C3=A9veloppeurs ont une solide expertise en Java, PHP, .NET, C, C +=
++ et ont une expertise dans le domaine de l'architecture logicielle, du f=
+ront-end, du back-end, des logiciels int=C3=A9gr=C3=A9s et de l'assurance=
+ qualit=C3=A9. Que vous soyez sur le point de lancer un nouveau projet ou=
+ que vous ayez des ing=C3=A9nieurs logiciels manquants, nous pouvons vous=
+ aider.
+=20
+Quel serait le bon moment pour discuter de votre pipeline de projets logi=
+ciels?
 
-Applied, thanks.
-
--- 
-Jens Axboe
-
+=20
+Cordialement,
+Pierre Musso
