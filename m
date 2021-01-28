@@ -7,94 +7,110 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA79CC433DB
-	for <linux-ide@archiver.kernel.org>; Thu, 28 Jan 2021 18:07:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D379CC433DB
+	for <linux-ide@archiver.kernel.org>; Thu, 28 Jan 2021 18:08:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 882A264E1F
-	for <linux-ide@archiver.kernel.org>; Thu, 28 Jan 2021 18:07:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D8D564E17
+	for <linux-ide@archiver.kernel.org>; Thu, 28 Jan 2021 18:08:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231526AbhA1SHs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 28 Jan 2021 13:07:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60814 "EHLO
+        id S231450AbhA1SHi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 28 Jan 2021 13:07:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231534AbhA1SFJ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 28 Jan 2021 13:05:09 -0500
-Received: from mail-wr1-x42a.google.com (mail-wr1-x42a.google.com [IPv6:2a00:1450:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 143BAC061222
-        for <linux-ide@vger.kernel.org>; Thu, 28 Jan 2021 10:02:59 -0800 (PST)
-Received: by mail-wr1-x42a.google.com with SMTP id s7so3347925wru.5
-        for <linux-ide@vger.kernel.org>; Thu, 28 Jan 2021 10:02:59 -0800 (PST)
+        with ESMTP id S231416AbhA1SEp (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 28 Jan 2021 13:04:45 -0500
+Received: from mail-wr1-x432.google.com (mail-wr1-x432.google.com [IPv6:2a00:1450:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 819A2C06121E
+        for <linux-ide@vger.kernel.org>; Thu, 28 Jan 2021 10:02:56 -0800 (PST)
+Received: by mail-wr1-x432.google.com with SMTP id l12so6350563wry.2
+        for <linux-ide@vger.kernel.org>; Thu, 28 Jan 2021 10:02:56 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=bku/TZDwGiY5vuh8zroI/7gSSOC7kKg9Wo8De+jk1lQ=;
-        b=Nurqslu0d9ZwZ10IWWGqE6G9xt1JePKcmpIrRynNCMdLIAc+57LzYLJKEL7PvrBXjw
-         6bGtME1fvy03oT7Jllc0teJLFoQrunhkSoJfyUIWryc3t0vG0CnlN7sFstoC6Ko9HM4x
-         /UzgUlxzWm9yrbEHJB8EcxTBGS/m98p7ZpId/OcKIhvBHeFPZ2tm4clYfnYWLSBw/DKE
-         yRmbLqUkhOlJ/BmotlqnwRtmPduKAJHrfOcNs2DsYl9yz5s3FNzw71H1HvDIznGpfL+b
-         vy4ulT08Wj2ss/C1JDa2ZnxFTJ3DiZ3PZhrdAPB0YttCZ83ZbVSp6dbRcqb0GldlIUq6
-         J5XQ==
+        bh=E/DwODThT9yC2p7TIC8q4FOkFeXMx+9HaJ4TFjAbkcM=;
+        b=IcehFqxg+qhB/Bt2N/xmvTOQuNtPxLWBYFNOY1uPVKFq6t37B8P6+QnybvCbJfIA0g
+         mHUNP7ASctifTUszQvOB+5y7G0oU/eSaeZKeAreNjtBPSzoijZeIitNytsMQ793/pOOS
+         l0T0sWha6HXVk5kMRVejg7Z2bHFXa46jLIbiy0rTXPg0nPwTFrRrRDbSIq+2zXlWGmbL
+         RWXJHlbHhMfR9Hucr89j3YzuE8r2piliwu92LDTV0LHIpbg1c6KOAlenjcx8HChqLW79
+         S5JiOCzAh1OIDpQPJ/npZfS0jnteGMOhfBJ0KpNOtHj5xvkgxYTlExW+zELNTPJ/vYAg
+         tS9g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=bku/TZDwGiY5vuh8zroI/7gSSOC7kKg9Wo8De+jk1lQ=;
-        b=HQ0SZr4CdsbWQCN0VM9jT5lEBRvOsL4YXxoNtmFO9P/L2yezV1SaehF9JpifD+jppy
-         KHNWP5Gc6JYuo9/a6qL1MHa6VS11sXkOrf5zjlHdCZMdR3tbIWjQyJW2ORaUWWrpybuN
-         ajY8CZZ+wcq8QNfVpYvn+mYjMvp+l3q4k5iCZMoOWwz6uWFQND7sfP7YXSRufnEP2Oq8
-         /kag3ZAoy89yrrBo7IKS/jA7I29iLTSXLCn2Q2DkkmYMys66NerHKuArVkFA9SALyPtH
-         cabz/W2TNg89WYR/4p2xw8blsH4Rjj79JZL0BpUDmc4evzlUFwPHGtQpj0L9k8YGIfuh
-         bBPA==
-X-Gm-Message-State: AOAM5333vrB18SCkUOogvVak98rQ/CkIYG8Of/1N0HAw+y5z5zUcYq1c
-        txx1PmaLM9Fgw93LsOJ3XXVD9g==
-X-Google-Smtp-Source: ABdhPJxrEupt53VzeI+7GcG+/MAFplgDc5K42e8phIxQ6WxAavhFiIMN6vtlA3P8N4zstFeBVpogiw==
-X-Received: by 2002:a5d:4e47:: with SMTP id r7mr323827wrt.312.1611856977884;
-        Thu, 28 Jan 2021 10:02:57 -0800 (PST)
+        bh=E/DwODThT9yC2p7TIC8q4FOkFeXMx+9HaJ4TFjAbkcM=;
+        b=iVDeCcosrdj5qt8+54pnSQUWs1DYUT5URrzy6jtPDDHf9K1Huo/5PzSCVWI97mvO01
+         gn39+FMY1ORbOTTxx/0H7jpa+Kx7/OhVdHRewhYrA12aLOwtniAIQEOCORLXOYN9pAfq
+         q3rMVlST8kXjB4Sqeb/bH8xqBVkzwupAq+9hkWKzA3opRPDLCljS0OzS5rDyD3Bv7vmT
+         U0OnbToJbYpbDIHP/78eq3nuU28ct7XTzSGtzAHUrWgJO8TEdWI7T9XOPjw4dPyawUex
+         KyTz2BL02++UqMw7zmG+WUpg6+SsepDWxaixtmUL9/XQmMQhcQQcbuyKuObQJlHqF3wn
+         SWlw==
+X-Gm-Message-State: AOAM533QTjvGP6QBz7HPj6rUPSNC929iItZdkZXf/oKgO/uiVQecbZR6
+        EU5BLnQ3tSfZKaP3BGV+fZK4Yg==
+X-Google-Smtp-Source: ABdhPJxVOhutxcNoDQUOFr31hXwp4y4YTk/hM1DXXDnAs/FBnB2x/NCn3+pnA2qCqgH/1pK5aeCmXg==
+X-Received: by 2002:adf:b64f:: with SMTP id i15mr244663wre.279.1611856975325;
+        Thu, 28 Jan 2021 10:02:55 -0800 (PST)
 Received: from dell.default ([91.110.221.188])
-        by smtp.gmail.com with ESMTPSA id u6sm8280794wro.75.2021.01.28.10.02.56
+        by smtp.gmail.com with ESMTPSA id u6sm8280794wro.75.2021.01.28.10.02.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 Jan 2021 10:02:57 -0800 (PST)
+        Thu, 28 Jan 2021 10:02:54 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
 Cc:     linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Andre Hedrick <andre@linux-ide.org>, linux-ide@vger.kernel.org
-Subject: [PATCH 12/20] ata: pata_hpt366: Provide missing description for 'hpt366_filter()'s 'mask' param
-Date:   Thu, 28 Jan 2021 18:02:31 +0000
-Message-Id: <20210128180239.548512-13-lee.jones@linaro.org>
+        linux-ide@vger.kernel.org
+Subject: [PATCH 10/20] ata: ahci_ceva: Ignore -Woverride-init
+Date:   Thu, 28 Jan 2021 18:02:29 +0000
+Message-Id: <20210128180239.548512-11-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210128180239.548512-1-lee.jones@linaro.org>
 References: <20210128180239.548512-1-lee.jones@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+Some ATA drivers use the SCSI host template, a series of interwoven
+macros, to aid with initialisation.  Some of these macros conflict,
+resulting in the over-writing of previously set values.
+
+This is known behaviour and can be safely ignored.
+
 Fixes the following W=1 kernel build warning(s):
 
- drivers/ata/pata_hpt366.c:200: warning: Function parameter or member 'mask' not described in 'hpt366_filter'
+ In file included from drivers/ata/ahci_ceva.c:15:
+ drivers/ata/ahci.h:387:16: warning: initialized field overwritten [-Woverride-init]
+ drivers/ata/ahci_ceva.c:187:2: note: in expansion of macro ‘AHCI_SHT’
+ drivers/ata/ahci.h:387:16: note: (near initialization for ‘ahci_platform_sht.can_queue’)
+ drivers/ata/ahci_ceva.c:187:2: note: in expansion of macro ‘AHCI_SHT’
+ drivers/ata/ahci.h:391:17: warning: initialized field overwritten [-Woverride-init]
+ drivers/ata/ahci_ceva.c:187:2: note: in expansion of macro ‘AHCI_SHT’
+ drivers/ata/ahci.h:391:17: note: (near initialization for ‘ahci_platform_sht.sdev_attrs’)
+ drivers/ata/ahci_ceva.c:187:2: note: in expansion of macro ‘AHCI_SHT’
+ drivers/ata/sata_sil24.c:378:16: warning: initialized field overwritten [-Woverride-init]
+ drivers/ata/sata_sil24.c:378:16: note: (near initialization for ‘sil24_sht.can_queue’)
 
 Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Andre Hedrick <andre@linux-ide.org>
 Cc: linux-ide@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/ata/pata_hpt366.c | 1 +
+ drivers/ata/Makefile | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/ata/pata_hpt366.c b/drivers/ata/pata_hpt366.c
-index 2574d6fbb1ad3..06b7c4a9ec954 100644
---- a/drivers/ata/pata_hpt366.c
-+++ b/drivers/ata/pata_hpt366.c
-@@ -192,6 +192,7 @@ static int hpt_dma_blacklisted(const struct ata_device *dev, char *modestr,
- /**
-  *	hpt366_filter	-	mode selection filter
-  *	@adev: ATA device
-+ *	@mask: Current mask to manipulate and pass back
-  *
-  *	Block UDMA on devices that cause trouble with this controller.
-  */
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index 4542f101042ac..c7460c6b94c1d 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -1,6 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ 
+ CFLAGS_acard-ahci.o		= $(call cc-disable-warning, override-init)
++CFLAGS_ahci_ceva.o		= $(call cc-disable-warning, override-init)
+ CFLAGS_ahci_dm816.o		= $(call cc-disable-warning, override-init)
+ CFLAGS_ahci_mtk.o		= $(call cc-disable-warning, override-init)
+ CFLAGS_ahci_platform.o		= $(call cc-disable-warning, override-init)
 -- 
 2.25.1
 
