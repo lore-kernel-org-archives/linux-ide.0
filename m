@@ -2,104 +2,60 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A1E8C433E0
-	for <linux-ide@archiver.kernel.org>; Thu, 28 Jan 2021 18:17:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56AAFC433E0
+	for <linux-ide@archiver.kernel.org>; Thu, 28 Jan 2021 18:23:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A10F64E23
-	for <linux-ide@archiver.kernel.org>; Thu, 28 Jan 2021 18:17:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2443C64E1C
+	for <linux-ide@archiver.kernel.org>; Thu, 28 Jan 2021 18:23:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231559AbhA1SQq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 28 Jan 2021 13:16:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32834 "EHLO
+        id S231876AbhA1SWy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 28 Jan 2021 13:22:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36300 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231563AbhA1SGv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 28 Jan 2021 13:06:51 -0500
-Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 777FEC06178B
-        for <linux-ide@vger.kernel.org>; Thu, 28 Jan 2021 10:03:04 -0800 (PST)
-Received: by mail-wr1-x436.google.com with SMTP id g10so6350179wrx.1
-        for <linux-ide@vger.kernel.org>; Thu, 28 Jan 2021 10:03:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=BlJPa4weJ+jes2vrsBZmFk9aHoMXb6b/UAhdjjLI1xw=;
-        b=tIoUH1MMZgHPgcFm1H5xu5GhnyoOc6pk1LknTNWKf1oRwOVc068CLd4D+hvcZXd3Dt
-         ZWekkNvjydaiLPrxtaSjQZWwB6pworR01AK+cB7oEEL5CfA9vfOx3l2cYwFWPEmGD5WX
-         /XUfMWHAgo+JLnjCquaGOUWO0E3+vodO+gsmcFkAWrLPeF+8MEPEDMGH9yg5HEp9GXQ+
-         pNWuR1mkrY1sscEUp1LswyjfN6lD84DZp0la7v5j7tIuyACn7j2ddg4MpbihmbuX7Zim
-         RnZxc6rXRoC14A6KgxJbyA2TXVc2x8e+Gh2mNWBEWqhnzwEMJKWV+Iep3OU9jqog7yQb
-         +2fA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=BlJPa4weJ+jes2vrsBZmFk9aHoMXb6b/UAhdjjLI1xw=;
-        b=TpVvbhG/NKa57Bo9atFMmRap0LcUarkuSezcTlDLrw2Na/VhLoSM0McxnZLBwUSyIw
-         DrDwJ0TuKqy5L/lee3Ez7bwY15QkT+mU4Ooy5OkXLocVVTsxIuRROubtQxq9qgy2e6Lk
-         KTYsIGPurvwkAxwCCFyeFQEIjxI3qeOe4hQoIBmv9hHneMT3TtkoCy+VQ1nKxoJhr5vW
-         ECLfExhACbId1Oq/F9ZoewCsdGRhASJlUHOw1s+AJnBSHNkaKlX0CJNdGw90I0lOHn+3
-         QWJCiirXVF+w7w0/iZAkp2F2t5ec7+Ve1oHkT2KgjISOY/DGyhbFksP8BxcFganK2WuE
-         kovw==
-X-Gm-Message-State: AOAM53391H+P+Ya89purk/Ma1GlqP7gORma9UZSjrkHEw9lUyXX+dWld
-        h9XB5Z89bmn72389zZkb+XBt5g==
-X-Google-Smtp-Source: ABdhPJzCh/6Len5XnN+iFyPGMOmxw2mV+V4tO818WFPny0PyiE6vtR+TA1iztn7KqE0i9aOnTYVTwQ==
-X-Received: by 2002:adf:80c3:: with SMTP id 61mr357970wrl.100.1611856983215;
-        Thu, 28 Jan 2021 10:03:03 -0800 (PST)
-Received: from dell.default ([91.110.221.188])
-        by smtp.gmail.com with ESMTPSA id u6sm8280794wro.75.2021.01.28.10.03.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 Jan 2021 10:03:02 -0800 (PST)
-From:   Lee Jones <lee.jones@linaro.org>
-To:     lee.jones@linaro.org
+        with ESMTP id S231688AbhA1SUu (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 28 Jan 2021 13:20:50 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4E04C0613ED;
+        Thu, 28 Jan 2021 10:19:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=3/eVDrOgGzWcTNcMv+Ud5/gsGdeOlwuJYul3Zh/W0is=; b=obNEnAK5172fzMAmMOvKftW+uT
+        tgBeWfDHBa5niwyhQs0q9I31G0dB2+3JR+Ikwp0gdZtfg08x68hizv9xXyu2sdmwSDS+MkFEhd2i2
+        pqS9UgGkKKiQWEgDzUqjwxG0lckEhLvCEualYSBJjKhkrVJ1AMUAs0EXNsE/chEVzrBXh1UyHrEM2
+        O6QlgbuYNxFDJwT1nALipZA44aZvhw+gN50GZT0rKSe10vLwXU5STC3TCVvrlda2lP7CnuQcgpO33
+        SyHzDSdz1O1UWRhtUh1cwx+Ggz79xYFQmk1Y22B96WIBkaAS/IOaSPuT9846zYCAfg/Zds/CXfnG0
+        paHHtfyA==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1l5Bsl-008oGv-2n; Thu, 28 Jan 2021 18:19:04 +0000
+Date:   Thu, 28 Jan 2021 18:19:03 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Lee Jones <lee.jones@linaro.org>
 Cc:     linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>,
-        Suman Tripathi <stripathi@apm.com>, linux-ide@vger.kernel.org
-Subject: [PATCH 17/20] ata: ahci_xgene: Fix incorrect naming of 'xgene_ahci_handle_broken_edge_irq()'s 'host' param
-Date:   Thu, 28 Jan 2021 18:02:36 +0000
-Message-Id: <20210128180239.548512-18-lee.jones@linaro.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210128180239.548512-1-lee.jones@linaro.org>
+        linux-ide@vger.kernel.org
+Subject: Re: [PATCH 01/20] ata: ahci_dm816: Ignore -Woverride-init
+Message-ID: <20210128181903.GA2099675@infradead.org>
 References: <20210128180239.548512-1-lee.jones@linaro.org>
+ <20210128180239.548512-2-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210128180239.548512-2-lee.jones@linaro.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Fixes the following W=1 kernel build warning(s):
+On Thu, Jan 28, 2021 at 06:02:20PM +0000, Lee Jones wrote:
+> Some ATA drivers use the SCSI host template, a series of interwoven
+> macros, to aid with initialisation.  Some of these macros conflict,
+> resulting in the over-writing of previously set values.
 
- drivers/ata/ahci_xgene.c:564: warning: Function parameter or member 'host' not described in 'xgene_ahci_handle_broken_edge_irq'
- drivers/ata/ahci_xgene.c:564: warning: Excess function parameter 'ata_host' description in 'xgene_ahci_handle_broken_edge_irq'
-
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Loc Ho <lho@apm.com>
-Cc: Tuan Phan <tphan@apm.com>
-Cc: Suman Tripathi <stripathi@apm.com>
-Cc: linux-ide@vger.kernel.org
-Signed-off-by: Lee Jones <lee.jones@linaro.org>
----
- drivers/ata/ahci_xgene.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 16246c843365e..dffc432b9d54a 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -537,7 +537,7 @@ static int xgene_ahci_softreset(struct ata_link *link, unsigned int *class,
- 
- /**
-  * xgene_ahci_handle_broken_edge_irq - Handle the broken irq.
-- * @ata_host: Host that recieved the irq
-+ * @host: Host that recieved the irq
-  * @irq_masked: HOST_IRQ_STAT value
-  *
-  * For hardware with broken edge trigger latch
--- 
-2.25.1
-
+Please just disable this warning globally.  This is a sensible
+patter and we should not sprinkle per-file options for something
+that fundamental.
