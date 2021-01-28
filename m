@@ -5,107 +5,106 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7592C433E9
-	for <linux-ide@archiver.kernel.org>; Thu, 28 Jan 2021 18:17:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C082C4332B
+	for <linux-ide@archiver.kernel.org>; Thu, 28 Jan 2021 18:17:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6534464E22
+	by mail.kernel.org (Postfix) with ESMTP id F1DF164E23
 	for <linux-ide@archiver.kernel.org>; Thu, 28 Jan 2021 18:17:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231444AbhA1SQn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 28 Jan 2021 13:16:43 -0500
+        id S231480AbhA1SQo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 28 Jan 2021 13:16:44 -0500
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60888 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229747AbhA1SDo (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 28 Jan 2021 13:03:44 -0500
-Received: from mail-wm1-x32d.google.com (mail-wm1-x32d.google.com [IPv6:2a00:1450:4864:20::32d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8CAEDC0617AB
-        for <linux-ide@vger.kernel.org>; Thu, 28 Jan 2021 10:02:49 -0800 (PST)
-Received: by mail-wm1-x32d.google.com with SMTP id m1so2021080wml.2
-        for <linux-ide@vger.kernel.org>; Thu, 28 Jan 2021 10:02:49 -0800 (PST)
+        with ESMTP id S231607AbhA1SGC (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 28 Jan 2021 13:06:02 -0500
+Received: from mail-wm1-x335.google.com (mail-wm1-x335.google.com [IPv6:2a00:1450:4864:20::335])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AE67C061226
+        for <linux-ide@vger.kernel.org>; Thu, 28 Jan 2021 10:03:01 -0800 (PST)
+Received: by mail-wm1-x335.google.com with SMTP id u14so5296274wmq.4
+        for <linux-ide@vger.kernel.org>; Thu, 28 Jan 2021 10:03:01 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=gat9ASy8Tcpn7xEHDYjYiqg8W2NDPEgsm5bh/q38djM=;
-        b=b5xBeNFkkABV7SRryiujgGned41DWkKsqVPxa7b6HABsi9v4EUrkgIVNmNINQsl+t8
-         3K1wC/j55Mcw3dh9HxtKtr9wr1Edho9KPRcRaBMuzsIWNMRHvnG9VC7UQ/EZo5EDaDHZ
-         dzulJbBlu406tRkTlB+XK4O2lltBNCzfT5xxhYqDq45Ha80kBl/gT+k4FrKUFOyjqjE+
-         vQJaGZqh1H9HuEB9Pt4yzLirEcsoed8yM9OPZmCI4FvezHyZewWmK5V/u8rL+osYuyZU
-         /cZ2ZNh5YbHjjwuCse9zdVYkXE5zJBR7EVP/pvsMG3EsaNyri+Eu3IzsNwbJtgFbDjre
-         KmaA==
+        bh=gT2cxZw+MQ4seB7v8/9B4WCOA4wG3O/G2z6VtzkvCxE=;
+        b=Gt5dMryvvJiG5ucbCvgM4VjHdED5lacseCJlduFYa9/RYb8Bm1pjJ4JzVsgtIkE84H
+         599RG1ThbTLLHDxyXnlh3p3x86BIL5+7WKkaExWDEF1fP9nqoTeaUIEPsyEjJYyEyRHZ
+         4A23gg+N2xnAK5nIX94CM6M4BUgTLujxp62Aj1tcJafnWQAGy5nQWDeYhURbX/VPxGLY
+         g7D6Lq4P1iQw7ivC8Mdoz7dgjXpAOlsGJcdfvtDwJV+HvSBNGJ14Q85YOXpW+m6o0Bzf
+         m8/9azLHkPwSK4T4CX5vzzUevFGd3SYfX8scgbLostDbjpidxT9jZQ0dNLuY5Av9YnzO
+         sT3w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=gat9ASy8Tcpn7xEHDYjYiqg8W2NDPEgsm5bh/q38djM=;
-        b=HiP3hOTEBy82JuGqkITtjwWD4JG3Mv39GCYnANO8k1X+86h5hto3HpXxlId0U43xJc
-         TEgbB6GDeOupY+37z4PRCD6hN/fvj7OL3kpjL15B+NTBbLs4IXH/IFuruo/AzvWe3JnK
-         dH3acvrfJpy4Nu0QYu4ANDx9bswUSBIcpI3f+tNYQjS2go62jYAL1ingARA0OuVU08FG
-         AcjUGuH463wzmo5NZHID62fm8VLHHPMVnZacgAYT5X705K/UQH4veit2isWiViHhNPPy
-         ow+EIKVIwGeTIngpQXFWAYnhtFk7jof8ve7kjpdCXQKBdZzo5fP6VJpr/8noYF/mOFO8
-         WJJA==
-X-Gm-Message-State: AOAM531XVkJDVWO4xofep94zSix+EgnBMdRfJ6lp6o1vCcMPm7dbIVDG
-        W8Wm4P/CLkOPqxepjN8lxobraw==
-X-Google-Smtp-Source: ABdhPJwX8a9ezXdt3Bhrl3TVpigZPvvrLgEpT+OvBZe6ZFqkp3d9fNtfAqGIZNRobORWb2k6E6sy/w==
-X-Received: by 2002:a1c:a549:: with SMTP id o70mr411325wme.71.1611856968288;
-        Thu, 28 Jan 2021 10:02:48 -0800 (PST)
+        bh=gT2cxZw+MQ4seB7v8/9B4WCOA4wG3O/G2z6VtzkvCxE=;
+        b=BktyLO7dZ4Fdvz6IiyjOy3QTJp1843mieYklgbS9sEh4THGsS+74pB6tknfdyQw5+H
+         P/bXhsmkNlNQi4iiEeTpzYqCI/SvCQ8SRej503lnXEyiWruHFFgH3/Zu0P38HCJEp5om
+         33acm7JR8Y1l/BeCElLQQ6a8S+4euqdEBfPyaxGhT7a7xE5eQKoHhzvnAhamaxb/H2mp
+         MdTBJdd3pl25H79aVzaBZXHFQf5sOw27+jMiaDPZIR5rNVzqM+RWvn59mn/dVxAlvx0o
+         uTBzb78US+tc/JJtWShjcEcasgIbLbM0df9Fq8wTr+sdBj/ey0/mj/rLYtI2SgCTcHUo
+         /xKA==
+X-Gm-Message-State: AOAM532CTnJMK6yaeHeBapPxM8/SCwAYC5JgCup0lyDphgLd2OXyXALO
+        XRFaO5vocjPEIjmraQEEqXqxRw==
+X-Google-Smtp-Source: ABdhPJwVi4H8wPonjuSrecsMlYCH9jt2QZgzS6XQr3HaYK95r2i3Rcv1jRARG6htvkqqNF6A2B32yw==
+X-Received: by 2002:a1c:6089:: with SMTP id u131mr405984wmb.99.1611856979878;
+        Thu, 28 Jan 2021 10:02:59 -0800 (PST)
 Received: from dell.default ([91.110.221.188])
-        by smtp.gmail.com with ESMTPSA id u6sm8280794wro.75.2021.01.28.10.02.46
+        by smtp.gmail.com with ESMTPSA id u6sm8280794wro.75.2021.01.28.10.02.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 Jan 2021 10:02:47 -0800 (PST)
+        Thu, 28 Jan 2021 10:02:59 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
 Cc:     linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org
-Subject: [PATCH 04/20] ata: libata-sata: Fix function names in header comments
-Date:   Thu, 28 Jan 2021 18:02:23 +0000
-Message-Id: <20210128180239.548512-5-lee.jones@linaro.org>
+        linux-ide@vger.kernel.org
+Subject: [PATCH 14/20] ata: sata_sil24: Ignore -Woverride-init
+Date:   Thu, 28 Jan 2021 18:02:33 +0000
+Message-Id: <20210128180239.548512-15-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210128180239.548512-1-lee.jones@linaro.org>
 References: <20210128180239.548512-1-lee.jones@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+Some ATA drivers use the SCSI host template, a series of interwoven
+macros, to aid with initialisation.  Some of these macros conflict,
+resulting in the over-writing of previously set values.
+
+This is known behaviour and can be safely ignored.
+
 Fixes the following W=1 kernel build warning(s):
 
- drivers/ata/libata-sata.c:1085: warning: expecting prototype for port_alloc(). Prototype was for ata_sas_port_alloc() instead
- drivers/ata/libata-sata.c:1140: warning: expecting prototype for ata_port_stop(). Prototype was for ata_sas_port_stop() instead
+ In file included from drivers/ata/sata_sil24.c:14:
+ drivers/ata/sata_sil24.c:381:22: note: in expansion of macro ‘BLK_TAG_ALLOC_FIFO’
+ drivers/ata/sata_sil24.c:381:22: note: in expansion of macro ‘BLK_TAG_ALLOC_FIFO’
+ drivers/ata/libata-pmp.c:76: warning: Function parameter or member 'val' not described in 'sata_pmp_write'
+ drivers/ata/libata-pmp.c:76: warning: Excess function parameter 'r_val' description in 'sata_pmp_write'
 
 Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Tejun Heo <htejun@gmail.com>
 Cc: linux-ide@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/ata/libata-sata.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/ata/Makefile | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index c16423e445255..8adeab76dd382 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -1067,7 +1067,7 @@ int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth)
- EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index c7460c6b94c1d..d46703777cdd4 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -5,6 +5,7 @@ CFLAGS_ahci_ceva.o		= $(call cc-disable-warning, override-init)
+ CFLAGS_ahci_dm816.o		= $(call cc-disable-warning, override-init)
+ CFLAGS_ahci_mtk.o		= $(call cc-disable-warning, override-init)
+ CFLAGS_ahci_platform.o		= $(call cc-disable-warning, override-init)
++CFLAGS_sata_sil24.o		= $(call cc-disable-warning, override-init)
  
- /**
-- *	port_alloc - Allocate port for a SAS attached SATA device
-+ *	ata_sas_port_alloc - Allocate port for a SAS attached SATA device
-  *	@host: ATA host container for all SAS ports
-  *	@port_info: Information from low-level host driver
-  *	@shost: SCSI host that the scsi device is attached to
-@@ -1127,7 +1127,7 @@ int ata_sas_port_start(struct ata_port *ap)
- EXPORT_SYMBOL_GPL(ata_sas_port_start);
+ obj-$(CONFIG_ATA)		+= libata.o
  
- /**
-- *	ata_port_stop - Undo ata_sas_port_start()
-+ *	ata_sas_port_stop - Undo ata_sas_port_start()
-  *	@ap: Port to shut down
-  *
-  *	May be used as the port_stop() entry in ata_port_operations.
 -- 
 2.25.1
 
