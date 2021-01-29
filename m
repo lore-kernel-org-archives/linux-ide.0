@@ -2,64 +2,140 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2731BC433DB
-	for <linux-ide@archiver.kernel.org>; Fri, 29 Jan 2021 05:54:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3A17C433E6
+	for <linux-ide@archiver.kernel.org>; Fri, 29 Jan 2021 18:30:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD3FA64D92
-	for <linux-ide@archiver.kernel.org>; Fri, 29 Jan 2021 05:54:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E63564E0A
+	for <linux-ide@archiver.kernel.org>; Fri, 29 Jan 2021 18:30:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229463AbhA2FyK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 29 Jan 2021 00:54:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43552 "EHLO
+        id S232208AbhA2Saa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 29 Jan 2021 13:30:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229459AbhA2FyJ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2021 00:54:09 -0500
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39D6DC061573;
-        Thu, 28 Jan 2021 21:53:29 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=CzDvjW0PsVn2C/KV8egp8yfOHQE/Tji5vpufDPEiy+Q=; b=s/8aDS3xramd3dUVdb/vzacIyC
-        Jj5WXpgxm4/ZnT9cScIAb0sh0MKpEBa4AvZY5VBuRmoXF34eGO5R+GTbueOCO21tvXHioV8UNFwLO
-        eJs5SdpHdCSQjvbzJzHffD6pm9LmrnB0qfybrmL9gXaFBVcmmV1ucqliuz3qLhn3dWAF0y849l7tS
-        5pJ/lIqOTDeYqogShW7Bb2hXhK0P2nhJN0GC+DoFAtLoWP25oB+X6gPBghYZNl2ZbO9Az2JYbkmn+
-        bf+vUU1rk1NVDRXa5zasGKV8oiJTjUIKFY5p7Z1EZ8x9+uty8Oo5joBdDlnC7TTjT5QDnc+4RPTXI
-        AgRgFAFA==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1l5Mig-009Rs8-5J; Fri, 29 Jan 2021 05:53:22 +0000
-Date:   Fri, 29 Jan 2021 05:53:22 +0000
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Lee Jones <lee.jones@linaro.org>
-Cc:     linux-kernel@vger.kernel.org, Alan Cox <alan@redhat.com>,
-        Alessandro Zummo <alessandro.zummo@towertech.it>,
-        ALWAYS copy <linux-ide@vger.kernel.org>,
-        and cc <htejun@gmail.com>, Andre Hedrick <andre@linux-ide.org>,
-        CJ <cjtsai@ali.com.tw>, Clear Zhang <Clear.Zhang@ali.com.tw>,
-        Jens Axboe <axboe@kernel.dk>, Loc Ho <lho@apm.com>,
-        Mark Lord <mlord@pobox.com>,
-        Suman Tripathi <stripathi@apm.com>, Tejun Heo <teheo@suse.de>,
-        Thibaut VARENE <varenet@parisc-linux.org>,
-        Tuan Phan <tphan@apm.com>
-Subject: Re: [PATCH 00/20] [Set 1] Rid W=1 warnings from ATA
-Message-ID: <20210129055322.GA2250604@infradead.org>
-References: <20210128180239.548512-1-lee.jones@linaro.org>
+        with ESMTP id S232740AbhA2S3j (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2021 13:29:39 -0500
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A113FC061573;
+        Fri, 29 Jan 2021 10:28:59 -0800 (PST)
+Received: by mail-pj1-x102c.google.com with SMTP id p15so6236352pjv.3;
+        Fri, 29 Jan 2021 10:28:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=yiEDkLsa4ylrHTtz0oYTVB6w9VLBYVLSPFL7BL952vg=;
+        b=JBvY/E/goAIn2FYCpn7Z4uZAvQnZjLm4hb0dGMzxw54kjH4LoxeQHczyzS6Ttmtz78
+         rOcDkOyK+9Cr0+WCljcGPyJYGb6vO0MtxsWo3bTZxf91KSKRTcrSwX4HHcgh0jJLS3cx
+         ZxemVImxeYzDSzTrgggaetQF+V9iXv1sgHtugcA1mfvCRbwo5QEH+DPxtNR/bYuQOWC+
+         FScwxkWJ9f+50eIt4c6xI9HVGIXJdIGG1WVOgKFMGMIZh8mYxxxeq/6yHoNwPkfcJ4bv
+         G+QTrgrlYalC4dn10vvirCJWem0LbZMBmYeYSJaej2ryBhA1UQx4rcxTo3oCjeIH1Gtt
+         4C1Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=yiEDkLsa4ylrHTtz0oYTVB6w9VLBYVLSPFL7BL952vg=;
+        b=OaaKGwQcT1rKuEg67/xTFK+EWgtiD8moK5Y58ty/RWhXv5v9l8eWDWNB8UBHWbghDW
+         /yVWPSpSWAZ6qXj9m2i3smjSnWw0uuQgcRnvBHAfTuweKxcvXJdJmSUDORLMOl1CpYgj
+         x6rC4K+b91M3RkQ8h9wMfozddUt399DZ93gB2iSevqscBBWuMMDs//oHHoxCvSvHK0c2
+         I1WmTcfwGtJdQIxpnZVuw3iJjeEsv6yYn8T1nWlOdiA0QNPoWqjdUmr0Lr3TRY6IYa6E
+         NJycPsDnUHCuOtokqAIH0jxg5G8rtvw8zoq8Wwxeo2olYN0p38Gdt1ltf8xrO3nLurB+
+         t7kg==
+X-Gm-Message-State: AOAM531oMlwBGZch1ZK/2/3QZrYSIT+qLzl7ARLNRbCwacIPj1Cq8TFL
+        hhs2AoinEqrZ4+gqYUCZlZvzgWGAFT4=
+X-Google-Smtp-Source: ABdhPJwmbhNgdoAnfwCB91O25ltFuXDclzbu0LDKuveryGbcxSBOjP4/4AhBzxmmRn7rwSsiStzu0w==
+X-Received: by 2002:a17:902:e84e:b029:de:45bf:1296 with SMTP id t14-20020a170902e84eb02900de45bf1296mr5420245plg.49.1611944938770;
+        Fri, 29 Jan 2021 10:28:58 -0800 (PST)
+Received: from fainelli-desktop.igp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id w66sm9458236pfd.48.2021.01.29.10.28.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 29 Jan 2021 10:28:57 -0800 (PST)
+From:   Florian Fainelli <f.fainelli@gmail.com>
+To:     linux-kernel@vger.kernel.org, axboe@kernel.dk, hdegoede@redhat.com
+Cc:     Florian Fainelli <f.fainelli@gmail.com>,
+        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
+        Parallel ATA drivers))
+Subject: [PATCH RESEND] ata: ahci_brcm: Add back regulators management
+Date:   Fri, 29 Jan 2021 10:28:45 -0800
+Message-Id: <20210129182846.1944699-1-f.fainelli@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210128180239.548512-1-lee.jones@linaro.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Everything except the individual CFLAGS flags looks fine to me,
-so for all the patches except for the CFLAGS changes:
+While reworking the resources management and departing from using
+ahci_platform_enable_resources() which did not allow a proper step
+separation like we need, we unfortunately lost the ability to control
+AHCI regulators. This broke some Broadcom STB systems that do expect
+regulators to be turned on to link up with attached hard drives.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Fixes: c0cdf2ac4b5b ("ata: ahci_brcm: Fix AHCI resources management")
+Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+---
+ drivers/ata/ahci_brcm.c | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+index 49f7acbfcf01..5b32df5d33ad 100644
+--- a/drivers/ata/ahci_brcm.c
++++ b/drivers/ata/ahci_brcm.c
+@@ -377,6 +377,10 @@ static int __maybe_unused brcm_ahci_resume(struct device *dev)
+ 	if (ret)
+ 		return ret;
+ 
++	ret = ahci_platform_enable_regulators(hpriv);
++	if (ret)
++		goto out_disable_clks;
++
+ 	brcm_sata_init(priv);
+ 	brcm_sata_phys_enable(priv);
+ 	brcm_sata_alpm_init(hpriv);
+@@ -406,6 +410,8 @@ static int __maybe_unused brcm_ahci_resume(struct device *dev)
+ 	ahci_platform_disable_phys(hpriv);
+ out_disable_phys:
+ 	brcm_sata_phys_disable(priv);
++	ahci_platform_disable_regulators(hpriv);
++out_disable_clks:
+ 	ahci_platform_disable_clks(hpriv);
+ 	return ret;
+ }
+@@ -490,6 +496,10 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		goto out_reset;
+ 
++	ret = ahci_platform_enable_regulators(hpriv);
++	if (ret)
++		goto out_disable_clks;
++
+ 	/* Must be first so as to configure endianness including that
+ 	 * of the standard AHCI register space.
+ 	 */
+@@ -499,7 +509,7 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 	priv->port_mask = brcm_ahci_get_portmask(hpriv, priv);
+ 	if (!priv->port_mask) {
+ 		ret = -ENODEV;
+-		goto out_disable_clks;
++		goto out_disable_regulators;
+ 	}
+ 
+ 	/* Must be done before ahci_platform_enable_phys() */
+@@ -524,6 +534,8 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 	ahci_platform_disable_phys(hpriv);
+ out_disable_phys:
+ 	brcm_sata_phys_disable(priv);
++out_disable_regulators:
++	ahci_platform_disable_regulators(hpriv);
+ out_disable_clks:
+ 	ahci_platform_disable_clks(hpriv);
+ out_reset:
+-- 
+2.25.1
+
