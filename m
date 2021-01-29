@@ -2,94 +2,64 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B7ADC433DB
-	for <linux-ide@archiver.kernel.org>; Thu, 28 Jan 2021 18:30:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2731BC433DB
+	for <linux-ide@archiver.kernel.org>; Fri, 29 Jan 2021 05:54:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 34FC364E22
-	for <linux-ide@archiver.kernel.org>; Thu, 28 Jan 2021 18:30:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD3FA64D92
+	for <linux-ide@archiver.kernel.org>; Fri, 29 Jan 2021 05:54:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232070AbhA1SaN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 28 Jan 2021 13:30:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37870 "EHLO
+        id S229463AbhA2FyK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 29 Jan 2021 00:54:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43552 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231460AbhA1S15 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 28 Jan 2021 13:27:57 -0500
-Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0DBB5C0613ED
-        for <linux-ide@vger.kernel.org>; Thu, 28 Jan 2021 10:27:17 -0800 (PST)
-Received: by mail-wm1-x32e.google.com with SMTP id m1so2072578wml.2
-        for <linux-ide@vger.kernel.org>; Thu, 28 Jan 2021 10:27:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=FHRjyjYE89qGrg3Y3Q4173ZyrozQfcKIJRYji1qkDFM=;
-        b=nRD5KHmNsZcktF/igWymXoXQ/aOFphiF4N1QJKg5TLO8qOtCZ0IkUi3Y829Z4//4dc
-         yFMj16HxlEFCQ6bVR34sYJaUq1DTTpNttjF8DuOoO81iBfehJOVVpHv6bYdI+K3tQiGH
-         jTcYrSETFLLNcMeB2Z6/rFr3009PbTB5xWqYQOKlrlKlxV+4hf46LIRvtrclyv+KF5tg
-         dfUu6RX/D3/x4wm+FXnVxm7Zuci9Mxg+KbRX4lPrcXNu01abyB7fhXbEikwCRNNXfiQf
-         aNKF5PH0xIu3V0A+fYH7YldMGhrkbzYSsUSFWXC5X0P3Pbt4il4vKA8dpCWiLBdah0X1
-         CSVA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=FHRjyjYE89qGrg3Y3Q4173ZyrozQfcKIJRYji1qkDFM=;
-        b=WT47aLfwFWfNPDEZc7e7T2owa3xWdmPeBQQBe3rO/cGZ1Vh6g+WLN78nIdKexLeJfH
-         Wyi31SvASF+5HQDxcKEbLm1WYCAYoAeFmUbkrDgGaCX7LdsWr2d7Xlc8OAbmR8Tg/lwv
-         9OvfYBRSlYKzSXFuUwD/1We2TtsG73MqfA0cEwz2e9CnjbfnxoT9OFmrt0rhZTtwcNR5
-         EJa3SejnunNWrZnAU2f5xNMBNpnApernVJsAAHO9ph5PW/n5tN8YRK9SZHRAmYo3l5+x
-         ZN/kotJnPCp4ar/S1/cXTdSkRXcoqf1qdTibPfGRXsgqc+Kz/fHhfD0MHFTTcu7/Oi5v
-         +CFw==
-X-Gm-Message-State: AOAM530/rOR8ve1VvwLt9oNF63enjftPCCjLnR1y622ZcrRO7U8PKW60
-        PS5yUzP+X+0aSMH2bKbOtEK09w==
-X-Google-Smtp-Source: ABdhPJxBSl6KKb9jx4AcBh1+S1MdD8ooOlSLI5Je5HBovcwouAW5yWRC5WCMBZBaHxfab8wvPNYfFQ==
-X-Received: by 2002:a1c:a406:: with SMTP id n6mr509739wme.53.1611858435697;
-        Thu, 28 Jan 2021 10:27:15 -0800 (PST)
-Received: from dell ([91.110.221.188])
-        by smtp.gmail.com with ESMTPSA id l84sm6827558wmf.17.2021.01.28.10.27.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 Jan 2021 10:27:15 -0800 (PST)
-Date:   Thu, 28 Jan 2021 18:27:13 +0000
-From:   Lee Jones <lee.jones@linaro.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        linux-ide@vger.kernel.org
-Subject: Re: [PATCH 01/20] ata: ahci_dm816: Ignore -Woverride-init
-Message-ID: <20210128182713.GM4774@dell>
+        with ESMTP id S229459AbhA2FyJ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2021 00:54:09 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 39D6DC061573;
+        Thu, 28 Jan 2021 21:53:29 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=CzDvjW0PsVn2C/KV8egp8yfOHQE/Tji5vpufDPEiy+Q=; b=s/8aDS3xramd3dUVdb/vzacIyC
+        Jj5WXpgxm4/ZnT9cScIAb0sh0MKpEBa4AvZY5VBuRmoXF34eGO5R+GTbueOCO21tvXHioV8UNFwLO
+        eJs5SdpHdCSQjvbzJzHffD6pm9LmrnB0qfybrmL9gXaFBVcmmV1ucqliuz3qLhn3dWAF0y849l7tS
+        5pJ/lIqOTDeYqogShW7Bb2hXhK0P2nhJN0GC+DoFAtLoWP25oB+X6gPBghYZNl2ZbO9Az2JYbkmn+
+        bf+vUU1rk1NVDRXa5zasGKV8oiJTjUIKFY5p7Z1EZ8x9+uty8Oo5joBdDlnC7TTjT5QDnc+4RPTXI
+        AgRgFAFA==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1l5Mig-009Rs8-5J; Fri, 29 Jan 2021 05:53:22 +0000
+Date:   Fri, 29 Jan 2021 05:53:22 +0000
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Lee Jones <lee.jones@linaro.org>
+Cc:     linux-kernel@vger.kernel.org, Alan Cox <alan@redhat.com>,
+        Alessandro Zummo <alessandro.zummo@towertech.it>,
+        ALWAYS copy <linux-ide@vger.kernel.org>,
+        and cc <htejun@gmail.com>, Andre Hedrick <andre@linux-ide.org>,
+        CJ <cjtsai@ali.com.tw>, Clear Zhang <Clear.Zhang@ali.com.tw>,
+        Jens Axboe <axboe@kernel.dk>, Loc Ho <lho@apm.com>,
+        Mark Lord <mlord@pobox.com>,
+        Suman Tripathi <stripathi@apm.com>, Tejun Heo <teheo@suse.de>,
+        Thibaut VARENE <varenet@parisc-linux.org>,
+        Tuan Phan <tphan@apm.com>
+Subject: Re: [PATCH 00/20] [Set 1] Rid W=1 warnings from ATA
+Message-ID: <20210129055322.GA2250604@infradead.org>
 References: <20210128180239.548512-1-lee.jones@linaro.org>
- <20210128180239.548512-2-lee.jones@linaro.org>
- <20210128181903.GA2099675@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210128181903.GA2099675@infradead.org>
+In-Reply-To: <20210128180239.548512-1-lee.jones@linaro.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, 28 Jan 2021, Christoph Hellwig wrote:
+Everything except the individual CFLAGS flags looks fine to me,
+so for all the patches except for the CFLAGS changes:
 
-> On Thu, Jan 28, 2021 at 06:02:20PM +0000, Lee Jones wrote:
-> > Some ATA drivers use the SCSI host template, a series of interwoven
-> > macros, to aid with initialisation.  Some of these macros conflict,
-> > resulting in the over-writing of previously set values.
-> 
-> Please just disable this warning globally.  This is a sensible
-> patter and we should not sprinkle per-file options for something
-> that fundamental.
-
-Will do.  Just as soon as I've figured out how. :)
-
--- 
-Lee Jones [李琼斯]
-Senior Technical Lead - Developer Services
-Linaro.org │ Open source software for Arm SoCs
-Follow Linaro: Facebook | Twitter | Blog
+Reviewed-by: Christoph Hellwig <hch@lst.de>
