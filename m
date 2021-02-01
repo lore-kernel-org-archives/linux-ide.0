@@ -7,61 +7,61 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9CD8C433DB
-	for <linux-ide@archiver.kernel.org>; Mon,  1 Feb 2021 14:41:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 511ACC433E6
+	for <linux-ide@archiver.kernel.org>; Mon,  1 Feb 2021 14:42:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6D61664E56
-	for <linux-ide@archiver.kernel.org>; Mon,  1 Feb 2021 14:41:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E1AA64E9A
+	for <linux-ide@archiver.kernel.org>; Mon,  1 Feb 2021 14:42:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231236AbhBAOl2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 1 Feb 2021 09:41:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59440 "EHLO
+        id S230214AbhBAOma (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 1 Feb 2021 09:42:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59384 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230304AbhBAOlU (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 1 Feb 2021 09:41:20 -0500
-Received: from mail-wm1-x32a.google.com (mail-wm1-x32a.google.com [IPv6:2a00:1450:4864:20::32a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB754C0617A9
-        for <linux-ide@vger.kernel.org>; Mon,  1 Feb 2021 06:39:51 -0800 (PST)
-Received: by mail-wm1-x32a.google.com with SMTP id u14so12840036wml.4
-        for <linux-ide@vger.kernel.org>; Mon, 01 Feb 2021 06:39:51 -0800 (PST)
+        with ESMTP id S231309AbhBAOmB (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 1 Feb 2021 09:42:01 -0500
+Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 059F3C0611C1
+        for <linux-ide@vger.kernel.org>; Mon,  1 Feb 2021 06:40:04 -0800 (PST)
+Received: by mail-wm1-x32f.google.com with SMTP id f16so12847282wmq.5
+        for <linux-ide@vger.kernel.org>; Mon, 01 Feb 2021 06:40:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=psxck1KMWyXDOgBCEv3jYVYq9cj2r/nvdYNmqCZ8a8o=;
-        b=naPZ9ARqYCwvn9JncVu9nING3uu/kiOgXUcGuQTkTs7taI4zz63FAnlO5iWAGDACmP
-         iNXjbxhfFKnGqviFm5BLJpk/Wu4a/5bfixHBp9hT6evXG6ay6VrzNclsUPnPqWPYmkD/
-         +w7SdPm01xRq9T6iWux+jV3mGiLopxx0qBwFqKjz/4hrdP/SFrID+68Z7Qk/DJAR79Eh
-         vHDJNIff4gd6ZinI4ir9DLGQgSubMZQZcEV4PIb3oNELlQsB7ldgGt9YCfDhmAf2G/LJ
-         rST08acpa2/lv7Z/NoEnoBnODJBs/6tuJql74+yjwK5N5xolpDFN3w3VpKgo3hFV/L2z
-         o3eg==
+        bh=WJaD217hQSKXajKZh4odA4Ej+1+v0RwQsiQWigDD874=;
+        b=SG05VYxhmiATV5Ec3tvOkXLMrtpO6V14Fm3Zwv0mZhiDBH4OZFX5TaUa9sOHOjC+Tu
+         d10ZRrDCUN6tUnyWCTknGMLanH76OlM07HYXalx1cPDtjztamew6UjyupxXAgpe9Uj9b
+         RHsaF6AvlaoQbyIJqOYIfVBlVOFAFLYmn4fWjNmb0xG4/DIdg2fjrkeIj9vIgRJpolOu
+         029hZeLOkgBTeWwhiStraalAbZ2mGo8Qm7kKukpgOTgMvkBpJPf0fqvLtsutVVvIR9x4
+         wpu3bCQzEOyj/tv/aaZEjLyuRyU1lcHSQHESU/XWfFbDAsc6l/rK4Xtla45p1qX84lI1
+         nzlQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=psxck1KMWyXDOgBCEv3jYVYq9cj2r/nvdYNmqCZ8a8o=;
-        b=JkhZ/LVnzrwkl0t0id8oQvUj3KJPQiBrnyqyN5wwZOPHqCa74m1i0TtuoIrNzQfDOX
-         iiLKlI/haYk/I66Q0yVDJXfPpGvDuHKYhfVuB5NZygEWisUyLr4UN8k8QTlVfaco/Rnq
-         OXzVQUz/Sp3WoaZpXfLRspgAlLJZcqYy972nwg9ZKps5AVs22XsYDfRMTHhETGJOYCZ4
-         JaOUg0mnv1cAtLYHScMKiHkwDT2otRgjxu3Qf7+LBpjKadiEfk+0oEGElReiGvGY537A
-         H6gsCPlNJqKH26ve3iIBsCutN+gZzf13SDvk4FRQBmCiT9BXDit9qFiaDN8d6PxTXPdq
-         zRwQ==
-X-Gm-Message-State: AOAM530tGWwBgumVv2I5eZCWSf4MOzErXMiNV61UYHHKcjIadi0fI9nC
-        j0VVLBKiwYLN+Zs2mz2NFwy11A==
-X-Google-Smtp-Source: ABdhPJx79fAmVLm4zlWTVY4xGoZWThx6TZd/7y+7bG+tOG2ZTCyfUiiFTet7/Ct3roidAjr1wfd10Q==
-X-Received: by 2002:a1c:5f89:: with SMTP id t131mr7153496wmb.148.1612190390339;
-        Mon, 01 Feb 2021 06:39:50 -0800 (PST)
+        bh=WJaD217hQSKXajKZh4odA4Ej+1+v0RwQsiQWigDD874=;
+        b=pHbvdokrccvXPbrUCsdQVu3SMW/18yf/EqTe/Nls3x+zW0a8KW4cJzmrRPEuCkqniE
+         aFTGfyG/FluqJp1XUTNxbYsDr4mskNWZ1EdoZX832UktW4gn9XZTxJG6pZnhAELvPt/o
+         qpVUhMfMgJwANt2/mESHUmSIVA08W5WyFgJ/az9cQBIDO5LYk1wRSHJPyZOKr4tG+h37
+         kT2eXZzoCcjcFB1oe2E0nMOpOr1ZFzL21jatSNcU0lmeEx2MvQh7/QNJc4+vcdIYQ/F6
+         +PSixcS+15w7DDeCsf11RyUsqfT7Be3qhZ0qXTJDUwUKgAbo/kzgoQV3Cl0El5XdluKL
+         rBRQ==
+X-Gm-Message-State: AOAM533iSZ4QX9UIROTlMMNnhXRKgVTYCw7Y2T1w7fsBvswhCH8XNQNz
+        A4QWhXzkXqnlejT1rnPwLYZXEg==
+X-Google-Smtp-Source: ABdhPJxypag9z0BgoaEL/svkoZORBrkuDUZgll+5UCqGmWHIy0AIcFk/35ta5jgAWFKrNRwwoacCAQ==
+X-Received: by 2002:a05:600c:358e:: with SMTP id p14mr15081905wmq.73.1612190402700;
+        Mon, 01 Feb 2021 06:40:02 -0800 (PST)
 Received: from dell.default ([91.110.221.188])
-        by smtp.gmail.com with ESMTPSA id h15sm27301359wrt.10.2021.02.01.06.39.49
+        by smtp.gmail.com with ESMTPSA id h15sm27301359wrt.10.2021.02.01.06.40.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Feb 2021 06:39:49 -0800 (PST)
+        Mon, 01 Feb 2021 06:40:02 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
 Cc:     linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         linux-ide@vger.kernel.org
-Subject: [PATCH 06/20] ata: pata_amd: Remove superfluous, add missing and fix broken params
-Date:   Mon,  1 Feb 2021 14:39:26 +0000
-Message-Id: <20210201143940.2070919-7-lee.jones@linaro.org>
+Subject: [PATCH 17/20] ata: pata_marvell: Fix incorrectly documented function parameter
+Date:   Mon,  1 Feb 2021 14:39:37 +0000
+Message-Id: <20210201143940.2070919-18-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210201143940.2070919-1-lee.jones@linaro.org>
 References: <20210201143940.2070919-1-lee.jones@linaro.org>
@@ -73,40 +73,29 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/ata/pata_amd.c:179: warning: Excess function parameter 'adev' description in 'amd_fifo_setup'
- drivers/ata/pata_amd.c:331: warning: Function parameter or member 'link' not described in 'nv_pre_reset'
- drivers/ata/pata_amd.c:331: warning: Function parameter or member 'deadline' not described in 'nv_pre_reset'
- drivers/ata/pata_amd.c:331: warning: expecting prototype for nv_probe_init(). Prototype was for nv_pre_reset() instead
+ drivers/ata/pata_marvell.c:125: warning: Function parameter or member 'id' not described in 'marvell_init_one'
+ drivers/ata/pata_marvell.c:125: warning: Excess function parameter 'ent' description in 'marvell_init_one'
 
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: linux-ide@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/ata/pata_amd.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/ata/pata_marvell.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
-index 987967f976cb2..75b830eb3c542 100644
---- a/drivers/ata/pata_amd.c
-+++ b/drivers/ata/pata_amd.c
-@@ -167,7 +167,6 @@ static int amd_cable_detect(struct ata_port *ap)
+diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
+index b066809ba9a11..361597d14c569 100644
+--- a/drivers/ata/pata_marvell.c
++++ b/drivers/ata/pata_marvell.c
+@@ -110,7 +110,7 @@ static struct ata_port_operations marvell_ops = {
  /**
-  *	amd_fifo_setup		-	set the PIO FIFO for ATA/ATAPI
-  *	@ap: ATA interface
-- *	@adev: ATA device
+  *	marvell_init_one - Register Marvell ATA PCI device with kernel services
+  *	@pdev: PCI device to register
+- *	@ent: Entry in marvell_pci_tbl matching with @pdev
++ *	@id: PCI device ID
   *
-  *	Set the PCI fifo for this device according to the devices present
-  *	on the bus at this point in time. We need to turn the post write buffer
-@@ -321,7 +320,8 @@ static unsigned long nv_mode_filter(struct ata_device *dev,
- 
- /**
-  *	nv_probe_init	-	cable detection
-- *	@lin: ATA link
-+ *	@link: ATA link
-+ *	@deadline: deadline jiffies for the operation
+  *	Called from kernel PCI layer.
   *
-  *	Perform cable detection. The BIOS stores this in PCI config
-  *	space for us.
 -- 
 2.25.1
 
