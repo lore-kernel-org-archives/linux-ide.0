@@ -2,127 +2,122 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D4F8C433DB
-	for <linux-ide@archiver.kernel.org>; Mon,  1 Feb 2021 13:57:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9630DC433E0
+	for <linux-ide@archiver.kernel.org>; Mon,  1 Feb 2021 14:40:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D48AD64E97
-	for <linux-ide@archiver.kernel.org>; Mon,  1 Feb 2021 13:57:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62D1464DFA
+	for <linux-ide@archiver.kernel.org>; Mon,  1 Feb 2021 14:40:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231145AbhBAN5S (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 1 Feb 2021 08:57:18 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49950 "EHLO
+        id S229513AbhBAOk3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 1 Feb 2021 09:40:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229707AbhBAN5R (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 1 Feb 2021 08:57:17 -0500
-Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F53CC061756
-        for <linux-ide@vger.kernel.org>; Mon,  1 Feb 2021 05:56:36 -0800 (PST)
-Received: by mail-wr1-x430.google.com with SMTP id g10so16687559wrx.1
-        for <linux-ide@vger.kernel.org>; Mon, 01 Feb 2021 05:56:36 -0800 (PST)
+        with ESMTP id S229981AbhBAOk0 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 1 Feb 2021 09:40:26 -0500
+Received: from mail-wr1-x42b.google.com (mail-wr1-x42b.google.com [IPv6:2a00:1450:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50316C061756
+        for <linux-ide@vger.kernel.org>; Mon,  1 Feb 2021 06:39:46 -0800 (PST)
+Received: by mail-wr1-x42b.google.com with SMTP id s7so13842195wru.5
+        for <linux-ide@vger.kernel.org>; Mon, 01 Feb 2021 06:39:46 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=hNt79SEwyevHlCnNpQqVrGlo2a3i4FGi8Hmj5UsB0YU=;
-        b=M3PnKpu5bp1bl2yYEhhr4sCnuaO9FGuJbLvEBWPW0WULJh3Cpkm8GLVAU6DYeu8dRy
-         pP1rj3IK0ON+NY7DRc8z82F+pbzd4oDCGZ4CY34AHOaHtMsmT3H+Kfu/PATcu2F/rS8n
-         fWdTB3af7hfwLCuQKmuYr6QEKdfcDNFKdP6rss0uFJmcz3Xkh7xWaW74LQb60V9xNghq
-         le+gHWovZEXM+0zOU7iXpxSh0XQzzeG8QtPWGAyntBAbLKDqt/nouH6NYzMuys4bPzS7
-         85D6QOHH6SbpRMF9pJ4bnPkEvSnP0JfZ/CmETeTm7cmKrcSKysdtSKYsGh/tV6MiBaYl
-         QCuQ==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=cK/LGNOy9DsyBBjFZYPOvNZ8xWqyFdDwYmos4fe8lCA=;
+        b=v7jsGj3c2vJL0l7/Fu2OSvsuxoyQFhNE4460l4Oc/ZpdEjZIPWubnmtOTaHB+ZH1nd
+         JlKrNKlAnJe9xP4T+XhobMsQgAZ8+72DYoqRddOxCwUxVg6zn7ccvOaQE8+/QMeEf0e5
+         dr10Uqyy5cYD60fNSDrzIPMSDQHw61wO40qV2bGU3EqEFm0o35VsWU1AwXK99FVUgAvL
+         QFvdcFRggJKIyjxkECKikuYzJz2Tace8M66CJIhJNuMhet5GJicaNUklymubJuZ+rqA5
+         XQY9eeTQecQ5Z7R3ThUe+OR7Tl5Zk7pEJ5rNm2SnE9AYxNXvAZiOLLFmIvlYxngGs3Wk
+         jRlw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=hNt79SEwyevHlCnNpQqVrGlo2a3i4FGi8Hmj5UsB0YU=;
-        b=Swbr4mifZWkm3YWlRNo4D9e6shpzBintCWcrT9I/Xgcjs5p5D3+yUN7WFq//wpRUbS
-         8loqi1yy09Zx2yJp96DVTk0uvTM9FLgcdmit1hFp+wGMUmmkXIBz057ZQkTNz+GST3VU
-         eYKMsYDFnftJlybGgDnejXihjdBNugKEHaTcUoe46m68wz4OAisvhOiD9ResvC0GanZM
-         FKZnjaIvqLsiGHEaLfnHN2VlUJodab8GguBvqJ1CS+Jn96jJ2E2uedWKJHvxj0ECnb9Q
-         BZ9iXToUtgs98uzmSB+nC7iODtZhAzrWE4r2t44dlcTQ5Sch710fyIh+3Hvvw7mJsuSW
-         L/1Q==
-X-Gm-Message-State: AOAM533cDT4GCabXVwFpJLjZV6gKlmwXELGYnDG6ShjZ4fF3kmotN8Xm
-        1fZQoOcg0n7DajC2RBAL+D79Cw==
-X-Google-Smtp-Source: ABdhPJymaH4S/uzykkYB60csZ4w9HpANZ6MSS095a8XKFeEWTFyVP/MB4qAPITf+EkWkOBiUVCMXLg==
-X-Received: by 2002:a5d:69ce:: with SMTP id s14mr17708926wrw.206.1612187795297;
-        Mon, 01 Feb 2021 05:56:35 -0800 (PST)
-Received: from dell ([91.110.221.188])
-        by smtp.gmail.com with ESMTPSA id u14sm20527162wml.19.2021.02.01.05.56.34
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=cK/LGNOy9DsyBBjFZYPOvNZ8xWqyFdDwYmos4fe8lCA=;
+        b=PywS74hB+x2aJUGPwHHS9HBwgbjGgVldeGzH4qnJaF8PwfuW4VGGn7asN1f0yKXXKY
+         YQmAJpnDFwC3ewC2/Wr5r0fZFcFh+Es+CXgMDpHoXvul+e12E6MyjWnhMcdIKqmvBWU5
+         NMH/RCFg5/AmPpkFmBPwdXHDRUxTIpaQU37aorD7paLiMf3YUfhzMENhRcAOgJFu7pJQ
+         BY68wfvl/FbN3JV5OG4mwkdgxtkfZtuNtIIayhtrRSCycKsR0ObZIJi6JCdR8N1aRYGG
+         BtGeNsXVUQ29LDQgYm5sEHnJ/poXjic4YSNTqXPwP6pC5tmZD5L+izJ+uTRKJOJma4DR
+         cbzw==
+X-Gm-Message-State: AOAM532zDeF7ZXaOS/FnCAw3Y258rIn9I0HDPI6RvaitlCv/g1uJsTFN
+        xegaIgngUdy+HGpBr57OctmVWDM7aFiTTdkJ
+X-Google-Smtp-Source: ABdhPJwuQyoZQsAT9aMUOrjHlteD3alQz281cVZJn0OBUEwFjaOkfuf4odwSaW6VYXE3F1Uii2uHRg==
+X-Received: by 2002:adf:dd10:: with SMTP id a16mr18521703wrm.207.1612190384969;
+        Mon, 01 Feb 2021 06:39:44 -0800 (PST)
+Received: from dell.default ([91.110.221.188])
+        by smtp.gmail.com with ESMTPSA id h15sm27301359wrt.10.2021.02.01.06.39.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Feb 2021 05:56:34 -0800 (PST)
-Date:   Mon, 1 Feb 2021 13:56:33 +0000
+        Mon, 01 Feb 2021 06:39:44 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
-To:     Arnd Bergmann <arnd@kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        IDE-ML <linux-ide@vger.kernel.org>
-Subject: Re: [PATCH 01/20] ata: ahci_dm816: Ignore -Woverride-init
-Message-ID: <20210201135633.GV4774@dell>
-References: <20210128180239.548512-1-lee.jones@linaro.org>
- <20210128180239.548512-2-lee.jones@linaro.org>
- <20210128181903.GA2099675@infradead.org>
- <20210128182713.GM4774@dell>
- <CAK8P3a3XgqD_bDreG_SPCfrjqLaduEpiwiWFVf73eNkrrMoBtw@mail.gmail.com>
+To:     lee.jones@linaro.org
+Cc:     linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        linux-ide@vger.kernel.org
+Subject: [PATCH 01/20] ata: libata-transport: Fix some potential doc-rot issues
+Date:   Mon,  1 Feb 2021 14:39:21 +0000
+Message-Id: <20210201143940.2070919-2-lee.jones@linaro.org>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20210201143940.2070919-1-lee.jones@linaro.org>
+References: <20210201143940.2070919-1-lee.jones@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAK8P3a3XgqD_bDreG_SPCfrjqLaduEpiwiWFVf73eNkrrMoBtw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, 01 Feb 2021, Arnd Bergmann wrote:
+Fixes the following W=1 kernel build warning(s):
 
-> On Thu, Jan 28, 2021 at 7:32 PM Lee Jones <lee.jones@linaro.org> wrote:
-> >
-> > On Thu, 28 Jan 2021, Christoph Hellwig wrote:
-> >
-> > > On Thu, Jan 28, 2021 at 06:02:20PM +0000, Lee Jones wrote:
-> > > > Some ATA drivers use the SCSI host template, a series of interwoven
-> > > > macros, to aid with initialisation.  Some of these macros conflict,
-> > > > resulting in the over-writing of previously set values.
-> > >
-> > > Please just disable this warning globally.  This is a sensible
-> > > patter and we should not sprinkle per-file options for something
-> > > that fundamental.
-> >
-> > Will do.  Just as soon as I've figured out how. :)
-> 
-> I have a local patch series doing it like this
+ drivers/ata/libata-transport.c:258: warning: Function parameter or member 'ap' not described in 'ata_tport_delete'
+ drivers/ata/libata-transport.c:258: warning: Excess function parameter 'port' description in 'ata_tport_delete'
+ drivers/ata/libata-transport.c:384: warning: Function parameter or member 'link' not described in 'ata_tlink_delete'
+ drivers/ata/libata-transport.c:384: warning: Excess function parameter 'port' description in 'ata_tlink_delete'
+ drivers/ata/libata-transport.c:640: warning: Function parameter or member 'ata_dev' not described in 'ata_tdev_delete'
+ drivers/ata/libata-transport.c:640: warning: Excess function parameter 'port' description in 'ata_tdev_delete'
 
-Can I leave this in your capable hands then?
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: linux-ide@vger.kernel.org
+Signed-off-by: Lee Jones <lee.jones@linaro.org>
+---
+ drivers/ata/libata-transport.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-I'll drop all my fixes for this if it can be replaced with just one.
-
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 5f550eb27f81..4e4cc14a289e 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -1390,6 +1390,8 @@ extern struct device_attribute *ata_common_sdev_attrs[];
->   * edge driver's module reference, otherwise the driver can be unloaded
->   * even if the scsi_device is being accessed.
->   */
-> +__diag_ignore(GCC, 8, "-Woverride-init", "intentional override")
-> +__diag_ignore(CLANG, 9, "-Winitializer-overrides", "intentional override")
->  #define __ATA_BASE_SHT(drv_name)                               \
->         .module                 = THIS_MODULE,                  \
->         .name                   = drv_name,                     \
-> 
-> I think this also requires a preparation patch to extend __diag_ignore to
-> additional compiler versions, not sure if that was already merged.
-> 
->          Arnd
-
+diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
+index 6a40e3c6cf492..34bb4608bdc67 100644
+--- a/drivers/ata/libata-transport.c
++++ b/drivers/ata/libata-transport.c
+@@ -250,7 +250,7 @@ static int ata_tport_match(struct attribute_container *cont,
+ 
+ /**
+  * ata_tport_delete  --  remove ATA PORT
+- * @port:	ATA PORT to remove
++ * @ap:	ATA PORT to remove
+  *
+  * Removes the specified ATA PORT.  Remove the associated link as well.
+  */
+@@ -376,7 +376,7 @@ static int ata_tlink_match(struct attribute_container *cont,
+ 
+ /**
+  * ata_tlink_delete  --  remove ATA LINK
+- * @port:	ATA LINK to remove
++ * @link:	ATA LINK to remove
+  *
+  * Removes the specified ATA LINK.  remove associated ATA device(s) as well.
+  */
+@@ -632,7 +632,7 @@ static void ata_tdev_free(struct ata_device *dev)
+ 
+ /**
+  * ata_tdev_delete  --  remove ATA device
+- * @port:	ATA PORT to remove
++ * @ata_dev:	ATA device to remove
+  *
+  * Removes the specified ATA device.
+  */
 -- 
-Lee Jones [李琼斯]
-Senior Technical Lead - Developer Services
-Linaro.org │ Open source software for Arm SoCs
-Follow Linaro: Facebook | Twitter | Blog
+2.25.1
+
