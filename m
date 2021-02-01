@@ -7,64 +7,61 @@ X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18653C433E6
-	for <linux-ide@archiver.kernel.org>; Mon,  1 Feb 2021 15:33:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E31A6C43381
+	for <linux-ide@archiver.kernel.org>; Mon,  1 Feb 2021 15:33:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA88464DE1
-	for <linux-ide@archiver.kernel.org>; Mon,  1 Feb 2021 15:33:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C694364EBF
+	for <linux-ide@archiver.kernel.org>; Mon,  1 Feb 2021 15:33:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230438AbhBAPdC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 1 Feb 2021 10:33:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59398 "EHLO
+        id S231250AbhBAPdU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 1 Feb 2021 10:33:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59390 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231186AbhBAOle (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 1 Feb 2021 09:41:34 -0500
-Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1BC2FC06121F
-        for <linux-ide@vger.kernel.org>; Mon,  1 Feb 2021 06:39:59 -0800 (PST)
-Received: by mail-wr1-x430.google.com with SMTP id v15so16864621wrx.4
-        for <linux-ide@vger.kernel.org>; Mon, 01 Feb 2021 06:39:59 -0800 (PST)
+        with ESMTP id S231282AbhBAOld (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 1 Feb 2021 09:41:33 -0500
+Received: from mail-wr1-x432.google.com (mail-wr1-x432.google.com [IPv6:2a00:1450:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 009C5C06121D
+        for <linux-ide@vger.kernel.org>; Mon,  1 Feb 2021 06:39:57 -0800 (PST)
+Received: by mail-wr1-x432.google.com with SMTP id c4so14119249wru.9
+        for <linux-ide@vger.kernel.org>; Mon, 01 Feb 2021 06:39:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=aMe7a3VhppfmWxSaJ9lM7zaGZfgpPGsI1NmH6z3NMlY=;
-        b=BcdbDpUnb48xUjDHyx+e2GZVxndB7U/KUWaPtWTaDHqFfJbSXUNkZHX++3YaFlDs1d
-         v4DqOQnLLK8V3qLaJWQ8mfTuEJLc/FiVzS01Rgxw8mZdHae27NwDTTxbRCpnNJKTNzAZ
-         Oe3naI2SbGdvzXzxewWpclopEeQe+VzbtaOSpOi0w2GZ+Q+wP6OLNMro9W1BnDqIXC71
-         fHgWMMnQpBNVQnN0RTDJCbm8zSM0KPdM08gD8f07e52K4Tod8/nYPrcOqdqfo3C1djTc
-         aU+oCj8RhJvWpun80Sg1GZRyIsl5fFCT4PzDE+m/S7OTTqLS9/dxVC+2GWDOWfCcmxvd
-         kIwA==
+        bh=g/xsj8QnzTyjZTuByN2rtr+7Bim8nVB2CCDQafkvd6A=;
+        b=nfEkhzEbgz14R/tMpOwQ02Eojho5vUVU6vM5evj27Ooo/l1N7p5vTWgkfFKNa0uKE7
+         +gL6H7kg3w41Bpb8ofpNmElwXHFyNIzGswnfbEVq/OFUytD3g/H/mgX+4QlicbyFv0/w
+         WljXKAe/AzV6xBwDr0P8gni8A31IN+pDSzCjGJuPRXFeFypKWYwrh+IzBWGDbTzPOHlm
+         bIWi94gCiNKCUhCft7VLMbp9LwTOu26W7vti9odQn6WaLswVKDBHrRMrkc85EeApTMHC
+         YbMkMAAZXD/5paEW4cT6W09tmhnY1tzAB/fUOvKHbMBAcCbWQrVd5pc3c1Lh7e9sI2He
+         OsOg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=aMe7a3VhppfmWxSaJ9lM7zaGZfgpPGsI1NmH6z3NMlY=;
-        b=ro17x7soKcoSfWu9KD2YUi8clRsd1q7cMJUkMtwQ/7izcY5bZnTaxnWN0czezGIHHG
-         cCUxDSzGrJFX/BQLVsYyqCLgSinWh5k67g4VTewM9h6QCQuJEHN5JK17lnVsEDnO9Azz
-         FImpp0alRc+I6Xzsqd67SCq0fbIRUb4c0g+erR0a88Dako7K7IZyq2P+I2ldG7d3Lun1
-         rLr6qXd1phsGHTodBMUpaTbmkqVpfYirmtdAdReQeca4hcWcF7Vaajg2qjSu7et3OojF
-         y57AuwYkMYFZ4kJlVbW+DmsSldOq1cDEihPrsz0F2mRUCweCNNr7fapwHuIrwMDQhuQJ
-         gh+Q==
-X-Gm-Message-State: AOAM533+NCyadb132ITGYJ+giJ2ulKwAz2X4sw0SzAmzprwar/urZ6wH
-        6qfLuXBCSwQY7LQoGyjSpOiscg==
-X-Google-Smtp-Source: ABdhPJzeOP1pJu5xl/+NmIPMfTjbgeyKY82fMKBoQz6WDykeOZ8f2/+1+uXUaS6hiuxPKbwonPdTBA==
-X-Received: by 2002:a05:6000:1202:: with SMTP id e2mr6891636wrx.328.1612190397886;
-        Mon, 01 Feb 2021 06:39:57 -0800 (PST)
+        bh=g/xsj8QnzTyjZTuByN2rtr+7Bim8nVB2CCDQafkvd6A=;
+        b=EP8vjL1YDk5KByLpXY3NXa4uO+oFOnFSG8HSPgTuFye3DNZq0Mo3QFmz+wTRtJnNpG
+         gyGCc97I4W4N4ACn2oNvPWVOeyqH8pPAL0L0ykOxZZ+chX9Qhz3Vc7u5BAdDHl0G0XkD
+         TwGLdc6iUuHe4xBN7F58jkzWj9WiRoanntdR7wiSpTkilRifrObmv56myeuISmGoZ8eo
+         DnZApjwn7/Tf+6QfJE7cbOMfsubaTLAIucbXID8ev3s1JArf4xE6Q/Bs+SXqcCAhN7Hy
+         ByWpraPHKw6IIaSPDdhmJepZ4YAIIv+9tuJSqo0R8MgtHgYIkiaFjoI7woNY8oypncJk
+         z/zA==
+X-Gm-Message-State: AOAM53087iP5K9OLGqZtI3Ll7KWmmmztA7bcSCMsCqinBVwyJyMqdnn1
+        rS+nLQ61FsEVBOXDCmm9gUpOww==
+X-Google-Smtp-Source: ABdhPJzPmYic1cm2Sz5pCBPwPCfylEgtpIbm5kuKCNjN5CBDvdpU0QDAwGLOOSsk3STc3hYIRx2dGQ==
+X-Received: by 2002:adf:dd10:: with SMTP id a16mr18522509wrm.207.1612190396737;
+        Mon, 01 Feb 2021 06:39:56 -0800 (PST)
 Received: from dell.default ([91.110.221.188])
-        by smtp.gmail.com with ESMTPSA id h15sm27301359wrt.10.2021.02.01.06.39.56
+        by smtp.gmail.com with ESMTPSA id h15sm27301359wrt.10.2021.02.01.06.39.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Feb 2021 06:39:57 -0800 (PST)
+        Mon, 01 Feb 2021 06:39:56 -0800 (PST)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
 Cc:     linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Andre Hedrick <andre@linux-ide.org>,
-        Thibaut VARENE <varenet@parisc-linux.org>,
-        Alessandro Zummo <alessandro.zummo@towertech.it>,
         linux-ide@vger.kernel.org
-Subject: [PATCH 13/20] ata: pata_artop: Repair possible copy/paste issue in 'artop_6210_qc_defer()'s header
-Date:   Mon,  1 Feb 2021 14:39:33 +0000
-Message-Id: <20210201143940.2070919-14-lee.jones@linaro.org>
+Subject: [PATCH 12/20] ata: pata_amd: Fix incorrectly named function in the header
+Date:   Mon,  1 Feb 2021 14:39:32 +0000
+Message-Id: <20210201143940.2070919-13-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210201143940.2070919-1-lee.jones@linaro.org>
 References: <20210201143940.2070919-1-lee.jones@linaro.org>
@@ -76,31 +73,28 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/ata/pata_artop.c:278: warning: expecting prototype for artop_6210_qc_defer(). Prototype was for artop6210_qc_defer() instead
+ drivers/ata/pata_amd.c:331: warning: expecting prototype for nv_probe_init(). Prototype was for nv_pre_reset() instead
 
 Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Andre Hedrick <andre@linux-ide.org>
-Cc: Thibaut VARENE <varenet@parisc-linux.org>
-Cc: Alessandro Zummo <alessandro.zummo@towertech.it>
 Cc: linux-ide@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/ata/pata_artop.c | 2 +-
+ drivers/ata/pata_amd.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/pata_artop.c b/drivers/ata/pata_artop.c
-index 02e4fd5e3b934..ad3c5808aaad6 100644
---- a/drivers/ata/pata_artop.c
-+++ b/drivers/ata/pata_artop.c
-@@ -268,7 +268,7 @@ static void artop6260_set_dmamode (struct ata_port *ap, struct ata_device *adev)
+diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
+index 75b830eb3c542..c8acba162d02f 100644
+--- a/drivers/ata/pata_amd.c
++++ b/drivers/ata/pata_amd.c
+@@ -319,7 +319,7 @@ static unsigned long nv_mode_filter(struct ata_device *dev,
  }
  
  /**
-- *	artop_6210_qc_defer	-	implement serialization
-+ *	artop6210_qc_defer	-	implement serialization
-  *	@qc: command
+- *	nv_probe_init	-	cable detection
++ *	nv_pre_reset	-	cable detection
+  *	@link: ATA link
+  *	@deadline: deadline jiffies for the operation
   *
-  *	Issue commands per host on this chip.
 -- 
 2.25.1
 
