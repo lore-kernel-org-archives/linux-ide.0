@@ -2,738 +2,141 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.6 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BC06C4332D
-	for <linux-ide@archiver.kernel.org>; Fri,  5 Feb 2021 22:18:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE70EC433DB
+	for <linux-ide@archiver.kernel.org>; Mon,  8 Feb 2021 18:03:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BC8A461492
-	for <linux-ide@archiver.kernel.org>; Fri,  5 Feb 2021 22:18:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ABAE364DE1
+	for <linux-ide@archiver.kernel.org>; Mon,  8 Feb 2021 18:03:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232660AbhBEWR2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 5 Feb 2021 17:17:28 -0500
-Received: from mx2.suse.de ([195.135.220.15]:55756 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232661AbhBEOfb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 5 Feb 2021 09:35:31 -0500
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 952A7AD29;
-        Fri,  5 Feb 2021 14:57:37 +0000 (UTC)
-Subject: Re: Lock inversion in ata_piix
-From:   Thomas Zimmermann <tzimmermann@suse.de>
-To:     axboe@kernel.dk
-Cc:     linux-ide@vger.kernel.org
-References: <f763098b-10e1-8825-84ea-1e4cb3c3c0ba@suse.de>
-Message-ID: <c75b61df-af1e-1abf-0e72-857011b1616a@suse.de>
-Date:   Fri, 5 Feb 2021 15:57:36 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.1
+        id S234366AbhBHSC1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 8 Feb 2021 13:02:27 -0500
+Received: from mail-mw2nam12on2071.outbound.protection.outlook.com ([40.107.244.71]:50388
+        "EHLO NAM12-MW2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S235244AbhBHSAQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 8 Feb 2021 13:00:16 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=lquU7jSddqAhqTGIEDCaeYccU2hGZoDxh84o81HTBxOd1qQRaiS14pYdWqSozJrndi61OhKpUM3+vuM3xOB5/A/RsN2Bt7Y7hjaBjIFGJYhVKRXTffFNxcnunn6eOCCq7CHOw6HliJPzeqZOnH+ODxEgCjIbZEjZJn7IYandT7e6SbXfMk3KbuxTCyvxvPR3xLTXUrUfhZI1Z6VnIHHoXZdvSexaJJ8mZhe8JMEXVHgqFTT/LcYX/FHiEL1eiCZnwvxEEo0R6Rigdv1wVVZeSCOgapJhzzLjebR1XiV3MIphI7wbAWy+5ssNsPMxyhVxA2Jo7CfVHrFzXC5S5iChcw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=iCuWH7vIF/MUa5y2uLt0by2pQAtTWRFX1eLhlmF9nGI=;
+ b=KrGMCAOrBSvrQAs7z6l2N0sNaI+Jg065w/jDqEvREUaXPBlp4K/pAHe0bXS7foyhXbLSzX0owkGYMkN2jjXwWGSr5vX7ZtM4xuvYa+1o+GrFI7svYgWxcJnkLxE5XVbzkailZJ7hG/tijlUXFzj19cYx+WxBjelVmjO2bnZxXQSzHqbFLvTW44KZrtcdhfDdP4MYVk57RNhdd5jBVx5lj5dOfYOwr1FyCZphJPTk3YdYfmeqDODN0XmzjntiZx8qjxGo73jnnkYc77+bX9DsumoRsBVZ6SMKnpJFWoUKwBdMFjaBaGDnOclm2l1bmIaYG9XZHQRtsRDDyqlRh2YYrQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 149.199.62.198) smtp.rcpttodomain=kernel.dk smtp.mailfrom=xilinx.com;
+ dmarc=bestguesspass action=none header.from=xilinx.com; dkim=none (message
+ not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=xilinx.onmicrosoft.com; s=selector2-xilinx-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=iCuWH7vIF/MUa5y2uLt0by2pQAtTWRFX1eLhlmF9nGI=;
+ b=Ge9w+nKb183Hq2y/jAF4vazzO102by2S/GmzVP2TbgSBw4OFVdXFhlfxNsAbxURYf4ZypNJw75VVu3Cu4Wwkt+Ll/2At2tSkaEnFbRslm5P5xIn5KeaU9Kptr6EU/c4gCmIbJbXbXfh9CD64IoF8si1oYFH024dN9PTw4TegVVw=
+Received: from SA0PR12CA0001.namprd12.prod.outlook.com (2603:10b6:806:6f::6)
+ by SN6PR02MB5312.namprd02.prod.outlook.com (2603:10b6:805:73::27) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3825.23; Mon, 8 Feb
+ 2021 17:59:20 +0000
+Received: from SN1NAM02FT028.eop-nam02.prod.protection.outlook.com
+ (2603:10b6:806:6f:cafe::7b) by SA0PR12CA0001.outlook.office365.com
+ (2603:10b6:806:6f::6) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3825.19 via Frontend
+ Transport; Mon, 8 Feb 2021 17:59:20 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 149.199.62.198)
+ smtp.mailfrom=xilinx.com; kernel.dk; dkim=none (message not signed)
+ header.d=none;kernel.dk; dmarc=bestguesspass action=none
+ header.from=xilinx.com;
+Received-SPF: Pass (protection.outlook.com: domain of xilinx.com designates
+ 149.199.62.198 as permitted sender) receiver=protection.outlook.com;
+ client-ip=149.199.62.198; helo=xsj-pvapexch02.xlnx.xilinx.com;
+Received: from xsj-pvapexch02.xlnx.xilinx.com (149.199.62.198) by
+ SN1NAM02FT028.mail.protection.outlook.com (10.152.72.105) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.3784.12 via Frontend Transport; Mon, 8 Feb 2021 17:59:20 +0000
+Received: from xsj-pvapexch02.xlnx.xilinx.com (172.19.86.41) by
+ xsj-pvapexch02.xlnx.xilinx.com (172.19.86.41) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1913.5; Mon, 8 Feb 2021 09:59:02 -0800
+Received: from smtp.xilinx.com (172.19.127.96) by
+ xsj-pvapexch02.xlnx.xilinx.com (172.19.86.41) with Microsoft SMTP Server id
+ 15.1.1913.5 via Frontend Transport; Mon, 8 Feb 2021 09:59:02 -0800
+Envelope-to: git@xilinx.com,
+ michal.simek@xilinx.com,
+ axboe@kernel.dk,
+ p.zabel@pengutronix.de,
+ robh+dt@kernel.org,
+ linux-ide@vger.kernel.org,
+ devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Received: from [10.140.6.35] (port=55682 helo=xhdsaipava40.xilinx.com)
+        by smtp.xilinx.com with esmtp (Exim 4.90)
+        (envelope-from <piyush.mehta@xilinx.com>)
+        id 1l9AoP-0001aF-Ih; Mon, 08 Feb 2021 09:59:02 -0800
+From:   Piyush Mehta <piyush.mehta@xilinx.com>
+To:     <axboe@kernel.dk>, <p.zabel@pengutronix.de>, <robh+dt@kernel.org>
+CC:     <linux-ide@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <git@xilinx.com>,
+        <sgoud@xilinx.com>, <michal.simek@xilinx.com>,
+        Piyush Mehta <piyush.mehta@xilinx.com>
+Subject: [PATCH V3 0/2] ata: ahci: ceva: Update the driver to support xilinx GT phy
+Date:   Mon, 8 Feb 2021 23:33:54 +0530
+Message-ID: <1612807436-5238-1-git-send-email-piyush.mehta@xilinx.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-In-Reply-To: <f763098b-10e1-8825-84ea-1e4cb3c3c0ba@suse.de>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="L9hcRbDqXuxRJHf9ZZZSWAURGpEgYnIql"
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
+X-MS-Office365-Filtering-HT: Tenant
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 7fa7e879-f29c-4413-3b0c-08d8cc5b42bd
+X-MS-TrafficTypeDiagnostic: SN6PR02MB5312:
+X-Microsoft-Antispam-PRVS: <SN6PR02MB5312F7B3AFEF6429CFFF2FF1D48F9@SN6PR02MB5312.namprd02.prod.outlook.com>
+X-Auto-Response-Suppress: DR, RN, NRN, OOF, AutoReply
+X-MS-Oob-TLC-OOBClassifiers: OLM:6430;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: SaDKBlXo1CC2E7pqgodSGF0WDPSbjFYr/aUCfbbtT9arwTVjjP/ZrMqXMX2HUuIYGnkdzNvV92zaksi88T046HiGoniG5CMro4dXOamvWJD7bfttntnHz1Hbat/nd2pN0pRbsbR/EQqA36tn8b6rDvhEvXDMo+V73Gp3hiLirjnRa5cnMXaqh2+b3T5Qn6nT+wVe8o0Nrvjd3WBByhmkAiWw8ZQ1Jp0r9M6Z9mp+G1wjXfQHJFczHgRe2uYfWbnjQuT8dD+4kcDFv1d/i5Z0VoNYOwiDw7h95SUUEMoj7XmSTFyXLNx1XXSBlt4dDRLrhMZIH6G7HnPPnOAP70RIv7bFT6k7/WyxQoayTFi9gmB1qWtr7yJdmed9bp5iQf4BhdnMbnuLlXXHNP2wPPnyZlCm2M1CbcqIRPC4fUzGeGdvaHkS+lP245L/x54nXPpBbuIqs7mRYDa5AnDsqvxdarR6At2Kjs2VOTL4jODQDzXMZ5+qfAomj9f8B9Pres8R+kdUM6rwTbgd5vbJn39leX9CkPfAnQFWFu5bSMjwc6xlkoUDimg0rSgMsdPBT/obwdy+c5UCUQpfUIo4+GFoyD24pd2u0sxAfEALENYPfxHbBNAauUFBhGtxTlY7ioDRg1X0CPBXxxW6jHU38VOVLSIUf4X0SWfTrq/t2k1wb6eVBpNHTv7DWgzrJluBfFnF
+X-Forefront-Antispam-Report: CIP:149.199.62.198;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:xsj-pvapexch02.xlnx.xilinx.com;PTR:unknown-62-198.xilinx.com;CAT:NONE;SFS:(4636009)(346002)(396003)(39860400002)(136003)(376002)(36840700001)(46966006)(6666004)(83380400001)(356005)(8936002)(36906005)(9786002)(4326008)(70206006)(82310400003)(47076005)(5660300002)(316002)(107886003)(7636003)(15650500001)(8676002)(26005)(2616005)(82740400003)(186003)(4744005)(336012)(426003)(36756003)(70586007)(7696005)(36860700001)(54906003)(2906002)(44832011)(478600001)(110136005)(102446001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: xilinx.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Feb 2021 17:59:20.5913
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7fa7e879-f29c-4413-3b0c-08d8cc5b42bd
+X-MS-Exchange-CrossTenant-Id: 657af505-d5df-48d0-8300-c31994686c5c
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=657af505-d5df-48d0-8300-c31994686c5c;Ip=[149.199.62.198];Helo=[xsj-pvapexch02.xlnx.xilinx.com]
+X-MS-Exchange-CrossTenant-AuthSource: SN1NAM02FT028.eop-nam02.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN6PR02MB5312
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---L9hcRbDqXuxRJHf9ZZZSWAURGpEgYnIql
-Content-Type: multipart/mixed; boundary="bCSYt9fEVDq7bLU5GofO6IOrV6yD36Bh8";
- protected-headers="v1"
-From: Thomas Zimmermann <tzimmermann@suse.de>
-To: axboe@kernel.dk
-Cc: linux-ide@vger.kernel.org
-Message-ID: <c75b61df-af1e-1abf-0e72-857011b1616a@suse.de>
-Subject: Re: Lock inversion in ata_piix
-References: <f763098b-10e1-8825-84ea-1e4cb3c3c0ba@suse.de>
-In-Reply-To: <f763098b-10e1-8825-84ea-1e4cb3c3c0ba@suse.de>
+This patch series updates the ceva driver to add support for Xilinx GT phy.
+This also updates the documentation with the device tree binding required
+for working with Xilinx GT phy.
 
---bCSYt9fEVDq7bLU5GofO6IOrV6yD36Bh8
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+---
+Changes in V2:
+ - Added backward compatibility with the older sequence of the CEVA controller.
+ - Update dt-bindings document: To make phy and reset properties optional.
+ - Remove rst_names property.
 
-Hi
+Changes in V3:
+ - Remove phy-names property.
+ - Validate backward compatibility with reset controller availability,
+   instead of a flag.
+---
+Piyush Mehta (2):
+  dt-bindings: ata: ahci: ceva: Update documentation for CEVA Controller
+  ata: ahci: ceva: Update the driver to support xilinx GT phy
 
-Am 03.02.21 um 13:22 schrieb Thomas Zimmermann:
-> Hi,
->=20
-> there's a possible lock inversion reported during boot-up. The rsp=20
-> driver is ata_piix. The full error is below.
+ .../devicetree/bindings/ata/ahci-ceva.txt          |  4 ++
+ drivers/ata/ahci_ceva.c                            | 43 ++++++++++++++++++++--
+ 2 files changed, 44 insertions(+), 3 deletions(-)
 
-The fix [1] given in [2] solves the issue.
+-- 
+2.7.4
 
-Tested-by: Thomas Zimmermann <tzimmermann@suse.de>
-
-[1]=20
-https://git.kernel.org/pub/scm/linux/kernel/git/pavel/linux-leds.git/comm=
-it/?id=3D9a5ad5c5b2d25508996f10ee6b428d5df91d9160
-[2]=20
-https://lore.kernel.org/linux-ide/46bcf09c-c4ac-e96b-1813-1798d36cd93d@re=
-dhat.com/T/#mbbccef9fd695a695eae14beda56b0bbb4e622c87
-
->=20
-> Best regards
-> Thomas
->=20
->=20
-> [=C2=A0=C2=A0 15.782834] =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> [=C2=A0=C2=A0 15.789912] WARNING: possible irq lock inversion dependenc=
-y detected
-> [=C2=A0=C2=A0 15.789915] 5.11.0-rc5-1-default+ #752 Tainted: G=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 E
-> [=C2=A0=C2=A0 15.789918] ----------------------------------------------=
-----------
-> [=C2=A0=C2=A0 15.789919] loadkeys/347 just changed the state of lock:
-> [=C2=A0=C2=A0 15.789922] ffff88810c289c18 (&host->lock){-...}-{2:2}, at=
-:=20
-> ata_bmdma_interrupt+0x22/0x2f0
-> [=C2=A0=C2=A0 15.789938] but this lock took another, HARDIRQ-READ-unsaf=
-e lock in=20
-> the past:
-> [=C2=A0=C2=A0 15.789940]=C2=A0 (&trig->leddev_list_lock){.+.?}-{2:2}
-> [=C2=A0=C2=A0 15.834024]
-> [=C2=A0=C2=A0 15.834024]
-> [=C2=A0=C2=A0 15.834024] and interrupts could create inverse lock order=
-ing between=20
-> them.
-> [=C2=A0=C2=A0 15.834024]
-> [=C2=A0=C2=A0 15.834028]
-> [=C2=A0=C2=A0 15.834028] other info that might help us debug this:
-> [=C2=A0=C2=A0 15.834029]=C2=A0 Possible interrupt unsafe locking scenar=
-io:
-> [=C2=A0=C2=A0 15.834029]
-> [=C2=A0=C2=A0 15.834031]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 CPU0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 CPU1
-> [=C2=A0=C2=A0 15.834032]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ----=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ----
-> [=C2=A0=C2=A0 15.834033]=C2=A0=C2=A0 lock(&trig->leddev_list_lock);
-> [=C2=A0=C2=A0 15.834037]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 local_irq=
-_disable();
-> [=C2=A0=C2=A0 15.834038]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 lock(&hos=
-t->lock);
-> [=C2=A0=C2=A0 15.834041]                               =20
-> lock(&trig->leddev_list_lock);
-> [=C2=A0=C2=A0 15.834044]=C2=A0=C2=A0 <Interrupt>
-> [=C2=A0=C2=A0 15.834045]=C2=A0=C2=A0=C2=A0=C2=A0 lock(&host->lock);
-> [=C2=A0=C2=A0 15.834048]
-> [=C2=A0=C2=A0 15.834048]=C2=A0 *** DEADLOCK ***
-> [=C2=A0=C2=A0 15.834048]
-> [=C2=A0=C2=A0 15.834049] no locks held by loadkeys/347.
-> [=C2=A0=C2=A0 15.834051]
-> [=C2=A0=C2=A0 15.834051] the shortest dependencies between 2nd lock and=
- 1st lock:
-> [=C2=A0=C2=A0 15.834064]=C2=A0 -> (&trig->leddev_list_lock){.+.?}-{2:2}=
- {
-> [=C2=A0=C2=A0 15.834071]=C2=A0=C2=A0=C2=A0=C2=A0 HARDIRQ-ON-R at:
-> [=C2=A0=C2=A0 15.834074]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 __lock_acquire+0x2d7/0x930
-> [=C2=A0=C2=A0 15.834081]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 lock_acquire.part.0+0xf7/0x1e0
-> [=C2=A0=C2=A0 15.834085]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 _raw_read_lock+0x3d/0xa0
-> [=C2=A0=C2=A0 15.834090]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 led_trigger_event+0x25/0x80
-> [=C2=A0=C2=A0 15.834095]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 kbd_bh+0xd1/0x100
-> [=C2=A0=C2=A0 15.834100] tasklet_action_common.constprop.0+0x1b1/0x1d0
-> [=C2=A0=C2=A0 15.834105]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 __do_softirq+0x108/0x554
-> [=C2=A0=C2=A0 15.834109]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 run_ksoftirqd+0x3a/0x60
-> [=C2=A0=C2=A0 15.834112]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 smpboot_thread_fn+0x1b7/0x300
-> [=C2=A0=C2=A0 15.834115]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 kthread+0x1e4/0x210
-> [=C2=A0=C2=A0 15.834119]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 ret_from_fork+0x22/0x30
-> [=C2=A0=C2=A0 15.834124]=C2=A0=C2=A0=C2=A0=C2=A0 IN-SOFTIRQ-R at:
-> [=C2=A0=C2=A0 15.834126]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 __lock_acquire+0x2d7/0x930
-> [=C2=A0=C2=A0 15.834130]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 lock_acquire.part.0+0xf7/0x1e0
-> [=C2=A0=C2=A0 15.834133]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 _raw_read_lock+0x3d/0xa0
-> [=C2=A0=C2=A0 15.834137]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 led_trigger_event+0x25/0x80
-> [=C2=A0=C2=A0 15.834141]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 kbd_bh+0xd1/0x100
-> [=C2=A0=C2=A0 15.834144] tasklet_action_common.constprop.0+0x1b1/0x1d0
-> [=C2=A0=C2=A0 15.834148]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 __do_softirq+0x108/0x554
-> [=C2=A0=C2=A0 15.834151]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 run_ksoftirqd+0x3a/0x60
-> [=C2=A0=C2=A0 15.834154]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 smpboot_thread_fn+0x1b7/0x300
-> [=C2=A0=C2=A0 15.834157]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 kthread+0x1e4/0x210
-> [=C2=A0=C2=A0 15.834160]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 ret_from_fork+0x22/0x30
-> [=C2=A0=C2=A0 15.834164]=C2=A0=C2=A0=C2=A0=C2=A0 SOFTIRQ-ON-R at:
-> [=C2=A0=C2=A0 15.834166]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 __lock_acquire+0x2d7/0x930
-> [=C2=A0=C2=A0 15.834169]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 lock_acquire.part.0+0xf7/0x1e0
-> [=C2=A0=C2=A0 15.834173]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 _raw_read_lock+0x3d/0xa0
-> [=C2=A0=C2=A0 15.834177]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 led_trigger_event+0x25/0x80
-> [=C2=A0=C2=A0 15.834181]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 ledtrig_cpu+0xb1/0x110
-> [=C2=A0=C2=A0 15.834184]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 ledtrig_online_cpu+0xf/0x20
-> [=C2=A0=C2=A0 15.834188]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 cpuhp_invoke_callback+0xf9/0x5b0
-> [=C2=A0=C2=A0 15.834193]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 cpuhp_thread_fun+0x237/0x330
-> [=C2=A0=C2=A0 15.834197]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 smpboot_thread_fn+0x1b7/0x300
-> [=C2=A0=C2=A0 15.834200]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 kthread+0x1e4/0x210
-> [=C2=A0=C2=A0 15.834203]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0 ret_from_fork+0x22/0x30
-> [=C2=A0=C2=A0 15.834207]=C2=A0=C2=A0=C2=A0=C2=A0 INITIAL USE at:
-> [=C2=A0=C2=A0 15.834209]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 __lock_acquire+0x2d7/0x930
-> [=C2=A0=C2=A0 15.834213]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 lock_acquire.part.0+0xf7/0x1e0
-> [=C2=A0=C2=A0 15.834216]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 _raw_write_lock_irqsave+0x4d/0x90
-> [=C2=A0=C2=A0 15.834221]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 led_trigger_set+0x224/0x470
-> [=C2=A0=C2=A0 15.834225]                     =20
-> led_trigger_set_default.part.0+0xd1/0xf0
-> [=C2=A0=C2=A0 15.834229]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 led_classdev_register_ext+0x37a/0x440
-> [=C2=A0=C2=A0 15.834233]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 input_leds_connect+0x1e6/0x380
-> [=C2=A0=C2=A0 15.834236]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 input_attach_handler+0xb1/0xd0
-> [=C2=A0=C2=A0 15.834241]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 input_register_device.cold+0xd0/0x192
-> [=C2=A0=C2=A0 15.834245]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 atkbd_connect+0x3bb/0x460
-> [=C2=A0=C2=A0 15.834248]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 serio_driver_probe+0x56/0x70
-> [=C2=A0=C2=A0 15.834252]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 really_probe+0x185/0x6c0
-> [=C2=A0=C2=A0 15.834255]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 driver_probe_device+0x13f/0x1d0
-> [=C2=A0=C2=A0 15.834259]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 device_driver_attach+0x114/0x120
-> [=C2=A0=C2=A0 15.834262]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 __driver_attach+0xb0/0x1a0
-> [=C2=A0=C2=A0 15.834265]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 bus_for_each_dev+0xdd/0x120
-> [=C2=A0=C2=A0 15.834269]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 serio_handle_event+0x18f/0x3f0
-> [=C2=A0=C2=A0 15.834273]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 process_one_work+0x571/0xa40
-> [=C2=A0=C2=A0 15.834277]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 worker_thread+0x8b/0x620
-> [=C2=A0=C2=A0 15.834280]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 kthread+0x1e4/0x210
-> [=C2=A0=C2=A0 15.834283]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 ret_from_fork+0x22/0x30
-> [=C2=A0=C2=A0 15.834287]=C2=A0=C2=A0=C2=A0=C2=A0 INITIAL READ USE at:
-> [=C2=A0=C2=A0 15.834289]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 __lock_acquire+0x2d7/0x930
-> [=C2=A0=C2=A0 15.834292]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 lock_acquire.part.0+0xf7/0x1e0
-> [=C2=A0=C2=A0 15.834296]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 _raw_read_lock+0x3d/0xa0
-> [=C2=A0=C2=A0 15.834300]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 led_trigger_event+0x25/0x80
-> [=C2=A0=C2=A0 15.834304]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 kbd_bh+0xd1/0x100
-> [=C2=A0=C2=A0 15.834307] tasklet_action_common.constprop.0+0x1b1/0x1d0
-> [=C2=A0=C2=A0 15.834311]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 __do_softirq+0x108/0x554
-> [=C2=A0=C2=A0 15.834314]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 run_ksoftirqd+0x3a/0x60
-> [=C2=A0=C2=A0 15.834318]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 smpboot_thread_fn+0x1b7/0x300
-> [=C2=A0=C2=A0 15.834321]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 kthread+0x1e4/0x210
-> [=C2=A0=C2=A0 15.834323]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ret_from_fork+0x22/0x30
-> [=C2=A0=C2=A0 15.834327]=C2=A0=C2=A0 }
-> [=C2=A0=C2=A0 15.834328]=C2=A0=C2=A0 ... key=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0 at: [<ffffffff962167c0>] __key.0+0x0/0x40
-> [=C2=A0=C2=A0 15.834334]=C2=A0=C2=A0 ... acquired at:
-> [=C2=A0=C2=A0 15.834335]=C2=A0=C2=A0=C2=A0 __lock_acquire+0x54f/0x930
-> [=C2=A0=C2=A0 15.834339]=C2=A0=C2=A0=C2=A0 lock_acquire.part.0+0xf7/0x1=
-e0
-> [=C2=A0=C2=A0 15.834342]=C2=A0=C2=A0=C2=A0 _raw_read_lock+0x3d/0xa0
-> [=C2=A0=C2=A0 15.834346]=C2=A0=C2=A0=C2=A0 led_trigger_blink_oneshot+0x=
-34/0x90
-> [=C2=A0=C2=A0 15.834350]=C2=A0=C2=A0=C2=A0 ledtrig_disk_activity+0x67/0=
-xc0
-> [=C2=A0=C2=A0 15.834354]=C2=A0=C2=A0=C2=A0 ata_qc_complete+0x3b/0x6d0
-> [=C2=A0=C2=A0 15.834357]=C2=A0=C2=A0=C2=A0 ata_sff_hsm_move+0x226/0x690=
-
-> [=C2=A0=C2=A0 15.834361]=C2=A0=C2=A0=C2=A0 ata_sff_pio_task+0x265/0x290=
-
-> [=C2=A0=C2=A0 15.834365]=C2=A0=C2=A0=C2=A0 process_one_work+0x571/0xa40=
-
-> [=C2=A0=C2=A0 15.834368]=C2=A0=C2=A0=C2=A0 worker_thread+0x8b/0x620
-> [=C2=A0=C2=A0 15.834372]=C2=A0=C2=A0=C2=A0 kthread+0x1e4/0x210
-> [=C2=A0=C2=A0 15.834374]=C2=A0=C2=A0=C2=A0 ret_from_fork+0x22/0x30
-> [=C2=A0=C2=A0 15.834378]
-> [=C2=A0=C2=A0 15.834379] -> (&host->lock){-...}-{2:2} {
-> [=C2=A0=C2=A0 15.834385]=C2=A0=C2=A0=C2=A0 IN-HARDIRQ-W at:
-> [=C2=A0=C2=A0 15.834387]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-__lock_acquire+0x2d7/0x930
-> [=C2=A0=C2=A0 15.834391]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-lock_acquire.part.0+0xf7/0x1e0
-> [=C2=A0=C2=A0 15.834394]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-_raw_spin_lock_irqsave+0x4d/0x90
-> [=C2=A0=C2=A0 15.834398]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-ata_bmdma_interrupt+0x22/0x2f0
-> [=C2=A0=C2=A0 15.834402]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-__handle_irq_event_percpu+0x176/0x410
-> [=C2=A0=C2=A0 15.834406]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-handle_irq_event+0xb1/0x140
-> [=C2=A0=C2=A0 15.834409]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-handle_fasteoi_irq+0x100/0x390
-> [=C2=A0=C2=A0 15.834413]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-asm_call_irq_on_stack+0x12/0x20
-> [=C2=A0=C2=A0 15.834416]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-common_interrupt+0xee/0x190
-> [=C2=A0=C2=A0 15.834421]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-asm_common_interrupt+0x1e/0x40
-> [=C2=A0=C2=A0 15.834424]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-__orc_find+0x39/0xc0
-> [=C2=A0=C2=A0 15.834428]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-unwind_next_frame+0x107/0xa20
-> [=C2=A0=C2=A0 15.834431]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-arch_stack_walk+0x6c/0xb0
-> [=C2=A0=C2=A0 15.834435]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-stack_trace_save+0x81/0xa0
-> [=C2=A0=C2=A0 15.834439]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-kasan_save_stack+0x1b/0x40
-> [=C2=A0=C2=A0 15.834443]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-____kasan_kmalloc.constprop.0+0x81/0xa0
-> [=C2=A0=C2=A0 15.834446]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-kmem_cache_alloc_trace+0x136/0x310
-> [=C2=A0=C2=A0 15.834451]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-vt_kdskbent+0x78/0x300
-> [=C2=A0=C2=A0 15.834455]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-vt_do_kdsk_ioctl+0xe5/0x1e0
-> [=C2=A0=C2=A0 15.834459]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-vt_k_ioctl+0x4dd/0x6f0
-> [=C2=A0=C2=A0 15.834462]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-vt_ioctl+0xc5/0x850
-> [=C2=A0=C2=A0 15.834465]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-tty_ioctl+0x472/0xab0
-> [=C2=A0=C2=A0 15.834471]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-__x64_sys_ioctl+0xb9/0xf0
-> [=C2=A0=C2=A0 15.834475]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-do_syscall_64+0x33/0x80
-> [=C2=A0=C2=A0 15.834478]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 =
-entry_SYSCALL_64_after_hwframe+0x44/0xa9
-> [=C2=A0=C2=A0 15.834483]=C2=A0=C2=A0=C2=A0 INITIAL USE at:
-> [=C2=A0=C2=A0 15.834485]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 __lock=
-_acquire+0x2d7/0x930
-> [=C2=A0=C2=A0 15.834489]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 lock_a=
-cquire.part.0+0xf7/0x1e0
-> [=C2=A0=C2=A0 15.834492]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 _raw_s=
-pin_lock_irqsave+0x4d/0x90
-> [=C2=A0=C2=A0 15.834496]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ata_de=
-v_init+0xb3/0x170
-> [=C2=A0=C2=A0 15.834500]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ata_li=
-nk_init+0xc7/0x140
-> [=C2=A0=C2=A0 15.834503]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ata_po=
-rt_alloc+0x2e7/0x300
-> [=C2=A0=C2=A0 15.834506]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ata_ho=
-st_alloc+0x136/0x180
-> [=C2=A0=C2=A0 15.834510]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ata_ho=
-st_alloc_pinfo+0x1e/0x190
-> [=C2=A0=C2=A0 15.834513]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ata_pc=
-i_sff_prepare_host+0x3c/0xa0
-> [=C2=A0=C2=A0 15.834517]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ata_pc=
-i_bmdma_prepare_host+0x10/0x30
-> [=C2=A0=C2=A0 15.834520]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 piix_i=
-nit_one+0x47b/0x681 [ata_piix]
-> [=C2=A0=C2=A0 15.834532]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 local_=
-pci_probe+0x74/0xc0
-> [=C2=A0=C2=A0 15.834535]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 pci_ca=
-ll_probe+0xb7/0x1d0
-> [=C2=A0=C2=A0 15.834538]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 pci_de=
-vice_probe+0x102/0x140
-> [=C2=A0=C2=A0 15.834541]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 really=
-_probe+0x185/0x6c0
-> [=C2=A0=C2=A0 15.834544]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 driver=
-_probe_device+0x13f/0x1d0
-> [=C2=A0=C2=A0 15.834547]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 device=
-_driver_attach+0x114/0x120
-> [=C2=A0=C2=A0 15.834550]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 __driv=
-er_attach+0xb0/0x1a0
-> [=C2=A0=C2=A0 15.834553]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bus_fo=
-r_each_dev+0xdd/0x120
-> [=C2=A0=C2=A0 15.834557]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bus_ad=
-d_driver+0x1fb/0x2e0
-> [=C2=A0=C2=A0 15.834560]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 driver=
-_register+0x103/0x180
-> [=C2=A0=C2=A0 15.834563]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 piix_i=
-nit+0x1f/0x1000 [ata_piix]
-> [=C2=A0=C2=A0 15.834572]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 do_one=
-_initcall+0xbb/0x3a0
-> [=C2=A0=C2=A0 15.834576]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 do_ini=
-t_module+0xfd/0x3c0
-> [=C2=A0=C2=A0 15.834580]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 load_m=
-odule+0xbef/0xc70
-> [=C2=A0=C2=A0 15.834584]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 __do_s=
-ys_finit_module+0xff/0x180
-> [=C2=A0=C2=A0 15.834588]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 do_sys=
-call_64+0x33/0x80
-> [=C2=A0=C2=A0 15.834591]=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 entry_=
-SYSCALL_64_after_hwframe+0x44/0xa9
-> [=C2=A0=C2=A0 15.834595]=C2=A0 }
-> [=C2=A0=C2=A0 15.834597]=C2=A0 ... key=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 at=
-: [<ffffffff9620bec0>] __key.5+0x0/0x40
-> [=C2=A0=C2=A0 15.834601]=C2=A0 ... acquired at:
-> [=C2=A0=C2=A0 15.834603]=C2=A0=C2=A0=C2=A0 mark_lock_irq+0x151/0x360
-> [=C2=A0=C2=A0 15.834606]=C2=A0=C2=A0=C2=A0 mark_lock+0x309/0x4f0
-> [=C2=A0=C2=A0 15.834609]=C2=A0=C2=A0=C2=A0 mark_usage+0x185/0x1a0
-> [=C2=A0=C2=A0 15.834612]=C2=A0=C2=A0=C2=A0 __lock_acquire+0x2d7/0x930
-> [=C2=A0=C2=A0 15.834615]=C2=A0=C2=A0=C2=A0 lock_acquire.part.0+0xf7/0x1=
-e0
-> [=C2=A0=C2=A0 15.834618]=C2=A0=C2=A0=C2=A0 _raw_spin_lock_irqsave+0x4d/=
-0x90
-> [=C2=A0=C2=A0 15.834622]=C2=A0=C2=A0=C2=A0 ata_bmdma_interrupt+0x22/0x2=
-f0
-> [=C2=A0=C2=A0 15.834626]=C2=A0=C2=A0=C2=A0 __handle_irq_event_percpu+0x=
-176/0x410
-> [=C2=A0=C2=A0 15.834629]=C2=A0=C2=A0=C2=A0 handle_irq_event+0xb1/0x140
-> [=C2=A0=C2=A0 15.834632]=C2=A0=C2=A0=C2=A0 handle_fasteoi_irq+0x100/0x3=
-90
-> [=C2=A0=C2=A0 15.834635]=C2=A0=C2=A0=C2=A0 asm_call_irq_on_stack+0x12/0=
-x20
-> [=C2=A0=C2=A0 15.834639]=C2=A0=C2=A0=C2=A0 common_interrupt+0xee/0x190
-> [=C2=A0=C2=A0 15.834642]=C2=A0=C2=A0=C2=A0 asm_common_interrupt+0x1e/0x=
-40
-> [=C2=A0=C2=A0 15.834645]=C2=A0=C2=A0=C2=A0 __orc_find+0x39/0xc0
-> [=C2=A0=C2=A0 15.834648]=C2=A0=C2=A0=C2=A0 unwind_next_frame+0x107/0xa2=
-0
-> [=C2=A0=C2=A0 15.834651]=C2=A0=C2=A0=C2=A0 arch_stack_walk+0x6c/0xb0
-> [=C2=A0=C2=A0 15.834654]=C2=A0=C2=A0=C2=A0 stack_trace_save+0x81/0xa0
-> [=C2=A0=C2=A0 15.834657]=C2=A0=C2=A0=C2=A0 kasan_save_stack+0x1b/0x40
-> [=C2=A0=C2=A0 15.834660]=C2=A0=C2=A0=C2=A0 ____kasan_kmalloc.constprop.=
-0+0x81/0xa0
-> [=C2=A0=C2=A0 15.834663]=C2=A0=C2=A0=C2=A0 kmem_cache_alloc_trace+0x136=
-/0x310
-> [=C2=A0=C2=A0 15.834667]=C2=A0=C2=A0=C2=A0 vt_kdskbent+0x78/0x300
-> [=C2=A0=C2=A0 15.834670]=C2=A0=C2=A0=C2=A0 vt_do_kdsk_ioctl+0xe5/0x1e0
-> [=C2=A0=C2=A0 15.834674]=C2=A0=C2=A0=C2=A0 vt_k_ioctl+0x4dd/0x6f0
-> [=C2=A0=C2=A0 15.834677]=C2=A0=C2=A0=C2=A0 vt_ioctl+0xc5/0x850
-> [=C2=A0=C2=A0 15.834680]=C2=A0=C2=A0=C2=A0 tty_ioctl+0x472/0xab0
-> [=C2=A0=C2=A0 15.834684]=C2=A0=C2=A0=C2=A0 __x64_sys_ioctl+0xb9/0xf0
-> [=C2=A0=C2=A0 15.834687]=C2=A0=C2=A0=C2=A0 do_syscall_64+0x33/0x80
-> [=C2=A0=C2=A0 15.834690]=C2=A0=C2=A0=C2=A0 entry_SYSCALL_64_after_hwfra=
-me+0x44/0xa9
-> [=C2=A0=C2=A0 15.834695]
-> [=C2=A0=C2=A0 15.834695]
-> [=C2=A0=C2=A0 15.834695] stack backtrace:
-> [=C2=A0=C2=A0 15.834697] CPU: 1 PID: 347 Comm: loadkeys Tainted: G=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 E  =20
-> 5.11.0-rc5-1-default+ #752
-> [=C2=A0=C2=A0 15.834702] Hardware name: HP ProLiant DL120 G7, BIOS J01 =
-04/21/2011
-> [=C2=A0=C2=A0 15.834705] Call Trace:
-> [=C2=A0=C2=A0 15.834707]=C2=A0 <IRQ>
-> [=C2=A0=C2=A0 15.834709]=C2=A0 dump_stack+0xae/0xe5
-> [=C2=A0=C2=A0 15.834715]=C2=A0 check_usage_forwards.cold+0x1f/0x4e
-> [=C2=A0=C2=A0 15.834722]=C2=A0 ? check_usage_backwards+0x2b0/0x2b0
-> [=C2=A0=C2=A0 15.834727]=C2=A0 ? stack_trace_save+0x81/0xa0
-> [=C2=A0=C2=A0 15.834731]=C2=A0 ? jhash.constprop.0+0x1e3/0x260
-> [=C2=A0=C2=A0 15.834737]=C2=A0 mark_lock_irq+0x151/0x360
-> [=C2=A0=C2=A0 15.834742]=C2=A0 mark_lock+0x309/0x4f0
-> [=C2=A0=C2=A0 15.834746]=C2=A0 mark_usage+0x185/0x1a0
-> [=C2=A0=C2=A0 15.834751]=C2=A0 __lock_acquire+0x2d7/0x930
-> [=C2=A0=C2=A0 15.834756]=C2=A0 ? check_prev_add+0x11e0/0x11e0
-> [=C2=A0=C2=A0 15.834760]=C2=A0 lock_acquire.part.0+0xf7/0x1e0
-> [=C2=A0=C2=A0 15.834764]=C2=A0 ? ata_bmdma_interrupt+0x22/0x2f0
-> [=C2=A0=C2=A0 15.834769]=C2=A0 ? rcu_read_unlock+0x40/0x40
-> [=C2=A0=C2=A0 15.834773]=C2=A0 ? lock_is_held_type+0xdc/0x110
-> [=C2=A0=C2=A0 15.834792]=C2=A0 ? rcu_read_lock_sched_held+0x3f/0x80
-> [=C2=A0=C2=A0 15.834797]=C2=A0 ? lock_acquire+0x74/0x190
-> [=C2=A0=C2=A0 15.834801]=C2=A0 ? ata_bmdma_interrupt+0x22/0x2f0
-> [=C2=A0=C2=A0 15.834806]=C2=A0 _raw_spin_lock_irqsave+0x4d/0x90
-> [=C2=A0=C2=A0 15.834811]=C2=A0 ? ata_bmdma_interrupt+0x22/0x2f0
-> [=C2=A0=C2=A0 15.834815]=C2=A0 ata_bmdma_interrupt+0x22/0x2f0
-> [=C2=A0=C2=A0 15.834819]=C2=A0 ? lock_is_held_type+0xdc/0x110
-> [=C2=A0=C2=A0 15.834824]=C2=A0 ? ata_bmdma_port_intr+0x180/0x180
-> [=C2=A0=C2=A0 15.834829]=C2=A0 __handle_irq_event_percpu+0x176/0x410
-> [=C2=A0=C2=A0 15.834834]=C2=A0 handle_irq_event+0xb1/0x140
-> [=C2=A0=C2=A0 15.834838]=C2=A0 ? handle_irq_event_percpu+0xd0/0xd0
-> [=C2=A0=C2=A0 15.834842]=C2=A0 ? handle_fasteoi_irq+0x4d/0x390
-> [=C2=A0=C2=A0 15.834847]=C2=A0 handle_fasteoi_irq+0x100/0x390
-> [=C2=A0=C2=A0 15.834853]=C2=A0 asm_call_irq_on_stack+0x12/0x20
-> [=C2=A0=C2=A0 15.834857]=C2=A0 </IRQ>
-> [=C2=A0=C2=A0 15.834858]=C2=A0 common_interrupt+0xee/0x190
-> [=C2=A0=C2=A0 15.834863]=C2=A0 asm_common_interrupt+0x1e/0x40
-> [=C2=A0=C2=A0 15.834867] RIP: 0010:__orc_find+0x39/0xc0
-> [=C2=A0=C2=A0 15.834871] Code: 6c 97 fc 41 54 55 53 48 83 ec 08 48 89 3=
-4 24 85 d2=20
-> 74 7d 49 89 fc 4c 39 ef 0f 87 82 00 00 00 48 89 cb 48 89 fd 49 89 ff eb=
-=20
-> 0c <4d> 8d 7e 04 4c 89 f5 4d 39 fd 72 37 4c 89 e8 4c 29 f8 48 89 c1 48
-> [=C2=A0=C2=A0 15.834875] RSP: 0018:ffffc9000304f720 EFLAGS: 00000202
-> [=C2=A0=C2=A0 15.834879] RAX: ffffffff91494573 RBX: ffffffff9149457a RC=
-X:=20
-> dffffc0000000000
-> [=C2=A0=C2=A0 15.834882] RDX: 0000000000000007 RSI: ffffffff93e7301a RD=
-I:=20
-> ffffffff93b820dc
-> [=C2=A0=C2=A0 15.834885] RBP: ffffffff93b820d8 R08: ffffffff910bbe28 R0=
-9:=20
-> ffffffff93debf3b
-> [=C2=A0=C2=A0 15.834888] R10: fffffbfff27bd7e7 R11: 0000000000000001 R1=
-2:=20
-> ffffffff93b82090
-> [=C2=A0=C2=A0 15.834890] R13: ffffffff93b820dc R14: ffffffff93b820dc R1=
-5:=20
-> ffffffff93b820dc
-> [=C2=A0=C2=A0 15.834894]=C2=A0 ? kasan_save_stack+0x1a/0x40
-> [=C2=A0=C2=A0 15.834898]=C2=A0 ? __orc_find+0x68/0xc0
-> [=C2=A0=C2=A0 15.834901]=C2=A0 ? kasan_save_stack+0x13/0x40
-> [=C2=A0=C2=A0 15.834908]=C2=A0 unwind_next_frame+0x107/0xa20
-> [=C2=A0=C2=A0 15.834912]=C2=A0 ? kasan_save_stack+0x1b/0x40
-> [=C2=A0=C2=A0 15.834915]=C2=A0 ? kasan_save_stack+0x1b/0x40
-> [=C2=A0=C2=A0 15.834919]=C2=A0 ? kasan_save_stack+0x1b/0x40
-> [=C2=A0=C2=A0 15.834922]=C2=A0 ? deref_stack_reg+0xb0/0xb0
-> [=C2=A0=C2=A0 15.834946]=C2=A0 ? __unwind_start.part.0+0x2c5/0x330
-> [=C2=A0=C2=A0 15.834949]=C2=A0 ? create_prof_cpu_mask+0x20/0x20
-> [=C2=A0=C2=A0 15.834954]=C2=A0 arch_stack_walk+0x6c/0xb0
-> [=C2=A0=C2=A0 15.834959]=C2=A0 ? kasan_save_stack+0x1b/0x40
-> [=C2=A0=C2=A0 15.834963]=C2=A0 stack_trace_save+0x81/0xa0
-> [=C2=A0=C2=A0 15.834967]=C2=A0 ? stack_trace_consume_entry+0x80/0x80
-> [=C2=A0=C2=A0 15.834971]=C2=A0 ? stack_trace_consume_entry+0x80/0x80
-> [=C2=A0=C2=A0 15.834975]=C2=A0 ? check_prev_add+0x11e0/0x11e0
-> [=C2=A0=C2=A0 15.834979]=C2=A0 kasan_save_stack+0x1b/0x40
-> [=C2=A0=C2=A0 15.834982]=C2=A0 ? kasan_save_stack+0x1b/0x40
-> [=C2=A0=C2=A0 15.834986]=C2=A0 ? __lock_acquire+0x572/0x930
-> [=C2=A0=C2=A0 15.834992]=C2=A0 ? lock_acquire.part.0+0xf7/0x1e0
-> [=C2=A0=C2=A0 15.834996]=C2=A0 ? sched_clock+0x5/0x10
-> [=C2=A0=C2=A0 15.835001]=C2=A0 ? sched_clock_cpu+0x18/0x110
-> [=C2=A0=C2=A0 15.835006]=C2=A0 ? __lock_release+0x12f/0x4f0
-> [=C2=A0=C2=A0 15.835011]=C2=A0 ? lock_downgrade+0xa0/0xa0
-> [=C2=A0=C2=A0 15.835014]=C2=A0 ? __lock_contended+0x490/0x490
-> [=C2=A0=C2=A0 15.835019]=C2=A0 ? cache_alloc_refill+0x2c8/0x310
-> [=C2=A0=C2=A0 15.835024]=C2=A0 ? do_raw_spin_unlock+0x86/0xf0
-> [=C2=A0=C2=A0 15.835029]=C2=A0 ? mark_held_locks+0x23/0x90
-> [=C2=A0=C2=A0 15.835033]=C2=A0 ? unpoison_range+0x3a/0x60
-> [=C2=A0=C2=A0 15.835037]=C2=A0 ____kasan_kmalloc.constprop.0+0x81/0xa0
-> [=C2=A0=C2=A0 15.835042]=C2=A0 kmem_cache_alloc_trace+0x136/0x310
-> [=C2=A0=C2=A0 15.835048]=C2=A0 vt_kdskbent+0x78/0x300
-> [=C2=A0=C2=A0 15.835053]=C2=A0 vt_do_kdsk_ioctl+0xe5/0x1e0
-> [=C2=A0=C2=A0 15.835058]=C2=A0 ? vt_do_kbkeycode_ioctl+0x230/0x230
-> [=C2=A0=C2=A0 15.835063]=C2=A0 ? check_prev_add+0x11e0/0x11e0
-> [=C2=A0=C2=A0 15.835067]=C2=A0 vt_k_ioctl+0x4dd/0x6f0
-> [=C2=A0=C2=A0 15.835071]=C2=A0 ? get_pid.part.0+0x50/0x50
-> [=C2=A0=C2=A0 15.835076]=C2=A0 ? apparmor_capable+0x9d/0x190
-> [=C2=A0=C2=A0 15.835081]=C2=A0 ? security_capable+0x4d/0x60
-> [=C2=A0=C2=A0 15.835086]=C2=A0 vt_ioctl+0xc5/0x850
-> [=C2=A0=C2=A0 15.835090]=C2=A0 ? complete_change_console+0x160/0x160
-> [=C2=A0=C2=A0 15.835096]=C2=A0 tty_ioctl+0x472/0xab0
-> [=C2=A0=C2=A0 15.835101]=C2=A0 ? tty_poll+0xd0/0xd0
-> [=C2=A0=C2=A0 15.835105]=C2=A0 ? lock_is_held_type+0xdc/0x110
-> [=C2=A0=C2=A0 15.835111]=C2=A0 ? do_vfs_ioctl+0x662/0x680
-> [=C2=A0=C2=A0 15.835115]=C2=A0 ? asm_sysvec_apic_timer_interrupt+0x12/0=
-x20
-> [=C2=A0=C2=A0 15.835119]=C2=A0 ? ioctl_fiemap.isra.0+0x1a0/0x1a0
-> [=C2=A0=C2=A0 15.835123]=C2=A0 ? asm_sysvec_apic_timer_interrupt+0x12/0=
-x20
-> [=C2=A0=C2=A0 15.835129]=C2=A0 __x64_sys_ioctl+0xb9/0xf0
-> [=C2=A0=C2=A0 15.835134]=C2=A0 do_syscall_64+0x33/0x80
-> [=C2=A0=C2=A0 15.835138]=C2=A0 entry_SYSCALL_64_after_hwframe+0x44/0xa9=
-
-> [=C2=A0=C2=A0 15.835143] RIP: 0033:0x7f79989113cb
-> [=C2=A0=C2=A0 15.835146] Code: 89 d8 49 8d 3c 1c 48 f7 d8 49 39 c4 72 b=
-5 e8 1c ff=20
-> ff ff 85 c0 78 ba 4c 89 e0 5b 5d 41 5c c3 f3 0f 1e fa b8 10 00 00 00 0f=
-=20
-> 05 <48> 3d 01 f0 ff ff 73 01 c3 48 8b 0d 75 ba 0c 00 f7 d8 64 89 01 48
-> [=C2=A0=C2=A0 15.835149] RSP: 002b:00007ffec2615b58 EFLAGS: 00000246 OR=
-IG_RAX:=20
-> 0000000000000010
-> [=C2=A0=C2=A0 15.835153] RAX: ffffffffffffffda RBX: 000000000000004d RC=
-X:=20
-> 00007f79989113cb
-> [=C2=A0=C2=A0 15.835156] RDX: 00007ffec2615bac RSI: 0000000000004b47 RD=
-I:=20
-> 0000000000000003
-> [=C2=A0=C2=A0 15.835158] RBP: 000000000000004d R08: 0000000000000000 R0=
-9:=20
-> 0000558170402830
-> [=C2=A0=C2=A0 15.835161] R10: 00005581703dfc30 R11: 0000000000000246 R1=
-2:=20
-> 0000000000000208
-> [=C2=A0=C2=A0 15.835163] R13: 0000000000000041 R14: 0000000000000041 R1=
-5:=20
-> 00005581707dc2f0
->=20
->=20
->=20
-
---=20
-Thomas Zimmermann
-Graphics Driver Developer
-SUSE Software Solutions Germany GmbH
-Maxfeldstr. 5, 90409 N=C3=BCrnberg, Germany
-(HRB 36809, AG N=C3=BCrnberg)
-Gesch=C3=A4ftsf=C3=BChrer: Felix Imend=C3=B6rffer
-
-
---bCSYt9fEVDq7bLU5GofO6IOrV6yD36Bh8--
-
---L9hcRbDqXuxRJHf9ZZZSWAURGpEgYnIql
-Content-Type: application/pgp-signature; name="OpenPGP_signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="OpenPGP_signature"
-
------BEGIN PGP SIGNATURE-----
-
-wsF5BAABCAAjFiEExndm/fpuMUdwYFFolh/E3EQov+AFAmAdXOAFAwAAAAAACgkQlh/E3EQov+Am
-SBAApWAfuBXkmA0bMwSOqsBayZwq9V4IirXO61oJ1eBs6OKXu7PkBVH/A48WkD0dj4QX+8gdaS81
-gleeB5LNTgfhjPyOUJl6FJku+qAUUH4NDl0VI1zj6m+f8xCQ6FQkb9T3U1X/b8O59ZZGIS7j/Pnu
-uiQq/CmgwWO4LDxcWQaAKhH6aEnspN+sc0zE0+Z7vMUIFuuIm376ejls7yFk0r5djmTVFQanSK/f
-RjQLezyc/wYulujd/VCjSuA9M3ThQw1yaXJ52zFJQgltmmiVha0VxG2e/aT7oXr2TLgyTJBrnhJ0
-sTHBh1+0Os2Rmx5sfs8JZXvgfbAdLYHt2MKl/bRdFeN/beDjt65HYjoy3N4sEag1Z30IQaGwCDp6
-WX127LXvYFwuE4G/7297EDGY/ma5NwN3oJDbAlKdWD1gbOsTIHfqnMXtiU4Pfp4EpWxDzKbcYpva
-gGARMo8OVETIiJDimQSgYJSZNDpuK/wCZlCGEXV3BqWOpYe1VnKcEQNpKI1IERrC8OYEjDgEXyXR
-t/l4/1wn7pOp0LlSU+hefIfFHtzUcxmfJdcGbiD1X3RwvEn+LOmKVs/1bQzdv3+2ZMkZ0v5i2JvH
-4V9dWhjGIZU0IYy/wtJA2ayETc2ufFbjpUcWjOLHP/6Vk1EkAG4kgV+hgK7mUSYYD1RC4uaapd28
-CJQ=
-=yK9f
------END PGP SIGNATURE-----
-
---L9hcRbDqXuxRJHf9ZZZSWAURGpEgYnIql--
