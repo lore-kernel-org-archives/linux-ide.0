@@ -2,68 +2,67 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-20.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85978C433E0
-	for <linux-ide@archiver.kernel.org>; Tue, 16 Feb 2021 11:13:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D355CC43381
+	for <linux-ide@archiver.kernel.org>; Wed, 17 Feb 2021 22:29:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C90864DE0
-	for <linux-ide@archiver.kernel.org>; Tue, 16 Feb 2021 11:13:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9EAA164DFF
+	for <linux-ide@archiver.kernel.org>; Wed, 17 Feb 2021 22:29:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229917AbhBPLNU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 16 Feb 2021 06:13:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37880 "EHLO
+        id S232887AbhBQW3E (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 17 Feb 2021 17:29:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38366 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229912AbhBPLNM (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 16 Feb 2021 06:13:12 -0500
-Received: from mail-wm1-x330.google.com (mail-wm1-x330.google.com [IPv6:2a00:1450:4864:20::330])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF010C061574
-        for <linux-ide@vger.kernel.org>; Tue, 16 Feb 2021 03:12:31 -0800 (PST)
-Received: by mail-wm1-x330.google.com with SMTP id l17so8809642wmq.2
-        for <linux-ide@vger.kernel.org>; Tue, 16 Feb 2021 03:12:31 -0800 (PST)
+        with ESMTP id S231925AbhBQW2r (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 17 Feb 2021 17:28:47 -0500
+Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5FDE0C061756
+        for <linux-ide@vger.kernel.org>; Wed, 17 Feb 2021 14:28:06 -0800 (PST)
+Received: by mail-pf1-x42b.google.com with SMTP id m6so9380697pfk.1
+        for <linux-ide@vger.kernel.org>; Wed, 17 Feb 2021 14:28:06 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
         h=to:cc:from:subject:message-id:date:user-agent:mime-version
          :content-language:content-transfer-encoding;
-        bh=UmpLeEW/6ZV1TTbJC46Fwto+nRUnbgy7ySkBxdls2uA=;
-        b=Z992/rRp0GR2lFYyXXvIvGyUHpsuG8RDygcjpyBflouDsBbLbxd+mx3KjuZNZo7Pae
-         PkjVKCKfOrQC5W8SoAmrL3UEE1Ya7bNcZO1UZFmwXUIW1msIXCxT+XORNOdMj7x0a6r1
-         rnQbAm21n7MEIySlY+JMJuUg5MvD2QIlePM03jEDyTO8pWwlaZTKo8As+u645C5bSxF9
-         EnTnL+u30y1dgcL/nxPTH6Irnb4JRWwrFXZFEP1XxUEzERLKJ4vS8J7Vn3UhionVXdlC
-         uVe4kZm0efB3/O+kksDh5XsglwAl2FKpdBho6QMnPny7R9hHsDTduoYtjfFcwdZyF1qb
-         lMAg==
+        bh=2lritnTFRDrDzmUeEe/JUrazWW1iIyYlZyx+TPAxq7w=;
+        b=avLtq4EFFcR4w4TBkn/A6L6tzBXKx5kahbw/f5UolAhcGTpAuEh1/+C89vYcxkABr1
+         KSxUp6EW69KY7aszCkgfFF2iJ6WqC5cgG7w+VHBZ1in2k6tTUXmSWZGyFX/v1CY7PbfB
+         OK0Mg/UsncGLjufs31r2oiOgiYebD5fiaxuvDjAMwyI6ZaD43tD75VWMzklGXm7843Hd
+         0XN+uLi7n+XXJEePz6AvQax47gZ8lbw1lUaxX42ZokGAoTk2TW2RCuZc5j0XDD/PDrsZ
+         T1JsVorcL6bxGbMJZRMKz8+Dt7EfBoDpoXyK1qNHhqb44+gZD2ba1ST8MVkyXPGBImcP
+         U3lg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
          :mime-version:content-language:content-transfer-encoding;
-        bh=UmpLeEW/6ZV1TTbJC46Fwto+nRUnbgy7ySkBxdls2uA=;
-        b=rk+PWT4/sY/YjUo7zhBi+hfTmTO7ypxJnGqZkgOGKuQWfEwnhwQCiow9YibVds67eR
-         ouLH/u3uxjHONICbv8KBuAjbR4NkM7S3dTpcZJy4xZIkpmm9c1XlmJdZgWaxnOYM5V4a
-         65vuu/7p/BZuAWAFOrg6hwNft9Q3txWhnbGxtRdxqDszgstOv6wyEoq7YQuYrCePMYFO
-         f+T5FhnuMbJbyeFIg25RHly49MSkYC0pU+BAJsxRNILlP5mae0Qdckxkp25+w+qcDRdz
-         yFnv6rSKjk3T8rbDF/AUnSVdFszMMTHwiVulxbIuWCwDCa84hgmoZgTX8530mFd9cQzx
-         +wbQ==
-X-Gm-Message-State: AOAM533g1vN/Yi1FrKI/I7K7jvaNirCSBvoUZwfPkT/8wufPfHTEH/c0
-        WeegtcDTaSjHO5ZpvVpt/56drpXMJzlrFw==
-X-Google-Smtp-Source: ABdhPJw5rj9x89Mh1bxHseIBdGshCakEa6t9WIeRTU5dEE0PZPRwByyRGQkoKjVVLfBbzFOX6m1KUw==
-X-Received: by 2002:a05:600c:22c8:: with SMTP id 8mr2875973wmg.108.1613473950191;
-        Tue, 16 Feb 2021 03:12:30 -0800 (PST)
-Received: from ?IPv6:2003:ea:8f39:5b00:ac39:e452:593c:61b5? (p200300ea8f395b00ac39e452593c61b5.dip0.t-ipconnect.de. [2003:ea:8f39:5b00:ac39:e452:593c:61b5])
-        by smtp.googlemail.com with ESMTPSA id r7sm2963059wmh.38.2021.02.16.03.12.29
+        bh=2lritnTFRDrDzmUeEe/JUrazWW1iIyYlZyx+TPAxq7w=;
+        b=qI01Qwr2wVep9UlpD7/skv58V4Y4UeijXv40TMpGU/shZVlJENMT6VsbTGF3ZUGqJp
+         CC18Ni/sQDCPYrrLfYlYKS3LP8FBkYA2xf0V9avlJ6wou/TFT3ZjETGIYVoVm31HMNgA
+         90dZbM1RP3fUvMS+0LE0cEXre+xJxOKA2Qsq0h5ghrBQA6E1aqhxCDhute7/m+YYOkRw
+         qsfNXuIjMEr/ToN7bLKzuvvsv9kcAjXbE8SYKKIaRiO9vwmxqnB7biaiy41ejjHx5/UC
+         ftwR7Arc3YoBFft+ySgN8XaSf/mzsh+2mKcRQDzSvBve5cwd1AAuNut9Vx+3bEUH5Afy
+         YdCA==
+X-Gm-Message-State: AOAM531DoItyClILRQNr7Z7bzGAMVKmun0vUlLbhJNo2L6B8S5B2fu8U
+        nPcoNruYuys2FYGOdOzscy2GFMQc9GI5Bg==
+X-Google-Smtp-Source: ABdhPJy7fCZFENeOAojU6E8cepX/gk/9+XRD7nGJkPVsvn+4pL4LZjpsf/AI2bBSro+drRw4W9qQOg==
+X-Received: by 2002:a65:480c:: with SMTP id h12mr1300522pgs.169.1613600885636;
+        Wed, 17 Feb 2021 14:28:05 -0800 (PST)
+Received: from ?IPv6:2620:10d:c085:21e1::19db? ([2620:10d:c090:400::5:5c48])
+        by smtp.gmail.com with ESMTPSA id 137sm3818852pgb.80.2021.02.17.14.28.04
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 16 Feb 2021 03:12:29 -0800 (PST)
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     linux-ide@vger.kernel.org
-From:   Heiner Kallweit <hkallweit1@gmail.com>
-Subject: [PATCH] ahci: use BUILD_BUG_ON for constants comparison
-Message-ID: <64ed387c-fdef-279c-dace-7c26ffd3cdb6@gmail.com>
-Date:   Tue, 16 Feb 2021 12:12:23 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.1
+        Wed, 17 Feb 2021 14:28:05 -0800 (PST)
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     IDE/ATA development list <linux-ide@vger.kernel.org>
+From:   Jens Axboe <axboe@kernel.dk>
+Subject: [GIT PULL] libata changes for 5.12-rc
+Message-ID: <91a99b47-409c-024c-8e50-ce64fa662aad@kernel.dk>
+Date:   Wed, 17 Feb 2021 15:28:04 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
@@ -72,27 +71,44 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Both are constant enum values, therefore we can check at
-compile time.
+Hi Linus,
 
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
----
- drivers/ata/ahci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Regulartors management addition from Florian, and a trivial change to
+avoid comma separated statements from Joe.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 00ba8e5a1..e953425e1 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1673,7 +1673,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	VPRINTK("ENTER\n");
- 
--	WARN_ON((int)ATA_MAX_QUEUE > AHCI_MAX_CMDS);
-+	BUILD_BUG_ON((int)ATA_MAX_QUEUE > AHCI_MAX_CMDS);
- 
- 	ata_print_version_once(&pdev->dev, DRV_VERSION);
- 
+Please pull!
+
+
+The following changes since commit 6ee1d745b7c9fd573fba142a2efdad76a9f1cb04:
+
+  Linux 5.11-rc5 (2021-01-24 16:47:14 -0800)
+
+are available in the Git repository at:
+
+  git://git.kernel.dk/linux-block.git tags/for-5.12/libata-2021-02-17
+
+for you to fetch changes up to e53d76e61ec0dbd52cf784993fde927cb9fe0fed:
+
+  ata: Avoid comma separated statements (2021-01-31 08:05:46 -0700)
+
+----------------------------------------------------------------
+for-5.12/libata-2021-02-17
+
+----------------------------------------------------------------
+Florian Fainelli (1):
+      ata: ahci_brcm: Add back regulators management
+
+Joe Perches (1):
+      ata: Avoid comma separated statements
+
+ drivers/ata/ahci_brcm.c   | 14 +++++++++++++-
+ drivers/ata/pata_icside.c | 21 +++++++++++++--------
+ 2 files changed, 26 insertions(+), 9 deletions(-)
+
 -- 
-2.30.1
+Jens Axboe
+
+
+-- 
+Jens Axboe
 
