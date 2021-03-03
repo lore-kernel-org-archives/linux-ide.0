@@ -2,90 +2,100 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B648C4332B
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DB73C4332D
 	for <linux-ide@archiver.kernel.org>; Wed,  3 Mar 2021 22:06:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C36261494
-	for <linux-ide@archiver.kernel.org>; Wed,  3 Mar 2021 22:06:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02F0561494
+	for <linux-ide@archiver.kernel.org>; Wed,  3 Mar 2021 22:06:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1390133AbhCCWAU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 3 Mar 2021 17:00:20 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37970 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1843023AbhCCKYd (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 3 Mar 2021 05:24:33 -0500
-Received: from mail-lj1-x22b.google.com (mail-lj1-x22b.google.com [IPv6:2a00:1450:4864:20::22b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A40E9C0611C2;
-        Wed,  3 Mar 2021 00:39:56 -0800 (PST)
-Received: by mail-lj1-x22b.google.com with SMTP id q14so27575000ljp.4;
-        Wed, 03 Mar 2021 00:39:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:references:from:organization:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=UA1aKK/fRs4m/xf5JpwLYyb5RS0D/JsZVdjnQfO+6qg=;
-        b=rVf6BQqDdDevA3A9eN6Rdxnlo1WXarKhnXs7egnAc+Xtk2FNgvOpp0rNYSkkmYJnIw
-         iLPIZg0XiTkIg5miyxobje+pw7A/7Rqd+VYORMBGrDnQE5AtOruduzeB9BS7yUCqu/jv
-         zbaPAZq1qJBBvMRNZ//UYKb0k4j1J6Al3RZq3vNEK+w2+pEetsHTq/fS4KrlLcTjAAT7
-         iX8GAKSUI4LqecLu7QGBf76e4kI8BmoZOVD3Z/ZNqXDgsoqQZZ8jb3H74/paojcjT4i/
-         dDn8P+9vm6eksihveT4Hz2BQ3ESVAFOObXKos3TFyK410gaVBoep0Ky/e5eaY52UZEbz
-         sl1w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:organization
-         :message-id:date:user-agent:mime-version:in-reply-to
-         :content-language:content-transfer-encoding;
-        bh=UA1aKK/fRs4m/xf5JpwLYyb5RS0D/JsZVdjnQfO+6qg=;
-        b=N1zWKaxhpX/4dPXITl+A6JODjWI/bcWaudj9OTd3CI1gEPWVybtOHfVNtRFTUaHMoh
-         CB2yqUxzbCJNximOxAPDrxXx/Nf1uptWBgIUD8UlTJU3HiCDQLzWQwI3VYI/xQWIJNpN
-         ucf0B4gWL3iBLT0h4c9BtVZgcjWJEcfK58Fyxai32esmCrDDi/9BfPOJAoXcKXlZqyRT
-         SeNNw1LDU4eyH5aCn/l/6OdvuLbqk20EjKPKoKuSI0bqELJ0PUYccdCs4jTrW9q+KVln
-         tKfyC1ieotpBxa2z2mohXXMBssuVkYU2DUMonq5b+qPeG9OqdvHoBcF0Rudtv3GvAMAW
-         gLTQ==
-X-Gm-Message-State: AOAM532M+nBZ0H6LjZ8mGuEgyRgJGp5XaLt6dYOz+tFXxBq/KkVKAveL
-        LnLQyXLdGRaH2FKiUWg28ynhRPEY088=
-X-Google-Smtp-Source: ABdhPJyR42jNsrIDLz1cVQ4OzYfNr99ht41Jnmd5a4XQLKQzeR6KGgQ+qRuX8msnfCCl6m1GgDTvKg==
-X-Received: by 2002:a2e:2f05:: with SMTP id v5mr15093700ljv.114.1614760794909;
-        Wed, 03 Mar 2021 00:39:54 -0800 (PST)
-Received: from [192.168.1.100] ([178.176.72.224])
-        by smtp.gmail.com with ESMTPSA id k18sm2892027lfm.88.2021.03.03.00.39.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 03 Mar 2021 00:39:54 -0800 (PST)
-Subject: Re: Toshiba TC86C001 support
-To:     Christoph Hellwig <hch@lst.de>, linux-ide@vger.kernel.org,
-        linux-mips@vger.kernel.org
-References: <20210303072708.GA8575@lst.de>
-From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Organization: Brain-dead Software
-Message-ID: <af1953de-d1d4-9573-2c3a-08da9ced429e@gmail.com>
-Date:   Wed, 3 Mar 2021 11:39:44 +0300
-User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.7.1
-MIME-Version: 1.0
-In-Reply-To: <20210303072708.GA8575@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+        id S1390009AbhCCV6O (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 3 Mar 2021 16:58:14 -0500
+Received: from mail.zju.edu.cn ([61.164.42.155]:23646 "EHLO zju.edu.cn"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1582095AbhCCHfN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 3 Mar 2021 02:35:13 -0500
+Received: from localhost.localdomain (unknown [222.205.72.8])
+        by mail-app4 (Coremail) with SMTP id cS_KCgD38WDwOz9gkrD4AQ--.3768S4;
+        Wed, 03 Mar 2021 15:34:12 +0800 (CST)
+From:   Dinghao Liu <dinghao.liu@zju.edu.cn>
+To:     dinghao.liu@zju.edu.cn, kjlu@umn.edu
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] [v2] sata_dwc_460ex: Fix missing check in sata_dwc_isr
+Date:   Wed,  3 Mar 2021 15:34:08 +0800
+Message-Id: <20210303073408.461-1-dinghao.liu@zju.edu.cn>
+X-Mailer: git-send-email 2.17.1
+X-CM-TRANSID: cS_KCgD38WDwOz9gkrD4AQ--.3768S4
+X-Coremail-Antispam: 1UD129KBjvJXoW7Cw4xGry7Xw4fKrW3KFWxWFg_yoW8GrWfpr
+        s3ZFyj9rZ3GFWUWrnrZw1kury5C3ykKFWrtFnxAa4IvryYq3s3WFW5K34aqrn8tFWkJ3W2
+        vas8JFZ09F4jyr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDU0xBIdaVrnRJUUUvF1xkIjI8I6I8E6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AE
+        w4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2
+        IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVWxJr0_GcWl84ACjcxK6I8E
+        87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c
+        8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_
+        Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwI
+        xGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc2xSY4AK67AK6r4xMxAIw28IcxkI7VAKI48J
+        MxAIw28IcVCjz48v1sIEY20_GFWkJr1UJwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c
+        02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_
+        Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7
+        CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAF
+        wI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvj
+        fUYMKZDUUUU
+X-CM-SenderInfo: qrrzjiaqtzq6lmxovvfxof0/1tbiAgENBlZdtSlmQQAAs4
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello!
+The return value of ata_qc_from_tag() is checked in the whole
+kernel except for two calls in sata_dwc_isr(), which may lead
+to null-pointer-dereference. Add return value checks to avoid
+such case.
 
-On 03.03.2021 10:27, Christoph Hellwig wrote:
+Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
+---
 
-> a lot of te mips defconfig enable CONFIG_BLK_DEV_TC86C001, which is
-> a legacy ide driver that has no libata equivalent.  We plan to
-> phase out the legacy ide driver this year, so I'm wondering if this
-> hardware is still in use by anyone, and if yes how we can get a libata
-> driver for it?
+Changelog:
 
-    I used to have this piece of hardware while working for MontaVista 
-(2004-2013), and I have long lost any access to it...
+v2: - Refine commit message.
+      Add return value check for another ata_qc_from_tag() call.
+---
+ drivers/ata/sata_dwc_460ex.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-MBR, Sergei
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index 9dcef6ac643b..f0ef844428bb 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -543,6 +543,11 @@ static irqreturn_t sata_dwc_isr(int irq, void *dev_instance)
+ 		hsdev->sactive_issued |= qcmd_tag_to_mask(tag);
+ 
+ 		qc = ata_qc_from_tag(ap, tag);
++		if (unlikely(!qc)) {
++			dev_err(ap->dev, "failed to get qc");
++			handled = 1;
++			goto DONE;
++		}
+ 		/*
+ 		 * Start FP DMA for NCQ command.  At this point the tag is the
+ 		 * active tag.  It is the tag that matches the command about to
+@@ -658,6 +663,11 @@ static irqreturn_t sata_dwc_isr(int irq, void *dev_instance)
+ 
+ 		tag_mask &= (~0x00000001);
+ 		qc = ata_qc_from_tag(ap, tag);
++		if (unlikely(!qc)) {
++			dev_err(ap->dev, "failed to get qc");
++			handled = 1;
++			goto DONE;
++		}
+ 
+ 		/* To be picked up by completion functions */
+ 		qc->ap->link.active_tag = tag;
+-- 
+2.17.1
+
