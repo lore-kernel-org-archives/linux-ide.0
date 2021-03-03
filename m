@@ -2,100 +2,82 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DB73C4332D
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5855FC43332
 	for <linux-ide@archiver.kernel.org>; Wed,  3 Mar 2021 22:06:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 02F0561494
-	for <linux-ide@archiver.kernel.org>; Wed,  3 Mar 2021 22:06:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3FAAE64E51
+	for <linux-ide@archiver.kernel.org>; Wed,  3 Mar 2021 22:06:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1390009AbhCCV6O (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 3 Mar 2021 16:58:14 -0500
-Received: from mail.zju.edu.cn ([61.164.42.155]:23646 "EHLO zju.edu.cn"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1582095AbhCCHfN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 3 Mar 2021 02:35:13 -0500
-Received: from localhost.localdomain (unknown [222.205.72.8])
-        by mail-app4 (Coremail) with SMTP id cS_KCgD38WDwOz9gkrD4AQ--.3768S4;
-        Wed, 03 Mar 2021 15:34:12 +0800 (CST)
-From:   Dinghao Liu <dinghao.liu@zju.edu.cn>
-To:     dinghao.liu@zju.edu.cn, kjlu@umn.edu
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] [v2] sata_dwc_460ex: Fix missing check in sata_dwc_isr
-Date:   Wed,  3 Mar 2021 15:34:08 +0800
-Message-Id: <20210303073408.461-1-dinghao.liu@zju.edu.cn>
-X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID: cS_KCgD38WDwOz9gkrD4AQ--.3768S4
-X-Coremail-Antispam: 1UD129KBjvJXoW7Cw4xGry7Xw4fKrW3KFWxWFg_yoW8GrWfpr
-        s3ZFyj9rZ3GFWUWrnrZw1kury5C3ykKFWrtFnxAa4IvryYq3s3WFW5K34aqrn8tFWkJ3W2
-        vas8JFZ09F4jyr7anT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDU0xBIdaVrnRJUUUvF1xkIjI8I6I8E6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AE
-        w4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2
-        IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxVWxJr0_GcWl84ACjcxK6I8E
-        87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c
-        8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_
-        Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwI
-        xGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc2xSY4AK67AK6r4xMxAIw28IcxkI7VAKI48J
-        MxAIw28IcVCjz48v1sIEY20_GFWkJr1UJwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c
-        02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_
-        Jw1lIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7
-        CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6rW3Jr0E3s1lIxAIcVC2z280aVAF
-        wI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvj
-        fUYMKZDUUUU
-X-CM-SenderInfo: qrrzjiaqtzq6lmxovvfxof0/1tbiAgENBlZdtSlmQQAAs4
+        id S1390137AbhCCWAs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 3 Mar 2021 17:00:48 -0500
+Received: from mail-vs1-f43.google.com ([209.85.217.43]:33174 "EHLO
+        mail-vs1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231712AbhCCKa1 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 3 Mar 2021 05:30:27 -0500
+Received: by mail-vs1-f43.google.com with SMTP id b189so6357126vsd.0;
+        Wed, 03 Mar 2021 02:30:11 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=RWLoJKrST9SY284XzyZhaHgjO9L3hwsdopDdAp6+Qlo=;
+        b=chrzGNYs5n+BOENUpuq53FK1a4WsBrOMAbWQ+Ifa1JKwKwd/nvyBpa0Aeh6NtzTNtw
+         yeNd3PEFRhedZFzITcSitEIu+S31J0oOhkpafz02v+ZeF4zF650o76nIw/KqQ4Pg0KU+
+         miH4Ovs6Y2v+Azse5vv/zMTGxCz1eq7m1sAAe8Kf/2Lmls597/H8Lp76J79B/35FsnYq
+         DN4HWRwQOOAPuerh25BPxnRq19k57UqjosCHk0NhzgRXytzmAwdQXcncER9p7jh8VpSt
+         KCqfNugeefDDT7io+V2W6th+tKk7azLfDvQ766LaLEyFVnfHma6vX2yIqhb0k/0bTBRt
+         ia9w==
+X-Gm-Message-State: AOAM533QvLhBAfrHpNxXGurkWEJTPYfVSYqGW0lk7EMrT37QFjr976yh
+        LYeN8KwkD33BXvRMtYH/OeVISGCy8gcIYDzgp5ODce8HueI=
+X-Google-Smtp-Source: ABdhPJzpzQ3O9SZyCnmbtWEbsFfvCEjIhxXr0EwZ57EjV3/sxsysE7w38CMuqEzZWCrIK6RNljiUJq2fg3z/4NKTStE=
+X-Received: by 2002:a67:fb86:: with SMTP id n6mr5477431vsr.3.1614767385754;
+ Wed, 03 Mar 2021 02:29:45 -0800 (PST)
+MIME-Version: 1.0
+References: <20210303074107.GA8880@lst.de> <20210303.173122.1467075982540149385.anemo@mba.ocn.ne.jp>
+In-Reply-To: <20210303.173122.1467075982540149385.anemo@mba.ocn.ne.jp>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Wed, 3 Mar 2021 11:29:34 +0100
+Message-ID: <CAMuHMdXwD6Oi1a6mmrPUA20vMPd6jQ1816vtc_WxobX3TW3y4g@mail.gmail.com>
+Subject: Re: tx4938 and tx4939 ide drivers
+To:     Atsushi Nemoto <anemo@mba.ocn.ne.jp>,
+        Christoph Hellwig <hch@lst.de>
+Cc:     linux-ide@vger.kernel.org,
+        "open list:BROADCOM NVRAM DRIVER" <linux-mips@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The return value of ata_qc_from_tag() is checked in the whole
-kernel except for two calls in sata_dwc_isr(), which may lead
-to null-pointer-dereference. Add return value checks to avoid
-such case.
+Hi Nemoto-san, Christoph,
 
-Signed-off-by: Dinghao Liu <dinghao.liu@zju.edu.cn>
----
+On Wed, Mar 3, 2021 at 9:31 AM Atsushi Nemoto <anemo@mba.ocn.ne.jp> wrote:
+>
+> On Wed, 3 Mar 2021 08:41:07 +0100, Christoph Hellwig <hch@lst.de> wrote:
+> > the tx4938 and tx4939 legacy ide drivers are some of the few that do
+> > not have libata equivalents, which is a bad thing given that CONFIG_IDE
+> > is planned to go away this year.  Are there any users of this hardware
+> > left, and if yes willing to help with the move to libata?
+>
+> I think nobody use these drivers now.
+>
+> As I wrote in
+> https://lore.kernel.org/lkml/20210107.101729.1936921832901251107.anemo@mba.ocn.ne.jp/
+> removal of these drivers does not break the only known user of TX49
+> boards. (i.e. Mr. Geert Uytterhoeven)
 
-Changelog:
+Right. Feel free to remove tx4938ide support.
 
-v2: - Refine commit message.
-      Add return value check for another ata_qc_from_tag() call.
----
- drivers/ata/sata_dwc_460ex.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Gr{oetje,eeting}s,
 
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 9dcef6ac643b..f0ef844428bb 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -543,6 +543,11 @@ static irqreturn_t sata_dwc_isr(int irq, void *dev_instance)
- 		hsdev->sactive_issued |= qcmd_tag_to_mask(tag);
- 
- 		qc = ata_qc_from_tag(ap, tag);
-+		if (unlikely(!qc)) {
-+			dev_err(ap->dev, "failed to get qc");
-+			handled = 1;
-+			goto DONE;
-+		}
- 		/*
- 		 * Start FP DMA for NCQ command.  At this point the tag is the
- 		 * active tag.  It is the tag that matches the command about to
-@@ -658,6 +663,11 @@ static irqreturn_t sata_dwc_isr(int irq, void *dev_instance)
- 
- 		tag_mask &= (~0x00000001);
- 		qc = ata_qc_from_tag(ap, tag);
-+		if (unlikely(!qc)) {
-+			dev_err(ap->dev, "failed to get qc");
-+			handled = 1;
-+			goto DONE;
-+		}
- 
- 		/* To be picked up by completion functions */
- 		qc->ap->link.active_tag = tag;
+                        Geert
+
 -- 
-2.17.1
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
