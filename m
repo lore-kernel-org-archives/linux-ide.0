@@ -2,98 +2,144 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-21.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C63EC433E6
-	for <linux-ide@archiver.kernel.org>; Thu,  4 Mar 2021 01:12:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8608C433E0
+	for <linux-ide@archiver.kernel.org>; Thu,  4 Mar 2021 15:55:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7EB8B64F39
-	for <linux-ide@archiver.kernel.org>; Thu,  4 Mar 2021 01:12:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6BD1764F31
+	for <linux-ide@archiver.kernel.org>; Thu,  4 Mar 2021 15:55:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240486AbhCDBMD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 3 Mar 2021 20:12:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53438 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1453036AbhCDAmh (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 3 Mar 2021 19:42:37 -0500
-Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E2B1C061756
-        for <linux-ide@vger.kernel.org>; Wed,  3 Mar 2021 16:41:57 -0800 (PST)
-Received: by mail-pf1-x42f.google.com with SMTP id j12so17535214pfj.12
-        for <linux-ide@vger.kernel.org>; Wed, 03 Mar 2021 16:41:57 -0800 (PST)
+        id S234750AbhCDPzA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 4 Mar 2021 10:55:00 -0500
+Received: from mail-bn8nam11on2070.outbound.protection.outlook.com ([40.107.236.70]:12644
+        "EHLO NAM11-BN8-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S235997AbhCDPys (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 4 Mar 2021 10:54:48 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=I/e27UoTSyhR6GN9QtZMf698STwBn7m9Pug+VrbrRTjb9itblGYVqqiHP5+57dCi6Ik2RPz6dazw5anyJGVMqor7CpkPzH358u/+WvrX/d15vZ1N2gnN5JpLEsJu8ucNh2gyP7ByIIz0r5oLNFeblsrHTfWbyKDVmQGThuBP5zoIerPFQSsOickROfV7GygyUv/lLBCESS0CrPW3huBHpOVC2DMxAvVkbTqHJFesycw0zpLQWUOxlpckz39MIXvrc/iGp3JR7O0Xh/UY8VT4YIpVmYDPesvMbMzL2Ur948jp1CV2RH/ST+Y7dF0Hca7nb+7tEGunqO88ua94yGS2sg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=6arrU01ZhUc80J2vbzfPV5GSY/ah929O+XCUmn/gQC4=;
+ b=Ib/AsRvXa7U266kV2jQu+EQDdsUPBnnAlQt9igMMwduoxWjKQswJvRRzsrOZ0VdWRWVgnEcLw924H9aPL85Tx7gKBL07j1aDN+JLia/GNvPMnHBlhd70wgQSJUK/OEoffNB1LbSDck6FTunix9q2hEnEmzyH3IGkEUMOqrjAeKWS5xK4AvHaoNtee35iSFK7Ta+xr61egDu77yO4XDLr3jIULSki286Kcj6c4m5BCrRtehjyUByq6/mcncOVPWEtbI3mzrduxUlJchlEKMIglvVW9GbQISlJ/V6OZil0VOP1L0/py5DAXM0qL2OhkrLFmZeUA12+8VkOpgUqG1PFHw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 149.199.62.198) smtp.rcpttodomain=kernel.dk smtp.mailfrom=xilinx.com;
+ dmarc=pass (p=none sp=none pct=100) action=none header.from=xilinx.com;
+ dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=tFv08AbuAbe3jKr7mEHbvIFM4gHAs0G2cR8M3WVE7oU=;
-        b=oPJ82WXi4oso8CTu9jJVromgLEPEV+9C+4QX9nI9WIl28beU4eRYKdz2LWHQuJu7tM
-         rGwaGEm0RSwfkDksmaYzRNv1NTc5leLuNlP4nDs11ocqW+OEPNLkXChKVIlhpedvjItq
-         0mqvjr23EaiRW3BjMeBJwHIy88b6NVQ1zhowzo5ZFJtfN9aJkzl4PuPTB600FQxKthA0
-         QWw4dhw3oGN13RtZEeTHxOkl+mdsJXIU+86I5BmSawInWBeiDPwccmNk8ZnMDku4drGZ
-         64Gilv0Sf+BMFlugA17g8PzbigrvVrvgDGfvvJiqJxMlCp5ULqc/vE2tz3qxXFKxuh08
-         kipw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=tFv08AbuAbe3jKr7mEHbvIFM4gHAs0G2cR8M3WVE7oU=;
-        b=OM0J8sZA5p+TNk486hC5fUoaJH3iBY6/1Q3fUALNbaBT7ByuvVdDX0UETEKUfO8UVx
-         yoKZ7qyNPCLBMk+Jq+KKYqonrJm1QimKjCBHm5+1PvUnqURXS3Q4+n1i3sO6c2xv71nR
-         vEkKtQtn8jDbQn3Mgp3Am+0yNnSfkrYGN4tgJ3h3voblxOQCEqSUCeKbwKILEd9651b/
-         weN/Jo1TbjcwkEpJ0GTWg6Gfhl7GIBmOL+rgSydGWXcJR3CN+UWrkMtS3pSV7DhpmASq
-         9mxvqMC8DVIZ0GQFUqSmMANLihOqP17C7VMciTfNl+ch5T0Ug7wAVCKJY1oPnbZBFO8V
-         FCUA==
-X-Gm-Message-State: AOAM530FnI09tdexcBTizw+51Urc5Zy5YvV8D5v7lKrqb+V/YqabGqYx
-        8zIxd1geaisye8bqRB+AxerRmEPCUdog0RYl
-X-Google-Smtp-Source: ABdhPJzlo2AoA2G6B3wfK7vW365vGZPnIFiwp4sYNQ5XX9zccNuwBUY1Ab2dielycYpQAW6JQCHFNw==
-X-Received: by 2002:a63:4808:: with SMTP id v8mr1326821pga.381.1614818516590;
-        Wed, 03 Mar 2021 16:41:56 -0800 (PST)
-Received: from ?IPv6:2600:380:7540:52b5:3f01:150c:3b2:bf47? ([2600:380:7540:52b5:3f01:150c:3b2:bf47])
-        by smtp.gmail.com with ESMTPSA id k64sm8251970pga.52.2021.03.03.16.41.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 03 Mar 2021 16:41:56 -0800 (PST)
-Subject: Re: [PATCH v2 00/20] [Set 1] Rid W=1 warnings from ATA
-To:     Lee Jones <lee.jones@linaro.org>
-Cc:     linux-kernel@vger.kernel.org, Alan Cox <alan@redhat.com>,
-        Albert Lee <albertcc@tw.ibm.com>,
-        Alessandro Zummo <alessandro.zummo@towertech.it>,
-        ALWAYS copy <linux-ide@vger.kernel.org>,
-        and cc <htejun@gmail.com>, Andre Hedrick <andre@linux-ide.org>,
-        ATI Inc <hyu@ati.com>, CJ <cjtsai@ali.com.tw>,
-        Clear Zhang <Clear.Zhang@ali.com.tw>,
-        Frank Tiernan <frankt@promise.com>, Loc Ho <lho@apm.com>,
-        Mark Lord <mlord@pobox.com>,
-        Suman Tripathi <stripathi@apm.com>, Tejun Heo <teheo@suse.de>,
-        Thibaut VARENE <varenet@parisc-linux.org>,
-        Tuan Phan <tphan@apm.com>
-References: <20210201143940.2070919-1-lee.jones@linaro.org>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <0975bce4-8e69-2aa4-3ad1-5ce3b4215126@kernel.dk>
-Date:   Wed, 3 Mar 2021 17:41:52 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+ d=xilinx.onmicrosoft.com; s=selector2-xilinx-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=6arrU01ZhUc80J2vbzfPV5GSY/ah929O+XCUmn/gQC4=;
+ b=GdpjKXbK+YJXjkWxE+kAcdWAz/Abt9cHg7QvRKtisZnSMS1iC2yrMsC75HD4lZ7dwJIEbe7FVJSCWO2sy53XY0XS7jPVWBHsnioY9sks37NxEVEIqAHscU1MENdQoCWUhDkm8b0XrrXl+m9/XBrokvroMPtC9UEKZRRG5RBdANA=
+Received: from MN2PR20CA0019.namprd20.prod.outlook.com (2603:10b6:208:e8::32)
+ by BL0PR02MB4852.namprd02.prod.outlook.com (2603:10b6:208:52::33) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3912.17; Thu, 4 Mar
+ 2021 15:53:56 +0000
+Received: from BL2NAM02FT054.eop-nam02.prod.protection.outlook.com
+ (2603:10b6:208:e8:cafe::2a) by MN2PR20CA0019.outlook.office365.com
+ (2603:10b6:208:e8::32) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.3912.17 via Frontend
+ Transport; Thu, 4 Mar 2021 15:53:56 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 149.199.62.198)
+ smtp.mailfrom=xilinx.com; kernel.dk; dkim=none (message not signed)
+ header.d=none;kernel.dk; dmarc=pass action=none header.from=xilinx.com;
+Received-SPF: Pass (protection.outlook.com: domain of xilinx.com designates
+ 149.199.62.198 as permitted sender) receiver=protection.outlook.com;
+ client-ip=149.199.62.198; helo=xsj-pvapexch01.xlnx.xilinx.com;
+Received: from xsj-pvapexch01.xlnx.xilinx.com (149.199.62.198) by
+ BL2NAM02FT054.mail.protection.outlook.com (10.152.77.107) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.3890.19 via Frontend Transport; Thu, 4 Mar 2021 15:53:56 +0000
+Received: from xsj-pvapexch02.xlnx.xilinx.com (172.19.86.41) by
+ xsj-pvapexch01.xlnx.xilinx.com (172.19.86.40) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.1913.5; Thu, 4 Mar 2021 07:53:28 -0800
+Received: from smtp.xilinx.com (172.19.127.95) by
+ xsj-pvapexch02.xlnx.xilinx.com (172.19.86.41) with Microsoft SMTP Server id
+ 15.1.1913.5 via Frontend Transport; Thu, 4 Mar 2021 07:53:28 -0800
+Envelope-to: git@xilinx.com,
+ michal.simek@xilinx.com,
+ axboe@kernel.dk,
+ linux-ide@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Received: from [10.140.6.6] (port=38532 helo=xhdappanad40.xilinx.com)
+        by smtp.xilinx.com with esmtp (Exim 4.90)
+        (envelope-from <piyush.mehta@xilinx.com>)
+        id 1lHqI3-00044o-GR; Thu, 04 Mar 2021 07:53:27 -0800
+From:   Piyush Mehta <piyush.mehta@xilinx.com>
+To:     <axboe@kernel.dk>
+CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <git@xilinx.com>, <sgoud@xilinx.com>, <michal.simek@xilinx.com>,
+        Piyush Mehta <piyush.mehta@xilinx.com>
+Subject: [PATCH] ata: ahci: ceva: Updated code by using dev_err_probe()
+Date:   Thu, 4 Mar 2021 21:23:08 +0530
+Message-ID: <20210304155309.17878-1-piyush.mehta@xilinx.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-In-Reply-To: <20210201143940.2070919-1-lee.jones@linaro.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
+X-MS-Office365-Filtering-HT: Tenant
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: d38fbfcf-d06a-495e-a4a5-08d8df25b7bf
+X-MS-TrafficTypeDiagnostic: BL0PR02MB4852:
+X-Microsoft-Antispam-PRVS: <BL0PR02MB48523DFB0DFBA86AB6889327D4979@BL0PR02MB4852.namprd02.prod.outlook.com>
+X-Auto-Response-Suppress: DR, RN, NRN, OOF, AutoReply
+X-MS-Oob-TLC-OOBClassifiers: OLM:131;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: LKC0alTxsU/PsazTTuaKqOGldGHA9y+Jr+hAlhb1fQP8IMEu9lEfB8kmpfSOu3VlOf7EwBeGD3PPkqo6nx/jILZixHANFSymI7VXESK8l06OByIfxQjupE2i/LnNUFLMCz6jVixOAKEVPmEW10cmzGaPJssVyWurtN5nSlf4y/96SvlLsuBtz7E5+33boFcAKnsnQ15FXIrWa9Dy0i4nHUZEWU4Ywifqg7aEcjj/S1u9XD8M17rWQFFOauKoVH3doBT/15SrywsCn3RkDO8CXMLST6BjHuBUMJXpvSEo3EWe4JD5P1KKaRjxI3mB9OrQd05w4w5SyhtmG74Ga6z2k7j9WCf6fyaeFi8Gvgw5d7MJpsof4cI2vmDGd9kgYUBLybqz2syaA13fAV3sCGFNkjj7EpJGoPH5LNhh4ulc7D9W2PPXIxPV478hRYpfPgZPr6kKWpjDvlk3ViN1U1GSfLY3F2ULYpoLGymOq9rAzvDt0RoaMr+M0U6pzIziHAKi4SQM9altHmrjJcqWePnG9n6fwynDmcVWvbkflzyG/99kuetxDMDTYmlCXmPp6vluBCDhrCZJEQZWEIMB5gApHk3vIm2Ll6Gui0awZhNATcBCfFjZhBEh4lCNMzAhWLBsYBniT1eWjrNkHheLF9DP3MaUG3/hKYUxVrmgkMDz2F4KsE8v3Bg5DWGigOCeKGPAxmy/gZmU4AW84ypL4nupNlWvntZhLpcuyxH9fVdth2HRc3F44tItjLEGYwRz0oUQeSyKtRMaQaKeRx5kkDNLvQ==
+X-Forefront-Antispam-Report: CIP:149.199.62.198;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:xsj-pvapexch01.xlnx.xilinx.com;PTR:unknown-62-198.xilinx.com;CAT:NONE;SFS:(4636009)(396003)(376002)(39860400002)(136003)(346002)(46966006)(36840700001)(36860700001)(44832011)(7696005)(107886003)(426003)(1076003)(8676002)(316002)(478600001)(82740400003)(8936002)(36906005)(336012)(9786002)(2616005)(4326008)(36756003)(54906003)(966005)(70206006)(70586007)(186003)(82310400003)(356005)(6916009)(2906002)(15650500001)(47076005)(5660300002)(26005)(6666004)(83380400001)(7636003)(102446001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: xilinx.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Mar 2021 15:53:56.1081
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: d38fbfcf-d06a-495e-a4a5-08d8df25b7bf
+X-MS-Exchange-CrossTenant-Id: 657af505-d5df-48d0-8300-c31994686c5c
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=657af505-d5df-48d0-8300-c31994686c5c;Ip=[149.199.62.198];Helo=[xsj-pvapexch01.xlnx.xilinx.com]
+X-MS-Exchange-CrossTenant-AuthSource: BL2NAM02FT054.eop-nam02.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR02MB4852
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/1/21 7:39 AM, Lee Jones wrote:
-> This set is part of a larger effort attempting to clean-up W=1
-> kernel builds, which are currently overwhelmingly riddled with
-> niggly little warnings.
-> 
-> This is set 1 out of 2 sets required.
+Updated code with already prepared dev_err_probe(). It reduces code size
+and simplifies EPROBE_DEFER handling.
 
-Queued up for 5.13, thanks.
+Also, unify message format for similar error cases.
 
+Signed-off-by: Piyush Mehta <piyush.mehta@xilinx.com>
+---
+This patch is based on ahci-ceva patches:
+https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git/commit/?h=for-next&id=5542fabd9e07d6c49c07862e73070c325f93d390
+
+Tree: https://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git/tree/?h=for-next
+---
+ drivers/ata/ahci_ceva.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
+index b980218..a935209 100644
+--- a/drivers/ata/ahci_ceva.c
++++ b/drivers/ata/ahci_ceva.c
+@@ -207,9 +207,8 @@ static int ceva_ahci_probe(struct platform_device *pdev)
+ 	cevapriv->rst = devm_reset_control_get_optional_exclusive(&pdev->dev,
+ 								  NULL);
+ 	if (IS_ERR(cevapriv->rst)) {
+-		if (PTR_ERR(cevapriv->rst) != -EPROBE_DEFER)
+-			dev_err(&pdev->dev, "failed to get reset: %ld\n",
+-				PTR_ERR(cevapriv->rst));
++		dev_err_probe(&pdev->dev, PTR_ERR(cevapriv->rst),
++			      "failed to get reset\n");
+ 	}
+ 
+ 	hpriv = ahci_platform_get_resources(pdev, 0);
 -- 
-Jens Axboe
+1.7.1
 
