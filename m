@@ -2,83 +2,72 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-21.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DDBBC433DB
-	for <linux-ide@archiver.kernel.org>; Fri,  5 Mar 2021 09:17:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DC66C433E6
+	for <linux-ide@archiver.kernel.org>; Fri,  5 Mar 2021 10:01:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E6FBF64F6F
-	for <linux-ide@archiver.kernel.org>; Fri,  5 Mar 2021 09:17:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED64164ECF
+	for <linux-ide@archiver.kernel.org>; Fri,  5 Mar 2021 10:01:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229660AbhCEJQx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 5 Mar 2021 04:16:53 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51886 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229653AbhCEJQY (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 5 Mar 2021 04:16:24 -0500
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2F6FC061760
-        for <linux-ide@vger.kernel.org>; Fri,  5 Mar 2021 01:16:22 -0800 (PST)
-Received: from dude02.hi.pengutronix.de ([2001:67c:670:100:1d::28] helo=dude02.pengutronix.de.)
-        by metis.ext.pengutronix.de with esmtp (Exim 4.92)
-        (envelope-from <p.zabel@pengutronix.de>)
-        id 1lI6ZJ-0004zS-7b; Fri, 05 Mar 2021 10:16:21 +0100
-From:   Philipp Zabel <p.zabel@pengutronix.de>
-To:     linux-ide@vger.kernel.org
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        Matthias Brugger <matthias.bgg@gmail.com>
-Subject: [PATCH] ata: mediatek: fix optional reset handling
-Date:   Fri,  5 Mar 2021 10:16:14 +0100
-Message-Id: <20210305091614.11390-1-p.zabel@pengutronix.de>
-X-Mailer: git-send-email 2.29.2
+        id S229740AbhCEKAm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 5 Mar 2021 05:00:42 -0500
+Received: from mail.kernel.org ([198.145.29.99]:45336 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229558AbhCEKAP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 5 Mar 2021 05:00:15 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1491964ECF;
+        Fri,  5 Mar 2021 10:00:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1614938414;
+        bh=FOgtTrdDCEE26PV/Hl1URH07csPdNLIDlJ2AYc7h8ww=;
+        h=Date:From:To:Cc:Subject:From;
+        b=ZfG3ftniQGnEpTwnsBrwvnlRutQjhpfQhx4IpA77vRAKmucAqwLKGWU1JzyHZCJ6C
+         dlmD739IVcTRRk48Nni+FuOBZjYHhzyWGVdmqeZKxfMBRTP4Vdpi3TxmyvU+dS7zYm
+         Q14JB397bNcpuBgcPshYI2zMQhHcB6m0DEbSKNdbQNpQ1i2gQ9dbyHNCRSy/G6MrD7
+         rLEmXhR9Il2BSoIV4DNTixJv2nZN/7SpFZYRvjcmVzEa1JuVdu+lOKw7pOUiDKGYUQ
+         lZ1jImIxozKkcCTCUzo4DY/0hsREzAJxUC7vRmweOsegOtnieaY/0lZ178cqX4HzFF
+         E/LeOVPIz7ouw==
+Date:   Fri, 5 Mar 2021 04:00:12 -0600
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     "David S. Miller" <davem@davemloft.net>
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-hardening@vger.kernel.org
+Subject: [PATCH RESEND][next] ide: Fix fall-through warnings for Clang
+Message-ID: <20210305100012.GA142349@embeddedor>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2001:67c:670:100:1d::28
-X-SA-Exim-Mail-From: p.zabel@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-As of commit bb475230b8e5 ("reset: make optional functions really
-optional"), the reset framework API calls use NULL pointers to describe
-optional, non-present reset controls.
+In preparation to enable -Wimplicit-fallthrough for Clang, fix a warning
+by explicitly adding a break statement instead of letting the code fall
+through to the next case.
 
-This allows to unconditionally return errors from
-devm_reset_control_get_optional_exclusive.
-
-Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
+Link: https://github.com/KSPP/linux/issues/115
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 ---
- drivers/ata/ahci_mtk.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/ide/siimage.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/ata/ahci_mtk.c b/drivers/ata/ahci_mtk.c
-index d9b08ae7c3b2..7b705302308e 100644
---- a/drivers/ata/ahci_mtk.c
-+++ b/drivers/ata/ahci_mtk.c
-@@ -49,15 +49,15 @@ static int mtk_ahci_platform_resets(struct ahci_host_priv *hpriv,
- 
- 	/* reset AXI bus and PHY part */
- 	plat->axi_rst = devm_reset_control_get_optional_exclusive(dev, "axi");
--	if (PTR_ERR(plat->axi_rst) == -EPROBE_DEFER)
-+	if (IS_ERR(plat->axi_rst))
- 		return PTR_ERR(plat->axi_rst);
- 
- 	plat->sw_rst = devm_reset_control_get_optional_exclusive(dev, "sw");
--	if (PTR_ERR(plat->sw_rst) == -EPROBE_DEFER)
-+	if (IS_ERR(plat->sw_rst))
- 		return PTR_ERR(plat->sw_rst);
- 
- 	plat->reg_rst = devm_reset_control_get_optional_exclusive(dev, "reg");
--	if (PTR_ERR(plat->reg_rst) == -EPROBE_DEFER)
-+	if (IS_ERR(plat->reg_rst))
- 		return PTR_ERR(plat->reg_rst);
- 
- 	err = reset_control_assert(plat->axi_rst);
+diff --git a/drivers/ide/siimage.c b/drivers/ide/siimage.c
+index 198847488cc6..c190dc6dfb50 100644
+--- a/drivers/ide/siimage.c
++++ b/drivers/ide/siimage.c
+@@ -493,6 +493,7 @@ static int init_chipset_siimage(struct pci_dev *dev)
+ 	case 0x30:
+ 		/* Clocking is disabled, attempt to force 133MHz clocking. */
+ 		sil_iowrite8(dev, tmp & ~0x20, scsc_addr);
++		break;
+ 	case 0x10:
+ 		/* On 133Mhz clocking. */
+ 		break;
 -- 
-2.29.2
+2.27.0
 
