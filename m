@@ -2,106 +2,64 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9CF9C433E6
-	for <linux-ide@archiver.kernel.org>; Mon,  8 Mar 2021 19:51:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B72BC433DB
+	for <linux-ide@archiver.kernel.org>; Thu, 11 Mar 2021 09:49:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D4C964F11
-	for <linux-ide@archiver.kernel.org>; Mon,  8 Mar 2021 19:51:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 476CF64D74
+	for <linux-ide@archiver.kernel.org>; Thu, 11 Mar 2021 09:49:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231359AbhCHTvO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 8 Mar 2021 14:51:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42486 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231804AbhCHTux (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 8 Mar 2021 14:50:53 -0500
-Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EF44C06174A;
-        Mon,  8 Mar 2021 11:50:53 -0800 (PST)
-Received: by mail-pj1-x1030.google.com with SMTP id kx1so245837pjb.3;
-        Mon, 08 Mar 2021 11:50:53 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=bY74PhrcbsYLS+QDyU3MBxV+McRj9LMSdo3Kk9RWRkg=;
-        b=hFZ+OV0Zfp62Rif2msJxt7slp2M6Q4APkfoZCGAmtNqchtwTavb/mwijGLNqSJinLX
-         hhhPz38e3kQXh3p1DU93WGYa79aql659bp1K68ELlacKb9FdR+uZIiNHo3mO1X1/aLOp
-         fzYO58wLbAzj/00Z1IXzOzoOh7QkkjspFA71ZLr0SpsITOn7qklSl9n3BmNp0xyjWkTZ
-         QqS5QRxy0jZT5939jb8pB8OmJlWlvkHLBRbXZmhlQDZUqeTgSsNeK2eoLvYwfaRzKTEG
-         d4nTb2QnbnNzltQ3P6id1SJYt32hygkZHPFunrbZITdCQRFJpogQkPq2F1w+pecbV7+K
-         bjKQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=bY74PhrcbsYLS+QDyU3MBxV+McRj9LMSdo3Kk9RWRkg=;
-        b=l7IvpgOcqbDXpEnLMIVYu0L3E0iC7rvIOxMCdOh1yxixyHlK+qxmeSd0jAQ4bzjwQo
-         Ad6o667Dv+Tws+0fSUu/Gj3ijmpBWMcEyis+C6YrJEbIXehPxZnebo9elax7lebNWVtI
-         COqAxs3W+fZrdW9xOujpFkiO8BZppIhEpHhfjxaIi0e8NAzLeC0AkHC9uieyhmT9mmgl
-         07yZ+y+4bYy7/OgAibcAstLhHKyM9krKbLoqycvH6HdJGcCnDpRGVEo6n6vqSblppOQQ
-         NwtYl2z8ANAwem5+xmhFxHVi0fLBdHLlfhvyT8uX9XFKDp4gxcqrXU1TkMTN7upAXFr2
-         khKg==
-X-Gm-Message-State: AOAM533WpCW0p2Vk2d5YcOy6HgJwTOwyQ4082fjUwo6NHQkg8m2fcCH7
-        6cldQxBuchk/V5boxCUb1jw=
-X-Google-Smtp-Source: ABdhPJytrq6G86DLRkdh6BNezs5lPObsRvdSjg7HGEWs3wCHL+H/n3Hvj2UHf8a+2tMjllTrtiExvQ==
-X-Received: by 2002:a17:90b:94c:: with SMTP id dw12mr501499pjb.119.1615233053241;
-        Mon, 08 Mar 2021 11:50:53 -0800 (PST)
-Received: from stbsrv-and-01.and.broadcom.net ([192.19.231.250])
-        by smtp.gmail.com with ESMTPSA id y1sm64685pjr.3.2021.03.08.11.50.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 08 Mar 2021 11:50:52 -0800 (PST)
-From:   Jim Quinlan <jim2101024@gmail.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
-        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com,
-        jim2101024@gmail.com
-Cc:     Florian Fainelli <f.fainelli@gmail.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Jim Quinlan <jquinlan@broadcom.com>,
-        linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM
-        BCM2711/BCM2835 ARM ARCHITECTURE),
-        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
-        Parallel ATA drivers)), linux-kernel@vger.kernel.org (open list),
-        linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM
-        BCM2711/BCM2835 ARM ARCHITECTURE),
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>
-Subject: [PATCH v4 0/2] ata: ahci_brcm: Fix use of BCM7216 reset controller
-Date:   Mon,  8 Mar 2021 14:50:35 -0500
-Message-Id: <20210308195037.1503-1-jim2101024@gmail.com>
-X-Mailer: git-send-email 2.17.1
+        id S232054AbhCKJsk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 11 Mar 2021 04:48:40 -0500
+Received: from out30-45.freemail.mail.aliyun.com ([115.124.30.45]:49342 "EHLO
+        out30-45.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231639AbhCKJsO (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 11 Mar 2021 04:48:14 -0500
+X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R121e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=alimailimapcm10staff010182156082;MF=jiapeng.chong@linux.alibaba.com;NM=1;PH=DS;RN=8;SR=0;TI=SMTPD_---0URS8WsQ_1615456087;
+Received: from j63c13417.sqa.eu95.tbsite.net(mailfrom:jiapeng.chong@linux.alibaba.com fp:SMTPD_---0URS8WsQ_1615456087)
+          by smtp.aliyun-inc.com(127.0.0.1);
+          Thu, 11 Mar 2021 17:48:12 +0800
+From:   Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+To:     davem@davemloft.net
+Cc:     mpe@ellerman.id.au, benh@kernel.crashing.org, paulus@samba.org,
+        linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-kernel@vger.kernel.org,
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Subject: [PATCH] ide: fix warning comparing pointer to 0
+Date:   Thu, 11 Mar 2021 17:48:06 +0800
+Message-Id: <1615456086-127803-1-git-send-email-jiapeng.chong@linux.alibaba.com>
+X-Mailer: git-send-email 1.8.3.1
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-v4 -- does not rely on a pending commit, unlike v3.
+Fix the following coccicheck warning:
 
-v3 -- discard commit from v2; instead rely on the new function
-      reset_control_rearm provided in a recent commit [1] applied
-      to reset/next.
-   -- New commit to correct pcie-brcmstb.c usage of a reset controller
-      to use reset/rearm verses deassert/assert.
+./drivers/ide/pmac.c:1680:38-39: WARNING comparing pointer to 0.
 
-v2 -- refactor rescal-reset driver to implement assert/deassert rather than
-      reset because the reset call only fires once per lifetime and we need
-      to reset after every resume from S2 or S3.
-   -- Split the use of "ahci" and "rescal" controllers in separate fields
-      to keep things simple.
+Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+Signed-off-by: Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+---
+ drivers/ide/pmac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-v1 -- original
-
-Jim Quinlan (2):
-  ata: ahci_brcm: Fix use of BCM7216 reset controller
-  nPCI: brcmstb: Use reset/rearm instead of deassert/assert
-
- drivers/ata/ahci_brcm.c               | 46 +++++++++++++--------------
- drivers/pci/controller/pcie-brcmstb.c | 19 +++++++----
- 2 files changed, 36 insertions(+), 29 deletions(-)
-
+diff --git a/drivers/ide/pmac.c b/drivers/ide/pmac.c
+index ea0b064..d5171e0 100644
+--- a/drivers/ide/pmac.c
++++ b/drivers/ide/pmac.c
+@@ -1677,7 +1677,7 @@ static int pmac_ide_init_dma(ide_hwif_t *hwif, const struct ide_port_info *d)
+ 	/* We won't need pci_dev if we switch to generic consistent
+ 	 * DMA routines ...
+ 	 */
+-	if (dev == NULL || pmif->dma_regs == 0)
++	if (!dev || pmif->dma_regs)
+ 		return -ENODEV;
+ 	/*
+ 	 * Allocate space for the DBDMA commands.
 -- 
-2.17.1
+1.8.3.1
 
