@@ -2,104 +2,108 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F4017C433E0
-	for <linux-ide@archiver.kernel.org>; Fri, 12 Mar 2021 09:00:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09D81C432C3
+	for <linux-ide@archiver.kernel.org>; Fri, 12 Mar 2021 10:27:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B0FDF64F6A
-	for <linux-ide@archiver.kernel.org>; Fri, 12 Mar 2021 09:00:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD97F65011
+	for <linux-ide@archiver.kernel.org>; Fri, 12 Mar 2021 10:27:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232473AbhCLJAH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 12 Mar 2021 04:00:07 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44140 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232408AbhCLJAB (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 12 Mar 2021 04:00:01 -0500
-Received: from mail-qv1-xf36.google.com (mail-qv1-xf36.google.com [IPv6:2607:f8b0:4864:20::f36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DADA8C061574;
-        Fri, 12 Mar 2021 01:00:00 -0800 (PST)
-Received: by mail-qv1-xf36.google.com with SMTP id j17so3914193qvo.13;
-        Fri, 12 Mar 2021 01:00:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=qeJvLuvyZg25yI6p7wMHbe9MGq2hul0E3YQjgkwAB/g=;
-        b=rJkmAh3MXE/SCquN6xlNHA9/xiBwhcoWk3VCz+JAEQTRBpT/sEl4tOW50I5eJtu+W7
-         582uK+TTjWyUBjabS9SzdYlTSI8KxuFFNdT7/xog7M7BRcS0LOtjXZbr0/bpN1DMNulT
-         smqCgGk4owwuhsr7SLJaECcAOIJj2peACcrjD8hSGQnGjBcXAuA8htvzZ31rG62sfMY6
-         OYJEl2InPCCL18t4Mdrzgysm1K3TlKpovoyHsr36fxP5r67+b+tdoxN6PCQfE7u92TSB
-         9w/sxyj/cyy2+3MwGYQ65QNyvdaCdFBPzdPWbTvZ9OmnwF20c5ZlBmTxZojv6GMvBZfg
-         gmnw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=qeJvLuvyZg25yI6p7wMHbe9MGq2hul0E3YQjgkwAB/g=;
-        b=rh8iXaEu4BRD2Ct/8m65FESKr2yT1xBIfOoNSe64L1EtCwgn1u4WoAA+BPhsxp6mNI
-         g4/r2asoUkdAco6tCUORGnTON+L4m8e7DY2vTbPK4ECVM0jccwcHyt8hwpCYWioghFE8
-         2ju3Y83n9WrpFXtpj2hSjCw3T4PdRNDGhn43rTLRQYMORXsJU2pqydutLnCCIs/tGWqz
-         YfjxrOIVbEok1kh9XKDR3BvkfikN3JvsJR6EddA3wNqhwpJiFNG0xkLQTUt34VagsIIC
-         XPUCRzO3FlGM8hN640P793f/l9iY2j7QQghtdOsw1KuYytkEKLlHMbgpgSfbZ2z8Iju7
-         PPEg==
-X-Gm-Message-State: AOAM530ng59GIuEasbqiCW6rd7JnSYvnRuSL6Pscqnf1YqJ00RYftvoP
-        8ZuyfzBrQ4m+phJdffgxl2M=
-X-Google-Smtp-Source: ABdhPJxyPBHTOqXAHSrp64hj2ew/9nN1TXxtlHooUSWZiLaSmH30bWqvPn6QoZO9qyMtTgDNUOjOtg==
-X-Received: by 2002:a0c:b617:: with SMTP id f23mr11284258qve.44.1615539600160;
-        Fri, 12 Mar 2021 01:00:00 -0800 (PST)
-Received: from localhost.localdomain ([138.199.13.196])
-        by smtp.gmail.com with ESMTPSA id o1sm3515384qtq.81.2021.03.12.00.59.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 12 Mar 2021 00:59:59 -0800 (PST)
-From:   Bhaskar Chowdhury <unixbhaskar@gmail.com>
-To:     axboe@kernel.dk, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc:     rdunlap@infradead.org, Bhaskar Chowdhury <unixbhaskar@gmail.com>
-Subject: [PATCH] ata: Trivial spelling fixes in the file pata_ns87415.c
-Date:   Fri, 12 Mar 2021 14:27:38 +0530
-Message-Id: <20210312085738.9372-1-unixbhaskar@gmail.com>
-X-Mailer: git-send-email 2.26.2
+        id S232822AbhCLKYX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 12 Mar 2021 05:24:23 -0500
+Received: from szxga04-in.huawei.com ([45.249.212.190]:13596 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233093AbhCLKYG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 12 Mar 2021 05:24:06 -0500
+Received: from DGGEMS413-HUB.china.huawei.com (unknown [172.30.72.59])
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4Dxhh519C9z17JnC;
+        Fri, 12 Mar 2021 18:22:13 +0800 (CST)
+Received: from huawei.com (10.69.192.56) by DGGEMS413-HUB.china.huawei.com
+ (10.3.19.213) with Microsoft SMTP Server id 14.3.498.0; Fri, 12 Mar 2021
+ 18:23:52 +0800
+From:   Luo Jiaxing <luojiaxing@huawei.com>
+To:     <axboe@kernel.dk>
+CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@openeuler.org>, <john.garry@huawei.com>,
+        <yangxingui@huawei.com>, <luojiaxing@huawei.com>
+Subject: [PATCH v1] ata: ahci: Disable SXS for Hisilicon Kunpeng920
+Date:   Fri, 12 Mar 2021 18:24:36 +0800
+Message-ID: <1615544676-61926-1-git-send-email-luojiaxing@huawei.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.56]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+From: Xingui Yang <yangxingui@huawei.com>
 
-Trivial spelling fixes.
+On Hisilicon Kunpeng920, ESP is set to 1 by default for all ports of
+SATA controller. In some scenarios, some ports are not external SATA ports,
+and it cause disks connected to these ports to be identified as removable
+disks. So disable the SXS capability on the software side to prevent users
+from mistakenly considering non-removable disks as removable disks and
+performing related operations.
 
-Signed-off-by: Bhaskar Chowdhury <unixbhaskar@gmail.com>
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
+Reviewed-by: John Garry <john.garry@huawei.com>
 ---
- drivers/ata/pata_ns87415.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/ata/ahci.c    | 5 +++++
+ drivers/ata/ahci.h    | 1 +
+ drivers/ata/libahci.c | 5 +++++
+ 3 files changed, 11 insertions(+)
 
-diff --git a/drivers/ata/pata_ns87415.c b/drivers/ata/pata_ns87415.c
-index 1532b2e3c672..f4949e704356 100644
---- a/drivers/ata/pata_ns87415.c
-+++ b/drivers/ata/pata_ns87415.c
-@@ -113,7 +113,7 @@ static void ns87415_set_piomode(struct ata_port *ap, struct ata_device *adev)
-  *	ns87415_bmdma_setup		-	Set up DMA
-  *	@qc: Command block
-  *
-- *	Set up for bus masterng DMA. We have to do this ourselves
-+ *	Set up for bus mastering DMA. We have to do this ourselves
-  *	rather than use the helper due to a chip erratum
-  */
-
-@@ -174,7 +174,7 @@ static void ns87415_bmdma_stop(struct ata_queued_cmd *qc)
-  *	ns87415_irq_clear		-	Clear interrupt
-  *	@ap: Channel to clear
-  *
-- *	Erratum: Due to a chip bug regisers 02 and 0A bit 1 and 2 (the
-+ *	Erratum: Due to a chip bug registers 02 and 0A bit 1 and 2 (the
-  *	error bits) are reset by writing to register 00 or 08.
-  */
-
---
-2.26.2
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 00ba8e5..33192a8 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1772,6 +1772,11 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		hpriv->flags |= AHCI_HFLAG_NO_DEVSLP;
+ 
+ #ifdef CONFIG_ARM64
++	if (pdev->vendor == PCI_VENDOR_ID_HUAWEI &&
++	    pdev->device == 0xa235 &&
++	    pdev->revision < 0x30)
++		hpriv->flags |= AHCI_HFLAG_NO_SXS;
++
+ 	if (pdev->vendor == 0x177d && pdev->device == 0xa01c)
+ 		hpriv->irq_handler = ahci_thunderx_irq_handler;
+ #endif
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 98b8baa..d1f284f 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -242,6 +242,7 @@ enum {
+ 							suspend/resume */
+ 	AHCI_HFLAG_IGN_NOTSUPP_POWER_ON	= (1 << 27), /* ignore -EOPNOTSUPP
+ 							from phy_power_on() */
++	AHCI_HFLAG_NO_SXS		= (1 << 28), /* SXS not supported */
+ 
+ 	/* ap->flags bits */
+ 
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index ea5bf5f..fec2e97 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -493,6 +493,11 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
+ 		cap |= HOST_CAP_ALPM;
+ 	}
+ 
++	if ((cap & HOST_CAP_SXS) && (hpriv->flags & AHCI_HFLAG_NO_SXS)) {
++		dev_info(dev, "controller does not support SXS, disabling CAP_SXS\n");
++		cap &= ~HOST_CAP_SXS;
++	}
++
+ 	if (hpriv->force_port_map && port_map != hpriv->force_port_map) {
+ 		dev_info(dev, "forcing port_map 0x%x -> 0x%x\n",
+ 			 port_map, hpriv->force_port_map);
+-- 
+2.7.4
 
