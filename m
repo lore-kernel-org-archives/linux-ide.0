@@ -2,38 +2,40 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE3ADC433E0
-	for <linux-ide@archiver.kernel.org>; Mon, 15 Mar 2021 19:48:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A310BC433DB
+	for <linux-ide@archiver.kernel.org>; Mon, 15 Mar 2021 20:10:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7E13264DE5
-	for <linux-ide@archiver.kernel.org>; Mon, 15 Mar 2021 19:48:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B96564E83
+	for <linux-ide@archiver.kernel.org>; Mon, 15 Mar 2021 20:10:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233727AbhCOTrh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 15 Mar 2021 15:47:37 -0400
-Received: from mxout01.lancloud.ru ([45.84.86.81]:59796 "EHLO
-        mxout01.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233731AbhCOTrO (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 15 Mar 2021 15:47:14 -0400
+        id S231367AbhCOUKB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 15 Mar 2021 16:10:01 -0400
+Received: from mxout04.lancloud.ru ([45.84.86.114]:54600 "EHLO
+        mxout04.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233831AbhCOUJo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 15 Mar 2021 16:09:44 -0400
 Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout01.lancloud.ru AF6BF20CB91F
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout04.lancloud.ru 8EEDD209458A
 Received: from LanCloud
 Received: from LanCloud
 Received: from LanCloud
+Subject: Re: [PATCH] ata: libahci_platform: fix IRQ check
+From:   Sergey Shtylyov <s.shtylyov@omprussia.ru>
 To:     Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>,
         <linux-ide@vger.kernel.org>
-From:   Sergey Shtylyov <s.shtylyov@omprussia.ru>
-Subject: [PATCH] ata: libahci_platform: fix IRQ check
+References: <f3aaa894-97f4-2a0b-dd1d-df345cd56e76@omprussia.ru>
 Organization: Open Mobile Platform, LLC
-Message-ID: <f3aaa894-97f4-2a0b-dd1d-df345cd56e76@omprussia.ru>
-Date:   Mon, 15 Mar 2021 22:47:11 +0300
+Message-ID: <49173d96-6d0d-720a-c29d-7e22ffe8bd20@omprussia.ru>
+Date:   Mon, 15 Mar 2021 23:09:41 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.8.0
 MIME-Version: 1.0
+In-Reply-To: <f3aaa894-97f4-2a0b-dd1d-df345cd56e76@omprussia.ru>
 Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -44,35 +46,14 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Iff platform_get_irq() returns 0, ahci_platform_init_host() would return 0
-early (as if the call was successful). Override IRQ0 with -EINVAL instead
-as the 'libata' regards 0 as "no IRQ" (thus polling) anyway...
+On 3/15/21 10:47 PM, Sergey Shtylyov wrote:
 
-Signed-off-by: Sergey Shtylyov <s.shtylyov@omprussia.ru>
+> Iff platform_get_irq() returns 0, ahci_platform_init_host() would return 0
+> early (as if the call was successful). Override IRQ0 with -EINVAL instead
+> as the 'libata' regards 0 as "no IRQ" (thus polling) anyway...
+> 
+> Signed-off-by: Sergey Shtylyov <s.shtylyov@omprussia.ru>
 
----
-This patch is against the 'master' branch of Jens Axboe's 'linux-block.git'
-repo.
+   Oops, forgot the "Fixes: tag, will repost! :-)
 
- drivers/ata/libahci_platform.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-Index: linux-block/drivers/ata/libahci_platform.c
-===================================================================
---- linux-block.orig/drivers/ata/libahci_platform.c
-+++ linux-block/drivers/ata/libahci_platform.c
-@@ -582,11 +582,13 @@ int ahci_platform_init_host(struct platf
- 	int i, irq, n_ports, rc;
- 
- 	irq = platform_get_irq(pdev, 0);
--	if (irq <= 0) {
-+	if (irq < 0) {
- 		if (irq != -EPROBE_DEFER)
- 			dev_err(dev, "no irq\n");
- 		return irq;
- 	}
-+	if (!irq)
-+		return -EINVAL;
- 
- 	hpriv->irq = irq;
- 
+MBR, Sergey
