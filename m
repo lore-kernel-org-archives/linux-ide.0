@@ -2,105 +2,110 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95804C433DB
-	for <linux-ide@archiver.kernel.org>; Thu, 18 Mar 2021 10:12:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45AE6C433DB
+	for <linux-ide@archiver.kernel.org>; Thu, 18 Mar 2021 12:36:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7414064E81
-	for <linux-ide@archiver.kernel.org>; Thu, 18 Mar 2021 10:12:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3A5E64F45
+	for <linux-ide@archiver.kernel.org>; Thu, 18 Mar 2021 12:36:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229929AbhCRKMZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 18 Mar 2021 06:12:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55502 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230082AbhCRKMT (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 18 Mar 2021 06:12:19 -0400
-Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7ACFFC06174A;
-        Thu, 18 Mar 2021 03:12:19 -0700 (PDT)
-Received: by mail-lf1-x130.google.com with SMTP id x28so3649969lfu.6;
-        Thu, 18 Mar 2021 03:12:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=fj+8CF0xEa6bOzXqxjtIYrEA5HoToR1DJW5/Q9q9jmw=;
-        b=h+XOb1GsQ2w8fLoRZPzFbHuKl4PLZbrg1n3NNXlB+1pwKaDpv3IYeBwNMYTnaAe/dv
-         53qY2HQRgJloO7YPpYoaazxwB0LyW9cda/3XqephYo6XWuKffw2EvNS/BeW8bu2CjhLn
-         YWTP2x1H0eEBDgDtwckTaScppt8aK7lt+V3njf7QJpXzuiT7grarbWs5GRfMMbxHi5hx
-         sbbCxsAJNuzngqg7yz9ZWUT+6eIJtzHyMp4aZtClTbLq39j781dflkTtZN7C5T1u2Nwq
-         xymOipVtMZt0XepUbRaIZljM2iUOt+cNzBqUcJW9l5gvLHs6joBPpTbT1tLMNxHlVuyX
-         KLDA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=fj+8CF0xEa6bOzXqxjtIYrEA5HoToR1DJW5/Q9q9jmw=;
-        b=HUCNz4GlwqZgU+TK0qPxyR4jdJJ+lHsiaAAyJQHSS5CSDIl7cge4W1n1bU3z5RFA3N
-         qlZvbj9UwUIbBFpidDUW1bom21so2OhGcLlUZIPAj+mq+MtLIUScm7pJqEDPr+e3m+sE
-         Gr//733uEoLYmFsaI5aqk97kyi5S0gS2qyzjvYByiWzCdT1xvAqjKHGc8jw4DJ+ti7LQ
-         S5P/GKoG9PfsSHFO8b8hwahTNIv+1VGpMN6EdNTTV+/m8es+ytg/dO6VXCKRX1NOVqJ3
-         QfJ9ZGMaKAovEJgLRojC3cpZa0k090THsDN9c+jR7e2vovZt1905VoJ3ufvW7fLhVu3y
-         Z0bw==
-X-Gm-Message-State: AOAM531xYL+TkUY0pLfwmCgC570IvuKETDFyriUveloCSWrKHdsljRbS
-        a7QCvdwbo5sRmbVzFlX1Gqk=
-X-Google-Smtp-Source: ABdhPJw0WKNmAy7eGUCvhofce6ngmswkk73bpXDn/HaCVJQto32NE95sJGLkJZuXS7ucQeT6WnUpaw==
-X-Received: by 2002:a05:6512:238c:: with SMTP id c12mr69712lfv.200.1616062337968;
-        Thu, 18 Mar 2021 03:12:17 -0700 (PDT)
-Received: from [192.168.1.101] ([178.176.78.3])
-        by smtp.gmail.com with ESMTPSA id p22sm168167lfh.113.2021.03.18.03.12.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 18 Mar 2021 03:12:17 -0700 (PDT)
-Subject: Re: [PATCH 08/10] MIPS: disable CONFIG_IDE in malta*_defconfig
-To:     Christoph Hellwig <hch@lst.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jens Axboe <axboe@kernel.dk>,
-        Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     Richard Henderson <rth@twiddle.net>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Matt Turner <mattst88@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        linux-ide@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-alpha@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-m68k@lists.linux-m68k.org, linux-mips@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org
-References: <20210318045706.200458-1-hch@lst.de>
- <20210318045706.200458-9-hch@lst.de>
-From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Message-ID: <5b0f503e-a27c-a241-c705-b2a9ccd6d0a2@gmail.com>
-Date:   Thu, 18 Mar 2021 13:12:16 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.0
+        id S230040AbhCRMgI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 18 Mar 2021 08:36:08 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:14090 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230473AbhCRMgG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 18 Mar 2021 08:36:06 -0400
+Received: from DGGEMS401-HUB.china.huawei.com (unknown [172.30.72.60])
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4F1RKW4Z1cz19GFr;
+        Thu, 18 Mar 2021 20:34:07 +0800 (CST)
+Received: from huawei.com (10.175.124.27) by DGGEMS401-HUB.china.huawei.com
+ (10.3.19.201) with Microsoft SMTP Server id 14.3.498.0; Thu, 18 Mar 2021
+ 20:35:55 +0800
+From:   Wu Bo <wubo40@huawei.com>
+To:     <axboe@kernel.dk>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+CC:     <linfeilong@huawei.com>, <yanaijie@huawei.com>, <wubo40@huawei.com>
+Subject: [RFC PATCH] ata: add lun validity check on ata_sas_queuecmd
+Date:   Thu, 18 Mar 2021 20:53:53 +0800
+Message-ID: <1616072033-287811-1-git-send-email-wubo40@huawei.com>
+X-Mailer: git-send-email 1.8.3.1
 MIME-Version: 1.0
-In-Reply-To: <20210318045706.200458-9-hch@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Originating-IP: [10.175.124.27]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 3/18/21 7:57 AM, Christoph Hellwig wrote:
+Hi all,
 
-> Various malta defconfigs enable CONFIG_IDE for the tc86c001 ide driver,
-> hich is a Toshiba plug in card that does not make much sense to use on
-  ^ which is for
+After executing rescan-scsi-bus.sh -r -m, the system adds 255 more disks.
 
-> bigsur platforms.  For all other ATA cards libata support is already
-  ^ Malta.
+The reason is as follows:
+1. Execute the rescan-scsi-bus.sh script to scan all targets.
+2. The REPORT_LUNS failed due to some errors on the device of sdb(LUN0).
+3. Do a sequential scan on the target which sdb belongs to.
+4. Have already scanned LUN 0, so start at LUN 1. and keep scanning until
+   reach the max.
+5. For SATA device, the driver of ata does not check the validity of 
+   LUN ID before dispatch commands to ATA device. 
+   Result in LUN 1~MAX successfully added to the system.
 
-> enabled.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-[...]
+trace:
+__scsi_scan_target()
+   -> scsi_report_lun_scan()
+   -> scsi_sequential_lun_scan()
+	
+Steps to reproduce as follow:
 
-MBR, Sergei
+step1: lsscsi
+[1:0:0:0]    disk    ATA      /dev/sda 
+[1:0:1:0]    disk    ATA      /dev/sdb 
+[1:0:2:0]    disk    ATA      /dev/sdc 
+[1:0:3:0]    disk    ATA      /dev/sdd 
+[1:0:4:0]    disk    ATA      /dev/sde
+
+step2: echo "offline" > /sys/block/sdb/device/state
+step3: rescan-scsi-bus.sh -r -m
+step4: lsscsi
+[1:0:0:0]    disk    ATA      /dev/sda 
+[1:0:1:1]    disk    ATA      /dev/sdr 
+[1:0:1:2]    disk    ATA      /dev/sds 
+[1:0:1:3]    disk    ATA      /dev/sdt 
+[1:0:1:4]    disk    ATA      /dev/sdu 
+......
+[1:0:1:251]  disk    ATA      /dev/sdjh
+[1:0:1:252]  disk    ATA      /dev/sdji
+[1:0:1:253]  disk    ATA      /dev/sdjj
+[1:0:1:254]  disk    ATA      /dev/sdjk
+[1:0:1:255]  disk    ATA      /dev/sdjl
+[1:0:2:0]    disk    ATA      /dev/sdc 
+[1:0:3:0]    disk    ATA      /dev/sdd 
+[1:0:4:0]    disk    ATA      /dev/sde 
+
+Signed-off-by: Wu Bo <wubo40@huawei.com>
+---
+ drivers/ata/libata-sata.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+index c16423e..e30a412 100644
+--- a/drivers/ata/libata-sata.c
++++ b/drivers/ata/libata-sata.c
+@@ -1242,7 +1242,8 @@ int ata_sas_queuecmd(struct scsi_cmnd *cmd, struct ata_port *ap)
+ 
+ 	ata_scsi_dump_cdb(ap, cmd);
+ 
+-	if (likely(ata_dev_enabled(ap->link.device)))
++	if (likely(ata_dev_enabled(ap->link.device)) &&
++	    (cmd->device->lun == 0))
+ 		rc = __ata_scsi_queuecmd(cmd, ap->link.device);
+ 	else {
+ 		cmd->result = (DID_BAD_TARGET << 16);
+-- 
+1.8.3.1
+
