@@ -7,61 +7,61 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 390CFC4161F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2610FC2BA13
 	for <linux-ide@archiver.kernel.org>; Thu, 18 Mar 2021 08:52:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F73064E2E
+	by mail.kernel.org (Postfix) with ESMTP id 0C3BF64F41
 	for <linux-ide@archiver.kernel.org>; Thu, 18 Mar 2021 08:52:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229942AbhCRIwT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S229944AbhCRIwT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Thu, 18 Mar 2021 04:52:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38214 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38228 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229903AbhCRIwF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 18 Mar 2021 04:52:05 -0400
-Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D3D7C06175F
-        for <linux-ide@vger.kernel.org>; Thu, 18 Mar 2021 01:52:04 -0700 (PDT)
-Received: by mail-wr1-x430.google.com with SMTP id x16so4605034wrn.4
-        for <linux-ide@vger.kernel.org>; Thu, 18 Mar 2021 01:52:04 -0700 (PDT)
+        with ESMTP id S229913AbhCRIwG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 18 Mar 2021 04:52:06 -0400
+Received: from mail-wm1-x336.google.com (mail-wm1-x336.google.com [IPv6:2a00:1450:4864:20::336])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CD0CC06174A
+        for <linux-ide@vger.kernel.org>; Thu, 18 Mar 2021 01:52:06 -0700 (PDT)
+Received: by mail-wm1-x336.google.com with SMTP id b2-20020a7bc2420000b029010be1081172so2850043wmj.1
+        for <linux-ide@vger.kernel.org>; Thu, 18 Mar 2021 01:52:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=LyiarI8XI+wr4cdrUP10jrX5TiM2u+Q08u5Edv+SeZQ=;
-        b=UFMJn5wdi36JaAz2Mtjh0Yn3v4pMvV51lK4rgktPR83seHiknusOzEY081nZ0utH9E
-         XsBjfmNGLBWwL3IwX/rHlehaL5IOMB2hwQ93D6exxnriB3HyIzgE/6VqvH6oizTh6sIa
-         3zJ0kloQGxi/vSZOQejyRMLGFC+hURMKXakf5Dt96K3XV+uhioLxhl6QZXadfVAPX4p1
-         /AlXszKtCNVLnxxMgOWXc7FPboidwGsAsm/8HIGZ2si/gIL55PqndogUsMPaKFiH3Tcs
-         87tSbTDNEz6f7vxk1Iq+05iVhdNmxWoIBxRAWK5T6riqKsGZgshzwgBsU83NAyR4rO9f
-         TzRw==
+        bh=8THP7/U46oj2AdA7yORlA1l0cGJIRsmbqUZT9U01N10=;
+        b=owBn+xS4OiRerAuKPY02l2lKcDg4A7rfCxSZlOaV5n+p4Anewb0qiJgnRGois5rJ53
+         otiPAUHyB1hiJmM966DeXNQGH3Y/Vl5TNAyPGd9mNWF7yhCRp3LL9z4zkgLNfj40onmH
+         miY9VIe/aPvbVgMkUH65Qgxe8KEtSs9fkM3dMCrXUIpohGmfGfQvnKt/kVI0O8sZ2xDA
+         zVbl/T/SpSUdCh8n5+yuA3OZQfxRIBucBvs9ZHClC/zyv05YgKQla+7hTZLfoegwNwbr
+         8FDQsG7hBlEd6Fd42wAih5yRSgbFXMGjnHhTEbjb+RqqhmGBio7PbeRT1j4UlWgRWvQ0
+         tnfg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=LyiarI8XI+wr4cdrUP10jrX5TiM2u+Q08u5Edv+SeZQ=;
-        b=ku2CSo52c8bJXe+5rUeeVQBqSdOmcyuFLHLaNZ58y9nrLUTSew9rBWpN1J7bxFjeUW
-         15a0LBSfE+Z6ePuAr0jpRsNh2Br+Q51BqFyfwvNU+O/NU80f9b9cWGgbfyDNsQdFlVFy
-         FdIA5QzaDQQHpeBdMoSoyIbc1Bd/YWsLQK26Sv8CeGiSdQ7LuopWdDUpEqEv1wUxYFwE
-         9BrLGfaSzU1q/iTXfc/NCyKMO/reXfQMNe7mZODVQ4GPEyqjmSCaBHnmMYoeAYoGHEYa
-         5vlwrKRM4zQ1O11xfz7moQvWz2hIJKAaEw2rtBJndrysPEuNUET9dmqGVVxOe8RTPebl
-         w8+w==
-X-Gm-Message-State: AOAM5331kmNbjZfCh9ZZkkKAgh058DWkR8LHUW+KkAk6n+ZvF0dNKz9a
-        m5WBi+jtEEYCUNXazMHyurhe5g==
-X-Google-Smtp-Source: ABdhPJyxfLSduApCEQu/3N3aXkvQ4WqyvhVfStfESZlS6GN8wfK8Blsp+2pYr2Wqw5RKEWPWEdVMVg==
-X-Received: by 2002:a05:6000:11cd:: with SMTP id i13mr8292296wrx.417.1616057523266;
-        Thu, 18 Mar 2021 01:52:03 -0700 (PDT)
+        bh=8THP7/U46oj2AdA7yORlA1l0cGJIRsmbqUZT9U01N10=;
+        b=sJaydDKqnRH/NqwbRSeLtcs+JRRQLDpAyL4GU/DVimxeN3fQpR+AkrZ3pJgodqCnEW
+         fhuIpBcGan+YPRX1wDCa2kFxoMqbZtl4hrEVZyl3ytoLKfyoiBIiORNCOeQI6jN6f6wU
+         pwwCmexlj7C6SGknLtknDWb+gZh6AzbhIks9XZnCFdCBN41mtyI7BgNn13/88kR9Hb2w
+         9Siz3B8EQ+DopAONLjznCR1/e3yLSw8oTPlTmYcORGiWuMssdhGLi0Zwe0x9CkNyWS+r
+         9yrHsYLTQ0KE0MKDuq0FzFXUp++XMpnEYpVP0uvzw6AYuXPh3zG4FYuGX54F3QycwzoV
+         fGiw==
+X-Gm-Message-State: AOAM531HVWqyON2/3N1D2KQ961FZx9IIgNTjmT+jBb68AJ4MzyruyVyp
+        ZHl7Inmt8LUL/wG55bknTAyOTA==
+X-Google-Smtp-Source: ABdhPJx9R9zd3as8Zx677i6YSfsUD2ksgApi6t1IlIfShE3hBRcdI0WVmZkNaqTIURd+qmu0fXnifg==
+X-Received: by 2002:a05:600c:3541:: with SMTP id i1mr2521821wmq.97.1616057525014;
+        Thu, 18 Mar 2021 01:52:05 -0700 (PDT)
 Received: from dell.default ([91.110.221.194])
-        by smtp.gmail.com with ESMTPSA id w131sm1526868wmb.8.2021.03.18.01.52.02
+        by smtp.gmail.com with ESMTPSA id w131sm1526868wmb.8.2021.03.18.01.52.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 18 Mar 2021 01:52:02 -0700 (PDT)
+        Thu, 18 Mar 2021 01:52:04 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
 Cc:     linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         linux-ide@vger.kernel.org
-Subject: [PATCH 12/15] ata: pata_cs5530: Fix misspelling of 'cs5530_init_one()'s 'pdev' param
-Date:   Thu, 18 Mar 2021 08:51:47 +0000
-Message-Id: <20210318085150.3131936-13-lee.jones@linaro.org>
+Subject: [PATCH 14/15] ata: libata-acpi: Fix function name and provide description for 'prev_gtf'
+Date:   Thu, 18 Mar 2021 08:51:49 +0000
+Message-Id: <20210318085150.3131936-15-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210318085150.3131936-1-lee.jones@linaro.org>
 References: <20210318085150.3131936-1-lee.jones@linaro.org>
@@ -73,29 +73,37 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/ata/pata_cs5530.c:283: warning: Function parameter or member 'pdev' not described in 'cs5530_init_one'
- drivers/ata/pata_cs5530.c:283: warning: Excess function parameter 'dev' description in 'cs5530_init_one'
+ drivers/ata/libata-acpi.c:493: warning: expecting prototype for ata_acpi_gtm_xfermode(). Prototype was for ata_acpi_gtm_xfermask() instead
+ drivers/ata/libata-acpi.c:648: warning: Function parameter or member 'prev_gtf' not described in 'ata_acpi_run_tf'
 
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: linux-ide@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/ata/pata_cs5530.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ata/libata-acpi.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/pata_cs5530.c b/drivers/ata/pata_cs5530.c
-index ad75d02b6dacf..a1b4aaccaa50a 100644
---- a/drivers/ata/pata_cs5530.c
-+++ b/drivers/ata/pata_cs5530.c
-@@ -271,7 +271,7 @@ static int cs5530_init_chip(void)
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index 224e3486e9a5d..7a7d6642edcc5 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -476,7 +476,7 @@ static int ata_dev_get_GTF(struct ata_device *dev, struct ata_acpi_gtf **gtf)
+ }
  
  /**
-  *	cs5530_init_one		-	Initialise a CS5530
-- *	@dev: PCI device
-+ *	@pdev: PCI device
-  *	@id: Entry in match table
+- * ata_acpi_gtm_xfermode - determine xfermode from GTM parameter
++ * ata_acpi_gtm_xfermask - determine xfermode from GTM parameter
+  * @dev: target device
+  * @gtm: GTM parameter to use
   *
-  *	Install a driver for the newly found CS5530 companion chip. Most of
+@@ -624,6 +624,7 @@ static int ata_acpi_filter_tf(struct ata_device *dev,
+  * ata_acpi_run_tf - send taskfile registers to host controller
+  * @dev: target ATA device
+  * @gtf: raw ATA taskfile register set (0x1f1 - 0x1f7)
++ * @prev_gtf: previous command
+  *
+  * Outputs ATA taskfile to standard ATA host controller.
+  * Writes the control, feature, nsect, lbal, lbam, and lbah registers.
 -- 
 2.27.0
 
