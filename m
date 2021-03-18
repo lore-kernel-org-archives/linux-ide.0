@@ -7,62 +7,62 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68988C43603
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92B78C4360C
 	for <linux-ide@archiver.kernel.org>; Thu, 18 Mar 2021 08:52:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 42FDE64F18
+	by mail.kernel.org (Postfix) with ESMTP id 6224864F3B
 	for <linux-ide@archiver.kernel.org>; Thu, 18 Mar 2021 08:52:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229897AbhCRIwS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 18 Mar 2021 04:52:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38200 "EHLO
+        id S229880AbhCRIwR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 18 Mar 2021 04:52:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38194 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229803AbhCRIwD (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 18 Mar 2021 04:52:03 -0400
-Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6B47C06175F
-        for <linux-ide@vger.kernel.org>; Thu, 18 Mar 2021 01:52:02 -0700 (PDT)
-Received: by mail-wr1-x434.google.com with SMTP id k8so4602640wrc.3
-        for <linux-ide@vger.kernel.org>; Thu, 18 Mar 2021 01:52:02 -0700 (PDT)
+        with ESMTP id S229872AbhCRIwC (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 18 Mar 2021 04:52:02 -0400
+Received: from mail-wm1-x330.google.com (mail-wm1-x330.google.com [IPv6:2a00:1450:4864:20::330])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BECB9C06175F
+        for <linux-ide@vger.kernel.org>; Thu, 18 Mar 2021 01:52:01 -0700 (PDT)
+Received: by mail-wm1-x330.google.com with SMTP id b2-20020a7bc2420000b029010be1081172so2849920wmj.1
+        for <linux-ide@vger.kernel.org>; Thu, 18 Mar 2021 01:52:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=u5wivGTr87AFeSVjq+RPxAGgUPqftM9xBrGW+nIjIr0=;
-        b=n6g2xoisS0ymTmWPWtvMfF3pktpNrRfc38MouzDXCl2G9wZiRyN1IJDDU0DrjekF0f
-         G6GW9SmWZmmnoBQvbNepQYyYcSCHHGzUAYyvZMoV+ZCkn3JmPYfu78sXT9V/9RgyJysU
-         peE/74Rml5/Me/rthJLUdzQALRajCSfLvmYbHPx2/WTIWIJcWv3nfCM+jKTeAIPKo5je
-         LVvrFLkcdxQdiZG3XNhChfZMIVlqo2KyOAEeOTguUbezO6Pq3LWjYpMTM8fvpdn+q2pU
-         rRISqXuHy+MgDpbwz2LNQ63udW8Wewm/TO/uZyJqCeCUNzKER6TGJsbtHu+4FqBH0+Cr
-         0d6g==
+        bh=1LSRu3B7vTOehIF+pPi+UNH/SrfnJ26bQ8jJ9MYE7/g=;
+        b=PNjjaiEovLZUonRxnIGR3ImVloNSF8ldt8dyaCxBC28aqjKAs/a5DKAZ+N59fzdauZ
+         y6m3IBNONcOWwWtX8Fby+/P2l/Pzh0OFUZeiiW9CQH1yr4WlbgVD2vCa+Dja8GFVkU5p
+         i6TPratcgwrM0szQJuHbqAxm/n6prU8nimMjbSp9CZGAmS01oZIGuqpqtIdZWAlKPRy6
+         9Q9zfsRROdM6T+jFl/dKas9kSn8n9Ugn2zLgJixA80jYp8fQ6Cwl4fwSyfuY13hn7KxS
+         4U37PDUXSpSvP28vQm+1lAUpqPoi4abMoRdlD5DfjR2SgkNTDxq49dyIulJT2pzIsi95
+         l23A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=u5wivGTr87AFeSVjq+RPxAGgUPqftM9xBrGW+nIjIr0=;
-        b=h/IrhzefGUZuQx6kZqIAld5ojG7BNCyvyYiM4mvYyTYNYY2oXq3L8diNh5vHNkzHMs
-         TDTc33rnsga8aKo7p+xrQdGmn1n4vu0sXpsRTpmUuC95jAntY/zcjrzrFpaoFadmhGzu
-         P++pfOR01U6o9gNc6qGGUKKs7r99RAevQF57HiD+UrnyStUinV+65KF76vG1mIRtK3Z7
-         84BUHKhFqSCsuqs7+Cp5q1ZE7gR53cqaX//tcnbICzAMWzvGBWAYYUmXAi+yqc5NtiWJ
-         tEf4S81nDBvvhytgUm0563Uhzf5KoVjfiRjGDTkeUcNk8qTCbnMt8jOIt2O08j323a7V
-         aBzw==
-X-Gm-Message-State: AOAM532dBbbZjzx/0pgcISed/iHDUkF6TO4OdGo6QbbNrAfRM//lcgJG
-        kBjj4MQzJmwhZRy8JDDrDJuLXA==
-X-Google-Smtp-Source: ABdhPJw2Na7Ak0qwm6kHBbG3Of6Eg8McOWqQOjJsj4cpF+pgsUQWGQ4wyl9sDf8tJEBgBkCkLW+Riw==
-X-Received: by 2002:a5d:424c:: with SMTP id s12mr8629682wrr.161.1616057521488;
-        Thu, 18 Mar 2021 01:52:01 -0700 (PDT)
+        bh=1LSRu3B7vTOehIF+pPi+UNH/SrfnJ26bQ8jJ9MYE7/g=;
+        b=IuejPGyjyaCrUYP1prDfQKnqqy/FUId1QNSZr7kqDJ3dL9U8tByAs+h/+d0gEtC2Aj
+         lONILk2nub12wGQit6W1H7uprnN4t7InzlxJVfDHzEwnwuGy79e8gYjxN38O6DH4IwW2
+         Sxa0P7igZBZ3Fza9asLINDx3G8z7+AXqF0MuDtMs3x6aDWkSfRc+iLV22LWb23TVR9/1
+         +Gpu8bdknl1pw37+vnGMRQmvKEblz55kV3B8ops8tkvTuxKjBWju72/jrHVKpk8S1Tfp
+         /Lb+Q6mSE7bphFJU95VpAqkVpdBqg5yiRYSLK7p5MPIG8e2COMtzSTkcEHKX5Fqhf1c+
+         T3XQ==
+X-Gm-Message-State: AOAM533LCUcFKKxOUFR6Z1Wfgv5AyQnU23P276YRGT2x6SKWMjsnUWZh
+        pRHJpQffis+fI1f1jOI2FhqztdjbkAZWmQ==
+X-Google-Smtp-Source: ABdhPJwxfsmQo8LTvurXnGpxqnAHfbVwXbRto0zZJmZy7QI/jBR+MV+eJWV7QIMprPIybvud/h50pQ==
+X-Received: by 2002:a05:600c:4ca9:: with SMTP id g41mr2556836wmp.150.1616057520550;
+        Thu, 18 Mar 2021 01:52:00 -0700 (PDT)
 Received: from dell.default ([91.110.221.194])
-        by smtp.gmail.com with ESMTPSA id w131sm1526868wmb.8.2021.03.18.01.52.00
+        by smtp.gmail.com with ESMTPSA id w131sm1526868wmb.8.2021.03.18.01.51.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 18 Mar 2021 01:52:01 -0700 (PDT)
+        Thu, 18 Mar 2021 01:52:00 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
 Cc:     linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Andre Hedrick <andre@linux-ide.org>, Hat Inc <alan@redhat.com>,
-        linux-ide@vger.kernel.org
-Subject: [PATCH 10/15] ata: ata_generic: Fix misspelling of 'ata_generic_init_one()'
-Date:   Thu, 18 Mar 2021 08:51:45 +0000
-Message-Id: <20210318085150.3131936-11-lee.jones@linaro.org>
+        Jaromir Koutek <miri@punknet.cz>, Jan Harkes <jaharkes@cwi.nl>,
+        Mark Lord <mlord@pobox.com>, linux-ide@vger.kernel.org
+Subject: [PATCH 09/15] ata: pata_opti: Fix spelling issue of 'val' in 'opti_write_reg()'
+Date:   Thu, 18 Mar 2021 08:51:44 +0000
+Message-Id: <20210318085150.3131936-10-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210318085150.3131936-1-lee.jones@linaro.org>
 References: <20210318085150.3131936-1-lee.jones@linaro.org>
@@ -74,30 +74,32 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/ata/ata_generic.c:164: warning: expecting prototype for ata_generic_init(). Prototype was for ata_generic_init_one() instead
+ drivers/ata/pata_opti.c:82: warning: Function parameter or member 'val' not described in 'opti_write_reg'
+ drivers/ata/pata_opti.c:82: warning: Excess function parameter 'value' description in 'opti_write_reg'
 
 Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Andre Hedrick <andre@linux-ide.org>
-Cc: Hat Inc <alan@redhat.com>
+Cc: Jaromir Koutek <miri@punknet.cz>
+Cc: Jan Harkes <jaharkes@cwi.nl>
+Cc: Mark Lord <mlord@pobox.com>
 Cc: linux-ide@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/ata/ata_generic.c | 2 +-
+ drivers/ata/pata_opti.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
-index 9ff545ce8da3e..20a32e4d501d3 100644
---- a/drivers/ata/ata_generic.c
-+++ b/drivers/ata/ata_generic.c
-@@ -151,7 +151,7 @@ static int is_intel_ider(struct pci_dev *dev)
- }
- 
+diff --git a/drivers/ata/pata_opti.c b/drivers/ata/pata_opti.c
+index 06a800a3b0706..01976c4e40330 100644
+--- a/drivers/ata/pata_opti.c
++++ b/drivers/ata/pata_opti.c
+@@ -69,7 +69,7 @@ static int opti_pre_reset(struct ata_link *link, unsigned long deadline)
  /**
-- *	ata_generic_init		-	attach generic IDE
-+ *	ata_generic_init_one		-	attach generic IDE
-  *	@dev: PCI device found
-  *	@id: match entry
+  *	opti_write_reg		-	control register setup
+  *	@ap: ATA port
+- *	@value: value
++ *	@val: value
+  *	@reg: control register number
   *
+  *	The Opti uses magic 'trapdoor' register accesses to do configuration
 -- 
 2.27.0
 
