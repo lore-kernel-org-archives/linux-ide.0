@@ -2,129 +2,106 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF5ECC4361B
-	for <linux-ide@archiver.kernel.org>; Thu, 18 Mar 2021 08:52:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 610D7C433DB
+	for <linux-ide@archiver.kernel.org>; Thu, 18 Mar 2021 10:09:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9B0C764F33
-	for <linux-ide@archiver.kernel.org>; Thu, 18 Mar 2021 08:52:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0CDFE64F53
+	for <linux-ide@archiver.kernel.org>; Thu, 18 Mar 2021 10:09:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229780AbhCRIwS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 18 Mar 2021 04:52:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38210 "EHLO
+        id S229844AbhCRKJN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 18 Mar 2021 06:09:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229896AbhCRIwE (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 18 Mar 2021 04:52:04 -0400
-Received: from mail-wm1-x32e.google.com (mail-wm1-x32e.google.com [IPv6:2a00:1450:4864:20::32e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C736C061762
-        for <linux-ide@vger.kernel.org>; Thu, 18 Mar 2021 01:52:03 -0700 (PDT)
-Received: by mail-wm1-x32e.google.com with SMTP id w203-20020a1c49d40000b029010c706d0642so6516858wma.0
-        for <linux-ide@vger.kernel.org>; Thu, 18 Mar 2021 01:52:03 -0700 (PDT)
+        with ESMTP id S229600AbhCRKJC (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 18 Mar 2021 06:09:02 -0400
+Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7AFF2C06175F;
+        Thu, 18 Mar 2021 03:09:02 -0700 (PDT)
+Received: by mail-lf1-x12f.google.com with SMTP id 75so3623920lfa.2;
+        Thu, 18 Mar 2021 03:09:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=GaackZ/z/LereQfTWx6EZY6YyaXRiP4t4NnTncEoRCA=;
-        b=hOaFBnS1qL4EZR4viHQwVJgMva2mOeGRvIL4fuUMRhTF5KlXTL27cypHXcqyLPU9ym
-         ptdWABTJunZmopbdxFY3/uyiRuUeA3/Q3UEN80dQm1oAGG49y9/rHmtT7WO3d+psKtIW
-         4Wo9VIBg0fX6g9AnuIt18/iI+tv+gBWlBhyXS+hlNi+aLHsijUkLw3BrOUaLxh9SxQuV
-         60+NQBDb9bQUXgG60CAZM6YSRq7WwpTT8gOFnLvS7dDyaQ/K4PwYAiaFZaQHjncg+ZjY
-         I9puisGMIqbK3GatIdPjfeiOHp4t9xQN748FETqDNEtbHMcYlfVs2JhY0w2VtLpEZsHT
-         kEfg==
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=jMxhISu+COlRrHc/EVrqMnT5LVw2161ovhdA7IBtSGw=;
+        b=N+Q0LUNoyVaDPJ1eJrZ67FhUa77q/Fz02On4l9bg9QACSIgykCKqUmFdsf53Ojgnbf
+         eyumUdx/TwjbtDOLgwCYAB7RDOtR57TMCBeyNSAY//ay7Tl2lccP2Ssym94kRXjxfYRe
+         lulL4E/vgpp41CghUdWNrhQunOsNpbRkQh1Z5uA9cr4OPAdKTqKspV2wEkOPVcm1LmJR
+         yZKXoXYlgW/Aj82akuKLiTGE5Fox66wxjP6rcBsCJbwoniHR5/N5xRjjkVjAEfQdY1MW
+         wabHvQrtRlGBXU/oemiBE0fxxY0J0doyEwDn/K3ybrpVrl7lPm8K8TOwVCHW7Z8VfYJf
+         AzpA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=GaackZ/z/LereQfTWx6EZY6YyaXRiP4t4NnTncEoRCA=;
-        b=aajLE93o+TgmJWgCD6DW9n/8c1T0hENnTFBpe/LF6oBFLFPDLd0rH+N1YvNETug4jA
-         CNpDz5H5LNT267RH2Ip+xmM0RseL7K6nUn3T7NTwLeGs1Lr7XMbUs2WR2w7ttKm2fo0p
-         xsJbwxG8hZzl9Pf9ZcX+/aESddfpzxj5SfK3zr8Upf0J20HYr4NPiKg/o4gnW3bpZ6nI
-         Ul1B4YQEYie++LJps7SPGsTmISrpnXO1rge3/F5Ez8kuH3rlrbdlY4yFbzxPY/zWi4Ya
-         8Lw+h6M04reUtAXHZ559iBdfaGUSq17hMPi9BP/rs8A/kQOs8HFmOchsYzQRS+XaM4UG
-         zH5Q==
-X-Gm-Message-State: AOAM533FyMGdb1+o6foJ0RCZ4CvOxqGl6SUa4B+u0OgNHHGvJb+HG5eM
-        tix3nYoHnmNWjdbtnpTNxC2iYQ==
-X-Google-Smtp-Source: ABdhPJxyXMICdkigPOOwmxZ9OVNAiEXw7pw+/JSuD26xTSpiSRESPA5e655cnDxb8hRfkdI6Or5ojg==
-X-Received: by 2002:a05:600c:b57:: with SMTP id k23mr2456756wmr.145.1616057522356;
-        Thu, 18 Mar 2021 01:52:02 -0700 (PDT)
-Received: from dell.default ([91.110.221.194])
-        by smtp.gmail.com with ESMTPSA id w131sm1526868wmb.8.2021.03.18.01.52.01
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 18 Mar 2021 01:52:01 -0700 (PDT)
-From:   Lee Jones <lee.jones@linaro.org>
-To:     lee.jones@linaro.org
-Cc:     linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Colten Edwards <pje120@cs.usask.ca>,
-        Samuel Thibault <samuel.thibault@ens-lyon.org>,
-        linux-ide@vger.kernel.org
-Subject: [PATCH 11/15] ata: pata_legacy: Repair a couple kernel-doc problems
-Date:   Thu, 18 Mar 2021 08:51:46 +0000
-Message-Id: <20210318085150.3131936-12-lee.jones@linaro.org>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210318085150.3131936-1-lee.jones@linaro.org>
-References: <20210318085150.3131936-1-lee.jones@linaro.org>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=jMxhISu+COlRrHc/EVrqMnT5LVw2161ovhdA7IBtSGw=;
+        b=IG0AFNQ4WIC7kIb1oqhO0NDJK4IpvBYtQMoHOV9DKFOKi5oYNqDC/BV9Gtr3IoH2cm
+         FMs+fvSr2r42szRdjBPArkOki56V6+y780HZ3xrW6yfFyKEi0qH0qiSI896Z5F/SCDWD
+         ywvmmefUjva1eWKcciuSJvoS6NdenabVMNcsg1d8HYaxGNWsyi9Xt1aa+qEHr4TnD6wH
+         an9cXBxh/pCVUaM1/Pr6Aho5lINHP7y0Ugv7D63w2LHAIaFUmQ0Lp14Sbf7tY7fYwmtz
+         IdX2/sg635XMHgnoc2K33eKSEoNXkHFZ3pV+ht+R7Yd3WIRao7tSSwmpDuvelJQKDFD1
+         81fA==
+X-Gm-Message-State: AOAM533B0nqqsdjnFA3SuMjAMpcZxmYRRvil0HpuTdKptUaWI6YivoUR
+        nH2jPe16oyAGQmh2VUFkPZLMuey11I6fmA==
+X-Google-Smtp-Source: ABdhPJx2/i763YoZT8agJf/e8IcPTQBDi5fhHCqQUnQpQ0jOlOdRn9E3L+UaYKsqgqqx/61KeZhUWQ==
+X-Received: by 2002:a05:6512:32ab:: with SMTP id q11mr4934722lfe.106.1616062140994;
+        Thu, 18 Mar 2021 03:09:00 -0700 (PDT)
+Received: from [192.168.1.101] ([178.176.78.3])
+        by smtp.gmail.com with ESMTPSA id z21sm173661ljh.104.2021.03.18.03.08.59
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 18 Mar 2021 03:09:00 -0700 (PDT)
+Subject: Re: [PATCH 07/10] MIPS: disable CONFIG_IDE in bigsur_defconfig
+To:     Christoph Hellwig <hch@lst.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jens Axboe <axboe@kernel.dk>,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Matt Turner <mattst88@gmail.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        linux-ide@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-alpha@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-m68k@lists.linux-m68k.org, linux-mips@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+References: <20210318045706.200458-1-hch@lst.de>
+ <20210318045706.200458-8-hch@lst.de>
+From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Message-ID: <53035511-c140-b51a-dd1d-874b1041039a@gmail.com>
+Date:   Thu, 18 Mar 2021 13:08:58 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210318045706.200458-8-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Fixes the following W=1 kernel build warning(s):
+Hi!
 
- drivers/ata/pata_legacy.c:606: warning: expecting prototype for opt82c465mv_qc_issue(). Prototype was for opti82c46x_qc_issue() instead
- drivers/ata/pata_legacy.c:933: warning: Function parameter or member 'probe' not described in 'legacy_init_one'
- drivers/ata/pata_legacy.c:933: warning: Excess function parameter 'pl' description in 'legacy_init_one'
- drivers/ata/pata_legacy.c:1024: warning: Function parameter or member 'primary' not described in 'legacy_check_special_cases'
- drivers/ata/pata_legacy.c:1024: warning: Function parameter or member 'secondary' not described in 'legacy_check_special_cases'
- drivers/ata/pata_legacy.c:1024: warning: Excess function parameter 'master' description in 'legacy_check_special_cases'
- drivers/ata/pata_legacy.c:1024: warning: Excess function parameter 'master' description in 'legacy_check_special_cases'
+On 3/18/21 7:57 AM, Christoph Hellwig wrote:
 
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Colten Edwards <pje120@cs.usask.ca>
-Cc: Samuel Thibault <samuel.thibault@ens-lyon.org>
-Cc: linux-ide@vger.kernel.org
-Signed-off-by: Lee Jones <lee.jones@linaro.org>
----
- drivers/ata/pata_legacy.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+> bigsur_defconfig enables CONFIG_IDE for the tc86c001 ide driver, which
+> is a Toshiba plug in card that does not make much sense to use on bigsur
+    ^ for
 
-diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
-index 4fd12b20df239..a7235bde6ae87 100644
---- a/drivers/ata/pata_legacy.c
-+++ b/drivers/ata/pata_legacy.c
-@@ -588,7 +588,7 @@ static void opti82c46x_set_piomode(struct ata_port *ap, struct ata_device *adev)
- }
- 
- /**
-- *	opt82c465mv_qc_issue		-	command issue
-+ *	opti82c46x_qc_issue		-	command issue
-  *	@qc: command pending
-  *
-  *	Called when the libata layer is about to issue a command. We wrap
-@@ -923,7 +923,7 @@ static __init int probe_chip_type(struct legacy_probe *probe)
- 
- /**
-  *	legacy_init_one		-	attach a legacy interface
-- *	@pl: probe record
-+ *	@probe: probe record
-  *
-  *	Register an ISA bus IDE interface. Such interfaces are PIO and we
-  *	assume do not support IRQ sharing.
-@@ -1009,8 +1009,8 @@ static __init int legacy_init_one(struct legacy_probe *probe)
- /**
-  *	legacy_check_special_cases	-	ATA special cases
-  *	@p: PCI device to check
-- *	@master: set this if we find an ATA master
-- *	@master: set this if we find an ATA secondary
-+ *	@primary: set this if we find an ATA master
-+ *	@secondary: set this if we find an ATA secondary
-  *
-  *	A small number of vendors implemented early PCI ATA interfaces
-  *	on bridge logic without the ATA interface being PCI visible.
--- 
-2.27.0
+   Else that doesn't make much sense. :-)
 
+> platforms.  For all other ATA cards libata support is already enabled.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+[...]
+
+MBR, Sergei
