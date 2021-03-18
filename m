@@ -2,95 +2,77 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03859C433DB
-	for <linux-ide@archiver.kernel.org>; Wed, 17 Mar 2021 18:04:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45E4EC433E6
+	for <linux-ide@archiver.kernel.org>; Thu, 18 Mar 2021 04:58:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 97D1864F37
-	for <linux-ide@archiver.kernel.org>; Wed, 17 Mar 2021 18:04:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 171A464F18
+	for <linux-ide@archiver.kernel.org>; Thu, 18 Mar 2021 04:58:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232838AbhCQSEW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 17 Mar 2021 14:04:22 -0400
-Received: from mout.kundenserver.de ([212.227.126.130]:46391 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231891AbhCQSEP (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 17 Mar 2021 14:04:15 -0400
-Received: from localhost ([81.170.149.220]) by mrelayeu.kundenserver.de
- (mreue011 [212.227.15.167]) with ESMTPSA (Nemesis) id
- 1M89XH-1lHvxN0SqB-005F0n for <linux-ide@vger.kernel.org>; Wed, 17 Mar 2021
- 19:04:14 +0100
-From:   =?UTF-8?q?Reimar=20D=C3=B6ffinger?= <Reimar.Doeffinger@gmx.de>
-To:     linux-ide@vger.kernel.org
-Subject: [PATCH] libata: add kernel parameter to force ATA_HORKAGE_NO_DMA_LOG
-Date:   Wed, 17 Mar 2021 19:04:13 +0100
-Message-Id: <20210317180413.2992-1-Reimar.Doeffinger@gmx.de>
-X-Mailer: git-send-email 2.30.2
+        id S229549AbhCRE6G (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 18 Mar 2021 00:58:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44256 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229512AbhCRE6B (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 18 Mar 2021 00:58:01 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D826C06174A;
+        Wed, 17 Mar 2021 21:57:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=wEy5NunwrZKXnkhywjB0DIEFLxRmlhSa94tBcP+tKjE=; b=bv913LM0lvcD8Id3k3odeou8wR
+        1UvHd2GaSV+awelY4zndccdEi1o98SvR0osHU7YT2lzvxPSgn9S+llRvYFYZl0NqxKr6JPY5h6ZqC
+        /VHtYLrSrsc3G0fU/qqnWT2IZ/W4XWIdxAZ8719My3Pmb4XVeFuT7ZtRtwHvPpDffcuPFktVt74Ci
+        iKFsp0yleZWPZWxf14Mw2w5Vhlql3ikursfJEfoBHUEAclgryE05eVjtWYzyYdxxKWdARDOzxutBe
+        fAU3lk4ETNL1tXb+E/S9a3A6KawIpnvinkS/iDrdzoMGs3YMF+h+OAjuVTBRk+TeCrfcJQuHQYqF9
+        rlZkW62w==;
+Received: from [2001:4bb8:18c:bb3:e1cf:ad2f:7ff7:7a0b] (helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.94 #2 (Red Hat Linux))
+        id 1lMkiZ-002ZB3-Ks; Thu, 18 Mar 2021 04:57:10 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     "David S. Miller" <davem@davemloft.net>,
+        Jens Axboe <axboe@kernel.dk>,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Matt Turner <mattst88@gmail.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        linux-ide@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-alpha@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-m68k@lists.linux-m68k.org, linux-mips@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+Subject: remove the legacy ide driver
+Date:   Thu, 18 Mar 2021 05:56:56 +0100
+Message-Id: <20210318045706.200458-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:vItrKnW11gdSUFGWGSPqO+SpDKOWViVJzCYsjzWqyOrMzmyyv4l
- BDXpahtxB5RjmiZsVf6e3JqQ9ezDfa3Wqbwu1FEntxNPewr+fGUHl915YhFzCnOeTdSjUkK
- h3aHo3DVoaVo9LZQ+1/hx4x5YYHqinRrU4YFWIIqYtKL6dFJP7BUSDAznz/LoqiX2ATLi5D
- 6OBpMhEwg9fKC4puGxUZw==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:qRIybGATCBs=:+7I0ce/A+OdG2QDwHv6300
- HOGffa294tgeTDBFoWz80QCMyiPs9QmQ36IYjGJ0eKaRO9SWWBYU65exwNXKFkWMlFb/KaW7q
- X/7gBEJHaIUR9b+6vtKjkES5lISzPR2ipZhKnIoKkpjMFGAjZmw+bTvI1EWNaJoboAeMeLhy0
- xgyEaqvmbACi6zIXzxGUmBnFk7KdELN7eYj80yBQR+sjiicMyBOK4qNhZcrWZaKhlAo3clpGO
- 2fit99VOzD8mlqSSZQsiQWGrua9EDk4oBP192LnSTTN5JkMhmGC+G+hAp+Uy/s+16ztwEP+yX
- HDY8lxfq476mO4+XU+kc1pXfrxMcdyMNvL7NF5VQWqXSJZxvLCQrWSL/UHoQW3aqrxrNjdg9F
- nIBj1eHmJD8+VG+UFgiDwynPpe3M7lu6FMp4F24hIubjVETr1KuUcUuUoJYBW5LZdIOHdvYq9
- x7pRdacu1Q==
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The ATA_CMD_READ_LOG_DMA_EXT can cause controller/device to
-become unresponsive until the next power cycle.
-This seems to particularly affect IDE to SATA adapters,
-possibly in combination with certain SATA SSDs, though
-there might be more/different cases.
-Comment 5 of https://bugzilla.kernel.org/show_bug.cgi?id=195895
-is an example.
-Having an option to disable its use allows booting systems affected,
-which besides being a useful workaround is also a necessary
-step to allow gathering more debug info on these systems.
+Hi all,
 
-Signed-off-by: Reimar Döffinger <Reimar.Doeffinger@gmx.de>
----
- Documentation/admin-guide/kernel-parameters.txt | 2 ++
- drivers/ata/libata-core.c                       | 2 ++
- 2 files changed, 4 insertions(+)
+we've been trying to get rid of the legacy ide driver for a while now,
+and finally scheduled a removal for 2021, which is three month old now.
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 04545725f187..d2428b3b98f1 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -2473,6 +2473,8 @@
- 
- 			* [no]ncqtrim: Turn off queued DSM TRIM.
- 
-+			* [no]dmalog: Turn off use of ATA_CMD_READ_LOG_DMA_EXT (0x47) command
-+
- 			* nohrst, nosrst, norst: suppress hard, soft
- 			  and both resets.
- 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 61c762961ca8..7fb865333a38 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6104,6 +6104,8 @@ static int __init ata_parse_force_one(char **cur,
- 		{ "ncq",	.horkage_off	= ATA_HORKAGE_NONCQ },
- 		{ "noncqtrim",	.horkage_on	= ATA_HORKAGE_NO_NCQ_TRIM },
- 		{ "ncqtrim",	.horkage_off	= ATA_HORKAGE_NO_NCQ_TRIM },
-+		{ "nodmalog",	.horkage_on	= ATA_HORKAGE_NO_DMA_LOG },
-+		{ "dmalog",	.horkage_off	= ATA_HORKAGE_NO_DMA_LOG },
- 		{ "dump_id",	.horkage_on	= ATA_HORKAGE_DUMP_ID },
- 		{ "pio0",	.xfer_mask	= 1 << (ATA_SHIFT_PIO + 0) },
- 		{ "pio1",	.xfer_mask	= 1 << (ATA_SHIFT_PIO + 1) },
--- 
-2.30.2
+In general distros and most defconfigs have switched to libata long ago,
+but there are a few exceptions.  This series first switches over all
+remaining defconfigs to use libata and then removes the legacy ide
+driver.
 
+libata mostly covers all hardware supported by the legacy ide driver.
+There are three mips drivers that are not supported, but the linux-mips
+list could not identify any users of those.  There also are two m68k
+drivers that do not have libata equivalents, which might or might not
+have users, so we'll need some input and possibly help from the m68k
+community here.
