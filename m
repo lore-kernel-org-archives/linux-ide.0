@@ -2,83 +2,80 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B05DC433E6
-	for <linux-ide@archiver.kernel.org>; Thu, 18 Mar 2021 18:04:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA19BC433E0
+	for <linux-ide@archiver.kernel.org>; Fri, 19 Mar 2021 00:13:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 545C864F1D
-	for <linux-ide@archiver.kernel.org>; Thu, 18 Mar 2021 18:04:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9105E64EB9
+	for <linux-ide@archiver.kernel.org>; Fri, 19 Mar 2021 00:13:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230164AbhCRSDx convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 18 Mar 2021 14:03:53 -0400
-Received: from unicorn.mansr.com ([81.2.72.234]:42590 "EHLO unicorn.mansr.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229734AbhCRSDv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 18 Mar 2021 14:03:51 -0400
-Received: from raven.mansr.com (raven.mansr.com [IPv6:2001:8b0:ca0d:8d8e::3])
-        by unicorn.mansr.com (Postfix) with ESMTPS id C65CC15361;
-        Thu, 18 Mar 2021 18:03:42 +0000 (GMT)
-Received: by raven.mansr.com (Postfix, from userid 51770)
-        id B967B219C32; Thu, 18 Mar 2021 18:03:42 +0000 (GMT)
-From:   =?iso-8859-1?Q?M=E5ns_Rullg=E5rd?= <mans@mansr.com>
+        id S230478AbhCSAND (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 18 Mar 2021 20:13:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40478 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230477AbhCSAMo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 18 Mar 2021 20:12:44 -0400
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CA976C06174A;
+        Thu, 18 Mar 2021 17:12:43 -0700 (PDT)
+Received: by angie.orcam.me.uk (Postfix, from userid 500)
+        id 0DF1592009C; Fri, 19 Mar 2021 01:12:38 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+        by angie.orcam.me.uk (Postfix) with ESMTP id F30ED92009B;
+        Fri, 19 Mar 2021 01:12:38 +0100 (CET)
+Date:   Fri, 19 Mar 2021 01:12:38 +0100 (CET)
+From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
 To:     Christoph Hellwig <hch@lst.de>
-Cc:     Al Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        linux-doc@vger.kernel.org, Russell King <linux@armlinux.org.uk>,
-        "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org,
-        linux-m68k@lists.linux-m68k.org,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        linux-arm-kernel@lists.infradead.org, linux-alpha@vger.kernel.org,
+cc:     "David S. Miller" <davem@davemloft.net>,
+        Jens Axboe <axboe@kernel.dk>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
-        Matt Turner <mattst88@gmail.com>, linux-mips@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        Richard Henderson <rth@twiddle.net>
-Subject: Re: [PATCH 01/10] alpha: use libata instead of the legacy ide driver
-References: <20210318045706.200458-1-hch@lst.de>
-        <20210318045706.200458-2-hch@lst.de>
-        <YFLrLwjZubWUvA2J@zeniv-ca.linux.org.uk>
-        <20210318060724.GA29117@lst.de> <yw1x1rccie35.fsf@mansr.com>
-Date:   Thu, 18 Mar 2021 18:03:42 +0000
-In-Reply-To: <yw1x1rccie35.fsf@mansr.com> (=?iso-8859-1?Q?=22M=E5ns_Rullg?=
- =?iso-8859-1?Q?=E5rd=22's?= message of "Thu,
-        18 Mar 2021 17:09:02 +0000")
-Message-ID: <yw1xwnu4gwzl.fsf@mansr.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/27.1 (gnu/linux)
+        Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Matt Turner <mattst88@gmail.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        linux-ide@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-alpha@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-m68k@lists.linux-m68k.org, linux-mips@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 04/10] MIPS: disable CONFIG_IDE in
+ sb1250_swarm_defconfig
+In-Reply-To: <20210318045706.200458-5-hch@lst.de>
+Message-ID: <alpine.DEB.2.21.2103190042210.21463@angie.orcam.me.uk>
+References: <20210318045706.200458-1-hch@lst.de> <20210318045706.200458-5-hch@lst.de>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Måns Rullgård <mans@mansr.com> writes:
+On Thu, 18 Mar 2021, Christoph Hellwig wrote:
 
-> Christoph Hellwig <hch@lst.de> writes:
->
->> On Thu, Mar 18, 2021 at 05:54:55AM +0000, Al Viro wrote:
->>> On Thu, Mar 18, 2021 at 05:56:57AM +0100, Christoph Hellwig wrote:
->>> > Switch the alpha defconfig from the legacy ide driver to libata.
->>> 
->>> Umm...  I don't have an IDE alpha box in a usable shape (fans on
->>> CPU module shat themselves), and it would take a while to resurrect
->>> it, but I remember the joy it used to cause in some versions.
->>> 
->>> Do you have reports of libata variants of drivers actually tested on
->>> those?
->>
->> No, I haven't.  The whole point is that we're not going to keep 40000
->> lines of code around despite notice for users that don't exist or
->> care.  If there is a regression we'll fix it, but we're not going to
->> make life miserable just because we can.
->
-> The pata_ali driver works fine on my UP1500 machine, unless something
-> broke recently.  I'll build the latest kernel and report back.
+> sb1250_swarm_defconfig enables CONFIG_IDE but no actual host controller
+> driver, so just drop CONFIG_IDE, CONFIG_BLK_DEV_IDECD and
+> CONFIG_BLK_DEV_IDETAPE as they are useless.
 
-5.11.7 seems fine too.
+ Actually BLK_DEV_PLATFORM would handle the SWARM's platform driver as an 
+IDE device, however the driver has supported libata ever since commit 
+2fef357cf391 ("IDE: Fix platform device registration in Swarm IDE driver 
+(v2)") back in 2008, so this is good to go.  We should probably enable 
+PATA_PLATFORM in the defconfig instead.
 
--- 
-Måns Rullgård
+ The printed name of the driver could be improved I suppose though:
+
+scsi host0: pata_platform
+ata1: PATA max PIO0 mmio cmd 0x100b3e00 ctl 0x100b7ec0 irq 36
+
+(PIO3 is actually hardwired; it's an odd interface and people reported 
+issues with it, but I have never had any myself be it with IDE or libata).
+
+Acked-by: Maciej W. Rozycki <macro@orcam.me.uk>
+
+  Maciej
