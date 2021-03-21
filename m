@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E648C433DB
-	for <linux-ide@archiver.kernel.org>; Sun, 21 Mar 2021 18:56:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FE43C433DB
+	for <linux-ide@archiver.kernel.org>; Sun, 21 Mar 2021 18:58:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C9C136194C
-	for <linux-ide@archiver.kernel.org>; Sun, 21 Mar 2021 18:56:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 473646024A
+	for <linux-ide@archiver.kernel.org>; Sun, 21 Mar 2021 18:58:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230094AbhCUSz5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 21 Mar 2021 14:55:57 -0400
-Received: from mxout02.lancloud.ru ([45.84.86.82]:47026 "EHLO
-        mxout02.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230064AbhCUSzv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 21 Mar 2021 14:55:51 -0400
+        id S230101AbhCUS6M (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 21 Mar 2021 14:58:12 -0400
+Received: from mxout03.lancloud.ru ([45.84.86.113]:44030 "EHLO
+        mxout03.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230053AbhCUS5y (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 21 Mar 2021 14:57:54 -0400
 Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout02.lancloud.ru 50B14205FD45
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout03.lancloud.ru ADEE8205F701
 Received: from LanCloud
 Received: from LanCloud
 Received: from LanCloud
-Subject: [PATCH 2/4] pata_ep93xx: deny IRQ0
+Subject: [PATCH 3/4] pata_ftide010: deny IRQ0
 From:   Sergey Shtylyov <s.shtylyov@omprussia.ru>
 To:     Jens Axboe <axboe@kernel.dk>, <linux-ide@vger.kernel.org>
 References: <2e552c36-84a5-a642-a8f0-1395f77a1a6a@omprussia.ru>
 Organization: Open Mobile Platform, LLC
-Message-ID: <747c195a-25b9-1cc0-e65e-f66225b91c28@omprussia.ru>
-Date:   Sun, 21 Mar 2021 21:55:48 +0300
+Message-ID: <b9e5dca0-4a55-ea08-c498-448b5e763e91@omprussia.ru>
+Date:   Sun, 21 Mar 2021 21:57:51 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.8.0
 MIME-Version: 1.0
@@ -51,25 +51,23 @@ a sign that libata should use polling and thus complains about non-NULL
 IRQ handler passed to it. Deny IRQ0 right away, returning -EINVAL from
 the probe() method...
 
-Fixes: 2fff27512600 ("PATA host controller driver for ep93xx")
+Fixes: be4e456ed3a5 ("ata: Add driver for Faraday Technology FTIDE010")
 Signed-off-by: Sergey Shtylyov <s.shtylyov@omprussia.ru>
 
 ---
- drivers/ata/pata_ep93xx.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/ata/pata_ftide010.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-Index: linux-block/drivers/ata/pata_ep93xx.c
+Index: linux-block/drivers/ata/pata_ftide010.c
 ===================================================================
---- linux-block.orig/drivers/ata/pata_ep93xx.c
-+++ linux-block/drivers/ata/pata_ep93xx.c
-@@ -931,6 +931,10 @@ static int ep93xx_pata_probe(struct plat
- 		err = irq;
- 		goto err_rel_gpio;
- 	}
-+	if (!irq) {
-+		err = -EINVAL;
-+		goto err_rel_gpio;
-+	}
+--- linux-block.orig/drivers/ata/pata_ftide010.c
++++ linux-block/drivers/ata/pata_ftide010.c
+@@ -469,6 +469,8 @@ static int pata_ftide010_probe(struct pl
+ 	irq = platform_get_irq(pdev, 0);
+ 	if (irq < 0)
+ 		return irq;
++	if (!irq)
++		return -EINVAL;
  
- 	mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	ide_base = devm_ioremap_resource(&pdev->dev, mem_res);
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	if (!res)
