@@ -4,34 +4,37 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8BC6C433DB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8873C433E0
 	for <linux-ide@archiver.kernel.org>; Sun, 21 Mar 2021 19:56:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9865561941
+	by mail.kernel.org (Postfix) with ESMTP id C4D3061943
 	for <linux-ide@archiver.kernel.org>; Sun, 21 Mar 2021 19:56:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230299AbhCUT4J (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S230310AbhCUT4J (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Sun, 21 Mar 2021 15:56:09 -0400
-Received: from angie.orcam.me.uk ([157.25.102.26]:38028 "EHLO
-        angie.orcam.me.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230267AbhCUTzY (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 21 Mar 2021 15:55:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35044 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230250AbhCUTzb (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 21 Mar 2021 15:55:31 -0400
+Received: from angie.orcam.me.uk (angie.orcam.me.uk [IPv6:2001:4190:8020::4])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C0502C061574;
+        Sun, 21 Mar 2021 12:55:30 -0700 (PDT)
 Received: by angie.orcam.me.uk (Postfix, from userid 500)
-        id CC5FE92009D; Sun, 21 Mar 2021 20:55:22 +0100 (CET)
+        id 2D41C92009C; Sun, 21 Mar 2021 20:55:27 +0100 (CET)
 Received: from localhost (localhost [127.0.0.1])
-        by angie.orcam.me.uk (Postfix) with ESMTP id C8F3692009B;
-        Sun, 21 Mar 2021 20:55:22 +0100 (CET)
-Date:   Sun, 21 Mar 2021 20:55:22 +0100 (CET)
+        by angie.orcam.me.uk (Postfix) with ESMTP id 274C992009B;
+        Sun, 21 Mar 2021 20:55:27 +0100 (CET)
+Date:   Sun, 21 Mar 2021 20:55:27 +0100 (CET)
 From:   "Maciej W. Rozycki" <macro@orcam.me.uk>
 To:     linux-ide@vger.kernel.org, linux-doc@vger.kernel.org,
         linux-kernel@vger.kernel.org
 cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/3] pata_legacy: Properly document module parameters
+Subject: [PATCH 2/3] pata_platform: Document `pio_mask' module parameter
 In-Reply-To: <alpine.DEB.2.21.2103202152120.21463@angie.orcam.me.uk>
-Message-ID: <alpine.DEB.2.21.2103211909560.21463@angie.orcam.me.uk>
+Message-ID: <alpine.DEB.2.21.2103212023190.21463@angie.orcam.me.uk>
 References: <alpine.DEB.2.21.2103202152120.21463@angie.orcam.me.uk>
 User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
@@ -40,222 +43,52 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Most pata_legacy module parameters lack MODULE_PARM_DESC documentation 
-and none is described in kernel-parameters.txt.  Also several comments 
-are inaccurate or wrong.
-
-Add the missing documentation pieces then and reorder parameters into a 
-consistent block.  Remove inaccuracies as follows:
-
-- `all' affects primary and secondary port ranges only rather than all,
-
-- `probe_all' affects tertiary and further port ranges rather than all,
-
-- `ht6560b' is for HT 6560B rather than HT 6560A.
+Add MODULE_PARM_DESC documentation and a kernel-parameters.txt entry.
 
 Signed-off-by: Maciej W. Rozycki <macro@orcam.me.uk>
 ---
- Documentation/admin-guide/kernel-parameters.txt |   72 ++++++++++++++++++
- drivers/ata/pata_legacy.c                       |   92 ++++++++++++++----------
- 2 files changed, 128 insertions(+), 36 deletions(-)
+ Documentation/admin-guide/kernel-parameters.txt |    7 +++++++
+ drivers/ata/pata_platform.c                     |    4 ++--
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
-linux-pata-legacy-parm-desc.diff
+linux-pata-platform-parm-desc.diff
 Index: linux-dolch/Documentation/admin-guide/kernel-parameters.txt
 ===================================================================
 --- linux-dolch.orig/Documentation/admin-guide/kernel-parameters.txt
 +++ linux-dolch/Documentation/admin-guide/kernel-parameters.txt
-@@ -3568,6 +3568,78 @@
- 			Currently this function knows 686a and 8231 chips.
- 			Format: [spp|ps2|epp|ecp|ecpepp]
+@@ -3640,6 +3640,13 @@
+ 			By default set to 1 if CONFIG_PATA_WINBOND_VLB_MODULE,
+ 			0 otherwise.
  
-+	pata_legacy.all=	[HW,LIBATA]
++	pata_platform.pio_mask=	[HW,LIBATA]
 +			Format: <int>
-+			Set to non-zero to probe primary and secondary ISA
-+			port ranges on PCI systems where no PCI PATA device
-+			has been found at either range.  Disabled by default.
-+
-+	pata_legacy.autospeed=	[HW,LIBATA]
-+			Format: <int>
-+			Set to non-zero if a chip is present that snoops speed
-+			changes.  Disabled by default.
-+
-+	pata_legacy.ht6560a=	[HW,LIBATA]
-+			Format: <int>
-+			Set to 1, 2, or 3 for HT 6560A on the primary channel,
-+			the secondary channel, or both channels respectively.
-+			Disabled by default.
-+
-+	pata_legacy.ht6560b=	[HW,LIBATA]
-+			Format: <int>
-+			Set to 1, 2, or 3 for HT 6560B on the primary channel,
-+			the secondary channel, or both channels respectively.
-+			Disabled by default.
-+
-+	pata_legacy.iordy_mask=	[HW,LIBATA]
-+			Format: <int>
-+			IORDY enable mask.  Set individual bits to allow IORDY
-+			for the respective channel.  Bit 0 is for the first
-+			legacy channel handled by this driver, bit 1 is for
-+			the second channel, and so on.  The sequence will often
-+			correspond to the primary legacy channel, the secondary
-+			legacy channel, and so on, but the handling of a PCI
-+			bus and the use of other driver options may interfere
-+			with the sequence.  By default IORDY is allowed across
-+			all channels.
-+
-+	pata_legacy.opti82c46x=	[HW,LIBATA]
-+			Format: <int>
-+			Set to 1, 2, or 3 for Opti 82c611A on the primary
-+			channel, the secondary channel, or both channels
-+			respectively.  Disabled by default.
-+
-+	pata_legacy.opti82c611a=	[HW,LIBATA]
-+			Format: <int>
-+			Set to 1, 2, or 3 for Opti 82c465MV on the primary
-+			channel, the secondary channel, or both channels
-+			respectively.  Disabled by default.
-+
-+	pata_legacy.pio_mask=	[HW,LIBATA]
-+			Format: <int>
-+			PIO mode mask for autospeed devices.  Set individual
-+			bits to allow the use of the respective PIO modes.
-+			Bit 0 is for mode 0, bit 1 is for mode 1, and so on.
-+			All modes allowed by default.
-+
-+	pata_legacy.probe_all=	[HW,LIBATA]
-+			Format: <int>
-+			Set to non-zero to probe tertiary and further ISA
-+			port ranges on PCI systems.  Disabled by default.
-+
-+	pata_legacy.qdi=	[HW,LIBATA]
-+			Format: <int>
-+			Set to non-zero to probe QDI controllers.  By default
-+			set to 1 if CONFIG_PATA_QDI_MODULE, 0 otherwise.
-+
-+	pata_legacy.winbond=	[HW,LIBATA]
-+			Format: <int>
-+			Set to non-zero to probe Winbond controllers.  Use
-+			the standard I/O port (0x130) if 1, otherwise the
-+			value given is the I/O port to use (typically 0x1b0).
-+			By default set to 1 if CONFIG_PATA_WINBOND_VLB_MODULE,
-+			0 otherwise.
++			Supported PIO mode mask.  Set individual bits to allow
++			the use of the respective PIO modes.  Bit 0 is for
++			mode 0, bit 1 is for mode 1, and so on.  Mode 0 only
++			allowed by default.
 +
  	pause_on_oops=
  			Halt all CPUs after the first oops has been printed for
  			the specified number of seconds.  This is to be used if
-Index: linux-dolch/drivers/ata/pata_legacy.c
+Index: linux-dolch/drivers/ata/pata_platform.c
 ===================================================================
---- linux-dolch.orig/drivers/ata/pata_legacy.c
-+++ linux-dolch/drivers/ata/pata_legacy.c
-@@ -63,7 +63,62 @@
+--- linux-dolch.orig/drivers/ata/pata_platform.c
++++ linux-dolch/drivers/ata/pata_platform.c
+@@ -24,6 +24,8 @@
+ #define DRV_VERSION "1.2"
  
- static int all;
- module_param(all, int, 0444);
--MODULE_PARM_DESC(all, "Grab all legacy port devices, even if PCI(0=off, 1=on)");
-+MODULE_PARM_DESC(all,
-+		 "Set to probe unclaimed pri/sec ISA port ranges even if PCI");
-+
-+static int probe_all;
-+module_param(probe_all, int, 0);
-+MODULE_PARM_DESC(probe_all,
-+		 "Set to probe tertiary+ ISA port ranges even if PCI");
-+
-+static int autospeed;
-+module_param(autospeed, int, 0);
-+MODULE_PARM_DESC(autospeed, "Chip present that snoops speed changes");
-+
-+static int pio_mask = ATA_PIO4;
+ static int pio_mask = 1;
 +module_param(pio_mask, int, 0);
-+MODULE_PARM_DESC(pio_mask, "PIO range for autospeed devices");
-+
-+static int iordy_mask = 0xFFFFFFFF;
-+module_param(iordy_mask, int, 0);
-+MODULE_PARM_DESC(iordy_mask, "Use IORDY if available");
-+
-+static int ht6560a;
-+module_param(ht6560a, int, 0);
-+MODULE_PARM_DESC(ht6560a, "HT 6560A on primary 1, second 2, both 3");
-+
-+static int ht6560b;
-+module_param(ht6560b, int, 0);
-+MODULE_PARM_DESC(ht6560b, "HT 6560B on primary 1, secondary 2, both 3");
-+
-+static int opti82c611a;
-+module_param(opti82c611a, int, 0);
-+MODULE_PARM_DESC(opti82c611a,
-+		 "Opti 82c611A on primary 1, secondary 2, both 3");
-+
-+static int opti82c46x;
-+module_param(opti82c46x, int, 0);
-+MODULE_PARM_DESC(opti82c46x,
-+		 "Opti 82c465MV on primary 1, secondary 2, both 3");
-+
-+#ifdef CONFIG_PATA_QDI_MODULE
-+static int qdi = 1;
-+#else
-+static int qdi;
-+#endif
-+module_param(qdi, int, 0);
-+MODULE_PARM_DESC(qdi, "Set to probe QDI controllers");
-+
-+#ifdef CONFIG_PATA_WINBOND_VLB_MODULE
-+static int winbond = 1;
-+#else
-+static int winbond;
-+#endif
-+module_param(winbond, int, 0);
-+MODULE_PARM_DESC(winbond,
-+		 "Set to probe Winbond controllers, "
-+		 "give I/O port if non standard");
-+
++MODULE_PARM_DESC(pio_mask, "PIO modes supported, mode 0 only by default");
  
- enum controller {
- 	BIOS = 0,
-@@ -117,30 +172,6 @@ static struct ata_host *legacy_host[NR_H
- static int nr_legacy_host;
+ /*
+  * Provide our own set_mode() as we don't want to change anything that has
+@@ -233,8 +235,6 @@ static struct platform_driver pata_platf
  
+ module_platform_driver(pata_platform_driver);
  
--static int probe_all;		/* Set to check all ISA port ranges */
--static int ht6560a;		/* HT 6560A on primary 1, second 2, both 3 */
--static int ht6560b;		/* HT 6560A on primary 1, second 2, both 3 */
--static int opti82c611a;		/* Opti82c611A on primary 1, sec 2, both 3 */
--static int opti82c46x;		/* Opti 82c465MV present(pri/sec autodetect) */
--static int autospeed;		/* Chip present which snoops speed changes */
--static int pio_mask = ATA_PIO4;	/* PIO range for autospeed devices */
--static int iordy_mask = 0xFFFFFFFF;	/* Use iordy if available */
--
--/* Set to probe QDI controllers */
--#ifdef CONFIG_PATA_QDI_MODULE
--static int qdi = 1;
--#else
--static int qdi;
--#endif
--
--#ifdef CONFIG_PATA_WINBOND_VLB_MODULE
--static int winbond = 1;		/* Set to probe Winbond controllers,
--					give I/O port if non standard */
--#else
--static int winbond;		/* Set to probe Winbond controllers,
--					give I/O port if non standard */
--#endif
--
- /**
-  *	legacy_probe_add	-	Add interface to probe list
-  *	@port: Controller port
-@@ -1250,16 +1281,5 @@ MODULE_VERSION(DRV_VERSION);
- MODULE_ALIAS("pata_qdi");
- MODULE_ALIAS("pata_winbond");
- 
--module_param(probe_all, int, 0);
--module_param(autospeed, int, 0);
--module_param(ht6560a, int, 0);
--module_param(ht6560b, int, 0);
--module_param(opti82c611a, int, 0);
--module_param(opti82c46x, int, 0);
--module_param(qdi, int, 0);
--module_param(winbond, int, 0);
 -module_param(pio_mask, int, 0);
--module_param(iordy_mask, int, 0);
 -
- module_init(legacy_init);
- module_exit(legacy_exit);
+ MODULE_AUTHOR("Paul Mundt");
+ MODULE_DESCRIPTION("low-level driver for platform device ATA");
+ MODULE_LICENSE("GPL");
