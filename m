@@ -2,99 +2,89 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 568ADC433DB
-	for <linux-ide@archiver.kernel.org>; Mon, 22 Mar 2021 08:09:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1BCEC433E1
+	for <linux-ide@archiver.kernel.org>; Mon, 22 Mar 2021 14:55:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 20F426196C
-	for <linux-ide@archiver.kernel.org>; Mon, 22 Mar 2021 08:09:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4AE256198E
+	for <linux-ide@archiver.kernel.org>; Mon, 22 Mar 2021 14:55:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229692AbhCVIJN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 22 Mar 2021 04:09:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51496 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229574AbhCVIIo (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 22 Mar 2021 04:08:44 -0400
-Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8B06C061756
-        for <linux-ide@vger.kernel.org>; Mon, 22 Mar 2021 01:08:43 -0700 (PDT)
-Received: by mail-pg1-x52f.google.com with SMTP id 32so1973744pgm.1
-        for <linux-ide@vger.kernel.org>; Mon, 22 Mar 2021 01:08:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=Kh/xmFXhfHtNnqJEg2fD821X69nj58fO7kUzZqMc42Y=;
-        b=mlisv27tJfvboLmPEj1JWnpGIbJugxo3Agmmvfkxi+/5ARKINWIPHc7dt+WSC8nX9d
-         oejV3PK5oTscj446aBJVgdKZsbBdx+WlGyV2jX12cYuRR2iKTMTL8px2tVYo1ryofRGc
-         /r6BgJNiCswdx+n67KUDicklcE8OP8URigWeE=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=Kh/xmFXhfHtNnqJEg2fD821X69nj58fO7kUzZqMc42Y=;
-        b=WXJSl7GDpMw99idHPkrEC3N6HjjPlHbiglfxk5xt8Df0hl+9FjYGXeBC0pzY03su6b
-         FaUt+OzQnFLIVRmJIgIvw6q02XDGxh2zjVVKjOpSl7ZdkjM0wBlMvnL4l21GtZbROscq
-         nNyNog2hIxjClHSzP7FCTe/pRhZlSTbSn8O3W6wx4usWbEFqFYBAAWU3rcFxBQbqQo/l
-         2R57J5dsPb2FMqm9xwhIsbqAIXc3RUp9tcedDYW8IqionJ6WLTsbz+Yyd7E501YDA1HR
-         6n1JlMFfI7ckX4EnWExlGLhS/VIvt2yVzqepy5KH9hNo7zUXD/wegSGiAAe0PRaW5KDW
-         YknA==
-X-Gm-Message-State: AOAM531zSycfY0Fsm3EyK1509BK2bweRN5TmUExKk6EworAVWG9jXtSt
-        aSrYECX3xy/1lILsHrSoqM98Ou4/cgrbkw==
-X-Google-Smtp-Source: ABdhPJxrjGOntJAWM/d1E6/2YCUkeyR+w5dUrpLdC/fp1IQLZ3qUhJ/N0nqxJxT+5UxdP592h6HZMA==
-X-Received: by 2002:a63:df09:: with SMTP id u9mr21704387pgg.64.1616400523274;
-        Mon, 22 Mar 2021 01:08:43 -0700 (PDT)
-Received: from localhost ([2620:15c:202:201:90ec:f36d:f115:8c9e])
-        by smtp.gmail.com with UTF8SMTPSA id gm10sm12691994pjb.4.2021.03.22.01.08.42
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 22 Mar 2021 01:08:42 -0700 (PDT)
-From:   Gwendal Grignou <gwendal@chromium.org>
-To:     tj@kernel.org, sergei.shtylyov@gmail.com
-Cc:     linux-ide@vger.kernel.org, Gwendal Grignou <gwendal@chromium.org>
-Subject: [PATCH v2 1/2] driver: ahci: Allow disabling dlpm for all bios version
-Date:   Mon, 22 Mar 2021 01:08:37 -0700
-Message-Id: <20210322080838.1640805-2-gwendal@chromium.org>
-X-Mailer: git-send-email 2.31.0.291.g576ba9dcdaf-goog
-In-Reply-To: <20210322080838.1640805-1-gwendal@chromium.org>
-References: <20210322080838.1640805-1-gwendal@chromium.org>
+        id S229771AbhCVOyi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 22 Mar 2021 10:54:38 -0400
+Received: from verein.lst.de ([213.95.11.211]:56129 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231366AbhCVOyI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 22 Mar 2021 10:54:08 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id A32F268BEB; Mon, 22 Mar 2021 15:54:03 +0100 (CET)
+Date:   Mon, 22 Mar 2021 15:54:03 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     Russell King - ARM Linux admin <linux@armlinux.org.uk>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jens Axboe <axboe@kernel.dk>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Matt Turner <mattst88@gmail.com>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        linux-ide@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-alpha@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-m68k@lists.linux-m68k.org, linux-mips@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+Subject: Re: [PATCH 02/10] ARM: disable CONFIG_IDE in footbridge_defconfig
+Message-ID: <20210322145403.GA30942@lst.de>
+References: <20210318045706.200458-1-hch@lst.de> <20210318045706.200458-3-hch@lst.de> <20210319170753.GV1463@shell.armlinux.org.uk> <20210319175311.GW1463@shell.armlinux.org.uk>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210319175311.GW1463@shell.armlinux.org.uk>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-In ahci_broken_lpm(), dmi->driver_data is encoded as a date: if the
-date of the current BIOS is older than driver_data, the LPM horkage is
-not applied.
-Allow dmi->driver_data to be empty in case a problem is not fixed in any
-BIOS version.
+On Fri, Mar 19, 2021 at 05:53:12PM +0000, Russell King - ARM Linux admin wrote:
+> If I extend the arch/arm/kernel/bios32.c code to kill BARs 2/3 (which
+> actually are not present on the CY82C693) then the IDE driver works
+> for me, but the PATA driver does not:
+> 
+> cy82c693 0000:00:06.1: IDE controller (0x1080:0xc693 rev 0x00)
+> cy82c693 0000:00:06.1: not 100% native mode: will probe irqs later
+> legacy IDE will be removed in 2021, please switch to libata
+> Report any missing HW support to linux-ide@vger.kernel.org
+>     ide0: BM-DMA at 0x1080-0x1087
+>     ide1: BM-DMA at 0x1088-0x108f
+> Probing IDE interface ide0...
+> hda: PIONEER DVD-RW DVR-105, ATAPI CD/DVD-ROM drive
+> hda: host max PIO4 wanted PIO255(auto-tune) selected PIO4
+> ...
+> 
+> (unbind Cypress_IDE and try binding pata_cypress)
+> 
+> pata_cypress 0000:00:06.1: no available native port
 
-Signed-off-by: Gwendal Grignou <gwendal@chromium.org>
----
- Changes in v2:
- Fix cut and paste error in commit message.
+This comes from ata_pci_sff_init_host when it tails to initialize
+a port.  There are three cases why it can't initialize the port:
 
- drivers/ata/ahci.c | 3 +++
- 1 file changed, 3 insertions(+)
+ 1) because it is marked as dummy, which is the case for the second
+    port of the cypress controller, but you're not using that even
+    with the old ide driver, and we'd still not get that message just
+    because of that second port.
+ 2) when ata_resources_present returns false because the BAR has
+    a zero start or length
+ 3) because pcim_iomap_regions() fails.  This prints a warning to the
+    log ("failed to request/iomap BARs for port %d (errno=%d)") that you
+    should have seen
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 5f1f049063dd2..9132201f1353e 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1279,6 +1279,9 @@ static bool ahci_broken_lpm(struct pci_dev *pdev)
- 	if (!dmi)
- 		return false;
- 
-+	if (!dmi->driver_data)
-+		return true;
-+
- 	dmi_get_date(DMI_BIOS_DATE, &year, &month, &date);
- 	snprintf(buf, sizeof(buf), "%04d%02d%02d", year, month, date);
- 
--- 
-2.31.0.291.g576ba9dcdaf-goog
+So the problem here has to be number two.  The legacy ide driver OTOH
+seems to lack a lot of these checks, although I'm not sure how it
+manages to actually work without those.
 
+Can you show how the BAR assignment for the device looks using lscpi
+or a tool of your choice?
