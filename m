@@ -2,156 +2,140 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B20B5C433ED
-	for <linux-ide@archiver.kernel.org>; Wed,  7 Apr 2021 23:00:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB8A2C433B4
+	for <linux-ide@archiver.kernel.org>; Wed,  7 Apr 2021 23:25:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 767D1611C9
-	for <linux-ide@archiver.kernel.org>; Wed,  7 Apr 2021 23:00:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 71090611C9
+	for <linux-ide@archiver.kernel.org>; Wed,  7 Apr 2021 23:25:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229460AbhDGXAi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 7 Apr 2021 19:00:38 -0400
-Received: from mail-dm6nam12on2088.outbound.protection.outlook.com ([40.107.243.88]:64704
-        "EHLO NAM12-DM6-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S229449AbhDGXAg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 7 Apr 2021 19:00:36 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=YLU37oZYRKNESf+0Ig/DN/4A8q8pfYaUCyF6CbmcEKVTr/bNlYZLEuqhCJTBw0vcmOKW5qr2vy/0ka6/bCQ+l3sZZeYvY8aLZPpZhiwS1pvfoEm06wIpkQSJK9uRoAzwWUEVykciECW/mL3DT/fYEooFwQGCj+PBrfZU8mTwu2Niv5GkQS8vgDALNZZewqkGtskXkGa24yiTUGxVdfWMIH7nOsPHKebGpiGjaVXkko92NXariskTUQRXm1HZ/V6IyA1R1/04017Xkopor4XkWsnkRDbREKNd7hVJhqqaaSh6zjBP1dWaKYAH/L9H+wtsGQCxJM2aXCGvNcv2NC8Jew==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OOpNfZkitU43azEhaIzoaq9rq+K7AAqP5gll3M5uEhc=;
- b=WyD/F2S96L1gSvxjlQtrgFQDD2SKzKV7XR/BTJrPuZ1uLJ98uQlsowlY/BTUBabN+5NDPWzVQ3iB9SETT6EvE5YWlxeyOivq2g+pdS795POV1PsUmCCbNxIlkfq+dGqSRguj4NfeLPObZmmpvZ6a8J9IYxC+7YPzIn6QSntndDiIAf6WHV8YCXUZDoJylAQs14bmB3/xe4QI2r4MXbRfTaIPX02wbkVkm5hDKPKASV2c30uIjdjIVvS9rMpCLLFm/PfUcF1sOs4PdjtyaREB5et419IAFdXM39wkyzB2w0UXfDOJklhYQMszuH54Y8H6e3ioIRd93lElB4qBTaMvLA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.112.34) smtp.rcpttodomain=gmail.com smtp.mailfrom=nvidia.com;
- dmarc=pass (p=none sp=none pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=OOpNfZkitU43azEhaIzoaq9rq+K7AAqP5gll3M5uEhc=;
- b=Du+4JrYrxp48dDJidgTr/x1OuMXLtBWpxbR3PT9c9Qh6PiJZlqxlhW78sK1EaGMwtgzUdj7N1GdjtKIjvleLqAPdtZx7/fR+IS+otwuPKZs9iEa8XGxw1Nu2IkOTxzLq73DkhqmKHaqul9GyRHHo1h7VPOLvaupOkTCbTuxJsJKv7ftlEtavNi0NHXSP2SEUEuO8X+G5BWVJjMtyrKky4K3FZUmH7bLtcayjPtejSb3p4VcZQkpNxRRHVFzgrbuYAexnO7jT3vbH5wXLm16LqwiVZ6NZGW4J4NDetSlp4eYKS6cEwH8us20Yt2+Igmz3/BrjBtTFwyCzgQ3ghbm4iw==
-Received: from DM5PR1101CA0010.namprd11.prod.outlook.com (2603:10b6:4:4c::20)
- by DM4PR12MB5295.namprd12.prod.outlook.com (2603:10b6:5:39f::23) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4020.18; Wed, 7 Apr
- 2021 23:00:25 +0000
-Received: from DM6NAM11FT022.eop-nam11.prod.protection.outlook.com
- (2603:10b6:4:4c:cafe::5b) by DM5PR1101CA0010.outlook.office365.com
- (2603:10b6:4:4c::20) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4020.16 via Frontend
- Transport; Wed, 7 Apr 2021 23:00:25 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.34)
- smtp.mailfrom=nvidia.com; gmail.com; dkim=none (message not signed)
- header.d=none;gmail.com; dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.112.34 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.112.34; helo=mail.nvidia.com;
-Received: from mail.nvidia.com (216.228.112.34) by
- DM6NAM11FT022.mail.protection.outlook.com (10.13.172.210) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.20.4020.17 via Frontend Transport; Wed, 7 Apr 2021 23:00:25 +0000
-Received: from [10.2.165.36] (172.20.145.6) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 7 Apr
- 2021 23:00:24 +0000
+        id S229778AbhDGXZc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 7 Apr 2021 19:25:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53086 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229607AbhDGXZc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 7 Apr 2021 19:25:32 -0400
+Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE852C061760;
+        Wed,  7 Apr 2021 16:25:21 -0700 (PDT)
+Received: by mail-lf1-x12a.google.com with SMTP id h19so784126lfu.9;
+        Wed, 07 Apr 2021 16:25:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=94h9zhuuoZjZJG0qodCDNY/t7MKNasaws+00zTsAsaE=;
+        b=Rncn5izKr2aD/p+7TPO+/F2VskBfDiL8ocr5SbGD1mpK8pVz4fH9GuvGLh7QMt2AdR
+         lhfp4hzNXb7tzQViyUl4L1yBsjZw7cm/LlMBI0JS6aVSdek6ywO7eTTGWlUavL1yxz5k
+         enIins9C516c3qlvp2Co4b6iGucJX/iGZqhug7R+C85vPiWoDpjSLXGyJ2jbn8LGBI62
+         0Inp0Vvjdvgf+J40jKIr1cReVFNqERn7nTiGq8BJH2woCoq+CzGaDexR0UZEE0Y8Q28D
+         p20RuLWT31T7hb+7nOs407jCDr08tbdZSD+mvLIBmqisuvTpFdTeJnp1gLAoXkn0XkiO
+         /IxQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=94h9zhuuoZjZJG0qodCDNY/t7MKNasaws+00zTsAsaE=;
+        b=cXP1ldzbX1wPQbzl2qKYjpecZvIu6pzjXUgT1Quzb+9d8uVreYVlenyIIBzR/Bly9K
+         mmWOaZqdJ7vittoCZAtooKtfX0TBA+2Qn8qk2SH1g0zPwknvYykuoRGsoLubbfOVLrWP
+         SpcULChUvM0SBJ/axT6g+WWJz70lacKCYl6nITZBHyuJ8kPJFd5tzN+TUCVbWyhqbmaS
+         cxrsKbf944HEuCcw29qwKgBICrkXL12VI8AA0p0wthcn7nv1eLE/VrtP22Ad05yx8n7O
+         Cqoc3StwIkXQf6KxXiKHS/Bq4Bceb+6Mm1vBEwUt7eE7sdZvP87GyQ5bwtJ4FexQ2dZP
+         2iaw==
+X-Gm-Message-State: AOAM5316C5d95D0uJHod88L+0tS+CkpTRY1s8YAtMJJK4gCBGmSqCy5k
+        CFR+lUjSBTCIsDmJxL/fEO48DZPJgV0=
+X-Google-Smtp-Source: ABdhPJyypgEFoDGX0vbaMG5H5+Zri7dEyUhFXDai3JlFHxX7hYKglgvoqbpfJjqFIoCZwPP1pKvILA==
+X-Received: by 2002:a05:6512:6d6:: with SMTP id u22mr3965920lff.386.1617837920240;
+        Wed, 07 Apr 2021 16:25:20 -0700 (PDT)
+Received: from [192.168.2.145] (109-252-193-85.dynamic.spd-mgts.ru. [109.252.193.85])
+        by smtp.googlemail.com with ESMTPSA id d27sm2624528lfv.226.2021.04.07.16.25.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 07 Apr 2021 16:25:19 -0700 (PDT)
 Subject: Re: [PATCH v4 3/3] ata: ahci_tegra: Add AHCI support for Tegra186
-From:   Sowjanya Komatineni <skomatineni@nvidia.com>
-To:     Dmitry Osipenko <digetx@gmail.com>, <axboe@kernel.dk>,
-        <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
-        <robh+dt@kernel.org>
-CC:     <pchandru@nvidia.com>, <devicetree@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
+To:     Sowjanya Komatineni <skomatineni@nvidia.com>, axboe@kernel.dk,
+        thierry.reding@gmail.com, jonathanh@nvidia.com, robh+dt@kernel.org
+Cc:     pchandru@nvidia.com, devicetree@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-tegra@vger.kernel.org,
+        linux-kernel@vger.kernel.org
 References: <1617758731-12380-1-git-send-email-skomatineni@nvidia.com>
  <1617758731-12380-4-git-send-email-skomatineni@nvidia.com>
  <594c622e-4505-3448-1c7b-eae8f36cbad8@gmail.com>
  <49eba27e-18fa-b682-1385-2930dfff28ac@nvidia.com>
-Message-ID: <01fd01ab-f4e7-57ee-2ad7-2aabaeb92a0e@nvidia.com>
-Date:   Wed, 7 Apr 2021 16:00:33 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+ <01fd01ab-f4e7-57ee-2ad7-2aabaeb92a0e@nvidia.com>
+From:   Dmitry Osipenko <digetx@gmail.com>
+Message-ID: <2ef2a124-9e4b-bc02-3830-8ef077638ced@gmail.com>
+Date:   Thu, 8 Apr 2021 02:25:19 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
 MIME-Version: 1.0
-In-Reply-To: <49eba27e-18fa-b682-1385-2930dfff28ac@nvidia.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <01fd01ab-f4e7-57ee-2ad7-2aabaeb92a0e@nvidia.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-X-Originating-IP: [172.20.145.6]
-X-ClientProxiedBy: HQMAIL107.nvidia.com (172.20.187.13) To
- HQMAIL107.nvidia.com (172.20.187.13)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: ac8213d2-8264-478e-0036-08d8fa18ee27
-X-MS-TrafficTypeDiagnostic: DM4PR12MB5295:
-X-Microsoft-Antispam-PRVS: <DM4PR12MB529568B7D3365E2CF6BAADFBC2759@DM4PR12MB5295.namprd12.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:7691;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: vyXOKR3bQ80Zhphg4M5z6x0xaNTEJxVFqloZPy6yWqb/adtTZ98ELYnS3XLuWT28J6AtMb5QcjSnmYOgr9u3f4LYqc4gLX/8jEmUCXGcb0gcvhmLmM8QkumtLbkGarwcDRTy2hh0kvitJ62kQuy0/lv6MVRnqDoNQDiyUvMzGztIu4n+hjf82KFu2x9zpf+0hDeBGJrAK+faUIXVQ0nnYI80EdILPTXXSrewpvLgQPRctbkIXjm7uCMYkEnLdrE4najtAPe6vBnAICyDOLfdA8wqINgu58mTj74MgZhwFXixjPfUVUyRw6kkDWrex1cB0K0Ay0nlcIwHEJ2s8JvxiNFuSL5edDDMX5+Hz/t/qZmnXC3LyLanRq+xXAi61JhpauvPOnpQP3MMCH0XtU3Uv3dXgT2fFfRmglFdyMsFLNzoLn4UxTMN83egCvU1ICh4O5BXJHPoFbVOWeN8jeuecVZYVTY/iU2pZAigCROAMXGd3GwOPSZ5jPEbSVyA+k0wtAjCE9EitriAJ8/+ue3fKHk6Gpqx3NCpKrWcegatMvKQTKLRFm10HKzqBPjPLXjAVPSG+nVMLEpvbs02mH8Vd3Ydu4y4rVIKz0g8UVXIZeU7igRx2/x4KdkjRFYdsQIRljjugcpWaQNKPfiI06teClRKyeWDBF4yzDUvkZTJVAcMhRws16/yFSD9RdMzK2kQ
-X-Forefront-Antispam-Report: CIP:216.228.112.34;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid03.nvidia.com;CAT:NONE;SFS:(4636009)(396003)(39860400002)(136003)(376002)(346002)(46966006)(36840700001)(82740400003)(16526019)(7636003)(4326008)(83380400001)(31696002)(82310400003)(186003)(31686004)(5660300002)(70586007)(70206006)(356005)(6666004)(26005)(2906002)(36756003)(86362001)(36906005)(426003)(53546011)(8936002)(47076005)(478600001)(336012)(8676002)(54906003)(110136005)(16576012)(36860700001)(2616005)(316002)(43740500002);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Apr 2021 23:00:25.3588
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: ac8213d2-8264-478e-0036-08d8fa18ee27
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.34];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT022.eop-nam11.prod.protection.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB5295
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-
-On 4/7/21 3:57 PM, Sowjanya Komatineni wrote:
->
-> On 4/7/21 2:36 PM, Dmitry Osipenko wrote:
->> 07.04.2021 04:25, Sowjanya Komatineni пишет:
->>> +    if (!tegra->pdev->dev.pm_domain) {
->>> +        ret = tegra_powergate_sequence_power_up(TEGRA_POWERGATE_SATA,
->>> +                            tegra->sata_clk,
->>> +                            tegra->sata_rst);
->>> +        if (ret)
->>> +            goto disable_regulators;
->>> +    }
->> Hi,
+08.04.2021 02:00, Sowjanya Komatineni пишет:
+> 
+> On 4/7/21 3:57 PM, Sowjanya Komatineni wrote:
 >>
->> Why you haven't added condition for tegra_powergate_power_off()? I think
->> it should break GENPD and legacy PD API isn't not supported by T186 
->> at all.
+>> On 4/7/21 2:36 PM, Dmitry Osipenko wrote:
+>>> 07.04.2021 04:25, Sowjanya Komatineni пишет:
+>>>> +    if (!tegra->pdev->dev.pm_domain) {
+>>>> +        ret = tegra_powergate_sequence_power_up(TEGRA_POWERGATE_SATA,
+>>>> +                            tegra->sata_clk,
+>>>> +                            tegra->sata_rst);
+>>>> +        if (ret)
+>>>> +            goto disable_regulators;
+>>>> +    }
+>>> Hi,
+>>>
+>>> Why you haven't added condition for tegra_powergate_power_off()? I think
+>>> it should break GENPD and legacy PD API isn't not supported by T186
+>>> at all.
+>>>
+>>> I'm also not sure whether the power up/down sequence is correct using
+>>> GENPD.
+>>>
+>>> Moreover the driver doesn't support runtime PM, so GENPD should be
+>>> always off?
 >>
->> I'm also not sure whether the power up/down sequence is correct using 
->> GENPD.
+>> This driver already using legacy PD API's so thought its supported and
+>> added power domain device check during powergate_sequence_power_up and
+>> yes same should apply for powergate_power_off as well. But if legacy
+>> PD is not supported by T186 then not sure why original driver even
+>> using these API's.
 >>
->> Moreover the driver doesn't support runtime PM, so GENPD should be
->> always off?
->
-> This driver already using legacy PD API's so thought its supported and 
-> added power domain device check during powergate_sequence_power_up and 
-> yes same should apply for powergate_power_off as well. But if legacy 
-> PD is not supported by T186 then not sure why original driver even 
-> using these API's.
->
->
-Sorry just took a look and driver supports T210 and prior tegra as well. 
-T210 and prior supports legacy PD and this check is applicable for 
-those. So we should add power domain device check for power off as well.
+>>
+> Sorry just took a look and driver supports T210 and prior tegra as well.
+> T210 and prior supports legacy PD and this check is applicable for
+> those. So we should add power domain device check for power off as well.
 
-But for T186, we should have GENPD working once we add runtime PM 
-support to driver.
+You could fix it with a follow up patch. Please try to test that
+power-off works properly, at least try to unload the driver module and
+re-load it.
 
-Preetham/Thierry, Can you confirm where SATA is un powergated prior to 
-kernel?
+> But for T186, we should have GENPD working once we add runtime PM
+> support to driver.
+> 
+> Preetham/Thierry, Can you confirm where SATA is un powergated prior to
+> kernel?
+> 
+> 
+>> But as RPM is not implemented yet for this driver, GENPD will be OFF
+>> but SATA is not in power-gate by the time kernel starts and
+>> functionally works.
+>>
+>> But with RPM implementation, I guess we can do proper power gate on/off.
+>>
 
-
-> But as RPM is not implemented yet for this driver, GENPD will be OFF 
-> but SATA is not in power-gate by the time kernel starts and 
-> functionally works.
->
-> But with RPM implementation, I guess we can do proper power gate on/off.
->
+I now recalled that GENPD turns ON all domains by default and then turns
+them OFF only when driver entered into the RPM-suspended state. This
+means that AHCI GENPD should be always-ON for T186, which should be okay
+if this doesn't break power sequences.
