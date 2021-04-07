@@ -7,81 +7,68 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46DE4C433B4
-	for <linux-ide@archiver.kernel.org>; Wed,  7 Apr 2021 09:27:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A9D5C43460
+	for <linux-ide@archiver.kernel.org>; Wed,  7 Apr 2021 13:46:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F6CE613A7
-	for <linux-ide@archiver.kernel.org>; Wed,  7 Apr 2021 09:27:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5AE2A61353
+	for <linux-ide@archiver.kernel.org>; Wed,  7 Apr 2021 13:46:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345889AbhDGJ1k (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 7 Apr 2021 05:27:40 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:16374 "EHLO
-        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234982AbhDGJ1k (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 7 Apr 2021 05:27:40 -0400
-Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.58])
-        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4FFfBs24RjzlVmk;
-        Wed,  7 Apr 2021 17:25:41 +0800 (CST)
-Received: from thunder-town.china.huawei.com (10.174.179.202) by
- DGGEMS414-HUB.china.huawei.com (10.3.19.214) with Microsoft SMTP Server id
- 14.3.498.0; Wed, 7 Apr 2021 17:27:21 +0800
-From:   Zhen Lei <thunder.leizhen@huawei.com>
-To:     "David S . Miller" <davem@davemloft.net>,
-        linux-ide <linux-ide@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-CC:     Zhen Lei <thunder.leizhen@huawei.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/1] ide: remove unused static variable 'ide_media_proc_fops'
-Date:   Wed, 7 Apr 2021 17:27:02 +0800
-Message-ID: <20210407092702.2868-1-thunder.leizhen@huawei.com>
-X-Mailer: git-send-email 2.26.0.windows.1
+        id S243136AbhDGNrF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 7 Apr 2021 09:47:05 -0400
+Received: from mga07.intel.com ([134.134.136.100]:15225 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230142AbhDGNrE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 7 Apr 2021 09:47:04 -0400
+IronPort-SDR: i8sm+2zfLpMV+zazkImUf3hI0WEp6/uwPR9bFYiKsfIktUkV/a2W39T7A54PckoMuB/f22vDjO
+ oMlKP3Uw5QxQ==
+X-IronPort-AV: E=McAfee;i="6000,8403,9947"; a="257294490"
+X-IronPort-AV: E=Sophos;i="5.82,203,1613462400"; 
+   d="scan'208";a="257294490"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2021 06:46:54 -0700
+IronPort-SDR: kMBIirvaSjG+DQejpM94NQUxNVyTb+7EmWvRRwj3POLzovONat6TwNlKZpTzeT7g8CSTg4EFPN
+ itgXAKpBUR1g==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.82,203,1613462400"; 
+   d="scan'208";a="448256023"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by FMSMGA003.fm.intel.com with ESMTP; 07 Apr 2021 06:46:53 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+        id B84EC12A; Wed,  7 Apr 2021 16:47:08 +0300 (EEST)
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Jens Axboe <axboe@kernel.dk>
+Subject: [PATCH v1 1/1] ata: Drop unneeded inclusion of kernel.h in the header
+Date:   Wed,  7 Apr 2021 16:47:06 +0300
+Message-Id: <20210407134706.81383-1-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.179.202]
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Fixes the following W=1 kernel build warning:
+There is no need to have kernel.h included, I do not see any
+direct users of it in ata.h. Drop unneeded inclusion of kernel.h.
 
-drivers/ide/ide-proc.c:457:37: warning: ‘ide_media_proc_fops’ defined but not used [-Wunused-const-variable=]
-
-The reference to the variable 'ide_media_proc_fops' is deleted by
-commit ec7d9c9ce897 ("ide: replace ->proc_fops with ->proc_show").
-
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/ide/ide-proc.c | 13 -------------
- 1 file changed, 13 deletions(-)
+ include/linux/ata.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/ide/ide-proc.c b/drivers/ide/ide-proc.c
-index 15c17f3781ee917..34bed14f88c78b3 100644
---- a/drivers/ide/ide-proc.c
-+++ b/drivers/ide/ide-proc.c
-@@ -449,19 +449,6 @@ static int ide_media_proc_show(struct seq_file *m, void *v)
- 	return 0;
- }
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 6e67aded28f8..21142b17245f 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -13,7 +13,6 @@
+ #ifndef __LINUX_ATA_H__
+ #define __LINUX_ATA_H__
  
--static int ide_media_proc_open(struct inode *inode, struct file *file)
--{
--	return single_open(file, ide_media_proc_show, PDE_DATA(inode));
--}
--
--static const struct file_operations ide_media_proc_fops = {
--	.owner		= THIS_MODULE,
--	.open		= ide_media_proc_open,
--	.read		= seq_read,
--	.llseek		= seq_lseek,
--	.release	= single_release,
--};
--
- static ide_proc_entry_t generic_drive_entries[] = {
- 	{ "driver",	S_IFREG|S_IRUGO,	 ide_driver_proc_show	},
- 	{ "identify",	S_IFREG|S_IRUSR,	 ide_identify_proc_show	},
+-#include <linux/kernel.h>
+ #include <linux/string.h>
+ #include <linux/types.h>
+ #include <asm/byteorder.h>
 -- 
-1.8.3
-
+2.30.2
 
