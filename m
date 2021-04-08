@@ -2,140 +2,79 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB8A2C433B4
-	for <linux-ide@archiver.kernel.org>; Wed,  7 Apr 2021 23:25:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FDD0C433B4
+	for <linux-ide@archiver.kernel.org>; Thu,  8 Apr 2021 01:55:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 71090611C9
-	for <linux-ide@archiver.kernel.org>; Wed,  7 Apr 2021 23:25:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E66461181
+	for <linux-ide@archiver.kernel.org>; Thu,  8 Apr 2021 01:55:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229778AbhDGXZc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 7 Apr 2021 19:25:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53086 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229607AbhDGXZc (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 7 Apr 2021 19:25:32 -0400
-Received: from mail-lf1-x12a.google.com (mail-lf1-x12a.google.com [IPv6:2a00:1450:4864:20::12a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE852C061760;
-        Wed,  7 Apr 2021 16:25:21 -0700 (PDT)
-Received: by mail-lf1-x12a.google.com with SMTP id h19so784126lfu.9;
-        Wed, 07 Apr 2021 16:25:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=94h9zhuuoZjZJG0qodCDNY/t7MKNasaws+00zTsAsaE=;
-        b=Rncn5izKr2aD/p+7TPO+/F2VskBfDiL8ocr5SbGD1mpK8pVz4fH9GuvGLh7QMt2AdR
-         lhfp4hzNXb7tzQViyUl4L1yBsjZw7cm/LlMBI0JS6aVSdek6ywO7eTTGWlUavL1yxz5k
-         enIins9C516c3qlvp2Co4b6iGucJX/iGZqhug7R+C85vPiWoDpjSLXGyJ2jbn8LGBI62
-         0Inp0Vvjdvgf+J40jKIr1cReVFNqERn7nTiGq8BJH2woCoq+CzGaDexR0UZEE0Y8Q28D
-         p20RuLWT31T7hb+7nOs407jCDr08tbdZSD+mvLIBmqisuvTpFdTeJnp1gLAoXkn0XkiO
-         /IxQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=94h9zhuuoZjZJG0qodCDNY/t7MKNasaws+00zTsAsaE=;
-        b=cXP1ldzbX1wPQbzl2qKYjpecZvIu6pzjXUgT1Quzb+9d8uVreYVlenyIIBzR/Bly9K
-         mmWOaZqdJ7vittoCZAtooKtfX0TBA+2Qn8qk2SH1g0zPwknvYykuoRGsoLubbfOVLrWP
-         SpcULChUvM0SBJ/axT6g+WWJz70lacKCYl6nITZBHyuJ8kPJFd5tzN+TUCVbWyhqbmaS
-         cxrsKbf944HEuCcw29qwKgBICrkXL12VI8AA0p0wthcn7nv1eLE/VrtP22Ad05yx8n7O
-         Cqoc3StwIkXQf6KxXiKHS/Bq4Bceb+6Mm1vBEwUt7eE7sdZvP87GyQ5bwtJ4FexQ2dZP
-         2iaw==
-X-Gm-Message-State: AOAM5316C5d95D0uJHod88L+0tS+CkpTRY1s8YAtMJJK4gCBGmSqCy5k
-        CFR+lUjSBTCIsDmJxL/fEO48DZPJgV0=
-X-Google-Smtp-Source: ABdhPJyypgEFoDGX0vbaMG5H5+Zri7dEyUhFXDai3JlFHxX7hYKglgvoqbpfJjqFIoCZwPP1pKvILA==
-X-Received: by 2002:a05:6512:6d6:: with SMTP id u22mr3965920lff.386.1617837920240;
-        Wed, 07 Apr 2021 16:25:20 -0700 (PDT)
-Received: from [192.168.2.145] (109-252-193-85.dynamic.spd-mgts.ru. [109.252.193.85])
-        by smtp.googlemail.com with ESMTPSA id d27sm2624528lfv.226.2021.04.07.16.25.19
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 07 Apr 2021 16:25:19 -0700 (PDT)
-Subject: Re: [PATCH v4 3/3] ata: ahci_tegra: Add AHCI support for Tegra186
-To:     Sowjanya Komatineni <skomatineni@nvidia.com>, axboe@kernel.dk,
-        thierry.reding@gmail.com, jonathanh@nvidia.com, robh+dt@kernel.org
-Cc:     pchandru@nvidia.com, devicetree@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-tegra@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <1617758731-12380-1-git-send-email-skomatineni@nvidia.com>
- <1617758731-12380-4-git-send-email-skomatineni@nvidia.com>
- <594c622e-4505-3448-1c7b-eae8f36cbad8@gmail.com>
- <49eba27e-18fa-b682-1385-2930dfff28ac@nvidia.com>
- <01fd01ab-f4e7-57ee-2ad7-2aabaeb92a0e@nvidia.com>
-From:   Dmitry Osipenko <digetx@gmail.com>
-Message-ID: <2ef2a124-9e4b-bc02-3830-8ef077638ced@gmail.com>
-Date:   Thu, 8 Apr 2021 02:25:19 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+        id S229558AbhDHBzT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 7 Apr 2021 21:55:19 -0400
+Received: from szxga04-in.huawei.com ([45.249.212.190]:15168 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229505AbhDHBzT (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 7 Apr 2021 21:55:19 -0400
+Received: from DGGEMS408-HUB.china.huawei.com (unknown [172.30.72.58])
+        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4FG45J6QZnzpWBP;
+        Thu,  8 Apr 2021 09:52:20 +0800 (CST)
+Received: from thunder-town.china.huawei.com (10.174.179.202) by
+ DGGEMS408-HUB.china.huawei.com (10.3.19.208) with Microsoft SMTP Server id
+ 14.3.498.0; Thu, 8 Apr 2021 09:54:58 +0800
+From:   Zhen Lei <thunder.leizhen@huawei.com>
+To:     "David S . Miller" <davem@davemloft.net>,
+        Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>,
+        linux-ide <linux-ide@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+CC:     Zhen Lei <thunder.leizhen@huawei.com>
+Subject: [PATCH 1/1] ide: remove unused local variable 'sitre'
+Date:   Thu, 8 Apr 2021 09:54:51 +0800
+Message-ID: <20210408015451.2983-1-thunder.leizhen@huawei.com>
+X-Mailer: git-send-email 2.26.0.windows.1
 MIME-Version: 1.0
-In-Reply-To: <01fd01ab-f4e7-57ee-2ad7-2aabaeb92a0e@nvidia.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.179.202]
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-08.04.2021 02:00, Sowjanya Komatineni пишет:
-> 
-> On 4/7/21 3:57 PM, Sowjanya Komatineni wrote:
->>
->> On 4/7/21 2:36 PM, Dmitry Osipenko wrote:
->>> 07.04.2021 04:25, Sowjanya Komatineni пишет:
->>>> +    if (!tegra->pdev->dev.pm_domain) {
->>>> +        ret = tegra_powergate_sequence_power_up(TEGRA_POWERGATE_SATA,
->>>> +                            tegra->sata_clk,
->>>> +                            tegra->sata_rst);
->>>> +        if (ret)
->>>> +            goto disable_regulators;
->>>> +    }
->>> Hi,
->>>
->>> Why you haven't added condition for tegra_powergate_power_off()? I think
->>> it should break GENPD and legacy PD API isn't not supported by T186
->>> at all.
->>>
->>> I'm also not sure whether the power up/down sequence is correct using
->>> GENPD.
->>>
->>> Moreover the driver doesn't support runtime PM, so GENPD should be
->>> always off?
->>
->> This driver already using legacy PD API's so thought its supported and
->> added power domain device check during powergate_sequence_power_up and
->> yes same should apply for powergate_power_off as well. But if legacy
->> PD is not supported by T186 then not sure why original driver even
->> using these API's.
->>
->>
-> Sorry just took a look and driver supports T210 and prior tegra as well.
-> T210 and prior supports legacy PD and this check is applicable for
-> those. So we should add power domain device check for power off as well.
+Fixes the following W=1 kernel build warning:
 
-You could fix it with a follow up patch. Please try to test that
-power-off works properly, at least try to unload the driver module and
-re-load it.
+drivers/ide/piix.c: In function ‘piix_set_dma_mode’:
+drivers/ide/piix.c:146:8: warning: variable ‘sitre’ set but not used [-Wunused-but-set-variable]
 
-> But for T186, we should have GENPD working once we add runtime PM
-> support to driver.
-> 
-> Preetham/Thierry, Can you confirm where SATA is un powergated prior to
-> kernel?
-> 
-> 
->> But as RPM is not implemented yet for this driver, GENPD will be OFF
->> but SATA is not in power-gate by the time kernel starts and
->> functionally works.
->>
->> But with RPM implementation, I guess we can do proper power gate on/off.
->>
+Fixes: 2bfba3c444fe ("ide: remove useless subdirs from drivers/ide/")
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
+---
+ drivers/ide/piix.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-I now recalled that GENPD turns ON all domains by default and then turns
-them OFF only when driver entered into the RPM-suspended state. This
-means that AHCI GENPD should be always-ON for T186, which should be okay
-if this doesn't break power sequences.
+diff --git a/drivers/ide/piix.c b/drivers/ide/piix.c
+index a671cead6ae72b7..b512d2dc9108cf6 100644
+--- a/drivers/ide/piix.c
++++ b/drivers/ide/piix.c
+@@ -143,13 +143,11 @@ static void piix_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+ 	int v_flag		= 0x01 << drive->dn;
+ 	int w_flag		= 0x10 << drive->dn;
+ 	int u_speed		= 0;
+-	int			sitre;
+ 	u16			reg4042, reg4a;
+ 	u8			reg48, reg54, reg55;
+ 	const u8 speed		= drive->dma_mode;
+ 
+ 	pci_read_config_word(dev, maslave, &reg4042);
+-	sitre = (reg4042 & 0x4000) ? 1 : 0;
+ 	pci_read_config_byte(dev, 0x48, &reg48);
+ 	pci_read_config_word(dev, 0x4a, &reg4a);
+ 	pci_read_config_byte(dev, 0x54, &reg54);
+-- 
+1.8.3
+
+
