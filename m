@@ -8,73 +8,70 @@ X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B480DC433ED
-	for <linux-ide@archiver.kernel.org>; Sat, 10 Apr 2021 08:46:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55C86C433B4
+	for <linux-ide@archiver.kernel.org>; Sat, 10 Apr 2021 08:52:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8DFC761005
-	for <linux-ide@archiver.kernel.org>; Sat, 10 Apr 2021 08:46:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1600E61026
+	for <linux-ide@archiver.kernel.org>; Sat, 10 Apr 2021 08:52:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230060AbhDJIrF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 10 Apr 2021 04:47:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39566 "EHLO
+        id S229537AbhDJIw1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 10 Apr 2021 04:52:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40726 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229494AbhDJIrE (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 10 Apr 2021 04:47:04 -0400
-Received: from mail-lf1-x12c.google.com (mail-lf1-x12c.google.com [IPv6:2a00:1450:4864:20::12c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D07FC061762;
-        Sat, 10 Apr 2021 01:46:50 -0700 (PDT)
-Received: by mail-lf1-x12c.google.com with SMTP id f17so6335063lfu.7;
-        Sat, 10 Apr 2021 01:46:50 -0700 (PDT)
+        with ESMTP id S229494AbhDJIw0 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 10 Apr 2021 04:52:26 -0400
+Received: from mail-lf1-x129.google.com (mail-lf1-x129.google.com [IPv6:2a00:1450:4864:20::129])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60827C061762;
+        Sat, 10 Apr 2021 01:52:12 -0700 (PDT)
+Received: by mail-lf1-x129.google.com with SMTP id b4so13402938lfi.6;
+        Sat, 10 Apr 2021 01:52:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:to:cc:references:from:organization:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=da/l24eP3nYB45qy4cZI7dM0NqKY848ZDOT8xVxHEUI=;
-        b=milV8WU6UhYWndfZDIcfYda2ZqUi2CrGGJn6sC5Bx4dMWlCOyvTNg+oFmZ5DZS8Qac
-         wnl7U3FdBkK6DmQfs2XEHWRjcg3ZVa4mTXjLYosFgQE+o4Tjt1rTNBR3Kbvo/MUnR3O1
-         tGtx8kmmOkDOubQmjYne68uwodzVUr2d6xBH2BNW8YNdJDtiZCOj6lb/Y+HT7vi+7je8
-         YRGJgHeUBLI12jh0uRI8MDYMMl+Tpnm+IEk9G+CQtyiMDZ6jj+hSTCiEH7LaRM+JuQ9E
-         Fd3UlgKzQjebgsXVF70Sgpa4SmpheKEkCbnXo2UDmTSegYTpwQoHQhBQoYj1TsmCeOKf
-         6EzA==
+        bh=4svQIHaWyonus6NC9Wt6UCIb/Wkk+iEs+l9TOzqnCus=;
+        b=oo8UIIim2xX9Ykzn12egb1Q5OuDF5+RMeJ/pNLTiGQ3lmNhLpVcr4qIDxU2IrRVBzh
+         zfwXRKUUhD9PQcZ+rvtkmoKaC+J+pC1SuYWmSlOF2Z7k9kcXlH9uE3Q+Zhk4gCv1++V/
+         EzRpb5tLY5tIW91EDLkQXQvkksFGmdsoKSY4UC6bllpuIutvFKDJxRoo0dsd7Lobj3oT
+         My6bbwzh0bDXhBE8LF7t8E6FJnokffka3OiL/mZ2pRHY/kbXqP+21xnKtW0li2qli5iJ
+         wuSj2FdHnXq0xFh06nLR2JXXFjp+TOqZZBnIchDr8hjrYXFHhGd/Hct3o7N6CV9LTv5V
+         xf0w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:organization
          :message-id:date:user-agent:mime-version:in-reply-to
          :content-language:content-transfer-encoding;
-        bh=da/l24eP3nYB45qy4cZI7dM0NqKY848ZDOT8xVxHEUI=;
-        b=Llp19nTRo4rloyVJbfe3uIeEEdm7x+Lgr5155f9dfBJxBDh+pEFlyxp9gS8GvX6CIi
-         q/5Hx2j03IH6f4HqVP0w08609OVzCCe40wgsTvCrTjFzwiC50g7wn9UZetkiyVMJDb+S
-         lPU+/gaEA8ff9vP4GCNEpXMCf+QkASOn0CfncAkXhCpy16NWEXdS0T7ioHEx72v/raIn
-         aQKOhZKZlACLAXA4EWFFqP0v6N9Pj0h5GGvKGPBGV7qPZNc04Ma6992iUpAH1suHNGfz
-         I8EzfpJ+YVu+AxLrBeE4E6NNtz61v+lbx2nAanzfCS8kMsvkZurl5K5wplUKDKW5NAyS
-         vSbA==
-X-Gm-Message-State: AOAM5309rRZvRwtgStoLHPTVIpOXLY9iuktq1FTdRol//Fvc1POYNchH
-        Ov1mLR+TX8tm8OzDT2TD+tOqDsEhuC4=
-X-Google-Smtp-Source: ABdhPJywYkV4jSYCLi6QgZmDa6q1xhpZmLlS4btBaJeRd1JwitT5AAXQIvgr6tE3NnOYdBjxljTymQ==
-X-Received: by 2002:a05:6512:3089:: with SMTP id z9mr12805138lfd.496.1618044408927;
-        Sat, 10 Apr 2021 01:46:48 -0700 (PDT)
+        bh=4svQIHaWyonus6NC9Wt6UCIb/Wkk+iEs+l9TOzqnCus=;
+        b=Ox29weTYOVxOM+wUq0Hl5PmVRu830dB89t07ziqKZ4O9q4gqHCaEVEjgWsLeYhj0nd
+         YVlMntfIYXTdbkra+vYs2CbaZyEwVXyVMmkeD3sQdD/mmp+i4pMzLFxnEotV0JY69ldP
+         wAovrYf6oj4L4wJHYVyIlBKoBeNa8ss9JZxitI3U8wJYL4fTewvi71srlQz4VPTNmwSi
+         9/L2L05Q9uaCQBoy9CKHsmYwNAkJfLXBTAiCQZWwfgzaxqdWyYG31NObWUQv6yADvctB
+         Ouqixc97AStovSdbzD8pnTGa87vlp6tLSfbA2Iz+W+NmaHn+tNagLfrKrVvN4tz0WhBR
+         i+Zw==
+X-Gm-Message-State: AOAM53012JPJNsPhMYBr5ddp7TVvXWT2Pnds1NJsJD3rbGg/27/W1eHY
+        4Q2FPUBjo2gIe5ndk0qGk6ah2llJnqY=
+X-Google-Smtp-Source: ABdhPJypzKENQeeFQdZM6ErG8H+Ffw1RWKwpyuFBAMvHLN3IebCdmTFdVM3+lJ+5DKbAXPa/Ld6oUw==
+X-Received: by 2002:a19:e206:: with SMTP id z6mr1375798lfg.100.1618044730773;
+        Sat, 10 Apr 2021 01:52:10 -0700 (PDT)
 Received: from [192.168.1.100] ([178.176.75.45])
-        by smtp.gmail.com with ESMTPSA id o9sm878899lfb.280.2021.04.10.01.46.47
+        by smtp.gmail.com with ESMTPSA id m3sm897123lfo.190.2021.04.10.01.52.10
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 10 Apr 2021 01:46:48 -0700 (PDT)
-Subject: Re: [PATCH] pata_ipx4xx_cf: Fix unsigned comparison with less than
+        Sat, 10 Apr 2021 01:52:10 -0700 (PDT)
+Subject: Re: [PATCH v1] pata_ipx4xx_cf: Fix unsigned comparison with less than
  zero
-To:     angkery <angkery@163.com>
-Cc:     axboe@kernel.dk, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Junlin Yang <yangjunlin@yulong.com>
-References: <20210409135426.1773-1-angkery@163.com>
- <e74ec570-96b6-23ce-edd5-b5a38628963a@gmail.com>
- <e6bf7f02-f0b8-b0c4-2253-62a55ea98d17@gmail.com>
- <20210410073814.00003b86.angkery@163.com>
+To:     angkery <angkery@163.com>, axboe@kernel.dk
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Junlin Yang <yangjunlin@yulong.com>
+References: <20210409234242.1979-1-angkery@163.com>
 From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
 Organization: Brain-dead Software
-Message-ID: <f9ea1536-6cfe-29fe-1ecd-95d0f68d3a85@gmail.com>
-Date:   Sat, 10 Apr 2021 11:46:45 +0300
+Message-ID: <a9af3dac-7ce5-71fb-5d89-a9afab4e48d4@gmail.com>
+Date:   Sat, 10 Apr 2021 11:52:08 +0300
 User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.9.1
 MIME-Version: 1.0
-In-Reply-To: <20210410073814.00003b86.angkery@163.com>
+In-Reply-To: <20210409234242.1979-1-angkery@163.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -82,29 +79,27 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 10.04.2021 2:38, angkery wrote:
-> On Fri, 9 Apr 2021 20:02:56 +0300
-> Sergei Shtylyov <sergei.shtylyov@gmail.com> wrote:
+On 10.04.2021 2:42, angkery wrote:
+
+> From: Junlin Yang <yangjunlin@yulong.com>
 > 
->> On 4/9/21 7:49 PM, Sergei Shtylyov wrote:
->>
->>>> From: Junlin Yang <yangjunlin@yulong.com>
->>>>
->>>> The return from the call to platform_get_irq() is int, it can be
->>>> a negative error code, however this is being assigned to an
->>>> unsigned int variable 'irq', so making 'irq' an int, and change
->>>> the position to keep the code format.
->>>>
->>>> ./drivers/ata/pata_ixp4xx_cf.c:168:5-8:
->>>> WARNING: Unsigned expression compared with zero: irq > 0
->>>
->>>     I'd understand < 0... but > 0? What tool warned about this issue?
->>>    
->>>> yes, by coccicheck, i will update commits information.
+> The return from the call to platform_get_irq() is int, it can be
+> a negative error code, however this is being assigned to an unsigned
+> int variable 'irq', so making 'irq' an int, and change the position to
+> keep the code format.
+> 
+> Fixes coccicheck warnings:
+> ./drivers/ata/pata_ixp4xx_cf.c:168:5-8:
+> WARNING: Unsigned expression compared with zero: irq > 0
+> 
+> Signed-off-by: Junlin Yang <yangjunlin@yulong.com>
+> ---
+> changes in v1:
+> update the commit information.
 
-    Thanks!
-    Yet, looking at your subject, the above should read irq < 0, not > 0.
+    Not seeing what's updated, and anwyways it should read irq < 0, else it 
+doesn't make sense...
 
->>>> Signed-off-by: Junlin Yang <yangjunlin@yulong.com>
+[...]
 
-
+MBR, Sergei
