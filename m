@@ -2,122 +2,86 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-23.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1EE7C433B4
-	for <linux-ide@archiver.kernel.org>; Tue, 27 Apr 2021 19:55:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ECC4C433B4
+	for <linux-ide@archiver.kernel.org>; Tue, 27 Apr 2021 23:14:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A41C60FF3
-	for <linux-ide@archiver.kernel.org>; Tue, 27 Apr 2021 19:55:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4767861401
+	for <linux-ide@archiver.kernel.org>; Tue, 27 Apr 2021 23:14:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235974AbhD0Tzn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 27 Apr 2021 15:55:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42492 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235719AbhD0Tzm (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 27 Apr 2021 15:55:42 -0400
-Received: from mail-pf1-x434.google.com (mail-pf1-x434.google.com [IPv6:2607:f8b0:4864:20::434])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4E2D7C06175F;
-        Tue, 27 Apr 2021 12:54:59 -0700 (PDT)
-Received: by mail-pf1-x434.google.com with SMTP id v191so345267pfc.8;
-        Tue, 27 Apr 2021 12:54:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=afoI4FuwTfrW6Z0hEFugsdIW4PHlren6vrmAD+HRX5I=;
-        b=XdmV3R4myyB0wfVtF2TSwjjYj73NP2+ZgRS6oYfw0kHGB9HC7orxGQFm2pp/bae30P
-         +oPTn+Bxjdu/46Q/7nli79ONM9lpasJ1bhguHMhI/aEj+6z46RrWK4hqhaUdeDW+G62B
-         JX1UrFr/GDZEmXYkRKIXiuCKxBVlEPx+b2yDb3YvKinpZ+4V2TxDswiT4tn+6FEWl87Z
-         pSKCczVuvZ5imuUQfQ8ZgkE/RCWpg4oGRjymdGOGv8uFGVJWKbYoVz47B/f9p2PRn20/
-         e/2Jcd+edwdtSa9ysX4myE572LIx0ophMwx1Hpbsvvc0UGvjKH/fTlkeAMYksICY9/m4
-         nBhg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=afoI4FuwTfrW6Z0hEFugsdIW4PHlren6vrmAD+HRX5I=;
-        b=QskoJJ2FfW639s3Sk+IaBXulvvgcpHPOf533PKUGLLhlKlSA3aGQSEIkzmPuvZ8Zcq
-         JgAFydGt++xfMfw6o5yaf1zA0KTJDA899S4/SboUktZBrLAhAk77YYpWbauifKLdfTNf
-         SxonTFEDnvfGvGUBq40FVDe/IWcZscf6vVj8TlFQetBStYjB8FsWKTLT62u+mISxuhOo
-         56qVPGkH81wnrdZCfFm0IPykYNJBCbQmdDtBhmTQXVunK5XorMni+TZxSNEYqspvQ4SH
-         u5k80rDfQGxB10lJQ8tqW6clNBOVuOinxEsZJqgM9HYF+nU/yESEWiLFXhTONXgSsgKd
-         7IYw==
-X-Gm-Message-State: AOAM5304Wp7uXXtIEQgFGNSDhgmmtZs/+BV3vcGx5RZuvsFJCtrYXfz/
-        dCvdofes617C931jaf7EECU0AxT1LHLekw==
-X-Google-Smtp-Source: ABdhPJxr+Gi/fH9i5uoPwpCusU2t0LPExJAdJfmub2rirPN9/jUFKYoUKTFbKtoZkGDtFL++Bw7jwg==
-X-Received: by 2002:a63:150c:: with SMTP id v12mr23654133pgl.344.1619553298674;
-        Tue, 27 Apr 2021 12:54:58 -0700 (PDT)
-Received: from ?IPv6:2001:df0:0:200c:2d50:30a4:47de:1dd6? ([2001:df0:0:200c:2d50:30a4:47de:1dd6])
-        by smtp.gmail.com with ESMTPSA id a7sm3116794pjm.0.2021.04.27.12.54.55
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 27 Apr 2021 12:54:58 -0700 (PDT)
-Subject: Re: [PATCH] m68k/mac: Replace macide driver with generic platform
- driver
-To:     Finn Thain <fthain@fastmail.com.au>
-Cc:     John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Joshua Thompson <funaho@jurai.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org
-References: <793432cca963b632709c4d1312baa9874d73e1d8.1619341585.git.fthain@telegraphics.com.au>
- <ba908b1d-eab5-a4e5-0c0a-2c745287d121@physik.fu-berlin.de>
- <10a08764-c138-9fe5-966c-ce68349b9b6@nippy.intranet>
- <65f01f42-31d9-522a-e690-73d286405a01@gmail.com>
- <9650358f-a789-7dbd-4495-1d39ff321ded@nippy.intranet>
-From:   Michael Schmitz <schmitzmic@gmail.com>
-Message-ID: <ada88dd6-f8d7-11dc-9a89-5c7e437a0981@gmail.com>
-Date:   Wed, 28 Apr 2021 07:54:52 +1200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S236805AbhD0XOu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 27 Apr 2021 19:14:50 -0400
+Received: from dd20004.kasserver.com ([85.13.150.92]:59908 "EHLO
+        dd20004.kasserver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236547AbhD0XOs (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 27 Apr 2021 19:14:48 -0400
+X-Greylist: delayed 455 seconds by postgrey-1.27 at vger.kernel.org; Tue, 27 Apr 2021 19:14:46 EDT
+Received: from timo-desktop.lan.xusig.net (i59F5205F.versanet.de [89.245.32.95])
+        by dd20004.kasserver.com (Postfix) with ESMTPSA id 320575458868;
+        Wed, 28 Apr 2021 01:06:25 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=silentcreek.de;
+        s=kas202012291009; t=1619564785;
+        bh=KTmAKZe1QU9CWTUWzvq+taFcNdmDF1IaeY/2hBlJl/o=;
+        h=From:To:Cc:Subject:Date:From;
+        b=I1OrQ3FPJ37iyguIGG9SRw1g6510jpBKXWy7ijohO+hM2+CmIeKsGBBVJsKVnlUGV
+         4TptB6l1p+/GY374PiHI+9tLhsIX5nXvx+eiWTUJzEicUrcXrGmWNTyIxe/PTyBkGE
+         yw6ZHOBpPDm3e0H4eyKevt8jjmGRV4a+ppw5wKVVJf59z+Ja9BH/3Tq8ugSQOn8oDh
+         ujpdyCIke0Ll+r3nnstxiYYCdwual47Am4YvVD8vAp/U+gMY5NotH37nqaaj6NARBX
+         /NdmuJz1vHCNDBisOF72U+qbaXXe37iJQ+so1Ot2HJundx95dvRMvR+mYWcK+Uhtj0
+         0Zb/bBFSzHR9A==
+From:   Timo Sigurdsson <public_timo.s@silentcreek.de>
+To:     axboe@kernel.dk, mripard@kernel.org, wens@csie.org,
+        jernej.skrabec@siol.net, linux-ide@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-sunxi@lists.linux.dev,
+        linux-kernel@vger.kernel.org
+Cc:     oliver@schinagl.nl, stable@vger.kernel.org,
+        Timo Sigurdsson <public_timo.s@silentcreek.de>
+Subject: [PATCH] ata: ahci_sunxi: Disable DIPM
+Date:   Wed, 28 Apr 2021 01:05:37 +0200
+Message-Id: <20210427230537.21423-1-public_timo.s@silentcreek.de>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-In-Reply-To: <9650358f-a789-7dbd-4495-1d39ff321ded@nippy.intranet>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Finn,
+DIPM is unsupported or broken on sunxi. Trying to enable the power
+management policy med_power_with_dipm on an Allwinner A20 SoC based board
+leads to immediate I/O errors and the attached SATA disk disappears from
+the /dev filesystem. A reset (power cycle) is required to make the SATA
+controller or disk work again. The A10 and A20 SoC data sheets and manuals
+don't mention DIPM at all [1], so it's fair to assume that it's simply not
+supported. But even if it were, it should be considered broken and best be
+disabled in the ahci_sunxi driver.
 
-On 27/04/21 3:47 pm, Finn Thain wrote:
-> On Tue, 27 Apr 2021, Michael Schmitz wrote:
->
->> On 26/04/21 7:37 pm, Finn Thain wrote:
->>> Was macide the only IDE driver in Debian/m68k kernels without a libata
->>> alternative? If so, this patch would allow you to finally drop
->>> CONFIG_IDE.
->>>
->> There's still q40ide.c (ISA IDE interface, byte-swapped, so would need
->> treatment similar to Falcon IDE). Hasn't been updated to a platform
->> device yet.
->>
-> AIUI, q40 support is not included in Debian/m68k kernel builds.
-I see.
-> I wonder whether q40 could re-use the pata_falcon driver . I suppose
+Fixes: c5754b5220f0 ("ARM: sunxi: Add support for Allwinner SUNXi SoCs sata to ahci_platform")
 
-I'm pretty sure it could, but there is no reason why it would have to be 
-crippled in that way. Interrupts should work perfectly fine with IDE on 
-Q40.
+[1] https://github.com/allwinner-zh/documents/tree/master/
 
-There is another reason why using the same module binary for both might 
-fail - the awkward address translation code in io_mm.h. Not certain at 
-all whether we can even have Q40 and Atari in the same kernel binary...
+Signed-off-by: Timo Sigurdsson <public_timo.s@silentcreek.de>
+Tested-by: Timo Sigurdsson <public_timo.s@silentcreek.de>
+---
+ drivers/ata/ahci_sunxi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> pata_falcon_set_mode() would be undesirable on q40 (?) It could be made
-
-Not sure what the defaults are - pata_buddha.c and pata_gayle.c use the 
-same code in their _set_mode(). I suspect we'd need it for Q40, too.
-
-Cheers,
-
-     Michael
-
+diff --git a/drivers/ata/ahci_sunxi.c b/drivers/ata/ahci_sunxi.c
+index cb69b737cb49..56b695136977 100644
+--- a/drivers/ata/ahci_sunxi.c
++++ b/drivers/ata/ahci_sunxi.c
+@@ -200,7 +200,7 @@ static void ahci_sunxi_start_engine(struct ata_port *ap)
+ }
+ 
+ static const struct ata_port_info ahci_sunxi_port_info = {
+-	.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NCQ,
++	.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NCQ | ATA_FLAG_NO_DIPM,
+ 	.pio_mask	= ATA_PIO4,
+ 	.udma_mask	= ATA_UDMA6,
+ 	.port_ops	= &ahci_platform_ops,
+-- 
+2.26.2
 
