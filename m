@@ -2,40 +2,66 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97E21C433ED
-	for <linux-ide@archiver.kernel.org>; Mon, 26 Apr 2021 07:49:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 521BFC433ED
+	for <linux-ide@archiver.kernel.org>; Tue, 27 Apr 2021 01:52:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 62C696105A
-	for <linux-ide@archiver.kernel.org>; Mon, 26 Apr 2021 07:49:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 265BD610A2
+	for <linux-ide@archiver.kernel.org>; Tue, 27 Apr 2021 01:52:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233030AbhDZHuA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 26 Apr 2021 03:50:00 -0400
-Received: from outpost1.zedat.fu-berlin.de ([130.133.4.66]:59925 "EHLO
-        outpost1.zedat.fu-berlin.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233805AbhDZHtS (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 26 Apr 2021 03:49:18 -0400
-Received: from inpost2.zedat.fu-berlin.de ([130.133.4.69])
-          by outpost.zedat.fu-berlin.de (Exim 4.94)
-          with esmtps (TLS1.2)
-          tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-          (envelope-from <glaubitz@zedat.fu-berlin.de>)
-          id 1lavyt-002jmy-7Y; Mon, 26 Apr 2021 09:48:35 +0200
-Received: from p5b13a1ac.dip0.t-ipconnect.de ([91.19.161.172] helo=[192.168.178.139])
-          by inpost2.zedat.fu-berlin.de (Exim 4.94)
-          with esmtpsa (TLS1.2)
-          tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-          (envelope-from <glaubitz@physik.fu-berlin.de>)
-          id 1lavys-001VGa-Tl; Mon, 26 Apr 2021 09:48:35 +0200
+        id S232295AbhD0Bwy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 26 Apr 2021 21:52:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57282 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234084AbhD0Bwy (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 26 Apr 2021 21:52:54 -0400
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 458E6C061756;
+        Mon, 26 Apr 2021 18:52:12 -0700 (PDT)
+Received: by mail-pl1-x62c.google.com with SMTP id h20so29977093plr.4;
+        Mon, 26 Apr 2021 18:52:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=ip0eSI1farMX4K3ODhmhyZChk4nnRpiFSszhZ85Hdf0=;
+        b=LQzTHxQoV8KV5DU+t8nyytrlnHJVZFfwIEAkBqQxbcA9Xn2Ok7CbVZe+lkGicjERJm
+         20aS1msgES1liR2v34OqSC7UpJk5kXnts87+q4mglWMeTjikgPIZn1OqFbCGv9CA7B0R
+         bhRZFt7ggO46a84yggZyD/W3Og9uBANgKTtL+6rKO7TOanFtekvtvHO94RKFOCZFo6iI
+         EbFkx1BeeRTttADS7iSijSMByNW6YMuaenTkn8VehVNcXjv8hC0eHvDZa1loN8Ewiqv0
+         QJ7hW2J4ar4sgi6iWJAKyiC7qPXqIMA5Q8EYSQTDoCjD5QnLbz/AMAWc1g/9Pd2Affz1
+         gpgw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=ip0eSI1farMX4K3ODhmhyZChk4nnRpiFSszhZ85Hdf0=;
+        b=qUBEbGKG3D3DzcxwJsUrj878U8spi/gW1SLiV0t/Xx2G+UY6UX7hZs3X4ABxwpqPiH
+         8dSbKxwUvdcZiIQoVC7qv4VaFpD6TvT0/DLAxdEkzlnZLw/KbVJsX5uHId2zXK80XK/X
+         QxPjypfZ7FlS1pZiYYCSkTRsj+6YCEZVwhuRc9UeI9+X4y4aihrEoGAyYFU+2LrQB7ZE
+         I3Qj+Q2Ru30ABMenAp7Hr8McvTFt6AbHJSDXMVZ/alKeJ1WCbDKFjhwdIn+b+RC1z6ln
+         5VoC/AMHW7zpa3NSXEC+hMDMkHhARHKuyTHIj2MCTDNwRgmFYmuymY2DBw+BAxRtmv4T
+         Mo/Q==
+X-Gm-Message-State: AOAM5300Tpi0BZtzrmSS8mbPNjv44VXaIKO4do+6xnswiOoGH6uwwAhr
+        adz1/9BkskTVdUF6OLGGdzm+qrLYgMHFUw==
+X-Google-Smtp-Source: ABdhPJxvsVjkRZWoVnSOrnpiC1eSw6ZXTpruPjC8s1HqMbxtWRnt9wdHU5QEzbK50KAuDO2UjZsqHQ==
+X-Received: by 2002:a17:90a:b947:: with SMTP id f7mr24886598pjw.28.1619488331538;
+        Mon, 26 Apr 2021 18:52:11 -0700 (PDT)
+Received: from ?IPv6:2001:df0:0:200c:2d50:30a4:47de:1dd6? ([2001:df0:0:200c:2d50:30a4:47de:1dd6])
+        by smtp.gmail.com with ESMTPSA id w18sm791728pfq.133.2021.04.26.18.52.07
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 26 Apr 2021 18:52:11 -0700 (PDT)
 Subject: Re: [PATCH] m68k/mac: Replace macide driver with generic platform
  driver
-To:     Finn Thain <fthain@fastmail.com.au>
+To:     Finn Thain <fthain@fastmail.com.au>,
+        John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
 Cc:     Finn Thain <fthain@telegraphics.com.au>,
         Geert Uytterhoeven <geert@linux-m68k.org>,
-        Michael Schmitz <schmitzmic@gmail.com>,
         Christoph Hellwig <hch@lst.de>,
         Joshua Thompson <funaho@jurai.org>,
         "David S. Miller" <davem@davemloft.net>,
@@ -44,43 +70,33 @@ Cc:     Finn Thain <fthain@telegraphics.com.au>,
 References: <793432cca963b632709c4d1312baa9874d73e1d8.1619341585.git.fthain@telegraphics.com.au>
  <ba908b1d-eab5-a4e5-0c0a-2c745287d121@physik.fu-berlin.de>
  <10a08764-c138-9fe5-966c-ce68349b9b6@nippy.intranet>
-From:   John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
-Message-ID: <aa712e6d-e69d-8a24-252a-7951161e74c6@physik.fu-berlin.de>
-Date:   Mon, 26 Apr 2021 09:48:34 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.0
+From:   Michael Schmitz <schmitzmic@gmail.com>
+Message-ID: <65f01f42-31d9-522a-e690-73d286405a01@gmail.com>
+Date:   Tue, 27 Apr 2021 13:51:57 +1200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
 In-Reply-To: <10a08764-c138-9fe5-966c-ce68349b9b6@nippy.intranet>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Original-Sender: glaubitz@physik.fu-berlin.de
-X-Originating-IP: 91.19.161.172
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 4/26/21 9:37 AM, Finn Thain wrote:> If you enable CONFIG_IDE and CONFIG_BLK_DEV_PLATFORM, Quadras and 
-> Powerbooks will use the kernel/drivers/ide/ide_platform.ko module.
-> 
-> If you enable CONFIG_ATA and CONFIG_PATA_PLATFORM, Quadras and
-> Powerbooks will use the kernel/drivers/ata/pata_platform.ko module.
-> 
-> (If you enable all of the above, you may need to use a blacklist to ensure 
-> that the preferred driver module gets loaded.)
-> 
-> Was macide the only IDE driver in Debian/m68k kernels without a libata 
+Hi Finn,
+
+On 26/04/21 7:37 pm, Finn Thain wrote:
+> Was macide the only IDE driver in Debian/m68k kernels without a libata
 > alternative? If so, this patch would allow you to finally drop CONFIG_IDE.
+>
+There's still q40ide.c (ISA IDE interface, byte-swapped, so would need 
+treatment similar to Falcon IDE). Hasn't been updated to a platform 
+device yet.
 
-That's great to hear. It means that systems using the Mac IDE drivers will
-survive the legacy IDE removal if it ever comes.
+Cheers,
 
-So, thanks a lot for addressing this!
+     Michael
 
-Adrian
 
--- 
- .''`.  John Paul Adrian Glaubitz
-: :' :  Debian Developer - glaubitz@debian.org
-`. `'   Freie Universitaet Berlin - glaubitz@physik.fu-berlin.de
-  `-    GPG: 62FF 8A75 84E0 2956 9546  0006 7426 3B37 F5B5 F913
+
