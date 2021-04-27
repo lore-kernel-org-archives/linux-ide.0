@@ -2,242 +2,111 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-20.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EC84C433B4
-	for <linux-ide@archiver.kernel.org>; Tue, 27 Apr 2021 17:00:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BECE2C433B4
+	for <linux-ide@archiver.kernel.org>; Tue, 27 Apr 2021 19:29:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0937460240
-	for <linux-ide@archiver.kernel.org>; Tue, 27 Apr 2021 17:00:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A257861153
+	for <linux-ide@archiver.kernel.org>; Tue, 27 Apr 2021 19:29:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238640AbhD0RBG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 27 Apr 2021 13:01:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60344 "EHLO
+        id S236459AbhD0TaL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 27 Apr 2021 15:30:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36804 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238089AbhD0RAz (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 27 Apr 2021 13:00:55 -0400
-Received: from mail-io1-xd2e.google.com (mail-io1-xd2e.google.com [IPv6:2607:f8b0:4864:20::d2e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB403C06175F
-        for <linux-ide@vger.kernel.org>; Tue, 27 Apr 2021 10:00:10 -0700 (PDT)
-Received: by mail-io1-xd2e.google.com with SMTP id g125so5989015iof.3
-        for <linux-ide@vger.kernel.org>; Tue, 27 Apr 2021 10:00:10 -0700 (PDT)
+        with ESMTP id S235686AbhD0TaL (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 27 Apr 2021 15:30:11 -0400
+Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C78B7C061756;
+        Tue, 27 Apr 2021 12:29:27 -0700 (PDT)
+Received: by mail-pf1-x436.google.com with SMTP id a12so2262487pfc.7;
+        Tue, 27 Apr 2021 12:29:27 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=to:cc:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=1NzrBQsJWF4WoHy4tHLEbqAl0M9aCcHHmWxZlSiVLu8=;
-        b=Lh+N34dFUpS47izy71VVaSm96koFb8G2k6dpWK77gjDRf7vUha8F4XoEjeMSqyISeB
-         msu4uJKQAtY6fhX8Ogp1CutoiElPKp5My9vFUZc0N61LAj+cN0kqtbQ03B9n+oWhItDX
-         4+g0aP76wKEP3T7+dLd0kv0nquLNhdQPkdh7jYQ8+8C8hgPothIWZZa1l2hVqKMgCF+W
-         UTwbIv4Yhpbl85W2x+maXarVK9DcWktQMLvTcbEHct5GA9dIu4z4wCaOza0Sp+HRTbDf
-         kDoAE181JHpuk2fOc/SSIkFKS6S2ZzeTvba6VCSbFVmT73pF8ZvOWxL3J7AFoVv3mM79
-         WUTw==
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding:content-language;
+        bh=4DnDRAFKRSlzBzYaivgjtMj5wX1pqux3PzUstCHe6KE=;
+        b=BJ0bqGD8MnjBlehJ3RU4NzEVMGbtX/qpT5wYt8CP2afSy2MZcwNDHieJSEEM5Lg0c9
+         uScbs4PNygryH15EVVuS+mxcccHjOeNJYC9mjAePpSua+0jxDkWhwL0p/YRaEA3N8O6/
+         FE7hIyMF9zr69mdHJw/N+j0AMykr/u0WhuyEsRyljYaJ/IR619g8Oe4/OXaIeegz+wth
+         RMK8f+2XADN13ckRvaehiICCApPnizze+rD4rj/wAIFqwAd//1ASSvL2ARoAQc1h2Dx3
+         htsG4CBeez1H+RzRqO52VEnERgS1HNFpZv8XR9g1o8hlFKYezFWPufJo2bPoVUl9+Sxy
+         G9iw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=1NzrBQsJWF4WoHy4tHLEbqAl0M9aCcHHmWxZlSiVLu8=;
-        b=uT9vBd9mBvDBWKGFkkHgWOI4F4dCBwFNwE0lOqfiAzlpuDoguxaxEfdBWpH25YmytV
-         5e3R+ZiGJHT2TJW0cKsUjnHMdSjhsJbJ7Q52kSXckfA1w5Bxt32nUnGonqyUTDcqcjZz
-         DFck/ppfSdK1g57/86d7rkIVN5We6yA5dCWuQ+LMOp6fCSjlCx2E4xcK533ikoagdpts
-         +25vALy98c/B71eKe8ny7W1NaFOnstfQNAsUjFsNyT1QgE1gbGrqdSE5Yr4GsOLg05sD
-         8v9FNZfE8pu+/q/cmfHj8QvCaY1uPTEjWMNDmE2TKJRGg7n+Ava/GcQT9Yz2vWz8t+MR
-         jxKg==
-X-Gm-Message-State: AOAM531+/sUlO0188uz7UdLSbWCQ9tQJWaEnuUEZfOhfi17UXBuVOrdF
-        9rciJ8x94HRiM1avIlJhm8pd+T+SKtS8pA==
-X-Google-Smtp-Source: ABdhPJxGYmPJl1ni7V1tdgV+rYFyoM+flvMt6PvRifFx915XCT4Pw0orBm93J7V6/LY0W8DHnqsS1A==
-X-Received: by 2002:a6b:e903:: with SMTP id u3mr20258457iof.161.1619542809899;
-        Tue, 27 Apr 2021 10:00:09 -0700 (PDT)
-Received: from [192.168.1.30] ([65.144.74.34])
-        by smtp.gmail.com with ESMTPSA id n4sm1618086ilm.39.2021.04.27.10.00.09
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding
+         :content-language;
+        bh=4DnDRAFKRSlzBzYaivgjtMj5wX1pqux3PzUstCHe6KE=;
+        b=XPiO9k1PvlhXuEC2esXdX+Z8k05SL613It+eRXVLrnW3iUWpTGjFDMk66n0nX44eYu
+         yd/NR3PUoeTXvFTVGhlenWsHI/W8fdRRUg7Tv5rqkNN2p3kicL0dtalbEmI9Awj6GSGQ
+         +/T4wUuEzxG5L6+9jYSf6Qi9VTgBeWE3wYscwYamzOH+/5aII9lMMxcWnkgfpv9pkixr
+         TZ52HnlSLv6smpdw0T684WlOc4WF+zPawFnLhqOAs8GcaQqOV6zpmIlI9x4UWrbvfNKT
+         h6FgoBDQwUl5yVbRZHkjTzF80Nka8u0IsWKTRX4d5ohqsMfo2TT+FSx5PVkncP69GLwD
+         KPQA==
+X-Gm-Message-State: AOAM5320lvAg/wQWcCEZdH7DpMl4DVkRbryJOfO0DxhV/gd5xpg1LCRg
+        s5LXWrabZhdhe3i7KCaAg58jZEVDU1VRzA==
+X-Google-Smtp-Source: ABdhPJw9e+tGS96lq3oOZM/s//+pqsPvbTeG8lwZt6ks9l/bAzVja8Dc+WiCSP/HaeSr+dgWtdBX0A==
+X-Received: by 2002:a63:f90d:: with SMTP id h13mr5623041pgi.18.1619551767150;
+        Tue, 27 Apr 2021 12:29:27 -0700 (PDT)
+Received: from ?IPv6:2001:df0:0:200c:2d50:30a4:47de:1dd6? ([2001:df0:0:200c:2d50:30a4:47de:1dd6])
+        by smtp.gmail.com with ESMTPSA id k15sm3263204pfi.0.2021.04.27.12.29.22
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 27 Apr 2021 10:00:09 -0700 (PDT)
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Tue, 27 Apr 2021 12:29:26 -0700 (PDT)
+Subject: Re: [PATCH] m68k/mac: Replace macide driver with generic platform
+ driver
+To:     Sergei Shtylyov <sergei.shtylyov@gmail.com>,
+        Finn Thain <fthain@fastmail.com.au>,
+        John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+Cc:     Finn Thain <fthain@telegraphics.com.au>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Joshua Thompson <funaho@jurai.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
         linux-ide@vger.kernel.org
-From:   Jens Axboe <axboe@kernel.dk>
-Subject: [GIT PULL] libata changes for 5.13-rc
-Message-ID: <7a48da22-ec0b-f22a-bc0d-4ad76f712ef0@kernel.dk>
-Date:   Tue, 27 Apr 2021 11:00:09 -0600
+References: <793432cca963b632709c4d1312baa9874d73e1d8.1619341585.git.fthain@telegraphics.com.au>
+ <ba908b1d-eab5-a4e5-0c0a-2c745287d121@physik.fu-berlin.de>
+ <10a08764-c138-9fe5-966c-ce68349b9b6@nippy.intranet>
+ <65f01f42-31d9-522a-e690-73d286405a01@gmail.com>
+ <dbd5ddaa-c0ee-5aad-20d9-7fae5e2618af@gmail.com>
+From:   Michael Schmitz <schmitzmic@gmail.com>
+Message-ID: <7c5eae75-d1de-171a-07ad-9c34ec7325b2@gmail.com>
+Date:   Wed, 28 Apr 2021 07:29:20 +1200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <dbd5ddaa-c0ee-5aad-20d9-7fae5e2618af@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Linus,
+On 27/04/21 8:11 pm, Sergei Shtylyov wrote:
+> On 27.04.2021 4:51, Michael Schmitz wrote:
+>
+>>> Was macide the only IDE driver in Debian/m68k kernels without a libata
+>>> alternative? If so, this patch would allow you to finally drop 
+>>> CONFIG_IDE.
+>>>
+>> There's still q40ide.c (ISA IDE interface, byte-swapped, so would 
+>> need treatment similar to Falcon IDE). Hasn't been updated to a 
+>> platform device yet.
+>
+>    ISA drivers shouldn't be "updated" to the platform drivers. But I 
+> don't see 'struct isa_driver' there either...
 
-Mostly cleanups this time, but also a few additions:
+My bad - while the Q40 has ISA slots, IDE isn't connected to the ISA 
+bus. Got confused by the base address range matching what I remember 
+from ISA cards...
 
-- kernel-doc cleanups and sanitization (Lee)
+Cheers,
 
-- Spelling fix (Bhaskar)
+     Michael
 
-- Fix ata_qc_from_tag() return value check in dwc_460ex (Dinghao)
-
-- Fall-through warning fix (Gustavo)
-
-- IRQ registration fixes (Sergey)
-
-- Add AHCI support for Tegra186 (Sowjanya)
-
-- Add xiling phy support for AHCI (Piyush)
-
-- SXS disable fix for AHCI for Hisilicon Kunpeng920 (Xingui)
-
-- pata legacy probe mask support (Maciej)
-
-Please pull!
-
-
-The following changes since commit a38fd8748464831584a19438cbb3082b5a2dab15:
-
-  Linux 5.12-rc2 (2021-03-05 17:33:41 -0800)
-
-are available in the Git repository at:
-
-  git://git.kernel.dk/linux-block.git tags/for-5.13/libata-2021-04-27
-
-for you to fetch changes up to e06abcc68cb555377efd5aa781c014d3d68498b6:
-
-  libata: Fix fall-through warnings for Clang (2021-04-20 14:23:17 -0600)
-
-----------------------------------------------------------------
-for-5.13/libata-2021-04-27
-
-----------------------------------------------------------------
-Bhaskar Chowdhury (1):
-      ata: Trivial spelling fixes in the file pata_ns87415.c
-
-Dinghao Liu (1):
-      sata_dwc_460ex: Fix missing check in sata_dwc_isr
-
-Gustavo A. R. Silva (1):
-      libata: Fix fall-through warnings for Clang
-
-Junlin Yang (1):
-      pata_ipx4xx_cf: Fix unsigned comparison with less than zero
-
-Lee Jones (35):
-      ata: libata-transport: Fix some potential doc-rot issues
-      ata: libata-sata: Fix function names in header comments
-      ata: libata-pmp: Fix misspelling of 'val'
-      ata: pata_ali: Repair some misnamed kernel-doc issues
-      ata: pata_artop: Fix a function name and parameter description
-      ata: pata_amd: Remove superfluous, add missing and fix broken params
-      ata: pata_hpt366: Provide missing description for 'hpt366_filter()'s 'mask' param
-      ata: pata_hpt37x: Fix some function misnaming and missing param issues
-      ata: ahci_xgene: Fix incorrect naming of 'xgene_ahci_handle_broken_edge_irq()'s 'host' param
-      ata: sata_mv: Fix worthy headers and demote others
-      ata: pata_ali: Supply description for 'ali_20_filter()'s 'mask' param
-      ata: pata_amd: Fix incorrectly named function in the header
-      ata: pata_artop: Repair possible copy/paste issue in 'artop_6210_qc_defer()'s header
-      ata: pata_atiixp: Fix a function name and supply description for 'pio'
-      ata: pata_cs5520: Add a couple of missing param descriptions
-      ata: pata_hpt3x2n: Fix possible doc-rotted function name
-      ata: pata_marvell: Fix incorrectly documented function parameter
-      ata: pata_jmicron: Fix incorrectly documented function parameter
-      ata: pata_optidma: Fix a function misnaming, a formatting issue and a missing description
-      ata: pata_pdc2027x: Fix some incorrect function names and parameter docs
-      ata: pata_pdc202xx_old: Fix some incorrectly named functions
-      ata: pata_sil680: Add some missing function parameter docs
-      ata: pata_sis: Remove superfluous param description and supply another
-      ata: pata_triflex: Repair some misnamed functions and fix some param descriptions
-      ata: pata_it821x: Fix possible doc-rotted function names
-      ata: pata_via: Fix a kernel-doc formatting issue
-      ata: pata_piccolo: 'ata_tosh_init()' is misnamed in its header
-      ata: pata_sl82c105: Fix potential doc-rot
-      ata: pata_opti: Fix spelling issue of 'val' in 'opti_write_reg()'
-      ata: ata_generic: Fix misspelling of 'ata_generic_init_one()'
-      ata: pata_legacy: Repair a couple kernel-doc problems
-      ata: pata_cs5530: Fix misspelling of 'cs5530_init_one()'s 'pdev' param
-      ata: sata_mv: Fix misnaming of 'mv_bmdma_stop()'
-      ata: libata-acpi: Fix function name and provide description for 'prev_gtf'
-      ata: pata_acpi: Fix some incorrect function param descriptions
-
-Maciej W. Rozycki (3):
-      pata_legacy: Properly document module parameters
-      pata_platform: Document `pio_mask' module parameter
-      pata_legacy: Add `probe_mask' parameter like with ide-generic
-
-Piyush Mehta (3):
-      dt-bindings: ata: ahci: ceva: Update documentation for CEVA Controller
-      ata: ahci: ceva: Update the driver to support xilinx GT phy
-      ata: ahci: ceva: Updated code by using dev_err_probe()
-
-Sergey Shtylyov (4):
-      pata_arasan_cf: fix IRQ check
-      pata_ipx4xx_cf: fix IRQ check
-      sata_mv: add IRQ checks
-      ata: libahci_platform: fix IRQ check
-
-Sowjanya Komatineni (4):
-      dt-bindings: ata: tegra: Convert binding documentation to YAML
-      dt-binding: ata: tegra: Add dt-binding documentation for Tegra186
-      ata: ahci_tegra: Add AHCI support for Tegra186
-      ata: ahci_tegra: call tegra_powergate_power_off only when PM domain is not present
-
-Xingui Yang (1):
-      ata: ahci: Disable SXS for Hisilicon Kunpeng920
-
- Documentation/admin-guide/kernel-parameters.txt    |  90 +++++++++++
- .../devicetree/bindings/ata/ahci-ceva.txt          |   4 +
- .../devicetree/bindings/ata/nvidia,tegra-ahci.yaml | 176 +++++++++++++++++++++
- .../bindings/ata/nvidia,tegra124-ahci.txt          |  44 ------
- drivers/ata/ahci.c                                 |   5 +
- drivers/ata/ahci.h                                 |   1 +
- drivers/ata/ahci_ceva.c                            |  41 ++++-
- drivers/ata/ahci_tegra.c                           |  66 ++++++--
- drivers/ata/ahci_xgene.c                           |   2 +-
- drivers/ata/ata_generic.c                          |   2 +-
- drivers/ata/libahci.c                              |   5 +
- drivers/ata/libahci_platform.c                     |   4 +-
- drivers/ata/libata-acpi.c                          |   3 +-
- drivers/ata/libata-eh.c                            |   1 +
- drivers/ata/libata-pmp.c                           |   2 +-
- drivers/ata/libata-sata.c                          |   4 +-
- drivers/ata/libata-transport.c                     |   6 +-
- drivers/ata/pata_acpi.c                            |   6 +-
- drivers/ata/pata_ali.c                             |   6 +-
- drivers/ata/pata_amd.c                             |   6 +-
- drivers/ata/pata_arasan_cf.c                       |  15 +-
- drivers/ata/pata_artop.c                           |   4 +-
- drivers/ata/pata_atiixp.c                          |   3 +-
- drivers/ata/pata_cs5520.c                          |   2 +
- drivers/ata/pata_cs5530.c                          |   2 +-
- drivers/ata/pata_hpt366.c                          |   1 +
- drivers/ata/pata_hpt37x.c                          |   6 +-
- drivers/ata/pata_hpt3x2n.c                         |   2 +-
- drivers/ata/pata_it821x.c                          |   4 +-
- drivers/ata/pata_ixp4xx_cf.c                       |   8 +-
- drivers/ata/pata_jmicron.c                         |   2 +-
- drivers/ata/pata_legacy.c                          | 106 ++++++++-----
- drivers/ata/pata_marvell.c                         |   2 +-
- drivers/ata/pata_ns87415.c                         |   4 +-
- drivers/ata/pata_opti.c                            |   2 +-
- drivers/ata/pata_optidma.c                         |   5 +-
- drivers/ata/pata_pdc2027x.c                        |  10 +-
- drivers/ata/pata_pdc202xx_old.c                    |   4 +-
- drivers/ata/pata_piccolo.c                         |   2 +-
- drivers/ata/pata_platform.c                        |   4 +-
- drivers/ata/pata_sil680.c                          |   2 +
- drivers/ata/pata_sis.c                             |   2 +-
- drivers/ata/pata_sl82c105.c                        |   2 +-
- drivers/ata/pata_triflex.c                         |   7 +-
- drivers/ata/pata_via.c                             |   2 +-
- drivers/ata/sata_dwc_460ex.c                       |  10 ++
- drivers/ata/sata_mv.c                              |  18 ++-
- 47 files changed, 538 insertions(+), 167 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ata/nvidia,tegra-ahci.yaml
- delete mode 100644 Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt
-
--- 
-Jens Axboe
 
