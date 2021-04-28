@@ -2,99 +2,109 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17F98C433ED
-	for <linux-ide@archiver.kernel.org>; Wed, 28 Apr 2021 06:53:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F85AC433B4
+	for <linux-ide@archiver.kernel.org>; Wed, 28 Apr 2021 08:40:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DBFA46141B
-	for <linux-ide@archiver.kernel.org>; Wed, 28 Apr 2021 06:53:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F1B761154
+	for <linux-ide@archiver.kernel.org>; Wed, 28 Apr 2021 08:40:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236357AbhD1Gyb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 28 Apr 2021 02:54:31 -0400
-Received: from mail-vs1-f51.google.com ([209.85.217.51]:34728 "EHLO
-        mail-vs1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234373AbhD1Gy3 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 28 Apr 2021 02:54:29 -0400
-Received: by mail-vs1-f51.google.com with SMTP id d25so24681894vsp.1;
-        Tue, 27 Apr 2021 23:53:45 -0700 (PDT)
+        id S236805AbhD1Ill (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 28 Apr 2021 04:41:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40728 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231635AbhD1Ill (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 28 Apr 2021 04:41:41 -0400
+Received: from mail-lf1-x131.google.com (mail-lf1-x131.google.com [IPv6:2a00:1450:4864:20::131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 88779C061574;
+        Wed, 28 Apr 2021 01:40:56 -0700 (PDT)
+Received: by mail-lf1-x131.google.com with SMTP id 2so5173677lft.4;
+        Wed, 28 Apr 2021 01:40:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:organization:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=oVYoHb0j5VFpSmctH5aR8XGJ4ktZiFaaq0zVF+LId6M=;
+        b=VmsGeVNhBij6WOHJ1eY4hSlEkPPsps8a7tFi36TLwEKoHl8nZdwE1/LgTd1Zscl3lS
+         l5JyzVZKh4Uoiawv1bs2Qwho0siLbLViBIhfa147ATHN8KIECJHBlDS5zM5F2efuzjg+
+         4yXj3IYXKVfY4P61gl5P7cdnbFfqGpd7nYy9bLtBPi8VPYqRLmP+xRT6TaynchVkqVHc
+         +zFjKDvG4BFm+y0hOAmutAKije5e8uslKiP64BJvnaYvHFe+iI9rMxVNzIUvWiY0JpWx
+         EvUJ+7BYCtxK9Aw/+xyZOgqc/u98NqF3QnVE37EQPbWtUY+2ilLhnpQHnDN4zHfAvA4K
+         ke0g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Qcj7/vi64EhvIZ063r8YI4RxRFbLfs3PNow3a+YW0lg=;
-        b=cAf6/mnqHqiNQeHBaIyvNmZqvu+ZKQN1PDms4OPyi/+AcJGZicWBqJGrEiwdxKLfaa
-         IcaENgQcasrWvyaoy75av4ukXV7DEAaofWRXaOEAqZP7x7kfM+KGkJP2Iwj0sQ1bVft9
-         AyD9ZMSQWzKQXXbB7sNPwGy5BCbeD46h5oE7+wsm6SJ6bE3gj9KXO0bDz3A/Bh2U/q2v
-         tNCo4WhxXY5GaxfRL4X/RPn0G21f3BFOBZA4KxPs+NZeSC/BqyKFVO+FP3Ihq5D4p9ZB
-         SwGYXsSpeXQ99bbRWPlFE0EWx7onae6BdqOqdoR7hhASNlTPWjW3S3PmJQWE/XwtIwJ+
-         CcoQ==
-X-Gm-Message-State: AOAM531Dv13R6bucoaudH68z3V1YZHf9Uc4nHO14O0rCBY96YxlJuEjH
-        HZZ3eo32D38/xnQTLHvgaf26ckAKz5+RRIo0PMY=
-X-Google-Smtp-Source: ABdhPJyELbGS2kG/kxrsEFotGwuE+59fsAnvQWK55bL61m1yNIRT7/aVm3vglBf6ZYvQwO5jkVSO99DpOIS8s+tQ5cQ=
-X-Received: by 2002:a67:8745:: with SMTP id j66mr23450138vsd.18.1619592824818;
- Tue, 27 Apr 2021 23:53:44 -0700 (PDT)
+        h=x-gm-message-state:subject:to:cc:references:from:organization
+         :message-id:date:user-agent:mime-version:in-reply-to
+         :content-language:content-transfer-encoding;
+        bh=oVYoHb0j5VFpSmctH5aR8XGJ4ktZiFaaq0zVF+LId6M=;
+        b=WAf6VL/uuDWlLH/j7SPApNObmMhT0EXfUwri7QXJ7/E23HwxN6LrEMKNEE3tiRFuhp
+         GySKlguqXvmLq9BWrvfOAAdijcRPdt6i4u7cVFEH0Y/+qZcScckpxgedECKurnfjCUgi
+         UfW5YX9gjIvpbezvIkYYrEeDiiiF995L3WPYDtIGN1DeaAklHFsgW5PCzEKnE05qf0+F
+         7N6bVRZAEDogi9hBCVVm+3fxYYCg5bp6IoK30ZIR/H0VhQhBnarNsjap7ff8T9cKqZNE
+         rZCexsrpd7kbKXEtetvMwJ8qsBqHSA0nT8L2ztCk88lWv0Ism/rvJc9mk2b37VyCSj2n
+         qTPw==
+X-Gm-Message-State: AOAM530f92RG+qSGUaB8VQAEbgfEmOjDcXhf0E5jQT2n9GjK4MeJ1X49
+        DBxH4OJfJFnAzCPipeolh2xXPkaF4ME=
+X-Google-Smtp-Source: ABdhPJyoXlMRwGItruwsciGuyz3DA7HhF4EfUhAvxkd5DHvXOkbFQAE5LlaG+9S92qRtX/BA+PDpFQ==
+X-Received: by 2002:a05:6512:3c8c:: with SMTP id h12mr19976447lfv.388.1619599254899;
+        Wed, 28 Apr 2021 01:40:54 -0700 (PDT)
+Received: from [192.168.1.100] ([31.173.87.27])
+        by smtp.gmail.com with ESMTPSA id a20sm1005787ljd.105.2021.04.28.01.40.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 28 Apr 2021 01:40:54 -0700 (PDT)
+Subject: Re: [PATCH] ata: ahci_sunxi: Disable DIPM
+To:     Timo Sigurdsson <public_timo.s@silentcreek.de>, axboe@kernel.dk,
+        mripard@kernel.org, wens@csie.org, jernej.skrabec@siol.net,
+        linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-sunxi@lists.linux.dev, linux-kernel@vger.kernel.org
+Cc:     oliver@schinagl.nl, stable@vger.kernel.org
+References: <20210427230537.21423-1-public_timo.s@silentcreek.de>
+From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Organization: Brain-dead Software
+Message-ID: <24eb672c-9772-4e3f-e3de-0fe3390c659f@gmail.com>
+Date:   Wed, 28 Apr 2021 11:40:44 +0300
+User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.0
 MIME-Version: 1.0
-References: <793432cca963b632709c4d1312baa9874d73e1d8.1619341585.git.fthain@telegraphics.com.au>
- <ba908b1d-eab5-a4e5-0c0a-2c745287d121@physik.fu-berlin.de>
- <10a08764-c138-9fe5-966c-ce68349b9b6@nippy.intranet> <65f01f42-31d9-522a-e690-73d286405a01@gmail.com>
- <9650358f-a789-7dbd-4495-1d39ff321ded@nippy.intranet> <ada88dd6-f8d7-11dc-9a89-5c7e437a0981@gmail.com>
-In-Reply-To: <ada88dd6-f8d7-11dc-9a89-5c7e437a0981@gmail.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Wed, 28 Apr 2021 08:53:33 +0200
-Message-ID: <CAMuHMdUy_B_+pHZQpnDHYsee+gpXOs9ek_HaVxLjE2HVfGmLQg@mail.gmail.com>
-Subject: Re: [PATCH] m68k/mac: Replace macide driver with generic platform driver
-To:     Michael Schmitz <schmitzmic@gmail.com>
-Cc:     Finn Thain <fthain@fastmail.com.au>,
-        John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
-        Christoph Hellwig <hch@lst.de>,
-        Joshua Thompson <funaho@jurai.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        linux-m68k <linux-m68k@lists.linux-m68k.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-ide@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20210427230537.21423-1-public_timo.s@silentcreek.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Michael,
+Hello!
 
-On Tue, Apr 27, 2021 at 9:55 PM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> On 27/04/21 3:47 pm, Finn Thain wrote:
-> > On Tue, 27 Apr 2021, Michael Schmitz wrote:
-> >> On 26/04/21 7:37 pm, Finn Thain wrote:
-> >>> Was macide the only IDE driver in Debian/m68k kernels without a libata
-> >>> alternative? If so, this patch would allow you to finally drop
-> >>> CONFIG_IDE.
-> >>>
-> >> There's still q40ide.c (ISA IDE interface, byte-swapped, so would need
-> >> treatment similar to Falcon IDE). Hasn't been updated to a platform
-> >> device yet.
-> >>
-> > AIUI, q40 support is not included in Debian/m68k kernel builds.
-> I see.
-> > I wonder whether q40 could re-use the pata_falcon driver . I suppose
->
-> I'm pretty sure it could, but there is no reason why it would have to be
-> crippled in that way. Interrupts should work perfectly fine with IDE on
-> Q40.
->
-> There is another reason why using the same module binary for both might
-> fail - the awkward address translation code in io_mm.h. Not certain at
-> all whether we can even have Q40 and Atari in the same kernel binary...
+On 28.04.2021 2:05, Timo Sigurdsson wrote:
 
-That's supposed to work, else our multi_defconfig is broken.
+> DIPM is unsupported or broken on sunxi. Trying to enable the power
+> management policy med_power_with_dipm on an Allwinner A20 SoC based board
+> leads to immediate I/O errors and the attached SATA disk disappears from
+> the /dev filesystem. A reset (power cycle) is required to make the SATA
+> controller or disk work again. The A10 and A20 SoC data sheets and manuals
+> don't mention DIPM at all [1], so it's fair to assume that it's simply not
+> supported. But even if it were, it should be considered broken and best be
+                             ^ was
 
-Gr{oetje,eeting}s,
+> disabled in the ahci_sunxi driver.
+> 
+> Fixes: c5754b5220f0 ("ARM: sunxi: Add support for Allwinner SUNXi SoCs sata to ahci_platform")
 
-                        Geert
+    The "Fixes:" tag should immediately precede the signoff tag...
 
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+> [1] https://github.com/allwinner-zh/documents/tree/master/
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+    And this line should be immediately after the patch description.
+
+> Signed-off-by: Timo Sigurdsson <public_timo.s@silentcreek.de>
+> Tested-by: Timo Sigurdsson <public_timo.s@silentcreek.de>
+[...]
+
+MBR, Sergei
