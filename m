@@ -2,123 +2,106 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99BE1C43461
-	for <linux-ide@archiver.kernel.org>; Mon,  3 May 2021 16:50:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 838D9C433ED
+	for <linux-ide@archiver.kernel.org>; Mon,  3 May 2021 18:57:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A73460FD7
-	for <linux-ide@archiver.kernel.org>; Mon,  3 May 2021 16:50:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5437C611C9
+	for <linux-ide@archiver.kernel.org>; Mon,  3 May 2021 18:57:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232177AbhECQu7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 3 May 2021 12:50:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:32850 "EHLO mail.kernel.org"
+        id S229560AbhECS6w (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 3 May 2021 14:58:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51582 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233847AbhECQtc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 3 May 2021 12:49:32 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 898976192F;
-        Mon,  3 May 2021 16:40:25 +0000 (UTC)
+        id S229522AbhECS6v (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 3 May 2021 14:58:51 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D812461153;
+        Mon,  3 May 2021 18:57:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620060026;
-        bh=tDBr1YL/om3BA+QjbMhSLmv9DZ+RSwDryarvMp7Ab2I=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ryN2woFTjvY6dGfLsBJg7n+B0So43GjijR7z33JNfvNfHCoqH2R6RUKF3v4W9876m
-         0fFsJ7OqVD/w1AqSbzwg9CJ67DkHkLGLtAieKQlT/bWbtEybm3mtAxA8uNmdTxOYnP
-         bN9C2lUFMoqX67H1LVJcQ0uUXVsi6QttYgW83RwKi4rcQiTCWRQm/wFv3mb1DdWkb0
-         Cr88go6Y0FdYPYXmNDaotLG6xWpqRH+fkAbI5U73UhB0eZMR78kxB3+l1KW38N0OQl
-         twELKZSQp+3vawB5jJvq3s8eYyLA2yWmXEZnuTWroLaNk3R75xbJ/L/YJPo8+emNx7
-         yX0nH79cKv/+w==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Xingui Yang <yangxingui@huawei.com>,
-        Luo Jiaxing <luojiaxing@huawei.com>,
-        John Garry <john.garry@huawei.com>,
-        Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
-        linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 29/57] ata: ahci: Disable SXS for Hisilicon Kunpeng920
-Date:   Mon,  3 May 2021 12:39:13 -0400
-Message-Id: <20210503163941.2853291-29-sashal@kernel.org>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210503163941.2853291-1-sashal@kernel.org>
-References: <20210503163941.2853291-1-sashal@kernel.org>
+        s=k20201202; t=1620068278;
+        bh=cQ75rdudKQ/QAGQKDKaMh2yRb48TX9KsOBfAfYu9N7E=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=sJZy4fWaeT/ZWrSgcd57XTlmRT2guB3g7nFyaLh3Kpz/Ky20f9h7KZbGwMNf46S7u
+         GKObapn7TwMpwbqXKm+dtXFzVY2ECL0edaxcq2qo3/3Gd7vkje81KU2TxcvDx+jI5H
+         IsCxTuGcrTHt3zwHGDDFLKxwPjthmth0bcNVQj1NmudaJ2UbCfepGpU80AK4dEfoig
+         vo8U6LS18a7PQIOHk/rngm8juav6OHXhibxHheW64HAo4uQJT++O4S5Nr1JECdsiay
+         meD5lbXc+UkqeGFP85RrsRetmZ2UkUbbc6fPWIgNn3cvIHe94PUq5tVHAKECle03i1
+         r5E8EQS2+F3oA==
+Date:   Mon, 3 May 2021 13:57:56 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Jim Quinlan <jim2101024@gmail.com>
+Cc:     Amjad Ouled-Ameur <aouledameur@baylibre.com>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        linux-pci@vger.kernel.org,
+        Nicolas Saenz Julienne <nsaenzjulienne@suse.de>,
+        bcm-kernel-feedback-list@broadcom.com, james.quinlan@broadcom.com,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Jim Quinlan <jquinlan@broadcom.com>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" 
+        <linux-rpi-kernel@lists.infradead.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v6 0/3] ata: ahci_brcm: Fix use of BCM7216 reset
+ controller
+Message-ID: <20210503185756.GA993240@bjorn-Precision-5520>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210430152156.21162-1-jim2101024@gmail.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Xingui Yang <yangxingui@huawei.com>
+On Fri, Apr 30, 2021 at 11:21:53AM -0400, Jim Quinlan wrote:
+> v6 -- Added new commit which adds a missing function to the reset API.
+>       This fixes 557acb3d2cd9 and should be destined for linux stable.
+> 
+> v5 -- Improved (I hope) commit description (Bjorn).
+>    -- Rnamed error labels (Krzyszt).
+>    -- Fixed typos.
+> 
+> v4 -- does not rely on a pending commit, unlike v3.
+> 
+> v3 -- discard commit from v2; instead rely on the new function
+>       reset_control_rearm provided in a recent commit [1] applied
+>       to reset/next.
+>    -- New commit to correct pcie-brcmstb.c usage of a reset controller
+>       to use reset/rearm verses deassert/assert.
+> 
+> v2 -- refactor rescal-reset driver to implement assert/deassert rather than
+>       reset because the reset call only fires once per lifetime and we need
+>       to reset after every resume from S2 or S3.
+>    -- Split the use of "ahci" and "rescal" controllers in separate fields
+>       to keep things simple.
+> 
+> v1 -- original
+> 
+> Jim Quinlan (3):
+>   reset: add missing empty function reset_control_rearm()
+>   ata: ahci_brcm: Fix use of BCM7216 reset controller
+>   PCI: brcmstb: Use reset/rearm instead of deassert/assert
+> 
+>  drivers/ata/ahci_brcm.c               | 46 +++++++++++++--------------
+>  drivers/pci/controller/pcie-brcmstb.c | 19 +++++++----
+>  include/linux/reset.h                 |  5 +++
+>  3 files changed, 41 insertions(+), 29 deletions(-)
 
-[ Upstream commit 234e6d2c18f5b080cde874483c4c361f3ae7cffe ]
+I provisionally applied these to my pci/brcmstb branch for v5.13.
 
-On Hisilicon Kunpeng920, ESP is set to 1 by default for all ports of
-SATA controller. In some scenarios, some ports are not external SATA ports,
-and it cause disks connected to these ports to be identified as removable
-disks. So disable the SXS capability on the software side to prevent users
-from mistakenly considering non-removable disks as removable disks and
-performing related operations.
+I carried forward Jens' ack on "ata: ahci_brcm: Fix use of BCM7216
+reset controller" since the patch is identical to the v5 version that
+he acked.
 
-Signed-off-by: Xingui Yang <yangxingui@huawei.com>
-Signed-off-by: Luo Jiaxing <luojiaxing@huawei.com>
-Reviewed-by: John Garry <john.garry@huawei.com>
-Link: https://lore.kernel.org/r/1615544676-61926-1-git-send-email-luojiaxing@huawei.com
-Signed-off-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/ata/ahci.c    | 5 +++++
- drivers/ata/ahci.h    | 1 +
- drivers/ata/libahci.c | 5 +++++
- 3 files changed, 11 insertions(+)
+I'm hoping to get an ack from Philipp for the reset.h change.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index d33528033042..8beb418ce167 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1728,6 +1728,11 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		hpriv->flags |= AHCI_HFLAG_NO_DEVSLP;
- 
- #ifdef CONFIG_ARM64
-+	if (pdev->vendor == PCI_VENDOR_ID_HUAWEI &&
-+	    pdev->device == 0xa235 &&
-+	    pdev->revision < 0x30)
-+		hpriv->flags |= AHCI_HFLAG_NO_SXS;
-+
- 	if (pdev->vendor == 0x177d && pdev->device == 0xa01c)
- 		hpriv->irq_handler = ahci_thunderx_irq_handler;
- #endif
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 9ef62e647cd2..732912cd4e08 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -242,6 +242,7 @@ enum {
- 							suspend/resume */
- 	AHCI_HFLAG_IGN_NOTSUPP_POWER_ON	= (1 << 27), /* ignore -EOPNOTSUPP
- 							from phy_power_on() */
-+	AHCI_HFLAG_NO_SXS		= (1 << 28), /* SXS not supported */
- 
- 	/* ap->flags bits */
- 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index ea5bf5f4cbed..fec2e9754aed 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -493,6 +493,11 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
- 		cap |= HOST_CAP_ALPM;
- 	}
- 
-+	if ((cap & HOST_CAP_SXS) && (hpriv->flags & AHCI_HFLAG_NO_SXS)) {
-+		dev_info(dev, "controller does not support SXS, disabling CAP_SXS\n");
-+		cap &= ~HOST_CAP_SXS;
-+	}
-+
- 	if (hpriv->force_port_map && port_map != hpriv->force_port_map) {
- 		dev_info(dev, "forcing port_map 0x%x -> 0x%x\n",
- 			 port_map, hpriv->force_port_map);
--- 
-2.30.2
-
+Bjorn
