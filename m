@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A623C4360C
-	for <linux-ide@archiver.kernel.org>; Mon,  3 May 2021 16:45:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2DE2C433B4
+	for <linux-ide@archiver.kernel.org>; Mon,  3 May 2021 16:50:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 338ED613B4
-	for <linux-ide@archiver.kernel.org>; Mon,  3 May 2021 16:45:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5112613B3
+	for <linux-ide@archiver.kernel.org>; Mon,  3 May 2021 16:50:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231622AbhECQpy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 3 May 2021 12:45:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48560 "EHLO mail.kernel.org"
+        id S232917AbhECQu5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 3 May 2021 12:50:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60624 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232363AbhECQne (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 3 May 2021 12:43:34 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 788B2613CC;
-        Mon,  3 May 2021 16:38:25 +0000 (UTC)
+        id S232606AbhECQrk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 3 May 2021 12:47:40 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 00A176141A;
+        Mon,  3 May 2021 16:39:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620059906;
+        s=k20201202; t=1620059979;
         bh=2NP5te+jZbVJI9Ngj88cWMuWA5RVvd7pvJ2s2BY2Bss=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=O6IYAni00QihauiffYeX6E0I9tadEonZGlYqqACaxGAEnb5CKIdilcuxwZRrqiNfu
-         /XYQdaEebngWnDHez+9tfYOOtOCKfk2NpPP9Nd9AaiUN+c9nJ3rDyviFMj29XxziCw
-         bxJizly3Cd2XBINrZtxA9KSXXy9bo9JX559Popj0Sw/vGrE2x2RUrcQ+tyRsEfwYgI
-         battUkq8qMGSP2DSpgsMdhfye+GoKrijQ5ofjJAVQfLB94OV8qeSF+0wEEhwvS3pbk
-         OyusEwL5dHvDRprbPMmnj5yinIweErkWZpum+VIHXC7Uo5zrXNurjJX0jwUiXLZDE5
-         LuZkv/+B7kfmw==
+        b=bruVSVTEznzukhtEDLhJGvrab44J41Ppa377Ij/GN+76cINSAYEdtfPIIO6WWAEDI
+         ZAAkK/yquaaJfC+NSbXmTzi5ACIHy47U26K2zHhNckBqLqpISk017sdgrRGDwF83Ml
+         6XLvpZWfMM6emUyrLLqgxVDIP0P2WuZBXdG7Fw0CfBB4g5RCvA2th7GJij6+ExpH8B
+         oKhjTqykghmXzfLAqHFV4qsAhDh/5Kr6SbZN49BIDEBCDsY4ZT9gTbPqSlDFPMsEtS
+         te94xL+EgEnm2uF5sJLdbtfiKoZDq49rS1GaZYb48aXl+DVgg0hGm+IkEqMxtazo5M
+         yyeKppfRaFgGA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Xingui Yang <yangxingui@huawei.com>,
@@ -38,12 +38,12 @@ Cc:     Xingui Yang <yangxingui@huawei.com>,
         John Garry <john.garry@huawei.com>,
         Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
         linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.11 056/115] ata: ahci: Disable SXS for Hisilicon Kunpeng920
-Date:   Mon,  3 May 2021 12:36:00 -0400
-Message-Id: <20210503163700.2852194-56-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 045/100] ata: ahci: Disable SXS for Hisilicon Kunpeng920
+Date:   Mon,  3 May 2021 12:37:34 -0400
+Message-Id: <20210503163829.2852775-45-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210503163700.2852194-1-sashal@kernel.org>
-References: <20210503163700.2852194-1-sashal@kernel.org>
+In-Reply-To: <20210503163829.2852775-1-sashal@kernel.org>
+References: <20210503163829.2852775-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
