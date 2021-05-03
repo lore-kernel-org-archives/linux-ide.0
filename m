@@ -5,32 +5,32 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2DE2C433B4
-	for <linux-ide@archiver.kernel.org>; Mon,  3 May 2021 16:50:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99BE1C43461
+	for <linux-ide@archiver.kernel.org>; Mon,  3 May 2021 16:50:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C5112613B3
-	for <linux-ide@archiver.kernel.org>; Mon,  3 May 2021 16:50:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6A73460FD7
+	for <linux-ide@archiver.kernel.org>; Mon,  3 May 2021 16:50:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232917AbhECQu5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 3 May 2021 12:50:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60624 "EHLO mail.kernel.org"
+        id S232177AbhECQu7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 3 May 2021 12:50:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:32850 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232606AbhECQrk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 3 May 2021 12:47:40 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 00A176141A;
-        Mon,  3 May 2021 16:39:37 +0000 (UTC)
+        id S233847AbhECQtc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 3 May 2021 12:49:32 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 898976192F;
+        Mon,  3 May 2021 16:40:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1620059979;
-        bh=2NP5te+jZbVJI9Ngj88cWMuWA5RVvd7pvJ2s2BY2Bss=;
+        s=k20201202; t=1620060026;
+        bh=tDBr1YL/om3BA+QjbMhSLmv9DZ+RSwDryarvMp7Ab2I=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bruVSVTEznzukhtEDLhJGvrab44J41Ppa377Ij/GN+76cINSAYEdtfPIIO6WWAEDI
-         ZAAkK/yquaaJfC+NSbXmTzi5ACIHy47U26K2zHhNckBqLqpISk017sdgrRGDwF83Ml
-         6XLvpZWfMM6emUyrLLqgxVDIP0P2WuZBXdG7Fw0CfBB4g5RCvA2th7GJij6+ExpH8B
-         oKhjTqykghmXzfLAqHFV4qsAhDh/5Kr6SbZN49BIDEBCDsY4ZT9gTbPqSlDFPMsEtS
-         te94xL+EgEnm2uF5sJLdbtfiKoZDq49rS1GaZYb48aXl+DVgg0hGm+IkEqMxtazo5M
-         yyeKppfRaFgGA==
+        b=ryN2woFTjvY6dGfLsBJg7n+B0So43GjijR7z33JNfvNfHCoqH2R6RUKF3v4W9876m
+         0fFsJ7OqVD/w1AqSbzwg9CJ67DkHkLGLtAieKQlT/bWbtEybm3mtAxA8uNmdTxOYnP
+         bN9C2lUFMoqX67H1LVJcQ0uUXVsi6QttYgW83RwKi4rcQiTCWRQm/wFv3mb1DdWkb0
+         Cr88go6Y0FdYPYXmNDaotLG6xWpqRH+fkAbI5U73UhB0eZMR78kxB3+l1KW38N0OQl
+         twELKZSQp+3vawB5jJvq3s8eYyLA2yWmXEZnuTWroLaNk3R75xbJ/L/YJPo8+emNx7
+         yX0nH79cKv/+w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Xingui Yang <yangxingui@huawei.com>,
@@ -38,12 +38,12 @@ Cc:     Xingui Yang <yangxingui@huawei.com>,
         John Garry <john.garry@huawei.com>,
         Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
         linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 045/100] ata: ahci: Disable SXS for Hisilicon Kunpeng920
-Date:   Mon,  3 May 2021 12:37:34 -0400
-Message-Id: <20210503163829.2852775-45-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 29/57] ata: ahci: Disable SXS for Hisilicon Kunpeng920
+Date:   Mon,  3 May 2021 12:39:13 -0400
+Message-Id: <20210503163941.2853291-29-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210503163829.2852775-1-sashal@kernel.org>
-References: <20210503163829.2852775-1-sashal@kernel.org>
+In-Reply-To: <20210503163941.2853291-1-sashal@kernel.org>
+References: <20210503163941.2853291-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -76,10 +76,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  3 files changed, 11 insertions(+)
 
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 00ba8e5a1ccc..33192a8f687d 100644
+index d33528033042..8beb418ce167 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -1772,6 +1772,11 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -1728,6 +1728,11 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
  		hpriv->flags |= AHCI_HFLAG_NO_DEVSLP;
  
  #ifdef CONFIG_ARM64
@@ -92,7 +92,7 @@ index 00ba8e5a1ccc..33192a8f687d 100644
  		hpriv->irq_handler = ahci_thunderx_irq_handler;
  #endif
 diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 98b8baa47dc5..d1f284f0c83d 100644
+index 9ef62e647cd2..732912cd4e08 100644
 --- a/drivers/ata/ahci.h
 +++ b/drivers/ata/ahci.h
 @@ -242,6 +242,7 @@ enum {
