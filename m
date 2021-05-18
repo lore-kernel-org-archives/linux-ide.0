@@ -7,66 +7,65 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6502C433ED
-	for <linux-ide@archiver.kernel.org>; Tue, 18 May 2021 21:18:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00048C433B4
+	for <linux-ide@archiver.kernel.org>; Tue, 18 May 2021 21:23:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8CDEC61209
-	for <linux-ide@archiver.kernel.org>; Tue, 18 May 2021 21:18:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD714611BD
+	for <linux-ide@archiver.kernel.org>; Tue, 18 May 2021 21:23:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236618AbhERVT7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 18 May 2021 17:19:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35262 "EHLO
+        id S236812AbhERVZI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 18 May 2021 17:25:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36444 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235250AbhERVT7 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 May 2021 17:19:59 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D5FB5C061573
-        for <linux-ide@vger.kernel.org>; Tue, 18 May 2021 14:18:40 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id cu11-20020a17090afa8bb029015d5d5d2175so2296720pjb.3
-        for <linux-ide@vger.kernel.org>; Tue, 18 May 2021 14:18:40 -0700 (PDT)
+        with ESMTP id S236428AbhERVZI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 May 2021 17:25:08 -0400
+Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 676BCC061573
+        for <linux-ide@vger.kernel.org>; Tue, 18 May 2021 14:23:48 -0700 (PDT)
+Received: by mail-pg1-x530.google.com with SMTP id 6so7925660pgk.5
+        for <linux-ide@vger.kernel.org>; Tue, 18 May 2021 14:23:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=kernel-dk.20150623.gappssmtp.com; s=20150623;
         h=subject:to:references:from:message-id:date:user-agent:mime-version
          :in-reply-to:content-language:content-transfer-encoding;
-        bh=/aFc8kH5YmPyOor4QmBrOjgKebWAC/xtYeXNuPRLBhw=;
-        b=kySxmI1ntUL1RMhvHruLeB06zUX/XS+ZbE4WeSUJRGxQgInxgp3wbzIYq+943c20pr
-         ZeZGX3FuFyBJkgDaeLfu0z9mTHmHyPV+RuIxBqQLBLfXQk71l36x59BMKNwH7AP2hnko
-         yl2J6Iiv2Rbc+iZwP8ASvQqMuh+IQIlfIlH2CjwpMuBReRoPNk/gu6IecWZBufmoD5Ud
-         nxLCg+E/DzaXRmeZ0jyqmlvoN6S3H1oNnvGCFfy4veZ8xcACxwWlPqaIiUEeS9r6YrzD
-         qVfwslzscQzZSHN9mIU0MCsDly7aNeuClGRfo17ugYJ+/5GM3Uc8gX+XYSgUd/7aGyG8
-         IOgQ==
+        bh=ahk6fQ4xzI2YyxJ4iMRMr01uTbgS9Uyc+7Prf8I3lmY=;
+        b=c7bZmOkyMwQykR3enUAWvv6cY4qach8hjFWqORIzNxuuw3SORL4AVf/ifslHiFoH3V
+         AzskfxVjDT0QilCYS3PBgnDdDIdQBFm3lpha98XkqihnH1LsG0jv8BbyM5xDfkY58vuF
+         LCzGL4/+jJftYO6T2wrWunSfNBCQJx6zCUVHOnXwtFTH3dqk+VH9ZiAO/HjnYGczRh13
+         /o8Qqmc9gLC3G+27pUDHR45MU/CWSksjddQTlsVxWPJCAE7dSeBdET3gNqsX9jRpaMs2
+         RFpPSRyBBb6ZzWlfbAtD3t7MEjm7uAQ1z/NqUFqj0/BhFX3I1G6MZxLSidI/iTa8uX1U
+         +Mjw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=/aFc8kH5YmPyOor4QmBrOjgKebWAC/xtYeXNuPRLBhw=;
-        b=gwA4RN8ClSwOGyURCDxcUgW9o9OA5Hi/fh3hiuejZ4Ji8MrxYxAqv7HMngaw+fepp9
-         0aNvfX2XVlSXt4wp/BiQYqyacbgVEwZtHixTEe3X9Lo7x874B0w963xE4hE/Nyk+tfX9
-         9Xws05LMmPuJ+CmORStN5w+12eEdMWguKFM5RFB3NB5C+zdg3svfO4kClaWFIEjEJ2aF
-         fc0QqmqOydU3I4J2nxDmpah4GTR8QrP515q4adp7D/S1AWslm7CcLKyQTV5Xp7EpuCP9
-         3YAguNpG0cnGOtHI+55NdKyT/fR2NMW432+/usAS6eQU0tPDMiylz9V2IS7prwYziNRV
-         iKfg==
-X-Gm-Message-State: AOAM533wBP6jElggtAnGxrD/Bl1lC4nAHDlE0BpfSdDnCZpE/RglIOIr
-        bka41F9VHevM7D/grGyat/Bj+uSq0BHMNA==
-X-Google-Smtp-Source: ABdhPJzW7p4JHlabXxkCYzXMhL48vjITdbuHuvBEnfDoMqUvt7qirQXf+tcjfvu3g+jK+Sm7pKJUhA==
-X-Received: by 2002:a17:902:229:b029:ef:6107:188d with SMTP id 38-20020a1709020229b02900ef6107188dmr6821179plc.41.1621372720230;
-        Tue, 18 May 2021 14:18:40 -0700 (PDT)
+        bh=ahk6fQ4xzI2YyxJ4iMRMr01uTbgS9Uyc+7Prf8I3lmY=;
+        b=E/3cP/tlQHvIao7mgu38dahP5fZ3MUjCT5zcW/dpGZtC3Hen+MSQAhTUw8HR6qtA16
+         udIXnhPzjaDNS7Wiy4d8p/y6hndyT6miFM9XiKxSIgbf75cQ0i4HhXQduMec1jreQBdt
+         npl4eYbgt8EDrSy9ow+13fgaT9pNPzD93t/PvLQYcvX6aI4olQoJSDqMvz+8ItHspPM+
+         6pivpNoQMjU9JM7XWzeTh+x2u45JAJfzc2FKzLvEFWa/tcG2yGWtJZuFjh22tiw8ynKU
+         YPB/xRRTZPRtIwbLZbijqN0vLW/MDn5hT+oqNeLrJFSy1Opf4HL/zKpY6Cz3YNdXFiLw
+         1jJg==
+X-Gm-Message-State: AOAM531nHXNlZ7+B1eT3rFCxBvG+5XSISoKBUpCFzTlzYsWYh/wyzdSq
+        XDbQ3hcD160Igs842axQjcPVbMGspZ32OA==
+X-Google-Smtp-Source: ABdhPJztFm+zrp0QhVEDjTIVGGMFXVv40r7Hy9Au2O3aCSz1p8/QIydqahkgCG/Cr0M9tjuhgzF8Gw==
+X-Received: by 2002:a63:358c:: with SMTP id c134mr7015596pga.114.1621373027544;
+        Tue, 18 May 2021 14:23:47 -0700 (PDT)
 Received: from [192.168.1.134] ([66.219.217.173])
-        by smtp.gmail.com with ESMTPSA id b15sm12802277pfi.100.2021.05.18.14.18.39
+        by smtp.gmail.com with ESMTPSA id kk7sm2528582pjb.16.2021.05.18.14.23.46
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 18 May 2021 14:18:39 -0700 (PDT)
-Subject: Re: [PATCH] pata_rb532_cf: fix deferred probing
-To:     Sergey Shtylyov <s.shtylyov@omprussia.ru>,
-        linux-ide@vger.kernel.org
-References: <771ced55-3efb-21f5-f21c-b99920aae611@omprussia.ru>
+        Tue, 18 May 2021 14:23:46 -0700 (PDT)
+Subject: Re: [PATCH] pata_octeon_cf: avoid WARN_ON() in ata_host_activate()
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
+References: <3a241167-f84d-1d25-5b9b-be910afbe666@omp.ru>
 From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <6baaf8cf-ab97-273b-4171-185863340018@kernel.dk>
-Date:   Tue, 18 May 2021 15:18:41 -0600
+Message-ID: <760bcc25-7dc5-3105-36e7-d55c19ece32b@kernel.dk>
+Date:   Tue, 18 May 2021 15:23:45 -0600
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <771ced55-3efb-21f5-f21c-b99920aae611@omprussia.ru>
+In-Reply-To: <3a241167-f84d-1d25-5b9b-be910afbe666@omp.ru>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -74,14 +73,14 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 3/15/21 5:46 AM, Sergey Shtylyov wrote:
-> The driver overrides the error codes returned by platform_get_irq() to
-> -ENOENT, so if it returns -EPROBE_DEFER, the driver would fail the probe
-> permanently instead of the deferred probing. Switch to propagating the
-> error code upstream, still checking/overriding IRQ0 as libata regards it
-> as "no IRQ" (thus polling) anyway...
+On 5/18/21 2:38 PM, Sergey Shtylyov wrote:
+> Iff platform_get_irq() fails (or returns IRQ0) and thus the polling mode
+> has to be used, ata_host_activate() hits the WARN_ON() due to 'irq_handler'
+> parameter being non-NULL if the polling mode is selected.  Let's only set
+> the pointer to the driver's IRQ handler if platform_get_irq() returns a
+> valid IRQ # -- this should avoid the unnecessary WARN_ON()...
 
-Applied, sorry about the delay.
+Applied, thanks.
 
 -- 
 Jens Axboe
