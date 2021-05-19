@@ -2,86 +2,98 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00048C433B4
-	for <linux-ide@archiver.kernel.org>; Tue, 18 May 2021 21:23:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2226AC433ED
+	for <linux-ide@archiver.kernel.org>; Wed, 19 May 2021 07:33:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD714611BD
-	for <linux-ide@archiver.kernel.org>; Tue, 18 May 2021 21:23:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F30266108D
+	for <linux-ide@archiver.kernel.org>; Wed, 19 May 2021 07:33:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236812AbhERVZI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 18 May 2021 17:25:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36444 "EHLO
+        id S240408AbhESHfR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 19 May 2021 03:35:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59068 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236428AbhERVZI (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 May 2021 17:25:08 -0400
-Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 676BCC061573
-        for <linux-ide@vger.kernel.org>; Tue, 18 May 2021 14:23:48 -0700 (PDT)
-Received: by mail-pg1-x530.google.com with SMTP id 6so7925660pgk.5
-        for <linux-ide@vger.kernel.org>; Tue, 18 May 2021 14:23:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:references:from:message-id:date:user-agent:mime-version
-         :in-reply-to:content-language:content-transfer-encoding;
-        bh=ahk6fQ4xzI2YyxJ4iMRMr01uTbgS9Uyc+7Prf8I3lmY=;
-        b=c7bZmOkyMwQykR3enUAWvv6cY4qach8hjFWqORIzNxuuw3SORL4AVf/ifslHiFoH3V
-         AzskfxVjDT0QilCYS3PBgnDdDIdQBFm3lpha98XkqihnH1LsG0jv8BbyM5xDfkY58vuF
-         LCzGL4/+jJftYO6T2wrWunSfNBCQJx6zCUVHOnXwtFTH3dqk+VH9ZiAO/HjnYGczRh13
-         /o8Qqmc9gLC3G+27pUDHR45MU/CWSksjddQTlsVxWPJCAE7dSeBdET3gNqsX9jRpaMs2
-         RFpPSRyBBb6ZzWlfbAtD3t7MEjm7uAQ1z/NqUFqj0/BhFX3I1G6MZxLSidI/iTa8uX1U
-         +Mjw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=ahk6fQ4xzI2YyxJ4iMRMr01uTbgS9Uyc+7Prf8I3lmY=;
-        b=E/3cP/tlQHvIao7mgu38dahP5fZ3MUjCT5zcW/dpGZtC3Hen+MSQAhTUw8HR6qtA16
-         udIXnhPzjaDNS7Wiy4d8p/y6hndyT6miFM9XiKxSIgbf75cQ0i4HhXQduMec1jreQBdt
-         npl4eYbgt8EDrSy9ow+13fgaT9pNPzD93t/PvLQYcvX6aI4olQoJSDqMvz+8ItHspPM+
-         6pivpNoQMjU9JM7XWzeTh+x2u45JAJfzc2FKzLvEFWa/tcG2yGWtJZuFjh22tiw8ynKU
-         YPB/xRRTZPRtIwbLZbijqN0vLW/MDn5hT+oqNeLrJFSy1Opf4HL/zKpY6Cz3YNdXFiLw
-         1jJg==
-X-Gm-Message-State: AOAM531nHXNlZ7+B1eT3rFCxBvG+5XSISoKBUpCFzTlzYsWYh/wyzdSq
-        XDbQ3hcD160Igs842axQjcPVbMGspZ32OA==
-X-Google-Smtp-Source: ABdhPJztFm+zrp0QhVEDjTIVGGMFXVv40r7Hy9Au2O3aCSz1p8/QIydqahkgCG/Cr0M9tjuhgzF8Gw==
-X-Received: by 2002:a63:358c:: with SMTP id c134mr7015596pga.114.1621373027544;
-        Tue, 18 May 2021 14:23:47 -0700 (PDT)
-Received: from [192.168.1.134] ([66.219.217.173])
-        by smtp.gmail.com with ESMTPSA id kk7sm2528582pjb.16.2021.05.18.14.23.46
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 18 May 2021 14:23:46 -0700 (PDT)
-Subject: Re: [PATCH] pata_octeon_cf: avoid WARN_ON() in ata_host_activate()
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-References: <3a241167-f84d-1d25-5b9b-be910afbe666@omp.ru>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <760bcc25-7dc5-3105-36e7-d55c19ece32b@kernel.dk>
-Date:   Tue, 18 May 2021 15:23:45 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        with ESMTP id S240198AbhESHfQ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 May 2021 03:35:16 -0400
+Received: from baptiste.telenet-ops.be (baptiste.telenet-ops.be [IPv6:2a02:1800:120:4::f00:13])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BF1AC06175F
+        for <linux-ide@vger.kernel.org>; Wed, 19 May 2021 00:33:57 -0700 (PDT)
+Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed20:c161:a89e:52bd:1787])
+        by baptiste.telenet-ops.be with bizsmtp
+        id 6XZu2500L446CkP01XZuzm; Wed, 19 May 2021 09:33:55 +0200
+Received: from geert (helo=localhost)
+        by ramsan.of.borg with local-esmtp (Exim 4.93)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1ljGiI-0074WD-Cy; Wed, 19 May 2021 09:33:54 +0200
+Date:   Wed, 19 May 2021 09:33:54 +0200 (CEST)
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+To:     Sergey Shtylyov <s.shtylyov@omprussia.ru>
+cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
+Subject: Re: [PATCH] sata_highbank: fix deferred probing
+In-Reply-To: <105b456d-1199-f6e9-ceb7-ffc5ba551d1a@omprussia.ru>
+Message-ID: <alpine.DEB.2.22.394.2105190930300.1685435@ramsan.of.borg>
+References: <105b456d-1199-f6e9-ceb7-ffc5ba551d1a@omprussia.ru>
+User-Agent: Alpine 2.22 (DEB 394 2020-01-19)
 MIME-Version: 1.0
-In-Reply-To: <3a241167-f84d-1d25-5b9b-be910afbe666@omp.ru>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 5/18/21 2:38 PM, Sergey Shtylyov wrote:
-> Iff platform_get_irq() fails (or returns IRQ0) and thus the polling mode
-> has to be used, ata_host_activate() hits the WARN_ON() due to 'irq_handler'
-> parameter being non-NULL if the polling mode is selected.  Let's only set
-> the pointer to the driver's IRQ handler if platform_get_irq() returns a
-> valid IRQ # -- this should avoid the unnecessary WARN_ON()...
+ 	Hi Sergei,
 
-Applied, thanks.
+On Sun, 14 Mar 2021, Sergey Shtylyov wrote:
+> The driver overrides the error codes returned by platform_get_irq() to
+> -EINVAL, so if it returns -EPROBE_DEFER, the driver would fail the probe
+> permanently instead of the deferred probing. Switch to propagating the
+> error code upstream, still checking/overriding IRQ0 as libata regards it
+> as "no IRQ" (thus polling) anyway...
+>
+> Fixes: 9ec36cafe43b ("of/irq: do irq resolution in platform_get_irq")
+> Signed-off-by: Sergey Shtylyov <s.shtylyov@omprussia.ru>
 
--- 
-Jens Axboe
+Thanks for your patch, which is now commit 4a24efa16e7db023
+("sata_highbank: fix deferred probing") in block/for-next.
 
+> --- linux-block.orig/drivers/ata/sata_highbank.c
+> +++ linux-block/drivers/ata/sata_highbank.c
+> @@ -469,10 +469,12 @@ static int ahci_highbank_probe(struct pl
+> 	}
+>
+> 	irq = platform_get_irq(pdev, 0);
+> -	if (irq <= 0) {
+> +	if (irq < 0) {
+> 		dev_err(dev, "no irq\n");
+
+This message should not be printed in case of -EPROBE_DEFER...
+
+> -		return -EINVAL;
+> +		return irq;
+
+... hence
+
+     return dev_err_probe(dev, irq, "no irq\n");
+
+Same for pata_rb532_cf.
+
+> 	}
+> +	if (!irq)
+> +		return -EINVAL;
+>
+> 	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
+> 	if (!hpriv) {
+>
+Gr{oetje,eeting}s,
+
+ 						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+ 							    -- Linus Torvalds
