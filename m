@@ -4,96 +4,82 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2226AC433ED
-	for <linux-ide@archiver.kernel.org>; Wed, 19 May 2021 07:33:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 296AEC43460
+	for <linux-ide@archiver.kernel.org>; Wed, 19 May 2021 15:19:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F30266108D
-	for <linux-ide@archiver.kernel.org>; Wed, 19 May 2021 07:33:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02DFD610A8
+	for <linux-ide@archiver.kernel.org>; Wed, 19 May 2021 15:19:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240408AbhESHfR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 19 May 2021 03:35:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59068 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240198AbhESHfQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 May 2021 03:35:16 -0400
-Received: from baptiste.telenet-ops.be (baptiste.telenet-ops.be [IPv6:2a02:1800:120:4::f00:13])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BF1AC06175F
-        for <linux-ide@vger.kernel.org>; Wed, 19 May 2021 00:33:57 -0700 (PDT)
-Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed20:c161:a89e:52bd:1787])
-        by baptiste.telenet-ops.be with bizsmtp
-        id 6XZu2500L446CkP01XZuzm; Wed, 19 May 2021 09:33:55 +0200
-Received: from geert (helo=localhost)
-        by ramsan.of.borg with local-esmtp (Exim 4.93)
-        (envelope-from <geert@linux-m68k.org>)
-        id 1ljGiI-0074WD-Cy; Wed, 19 May 2021 09:33:54 +0200
-Date:   Wed, 19 May 2021 09:33:54 +0200 (CEST)
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-To:     Sergey Shtylyov <s.shtylyov@omprussia.ru>
-cc:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
+        id S1354473AbhESPVL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 19 May 2021 11:21:11 -0400
+Received: from mxout03.lancloud.ru ([45.84.86.113]:53118 "EHLO
+        mxout03.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1354419AbhESPVK (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 May 2021 11:21:10 -0400
+Received: from LanCloud
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout03.lancloud.ru DEF3320FD455
+Received: from LanCloud
+Received: from LanCloud
+Received: from LanCloud
 Subject: Re: [PATCH] sata_highbank: fix deferred probing
-In-Reply-To: <105b456d-1199-f6e9-ceb7-ffc5ba551d1a@omprussia.ru>
-Message-ID: <alpine.DEB.2.22.394.2105190930300.1685435@ramsan.of.borg>
+To:     Geert Uytterhoeven <geert@linux-m68k.org>,
+        Sergey Shtylyov <s.shtylyov@omprussia.ru>
+CC:     Jens Axboe <axboe@kernel.dk>, <linux-ide@vger.kernel.org>
 References: <105b456d-1199-f6e9-ceb7-ffc5ba551d1a@omprussia.ru>
-User-Agent: Alpine 2.22 (DEB 394 2020-01-19)
+ <alpine.DEB.2.22.394.2105190930300.1685435@ramsan.of.borg>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <13485ccc-83d6-d4a7-f423-feeb9094505f@omp.ru>
+Date:   Wed, 19 May 2021 18:19:47 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+In-Reply-To: <alpine.DEB.2.22.394.2105190930300.1685435@ramsan.of.borg>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [192.168.11.198]
+X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
+ LFEX1908.lancloud.ru (fd00:f066::208)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
- 	Hi Sergei,
+On 5/19/21 10:33 AM, Geert Uytterhoeven wrote:
 
-On Sun, 14 Mar 2021, Sergey Shtylyov wrote:
-> The driver overrides the error codes returned by platform_get_irq() to
-> -EINVAL, so if it returns -EPROBE_DEFER, the driver would fail the probe
-> permanently instead of the deferred probing. Switch to propagating the
-> error code upstream, still checking/overriding IRQ0 as libata regards it
-> as "no IRQ" (thus polling) anyway...
->
-> Fixes: 9ec36cafe43b ("of/irq: do irq resolution in platform_get_irq")
-> Signed-off-by: Sergey Shtylyov <s.shtylyov@omprussia.ru>
+>> The driver overrides the error codes returned by platform_get_irq() to
+>> -EINVAL, so if it returns -EPROBE_DEFER, the driver would fail the probe
+>> permanently instead of the deferred probing. Switch to propagating the
+>> error code upstream, still checking/overriding IRQ0 as libata regards it
+>> as "no IRQ" (thus polling) anyway...
+>>
+>> Fixes: 9ec36cafe43b ("of/irq: do irq resolution in platform_get_irq")
+>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omprussia.ru>
+> 
+> Thanks for your patch, which is now commit 4a24efa16e7db023
+> ("sata_highbank: fix deferred probing") in block/for-next.
+> 
+>> --- linux-block.orig/drivers/ata/sata_highbank.c
+>> +++ linux-block/drivers/ata/sata_highbank.c
+>> @@ -469,10 +469,12 @@ static int ahci_highbank_probe(struct pl
+>>     }
+>>
+>>     irq = platform_get_irq(pdev, 0);
+>> -    if (irq <= 0) {
+>> +    if (irq < 0) {
+>>         dev_err(dev, "no irq\n");
+> 
+> This message should not be printed in case of -EPROBE_DEFER...
 
-Thanks for your patch, which is now commit 4a24efa16e7db023
-("sata_highbank: fix deferred probing") in block/for-next.
+    I fact, platform_get_irq() now prints erors, even checking for EPROBE_DEFER,
+so the message may be removed completely... :-)
 
-> --- linux-block.orig/drivers/ata/sata_highbank.c
-> +++ linux-block/drivers/ata/sata_highbank.c
-> @@ -469,10 +469,12 @@ static int ahci_highbank_probe(struct pl
-> 	}
->
-> 	irq = platform_get_irq(pdev, 0);
-> -	if (irq <= 0) {
-> +	if (irq < 0) {
-> 		dev_err(dev, "no irq\n");
+> 
+>> -        return -EINVAL;
+>> +        return irq;
+[...]
 
-This message should not be printed in case of -EPROBE_DEFER...
-
-> -		return -EINVAL;
-> +		return irq;
-
-... hence
-
-     return dev_err_probe(dev, irq, "no irq\n");
-
-Same for pata_rb532_cf.
-
-> 	}
-> +	if (!irq)
-> +		return -EINVAL;
->
-> 	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
-> 	if (!hpriv) {
->
-Gr{oetje,eeting}s,
-
- 						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
- 							    -- Linus Torvalds
+MBR, Sergey
