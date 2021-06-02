@@ -7,66 +7,69 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DE81C4708F
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Jun 2021 10:18:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9853C47096
+	for <linux-ide@archiver.kernel.org>; Wed,  2 Jun 2021 10:18:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 063B5613B8
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Jun 2021 10:18:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7328613B8
+	for <linux-ide@archiver.kernel.org>; Wed,  2 Jun 2021 10:18:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232713AbhFBKUJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 2 Jun 2021 06:20:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37984 "EHLO
+        id S232733AbhFBKUM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 2 Jun 2021 06:20:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37944 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232564AbhFBKTl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Jun 2021 06:19:41 -0400
-Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3F4CC061574
-        for <linux-ide@vger.kernel.org>; Wed,  2 Jun 2021 03:17:47 -0700 (PDT)
-Received: by mail-wm1-x32f.google.com with SMTP id n17-20020a7bc5d10000b0290169edfadac9so3427818wmk.1
-        for <linux-ide@vger.kernel.org>; Wed, 02 Jun 2021 03:17:47 -0700 (PDT)
+        with ESMTP id S232578AbhFBKTm (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Jun 2021 06:19:42 -0400
+Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2DD7C061761
+        for <linux-ide@vger.kernel.org>; Wed,  2 Jun 2021 03:17:49 -0700 (PDT)
+Received: by mail-wm1-x331.google.com with SMTP id o127so908573wmo.4
+        for <linux-ide@vger.kernel.org>; Wed, 02 Jun 2021 03:17:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=+NvljD9Coe3ImbVweUQhRVx0U62sw+qymnCXTI2Y/Fw=;
-        b=Gc9btDcQSoeuLckJ3t8QvsF8N1XiFgL8Yc10DL7jwSYW5cVBidCVJWCiUbQE4cpQTe
-         ABCaHy0bP7v8JrcR3tPLIWbA49QaqUN/UgeznpNE+or3KHcYsZDM8HK43mlpbFUMxuwd
-         My623Iu3a4ApnfO9kDC8b7hvQhJjq3/1mvMT8jYAqR2rWNoqSe//YMUsP0/UZ6itFFKD
-         Biro4D72WU95DpCGE+5osKehNHqaiqYSQE2XY3bsdSJiLI+49OwRQtJ8UKl0mFt8SKYv
-         vjjYQCKvnfbGLqhULN13U6B/D7GVCrYG46OtlYXtQSD3ap/YIY1O7yuXaMnDHzsy1LWo
-         LU3A==
+        bh=zE6oZe1kBhGirjXSzVIMgawNguodFCFABhPx7JeRjyY=;
+        b=wB0s8OGcZQIBjcRX1Bz+xqXw1bfT+Lnt7oXITnkwQRtuxBqR4R3zNKHc2Tde1PnPsU
+         p0ktvhXjM0D1+g8WzN8D+AiU+OYwrZAQL92YB7VgcNvwb8U0qTCWgmXt2sE347ayu1tm
+         ZYpV8GGvH3aVzCjq9pvH7ynkDm965oMzCQ8dlKH9jJuM+mpVK54xr0DyVS1UuGL4JDel
+         irwrYMmOEjbORzk/+h9+P2teEFeMb2QCusMMTqFez9rgLPCtM1OcxvoyYweQKG0OvIjd
+         1+M5AWqGLl0laIqeuSdP81vWEUChXvTGjUP7FSgar3bhuD0Zv2+q3oF9JzRmxK0EEG5b
+         XVnA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=+NvljD9Coe3ImbVweUQhRVx0U62sw+qymnCXTI2Y/Fw=;
-        b=dQBVUB+qQZY7bVoIDQ6SBLGW7/7TjacNRUXp1ReujY3VdEvLE9Cp0nZJxYs3oIqtxt
-         hag3+Exm0Q8joqQxZ2z26phedFtW+AXqTE6pKWWi+HGRl4/zdPZk6TC3xBbGrNY/vYN5
-         UPCVexhncXEnTXEK88QLrEMQMo72RRsmTNvDRNiTf7PhVHx//sETHqmCUn7nNJrB8uJf
-         wjFui7Xbid24DXueYkBoV7/JerK/P077ByfFMhz6EIqJt4QFFg2PCB7jzT0hhoNjd5Z5
-         nkn6PCtCHTvdetP4XPeyukL4GaCIfxUKHAAloKDBGAiqzN6/PNtTMX3b6PVPKAE3ymjI
-         +LAA==
-X-Gm-Message-State: AOAM533wATYJkoEDbfs0YwWX4rSav0NIzwKa0vM1KJOkmoCGEHcexntD
-        nNl56ur3lRdFQ/Nfu5QP2+sRsw==
-X-Google-Smtp-Source: ABdhPJwwcyUY7GSV9q5R5pikjcfL0GaGuqMxRtnHnBtiSkEpFd7Ggbu7+oBDJJL1GrZVcThFLxXdHg==
-X-Received: by 2002:a1c:1b93:: with SMTP id b141mr20132118wmb.8.1622629066278;
-        Wed, 02 Jun 2021 03:17:46 -0700 (PDT)
+        bh=zE6oZe1kBhGirjXSzVIMgawNguodFCFABhPx7JeRjyY=;
+        b=A3dfjOA97M7jXt9V5MWVoDBSAkYhx6AZOdyXJX1jE123ebcD8NGRXlHs52iYXS2+E3
+         p6CoSo7uDR2ojFlmMwfUx/z9MeL4jyLUvGWkWrO7wM1fV3Tul9ynjgDxUkyGlIoOhxXU
+         b1IvnhfJbwpy7yyrIC/CBlsytSqj9It8e7/ZSvVnzBf0zXi8LQH7lg22Doxfibv0MMHy
+         O3n1rA0E7y2nf/kqf8dCz7gUnI8OfmBEKUfGLtUxYDWLgszjiRh9fNHn+1Wips078U79
+         EN1KqGYb9wyrsQlv0V56U8TOgplsY5TcBZaki2+jv/ymoqcaF0d076fcmAlJuW6axOOA
+         EIsg==
+X-Gm-Message-State: AOAM533AbCso6cGgiaT9BucQ4bOfXvhRwfq3huui8uupSEXiaulbdNrm
+        ZgZCFiBMcoe/VSsGwyusMsz8vGLns6kZEg==
+X-Google-Smtp-Source: ABdhPJwBkFs0G1HfVBAVacPTxpUaZWui9Qw4YuegR/FlDN75E+Vs0l1k1deOKhJlk7KLN1D9F3tvjw==
+X-Received: by 2002:a7b:c1ce:: with SMTP id a14mr4288251wmj.81.1622629068325;
+        Wed, 02 Jun 2021 03:17:48 -0700 (PDT)
 Received: from dell.default ([91.110.221.214])
-        by smtp.gmail.com with ESMTPSA id q11sm1593265wmq.1.2021.06.02.03.17.45
+        by smtp.gmail.com with ESMTPSA id q11sm1593265wmq.1.2021.06.02.03.17.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Jun 2021 03:17:45 -0700 (PDT)
+        Wed, 02 Jun 2021 03:17:47 -0700 (PDT)
 From:   Lee Jones <lee.jones@linaro.org>
 To:     lee.jones@linaro.org
 Cc:     linux-kernel@vger.kernel.org,
         "David S. Miller" <davem@davemloft.net>,
-        Andre Hedrick <andre@linux-ide.org>, linux-ide@vger.kernel.org
-Subject: [PATCH 13/21] ide: siimage: Fix some incorrectly documented functions/params
-Date:   Wed,  2 Jun 2021 11:17:14 +0100
-Message-Id: <20210602101722.2276638-14-lee.jones@linaro.org>
+        Scott Snyder <snyder@fnald0.fnal.gov>,
+        Erik Andersen <andersee@debian.org>,
+        Jens Axboe <axboe@suse.de>, linux-ide@vger.kernel.org
+Subject: [PATCH 15/21] ide: ide-cd_ioctl: Remove unused variable 'stat'
+Date:   Wed,  2 Jun 2021 11:17:16 +0100
+Message-Id: <20210602101722.2276638-16-lee.jones@linaro.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210602101722.2276638-1-lee.jones@linaro.org>
 References: <20210602101722.2276638-1-lee.jones@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
@@ -74,40 +77,40 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 Fixes the following W=1 kernel build warning(s):
 
- drivers/ide/siimage.c:115: warning: Function parameter or member 'drive' not described in 'siimage_seldev'
- drivers/ide/siimage.c:115: warning: Excess function parameter 'hwif' description in 'siimage_seldev'
- drivers/ide/siimage.c:196: warning: expecting prototype for sil_udma_filter(). Prototype was for sil_pata_udma_filter() instead
+ drivers/ide/ide-cd_ioctl.c: In function ‘ide_cdrom_select_speed’:
+ drivers/ide/ide-cd_ioctl.c:212:6: warning: variable ‘stat’ set but not used [-Wunused-but-set-variable]
 
 Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Andre Hedrick <andre@linux-ide.org>
+Cc: Scott Snyder <snyder@fnald0.fnal.gov>
+Cc: Erik Andersen <andersee@debian.org>
+Cc: Jens Axboe <axboe@suse.de>
 Cc: linux-ide@vger.kernel.org
 Signed-off-by: Lee Jones <lee.jones@linaro.org>
 ---
- drivers/ide/siimage.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/ide/ide-cd_ioctl.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/ide/siimage.c b/drivers/ide/siimage.c
-index c190dc6dfb50a..64fa6b253a824 100644
---- a/drivers/ide/siimage.c
-+++ b/drivers/ide/siimage.c
-@@ -103,7 +103,7 @@ static unsigned long siimage_selreg(ide_hwif_t *hwif, int r)
+diff --git a/drivers/ide/ide-cd_ioctl.c b/drivers/ide/ide-cd_ioctl.c
+index 011eab9c69b7e..22ec8b7a6b90f 100644
+--- a/drivers/ide/ide-cd_ioctl.c
++++ b/drivers/ide/ide-cd_ioctl.c
+@@ -209,7 +209,6 @@ int ide_cdrom_select_speed(struct cdrom_device_info *cdi, int speed)
+ 	ide_drive_t *drive = cdi->handle;
+ 	struct cdrom_info *cd = drive->driver_data;
+ 	u8 buf[ATAPI_CAPABILITIES_PAGE_SIZE];
+-	int stat;
+ 	unsigned char cmd[BLK_MAX_CDB];
  
- /**
-  *	siimage_seldev		-	return register base
-- *	@hwif: interface
-+ *	@drive: interface
-  *	@r: config offset
-  *
-  *	Turn a config register offset into the right address in either
-@@ -183,7 +183,7 @@ static void sil_iowrite32(struct pci_dev *dev, u32 val, unsigned long addr)
- }
+ 	if (speed == 0)
+@@ -230,7 +229,7 @@ int ide_cdrom_select_speed(struct cdrom_device_info *cdi, int speed)
+ 		cmd[5] = speed & 0xff;
+ 	}
  
- /**
-- *	sil_udma_filter		-	compute UDMA mask
-+ *	sil_pata_udma_filter		-	compute UDMA mask
-  *	@drive: IDE device
-  *
-  *	Compute the available UDMA speeds for the device on the interface.
+-	stat = ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, NULL, 0, 0);
++	ide_cd_queue_pc(drive, cmd, 0, NULL, NULL, NULL, 0, 0);
+ 
+ 	if (!ide_cdrom_get_capabilities(drive, buf)) {
+ 		ide_cdrom_update_speed(drive, buf);
 -- 
 2.31.1
 
