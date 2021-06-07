@@ -2,72 +2,108 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F348EC47082
-	for <linux-ide@archiver.kernel.org>; Mon,  7 Jun 2021 08:26:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2264DC47082
+	for <linux-ide@archiver.kernel.org>; Mon,  7 Jun 2021 08:38:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D428D610E7
-	for <linux-ide@archiver.kernel.org>; Mon,  7 Jun 2021 08:26:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0AD6760233
+	for <linux-ide@archiver.kernel.org>; Mon,  7 Jun 2021 08:38:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230215AbhFGI2m (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 7 Jun 2021 04:28:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57074 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229436AbhFGI2l (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jun 2021 04:28:41 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83EA6C061766;
-        Mon,  7 Jun 2021 01:26:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=Gm/Z4ZEed7fwYvc2lrsvQUFJOpzqbnReZh3AcOm9gYM=; b=I2WarOQvkgsFqNSXPKcah6GQKq
-        jeBgdpqKK12q7hvx9wBGPxm0WF2ziLRAM13cchy7N0XoaQFj60Oms2wN7vOUoZop31TAr/CpEGDE1
-        WVh0S8Q0z8rnEi2nxIg1c7C8lmB82PX/0spN3ewh3XfKU0wZYrsSuM1HiEFtraeRnlHB3Nrnh9WBa
-        J+PYkXN3ukUXz+LSQ1Ax/FN0G5Ia1WrwxvB0SegWTzymw8QUoZJL92sgtPiKnZmA/kKjhXLR4Hwuo
-        78NIpBQ7E20T+t83m3NQHnOtw3aj55onG1ks81EiR5nz1iKutFFNsPyOw3sxOc2+TA7JmJ0V9xxuC
-        QoULjKTQ==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1lqAaW-00FWsl-Qa; Mon, 07 Jun 2021 08:26:26 +0000
-Date:   Mon, 7 Jun 2021 09:26:24 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Lee Jones <lee.jones@linaro.org>
-Cc:     linux-kernel@vger.kernel.org, Adrian Sun <a.sun@sun.com>,
-        Alan Cox <alan@lxorguk.ukuu.org.uk>,
-        Andre Hedrick <andre@linux-ide.org>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Benoit Poulot-Cazajous <poulot@chorus.fr>,
-        Christian Brunner <chb@muc.de>,
-        "Christopher J. Reimer" <reimer@doe.carleton.ca>,
-        CJ <cjtsai@ali.com.tw>, Clear Zhang <Clear.Zhang@ali.com.tw>,
-        "David S. Miller" <davem@davemloft.net>,
-        Duncan Laurie <void@sun.com>,
-        Erik Andersen <andersee@debian.org>,
-        Frank Tiernan <frankt@promise.com>,
-        Gadi Oxman <gadio@netvision.net.il>,
-        Jens Axboe <axboe@suse.de>, linux-ide@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, Mark Lord <mlord@pobox.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Mike Waychison <crlf@sun.com>, or <source@mvista.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Robert Bringman <rob@mars.trion.com>,
-        Scott Snyder <snyder@fnald0.fnal.gov>,
-        Sergei Shtylyov <sshtylyov@ru.mvista.com>,
-        Tim Hockin <thockin@sun.com>
-Subject: Re: [PATCH 00/21] Rid W=1 warnings from IDE
-Message-ID: <YL3YMGl9kmtv55B/@infradead.org>
-References: <20210602101722.2276638-1-lee.jones@linaro.org>
+        id S229545AbhFGIkQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 7 Jun 2021 04:40:16 -0400
+Received: from mail-vs1-f44.google.com ([209.85.217.44]:42669 "EHLO
+        mail-vs1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229436AbhFGIkP (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jun 2021 04:40:15 -0400
+Received: by mail-vs1-f44.google.com with SMTP id l25so8457605vsb.9;
+        Mon, 07 Jun 2021 01:38:10 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=FYObgoUDn1dZfzXvNOLi4ACAcC+zbDXmQL5SVeQ1ZdI=;
+        b=lvdceScZfrZ1AyCEHILpAnz2jrBmTEOWu8nEo+SObSNMm9jJSQCsbPeDIAhF/XHdJE
+         5s4c2i6B12WxXzpHsCO4DRtXeEOCmUQSnQWm3Ym/RbN3lSd3L3/lmk1YqS4NKGQiH77l
+         wWre5q6Ek1FAhODw6UFNQgjwrSvfe6WU3JQATI2A4pwZI1pI1djC554xubhDcg840jtK
+         AqM5uOS7Dv/bvy94FF8VSE8JM21h/Lr5uLKXIxvElLQMleWzOINtBxhfqnanv0MtA515
+         Whv+WS0U6QDMeRjvixQYgbf/Al+tW5yH1lM0HqCDkIzGfaXMug38v5L4jbdtKpStxztY
+         r1NA==
+X-Gm-Message-State: AOAM530EhVdFHpWAKpNIX/O9LwDhjzcC8JoXssPQ4Yh4FhvVXvfSf1Xh
+        55hqKnNf5YdbWP72QwTYCy/qi8Mq5Qc6q2UKQZg=
+X-Google-Smtp-Source: ABdhPJxjksG4tSgH7kBrptHVDZYgoOaK/J8ZM0GPBueKVXw5fG+cxqxXBTyZQs/w3tEY/PBOUsI8fQ5fuZ2OwaOuCDc=
+X-Received: by 2002:a67:efd6:: with SMTP id s22mr7945226vsp.3.1623055090060;
+ Mon, 07 Jun 2021 01:38:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210602101722.2276638-1-lee.jones@linaro.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+References: <20210605060447.GA18461@allandria.com> <1622958877-2026-1-git-send-email-schmitzmic@gmail.com>
+ <1622958877-2026-3-git-send-email-schmitzmic@gmail.com>
+In-Reply-To: <1622958877-2026-3-git-send-email-schmitzmic@gmail.com>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Mon, 7 Jun 2021 10:37:58 +0200
+Message-ID: <CAMuHMdVCQHm2SX1XzphZ_cq6YtcjuudqG9SZUSTi+f80L=d9YQ@mail.gmail.com>
+Subject: Re: [PATCH RFC 2/2] net/8390: apne.c - add 100 Mbit support to apne.c driver
+To:     Michael Schmitz <schmitzmic@gmail.com>
+Cc:     "Linux/m68k" <linux-m68k@vger.kernel.org>,
+        linux-ide@vger.kernel.org, Finn Thain <fthain@linux-m68k.org>,
+        ALeX Kazik <alex@kazik.de>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Please don't touch this code as it is about to be removed entirely.
+Hi Michael,
+
+On Sun, Jun 6, 2021 at 7:54 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
+> Add Kconfig option, module parameter and PCMCIA reset code
+> required to support 100 Mbit PCMCIA ethernet cards on Amiga.
+>
+> 10 Mbit and 100 Mbit mode are supported by the same module.
+> A module parameter switches Amiga ISA IO accessors to word
+> access by changing isa_type at runtime. Additional code to
+> reset the PCMCIA hardware is also added to the driver probe.
+>
+> Patch modified after patch "[PATCH RFC net-next] Amiga PCMCIA
+> 100 MBit card support" submitted to netdev 2018/09/16 by Alex
+> Kazik <alex@kazik.de>.
+>
+> Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
+
+> --- a/drivers/net/ethernet/8390/Kconfig
+> +++ b/drivers/net/ethernet/8390/Kconfig
+> @@ -143,6 +143,19 @@ config APNE
+>           To compile this driver as a module, choose M here: the module
+>           will be called apne.
+>
+> +if APNE
+> +config APNE100MBIT
+> +       bool "PCMCIA NE2000 100MBit support"
+> +       default n
+> +       ---help---
+
+"help" (support for "---help---" was removed in v5.9).
+
+> +         This changes the driver to support 10/100Mbit cards (e.g. Netgear
+> +         FA411, CNet Singlepoint). 10 MBit cards and 100 MBit cards are
+> +         supported by the same driver.
+> +
+> +         To activate 100 Mbit support at runtime, use the apne100 module
+> +         parameter.
+> +endif
+> +
+>  config PCMCIA_PCNET
+>         tristate "NE2000 compatible PCMCIA support"
+>         depends on PCMCIA
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
