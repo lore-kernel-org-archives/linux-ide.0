@@ -2,105 +2,98 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15907C47082
-	for <linux-ide@archiver.kernel.org>; Mon,  7 Jun 2021 08:46:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0D3AC4743F
+	for <linux-ide@archiver.kernel.org>; Mon,  7 Jun 2021 11:15:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE54A60E08
-	for <linux-ide@archiver.kernel.org>; Mon,  7 Jun 2021 08:46:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A5E961205
+	for <linux-ide@archiver.kernel.org>; Mon,  7 Jun 2021 11:15:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230131AbhFGIsb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 7 Jun 2021 04:48:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33344 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229545AbhFGIsa (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jun 2021 04:48:30 -0400
-Received: from mail-ed1-x532.google.com (mail-ed1-x532.google.com [IPv6:2a00:1450:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 25415C061766
-        for <linux-ide@vger.kernel.org>; Mon,  7 Jun 2021 01:46:23 -0700 (PDT)
-Received: by mail-ed1-x532.google.com with SMTP id dj8so19350590edb.6
-        for <linux-ide@vger.kernel.org>; Mon, 07 Jun 2021 01:46:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kazik.de; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=rbCJZ424Xbt1MnOfGZf2sF9LS+q4Pp70klcOnStjO08=;
-        b=rVqM/N7ix6+OFOAqkzmX/3xR+VlPj49ipm/MCahSj2TeHef+NFYDEi6YmLyp/zvLo1
-         yJOMfqUsR9VaRoZirf2O9halVqRXr9wqnGlav1+bXjIDu4/scqA7V4E+aIPH5RPdpj9s
-         ak2db+be33WvInAZeRfH0cXVt1OmFxsJ8Uxnc=
+        id S230219AbhFGLRV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 7 Jun 2021 07:17:21 -0400
+Received: from mail-ua1-f45.google.com ([209.85.222.45]:38586 "EHLO
+        mail-ua1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230215AbhFGLRV (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jun 2021 07:17:21 -0400
+Received: by mail-ua1-f45.google.com with SMTP id d13so8775435uav.5;
+        Mon, 07 Jun 2021 04:15:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=rbCJZ424Xbt1MnOfGZf2sF9LS+q4Pp70klcOnStjO08=;
-        b=V4wMEo/tz003YKsrLWf0A2GOyqdRAj8sHGR8V7IlolE+NWaOql/WIvcXiqWBn3tk1z
-         QEH3pPFlrl4gySIEw0G7b7M09eMxxC16mxMKMtuPLxK22LTHLnp0kwsD6RqOOxW6I7sA
-         F1xz54CAIPazaQh686tGy464Iv/kmFN5JWIO42y78NiEUzscroOxs7G0JUcD4mggJZrv
-         C4+DA6R8AS0l9VZzdJAklHu8bkl3/viZ66/F+5IEe+//87wAgEhQBBSLIJuGqPnNgING
-         ZtJFXn78UgK8vioek8UgYbF9auy/gME+vfEf2riRK4CvPeJi6HSpOZZ/22pihigMW3qx
-         u9OQ==
-X-Gm-Message-State: AOAM532oxfaMHgKIYU5xXhnJX3bDKmcrq/yAbRjYvGPgGO6zwOGN7Mbf
-        5ch5PvE790r08IA/mrE7h/2g+6PDMJLfKhm39ixZbg==
-X-Google-Smtp-Source: ABdhPJyxVmF5qq2RnWEx36JlhrjEE//8AmCKLcPsyhdNc3vg9ieNuhslYCmsW8jAruky+WQ86nfRnSGCmnXvx/owm8Q=
-X-Received: by 2002:a05:6402:5256:: with SMTP id t22mr5796547edd.54.1623055579647;
- Mon, 07 Jun 2021 01:46:19 -0700 (PDT)
+        bh=Wgp/tBpjeqf6O2lPslH9bnakWrDSZCGb8Fz8Hl4UvnQ=;
+        b=rd7fZ/Vc5Tsay7oyC4m89l5lqP08dgiz09ZdO4zJ6HMYgmJvuH6hXsxDYXBwB1yXeW
+         CcD/yq1hOEV4NKwk6DahbTpdihR9ASHQYzV5yHoDY0SUm3RLdOBtnM+XO/TXKPdAFnBk
+         m3bloOuU8x2w6GPMs24zEK2Ai8wHNSekm2HxRx+YRbc7nbDmrmjIhIcYwyBH51aOnd5r
+         NbDRexnwa/1j30Pjx6f8cHI/529WMBCtisWiMUFV4M2d3o7/wAj7SNh/aXuu4p6yH9NQ
+         bioNtg39fLmaasgjhN84GWLAk9GAyX/EtAHhO3BKwgIeJhMici0RcueLDUa81deR2RDZ
+         gyDQ==
+X-Gm-Message-State: AOAM530rsROBqmATWwAcFhc6rjkMGUPzKZZn4szat8iJabkNIzGj5cDw
+        vV8QJvBSFUy2pZOwql/49mvb+Zyn38ZV2MSMMqM=
+X-Google-Smtp-Source: ABdhPJwXLFVczFNkh7qoopILS7Zq6IMI4+2N7i/u5ETu9RMK0fDl0OmoiIgsh/Y9sOA5u809zy+ptyPJmCdH9bcLgXE=
+X-Received: by 2002:a1f:d8c3:: with SMTP id p186mr7553368vkg.1.1623064529977;
+ Mon, 07 Jun 2021 04:15:29 -0700 (PDT)
 MIME-Version: 1.0
 References: <20210605060447.GA18461@allandria.com> <1622958877-2026-1-git-send-email-schmitzmic@gmail.com>
- <1622958877-2026-3-git-send-email-schmitzmic@gmail.com> <CAMuHMdXEs874y3nBjVNt8TQP-AMLTRMFgh+1wMt2xyJP3W_+Dg@mail.gmail.com>
- <d6268e39-295d-f9a4-862c-738803168f03@gmail.com>
-In-Reply-To: <d6268e39-295d-f9a4-862c-738803168f03@gmail.com>
-From:   ALeX Kazik <alex@kazik.de>
-Date:   Mon, 7 Jun 2021 10:46:09 +0200
-Message-ID: <CAFFuhJp5iu-2o4wYf3XSsCF3VV_T-q8gp08bkPpGBs8Ra_OnKw@mail.gmail.com>
-Subject: Re: [PATCH RFC 2/2] net/8390: apne.c - add 100 Mbit support to apne.c driver
+ <1622958877-2026-2-git-send-email-schmitzmic@gmail.com>
+In-Reply-To: <1622958877-2026-2-git-send-email-schmitzmic@gmail.com>
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+Date:   Mon, 7 Jun 2021 13:15:18 +0200
+Message-ID: <CAMuHMdX1cD_zt6hU-6CUZi=uyYdk_xgW+hTCXvxSTRFPy_qn5w@mail.gmail.com>
+Subject: Re: [PATCH RFC 1/2] m68k: io_mm.h - add APNE 100 MBit support
 To:     Michael Schmitz <schmitzmic@gmail.com>
-Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
-        "Linux/m68k" <linux-m68k@vger.kernel.org>,
-        linux-ide@vger.kernel.org, Finn Thain <fthain@linux-m68k.org>
+Cc:     "Linux/m68k" <linux-m68k@vger.kernel.org>,
+        linux-ide@vger.kernel.org, Finn Thain <fthain@linux-m68k.org>,
+        ALeX Kazik <alex@kazik.de>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi all,
+Hi Michael,
 
-> It's been quite a while - can you still try and build/test this change, Alex?
-
-I'm happy to test it again (assuming my Amiga still works, not used
-for a while).
-But I'm waiting until you guys have perfected the patch.
-
-> >> +
-> >>         pr_info("Looking for PCMCIA ethernet card : ");
-> >>
-> >>         /* check if a card is inserted */
-> >> @@ -590,6 +597,16 @@ static int init_pcmcia(void)
-> >>  #endif
-> >>         u_long offset;
-> >>
-> >> +#ifdef CONFIG_APNE100MBIT
-> >> +       /* reset card (idea taken from CardReset by Artur Pogoda) */
-> >> +       {
-> >> +               u_char  tmp = gayle.intreq;
-> >> +
-> >> +               gayle.intreq = 0xff;    mdelay(1);
-> >> +               gayle.intreq = tmp;     mdelay(300);
-> >> +       }
-> >
-> > Is this safe for all cards?
+On Sun, Jun 6, 2021 at 7:54 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
+> Add code to support 10 Mbit and 100 Mbit mode for APNE driver.
 >
-> I _think_ so, but this really is a question for Alex and others involved
-> in developing the original patch. (The original patch had that
-> conditionalized as well so I might be wrong ...)
+> A new ISA type ISA_TYPE_AG100 switches the Amiga ISA inb accessor
+> to word access as required by the 100 Mbit cards.
+>
+> Patch modified after patch "[PATCH RFC net-next] Amiga PCMCIA
+> 100 MBit card support" submitted to netdev 2018/09/16 by Alex
+> Kazik <alex@kazik.de>.
+>
+> Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
 
-My code is based on the patches here: http://www.g-mb.de/pcmcia_e.html
+> --- a/arch/m68k/include/asm/io_mm.h
+> +++ b/arch/m68k/include/asm/io_mm.h
+> @@ -212,13 +232,16 @@ static inline u16 __iomem *isa_mtw(unsigned long addr)
+>  }
+>
+>
+> -#define isa_inb(port)      in_8(isa_itb(port))
+>  #define isa_inw(port)      (ISA_SEX ? in_be16(isa_itw(port)) : in_le16(isa_itw(port)))
+>  #define isa_inl(port)      (ISA_SEX ? in_be32(isa_itl(port)) : in_le32(isa_itl(port)))
+>  #define isa_outb(val,port) out_8(isa_itb(port),(val))
+>  #define isa_outw(val,port) (ISA_SEX ? out_be16(isa_itw(port),(val)) : out_le16(isa_itw(port),(val)))
+>  #define isa_outl(val,port) (ISA_SEX ? out_be32(isa_itl(port),(val)) : out_le32(isa_itl(port),(val)))
+>
+> +/* for APNE 100 Mbit cards - hope the APNE 100 case will be eliminated as
+> + * dead code if MULTI_ISA is not set */
+> +#define isa_inb(port)      ((ISA_TYPE == ISA_TYPE_AG100) ? ((port) & 1 ? isa_inw((port) - 1) & 0xff : isa_inw(port) >> 8) : in_8(isa_itb(port))
 
-I'm not deep into it, just adapted the patch. And that's why I can't
-tell if the other drivers will work with it always enabled, sorry.
+This fails to compile due to a missing closing parenthesis.
 
-Bye,
-Alex.
+Gr{oetje,eeting}s,
+
+                        Geert
+
+-- 
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
