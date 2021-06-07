@@ -4,47 +4,47 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0D3AC4743F
-	for <linux-ide@archiver.kernel.org>; Mon,  7 Jun 2021 11:15:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B0A6C47082
+	for <linux-ide@archiver.kernel.org>; Mon,  7 Jun 2021 12:56:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A5E961205
-	for <linux-ide@archiver.kernel.org>; Mon,  7 Jun 2021 11:15:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B10360240
+	for <linux-ide@archiver.kernel.org>; Mon,  7 Jun 2021 12:56:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230219AbhFGLRV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 7 Jun 2021 07:17:21 -0400
-Received: from mail-ua1-f45.google.com ([209.85.222.45]:38586 "EHLO
-        mail-ua1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230215AbhFGLRV (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jun 2021 07:17:21 -0400
-Received: by mail-ua1-f45.google.com with SMTP id d13so8775435uav.5;
-        Mon, 07 Jun 2021 04:15:30 -0700 (PDT)
+        id S230286AbhFGM61 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 7 Jun 2021 08:58:27 -0400
+Received: from mail-vs1-f48.google.com ([209.85.217.48]:41574 "EHLO
+        mail-vs1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230145AbhFGM60 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jun 2021 08:58:26 -0400
+Received: by mail-vs1-f48.google.com with SMTP id c1so2408955vsh.8;
+        Mon, 07 Jun 2021 05:56:25 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=Wgp/tBpjeqf6O2lPslH9bnakWrDSZCGb8Fz8Hl4UvnQ=;
-        b=rd7fZ/Vc5Tsay7oyC4m89l5lqP08dgiz09ZdO4zJ6HMYgmJvuH6hXsxDYXBwB1yXeW
-         CcD/yq1hOEV4NKwk6DahbTpdihR9ASHQYzV5yHoDY0SUm3RLdOBtnM+XO/TXKPdAFnBk
-         m3bloOuU8x2w6GPMs24zEK2Ai8wHNSekm2HxRx+YRbc7nbDmrmjIhIcYwyBH51aOnd5r
-         NbDRexnwa/1j30Pjx6f8cHI/529WMBCtisWiMUFV4M2d3o7/wAj7SNh/aXuu4p6yH9NQ
-         bioNtg39fLmaasgjhN84GWLAk9GAyX/EtAHhO3BKwgIeJhMici0RcueLDUa81deR2RDZ
-         gyDQ==
-X-Gm-Message-State: AOAM530rsROBqmATWwAcFhc6rjkMGUPzKZZn4szat8iJabkNIzGj5cDw
-        vV8QJvBSFUy2pZOwql/49mvb+Zyn38ZV2MSMMqM=
-X-Google-Smtp-Source: ABdhPJwXLFVczFNkh7qoopILS7Zq6IMI4+2N7i/u5ETu9RMK0fDl0OmoiIgsh/Y9sOA5u809zy+ptyPJmCdH9bcLgXE=
-X-Received: by 2002:a1f:d8c3:: with SMTP id p186mr7553368vkg.1.1623064529977;
- Mon, 07 Jun 2021 04:15:29 -0700 (PDT)
+        bh=NKFYA0rVo8pDDw3kqdWXLZF1QMNcT83wO8lP+2uYg3I=;
+        b=bVfh8Z8qT1kaBB4btl4fbQ4NBGvgk6WsSJo7GnWHOuJ2iQuTegfkIe4ecr49M+xqis
+         H4w6l8N65QXE4M1AWyUzDc0QvwDeikt5rYGWxOBqcBrAB3Rmqm1pk8B09WdNif9gTgGw
+         xZpsyHHdY3/ueM9dOzdoSuNYPt1imt129x5tZZBZl/A8WhRend8sFkW9kTBt6j4KgPOH
+         an/WMoXbKJjmwkdWjfiP845xSidA/LHljY2SDdkgTlIk6ZLQ66S77967ym2W1tzUa7U7
+         bGVTg6M9ZF/F8OLE3cNuG4S+mw7tIGBk1hESdCNV0cHx+7hTPAXP0oMSpMghupABAA2R
+         C48A==
+X-Gm-Message-State: AOAM533yF1tpJOEFAQxLaEjxG9/GBIk5gJ4tCsNleMd86dMYbj4QIkrP
+        8XWz4yEXE2+XDYtBcGEKK4NpRDXAy0wmKLcqakM=
+X-Google-Smtp-Source: ABdhPJzUtDvgpW/g1ADKtzeLLT+XbV3CaoKPpoIwtbMz1ogDAj4PP0yO79AYml3nrvytqf4H1IMt+p9MLBJdpHlXmXo=
+X-Received: by 2002:a05:6102:2011:: with SMTP id p17mr8293272vsr.40.1623070584665;
+ Mon, 07 Jun 2021 05:56:24 -0700 (PDT)
 MIME-Version: 1.0
 References: <20210605060447.GA18461@allandria.com> <1622958877-2026-1-git-send-email-schmitzmic@gmail.com>
- <1622958877-2026-2-git-send-email-schmitzmic@gmail.com>
-In-Reply-To: <1622958877-2026-2-git-send-email-schmitzmic@gmail.com>
+ <1622958877-2026-3-git-send-email-schmitzmic@gmail.com>
+In-Reply-To: <1622958877-2026-3-git-send-email-schmitzmic@gmail.com>
 From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Mon, 7 Jun 2021 13:15:18 +0200
-Message-ID: <CAMuHMdX1cD_zt6hU-6CUZi=uyYdk_xgW+hTCXvxSTRFPy_qn5w@mail.gmail.com>
-Subject: Re: [PATCH RFC 1/2] m68k: io_mm.h - add APNE 100 MBit support
+Date:   Mon, 7 Jun 2021 14:56:13 +0200
+Message-ID: <CAMuHMdXOnAwrdjnqwWeMGBv8Y+eKk1SQSs+tHnFL9Q89W3gGhQ@mail.gmail.com>
+Subject: Re: [PATCH RFC 2/2] net/8390: apne.c - add 100 Mbit support to apne.c driver
 To:     Michael Schmitz <schmitzmic@gmail.com>
 Cc:     "Linux/m68k" <linux-m68k@vger.kernel.org>,
         linux-ide@vger.kernel.org, Finn Thain <fthain@linux-m68k.org>,
@@ -57,10 +57,13 @@ X-Mailing-List: linux-ide@vger.kernel.org
 Hi Michael,
 
 On Sun, Jun 6, 2021 at 7:54 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> Add code to support 10 Mbit and 100 Mbit mode for APNE driver.
+> Add Kconfig option, module parameter and PCMCIA reset code
+> required to support 100 Mbit PCMCIA ethernet cards on Amiga.
 >
-> A new ISA type ISA_TYPE_AG100 switches the Amiga ISA inb accessor
-> to word access as required by the 100 Mbit cards.
+> 10 Mbit and 100 Mbit mode are supported by the same module.
+> A module parameter switches Amiga ISA IO accessors to word
+> access by changing isa_type at runtime. Additional code to
+> reset the PCMCIA hardware is also added to the driver probe.
 >
 > Patch modified after patch "[PATCH RFC net-next] Amiga PCMCIA
 > 100 MBit card support" submitted to netdev 2018/09/16 by Alex
@@ -68,24 +71,16 @@ On Sun, Jun 6, 2021 at 7:54 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
 >
 > Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
 
-> --- a/arch/m68k/include/asm/io_mm.h
-> +++ b/arch/m68k/include/asm/io_mm.h
-> @@ -212,13 +232,16 @@ static inline u16 __iomem *isa_mtw(unsigned long addr)
->  }
+> --- a/drivers/net/ethernet/8390/apne.c
+> +++ b/drivers/net/ethernet/8390/apne.c
+> @@ -120,6 +120,10 @@ static u32 apne_msg_enable;
+>  module_param_named(msg_enable, apne_msg_enable, uint, 0444);
+>  MODULE_PARM_DESC(msg_enable, "Debug message level (see linux/netdevice.h for bitmap)");
 >
->
-> -#define isa_inb(port)      in_8(isa_itb(port))
->  #define isa_inw(port)      (ISA_SEX ? in_be16(isa_itw(port)) : in_le16(isa_itw(port)))
->  #define isa_inl(port)      (ISA_SEX ? in_be32(isa_itl(port)) : in_le32(isa_itl(port)))
->  #define isa_outb(val,port) out_8(isa_itb(port),(val))
->  #define isa_outw(val,port) (ISA_SEX ? out_be16(isa_itw(port),(val)) : out_le16(isa_itw(port),(val)))
->  #define isa_outl(val,port) (ISA_SEX ? out_be32(isa_itl(port),(val)) : out_le32(isa_itl(port),(val)))
->
-> +/* for APNE 100 Mbit cards - hope the APNE 100 case will be eliminated as
-> + * dead code if MULTI_ISA is not set */
-> +#define isa_inb(port)      ((ISA_TYPE == ISA_TYPE_AG100) ? ((port) & 1 ? isa_inw((port) - 1) & 0xff : isa_inw(port) >> 8) : in_8(isa_itb(port))
+> +static u32 apne_100_mbit;
+> +module_param_named(apne_100_mbit, uint, 0);
 
-This fails to compile due to a missing closing parenthesis.
+error: macro "module_param_named" requires 4 arguments, but only 3 given
 
 Gr{oetje,eeting}s,
 
