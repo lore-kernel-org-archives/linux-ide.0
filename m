@@ -2,124 +2,143 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5148AC47095
-	for <linux-ide@archiver.kernel.org>; Mon,  7 Jun 2021 19:59:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A78DFC47082
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Jun 2021 03:01:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 195666102A
-	for <linux-ide@archiver.kernel.org>; Mon,  7 Jun 2021 19:59:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8CE5960FE4
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Jun 2021 03:01:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230351AbhFGUAz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 7 Jun 2021 16:00:55 -0400
-Received: from mail-pf1-f172.google.com ([209.85.210.172]:35833 "EHLO
-        mail-pf1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230261AbhFGUAy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jun 2021 16:00:54 -0400
-Received: by mail-pf1-f172.google.com with SMTP id h12so11089168pfe.2;
-        Mon, 07 Jun 2021 12:59:03 -0700 (PDT)
+        id S231543AbhFHDDn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 7 Jun 2021 23:03:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49080 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231520AbhFHDDl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jun 2021 23:03:41 -0400
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D64CC061574;
+        Mon,  7 Jun 2021 20:01:38 -0700 (PDT)
+Received: by mail-pf1-x430.google.com with SMTP id c12so14641380pfl.3;
+        Mon, 07 Jun 2021 20:01:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=lKGKykqdX3l2lHrKO1Ga7RdgoyZwYN2DZgfrToJQoJg=;
-        b=tHwaSrU8oT3NMHgAHYFxCggUcCyV3+nkmIs1d16zLqWUDs//JKbxhajw8p7DDjOjH2
-         q5zbsNG/MTaWbfa5fA3+u6ce4Y9hpQEuh3DuZPMZUEwDi1u5XhYb6lrqTbt/m+yoI16G
-         b0VQcnSzUeI4rF4XeaiDusi4RUPYtTP2a2kx+ZjD07eu+2ErA+In5a6VmaQ0tqAu+RLF
-         OROH3h/wNwK/5OdYegJFqa/UPl+XjAZOnGKlU6SLORzrJMR60hCbyLHrgN0Y6QJV+w83
-         71MLWXwFrD9Lbz/xv3w0SFZ3ff0b8TUCkHfN+hsmFrJun1APsBx1tXHss4Diw37X6KQd
-         EOtQ==
+        h=subject:to:references:cc:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-transfer-encoding;
+        bh=4zyzSgjehYpTMwvkMAdkEk8UOEiuBvRn+Lbe9JMcg3U=;
+        b=KmwLevrVyZBLk+TmP9kkEbneRprDD+cTDc0mI24ZPzZmmSOvZrTtua9iRD/F86olxj
+         XQxcHOeBpFNwsT9mafmBM5kWyJ5XrWUflmotaFtnE7CrU+ZNcSTaL+MwfZ/XEhPwkqoh
+         tFMfhaAChKjg9eh1pl1MkH1RhJtk5qjpF56DA3DJsM1Ch/LcuBuocp0puIiG3kwKqHUm
+         UWfOYdYCU/z4HKw6sRU32qcaLzeoAFtB2Dj9sJGsoJuDoRumahYiN8zrIbcjhQxmxO4R
+         T6cDnViulSmU4/FnHqs+kV1rZL5UoNK/Q/BAVrKvzVrc0muqKf+yHnUpydwdsMJPp0CX
+         jzAw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=lKGKykqdX3l2lHrKO1Ga7RdgoyZwYN2DZgfrToJQoJg=;
-        b=NYf4Jz8LNPUhCXy1sP4CD83xawL0HLxg+A0HyHdudbh7aUGH6PfM9Co0aRr/58HVA8
-         RVqJ4xHWyZj1e+zMKS8KHAmqDF1smsTSsU3zBEuhTGxBANMFEtABy+VSQTvpQZ+5dWla
-         sRymdPRhLQpxPF5sVoaNE6bVxUHrujxGLKO0ZBZiFXmdtEXAaVJ8yOlJKnmIouA2xoJn
-         bFgwnE5LznKzalF7KYg/Aqbv2aMpx50QmKkFM3hcGiiOmvTShJJ8tU3nZZbtCa6r6eyF
-         lMZuGVxgQFdMIgKtU+LWHBJH+0KEjM8qCKMYpJeu0LBz0Pm85Cm7rveDs/3DTFT8P5NL
-         oAFw==
-X-Gm-Message-State: AOAM533gz9fSCcrIaJr9sJvD8AsgAYmxMV7PZ3n7EHuu1pD3hWg3VgiH
-        H50i3gEqk+mlWfUvuMWFtQB9P+J7H+g=
-X-Google-Smtp-Source: ABdhPJywe7pcdVy/glUi0frkOMyiq20cgMZHycTGjk8Q35F8S3biP+ctHo4LktQVL9cf4OQitP+QWw==
-X-Received: by 2002:a05:6a00:1a11:b029:2e9:e204:42ae with SMTP id g17-20020a056a001a11b02902e9e20442aemr18999989pfv.20.1623095882958;
-        Mon, 07 Jun 2021 12:58:02 -0700 (PDT)
-Received: from ?IPv6:2001:df0:0:200c:200e:6f35:219a:3662? ([2001:df0:0:200c:200e:6f35:219a:3662])
-        by smtp.gmail.com with ESMTPSA id pi8sm8288102pjb.52.2021.06.07.12.58.00
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 07 Jun 2021 12:58:02 -0700 (PDT)
-Subject: Re: [PATCH RFC 1/2] m68k: io_mm.h - add APNE 100 MBit support
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     Linux/m68k <linux-m68k@vger.kernel.org>, linux-ide@vger.kernel.org,
-        Finn Thain <fthain@linux-m68k.org>, ALeX Kazik <alex@kazik.de>
-References: <20210605060447.GA18461@allandria.com>
- <1622958877-2026-1-git-send-email-schmitzmic@gmail.com>
- <1622958877-2026-2-git-send-email-schmitzmic@gmail.com>
- <CAMuHMdX1cD_zt6hU-6CUZi=uyYdk_xgW+hTCXvxSTRFPy_qn5w@mail.gmail.com>
+        h=x-gm-message-state:subject:to:references:cc:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
+        bh=4zyzSgjehYpTMwvkMAdkEk8UOEiuBvRn+Lbe9JMcg3U=;
+        b=ZSuETvkqE58LrigtXRsIeLnCu07eCHZFpdHVY7kjJDmdunZtNw8jaCyO5dBIzP4me7
+         aOA+/QLBnDy/JYtGSiyKRFe5EkVr13ehmfayWd4mebwkKMpFIG2S6ZcPnLibUjWJcH0w
+         v6I8pRRP4m8V9DunVBRDHHOx0v3EEjZwsSRlohDQnoowxj+8+MvjjWOLAwFq8o0McLHi
+         bxV/Lm4vWSlu84moW46+9nlqvWPgODe7Q/PyV6Y2IcK5N1jPLvCRjQGWNGuHj5IzgW8D
+         ktx5XLKJc78PbhSdHK99jN3Zfa9ddYZOqmCsgc3JGx7hJ3pAkgqlf7Z10A9IU2va/BmV
+         x2bg==
+X-Gm-Message-State: AOAM533IrF/NE5LQgcDMowNH2DRConNdLqEAvdBJW0FlodUkylnQcQsR
+        cVCkjzYG/qlk18irdfXH1krLJ7xE7M4=
+X-Google-Smtp-Source: ABdhPJyvDlTti6C1rnpagcKLHVsTYa+kmn9kiphYRNiQIyDb3KlqCPzQXCo032VmJ6SiL+ifXjSD1w==
+X-Received: by 2002:a63:9515:: with SMTP id p21mr18889215pgd.333.1623121297946;
+        Mon, 07 Jun 2021 20:01:37 -0700 (PDT)
+Received: from [10.1.1.25] (222-152-189-137-fibre.sparkbb.co.nz. [222.152.189.137])
+        by smtp.gmail.com with ESMTPSA id s22sm1671639pfg.197.2021.06.07.20.01.33
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 07 Jun 2021 20:01:37 -0700 (PDT)
+Subject: Re: [PATCH] m68k/q40: Replace q40ide with pata_falcon and falconide
+To:     Finn Thain <fthain@linux-m68k.org>
+References: <352239036981177050c296ca3deb84a102d9faa2.1622970906.git.fthain@linux-m68k.org>
+ <e250cffb-9edd-1b84-3826-58079758b35a@gmail.com>
+ <4a32d59-ebb-9dc-fec7-ad172547d9a3@linux-m68k.org>
+Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
+        Richard Zidlicky <rz@linux-m68k.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "David S. Miller" <davem@davemloft.net>,
+        linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org
 From:   Michael Schmitz <schmitzmic@gmail.com>
-Message-ID: <b2943f57-396c-cfd7-7064-4a1351585fa3@gmail.com>
-Date:   Tue, 8 Jun 2021 07:57:57 +1200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+Message-ID: <3b789204-a959-a266-9fc3-1b2be09c981a@gmail.com>
+Date:   Tue, 8 Jun 2021 15:01:30 +1200
+User-Agent: Mozilla/5.0 (X11; Linux ppc; rv:45.0) Gecko/20100101
+ Icedove/45.4.0
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdX1cD_zt6hU-6CUZi=uyYdk_xgW+hTCXvxSTRFPy_qn5w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+In-Reply-To: <4a32d59-ebb-9dc-fec7-ad172547d9a3@linux-m68k.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Geert,
+Hi Finn,
 
-On 7/06/21 11:15 pm, Geert Uytterhoeven wrote:
-> Hi Michael,
+
+
+Am 07.06.2021 um 14:07 schrieb Finn Thain:
+> On Mon, 7 Jun 2021, Michael Schmitz wrote:
 >
-> On Sun, Jun 6, 2021 at 7:54 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
->> Add code to support 10 Mbit and 100 Mbit mode for APNE driver.
+>> Hi Finn,
 >>
->> A new ISA type ISA_TYPE_AG100 switches the Amiga ISA inb accessor
->> to word access as required by the 100 Mbit cards.
->>
->> Patch modified after patch "[PATCH RFC net-next] Amiga PCMCIA
->> 100 MBit card support" submitted to netdev 2018/09/16 by Alex
->> Kazik <alex@kazik.de>.
->>
->> Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
->> --- a/arch/m68k/include/asm/io_mm.h
->> +++ b/arch/m68k/include/asm/io_mm.h
->> @@ -212,13 +232,16 @@ static inline u16 __iomem *isa_mtw(unsigned long addr)
->>   }
->>
->>
->> -#define isa_inb(port)      in_8(isa_itb(port))
->>   #define isa_inw(port)      (ISA_SEX ? in_be16(isa_itw(port)) : in_le16(isa_itw(port)))
->>   #define isa_inl(port)      (ISA_SEX ? in_be32(isa_itl(port)) : in_le32(isa_itl(port)))
->>   #define isa_outb(val,port) out_8(isa_itb(port),(val))
->>   #define isa_outw(val,port) (ISA_SEX ? out_be16(isa_itw(port),(val)) : out_le16(isa_itw(port),(val)))
->>   #define isa_outl(val,port) (ISA_SEX ? out_be32(isa_itl(port),(val)) : out_le32(isa_itl(port),(val)))
->>
->> +/* for APNE 100 Mbit cards - hope the APNE 100 case will be eliminated as
->> + * dead code if MULTI_ISA is not set */
->> +#define isa_inb(port)      ((ISA_TYPE == ISA_TYPE_AG100) ? ((port) & 1 ? isa_inw((port) - 1) & 0xff : isa_inw(port) >> 8) : in_8(isa_itb(port))
-> This fails to compile due to a missing closing parenthesis.
-
-Sorry - looks like brown paper bag time today. (I did say 'entirely 
-untested'? Didn't expect such a thorough review for a first RFC patch ...)
-
-Apologies,
-
-     Michael
-
-
+>> are there any substantial changes from what I'd tested before?
 >
-> Gr{oetje,eeting}s,
+> The request_region() stuff is new, and I reworked the host->get_lock and
+> host->release_lock changes. So you may want to review it again.
+
+Done that - the weirdness around request_irq() that I remembered is not 
+actually an issue, that's taken care of by setting host->get_lock. And 
+your patch doesn't change anything for Falcon.
+
+Tested on my Falcon - I can still use both IDE and SCSI (no stress test 
+done but I doubt it would turn out much different).
+
+Not setting host->get_lock on Q40 will correctly request the IRQ for IDE 
+there, the same lowlevel IO routines can be shared by both, and there 
+wasn't ever much more that these old drivers did.
+
+Please add my Reviewed-by as well as Tested-by.
+
+Cheers,
+
+	Michael
+
+
+>> Your patch conflicts with (I think) the Mac IDE patches now in Geert's
+>> tree, and I'd rather avoid hand-patching the lot if at all possible:
+>>
+>> m68k_q40_Replace_q40ide_with_pata_falcon_and_falconide
+>> Applying: m68k/q40: Replace q40ide with pata_falcon and falconide
+>> error: patch failed: arch/m68k/configs/multi_defconfig:351
+>> error: arch/m68k/configs/multi_defconfig: patch does not apply
+>> error: patch failed: drivers/ide/Kconfig:731
+>> error: drivers/ide/Kconfig: patch does not apply
+>> error: patch failed: drivers/ide/Makefile:29
+>> error: drivers/ide/Makefile: patch does not apply
+>>
 >
->                          Geert
+> I should have sent these as a two-part series. Sorry about that.
+> You'll need to apply this patch first:
+> https://lore.kernel.org/linux-ide/3de9a93d-2f7-a650-1fa-c2129a4a765b@nippy.intranet/T/
+>
+>> What's your baseline for this patch?
+>>
+>
+> I've used v5.12 and v5.13-rc5, but mostly I develop on the mac68k branch
+> in my github repository.
+>
+>> (In the alternative: just add my Tested-by if nothing changed aside from the
+>> IO region reservation)
+>>
+>
+> I have tested these patches in Aranym (including a multi-platform
+> atari/q40 build which required your ISA fix) but I don't have any way to
+> test the q40-only code.
 >
