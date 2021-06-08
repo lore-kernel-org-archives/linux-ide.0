@@ -7,55 +7,52 @@ X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66600C4743D
-	for <linux-ide@archiver.kernel.org>; Tue,  8 Jun 2021 21:56:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64B66C4743F
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Jun 2021 21:57:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 522BC61278
-	for <linux-ide@archiver.kernel.org>; Tue,  8 Jun 2021 21:56:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 471C76124B
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Jun 2021 21:57:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234501AbhFHV6A (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 8 Jun 2021 17:58:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45814 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234404AbhFHV57 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jun 2021 17:57:59 -0400
-Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 522DDC061574;
-        Tue,  8 Jun 2021 14:56:06 -0700 (PDT)
-Received: by mail-pg1-x535.google.com with SMTP id t17so1113564pga.5;
-        Tue, 08 Jun 2021 14:56:06 -0700 (PDT)
+        id S234725AbhFHV6w (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 8 Jun 2021 17:58:52 -0400
+Received: from mail-pf1-f178.google.com ([209.85.210.178]:36444 "EHLO
+        mail-pf1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234344AbhFHV6q (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jun 2021 17:58:46 -0400
+Received: by mail-pf1-f178.google.com with SMTP id c12so16815084pfl.3;
+        Tue, 08 Jun 2021 14:56:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-transfer-encoding:content-language;
         bh=mr9J0RXtCDZq3pRoOBycR1dqunNt6hX8FuEJsnSVmro=;
-        b=IO63RfGZ69ZgM942TEJFeYP5OftLiQp7RB3prmowsyo7ABGi4wwT2lNf/cekvvBQ16
-         gRN9oHb2ETn3gUHwaZBPDFqGoJ0iVL3IOyefwqitQTn1DtDHLxXjaibRizAfKnBLKVEY
-         OgA0ZzSQRUPycn+KGpf/q0X9ccWY4MNFkluG2sd5qNR0BpjAw/RdeW4Wrz2BPUpKGy8z
-         XqNTJL4fipB8ydUqXrH81olOKLawWWINtzyy4eJI/YDssdC+62HtIDmykkmPTxJCGFeq
-         8+1HSPaTVY/zsjAcvcIJZl7ONyE6VroBZGi8lI1e0wE983mP4oaX9qnV7UR6VPj9ShMm
-         679g==
+        b=PfcI5crnVHRvKskKI62kLlNbY5tuW2XSc4BghK6NoINfwvY0FYxntuYmAJ58eHKZEg
+         6d5z9fNv/fTV2T4Zo77XriGM+w6wVEMwbkSXwXuro9AJMIGRHYm2HB/Dspv3519/m3oM
+         IZKXzyvS+A4QqAaO564E/jMLCRtGRLCLNUZ1DlA4kAr+yVYAJdLdjbwXIijft5W7w2AY
+         1OeIZm0iuvurQAVX56IdaVGuyoCNRWlpY7KzKeUlqDwK17jCg2SCtlS15M28zcgWL2YP
+         Lf1H5DmFk2yjgV4SFFqpKEmjC80QQptTjZZy89nbtXgaB3Zk8DKq1GKxTsQO49wqrmHI
+         7aDw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-transfer-encoding
          :content-language;
         bh=mr9J0RXtCDZq3pRoOBycR1dqunNt6hX8FuEJsnSVmro=;
-        b=khzKOVWHPhj6xstao9Bh/G37Rm5VyRqzUn93PpawsLRoRAaz79+5cTZVoV2Z5U94vE
-         kfJ8AjubTfLcBrymc4lsHp2dYmvIeoZuLdtmnhi+ESpjFbwdV1ZuwbQFdaBTVHmFCyPq
-         23ZG5kL887iruYy2zFnRp1x149BAowuJaZCtBfSyB0DR98hFtGIf2byOs3+LxOE7NaS2
-         c1YIR20IK2S4N0C690V6I50poB/62VqddG4A3iLGQ42/zQtax/OPP+zhLZVfh7CYPDc7
-         VAL8fKw5nuupIPPI9MTiIhRDUpJTWg375o6RGuVZwJ99Cae1v1aE1yHJMSAiE8IqWQUg
-         Jwqw==
-X-Gm-Message-State: AOAM5327UbxBQflPYE5Gnb2RkpHA4UcFGT31EYBGAGwF9BQ5OtPZ1irH
-        rlnLwPWqUtzPNKU1CFsuhBNqQEkgd9o=
-X-Google-Smtp-Source: ABdhPJyY17wt2L23v5ox7iYCDQIIRUJ3jI7hGfRDf1VkuPj/83v4GO/ajw2Pa6akByn7yny+/+QB3Q==
-X-Received: by 2002:a62:2901:0:b029:28e:ef3d:10d2 with SMTP id p1-20020a6229010000b029028eef3d10d2mr1865168pfp.45.1623189365520;
-        Tue, 08 Jun 2021 14:56:05 -0700 (PDT)
+        b=BuAwwjEJoqV1Qu+2n+f3hBj4Vy+ZNew2BSUtYwyGznOR/GR3gQ6MgXO3FEcLTsF/p6
+         izZRYYXkMdSRk+6IfU9nloEb4P2R0NSiI3g/UuHFhDl/waYLGS//g/HAkPLqiuhpchj5
+         3E3oha1t9mBg8StlkFxXb0SN3pk/FUEPzIOZj91BkQ1ZBsmYBkm5PVOf9Bq6NtPNsEnB
+         LTHlSgfbZTvApO2mrYunxcOhPBOR9FOChu8wqXFeeYVFHHNV87N+DLD5v1WCxKIMQ+RI
+         GhKTksSmrTBp9pNcQmUrbgIxzQqut3VsD4hkUWOp7WmNUWxvt1XKdoutikA4o8OozTpR
+         lOew==
+X-Gm-Message-State: AOAM5327ijC8dgUvhEd2gwrCSU2qswlYDz0Z+rotmXbGC+4RT6Xoaskh
+        rmHLj+NjNhSSYqqhU2g0oPGzyeBjX2U=
+X-Google-Smtp-Source: ABdhPJw0NTcVeabyAHs0/a0kTX+yGxw/o/pZb1WKvzQSYvmAZhf+G/ry7k2lD8mzZOEyHSucD28YLQ==
+X-Received: by 2002:a63:1004:: with SMTP id f4mr329361pgl.115.1623189352821;
+        Tue, 08 Jun 2021 14:55:52 -0700 (PDT)
 Received: from ?IPv6:2001:df0:0:200c:6c1b:b1ca:5501:207d? ([2001:df0:0:200c:6c1b:b1ca:5501:207d])
-        by smtp.gmail.com with ESMTPSA id m129sm11488816pfb.7.2021.06.08.14.56.03
+        by smtp.gmail.com with ESMTPSA id s15sm15794228pjr.18.2021.06.08.14.55.49
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 08 Jun 2021 14:56:05 -0700 (PDT)
+        Tue, 08 Jun 2021 14:55:52 -0700 (PDT)
 Subject: Re: [PATCH RFC 1/2] m68k: io_mm.h - add APNE 100 MBit support
 To:     Geert Uytterhoeven <geert@linux-m68k.org>
 Cc:     Linux/m68k <linux-m68k@vger.kernel.org>, linux-ide@vger.kernel.org,
@@ -67,8 +64,8 @@ References: <20210605060447.GA18461@allandria.com>
  <b2943f57-396c-cfd7-7064-4a1351585fa3@gmail.com>
  <CAMuHMdXDXSh2VkpFyFDXpPFDS+f2JGhU-x1gn2dTCSub=9gw8w@mail.gmail.com>
 From:   Michael Schmitz <schmitzmic@gmail.com>
-Message-ID: <617eb8d2-7cd3-e6c5-7c9c-bb32ef35fb2c@gmail.com>
-Date:   Wed, 9 Jun 2021 09:56:00 +1200
+Message-ID: <602d8eed-dcad-33db-3b64-d099c2f33503@gmail.com>
+Date:   Wed, 9 Jun 2021 09:55:47 +1200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
