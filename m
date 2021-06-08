@@ -2,104 +2,68 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49711C4743E
-	for <linux-ide@archiver.kernel.org>; Tue,  8 Jun 2021 06:42:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29F4CC47082
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Jun 2021 14:38:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2B775611BD
-	for <linux-ide@archiver.kernel.org>; Tue,  8 Jun 2021 06:42:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BA266100B
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Jun 2021 14:38:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229507AbhFHGon (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 8 Jun 2021 02:44:43 -0400
-Received: from mail-vs1-f50.google.com ([209.85.217.50]:34397 "EHLO
-        mail-vs1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229657AbhFHGom (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jun 2021 02:44:42 -0400
-Received: by mail-vs1-f50.google.com with SMTP id q2so2915463vsr.1;
-        Mon, 07 Jun 2021 23:42:50 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=uh8HVNA1CoHHn3gsvnYelJgEcLtS8VQWfCKOnvYkTR0=;
-        b=QazluQD6dqkzEzIUbp0SjjoSLxvltr9MbzQDY7wdkV8ty6SZH7bBt1qYXQmFxMEjBP
-         NLHklz4ZuEBzmNdEoQVMsO3tBDx5TRrc+6VA820j/x04kb1XDiwRArWB4pBdYg7GvTGH
-         AytrfwOt0ew9NVbRzjrrT9TiTsbtslsbdqNrADBAaD/V1WkApCgTmvhE7bc98Kh+HoBh
-         ImUNlZ0c9zPvAfssvwKkOkj30oO7MrER0FG1LvWxxY6DsmOg0gKVq+6hc4K3L+cVje+T
-         L5BQTUWtOUFBQn3sWXJ8oKcwl90wn7B7E4qmBjyUPU3Ip8kGqLUbfPD7pUKcpSfre/2c
-         koTA==
-X-Gm-Message-State: AOAM533K0ptjqdREkKKd4jLKeA0CIcPvdQstDnoxOF0e4RBDbv7ocD3Q
-        ejXPC/A28HEV9Bm+/oytCGOWJu2u1lb7D5yx6m8=
-X-Google-Smtp-Source: ABdhPJw7FTOmF92eD7pkc9jfXU8xB1JoFwxiW8B5Z+8hEoMj937klVZqauirHweN/cDJG+B4SNp7f0sNyMOf9T1elAQ=
-X-Received: by 2002:a05:6102:2011:: with SMTP id p17mr11257426vsr.40.1623134569719;
- Mon, 07 Jun 2021 23:42:49 -0700 (PDT)
+        id S233513AbhFHOkE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 8 Jun 2021 10:40:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33196 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233316AbhFHOkC (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jun 2021 10:40:02 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EB69C06178B;
+        Tue,  8 Jun 2021 07:38:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=sMEsStOb6mO9hXHdT3HWSmfrRuJ0Awq1YlH4iEA8L4Y=; b=KFplbzH/LlDm+AgUOf2U3e3d9H
+        GLn3zqEjGHW+Ei/TTsCFYfGLui341DfsWefMKpI6fnAW+l4q3H1pyXf1V4CGFoU88MBFCZ4sUeQqf
+        rr0mEh6nyOS4EVCF2ORhPFHrm6ycrBSTzuuGq5b8i8F6uStpFoB2yYVLdSo50hR7rNIgZ9X5dXmMY
+        wNZAJMxQHKrGwKIGZXO4r5fKNXfT3ZeRiJ7gq+grDL/03GEWEgAvCzEjdBlsP2YAoiWDh6+XMozmh
+        9QN0dZsccRRXkkii2OZ2xFYtR4jXqY4bVgq4LBqzFPQ7WXAYIo1axFCfeLy2YPZDhCXeF15pbaMUO
+        /fsTBHmQ==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1lqcrA-00H1nj-W6; Tue, 08 Jun 2021 14:37:34 +0000
+Date:   Tue, 8 Jun 2021 15:37:28 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Finn Thain <fthain@linux-m68k.org>
+Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "David S. Miller" <davem@davemloft.net>,
+        Joshua Thompson <funaho@jurai.org>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+        Richard Zidlicky <rz@linux-m68k.org>,
+        Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: [PATCH v2 0/2] Use libata platform drivers to replace deprecated
+ m68k IDE drivers
+Message-ID: <YL+AqIEPjMgG519L@infradead.org>
+References: <cover.1623131194.git.fthain@linux-m68k.org>
 MIME-Version: 1.0
-References: <20210605060447.GA18461@allandria.com> <1622958877-2026-1-git-send-email-schmitzmic@gmail.com>
- <1622958877-2026-2-git-send-email-schmitzmic@gmail.com> <CAMuHMdX1cD_zt6hU-6CUZi=uyYdk_xgW+hTCXvxSTRFPy_qn5w@mail.gmail.com>
- <b2943f57-396c-cfd7-7064-4a1351585fa3@gmail.com>
-In-Reply-To: <b2943f57-396c-cfd7-7064-4a1351585fa3@gmail.com>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Tue, 8 Jun 2021 08:42:38 +0200
-Message-ID: <CAMuHMdXDXSh2VkpFyFDXpPFDS+f2JGhU-x1gn2dTCSub=9gw8w@mail.gmail.com>
-Subject: Re: [PATCH RFC 1/2] m68k: io_mm.h - add APNE 100 MBit support
-To:     Michael Schmitz <schmitzmic@gmail.com>
-Cc:     "Linux/m68k" <linux-m68k@vger.kernel.org>,
-        linux-ide@vger.kernel.org, Finn Thain <fthain@linux-m68k.org>,
-        ALeX Kazik <alex@kazik.de>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cover.1623131194.git.fthain@linux-m68k.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Michael,
+On Tue, Jun 08, 2021 at 03:46:34PM +1000, Finn Thain wrote:
+> This patch series allows m68k platforms to switch from deprecated IDE
+> drivers to libata drivers.
 
-On Mon, Jun 7, 2021 at 9:58 PM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> On 7/06/21 11:15 pm, Geert Uytterhoeven wrote:
-> > On Sun, Jun 6, 2021 at 7:54 AM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> >> Add code to support 10 Mbit and 100 Mbit mode for APNE driver.
-> >>
-> >> A new ISA type ISA_TYPE_AG100 switches the Amiga ISA inb accessor
-> >> to word access as required by the 100 Mbit cards.
-> >>
-> >> Patch modified after patch "[PATCH RFC net-next] Amiga PCMCIA
-> >> 100 MBit card support" submitted to netdev 2018/09/16 by Alex
-> >> Kazik <alex@kazik.de>.
-> >>
-> >> Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
-> >> --- a/arch/m68k/include/asm/io_mm.h
-> >> +++ b/arch/m68k/include/asm/io_mm.h
-> >> @@ -212,13 +232,16 @@ static inline u16 __iomem *isa_mtw(unsigned long addr)
-> >>   }
-> >>
-> >>
-> >> -#define isa_inb(port)      in_8(isa_itb(port))
-> >>   #define isa_inw(port)      (ISA_SEX ? in_be16(isa_itw(port)) : in_le16(isa_itw(port)))
-> >>   #define isa_inl(port)      (ISA_SEX ? in_be32(isa_itl(port)) : in_le32(isa_itl(port)))
-> >>   #define isa_outb(val,port) out_8(isa_itb(port),(val))
-> >>   #define isa_outw(val,port) (ISA_SEX ? out_be16(isa_itw(port),(val)) : out_le16(isa_itw(port),(val)))
-> >>   #define isa_outl(val,port) (ISA_SEX ? out_be32(isa_itl(port),(val)) : out_le32(isa_itl(port),(val)))
-> >>
-> >> +/* for APNE 100 Mbit cards - hope the APNE 100 case will be eliminated as
-> >> + * dead code if MULTI_ISA is not set */
-> >> +#define isa_inb(port)      ((ISA_TYPE == ISA_TYPE_AG100) ? ((port) & 1 ? isa_inw((port) - 1) & 0xff : isa_inw(port) >> 8) : in_8(isa_itb(port))
-> > This fails to compile due to a missing closing parenthesis.
->
-> Sorry - looks like brown paper bag time today. (I did say 'entirely
-> untested'? Didn't expect such a thorough review for a first RFC patch ...)
+Thanks, this looks good to me:
 
-Sorry, I missed that part in the cover letter ;-)
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Gr{oetje,eeting}s,
-
-                        Geert
-
--- 
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Jens, any chance you could pick this up quickly to prepare for the
+legacy IDE removal series?
