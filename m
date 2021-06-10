@@ -2,676 +2,262 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B3B7C48BCF
-	for <linux-ide@archiver.kernel.org>; Thu, 10 Jun 2021 01:34:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAAADC48BCD
+	for <linux-ide@archiver.kernel.org>; Thu, 10 Jun 2021 02:05:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3CE1F6140D
-	for <linux-ide@archiver.kernel.org>; Thu, 10 Jun 2021 01:34:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B38E0613BC
+	for <linux-ide@archiver.kernel.org>; Thu, 10 Jun 2021 02:05:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229979AbhFJBgk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 9 Jun 2021 21:36:40 -0400
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:56122 "EHLO
-        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229966AbhFJBgj (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jun 2021 21:36:39 -0400
-Received: by kvm5.telegraphics.com.au (Postfix, from userid 502)
-        id EEF212A970; Wed,  9 Jun 2021 21:34:32 -0400 (EDT)
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        "Michael Schmitz" <schmitzmic@gmail.com>,
-        "Richard Zidlicky" <rz@linux-m68k.org>,
-        linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org,
-        linux-ide@vger.kernel.org
-Message-Id: <eefb7e9c2291e09fb4e065ce06bc105f05bb9e06.1623287706.git.fthain@linux-m68k.org>
-In-Reply-To: <cover.1623287706.git.fthain@linux-m68k.org>
-References: <cover.1623287706.git.fthain@linux-m68k.org>
-From:   Finn Thain <fthain@linux-m68k.org>
-Subject: [PATCH v3 2/2] m68k/q40: Replace q40ide driver with pata_falcon and
- falconide
-Date:   Thu, 10 Jun 2021 11:15:06 +1000
+        id S229943AbhFJCHF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 9 Jun 2021 22:07:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51148 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229507AbhFJCHD (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jun 2021 22:07:03 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75394C061574;
+        Wed,  9 Jun 2021 19:04:52 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id p13so324768pfw.0;
+        Wed, 09 Jun 2021 19:04:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=HHAxP0hOGSJ1IRyI1cn4uIcL8e4bANLQWvBJcz4lwSM=;
+        b=sPF33VxBIajWoEsxIAsBFvh3dFjlJWAVuaeVALLjX5UY9srSNbzrsKESQWLUXkKji7
+         sT+GXojOtxHPYZ/dt6TtR/l1bys7EyMVf//AbyMauX6u/ptOwFAXphhD/WQfP5apKZKt
+         ZVS8xsKYpI8kgw44G9R3qxBCiqHAK9eVlraN1SUYa/hzNI1ERm9kahCU5KE1RDu21nKu
+         pwIt706VZtMqr7pBZfpoEORixlKNGXtxtrhwBk751pUQMv3ExmxTRjVVqkOG9zXtMMd5
+         +0uVQuqxh/76jXeyk8Y0o80yHotz1ZpNOBQCIqXdv5NzLS6RTTEkN3XjsX2bJe28UWnu
+         tLSQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=HHAxP0hOGSJ1IRyI1cn4uIcL8e4bANLQWvBJcz4lwSM=;
+        b=djGyUzPA+azstdpnhtDKVSdhyEpSVlhyNYJnUUtn9oV+oL5d4Lei+60UL1eeKNJPuZ
+         6gi3rgFy2AhDC3C4ZggwYMjCNcEgdpCHvQib1x13l7QVFn9Izox7CyaH15AxxPQJrZhY
+         Cqzi60f7Bt55UqTBpj7jlGYYvOeyScUt5GAf6VNolIt+7+BGlYgApqnxOqZFrbQ95u4m
+         VvxWVdzFiTIbZ4dVykaFTP8XxcCbF+Dg5W8++PNoA/JNVEpWEV+rQS+7psetBrbccxNP
+         gbyS0r6gK0xfNJTslid+0Sx+rPFcAMaaRY9zx4aPVlntsfN8+MTFvjvhkMWNA1rnQoBC
+         G3Xg==
+X-Gm-Message-State: AOAM533zkFMi9m6SD+GGkZnYcBx51DzxXh59eZ0XCa2a9I4NJbuWQixt
+        R4501CZguJ5j2aAJSa+ivBg=
+X-Google-Smtp-Source: ABdhPJwtmfzqbTg6P/3lMxVWtEdJb8FyZWtDlrquvEFvhpAafkcUl3DqawR2piogf5tygehVgeWHiA==
+X-Received: by 2002:a63:4b0f:: with SMTP id y15mr2554460pga.227.1623290690596;
+        Wed, 09 Jun 2021 19:04:50 -0700 (PDT)
+Received: from xplor.waratah.dyndns.org (222-152-189-137-fibre.sparkbb.co.nz. [222.152.189.137])
+        by smtp.gmail.com with ESMTPSA id f13sm668667pfa.207.2021.06.09.19.04.49
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 09 Jun 2021 19:04:49 -0700 (PDT)
+Received: by xplor.waratah.dyndns.org (Postfix, from userid 1000)
+        id B42B83603D8; Thu, 10 Jun 2021 14:04:45 +1200 (NZST)
+From:   Michael Schmitz <schmitzmic@gmail.com>
+To:     linux-m68k@vger.kernel.org, geert@linux-m68k.org
+Cc:     linux-ide@vger.kernel.org, fthain@linux-m68k.org,
+        Michael Schmitz <schmitzmic@gmail.com>
+Subject: [PATCH v3] m68k: io_mm.h: conditionalize ISA address translation on Atari
+Date:   Thu, 10 Jun 2021 14:04:43 +1200
+Message-Id: <1623290683-17859-1-git-send-email-schmitzmic@gmail.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1623223322-4242-1-git-send-email-schmitzmic@gmail.com>
+References: <1623223322-4242-1-git-send-email-schmitzmic@gmail.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-This allows m68k q40 systems to switch from the deprecated IDE subsystem
-to libata.
+Current io_mm.h uses address translation and ROM port IO primitives when
+port addresses are below 1024, and raw untranslated MMIO IO primitives
+else when CONFIG_ATARI_ROM_ISA is set. This is done regardless of the
+m68k machine type a multi-platform kernel runs on. As a consequence,
+the Q40 IDE driver in multiplatform kernels cannot work.
+Conversely, the Atari IDE driver uses wrong address translation if a
+multiplatform Q40 and Atari kernel does _not_ set CONFIG_ATARI_ROM_ISA.
 
-Enhance the byte-swapping falconide and pata_falcon platform drivers to
-accept an irq resource, for use on q40. Atari ST-DMA IRQ arrangements seem
-to co-exist with q40 IRQ arrangements without too much mess.
+Replace MMIO by ISA IO primitives for addresses > 1024 (if isa_type
+is ISA_TYPE_ENEC), and change the ISA address translation used for
+Atari to a no-op for those addresses.
 
-The new IO resources were added solely for the purpose of making
-request_region() reservations identical to those made by q40ide: these
-regions aren't used for actual IO.
+Switch readb()/writeb() and readw()/writew() to their ISA equivalents
+also. Change the address translation functions to return the identity
+translation if CONFIG_ATARI_ROM_ISA is not defined, and set MULTI_ISA
+for kernels where Q40 and Atari are both configured so this can actually
+work (isa_type set to Q40 at compile time else).
 
-Cc: Michael Schmitz <schmitzmic@gmail.com>
-Cc: Richard Zidlicky <rz@linux-m68k.org>
-Reviewed-and-tested-by: Michael Schmitz <schmitzmic@gmail.com>
-Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Signed-off-by: Finn Thain <fthain@linux-m68k.org>
+Fixes:  84b16b7b0d5c818f ("m68k/atari: ROM port ISA adapter support")
+Signed-off-by: Michael Schmitz <schmitzmic@gmail.com>
+
+--
+Changes from v2:
+
+Andreas Schwab:
+- drop misleading default return comment
+
+Changes from v1:
+
+Geert Uytterhoeven;
+- fix Fixes tag
+- remove comment about isa_sex zero initialization
+- move default return outside switch statement in address
+  translation functions to allow other code to break to default.
+- fix indentation in switch statement
+
+Changes from RFC:
+
+Geert Uytterhoeven;
+- drop setup_mm.c patch
+
+Finn Thain:
+- Add 'Fixes' tag
+- Annotate rationale for MULTI_ISA setting on Atari
+- Use fallthrough macro annotation in Atari address translation
 ---
-Note that q40ide, falconide and pata_falcon all use the same accessors
-(raw_insw_swapw, raw_insw, raw_outsw_swapw, raw_outsw) and hence all
-three drivers are affected by the bug relating to CONFIG_ISA and
-CONFIG_ATARI_ROM_ISA which Michael has been working on recently.
-This patch doesn't make that issue any better or worse.
+ arch/m68k/include/asm/io_mm.h | 66 +++++++++++++++++++++++++++----------------
+ 1 file changed, 41 insertions(+), 25 deletions(-)
 
-Changed since v2:
- - Added #ifdef guards to prevent build failure when CONFIG_ATARI=n.
----
- arch/m68k/atari/config.c          |  12 +--
- arch/m68k/configs/multi_defconfig |   1 -
- arch/m68k/configs/q40_defconfig   |   2 +-
- arch/m68k/q40/config.c            |  37 +++++--
- drivers/ata/Kconfig               |   6 +-
- drivers/ata/pata_falcon.c         |  62 ++++++++---
- drivers/ide/Kconfig               |  18 +---
- drivers/ide/Makefile              |   1 -
- drivers/ide/falconide.c           |  79 +++++++++-----
- drivers/ide/q40ide.c              | 168 ------------------------------
- 10 files changed, 141 insertions(+), 245 deletions(-)
- delete mode 100644 drivers/ide/q40ide.c
-
-diff --git a/arch/m68k/atari/config.c b/arch/m68k/atari/config.c
-index 44f9b5216ac9..261a0f57cc9a 100644
---- a/arch/m68k/atari/config.c
-+++ b/arch/m68k/atari/config.c
-@@ -875,16 +875,8 @@ static const struct resource atari_scsi_tt_rsrc[] __initconst = {
- #define FALCON_IDE_BASE	0xfff00000
+diff --git a/arch/m68k/include/asm/io_mm.h b/arch/m68k/include/asm/io_mm.h
+index d41fa48..9c521b0 100644
+--- a/arch/m68k/include/asm/io_mm.h
++++ b/arch/m68k/include/asm/io_mm.h
+@@ -52,7 +52,11 @@
+ #define Q40_ISA_MEM_B(madr)  (q40_isa_mem_base+1+4*((unsigned long)(madr)))
+ #define Q40_ISA_MEM_W(madr)  (q40_isa_mem_base+  4*((unsigned long)(madr)))
  
- static const struct resource atari_falconide_rsrc[] __initconst = {
--	{
--		.flags = IORESOURCE_MEM,
--		.start = FALCON_IDE_BASE,
--		.end   = FALCON_IDE_BASE + 0x39,
--	},
--	{
--		.flags = IORESOURCE_IRQ,
--		.start = IRQ_MFP_FSCSI,
--		.end   = IRQ_MFP_FSCSI,
--	},
-+	DEFINE_RES_MEM(FALCON_IDE_BASE, 0x38),
-+	DEFINE_RES_MEM(FALCON_IDE_BASE + 0x38, 2),
- };
- 
- int __init atari_platform_init(void)
-diff --git a/arch/m68k/configs/multi_defconfig b/arch/m68k/configs/multi_defconfig
-index 9ee6d2b4d1f4..f4cafed671cb 100644
---- a/arch/m68k/configs/multi_defconfig
-+++ b/arch/m68k/configs/multi_defconfig
-@@ -351,7 +351,6 @@ CONFIG_BLK_DEV_PLATFORM=y
- CONFIG_BLK_DEV_GAYLE=y
- CONFIG_BLK_DEV_BUDDHA=y
- CONFIG_BLK_DEV_FALCON_IDE=y
--CONFIG_BLK_DEV_Q40IDE=y
- CONFIG_RAID_ATTRS=m
- CONFIG_SCSI=y
- CONFIG_BLK_DEV_SD=y
-diff --git a/arch/m68k/configs/q40_defconfig b/arch/m68k/configs/q40_defconfig
-index 3ae421cb24a4..2c25b4096397 100644
---- a/arch/m68k/configs/q40_defconfig
-+++ b/arch/m68k/configs/q40_defconfig
-@@ -317,7 +317,7 @@ CONFIG_DUMMY_IRQ=m
- CONFIG_IDE=y
- CONFIG_IDE_GD_ATAPI=y
- CONFIG_BLK_DEV_IDECD=y
--CONFIG_BLK_DEV_Q40IDE=y
-+CONFIG_BLK_DEV_FALCON_IDE=y
- CONFIG_RAID_ATTRS=m
- CONFIG_SCSI=y
- CONFIG_BLK_DEV_SD=y
-diff --git a/arch/m68k/q40/config.c b/arch/m68k/q40/config.c
-index d6a423875231..5caf1e5be1c2 100644
---- a/arch/m68k/q40/config.c
-+++ b/arch/m68k/q40/config.c
-@@ -286,14 +286,39 @@ static int q40_set_rtc_pll(struct rtc_pll_info *pll)
- 		return -EINVAL;
- }
- 
--static __init int q40_add_kbd_device(void)
--{
--	struct platform_device *pdev;
-+#define PCIDE_BASE1	0x1f0
-+#define PCIDE_BASE2	0x170
-+#define PCIDE_CTL	0x206
-+
-+static const struct resource q40_pata_rsrc_0[] __initconst = {
-+	DEFINE_RES_MEM(q40_isa_io_base + PCIDE_BASE1 * 4, 0x38),
-+	DEFINE_RES_MEM(q40_isa_io_base + (PCIDE_BASE1 + PCIDE_CTL) * 4, 2),
-+	DEFINE_RES_IO(PCIDE_BASE1, 8),
-+	DEFINE_RES_IO(PCIDE_BASE1 + PCIDE_CTL, 1),
-+	DEFINE_RES_IRQ(14),
-+};
- 
-+static const struct resource q40_pata_rsrc_1[] __initconst = {
-+	DEFINE_RES_MEM(q40_isa_io_base + PCIDE_BASE2 * 4, 0x38),
-+	DEFINE_RES_MEM(q40_isa_io_base + (PCIDE_BASE2 + PCIDE_CTL) * 4, 2),
-+	DEFINE_RES_IO(PCIDE_BASE2, 8),
-+	DEFINE_RES_IO(PCIDE_BASE2 + PCIDE_CTL, 1),
-+	DEFINE_RES_IRQ(15),
-+};
-+
-+static __init int q40_platform_init(void)
-+{
- 	if (!MACH_IS_Q40)
- 		return -ENODEV;
- 
--	pdev = platform_device_register_simple("q40kbd", -1, NULL, 0);
--	return PTR_ERR_OR_ZERO(pdev);
-+	platform_device_register_simple("q40kbd", -1, NULL, 0);
-+
-+	platform_device_register_simple("atari-falcon-ide", 0, q40_pata_rsrc_0,
-+					ARRAY_SIZE(q40_pata_rsrc_0));
-+
-+	platform_device_register_simple("atari-falcon-ide", 1, q40_pata_rsrc_1,
-+					ARRAY_SIZE(q40_pata_rsrc_1));
-+
-+	return 0;
- }
--arch_initcall(q40_add_kbd_device);
-+arch_initcall(q40_platform_init);
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 030cb32da980..b7a5abee2147 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -1015,11 +1015,11 @@ config PATA_CMD640_PCI
- 	  If unsure, say N.
- 
- config PATA_FALCON
--	tristate "Atari Falcon PATA support"
--	depends on M68K && ATARI
-+	tristate "Atari Falcon and Q40/Q60 PATA support"
-+	depends on M68K && (ATARI || Q40)
- 	help
- 	  This option enables support for the on-board IDE
--	  interface on the Atari Falcon.
-+	  interface on the Atari Falcon and Q40/Q60.
- 
- 	  If unsure, say N.
- 
-diff --git a/drivers/ata/pata_falcon.c b/drivers/ata/pata_falcon.c
-index 27b0952fde6b..9d0dd8f4c21c 100644
---- a/drivers/ata/pata_falcon.c
-+++ b/drivers/ata/pata_falcon.c
-@@ -33,8 +33,6 @@
- #define DRV_NAME "pata_falcon"
- #define DRV_VERSION "0.1.0"
- 
--#define ATA_HD_CONTROL	0x39
--
- static struct scsi_host_template pata_falcon_sht = {
- 	ATA_PIO_SHT(DRV_NAME),
- };
-@@ -121,23 +119,42 @@ static struct ata_port_operations pata_falcon_ops = {
- 
- static int __init pata_falcon_init_one(struct platform_device *pdev)
- {
--	struct resource *res;
-+	struct resource *base_mem_res, *ctl_mem_res;
-+	struct resource *base_res, *ctl_res, *irq_res;
- 	struct ata_host *host;
- 	struct ata_port *ap;
- 	void __iomem *base;
-+	int irq = 0;
- 
--	dev_info(&pdev->dev, "Atari Falcon PATA controller\n");
-+	dev_info(&pdev->dev, "Atari Falcon and Q40/Q60 PATA controller\n");
- 
--	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	if (!res)
--		return -ENODEV;
-+	base_res = platform_get_resource(pdev, IORESOURCE_IO, 0);
-+	if (base_res && !devm_request_region(&pdev->dev, base_res->start,
-+					   resource_size(base_res), DRV_NAME)) {
-+		dev_err(&pdev->dev, "resources busy\n");
-+		return -EBUSY;
-+	}
- 
--	if (!devm_request_mem_region(&pdev->dev, res->start,
--				     resource_size(res), DRV_NAME)) {
-+	ctl_res = platform_get_resource(pdev, IORESOURCE_IO, 1);
-+	if (ctl_res && !devm_request_region(&pdev->dev, ctl_res->start,
-+					    resource_size(ctl_res), DRV_NAME)) {
- 		dev_err(&pdev->dev, "resources busy\n");
- 		return -EBUSY;
- 	}
- 
-+	base_mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (!base_mem_res)
-+		return -ENODEV;
-+	if (!devm_request_mem_region(&pdev->dev, base_mem_res->start,
-+				     resource_size(base_mem_res), DRV_NAME)) {
-+		dev_err(&pdev->dev, "resources busy\n");
-+		return -EBUSY;
-+	}
-+
-+	ctl_mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-+	if (!ctl_mem_res)
-+		return -ENODEV;
-+
- 	/* allocate host */
- 	host = ata_host_alloc(&pdev->dev, 1);
- 	if (!host)
-@@ -147,10 +164,10 @@ static int __init pata_falcon_init_one(struct platform_device *pdev)
- 	ap->ops = &pata_falcon_ops;
- 	ap->pio_mask = ATA_PIO4;
- 	ap->flags |= ATA_FLAG_SLAVE_POSS | ATA_FLAG_NO_IORDY;
--	ap->flags |= ATA_FLAG_PIO_POLLING;
- 
--	base = (void __iomem *)res->start;
--	ap->ioaddr.data_addr		= base;
-+	base = (void __iomem *)base_mem_res->start;
-+	/* N.B. this assumes data_addr will be used for word-sized I/O only */
-+	ap->ioaddr.data_addr		= base + 0 + 0 * 4;
- 	ap->ioaddr.error_addr		= base + 1 + 1 * 4;
- 	ap->ioaddr.feature_addr		= base + 1 + 1 * 4;
- 	ap->ioaddr.nsect_addr		= base + 1 + 2 * 4;
-@@ -161,14 +178,25 @@ static int __init pata_falcon_init_one(struct platform_device *pdev)
- 	ap->ioaddr.status_addr		= base + 1 + 7 * 4;
- 	ap->ioaddr.command_addr		= base + 1 + 7 * 4;
- 
--	ap->ioaddr.altstatus_addr	= base + ATA_HD_CONTROL;
--	ap->ioaddr.ctl_addr		= base + ATA_HD_CONTROL;
-+	base = (void __iomem *)ctl_mem_res->start;
-+	ap->ioaddr.altstatus_addr	= base + 1;
-+	ap->ioaddr.ctl_addr		= base + 1;
- 
--	ata_port_desc(ap, "cmd 0x%lx ctl 0x%lx", (unsigned long)base,
--		      (unsigned long)base + ATA_HD_CONTROL);
-+	ata_port_desc(ap, "cmd 0x%lx ctl 0x%lx",
-+		      (unsigned long)base_mem_res->start,
-+		      (unsigned long)ctl_mem_res->start);
-+
-+	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
-+	if (irq_res && irq_res->start > 0) {
-+		irq = irq_res->start;
-+	} else {
-+		ap->flags |= ATA_FLAG_PIO_POLLING;
-+		ata_port_desc(ap, "no IRQ, using PIO polling");
-+	}
- 
- 	/* activate */
--	return ata_host_activate(host, 0, NULL, 0, &pata_falcon_sht);
-+	return ata_host_activate(host, irq, irq ? ata_sff_interrupt : NULL,
-+				 IRQF_SHARED, &pata_falcon_sht);
- }
- 
- static int __exit pata_falcon_remove_one(struct platform_device *pdev)
-diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
-index 8ce4a5878d0c..8af1ac69e5f8 100644
---- a/drivers/ide/Kconfig
-+++ b/drivers/ide/Kconfig
-@@ -731,21 +731,13 @@ config BLK_DEV_BUDDHA
- 	  to one of its IDE interfaces.
- 
- config BLK_DEV_FALCON_IDE
--	tristate "Falcon IDE interface support"
--	depends on ATARI
-+	tristate "Falcon and Q40/Q60 IDE interface support"
-+	depends on ATARI || Q40
- 	help
- 	  This is the IDE driver for the on-board IDE interface on the Atari
--	  Falcon. Say Y if you have a Falcon and want to use IDE devices (hard
--	  disks, CD-ROM drives, etc.) that are connected to the on-board IDE
--	  interface.
--
--config BLK_DEV_Q40IDE
--	tristate "Q40/Q60 IDE interface support"
--	depends on Q40
--	help
--	  Enable the on-board IDE controller in the Q40/Q60.  This should
--	  normally be on; disable it only if you are running a custom hard
--	  drive subsystem through an expansion card.
-+	  Falcon and Q40/Q60. Say Y if you have such a machine and want to use
-+	  IDE devices (hard disks, CD-ROM drives, etc.) that are connected to
-+	  the on-board IDE interface.
- 
- config BLK_DEV_PALMCHIP_BK3710
- 	tristate "Palmchip bk3710 IDE controller support"
-diff --git a/drivers/ide/Makefile b/drivers/ide/Makefile
-index 45a1c0463bed..991eb72a786b 100644
---- a/drivers/ide/Makefile
-+++ b/drivers/ide/Makefile
-@@ -29,7 +29,6 @@ obj-$(CONFIG_BLK_DEV_4DRIVES)		+= ide-4drives.o
- 
- obj-$(CONFIG_BLK_DEV_GAYLE)		+= gayle.o
- obj-$(CONFIG_BLK_DEV_FALCON_IDE)	+= falconide.o
--obj-$(CONFIG_BLK_DEV_Q40IDE)		+= q40ide.o
- obj-$(CONFIG_BLK_DEV_BUDDHA)		+= buddha.o
- 
- obj-$(CONFIG_BLK_DEV_AEC62XX)		+= aec62xx.o
-diff --git a/drivers/ide/falconide.c b/drivers/ide/falconide.c
-index bb86d84558d9..a73a9dc17e4d 100644
---- a/drivers/ide/falconide.c
-+++ b/drivers/ide/falconide.c
-@@ -25,12 +25,7 @@
- 
- #define DRV_NAME "falconide"
- 
--    /*
--     *  Offsets from base address
--     */
--
--#define ATA_HD_CONTROL	0x39
--
 +#ifdef CONFIG_ATARI
-     /*
-      *  falconide_intr_lock is used to obtain access to the IDE interrupt,
-      *  which is shared between several drivers.
-@@ -55,6 +50,7 @@ static void falconide_get_lock(irq_handler_t handler, void *data)
- 		falconide_intr_lock = 1;
- 	}
++#define MULTI_ISA 1	/* Need MULTI_ISA if Atari drivers (IDE) present !! */
++#else
+ #define MULTI_ISA 0
++#endif /* Atari */
+ #endif /* Q40 */
+ 
+ #ifdef CONFIG_AMIGA_PCMCIA
+@@ -135,10 +139,13 @@ static inline u8 __iomem *isa_itb(unsigned long addr)
+     case ISA_TYPE_AG: return (u8 __iomem *)AG_ISA_IO_B(addr);
+ #endif
+ #ifdef CONFIG_ATARI_ROM_ISA
+-    case ISA_TYPE_ENEC: return (u8 __iomem *)ENEC_ISA_IO_B(addr);
++    case ISA_TYPE_ENEC:
++	if (addr < 1024)
++		return (u8 __iomem *)ENEC_ISA_IO_B(addr);
++	break; /* not ROM port? fallback below! */
+ #endif
+-    default: return NULL; /* avoid warnings, just in case */
+     }
++    return (u8 __iomem *)(addr);
  }
-+#endif
- 
- static void falconide_input_data(ide_drive_t *drive, struct ide_cmd *cmd,
- 				 void *buf, unsigned int len)
-@@ -98,8 +94,10 @@ static const struct ide_tp_ops falconide_tp_ops = {
- };
- 
- static const struct ide_port_info falconide_port_info = {
-+#ifdef CONFIG_ATARI
- 	.get_lock		= falconide_get_lock,
- 	.release_lock		= falconide_release_lock,
-+#endif
- 	.tp_ops			= &falconide_tp_ops,
- 	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_SERIALIZE |
- 				  IDE_HFLAG_NO_DMA,
-@@ -107,7 +105,8 @@ static const struct ide_port_info falconide_port_info = {
- 	.chipset		= ide_generic,
- };
- 
--static void __init falconide_setup_ports(struct ide_hw *hw, unsigned long base)
-+static void __init falconide_setup_ports(struct ide_hw *hw, unsigned long base,
-+					 unsigned long ctl, int irq)
+ static inline u16 __iomem *isa_itw(unsigned long addr)
  {
- 	int i;
- 
-@@ -118,9 +117,9 @@ static void __init falconide_setup_ports(struct ide_hw *hw, unsigned long base)
- 	for (i = 1; i < 8; i++)
- 		hw->io_ports_array[i] = base + 1 + i * 4;
- 
--	hw->io_ports.ctl_addr = base + ATA_HD_CONTROL;
-+	hw->io_ports.ctl_addr = ctl + 1;
- 
--	hw->irq = IRQ_MFP_IDE;
-+	hw->irq = irq;
+@@ -151,10 +158,13 @@ static inline u16 __iomem *isa_itw(unsigned long addr)
+     case ISA_TYPE_AG: return (u16 __iomem *)AG_ISA_IO_W(addr);
+ #endif
+ #ifdef CONFIG_ATARI_ROM_ISA
+-    case ISA_TYPE_ENEC: return (u16 __iomem *)ENEC_ISA_IO_W(addr);
++    case ISA_TYPE_ENEC:
++	if (addr < 1024)
++		return (u16 __iomem *)ENEC_ISA_IO_W(addr);
++	break; /* not ROM port? fallback below! */
+ #endif
+-    default: return NULL; /* avoid warnings, just in case */
+     }
++    return (u16 __iomem *)(addr);
  }
- 
-     /*
-@@ -129,37 +128,69 @@ static void __init falconide_setup_ports(struct ide_hw *hw, unsigned long base)
- 
- static int __init falconide_init(struct platform_device *pdev)
+ static inline u32 __iomem *isa_itl(unsigned long addr)
  {
--	struct resource *res;
-+	struct resource *base_mem_res, *ctl_mem_res;
-+	struct resource *base_res, *ctl_res, *irq_res;
- 	struct ide_host *host;
- 	struct ide_hw hw, *hws[] = { &hw };
--	unsigned long base;
- 	int rc;
-+	int irq;
-+
-+	dev_info(&pdev->dev, "Atari Falcon and Q40/Q60 IDE controller\n");
-+
-+	base_res = platform_get_resource(pdev, IORESOURCE_IO, 0);
-+	if (base_res && !devm_request_region(&pdev->dev, base_res->start,
-+					   resource_size(base_res), DRV_NAME)) {
-+		dev_err(&pdev->dev, "resources busy\n");
-+		return -EBUSY;
-+	}
- 
--	dev_info(&pdev->dev, "Atari Falcon IDE controller\n");
-+	ctl_res = platform_get_resource(pdev, IORESOURCE_IO, 0);
-+	if (ctl_res && !devm_request_region(&pdev->dev, ctl_res->start,
-+					   resource_size(ctl_res), DRV_NAME)) {
-+		dev_err(&pdev->dev, "resources busy\n");
-+		return -EBUSY;
-+	}
- 
--	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	if (!res)
-+	base_mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (!base_mem_res)
- 		return -ENODEV;
- 
--	if (!devm_request_mem_region(&pdev->dev, res->start,
--				     resource_size(res), DRV_NAME)) {
-+	if (!devm_request_mem_region(&pdev->dev, base_mem_res->start,
-+				     resource_size(base_mem_res), DRV_NAME)) {
- 		dev_err(&pdev->dev, "resources busy\n");
- 		return -EBUSY;
- 	}
- 
--	base = (unsigned long)res->start;
-+	ctl_mem_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-+	if (!ctl_mem_res)
-+		return -ENODEV;
-+
-+	if (MACH_IS_ATARI) {
-+		irq = IRQ_MFP_IDE;
-+	} else {
-+		irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
-+		if (irq_res && irq_res->start > 0)
-+			irq = irq_res->start;
-+		else
-+			return -ENODEV;
-+	}
- 
--	falconide_setup_ports(&hw, base);
-+	falconide_setup_ports(&hw, base_mem_res->start, ctl_mem_res->start, irq);
- 
- 	host = ide_host_alloc(&falconide_port_info, hws, 1);
--	if (host == NULL) {
--		rc = -ENOMEM;
--		goto err;
-+	if (!host)
-+		return -ENOMEM;
-+
-+	if (!MACH_IS_ATARI) {
-+		host->get_lock = NULL;
-+		host->release_lock = NULL;
- 	}
- 
--	falconide_get_lock(NULL, NULL);
-+	if (host->get_lock)
-+		host->get_lock(NULL, NULL);
- 	rc = ide_host_register(host, &falconide_port_info, hws);
--	falconide_release_lock();
-+	if (host->release_lock)
-+		host->release_lock();
- 
- 	if (rc)
- 		goto err_free;
-@@ -168,8 +199,6 @@ static int __init falconide_init(struct platform_device *pdev)
- 	return 0;
- err_free:
- 	ide_host_free(host);
--err:
--	release_mem_region(res->start, resource_size(res));
- 	return rc;
+@@ -163,8 +173,8 @@ static inline u32 __iomem *isa_itl(unsigned long addr)
+ #ifdef CONFIG_AMIGA_PCMCIA
+     case ISA_TYPE_AG: return (u32 __iomem *)AG_ISA_IO_W(addr);
+ #endif
+-    default: return 0; /* avoid warnings, just in case */
+     }
++    return 0; /* avoid warnings, just in case */
+ }
+ static inline u8 __iomem *isa_mtb(unsigned long addr)
+ {
+@@ -177,10 +187,13 @@ static inline u8 __iomem *isa_mtb(unsigned long addr)
+     case ISA_TYPE_AG: return (u8 __iomem *)addr;
+ #endif
+ #ifdef CONFIG_ATARI_ROM_ISA
+-    case ISA_TYPE_ENEC: return (u8 __iomem *)ENEC_ISA_MEM_B(addr);
++    case ISA_TYPE_ENEC:
++	if (addr < 1024)
++		return (u8 __iomem *)ENEC_ISA_MEM_B(addr);
++	break; /* not ROM port? fallback below! */
+ #endif
+-    default: return NULL; /* avoid warnings, just in case */
+     }
++    return (u8 __iomem *)(addr);
+ }
+ static inline u16 __iomem *isa_mtw(unsigned long addr)
+ {
+@@ -193,10 +206,13 @@ static inline u16 __iomem *isa_mtw(unsigned long addr)
+     case ISA_TYPE_AG: return (u16 __iomem *)addr;
+ #endif
+ #ifdef CONFIG_ATARI_ROM_ISA
+-    case ISA_TYPE_ENEC: return (u16 __iomem *)ENEC_ISA_MEM_W(addr);
++    case ISA_TYPE_ENEC:
++	if (addr < 1024)
++		return (u16 __iomem *)ENEC_ISA_MEM_W(addr);
++	break; /* not ROM port? fallback below! */
+ #endif
+-    default: return NULL; /* avoid warnings, just in case */
+     }
++    return (u16 __iomem *)(addr);
  }
  
-diff --git a/drivers/ide/q40ide.c b/drivers/ide/q40ide.c
-deleted file mode 100644
-index ecd0a69245f6..000000000000
---- a/drivers/ide/q40ide.c
-+++ /dev/null
-@@ -1,168 +0,0 @@
--/*
-- *  Q40 I/O port IDE Driver
-- *
-- *     (c) Richard Zidlicky
-- *
-- *  This file is subject to the terms and conditions of the GNU General Public
-- *  License.  See the file COPYING in the main directory of this archive for
-- *  more details.
-- *
-- *
-- */
--
--#include <linux/types.h>
--#include <linux/mm.h>
--#include <linux/interrupt.h>
--#include <linux/blkdev.h>
--#include <linux/ide.h>
--#include <linux/module.h>
--
--#include <asm/ide.h>
--
--    /*
--     *  Bases of the IDE interfaces
--     */
--
--#define Q40IDE_NUM_HWIFS	2
--
--#define PCIDE_BASE1	0x1f0
--#define PCIDE_BASE2	0x170
--#define PCIDE_BASE3	0x1e8
--#define PCIDE_BASE4	0x168
--#define PCIDE_BASE5	0x1e0
--#define PCIDE_BASE6	0x160
--
--static const unsigned long pcide_bases[Q40IDE_NUM_HWIFS] = {
--    PCIDE_BASE1, PCIDE_BASE2, /* PCIDE_BASE3, PCIDE_BASE4  , PCIDE_BASE5,
--    PCIDE_BASE6 */
--};
--
--static int q40ide_default_irq(unsigned long base)
--{
--           switch (base) {
--	            case 0x1f0: return 14;
--		    case 0x170: return 15;
--		    case 0x1e8: return 11;
--		    default:
--			return 0;
--	   }
--}
--
--
--/*
-- * Addresses are pretranslated for Q40 ISA access.
-- */
--static void q40_ide_setup_ports(struct ide_hw *hw, unsigned long base, int irq)
--{
--	memset(hw, 0, sizeof(*hw));
--	/* BIG FAT WARNING: 
--	   assumption: only DATA port is ever used in 16 bit mode */
--	hw->io_ports.data_addr = Q40_ISA_IO_W(base);
--	hw->io_ports.error_addr = Q40_ISA_IO_B(base + 1);
--	hw->io_ports.nsect_addr = Q40_ISA_IO_B(base + 2);
--	hw->io_ports.lbal_addr = Q40_ISA_IO_B(base + 3);
--	hw->io_ports.lbam_addr = Q40_ISA_IO_B(base + 4);
--	hw->io_ports.lbah_addr = Q40_ISA_IO_B(base + 5);
--	hw->io_ports.device_addr = Q40_ISA_IO_B(base + 6);
--	hw->io_ports.status_addr = Q40_ISA_IO_B(base + 7);
--	hw->io_ports.ctl_addr = Q40_ISA_IO_B(base + 0x206);
--
--	hw->irq = irq;
--}
--
--static void q40ide_input_data(ide_drive_t *drive, struct ide_cmd *cmd,
--			      void *buf, unsigned int len)
--{
--	unsigned long data_addr = drive->hwif->io_ports.data_addr;
--
--	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS)) {
--		__ide_mm_insw(data_addr, buf, (len + 1) / 2);
--		return;
--	}
--
--	raw_insw_swapw((u16 *)data_addr, buf, (len + 1) / 2);
--}
--
--static void q40ide_output_data(ide_drive_t *drive, struct ide_cmd *cmd,
--			       void *buf, unsigned int len)
--{
--	unsigned long data_addr = drive->hwif->io_ports.data_addr;
--
--	if (drive->media == ide_disk && cmd && (cmd->tf_flags & IDE_TFLAG_FS)) {
--		__ide_mm_outsw(data_addr, buf, (len + 1) / 2);
--		return;
--	}
--
--	raw_outsw_swapw((u16 *)data_addr, buf, (len + 1) / 2);
--}
--
--/* Q40 has a byte-swapped IDE interface */
--static const struct ide_tp_ops q40ide_tp_ops = {
--	.exec_command		= ide_exec_command,
--	.read_status		= ide_read_status,
--	.read_altstatus		= ide_read_altstatus,
--	.write_devctl		= ide_write_devctl,
--
--	.dev_select		= ide_dev_select,
--	.tf_load		= ide_tf_load,
--	.tf_read		= ide_tf_read,
--
--	.input_data		= q40ide_input_data,
--	.output_data		= q40ide_output_data,
--};
--
--static const struct ide_port_info q40ide_port_info = {
--	.tp_ops			= &q40ide_tp_ops,
--	.host_flags		= IDE_HFLAG_MMIO | IDE_HFLAG_NO_DMA,
--	.irq_flags		= IRQF_SHARED,
--	.chipset		= ide_generic,
--};
--
--/* 
-- * the static array is needed to have the name reported in /proc/ioports,
-- * hwif->name unfortunately isn't available yet
-- */
--static const char *q40_ide_names[Q40IDE_NUM_HWIFS]={
--	"ide0", "ide1"
--};
--
--/*
-- *  Probe for Q40 IDE interfaces
-- */
--
--static int __init q40ide_init(void)
--{
--    int i;
--    struct ide_hw hw[Q40IDE_NUM_HWIFS], *hws[] = { NULL, NULL };
--
--    if (!MACH_IS_Q40)
--      return -ENODEV;
--
--    printk(KERN_INFO "ide: Q40 IDE controller\n");
--
--    for (i = 0; i < Q40IDE_NUM_HWIFS; i++) {
--	const char *name = q40_ide_names[i];
--
--	if (!request_region(pcide_bases[i], 8, name)) {
--		printk("could not reserve ports %lx-%lx for %s\n",
--		       pcide_bases[i],pcide_bases[i]+8,name);
--		continue;
--	}
--	if (!request_region(pcide_bases[i]+0x206, 1, name)) {
--		printk("could not reserve port %lx for %s\n",
--		       pcide_bases[i]+0x206,name);
--		release_region(pcide_bases[i], 8);
--		continue;
--	}
--	q40_ide_setup_ports(&hw[i], pcide_bases[i],
--			q40ide_default_irq(pcide_bases[i]));
--
--	hws[i] = &hw[i];
--    }
--
--    return ide_host_add(&q40ide_port_info, hws, Q40IDE_NUM_HWIFS, NULL);
--}
--
--module_init(q40ide_init);
--
--MODULE_LICENSE("GPL");
+ 
+@@ -344,31 +360,31 @@ static inline void isa_delay(void)
+  * ROM port ISA and everything else regular ISA for IDE. read,write defined
+  * below.
+  */
+-#define inb(port)	((port) < 1024 ? isa_rom_inb(port) : in_8(port))
+-#define inb_p(port)	((port) < 1024 ? isa_rom_inb_p(port) : in_8(port))
+-#define inw(port)	((port) < 1024 ? isa_rom_inw(port) : in_le16(port))
+-#define inw_p(port)	((port) < 1024 ? isa_rom_inw_p(port) : in_le16(port))
++#define inb(port)	(((port) < 1024 && ISA_TYPE == ISA_TYPE_ENEC) ? isa_rom_inb(port) : isa_inb(port))
++#define inb_p(port)	(((port) < 1024 && ISA_TYPE == ISA_TYPE_ENEC) ? isa_rom_inb_p(port) : isa_inb_p(port))
++#define inw(port)	(((port) < 1024 && ISA_TYPE == ISA_TYPE_ENEC) ? isa_rom_inw(port) : isa_inw(port))
++#define inw_p(port)	(((port) < 1024 && ISA_TYPE == ISA_TYPE_ENEC) ? isa_rom_inw_p(port) : isa_inw_p(port))
+ #define inl		isa_inl
+ #define inl_p		isa_inl_p
+ 
+-#define outb(val, port)	((port) < 1024 ? isa_rom_outb((val), (port)) : out_8((port), (val)))
+-#define outb_p(val, port) ((port) < 1024 ? isa_rom_outb_p((val), (port)) : out_8((port), (val)))
+-#define outw(val, port)	((port) < 1024 ? isa_rom_outw((val), (port)) : out_le16((port), (val)))
+-#define outw_p(val, port) ((port) < 1024 ? isa_rom_outw_p((val), (port)) : out_le16((port), (val)))
++#define outb(val, port)	(((port) < 1024 && ISA_TYPE == ISA_TYPE_ENEC) ? isa_rom_outb((val), (port)) : isa_outb((val), (port)))
++#define outb_p(val, port) (((port) < 1024 && ISA_TYPE == ISA_TYPE_ENEC) ? isa_rom_outb_p((val), (port)) : isa_outb_p((val), (port)))
++#define outw(val, port)	(((port) < 1024 && ISA_TYPE == ISA_TYPE_ENEC) ? isa_rom_outw((val), (port)) : isa_outw((val), (port)))
++#define outw_p(val, port) (((port) < 1024 && ISA_TYPE == ISA_TYPE_ENEC) ? isa_rom_outw_p((val), (port)) : isa_outw_p((val), (port)))
+ #define outl		isa_outl
+ #define outl_p		isa_outl_p
+ 
+-#define insb(port, buf, nr)	((port) < 1024 ? isa_rom_insb((port), (buf), (nr)) : isa_insb((port), (buf), (nr)))
+-#define insw(port, buf, nr)	((port) < 1024 ? isa_rom_insw((port), (buf), (nr)) : isa_insw((port), (buf), (nr)))
++#define insb(port, buf, nr)	(((port) < 1024 && ISA_TYPE == ISA_TYPE_ENEC) ? isa_rom_insb((port), (buf), (nr)) : isa_insb((port), (buf), (nr)))
++#define insw(port, buf, nr)	(((port) < 1024 && ISA_TYPE == ISA_TYPE_ENEC) ? isa_rom_insw((port), (buf), (nr)) : isa_insw((port), (buf), (nr)))
+ #define insl			isa_insl
+-#define outsb(port, buf, nr)	((port) < 1024 ? isa_rom_outsb((port), (buf), (nr)) : isa_outsb((port), (buf), (nr)))
+-#define outsw(port, buf, nr)	((port) < 1024 ? isa_rom_outsw((port), (buf), (nr)) : isa_outsw((port), (buf), (nr)))
++#define outsb(port, buf, nr)	(((port) < 1024 && ISA_TYPE == ISA_TYPE_ENEC) ? isa_rom_outsb((port), (buf), (nr)) : isa_outsb((port), (buf), (nr)))
++#define outsw(port, buf, nr)	(((port) < 1024 && ISA_TYPE == ISA_TYPE_ENEC) ? isa_rom_outsw((port), (buf), (nr)) : isa_outsw((port), (buf), (nr)))
+ #define outsl			isa_outsl
+ 
+-#define readb(addr)		in_8(addr)
+-#define writeb(val, addr)	out_8((addr), (val))
+-#define readw(addr)		in_le16(addr)
+-#define writew(val, addr)	out_le16((addr), (val))
++#define readb   isa_readb
++#define readw   isa_readw
++#define writeb  isa_writeb
++#define writew  isa_writew
+ #endif /* CONFIG_ATARI_ROM_ISA */
+ 
+ #define readl(addr)      in_le32(addr)
 -- 
-2.26.3
+2.7.4
 
