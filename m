@@ -2,133 +2,288 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_RED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71D60C2B9F4
-	for <linux-ide@archiver.kernel.org>; Thu, 17 Jun 2021 10:31:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73F42C49EA7
+	for <linux-ide@archiver.kernel.org>; Thu, 17 Jun 2021 13:39:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 423ED61001
-	for <linux-ide@archiver.kernel.org>; Thu, 17 Jun 2021 10:31:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 554C9613DD
+	for <linux-ide@archiver.kernel.org>; Thu, 17 Jun 2021 13:39:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229868AbhFQKdk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 17 Jun 2021 06:33:40 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:54545 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231521AbhFQKdj (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Jun 2021 06:33:39 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1623925890;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=YVlthFQmQaQdgcXen+woq/2l+gZZsPSJuLyGQkrVMiQ=;
-        b=XNw0rsKYArnkoPpBxzNEJLxdXEtIvJaj9seMbgiK8U8Jh3/2hSx0UFIapfLNyxcs6alzjK
-        fYFEwY9a+kvYqMZnrac5DIy+ov4vqyx4Qz1CLiuUuzR3YJo52ygeQzZySqcdIECYM84OIg
-        uVVmX0usEmyrFsG6uibVws0x1+pHJQM=
-Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
- [209.85.208.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-291-qPegDR13N-ClYDxYU74aLQ-1; Thu, 17 Jun 2021 06:31:28 -0400
-X-MC-Unique: qPegDR13N-ClYDxYU74aLQ-1
-Received: by mail-ed1-f70.google.com with SMTP id ch5-20020a0564021bc5b029039389929f28so1230459edb.16
-        for <linux-ide@vger.kernel.org>; Thu, 17 Jun 2021 03:31:28 -0700 (PDT)
+        id S232415AbhFQNlZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 17 Jun 2021 09:41:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53008 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231454AbhFQNlY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Jun 2021 09:41:24 -0400
+Received: from mail-io1-xd31.google.com (mail-io1-xd31.google.com [IPv6:2607:f8b0:4864:20::d31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A1D8C061574;
+        Thu, 17 Jun 2021 06:39:16 -0700 (PDT)
+Received: by mail-io1-xd31.google.com with SMTP id a6so3225210ioe.0;
+        Thu, 17 Jun 2021 06:39:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=8uLouHcYHuvh5T6xM8yIVrzF523FcxAB8VCcMY44PSs=;
+        b=DrkJglOKwg+WmIiFFG6K712yfI6x/RLf5UEIcKJydGaOBMRZNFam7wWwsGYeL6N5JC
+         40XbFWouWd4QbPoLw8juqNhDZjeFW8IIRYwllHXIDFq7EEBSOdqop4JrK/NiPWcrxHZP
+         /7Xin9xwWygH3SObqeMvZKjZ2iaQKa1insYgEv0RWSpNGlKsE4RoDeEL46eBil9pauhu
+         NNEsvRKP+YC8j+BjCLOuR9lNaBR92oHV3zowMDb2lWi+WdOnuqIjH2NQUK2KvphQxb1t
+         hK2dV+lsVMmfmM0S2aVlI4PLW+ESdaXkuzI8NPiT9kFyN0CohBvacdSflevgnk8XhAvL
+         2/nA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=YVlthFQmQaQdgcXen+woq/2l+gZZsPSJuLyGQkrVMiQ=;
-        b=oInLGUOaY+ZbFn/GS4/cFkp7Dg+0R9OsWNdQQ9TGGSDSdKV6ix6YVIyHlxI/jFyr4Y
-         EsGU8+SYcJp9Kph5fbQq72IDGb0FA7ZBCAQia+c84GCMrwq3vUUsSkNLW5suX+vqZnqp
-         DXqqV72dO6SLPz7RQMnoB3Qt32Ho+JWJpHaWlo92212FuYmRK/vfzbbQiHnDO6GzCyDB
-         IRWgV2s7G/26j0YgQBgIwy/tDFEjo8V+fb7/9fo7NeRHmt9wJmW5n5wQcjUcDQoJo/oW
-         RlPUzYW+/9Nsxamb4OSO1qmGEimoLVbcXUlFChXKdzmz14380zozxbAF3ZYm1OJ8yiIm
-         SbEQ==
-X-Gm-Message-State: AOAM531YKsfdmsz20+7kTdsbLyed7Mrsn8RjHZ9Y600/4Z3dDLFMCk+j
-        n4osC0U6unUcaV8caJZbSgEdW66D1zjBrcQo+aPxclwpKcEZ2OrJ5eeAqirNDvfsW5LVwtq0nv1
-        q1ZP7GjJckaL0VMJ0kAx6
-X-Received: by 2002:a17:906:430f:: with SMTP id j15mr4383520ejm.445.1623925887705;
-        Thu, 17 Jun 2021 03:31:27 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJx1Vp+Q0gq+s4vwko4uNngYufTdyboN4gUP+I2uS7LzKUPO2Ll+jzfw1xQQatxLI3bc8tNmsw==
-X-Received: by 2002:a17:906:430f:: with SMTP id j15mr4383511ejm.445.1623925887582;
-        Thu, 17 Jun 2021 03:31:27 -0700 (PDT)
-Received: from x1.localdomain (2001-1c00-0c1e-bf00-1054-9d19-e0f0-8214.cable.dynamic.v6.ziggo.nl. [2001:1c00:c1e:bf00:1054:9d19:e0f0:8214])
-        by smtp.gmail.com with ESMTPSA id t17sm4169504edv.75.2021.06.17.03.31.26
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 17 Jun 2021 03:31:27 -0700 (PDT)
-Subject: Re: [PATCH] ahci: Add support for Dell S140 and later controllers
-To:     Charles Rose <charles.rose@dell.com>, linux-ide@vger.kernel.org,
-        axboe@kernel.dk
-Cc:     Mika Westerberg <mika.westerberg@intel.com>
-References: <20210615190801.1744466-1-charles.rose@dell.com>
-From:   Hans de Goede <hdegoede@redhat.com>
-Message-ID: <e7067ad7-07ad-e747-ed18-8587c6b6a2c2@redhat.com>
-Date:   Thu, 17 Jun 2021 12:31:26 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=8uLouHcYHuvh5T6xM8yIVrzF523FcxAB8VCcMY44PSs=;
+        b=UmvHzrrm1XoMTphnbEhgZho3vQQozBoUG9e497vImcNb7/N4rrHRPh0us3T5opzGKG
+         c25fJdQQfCNQkdhSMg4WZBNDtBB4kajxQxmwi8hQMqiQK9KK8ptyfxkXOPJGvXLp7Iqd
+         Ahclu1nWudjxZaPwpn0MkbnC0QkrIcmHX5ufGppAkoWJHzNq4D9jWT1Zbn+ze66QMKyE
+         k/6bn41x8pLJ2i8yWRjJMSNw1uZMJHRx3IzNUumuzXCXFQzlQn7plorqLVJX32361Hav
+         +peDKGXiI7oRpp5hmPwiCJkuRmwyFti1qpVcolsWjAdapHlSmW0nGkXuOEwjC3H7Omek
+         y9pA==
+X-Gm-Message-State: AOAM531q429JijDXscApyyjVwEp0RhfgdwpFDsH1d0jDZOoO6md27W0D
+        1go6JUQNmEoLhtr3Ku9vOorpIgpj4rVsNxfJdYo=
+X-Google-Smtp-Source: ABdhPJxnfkeEWGUJgQcDn0I2Ve0wSFkY7REYvBKyja2+qam6LK577H+YFA9dEQrKZJ960bwwySGIDnthxfzoxsKE1u0=
+X-Received: by 2002:a5d:97d9:: with SMTP id k25mr3918157ios.197.1623937155671;
+ Thu, 17 Jun 2021 06:39:15 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20210615190801.1744466-1-charles.rose@dell.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20210615191543.1043414-1-robh@kernel.org>
+In-Reply-To: <20210615191543.1043414-1-robh@kernel.org>
+From:   Jassi Brar <jassisinghbrar@gmail.com>
+Date:   Thu, 17 Jun 2021 08:39:04 -0500
+Message-ID: <CABb+yY1hR8=7Bc7tw8koqNd2_r0-P6HiHkoyb0j=C7QbN4Dvrw@mail.gmail.com>
+Subject: Re: [PATCH] dt-bindings: Drop redundant minItems/maxItems
+To:     Rob Herring <robh@kernel.org>
+Cc:     Devicetree List <devicetree@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-ide@vger.kernel.org, linux-clk@vger.kernel.org,
+        linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+        linux-crypto@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        dmaengine@vger.kernel.org, linux-i2c@vger.kernel.org,
+        linux-iio@vger.kernel.org, alsa-devel@alsa-project.org,
+        iommu@lists.linux-foundation.org, linux-media@vger.kernel.org,
+        linux-mmc@vger.kernel.org,
+        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
+        linux-can@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-phy@lists.infradead.org, linux-gpio@vger.kernel.org,
+        linux-pwm@vger.kernel.org, linux-remoteproc@vger.kernel.org,
+        linux-riscv@lists.infradead.org, linux-rtc@vger.kernel.org,
+        linux-serial@vger.kernel.org,
+        linux-spi <linux-spi@vger.kernel.org>, linux-pm@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-watchdog@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>, Stephen Boyd <sboyd@kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>, Vinod Koul <vkoul@kernel.org>,
+        Bartosz Golaszewski <bgolaszewski@baylibre.com>,
+        Kamal Dasu <kdasu.kdev@gmail.com>,
+        Jonathan Cameron <jic23@kernel.org>,
+        Lars-Peter Clausen <lars@metafoo.de>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Marc Zyngier <maz@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Wolfgang Grandegger <wg@grandegger.com>,
+        Marc Kleine-Budde <mkl@pengutronix.de>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Vivien Didelot <vivien.didelot@gmail.com>,
+        Vladimir Oltean <olteanv@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>, Lee Jones <lee.jones@linaro.org>,
+        Ohad Ben-Cohen <ohad@wizery.com>,
+        Mathieu Poirier <mathieu.poirier@linaro.org>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Albert Ou <aou@eecs.berkeley.edu>,
+        Alessandro Zummo <a.zummo@towertech.it>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Mark Brown <broonie@kernel.org>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Wim Van Sebroeck <wim@linux-watchdog.org>,
+        Guenter Roeck <linux@roeck-us.net>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi,
-
-On 6/15/21 9:08 PM, Charles Rose wrote:
-> This patch enables support for Dell S140 and later controllers
-> that use Intel's PCHs configured as PCI_CLASS_STORAGE_RAID.
-> 
-> Reviewed-by: Mika Westerberg <mika.westerberg@intel.com>
-> Signed-off-by: Charles Rose <charles.rose@dell.com>
-
-Thanks, patch looks good to me:
-
-Reviewed-by: Hans de Goede <hdegoede@redhat.com>
-
-Regards,
-
-Hans
-
-
+On Tue, Jun 15, 2021 at 2:15 PM Rob Herring <robh@kernel.org> wrote:
+>
+> If a property has an 'items' list, then a 'minItems' or 'maxItems' with t=
+he
+> same size as the list is redundant and can be dropped. Note that is DT
+> schema specific behavior and not standard json-schema behavior. The tooli=
+ng
+> will fixup the final schema adding any unspecified minItems/maxItems.
+>
+> This condition is partially checked with the meta-schema already, but
+> only if both 'minItems' and 'maxItems' are equal to the 'items' length.
+> An improved meta-schema is pending.
+>
+> Cc: Jens Axboe <axboe@kernel.dk>
+> Cc: Stephen Boyd <sboyd@kernel.org>
+> Cc: Herbert Xu <herbert@gondor.apana.org.au>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: David Airlie <airlied@linux.ie>
+> Cc: Daniel Vetter <daniel@ffwll.ch>
+> Cc: Vinod Koul <vkoul@kernel.org>
+> Cc: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+> Cc: Kamal Dasu <kdasu.kdev@gmail.com>
+> Cc: Jonathan Cameron <jic23@kernel.org>
+> Cc: Lars-Peter Clausen <lars@metafoo.de>
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Cc: Marc Zyngier <maz@kernel.org>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: Jassi Brar <jassisinghbrar@gmail.com>
+> Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
+> Cc: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+> Cc: Ulf Hansson <ulf.hansson@linaro.org>
+> Cc: Jakub Kicinski <kuba@kernel.org>
+> Cc: Wolfgang Grandegger <wg@grandegger.com>
+> Cc: Marc Kleine-Budde <mkl@pengutronix.de>
+> Cc: Andrew Lunn <andrew@lunn.ch>
+> Cc: Vivien Didelot <vivien.didelot@gmail.com>
+> Cc: Vladimir Oltean <olteanv@gmail.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Kishon Vijay Abraham I <kishon@ti.com>
+> Cc: Linus Walleij <linus.walleij@linaro.org>
+> Cc: "Uwe Kleine-K=C3=B6nig" <u.kleine-koenig@pengutronix.de>
+> Cc: Lee Jones <lee.jones@linaro.org>
+> Cc: Ohad Ben-Cohen <ohad@wizery.com>
+> Cc: Mathieu Poirier <mathieu.poirier@linaro.org>
+> Cc: Philipp Zabel <p.zabel@pengutronix.de>
+> Cc: Paul Walmsley <paul.walmsley@sifive.com>
+> Cc: Palmer Dabbelt <palmer@dabbelt.com>
+> Cc: Albert Ou <aou@eecs.berkeley.edu>
+> Cc: Alessandro Zummo <a.zummo@towertech.it>
+> Cc: Alexandre Belloni <alexandre.belloni@bootlin.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: Mark Brown <broonie@kernel.org>
+> Cc: Zhang Rui <rui.zhang@intel.com>
+> Cc: Daniel Lezcano <daniel.lezcano@linaro.org>
+> Cc: Wim Van Sebroeck <wim@linux-watchdog.org>
+> Cc: Guenter Roeck <linux@roeck-us.net>
+> Signed-off-by: Rob Herring <robh@kernel.org>
 > ---
->  drivers/ata/ahci.c      | 4 ++++
->  include/linux/pci_ids.h | 2 ++
->  2 files changed, 6 insertions(+)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 33192a8f687d..186cbf90c8ea 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -446,6 +446,10 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->  	{ PCI_VENDOR_ID_AMD, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
->  	  PCI_CLASS_STORAGE_RAID << 8, 0xffffff, board_ahci },
->  
-> +	/* Dell S140/S150 */
-> +	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, PCI_SUBVENDOR_ID_DELL, PCI_ANY_ID,
-> +	  PCI_CLASS_STORAGE_RAID << 8, 0xffffff, board_ahci },
-> +
->  	/* VIA */
->  	{ PCI_VDEVICE(VIA, 0x3349), board_ahci_vt8251 }, /* VIA VT8251 */
->  	{ PCI_VDEVICE(VIA, 0x6287), board_ahci_vt8251 }, /* VIA VT8251 */
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 4c3fa5293d76..803ec446a729 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -631,6 +631,8 @@
->  #define PCI_DEVICE_ID_DELL_RAC4		0x0012
->  #define PCI_DEVICE_ID_DELL_PERC5	0x0015
->  
-> +#define PCI_SUBVENDOR_ID_DELL		0x1028
-> +
->  #define PCI_VENDOR_ID_MATROX		0x102B
->  #define PCI_DEVICE_ID_MATROX_MGA_2	0x0518
->  #define PCI_DEVICE_ID_MATROX_MIL	0x0519
-> 
+>  .../devicetree/bindings/ata/nvidia,tegra-ahci.yaml          | 1 -
+>  .../devicetree/bindings/clock/allwinner,sun4i-a10-ccu.yaml  | 2 --
+>  .../devicetree/bindings/clock/qcom,gcc-apq8064.yaml         | 1 -
+>  Documentation/devicetree/bindings/clock/qcom,gcc-sdx55.yaml | 2 --
+>  .../devicetree/bindings/clock/qcom,gcc-sm8350.yaml          | 2 --
+>  .../devicetree/bindings/clock/sprd,sc9863a-clk.yaml         | 1 -
+>  .../devicetree/bindings/crypto/allwinner,sun8i-ce.yaml      | 2 --
+>  Documentation/devicetree/bindings/crypto/fsl-dcp.yaml       | 1 -
+>  .../display/allwinner,sun4i-a10-display-backend.yaml        | 6 ------
+>  .../bindings/display/allwinner,sun6i-a31-mipi-dsi.yaml      | 1 -
+>  .../bindings/display/allwinner,sun8i-a83t-dw-hdmi.yaml      | 4 ----
+>  .../bindings/display/allwinner,sun8i-a83t-hdmi-phy.yaml     | 2 --
+>  .../bindings/display/allwinner,sun8i-r40-tcon-top.yaml      | 2 --
+>  .../devicetree/bindings/display/bridge/cdns,mhdp8546.yaml   | 2 --
+>  .../bindings/display/rockchip/rockchip,dw-hdmi.yaml         | 2 --
+>  Documentation/devicetree/bindings/display/st,stm32-dsi.yaml | 2 --
+>  .../devicetree/bindings/display/st,stm32-ltdc.yaml          | 1 -
+>  .../devicetree/bindings/display/xlnx/xlnx,zynqmp-dpsub.yaml | 4 ----
+>  .../devicetree/bindings/dma/renesas,rcar-dmac.yaml          | 1 -
+>  .../devicetree/bindings/edac/amazon,al-mc-edac.yaml         | 2 --
+>  Documentation/devicetree/bindings/eeprom/at24.yaml          | 1 -
+>  Documentation/devicetree/bindings/example-schema.yaml       | 2 --
+>  Documentation/devicetree/bindings/gpu/brcm,bcm-v3d.yaml     | 1 -
+>  Documentation/devicetree/bindings/gpu/vivante,gc.yaml       | 1 -
+>  Documentation/devicetree/bindings/i2c/brcm,brcmstb-i2c.yaml | 1 -
+>  .../devicetree/bindings/i2c/marvell,mv64xxx-i2c.yaml        | 2 --
+>  .../devicetree/bindings/i2c/mellanox,i2c-mlxbf.yaml         | 1 -
+>  .../devicetree/bindings/iio/adc/amlogic,meson-saradc.yaml   | 1 -
+>  .../devicetree/bindings/iio/adc/st,stm32-dfsdm-adc.yaml     | 2 --
+>  .../bindings/interrupt-controller/fsl,irqsteer.yaml         | 1 -
+>  .../bindings/interrupt-controller/loongson,liointc.yaml     | 1 -
+>  Documentation/devicetree/bindings/iommu/arm,smmu-v3.yaml    | 1 -
+>  .../devicetree/bindings/iommu/renesas,ipmmu-vmsa.yaml       | 1 -
+>  .../devicetree/bindings/mailbox/st,stm32-ipcc.yaml          | 2 --
+>  .../devicetree/bindings/media/amlogic,gx-vdec.yaml          | 1 -
+>  Documentation/devicetree/bindings/media/i2c/adv7604.yaml    | 1 -
+>  .../devicetree/bindings/media/marvell,mmp2-ccic.yaml        | 1 -
+>  .../devicetree/bindings/media/qcom,sc7180-venus.yaml        | 1 -
+>  .../devicetree/bindings/media/qcom,sdm845-venus-v2.yaml     | 1 -
+>  .../devicetree/bindings/media/qcom,sm8250-venus.yaml        | 1 -
+>  Documentation/devicetree/bindings/media/renesas,drif.yaml   | 1 -
+>  .../bindings/memory-controllers/mediatek,smi-common.yaml    | 6 ++----
+>  .../bindings/memory-controllers/mediatek,smi-larb.yaml      | 1 -
+>  .../devicetree/bindings/mmc/allwinner,sun4i-a10-mmc.yaml    | 2 --
+>  Documentation/devicetree/bindings/mmc/fsl-imx-esdhc.yaml    | 1 -
+>  Documentation/devicetree/bindings/mmc/mtk-sd.yaml           | 2 --
+>  Documentation/devicetree/bindings/mmc/renesas,sdhi.yaml     | 2 --
+>  Documentation/devicetree/bindings/mmc/sdhci-am654.yaml      | 1 -
+>  Documentation/devicetree/bindings/mmc/sdhci-pxa.yaml        | 1 -
+>  .../devicetree/bindings/net/amlogic,meson-dwmac.yaml        | 2 --
+>  .../devicetree/bindings/net/brcm,bcm4908-enet.yaml          | 2 --
+>  Documentation/devicetree/bindings/net/can/bosch,m_can.yaml  | 2 --
+>  Documentation/devicetree/bindings/net/dsa/brcm,sf2.yaml     | 2 --
+>  Documentation/devicetree/bindings/net/snps,dwmac.yaml       | 2 --
+>  Documentation/devicetree/bindings/net/stm32-dwmac.yaml      | 1 -
+>  Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml    | 2 --
+>  Documentation/devicetree/bindings/pci/loongson.yaml         | 1 -
+>  .../devicetree/bindings/pci/mediatek-pcie-gen3.yaml         | 1 -
+>  .../devicetree/bindings/pci/microchip,pcie-host.yaml        | 2 --
+>  Documentation/devicetree/bindings/perf/arm,cmn.yaml         | 1 -
+>  .../devicetree/bindings/phy/brcm,bcm63xx-usbh-phy.yaml      | 1 -
+>  .../devicetree/bindings/phy/brcm,brcmstb-usb-phy.yaml       | 3 ---
+>  Documentation/devicetree/bindings/phy/brcm,sata-phy.yaml    | 1 -
+>  Documentation/devicetree/bindings/phy/mediatek,tphy.yaml    | 2 --
+>  .../devicetree/bindings/phy/phy-cadence-sierra.yaml         | 2 --
+>  .../devicetree/bindings/phy/phy-cadence-torrent.yaml        | 4 ----
+>  .../devicetree/bindings/phy/qcom,ipq806x-usb-phy-hs.yaml    | 1 -
+>  .../devicetree/bindings/phy/qcom,ipq806x-usb-phy-ss.yaml    | 1 -
+>  Documentation/devicetree/bindings/phy/qcom,qmp-phy.yaml     | 1 -
+>  Documentation/devicetree/bindings/phy/qcom,qusb2-phy.yaml   | 2 --
+>  Documentation/devicetree/bindings/phy/renesas,usb2-phy.yaml | 2 --
+>  Documentation/devicetree/bindings/phy/renesas,usb3-phy.yaml | 1 -
+>  .../devicetree/bindings/pinctrl/actions,s500-pinctrl.yaml   | 1 -
+>  .../devicetree/bindings/power/amlogic,meson-ee-pwrc.yaml    | 1 -
+>  .../devicetree/bindings/pwm/allwinner,sun4i-a10-pwm.yaml    | 1 -
+>  .../devicetree/bindings/remoteproc/st,stm32-rproc.yaml      | 2 --
+>  .../devicetree/bindings/remoteproc/ti,k3-dsp-rproc.yaml     | 1 -
+>  .../devicetree/bindings/remoteproc/ti,omap-remoteproc.yaml  | 1 -
+>  Documentation/devicetree/bindings/reset/fsl,imx-src.yaml    | 1 -
+>  .../devicetree/bindings/riscv/sifive-l2-cache.yaml          | 1 -
+>  .../devicetree/bindings/rtc/allwinner,sun6i-a31-rtc.yaml    | 1 -
+>  Documentation/devicetree/bindings/rtc/imxdi-rtc.yaml        | 1 -
+>  Documentation/devicetree/bindings/serial/fsl-lpuart.yaml    | 2 --
+>  Documentation/devicetree/bindings/serial/samsung_uart.yaml  | 1 -
+>  .../devicetree/bindings/soc/qcom/qcom,geni-se.yaml          | 1 -
+>  Documentation/devicetree/bindings/soc/ti/ti,pruss.yaml      | 2 --
+>  .../bindings/sound/nvidia,tegra-audio-graph-card.yaml       | 1 -
+>  .../devicetree/bindings/sound/nvidia,tegra210-i2s.yaml      | 2 --
+>  Documentation/devicetree/bindings/sound/st,stm32-sai.yaml   | 3 ---
+>  .../devicetree/bindings/spi/amlogic,meson-gx-spicc.yaml     | 1 -
+>  .../devicetree/bindings/spi/brcm,spi-bcm-qspi.yaml          | 2 --
+>  .../bindings/thermal/allwinner,sun8i-a83t-ths.yaml          | 2 --
+>  Documentation/devicetree/bindings/thermal/qcom-tsens.yaml   | 1 -
+>  .../bindings/timer/allwinner,sun5i-a13-hstimer.yaml         | 1 -
+>  Documentation/devicetree/bindings/timer/arm,arch_timer.yaml | 1 -
+>  .../devicetree/bindings/timer/arm,arch_timer_mmio.yaml      | 2 --
+>  .../devicetree/bindings/timer/intel,ixp4xx-timer.yaml       | 1 -
+>  .../devicetree/bindings/usb/maxim,max3420-udc.yaml          | 2 --
+>  .../devicetree/bindings/usb/nvidia,tegra-xudc.yaml          | 4 ----
+>  Documentation/devicetree/bindings/usb/renesas,usbhs.yaml    | 3 ---
+>  .../devicetree/bindings/watchdog/st,stm32-iwdg.yaml         | 1 -
+>  101 files changed, 2 insertions(+), 163 deletions(-)
+>
+mailbox stuff
+Acked-by: Jassi Brar <jassisinghbrar@gmail.com>
 
+thanks.
