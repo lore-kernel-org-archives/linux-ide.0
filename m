@@ -2,119 +2,191 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8D59C48BE8
-	for <linux-ide@archiver.kernel.org>; Thu, 17 Jun 2021 01:10:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E358C49EBA
+	for <linux-ide@archiver.kernel.org>; Thu, 17 Jun 2021 09:15:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8DDB8613D5
-	for <linux-ide@archiver.kernel.org>; Thu, 17 Jun 2021 01:10:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47BE2613C1
+	for <linux-ide@archiver.kernel.org>; Thu, 17 Jun 2021 09:15:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231748AbhFQBMN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 16 Jun 2021 21:12:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55228 "EHLO
+        id S231516AbhFQJRN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 17 Jun 2021 05:17:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230267AbhFQBMN (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 16 Jun 2021 21:12:13 -0400
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98D3EC061574;
-        Wed, 16 Jun 2021 18:10:06 -0700 (PDT)
-Received: by mail-pf1-x430.google.com with SMTP id z26so3625803pfj.5;
-        Wed, 16 Jun 2021 18:10:06 -0700 (PDT)
+        with ESMTP id S231547AbhFQJRL (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Jun 2021 05:17:11 -0400
+Received: from mail-vs1-xe2d.google.com (mail-vs1-xe2d.google.com [IPv6:2607:f8b0:4864:20::e2d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2282C06124C
+        for <linux-ide@vger.kernel.org>; Thu, 17 Jun 2021 02:15:02 -0700 (PDT)
+Received: by mail-vs1-xe2d.google.com with SMTP id l25so2599114vsb.9
+        for <linux-ide@vger.kernel.org>; Thu, 17 Jun 2021 02:15:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=5CFAnD2pFgTapSI0IuW8VVi8leOVL2PTk0MVDgV8WjU=;
-        b=O26FgXo6QsfESEQaT+Ndre/bXFjpQ2RZWUKz+u8cQZzwjiQWxdngXyvcAaix15xtCo
-         OpQmyaRTNPrmqLqsAo3iJDv/tEPVkhV/6E63Uqg3Rg6Mm3KRwp3Dhu+2Nv1v8o1BuJki
-         kEDE86fVgv23R33I/pBStn+1ogOLSsZ/pYCluShIduWfcKJd4QGma26TGaVLoJBrd27T
-         ach4MGapeEqonG2wa4N3Usrsf1+wb2xdWTZ2lGQ6mmqmt7NGB7Hdpqaf9ZNhvxruBvxx
-         Yo9qPOS6jBGHIlch9IdzluHyQQRjiv7GQac76CH5/Mg7hqwiJXR8qs8m31miS6CRTfNO
-         ZBpw==
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=NiiU6fiVLbE4syulfvGQUEnbQNZvmtFPXY1KRGZ4VKs=;
+        b=tspUddDmWP1nXGb8dYzDapkXukDhtaQZ8yVoZQOykE4MszNmnQ2Jc7pAu3v7qBcemT
+         UyLs98rU9nEy8e3wRIJkxsl8g3L8Eb/AvQODxlfCIA8Y+SqSVtbG2msAYvDIZFEizfbY
+         20UD8As6h7+oRqO/LBfp1JKzos5qS4bIZn22juJCAEEZOMhbhqM1f/S6KCbcFkkK35Tr
+         P7laFgsJQmqhNYip+ALRHKPPvbOtIHBYtRpZR/hgm9hpO06Ne5Y1MzvmGVRytTLSpocX
+         +CLKqhQk6OUYMP0R+b/JJQ4/QkH+6e5JGgp8Hm8OfSHuZ6CIo4hVwTpj+jWWd51a3cq+
+         7N8A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=5CFAnD2pFgTapSI0IuW8VVi8leOVL2PTk0MVDgV8WjU=;
-        b=DEjT+HPXpkcDNvjqqiqvS45g/KQfRTjntebv0jW+Ifv6upQtALyzHi5buE2eM5pp3F
-         z4NpfJgCeGnh3fsorfxJoDWSJVexfZyjZEpkkG6/zY1T/SNOX4T4j2QnX8yuHKwROFEo
-         uZoc64iVo8359Lg6FoaXbWDwecPpmNrf7QomiO6RhQYlElQd01UcLV8S2nl/pBgn9PXG
-         CFZ4+zeWQ846YACUnvD2y3TPRj2AVwQcf1MTh2O9S6sWx1B7Ac2jwP9mwYoqsESuBLlf
-         txb+52d83yM1bMcmSJRRSFwZOBWmiLRwUF5RN2R+TIa8hihWrhuQXpooZtqs3AgFtoA9
-         XGAQ==
-X-Gm-Message-State: AOAM531kILO8558cL+FRWb0uV2Y66pOmPL1Q7zd7rkGBVbs0wKIV/BqE
-        fjLfULrVaM5gMQXuNESphI8=
-X-Google-Smtp-Source: ABdhPJzPC3QiD7aZcmcAleSzjXkZaSMB7vcYTXvwvU7oVODneGdRAO+OXUeWPQVIIe/IyulRcACb2w==
-X-Received: by 2002:a63:a44:: with SMTP id z4mr2349161pgk.379.1623892206137;
-        Wed, 16 Jun 2021 18:10:06 -0700 (PDT)
-Received: from ?IPv6:2001:df0:0:200c:9d12:c2c8:273e:6ffd? ([2001:df0:0:200c:9d12:c2c8:273e:6ffd])
-        by smtp.gmail.com with ESMTPSA id r10sm3603660pga.48.2021.06.16.18.10.02
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 16 Jun 2021 18:10:05 -0700 (PDT)
-Subject: Re: [PATCH v2 0/2] Add APNE PCMCIA 100 Mbit support
-To:     ALeX Kazik <alex@kazik.de>
-Cc:     Linux/m68k <linux-m68k@vger.kernel.org>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        linux-ide@vger.kernel.org, Finn Thain <fthain@linux-m68k.org>
-References: <1623224214-4836-1-git-send-email-schmitzmic@gmail.com>
- <1623290953-18000-1-git-send-email-schmitzmic@gmail.com>
- <CAFFuhJpT+2h+4O_q15VjE_77iCQaxwLJC11siSFrr5GbjQ-pFw@mail.gmail.com>
-From:   Michael Schmitz <schmitzmic@gmail.com>
-Message-ID: <904176c2-810f-0573-998f-31b55e617448@gmail.com>
-Date:   Thu, 17 Jun 2021 13:10:00 +1200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=NiiU6fiVLbE4syulfvGQUEnbQNZvmtFPXY1KRGZ4VKs=;
+        b=bzy2abntUNX53Q19QJQNVBVeE09zogo9pShA/ccosqpw6/twlygRd4fuhENNi1xYih
+         LjlDCryR4ijmviapJobKQo+DpgC8vKNnzD29Yxw5E9ZihmQTMEWb4q3NJck0GTcQU6fE
+         JyCn1XtWGQhms34F7D4wEyEkiTokGUsHLWXrvISUT7si2DT7ZU8uaAWoEquln8PBDPSA
+         s4TxiL2CALq63EDQLqR3e67/9xHDKardkTHmDJxDIB2lkR5JGCUr1y0d4ukNd9/M077r
+         CAijjaqnRhYy9d7WNDtS8DzSlUkS+z2UmlD3Zb4H6h4OZnicBOIl23b0eP/70Cq/quSL
+         W+Lg==
+X-Gm-Message-State: AOAM530JmIlcUYT59u8reDgNiLtUO+0lbzZkL3/zX4RmVXQobHU2vw/N
+        IY6Po/jdfehxlfJEipCa2+qvQFPel+/OS5Jn+1LRfw==
+X-Google-Smtp-Source: ABdhPJyDDRUn2syWiuy8XigFtL3iDYKz59Ub/6ekAvgFfmAY9tRuxX/nulbHrrDC8J99+RHvCUQeMQ9XnjKDaURJSR4=
+X-Received: by 2002:a05:6102:2159:: with SMTP id h25mr3349328vsg.19.1623921301368;
+ Thu, 17 Jun 2021 02:15:01 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAFFuhJpT+2h+4O_q15VjE_77iCQaxwLJC11siSFrr5GbjQ-pFw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+References: <20210615191543.1043414-1-robh@kernel.org>
+In-Reply-To: <20210615191543.1043414-1-robh@kernel.org>
+From:   Ulf Hansson <ulf.hansson@linaro.org>
+Date:   Thu, 17 Jun 2021 11:14:25 +0200
+Message-ID: <CAPDyKFrY4UOO5CbZ8Bj7AH2+3Wo1PRpUv+Zs96tub=MzGuGrrQ@mail.gmail.com>
+Subject: Re: [PATCH] dt-bindings: Drop redundant minItems/maxItems
+To:     Rob Herring <robh@kernel.org>
+Cc:     DTML <devicetree@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-ide@vger.kernel.org, linux-clk <linux-clk@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-crypto@vger.kernel.org,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        dmaengine@vger.kernel.org, linux-i2c@vger.kernel.org,
+        linux-iio@vger.kernel.org, alsa-devel@alsa-project.org,
+        "list@263.net:IOMMU DRIVERS <iommu@lists.linux-foundation.org>, Joerg
+        Roedel <joro@8bytes.org>," <iommu@lists.linux-foundation.org>,
+        Linux Media Mailing List <linux-media@vger.kernel.org>,
+        linux-mmc <linux-mmc@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>, linux-can@vger.kernel.org,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        linux-phy@lists.infradead.org,
+        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
+        linux-pwm@vger.kernel.org, linux-remoteproc@vger.kernel.org,
+        linux-riscv <linux-riscv@lists.infradead.org>,
+        linux-rtc@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-spi@vger.kernel.org, Linux PM <linux-pm@vger.kernel.org>,
+        Linux USB List <linux-usb@vger.kernel.org>,
+        linux-watchdog@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel@ffwll.ch>, Vinod Koul <vkoul@kernel.org>,
+        Bartosz Golaszewski <bgolaszewski@baylibre.com>,
+        Kamal Dasu <kdasu.kdev@gmail.com>,
+        Jonathan Cameron <jic23@kernel.org>,
+        Lars-Peter Clausen <lars@metafoo.de>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Marc Zyngier <maz@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+        Jassi Brar <jassisinghbrar@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Wolfgang Grandegger <wg@grandegger.com>,
+        Marc Kleine-Budde <mkl@pengutronix.de>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Vivien Didelot <vivien.didelot@gmail.com>,
+        Vladimir Oltean <olteanv@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>, Lee Jones <lee.jones@linaro.org>,
+        Ohad Ben-Cohen <ohad@wizery.com>,
+        Mathieu Poirier <mathieu.poirier@linaro.org>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Albert Ou <aou@eecs.berkeley.edu>,
+        Alessandro Zummo <a.zummo@towertech.it>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Mark Brown <broonie@kernel.org>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Wim Van Sebroeck <wim@linux-watchdog.org>,
+        Guenter Roeck <linux@roeck-us.net>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Alex,
+On Tue, 15 Jun 2021 at 21:15, Rob Herring <robh@kernel.org> wrote:
+>
+> If a property has an 'items' list, then a 'minItems' or 'maxItems' with t=
+he
+> same size as the list is redundant and can be dropped. Note that is DT
+> schema specific behavior and not standard json-schema behavior. The tooli=
+ng
+> will fixup the final schema adding any unspecified minItems/maxItems.
+>
+> This condition is partially checked with the meta-schema already, but
+> only if both 'minItems' and 'maxItems' are equal to the 'items' length.
+> An improved meta-schema is pending.
+>
+> Cc: Jens Axboe <axboe@kernel.dk>
+> Cc: Stephen Boyd <sboyd@kernel.org>
+> Cc: Herbert Xu <herbert@gondor.apana.org.au>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: David Airlie <airlied@linux.ie>
+> Cc: Daniel Vetter <daniel@ffwll.ch>
+> Cc: Vinod Koul <vkoul@kernel.org>
+> Cc: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+> Cc: Kamal Dasu <kdasu.kdev@gmail.com>
+> Cc: Jonathan Cameron <jic23@kernel.org>
+> Cc: Lars-Peter Clausen <lars@metafoo.de>
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Cc: Marc Zyngier <maz@kernel.org>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: Jassi Brar <jassisinghbrar@gmail.com>
+> Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
+> Cc: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+> Cc: Ulf Hansson <ulf.hansson@linaro.org>
+> Cc: Jakub Kicinski <kuba@kernel.org>
+> Cc: Wolfgang Grandegger <wg@grandegger.com>
+> Cc: Marc Kleine-Budde <mkl@pengutronix.de>
+> Cc: Andrew Lunn <andrew@lunn.ch>
+> Cc: Vivien Didelot <vivien.didelot@gmail.com>
+> Cc: Vladimir Oltean <olteanv@gmail.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Kishon Vijay Abraham I <kishon@ti.com>
+> Cc: Linus Walleij <linus.walleij@linaro.org>
+> Cc: "Uwe Kleine-K=C3=B6nig" <u.kleine-koenig@pengutronix.de>
+> Cc: Lee Jones <lee.jones@linaro.org>
+> Cc: Ohad Ben-Cohen <ohad@wizery.com>
+> Cc: Mathieu Poirier <mathieu.poirier@linaro.org>
+> Cc: Philipp Zabel <p.zabel@pengutronix.de>
+> Cc: Paul Walmsley <paul.walmsley@sifive.com>
+> Cc: Palmer Dabbelt <palmer@dabbelt.com>
+> Cc: Albert Ou <aou@eecs.berkeley.edu>
+> Cc: Alessandro Zummo <a.zummo@towertech.it>
+> Cc: Alexandre Belloni <alexandre.belloni@bootlin.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: Mark Brown <broonie@kernel.org>
+> Cc: Zhang Rui <rui.zhang@intel.com>
+> Cc: Daniel Lezcano <daniel.lezcano@linaro.org>
+> Cc: Wim Van Sebroeck <wim@linux-watchdog.org>
+> Cc: Guenter Roeck <linux@roeck-us.net>
+> Signed-off-by: Rob Herring <robh@kernel.org>
 
-Thanks for testing!
+Acked-by: Ulf Hansson <ulf.hansson@linaro.org> # for MMC
 
-On 17/06/21 9:11 am, ALeX Kazik wrote:
-> Hi,
->
-> I've tested the patches and they work.
->
-> At first I got it only to work with the following line removed/commented out:
->    if (apne_100_mbit)
-> And thus enabling the following line always.
->
-> I've changed, with the help of Michael, the parameters to:
->
->    static u32 apne_100_mbit = 0;
->    module_param_named(100_mbit, apne_100_mbit, uint, 0644);
->    MODULE_PARM_DESC(100_mbit, "Enable 100 Mbit support");
->
-> And was able to enable it with the kernel option "apne.100_mbit=1".
->
-> It's also available as /sys/module/apne/parameters/100_mbit
->
-> The 0644 is the permission (root can change it), If it shouldn't be
-> changed at runtime 0444 or 0 would be used.
-Changing that parameter at runtime won't do anything (it's only tested 
-at device probe time). But I'd better change the permission to 444.
-> (I think there is also a bool option instead of the uint, but I'm glad
-> it works like this.)
+[...]
 
-True, that would be the better option indeed. I'll change that in the 
-next version (which will go to netdev as well).
-
-Cheers,
-
-     Michael
-
-
->
-> Alex.
+Kind regards
+Uffe
