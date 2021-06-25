@@ -2,183 +2,87 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F740C49EA5
-	for <linux-ide@archiver.kernel.org>; Tue, 22 Jun 2021 13:43:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A8F6C49EA5
+	for <linux-ide@archiver.kernel.org>; Fri, 25 Jun 2021 00:49:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 18D3E61353
-	for <linux-ide@archiver.kernel.org>; Tue, 22 Jun 2021 13:43:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1510B6137D
+	for <linux-ide@archiver.kernel.org>; Fri, 25 Jun 2021 00:49:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230402AbhFVNqK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 22 Jun 2021 09:46:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37118 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229988AbhFVNqJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 22 Jun 2021 09:46:09 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BC2F861353;
-        Tue, 22 Jun 2021 13:43:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1624369432;
-        bh=NqFXh1RzaIB7T3yUivBhV+3jLDLAyj/zzCtWY0JA0SQ=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=n2C4l95B/w+7fm3Hy/W1ls3BjWTgUnPkeMWPcJwuHNhjALViq36NSNRvf1J+UxXwT
-         W1of8Zg2OiipKGz+JaQJVEN0Rymz9BqpYAiOBzmrtdT5/mgiDbEVBsHlr3gDk+TOBO
-         Fe7qpiKq+UgUir5JlR9fsJDRZtySIEJhB36NWX9yf5t0mO64+Z1mYCq7ew8ZAwg0KI
-         F5hwQr8sPPDgEGs9UTcylTzkdsRMaQyTccf/acpKJhxDJxKtULLFNQYEsUOGj4MJxK
-         B3a0hJqzs9FjH4X1uUrkMDUidT5NSByby5xfUTkfYV6nW2261SSjbz6fXsdgEAv5QU
-         qCbHec6qB4IfA==
-Received: by mail-ed1-f48.google.com with SMTP id t3so23726766edc.7;
-        Tue, 22 Jun 2021 06:43:52 -0700 (PDT)
-X-Gm-Message-State: AOAM530naL8j0CKzvJfrllBmASUFsX2bsI1GjGzC0mAXDpPnd7e/OVpX
-        4EDZT2wnXe4JGzDS7JIUEAN3Ta5uIGiYDz5J5Q==
-X-Google-Smtp-Source: ABdhPJzR0Ub3ZgSNkr3MEhjSHq6x9DynzmvMX7quMzOS1boijoDJs7nsAsYPAJuJ3rupM/aSXMVZuLXS4ayPZR+vCGA=
-X-Received: by 2002:a05:6402:ca2:: with SMTP id cn2mr2897976edb.62.1624369431373;
- Tue, 22 Jun 2021 06:43:51 -0700 (PDT)
+        id S232903AbhFYAvq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 24 Jun 2021 20:51:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43382 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229521AbhFYAvq (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jun 2021 20:51:46 -0400
+Received: from mail-io1-xd35.google.com (mail-io1-xd35.google.com [IPv6:2607:f8b0:4864:20::d35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36011C061574
+        for <linux-ide@vger.kernel.org>; Thu, 24 Jun 2021 17:49:26 -0700 (PDT)
+Received: by mail-io1-xd35.google.com with SMTP id v3so10567026ioq.9
+        for <linux-ide@vger.kernel.org>; Thu, 24 Jun 2021 17:49:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=3PR/UUWyRo3W86jHkTCrMGfl2K4mSiZxkeLBFZAP1Fk=;
+        b=zp1bHW9KUWJi4ZFV5WTYC81AR3omUkBmmTvp02R4K5SuzzL9ksQP/V2cIMR8kZVb6s
+         D1mYoyckpBqtKh7OAa0aniIP0CzD1qKNjmt/LusyOXdHyD2jjQhCOPnoXpAPnr8N2dSI
+         NqlYnAm/pSqaFCjQlVXQN2vZBEdI0UJ1i3WNpKmM4z/fdM+HV69bQTmo3VpbNBaocFfq
+         BiKSIq5wpFEb8w3aSeLguSW8mhc4vV5UBXeNYT7N7/0oRrPFpMYP3GALhw5gElYAH1pZ
+         rxqEqIVu3lzPOTNSAyBjKP3X9nelKqfUV7w820XEvJ7mRDR6qiyJhjbzzdshQztlfxWq
+         Cmrg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=3PR/UUWyRo3W86jHkTCrMGfl2K4mSiZxkeLBFZAP1Fk=;
+        b=H/UsgauwZUnUkXaS+CjA75q3ioejB/3AUeVCxECURjuKQX70Y9VZYBFEOBcDmXnLyW
+         31jWHseGpwyP65FUp4j49/lS+AJnzByOMKe4J65u4kkSDmndcpvFEGesVmJfJkTOvN9L
+         c52+qY74LceQnQbpv0zuNrqTE9S9jOcDPIQ/RJQxUoyNXm19X/zzBas+g8lSTFlZhHzC
+         QOeH9LdWHVtUlb6HIrpNpfcGGoPzXKJ+IiIv/dculi6LoLAdhbXK4fMjfg/QIgIUIxE/
+         OuQ36C6oqhC32Kvz3Tx37Vs6BARHXhw9mbCUHs7zqdrimwCqunYmBaQuIwnfqoDPMgkn
+         CCsg==
+X-Gm-Message-State: AOAM53238YSOQTT5P9JzzEo5G40b977fkAwj3+NYtZVGmzqy3H4CHyyP
+        AKtLayDUFiamA02q+FB7EabP3Q==
+X-Google-Smtp-Source: ABdhPJzl3Ao3+69Nt+XJsgbEnmxvRKyJfWDOB6efG73px9/nSiJE70wm/ddnuIFkkRoTTREqJA1ejA==
+X-Received: by 2002:a05:6602:12:: with SMTP id b18mr6007226ioa.115.1624582165656;
+        Thu, 24 Jun 2021 17:49:25 -0700 (PDT)
+Received: from [192.168.1.134] ([198.8.77.61])
+        by smtp.gmail.com with ESMTPSA id h18sm2595750ilr.86.2021.06.24.17.49.24
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 24 Jun 2021 17:49:25 -0700 (PDT)
+Subject: Re: [PATCH] ata: rb532_cf: remove redundant codes
+To:     13145886936@163.com
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        gushengxian <gushengxian@yulong.com>
+References: <20210622115507.359017-1-13145886936@163.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <d69296c5-faf3-24f7-bf3a-faede4ed79e5@kernel.dk>
+Date:   Thu, 24 Jun 2021 18:49:24 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-References: <20210615191543.1043414-1-robh@kernel.org> <CAMuHMdUGXu8yj3JWKwM8mt7axkrzGMiowC1t0PHrbpxRCBME3w@mail.gmail.com>
-In-Reply-To: <CAMuHMdUGXu8yj3JWKwM8mt7axkrzGMiowC1t0PHrbpxRCBME3w@mail.gmail.com>
-From:   Rob Herring <robh@kernel.org>
-Date:   Tue, 22 Jun 2021 07:43:37 -0600
-X-Gmail-Original-Message-ID: <CAL_JsqJ8jjkufTAmoFHuqpWB0bMUfCCkUR-pFFa2MoyeGzgBvA@mail.gmail.com>
-Message-ID: <CAL_JsqJ8jjkufTAmoFHuqpWB0bMUfCCkUR-pFFa2MoyeGzgBvA@mail.gmail.com>
-Subject: Re: [PATCH] dt-bindings: Drop redundant minItems/maxItems
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
-        <devicetree@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>, linux-clk <linux-clk@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
-        DRI Development <dri-devel@lists.freedesktop.org>,
-        dmaengine <dmaengine@vger.kernel.org>,
-        Linux I2C <linux-i2c@vger.kernel.org>,
-        "open list:IIO SUBSYSTEM AND DRIVERS" <linux-iio@vger.kernel.org>,
-        ALSA Development Mailing List <alsa-devel@alsa-project.org>,
-        Linux IOMMU <iommu@lists.linux-foundation.org>,
-        Linux Media Mailing List <linux-media@vger.kernel.org>,
-        Linux MMC List <linux-mmc@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>, linux-can@vger.kernel.org,
-        linux-pci <linux-pci@vger.kernel.org>,
-        linux-phy@lists.infradead.org,
-        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
-        Linux PWM List <linux-pwm@vger.kernel.org>,
-        "open list:REMOTE PROCESSOR (REMOTEPROC) SUBSYSTEM" 
-        <linux-remoteproc@vger.kernel.org>,
-        linux-riscv <linux-riscv@lists.infradead.org>,
-        "open list:REAL TIME CLOCK (RTC) SUBSYSTEM" 
-        <linux-rtc@vger.kernel.org>,
-        "open list:SERIAL DRIVERS" <linux-serial@vger.kernel.org>,
-        linux-spi <linux-spi@vger.kernel.org>,
-        Linux PM list <linux-pm@vger.kernel.org>,
-        USB list <linux-usb@vger.kernel.org>,
-        Linux Watchdog Mailing List <linux-watchdog@vger.kernel.org>,
-        Jens Axboe <axboe@kernel.dk>, Stephen Boyd <sboyd@kernel.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel@ffwll.ch>, Vinod Koul <vkoul@kernel.org>,
-        Bartosz Golaszewski <bgolaszewski@baylibre.com>,
-        Kamal Dasu <kdasu.kdev@gmail.com>,
-        Jonathan Cameron <jic23@kernel.org>,
-        Lars-Peter Clausen <lars@metafoo.de>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Marc Zyngier <maz@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-        Jassi Brar <jassisinghbrar@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Wolfgang Grandegger <wg@grandegger.com>,
-        Marc Kleine-Budde <mkl@pengutronix.de>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Vivien Didelot <vivien.didelot@gmail.com>,
-        Vladimir Oltean <olteanv@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>, Lee Jones <lee.jones@linaro.org>,
-        Ohad Ben-Cohen <ohad@wizery.com>,
-        Mathieu Poirier <mathieu.poirier@linaro.org>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        Alessandro Zummo <a.zummo@towertech.it>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Mark Brown <broonie@kernel.org>,
-        Zhang Rui <rui.zhang@intel.com>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Guenter Roeck <linux@roeck-us.net>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20210622115507.359017-1-13145886936@163.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Jun 22, 2021 at 2:17 AM Geert Uytterhoeven <geert@linux-m68k.org> wrote:
->
-> Hi Rob,
->
-> On Tue, Jun 15, 2021 at 9:16 PM Rob Herring <robh@kernel.org> wrote:
-> > If a property has an 'items' list, then a 'minItems' or 'maxItems' with the
-> > same size as the list is redundant and can be dropped. Note that is DT
-> > schema specific behavior and not standard json-schema behavior. The tooling
-> > will fixup the final schema adding any unspecified minItems/maxItems.
-> >
-> > This condition is partially checked with the meta-schema already, but
-> > only if both 'minItems' and 'maxItems' are equal to the 'items' length.
-> > An improved meta-schema is pending.
->
-> > Signed-off-by: Rob Herring <robh@kernel.org>
->
-> > --- a/Documentation/devicetree/bindings/net/stm32-dwmac.yaml
-> > +++ b/Documentation/devicetree/bindings/net/stm32-dwmac.yaml
-> > @@ -46,7 +46,6 @@ properties:
-> >
-> >    clocks:
-> >      minItems: 3
-> > -    maxItems: 5
-> >      items:
-> >        - description: GMAC main clock
-> >        - description: MAC TX clock
->
-> While resolving the conflict with commit fea99822914039c6
-> ("dt-bindings: net: document ptp_ref clk in dwmac") in soc/for-next,
-> I noticed the following construct for clock-names:
->
->   clock-names:
->     minItems: 3
->     maxItems: 6
->     contains:
->       enum:
->         - stmmaceth
->         - mac-clk-tx
->         - mac-clk-rx
->         - ethstp
->         - eth-ck
->         - ptp_ref
->
-> Should this use items instead of enum, and drop maxItems, or is this
-> a valid construct to support specifying the clocks in random order?
-> If the latter, it does mean that the order of clock-names may not
-> match the order of the clock descriptions.
+On 6/22/21 5:55 AM, 13145886936@163.com wrote:
+> From: gushengxian <gushengxian@yulong.com>
+> 
+> The codes "dev_err(&pdev->dev, "no IRQ resource found\n");" is
+> redundant because platform_get_irq() already prints an error.
 
-'contains' is true if one or more entries match the strings. So it is
-really saying one of these is required. That's not really much of a
-constraint. There's 'minContains' and 'maxContains' in newer
-json-schema versions (not yet supported) that could add some
-constraints if there has to be at least N entries from contains. An
-'items' schema (as opposed to a list) would say all items have to
-match one of the strings. I'm sure that's too strict.
+Applied, thanks.
 
-TLDR: clocks for this binding are a mess and the above is probably all
-we can do here.
+-- 
+Jens Axboe
 
-Rob
