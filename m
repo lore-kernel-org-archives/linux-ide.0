@@ -2,131 +2,89 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EDD7C07E99
-	for <linux-ide@archiver.kernel.org>; Fri,  9 Jul 2021 13:03:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64C09C07E99
+	for <linux-ide@archiver.kernel.org>; Fri,  9 Jul 2021 14:28:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA9456023E
-	for <linux-ide@archiver.kernel.org>; Fri,  9 Jul 2021 13:03:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 458276120D
+	for <linux-ide@archiver.kernel.org>; Fri,  9 Jul 2021 14:28:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231455AbhGINFm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 9 Jul 2021 09:05:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39986 "EHLO
+        id S231942AbhGIObe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 9 Jul 2021 10:31:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231285AbhGINFm (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 9 Jul 2021 09:05:42 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A09AC0613DD
-        for <linux-ide@vger.kernel.org>; Fri,  9 Jul 2021 06:02:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
-        Content-Description:In-Reply-To:References;
-        bh=GI1I5jHdt3UOe70cgWxZkHEypM3B1skzMDDEquI28sU=; b=et1FJMoU6hSqHOBiJUV5tUxPfd
-        YKowuIhn1qbODXUbiSSNIwwFP9R2hEsPkgTzpCKjBNeccb7DK0p8AIBB05/eESFqYG8PWyX+IC8cr
-        /X07nTU5n/T+Pnump+TB7bWdwyyuqVoY+ddCeMuGkuA3y/KpPe+3Gvi2BPg+efh3CyC4fj7cuAr/E
-        fSciKLlbD4cxtNjqhRwjkaGcwq5qTN0JwKt3m34DNuwhqUUAeqILzA5lj8XFp43S9czvhmIT7vHzU
-        UdPek/YmD4Ovx7WM2T64Do6idAd2K/F48xgQvGnGtVO7MijVIw5/zft8WKqK1ZXSB49CIyOAsyc4g
-        JraUpChw==;
-Received: from p4fdb05cb.dip0.t-ipconnect.de ([79.219.5.203] helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1m1q9R-00EWEM-BT; Fri, 09 Jul 2021 13:02:44 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     axboe@kernel.dk
+        with ESMTP id S231797AbhGIObe (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 9 Jul 2021 10:31:34 -0400
+Received: from mail-io1-xd2b.google.com (mail-io1-xd2b.google.com [IPv6:2607:f8b0:4864:20::d2b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1EC71C0613DD
+        for <linux-ide@vger.kernel.org>; Fri,  9 Jul 2021 07:28:51 -0700 (PDT)
+Received: by mail-io1-xd2b.google.com with SMTP id d9so12595678ioo.2
+        for <linux-ide@vger.kernel.org>; Fri, 09 Jul 2021 07:28:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=VyEDlbEpOJeUhzC1Z+eWRe1fj1oBBaYPYIFuyTV164Q=;
+        b=dVqhFY7h5WRTIaFhkwOAc9Mg4HXJBJCvu0KhBxnR1+zZT9h6UnMlG7NLxHULlv/Nk/
+         3JYvrVzdDDN7uT6YePPedsKeGmDU03FX/shVt772BdjCNgcPCDTx7jsxofI1WdqFt9bl
+         t1QcqQzANij7/4/PNxWksOaSK+V8mVdLwGfo1eog7NP0ZjPMSgfs9cHfCuKMqeuWqYW+
+         acQaobm698Rrecxl1sivdsuPdGGKuI41pHmuXmZdwdmkpov9sAR1Kj1i/btL4iX927c3
+         bST/32uVCtw/gGcxJy/xif/yG0LcILzQm/TK2VIlMHW/T6rmf4Hto2G5DbWenjma9dOq
+         TUtQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=VyEDlbEpOJeUhzC1Z+eWRe1fj1oBBaYPYIFuyTV164Q=;
+        b=rC62TppDWUS5G3T8+2HEiBFlh12UOT2taKafMNZbqvaimp7xViM5x+I14+gXv5iwxI
+         6P3FiFDu1XosRRUlhM85yKTBTeN3KM9bxoG/y/igpZr1gw2IrlmFNKVpc8h5Bo89JoWi
+         n+JszorbQISYn4rwzciswrZ+Q370GBltshJNfuLl8Vchxr45Agv360IXnoz3n6+7R9CS
+         oHygNFRWBGTNwprfdPZokwhFQ89snsoaoAfW1wGj2KHv1y0KNeuoj5d/DCn/xXRWEKrI
+         LNe/P7/yyTbsFU8xLANUr18xo4uJUVMx9YpiUMiP9G7PsU3vFYfeP0VyMia5dJLfTBGm
+         RN7A==
+X-Gm-Message-State: AOAM533G2GcomfxKuExGmsgYDhTVi37XKANf7I74+9RpnpBNgWBubFkA
+        IX9ni5jrOA5p9Poy3NUiLC0Oig==
+X-Google-Smtp-Source: ABdhPJy09vfupmSSA29QlFDJO3Z46pUWdkxKIgUzH+LXmKKeWTNJkh2Ra13rHvLwXI/Xv83R83Btag==
+X-Received: by 2002:a5d:9acb:: with SMTP id x11mr29077421ion.133.1625840930583;
+        Fri, 09 Jul 2021 07:28:50 -0700 (PDT)
+Received: from [192.168.1.134] ([198.8.77.61])
+        by smtp.gmail.com with ESMTPSA id g17sm3033373ilc.12.2021.07.09.07.28.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 09 Jul 2021 07:28:50 -0700 (PDT)
+Subject: Re: [PATCH] libata: fix ata_pio_sector for CONFIG_HIGHMEM
+To:     Christoph Hellwig <hch@lst.de>
 Cc:     torvalds@linux-foundation.org, linux-ide@vger.kernel.org,
         kernel test robot <oliver.sang@intel.com>
-Subject: [PATCH] libata: fix ata_pio_sector for CONFIG_HIGHMEM
-Date:   Fri,  9 Jul 2021 15:02:37 +0200
-Message-Id: <20210709130237.3730959-1-hch@lst.de>
-X-Mailer: git-send-email 2.30.2
+References: <20210709130237.3730959-1-hch@lst.de>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <3dc3df80-c393-90c3-4bcd-79cfed291035@kernel.dk>
+Date:   Fri, 9 Jul 2021 08:28:48 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20210709130237.3730959-1-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Data transfers are not required to be block aligned in memory, so they
-span two pages.  Fix this by splitting the call to >sff_data_xfer into
-two for that case.
+On 7/9/21 7:02 AM, Christoph Hellwig wrote:
+> Data transfers are not required to be block aligned in memory, so they
+> span two pages.  Fix this by splitting the call to >sff_data_xfer into
+> two for that case.
+> 
+> This has been broken since the initial libata import before the damn
+> of git, but was uncovered by the legacy ide driver removal.
 
-This has been broken since the initial libata import before the damn
-of git, but was uncovered by the legacy ide driver removal.
+Applied, thanks.
 
-Reported-by: kernel test robot <oliver.sang@intel.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/ata/libata-sff.c | 35 +++++++++++++++++++++++++++--------
- 1 file changed, 27 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index ae7189d1a568..b71ea4a680b0 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -637,6 +637,20 @@ unsigned int ata_sff_data_xfer32(struct ata_queued_cmd *qc, unsigned char *buf,
- }
- EXPORT_SYMBOL_GPL(ata_sff_data_xfer32);
- 
-+static void ata_pio_xfer(struct ata_queued_cmd *qc, struct page *page,
-+		unsigned int offset, size_t xfer_size)
-+{
-+	bool do_write = (qc->tf.flags & ATA_TFLAG_WRITE);
-+	unsigned char *buf;
-+
-+	buf = kmap_atomic(page);
-+	qc->ap->ops->sff_data_xfer(qc, buf + offset, xfer_size, do_write);
-+	kunmap_atomic(buf);
-+
-+	if (!do_write && !PageSlab(page))
-+		flush_dcache_page(page);
-+}
-+
- /**
-  *	ata_pio_sector - Transfer a sector of data.
-  *	@qc: Command on going
-@@ -648,11 +662,9 @@ EXPORT_SYMBOL_GPL(ata_sff_data_xfer32);
-  */
- static void ata_pio_sector(struct ata_queued_cmd *qc)
- {
--	int do_write = (qc->tf.flags & ATA_TFLAG_WRITE);
- 	struct ata_port *ap = qc->ap;
- 	struct page *page;
- 	unsigned int offset;
--	unsigned char *buf;
- 
- 	if (!qc->cursg) {
- 		qc->curbytes = qc->nbytes;
-@@ -670,13 +682,20 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
- 
- 	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
- 
--	/* do the actual data transfer */
--	buf = kmap_atomic(page);
--	ap->ops->sff_data_xfer(qc, buf + offset, qc->sect_size, do_write);
--	kunmap_atomic(buf);
-+	/*
-+	 * Split the transfer when it splits a page boundary.  Note that the
-+	 * split still has to be dword aligned like all ATA data transfers.
-+	 */
-+	WARN_ON_ONCE(offset % 4);
-+	if (offset + qc->sect_size > PAGE_SIZE) {
-+		unsigned int split_len = PAGE_SIZE - offset;
- 
--	if (!do_write && !PageSlab(page))
--		flush_dcache_page(page);
-+		ata_pio_xfer(qc, page, offset, split_len);
-+		ata_pio_xfer(qc, nth_page(page, 1), 0,
-+			     qc->sect_size - split_len);
-+	} else {
-+		ata_pio_xfer(qc, page, offset, qc->sect_size);
-+	}
- 
- 	qc->curbytes += qc->sect_size;
- 	qc->cursg_ofs += qc->sect_size;
 -- 
-2.30.2
+Jens Axboe
 
