@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E988CC432BE
-	for <linux-ide@archiver.kernel.org>; Tue,  3 Aug 2021 11:44:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7957AC43216
+	for <linux-ide@archiver.kernel.org>; Tue,  3 Aug 2021 11:45:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D2F7C610FB
-	for <linux-ide@archiver.kernel.org>; Tue,  3 Aug 2021 11:44:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 654C360F56
+	for <linux-ide@archiver.kernel.org>; Tue,  3 Aug 2021 11:45:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235789AbhHCLo6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 3 Aug 2021 07:44:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35302 "EHLO mail.kernel.org"
+        id S236220AbhHCLps (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 3 Aug 2021 07:45:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35598 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236240AbhHCLod (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 3 Aug 2021 07:44:33 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 59CC260ED6;
-        Tue,  3 Aug 2021 11:44:22 +0000 (UTC)
+        id S236279AbhHCLou (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 3 Aug 2021 07:44:50 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A72D361040;
+        Tue,  3 Aug 2021 11:44:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1627991063;
-        bh=IKYl1kJ9aYIpehnEShOGCBcaZC8ze61LAC9wbfsXwpE=;
+        s=k20201202; t=1627991079;
+        bh=omMAXG4dRWxGLguCkIGShrcPQhRs8LbeFch9vz0fYBg=;
         h=From:To:Cc:Subject:Date:From;
-        b=kn3nCnB7DG0caXtvCK/ybUwPiXzmK7lrUVzOYLdjhG18gKoGVFMEcdif9fDQ3wrmu
-         Kf+CFEp0VP3fRJoihUVNj4ISOHt0RV65/PVMDuWgQ/L5akZG5KgEtbAp01IR2S2ys1
-         lsseV4uJMLkUpJc4prYx+5kA71qcInPt8Pi5HtVT+NPnnSsRosLo9XQnHAi+DAK8XT
-         H4qnGaqvav3SUMhwwsv3lLzvd+7u6lKiXG+JTVMfs/YSMi40VLCj0UsPGgTHZnVLXU
-         4k7gHKI2WuePUDAl1lzLR+nGOOpcjVOc6Q/km0hs90QHx8pxTRRFQMHIXDY9lbmCui
-         CN0/jFLNM8Sgg==
+        b=O1Vet6vWd7vpA+Dki5Xpksi9S07SxGX47oFBOnLahp4CijmElIdUSkYA+Fd8KqKm3
+         RSUpGXH72VgFs6Xy4al07j918eMSsryZEu4+IjPDDIJy++7/hW4vlxtPuuxwj9MjOm
+         k2jVP2eX1kFad0YbTog8TKmCiEcVtsc8p1pFT6LuTm3UxnqNcnqjrmX3bhGYdrPCUB
+         7A2K0lE3m53e+PVKdag9upWGU3xWRXwLdx4CmyO7RRFOFtb/DNHpac24xiMOL1Z2cD
+         reBNHmOG6+rjJfVHhEHA8B8WA+HCC+LdZb1r4ftuU4XcnpLcxiw31W8+9r6H8PcCuo
+         Mr+co2WH7tUIw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Christoph Hellwig <hch@lst.de>,
         kernel test robot <oliver.sang@intel.com>,
         Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
         linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 1/6] libata: fix ata_pio_sector for CONFIG_HIGHMEM
-Date:   Tue,  3 Aug 2021 07:44:16 -0400
-Message-Id: <20210803114421.2252840-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 1/5] libata: fix ata_pio_sector for CONFIG_HIGHMEM
+Date:   Tue,  3 Aug 2021 07:44:33 -0400
+Message-Id: <20210803114437.2253079-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
 X-stable: review
@@ -70,10 +70,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 27 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 038db94216a9..454f9d7d42fe 100644
+index 7057630ccf52..1b4297ec3e87 100644
 --- a/drivers/ata/libata-sff.c
 +++ b/drivers/ata/libata-sff.c
-@@ -641,6 +641,20 @@ unsigned int ata_sff_data_xfer32(struct ata_queued_cmd *qc, unsigned char *buf,
+@@ -657,6 +657,20 @@ unsigned int ata_sff_data_xfer32(struct ata_queued_cmd *qc, unsigned char *buf,
  }
  EXPORT_SYMBOL_GPL(ata_sff_data_xfer32);
  
@@ -92,9 +92,9 @@ index 038db94216a9..454f9d7d42fe 100644
 +}
 +
  /**
-  *	ata_pio_sector - Transfer a sector of data.
-  *	@qc: Command on going
-@@ -652,11 +666,9 @@ EXPORT_SYMBOL_GPL(ata_sff_data_xfer32);
+  *	ata_sff_data_xfer_noirq - Transfer data by PIO
+  *	@qc: queued command
+@@ -698,11 +712,9 @@ EXPORT_SYMBOL_GPL(ata_sff_data_xfer_noirq);
   */
  static void ata_pio_sector(struct ata_queued_cmd *qc)
  {
@@ -106,7 +106,7 @@ index 038db94216a9..454f9d7d42fe 100644
  
  	if (!qc->cursg) {
  		qc->curbytes = qc->nbytes;
-@@ -674,13 +686,20 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
+@@ -720,13 +732,20 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
  
  	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
  
