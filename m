@@ -2,84 +2,154 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-20.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,
+	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC8FAC4338F
-	for <linux-ide@archiver.kernel.org>; Wed,  4 Aug 2021 12:40:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DBEB4C4320E
+	for <linux-ide@archiver.kernel.org>; Wed,  4 Aug 2021 12:44:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F02860F22
-	for <linux-ide@archiver.kernel.org>; Wed,  4 Aug 2021 12:40:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C017660F25
+	for <linux-ide@archiver.kernel.org>; Wed,  4 Aug 2021 12:44:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238126AbhHDMkq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 4 Aug 2021 08:40:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57954 "EHLO
+        id S238173AbhHDMop (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 4 Aug 2021 08:44:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58826 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236625AbhHDMko (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 4 Aug 2021 08:40:44 -0400
-Received: from mail-lf1-x12e.google.com (mail-lf1-x12e.google.com [IPv6:2a00:1450:4864:20::12e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C18FC0613D5
-        for <linux-ide@vger.kernel.org>; Wed,  4 Aug 2021 05:40:32 -0700 (PDT)
-Received: by mail-lf1-x12e.google.com with SMTP id n17so1472560lft.13
-        for <linux-ide@vger.kernel.org>; Wed, 04 Aug 2021 05:40:32 -0700 (PDT)
+        with ESMTP id S236990AbhHDMoo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 4 Aug 2021 08:44:44 -0400
+Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37DA5C061798
+        for <linux-ide@vger.kernel.org>; Wed,  4 Aug 2021 05:44:31 -0700 (PDT)
+Received: by mail-lf1-x12f.google.com with SMTP id c24so894434lfi.11
+        for <linux-ide@vger.kernel.org>; Wed, 04 Aug 2021 05:44:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=Gbbjr/HPtx9f7C74Fj3YfSdUYQxwWjsve6R9asXX9j4=;
-        b=XDTU9DoH2XvkuXYpiO94yV4E7u/sYw78MGhhWsot155jTqR/INsiyl6UbXtMQYt3XO
-         RTpUWFNt9EddUMg1ZELO/bK2V5cmwGBJy8pFQEM/KhUXKA/q2Gv9lz+io6OhAtpg/P5M
-         s2xYwPiVFohWQUF3zFAKphNO7X5YCHEi7dVAELG2gdwHyC60HUFHSvtbP7QB4KiVF/ik
-         QWphjtEiOYstrm6754K/XS2q1ySoH/6A2VNOzieTHlIbQTGVONEs7xms62Ti8dGWKBKT
-         JO84lJ8r2bh1zsJYd9J1KImpBmJaSHGSJnHNuWNxN81wpOn/OGN5hj28kwtK9NkBeR/S
-         Fq7w==
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=KThPZotl2MnbNHnYwN0Cur48hqa8t2fsEOoHY+/KM0c=;
+        b=Gocdf1yXuPX8xeoaYI9oLI1JhocaQp6ZZyVcTlOJdDZI2/0vnch4E5lQGPm3MxwdUM
+         giqLR8+3StPTSF4eaI9QxPRAYgsQPOy3Sgy1vk6QHMGur8WgKk9JiwpBE7Q7NqhIFwt9
+         YVZHv5lFDRw148Wb0r8UWWKNpLe8xrYAqQDWLQuAbt5MPsHwKIZ92D+P+/WX5P4zRRJR
+         snno7CnnmIaYZRGMeNve6R+RMLZT4vIseAntmNcFNMogNI0duS3C7Rhms//adcYhnZ1B
+         JgYUmWHHnqKvaZCBz8Vai7whhh0nzb9P1JFctB31mbxCa5/w7d9XJZYYIGYyiaufHl03
+         +5sA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=Gbbjr/HPtx9f7C74Fj3YfSdUYQxwWjsve6R9asXX9j4=;
-        b=oQZFpMSvugvyJzyFPqWiquvPViCCvmIyfmh0VtXW7NPt3HJZh58EzSAJTFJ+mFrb9/
-         te6HzkHF0ZSmUGLPLi81aQMlTIWKJqoDOMLwSJPSnPkHOHfX42Xtgdt2o8u9TBl/Ft/F
-         e9xFbtopWB2JqXYF+W/DEd5XDhcojShhDS6rofoOwUEHQgTfFKz1N9fPy/zWnvlPTazz
-         J9TIBnZmqghT0DjqRlmJlzcKFeuzoS8twB4+ROaQoWnO2gJcciIsnRpWiy4ZgfxbgvhE
-         kHT+EVNjUkZKoUSEQzbfBVgtiWboK3SGLGzYHUwOkTkzGk9ZIkuqsBYeeJT5jveR2m/X
-         xMeg==
-X-Gm-Message-State: AOAM530yMY+3iZXRUyj4ic9IuBEYasA6Q2t36DG64fQ6uNQ8nSA4Y27S
-        wJWU9xzM4jsBAB19nLQJa1/7jTmi2Z4siRH+HanTvg==
-X-Google-Smtp-Source: ABdhPJzkI6Mc7+7v0iwyBjEXw7WKG0pSUwXL+KPm1hl90GtpjZmDv90l+kSWtsqISW7O/2IlokCZ0cRHqVrvTqpQkPQ=
-X-Received: by 2002:ac2:4d0f:: with SMTP id r15mr12211393lfi.649.1628080830108;
- Wed, 04 Aug 2021 05:40:30 -0700 (PDT)
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=KThPZotl2MnbNHnYwN0Cur48hqa8t2fsEOoHY+/KM0c=;
+        b=RoZCT5O+NWFJ8bAsjAyFSpWY8XiHmbeDqW6cyg0jkcnfmRDj6GDO1IJOUV6hObmeSd
+         aNUDIWIKtqXRZAkM1AOPdfjJSDRyN0FGS6x2APmV8EAlXGZzdoqAvP6/oi10q+qN/W6F
+         eGTIylZbXEY/qhtrXJNiy2937Ah51NAGl3RAMV7zqKbea2ccjNgz/MMCJpOvj852a4RA
+         xj/vr4DDYZ1mNUB+RHQHSGEnO0SVOfDd0Yt3+BSQXP28ZatZX0wDBRA3rVtkeaMfDIBd
+         6QUuyXP7F/t0c1Ux3cNOpLFpuPJ1HbGVRj/rN3ojq6zJfk603FjDcMbJti459EQUuNgI
+         wUIg==
+X-Gm-Message-State: AOAM531XJOG+Ky39xnm4tF69g9PuZNZHPmZgV31zXdOPAJTdQGRDmzHf
+        0d5bklJ+foy0HafnFu9cyr0W5xx/CmdD1kik9ghY9A==
+X-Google-Smtp-Source: ABdhPJyDDyEf+9rLZyk+tYny9g+7KdGyN7lm64G/9thaqibRNfBCYr9r5bZvfT70hWlzM4bj90OnDOt9H++74lx9/Q4=
+X-Received: by 2002:ac2:4d0f:: with SMTP id r15mr12222472lfi.649.1628081069590;
+ Wed, 04 Aug 2021 05:44:29 -0700 (PDT)
 MIME-Version: 1.0
-References: <20210731213555.2965356-1-linus.walleij@linaro.org>
-In-Reply-To: <20210731213555.2965356-1-linus.walleij@linaro.org>
 From:   Linus Walleij <linus.walleij@linaro.org>
-Date:   Wed, 4 Aug 2021 14:40:18 +0200
-Message-ID: <CACRpkdbf9TfFyObuqCzOEe_QrS=Gru8i6x-1P7v_N-a11g_iiA@mail.gmail.com>
-Subject: Re: [PATCH 1/5 v2] pata: ixp4xx: Use local dev variable
-To:     Jens Axboe <axboe@kernel.dk>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>
+Date:   Wed, 4 Aug 2021 14:44:18 +0200
+Message-ID: <CACRpkdZaCosXsgp02nuUbd_nEvdxm5-z0+d0oSA97UTWQ0RQQg@mail.gmail.com>
+Subject: [GIT PULL] IXP4xx driver updates for v5.15
+List-Id: <soc.lore.kernel.org>
+To:     SoC Team <soc@kernel.org>, arm-soc <arm@kernel.org>
 Cc:     Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        Imre Kaloz <kaloz@openwrt.org>,
-        Krzysztof Halasa <khalasa@piap.pl>
+        Jens Axboe <axboe@kernel.dk>,
+        Guenter Roeck <linux@roeck-us.net>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        LINUXWATCHDOG <linux-watchdog@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sat, Jul 31, 2021 at 11:38 PM Linus Walleij <linus.walleij@linaro.org> wrote:
+Hi SoC maintainers,
 
-> Let's simplify all &pdev->dev references by creating a
-> local struct device *dev variable.
->
-> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+this is a set of combined driver updates for IXP4xx targeted for the
+v5.15 merge window.
 
-I will send a pull request to the SoC tree for all of these changes
-since it has effect on device trees and the like.
+I am sending it to the SoC tree because of the cross-subsystem
+dependencies and since the corresponding DTS changes goes
+into SoC. These will be sent separately.
 
-Jens: if you prefer to take them through your tree, just yell!
+Note the following:
+
+All new DT bindings in this patch set are ACKed by bindings
+maintainer Rob Herring.
+
+The new expansion bus driver goes in through the SoC tree as is
+custom for bus drivers.
+
+The watchdog maintainer has ACKed the watchdog patch, which
+also briefly affects the timer driver.
+
+The PATA changes also have some mach dependencies.
+I have informed the libata maintainer that I intend to take these
+through ARM SoC.
+https://lore.kernel.org/linux-ide/CACRpkdbf9TfFyObuqCzOEe_QrS=Gru8i6x-1P7v_N-a11g_iiA@mail.gmail.com/
+
+Please pull it in!
 
 Yours,
 Linus Walleij
+
+The following changes since commit e73f0f0ee7541171d89f2e2491130c7771ba58d3:
+
+  Linux 5.14-rc1 (2021-07-11 15:07:40 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/linusw/linux-nomadik.git
+tags/ixp4xx-drivers-arm-soc-v5.15-1
+
+for you to fetch changes up to 47adef20e67d657696c953f4b8023017c6005c1b:
+
+  pata: ixp4xx: Rewrite to use device tree (2021-08-04 12:20:44 +0200)
+
+----------------------------------------------------------------
+IXP4xx driver updates for modernizing the IXP4xx platforms,
+taregeted for v5.15:
+
+- Add DT bindings to the expansion bus and PATA libata driver.
+
+- Add a new expansion bus driver.
+
+- Rewrite the watchdog driver to use the watchdog core and
+  spawn from the timer (clocksource) driver.
+
+- Refactor the PATA/libata driver to probe from the device
+  tree and use the expansion bus driver to manipulate chip
+  select timings directly.
+
+----------------------------------------------------------------
+Linus Walleij (8):
+      bus: ixp4xx: Add DT bindings for the IXP4xx expansion bus
+      bus: ixp4xx: Add a driver for IXP4xx expansion bus
+      watchdog: ixp4xx: Rewrite driver to use core
+      pata: ixp4xx: Use local dev variable
+      pata: ixp4xx: Use IS_ENABLED() to determine endianness
+      pata: ixp4xx: Refer to cmd and ctl rather than csN
+      pata: ixp4xx: Add DT bindings
+      pata: ixp4xx: Rewrite to use device tree
+
+ .../bindings/ata/intel,ixp4xx-compact-flash.yaml   |  61 +++
+ .../bus/intel,ixp4xx-expansion-bus-controller.yaml | 168 ++++++++
+ MAINTAINERS                                        |   2 +
+ drivers/ata/pata_ixp4xx_cf.c                       | 264 +++++++++----
+ drivers/bus/Kconfig                                |  11 +
+ drivers/bus/Makefile                               |   1 +
+ drivers/bus/intel-ixp4xx-eb.c                      | 429 +++++++++++++++++++++
+ drivers/clocksource/timer-ixp4xx.c                 |  48 ++-
+ drivers/watchdog/Kconfig                           |   1 +
+ drivers/watchdog/ixp4xx_wdt.c                      | 283 ++++++--------
+ include/linux/platform_data/pata_ixp4xx_cf.h       |   4 +-
+ 11 files changed, 1014 insertions(+), 258 deletions(-)
+ create mode 100644
+Documentation/devicetree/bindings/ata/intel,ixp4xx-compact-flash.yaml
+ create mode 100644
+Documentation/devicetree/bindings/bus/intel,ixp4xx-expansion-bus-controller.yaml
+ create mode 100644 drivers/bus/intel-ixp4xx-eb.c
