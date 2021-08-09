@@ -2,57 +2,61 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A09AC4338F
-	for <linux-ide@archiver.kernel.org>; Sat,  7 Aug 2021 04:19:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 477FCC4338F
+	for <linux-ide@archiver.kernel.org>; Mon,  9 Aug 2021 06:09:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2D31161050
-	for <linux-ide@archiver.kernel.org>; Sat,  7 Aug 2021 04:19:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1AE7B61052
+	for <linux-ide@archiver.kernel.org>; Mon,  9 Aug 2021 06:09:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231194AbhHGETk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 7 Aug 2021 00:19:40 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:14369 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231247AbhHGETg (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 7 Aug 2021 00:19:36 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1628309958; x=1659845958;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=v0axotK745BOmKq1hqhT1UMPhW1oSJVk5yL66WtuDMY=;
-  b=BB8/By+o0e4/B6z29KzwfC5z5obDG0XLhArYYRkeo7myZeHEIZgNWV9X
-   KztVOSO1QB7ddbOlnhAhnZk6SPqKRtELY1YLSyiY8JawqZDHgujXAXi0C
-   KIliX2zJI+Ip+YBacoog1CtTw+dLY0YwFotMzYOxkfp2nM4WUTyD9356M
-   GLfE3EUrfBWZyTsv6+QlA3Edk0lEi8izo8m7LgfyirxcR4Y2zWNa7aYiY
-   TDKuU58/BnIQ2gy12RnBIpOJichaPOkNCaN4W5cPvyBBsgnnB8xOAzGsd
-   GP3tSKm3Ce6COqKF9Hi/fULE+Sdp4xOmKotHUvfSkL06MggaC2FRJFRwH
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.84,301,1620662400"; 
-   d="scan'208";a="181363694"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Aug 2021 12:19:16 +0800
-IronPort-SDR: zwxci9ZM89sg1h8Vu/whG5sAWRbWxnsDFVUVl3u/a+DjEMbI2mtlXmi+7WNOsGmjsFomua6gd3
- zloT3oSlD32oG+jk4x5G7PldyZk++PnIT1moKdsdn0auXytOnzquoILVexMtiYk3A5cUXUMm+F
- AETfb1dd56445qTdNzr9rtnyRrik/t0nYVQYQyWURQiEZgsRIgfuHScyAJ1L4r5eY973R/j/Su
- 7KeI+2U+Ecfhkid9i7zJB4vf/8TFgiWDnWdqhAizrjt2e7vtVcZizCk4UKhENEV040Onp/uY5L
- ucRRbCvgyGHXGtpYkCmQMoaz
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Aug 2021 20:56:45 -0700
-IronPort-SDR: voDHxoG7w99GokpiODviS6Bnk/ekEg4inL25ebaj4mmnPclmXaU1Mc+8AMvVCN2/jNa/u29CjN
- u4HVWit2l0ioZ9DrNHdu2DS20WHWull1uScOkstaLQhoMpuJY34f/piet1GJSUlkTAwBkdI17k
- Zv8in9dBkXU6La6UaCtlDLZig6k6IupWHbQ/bYND6Te90nmjmB2UI8LSQIPjC3t0YX3TaqeKuc
- uaB7cQBYIEN+sPPyEZw3PcHAx0vhrsQdX5RdEMGqj66Zpf6BLhQYqrlw6JlG+UHe6x+CUFrQkf
- fNo=
-WDCIronportException: Internal
-Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip01.wdc.com with ESMTP; 06 Aug 2021 21:19:16 -0700
-From:   Damien Le Moal <damien.lemoal@wdc.com>
-To:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        id S232786AbhHIGJe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 9 Aug 2021 02:09:34 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:45642 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231675AbhHIGJd (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 9 Aug 2021 02:09:33 -0400
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id E04B11FD8B;
+        Mon,  9 Aug 2021 06:09:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1628489350; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=KTsdHLNngBRItLsOeCRct6yXojKSD5xUmCDmuKjap14=;
+        b=JZp5iz1gRh9WaJkt05ognGdT6WuP/DxxlWq+RsvzI+WRu32EKaYYr8U/utwsRKunygKj1P
+        CPNn4eNjVe7IqBpAz8zM9xumjkIjEtn91Ibz/4AkqXXg0GexbNCBNafbb3P3SWwXYCFeNE
+        0fwK5tMONDPHxUE5AxN1DfOex8Y+msc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1628489350;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=KTsdHLNngBRItLsOeCRct6yXojKSD5xUmCDmuKjap14=;
+        b=EyZZGM+VIvrywQG3PHCtHtYVS/kSrYzhy6hWDhROleF2P4PpkRjRr7rxdwmojfyUOBRWiT
+        RqSbt5PdbCjBmXCg==
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 9951D13318;
+        Mon,  9 Aug 2021 06:09:10 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap1.suse-dmz.suse.de with ESMTPSA
+        id Ix7LI4bGEGF3BwAAGKfGzw
+        (envelope-from <hare@suse.de>); Mon, 09 Aug 2021 06:09:10 +0000
+Subject: Re: [PATCH v4 01/10] libata: fix ata_host_alloc_pinfo()
+To:     Damien Le Moal <damien.lemoal@wdc.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
         linux-ide@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
@@ -60,68 +64,85 @@ Cc:     Sathya Prakash <sathya.prakash@broadcom.com>,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         Suganath Prabu Subramani 
         <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH v4 10/10] scsi: mpt3sas: Introduce sas_ncq_prio_supported sysfs sttribute
-Date:   Sat,  7 Aug 2021 13:18:59 +0900
-Message-Id: <20210807041859.579409-11-damien.lemoal@wdc.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210807041859.579409-1-damien.lemoal@wdc.com>
 References: <20210807041859.579409-1-damien.lemoal@wdc.com>
+ <20210807041859.579409-2-damien.lemoal@wdc.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <8b4177d7-b23b-e152-1bcc-35d39118e26b@suse.de>
+Date:   Mon, 9 Aug 2021 08:09:10 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
+In-Reply-To: <20210807041859.579409-2-damien.lemoal@wdc.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Similarly to AHCI, introduce the device sysfs attribute
-sas_ncq_prio_supported to advertize if a SATA device supports the NCQ
-priority feature. Without this new attribute, the user can only
-discover if a SATA device supports NCQ priority by trying to enable
-the feature use with the sas_ncq_prio_enable sysfs device attribute,
-which fails when the device does not support high priroity commands.
+On 8/7/21 6:18 AM, Damien Le Moal wrote:
+> Avoid static checkers warnings about a potential NULL pointer
+> dereference for the port info variable pi. To do so, test that at least
+> one port info is available on entry to ata_host_alloc_pinfo() and start
+> the ata port initialization for loop with pi initialized to a non-NULL
+> pointer. Within the for loop, get the next port info (if it is not NULL)
+> after initializing the ata port using the previous port info.
+> 
+> Reported-by: kernel test robot <lkp@intel.com>
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+> ---
+>   drivers/ata/libata-core.c | 16 +++++++++++-----
+>   1 file changed, 11 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 61c762961ca8..b17e161c07e2 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5441,16 +5441,17 @@ struct ata_host *ata_host_alloc_pinfo(struct device *dev,
+>   	struct ata_host *host;
+>   	int i, j;
+>   
+> +	/* We must have at least one port info */
+> +	if (!ppi[0])
+> +		return NULL;
+> +
+>   	host = ata_host_alloc(dev, n_ports);
+>   	if (!host)
+>   		return NULL;
+>   
+> -	for (i = 0, j = 0, pi = NULL; i < host->n_ports; i++) {
+> +	for (i = 0, j = 0, pi = ppi[0]; i < host->n_ports; i++) {
+>   		struct ata_port *ap = host->ports[i];
+>   
+> -		if (ppi[j])
+> -			pi = ppi[j++];
+> -
+>   		ap->pio_mask = pi->pio_mask;
+>   		ap->mwdma_mask = pi->mwdma_mask;
+>   		ap->udma_mask = pi->udma_mask;
+> @@ -5458,8 +5459,13 @@ struct ata_host *ata_host_alloc_pinfo(struct device *dev,
+>   		ap->link.flags |= pi->link_flags;
+>   		ap->ops = pi->port_ops;
+>   
+> -		if (!host->ops && (pi->port_ops != &ata_dummy_port_ops))
+> +		if (!host->ops && pi->port_ops != &ata_dummy_port_ops)
+>   			host->ops = pi->port_ops;
+> +
+> +		if (ppi[j + 1]) {
+> +			j++;
+> +			pi = ppi[j];
+> +		}
+>   	}
+>   
+>   	return host;
+> 
+This requires a comment as to why this is necessary.
 
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+Cheers,
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index b66140e4c370..f83d4d32d459 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -3918,6 +3918,24 @@ sas_device_handle_show(struct device *dev, struct device_attribute *attr,
- }
- static DEVICE_ATTR_RO(sas_device_handle);
- 
-+/**
-+ * sas_ncq_prio_supported_show - Indicate if device supports NCQ priority
-+ * @dev: pointer to embedded device
-+ * @attr: sas_ncq_prio_supported attribute descriptor
-+ * @buf: the buffer returned
-+ *
-+ * A sysfs 'read-only' sdev attribute, only works with SATA
-+ */
-+static ssize_t
-+sas_ncq_prio_supported_show(struct device *dev,
-+			    struct device_attribute *attr, char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+
-+	return sysfs_emit(buf, "%d\n", scsih_ncq_prio_supp(sdev));
-+}
-+static DEVICE_ATTR_RO(sas_ncq_prio_supported);
-+
- /**
-  * sas_ncq_prio_enable_show - send prioritized io commands to device
-  * @dev: pointer to embedded device
-@@ -3960,6 +3978,7 @@ static DEVICE_ATTR_RW(sas_ncq_prio_enable);
- struct device_attribute *mpt3sas_dev_attrs[] = {
- 	&dev_attr_sas_address,
- 	&dev_attr_sas_device_handle,
-+	&dev_attr_sas_ncq_prio_supported,
- 	&dev_attr_sas_ncq_prio_enable,
- 	NULL,
- };
+Hannes
 -- 
-2.31.1
-
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
