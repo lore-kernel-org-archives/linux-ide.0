@@ -2,119 +2,99 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-21.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0121FC19F36
-	for <linux-ide@archiver.kernel.org>; Mon, 16 Aug 2021 01:45:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A80AC4338F
+	for <linux-ide@archiver.kernel.org>; Mon, 16 Aug 2021 05:53:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D776B6140B
-	for <linux-ide@archiver.kernel.org>; Mon, 16 Aug 2021 01:45:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F0A47600CC
+	for <linux-ide@archiver.kernel.org>; Mon, 16 Aug 2021 05:53:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232627AbhHPBpo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 15 Aug 2021 21:45:44 -0400
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:37276 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232408AbhHPBpm (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 15 Aug 2021 21:45:42 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1629078309; x=1660614309;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=j+YSu3G8m1N242e8AZ8+DtgpNOkgeoLoxwljEWU6T60=;
-  b=BQDqvFrkU4BUxVs0bV6NCTKMJfX7sV4S8e8wAxbWBIS7IAEkCq6wYT5t
-   RfdRP1ZfUU2Kn8nfBf/jx1L/aseFZx2bm9GiHajaR6MMRSwJdIkhpIkRb
-   tywXDdvmnST9MiGYeTyhDAk3+jKf/R2/MQM/rPDQfcSlknjNM4MSBNnBx
-   UeTELyqPVD6t//aChnh6dAVqK+XbPpmtf2Scz9BDJuryuP9hnLfndkrpX
-   x/MhS/shqcmMF5T9IT6L2bTzO/qg2g4Db/H/2lV4frTO5EddY4AwnXseR
-   qkjqS8Ygi3ObE7SWkR7P8n3sD+wu9tFK4aYMOg/drUbEJXXk+/ohkH7zz
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.84,324,1620662400"; 
-   d="scan'208";a="177326727"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 16 Aug 2021 09:45:07 +0800
-IronPort-SDR: I4bXPIJ4FwJ20KkNTwmpwJvAPVNVid9LA0/ftvaw7C/uYSHWDDC+C/shtMFIQ/OKki+2Eot76M
- YmlL5C0etxpN4xKaz6iORkEkVNQ/CPwihGRIQpWY1v5LWGxOYn+nLO7JbRn4IPSDaUyUYWr+NG
- RTOsyTt2zrspPNbQ+jgSr7oqZSFuGXP7amUos6dhrkG/rdwbg5f3ejDfHNPeDUJoXzZNHVztew
- CXs3SOJPmlQ0vBjAdyskusI5R1kbBfvS+wn3wy2THbQOa6Kdu+EYCty9AMfkNYJfHJP5nXse89
- LqGaQTn9GyF+nIZd3IdYAIIp
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Aug 2021 18:20:34 -0700
-IronPort-SDR: pX/X+1huhgyGVj2GKrWSu3okC5q4TmEHNcU+MAUGjtQuV2YLIyysfJSAG+wBTcAhldzcRHjG1L
- lluMnVrCTK6qG6Xp825SgVyV0ozvqQKDy3ZeDNf/wex+xSWC1IB89rEoGLcVnCh/N7USBMlAYQ
- xQ6OKep0lbRkuaDE55dYD1Ho76TxWxqbTf1oTJAqX0DF6PDZFfvi28bXum2WIXouQ4iIVw/oAM
- ai7noPfAAnRtnvZ8WDwrwJlUeq0kjkgIErsEsNxsHodxjoAe7PSLj6pSx8TGYoWmNgi0dkHm1k
- K8Y=
-WDCIronportException: Internal
-Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip02.wdc.com with ESMTP; 15 Aug 2021 18:45:09 -0700
-From:   Damien Le Moal <damien.lemoal@wdc.com>
-To:     Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
+        id S231680AbhHPFyF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 16 Aug 2021 01:54:05 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:33136 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229623AbhHPFyF (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 16 Aug 2021 01:54:05 -0400
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 8B26D21E35;
+        Mon, 16 Aug 2021 05:53:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1629093213; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=aJD66JK/QbqMVGhZFAE1lmS4E54mftfsrYa+7+AS7hw=;
+        b=pOpgohigd9Q3X7eSaeGihJDC2v3ZEerTEKJnTHNcBnoJuP2cKvLfa27ToDCzvoLPyjrqrJ
+        TzrgLAA8lt+liJfk2aoVq8xdaPDt8WFLoHP0ye7yB1155bnUvM0Ii0IVu1vdB0gsTefMbX
+        Mwb1nyUfWb5Mru0cRIj/7mZaCKjdbuo=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1629093213;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=aJD66JK/QbqMVGhZFAE1lmS4E54mftfsrYa+7+AS7hw=;
+        b=BSYP9A05Juebm+PPzPr56MFO/Es0+a935LwP616P9cHTaElROt/uU5kMP2XJo1Cr6QlC0q
+        zbRUmqtToMWYNUBg==
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 71A5C136A6;
+        Mon, 16 Aug 2021 05:53:33 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap1.suse-dmz.suse.de with ESMTPSA
+        id i4ACG139GWH1TwAAGKfGzw
+        (envelope-from <hare@suse.de>); Mon, 16 Aug 2021 05:53:33 +0000
+Subject: Re: [PATCH v7 01/11] libata: fix ata_host_alloc_pinfo()
+To:     Damien Le Moal <damien.lemoal@wdc.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org
 Cc:     linux-block@vger.kernel.org
-Subject: [PATCH v7 11/11] docs: sysfs-block-device: document ncq_prio_supported
-Date:   Mon, 16 Aug 2021 10:44:56 +0900
-Message-Id: <20210816014456.2191776-12-damien.lemoal@wdc.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210816014456.2191776-1-damien.lemoal@wdc.com>
 References: <20210816014456.2191776-1-damien.lemoal@wdc.com>
+ <20210816014456.2191776-2-damien.lemoal@wdc.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <a849c068-5538-30bc-9f0d-8dd2985e1375@suse.de>
+Date:   Mon, 16 Aug 2021 07:53:32 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
+In-Reply-To: <20210816014456.2191776-2-damien.lemoal@wdc.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add documentation for the new device attribute file ncq_prio_supported,
-and its SAS HBA equivalent sas_ncq_prio_supported.
+On 8/16/21 3:44 AM, Damien Le Moal wrote:
+> Avoid static checkers warnings about a potential NULL pointer
+> dereference for the port info variable pi. To do so, test that at least
+> one port info is available on entry to ata_host_alloc_pinfo() and start
+> the ata port initialization for() loop with pi initialized to the first
+> port info passed as argument (which is already checked to be non NULL).
+> Within the for() loop, get the next port info, if it is not NULL,
+> after initializing the ata port using the previous port info.
+> 
+> Reported-by: kernel test robot <lkp@intel.com>
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+> ---
+>   drivers/ata/libata-core.c | 18 ++++++++++++++----
+>   1 file changed, 14 insertions(+), 4 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
----
- Documentation/ABI/testing/sysfs-block-device | 25 +++++++++++++++++++-
- 1 file changed, 24 insertions(+), 1 deletion(-)
+Cheers,
 
-diff --git a/Documentation/ABI/testing/sysfs-block-device b/Documentation/ABI/testing/sysfs-block-device
-index cf1013df4b92..7ac7b19b2f72 100644
---- a/Documentation/ABI/testing/sysfs-block-device
-+++ b/Documentation/ABI/testing/sysfs-block-device
-@@ -58,7 +58,8 @@ Description:
- 		(RW) Write to the file to turn on or off the SATA NCQ (native
- 		command queueing) priority support. By default this feature is
- 		turned off. If the device does not support the SATA NCQ
--		priority feature, writing "1" to this file results in an error.
-+		priority feature, writing "1" to this file results in an error
-+		(see ncq_prio_supported).
- 
- 
- What:		/sys/block/*/device/sas_ncq_prio_enable
-@@ -71,4 +72,26 @@ Description:
- 		(HBA) implementing support for the SATA NCQ priority feature.
- 		This file does not exist if the HBA driver does not implement
- 		support for the SATA NCQ priority feature, regardless of the
-+		device support for this feature (see sas_ncq_prio_supported).
-+
-+
-+What:		/sys/block/*/device/ncq_prio_supported
-+Date:		Aug, 2021
-+KernelVersion:	v5.15
-+Contact:	linux-ide@vger.kernel.org
-+Description:
-+		(RO) Indicates if the device supports the SATA NCQ (native
-+		command queueing) priority feature.
-+
-+
-+What:		/sys/block/*/device/sas_ncq_prio_supported
-+Date:		Aug, 2021
-+KernelVersion:	v5.15
-+Contact:	linux-ide@vger.kernel.org
-+Description:
-+		(RO) This is the equivalent of the ncq_prio_supported attribute
-+		file for SATA devices connected to a SAS host-bus-adapter
-+		(HBA) implementing support for the SATA NCQ priority feature.
-+		This file does not exist if the HBA driver does not implement
-+		support for the SATA NCQ priority feature, regardless of the
- 		device support for this feature.
+Hannes
 -- 
-2.31.1
-
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
