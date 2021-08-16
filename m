@@ -2,135 +2,115 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-0.8 required=3.0 tests=BAYES_00,
 	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DE74C4338F
-	for <linux-ide@archiver.kernel.org>; Mon, 16 Aug 2021 17:16:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28BC4C4338F
+	for <linux-ide@archiver.kernel.org>; Mon, 16 Aug 2021 17:26:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3106A6054E
-	for <linux-ide@archiver.kernel.org>; Mon, 16 Aug 2021 17:16:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED26960F39
+	for <linux-ide@archiver.kernel.org>; Mon, 16 Aug 2021 17:26:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230204AbhHPRQh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 16 Aug 2021 13:16:37 -0400
-Received: from mout.kundenserver.de ([212.227.126.130]:47701 "EHLO
+        id S229872AbhHPR1M (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 16 Aug 2021 13:27:12 -0400
+Received: from mout.kundenserver.de ([212.227.126.134]:36635 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229872AbhHPRQh (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 16 Aug 2021 13:16:37 -0400
+        with ESMTP id S229590AbhHPR1L (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 16 Aug 2021 13:27:11 -0400
 Received: from localhost ([98.128.181.94]) by mrelayeu.kundenserver.de
- (mreue011 [212.227.15.167]) with ESMTPSA (Nemesis) id
- 1MeknF-1mq6tR3CMP-00anaf; Mon, 16 Aug 2021 19:15:44 +0200
-From:   =?UTF-8?q?Reimar=20D=C3=B6ffinger?= <Reimar.Doeffinger@gmx.de>
-To:     linux-ide@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        hch@infradead.org, Damien Le Moal <Damien.LeMoal@wdc.com>
-Subject: [PATCH] libata: Disable ATA_CMD_READ_LOG_DMA_EXT in problematic cases.
-Date:   Mon, 16 Aug 2021 19:15:43 +0200
-Message-Id: <20210816171543.11059-1-Reimar.Doeffinger@gmx.de>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <DM6PR04MB708117F3FD8537CB6875E2C4E7FD9@DM6PR04MB7081.namprd04.prod.outlook.com>
-References: <DM6PR04MB708117F3FD8537CB6875E2C4E7FD9@DM6PR04MB7081.namprd04.prod.outlook.com>
+ (mreue012 [212.227.15.167]) with ESMTPSA (Nemesis) id
+ 1MKuGD-1mWVkA0DbZ-00LDLd; Mon, 16 Aug 2021 19:26:31 +0200
+Date:   Mon, 16 Aug 2021 19:26:30 +0200
+From:   Reimar =?iso-8859-1?Q?D=F6ffinger?= <Reimar.Doeffinger@gmx.de>
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>
+Cc:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "hch@infradead.org" <hch@infradead.org>
+Subject: Re: [PATCH] libata: Disable ATA_CMD_READ_LOG_DMA_EXT in problematic
+ cases.
+Message-ID: <YRqfxrWJsIeyjFed@reimardoeffinger.de>
+References: <YRjN4oULwmNKI/yi@infradead.org>
+ <20210815162725.15124-1-Reimar.Doeffinger@gmx.de>
+ <DM6PR04MB708117F3FD8537CB6875E2C4E7FD9@DM6PR04MB7081.namprd04.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Provags-ID: V03:K1:8lUiZpkkeK2H2te/7c0AwWm9eRlgDlogWPxjSytnnzAlThQc+uo
- 90kUH+t5zytWvxqYn/j472Z1lN2QpFzkq9MA7KVbiSpG7nagpK0NwS9nqntEatAErZT4nhU
- x5nccKvfPQahHEeweXju64W/eW3LBpHx0SUDiCT1RLVytJH88occQ1hOxU3S9MCnUTLImLC
- vO+K8jTgy8Y2eI0X40dKA==
-X-UI-Out-Filterresults: notjunk:1;V03:K0:MQHN0AD/mwI=:i2FSoLcyHAph265MUyEMZN
- 2+DaXrv/CyOME4xOXUTjEtwfGAXoO1hpoMN2NSOIpJ0a6MQlPHF+n8Dhg6e4l0EhRGuuR/XtJ
- edWXZAT8dEQJktUXcI0yWgEVUcC3om4oWCoxPxTtd7+9RM1CnP6I71PDQ51MHgBvXYWBrR4lH
- boKzyt+hPXPizfD+s2PT4FtNPDDRhNjtFVqMMesOPuGgvQkvONdHIyQmbz8DDMRR3PoIdiFL7
- r5ZlO/+G7Hwv93q655XJUoFA1zHMmetDoXfq1cQVhOy5SLe+fK9o7oFFxa42QSGPXOczVbAAA
- uwxYSNm4qk0d9CCWLfcUNN2LNI+5ZivsN0S/IDtVtT0737Rf6F9vLddTGjSSKLPamUNHvGd+x
- yf8M1/NThM4qJbJPU0yYavXvuEPt0hxUSD8QO2Z5Gpx00iH1lNKqr9nn4JqRI0Uo+aWcIbpg+
- HIeniE6xqfWASvaXUCaEakrx+jMt/h2PwexUswn0BrvGT8isdFs04VdFhwNm2uM/vkH9jxQHK
- o2XJDszvg/haPyQGKOUKqT7PrfgnsjFji4Nx9DxtBUeKQQE4qvntl2aKzI3LPZnyJpoyg+SY2
- jie9kXwYfZR84TrBOOllLZ/tuOpe+/zby/RwTDxIkZaqgXnuo8qPsul33IqvrPxHC1Hq10KAS
- ZfDWBt5+Uzna2fRhCgeSLcARg1XNJdGXbaSzMqifWA8QOhZvII8+JnLQRAt3O12YevG7zqQ8V
- oG7UUWqDDrqHje2gYA/IFXSBjRWUQwmEmywo1Z2b0PuS7g053283fNCbLrtJMB4o87rwDuv4p
- erfIdcd+OO0p2Mr2Pk/fCmzKYbdT+SmjRoNH6Q6uqhTZBAAOMAVK/F/stC3fG9KXq/saAGudG
- k+C9JPXJiXkYv3mfPvBg==
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <DM6PR04MB708117F3FD8537CB6875E2C4E7FD9@DM6PR04MB7081.namprd04.prod.outlook.com>
+X-Provags-ID: V03:K1:4yNXBJ9haiL7NHYiHMfxZmjgBVb9stNB9wNPMLpnAiLRJwZ5AWt
+ 8enEtgHI1+F9AEVwwmmoHFctYKYYpD63VN0kYwx0XfSXOcVWCvfw6KQoDydxw0RzpHI96ID
+ f7XkHJRl1tglJcTHBevzldQucpa3wfFlNfVjkFJ9lo6U1T2RD1x6c+wVtiZwchcXJe0KFhc
+ q33y2+GrXx3Gz4n3iv2uA==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:b3SXQxPEKL4=:69Y/Nl4DFbYBrY/6rfZf7b
+ CRMfOHv7bEkKkZ+kL0SfKiIuOYaQr7kt0So0jVEdD9L9sqcQDD55w95b3RivMEpxriWyhpFiz
+ W26KfKl8ryXCkxp66DcFTT1/qrzJ23/euYITojvmWJmOwDNFVHwnUTpVDXZCscMS8IiZjzvpq
+ lPKIjpm/Cq0+iXUIqWGBhZfstq6BD8LbIJnQoEVWoXPb+DxOWMgfM2LlXzhMIb7rvZk6VZWq4
+ 4a3YBKvNEba6Pzt14lR4XVSQzh9LhTIBjVYHfNrOVMNYHw5UksHNam8c2tkPqv62653ZM3Afo
+ nqRSFTMa2+rOSMWMCpeF8GV4jbBdKalf2vpFQOtjsm9ThU14H/zu6SthOM0MafXQybc/ygLGN
+ d/EfxN2tqQ+ZcjsORQ0CSoo3v4MaR5e10U/4scWr3CTApoMzgls+qQk8Na7VjB2U6aXeKrPku
+ PIXct60XBDTD00gL953JufR4/F6mIgBwNMezRJ3COzywyBh3Yeu7ljdyDBxwB8cnVg9SI9nA5
+ 86jmXL/EZ+caZEdz2NBxHVWQYXYDy1XN6+zhMyykVJnwxldmk+YZDIqSxAn707LIYjQVhBomP
+ IOe9B6Wznf1/WEK8yofQ3PC5X64M19j6VhnLlU6h0DY1xQOS9bbnmhXk1Yb/F5xTVsO0it8dX
+ IkDRQ65ntpK4oyZiZ68pSG6Isvg9AIcdcSCyVg07Kz59bl56hEwKTJJT1qsbB+3VUcribMk4v
+ 9G/4K1GmrCfW3JYWud8PUJ0Qo1ji5JHQDyIPjmPpb/jLf+0/0ORRu4tBBVI5ZJLBkAy7lbG1F
+ FcYK2mXR5mG+8luaOD/n/c3BlFfecjQSe798LuXWNlQQoWeKtx7s4Igez8BJW8j6+jP2Rgkv4
+ zMX2Xz2TPCaxtmBKcr0w==
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The ATA_CMD_READ_LOG_DMA_EXT can cause controller/device to
-become unresponsive until the next power cycle.
-This seems to particularly affect IDE to SATA adapters,
-possibly in combination with certain SATA SSDs, though
-there might be more/different cases.
-Comment 5 of https://bugzilla.kernel.org/show_bug.cgi?id=195895
-is an example.
-Disable it by default on Crucial MX500 devices and all
-PATA controllers.
-Also add an option to set the workaround state, which might
-help with gathering more data on the exact devices/controllers
-affected, and speed up narrowing down the cause for users that
-are affect but not covered by the added quirks.
-Existing workarounds like forcing PIO mode do not work
-(in addition to the performance issues) because READ_LOG_DMA
-is issued even if PIO mode is forced.
+On Mon, Aug 16, 2021 at 12:10:28AM +0000, Damien Le Moal wrote:
+> > +	/* Do not even attempt DMA with PATA-SATA adapters, they seem likely to
+> > +	 * hang, see https://bugzilla.kernel.org/show_bug.cgi?id=195895
+> > +	 */
+> 
+> This is not the standard kernel comment style. Multi-lines comment should start
+> with a "/*" line:
 
-Signed-off-by: Reimar Döffinger <Reimar.Doeffinger@gmx.de>
----
- Documentation/admin-guide/kernel-parameters.txt |  2 ++
- drivers/ata/libata-core.c                       | 14 ++++++++++++++
- 2 files changed, 16 insertions(+)
+Fixed, somehow I thought I had followed the surrounding style, I was
+wrong.
 
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index bdb22006f713..191502e8fa74 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -2551,6 +2551,8 @@
- 
- 			* [no]ncqtrim: Turn off queued DSM TRIM.
- 
-+			* [no]dmalog: Turn off use of ATA_CMD_READ_LOG_DMA_EXT (0x47) command
-+
- 			* nohrst, nosrst, norst: suppress hard, soft
- 			  and both resets.
- 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 61c762961ca8..9934f6c465f4 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2399,6 +2399,9 @@ int ata_dev_configure(struct ata_device *dev)
- 
- 	/* set horkage */
- 	dev->horkage |= ata_dev_blacklisted(dev);
-+	/* Disable READ_LOG_DMA with PATA-SATA adapters, they seem likely to hang */
-+	if (!(ap->flags & ATA_FLAG_SATA))
-+		dev->horkage |= ATA_HORKAGE_NO_DMA_LOG;
- 	ata_force_horkage(dev);
- 
- 	if (dev->horkage & ATA_HORKAGE_DISABLE) {
-@@ -4000,6 +4003,15 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "WDC WD3000JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
- 	{ "WDC WD3200JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
- 
-+	/*
-+	 * Devices with observed READ_LOG_DMA issues - unclear if only
-+	 * specific firmware versions or only in combination with specific
-+	 * controllers.
-+	 * Specifically broken combinations reported
-+	 * CT1000MX500SSD4, M3CR020 with B350M-Mortar
-+	 * CT500MX500SSD4, M3CR023 with PATA-SATA adapter
-+	 */
-+	{ "Crucial_CT*MX500*",		NULL,	ATA_HORKAGE_NO_DMA_LOG },
- 	/* End Marker */
- 	{ }
- };
-@@ -6104,6 +6116,8 @@ static int __init ata_parse_force_one(char **cur,
- 		{ "ncq",	.horkage_off	= ATA_HORKAGE_NONCQ },
- 		{ "noncqtrim",	.horkage_on	= ATA_HORKAGE_NO_NCQ_TRIM },
- 		{ "ncqtrim",	.horkage_off	= ATA_HORKAGE_NO_NCQ_TRIM },
-+		{ "nodmalog",	.horkage_on	= ATA_HORKAGE_NO_DMA_LOG },
-+		{ "dmalog",	.horkage_off	= ATA_HORKAGE_NO_DMA_LOG },
- 		{ "dump_id",	.horkage_on	= ATA_HORKAGE_DUMP_ID },
- 		{ "pio0",	.xfer_mask	= 1 << (ATA_SHIFT_PIO + 0) },
- 		{ "pio1",	.xfer_mask	= 1 << (ATA_SHIFT_PIO + 1) },
--- 
-2.32.0
+> Also, I would remove the bugzilla reference since it is in the commit message.
 
+Done, though long-term the commit message might be harder to find than
+the comment...
+
+> >  	if (dev->dma_mode && ata_id_has_read_log_dma_ext(dev->id) &&
+> > +	    (ap_flags & ATA_FLAG_SATA) &&
+> 
+> Why is this necessary since you have the ATA_HORKAGE_NO_DMA_LOG flag ?
+
+Not sure I understand the question right.
+The patch is a best-guess + "in doubt disable" attempt at
+auto-detecting.
+As I mentioned the data is rather light, so I wanted to only add the
+option at first.
+Now it does 2 things in addition:
+- disable it for Crucial MX500 because the issue was seen and confirmed
+  with and without PATA converter with that device
+- disable it for anything connected with a PATA converter because there
+  are lots of bug reports with different devices that have a PATA
+  converter in common. Unfortunately no confirmation from any of those.
+  However in quick testing I could verify the MX500 issue only with
+  PATA adapter myself, so it seems like an appropriate precaution,
+  especially as now with the new code it is possible to override both
+  ways.
+
+(should I put something more in the commit message? I didn't want to
+bloat it too much)
+
+Aside: I don't have the ATA spec, so I can't check, but I do find it
+a bit suspicious that the logs look like the code runs the
+READ_LOG_DMA command before SETXFERMODE is done, and thus while the
+device is still in PIO mode?
+
+> If this is really necessary, ATA_HORKAGE_NO_DMA_LOG should be set for all
+> devices that have ATA_FLAG_SATA when the device is initialized. With that, this
+> additional condition can go away.
+
+I missed the right place to do that before, I think I now found it, so
+moved.
+
+Thanks for the review,
+Reimar
