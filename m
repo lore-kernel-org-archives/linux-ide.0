@@ -2,96 +2,96 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3039FC4338F
-	for <linux-ide@archiver.kernel.org>; Wed, 18 Aug 2021 12:58:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF66FC4338F
+	for <linux-ide@archiver.kernel.org>; Wed, 18 Aug 2021 13:20:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1944A600D4
-	for <linux-ide@archiver.kernel.org>; Wed, 18 Aug 2021 12:58:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF1C26108E
+	for <linux-ide@archiver.kernel.org>; Wed, 18 Aug 2021 13:20:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236204AbhHRM7Q (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 18 Aug 2021 08:59:16 -0400
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:49257 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S236124AbhHRM7Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 18 Aug 2021 08:59:16 -0400
-Received: from [141.14.13.3] (g258.RadioFreeInternet.molgen.mpg.de [141.14.13.3])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 7CFD561E5FE33;
-        Wed, 18 Aug 2021 14:58:40 +0200 (CEST)
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-Subject: Failed disk initialization logged as warning `ata3.00: disabled`
- instead with more severe log level
-Message-ID: <e5cc55d4-ef08-cd57-f1b0-cd15df43dc8b@molgen.mpg.de>
-Date:   Wed, 18 Aug 2021 14:58:40 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+        id S236676AbhHRNU4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 18 Aug 2021 09:20:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33924 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235943AbhHRNUz (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 18 Aug 2021 09:20:55 -0400
+Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DE54C061764
+        for <linux-ide@vger.kernel.org>; Wed, 18 Aug 2021 06:20:21 -0700 (PDT)
+Received: by mail-pg1-x534.google.com with SMTP id x4so2208202pgh.1
+        for <linux-ide@vger.kernel.org>; Wed, 18 Aug 2021 06:20:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=MhAcwTmHxIAd4QFbOxVpg7wOWs84Q98Cer8hoXchdek=;
+        b=NVOwObjdIFoEbxF1XKZPzChGZXuZE/g+BpaPO5TLr44UaP5tY8KjyfATi22pXQtWan
+         aw7OAVz0spM5GoRwsIffIpkgUIcl496SJQ+z3rJbwuh5JFBWltsoom4HpdOb9LbU48Th
+         atnFM2by41h6JmoCRwBucAb8RZzv/FnEkhxDXtL6/RtRkpLlj246jZxlnfnxJGuPGsM1
+         nhRdYYwOegg8rd9/YzJGsm7+UyYBJU2G2gHNkbO607/25flTYRcDLzA+p+jAvUaUDPxH
+         8gguDMfkZm1tP4k7b6YY3elYaxwj1E2M5cSX/Rrbx+iNe+kk1GrLabg4dzMyFGfe5jXQ
+         yoow==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=MhAcwTmHxIAd4QFbOxVpg7wOWs84Q98Cer8hoXchdek=;
+        b=mcal/7qc3ATws8XYCtepVu9RwkOiEHZnthKzM4oIMaRr+Ig3dx0XRTLvESlulPPXNr
+         qCUTdS7n7wLQG4T6UWmza7lGRZzmpagxaPAPd+Ma5rbtjTqUevHIHRmITbICAA0DB7HL
+         wyKb89oBMopdY34H95UgUWa2/8DnyKLbE7QpQJ7xj2JEltxOZF5Jm8t0XyE06026zZ5g
+         Q87L0mKmkVbe84XzxiCLRMd9zITWZisWGqeFZ6rCiKrXFLiUjz9vdDgx4/48VnDIJwQO
+         eez2R2+Mk41WpXzF+yABLcMS9+gbUZEvtBkug5txJL1ups+NTNtxMiqtZFmmm0EaeqgO
+         jz3A==
+X-Gm-Message-State: AOAM532Y31npKFzBRHKBamOWlVZAYzMboPGMtL/+ottxmeGFW0aZyyYZ
+        2iks3pQ/RdzK9LUQGm5kimszrg==
+X-Google-Smtp-Source: ABdhPJwffJWAKC4Zll3QD2/A3uRNlLIUf8tiqDSzFTiSEiVs5PPdbXEKBxCy/wINIbG/mXnGa7LcOA==
+X-Received: by 2002:a05:6a00:a18:b029:382:e172:653e with SMTP id p24-20020a056a000a18b0290382e172653emr9394640pfh.19.1629292820948;
+        Wed, 18 Aug 2021 06:20:20 -0700 (PDT)
+Received: from [192.168.1.116] ([66.219.217.159])
+        by smtp.gmail.com with ESMTPSA id h24sm6657086pfn.180.2021.08.18.06.20.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 18 Aug 2021 06:20:20 -0700 (PDT)
+Subject: Re: [PATCH v7 00/11] libata cleanups and improvements
+To:     Damien Le Moal <damien.lemoal@wdc.com>, linux-ide@vger.kernel.org
+Cc:     linux-block@vger.kernel.org
+References: <20210816014456.2191776-1-damien.lemoal@wdc.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <18c2f2e2-b7b6-b8b8-35ef-89ee59001cac@kernel.dk>
+Date:   Wed, 18 Aug 2021 07:20:18 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20210816014456.2191776-1-damien.lemoal@wdc.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dear Linux folks,
+On 8/15/21 7:44 PM, Damien Le Moal wrote:
+> The first three patches of this series fix sparse and kernel bot
+> warnings (potential NULL pointer dereference and locking imbalance).
+> 
+> The following three patches cleanup libata-core code in the area of
+> device configuration (ata_dev_configure() function).
+> 
+> Patch 7 improves ata_read_log_page() to avoid unnecessary warning
+> messages and patch 8 adds an informational message on device scan to
+> advertize the features supported by a device.
+> 
+> Path 9 adds the new sysfs ahci device attribute ncq_prio_supported to
+> indicate that a disk supports NCQ priority.
+> 
+> Patch 10 and 11 update the ABI user documentation files.
 
+Applied 2-11, thanks.
 
-A disk died on an old system, and is not displayed by `lsblk` anymore 
-after a reboot. I would have expected such an event be logged with a 
-severe level.
+-- 
+Jens Axboe
 
-     @moppel:~$ dmesg --level=emerg
-     @moppel:~$ dmesg --level=alert
-     @moppel:~$ dmesg --level=crit
-     @moppel:~$ dmesg --level=err
-     [   24.450604] ata3.00: failed to set xfermode (err_mask=0x4)
-     [   39.810617] ata3.00: failed to set xfermode (err_mask=0x4)
-     @moppel:~$ dmesg --level=warn
-     [    1.039497] ENERGY_PERF_BIAS: Set to 'normal', was 'performance'
-     [    2.539408] pci 0000:03:00.0: can't disable ASPM; OS doesn't 
-have ASPM control
-     [    3.088540] ACPI Warning: SystemIO range 
-0x0000000000000428-0x000000000000042F conflicts with OpRegion 
-0x0000000000000400-0x000000000000047F (\PMIO) (20200925/utaddress-213)
-     [    3.114469] ACPI Warning: SystemIO range 
-0x0000000000000540-0x000000000000054F conflicts with OpRegion 
-0x0000000000000500-0x0000000000000563 (\GPIO) (20200925/utaddress-213)
-     [    3.140390] ACPI Warning: SystemIO range 
-0x0000000000000530-0x000000000000053F conflicts with OpRegion 
-0x0000000000000500-0x0000000000000563 (\GPIO) (20200925/utaddress-213)
-     [    3.166311] ACPI Warning: SystemIO range 
-0x0000000000000500-0x000000000000052F conflicts with OpRegion 
-0x0000000000000500-0x0000000000000563 (\GPIO) (20200925/utaddress-213)
-     [    3.192226] lpc_ich: Resource conflict(s) found affecting gpio_ich
-     [    3.900324] i8042: PNP: PS/2 controller doesn't have KBD irq; 
-using default 1
-     [    9.086414] ata3.00: qc timeout (cmd 0x27)
-     [    9.090618] ata3.00: failed to read native max address 
-(err_mask=0x4)
-     [    9.097155] ata3.00: HPA support seems broken, skipping HPA handling
-     [   24.446401] ata3.00: qc timeout (cmd 0xef)
-     [   24.456189] ata3: limiting SATA link speed to 1.5 Gbps
-     [   24.461423] ata3.00: limiting speed to UDMA/133:PIO3
-     [   39.806416] ata3.00: qc timeout (cmd 0xef)
-     [   39.816203] ata3.00: disabled
-
-The xfermode message is logged as an error, but I have system, where the 
-device is still functional. The actual disabled message is “only” logged 
-as a warning.
-
-Is there a way to improve the logging, and log a failed initialization 
-of a disk with a higher level? Maybe even critical or alert?
-
-
-Kind regards,
-
-Paul
