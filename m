@@ -2,106 +2,91 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86ABBC4338F
-	for <linux-ide@archiver.kernel.org>; Tue, 24 Aug 2021 06:07:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21B99C4320A
+	for <linux-ide@archiver.kernel.org>; Tue, 24 Aug 2021 16:11:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6E75E61220
-	for <linux-ide@archiver.kernel.org>; Tue, 24 Aug 2021 06:07:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07E7561212
+	for <linux-ide@archiver.kernel.org>; Tue, 24 Aug 2021 16:11:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229889AbhHXGH4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 24 Aug 2021 02:07:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44762 "EHLO
+        id S232621AbhHXQMd (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 24 Aug 2021 12:12:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45576 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229623AbhHXGHx (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 Aug 2021 02:07:53 -0400
-Received: from mail-qt1-x82e.google.com (mail-qt1-x82e.google.com [IPv6:2607:f8b0:4864:20::82e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF7B0C061575;
-        Mon, 23 Aug 2021 23:07:09 -0700 (PDT)
-Received: by mail-qt1-x82e.google.com with SMTP id e3so9699036qth.9;
-        Mon, 23 Aug 2021 23:07:09 -0700 (PDT)
+        with ESMTP id S232698AbhHXQM1 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 Aug 2021 12:12:27 -0400
+Received: from mail-io1-xd35.google.com (mail-io1-xd35.google.com [IPv6:2607:f8b0:4864:20::d35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 369BCC0617AE
+        for <linux-ide@vger.kernel.org>; Tue, 24 Aug 2021 09:11:42 -0700 (PDT)
+Received: by mail-io1-xd35.google.com with SMTP id a15so27030192iot.2
+        for <linux-ide@vger.kernel.org>; Tue, 24 Aug 2021 09:11:42 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=xlxVIlSIJOfwlvlyoHVU5DcvdPbYDq3D2Wp4glE4NMQ=;
-        b=aVRcjTk2xVRDpklFxv1rTRvnh9OxA13KpPftmpbWOxvC6Jy4PrlYStTMIqPTSXnZBq
-         8ry65Z13+LJTmx+R/4fMICmBccxu6RRCEoexOnwI/hl1iu4YKR5A5qFBayz7yLlsTVqA
-         jRBb6IwtVuI+b5jpZvqGRfF6RC6NybSU4DhMTyubv8ZRORUERo5+jZUKyRfNE//uW9Qw
-         W/oQPqUuFzIfPANJiy/5IQlbfDiQ3KKm9b0dbAmxib1ShBlYM1gMQFuRn8ARAxfYhdto
-         xflEkGQd6BABzT7aNthhAxLQ3y5Ro7inh2kGxXyeCAo71Ros3E/V/ogim94hcQ6Zw2bn
-         IK4g==
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=JAsKRN3bly1YA9bPZ1MQXzadV3alLJQ6BFvBOznMdfc=;
+        b=x3t6Igle4xKMrUrFP1IGFtgXi7yZDPeXMHU921icvD2kUSHfH5Jl24+zfhqRqO3o9+
+         ianmQOi2yUAqYoK5Kko4euXqWgeVm72XpNCa9W3yC+eMiKZlFV1zmDEH42C6d1OiKEH9
+         xNj0pJZKY/7n1mqxIi7fRWl8Apv4imnWEnoDgjvKWg3VI/EU0Go1mEPNryiuvl/UI9N8
+         RQkj/ULEz6ayHGZXW4qIfMC761BSC3cm5rr3+Kma+/KA5pgrv59/KaZeO+DkZpOifwOV
+         H01dakL9VQp+jwhHN+Qi5z0RLVL1WvYLsax0t1PLE7QlAPobcmSO+8aiqEiGc1Zo6pao
+         syOQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=xlxVIlSIJOfwlvlyoHVU5DcvdPbYDq3D2Wp4glE4NMQ=;
-        b=DtmJp7q0d21rpdJVNAbIMjoG8CYDCo8Phkt8BhjmOX0J5MT3hwtt9YgJpr0QNCtHfK
-         vwkYz6SCOkgm+BnUYfs/Qs18HnhQRk2sRfrwDoqeSlOBRVojBpUBIDuKOFOiCfOahtke
-         GBpdUKAE2os8Zx2jb14RbCR/11SIneCHbCxbebqFr5288yoGefyXH+CrrHKVYnfoBgLg
-         NJqKSjy/J2VqQrqZv+GESVnHq3KxrjQfIYUR9V/oYXXnRsBT7RTBGYgvpkLdakyUhZ1y
-         +KgI3BjdRKWkuat0J9NQOFu2nVF+SL/x3rWw0WrsQtxN5b/yifwvJ9wRFmSnefMqFM0G
-         E7eQ==
-X-Gm-Message-State: AOAM530D7KBhEsgeQxC41BbW1Ti3MInGHGZTaGJxot1Cq7P30/63UVen
-        FiZix2ZdJvW5/rCUEFh5yd9k8ucYJUE=
-X-Google-Smtp-Source: ABdhPJzvoJGu2eEDi45tIT+9IwlTn7ZQP9gA7GNK3uPiukbk2Eg0W31PujTJScxx/Bo8gzIqbn9Jjg==
-X-Received: by 2002:ac8:7761:: with SMTP id h1mr15123062qtu.272.1629785228905;
-        Mon, 23 Aug 2021 23:07:08 -0700 (PDT)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id g13sm1803263qkk.110.2021.08.23.23.07.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Aug 2021 23:07:08 -0700 (PDT)
-From:   CGEL <cgel.zte@gmail.com>
-X-Google-Original-From: CGEL <deng.changcheng@zte.com.cn>
-To:     Jens Axboe <axboe@kernel.dk>
+        bh=JAsKRN3bly1YA9bPZ1MQXzadV3alLJQ6BFvBOznMdfc=;
+        b=guLFQHXgwgt55f580SzUwqKLKPCPoJou6tDodiqEUacUHQbho7PHlCwoF3zl/4NqpW
+         1BXzHDAN3PrVqBkJ/oRIah8HZx9fAeladn1H6tTIcu5xQPpMbDqLor+uEi4KVY9vdW1/
+         Fz5TeiidtqvrbK1mkFPwNsTfe8nC3b0lZElAjnSoU67d26QJPYKHN+RkvdPyC5J35hH8
+         kgxE/mMslItBiPF1B1/k3WHS2zNz5nxv0zpN6dYWJu81P+VA+r7FlMpgZOKqXNAPPL9h
+         5XWa2A551KUc+V+u6/SblqGm7L9A7kONbuy42/Al6A1txjO9YlwPLkscGC9yBgm9h37k
+         XEIw==
+X-Gm-Message-State: AOAM533kYk344Jc/Ws3gHXP+DIrrnRko7cSk24aRO5AUMuEHDcMHbKiV
+        QRtw1so5klcfYs0zV2gecRSmqA==
+X-Google-Smtp-Source: ABdhPJxQezq6YEXGwvgGJIGh/xG32FXNToJF3KRwkIcbaEuNSf5vCd8mqCG2RRAUXTX6XqrUVvhpPw==
+X-Received: by 2002:a5d:9592:: with SMTP id a18mr30914809ioo.168.1629821501641;
+        Tue, 24 Aug 2021 09:11:41 -0700 (PDT)
+Received: from [192.168.1.116] ([66.219.217.159])
+        by smtp.gmail.com with ESMTPSA id v5sm10014577iln.42.2021.08.24.09.11.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 24 Aug 2021 09:11:41 -0700 (PDT)
+Subject: Re: [PATCH linux-next] include:libata: fix boolreturn.cocci warnings
+To:     CGEL <cgel.zte@gmail.com>
 Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
         Jing Yangyang <jing.yangyang@zte.com.cn>,
         Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH linux-next] include:libata: fix boolreturn.cocci warnings
-Date:   Mon, 23 Aug 2021 23:07:02 -0700
-Message-Id: <20210824060702.59006-1-deng.changcheng@zte.com.cn>
-X-Mailer: git-send-email 2.25.1
+References: <20210824060702.59006-1-deng.changcheng@zte.com.cn>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <9fe2fc07-bd1c-32bd-138d-a04cf4c5e489@kernel.dk>
+Date:   Tue, 24 Aug 2021 10:11:40 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210824060702.59006-1-deng.changcheng@zte.com.cn>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Jing Yangyang <jing.yangyang@zte.com.cn>
+On 8/24/21 12:07 AM, CGEL wrote:
+> From: Jing Yangyang <jing.yangyang@zte.com.cn>
+> 
+> ./include/linux/libata.h:1462:8-9:WARNING: return of 0/1 in function
+> 'ata_is_host_link' with return type bool
+> 
+> Return statements in functions returning bool should use true/false
+> instead of 1/0.
 
-./include/linux/libata.h:1462:8-9:WARNING: return of 0/1 in function
-'ata_is_host_link' with return type bool
+Applied, thanks.
 
-Return statements in functions returning bool should use true/false
-instead of 1/0.
-
-Generated by: scripts/coccinelle/misc/boolreturn.cocci
-
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Jing Yangyang <jing.yangyang@zte.com.cn>
----
- include/linux/libata.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index a2d1bae..860e63f 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1459,7 +1459,7 @@ static inline bool sata_pmp_attached(struct ata_port *ap)
- 
- static inline bool ata_is_host_link(const struct ata_link *link)
- {
--	return 1;
-+	return true;
- }
- #endif /* CONFIG_SATA_PMP */
- 
 -- 
-1.8.3.1
-
+Jens Axboe
 
