@@ -2,123 +2,133 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-20.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49FC2C432BE
-	for <linux-ide@archiver.kernel.org>; Fri, 27 Aug 2021 12:26:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D48EC4320E
+	for <linux-ide@archiver.kernel.org>; Mon, 30 Aug 2021 14:43:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2994B60ED5
-	for <linux-ide@archiver.kernel.org>; Fri, 27 Aug 2021 12:26:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F7816023E
+	for <linux-ide@archiver.kernel.org>; Mon, 30 Aug 2021 14:43:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245031AbhH0M1Y (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 27 Aug 2021 08:27:24 -0400
-Received: from mout.gmx.com ([74.208.4.201]:37059 "EHLO mout.gmx.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231260AbhH0M1X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 27 Aug 2021 08:27:23 -0400
-X-Greylist: delayed 301 seconds by postgrey-1.27 at vger.kernel.org; Fri, 27 Aug 2021 08:27:23 EDT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mail.com;
-        s=dbd5af2cbaf7; t=1630067194;
-        bh=boA9ttBV13kAYmPbvgyGZwdAkPScGDp5v+LFpboaCWQ=;
-        h=X-UI-Sender-Class:From:To:Subject:Date;
-        b=XP6imK+Q4Y662OOSewamFnM/KcwFUBf9uAr+V2GPxb9Irftk7mPNPHlN3UlBU8rJD
-         VbSVUQykjqOhokfeHiOvJ1RwVJ6fOUrfkDx4AihXRZwltkjmdk01wg/B6kdvOQ9BQi
-         3yCe7taNlr1r7QxacxzILbrHrai2hyVf/cErzDYY=
-X-UI-Sender-Class: 214d933f-fd2f-45c7-a636-f5d79ae31a79
-Received: from [2.124.18.161] ([2.124.18.161]) by web-mail.mail.com
- (3c-app-mailcom-lxa12.server.lan [10.76.45.13]) (via HTTP); Fri, 27 Aug
- 2021 14:21:33 +0200
+        id S237046AbhH3OoO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 30 Aug 2021 10:44:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52114 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233798AbhH3OoN (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Aug 2021 10:44:13 -0400
+Received: from mail-il1-x12b.google.com (mail-il1-x12b.google.com [IPv6:2607:f8b0:4864:20::12b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F0D63C061575
+        for <linux-ide@vger.kernel.org>; Mon, 30 Aug 2021 07:43:19 -0700 (PDT)
+Received: by mail-il1-x12b.google.com with SMTP id i13so16326752ilm.4
+        for <linux-ide@vger.kernel.org>; Mon, 30 Aug 2021 07:43:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=to:cc:from:subject:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=lHOJycOEm6G1FJCFPrTMFzx9dmiVcg5vnIQcA7ovDlU=;
+        b=wW/KchiniumZFEd1QEb6sN50Z0s+zY4obOF59abjDC/Rg4+NLaO26n6+KlT3Kftqg5
+         LQnZ2uX3VX9nls67Tgf39n4c/W6MxqmcR/zDVsbEMIwOrIPENYs1M+E3YCklPvyAP5Vo
+         2N/Y2uIZ2yxgKxjJ9e2UaNsDQtguqnqn6b2pl26WIa/0yW1KVACGa5y2sAWCGqnCp15V
+         ZpVvFhNx2jUjbkM/1XcNlqJXSBXgwNa5PYpzQJNvVg7iYh6gTZcjZSbyC3A8KF+vxwkZ
+         1xwWIJYi54GsX42akf5HYuUjFkx9xwkGhAUJ6xzJVjoP9iVnTVUJoxMPOSlRz2oyu+Y9
+         bPvA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=lHOJycOEm6G1FJCFPrTMFzx9dmiVcg5vnIQcA7ovDlU=;
+        b=CP9i8Sa+PNazLN+Nt28uc4gaLvwnjquEqoDs0AoFWioTCcIsmlX8mhNmPBfsof71Yq
+         alzuGlxgzTqvMDDXUOO1vv65bLj0JvmEquXcKem6yjR4Nj0N9lWCpHauTHwYUkea/qkZ
+         Z0OjFmUz4cdo6fIQCuHeBOu3or2QwPIj2e8Hqq9KcR78kdDhz8nw2ilDcddNse0BmuJp
+         RyH+vx0tj4CtEot9EqZxXqAUOOI7Ftme/LZ2bRE2fx9DlAD/X65u+8UxIRwyoXJJZ94U
+         W8ijSmSD4lzYAEQkhB/rLcM7wV6qOFLjwHUHlhxDZhVsCLsbXrMczAtj5PNTXcGDY4VI
+         hddw==
+X-Gm-Message-State: AOAM532XHElPaASBUBi4JvsUvyCmtiPo1mFQnCpyBk6VwZZDXKcXgoqD
+        ka7OentqsZOu3jJx0VotGhV4vaXJUTF0hg==
+X-Google-Smtp-Source: ABdhPJw6t5jTIRSaup3lnzf4VCTJ+eH/HzAmymRgqyNIYQqcdBfudXryena/hT+AZBXzZkgxFiFoDg==
+X-Received: by 2002:a92:194b:: with SMTP id e11mr16598970ilm.200.1630334599120;
+        Mon, 30 Aug 2021 07:43:19 -0700 (PDT)
+Received: from [192.168.1.30] ([207.135.234.126])
+        by smtp.gmail.com with ESMTPSA id p15sm9300365ilc.12.2021.08.30.07.43.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 30 Aug 2021 07:43:18 -0700 (PDT)
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     ALWAYS copy <linux-ide@vger.kernel.org>
+From:   Jens Axboe <axboe@kernel.dk>
+Subject: [GIT PULL] libata changes for 5.15-rc1
+Message-ID: <25e33a98-25ad-1db1-98c8-ea74c0b3809e@kernel.dk>
+Date:   Mon, 30 Aug 2021 08:43:18 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Message-ID: <trinity-a03ecf2a-166f-4889-99d1-fa2e31e12fe9-1630066893472@3c-app-mailcom-lxa12>
-From:   Mark K <mark_k@iname.com>
-To:     linux-ide@vger.kernel.org
-Subject: SATA SSD inaccessible, fails on initial end-of-drive read command
-Content-Type: text/plain; charset=UTF-8
-Date:   Fri, 27 Aug 2021 14:21:33 +0200
-Importance: normal
-Sensitivity: Normal
-X-Priority: 3
-X-Provags-ID: V03:K1:0LXfHGEXz/gk4/gmvpnNFqRleKtE23cm+l+h3Zk5UIgEhT4iO5iRwCJa/PKw9BtaHOHSO
- hWEj22VBtBG4/9khXe9ncp/C9cIC+UIPoNtnbFceqViIh5WNbMydjJmyhO20hcXGsx+P5iIGIkSN
- HU9FWxRPB8rEX6KSo+R1LhSjXbXOCfZEmPMN+rYkYWc7uX2bfA0EJM5k3aeFAmAIi+wB14xjhMXV
- SX4tYEVcqlFrTCa4WEBCdXt8MgBwwm1qJayvMsapFWBqLVghJzw3lFyxoZup9BBusMv38KZWGG+m
- NQ=
-X-UI-Out-Filterresults: notjunk:1;V03:K0:a/ragNpXEto=:aVlbbFEHVKoCbZyW4XxZzl
- jAi5J2OUSy1L7ayYz3wOe2EpDxu8AEOMlhAazVA1KM51ThkLeQVjS82fmJx38I9lZhc/zGx6e
- tPyCoBoyrSKXLZYCwefTqUg/xSqCUSw/i6JT6ZG3xzId+gt3CHpnRZX1SJK/pGDNObqGVVcFX
- EZ5FEYgLqm6fNNVzbBGvts+R8rFWQMQ8BOqSU6s3Pbq9r0eYDwSC8mMkTbp76sL2hDodxlCrf
- lABF38qoXKU8HP7Prz+CxHhtzDmhMZKxLQ/CPaM+3/NGJXU2HziVgnUOtCT/dJSFRB5WGx9mJ
- ppnVQULwnr1TEP/C8epPxA7LaLINItvEMmS8BmYu4j22X42MfnS6kmlgHULPjOQlggSzT3TCM
- +Nm7GyxG0IHLEtTLiayvBPsm5WQ2SGc++A0r0EumMvOikuHRXsq+ITZ7j81HDfAZDbskISoyJ
- ZYSHZvQLGqG7KrGAyYEO6OOGkYetJMQsfCkrl+G2KK/TYofb1nubwF4fQkQq6Upf0WtBNrJJz
- wEq+4040nTNmOJAF6YzBUSj4PBmz5BcdMALtnDsWML6V0r8V0tv8uNoN2wWuRZXUiUaar0Q34
- Hq83VzpMcTVgr9RlJXNX1HDnHQb6xVPHg0KlVgzl8q7wlYEAiDZSkSlW15n+t8g7j11Fn5MeB
- vX+pc/km9Ry79yelhUjUCRjJ0gKbv/+eO0bD4NtHRN6xpcdpR9fvLSSC4fraYbdjgfM5KWba8
- GyWSVT1F4mkABma4Emba7j14WLdHjtY+AHPIR3xdnVyevUbYZDOO0ZSFDECoWCuQD07vrgC72
- Kx+4F8IH/6G2eUqmTMyxSHiKIBqnz/n1+/4rzd4mnW/eoJ8OiE=
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi,
+Hi Linus,
 
-I have a system with secondary SATA SSD (OCZ Saber 1000 480GB) which is
-readable in Windows.
+libata changes for the 5.15 release:
 
-The drive capacity shown when probed by the kernel during boot is 937703088 =
-0x37E436B0 sectors.
+- NCQ priority improvements (Damien, Niklas)
 
-The drive seems to be failing the command issued by libata to read its last 8
-sectors.
+- coccinelle warning fix (Jing)
 
-After reporting
-  ata8.00: exception Emask 0x0 SAct 0x40 SErr 0x0 action 0x6 frozen
-  ata8.00: failed command: READ FPDMA QUEUED
-  ata8.00: cmd 60/08:30:a8:36:e4/00:00:37:00:00/40 tag 6 ncq dma 4096 in
-it tries resetting the link several times and eventually gives up.
+- dwc_460ex phy fix (Andy)
 
-In this state, while the block device and sg device (/dev/sda and /dev/sg5) are
-still present, any attempt to e.g. issue INQUIRY or READ CAPACITY fails, along
-with data access commands like READ and WRITE, meaning the drive is
-inaccessible in Linux.
-
-I'm not sure whether the drive itself locks up after receiving that read
-command, or whether libata is giving up too soon, or whether that error could
-just be ignored.
-
-Is there any way to tell libata to avoid issuing the initial end-of-drive read
-command? Or is that read issued by the block layer?
+Please pull!
 
 
-[    1.499334] libata version 3.00 loaded.
-[    1.505518] scsi host0: ata_generic
-[    1.505703] scsi host2: ata_generic
-[    1.516083] ata8: SATA max UDMA/133 abar m2048@0xf7f12000 port 0xf7f12180 irq 41
-[    1.830511] ata8: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-[    1.830975] ata8.00: ATA-8: OCZ-SABER1000, 1.01, max UDMA/133
-[    1.830978] ata8.00: 937703088 sectors, multi 1: LBA48 NCQ (depth 32), AA
-[    1.836358] ata8.00: configured for UDMA/133
-[   33.943503] ata8.00: exception Emask 0x0 SAct 0x40 SErr 0x0 action 0x6 frozen
-[   33.943585] ata8.00: failed command: READ FPDMA QUEUED
-[   33.943631] ata8.00: cmd 60/08:30:a8:36:e4/00:00:37:00:00/40 tag 6 ncq dma 4096 in
-[   33.943735] ata8.00: status: { DRDY }
-[   33.943768] ata8: hard resetting link
-[   39.295447] ata8: link is slow to respond, please be patient (ready=0)
-[   43.975468] ata8: COMRESET failed (errno=-16)
-[   43.975531] ata8: hard resetting link
-[   49.327467] ata8: link is slow to respond, please be patient (ready=0)
-[   54.007448] ata8: COMRESET failed (errno=-16)
-[   54.007512] ata8: hard resetting link
-[   59.359466] ata8: link is slow to respond, please be patient (ready=0)
-[   89.059463] ata8: COMRESET failed (errno=-16)
-[   89.059532] ata8: limiting SATA link speed to 3.0 Gbps
-[   89.059533] ata8: hard resetting link
-[   94.111441] ata8: COMRESET failed (errno=-16)
-[   94.111508] ata8: reset failed, giving up
-[   94.111545] ata8.00: disabled
-[   94.111668] ata8: EH complete
+The following changes since commit 7d549995d4e0d99b68e8a7793a0d23da6fc40fe8:
 
+  Merge tag 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/rdma/rdma (2021-07-27 14:13:33 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.dk/linux-block.git tags/for-5.15/libata-2021-08-30
+
+for you to fetch changes up to 62283c6c9d4c1018badcd0b9c5b6ca66d978fa0d:
+
+  include:libata: fix boolreturn.cocci warnings (2021-08-24 10:11:21 -0600)
+
+----------------------------------------------------------------
+for-5.15/libata-2021-08-30
+
+----------------------------------------------------------------
+Andy Shevchenko (1):
+      ata: sata_dwc_460ex: No need to call phy_exit() befre phy_init()
+
+Damien Le Moal (9):
+      libata: fix ata_host_start()
+      libata: simplify ata_scsi_rbuf_fill()
+      libata: cleanup device sleep capability detection
+      libata: cleanup ata_dev_configure()
+      libata: cleanup NCQ priority handling
+      libata: fix ata_read_log_page() warning
+      libata: print feature list on device scan
+      libata: Introduce ncq_prio_supported sysfs sttribute
+      docs: sysfs-block-device: document ncq_prio_supported
+
+Jing Yangyang (1):
+      include:libata: fix boolreturn.cocci warnings
+
+Niklas Cassel (1):
+      docs: sysfs-block-device: improve ncq_prio_enable documentation
+
+ Documentation/ABI/testing/sysfs-block-device |  43 ++++-
+ drivers/ata/libahci.c                        |   1 +
+ drivers/ata/libata-core.c                    | 272 ++++++++++++++-------------
+ drivers/ata/libata-sata.c                    |  62 +++---
+ drivers/ata/libata-scsi.c                    |  60 +-----
+ drivers/ata/sata_dwc_460ex.c                 |  12 +-
+ include/linux/libata.h                       |   7 +-
+ 7 files changed, 243 insertions(+), 214 deletions(-)
+
+-- 
+Jens Axboe
 
