@@ -2,175 +2,178 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6C7CC432BE
-	for <linux-ide@archiver.kernel.org>; Mon, 30 Aug 2021 15:05:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89026C432BE
+	for <linux-ide@archiver.kernel.org>; Mon, 30 Aug 2021 21:45:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C98EF60C40
-	for <linux-ide@archiver.kernel.org>; Mon, 30 Aug 2021 15:05:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6827860E90
+	for <linux-ide@archiver.kernel.org>; Mon, 30 Aug 2021 21:45:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237483AbhH3PGw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 30 Aug 2021 11:06:52 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:46203 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237471AbhH3PGw (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Aug 2021 11:06:52 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1630335958;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=B/eY6MBBGnoc9ZGH1Ximi++6G4BBsWfaRYMnOxmNy4U=;
-        b=N4aQKc5UsokBg1kY5Aoayn8aXTeN9jK6kpABYnFDhXnhV9meoQm3SHXKvZjf+2V2K/WYT+
-        VUguY9oH7BNIieY+2j0J7w6GpODqfOQ0eN+xEOgqxGoB51aNhftMfKmgKaQB82EoVEYpyS
-        ShZgQb0BJopc4Rs8R8u2xKSzx4BM1Jk=
-Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
- [209.85.208.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-67-uJ_JeT8cNEuOUEpNgjkkug-1; Mon, 30 Aug 2021 11:05:56 -0400
-X-MC-Unique: uJ_JeT8cNEuOUEpNgjkkug-1
-Received: by mail-ed1-f70.google.com with SMTP id d12-20020a50fe8c0000b02903a4b519b413so5541695edt.9
-        for <linux-ide@vger.kernel.org>; Mon, 30 Aug 2021 08:05:56 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=B/eY6MBBGnoc9ZGH1Ximi++6G4BBsWfaRYMnOxmNy4U=;
-        b=tOy/vjsVH76AuPKwzpVr04jMFdvwefNDy6xLBEgnxPQaNyY98kkwWEORi/zvZHMMr1
-         Cjrg4tS006cih62juOsziLIH9Ym79nTYcS/vCI72ChVzUjx1ueMBeyXPn262pvHgrcZu
-         U8MtCNj1M+rv/KiPlNlOr2L2ySq0Oxost78fdv+SVB5IhxdraCqPavN+6mpCgH1y87SK
-         sHHUy5zIoOnr8VkqhPZ8vZOHVNyPkYE+3I32c1M5jIiwvAiMAnCOhfna5u1y+ekZPLyH
-         em9cIdzVc0byRCw0oqshih7rt8Ij0jT2lgTslF/zxagpVqf5nuOchR4swcgFjZsoCbGe
-         d2ig==
-X-Gm-Message-State: AOAM533gr43XNbJnyajKQSv+IhQuLbVCdrmGnUQkAR8WC4uePqUdSzAw
-        TgwcMwQYicmjtmNAdyz24Oq8eiiv8xN8fsIbRmDY/Pd+id+SrrOZzWI8Ya4NXTqbULbEHTO6WHi
-        hE0MuUDKLlBlNjRU3xS+3
-X-Received: by 2002:a17:906:1ec9:: with SMTP id m9mr26346163ejj.115.1630335955533;
-        Mon, 30 Aug 2021 08:05:55 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzsw0gUJqPRcAYUZDNvgJ7oZRWoF/ixLkYQw02ic/Xu0lKjevOM15d0b01zVw0oIKHNX3VFeQ==
-X-Received: by 2002:a17:906:1ec9:: with SMTP id m9mr26346147ejj.115.1630335955369;
-        Mon, 30 Aug 2021 08:05:55 -0700 (PDT)
-Received: from x1.localdomain ([81.30.35.201])
-        by smtp.gmail.com with ESMTPSA id i13sm7787381edc.48.2021.08.30.08.05.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 30 Aug 2021 08:05:55 -0700 (PDT)
-Subject: Re: [PATCH v3 1/1] libata: Add ATA_HORKAGE_NONCQ_ON_AMD for Samsung
- 860 and 870 SSD.
+        id S237296AbhH3Vqq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 30 Aug 2021 17:46:46 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:29450 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237167AbhH3Vqq (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 30 Aug 2021 17:46:46 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1630359953; x=1661895953;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=T9aI4lMAJl2aC8sd3KjLSd+pk59hjK8uqIqTrMBdsc4=;
+  b=eUg8CHHNUJTB8zDynOtfc4IHsozhVtvYreiioeWbkBIK/vXQplfaV/ZP
+   YDOfVdAmIFt5sEPuNHkCi5SmzOYhQG4hEEgY8WsBCWBg5ns9PPbpgl2Zw
+   o0foiXXnGkkOfdJnId1Cb+GYmmzT/1u3NLtGpf3MWHN5dhW50Na5DgTkF
+   TnK0WP9N3kdmg43bp10aC8tPDcK/9rEhCKBbEx65ooUxmcb/UisGak0/Y
+   r73egOHxcNyjUjzzd7vSW8hgvqvcJPX26eZ7m0P+vbBeVpH10XBdSDEgk
+   U9olnozLknPyLbi63d8cUTOowb5CfO2jDm1+PZm+3U3bJybflE1mvLlqg
+   w==;
+X-IronPort-AV: E=Sophos;i="5.84,364,1620662400"; 
+   d="scan'208";a="179348458"
+Received: from mail-dm6nam08lp2047.outbound.protection.outlook.com (HELO NAM04-DM6-obe.outbound.protection.outlook.com) ([104.47.73.47])
+  by ob1.hgst.iphmx.com with ESMTP; 31 Aug 2021 05:45:52 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=MUHbifM6Nv+WCx6zL2Ls4XYnDqkZlawnE4Oz7oTohLdY/ZS8gygEVnoz7CiiX0S3A1CZAeLHvZ+/JQHulhfn53AH5dMYjUpeteZsG2g1ESLePaocIWSlqcOcIPiHWTSdTrtAdq1mITViKoOVejMQ/6cmcrQgyQBPh7CFC9y6vDBaezEEKolnMsWOZZRsgiVvq0+CMdvO79QS74AEepBlOcfGuHHFyhMSPlcAZxvepgnBpphfeqRyk0DO/JdQPr/U0SuOx2aghwhHdYMq+wmKDLT7D8st7LuY6QJopwgYAzD3TpmngMqXrXnjbW8FBxTOG9WkKXt5xVtd0JTAO+wTvA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=HfVslO6U95z1fUpGDu00/cl2X4I2eohqPtuBfnGFHWo=;
+ b=DVLyS5BZFQwE412W84ShvaA6MZiFJKxAuTDwtmCWlQia93hj4E/mqbOKezpGEWSi0Th7qdIWMBfjbgmjQZgSxDpNBFvuk6mScEd9Q8/PIprkORb3npRCkEjnlQmojge0SVSn2pcivl5kpz+s22BYrBA8D8s+0fmozOd/XDtIWpvpwMo7WaD/SvrJ6p6AaTUd9g3FbLvaETgVYva/Ztpjw78XkWAZXNBTNfxsEFz7IELmxa3iQJtrDib+JDJe6hW+fQWY1v9w2+uuAqffXXoB9c7UD38J0Ry32hq2XvnTi8Hw+fkiZ+LnWLdP8ihMkO7XQyC+ei7d8QTePOikAmKHig==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=HfVslO6U95z1fUpGDu00/cl2X4I2eohqPtuBfnGFHWo=;
+ b=Ns/beyEMZr3rBC0G2mwdvR3NRuQ+K83WBhWz9I27boZnsKCwdg/4pkuqaguZ1ZjI77zXpwM9a7+Hk6PLvqphDV7JdDhFjBRtDnw8ZBx9w5hiVGuAvNtGfofEzGR8bJNCkzg8RY6AYC/lsxuX1nSlpgbkxCVXVX7+x4LfXvmTKKg=
+Received: from DM6PR04MB7081.namprd04.prod.outlook.com (2603:10b6:5:244::21)
+ by DM5PR04MB0810.namprd04.prod.outlook.com (2603:10b6:3:f5::9) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.4457.23; Mon, 30 Aug 2021 21:45:49 +0000
+Received: from DM6PR04MB7081.namprd04.prod.outlook.com
+ ([fe80::7c0e:3e95:80d3:7a70]) by DM6PR04MB7081.namprd04.prod.outlook.com
+ ([fe80::7c0e:3e95:80d3:7a70%6]) with mapi id 15.20.4457.024; Mon, 30 Aug 2021
+ 21:45:48 +0000
+From:   Damien Le Moal <Damien.LeMoal@wdc.com>
 To:     Kate Hsuan <hpa@redhat.com>, Jens Axboe <axboe@kernel.dk>,
-        Damien Le Moal <damien.lemoal@wdc.com>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+        Hans de Goede <hdegoede@redhat.com>
+CC:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 0/1] libata: Add ATA_HORKAGE_NONCQ_ON_AMD for Samsung
+ 860 and 870 SSD.
+Thread-Topic: [PATCH v3 0/1] libata: Add ATA_HORKAGE_NONCQ_ON_AMD for Samsung
+ 860 and 870 SSD.
+Thread-Index: AQHXna1t7boOugOZ8kmPA9hpElRs0A==
+Date:   Mon, 30 Aug 2021 21:45:48 +0000
+Message-ID: <DM6PR04MB708147357F91D5AEB6128A2AE7CB9@DM6PR04MB7081.namprd04.prod.outlook.com>
 References: <20210830144253.289542-1-hpa@redhat.com>
- <20210830144253.289542-2-hpa@redhat.com>
-From:   Hans de Goede <hdegoede@redhat.com>
-Message-ID: <54f63e11-e421-0fa6-80e1-297287dc0974@redhat.com>
-Date:   Mon, 30 Aug 2021 17:05:54 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
-MIME-Version: 1.0
-In-Reply-To: <20210830144253.289542-2-hpa@redhat.com>
-Content-Type: text/plain; charset=utf-8
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: redhat.com; dkim=none (message not signed)
+ header.d=none;redhat.com; dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 1d6f58db-f709-4d44-8f1e-08d96bff87d7
+x-ms-traffictypediagnostic: DM5PR04MB0810:
+x-microsoft-antispam-prvs: <DM5PR04MB0810ADC6EAE9ED719C84E6B0E7CB9@DM5PR04MB0810.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:1850;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: BBag8W6reJ12B40W2uhDYciKA9lkIBvnMT+eRqbx7+QEBAoyFPi7k8Qr2iYMHmcahOLFmjgAbtyDCHn8yfDqspQf1OmO3b8gYykKtkImLl8xNRLw1t9tXRd26AY8hwkAi+AZsfJ7HACsv7n+FezGf1ZEfJ7ySjwcJgZCnwmvNFvuQecdY/s6/zTWApsunp/C8IpwmJ3Zm8e9l7b4cyfRzsJTFQA/Or/L0RFOY76qaMu3azdAqhcmUGnyb4uYZbRODvrEl3bqsuvvx1VUJwzJEj66iBIsTJSNuMT+KSNO+iZSxm6JrS2vdNUdSGUp1XHj4HSxkja0Hue2gU6JnmuTrK//M5udZ4ZlPptNzppzdSPJxLM212ySu/pwDiHrKUlTQfsiA+r4yt6/e/EBvym+54pelrRtMoJJlr+poXEd3GvLGweSAaarZ/Fzl8IkT7KYazc7OmjOaZEU/uYDibA+fy02b9urrpolBBXLaC1z9MSKIYMpvIx++aqRTU18U9UlSPqJejALdx1vFuk9goMUF+ML9itbHlIcfT3Bgv8X75xKK+hY0r9Pn4fakUCZJI28a8MbZ4bm+bL6Eh/6ZDFks/AL0+9w2lqp2mis/dGnF/TBgJ9NJiZVnUWn6GaWB3ZLbWoaAez4hLSmJovtQ2cX0C/gNY07Ny3JwHHPmTtla7J4o07uQpHNjDix1gUj+Llj7I3wBwBIcYXD28qCM5JgHA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB7081.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(136003)(346002)(366004)(39860400002)(376002)(33656002)(8936002)(66476007)(38070700005)(91956017)(38100700002)(4326008)(7696005)(316002)(2906002)(5660300002)(55016002)(122000001)(54906003)(110136005)(86362001)(9686003)(66946007)(66446008)(83380400001)(186003)(8676002)(52536014)(76116006)(478600001)(71200400001)(53546011)(6506007)(64756008)(66556008);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?mDqSSxaNSmtMK8JmVYGrdbHxv+ofiovp7xeDH5kgu/ivu/DnmVTG8K2DsJ9k?=
+ =?us-ascii?Q?qDq5q44XjiCR2DfxxIoDGKBN4o9ivLr4Pm/L7SUQETl3Pw37NeVcJipC45Ra?=
+ =?us-ascii?Q?61aNrneIvxD88NW4Gdv75jmPmkl2960PQvr7Cohy7pcBGHOfid7+84raF7dG?=
+ =?us-ascii?Q?G48HpVumHdpK3SNL5QE6uzn9Y2kMsprAWPgh7eZ7wVqxhNpzeHprUWkfpu+8?=
+ =?us-ascii?Q?Pkw3HJ1B/vsnScxyBH2UOsGyIVu1FSjoFg6V8sEhQ2G6RDB53nSrIpXGBSgi?=
+ =?us-ascii?Q?06qemEKcfxgb9CjlYypA5mqNSo0kJczmQiNH7He7o1XXInz91gblQ+GNJPHt?=
+ =?us-ascii?Q?wj4/crrnVPTM8xdekwrP8kKI/pAwCN6TnhoEEBVAcVVy2NeVbKVUN1K7NeRt?=
+ =?us-ascii?Q?3e1R1457z1Z2BJuve+vRPZYJzOqrNI2dhbvIp7ieKZMmVYUPc+YlknWkiM62?=
+ =?us-ascii?Q?eiKkZf/tYEwWK5SdrBzVfUVkTAN0pPhJvrOeOF6TI37pFUPvCbQa5kU7vfxQ?=
+ =?us-ascii?Q?TsURUhGvMyuoT3InfIcfQ4MyKi8u92Us9Vc/C04/zdG1o9XKxOV2AiON26zo?=
+ =?us-ascii?Q?4lxxAmxjsIZUki2BNiB6sv4IF0tG11tGlX9LLRPAYxXd15x9/LL7sm3CxSq8?=
+ =?us-ascii?Q?iBLOrlTYL9eT8+H1ispMVEP0OvFGUxxjLa4hkI+FmkrGah+VW81QEcIY44SA?=
+ =?us-ascii?Q?NWyJvIA2EqI00RhmHnARubB0YEdegloNSumooI8liAdXEfH+dGwcwfluh/EK?=
+ =?us-ascii?Q?VDSjTNJXnWJ+6JIbCur6HjEd/l6e/JVC2QlUcwnWcWJbwHJ1TotlqrvkENoB?=
+ =?us-ascii?Q?/eYttavxLa+f2oLjLC/aIuqytHLckThPK0YAJYO+Rh6+37ENq48BYnO9e3bz?=
+ =?us-ascii?Q?j1FRBQyMsJk6RXqIFwaiCOLsf6qDQPgbrvryCrU51oaunaBpYc+LRFYmnmVM?=
+ =?us-ascii?Q?H68N2F3bPjBRu0LR7oLWk3gn7vqNxzVuttj46asOPk90re/QTr+JaVVdPhP3?=
+ =?us-ascii?Q?h786JTmhZalYv3ughatszQ/D1nGMbQOSWzEZW9+zJsdToPBjfqCLS7nQh2fH?=
+ =?us-ascii?Q?VQCUtEp3gg+2yXt3QJabkYKoj0toUGnpO4CMOOQ6nfjoqzd9aVZbnREbHcxj?=
+ =?us-ascii?Q?fwshidNLKlg603L03zM+063egGvTjF4uzyxID6BKaOj+DbKGGx9Y6gQuUt0f?=
+ =?us-ascii?Q?BtOSI8OROLbRg5BaQEPK9RNa9VV1pB5QRmPnSuyCjEzor4KILlFy1BRsQBSf?=
+ =?us-ascii?Q?ng958x43mBDduJ6xXLhXj1YTH8T4vKv7mMxs5lzfKXWZx5t51Dppp/1bFtSy?=
+ =?us-ascii?Q?zg4tZW1BoKdoy5IYiAmyXm1zhcAjF/Wy1S6jyvSfr3JaggFEgnAukPDhmHNO?=
+ =?us-ascii?Q?VKMtEX9MGlj0AjujihPZVUoRh3PTf+qYHjnlebfOijnSeqBKsA=3D=3D?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB7081.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1d6f58db-f709-4d44-8f1e-08d96bff87d7
+X-MS-Exchange-CrossTenant-originalarrivaltime: 30 Aug 2021 21:45:48.9240
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 3n0xVMcRDFYKby9C5fDRTQSURqYO9/Y3vTuxakoqtDwLtdT2syDFHRCfEimgrt85VqgaPc/cFm5LPoGR8rdGZA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR04MB0810
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi,
-
-On 8/30/21 4:42 PM, Kate Hsuan wrote:
-> Many users are reporting that the Samsung 860 and 870 SSD are having
-> various issues when combined with AMD SATA controllers and only
-> completely disabling NCQ helps to avoid these issues.
-> 
-> Entire disabling NCQ for Samsugn 860/870 SSD will cause I/O performance
-> drop. In this case, a flag ATA_HORKAGE_NONCQ_ON_AMD is introduced to
-> used to perform an additional check for these SSDs. If it finds it's
-> parent ATA controller is AMD, the NCQ will be disabled. Otherwise, the
-> NCQ is kept to enable.
-> 
-> BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=201693
-> Signed-off-by: Kate Hsuan <hpa@redhat.com>
-
-Thanks, patch looks good to me:
-
-Reviewed-by: Hans de Goede <hdegoede@redhat.com>
-
-Regards,
-
-Hans
-
-> ---
->  drivers/ata/libata-core.c | 24 ++++++++++++++++++++++--
->  include/linux/libata.h    |  1 +
->  2 files changed, 23 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index c861c93d1e84..36c62f758b73 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -2190,6 +2190,8 @@ static int ata_dev_config_ncq(struct ata_device *dev,
->  			       char *desc, size_t desc_sz)
->  {
->  	struct ata_port *ap = dev->link->ap;
-> +	struct pci_dev *pcidev = NULL;
-> +	struct device *parent_dev = NULL;
->  	int hdepth = 0, ddepth = ata_id_queue_depth(dev->id);
->  	unsigned int err_mask;
->  	char *aa_desc = "";
-> @@ -2204,6 +2206,22 @@ static int ata_dev_config_ncq(struct ata_device *dev,
->  		snprintf(desc, desc_sz, "NCQ (not used)");
->  		return 0;
->  	}
-> +
-> +	if (dev->horkage & ATA_HORKAGE_NONCQ_ON_AMD) {
-> +		for (parent_dev = dev->tdev.parent; parent_dev != NULL;
-> +		    parent_dev = parent_dev->parent) {
-> +			if (dev_is_pci(parent_dev)) {
-> +				pcidev = to_pci_dev(parent_dev);
-> +				if (pcidev->vendor == PCI_VENDOR_ID_AMD) {
-> +					snprintf(desc, desc_sz,
-> +						 "NCQ (not used)");
-> +					return 0;
-> +				}
-> +			break;
-> +			}
-> +		}
-> +	}
-> +
->  	if (ap->flags & ATA_FLAG_NCQ) {
->  		hdepth = min(ap->scsi_host->can_queue, ATA_MAX_QUEUE);
->  		dev->flags |= ATA_DFLAG_NCQ;
-> @@ -3971,9 +3989,11 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
->  	{ "Samsung SSD 850*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
->  						ATA_HORKAGE_ZERO_AFTER_TRIM, },
->  	{ "Samsung SSD 860*",           NULL,   ATA_HORKAGE_NO_NCQ_TRIM |
-> -						ATA_HORKAGE_ZERO_AFTER_TRIM, },
-> +						ATA_HORKAGE_ZERO_AFTER_TRIM |
-> +						ATA_HORKAGE_NONCQ_ON_AMD, },
->  	{ "Samsung SSD 870*",           NULL,   ATA_HORKAGE_NO_NCQ_TRIM |
-> -						ATA_HORKAGE_ZERO_AFTER_TRIM, },
-> +						ATA_HORKAGE_ZERO_AFTER_TRIM |
-> +						ATA_HORKAGE_NONCQ_ON_AMD, },
->  	{ "FCCT*M500*",			NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
->  						ATA_HORKAGE_ZERO_AFTER_TRIM, },
->  
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 860e63f5667b..42e16114e91f 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -426,6 +426,7 @@ enum {
->  	ATA_HORKAGE_NOTRIM	= (1 << 24),	/* don't use TRIM */
->  	ATA_HORKAGE_MAX_SEC_1024 = (1 << 25),	/* Limit max sects to 1024 */
->  	ATA_HORKAGE_MAX_TRIM_128M = (1 << 26),	/* Limit max trim size to 128M */
-> +	ATA_HORKAGE_NONCQ_ON_AMD = (1 << 27),	/* Disable NCQ on AMD chipset */
->  
->  	 /* DMA mask for user DMA control: User visible values; DO NOT
->  	    renumber */
-> 
-
+On 2021/08/30 23:43, Kate Hsuan wrote:=0A=
+> Many users reported the issue when running the system with Samsung 860,=
+=0A=
+> 870 SSD, and AMD chipset. Therefore, completely disabling the NCQ can=0A=
+> avoid this issue.=0A=
+> =0A=
+> Entire disabling NCQ for Samsung 860/870 SSD will cause I/O performance=
+=0A=
+> drop. In this case, a flag ATA_HORKAGE_NONCQ_ON_AMD is introduced to=0A=
+> used to perform an additional check for these SSDs. If it finds its paren=
+t=0A=
+> ATA controller is AMD, the NCQ will be disabled. Otherwise, the NCQ is ke=
+pt=0A=
+> to enable.=0A=
+=0A=
+For a single patch, generally, a cover letter is not needed. Especially so =
+in=0A=
+this case since your cover letter message is the same as the patch commit m=
+essage.=0A=
+=0A=
+> =0A=
+> Changes since v3=0A=
+> * Modified the flag from ATA_HORKAGE_NONCQ_ON_ASMEDIA_AMD_MARVELL to=0A=
+>   ATA_HORKAGE_NONCQ_ON_AMD.=0A=
+> * Modified and fixed the code to completely disable NCQ on AMD controller=
+.=0A=
+=0A=
+Technically, this is a v2 right ? Also, by "completely", did you mean "alwa=
+ys" ?=0A=
+(see patch comments).=0A=
+=0A=
+> =0A=
+> =0A=
+> Kate Hsuan (1):=0A=
+>   libata: Add ATA_HORKAGE_NONCQ_ON_AMD for Samsung 860 and 870 SSD.=0A=
+> =0A=
+>  drivers/ata/libata-core.c | 24 ++++++++++++++++++++++--=0A=
+>  include/linux/libata.h    |  1 +=0A=
+>  2 files changed, 23 insertions(+), 2 deletions(-)=0A=
+> =0A=
+=0A=
+=0A=
+-- =0A=
+Damien Le Moal=0A=
+Western Digital Research=0A=
