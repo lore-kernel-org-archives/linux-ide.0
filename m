@@ -2,149 +2,179 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AFE0C432BE
-	for <linux-ide@archiver.kernel.org>; Wed,  1 Sep 2021 11:17:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B6E2C432BE
+	for <linux-ide@archiver.kernel.org>; Wed,  1 Sep 2021 15:17:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3919961054
-	for <linux-ide@archiver.kernel.org>; Wed,  1 Sep 2021 11:17:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 82F6F6109E
+	for <linux-ide@archiver.kernel.org>; Wed,  1 Sep 2021 15:17:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237454AbhIALR5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 1 Sep 2021 07:17:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40880 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234640AbhIALR4 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 1 Sep 2021 07:17:56 -0400
-X-Greylist: delayed 351 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 01 Sep 2021 04:16:59 PDT
-Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [IPv6:2001:67c:2050::465:103])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9F9FC061575
-        for <linux-ide@vger.kernel.org>; Wed,  1 Sep 2021 04:16:59 -0700 (PDT)
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [80.241.60.233])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (No client certificate requested)
-        by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4H01Zd4ylbzQkBy;
-        Wed,  1 Sep 2021 13:11:05 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mailbox.org; h=
-        content-transfer-encoding:content-type:content-type:mime-version
-        :subject:subject:references:in-reply-to:message-id:from:from
-        :date:date:received; s=mail20150812; t=1630494662; bh=g7wYD5yqdl
-        D1LFC8b2a26qOAWY+lw+FL1h8Cz5AsAnI=; b=cLvJvCWZi9cFc5Kp2KJuuhGOaP
-        RQXMODR0FXhlsAxa/QXRopBjayAY/z1z89i1BIVBKHcjlSVYh4ASmpvsxDPe9V6/
-        kdhojfIdJhxFOJ4NjN0sNzgCQAh876QCjoa2h2yU6yQmdBMrH+VP8aSUT0fNZmCy
-        lVrj3PsaxFqPkUVdMYe+UNXi51w92LbEeJIuF6c/BDGKqgQXcK17H+IPfnS3hmVg
-        JOY6UIJBVDy6kSnpqvqnl6qdIWzcf5f1Ri0EbmJPoZQW6+DycUc5t+O5GULSLk4X
-        IHgV45wIIb2kaKeQ+ahMXEt7XP4Jp2/8e/Qhe2wm8PrOd7wKXpfUCOkZxvZg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-        t=1630494663;
+        id S1343543AbhIAPR7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 1 Sep 2021 11:17:59 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:20411 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S245699AbhIAPR6 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 1 Sep 2021 11:17:58 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1630509421;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=qVjLIa5ukEcRiqoQYW3N8gtUf8eP4aka2iiO+aqRH9g=;
-        b=WuoJDT+yIZYdsA6WjhuuEOLOZ7R5EmBJGm0S+Wht9ihQ9uPSwJEfBzDUaHbS/TogoqvvcJ
-        iDany6qO11w7mZBGJYETPd8wkZ78sqY3+iWqMVirDFYyMx8UiwJ4WlZikpsSNTeSDZP6z1
-        +qhp91h0b54TqgZ4EEWbqiHzCRbqIap9I6ZPrtg7QCoVxYACA+4V9AxP+1Fp59+57edJOq
-        RFoalEBaIXsWPPn1uOq7bJzj1H4MvM9Relw72/aH9QQq32N0iKF2n0NeJ0FyyqDL/pFxI6
-        Gacm/qiG5M49/nWoLXkbJAm7bpvHHF/gOaupczEhgEJJVlYkXJz/CwaQn4DF1w==
-X-Virus-Scanned: amavisd-new at heinlein-support.de
-Date:   Wed, 1 Sep 2021 13:11:01 +0200 (CEST)
-From:   torvic9@mailbox.org
-To:     Hans de Goede <hdegoede@redhat.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "hpa@redhat.com" <hpa@redhat.com>
-Cc:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "damien.lemoal@wdc.com" <damien.lemoal@wdc.com>
-Message-ID: <1693972970.60125.1630494661286@office.mailbox.org>
-In-Reply-To: <2df1c3d5-301d-dc46-7f9f-d28be2933bd3@redhat.com>
-References: <1876334901.51676.1630481868266@office.mailbox.org>
- <e6f9921d-0fb6-da30-4dc5-53b4cb7b5270@redhat.com>
- <2df1c3d5-301d-dc46-7f9f-d28be2933bd3@redhat.com>
-Subject: Re: [PATCH v4] libata: Add ATA_HORKAGE_NO_NCQ_ON_AMD for Samsung
- 860 and 870 SSD.
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=Mh3cylghfHfvCDQ5ybQ0BmduttKnKOaYDqF4MlKkW9M=;
+        b=DtBM2Vk2CcJqk8a37vqbIKVM6FKCie/oZk3HG9bXfWd9I+fJ48iINl+VQy7rdvp1kT4k56
+        6QsjbEestRqj4X/rd5C2gADxQN6s+ArpYhX7oslHRec20uiENce65XO6bSU8cD/95X9chY
+        dnvqHGm0c0IOwe8OJffzCK4cft4rdSk=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-565-Yuquzq97P3mmrLZTRAVsaQ-1; Wed, 01 Sep 2021 11:17:00 -0400
+X-MC-Unique: Yuquzq97P3mmrLZTRAVsaQ-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D6BA41B2C980;
+        Wed,  1 Sep 2021 15:16:58 +0000 (UTC)
+Received: from fedora-t480.redhat.com (unknown [10.39.192.79])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id F22FB60C9F;
+        Wed,  1 Sep 2021 15:16:54 +0000 (UTC)
+From:   Kate Hsuan <hpa@redhat.com>
+To:     Jens Axboe <axboe@kernel.dk>, Hans de Goede <hdegoede@redhat.com>,
+        Damien Le Moal <damien.lemoal@wdc.com>
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Kate Hsuan <hpa@redhat.com>
+Subject: [PATCH v5] libata: Add ATA_HORKAGE_NO_NCQ_ON_AMD for Samsung 860 and 870 SSD.
+Date:   Wed,  1 Sep 2021 23:16:43 +0800
+Message-Id: <20210901151643.13562-1-hpa@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Priority: 3
-Importance: Normal
-X-Rspamd-Queue-Id: 415AB270
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+Many users are reporting that the Samsung 860 and 870 SSD are having
+various issues when combined with AMD SATA controllers and only
+completely disabling NCQ helps to avoid these issues.
 
-> Hans de Goede <hdegoede@redhat.com> hat am 01.09.2021 11:38 geschrieben:
-> 
->  
-> Hi,
-> 
-> On 9/1/21 10:55 AM, Hans de Goede wrote:
-> > Hi Tor,
-> > 
-> > On 9/1/21 9:37 AM, torvic9@mailbox.org wrote:
-> >> (Sorry for not doing a proper reply)
-> >>
-> >> Hello,
-> >> Noob here.
-> >> I have a Samsung 860 Pro connected to a AMD X570 chipset mainboard and
-> >> it just works flawlessly on 5.13 and 5.14.
-> >> Are you sure that *every* 860/870 is concerned by this problem on
-> >> *every* AMD controller?
-> > 
-> > I am pretty sure that every 860 / 870 EVO is affected,
-> > I am not sure if the PRO is also affected.
-> 
-> So while reading https://bugzilla.kernel.org/show_bug.cgi?id=201693
-> again to add a comment asking if anyone was seeing this on a
-> pro to I found existing comments of both queued-trims being
-> an issue on the 860 pro, as well as the 860 pro having issues
-> with some AMD sata controllers.
-> 
-> So it seems safe to say that the 860 pro has the same issues
-> as the 860 and 870 evo models. Chances are you don't have
-> discard support enabled causing you to not see the queued-trim
-> issues (which means you also won't see any difference from
-> disabling support for queued-trim commands).
+Always disabling NCQ for Samsung 860/870 SSDs regardless of the host
+SATA adapter vendor will cause I/O performance degradation with well
+behaved adapters. To limit the performance impact to AMD adapters,
+introduce the ATA_HORKAGE_NO_NCQ_ON_AMD flag to force disable NCQ
+only for these adapters.
 
-Thanks for your answer, Hans.
+Also, two libata.force parameters (noncqamd and ncqamd) are introduced
+to disable and enable the NCQ for the system which equiped with AMD
+SATA adapter and Samsung 860 and 870 SSDs. The user can determine NCQ
+function to be enabled or disabled according to the demand.
 
-If you mean the "discard" mount option, then yes, you're correct,
-I don't use this because some (apparently) knowledgeable people
-recommended against using it especially on LUKS partitions.
-I don't know whether that's true though, it might be outdated.
-I do however do manual TRIMs with "fstrim".
+BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=201693
+Signed-off-by: Kate Hsuan <hpa@redhat.com>
+---
+Changes in v5:
+* The libata.force parameters ncqamd and noncqamd are used to enable and
+  disable the NCQ for the systems equiped with AMD SATA adapter and
+  Samsung 860 and 870 SSDs.
+* The character encoding of the patch comment was fixed.
 
-> 
-> So this just leaves your question of:
-> 
-> "concerned by this problem on *every* AMD controller?"
-> 
-> Where "this problem" is needing to completely disable NCQ
-> and I guess the answer is no, not every AMD controller
-> is affected. Still the plan is to err on the safe side for now,
-> allowing overriding this from the kernel cmdline with:
-> 
-> libata.force=ncqamd
+Changes in v4:
+* A function ata_dev_check_adapter() is added to check the vendor ID of
+  the adapter.
+* ATA_HORKAGE_NONCQ_ON_AMD was modified to ATA_HORKAGE_NO_NCQ_ON_AMD to
+  align with the naming convention.
+* Commit messages were improved according to reviewer comments.
 
-I agree to do it in a safe way, that sounds like a good solution.
+Changes in v3:
+* ATA_HORKAGE_NONCQ_ON_ASMEDIA_AMD_MARVELL was modified to
+  ATA_HORKAGE_NONCQ_ON_AMD.
+* Codes were fixed to completely disable NCQ on AMD controller.
 
-> 
-> I will add a comment to:
-> 
-> https://bugzilla.kernel.org/show_bug.cgi?id=201693
-> 
-> Asking for PCI-ids of the controllers where people are seeing
-> this and then maybe we can narrow down the "AMD" check in a
-> future follow up patch.
+---
+ drivers/ata/libata-core.c | 34 ++++++++++++++++++++++++++++++++--
+ include/linux/libata.h    |  1 +
+ 2 files changed, 33 insertions(+), 2 deletions(-)
 
-I can send you PCI and device IDs later if it helps.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 3eda3291952b..e2e900085f99 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2199,6 +2199,25 @@ static void ata_dev_config_ncq_prio(struct ata_device *dev)
 
-> 
-> Regards,
-> 
-> Hans
+ }
+
++static bool ata_dev_check_adapter(struct ata_device *dev,
++				  unsigned short vendor_id)
++{
++	struct pci_dev *pcidev = NULL;
++	struct device *parent_dev = NULL;
++
++	for (parent_dev = dev->tdev.parent; parent_dev != NULL;
++	     parent_dev = parent_dev->parent) {
++		if (dev_is_pci(parent_dev)) {
++			pcidev = to_pci_dev(parent_dev);
++			if (pcidev->vendor == vendor_id)
++				return true;
++			break;
++		}
++	}
++
++	return false;
++}
++
+ static int ata_dev_config_ncq(struct ata_device *dev,
+ 			       char *desc, size_t desc_sz)
+ {
+@@ -2217,6 +2236,13 @@ static int ata_dev_config_ncq(struct ata_device *dev,
+ 		snprintf(desc, desc_sz, "NCQ (not used)");
+ 		return 0;
+ 	}
++
++	if (dev->horkage & ATA_HORKAGE_NO_NCQ_ON_AMD &&
++	    ata_dev_check_adapter(dev, PCI_VENDOR_ID_AMD)) {
++		snprintf(desc, desc_sz, "NCQ (not used)");
++		return 0;
++	}
++
+ 	if (ap->flags & ATA_FLAG_NCQ) {
+ 		hdepth = min(ap->scsi_host->can_queue, ATA_MAX_QUEUE);
+ 		dev->flags |= ATA_DFLAG_NCQ;
+@@ -3951,9 +3977,11 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "Samsung SSD 850*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+ 	{ "Samsung SSD 860*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+-						ATA_HORKAGE_ZERO_AFTER_TRIM, },
++						ATA_HORKAGE_ZERO_AFTER_TRIM |
++						ATA_HORKAGE_NO_NCQ_ON_AMD, },
+ 	{ "Samsung SSD 870*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+-						ATA_HORKAGE_ZERO_AFTER_TRIM, },
++						ATA_HORKAGE_ZERO_AFTER_TRIM |
++						ATA_HORKAGE_NO_NCQ_ON_AMD, },
+ 	{ "FCCT*M500*",			NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+
+@@ -6108,6 +6136,8 @@ static int __init ata_parse_force_one(char **cur,
+ 		{ "ncq",	.horkage_off	= ATA_HORKAGE_NONCQ },
+ 		{ "noncqtrim",	.horkage_on	= ATA_HORKAGE_NO_NCQ_TRIM },
+ 		{ "ncqtrim",	.horkage_off	= ATA_HORKAGE_NO_NCQ_TRIM },
++		{ "noncqamd",	.horkage_on	= ATA_HORKAGE_NO_NCQ_ON_AMD },
++		{ "ncqamd",	.horkage_off	= ATA_HORKAGE_NO_NCQ_ON_AMD },
+ 		{ "dump_id",	.horkage_on	= ATA_HORKAGE_DUMP_ID },
+ 		{ "pio0",	.xfer_mask	= 1 << (ATA_SHIFT_PIO + 0) },
+ 		{ "pio1",	.xfer_mask	= 1 << (ATA_SHIFT_PIO + 1) },
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 3fcd24236793..ef1417152ecd 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -422,6 +422,7 @@ enum {
+ 	ATA_HORKAGE_NOTRIM	= (1 << 24),	/* don't use TRIM */
+ 	ATA_HORKAGE_MAX_SEC_1024 = (1 << 25),	/* Limit max sects to 1024 */
+ 	ATA_HORKAGE_MAX_TRIM_128M = (1 << 26),	/* Limit max trim size to 128M */
++	ATA_HORKAGE_NO_NCQ_ON_AMD = (1 << 27),	/* Disable NCQ on AMD chipset */
+
+ 	 /* DMA mask for user DMA control: User visible values; DO NOT
+ 	    renumber */
+--
+2.31.1
+
