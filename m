@@ -2,160 +2,147 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED5BDC432BE
-	for <linux-ide@archiver.kernel.org>; Wed,  1 Sep 2021 08:14:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F486C4320A
+	for <linux-ide@archiver.kernel.org>; Wed,  1 Sep 2021 08:55:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D635C6103A
-	for <linux-ide@archiver.kernel.org>; Wed,  1 Sep 2021 08:14:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8935F61057
+	for <linux-ide@archiver.kernel.org>; Wed,  1 Sep 2021 08:55:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243012AbhIAIO4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 1 Sep 2021 04:14:56 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:41740 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243028AbhIAIOy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 1 Sep 2021 04:14:54 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1630484039; x=1662020039;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=u5Lr7o0X5tlK+2+/dYobLehep4fXgRQQJyQZE3kONCY=;
-  b=G5mMlC0a0hk/aujN5Fr01oBllMxFp1/nXY3fxZA6LFuGzUA1L0qH1kA2
-   gDuZG9TRSIPaS11Fn3OfNwXxbJbX75WUJtP4udzVVIFpGNaRsp7t7duwL
-   bklME+sM7Q33ocaCTfpkIKXdbK4QVz90XSyxet/6EHLsU0Hp+tvMUEWh1
-   R78A3jF0HYcp+dN3bm5/geO7yyzXyIMTFo7zO3fnhHl5Qh5emlFj8m72c
-   myKteh4/jz5b5GV4WVo5lWQF6ph+UMGPul8x+xiwsRw4bYEQvl8LU/J93
-   smXtVTOerp1T3h8vI0ABfGGVgocAMPPk/plMjzh91v+rF+DEpCBNuNSMN
-   g==;
-X-IronPort-AV: E=Sophos;i="5.84,368,1620662400"; 
-   d="scan'208";a="179476508"
-Received: from mail-co1nam11lp2177.outbound.protection.outlook.com (HELO NAM11-CO1-obe.outbound.protection.outlook.com) ([104.47.56.177])
-  by ob1.hgst.iphmx.com with ESMTP; 01 Sep 2021 16:13:56 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=QW5iXKi2t/pCmiL5Wh4R4qdobF5jxSYxccNkMLog5nrziyR0YI6OEqMnVniEMeydweXcHRSHOlHGzHc5i56ulU4efNnErtwfsYexUBJg+k0wfz3MD0vXvlVqfy0p0FJNfUJ3+J+uizeUSIyzwY4F684PY43uLvoelK1p8D7qRmLPnqSFqKoyD4FidH+jrjsldswYAgXpOjXKj5JBIkYfhuTfmwMy++phclgT6FB3Zdv4j8w25AQ0MIpQlgBu9jmeqIu2M5/RP+BhCTGs88DjMtFh7In5VOG2wz80W3bLa2uolCH8tYnPaZz4PpxSMvctlbjE8wOcdYJFP7ZjMDpqIQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=u5Lr7o0X5tlK+2+/dYobLehep4fXgRQQJyQZE3kONCY=;
- b=SzrxIFfJFvoZ7/vAlubRZNETWN0q6tiT+fIQFJ0ZKgdcYhytggLm3UIPToswxiAE7RukilLabBgHGuYi4RE1LFZaWlNRJl6vfEAKlTaCw2Xprz7J12Zs4lkzI+aW9aNTji1XGxdZp10J8OhtKW6oiRX95BoDAyKOY3UsAAz52ovr8BjNxBmSQLl4QiCSSzJNEN5TKSdWPkWwRqUM8hqNvR9EAQzUo2IgNwTd5pSxJGQYw1iM03GTDZNDYTjBtgCH+vzwGOQGacCdNjEsKlCQVk1BkXc5EdjAOS5JM5ftmcJ+jIbAEW1vF/9KAAERY4PRSVyAS/R0/w8bgiw243qf5g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=u5Lr7o0X5tlK+2+/dYobLehep4fXgRQQJyQZE3kONCY=;
- b=BlCuCPAQDgQr6hdtJyX/yPt8mM3v7kYcD2y59NzJjMfD74DgrauAXP+HXIxusZfiyelzFAntl3peuLuBAvKXuyBmwlpq+dwEB8w4JYUb3gIBL0jT0yY5ZQXol1p5rbAuhyKxQ1qKL1zF79GofukdHt8tN86sLD+jTWn16zzieQY=
-Received: from DM6PR04MB7081.namprd04.prod.outlook.com (2603:10b6:5:244::21)
- by DM6PR04MB4828.namprd04.prod.outlook.com (2603:10b6:5:25::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4457.18; Wed, 1 Sep
- 2021 08:13:54 +0000
-Received: from DM6PR04MB7081.namprd04.prod.outlook.com
- ([fe80::7c0e:3e95:80d3:7a70]) by DM6PR04MB7081.namprd04.prod.outlook.com
- ([fe80::7c0e:3e95:80d3:7a70%6]) with mapi id 15.20.4457.025; Wed, 1 Sep 2021
- 08:13:54 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     "torvic9@mailbox.org" <torvic9@mailbox.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "hpa@redhat.com" <hpa@redhat.com>
-CC:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "hdegoede@redhat.com" <hdegoede@redhat.com>
+        id S243227AbhIAI4l (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 1 Sep 2021 04:56:41 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:34073 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S243208AbhIAI4k (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 1 Sep 2021 04:56:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1630486543;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=xT6YX/8MTeduh5vXDIw9ZgKlPqVeou/Tf3S3Uzgm3TM=;
+        b=Z6wViVhIQj9pZx9Cbw9cvWecdXC0DC+FE1usdiUMIitHCEPjUIOqrpb0NUzORQfA6SP3zg
+        s6i4oa3iXjYi8QLrLCeynIsKTs/SI0MWRrGhtudM3Ldk14TksTQvONUl42jbcOHp1k5rQH
+        +KBdcVIAJml8bsyJ+6XZ/QlrEQ6FR1E=
+Received: from mail-ej1-f71.google.com (mail-ej1-f71.google.com
+ [209.85.218.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-481-15BS-RnlMMW0NVzcXM9VxA-1; Wed, 01 Sep 2021 04:55:40 -0400
+X-MC-Unique: 15BS-RnlMMW0NVzcXM9VxA-1
+Received: by mail-ej1-f71.google.com with SMTP id jw25-20020a17090776b900b005ca775a2a00so1105817ejc.1
+        for <linux-ide@vger.kernel.org>; Wed, 01 Sep 2021 01:55:40 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=xT6YX/8MTeduh5vXDIw9ZgKlPqVeou/Tf3S3Uzgm3TM=;
+        b=k1cvpJAnBH6zss3/Nz8d/iWB1fNbSbNIY22ht/Rm1fFth0HbSCmrlAZR7AnGToS1Q8
+         3GQr/qxR9nXBg+ND1iE7tUafCoHHfKnfzpuulJz6SgOSmC3Ty6XmeTVZnpJw772WDHux
+         oz1Yjxqfn00K4xNWnUqRMsPeWhzGKy1xHbIIT7YPuafgY4ePAwM8gtF8QDuAphJkHFrC
+         dD1A3UICIzPGn4nSxVFPHb/f2AalJ9eGIgbUFTndvGnryRP42OBHAyY645mwJRNn19uP
+         kBs1i2oZoh6SBjT3iUFKRBvuksa+Aivi79AlxxU8aoU5/xulJKm+chrg3diS2kn+hKia
+         T7FA==
+X-Gm-Message-State: AOAM532IpURAppa3QxrvvRsNBS4vNyI0qnRKQWUSigLldOjn3NNCTrGI
+        eZp4cgFadmzAENs/1Z3O0WDOSNDkrc9anVI+E0LrCzxMWGAELm/akVnpi3STZL6zsm7Sic7OjJs
+        sBgp5xXsXmwm4RrKj7srS
+X-Received: by 2002:a17:906:9742:: with SMTP id o2mr36279526ejy.532.1630486539217;
+        Wed, 01 Sep 2021 01:55:39 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxFIoEaIgWKck82cXtSM07ZddrJn3BIknjQk8s4oo2zco1Yv8nJyyD9+kS8jjRjyPmIccm80A==
+X-Received: by 2002:a17:906:9742:: with SMTP id o2mr36279509ejy.532.1630486539013;
+        Wed, 01 Sep 2021 01:55:39 -0700 (PDT)
+Received: from x1.localdomain (2001-1c00-0c1e-bf00-1054-9d19-e0f0-8214.cable.dynamic.v6.ziggo.nl. [2001:1c00:c1e:bf00:1054:9d19:e0f0:8214])
+        by smtp.gmail.com with ESMTPSA id v24sm10611583edq.79.2021.09.01.01.55.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 01 Sep 2021 01:55:38 -0700 (PDT)
 Subject: Re: [PATCH v4] libata: Add ATA_HORKAGE_NO_NCQ_ON_AMD for Samsung 860
  and 870 SSD.
-Thread-Topic: [PATCH v4] libata: Add ATA_HORKAGE_NO_NCQ_ON_AMD for Samsung 860
- and 870 SSD.
-Thread-Index: AQHXnwRKp842qzcMQUysR5ppI0c+xQ==
-Date:   Wed, 1 Sep 2021 08:13:54 +0000
-Message-ID: <DM6PR04MB708115B43C231444AFB22DC2E7CD9@DM6PR04MB7081.namprd04.prod.outlook.com>
+To:     torvic9@mailbox.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "hpa@redhat.com" <hpa@redhat.com>
+Cc:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "damien.lemoal@wdc.com" <damien.lemoal@wdc.com>
 References: <1876334901.51676.1630481868266@office.mailbox.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: mailbox.org; dkim=none (message not signed)
- header.d=none;mailbox.org; dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 85002eca-8452-4756-f25c-08d96d20708f
-x-ms-traffictypediagnostic: DM6PR04MB4828:
-x-microsoft-antispam-prvs: <DM6PR04MB4828D3D0E2548847619FEF5EE7CD9@DM6PR04MB4828.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:5236;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: yUgKfyuiemdJHWPKBv6ftjt4Vz5gcTB9y4rrl/siogsPCRVqbIu/q5GO8x2yWJJGDH96xfexG10osfIADlLKx5sDUONQhJaDBL3BjhQ4AadtYK9m6SLFRdZogdv8lzkKhqM+RlZQXwo6jJ0ax1uB0s6oZsXill04z0PkTijySooCge2rAalHOWlzPidfWbJYO+IJELkbx70RsJ7wL/15Jg/mCOYNiP0+FbssUZU5GC4mSpF2FFek5s6PKcwJmCLwqMqDjw+wqhtwzGiSevVo7BMaXJzBw8t8BvNojGfJQIC847uqLtobTV/k6UcLD2qe6XiOb9nBCLmsOJjV6kUBxg9a0/MbglE11XY9sd/usbXDJSnbpY3ZuOjrjPuJmmua1aRAUOx0y6NKatZUnsG1JU8COJ7F5hVUE0b3qi8TPzQGFzTF4yv0cvv2MzuKlzfR9Y+gt3QNV5e/cbgRC3Th/FCRDVO/hz0jTXH8p9eCvNMVesM5isfzgBnpUnaEfl18XVRKjatEckA03x5LWzpKlfvpoz/vLnHFxHIlOk+monZswkHwI6LprTfXFhPew5wbhlZflIdqxVIs1sMT37587OKbhDiI2CrO8YKh1FPFYhWmDoP0vt/aDoKp642BftsVkQLRRFwt+rwLv28xI5a9J5kAydZzrrqWYw0r4j3jcd+AjRc+/LMs2fi48uVoAo1Z7dj0u+qqUzGXQODJcXOMOA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB7081.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(122000001)(6506007)(52536014)(55016002)(38100700002)(5660300002)(508600001)(83380400001)(54906003)(53546011)(7696005)(4326008)(66556008)(86362001)(38070700005)(316002)(4744005)(110136005)(8676002)(64756008)(76116006)(8936002)(66946007)(66476007)(66446008)(186003)(91956017)(2906002)(33656002)(9686003)(71200400001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?ViTzXDfZXioDnbCuE4Fkifl2CwlQXs+XlqkPrKeKE2AfMrTlCxCp18ylszqA?=
- =?us-ascii?Q?52yiuK5QuVVjdMGOMFQPW2RXOqt1Ky0VyMMG9zQAT2dmM9A2HL93XbOm81Pv?=
- =?us-ascii?Q?USXpXBURh41QqrTZJaax2UnGrlcXY1vztdMXVoJlhw1k4gQNsb+RVvcy9843?=
- =?us-ascii?Q?tuvGBAhRun7oa9sC6v75qRmXKWLI24+Y7rI077VPjkpRK94nRt19JPFOcBOW?=
- =?us-ascii?Q?f1zp/4MDbLKDYUJ1dFmqbLiK/UEBgfzQKyU4dXwOoKe2uq/mJetT/W8dW7+7?=
- =?us-ascii?Q?nihq7HoU6Gci43B4nkojEb/YUt9lVueGaAMNut/KBe6WhzADCl7mBIgaGsEG?=
- =?us-ascii?Q?LtvhS2pgbJeBQH4WtDWDOv/0s/s/hRlOxywCvXkHT880IIo3k6PAf1zS/YTE?=
- =?us-ascii?Q?P1YTXwgVs+O4QK16WWNIyle9IgUcLrzwuPluRo6Tn8FY89o+ukaW0RID5TLc?=
- =?us-ascii?Q?D3C6sso5KeFCQ4MavFc7I6+FRa+PTpvBId2gniJ8Qo5ivFSOowAxlffobuU3?=
- =?us-ascii?Q?/Lz/hQx2rqeJvCmy/mvlGMu8CDqBgpSh0IxRWaGFt9kDSwwYKTxPQh5+31+d?=
- =?us-ascii?Q?egkBCUM3+cDnGTg2xUqxdLQZrtqvVgBu2271zpRUmJ3iBRmntkigv6shnVj4?=
- =?us-ascii?Q?MCNv3ADFBjwQVToOzU7aOdIm2eqydjDM+VQxSIKRT4otSYfvaUe9obySCkkH?=
- =?us-ascii?Q?YG1FwFjE40VXZ0dk667VuKe7cNNieoIJ2HC4/0TbnW0J1hl2U9W5249IFrbC?=
- =?us-ascii?Q?FutuzizHpxUhT/OP/FCIMhw5LLZqXkTwUI2ia4HGzBoK3cQUWVTbfQmcrHfl?=
- =?us-ascii?Q?+tHQhzKzdcoQt4CKzI4iD3i04wZI5+xMdvxBLk0sXqlZqR+l5/sG0jx1/y56?=
- =?us-ascii?Q?jjWWOHI9xephTbEbhIK36xuq/TrfNiyVQq7UZU5thsLqy/8l8Cl+QrlwLoUK?=
- =?us-ascii?Q?MIn8nI1Y7juYMlQGDYmUZDMG+VEEBc6Nfjo+U3IcOT+S0o50Ui5TiUrCRvJP?=
- =?us-ascii?Q?hhn/PxbQ/ixzhKMPs+dwnuVAmCG27jQ+lf3o9AaApDtOD6erWu25LBs8JoFE?=
- =?us-ascii?Q?lkERYHjSzb7ikJCF2JJwlltk7id/JaTeIzx4g37A3SwYEnVHhLFN4N59AiSg?=
- =?us-ascii?Q?Kclor4qR3Hut1SEnTrP9DsDb3CtJA0EcB7Kaek3CSc5G0BNDgxoupxdi8mn3?=
- =?us-ascii?Q?l9JUGL4ELIS4DZw0rjjEjsCML3ONVV+mhQVOr8dRTSNQfO9CJNT311yR0KBu?=
- =?us-ascii?Q?AVKiaRNrTGAHXj8fmXSyYXCRUnnCAT6OGWGlNjEtZKKj0uS2hdkUEjkEOHFK?=
- =?us-ascii?Q?IF1uiJaaBRo7FwySD+TsmQxxLzNYMwHP+7Q5ULVr8CLPOmd6zzXTIzZvEADJ?=
- =?us-ascii?Q?olU9gArv+AgduRidto1W9MckNPPvVXUih0EXzwNHrx8hqXFH2A=3D=3D?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+From:   Hans de Goede <hdegoede@redhat.com>
+Message-ID: <e6f9921d-0fb6-da30-4dc5-53b4cb7b5270@redhat.com>
+Date:   Wed, 1 Sep 2021 10:55:37 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB7081.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 85002eca-8452-4756-f25c-08d96d20708f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Sep 2021 08:13:54.2965
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: httnI6zUL0qDwDt5xa4ckleu1XI0dfpu1eYE36qY5OZ7+wl1uYGWeIajWzHuzGwrJjnLYC6q+LapZ+/NxnGG4Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB4828
+In-Reply-To: <1876334901.51676.1630481868266@office.mailbox.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2021/09/01 16:38, torvic9@mailbox.org wrote:=0A=
-> (Sorry for not doing a proper reply)=0A=
-> =0A=
-> Hello,=0A=
-> Noob here.=0A=
-> I have a Samsung 860 Pro connected to a AMD X570 chipset mainboard and=0A=
-> it just works flawlessly on 5.13 and 5.14.=0A=
-> Are you sure that *every* 860/870 is concerned by this problem on=0A=
-> *every* AMD controller? Isn't this too restrictive?=0A=
-> Or am I simply missing something?=0A=
-=0A=
-Is you drive being initialized with NCQ enabled ?=0A=
-=0A=
-cat /sys/block/sdX/device/queue_depth ?=0A=
-=0A=
-> =0A=
-> Thanks,=0A=
-> Tor=0A=
-> =0A=
-=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+Hi Tor,
+
+On 9/1/21 9:37 AM, torvic9@mailbox.org wrote:
+> (Sorry for not doing a proper reply)
+> 
+> Hello,
+> Noob here.
+> I have a Samsung 860 Pro connected to a AMD X570 chipset mainboard and
+> it just works flawlessly on 5.13 and 5.14.
+> Are you sure that *every* 860/870 is concerned by this problem on
+> *every* AMD controller?
+
+I am pretty sure that every 860 / 870 EVO is affected,
+I am not sure if the PRO is also affected.
+
+As for *every* AMD controller, chances are that more recent
+AMD controllers are fine.
+
+We have been trying to resolve various issues with this combo
+for a long time now, see:
+
+https://bugzilla.kernel.org/show_bug.cgi?id=201693
+https://bugzilla.kernel.org/show_bug.cgi?id=203475
+
+> Isn't this too restrictive?
+> Or am I simply missing something?
+
+The problem is that when users are hit by this they end up with
+a non functional system and even fs / data  corruption. Where
+as OTOH disabling NCQ leads to a (significant) performance
+degradation but affected systems will still work fine.
+
+So I believe that it is best to err on the safe side here
+and accept the performance degradation as a trade-of for
+fixing the fs / data corruption.
+
+With that said, I do believe that we should allow re-enabling
+ncq on this combo through libata.force on the kernel cmdline
+by adding this extra bit to the patch:
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6136,6 +6136,8 @@ static int __init ata_parse_force_one(char **cur,
+ 		{ "ncq",	.horkage_off	= ATA_HORKAGE_NONCQ },
+ 		{ "noncqtrim",	.horkage_on	= ATA_HORKAGE_NO_NCQ_TRIM },
+ 		{ "ncqtrim",	.horkage_off	= ATA_HORKAGE_NO_NCQ_TRIM },
++		{ "noncqamd",	.horkage_on	= ATA_HORKAGE_NO_NCQ_ON_AMD },
++		{ "ncqamd",	.horkage_off	= ATA_HORKAGE_NO_NCQ_ON_AMD },
+ 		{ "dump_id",	.horkage_on	= ATA_HORKAGE_DUMP_ID },
+ 		{ "pio0",	.xfer_mask	= 1 << (ATA_SHIFT_PIO + 0) },
+ 		{ "pio1",	.xfer_mask	= 1 << (ATA_SHIFT_PIO + 1) },
+
+And I will also add a comment to both linked bugs to see if we can maybe
+exclude the pro models from this quirk and if we can maybe narrow it down
+to a subset of the AMD SATA controllers.
+
+But that narrowing down is probably best done as a follow up fix, while just
+going with this "err on the safe side" approach for now.
+
+Regards,
+
+Hans
+
