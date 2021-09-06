@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7E21C43219
-	for <linux-ide@archiver.kernel.org>; Mon,  6 Sep 2021 01:31:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A289C4167D
+	for <linux-ide@archiver.kernel.org>; Mon,  6 Sep 2021 01:31:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A305960EBA
-	for <linux-ide@archiver.kernel.org>; Mon,  6 Sep 2021 01:31:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1460561051
+	for <linux-ide@archiver.kernel.org>; Mon,  6 Sep 2021 01:31:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240797AbhIFBcT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 5 Sep 2021 21:32:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46996 "EHLO mail.kernel.org"
+        id S241085AbhIFBcW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 5 Sep 2021 21:32:22 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47528 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S240375AbhIFB3D (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sun, 5 Sep 2021 21:29:03 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3887861130;
-        Mon,  6 Sep 2021 01:23:09 +0000 (UTC)
+        id S1351401AbhIFBa0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sun, 5 Sep 2021 21:30:26 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id EC7AE611AD;
+        Mon,  6 Sep 2021 01:23:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630891390;
-        bh=t69di5wsk9zap04vJghr7ora4FQh2E8rzBla83neAiU=;
+        s=k20201202; t=1630891422;
+        bh=oTBW6XUuhknbqKs+Jvdfwrz8zVlzu29Nj5RUC1hNxZA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MF96sIRb4+M0td3N2RHkBGdz7FwTh4cTckqleEeBlgCrUqkz1YlWmpoxWV80wLXOv
-         74u5hBj2rRLy1CZU62ip2Utdu53v2br3kRJlIyoTJIVQCepPij7NjDq3V9Tr0S0mer
-         bQjaerDVq4T06hMAn88yd+XbKaU/bLnAeC7l3A9wGBp9YFyL7+EI46JloHNdm2QBVE
-         xRJfbyG5xxQOjtfdKNVjaTbXh5vdZ/uUdUrcxaazWXvxS1P6hqfNluLTc45FEWDh1o
-         krj3yH8ja5hBc4vryd/PS2Lwr3AwOk+0DYvaEsoP5Nk/g1GuZ8rV8SRhKYAwuR9/Fh
-         RyU6CuVfYkjKg==
+        b=PdeAb364ScRObp70pqqlVo/GyIrfGE09f6LlR4eQQjNt/6FPM5Y74xHBq4weDzdGJ
+         PCrvrvVYruaqZaMgwvwTEfzcUdQRG9xJ9zD1/D5DL8iYj8JzxmfEeyR1lTGe4ago/w
+         Get1ZqbfTdlBP5s7Rbe3uxoVpwv/puHmUr5q0mCE3bg9k1uJk5PxlzIAwcDJbDFHhy
+         kC+lL7TWvIkQmOCwQtBNzZ1jbTna5ki0HS7lstwGr7ueGeg3PRMFFiSp7NTGjaMwvF
+         13eI/brSsdfxlgqzV2GpY08dXl9wg4rRnbLVYveTN0p9H37KyhNqo83UwQEZKA1bnK
+         JcjYBjmtEKtXg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Damien Le Moal <damien.lemoal@wdc.com>,
         kernel test robot <lkp@intel.com>,
         Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
         Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 21/30] libata: fix ata_host_start()
-Date:   Sun,  5 Sep 2021 21:22:34 -0400
-Message-Id: <20210906012244.930338-21-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 16/23] libata: fix ata_host_start()
+Date:   Sun,  5 Sep 2021 21:23:15 -0400
+Message-Id: <20210906012322.930668-16-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210906012244.930338-1-sashal@kernel.org>
-References: <20210906012244.930338-1-sashal@kernel.org>
+In-Reply-To: <20210906012322.930668-1-sashal@kernel.org>
+References: <20210906012322.930668-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -70,10 +70,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index f67b3fb33d57..7788af0ca109 100644
+index db1d86af21b4..d9b1c3e95592 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -6394,7 +6394,7 @@ int ata_host_start(struct ata_host *host)
+@@ -6412,7 +6412,7 @@ int ata_host_start(struct ata_host *host)
  			have_stop = 1;
  	}
  
