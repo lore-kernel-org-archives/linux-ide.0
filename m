@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4812EC4332F
-	for <linux-ide@archiver.kernel.org>; Mon,  6 Sep 2021 01:23:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 177A1C43217
+	for <linux-ide@archiver.kernel.org>; Mon,  6 Sep 2021 01:26:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 32DC2611CA
-	for <linux-ide@archiver.kernel.org>; Mon,  6 Sep 2021 01:23:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F32C660F45
+	for <linux-ide@archiver.kernel.org>; Mon,  6 Sep 2021 01:26:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239278AbhIFBYV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 5 Sep 2021 21:24:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39130 "EHLO mail.kernel.org"
+        id S241130AbhIFB15 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 5 Sep 2021 21:27:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39352 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239524AbhIFBXA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sun, 5 Sep 2021 21:23:00 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 48D6461107;
-        Mon,  6 Sep 2021 01:21:26 +0000 (UTC)
+        id S240488AbhIFBZk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sun, 5 Sep 2021 21:25:40 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9CD9761106;
+        Mon,  6 Sep 2021 01:22:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630891287;
+        s=k20201202; t=1630891345;
         bh=E7xl6sl5aXICv+yvtADSMdwGsKCvfw4DCGPr4TIpfMQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=JmIGBPuY+2KZc74N0W560/ohCMDKWtjoI+A6M0o4ZS4fUJo8910CZTFhHoiTBvnyc
-         NyCSURdtv23Drqo3RuRZOCJdeSk40nLvS+7/vcXL3Mw4hk2o/6fLjGeGoLZi7CfDRe
-         nJHFZ4RUtDdagNalNALJ1xdEH9HMaYWyohxMsctsN/jV5EkQrfaZTH3zqh9xwSrd4u
-         HZ3uOsLVhlJp0y/BRxYJ6gs+J1gHNvoyLb70fUojneKdzrKwzmH3AusMx8mOFvtvTs
-         oKFoXP0AHA7FCwztJtPztdHzIdwSVypWjuED2dTrERMiQLYtUk9tkgKO6S8S+C8XtF
-         XO3/fJMJ1gqqw==
+        b=MyIsmEZCA+0eWeV8C2pRx/OS4C26jjaVR0r3GrzXXg7MoFxZwF7jbN0lPKk24IUji
+         WarlFifdmssB4digpjhnwZKmyaPKI+VkRdlg6WVb2Gs4ft1KQHdZPi7d5qyFOE8vRf
+         5cf7ZtoyrsETR8jS6qOTio6S8syc30ttew9xLURDmidLFNHD16kXScN3x8TPgXjI7h
+         7ri4CwqWZQ/6GZQHCElhsjPZGSX5Jgqw2SsBdX5qKM+UtxQt9j5TnuhaaRIUe5uuTJ
+         agLvkd/bTKb3Emr4kVwZYHwp6aF35x7av2pced04fLkKYu8xvOjhc2wy2mbnls5w/d
+         eMiOFV8FP8XSg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Damien Le Moal <damien.lemoal@wdc.com>,
         kernel test robot <lkp@intel.com>,
         Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
         Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 27/46] libata: fix ata_host_start()
-Date:   Sun,  5 Sep 2021 21:20:32 -0400
-Message-Id: <20210906012052.929174-27-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 26/39] libata: fix ata_host_start()
+Date:   Sun,  5 Sep 2021 21:21:40 -0400
+Message-Id: <20210906012153.929962-26-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210906012052.929174-1-sashal@kernel.org>
-References: <20210906012052.929174-1-sashal@kernel.org>
+In-Reply-To: <20210906012153.929962-1-sashal@kernel.org>
+References: <20210906012153.929962-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
