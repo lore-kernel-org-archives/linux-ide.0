@@ -2,63 +2,98 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58863C433EF
-	for <linux-ide@archiver.kernel.org>; Mon,  6 Sep 2021 17:15:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07400C433FE
+	for <linux-ide@archiver.kernel.org>; Mon,  6 Sep 2021 17:38:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 42B2060EE6
-	for <linux-ide@archiver.kernel.org>; Mon,  6 Sep 2021 17:15:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1EFD6103B
+	for <linux-ide@archiver.kernel.org>; Mon,  6 Sep 2021 17:38:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243874AbhIFRQa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 6 Sep 2021 13:16:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37648 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243812AbhIFRQa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 6 Sep 2021 13:16:30 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id 4E27661004;
-        Mon,  6 Sep 2021 17:15:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1630948525;
-        bh=NHszRdsEugz7z7nOZ9Ux5N0HWFK1Me9ttTcD1MhbnWo=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=IrFL8wE+dFfqNnVejAu9gT0dDrPqVdocQBOn3Tp6TL0u/dvABf5VSVAWc5uyqG3Q1
-         fCMziba+oZJi4XbzMn1Lbsp69T/z2IWdDafIFUC4YvoTaOiO4k9F4s3l1a1nwTXnGB
-         a+GWb+4GJYgRoy4kiLkKPDd4H+SJKU2iHz9dVZdna+LkK0dJCmlHvPPvBjBRShk/au
-         WlKCMjrsqJlEKi0fQski5QFRzK0lxhJVIYgHfntM8XsIsd766GDGrJYNdd17SFMuAm
-         8Ljrjkv2SCotXL4q6BuJMGIGiVgzysT3ijda77Jb2LL2OriQ9Mm/s9sG2ESkpYyp7r
-         3syqxi/+LhQQg==
-Subject: Re: [GIT PULL] libata fixes for 5.15-rc1
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <9004cd72-d5a7-da36-10c0-7ef80d222950@kernel.dk>
-References: <9004cd72-d5a7-da36-10c0-7ef80d222950@kernel.dk>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <9004cd72-d5a7-da36-10c0-7ef80d222950@kernel.dk>
-X-PR-Tracked-Remote: git://git.kernel.dk/linux-block.git tags/libata-5.15-2021-09-05
-X-PR-Tracked-Commit-Id: 7a8526a5cd51cf5f070310c6c37dd7293334ac49
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: eebb4159a2bf660b545ecb6ee318179971d610a2
-Message-Id: <163094852529.9377.11013413572782361337.pr-tracker-bot@kernel.org>
-Date:   Mon, 06 Sep 2021 17:15:25 +0000
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        ALWAYS copy <linux-ide@vger.kernel.org>
+        id S244197AbhIFRkA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 6 Sep 2021 13:40:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47702 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237281AbhIFRj7 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 6 Sep 2021 13:39:59 -0400
+Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 67A99C061757
+        for <linux-ide@vger.kernel.org>; Mon,  6 Sep 2021 10:38:54 -0700 (PDT)
+Received: by mail-pj1-x102e.google.com with SMTP id j10-20020a17090a94ca00b00181f17b7ef7so4659832pjw.2
+        for <linux-ide@vger.kernel.org>; Mon, 06 Sep 2021 10:38:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:references:from:message-id:date:user-agent:mime-version
+         :in-reply-to:content-language:content-transfer-encoding;
+        bh=sQHkWdbNwQL+km/anEAO4GkAw1yDfLqfvOkzncIGzQs=;
+        b=hkZiYTI7ITLho6KNgNMXS3Fojm3uLGt2wMEGeP/KT/1WA9ObXGUmNfae9U7na0E/FN
+         pgFNLPgsmgMsBHwn/CrJrUHyEahtdPY0Dqb6Taw/JA2Or6xMfDyf/Q4quQch6i5a6T0f
+         z8G1o755xM1YG5ooQd8blQN2vfEiV3P2Kh/a6fdhBDh9brcsyKKSJRL1JtEsjTgCTfbo
+         NZ9zzc3RNYRT2g/y8So3niUUGgrTFHh7tFi0vu+8XmdFPMgWhX+PpIum0ODEGf1wJkIp
+         8l9RczsPGbkvSi0EpTuyOjPVcBPm1KLbMUg5ReYFqiYRGsVNdISgi2pAf5IDMf0Q0zuT
+         QbpQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=sQHkWdbNwQL+km/anEAO4GkAw1yDfLqfvOkzncIGzQs=;
+        b=typsCTzamy725dVp03glpttRYs8YA0zsiOEqNq1ZtQU4JqGc9R9lAPO7jC8RNntI2Y
+         icMjTIIUuPz1UIAyKSnaB6Meft81pzzAywjDxH5ZE4QVmKVmyHNyCEDXVMQwJMiqUlL+
+         rk+SyQDtBxoXn/2NewSxhDN/KDmmfxzcgYgv1YZJSDBKhh6T1NIpSAdqf2oOgH4XOJDy
+         RKKjlu1yuUHyT+vPIapdZ5Zd3lsXatTUiMTsvQCyyHtJxIvIiatGEnQGp8+Vy1G42cSm
+         g0BoIHGdnsW4QTZ1ZTEnwfR85NG4TAJt7fYBYI5SZTGg/0PJBWuSHHlypVw0ZgQIJHdj
+         0ZZw==
+X-Gm-Message-State: AOAM5310N8DMqc/yxlBOSxkRbxVl26TfU6nEPXboEbfUX6IfLGlU2IL8
+        ROT5r+VFJfcTdFuo/pO2MQ9JBg==
+X-Google-Smtp-Source: ABdhPJxuIE2RpHMVps8Sa+gF25x2LZ3amjCLjaUwGyvy6FRnJ8jf0971TypSPxvLWdevF0Bx6gmEcQ==
+X-Received: by 2002:a17:90b:2212:: with SMTP id kw18mr230767pjb.59.1630949933839;
+        Mon, 06 Sep 2021 10:38:53 -0700 (PDT)
+Received: from [192.168.4.41] (cpe-72-132-29-68.dc.res.rr.com. [72.132.29.68])
+        by smtp.gmail.com with ESMTPSA id n15sm8579420pff.149.2021.09.06.10.38.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 06 Sep 2021 10:38:53 -0700 (PDT)
+Subject: Re: [PATCH v7 1/5] block: Add independent access ranges support
+To:     Damien Le Moal <damien.lemoal@wdc.com>,
+        linux-block@vger.kernel.org, linux-ide@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+References: <20210906015810.732799-1-damien.lemoal@wdc.com>
+ <20210906015810.732799-2-damien.lemoal@wdc.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <9a253efe-d924-a8a8-10ac-c2787ce34cb7@kernel.dk>
+Date:   Mon, 6 Sep 2021 11:38:50 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
+MIME-Version: 1.0
+In-Reply-To: <20210906015810.732799-2-damien.lemoal@wdc.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The pull request you sent on Sun, 5 Sep 2021 12:57:29 -0600:
+On 9/5/21 7:58 PM, Damien Le Moal wrote:
+> struct blk_independent_access_ranges contains kobjects (struct kobject)
+> to expose to the user through sysfs the set of independent access ranges
+> supported by a device. When the device is initialized, sysfs
+> registration of the ranges information is done from blk_register_queue()
+> using the block layer internal function disk_register_iaranges(). If a
+> driver calls disk_set_iaranges() for a registered queue, e.g. when a
+> device is revalidated, disk_set_iaranges() will execute
+> disk_register_iaranges() to update the sysfs attribute files.
 
-> git://git.kernel.dk/linux-block.git tags/libata-5.15-2021-09-05
+I really detest the iaranges "name", it's horribly illegible. If you
+want to stick with the ia thing, then disk_register_ia_ranges() would be
+a lot better (though still horrible, imho, just less so).
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/eebb4159a2bf660b545ecb6ee318179971d610a2
-
-Thank you!
+Same goes for blk-iaranges, we really need to come up with something
+more descriptive here.
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Jens Axboe
+
