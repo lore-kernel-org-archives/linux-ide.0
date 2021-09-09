@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64FBCC28B22
-	for <linux-ide@archiver.kernel.org>; Thu,  9 Sep 2021 12:36:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61FCCC433F5
+	for <linux-ide@archiver.kernel.org>; Thu,  9 Sep 2021 12:51:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 52233611BF
-	for <linux-ide@archiver.kernel.org>; Thu,  9 Sep 2021 12:36:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D641611BF
+	for <linux-ide@archiver.kernel.org>; Thu,  9 Sep 2021 12:51:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353311AbhIIMhN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 9 Sep 2021 08:37:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39522 "EHLO mail.kernel.org"
+        id S1349736AbhIIMwh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 9 Sep 2021 08:52:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60536 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1354239AbhIIMaR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 9 Sep 2021 08:30:17 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 51EC861B3F;
-        Thu,  9 Sep 2021 11:52:34 +0000 (UTC)
+        id S1355289AbhIIMpF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 9 Sep 2021 08:45:05 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 71A2D6320D;
+        Thu,  9 Sep 2021 11:55:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631188355;
+        s=k20201202; t=1631188559;
         bh=R5DxAoygujqDzBMuS+3iVJzTamDZS/jf4GHwAfptkMg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=vNyMfprS0NaKjZfPS3sasZwIXnS7gsdghlw8ro7upvlFhDtH3HoIevwjrshQKwFU/
-         8g134M8D8JhS/n6EmrgtF4jRmou6Zk4LD55N39Q1hN+BKB+sOE39WXLYjjkfuPnwHz
-         ZboIKz9kBs01yi6QFxCkZgmZ7NFlKGjtj9q5eO/24/NREWc3geeU0eC+O+fGsF258Q
-         7+LkP53Y3NJf+gipJLjRTWn+5NFsFCpm8fX1N25GfrlDbkbjaHQeH49w3/6sw4K9mD
-         36EOz19ANU2hBJ84+vUnvzaq6FPghCYnTH9OjJAACfqkynJ/RgeoyvSV02IAUTCI1j
-         1ibT+KOav5peA==
+        b=Ebw0pZuBkSvFynylJEQ9zcDdWFbuY6MoyUBJoIm6adZLme6JRxs3DopOqxbcLA0az
+         mMHSm+mJF7q2VAbX/pCI/HE+vYTTqq18szOG+ZpqZy3IrJ/+ApEFGSOsvMfs4b+Iez
+         W8vQSUbbZY/n9gWwqjVx9xTKgYojr8KD+TCP53nCrg7M84hrmG4eGPDbq9vHHvO+Jo
+         tIlxuJhPsw05t57hlKGHa9NJmuzxL27lpgdbDSemlPnwTW43OmmpUySzk/hAUJvy74
+         lyvilWF7PCYt8+mp5VpVuutZv4Sn5q2D+XVAFM2aUli0Ab7V6qBItz9JKt3bbT8hZH
+         3L6ExH/3qwQtA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
         Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
         linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 060/176] ata: sata_dwc_460ex: No need to call phy_exit() befre phy_init()
-Date:   Thu,  9 Sep 2021 07:49:22 -0400
-Message-Id: <20210909115118.146181-60-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 041/109] ata: sata_dwc_460ex: No need to call phy_exit() befre phy_init()
+Date:   Thu,  9 Sep 2021 07:53:58 -0400
+Message-Id: <20210909115507.147917-41-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210909115118.146181-1-sashal@kernel.org>
-References: <20210909115118.146181-1-sashal@kernel.org>
+In-Reply-To: <20210909115507.147917-1-sashal@kernel.org>
+References: <20210909115507.147917-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
