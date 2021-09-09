@@ -2,108 +2,104 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F04EC433FE
-	for <linux-ide@archiver.kernel.org>; Thu,  9 Sep 2021 06:00:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DA17C433EF
+	for <linux-ide@archiver.kernel.org>; Thu,  9 Sep 2021 11:49:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 531C661176
-	for <linux-ide@archiver.kernel.org>; Thu,  9 Sep 2021 06:00:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7777961A7B
+	for <linux-ide@archiver.kernel.org>; Thu,  9 Sep 2021 11:49:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350986AbhIIGB3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 9 Sep 2021 02:01:29 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:57332 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350955AbhIIGB2 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Sep 2021 02:01:28 -0400
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id E6FDE21D77;
-        Thu,  9 Sep 2021 06:00:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1631167218; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=z9QpcSoWNbfBgZAsVg1wXH4mwz6iiOGa/E6IWp3n3FY=;
-        b=VF1UQ1nTWPCZvi+tuR/palL+9UJEzynxXXXcNIrmDI0/f8onbbhsxI96yTWHaGl6NV6DVj
-        /kqsRCvbBQc462mHGDjMeg/Vy5cJo6DtF8VTyw8ZbrIbvnA/EIiBzzwtMEg3aFHJsXnf57
-        h6576FbTXIPXAZdywrkuMd/nwNGDxws=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1631167218;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=z9QpcSoWNbfBgZAsVg1wXH4mwz6iiOGa/E6IWp3n3FY=;
-        b=Vw4dR57QZQiapMPsBSa8KvrUWmaPIp7xOcPkF82qlFqTB6JNQ/1IvldLKsxCujqalY2jn1
-        qZIuqanhnKJnmaBQ==
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id BF4D113A61;
-        Thu,  9 Sep 2021 06:00:18 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap1.suse-dmz.suse.de with ESMTPSA
-        id mEx6LfKiOWHLVwAAGKfGzw
-        (envelope-from <hare@suse.de>); Thu, 09 Sep 2021 06:00:18 +0000
-Subject: Re: [PATCH v8 2/5] scsi: sd: add concurrent positioning ranges
- support
-To:     Damien Le Moal <damien.lemoal@wdc.com>,
-        Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-References: <20210909023545.1101672-1-damien.lemoal@wdc.com>
- <20210909023545.1101672-3-damien.lemoal@wdc.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <e6fb552e-69f7-56ca-24d6-28ebcd2537c6@suse.de>
-Date:   Thu, 9 Sep 2021 08:00:16 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        id S236553AbhIILup (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 9 Sep 2021 07:50:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46486 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S240926AbhIILqa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 9 Sep 2021 07:46:30 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C6F286124C;
+        Thu,  9 Sep 2021 11:42:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1631187777;
+        bh=0SQO3dsOesV/b1l38s4e7bxFqHBn1nCeqqbt7vgjWlU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=LrV0x7MAwV1BG6sAiQWpHyvEcm0n75rXUedL5QM0JbS39IIawhlrYi/oV8f6psC2j
+         8TtolSFdbFrrkc5FlT6KDDrqcF+zV5Pe7gGPECNdXV4997wMKwpfaPMRI2c7Z5a2h9
+         ttF2WgK9R+QAq0fI9WetV8YfId9oKoxtuKkXrGDys5Al6hLLxyqehJlCzJJIrQiQZu
+         8EF6Q68HuT1Se2P0i0Qy4szM+NbJbPMuKMl2m0yrEOui5d7x+cxkjJcXr6UcFg3v0J
+         lpZH0kUeUE+4hPv8bIhIIkJRqwD41U4XbGkivkntCvfwn+ynxuBS7D4yFog5VfU6Fr
+         NrCLqvcK2Kkpw==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
+        linux-ide@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.14 087/252] ata: sata_dwc_460ex: No need to call phy_exit() befre phy_init()
+Date:   Thu,  9 Sep 2021 07:38:21 -0400
+Message-Id: <20210909114106.141462-87-sashal@kernel.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210909114106.141462-1-sashal@kernel.org>
+References: <20210909114106.141462-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20210909023545.1101672-3-damien.lemoal@wdc.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 9/9/21 4:35 AM, Damien Le Moal wrote:
-> Add the sd_read_cpr() function to the sd scsi disk driver to discover
-> if a device has multiple concurrent positioning ranges (i.e. multiple
-> actuators on an HDD). The existence of VPD page B9h indicates if a
-> device has multiple concurrent positioning ranges. The page content
-> describes each range supported by the device.
-> 
-> sd_read_cpr() is called from sd_revalidate_disk() and uses the block
-> layer functions disk_alloc_independent_access_ranges() and
-> disk_set_independent_access_ranges() to represent the set of actuators
-> of the device as independent access ranges.
-> 
-> The format of the Concurrent Positioning Ranges VPD page B9h is defined
-> in section 6.6.6 of SBC-5.
-> 
-> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-> ---
->   drivers/scsi/sd.c | 81 +++++++++++++++++++++++++++++++++++++++++++++++
->   drivers/scsi/sd.h |  1 +
->   2 files changed, 82 insertions(+)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Cheers,
+[ Upstream commit 3ad4a31620355358316fa08fcfab37b9d6c33347 ]
 
-Hannes
+Last change to device managed APIs cleaned up error path to simple phy_exit()
+call, which in some cases has been executed with NULL parameter. This per se
+is not a problem, but rather logical misconception: no need to free resource
+when it's for sure has not been allocated yet. Fix the driver accordingly.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Link: https://lore.kernel.org/r/20210727125130.19977-1-andriy.shevchenko@linux.intel.com
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/ata/sata_dwc_460ex.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index f0ef844428bb..338c2e50f759 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -1259,24 +1259,20 @@ static int sata_dwc_probe(struct platform_device *ofdev)
+ 	irq = irq_of_parse_and_map(np, 0);
+ 	if (irq == NO_IRQ) {
+ 		dev_err(&ofdev->dev, "no SATA DMA irq\n");
+-		err = -ENODEV;
+-		goto error_out;
++		return -ENODEV;
+ 	}
+ 
+ #ifdef CONFIG_SATA_DWC_OLD_DMA
+ 	if (!of_find_property(np, "dmas", NULL)) {
+ 		err = sata_dwc_dma_init_old(ofdev, hsdev);
+ 		if (err)
+-			goto error_out;
++			return err;
+ 	}
+ #endif
+ 
+ 	hsdev->phy = devm_phy_optional_get(hsdev->dev, "sata-phy");
+-	if (IS_ERR(hsdev->phy)) {
+-		err = PTR_ERR(hsdev->phy);
+-		hsdev->phy = NULL;
+-		goto error_out;
+-	}
++	if (IS_ERR(hsdev->phy))
++		return PTR_ERR(hsdev->phy);
+ 
+ 	err = phy_init(hsdev->phy);
+ 	if (err)
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+2.30.2
+
