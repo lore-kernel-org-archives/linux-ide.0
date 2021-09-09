@@ -2,94 +2,162 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AA5FC4332F
-	for <linux-ide@archiver.kernel.org>; Thu,  9 Sep 2021 02:36:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64F5AC433EF
+	for <linux-ide@archiver.kernel.org>; Thu,  9 Sep 2021 05:59:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 333A16101A
-	for <linux-ide@archiver.kernel.org>; Thu,  9 Sep 2021 02:36:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4383661167
+	for <linux-ide@archiver.kernel.org>; Thu,  9 Sep 2021 05:59:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231898AbhIIChK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 8 Sep 2021 22:37:10 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:42529 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236247AbhIIChC (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Sep 2021 22:37:02 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1631154954; x=1662690954;
-  h=from:to:subject:date:message-id:in-reply-to:references:
-   mime-version:content-transfer-encoding;
-  bh=3JeErjhCOeicdhDxDeTDah+4oAV2vjbhTuPsGM0V3P0=;
-  b=MtitKjQxrqFuhpNYgm87CQNuLvdcxNrnV9J3vovzO1mKEtTH3SiVjxud
-   YhML5HG/Lch3xd4I/vwbcZTKkpcpd8+nDXteGR4ph1hhPQexyPaBcut8D
-   RhM/xCmHpl0fltahJkJfWQdMqBkFJPDRv4XrRyLnQ29L1RCsPtaGQ6jAO
-   htOfDVHbtOFIBnATj+QXc9RXdmewG82+mT3zLqCDeuqC6g+fMtyRDd8Jl
-   kB6+aMHtrjCyZGKmv3nvrZggxJ/2qBm7twSIytT7zBQjXUvb2ifCXiRkt
-   yinoqpWXW4NFLWcvt27ybeIytXcfEdEAdN8/QOvGbGGNcl77ZtidpW8p7
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.85,279,1624291200"; 
-   d="scan'208";a="180062219"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 09 Sep 2021 10:35:53 +0800
-IronPort-SDR: EXYvubKZgZJpPiq+j2YPIuOWpFkDl3SZ2tazwzFMyGRQUt4CdP+BiAOaGUIlG9JDnjA9QuNny3
- ztbqfJ5Qk51xjmtNweUJzhETollwpMU8o+nkU8uie36XK/5giFXoLrhTMFSJywFg2wdJQRgeDK
- 4ct0haURdnG0dtIm7hGGnzH33c3Ca/ie0nadN9GVQTH9vQPKLDEBVO7GIfvJCZlSRRjiRvZpng
- t3zIOMNEGHyeqYn+GiSHBtVKH40To3KFxlpLUCJzQnxmUf2oiOh7R4M/0FM6C+0a2ndsLq5ceO
- WVFsaHXbgDgrgLdkQKf1udMe
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Sep 2021 19:12:28 -0700
-IronPort-SDR: mR7H0Nr8Gkjfb5QWSVCaYbWG5kQ/0nkzNG0jw7yK8YkHxz9HsSGaX5s4FEeoLrhzKNQiIt7027
- HEjcghKhYl0bSNyxZr/4Ppw2EnGn+mzUwVVUsahQwhB7ySpkwrgkG69X6RbfckKGp+qER3GyMa
- KLcjiFlEQ//rI2h+qYM+n5ai0mD1lb75+cImfHLIJpN5sXQbRjx6m9rcG/Ng+OWNyUtuQUmhl1
- 3QtE4K1b6tHZZWY8BJ9ZPU3SRTdSy1cUiOTFk7Huc4MRXb3lMAQ1Kysh7yN/reVvF+dKqzt83B
- AVY=
-WDCIronportException: Internal
-Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip02.wdc.com with ESMTP; 08 Sep 2021 19:35:52 -0700
-From:   Damien Le Moal <damien.lemoal@wdc.com>
-To:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        id S1350953AbhIIGBA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 9 Sep 2021 02:01:00 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:37596 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S244990AbhIIGBA (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Sep 2021 02:01:00 -0400
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 225CD1FDD4;
+        Thu,  9 Sep 2021 05:59:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1631167190; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=IlkJBr+7WVZFmgT9pPY949rtwb3yBycp/VGsCqFWLIk=;
+        b=qy1YK9vgU2x6y660tulXSQomlBZxI/4Dr17f+4DR1RtCOdrp5KbJcx9vsPteFoxmycD+38
+        5fEz3TufhFWFE1lLiR3PA3mW9IdDrGjNxsyuekMI2Lr+vzoHBeXpgBxkJyXzqfUKiwpYAI
+        avMXCkRhdDYK8kmb6kD1M2yC1QzomZw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1631167190;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=IlkJBr+7WVZFmgT9pPY949rtwb3yBycp/VGsCqFWLIk=;
+        b=eObPCfEXPMNMzfPq1JemfVF/xnCupBhx0Rmw4B2t6AGba2qM6+bQp4HGg0uy3+uzYc5Smq
+        lj0fL1rJwPReFECg==
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id E824913A61;
+        Thu,  9 Sep 2021 05:59:49 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap1.suse-dmz.suse.de with ESMTPSA
+        id llrHNNWiOWGNVwAAGKfGzw
+        (envelope-from <hare@suse.de>); Thu, 09 Sep 2021 05:59:49 +0000
+Subject: Re: [PATCH v8 1/5] block: Add independent access ranges support
+To:     Damien Le Moal <damien.lemoal@wdc.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
         linux-ide@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH v8 5/5] doc: Fix typo in request queue sysfs documentation
-Date:   Thu,  9 Sep 2021 11:35:45 +0900
-Message-Id: <20210909023545.1101672-6-damien.lemoal@wdc.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210909023545.1101672-1-damien.lemoal@wdc.com>
 References: <20210909023545.1101672-1-damien.lemoal@wdc.com>
+ <20210909023545.1101672-2-damien.lemoal@wdc.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <d708e1a9-f8ad-e8f9-4d21-c2fca8cb4de7@suse.de>
+Date:   Thu, 9 Sep 2021 07:59:48 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
+In-Reply-To: <20210909023545.1101672-2-damien.lemoal@wdc.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Fix a typo (are -> as) in the introduction paragraph of
-Documentation/block/queue-sysfs.rst.
+On 9/9/21 4:35 AM, Damien Le Moal wrote:
+> The Concurrent Positioning Ranges VPD page (for SCSI) and data log page
+> (for ATA) contain parameters describing the set of contiguous LBAs that
+> can be served independently by a single LUN multi-actuator hard-disk.
+> Similarly, a logically defined block device composed of multiple disks
+> can in some cases execute requests directed at different sector ranges
+> in parallel. A dm-linear device aggregating 2 block devices together is
+> an example.
+> 
+> This patch implements support for exposing a block device independent
+> access ranges to the user through sysfs to allow optimizing device
+> accesses to increase performance.
+> 
+> To describe the set of independent sector ranges of a device (actuators
+> of a multi-actuator HDDs or table entries of a dm-linear device),
+> The type struct blk_independent_access_ranges is introduced. This
+> structure describes the sector ranges using an array of
+> struct blk_independent_access_range structures. This range structure
+> defines the start sector and number of sectors of the access range.
+> The ranges in the array cannot overlap and must contain all sectors
+> within the device capacity.
+> 
+> The function disk_set_independent_access_ranges() allows a device
+> driver to signal to the block layer that a device has multiple
+> independent access ranges.  In this case, a struct
+> blk_independent_access_ranges is attached to the device request queue
+> by the function disk_set_independent_access_ranges(). The function
+> disk_alloc_independent_access_ranges() is provided for drivers to
+> allocate this structure.
+> 
+> struct blk_independent_access_ranges contains kobjects (struct kobject)
+> to expose to the user through sysfs the set of independent access ranges
+> supported by a device. When the device is initialized, sysfs
+> registration of the ranges information is done from blk_register_queue()
+> using the block layer internal function
+> disk_register_independent_access_ranges(). If a driver calls
+> disk_set_independent_access_ranges() for a registered queue, e.g. when a
+> device is revalidated, disk_set_independent_access_ranges() will execute
+> disk_register_independent_access_ranges() to update the sysfs attribute
+> files.  The sysfs file structure created starts from the
+> independent_access_ranges sub-directory and contains the start sector
+> and number of sectors of each range, with the information for each range
+> grouped in numbered sub-directories.
+> 
+> E.g. for a dual actuator HDD, the user sees:
+> 
+> $ tree /sys/block/sdk/queue/independent_access_ranges/
+> /sys/block/sdk/queue/independent_access_ranges/
+> |-- 0
+> |   |-- nr_sectors
+> |   `-- sector
+> `-- 1
+>      |-- nr_sectors
+>      `-- sector
+> 
+> For a regular device with a single access range, the
+> independent_access_ranges sysfs directory does not exist.
+> 
+> Device revalidation may lead to changes to this structure and to the
+> attribute values. When manipulated, the queue sysfs_lock and
+> sysfs_dir_lock mutexes are held for atomicity, similarly to how the
+> blk-mq and elevator sysfs queue sub-directories are protected.
+> 
+> The code related to the management of independent access ranges is
+> added in the new file block/blk-ia-ranges.c.
+> 
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+> ---
+>   block/Makefile         |   2 +-
+>   block/blk-ia-ranges.c  | 348 +++++++++++++++++++++++++++++++++++++++++
+>   block/blk-sysfs.c      |  26 ++-
+>   block/blk.h            |   4 +
+>   include/linux/blkdev.h |  39 +++++
+>   5 files changed, 410 insertions(+), 9 deletions(-)
+>   create mode 100644 block/blk-ia-ranges.c
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
----
- Documentation/block/queue-sysfs.rst | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Cheers,
 
-diff --git a/Documentation/block/queue-sysfs.rst b/Documentation/block/queue-sysfs.rst
-index b6e8983d8eda..e8c74306f70a 100644
---- a/Documentation/block/queue-sysfs.rst
-+++ b/Documentation/block/queue-sysfs.rst
-@@ -4,7 +4,7 @@ Queue sysfs files
- 
- This text file will detail the queue files that are located in the sysfs tree
- for each block device. Note that stacked devices typically do not export
--any settings, since their queue merely functions are a remapping target.
-+any settings, since their queue merely functions as a remapping target.
- These files are the ones found in the /sys/block/xxx/queue/ directory.
- 
- Files denoted with a RO postfix are readonly and the RW postfix means
+Hannes
 -- 
-2.31.1
-
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
