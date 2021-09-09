@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37A96C433F5
-	for <linux-ide@archiver.kernel.org>; Thu,  9 Sep 2021 12:12:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64FBCC28B22
+	for <linux-ide@archiver.kernel.org>; Thu,  9 Sep 2021 12:36:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F97C61132
-	for <linux-ide@archiver.kernel.org>; Thu,  9 Sep 2021 12:12:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52233611BF
+	for <linux-ide@archiver.kernel.org>; Thu,  9 Sep 2021 12:36:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349970AbhIIMNI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 9 Sep 2021 08:13:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47324 "EHLO mail.kernel.org"
+        id S1353311AbhIIMhN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 9 Sep 2021 08:37:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39522 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1351154AbhIIMJj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 9 Sep 2021 08:09:39 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 11316619E0;
-        Thu,  9 Sep 2021 11:48:09 +0000 (UTC)
+        id S1354239AbhIIMaR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 9 Sep 2021 08:30:17 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 51EC861B3F;
+        Thu,  9 Sep 2021 11:52:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631188090;
-        bh=0SQO3dsOesV/b1l38s4e7bxFqHBn1nCeqqbt7vgjWlU=;
+        s=k20201202; t=1631188355;
+        bh=R5DxAoygujqDzBMuS+3iVJzTamDZS/jf4GHwAfptkMg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fzgbQUoGt3VX34m+kE04ap6mrhUYmf26Mg3dxyYSenXSxwr9YfRzyiVqkVLjJrLLh
-         OuHjiY8/GEYFQnU1kSiQCuCwIp9xxrkt6jmp9FlXSJKgnXWbedFzvpPLOFAYewyS2p
-         utMCqYWNHlTA99cJg8CPJ6n0T4Jr6DQbvl6M94jfa94zHiTTiQqLm2uwMaKHBnDSx+
-         dRWNGjcKJANlC20jz3tQub81R2kZ4HNquy2sR56vg0kZ+/ahbWfI1B4LpUaPd/W+lz
-         7XORhK0pBAnqV//diQ2tdhIb9N8X/WBBTyQei7XuvkCR3fXDpbpR2DsEzSYF8M1LZi
-         aSCQXkeUoC8HQ==
+        b=vNyMfprS0NaKjZfPS3sasZwIXnS7gsdghlw8ro7upvlFhDtH3HoIevwjrshQKwFU/
+         8g134M8D8JhS/n6EmrgtF4jRmou6Zk4LD55N39Q1hN+BKB+sOE39WXLYjjkfuPnwHz
+         ZboIKz9kBs01yi6QFxCkZgmZ7NFlKGjtj9q5eO/24/NREWc3geeU0eC+O+fGsF258Q
+         7+LkP53Y3NJf+gipJLjRTWn+5NFsFCpm8fX1N25GfrlDbkbjaHQeH49w3/6sw4K9mD
+         36EOz19ANU2hBJ84+vUnvzaq6FPghCYnTH9OjJAACfqkynJ/RgeoyvSV02IAUTCI1j
+         1ibT+KOav5peA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
         Jens Axboe <axboe@kernel.dk>, Sasha Levin <sashal@kernel.org>,
         linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 074/219] ata: sata_dwc_460ex: No need to call phy_exit() befre phy_init()
-Date:   Thu,  9 Sep 2021 07:44:10 -0400
-Message-Id: <20210909114635.143983-74-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 060/176] ata: sata_dwc_460ex: No need to call phy_exit() befre phy_init()
+Date:   Thu,  9 Sep 2021 07:49:22 -0400
+Message-Id: <20210909115118.146181-60-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210909114635.143983-1-sashal@kernel.org>
-References: <20210909114635.143983-1-sashal@kernel.org>
+In-Reply-To: <20210909115118.146181-1-sashal@kernel.org>
+References: <20210909115118.146181-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -68,10 +68,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 4 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index f0ef844428bb..338c2e50f759 100644
+index 9dcef6ac643b..982fe9112532 100644
 --- a/drivers/ata/sata_dwc_460ex.c
 +++ b/drivers/ata/sata_dwc_460ex.c
-@@ -1259,24 +1259,20 @@ static int sata_dwc_probe(struct platform_device *ofdev)
+@@ -1249,24 +1249,20 @@ static int sata_dwc_probe(struct platform_device *ofdev)
  	irq = irq_of_parse_and_map(np, 0);
  	if (irq == NO_IRQ) {
  		dev_err(&ofdev->dev, "no SATA DMA irq\n");
