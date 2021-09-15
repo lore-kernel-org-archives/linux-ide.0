@@ -2,95 +2,168 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA701C433F5
-	for <linux-ide@archiver.kernel.org>; Wed, 15 Sep 2021 07:51:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38461C433EF
+	for <linux-ide@archiver.kernel.org>; Wed, 15 Sep 2021 16:45:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D04BF61185
-	for <linux-ide@archiver.kernel.org>; Wed, 15 Sep 2021 07:51:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B97D60FC0
+	for <linux-ide@archiver.kernel.org>; Wed, 15 Sep 2021 16:45:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236734AbhIOHw0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 15 Sep 2021 03:52:26 -0400
-Received: from smtp-relay-internal-1.canonical.com ([185.125.188.123]:44946
-        "EHLO smtp-relay-internal-1.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236721AbhIOHwZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Sep 2021 03:52:25 -0400
-Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com [209.85.208.71])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id 5A03840285
-        for <linux-ide@vger.kernel.org>; Wed, 15 Sep 2021 07:51:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1631692266;
-        bh=yfmyLGLaZHO2X3SIp2h1tQ0oSU6KsOx2ug/7Y4ecG1Y=;
-        h=From:To:Subject:Date:Message-Id:In-Reply-To:References:
-         MIME-Version:Content-Type;
-        b=GcSj10tYJ8+Z1OPk/51Elz8W7vfte/kCNMUqyRQML9yIUfv2Ywptkg+nBoDb0Lvw7
-         3hlCVNaaQK/clFgOe3uOgiFRle86o/ii4ufCv8CtHtfFoR79US4ltbUnPr1PwVBT9O
-         mVGMZMtD7+B1epDAVhVXLiPCy/NV8xQ2tGmGpQlG7gXUoC8mZqvvJV1VCS9NZ6HzGW
-         aMpb/GbiqCQ/7ZcmraPgC1oU97ZTZLzQndIPlpLcMUmAkIDkeXtSOosuIPPKwQtSJk
-         2VzdRNJlWE/FMyVWrwSYT0ZQNNJifWZld7fZzMKSDM+eP6U0lhyzfqS08EQ6ISFT+R
-         Xgrhyn981HWtw==
-Received: by mail-ed1-f71.google.com with SMTP id o18-20020a056402439200b003d2b11eb0a9so1078901edc.23
-        for <linux-ide@vger.kernel.org>; Wed, 15 Sep 2021 00:51:06 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=yfmyLGLaZHO2X3SIp2h1tQ0oSU6KsOx2ug/7Y4ecG1Y=;
-        b=Bk69vfY1tzzTJNvZsfaTjDcbXuNLu5G4+mYoqJHdyw8a1FllM8x7oOZI3A7kyVvthZ
-         oLBd8nGW5qdY0Tc6bJNStcNme5f+9ywA5gPXFkVAtDvRJ587KKcYOEGe3QgMJkOKHKdz
-         sZlWSyjBaE3yKPFMdb2AahDW2oalB2zaIcT0LUa8eBuy7QunwH0eToZ6mU1ms+UCfRRH
-         Fviw5kXbjVNCfn6oRIPt8S914L0fMWF4qiPleulDoY1Jbgg2ozNJxcJgZ8kMMQRUjbwh
-         I9KoZ0+vDdh+IYU0QeSARqQ3kaGZbgpDQYn1yVkTFwkGagx3oyFA00lRR618i6FGUE5Q
-         9amw==
-X-Gm-Message-State: AOAM531lz+X8oorS9RLXFLFUlNSf0ZBGqJ0CRK/0Ly3dhrddTNGMbElg
-        XSLMQAkHvCbn910o9hiCoD2l73A5+INPmztuOo31Kny/gJT0zc9TB9o8jLivZxz6SVjoyCpLN8/
-        KyPyNt2rriob4XkS+2wYeJtm2tiFg29hFa7lyqQ==
-X-Received: by 2002:a17:906:1484:: with SMTP id x4mr23446552ejc.72.1631692266014;
-        Wed, 15 Sep 2021 00:51:06 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwOUoG/3APcqCn+ZeMkj7rfrYeSKawWs4kMluxJlwRm1ZVOU1UXmVKC+P6dzqxBWLZzMUXm7g==
-X-Received: by 2002:a17:906:1484:: with SMTP id x4mr23446537ejc.72.1631692265892;
-        Wed, 15 Sep 2021 00:51:05 -0700 (PDT)
-Received: from kozik-lap.lan (lk.84.20.244.219.dc.cable.static.lj-kabel.net. [84.20.244.219])
-        by smtp.gmail.com with ESMTPSA id n11sm591922edr.51.2021.09.15.00.51.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Sep 2021 00:51:05 -0700 (PDT)
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
-To:     linux-samsung-soc@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>, Jens Axboe <axboe@kernel.dk>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
-        devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: (subset) [PATCH 2/2] ARM: dts: exynos: drop undocumented samsung,sata-freq property in Exynos5250
-Date:   Wed, 15 Sep 2021 09:50:57 +0200
-Message-Id: <163169222223.16372.5968468091067814422.b4-ty@canonical.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210811083859.28234-2-krzysztof.kozlowski@canonical.com>
-References: <20210811083859.28234-1-krzysztof.kozlowski@canonical.com> <20210811083859.28234-2-krzysztof.kozlowski@canonical.com>
+        id S229479AbhIOQqb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 15 Sep 2021 12:46:31 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35364 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229787AbhIOQq1 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Sep 2021 12:46:27 -0400
+X-Greylist: delayed 585 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 15 Sep 2021 09:45:08 PDT
+Received: from polyxena.technikum-wien.at (mail.technikum-wien.at [IPv6:2001:67c:1790:1d00::de])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29DFFC061574
+        for <linux-ide@vger.kernel.org>; Wed, 15 Sep 2021 09:45:07 -0700 (PDT)
+Received: from legacy (80-109-83-31.cable.dynamic.surfer.at [80.109.83.31])
+        by bifrost2.technikum-wien.at (Postfix) with ESMTPSA id 4H8m6H1MDbzRy1;
+        Wed, 15 Sep 2021 18:35:19 +0200 (CEST)
+Date:   Wed, 15 Sep 2021 18:35:18 +0200
+From:   Stefan Tauner <tauner@technikum-wien.at>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-ide@vger.kernel.org
+Subject: Re: Questions (and a possible bug) regarding the
+ ata_device_blacklist and ATA_HORKAGE_ZERO_AFTER_TRIM
+Message-ID: <20210915183518.0947de73@legacy>
+In-Reply-To: <yq1pnjm1zvk.fsf@oracle.com>
+References: <20190926150400.2524a63b@legacy>
+        <yq1pnjm1zvk.fsf@oracle.com>
+X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, 11 Aug 2021 10:38:59 +0200, Krzysztof Kozlowski wrote:
-> The samsung,sata-freq property is not used (and not documented by
-> generic AHCI platform bindings), so can be safely dropped.
+Hi,
+
+sorry for the "small" delay... I got distracted and only now revisited
+this topic as I wanted to use discard to improve backup space
+efficiency and pondered on using devices_handle_discard_safely of the
+raid456 module (I run ext4 on lvm on luks on raid5 on 3 ssds) since
+otherwise I cannot trim at all.
+
+My inquiry deals with two points:
+ - Discussing the addition of ATA_HORKAGE_ZERO_AFTER_TRIM for Crucial
+   CT500MX500 (or CT*MX500 to include the 250 GB, 1 TB and 2 TB models)
+ - Determining why the Samsung SSD 860 EVO is not recognized to zero
+   after trim
+
+On Thu, 26 Sep 2019 18:01:03 -0400
+"Martin K. Petersen" <martin.petersen@oracle.com> wrote:
+
+> > I don't know the technical details how this is communicated by the
+> > drive but I assume it's the same thing that smartctl and hdparm output
+> > as "Model Number" and "Device Model" respectively.  
 > 
+> Yes.
 > 
+> > If this is correct (is it?) then there is a problem with the list
+> > AFAICT because the Crucial SSD I have reports this field simply as
+> > "CT500MX500SSD4" but the kernel expects "Crucial" at the beginning of
+> > almost all Crucial drives (line 4523+) including the vendor wildcard at
+> > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/ata/libata-core.c#n4586
+> > Interestingly, in line 4520 there is an entry for the CT500BX100SSD1
+> > that does not start with "Crucial".  
+> 
+> With a few exceptions, the entries in the libata white/blacklist were
+> submitted by Crucial/Micron themselves. But it's possible that they
+> changed their naming scheme.
 
-Applied, thanks!
+I can look for some smartctl logs of similar models but it is obviously
+the case for mine.
 
-[2/2] ARM: dts: exynos: drop undocumented samsung,sata-freq property in Exynos5250
-      commit: 06cf9e0b1aae8ff4f4cee39126a415b2b173b986
+> > After looking into smartctl's drive database I guess the MX500 [2] (as
+> > well as BX100, BX200, BX300 and BX500 [1]) series stand out in this
+> > regard. This means that all of them do *not* get the
+> > ATA_HORKAGE_ZERO_AFTER_TRIM flag set because they are not matched by
+> > any of the model-specific entries nor the cumulative "Crucial*" vendor
+> > entry.  
+> 
+> The newest drives I have are M550 models.
 
-Best regards,
+Since Crucial has stopped producing new models I think it makes sense
+to eventually conclude this topic and make some (final?) changes if
+need be. Apparently the queued trim issues are not fully figured out
+yet (saw commits to Linus' tree a short while ago on that) - so maybe
+final-ish changes ;)
+
+> > I have not tested my drive to actually return zeros after trimming but
+> > from the kernel code I would assume that its intent is to match all
+> > Crucial SSDs and thus it is a bug mine is not matched. If someone
+> > tells me to the preferred method to test it I am happy to do this. If
+> > need be I can also submit a patch (just for MX500? all of the above?).  
+> 
+> There's no way to exhaustively test. Many drives will return zeroes most
+> of the time but can have corner conditions that cause them to ignore
+> TRIM commands.
+
+Sure, but since the whitelist was filled with devices that have been
+tested/validated empirically, I wonder how thorough this needs to be
+to add a drive with good confidence. After all, the vendor wildcard
+for Crucial SSDs[1] has been quite broad and only restricted later
+with blacklist entries (only due to NCQ trim and LPM problems AFAICT)...
+So while queued trim is not blacklisted on my device the safe zeroing
+assumption is not whitelisted for no other reason than the model
+string missing "Crucial " at the beginning.
+ 
+> > Is there any way to see which flags the kernel applies to a drive?  
+> 
+> # grep . /sys/class/ata_device/*/trim
+> /sys/class/ata_device/dev1.0/trim:unqueued
+> /sys/class/ata_device/dev2.0/trim:queued
+
+But that's only to distinguish ATA_HORKAGE_NO_NCQ_TRIM I guess? While
+this seems to be the major culprit of trim related issues I don't care
+about that (yet).
+
+> > Interestingly, "lsblk -D" does only show "0" for the Samsung device
+> > (although AFAICT it is matched by the white list AND reports
+> > "Deterministic read ZEROs after TRIM" according to hdparm. But I don't
+> > know what lsblk actually looks at...?  
+> 
+> lsblk looks at /sys/block/*/queue/discard*
+
+Yes, I could have checked strace :)
+
+> You get "0" for the discard granularity on the Samsung?
+
+Not for the granularity - that's fine I presume - but for the zeroing
+capability. This is still the case (with Linux 5.10). I would have
+expected that to be non-zero for devices with
+ATA_HORKAGE_ZERO_AFTER_TRIM.
+
+# lsblk -o PATH,MODEL,DISC-ALN,DISC-GRAN,DISC-MAX,DISC-ZERO -d
+PATH     MODEL                           DISC-ALN DISC-GRAN DISC-MAX DISC-ZERO
+/dev/sda CT500MX500SSD4                         0        4K       2G         0
+/dev/sdb CT500MX500SSD4                         0        4K       2G         0
+/dev/sdc Samsung_SSD_860_EVO_mSATA_500GB        0      512B       2G         0
+
+Just to make sure lsblk is not lying:
+# cat /sys/block/sdc/queue/discard_zeroes_data 
+0
+
+I don't understand why that's the case.
+
+
+1: https://github.com/torvalds/linux/blob/7a8526a5cd51cf5f070310c6c37dd7293334ac49/drivers/ata/libata-core.c#L4030
+
+KR
 -- 
-Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+Dipl.-Ing. Stefan Tauner
+Lecturer and former researcher
+Embedded Systems Department
+
+University of Applied Sciences Technikum Wien
+Hoechstaedtplatz 6, 1200 Vienna, Austria
+E: stefan.tauner@technikum-wien.at
+I: embsys.technikum-wien.at
