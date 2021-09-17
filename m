@@ -2,168 +2,133 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38461C433EF
-	for <linux-ide@archiver.kernel.org>; Wed, 15 Sep 2021 16:45:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDC1BC433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 17 Sep 2021 10:25:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0B97D60FC0
-	for <linux-ide@archiver.kernel.org>; Wed, 15 Sep 2021 16:45:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCCDA61029
+	for <linux-ide@archiver.kernel.org>; Fri, 17 Sep 2021 10:25:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229479AbhIOQqb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 15 Sep 2021 12:46:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35364 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229787AbhIOQq1 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 15 Sep 2021 12:46:27 -0400
-X-Greylist: delayed 585 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 15 Sep 2021 09:45:08 PDT
-Received: from polyxena.technikum-wien.at (mail.technikum-wien.at [IPv6:2001:67c:1790:1d00::de])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29DFFC061574
-        for <linux-ide@vger.kernel.org>; Wed, 15 Sep 2021 09:45:07 -0700 (PDT)
-Received: from legacy (80-109-83-31.cable.dynamic.surfer.at [80.109.83.31])
-        by bifrost2.technikum-wien.at (Postfix) with ESMTPSA id 4H8m6H1MDbzRy1;
-        Wed, 15 Sep 2021 18:35:19 +0200 (CEST)
-Date:   Wed, 15 Sep 2021 18:35:18 +0200
-From:   Stefan Tauner <tauner@technikum-wien.at>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-ide@vger.kernel.org
-Subject: Re: Questions (and a possible bug) regarding the
- ata_device_blacklist and ATA_HORKAGE_ZERO_AFTER_TRIM
-Message-ID: <20210915183518.0947de73@legacy>
-In-Reply-To: <yq1pnjm1zvk.fsf@oracle.com>
-References: <20190926150400.2524a63b@legacy>
-        <yq1pnjm1zvk.fsf@oracle.com>
-X-Mailer: Claws Mail 3.17.3 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+        id S242335AbhIQK0n (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 17 Sep 2021 06:26:43 -0400
+Received: from smtp-relay-internal-1.canonical.com ([185.125.188.123]:50788
+        "EHLO smtp-relay-internal-1.canonical.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S241064AbhIQK0n (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Sep 2021 06:26:43 -0400
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com [209.85.128.70])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id BA5EA3F338
+        for <linux-ide@vger.kernel.org>; Fri, 17 Sep 2021 10:25:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1631874319;
+        bh=2xQ1/AEURoJyQBP257GxvnHNKDEHX4wx3ObYTWar7oY=;
+        h=From:To:Cc:Subject:Date:Message-Id:MIME-Version;
+        b=ACSWJA8nr4k+/12OR3MTUUcPWRf2TJnIXxIUjlXsNkJdSh5YQVOgsPG1kN62CvIEU
+         4+gUEP8dJuXkVTfudJTVymItyJ92d65wpjJEsseUvD1rfPHybDFKr9DVVE9DXxGlMq
+         Lk3SK5M9BlWap93d/Rzrca4q56zJGgr17O74L8yqmQZPQXBxbqI5Mo7K5pXQQCniph
+         kjgQnhaFQQlxk+NvIfdfwt3R7+HVHMhdvNo3DRR5u0UC6gzuPFkx5dr6rPlsZxlHzP
+         hcWUhnUmUkzTvWLhTFKF6bg9OFHgNpGrSxMlxmVLWtuY6dXQUsxhhwLYN9MpovzU4R
+         73Ki2XdBpCmGg==
+Received: by mail-wm1-f70.google.com with SMTP id z18-20020a1c7e120000b02902e69f6fa2e0so4427560wmc.9
+        for <linux-ide@vger.kernel.org>; Fri, 17 Sep 2021 03:25:19 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=2xQ1/AEURoJyQBP257GxvnHNKDEHX4wx3ObYTWar7oY=;
+        b=Ot3VmECO06mHac0N9lLPEejl/rbwzfHxHty2zuISsdHBRTLQAjlWdffBanPDZIB7Xh
+         QczsYj62AzFjIAixrv6UpMcWrPO1+b3PCfZSayA29Jzbsod/XJpcp3X1gh6/zoYbPWfi
+         dePDK4wsgho7XYadIiO37dnt3lbEOuFVYYsC3Y0JseqF8Ypdv1WoHARLIEUX/mcgCveD
+         WPxkyDLcQwhmHkuarF2YgS1ks4DU/3qeoVqktwUJ2Go2AvUyjZt2JrDGRsnBffZufeG+
+         jwqiFdNn7qcy1j+3HGkEZIWAcBxchm6cC4nfHMUxWviQxtcg9YRueJd8ccXt5poIFmO3
+         7Y9g==
+X-Gm-Message-State: AOAM532O1/B0DGty+gTne9NYu1y4srUZWqilGdDPmORRPdpDmWxPGpyS
+        ejolmMum9a8fG4Nn9Y+SzmqbWTPuq1gVjlun+6ozub0uZEFEBukLZ0NNJhOq/z7levBcLUudJe1
+        lSyYpY9l5G+v3dvksZ/xYhMUfmL0WIJ7FS8IbZw==
+X-Received: by 2002:a1c:acc2:: with SMTP id v185mr9516521wme.71.1631874319222;
+        Fri, 17 Sep 2021 03:25:19 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJy6BP6x1Dwi4163Sx4CfX5t+shARUqdLVM7Pj2bw2k5ASK7V0D5yK04rjbrHOAQzRUa1BAn0g==
+X-Received: by 2002:a1c:acc2:: with SMTP id v185mr9516509wme.71.1631874319074;
+        Fri, 17 Sep 2021 03:25:19 -0700 (PDT)
+Received: from localhost.localdomain (lk.84.20.244.219.dc.cable.static.lj-kabel.net. [84.20.244.219])
+        by smtp.gmail.com with ESMTPSA id h16sm6256944wre.52.2021.09.17.03.25.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Sep 2021 03:25:18 -0700 (PDT)
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+Subject: [PATCH] ahci: remove duplicated PCI device IDs
+Date:   Fri, 17 Sep 2021 12:24:42 +0200
+Message-Id: <20210917102442.24818-1-krzysztof.kozlowski@canonical.com>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi,
+Intel devices 0x2822, 0x2823, 0x2826 and 0x2827 are already on the list
+as Lewisburg AHCI/RAID.  They use same configuration except 0x2822 which
+has board_ahci_nosntf (for ICH8).
 
-sorry for the "small" delay... I got distracted and only now revisited
-this topic as I wanted to use discard to improve backup space
-efficiency and pondered on using devices_handle_discard_safely of the
-raid456 module (I run ext4 on lvm on luks on raid5 on 3 ssds) since
-otherwise I cannot trim at all.
+Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 
-My inquiry deals with two points:
- - Discussing the addition of ATA_HORKAGE_ZERO_AFTER_TRIM for Crucial
-   CT500MX500 (or CT*MX500 to include the 250 GB, 1 TB and 2 TB models)
- - Determining why the Samsung SSD 860 EVO is not recognized to zero
-   after trim
+---
 
-On Thu, 26 Sep 2019 18:01:03 -0400
-"Martin K. Petersen" <martin.petersen@oracle.com> wrote:
+Not tested.
+---
+ drivers/ata/ahci.c | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
-> > I don't know the technical details how this is communicated by the
-> > drive but I assume it's the same thing that smartctl and hdparm output
-> > as "Model Number" and "Device Model" respectively.  
-> 
-> Yes.
-> 
-> > If this is correct (is it?) then there is a problem with the list
-> > AFAICT because the Crucial SSD I have reports this field simply as
-> > "CT500MX500SSD4" but the kernel expects "Crucial" at the beginning of
-> > almost all Crucial drives (line 4523+) including the vendor wildcard at
-> > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/ata/libata-core.c#n4586
-> > Interestingly, in line 4520 there is an entry for the CT500BX100SSD1
-> > that does not start with "Crucial".  
-> 
-> With a few exceptions, the entries in the libata white/blacklist were
-> submitted by Crucial/Micron themselves. But it's possible that they
-> changed their naming scheme.
-
-I can look for some smartctl logs of similar models but it is obviously
-the case for mine.
-
-> > After looking into smartctl's drive database I guess the MX500 [2] (as
-> > well as BX100, BX200, BX300 and BX500 [1]) series stand out in this
-> > regard. This means that all of them do *not* get the
-> > ATA_HORKAGE_ZERO_AFTER_TRIM flag set because they are not matched by
-> > any of the model-specific entries nor the cumulative "Crucial*" vendor
-> > entry.  
-> 
-> The newest drives I have are M550 models.
-
-Since Crucial has stopped producing new models I think it makes sense
-to eventually conclude this topic and make some (final?) changes if
-need be. Apparently the queued trim issues are not fully figured out
-yet (saw commits to Linus' tree a short while ago on that) - so maybe
-final-ish changes ;)
-
-> > I have not tested my drive to actually return zeros after trimming but
-> > from the kernel code I would assume that its intent is to match all
-> > Crucial SSDs and thus it is a bug mine is not matched. If someone
-> > tells me to the preferred method to test it I am happy to do this. If
-> > need be I can also submit a patch (just for MX500? all of the above?).  
-> 
-> There's no way to exhaustively test. Many drives will return zeroes most
-> of the time but can have corner conditions that cause them to ignore
-> TRIM commands.
-
-Sure, but since the whitelist was filled with devices that have been
-tested/validated empirically, I wonder how thorough this needs to be
-to add a drive with good confidence. After all, the vendor wildcard
-for Crucial SSDs[1] has been quite broad and only restricted later
-with blacklist entries (only due to NCQ trim and LPM problems AFAICT)...
-So while queued trim is not blacklisted on my device the safe zeroing
-assumption is not whitelisted for no other reason than the model
-string missing "Crucial " at the beginning.
- 
-> > Is there any way to see which flags the kernel applies to a drive?  
-> 
-> # grep . /sys/class/ata_device/*/trim
-> /sys/class/ata_device/dev1.0/trim:unqueued
-> /sys/class/ata_device/dev2.0/trim:queued
-
-But that's only to distinguish ATA_HORKAGE_NO_NCQ_TRIM I guess? While
-this seems to be the major culprit of trim related issues I don't care
-about that (yet).
-
-> > Interestingly, "lsblk -D" does only show "0" for the Samsung device
-> > (although AFAICT it is matched by the white list AND reports
-> > "Deterministic read ZEROs after TRIM" according to hdparm. But I don't
-> > know what lsblk actually looks at...?  
-> 
-> lsblk looks at /sys/block/*/queue/discard*
-
-Yes, I could have checked strace :)
-
-> You get "0" for the discard granularity on the Samsung?
-
-Not for the granularity - that's fine I presume - but for the zeroing
-capability. This is still the case (with Linux 5.10). I would have
-expected that to be non-zero for devices with
-ATA_HORKAGE_ZERO_AFTER_TRIM.
-
-# lsblk -o PATH,MODEL,DISC-ALN,DISC-GRAN,DISC-MAX,DISC-ZERO -d
-PATH     MODEL                           DISC-ALN DISC-GRAN DISC-MAX DISC-ZERO
-/dev/sda CT500MX500SSD4                         0        4K       2G         0
-/dev/sdb CT500MX500SSD4                         0        4K       2G         0
-/dev/sdc Samsung_SSD_860_EVO_mSATA_500GB        0      512B       2G         0
-
-Just to make sure lsblk is not lying:
-# cat /sys/block/sdc/queue/discard_zeroes_data 
-0
-
-I don't understand why that's the case.
-
-
-1: https://github.com/torvalds/linux/blob/7a8526a5cd51cf5f070310c6c37dd7293334ac49/drivers/ata/libata-core.c#L4030
-
-KR
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 186cbf90c8ea..5f257064fcd8 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -258,7 +258,6 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x2683), board_ahci }, /* ESB2 */
+ 	{ PCI_VDEVICE(INTEL, 0x27c6), board_ahci }, /* ICH7-M DH */
+ 	{ PCI_VDEVICE(INTEL, 0x2821), board_ahci }, /* ICH8 */
+-	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci_nosntf }, /* ICH8 */
+ 	{ PCI_VDEVICE(INTEL, 0x2824), board_ahci }, /* ICH8 */
+ 	{ PCI_VDEVICE(INTEL, 0x2829), board_ahci }, /* ICH8M */
+ 	{ PCI_VDEVICE(INTEL, 0x282a), board_ahci }, /* ICH8M */
+@@ -316,7 +315,6 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x1d02), board_ahci }, /* PBG AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x1d04), board_ahci }, /* PBG RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x1d06), board_ahci }, /* PBG RAID */
+-	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci }, /* PBG RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x2323), board_ahci }, /* DH89xxCC AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x1e02), board_ahci }, /* Panther Point AHCI */
+ 	{ PCI_VDEVICE(INTEL, 0x1e03), board_ahci_mobile }, /* Panther M AHCI */
+@@ -358,8 +356,6 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x1f37), board_ahci_avn }, /* Avoton RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x1f3e), board_ahci_avn }, /* Avoton RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x1f3f), board_ahci_avn }, /* Avoton RAID */
+-	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Wellsburg RAID */
+-	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci }, /* Wellsburg RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x43d4), board_ahci }, /* Rocket Lake PCH-H RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x43d5), board_ahci }, /* Rocket Lake PCH-H RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x43d6), board_ahci }, /* Rocket Lake PCH-H RAID */
+@@ -395,9 +391,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0xa107), board_ahci_mobile }, /* Sunrise M RAID */
+ 	{ PCI_VDEVICE(INTEL, 0xa10f), board_ahci }, /* Sunrise Point-H RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci }, /* Lewisburg RAID*/
+-	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Lewisburg AHCI*/
+-	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci }, /* Lewisburg RAID*/
+-	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci }, /* Lewisburg RAID*/
++	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Wellsburg/Lewisburg AHCI*/
++	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci }, /* PBG/Lewisburg RAID*/
++	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci }, /* Wellsburg/Lewisburg RAID*/
+ 	{ PCI_VDEVICE(INTEL, 0xa182), board_ahci }, /* Lewisburg AHCI*/
+ 	{ PCI_VDEVICE(INTEL, 0xa186), board_ahci }, /* Lewisburg RAID*/
+ 	{ PCI_VDEVICE(INTEL, 0xa1d2), board_ahci }, /* Lewisburg RAID*/
 -- 
-Dipl.-Ing. Stefan Tauner
-Lecturer and former researcher
-Embedded Systems Department
+2.30.2
 
-University of Applied Sciences Technikum Wien
-Hoechstaedtplatz 6, 1200 Vienna, Austria
-E: stefan.tauner@technikum-wien.at
-I: embsys.technikum-wien.at
