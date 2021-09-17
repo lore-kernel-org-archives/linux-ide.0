@@ -2,167 +2,114 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 205ECC433F5
-	for <linux-ide@archiver.kernel.org>; Fri, 17 Sep 2021 11:21:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28905C433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 17 Sep 2021 13:03:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 02E47611C8
-	for <linux-ide@archiver.kernel.org>; Fri, 17 Sep 2021 11:21:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C92E610C7
+	for <linux-ide@archiver.kernel.org>; Fri, 17 Sep 2021 13:03:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243690AbhIQLWb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 17 Sep 2021 07:22:31 -0400
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:8369 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232619AbhIQLWb (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Sep 2021 07:22:31 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1631877669; x=1663413669;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=fw4xa9xepMpGamCD+e5caMq0zjIaQr2kunX3DwHfCN4=;
-  b=KpK+NfxlI9H6ImjpDAg/mf1ZnwkGKtKDjIrf+xf9kzkjbLWTryGw5W7i
-   DLzCzCOGN8AJgeffwJiipZFgFZxTVAdczibT5VhGeYrhhi4Lxcs9RFAnI
-   8ewcA4mHeI56HsGGi5BtZT+1KbE3s2Qpxgp+0leOM20I0AP8h9ueAFqlB
-   IxiXwlU+GkDJHdAKsCiIkkHy1JcgeUXDTLjK1LkLaf5RWOc9kpPy0zwhP
-   X4HyrrtI0sWufl0kz/xuohVrkoFO/vJ7ai3O19wWmNvwH2qoficOAvLDK
-   15nulT5Ks+ukOpQgiy574zHNbMRfR1lcm2H8F/Zn87p9dviQKU64XqAso
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.85,301,1624291200"; 
-   d="scan'208";a="179335429"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 17 Sep 2021 19:21:08 +0800
-IronPort-SDR: 7Of+JGp7WIuAifsDh+/YAl+x5rOM4T5pcDOJEmXJn/vC/zje2Nj7bvszu9RxbX5oqsx7cjZs+Q
- DNDCcgppRkTzAhR2R00upQtUhJ0AXzVCiiZDnqUvitA+9eU0gRVuaMjLIklMkdFpuLlIY9pqkW
- 6I3B4mWG3VPY5I3/BGFB9nmhETkqTk4THOY7ydodnX9gbfDDgvCFNsO5qnCl38yhXQbULeO1BJ
- fpfW6gJ9N0qAWVOCeSy6fECo3QQn+0UwrNyYne7yZzXFa+4YfaiPNF9C9+FivxBd4b8njD6r1L
- DuO0y4zUv6WJHD9KhGFP7H0p
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Sep 2021 03:55:54 -0700
-IronPort-SDR: Nxv3SI3+q09s+DZcTKPKl5mZ42jYCZ1YHuVs82I9Wb2NhbwaDfw+qZEmQ7izTExWiuWEqyb4+K
- nJY1QN5dHeblf+C8wPYNQvnzE1PJK0IK0ohRL7YQre0XMcIkmT6Q/7OWU3xNF5N4I6cX1T5z2J
- VQCpKi+SplZ/m6501RAGCriw/KUofysuC0HS5Z7OrYzz9CY1ND/zEPs78H0XusL8ydI6iu/7BJ
- yi3cz58dgce/VY8BMCNEtv3hvRBA6JryFtKdRoWGDIp11GACD5HhnMb1akcD/KGVazSqh5Lth/
- vSg=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Sep 2021 04:21:08 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4H9s2q6Bvgz1RvlV
-        for <linux-ide@vger.kernel.org>; Fri, 17 Sep 2021 04:21:07 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1631877666; x=1634469667; bh=fw4xa9xepMpGamCD+e5caMq0zjIaQr2kunX
-        3DwHfCN4=; b=a7GBgwuiscbOJi6IvaBn7VoXD7v9bqCtm//tFc1XYPJfYJUP+TI
-        TL+HPti0jnvqphBTHO2Tn5/XKreurX7iuDlWqTFdbAe67S3HMDtl8NtvH5BlYlSk
-        ab5dcdC+eAEbjp4gaQQjPsHMWdPIMAKcXJ1f3poyh6cod4Snf0m5HDMkn9w5u1sr
-        ViAZbyKzzuoZnbzgGL7b2nq+Vuc5k3dlHI6tWGMnc8qNIjPkEENxG/i6VUr3+G45
-        V03QvvbedxPzm0l/4Cmv7QbeOGdc1IS4TPmiMMUMx43DpSKGjHogCHmm7GWvTUyT
-        hjixGdjJgdY8dDW/zuSiQR1WJm8zDVxqKBQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id C5_GlVpsfFgh for <linux-ide@vger.kernel.org>;
-        Fri, 17 Sep 2021 04:21:06 -0700 (PDT)
-Received: from [10.225.48.54] (unknown [10.225.48.54])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4H9s2p2y3Lz1RvlP;
-        Fri, 17 Sep 2021 04:21:06 -0700 (PDT)
-Message-ID: <dbfab8de-487d-a5ea-6397-7e16c5eb5185@opensource.wdc.com>
-Date:   Fri, 17 Sep 2021 20:21:04 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.1.1
+        id S235210AbhIQNFQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 17 Sep 2021 09:05:16 -0400
+Received: from smtp-relay-internal-1.canonical.com ([185.125.188.123]:55054
+        "EHLO smtp-relay-internal-1.canonical.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S239001AbhIQNFP (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Sep 2021 09:05:15 -0400
+Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com [209.85.208.70])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id F36B83F4B9
+        for <linux-ide@vger.kernel.org>; Fri, 17 Sep 2021 13:03:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1631883830;
+        bh=BtPQgu/JVrGaxOIwp6e1J+UI80xieldZPRf8MxNQimw=;
+        h=Subject:To:References:From:Message-ID:Date:MIME-Version:
+         In-Reply-To:Content-Type;
+        b=mu9iHW3tVQ2GZ1Md2Dh28pwlZT6rdlmSi3uIUk71H522BMARTw+BgHX1FwNVlKsld
+         8CFXRNA9vSc+B0yZFihQGjOP5heDZaGcy4gvioTrePjiDySvaWQGqjJoBEjP0AYtH8
+         fLyxmDVLotpPKLn7OsjQrOIW9hLqUg4Ew0AuAczirVdtO0MfOyQhXmYL9Hz6SBCl5D
+         M8Y4/7nSh6lFXDsXGUi1SfcWZUcKqNU4cNjGqPBiAyKmmjMUofOHMOq0td2IphtsmA
+         PE4mQsa0SV62V5dWH/JGHsxlyqps1qGhQPzyqeU7hxZ8R24qMcponYPtkBUtxdKhfQ
+         GV/TWrDsXHIxg==
+Received: by mail-ed1-f70.google.com with SMTP id m20-20020aa7c2d4000000b003d1add00b8aso8992938edp.0
+        for <linux-ide@vger.kernel.org>; Fri, 17 Sep 2021 06:03:50 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=BtPQgu/JVrGaxOIwp6e1J+UI80xieldZPRf8MxNQimw=;
+        b=mKqkxxH+/DljQna8KYzu6Y6MuV2e85BNVJxlrXkBp1+C3cK090tZ9ipRIprg5tvvqJ
+         xNah0yxoyigQwJgg5UPU+G3zCNnOFu+SEGi5ZWZkKun6tzPV7AeePs0/QDTHqcLVcJEF
+         XS/VHv7jgsS0qY/i/9SfL8WyjtyKT7rwvmZJZvHpuqlvQMgo621c+YUFx05Lg3m81IMh
+         LWNV0tkHj0Ys1TDdjO+HS/uAaq6qWG4cQdLtTrKdMKjM9JZqmf//n59r0d5Xdzthx1dX
+         mcVO7AiMMORCDfYFvuhcE1AtpKkd8JTZPx//RxhzAW97lqjZjFkPOkgsKyd3kSk44+nJ
+         GhPg==
+X-Gm-Message-State: AOAM5301MeUyv2IVvSHp849ATw2wyY8EUZkMpwr0o7++ylseQvBC8nQV
+        OCm/rO490Pq2g4HbiUgVF/GSYJNrO50a87BigbC+ys26zViBP9Y/OnzcswvtxREUyTMmFu5izFj
+        HcxWBFf95R9J7tgTYUA161udBa/limLPyWFgTeA==
+X-Received: by 2002:a17:907:8693:: with SMTP id qa19mr11652896ejc.497.1631883829966;
+        Fri, 17 Sep 2021 06:03:49 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzb9h8Q/Swzmu6LP3OJVFY5jF/ihVwDVg7z0XJ3AD8ulIfVhJIwCXH2O+TEtyHUlKtGsmSq0Q==
+X-Received: by 2002:a17:907:8693:: with SMTP id qa19mr11652719ejc.497.1631883827947;
+        Fri, 17 Sep 2021 06:03:47 -0700 (PDT)
+Received: from [192.168.0.134] (lk.84.20.244.219.dc.cable.static.lj-kabel.net. [84.20.244.219])
+        by smtp.gmail.com with ESMTPSA id e21sm2619082edj.47.2021.09.17.06.03.47
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 17 Sep 2021 06:03:47 -0700 (PDT)
 Subject: Re: [PATCH] ahci: remove duplicated PCI device IDs
-Content-Language: en-US
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Alexandra Yates <alexandra.yates@linux.intel.com>,
+        Shaohua Li <shaohua.li@intel.com>
 References: <20210917102442.24818-1-krzysztof.kozlowski@canonical.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital
-In-Reply-To: <20210917102442.24818-1-krzysztof.kozlowski@canonical.com>
-Content-Type: text/plain; charset=UTF-8
+ <dbfab8de-487d-a5ea-6397-7e16c5eb5185@opensource.wdc.com>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+Message-ID: <649b7c3b-0e01-0d26-ed03-c5ac66e32bce@canonical.com>
+Date:   Fri, 17 Sep 2021 15:03:46 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
+MIME-Version: 1.0
+In-Reply-To: <dbfab8de-487d-a5ea-6397-7e16c5eb5185@opensource.wdc.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2021/09/17 19:24, Krzysztof Kozlowski wrote:
-> Intel devices 0x2822, 0x2823, 0x2826 and 0x2827 are already on the list
-> as Lewisburg AHCI/RAID.  They use same configuration except 0x2822 which
-> has board_ahci_nosntf (for ICH8).
+On 17/09/2021 13:21, Damien Le Moal wrote:
+> On 2021/09/17 19:24, Krzysztof Kozlowski wrote:
+>> Intel devices 0x2822, 0x2823, 0x2826 and 0x2827 are already on the list
+>> as Lewisburg AHCI/RAID.  They use same configuration except 0x2822 which
+>> has board_ahci_nosntf (for ICH8).
+>>
+>> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+>>
+>> ---
+>>
+>> Not tested.
 > 
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+> I cannot test this either. I do not have this hardware. No chance of getting
+> this tested by someone ?
 > 
-> ---
-> 
-> Not tested.
+> Changes for 0x2823, 0x2826 and 0x2827 seem OK, but 0x2822 is weird.
+> Since it is replicated, I think that the second entry was in fact never used as
+> the first one would be a hit before the second. So shouldn't we keep the first
+> entry with board_ahci_nosntf and remove the second one with board_ahci ?
 
-I cannot test this either. I do not have this hardware. No chance of getting
-this tested by someone ?
+The second 0x2822 entry was added by Alexandra Yates
+<alexandra.yates@linux.intel.com>.
 
-Changes for 0x2823, 0x2826 and 0x2827 seem OK, but 0x2822 is weird.
-Since it is replicated, I think that the second entry was in fact never used as
-the first one would be a hit before the second. So shouldn't we keep the first
-entry with board_ahci_nosntf and remove the second one with board_ahci ?
+However first entry was added with much bigger explanation by Shaohua Li
+<shaohua.li@intel.com>, where he/she tested it.
 
-> ---
->  drivers/ata/ahci.c | 10 +++-------
->  1 file changed, 3 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 186cbf90c8ea..5f257064fcd8 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -258,7 +258,6 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->  	{ PCI_VDEVICE(INTEL, 0x2683), board_ahci }, /* ESB2 */
->  	{ PCI_VDEVICE(INTEL, 0x27c6), board_ahci }, /* ICH7-M DH */
->  	{ PCI_VDEVICE(INTEL, 0x2821), board_ahci }, /* ICH8 */
-> -	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci_nosntf }, /* ICH8 */
->  	{ PCI_VDEVICE(INTEL, 0x2824), board_ahci }, /* ICH8 */
->  	{ PCI_VDEVICE(INTEL, 0x2829), board_ahci }, /* ICH8M */
->  	{ PCI_VDEVICE(INTEL, 0x282a), board_ahci }, /* ICH8M */
-> @@ -316,7 +315,6 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->  	{ PCI_VDEVICE(INTEL, 0x1d02), board_ahci }, /* PBG AHCI */
->  	{ PCI_VDEVICE(INTEL, 0x1d04), board_ahci }, /* PBG RAID */
->  	{ PCI_VDEVICE(INTEL, 0x1d06), board_ahci }, /* PBG RAID */
-> -	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci }, /* PBG RAID */
->  	{ PCI_VDEVICE(INTEL, 0x2323), board_ahci }, /* DH89xxCC AHCI */
->  	{ PCI_VDEVICE(INTEL, 0x1e02), board_ahci }, /* Panther Point AHCI */
->  	{ PCI_VDEVICE(INTEL, 0x1e03), board_ahci_mobile }, /* Panther M AHCI */
-> @@ -358,8 +356,6 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->  	{ PCI_VDEVICE(INTEL, 0x1f37), board_ahci_avn }, /* Avoton RAID */
->  	{ PCI_VDEVICE(INTEL, 0x1f3e), board_ahci_avn }, /* Avoton RAID */
->  	{ PCI_VDEVICE(INTEL, 0x1f3f), board_ahci_avn }, /* Avoton RAID */
-> -	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Wellsburg RAID */
-> -	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci }, /* Wellsburg RAID */
->  	{ PCI_VDEVICE(INTEL, 0x43d4), board_ahci }, /* Rocket Lake PCH-H RAID */
->  	{ PCI_VDEVICE(INTEL, 0x43d5), board_ahci }, /* Rocket Lake PCH-H RAID */
->  	{ PCI_VDEVICE(INTEL, 0x43d6), board_ahci }, /* Rocket Lake PCH-H RAID */
-> @@ -395,9 +391,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->  	{ PCI_VDEVICE(INTEL, 0xa107), board_ahci_mobile }, /* Sunrise M RAID */
->  	{ PCI_VDEVICE(INTEL, 0xa10f), board_ahci }, /* Sunrise Point-H RAID */
->  	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci }, /* Lewisburg RAID*/
-> -	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Lewisburg AHCI*/
-> -	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci }, /* Lewisburg RAID*/
-> -	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci }, /* Lewisburg RAID*/
-> +	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Wellsburg/Lewisburg AHCI*/
-> +	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci }, /* PBG/Lewisburg RAID*/
-> +	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci }, /* Wellsburg/Lewisburg RAID*/
->  	{ PCI_VDEVICE(INTEL, 0xa182), board_ahci }, /* Lewisburg AHCI*/
->  	{ PCI_VDEVICE(INTEL, 0xa186), board_ahci }, /* Lewisburg RAID*/
->  	{ PCI_VDEVICE(INTEL, 0xa1d2), board_ahci }, /* Lewisburg RAID*/
-> 
+Indeed it points to using board_ahci_nosntf.
 
-
--- 
-Damien Le Moal
-Western Digital Research
+Best regards,
+Krzysztof
