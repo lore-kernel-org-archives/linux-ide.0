@@ -2,160 +2,130 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C947C433F5
-	for <linux-ide@archiver.kernel.org>; Sun, 19 Sep 2021 13:07:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 188ABC433EF
+	for <linux-ide@archiver.kernel.org>; Sun, 19 Sep 2021 14:25:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 463A861205
-	for <linux-ide@archiver.kernel.org>; Sun, 19 Sep 2021 13:07:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DCF8D611C3
+	for <linux-ide@archiver.kernel.org>; Sun, 19 Sep 2021 14:25:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229656AbhISNIc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 19 Sep 2021 09:08:32 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:39165 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229570AbhISNIb (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 19 Sep 2021 09:08:31 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1632056826;
+        id S231721AbhISO0h (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 19 Sep 2021 10:26:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43582 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230227AbhISO0g (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 19 Sep 2021 10:26:36 -0400
+Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [IPv6:2001:67c:2050::465:102])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78C4EC061574;
+        Sun, 19 Sep 2021 07:25:11 -0700 (PDT)
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [80.241.60.245])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4HC92B1qTRzQjgJ;
+        Sun, 19 Sep 2021 16:25:06 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=mailbox.org; h=
+        content-transfer-encoding:content-type:content-type:in-reply-to
+        :from:from:references:content-language:subject:subject
+        :mime-version:date:date:message-id:received; s=mail20150812; t=
+        1632061502; bh=rOZLDTtW4FsPmLA23JYFH070GWoMQDtlb6u6WIlvx9A=; b=w
+        w/u4Gh4g1PTdRQlMvYhPnrrwXzz1CAVHFcHSAl7GNiJ9Shispe1m96SPGX1i0bQc
+        LT3eLcWkYUIyqonMk4uXT17gUsHQe52QSjt+tTfUgVZ3QBjgQAfu/Z3suCgSM5Ln
+        0PuUOTcbhRoFFclPxeCKf96eumzJYkipUKa8A0c+KWcqSgvNmWwRDPvXM/wjbgxd
+        CZ0+PAnh6AowR3yJjhdJGzhpajxj4LTLDucTyMMonio7mxST5lk3siiajGWLrBaV
+        yy7m0nK0sYo+RzOswGo9AKEGgTgOCnOofIU3YJighBLgCwoYF/p5qa54Qr/2r8qm
+        LA7mvSLxkfwPmnqOlBqyw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+        t=1632061504;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=FSV1fiiQiqM7zkda1AZckSbb14ibuCt8qjVoxm4AB3Y=;
-        b=a32ZjCy7S+3HxUAdQpTN699Ff4qw2brkca8xH0TauZG/j8gkej9p+MNDtetoiKfaDv2/cn
-        manWBYRX4BOTMlR9hcodKie2DdXuFkglJ4/DI0MDKm6uxhhb6C10XJIRfGIkiXqHOAJD3g
-        ck6D81P9P4ZCt6hHimoeaVCxz2dVuLU=
-Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
- [209.85.208.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-440-oPIlAF3mNkCnXPn2qSPkjQ-1; Sun, 19 Sep 2021 09:07:04 -0400
-X-MC-Unique: oPIlAF3mNkCnXPn2qSPkjQ-1
-Received: by mail-ed1-f70.google.com with SMTP id w24-20020a056402071800b003cfc05329f8so13367973edx.19
-        for <linux-ide@vger.kernel.org>; Sun, 19 Sep 2021 06:07:04 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=FSV1fiiQiqM7zkda1AZckSbb14ibuCt8qjVoxm4AB3Y=;
-        b=gtkM9KgfezLnvv63Uop7CqbDCGwXX6RG11/GSk5iey1fn1b5q7xUa1CxX7S9zcENkb
-         jWFaaJHucEGMuFpxbm4OJZX9OS46aBZGaoKILe4kjFxSqVwhRkRG4TNGQ63IZZBA+/Nn
-         mlqZ5apa/X4OIQr9nPIQby+kphar/8Ie6V6C1AkGQHBDRPgglteethDGdqVu3jILfyKV
-         nJMZAw8+C64YcKW4IB4LyCF8crx2J/8x3J+OKHXtGK+g784GjbdVFVbPmr/EYyI9Abm7
-         u3P7jiAVx0thSCN/EIAZDIW/WeBBcgXWosO8eFDGwIsDavuaQCSCBik4YZkoXTjNxGEW
-         5E0w==
-X-Gm-Message-State: AOAM533zUFjl5jWWVjmjy7Szykn+pxXwLNTQPTEtffKQp6eCpUW1w76m
-        IApU9MSPUMWOjfxJ9/LvvBVMUiIploswgtnby42HkWaQe9F/wwykq3+tvYb1eJpzoDLztSBEvfE
-        cTD1Iqa+OXyz1lroeMmpY
-X-Received: by 2002:a17:906:7147:: with SMTP id z7mr22792355ejj.94.1632056823715;
-        Sun, 19 Sep 2021 06:07:03 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwYMen7qgiNk2u2tBQGaLCtCtuL2r5BFu8S8KRJrLVgAcI5XJi6KUoNjPlKAimk5kZ/PFmu/A==
-X-Received: by 2002:a17:906:7147:: with SMTP id z7mr22792328ejj.94.1632056823478;
-        Sun, 19 Sep 2021 06:07:03 -0700 (PDT)
-Received: from x1.localdomain (2001-1c00-0c1e-bf00-1054-9d19-e0f0-8214.cable.dynamic.v6.ziggo.nl. [2001:1c00:c1e:bf00:1054:9d19:e0f0:8214])
-        by smtp.gmail.com with ESMTPSA id p8sm4877375ejo.2.2021.09.19.06.07.02
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 19 Sep 2021 06:07:03 -0700 (PDT)
-Subject: Re: [PATCH v2] ahci: remove duplicated PCI device IDs
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Alexandra Yates <alexandra.yates@linux.intel.com>
-References: <20210919094313.52666-1-krzysztof.kozlowski@canonical.com>
-From:   Hans de Goede <hdegoede@redhat.com>
-Message-ID: <bf0e4e5f-4638-ad1e-d4a4-32a4475b247e@redhat.com>
-Date:   Sun, 19 Sep 2021 15:07:02 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+        bh=OFCrzvvitWWIdA/0PvlWnf7mKmr8FXHcOdNEzLMV3CE=;
+        b=xCPc7UyDVIh7ePp1LmvZfgL7rLX3s5lHX3enCNpu0tTH2N6IonxO91ReYzY6KrptwDYVaH
+        yvhLJLtOxQbujlD7q2EXY6cvqvKUrcMT9TJzYqRcOjcdEIqo3IYAaJFtC9MinoF5iKoAwI
+        0rGMirQXKxPZCylMJh6kkSrKVlBEphapEUrleVIz3Adq5DZ0JrutZabFzqUkHszIi6WYlg
+        SDmFIjGMl+XQPuNfW/Sd2F5bvodq3pfGIPuiBu6r3LeiyIJLEZDUdBUaWn8wtYpL0/khHS
+        Qn7fUa1QOVTzZ5h2ftcAZTRbAEKYza4MVEIpgLSp3/xsQY2IMS2fuTWXWHuD/g==
+X-Virus-Scanned: amavisd-new at heinlein-support.de
+Message-ID: <f071dfb3-1aad-003c-00bc-6b7ecf103e91@mailbox.org>
+Date:   Sun, 19 Sep 2021 14:24:49 +0000
 MIME-Version: 1.0
-In-Reply-To: <20210919094313.52666-1-krzysztof.kozlowski@canonical.com>
-Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v5] libata: Add ATA_HORKAGE_NO_NCQ_ON_AMD for Samsung 860
+ and 870 SSD.
 Content-Language: en-US
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hans de Goede <hdegoede@redhat.com>
+Cc:     Kate Hsuan <hpa@redhat.com>, Jens Axboe <axboe@kernel.dk>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20210901151643.13562-1-hpa@redhat.com>
+ <3e26e7a5-0d99-b993-d5ce-aa517e1bf1bb@redhat.com>
+ <yq1h7f24y6f.fsf@ca-mkp.ca.oracle.com>
+ <238d0841-0f03-928f-5441-89d5c9dcf9b9@redhat.com>
+ <cd75fa32-8c4d-664e-5adb-f2f325d3c58e@redhat.com>
+ <yq14kb24e97.fsf@ca-mkp.ca.oracle.com>
+From:   Tor Vic <torvic9@mailbox.org>
+In-Reply-To: <yq14kb24e97.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-Rspamd-Queue-Id: 029B326C
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 Hi,
 
-On 9/19/21 11:43 AM, Krzysztof Kozlowski wrote:
-> Intel devices 0x2822, 0x2823, 0x2826 and 0x2827 are already on the list
-> as Lewisburg AHCI/RAID.  They use same configuration except 0x2822 which
-> has board_ahci_nosntf (for ICH8).
+I saw that v2 (?) of this patch has made it into stable, which
+is quite reasonable given the number of bug reports.
+Are there any plans to "enhance" this patch once sufficient data
+on controller support/drive combinations has been collected?
+
+I didn't run any benchmarks to see whether performance has changed,
+but I now have this on 5.14.6:
+
+   /sys/class/ata_device/dev3.0/trim:forced_unqueued
+   /sys/class/ata_device/dev4.0/trim:forced_unqueued
+
+Before:
+
+   /sys/class/ata_device/dev3.0/trim:queued
+   /sys/class/ata_device/dev4.0/trim:queued
+
+These correspond to 860 Pro and 860 Evo, connected to a X570
+mainboard (AMD FCH controller).
+Note that neither before nor after this commit I had any problems
+with these drives.
+
+
+On 03.09.21 03:21, Martin K. Petersen wrote:
 > 
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
-
-Thanks, patch looks good to me:
-
-Reviewed-by: Hans de Goede <hdegoede@redhat.com>
-
-Regards,
-
-Hans
-
-
-
+> Hans,
 > 
-> ---
+>> I just realized that all newer Samsung models are non SATA...
+>>
+>> Still I cponsider it likely that some of the other vendors also
+>> implement queued trim support and there are no reports of issues
+>> with the other vendors' SSDs.
 > 
-> Not tested.
+> When I originally worked on this the only other drive that supported
+> queued trim was a specific controller generation from Crucial/Micron.
 > 
-> Changes since v1:
-> 1. Use still board_ahci_nosntf for 0x2822.
-> ---
->  drivers/ata/ahci.c | 12 ++++--------
->  1 file changed, 4 insertions(+), 8 deletions(-)
+> Since performance-sensitive workloads quickly moved to NVMe, I don't
+> know if implementing queued trim has been very high on the SSD
+> manufacturers' todo lists. FWIW, I just checked and none of the more
+> recent SATA SSD drives I happen to have support queued trim.
 > 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 186cbf90c8ea..63198ad95ed9 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -258,7 +258,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->  	{ PCI_VDEVICE(INTEL, 0x2683), board_ahci }, /* ESB2 */
->  	{ PCI_VDEVICE(INTEL, 0x27c6), board_ahci }, /* ICH7-M DH */
->  	{ PCI_VDEVICE(INTEL, 0x2821), board_ahci }, /* ICH8 */
-> -	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci_nosntf }, /* ICH8 */
-> +	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci_nosntf }, /* ICH8/Lewisburg RAID*/
->  	{ PCI_VDEVICE(INTEL, 0x2824), board_ahci }, /* ICH8 */
->  	{ PCI_VDEVICE(INTEL, 0x2829), board_ahci }, /* ICH8M */
->  	{ PCI_VDEVICE(INTEL, 0x282a), board_ahci }, /* ICH8M */
-> @@ -316,7 +316,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->  	{ PCI_VDEVICE(INTEL, 0x1d02), board_ahci }, /* PBG AHCI */
->  	{ PCI_VDEVICE(INTEL, 0x1d04), board_ahci }, /* PBG RAID */
->  	{ PCI_VDEVICE(INTEL, 0x1d06), board_ahci }, /* PBG RAID */
-> -	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci }, /* PBG RAID */
-> +	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci }, /* PBG/Lewisburg RAID*/
->  	{ PCI_VDEVICE(INTEL, 0x2323), board_ahci }, /* DH89xxCC AHCI */
->  	{ PCI_VDEVICE(INTEL, 0x1e02), board_ahci }, /* Panther Point AHCI */
->  	{ PCI_VDEVICE(INTEL, 0x1e03), board_ahci_mobile }, /* Panther M AHCI */
-> @@ -358,8 +358,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->  	{ PCI_VDEVICE(INTEL, 0x1f37), board_ahci_avn }, /* Avoton RAID */
->  	{ PCI_VDEVICE(INTEL, 0x1f3e), board_ahci_avn }, /* Avoton RAID */
->  	{ PCI_VDEVICE(INTEL, 0x1f3f), board_ahci_avn }, /* Avoton RAID */
-> -	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Wellsburg RAID */
-> -	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci }, /* Wellsburg RAID */
-> +	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Wellsburg/Lewisburg AHCI*/
-> +	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci }, /* Wellsburg/Lewisburg RAID*/
->  	{ PCI_VDEVICE(INTEL, 0x43d4), board_ahci }, /* Rocket Lake PCH-H RAID */
->  	{ PCI_VDEVICE(INTEL, 0x43d5), board_ahci }, /* Rocket Lake PCH-H RAID */
->  	{ PCI_VDEVICE(INTEL, 0x43d6), board_ahci }, /* Rocket Lake PCH-H RAID */
-> @@ -394,10 +394,6 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->  	{ PCI_VDEVICE(INTEL, 0xa106), board_ahci }, /* Sunrise Point-H RAID */
->  	{ PCI_VDEVICE(INTEL, 0xa107), board_ahci_mobile }, /* Sunrise M RAID */
->  	{ PCI_VDEVICE(INTEL, 0xa10f), board_ahci }, /* Sunrise Point-H RAID */
-> -	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci }, /* Lewisburg RAID*/
-> -	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Lewisburg AHCI*/
-> -	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci }, /* Lewisburg RAID*/
-> -	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci }, /* Lewisburg RAID*/
->  	{ PCI_VDEVICE(INTEL, 0xa182), board_ahci }, /* Lewisburg AHCI*/
->  	{ PCI_VDEVICE(INTEL, 0xa186), board_ahci }, /* Lewisburg RAID*/
->  	{ PCI_VDEVICE(INTEL, 0xa1d2), board_ahci }, /* Lewisburg RAID*/
+> Purely anecdotal: I have a Samsung 863 which I believe is
+> architecturally very similar to the 860. That drive clocked over 40K
+> hours as my main git repo/build drive until it was retired last
+> fall. And it ran a queued fstrim every night.
 > 
-
+> Anyway. I am not against disabling queued trim for these drives. As far
+> as I'm concerned it was a feature that didn't quite get enough industry
+> momentum. It just irks me that we don't have a good understanding of why
+> it works for some and not for others...
+> 
