@@ -2,105 +2,87 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83AF3C433F5
-	for <linux-ide@archiver.kernel.org>; Fri,  1 Oct 2021 20:18:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4434EC433EF
+	for <linux-ide@archiver.kernel.org>; Sun,  3 Oct 2021 11:29:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 60E5161247
-	for <linux-ide@archiver.kernel.org>; Fri,  1 Oct 2021 20:18:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E0F361AFB
+	for <linux-ide@archiver.kernel.org>; Sun,  3 Oct 2021 11:29:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231818AbhJAUTt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 1 Oct 2021 16:19:49 -0400
-Received: from mxout04.lancloud.ru ([45.84.86.114]:58576 "EHLO
-        mxout04.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230045AbhJAUTs (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 1 Oct 2021 16:19:48 -0400
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout04.lancloud.ru 7185420A58A3
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-Subject: Re: [PATCH] drivers/ata: Fix kernel pointer leak
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Guo Zhi <qtxuning1999@sjtu.edu.cn>
-CC:     <linux-ide@vger.kernel.org>
-References: <20210929121618.1157415-1-qtxuning1999@sjtu.edu.cn>
- <265805eb-162e-4d2d-1e56-39aa16c87934@opensource.wdc.com>
- <baee2cee-3401-e8e4-efb3-432d48bb9589@omp.ru>
- <445ae4fd-46af-ba09-1921-2ccedcdcf4ce@opensource.wdc.com>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <b0176181-ae0d-f2d7-d9de-776c161b2ff9@omp.ru>
-Date:   Fri, 1 Oct 2021 23:18:01 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        id S230131AbhJCLbI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 3 Oct 2021 07:31:08 -0400
+Received: from mout.kundenserver.de ([212.227.126.187]:58673 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230108AbhJCLbH (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 3 Oct 2021 07:31:07 -0400
+Received: from localhost ([217.85.124.89]) by mrelayeu.kundenserver.de
+ (mreue009 [212.227.15.167]) with ESMTPSA (Nemesis) id
+ 1MtOT0-1mnz3R3SpS-00uqpd; Sun, 03 Oct 2021 13:28:47 +0200
+From:   =?UTF-8?q?Reimar=20D=C3=B6ffinger?= <Reimar.Doeffinger@gmx.de>
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>, linux-ide@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>, hch@infradead.org,
+        Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: [PATCH 5/6] pata_optidma: fix checking of DMA state
+Date:   Sun,  3 Oct 2021 15:28:50 +0200
+Message-Id: <20211003132851.12574-6-Reimar.Doeffinger@gmx.de>
+X-Mailer: git-send-email 2.33.0
+In-Reply-To: <20211003132851.12574-1-Reimar.Doeffinger@gmx.de>
+References: <11506f71-80ea-a40f-1d5a-50c8005fcc42@opensource.wdc.com>
+ <20211003132851.12574-1-Reimar.Doeffinger@gmx.de>
 MIME-Version: 1.0
-In-Reply-To: <445ae4fd-46af-ba09-1921-2ccedcdcf4ce@opensource.wdc.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
- LFEX1907.lancloud.ru (fd00:f066::207)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Provags-ID: V03:K1:NGkkEyr7gjaUpsiGwUEOwilZBJz16eWE9pXYcuvfkMvKf9D6W85
+ AH6IZ2C+m/WooaxtzXX4NkH8ZKZQ+FbYIBMOqvSRK6sg6o+ANiNCXozxUwm05DTKMssuAwz
+ YZefi6d+WhoLemtcnIxWosahstwncWy5RoVPgIW7UOQTJIeAxeP57yhIfz9TusjUu+SNSGg
+ iz5XE1YjzwwOj3BG4CzJw==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:EPNgMql1Y/U=:z+53rx0ycXSQCBcvD9cD3b
+ SZcXHtGoJCy2NS9hMY+1/iAKGqkP13uIhVTVQcTF7eNgJhcaRjJUmffmE2BpaWT6lhIgqiQQL
+ exCRgKDGu+czP1jU2DnzHPsLjbWEDO7+P/8q4Vq2tV46G5/r+l2JHtp92eB9AXH1CxPdr/BAS
+ leNXSG3Zmw5HnuFdgk+YNV3kJ4iDMLnQ38+De+o8FR+VRDFwDhu31dvrCEips1rQSJSolHXgc
+ yqzXysWoY2AEi2zkI0iXpNknL7+xEGFO5gKT+H1IBWHEBf5KHXlsDEsibxOmM53Jh0qdjqvoV
+ wKpwTfOH3yrx49XzZ0/7zuv7f4ZKky7sLm7KDkX5ltZUFsQdYHfpCmZoZOT0PrtTUL+tba+cR
+ iOfJfHgDCBwYMX56Th6LpUzB2wQfnmQ/KJynZbn5C10ElWNmyBoidGQBRP6QtdKf5KxgKJ150
+ UqyzfJdhzTYmLaohrud1LxaXa0gPfqiPFjqVPncVzyreVjxOTmiOFusnxFU2uTJp6be3oysQX
+ F2eOfCDbHTPsTGuB9j/XdAANzXYLektupqX5tomqSwyOl0kDNC+lAhhIrbATxvGsAHXkZZRBv
+ EUtsgC7ZLDfb3lr5ybTLP3m/pFraf+0QwcmGcCFlPLSNBm8KSZ4h4lILUtqqJvUYoyDOtN5tI
+ HXg+YZDK82ogHzpdQwVPyV7aX10xJU9RlPucQD9wQMFP7vB03NFmX/Li8LiK0CqmFpnXjCbPk
+ vSWPc6rbvupQl2ppmrxWNUpL3IH4kZeGiCCNF/YkJIf29UE2rX0qbb4rQgg=
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 10/1/21 4:18 AM, Damien Le Moal wrote:
+Checking if DMA is enabled should be done via the
+ata_dma_enabled helper function, since the init state
+0xff indicates disabled.
+Change based on code review, not tested due to lack of hardware.
 
-[...]
->>>> Pointers should be printed with %p or %px rather than cast to
->>>> 'unsigned long' and pinted with %lx
->>>
->>> s/pinted/printed
->>>
->>>> Change %lx to %p to print the secured pointer.
->>>>
->>>> Signed-off-by: Guo Zhi <qtxuning1999@sjtu.edu.cn>
->>>> ---
->>>>   drivers/ata/pata_atp867x.c | 10 +++++-----
->>>>   1 file changed, 5 insertions(+), 5 deletions(-)
->>>>
->>>> diff --git a/drivers/ata/pata_atp867x.c b/drivers/ata/pata_atp867x.c
->>>> index 2bc5fc81efe3..c32b95f48e50 100644
->>>> --- a/drivers/ata/pata_atp867x.c
->>>> +++ b/drivers/ata/pata_atp867x.c
->>>> @@ -447,11 +447,11 @@ static int atp867x_ata_pci_sff_init_host(struct ata_host *host)
->>>>   #ifdef	ATP867X_DEBUG
->>>>   		atp867x_check_ports(ap, i);
->>>>   #endif
->>>> -		ata_port_desc(ap, "cmd 0x%lx ctl 0x%lx",
->>>> -			(unsigned long)ioaddr->cmd_addr,
->>>> -			(unsigned long)ioaddr->ctl_addr);
->>>> -		ata_port_desc(ap, "bmdma 0x%lx",
->>>> -			(unsigned long)ioaddr->bmdma_addr);
->>>> +		ata_port_desc(ap, "cmd 0x%p ctl 0x%p",
->>>> +			ioaddr->cmd_addr,
->>>> +			ioaddr->ctl_addr);
->>>> +		ata_port_desc(ap, "bmdma 0x%p",
->>>> +			ioaddr->bmdma_addr);
->>>>   
->>>>   		mask |= 1 << i;
->>>>   	}
->>>>
->>>
->>> Looks OK to me. But please fix the commit title to:
->>>
->>> "ata: atp867x: Fix pointer value print"
->>>
->>> "pointer leak" is too scary for what is only a simple printk problem.
->>
->>     It's not a simple printk() problem, it's an kernel info leak that he's 
->> fixing. But, as I said, this driver doesn't use MMIO, so "leaks" only I/O port 
->> addresses.
-> 
-> OK. I interpreted "leak" as memory leak... So the problem is print of pointer
-> addresses that are unused. But if they are, shouldn't the pointers be NULL ? (I
-> am absolutely not familiar with this driver, never looked at it).
+Signed-off-by: Reimar Döffinger <Reimar.Doeffinger@gmx.de>
+---
+ drivers/ata/pata_optidma.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-  They are used to map the I/O parts, so the driver can use ioread*()/iowrite()*.
-
-[...]
-
-
-MBR, Sergey
+diff --git a/drivers/ata/pata_optidma.c b/drivers/ata/pata_optidma.c
+index f6278d9de348..ad1090b90e52 100644
+--- a/drivers/ata/pata_optidma.c
++++ b/drivers/ata/pata_optidma.c
+@@ -153,7 +153,7 @@ static void optidma_mode_setup(struct ata_port *ap, struct ata_device *adev, u8
+ 	if (pair) {
+ 		u8 pair_addr;
+ 		/* Hardware constraint */
+-		if (pair->dma_mode)
++		if (ata_dma_enabled(pair))
+ 			pair_addr = 0;
+ 		else
+ 			pair_addr = addr_timing[pci_clock][pair->pio_mode - XFER_PIO_0];
+@@ -301,7 +301,7 @@ static u8 optidma_make_bits43(struct ata_device *adev)
+ 	};
+ 	if (!ata_dev_enabled(adev))
+ 		return 0;
+-	if (adev->dma_mode)
++	if (ata_dma_enabled(adev))
+ 		return adev->dma_mode - XFER_MW_DMA_0;
+ 	return bits43[adev->pio_mode - XFER_PIO_0];
+ }
+-- 
+2.33.0
 
