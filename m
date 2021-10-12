@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C909C433F5
-	for <linux-ide@archiver.kernel.org>; Tue, 12 Oct 2021 06:32:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8545BC433F5
+	for <linux-ide@archiver.kernel.org>; Tue, 12 Oct 2021 06:33:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0243F601FF
-	for <linux-ide@archiver.kernel.org>; Tue, 12 Oct 2021 06:32:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6773C60E94
+	for <linux-ide@archiver.kernel.org>; Tue, 12 Oct 2021 06:33:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232931AbhJLGeG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 12 Oct 2021 02:34:06 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:1164 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232340AbhJLGeF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 12 Oct 2021 02:34:05 -0400
+        id S233059AbhJLGfm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 12 Oct 2021 02:35:42 -0400
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:42062 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232340AbhJLGfm (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 12 Oct 2021 02:35:42 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1634020323; x=1665556323;
+  t=1634020421; x=1665556421;
   h=message-id:date:mime-version:subject:to:references:from:
    in-reply-to:content-transfer-encoding;
-  bh=+kUGpjGyoyfKGJLc0NJSoxIKn85/fjVPkTcoNAU2OcE=;
-  b=KManhbX3QOnuBw9uvZc2oU9/bapjRRVGkbxUgzqv2I/nL21QVLJ5N0K6
-   n6EgTQw8z+38lqv5/1OPHAGBGjXM5Or3rIVed/lt7FR0wg/cYyQeOuIkN
-   QiRTLiMlyFyV9Lube86GFaljClF7YK+6IF33jUg4y5oAdrKj/mcud11ta
-   XcggERWLm9GRR5ZZD5TJ3sNHyLHh7P37Wjmfs8lDcQi4wKQka7/kzSWpb
-   B44KE1Kvl2dK8qqI8XQV6gqSq9I6Stqwwvk92S+/7GrdrqjXR5K5H7HTJ
-   rZSHoPSJsVAQVYMNbrz23fU2r76KL5H6ciIsLZEzODnWV0LHklmFjTuUr
-   w==;
+  bh=H4ONciO5zKYeSi2T2fOsI5PzYnJqn6fmyJu6aa15Mpw=;
+  b=nZdP3IvbdCRyMdHbMoctInppY6wY7YfcfXjlqQpaSnN6ju3ecSkLRvBr
+   4vG/NmZOh/uJ43ftQL88sy1Rpmq1UqJTImqhRAtBOWSm6DfgJpo4qNM3c
+   n0eaRG9ijEc8WfEPHsS9oKPGdhdo0Ztfy9+qT12VfAyKF77UHFLiG3YXB
+   XOWw4FovJtZKycxZvMRJ4ZOb3bQlkVKBUWiWSzX9KNFJUUsngj2AGy8jn
+   3NhM1cldJe+cCSoXPmfaUjJ7qEn8PrCQ4BEG9/myv4Aon095/iCl/l2rk
+   iFjUXOwW0rg3eg2y3nXNu8N9G7bJDV6AiQLmDL6JdpWBQdhfEnHhvMrtR
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.85,366,1624291200"; 
-   d="scan'208";a="187344717"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 12 Oct 2021 14:32:02 +0800
-IronPort-SDR: NdpubEg3fvGhxTzW3Gb00BSpGSA8naV5GacQGSktVCw5ujGffVTlQbEzLqNvP9/uggZHcWPMXS
- C5BePRZRH4BbGRCHk1Duv051o4Tkaqc3hMV/v+gjh1ifnlRl/RTx/0QDQKtL2TgtNZB3oKKh2m
- hX9KmkEDuSn9ekSxvkBgEeScP6MVKWu8zWe2KceDB6U4Y/pogPkQxjkuNnvZbSsvtYo7Fvne8D
- LClVVzTRWYkL/NOujTF1LdutfIAe+N9phiZUcuWLjF+wA0xHcaQvNc80cXFHnEf2cYKsp1YUkb
- dDdc3W8sHQAKX89kQhFfIK76
+   d="scan'208";a="294296661"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 12 Oct 2021 14:33:40 +0800
+IronPort-SDR: xCFPWu2hZ2JBgq3fbQr1Wt7UJ42idj3UikYzQH+0FguW7z+VloaXq7dCz/53+owCfd3eUmIyQa
+ OdH6S19wuAyJ9M5V43W6STgQMFgt7z9jvhUJESNsedqydOTm90FFc4zWntZAiwfznZtCRILBTg
+ Lus4VRTEJ1VTd/GJVJnFCGqTm61rsmthVogTNN5BLngyhAF9ENv3Pu5frjvirnQcMzBKRKTzAv
+ IuczaqFwPoCwiLLunMpZ0Bz1nulzIQARKGlZXKUbViASBuK6yEimxYrQXbVnnXyJ00eiElFn3N
+ kUxrHkaGmTP/jQJDQ8hqqUXm
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2021 23:06:19 -0700
-IronPort-SDR: xu62lKkRSHw1pVgkKUqw/u2UnhqJU3kdBQJusnbmXse5V3RS64+JFmVv1B+Lpa9mU6fH88qLEi
- 0ZvdRMEumTLhVwRgiFlN4PDBvcU7PNR2a4H+n0CEcQWlm89BYNm1eelKAASMhYgZKkEPOC1msQ
- Eg3CinzuX91zQ2dgURj5L5nRwVj1j9C9+QAQdRce7dyans74btf/SrAfuctBx4HImXcMSwbVU8
- GXCH/SpzRQyGY06aq9UVOpvLcoW/qZDcv0q0XHxKADt/ybFMbeKpYkT5aMMvRLgMfkeJxf5/d5
- myM=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2021 23:07:55 -0700
+IronPort-SDR: YwDhJt7oB1taUQJNXBjZ8Kqyr/E+J/dzfeYuZmv1HkJOA9MEQC86DAkkiLWqkiry1UfKCQNAyZ
+ F557x8XWO0ZuG6DmJNhfddS0HpiCXsJgCpGqbCN7xeODm28yuwS3lMWEX+BHxYoiICmez30ExT
+ n7KEd1dziM33UZAC5avekrgSbgo92BQlPPU1Z5gdTWG/CghclQMHGreWlgzsqal209mil9T8SB
+ apjquRjB4+DIPHdyhSSeg3pve5h5jTYhGRtPKSvPvX/PeG+WH3QkiGwtfAvMtJykqLVQquGo/E
+ Uww=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2021 23:32:05 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2021 23:33:41 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4HT5Rm0TZ9z1RvlM
-        for <linux-ide@vger.kernel.org>; Mon, 11 Oct 2021 23:32:04 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4HT5Tc2q4pz1Rvll
+        for <linux-ide@vger.kernel.org>; Mon, 11 Oct 2021 23:33:40 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,23 +56,23 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1634020323; x=1636612324; bh=+kUGpjGyoyfKGJLc0NJSoxIKn85/fjVPkTc
-        oNAU2OcE=; b=gnebySUi4Qk+Hyp3aRDr/F+q4y1SmgLR+nCCkUjQMg1LOOApGuS
-        Qhd7ASNSiccf6RPIVKtvlAHXnL8+WlY+6e5Tx8Gg+lc7T3XXCugjTTXCxppu+rsF
-        QGhif3gapIzO3IVY7P9bHyBd+94q4e1YCKNAS9uwU0cgMbd7qRWyKr3K8vN0nYdW
-        dDA8OFarReoomF7dPUAZe28k2j7OxkqxoZRKHnqspl5i6fKi1f4q9ab0yMetv8Rt
-        quMe00IvGPYk9gavnTVLU0XKLCX0r1Uz3pjQNb7TBAU2egk+ZHOe7oMb+z7MJFyN
-        Lb+RW4+sAXG8qReRzmUqiIzYBqJFteXoMiw==
+        1634020419; x=1636612420; bh=H4ONciO5zKYeSi2T2fOsI5PzYnJqn6fmyJu
+        6aa15Mpw=; b=YkptdX7eFOZGNqH1QEyFETeeqrcCvwdvTSBAV/Dc33JTMpFbuoW
+        EL/ThbztoECnp8jIanETK1TSYkUmFlVxidkdPGndkGiK/cX03YOTjOHpzazK7BG+
+        GsSd+ISu6rrEJ9DwUL8X6NbEnXhKBkmUpkuBzj870IvorYESgvlVsU177M28yqJn
+        PgHc+Sd146MTECX4AUgMWLZbJXzNOK6uqObJFi73QnF/BqbEfZ/+9Z00O8P76OE3
+        bxb6eeZakJJTemdWulLQB5mje5JjNHP1lgAMVtivgMYUcvcGRUkhfPGrd7Y0Kgr4
+        fVRJQDpY/EJt5DeLkTu3kHKqzWx1Oh/qdvg==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id FPyBfBzE4s41 for <linux-ide@vger.kernel.org>;
-        Mon, 11 Oct 2021 23:32:03 -0700 (PDT)
+        with ESMTP id wGlhPAOfkiZs for <linux-ide@vger.kernel.org>;
+        Mon, 11 Oct 2021 23:33:39 -0700 (PDT)
 Received: from [10.225.54.48] (unknown [10.225.54.48])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4HT5Rk4wqbz1RvTg;
-        Mon, 11 Oct 2021 23:32:02 -0700 (PDT)
-Message-ID: <c34d1073-391e-1b9d-3378-f916f6ed1e30@opensource.wdc.com>
-Date:   Tue, 12 Oct 2021 15:32:01 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4HT5Tb0R1tz1RvTg;
+        Mon, 11 Oct 2021 23:33:38 -0700 (PDT)
+Message-ID: <2c974db4-74de-1749-af49-72871338ade4@opensource.wdc.com>
+Date:   Tue, 12 Oct 2021 15:33:37 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
  Gecko/20100101 Thunderbird/91.1.2
@@ -133,7 +133,11 @@ t.
 sidering the whole user base and not just my use? Would that be sensible =
 to handle that way?=20
 
-That works !
+Note that I will apply the entire series to for-5.16 so that the patches =
+have
+time to go through linux-next for more testing. The first patch will be
+backported once we start the 5.16 cycle.
+
 
 >=20
 > Best regards,
