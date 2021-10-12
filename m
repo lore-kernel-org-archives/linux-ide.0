@@ -2,121 +2,86 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71B7AC433EF
-	for <linux-ide@archiver.kernel.org>; Tue, 12 Oct 2021 02:20:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C075FC433F5
+	for <linux-ide@archiver.kernel.org>; Tue, 12 Oct 2021 06:28:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4DD8A60E78
-	for <linux-ide@archiver.kernel.org>; Tue, 12 Oct 2021 02:20:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D78460C4D
+	for <linux-ide@archiver.kernel.org>; Tue, 12 Oct 2021 06:28:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230330AbhJLCW4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 11 Oct 2021 22:22:56 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:24166 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229556AbhJLCWz (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Oct 2021 22:22:55 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1634005255; x=1665541255;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=Hdpfu61NK2jCZ+nrHzbjU16uXJwHiZD1bPqpYESa6NE=;
-  b=MEx8a/fpYRWWARL7fxXgHK5mm4knWICKHhe5/cZkgUbkAI+9X9vECnni
-   niHmWyfpvzcK+m8PrKEtLCfOR3BDfWKStBWkzbDU4mlwIPsxZmnefpSEt
-   tK5YRbaUGx6YX8+/D8NaFLmh71uv+UitjYASozZfvKHlcOXhjApzlrYxV
-   kdnprtOu7k8WAa/hSidYqF/iMvmRo0vq97jtaXfxm3tTke2HkzHN7rWlS
-   6vVAAKodbXYvXUnjr11ZS0+k1iq0GQLDwR7m7cVCk5lnrSOr7DQVbQ2yF
-   PteL9Rr4VnL2L6b5FTF9Mwak/m00wWijZOKK2Z8YvpYIi+Tm9+daXOJ2f
-   A==;
-X-IronPort-AV: E=Sophos;i="5.85,366,1624291200"; 
-   d="scan'208";a="183506630"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 12 Oct 2021 10:20:52 +0800
-IronPort-SDR: RVRY5b51tl4idNeyAwbTPr3ZKv0DCaVf7MglqurpesmNbYz7/jKyh6YMMziCWIu/SuhnRdmK+I
- +V6acMSDPURy/zaOQvcAGsK370S46BVsQ5Iw1aZ6kHoNEI+jgQBbKnn+Fm4/J9pO3MjSFe80Gs
- 3bqBxmVBo4oMt/LgX8P+JE3ceQJj+t/duh3kvrhXxPdRgffzgwwW2SrqJwdkWjMEcmobWjrjG5
- VGgaNP/bGM3AjcOwU4iQlvnbjc8sxeFGyXLXT7akuIaDfDORnKyI4RhWeCm8KXky7LZVbRu/ps
- beLw7LDg0CWp0L1i3Xg4m/nA
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2021 18:56:39 -0700
-IronPort-SDR: KOIcfENYF4+9Im7A0VfREvA0ffd3KBIFYoBdc7wN+adt+DlO/DBERTIj37/XbHpPIrcRqNwFAC
- 3px9jjPfp1D2gNYLB39qdFpWWP2+r5xdQ98mVsVMbAb4Vscss6IU6tbZdtXy3Cywq18LtWkNQW
- cemh6mOVtN19HwXvLLvkzWymgALNvuDi+KCAlvExJx4ZqmUe3gdPRwmoPgMmiFiIpgWe0IfbkZ
- u+s9leeX7fd4PQ+UBMxEAyE1wBWYh4dIPKweo4h5PFKSGiWfdWrA3vWdwoG32eSCuU27SIFeRQ
- oq8=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2021 19:20:51 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4HSzsv1B7Bz1Rvll
-        for <linux-ide@vger.kernel.org>; Mon, 11 Oct 2021 19:20:51 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1634005250; x=1636597251; bh=Hdpfu61NK2jCZ+nrHzbjU16uXJwHiZD1bPq
-        pYESa6NE=; b=Q7UNrJGpQn6Dwy1ev2WXZh6jrWp64D4XFeD3NS1hQZflzzwHKuf
-        rz1IvZi3RAghdD/Ij0vZ5lxEszLPfQmBtItaoFbT4XSSsQH72kyQumU4Gmn95a+v
-        GZIKTurwFvV3jo5xWo+b21bdTd1kS2d3SgOWXT+TTc6qFOfr07/AELmDfUshVfo8
-        1qgxogws/IFfRft8tpnTVFzAhf7LRwWBH8SaV+V4tqN3GmBfuqc0IusIakBjF2lc
-        W70Z5MDB0kicgRolMQC+vZazBfUTgn0LOnofsVGxYpiRRFqkT+U/Y4Lv4Kj3prba
-        K0999BbrJjayBWgQkrgybNXodT6gPqZHaSg==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 77XNNTmKfdr7 for <linux-ide@vger.kernel.org>;
-        Mon, 11 Oct 2021 19:20:50 -0700 (PDT)
-Received: from [10.225.163.54] (unknown [10.225.163.54])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4HSzss3xz5z1RvTg;
-        Mon, 11 Oct 2021 19:20:49 -0700 (PDT)
-Message-ID: <c3a7bdf2-caab-99e6-4da6-25638e3b3c24@opensource.wdc.com>
-Date:   Tue, 12 Oct 2021 11:20:47 +0900
+        id S232963AbhJLGai (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 12 Oct 2021 02:30:38 -0400
+Received: from mout.kundenserver.de ([217.72.192.74]:44597 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231190AbhJLGag (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 12 Oct 2021 02:30:36 -0400
+Received: from localhost ([98.128.181.94]) by mrelayeu.kundenserver.de
+ (mreue108 [212.227.15.183]) with ESMTPSA (Nemesis) id
+ 1MYvPq-1mEEaG39tI-00UoSu; Tue, 12 Oct 2021 08:28:16 +0200
+From:   =?UTF-8?q?Reimar=20D=C3=B6ffinger?= <Reimar.Doeffinger@gmx.de>
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>, linux-ide@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>, hch@infradead.org,
+        Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: [PATCH 5/6] pata_optidma: fix checking of DMA state
+Date:   Tue, 12 Oct 2021 08:27:48 +0200
+Message-Id: <20211012062749.4728-6-Reimar.Doeffinger@gmx.de>
+X-Mailer: git-send-email 2.33.0
+In-Reply-To: <20211012062749.4728-1-Reimar.Doeffinger@gmx.de>
+References: <20211012062749.4728-1-Reimar.Doeffinger@gmx.de>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.1.0
-Subject: Re: [PATCH v4] Fixes to DMA state check
-Content-Language: en-US
-To:     =?UTF-8?Q?Reimar_D=c3=b6ffinger?= <Reimar.Doeffinger@gmx.de>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        linux-ide@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        hch@infradead.org, Paul Menzel <pmenzel@molgen.mpg.de>
-References: <11506f71-80ea-a40f-1d5a-50c8005fcc42@opensource.wdc.com>
- <20211003132851.12574-1-Reimar.Doeffinger@gmx.de>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20211003132851.12574-1-Reimar.Doeffinger@gmx.de>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Provags-ID: V03:K1:b85dMji3/3R0FUsm5XLNwdcPVeCEciMnjXGP66mKoiNf5pp3C42
+ FZrRNXfYm779yUvasXdpTvhPoYbQE2qk1l9Yx/Vhx+PgXoIQCI1RZdrOkyGqn8/pb3MPQmn
+ 9tcJq8xcagt5kPUmiL0nbkNR3xYC/gwguI2PsiL/KLC7Qat2d/W3U1s7cuP+zjYb6/SGZWr
+ o0xEIDA8ARoV4/BI0IHZg==
+X-UI-Out-Filterresults: notjunk:1;V03:K0:WpEHaBy0Hbg=:302Avo+f4Ux9QNxfVs5Oy8
+ 65cMgHsuJRLhyhpCqDJVcukj6YRid94ZBUaAz2/DiOuzyczVqx712/9UY+RnFualrmJvK4QQT
+ HbXqPCo782c2BAQPtsQIaGCo5LfoagubArfkfxmnEDfWQvJaAW4aUEZlCyN0UkR0W8T6hwZvt
+ OTnR2hOxj4CKbB848daC38n0xcyRRUBD7bgIerVi9IpgkSwvl+gP/I8NoZ78TCCegPBO08axL
+ zwtpLDzy6HeJMxPgMXcPf8qP2VG75NThTnrYlXHmw7uZxQvJbN29x1GsUyalO4XK45VR64/g9
+ +67yfjwBeDn1B2n3RlAH28yN+55CK1lQArUh25h7XGgppVRafn/IZDlIamGizRWycgO8MJDXI
+ IO5U5vd5pJmYfkMB3kK9gtROgME/4UAECOy+iuEf42Nuqh+CCekMsxV4gjYi/2adUXYU+YkGN
+ zZcxf71EguvNb0rln/TWgKsyGrGDrYrEHz+KDSl7EaygU9nuVb1s6rroEuK7X5UKvf1/A11cM
+ KBWe8D/25iWkBbeubTK09/Ntbe2slfrlF0BViW1lPTdJf9i1W702dPMY/67nd9Xq4dT8N8lym
+ Dy8kFhA6igvuZodqAB/oLwPywmxoKHvmsIIL4q5xVAG1c49WtsilBJWwFfcdRsEmJPkmIcn8W
+ d+0ft/n31xESM5cRarFyfl2w3KrrO9s9995iqm/2xNVDb2oTkQqD8/AkgF0nUgC7gZ8Zn6R1u
+ 2F8DajQIa/6f36AY4UeINbd5wwDVglfwrtvqbxnGtzMp18nONtQhBDQ3jg8=
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 10/3/21 22:28, Reimar D=C3=B6ffinger wrote:
-> Patch series to add ata_dma_enabled calls instead of incorrectly
-> checking dev->dma_mode !=3D 0.
-> Only the first patch is confirmed to have caused real issues
-> that it indeed fixes, rest based purely on code review.
->=20
-> Changes v4:
-> - split per file/driver
-> - added Signed-off-by and Tested-by lines, improved commit messages
-> Changes v3:
-> - found and updated more cases in pata_ali, pata_amd and pata_radisys.
-> Changes v2:
-> - removed initialization change for SATA. I got confused by the
->   ping-pong between libata-eh and libata-core and thought SATA did not
->   set up xfermode
-> - reviewed other cases that used dma_mode in boolean context and those
->   seemed to need changing as well, so added them to patch.
->   I did not see any places that would set dma_mode to 0 ever, so I
->   do think they were all indeed wrong.
+Checking if DMA is enabled should be done via the
+ata_dma_enabled helper function, since the init state
+0xff indicates disabled.
+Change based on code review, not tested due to lack of hardware.
 
-This looks all good to me but I do not see any CC Stable tag. Do you
-want this backported to stable versions ?
+Signed-off-by: Reimar Döffinger <Reimar.Doeffinger@gmx.de>
+---
+ drivers/ata/pata_optidma.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/ata/pata_optidma.c b/drivers/ata/pata_optidma.c
+index f6278d9de348..ad1090b90e52 100644
+--- a/drivers/ata/pata_optidma.c
++++ b/drivers/ata/pata_optidma.c
+@@ -153,7 +153,7 @@ static void optidma_mode_setup(struct ata_port *ap, struct ata_device *adev, u8
+ 	if (pair) {
+ 		u8 pair_addr;
+ 		/* Hardware constraint */
+-		if (pair->dma_mode)
++		if (ata_dma_enabled(pair))
+ 			pair_addr = 0;
+ 		else
+ 			pair_addr = addr_timing[pci_clock][pair->pio_mode - XFER_PIO_0];
+@@ -301,7 +301,7 @@ static u8 optidma_make_bits43(struct ata_device *adev)
+ 	};
+ 	if (!ata_dev_enabled(adev))
+ 		return 0;
+-	if (adev->dma_mode)
++	if (ata_dma_enabled(adev))
+ 		return adev->dma_mode - XFER_MW_DMA_0;
+ 	return bits43[adev->pio_mode - XFER_PIO_0];
+ }
+-- 
+2.33.0
 
---=20
-Damien Le Moal
-Western Digital Research
