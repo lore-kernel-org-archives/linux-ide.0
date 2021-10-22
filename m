@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FE29C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDD5FC433F5
 	for <linux-ide@archiver.kernel.org>; Fri, 22 Oct 2021 01:41:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6FEA161183
+	by mail.kernel.org (Postfix) with ESMTP id A0D216128E
 	for <linux-ide@archiver.kernel.org>; Fri, 22 Oct 2021 01:41:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231732AbhJVBoL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S231672AbhJVBoL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Thu, 21 Oct 2021 21:44:11 -0400
 Received: from esa5.hgst.iphmx.com ([216.71.153.144]:52066 "EHLO
         esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231672AbhJVBoK (ORCPT
+        with ESMTP id S231687AbhJVBoK (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Thu, 21 Oct 2021 21:44:10 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1634866913; x=1666402913;
+  t=1634866914; x=1666402914;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=Fb8PmAqzVEUvcNzAAPPpInPp8Q+wCVeIhNjeqX65G10=;
-  b=MKUYj3FfCIJ8m4m4NOeRmcrEvrNthbyOva5456dJ6lKBGbE6orlpNA2+
-   U+o4deXtW7W0pO1s6yujgTs+llqdhbPa5qR9TuoRiE1vKJgpMrOaEEzr3
-   kwOTSINv0DuPI1l3jkL5H7Y8BhLRLZcrML2KmvxvR/OMsbWJNumUzaIZt
-   sdu2im9d6zCi7i9634hwyGJAFfgUoLrbnK+OvXZc7qouGjjRkytvMbMSu
-   YfeQS7EPNuBi2eTUsLoWNrThGmDH+1srfrdI3UouVcneaS9XvC0r1Zi8v
-   XHO25JmkQYcKd/P8De3yhHZqtYh1LMLzelToxmGb6cOXSMp7CmOhMX6gf
+  bh=0GBEnQOgShUxem7vnjYXTpBVavyzGngAN6kWGPfkKB4=;
+  b=C071h3GQxXhNvjqj+0WvBghVtTfjK54ReQaI4i/m9VrO7he4okpmG4US
+   R9VI4AcJ4dM40fI5835+cEJ7Ar06pY1k7M8qOSB3iFFTLHvz4BB35j/e0
+   Y4P81yXXjhcMVp4dC4FAW8cOfmB7v8BKXUguBiqc2xl2pSBIDm7RV5cNN
+   OK1SO+ic0CbMUf7tidTi774CzJFmlirT55ot6hXVvZ3x28dm3pfm6bmUS
+   M5xeCi38e/JELVbY4D6HnLbUUYGLFCAlx513YLDP6toY+I+7ebDa9fge7
+   YJDx/oPiv3qAJf4mT6pAvogZpwPg0xg5eO2ra6oatbKigVdwx8LikXRyu
    w==;
 X-IronPort-AV: E=Sophos;i="5.87,171,1631548800"; 
-   d="scan'208";a="183572329"
+   d="scan'208";a="183572331"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
   by ob1.hgst.iphmx.com with ESMTP; 22 Oct 2021 09:41:53 +0800
-IronPort-SDR: NoyTWICUjgFQOIJQJ9ABtzC39srWDujYUJWIWTqzXL9yc45vFFmKo9jxF5zpdHjemMotG7Vtmg
- SECh5CihICe8GASUHFiT6YFl2WmhQQ/XWG34RpsA+mob6+9O+B/84rXXEVy9K6QQv7XWgYH4Lr
- C86jkGL/d0QRm6W+YiwogKxl8NNdBJUyVAMf6Z1+D4WIAcIq9IUlX7AjQDiIJ5OttAoDHqE+tf
- GW32MJuFyEUaWZGxnelGGAa9G6+4bvNl5jktHMXrPp/hN49pMyfMQswWtkQOny8Ce0/SXWS6Z9
- szyE0vCYSKEgOGWuC6hycCNe
+IronPort-SDR: O7OuUZseTvLJMKqpJFiodlbrM3fpJbUejOCi4luUQ80Bo03s+Gq478TlpP0T6K73AZlBpGzM1i
+ yjsLDzoGNNx/Mvik1bIPu58DOB6qnjMNZ7F7H16kyJc6Zwi2gufDtcNW24R+qzKPIVTKnWqJf5
+ MqwBM7CFB7tkSUGusumPaUO3MKfvFh6Gm5/CFDWWrAFaUVvSqsawO/IA4539EdJ5oSWS+tjCnA
+ oj3ELIrMyRBh4cb4I1gyzvTtyDruexbgXjAgC50y9/LXREW7WvD5oQXSfaYJZEBoZoHck6KT7K
+ UShhFF7fjpPfNmgbg9LEzruI
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
   by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2021 18:15:56 -0700
-IronPort-SDR: Qg24rmDIa9egUZ7fSg3iGOPMpLZEwYcsijsOEpz7j8qEhSfAgO5GuUVyanrFdw6RFVvIQfcRDu
- 4/9HUjnG08r9v8Gig3dhVaHVtZ2ELM4JZxWMHxKXPXCOultxQbsw0fM3ZbPKzZaCp4+CVGVfU9
- ojj2/ngLW367XylbiAYHV4MpBptfThc7XUSN8lb4RpCuzABaZsnM2ADe0+RJamjM4xNszQcKAA
- PhuzbrW+SNbPvTJZaiyD4xu5/juKNPlrORUnwtbXCVOr5ZzExG0kr1SDyruCYCyTW8XuU5JUva
- bCo=
+IronPort-SDR: DIuWuojc9bgUV5C3qY1EwpSDrlS/5KuSk9C0OdgRMg71gGrT7KvR8Ixx33qlJ6PDnYifjHbVUS
+ rDQkojq3Q5uCpKKPa/m9hHKwLT39n6MXLSR57q9Pcu6sOxiXdP3fWD6wreJtt78McIyC8L6fqj
+ 6ZuPnR+H5G3S0TSuzc4Cs10U76HUznCXCRLfO/P/+7XLXyvVaJE+b7+HNl8db0ecyVsVS41gwC
+ 3drARU63SY7xaUtA1oVxqpZJptLqphRATepH1BwSm0MbvH7GYXGgHJmZbNg5Rx/eZ1goABTiB0
+ Rzw=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2021 18:40:56 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Oct 2021 18:41:53 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Hb6WD2p1zz1Rvlv
-        for <linux-ide@vger.kernel.org>; Thu, 21 Oct 2021 18:40:56 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Hb6XK1wZSz1Rvlv
+        for <linux-ide@vger.kernel.org>; Thu, 21 Oct 2021 18:41:53 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,23 +56,23 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1634866855; x=1637458856; bh=Fb8PmAqzVEUvcNzAAPPpInPp8Q+wCVeIhNj
-        eqX65G10=; b=qEHfXsqB9TKKHJQdqiXEnChbzMfeTVOloIFfLAsFItGgTEpqrg2
-        aUjxal4YL1grm6DgXuqAbH/xBpo71hQ9ssabNxGEwVfMQAWjqLH+WM05ZFzStTyF
-        6Sw1/9vpQ2fUXGoZbWfUeb5CUQcNNSs7vc//f0lVJSjusRow9NFUvbv/JG/IJ8oG
-        5wlMl0KOUq3XHL1qduokaJqYvBvHN8fWhgp6MvV6XUUflsX3aBIrI9rXZqF2KY7e
-        +BBJzk7ze2OSMERlmQqqCt68C0eKGGIYZ5S+k13QYwWoeHsV6IoasiJowVokQDxG
-        /CbC+re+0OQA3Oz5PGUqq4BVr2o86b5btxg==
+        1634866912; x=1637458913; bh=0GBEnQOgShUxem7vnjYXTpBVavyzGngAN6k
+        WGPfkKB4=; b=Mpd7gCVrDYXQcY77OZlJfELf94YO/s7Tpk0RPoKb1UnBzyLtYr1
+        IrnWPDcQCbLEaoh4EakgyJsPg+LbK7O61++bXxq90HjPsNeDQSNSyianN+FwW5vc
+        J7vTnMhp2OYP5hR8s43S4abSSxc5F0i4GAu8FRAPNVKARg4LliozlEnOeQDV0Net
+        G+1d8ctMhPX1iiFPyXxkkGoCb3YOVZucJtIWn6chk2WtNmPz2hMbzfapj009p1Pp
+        FWaqZ5YiWHBIVDrk87lpOSJmVGXBG2KgS0ypHT0F6mumMzwnNQnFCwIR1wpFNIEy
+        uQ0eUdXaZBBVCVkWbyzn+XgNHaGTycZrn6w==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id Jy16gl7j8bDH for <linux-ide@vger.kernel.org>;
-        Thu, 21 Oct 2021 18:40:55 -0700 (PDT)
+        with ESMTP id qkDng2CriLsr for <linux-ide@vger.kernel.org>;
+        Thu, 21 Oct 2021 18:41:52 -0700 (PDT)
 Received: from [10.225.54.48] (unknown [10.225.54.48])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Hb6WC1N4Cz1RvTm;
-        Thu, 21 Oct 2021 18:40:54 -0700 (PDT)
-Message-ID: <1fd2156d-1f96-6aa9-e528-0d83f12c840e@opensource.wdc.com>
-Date:   Fri, 22 Oct 2021 10:40:53 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Hb6XJ1YKpz1RvTm;
+        Thu, 21 Oct 2021 18:41:52 -0700 (PDT)
+Message-ID: <e10d2ea8-859d-7e5a-e132-411dec748df9@opensource.wdc.com>
+Date:   Fri, 22 Oct 2021 10:41:51 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
  Gecko/20100101 Thunderbird/91.2.0
@@ -135,17 +135,6 @@ On 2021/10/21 20:23, Zheyu Ma wrote:
 > kernel will assume that the driver and the hardware match successfully
 > (even if that is not the case), which will cause the following error
 > if modprobe is called to remove the driver.
-
-What I meant is that -EINVAL or -ENODEV or any other proper error code do not
-really matter much since this error seems to happen only if there is something
-really wrong with the setup. "return 1" as it was definitely seems wrong.
-
-Given that the problem triggers with an invalid board_idx, -EINVAL seems more
-appropriate. But I would also change that message to dev_crit() or dev_alert()
-since this is a bug rather than a recoverable runtime error.
-
-Can you resend the patch with these changes ?
-
 > 
 > [   21.944486] general protection fault, probably for non-canonical
 > address 0xdffffc000000001b: 0000 [#1] PREEMPT SMP KASAN PTI
@@ -173,6 +162,9 @@ Can you resend the patch with these changes ?
 > [   21.960552]  driver_unregister+0x77/0xa0
 > [   21.960859]  pci_unregister_driver+0x2c/0x1c0
 > [   21.961178]  cleanup_module+0x15/0x28 [sata_mv]
+
+How do you trigger this ? A bad device tree or something like that ?
+
 > 
 > This is not the case if the correct error code is returned.
 > 
