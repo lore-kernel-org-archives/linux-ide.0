@@ -2,143 +2,132 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24D06C433F5
-	for <linux-ide@archiver.kernel.org>; Fri, 22 Oct 2021 09:18:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E11BC433F5
+	for <linux-ide@archiver.kernel.org>; Sun, 24 Oct 2021 23:24:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F1324610CB
-	for <linux-ide@archiver.kernel.org>; Fri, 22 Oct 2021 09:18:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4812E60FE8
+	for <linux-ide@archiver.kernel.org>; Sun, 24 Oct 2021 23:24:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232374AbhJVJUy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 22 Oct 2021 05:20:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40846 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232375AbhJVJUx (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 22 Oct 2021 05:20:53 -0400
-Received: from mail-ot1-x335.google.com (mail-ot1-x335.google.com [IPv6:2607:f8b0:4864:20::335])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D64CC061764;
-        Fri, 22 Oct 2021 02:18:36 -0700 (PDT)
-Received: by mail-ot1-x335.google.com with SMTP id p6-20020a9d7446000000b0054e6bb223f3so3672065otk.3;
-        Fri, 22 Oct 2021 02:18:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=AItOCyIoiykaIgn2iwMrFE8Ojtlnz+oni5ac/ci7TH8=;
-        b=naB9shmIGfxChEWyKJdR+YqE2pr/zTqeW7xDYvj7MEZMdwiJgV7VFWBejCEjLQjfnu
-         jtqwy2CB8U76e4k9Qp7PsEsnpfiYx0Aama7lHOCPMFamcG9jwglx5WQirF4h7KHpWYnt
-         kqi77571o+n+A7DoViHj05Wpw4EjxGip5UcA3fWcYKnAX7CL+n5GJKDNWKM+T/Gm5Q3J
-         78FiLQjkx+iEFzfMPUjCW9daOk6MGcNJyRtn4ZHKbG0sKMQQ9MaLldnX1xcAgjFKqZGG
-         kl0sDOfoB4/RbxyG1UvK3nNUK/nRJDLbfifJOiMxxKmpkinYl+p8h5wb0h3nXl/2Gcsc
-         76DQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=AItOCyIoiykaIgn2iwMrFE8Ojtlnz+oni5ac/ci7TH8=;
-        b=77NvpVG9I6cfGKZzUFacAAQdh3cB8lFOZUWCbEJwuREKgWJhc+Mwt/aDcCZgDFi5xe
-         PR0ERnVbSi9yi5S6ezpXtsUUqd/e6JO+zAxZ/lhndAr5C3tkcgU5sMKVcwgTxv70c4b+
-         aNG37Yecj6YojghB4bYWDfXBKGTy6RzKzvhdg4I9kP+1sXFVSv8iBAMzane6/nwitmop
-         QaV9jUXmX6EVhzMzCfHe6mSFh8PkTfBw2SQSWMkaZ5Cvc2qoVYJBHlogcxXWua/BBB7b
-         tiMiDMAZs0uH0jquMalBruI++M1fJ1w7vZnoKUWTnRGI8IrarN0N6+PlXU4IFLuYImgh
-         986w==
-X-Gm-Message-State: AOAM532EtnGtf+dzLnia678hOtq3uuTetjNyNtjwG9lUKWMrUErFRXgc
-        YuxHjhquxxVsHngUOsmn2j1XZi6muJ2lmZUUpOsTrkG5Cg==
-X-Google-Smtp-Source: ABdhPJzaMAiErlz/AbEXpOcAi05R5YZQYIsHDiaS4RAP8UdZTZeNHVFrei4RabKl3HyS/Q52tRHnXmQFFmzB08fu5tw=
-X-Received: by 2002:a05:6830:23ac:: with SMTP id m12mr9637598ots.166.1634894315790;
- Fri, 22 Oct 2021 02:18:35 -0700 (PDT)
+        id S229837AbhJXX06 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 24 Oct 2021 19:26:58 -0400
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:30047 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229533AbhJXX06 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 24 Oct 2021 19:26:58 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1635117877; x=1666653877;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=JSni6iXUGiVL+1tgcIkRcK5iNkHL92fz77zC9anEhZE=;
+  b=a2qPUOL1t1PP7JC3Q9tkXq1fZH8ym38OXsKOi9Dy5Qqjjhu5iDfPN6O1
+   zY//uSoO6CV5dscE2kIktOzuVml+lJDZZX6Ryv5KGAPsKSCyBZHuRU4Bn
+   lCIqbaq0xAWldqjYumUrND1NtoFq6aA7R+5eS2FPdLo9nXx/eIFXFS9gA
+   0eFu97Vl1NoA4OeFXUGmc6pcYhaGaMIHo6jYKDvkAERFZNpb49FmRnHjY
+   IW2Ixjo3m4Nne6N9Np+nVbT/L+M2Eonw65CvbgtHszJ+hGNcKImWbElYu
+   Nomw4xsqe7wp3hm7LFKVe2p3FsBUq56TTx75xZKy2scbnjx7tK5o7fVF5
+   w==;
+X-IronPort-AV: E=Sophos;i="5.87,179,1631548800"; 
+   d="scan'208";a="295458767"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 25 Oct 2021 07:24:36 +0800
+IronPort-SDR: OHvGJ4D7/IN2fG/GAfo3RbjnxNT7XD7dnVHZmKqlnHd2DjjKpLg0T6iyxEMQtZEy/i6WA5dAPR
+ JARvcGfARjQvWX2KTRi41ktLhNhJiw8+1gYFTAqF6GqqA9aX2ctw0q+2ltdvqKjiXrWeGmiaoQ
+ jyOe86TpbuoiszOOxadhLvunr7pkrLKfUr1h07h2ZqciQvuSvyLt5ptggoBfYZcit71FDanIl3
+ Hj/cu4ucBsEki0mRcoBgk7YLoSinDYEUawALsye9Q65oRADCl7Hn82NLYHrn1ZT3onZjY9c2+E
+ wg65/I+XbTCjq4DuFOK2CxtQ
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2021 16:00:08 -0700
+IronPort-SDR: wTXMtZ452Et76tZJNabBeuPKXPLf5v+r9848RwRZaQ0smlWL+YxEZGSMjjcH15Fcp5KfPWqqLC
+ YorOO4OHyghNN71HRgvuoPgebMml+DDMXdPgVoMZDQR9l8UcoDoOIqkVuwi5rKox5/bFuPl6SE
+ BjRymijRBT8yHK8Tm5RAuW2TkvdwUXeJzdXT85Yfjf6ILkevR5ipU7GazuOMlcVOL5PNxsYQZ8
+ gBkXaSOWIinwkGOlMyyow57KOte4Yeb3jDrSexy3xg31BdOLSrnshhEIcQ+SE2hxREx/cGxyMG
+ Se4=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2021 16:24:37 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4HcvLX2HqKz1RtVm
+        for <linux-ide@vger.kernel.org>; Sun, 24 Oct 2021 16:24:36 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1635117875; x=1637709876; bh=JSni6iXUGiVL+1tgcIkRcK5iNkHL92fz77z
+        C9anEhZE=; b=JZVk+DDg32P10gpbwUNYp6mURWcXEhDjBQJ5ZpYWUUviakSuBsh
+        VYiWCDeKv1bOKrmPIv+jWcRCVuTOEveVySVt1Jme1eXByiHZiOOkAkLdlY3TlD1r
+        7rPZXL6lq65Tc9J/Pr/Nn1LSR80OwKU9eudlZcXAi3PFqKfMAaE29oIZFyUg0TiS
+        6eBDR2Dy0sz3KOUe4zkPLLTqPFXxVVS2rHR5GV9fshr9UVrVflMqJ1pahZoagZ+3
+        N0qbhQGRD8fiHX1NXUEr88USFiY28NU4QDq/nVla46o5Wbtg+rMSpwkgwZYIcF4u
+        6nU1ZanOkOdw/1UhukVvSqzidxw23jRuwSg==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id qAZofnGN1-qL for <linux-ide@vger.kernel.org>;
+        Sun, 24 Oct 2021 16:24:35 -0700 (PDT)
+Received: from [10.225.54.48] (unknown [10.225.54.48])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4HcvLW2F9Dz1RtVl;
+        Sun, 24 Oct 2021 16:24:35 -0700 (PDT)
+Message-ID: <02571fc0-9c08-3e2b-124a-17fdb2262050@opensource.wdc.com>
+Date:   Mon, 25 Oct 2021 08:24:33 +0900
 MIME-Version: 1.0
-References: <1634795836-1803-1-git-send-email-zheyuma97@gmail.com>
- <e1f96f77-cf44-7783-bf88-0814bbabbfbc@omp.ru> <1d5064f6-0498-c78c-d98f-df7ca74e0a8d@opensource.wdc.com>
- <CAMhUBjnFebrick3dt4CtYPANU69Uy0vPagZd-PEo+mFg6BTGEA@mail.gmail.com> <e10d2ea8-859d-7e5a-e132-411dec748df9@opensource.wdc.com>
-In-Reply-To: <e10d2ea8-859d-7e5a-e132-411dec748df9@opensource.wdc.com>
-From:   Zheyu Ma <zheyuma97@gmail.com>
-Date:   Fri, 22 Oct 2021 17:18:24 +0800
-Message-ID: <CAMhUBjkX-eSzQRcNFaypb6NbY9HuLSDZCjewBHbe1fk89M3-BA@mail.gmail.com>
-Subject: Re: [PATCH] ata: sata_mv: Fix the return value of the probe function
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.2.1
+Subject: Re: Potential null-pointer-dereference problem due to missing
+ null-checking for ata_timing_find_mode
+Content-Language: en-US
+To:     YE Chengfeng <cyeaa@connect.ust.hk>
+Cc:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <TYCP286MB1188D47BA1A976E4090AF2B88A829@TYCP286MB1188.JPNP286.PROD.OUTLOOK.COM>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital
+In-Reply-To: <TYCP286MB1188D47BA1A976E4090AF2B88A829@TYCP286MB1188.JPNP286.PROD.OUTLOOK.COM>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Oct 22, 2021 at 9:41 AM Damien Le Moal
-<damien.lemoal@opensource.wdc.com> wrote:
->
-> On 2021/10/21 20:23, Zheyu Ma wrote:
-> > On Thu, Oct 21, 2021 at 6:38 PM Damien Le Moal
-> > <damien.lemoal@opensource.wdc.com> wrote:
-> >>
-> >> On 2021/10/21 17:37, Sergey Shtylyov wrote:
-> >>> On 21.10.2021 8:57, Zheyu Ma wrote:
-> >>>
-> >>>> mv_init_host() propagates the value returned by mv_chip_id() which in turn
-> >>>> gets propagated by mv_pci_init_one() and hits local_pci_probe().
-> >>>>
-> >>>> During the process of driver probing, the probe function should return < 0
-> >>>> for failure, otherwise, the kernel will treat value > 0 as success.
-> >>>>
-> >>>> Signed-off-by: Zheyu Ma <zheyuma97@gmail.com>
-> >>>> ---
-> >>>>   drivers/ata/sata_mv.c | 2 +-
-> >>>>   1 file changed, 1 insertion(+), 1 deletion(-)
-> >>>>
-> >>>> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-> >>>> index 9d86203e1e7a..7461fe078dd1 100644
-> >>>> --- a/drivers/ata/sata_mv.c
-> >>>> +++ b/drivers/ata/sata_mv.c
-> >>>> @@ -3897,7 +3897,7 @@ static int mv_chip_id(struct ata_host *host, unsigned int board_idx)
-> >>>>
-> >>>>      default:
-> >>>>              dev_err(host->dev, "BUG: invalid board index %u\n", board_idx);
-> >>>> -            return 1;
-> >>>> +            return -ENODEV;
-> >>>
-> >>>     Doesn't -EINVAL fit better here?
-> >>
-> >> If the error message is correct and this can only happen if there is a bug
-> >> somewhere, I do not think the error code really matters much. The dev_err()
-> >> should probably be changed to dev_alert() or even dev_crit() for this case.
-> >>
-> >
-> > I don't think so, the error code does matter. If mv_chip_id() returns
-> > 1 which eventually causes the probe function to return 1, then the
-> > kernel will assume that the driver and the hardware match successfully
-> > (even if that is not the case), which will cause the following error
-> > if modprobe is called to remove the driver.
-> >
-> > [   21.944486] general protection fault, probably for non-canonical
-> > address 0xdffffc000000001b: 0000 [#1] PREEMPT SMP KASAN PTI
-> > [   21.945317] KASAN: null-ptr-deref in range
-> > [0x00000000000000d8-0x00000000000000df]
-> > [   21.954442] Call Trace:
-> > [   21.954624]  ? scsi_remove_host+0x32/0x660
-> > [   21.954923]  ? lockdep_hardirqs_on+0x7e/0x110
-> > [   21.955240]  ? _raw_spin_unlock_irqrestore+0x30/0x60
-> > [   21.955634]  ? mutex_lock_io_nested+0x60/0x60
-> > [   21.956027]  ? _raw_spin_unlock_irqrestore+0x41/0x60
-> > [   21.956395]  ? async_synchronize_cookie_domain+0x35f/0x4a0
-> > [   21.956802]  ? async_synchronize_full_domain+0x20/0x20
-> > [   21.957179]  ? lock_release+0x63f/0x8f0
-> > [   21.957468]  mutex_lock_nested+0x1b/0x30
-> > [   21.957761]  scsi_remove_host+0x32/0x660
-> > [   21.958054]  ata_host_detach+0x75d/0x830
-> > [   21.958349]  ata_pci_remove_one+0x3b/0x40
-> > [   21.958649]  pci_device_remove+0xa9/0x250
-> > [   21.958949]  ? pci_device_probe+0x7d0/0x7d0
-> > [   21.959261]  device_release_driver_internal+0x4f7/0x7a0
-> > [   21.959647]  driver_detach+0x1e8/0x2c0
-> > [   21.959929]  bus_remove_driver+0x134/0x290
-> > [   21.960234]  ? sysfs_remove_groups+0x97/0xb0
-> > [   21.960552]  driver_unregister+0x77/0xa0
-> > [   21.960859]  pci_unregister_driver+0x2c/0x1c0
-> > [   21.961178]  cleanup_module+0x15/0x28 [sata_mv]
->
-> How do you trigger this ? A bad device tree or something like that ?
+On 2021/10/25 3:08, YE Chengfeng wrote:
+> Hi,
+>=20
+> I found that the function=C2=A0*ata_timing_find_mode *could return a nu=
+ll pointer in
+> some situattions, but some call sites of this function don't check whet=
+her the
+> return value is a null pointer. Could it be a potential null-pointer-de=
+reference
+> problem?=C2=A0
+> https://github.com/torvalds/linux/blob/master/drivers/ata/pata_acpi.c#L=
+145
+> <https://github.com/torvalds/linux/blob/master/drivers/ata/pata_acpi.c#=
+L145>
+> <https://github.com/torvalds/linux/blob/master/drivers/ata/pata_acpi.c#=
+L145>
+> =09
+> linux/pata_acpi.c at master =C2=B7 torvalds/linux
+> <https://github.com/torvalds/linux/blob/master/drivers/ata/pata_acpi.c#=
+L145>
+> Linux kernel source tree. Contribute to torvalds/linux development by c=
+reating
+> an account on GitHub.
+> github.com
+>=20
+>=20
+>=20
+> Best Regards,
+> - Chengfeng
 
-Pretty much, I was testing on qemu and used fault injection to force
-the my_chip_id() to fail, even though this rarely happens.
+The ata_timing array last element is 0xff, which is the initial value of =
+pio/dma
+mode. So an entry will always be returned. I do not think the NULL return=
+ ever
+triggers.
 
-Regards,
-Zheyu Ma
+--=20
+Damien Le Moal
+Western Digital Research
