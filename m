@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E11BC433F5
-	for <linux-ide@archiver.kernel.org>; Sun, 24 Oct 2021 23:24:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 496B2C433EF
+	for <linux-ide@archiver.kernel.org>; Mon, 25 Oct 2021 00:00:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4812E60FE8
-	for <linux-ide@archiver.kernel.org>; Sun, 24 Oct 2021 23:24:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A74D60FDA
+	for <linux-ide@archiver.kernel.org>; Mon, 25 Oct 2021 00:00:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229837AbhJXX06 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 24 Oct 2021 19:26:58 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:30047 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229533AbhJXX06 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 24 Oct 2021 19:26:58 -0400
+        id S229821AbhJYADQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 24 Oct 2021 20:03:16 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:51343 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229554AbhJYADQ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 24 Oct 2021 20:03:16 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1635117877; x=1666653877;
+  t=1635120055; x=1666656055;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=JSni6iXUGiVL+1tgcIkRcK5iNkHL92fz77zC9anEhZE=;
-  b=a2qPUOL1t1PP7JC3Q9tkXq1fZH8ym38OXsKOi9Dy5Qqjjhu5iDfPN6O1
-   zY//uSoO6CV5dscE2kIktOzuVml+lJDZZX6Ryv5KGAPsKSCyBZHuRU4Bn
-   lCIqbaq0xAWldqjYumUrND1NtoFq6aA7R+5eS2FPdLo9nXx/eIFXFS9gA
-   0eFu97Vl1NoA4OeFXUGmc6pcYhaGaMIHo6jYKDvkAERFZNpb49FmRnHjY
-   IW2Ixjo3m4Nne6N9Np+nVbT/L+M2Eonw65CvbgtHszJ+hGNcKImWbElYu
-   Nomw4xsqe7wp3hm7LFKVe2p3FsBUq56TTx75xZKy2scbnjx7tK5o7fVF5
-   w==;
+  bh=Hc5PEPI7BUMGCztrsv2fuMCX9yzlqOPTN+3m/SEpSLg=;
+  b=Q+g/g1bBm0GIYe5YWqJcOtT0QIujDDteBRJBcYp5zymXap5W+roHtobJ
+   A5XkMzQpLnoNkyUZoEq2gm2tu6b/+lZ3YnTtO7/H//P4K0fEvo+nfNph9
+   v0dLapDwBZhYuG1Fw1li3Ukb2z24zXi4oLhhcnmhWakRIFxw+8CqaicuG
+   4A08cJfwZBwt0YzS/ZA9F/9NxEQ70JRP3rCs8qNaDXKwwH0l8vWvq2x6q
+   YEZjoENJAAAc3wJ3FpvqJ5GCmwnPMqXebdnckmrl7Z7rkeXKA2D7Bvmig
+   wy5LK3VwLSQlJRXiLH+TBoZtRhPUiyOK3tZWPLP971enyWddWFUwGy4gb
+   A==;
 X-IronPort-AV: E=Sophos;i="5.87,179,1631548800"; 
-   d="scan'208";a="295458767"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Oct 2021 07:24:36 +0800
-IronPort-SDR: OHvGJ4D7/IN2fG/GAfo3RbjnxNT7XD7dnVHZmKqlnHd2DjjKpLg0T6iyxEMQtZEy/i6WA5dAPR
- JARvcGfARjQvWX2KTRi41ktLhNhJiw8+1gYFTAqF6GqqA9aX2ctw0q+2ltdvqKjiXrWeGmiaoQ
- jyOe86TpbuoiszOOxadhLvunr7pkrLKfUr1h07h2ZqciQvuSvyLt5ptggoBfYZcit71FDanIl3
- Hj/cu4ucBsEki0mRcoBgk7YLoSinDYEUawALsye9Q65oRADCl7Hn82NLYHrn1ZT3onZjY9c2+E
- wg65/I+XbTCjq4DuFOK2CxtQ
+   d="scan'208";a="184661652"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 25 Oct 2021 08:00:55 +0800
+IronPort-SDR: nL1xDL4Eb/KJTfHvraBiKMvho2kbar0fPgUso8wsHawr5hofVLJQregFA/pxnb3GjU7RUCFxXI
+ qm5GWLxa9mMAgc+USTmLI3Q/6nllMOac2cOgFa3NoGQJLYw+BxiFr2u1ZZYlsaS7WRzR9egJpw
+ nWuIjd2RlLn+Vod4QzGzVWOp7oNCWNXF39U01hd5TYoD8iCs/1ecJ0cEEbYyHJI9kcshWWzEP7
+ ustcaigm2sFAsAPIAF0328vcl4J+sntaGFQOkSOh4V/U4SvmJX4kin9PvJveAwDvKMqjLU0d94
+ 9pHCvDROcVK5lSOP/+iBaBGu
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2021 16:00:08 -0700
-IronPort-SDR: wTXMtZ452Et76tZJNabBeuPKXPLf5v+r9848RwRZaQ0smlWL+YxEZGSMjjcH15Fcp5KfPWqqLC
- YorOO4OHyghNN71HRgvuoPgebMml+DDMXdPgVoMZDQR9l8UcoDoOIqkVuwi5rKox5/bFuPl6SE
- BjRymijRBT8yHK8Tm5RAuW2TkvdwUXeJzdXT85Yfjf6ILkevR5ipU7GazuOMlcVOL5PNxsYQZ8
- gBkXaSOWIinwkGOlMyyow57KOte4Yeb3jDrSexy3xg31BdOLSrnshhEIcQ+SE2hxREx/cGxyMG
- Se4=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2021 16:34:53 -0700
+IronPort-SDR: 7qz0jweLnwTazTk/UpgBs5Z08FTeBPCNqF46g0zKRSi/xm4GI/3jqgRk+GlhzCG3Y76cITvt+C
+ gHa0AdZjpcvF8BoFZ1x/rv6I1nR0gHWT54ODy7L/+k6q/3pUyvAg2gCO0aBGT1d+G4aN7gtMp+
+ 7sqeDlSEzNw3iQuTOBEHzVGqRxJu8Ulv5GPXdEwSRApf9qYymbn7ecpdTqWk7ofNhUB3i3glxS
+ UY0aPu0YPZXqhPWBO5TSO3yQAxxLJUDZgPlt4P2RiRtl3qxHbkn8PbJLxMSxqC3H1UJ9JtGore
+ 6ks=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2021 16:24:37 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2021 17:00:54 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4HcvLX2HqKz1RtVm
-        for <linux-ide@vger.kernel.org>; Sun, 24 Oct 2021 16:24:36 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Hcw8Q2Rl9z1RtVm
+        for <linux-ide@vger.kernel.org>; Sun, 24 Oct 2021 17:00:54 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,78 +56,78 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1635117875; x=1637709876; bh=JSni6iXUGiVL+1tgcIkRcK5iNkHL92fz77z
-        C9anEhZE=; b=JZVk+DDg32P10gpbwUNYp6mURWcXEhDjBQJ5ZpYWUUviakSuBsh
-        VYiWCDeKv1bOKrmPIv+jWcRCVuTOEveVySVt1Jme1eXByiHZiOOkAkLdlY3TlD1r
-        7rPZXL6lq65Tc9J/Pr/Nn1LSR80OwKU9eudlZcXAi3PFqKfMAaE29oIZFyUg0TiS
-        6eBDR2Dy0sz3KOUe4zkPLLTqPFXxVVS2rHR5GV9fshr9UVrVflMqJ1pahZoagZ+3
-        N0qbhQGRD8fiHX1NXUEr88USFiY28NU4QDq/nVla46o5Wbtg+rMSpwkgwZYIcF4u
-        6nU1ZanOkOdw/1UhukVvSqzidxw23jRuwSg==
+        1635120054; x=1637712055; bh=Hc5PEPI7BUMGCztrsv2fuMCX9yzlqOPTN+3
+        m/SEpSLg=; b=TGpQ+nw/pgigLu6Zz87cyR660u+8FYu73e2VKbSYXRyo9cd6E2M
+        25yuEhlEHS6HNTqKY3MxCDaZs9G+BoJGc9o9vJ7JkldcQPMINOVki9IySQjnD3tN
+        DQKVGC3//dSn+ZSFXSLaIEK2p5vYjusEsxpIGPWvSUSyBSQ0XteaIZfCizIGnsYf
+        8sKkAB7648KBiyFgkpmvO0OugerPr1P6Athn6BKJTsZJRWIQK5rs2nsRaMSizU16
+        25onF8yT9Gc5O4ORheoMl1WqK6umuEDjdxpbOvJK+nBCnodV2Xnhqeb86Q9nVZWb
+        Avi2Esq7KHKrIqX+mPosNOX9U/PGD6qk1zQ==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id qAZofnGN1-qL for <linux-ide@vger.kernel.org>;
-        Sun, 24 Oct 2021 16:24:35 -0700 (PDT)
+        with ESMTP id NV39ULLmueAG for <linux-ide@vger.kernel.org>;
+        Sun, 24 Oct 2021 17:00:54 -0700 (PDT)
 Received: from [10.225.54.48] (unknown [10.225.54.48])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4HcvLW2F9Dz1RtVl;
-        Sun, 24 Oct 2021 16:24:35 -0700 (PDT)
-Message-ID: <02571fc0-9c08-3e2b-124a-17fdb2262050@opensource.wdc.com>
-Date:   Mon, 25 Oct 2021 08:24:33 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Hcw8P4Zryz1RtVl;
+        Sun, 24 Oct 2021 17:00:53 -0700 (PDT)
+Message-ID: <3a3083f5-4843-5258-31ca-61a50cebbc1f@opensource.wdc.com>
+Date:   Mon, 25 Oct 2021 09:00:52 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
  Gecko/20100101 Thunderbird/91.2.1
-Subject: Re: Potential null-pointer-dereference problem due to missing
- null-checking for ata_timing_find_mode
+Subject: Re: [PATCH v2] ata: sata_mv: Fix the error handling of mv_chip_id()
 Content-Language: en-US
-To:     YE Chengfeng <cyeaa@connect.ust.hk>
-Cc:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <TYCP286MB1188D47BA1A976E4090AF2B88A829@TYCP286MB1188.JPNP286.PROD.OUTLOOK.COM>
+To:     Zheyu Ma <zheyuma97@gmail.com>
+Cc:     linux-ide@vger.kernel.org
+References: <1634893946-16195-1-git-send-email-zheyuma97@gmail.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital
-In-Reply-To: <TYCP286MB1188D47BA1A976E4090AF2B88A829@TYCP286MB1188.JPNP286.PROD.OUTLOOK.COM>
+In-Reply-To: <1634893946-16195-1-git-send-email-zheyuma97@gmail.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2021/10/25 3:08, YE Chengfeng wrote:
-> Hi,
->=20
-> I found that the function=C2=A0*ata_timing_find_mode *could return a nu=
-ll pointer in
-> some situattions, but some call sites of this function don't check whet=
-her the
-> return value is a null pointer. Could it be a potential null-pointer-de=
-reference
-> problem?=C2=A0
-> https://github.com/torvalds/linux/blob/master/drivers/ata/pata_acpi.c#L=
-145
-> <https://github.com/torvalds/linux/blob/master/drivers/ata/pata_acpi.c#=
-L145>
-> <https://github.com/torvalds/linux/blob/master/drivers/ata/pata_acpi.c#=
-L145>
-> =09
-> linux/pata_acpi.c at master =C2=B7 torvalds/linux
-> <https://github.com/torvalds/linux/blob/master/drivers/ata/pata_acpi.c#=
-L145>
-> Linux kernel source tree. Contribute to torvalds/linux development by c=
-reating
-> an account on GitHub.
-> github.com
->=20
->=20
->=20
-> Best Regards,
-> - Chengfeng
+On 2021/10/22 18:12, Zheyu Ma wrote:
+> mv_init_host() propagates the value returned by mv_chip_id() which in turn
+> gets propagated by mv_pci_init_one() and hits local_pci_probe().
+> 
+> During the process of driver probing, the probe function should return < 0
+> for failure, otherwise, the kernel will treat value > 0 as success.
+> 
+> Since this is a bug rather than a recoverable runtime error we should
+> use dev_alert() instead of dev_err().
+> 
+> Signed-off-by: Zheyu Ma <zheyuma97@gmail.com>
+> ---
+> Changes in v2:
+>     - Change the error code
+>     - Change the logging function
+> ---
+>  drivers/ata/sata_mv.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> index 9d86203e1e7a..c53633d47bfb 100644
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+> @@ -3896,8 +3896,8 @@ static int mv_chip_id(struct ata_host *host, unsigned int board_idx)
+>  		break;
+>  
+>  	default:
+> -		dev_err(host->dev, "BUG: invalid board index %u\n", board_idx);
+> -		return 1;
+> +		dev_alert(host->dev, "BUG: invalid board index %u\n", board_idx);
+> +		return -EINVAL;
+>  	}
+>  
+>  	hpriv->hp_flags = hp_flags;
+> 
 
-The ata_timing array last element is 0xff, which is the initial value of =
-pio/dma
-mode. So an entry will always be returned. I do not think the NULL return=
- ever
-triggers.
+Applied to for-5.15-fixes. Thanks !
 
---=20
+-- 
 Damien Le Moal
 Western Digital Research
