@@ -2,124 +2,63 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8FAAC433EF
-	for <linux-ide@archiver.kernel.org>; Tue,  9 Nov 2021 00:01:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 574AAC433F5
+	for <linux-ide@archiver.kernel.org>; Tue,  9 Nov 2021 08:54:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C3B626120A
-	for <linux-ide@archiver.kernel.org>; Tue,  9 Nov 2021 00:01:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F7FB611AD
+	for <linux-ide@archiver.kernel.org>; Tue,  9 Nov 2021 08:54:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241094AbhKIAEG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 8 Nov 2021 19:04:06 -0500
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:50857 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240309AbhKIAEE (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 8 Nov 2021 19:04:04 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1636416079; x=1667952079;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=0CC+71pr0JEcv52gEobJ5aPpe43f/FIZmKX9mSfBQ34=;
-  b=OubrYye/ZE4gIUwu5MVczSu6zk6KnUIm1nDq5QSbVHyO4ZLvsquGdr9u
-   lGdZIIsgd99PKhGFd5hIIgmh8//swsjo1P9WJb0+IIHvWCiFzZSVwYCmp
-   7LO9GDHYdkzxxP2MQ1QHEBOUv2g7MRBEb+7KJvDNMSIE4jd2VhTljufps
-   kY5S2CEIuKiqE817Mo2ql6SALXdTwj7RwRzKkOzMwdXNH+c3FM/v90P1m
-   J6gtrf3uZ4VctpW2RTIFQmnzVYtm0eZ0XnJHc/FM7vjD79gm5uIJg3tZU
-   34rWn/jVYmClueUpRsg/5qqUUGYpG2ERWy2hTsiyEyl+aICe+b2nkQP/U
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.87,218,1631548800"; 
-   d="scan'208";a="288987036"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 09 Nov 2021 08:01:19 +0800
-IronPort-SDR: K65i+bY3scV5JUuPb+cm8P6OWDT7Fi4q8WbFN8S5PlNv5wFtn9PCFVNjBL4e3GjtuemGTj4gEj
- ZwxV+yAiXbAqN/PRXNR9zMh3ekni+l2hsHxtsgIL4RAFYnHvG9xCNXEg0YO/J5AYFQBF8W9mQH
- VJJfNaAWQ3VMKXVGoPCrHPvD+qR+L3MTxPQiFTF71VrpfXcD43XwbD46ygEgVucfsCY/oFVBT6
- TEPajaZFMMoOZKEjETgYraTXiTQr2PC4PujvnPj3Gl+fegFW8miJ80H4nH+znbAJb0jR9omKaO
- UurnKhadrn1T3q+WP80fWUn5
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Nov 2021 15:36:32 -0800
-IronPort-SDR: z/ppKb2RfSRzDD/fqyDDKCcfYdJx9ivSG39bIgPTwQrSO1huC0OEtMo7dQl8g+t/dowcxNMnWk
- kB1l1esKzwV2PRYuLWn5ac6XIE8pbodpBcs0f1HKtYtccyYv2Hbc7gxqx81h/mt6oTFypSLT5J
- RNKllSuAKWZB6/IOwaYe2jHkvfwfXk5pbGZ7/9XrLrxYcIoKlArBDRZR6AwAzhlq5mdqRO6Wlo
- djWJrt/Z24iErdHW0YQDWicLMkeXuDDWsXGIwf1jo2g3d66pnHXGPWqOzweRVUMJgA3IjkSXYI
- /0I=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Nov 2021 16:01:19 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Hp7Rz23zlz1RtVm
-        for <linux-ide@vger.kernel.org>; Mon,  8 Nov 2021 16:01:19 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1636416078; x=1639008079; bh=0CC+71pr0JEcv52gEobJ5aPpe43f/FIZmKX
-        9mSfBQ34=; b=ABrmVHvg0vj4rZKyx3qyqfZoApFU5rO379qT6mB4jtL9qyN37G3
-        tJxeLpoV+B0Nb+VtjJwdzr+Bamk1y1Q191wvoKrsokIElZaCJd33sJ52a2+OgEYC
-        Nt2ZkZZdhZMcqM0OmIlP2lR2gUtzkbBJ6U/uxz/N3oWbd/p6ARzwXHh39Jc4Ww7G
-        4U428f6CBU5IF74JUlxSzDO3qq1kZsktWOARhWpkb/aY7hc0FaJIWJLCdQXJLFHh
-        sHgvk0xN+TS8d/DsQW4/U5NUIfSiTkLMAZh1Ao7GZkPPZrc9LmO3K8JIzv9TYvWZ
-        VgsafU+6J2EDo51iQYmdz0cD4ENnTz6gvIQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id W-72LQbNSdOR for <linux-ide@vger.kernel.org>;
-        Mon,  8 Nov 2021 16:01:18 -0800 (PST)
-Received: from [10.225.54.48] (unknown [10.225.54.48])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Hp7Rx6s9Cz1RtVl;
-        Mon,  8 Nov 2021 16:01:17 -0800 (PST)
-Message-ID: <418b3bdf-42df-c7aa-0e21-fa35484a6931@opensource.wdc.com>
-Date:   Tue, 9 Nov 2021 09:01:16 +0900
+        id S238031AbhKII5C (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 9 Nov 2021 03:57:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36672 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230489AbhKII5B (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 9 Nov 2021 03:57:01 -0500
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42B8AC061764
+        for <linux-ide@vger.kernel.org>; Tue,  9 Nov 2021 00:54:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=AEMrlyU+w7ZzLCg6jGqa4nXREPRGdhAcmCxr3cpHjGc=; b=lKyRywtGZvLzBPq5ANz8yimAyH
+        ahTNlLVFj99aaO7aPV8iH5ddpxYKSjFII6s0WNwTK6y5JiZ47rioxXO0rDZhHJZQXTm8FbtvNyvj6
+        3eseE3wrqIm3go3RxDsY1nirUtWdVlAe7CbVZ0MZI3AbO2bIcIpJUeMatJK8XTTrU7vg5wbmeutG1
+        rBGBXdRGgxWq5HGk9PfmR/X+LU0U8UNdKGS3+7bY6YMMvZgabZgiMWYVKpSPS6FG8ZMrd7blO+v/j
+        Q9D3wwvVinZUr2l8P5ScRKmg+THbbgIF7yuWCncVDDxw9LauNdLSAcan+i6IaafEhOQznUG9cw5wX
+        XrA/wabA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mkMtT-0016iP-Tz; Tue, 09 Nov 2021 08:54:15 +0000
+Date:   Tue, 9 Nov 2021 00:54:15 -0800
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     linux-ide@vger.kernel.org
+Subject: Re: [PATCH] libata: add horkage for missing Identify Device log
+Message-ID: <YYo3N/dwJmOxCBHE@infradead.org>
+References: <20211108235723.408711-1-damien.lemoal@opensource.wdc.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.3.0
-Subject: Re: [PATCH] ata: sata_highbank: Remove unnecessary print function
- dev_err()
-Content-Language: en-US
-To:     Xu Wang <vulab@iscas.ac.cn>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20211105015021.38998-1-vulab@iscas.ac.cn>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital
-In-Reply-To: <20211105015021.38998-1-vulab@iscas.ac.cn>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211108235723.408711-1-damien.lemoal@opensource.wdc.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2021/11/05 10:50, Xu Wang wrote:
-> The print function dev_err() is redundant because
-> platform_get_irq() already prints an error.
+On Tue, Nov 09, 2021 at 08:57:23AM +0900, Damien Le Moal wrote:
+> ACS defines the ATA Identify Device Data log as mandatory. A warning
+> message currently signals to the user if a device does not report
+> supporting this log page in the log directory page. However, it is
+> useless to constantly access the log directory and warn about this lack
+> of support once we have discovered that the device does not support
+> this mandatory log page.
 > 
-> Signed-off-by: Xu Wang <vulab@iscas.ac.cn>
-> ---
->  drivers/ata/sata_highbank.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
-> index 8440203e835e..b29d3f1d64b0 100644
-> --- a/drivers/ata/sata_highbank.c
-> +++ b/drivers/ata/sata_highbank.c
-> @@ -469,10 +469,8 @@ static int ahci_highbank_probe(struct platform_device *pdev)
->  	}
->  
->  	irq = platform_get_irq(pdev, 0);
-> -	if (irq < 0) {
-> -		dev_err(dev, "no irq\n");
-> +	if (irq < 0)
->  		return irq;
-> -	}
->  	if (!irq)
->  		return -EINVAL;
->  
-> 
+> Introduce the horkage flag ATA_HORKAGE_NO_ID_DEV_LOG to mark a device as
+> lacking support for the Identify Device Data log page. Set this flag
+> when ata_log_supported() returns false in ata_identify_page_supported().
+> The warning is printed only once on device scan and the log directory
+> not accessed again to test for Identify Device Data log page support.
 
-Applied. Thanks !
-
--- 
-Damien Le Moal
-Western Digital Research
+Should we also just set it by default for older devices?  I'd need to
+look up when it was introduced, but I think it is a somewhat recent
+addition.
