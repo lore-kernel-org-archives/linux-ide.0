@@ -2,128 +2,128 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF4FCC433F5
-	for <linux-ide@archiver.kernel.org>; Fri, 12 Nov 2021 00:25:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C36B6C433F5
+	for <linux-ide@archiver.kernel.org>; Fri, 12 Nov 2021 20:15:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E1B661252
-	for <linux-ide@archiver.kernel.org>; Fri, 12 Nov 2021 00:25:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A411E60F93
+	for <linux-ide@archiver.kernel.org>; Fri, 12 Nov 2021 20:15:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230457AbhKLA2B (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 11 Nov 2021 19:28:01 -0500
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:43512 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229862AbhKLA2A (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 11 Nov 2021 19:28:00 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1636676710; x=1668212710;
-  h=from:to:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=ruyU8X4e9VuAAMZuSpmCIL1KxugzFsL/akp4sbfJPMQ=;
-  b=ZrJL0kg1ZBHZW/n5k1c+lCbKSYtI7LvidQUMeCunYCr9x2u4DkJEdcIr
-   y3CVBkj1bv5+YRoB/wKeyKCX66fY/LEvdtUH6u9bv0O9eJ79lXlLUTJfA
-   MNXPQs0pCZTEPJH1fLfgWYEacwej4kc05iDeE4wDL/lu+scGcatZgLOJ7
-   QTDSxY5v4fREn2gu9rvZeujk0rf+yNFfBBN+qK8g4DjtbUBwxBdChQn3A
-   Jrsvv5bL0kCKXv7tBFl29LHKoLxZc0MkPsKAmKaWp+Qz2eHr9W1UYPMtw
-   LgxpYR7PPvmJQ8wSSNBmpvzdZdBAi5m+NvDgOCyhEJs9iz5I6/V+ADG/p
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.87,227,1631548800"; 
-   d="scan'208";a="185392032"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 12 Nov 2021 08:25:10 +0800
-IronPort-SDR: uzCCQhJC1/h1h1enFasZAtYnuxNyu8hoOoYfyxJL4S8GPkiRZ24kR3hi1woicVc+mNzcsD7JCt
- FEaUlhHqx5cLMwQrWvrQGa5QjC02zAEEz2ffCqOboGCO5xx8LdrX2ApLnkS84gsVPEQwP0SD1s
- QKKRIBGbfAdIRKRHUKmA83NuyVzhg9nOlXWPSnWGVVkad8+pg+cLQwASUul/ApQ5NAWEBhRUVJ
- ZxU3rGpKK4e+lCp1xYPqnkfUpcJWMh/NpASdvhGcQkqRKGLl7ou0ETEOovjTFtVgZ/XwMenaXG
- AZBc5AH2y+VDTb9xPKfXbCPO
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2021 16:00:20 -0800
-IronPort-SDR: pc5XNcr7V+31XhByT3/PBgsw/l8trYyAi6Hdk7LwW5Xb97R+7tlvYTQ8+PgSGXDcdPKlacC0aD
- NuIc0qg68Gpfk/h3ZfvivsNT+cCU/P+7zm++uakZiA75k4hGGTqhvwMT11ZKHiwJ+037GhgqXR
- fCiqDieYcJ9siLG4Ou/1X5ZEYWoUDjmxZq/k5pUns04cIJSNWoD6Rpkegop8UlqRtzNXBfn70m
- pNKDfrLrg6FXO89ncNyUrxd8so9UcC89hb8MVvcfxSbHCq+wvNTkDOFZ+cmAxyEkGQGq+LEopZ
- Rq4=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2021 16:25:11 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Hqzr637Crz1RtVm
-        for <linux-ide@vger.kernel.org>; Thu, 11 Nov 2021 16:25:10 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:mime-version
-        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1636676710;
-         x=1639268711; bh=ruyU8X4e9VuAAMZuSpmCIL1KxugzFsL/akp4sbfJPMQ=; b=
-        as4BsKdpKeUvylSEQZ2rrpIZhoz6dR0HB3LZR9VAo4Ys+7mmXDbq9dlNwVJhwnVH
-        G2GXsN1KbKzTLYddCQNvQUkycKpVwG1AiECO2YBAHLHF6KRHavzuuXKyiq0uyz92
-        5OCM8mJpXsruhq+OtjO+MaOfQ06HB5eXRUDW2YAeqpzZPItoBTFkUqZn23QAZj3b
-        eLipefgSCzFGp2HsitLzA64hn0lolGSWVcB59JbAxyp3EARKQGePNQPwkZihW1VX
-        6UIUHkblyyBtECMJ+UZLrQGmGEZ/iNyZlMfjKGX7l8rOajRLcy/fiuxhUclHpPIm
-        Ge7NCRXtso6P+5uIWu8fZQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id J2XAq0CSfE3v for <linux-ide@vger.kernel.org>;
-        Thu, 11 Nov 2021 16:25:10 -0800 (PST)
-Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Hqzr54RQpz1RtVl;
-        Thu, 11 Nov 2021 16:25:09 -0800 (PST)
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-To:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-ide@vger.kernel.org
-Subject: [GIT PULL] second round of libata changes for 5.16-rc1
-Date:   Fri, 12 Nov 2021 09:25:06 +0900
-Message-Id: <20211112002506.564912-1-damien.lemoal@opensource.wdc.com>
-X-Mailer: git-send-email 2.31.1
+        id S231238AbhKLUSl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 12 Nov 2021 15:18:41 -0500
+Received: from mail-bn8nam11on2053.outbound.protection.outlook.com ([40.107.236.53]:30369
+        "EHLO NAM11-BN8-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S230235AbhKLUSl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 12 Nov 2021 15:18:41 -0500
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=TwQBTnQuajykTv94kE0XRPcxvKAyd91VOztkVgCBKWokHeXj+oZLbnBtiyXMVNf/KumF3WBgPVxtnUGbLxMZ7sF68hykDcRXullf7qEQKqlBsdhmenHMpCl86wVFvIYGGIipcRBKvOoSvbEs4yCrQc6SekYXRM10+ItlsxugA2ZLRgP2c6BOSgo7U9Sf9e1Sg/6Es6ziN0wpEsD/x8kD91NSMp+z0jjskDkwOwsf+TNpsHDG2+JPLE21RGgEEjUURveBVJyIILKCZB2blpgPSyyU7Yua+PuLFhlK3wrrCIPlgGThS403UHosnE7Lz5qmqp4MBq3cfHrdm9LgDQtSdg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=lDw14s7iChUNhdZtf7kxAvagn7yz0qHaNZuBy142+Xo=;
+ b=gZDKAkqpHLnyJxALI5gmxBeaCqQPmod5g0qZWhhSjvdxB417rvVfEvrYf/JQTgUtpgak6KmK7b3ZGBSEylJDryXUgj0BOgAuyXs6ZGkiU/zaatd6vk94WX+vFbGjW73hZb/awlp9Ef18nA1LqQbZLLOIAEPZIUEGM82v/InIx7QJf+z3O3dOz6fM+Rcy8Gg5fF8dPXZy7qP4F07EEo3j6cs/+tTFQ1HVJdxHwDnMWwHVNsBcNkqbLO7wuquPDKX9xedPScPQJ6Gab5O6P75EAtM0WLj2BNsfYzEnd6C958SpzDv+0YwK0L1vXJmDL9H0LRyxJm4VH4l++jFiqx086w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=opensource.wdc.com smtp.mailfrom=amd.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=amd.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=lDw14s7iChUNhdZtf7kxAvagn7yz0qHaNZuBy142+Xo=;
+ b=Ep60bFRHv/zmEmvlPlBtIO5j4Jpb5n7PRz1MYQKEYAJQM6qQll+fibGnGN9PULKBN2+PoCo3eN8xCSh9hrW4xLNKzwpGlnrY1sDbeguOkTgvdjJV0RmEWVUzVKMGX+ywUwMwd2rqEObGLD0x8K2A3oJwv4ws7go2Nkovk3fMizI=
+Received: from DM5PR19CA0029.namprd19.prod.outlook.com (2603:10b6:3:9a::15) by
+ MN2PR12MB4205.namprd12.prod.outlook.com (2603:10b6:208:198::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4690.17; Fri, 12 Nov
+ 2021 20:15:48 +0000
+Received: from DM6NAM11FT024.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:3:9a:cafe::70) by DM5PR19CA0029.outlook.office365.com
+ (2603:10b6:3:9a::15) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4690.17 via Frontend
+ Transport; Fri, 12 Nov 2021 20:15:48 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com;
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ DM6NAM11FT024.mail.protection.outlook.com (10.13.172.159) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.4690.15 via Frontend Transport; Fri, 12 Nov 2021 20:15:47 +0000
+Received: from AUS-LX-MLIMONCI.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.17; Fri, 12 Nov
+ 2021 14:15:46 -0600
+From:   Mario Limonciello <mario.limonciello@amd.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+CC:     "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "Mario Limonciello" <mario.limonciello@amd.com>,
+        Nehal-bakulchandra Shah <Nehal-bakulchandra.Shah@amd.com>
+Subject: [PATCH 1/2] ahci: Add Green Sardine vendor ID as board_ahci_mobile
+Date:   Fri, 12 Nov 2021 14:15:38 -0600
+Message-ID: <20211112201539.17377-1-mario.limonciello@amd.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 1650ffac-ab83-4d16-6013-08d9a6193732
+X-MS-TrafficTypeDiagnostic: MN2PR12MB4205:
+X-Microsoft-Antispam-PRVS: <MN2PR12MB4205B93E7E748CFF907BD109E2959@MN2PR12MB4205.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:972;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: WGdirqfcBMhT6Tbizy4fOydr+KjFvc7Qfh28Ck+lNNYXqHsdr45zeRibbUkkaG+y1yclaSPcomXMeWnYpWjb2xg9xSHdKoFO/UDMofd4sB8bMxZKtj71yG60EXkhUw01v7SDioXklRP16QTGk1PI3W17lpeKX/qfDLjfx3Cma6yM9bbz5y9JfaZEtRcglUdvaV6ARlPJpfSDdREN/PF2xscQWH2+PQzhIRoIJiGv1u7FZbsqhs2ZalI2vEipBxnvvLcXmv01mtxTMw3z4ktSDeXtceTwJhBi7IAjoNCouph9y6TCw7Atu+2/Y7uILvz1F/quzOAxVDO+O4XetugZqM6x7A7OvnL95NplFYmo82CyANdJyQcC13exMGzVuNET259+kL+38QUFf3PDdoRAJ7HrsbVuPlzNjYltwYsdX6k7zYS6sUJvQic395PBQrcwsWzPb7LdIU9aDjB4PNd2D1CLPdmSvaIB0s/eC4Yf8vYeNMkTzhkVPjofjYTWkHJHs+Ro8RghNnQ90qqC8DXRaZ1m7ltoOzIaHiYLA0xfF08AoaDJUqj8y7U1uDxnMelCF1UDy9xOCBNtTtJXEfHAKgXfIdc0kTclM67dWsPGRqK3NkMvyM/E+ovRbPzOlrdHgMfYv6PWsGLoe3aAot/uyS8379x5n6WDZIJlzrgS+E5lFAYbVqnykZDxyEfgC6M4zKelrqPq0f9RrU2uPYG1Aiv4Cik2Zj/cmcT5tNcwjzVW3q2hvX6/xWf/OVMW2/OOowDhamLAKTiUXbxB3FB88BIJFRvq+FBTqPBLqKCTPRhMtSdV28AAMeamS8FUbiEB
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(4636009)(36840700001)(46966006)(4326008)(5660300002)(36756003)(336012)(7696005)(8676002)(70586007)(2906002)(356005)(47076005)(54906003)(186003)(44832011)(6666004)(36860700001)(1076003)(86362001)(6916009)(16526019)(2616005)(26005)(8936002)(508600001)(83380400001)(966005)(82310400003)(70206006)(316002)(81166007)(426003)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 12 Nov 2021 20:15:47.8987
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1650ffac-ab83-4d16-6013-08d9a6193732
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT024.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB4205
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Linus,
+AMD requires that the SATA controller be configured for devsleep in order
+for S0i3 entry to work properly.
 
-The following changes since commit debe436e77c72fcee804fb867f275e6d31aa99=
-9c:
+commit b1a9585cc396 ("ata: ahci: Enable DEVSLP by default on x86 with
+SLP_S0") sets up a kernel policy to enable devsleep on Intel mobile
+platforms that are using s0ix.  Add the PCI ID for the SATA controller in
+Green Sardine platforms to extend this policy by default for AMD based
+systems using s0i3 as well.
 
-  Merge tag 'ext4_for_linus' of git://git.kernel.org/pub/scm/linux/kernel=
-/git/tytso/ext4 (2021-11-10 17:05:37 -0800)
+Cc: Nehal-bakulchandra Shah <Nehal-bakulchandra.Shah@amd.com>
+BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=214091
+Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+---
+ drivers/ata/ahci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-are available in the Git repository at:
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index d60f34718b5d..1e1167e725a4 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -438,6 +438,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	/* AMD */
+ 	{ PCI_VDEVICE(AMD, 0x7800), board_ahci }, /* AMD Hudson-2 */
+ 	{ PCI_VDEVICE(AMD, 0x7900), board_ahci }, /* AMD CZ */
++	{ PCI_VDEVICE(AMD, 0x7901), board_ahci_mobile }, /* AMD Green Sardine */
+ 	/* AMD is using RAID class only for ahci controllers */
+ 	{ PCI_VENDOR_ID_AMD, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+ 	  PCI_CLASS_STORAGE_RAID << 8, 0xffffff, board_ahci },
+-- 
+2.25.1
 
-  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata t=
-ags/libata-5.16-rc1-p2
-
-for you to fetch changes up to 1b87bda1f29a91720a410ac0819866a3cf0df32d:
-
-  libata: libahci: declare ahci_shost_attr_group as static (2021-11-12 08=
-:05:47 +0900)
-
-----------------------------------------------------------------
-libata changes for 5.16-rc1, second round
-
-Second round of updates for libata for 5.16:
-* Fix READ LOG EXT and READ LOG DMA EXT command timeouts during disk
-  revalidation after a resume or a modprobe of the LLDD (from me).
-* Remove unnecessary error message in sata_highbank driver (from Xu).
-* Better handling of accesses to the IDENTIFY DEVICE data log for drives
-  that do not support this log page (from me).
-* Fix ahci_shost_attr_group declaration in ahci driver (from me).
-
-----------------------------------------------------------------
-Damien Le Moal (3):
-      libata: fix read log timeout value
-      libata: add horkage for missing Identify Device log
-      libata: libahci: declare ahci_shost_attr_group as static
-
-Xu Wang (1):
-      ata: sata_highbank: Remove unnecessary print function dev_err()
-
- drivers/ata/libahci.c       |  2 +-
- drivers/ata/libata-core.c   | 13 ++++++++++++-
- drivers/ata/libata-eh.c     |  8 ++++++++
- drivers/ata/sata_highbank.c |  4 +---
- include/linux/libata.h      |  3 ++-
- 5 files changed, 24 insertions(+), 6 deletions(-)
