@@ -2,59 +2,66 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5317AC4332F
-	for <linux-ide@archiver.kernel.org>; Fri, 12 Nov 2021 20:42:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19E76C433F5
+	for <linux-ide@archiver.kernel.org>; Sat, 13 Nov 2021 06:26:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01E3E604D7
-	for <linux-ide@archiver.kernel.org>; Fri, 12 Nov 2021 20:42:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E924260FE7
+	for <linux-ide@archiver.kernel.org>; Sat, 13 Nov 2021 06:26:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235630AbhKLUpB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 12 Nov 2021 15:45:01 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52586 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235616AbhKLUpA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 12 Nov 2021 15:45:00 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPS id 8224A604DC;
-        Fri, 12 Nov 2021 20:42:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1636749729;
-        bh=fhCYrLz6On2iF9/PqRzVGhUIyFE83mwaePM7JIi38pw=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=BmAHGkNV52z2bvPxx22AEk9ifBro+sY6bu6FReJEEs376Qp1PldFKfrvIw8Yyb4Fh
-         vbPHv2Z4pjS+h28qTILo/+vVKNZ+zUuLWQeeOSeklaNAMGB5w/tJIc6TKXf9PfCHLK
-         pZUjoZdJq8zn5QlDzymJVaxZJxT38Hs4YTlcZS8ShoJGbeAnUWx8/Z3NrRZmiZaWCH
-         z8ymhJ8GQ3u6ASXvKQUh2FkhAoUDSw4/3x/l/+Zt6NY4C+UTNWN6Pyiolj69zEz5hg
-         GsKbuCWh52pGWy6f4nbMMRy5M9+20xin1qBIf8s+Eq706tXLOxD0uQ34NkkJQnFJdR
-         CC92M+X6C2v9A==
-Subject: Re: [GIT PULL] second round of libata changes for 5.16-rc1
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20211112002506.564912-1-damien.lemoal@opensource.wdc.com>
-References: <20211112002506.564912-1-damien.lemoal@opensource.wdc.com>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20211112002506.564912-1-damien.lemoal@opensource.wdc.com>
-X-PR-Tracked-Remote: ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/libata-5.16-rc1-p2
-X-PR-Tracked-Commit-Id: 1b87bda1f29a91720a410ac0819866a3cf0df32d
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 204d32efa8a5746682dab5038d8b54a359bb0e3e
-Message-Id: <163674972950.4802.5192152298303436090.pr-tracker-bot@kernel.org>
-Date:   Fri, 12 Nov 2021 20:42:09 +0000
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-ide@vger.kernel.org
+        id S229914AbhKMG3q (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 13 Nov 2021 01:29:46 -0500
+Received: from smtpbg128.qq.com ([106.55.201.39]:59865 "EHLO smtpbg587.qq.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S229487AbhKMG3o (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sat, 13 Nov 2021 01:29:44 -0500
+X-QQ-mid: bizesmtp51t1636784777tgdf0y1a
+Received: from localhost.localdomain (unknown [125.69.41.88])
+        by esmtp6.qq.com (ESMTP) with 
+        id ; Sat, 13 Nov 2021 14:26:15 +0800 (CST)
+X-QQ-SSF: 01000000000000C0F000B00A0000000
+X-QQ-FEAT: 3uawQE1sH+291VbBBWnryed0ntvm7R6avfLrXgIcdCpjaQtx7yWViNbybxB31
+        uayKxrAeLP5YmUF3X5cba2dcLdT8r5bYWWE7vXZvC3i5OrUMXAwqvWD8vk7KyFDKMt5+pX2
+        CRgEZnAMH6BVSXL3M2C74xYSDKM56njRagvOfWYswjvgDn4G5DrkQJoVpfSGq8H5IVmbPa+
+        COLFF73PtitYD3hLUOHulzc/qMHi9DAnFmIv6ISaK/jaZMrOImJDzds1nPJ3XSaKrGeMYdp
+        LVSd5FOCt8F6Hy8iwoCpmu981Evs9p9gtnusWCHQ5Ps6ubrgWvVDEcHKltwytDdSo1cCPio
+        TExq5vZNffCiA+YSVC1X0R4Y/GZYQ==
+X-QQ-GoodBg: 0
+From:   Jason Wang <wangborong@cdjrlc.com>
+To:     damien.lemoal@opensource.wdc.com
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jason Wang <wangborong@cdjrlc.com>
+Subject: [PATCH] ata: pata_ali: no need to initialise statics to 0
+Date:   Sat, 13 Nov 2021 14:26:14 +0800
+Message-Id: <20211113062614.246352-1-wangborong@cdjrlc.com>
+X-Mailer: git-send-email 2.33.0
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtp:cdjrlc.com:qybgspam:qybgspam5
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The pull request you sent on Fri, 12 Nov 2021 09:25:06 +0900:
+Static variables do not need to be initialized to 0.
 
-> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/libata-5.16-rc1-p2
+Signed-off-by: Jason Wang <wangborong@cdjrlc.com>
+---
+ drivers/ata/pata_ali.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/204d32efa8a5746682dab5038d8b54a359bb0e3e
-
-Thank you!
-
+diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
+index b7ff63ed3bbb..ab28a6707b94 100644
+--- a/drivers/ata/pata_ali.c
++++ b/drivers/ata/pata_ali.c
+@@ -37,7 +37,7 @@
+ #define DRV_NAME "pata_ali"
+ #define DRV_VERSION "0.7.8"
+ 
+-static int ali_atapi_dma = 0;
++static int ali_atapi_dma;
+ module_param_named(atapi_dma, ali_atapi_dma, int, 0644);
+ MODULE_PARM_DESC(atapi_dma, "Enable ATAPI DMA (0=disable, 1=enable)");
+ 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.33.0
+
