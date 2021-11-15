@@ -2,127 +2,74 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9B37C433F5
-	for <linux-ide@archiver.kernel.org>; Mon, 15 Nov 2021 06:06:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E5E9C433F5
+	for <linux-ide@archiver.kernel.org>; Mon, 15 Nov 2021 08:15:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A2F9161C48
-	for <linux-ide@archiver.kernel.org>; Mon, 15 Nov 2021 06:06:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EDE7461BFD
+	for <linux-ide@archiver.kernel.org>; Mon, 15 Nov 2021 08:15:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230017AbhKOGJB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 15 Nov 2021 01:09:01 -0500
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:15528 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230111AbhKOGI5 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 15 Nov 2021 01:08:57 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1636956363; x=1668492363;
-  h=from:to:subject:date:message-id:in-reply-to:references:
-   mime-version:content-transfer-encoding;
-  bh=LcEzRPgYYoxUM3gBTJ7X/fWkFD7qZQRFLRB1IyW1yJk=;
-  b=S1q5UsKcfEYAHHUl+QNFpruXxiYyc+yA5Jp3AAVBqYPQ/sYiqxiqHxl9
-   weI4XwXH8/IUYdCiHqsCqDQwXPz0XCpfYEB7VifHG4PAsW9YGgyG10Jfh
-   by67ODZL3ohKom/XAnjtq2h0Nq8tWEOlZJexz5H+jLYnAXKFKmc5pmFqX
-   0tl6MKpBNzqR9d0sFRii8Ch2BTuws6iVsulTTySUFUhn/UGGH+1KngTUA
-   7p7fH8IvT9A5ROG8Zjog+IuHMIwabNKLPKeA/DwNU0eGENpDRbvyvs3kZ
-   Aaw1/Ifga1trJKUez1IRZ7kEMQXEURp553j3xg2i11RHf+a5RAoclaBV9
-   w==;
-X-IronPort-AV: E=Sophos;i="5.87,235,1631548800"; 
-   d="scan'208";a="297418914"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 15 Nov 2021 14:06:03 +0800
-IronPort-SDR: 07cFVz3MpEM7uJCc/3g/0K2rheTSTIECKbVbu7Y4BKKxOlRiwryW7ichxEsliWhHNseb874h8W
- Iy5yhk0pfTPSS+4mJikwcp64RKvHrhbuEMDlVCscJH5qqy0apGHRZ8hxW/I8y+jOV21mWEGCir
- Nr5n04a5NB/hmRYU6aOuiDs2rc8kXcVC0min1/PPBNk7dBQM3EyqQzWiLuJ8nZ7px3hWDDD+47
- T8o28mKPF2ld+ihLJEpS56iz0cc3tkZITTHGiGD7SNFdfOSHR6iGVUViQnbNjrix38G9UP2yV6
- vQehny1X4J9fze7d02uNrcAU
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Nov 2021 21:39:35 -0800
-IronPort-SDR: SS72n2ohoy4lDBOMBH1VcnIFrzdcvv0+QRYK9a8EuhjqvVk+eFykRIMEVGvJ94TjMojpDgOQTm
- 2w0Vuc9Hq/um4ZOpGuTKPEDjdJ0Rx6qzeLCcchEAmHfrrTk52RD+ksAI4ug9gdu6HQ1wWiF93o
- PRRI8OxrrwS6reLb0ok0xhBtOpGXzXGOW737nSPyeqAEjJfSGqAPGv7PQDYAxb6HxTpZ1spyjr
- tM09bdKMspKx9xylnSvXB9zoKC8LFZUIIpz86U7K6jvbLvQq7YELpIE+cw/RCwLUAyI39qHwSu
- aVs=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Nov 2021 22:06:03 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4HszG252hCz1RtVm
-        for <linux-ide@vger.kernel.org>; Sun, 14 Nov 2021 22:06:02 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:mime-version
-        :references:in-reply-to:x-mailer:message-id:date:subject:to
-        :from; s=dkim; t=1636956362; x=1639548363; bh=LcEzRPgYYoxUM3gBTJ
-        7X/fWkFD7qZQRFLRB1IyW1yJk=; b=oj/cGZdWFOOlH5sCDl5OJn32q2kmJRI3Ar
-        sfPwr6sUI7ersa4sHr9VfcpyHgjdGvFC26tTV23KxOXlMF5oFJuI6gfq+dr9pGAf
-        CiuxpzNE3N6/KgHIQll0onfjMbxLW69gXv2PWX8Kf3mmy8deG1mjEai8o97BgofL
-        DcGfjqjso+3n54jO8xWWYloZkhzT2bGcfTVKq1+B1GDzDwsCm8QcDlt/gGzebv9z
-        Tvtj3qUTTxlrTj54As0ZZ78ufOlFC5n8joBGiXrOAwr/hujN/dKfmZuBckdYuJyg
-        5YrrqTGCW80H1PGh2AgiVeirTzj1HtOlXmQCkXv5RJBm2vEtgK4g==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id k8sYo9MmoKhn for <linux-ide@vger.kernel.org>;
-        Sun, 14 Nov 2021 22:06:02 -0800 (PST)
-Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4HszG2050Gz1RtVl
-        for <linux-ide@vger.kernel.org>; Sun, 14 Nov 2021 22:06:01 -0800 (PST)
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-To:     linux-ide@vger.kernel.org
-Subject: [PATCH 2/2] libata: core: add missing ata_identify_page_supported() calls
-Date:   Mon, 15 Nov 2021 15:05:59 +0900
-Message-Id: <20211115060559.232835-3-damien.lemoal@opensource.wdc.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20211115060559.232835-1-damien.lemoal@opensource.wdc.com>
-References: <20211115060559.232835-1-damien.lemoal@opensource.wdc.com>
+        id S229707AbhKOISC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 15 Nov 2021 03:18:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54406 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229967AbhKOIR6 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 15 Nov 2021 03:17:58 -0500
+Received: from mail-vk1-xa31.google.com (mail-vk1-xa31.google.com [IPv6:2607:f8b0:4864:20::a31])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15C33C061746;
+        Mon, 15 Nov 2021 00:15:03 -0800 (PST)
+Received: by mail-vk1-xa31.google.com with SMTP id t127so8649699vke.13;
+        Mon, 15 Nov 2021 00:15:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=xW/67NTDls+AQBecTda6JoZytjWJ644lT/RbFu2z3fY=;
+        b=hTnkAyzdW22Hcal9RqXHw9g67fPiEEhJ7Jr2a4MPzrCaluIRScv3scJMJKVk+IsZSP
+         ABGP/bITlvsSOijmyfabGbUebX8C4PyfZMxV2LJQsh8DX5i3y68Q+uG8ajlDYHquNMT6
+         83wd1uGIiDbjcTWS9IfSLgoHAFuz17oN7Ewp0BuePodCo36IL+P3PytFv6KDUOs8KmOD
+         ehfuK7VgT9FFj5nQVmAF8X7hPFTml5x6Ba5vhDSf+/lNQQf4gb0VrH9sUllsQHMXBc8s
+         IBwbz/J94ws2T8IRPhXlYiwgzjk9YNiN4343CI8ks866BUO10kfZlboSXtWmDRaHSXbL
+         kKwg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=xW/67NTDls+AQBecTda6JoZytjWJ644lT/RbFu2z3fY=;
+        b=R4sKH0d1DdP0Z68j4sNuhfpzUEd+VXgjCJKYZCByNP/+F2cf489oUQJuiFS66gJPz8
+         n2F2rIfb7FyvPwC3NCCsbPVdHOGfUDo8FibYLZEPpM6kI7Y2zwucgq1ms7RLeFWludAA
+         /K5Sl1Jsn3kUeIU0laOj6+cwvQOgdQkjUawZ2cVZGX9BLHiOUgxs4Rob7qzYrfKsQ4U7
+         n/wqiBhxeAvngT+41WFxGSEoB5hL2mzbh4YConctPsHdALdL5cmUhaNZA65/tOuGi0y2
+         jdK4VUGFKctG3SY74AF+ErpropZgVK2rLof6sKvnu/Jz3Grf8NzbHTdfoH0H4VkdaL49
+         eocg==
+X-Gm-Message-State: AOAM532WP3xP0KA+TIIBOXsfbRsO+K5RIpP+MS8NN9WvwKme+PFZDzXj
+        9PqKl2385nleR1RX0cG6nMzcRCB0fH/Ua+GVAZAm93rD
+X-Google-Smtp-Source: ABdhPJyYG51GdeIH12hPpxNe7LoSy8M5VHKjtJOXH/PCAydAxorFEYz4RDwkS4aYCg7y9cygsxBHPKHnyvwSpKoxb8U=
+X-Received: by 2002:a05:6122:884:: with SMTP id 4mr55829588vkf.6.1636964101899;
+ Mon, 15 Nov 2021 00:15:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+References: <YZABtvQab/M2CCQd@msi.localdomain> <14b22c98-dc4c-fe3b-fa20-b3dd78afd5cc@opensource.wdc.com>
+In-Reply-To: <14b22c98-dc4c-fe3b-fa20-b3dd78afd5cc@opensource.wdc.com>
+From:   "Nikolas L." <knv418@gmail.com>
+Date:   Mon, 15 Nov 2021 11:14:50 +0300
+Message-ID: <CAMJR_v6igrNZMzXpio27PpA6rQvo+efAVd2nM5GNg2+agQa9=A@mail.gmail.com>
+Subject: Re: PROBLEM: [drivers/ata] Read log page failed (boot error message)
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-ata_dev_config_ncq_prio() and ata_dev_config_devslp() both access pages
-of the IDENTIFY DEVICE data log. Before calling ata_read_log_page(),
-make sure to check for the existence of the IDENTIFY DEVICE data log and
-of the log page accessed suing ata_identify_page_supported(). This
-avoids useless error messages from ata_read_log_page().
-
-Reported-by: Nikolay <knv418@gmail.com>
-Cc: stable@kernel.org # 4.14+
-Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
----
- drivers/ata/libata-core.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index edaedcd82630..59ad8c979cb3 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2178,6 +2178,9 @@ static void ata_dev_config_ncq_prio(struct ata_devi=
-ce *dev)
- 	struct ata_port *ap =3D dev->link->ap;
- 	unsigned int err_mask;
-=20
-+	if (!ata_identify_page_supported(dev, ATA_LOG_SATA_SETTINGS))
-+		return;
-+
- 	err_mask =3D ata_read_log_page(dev,
- 				     ATA_LOG_IDENTIFY_DEVICE,
- 				     ATA_LOG_SATA_SETTINGS,
-@@ -2454,7 +2457,8 @@ static void ata_dev_config_devslp(struct ata_device=
- *dev)
- 	 * Check device sleep capability. Get DevSlp timing variables
- 	 * from SATA Settings page of Identify Device Data Log.
- 	 */
--	if (!ata_id_has_devslp(dev->id))
-+	if (!ata_id_has_devslp(dev->id) ||
-+	    !ata_identify_page_supported(dev, ATA_LOG_SATA_SETTINGS))
- 		return;
-=20
- 	err_mask =3D ata_read_log_page(dev,
---=20
-2.31.1
-
+> This error is not fatal. It simply means that the drive does not support the
+> INDENTIFY DEVICE log page. Nothing to worry about.
+I suppose it's not the reason to log error, maybe warn or notice.
+> Attempting to read this log should be avoided in this case though. I will send a
+> patch to fix that.
+Thank you! Got it.
+> However, the files you attached show that you are using
+> kernel 5.12
+According to almost any file in attachment, I'm using 5.15.2.
+Error happens only since 5.15, tested on 5.14.16.
+> You can ignore the read log error, unless your drive is not functional ?
+Yes I can and I will. Entire problem is just about redundant noise
+with error level in kernel log.
