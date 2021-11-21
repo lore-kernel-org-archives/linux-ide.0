@@ -2,161 +2,142 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0B2EC433F5
-	for <linux-ide@archiver.kernel.org>; Sat, 20 Nov 2021 12:01:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 919FDC433EF
+	for <linux-ide@archiver.kernel.org>; Sun, 21 Nov 2021 23:24:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231398AbhKTMEu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 20 Nov 2021 07:04:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35358 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230381AbhKTMEu (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 20 Nov 2021 07:04:50 -0500
-Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A14E0C061574;
-        Sat, 20 Nov 2021 04:01:46 -0800 (PST)
-Received: by mail-lf1-x133.google.com with SMTP id y26so56109897lfa.11;
-        Sat, 20 Nov 2021 04:01:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:organization:in-reply-to
-         :content-transfer-encoding;
-        bh=wbJD9nZe6qNHGvBaJI58XqT00jTe1paMdYt56fGsTdQ=;
-        b=Opf18F8tY87CNqNWoL54Enz4yj9+AiUaIspVfDSRk1iqdnse6PminboQ5g9ztcyMyx
-         501X0MM6QToIONl4dh+ndDYnwa34KVAgpc4fCjTymn2r6sF4HH0T7wKSdd/7/8OaM/Rf
-         N7mYYSB+Zj5/5tcfsLyMdT8JgWzlIk/kJtW3V24RjOEZheI0B5XJiUwBCfrfaaNCwmEZ
-         R99dcc9aVst980QALtj9Wm+aAYAeZXB6fCh4vZwn4QyIbBiTUjzcOaFKK1Jby3B+h4ws
-         z9syhr3kRreF5y01aRK7cUiNaL9EfrDbcvD87Paps2PYAnKNYUnX7R1KmRWjtoaOdka1
-         tVGQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:organization:in-reply-to
-         :content-transfer-encoding;
-        bh=wbJD9nZe6qNHGvBaJI58XqT00jTe1paMdYt56fGsTdQ=;
-        b=Zh+is57B52d9VeLFQEIMx5w2Am5erL48tIk3KFGsMfv3l6Sy9hlkeiPJ5RWQGFwYMG
-         PktRp+iWfsn57prD2/AvqbqmoVr7ctmB++eJmw7HN05FDeL55zRyXhh7wwAUK8WBDTou
-         6tM0GoVQFWnv+o6XTPYWdnya+IKH0L3ObUhuoLkukdpEQV7J2oXBqWDuQubdFVtC96XF
-         TBtG1nM+jdXXqP0M+yUAueeZn1TOb0nUtS4lIf/PzrMKeEqYXHNm1cMSMkB83NU+7map
-         jdwGzgMRADHOyvjJmMG9ZwtQSyAia8OmY3JuyAp5rZOB6O0oCtfgQtAuZPBhv8Ctu0sF
-         3Ssw==
-X-Gm-Message-State: AOAM533KHDCI3aBuZE8VxzqUCX8eyv4nKD8oTzdpxnc474+D2lFkS0oT
-        9U8uXM1qrb2Uk7vx0rb7S/0=
-X-Google-Smtp-Source: ABdhPJxlJw2/XZ1Wo2YKnWyVGQl0ojyTplQRPVAsQkD+7meVgixOF6S6wy+BMivE9YlEReWILulwsw==
-X-Received: by 2002:a2e:bc21:: with SMTP id b33mr35734548ljf.497.1637409704996;
-        Sat, 20 Nov 2021 04:01:44 -0800 (PST)
-Received: from [192.168.1.100] ([178.176.76.156])
-        by smtp.gmail.com with ESMTPSA id f9sm310089lfv.44.2021.11.20.04.01.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 20 Nov 2021 04:01:44 -0800 (PST)
-Message-ID: <4216b1e4-5649-071a-84fc-2440aba9d5a0@gmail.com>
-Date:   Sat, 20 Nov 2021 15:01:43 +0300
+        id S230028AbhKUX1T (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 21 Nov 2021 18:27:19 -0500
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:7720 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229901AbhKUX1T (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 21 Nov 2021 18:27:19 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1637537053; x=1669073053;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=tlwdWbWglkxZo5YzvFa5+BGoWfDC7z1mUE2T+vWMsiI=;
+  b=ZCYdHqIBQLoyu+KfryOdvVQsBTPaWB58rbghZGdU7cRKFe45YGAPXAQA
+   pYcwrw3Yb9gg2gX9B8+JcIPpBM44rLBOGA9JRqYJ1Eh/xmvpqtsy6CmGh
+   O3ls5nyMDT+qXA3N3TitgObjhiHHsWlusgSKNyH7EJRpQ77LsnSgN2AL/
+   hkAKEZXgFomwbTkwTB+oA8qISX3d+vD7phDR0sNgZwNGOMfnVhZyKjg8G
+   J3yf/haYZVOsWjKQ4hecDx7/UieIU8DgQ+4RcNaCWqV3qV1TvYCpP6l5X
+   0VHnajgnPlFXfd43uwpdhGRpY8aV65VA1zVpsyU0LRKKY9bRiN8csLU+9
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.87,253,1631548800"; 
+   d="scan'208";a="185247299"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 22 Nov 2021 07:24:13 +0800
+IronPort-SDR: v2WvFxAv527wS9DLk3y/13VL6/WPyIc+4YKWa3SWSyAG6qUKXx4msBFRrQoOheU5N3Eta+bvZO
+ c3LAKdBI3373Vh9lrxaKIG0OatH686Zw80Q8TPKPspdJl7A4AwK5Rme4qQx3h1evfVU1auTHDl
+ 45BHF7EWbAXRXddFsKbYuQLen2xoZv60AzKfXs2uwmHi12xNLxWpo2hjFHylYW/Wk55Pr1tq7b
+ RTCGHpJvJ6V5v2nCtOIaMzZIxjNT010F2yjOr/L3xCb0VxGYerGNHxvSUr8dFMzDrX5bRC/ppg
+ 03hMo3fQCEdUEh0Y6Vmm9WsL
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Nov 2021 14:57:36 -0800
+IronPort-SDR: OhAr3rYHlVLHse7SWxIdwXmFE660RJk3sQ+m1jCObZ8wWyGozCe/fJ8WCJWwHGws8CX7NuURqN
+ 4HXu+ZzYaA9UsSQj0zJazYHczcG5kVewldYGs3xwFwmyoUeHvtvPk7Yu+oM7skDWAgQL+PJ5dw
+ 4psps1V7O4pITHZyNabPpSvCab9IQH4PaeIYD2YQ2fVfWx85P7llYNlmPeZXAugYOskduRhnEF
+ Ol/8SnnGvg9FeVCceNyHrSOTjWTcJkz1/cBrI+bELTwQBPvrUdiFan1wSQ24vu3g+hTBUu1mOU
+ ZI8=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Nov 2021 15:24:13 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Hy618392Gz1RtVt
+        for <linux-ide@vger.kernel.org>; Sun, 21 Nov 2021 15:24:12 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1637537051; x=1640129052; bh=tlwdWbWglkxZo5YzvFa5+BGoWfDC7z1mUE2
+        T+vWMsiI=; b=DnSnRNGG6BynAEvTGN5AppgQL4iHbRy3x5PqjncUbtH7qSD0jgk
+        HVFZKFrZgBe6+ZYOaCOZESO8Z/UQM05LgZmmHJvsZ99W/5kBsSsKZIl4gS2ij0mh
+        2Cdjx+1vNbAf7zfZ4XcEVJUa6pmFPiTUW7BvEjVjWP7YIar88aMqaBu7DbAZBlYE
+        HdXZzW3MhZ3DxeMzKgSGw09XGjWYD8pD87Y/vnYnhqp/1O1Ut24e5n2z155OTIYB
+        4oyCtlMg6GrZqLxWOSKuSobKf72KH8d/d3tYJXHY2Lf+iYTxGP2BGVbemMTMYSrq
+        E0n6LlCaeNruYFhr9ubGaH9hyIpn2wIpHOw==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id qInphipJmidz for <linux-ide@vger.kernel.org>;
+        Sun, 21 Nov 2021 15:24:11 -0800 (PST)
+Received: from [10.225.54.48] (unknown [10.225.54.48])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Hy6163Xtcz1RtVl;
+        Sun, 21 Nov 2021 15:24:10 -0800 (PST)
+Message-ID: <f45d8750-4dfb-ec46-4ef9-a96169722ca4@opensource.wdc.com>
+Date:   Mon, 22 Nov 2021 08:24:08 +0900
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.1
-Subject: Re: [PATCH -next V2 1/2] sata_fsl: fix UAF in sata_fsl_port_stop when
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.3.1
+Subject: Re: [PATCH -next 2/2] sata_fsl: fix warning in remove_proc_entry when
  rmmod sata_fsl
 Content-Language: en-US
-To:     Baokun Li <libaokun1@huawei.com>, damien.lemoal@opensource.wdc.com,
-        axboe@kernel.dk, tj@kernel.org, linux-ide@vger.kernel.org,
+To:     Sergei Shtylyov <sergei.shtylyov@gmail.com>,
+        Baokun Li <libaokun1@huawei.com>, axboe@kernel.dk,
+        tj@kernel.org, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org
 Cc:     yebin10@huawei.com, yukuai3@huawei.com,
         Hulk Robot <hulkci@huawei.com>
-References: <20211120033420.3762681-1-libaokun1@huawei.com>
- <20211120033420.3762681-2-libaokun1@huawei.com>
-From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Organization: Brain-dead Software
-In-Reply-To: <20211120033420.3762681-2-libaokun1@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+References: <20211119041128.2436889-1-libaokun1@huawei.com>
+ <20211119041128.2436889-3-libaokun1@huawei.com>
+ <283712c0-bab7-de13-fc27-6ae2e6f9532f@gmail.com>
+ <fcf2d384-ee03-298c-c1ac-5a39c0d85784@opensource.wdc.com>
+ <361abc20-e01e-3c3a-3217-2e7ed6cb3f76@gmail.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital
+In-Reply-To: <361abc20-e01e-3c3a-3217-2e7ed6cb3f76@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello!
-
-On 20.11.2021 6:34, Baokun Li wrote:
-
-> When the `rmmod sata_fsl.ko` command is executed in the PPC64 GNU/Linux,
-> a bug is reported:
->   ==================================================================
->   BUG: Unable to handle kernel data access on read at 0x80000800805b502c
->   Oops: Kernel access of bad area, sig: 11 [#1]
->   NIP [c0000000000388a4] .ioread32+0x4/0x20
->   LR [80000000000c6034] .sata_fsl_port_stop+0x44/0xe0 [sata_fsl]
->   Call Trace:
->    .free_irq+0x1c/0x4e0 (unreliable)
->    .ata_host_stop+0x74/0xd0 [libata]
->    .release_nodes+0x330/0x3f0
->    .device_release_driver_internal+0x178/0x2c0
->    .driver_detach+0x64/0xd0
->    .bus_remove_driver+0x70/0xf0
->    .driver_unregister+0x38/0x80
->    .platform_driver_unregister+0x14/0x30
->    .fsl_sata_driver_exit+0x18/0xa20 [sata_fsl]
->    .__se_sys_delete_module+0x1ec/0x2d0
->    .system_call_exception+0xfc/0x1f0
->    system_call_common+0xf8/0x200
->   ==================================================================
+On 2021/11/20 18:51, Sergei Shtylyov wrote:
+> On 20.11.2021 9:08, Damien Le Moal wrote:
+>> On 11/20/21 00:43, Sergei Shtylyov wrote:
+>>>> diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+>>>> index 30759fd1c3a2..011daac4a14e 100644
+>>>> --- a/drivers/ata/sata_fsl.c
+>>>> +++ b/drivers/ata/sata_fsl.c
+>>>> @@ -1493,7 +1493,7 @@ static int sata_fsl_probe(struct platform_device *ofdev)
+>>>>    	host_priv->ssr_base = ssr_base;
+>>>>    	host_priv->csr_base = csr_base;
+>>>>    
+>>>> -	irq = irq_of_parse_and_map(ofdev->dev.of_node, 0);
+>>>> +	irq = platform_get_irq(ofdev, 0);
+>>>>    	if (!irq) {
+>>>
+>>> 	if (irq < 0) {
+>>>
+>>>      platform_get_irq() returns negative error codes, not 0 on failure.
+>>
+>> Sergei,
+>>
+>> By the way, the kdoc comment for platform_get_irq() says:
+>>
+>> "Return: non-zero IRQ number on success, negative error number on failure."
+>>
+>> But irq	0 is valid, isn't it ? So shouldn't this be changed to something
+>> like:
+>>
+>> "Return: IRQ number on success, negative error number on failure."
 > 
-> The triggering of the BUG is shown in the following stack:
+>     No, it's not valid (the current code WARN()s about it) and won't be 
+> returned anymore after my patch [1] gets applied.
 > 
-> driver_detach
->    device_release_driver_internal
->      __device_release_driver
->        drv->remove(dev) --> platform_drv_remove/platform_remove
->          drv->remove(dev) --> sata_fsl_remove
->            iounmap(host_priv->hcr_base);			<---- unmap
->            kfree(host_priv);                             <---- free
->        devres_release_all
->          release_nodes
->            dr->node.release(dev, dr->data) --> ata_host_stop
->              ap->ops->port_stop(ap) --> sata_fsl_port_stop
->                  ioread32(hcr_base + HCONTROL)           <---- UAF
->              host->ops->host_stop(host)
+> [1] https://marc.info/?l=linux-kernel&m=163623041902285
+
+OK. Got it. Thanks.
+
 > 
-> The iounmap(host_priv->hcr_base) and kfree(host_priv) commands should
-
-    s/commands/functions/?
-
-> not be executed in drv->remove. These commands should be executed in
-> host_stop after port_stop. Therefore, we move these commands to the
-> new function sata_fsl_host_stop and bind the new function to host_stop
-> by referring to achi.
-
-    You mean AHCI? I don't see where you reference ahci (or achi)...
-
-> Reported-by: Hulk Robot <hulkci@huawei.com>
-> Signed-off-by: Baokun Li <libaokun1@huawei.com>
-
-    Doesn't this need to go into the stable trees?
-
-> ---
->   drivers/ata/sata_fsl.c | 17 ++++++++++++++---
->   1 file changed, 14 insertions(+), 3 deletions(-)
+> MBR, Sergei
 > 
-> diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-> index e5838b23c9e0..30759fd1c3a2 100644
-> --- a/drivers/ata/sata_fsl.c
-> +++ b/drivers/ata/sata_fsl.c
-> @@ -1430,12 +1430,25 @@ static struct ata_port_operations sata_fsl_ops = {
->   	.pmp_detach = sata_fsl_pmp_detach,
->   };
->   
-> +static void sata_fsl_host_stop(struct ata_host *host)
-> +{
-> +	struct sata_fsl_host_priv *host_priv = host->private_data;
-> +
-> +	iounmap(host_priv->hcr_base);
-> +	kfree(host_priv);
-> +}
-> +
-> +static struct ata_port_operations sata_fsl_platform_ops = {
-> +	.inherits       = &sata_fsl_ops,
-> +	.host_stop      = sata_fsl_host_stop,
 
-    Why not just add it to the initializer for sata_fsl_ops?
 
-[...]
-
-MBR, Sergei
+-- 
+Damien Le Moal
+Western Digital Research
