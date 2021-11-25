@@ -2,125 +2,79 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4389CC433F5
-	for <linux-ide@archiver.kernel.org>; Thu, 25 Nov 2021 22:38:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54B2FC433EF
+	for <linux-ide@archiver.kernel.org>; Thu, 25 Nov 2021 22:38:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233151AbhKYWl7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 25 Nov 2021 17:41:59 -0500
-Received: from new1-smtp.messagingengine.com ([66.111.4.221]:34829 "EHLO
-        new1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S238253AbhKYWj6 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 25 Nov 2021 17:39:58 -0500
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailnew.nyi.internal (Postfix) with ESMTP id 9BB8658043F;
-        Thu, 25 Nov 2021 17:36:46 -0500 (EST)
+        id S238595AbhKYWmF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 25 Nov 2021 17:42:05 -0500
+Received: from out2-smtp.messagingengine.com ([66.111.4.26]:51559 "EHLO
+        out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S238402AbhKYWkF (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 25 Nov 2021 17:40:05 -0500
+Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
+        by mailout.nyi.internal (Postfix) with ESMTP id 016135C01ED;
+        Thu, 25 Nov 2021 17:36:53 -0500 (EST)
 Received: from mailfrontend1 ([10.202.2.162])
-  by compute1.internal (MEProxy); Thu, 25 Nov 2021 17:36:46 -0500
+  by compute3.internal (MEProxy); Thu, 25 Nov 2021 17:36:53 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:date:from:message-id:subject:to
-        :x-me-proxy:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=
-        fm1; bh=Ba2WyiN6647MB61mpmqIykEYTj6KVGUq5LS7QOD/UcE=; b=WTBHISQS
-        4uwAgJLcHkqzfyw5Uno4ikYUSIrRTm5iTuJb1F4L1VFGy8PmJHiCHzl+gt/FzU65
-        kYNn/q/K3eu5IwK5GFSslUBuimsU28lR14fRrwFKUBrrm5d9EbJekLctdwijDHP+
-        DPEFkBXU5ETrHODepsQeIxUwsXvpsUxF4+icusoLvVcMYNTlO/p7UgU2pfyRWVs0
-        IB6TxVsB1Fs+X3o1b9UwFRgIZRu98U9v3Zw03pxGXfLxAr1akHv86CuypuX/JND/
-        v3qmHC7fgYfgpeeWfYJbhVNM8S9z+Hh1YcVHg6lNfvXmHLazOJAMmgpOO9d2R53y
-        C9n6i/u2ovSaQg==
-X-ME-Sender: <xms:_g-gYWfvwmNjV8NmNu6J_vbCnDCVR3mfgXw7H__8n-KeuEID-bww3A>
-    <xme:_g-gYQOVAOpvsKjYQtEJsEgc-qs7SCdrAvWrn7u1mh8XENy0yjKzF0Gc42ZOKL26J
-    eEEqdambyD3pt0GzIY>
-X-ME-Received: <xmr:_g-gYXh8RBiMnyyJcF1kqha1MKLPzcYv57KgmSvYbIAXcCIOfEaPt8t5f9ftwT_BEpngXPIM5g8k_yQAA5CIBxiiaijB4-OxEek>
+        messagingengine.com; h=cc:content-type:date:from:in-reply-to
+        :message-id:mime-version:references:subject:to:x-me-proxy
+        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; bh=5zdxyc
+        JIKRW4j7oFSN3KP5jOmnSpqaDy8dBhTuplRRA=; b=BENsBC6hRoybmKz9OYy6uA
+        51cWrzOWpsN0EuMtNN+LjUSU2Y7R3j5ErS9CgHd9/kfq1ryZoNqZaWcCn1OCRjKL
+        HlmiVH2a1IHiNoWCajIOJI+7s9XgmmgXUqzt3opsU1XFMuqCSiuS+ArqCnvIzeSn
+        PwjX5mymESB/yCBW1yjgdhZ1bRzb8Vdd0dBoHtXPkupW3Xu/73UNLkgL++BeGyXm
+        vqOcNUPJmPU040HnbFiadikkiQ/ELywj5UlogugRvT5eEbvqFN2iYboRI8Lmgfbk
+        2fT1auPiG0r+Vjv3Dhr8Sb1L0+8Der9UhQTf2HOhW8GK5bChEfHzElNSfMGBe9fQ
+        ==
+X-ME-Sender: <xms:BBCgYfktbjoixWvZll1AFf0nhdP5HSt86SpCow2ojalg_Qtbgw-oDg>
+    <xme:BBCgYS1luXXAzaLYnHo-mtyAh_v-KnecBCDnaDbpZmO_4ls7JZHfi_8yP49L6ymtk
+    dQxkwwDGvtfvk58nX8>
+X-ME-Received: <xmr:BBCgYVrasvPT7QO7vhO4PAMJS61tND7XNprtgwS1MgbU89HbNTOMY5elm0GgZ7bLBr2Fkmm0-iBiWRL_x2vGnV_nUIPiWYir8IY>
 X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvuddrhedtgdduiedvucetufdoteggodetrfdotf
     fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
     uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    gohfhorhgsihguuggvnhfjughrucdlhedttddmnecujfgurhepvffkhffuffestddtredt
-    tddtnecuhfhrohhmpefhihhnnhcuvfhhrghinhcuoehfthhhrghinheslhhinhhugidqmh
-    eikehkrdhorhhgqeenucfhohhrsghiugguvghnjfgurhepvffkhffuffestddtredttddt
-    pdfvkffhufffsedttdertddttdenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmh
-    epmhgrihhlfhhrohhmpehfthhhrghinheslhhinhhugidqmheikehkrdhorhhg
-X-ME-Proxy: <xmx:_g-gYT87gPDf8dUhjILy5POt5l8WjSYFiYFWVW_-5NMD3LweSKP5rQ>
-    <xmx:_g-gYSuYKxg5XOsGtl8tOQezDkHBypuJVF5Ks-9hqwp1rnGqEBvoeQ>
-    <xmx:_g-gYaEI0YfMaKyU9XLpwRv5frllwnwDD5WBmHUIhsg8jq4wvPJ6VQ>
-    <xmx:_g-gYWKBO3r0DXOHgnp3I_lHSH_OoG7pRDeEH6xGy1WvIWGR2RVTNA>
+    cujfgurhepfffhvffujgfkfhggtgesthdtredttddtvdenucfhrhhomhephfhinhhnucfv
+    hhgrihhnuceofhhthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgheqnecuggftrfgrth
+    htvghrnhepffduhfegfedvieetudfgleeugeehkeekfeevfffhieevteelvdfhtdevffet
+    uedunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepfh
+    hthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgh
+X-ME-Proxy: <xmx:BBCgYXlALw_P9fJ0LLiHqbtsAjR0BRtCFA_xhFE4lz2KBwyfcLmIPw>
+    <xmx:BBCgYd3t2oTER9Yg3avvfVC9fRGMD6mTZJRvRWYpDRAJDWRcvhiMDA>
+    <xmx:BBCgYWtxjrHW_YX5nMf5qs03IvEebPOVXKljGA7s-4BRbJ0BxR3JGQ>
+    <xmx:BBCgYYRaV0Kl9J6-M7rTFYXFLK7ybxxavy_PG0pDUH46Dtq5M9T4Zw>
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Thu,
- 25 Nov 2021 17:36:43 -0500 (EST)
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     "Geert Uytterhoeven" <geert@linux-m68k.org>,
-        "Michael Schmitz" <schmitzmic@gmail.com>,
-        "Jens Axboe" <axboe@kernel.dk>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Message-Id: <8f6a78cf7b60160ef3d22445ee1b8f2c0678f74b.1637879659.git.fthain@linux-m68k.org>
+ 25 Nov 2021 17:36:50 -0500 (EST)
+Date:   Fri, 26 Nov 2021 09:36:56 +1100 (AEDT)
 From:   Finn Thain <fthain@linux-m68k.org>
-Subject: [PATCH v2] pata_falcon: Avoid type warnings from sparse
-Date:   Fri, 26 Nov 2021 09:34:19 +1100
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Michael Schmitz <schmitzmic@gmail.com>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] pata_falcon: Add missing __iomem annotations
+In-Reply-To: <CAMuHMdXy-XyR5PtczK9J1p_i=jugp4yq6JF8_MhVC1FMK5dtPw@mail.gmail.com>
+Message-ID: <9713ea83-b4e7-4eee-5ab1-7fb2dccb4ccd@linux-m68k.org>
+References: <44e0213a681f3c8ee4c6ab2ef9d61ce3ac00e368.1637727935.git.fthain@linux-m68k.org> <CAMuHMdXTxTABOoVgC6fVR44dxUZZEbZV=ewSk9vKFY=U5u+fcw@mail.gmail.com> <35a85d2f-ab6a-4ab7-85a8-626f1560a57d@linux-m68k.org>
+ <CAMuHMdXy-XyR5PtczK9J1p_i=jugp4yq6JF8_MhVC1FMK5dtPw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The zero day bot reported some sparse complaints in pata_falcon.c. E.g.
+On Thu, 25 Nov 2021, Geert Uytterhoeven wrote:
 
-drivers/ata/pata_falcon.c:58:41: warning: cast removes address space '__iomem' of expression
-drivers/ata/pata_falcon.c:58:41: warning: incorrect type in argument 1 (different address spaces)
-drivers/ata/pata_falcon.c:58:41:    expected unsigned short volatile [noderef] [usertype] __iomem *port
-drivers/ata/pata_falcon.c:58:41:    got unsigned short [usertype] *
+> 
+> Yeah, you do have to be careful with macros that derive a size from the 
+> type of the passed data.  The *{in,out}sw() functions do not suffer from 
+> that: they are defined to operate on a 16-bit I/O register. It is very 
+> unlikely these semantics will ever change.
+> 
+> Here I'm more worried about the other danger: keeping casts will silence 
+> any warning that may be introduced in a future change to the driver 
+> code.
+> 
 
-The same thing shows up in 8 places, all told. Avoid this by removing
-unnecessary type casts.
-
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Michael Schmitz <schmitzmic@gmail.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Reported-by: kernel test robot <lkp@intel.com>
-Suggested-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Signed-off-by: Finn Thain <fthain@linux-m68k.org>
----
- drivers/ata/pata_falcon.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/ata/pata_falcon.c b/drivers/ata/pata_falcon.c
-index 121635aa8c00..823c88622e34 100644
---- a/drivers/ata/pata_falcon.c
-+++ b/drivers/ata/pata_falcon.c
-@@ -55,14 +55,14 @@ static unsigned int pata_falcon_data_xfer(struct ata_queued_cmd *qc,
- 	/* Transfer multiple of 2 bytes */
- 	if (rw == READ) {
- 		if (swap)
--			raw_insw_swapw((u16 *)data_addr, (u16 *)buf, words);
-+			raw_insw_swapw(data_addr, (u16 *)buf, words);
- 		else
--			raw_insw((u16 *)data_addr, (u16 *)buf, words);
-+			raw_insw(data_addr, (u16 *)buf, words);
- 	} else {
- 		if (swap)
--			raw_outsw_swapw((u16 *)data_addr, (u16 *)buf, words);
-+			raw_outsw_swapw(data_addr, (u16 *)buf, words);
- 		else
--			raw_outsw((u16 *)data_addr, (u16 *)buf, words);
-+			raw_outsw(data_addr, (u16 *)buf, words);
- 	}
- 
- 	/* Transfer trailing byte, if any. */
-@@ -74,16 +74,16 @@ static unsigned int pata_falcon_data_xfer(struct ata_queued_cmd *qc,
- 
- 		if (rw == READ) {
- 			if (swap)
--				raw_insw_swapw((u16 *)data_addr, (u16 *)pad, 1);
-+				raw_insw_swapw(data_addr, (u16 *)pad, 1);
- 			else
--				raw_insw((u16 *)data_addr, (u16 *)pad, 1);
-+				raw_insw(data_addr, (u16 *)pad, 1);
- 			*buf = pad[0];
- 		} else {
- 			pad[0] = *buf;
- 			if (swap)
--				raw_outsw_swapw((u16 *)data_addr, (u16 *)pad, 1);
-+				raw_outsw_swapw(data_addr, (u16 *)pad, 1);
- 			else
--				raw_outsw((u16 *)data_addr, (u16 *)pad, 1);
-+				raw_outsw(data_addr, (u16 *)pad, 1);
- 		}
- 		words++;
- 	}
--- 
-2.26.3
-
+Fair enough. I'll send v2.
