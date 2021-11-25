@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BC5AC433EF
-	for <linux-ide@archiver.kernel.org>; Thu, 25 Nov 2021 07:35:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FFFFC433F5
+	for <linux-ide@archiver.kernel.org>; Thu, 25 Nov 2021 07:42:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234846AbhKYHiy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 25 Nov 2021 02:38:54 -0500
-Received: from mail-vk1-f171.google.com ([209.85.221.171]:42629 "EHLO
-        mail-vk1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235419AbhKYHgy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 25 Nov 2021 02:36:54 -0500
-Received: by mail-vk1-f171.google.com with SMTP id b125so3242936vkb.9;
-        Wed, 24 Nov 2021 23:33:43 -0800 (PST)
+        id S234810AbhKYHpV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 25 Nov 2021 02:45:21 -0500
+Received: from mail-ua1-f48.google.com ([209.85.222.48]:41664 "EHLO
+        mail-ua1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1349771AbhKYHnV (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 25 Nov 2021 02:43:21 -0500
+Received: by mail-ua1-f48.google.com with SMTP id p37so10482061uae.8;
+        Wed, 24 Nov 2021 23:40:10 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=ugpVh5eVFcoLVCWRbPKzq92m0amK53xVN2bsl5MSGy0=;
-        b=BRjrRgyM+A8McJ/YI5PBg6IXU2XGf3Flp97LxMYFG3celISig3ju7QESHhwH/9GHDa
-         42MSvj3c8EI6Fnpn3noNt5Es0FbUOAlmZqo6QNdmR4sgUvCTL8AYKOk7H6jlsiEMXKeN
-         apiI0ALbyxLK0sAS1gO/MR4sdlHT3GGrK2C40JQ1UVdwNMOQ6pNP5Bg3v05EAM4LI18q
-         Pmb4L3/GKJzIoY0SE9I5H1aGFVxhTnL9v8mtHM1/l2OGsPSNWLguTZOpJn7yTWguf9DY
-         oBC2ZSihRBfd8avU5NC1dk6WqB2lMSqGZQrCEvoavyM0E5bLyiuyShr8T7s+rvDypFaW
-         XfrA==
-X-Gm-Message-State: AOAM531ALBSaqame9OzAv/nPxy03jipBPFbA7faAf9Spzo5Id3SfDpLx
-        HStHheR8vii2XdWtWgAfbD+DD2odWsfWbw==
-X-Google-Smtp-Source: ABdhPJzi+HXCmPDOWGxSTgzMa52rO2qQxWXcSTOkIAm30J3VSnjVwmW5s4FosaloHqFShx2CbE0i0g==
-X-Received: by 2002:a1f:d903:: with SMTP id q3mr2615955vkg.37.1637825622541;
-        Wed, 24 Nov 2021 23:33:42 -0800 (PST)
-Received: from mail-vk1-f169.google.com (mail-vk1-f169.google.com. [209.85.221.169])
-        by smtp.gmail.com with ESMTPSA id v8sm1234705vkc.52.2021.11.24.23.33.42
+        bh=+Xww3NmiLJg8wUoKC432ZnWMLq8MLYHwiXtDDzGojtg=;
+        b=kkH41+E1MnsSGhvNufobE8N6ssD+chgtULuG5c5PFetYRdeNfV9GuVptUl0VxAWatT
+         SAo7NjiskRn+/4LHIZrKnXwRlCb1EkqoJ/4jY0giGPCJy9eUHyCJ79LS1eYHYGRDIWkd
+         4qqnaEtojy/xhT3DsJxrPEW1XLAB1kOToOyVhbuSQlqHn3bbNNbNqnZm7eIr0+Vtbv1b
+         94CE8AvMmHIBRNitcby5l/F+cIVsRiVxq9AOLs8r2b/hmFfVfRVNCBosBdXsqIChZ8Ji
+         ezz0kLVs2rRfqSMFgNLPS7uJaxjgXBPuFVZDybHTzyFX/5fX1b84WjsNHmeuaWeBrvwn
+         jg5Q==
+X-Gm-Message-State: AOAM533oJ566udOOlcNaCK1bns+K9pVOe7fc5PDwfad4urU9Xae+jXqF
+        8WVVXfHPKsJBqNjt2O/7uHNjLfTWqQ2CRA==
+X-Google-Smtp-Source: ABdhPJxMKPnYCHfMILvXueqVlLfPc8y6KRbt59Epoe4Hl8lhvi2INUzQqIVWB4g7v7d0D8HBtPJEPA==
+X-Received: by 2002:a05:6102:dc7:: with SMTP id e7mr6400909vst.21.1637826009266;
+        Wed, 24 Nov 2021 23:40:09 -0800 (PST)
+Received: from mail-vk1-f174.google.com (mail-vk1-f174.google.com. [209.85.221.174])
+        by smtp.gmail.com with ESMTPSA id 17sm1445511uaq.10.2021.11.24.23.40.08
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 24 Nov 2021 23:33:42 -0800 (PST)
-Received: by mail-vk1-f169.google.com with SMTP id 188so3254327vku.8;
-        Wed, 24 Nov 2021 23:33:42 -0800 (PST)
-X-Received: by 2002:a05:6122:104f:: with SMTP id z15mr2634547vkn.39.1637825621983;
- Wed, 24 Nov 2021 23:33:41 -0800 (PST)
+        Wed, 24 Nov 2021 23:40:09 -0800 (PST)
+Received: by mail-vk1-f174.google.com with SMTP id m16so2339684vkl.13;
+        Wed, 24 Nov 2021 23:40:08 -0800 (PST)
+X-Received: by 2002:a1f:ac48:: with SMTP id v69mr7479303vke.0.1637826003913;
+ Wed, 24 Nov 2021 23:40:03 -0800 (PST)
 MIME-Version: 1.0
 References: <44e0213a681f3c8ee4c6ab2ef9d61ce3ac00e368.1637727935.git.fthain@linux-m68k.org>
- <CAMuHMdXTxTABOoVgC6fVR44dxUZZEbZV=ewSk9vKFY=U5u+fcw@mail.gmail.com> <CAOmrzkJhXvN0gOU8fc5jNu3Q9LnT4dgCGdrznYbCbGXxq0dJpQ@mail.gmail.com>
-In-Reply-To: <CAOmrzkJhXvN0gOU8fc5jNu3Q9LnT4dgCGdrznYbCbGXxq0dJpQ@mail.gmail.com>
+ <CAMuHMdXTxTABOoVgC6fVR44dxUZZEbZV=ewSk9vKFY=U5u+fcw@mail.gmail.com> <35a85d2f-ab6a-4ab7-85a8-626f1560a57d@linux-m68k.org>
+In-Reply-To: <35a85d2f-ab6a-4ab7-85a8-626f1560a57d@linux-m68k.org>
 From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Thu, 25 Nov 2021 08:33:30 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdXfFtn9b_2d5BQdzeyMH_puKJ8tzQeLu-Cw4dxfovcb5w@mail.gmail.com>
-Message-ID: <CAMuHMdXfFtn9b_2d5BQdzeyMH_puKJ8tzQeLu-Cw4dxfovcb5w@mail.gmail.com>
+Date:   Thu, 25 Nov 2021 08:39:52 +0100
+X-Gmail-Original-Message-ID: <CAMuHMdXy-XyR5PtczK9J1p_i=jugp4yq6JF8_MhVC1FMK5dtPw@mail.gmail.com>
+Message-ID: <CAMuHMdXy-XyR5PtczK9J1p_i=jugp4yq6JF8_MhVC1FMK5dtPw@mail.gmail.com>
 Subject: Re: [PATCH] pata_falcon: Add missing __iomem annotations
-To:     Michael Schmitz <schmitzmic@gmail.com>
-Cc:     Finn Thain <fthain@linux-m68k.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+To:     Finn Thain <fthain@linux-m68k.org>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Michael Schmitz <schmitzmic@gmail.com>,
         Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
         Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
@@ -57,10 +57,10 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Michael,
+Hi Finn,
 
-On Wed, Nov 24, 2021 at 9:50 PM Michael Schmitz <schmitzmic@gmail.com> wrote:
-> On Wed, Nov 24, 2021 at 8:51 PM Geert Uytterhoeven <geert@linux-m68k.org> wrote:
+On Thu, Nov 25, 2021 at 2:06 AM Finn Thain <fthain@linux-m68k.org> wrote:
+> On Wed, 24 Nov 2021, Geert Uytterhoeven wrote:
 > > > --- a/drivers/ata/pata_falcon.c
 > > > +++ b/drivers/ata/pata_falcon.c
 > > > @@ -55,14 +55,14 @@ static unsigned int pata_falcon_data_xfer(struct ata_queued_cmd *qc,
@@ -82,11 +82,28 @@ On Wed, Nov 24, 2021 at 9:50 PM Michael Schmitz <schmitzmic@gmail.com> wrote:
 > >
 > > Can't you just drop the casts? data_addr is an __iomem void *.
 >
-> It's not u16 though, and the raw_ IO functions require that. But we
-> could cast data_addr as __iomem u16 * (compile tested).
+> Yes, that works here (i.e. removing the data_addr casts and not the buf
+> casts). But is it prudent?
+>
+> Given the implementation of raw_in/out is subject to change, it seems like
+> the original casts were defensive programming.
+>
+> Here's an example of a recent regression that was fixed by casting a macro
+> argument to a specific width:
+>
+> https://lore.kernel.org/linuxppc-dev/79ae1f49-f6b1-e9ad-977d-0cc7e553c7b9@csgroup.eu/
+> https://lore.kernel.org/linuxppc-dev/08bbe7240b384016e0b2912ecf3bf5e2d25ef2c6.1636501628.git.fthain@linux-m68k.org/
 
-The raw_ IO functions do not require that: you can pass a void *
-to a function that expects a different pointer type.
+Yeah, you do have to be careful with macros that derive a size from
+the type of the passed data.  The *{in,out}sw() functions do not suffer
+from that: they are defined to operate on a 16-bit I/O register.
+It is very unlikely these semantics will ever change.
+
+Here I'm more worried about the other danger: keeping casts will
+silence any warning that may be introduced in a future change to the
+driver code.
+
+BTW, insw() and readsw() in asm-generic take void *.
 
 Gr{oetje,eeting}s,
 
