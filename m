@@ -2,121 +2,115 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69B04C433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 26 Nov 2021 01:53:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99460C433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 26 Nov 2021 02:00:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1357547AbhKZB4P (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 25 Nov 2021 20:56:15 -0500
-Received: from szxga01-in.huawei.com ([45.249.212.187]:14983 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1357475AbhKZByL (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 25 Nov 2021 20:54:11 -0500
-Received: from dggpeml500020.china.huawei.com (unknown [172.30.72.57])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4J0d1g0cW0zZdJ9;
-        Fri, 26 Nov 2021 09:48:23 +0800 (CST)
-Received: from huawei.com (10.175.127.227) by dggpeml500020.china.huawei.com
- (7.185.36.88) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Fri, 26 Nov
- 2021 09:50:57 +0800
-From:   Baokun Li <libaokun1@huawei.com>
-To:     <damien.lemoal@opensource.wdc.com>, <axboe@kernel.dk>,
-        <tj@kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-CC:     <sergei.shtylyov@gmail.com>, <yebin10@huawei.com>,
-        <libaokun1@huawei.com>, <yukuai3@huawei.com>,
-        <stable@vger.kernel.org>, Hulk Robot <hulkci@huawei.com>
-Subject: [PATCH -next V5 2/2] sata_fsl: fix warning in remove_proc_entry when rmmod sata_fsl
-Date:   Fri, 26 Nov 2021 10:03:07 +0800
-Message-ID: <20211126020307.2168767-3-libaokun1@huawei.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20211126020307.2168767-1-libaokun1@huawei.com>
-References: <20211126020307.2168767-1-libaokun1@huawei.com>
+        id S236826AbhKZCD2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 25 Nov 2021 21:03:28 -0500
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:9786 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243804AbhKZCB0 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 25 Nov 2021 21:01:26 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1637891894; x=1669427894;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=VAqsQec0+Opf3JDtqaY8hCVI7L6tRNJGyVRiDWoI49o=;
+  b=pdfpk6pK2k8P4MCjj3N5tntL3Fp8vRhdIq9PmhvVvIr3ATvDMvh8qVgP
+   9vUEj7i+cw0IXP5Tf4kU7aFP/BUhhYgDM+ww4UXidisMZU62jT8ztvRdf
+   uX+WSFd8uSlJm6KIbN6wzg5db8+h+uqejFQIGf84MhWqWFSLSNLIG9kSP
+   UPEHVo0Kg9alG7/3UEIGtVshoFQU7Awg7yjm7hnCCml+Jz9AIXstUzDng
+   D8dcRwycG05JPYqQoIsRbEyO0VEJvsq8iqqcn1R3ETU7sNcTBOyVOe90E
+   xyoE5GOhhlDOjFeHNJXu/dT6JD699Q6P6Ss368eL5EZRmzdVh1A/kxCBU
+   A==;
+X-IronPort-AV: E=Sophos;i="5.87,263,1631548800"; 
+   d="scan'208";a="186679702"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 26 Nov 2021 09:56:12 +0800
+IronPort-SDR: Cx7Z+3iHxYF4ceTd2xJyQGQMT3QwCf/FFbKT4HKyzy3FhPzGBRG6Iv/9abzVbyBVr1DoISkXw7
+ AV+n6D3xhbepFjXdc43Fbv9ci54Zs+CYPULtGinSdCYKgrGwW6jcDt/TV7sTX6XuIZVAIvbaxy
+ TxBCJdTLXfGEDTXW+Q4/7Qem2BFTl7W1xcrCjAtoAl3WpBddpHlGyniIsJ/NLYbzeMpgP771v0
+ Zp/3KH6obcCpyiHf6GCCzSkKW2O8fFOQ5pNjUDc9B+4klj1FinxoTl+LwINwUK/KLm4Js3/ky4
+ 6UCpy8+EX6b4Hmo4oesPty/r
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Nov 2021 17:29:31 -0800
+IronPort-SDR: H/am5vPhP0YgwDnWtcXcGHDX5ZTokrdmHpNEr/M0HXC1lb51rhhuGNAH0TJ+D0CZAyQ7tOpAP3
+ drizTV8P4kGpxrj5SfZAIC3Mel6VEo3LuD4H8gb24KqfjZipwC3gXiZgfMsxKXTyWHD4PrFtus
+ I/d26IhBZ3ora+/9tTZg6QGqDRv8RIgajMSaP0RDSuigl7dqbz3bwVNcRyk80KZil+khKvHGsQ
+ enhBPwpMdp0mlT5qp8DK6lYr8nSai6d2kMHWgE1SfAssVrbkWfp29cMKPERUzr/uE24bSzY1D6
+ X0E=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Nov 2021 17:56:12 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4J0dBg5shYz1RtVt
+        for <linux-ide@vger.kernel.org>; Thu, 25 Nov 2021 17:56:11 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1637891771; x=1640483772; bh=VAqsQec0+Opf3JDtqaY8hCVI7L6tRNJGyVR
+        iDWoI49o=; b=TTv9BSpGZXAwCwy/uUxejuv3mgrA0Im9V5RaLYWJiujmkTNz7N4
+        zQTSNcVnX/Bs1TaEbsEU/xrJPW7I8uJbczqmTf9hUgEWe8WJLTSEWcBpd/4wG3vP
+        Gq8W5pdmfUqYnW2uYalM2DlZopdpEGf7EZN7tJcCRrJuuBKniKWSOaRzlOXyAh3+
+        jy5VHs/ylyvhX2d7/pTCGvI9dBQw9R48d51UPBTcmhW5fZo7Lpa5b655aEtfjz7L
+        VnftgB699vAZNtinJaveFj+acqE6g17SRspan9EinKA5VYK9c2G5IBoe/6aE11fr
+        J0jsmuVBtENrUi5on581GmxLDVg93FBuXWg==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id vYCiJp2HNtv1 for <linux-ide@vger.kernel.org>;
+        Thu, 25 Nov 2021 17:56:11 -0800 (PST)
+Received: from [10.225.54.48] (unknown [10.225.54.48])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4J0dBf2L22z1RtVl;
+        Thu, 25 Nov 2021 17:56:10 -0800 (PST)
+Message-ID: <4469be5f-01a9-5d10-9dc3-b703f36a1ea4@opensource.wdc.com>
+Date:   Fri, 26 Nov 2021 10:56:08 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.127.227]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- dggpeml500020.china.huawei.com (7.185.36.88)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.3.2
+Subject: Re: [PATCH -next V5 0/2] fix two bugs when trying rmmod sata_fsl
+Content-Language: en-US
+To:     Baokun Li <libaokun1@huawei.com>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     sergei.shtylyov@gmail.com, yebin10@huawei.com, yukuai3@huawei.com
+References: <20211126020307.2168767-1-libaokun1@huawei.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital
+In-Reply-To: <20211126020307.2168767-1-libaokun1@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Trying to remove the fsl-sata module in the PPC64 GNU/Linux
-leads to the following warning:
- ------------[ cut here ]------------
- remove_proc_entry: removing non-empty directory 'irq/69',
-   leaking at least 'fsl-sata[ff0221000.sata]'
- WARNING: CPU: 3 PID: 1048 at fs/proc/generic.c:722
-   .remove_proc_entry+0x20c/0x220
- IRQMASK: 0
- NIP [c00000000033826c] .remove_proc_entry+0x20c/0x220
- LR [c000000000338268] .remove_proc_entry+0x208/0x220
- Call Trace:
-  .remove_proc_entry+0x208/0x220 (unreliable)
-  .unregister_irq_proc+0x104/0x140
-  .free_desc+0x44/0xb0
-  .irq_free_descs+0x9c/0xf0
-  .irq_dispose_mapping+0x64/0xa0
-  .sata_fsl_remove+0x58/0xa0 [sata_fsl]
-  .platform_drv_remove+0x40/0x90
-  .device_release_driver_internal+0x160/0x2c0
-  .driver_detach+0x64/0xd0
-  .bus_remove_driver+0x70/0xf0
-  .driver_unregister+0x38/0x80
-  .platform_driver_unregister+0x14/0x30
-  .fsl_sata_driver_exit+0x18/0xa20 [sata_fsl]
- ---[ end trace 0ea876d4076908f5 ]---
+On 2021/11/26 11:03, Baokun Li wrote:
+> V1->V2:
+> 	Fixed the check on the return value of platform_get_irq().
+> 	And propagate errors up to sata_fsl_probe()'s callers.
+> V2->V3:
+> 	Add fixed and CC stable and modified the patch description.
+> V3->V4:
+> 	Use a single structure.
+> V4->V5:
+> 	Delete duplicate dev_err() message.
+> 
+> Baokun Li (2):
+>   sata_fsl: fix UAF in sata_fsl_port_stop when rmmod sata_fsl
+>   sata_fsl: fix warning in remove_proc_entry when rmmod sata_fsl
+> 
+>  drivers/ata/sata_fsl.c | 20 +++++++++++++-------
+>  1 file changed, 13 insertions(+), 7 deletions(-)
+> 
 
-The driver creates the mapping by calling irq_of_parse_and_map(),
-so it also has to dispose the mapping. But the easy way out is to
-simply use platform_get_irq() instead of irq_of_parse_map(). Also
-we should adapt return value checking and propagate error values.
+The series looks good to me now.
 
-In this case the mapping is not managed by the device but by
-the of core, so the device has not to dispose the mapping.
+Sergei ? Are you OK with it ?
 
-Fixes: faf0b2e5afe7 ("drivers/ata: add support to Freescale 3.0Gbps SATA Controller")
-Cc: stable@vger.kernel.org
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Baokun Li <libaokun1@huawei.com>
----
-V1->V2:
-	Adapt return value checking and propagate error values.
-V2->V3:
-	Add fixed and CC stable.
-V4->V5:
-	Delete duplicate dev_err() message.
-
- drivers/ata/sata_fsl.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 2eb216792695..3b31a4f596d8 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -1490,9 +1490,9 @@ static int sata_fsl_probe(struct platform_device *ofdev)
- 	host_priv->ssr_base = ssr_base;
- 	host_priv->csr_base = csr_base;
- 
--	irq = irq_of_parse_and_map(ofdev->dev.of_node, 0);
--	if (!irq) {
--		dev_err(&ofdev->dev, "invalid irq from platform\n");
-+	irq = platform_get_irq(ofdev, 0);
-+	if (irq < 0) {
-+		retval = irq;
- 		goto error_exit_with_cleanup;
- 	}
- 	host_priv->irq = irq;
-@@ -1567,8 +1567,6 @@ static int sata_fsl_remove(struct platform_device *ofdev)
- 
- 	ata_host_detach(host);
- 
--	irq_dispose_mapping(host_priv->irq);
--
- 	return 0;
- }
- 
 -- 
-2.31.1
-
+Damien Le Moal
+Western Digital Research
