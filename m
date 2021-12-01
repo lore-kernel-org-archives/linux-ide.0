@@ -2,51 +2,51 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85BABC433EF
-	for <linux-ide@archiver.kernel.org>; Wed,  1 Dec 2021 20:54:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4985EC433FE
+	for <linux-ide@archiver.kernel.org>; Wed,  1 Dec 2021 20:55:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353278AbhLAU43 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 1 Dec 2021 15:56:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50738 "EHLO
+        id S1353148AbhLAU4I (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 1 Dec 2021 15:56:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50684 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353232AbhLAUz2 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 1 Dec 2021 15:55:28 -0500
-Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3660C06174A;
-        Wed,  1 Dec 2021 12:52:07 -0800 (PST)
-Received: by mail-pl1-x635.google.com with SMTP id z6so18649904plk.6;
-        Wed, 01 Dec 2021 12:52:07 -0800 (PST)
+        with ESMTP id S1353213AbhLAUzR (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 1 Dec 2021 15:55:17 -0500
+Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C571C061748;
+        Wed,  1 Dec 2021 12:51:55 -0800 (PST)
+Received: by mail-pl1-x632.google.com with SMTP id q17so18625717plr.11;
+        Wed, 01 Dec 2021 12:51:55 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Z+SJkx7gZpNSKY4hP5L7YJpSZTXuOMEA5gcyCCsEvsg=;
-        b=HlQUEM8THquWt6x0dLOJGG/7ST0cRNjhD2RO0NxDe9QDgSRYzpjnChlTkF+gPXhz62
-         qVgHu+jifwqKySgi9hwWXucaQbivTi3wBwJEieRnadI95e+5Dzfjd4spx/f3E6IqpqwR
-         lpSQZy00/0SlBL4eK7QRcv0WUfW3zqgVt8QkZZ4J1ibQiZi36+bieo67cjUPwRDAwDIB
-         R5Jq3sfjH22mxgMpjYrqRm/mwO/ZJfGXda01W/4VRt2MREcIyfQBQraq40rIlrfsV825
-         6Vm5O3PqWnB00RDHSa+RE2CtLEJCLuX2Q1TVb91F/wl1g5qZk69eWgpneUfXRnExaumJ
-         zG1Q==
+        bh=eHsb1rXkFFF/5VyRHKhImaCsYA2F/4ddGcGA/wMvypA=;
+        b=ErkLAXD8PrLpwTlxaFyc/UrvrU0jJn8RFKnjQ3H4/8XUbQLpN38SnKk0fKmSIkXwKA
+         apCrqIKrq7kzxTb8jyKuL+flofOxXPnvTFVjUknMe5nVzyXIaAxxr2GZe1Yck1TfRNcL
+         iHLo8QkHwIO/ogo8PT+15jsAV4Z0c0LoLU2FZmoWtx1yKz7aVbrofpgJ5kxYqrPkSyW6
+         1dpfonv/plehaQrsRYA2bBxAEaSyxj6elCeJw3cKFir+S1uREYVI+C++HmgprdDP066G
+         iXLXNisK0nwP4v5m++kM53+tyeFu+PCFH5SY+yRPYstfGcap7NTAEziXNRSsQLv/3DLt
+         GUrw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Z+SJkx7gZpNSKY4hP5L7YJpSZTXuOMEA5gcyCCsEvsg=;
-        b=h1lVr1At93Gj6bXPHRuhpVmU00IYelLkhCvt0QPbG3kdErq9ypb3UtL3zGrWTMIY/L
-         MUkbUx5OKXfWt9uSD3XexvK94o8HrfVqQa7yrwJC3cigDSZQa5J2zOBJ1211mpE1g8hK
-         YTjV/vhtHUJCtHk9KzzTH3dr7cq2JUvd2MtoTEUZQH2YP12Ht8EpkRZ9748koikRPtgy
-         ON2+6+of5CAZtGzRUEOSlTY8z0wR+ivrj0zZevOmsNWosmcIurEGdp4ZguKt3AN0UvY0
-         X2YvyVU11Bsgd6SC1GYMegMA/lWBdRgA9kKSca00D16ZgpOhgWvP7qVcxFArmvH4j6Fb
-         sdhQ==
-X-Gm-Message-State: AOAM532mYqSlR60Gxf0MsbX9+Ithp8/F1LeHO4bftgRZ+9abgDctxRsm
-        ABpDKrtzhH2Xb6m7cecK3rObQ8JnG1Q=
-X-Google-Smtp-Source: ABdhPJycFkYcanZu711/X/cGVfD11g1lE+wluwV3VRtNHqKIZWwA+CdO5KEBLg047YADwpUvmJSe5Q==
-X-Received: by 2002:a17:90b:19c8:: with SMTP id nm8mr725245pjb.163.1638391926915;
-        Wed, 01 Dec 2021 12:52:06 -0800 (PST)
+        bh=eHsb1rXkFFF/5VyRHKhImaCsYA2F/4ddGcGA/wMvypA=;
+        b=tUkB2wFu1CcBzKw3tweUhwaH4aLInaX8ivjO1Elpc16LM4hbmYe29B1pwgR9ZVNa0Y
+         TLPrJkB6dQNzIRTlu0HVzHV2w5Fv5guan9MQjNcU0gUTqrc3dLyMdKhzlMqzvW0PEVRP
+         gRkTAanIpss5OHmF9bpNdXPmZFgnMhL8VbQ27x6HSl64IQMIHvdJ2SGJKUh4UOtwj/TG
+         Lz/lBdi4Eyv7spDaqzBvjaE9jJgLQcu49PM0ZFWV6a9evq+0h4rBdGElBhNz+Ny0Rp2r
+         nN4Sw7oDXU92oG0AKjwYU1JNecuIpAl+bmj04SnVB6zqUVVupoCSFl+982mybY92r4ba
+         nMQQ==
+X-Gm-Message-State: AOAM531rnGJF4V/LI836r7iJokd8rPlw1Ya0XfL5dzozwVTxQIV9Jeq5
+        NcJS646v7isRcGJYY58wY38WOsFKWRU=
+X-Google-Smtp-Source: ABdhPJwzsIeJDsohrkfmVSgFtGBs8Bt7OWtFvCZDZlO8UUOb+tkMHAOeqE/TTMesjEPO9rL4g++ILQ==
+X-Received: by 2002:a17:90b:30c6:: with SMTP id hi6mr718068pjb.201.1638391914462;
+        Wed, 01 Dec 2021 12:51:54 -0800 (PST)
 Received: from fainelli-desktop.igp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id p20sm729117pfw.96.2021.12.01.12.52.04
+        by smtp.gmail.com with ESMTPSA id p20sm729117pfw.96.2021.12.01.12.51.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 01 Dec 2021 12:52:06 -0800 (PST)
+        Wed, 01 Dec 2021 12:51:54 -0800 (PST)
 From:   Florian Fainelli <f.fainelli@gmail.com>
 To:     devicetree@vger.kernel.org
 Cc:     Florian Fainelli <f.fainelli@gmail.com>,
@@ -90,9 +90,9 @@ Cc:     Florian Fainelli <f.fainelli@gmail.com>,
         linux-rtc@vger.kernel.org (open list:REAL TIME CLOCK (RTC) SUBSYSTEM),
         linux-pm@vger.kernel.org (open list:THERMAL),
         linux-usb@vger.kernel.org (open list:USB SUBSYSTEM)
-Subject: [PATCH 14/14] dt-bindings: usb: Convert BDC to YAML
-Date:   Wed,  1 Dec 2021 12:51:10 -0800
-Message-Id: <20211201205110.41656-15-f.fainelli@gmail.com>
+Subject: [PATCH 08/14] dt-bindings: interrupt-controller: Merge BCM3380 with BCM7120
+Date:   Wed,  1 Dec 2021 12:51:04 -0800
+Message-Id: <20211201205110.41656-9-f.fainelli@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211201205110.41656-1-f.fainelli@gmail.com>
 References: <20211201205110.41656-1-f.fainelli@gmail.com>
@@ -102,118 +102,122 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Convert the Broadcom BDC device controller Device Tree binding to YAML
-to help with validation.
+The two bindings are very similar and should be covered by the same
+document, do that so we can get rid of an additional binding file.
 
 Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
 ---
- .../devicetree/bindings/usb/brcm,bdc.txt      | 29 ------------
- .../devicetree/bindings/usb/brcm,bdc.yaml     | 46 +++++++++++++++++++
- MAINTAINERS                                   |  2 +-
- 3 files changed, 47 insertions(+), 30 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/usb/brcm,bdc.txt
- create mode 100644 Documentation/devicetree/bindings/usb/brcm,bdc.yaml
+ .../brcm,bcm3380-l2-intc.txt                  | 39 -------------------
+ .../brcm,bcm7120-l2-intc.yaml                 | 30 +++++++++++++-
+ 2 files changed, 28 insertions(+), 41 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/interrupt-controller/brcm,bcm3380-l2-intc.txt
 
-diff --git a/Documentation/devicetree/bindings/usb/brcm,bdc.txt b/Documentation/devicetree/bindings/usb/brcm,bdc.txt
+diff --git a/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm3380-l2-intc.txt b/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm3380-l2-intc.txt
 deleted file mode 100644
-index c9f52b97cef1..000000000000
---- a/Documentation/devicetree/bindings/usb/brcm,bdc.txt
+index 37aea40d5430..000000000000
+--- a/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm3380-l2-intc.txt
 +++ /dev/null
-@@ -1,29 +0,0 @@
--Broadcom USB Device Controller (BDC)
--====================================
+@@ -1,39 +0,0 @@
+-Broadcom BCM3380-style Level 1 / Level 2 interrupt controller
+-
+-This interrupt controller shows up in various forms on many BCM338x/BCM63xx
+-chipsets.  It has the following properties:
+-
+-- outputs a single interrupt signal to its interrupt controller parent
+-
+-- contains one or more enable/status word pairs, which often appear at
+-  different offsets in different blocks
+-
+-- no atomic set/clear operations
 -
 -Required properties:
 -
--- compatible: must be one of:
--                "brcm,bdc-udc-v2"
--                "brcm,bdc"
--- reg: the base register address and length
--- interrupts: the interrupt line for this controller
+-- compatible: should be "brcm,bcm3380-l2-intc"
+-- reg: specifies one or more enable/status pairs, in the following format:
+-  <enable_reg 0x4 status_reg 0x4>...
+-- interrupt-controller: identifies the node as an interrupt controller
+-- #interrupt-cells: specifies the number of cells needed to encode an interrupt
+-  source, should be 1.
+-- interrupts: specifies the interrupt line in the interrupt-parent controller
+-  node, valid values depend on the type of parent interrupt controller
 -
 -Optional properties:
 -
--On Broadcom STB platforms, these properties are required:
--
--- phys: phandle to one or two USB PHY blocks
--        NOTE: Some SoC's have a single phy and some have
--        USB 2.0 and USB 3.0 phys
--- clocks: phandle to the functional clock of this block
+-- brcm,irq-can-wake: if present, this means the L2 controller can be used as a
+-  wakeup source for system suspend/resume.
 -
 -Example:
 -
--        bdc@f0b02000 {
--                compatible = "brcm,bdc-udc-v2";
--                reg = <0xf0b02000 0xfc4>;
--                interrupts = <0x0 0x60 0x0>;
--                phys = <&usbphy_0 0x0>;
--                clocks = <&sw_usbd>;
--        };
-diff --git a/Documentation/devicetree/bindings/usb/brcm,bdc.yaml b/Documentation/devicetree/bindings/usb/brcm,bdc.yaml
-new file mode 100644
-index 000000000000..48831b62ab31
---- /dev/null
-+++ b/Documentation/devicetree/bindings/usb/brcm,bdc.yaml
-@@ -0,0 +1,46 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/usb/brcm,bdc.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
+-irq0_intc: interrupt-controller@10000020 {
+-	compatible = "brcm,bcm3380-l2-intc";
+-	reg = <0x10000024 0x4 0x1000002c 0x4>,
+-	      <0x10000020 0x4 0x10000028 0x4>;
+-	interrupt-controller;
+-	#interrupt-cells = <1>;
+-	interrupt-parent = <&cpu_intc>;
+-	interrupts = <2>;
+-};
+diff --git a/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7120-l2-intc.yaml b/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7120-l2-intc.yaml
+index e0c6dce40d13..8be7fe29e6a9 100644
+--- a/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7120-l2-intc.yaml
++++ b/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7120-l2-intc.yaml
+@@ -4,7 +4,7 @@
+ $id: http://devicetree.org/schemas/interrupt-controller/brcm,bcm7120-l2-intc.yaml#
+ $schema: http://devicetree.org/meta-schemas/core.yaml#
+ 
+-title: Broadcom BCM7120-style Level 2 interrupt controller
++title: Broadcom BCM7120-style Level 2 and Broadcom BCM3380 Level 1 / Level 2
+ 
+ maintainers:
+   - Florian Fainelli <f.fainelli@gmail.com>
+@@ -59,16 +59,31 @@ description: >
+   ..
+   31 ........................ X
+ 
++  The BCM3380 Level 1 / Level 2 interrrupt controller shows up in various forms
++  on many BCM338x/BCM63xx chipsets. It has the following properties:
 +
-+title: Broadcom USB Device Controller (BDC)
++  - outputs a single interrupt signal to its interrupt controller parent
 +
-+maintainers:
-+  - Al Cooper <alcooperx@gmail.com>
-+  - Florian Fainelli <f.fainelli@gmail.com>
++  - contains one or more enable/status word pairs, which often appear at
++    different offsets in different blocks
 +
-+properties:
-+  compatible:
++  - no atomic set/clear operations
++
+ allOf:
+   - $ref: /schemas/interrupt-controller.yaml#
+ 
+ properties:
+   compatible:
+-    const: brcm,bcm7120-l2-intc
 +    items:
 +      - enum:
-+          - brcm,bdc-udc-v2
-+          - brcm,bdc
-+
-+  reg:
-+    maxItems: 1
-+
-+  interrupts: true
-+
-+  phys:
-+    $ref: "/schemas/types.yaml#/definitions/phandle-array"
-+
-+  clocks:
-+    maxItems: 1
-+
-+required:
-+  - compatible
-+  - reg
-+  - interrupts
-+
-+additionalProperties: false
-+
-+examples:
-+  - |
-+        bdc@f0b02000 {
-+                compatible = "brcm,bdc-udc-v2";
-+                reg = <0xf0b02000 0xfc4>;
-+                interrupts = <0x0 0x60 0x0>;
-+                phys = <&usbphy_0 0x0>;
-+                clocks = <&sw_usbd>;
-+        };
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 11808be8e128..2f657775eb59 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3690,7 +3690,7 @@ M:	Al Cooper <alcooperx@gmail.com>
- L:	linux-usb@vger.kernel.org
- L:	bcm-kernel-feedback-list@broadcom.com
- S:	Maintained
--F:	Documentation/devicetree/bindings/usb/brcm,bdc.txt
-+F:	Documentation/devicetree/bindings/usb/brcm,bdc.yaml
- F:	drivers/usb/gadget/udc/bdc/
++          - brcm,bcm7120-l2-intc
++          - brcm,bcm3380-l2-intc
  
- BROADCOM BMIPS CPUFREQ DRIVER
+   reg:
+     description: >
+       Specifies the base physical address and size of the registers
++    minItems: 1
++    maxItems: 4
+ 
+   interrupt-controller: true
+ 
+@@ -121,3 +136,14 @@ examples:
+       brcm,int-map-mask = <0xeb8>, <0x140>;
+       brcm,int-fwd-mask = <0x7>;
+     };
++
++  - |
++    irq1_intc: interrupt-controller@10000020 {
++       compatible = "brcm,bcm3380-l2-intc";
++       reg = <0x10000024 0x4>, <0x1000002c 0x4>,
++             <0x10000020 0x4>, <0x10000028 0x4>;
++       interrupt-controller;
++       #interrupt-cells = <1>;
++       interrupt-parent = <&cpu_intc>;
++       interrupts = <2>;
++    };
 -- 
 2.25.1
 
