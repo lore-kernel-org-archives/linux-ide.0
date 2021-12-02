@@ -2,126 +2,117 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1635CC433F5
-	for <linux-ide@archiver.kernel.org>; Thu,  2 Dec 2021 04:20:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E57F6C433EF
+	for <linux-ide@archiver.kernel.org>; Thu,  2 Dec 2021 08:36:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345300AbhLBEYI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 1 Dec 2021 23:24:08 -0500
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:53179 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355495AbhLBEWl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 1 Dec 2021 23:22:41 -0500
+        id S230398AbhLBIkT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 2 Dec 2021 03:40:19 -0500
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:63701 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345414AbhLBIkH (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 2 Dec 2021 03:40:07 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1638418756; x=1669954756;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=N8aM/Sb3HlK/fVLgx/vco0JFJ9ktzDZRzBTzIyPp2As=;
-  b=RKl4zh6kgsLyTOCNC7KnW/mvK63+P7VLN5+USmBK/T1VvDnEW5P6CnB7
-   hTN3XfpTKpUMdvyLm0JnVUI8QisrJjDn8SVFbhqgUWEFqDo+l925iJrNw
-   Pl4mIF4yg2vA3Vp8wWfsDT9wNaJtrTAozqMHC1MBbZ7hIzm3buU6PVQuk
-   LV63k+L40NOrP+yWQW8zvlhXrJIWFzurLYgdAmM23Jss6U8InhN3ddtGS
-   bfe6wDj5BuMlBVsdVBAXlXH1Tt4DoKH3re2493FmFXoXtoW/C8lxq0EZ+
-   lhB5bVJP4hslc+au23GbOrXVGzXiL2mAb/6Of96l50c9Yc2WsvhAH8KMp
-   A==;
+  t=1638434204; x=1669970204;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=Q4+jQB6IzMwtjyTYbUVpZ8/hVJ/jfapkUHY4m/vWn54=;
+  b=Vc3TReZC8mpFfgxFiKOMh1djE1nr1lpcvwzfd4M/Ci+l1vmbDWuXGPi9
+   YHVkjz/YDRImp3hOu1+p3bgYzGA7BWcB7q9EYxRNPzqJjVTH1DHZfysCl
+   N3DdW4GQLrSojE/+o4InrQX5ooNbNRx+R1EzCXuvlQ4lU63iptmN3f2w5
+   7ghSc7Iv9HQtqaTkkxJwmjRWEdH05otlrOmi7FamL4X4lZCezex/LF7a3
+   RENjdVNbh6Z9ac+NfABnV6QatyK3OkLlglCFM9bhEouCjd1ii9gQVGQET
+   LUHYAH74iTG5uLldMevbtCkpweVCB+Smw/poQL5ZdM3iVhWlCkPS1hqpm
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.87,281,1631548800"; 
-   d="scan'208";a="187253083"
+   d="scan'208";a="186250273"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 02 Dec 2021 12:19:07 +0800
-IronPort-SDR: M7ugOsqV7nMCsCruAw9lr3fOLBHNpct9T+MsiPUiMrGQyWhm1QalT2xvoGrJRY1512/Euyg3/0
- PC2b8MG4JsdYmQL+osJV7bzkOopee0PlpuMlHRrNhHDnkGZ/oygsYtHYHGtzog4uoAQfOM33yW
- 86RNtAxq/T9Jb3J/4I/+ZT+hayr5Ei+gq44eiUd3tiMVLQOvKWAmD1fDPOaIFGluA7bpcy+QlD
- /gjbK3yUz9W1gX7qz5q+SIeJ17KxjwqvSVIduC4RYmGRCelz+L59tIFUxaeeIt/tEygixJokXm
- QvM/SedvCaoicPSTnSruluol
+  by ob1.hgst.iphmx.com with ESMTP; 02 Dec 2021 16:36:43 +0800
+IronPort-SDR: iKrol9hlcB2UVJ4J1WyZVGGP7ZNnh8SPkJW1Jool3T9HtZmUGGTpe+jgwdplHuQ1rebjon8zyI
+ evhYt2+DwfLHhUkGCB5a4Y88NNhDs1hF7KnwEjniAp+evrbKfcX2NKUhm/rYGsXdAMHo6R3Es4
+ eWvxGqlEDEPq7+jq5MDGzidUpoqTKeQXnpriFFoJFp9tkHqJ37ljsGq9OEO50AufpgIJ3/pCQL
+ bVVyX/zaAW32AZNghsGtMF0HD0SdzG5oK9IMsb4wy5CAA/mGUcxcdOoEa7A1FHlKuL7Hbv2UBH
+ gYfBvOZDbUqjBkIYi4AkrvxL
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2021 19:53:52 -0800
-IronPort-SDR: sAHyTfEu6XdEbxW7AmBuZxScCEqcJTOtD1ZKcmfZYuMVeTymXksJ9g1Cs+r5fm1tdJvjFE+ty7
- qHa9OIdFLA05IDt4iGi1JVBy/jPGmU8HSpzhg2X2CXoA4k4rv9LzmunlifU12QKC++6AK2U4+F
- x7D2CBKB6lp6JT1C+p87QsugtoZyE7TvPm+Hv7sx7uJCTocWyKkWs7M/jW8mQbCYPc1ctRCwz4
- 7x0CssHekUxhd5+VIoKf3G7+LeX8plwthPE39K29jAlQCxkzw57KDjn77p3XNCTh0DImX5lWav
- L2A=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Dec 2021 00:11:26 -0800
+IronPort-SDR: H6WE9Bz4vFwvUQiRNSOQPcyh7lExOgDDws+Dd8NBueUSMNJ7uIfahe9vCwUgZy2L4wifsD+Np6
+ KKXbtGaPPlMcD9Ai25sUQi70uG/Q7yVPC7+dAmL0VfttftqMnL2LPQ7/fH5x6lA8raGrXnn6YF
+ 3Yi7HPAcqeyAq/mTSYwIrX80Z6AC0cIsoR/+jQR4UMoeKFx6LqUGAWWwHJB/6m0v5dxO6cCYFs
+ 8edZLe3UAzvuzhgsItKqvGliXF/wWHTLBI8maw5fNs8WHtihnSj0D0tvvvn2umCj2rNQLnScQZ
+ EgY=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2021 20:19:08 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Dec 2021 00:36:43 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4J4N4r1dBJz1RtVm
-        for <linux-ide@vger.kernel.org>; Wed,  1 Dec 2021 20:19:08 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4J4Tp22SW3z1RtVp
+        for <linux-ide@vger.kernel.org>; Thu,  2 Dec 2021 00:36:42 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1638418747; x=1641010748; bh=N8aM/Sb3HlK/fVLgx/vco0JFJ9ktzDZRzBT
-        zIyPp2As=; b=O6KyyhgBHKfURETK18F1VWYvQ6LVnU/ltu+7Bthjx5le3b8TC1k
-        qKFoPmK1A6VIkBwtavNYABvcAs8lK0m+ozO9aGmf+NaPcvR7IaXSf/NyuG848Q9T
-        X5/SJuPDlWodmLbu1FiPUIWNX7QCSAq+eN9D+OeNW5jFfuqIBsJR90aztgSDbLXe
-        WPbnPTgZWawknqpa0l2B880y84j6Nx4M1xcMO063Ecw5fki3e47ZCBUvvEYADzrd
-        3DwGJXFMLfC7MQ3uk9RBKKaEh5iwHEKswqIhzK165fBg5yWWMtZIKYANmB7DQYVD
-        fpdolJdwV2dFb7IdM/ADviMwY9e2mzGYCuQ==
+        opensource.wdc.com; h=content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1638434202;
+         x=1641026203; bh=Q4+jQB6IzMwtjyTYbUVpZ8/hVJ/jfapkUHY4m/vWn54=; b=
+        uausdhSwlcSClHucHcG2MFYYNxMuz/8EIgWCBBXRB0JzkDmy8FgawqyTkQCejUCj
+        Q8n9Uzop8cESS486BASJVTAHAhq9KDkdyA7WStykH78bCmxnlYYgRwLVGx8qphNP
+        q1x+8JVgZnb5JMHAUVwvgw3lAMxSw/VtA0yxpEJ4gW3F6X8x/T3IdkEilezI1+xW
+        PJq5iVgahTTU/pgENC6NNAEJZtTcTb7tND6ZU/Yppw1P+dRtMGXrRnrPjHva7WQF
+        /HUK3J4dcje4KdAUZ7PhmUHPrHvlmduDNKZXNeMvj6f/ZJvD3istBSPrY7y1QA2w
+        HSPAPpFruxBlgFxwLtHiEw==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id PyN5lugurf9q for <linux-ide@vger.kernel.org>;
-        Wed,  1 Dec 2021 20:19:07 -0800 (PST)
-Received: from [10.225.54.48] (unknown [10.225.54.48])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4J4N4q0J71z1RtVl;
-        Wed,  1 Dec 2021 20:19:06 -0800 (PST)
-Message-ID: <f74c3567-64ff-4bce-89f5-192a1ae9fc45@opensource.wdc.com>
-Date:   Thu, 2 Dec 2021 13:19:05 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.3.2
-Subject: Re: [PATCH] ata: replace snprintf in show functions with sysfs_emit
-Content-Language: en-US
-To:     davidcomponentone@gmail.com
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yang Guang <yang.guang5@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-References: <2fbce7707eff3bfebf38138899e900ee8c619931.1638155918.git.yang.guang5@zte.com.cn>
+        with ESMTP id 6Nf0thHRNzn4 for <linux-ide@vger.kernel.org>;
+        Thu,  2 Dec 2021 00:36:42 -0800 (PST)
+Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4J4Tp13fmDz1RtVm;
+        Thu,  2 Dec 2021 00:36:41 -0800 (PST)
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital
-In-Reply-To: <2fbce7707eff3bfebf38138899e900ee8c619931.1638155918.git.yang.guang5@zte.com.cn>
-Content-Type: text/plain; charset=UTF-8
+To:     linux-ide@vger.kernel.org
+Cc:     Philipp Zabel <p.zabel@pengutronix.de>
+Subject: [PATCH] ata: ahci_ceva: Fix sparse warning in ceva_ahci_read_id()
+Date:   Thu,  2 Dec 2021 17:36:39 +0900
+Message-Id: <20211202083639.645311-1-damien.lemoal@opensource.wdc.com>
+X-Mailer: git-send-email 2.31.1
+MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2021/11/30 9:04, davidcomponentone@gmail.com wrote:
-> From: Yang Guang <yang.guang5@zte.com.cn>
->=20
-> coccinelle report=EF=BC=9A
-> ./drivers/ata/libata-sata.c:830:8-16:=20
-> WARNING: use scnprintf or sprintf
->=20
-> Use sysfs_emit instead of scnprintf or sprintf makes more sense.
->=20
-> Reported-by: Zeal Robot <zealci@zte.com.cn>
-> Signed-off-by: Yang Guang <yang.guang5@zte.com.cn>
-> ---
->  drivers/ata/libata-sata.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-> index 5b78e86e3459..b9c77885b872 100644
-> --- a/drivers/ata/libata-sata.c
-> +++ b/drivers/ata/libata-sata.c
-> @@ -827,7 +827,7 @@ static ssize_t ata_scsi_lpm_show(struct device *dev=
-,
->  	if (ap->target_lpm_policy >=3D ARRAY_SIZE(ata_lpm_policy_names))
->  		return -EINVAL;
-> =20
-> -	return snprintf(buf, PAGE_SIZE, "%s\n",
-> +	return sysfs_emit(buf, "%s\n",
->  			ata_lpm_policy_names[ap->target_lpm_policy]);
->  }
->  DEVICE_ATTR(link_power_management_policy, S_IRUGO | S_IWUSR,
->=20
+Fix the following sparse warning:
 
-Applied to for-5.16-fixes. Thanks !
+drivers/ata/ahci_ceva.c:107:33: warning: invalid assignment: &=3D
+drivers/ata/ahci_ceva.c:107:33:    left side has type unsigned short
+drivers/ata/ahci_ceva.c:107:33:    right side has type restricted __le16
 
+Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+---
+ drivers/ata/ahci_ceva.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
+index 50b56cd0039d..e9c7c07fd84c 100644
+--- a/drivers/ata/ahci_ceva.c
++++ b/drivers/ata/ahci_ceva.c
+@@ -94,6 +94,7 @@ struct ceva_ahci_priv {
+ static unsigned int ceva_ahci_read_id(struct ata_device *dev,
+ 					struct ata_taskfile *tf, u16 *id)
+ {
++	__le16 *__id =3D (__le16 *)id;
+ 	u32 err_mask;
+=20
+ 	err_mask =3D ata_do_dev_read_id(dev, tf, id);
+@@ -103,7 +104,7 @@ static unsigned int ceva_ahci_read_id(struct ata_devi=
+ce *dev,
+ 	 * Since CEVA controller does not support device sleep feature, we
+ 	 * need to clear DEVSLP (bit 8) in word78 of the IDENTIFY DEVICE data.
+ 	 */
+-	id[ATA_ID_FEATURE_SUPP] &=3D cpu_to_le16(~(1 << 8));
++	__id[ATA_ID_FEATURE_SUPP] &=3D cpu_to_le16(~(1 << 8));
+=20
+ 	return 0;
+ }
 --=20
-Damien Le Moal
-Western Digital Research
+2.31.1
+
