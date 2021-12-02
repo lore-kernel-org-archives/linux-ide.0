@@ -2,50 +2,50 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBA7FC433FE
-	for <linux-ide@archiver.kernel.org>; Thu,  2 Dec 2021 00:03:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1635CC433F5
+	for <linux-ide@archiver.kernel.org>; Thu,  2 Dec 2021 04:20:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354089AbhLBAG3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 1 Dec 2021 19:06:29 -0500
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:65140 "EHLO
+        id S1345300AbhLBEYI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 1 Dec 2021 23:24:08 -0500
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:53179 "EHLO
         esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353994AbhLBAG0 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 1 Dec 2021 19:06:26 -0500
+        with ESMTP id S1355495AbhLBEWl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 1 Dec 2021 23:22:41 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1638403383; x=1669939383;
+  t=1638418756; x=1669954756;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=dnRwlM2g208wpzcQ1fHoMh5ABTusv5pFo5cTKx90whg=;
-  b=QlM3Z7K8vAy/wVLJov+zpBdtLpdod8iR17myhXI/dZ5aOqljwmzrNAVD
-   mear1UarNBnB3SueOtSw/8gmt0Bf+IlLNxITx0DjZdPACZWSQIjfRb1tN
-   nXLBlJ/i85tpx+FM2l4/mnqLtpL/tgZpw2Fs0b9wkSimoR7btkA96wqwS
-   r9B3eWiOSCxyE8apa/i7/94cMiTL3l0uA9+Ptl9krMxznfgvGxmL4qQmW
-   ZPZMKE4XeTkk4BOKTDBnbrrAk9k3rMSxrO5C8JuExV6PkhKWMJND4Tg9b
-   Hg8y92dUxA8sQu2VMJpFFxayklw1OgCWSmQHPyEch5tCp4YDTY0zHzxul
+  bh=N8aM/Sb3HlK/fVLgx/vco0JFJ9ktzDZRzBTzIyPp2As=;
+  b=RKl4zh6kgsLyTOCNC7KnW/mvK63+P7VLN5+USmBK/T1VvDnEW5P6CnB7
+   hTN3XfpTKpUMdvyLm0JnVUI8QisrJjDn8SVFbhqgUWEFqDo+l925iJrNw
+   Pl4mIF4yg2vA3Vp8wWfsDT9wNaJtrTAozqMHC1MBbZ7hIzm3buU6PVQuk
+   LV63k+L40NOrP+yWQW8zvlhXrJIWFzurLYgdAmM23Jss6U8InhN3ddtGS
+   bfe6wDj5BuMlBVsdVBAXlXH1Tt4DoKH3re2493FmFXoXtoW/C8lxq0EZ+
+   lhB5bVJP4hslc+au23GbOrXVGzXiL2mAb/6Of96l50c9Yc2WsvhAH8KMp
    A==;
-X-IronPort-AV: E=Sophos;i="5.87,280,1631548800"; 
-   d="scan'208";a="187234991"
+X-IronPort-AV: E=Sophos;i="5.87,281,1631548800"; 
+   d="scan'208";a="187253083"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 02 Dec 2021 07:58:14 +0800
-IronPort-SDR: GmZ6ICH7s+bqQrVfb2HwWcQm069mJ5H3pp8YLEhsh/xbG3AGia8NM+Boy4bEF30k1oEgzTWK1X
- NNL+U1KfU06gJGluXna8K87AR76yrvCOWv5oR6BqJziVhRgj4XNYd5WSpV3U0+sssgpp9Oamyd
- RiUAAX2fXkM814jTeVvWm5W6TrxSr/u3CmDQmvK+ur1B1lmO/S1oRL1n/EwCqpmiwsev7M1crj
- GsLekprHGPwQRYKY+AhbPSU1ZEXvtze4GFbiFEXZitlJjykC8gDZoxmAaxUf3gQZuTmaruWYE2
- zP/Oh5yKm2NKkOmDZ9EHAk3b
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2021 15:32:57 -0800
-IronPort-SDR: w0s330atjYNIgL5vMvgSE/XjL6D4TjgHBvnGzKsFLED2YR4P1CxGaDnjXTT2dY1Q/0bct5xdoM
- BI8PQVXgFoY+Uo95hWa6B4LFEYEwrK4TEOINbKR7J7GKLvf+rDsyp3MVRJV7qzJn0Sn1EqRaCF
- 0Ay/zPcIJJTZW31f3EHDjVHCyqPuj2SK2RySzydMlt7JBvhDsCQn/DppgcsnM5pPiRStflgA8a
- 3QR7qzTW4THhBXxkNc+pVLdtE5P38NcPY2B05HFlb1OWa93QZ+tJI2m50sOMAqHME2P08f7Xqg
- pR8=
+  by ob1.hgst.iphmx.com with ESMTP; 02 Dec 2021 12:19:07 +0800
+IronPort-SDR: M7ugOsqV7nMCsCruAw9lr3fOLBHNpct9T+MsiPUiMrGQyWhm1QalT2xvoGrJRY1512/Euyg3/0
+ PC2b8MG4JsdYmQL+osJV7bzkOopee0PlpuMlHRrNhHDnkGZ/oygsYtHYHGtzog4uoAQfOM33yW
+ 86RNtAxq/T9Jb3J/4I/+ZT+hayr5Ei+gq44eiUd3tiMVLQOvKWAmD1fDPOaIFGluA7bpcy+QlD
+ /gjbK3yUz9W1gX7qz5q+SIeJ17KxjwqvSVIduC4RYmGRCelz+L59tIFUxaeeIt/tEygixJokXm
+ QvM/SedvCaoicPSTnSruluol
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2021 19:53:52 -0800
+IronPort-SDR: sAHyTfEu6XdEbxW7AmBuZxScCEqcJTOtD1ZKcmfZYuMVeTymXksJ9g1Cs+r5fm1tdJvjFE+ty7
+ qHa9OIdFLA05IDt4iGi1JVBy/jPGmU8HSpzhg2X2CXoA4k4rv9LzmunlifU12QKC++6AK2U4+F
+ x7D2CBKB6lp6JT1C+p87QsugtoZyE7TvPm+Hv7sx7uJCTocWyKkWs7M/jW8mQbCYPc1ctRCwz4
+ 7x0CssHekUxhd5+VIoKf3G7+LeX8plwthPE39K29jAlQCxkzw57KDjn77p3XNCTh0DImX5lWav
+ L2A=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2021 15:58:14 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Dec 2021 20:19:08 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4J4GHm5fbHz1RtVp
-        for <linux-ide@vger.kernel.org>; Wed,  1 Dec 2021 15:58:12 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4J4N4r1dBJz1RtVm
+        for <linux-ide@vger.kernel.org>; Wed,  1 Dec 2021 20:19:08 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -53,250 +53,75 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1638403091; x=1640995092; bh=dnRwlM2g208wpzcQ1fHoMh5ABTusv5pFo5c
-        TKx90whg=; b=Smg8tZ+TvJgoqFK7osdFry7pC21BK7S3yr15mJQjwB/VT9nSMYr
-        7iIvDU9l8vFruHz8R0A0SVuly46XttI5hP7+kfC5nbW0dAzvHaZXyz4ZDsmfd3qB
-        D0Ph8lgqh06/wHt+lro2VpDTfjRFCGMvRHXyhklU38zB6iPfugAApaDMw29xaH6x
-        Pocm/LRy1wZ1rAlLDlzn9u7axyibnyRJDEalhSezz+2Wqhp77ULG7HlRPACEG+Q7
-        fSVIANXzSmOc7Dv7ZW8aIyMLJPlNNQjybxvXCKMmPtm/7CIV298EqCCQ+BEWWo6h
-        LcJe0ZNh1pNmkNb9fwaGI9bsqmnIs91czqw==
+        1638418747; x=1641010748; bh=N8aM/Sb3HlK/fVLgx/vco0JFJ9ktzDZRzBT
+        zIyPp2As=; b=O6KyyhgBHKfURETK18F1VWYvQ6LVnU/ltu+7Bthjx5le3b8TC1k
+        qKFoPmK1A6VIkBwtavNYABvcAs8lK0m+ozO9aGmf+NaPcvR7IaXSf/NyuG848Q9T
+        X5/SJuPDlWodmLbu1FiPUIWNX7QCSAq+eN9D+OeNW5jFfuqIBsJR90aztgSDbLXe
+        WPbnPTgZWawknqpa0l2B880y84j6Nx4M1xcMO063Ecw5fki3e47ZCBUvvEYADzrd
+        3DwGJXFMLfC7MQ3uk9RBKKaEh5iwHEKswqIhzK165fBg5yWWMtZIKYANmB7DQYVD
+        fpdolJdwV2dFb7IdM/ADviMwY9e2mzGYCuQ==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id Lu2ACb02C0cg for <linux-ide@vger.kernel.org>;
-        Wed,  1 Dec 2021 15:58:11 -0800 (PST)
+        with ESMTP id PyN5lugurf9q for <linux-ide@vger.kernel.org>;
+        Wed,  1 Dec 2021 20:19:07 -0800 (PST)
 Received: from [10.225.54.48] (unknown [10.225.54.48])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4J4GHc4pQzz1RtVl;
-        Wed,  1 Dec 2021 15:58:04 -0800 (PST)
-Message-ID: <0cbaad0b-bab0-177e-48ef-5c4f6dd4391a@opensource.wdc.com>
-Date:   Thu, 2 Dec 2021 08:58:03 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4J4N4q0J71z1RtVl;
+        Wed,  1 Dec 2021 20:19:06 -0800 (PST)
+Message-ID: <f74c3567-64ff-4bce-89f5-192a1ae9fc45@opensource.wdc.com>
+Date:   Thu, 2 Dec 2021 13:19:05 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
  Gecko/20100101 Thunderbird/91.3.2
-Subject: Re: [PATCH 12/14] dt-bindings: ata: Convert Broadcom SATA to YAML
+Subject: Re: [PATCH] ata: replace snprintf in show functions with sysfs_emit
 Content-Language: en-US
-To:     Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org
-Cc:     Rob Herring <robh+dt@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Bartosz Golaszewski <brgl@bgdev.pl>,
-        "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" 
-        <bcm-kernel-feedback-list@broadcom.com>,
-        Gregory Fong <gregory.0xf0@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Marc Zyngier <maz@kernel.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        =?UTF-8?Q?Uwe_Kleine-K=c3=b6nig?= <u.kleine-koenig@pengutronix.de>,
-        Lee Jones <lee.jones@linaro.org>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Matt Mackall <mpm@selenic.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Alessandro Zummo <a.zummo@towertech.it>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Amit Kucheria <amitk@kernel.org>,
-        Zhang Rui <rui.zhang@intel.com>,
-        Markus Mayer <mmayer@broadcom.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Al Cooper <alcooperx@gmail.com>,
-        Doug Berger <opendmb@gmail.com>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
-        "moderated list:BROADCOM BCM7XXX ARM ARCHITECTURE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "open list:MULTIMEDIA CARD (MMC), SECURE DIGITAL (SD) AND..." 
-        <linux-mmc@vger.kernel.org>,
-        "open list:PWM SUBSYSTEM" <linux-pwm@vger.kernel.org>,
-        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
-        <linux-crypto@vger.kernel.org>,
-        "open list:REAL TIME CLOCK (RTC) SUBSYSTEM" 
-        <linux-rtc@vger.kernel.org>,
-        "open list:THERMAL" <linux-pm@vger.kernel.org>,
-        "open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>
-References: <20211201205110.41656-1-f.fainelli@gmail.com>
- <20211201205110.41656-13-f.fainelli@gmail.com>
+To:     davidcomponentone@gmail.com
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yang Guang <yang.guang5@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+References: <2fbce7707eff3bfebf38138899e900ee8c619931.1638155918.git.yang.guang5@zte.com.cn>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital
-In-Reply-To: <20211201205110.41656-13-f.fainelli@gmail.com>
+In-Reply-To: <2fbce7707eff3bfebf38138899e900ee8c619931.1638155918.git.yang.guang5@zte.com.cn>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2021/12/02 5:51, Florian Fainelli wrote:
-> Convert the Broadcom SATA3 AHCI controller Device Tree binding to YAML
-> to help with validation.
-> 
-> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+On 2021/11/30 9:04, davidcomponentone@gmail.com wrote:
+> From: Yang Guang <yang.guang5@zte.com.cn>
+>=20
+> coccinelle report=EF=BC=9A
+> ./drivers/ata/libata-sata.c:830:8-16:=20
+> WARNING: use scnprintf or sprintf
+>=20
+> Use sysfs_emit instead of scnprintf or sprintf makes more sense.
+>=20
+> Reported-by: Zeal Robot <zealci@zte.com.cn>
+> Signed-off-by: Yang Guang <yang.guang5@zte.com.cn>
 > ---
->  .../bindings/ata/brcm,sata-brcm.txt           | 45 ---------
->  .../bindings/ata/brcm,sata-brcm.yaml          | 91 +++++++++++++++++++
->  2 files changed, 91 insertions(+), 45 deletions(-)
->  delete mode 100644 Documentation/devicetree/bindings/ata/brcm,sata-brcm.txt
->  create mode 100644 Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml
-> 
-> diff --git a/Documentation/devicetree/bindings/ata/brcm,sata-brcm.txt b/Documentation/devicetree/bindings/ata/brcm,sata-brcm.txt
-> deleted file mode 100644
-> index b9ae4ce4a0a0..000000000000
-> --- a/Documentation/devicetree/bindings/ata/brcm,sata-brcm.txt
-> +++ /dev/null
-> @@ -1,45 +0,0 @@
-> -* Broadcom SATA3 AHCI Controller
-> -
-> -SATA nodes are defined to describe on-chip Serial ATA controllers.
-> -Each SATA controller should have its own node.
-> -
-> -Required properties:
-> -- compatible         : should be one or more of
-> -			"brcm,bcm7216-ahci"
-> -			"brcm,bcm7425-ahci"
-> -			"brcm,bcm7445-ahci"
-> -			"brcm,bcm-nsp-ahci"
-> -			"brcm,sata3-ahci"
-> -			"brcm,bcm63138-ahci"
-> -- reg                : register mappings for AHCI and SATA_TOP_CTRL
-> -- reg-names          : "ahci" and "top-ctrl"
-> -- interrupts         : interrupt mapping for SATA IRQ
-> -
-> -Optional properties:
-> -
-> -- reset: for "brcm,bcm7216-ahci" must be a valid reset phandle
-> -  pointing to the RESCAL reset controller provider node.
-> -- reset-names: for "brcm,bcm7216-ahci", must be "rescal".
-> -
-> -Also see ahci-platform.txt.
-> -
-> -Example:
-> -
-> -	sata@f045a000 {
-> -		compatible = "brcm,bcm7445-ahci", "brcm,sata3-ahci";
-> -		reg = <0xf045a000 0xa9c>, <0xf0458040 0x24>;
-> -		reg-names = "ahci", "top-ctrl";
-> -		interrupts = <0 30 0>;
-> -		#address-cells = <1>;
-> -		#size-cells = <0>;
-> -
-> -		sata0: sata-port@0 {
-> -			reg = <0>;
-> -			phys = <&sata_phy 0>;
-> -		};
-> -
-> -		sata1: sata-port@1 {
-> -			reg = <1>;
-> -			phys = <&sata_phy 1>;
-> -		};
-> -	};
-> diff --git a/Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml b/Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml
-> new file mode 100644
-> index 000000000000..4098d56872ae
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml
-> @@ -0,0 +1,91 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/ata/brcm,sata-brcm.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: Broadcom SATA3 AHCI Controller
-> +
-> +description:
-> +  SATA nodes are defined to describe on-chip Serial ATA controllers.
-> +  Each SATA controller should have its own node.
-> +
-> +maintainers:
-> +  - Florian Fainelli <f.fainelli@gmail.com>
-> +
-> +allOf:
-> +  - $ref: sata-common.yaml#
-> +
-> +properties:
-> +  compatible:
-> +    oneOf:
-> +      - items:
-> +          - enum:
-> +              - brcm,bcm7216-ahci
-> +          - const: brcm,sata3-ahci
-> +      - items:
-> +          - enum:
-> +              - brcm,bcm7445-ahci
-> +          - const: brcm,sata3-ahci
-> +      - items:
-> +          - enum:
-> +              - brcm,bcm7425-ahci
-> +          - const: brcm,sata3-ahci
-> +      - items:
-> +          - const: brcm,bcm-nsp-ahci
-> +      - items:
-> +          - const: brcm,bcm63138-ahci
-> +
-> +  reg:
-> +    minItems: 2
-> +    maxItems: 2
-> +
-> +  reg-names:
-> +    items:
-> +      - const: ahci
-> +      - const: top-ctrl
-> +
-> +  interrupts: true
-> +
-> +if:
-> +  properties:
-> +    compatible:
-> +      contains:
-> +        enum:
-> +          - brcm,bcm7216-ahci
-> +then:
-> +  properties:
-> +    resets: true
-> +    reset-names:
-> +      items:
-> +        - const: rescal
-> +
-> +required:
-> +  - compatible
-> +  - reg
-> +  - interrupts
-> +  - "#address-cells"
-> +  - "#size-cells"
-> +
-> +unevaluatedProperties: false
-> +
-> +examples:
-> +  - |
-> +    sata@f045a000 {
-> +        compatible = "brcm,bcm7445-ahci", "brcm,sata3-ahci";
-> +        reg = <0xf045a000 0xa9c>, <0xf0458040 0x24>;
-> +        reg-names = "ahci", "top-ctrl";
-> +        interrupts = <0 30 0>;
-> +        #address-cells = <1>;
-> +        #size-cells = <0>;
-> +
-> +        sata0: sata-port@0 {
-> +            reg = <0>;
-> +            phys = <&sata_phy 0>;
-> +        };
-> +
-> +        sata1: sata-port@1 {
-> +            reg = <1>;
-> +            phys = <&sata_phy 1>;
-> +        };
-> +    };
-> 
+>  drivers/ata/libata-sata.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+> index 5b78e86e3459..b9c77885b872 100644
+> --- a/drivers/ata/libata-sata.c
+> +++ b/drivers/ata/libata-sata.c
+> @@ -827,7 +827,7 @@ static ssize_t ata_scsi_lpm_show(struct device *dev=
+,
+>  	if (ap->target_lpm_policy >=3D ARRAY_SIZE(ata_lpm_policy_names))
+>  		return -EINVAL;
+> =20
+> -	return snprintf(buf, PAGE_SIZE, "%s\n",
+> +	return sysfs_emit(buf, "%s\n",
+>  			ata_lpm_policy_names[ap->target_lpm_policy]);
+>  }
+>  DEVICE_ATTR(link_power_management_policy, S_IRUGO | S_IWUSR,
+>=20
 
-Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Applied to for-5.16-fixes. Thanks !
 
-Rob,
-
-Will take this through your tree ?
-
--- 
+--=20
 Damien Le Moal
 Western Digital Research
