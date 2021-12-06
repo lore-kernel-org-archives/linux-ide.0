@@ -2,170 +2,192 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 491C4C433F5
-	for <linux-ide@archiver.kernel.org>; Mon,  6 Dec 2021 11:58:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D966C433FE
+	for <linux-ide@archiver.kernel.org>; Mon,  6 Dec 2021 18:26:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242798AbhLFMBf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 6 Dec 2021 07:01:35 -0500
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:11374 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242753AbhLFMBf (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 6 Dec 2021 07:01:35 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1638791886; x=1670327886;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=JLsPtMRwUyoWIb/S1MOjGwHtvTz17PsU2F+I+ND0T48=;
-  b=TidxbIEVOKwh7kXWolAYXE/Qgxm8hizQYUa+2rbLhtb/3mxI5pkSx5rv
-   KdXuOmd8mjoYuY+0OMpP2PQPNI0+A/YwsApTuKVeITEPetRfNR34pVvnE
-   9m3T7GHn7uNr6ULt3IW5pz4wvaLoDPHcmSzfEmADpkVerM8QBMtETskzT
-   EJHuXzr+iFmgTP3ptdaIat42RUJM/hMIRfe7HycYCZfB8vKnZCV8p8fqx
-   pAk2e93EctIguGcGL7dXwYra4DnoiQaAkTTqf+RStReOjhN13eoe9o5Th
-   k8vAQ9OiCFyJYhdt7bd+CO+jQKZOb0H7W9IAhfo2Uco49t4SXcR9he/qd
-   A==;
-X-IronPort-AV: E=Sophos;i="5.87,291,1631548800"; 
-   d="scan'208";a="192335996"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 06 Dec 2021 19:58:06 +0800
-IronPort-SDR: UadDTQ8tYl3FfY/rYAsLdKb2fXnSAdXHXSmwKAwtn3xs0dtWdqAid+x0nYPcbHhXwA4vqweYm+
- HXeqEClekMrUfBmqR+hRKwsOfTu56xzCPUGSQYjTDaVEO7UZDZZSFQVvUwiCjWoLNW1PS2sW1R
- eGqIbzNHGJfgAEAt1MyofezopdzBv1Eyw8AtP9PPAjtX+ltSnk9ukkkZH0SHYta0ajw4nQxJjb
- 0/4kRtziPQihn8YNjD0r6XLhHVk5Kxg9hNuz2XPMnTviERMInChoSGq/C6VRjlhBx8PR9vh9wD
- Hd68ZGG5wUHnlzRTwY8wKHX3
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Dec 2021 03:32:43 -0800
-IronPort-SDR: d/RUZ+xua/r/4jPGog46VKqOIiQwKhNndizgaoU62z8Yv21eczsoqL28d5bAsQpBnP0Ax1FmnR
- taEe3/P15WtNc/vKLQnKysuAlBIZXsvyzrM0lHv6e7s/s8uUfb4wUy/N7B7mJa0rK35YIFW8k2
- qvJIdq+Fh6E3AOTGo2G/6y5XB407+rbJARE29IA4YRRuX3LLehKBHtoV22rWbjsT+/b6mJoKOy
- aYwPDbfRT79tW3XrtWbhmkcQuc6lpVM0i9jk27REbH5hjiOx7sNUnBSsYqkyfuUb0V3hFs8zUC
- 9rA=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Dec 2021 03:58:04 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4J724V5H4Kz1RwFN
-        for <linux-ide@vger.kernel.org>; Mon,  6 Dec 2021 03:58:02 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1638791881; x=1641383882; bh=JLsPtMRwUyoWIb/S1MOjGwHtvTz17PsU2F+
-        I+ND0T48=; b=KHuS9w9VVNTRTQs/HK84M3/UJxkpE7spResPSul5I5VI7bB1hqU
-        5ldgtm0wcz4TsLl7+TVTnEsX/CLILntNe6zDvOzuDHJqbsB+w8g29SeMxbfvw0pj
-        y9zyVN3NsbButJGHSlMl/NcScTZ9788ftGAYBVhXS2HpMdJkYDOvI4s/4/iBEG83
-        FfXh8D5c5aae+zN+w/Dv2mbQqzzMthxmDxaZf/tKlDDB9p+wgtBfZxjrtfjGrw9Y
-        jDXCT0tyftXLcZbDWbMOxscjGfD3t4kYnFo4NCCmSdQL5K/PJ69oUhAtGyTBANJY
-        zPd0Mq0SskKP6l5ruzMX3ZxUvQt3zCbTLzg==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id YWq2FRmDiE8F for <linux-ide@vger.kernel.org>;
-        Mon,  6 Dec 2021 03:58:01 -0800 (PST)
-Received: from [10.225.54.48] (unknown [10.225.54.48])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4J724S3TDvz1RtVG;
-        Mon,  6 Dec 2021 03:58:00 -0800 (PST)
-Message-ID: <8dfe634c-7466-dca3-6838-b305b2eb465a@opensource.wdc.com>
-Date:   Mon, 6 Dec 2021 20:57:58 +0900
+        id S1347018AbhLFS3u (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 6 Dec 2021 13:29:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47328 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1346999AbhLFS3u (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 6 Dec 2021 13:29:50 -0500
+Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1AF3C061354;
+        Mon,  6 Dec 2021 10:26:20 -0800 (PST)
+Received: by mail-pl1-x631.google.com with SMTP id z6so7632033plk.6;
+        Mon, 06 Dec 2021 10:26:20 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=hE2WN/DCm9N6dOZUu7hJVv+yyUkTDtyJAizkqbQOmeM=;
+        b=ipaMazgxgTpkYikqGl6f7YCz3dX0DH+kDEHQf9IPrXn8Ty2anNzxe5KfYlV9DKm45W
+         6LcK8K52jRcL5K9k/42alehFViSE1QSnRhzjLtXd3eN7VBi5wToe9wdkyXDAGEJgDygg
+         XhSMYxgkyh8wjxjdMyVsvXhk1aE0DQvfO4C5pZBMPZlsUk4V+e2QgcgAzEU0j3AFiSx4
+         h7n9OXSRpGq6ztUgfpDLuXGOVbcSB+Vf/goU2C53KQnpyGTGHsRhf9cwPPeUSkfFFgiA
+         5PBTFLrA8M+fmqv5jj4nU15Nh1TPtq61NJxqjPcus1YOURkR8gu7zepJsCz61vYuF6E4
+         1ikw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=hE2WN/DCm9N6dOZUu7hJVv+yyUkTDtyJAizkqbQOmeM=;
+        b=7odm4aRBpSoh/ebdkrGXB3ba3PnSfCw6W2aKzwZYvX6d/s7L7iqSfZVeDYPCVpJf2T
+         uRhIRo+ljNpVAq0Z8mtNXfx4ECPKdp+d2WRWMTdC6PBLhZ0mjp/iksEwHBolIxCoalVg
+         k3ZNGSSfqAa+b17msqH3P+HLhL64qPqr8Hb2zCdJkVT605rb5KW59bBMnzGxd8X9cCun
+         6E63j6GHOoD0Lhz6PUF2FJjo1Fui7oO1+ZokuwHHIMfpLqYXSSIYirOhwzz3D7fzf6pn
+         jSK6dqO3SSv8M3KPpjvxEha/5jC0/cIJiPmxeVQ2HrOWiOCqBD07sAS1OwnQTYmpvTRY
+         DH/w==
+X-Gm-Message-State: AOAM530FLKYcriURdysHPBtcWPD5eI0z+lRPdlZTZHIUCeR2FHMbJHfq
+        w+IOU/1/oBhI+ltGf4mvN09DZIWHpPM=
+X-Google-Smtp-Source: ABdhPJzHrXUEulYgTnv8rmP1N2EktMiXwXTNQXI/qz7ddNDdC9RmNahV0Zhzd5IDB4MUonyGD9AseQ==
+X-Received: by 2002:a17:90b:1892:: with SMTP id mn18mr250556pjb.178.1638815179928;
+        Mon, 06 Dec 2021 10:26:19 -0800 (PST)
+Received: from fainelli-desktop.igp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id a22sm12773097pfh.111.2021.12.06.10.26.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 06 Dec 2021 10:26:19 -0800 (PST)
+From:   Florian Fainelli <f.fainelli@gmail.com>
+To:     devicetree@vger.kernel.org
+Cc:     Florian Fainelli <f.fainelli@gmail.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        bcm-kernel-feedback-list@broadcom.com (maintainer:BROADCOM BCM7XXX ARM
+        ARCHITECTURE), Gregory Fong <gregory.0xf0@gmail.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Marc Zyngier <maz@kernel.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>, Lee Jones <lee.jones@linaro.org>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Alessandro Zummo <a.zummo@towertech.it>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Amit Kucheria <amitk@kernel.org>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Markus Mayer <mmayer@broadcom.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Al Cooper <alcooperx@gmail.com>,
+        Doug Berger <opendmb@gmail.com>,
+        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
+        Parallel ATA drivers)), linux-kernel@vger.kernel.org (open list),
+        linux-gpio@vger.kernel.org (open list:GPIO SUBSYSTEM),
+        linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM BCM7XXX
+        ARM ARCHITECTURE),
+        linux-mmc@vger.kernel.org (open list:MULTIMEDIA CARD (MMC), SECURE
+        DIGITAL (SD) AND...),
+        linux-pwm@vger.kernel.org (open list:PWM SUBSYSTEM),
+        linux-crypto@vger.kernel.org (open list:HARDWARE RANDOM NUMBER
+        GENERATOR CORE),
+        linux-rtc@vger.kernel.org (open list:REAL TIME CLOCK (RTC) SUBSYSTEM),
+        linux-pm@vger.kernel.org (open list:THERMAL),
+        linux-usb@vger.kernel.org (open list:USB SUBSYSTEM)
+Subject: [PATCH v2 00/14] Broadcom DT bindings updates to YAML
+Date:   Mon,  6 Dec 2021 10:26:02 -0800
+Message-Id: <20211206182616.2089677-1-f.fainelli@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.3.2
-Subject: Re: Need help to debug ata errors
-Content-Language: en-US
-To:     Ayan Kumar Halder <ayan.kumar.halder@xilinx.com>,
-        linux-ide@vger.kernel.org
-Cc:     axboe@kernel.dk, linux-kernel@vger.kernel.org,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Stefano Stabellini <stefano.stabellini@xilinx.com>
-References: <df61e958-7bd6-94df-0da2-56aa1084350d@xilinx.com>
- <022c3fad-ca0b-50c9-79f7-2bfa3de75a0d@opensource.wdc.com>
- <3aba2b93-9440-e581-61aa-76161f55563f@xilinx.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital
-In-Reply-To: <3aba2b93-9440-e581-61aa-76161f55563f@xilinx.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2021/12/06 20:18, Ayan Kumar Halder wrote:
-> Hi Damien,
-> 
-> Thanks a lot for your inputs.
-> 
-> On 06/12/2021 00:12, Damien Le Moal wrote:
->> On 2021/12/03 20:11, Ayan Kumar Halder wrote:
->>> Hi All,
->>>
->>> I am trying to run linux as a DomU guest on Xen with AHCI assigned to it.
->>> I can confirm that SATA works (ie able to detect sdb) as a Dom0 guest.
->>> However, it does not work as a DomU guest.
->>>
->>> Hardware :- ZCU102 board and it has two sata ports
->>> Kernel :- 5.10
->>>
->>> I have enabled the debug logs in drivers/ata
->>>
->>> 1. Logs from dom0 (where SATA works) https://pastebin.com/2BhMDq47
->>> 2. Logs from domU (where SATA does not work) https://pastebin.com/fE8WZnZ0
->>>
->>> Can some help me to answer these questions
->>> 1. What does this mean "1st FIS failed" ?
->>>
->>> 2. In the dom0 logs, PORT_SCR_ERR = 0x41d0002 whereas in domU logs,
->>> PORT_SCR_ERR = 0. Does it give some hints ?
->>>
->>> 3. Any other issues or hints to debug this ?
->>>
->>> I can confirm that in domU scenario, we do not get any interrupts from
->>> the device. What might be going wrong here ?
->>
->> That would be the first thing to check since without interrupts you will not get
->> any command completion. Commands will timeout and probe will not work.
->> And this IRQ problem is Xen territory, not ata.
-> 
-> I am actually debugging the interrupts from the Xen's side. I can 
-> confirm that do_IRQ() (Xen's irq handler) does not receive AHCI 
-> interrupts. It does get invoked for interrupts from serial and other 
-> devices.
-> 
-> I have seen commands being timed out which is due to the iRQ issue. But 
-> suprisingly, ahci probe is successful.
+Hi Rob,
 
-That cannot be. Without any interrupt, there will be no command completion.
-Command that timeout are retried. So you may have seen timeouts because the
-platform or device is very slow to respond, but you must be getting interrupts
-if you get a good device probe. Otherwise, you would not see any disk connected
-to your ports.
+This patch series contains a number of device tree bindings being
+converted to YAML to help with validation.
 
->>
->> The 1st FIS failed error may be due to some problems with AHCI PCI bar/register
->> accesses, which may not be working. This I think points again to Xen setup with
->> domU, which may not have the necessary access rights to get IRQ and PCI bar
->> accesses ? (I have no experience with Xen)
-> 
-> This is the device tree https://pastebin.com/HtdLx63v . I think it is 
-> not related to PCI bus. Please correct me if mistaken.
+There will be second, and possibly third rounds later on after those
+land in.
 
-Well, since you have an ahci node, I do not think that adapter is behind the PCI
-bus :) It is a child of the axi bus. Not familiar with that type of setup...
-Are you sure all properties of the ahci node are correct ?
+Thanks!
 
-> I have the necessary debug support from Xen. Can you let me know what 
-> bits I can debug from SATA side (for eg reading a particular register) 
-> which will confirm if SATA has been programmed correctly or not ?
+Changes in v2:
 
-The device probe with domU should be no different than what it is with dom0, I
-think. Again, I do not have experience with Xen, so not entirely sure.
+- rebased against dt/next
+- addressed Gregory's feedback on the GPIO binding change
+- added Damien's Acked-by to the ATA binding patch
 
-Note that from the dmesg you sent, for the working case, the port seems to be
-awfully slow to link up. Not sure if that is normal for this platform.
+Florian Fainelli (14):
+  dt-bindings: mmc: Convert Broadcom STB SDHCI binding to YAML
+  dt-bindings: reset: Convert Broadcom STB reset to YAML
+  dt-bindings: pwm: Convert BCM7038 PWM binding to YAML
+  dt-bindings: rtc: Convert Broadcom STB waketimer to YAML
+  dt-bindings: gpio: Convert Broadcom STB GPIO to YAML
+  dt-binding: interrupt-controller: Convert BCM7038 L1 intc to YAML
+  dt-bindings: interrupt-controller: Convert BCM7120 L2 to YAML
+  dt-bindings: interrupt-controller: Merge BCM3380 with BCM7120
+  dt-bindings: interrupt-controller: Convert Broadcom STB L2 to YAML
+  dt-bindings: rng: Convert iProc RNG200 to YAML
+  dt-bindings: thermal: Convert Broadcom TMON to YAML
+  dt-bindings: ata: Convert Broadcom SATA to YAML
+  dt-bindings: bus: Convert GISB arbiter to YAML
+  dt-bindings: usb: Convert BDC to YAML
 
+ .../bindings/ata/brcm,sata-brcm.txt           |  45 ------
+ .../bindings/ata/brcm,sata-brcm.yaml          |  91 +++++++++++
+ .../devicetree/bindings/bus/brcm,gisb-arb.txt |  34 ----
+ .../bindings/bus/brcm,gisb-arb.yaml           |  66 ++++++++
+ .../bindings/gpio/brcm,brcmstb-gpio.txt       |  83 ----------
+ .../bindings/gpio/brcm,brcmstb-gpio.yaml      | 105 ++++++++++++
+ .../brcm,bcm3380-l2-intc.txt                  |  39 -----
+ .../brcm,bcm7038-l1-intc.txt                  |  61 -------
+ .../brcm,bcm7038-l1-intc.yaml                 |  91 +++++++++++
+ .../brcm,bcm7120-l2-intc.txt                  |  88 -----------
+ .../brcm,bcm7120-l2-intc.yaml                 | 149 ++++++++++++++++++
+ .../interrupt-controller/brcm,l2-intc.txt     |  31 ----
+ .../interrupt-controller/brcm,l2-intc.yaml    |  64 ++++++++
+ .../bindings/mmc/brcm,sdhci-brcmstb.txt       |  53 -------
+ .../bindings/mmc/brcm,sdhci-brcmstb.yaml      | 100 ++++++++++++
+ .../bindings/pwm/brcm,bcm7038-pwm.txt         |  20 ---
+ .../bindings/pwm/brcm,bcm7038-pwm.yaml        |  43 +++++
+ .../bindings/reset/brcm,brcmstb-reset.txt     |  27 ----
+ .../bindings/reset/brcm,brcmstb-reset.yaml    |  48 ++++++
+ .../bindings/rng/brcm,iproc-rng200.txt        |  16 --
+ .../bindings/rng/brcm,iproc-rng200.yaml       |  29 ++++
+ .../bindings/rtc/brcm,brcmstb-waketimer.txt   |  20 ---
+ .../bindings/rtc/brcm,brcmstb-waketimer.yaml  |  44 ++++++
+ .../bindings/thermal/brcm,avs-tmon.txt        |  23 ---
+ .../bindings/thermal/brcm,avs-tmon.yaml       |  57 +++++++
+ .../devicetree/bindings/usb/brcm,bdc.txt      |  29 ----
+ .../devicetree/bindings/usb/brcm,bdc.yaml     |  46 ++++++
+ MAINTAINERS                                   |   6 +-
+ 28 files changed, 936 insertions(+), 572 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/ata/brcm,sata-brcm.txt
+ create mode 100644 Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml
+ delete mode 100644 Documentation/devicetree/bindings/bus/brcm,gisb-arb.txt
+ create mode 100644 Documentation/devicetree/bindings/bus/brcm,gisb-arb.yaml
+ delete mode 100644 Documentation/devicetree/bindings/gpio/brcm,brcmstb-gpio.txt
+ create mode 100644 Documentation/devicetree/bindings/gpio/brcm,brcmstb-gpio.yaml
+ delete mode 100644 Documentation/devicetree/bindings/interrupt-controller/brcm,bcm3380-l2-intc.txt
+ delete mode 100644 Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7038-l1-intc.txt
+ create mode 100644 Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7038-l1-intc.yaml
+ delete mode 100644 Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7120-l2-intc.txt
+ create mode 100644 Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7120-l2-intc.yaml
+ delete mode 100644 Documentation/devicetree/bindings/interrupt-controller/brcm,l2-intc.txt
+ create mode 100644 Documentation/devicetree/bindings/interrupt-controller/brcm,l2-intc.yaml
+ delete mode 100644 Documentation/devicetree/bindings/mmc/brcm,sdhci-brcmstb.txt
+ create mode 100644 Documentation/devicetree/bindings/mmc/brcm,sdhci-brcmstb.yaml
+ delete mode 100644 Documentation/devicetree/bindings/pwm/brcm,bcm7038-pwm.txt
+ create mode 100644 Documentation/devicetree/bindings/pwm/brcm,bcm7038-pwm.yaml
+ delete mode 100644 Documentation/devicetree/bindings/reset/brcm,brcmstb-reset.txt
+ create mode 100644 Documentation/devicetree/bindings/reset/brcm,brcmstb-reset.yaml
+ delete mode 100644 Documentation/devicetree/bindings/rng/brcm,iproc-rng200.txt
+ create mode 100644 Documentation/devicetree/bindings/rng/brcm,iproc-rng200.yaml
+ delete mode 100644 Documentation/devicetree/bindings/rtc/brcm,brcmstb-waketimer.txt
+ create mode 100644 Documentation/devicetree/bindings/rtc/brcm,brcmstb-waketimer.yaml
+ delete mode 100644 Documentation/devicetree/bindings/thermal/brcm,avs-tmon.txt
+ create mode 100644 Documentation/devicetree/bindings/thermal/brcm,avs-tmon.yaml
+ delete mode 100644 Documentation/devicetree/bindings/usb/brcm,bdc.txt
+ create mode 100644 Documentation/devicetree/bindings/usb/brcm,bdc.yaml
 
 -- 
-Damien Le Moal
-Western Digital Research
+2.25.1
+
