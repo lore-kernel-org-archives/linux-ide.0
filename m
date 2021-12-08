@@ -2,47 +2,47 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD00FC433EF
-	for <linux-ide@archiver.kernel.org>; Wed,  8 Dec 2021 16:33:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF02EC43217
+	for <linux-ide@archiver.kernel.org>; Wed,  8 Dec 2021 16:33:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237071AbhLHQg6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 8 Dec 2021 11:36:58 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:37892 "EHLO
+        id S230154AbhLHQhC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 8 Dec 2021 11:37:02 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:37754 "EHLO
         smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237041AbhLHQgo (ORCPT
+        with ESMTP id S237044AbhLHQgo (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Dec 2021 11:36:44 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id C60D81FE1D;
+        by smtp-out2.suse.de (Postfix) with ESMTP id E861B1FE23;
         Wed,  8 Dec 2021 16:33:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1638981180; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1638981181; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=pODBL/nopMvfXWjYs6XtsCSk3S/drQ/5HPEo2KWs3e0=;
-        b=J1gvF8E+AH9LmC7Pc5b//Q7Kph2qUG/2WwBjHuiuSQr3rBauERoaMfNXQ5IZoKfSJKcvjm
-        Yz3MRzK9xrdeBjteQcrDAnfMClGMiIjHyQCumjCEE1Kr4B1JZXpU6tzus2dugGGjTrqWzC
-        7OZDckcTdit1Ybqp9WG1K5jAt5WJdYY=
+        bh=+p+o+fQWekWOpE3MHtc5A7R+7swokSvXQwCwJd3a5JA=;
+        b=pqfxMuXP3ig2bmfsjLqAaEpPmD9YoTjt6cOIA6QS5+veISmP2q5yLjJpyElbpzTO4m3YnS
+        PAqgTxWoCCn0WNavn3MxqccvLCVtX4sQzX8/uqO634OLdZQ1JdiZ92gKAkSXI4TuhPqCZh
+        9bXynZst2E2sCKGjTFl8z2xPd7C98c0=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1638981180;
+        s=susede2_ed25519; t=1638981181;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=pODBL/nopMvfXWjYs6XtsCSk3S/drQ/5HPEo2KWs3e0=;
-        b=oAqmu37sd8qjgSIykiifJXy7EbOMitr/Hatf4RTeq20w7iyrF+tsC/4vGBlPQ4XW65+dmb
-        SDzlESB7Q4T8IgAg==
+        bh=+p+o+fQWekWOpE3MHtc5A7R+7swokSvXQwCwJd3a5JA=;
+        b=7eLXNzp9rBZs66nbuhXLwJQQhBI1oeUbj8/5SkkYQfl2cQVZNih9DfcelNcmqyh2Nopoo7
+        zeGs62DDOPZmD1BQ==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id C23C4A3BBA;
+        by relay2.suse.de (Postfix) with ESMTP id E5B72A3BC2;
         Wed,  8 Dec 2021 16:33:00 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id BEF4D5191FAD; Wed,  8 Dec 2021 17:33:00 +0100 (CET)
+        id E2C475191FB9; Wed,  8 Dec 2021 17:33:00 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Damien LeMoal <damien.lemoal@wdc.com>
 Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 40/73] sata_nv: drop pointless VPRINTK() calls and convert remaining ones
-Date:   Wed,  8 Dec 2021 17:32:22 +0100
-Message-Id: <20211208163255.114660-41-hare@suse.de>
+Subject: [PATCH 46/73] libata: drop ata_msg_ctl()
+Date:   Wed,  8 Dec 2021 17:32:28 +0100
+Message-Id: <20211208163255.114660-47-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20211208163255.114660-1-hare@suse.de>
 References: <20211208163255.114660-1-hare@suse.de>
@@ -52,153 +52,60 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Quite some information from the VPRINTK() is already covered by
-tracepoints, so remove the pointless calls and convert the remaining
-ones to structured logging.
+The one caller have been converted to dynamic debugging.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/sata_nv.c | 38 ++++++++++++++------------------------
- 1 file changed, 14 insertions(+), 24 deletions(-)
+ drivers/ata/libata-core.c | 7 ++-----
+ include/linux/libata.h    | 2 --
+ 2 files changed, 2 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 995c6f19e78f..a9ef8ab378ee 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -809,7 +809,7 @@ static int nv_adma_check_cpb(struct ata_port *ap, int cpb_num, int force_err)
- 	struct nv_adma_port_priv *pp = ap->private_data;
- 	u8 flags = pp->cpb[cpb_num].resp_flags;
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index ff7e82be0a94..691dfa1f01c5 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1809,9 +1809,6 @@ int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
+ 	int may_fallback = 1, tried_spinup = 0;
+ 	int rc;
  
--	VPRINTK("CPB %d, flags=0x%x\n", cpb_num, flags);
-+	ata_port_dbg(ap, "CPB %d, flags=0x%x\n", cpb_num, flags);
- 
- 	if (unlikely((force_err ||
- 		     flags & (NV_CPB_RESP_ATA_ERR |
-@@ -1101,8 +1101,6 @@ static int nv_adma_port_start(struct ata_port *ap)
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	u16 tmp;
- 
--	VPRINTK("ENTER\n");
+-	if (ata_msg_ctl(ap))
+-		ata_dev_dbg(dev, "%s: ENTER\n", __func__);
 -
- 	/*
- 	 * Ensure DMA mask is set to 32-bit before allocating legacy PRD and
- 	 * pad buffers.
-@@ -1191,7 +1189,6 @@ static void nv_adma_port_stop(struct ata_port *ap)
- 	struct nv_adma_port_priv *pp = ap->private_data;
- 	void __iomem *mmio = pp->ctl_block;
+ retry:
+ 	ata_tf_init(dev, &tf);
  
--	VPRINTK("ENTER\n");
- 	writew(0, mmio + NV_ADMA_CTL);
- }
+@@ -5384,9 +5381,9 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
  
-@@ -1253,8 +1250,6 @@ static void nv_adma_setup_port(struct ata_port *ap)
- 	void __iomem *mmio = ap->host->iomap[NV_MMIO_BAR];
- 	struct ata_ioports *ioport = &ap->ioaddr;
+ #if defined(ATA_VERBOSE_DEBUG)
+ 	/* turn on all debugging levels */
+-	ap->msg_enable = 0x003F;
++	ap->msg_enable = 0x001F;
+ #elif defined(ATA_DEBUG)
+-	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_INFO | ATA_MSG_CTL | ATA_MSG_WARN;
++	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_INFO | ATA_MSG_WARN;
+ #else
+ 	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_WARN;
+ #endif
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index a3f35735fd27..fc7f64646e5b 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -77,7 +77,6 @@ enum {
+ 	ATA_MSG_PROBE	= 0x0004,
+ 	ATA_MSG_WARN	= 0x0008,
+ 	ATA_MSG_MALLOC	= 0x0010,
+-	ATA_MSG_CTL	= 0x0020,
+ };
  
--	VPRINTK("ENTER\n");
--
- 	mmio += NV_ADMA_PORT + ap->port_no * NV_ADMA_PORT_SIZE;
+ #define ata_msg_drv(p)    ((p)->msg_enable & ATA_MSG_DRV)
+@@ -85,7 +84,6 @@ enum {
+ #define ata_msg_probe(p)  ((p)->msg_enable & ATA_MSG_PROBE)
+ #define ata_msg_warn(p)   ((p)->msg_enable & ATA_MSG_WARN)
+ #define ata_msg_malloc(p) ((p)->msg_enable & ATA_MSG_MALLOC)
+-#define ata_msg_ctl(p)    ((p)->msg_enable & ATA_MSG_CTL)
  
- 	ioport->cmd_addr	= mmio;
-@@ -1375,8 +1370,6 @@ static enum ata_completion_errors nv_adma_qc_prep(struct ata_queued_cmd *qc)
- 	if (qc->tf.protocol == ATA_PROT_NCQ)
- 		ctl_flags |= NV_CPB_CTL_QUEUE | NV_CPB_CTL_FPDMA;
- 
--	VPRINTK("qc->flags = 0x%lx\n", qc->flags);
--
- 	nv_adma_tf_to_cpb(&qc->tf, cpb->tf);
- 
- 	if (qc->flags & ATA_QCFLAG_DMAMAP) {
-@@ -1401,8 +1394,6 @@ static unsigned int nv_adma_qc_issue(struct ata_queued_cmd *qc)
- 	void __iomem *mmio = pp->ctl_block;
- 	int curr_ncq = (qc->tf.protocol == ATA_PROT_NCQ);
- 
--	VPRINTK("ENTER\n");
--
- 	/* We can't handle result taskfile with NCQ commands, since
- 	   retrieving the taskfile switches us out of ADMA mode and would abort
- 	   existing commands. */
-@@ -1414,7 +1405,6 @@ static unsigned int nv_adma_qc_issue(struct ata_queued_cmd *qc)
- 
- 	if (nv_adma_use_reg_mode(qc)) {
- 		/* use ATA register mode */
--		VPRINTK("using ATA register mode: 0x%lx\n", qc->flags);
- 		BUG_ON(!(pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) &&
- 			(qc->flags & ATA_QCFLAG_DMAMAP));
- 		nv_adma_register_mode(qc->ap);
-@@ -1866,12 +1856,12 @@ static void nv_swncq_host_init(struct ata_host *host)
- 
- 	/* enable swncq */
- 	tmp = readl(mmio + NV_CTL_MCP55);
--	VPRINTK("HOST_CTL:0x%X\n", tmp);
-+	dev_dbg(&pdev->dev, "HOST_CTL:0x%X\n", tmp);
- 	writel(tmp | NV_CTL_PRI_SWNCQ | NV_CTL_SEC_SWNCQ, mmio + NV_CTL_MCP55);
- 
- 	/* enable irq intr */
- 	tmp = readl(mmio + NV_INT_ENABLE_MCP55);
--	VPRINTK("HOST_ENABLE:0x%X\n", tmp);
-+	dev_dbg(&pdev->dev, "HOST_ENABLE:0x%X\n", tmp);
- 	writel(tmp | 0x00fd00fd, mmio + NV_INT_ENABLE_MCP55);
- 
- 	/*  clear port irq */
-@@ -2100,7 +2090,7 @@ static int nv_swncq_sdbfis(struct ata_port *ap)
- 	ata_qc_complete_multiple(ap, ata_qc_get_active(ap) ^ done_mask);
- 
- 	if (!ap->qc_active) {
--		DPRINTK("over\n");
-+		ata_port_dbg(ap, "over\n");
- 		nv_swncq_pp_reinit(ap);
- 		return 0;
- 	}
-@@ -2115,12 +2105,12 @@ static int nv_swncq_sdbfis(struct ata_port *ap)
- 		 */
- 		lack_dhfis = 1;
- 
--	DPRINTK("id 0x%x QC: qc_active 0x%llx,"
--		"SWNCQ:qc_active 0x%X defer_bits %X "
--		"dhfis 0x%X dmafis 0x%X last_issue_tag %x\n",
--		ap->print_id, ap->qc_active, pp->qc_active,
--		pp->defer_queue.defer_bits, pp->dhfis_bits,
--		pp->dmafis_bits, pp->last_issue_tag);
-+	ata_port_dbg(ap, "QC: qc_active 0x%llx,"
-+		     "SWNCQ:qc_active 0x%X defer_bits %X "
-+		     "dhfis 0x%X dmafis 0x%X last_issue_tag %x\n",
-+		     ap->qc_active, pp->qc_active,
-+		     pp->defer_queue.defer_bits, pp->dhfis_bits,
-+		     pp->dmafis_bits, pp->last_issue_tag);
- 
- 	nv_swncq_fis_reinit(ap);
- 
-@@ -2160,7 +2150,7 @@ static void nv_swncq_dmafis(struct ata_port *ap)
- 	__ata_bmdma_stop(ap);
- 	tag = nv_swncq_tag(ap);
- 
--	DPRINTK("dma setup tag 0x%x\n", tag);
-+	ata_port_dbg(ap, "dma setup tag 0x%x\n", tag);
- 	qc = ata_qc_from_tag(ap, tag);
- 
- 	if (unlikely(!qc))
-@@ -2228,9 +2218,9 @@ static void nv_swncq_host_interrupt(struct ata_port *ap, u16 fis)
- 
- 	if (fis & NV_SWNCQ_IRQ_SDBFIS) {
- 		pp->ncq_flags |= ncq_saw_sdb;
--		DPRINTK("id 0x%x SWNCQ: qc_active 0x%X "
-+		ata_port_dbg(ap, "SWNCQ: qc_active 0x%X "
- 			"dhfis 0x%X dmafis 0x%X sactive 0x%X\n",
--			ap->print_id, pp->qc_active, pp->dhfis_bits,
-+			pp->qc_active, pp->dhfis_bits,
- 			pp->dmafis_bits, readl(pp->sactive_block));
- 		if (nv_swncq_sdbfis(ap) < 0)
- 			goto irq_error;
-@@ -2256,7 +2246,7 @@ static void nv_swncq_host_interrupt(struct ata_port *ap, u16 fis)
- 				goto irq_exit;
- 
- 			if (pp->defer_queue.defer_bits) {
--				DPRINTK("send next command\n");
-+				ata_port_dbg(ap, "send next command\n");
- 				qc = nv_swncq_qc_from_dq(ap);
- 				nv_swncq_issue_atacmd(ap, qc);
- 			}
+ static inline u32 ata_msg_init(int dval, int default_msg_enable_bits)
+ {
 -- 
 2.29.2
 
