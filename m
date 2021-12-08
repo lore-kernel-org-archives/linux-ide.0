@@ -2,47 +2,48 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 645C8C43219
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE37AC4321E
 	for <linux-ide@archiver.kernel.org>; Wed,  8 Dec 2021 16:33:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237033AbhLHQgk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 8 Dec 2021 11:36:40 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:40664 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237001AbhLHQge (ORCPT
+        id S234530AbhLHQgl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 8 Dec 2021 11:36:41 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:37746 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237004AbhLHQge (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Dec 2021 11:36:34 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 61CF22191A;
+        by smtp-out2.suse.de (Postfix) with ESMTP id 48DEE1FE0C;
         Wed,  8 Dec 2021 16:33:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1638981180; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=kQJ7CGBfPOqghbAKggIF/gGbqinygkOaXhMx2Gjitg0=;
-        b=o+tUjMY3i+RIgkA3/RMNKxQj0nipcJRdOmC3ucN+RaZa6c7vlhgs7PMLiySysp3L7Z5iJP
-        zxi826q08g2fVHynIHRorG3qqToxfMmsZoN7WgymZGAl4l3EFziob0tBWX98Eg5Zjr0a14
-        3T6pcGj79nd7xd7YZHouSfZVgdXdPps=
+        bh=aXYRQ+8Yy448PM8DJFkQ+urRqLeuECSozTgi8xmktL0=;
+        b=DxRq5KsdUvDffXIivlR/IYHIXTtgNtPPlxeWtQytFD4xBogIbXFfl94LyrHpmnpVP0/wb3
+        YBhkmjYSlU+JyRX0XlbuLOcVNy8yL1MHGgHxbfuch9/y2EddtTt6r4hKTCZfqtDUPmB9Vt
+        hPOyPHgTAEpHkz1fnRYvKCQylBhfnDk=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1638981180;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=kQJ7CGBfPOqghbAKggIF/gGbqinygkOaXhMx2Gjitg0=;
-        b=UlwHex25F4mOfSSXCtsaye3GLrSaHba7FkEyThghhi1QgBG8xGTdQwMQvvQ54cAHdKXnrm
-        ebwp4qMYFuSJHNDg==
+        bh=aXYRQ+8Yy448PM8DJFkQ+urRqLeuECSozTgi8xmktL0=;
+        b=c4kva/pBGP/tzNh2PWWiv19qB3ZM5U+oIVyA6HoiNt6Ss3FKXSmwXZpiXi3odTRfIrSsNY
+        ++D+eF/mCToxIKAg==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 5734AA3BA8;
+        by relay2.suse.de (Postfix) with ESMTP id 459D4A3BA5;
         Wed,  8 Dec 2021 16:33:00 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 537E25191F87; Wed,  8 Dec 2021 17:33:00 +0100 (CET)
+        id 41D0E5191F81; Wed,  8 Dec 2021 17:33:00 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Damien LeMoal <damien.lemoal@wdc.com>
-Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 21/73] libata: move ata_{port,link,dev}_dbg to standard dev_XXX() macros
-Date:   Wed,  8 Dec 2021 17:32:03 +0100
-Message-Id: <20211208163255.114660-22-hare@suse.de>
+Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: [PATCH 18/73] libata: add tracepoints for ATA error handling
+Date:   Wed,  8 Dec 2021 17:32:00 +0100
+Message-Id: <20211208163255.114660-19-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20211208163255.114660-1-hare@suse.de>
 References: <20211208163255.114660-1-hare@suse.de>
@@ -52,285 +53,142 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Use standard dev_{dbg,info,notice,warn,err} macros instead of the
-hand-crafted printk helpers.
+Add tracepoints for ATA error handling.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/ata/libata-acpi.c    | 48 +++++++++++++++-------------
- drivers/ata/libata-core.c    | 61 ------------------------------------
- drivers/ata/pata_ixp4xx_cf.c |  6 ++--
- include/linux/libata.h       | 48 ++++++++++------------------
- 4 files changed, 45 insertions(+), 118 deletions(-)
+ drivers/ata/libata-eh.c       | 10 ++++--
+ include/trace/events/libata.h | 60 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 67 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 7a7d6642edcc..7007377880ce 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -650,9 +650,7 @@ static int ata_acpi_run_tf(struct ata_device *dev,
- 	struct ata_taskfile *pptf = NULL;
- 	struct ata_taskfile tf, ptf, rtf;
- 	unsigned int err_mask;
--	const char *level;
- 	const char *descr;
--	char msg[60];
- 	int rc;
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 043a1c846f2c..2a25be588e14 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -940,7 +940,7 @@ void ata_std_sched_eh(struct ata_port *ap)
+ 	ata_eh_set_pending(ap, 1);
+ 	scsi_schedule_eh(ap->scsi_host);
  
- 	if ((gtf->tf[0] == 0) && (gtf->tf[1] == 0) && (gtf->tf[2] == 0)
-@@ -666,6 +664,10 @@ static int ata_acpi_run_tf(struct ata_device *dev,
- 		pptf = &ptf;
- 	}
+-	DPRINTK("port EH scheduled\n");
++	trace_ata_std_sched_eh(ap);
+ }
+ EXPORT_SYMBOL_GPL(ata_std_sched_eh);
  
-+	descr = ata_get_cmd_descript(tf.command);
-+	if (!descr)
-+		descr = "unknown";
-+
- 	if (!ata_acpi_filter_tf(dev, &tf, pptf)) {
- 		rtf = tf;
- 		err_mask = ata_exec_internal(dev, &rtf, NULL,
-@@ -673,40 +675,42 @@ static int ata_acpi_run_tf(struct ata_device *dev,
+@@ -1070,7 +1070,7 @@ static void __ata_port_freeze(struct ata_port *ap)
  
- 		switch (err_mask) {
- 		case 0:
--			level = KERN_DEBUG;
--			snprintf(msg, sizeof(msg), "succeeded");
-+			ata_dev_dbg(dev,
-+				"ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x"
-+				"(%s) succeeded\n",
-+				tf.command, tf.feature, tf.nsect, tf.lbal,
-+				tf.lbam, tf.lbah, tf.device, descr);
- 			rc = 1;
- 			break;
+ 	ap->pflags |= ATA_PFLAG_FROZEN;
  
- 		case AC_ERR_DEV:
--			level = KERN_INFO;
--			snprintf(msg, sizeof(msg),
--				 "rejected by device (Stat=0x%02x Err=0x%02x)",
--				 rtf.command, rtf.feature);
-+			ata_dev_info(dev,
-+				"ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x"
-+				"(%s) rejected by device (Stat=0x%02x Err=0x%02x)",
-+				tf.command, tf.feature, tf.nsect, tf.lbal,
-+				tf.lbam, tf.lbah, tf.device, descr,
-+				rtf.command, rtf.feature);
- 			rc = 0;
- 			break;
- 
- 		default:
--			level = KERN_ERR;
--			snprintf(msg, sizeof(msg),
--				 "failed (Emask=0x%x Stat=0x%02x Err=0x%02x)",
--				 err_mask, rtf.command, rtf.feature);
-+			ata_dev_err(dev,
-+				"ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x"
-+				"(%s) failed (Emask=0x%x Stat=0x%02x Err=0x%02x)",
-+				tf.command, tf.feature, tf.nsect, tf.lbal,
-+				tf.lbam, tf.lbah, tf.device, descr,
-+				err_mask, rtf.command, rtf.feature);
- 			rc = -EIO;
- 			break;
- 		}
- 	} else {
--		level = KERN_INFO;
--		snprintf(msg, sizeof(msg), "filtered out");
-+		ata_dev_info(dev,
-+			"ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x"
-+			"(%s) filtered out\n",
-+			tf.command, tf.feature, tf.nsect, tf.lbal,
-+			tf.lbam, tf.lbah, tf.device, descr);
- 		rc = 0;
- 	}
--	descr = ata_get_cmd_descript(tf.command);
--
--	ata_dev_printk(dev, level,
--		       "ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x (%s) %s\n",
--		       tf.command, tf.feature, tf.nsect, tf.lbal,
--		       tf.lbam, tf.lbah, tf.device,
--		       (descr ? descr : "unknown"), msg);
--
- 	return rc;
+-	DPRINTK("ata%u port frozen\n", ap->print_id);
++	trace_ata_port_freeze(ap);
  }
  
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index ef5ae37bfac0..de5f4bf1c90c 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6548,67 +6548,6 @@ const struct ata_port_info ata_dummy_port_info = {
- };
- EXPORT_SYMBOL_GPL(ata_dummy_port_info);
+ /**
+@@ -1147,7 +1147,7 @@ void ata_eh_thaw_port(struct ata_port *ap)
  
--/*
-- * Utility print functions
-- */
--void ata_port_printk(const struct ata_port *ap, const char *level,
--		     const char *fmt, ...)
--{
--	struct va_format vaf;
--	va_list args;
--
--	va_start(args, fmt);
--
--	vaf.fmt = fmt;
--	vaf.va = &args;
--
--	printk("%sata%u: %pV", level, ap->print_id, &vaf);
--
--	va_end(args);
--}
--EXPORT_SYMBOL(ata_port_printk);
--
--void ata_link_printk(const struct ata_link *link, const char *level,
--		     const char *fmt, ...)
--{
--	struct va_format vaf;
--	va_list args;
--
--	va_start(args, fmt);
--
--	vaf.fmt = fmt;
--	vaf.va = &args;
--
--	if (sata_pmp_attached(link->ap) || link->ap->slave_link)
--		printk("%sata%u.%02u: %pV",
--		       level, link->ap->print_id, link->pmp, &vaf);
--	else
--		printk("%sata%u: %pV",
--		       level, link->ap->print_id, &vaf);
--
--	va_end(args);
--}
--EXPORT_SYMBOL(ata_link_printk);
--
--void ata_dev_printk(const struct ata_device *dev, const char *level,
--		    const char *fmt, ...)
--{
--	struct va_format vaf;
--	va_list args;
--
--	va_start(args, fmt);
--
--	vaf.fmt = fmt;
--	vaf.va = &args;
--
--	printk("%sata%u.%02u: %pV",
--	       level, dev->link->ap->print_id, dev->link->pmp + dev->devno,
--	       &vaf);
--
--	va_end(args);
--}
--EXPORT_SYMBOL(ata_dev_printk);
--
- void ata_print_version(const struct device *dev, const char *version)
- {
- 	dev_printk(KERN_DEBUG, dev, "version %s\n", version);
-diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
-index 99c63087c8ae..17b557c91e1c 100644
---- a/drivers/ata/pata_ixp4xx_cf.c
-+++ b/drivers/ata/pata_ixp4xx_cf.c
-@@ -114,7 +114,7 @@ static void ixp4xx_set_piomode(struct ata_port *ap, struct ata_device *adev)
- {
- 	struct ixp4xx_pata *ixpp = ap->host->private_data;
+ 	spin_unlock_irqrestore(ap->lock, flags);
  
--	ata_dev_printk(adev, KERN_INFO, "configured for PIO%d 8bit\n",
-+	ata_dev_info(adev, "configured for PIO%d 8bit\n",
- 		       adev->pio_mode - XFER_PIO_0);
- 	ixp4xx_set_8bit_timing(ixpp, adev->pio_mode);
+-	DPRINTK("ata%u port thawed\n", ap->print_id);
++	trace_ata_port_thaw(ap);
  }
-@@ -132,8 +132,8 @@ static unsigned int ixp4xx_mmio_data_xfer(struct ata_queued_cmd *qc,
- 	struct ixp4xx_pata *ixpp = ap->host->private_data;
+ 
+ static void ata_eh_scsidone(struct scsi_cmnd *scmd)
+@@ -1287,6 +1287,8 @@ void ata_eh_about_to_do(struct ata_link *link, struct ata_device *dev,
+ 	struct ata_eh_context *ehc = &link->eh_context;
  	unsigned long flags;
  
--	ata_dev_printk(adev, KERN_DEBUG, "%s %d bytes\n", (rw == READ) ? "READ" : "WRITE",
--		       buflen);
-+	ata_dev_dbg(adev, "%s %d bytes\n", (rw == READ) ? "READ" : "WRITE",
-+		    buflen);
++	trace_ata_eh_about_to_do(link, dev ? dev->devno : 0, action);
++
  	spin_lock_irqsave(ap->lock, flags);
  
- 	/* set the expansion bus in 16bit mode and restore
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 235fdbeb19ea..a807d2d43d70 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1489,51 +1489,38 @@ static inline int sata_srst_pmp(struct ata_link *link)
- 	return link->pmp;
- }
- 
--/*
-- * printk helpers
-- */
--__printf(3, 4)
--void ata_port_printk(const struct ata_port *ap, const char *level,
--		     const char *fmt, ...);
--__printf(3, 4)
--void ata_link_printk(const struct ata_link *link, const char *level,
--		     const char *fmt, ...);
--__printf(3, 4)
--void ata_dev_printk(const struct ata_device *dev, const char *level,
--		    const char *fmt, ...);
--
- #define ata_port_err(ap, fmt, ...)				\
--	ata_port_printk(ap, KERN_ERR, fmt, ##__VA_ARGS__)
-+	dev_err(&ap->tdev, fmt, ##__VA_ARGS__)
- #define ata_port_warn(ap, fmt, ...)				\
--	ata_port_printk(ap, KERN_WARNING, fmt, ##__VA_ARGS__)
-+	dev_warn(&ap->tdev, fmt, ##__VA_ARGS__)
- #define ata_port_notice(ap, fmt, ...)				\
--	ata_port_printk(ap, KERN_NOTICE, fmt, ##__VA_ARGS__)
-+	dev_notice(&ap->tdev, fmt, ##__VA_ARGS__)
- #define ata_port_info(ap, fmt, ...)				\
--	ata_port_printk(ap, KERN_INFO, fmt, ##__VA_ARGS__)
-+	dev_info(&ap->tdev, fmt, ##__VA_ARGS__)
- #define ata_port_dbg(ap, fmt, ...)				\
--	ata_port_printk(ap, KERN_DEBUG, fmt, ##__VA_ARGS__)
-+	dev_dbg(&ap->tdev, "%s: " fmt, __func__, ##__VA_ARGS__)
- 
- #define ata_link_err(link, fmt, ...)				\
--	ata_link_printk(link, KERN_ERR, fmt, ##__VA_ARGS__)
-+	dev_err(&link->tdev, fmt, ##__VA_ARGS__)
- #define ata_link_warn(link, fmt, ...)				\
--	ata_link_printk(link, KERN_WARNING, fmt, ##__VA_ARGS__)
-+	dev_warn(&link->tdev, fmt, ##__VA_ARGS__)
- #define ata_link_notice(link, fmt, ...)				\
--	ata_link_printk(link, KERN_NOTICE, fmt, ##__VA_ARGS__)
-+	dev_notice(&link->tdev, fmt, ##__VA_ARGS__)
- #define ata_link_info(link, fmt, ...)				\
--	ata_link_printk(link, KERN_INFO, fmt, ##__VA_ARGS__)
-+	dev_info(&link->tdev, fmt, ##__VA_ARGS__)
- #define ata_link_dbg(link, fmt, ...)				\
--	ata_link_printk(link, KERN_DEBUG, fmt, ##__VA_ARGS__)
-+	dev_dbg(&link->tdev, "%s: " fmt, __func__, ##__VA_ARGS__)
- 
- #define ata_dev_err(dev, fmt, ...)				\
--	ata_dev_printk(dev, KERN_ERR, fmt, ##__VA_ARGS__)
-+	dev_err(&dev->tdev, fmt, ##__VA_ARGS__)
- #define ata_dev_warn(dev, fmt, ...)				\
--	ata_dev_printk(dev, KERN_WARNING, fmt, ##__VA_ARGS__)
-+	dev_warn(&dev->tdev, fmt, ##__VA_ARGS__)
- #define ata_dev_notice(dev, fmt, ...)				\
--	ata_dev_printk(dev, KERN_NOTICE, fmt, ##__VA_ARGS__)
-+	dev_notice(&dev->tdev, fmt, ##__VA_ARGS__)
- #define ata_dev_info(dev, fmt, ...)				\
--	ata_dev_printk(dev, KERN_INFO, fmt, ##__VA_ARGS__)
-+	dev_info(&dev->tdev, fmt, ##__VA_ARGS__)
- #define ata_dev_dbg(dev, fmt, ...)				\
--	ata_dev_printk(dev, KERN_DEBUG, fmt, ##__VA_ARGS__)
-+	dev_dbg(&dev->tdev, "%s: " fmt, __func__, ##__VA_ARGS__)
- 
- void ata_print_version(const struct device *dev, const char *version);
- 
-@@ -2067,11 +2054,8 @@ static inline u8 ata_wait_idle(struct ata_port *ap)
+ 	ata_eh_clear_action(link, dev, ehi, action);
+@@ -1317,6 +1319,8 @@ void ata_eh_done(struct ata_link *link, struct ata_device *dev,
  {
- 	u8 status = ata_sff_busy_wait(ap, ATA_BUSY | ATA_DRQ, 1000);
+ 	struct ata_eh_context *ehc = &link->eh_context;
  
--#ifdef ATA_DEBUG
- 	if (status != 0xff && (status & (ATA_BUSY | ATA_DRQ)))
--		ata_port_printk(ap, KERN_DEBUG, "abnormal Status 0x%X\n",
--				status);
--#endif
-+		ata_port_dbg(ap, "abnormal Status 0x%X\n", status);
- 
- 	return status;
++	trace_ata_eh_done(link, dev ? dev->devno : 0, action);
++
+ 	ata_eh_clear_action(link, dev, &ehc->i, action);
  }
+ 
+diff --git a/include/trace/events/libata.h b/include/trace/events/libata.h
+index 06bc6756f1dc..7d48e804b889 100644
+--- a/include/trace/events/libata.h
++++ b/include/trace/events/libata.h
+@@ -457,6 +457,37 @@ TRACE_EVENT(ata_eh_link_autopsy_qc,
+ 		  __parse_eh_err_mask(__entry->eh_err_mask))
+ );
+ 
++DECLARE_EVENT_CLASS(ata_eh_action_template,
++
++	TP_PROTO(struct ata_link *link, unsigned int devno, unsigned int eh_action),
++
++	TP_ARGS(link, devno, eh_action),
++
++	TP_STRUCT__entry(
++		__field( unsigned int,	ata_port )
++		__field( unsigned int,	ata_dev	)
++		__field( unsigned int,	eh_action )
++	),
++
++	TP_fast_assign(
++		__entry->ata_port	= link->ap->print_id;
++		__entry->ata_dev	= link->pmp + devno;
++		__entry->eh_action	= eh_action;
++	),
++
++	TP_printk("ata_port=%u ata_dev=%u eh_action=%s",
++		  __entry->ata_port, __entry->ata_dev,
++		  __parse_eh_action(__entry->eh_action))
++);
++
++DEFINE_EVENT(ata_eh_action_template, ata_eh_about_to_do,
++	     TP_PROTO(struct ata_link *link, unsigned int devno, unsigned int eh_action),
++	     TP_ARGS(link, devno, eh_action));
++
++DEFINE_EVENT(ata_eh_action_template, ata_eh_done,
++	     TP_PROTO(struct ata_link *link, unsigned int devno, unsigned int eh_action),
++	     TP_ARGS(link, devno, eh_action));
++
+ DECLARE_EVENT_CLASS(ata_link_reset_begin_template,
+ 
+ 	TP_PROTO(struct ata_link *link, unsigned int *class, unsigned long deadline),
+@@ -537,6 +568,35 @@ DEFINE_EVENT(ata_link_reset_end_template, ata_slave_postreset,
+ 	     TP_PROTO(struct ata_link *link, unsigned int *class, int rc),
+ 	     TP_ARGS(link, class, rc));
+ 
++DECLARE_EVENT_CLASS(ata_port_eh_begin_template,
++
++	TP_PROTO(struct ata_port *ap),
++
++	TP_ARGS(ap),
++
++	TP_STRUCT__entry(
++		__field( unsigned int,	ata_port )
++	),
++
++	TP_fast_assign(
++		__entry->ata_port	= ap->print_id;
++	),
++
++	TP_printk("ata_port=%u", __entry->ata_port)
++);
++
++DEFINE_EVENT(ata_port_eh_begin_template, ata_std_sched_eh,
++	     TP_PROTO(struct ata_port *ap),
++	     TP_ARGS(ap));
++
++DEFINE_EVENT(ata_port_eh_begin_template, ata_port_freeze,
++	     TP_PROTO(struct ata_port *ap),
++	     TP_ARGS(ap));
++
++DEFINE_EVENT(ata_port_eh_begin_template, ata_port_thaw,
++	     TP_PROTO(struct ata_port *ap),
++	     TP_ARGS(ap));
++
+ DECLARE_EVENT_CLASS(ata_sff_hsm_template,
+ 
+ 	TP_PROTO(struct ata_queued_cmd *qc, unsigned char status),
 -- 
 2.29.2
 
