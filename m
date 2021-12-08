@@ -2,47 +2,47 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 937D5C4332F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3301C43219
 	for <linux-ide@archiver.kernel.org>; Wed,  8 Dec 2021 16:33:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237054AbhLHQhF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 8 Dec 2021 11:37:05 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:37746 "EHLO
+        id S237055AbhLHQhG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 8 Dec 2021 11:37:06 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:37726 "EHLO
         smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237056AbhLHQgv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Dec 2021 11:36:51 -0500
+        with ESMTP id S237050AbhLHQgp (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Dec 2021 11:36:45 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 450E81FE2D;
+        by smtp-out2.suse.de (Postfix) with ESMTP id 220591FE29;
         Wed,  8 Dec 2021 16:33:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1638981181; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Y3jmduD4DC/3XiJKiGVyNYXPQA3QqZdoEDrDwHgMgF0=;
-        b=nLl0ePf9PyOZ9ctN1w+sHinZj342Upi/r4sy94bM15pW7shje6VsX19axqbxnMHtWPNhAT
-        xkMa65qzS4tGa8Ep5KDeHgWeON6e2Wcluo/i0GV8DmZb6Yha94Cv7WVg3eeXM48dCMl4oj
-        vIDGG0fKf4VxCYplGEWD1/p2yKHzC4U=
+        bh=7ozM4m1eN82r1Gl4XnBm57r2Pu3KuGH497lEKHIcbP4=;
+        b=LlipJqMEt0/UZ88i2saApcsYnMIzIBTLweg57NrUnWwKqJmwlBaPMD90f1Sa1mEwqvpQZZ
+        qNjdUt6u6XFhTcMXfcYMfAHtAmSWGRW4nQr8XqLLBk6013Zgh56wgUIT18pVq07c7tU4lX
+        gIfgxy7NB8N0boVQJ8EfxvynSbbjD4E=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1638981181;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Y3jmduD4DC/3XiJKiGVyNYXPQA3QqZdoEDrDwHgMgF0=;
-        b=ehlS3i7h6HAR1IaXyY1nD9jzFRoamyvQ9CgjLpzK6illcregfvsNYwKoRwdu8aw0sBH9vm
-        FT3/hWrhNYXLUcDw==
+        bh=7ozM4m1eN82r1Gl4XnBm57r2Pu3KuGH497lEKHIcbP4=;
+        b=ujs3aFNUNqS79gvzLOvGnorruCS+jYhPGEKlXEQbPmbs1OQ/1Ymo/88tW59jXQEghOB8CH
+        SAs/19ivZsrAC4CA==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 42E1AA3BD1;
+        by relay2.suse.de (Postfix) with ESMTP id 1FF75A3BCA;
         Wed,  8 Dec 2021 16:33:01 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 3F60E5191FD5; Wed,  8 Dec 2021 17:33:01 +0100 (CET)
+        id 1D0DC5191FC9; Wed,  8 Dec 2021 17:33:01 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Damien LeMoal <damien.lemoal@wdc.com>
 Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 60/73] pata_it821x: convert blank printk() calls
-Date:   Wed,  8 Dec 2021 17:32:42 +0100
-Message-Id: <20211208163255.114660-61-hare@suse.de>
+Subject: [PATCH 54/73] pata_atp867x: convert blank printk() calls
+Date:   Wed,  8 Dec 2021 17:32:36 +0100
+Message-Id: <20211208163255.114660-55-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20211208163255.114660-1-hare@suse.de>
 References: <20211208163255.114660-1-hare@suse.de>
@@ -56,140 +56,138 @@ Convert blank printk() calls to structured logging.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/pata_it821x.c | 43 ++++++++++++++++++++++-----------------
- 1 file changed, 24 insertions(+), 19 deletions(-)
+ drivers/ata/pata_atp867x.c | 29 ++++++++++++-----------------
+ 1 file changed, 12 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/ata/pata_it821x.c b/drivers/ata/pata_it821x.c
-index 0e2265978a34..b77ef0046dbe 100644
---- a/drivers/ata/pata_it821x.c
-+++ b/drivers/ata/pata_it821x.c
-@@ -431,7 +431,8 @@ static unsigned int it821x_smart_qc_issue(struct ata_queued_cmd *qc)
- 		case ATA_CMD_SET_FEATURES:
- 			return ata_bmdma_qc_issue(qc);
- 	}
--	printk(KERN_DEBUG "it821x: can't process command 0x%02X\n", qc->tf.command);
-+	ata_dev_dbg(qc->dev, "it821x: can't process command 0x%02X\n",
-+		    qc->tf.command);
- 	return AC_ERR_DEV;
+diff --git a/drivers/ata/pata_atp867x.c b/drivers/ata/pata_atp867x.c
+index 2bc5fc81efe3..84dac8c69085 100644
+--- a/drivers/ata/pata_atp867x.c
++++ b/drivers/ata/pata_atp867x.c
+@@ -155,7 +155,7 @@ static int atp867x_get_active_clocks_shifted(struct ata_port *ap,
+ 	case 1 ... 6:
+ 		break;
+ 	default:
+-		printk(KERN_WARNING "ATP867X: active %dclk is invalid. "
++		ata_port_warn(ap, "ATP867X: active %dclk is invalid. "
+ 			"Using 12clk.\n", clk);
+ 		fallthrough;
+ 	case 9 ... 12:
+@@ -171,7 +171,8 @@ static int atp867x_get_active_clocks_shifted(struct ata_port *ap,
+ 	return clocks << ATP867X_IO_PIOSPD_ACTIVE_SHIFT;
  }
  
-@@ -507,12 +508,14 @@ static void it821x_dev_config(struct ata_device *adev)
- 
- 	if (strstr(model_num, "Integrated Technology Express")) {
- 		/* RAID mode */
--		ata_dev_info(adev, "%sRAID%d volume",
--			     adev->id[147] ? "Bootable " : "",
--			     adev->id[129]);
--		if (adev->id[129] != 1)
--			pr_cont("(%dK stripe)", adev->id[146]);
--		pr_cont("\n");
-+		if (adev->id[129] == 1)
-+			ata_dev_info(adev, "%sRAID%d volume\n",
-+				     adev->id[147] ? "Bootable " : "",
-+				     adev->id[129]);
-+		else
-+			ata_dev_info(adev, "%sRAID%d volume (%dK stripe)\n",
-+				     adev->id[147] ? "Bootable " : "",
-+				     adev->id[129], adev->id[146]);
- 	}
- 	/* This is a controller firmware triggered funny, don't
- 	   report the drive faulty! */
-@@ -593,6 +596,7 @@ static int it821x_check_atapi_dma(struct ata_queued_cmd *qc)
- 
- /**
-  *	it821x_display_disk	-	display disk setup
-+ *	@ap: ATA port
-  *	@n: Device number
-  *	@buf: Buffer block from firmware
-  *
-@@ -600,7 +604,7 @@ static int it821x_check_atapi_dma(struct ata_queued_cmd *qc)
-  *	by the firmware.
-  */
- 
--static void it821x_display_disk(int n, u8 *buf)
-+static void it821x_display_disk(struct ata_port *ap, int n, u8 *buf)
+-static int atp867x_get_recover_clocks_shifted(unsigned int clk)
++static int atp867x_get_recover_clocks_shifted(struct ata_port *ap,
++					      unsigned int clk)
  {
- 	unsigned char id[41];
- 	int mode = 0;
-@@ -633,13 +637,13 @@ static void it821x_display_disk(int n, u8 *buf)
- 	else
- 		strcpy(mbuf, "PIO");
- 	if (buf[52] == 4)
--		printk(KERN_INFO "%d: %-6s %-8s          %s %s\n",
-+		ata_port_info(ap, "%d: %-6s %-8s          %s %s\n",
- 				n, mbuf, types[buf[52]], id, cbl);
- 	else
--		printk(KERN_INFO "%d: %-6s %-8s Volume: %1d %s %s\n",
-+		ata_port_info(ap, "%d: %-6s %-8s Volume: %1d %s %s\n",
- 				n, mbuf, types[buf[52]], buf[53], id, cbl);
- 	if (buf[125] < 100)
--		printk(KERN_INFO "%d: Rebuilding: %d%%\n", n, buf[125]);
-+		ata_port_info(ap, "%d: Rebuilding: %d%%\n", n, buf[125]);
+ 	unsigned char clocks = clk;
+ 
+@@ -188,7 +189,7 @@ static int atp867x_get_recover_clocks_shifted(unsigned int clk)
+ 	case 15:
+ 		break;
+ 	default:
+-		printk(KERN_WARNING "ATP867X: recover %dclk is invalid. "
++		ata_port_warn(ap, "ATP867X: recover %dclk is invalid. "
+ 			"Using default 12clk.\n", clk);
+ 		fallthrough;
+ 	case 12:	/* default 12 clk */
+@@ -225,7 +226,7 @@ static void atp867x_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	iowrite8(b, dp->dma_mode);
+ 
+ 	b = atp867x_get_active_clocks_shifted(ap, t.active) |
+-	    atp867x_get_recover_clocks_shifted(t.recover);
++		atp867x_get_recover_clocks_shifted(ap, t.recover);
+ 
+ 	if (adev->devno & 1)
+ 		iowrite8(b, dp->slave_piospd);
+@@ -233,7 +234,7 @@ static void atp867x_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 		iowrite8(b, dp->mstr_piospd);
+ 
+ 	b = atp867x_get_active_clocks_shifted(ap, t.act8b) |
+-	    atp867x_get_recover_clocks_shifted(t.rec8b);
++		atp867x_get_recover_clocks_shifted(ap, t.rec8b);
+ 
+ 	iowrite8(b, dp->eightb_piospd);
  }
+@@ -270,7 +271,6 @@ static struct ata_port_operations atp867x_ops = {
+ };
  
- /**
-@@ -676,7 +680,7 @@ static u8 *it821x_firmware_command(struct ata_port *ap, u8 cmd, int len)
- 		status = ioread8(ap->ioaddr.status_addr);
- 		if (status & ATA_ERR) {
- 			kfree(buf);
--			printk(KERN_ERR "it821x_firmware_command: rejected\n");
-+			ata_port_err(ap, "%s: rejected\n", __func__);
- 			return NULL;
- 		}
- 		if (status & ATA_DRQ) {
-@@ -686,7 +690,7 @@ static u8 *it821x_firmware_command(struct ata_port *ap, u8 cmd, int len)
- 		usleep_range(500, 1000);
- 	}
- 	kfree(buf);
--	printk(KERN_ERR "it821x_firmware_command: timeout\n");
-+	ata_port_err(ap, "%s: timeout\n", __func__);
- 	return NULL;
- }
  
-@@ -709,13 +713,13 @@ static void it821x_probe_firmware(struct ata_port *ap)
- 	buf = it821x_firmware_command(ap, 0xFA, 512);
- 
- 	if (buf != NULL) {
--		printk(KERN_INFO "pata_it821x: Firmware %02X/%02X/%02X%02X\n",
-+		ata_port_info(ap, "pata_it821x: Firmware %02X/%02X/%02X%02X\n",
- 				buf[505],
- 				buf[506],
- 				buf[507],
- 				buf[508]);
- 		for (i = 0; i < 4; i++)
-- 			it821x_display_disk(i, buf + 128 * i);
-+			it821x_display_disk(ap, i, buf + 128 * i);
- 		kfree(buf);
+-#ifdef	ATP867X_DEBUG
+ static void atp867x_check_res(struct pci_dev *pdev)
+ {
+ 	int i;
+@@ -280,7 +280,7 @@ static void atp867x_check_res(struct pci_dev *pdev)
+ 	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+ 		start = pci_resource_start(pdev, i);
+ 		len   = pci_resource_len(pdev, i);
+-		printk(KERN_DEBUG "ATP867X: resource start:len=%lx:%lx\n",
++		dev_dbg(&pdev->dev, "ATP867X: resource start:len=%lx:%lx\n",
+ 			start, len);
  	}
  }
-@@ -771,7 +775,8 @@ static int it821x_port_start(struct ata_port *ap)
- 		itdev->timing10 = 1;
- 		/* Need to disable ATAPI DMA for this case */
- 		if (!itdev->smart)
--			printk(KERN_WARNING DRV_NAME": Revision 0x10, workarounds activated.\n");
-+			dev_warn(&pdev->dev,
-+				 "Revision 0x10, workarounds activated.\n");
+@@ -290,7 +290,7 @@ static void atp867x_check_ports(struct ata_port *ap, int port)
+ 	struct ata_ioports *ioaddr = &ap->ioaddr;
+ 	struct atp867x_priv *dp = ap->private_data;
+ 
+-	printk(KERN_DEBUG "ATP867X: port[%d] addresses\n"
++	ata_port_dbg(ap, "ATP867X: port[%d] addresses\n"
+ 		"  cmd_addr	=0x%llx, 0x%llx\n"
+ 		"  ctl_addr	=0x%llx, 0x%llx\n"
+ 		"  bmdma_addr	=0x%llx, 0x%llx\n"
+@@ -332,7 +332,6 @@ static void atp867x_check_ports(struct ata_port *ap, int port)
+ 		(unsigned long long)dp->eightb_piospd,
+ 		(unsigned long)dp->pci66mhz);
+ }
+-#endif
+ 
+ static int atp867x_set_priv(struct ata_port *ap)
+ {
+@@ -370,8 +369,7 @@ static void atp867x_fixup(struct ata_host *host)
+ 	if (v < 0x80) {
+ 		v = 0x80;
+ 		pci_write_config_byte(pdev, PCI_LATENCY_TIMER, v);
+-		printk(KERN_DEBUG "ATP867X: set latency timer of device %s"
+-			" to %d\n", pci_name(pdev), v);
++		dev_dbg(&pdev->dev, "ATP867X: set latency timer to %d\n", v);
  	}
  
- 	return 0;
-@@ -919,14 +924,14 @@ static int it821x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	} else {
- 		/* Force the card into bypass mode if so requested */
- 		if (it8212_noraid) {
--			printk(KERN_INFO DRV_NAME ": forcing bypass mode.\n");
-+			dev_info(&pdev->dev, "forcing bypass mode.\n");
- 			it821x_disable_raid(pdev);
- 		}
- 		pci_read_config_byte(pdev, 0x50, &conf);
- 		conf &= 1;
+ 	/*
+@@ -419,13 +417,11 @@ static int atp867x_ata_pci_sff_init_host(struct ata_host *host)
+ 		return rc;
+ 	host->iomap = pcim_iomap_table(pdev);
  
--		printk(KERN_INFO DRV_NAME": controller in %s mode.\n",
--								mode[conf]);
-+		dev_info(&pdev->dev, "controller in %s mode.\n", mode[conf]);
+-#ifdef	ATP867X_DEBUG
+ 	atp867x_check_res(pdev);
+ 
+ 	for (i = 0; i < PCI_STD_NUM_BARS; i++)
+-		printk(KERN_DEBUG "ATP867X: iomap[%d]=0x%llx\n", i,
++		dev_dbg(gdev, "ATP867X: iomap[%d]=0x%llx\n", i,
+ 			(unsigned long long)(host->iomap[i]));
+-#endif
+ 
+ 	/*
+ 	 * request, iomap BARs and init port addresses accordingly
+@@ -444,9 +440,8 @@ static int atp867x_ata_pci_sff_init_host(struct ata_host *host)
+ 		if (rc)
+ 			return rc;
+ 
+-#ifdef	ATP867X_DEBUG
+ 		atp867x_check_ports(ap, i);
+-#endif
 +
- 		if (conf == 0)
- 			ppi[0] = &info_passthru;
- 		else
+ 		ata_port_desc(ap, "cmd 0x%lx ctl 0x%lx",
+ 			(unsigned long)ioaddr->cmd_addr,
+ 			(unsigned long)ioaddr->ctl_addr);
+@@ -486,7 +481,7 @@ static int atp867x_init_one(struct pci_dev *pdev,
+ 	if (rc)
+ 		return rc;
+ 
+-	printk(KERN_INFO "ATP867X: ATP867 ATA UDMA133 controller (rev %02X)",
++	dev_info(&pdev->dev, "ATP867X: ATP867 ATA UDMA133 controller (rev %02X)",
+ 		pdev->device);
+ 
+ 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, ATP867X_NUM_PORTS);
 -- 
 2.29.2
 
