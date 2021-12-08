@@ -2,47 +2,47 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 849B3C43217
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01F8DC433FE
 	for <linux-ide@archiver.kernel.org>; Wed,  8 Dec 2021 16:33:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237027AbhLHQg4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S237036AbhLHQg4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Wed, 8 Dec 2021 11:36:56 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:37884 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237036AbhLHQgl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Dec 2021 11:36:41 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:40654 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236983AbhLHQgh (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Dec 2021 11:36:37 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id AE9821FE19;
-        Wed,  8 Dec 2021 16:33:00 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTP id 2E24221B3F;
+        Wed,  8 Dec 2021 16:33:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1638981180; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1638981181; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=blHxTHASdShcDS68QjmW2iURnMqPfvw+I17evoNK+xg=;
-        b=JgQZSc2p2NrPAwLbU9aFqvymZsLZJCdAqTXVQeeQyfBeCdgiSdRwsu2O+lrAgTcEc/wOev
-        r+mGn1FQGvvYgjevraPM3MXb8neCKUDUmyFkAfExEPPOg0a2AQYZeIfcPtKkh9sCoTbibh
-        tqhJdUbRSQdpw14IpW3t7uXrWfS4JyQ=
+        bh=ahu3y33lLuAZvY+BNhUuCSu8/afzKK+S7NkLAoqSCTw=;
+        b=acc/tqZlu38ZEM1kH8rOxza4D3noiR6fB3980R79+F1VL+0SDv3YW/D1WmsbH3FnIM0/jP
+        SNGFtGhUUvJuY3rRKHSa5E33vCIATIt6yy5EXvUteSzCnqdY0zGnG63wkoPHYmGApxMZ2T
+        QBAK/wXyxJuMcNngsm/kghNXCJntfXc=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1638981180;
+        s=susede2_ed25519; t=1638981181;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=blHxTHASdShcDS68QjmW2iURnMqPfvw+I17evoNK+xg=;
-        b=xpBuLBYeebO3RXtZWOZ+KEPaVR45AlepwbpOl4svFwsgC80CN1amKKJA6pHZyxGZi1fVE7
-        3jgmL3HCKrtS/kCA==
+        bh=ahu3y33lLuAZvY+BNhUuCSu8/afzKK+S7NkLAoqSCTw=;
+        b=4XSJfbTD6lJjPE6S0sfZnZua3uBvsDakNHL7bRXDxFwdtu63m+o+UyF3gHXuPlKud2CPzv
+        Ol5ImX7mAaWNP3Bg==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id ABA6EA3BB6;
-        Wed,  8 Dec 2021 16:33:00 +0000 (UTC)
+        by relay2.suse.de (Postfix) with ESMTP id 2B534A3BCC;
+        Wed,  8 Dec 2021 16:33:01 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id A85D75191FA5; Wed,  8 Dec 2021 17:33:00 +0100 (CET)
+        id 2834B5191FCD; Wed,  8 Dec 2021 17:33:01 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Damien LeMoal <damien.lemoal@wdc.com>
 Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 36/73] sata_qstor: Drop pointless VPRINTK() calls
-Date:   Wed,  8 Dec 2021 17:32:18 +0100
-Message-Id: <20211208163255.114660-37-hare@suse.de>
+Subject: [PATCH 56/73] pata_cmd64x: convert blank printk() calls
+Date:   Wed,  8 Dec 2021 17:32:38 +0100
+Message-Id: <20211208163255.114660-57-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20211208163255.114660-1-hare@suse.de>
 References: <20211208163255.114660-1-hare@suse.de>
@@ -52,58 +52,35 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+Convert blank printk() calls to structured logging.
+
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/sata_qstor.c | 11 -----------
- 1 file changed, 11 deletions(-)
+ drivers/ata/pata_cmd64x.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
-index 2b4ccdca71c6..db62c07f820f 100644
---- a/drivers/ata/sata_qstor.c
-+++ b/drivers/ata/sata_qstor.c
-@@ -252,9 +252,6 @@ static unsigned int qs_fill_sg(struct ata_queued_cmd *qc)
- 		len = sg_dma_len(sg);
- 		*(__le32 *)prd = cpu_to_le32(len);
- 		prd += sizeof(u64);
--
--		VPRINTK("PRD[%u] = (0x%llX, 0x%X)\n", si,
--					(unsigned long long)addr, len);
+diff --git a/drivers/ata/pata_cmd64x.c b/drivers/ata/pata_cmd64x.c
+index 1d74d89b5bed..5baa4a7819c1 100644
+--- a/drivers/ata/pata_cmd64x.c
++++ b/drivers/ata/pata_cmd64x.c
+@@ -116,7 +116,7 @@ static void cmd64x_set_timing(struct ata_port *ap, struct ata_device *adev, u8 m
+ 	/* ata_timing_compute is smart and will produce timings for MWDMA
+ 	   that don't violate the drives PIO capabilities. */
+ 	if (ata_timing_compute(adev, mode, &t, T, 0) < 0) {
+-		printk(KERN_ERR DRV_NAME ": mode computation failed.\n");
++		ata_dev_err(adev, DRV_NAME ": mode computation failed.\n");
+ 		return;
+ 	}
+ 	if (ap->port_no) {
+@@ -130,7 +130,7 @@ static void cmd64x_set_timing(struct ata_port *ap, struct ata_device *adev, u8 m
+ 		}
  	}
  
- 	return si;
-@@ -268,8 +265,6 @@ static enum ata_completion_errors qs_qc_prep(struct ata_queued_cmd *qc)
- 	u64 addr;
- 	unsigned int nelem;
- 
--	VPRINTK("ENTER\n");
--
- 	qs_enter_reg_mode(qc->ap);
- 	if (qc->tf.protocol != ATA_PROT_DMA)
- 		return AC_ERR_OK;
-@@ -304,8 +299,6 @@ static inline void qs_packet_start(struct ata_queued_cmd *qc)
- 	struct ata_port *ap = qc->ap;
- 	u8 __iomem *chan = qs_mmio_base(ap->host) + (ap->port_no * 0x4000);
- 
--	VPRINTK("ENTER, ap %p\n", ap);
--
- 	writeb(QS_CTR0_CLER, chan + QS_CCT_CTR0);
- 	wmb();                             /* flush PRDs and pkt to memory */
- 	writel(QS_CCF_RUN_PKT, chan + QS_CCT_CFF);
-@@ -435,14 +428,10 @@ static irqreturn_t qs_intr(int irq, void *dev_instance)
- 	unsigned int handled = 0;
- 	unsigned long flags;
- 
--	VPRINTK("ENTER\n");
--
- 	spin_lock_irqsave(&host->lock, flags);
- 	handled  = qs_intr_pkt(host) | qs_intr_mmio(host);
- 	spin_unlock_irqrestore(&host->lock, flags);
- 
--	VPRINTK("EXIT\n");
--
- 	return IRQ_RETVAL(handled);
- }
- 
+-	printk(KERN_DEBUG DRV_NAME ": active %d recovery %d setup %d.\n",
++	ata_dev_dbg(adev, DRV_NAME ": active %d recovery %d setup %d.\n",
+ 		t.active, t.recover, t.setup);
+ 	if (t.recover > 16) {
+ 		t.active += t.recover - 16;
 -- 
 2.29.2
 
