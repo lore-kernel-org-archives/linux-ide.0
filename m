@@ -2,47 +2,47 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3301C43219
-	for <linux-ide@archiver.kernel.org>; Wed,  8 Dec 2021 16:33:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 125F4C433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  8 Dec 2021 16:33:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237055AbhLHQhG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 8 Dec 2021 11:37:06 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:37726 "EHLO
+        id S237050AbhLHQhH (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 8 Dec 2021 11:37:07 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:37896 "EHLO
         smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237050AbhLHQgp (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Dec 2021 11:36:45 -0500
+        with ESMTP id S237045AbhLHQgo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Dec 2021 11:36:44 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 220591FE29;
-        Wed,  8 Dec 2021 16:33:01 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTP id CCDFA1FE1E;
+        Wed,  8 Dec 2021 16:33:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1638981181; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1638981180; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=7ozM4m1eN82r1Gl4XnBm57r2Pu3KuGH497lEKHIcbP4=;
-        b=LlipJqMEt0/UZ88i2saApcsYnMIzIBTLweg57NrUnWwKqJmwlBaPMD90f1Sa1mEwqvpQZZ
-        qNjdUt6u6XFhTcMXfcYMfAHtAmSWGRW4nQr8XqLLBk6013Zgh56wgUIT18pVq07c7tU4lX
-        gIfgxy7NB8N0boVQJ8EfxvynSbbjD4E=
+        bh=bZZgwWpafep0FIXycq933a+17St60P8bT0IURqv4l0M=;
+        b=IL0lRxImoLnmwmd5jsVXeN2y9PrajH9Bn902JKxNxD5LdTsOpdDHugV2y7m+nlUXi89ELe
+        9ERB1OOFZuKjhpcF2KmSZO+Bf2sLxDrSvdNLxWcUWwvRNvY1PTT3nTMWI1oSv3f/P4iM7s
+        as4hj2vjAkXzf5l1YxYO75ZGIKs8d4w=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1638981181;
+        s=susede2_ed25519; t=1638981180;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=7ozM4m1eN82r1Gl4XnBm57r2Pu3KuGH497lEKHIcbP4=;
-        b=ujs3aFNUNqS79gvzLOvGnorruCS+jYhPGEKlXEQbPmbs1OQ/1Ymo/88tW59jXQEghOB8CH
-        SAs/19ivZsrAC4CA==
+        bh=bZZgwWpafep0FIXycq933a+17St60P8bT0IURqv4l0M=;
+        b=+weN6d4ihQiRmYmCaxlxwSFpihn/I608TrmTK5wvS0O4K57JeSWAkIYro4WmLiZN4XUYQp
+        V5EHq7x4YjAM9nBA==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 1FF75A3BCA;
-        Wed,  8 Dec 2021 16:33:01 +0000 (UTC)
+        by relay2.suse.de (Postfix) with ESMTP id C8683A3BBB;
+        Wed,  8 Dec 2021 16:33:00 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 1D0DC5191FC9; Wed,  8 Dec 2021 17:33:01 +0100 (CET)
+        id C4A275191FAF; Wed,  8 Dec 2021 17:33:00 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Damien LeMoal <damien.lemoal@wdc.com>
 Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 54/73] pata_atp867x: convert blank printk() calls
-Date:   Wed,  8 Dec 2021 17:32:36 +0100
-Message-Id: <20211208163255.114660-55-hare@suse.de>
+Subject: [PATCH 41/73] sata_fsl: convert VPRINTK() calls to ata_port_dbg()
+Date:   Wed,  8 Dec 2021 17:32:23 +0100
+Message-Id: <20211208163255.114660-42-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20211208163255.114660-1-hare@suse.de>
 References: <20211208163255.114660-1-hare@suse.de>
@@ -52,142 +52,256 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Convert blank printk() calls to structured logging.
-
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/pata_atp867x.c | 29 ++++++++++++-----------------
- 1 file changed, 12 insertions(+), 17 deletions(-)
+ drivers/ata/sata_fsl.c | 74 +++++++++++++++++-------------------------
+ 1 file changed, 29 insertions(+), 45 deletions(-)
 
-diff --git a/drivers/ata/pata_atp867x.c b/drivers/ata/pata_atp867x.c
-index 2bc5fc81efe3..84dac8c69085 100644
---- a/drivers/ata/pata_atp867x.c
-+++ b/drivers/ata/pata_atp867x.c
-@@ -155,7 +155,7 @@ static int atp867x_get_active_clocks_shifted(struct ata_port *ap,
- 	case 1 ... 6:
- 		break;
- 	default:
--		printk(KERN_WARNING "ATP867X: active %dclk is invalid. "
-+		ata_port_warn(ap, "ATP867X: active %dclk is invalid. "
- 			"Using 12clk.\n", clk);
- 		fallthrough;
- 	case 9 ... 12:
-@@ -171,7 +171,8 @@ static int atp867x_get_active_clocks_shifted(struct ata_port *ap,
- 	return clocks << ATP867X_IO_PIOSPD_ACTIVE_SHIFT;
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index 9a371dd593a7..548b44baecc8 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -404,7 +404,8 @@ static inline unsigned int sata_fsl_tag(struct ata_port *ap,
+ 	return tag;
  }
  
--static int atp867x_get_recover_clocks_shifted(unsigned int clk)
-+static int atp867x_get_recover_clocks_shifted(struct ata_port *ap,
-+					      unsigned int clk)
- {
- 	unsigned char clocks = clk;
+-static void sata_fsl_setup_cmd_hdr_entry(struct sata_fsl_port_priv *pp,
++static void sata_fsl_setup_cmd_hdr_entry(struct ata_port *ap,
++					 struct sata_fsl_port_priv *pp,
+ 					 unsigned int tag, u32 desc_info,
+ 					 u32 data_xfer_len, u8 num_prde,
+ 					 u8 fis_len)
+@@ -422,7 +423,7 @@ static void sata_fsl_setup_cmd_hdr_entry(struct sata_fsl_port_priv *pp,
+ 	pp->cmdslot[tag].ttl = cpu_to_le32(data_xfer_len & ~0x03);
+ 	pp->cmdslot[tag].desc_info = cpu_to_le32(desc_info | (tag & 0x1F));
  
-@@ -188,7 +189,7 @@ static int atp867x_get_recover_clocks_shifted(unsigned int clk)
- 	case 15:
- 		break;
- 	default:
--		printk(KERN_WARNING "ATP867X: recover %dclk is invalid. "
-+		ata_port_warn(ap, "ATP867X: recover %dclk is invalid. "
- 			"Using default 12clk.\n", clk);
- 		fallthrough;
- 	case 12:	/* default 12 clk */
-@@ -225,7 +226,7 @@ static void atp867x_set_piomode(struct ata_port *ap, struct ata_device *adev)
- 	iowrite8(b, dp->dma_mode);
+-	VPRINTK("cda=0x%x, prde_fis_len=0x%x, ttl=0x%x, di=0x%x\n",
++	ata_port_dbg(ap, "cda=0x%x, prde_fis_len=0x%x, ttl=0x%x, di=0x%x\n",
+ 		pp->cmdslot[tag].cda,
+ 		pp->cmdslot[tag].prde_fis_len,
+ 		pp->cmdslot[tag].ttl, pp->cmdslot[tag].desc_info);
+@@ -448,8 +449,6 @@ static unsigned int sata_fsl_fill_sg(struct ata_queued_cmd *qc, void *cmd_desc,
+ 	dma_addr_t indirect_ext_segment_paddr;
+ 	unsigned int si;
  
- 	b = atp867x_get_active_clocks_shifted(ap, t.active) |
--	    atp867x_get_recover_clocks_shifted(t.recover);
-+		atp867x_get_recover_clocks_shifted(ap, t.recover);
+-	VPRINTK("SATA FSL : cd = 0x%p, prd = 0x%p\n", cmd_desc, prd);
+-
+ 	indirect_ext_segment_paddr = cmd_desc_paddr +
+ 	    SATA_FSL_CMD_DESC_OFFSET_TO_PRDT + SATA_FSL_MAX_PRD_DIRECT * 16;
  
- 	if (adev->devno & 1)
- 		iowrite8(b, dp->slave_piospd);
-@@ -233,7 +234,7 @@ static void atp867x_set_piomode(struct ata_port *ap, struct ata_device *adev)
- 		iowrite8(b, dp->mstr_piospd);
+@@ -457,9 +456,6 @@ static unsigned int sata_fsl_fill_sg(struct ata_queued_cmd *qc, void *cmd_desc,
+ 		dma_addr_t sg_addr = sg_dma_address(sg);
+ 		u32 sg_len = sg_dma_len(sg);
  
- 	b = atp867x_get_active_clocks_shifted(ap, t.act8b) |
--	    atp867x_get_recover_clocks_shifted(t.rec8b);
-+		atp867x_get_recover_clocks_shifted(ap, t.rec8b);
+-		VPRINTK("SATA FSL : fill_sg, sg_addr = 0x%llx, sg_len = %d\n",
+-			(unsigned long long)sg_addr, sg_len);
+-
+ 		/* warn if each s/g element is not dword aligned */
+ 		if (unlikely(sg_addr & 0x03))
+ 			ata_port_err(qc->ap, "s/g addr unaligned : 0x%llx\n",
+@@ -470,7 +466,6 @@ static unsigned int sata_fsl_fill_sg(struct ata_queued_cmd *qc, void *cmd_desc,
  
- 	iowrite8(b, dp->eightb_piospd);
- }
-@@ -270,7 +271,6 @@ static struct ata_port_operations atp867x_ops = {
- };
+ 		if (num_prde == (SATA_FSL_MAX_PRD_DIRECT - 1) &&
+ 		    sg_next(sg) != NULL) {
+-			VPRINTK("setting indirect prde\n");
+ 			prd_ptr_to_indirect_ext = prd;
+ 			prd->dba = cpu_to_le32(indirect_ext_segment_paddr);
+ 			indirect_ext_segment_sz = 0;
+@@ -482,9 +477,6 @@ static unsigned int sata_fsl_fill_sg(struct ata_queued_cmd *qc, void *cmd_desc,
+ 		prd->dba = cpu_to_le32(sg_addr);
+ 		prd->ddc_and_ext = cpu_to_le32(data_snoop | (sg_len & ~0x03));
  
+-		VPRINTK("sg_fill, ttl=%d, dba=0x%x, ddc=0x%x\n",
+-			ttl_dwords, prd->dba, prd->ddc_and_ext);
+-
+ 		++num_prde;
+ 		++prd;
+ 		if (prd_ptr_to_indirect_ext)
+@@ -521,14 +513,6 @@ static enum ata_completion_errors sata_fsl_qc_prep(struct ata_queued_cmd *qc)
  
--#ifdef	ATP867X_DEBUG
- static void atp867x_check_res(struct pci_dev *pdev)
- {
- 	int i;
-@@ -280,7 +280,7 @@ static void atp867x_check_res(struct pci_dev *pdev)
- 	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
- 		start = pci_resource_start(pdev, i);
- 		len   = pci_resource_len(pdev, i);
--		printk(KERN_DEBUG "ATP867X: resource start:len=%lx:%lx\n",
-+		dev_dbg(&pdev->dev, "ATP867X: resource start:len=%lx:%lx\n",
- 			start, len);
+ 	ata_tf_to_fis(&qc->tf, qc->dev->link->pmp, 1, (u8 *) &cd->cfis);
+ 
+-	VPRINTK("Dumping cfis : 0x%x, 0x%x, 0x%x\n",
+-		cd->cfis[0], cd->cfis[1], cd->cfis[2]);
+-
+-	if (qc->tf.protocol == ATA_PROT_NCQ) {
+-		VPRINTK("FPDMA xfer,Sctor cnt[0:7],[8:15] = %d,%d\n",
+-			cd->cfis[3], cd->cfis[11]);
+-	}
+-
+ 	/* setup "ACMD - atapi command" in cmd. desc. if this is ATAPI cmd */
+ 	if (ata_is_atapi(qc->tf.protocol)) {
+ 		desc_info |= ATAPI_CMD;
+@@ -544,10 +528,10 @@ static enum ata_completion_errors sata_fsl_qc_prep(struct ata_queued_cmd *qc)
+ 	if (qc->tf.protocol == ATA_PROT_NCQ)
+ 		desc_info |= FPDMA_QUEUED_CMD;
+ 
+-	sata_fsl_setup_cmd_hdr_entry(pp, tag, desc_info, ttl_dwords,
++	sata_fsl_setup_cmd_hdr_entry(ap, pp, tag, desc_info, ttl_dwords,
+ 				     num_prde, 5);
+ 
+-	VPRINTK("SATA FSL : xx_qc_prep, di = 0x%x, ttl = %d, num_prde = %d\n",
++	ata_port_dbg(ap, "SATA FSL : di = 0x%x, ttl = %d, num_prde = %d\n",
+ 		desc_info, ttl_dwords, num_prde);
+ 
+ 	return AC_ERR_OK;
+@@ -560,7 +544,7 @@ static unsigned int sata_fsl_qc_issue(struct ata_queued_cmd *qc)
+ 	void __iomem *hcr_base = host_priv->hcr_base;
+ 	unsigned int tag = sata_fsl_tag(ap, qc->hw_tag, hcr_base);
+ 
+-	VPRINTK("xx_qc_issue called,CQ=0x%x,CA=0x%x,CE=0x%x,CC=0x%x\n",
++	ata_port_dbg(ap, "CQ=0x%x,CA=0x%x,CE=0x%x,CC=0x%x\n",
+ 		ioread32(CQ + hcr_base),
+ 		ioread32(CA + hcr_base),
+ 		ioread32(CE + hcr_base), ioread32(CC + hcr_base));
+@@ -570,10 +554,10 @@ static unsigned int sata_fsl_qc_issue(struct ata_queued_cmd *qc)
+ 	/* Simply queue command to the controller/device */
+ 	iowrite32(1 << tag, CQ + hcr_base);
+ 
+-	VPRINTK("xx_qc_issue called, tag=%d, CQ=0x%x, CA=0x%x\n",
++	ata_port_dbg(ap, "tag=%d, CQ=0x%x, CA=0x%x\n",
+ 		tag, ioread32(CQ + hcr_base), ioread32(CA + hcr_base));
+ 
+-	VPRINTK("CE=0x%x, DE=0x%x, CC=0x%x, CmdStat = 0x%x\n",
++	ata_port_dbg(ap, "CE=0x%x, DE=0x%x, CC=0x%x, CmdStat = 0x%x\n",
+ 		ioread32(CE + hcr_base),
+ 		ioread32(DE + hcr_base),
+ 		ioread32(CC + hcr_base),
+@@ -614,7 +598,7 @@ static int sata_fsl_scr_write(struct ata_link *link,
+ 		return -EINVAL;
  	}
- }
-@@ -290,7 +290,7 @@ static void atp867x_check_ports(struct ata_port *ap, int port)
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
- 	struct atp867x_priv *dp = ap->private_data;
  
--	printk(KERN_DEBUG "ATP867X: port[%d] addresses\n"
-+	ata_port_dbg(ap, "ATP867X: port[%d] addresses\n"
- 		"  cmd_addr	=0x%llx, 0x%llx\n"
- 		"  ctl_addr	=0x%llx, 0x%llx\n"
- 		"  bmdma_addr	=0x%llx, 0x%llx\n"
-@@ -332,7 +332,6 @@ static void atp867x_check_ports(struct ata_port *ap, int port)
- 		(unsigned long long)dp->eightb_piospd,
- 		(unsigned long)dp->pci66mhz);
- }
--#endif
+-	VPRINTK("xx_scr_write, reg_in = %d\n", sc_reg);
++	ata_link_dbg(link, "reg_in = %d\n", sc_reg);
  
- static int atp867x_set_priv(struct ata_port *ap)
- {
-@@ -370,8 +369,7 @@ static void atp867x_fixup(struct ata_host *host)
- 	if (v < 0x80) {
- 		v = 0x80;
- 		pci_write_config_byte(pdev, PCI_LATENCY_TIMER, v);
--		printk(KERN_DEBUG "ATP867X: set latency timer of device %s"
--			" to %d\n", pci_name(pdev), v);
-+		dev_dbg(&pdev->dev, "ATP867X: set latency timer to %d\n", v);
+ 	iowrite32(val, ssr_base + (sc_reg * 4));
+ 	return 0;
+@@ -638,7 +622,7 @@ static int sata_fsl_scr_read(struct ata_link *link,
+ 		return -EINVAL;
  	}
  
- 	/*
-@@ -419,13 +417,11 @@ static int atp867x_ata_pci_sff_init_host(struct ata_host *host)
- 		return rc;
- 	host->iomap = pcim_iomap_table(pdev);
+-	VPRINTK("xx_scr_read, reg_in = %d\n", sc_reg);
++	ata_link_dbg(link, "reg_in = %d\n", sc_reg);
  
--#ifdef	ATP867X_DEBUG
- 	atp867x_check_res(pdev);
+ 	*val = ioread32(ssr_base + (sc_reg * 4));
+ 	return 0;
+@@ -650,18 +634,18 @@ static void sata_fsl_freeze(struct ata_port *ap)
+ 	void __iomem *hcr_base = host_priv->hcr_base;
+ 	u32 temp;
  
- 	for (i = 0; i < PCI_STD_NUM_BARS; i++)
--		printk(KERN_DEBUG "ATP867X: iomap[%d]=0x%llx\n", i,
-+		dev_dbg(gdev, "ATP867X: iomap[%d]=0x%llx\n", i,
- 			(unsigned long long)(host->iomap[i]));
--#endif
+-	VPRINTK("xx_freeze, CQ=0x%x, CA=0x%x, CE=0x%x, DE=0x%x\n",
++	ata_port_dbg(ap, "CQ=0x%x, CA=0x%x, CE=0x%x, DE=0x%x\n",
+ 		ioread32(CQ + hcr_base),
+ 		ioread32(CA + hcr_base),
+ 		ioread32(CE + hcr_base), ioread32(DE + hcr_base));
+-	VPRINTK("CmdStat = 0x%x\n",
++	ata_port_dbg(ap, "CmdStat = 0x%x\n",
+ 		ioread32(host_priv->csr_base + COMMANDSTAT));
  
- 	/*
- 	 * request, iomap BARs and init port addresses accordingly
-@@ -444,9 +440,8 @@ static int atp867x_ata_pci_sff_init_host(struct ata_host *host)
- 		if (rc)
- 			return rc;
+ 	/* disable interrupts on the controller/port */
+ 	temp = ioread32(hcr_base + HCONTROL);
+ 	iowrite32((temp & ~0x3F), hcr_base + HCONTROL);
  
--#ifdef	ATP867X_DEBUG
- 		atp867x_check_ports(ap, i);
--#endif
-+
- 		ata_port_desc(ap, "cmd 0x%lx ctl 0x%lx",
- 			(unsigned long)ioaddr->cmd_addr,
- 			(unsigned long)ioaddr->ctl_addr);
-@@ -486,7 +481,7 @@ static int atp867x_init_one(struct pci_dev *pdev,
- 	if (rc)
- 		return rc;
+-	VPRINTK("in xx_freeze : HControl = 0x%x, HStatus = 0x%x\n",
++	ata_port_dbg(ap, "HControl = 0x%x, HStatus = 0x%x\n",
+ 		ioread32(hcr_base + HCONTROL), ioread32(hcr_base + HSTATUS));
+ }
  
--	printk(KERN_INFO "ATP867X: ATP867 ATA UDMA133 controller (rev %02X)",
-+	dev_info(&pdev->dev, "ATP867X: ATP867 ATA UDMA133 controller (rev %02X)",
- 		pdev->device);
+@@ -674,7 +658,7 @@ static void sata_fsl_thaw(struct ata_port *ap)
+ 	/* ack. any pending IRQs for this controller/port */
+ 	temp = ioread32(hcr_base + HSTATUS);
  
- 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, ATP867X_NUM_PORTS);
+-	VPRINTK("xx_thaw, pending IRQs = 0x%x\n", (temp & 0x3F));
++	ata_port_dbg(ap, "pending IRQs = 0x%x\n", (temp & 0x3F));
+ 
+ 	if (temp & 0x3F)
+ 		iowrite32((temp & 0x3F), hcr_base + HSTATUS);
+@@ -683,7 +667,7 @@ static void sata_fsl_thaw(struct ata_port *ap)
+ 	temp = ioread32(hcr_base + HCONTROL);
+ 	iowrite32((temp | DEFAULT_PORT_IRQ_ENABLE_MASK), hcr_base + HCONTROL);
+ 
+-	VPRINTK("xx_thaw : HControl = 0x%x, HStatus = 0x%x\n",
++	ata_port_dbg(ap, "HControl = 0x%x, HStatus = 0x%x\n",
+ 		ioread32(hcr_base + HCONTROL), ioread32(hcr_base + HSTATUS));
+ }
+ 
+@@ -745,7 +729,7 @@ static int sata_fsl_port_start(struct ata_port *ap)
+ 
+ 	ap->private_data = pp;
+ 
+-	VPRINTK("CHBA = 0x%x, cmdentry_phys = 0x%x\n",
++	ata_port_dbg(ap, "CHBA = 0x%x, cmdentry_phys = 0x%x\n",
+ 		pp->cmdslot_paddr, pp->cmdentry_paddr);
+ 
+ 	/* Now, update the CHBA register in host controller cmd register set */
+@@ -762,9 +746,9 @@ static int sata_fsl_port_start(struct ata_port *ap)
+ 	temp = ioread32(hcr_base + HCONTROL);
+ 	iowrite32((temp | HCONTROL_ONLINE_PHY_RST), hcr_base + HCONTROL);
+ 
+-	VPRINTK("HStatus = 0x%x\n", ioread32(hcr_base + HSTATUS));
+-	VPRINTK("HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
+-	VPRINTK("CHBA  = 0x%x\n", ioread32(hcr_base + CHBA));
++	ata_port_dbg(ap, "HStatus = 0x%x\n", ioread32(hcr_base + HSTATUS));
++	ata_port_dbg(ap, "HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
++	ata_port_dbg(ap, "CHBA  = 0x%x\n", ioread32(hcr_base + CHBA));
+ 
+ 	return 0;
+ }
+@@ -804,9 +788,8 @@ static unsigned int sata_fsl_dev_classify(struct ata_port *ap)
+ 
+ 	temp = ioread32(hcr_base + SIGNATURE);
+ 
+-	VPRINTK("raw sig = 0x%x\n", temp);
+-	VPRINTK("HStatus = 0x%x\n", ioread32(hcr_base + HSTATUS));
+-	VPRINTK("HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
++	ata_port_dbg(ap, "HStatus = 0x%x\n", ioread32(hcr_base + HSTATUS));
++	ata_port_dbg(ap, "HControl = 0x%x\n", ioread32(hcr_base + HCONTROL));
+ 
+ 	tf.lbah = (temp >> 24) & 0xff;
+ 	tf.lbam = (temp >> 16) & 0xff;
+@@ -959,7 +942,7 @@ static int sata_fsl_softreset(struct ata_link *link, unsigned int *class,
+ 	cfis = (u8 *) &pp->cmdentry->cfis;
+ 
+ 	/* device reset/SRST is a control register update FIS, uses tag0 */
+-	sata_fsl_setup_cmd_hdr_entry(pp, 0,
++	sata_fsl_setup_cmd_hdr_entry(ap, pp, 0,
+ 		SRST_CMD | CMD_DESC_RES | CMD_DESC_SNOOP_ENABLE, 0, 0, 5);
+ 
+ 	tf.ctl |= ATA_SRST;	/* setup SRST bit in taskfile control reg */
+@@ -1009,8 +992,9 @@ static int sata_fsl_softreset(struct ata_link *link, unsigned int *class,
+ 	 * using ATA signature D2H register FIS to the host controller.
+ 	 */
+ 
+-	sata_fsl_setup_cmd_hdr_entry(pp, 0, CMD_DESC_RES | CMD_DESC_SNOOP_ENABLE,
+-				      0, 0, 5);
++	sata_fsl_setup_cmd_hdr_entry(ap, pp, 0,
++				     CMD_DESC_RES | CMD_DESC_SNOOP_ENABLE,
++				     0, 0, 5);
+ 
+ 	tf.ctl &= ~ATA_SRST;	/* 2nd H2D Ctl. register FIS */
+ 	ata_tf_to_fis(&tf, pmp, 0, cfis);
+@@ -1040,8 +1024,8 @@ static int sata_fsl_softreset(struct ata_link *link, unsigned int *class,
+ 
+ 		*class = sata_fsl_dev_classify(ap);
+ 
+-		VPRINTK("ccreg = 0x%x\n", ioread32(hcr_base + CC));
+-		VPRINTK("cereg = 0x%x\n", ioread32(hcr_base + CE));
++		ata_port_dbg(ap, "ccreg = 0x%x\n", ioread32(hcr_base + CC));
++		ata_port_dbg(ap, "cereg = 0x%x\n", ioread32(hcr_base + CE));
+ 	}
+ 
+ 	return 0;
+@@ -1246,8 +1230,8 @@ static void sata_fsl_host_intr(struct ata_port *ap)
+ 		return;
+ 	}
+ 
+-	VPRINTK("Status of all queues :\n");
+-	VPRINTK("done_mask/CC = 0x%x, CA = 0x%x, CE=0x%x,CQ=0x%x,apqa=0x%llx\n",
++	ata_port_dbg(ap, "Status of all queues :\n");
++	ata_port_dbg(ap, "done_mask/CC = 0x%x, CA = 0x%x, CE=0x%x,CQ=0x%x,apqa=0x%llx\n",
+ 		done_mask,
+ 		ioread32(hcr_base + CA),
+ 		ioread32(hcr_base + CE),
 -- 
 2.29.2
 
