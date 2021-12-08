@@ -2,48 +2,47 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E5E0C43219
-	for <linux-ide@archiver.kernel.org>; Wed,  8 Dec 2021 16:33:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AEC2C433EF
+	for <linux-ide@archiver.kernel.org>; Wed,  8 Dec 2021 16:33:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237042AbhLHQgn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 8 Dec 2021 11:36:43 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:37750 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237008AbhLHQge (ORCPT
+        id S230245AbhLHQgo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 8 Dec 2021 11:36:44 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:40676 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237014AbhLHQge (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Dec 2021 11:36:34 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 4F8451FE0F;
+        by smtp-out1.suse.de (Postfix) with ESMTP id 98C3F21763;
         Wed,  8 Dec 2021 16:33:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1638981180; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=GGANcJUSgC2qg0ieE2QF+DgYGR3exd6aG4nDzLYNHnc=;
-        b=Ebty7O8FIb5JsOmW19pcKpA5OfQ4Zo3uCGLcR6+KPrAZBoTAnErkfLq8D8nk4ycmwwxZZH
-        oYFJ+O4MjUWtrG0XDtwSElf3+gUc8geqrad1tYnnE67zGZuIT0BWF+nTHhGfnr7SvR99QO
-        6Qh0HUV9NgLDZsIrgcPEJm3GjZGqHHo=
+        bh=HiZmv/QvahwRXoRBlxUFqBUStxno1ZwdMuCEj4y1jZ4=;
+        b=Wb0Kujg5wGuFC4PFEwIF2b4j1OvNrzMj8pcYJEy1d3yzU3EebXHu7N7ljevoJOQ3vS29X0
+        IknEyBkA+sKUbPdw4dscxtOkL7El8U2HxEDY4uOXQwF7uxJjx6LW1EwPsujuuZ1YCWqOl4
+        SGuIvpgmTK0smcZUdUtJT4pIRAaOrnY=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1638981180;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=GGANcJUSgC2qg0ieE2QF+DgYGR3exd6aG4nDzLYNHnc=;
-        b=pq3YBvjxlrDkYa2omtvk9kfw3gk8zZdYvu1n4YKg+r6CUcFTLLizXhM0PsThuSKKPSuCCN
-        oiPt//YNlZw+krCg==
+        bh=HiZmv/QvahwRXoRBlxUFqBUStxno1ZwdMuCEj4y1jZ4=;
+        b=Ibo/BmHvSWlmZ/5dPc5g64ka20IZQCbnB4j6xddWGQg9y2Da7i1zdAp9RQ0+oiFi6lill4
+        2T0VHgGsX87HG+AQ==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 4C9D5A3BA6;
+        by relay2.suse.de (Postfix) with ESMTP id 951D9A3BB3;
         Wed,  8 Dec 2021 16:33:00 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 486365191F83; Wed,  8 Dec 2021 17:33:00 +0100 (CET)
+        id 919B45191F9D; Wed,  8 Dec 2021 17:33:00 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Damien LeMoal <damien.lemoal@wdc.com>
-Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [PATCH 19/73] libata: drop DPRINTK() calls during ATA error handling
-Date:   Wed,  8 Dec 2021 17:32:01 +0100
-Message-Id: <20211208163255.114660-20-hare@suse.de>
+Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 32/73] pdc_adma: Drop pointless VPRINTK() calls and convert the remaining ones
+Date:   Wed,  8 Dec 2021 17:32:14 +0100
+Message-Id: <20211208163255.114660-33-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20211208163255.114660-1-hare@suse.de>
 References: <20211208163255.114660-1-hare@suse.de>
@@ -53,161 +52,61 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The information is now logged with tracepoints, so the DPRINTK()
-calls can be dropped.
+Drop pointless VPRINTK() calls for entering and existing interrupt
+routines and convert the remaining calls to dev_dbg().
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/ata/libata-eh.c   | 12 ------------
- drivers/ata/libata-pmp.c  |  8 --------
- drivers/ata/libata-sata.c |  3 ---
- 3 files changed, 23 deletions(-)
+ drivers/ata/pdc_adma.c | 11 -----------
+ 1 file changed, 11 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 2a25be588e14..a0fd38260f48 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -533,8 +533,6 @@ void ata_scsi_error(struct Scsi_Host *host)
- 	unsigned long flags;
- 	LIST_HEAD(eh_work_q);
- 
--	DPRINTK("ENTER\n");
+diff --git a/drivers/ata/pdc_adma.c b/drivers/ata/pdc_adma.c
+index 2c910c4cd4de..5d6f460b2356 100644
+--- a/drivers/ata/pdc_adma.c
++++ b/drivers/ata/pdc_adma.c
+@@ -284,9 +284,6 @@ static int adma_fill_sg(struct ata_queued_cmd *qc)
+ 		*(__le32 *)(buf + i) =
+ 			(pFLAGS & pEND) ? 0 : cpu_to_le32(pp->pkt_dma + i + 4);
+ 		i += 4;
 -
- 	spin_lock_irqsave(host->host_lock, flags);
- 	list_splice_init(&host->eh_cmd_q, &eh_work_q);
- 	spin_unlock_irqrestore(host->host_lock, flags);
-@@ -548,7 +546,6 @@ void ata_scsi_error(struct Scsi_Host *host)
- 	/* finish or retry handled scmd's and clean up */
- 	WARN_ON(!list_empty(&eh_work_q));
- 
--	DPRINTK("EXIT\n");
- }
- 
- /**
-@@ -1932,8 +1929,6 @@ static void ata_eh_link_autopsy(struct ata_link *link)
- 	u32 serror;
- 	int rc;
- 
--	DPRINTK("ENTER\n");
--
- 	if (ehc->i.flags & ATA_EHI_NO_AUTOPSY)
- 		return;
- 
-@@ -2040,7 +2035,6 @@ static void ata_eh_link_autopsy(struct ata_link *link)
- 		ehc->i.action |= ata_eh_speed_down(dev, eflags, all_err_mask);
- 		trace_ata_eh_link_autopsy(dev, ehc->i.action, all_err_mask);
+-		VPRINTK("PRD[%u] = (0x%lX, 0x%X)\n", i/4,
+-					(unsigned long)addr, len);
  	}
--	DPRINTK("EXIT\n");
- }
  
- /**
-@@ -2940,8 +2934,6 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
- 	unsigned long flags;
- 	int rc = 0;
+ 	if (likely(last_buf))
+@@ -302,8 +299,6 @@ static enum ata_completion_errors adma_qc_prep(struct ata_queued_cmd *qc)
+ 	u32 pkt_dma = (u32)pp->pkt_dma;
+ 	int i = 0;
  
--	DPRINTK("ENTER\n");
+-	VPRINTK("ENTER\n");
 -
- 	/* For PATA drive side cable detection to work, IDENTIFY must
- 	 * be done backwards such that PDIAG- is released by the slave
- 	 * device before the master device is identified.
-@@ -3055,7 +3047,6 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
+ 	adma_enter_reg_mode(qc->ap);
+ 	if (qc->tf.protocol != ATA_PROT_DMA)
+ 		return AC_ERR_OK;
+@@ -379,8 +374,6 @@ static inline void adma_packet_start(struct ata_queued_cmd *qc)
+ 	struct ata_port *ap = qc->ap;
+ 	void __iomem *chan = ADMA_PORT_REGS(ap);
  
-  err:
- 	*r_failed_dev = dev;
--	DPRINTK("EXIT rc=%d\n", rc);
- 	return rc;
- }
- 
-@@ -3570,8 +3561,6 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 	int rc, nr_fails;
- 	unsigned long flags, deadline;
- 
--	DPRINTK("ENTER\n");
+-	VPRINTK("ENTER, ap %p\n", ap);
 -
- 	/* prep for recovery */
- 	ata_for_each_link(link, ap, EDGE) {
- 		struct ata_eh_context *ehc = &link->eh_context;
-@@ -3779,7 +3768,6 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 	if (rc && r_failed_link)
- 		*r_failed_link = link;
- 
--	DPRINTK("EXIT, rc=%d\n", rc);
- 	return rc;
+ 	/* fire up the ADMA engine */
+ 	writew(aPIOMD4 | aGO, chan + ADMA_CONTROL);
  }
+@@ -502,14 +495,10 @@ static irqreturn_t adma_intr(int irq, void *dev_instance)
+ 	struct ata_host *host = dev_instance;
+ 	unsigned int handled = 0;
  
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index ba7be3f38617..e2e9cbd405fa 100644
---- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -652,8 +652,6 @@ static int sata_pmp_revalidate(struct ata_device *dev, unsigned int new_class)
- 	u32 *gscr = (void *)ap->sector_buf;
- 	int rc;
- 
--	DPRINTK("ENTER\n");
+-	VPRINTK("ENTER\n");
 -
- 	ata_eh_about_to_do(link, NULL, ATA_EH_REVALIDATE);
+ 	spin_lock(&host->lock);
+ 	handled  = adma_intr_pkt(host) | adma_intr_mmio(host);
+ 	spin_unlock(&host->lock);
  
- 	if (!ata_dev_enabled(dev)) {
-@@ -686,12 +684,10 @@ static int sata_pmp_revalidate(struct ata_device *dev, unsigned int new_class)
- 
- 	ata_eh_done(link, NULL, ATA_EH_REVALIDATE);
- 
--	DPRINTK("EXIT, rc=0\n");
- 	return 0;
- 
-  fail:
- 	ata_dev_err(dev, "PMP revalidation failed (errno=%d)\n", rc);
--	DPRINTK("EXIT, rc=%d\n", rc);
- 	return rc;
- }
- 
-@@ -759,8 +755,6 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
- 	int detach = 0, rc = 0;
- 	int reval_failed = 0;
- 
--	DPRINTK("ENTER\n");
+-	VPRINTK("EXIT\n");
 -
- 	if (dev->flags & ATA_DFLAG_DETACH) {
- 		detach = 1;
- 		rc = -ENODEV;
-@@ -828,7 +822,6 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
- 	/* okay, PMP resurrected */
- 	ehc->i.flags = 0;
- 
--	DPRINTK("EXIT, rc=0\n");
- 	return 0;
- 
-  fail:
-@@ -838,7 +831,6 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
- 	else
- 		ata_dev_disable(dev);
- 
--	DPRINTK("EXIT, rc=%d\n", rc);
- 	return rc;
+ 	return IRQ_RETVAL(handled);
  }
  
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index 4e88597aa9df..7b72c68bc9f7 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -533,8 +533,6 @@ int sata_link_hardreset(struct ata_link *link, const unsigned long *timing,
- 	u32 scontrol;
- 	int rc;
- 
--	DPRINTK("ENTER\n");
--
- 	if (online)
- 		*online = false;
- 
-@@ -610,7 +608,6 @@ int sata_link_hardreset(struct ata_link *link, const unsigned long *timing,
- 			*online = false;
- 		ata_link_err(link, "COMRESET failed (errno=%d)\n", rc);
- 	}
--	DPRINTK("EXIT, rc=%d\n", rc);
- 	return rc;
- }
- EXPORT_SYMBOL_GPL(sata_link_hardreset);
 -- 
 2.29.2
 
