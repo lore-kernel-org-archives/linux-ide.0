@@ -2,104 +2,95 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E35AFC433F5
-	for <linux-ide@archiver.kernel.org>; Wed,  8 Dec 2021 11:09:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E68FC433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  8 Dec 2021 11:55:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232200AbhLHLNO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 8 Dec 2021 06:13:14 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:58648 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232221AbhLHLNM (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Dec 2021 06:13:12 -0500
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 1775D1FD2A;
-        Wed,  8 Dec 2021 11:09:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1638961780; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=pmYcQTEDC/K9M1i0GyivJiiFVxRd65i9saUZOPaSUoc=;
-        b=MD3cOzwXCltTHu+igG5y+U1OVRu/E7uVnr0zKCyJhB64hr1OYERb6YxmNf99lsWuACmc0w
-        7JwrR0H2hwOzGtcX9BeMnKNIs3GwoVT0XV/HFmjeIUMxZYYuFJusY651VEptRnOrH2FFH4
-        cU/B0wCOrpKjBCSs9rNatYbIz+hmysY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1638961780;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=pmYcQTEDC/K9M1i0GyivJiiFVxRd65i9saUZOPaSUoc=;
-        b=x15MT9L9mfAkXeyZG12REJj685S8yD0phk1ICrwyXOKJPojzFlJ45IF8nii9+e6HMjp1d7
-        iQtmi7DFdaqdMPDQ==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 0AFD213C46;
-        Wed,  8 Dec 2021 11:09:40 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 879fAnSSsGE9QwAAMHmgww
-        (envelope-from <hare@suse.de>); Wed, 08 Dec 2021 11:09:40 +0000
-Subject: Re: [PATCH] libata: add horkage for ASMedia 1092
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>
-Cc:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-References: <20211208065853.5270-1-hare@suse.de>
- <DM6PR04MB7081F06F8B94345297B0267FE76F9@DM6PR04MB7081.namprd04.prod.outlook.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <731e355a-9365-3199-6db4-e9f07a79de8c@suse.de>
-Date:   Wed, 8 Dec 2021 12:09:39 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        id S231966AbhLHL7I convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 8 Dec 2021 06:59:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33436 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231890AbhLHL7I (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Dec 2021 06:59:08 -0500
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66B0CC061746
+        for <linux-ide@vger.kernel.org>; Wed,  8 Dec 2021 03:55:36 -0800 (PST)
+Received: from lupine.hi.pengutronix.de ([2001:67c:670:100:3ad5:47ff:feaf:1a17] helo=lupine)
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <p.zabel@pengutronix.de>)
+        id 1muvXT-0003yx-Aa; Wed, 08 Dec 2021 12:55:11 +0100
+Received: from pza by lupine with local (Exim 4.94.2)
+        (envelope-from <p.zabel@pengutronix.de>)
+        id 1muvXL-0009LG-9d; Wed, 08 Dec 2021 12:55:03 +0100
+Message-ID: <7fd56b837d64307983828bde89096c495d9b5cf9.camel@pengutronix.de>
+Subject: Re: [PATCH v2 02/14] dt-bindings: reset: Convert Broadcom STB reset
+ to YAML
+From:   Philipp Zabel <p.zabel@pengutronix.de>
+To:     Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" 
+        <bcm-kernel-feedback-list@broadcom.com>,
+        Gregory Fong <gregory.0xf0@gmail.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Marc Zyngier <maz@kernel.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?= 
+        <u.kleine-koenig@pengutronix.de>, Lee Jones <lee.jones@linaro.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Alessandro Zummo <a.zummo@towertech.it>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Amit Kucheria <amitk@kernel.org>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Markus Mayer <mmayer@broadcom.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Al Cooper <alcooperx@gmail.com>,
+        Doug Berger <opendmb@gmail.com>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
+        "moderated list:BROADCOM BCM7XXX ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:MULTIMEDIA CARD (MMC), SECURE DIGITAL (SD) AND..." 
+        <linux-mmc@vger.kernel.org>,
+        "open list:PWM SUBSYSTEM" <linux-pwm@vger.kernel.org>,
+        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
+        <linux-crypto@vger.kernel.org>,
+        "open list:REAL TIME CLOCK (RTC) SUBSYSTEM" 
+        <linux-rtc@vger.kernel.org>,
+        "open list:THERMAL" <linux-pm@vger.kernel.org>,
+        "open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>
+Date:   Wed, 08 Dec 2021 12:55:03 +0100
+In-Reply-To: <20211206182616.2089677-3-f.fainelli@gmail.com>
+References: <20211206182616.2089677-1-f.fainelli@gmail.com>
+         <20211206182616.2089677-3-f.fainelli@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+User-Agent: Evolution 3.38.3-1 
 MIME-Version: 1.0
-In-Reply-To: <DM6PR04MB7081F06F8B94345297B0267FE76F9@DM6PR04MB7081.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2001:67c:670:100:3ad5:47ff:feaf:1a17
+X-SA-Exim-Mail-From: p.zabel@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-ide@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 12/8/21 11:57 AM, Damien Le Moal wrote:
-> On 2021/12/08 15:59, Hannes Reinecke wrote:
->> The ASMedia 1092 has a configuration mode which will present a
->> dummy device; sadly the implementation falsely claims to provide
->> a device with 100M which doesn't actually exist.
->> So disable this device to avoid errors during boot.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> ---
->>  drivers/ata/libata-core.c | 2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->> index 9c05177e09c2..f1a2f0a4ce05 100644
->> --- a/drivers/ata/libata-core.c
->> +++ b/drivers/ata/libata-core.c
->> @@ -4416,6 +4416,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
->>  	{ "VRFDFC22048UCHC-TE*", NULL,		ATA_HORKAGE_NODMA },
->>  	/* Odd clown on sil3726/4726 PMPs */
->>  	{ "Config  Disk",	NULL,		ATA_HORKAGE_DISABLE },
->> +	/* Similar story with ASMedia 1092 */
->> +	{ "ASMT109x- Config",	NULL,		ATA_HORKAGE_DISABLE },
->>  
->>  	/* Weird ATAPI devices */
->>  	{ "TORiSAN DVD-ROM DRD-N216", NULL,	ATA_HORKAGE_MAX_SEC_128 },
->>
+On Mon, 2021-12-06 at 10:26 -0800, Florian Fainelli wrote:
+> Convert the Broadcom STB SW_INIT style reset controller binding to YAML.
 > 
-> Doesn't this need a Cc stable ? I can add it.
-> 
-Possibly; device has never worked properly.
+> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
 
-Cheers,
+Acked-by: Philipp Zabel <p.zabel@pengutronix.de>
 
-Hannes
--- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+regards
+Philipp
