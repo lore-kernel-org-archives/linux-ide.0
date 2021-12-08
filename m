@@ -2,48 +2,48 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AACAC433EF
-	for <linux-ide@archiver.kernel.org>; Wed,  8 Dec 2021 16:33:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 187BBC433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  8 Dec 2021 16:33:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236990AbhLHQgk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 8 Dec 2021 11:36:40 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:40660 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236999AbhLHQge (ORCPT
+        id S237004AbhLHQgl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 8 Dec 2021 11:36:41 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:37748 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237006AbhLHQge (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Dec 2021 11:36:34 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 3F776218DF;
+        by smtp-out2.suse.de (Postfix) with ESMTP id 4B1DE1FE0D;
         Wed,  8 Dec 2021 16:33:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1638981180; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=baUKbtNSh74UfEuMhSpprbaOG1vy2Zq+NPM/0/gP6i4=;
-        b=CoVzV/huv/CSa/a9Ue6iARkTu74uNuFRo3gFyKCwFMGcHb/llwiHK2W+eAOFL1XW7fLfUc
-        4MQM795Th/Gl2VbFhrIcv1qZyE/Lmgg3llyQWe1JDQ4FUj29wq3AQB/wYf261Rq+aqwDBg
-        IHYWnqEEXMePRfjNSywyYPdK+i0Lek8=
+        bh=TjswPDBCnBWmaxh4x2DX3gkFKSqIUOpnhQqfrvWGcY4=;
+        b=SVc9lgiIYIqmPe4I8r5MYt/TNQAsk52GADdwsefHjt6M5VxzsrH+Q58hLkTYDdRybEWpPC
+        YuMlCRCZeRiolDqvlqJxd3Xf1zsZT7HHnSVuCgJa+8XARXh8ZJRlBNQU9IQWInA/i+79gp
+        7f0i8DOcze+56fSCs/AcgQoCCGhhWxk=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1638981180;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=baUKbtNSh74UfEuMhSpprbaOG1vy2Zq+NPM/0/gP6i4=;
-        b=s03TU63k7gqkDJcdkRoPzmyh0jLHwoKnArbOO9lCFELJeOm/ZIFctIIQJ+oPE16JLpHeMn
-        MYYr4d2FamwZxkDg==
+        bh=TjswPDBCnBWmaxh4x2DX3gkFKSqIUOpnhQqfrvWGcY4=;
+        b=NqV7J2AbhOvRECz8BgB1+/3wTdn39qauCtNasDjDRRl7lYSfmZPf5kt7Q1bOqLaOZOPMs/
+        bBAZXUo2eu/+09CQ==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 32D69A3BA1;
+        by relay2.suse.de (Postfix) with ESMTP id 3AE7DA3BA3;
         Wed,  8 Dec 2021 16:33:00 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 276AE5191F77; Wed,  8 Dec 2021 17:33:00 +0100 (CET)
+        id 36A525191F7D; Wed,  8 Dec 2021 17:33:00 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Damien LeMoal <damien.lemoal@wdc.com>
 Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
         Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [PATCH 13/73] sata_dwc_460ex: use generic tracepoints
-Date:   Wed,  8 Dec 2021 17:31:55 +0100
-Message-Id: <20211208163255.114660-14-hare@suse.de>
+Subject: [PATCH 16/73] libata-sff: add tracepoints for ata_sff_flush_pio_task()
+Date:   Wed,  8 Dec 2021 17:31:58 +0100
+Message-Id: <20211208163255.114660-17-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20211208163255.114660-1-hare@suse.de>
 References: <20211208163255.114660-1-hare@suse.de>
@@ -53,114 +53,74 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add generic tracepoints and drop the now obsolete logging statements.
+Replace DPRINTK calls with tracepoints.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/ata/sata_dwc_460ex.c | 53 +++---------------------------------
- 1 file changed, 4 insertions(+), 49 deletions(-)
+ drivers/ata/libata-sff.c      |  5 +----
+ include/trace/events/libata.h | 25 +++++++++++++++++++++++++
+ 2 files changed, 26 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index f5ef5ce5f758..6cdce9d00ed7 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -34,6 +34,7 @@
- #include <linux/phy/phy.h>
- #include <linux/libata.h>
- #include <linux/slab.h>
-+#include <trace/events/libata.h>
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 5d6ea1c9ce29..58304dc401ac 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -1249,7 +1249,7 @@ EXPORT_SYMBOL_GPL(ata_sff_queue_pio_task);
  
- #include "libata.h"
+ void ata_sff_flush_pio_task(struct ata_port *ap)
+ {
+-	DPRINTK("ENTER\n");
++	trace_ata_sff_flush_pio_task(ap);
  
-@@ -297,35 +298,6 @@ static const char *get_prot_descript(u8 protocol)
- 	}
+ 	cancel_delayed_work_sync(&ap->sff_pio_task);
+ 
+@@ -1266,9 +1266,6 @@ void ata_sff_flush_pio_task(struct ata_port *ap)
+ 	spin_unlock_irq(ap->lock);
+ 
+ 	ap->sff_pio_task_link = NULL;
+-
+-	if (ata_msg_ctl(ap))
+-		ata_port_dbg(ap, "%s: EXIT\n", __func__);
  }
  
--static const char *get_dma_dir_descript(int dma_dir)
--{
--	switch ((enum dma_data_direction)dma_dir) {
--	case DMA_BIDIRECTIONAL:
--		return "bidirectional";
--	case DMA_TO_DEVICE:
--		return "to device";
--	case DMA_FROM_DEVICE:
--		return "from device";
--	default:
--		return "none";
--	}
--}
--
--static void sata_dwc_tf_dump(struct ata_port *ap, struct ata_taskfile *tf)
--{
--	dev_vdbg(ap->dev,
--		"taskfile cmd: 0x%02x protocol: %s flags: 0x%lx device: %x\n",
--		tf->command, get_prot_descript(tf->protocol), tf->flags,
--		tf->device);
--	dev_vdbg(ap->dev,
--		"feature: 0x%02x nsect: 0x%x lbal: 0x%x lbam: 0x%x lbah: 0x%x\n",
--		tf->feature, tf->nsect, tf->lbal, tf->lbam, tf->lbah);
--	dev_vdbg(ap->dev,
--		"hob_feature: 0x%02x hob_nsect: 0x%x hob_lbal: 0x%x hob_lbam: 0x%x hob_lbah: 0x%x\n",
--		tf->hob_feature, tf->hob_nsect, tf->hob_lbal, tf->hob_lbam,
--		tf->hob_lbah);
--}
--
- static void dma_dwc_xfer_done(void *hsdev_instance)
- {
- 	unsigned long flags;
-@@ -553,6 +525,7 @@ static irqreturn_t sata_dwc_isr(int irq, void *dev_instance)
- 		 * active tag.  It is the tag that matches the command about to
- 		 * be completed.
- 		 */
-+		trace_ata_bmdma_start(ap, &qc->tf, tag);
- 		qc->ap->link.active_tag = tag;
- 		sata_dwc_bmdma_start_by_tag(qc, tag);
+ static void ata_sff_pio_task(struct work_struct *work)
+diff --git a/include/trace/events/libata.h b/include/trace/events/libata.h
+index 135b1df472e5..06bc6756f1dc 100644
+--- a/include/trace/events/libata.h
++++ b/include/trace/events/libata.h
+@@ -621,6 +621,31 @@ DEFINE_EVENT(ata_transfer_data_template, atapi_send_cdb,
+ 	     TP_PROTO(struct ata_queued_cmd *qc, unsigned int offset, unsigned int count),
+ 	     TP_ARGS(qc, offset, count));
  
-@@ -1031,12 +1004,6 @@ static void sata_dwc_bmdma_start_by_tag(struct ata_queued_cmd *qc, u8 tag)
- 		start_dma = 0;
- 	}
++DECLARE_EVENT_CLASS(ata_sff_template,
++
++	TP_PROTO(struct ata_port *ap),
++
++	TP_ARGS(ap),
++
++	TP_STRUCT__entry(
++		__field( unsigned int,	ata_port )
++		__field( unsigned char,	hsm_state )
++	),
++
++	TP_fast_assign(
++		__entry->ata_port	= ap->print_id;
++		__entry->hsm_state	= ap->hsm_task_state;
++	),
++
++	TP_printk("ata_port=%u task_state=%s",
++		  __entry->ata_port,
++		  show_sff_hsm_state_name(__entry->hsm_state))
++);
++
++DEFINE_EVENT(ata_sff_template, ata_sff_flush_pio_task,
++	     TP_PROTO(struct ata_port *ap),
++	     TP_ARGS(ap));
++
+ #endif /*  _TRACE_LIBATA_H */
  
--	dev_dbg(ap->dev,
--		"%s qc=%p tag: %x cmd: 0x%02x dma_dir: %s start_dma? %x\n",
--		__func__, qc, tag, qc->tf.command,
--		get_dma_dir_descript(qc->dma_dir), start_dma);
--	sata_dwc_tf_dump(ap, &qc->tf);
--
- 	if (start_dma) {
- 		sata_dwc_scr_read(&ap->link, SCR_ERROR, &reg);
- 		if (reg & SATA_DWC_SERROR_ERR_BITS) {
-@@ -1074,16 +1041,6 @@ static unsigned int sata_dwc_qc_issue(struct ata_queued_cmd *qc)
- 	struct ata_port *ap = qc->ap;
- 	struct sata_dwc_device_port *hsdevp = HSDEVP_FROM_AP(ap);
- 
--#ifdef DEBUG_NCQ
--	if (qc->hw_tag > 0 || ap->link.sactive > 1)
--		dev_info(ap->dev,
--			 "%s ap id=%d cmd(0x%02x)=%s qc tag=%d prot=%s ap active_tag=0x%08x ap sactive=0x%08x\n",
--			 __func__, ap->print_id, qc->tf.command,
--			 ata_get_cmd_descript(qc->tf.command),
--			 qc->hw_tag, get_prot_descript(qc->tf.protocol),
--			 ap->link.active_tag, ap->link.sactive);
--#endif
--
- 	if (!ata_is_ncq(qc->tf.protocol))
- 		tag = 0;
- 
-@@ -1100,11 +1057,9 @@ static unsigned int sata_dwc_qc_issue(struct ata_queued_cmd *qc)
- 		sactive |= (0x00000001 << tag);
- 		sata_dwc_scr_write(&ap->link, SCR_ACTIVE, sactive);
- 
--		dev_dbg(qc->ap->dev,
--			"%s: tag=%d ap->link.sactive = 0x%08x sactive=0x%08x\n",
--			__func__, tag, qc->ap->link.sactive, sactive);
--
-+		trace_ata_tf_load(ap, &qc->tf);
- 		ap->ops->sff_tf_load(ap, &qc->tf);
-+		trace_ata_exec_command(ap, &qc->tf, tag);
- 		sata_dwc_exec_command_by_tag(ap, &qc->tf, tag,
- 					     SATA_DWC_CMD_ISSUED_PEND);
- 	} else {
+ /* This part must be outside protection */
 -- 
 2.29.2
 
