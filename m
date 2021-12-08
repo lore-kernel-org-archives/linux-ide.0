@@ -2,47 +2,47 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF02EC43217
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34BBAC4332F
 	for <linux-ide@archiver.kernel.org>; Wed,  8 Dec 2021 16:33:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230154AbhLHQhC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 8 Dec 2021 11:37:02 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:37754 "EHLO
+        id S236983AbhLHQg5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 8 Dec 2021 11:36:57 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:37888 "EHLO
         smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237044AbhLHQgo (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Dec 2021 11:36:44 -0500
+        with ESMTP id S237001AbhLHQgl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Dec 2021 11:36:41 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id E861B1FE23;
+        by smtp-out2.suse.de (Postfix) with ESMTP id BE9421FE1C;
         Wed,  8 Dec 2021 16:33:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1638981181; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1638981180; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=+p+o+fQWekWOpE3MHtc5A7R+7swokSvXQwCwJd3a5JA=;
-        b=pqfxMuXP3ig2bmfsjLqAaEpPmD9YoTjt6cOIA6QS5+veISmP2q5yLjJpyElbpzTO4m3YnS
-        PAqgTxWoCCn0WNavn3MxqccvLCVtX4sQzX8/uqO634OLdZQ1JdiZ92gKAkSXI4TuhPqCZh
-        9bXynZst2E2sCKGjTFl8z2xPd7C98c0=
+        bh=Pk8O0Pga7cVsfugoLOSOLGDrMehfaIPmIeQG0Gu9zMc=;
+        b=XK/OrU1nrrkJQ053dNmy6A0+1tqsgO9FjW7kM+4dlx1ACDzjkR9BY16vb7XMklTxO7seO5
+        HbszLNttu929y9ZFzMTBaV3O6Wt2m+HhH2r7l5Jp8p5yeTUTI0eXij+khdXWkV/Owd0OrK
+        ld3+xomJShv0f06u446mshzWfjhtlZA=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1638981181;
+        s=susede2_ed25519; t=1638981180;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=+p+o+fQWekWOpE3MHtc5A7R+7swokSvXQwCwJd3a5JA=;
-        b=7eLXNzp9rBZs66nbuhXLwJQQhBI1oeUbj8/5SkkYQfl2cQVZNih9DfcelNcmqyh2Nopoo7
-        zeGs62DDOPZmD1BQ==
+        bh=Pk8O0Pga7cVsfugoLOSOLGDrMehfaIPmIeQG0Gu9zMc=;
+        b=x2TDLdLQe34cqOA9/4g4pVIZxes7eFSBgnzNG6L7ad403M8fafwamhLr4u8merBlscUvsp
+        KBwGmUAcmA3RjTCA==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id E5B72A3BC2;
+        by relay2.suse.de (Postfix) with ESMTP id BC48EA3BB9;
         Wed,  8 Dec 2021 16:33:00 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id E2C475191FB9; Wed,  8 Dec 2021 17:33:00 +0100 (CET)
+        id B91945191FAB; Wed,  8 Dec 2021 17:33:00 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Damien LeMoal <damien.lemoal@wdc.com>
 Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 46/73] libata: drop ata_msg_ctl()
-Date:   Wed,  8 Dec 2021 17:32:28 +0100
-Message-Id: <20211208163255.114660-47-hare@suse.de>
+Subject: [PATCH 39/73] sata_mv: Drop pointless VPRINTK() call and convert the remaining one
+Date:   Wed,  8 Dec 2021 17:32:21 +0100
+Message-Id: <20211208163255.114660-40-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20211208163255.114660-1-hare@suse.de>
 References: <20211208163255.114660-1-hare@suse.de>
@@ -52,60 +52,38 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The one caller have been converted to dynamic debugging.
+Drop pointless VPRINTK() call and convert the remaining one to dev_dbg().
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-core.c | 7 ++-----
- include/linux/libata.h    | 2 --
- 2 files changed, 2 insertions(+), 7 deletions(-)
+ drivers/ata/sata_mv.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index ff7e82be0a94..691dfa1f01c5 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1809,9 +1809,6 @@ int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
- 	int may_fallback = 1, tried_spinup = 0;
- 	int rc;
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index e86eddf83704..4f3fa54c8f64 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -3723,11 +3723,6 @@ static void mv_port_init(struct ata_ioports *port,  void __iomem *port_mmio)
  
--	if (ata_msg_ctl(ap))
--		ata_dev_dbg(dev, "%s: ENTER\n", __func__);
+ 	/* unmask all non-transient EDMA error interrupts */
+ 	writelfl(~EDMA_ERR_IRQ_TRANSIENT, port_mmio + EDMA_ERR_IRQ_MASK);
 -
- retry:
- 	ata_tf_init(dev, &tf);
+-	VPRINTK("EDMA cfg=0x%08x EDMA IRQ err cause/mask=0x%08x/0x%08x\n",
+-		readl(port_mmio + EDMA_CFG),
+-		readl(port_mmio + EDMA_ERR_IRQ_CAUSE),
+-		readl(port_mmio + EDMA_ERR_IRQ_MASK));
+ }
  
-@@ -5384,9 +5381,9 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+ static unsigned int mv_in_pcix_mode(struct ata_host *host)
+@@ -3972,7 +3967,7 @@ static int mv_init_host(struct ata_host *host)
+ 	for (hc = 0; hc < n_hc; hc++) {
+ 		void __iomem *hc_mmio = mv_hc_base(mmio, hc);
  
- #if defined(ATA_VERBOSE_DEBUG)
- 	/* turn on all debugging levels */
--	ap->msg_enable = 0x003F;
-+	ap->msg_enable = 0x001F;
- #elif defined(ATA_DEBUG)
--	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_INFO | ATA_MSG_CTL | ATA_MSG_WARN;
-+	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_INFO | ATA_MSG_WARN;
- #else
- 	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_WARN;
- #endif
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index a3f35735fd27..fc7f64646e5b 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -77,7 +77,6 @@ enum {
- 	ATA_MSG_PROBE	= 0x0004,
- 	ATA_MSG_WARN	= 0x0008,
- 	ATA_MSG_MALLOC	= 0x0010,
--	ATA_MSG_CTL	= 0x0020,
- };
- 
- #define ata_msg_drv(p)    ((p)->msg_enable & ATA_MSG_DRV)
-@@ -85,7 +84,6 @@ enum {
- #define ata_msg_probe(p)  ((p)->msg_enable & ATA_MSG_PROBE)
- #define ata_msg_warn(p)   ((p)->msg_enable & ATA_MSG_WARN)
- #define ata_msg_malloc(p) ((p)->msg_enable & ATA_MSG_MALLOC)
--#define ata_msg_ctl(p)    ((p)->msg_enable & ATA_MSG_CTL)
- 
- static inline u32 ata_msg_init(int dval, int default_msg_enable_bits)
- {
+-		VPRINTK("HC%i: HC config=0x%08x HC IRQ cause "
++		dev_dbg(host->dev, "HC%i: HC config=0x%08x HC IRQ cause "
+ 			"(before clear)=0x%08x\n", hc,
+ 			readl(hc_mmio + HC_CFG),
+ 			readl(hc_mmio + HC_IRQ_CAUSE));
 -- 
 2.29.2
 
