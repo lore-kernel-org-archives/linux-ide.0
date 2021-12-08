@@ -2,48 +2,48 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6A5CC43217
-	for <linux-ide@archiver.kernel.org>; Wed,  8 Dec 2021 16:33:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9990AC4332F
+	for <linux-ide@archiver.kernel.org>; Wed,  8 Dec 2021 16:33:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236974AbhLHQge (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S237019AbhLHQge (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Wed, 8 Dec 2021 11:36:34 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:40570 "EHLO
+Received: from smtp-out1.suse.de ([195.135.220.28]:40564 "EHLO
         smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236979AbhLHQgc (ORCPT
+        with ESMTP id S236974AbhLHQgc (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Dec 2021 11:36:32 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 36EBD218B0;
+        by smtp-out1.suse.de (Postfix) with ESMTP id 336AC218A4;
         Wed,  8 Dec 2021 16:33:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1638981180; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=WB6VKKboVeCEO09ULEAAq3CZWJYKewYeznBkKgeMxbk=;
-        b=0sRUsbu5ADFObgEkZeLaBVVI/AeSPWjOiW+DvLtVW5auSj/3rBpf1PfJbkBlkNdBBFoB2T
-        Yh+wPTm407a1d6TbHm4QN2OdO9WvgcSfGhLnBBM68Z3ST4Hjihu//SF9uIN7ho1SxJbmee
-        Va3VgKxNKOSSQzpbckcnl7f09sQUAMA=
+        bh=wmWpYVFHscSUZdO03ChdXlUx8U+qTwWmCBlqN9RfLDw=;
+        b=KSGyDpbbcztZ0TG9LNWUJAOGtB9uLnmglcghsD6nW20ONIeIyy5lMckyduD2F0/loA+1S9
+        3jvfg9996qN+a6dD4Ka/iGizVo6wPLaxeP3e3R3eW/pNN2EvHHj4ZiDv6/6QT+dGmS7o8x
+        mfKONPQ01nlE8LV/VjfRUmMdNl4dIKc=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1638981180;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=WB6VKKboVeCEO09ULEAAq3CZWJYKewYeznBkKgeMxbk=;
-        b=ro8A9htZ83/ZCfYEY/Z9pPo8hZ7sqYATl9s9C6PA4ZBl9mQvKfrRnDUlv7oemHq+tbxUEX
-        2Jkw9OCCzWpC1dDQ==
+        bh=wmWpYVFHscSUZdO03ChdXlUx8U+qTwWmCBlqN9RfLDw=;
+        b=m7oTMhrGLi7GyjEUBQ4n7GKoAFkHhVXFY7Gxk6mQ34C+NW50OAY74phSMOIkGFK4FuOtVc
+        lXud4XACT1KbTKBw==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 2A432A3B96;
+        by relay2.suse.de (Postfix) with ESMTP id 2B32CA3B98;
         Wed,  8 Dec 2021 16:32:59 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id D799C5191F61; Wed,  8 Dec 2021 17:32:59 +0100 (CET)
+        id D0AFE5191F5F; Wed,  8 Dec 2021 17:32:59 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Damien LeMoal <damien.lemoal@wdc.com>
 Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
         Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [PATCH 02/73] libata: Add ata_port_classify() helper
-Date:   Wed,  8 Dec 2021 17:31:44 +0100
-Message-Id: <20211208163255.114660-3-hare@suse.de>
+Subject: [PATCH 01/73] libata: remove pointless debugging messages
+Date:   Wed,  8 Dec 2021 17:31:43 +0100
+Message-Id: <20211208163255.114660-2-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20211208163255.114660-1-hare@suse.de>
 References: <20211208163255.114660-1-hare@suse.de>
@@ -53,201 +53,191 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add an ata_port_classify() helper to print out the results from
-the device classification and remove the debugging statements
-from ata_dev_classify(). Also provide a mapping ata_dev_class_string()
-to provide a string representation for those instances calling
-ata_dev_classify() directly.
+Debugging messages in pci init functions or sg setup are pretty
+much pointless, as the workflow pretty much decides what happened.
+So drop them.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/ata/libahci.c       |  2 +-
- drivers/ata/libata-core.c   | 67 ++++++++++++++++++++++++++++---------
- drivers/ata/libata-sff.c    |  2 +-
- drivers/ata/sata_fsl.c      |  2 +-
- drivers/ata/sata_inic162x.c |  2 +-
- drivers/ata/sata_sil24.c    |  2 +-
- include/linux/libata.h      |  2 ++
- 7 files changed, 58 insertions(+), 21 deletions(-)
+ drivers/ata/acard-ahci.c  |  4 ----
+ drivers/ata/ahci.c        |  2 --
+ drivers/ata/ata_piix.c    |  3 ---
+ drivers/ata/libahci.c     |  3 ---
+ drivers/ata/libata-core.c | 11 -----------
+ drivers/ata/libata-sff.c  |  2 --
+ drivers/ata/sata_nv.c     |  4 ----
+ 7 files changed, 29 deletions(-)
 
+diff --git a/drivers/ata/acard-ahci.c b/drivers/ata/acard-ahci.c
+index 2a04e8abd397..536d4cb8f08b 100644
+--- a/drivers/ata/acard-ahci.c
++++ b/drivers/ata/acard-ahci.c
+@@ -185,8 +185,6 @@ static unsigned int acard_ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl)
+ 	struct acard_sg *acard_sg = cmd_tbl + AHCI_CMD_TBL_HDR_SZ;
+ 	unsigned int si, last_si = 0;
+ 
+-	VPRINTK("ENTER\n");
+-
+ 	/*
+ 	 * Next, the S/G list.
+ 	 */
+@@ -362,8 +360,6 @@ static int acard_ahci_init_one(struct pci_dev *pdev, const struct pci_device_id
+ 	struct ata_host *host;
+ 	int n_ports, i, rc;
+ 
+-	VPRINTK("ENTER\n");
+-
+ 	WARN_ON((int)ATA_MAX_QUEUE > AHCI_MAX_CMDS);
+ 
+ 	ata_print_version_once(&pdev->dev, DRV_VERSION);
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index d60f34718b5d..5fa8a12c6b3b 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1672,8 +1672,6 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	int n_ports, i, rc;
+ 	int ahci_pci_bar = AHCI_PCI_BAR_STANDARD;
+ 
+-	VPRINTK("ENTER\n");
+-
+ 	WARN_ON((int)ATA_MAX_QUEUE > AHCI_MAX_CMDS);
+ 
+ 	ata_print_version_once(&pdev->dev, DRV_VERSION);
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 0b2fcf0d1d6c..eb6bf30bd2e3 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -1345,7 +1345,6 @@ static void piix_init_pcs(struct ata_host *host,
+ 	new_pcs = pcs | map_db->port_enable;
+ 
+ 	if (new_pcs != pcs) {
+-		DPRINTK("updating PCS from 0x%x to 0x%x\n", pcs, new_pcs);
+ 		pci_write_config_word(pdev, ICH5_PCS, new_pcs);
+ 		msleep(150);
+ 	}
+@@ -1769,14 +1768,12 @@ static int __init piix_init(void)
+ {
+ 	int rc;
+ 
+-	DPRINTK("pci_register_driver\n");
+ 	rc = pci_register_driver(&piix_pci_driver);
+ 	if (rc)
+ 		return rc;
+ 
+ 	in_module_init = 0;
+ 
+-	DPRINTK("done\n");
+ 	return 0;
+ }
+ 
 diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 8b651f55fc84..21dbcd551443 100644
+index 8a6835bfd18a..8b651f55fc84 100644
 --- a/drivers/ata/libahci.c
 +++ b/drivers/ata/libahci.c
-@@ -1300,7 +1300,7 @@ unsigned int ahci_dev_classify(struct ata_port *ap)
- 	tf.lbal		= (tmp >> 8)	& 0xff;
- 	tf.nsect	= (tmp)		& 0xff;
+@@ -1620,8 +1620,6 @@ static unsigned int ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl)
+ 	struct ahci_sg *ahci_sg = cmd_tbl + AHCI_CMD_TBL_HDR_SZ;
+ 	unsigned int si;
  
--	return ata_dev_classify(&tf);
-+	return ata_port_classify(ap, &tf);
- }
- EXPORT_SYMBOL_GPL(ahci_dev_classify);
+-	VPRINTK("ENTER\n");
+-
+ 	/*
+ 	 * Next, the S/G list.
+ 	 */
+@@ -1695,7 +1693,6 @@ static void ahci_fbs_dec_intr(struct ata_port *ap)
+ 	u32 fbs = readl(port_mmio + PORT_FBS);
+ 	int retries = 3;
  
+-	DPRINTK("ENTER\n");
+ 	BUG_ON(!pp->fbs_enabled);
+ 
+ 	/* time to wait for DEC is not specified by AHCI spec,
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index f6a9e2f22a94..6cac413caf83 100644
+index 8a0ccb190d76..f6a9e2f22a94 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -969,6 +969,27 @@ const char *sata_spd_string(unsigned int spd)
- 	return spd_str[spd - 1];
+@@ -764,9 +764,6 @@ int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+ 		head  = track % dev->heads;
+ 		sect  = (u32)block % dev->sectors + 1;
+ 
+-		DPRINTK("block %u track %u cyl %u head %u sect %u\n",
+-			(u32)block, track, cyl, head, sect);
+-
+ 		/* Check whether the converted CHS can fit.
+ 		   Cylinder: 0-65535
+ 		   Head: 0-15
+@@ -4562,8 +4559,6 @@ static int ata_sg_setup(struct ata_queued_cmd *qc)
+ 	struct ata_port *ap = qc->ap;
+ 	unsigned int n_elem;
+ 
+-	VPRINTK("ENTER, ata%u\n", ap->print_id);
+-
+ 	n_elem = dma_map_sg(ap->dev, qc->sg, qc->n_elem, qc->dma_dir);
+ 	if (n_elem < 1)
+ 		return -1;
+@@ -5368,8 +5363,6 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+ {
+ 	struct ata_port *ap;
+ 
+-	DPRINTK("ENTER\n");
+-
+ 	ap = kzalloc(sizeof(*ap), GFP_KERNEL);
+ 	if (!ap)
+ 		return NULL;
+@@ -5486,8 +5479,6 @@ struct ata_host *ata_host_alloc(struct device *dev, int max_ports)
+ 	int i;
+ 	void *dr;
+ 
+-	DPRINTK("ENTER\n");
+-
+ 	/* alloc a container for our list of ATA ports (buses) */
+ 	sz = sizeof(struct ata_host) + (max_ports + 1) * sizeof(void *);
+ 	host = kzalloc(sz, GFP_KERNEL);
+@@ -5777,9 +5768,7 @@ int ata_port_probe(struct ata_port *ap)
+ 		__ata_port_probe(ap);
+ 		ata_port_wait_eh(ap);
+ 	} else {
+-		DPRINTK("ata%u: bus probe begin\n", ap->print_id);
+ 		rc = ata_bus_probe(ap);
+-		DPRINTK("ata%u: bus probe end\n", ap->print_id);
+ 	}
+ 	return rc;
  }
- 
-+const char *ata_dev_class_string(unsigned int class)
-+{
-+	static const char * const class_str[] = {
-+		"unknown",
-+		"ATA",
-+		"ATA (unsupported)",
-+		"ATAPI",
-+		"ATAPI (unsupported",
-+		"PMP",
-+		"PMP (unsupported)",
-+		"SEMB",
-+		"SEMB (unsupported)",
-+		"ZAC",
-+		"ZAC (unsupported)",
-+		"none",
-+	};
-+	if (class == 0 || (class - 1) >= ARRAY_SIZE(class_str))
-+		return "unknown";
-+	return class_str[class - 1];
-+}
-+
- /**
-  *	ata_dev_classify - determine device type based on ATA-spec signature
-  *	@tf: ATA taskfile register set for device to be identified
-@@ -1007,36 +1028,50 @@ unsigned int ata_dev_classify(const struct ata_taskfile *tf)
- 	 * SEMB signature.  This is worked around in
- 	 * ata_dev_read_id().
- 	 */
--	if ((tf->lbam == 0) && (tf->lbah == 0)) {
--		DPRINTK("found ATA device by sig\n");
-+	if ((tf->lbam == 0) && (tf->lbah == 0))
- 		return ATA_DEV_ATA;
--	}
- 
--	if ((tf->lbam == 0x14) && (tf->lbah == 0xeb)) {
--		DPRINTK("found ATAPI device by sig\n");
-+	if ((tf->lbam == 0x14) && (tf->lbah == 0xeb))
- 		return ATA_DEV_ATAPI;
--	}
- 
--	if ((tf->lbam == 0x69) && (tf->lbah == 0x96)) {
--		DPRINTK("found PMP device by sig\n");
-+	if ((tf->lbam == 0x69) && (tf->lbah == 0x96))
- 		return ATA_DEV_PMP;
--	}
- 
--	if ((tf->lbam == 0x3c) && (tf->lbah == 0xc3)) {
--		DPRINTK("found SEMB device by sig (could be ATA device)\n");
-+	if ((tf->lbam == 0x3c) && (tf->lbah == 0xc3))
- 		return ATA_DEV_SEMB;
--	}
- 
--	if ((tf->lbam == 0xcd) && (tf->lbah == 0xab)) {
--		DPRINTK("found ZAC device by sig\n");
-+	if ((tf->lbam == 0xcd) && (tf->lbah == 0xab))
- 		return ATA_DEV_ZAC;
--	}
- 
--	DPRINTK("unknown device\n");
- 	return ATA_DEV_UNKNOWN;
- }
- EXPORT_SYMBOL_GPL(ata_dev_classify);
- 
-+/**
-+ *     ata_port_classify - determine device type based on ATA-spec signature
-+ *     @ap: ATA port device on which the classification should be run
-+ *     @tf: ATA taskfile register set for device to be identified
-+ *
-+ *     A wrapper around ata_dev_classify() to provide additional logging
-+ *
-+ *     RETURNS:
-+ *     Device type, %ATA_DEV_ATA, %ATA_DEV_ATAPI, %ATA_DEV_PMP,
-+ *     %ATA_DEV_ZAC, or %ATA_DEV_UNKNOWN the event of failure.
-+ */
-+unsigned int ata_port_classify(struct ata_port *ap,
-+			       const struct ata_taskfile *tf)
-+{
-+	unsigned int class = ata_dev_classify(tf);
-+
-+	if (class != ATA_DEV_UNKNOWN)
-+		ata_port_dbg(ap, "found %s device by sig\n",
-+			     ata_dev_class_string(class));
-+	else
-+		ata_port_dbg(ap, "found unknown device\n");
-+	return class;
-+}
-+EXPORT_SYMBOL_GPL(ata_port_classify);
-+
- /**
-  *	ata_id_string - Convert IDENTIFY DEVICE page into string
-  *	@id: IDENTIFY DEVICE results we will examine
 diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 39c026f3948c..a119fabe0919 100644
+index b71ea4a680b0..39c026f3948c 100644
 --- a/drivers/ata/libata-sff.c
 +++ b/drivers/ata/libata-sff.c
-@@ -1853,7 +1853,7 @@ unsigned int ata_sff_dev_classify(struct ata_device *dev, int present,
- 		return ATA_DEV_NONE;
+@@ -2467,8 +2467,6 @@ static int ata_pci_init_one(struct pci_dev *pdev,
+ 	struct ata_host *host = NULL;
+ 	int rc;
  
- 	/* determine if device is ATA or ATAPI */
--	class = ata_dev_classify(&tf);
-+	class = ata_port_classify(ap, &tf);
+-	DPRINTK("ENTER\n");
+-
+ 	pi = ata_sff_find_valid_pi(ppi);
+ 	if (!pi) {
+ 		dev_err(&pdev->dev, "no valid port_info specified\n");
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index 16272c111208..3c70405a0b80 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -1277,8 +1277,6 @@ static int nv_adma_host_init(struct ata_host *host)
+ 	unsigned int i;
+ 	u32 tmp32;
  
- 	if (class == ATA_DEV_UNKNOWN) {
- 		/* If the device failed diagnostic, it's likely to
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index e5838b23c9e0..dbc57b7a58b8 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -812,7 +812,7 @@ static unsigned int sata_fsl_dev_classify(struct ata_port *ap)
- 	tf.lbal = (temp >> 8) & 0xff;
- 	tf.nsect = temp & 0xff;
+-	VPRINTK("ENTER\n");
+-
+ 	/* enable ADMA on the ports */
+ 	pci_read_config_dword(pdev, NV_MCP_SATA_CFG_20, &tmp32);
+ 	tmp32 |= NV_MCP_SATA_CFG_20_PORT0_EN |
+@@ -1320,8 +1318,6 @@ static void nv_adma_fill_sg(struct ata_queued_cmd *qc, struct nv_adma_cpb *cpb)
+ 	struct scatterlist *sg;
+ 	unsigned int si;
  
--	return ata_dev_classify(&tf);
-+	return ata_port_classify(ap, &tf);
- }
- 
- static int sata_fsl_hardreset(struct ata_link *link, unsigned int *class,
-diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
-index e517bd8822a5..b6239dae524a 100644
---- a/drivers/ata/sata_inic162x.c
-+++ b/drivers/ata/sata_inic162x.c
-@@ -657,7 +657,7 @@ static int inic_hardreset(struct ata_link *link, unsigned int *class,
- 		}
- 
- 		inic_tf_read(ap, &tf);
--		*class = ata_dev_classify(&tf);
-+		*class = ata_port_classify(ap, &tf);
- 	}
- 
- 	return 0;
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index f99ec6f7d7c0..7e9c1945dc81 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -680,7 +680,7 @@ static int sil24_softreset(struct ata_link *link, unsigned int *class,
- 	}
- 
- 	sil24_read_tf(ap, 0, &tf);
--	*class = ata_dev_classify(&tf);
-+	*class = ata_port_classify(ap, &tf);
- 
- 	DPRINTK("EXIT, class=%u\n", *class);
- 	return 0;
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 2a8404b26083..235fdbeb19ea 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1160,6 +1160,8 @@ extern enum ata_completion_errors ata_noop_qc_prep(struct ata_queued_cmd *qc);
- extern void ata_sg_init(struct ata_queued_cmd *qc, struct scatterlist *sg,
- 		 unsigned int n_elem);
- extern unsigned int ata_dev_classify(const struct ata_taskfile *tf);
-+extern unsigned int ata_port_classify(struct ata_port *ap,
-+				      const struct ata_taskfile *tf);
- extern void ata_dev_disable(struct ata_device *adev);
- extern void ata_id_string(const u16 *id, unsigned char *s,
- 			  unsigned int ofs, unsigned int len);
+-	VPRINTK("ENTER\n");
+-
+ 	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 		aprd = (si < 5) ? &cpb->aprd[si] :
+ 			&pp->aprd[NV_ADMA_SGTBL_LEN * qc->hw_tag + (si-5)];
 -- 
 2.29.2
 
