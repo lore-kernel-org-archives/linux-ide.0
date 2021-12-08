@@ -2,198 +2,306 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69BB1C433EF
-	for <linux-ide@archiver.kernel.org>; Wed,  8 Dec 2021 16:33:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B5B0C433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  8 Dec 2021 16:33:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237015AbhLHQgd (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 8 Dec 2021 11:36:33 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:37574 "EHLO
+        id S236979AbhLHQge (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 8 Dec 2021 11:36:34 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:37592 "EHLO
         smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230245AbhLHQgc (ORCPT
+        with ESMTP id S236981AbhLHQgc (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Wed, 8 Dec 2021 11:36:32 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 1278E1FD3E;
+        by smtp-out2.suse.de (Postfix) with ESMTP id 37F7C1FD2A;
         Wed,  8 Dec 2021 16:33:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1638981180; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=P6Prnv20miX/4xDb+oS9UDt51yzbfN2ii1KsSGaD35M=;
-        b=PIxPjCLsKVKGQEynOo3gV+YQhKNchPzclOdxMc+sKFYfevgnAWqPv7oMbTqoRBBpYGGU7z
-        0gQXAfCTEWDk2q3vCHZDjafyAR2DP5oyImBT7MFhvL9dCs0IndK8ZUSobn8YkF4sWNPiOL
-        Ohhwvfg7EcKwzkD4RT0mXpoPZrp3FA0=
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=guUwfX68vopVfGyGXTrFZ3Egm+67WKjTH7HIGlKhF3M=;
+        b=xIbrCfjYi1N0ISnMfAFatB1mePEu8v+BRDlyhcCr5JPDwSRyTHNx7X3xPchCVW+vrOhnNw
+        W8ruFr5fFQriEEwx1Zeznpw1W9olyzBiKqd0VE8SBhXftS2Kpd8aEDRcX5ia4N+tV5XUQp
+        guDhIR+mA6hE/WgZJinmrTnN7zg7ydU=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1638981180;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=P6Prnv20miX/4xDb+oS9UDt51yzbfN2ii1KsSGaD35M=;
-        b=W1KpAa2qGgTRlNVQweih7upG72PzcnbUv5nHFQexG5omeIpE43NQhDGw2q3Khsnp8A6bvw
-        z5PdkPuwnhYMjCCA==
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=guUwfX68vopVfGyGXTrFZ3Egm+67WKjTH7HIGlKhF3M=;
+        b=6s+yTOtJ3vwV7KizpaHvUl6E7F0RLFAPvjqFwPE+BY9kW1rAJktL+UK6fTZDz3fOC0B2pO
+        PsUvUbL9ylcSBgDw==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id D8994A3B93;
-        Wed,  8 Dec 2021 16:32:59 +0000 (UTC)
+        by relay2.suse.de (Postfix) with ESMTP id 2E71EA3B9C;
+        Wed,  8 Dec 2021 16:33:00 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id CC99D5191F5D; Wed,  8 Dec 2021 17:32:59 +0100 (CET)
+        id 109455191F6F; Wed,  8 Dec 2021 17:33:00 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Damien LeMoal <damien.lemoal@wdc.com>
 Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 00/73] libata: rework logging, take II
-Date:   Wed,  8 Dec 2021 17:31:42 +0100
-Message-Id: <20211208163255.114660-1-hare@suse.de>
+Subject: [PATCH 09/73] libata: tracepoints for bus-master DMA
+Date:   Wed,  8 Dec 2021 17:31:51 +0100
+Message-Id: <20211208163255.114660-10-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20211208163255.114660-1-hare@suse.de>
+References: <20211208163255.114660-1-hare@suse.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi all,
+Add tracepoints for bus-master DMA and taskfile related functions.
+That allows us to drop the relevant DPRINTK() calls.
 
-after some prodding from individual persons I've resurrected my
-patchset to put libata logging on a even keel, and use structured
-logging for everything.
-So this patch does away with DPRINTK, ATA_DEBUG or ata_msg_XXX() calls,
-and moves everything over to structured logging (ie the dev_XXX()
-calls).
-Additionally I've added more tracepoints to trace command flow
-and EH, HSM, and other related things.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/ata/libata-core.c     |   5 ++
+ drivers/ata/libata-sff.c      |  23 ++++++--
+ include/trace/events/libata.h | 100 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 123 insertions(+), 5 deletions(-)
 
-So everything is looking far saner now.
-
-As usual, comments and reviews are welcome.
-
-I know that the device names suck. Blame Tejun.
-
-Hannes Reinecke (73):
-  libata: remove pointless debugging messages
-  libata: Add ata_port_classify() helper
-  libata: move ata_dump_id() to dynamic debugging
-  libata: sanitize ATA_HORKAGE_DUMP_ID
-  sata_mv: replace DPRINTK with 'pci_dump' module parameter
-  sata_mv: kill 'port' argument in mv_dump_all_regs()
-  libata: add reset tracepoints
-  libata: drop DPRINTK() calls in reset
-  libata: tracepoints for bus-master DMA
-  libata: drop debugging statements for bus-master DMA
-  pata_octeon_cf: add bmdma tracepoints and drop DPRINTK() calls
-  pata_arasan_cf: use generic tracepoints
-  sata_dwc_460ex: use generic tracepoints
-  sata_nv: use generic tracepoints
-  libata-sff: tracepoints for HSM state machine
-  libata-sff: add tracepoints for ata_sff_flush_pio_task()
-  libata-scsi: drop DPRINTK calls for cdb translation
-  libata: add tracepoints for ATA error handling
-  libata: drop DPRINTK() calls during ATA error handling
-  libata-eh: remove DPRINTK() calls for request sense
-  libata: move ata_{port,link,dev}_dbg to standard dev_XXX() macros
-  libata: add qc_prep tracepoint
-  libata: move DPRINTK to ata debugging
-  pata_octeon_cf: remove DPRINTK() macro in interrupt context
-  pdc_adma: Remove DPRINTK call
-  sata_fsl: move DPRINTK to ata debugging
-  sata_rcar: replace DPRINTK() with ata_port_dbg()
-  sata_qstor: replace DPRINTK() with ata_port_dbg()
-  pata_pdc2027x: Replace PDPRINTK() with standard ata logging
-  libata: remove pointless VPRINTK() calls
-  ahci: Drop pointless VPRINTK() calls and convert the remaining ones
-  pdc_adma: Drop pointless VPRINTK() calls and convert the remaining
-    ones
-  pata_octeon_cf: Drop pointless VPRINTK() calls and convert the
-    remaining ones
-  pata_via: Drop pointless VPRINTK() calls
-  sata_promise: Drop pointless VPRINTK() calls and convert the remaining
-    ones
-  sata_qstor: Drop pointless VPRINTK() calls
-  sata_rcar: Drop pointless VPRINTK() calls
-  sata_inic162x: Drop pointless VPRINTK() calls
-  sata_mv: Drop pointless VPRINTK() call and convert the remaining one
-  sata_nv: drop pointless VPRINTK() calls and convert remaining ones
-  sata_fsl: convert VPRINTK() calls to ata_port_dbg()
-  sata_sil: Drop pointless VPRINTK() calls
-  sata_sx4: Drop pointless VPRINTK() calls and convert the remaining
-    ones
-  sata_sx4: add module parameter 'dimm_test'
-  libata: drop ata_msg_error() and ata_msg_intr()
-  libata: drop ata_msg_ctl()
-  libata: drop ata_msg_malloc()
-  libata: drop ata_msg_warn()
-  libata: drop ata_msg_probe()
-  libata: drop ata_msg_info()
-  libata: drop ata_msg_drv()
-  libata: remove 'new' ata message handling
-  libata: remove debug compilation switches
-  pata_atp867x: convert blank printk() calls
-  pata_cmd640: convert blank printk() calls
-  pata_cmd64x: convert blank printk() calls
-  pata_cs5520: convert blank printk() calls
-  pata_cs5536: convert blank printk() calls
-  pata_cypressx: convert blank printk() calls
-  pata_it821x: convert blank printk() calls
-  pata_marvell: convert blank printk() calls
-  pata_rz1000: convert blank printk() calls
-  pata_serverworks: convert blank printk() calls
-  pata_sil680: convert blank printk() calls
-  pdc_adma: remove disabled debugging messages
-  sata_sx4: convert blank printk() calls
-  sata_mv: convert remaining printk() to structured logging
-  pata_hpt37x: convert pr_XXX() calls
-  pata_octeon_cf: Replace pr_XXX() calls with structured logging
-  pata_hpt3x2n: convert pr_XXX() calls
-  pata_hpt3x2n: convert pr_err() calls
-  pata_hpt366: convert pr_warn() calls
-  libata-scsi: rework ata_dump_status to avoid using pr_cont()
-
- drivers/ata/acard-ahci.c        |   4 -
- drivers/ata/ahci.c              |  13 +-
- drivers/ata/ahci_qoriq.c        |   4 -
- drivers/ata/ahci_xgene.c        |   4 -
- drivers/ata/ata_piix.c          |   3 -
- drivers/ata/libahci.c           |  33 +--
- drivers/ata/libata-acpi.c       |  71 +++---
- drivers/ata/libata-core.c       | 270 ++++++++--------------
- drivers/ata/libata-eh.c         |  50 +++--
- drivers/ata/libata-pmp.c        |   8 -
- drivers/ata/libata-sata.c       |   5 -
- drivers/ata/libata-scsi.c       | 111 ++-------
- drivers/ata/libata-sff.c        |  86 +++----
- drivers/ata/libata-trace.c      |  29 +++
- drivers/ata/libata.h            |   1 -
- drivers/ata/pata_arasan_cf.c    |   3 +
- drivers/ata/pata_atp867x.c      |  29 +--
- drivers/ata/pata_cmd640.c       |   2 +-
- drivers/ata/pata_cmd64x.c       |   4 +-
- drivers/ata/pata_cs5520.c       |   4 +-
- drivers/ata/pata_cs5536.c       |   4 +-
- drivers/ata/pata_cypress.c      |   2 +-
- drivers/ata/pata_hpt366.c       |   4 +-
- drivers/ata/pata_hpt37x.c       |  19 +-
- drivers/ata/pata_hpt3x2n.c      |  11 +-
- drivers/ata/pata_it821x.c       |  43 ++--
- drivers/ata/pata_ixp4xx_cf.c    |   6 +-
- drivers/ata/pata_marvell.c      |   9 +-
- drivers/ata/pata_octeon_cf.c    |  48 +---
- drivers/ata/pata_pdc2027x.c     |  71 +++---
- drivers/ata/pata_pdc202xx_old.c |   2 -
- drivers/ata/pata_rz1000.c       |   4 +-
- drivers/ata/pata_serverworks.c  |   4 +-
- drivers/ata/pata_sil680.c       |   9 +-
- drivers/ata/pata_via.c          |  12 -
- drivers/ata/pdc_adma.c          |  33 +--
- drivers/ata/sata_dwc_460ex.c    |  71 +-----
- drivers/ata/sata_fsl.c          | 165 ++++++--------
- drivers/ata/sata_gemini.c       |   4 +-
- drivers/ata/sata_inic162x.c     |   4 +-
- drivers/ata/sata_mv.c           | 147 ++++++------
- drivers/ata/sata_nv.c           |  53 ++---
- drivers/ata/sata_promise.c      |  31 +--
- drivers/ata/sata_qstor.c        |  15 +-
- drivers/ata/sata_rcar.c         |  25 +--
- drivers/ata/sata_sil.c          |   1 -
- drivers/ata/sata_sil24.c        |   5 +-
- drivers/ata/sata_sx4.c          | 148 +++++-------
- include/linux/libata.h          |  99 ++------
- include/trace/events/libata.h   | 387 +++++++++++++++++++++++++++++++-
- 50 files changed, 992 insertions(+), 1178 deletions(-)
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 02cd8fe1acab..ef5ae37bfac0 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6614,3 +6614,8 @@ void ata_print_version(const struct device *dev, const char *version)
+ 	dev_printk(KERN_DEBUG, dev, "version %s\n", version);
+ }
+ EXPORT_SYMBOL(ata_print_version);
++
++EXPORT_TRACEPOINT_SYMBOL_GPL(ata_tf_load);
++EXPORT_TRACEPOINT_SYMBOL_GPL(ata_exec_command);
++EXPORT_TRACEPOINT_SYMBOL_GPL(ata_bmdma_setup);
++EXPORT_TRACEPOINT_SYMBOL_GPL(ata_bmdma_start);
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 4cc7c0606e06..60ac93a0bafb 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -18,7 +18,7 @@
+ #include <linux/module.h>
+ #include <linux/libata.h>
+ #include <linux/highmem.h>
+-
++#include <trace/events/libata.h>
+ #include "libata.h"
+ 
+ static struct workqueue_struct *ata_sff_wq;
+@@ -505,6 +505,7 @@ EXPORT_SYMBOL_GPL(ata_sff_exec_command);
+  *	ata_tf_to_host - issue ATA taskfile to host controller
+  *	@ap: port to which command is being issued
+  *	@tf: ATA taskfile register set
++ *	@tag: tag of the associated command
+  *
+  *	Issues ATA taskfile register set to ATA host controller,
+  *	with proper synchronization with interrupt handler and
+@@ -514,9 +515,12 @@ EXPORT_SYMBOL_GPL(ata_sff_exec_command);
+  *	spin_lock_irqsave(host lock)
+  */
+ static inline void ata_tf_to_host(struct ata_port *ap,
+-				  const struct ata_taskfile *tf)
++				  const struct ata_taskfile *tf,
++				  unsigned int tag)
+ {
++	trace_ata_tf_load(ap, tf);
+ 	ap->ops->sff_tf_load(ap, tf);
++	trace_ata_exec_command(ap, tf, tag);
+ 	ap->ops->sff_exec_command(ap, tf);
+ }
+ 
+@@ -768,6 +772,7 @@ static void atapi_send_cdb(struct ata_port *ap, struct ata_queued_cmd *qc)
+ 	case ATAPI_PROT_DMA:
+ 		ap->hsm_task_state = HSM_ST_LAST;
+ 		/* initiate bmdma */
++		trace_ata_bmdma_start(ap, &qc->tf, qc->tag);
+ 		ap->ops->bmdma_start(qc);
+ 		break;
+ #endif /* CONFIG_ATA_BMDMA */
+@@ -1376,7 +1381,7 @@ unsigned int ata_sff_qc_issue(struct ata_queued_cmd *qc)
+ 		if (qc->tf.flags & ATA_TFLAG_POLLING)
+ 			ata_qc_set_polling(qc);
+ 
+-		ata_tf_to_host(ap, &qc->tf);
++		ata_tf_to_host(ap, &qc->tf, qc->tag);
+ 		ap->hsm_task_state = HSM_ST_LAST;
+ 
+ 		if (qc->tf.flags & ATA_TFLAG_POLLING)
+@@ -1388,7 +1393,7 @@ unsigned int ata_sff_qc_issue(struct ata_queued_cmd *qc)
+ 		if (qc->tf.flags & ATA_TFLAG_POLLING)
+ 			ata_qc_set_polling(qc);
+ 
+-		ata_tf_to_host(ap, &qc->tf);
++		ata_tf_to_host(ap, &qc->tf, qc->tag);
+ 
+ 		if (qc->tf.flags & ATA_TFLAG_WRITE) {
+ 			/* PIO data out protocol */
+@@ -1418,7 +1423,7 @@ unsigned int ata_sff_qc_issue(struct ata_queued_cmd *qc)
+ 		if (qc->tf.flags & ATA_TFLAG_POLLING)
+ 			ata_qc_set_polling(qc);
+ 
+-		ata_tf_to_host(ap, &qc->tf);
++		ata_tf_to_host(ap, &qc->tf, qc->tag);
+ 
+ 		ap->hsm_task_state = HSM_ST_FIRST;
+ 
+@@ -2745,8 +2750,11 @@ unsigned int ata_bmdma_qc_issue(struct ata_queued_cmd *qc)
+ 	case ATA_PROT_DMA:
+ 		WARN_ON_ONCE(qc->tf.flags & ATA_TFLAG_POLLING);
+ 
++		trace_ata_tf_load(ap, &qc->tf);
+ 		ap->ops->sff_tf_load(ap, &qc->tf);  /* load tf registers */
++		trace_ata_bmdma_setup(ap, &qc->tf, qc->tag);
+ 		ap->ops->bmdma_setup(qc);	    /* set up bmdma */
++		trace_ata_bmdma_start(ap, &qc->tf, qc->tag);
+ 		ap->ops->bmdma_start(qc);	    /* initiate bmdma */
+ 		ap->hsm_task_state = HSM_ST_LAST;
+ 		break;
+@@ -2754,7 +2762,9 @@ unsigned int ata_bmdma_qc_issue(struct ata_queued_cmd *qc)
+ 	case ATAPI_PROT_DMA:
+ 		WARN_ON_ONCE(qc->tf.flags & ATA_TFLAG_POLLING);
+ 
++		trace_ata_tf_load(ap, &qc->tf);
+ 		ap->ops->sff_tf_load(ap, &qc->tf);  /* load tf registers */
++		trace_ata_bmdma_setup(ap, &qc->tf, qc->tag);
+ 		ap->ops->bmdma_setup(qc);	    /* set up bmdma */
+ 		ap->hsm_task_state = HSM_ST_FIRST;
+ 
+@@ -2802,6 +2812,7 @@ unsigned int ata_bmdma_port_intr(struct ata_port *ap, struct ata_queued_cmd *qc)
+ 			return ata_sff_idle_irq(ap);
+ 
+ 		/* before we do anything else, clear DMA-Start bit */
++		trace_ata_bmdma_stop(ap, &qc->tf, qc->tag);
+ 		ap->ops->bmdma_stop(qc);
+ 		bmdma_stopped = true;
+ 
+@@ -2881,6 +2892,7 @@ void ata_bmdma_error_handler(struct ata_port *ap)
+ 			thaw = true;
+ 		}
+ 
++		trace_ata_bmdma_stop(ap, &qc->tf, qc->tag);
+ 		ap->ops->bmdma_stop(qc);
+ 
+ 		/* if we're gonna thaw, make sure IRQ is clear */
+@@ -2914,6 +2926,7 @@ void ata_bmdma_post_internal_cmd(struct ata_queued_cmd *qc)
+ 
+ 	if (ata_is_dma(qc->tf.protocol)) {
+ 		spin_lock_irqsave(ap->lock, flags);
++		trace_ata_bmdma_stop(ap, &qc->tf, qc->tag);
+ 		ap->ops->bmdma_stop(qc);
+ 		spin_unlock_irqrestore(ap->lock, flags);
+ 	}
+diff --git a/include/trace/events/libata.h b/include/trace/events/libata.h
+index ec2a350d1aca..6a0a9b7a42ec 100644
+--- a/include/trace/events/libata.h
++++ b/include/trace/events/libata.h
+@@ -291,6 +291,106 @@ DEFINE_EVENT(ata_qc_complete_template, ata_qc_complete_done,
+ 	     TP_PROTO(struct ata_queued_cmd *qc),
+ 	     TP_ARGS(qc));
+ 
++TRACE_EVENT(ata_tf_load,
++
++	TP_PROTO(struct ata_port *ap, const struct ata_taskfile *tf),
++
++	TP_ARGS(ap, tf),
++
++	TP_STRUCT__entry(
++		__field( unsigned int,	ata_port )
++		__field( unsigned char,	cmd	)
++		__field( unsigned char,	dev	)
++		__field( unsigned char,	lbal	)
++		__field( unsigned char,	lbam	)
++		__field( unsigned char,	lbah	)
++		__field( unsigned char,	nsect	)
++		__field( unsigned char,	feature	)
++		__field( unsigned char,	hob_lbal )
++		__field( unsigned char,	hob_lbam )
++		__field( unsigned char,	hob_lbah )
++		__field( unsigned char,	hob_nsect )
++		__field( unsigned char,	hob_feature )
++		__field( unsigned char,	proto	)
++	),
++
++	TP_fast_assign(
++		__entry->ata_port	= ap->print_id;
++		__entry->proto		= tf->protocol;
++		__entry->cmd		= tf->command;
++		__entry->dev		= tf->device;
++		__entry->lbal		= tf->lbal;
++		__entry->lbam		= tf->lbam;
++		__entry->lbah		= tf->lbah;
++		__entry->hob_lbal	= tf->hob_lbal;
++		__entry->hob_lbam	= tf->hob_lbam;
++		__entry->hob_lbah	= tf->hob_lbah;
++		__entry->feature	= tf->feature;
++		__entry->hob_feature	= tf->hob_feature;
++		__entry->nsect		= tf->nsect;
++		__entry->hob_nsect	= tf->hob_nsect;
++	),
++
++	TP_printk("ata_port=%u proto=%s cmd=%s%s " \
++		  " tf=(%02x/%02x:%02x:%02x:%02x:%02x/%02x:%02x:%02x:%02x:%02x/%02x)",
++		  __entry->ata_port,
++		  show_protocol_name(__entry->proto),
++		  show_opcode_name(__entry->cmd),
++		  __parse_subcmd(__entry->cmd, __entry->feature, __entry->hob_nsect),
++		  __entry->cmd, __entry->feature, __entry->nsect,
++		  __entry->lbal, __entry->lbam, __entry->lbah,
++		  __entry->hob_feature, __entry->hob_nsect,
++		  __entry->hob_lbal, __entry->hob_lbam, __entry->hob_lbah,
++		  __entry->dev)
++);
++
++DECLARE_EVENT_CLASS(ata_exec_command_template,
++
++	TP_PROTO(struct ata_port *ap, const struct ata_taskfile *tf, unsigned int tag),
++
++	TP_ARGS(ap, tf, tag),
++
++	TP_STRUCT__entry(
++		__field( unsigned int,	ata_port )
++		__field( unsigned int,	tag	)
++		__field( unsigned char,	cmd	)
++		__field( unsigned char,	feature	)
++		__field( unsigned char,	hob_nsect )
++		__field( unsigned char,	proto	)
++	),
++
++	TP_fast_assign(
++		__entry->ata_port	= ap->print_id;
++		__entry->tag		= tag;
++		__entry->proto		= tf->protocol;
++		__entry->cmd		= tf->command;
++		__entry->feature	= tf->feature;
++		__entry->hob_nsect	= tf->hob_nsect;
++	),
++
++	TP_printk("ata_port=%u tag=%d proto=%s cmd=%s%s",
++		  __entry->ata_port, __entry->tag,
++		  show_protocol_name(__entry->proto),
++		  show_opcode_name(__entry->cmd),
++		  __parse_subcmd(__entry->cmd, __entry->feature, __entry->hob_nsect))
++);
++
++DEFINE_EVENT(ata_exec_command_template, ata_exec_command,
++	     TP_PROTO(struct ata_port *ap, const struct ata_taskfile *tf, unsigned int tag),
++	     TP_ARGS(ap, tf, tag));
++
++DEFINE_EVENT(ata_exec_command_template, ata_bmdma_setup,
++	     TP_PROTO(struct ata_port *ap, const struct ata_taskfile *tf, unsigned int tag),
++	     TP_ARGS(ap, tf, tag));
++
++DEFINE_EVENT(ata_exec_command_template, ata_bmdma_start,
++	     TP_PROTO(struct ata_port *ap, const struct ata_taskfile *tf, unsigned int tag),
++	     TP_ARGS(ap, tf, tag));
++
++DEFINE_EVENT(ata_exec_command_template, ata_bmdma_stop,
++	     TP_PROTO(struct ata_port *ap, const struct ata_taskfile *tf, unsigned int tag),
++	     TP_ARGS(ap, tf, tag));
++
+ TRACE_EVENT(ata_eh_link_autopsy,
+ 
+ 	TP_PROTO(struct ata_device *dev, unsigned int eh_action, unsigned int eh_err_mask),
 -- 
 2.29.2
 
