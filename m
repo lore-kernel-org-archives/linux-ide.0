@@ -2,106 +2,95 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBFB7C433F5
-	for <linux-ide@archiver.kernel.org>; Thu,  9 Dec 2021 08:42:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D85D0C433FE
+	for <linux-ide@archiver.kernel.org>; Thu,  9 Dec 2021 09:41:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235036AbhLIIqW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 9 Dec 2021 03:46:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37102 "EHLO
+        id S229844AbhLIJpa convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 9 Dec 2021 04:45:30 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51172 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235019AbhLIIqV (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Dec 2021 03:46:21 -0500
-Received: from mail-lf1-x130.google.com (mail-lf1-x130.google.com [IPv6:2a00:1450:4864:20::130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9218AC061746
-        for <linux-ide@vger.kernel.org>; Thu,  9 Dec 2021 00:42:48 -0800 (PST)
-Received: by mail-lf1-x130.google.com with SMTP id c32so10624414lfv.4
-        for <linux-ide@vger.kernel.org>; Thu, 09 Dec 2021 00:42:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:organization:in-reply-to
-         :content-transfer-encoding;
-        bh=uzNJnXLH9ZUvNxPl4Jf+tO532cstdbrGCUjXE5IEgL0=;
-        b=LCl6i1h8qD4Htv1gkyPFKjIBOl2oJv911GxtwuvvVQAFAMMp6wvjvBMXj6yXjlaXZz
-         VPZOg4MmuqX2XSWldnN/J4SJyP/l47ty1vshg+ylrPYXZ2m7oPKmiIhetFkJftb7+vnj
-         q8dwxrXXEkZTT5aJRSrvw9nbCPMXnMfnHBU1LinkOvwjII8DslslhNoT8MKODGCt5xoS
-         cTIWT2xOiOEjw2Sa6LWc7a6ze+yxvFSDQZNSeQLPve0CCrLjpaYgNzMuHB9f9a64QpA+
-         xwZ8ZqaDRUe9EJnhkvbfSVMmi9ujoGLzXUW0NPkzWhudhlD8ydR+wq+3ybEc7jQGq2w8
-         2l2g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:organization:in-reply-to
-         :content-transfer-encoding;
-        bh=uzNJnXLH9ZUvNxPl4Jf+tO532cstdbrGCUjXE5IEgL0=;
-        b=yMD82ravQmkh22fhUWxLnWVoBBA6KGH49FJfK7xEigqxRJRz6XHDATxP4ux56mIrtL
-         hYzoBU2149NyjMvipvb9CE+YdMA4YYLA0yxjC2+6Gu5dl0Y41CPJEhwHCRsS9oU+KLCA
-         2uIN6xa6kEnsOrdEC/1pVfb5Ia0odD/lZRH/NbLiH1gLyaJAu7ildBx8FKzGwRTXTjmi
-         Q4W3iraxe9aAYoGirmSgFu+OVR1Hd/TXGk/L9DoZriqzVVQJ0VTOdUIj/Jyq+kLffm51
-         2RrLNHZIe7iY6fmnqRF9Pn3Nw+nkUI95UPh3y6evzD24HUoXDy+o46xBEfYh7LErYVby
-         C4iA==
-X-Gm-Message-State: AOAM531dkSwnIxKgwUfNSbtCCsAcRlA0jqlk2Rmc71q0SzjqnVeZ9YiU
-        057kRhsBFgg71VW4f4Z81+4=
-X-Google-Smtp-Source: ABdhPJwBhLU27gKKIKdOUR7JgwCcwg2UAsyjdAuyVzq7YTzAc2d3SJUPZ8QhnCPfICTsbHP4FJuBgg==
-X-Received: by 2002:a05:6512:405:: with SMTP id u5mr4538955lfk.271.1639039366901;
-        Thu, 09 Dec 2021 00:42:46 -0800 (PST)
-Received: from [192.168.1.100] ([178.176.78.201])
-        by smtp.gmail.com with ESMTPSA id f17sm465291lfk.145.2021.12.09.00.42.45
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 09 Dec 2021 00:42:46 -0800 (PST)
-Message-ID: <116f7933-5dbc-4aae-a300-fa544f0b1b0d@gmail.com>
-Date:   Thu, 9 Dec 2021 11:42:34 +0300
+        with ESMTP id S229713AbhLIJpa (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Dec 2021 04:45:30 -0500
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C273DC061746
+        for <linux-ide@vger.kernel.org>; Thu,  9 Dec 2021 01:41:56 -0800 (PST)
+Received: from lupine.hi.pengutronix.de ([2001:67c:670:100:3ad5:47ff:feaf:1a17] helo=lupine)
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <p.zabel@pengutronix.de>)
+        id 1mvFvk-0001TL-1T; Thu, 09 Dec 2021 10:41:36 +0100
+Received: from pza by lupine with local (Exim 4.94.2)
+        (envelope-from <p.zabel@pengutronix.de>)
+        id 1mvFve-0004Ge-0z; Thu, 09 Dec 2021 10:41:30 +0100
+Message-ID: <ab45adc2e305c79286f6b63fa42cfd78983cb757.camel@pengutronix.de>
+Subject: Re: [PATCH v3 02/15] dt-bindings: reset: Convert Broadcom STB reset
+ to YAML
+From:   Philipp Zabel <p.zabel@pengutronix.de>
+To:     Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" 
+        <bcm-kernel-feedback-list@broadcom.com>,
+        Gregory Fong <gregory.0xf0@gmail.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Marc Zyngier <maz@kernel.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Uwe =?ISO-8859-1?Q?Kleine-K=F6nig?= 
+        <u.kleine-koenig@pengutronix.de>, Lee Jones <lee.jones@linaro.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Alessandro Zummo <a.zummo@towertech.it>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Amit Kucheria <amitk@kernel.org>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Markus Mayer <mmayer@broadcom.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Al Cooper <alcooperx@gmail.com>,
+        Doug Berger <opendmb@gmail.com>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
+        "moderated list:BROADCOM BCM7XXX ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:MULTIMEDIA CARD (MMC), SECURE DIGITAL (SD) AND..." 
+        <linux-mmc@vger.kernel.org>,
+        "open list:PWM SUBSYSTEM" <linux-pwm@vger.kernel.org>,
+        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
+        <linux-crypto@vger.kernel.org>,
+        "open list:REAL TIME CLOCK (RTC) SUBSYSTEM" 
+        <linux-rtc@vger.kernel.org>,
+        "open list:THERMAL" <linux-pm@vger.kernel.org>,
+        "open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>
+Date:   Thu, 09 Dec 2021 10:41:29 +0100
+In-Reply-To: <20211208003727.3596577-3-f.fainelli@gmail.com>
+References: <20211208003727.3596577-1-f.fainelli@gmail.com>
+         <20211208003727.3596577-3-f.fainelli@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+User-Agent: Evolution 3.38.3-1 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.2
-Subject: Re: [PATCH 22/73] libata: add qc_prep tracepoint
-Content-Language: en-US
-To:     Hannes Reinecke <hare@suse.de>,
-        Damien LeMoal <damien.lemoal@wdc.com>
-Cc:     linux-ide@vger.kernel.org
-References: <20211208163255.114660-1-hare@suse.de>
- <20211208163255.114660-23-hare@suse.de>
-From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Organization: Brain-dead Software
-In-Reply-To: <20211208163255.114660-23-hare@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 2001:67c:670:100:3ad5:47ff:feaf:1a17
+X-SA-Exim-Mail-From: p.zabel@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-ide@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 08.12.2021 19:32, Hannes Reinecke wrote:
+On Tue, 2021-12-07 at 16:37 -0800, Florian Fainelli wrote:
+> Convert the Broadcom STB SW_INIT style reset controller binding to YAML.
+> 
+> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
 
-> Add tracepoint for ata_qc_prep().
+Acked-by: Philipp Zabel <p.zabel@pengutronix.de>
 
-    You're also adding a tracepoint for ata_qc_issue...
-
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->   drivers/ata/libata-core.c     |  1 +
->   include/trace/events/libata.h | 10 +++++++++-
->   2 files changed, 10 insertions(+), 1 deletion(-)
-
-[...]
-> diff --git a/include/trace/events/libata.h b/include/trace/events/libata.h
-> index 7d48e804b889..360f99980b44 100644
-> --- a/include/trace/events/libata.h
-> +++ b/include/trace/events/libata.h
-[...]
-> @@ -235,6 +235,14 @@ TRACE_EVENT(ata_qc_issue,
->   		  __entry->dev)
->   );
->   
-> +DEFINE_EVENT(ata_qc_issue_template, ata_qc_prep,
-> +	     TP_PROTO(struct ata_queued_cmd *qc),
-> +	     TP_ARGS(qc));
-> +
-> +DEFINE_EVENT(ata_qc_issue_template, ata_qc_issue,
-> +	     TP_PROTO(struct ata_queued_cmd *qc),
-> +	     TP_ARGS(qc));
-> +
->   DECLARE_EVENT_CLASS(ata_qc_complete_template,
->   
->   	TP_PROTO(struct ata_queued_cmd *qc),
-
-MBR, Sergey
+regards
+Philipp
