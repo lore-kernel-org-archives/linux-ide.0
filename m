@@ -2,64 +2,64 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34EDCC433EF
-	for <linux-ide@archiver.kernel.org>; Thu,  9 Dec 2021 07:16:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC3D1C433F5
+	for <linux-ide@archiver.kernel.org>; Thu,  9 Dec 2021 07:17:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233612AbhLIHTg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 9 Dec 2021 02:19:36 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:56662 "EHLO
+        id S233614AbhLIHVc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 9 Dec 2021 02:21:32 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:56684 "EHLO
         smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233467AbhLIHTf (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Dec 2021 02:19:35 -0500
+        with ESMTP id S233467AbhLIHVb (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Dec 2021 02:21:31 -0500
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 815A621763;
-        Thu,  9 Dec 2021 07:16:01 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id E678121763;
+        Thu,  9 Dec 2021 07:17:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1639034161; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1639034277; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=vdtQGfTwfNJAMQny2DAWR9XXdNNvMGeYl7SEwjVlglw=;
-        b=pPK1SrTbAuK2ulwaQpCb09wM6mM2HyMXO/X5pbUBAcecoDeCdABj70F4yTGYiFNfHKVVfF
-        E5c87reRvDiVpBhm7PO2pVRQ1ZnzuXBrEOhvfXW+hRCfMQibm0clyrKP7+vB8Om7LHqKuM
-        qCCjYJnvmCp7wc1aVmT1Vj4WMIw4OHo=
+        bh=I9nFsnj8DQVJ41KvIS3AdH0AVpAFUUONJAmUQvBLN40=;
+        b=uR7NRu/KZCvA3svYral/FmR12TrGR2Qm4tq3FXbPFPuVtY9GTSSTXXRSOlvmdVlPO/ec0n
+        WpLFIIfnTGstNDsfsYrZ4j1Oo2HAzaKwXHwzaVxFzEMeolz6C+PWDdl95U0ALNzugFc5Hz
+        Bgrs0MuDVM3MJPgTwJhvr7hU5sCkqaU=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1639034161;
+        s=susede2_ed25519; t=1639034277;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=vdtQGfTwfNJAMQny2DAWR9XXdNNvMGeYl7SEwjVlglw=;
-        b=2PcephOlleJa5Yx5g+7WZ7UkAwiCLYpbCm5qegPvrdOKlgtkcw3BvkEeyMc0pe/SgIIW7X
-        6s3PGyxBNLeDG4Cg==
+        bh=I9nFsnj8DQVJ41KvIS3AdH0AVpAFUUONJAmUQvBLN40=;
+        b=KULhk0Q1QzooYbe5+6LqelRc5IhdaECkMpJJz0h0maq7SrRJXSetBkTkiZDP0PFniOAaxa
+        lWY9rYKXUsxunhDg==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 6B1CD13CA2;
-        Thu,  9 Dec 2021 07:16:01 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id B451113CA2;
+        Thu,  9 Dec 2021 07:17:57 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id q3tBGTGtsWExLgAAMHmgww
-        (envelope-from <hare@suse.de>); Thu, 09 Dec 2021 07:16:01 +0000
-Subject: Re: [PATCH 02/73] libata: Add ata_port_classify() helper
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Damien LeMoal <damien.lemoal@wdc.com>
+        id +OiHKaWtsWG/LgAAMHmgww
+        (envelope-from <hare@suse.de>); Thu, 09 Dec 2021 07:17:57 +0000
+Subject: Re: [PATCH 05/73] sata_mv: replace DPRINTK with 'pci_dump' module
+ parameter
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Cc:     linux-ide@vger.kernel.org,
         Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 References: <20211208163255.114660-1-hare@suse.de>
- <20211208163255.114660-3-hare@suse.de>
- <a3368acf-d517-7a6c-04d5-44c903ceff43@opensource.wdc.com>
+ <20211208163255.114660-6-hare@suse.de>
+ <6fc0936f-d220-69c4-a76b-f68485a078bd@opensource.wdc.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <d92f9325-c1c6-e476-61d3-5ec1bf6571ee@suse.de>
-Date:   Thu, 9 Dec 2021 08:16:00 +0100
+Message-ID: <c0891706-61c9-ff2d-c199-b15fde712040@suse.de>
+Date:   Thu, 9 Dec 2021 08:17:56 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.12.0
 MIME-Version: 1.0
-In-Reply-To: <a3368acf-d517-7a6c-04d5-44c903ceff43@opensource.wdc.com>
+In-Reply-To: <6fc0936f-d220-69c4-a76b-f68485a078bd@opensource.wdc.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -67,157 +67,64 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 12/9/21 1:34 AM, Damien Le Moal wrote:
+On 12/9/21 1:38 AM, Damien Le Moal wrote:
 > On 2021/12/09 1:31, Hannes Reinecke wrote:
->> Add an ata_port_classify() helper to print out the results from
->> the device classification and remove the debugging statements
->> from ata_dev_classify(). Also provide a mapping ata_dev_class_string()
->> to provide a string representation for those instances calling
->> ata_dev_classify() directly.
+>> Implement module parameter 'pci_dump' and move the DPRINTK calls
+>> over to dev_printk().
 >>
 >> Signed-off-by: Hannes Reinecke <hare@suse.de>
 >> Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 >> ---
->>   drivers/ata/libahci.c       |  2 +-
->>   drivers/ata/libata-core.c   | 67 ++++++++++++++++++++++++++++---------
->>   drivers/ata/libata-sff.c    |  2 +-
->>   drivers/ata/sata_fsl.c      |  2 +-
->>   drivers/ata/sata_inic162x.c |  2 +-
->>   drivers/ata/sata_sil24.c    |  2 +-
->>   include/linux/libata.h      |  2 ++
->>   7 files changed, 58 insertions(+), 21 deletions(-)
+>>   drivers/ata/sata_mv.c | 88 ++++++++++++++++++++++++-------------------
+>>   1 file changed, 49 insertions(+), 39 deletions(-)
 >>
->> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
->> index 8b651f55fc84..21dbcd551443 100644
->> --- a/drivers/ata/libahci.c
->> +++ b/drivers/ata/libahci.c
->> @@ -1300,7 +1300,7 @@ unsigned int ahci_dev_classify(struct ata_port *ap)
->>   	tf.lbal		= (tmp >> 8)	& 0xff;
->>   	tf.nsect	= (tmp)		& 0xff;
+>> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+>> index cae4c1eab102..f0257685495f 100644
+>> --- a/drivers/ata/sata_mv.c
+>> +++ b/drivers/ata/sata_mv.c
+>> @@ -83,6 +83,10 @@ module_param(irq_coalescing_usecs, int, S_IRUGO);
+>>   MODULE_PARM_DESC(irq_coalescing_usecs,
+>>   		 "IRQ coalescing time threshold in usecs");
 >>   
->> -	return ata_dev_classify(&tf);
->> +	return ata_port_classify(ap, &tf);
->>   }
->>   EXPORT_SYMBOL_GPL(ahci_dev_classify);
->>   
->> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->> index f6a9e2f22a94..6cac413caf83 100644
->> --- a/drivers/ata/libata-core.c
->> +++ b/drivers/ata/libata-core.c
->> @@ -969,6 +969,27 @@ const char *sata_spd_string(unsigned int spd)
->>   	return spd_str[spd - 1];
->>   }
->>   
->> +const char *ata_dev_class_string(unsigned int class)
-> 
-> This should be static.
-> 
-Yeah; kbuild robot complained already.
-
->> +{
->> +	static const char * const class_str[] = {
->> +		"unknown",
->> +		"ATA",
->> +		"ATA (unsupported)",
->> +		"ATAPI",
->> +		"ATAPI (unsupported",
->> +		"PMP",
->> +		"PMP (unsupported)",
->> +		"SEMB",
->> +		"SEMB (unsupported)",
->> +		"ZAC",
->> +		"ZAC (unsupported)",
->> +		"none",
->> +	};
-> 
-> Add a blank line after the declaration.
-> 
->> +	if (class == 0 || (class - 1) >= ARRAY_SIZE(class_str))
->> +		return "unknown";
->> +	return class_str[class - 1];
-> 
-> Why class - 1 ? The class_str entries directly match the values of the
-> ATA_DEV_XXX macros...
-> 
-Yeah; and the whole thing should just go anyway, as we have the same 
-functionality already present in libata-transport.c:get_ata_class_names().
-
->> +}
+>> +static int pci_dump;
+>> +module_param(pci_dump, int, S_IRUGO);
+>> +MODULE_PARM_DESC(pci_dump, "Enable dumping of PCI registers on error");
 >> +
->>   /**
->>    *	ata_dev_classify - determine device type based on ATA-spec signature
->>    *	@tf: ATA taskfile register set for device to be identified
->> @@ -1007,36 +1028,50 @@ unsigned int ata_dev_classify(const struct ata_taskfile *tf)
->>   	 * SEMB signature.  This is worked around in
->>   	 * ata_dev_read_id().
->>   	 */
->> -	if ((tf->lbam == 0) && (tf->lbah == 0)) {
->> -		DPRINTK("found ATA device by sig\n");
->> +	if ((tf->lbam == 0) && (tf->lbah == 0))
->>   		return ATA_DEV_ATA;
->> -	}
->>   
->> -	if ((tf->lbam == 0x14) && (tf->lbah == 0xeb)) {
->> -		DPRINTK("found ATAPI device by sig\n");
->> +	if ((tf->lbam == 0x14) && (tf->lbah == 0xeb))
->>   		return ATA_DEV_ATAPI;
->> -	}
->>   
->> -	if ((tf->lbam == 0x69) && (tf->lbah == 0x96)) {
->> -		DPRINTK("found PMP device by sig\n");
->> +	if ((tf->lbam == 0x69) && (tf->lbah == 0x96))
->>   		return ATA_DEV_PMP;
->> -	}
->>   
->> -	if ((tf->lbam == 0x3c) && (tf->lbah == 0xc3)) {
->> -		DPRINTK("found SEMB device by sig (could be ATA device)\n");
->> +	if ((tf->lbam == 0x3c) && (tf->lbah == 0xc3))
->>   		return ATA_DEV_SEMB;
->> -	}
->>   
->> -	if ((tf->lbam == 0xcd) && (tf->lbah == 0xab)) {
->> -		DPRINTK("found ZAC device by sig\n");
->> +	if ((tf->lbam == 0xcd) && (tf->lbah == 0xab))
->>   		return ATA_DEV_ZAC;
->> -	}
->>   
->> -	DPRINTK("unknown device\n");
->>   	return ATA_DEV_UNKNOWN;
+>>   enum {
+>>   	/* BAR's are enumerated in terms of pci_resource_start() terms */
+>>   	MV_PRIMARY_BAR		= 0,	/* offset 0x10: memory space */
+>> @@ -1248,42 +1252,43 @@ static int mv_stop_edma(struct ata_port *ap)
+>>   	return err;
 >>   }
->>   EXPORT_SYMBOL_GPL(ata_dev_classify);
 >>   
->> +/**
->> + *     ata_port_classify - determine device type based on ATA-spec signature
->> + *     @ap: ATA port device on which the classification should be run
->> + *     @tf: ATA taskfile register set for device to be identified
->> + *
->> + *     A wrapper around ata_dev_classify() to provide additional logging
->> + *
->> + *     RETURNS:
->> + *     Device type, %ATA_DEV_ATA, %ATA_DEV_ATAPI, %ATA_DEV_PMP,
->> + *     %ATA_DEV_ZAC, or %ATA_DEV_UNKNOWN the event of failure.
->> + */
->> +unsigned int ata_port_classify(struct ata_port *ap,
->> +			       const struct ata_taskfile *tf)
->> +{
->> +	unsigned int class = ata_dev_classify(tf);
+>> -#ifdef ATA_DEBUG
+>> -static void mv_dump_mem(void __iomem *start, unsigned bytes)
+>> +static void mv_dump_mem(struct device *dev, void __iomem *start, unsigned bytes)
+>>   {
+>> -	int b, w;
+>> +	int b, w, o;
+>> +	unsigned char linebuf[38];
 >> +
->> +	if (class != ATA_DEV_UNKNOWN)
->> +		ata_port_dbg(ap, "found %s device by sig\n",
->> +			     ata_dev_class_string(class));
->> +	else
->> +		ata_port_dbg(ap, "found unknown device\n");
+>>   	for (b = 0; b < bytes; ) {
+>> -		DPRINTK("%p: ", start + b);
+>> -		for (w = 0; b < bytes && w < 4; w++) {
+>> -			printk("%08x ", readl(start + b));
+>> +		for (w = 0, o = 0; b < bytes && w < 4; w++) {
+>> +			o += snprintf(linebuf + o, 38 - o,
+>> +				      "%08x ", readl(start + b));
+>>   			b += sizeof(u32);
+>>   		}
+>> -		printk("\n");
+>> +		dev_printk(KERN_DEBUG, dev, "%s: %p: %s\n",
+>> +			   __func__, start + b, linebuf);
 > 
-> Why the if-else here ? ata_dev_class_string(() handles ATA_DEV_UNKNOWN and "bad"
-> class values saying "unknown" already. So this all seems redundant. If this is
-> removed, then ata_dev_class_string() could be coded in here since this is the
-> sole user of that helper.
+> Why not dev_dbg() ? Same comment for all the prints below.
 > 
+Because the entire thing is encapsulated by the 'pci_dump' parameter, ie 
+it'll be only ever called when 'pci_dump' is set.
+So it feels redundant to require both, 'pci_dump' _and_ dynamic debugging.
 
-Will be doing so, and removing ata_dev_class_string() in favour of the 
-libata-transport routines.
-
-Thanks for the review!
+But I can move it over to dynamic debugging and kill the pci_dump parameter.
 
 Cheers,
 
