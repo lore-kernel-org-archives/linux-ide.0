@@ -2,21 +2,20 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88703C433F5
-	for <linux-ide@archiver.kernel.org>; Thu,  9 Dec 2021 20:29:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C390CC433F5
+	for <linux-ide@archiver.kernel.org>; Thu,  9 Dec 2021 20:31:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231206AbhLIUco (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 9 Dec 2021 15:32:44 -0500
-Received: from mxout04.lancloud.ru ([45.84.86.114]:35392 "EHLO
-        mxout04.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229850AbhLIUco (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Dec 2021 15:32:44 -0500
+        id S229710AbhLIUf3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 9 Dec 2021 15:35:29 -0500
+Received: from mxout01.lancloud.ru ([45.84.86.81]:48156 "EHLO
+        mxout01.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229657AbhLIUf3 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Dec 2021 15:35:29 -0500
 Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout04.lancloud.ru AE51A20AAC93
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout01.lancloud.ru 0A74D20AB94D
 Received: from LanCloud
 Received: from LanCloud
 Received: from LanCloud
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
 Subject: Re: [PATCH v1 1/2] ata: libahci_platform: Get rid of dup message when
  IRQ can't be retrieved
 To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
@@ -28,67 +27,43 @@ References: <20211209145937.77719-1-andriy.shevchenko@linux.intel.com>
  <d841bc59-a2a6-27f5-10af-05fe2e24067a@omp.ru>
  <YbI/6OIKM7qvLQcp@smile.fi.intel.com>
  <bfd96f5a-94c7-cee6-9546-14dc59cb8542@omp.ru>
- <YbJXjmsDJWlr3xpB@smile.fi.intel.com>
+ <YbJXjmsDJWlr3xpB@smile.fi.intel.com> <YbJYr7jg162RVP12@smile.fi.intel.com>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
 Organization: Open Mobile Platform
-Message-ID: <15cf03b2-8d45-93b1-f0a0-d79c93cee0da@omp.ru>
-Date:   Thu, 9 Dec 2021 23:29:07 +0300
+Message-ID: <fbc6f255-09e8-49be-8656-fac20968854c@omp.ru>
+Date:   Thu, 9 Dec 2021 23:31:52 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.1
 MIME-Version: 1.0
-In-Reply-To: <YbJXjmsDJWlr3xpB@smile.fi.intel.com>
+In-Reply-To: <YbJYr7jg162RVP12@smile.fi.intel.com>
 Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
+X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
  LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 12/9/21 10:22 PM, Andy Shevchenko wrote:
+On 12/9/21 10:27 PM, Andy Shevchenko wrote:
 
 [...]
->>>>> No need to repeat this.
->>>>>
->>>>> While at it, drop redundant check for 0 as platform_get_irq() spills
->>>>> out a big WARN() in such case.
->>>>
->>>>    And? IRQ0 is still returned! :-(
+>>>> Does it fix platform_get_irq_optional()?
 >>>
->>> It should not be returned in the first place.
+>>>    Of course! :-)
 >>
->>    But it still is, despite the WARN(), right?
+>> Can you share link to lore.kernel.org, please?
+>> It will make much easier to try and comment.
 > 
-> So, you admit that there is a code which does that?
+> For the record it does not fix platform_get_irq_optional() AFAICS.
 
-   I admit *what*?! That platfrom_get_irq() and its ilk return IRQ0 while they
-shouldn't? =)
+   Again, why? My only issue is stoppping to return IRQ0 --- which it does. :-)
 
-> That code should be fixed first. Have you sent a patch?
+> Have you read the discussion:
+> https://lore.kernel.org/lkml/20210331144526.19439-1-andriy.shevchenko@linux.intel.com/T/#u
+> ?
 
-   Which code?! You got me totally muddled. =)
-
-> ...
-> 
->>>>> -	if (!irq)
->>>>> -		return -EINVAL;
->>>>
->>>>    This is prermature -- let's wait till my patch that stops returning IRQ0 from
->>>> platform_get_irq() and friends gets merged....
->>>
->>> What patch?
->>
->>    https://marc.info/?l=linux-kernel&m=163623041902285
->>
->>> Does it fix platform_get_irq_optional()?
->>
->>    Of course! :-)
-> 
-> Can you share link to lore.kernel.org, please?
-> It will make much easier to try and comment.
-
-   I don't know how to uise it yet, and I'm a little busy with other IRQ0 issues ATM,
-so I'm afraid you're on your own here...
+  Yes, I have. I just don't care about it much... :-)
 
 MBR, Sergey
