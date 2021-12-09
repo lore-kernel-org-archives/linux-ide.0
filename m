@@ -2,85 +2,120 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8C5EC4332F
-	for <linux-ide@archiver.kernel.org>; Thu,  9 Dec 2021 15:10:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FA23C433FE
+	for <linux-ide@archiver.kernel.org>; Thu,  9 Dec 2021 15:21:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239300AbhLIPNm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 9 Dec 2021 10:13:42 -0500
-Received: from ams.source.kernel.org ([145.40.68.75]:58144 "EHLO
-        ams.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234445AbhLIPNl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Dec 2021 10:13:41 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 11EE6B82503;
-        Thu,  9 Dec 2021 15:10:07 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 37F4DC341D3;
-        Thu,  9 Dec 2021 15:10:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1639062605;
-        bh=U6ztHGouKLYBRw/akAYNLv9KsMRJgPYo7HpUyAVcfAY=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=AUnO/E+WkuhTnHbF9769He2y5u8eG2YnwHlCTUMWN+ofequY3YwApFr8+GS23LklD
-         LQR4BgdzPkdg/FAhbxZUQBZC6RAAmGby2E+E3wk8gQpkn0/JQce+te4xF9eUdUC6U7
-         w8MgldlL8xFs8h6ieeWGm/IMCxJKb+8lHIO9y6U8=
-Date:   Thu, 9 Dec 2021 16:10:03 +0100
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     George Kennedy <george.kennedy@oracle.com>
-Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] libata: if T_LENGTH is zero, dma direction should be
- DMA_NONE
-Message-ID: <YbIcS+07ix53hIoY@kroah.com>
-References: <1639062020-5621-1-git-send-email-george.kennedy@oracle.com>
+        id S236107AbhLIPZR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 9 Dec 2021 10:25:17 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:50309 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S236059AbhLIPZQ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 9 Dec 2021 10:25:16 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1639063302;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=6YIGwGqD4dGu6FG9WPJtv2xc8Ws3EOTfiVlMjVaJjDc=;
+        b=e4zSpZRskvKrWZrUUWzwgkjPXSaQ2I5Fu4EUXbwTnHYaMvrM0gIHVJZ1D7yJiS/7kBCcNW
+        1tUyLu/czt0Z6Rwh7+N3FxasBwtChluyTV9qqmXlG0veMQT+JQ7c6tpARmRaFwGv5uSTIg
+        yCH6VRH34bbeCr0Ip3mQtSRFRoRIzGE=
+Received: from mail-ed1-f70.google.com (mail-ed1-f70.google.com
+ [209.85.208.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-290-5jIVvQnOMxGSjQ4elccM1g-1; Thu, 09 Dec 2021 10:21:41 -0500
+X-MC-Unique: 5jIVvQnOMxGSjQ4elccM1g-1
+Received: by mail-ed1-f70.google.com with SMTP id v1-20020aa7cd41000000b003e80973378aso5543434edw.14
+        for <linux-ide@vger.kernel.org>; Thu, 09 Dec 2021 07:21:41 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=6YIGwGqD4dGu6FG9WPJtv2xc8Ws3EOTfiVlMjVaJjDc=;
+        b=AbrRhk91z/UzNbEYHNp9Ou/7ar6hYneZo7cfRgWOk0ys1CvJKMHs3/GAld9WJAnq2k
+         DzGYQ4GbaGSTY5yr+NXHpN6B7GWLHmgZjMbAHRf9OyYGUBhgaKjwQ2A8MtVNR5RR6Z0J
+         xrx3ffmzsGBnSWzH4a1lc1KZhdyL4nn5VvcaIx0mDQeGMEaz92PkEvQwZQ464eI2bgD4
+         ISku+yETTQu4Qahl4Uv8loO8SDxmDkhfnYnggDfGYpXWh7aXtzrSYcLQVlFnwXsyxrBG
+         GstEkMQTLXLzKhyhbcX3Vcssp3OQDivlceXs3U6RgSRUYVAdU5AEBzPcI/O2di+FdX0x
+         Ms2g==
+X-Gm-Message-State: AOAM531/Ls8Ln+RWKrj8NQB6zPh5DMQXiRCV7E6jQKMvs4wb+sfoe5oV
+        AFXjaJq3hNNmM/tvk5LRx/EvBRXSGZD1wuPKwN/FRpZUlKR2OezkizHJX0iVzHH6A9lcwVVm7yV
+        VRWABbmsgooQftA7rXGi1
+X-Received: by 2002:a17:907:3fa0:: with SMTP id hr32mr16327580ejc.443.1639063300414;
+        Thu, 09 Dec 2021 07:21:40 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJyF1/alZruXsxPvxvH8kFaKeZWv95VPojWHHwg+QJ4I8m8OmUqA7eco9d+KB2Cp/F+WGLjJAQ==
+X-Received: by 2002:a17:907:3fa0:: with SMTP id hr32mr16327550ejc.443.1639063300133;
+        Thu, 09 Dec 2021 07:21:40 -0800 (PST)
+Received: from ?IPV6:2001:1c00:c1e:bf00:1054:9d19:e0f0:8214? (2001-1c00-0c1e-bf00-1054-9d19-e0f0-8214.cable.dynamic.v6.ziggo.nl. [2001:1c00:c1e:bf00:1054:9d19:e0f0:8214])
+        by smtp.gmail.com with ESMTPSA id e26sm50021edr.82.2021.12.09.07.21.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 09 Dec 2021 07:21:39 -0800 (PST)
+Message-ID: <ffba1bed-9e68-1d4a-a03b-c9bc1edfa7b5@redhat.com>
+Date:   Thu, 9 Dec 2021 16:21:39 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1639062020-5621-1-git-send-email-george.kennedy@oracle.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.0
+Subject: Re: [PATCH v1 1/2] ata: libahci_platform: Get rid of dup message when
+ IRQ can't be retrieved
+Content-Language: en-US
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+References: <20211209145937.77719-1-andriy.shevchenko@linux.intel.com>
+From:   Hans de Goede <hdegoede@redhat.com>
+In-Reply-To: <20211209145937.77719-1-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Dec 09, 2021 at 10:00:20AM -0500, George Kennedy wrote:
-> Avoid data corruption by rejecting pass-through commands where
-> T_LENGTH is zero (No data is transferred) and the dma direction
-> is not DMA_NONE.
+Hi,
+
+On 12/9/21 15:59, Andy Shevchenko wrote:
+> platform_get_irq() will print a message when it fails.
+> No need to repeat this.
 > 
-> Reported-by: syzkaller <syzkaller@googlegroups.com>
-> Signed-off-by: George Kennedy <george.kennedy@oracle.com>
+> While at it, drop redundant check for 0 as platform_get_irq() spills
+> out a big WARN() in such case.
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+
+Thanks, the series looks good to me:
+
+Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+
+for the series.
+
+Regards,
+
+Hans
+
 > ---
->  drivers/ata/libata-scsi.c | 6 ++++++
->  1 file changed, 6 insertions(+)
+>  drivers/ata/libahci_platform.c | 7 +------
+>  1 file changed, 1 insertion(+), 6 deletions(-)
 > 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 1b84d55..d428392 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -2859,6 +2859,12 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
->  		goto invalid_fld;
->  	}
+> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> index 0910441321f7..1af642c84e7b 100644
+> --- a/drivers/ata/libahci_platform.c
+> +++ b/drivers/ata/libahci_platform.c
+> @@ -579,13 +579,8 @@ int ahci_platform_init_host(struct platform_device *pdev,
+>  	int i, irq, n_ports, rc;
 >  
-> +	/* if T_LENGTH is zero (No data is transferred), then dir should be DMA_NONE */
-> +	if ((cdb[2 + cdb_offset] & 3) == 0 && scmd->sc_data_direction != DMA_NONE) {
-> +		fp = 2 + cdb_offset;
-> +		goto invalid_fld;
-> +	}
-> +
->  	if (ata_is_ncq(tf->protocol) && (cdb[2 + cdb_offset] & 0x3) == 0)
->  		tf->protocol = ATA_PROT_NCQ_NODATA;
+>  	irq = platform_get_irq(pdev, 0);
+> -	if (irq < 0) {
+> -		if (irq != -EPROBE_DEFER)
+> -			dev_err(dev, "no irq\n");
+> +	if (irq < 0)
+>  		return irq;
+> -	}
+> -	if (!irq)
+> -		return -EINVAL;
 >  
-> -- 
-> 1.8.3.1
+>  	hpriv->irq = irq;
+>  
 > 
 
-Odd, why send this to me?
-
-Also, you should look at:
-	https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html
-for how to send patches to automatically get included in stable
-releases, which is what I think you want here.
-
-thanks,
-
-greg k-h
