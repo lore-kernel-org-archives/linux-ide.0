@@ -2,105 +2,109 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DEC5C433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Dec 2021 11:37:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 104E1C433F5
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Dec 2021 15:23:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240696AbhLJLlW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Dec 2021 06:41:22 -0500
-Received: from mga02.intel.com ([134.134.136.20]:28254 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S240626AbhLJLlV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 10 Dec 2021 06:41:21 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10193"; a="225603944"
-X-IronPort-AV: E=Sophos;i="5.88,195,1635231600"; 
-   d="scan'208";a="225603944"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Dec 2021 03:37:39 -0800
-X-IronPort-AV: E=Sophos;i="5.88,195,1635231600"; 
-   d="scan'208";a="543952620"
-Received: from smile.fi.intel.com ([10.237.72.184])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Dec 2021 03:37:37 -0800
-Received: from andy by smile.fi.intel.com with local (Exim 4.95)
-        (envelope-from <andriy.shevchenko@linux.intel.com>)
-        id 1mveCd-004TN5-3z;
-        Fri, 10 Dec 2021 13:36:39 +0200
-Date:   Fri, 10 Dec 2021 13:36:38 +0200
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v1 1/2] ata: libahci_platform: Get rid of dup message
- when IRQ can't be retrieved
-Message-ID: <YbM7xkTazM76CVvD@smile.fi.intel.com>
-References: <20211209145937.77719-1-andriy.shevchenko@linux.intel.com>
- <d91cf14d-c7d8-1c61-9071-102f38e8c924@opensource.wdc.com>
- <febc7f73-929f-d8a6-ea01-5056b9101b46@omp.ru>
- <YbMwBFf5e7k2o6W5@smile.fi.intel.com>
- <9e6b2e9a-e958-0c14-6570-135607041978@omp.ru>
+        id S242830AbhLJP0y (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 10 Dec 2021 10:26:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40416 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239180AbhLJP0x (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Dec 2021 10:26:53 -0500
+Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFC95C061746
+        for <linux-ide@vger.kernel.org>; Fri, 10 Dec 2021 07:23:18 -0800 (PST)
+Received: by mail-ed1-x535.google.com with SMTP id x10so13707605edd.5
+        for <linux-ide@vger.kernel.org>; Fri, 10 Dec 2021 07:23:18 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bgdev-pl.20210112.gappssmtp.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=CaWHeGP0DuwfkbKXUdYIJmX8F+biVrGWME72+JdzhqU=;
+        b=MgLv3YrA9NlwpapqjGWsPaT057Lv4NTkMge5x9aYIzLu/EWTNZl9PQJ3i9HcLMOx6B
+         B9IguP3K+gzGh6KfKbYSO8oxGj7MjYa00frl0BCd7lnk7OkZoOhbnGk36UU3KzWuB3In
+         ZXMjkVs8K5nE10yvrBZiB/8HDzocgX7Too6WWjeeDpdcoaRlxj/sgAghwl/0IvTuGbeh
+         fAFYqtmGZZZiSOSvOT+oAtgE4HrF1eec+d4mRi7xCG+BmEL2kk0ZRTS2b7waN3H1I0k/
+         3ly7VwemPgrnfSjfL1C507DwBcuWSj3OL9qXJWKAX4/7OLRZbrfLo/DTY1QGnfnvK/nI
+         rVzg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=CaWHeGP0DuwfkbKXUdYIJmX8F+biVrGWME72+JdzhqU=;
+        b=lfUi4/jG7DsRLhHZ9mLlWr76ERhDeA569xghLuO6GmXPLMqHrI5ORCmgTWhK+j9kCs
+         jTJMJiipqAXw9lUnpYAWsOqljUPezDqHZ5t47zw7vm6YuofNoP88fg0LTXkQE3smpGX0
+         D+iGLHX7t2NCO+NwP/aYZV9lZx64yemVtW2Ao1+ZJumHosNod5INK8fmEEusY0igk5Wz
+         kFXvdU4LuAEKoQ02+ROztmAv1IrhNg0R9fHRzO5SkWf9S10ihzXEA/pnLhRAYeDpONil
+         WBTrPcFnNu9J8+x6S4c9xvmiJGZfIkkwMsJZbNB8U8Ss+2zuE2wa/khGkpXuQ9ATLhh5
+         9B1w==
+X-Gm-Message-State: AOAM530VZMUox0QKoEL5jDclyGVWjx2adidYQlm92V4W+hHw9Di2pBkt
+        zRoVPiRhvUhxQot2ayJ8efX3ggzS2DsfexlVORS7tA==
+X-Google-Smtp-Source: ABdhPJzwyJoQo5zS+XCmbkGk9eGVm61YMp0R/nIUhpMaAI0dyZLbksovDhkrc3SVhNC+OXjC0RSzQ3wiLRH8X7JDAvI=
+X-Received: by 2002:a05:6402:2805:: with SMTP id h5mr38690255ede.267.1639149780836;
+ Fri, 10 Dec 2021 07:23:00 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9e6b2e9a-e958-0c14-6570-135607041978@omp.ru>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+References: <20211208003727.3596577-1-f.fainelli@gmail.com> <20211208003727.3596577-6-f.fainelli@gmail.com>
+In-Reply-To: <20211208003727.3596577-6-f.fainelli@gmail.com>
+From:   Bartosz Golaszewski <brgl@bgdev.pl>
+Date:   Fri, 10 Dec 2021 16:22:50 +0100
+Message-ID: <CAMRc=MdmP5UCi2SJq9Ybhe9evUmM_PhpSUfzRF24yYUiRG+MNg@mail.gmail.com>
+Subject: Re: [PATCH v3 05/15] dt-bindings: gpio: Convert Broadcom STB GPIO to YAML
+To:     Florian Fainelli <f.fainelli@gmail.com>
+Cc:     devicetree <devicetree@vger.kernel.org>,
+        Gregory Fong <gregory.0xf0@gmail.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" 
+        <bcm-kernel-feedback-list@broadcom.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Marc Zyngier <maz@kernel.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>, Lee Jones <lee.jones@linaro.org>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Alessandro Zummo <a.zummo@towertech.it>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Amit Kucheria <amitk@kernel.org>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Markus Mayer <mmayer@broadcom.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Al Cooper <alcooperx@gmail.com>,
+        Doug Berger <opendmb@gmail.com>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:GPIO SUBSYSTEM" <linux-gpio@vger.kernel.org>,
+        "moderated list:BROADCOM BCM7XXX ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:MULTIMEDIA CARD (MMC), SECURE DIGITAL (SD) AND..." 
+        <linux-mmc@vger.kernel.org>,
+        "open list:PWM SUBSYSTEM" <linux-pwm@vger.kernel.org>,
+        "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" 
+        <linux-crypto@vger.kernel.org>,
+        "open list:REAL TIME CLOCK (RTC) SUBSYSTEM" 
+        <linux-rtc@vger.kernel.org>,
+        "open list:THERMAL" <linux-pm@vger.kernel.org>,
+        "open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Dec 10, 2021 at 02:19:52PM +0300, Sergey Shtylyov wrote:
-> On 12/10/21 1:46 PM, Andy Shevchenko wrote:
-> 
-> >>>> platform_get_irq() will print a message when it fails.
-> >>>> No need to repeat this.
-> >>>>
-> >>>> While at it, drop redundant check for 0 as platform_get_irq() spills
-> >>>> out a big WARN() in such case.
-> >>>
-> >>> The reason you should be able to remove the "if (!irq)" test is that
-> >>> platform_get_irq() never returns 0. At least, that is what the function kdoc
-> >>> says. But looking at platform_get_irq_optional(), which is called by
-> >>> platform_get_irq(), the out label is:
-> >>>
-> >>> 	WARN(ret == 0, "0 is an invalid IRQ number\n");
-> >>> 	return ret;
-> >>>
-> >>> So 0 will be returned as-is. That is rather weird. That should be fixed to
-> >>> return -ENXIO:
-> >>>
-> >>> 	if (WARN(ret == 0, "0 is an invalid IRQ number\n"))
-> >>> 		return -ENXIO;
-> >>> 	return ret;
-> >>
-> >>    My unmerged patch (https://marc.info/?l=linux-kernel&m=163623041902285) does this
-> >> but returns -EINVAL instead.
-> >>
-> >>> Otherwise, I do not think that removing the "if (!irq)" hunk is safe. no ?
-> >>
-> >>    Of course it isn't...
-> > 
-> > It's unsubstantiated statement. The vIRQ 0 shouldn't be returned by any of
-> > those API calls.
-> 
->    We do _not_ know what needs to be fixed, that's the problem, and that's why the WARN()
-> is there...
+On Wed, Dec 8, 2021 at 1:37 AM Florian Fainelli <f.fainelli@gmail.com> wrote:
+>
+> Convert the Broadcom STB GPIO Device Tree binding to YAML to help with
+> validation.
+>
+> Acked-by: Gregory Fong <gregory.0xf0@gmail.com>
+> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+> ---
 
-So, have you seen this warning (being reported) related to libahci_platform?
-If no, what we are discussing about then? The workaround is redundant and
-no need to have a dead code in the driver, really.
-
-> > If it is the case, go and fix them, no need to workaround
-> > in each of the callers.
-> 
->    There's a need to work around as long as IRQ0 ican be returned, otherwise
->    we get partly functioning or non-functioning drivers...
-
-You get them unfunctioning anyways and you get the big WARN() even before this
-patch.
-
-
--- 
-With Best Regards,
-Andy Shevchenko
-
-
+Acked-by: Bartosz Golaszewski <brgl@bgdev.pl>
