@@ -2,175 +2,128 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88BA7C433F5
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Dec 2021 17:52:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72C78C433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Dec 2021 17:58:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244796AbhLJR4M (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Dec 2021 12:56:12 -0500
-Received: from mga17.intel.com ([192.55.52.151]:18455 "EHLO mga17.intel.com"
+        id S235577AbhLJSCQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 10 Dec 2021 13:02:16 -0500
+Received: from mga03.intel.com ([134.134.136.65]:5780 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S244769AbhLJR4L (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 10 Dec 2021 12:56:11 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10194"; a="219090440"
+        id S235392AbhLJSCQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 10 Dec 2021 13:02:16 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10194"; a="238347542"
 X-IronPort-AV: E=Sophos;i="5.88,196,1635231600"; 
-   d="scan'208";a="219090440"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Dec 2021 09:52:36 -0800
+   d="scan'208";a="238347542"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Dec 2021 09:58:41 -0800
 X-IronPort-AV: E=Sophos;i="5.88,196,1635231600"; 
-   d="scan'208";a="480801816"
+   d="scan'208";a="544053703"
 Received: from smile.fi.intel.com ([10.237.72.184])
-  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Dec 2021 09:52:34 -0800
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Dec 2021 09:58:39 -0800
 Received: from andy by smile.fi.intel.com with local (Exim 4.95)
-        (envelope-from <andriy.shevchenko@linux.intel.com>)
-        id 1mvk3T-004b4u-PL;
-        Fri, 10 Dec 2021 19:51:35 +0200
-Date:   Fri, 10 Dec 2021 19:51:35 +0200
-From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+        (envelope-from <andy.shevchenko@gmail.com>)
+        id 1mvk9M-004bBe-TE;
+        Fri, 10 Dec 2021 19:57:40 +0200
+Date:   Fri, 10 Dec 2021 19:57:40 +0200
+From:   Andy Shevchenko <andy.shevchenko@gmail.com>
 To:     Sergey Shtylyov <s.shtylyov@omp.ru>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+        Jens Axboe <axboe@kernel.dk>
 Subject: Re: [PATCH v1 1/2] ata: libahci_platform: Get rid of dup message
  when IRQ can't be retrieved
-Message-ID: <YbOTp2f0WLhPo0bu@smile.fi.intel.com>
+Message-ID: <YbOVFH1B2TDZEcGY@smile.fi.intel.com>
 References: <20211209145937.77719-1-andriy.shevchenko@linux.intel.com>
- <d841bc59-a2a6-27f5-10af-05fe2e24067a@omp.ru>
- <YbI/6OIKM7qvLQcp@smile.fi.intel.com>
- <bfd96f5a-94c7-cee6-9546-14dc59cb8542@omp.ru>
- <YbJXjmsDJWlr3xpB@smile.fi.intel.com>
- <15cf03b2-8d45-93b1-f0a0-d79c93cee0da@omp.ru>
- <YbMvfzKsc4CcQzSa@smile.fi.intel.com>
- <7ffe328f-2ba1-4799-5c6a-d48d88c0459d@omp.ru>
- <YbM541VXHoOUsM5+@smile.fi.intel.com>
- <51c0aa6e-e75f-faa7-b9b1-850684da58c8@omp.ru>
+ <d91cf14d-c7d8-1c61-9071-102f38e8c924@opensource.wdc.com>
+ <CAHp75VcdwozpUJVB17VmCDska7euYnx1VjZLnCaZ8DHG+_3vYg@mail.gmail.com>
+ <587c35bd-8877-030e-6236-d0d8c2b6811c@omp.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <51c0aa6e-e75f-faa7-b9b1-850684da58c8@omp.ru>
+In-Reply-To: <587c35bd-8877-030e-6236-d0d8c2b6811c@omp.ru>
 Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Dec 10, 2021 at 08:39:38PM +0300, Sergey Shtylyov wrote:
-> On 12/10/21 2:28 PM, Andy Shevchenko wrote:
+On Fri, Dec 10, 2021 at 07:38:40PM +0300, Sergey Shtylyov wrote:
+> On 12/10/21 11:47 AM, Andy Shevchenko wrote:
 > 
-> >>>>>>>>> While at it, drop redundant check for 0 as platform_get_irq() spills
-> >>>>>>>>> out a big WARN() in such case.
-> >>>>>>>>
-> >>>>>>>>    And? IRQ0 is still returned! :-(
-> >>>>>>>
-> >>>>>>> It should not be returned in the first place.
-> >>>>>>
-> >>>>>>    But it still is, despite the WARN(), right?
-> >>>>>
-> >>>>> So, you admit that there is a code which does that?
-> >>>>
-> >>>>    I admit *what*?! That platfrom_get_irq() and its ilk return IRQ0 while they
-> >>>> shouldn't? =)
+> >>> platform_get_irq() will print a message when it fails.
+> >>> No need to repeat this.
 > >>>
-> >>> That there is a code beneath platform_get_irq() that returns 0, yes.
+> >>> While at it, drop redundant check for 0 as platform_get_irq() spills
+> >>> out a big WARN() in such case.
 > >>
-> >>    Look at the ACPI-specific GpioInt handling code (just above the out_not_found label) --
-> >> I'm not sure the check there is correct -- I'm not very familiar with ACPI, you seem to
-> >> know it much better. :-)
-> > 
-> > And what is your point here exactly?
-> 
->    You're saying IRQ0 shouldn't be returned (by the ACPI code) -- from this fragment
-> we can see that it may be returned...
-
-Please, provide your analysis, I really don't see how it's possible.
-If you prove that, we must fix the severe bug then.
-
-> > If == 0 case happens, it will be
-> > immediately WARN() and reported (I hope)
-> 
->    Well, "hope dies last"... :-)
-
-Believe, big WARNs are quite likely to be reported if not by humans, then by
-CIs and fuzzers. So, the hope is rather to word 'immediately'.
-
-> > since it will mean bug in the code.
-> > 
-> >>    Also, 0 can be specified via the normal IRQ resource. I know of e.g. the Alchemy MIPS SoCs
-> >> that have IRQ0 used by UART0; luckily, currently SoC IRQs are mapped starting at Linux IRQ8
-> >> (but it wasn't the case in the 2.6.1x time frame where we had issue with the serial driver)...
-> > 
-> > You mixed up HW IRQ with vIRQ.
-> 
->    I didn't. Linux expects the vIRQs (I called them Linux IRQs). In the 2.6.1x time frame
-> those corresponded 1:1 on Alchemy. Also, there's 8259 which is always mapped at vIRQ0 (or
-> the legacy drivers won't work).
-> 
-> > The former one may be 0 and it's completely valid case, while
-> > the second one is not.
-> 
->    Well, request_irq() happilly takes vIRQ0. Moreover, there are 8253 drivers in e.g. the arch/x86/
-> (PPC and MIPS too) which do use vIRQ0.
-
-This is an exception which is not in the scope here. Let me remind that the
-topic here is libahci_platform and platform_get_irq().
-
-> >>>>> That code should be fixed first. Have you sent a patch?
-> >>>>
-> >>>>    Which code?! You got me totally muddled. =)
-> >>>
-> >>> Above mentioned.
+> >> The reason you should be able to remove the "if (!irq)" test is that
+> >> platform_get_irq() never returns 0. At least, that is what the function kdoc
+> >> says. But looking at platform_get_irq_optional(), which is called by
+> >> platform_get_irq(), the out label is:
 > >>
-> >>    What needs to be fixed in this case is the interrupt controller driver.
+> >>         WARN(ret == 0, "0 is an invalid IRQ number\n");
+> >>         return ret;
+> >>
+> >> So 0 will be returned as-is. That is rather weird. That should be fixed to
+> >> return -ENXIO:
+> >>
+> >>         if (WARN(ret == 0, "0 is an invalid IRQ number\n"))
+> >>                 return -ENXIO;
+> 
+>    -ENXIO seems to me more fitting indeed (than -EINVAL that I used).
+> 
 > > 
-> > What do you mean by that?
+> > No, this is wrong for the same reasons I explained to Sergey.
 > 
->    You better ask Linus... ;-)
+>    I fail to understand you, sorry. We're going in circles, it seems... :-/
 
-If you cite somebody you have to understand what they said, right?
-Lemme repeat the question, what do you mean by that? In your own words, please.
+platform_get_irq_optional() is supposed to return 0 when there is no IRQ found,
+but everything else went alright.
 
-> > vIRQ is handled by IRQ core, IRQ controller driver
-> > just a mere provider of the resource. And those exceptions for vIRQ == 0
-> > shouldn't be propagated to the platform code or so.
+I'm tired to waste my time to go circles.
+
+Again, the problem is that platform_get_irq_optional() has wrong set of output
+values. And your patch doesn't fix that. And it has nothing to do with my code
+here.
+
+> > The problem is that this is _optional API and it has been misdesigned.
+> > Replacing things like above will increase the mess.
 > 
-> >> Quoting Linus
-> >> (imprecisely :-)), IRQ #s should be either mapped starting with #1 or IRQ0 remapped at
-> >> the end of the controller's interrupt range... I currently have no information on the
-> >> platforms requiring such kind of fixing (Alchemy don't seem to need it now)...
-> 
->    Well, actually that Linus' quote predates drivers/irqchip/, so I must confess this
-> argument was wrong... :-)
-> 
-> > Again, do not mix vIRQ (about which Linus ranted) and HW IRQ.
+>    What's wrong with replacing IRQ0 with -ENXIO now? platform_get_irq_optional()
+> (as in your patch) could then happily return 0 ISO -ENXIO. Contrarywise, if we don't
+> replace IRQ0 with -ENXIO, platform_get_irq_optional() will return 0 for both IRQ0
+> and missing IRQ! Am I clear enough? If you don't understand me now, I don't know what
+> to say... :-/
 
-...
+See above. Read my messages again, please. I'm really tired to explain again
+and again the same.
 
-> >>>>>>>>> -	if (!irq)
-> >>>>>>>>> -		return -EINVAL;
-> >>>>>>>>
-> >>>>>>>>    This is prermature -- let's wait till my patch that stops returning IRQ0 from
-> >>>>>>>> platform_get_irq() and friends gets merged....
-> >>>>>>>
-> >>>>>>> What patch?
-> >>>>>>
-> >>>>>>    https://marc.info/?l=linux-kernel&m=163623041902285
-> >>>>>>
-> >>>>>>> Does it fix platform_get_irq_optional()?
-> >>>>>>
-> >>>>>>    Of course! :-)
-> >>>>>
-> >>>>> Can you share link to lore.kernel.org, please?
-> >>>>> It will make much easier to try and comment.
-> >>>>
-> >>>>    I don't know how to uise it yet, and I'm a little busy with other IRQ0 issues ATM,
+TL;DR: You simply try to "fix" in a correct place but in a wrong way.
+
+> >>         return ret;
+> >>
+> >> Otherwise, I do not think that removing the "if (!irq)" hunk is safe. no ?
 > > 
-> >>    A little bit, I meant to type.
-> > 
-> > No problem. I just haven't got what other IRQ0 issues except fixing
-> > platform_get_irq_optional() et al. could be possibly needed...
+> > No. This is not a business of the caller to workaround implementation
+> > details (bugs) of the core APIs.
+> > If something goes wrong, then it's platform_get_irq() to blame, and
+> > not the libahci_platform.
 > 
->    There is other IRQ0 issue which is very old already...
+>    I'm repeating myself already: we don't work around the bug in platform_get_irq(),
 
-Is it big secret? What is that issue?
+Yes, you do.
+
+> we're working around the driver subsystems that treat 0 specially (and so don't
+> support IRQ0); libata treats 0 as an indication of the polling mode (moreover,
+> it will curse if you pass to it both IRQ == 0 and a pointer to an interrupt handler!
+> Am I clear enough this time? :-)
+
+Yes, and it doesn't contradict to what my patch does.
+Read comment against platform_get_irq(). If it returns 0,
+it's not a business of the callers to work around it.
+
+Am I clear enough this time? :-)
 
 -- 
 With Best Regards,
