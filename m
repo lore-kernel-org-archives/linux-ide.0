@@ -2,79 +2,101 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B039DC433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Dec 2021 08:42:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADEF3C433F5
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Dec 2021 08:48:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232658AbhLJIqc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Dec 2021 03:46:32 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59702 "EHLO
+        id S238703AbhLJIvy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 10 Dec 2021 03:51:54 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60902 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229761AbhLJIqc (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Dec 2021 03:46:32 -0500
-Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBC87C061746;
-        Fri, 10 Dec 2021 00:42:57 -0800 (PST)
-Received: by mail-ed1-x533.google.com with SMTP id o20so27906116eds.10;
-        Fri, 10 Dec 2021 00:42:57 -0800 (PST)
+        with ESMTP id S238685AbhLJIvx (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Dec 2021 03:51:53 -0500
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1CF70C061746;
+        Fri, 10 Dec 2021 00:48:19 -0800 (PST)
+Received: by mail-ed1-x530.google.com with SMTP id y12so27036749eda.12;
+        Fri, 10 Dec 2021 00:48:19 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=yjp7trcWfJyJK01y2ql41SX0hmC1hQH0mrMXyHW+2Hs=;
-        b=NqRQ7yb7DNbmcDX0xULVOpdF14Ke+Eq71Bsf5R6opbNMHc/bwBWBT9iMsG9BLurMK4
-         illARVTpym3Y1cCMbon8sC7kD9K7EVJFKIgPNNVxZF4+JthUutRKvxL6k9Eu9rpFa3mN
-         ytpn25V88JVwPfI6OgBvmzNWa4sDM9dyzMC6K+ShOzQC4RQL/YDhxKE6lezzaaAmfnNL
-         mNV6yfNcpqvscsJmt0iu6r1ufB1XngCciJlB6kJBDNYQICxmqAiNkX5Zmj+SVcjIVirV
-         f9kvOCuscHcczZo0pfXHc7W6NOWL+qytYtWF3CZP2ZGZfhl0b73ixenYUc+a9WLEsPrc
-         o46g==
+        bh=qkHF+XwQ2moOpOWfA34HBp/T8uX0AbR7EB91Anq22ok=;
+        b=UqaPAQKK3Vd1ZYMl9v5BrdodRB5t3MyLXBPEEQXfHcbDEEY0oJlT3hjry/mBUxZ6R5
+         ooIGQIAjIGdV++gjqfaPcdAjKoaNEh0cM0XwlSig4rbsoeTkWHrUGdjZ6UTfRIiQyYPU
+         MyCs+e5YHQjH6r192BMix0QWKsxePV7EN48RCDbCkoHg3eQKiG+qNSinr9Bx4IebpQwy
+         4c8DkLTT7JkhDgaLUrmd5PL6SdGkArbtHunVZaBkJUB6nGl7kf1Sx5K9AryB1pmekV8n
+         yoih8Ieilrnu63WIcQM8RBQlC07UuKax1ggIjQYcGkB7Zt8D3X3yGyY5OfrFTfOPQF0m
+         RupQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=yjp7trcWfJyJK01y2ql41SX0hmC1hQH0mrMXyHW+2Hs=;
-        b=40Sbb8iZPCTSpmrmFJGqGbpVOXqli5PuZ8fd/1TIiA/spXmA8Qc6l+eTPhkrKwUquL
-         fqCCmwaWEK6EODj0P8TgZvTprKH9VkirRKbb7Gewkdr4RWYZJ+zJFYCjfcPSWe1vpceX
-         B3+IA5IfVU0ng201b8eiiXu8r/J7Pb/MRqotV4ABRJZX/MemNKLy8ZJ6T7KEWJ6EAQnt
-         jyWVOlHUkWxwrhmNLFzwAyragkMAiyQSyDTAM7VSxykgCepY8YhGxjPVRt1ByRecliOm
-         9WGham4ePpalQF9F4jJIx9u0ZUAo77wMPWY+Uy1F7sujfMQZLyQZXM5s4lNR/mAe4iel
-         Lodg==
-X-Gm-Message-State: AOAM533jyPIGa1xnsTFr6Fcmr2YGOmMO14gWFr6+Zb9VWHaXcaMuhtTV
-        6mZOmzsYjy5ltPJ0EVxpGGtt8bHtltzZKz68jMY=
-X-Google-Smtp-Source: ABdhPJyBq4sqMdV9YOgX2LPfg7v0r1TyKLPSCgNFE9WC5dr6x7nuG0vtpTjgac6McvvCGXMKFokOKQeKqW5/o5klD8Y=
-X-Received: by 2002:a17:906:9b92:: with SMTP id dd18mr21874490ejc.425.1639125776074;
- Fri, 10 Dec 2021 00:42:56 -0800 (PST)
+        bh=qkHF+XwQ2moOpOWfA34HBp/T8uX0AbR7EB91Anq22ok=;
+        b=nmhCWicr3sD48xkFrh1+UqI12jKvgxcojz+Q3t27kr3pT3Pw83hMKuO672u8ZK0di6
+         6GLyXJOap4RjQgZpX68tKSI4+2qvh7ASrkRElwBPM2o+jaoRwCvDVMsCv7I+Y+exNGm0
+         bmgytAc5YYWderGqVhMHjBk9Mf5/o94tjVzP4bzBSM9yWvf7Ev0lTqg1BwY+WcONhZ7r
+         EHEIZYbUT0cT00ylJARFwzo00QK0U96KfDZ26FZEBZB9xqcTLAZ7T1DFVxzmPo2572Dp
+         /BMHOoj8rSYkifMCgeaU+cohfVo8y6sVI6syp09e0MXSk7qSzo+1vGZ9w/Jh6ORqhK8o
+         mfXA==
+X-Gm-Message-State: AOAM532yp02r1AS89wMckF7ZLOJXetPcYl/u3R4r/8VYLVOZxzHIML5M
+        ARylh8IWWITwba4XdEE47Lsk6pFxxCkI3rNQaRE=
+X-Google-Smtp-Source: ABdhPJycGjyJTGxjy8H1QTUexOFtRrVKNPl8q4lWAL1NURgWgvWGUNN4iPah2dcp1gzAiBWd7370i4tG0E5UYmdkJf0=
+X-Received: by 2002:a17:906:9b92:: with SMTP id dd18mr21901868ejc.425.1639126097529;
+ Fri, 10 Dec 2021 00:48:17 -0800 (PST)
 MIME-Version: 1.0
-References: <20211209143519.60498-1-andriy.shevchenko@linux.intel.com>
- <20211209143519.60498-2-andriy.shevchenko@linux.intel.com> <5d98df66-a1fb-a2cf-f780-963bf26f6d1e@opensource.wdc.com>
-In-Reply-To: <5d98df66-a1fb-a2cf-f780-963bf26f6d1e@opensource.wdc.com>
+References: <20211209145937.77719-1-andriy.shevchenko@linux.intel.com> <d91cf14d-c7d8-1c61-9071-102f38e8c924@opensource.wdc.com>
+In-Reply-To: <d91cf14d-c7d8-1c61-9071-102f38e8c924@opensource.wdc.com>
 From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Fri, 10 Dec 2021 10:42:19 +0200
-Message-ID: <CAHp75Vezco85W+TG+ehtMwtUyFubb+fbnn5XuyNQiNX4mJczXg@mail.gmail.com>
-Subject: Re: [PATCH v1 2/3] ata: sata_dwc_460ex: Use temporary variable for
- struct device
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Hannes Reinecke <hare@suse.de>
+Date:   Fri, 10 Dec 2021 10:47:41 +0200
+Message-ID: <CAHp75VcdwozpUJVB17VmCDska7euYnx1VjZLnCaZ8DHG+_3vYg@mail.gmail.com>
+Subject: Re: [PATCH v1 1/2] ata: libahci_platform: Get rid of dup message when
+ IRQ can't be retrieved
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
         linux-ide@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Dec 10, 2021 at 4:25 AM Damien Le Moal
+On Fri, Dec 10, 2021 at 4:47 AM Damien Le Moal
 <damien.lemoal@opensource.wdc.com> wrote:
->
-> On 2021/12/09 23:35, Andy Shevchenko wrote:
-> > Use temporary variable for struct device to make code neater.
+> On 2021/12/09 23:59, Andy Shevchenko wrote:
+> > platform_get_irq() will print a message when it fails.
+> > No need to repeat this.
 > >
-> > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> > While at it, drop redundant check for 0 as platform_get_irq() spills
+> > out a big WARN() in such case.
 >
-> What is this based on ? Is this on top of Hannes series ?
+> The reason you should be able to remove the "if (!irq)" test is that
+> platform_get_irq() never returns 0. At least, that is what the function kdoc
+> says. But looking at platform_get_irq_optional(), which is called by
+> platform_get_irq(), the out label is:
+>
+>         WARN(ret == 0, "0 is an invalid IRQ number\n");
+>         return ret;
+>
+> So 0 will be returned as-is. That is rather weird. That should be fixed to
+> return -ENXIO:
+>
+>         if (WARN(ret == 0, "0 is an invalid IRQ number\n"))
+>                 return -ENXIO;
 
-Nope, on latest (available) Linux Next.
-Hannes, can you incorporate this to yours maybe? I see one conflict
-with the last patch.
+No, this is wrong for the same reasons I explained to Sergey.
+The problem is that this is _optional API and it has been misdesigned.
+Replacing things like above will increase the mess.
+
+>         return ret;
+>
+> Otherwise, I do not think that removing the "if (!irq)" hunk is safe. no ?
+
+No. This is not a business of the caller to workaround implementation
+details (bugs) of the core APIs.
+If something goes wrong, then it's platform_get_irq() to blame, and
+not the libahci_platform.
 
 -- 
 With Best Regards,
