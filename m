@@ -2,47 +2,47 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 303DBC433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98643C433EF
 	for <linux-ide@archiver.kernel.org>; Fri, 10 Dec 2021 07:30:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235078AbhLJHdo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S235102AbhLJHdo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Fri, 10 Dec 2021 02:33:44 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:35076 "EHLO
+Received: from smtp-out1.suse.de ([195.135.220.28]:34974 "EHLO
         smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237689AbhLJHdZ (ORCPT
+        with ESMTP id S237686AbhLJHdZ (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Dec 2021 02:33:25 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 626312170E;
+        by smtp-out1.suse.de (Postfix) with ESMTP id 566D0212FE;
         Fri, 10 Dec 2021 07:29:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1639121359; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=XPhnFIxjmBXt98cn096HoTLctBFVnctxo8xCa8drYKY=;
-        b=buvltI3NvIKI5Py7RzduB1yPT2JMF65KxmcelogwX/9lPWFneEMeOD7OnoPuoWdz6OPc1Y
-        gPu0PjgmA7TYzrTvqZJIFnQG0k0L4yC7GR78JAF8gpxVBvUvXb6CbzustC4z4efGyqtp2/
-        S9r2XWfjT3jbVUgc2Dr90pbsgD0YkvU=
+        bh=9+tU5VdVZUA09r+zopHdzO3lLkXdKcuXT1/ZCa4kd+8=;
+        b=rp6iewDqtGKA/t+xgYLoeOUSWts82n61bOLEmZe+GQM2OTvwKRFCUqmZH/6i/jK8lr2MSb
+        HhfPEiJAJUpdv0k5aMGxElqAxo9KzqoTsYB2oAVi5xaVVgR1Nudx0BBVqNhMza4i4aQTnm
+        gfz9U6wQHSsKVwYzdkY/erZXL0MpZi8=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1639121359;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=XPhnFIxjmBXt98cn096HoTLctBFVnctxo8xCa8drYKY=;
-        b=sH2BOyAa9umlOVPQfPxm1UrxvXplhyOQSgfEbBXCqYEvkq5JNO3vfWE3hTyGr0ULTSTH3f
-        t/w0D+H0G3fPYRBg==
+        bh=9+tU5VdVZUA09r+zopHdzO3lLkXdKcuXT1/ZCa4kd+8=;
+        b=l5+RzcOO/slwqEJgUmjmFVBXAlXwox6Bfv9IeR5yPoXjJPfSnUkHgKixuY2pls3jmX5PQv
+        zYvLmZVvHCc3KCCA==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 5DC96A3BD4;
+        by relay2.suse.de (Postfix) with ESMTP id 5292EA3BD1;
         Fri, 10 Dec 2021 07:29:19 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 5BB7351920A3; Fri, 10 Dec 2021 08:29:19 +0100 (CET)
+        id 4FC22519209D; Fri, 10 Dec 2021 08:29:19 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Damien LeMoal <damien.lemoal@wdc.com>
 Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 65/68] libata-scsi: rework ata_dump_status to avoid using pr_cont()
-Date:   Fri, 10 Dec 2021 08:29:02 +0100
-Message-Id: <20211210072905.15666-66-hare@suse.de>
+Subject: [PATCH 62/68] pata_hpt3x2n: convert pr_XXX() calls
+Date:   Fri, 10 Dec 2021 08:28:59 +0100
+Message-Id: <20211210072905.15666-63-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20211210072905.15666-1-hare@suse.de>
 References: <20211210072905.15666-1-hare@suse.de>
@@ -52,89 +52,60 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-pr_cont() has the problem that individual calls will be disrupted
-under high load, causing each call to end up on a single line and
-thereby mangling the output.
-So rework ata_dump_status() to have just one call to ata_port_warn()
-and avoid this problem.
+Convert pr_XXX() calls to structured logging.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-scsi.c | 49 ++++++++++++++++++---------------------
- 1 file changed, 22 insertions(+), 27 deletions(-)
+ drivers/ata/pata_hpt3x2n.c | 12 +++++-------
+ 1 file changed, 5 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index bbbd0a06ffd2..aab648d20493 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -678,37 +678,32 @@ static void ata_qc_set_pc_nbytes(struct ata_queued_cmd *qc)
-  *	LOCKING:
-  *	inherited from caller
+diff --git a/drivers/ata/pata_hpt3x2n.c b/drivers/ata/pata_hpt3x2n.c
+index 48eef338e050..1d9d4eec5b8a 100644
+--- a/drivers/ata/pata_hpt3x2n.c
++++ b/drivers/ata/pata_hpt3x2n.c
+@@ -15,9 +15,6 @@
+  * TODO
+  *	Work out best PLL policy
   */
--static void ata_dump_status(unsigned id, struct ata_taskfile *tf)
-+static void ata_dump_status(struct ata_port *ap, struct ata_taskfile *tf)
- {
- 	u8 stat = tf->command, err = tf->feature;
- 
--	pr_warn("ata%u: status=0x%02x { ", id, stat);
- 	if (stat & ATA_BUSY) {
--		pr_cont("Busy }\n");	/* Data is not valid in this case */
-+		ata_port_warn(ap, "status=0x%02x {Busy} ", stat);
- 	} else {
--		if (stat & ATA_DRDY)	pr_cont("DriveReady ");
--		if (stat & ATA_DF)	pr_cont("DeviceFault ");
--		if (stat & ATA_DSC)	pr_cont("SeekComplete ");
--		if (stat & ATA_DRQ)	pr_cont("DataRequest ");
--		if (stat & ATA_CORR)	pr_cont("CorrectedError ");
--		if (stat & ATA_SENSE)	pr_cont("Sense ");
--		if (stat & ATA_ERR)	pr_cont("Error ");
--		pr_cont("}\n");
 -
--		if (err) {
--			pr_warn("ata%u: error=0x%02x { ", id, err);
--			if (err & ATA_ABORTED)	pr_cont("DriveStatusError ");
--			if (err & ATA_ICRC) {
--				if (err & ATA_ABORTED)
--						pr_cont("BadCRC ");
--				else		pr_cont("Sector ");
--			}
--			if (err & ATA_UNC)	pr_cont("UncorrectableError ");
--			if (err & ATA_IDNF)	pr_cont("SectorIdNotFound ");
--			if (err & ATA_TRK0NF)	pr_cont("TrackZeroNotFound ");
--			if (err & ATA_AMNF)	pr_cont("AddrMarkNotFound ");
--			pr_cont("}\n");
--		}
-+		ata_port_warn(ap, "status=0x%02x { %s%s%s%s%s%s%s} ", stat,
-+			      stat & ATA_DRDY ? "DriveReady " : "",
-+			      stat & ATA_DF ? "DeviceFault " : "",
-+			      stat & ATA_DSC ? "SeekComplete " : "",
-+			      stat & ATA_DRQ ? "DataRequest " : "",
-+			      stat & ATA_CORR ? "CorrectedError " : "",
-+			      stat & ATA_SENSE ? "Sense " : "",
-+			      stat & ATA_ERR ? "Error " : "");
-+		if (err)
-+			ata_port_warn(ap, "error=0x%02x {%s%s%s%s%s%s", err,
-+				      err & ATA_ABORTED ?
-+				      "DriveStatusError " : "",
-+				      err & ATA_ICRC ?
-+				      (err & ATA_ABORTED ?
-+				       "BadCRC " : "Sector ") : "",
-+				      err & ATA_UNC ? "UncorrectableError " : "",
-+				      err & ATA_IDNF ? "SectorIdNotFound " : "",
-+				      err & ATA_TRK0NF ? "TrackZeroNotFound " : "",
-+				      err & ATA_AMNF ? "AddrMarkNotFound " : "");
+-#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+-
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
+@@ -420,7 +417,7 @@ static int hpt3x2n_pci_clock(struct pci_dev *pdev)
+ 		u16 sr;
+ 		u32 total = 0;
+ 
+-		pr_warn("BIOS clock data not set\n");
++		dev_warn(&pdev->dev, "BIOS clock data not set\n");
+ 
+ 		/* This is the process the HPT371 BIOS is reported to use */
+ 		for (i = 0; i < 128; i++) {
+@@ -530,7 +527,8 @@ static int hpt3x2n_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 		ppi[0] = &info_hpt372n;
+ 		break;
+ 	default:
+-		pr_err("PCI table is bogus, please report (%d)\n", dev->device);
++		dev_err(&dev->dev,"PCI table is bogus, please report (%d)\n",
++			dev->device);
+ 		return -ENODEV;
  	}
- }
  
-@@ -1662,7 +1657,7 @@ static void ata_scsi_qc_complete(struct ata_queued_cmd *qc)
- 		cmd->result = SAM_STAT_GOOD;
+@@ -579,11 +577,11 @@ static int hpt3x2n_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 		pci_write_config_dword(dev, 0x5C, (f_high << 16) | f_low);
+ 	}
+ 	if (adjust == 8) {
+-		pr_err("DPLL did not stabilize!\n");
++		dev_err(&dev->dev, "DPLL did not stabilize!\n");
+ 		return -ENODEV;
+ 	}
  
- 	if (need_sense && !ap->ops->error_handler)
--		ata_dump_status(ap->print_id, &qc->result_tf);
-+		ata_dump_status(ap, &qc->result_tf);
+-	pr_info("bus clock %dMHz, using 66MHz DPLL\n", pci_mhz);
++	dev_info(&dev->dev, "bus clock %dMHz, using 66MHz DPLL\n", pci_mhz);
  
- 	ata_qc_done(qc);
- }
+ 	/*
+ 	 * Set our private data up. We only need a few flags
 -- 
 2.29.2
 
