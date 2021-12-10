@@ -2,93 +2,80 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0635C433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Dec 2021 07:30:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B039DC433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Dec 2021 08:42:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235135AbhLJHdr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Dec 2021 02:33:47 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:34986 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237711AbhLJHd1 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Dec 2021 02:33:27 -0500
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 6775D21763;
-        Fri, 10 Dec 2021 07:29:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1639121359; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=uLKrG7HSGdnX2NHYOGoGgWVeWwHbB7tkdSEuOpqH2Ic=;
-        b=z178Nn+sgndcsMi7P6agXAJe3dB/0Y7/jGeBtCiEmAxs52kt8265FTOAAbSHduNKk2+bsL
-        cBWxN36FmOx7Os9IYiRnjpE/y2p1GOgnAqfZWFXzD82mt3xUWircK35TymJ3mwpZ1Akq2j
-        ZXG9Is8xjNoHpWL6/vatiQf3QiWD1SE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1639121359;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=uLKrG7HSGdnX2NHYOGoGgWVeWwHbB7tkdSEuOpqH2Ic=;
-        b=cBXEZDHB5gURJmsfgG6Qy34r//2OLosLrFcWI0qoXjImz3P9YFbkwRcyFjJUbJk8L2fOsv
-        2LhLPax27sHM14BQ==
-Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 6247BA3BD5;
-        Fri, 10 Dec 2021 07:29:19 +0000 (UTC)
-Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 5FDCA51920A5; Fri, 10 Dec 2021 08:29:19 +0100 (CET)
-From:   Hannes Reinecke <hare@suse.de>
-To:     Damien LeMoal <damien.lemoal@wdc.com>
-Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 66/68] sata_dwc_460ex: drop DEBUG_NCQ
-Date:   Fri, 10 Dec 2021 08:29:03 +0100
-Message-Id: <20211210072905.15666-67-hare@suse.de>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20211210072905.15666-1-hare@suse.de>
-References: <20211210072905.15666-1-hare@suse.de>
+        id S232658AbhLJIqc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 10 Dec 2021 03:46:32 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59702 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229761AbhLJIqc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Dec 2021 03:46:32 -0500
+Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBC87C061746;
+        Fri, 10 Dec 2021 00:42:57 -0800 (PST)
+Received: by mail-ed1-x533.google.com with SMTP id o20so27906116eds.10;
+        Fri, 10 Dec 2021 00:42:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=yjp7trcWfJyJK01y2ql41SX0hmC1hQH0mrMXyHW+2Hs=;
+        b=NqRQ7yb7DNbmcDX0xULVOpdF14Ke+Eq71Bsf5R6opbNMHc/bwBWBT9iMsG9BLurMK4
+         illARVTpym3Y1cCMbon8sC7kD9K7EVJFKIgPNNVxZF4+JthUutRKvxL6k9Eu9rpFa3mN
+         ytpn25V88JVwPfI6OgBvmzNWa4sDM9dyzMC6K+ShOzQC4RQL/YDhxKE6lezzaaAmfnNL
+         mNV6yfNcpqvscsJmt0iu6r1ufB1XngCciJlB6kJBDNYQICxmqAiNkX5Zmj+SVcjIVirV
+         f9kvOCuscHcczZo0pfXHc7W6NOWL+qytYtWF3CZP2ZGZfhl0b73ixenYUc+a9WLEsPrc
+         o46g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=yjp7trcWfJyJK01y2ql41SX0hmC1hQH0mrMXyHW+2Hs=;
+        b=40Sbb8iZPCTSpmrmFJGqGbpVOXqli5PuZ8fd/1TIiA/spXmA8Qc6l+eTPhkrKwUquL
+         fqCCmwaWEK6EODj0P8TgZvTprKH9VkirRKbb7Gewkdr4RWYZJ+zJFYCjfcPSWe1vpceX
+         B3+IA5IfVU0ng201b8eiiXu8r/J7Pb/MRqotV4ABRJZX/MemNKLy8ZJ6T7KEWJ6EAQnt
+         jyWVOlHUkWxwrhmNLFzwAyragkMAiyQSyDTAM7VSxykgCepY8YhGxjPVRt1ByRecliOm
+         9WGham4ePpalQF9F4jJIx9u0ZUAo77wMPWY+Uy1F7sujfMQZLyQZXM5s4lNR/mAe4iel
+         Lodg==
+X-Gm-Message-State: AOAM533jyPIGa1xnsTFr6Fcmr2YGOmMO14gWFr6+Zb9VWHaXcaMuhtTV
+        6mZOmzsYjy5ltPJ0EVxpGGtt8bHtltzZKz68jMY=
+X-Google-Smtp-Source: ABdhPJyBq4sqMdV9YOgX2LPfg7v0r1TyKLPSCgNFE9WC5dr6x7nuG0vtpTjgac6McvvCGXMKFokOKQeKqW5/o5klD8Y=
+X-Received: by 2002:a17:906:9b92:: with SMTP id dd18mr21874490ejc.425.1639125776074;
+ Fri, 10 Dec 2021 00:42:56 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20211209143519.60498-1-andriy.shevchenko@linux.intel.com>
+ <20211209143519.60498-2-andriy.shevchenko@linux.intel.com> <5d98df66-a1fb-a2cf-f780-963bf26f6d1e@opensource.wdc.com>
+In-Reply-To: <5d98df66-a1fb-a2cf-f780-963bf26f6d1e@opensource.wdc.com>
+From:   Andy Shevchenko <andy.shevchenko@gmail.com>
+Date:   Fri, 10 Dec 2021 10:42:19 +0200
+Message-ID: <CAHp75Vezco85W+TG+ehtMwtUyFubb+fbnn5XuyNQiNX4mJczXg@mail.gmail.com>
+Subject: Re: [PATCH v1 2/3] ata: sata_dwc_460ex: Use temporary variable for
+ struct device
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Hannes Reinecke <hare@suse.de>
+Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        linux-ide@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Obsolete, and has been converted to tracepoints.
+On Fri, Dec 10, 2021 at 4:25 AM Damien Le Moal
+<damien.lemoal@opensource.wdc.com> wrote:
+>
+> On 2021/12/09 23:35, Andy Shevchenko wrote:
+> > Use temporary variable for struct device to make code neater.
+> >
+> > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+>
+> What is this based on ? Is this on top of Hannes series ?
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/ata/sata_dwc_460ex.c | 12 ------------
- 1 file changed, 12 deletions(-)
+Nope, on latest (available) Linux Next.
+Hannes, can you incorporate this to yours maybe? I see one conflict
+with the last patch.
 
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 6cdce9d00ed7..78618b3efcbc 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -20,7 +20,6 @@
- 
- #ifdef CONFIG_SATA_DWC_VDEBUG
- #define VERBOSE_DEBUG
--#define DEBUG_NCQ
- #endif
- 
- #include <linux/kernel.h>
-@@ -736,17 +735,6 @@ static void sata_dwc_dma_xfer_complete(struct ata_port *ap, u32 check_status)
- 		return;
- 	}
- 
--#ifdef DEBUG_NCQ
--	if (tag > 0) {
--		dev_info(ap->dev,
--			 "%s tag=%u cmd=0x%02x dma dir=%s proto=%s dmacr=0x%08x\n",
--			 __func__, qc->hw_tag, qc->tf.command,
--			 get_dma_dir_descript(qc->dma_dir),
--			 get_prot_descript(qc->tf.protocol),
--			 sata_dwc_readl(&hsdev->sata_dwc_regs->dmacr));
--	}
--#endif
--
- 	if (ata_is_dma(qc->tf.protocol)) {
- 		if (hsdevp->dma_pending[tag] == SATA_DWC_DMA_PENDING_NONE) {
- 			dev_err(ap->dev,
 -- 
-2.29.2
-
+With Best Regards,
+Andy Shevchenko
