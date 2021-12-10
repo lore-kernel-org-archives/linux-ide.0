@@ -2,47 +2,47 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00B77C43219
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5A83C433FE
 	for <linux-ide@archiver.kernel.org>; Fri, 10 Dec 2021 07:29:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237668AbhLJHdT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Dec 2021 02:33:19 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:35092 "EHLO
+        id S237667AbhLJHdS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 10 Dec 2021 02:33:18 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:34984 "EHLO
         smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237592AbhLJHdA (ORCPT
+        with ESMTP id S237588AbhLJHdA (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Dec 2021 02:33:00 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id EF30D2113A;
+        by smtp-out1.suse.de (Postfix) with ESMTP id E34D12112B;
         Fri, 10 Dec 2021 07:29:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1639121358; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=cJOvM5cGCIp+rdub/IzM/SYg0TtdZveoHHjlOgQhUQ0=;
-        b=V1ire5Wtx+oq/kCwUzGTF7geFEIwhqNo5x5Lxbb/r2tMRbct387h+PtWOM1x7WvEaT3EYv
-        gLSTrQt6jks6AHwS1KP2slxmFeKs0HWaROL2ZWoerelnd19gjxvlY+8xg5k7+nFblfd3jW
-        3pCaVl9wi8vr/gO8vpHnhnUWZ22d01Y=
+        bh=oIuXxAQkPBNVdBIj7LFlYTr68xCImrWSftyEwnOY5pw=;
+        b=R0CkwYCH39AD0BuIwG5WglhSCNgicPDJVUwLpFZMMGCA507WJAUNErXEWkCwUi7vBrmUAQ
+        9pc9kc0Wh6tjftbxkEWNewj6uX7nfpv/7WC1aTTrQCNxCZ4zrBKEVuZ1M5FB4lcJMxz4JI
+        v4DLoeqlL2cDn5pkrE9GSUsA4M6biUk=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1639121358;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=cJOvM5cGCIp+rdub/IzM/SYg0TtdZveoHHjlOgQhUQ0=;
-        b=GN8SjUEPezZT2bbhr5jEJY8rP6Hzmpz0Or+CzfeUGJqC7Eb++pNTnsDP9LLIEKwOFuPYP7
-        LDkzv7Ukxb6S53Dg==
+        bh=oIuXxAQkPBNVdBIj7LFlYTr68xCImrWSftyEwnOY5pw=;
+        b=pOV90D0yhgmXO//BBbVr+oRmBT6FRz6Im1Ztb/yuMvxU2P8HAYc1RYrCL/PX7sZU9zq2zx
+        eX+RoXY3lWxDsxCg==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id EB91FA3BBA;
+        by relay2.suse.de (Postfix) with ESMTP id DE41FA3BB6;
         Fri, 10 Dec 2021 07:29:18 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id E8EA2519206B; Fri, 10 Dec 2021 08:29:18 +0100 (CET)
+        id DC7435192063; Fri, 10 Dec 2021 08:29:18 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Damien LeMoal <damien.lemoal@wdc.com>
 Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 37/68] sata_sx4: add module parameter 'dimm_test'
-Date:   Fri, 10 Dec 2021 08:28:34 +0100
-Message-Id: <20211210072905.15666-38-hare@suse.de>
+Subject: [PATCH 33/68] sata_nv: drop pointless VPRINTK() calls and convert remaining ones
+Date:   Fri, 10 Dec 2021 08:28:30 +0100
+Message-Id: <20211210072905.15666-34-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20211210072905.15666-1-hare@suse.de>
 References: <20211210072905.15666-1-hare@suse.de>
@@ -52,117 +52,153 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add module parameter 'dimm_test' to enable DIMM testing during startup.
+Quite some information from the VPRINTK() is already covered by
+tracepoints, so remove the pointless calls and convert the remaining
+ones to structured logging.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/sata_sx4.c | 34 ++++++++++++++--------------------
- 1 file changed, 14 insertions(+), 20 deletions(-)
+ drivers/ata/sata_nv.c | 38 ++++++++++++++------------------------
+ 1 file changed, 14 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
-index 85e72c81a1de..5d7913644dfc 100644
---- a/drivers/ata/sata_sx4.c
-+++ b/drivers/ata/sata_sx4.c
-@@ -78,6 +78,9 @@
- #define DRV_NAME	"sata_sx4"
- #define DRV_VERSION	"0.12"
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index 06d381b9764e..7f14d0d31057 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -809,7 +809,7 @@ static int nv_adma_check_cpb(struct ata_port *ap, int cpb_num, int force_err)
+ 	struct nv_adma_port_priv *pp = ap->private_data;
+ 	u8 flags = pp->cpb[cpb_num].resp_flags;
  
-+static int dimm_test;
-+module_param(dimm_test, int, 0644);
-+MODULE_PARM_DESC(dimm_test, "Enable DIMM test during startup (1 = enabled)");
+-	VPRINTK("CPB %d, flags=0x%x\n", cpb_num, flags);
++	ata_port_dbg(ap, "CPB %d, flags=0x%x\n", cpb_num, flags);
  
- enum {
- 	PDC_MMIO_BAR		= 3,
-@@ -211,10 +214,8 @@ static unsigned int pdc20621_i2c_read(struct ata_host *host,
- 				      u32 device, u32 subaddr, u32 *pdata);
- static int pdc20621_prog_dimm0(struct ata_host *host);
- static unsigned int pdc20621_prog_dimm_global(struct ata_host *host);
--#ifdef ATA_VERBOSE_DEBUG
- static void pdc20621_get_from_dimm(struct ata_host *host,
- 				   void *psource, u32 offset, u32 size);
--#endif
- static void pdc20621_put_to_dimm(struct ata_host *host,
- 				 void *psource, u32 offset, u32 size);
- static void pdc20621_irq_clear(struct ata_port *ap);
-@@ -575,7 +576,6 @@ static void pdc20621_pop_hdma(struct ata_queued_cmd *qc)
- 	pp->hdma_cons++;
+ 	if (unlikely((force_err ||
+ 		     flags & (NV_CPB_RESP_ATA_ERR |
+@@ -1101,8 +1101,6 @@ static int nv_adma_port_start(struct ata_port *ap)
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	u16 tmp;
+ 
+-	VPRINTK("ENTER\n");
+-
+ 	/*
+ 	 * Ensure DMA mask is set to 32-bit before allocating legacy PRD and
+ 	 * pad buffers.
+@@ -1191,7 +1189,6 @@ static void nv_adma_port_stop(struct ata_port *ap)
+ 	struct nv_adma_port_priv *pp = ap->private_data;
+ 	void __iomem *mmio = pp->ctl_block;
+ 
+-	VPRINTK("ENTER\n");
+ 	writew(0, mmio + NV_ADMA_CTL);
  }
  
--#ifdef ATA_VERBOSE_DEBUG
- static void pdc20621_dump_hdma(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
-@@ -585,14 +585,10 @@ static void pdc20621_dump_hdma(struct ata_queued_cmd *qc)
- 	dimm_mmio += (port_no * PDC_DIMM_WINDOW_STEP);
- 	dimm_mmio += PDC_DIMM_HOST_PKT;
+@@ -1253,8 +1250,6 @@ static void nv_adma_setup_port(struct ata_port *ap)
+ 	void __iomem *mmio = ap->host->iomap[NV_MMIO_BAR];
+ 	struct ata_ioports *ioport = &ap->ioaddr;
  
--	printk(KERN_ERR "HDMA[0] == 0x%08X\n", readl(dimm_mmio));
--	printk(KERN_ERR "HDMA[1] == 0x%08X\n", readl(dimm_mmio + 4));
--	printk(KERN_ERR "HDMA[2] == 0x%08X\n", readl(dimm_mmio + 8));
--	printk(KERN_ERR "HDMA[3] == 0x%08X\n", readl(dimm_mmio + 12));
-+	ata_port_dbg(ap, "HDMA 0x%08X 0x%08X 0x%08X 0x%08X\n",
-+		     readl(dimm_mmio), readl(dimm_mmio + 4),
-+		     readl(dimm_mmio + 8), readl(dimm_mmio + 12));
- }
--#else
--static inline void pdc20621_dump_hdma(struct ata_queued_cmd *qc) { }
--#endif /* ATA_VERBOSE_DEBUG */
+-	VPRINTK("ENTER\n");
+-
+ 	mmio += NV_ADMA_PORT + ap->port_no * NV_ADMA_PORT_SIZE;
  
- static void pdc20621_packet_start(struct ata_queued_cmd *qc)
- {
-@@ -938,7 +934,6 @@ static void pdc_sata_setup_port(struct ata_ioports *port, void __iomem *base)
- }
+ 	ioport->cmd_addr	= mmio;
+@@ -1375,8 +1370,6 @@ static enum ata_completion_errors nv_adma_qc_prep(struct ata_queued_cmd *qc)
+ 	if (qc->tf.protocol == ATA_PROT_NCQ)
+ 		ctl_flags |= NV_CPB_CTL_QUEUE | NV_CPB_CTL_FPDMA;
  
+-	VPRINTK("qc->flags = 0x%lx\n", qc->flags);
+-
+ 	nv_adma_tf_to_cpb(&qc->tf, cpb->tf);
  
--#ifdef ATA_VERBOSE_DEBUG
- static void pdc20621_get_from_dimm(struct ata_host *host, void *psource,
- 				   u32 offset, u32 size)
- {
-@@ -988,7 +983,6 @@ static void pdc20621_get_from_dimm(struct ata_host *host, void *psource,
- 		memcpy_fromio(psource, dimm_mmio, size / 4);
+ 	if (qc->flags & ATA_QCFLAG_DMAMAP) {
+@@ -1401,8 +1394,6 @@ static unsigned int nv_adma_qc_issue(struct ata_queued_cmd *qc)
+ 	void __iomem *mmio = pp->ctl_block;
+ 	int curr_ncq = (qc->tf.protocol == ATA_PROT_NCQ);
+ 
+-	VPRINTK("ENTER\n");
+-
+ 	/* We can't handle result taskfile with NCQ commands, since
+ 	   retrieving the taskfile switches us out of ADMA mode and would abort
+ 	   existing commands. */
+@@ -1414,7 +1405,6 @@ static unsigned int nv_adma_qc_issue(struct ata_queued_cmd *qc)
+ 
+ 	if (nv_adma_use_reg_mode(qc)) {
+ 		/* use ATA register mode */
+-		VPRINTK("using ATA register mode: 0x%lx\n", qc->flags);
+ 		BUG_ON(!(pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) &&
+ 			(qc->flags & ATA_QCFLAG_DMAMAP));
+ 		nv_adma_register_mode(qc->ap);
+@@ -1866,12 +1856,12 @@ static void nv_swncq_host_init(struct ata_host *host)
+ 
+ 	/* enable swncq */
+ 	tmp = readl(mmio + NV_CTL_MCP55);
+-	VPRINTK("HOST_CTL:0x%X\n", tmp);
++	dev_dbg(&pdev->dev, "HOST_CTL:0x%X\n", tmp);
+ 	writel(tmp | NV_CTL_PRI_SWNCQ | NV_CTL_SEC_SWNCQ, mmio + NV_CTL_MCP55);
+ 
+ 	/* enable irq intr */
+ 	tmp = readl(mmio + NV_INT_ENABLE_MCP55);
+-	VPRINTK("HOST_ENABLE:0x%X\n", tmp);
++	dev_dbg(&pdev->dev, "HOST_ENABLE:0x%X\n", tmp);
+ 	writel(tmp | 0x00fd00fd, mmio + NV_INT_ENABLE_MCP55);
+ 
+ 	/*  clear port irq */
+@@ -2101,7 +2091,7 @@ static int nv_swncq_sdbfis(struct ata_port *ap)
+ 	ata_qc_complete_multiple(ap, ata_qc_get_active(ap) ^ done_mask);
+ 
+ 	if (!ap->qc_active) {
+-		DPRINTK("over\n");
++		ata_port_dbg(ap, "over\n");
+ 		nv_swncq_pp_reinit(ap);
+ 		return 0;
  	}
- }
--#endif
+@@ -2116,12 +2106,12 @@ static int nv_swncq_sdbfis(struct ata_port *ap)
+ 		 */
+ 		lack_dhfis = 1;
  
+-	DPRINTK("id 0x%x QC: qc_active 0x%llx,"
+-		"SWNCQ:qc_active 0x%X defer_bits %X "
+-		"dhfis 0x%X dmafis 0x%X last_issue_tag %x\n",
+-		ap->print_id, ap->qc_active, pp->qc_active,
+-		pp->defer_queue.defer_bits, pp->dhfis_bits,
+-		pp->dmafis_bits, pp->last_issue_tag);
++	ata_port_dbg(ap, "QC: qc_active 0x%llx,"
++		     "SWNCQ:qc_active 0x%X defer_bits %X "
++		     "dhfis 0x%X dmafis 0x%X last_issue_tag %x\n",
++		     ap->qc_active, pp->qc_active,
++		     pp->defer_queue.defer_bits, pp->dhfis_bits,
++		     pp->dmafis_bits, pp->last_issue_tag);
  
- static void pdc20621_put_to_dimm(struct ata_host *host, void *psource,
-@@ -1301,8 +1295,7 @@ static unsigned int pdc20621_dimm_init(struct ata_host *host)
- 		return 1;
- 	}
+ 	nv_swncq_fis_reinit(ap);
  
--#ifdef ATA_VERBOSE_DEBUG
--	{
-+	if (dimm_test) {
- 		u8 test_parttern1[40] =
- 			{0x55,0xAA,'P','r','o','m','i','s','e',' ',
- 			'N','o','t',' ','Y','e','t',' ',
-@@ -1316,19 +1309,20 @@ static unsigned int pdc20621_dimm_init(struct ata_host *host)
+@@ -2161,7 +2151,7 @@ static void nv_swncq_dmafis(struct ata_port *ap)
+ 	__ata_bmdma_stop(ap);
+ 	tag = nv_swncq_tag(ap);
  
- 		pdc20621_put_to_dimm(host, test_parttern1, 0x10040, 40);
- 		pdc20621_get_from_dimm(host, test_parttern2, 0x40, 40);
--		printk(KERN_ERR "%x, %x, %s\n", test_parttern2[0],
-+		dev_info(host->dev, "DIMM test pattern 1: %x, %x, %s\n", test_parttern2[0],
- 		       test_parttern2[1], &(test_parttern2[2]));
- 		pdc20621_get_from_dimm(host, test_parttern2, 0x10040,
- 				       40);
--		printk(KERN_ERR "%x, %x, %s\n", test_parttern2[0],
--		       test_parttern2[1], &(test_parttern2[2]));
-+		dev_info(host->dev, "DIMM test pattern 2: %x, %x, %s\n",
-+			 test_parttern2[0],
-+			 test_parttern2[1], &(test_parttern2[2]));
+-	DPRINTK("dma setup tag 0x%x\n", tag);
++	ata_port_dbg(ap, "dma setup tag 0x%x\n", tag);
+ 	qc = ata_qc_from_tag(ap, tag);
  
- 		pdc20621_put_to_dimm(host, test_parttern1, 0x40, 40);
- 		pdc20621_get_from_dimm(host, test_parttern2, 0x40, 40);
--		printk(KERN_ERR "%x, %x, %s\n", test_parttern2[0],
--		       test_parttern2[1], &(test_parttern2[2]));
-+		dev_info(host->dev, "DIMM test pattern 3: %x, %x, %s\n",
-+			 test_parttern2[0],
-+			 test_parttern2[1], &(test_parttern2[2]));
- 	}
--#endif
+ 	if (unlikely(!qc))
+@@ -2229,9 +2219,9 @@ static void nv_swncq_host_interrupt(struct ata_port *ap, u16 fis)
  
- 	/* ECC initiliazation. */
+ 	if (fis & NV_SWNCQ_IRQ_SDBFIS) {
+ 		pp->ncq_flags |= ncq_saw_sdb;
+-		DPRINTK("id 0x%x SWNCQ: qc_active 0x%X "
++		ata_port_dbg(ap, "SWNCQ: qc_active 0x%X "
+ 			"dhfis 0x%X dmafis 0x%X sactive 0x%X\n",
+-			ap->print_id, pp->qc_active, pp->dhfis_bits,
++			pp->qc_active, pp->dhfis_bits,
+ 			pp->dmafis_bits, readl(pp->sactive_block));
+ 		if (nv_swncq_sdbfis(ap) < 0)
+ 			goto irq_error;
+@@ -2257,7 +2247,7 @@ static void nv_swncq_host_interrupt(struct ata_port *ap, u16 fis)
+ 				goto irq_exit;
  
+ 			if (pp->defer_queue.defer_bits) {
+-				DPRINTK("send next command\n");
++				ata_port_dbg(ap, "send next command\n");
+ 				qc = nv_swncq_qc_from_dq(ap);
+ 				nv_swncq_issue_atacmd(ap, qc);
+ 			}
 -- 
 2.29.2
 
