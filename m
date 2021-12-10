@@ -2,47 +2,47 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5A83C433FE
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Dec 2021 07:29:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AE9CC433F5
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Dec 2021 07:29:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237667AbhLJHdS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Dec 2021 02:33:18 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:34984 "EHLO
+        id S237517AbhLJHdU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 10 Dec 2021 02:33:20 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:35094 "EHLO
         smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237588AbhLJHdA (ORCPT
+        with ESMTP id S237593AbhLJHdA (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Dec 2021 02:33:00 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id E34D12112B;
+        by smtp-out1.suse.de (Postfix) with ESMTP id F17462113D;
         Fri, 10 Dec 2021 07:29:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1639121358; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=oIuXxAQkPBNVdBIj7LFlYTr68xCImrWSftyEwnOY5pw=;
-        b=R0CkwYCH39AD0BuIwG5WglhSCNgicPDJVUwLpFZMMGCA507WJAUNErXEWkCwUi7vBrmUAQ
-        9pc9kc0Wh6tjftbxkEWNewj6uX7nfpv/7WC1aTTrQCNxCZ4zrBKEVuZ1M5FB4lcJMxz4JI
-        v4DLoeqlL2cDn5pkrE9GSUsA4M6biUk=
+        bh=wIzHCsyud2ctKlYFewcyF1YtljO/1PKpRz99DRbtwZ0=;
+        b=IpAXpPMOSGLiNXYX9uvIQWOa0zrGCftvoSDNN2N1Drn1HUKczMB3FSEAl7xRhn5KEJ6C7Y
+        teOqtpHY0u1gl4BO1FY8no2bPgDsWkvSHmO31L9uNDoSuuGzpScSx7zTOzxXztUSKW0562
+        OnkLV7Gx3iqrDBi7nI3hMVYV3Sv3AuY=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1639121358;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=oIuXxAQkPBNVdBIj7LFlYTr68xCImrWSftyEwnOY5pw=;
-        b=pOV90D0yhgmXO//BBbVr+oRmBT6FRz6Im1Ztb/yuMvxU2P8HAYc1RYrCL/PX7sZU9zq2zx
-        eX+RoXY3lWxDsxCg==
+        bh=wIzHCsyud2ctKlYFewcyF1YtljO/1PKpRz99DRbtwZ0=;
+        b=eGZc+9Cdz5BNEcV9y47Fm5Eqe+feBz+qx868VMPBOddVLeKI82/N4loqloHuNSOC6kMqwp
+        5aiaJCQ9GwRXv7AQ==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id DE41FA3BB6;
+        by relay2.suse.de (Postfix) with ESMTP id EDA37A3BBB;
         Fri, 10 Dec 2021 07:29:18 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id DC7435192063; Fri, 10 Dec 2021 08:29:18 +0100 (CET)
+        id EBCD8519206D; Fri, 10 Dec 2021 08:29:18 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Damien LeMoal <damien.lemoal@wdc.com>
 Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 33/68] sata_nv: drop pointless VPRINTK() calls and convert remaining ones
-Date:   Fri, 10 Dec 2021 08:28:30 +0100
-Message-Id: <20211210072905.15666-34-hare@suse.de>
+Subject: [PATCH 38/68] libata: drop ata_msg_error() and ata_msg_intr()
+Date:   Fri, 10 Dec 2021 08:28:35 +0100
+Message-Id: <20211210072905.15666-39-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20211210072905.15666-1-hare@suse.de>
 References: <20211210072905.15666-1-hare@suse.de>
@@ -52,153 +52,55 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Quite some information from the VPRINTK() is already covered by
-tracepoints, so remove the pointless calls and convert the remaining
-ones to structured logging.
+Unused.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/sata_nv.c | 38 ++++++++++++++------------------------
- 1 file changed, 14 insertions(+), 24 deletions(-)
+ drivers/ata/libata-core.c | 6 +++---
+ include/linux/libata.h    | 4 ----
+ 2 files changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 06d381b9764e..7f14d0d31057 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -809,7 +809,7 @@ static int nv_adma_check_cpb(struct ata_port *ap, int cpb_num, int force_err)
- 	struct nv_adma_port_priv *pp = ap->private_data;
- 	u8 flags = pp->cpb[cpb_num].resp_flags;
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 75120f647b41..cda8c21602b9 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5338,11 +5338,11 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
  
--	VPRINTK("CPB %d, flags=0x%x\n", cpb_num, flags);
-+	ata_port_dbg(ap, "CPB %d, flags=0x%x\n", cpb_num, flags);
+ #if defined(ATA_VERBOSE_DEBUG)
+ 	/* turn on all debugging levels */
+-	ap->msg_enable = 0x00FF;
++	ap->msg_enable = 0x003F;
+ #elif defined(ATA_DEBUG)
+-	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_INFO | ATA_MSG_CTL | ATA_MSG_WARN | ATA_MSG_ERR;
++	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_INFO | ATA_MSG_CTL | ATA_MSG_WARN;
+ #else
+-	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_ERR | ATA_MSG_WARN;
++	ap->msg_enable = ATA_MSG_DRV | ATA_MSG_WARN;
+ #endif
  
- 	if (unlikely((force_err ||
- 		     flags & (NV_CPB_RESP_ATA_ERR |
-@@ -1101,8 +1101,6 @@ static int nv_adma_port_start(struct ata_port *ap)
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	u16 tmp;
+ 	mutex_init(&ap->scsi_scan_mutex);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index a807d2d43d70..a3f35735fd27 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -78,8 +78,6 @@ enum {
+ 	ATA_MSG_WARN	= 0x0008,
+ 	ATA_MSG_MALLOC	= 0x0010,
+ 	ATA_MSG_CTL	= 0x0020,
+-	ATA_MSG_INTR	= 0x0040,
+-	ATA_MSG_ERR	= 0x0080,
+ };
  
--	VPRINTK("ENTER\n");
--
- 	/*
- 	 * Ensure DMA mask is set to 32-bit before allocating legacy PRD and
- 	 * pad buffers.
-@@ -1191,7 +1189,6 @@ static void nv_adma_port_stop(struct ata_port *ap)
- 	struct nv_adma_port_priv *pp = ap->private_data;
- 	void __iomem *mmio = pp->ctl_block;
+ #define ata_msg_drv(p)    ((p)->msg_enable & ATA_MSG_DRV)
+@@ -88,8 +86,6 @@ enum {
+ #define ata_msg_warn(p)   ((p)->msg_enable & ATA_MSG_WARN)
+ #define ata_msg_malloc(p) ((p)->msg_enable & ATA_MSG_MALLOC)
+ #define ata_msg_ctl(p)    ((p)->msg_enable & ATA_MSG_CTL)
+-#define ata_msg_intr(p)   ((p)->msg_enable & ATA_MSG_INTR)
+-#define ata_msg_err(p)    ((p)->msg_enable & ATA_MSG_ERR)
  
--	VPRINTK("ENTER\n");
- 	writew(0, mmio + NV_ADMA_CTL);
- }
- 
-@@ -1253,8 +1250,6 @@ static void nv_adma_setup_port(struct ata_port *ap)
- 	void __iomem *mmio = ap->host->iomap[NV_MMIO_BAR];
- 	struct ata_ioports *ioport = &ap->ioaddr;
- 
--	VPRINTK("ENTER\n");
--
- 	mmio += NV_ADMA_PORT + ap->port_no * NV_ADMA_PORT_SIZE;
- 
- 	ioport->cmd_addr	= mmio;
-@@ -1375,8 +1370,6 @@ static enum ata_completion_errors nv_adma_qc_prep(struct ata_queued_cmd *qc)
- 	if (qc->tf.protocol == ATA_PROT_NCQ)
- 		ctl_flags |= NV_CPB_CTL_QUEUE | NV_CPB_CTL_FPDMA;
- 
--	VPRINTK("qc->flags = 0x%lx\n", qc->flags);
--
- 	nv_adma_tf_to_cpb(&qc->tf, cpb->tf);
- 
- 	if (qc->flags & ATA_QCFLAG_DMAMAP) {
-@@ -1401,8 +1394,6 @@ static unsigned int nv_adma_qc_issue(struct ata_queued_cmd *qc)
- 	void __iomem *mmio = pp->ctl_block;
- 	int curr_ncq = (qc->tf.protocol == ATA_PROT_NCQ);
- 
--	VPRINTK("ENTER\n");
--
- 	/* We can't handle result taskfile with NCQ commands, since
- 	   retrieving the taskfile switches us out of ADMA mode and would abort
- 	   existing commands. */
-@@ -1414,7 +1405,6 @@ static unsigned int nv_adma_qc_issue(struct ata_queued_cmd *qc)
- 
- 	if (nv_adma_use_reg_mode(qc)) {
- 		/* use ATA register mode */
--		VPRINTK("using ATA register mode: 0x%lx\n", qc->flags);
- 		BUG_ON(!(pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) &&
- 			(qc->flags & ATA_QCFLAG_DMAMAP));
- 		nv_adma_register_mode(qc->ap);
-@@ -1866,12 +1856,12 @@ static void nv_swncq_host_init(struct ata_host *host)
- 
- 	/* enable swncq */
- 	tmp = readl(mmio + NV_CTL_MCP55);
--	VPRINTK("HOST_CTL:0x%X\n", tmp);
-+	dev_dbg(&pdev->dev, "HOST_CTL:0x%X\n", tmp);
- 	writel(tmp | NV_CTL_PRI_SWNCQ | NV_CTL_SEC_SWNCQ, mmio + NV_CTL_MCP55);
- 
- 	/* enable irq intr */
- 	tmp = readl(mmio + NV_INT_ENABLE_MCP55);
--	VPRINTK("HOST_ENABLE:0x%X\n", tmp);
-+	dev_dbg(&pdev->dev, "HOST_ENABLE:0x%X\n", tmp);
- 	writel(tmp | 0x00fd00fd, mmio + NV_INT_ENABLE_MCP55);
- 
- 	/*  clear port irq */
-@@ -2101,7 +2091,7 @@ static int nv_swncq_sdbfis(struct ata_port *ap)
- 	ata_qc_complete_multiple(ap, ata_qc_get_active(ap) ^ done_mask);
- 
- 	if (!ap->qc_active) {
--		DPRINTK("over\n");
-+		ata_port_dbg(ap, "over\n");
- 		nv_swncq_pp_reinit(ap);
- 		return 0;
- 	}
-@@ -2116,12 +2106,12 @@ static int nv_swncq_sdbfis(struct ata_port *ap)
- 		 */
- 		lack_dhfis = 1;
- 
--	DPRINTK("id 0x%x QC: qc_active 0x%llx,"
--		"SWNCQ:qc_active 0x%X defer_bits %X "
--		"dhfis 0x%X dmafis 0x%X last_issue_tag %x\n",
--		ap->print_id, ap->qc_active, pp->qc_active,
--		pp->defer_queue.defer_bits, pp->dhfis_bits,
--		pp->dmafis_bits, pp->last_issue_tag);
-+	ata_port_dbg(ap, "QC: qc_active 0x%llx,"
-+		     "SWNCQ:qc_active 0x%X defer_bits %X "
-+		     "dhfis 0x%X dmafis 0x%X last_issue_tag %x\n",
-+		     ap->qc_active, pp->qc_active,
-+		     pp->defer_queue.defer_bits, pp->dhfis_bits,
-+		     pp->dmafis_bits, pp->last_issue_tag);
- 
- 	nv_swncq_fis_reinit(ap);
- 
-@@ -2161,7 +2151,7 @@ static void nv_swncq_dmafis(struct ata_port *ap)
- 	__ata_bmdma_stop(ap);
- 	tag = nv_swncq_tag(ap);
- 
--	DPRINTK("dma setup tag 0x%x\n", tag);
-+	ata_port_dbg(ap, "dma setup tag 0x%x\n", tag);
- 	qc = ata_qc_from_tag(ap, tag);
- 
- 	if (unlikely(!qc))
-@@ -2229,9 +2219,9 @@ static void nv_swncq_host_interrupt(struct ata_port *ap, u16 fis)
- 
- 	if (fis & NV_SWNCQ_IRQ_SDBFIS) {
- 		pp->ncq_flags |= ncq_saw_sdb;
--		DPRINTK("id 0x%x SWNCQ: qc_active 0x%X "
-+		ata_port_dbg(ap, "SWNCQ: qc_active 0x%X "
- 			"dhfis 0x%X dmafis 0x%X sactive 0x%X\n",
--			ap->print_id, pp->qc_active, pp->dhfis_bits,
-+			pp->qc_active, pp->dhfis_bits,
- 			pp->dmafis_bits, readl(pp->sactive_block));
- 		if (nv_swncq_sdbfis(ap) < 0)
- 			goto irq_error;
-@@ -2257,7 +2247,7 @@ static void nv_swncq_host_interrupt(struct ata_port *ap, u16 fis)
- 				goto irq_exit;
- 
- 			if (pp->defer_queue.defer_bits) {
--				DPRINTK("send next command\n");
-+				ata_port_dbg(ap, "send next command\n");
- 				qc = nv_swncq_qc_from_dq(ap);
- 				nv_swncq_issue_atacmd(ap, qc);
- 			}
+ static inline u32 ata_msg_init(int dval, int default_msg_enable_bits)
+ {
 -- 
 2.29.2
 
