@@ -2,77 +2,96 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF067C433F5
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Dec 2021 08:59:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DB73C433F5
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Dec 2021 09:25:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238864AbhLJJCj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Dec 2021 04:02:39 -0500
-Received: from mxout01.lancloud.ru ([45.84.86.81]:38532 "EHLO
-        mxout01.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236109AbhLJJCj (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Dec 2021 04:02:39 -0500
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout01.lancloud.ru 3A37D20E4351
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-Subject: Re: [PATCH v1 1/2] ata: libahci_platform: Get rid of dup message when
- IRQ can't be retrieved
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>
-References: <20211209145937.77719-1-andriy.shevchenko@linux.intel.com>
- <d91cf14d-c7d8-1c61-9071-102f38e8c924@opensource.wdc.com>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <febc7f73-929f-d8a6-ea01-5056b9101b46@omp.ru>
-Date:   Fri, 10 Dec 2021 11:59:00 +0300
+        id S239430AbhLJJ33 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 10 Dec 2021 04:29:29 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:58812 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239433AbhLJJ30 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Dec 2021 04:29:26 -0500
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 558371F3A0;
+        Fri, 10 Dec 2021 09:25:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1639128351; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Wf9vb8M1IAE2GO6dm0K8PPb5mu0IWeheJoH7UpjmkIQ=;
+        b=mRgJijdA90Egw5DrcHGPs/G84NyI6TAIuLnJ/O/S8cIbluRf9ypFGStFZ5hdtcpdW0NCBt
+        5Fvcuzx+VB9BnGbRGbUavkn0GdMsyF8jW3d5v2Gvgnm/ZpZiTEnuWDwCC4ND18qSK0gOyG
+        aQz0/XjfXDF34wCrZUPfo4r1X8vvruY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1639128351;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Wf9vb8M1IAE2GO6dm0K8PPb5mu0IWeheJoH7UpjmkIQ=;
+        b=Oa3KC4txqB3VHKby2Ljjj5KfVc9WjvUZUEfV4LfX661FLB96451iTBlEQSuTH2G1h29siH
+        rErxAqCGxtmYdyDg==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 4836513E15;
+        Fri, 10 Dec 2021 09:25:51 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id f55bER8ds2EkMgAAMHmgww
+        (envelope-from <hare@suse.de>); Fri, 10 Dec 2021 09:25:51 +0000
+Subject: Re: [PATCH v1 2/3] ata: sata_dwc_460ex: Use temporary variable for
+ struct device
+To:     Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        linux-ide@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <20211209143519.60498-1-andriy.shevchenko@linux.intel.com>
+ <20211209143519.60498-2-andriy.shevchenko@linux.intel.com>
+ <5d98df66-a1fb-a2cf-f780-963bf26f6d1e@opensource.wdc.com>
+ <CAHp75Vezco85W+TG+ehtMwtUyFubb+fbnn5XuyNQiNX4mJczXg@mail.gmail.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <be7f4ab7-3625-8b84-9d58-fd2958daa031@suse.de>
+Date:   Fri, 10 Dec 2021 10:25:46 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-In-Reply-To: <d91cf14d-c7d8-1c61-9071-102f38e8c924@opensource.wdc.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAHp75Vezco85W+TG+ehtMwtUyFubb+fbnn5XuyNQiNX4mJczXg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
- LFEX1907.lancloud.ru (fd00:f066::207)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 12/10/21 1:49 AM, Damien Le Moal wrote:
-
->> platform_get_irq() will print a message when it fails.
->> No need to repeat this.
+On 12/10/21 9:42 AM, Andy Shevchenko wrote:
+> On Fri, Dec 10, 2021 at 4:25 AM Damien Le Moal
+> <damien.lemoal@opensource.wdc.com> wrote:
 >>
->> While at it, drop redundant check for 0 as platform_get_irq() spills
->> out a big WARN() in such case.
+>> On 2021/12/09 23:35, Andy Shevchenko wrote:
+>>> Use temporary variable for struct device to make code neater.
+>>>
+>>> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+>>
+>> What is this based on ? Is this on top of Hannes series ?
 > 
-> The reason you should be able to remove the "if (!irq)" test is that
-> platform_get_irq() never returns 0. At least, that is what the function kdoc
-> says. But looking at platform_get_irq_optional(), which is called by
-> platform_get_irq(), the out label is:
+> Nope, on latest (available) Linux Next.
+> Hannes, can you incorporate this to yours maybe? I see one conflict
+> with the last patch.
 > 
-> 	WARN(ret == 0, "0 is an invalid IRQ number\n");
-> 	return ret;
-> 
-> So 0 will be returned as-is. That is rather weird. That should be fixed to
-> return -ENXIO:
-> 
-> 	if (WARN(ret == 0, "0 is an invalid IRQ number\n"))
-> 		return -ENXIO;
-> 	return ret;
+Sure.
 
-   My unmerged patch (https://marc.info/?l=linux-kernel&m=163623041902285) does this
-but returns -EINVAL instead.
+Cheers,
 
-> Otherwise, I do not think that removing the "if (!irq)" hunk is safe. no ?
-
-   Of course it isn't...
-
->> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-[...]
-
-MBR, Sergey
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
