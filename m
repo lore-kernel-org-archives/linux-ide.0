@@ -2,47 +2,47 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5171C433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00B77C43219
 	for <linux-ide@archiver.kernel.org>; Fri, 10 Dec 2021 07:29:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237662AbhLJHdS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Dec 2021 02:33:18 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:34980 "EHLO
+        id S237668AbhLJHdT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 10 Dec 2021 02:33:19 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:35092 "EHLO
         smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237578AbhLJHdA (ORCPT
+        with ESMTP id S237592AbhLJHdA (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Dec 2021 02:33:00 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id D6D3A21127;
+        by smtp-out1.suse.de (Postfix) with ESMTP id EF30D2113A;
         Fri, 10 Dec 2021 07:29:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1639121358; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=blHxTHASdShcDS68QjmW2iURnMqPfvw+I17evoNK+xg=;
-        b=WkTTpqvYKlx6z779SOhpmXqOum+WNBPabOEtCerje5SO/BlWhRUuvIRlugk33HntIblt6z
-        i3c/j8vCa1dkV1uU+6yhOt115BNWjQrGEfSh1YVCNfiF6+l2oj4nn4VJflz2gGAaQL0NuT
-        TXxk27P+MRQO1YjC//87kjZr5NXbB4g=
+        bh=cJOvM5cGCIp+rdub/IzM/SYg0TtdZveoHHjlOgQhUQ0=;
+        b=V1ire5Wtx+oq/kCwUzGTF7geFEIwhqNo5x5Lxbb/r2tMRbct387h+PtWOM1x7WvEaT3EYv
+        gLSTrQt6jks6AHwS1KP2slxmFeKs0HWaROL2ZWoerelnd19gjxvlY+8xg5k7+nFblfd3jW
+        3pCaVl9wi8vr/gO8vpHnhnUWZ22d01Y=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1639121358;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=blHxTHASdShcDS68QjmW2iURnMqPfvw+I17evoNK+xg=;
-        b=vPYiwyea6aTbEFwjadStQwcuY/HYUMZ9yyBH9I6stG40JZj5Gb4p986TNJi/J2/4xnu2d/
-        g6IbgblN+5IiyaBA==
+        bh=cJOvM5cGCIp+rdub/IzM/SYg0TtdZveoHHjlOgQhUQ0=;
+        b=GN8SjUEPezZT2bbhr5jEJY8rP6Hzmpz0Or+CzfeUGJqC7Eb++pNTnsDP9LLIEKwOFuPYP7
+        LDkzv7Ukxb6S53Dg==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id D3284A3BB3;
+        by relay2.suse.de (Postfix) with ESMTP id EB91FA3BBA;
         Fri, 10 Dec 2021 07:29:18 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id CF7F6519205B; Fri, 10 Dec 2021 08:29:18 +0100 (CET)
+        id E8EA2519206B; Fri, 10 Dec 2021 08:29:18 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Damien LeMoal <damien.lemoal@wdc.com>
 Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 29/68] sata_qstor: Drop pointless VPRINTK() calls
-Date:   Fri, 10 Dec 2021 08:28:26 +0100
-Message-Id: <20211210072905.15666-30-hare@suse.de>
+Subject: [PATCH 37/68] sata_sx4: add module parameter 'dimm_test'
+Date:   Fri, 10 Dec 2021 08:28:34 +0100
+Message-Id: <20211210072905.15666-38-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20211210072905.15666-1-hare@suse.de>
 References: <20211210072905.15666-1-hare@suse.de>
@@ -52,57 +52,116 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+Add module parameter 'dimm_test' to enable DIMM testing during startup.
+
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/sata_qstor.c | 11 -----------
- 1 file changed, 11 deletions(-)
+ drivers/ata/sata_sx4.c | 34 ++++++++++++++--------------------
+ 1 file changed, 14 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
-index 2b4ccdca71c6..db62c07f820f 100644
---- a/drivers/ata/sata_qstor.c
-+++ b/drivers/ata/sata_qstor.c
-@@ -252,9 +252,6 @@ static unsigned int qs_fill_sg(struct ata_queued_cmd *qc)
- 		len = sg_dma_len(sg);
- 		*(__le32 *)prd = cpu_to_le32(len);
- 		prd += sizeof(u64);
--
--		VPRINTK("PRD[%u] = (0x%llX, 0x%X)\n", si,
--					(unsigned long long)addr, len);
+diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
+index 85e72c81a1de..5d7913644dfc 100644
+--- a/drivers/ata/sata_sx4.c
++++ b/drivers/ata/sata_sx4.c
+@@ -78,6 +78,9 @@
+ #define DRV_NAME	"sata_sx4"
+ #define DRV_VERSION	"0.12"
+ 
++static int dimm_test;
++module_param(dimm_test, int, 0644);
++MODULE_PARM_DESC(dimm_test, "Enable DIMM test during startup (1 = enabled)");
+ 
+ enum {
+ 	PDC_MMIO_BAR		= 3,
+@@ -211,10 +214,8 @@ static unsigned int pdc20621_i2c_read(struct ata_host *host,
+ 				      u32 device, u32 subaddr, u32 *pdata);
+ static int pdc20621_prog_dimm0(struct ata_host *host);
+ static unsigned int pdc20621_prog_dimm_global(struct ata_host *host);
+-#ifdef ATA_VERBOSE_DEBUG
+ static void pdc20621_get_from_dimm(struct ata_host *host,
+ 				   void *psource, u32 offset, u32 size);
+-#endif
+ static void pdc20621_put_to_dimm(struct ata_host *host,
+ 				 void *psource, u32 offset, u32 size);
+ static void pdc20621_irq_clear(struct ata_port *ap);
+@@ -575,7 +576,6 @@ static void pdc20621_pop_hdma(struct ata_queued_cmd *qc)
+ 	pp->hdma_cons++;
+ }
+ 
+-#ifdef ATA_VERBOSE_DEBUG
+ static void pdc20621_dump_hdma(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+@@ -585,14 +585,10 @@ static void pdc20621_dump_hdma(struct ata_queued_cmd *qc)
+ 	dimm_mmio += (port_no * PDC_DIMM_WINDOW_STEP);
+ 	dimm_mmio += PDC_DIMM_HOST_PKT;
+ 
+-	printk(KERN_ERR "HDMA[0] == 0x%08X\n", readl(dimm_mmio));
+-	printk(KERN_ERR "HDMA[1] == 0x%08X\n", readl(dimm_mmio + 4));
+-	printk(KERN_ERR "HDMA[2] == 0x%08X\n", readl(dimm_mmio + 8));
+-	printk(KERN_ERR "HDMA[3] == 0x%08X\n", readl(dimm_mmio + 12));
++	ata_port_dbg(ap, "HDMA 0x%08X 0x%08X 0x%08X 0x%08X\n",
++		     readl(dimm_mmio), readl(dimm_mmio + 4),
++		     readl(dimm_mmio + 8), readl(dimm_mmio + 12));
+ }
+-#else
+-static inline void pdc20621_dump_hdma(struct ata_queued_cmd *qc) { }
+-#endif /* ATA_VERBOSE_DEBUG */
+ 
+ static void pdc20621_packet_start(struct ata_queued_cmd *qc)
+ {
+@@ -938,7 +934,6 @@ static void pdc_sata_setup_port(struct ata_ioports *port, void __iomem *base)
+ }
+ 
+ 
+-#ifdef ATA_VERBOSE_DEBUG
+ static void pdc20621_get_from_dimm(struct ata_host *host, void *psource,
+ 				   u32 offset, u32 size)
+ {
+@@ -988,7 +983,6 @@ static void pdc20621_get_from_dimm(struct ata_host *host, void *psource,
+ 		memcpy_fromio(psource, dimm_mmio, size / 4);
+ 	}
+ }
+-#endif
+ 
+ 
+ static void pdc20621_put_to_dimm(struct ata_host *host, void *psource,
+@@ -1301,8 +1295,7 @@ static unsigned int pdc20621_dimm_init(struct ata_host *host)
+ 		return 1;
  	}
  
- 	return si;
-@@ -268,8 +265,6 @@ static enum ata_completion_errors qs_qc_prep(struct ata_queued_cmd *qc)
- 	u64 addr;
- 	unsigned int nelem;
+-#ifdef ATA_VERBOSE_DEBUG
+-	{
++	if (dimm_test) {
+ 		u8 test_parttern1[40] =
+ 			{0x55,0xAA,'P','r','o','m','i','s','e',' ',
+ 			'N','o','t',' ','Y','e','t',' ',
+@@ -1316,19 +1309,20 @@ static unsigned int pdc20621_dimm_init(struct ata_host *host)
  
--	VPRINTK("ENTER\n");
--
- 	qs_enter_reg_mode(qc->ap);
- 	if (qc->tf.protocol != ATA_PROT_DMA)
- 		return AC_ERR_OK;
-@@ -304,8 +299,6 @@ static inline void qs_packet_start(struct ata_queued_cmd *qc)
- 	struct ata_port *ap = qc->ap;
- 	u8 __iomem *chan = qs_mmio_base(ap->host) + (ap->port_no * 0x4000);
+ 		pdc20621_put_to_dimm(host, test_parttern1, 0x10040, 40);
+ 		pdc20621_get_from_dimm(host, test_parttern2, 0x40, 40);
+-		printk(KERN_ERR "%x, %x, %s\n", test_parttern2[0],
++		dev_info(host->dev, "DIMM test pattern 1: %x, %x, %s\n", test_parttern2[0],
+ 		       test_parttern2[1], &(test_parttern2[2]));
+ 		pdc20621_get_from_dimm(host, test_parttern2, 0x10040,
+ 				       40);
+-		printk(KERN_ERR "%x, %x, %s\n", test_parttern2[0],
+-		       test_parttern2[1], &(test_parttern2[2]));
++		dev_info(host->dev, "DIMM test pattern 2: %x, %x, %s\n",
++			 test_parttern2[0],
++			 test_parttern2[1], &(test_parttern2[2]));
  
--	VPRINTK("ENTER, ap %p\n", ap);
--
- 	writeb(QS_CTR0_CLER, chan + QS_CCT_CTR0);
- 	wmb();                             /* flush PRDs and pkt to memory */
- 	writel(QS_CCF_RUN_PKT, chan + QS_CCT_CFF);
-@@ -435,14 +428,10 @@ static irqreturn_t qs_intr(int irq, void *dev_instance)
- 	unsigned int handled = 0;
- 	unsigned long flags;
+ 		pdc20621_put_to_dimm(host, test_parttern1, 0x40, 40);
+ 		pdc20621_get_from_dimm(host, test_parttern2, 0x40, 40);
+-		printk(KERN_ERR "%x, %x, %s\n", test_parttern2[0],
+-		       test_parttern2[1], &(test_parttern2[2]));
++		dev_info(host->dev, "DIMM test pattern 3: %x, %x, %s\n",
++			 test_parttern2[0],
++			 test_parttern2[1], &(test_parttern2[2]));
+ 	}
+-#endif
  
--	VPRINTK("ENTER\n");
--
- 	spin_lock_irqsave(&host->lock, flags);
- 	handled  = qs_intr_pkt(host) | qs_intr_mmio(host);
- 	spin_unlock_irqrestore(&host->lock, flags);
- 
--	VPRINTK("EXIT\n");
--
- 	return IRQ_RETVAL(handled);
- }
+ 	/* ECC initiliazation. */
  
 -- 
 2.29.2
