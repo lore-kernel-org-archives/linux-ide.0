@@ -2,96 +2,110 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DB73C433F5
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Dec 2021 09:25:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C614FC433F5
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Dec 2021 10:45:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239430AbhLJJ33 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 10 Dec 2021 04:29:29 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:58812 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239433AbhLJJ30 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Dec 2021 04:29:26 -0500
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 558371F3A0;
-        Fri, 10 Dec 2021 09:25:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1639128351; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Wf9vb8M1IAE2GO6dm0K8PPb5mu0IWeheJoH7UpjmkIQ=;
-        b=mRgJijdA90Egw5DrcHGPs/G84NyI6TAIuLnJ/O/S8cIbluRf9ypFGStFZ5hdtcpdW0NCBt
-        5Fvcuzx+VB9BnGbRGbUavkn0GdMsyF8jW3d5v2Gvgnm/ZpZiTEnuWDwCC4ND18qSK0gOyG
-        aQz0/XjfXDF34wCrZUPfo4r1X8vvruY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1639128351;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Wf9vb8M1IAE2GO6dm0K8PPb5mu0IWeheJoH7UpjmkIQ=;
-        b=Oa3KC4txqB3VHKby2Ljjj5KfVc9WjvUZUEfV4LfX661FLB96451iTBlEQSuTH2G1h29siH
-        rErxAqCGxtmYdyDg==
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 4836513E15;
-        Fri, 10 Dec 2021 09:25:51 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id f55bER8ds2EkMgAAMHmgww
-        (envelope-from <hare@suse.de>); Fri, 10 Dec 2021 09:25:51 +0000
-Subject: Re: [PATCH v1 2/3] ata: sata_dwc_460ex: Use temporary variable for
- struct device
-To:     Andy Shevchenko <andy.shevchenko@gmail.com>,
+        id S234566AbhLJKsw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 10 Dec 2021 05:48:52 -0500
+Received: from mga05.intel.com ([192.55.52.43]:33143 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233090AbhLJKsv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 10 Dec 2021 05:48:51 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10193"; a="324588169"
+X-IronPort-AV: E=Sophos;i="5.88,195,1635231600"; 
+   d="scan'208";a="324588169"
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Dec 2021 02:45:16 -0800
+X-IronPort-AV: E=Sophos;i="5.88,195,1635231600"; 
+   d="scan'208";a="480693137"
+Received: from smile.fi.intel.com ([10.237.72.184])
+  by orsmga002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Dec 2021 02:45:14 -0800
+Received: from andy by smile.fi.intel.com with local (Exim 4.95)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1mvdNv-004SNS-TD;
+        Fri, 10 Dec 2021 12:44:15 +0200
+Date:   Fri, 10 Dec 2021 12:44:15 +0200
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        linux-ide@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <20211209143519.60498-1-andriy.shevchenko@linux.intel.com>
- <20211209143519.60498-2-andriy.shevchenko@linux.intel.com>
- <5d98df66-a1fb-a2cf-f780-963bf26f6d1e@opensource.wdc.com>
- <CAHp75Vezco85W+TG+ehtMwtUyFubb+fbnn5XuyNQiNX4mJczXg@mail.gmail.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <be7f4ab7-3625-8b84-9d58-fd2958daa031@suse.de>
-Date:   Fri, 10 Dec 2021 10:25:46 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+Subject: Re: [PATCH v1 1/2] ata: libahci_platform: Get rid of dup message
+ when IRQ can't be retrieved
+Message-ID: <YbMvfzKsc4CcQzSa@smile.fi.intel.com>
+References: <20211209145937.77719-1-andriy.shevchenko@linux.intel.com>
+ <d841bc59-a2a6-27f5-10af-05fe2e24067a@omp.ru>
+ <YbI/6OIKM7qvLQcp@smile.fi.intel.com>
+ <bfd96f5a-94c7-cee6-9546-14dc59cb8542@omp.ru>
+ <YbJXjmsDJWlr3xpB@smile.fi.intel.com>
+ <15cf03b2-8d45-93b1-f0a0-d79c93cee0da@omp.ru>
 MIME-Version: 1.0
-In-Reply-To: <CAHp75Vezco85W+TG+ehtMwtUyFubb+fbnn5XuyNQiNX4mJczXg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <15cf03b2-8d45-93b1-f0a0-d79c93cee0da@omp.ru>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 12/10/21 9:42 AM, Andy Shevchenko wrote:
-> On Fri, Dec 10, 2021 at 4:25 AM Damien Le Moal
-> <damien.lemoal@opensource.wdc.com> wrote:
->>
->> On 2021/12/09 23:35, Andy Shevchenko wrote:
->>> Use temporary variable for struct device to make code neater.
->>>
->>> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
->>
->> What is this based on ? Is this on top of Hannes series ?
-> 
-> Nope, on latest (available) Linux Next.
-> Hannes, can you incorporate this to yours maybe? I see one conflict
-> with the last patch.
-> 
-Sure.
+On Thu, Dec 09, 2021 at 11:29:07PM +0300, Sergey Shtylyov wrote:
+> On 12/9/21 10:22 PM, Andy Shevchenko wrote:
 
-Cheers,
+...
 
-Hannes
+> >>>>> While at it, drop redundant check for 0 as platform_get_irq() spills
+> >>>>> out a big WARN() in such case.
+> >>>>
+> >>>>    And? IRQ0 is still returned! :-(
+> >>>
+> >>> It should not be returned in the first place.
+> >>
+> >>    But it still is, despite the WARN(), right?
+> > 
+> > So, you admit that there is a code which does that?
+> 
+>    I admit *what*?! That platfrom_get_irq() and its ilk return IRQ0 while they
+> shouldn't? =)
+
+That there is a code beneath platform_get_irq() that returns 0, yes.
+
+> > That code should be fixed first. Have you sent a patch?
+> 
+>    Which code?! You got me totally muddled. =)
+
+Above mentioned.
+
+...
+
+> >>>>> -	if (!irq)
+> >>>>> -		return -EINVAL;
+> >>>>
+> >>>>    This is prermature -- let's wait till my patch that stops returning IRQ0 from
+> >>>> platform_get_irq() and friends gets merged....
+> >>>
+> >>> What patch?
+> >>
+> >>    https://marc.info/?l=linux-kernel&m=163623041902285
+> >>
+> >>> Does it fix platform_get_irq_optional()?
+> >>
+> >>    Of course! :-)
+> > 
+> > Can you share link to lore.kernel.org, please?
+> > It will make much easier to try and comment.
+> 
+>    I don't know how to uise it yet, and I'm a little busy with other IRQ0 issues ATM,
+> so I'm afraid you're on your own here...
+
+lore.kernel.org is the official mailing list archive for Linux kernel work
+AFAIU. Other sites may do whatever they want with that information, so -->
+they are unreliable. If you wish to follow the better process, use
+lore.kernel.org. Understanding how it works takes no more than 5 minutes
+by engineer with your kind of experience with Linux kernel development.
+
 -- 
-Dr. Hannes Reinecke		           Kernel Storage Architect
-hare@suse.de			                  +49 911 74053 688
-SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
+With Best Regards,
+Andy Shevchenko
+
+
