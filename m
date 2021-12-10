@@ -2,47 +2,47 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A828C43217
-	for <linux-ide@archiver.kernel.org>; Fri, 10 Dec 2021 07:29:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFE62C433FE
+	for <linux-ide@archiver.kernel.org>; Fri, 10 Dec 2021 07:29:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237529AbhLJHdG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S237580AbhLJHdG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Fri, 10 Dec 2021 02:33:06 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:34984 "EHLO
+Received: from smtp-out1.suse.de ([195.135.220.28]:34972 "EHLO
         smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237526AbhLJHcz (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Dec 2021 02:32:55 -0500
+        with ESMTP id S237570AbhLJHc7 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 10 Dec 2021 02:32:59 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id BFCCB21121;
+        by smtp-out1.suse.de (Postfix) with ESMTP id C3ACD21122;
         Fri, 10 Dec 2021 07:29:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1639121358; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=CpjaiKV5T2WnqfcWQ7x+Vk7g1mw7WWTVuBos5L2UOno=;
-        b=YYDPij7Nf2ww8jHq10R3LlOd2d8kWaBDYX2KdE4cwKeslAsV7lJQ5HqK0Djo0vtLvCX8jc
-        1OQJp1IzBXiYNG1AT9vCMYp9v3fWDgqRSWTAACOcWnZUa3bhvHP2Y35r/hQ7r+6wkTYvtB
-        rDnGzgG2ryGwvfRMD9XAbp8usb3F85E=
+        bh=avHZ2T3WtPXVtL0Evjazu33BoW7vuaczHJtBbNHwQhM=;
+        b=dbdFG2v3+1dXyTgvwTUo2GdGgA1tulzXiOkcXxRQr1iYTKFiJT1VUU5Hed6jqolikdZ3r1
+        RksZV9ohzIf3MQnXocOOL0Qwdmb4zKF9kRotVT8c8M7qOEI2ViVr6G1r4h3KZe9VSZ+A1T
+        iQrvnZjhTbDyjrsDNgY6J93UVBj3oBA=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1639121358;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=CpjaiKV5T2WnqfcWQ7x+Vk7g1mw7WWTVuBos5L2UOno=;
-        b=RzIsLTIPZSatTKB0DcMFBQWiFtbgV43L1qJir04cEtv/HOJ02ORpE06Wz6Hpm82hl5tP1I
-        2quI07FaeSyArvAQ==
+        bh=avHZ2T3WtPXVtL0Evjazu33BoW7vuaczHJtBbNHwQhM=;
+        b=fnj/LPsne2ixleFbTLVDA4gDREsEi1JU14qkD8pOqPB7lw54bzMmrMfNw4R8NlHjCExJXy
+        eexZgdZklrfXd6CQ==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id BBE5DA3BAD;
+        by relay2.suse.de (Postfix) with ESMTP id BEA08A3BAE;
         Fri, 10 Dec 2021 07:29:18 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id B87E7519204F; Fri, 10 Dec 2021 08:29:18 +0100 (CET)
+        id BCD705192051; Fri, 10 Dec 2021 08:29:18 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Damien LeMoal <damien.lemoal@wdc.com>
 Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 23/68] libata: remove pointless VPRINTK() calls
-Date:   Fri, 10 Dec 2021 08:28:20 +0100
-Message-Id: <20211210072905.15666-24-hare@suse.de>
+Subject: [PATCH 24/68] ahci: Drop pointless VPRINTK() calls and convert the remaining ones
+Date:   Fri, 10 Dec 2021 08:28:21 +0100
+Message-Id: <20211210072905.15666-25-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20211210072905.15666-1-hare@suse.de>
 References: <20211210072905.15666-1-hare@suse.de>
@@ -52,232 +52,145 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Most of the information is already covered by tracepoints
-(if not downright pointless), so remove the VPRINTK() calls.
-And while we're at it, remove ata_scsi_dump_cdb(), too,
-as this information can be retrieved from scsi tracing.
+Drop pointless VPRINTK() calls for entering and existing interrupt
+routines and convert the remaining calls to dev_dbg().
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-core.c |  3 ---
- drivers/ata/libata-sata.c |  2 --
- drivers/ata/libata-scsi.c | 42 ---------------------------------------
- drivers/ata/libata-sff.c  |  4 ----
- drivers/ata/libata.h      |  1 -
- 5 files changed, 52 deletions(-)
+ drivers/ata/ahci.c       |  4 +---
+ drivers/ata/ahci_xgene.c |  4 ----
+ drivers/ata/libahci.c    | 18 ++++--------------
+ 3 files changed, 5 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 55c8ba8e3cdc..75120f647b41 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4496,8 +4496,6 @@ static void ata_sg_clean(struct ata_queued_cmd *qc)
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 6a867ef64c9c..e9fd09152a6b 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -683,7 +683,7 @@ static void ahci_pci_init_controller(struct ata_host *host)
  
- 	WARN_ON_ONCE(sg == NULL);
+ 		/* clear port IRQ */
+ 		tmp = readl(port_mmio + PORT_IRQ_STAT);
+-		VPRINTK("PORT_IRQ_STAT 0x%x\n", tmp);
++		dev_dbg(&pdev->dev, "PORT_IRQ_STAT 0x%x\n", tmp);
+ 		if (tmp)
+ 			writel(tmp, port_mmio + PORT_IRQ_STAT);
+ 	}
+@@ -1468,7 +1468,6 @@ static irqreturn_t ahci_thunderx_irq_handler(int irq, void *dev_instance)
+ 	u32 irq_stat, irq_masked;
+ 	unsigned int handled = 1;
  
--	VPRINTK("unmapping %u sg elements\n", qc->n_elem);
--
- 	if (qc->n_elem)
- 		dma_unmap_sg(ap->dev, sg, qc->orig_n_elem, dir);
+-	VPRINTK("ENTER\n");
+ 	hpriv = host->private_data;
+ 	mmio = hpriv->mmio;
+ 	irq_stat = readl(mmio + HOST_IRQ_STAT);
+@@ -1485,7 +1484,6 @@ static irqreturn_t ahci_thunderx_irq_handler(int irq, void *dev_instance)
+ 		irq_stat = readl(mmio + HOST_IRQ_STAT);
+ 		spin_unlock(&host->lock);
+ 	} while (irq_stat);
+-	VPRINTK("EXIT\n");
  
-@@ -4527,7 +4525,6 @@ static int ata_sg_setup(struct ata_queued_cmd *qc)
- 	if (n_elem < 1)
- 		return -1;
- 
--	VPRINTK("%d sg elements mapped\n", n_elem);
- 	qc->orig_n_elem = qc->n_elem;
- 	qc->n_elem = n_elem;
- 	qc->flags |= ATA_QCFLAG_DMAMAP;
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index 7b72c68bc9f7..e1339e18c800 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -1258,8 +1258,6 @@ int ata_sas_queuecmd(struct scsi_cmnd *cmd, struct ata_port *ap)
- {
- 	int rc = 0;
- 
--	ata_scsi_dump_cdb(ap, cmd);
--
- 	if (likely(ata_dev_enabled(ap->link.device)))
- 		rc = __ata_scsi_queuecmd(cmd, ap->link.device);
- 	else {
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 4df7cbf6abe6..bbbd0a06ffd2 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1299,8 +1299,6 @@ static void scsi_6_lba_len(const u8 *cdb, u64 *plba, u32 *plen)
- 	u64 lba = 0;
- 	u32 len;
- 
--	VPRINTK("six-byte command\n");
--
- 	lba |= ((u64)(cdb[1] & 0x1f)) << 16;
- 	lba |= ((u64)cdb[2]) << 8;
- 	lba |= ((u64)cdb[3]);
-@@ -1326,8 +1324,6 @@ static void scsi_10_lba_len(const u8 *cdb, u64 *plba, u32 *plen)
- 	u64 lba = 0;
- 	u32 len = 0;
- 
--	VPRINTK("ten-byte command\n");
--
- 	lba |= ((u64)cdb[2]) << 24;
- 	lba |= ((u64)cdb[3]) << 16;
- 	lba |= ((u64)cdb[4]) << 8;
-@@ -1355,8 +1351,6 @@ static void scsi_16_lba_len(const u8 *cdb, u64 *plba, u32 *plen)
- 	u64 lba = 0;
- 	u32 len = 0;
- 
--	VPRINTK("sixteen-byte command\n");
--
- 	lba |= ((u64)cdb[2]) << 56;
- 	lba |= ((u64)cdb[3]) << 48;
- 	lba |= ((u64)cdb[4]) << 40;
-@@ -1706,8 +1700,6 @@ static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 	struct ata_queued_cmd *qc;
- 	int rc;
+ 	return IRQ_RETVAL(handled);
+ }
+diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+index dffc432b9d54..4d8a186ec12a 100644
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -588,8 +588,6 @@ static irqreturn_t xgene_ahci_irq_intr(int irq, void *dev_instance)
+ 	void __iomem *mmio;
+ 	u32 irq_stat, irq_masked;
  
 -	VPRINTK("ENTER\n");
 -
- 	qc = ata_scsi_qc_new(dev, cmd);
- 	if (!qc)
- 		goto err_mem;
-@@ -1738,7 +1730,6 @@ static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 	/* select device, send command to hardware */
- 	ata_qc_issue(qc);
+ 	hpriv = host->private_data;
+ 	mmio = hpriv->mmio;
+ 
+@@ -612,8 +610,6 @@ static irqreturn_t xgene_ahci_irq_intr(int irq, void *dev_instance)
+ 
+ 	spin_unlock(&host->lock);
  
 -	VPRINTK("EXIT\n");
- 	return 0;
- 
- early_finish:
-@@ -1851,8 +1842,6 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
- 		2
- 	};
- 
--	VPRINTK("ENTER\n");
 -
- 	/* set scsi removable (RMB) bit per ata bit, or if the
- 	 * AHCI port says it's external (Hotplug-capable, eSATA).
- 	 */
-@@ -2287,8 +2276,6 @@ static unsigned int ata_scsiop_mode_sense(struct ata_scsi_args *args, u8 *rbuf)
- 	u8 dpofua, bp = 0xff;
- 	u16 fp;
- 
--	VPRINTK("ENTER\n");
--
- 	six_byte = (scsicmd[0] == MODE_SENSE);
- 	ebd = !(scsicmd[1] & 0x8);      /* dbd bit inverted == edb */
- 	/*
-@@ -2406,8 +2393,6 @@ static unsigned int ata_scsiop_read_cap(struct ata_scsi_args *args, u8 *rbuf)
- 	log2_per_phys = ata_id_log2_per_physical_sector(dev->id);
- 	lowest_aligned = ata_id_logical_sector_offset(dev->id, log2_per_phys);
- 
--	VPRINTK("ENTER\n");
--
- 	if (args->cmd->cmnd[0] == READ_CAPACITY) {
- 		if (last_lba >= 0xffffffffULL)
- 			last_lba = 0xffffffff;
-@@ -2474,7 +2459,6 @@ static unsigned int ata_scsiop_read_cap(struct ata_scsi_args *args, u8 *rbuf)
-  */
- static unsigned int ata_scsiop_report_luns(struct ata_scsi_args *args, u8 *rbuf)
- {
--	VPRINTK("ENTER\n");
- 	rbuf[3] = 8;	/* just one lun, LUN 0, size 8 bytes */
- 
- 	return 0;
-@@ -2570,8 +2554,6 @@ static void atapi_qc_complete(struct ata_queued_cmd *qc)
- 	struct scsi_cmnd *cmd = qc->scsicmd;
- 	unsigned int err_mask = qc->err_mask;
- 
--	VPRINTK("ENTER, err_mask 0x%X\n", err_mask);
--
- 	/* handle completion from new EH */
- 	if (unlikely(qc->ap->ops->error_handler &&
- 		     (err_mask || qc->flags & ATA_QCFLAG_SENSE_VALID))) {
-@@ -3675,8 +3657,6 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
- 	u8 buffer[64];
- 	const u8 *p = buffer;
- 
--	VPRINTK("ENTER\n");
--
- 	six_byte = (cdb[0] == MODE_SELECT);
- 	if (six_byte) {
- 		if (scmd->cmd_len < 5) {
-@@ -3974,26 +3954,6 @@ static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
- 	return NULL;
+ 	return IRQ_RETVAL(rc);
  }
  
--/**
-- *	ata_scsi_dump_cdb - dump SCSI command contents to dmesg
-- *	@ap: ATA port to which the command was being sent
-- *	@cmd: SCSI command to dump
-- *
-- *	Prints the contents of a SCSI command via printk().
-- */
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index ee7e63da0437..4deb5e9295c0 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1234,12 +1234,12 @@ static void ahci_port_init(struct device *dev, struct ata_port *ap,
+ 
+ 	/* clear SError */
+ 	tmp = readl(port_mmio + PORT_SCR_ERR);
+-	VPRINTK("PORT_SCR_ERR 0x%x\n", tmp);
++	dev_dbg(dev, "PORT_SCR_ERR 0x%x\n", tmp);
+ 	writel(tmp, port_mmio + PORT_SCR_ERR);
+ 
+ 	/* clear port IRQ */
+ 	tmp = readl(port_mmio + PORT_IRQ_STAT);
+-	VPRINTK("PORT_IRQ_STAT 0x%x\n", tmp);
++	dev_dbg(dev, "PORT_IRQ_STAT 0x%x\n", tmp);
+ 	if (tmp)
+ 		writel(tmp, port_mmio + PORT_IRQ_STAT);
+ 
+@@ -1270,10 +1270,10 @@ void ahci_init_controller(struct ata_host *host)
+ 	}
+ 
+ 	tmp = readl(mmio + HOST_CTL);
+-	VPRINTK("HOST_CTL 0x%x\n", tmp);
++	dev_dbg(host->dev, "HOST_CTL 0x%x\n", tmp);
+ 	writel(tmp | HOST_IRQ_EN, mmio + HOST_CTL);
+ 	tmp = readl(mmio + HOST_CTL);
+-	VPRINTK("HOST_CTL 0x%x\n", tmp);
++	dev_dbg(host->dev, "HOST_CTL 0x%x\n", tmp);
+ }
+ EXPORT_SYMBOL_GPL(ahci_init_controller);
+ 
+@@ -1911,8 +1911,6 @@ static irqreturn_t ahci_multi_irqs_intr_hard(int irq, void *dev_instance)
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 	u32 status;
+ 
+-	VPRINTK("ENTER\n");
 -
--void ata_scsi_dump_cdb(struct ata_port *ap, struct scsi_cmnd *cmd)
--{
--#ifdef ATA_VERBOSE_DEBUG
--	struct scsi_device *scsidev = cmd->device;
+ 	status = readl(port_mmio + PORT_IRQ_STAT);
+ 	writel(status, port_mmio + PORT_IRQ_STAT);
+ 
+@@ -1920,8 +1918,6 @@ static irqreturn_t ahci_multi_irqs_intr_hard(int irq, void *dev_instance)
+ 	ahci_handle_port_interrupt(ap, port_mmio, status);
+ 	spin_unlock(ap->lock);
+ 
+-	VPRINTK("EXIT\n");
 -
--	VPRINTK("CDB (%u:%d,%d,%lld) %9ph\n",
--		ap->print_id,
--		scsidev->channel, scsidev->id, scsidev->lun,
--		cmd->cmnd);
--#endif
--}
+ 	return IRQ_HANDLED;
+ }
+ 
+@@ -1938,9 +1934,7 @@ u32 ahci_handle_port_intr(struct ata_host *host, u32 irq_masked)
+ 		ap = host->ports[i];
+ 		if (ap) {
+ 			ahci_port_intr(ap);
+-			VPRINTK("port %u\n", i);
+ 		} else {
+-			VPRINTK("port %u (no irq)\n", i);
+ 			if (ata_ratelimit())
+ 				dev_warn(host->dev,
+ 					 "interrupt on disabled port %u\n", i);
+@@ -1961,8 +1955,6 @@ static irqreturn_t ahci_single_level_irq_intr(int irq, void *dev_instance)
+ 	void __iomem *mmio;
+ 	u32 irq_stat, irq_masked;
+ 
+-	VPRINTK("ENTER\n");
 -
- int __ata_scsi_queuecmd(struct scsi_cmnd *scmd, struct ata_device *dev)
- {
- 	u8 scsi_op = scmd->cmnd[0];
-@@ -4072,8 +4032,6 @@ int ata_scsi_queuecmd(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+ 	hpriv = host->private_data;
+ 	mmio = hpriv->mmio;
  
- 	spin_lock_irqsave(ap->lock, irq_flags);
+@@ -1990,8 +1982,6 @@ static irqreturn_t ahci_single_level_irq_intr(int irq, void *dev_instance)
  
--	ata_scsi_dump_cdb(ap, cmd);
+ 	spin_unlock(&host->lock);
+ 
+-	VPRINTK("EXIT\n");
 -
- 	dev = ata_scsi_find_dev(ap, scsidev);
- 	if (likely(dev))
- 		rc = __ata_scsi_queuecmd(cmd, dev);
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index b544bdc6d0a3..d5dbeb68b2bf 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -877,8 +877,6 @@ static void atapi_pio_bytes(struct ata_queued_cmd *qc)
- 	if (unlikely(!bytes))
- 		goto atapi_check;
+ 	return IRQ_RETVAL(rc);
+ }
  
--	VPRINTK("ata%u: xfering %d bytes\n", ap->print_id, bytes);
--
- 	if (unlikely(__atapi_pio_bytes(qc, bytes)))
- 		goto err_out;
- 	ata_sff_sync(ap); /* flush */
-@@ -2586,7 +2584,6 @@ static void ata_bmdma_fill_sg(struct ata_queued_cmd *qc)
- 
- 			prd[pi].addr = cpu_to_le32(addr);
- 			prd[pi].flags_len = cpu_to_le32(len & 0xffff);
--			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", pi, addr, len);
- 
- 			pi++;
- 			sg_len -= len;
-@@ -2646,7 +2643,6 @@ static void ata_bmdma_fill_sg_dumb(struct ata_queued_cmd *qc)
- 				prd[++pi].addr = cpu_to_le32(addr + 0x8000);
- 			}
- 			prd[pi].flags_len = cpu_to_le32(blen);
--			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", pi, addr, len);
- 
- 			pi++;
- 			sg_len -= len;
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 2144065e762c..51e01acdd241 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -148,7 +148,6 @@ extern int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
- 			      unsigned int id, u64 lun);
- void ata_scsi_sdev_config(struct scsi_device *sdev);
- int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev);
--void ata_scsi_dump_cdb(struct ata_port *ap, struct scsi_cmnd *cmd);
- int __ata_scsi_queuecmd(struct scsi_cmnd *scmd, struct ata_device *dev);
- 
- /* libata-eh.c */
 -- 
 2.29.2
 
