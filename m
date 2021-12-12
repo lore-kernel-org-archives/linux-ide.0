@@ -2,40 +2,35 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 679CEC433F5
-	for <linux-ide@archiver.kernel.org>; Sat, 11 Dec 2021 10:25:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C88AC433F5
+	for <linux-ide@archiver.kernel.org>; Sun, 12 Dec 2021 09:19:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229953AbhLKKZZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 11 Dec 2021 05:25:25 -0500
-Received: from mxout02.lancloud.ru ([45.84.86.82]:42448 "EHLO
-        mxout02.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229514AbhLKKZZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 11 Dec 2021 05:25:25 -0500
+        id S229985AbhLLJTB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 12 Dec 2021 04:19:01 -0500
+Received: from mxout04.lancloud.ru ([45.84.86.114]:44390 "EHLO
+        mxout04.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229888AbhLLJTA (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 12 Dec 2021 04:19:00 -0500
 Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout02.lancloud.ru F0FE922F2569
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout04.lancloud.ru 91F7720C5C41
 Received: from LanCloud
 Received: from LanCloud
 Received: from LanCloud
-Message-ID: <5322dafd-86ad-a293-6005-29384cb96cc8@omp.ru>
-Date:   Sat, 11 Dec 2021 13:25:20 +0300
+Message-ID: <5cebbfc6-c763-734c-ddc2-5b9ffa3d3f38@omp.ru>
+Date:   Sun, 12 Dec 2021 12:18:52 +0300
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.3.2
-Subject: Re: [PATCH v1 1/2] ata: libahci_platform: Get rid of dup message when
- IRQ can't be retrieved
+Subject: Re: [PATCH 67/68] sata_dwc_460ex: remove 'checkstatus' argument
 Content-Language: en-US
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>
-References: <20211209145937.77719-1-andriy.shevchenko@linux.intel.com>
- <d91cf14d-c7d8-1c61-9071-102f38e8c924@opensource.wdc.com>
- <febc7f73-929f-d8a6-ea01-5056b9101b46@omp.ru>
- <549c1825-56e6-de9e-e109-77f0d06cfd0f@opensource.wdc.com>
+To:     Hannes Reinecke <hare@suse.de>,
+        Damien LeMoal <damien.lemoal@wdc.com>
+CC:     <linux-ide@vger.kernel.org>
+References: <20211210072905.15666-1-hare@suse.de>
+ <20211210072905.15666-68-hare@suse.de>
 From:   Sergey Shtylyov <s.shtylyov@omp.ru>
 Organization: Open Mobile Platform
-In-Reply-To: <549c1825-56e6-de9e-e109-77f0d06cfd0f@opensource.wdc.com>
+In-Reply-To: <20211210072905.15666-68-hare@suse.de>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [192.168.11.198]
@@ -47,61 +42,15 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 Hello!
 
-On 11.12.2021 2:45, Damien Le Moal wrote:
+On 10.12.2021 10:29, Hannes Reinecke wrote:
 
-[...]
->>>> platform_get_irq() will print a message when it fails.
->>>> No need to repeat this.
->>>>
->>>> While at it, drop redundant check for 0 as platform_get_irq() spills
->>>> out a big WARN() in such case.
->>>
->>> The reason you should be able to remove the "if (!irq)" test is that
->>> platform_get_irq() never returns 0. At least, that is what the function kdoc
->>> says. But looking at platform_get_irq_optional(), which is called by
->>> platform_get_irq(), the out label is:
->>>
->>> 	WARN(ret == 0, "0 is an invalid IRQ number\n");
->>> 	return ret;
->>>
->>> So 0 will be returned as-is. That is rather weird. That should be fixed to
->>> return -ENXIO:
->>>
->>> 	if (WARN(ret == 0, "0 is an invalid IRQ number\n"))
->>> 		return -ENXIO;
->>> 	return ret;
->>
->>     My unmerged patch (https://marc.info/?l=linux-kernel&m=163623041902285) does this
->> but returns -EINVAL instead.
+> Remove the 'checkstatus' argument from sata_dwc_qc_complete() and
+
+    It's 'check_status' actually, here and in the subject. :-)
+
+> sata_dwc_dma_xfer_complete() as it has no functionality.
 > 
-> Thinking more about this, shouldn't this change go into platform_get_irq()
-> instead of platform_get_irq_optional() ?
-
-    Why? platform_get_irq() currently just calls platform_get_irq_optional()...
-
-> The way I see it, I think that the intended behavior for
-> platform_get_irq_optional() is:
-> 1) If have IRQ, return it, always > 0
-> 2) If no IRQ, return 0
-
-    That does include the IRQ0 case, right?
-
-> 3) If error, return < 0
-> no ?
-
-   I completely agree, I (after thinking a bit) have no issues with that...
-
-> And for platform_get_irq(), case (2) becomes an error.
-> Is this the intended semantic ?
-
-    I don't see how it's different from the current behavior. But we can do 
-that as well, I just don't see whether it's really better...
-
-> I am really not sure here as the functions kdoc description and the code do not
-> match. Which one is correct ?
-
-    It seems both are wrong. :-)
-
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 [...]
 
 MBR, Sergey
