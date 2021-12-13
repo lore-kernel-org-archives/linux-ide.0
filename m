@@ -2,178 +2,168 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2915BC433FE
-	for <linux-ide@archiver.kernel.org>; Mon, 13 Dec 2021 15:34:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04D09C433F5
+	for <linux-ide@archiver.kernel.org>; Mon, 13 Dec 2021 21:36:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233023AbhLMPeC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 13 Dec 2021 10:34:02 -0500
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:55162 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233104AbhLMPeA (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Dec 2021 10:34:00 -0500
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1BDEmo08012389;
-        Mon, 13 Dec 2021 15:33:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- to : cc : from : subject : content-type : content-transfer-encoding :
- mime-version; s=corp-2021-07-09;
- bh=ddg0iE4S2HRDUpv+v4vRhH1BWvJk8x7LeTFzRU8G580=;
- b=b43bmrfg4uaNy41y9y481uzaUQd47QLKbcmYAsSXm/1LMfXs619l7CpUnNyXW60B5Gu6
- DOk3F1eOvuGToDRLiy3ljI7cZJAmuCVciwkSFLuaZHJO+wNY7s753xBPxyqRlts34Ydv
- ia/40NbaSwsyJd7JasdjAGFirp3c9UoPBAKmyfBokWflKu8gneIfkfEmslsk0aAYJMCm
- D010hqZbXbt6X9N5HX6bSRHcV9D+NQnf9GLgx6cVk0Kg6/V7mRrMdyWkNUFXl6vssUZT
- zUTO4VCnec8P5z1l3dJkJUlrmSbVlbzjgPoG+onqURBB/f5D2EyXdPNRQnle1OPCFJp0 tA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3cx5ak8kf0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 13 Dec 2021 15:33:58 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1BDFUSqr011709;
-        Mon, 13 Dec 2021 15:33:58 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2172.outbound.protection.outlook.com [104.47.59.172])
-        by aserp3020.oracle.com with ESMTP id 3cvkt347yy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 13 Dec 2021 15:33:58 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=G03+YhE4BNRxPYDO3X+B9tjUviiZ4Z0CKe0NDtXDg1zvk4aNLOfGVrii5J5GSNkaeX8YVCstjZ5pkAyGY98aRgbpGViUn/utqR+vPBcrywuY7RYK3RYqYd5gnTv1q0SA8X9cfiF9gA4V+F6QZ7PJRc7KIhkjhQyNz1ZHedJh6adBBh3a4pFm65y5Cv++6cBS8DPY43XvZny7bDYPQclRj1eVDdbpQOZEyakqOYrlILQ/FFCcjyWfvYKFY5QHfl89801yIXJ1aTWUUYSDNwja3FSrkZKqw7QCpHcJrGXWXTvxkWxUlQpJGCF5Lra9JdnKeFhAZ327Ob30ubswViZQag==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ddg0iE4S2HRDUpv+v4vRhH1BWvJk8x7LeTFzRU8G580=;
- b=OPO3JnfNtCTJV0fy0EkXLEJgsO9J6LJ3JwVtGe/BOmNsYDI5p/bajR9wDM32q93nWjarL2K9BuPUYsyGsLahDTfYyOPqiua5rKWb9J8L1XK1oBKgtVm6Iy2bGZuDMskgxf7LESNnx1EFrDchXPFq7Y1zEHnNk8Lce1rvAmbiD9vMuqjByfxEyvenlP4MO7HfS9Bzm0h+ELpmegPRiHqvNxB7XvPkAC8rl+efxIpDNTLhny9b7FyySY4bPrhDBhCcHVeeNXpJpxugq24ygJhL/OuSDDH5YnkyI+bQ/1L54GLl7epIbg/fykIg9U5S9baTO//P63yGIwT+C+/l83wSeA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ddg0iE4S2HRDUpv+v4vRhH1BWvJk8x7LeTFzRU8G580=;
- b=HTepbvCbQrGVE+5suF2vxMpmuX1/VasiwjzhHxoGTCMd+5HZooax5nyyZyDjg0VHwbfhrcdociBacpHIJdaaM2BkcByzK3Fic+CjAKWgkWWPX0mQRdKTr37fMFXXjUVVniM3f/CobVNfTx+J9sHMJIA0yUTYks/upamJV2XM0lU=
-Received: from BN0PR10MB5192.namprd10.prod.outlook.com (2603:10b6:408:115::8)
- by BN7PR10MB2561.namprd10.prod.outlook.com (2603:10b6:406:c9::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4778.16; Mon, 13 Dec
- 2021 15:33:56 +0000
-Received: from BN0PR10MB5192.namprd10.prod.outlook.com
- ([fe80::4440:4f39:6d92:a14c]) by BN0PR10MB5192.namprd10.prod.outlook.com
- ([fe80::4440:4f39:6d92:a14c%8]) with mapi id 15.20.4778.018; Mon, 13 Dec 2021
- 15:33:56 +0000
-Message-ID: <1f57bc3d-d125-7e09-4699-0338ddcc50f1@oracle.com>
-Date:   Mon, 13 Dec 2021 10:33:51 -0500
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.2
-Content-Language: en-US
-To:     damien.lemoal@opensource.wdc.com
-Cc:     linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-        "GEORGE.KENNEDY" <george.kennedy@oracle.com>
-From:   George Kennedy <george.kennedy@oracle.com>
-Subject: [PATCH RESEND 2] libata: if T_LENGTH is zero, dma direction should be
- DMA_NONE
-Organization: Oracle Corporation
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SJ0PR13CA0054.namprd13.prod.outlook.com
- (2603:10b6:a03:2c2::29) To BN0PR10MB5192.namprd10.prod.outlook.com
- (2603:10b6:408:115::8)
+        id S239169AbhLMVgE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 13 Dec 2021 16:36:04 -0500
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:36229 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233303AbhLMVgE (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 13 Dec 2021 16:36:04 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1639431364; x=1670967364;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=Y1aijt6W5xSLElwfb451rPpPyfNoxCPVqIiqCMNnxpU=;
+  b=fdWokLAOVFlso1cLK4+Q08IfTUBBeXUXJ5NWtIsHQSAIGH3/RJVDmYzF
+   Qe8z1mEN3wm9sXMbMZt9EGEg+uBlNTdRWxZTPiYhW/OPbHqcuOQOnRrSh
+   LMsEPDQt2WkDNTes7ZRRitzKPh3lwp4ctfoe/NRLFC2igi6WoEm9cHBFf
+   4twY+9F3UFdOfsjzfynqbZ9dJFS1YAnRUXebG15Y5LeF+nS3MpIGbZUrl
+   ORj7f0/xhBauR1mjFcHHehs7maqV0xeLYOoUW+Suk8KvNgYzEFA18jAk4
+   VngouGStJYaegVHfeanTNh4udgaGg0p5UBCY6XZgpq3vDkru4cjtCB3Os
+   w==;
+X-IronPort-AV: E=Sophos;i="5.88,203,1635177600"; 
+   d="scan'208";a="189171312"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 14 Dec 2021 05:36:03 +0800
+IronPort-SDR: k/gXL8Jk3ayaO/hSlUNswKg6iz/wd0R9X98ulmfHkAdvow82ZDTyBDPJHsJrcg8JPEtLVYDoFh
+ gVLdnTqZ+lHINHSFk5QMazVC1VSuov4pe+n6pzcA3RNRYvPnoLKl371Ltqc1v0zMNYzkN1B2Jg
+ 7fex5qJH+XdBczpR6kkdCGqxFsf68q1/A6af4XVW3NAMWQuVsV/dz8drK4l8IR+D8nqeteCrhY
+ 3Gd0PUwRixHhYdS9GCLpXc6yiNshdU5V2INRrxBD1+AngncpR9vgfBmFpLp2M9EuucNUfAPh1p
+ u5YNFPKaej+/pqsTQl2h13Ex
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Dec 2021 13:09:01 -0800
+IronPort-SDR: 1474BbOyyTNbIdOuGmM+usOkVBoI/72YHtJQsqk0uBJlHh6SSuWZfw8pEgVlnDJfYBPQuJAkT2
+ z0BVOrpfkw2zsPINgoNLybhEIApZLwuhvv4e4x2q395IfR+MpZ8OGGdOja9ElOzGHIbpm56KPc
+ In5vDYXC4mXIDaT9jWVoiwn5KcvzKyP0AmJ9ZkvZ69ANdzflp0fey5A10a59vg6i8mpZgVwHYa
+ IQZ37dKEf3k55uuDOdw+JXclIck1XDuM6oTGi9e0BeVUPkXoY5N1A3kGmW7rlE+lm9JGebC/ZC
+ Y6w=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Dec 2021 13:36:04 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JCZZC25gKz1Rwns
+        for <linux-ide@vger.kernel.org>; Mon, 13 Dec 2021 13:36:03 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1639431362; x=1642023363; bh=Y1aijt6W5xSLElwfb451rPpPyfNoxCPVqIi
+        qCMNnxpU=; b=daLbqARzPgpNwqofhGN03xEMK/W86BSGUcIk906EahyJc0Q6y/0
+        2Ht+gu0i4+HiaPe/JhUJxcWw7NTSVjlRX2s8KajJ+xWOXnAHkOTTw1I24IPJsvIg
+        AqaP3eYp5KF58iT5H2g3inA+1RyATrIIlWtAd3zaiCkY2yemXmuB0Q+OYy84o32P
+        Lm4ULST0RIBvAlCiLUiaZuReq1zCu1PYxaC7xrNaJQkNHB0VjB7/7MpfY4Rv8TMg
+        mZTx46OfYOMToxnx/bN2HFs90nkh/UDkLQhRVc6IOD92Us8nIiUfiDbPTDe+Bdkb
+        GbQXBwuxmsWP3IvLV7zu1jKQuDi3GGKF4lg==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id iaacZjzWbdgf for <linux-ide@vger.kernel.org>;
+        Mon, 13 Dec 2021 13:36:02 -0800 (PST)
+Received: from [10.225.54.48] (unknown [10.225.54.48])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JCZZ947Brz1RtVG;
+        Mon, 13 Dec 2021 13:36:01 -0800 (PST)
+Message-ID: <0d967bb4-0b80-c293-b7d5-f49c9cc38718@opensource.wdc.com>
+Date:   Tue, 14 Dec 2021 06:36:00 +0900
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: b1552b29-2353-4743-03e2-08d9be4df99e
-X-MS-TrafficTypeDiagnostic: BN7PR10MB2561:EE_
-X-Microsoft-Antispam-PRVS: <BN7PR10MB2561054D29AA39C27B3CB45DE6749@BN7PR10MB2561.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:1148;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: UNg7bxzH1UXySZuJ5nxrzfNeHW77E774v3u4dusULhpgO0b0XB+Px13gUTL5dFVGMezR35vELak1mgc+dFCqFJfiwg+XPi4qIwvHvfIwTtfBTbdqgDegk45lIRECwbpedvPVtPBGAnhbWr5lOpDa4yRoijZh1RP8RXi1NLvvlutUpyQQIHvlIE9dpz/wSSFPmPuunaFi7X2YtALU5upTYiR9xn96a7BUgpQs1kgd5wZmvXZe7vMp5cc4vAaK358noX9FJ1di5Cnz24CoIk24QQRE4agOsFUc6NDI61X/RJAGG+fVU82l31jW0OSwcfHYWVLUmRa6+Yog8vQ38emkQij0VVGxuV6uewV8TypzpHeobisv16LN17GIMk3J/i9bmTlTCl/mDGc58ohKHNps2gOX7Q17zdMVR3S2nnlt9z4x+Q6bShSxfgD67F3VO20Z89I3R0B1Mm3jlThMXeCrcY7y0vOirW7ZSuXYC8n3LRnQ0U2kASKLqXnx/9Qz+ocOhP9u1wDHXnT3PRWcequ3ygljXllcG+0EAYxAfiIykpUsrYmkzg1lV9eqiXpDVGKfEX3oD0+1OZHNv5QlbWpDIV7LvnnvOJzWKmGxUiyiw/nfjz6u+TNaPKYwp4M+TwpHaD2WeR5bjcVRHuAy7/kDmI0Ura3WnmRuzwaBXPiddPu9+6z8flRVONO9NjWT+gXLPhPDUkVjzSVn8cCaDLrfcUZXIWvl6KKtlT4S28TLI/I7Z1BUW5nxuCLB4uPbZj+s
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN0PR10MB5192.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(5660300002)(6506007)(4326008)(66946007)(54906003)(2906002)(6512007)(44832011)(66476007)(66556008)(36756003)(316002)(36916002)(8936002)(508600001)(186003)(6486002)(4744005)(86362001)(2616005)(8676002)(107886003)(6666004)(38100700002)(31686004)(6916009)(26005)(31696002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?K1p3L1JnTkNGZ21LcjB4Q2V3UnVWc05RNU1wTDc1eW00VDZLUWxZcXlSck1P?=
- =?utf-8?B?K1JEWlNGMm1VTDVFK1RiY2Y1ei9McS9kWSsxQ094d2VlT0tmSjlES1NLaFVE?=
- =?utf-8?B?VktoMXRzdTlub2lWVzRtL3JOYVJHZXFDN2s0cHkyenc0NGRqMXdKUjBpRjVm?=
- =?utf-8?B?bUdYOTAyVVI4UWkwV0NnemxiNThjZ011bmRBWUd6aUI1bnhib0MwMng0aXBt?=
- =?utf-8?B?K05iUEo5VStOZEdQMkJYSm80SjdXbjdPc3IzdlFYaGdOZWpJZy80TWNpSWMr?=
- =?utf-8?B?Rko4VzYxK0J4WVNxSFc5dElxQXRRcUVSbEpGdjVQa3prbW5RQWN4NjVVRUdo?=
- =?utf-8?B?bTFmOExsbHdKUktNVDlGVGhhRTJzQWFQZDVCMkd4eWZWcVcxSk4zQ1BEbFg5?=
- =?utf-8?B?TXpMRVYyczU4K1JvZ2pLVlIvbERKNXZ2ZDdUMUlxRGVKSWNUNkdEZEdrT0ts?=
- =?utf-8?B?MlhhL3RGZUZjQ1RNbDR2bWp0SUQyZzdibWIwOHpFWHhwS1ZEcGVBK3B4THJG?=
- =?utf-8?B?WWdKSTlCWEl5cEFUN1Y1QzlzWTUyTnVhQ2pwYUF6eFJISnVCVTVwenFQL3Mx?=
- =?utf-8?B?SlNONUVzaVNJZ3pwZHdvUXFQQUZKaVN3YjFvR2E4VEdwdlFjYkVncFRJVHNz?=
- =?utf-8?B?dmtlVlR1WkY1Rk5jdzJHeDRGNEZQQ0hxcVZjbjJQYzBucVh0V2U3ZlROZXcz?=
- =?utf-8?B?RlV3cElLeDJKcUI0dkJRVjJYU1gyYktXV2xOU1doUDRyTG9xK0JwSHBpbThZ?=
- =?utf-8?B?UzZhTTYyYVY5djVwOGNDUnJaV2I2bmRrK1NmcHA0SkVtUERadUNqTXBqTDdh?=
- =?utf-8?B?ZDJMSHE0QnZWcWZsZi9QSVF2WjRaenpuRUM0azBFYXJJczBIckJFV0hDU2NH?=
- =?utf-8?B?bEl3MDg5OUVzNEJmL1ppQU9BSXRCbG1ySHZSRGpVWkFaWmt4L3NoYTR6UGtl?=
- =?utf-8?B?UHJyV2tpaHgyK0ZzSkRvc01GUllld1BnZXp0R2MvTVlPZjZieFl1cloxTi94?=
- =?utf-8?B?U0VFU2duNjUwVldMVkkxRkZFd3NXcnpod0RsS0dLZFNoTS9YRmxiaGpsUElv?=
- =?utf-8?B?QVBJb2xOVDd6NXRiL0JjRjJ4eWhiMkxuT0VySWNPK2VHSUZXMVhZNTY2MWVP?=
- =?utf-8?B?NDIvTEEvSFYyWTY1bjF4R0Y5QmJLQVRoTFRhZzkxeSswTkFySzRNcUY1b2Jz?=
- =?utf-8?B?S0RST0hMTjUrbkNCaGNtSi9VcVJ0Mjk3bWpmdTc3UnZCZjFPVGh0S1RWdVl3?=
- =?utf-8?B?OGF3YmtOSWU5Y2pDRDNGYUptM0xuU0xUZHpiTjVKTGdORndkM1pSNmo3ZGZY?=
- =?utf-8?B?aGVKVVN4TnQ5Y2FKR0xHRm5WMTlaaVN2Yk5jMW1BckdYODgwdm5tRGwzcjNL?=
- =?utf-8?B?cloyV3ZsbC84V3lQL1RVVWMzd1VVUjV4c1JDRzJtQ04vZ0ZEZ2xyZTBaRGFL?=
- =?utf-8?B?VG4zOE9LSzgxclYrSEhXR2xrZDR0c2VGaEhIeUtoTDE4RjhCenhWaUVWWG5S?=
- =?utf-8?B?bUtqMjNQOHVKaHlKRE9HY0x4TnNRYjJnUGg3SFVwR3JweDFKZXQ1dFl0MWw2?=
- =?utf-8?B?OHR2cWVRMEFzbkd5aC9SNDdhVEpCZTFBdU9XZWVHUjdhS0QrQ1Jtamx2QWNz?=
- =?utf-8?B?elZnRlFLV1Ixa0JJRXcwMXBsNm0xdVhpbDhLcUNVM0FFc2VFZ0M4Nk9YWHQ0?=
- =?utf-8?B?L25TaDR3MGxUenp3VlNlaDFhSTk4R1pQL0FhemJHY2dmYTVDeWxncEtITDRX?=
- =?utf-8?B?dDRHSXgvVGMvN2o1MkFnMnpmeGp1b1kzVHFMQ29wQkM4SU52N1lxN1pKa0NR?=
- =?utf-8?B?NXZxTS93d1prVmdFUlViUWJ3eDJ1WVEzZUd1bGltU3I5cytmVy95aW9JQm5w?=
- =?utf-8?B?WGE3V0RraVZ3RE5Bd0dRYjIyKy9WVk9kdVBVcFVVNzMvK3dzNTFQOHBHeHI2?=
- =?utf-8?B?djBKYVloUVpzc2Q1VVdRYUlDdGV0R3NyTHlITHd3MktOenRCcTRkZzl0VzVJ?=
- =?utf-8?B?WUhRS0QrZzlwbmxUM3ZWQVZEa0VUMXNhdVBvN2o3bUkzb1c3N1lkeHdyZ2dG?=
- =?utf-8?B?Z3NqZkJMQlJ0bFRtaS84amQzbDFKTHJybmxEcS80Z0RuR0Via2FHRHhXOUph?=
- =?utf-8?B?cWc4QUlBdFdwQ2JaR2xwVm1xTDRCOU5xdUg1dWpxaE00ZFZTbi9XN1k2RFBl?=
- =?utf-8?B?dnlvQldrVU96eDBkemZLME1TTTlDYm9KUi9pMDZpZXhFWjFqNlZKM0xocFc5?=
- =?utf-8?B?R3dEQU5EeXJ6SEFaRDVBS1dkRU9BPT0=?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b1552b29-2353-4743-03e2-08d9be4df99e
-X-MS-Exchange-CrossTenant-AuthSource: BN0PR10MB5192.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Dec 2021 15:33:56.0995
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: tAABRD5zvUcex+j8bTj0tk5/oINOk5Qq7hfw/qM0PfqjXLMuX7QC8qWlwnonAFrmENBzE6STgMbImUvadQhHFRB7UhZskHOZr2GNfeOEX9I=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PR10MB2561
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10196 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 suspectscore=0
- mlxlogscore=999 phishscore=0 malwarescore=0 bulkscore=0 mlxscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2110150000
- definitions=main-2112130099
-X-Proofpoint-GUID: CLpq3mzThK8_qUoLdebsjkUlQw5G-f4S
-X-Proofpoint-ORIG-GUID: CLpq3mzThK8_qUoLdebsjkUlQw5G-f4S
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.4.0
+Subject: Re: [PATCH v1 1/2] ata: libahci_platform: Get rid of dup message when
+ IRQ can't be retrieved
+Content-Language: en-US
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>
+References: <20211209145937.77719-1-andriy.shevchenko@linux.intel.com>
+ <d91cf14d-c7d8-1c61-9071-102f38e8c924@opensource.wdc.com>
+ <febc7f73-929f-d8a6-ea01-5056b9101b46@omp.ru>
+ <549c1825-56e6-de9e-e109-77f0d06cfd0f@opensource.wdc.com>
+ <5322dafd-86ad-a293-6005-29384cb96cc8@omp.ru>
+ <de3dc434-8b87-5d9d-7fe8-bd44ff2bcbfb@opensource.wdc.com>
+ <Ybcz85/ZoXRCmbbD@smile.fi.intel.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital
+In-Reply-To: <Ybcz85/ZoXRCmbbD@smile.fi.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Avoid data corruption by rejecting pass-through commands where
-T_LENGTH is zero (No data is transferred) and the dma direction
-is not DMA_NONE.
+On 2021/12/13 20:52, Andy Shevchenko wrote:
+> On Mon, Dec 13, 2021 at 07:39:31AM +0900, Damien Le Moal wrote:
+>> On 2021/12/11 19:25, Sergey Shtylyov wrote:
+>>> On 11.12.2021 2:45, Damien Le Moal wrote:
+> 
+> ...
+> 
+>>>>>> So 0 will be returned as-is. That is rather weird. That should be fixed to
+>>>>>> return -ENXIO:
+>>>>>>
+>>>>>> 	if (WARN(ret == 0, "0 is an invalid IRQ number\n"))
+>>>>>> 		return -ENXIO;
+>>>>>> 	return ret;
+>>>>>
+>>>>>     My unmerged patch (https://marc.info/?l=linux-kernel&m=163623041902285) does this
+>>>>> but returns -EINVAL instead.
+>>>>
+>>>> Thinking more about this, shouldn't this change go into platform_get_irq()
+>>>> instead of platform_get_irq_optional() ?
+>>>
+>>>     Why? platform_get_irq() currently just calls platform_get_irq_optional()...
+>>>
+>>>> The way I see it, I think that the intended behavior for
+>>>> platform_get_irq_optional() is:
+>>>> 1) If have IRQ, return it, always > 0
+>>>> 2) If no IRQ, return 0
+>>>
+>>>     That does include the IRQ0 case, right?
+>>
+>> IRQ 0 being invalid, I think that case should be dealt with internally within
+>> platform_get_irq_optional() and warn/error return. IRQ 0 showing up would thus
+>> be case (3), an error.
+>>
+>>>
+>>>> 3) If error, return < 0
+>>>> no ?
+>>>
+>>>    I completely agree, I (after thinking a bit) have no issues with that...
+>>>
+>>>> And for platform_get_irq(), case (2) becomes an error.
+>>>> Is this the intended semantic ?
+>>>
+>>>     I don't see how it's different from the current behavior. But we can do 
+>>> that as well, I just don't see whether it's really better...
+>>
+>> The problem I see is that the current behavior is unclear: what does
+>> platform_get_irq_optional() returning 0 mean ? IRQ == 0 ? or "no IRQ" ? I think
+>> it should be the latter rather than the former. Note that the function could
+>> return ENOENT (or similar) for the "no IRQ" case. With that, case (2) goes away,
+>> but then I do not see any difference between platform_get_irq_optional() and
+>> platform_get_irq().
+>>
+>> If the preferred API semantic is to allow returning IRQ 0 with a warning, then
+>> the kdoc comments of platform_get_irq_optional() and platform_get_irq() are
+>> totally broken, and the code for many drivers is probably wrong too.
+> 
+> Yeah, what we need to do is that (roughly a roadmap):
+>  - revisit callers of platform_get_irq_optional() to be prepared for
+>    new behaviour
+>  - rewrite platform_get_irq() to return -ENOENT
+>  - rewrite platform_get_irq_optional() to return 0 on -ENOENT
+> 
+> This is how other similar (i.e. _optional) APIs do.
 
-Cc:<stable@vger.kernel.org>  # 5.4.y
-Reported-by: syzkaller<syzkaller@googlegroups.com>
-Signed-off-by: George Kennedy<george.kennedy@oracle.com>
----
-  drivers/ata/libata-scsi.c | 6 ++++++
-  1 file changed, 6 insertions(+)
+Sounds like a good plan to me. In the mean time though, your patch 1/2 should
+keep the "if (!irq)" test and return an error for that case. No ?
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 1b84d55..d428392 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2859,6 +2859,12 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
-  		goto invalid_fld;
-  	}
-  
-+	/* if T_LENGTH is zero (No data is transferred), then dir should be DMA_NONE */
-+	if ((cdb[2 + cdb_offset] & 3) == 0 && scmd->sc_data_direction != DMA_NONE) {
-+		fp = 2 + cdb_offset;
-+		goto invalid_fld;
-+	}
-+
-  	if (ata_is_ncq(tf->protocol) && (cdb[2 + cdb_offset] & 0x3) == 0)
-  		tf->protocol = ATA_PROT_NCQ_NODATA;
-  
--- 1.8.3.1
 
+-- 
+Damien Le Moal
+Western Digital Research
