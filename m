@@ -2,190 +2,111 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 875A5C433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 17 Dec 2021 21:38:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F353C433F5
+	for <linux-ide@archiver.kernel.org>; Fri, 17 Dec 2021 23:57:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229809AbhLQVi3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 17 Dec 2021 16:38:29 -0500
-Received: from mxout03.lancloud.ru ([45.84.86.113]:34336 "EHLO
-        mxout03.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229772AbhLQVi2 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Dec 2021 16:38:28 -0500
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout03.lancloud.ru 7612920D755E
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-Subject: Re: [PATCH 2/2] ata: pata_platform: Merge pata_of_platform into
- pata_platform
-To:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>
-CC:     Rob Herring <robh+dt@kernel.org>, <linux-kernel@vger.kernel.org>,
-        Prabhakar <prabhakar.csengg@gmail.com>
-References: <20211217141715.29747-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20211217141715.29747-3-prabhakar.mahadev-lad.rj@bp.renesas.com>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <b94e0a92-1995-926c-95df-17365f03eed0@omp.ru>
-Date:   Sat, 18 Dec 2021 00:38:25 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        id S231403AbhLQX5f (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 17 Dec 2021 18:57:35 -0500
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:1571 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229665AbhLQX5f (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Dec 2021 18:57:35 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1639785454; x=1671321454;
+  h=from:to:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=6ziVcku2nzpXj5v/jgnXpZeKezzkAJFhvfbmBy8iAL8=;
+  b=o0P34Rb4k44jLZS2E/rY6PjxMl1xo1a5Hx4TOPYgEWaZaeX7U8rQwVb8
+   jeZ3EyXuWpFMsYfE/ZfKMTtINAWQ4tMr5vFCME035A+DEBN7c4FSTntsn
+   eGLo1AXJ8wFyQO5XGoI+kUDuSs34SG6Hi1DZFeTp8cHZgXVevp//xxpx4
+   UAidLdlf+TtJ5c7Qejdrs34YB7AnYZ3MGN027THbAGM23bE6gIK6R4nJN
+   LJaGaJzeb0XHBKHUYQanaegKFOtipbw+lINl2JP3/H9F8tbO7mF52uTnr
+   zsjWJ7YoFS70uCD7JOsp7N370ZCvJBoqENxlHHLFQz7N6dTwsRxAY4oHB
+   A==;
+X-IronPort-AV: E=Sophos;i="5.88,215,1635177600"; 
+   d="scan'208";a="292548008"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 18 Dec 2021 07:57:34 +0800
+IronPort-SDR: klz9Px85kJguK61TZkg/Qz4pnovpSN9HUcNec1f3+AzzFeBcBhWuIAzF7jwvahkHXcubfAbXGC
+ PhiEBUepvkqa68pnACPsWGNGuVT7c41KMSwTa7Me7CtKD3y6N6BKU+tSQicc+CwxxwF58cBJBL
+ 0Q80oE2ChA2JJyNgzPS7B/eKC+X6LLxwP6HrVUWXCiCeGPVETvaYEegssqX84CGdvNKSh9NCIS
+ 5QC/ZkTt2xAZtXTG6i2CV8O1HE7OOfy1l8apXAnr7KOiXABsCSvQvXBV/bNTScnEktTRo4HTXq
+ F9KzSLZoUjrNfTIYWZbxg77V
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Dec 2021 15:30:26 -0800
+IronPort-SDR: EMcYvYAzWZxim8u7ed140TAZo/RtDV0ctSvJkQ7U62kQvz+ETF80/dV2RPx4V3fTpaFNAETSls
+ Sn2nGpjb4NyF2qEl32XtUqkLvOc2/RFU0PtuRcUT2XbPQAXhYQoMEBOFGvu9rXEI/QFvJPh1b6
+ 9JFbfnRunVV4hpQMX8GiM1Ps740t54xGWjLmQUBTFRBjdaLB2Az49EQm+f+S4EIBYg5gz1BaAA
+ IoLV1R27i0doeqFls/MMJVE5nee9plaH9sQxGGxB5Y6Vm5JWK7O4wSFGQsubcxkTBm0DzfileX
+ leU=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Dec 2021 15:57:35 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JG5Wf1fLYz1Rvlf
+        for <linux-ide@vger.kernel.org>; Fri, 17 Dec 2021 15:57:34 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1639785453;
+         x=1642377454; bh=6ziVcku2nzpXj5v/jgnXpZeKezzkAJFhvfbmBy8iAL8=; b=
+        RitaGV8Gb+dzW5Holv++j130pECLJ8+d83apAkvPGOr3bgE8G4Q4JrW6CvgmVamt
+        WYetfY2s+iim5OFs5ps7WGdO6WQOL+i6PGdqA5negjo+2KovvdRZ9CMf1OkU6bZC
+        YHAsAic6QuQN2//U5e10bXH82UZRvZBJMhwZUy+n5smyngC95jP8YtoYm5BTCxFi
+        XKZQU/eg9r6hKJw/6dYFVNlZ5mcwC7ak1ilBvRQ37Xb1XuDa3jFkFmabBml2u4mt
+        3MAvFRkshOT8Xc3xfsq05tOQQyqj+Ml6hOeEuY6EqOuwvVMkv3eY3aK12Pk6maE6
+        BQ8whwvIL1kTj5e62beTDg==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id eIM8GHsAvuWQ for <linux-ide@vger.kernel.org>;
+        Fri, 17 Dec 2021 15:57:33 -0800 (PST)
+Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JG5Wd2qQfz1RtVG;
+        Fri, 17 Dec 2021 15:57:33 -0800 (PST)
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+To:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-ide@vger.kernel.org
+Subject: [GIT PULL] libata fixes for 5.16-rc6
+Date:   Sat, 18 Dec 2021 08:57:31 +0900
+Message-Id: <20211217235731.304392-1-damien.lemoal@opensource.wdc.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-In-Reply-To: <20211217141715.29747-3-prabhakar.mahadev-lad.rj@bp.renesas.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
- LFEX1907.lancloud.ru (fd00:f066::207)
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello!
+Linus,
 
-On 12/17/21 5:17 PM, Lad Prabhakar wrote:
+The following changes since commit 2585cf9dfaaddf00b069673f27bb3f8530e203=
+9c:
 
-> Merge the OF pata_of_platform driver into pata_platform.
-> 
-> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-[...]
+  Linux 5.16-rc5 (2021-12-12 14:53:01 -0800)
 
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index a7da8ea7b3ed..0fab5cae45d5 100644
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-> @@ -1122,7 +1122,8 @@ config PATA_PLATFORM
->  
->  config PATA_OF_PLATFORM
->  	tristate "OpenFirmware platform device PATA support"
-> -	depends on PATA_PLATFORM && OF
-> +	depends on OF
-> +	select PATA_PLATFORM
->  	help
->  	  This option enables support for generic directly connected ATA
->  	  devices commonly found on embedded systems with OpenFirmware
+are available in the Git repository at:
 
-   Hm, why in the world you're keeping this Konfig entry? You doint even use it
-anywhere... :-/
+  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata t=
+ags/libata-5.16-rc6
 
-[...]
-> diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-> index cb3134bf88eb..b8d8d51bc562 100644
-> --- a/drivers/ata/pata_platform.c
-> +++ b/drivers/ata/pata_platform.c
-> @@ -11,21 +11,42 @@
->   * License.  See the file "COPYING" in the main directory of this archive
->   * for more details.
->   */
-> -#include <linux/kernel.h>
-> -#include <linux/module.h>
-> -#include <linux/blkdev.h>
-> -#include <scsi/scsi_host.h>
->  #include <linux/ata.h>
-> +#include <linux/ata_platform.h>
-> +#include <linux/blkdev.h>
-> +#include <linux/kernel.h>
->  #include <linux/libata.h>
-> +#include <linux/module.h>
-> +#include <linux/of_address.h>
->  #include <linux/platform_device.h>
-> -#include <linux/ata_platform.h>
-> +#include <scsi/scsi_host.h>
+for you to fetch changes up to 5da5231bb47864e5dd6c6731151e98b6ee498827:
 
-   I'd make the sorting of the #include's a separate patch...
+  libata: if T_LENGTH is zero, dma direction should be DMA_NONE (2021-12-=
+17 09:32:13 +0900)
 
-[...]
-> +/**
-> + * struct pata_platform_priv - Private info
-> + * @io_res: Resource representing I/O base
-> + * @ctl_res: Resource representing CTL base
-> + * @irq_res: Resource representing IRQ and its flags
-> + * @ioport_shift: I/O port shift
-> + * @mask: PIO mask
-> + * @sht: scsi_host_template to use when registering
-> + * @use16bit: Flag to indicate 16-bit IO instead of 32-bit
-> + */
-> +struct pata_platform_priv {
-> +	struct resource *io_res;
-> +	struct resource *ctl_res;
-> +	struct resource *irq_res;
-> +	unsigned int ioport_shift;
-> +	int mask;
+----------------------------------------------------------------
+libata fixes for 5.16-rc6
 
-   Why not pio_mask?
+A single fix for this cycle:
+* Check that ATA16 passthrough commands that do not transfer any data
+  have a DMA direction set to DMA_NONE (From George).
 
-> +	struct scsi_host_template *sht;
-> +	bool use16bit;
-> +};
->  
->  /*
->   * Provide our own set_mode() as we don't want to change anything that has
-[...]
-> @@ -168,23 +180,83 @@ int __pata_platform_probe(struct device *dev, struct resource *io_res,
-[...]
->  
-> -static int pata_platform_probe(struct platform_device *pdev)
-> +static int pata_of_platform_get_pdata(struct platform_device *ofdev,
-> +				      struct pata_platform_priv *priv)
->  {
-> -	struct resource *io_res;
-> +	struct device_node *dn = ofdev->dev.of_node;
->  	struct resource *ctl_res;
->  	struct resource *irq_res;
-> +	struct resource *io_res;
+----------------------------------------------------------------
+George Kennedy (1):
+      libata: if T_LENGTH is zero, dma direction should be DMA_NONE
 
-   Should be declared before ctl_res...
-
-
-> +	int pio_mode = 0;
-> +	int irq;
-> +	int ret;
-> +
-> +	ctl_res = devm_kzalloc(&ofdev->dev, sizeof(*ctl_res), GFP_KERNEL);
-> +	io_res = devm_kzalloc(&ofdev->dev, sizeof(*io_res), GFP_KERNEL);
-> +	irq_res = devm_kzalloc(&ofdev->dev, sizeof(*irq_res), GFP_KERNEL);
-> +	if (!ctl_res || !io_res || !irq_res)
-> +		return -ENOMEM;
-
-   Can't we get away from these allocated resources? Or at least irq_res?
-
-[...]
-> +	priv->use16bit = of_property_read_bool(dn, "ata-generic,use16bit");
-> +
-> +	priv->mask = 1 << pio_mode;
-> +	priv->mask |= (1 << pio_mode) - 1;
-
-   You can make use of GENMASK(pio_mode, 0), in a separate pre-patch (or post-patch?).
-
-[...]
-> @@ -198,32 +270,63 @@ static int pata_platform_probe(struct platform_device *pdev)
-[...]
-> +static int pata_platform_probe(struct platform_device *pdev)
-> +{
-> +	struct pata_platform_priv *priv;
-> +	int ret;
-> +
-> +	priv = devm_kzalloc(&pdev->dev, sizeof(*priv), GFP_KERNEL);
-> +	if (!priv)
-> +		return -ENOMEM;
-> +
-> +	if (!dev_of_node(&pdev->dev))
-> +		ret = pata_platform_get_pdata(pdev, priv);
-> +	else
-> +		ret = pata_of_platform_get_pdata(pdev, priv);
-> +
-
-   No need for empty line here...
-
-> +	if (ret)
-> +		return ret;
-> +
-> +	priv->sht = &pata_platform_sht;
-
-   Aren't those structures identical between the formerly separate drivers?
-
-[...]
-
-MBR, Sergey
+ drivers/ata/libata-scsi.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
