@@ -2,165 +2,141 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E108C433F5
-	for <linux-ide@archiver.kernel.org>; Fri, 17 Dec 2021 01:16:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD57EC433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 17 Dec 2021 04:20:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231704AbhLQBQv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 16 Dec 2021 20:16:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53838 "EHLO
+        id S232673AbhLQEUL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 16 Dec 2021 23:20:11 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229532AbhLQBQu (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 16 Dec 2021 20:16:50 -0500
-Received: from mail-yb1-xb2a.google.com (mail-yb1-xb2a.google.com [IPv6:2607:f8b0:4864:20::b2a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 489C4C061574;
-        Thu, 16 Dec 2021 17:16:49 -0800 (PST)
-Received: by mail-yb1-xb2a.google.com with SMTP id g17so1779069ybe.13;
-        Thu, 16 Dec 2021 17:16:49 -0800 (PST)
+        with ESMTP id S232655AbhLQEUK (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 16 Dec 2021 23:20:10 -0500
+Received: from mail-pg1-x530.google.com (mail-pg1-x530.google.com [IPv6:2607:f8b0:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B91E6C061574;
+        Thu, 16 Dec 2021 20:20:10 -0800 (PST)
+Received: by mail-pg1-x530.google.com with SMTP id l18so949978pgj.9;
+        Thu, 16 Dec 2021 20:20:10 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=CxroxGpED4ebB7+ml5TK6/oHJjco3q8gRiWmo9QG7KA=;
-        b=GikRGHKvM48x348muCoHHjZE+J2Ho76W8ZGYgKq5Px0yDgaII/6byXEpe7T9mI5oux
-         Io2C/9zZ4Wl2CVDv6Hd4SxyaKGpCf1tYOXMhVVF7gXU1JGpll2e9yWlKXigogEF8mKeP
-         5rdye4tyujsx7McW9oXjlel2pAQZ57Bj6eDQbvR+SpelIOWckKqk+HVC4h0fFBVFDxcR
-         Q0Hy7yQITyf9uZOMnP7ClYNd13GBqevVMdANSwoBHX3zm1JsFT0ycSVaXvAze1xyDrlX
-         awBBkHQZ+m1io6Xts2PfzgB14KmDu3DWtoKLA/W2x3M5zUQgpVVUmTJmqErSs2RuqLEh
-         IzGA==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=WXlXaQzQ+nfyK3zsVRGeFn4YVh8Bg3qKyVZtZQPRG+Q=;
+        b=jpr4no+MdZr+tiCxsYI0JTilC48QiI4Rln1XP1lhrhq/aGjQhbhUdM7b2Tvdg/S5xF
+         kfU3wS0R1slmczGsRZi8opS2qxTsLOFbzpI9w7CyAu/mFiSDAZA6fhw70rRuImTf3mxM
+         UWBsCYa2QN3F3mAQ7FZgoeLLYJJAtRAkLBCxvyFmdQcYl4A1akBw+oF1LzbYplkG3N9w
+         ctRuzJiLOJ+lprgD5KTm6wDYVLncFB6nQVlOYeL7l41PO70XfHg6b+EllgDia8IA3Cx7
+         Nd71632sicRjx2CPxoDhzG16Nnl4zTXfVuAJUC5/BB7l5F9GUIkrLVbvfsw/T0G6+saf
+         xtzg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=CxroxGpED4ebB7+ml5TK6/oHJjco3q8gRiWmo9QG7KA=;
-        b=r6+HcwbK2kzN+vxMEfVqPVCLnGlOZN6ImpDx86tB6e0llAigVXrFRtzl/lWSP9chR0
-         zSWayQPf3TgORpPaKuFf/XbjtXaE+DB8D/mIfs3QMAU58/HImJFwxwGknHwK/6JCkG01
-         6yp/rgl8SBDdftZiGoSLC09tXQSEkdcNDgUF1qL9uiW2tkl+4O4eAsJZ6PM8I1ui7c/m
-         HXwwLuGGFmr67xaa9a5nWjFgQAeBMlwdpDQDgWZzv53ifHCGx+m5KxpZJ/PhcJhlAI6w
-         7kWmTLLY1DwmPjQ5w4DilsZdVZphMgfjcZ45fLWpN3JLxfa34OQgNEO3Ux0lEoyXrnAF
-         ZRIw==
-X-Gm-Message-State: AOAM5306xQGzbWDPqyY/vHSv8O9bEuxgeQHinMX2UwJixOI8NV/LYS5D
-        r6HlIEb6YOhQT3bt/vQkr+Jey+XGx84nLBFr1O/IUVWok8lmKQ==
-X-Google-Smtp-Source: ABdhPJwRNPsT87LmhYEe2k4TjApsmTNJZSqksXUBA3DXWm69lqwyLpmMBd9YbNv3o3oyBbjr8rCKsxCYLwTN1uAM/a8=
-X-Received: by 2002:a25:148a:: with SMTP id 132mr1052771ybu.251.1639703808506;
- Thu, 16 Dec 2021 17:16:48 -0800 (PST)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=WXlXaQzQ+nfyK3zsVRGeFn4YVh8Bg3qKyVZtZQPRG+Q=;
+        b=YH7JnGFtNCReZ6xvAGBETrdgN8SXstfhtInsDcPaa5vUfvaGiiU/7NDhA8XBk33pZd
+         9uGudoesioDEdoh4baStxpLqRkDFpXgtxzYamsxOrttMSFoF5gJ//pSRuS7F/1N5VGzM
+         N4Wxlr/RNyPct0c6llE9nokvlo6O8Kz2gVZGeSvkLvH59PE/C4TukMg+miZvmG75KfmD
+         TsKr0rzpU8uqe5N8OEZ9QwwoyBpy2u4fDo7pQFjpWaHmTLmwu/7eRESYJKxOFCtaL4Kx
+         jJqWokOzNIGAtbBHBndrGaJ8mL9RShlp53Y3GkzzAio3/mynSQOEdHFK6e5sMJ4WE4l3
+         fNSA==
+X-Gm-Message-State: AOAM5315fqE/s4MT++zsFWFhg6XIudMhUu0ncn+3KXBxvqNdmLcs7tWO
+        l3XhO2kLTU/AoTPn9c1YWUVizMyJy+0=
+X-Google-Smtp-Source: ABdhPJwOMKCRXTbQlcDoh+2QnIwrqTxR94/znbwNVzvHpdBleP/ncp2gnAca4nMx6/kpLJ5IKuwQLw==
+X-Received: by 2002:aa7:86c6:0:b0:4a4:ac66:99fc with SMTP id h6-20020aa786c6000000b004a4ac6699fcmr1120244pfo.83.1639714809820;
+        Thu, 16 Dec 2021 20:20:09 -0800 (PST)
+Received: from fainelli-desktop.igp.broadcom.net ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id mq10sm7553496pjb.3.2021.12.16.20.20.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 16 Dec 2021 20:20:09 -0800 (PST)
+From:   Florian Fainelli <f.fainelli@gmail.com>
+To:     devicetree@vger.kernel.org
+Cc:     Florian Fainelli <f.fainelli@gmail.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Marc Zyngier <maz@kernel.org>,
+        bcm-kernel-feedback-list@broadcom.com (maintainer:BROADCOM BCM7XXX ARM
+        ARCHITECTURE), Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Al Cooper <alcooperx@gmail.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        linux-ide@vger.kernel.org (open list:LIBATA SUBSYSTEM (Serial and
+        Parallel ATA drivers)), linux-kernel@vger.kernel.org (open list),
+        linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM BCM7XXX
+        ARM ARCHITECTURE),
+        linux-usb@vger.kernel.org (open list:USB SUBSYSTEM)
+Subject: [PATCH v4 0/6] Broadcom DT bindings updates to YAML
+Date:   Thu, 16 Dec 2021 20:19:55 -0800
+Message-Id: <20211217042001.479577-1-f.fainelli@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-References: <20211217001238.16298-1-prabhakar.mahadev-lad.rj@bp.renesas.com> <d25d6c6f-098a-1dbc-0c85-00f97f491e99@opensource.wdc.com>
-In-Reply-To: <d25d6c6f-098a-1dbc-0c85-00f97f491e99@opensource.wdc.com>
-From:   "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Date:   Fri, 17 Dec 2021 01:16:22 +0000
-Message-ID: <CA+V-a8s=WhzjX-Cw5xXJ5Y1uADx42tHMWYuVruSPt87T9BNUeg@mail.gmail.com>
-Subject: Re: [PATCH] ata: pata_of_platform: Use of_irq_to_resource() to
- populate IRQ resource
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
-        linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Damien,
+Hi Rob,
 
-Thank you for the review.
+This patch series contains a number of device tree bindings being
+converted to YAML to help with validation.
 
-On Fri, Dec 17, 2021 at 12:23 AM Damien Le Moal
-<damien.lemoal@opensource.wdc.com> wrote:
->
-> On 12/17/21 09:12, Lad Prabhakar wrote:
-> > platform_get_resource(pdev, IORESOURCE_IRQ, ..) relies on static
-> > allocation of IRQ resources in DT core code, this causes an issue
-> > when using hierarchical interrupt domains using "interrupts" property
-> > in the node as this bypassed the hierarchical setup and messed up the
->
-> s/bypassed/bypasses
-> s/messed/messes
->
-Ok will update this.
+There will be second, and possibly third rounds later on after those
+land in.
 
-> > irq chaining.
-> >
-> > In preparation for removal of static setup of IRQ resource from DT core
-> > code use of_irq_to_resource().
-> >
-> > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> > ---
-> > Hi,
-> >
-> > Dropping usage of platform_get_resource() was agreed based on
-> > the discussion [0].
-> >
-> > [0] https://patchwork.kernel.org/project/linux-renesas-soc/
-> > patch/20211209001056.29774-1-prabhakar.mahadev-lad.rj@bp.renesas.com/
-> >
-> > Cheers,
-> > Prabhakar
-> > ---
-> >  drivers/ata/pata_of_platform.c | 11 ++++++++---
-> >  1 file changed, 8 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
-> > index 35aa158fc976..557f349eb533 100644
-> > --- a/drivers/ata/pata_of_platform.c
-> > +++ b/drivers/ata/pata_of_platform.c
-> > @@ -9,6 +9,7 @@
-> >  #include <linux/kernel.h>
-> >  #include <linux/module.h>
-> >  #include <linux/of_address.h>
-> > +#include <linux/of_irq.h>
-> >  #include <linux/platform_device.h>
-> >  #include <linux/ata_platform.h>
-> >  #include <linux/libata.h>
-> > @@ -25,11 +26,12 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
-> >       struct device_node *dn = ofdev->dev.of_node;
-> >       struct resource io_res;
-> >       struct resource ctl_res;
-> > -     struct resource *irq_res;
-> > +     struct resource irq_res;
-> >       unsigned int reg_shift = 0;
-> >       int pio_mode = 0;
-> >       int pio_mask;
-> >       bool use16bit;
-> > +     int irq;
-> >
-> >       ret = of_address_to_resource(dn, 0, &io_res);
-> >       if (ret) {
-> > @@ -45,7 +47,9 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
-> >               return -EINVAL;
-> >       }
-> >
-> > -     irq_res = platform_get_resource(ofdev, IORESOURCE_IRQ, 0);
-> > +     irq = of_irq_to_resource(dn, 0, &irq_res);
-> > +     if (irq <= 0 && irq != -ENXIO)
-> > +             return irq ? irq : -ENXIO;
->
-> Why are you making an exception for ENXIO ? I suspect this is to cover
-> the case "there is no IRQ for this node", but then how does this
-> differentiate from a real error case ?
->
--ENXIO to handle no interrupt case. In case of actual error case we
-fallback to polling mode..
+Thanks!
 
-> >
-> >       of_property_read_u32(dn, "reg-shift", &reg_shift);
-> >
-> > @@ -63,7 +67,8 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
-> >       pio_mask = 1 << pio_mode;
-> >       pio_mask |= (1 << pio_mode) - 1;
-> >
-> > -     return __pata_platform_probe(&ofdev->dev, &io_res, &ctl_res, irq_res,
-> > +     return __pata_platform_probe(&ofdev->dev, &io_res, &ctl_res,
-> > +                                  irq > 0 ? &irq_res : NULL,
-.. here is check for irq number again.
+Changes in v4:
+- removed the patches that have already been merged
+- fixed errors in brcm,bcm7120-l2 binding
+- added interrupt descriptions and comments to compatibles of
+  brcm,gisb-arb
+- added description of the 'phys' for BDC and dropped 'ref'
+- combined all enums into a single one for brcm,sata-brcm,yaml
 
-Cheers,
-Prabhakar
-> >                                    reg_shift, pio_mask, &pata_platform_sht,
-> >                                    use16bit);
-> >  }
-> >
->
->
-> --
-> Damien Le Moal
-> Western Digital Research
+Changes in v3;
+
+- added Gregorys' Acked-by to the GPIO binding patch
+- added Uwe's Acked-by to the PWM binding patch
+- fixed STB L2 binding to include the missing 2711 compatible string
+  and interrupt-names property for 7445
+- fixed the NSP SATA3 controller node unit name and added a missing
+  check for the 63138 variant to check for the reset/reset-names
+  property
+
+Changes in v2:
+
+- rebased against dt/next
+- addressed Gregory's feedback on the GPIO binding change
+- added Damien's Acked-by to the ATA binding patch
+
+Florian Fainelli (6):
+  dt-bindings: interrupt-controller: Convert BCM7120 L2 to YAML
+  dt-bindings: interrupt-controller: Merge BCM3380 with BCM7120
+  ARM: dts: NSP: Rename SATA unit name
+  dt-bindings: ata: Convert Broadcom SATA to YAML
+  dt-bindings: bus: Convert GISB arbiter to YAML
+  dt-bindings: usb: Convert BDC to YAML
+
+ .../bindings/ata/brcm,sata-brcm.txt           |  45 ------
+ .../bindings/ata/brcm,sata-brcm.yaml          |  90 +++++++++++
+ .../devicetree/bindings/bus/brcm,gisb-arb.txt |  34 ----
+ .../bindings/bus/brcm,gisb-arb.yaml           |  66 ++++++++
+ .../brcm,bcm3380-l2-intc.txt                  |  39 -----
+ .../brcm,bcm7120-l2-intc.txt                  |  88 -----------
+ .../brcm,bcm7120-l2-intc.yaml                 | 149 ++++++++++++++++++
+ .../devicetree/bindings/usb/brcm,bdc.txt      |  29 ----
+ .../devicetree/bindings/usb/brcm,bdc.yaml     |  49 ++++++
+ MAINTAINERS                                   |   2 +-
+ arch/arm/boot/dts/bcm-nsp.dtsi                |   2 +-
+ 11 files changed, 356 insertions(+), 237 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/ata/brcm,sata-brcm.txt
+ create mode 100644 Documentation/devicetree/bindings/ata/brcm,sata-brcm.yaml
+ delete mode 100644 Documentation/devicetree/bindings/bus/brcm,gisb-arb.txt
+ create mode 100644 Documentation/devicetree/bindings/bus/brcm,gisb-arb.yaml
+ delete mode 100644 Documentation/devicetree/bindings/interrupt-controller/brcm,bcm3380-l2-intc.txt
+ delete mode 100644 Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7120-l2-intc.txt
+ create mode 100644 Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7120-l2-intc.yaml
+ delete mode 100644 Documentation/devicetree/bindings/usb/brcm,bdc.txt
+ create mode 100644 Documentation/devicetree/bindings/usb/brcm,bdc.yaml
+
+-- 
+2.25.1
+
