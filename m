@@ -2,429 +2,310 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D070C433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 17 Dec 2021 14:50:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFFEBC433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 17 Dec 2021 14:59:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237521AbhLQOuT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 17 Dec 2021 09:50:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47432 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237552AbhLQOuQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Dec 2021 09:50:16 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1E256C061574;
-        Fri, 17 Dec 2021 06:50:16 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id A5ABA62243;
-        Fri, 17 Dec 2021 14:50:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 129CBC36AE7;
-        Fri, 17 Dec 2021 14:50:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1639752615;
-        bh=viUxoT/2r3lETLZyJXth+vblln3i81mX7XVB8BK5GUk=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=t+q/pjVmUj3hZZ1ApKBVRumDnb+6HeuxDKMdBnZWuF4uY4mH0YNRSgbG9FniPhRe5
-         SJ70rMZAcypwccKV53FpUZOQ5eqPOgeX7Et5hxHAYPadQxBKBsjkGb+y6+WR6dfAFi
-         B2XpXIT+5OTr4QbTIfyxZ7h0KybxK9p9GgkHgQhQsvj7zYdwmpBzqGhjAv0aVWuBaF
-         2X3gfRLQg79I/u756dzhY1DMgZg8ZtpaCA+3GbO0vtBtYojgR9NFs+NN9YsGPaRRuR
-         ublWUHAhUz636emYc4nHTrh8jyl3o7YI8cySQd0Cdi+nmK/FMPLRv2C9rxfofuNmlg
-         /TiAU8b8bUkPQ==
-Received: by mail-ed1-f51.google.com with SMTP id o20so8664756eds.10;
-        Fri, 17 Dec 2021 06:50:14 -0800 (PST)
-X-Gm-Message-State: AOAM533j0zCF6zDpytcAeZWBuR5aertMJYWhonMgY3m9920kecwCAuBf
-        NNkDLHEZsv9L6p8q9TPDXAGZzebmnmfPKTV2BA==
-X-Google-Smtp-Source: ABdhPJw/vE+TR1HESO1by8p6/bvZPlnosiHar9TIrILCMtaOTI7VyXSpAl1jw66Yn77GXvkEw5w+PUMRP2tVuHzunu8=
-X-Received: by 2002:aa7:cc82:: with SMTP id p2mr3137320edt.201.1639752613286;
- Fri, 17 Dec 2021 06:50:13 -0800 (PST)
-MIME-Version: 1.0
-References: <20211217141715.29747-1-prabhakar.mahadev-lad.rj@bp.renesas.com> <20211217141715.29747-3-prabhakar.mahadev-lad.rj@bp.renesas.com>
-In-Reply-To: <20211217141715.29747-3-prabhakar.mahadev-lad.rj@bp.renesas.com>
-From:   Rob Herring <robh+dt@kernel.org>
-Date:   Fri, 17 Dec 2021 08:50:01 -0600
-X-Gmail-Original-Message-ID: <CAL_Jsq+a94CE5iPF5oDznV8vzBaX=tVnbEOPn-zuKd5CnS6ViA@mail.gmail.com>
-Message-ID: <CAL_Jsq+a94CE5iPF5oDznV8vzBaX=tVnbEOPn-zuKd5CnS6ViA@mail.gmail.com>
-Subject: Re: [PATCH 2/2] ata: pata_platform: Merge pata_of_platform into pata_platform
-To:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        id S237666AbhLQO7H (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 17 Dec 2021 09:59:07 -0500
+Received: from mail-ot1-f46.google.com ([209.85.210.46]:40607 "EHLO
+        mail-ot1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237575AbhLQO7G (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Dec 2021 09:59:06 -0500
+Received: by mail-ot1-f46.google.com with SMTP id v15-20020a9d604f000000b0056cdb373b82so3168174otj.7;
+        Fri, 17 Dec 2021 06:59:06 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=MtNNLbxBpuHX5RmS7GKEPVN70OvcjZU0mEBkeENGSlM=;
+        b=JesvwuojGhgViV3E28QA05+RME7VFXOb8016iHbZ7yWVGoyfDk90p6z96nPYdQ/+mE
+         mDhDfepFFkMRwbRHXK5RqAv5dReVKt2p3VaYo1bNREMamAyitotidbh6efaAIhr52D6K
+         0N4/C2zeioCtPbzvaknBnOUmgtfCOqV/MEmio9dyth9oZsPDszp3LcwKVGSbaIs0ngT1
+         eYBdn3tgCld1mgPmuLBG5LKOZue7e0QaMAXL4TxPbsVB/ELyu1Mu4TTJqWKgsSc5ODkv
+         i0xUI1bxdaiV6AC/gBSw0oZ2sDgZbeZsbBBShxP4Zs8qRMaAEFjnoypfJ1Mhj+5NWdY+
+         u7Kg==
+X-Gm-Message-State: AOAM5315Pa05R1dpKSDYyQczhKfIlwxLQe9dd0h4+jWNjzqZby+ruTOC
+        caoPx/b8uqRlfAgnHvmQtIKKcl/22g==
+X-Google-Smtp-Source: ABdhPJxFtDSunlbe57jArZYJu0wYYZwKyWjva5ekvHqFWfYjG9zeN+rbLPoMpSUVApxg8x75T89/xg==
+X-Received: by 2002:a9d:d02:: with SMTP id 2mr2421512oti.342.1639753146035;
+        Fri, 17 Dec 2021 06:59:06 -0800 (PST)
+Received: from robh.at.kernel.org (66-90-148-213.dyn.grandenetworks.net. [66.90.148.213])
+        by smtp.gmail.com with ESMTPSA id bl33sm1797061oib.47.2021.12.17.06.59.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 Dec 2021 06:59:05 -0800 (PST)
+Received: (nullmailer pid 2879918 invoked by uid 1000);
+        Fri, 17 Dec 2021 14:59:04 -0000
+Date:   Fri, 17 Dec 2021 08:59:04 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Florian Fainelli <f.fainelli@gmail.com>
+Cc:     devicetree@vger.kernel.org,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Marc Zyngier <maz@kernel.org>,
+        "maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" 
+        <bcm-kernel-feedback-list@broadcom.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Al Cooper <alcooperx@gmail.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
         "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
         <linux-ide@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Prabhakar <prabhakar.csengg@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:BROADCOM BCM7XXX ARM ARCHITECTURE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>
+Subject: Re: [PATCH v4 1/6] dt-bindings: interrupt-controller: Convert
+ BCM7120 L2 to YAML
+Message-ID: <YbyluObgbL3+hqYO@robh.at.kernel.org>
+References: <20211217042001.479577-1-f.fainelli@gmail.com>
+ <20211217042001.479577-2-f.fainelli@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211217042001.479577-2-f.fainelli@gmail.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Dec 17, 2021 at 8:17 AM Lad Prabhakar
-<prabhakar.mahadev-lad.rj@bp.renesas.com> wrote:
->
-> Merge the OF pata_of_platform driver into pata_platform.
->
-> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+On Thu, Dec 16, 2021 at 08:19:56PM -0800, Florian Fainelli wrote:
+> Convert the Broadcom BCM7120 Level 2 interrupt controller Device Tree
+> binding to YAML to help with validation.
+> 
+> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
 > ---
->  drivers/ata/Kconfig            |   3 +-
->  drivers/ata/Makefile           |   1 -
->  drivers/ata/pata_of_platform.c |  90 ---------------
->  drivers/ata/pata_platform.c    | 199 +++++++++++++++++++++++++--------
->  include/linux/ata_platform.h   |   9 --
->  5 files changed, 153 insertions(+), 149 deletions(-)
->  delete mode 100644 drivers/ata/pata_of_platform.c
->
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index a7da8ea7b3ed..0fab5cae45d5 100644
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-> @@ -1122,7 +1122,8 @@ config PATA_PLATFORM
->
->  config PATA_OF_PLATFORM
->         tristate "OpenFirmware platform device PATA support"
-> -       depends on PATA_PLATFORM && OF
-> +       depends on OF
-> +       select PATA_PLATFORM
-
-Can't we just kill the kconfig option?
-
->         help
->           This option enables support for generic directly connected ATA
->           devices commonly found on embedded systems with OpenFirmware
-
-
-> diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-> index cb3134bf88eb..b8d8d51bc562 100644
-> --- a/drivers/ata/pata_platform.c
-> +++ b/drivers/ata/pata_platform.c
-> @@ -11,21 +11,42 @@
->   * License.  See the file "COPYING" in the main directory of this archive
->   * for more details.
->   */
-> -#include <linux/kernel.h>
-> -#include <linux/module.h>
-> -#include <linux/blkdev.h>
-> -#include <scsi/scsi_host.h>
->  #include <linux/ata.h>
-> +#include <linux/ata_platform.h>
-> +#include <linux/blkdev.h>
-> +#include <linux/kernel.h>
->  #include <linux/libata.h>
-> +#include <linux/module.h>
-> +#include <linux/of_address.h>
->  #include <linux/platform_device.h>
-> -#include <linux/ata_platform.h>
-> +#include <scsi/scsi_host.h>
->
->  #define DRV_NAME "pata_platform"
->  #define DRV_VERSION "1.2"
->
->  static int pio_mask = 1;
->  module_param(pio_mask, int, 0);
-> -MODULE_PARM_DESC(pio_mask, "PIO modes supported, mode 0 only by default");
-> +MODULE_PARM_DESC(pio_mask, "PIO modes supported, mode 0 only by default (param valid only for non DT users)");
-> +
-> +/**
-> + * struct pata_platform_priv - Private info
-> + * @io_res: Resource representing I/O base
-> + * @ctl_res: Resource representing CTL base
-> + * @irq_res: Resource representing IRQ and its flags
-> + * @ioport_shift: I/O port shift
-> + * @mask: PIO mask
-> + * @sht: scsi_host_template to use when registering
-> + * @use16bit: Flag to indicate 16-bit IO instead of 32-bit
-> + */
-> +struct pata_platform_priv {
-> +       struct resource *io_res;
-> +       struct resource *ctl_res;
-> +       struct resource *irq_res;
-> +       unsigned int ioport_shift;
-> +       int mask;
-> +       struct scsi_host_template *sht;
-> +       bool use16bit;
-> +};
->
->  /*
->   * Provide our own set_mode() as we don't want to change anything that has
-> @@ -66,15 +87,9 @@ static void pata_platform_setup_port(struct ata_ioports *ioaddr,
->  }
->
->  /**
-> - *     __pata_platform_probe           -       attach a platform interface
-> + *     pata_platform_host_activate - attach a platform interface
->   *     @dev: device
-> - *     @io_res: Resource representing I/O base
-> - *     @ctl_res: Resource representing CTL base
-> - *     @irq_res: Resource representing IRQ and its flags
-> - *     @ioport_shift: I/O port shift
-> - *     @__pio_mask: PIO mask
-> - *     @sht: scsi_host_template to use when registering
-> - *     @use16bit: Flag to indicate 16-bit IO instead of 32-bit
-> + *     @priv: Pointer to struct pata_platform_priv
->   *
->   *     Register a platform bus IDE interface. Such interfaces are PIO and we
->   *     assume do not support IRQ sharing.
-> @@ -94,10 +109,7 @@ static void pata_platform_setup_port(struct ata_ioports *ioaddr,
->   *
->   *     If no IRQ resource is present, PIO polling mode is used instead.
->   */
-> -int __pata_platform_probe(struct device *dev, struct resource *io_res,
-> -                         struct resource *ctl_res, struct resource *irq_res,
-> -                         unsigned int ioport_shift, int __pio_mask,
-> -                         struct scsi_host_template *sht, bool use16bit)
-> +static int pata_platform_host_activate(struct device *dev, struct pata_platform_priv *priv)
->  {
->         struct ata_host *host;
->         struct ata_port *ap;
-> @@ -108,15 +120,15 @@ int __pata_platform_probe(struct device *dev, struct resource *io_res,
->         /*
->          * Check for MMIO
->          */
-> -       mmio = (( io_res->flags == IORESOURCE_MEM) &&
-> -               (ctl_res->flags == IORESOURCE_MEM));
-> +       mmio = ((priv->io_res->flags == IORESOURCE_MEM) &&
-> +               (priv->ctl_res->flags == IORESOURCE_MEM));
->
->         /*
->          * And the IRQ
->          */
-> -       if (irq_res && irq_res->start > 0) {
-> -               irq = irq_res->start;
-> -               irq_flags = (irq_res->flags & IRQF_TRIGGER_MASK) | IRQF_SHARED;
-> +       if (priv->irq_res && priv->irq_res->start > 0) {
-> +               irq = priv->irq_res->start;
-> +               irq_flags = (priv->irq_res->flags & IRQF_TRIGGER_MASK) | IRQF_SHARED;
->         }
->
->         /*
-> @@ -131,12 +143,12 @@ int __pata_platform_probe(struct device *dev, struct resource *io_res,
->         ap->ops->inherits = &ata_sff_port_ops;
->         ap->ops->cable_detect = ata_cable_unknown;
->         ap->ops->set_mode = pata_platform_set_mode;
-> -       if (use16bit)
-> +       if (priv->use16bit)
->                 ap->ops->sff_data_xfer = ata_sff_data_xfer;
->         else
->                 ap->ops->sff_data_xfer = ata_sff_data_xfer32;
->
-> -       ap->pio_mask = __pio_mask;
-> +       ap->pio_mask = priv->mask;
->         ap->flags |= ATA_FLAG_SLAVE_POSS;
->
->         /*
-> @@ -151,15 +163,15 @@ int __pata_platform_probe(struct device *dev, struct resource *io_res,
->          * Handle the MMIO case
->          */
->         if (mmio) {
-> -               ap->ioaddr.cmd_addr = devm_ioremap(dev, io_res->start,
-> -                               resource_size(io_res));
-> -               ap->ioaddr.ctl_addr = devm_ioremap(dev, ctl_res->start,
-> -                               resource_size(ctl_res));
-> +               ap->ioaddr.cmd_addr = devm_ioremap(dev, priv->io_res->start,
-> +                                                  resource_size(priv->io_res));
-> +               ap->ioaddr.ctl_addr = devm_ioremap(dev, priv->ctl_res->start,
-> +                                                  resource_size(priv->ctl_res));
->         } else {
-> -               ap->ioaddr.cmd_addr = devm_ioport_map(dev, io_res->start,
-> -                               resource_size(io_res));
-> -               ap->ioaddr.ctl_addr = devm_ioport_map(dev, ctl_res->start,
-> -                               resource_size(ctl_res));
-> +               ap->ioaddr.cmd_addr = devm_ioport_map(dev, priv->io_res->start,
-> +                                                     resource_size(priv->io_res));
-> +               ap->ioaddr.ctl_addr = devm_ioport_map(dev, priv->ctl_res->start,
-> +                                                     resource_size(priv->ctl_res));
->         }
->         if (!ap->ioaddr.cmd_addr || !ap->ioaddr.ctl_addr) {
->                 dev_err(dev, "failed to map IO/CTL base\n");
-> @@ -168,23 +180,83 @@ int __pata_platform_probe(struct device *dev, struct resource *io_res,
->
->         ap->ioaddr.altstatus_addr = ap->ioaddr.ctl_addr;
->
-> -       pata_platform_setup_port(&ap->ioaddr, ioport_shift);
-> +       pata_platform_setup_port(&ap->ioaddr, priv->ioport_shift);
->
->         ata_port_desc(ap, "%s cmd 0x%llx ctl 0x%llx", mmio ? "mmio" : "ioport",
-> -                     (unsigned long long)io_res->start,
-> -                     (unsigned long long)ctl_res->start);
-> +                     (unsigned long long)priv->io_res->start,
-> +                     (unsigned long long)priv->ctl_res->start);
->
->         /* activate */
->         return ata_host_activate(host, irq, irq ? ata_sff_interrupt : NULL,
-> -                                irq_flags, sht);
-> +                                irq_flags, priv->sht);
->  }
-> -EXPORT_SYMBOL_GPL(__pata_platform_probe);
->
-> -static int pata_platform_probe(struct platform_device *pdev)
-> +static int pata_of_platform_get_pdata(struct platform_device *ofdev,
-> +                                     struct pata_platform_priv *priv)
->  {
-> -       struct resource *io_res;
-> +       struct device_node *dn = ofdev->dev.of_node;
->         struct resource *ctl_res;
->         struct resource *irq_res;
-> +       struct resource *io_res;
-> +       int pio_mode = 0;
-> +       int irq;
-> +       int ret;
-> +
-> +       ctl_res = devm_kzalloc(&ofdev->dev, sizeof(*ctl_res), GFP_KERNEL);
-> +       io_res = devm_kzalloc(&ofdev->dev, sizeof(*io_res), GFP_KERNEL);
-> +       irq_res = devm_kzalloc(&ofdev->dev, sizeof(*irq_res), GFP_KERNEL);
-> +       if (!ctl_res || !io_res || !irq_res)
-> +               return -ENOMEM;
-> +
-> +       ret = of_address_to_resource(dn, 0, io_res);
-> +       if (ret) {
-> +               dev_err(&ofdev->dev, "can't get IO address from device tree\n");
-> +               return -EINVAL;
-> +       }
-> +       priv->io_res = io_res;
-> +
-> +       ret = of_address_to_resource(dn, 1, ctl_res);
-> +       if (ret) {
-> +               dev_err(&ofdev->dev, "can't get CTL address from device tree\n");
-> +               return -EINVAL;
-> +       }
-> +       priv->ctl_res = ctl_res;
-> +
-> +       irq = platform_get_irq_optional(ofdev, 0);
-> +       if (irq <= 0 && irq != -ENXIO)
-> +               return irq ? irq : -ENXIO;
-> +
-> +       if (irq > 0) {
-> +               irq_res->start = irq;
-> +               irq_res->end = irq;
-> +               irq_res->flags = IORESOURCE_IRQ | irq_get_trigger_type(irq);
-
-Though of_irq_to_resource() does the same thing, I think the irq code
-handles the flags automatically for DT.
-
-> +               priv->irq_res = irq_res;
-> +       } else {
-> +               devm_kfree(&ofdev->dev, io_res);
-
-Is this supposed to be irq_res? Otherwise, there shouldn't be any need
-to free a devres allocation.
-
-> +       }
-> +
-> +       of_property_read_u32(dn, "reg-shift", &priv->ioport_shift);
-> +
-> +       if (!of_property_read_u32(dn, "pio-mode", &pio_mode)) {
-> +               if (pio_mode > 6) {
-> +                       dev_err(&ofdev->dev, "invalid pio-mode\n");
-> +                       return -EINVAL;
-> +               }
-> +       } else {
-> +               dev_info(&ofdev->dev, "pio-mode unspecified, assuming PIO0\n");
-> +       }
-> +
-> +       priv->use16bit = of_property_read_bool(dn, "ata-generic,use16bit");
-> +
-> +       priv->mask = 1 << pio_mode;
-> +       priv->mask |= (1 << pio_mode) - 1;
-> +
-> +       return 0;
-> +}
-> +
-> +static int pata_platform_get_pdata(struct platform_device *pdev,
-> +                                  struct pata_platform_priv *priv)
-> +{
->         struct pata_platform_info *pp_info = dev_get_platdata(&pdev->dev);
->
->         /*
-> @@ -198,32 +270,63 @@ static int pata_platform_probe(struct platform_device *pdev)
->         /*
->          * Get the I/O base first
->          */
-> -       io_res = platform_get_mem_or_io(pdev, 0);
-> -       if (unlikely(!io_res))
-> +       priv->io_res = platform_get_mem_or_io(pdev, 0);
-> +       if (unlikely(!priv->io_res))
->                 return -EINVAL;
->
->         /*
->          * Then the CTL base
->          */
-> -       ctl_res = platform_get_mem_or_io(pdev, 1);
-> -       if (unlikely(!ctl_res))
-> +       priv->ctl_res = platform_get_mem_or_io(pdev, 1);
-> +       if (unlikely(!priv->ctl_res))
->                 return -EINVAL;
->
->         /*
->          * And the IRQ
->          */
-> -       irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
-> +       priv->irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
-> +
-> +       priv->ioport_shift = pp_info ? pp_info->ioport_shift : 0;
-> +       priv->mask = pio_mask;
-> +       priv->use16bit = false;
->
-> -       return __pata_platform_probe(&pdev->dev, io_res, ctl_res, irq_res,
-> -                                    pp_info ? pp_info->ioport_shift : 0,
-> -                                    pio_mask, &pata_platform_sht, false);
-> +       return 0;
-> +}
-> +
-> +static int pata_platform_probe(struct platform_device *pdev)
-> +{
-> +       struct pata_platform_priv *priv;
-> +       int ret;
-> +
-> +       priv = devm_kzalloc(&pdev->dev, sizeof(*priv), GFP_KERNEL);
-> +       if (!priv)
-> +               return -ENOMEM;
-> +
-> +       if (!dev_of_node(&pdev->dev))
-> +               ret = pata_platform_get_pdata(pdev, priv);
-> +       else
-> +               ret = pata_of_platform_get_pdata(pdev, priv);
-> +
-> +       if (ret)
-> +               return ret;
-> +
-> +       priv->sht = &pata_platform_sht;
-> +
-> +       return pata_platform_host_activate(&pdev->dev, priv);
->  }
->
-> +static const struct of_device_id pata_of_platform_match[] = {
-> +       { .compatible = "ata-generic", },
-> +       { },
-> +};
-> +MODULE_DEVICE_TABLE(of, pata_of_platform_match);
-> +
->  static struct platform_driver pata_platform_driver = {
->         .probe          = pata_platform_probe,
->         .remove         = ata_platform_remove_one,
->         .driver = {
->                 .name           = DRV_NAME,
-> +               .of_match_table = pata_of_platform_match,
->         },
->  };
->
-> diff --git a/include/linux/ata_platform.h b/include/linux/ata_platform.h
-> index 9cafec92282d..91b8529e6712 100644
-> --- a/include/linux/ata_platform.h
-> +++ b/include/linux/ata_platform.h
-> @@ -13,15 +13,6 @@ struct pata_platform_info {
->
->  struct scsi_host_template;
->
-> -extern int __pata_platform_probe(struct device *dev,
-> -                                struct resource *io_res,
-> -                                struct resource *ctl_res,
-> -                                struct resource *irq_res,
-> -                                unsigned int ioport_shift,
-> -                                int __pio_mask,
-> -                                struct scsi_host_template *sht,
-> -                                bool use16bit);
+>  .../brcm,bcm7120-l2-intc.txt                  |  88 -------------
+>  .../brcm,bcm7120-l2-intc.yaml                 | 124 ++++++++++++++++++
+>  2 files changed, 124 insertions(+), 88 deletions(-)
+>  delete mode 100644 Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7120-l2-intc.txt
+>  create mode 100644 Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7120-l2-intc.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7120-l2-intc.txt b/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7120-l2-intc.txt
+> deleted file mode 100644
+> index addd86b6ca2f..000000000000
+> --- a/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7120-l2-intc.txt
+> +++ /dev/null
+> @@ -1,88 +0,0 @@
+> -Broadcom BCM7120-style Level 2 interrupt controller
 > -
->  /*
->   * Marvell SATA private data
->   */
-> --
-> 2.17.1
->
+> -This interrupt controller hardware is a second level interrupt controller that
+> -is hooked to a parent interrupt controller: e.g: ARM GIC for ARM-based
+> -platforms. It can be found on BCM7xxx products starting with BCM7120.
+> -
+> -Such an interrupt controller has the following hardware design:
+> -
+> -- outputs multiple interrupts signals towards its interrupt controller parent
+> -
+> -- controls how some of the interrupts will be flowing, whether they will
+> -  directly output an interrupt signal towards the interrupt controller parent,
+> -  or if they will output an interrupt signal at this 2nd level interrupt
+> -  controller, in particular for UARTs
+> -
+> -- has one 32-bit enable word and one 32-bit status word
+> -
+> -- no atomic set/clear operations
+> -
+> -- not all bits within the interrupt controller actually map to an interrupt
+> -
+> -The typical hardware layout for this controller is represented below:
+> -
+> -2nd level interrupt line		Outputs for the parent controller (e.g: ARM GIC)
+> -
+> -0 -----[ MUX ] ------------|==========> GIC interrupt 75
+> -          \-----------\
+> -                       |
+> -1 -----[ MUX ] --------)---|==========> GIC interrupt 76
+> -          \------------|
+> -                       |
+> -2 -----[ MUX ] --------)---|==========> GIC interrupt 77
+> -          \------------|
+> -                       |
+> -3 ---------------------|
+> -4 ---------------------|
+> -5 ---------------------|
+> -7 ---------------------|---|===========> GIC interrupt 66
+> -9 ---------------------|
+> -10 --------------------|
+> -11 --------------------/
+> -
+> -6 ------------------------\
+> -                           |===========> GIC interrupt 64
+> -8 ------------------------/
+> -
+> -12 ........................ X
+> -13 ........................ X 		(not connected)
+> -..
+> -31 ........................ X
+> -
+> -Required properties:
+> -
+> -- compatible: should be "brcm,bcm7120-l2-intc"
+> -- reg: specifies the base physical address and size of the registers
+> -- interrupt-controller: identifies the node as an interrupt controller
+> -- #interrupt-cells: specifies the number of cells needed to encode an interrupt
+> -  source, should be 1.
+> -- interrupts: specifies the interrupt line(s) in the interrupt-parent controller
+> -  node, valid values depend on the type of parent interrupt controller
+> -- brcm,int-map-mask: 32-bits bit mask describing how many and which interrupts
+> -  are wired to this 2nd level interrupt controller, and how they match their
+> -  respective interrupt parents. Should match exactly the number of interrupts
+> -  specified in the 'interrupts' property.
+> -
+> -Optional properties:
+> -
+> -- brcm,irq-can-wake: if present, this means the L2 controller can be used as a
+> -  wakeup source for system suspend/resume.
+> -
+> -- brcm,int-fwd-mask: if present, a bit mask to configure the interrupts which
+> -  have a mux gate, typically UARTs. Setting these bits will make their
+> -  respective interrupt outputs bypass this 2nd level interrupt controller
+> -  completely; it is completely transparent for the interrupt controller
+> -  parent. This should have one 32-bit word per enable/status pair.
+> -
+> -Example:
+> -
+> -irq0_intc: interrupt-controller@f0406800 {
+> -	compatible = "brcm,bcm7120-l2-intc";
+> -	interrupt-parent = <&intc>;
+> -	#interrupt-cells = <1>;
+> -	reg = <0xf0406800 0x8>;
+> -	interrupt-controller;
+> -	interrupts = <0x0 0x42 0x0>, <0x0 0x40 0x0>;
+> -	brcm,int-map-mask = <0xeb8>, <0x140>;
+> -	brcm,int-fwd-mask = <0x7>;
+> -};
+> diff --git a/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7120-l2-intc.yaml b/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7120-l2-intc.yaml
+> new file mode 100644
+> index 000000000000..e10c9879f3f8
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7120-l2-intc.yaml
+> @@ -0,0 +1,124 @@
+> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/interrupt-controller/brcm,bcm7120-l2-intc.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: Broadcom BCM7120-style Level 2 interrupt controller
+> +
+> +maintainers:
+> +  - Florian Fainelli <f.fainelli@gmail.com>
+> +
+> +description: >
+> +  This interrupt controller hardware is a second level interrupt controller that
+> +  is hooked to a parent interrupt controller: e.g: ARM GIC for ARM-based
+> +  platforms. It can be found on BCM7xxx products starting with BCM7120.
+> +
+> +  Such an interrupt controller has the following hardware design:
+> +
+> +  - outputs multiple interrupts signals towards its interrupt controller parent
+> +
+> +  - controls how some of the interrupts will be flowing, whether they will
+> +    directly output an interrupt signal towards the interrupt controller parent,
+> +    or if they will output an interrupt signal at this 2nd level interrupt
+> +    controller, in particular for UARTs
+> +
+> +  - has one 32-bit enable word and one 32-bit status word
+> +
+> +  - no atomic set/clear operations
+> +
+> +  - not all bits within the interrupt controller actually map to an interrupt
+> +
+> +  The typical hardware layout for this controller is represented below:
+> +
+> +  2nd level interrupt line		Outputs for the parent controller (e.g: ARM GIC)
+> +
+> +  0 -----[ MUX ] ------------|==========> GIC interrupt 75
+> +            \-----------\
+> +                         |
+> +  1 -----[ MUX ] --------)---|==========> GIC interrupt 76
+> +            \------------|
+> +                         |
+> +  2 -----[ MUX ] --------)---|==========> GIC interrupt 77
+> +            \------------|
+> +                         |
+> +  3 ---------------------|
+> +  4 ---------------------|
+> +  5 ---------------------|
+> +  7 ---------------------|---|===========> GIC interrupt 66
+> +  9 ---------------------|
+> +  10 --------------------|
+> +  11 --------------------/
+> +
+> +  6 ------------------------\
+> +                            |===========> GIC interrupt 64
+> +  8 ------------------------/
+> +
+> +  12 ........................ X
+> +  13 ........................ X           (not connected)
+> +  ..
+> +  31 ........................ X
+> +
+> +allOf:
+> +  - $ref: /schemas/interrupt-controller.yaml#
+> +
+> +properties:
+> +  compatible:
+> +    const: brcm,bcm7120-l2-intc
+> +
+> +  reg:
+> +    maxItems: 1
+> +    description: >
+> +      Specifies the base physical address and size of the registers
+> +
+> +  interrupt-controller: true
+> +
+> +  "#interrupt-cells":
+> +    const: 1
+> +
+> +  interrupts: true
+
+How many?
+
+> +
+> +  brcm,int-map-mask:
+> +    $ref: /schemas/types.yaml#/definitions/uint32-array
+> +    description: >
+> +      32-bits bit mask describing how many and which interrupts are wired to
+> +      this 2nd level interrupt controller, and how they match their respective
+> +      interrupt parents. Should match exactly the number of interrupts
+> +      specified in the 'interrupts' property.
+> +
+> +  brcm,irq-can-wake:
+> +    type: boolean
+> +    description: >
+> +      If present, this means the L2 controller can be used as a wakeup source
+> +      for system suspend/resume.
+> +
+> +  brcm,int-fwd-mask:
+> +    $ref: /schemas/types.yaml#/definitions/uint32
+> +    description: >
+> +      if present, a bit mask to configure the interrupts which have a mux gate,
+> +      typically UARTs. Setting these bits will make their respective interrupt
+> +      outputs bypass this 2nd level interrupt controller completely; it is
+> +      completely transparent for the interrupt controller parent. This should
+> +      have one 32-bit word per enable/status pair.
+> +
+> +additionalProperties: false
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - interrupt-controller
+> +  - "#interrupt-cells"
+> +  - interrupts
+> +
+> +examples:
+> +  - |
+> +    irq0_intc: interrupt-controller@f0406800 {
+> +      compatible = "brcm,bcm7120-l2-intc";
+> +      interrupt-parent = <&intc>;
+> +      #interrupt-cells = <1>;
+> +      reg = <0xf0406800 0x8>;
+> +      interrupt-controller;
+> +      interrupts = <0x0 0x42 0x0>, <0x0 0x40 0x0>;
+> +      brcm,int-map-mask = <0xeb8>, <0x140>;
+> +      brcm,int-fwd-mask = <0x7>;
+> +    };
+> -- 
+> 2.25.1
+> 
+> 
