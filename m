@@ -2,50 +2,50 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A107C433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 17 Dec 2021 00:56:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 495A2C433F5
+	for <linux-ide@archiver.kernel.org>; Fri, 17 Dec 2021 00:58:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231419AbhLQA4p (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 16 Dec 2021 19:56:45 -0500
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:46015 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231376AbhLQA4p (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 16 Dec 2021 19:56:45 -0500
+        id S231442AbhLQA6O (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 16 Dec 2021 19:58:14 -0500
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:11727 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231439AbhLQA6N (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 16 Dec 2021 19:58:13 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1639702605; x=1671238605;
+  t=1639702692; x=1671238692;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=VSUrlNKGkYcfFiPqqT5AR/Q+LuxOulsi8FcOiOwrAVo=;
-  b=TNrjY+Iq6Ey45f74P4285N2R1wPVr62yn8tG78EKi0J+iEApbpjXOEhi
-   nIYlOVcQ+c2jbZFDqO7t5/8gn5aaeAWiXZcbIwVy3slhD95JPg6WZQp5O
-   IFb3IKUazWAjZiPrIL4sxULGSzBqBeJbxzHb6q6w2TTr+86EQ73RDXv8t
-   GP9gU19lsVXO4obCdnjJ5VsLlDzRYTxHkNzBcfQhdPlshwLaBlO/biapD
-   ++J3YdK9SeJuca834zuDRVm2682ZTvD80l90NnbmHL1LCJfkSTLk9TJEX
-   eNC3H9SFrL97gmliugUJc+F2D1rDBfrUrq8o1bAtrI+NX4XDygplViI68
-   w==;
+  bh=Qno2CgAyxQirWWW1hmZkXeM+1LMatVaVq6RgRnLvU9g=;
+  b=ILS6U4A55Vxj5Sr0QmwtJyPUXmjVwNTttJbB2/stM9UaIHbys+kVwxoe
+   gvvBgEre/Uf5TvmjYMohSA58JAIwExK036/QfaxxfOsln1O9Q3arltLsn
+   xAn20I7K8mTFT+IeXi1lATn1sYfwpWGYRf9KOxESLB2XebuZcOOwlR6VL
+   ra1PCF4zfEVnt/VocNWlcgZmZbwnA6vFtVk6vIbntaUsYm9ROM9XfjOhe
+   5yC8u73lG8FLOZGfBdvA+QWGY83BdFnsduekUxc/He0x7nWl5NP/AyLkC
+   5z/Mm5JIATOtWf0u/IC+PnmxXMPPHExEDJ8SSvIKfnhWjgEkk0RqRmNGo
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.88,212,1635177600"; 
-   d="scan'208";a="292463220"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 17 Dec 2021 08:56:44 +0800
-IronPort-SDR: Hlhr6pg2xULMzRfxytqix6B8VJoshFQJEmsXTmbs0Xu6LhdBVwrzDrm9+Kxzg4NKNpGDc1D7yi
- EUO1JEW57S+Q+3yIXsriD2dxa1tQVL2O5IQSQRdGCBz69NrlBo9Pk+3uqGJteKmzPGyQ4dE6sQ
- ET5rYlbzg9JXzPuPCkvx+Fl41oiVuQDO4Pk5qSpfoVD34+7c3ucbKFpD2jvup0a9w91XBPRKZP
- UzuliK625TGN0orV2PH7wI44b62pr5xUjUP9Yxc17K/7Dgz2csvJpWbiHBPo5TrgBBCGU12/rT
- rXi5NszPzFWje8G0CvTUKM9b
+   d="scan'208";a="193258225"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 17 Dec 2021 08:58:12 +0800
+IronPort-SDR: /0HVHYN1uudhvCnXa2pc3ZgYh8wY8T27KOAUuqeLzdwv+CCy/zUlMZI0nRwp4Y1uWhT+8YRAYX
+ m7pYyQ08j303E5ME6EKu4L6/YbJlG6Rcz0jdW/5T9jIB5N2LRodrQFQWJWpXZPbuHWaxjP91+a
+ 3dwqMK0sJSmcPg2A/R6fckrwWTs1pNmD8V3mzZFDnJAIJml/H4nuNbbOW//dzvBVI2m6x8YUnL
+ Qi6odGX7vjO/nwbtB5OblRH8taXxBXDPxoWixMAss22bZqhedGWKa3sGduDWNgKMBPqqRYrJUc
+ K+cGlfO+5JBLvmnelA9htK+B
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2021 16:31:06 -0800
-IronPort-SDR: TZLWn0Fps/QMbD6FwgTMAm2G/QgY/39ny4OeM/gS9yVk1ZUFN5PX7j3g7WchETToYoRs8pWpxx
- RWDzHFVk8PyUf2OyYstYiKMC+EDBLymkYKXiQwp8SKUwNf2IBZKwebiXGBa3pcgEourExUsZH1
- fi/roK5ctjv1IQ0HGDysIx9AaSr0slEWfS2LLdfZZivGSI5snWe3kMUg6ZsWGLFoyHAzDs2OCo
- va1AqvmLPqkcJNghnZI2MfTAShBd/TD4xFxs9vksUfs5ZghGOOFNDWb19uZMinybGaJi+SjPgF
- Cco=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2021 16:31:05 -0800
+IronPort-SDR: NNxwl7v2NtaAAQk8RqY0xusVoEU5yEYXhGlEnru8H/g6s5qLPVnPwLp/AzMZ7fYjymBxbFpZsn
+ EhQ5PycoxpDtoy/q0e1cloIiHMCQmrkrPX+fNxv649u8VK/Zlzqsw5ajL4+P87jmY2n/WutChM
+ NWb5wiyQ2PIaAAR/4tZ+uoFmFFGZ9tMjsNb4RA8DM1VLAzaWf9w4xmKLLmnS4zbfsOviMVhcse
+ ck11SbnM7s5/OLQn+N/4jq7loJTzTUGKKU0LRGtxsO89X1dXwp/p8ihFlISsQMA0sFS2fSu4FT
+ HO0=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2021 16:56:46 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2021 16:58:13 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JFVtN53NTz1Rvlf
-        for <linux-ide@vger.kernel.org>; Thu, 16 Dec 2021 16:56:44 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JFVw43Stsz1RwFN
+        for <linux-ide@vger.kernel.org>; Thu, 16 Dec 2021 16:58:12 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -53,84 +53,77 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1639702604; x=1642294605; bh=VSUrlNKGkYcfFiPqqT5AR/Q+LuxOulsi8Fc
-        OiOwrAVo=; b=TQcBwUsDbrEQmWC43Zzz7YLatOgoodmBSA/7KXMX3Czq6oGfPST
-        jyqTQMoSqQpoyMtLwL3RVIsZs1sPCNrP7WUch0MWIzgWmMkwxU1iV6Pkaw+5a8PE
-        XEVjiPLIUXLsGt/F8t1DwDl3NTiHxoJrNZRV4rZDsQCKm1CdTltj06JTZ1T1BS6y
-        J7dwEfwo/pecPwidU9qBD3/E9OgHHGN1ZibqyU9z52mqsJzgG7YTUUG9kzNsHZc5
-        WWecDMGP+e+0YIHujjCl0p8LzSXdUF4OBERDQZ6+n7sfISsz+b8gUDY+TCqXRI74
-        9qhiWVZZTZO9aid3bXE73T0CX8lZK0/KO0A==
+        1639702691; x=1642294692; bh=Qno2CgAyxQirWWW1hmZkXeM+1LMatVaVq6R
+        gRnLvU9g=; b=sX+5aHWgjU9WmuJbCT9oQHSqKbcQ0AsCaRcqPHpRlVbdNupQT2R
+        Ijey0rj3u2cDC9Qr2rWzE9SGFC/4KXUVJBIaOsxnZ3rNAp7HoyAAcY1+7Lqff/gj
+        HZcT5qlU80JXjKVg6DV7OIiKLf/G+QXmIFdst7/Z7uvPzghZayLy7Kg8LkBGGV/L
+        MK6Eu4bzvACUSZo8Bh5DXPbUBW+0I1R/n1KkDylyPlTaN10XgsRvLLggg8U0EIyu
+        +KtpVGVSBOqyx553a2J9hbr/96iLmelOUCI2shTt5RnopU8HTfoFjBrBixktv4OV
+        vfmZOHIJFAG6xE7Q/V/tj09NPdprRdzk8pw==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id tdwqYJV454tU for <linux-ide@vger.kernel.org>;
-        Thu, 16 Dec 2021 16:56:44 -0800 (PST)
+        with ESMTP id d1J3y20-ZC8b for <linux-ide@vger.kernel.org>;
+        Thu, 16 Dec 2021 16:58:11 -0800 (PST)
 Received: from [10.225.163.18] (unknown [10.225.163.18])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JFVtM4SQyz1RtVG;
-        Thu, 16 Dec 2021 16:56:43 -0800 (PST)
-Message-ID: <1b0efdd4-3abe-50dd-5fb8-ae00cdee30b5@opensource.wdc.com>
-Date:   Fri, 17 Dec 2021 09:56:42 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JFVw26Y4Vz1RtVG;
+        Thu, 16 Dec 2021 16:58:10 -0800 (PST)
+Message-ID: <ad51ef97-7742-7ed3-58f0-e3b9fc4f71ed@opensource.wdc.com>
+Date:   Fri, 17 Dec 2021 09:58:09 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.3.0
-Subject: Re: [PATCH v2 RESEND] libata: if T_LENGTH is zero, dma direction
- should be DMA_NONE
+Subject: Re: [PATCH v1 2/2] ata: libahci_platform: Remove bogus 32-bit DMA
+ mask attempt
 Content-Language: en-US
-To:     George Kennedy <george.kennedy@oracle.com>
-Cc:     linux-ide@vger.kernel.org
-References: <1639493110-15900-1-git-send-email-george.kennedy@oracle.com>
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>
+References: <20211209145937.77719-1-andriy.shevchenko@linux.intel.com>
+ <20211209145937.77719-2-andriy.shevchenko@linux.intel.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <1639493110-15900-1-git-send-email-george.kennedy@oracle.com>
+In-Reply-To: <20211209145937.77719-2-andriy.shevchenko@linux.intel.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 12/14/21 23:45, George Kennedy wrote:
-> Avoid data corruption by rejecting pass-through commands where
-> T_LENGTH is zero (No data is transferred) and the dma direction
-> is not DMA_NONE.
+On 12/9/21 23:59, Andy Shevchenko wrote:
+> If 64-bit mask attempt fails, the 32-bit will fail by the very same reason.
+> Don't even try the latter. It's a continuation of the changes that contains,
+> e.g. dcc02c19cc06 ("sata_sil24: use dma_set_mask_and_coherent").
 > 
-> Cc: <stable@vger.kernel.org>
-> Reported-by: syzkaller<syzkaller@googlegroups.com>
-> Signed-off-by: George Kennedy<george.kennedy@oracle.com>
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 > ---
-> Used the Maintainers suggested fix.
+>  drivers/ata/libahci_platform.c | 9 ++-------
+>  1 file changed, 2 insertions(+), 7 deletions(-)
 > 
->  drivers/ata/libata-scsi.c | 15 +++++++++++++--
->  1 file changed, 13 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 1b84d55..313e947 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -2859,8 +2859,19 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
->  		goto invalid_fld;
+> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> index 1af642c84e7b..972f5ec86a27 100644
+> --- a/drivers/ata/libahci_platform.c
+> +++ b/drivers/ata/libahci_platform.c
+> @@ -637,13 +637,8 @@ int ahci_platform_init_host(struct platform_device *pdev,
+>  	if (hpriv->cap & HOST_CAP_64) {
+>  		rc = dma_coerce_mask_and_coherent(dev, DMA_BIT_MASK(64));
+>  		if (rc) {
+> -			rc = dma_coerce_mask_and_coherent(dev,
+> -							  DMA_BIT_MASK(32));
+> -			if (rc) {
+> -				dev_err(dev, "Failed to enable 64-bit DMA.\n");
+> -				return rc;
+> -			}
+> -			dev_warn(dev, "Enable 32-bit DMA instead of 64-bit.\n");
+> +			dev_err(dev, "Failed to enable 64-bit DMA.\n");
+> +			return rc;
+>  		}
 >  	}
 >  
-> -	if (ata_is_ncq(tf->protocol) && (cdb[2 + cdb_offset] & 0x3) == 0)
-> -		tf->protocol = ATA_PROT_NCQ_NODATA;
-> +	if ((cdb[2 + cdb_offset] & 0x3) == 0) {
-> +		/*
-> +		 * When T_LENGTH is zero (No data is transferred), dir should
-> +		 * be DMA_NONE.
-> +		 */
-> +		if (scmd->sc_data_direction != DMA_NONE) {
-> +			fp = 2 + cdb_offset;
-> +			goto invalid_fld;
-> +		}
-> +
-> +		if (ata_is_ncq(tf->protocol))
-> +			tf->protocol = ATA_PROT_NCQ_NODATA;
-> +	}
->  
->  	/* enable LBA */
->  	tf->flags |= ATA_TFLAG_LBA;
 > 
 
-Applied to for-5.16-fixes. Thanks !
+Applied to for-5.17.
+For patch 1/2, waiting for you v2 restoring the irq == 0 check.
 
 -- 
 Damien Le Moal
