@@ -2,94 +2,68 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12B4CC433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 17 Dec 2021 09:33:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1A5EC433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 17 Dec 2021 11:28:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232790AbhLQJdI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 17 Dec 2021 04:33:08 -0500
-Received: from mxout04.lancloud.ru ([45.84.86.114]:52466 "EHLO
-        mxout04.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232822AbhLQJdF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Dec 2021 04:33:05 -0500
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout04.lancloud.ru 66E2420C509F
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-Message-ID: <ca168723-f113-8620-056d-ab2ee801d8fe@omp.ru>
-Date:   Fri, 17 Dec 2021 12:32:59 +0300
+        id S229959AbhLQL2b (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 17 Dec 2021 06:28:31 -0500
+Received: from mga03.intel.com ([134.134.136.65]:57511 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229503AbhLQL2a (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 17 Dec 2021 06:28:30 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10200"; a="239686179"
+X-IronPort-AV: E=Sophos;i="5.88,213,1635231600"; 
+   d="scan'208";a="239686179"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Dec 2021 03:28:30 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.88,213,1635231600"; 
+   d="scan'208";a="662819636"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmsmga001.fm.intel.com with ESMTP; 17 Dec 2021 03:28:28 -0800
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+        id D6F3B109; Fri, 17 Dec 2021 13:28:35 +0200 (EET)
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Subject: [PATCH v2 1/1] ata: libahci_platform: Get rid of dup message when IRQ can't be retrieved
+Date:   Fri, 17 Dec 2021 13:28:32 +0200
+Message-Id: <20211217112832.69875-1-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [PATCH] ata: pata_of_platform: Use of_irq_to_resource() to
- populate IRQ resource
-Content-Language: en-US
-To:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>
-CC:     Rob Herring <robh+dt@kernel.org>, <linux-kernel@vger.kernel.org>,
-        Prabhakar <prabhakar.csengg@gmail.com>
-References: <20211217001238.16298-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-In-Reply-To: <20211217001238.16298-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
- LFEX1907.lancloud.ru (fd00:f066::207)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hello!
+platform_get_irq() will print a message when it fails.
+No need to repeat this.
 
-On 17.12.2021 3:12, Lad Prabhakar wrote:
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+v2: left !irq check untouched (Damien, Sergey)
+ drivers/ata/libahci_platform.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-> platform_get_resource(pdev, IORESOURCE_IRQ, ..) relies on static
-> allocation of IRQ resources in DT core code, this causes an issue
-> when using hierarchical interrupt domains using "interrupts" property
-> in the node as this bypassed the hierarchical setup and messed up the
-> irq chaining.
-> 
-> In preparation for removal of static setup of IRQ resource from DT core
-> code use of_irq_to_resource().
-> 
-> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> ---
-> Hi,
-> 
-> Dropping usage of platform_get_resource() was agreed based on
-> the discussion [0].
-> 
-> [0] https://patchwork.kernel.org/project/linux-renesas-soc/
-> patch/20211209001056.29774-1-prabhakar.mahadev-lad.rj@bp.renesas.com/
-> 
-> Cheers,
-> Prabhakar
-> ---
->   drivers/ata/pata_of_platform.c | 11 ++++++++---
->   1 file changed, 8 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
-> index 35aa158fc976..557f349eb533 100644
-> --- a/drivers/ata/pata_of_platform.c
-> +++ b/drivers/ata/pata_of_platform.c
-[...]
-> @@ -45,7 +47,9 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
->   		return -EINVAL;
->   	}
->   
-> -	irq_res = platform_get_resource(ofdev, IORESOURCE_IRQ, 0);
-> +	irq = of_irq_to_resource(dn, 0, &irq_res);
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index bfa267e6f045..18296443ccba 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -579,11 +579,8 @@ int ahci_platform_init_host(struct platform_device *pdev,
+ 	int i, irq, n_ports, rc;
+ 
+ 	irq = platform_get_irq(pdev, 0);
+-	if (irq < 0) {
+-		if (irq != -EPROBE_DEFER)
+-			dev_err(dev, "no irq\n");
++	if (irq < 0)
+ 		return irq;
+-	}
+ 	if (!irq)
+ 		return -EINVAL;
+ 
+-- 
+2.34.1
 
-    Why not use platform_get_irq_optional()?
-
-> +	if (irq <= 0 && irq != -ENXIO)
-> +		return irq ? irq : -ENXIO;
->   
->   	of_property_read_u32(dn, "reg-shift", &reg_shift);
->   
-[...]
-
-MBR, Sergey
