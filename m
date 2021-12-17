@@ -2,76 +2,77 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F8D5C433F5
-	for <linux-ide@archiver.kernel.org>; Fri, 17 Dec 2021 15:01:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BEE2C433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 17 Dec 2021 15:04:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237753AbhLQPBZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 17 Dec 2021 10:01:25 -0500
-Received: from mail-ot1-f43.google.com ([209.85.210.43]:44560 "EHLO
-        mail-ot1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237660AbhLQPBZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Dec 2021 10:01:25 -0500
-Received: by mail-ot1-f43.google.com with SMTP id u18-20020a9d7212000000b00560cb1dc10bso3141944otj.11;
-        Fri, 17 Dec 2021 07:01:25 -0800 (PST)
+        id S237804AbhLQPEZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 17 Dec 2021 10:04:25 -0500
+Received: from mail-oi1-f170.google.com ([209.85.167.170]:43805 "EHLO
+        mail-oi1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237805AbhLQPEZ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 17 Dec 2021 10:04:25 -0500
+Received: by mail-oi1-f170.google.com with SMTP id w64so3963085oif.10;
+        Fri, 17 Dec 2021 07:04:24 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=vm+0KOiQ/cdorWbjPQlF8P1R3w9VNGME1PIo6ZZG+U8=;
-        b=TDK5m2IDRN3wtjyZJrbwgYFtIVWGYGKg9oIcwLmDzdqbcKT2ReV/046GF87dEzh3TO
-         qoe7ZXWxxfeS1doX608T6Vv4+QJ8hvNSpkkEKwYxj6oHILs82hi5ZkKyxmnOVlomwsR6
-         tJhNRmLQGhOdV5t/5WOZzZ1jkNIwDUveqH5YVwtKXVmfOUnlqb/C9MAHZ0P1thZDfOY2
-         1hEKvfPRj5vPs+O5VZTYif+6EKkqj1WKgwPVxP54XiCOvaH+/dJ39EfKH/q7rWN6zBp5
-         AftGpKbVi/XPZCTowJhddMHPkozJy7HiacSB7tqNhEg5nn5m6h/hMFOJU+5BZ1+OI+fJ
-         fRrg==
-X-Gm-Message-State: AOAM5323jmkchN5XAhdfFSG9SoHjP/BkUSiVZXi84BAgxtQY+Ct2Cytm
-        NSC1yLcXGnoehaqAwImfjQ==
-X-Google-Smtp-Source: ABdhPJypwUInHv0Sczfg930N0JXh7v1ALIjDDA9QoZLIlYOznNwSV7sDgy4zD1VhjO/AGwJcFHxrKQ==
-X-Received: by 2002:a9d:6f0e:: with SMTP id n14mr2433115otq.173.1639753283553;
-        Fri, 17 Dec 2021 07:01:23 -0800 (PST)
+        bh=vAlEDIiSuhbqkj9T2K1Mncm8D6+1tTAwxfTUCDC4sCk=;
+        b=c0d/1k2Sz/PXdWLLnP6fRv+HamIt1+H4uYrMMw8usvOvlCXMttFwTiiyXwGwzDNs++
+         lcXGbk49+zhUUdf+wGaNRPP5EMGH/fXo0Lyf1Gk7q2v+W0t2fEsjOvlFwiW7CoLOsCJU
+         pq6DdqqVTUHm3WMeyN2lSfcaE8CecimEPo+Z65UP/xxl29mELT3TmXc29/WzdgCQ0elc
+         FQ0Mc0Wt8uQh+rsHwvHjTpKKJrIFG1sFkKJPjmxVWT54z+oFGznTy2NiqiYq/dw/fAyh
+         jei98M1gv8wOY2eCfab26aXT8pudytmPwkKK+oFAKIbzXO0bOg0E0ZT4PDOetgN3LHzK
+         LNDA==
+X-Gm-Message-State: AOAM530KwlqoFuHxfGFbPsGcQ6LKnLzK6a+rZ8qJ2aYg1YQZc8MZ5agw
+        hVbrKABq46R/C6ge6ezMEQ==
+X-Google-Smtp-Source: ABdhPJywY9+tWSe0QAH9R5izM1TehP2QFOHQ7YkJV/EcV1cTInKEFsym0ieNZyS6e1meAK8UTXKqlw==
+X-Received: by 2002:a05:6808:1c5:: with SMTP id x5mr2351401oic.144.1639753464281;
+        Fri, 17 Dec 2021 07:04:24 -0800 (PST)
 Received: from robh.at.kernel.org (66-90-148-213.dyn.grandenetworks.net. [66.90.148.213])
-        by smtp.gmail.com with ESMTPSA id x4sm1705576oiv.35.2021.12.17.07.01.22
+        by smtp.gmail.com with ESMTPSA id y17sm1683388ote.48.2021.12.17.07.04.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Dec 2021 07:01:23 -0800 (PST)
-Received: (nullmailer pid 2884236 invoked by uid 1000);
-        Fri, 17 Dec 2021 15:01:22 -0000
-Date:   Fri, 17 Dec 2021 09:01:22 -0600
+        Fri, 17 Dec 2021 07:04:23 -0800 (PST)
+Received: (nullmailer pid 2889574 invoked by uid 1000);
+        Fri, 17 Dec 2021 15:04:22 -0000
+Date:   Fri, 17 Dec 2021 09:04:22 -0600
 From:   Rob Herring <robh@kernel.org>
 To:     Florian Fainelli <f.fainelli@gmail.com>
-Cc:     linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        devicetree@vger.kernel.org, linux-usb@vger.kernel.org,
-        Ray Jui <rjui@broadcom.com>, linux-kernel@vger.kernel.org,
-        Marc Zyngier <maz@kernel.org>,
+Cc:     linux-ide@vger.kernel.org,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Al Cooper <alcooperx@gmail.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Al Cooper <alcooperx@gmail.com>, devicetree@vger.kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Marc Zyngier <maz@kernel.org>,
         Scott Branden <sbranden@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com
-Subject: Re: [PATCH v4 5/6] dt-bindings: bus: Convert GISB arbiter to YAML
-Message-ID: <YbymQpEBpk8F2B/3@robh.at.kernel.org>
+        linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        linux-usb@vger.kernel.org, Ray Jui <rjui@broadcom.com>
+Subject: Re: [PATCH v4 6/6] dt-bindings: usb: Convert BDC to YAML
+Message-ID: <Ybym9mlMZjtt9zZ4@robh.at.kernel.org>
 References: <20211217042001.479577-1-f.fainelli@gmail.com>
- <20211217042001.479577-6-f.fainelli@gmail.com>
+ <20211217042001.479577-7-f.fainelli@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211217042001.479577-6-f.fainelli@gmail.com>
+In-Reply-To: <20211217042001.479577-7-f.fainelli@gmail.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, 16 Dec 2021 20:20:00 -0800, Florian Fainelli wrote:
-> Convert the Broadcom STB GISB bus arbiter to YAML to help with
-> validation.
+On Thu, 16 Dec 2021 20:20:01 -0800, Florian Fainelli wrote:
+> Convert the Broadcom BDC device controller Device Tree binding to YAML
+> to help with validation.
 > 
 > Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
 > ---
->  .../devicetree/bindings/bus/brcm,gisb-arb.txt | 34 ----------
->  .../bindings/bus/brcm,gisb-arb.yaml           | 66 +++++++++++++++++++
->  2 files changed, 66 insertions(+), 34 deletions(-)
->  delete mode 100644 Documentation/devicetree/bindings/bus/brcm,gisb-arb.txt
->  create mode 100644 Documentation/devicetree/bindings/bus/brcm,gisb-arb.yaml
+>  .../devicetree/bindings/usb/brcm,bdc.txt      | 29 -----------
+>  .../devicetree/bindings/usb/brcm,bdc.yaml     | 49 +++++++++++++++++++
+>  MAINTAINERS                                   |  2 +-
+>  3 files changed, 50 insertions(+), 30 deletions(-)
+>  delete mode 100644 Documentation/devicetree/bindings/usb/brcm,bdc.txt
+>  create mode 100644 Documentation/devicetree/bindings/usb/brcm,bdc.yaml
 > 
 
 Applied, thanks!
