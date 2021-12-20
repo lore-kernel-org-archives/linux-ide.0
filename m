@@ -2,112 +2,105 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BA27C433EF
-	for <linux-ide@archiver.kernel.org>; Sat, 18 Dec 2021 11:56:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29AC8C433F5
+	for <linux-ide@archiver.kernel.org>; Mon, 20 Dec 2021 11:34:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233009AbhLRL4r (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 18 Dec 2021 06:56:47 -0500
-Received: from mxout03.lancloud.ru ([45.84.86.113]:51630 "EHLO
-        mxout03.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232991AbhLRL4r (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 18 Dec 2021 06:56:47 -0500
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout03.lancloud.ru 669CD20F12C6
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-Message-ID: <e852a63f-cb84-2683-f102-2f8572b1799d@omp.ru>
-Date:   Sat, 18 Dec 2021 14:56:40 +0300
+        id S231879AbhLTLeF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 20 Dec 2021 06:34:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44850 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231874AbhLTLeE (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 20 Dec 2021 06:34:04 -0500
+Received: from mail-qk1-x730.google.com (mail-qk1-x730.google.com [IPv6:2607:f8b0:4864:20::730])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82018C06173E;
+        Mon, 20 Dec 2021 03:34:04 -0800 (PST)
+Received: by mail-qk1-x730.google.com with SMTP id t83so8978359qke.8;
+        Mon, 20 Dec 2021 03:34:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=b11GC6J4naFP7ut6C4B/nZYlxhKbFfvvWnmwwNFdTEU=;
+        b=Rp2GrJE4cRgLy6yNipKkd3fxMoKIHtY0SSxIs2HM6VKTjDnwNl8qeEluaXwGN3gI2K
+         xOESW+kxNRZRpVH+N52Msy8c0emSegLQuLI9Z2NGj5KZTKdoOU5flhxWRO9CzGPFYEyz
+         AbQ+vWaHfRZjVNNUP+lTsBbizarZX0EbqfaHly1uF8PaBEt8PG0pWIlg5QhN5fAopxS7
+         kHvTP0uvm6eG4LLoD45OZKyoN+YE5SjfuhCuZt+3WNlxBQd7Ho1D+iN6z2nH5P1HSS07
+         7FpzB90kivqQFjr3DiTvgdyiD9/UpZh6zngvVX1Sfi44sq1F9Da1/e3LrIRtsMxsQXx/
+         IJMA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=b11GC6J4naFP7ut6C4B/nZYlxhKbFfvvWnmwwNFdTEU=;
+        b=mey7fm8e6g8qWyXO3VQvG6KYUnaNDyJmQm1udf5ydQu/kuC8n7CBT34a/+Ebn/fUJk
+         91vrtgvFFarMEFN1n5n3VGpGOFqJDdFXk0S6yaXMPPL/ezPvShrKBTQjjSwr9T6VZkB3
+         /QKlX6ISeJ2r7ljwHleNoDpyUeL97awYE+FvMhIgI6yGEUI7e2sjhBmHstFaQt4gi8MB
+         lGaJkoXCfrI8XZM/4AV2Drv+edr8yeWjWGggizM7hzFVnuYwxfez+wrNhd2EY/XVEr9/
+         w9JTWs5gnXnVKUKPpfnmmX8JQ9TtyKw9vKkvukNt2tUYaRKxiGZy61cQvsvAYNG/Kihx
+         mCEg==
+X-Gm-Message-State: AOAM5307LsW4tSQ5ijBJN6axHlcnedTzULBE7Ky/NqQ07Vdu4Y1OWxLP
+        BUizAf9dOTvioD1tspgC6sA=
+X-Google-Smtp-Source: ABdhPJy6WAwqT1a4mQNzGvF0P80VcjecEaXKV/165KhWgRLWo3jomZsvO8M5GJ+IE0tGz62vm5C+ng==
+X-Received: by 2002:a37:716:: with SMTP id 22mr9196462qkh.674.1640000043705;
+        Mon, 20 Dec 2021 03:34:03 -0800 (PST)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id br13sm11602405qkb.10.2021.12.20.03.34.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 20 Dec 2021 03:34:03 -0800 (PST)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: deng.changcheng@zte.com.cn
+To:     damien.lemoal@opensource.wdc.com
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Changcheng Deng <deng.changcheng@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH] libata: use min() to make code cleaner
+Date:   Mon, 20 Dec 2021 11:33:58 +0000
+Message-Id: <20211220113358.472974-1-deng.changcheng@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [PATCH 2/2] ata: pata_platform: Merge pata_of_platform into
- pata_platform
-Content-Language: en-US
-To:     "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-CC:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>
-References: <20211217141715.29747-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20211217141715.29747-3-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <b94e0a92-1995-926c-95df-17365f03eed0@omp.ru>
- <CA+V-a8tU6XCYw2B32obgOkezd_YMqBkpWA_EuJzK=nCmkuWtQw@mail.gmail.com>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-In-Reply-To: <CA+V-a8tU6XCYw2B32obgOkezd_YMqBkpWA_EuJzK=nCmkuWtQw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
- LFEX1907.lancloud.ru (fd00:f066::207)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 18.12.2021 13:51, Lad, Prabhakar wrote:
+From: Changcheng Deng <deng.changcheng@zte.com.cn>
 
-[...]
->>> Merge the OF pata_of_platform driver into pata_platform.
->>>
->>> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-[...]
->>> diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
->>> index cb3134bf88eb..b8d8d51bc562 100644
->>> --- a/drivers/ata/pata_platform.c
->>> +++ b/drivers/ata/pata_platform.c
-[...]
->>> @@ -168,23 +180,83 @@ int __pata_platform_probe(struct device *dev, struct resource *io_res,
->> [...]
->>>
->>> -static int pata_platform_probe(struct platform_device *pdev)
->>> +static int pata_of_platform_get_pdata(struct platform_device *ofdev,
->>> +                                   struct pata_platform_priv *priv)
->>>   {
->>> -     struct resource *io_res;
->>> +     struct device_node *dn = ofdev->dev.of_node;
->>>        struct resource *ctl_res;
->>>        struct resource *irq_res;
->>> +     struct resource *io_res;
->>
->>     Should be declared before ctl_res...
->>
-> Any reason why?
+Use min() in order to make code cleaner.
 
-    Well, it's a natural order, following from the driver logic, no?
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Changcheng Deng <deng.changcheng@zte.com.cn>
+---
+ drivers/ata/libata-scsi.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
->>> +     int pio_mode = 0;
->>> +     int irq;
->>> +     int ret;
->>> +
->>> +     ctl_res = devm_kzalloc(&ofdev->dev, sizeof(*ctl_res), GFP_KERNEL);
->>> +     io_res = devm_kzalloc(&ofdev->dev, sizeof(*io_res), GFP_KERNEL);
->>> +     irq_res = devm_kzalloc(&ofdev->dev, sizeof(*irq_res), GFP_KERNEL);
->>> +     if (!ctl_res || !io_res || !irq_res)
->>> +             return -ENOMEM;
->>
->>     Can't we get away from these allocated resources? Or at least irq_res?
->>
-> Do you have any suggestions?
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 313e9475507b..0dc849415e3a 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3591,10 +3591,7 @@ static int ata_mselect_caching(struct ata_queued_cmd *qc,
+ 	 */
+ 
+ 	if (len != CACHE_MPAGE_LEN - 2) {
+-		if (len < CACHE_MPAGE_LEN - 2)
+-			*fp = len;
+-		else
+-			*fp = CACHE_MPAGE_LEN - 2;
++		*fp = min(len, CACHE_MPAGE_LEN - 2);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -3647,10 +3644,7 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
+ 	 */
+ 
+ 	if (len != CONTROL_MPAGE_LEN - 2) {
+-		if (len < CONTROL_MPAGE_LEN - 2)
+-			*fp = len;
+-		else
+-			*fp = CONTROL_MPAGE_LEN - 2;
++		*fp = min(len, CONTROL_MPAGE_LEN - 2);
+ 		return -EINVAL;
+ 	}
+ 
+-- 
+2.25.1
 
-    Let me look deeper...
-
-[...]
->>> @@ -198,32 +270,63 @@ static int pata_platform_probe(struct platform_device *pdev)
-[...]
->>> +     if (ret)
->>> +             return ret;
->>> +
->>> +     priv->sht = &pata_platform_sht;
->>
->>     Aren't those structures identical between the formerly separate drivers?
->>
-> Yes so are you suggesting to drop sht from priv and use it directly?
-
-    Yep.
-
-> Cheers,
-> Prabhakar
-
-MBR, Sergey
