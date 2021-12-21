@@ -2,47 +2,47 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE9FEC43219
-	for <linux-ide@archiver.kernel.org>; Tue, 21 Dec 2021 07:22:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80618C433EF
+	for <linux-ide@archiver.kernel.org>; Tue, 21 Dec 2021 07:22:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230447AbhLUHWp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S231924AbhLUHWp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Tue, 21 Dec 2021 02:22:45 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:52540 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231924AbhLUHWm (ORCPT
+Received: from smtp-out2.suse.de ([195.135.220.29]:55800 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230165AbhLUHWm (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Tue, 21 Dec 2021 02:22:42 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id CD6DC210FE;
+        by smtp-out2.suse.de (Postfix) with ESMTP id A5BA61F3A6;
         Tue, 21 Dec 2021 07:22:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1640071361; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=enxxeNA+QtmGpsLjrhMS4N9g4SCAJ1WOrZL8HLxymp4=;
-        b=vGo+QtuDFkIKWw6qc8tBkmC3uwkEXwkjLJ8RyH2iYPXH+FokVmdDXx7oOaUy1aXThn2iU9
-        OV7F8JTXp94mAlfy8gqnc6LrplLSQwEwjB6Xm+zQfoBszUtOrhHGMmCH0pnY5NQUJWHF/b
-        YOEL6atP8I/KZwxTrg/x2SrLWUWH7So=
+        bh=CIOnAOaAuguZ/GY+pHhTTm4gRJZg2U4peBSi2KvasSQ=;
+        b=iXCKPKSZS+7L9ihX9K46Y34EBHkKMSbTCOo/opAC9MG+b9fgkiIFOp66c2fGzVyW2IvhgJ
+        JvohF3CGcr3or0V1tCbE2Ex+bcfv/udcZeCvEDX0FCril4ECB4yWMNa09hxn7AZRighCtV
+        8amgHN0zjCC9g2ZMyzaKt+IIlSEFISU=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1640071361;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=enxxeNA+QtmGpsLjrhMS4N9g4SCAJ1WOrZL8HLxymp4=;
-        b=FQrMGdIx6xr2iPbgi5mSsoCtCHYYbHI2lM9y7q7X559yqxYeMpVdGLjK6Xrr38SdLJMoVT
-        xIF4lB657kpUqAAA==
+        bh=CIOnAOaAuguZ/GY+pHhTTm4gRJZg2U4peBSi2KvasSQ=;
+        b=jlOgjQUPwAwqRSh+9J40OyGjzaTw07j24NMqI44M+/69z0IsKfAykLJJxP2tnRVO26lBO/
+        SUUyx0HBEqIBxPDg==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id C8C42A3B8F;
+        by relay2.suse.de (Postfix) with ESMTP id 9EA15A3B84;
         Tue, 21 Dec 2021 07:22:41 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id C709D5192388; Tue, 21 Dec 2021 08:22:41 +0100 (CET)
+        id 954675192374; Tue, 21 Dec 2021 08:22:41 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Damien LeMoal <damien.lemoal@wdc.com>
 Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 11/68] libata: add tracepoints for ATA error handling
-Date:   Tue, 21 Dec 2021 08:20:34 +0100
-Message-Id: <20211221072131.46673-12-hare@suse.de>
+Subject: [PATCH 01/68] libata: remove pointless debugging messages
+Date:   Tue, 21 Dec 2021 08:20:24 +0100
+Message-Id: <20211221072131.46673-2-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20211221072131.46673-1-hare@suse.de>
 References: <20211221072131.46673-1-hare@suse.de>
@@ -52,301 +52,190 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add tracepoints for ATA error handling.
+Debugging messages in pci init functions or sg setup are pretty
+much pointless, as the workflow pretty much decides what happened.
+So drop them.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-eh.c       | 26 ++++-----------
- drivers/ata/libata-pmp.c      |  8 -----
- drivers/ata/libata-sata.c     |  3 --
- include/trace/events/libata.h | 60 +++++++++++++++++++++++++++++++++++
- 4 files changed, 67 insertions(+), 30 deletions(-)
+ drivers/ata/acard-ahci.c  |  4 ----
+ drivers/ata/ahci.c        |  2 --
+ drivers/ata/ata_piix.c    |  3 ---
+ drivers/ata/libahci.c     |  3 ---
+ drivers/ata/libata-core.c | 11 -----------
+ drivers/ata/libata-sff.c  |  2 --
+ drivers/ata/sata_nv.c     |  4 ----
+ 7 files changed, 29 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 043a1c846f2c..69f51616d8bd 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -533,8 +533,6 @@ void ata_scsi_error(struct Scsi_Host *host)
- 	unsigned long flags;
- 	LIST_HEAD(eh_work_q);
+diff --git a/drivers/ata/acard-ahci.c b/drivers/ata/acard-ahci.c
+index 2a04e8abd397..536d4cb8f08b 100644
+--- a/drivers/ata/acard-ahci.c
++++ b/drivers/ata/acard-ahci.c
+@@ -185,8 +185,6 @@ static unsigned int acard_ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl)
+ 	struct acard_sg *acard_sg = cmd_tbl + AHCI_CMD_TBL_HDR_SZ;
+ 	unsigned int si, last_si = 0;
  
--	DPRINTK("ENTER\n");
+-	VPRINTK("ENTER\n");
 -
- 	spin_lock_irqsave(host->host_lock, flags);
- 	list_splice_init(&host->eh_cmd_q, &eh_work_q);
- 	spin_unlock_irqrestore(host->host_lock, flags);
-@@ -548,7 +546,6 @@ void ata_scsi_error(struct Scsi_Host *host)
- 	/* finish or retry handled scmd's and clean up */
- 	WARN_ON(!list_empty(&eh_work_q));
+ 	/*
+ 	 * Next, the S/G list.
+ 	 */
+@@ -362,8 +360,6 @@ static int acard_ahci_init_one(struct pci_dev *pdev, const struct pci_device_id
+ 	struct ata_host *host;
+ 	int n_ports, i, rc;
  
--	DPRINTK("EXIT\n");
- }
+-	VPRINTK("ENTER\n");
+-
+ 	WARN_ON((int)ATA_MAX_QUEUE > AHCI_MAX_CMDS);
  
- /**
-@@ -940,7 +937,7 @@ void ata_std_sched_eh(struct ata_port *ap)
- 	ata_eh_set_pending(ap, 1);
- 	scsi_schedule_eh(ap->scsi_host);
+ 	ata_print_version_once(&pdev->dev, DRV_VERSION);
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 98d04a780458..d5bed24a52ba 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1673,8 +1673,6 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	int n_ports, i, rc;
+ 	int ahci_pci_bar = AHCI_PCI_BAR_STANDARD;
  
--	DPRINTK("port EH scheduled\n");
-+	trace_ata_std_sched_eh(ap);
- }
- EXPORT_SYMBOL_GPL(ata_std_sched_eh);
+-	VPRINTK("ENTER\n");
+-
+ 	WARN_ON((int)ATA_MAX_QUEUE > AHCI_MAX_CMDS);
  
-@@ -1070,7 +1067,7 @@ static void __ata_port_freeze(struct ata_port *ap)
+ 	ata_print_version_once(&pdev->dev, DRV_VERSION);
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 0b2fcf0d1d6c..eb6bf30bd2e3 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -1345,7 +1345,6 @@ static void piix_init_pcs(struct ata_host *host,
+ 	new_pcs = pcs | map_db->port_enable;
  
- 	ap->pflags |= ATA_PFLAG_FROZEN;
- 
--	DPRINTK("ata%u port frozen\n", ap->print_id);
-+	trace_ata_port_freeze(ap);
- }
- 
- /**
-@@ -1147,7 +1144,7 @@ void ata_eh_thaw_port(struct ata_port *ap)
- 
- 	spin_unlock_irqrestore(ap->lock, flags);
- 
--	DPRINTK("ata%u port thawed\n", ap->print_id);
-+	trace_ata_port_thaw(ap);
- }
- 
- static void ata_eh_scsidone(struct scsi_cmnd *scmd)
-@@ -1287,6 +1284,8 @@ void ata_eh_about_to_do(struct ata_link *link, struct ata_device *dev,
- 	struct ata_eh_context *ehc = &link->eh_context;
- 	unsigned long flags;
- 
-+	trace_ata_eh_about_to_do(link, dev ? dev->devno : 0, action);
-+
- 	spin_lock_irqsave(ap->lock, flags);
- 
- 	ata_eh_clear_action(link, dev, ehi, action);
-@@ -1317,6 +1316,8 @@ void ata_eh_done(struct ata_link *link, struct ata_device *dev,
+ 	if (new_pcs != pcs) {
+-		DPRINTK("updating PCS from 0x%x to 0x%x\n", pcs, new_pcs);
+ 		pci_write_config_word(pdev, ICH5_PCS, new_pcs);
+ 		msleep(150);
+ 	}
+@@ -1769,14 +1768,12 @@ static int __init piix_init(void)
  {
- 	struct ata_eh_context *ehc = &link->eh_context;
- 
-+	trace_ata_eh_done(link, dev ? dev->devno : 0, action);
-+
- 	ata_eh_clear_action(link, dev, &ehc->i, action);
- }
- 
-@@ -1421,8 +1422,6 @@ static void ata_eh_request_sense(struct ata_queued_cmd *qc,
- 		return;
- 	}
- 
--	DPRINTK("ATA request sense\n");
--
- 	ata_tf_init(dev, &tf);
- 	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
- 	tf.flags |= ATA_TFLAG_LBA | ATA_TFLAG_LBA48;
-@@ -1463,8 +1462,6 @@ unsigned int atapi_eh_request_sense(struct ata_device *dev,
- 	struct ata_port *ap = dev->link->ap;
- 	struct ata_taskfile tf;
- 
--	DPRINTK("ATAPI request sense\n");
--
- 	memset(sense_buf, 0, SCSI_SENSE_BUFFERSIZE);
- 
- 	/* initialize sense_buf with the error register,
-@@ -1928,8 +1925,6 @@ static void ata_eh_link_autopsy(struct ata_link *link)
- 	u32 serror;
  	int rc;
  
--	DPRINTK("ENTER\n");
--
- 	if (ehc->i.flags & ATA_EHI_NO_AUTOPSY)
- 		return;
+-	DPRINTK("pci_register_driver\n");
+ 	rc = pci_register_driver(&piix_pci_driver);
+ 	if (rc)
+ 		return rc;
  
-@@ -2036,7 +2031,6 @@ static void ata_eh_link_autopsy(struct ata_link *link)
- 		ehc->i.action |= ata_eh_speed_down(dev, eflags, all_err_mask);
- 		trace_ata_eh_link_autopsy(dev, ehc->i.action, all_err_mask);
- 	}
--	DPRINTK("EXIT\n");
- }
+ 	in_module_init = 0;
  
- /**
-@@ -2936,8 +2930,6 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
- 	unsigned long flags;
- 	int rc = 0;
- 
--	DPRINTK("ENTER\n");
--
- 	/* For PATA drive side cable detection to work, IDENTIFY must
- 	 * be done backwards such that PDIAG- is released by the slave
- 	 * device before the master device is identified.
-@@ -3051,7 +3043,6 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
- 
-  err:
- 	*r_failed_dev = dev;
--	DPRINTK("EXIT rc=%d\n", rc);
- 	return rc;
- }
- 
-@@ -3566,8 +3557,6 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 	int rc, nr_fails;
- 	unsigned long flags, deadline;
- 
--	DPRINTK("ENTER\n");
--
- 	/* prep for recovery */
- 	ata_for_each_link(link, ap, EDGE) {
- 		struct ata_eh_context *ehc = &link->eh_context;
-@@ -3775,7 +3764,6 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 	if (rc && r_failed_link)
- 		*r_failed_link = link;
- 
--	DPRINTK("EXIT, rc=%d\n", rc);
- 	return rc;
- }
- 
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index ba7be3f38617..e2e9cbd405fa 100644
---- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -652,8 +652,6 @@ static int sata_pmp_revalidate(struct ata_device *dev, unsigned int new_class)
- 	u32 *gscr = (void *)ap->sector_buf;
- 	int rc;
- 
--	DPRINTK("ENTER\n");
--
- 	ata_eh_about_to_do(link, NULL, ATA_EH_REVALIDATE);
- 
- 	if (!ata_dev_enabled(dev)) {
-@@ -686,12 +684,10 @@ static int sata_pmp_revalidate(struct ata_device *dev, unsigned int new_class)
- 
- 	ata_eh_done(link, NULL, ATA_EH_REVALIDATE);
- 
--	DPRINTK("EXIT, rc=0\n");
+-	DPRINTK("done\n");
  	return 0;
- 
-  fail:
- 	ata_dev_err(dev, "PMP revalidation failed (errno=%d)\n", rc);
--	DPRINTK("EXIT, rc=%d\n", rc);
- 	return rc;
  }
  
-@@ -759,8 +755,6 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
- 	int detach = 0, rc = 0;
- 	int reval_failed = 0;
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index f76b8418e6fb..94edbc89a48c 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1620,8 +1620,6 @@ static unsigned int ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl)
+ 	struct ahci_sg *ahci_sg = cmd_tbl + AHCI_CMD_TBL_HDR_SZ;
+ 	unsigned int si;
+ 
+-	VPRINTK("ENTER\n");
+-
+ 	/*
+ 	 * Next, the S/G list.
+ 	 */
+@@ -1695,7 +1693,6 @@ static void ahci_fbs_dec_intr(struct ata_port *ap)
+ 	u32 fbs = readl(port_mmio + PORT_FBS);
+ 	int retries = 3;
+ 
+-	DPRINTK("ENTER\n");
+ 	BUG_ON(!pp->fbs_enabled);
+ 
+ 	/* time to wait for DEC is not specified by AHCI spec,
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index aba0c67d1bd6..72f56c32fe83 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -764,9 +764,6 @@ int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+ 		head  = track % dev->heads;
+ 		sect  = (u32)block % dev->sectors + 1;
+ 
+-		DPRINTK("block %u track %u cyl %u head %u sect %u\n",
+-			(u32)block, track, cyl, head, sect);
+-
+ 		/* Check whether the converted CHS can fit.
+ 		   Cylinder: 0-65535
+ 		   Head: 0-15
+@@ -4569,8 +4566,6 @@ static int ata_sg_setup(struct ata_queued_cmd *qc)
+ 	struct ata_port *ap = qc->ap;
+ 	unsigned int n_elem;
+ 
+-	VPRINTK("ENTER, ata%u\n", ap->print_id);
+-
+ 	n_elem = dma_map_sg(ap->dev, qc->sg, qc->n_elem, qc->dma_dir);
+ 	if (n_elem < 1)
+ 		return -1;
+@@ -5375,8 +5370,6 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
+ {
+ 	struct ata_port *ap;
  
 -	DPRINTK("ENTER\n");
 -
- 	if (dev->flags & ATA_DFLAG_DETACH) {
- 		detach = 1;
- 		rc = -ENODEV;
-@@ -828,7 +822,6 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
- 	/* okay, PMP resurrected */
- 	ehc->i.flags = 0;
+ 	ap = kzalloc(sizeof(*ap), GFP_KERNEL);
+ 	if (!ap)
+ 		return NULL;
+@@ -5493,8 +5486,6 @@ struct ata_host *ata_host_alloc(struct device *dev, int max_ports)
+ 	int i;
+ 	void *dr;
  
--	DPRINTK("EXIT, rc=0\n");
- 	return 0;
- 
-  fail:
-@@ -838,7 +831,6 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
- 	else
- 		ata_dev_disable(dev);
- 
--	DPRINTK("EXIT, rc=%d\n", rc);
+-	DPRINTK("ENTER\n");
+-
+ 	/* alloc a container for our list of ATA ports (buses) */
+ 	sz = sizeof(struct ata_host) + (max_ports + 1) * sizeof(void *);
+ 	host = kzalloc(sz, GFP_KERNEL);
+@@ -5784,9 +5775,7 @@ int ata_port_probe(struct ata_port *ap)
+ 		__ata_port_probe(ap);
+ 		ata_port_wait_eh(ap);
+ 	} else {
+-		DPRINTK("ata%u: bus probe begin\n", ap->print_id);
+ 		rc = ata_bus_probe(ap);
+-		DPRINTK("ata%u: bus probe end\n", ap->print_id);
+ 	}
  	return rc;
  }
- 
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index eddd33a3cb5f..d9b5744a3b06 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -533,8 +533,6 @@ int sata_link_hardreset(struct ata_link *link, const unsigned long *timing,
- 	u32 scontrol;
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index b71ea4a680b0..39c026f3948c 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -2467,8 +2467,6 @@ static int ata_pci_init_one(struct pci_dev *pdev,
+ 	struct ata_host *host = NULL;
  	int rc;
  
 -	DPRINTK("ENTER\n");
 -
- 	if (online)
- 		*online = false;
+ 	pi = ata_sff_find_valid_pi(ppi);
+ 	if (!pi) {
+ 		dev_err(&pdev->dev, "no valid port_info specified\n");
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index 16272c111208..3c70405a0b80 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -1277,8 +1277,6 @@ static int nv_adma_host_init(struct ata_host *host)
+ 	unsigned int i;
+ 	u32 tmp32;
  
-@@ -610,7 +608,6 @@ int sata_link_hardreset(struct ata_link *link, const unsigned long *timing,
- 			*online = false;
- 		ata_link_err(link, "COMRESET failed (errno=%d)\n", rc);
- 	}
--	DPRINTK("EXIT, rc=%d\n", rc);
- 	return rc;
- }
- EXPORT_SYMBOL_GPL(sata_link_hardreset);
-diff --git a/include/trace/events/libata.h b/include/trace/events/libata.h
-index fcb8fde39614..d4e631aa976f 100644
---- a/include/trace/events/libata.h
-+++ b/include/trace/events/libata.h
-@@ -490,6 +490,37 @@ TRACE_EVENT(ata_eh_link_autopsy_qc,
- 		  __parse_eh_err_mask(__entry->eh_err_mask))
- );
+-	VPRINTK("ENTER\n");
+-
+ 	/* enable ADMA on the ports */
+ 	pci_read_config_dword(pdev, NV_MCP_SATA_CFG_20, &tmp32);
+ 	tmp32 |= NV_MCP_SATA_CFG_20_PORT0_EN |
+@@ -1320,8 +1318,6 @@ static void nv_adma_fill_sg(struct ata_queued_cmd *qc, struct nv_adma_cpb *cpb)
+ 	struct scatterlist *sg;
+ 	unsigned int si;
  
-+DECLARE_EVENT_CLASS(ata_eh_action_template,
-+
-+	TP_PROTO(struct ata_link *link, unsigned int devno, unsigned int eh_action),
-+
-+	TP_ARGS(link, devno, eh_action),
-+
-+	TP_STRUCT__entry(
-+		__field( unsigned int,	ata_port )
-+		__field( unsigned int,	ata_dev	)
-+		__field( unsigned int,	eh_action )
-+	),
-+
-+	TP_fast_assign(
-+		__entry->ata_port	= link->ap->print_id;
-+		__entry->ata_dev	= link->pmp + devno;
-+		__entry->eh_action	= eh_action;
-+	),
-+
-+	TP_printk("ata_port=%u ata_dev=%u eh_action=%s",
-+		  __entry->ata_port, __entry->ata_dev,
-+		  __parse_eh_action(__entry->eh_action))
-+);
-+
-+DEFINE_EVENT(ata_eh_action_template, ata_eh_about_to_do,
-+	     TP_PROTO(struct ata_link *link, unsigned int devno, unsigned int eh_action),
-+	     TP_ARGS(link, devno, eh_action));
-+
-+DEFINE_EVENT(ata_eh_action_template, ata_eh_done,
-+	     TP_PROTO(struct ata_link *link, unsigned int devno, unsigned int eh_action),
-+	     TP_ARGS(link, devno, eh_action));
-+
- DECLARE_EVENT_CLASS(ata_link_reset_begin_template,
- 
- 	TP_PROTO(struct ata_link *link, unsigned int *class, unsigned long deadline),
-@@ -570,6 +601,35 @@ DEFINE_EVENT(ata_link_reset_end_template, ata_slave_postreset,
- 	     TP_PROTO(struct ata_link *link, unsigned int *class, int rc),
- 	     TP_ARGS(link, class, rc));
- 
-+DECLARE_EVENT_CLASS(ata_port_eh_begin_template,
-+
-+	TP_PROTO(struct ata_port *ap),
-+
-+	TP_ARGS(ap),
-+
-+	TP_STRUCT__entry(
-+		__field( unsigned int,	ata_port )
-+	),
-+
-+	TP_fast_assign(
-+		__entry->ata_port	= ap->print_id;
-+	),
-+
-+	TP_printk("ata_port=%u", __entry->ata_port)
-+);
-+
-+DEFINE_EVENT(ata_port_eh_begin_template, ata_std_sched_eh,
-+	     TP_PROTO(struct ata_port *ap),
-+	     TP_ARGS(ap));
-+
-+DEFINE_EVENT(ata_port_eh_begin_template, ata_port_freeze,
-+	     TP_PROTO(struct ata_port *ap),
-+	     TP_ARGS(ap));
-+
-+DEFINE_EVENT(ata_port_eh_begin_template, ata_port_thaw,
-+	     TP_PROTO(struct ata_port *ap),
-+	     TP_ARGS(ap));
-+
- DECLARE_EVENT_CLASS(ata_sff_hsm_template,
- 
- 	TP_PROTO(struct ata_queued_cmd *qc, unsigned char status),
+-	VPRINTK("ENTER\n");
+-
+ 	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+ 		aprd = (si < 5) ? &cpb->aprd[si] :
+ 			&pp->aprd[NV_ADMA_SGTBL_LEN * qc->hw_tag + (si-5)];
 -- 
 2.29.2
 
