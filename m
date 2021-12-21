@@ -2,63 +2,57 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0696C433F5
-	for <linux-ide@archiver.kernel.org>; Tue, 21 Dec 2021 16:26:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F004C433F5
+	for <linux-ide@archiver.kernel.org>; Tue, 21 Dec 2021 16:52:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239754AbhLUQ0u (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 21 Dec 2021 11:26:50 -0500
-Received: from relmlor2.renesas.com ([210.160.252.172]:32541 "EHLO
-        relmlie6.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S239749AbhLUQ0s (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 21 Dec 2021 11:26:48 -0500
-X-IronPort-AV: E=Sophos;i="5.88,224,1635174000"; 
-   d="scan'208";a="104724102"
-Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 22 Dec 2021 01:26:47 +0900
-Received: from localhost.localdomain (unknown [10.226.36.204])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id A413B40A64B7;
-        Wed, 22 Dec 2021 01:26:45 +0900 (JST)
-From:   Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-To:     Rob Herring <robh+dt@kernel.org>,
+        id S236538AbhLUQwm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 21 Dec 2021 11:52:42 -0500
+Received: from mxout03.lancloud.ru ([45.84.86.113]:39078 "EHLO
+        mxout03.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236530AbhLUQwm (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 21 Dec 2021 11:52:42 -0500
+Received: from LanCloud
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout03.lancloud.ru 75CFC20323E0
+Received: from LanCloud
+Received: from LanCloud
+Received: from LanCloud
+Subject: Re: [PATCH v2 3/4] ata: pata_platform: Sort the #includes
+ alphabetically
+To:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
+        Rob Herring <robh+dt@kernel.org>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org,
-        Prabhakar <prabhakar.csengg@gmail.com>,
-        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Subject: [PATCH v2 4/4] ata: pata_platform: Make use of GENMASK() macro
-Date:   Tue, 21 Dec 2021 16:26:14 +0000
-Message-Id: <20211221162614.25308-5-prabhakar.mahadev-lad.rj@bp.renesas.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20211221162614.25308-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+        <linux-ide@vger.kernel.org>
+CC:     <linux-kernel@vger.kernel.org>,
+        Prabhakar <prabhakar.csengg@gmail.com>
 References: <20211221162614.25308-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <20211221162614.25308-4-prabhakar.mahadev-lad.rj@bp.renesas.com>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <cb168640-cc49-a549-8e8f-8db6f602130f@omp.ru>
+Date:   Tue, 21 Dec 2021 19:52:38 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
+MIME-Version: 1.0
+In-Reply-To: <20211221162614.25308-4-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [192.168.11.198]
+X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
+ LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Make use of GENMASK() macro instead of open coding.
+Hello!
 
-Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
----
-v1-->v2
-* New patch
----
- drivers/ata/pata_platform.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+On 12/21/21 7:26 PM, Lad Prabhakar wrote:
 
-diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-index 80e5cb12707e..118b332dae2d 100644
---- a/drivers/ata/pata_platform.c
-+++ b/drivers/ata/pata_platform.c
-@@ -244,8 +244,7 @@ static int pata_of_platform_get_pdata(struct platform_device *ofdev,
- 
- 	priv->use16bit = of_property_read_bool(dn, "ata-generic,use16bit");
- 
--	priv->pio_mask = 1 << pio_mode;
--	priv->pio_mask |= (1 << pio_mode) - 1;
-+	priv->pio_mask = GENMASK(pio_mode, 0);
- 
- 	return 0;
- }
--- 
-2.17.1
+> Sort the #includes alphabetically.
+> 
+> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+[...]
 
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+
+MBR, Sergey
