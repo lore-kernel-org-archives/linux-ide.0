@@ -2,47 +2,48 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0DD3C433EF
-	for <linux-ide@archiver.kernel.org>; Tue, 21 Dec 2021 07:22:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41E75C433F5
+	for <linux-ide@archiver.kernel.org>; Tue, 21 Dec 2021 07:22:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233039AbhLUHWx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S235114AbhLUHWx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Tue, 21 Dec 2021 02:22:53 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:55886 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232268AbhLUHWo (ORCPT
+Received: from smtp-out1.suse.de ([195.135.220.28]:52642 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232712AbhLUHWo (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Tue, 21 Dec 2021 02:22:44 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id D16891F3BB;
-        Tue, 21 Dec 2021 07:22:41 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTP id 07F18218FE;
+        Tue, 21 Dec 2021 07:22:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1640071361; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1640071362; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=ABtWRUtItnX2AlfxGna+veZ3U5o0bI3G4s/qhtZn9AU=;
-        b=sUFz7uuFAmzuyFNyvHqE96FV6jMHG9Ic6b36noTJ48vr67YhSP4eCo/jdEyqdEE/xIfYaN
-        MUYC+hALdMlM83B83rUY+nFR0zsbueRFwYi0J6AprDLdeORR4vP5fz5kjMP5y9o/wJQGxF
-        TFH56ZxCA4BfDyeX9WYJ+tzOxBZJuZU=
+        bh=iIWtJ061dNZxVhkMNbtLB5KwIXLdM8iTsZlGUw0n2EE=;
+        b=2ACHs165eesJm4bE53yDGrygEvQMQG5ieZJTb7sNl7Xkk1PZQjb8fITl1LShJGv5OHNXP0
+        fwZhyC+d1GCsQgCS0N+YpeZ0VmKJmJCjdQZ9uTb7EJpH+grSza6m7eA1kWB2mhiIekzfsO
+        42+gsYEPMGElyHSMYXkkjr9c55QxmOE=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1640071361;
+        s=susede2_ed25519; t=1640071362;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=ABtWRUtItnX2AlfxGna+veZ3U5o0bI3G4s/qhtZn9AU=;
-        b=T5f3Mg6TPfOMO4LhRO7Sd2jJT7wbuH5kub5yIYr34N1SAvDA4s2I0D5kQ1Y2GxOavkhxQ5
-        bhhl+HEtGy5EGxDw==
+        bh=iIWtJ061dNZxVhkMNbtLB5KwIXLdM8iTsZlGUw0n2EE=;
+        b=QhczxQUmBsdAtkjI3fQ3XxJ6GwpimLFS/q40OMTUkx4OZicN62FJgmdQ1bpZoX8gs9pG7t
+        Abwl3T0qXtUPBkAw==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id CCD12A3B90;
-        Tue, 21 Dec 2021 07:22:41 +0000 (UTC)
+        by relay2.suse.de (Postfix) with ESMTP id 03786A3B9A;
+        Tue, 21 Dec 2021 07:22:42 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id CB07C519238A; Tue, 21 Dec 2021 08:22:41 +0100 (CET)
+        id 004AF519239E; Tue, 21 Dec 2021 08:22:41 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Damien LeMoal <damien.lemoal@wdc.com>
-Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 12/68] libata: move ata_{port,link,dev}_dbg to standard dev_XXX() macros
-Date:   Tue, 21 Dec 2021 08:20:35 +0100
-Message-Id: <20211221072131.46673-13-hare@suse.de>
+Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.com>,
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 22/68] pata_pdc2027x: Replace PDPRINTK() with standard ata logging
+Date:   Tue, 21 Dec 2021 08:20:45 +0100
+Message-Id: <20211221072131.46673-23-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20211221072131.46673-1-hare@suse.de>
 References: <20211221072131.46673-1-hare@suse.de>
@@ -52,284 +53,249 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Use standard dev_{dbg,info,notice,warn,err} macros instead of the
-hand-crafted printk helpers.
+From: Hannes Reinecke <hare@suse.com>
+
+Use standard ata logging macros instead of the hand-crafted
+PDPRINTK and remove duplicate logging messages.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-acpi.c    | 48 +++++++++++++++-------------
- drivers/ata/libata-core.c    | 61 ------------------------------------
- drivers/ata/pata_ixp4xx_cf.c |  6 ++--
- include/linux/libata.h       | 48 ++++++++++------------------
- 4 files changed, 45 insertions(+), 118 deletions(-)
+ drivers/ata/pata_pdc2027x.c | 71 +++++++++++++++----------------------
+ 1 file changed, 28 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 7a7d6642edcc..7007377880ce 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -650,9 +650,7 @@ static int ata_acpi_run_tf(struct ata_device *dev,
- 	struct ata_taskfile *pptf = NULL;
- 	struct ata_taskfile tf, ptf, rtf;
- 	unsigned int err_mask;
--	const char *level;
- 	const char *descr;
--	char msg[60];
- 	int rc;
+diff --git a/drivers/ata/pata_pdc2027x.c b/drivers/ata/pata_pdc2027x.c
+index effc1a09444d..4fbb3eed8b0b 100644
+--- a/drivers/ata/pata_pdc2027x.c
++++ b/drivers/ata/pata_pdc2027x.c
+@@ -30,13 +30,6 @@
  
- 	if ((gtf->tf[0] == 0) && (gtf->tf[1] == 0) && (gtf->tf[2] == 0)
-@@ -666,6 +664,10 @@ static int ata_acpi_run_tf(struct ata_device *dev,
- 		pptf = &ptf;
- 	}
- 
-+	descr = ata_get_cmd_descript(tf.command);
-+	if (!descr)
-+		descr = "unknown";
-+
- 	if (!ata_acpi_filter_tf(dev, &tf, pptf)) {
- 		rtf = tf;
- 		err_mask = ata_exec_internal(dev, &rtf, NULL,
-@@ -673,40 +675,42 @@ static int ata_acpi_run_tf(struct ata_device *dev,
- 
- 		switch (err_mask) {
- 		case 0:
--			level = KERN_DEBUG;
--			snprintf(msg, sizeof(msg), "succeeded");
-+			ata_dev_dbg(dev,
-+				"ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x"
-+				"(%s) succeeded\n",
-+				tf.command, tf.feature, tf.nsect, tf.lbal,
-+				tf.lbam, tf.lbah, tf.device, descr);
- 			rc = 1;
- 			break;
- 
- 		case AC_ERR_DEV:
--			level = KERN_INFO;
--			snprintf(msg, sizeof(msg),
--				 "rejected by device (Stat=0x%02x Err=0x%02x)",
--				 rtf.command, rtf.feature);
-+			ata_dev_info(dev,
-+				"ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x"
-+				"(%s) rejected by device (Stat=0x%02x Err=0x%02x)",
-+				tf.command, tf.feature, tf.nsect, tf.lbal,
-+				tf.lbam, tf.lbah, tf.device, descr,
-+				rtf.command, rtf.feature);
- 			rc = 0;
- 			break;
- 
- 		default:
--			level = KERN_ERR;
--			snprintf(msg, sizeof(msg),
--				 "failed (Emask=0x%x Stat=0x%02x Err=0x%02x)",
--				 err_mask, rtf.command, rtf.feature);
-+			ata_dev_err(dev,
-+				"ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x"
-+				"(%s) failed (Emask=0x%x Stat=0x%02x Err=0x%02x)",
-+				tf.command, tf.feature, tf.nsect, tf.lbal,
-+				tf.lbam, tf.lbah, tf.device, descr,
-+				err_mask, rtf.command, rtf.feature);
- 			rc = -EIO;
- 			break;
- 		}
- 	} else {
--		level = KERN_INFO;
--		snprintf(msg, sizeof(msg), "filtered out");
-+		ata_dev_info(dev,
-+			"ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x"
-+			"(%s) filtered out\n",
-+			tf.command, tf.feature, tf.nsect, tf.lbal,
-+			tf.lbam, tf.lbah, tf.device, descr);
- 		rc = 0;
- 	}
--	descr = ata_get_cmd_descript(tf.command);
+ #define DRV_NAME	"pata_pdc2027x"
+ #define DRV_VERSION	"1.0"
+-#undef PDC_DEBUG
 -
--	ata_dev_printk(dev, level,
--		       "ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x (%s) %s\n",
--		       tf.command, tf.feature, tf.nsect, tf.lbal,
--		       tf.lbam, tf.lbah, tf.device,
--		       (descr ? descr : "unknown"), msg);
--
- 	return rc;
- }
- 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index a836f594b095..bd5803a86896 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6510,67 +6510,6 @@ const struct ata_port_info ata_dummy_port_info = {
- };
- EXPORT_SYMBOL_GPL(ata_dummy_port_info);
- 
--/*
-- * Utility print functions
-- */
--void ata_port_printk(const struct ata_port *ap, const char *level,
--		     const char *fmt, ...)
--{
--	struct va_format vaf;
--	va_list args;
--
--	va_start(args, fmt);
--
--	vaf.fmt = fmt;
--	vaf.va = &args;
--
--	printk("%sata%u: %pV", level, ap->print_id, &vaf);
--
--	va_end(args);
--}
--EXPORT_SYMBOL(ata_port_printk);
--
--void ata_link_printk(const struct ata_link *link, const char *level,
--		     const char *fmt, ...)
--{
--	struct va_format vaf;
--	va_list args;
--
--	va_start(args, fmt);
--
--	vaf.fmt = fmt;
--	vaf.va = &args;
--
--	if (sata_pmp_attached(link->ap) || link->ap->slave_link)
--		printk("%sata%u.%02u: %pV",
--		       level, link->ap->print_id, link->pmp, &vaf);
--	else
--		printk("%sata%u: %pV",
--		       level, link->ap->print_id, &vaf);
--
--	va_end(args);
--}
--EXPORT_SYMBOL(ata_link_printk);
--
--void ata_dev_printk(const struct ata_device *dev, const char *level,
--		    const char *fmt, ...)
--{
--	struct va_format vaf;
--	va_list args;
--
--	va_start(args, fmt);
--
--	vaf.fmt = fmt;
--	vaf.va = &args;
--
--	printk("%sata%u.%02u: %pV",
--	       level, dev->link->ap->print_id, dev->link->pmp + dev->devno,
--	       &vaf);
--
--	va_end(args);
--}
--EXPORT_SYMBOL(ata_dev_printk);
--
- void ata_print_version(const struct device *dev, const char *version)
- {
- 	dev_printk(KERN_DEBUG, dev, "version %s\n", version);
-diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
-index 99c63087c8ae..17b557c91e1c 100644
---- a/drivers/ata/pata_ixp4xx_cf.c
-+++ b/drivers/ata/pata_ixp4xx_cf.c
-@@ -114,7 +114,7 @@ static void ixp4xx_set_piomode(struct ata_port *ap, struct ata_device *adev)
- {
- 	struct ixp4xx_pata *ixpp = ap->host->private_data;
- 
--	ata_dev_printk(adev, KERN_INFO, "configured for PIO%d 8bit\n",
-+	ata_dev_info(adev, "configured for PIO%d 8bit\n",
- 		       adev->pio_mode - XFER_PIO_0);
- 	ixp4xx_set_8bit_timing(ixpp, adev->pio_mode);
- }
-@@ -132,8 +132,8 @@ static unsigned int ixp4xx_mmio_data_xfer(struct ata_queued_cmd *qc,
- 	struct ixp4xx_pata *ixpp = ap->host->private_data;
- 	unsigned long flags;
- 
--	ata_dev_printk(adev, KERN_DEBUG, "%s %d bytes\n", (rw == READ) ? "READ" : "WRITE",
--		       buflen);
-+	ata_dev_dbg(adev, "%s %d bytes\n", (rw == READ) ? "READ" : "WRITE",
-+		    buflen);
- 	spin_lock_irqsave(ap->lock, flags);
- 
- 	/* set the expansion bus in 16bit mode and restore
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 235fdbeb19ea..a807d2d43d70 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1489,51 +1489,38 @@ static inline int sata_srst_pmp(struct ata_link *link)
- 	return link->pmp;
- }
- 
--/*
-- * printk helpers
-- */
--__printf(3, 4)
--void ata_port_printk(const struct ata_port *ap, const char *level,
--		     const char *fmt, ...);
--__printf(3, 4)
--void ata_link_printk(const struct ata_link *link, const char *level,
--		     const char *fmt, ...);
--__printf(3, 4)
--void ata_dev_printk(const struct ata_device *dev, const char *level,
--		    const char *fmt, ...);
--
- #define ata_port_err(ap, fmt, ...)				\
--	ata_port_printk(ap, KERN_ERR, fmt, ##__VA_ARGS__)
-+	dev_err(&ap->tdev, fmt, ##__VA_ARGS__)
- #define ata_port_warn(ap, fmt, ...)				\
--	ata_port_printk(ap, KERN_WARNING, fmt, ##__VA_ARGS__)
-+	dev_warn(&ap->tdev, fmt, ##__VA_ARGS__)
- #define ata_port_notice(ap, fmt, ...)				\
--	ata_port_printk(ap, KERN_NOTICE, fmt, ##__VA_ARGS__)
-+	dev_notice(&ap->tdev, fmt, ##__VA_ARGS__)
- #define ata_port_info(ap, fmt, ...)				\
--	ata_port_printk(ap, KERN_INFO, fmt, ##__VA_ARGS__)
-+	dev_info(&ap->tdev, fmt, ##__VA_ARGS__)
- #define ata_port_dbg(ap, fmt, ...)				\
--	ata_port_printk(ap, KERN_DEBUG, fmt, ##__VA_ARGS__)
-+	dev_dbg(&ap->tdev, "%s: " fmt, __func__, ##__VA_ARGS__)
- 
- #define ata_link_err(link, fmt, ...)				\
--	ata_link_printk(link, KERN_ERR, fmt, ##__VA_ARGS__)
-+	dev_err(&link->tdev, fmt, ##__VA_ARGS__)
- #define ata_link_warn(link, fmt, ...)				\
--	ata_link_printk(link, KERN_WARNING, fmt, ##__VA_ARGS__)
-+	dev_warn(&link->tdev, fmt, ##__VA_ARGS__)
- #define ata_link_notice(link, fmt, ...)				\
--	ata_link_printk(link, KERN_NOTICE, fmt, ##__VA_ARGS__)
-+	dev_notice(&link->tdev, fmt, ##__VA_ARGS__)
- #define ata_link_info(link, fmt, ...)				\
--	ata_link_printk(link, KERN_INFO, fmt, ##__VA_ARGS__)
-+	dev_info(&link->tdev, fmt, ##__VA_ARGS__)
- #define ata_link_dbg(link, fmt, ...)				\
--	ata_link_printk(link, KERN_DEBUG, fmt, ##__VA_ARGS__)
-+	dev_dbg(&link->tdev, "%s: " fmt, __func__, ##__VA_ARGS__)
- 
- #define ata_dev_err(dev, fmt, ...)				\
--	ata_dev_printk(dev, KERN_ERR, fmt, ##__VA_ARGS__)
-+	dev_err(&dev->tdev, fmt, ##__VA_ARGS__)
- #define ata_dev_warn(dev, fmt, ...)				\
--	ata_dev_printk(dev, KERN_WARNING, fmt, ##__VA_ARGS__)
-+	dev_warn(&dev->tdev, fmt, ##__VA_ARGS__)
- #define ata_dev_notice(dev, fmt, ...)				\
--	ata_dev_printk(dev, KERN_NOTICE, fmt, ##__VA_ARGS__)
-+	dev_notice(&dev->tdev, fmt, ##__VA_ARGS__)
- #define ata_dev_info(dev, fmt, ...)				\
--	ata_dev_printk(dev, KERN_INFO, fmt, ##__VA_ARGS__)
-+	dev_info(&dev->tdev, fmt, ##__VA_ARGS__)
- #define ata_dev_dbg(dev, fmt, ...)				\
--	ata_dev_printk(dev, KERN_DEBUG, fmt, ##__VA_ARGS__)
-+	dev_dbg(&dev->tdev, "%s: " fmt, __func__, ##__VA_ARGS__)
- 
- void ata_print_version(const struct device *dev, const char *version);
- 
-@@ -2067,11 +2054,8 @@ static inline u8 ata_wait_idle(struct ata_port *ap)
- {
- 	u8 status = ata_sff_busy_wait(ap, ATA_BUSY | ATA_DRQ, 1000);
- 
--#ifdef ATA_DEBUG
- 	if (status != 0xff && (status & (ATA_BUSY | ATA_DRQ)))
--		ata_port_printk(ap, KERN_DEBUG, "abnormal Status 0x%X\n",
--				status);
+-#ifdef PDC_DEBUG
+-#define PDPRINTK(fmt, args...) printk(KERN_ERR "%s: " fmt, __func__, ## args)
+-#else
+-#define PDPRINTK(fmt, args...)
 -#endif
-+		ata_port_dbg(ap, "abnormal Status 0x%X\n", status);
  
- 	return status;
+ enum {
+ 	PDC_MMIO_BAR		= 5,
+@@ -214,11 +207,11 @@ static int pdc2027x_cable_detect(struct ata_port *ap)
+ 	if (cgcr & (1 << 26))
+ 		goto cbl40;
+ 
+-	PDPRINTK("No cable or 80-conductor cable on port %d\n", ap->port_no);
++	ata_port_dbg(ap, "No cable or 80-conductor cable\n");
+ 
+ 	return ATA_CBL_PATA80;
+ cbl40:
+-	printk(KERN_INFO DRV_NAME ": 40-conductor cable detected on port %d\n", ap->port_no);
++	ata_port_info(ap, DRV_NAME ":40-conductor cable detected\n");
+ 	return ATA_CBL_PATA40;
+ }
+ 
+@@ -292,17 +285,17 @@ static void pdc2027x_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	unsigned int pio = adev->pio_mode - XFER_PIO_0;
+ 	u32 ctcr0, ctcr1;
+ 
+-	PDPRINTK("adev->pio_mode[%X]\n", adev->pio_mode);
++	ata_port_dbg(ap, "adev->pio_mode[%X]\n", adev->pio_mode);
+ 
+ 	/* Sanity check */
+ 	if (pio > 4) {
+-		printk(KERN_ERR DRV_NAME ": Unknown pio mode [%d] ignored\n", pio);
++		ata_port_err(ap, "Unknown pio mode [%d] ignored\n", pio);
+ 		return;
+ 
+ 	}
+ 
+ 	/* Set the PIO timing registers using value table for 133MHz */
+-	PDPRINTK("Set pio regs... \n");
++	ata_port_dbg(ap, "Set pio regs... \n");
+ 
+ 	ctcr0 = ioread32(dev_mmio(ap, adev, PDC_CTCR0));
+ 	ctcr0 &= 0xffff0000;
+@@ -315,9 +308,7 @@ static void pdc2027x_set_piomode(struct ata_port *ap, struct ata_device *adev)
+ 	ctcr1 |= (pdc2027x_pio_timing_tbl[pio].value2 << 24);
+ 	iowrite32(ctcr1, dev_mmio(ap, adev, PDC_CTCR1));
+ 
+-	PDPRINTK("Set pio regs done\n");
+-
+-	PDPRINTK("Set to pio mode[%u] \n", pio);
++	ata_port_dbg(ap, "Set to pio mode[%u] \n", pio);
+ }
+ 
+ /**
+@@ -350,7 +341,7 @@ static void pdc2027x_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+ 			iowrite32(ctcr1 & ~(1 << 7), dev_mmio(ap, adev, PDC_CTCR1));
+ 		}
+ 
+-		PDPRINTK("Set udma regs... \n");
++		ata_port_dbg(ap, "Set udma regs... \n");
+ 
+ 		ctcr1 = ioread32(dev_mmio(ap, adev, PDC_CTCR1));
+ 		ctcr1 &= 0xff000000;
+@@ -359,16 +350,14 @@ static void pdc2027x_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+ 			(pdc2027x_udma_timing_tbl[udma_mode].value2 << 16);
+ 		iowrite32(ctcr1, dev_mmio(ap, adev, PDC_CTCR1));
+ 
+-		PDPRINTK("Set udma regs done\n");
+-
+-		PDPRINTK("Set to udma mode[%u] \n", udma_mode);
++		ata_port_dbg(ap, "Set to udma mode[%u] \n", udma_mode);
+ 
+ 	} else  if ((dma_mode >= XFER_MW_DMA_0) &&
+ 		   (dma_mode <= XFER_MW_DMA_2)) {
+ 		/* Set the MDMA timing registers with value table for 133MHz */
+ 		unsigned int mdma_mode = dma_mode & 0x07;
+ 
+-		PDPRINTK("Set mdma regs... \n");
++		ata_port_dbg(ap, "Set mdma regs... \n");
+ 		ctcr0 = ioread32(dev_mmio(ap, adev, PDC_CTCR0));
+ 
+ 		ctcr0 &= 0x0000ffff;
+@@ -376,11 +365,10 @@ static void pdc2027x_set_dmamode(struct ata_port *ap, struct ata_device *adev)
+ 			(pdc2027x_mdma_timing_tbl[mdma_mode].value1 << 24);
+ 
+ 		iowrite32(ctcr0, dev_mmio(ap, adev, PDC_CTCR0));
+-		PDPRINTK("Set mdma regs done\n");
+ 
+-		PDPRINTK("Set to mdma mode[%u] \n", mdma_mode);
++		ata_port_dbg(ap, "Set to mdma mode[%u] \n", mdma_mode);
+ 	} else {
+-		printk(KERN_ERR DRV_NAME ": Unknown dma mode [%u] ignored\n", dma_mode);
++		ata_port_err(ap, "Unknown dma mode [%u] ignored\n", dma_mode);
+ 	}
+ }
+ 
+@@ -414,7 +402,7 @@ static int pdc2027x_set_mode(struct ata_link *link, struct ata_device **r_failed
+ 			ctcr1 |= (1 << 25);
+ 			iowrite32(ctcr1, dev_mmio(ap, dev, PDC_CTCR1));
+ 
+-			PDPRINTK("Turn on prefetch\n");
++			ata_dev_dbg(dev, "Turn on prefetch\n");
+ 		} else {
+ 			pdc2027x_set_dmamode(ap, dev);
+ 		}
+@@ -485,8 +473,8 @@ static long pdc_read_counter(struct ata_host *host)
+ 
+ 	counter = (bccrh << 15) | bccrl;
+ 
+-	PDPRINTK("bccrh [%X] bccrl [%X]\n", bccrh,  bccrl);
+-	PDPRINTK("bccrhv[%X] bccrlv[%X]\n", bccrhv, bccrlv);
++	dev_dbg(host->dev, "bccrh [%X] bccrl [%X]\n", bccrh,  bccrl);
++	dev_dbg(host->dev, "bccrhv[%X] bccrlv[%X]\n", bccrhv, bccrlv);
+ 
+ 	/*
+ 	 * The 30-bit decreasing counter are read by 2 pieces.
+@@ -495,7 +483,7 @@ static long pdc_read_counter(struct ata_host *host)
+ 	 */
+ 	if (retry && !(bccrh == bccrhv && bccrl >= bccrlv)) {
+ 		retry--;
+-		PDPRINTK("rereading counter\n");
++		dev_dbg(host->dev, "rereading counter\n");
+ 		goto retry;
+ 	}
+ 
+@@ -520,20 +508,19 @@ static void pdc_adjust_pll(struct ata_host *host, long pll_clock, unsigned int b
+ 
+ 	/* Sanity check */
+ 	if (unlikely(pll_clock_khz < 5000L || pll_clock_khz > 70000L)) {
+-		printk(KERN_ERR DRV_NAME ": Invalid PLL input clock %ldkHz, give up!\n", pll_clock_khz);
++		dev_err(host->dev, "Invalid PLL input clock %ldkHz, give up!\n",
++			pll_clock_khz);
+ 		return;
+ 	}
+ 
+-#ifdef PDC_DEBUG
+-	PDPRINTK("pout_required is %ld\n", pout_required);
++	dev_dbg(host->dev, "pout_required is %ld\n", pout_required);
+ 
+ 	/* Show the current clock value of PLL control register
+ 	 * (maybe already configured by the firmware)
+ 	 */
+ 	pll_ctl = ioread16(mmio_base + PDC_PLL_CTL);
+ 
+-	PDPRINTK("pll_ctl[%X]\n", pll_ctl);
+-#endif
++	dev_dbg(host->dev, "pll_ctl[%X]\n", pll_ctl);
+ 
+ 	/*
+ 	 * Calculate the ratio of F, R and OD
+@@ -552,7 +539,7 @@ static void pdc_adjust_pll(struct ata_host *host, long pll_clock, unsigned int b
+ 		R = 0x00;
+ 	} else {
+ 		/* Invalid ratio */
+-		printk(KERN_ERR DRV_NAME ": Invalid ratio %ld, give up!\n", ratio);
++		dev_err(host->dev, "Invalid ratio %ld, give up!\n", ratio);
+ 		return;
+ 	}
+ 
+@@ -560,15 +547,15 @@ static void pdc_adjust_pll(struct ata_host *host, long pll_clock, unsigned int b
+ 
+ 	if (unlikely(F < 0 || F > 127)) {
+ 		/* Invalid F */
+-		printk(KERN_ERR DRV_NAME ": F[%d] invalid!\n", F);
++		dev_err(host->dev, "F[%d] invalid!\n", F);
+ 		return;
+ 	}
+ 
+-	PDPRINTK("F[%d] R[%d] ratio*1000[%ld]\n", F, R, ratio);
++	dev_dbg(host->dev, "F[%d] R[%d] ratio*1000[%ld]\n", F, R, ratio);
+ 
+ 	pll_ctl = (R << 8) | F;
+ 
+-	PDPRINTK("Writing pll_ctl[%X]\n", pll_ctl);
++	dev_dbg(host->dev, "Writing pll_ctl[%X]\n", pll_ctl);
+ 
+ 	iowrite16(pll_ctl, mmio_base + PDC_PLL_CTL);
+ 	ioread16(mmio_base + PDC_PLL_CTL); /* flush */
+@@ -576,15 +563,13 @@ static void pdc_adjust_pll(struct ata_host *host, long pll_clock, unsigned int b
+ 	/* Wait the PLL circuit to be stable */
+ 	msleep(30);
+ 
+-#ifdef PDC_DEBUG
+ 	/*
+ 	 *  Show the current clock value of PLL control register
+ 	 * (maybe configured by the firmware)
+ 	 */
+ 	pll_ctl = ioread16(mmio_base + PDC_PLL_CTL);
+ 
+-	PDPRINTK("pll_ctl[%X]\n", pll_ctl);
+-#endif
++	dev_dbg(host->dev, "pll_ctl[%X]\n", pll_ctl);
+ 
+ 	return;
+ }
+@@ -605,7 +590,7 @@ static long pdc_detect_pll_input_clock(struct ata_host *host)
+ 
+ 	/* Start the test mode */
+ 	scr = ioread32(mmio_base + PDC_SYS_CTL);
+-	PDPRINTK("scr[%X]\n", scr);
++	dev_dbg(host->dev, "scr[%X]\n", scr);
+ 	iowrite32(scr | (0x01 << 14), mmio_base + PDC_SYS_CTL);
+ 	ioread32(mmio_base + PDC_SYS_CTL); /* flush */
+ 
+@@ -622,7 +607,7 @@ static long pdc_detect_pll_input_clock(struct ata_host *host)
+ 
+ 	/* Stop the test mode */
+ 	scr = ioread32(mmio_base + PDC_SYS_CTL);
+-	PDPRINTK("scr[%X]\n", scr);
++	dev_dbg(host->dev, "scr[%X]\n", scr);
+ 	iowrite32(scr & ~(0x01 << 14), mmio_base + PDC_SYS_CTL);
+ 	ioread32(mmio_base + PDC_SYS_CTL); /* flush */
+ 
+@@ -632,8 +617,8 @@ static long pdc_detect_pll_input_clock(struct ata_host *host)
+ 	pll_clock = ((start_count - end_count) & 0x3fffffff) / 100 *
+ 		(100000000 / usec_elapsed);
+ 
+-	PDPRINTK("start[%ld] end[%ld] \n", start_count, end_count);
+-	PDPRINTK("PLL input clock[%ld]Hz\n", pll_clock);
++	dev_dbg(host->dev, "start[%ld] end[%ld] PLL input clock[%ld]HZ\n",
++		     start_count, end_count, pll_clock);
+ 
+ 	return pll_clock;
  }
 -- 
 2.29.2
