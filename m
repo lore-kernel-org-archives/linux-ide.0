@@ -2,47 +2,47 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA00DC4167D
-	for <linux-ide@archiver.kernel.org>; Tue, 21 Dec 2021 07:22:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 51251C4167E
+	for <linux-ide@archiver.kernel.org>; Tue, 21 Dec 2021 07:22:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233300AbhLUHW4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S230053AbhLUHW4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Tue, 21 Dec 2021 02:22:56 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:52658 "EHLO
+Received: from smtp-out1.suse.de ([195.135.220.28]:52636 "EHLO
         smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230053AbhLUHWo (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 21 Dec 2021 02:22:44 -0500
+        with ESMTP id S231951AbhLUHWp (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 21 Dec 2021 02:22:45 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 1F11121900;
+        by smtp-out1.suse.de (Postfix) with ESMTP id 391E621902;
         Tue, 21 Dec 2021 07:22:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1640071362; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Nb2/ZW5mWNW54YuCqzmfouew1g0ngMTkKE0h18UDNvA=;
-        b=Hw9odwK/blZUMQ+LzzS9c+74pn9JYPJOi2QSBpWHPdc1/OLGgIaOZWClp7w0NSZL8086Hf
-        Vn+vRZuHOLtxGSxDDZ75FMyUL+CUQPwkxskJXsRA1KqIqIoU7ODwbsa16jXJF3kxUKreyJ
-        lTYSqe2FE5wRkW7TQwNV13KNly9+Ov0=
+        bh=oIuXxAQkPBNVdBIj7LFlYTr68xCImrWSftyEwnOY5pw=;
+        b=OKGE4H9CJvTTsnE5bpFf0wCp6lQJGd6iKIysxBEa+CTtuxSrkGkFct/YJrLbK4KXBBjPJl
+        HebVvGcTGZiss7GmExwEQ9Mfzw+WkDsDkqp4jRxk1+otI/O2Jp8FgciiXpzy4o5op1830x
+        VB+L64ERJ4jcUG1Mxwmb2PB/tsCsNjg=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1640071362;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Nb2/ZW5mWNW54YuCqzmfouew1g0ngMTkKE0h18UDNvA=;
-        b=oFkv4Vs3tPxaQr8eblsJlQLW4rl5EAvdDcxJvq8QpcT1dNne9udqqsIAYcPcUaAk1PIQrE
-        DDua2A+x46hVOjBA==
+        bh=oIuXxAQkPBNVdBIj7LFlYTr68xCImrWSftyEwnOY5pw=;
+        b=Z1Oy5lNy40aOo9ZRbt5CBUIPcC/YUNWxgVgHCkxNZ/VjLrY5g6Fh8hFGJsVaW3tKTuj2FW
+        S67qEulEy/yV1oAw==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 1AD0FA3BA0;
+        by relay2.suse.de (Postfix) with ESMTP id 33CBCA3BA4;
         Tue, 21 Dec 2021 07:22:42 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 18F8851923AA; Tue, 21 Dec 2021 08:22:42 +0100 (CET)
+        id 31B2951923B4; Tue, 21 Dec 2021 08:22:42 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Damien LeMoal <damien.lemoal@wdc.com>
 Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 28/68] sata_promise: Drop pointless VPRINTK() calls and convert the remaining ones
-Date:   Tue, 21 Dec 2021 08:20:51 +0100
-Message-Id: <20211221072131.46673-29-hare@suse.de>
+Subject: [PATCH 33/68] sata_nv: drop pointless VPRINTK() calls and convert remaining ones
+Date:   Tue, 21 Dec 2021 08:20:56 +0100
+Message-Id: <20211221072131.46673-34-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20211221072131.46673-1-hare@suse.de>
 References: <20211221072131.46673-1-hare@suse.de>
@@ -52,116 +52,153 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Drop pointless VPRINTK() calls for entering and existing interrupt
-routines and convert the remaining calls to ata_port_dbg().
+Quite some information from the VPRINTK() is already covered by
+tracepoints, so remove the pointless calls and convert the remaining
+ones to structured logging.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/sata_promise.c | 31 ++++++++-----------------------
- 1 file changed, 8 insertions(+), 23 deletions(-)
+ drivers/ata/sata_nv.c | 38 ++++++++++++++------------------------
+ 1 file changed, 14 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
-index 7815da8ef9e5..b8465fef2ed2 100644
---- a/drivers/ata/sata_promise.c
-+++ b/drivers/ata/sata_promise.c
-@@ -596,7 +596,8 @@ static void pdc_fill_sg(struct ata_queued_cmd *qc)
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index 06d381b9764e..7f14d0d31057 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -809,7 +809,7 @@ static int nv_adma_check_cpb(struct ata_port *ap, int cpb_num, int force_err)
+ 	struct nv_adma_port_priv *pp = ap->private_data;
+ 	u8 flags = pp->cpb[cpb_num].resp_flags;
  
- 			prd[idx].addr = cpu_to_le32(addr);
- 			prd[idx].flags_len = cpu_to_le32(len & 0xffff);
--			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx, addr, len);
-+			ata_port_dbg(ap, "PRD[%u] = (0x%X, 0x%X)\n",
-+				     idx, addr, len);
+-	VPRINTK("CPB %d, flags=0x%x\n", cpb_num, flags);
++	ata_port_dbg(ap, "CPB %d, flags=0x%x\n", cpb_num, flags);
  
- 			idx++;
- 			sg_len -= len;
-@@ -609,17 +610,16 @@ static void pdc_fill_sg(struct ata_queued_cmd *qc)
- 	if (len > SG_COUNT_ASIC_BUG) {
- 		u32 addr;
- 
--		VPRINTK("Splitting last PRD.\n");
--
- 		addr = le32_to_cpu(prd[idx - 1].addr);
- 		prd[idx - 1].flags_len = cpu_to_le32(len - SG_COUNT_ASIC_BUG);
--		VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx - 1, addr, SG_COUNT_ASIC_BUG);
-+		ata_port_dbg(ap, "PRD[%u] = (0x%X, 0x%X)\n",
-+			     idx - 1, addr, SG_COUNT_ASIC_BUG);
- 
- 		addr = addr + len - SG_COUNT_ASIC_BUG;
- 		len = SG_COUNT_ASIC_BUG;
- 		prd[idx].addr = cpu_to_le32(addr);
- 		prd[idx].flags_len = cpu_to_le32(len);
--		VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", idx, addr, len);
-+		ata_port_dbg(ap, "PRD[%u] = (0x%X, 0x%X)\n", idx, addr, len);
- 
- 		idx++;
- 	}
-@@ -632,8 +632,6 @@ static enum ata_completion_errors pdc_qc_prep(struct ata_queued_cmd *qc)
- 	struct pdc_port_priv *pp = qc->ap->private_data;
- 	unsigned int i;
+ 	if (unlikely((force_err ||
+ 		     flags & (NV_CPB_RESP_ATA_ERR |
+@@ -1101,8 +1101,6 @@ static int nv_adma_port_start(struct ata_port *ap)
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	u16 tmp;
  
 -	VPRINTK("ENTER\n");
 -
- 	switch (qc->tf.protocol) {
- 	case ATA_PROT_DMA:
- 		pdc_fill_sg(qc);
-@@ -922,12 +920,8 @@ static irqreturn_t pdc_interrupt(int irq, void *dev_instance)
- 	u32 hotplug_status;
- 	int is_sataii_tx4;
+ 	/*
+ 	 * Ensure DMA mask is set to 32-bit before allocating legacy PRD and
+ 	 * pad buffers.
+@@ -1191,7 +1189,6 @@ static void nv_adma_port_stop(struct ata_port *ap)
+ 	struct nv_adma_port_priv *pp = ap->private_data;
+ 	void __iomem *mmio = pp->ctl_block;
+ 
+-	VPRINTK("ENTER\n");
+ 	writew(0, mmio + NV_ADMA_CTL);
+ }
+ 
+@@ -1253,8 +1250,6 @@ static void nv_adma_setup_port(struct ata_port *ap)
+ 	void __iomem *mmio = ap->host->iomap[NV_MMIO_BAR];
+ 	struct ata_ioports *ioport = &ap->ioaddr;
  
 -	VPRINTK("ENTER\n");
 -
--	if (!host || !host->iomap[PDC_MMIO_BAR]) {
--		VPRINTK("QUICK EXIT\n");
-+	if (!host || !host->iomap[PDC_MMIO_BAR])
- 		return IRQ_NONE;
--	}
+ 	mmio += NV_ADMA_PORT + ap->port_no * NV_ADMA_PORT_SIZE;
  
- 	host_mmio = host->iomap[PDC_MMIO_BAR];
+ 	ioport->cmd_addr	= mmio;
+@@ -1375,8 +1370,6 @@ static enum ata_completion_errors nv_adma_qc_prep(struct ata_queued_cmd *qc)
+ 	if (qc->tf.protocol == ATA_PROT_NCQ)
+ 		ctl_flags |= NV_CPB_CTL_QUEUE | NV_CPB_CTL_FPDMA;
  
-@@ -946,23 +940,18 @@ static irqreturn_t pdc_interrupt(int irq, void *dev_instance)
- 	/* reading should also clear interrupts */
- 	mask = readl(host_mmio + PDC_INT_SEQMASK);
+-	VPRINTK("qc->flags = 0x%lx\n", qc->flags);
+-
+ 	nv_adma_tf_to_cpb(&qc->tf, cpb->tf);
  
--	if (mask == 0xffffffff && hotplug_status == 0) {
--		VPRINTK("QUICK EXIT 2\n");
-+	if (mask == 0xffffffff && hotplug_status == 0)
- 		goto done_irq;
--	}
+ 	if (qc->flags & ATA_QCFLAG_DMAMAP) {
+@@ -1401,8 +1394,6 @@ static unsigned int nv_adma_qc_issue(struct ata_queued_cmd *qc)
+ 	void __iomem *mmio = pp->ctl_block;
+ 	int curr_ncq = (qc->tf.protocol == ATA_PROT_NCQ);
  
- 	mask &= 0xffff;		/* only 16 SEQIDs possible */
--	if (mask == 0 && hotplug_status == 0) {
--		VPRINTK("QUICK EXIT 3\n");
-+	if (mask == 0 && hotplug_status == 0)
- 		goto done_irq;
--	}
+-	VPRINTK("ENTER\n");
+-
+ 	/* We can't handle result taskfile with NCQ commands, since
+ 	   retrieving the taskfile switches us out of ADMA mode and would abort
+ 	   existing commands. */
+@@ -1414,7 +1405,6 @@ static unsigned int nv_adma_qc_issue(struct ata_queued_cmd *qc)
  
- 	writel(mask, host_mmio + PDC_INT_SEQMASK);
+ 	if (nv_adma_use_reg_mode(qc)) {
+ 		/* use ATA register mode */
+-		VPRINTK("using ATA register mode: 0x%lx\n", qc->flags);
+ 		BUG_ON(!(pp->flags & NV_ADMA_ATAPI_SETUP_COMPLETE) &&
+ 			(qc->flags & ATA_QCFLAG_DMAMAP));
+ 		nv_adma_register_mode(qc->ap);
+@@ -1866,12 +1856,12 @@ static void nv_swncq_host_init(struct ata_host *host)
  
- 	is_sataii_tx4 = pdc_is_sataii_tx4(host->ports[0]->flags);
+ 	/* enable swncq */
+ 	tmp = readl(mmio + NV_CTL_MCP55);
+-	VPRINTK("HOST_CTL:0x%X\n", tmp);
++	dev_dbg(&pdev->dev, "HOST_CTL:0x%X\n", tmp);
+ 	writel(tmp | NV_CTL_PRI_SWNCQ | NV_CTL_SEC_SWNCQ, mmio + NV_CTL_MCP55);
  
- 	for (i = 0; i < host->n_ports; i++) {
--		VPRINTK("port %u\n", i);
- 		ap = host->ports[i];
+ 	/* enable irq intr */
+ 	tmp = readl(mmio + NV_INT_ENABLE_MCP55);
+-	VPRINTK("HOST_ENABLE:0x%X\n", tmp);
++	dev_dbg(&pdev->dev, "HOST_ENABLE:0x%X\n", tmp);
+ 	writel(tmp | 0x00fd00fd, mmio + NV_INT_ENABLE_MCP55);
  
- 		/* check for a plug or unplug event */
-@@ -989,8 +978,6 @@ static irqreturn_t pdc_interrupt(int irq, void *dev_instance)
- 		}
+ 	/*  clear port irq */
+@@ -2101,7 +2091,7 @@ static int nv_swncq_sdbfis(struct ata_port *ap)
+ 	ata_qc_complete_multiple(ap, ata_qc_get_active(ap) ^ done_mask);
+ 
+ 	if (!ap->qc_active) {
+-		DPRINTK("over\n");
++		ata_port_dbg(ap, "over\n");
+ 		nv_swncq_pp_reinit(ap);
+ 		return 0;
  	}
+@@ -2116,12 +2106,12 @@ static int nv_swncq_sdbfis(struct ata_port *ap)
+ 		 */
+ 		lack_dhfis = 1;
  
--	VPRINTK("EXIT\n");
--
- done_irq:
- 	spin_unlock(&host->lock);
- 	return IRQ_RETVAL(handled);
-@@ -1005,8 +992,6 @@ static void pdc_packet_start(struct ata_queued_cmd *qc)
- 	unsigned int port_no = ap->port_no;
- 	u8 seq = (u8) (port_no + 1);
+-	DPRINTK("id 0x%x QC: qc_active 0x%llx,"
+-		"SWNCQ:qc_active 0x%X defer_bits %X "
+-		"dhfis 0x%X dmafis 0x%X last_issue_tag %x\n",
+-		ap->print_id, ap->qc_active, pp->qc_active,
+-		pp->defer_queue.defer_bits, pp->dhfis_bits,
+-		pp->dmafis_bits, pp->last_issue_tag);
++	ata_port_dbg(ap, "QC: qc_active 0x%llx,"
++		     "SWNCQ:qc_active 0x%X defer_bits %X "
++		     "dhfis 0x%X dmafis 0x%X last_issue_tag %x\n",
++		     ap->qc_active, pp->qc_active,
++		     pp->defer_queue.defer_bits, pp->dhfis_bits,
++		     pp->dmafis_bits, pp->last_issue_tag);
  
--	VPRINTK("ENTER, ap %p\n", ap);
--
- 	writel(0x00000001, host_mmio + (seq * 4));
- 	readl(host_mmio + (seq * 4));	/* flush */
+ 	nv_swncq_fis_reinit(ap);
  
+@@ -2161,7 +2151,7 @@ static void nv_swncq_dmafis(struct ata_port *ap)
+ 	__ata_bmdma_stop(ap);
+ 	tag = nv_swncq_tag(ap);
+ 
+-	DPRINTK("dma setup tag 0x%x\n", tag);
++	ata_port_dbg(ap, "dma setup tag 0x%x\n", tag);
+ 	qc = ata_qc_from_tag(ap, tag);
+ 
+ 	if (unlikely(!qc))
+@@ -2229,9 +2219,9 @@ static void nv_swncq_host_interrupt(struct ata_port *ap, u16 fis)
+ 
+ 	if (fis & NV_SWNCQ_IRQ_SDBFIS) {
+ 		pp->ncq_flags |= ncq_saw_sdb;
+-		DPRINTK("id 0x%x SWNCQ: qc_active 0x%X "
++		ata_port_dbg(ap, "SWNCQ: qc_active 0x%X "
+ 			"dhfis 0x%X dmafis 0x%X sactive 0x%X\n",
+-			ap->print_id, pp->qc_active, pp->dhfis_bits,
++			pp->qc_active, pp->dhfis_bits,
+ 			pp->dmafis_bits, readl(pp->sactive_block));
+ 		if (nv_swncq_sdbfis(ap) < 0)
+ 			goto irq_error;
+@@ -2257,7 +2247,7 @@ static void nv_swncq_host_interrupt(struct ata_port *ap, u16 fis)
+ 				goto irq_exit;
+ 
+ 			if (pp->defer_queue.defer_bits) {
+-				DPRINTK("send next command\n");
++				ata_port_dbg(ap, "send next command\n");
+ 				qc = nv_swncq_qc_from_dq(ap);
+ 				nv_swncq_issue_atacmd(ap, qc);
+ 			}
 -- 
 2.29.2
 
