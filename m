@@ -2,104 +2,127 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABF68C433F5
-	for <linux-ide@archiver.kernel.org>; Tue, 21 Dec 2021 04:54:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A5F5C433EF
+	for <linux-ide@archiver.kernel.org>; Tue, 21 Dec 2021 07:22:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232214AbhLUEy0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 20 Dec 2021 23:54:26 -0500
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:50122 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229441AbhLUEy0 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 20 Dec 2021 23:54:26 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1640062467; x=1671598467;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=a/wMZz9CrZXLjivTFTZZRqGAfks9G2lpHxOQXEEBUzs=;
-  b=R6/9vjxPDAVyT2XHlCNJcWBpGG/YTYRdp1kPZ8McdQmRww9VzmfWID+L
-   4r7nHSwJ//SClR7ntwcuZTmq+9nYLCy/Dac+mg3q3GAcEjewUc00e6t99
-   PfvVjs0fk9tIOVKwlCLyKSuvqwwKcoHAKRGhxFC7JiTZT2Y/foA6WQ2/m
-   kH9PbZBGVw2DlHErp+uMTc+o/jZv/T3blZXGSyB/y/SbLJkOQykElJ1/c
-   Z+dvzeO976roM50mrlvpRmiD5GY7ozT2V54cMFqeOYtsm0FR2oL55fHq5
-   +ZGQuzs8ACfG/GPLlxZ5gKRtnRK6u9ZIukgJlrLksvYqG4pR2AyHgLD4G
-   A==;
-X-IronPort-AV: E=Sophos;i="5.88,222,1635177600"; 
-   d="scan'208";a="189764683"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 21 Dec 2021 12:54:26 +0800
-IronPort-SDR: k07+A3QBZDrgS/+FMWMgGmJxmMoqfvGDT+H7CzorEqkR+ttqffpdrWNW9tn1huOBmbt5XdANFz
- HKFkMWsE9GXr+BN3qOhCRMGMpQ/EMuRwtY5hxI+IZzOi7G6ykRc89Rod6cSGzYUC0WgCrlovVN
- ZflnDuvdCjV6AInB4T81TrLvkdguXfjcGX/pNtjxogBqAhkH0J2Jkfw0TRH1J/sycuy3xEKi+k
- sihaKEcyCo9jcsjX8PTX8v4Jk8arbBKBsvxR4D/2whYpLzc424Z99VlxQPIp2vFHjdFLI2bjeO
- ITuMLTjFJWmSVUlQWwKfQ/ui
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Dec 2021 20:27:14 -0800
-IronPort-SDR: F3o1yRxDutJHRKxPvbRy7XBQmmUx7ual29iHPkvNd8ze0Vbe93gbC5kO2S3UHaytxk8o5pZVDZ
- W4+GaN4NGo/UEE3Tcl7ILW2t3xPg9fIuz1gCL0oC1+KFAMpYMxEhtYz2pxiGM9jHbJDERxTJ2e
- FxKtWkAboJmw07caW+2qZdQG6Ak4X0sqqGbkeqyche1LKXXYfSGvCmkgqUI5k2ORmcskeNz5EN
- ztlU/NpFWfM9HQ7PIzlxQltKWM+TZhckuWm2Od+sRwtwNRuSXFnzHi6erRmb+e7uIKZIKcVZpf
- RRc=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Dec 2021 20:54:26 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JJ3yn3VTfz1Rvlf
-        for <linux-ide@vger.kernel.org>; Mon, 20 Dec 2021 20:54:25 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1640062464; x=1642654465; bh=a/wMZz9CrZXLjivTFTZZRqGAfks9G2lpHxO
-        QXEEBUzs=; b=DqEeyvBKk/eFim4n/fx4v3DSxkHaZvVT1+KW1hyQ4g7OBxjYUd8
-        RWf63nMkjyFITTKqsWgGLk+/St/NLTGvcM543Ds68oxWFM59EXmIESDINRiZuwkz
-        fFHXokJHM45K3hJsFfD/Qzv3mwBZZb/DaexTZkOszsIxVMRYGwjw21clozFaiWdD
-        qGUFHQkRVxPZHiEvJmaoapsRe4+NW3trGdYqa2IOT2wx0MDQyn5BWpuG4sl9RWbG
-        qx7CMUZuHBg/IuEzj7tbNzKIr7DmXi4s0EXXp7vdfWut3cTvbkOLFuEXgF3hb8Z4
-        5N653r6kvkil6m6jteqR3+sFntrRXlNKqUA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 7swJR9In-e3N for <linux-ide@vger.kernel.org>;
-        Mon, 20 Dec 2021 20:54:24 -0800 (PST)
-Received: from [10.225.163.32] (unknown [10.225.163.32])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JJ3yl3b5vz1RtVG;
-        Mon, 20 Dec 2021 20:54:23 -0800 (PST)
-Message-ID: <e81624de-95b5-f5ae-e0fb-9019f9fc3944@opensource.wdc.com>
-Date:   Tue, 21 Dec 2021 13:54:22 +0900
+        id S229820AbhLUHWn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 21 Dec 2021 02:22:43 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:55798 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230053AbhLUHWm (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 21 Dec 2021 02:22:42 -0500
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out2.suse.de (Postfix) with ESMTP id A8F3D1F3B4;
+        Tue, 21 Dec 2021 07:22:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1640071361; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=NqiM7Ui8DpkDYcwwcVxSUlp4/b5zYbLgqNVqetoUke4=;
+        b=lw8bh8ieF4gBN85GPg5LgE5ZIXSsFYrNjxoYAA02BzaHTn0uDGagClna3K7eKl05cQQSJB
+        E7eBEuCmJ5q6fEWtkx/K83ye9VNc2EZIn0sQdxTLcf5R12OxWQwoXZKKdvSDjerQv5bmNx
+        eNU3SaGJnxIOAACMZHaMwxBJr9nx2d0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1640071361;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=NqiM7Ui8DpkDYcwwcVxSUlp4/b5zYbLgqNVqetoUke4=;
+        b=5sokmq3Iy9QxtVeS83gHEPuQcye3j7Muu3+C7zMhaOiHTe5yBgL+vcuh2i4puVFezD6zn1
+        i4+TKLy735tVInBQ==
+Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
+        by relay2.suse.de (Postfix) with ESMTP id A3D98A3B88;
+        Tue, 21 Dec 2021 07:22:41 +0000 (UTC)
+Received: by adalid.arch.suse.de (Postfix, from userid 16045)
+        id A2FEA519237A; Tue, 21 Dec 2021 08:22:41 +0100 (CET)
+From:   Hannes Reinecke <hare@suse.de>
+To:     Damien LeMoal <damien.lemoal@wdc.com>
+Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 04/68] libata: move ata_dump_id() to dynamic debugging
+Date:   Tue, 21 Dec 2021 08:20:27 +0100
+Message-Id: <20211221072131.46673-5-hare@suse.de>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20211221072131.46673-1-hare@suse.de>
+References: <20211221072131.46673-1-hare@suse.de>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [PATCH] libata: use min() to make code cleaner
-Content-Language: en-US
-To:     cgel.zte@gmail.com
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Changcheng Deng <deng.changcheng@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-References: <20211220113358.472974-1-deng.changcheng@zte.com.cn>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20211220113358.472974-1-deng.changcheng@zte.com.cn>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 12/20/21 20:33, cgel.zte@gmail.com wrote:
-> From: Changcheng Deng <deng.changcheng@zte.com.cn>
-> 
-> Use min() in order to make code cleaner.
-> 
-> Reported-by: Zeal Robot <zealci@zte.com.cn>
-> Signed-off-by: Changcheng Deng <deng.changcheng@zte.com.cn>
+Use ata_dev_dbg() to print out the information in ata_dump_id()
+and remove the ata_msg_probe() conditional.
 
-Applied to for-5.17. Thanks !
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/ata/libata-core.c | 38 ++++++++++----------------------------
+ 1 file changed, 10 insertions(+), 28 deletions(-)
 
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 296cca54017a..c9e8fab05a9a 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1341,6 +1341,7 @@ static int ata_hpa_resize(struct ata_device *dev)
+ 
+ /**
+  *	ata_dump_id - IDENTIFY DEVICE info debugging output
++ *	@dev: device from which the information is fetched
+  *	@id: IDENTIFY DEVICE page to dump
+  *
+  *	Dump selected 16-bit words from the given IDENTIFY DEVICE
+@@ -1350,32 +1351,14 @@ static int ata_hpa_resize(struct ata_device *dev)
+  *	caller.
+  */
+ 
+-static inline void ata_dump_id(const u16 *id)
+-{
+-	DPRINTK("49==0x%04x  "
+-		"53==0x%04x  "
+-		"63==0x%04x  "
+-		"64==0x%04x  "
+-		"75==0x%04x  \n",
+-		id[49],
+-		id[53],
+-		id[63],
+-		id[64],
+-		id[75]);
+-	DPRINTK("80==0x%04x  "
+-		"81==0x%04x  "
+-		"82==0x%04x  "
+-		"83==0x%04x  "
+-		"84==0x%04x  \n",
+-		id[80],
+-		id[81],
+-		id[82],
+-		id[83],
+-		id[84]);
+-	DPRINTK("88==0x%04x  "
+-		"93==0x%04x\n",
+-		id[88],
+-		id[93]);
++static inline void ata_dump_id(struct ata_device *dev, const u16 *id)
++{
++	ata_dev_dbg(dev,
++		"49==0x%04x  53==0x%04x  63==0x%04x  64==0x%04x  75==0x%04x\n"
++		"80==0x%04x  81==0x%04x  82==0x%04x  83==0x%04x  84==0x%04x\n"
++		"88==0x%04x  93==0x%04x\n",
++		id[49], id[53], id[63], id[64], id[75], id[80],
++		id[81], id[82], id[83], id[84], id[88], id[93]);
+ }
+ 
+ /**
+@@ -2632,8 +2615,7 @@ int ata_dev_configure(struct ata_device *dev)
+ 	/* find max transfer mode; for printk only */
+ 	xfer_mask = ata_id_xfermask(id);
+ 
+-	if (ata_msg_probe(ap))
+-		ata_dump_id(id);
++	ata_dump_id(dev, id);
+ 
+ 	/* SCSI only uses 4-char revisions, dump full 8 chars from ATA */
+ 	ata_id_c_string(dev->id, fwrevbuf, ATA_ID_FW_REV,
 -- 
-Damien Le Moal
-Western Digital Research
+2.29.2
+
