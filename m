@@ -2,47 +2,47 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39993C4167D
-	for <linux-ide@archiver.kernel.org>; Tue, 21 Dec 2021 07:22:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0DD3C433EF
+	for <linux-ide@archiver.kernel.org>; Tue, 21 Dec 2021 07:22:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232272AbhLUHWu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 21 Dec 2021 02:22:50 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:55892 "EHLO
+        id S233039AbhLUHWx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 21 Dec 2021 02:22:53 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:55886 "EHLO
         smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232569AbhLUHWo (ORCPT
+        with ESMTP id S232268AbhLUHWo (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Tue, 21 Dec 2021 02:22:44 -0500
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id E31871F3BE;
+        by smtp-out2.suse.de (Postfix) with ESMTP id D16891F3BB;
         Tue, 21 Dec 2021 07:22:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1640071361; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=nQ/i/lSfSuUN+NBIwnNpb8mcXW/+zJQ82gaAeWv5UDU=;
-        b=KM6I1zblmndKiMDjZAYQ29sv6uF1mihlpN0jg+0QUdqhEAMj92i2WVDkTnyCbJSxrE7Ght
-        FBSBHrxIC3wkWY3pN/hn+lF3WtrTV4a4rPE1NapaoMygeN36ORFEhXTlQr6gdoCNdAzA8a
-        3tK1pF6vFVxF73TEc0/dhGMmKZc0j48=
+        bh=ABtWRUtItnX2AlfxGna+veZ3U5o0bI3G4s/qhtZn9AU=;
+        b=sUFz7uuFAmzuyFNyvHqE96FV6jMHG9Ic6b36noTJ48vr67YhSP4eCo/jdEyqdEE/xIfYaN
+        MUYC+hALdMlM83B83rUY+nFR0zsbueRFwYi0J6AprDLdeORR4vP5fz5kjMP5y9o/wJQGxF
+        TFH56ZxCA4BfDyeX9WYJ+tzOxBZJuZU=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1640071361;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=nQ/i/lSfSuUN+NBIwnNpb8mcXW/+zJQ82gaAeWv5UDU=;
-        b=acVXQjMRwC1/BABF7eQhcsngVUiOUzmfnZ65ipfNNrmWe/8jNfF1nTrpw8n+D6B6wvQdob
-        u0NMk0k8VZOnyVAA==
+        bh=ABtWRUtItnX2AlfxGna+veZ3U5o0bI3G4s/qhtZn9AU=;
+        b=T5f3Mg6TPfOMO4LhRO7Sd2jJT7wbuH5kub5yIYr34N1SAvDA4s2I0D5kQ1Y2GxOavkhxQ5
+        bhhl+HEtGy5EGxDw==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id DE28BA3B94;
+        by relay2.suse.de (Postfix) with ESMTP id CCD12A3B90;
         Tue, 21 Dec 2021 07:22:41 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id DC33D5192392; Tue, 21 Dec 2021 08:22:41 +0100 (CET)
+        id CB07C519238A; Tue, 21 Dec 2021 08:22:41 +0100 (CET)
 From:   Hannes Reinecke <hare@suse.de>
 To:     Damien LeMoal <damien.lemoal@wdc.com>
 Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 16/68] sata_mv: replace DPRINTK with dynamic debugging
-Date:   Tue, 21 Dec 2021 08:20:39 +0100
-Message-Id: <20211221072131.46673-17-hare@suse.de>
+Subject: [PATCH 12/68] libata: move ata_{port,link,dev}_dbg to standard dev_XXX() macros
+Date:   Tue, 21 Dec 2021 08:20:35 +0100
+Message-Id: <20211221072131.46673-13-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20211221072131.46673-1-hare@suse.de>
 References: <20211221072131.46673-1-hare@suse.de>
@@ -52,137 +52,285 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Move the DPRINTK calls over to dynamic debugging.
+Use standard dev_{dbg,info,notice,warn,err} macros instead of the
+hand-crafted printk helpers.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/sata_mv.c | 74 +++++++++++++++++++++----------------------
- 1 file changed, 37 insertions(+), 37 deletions(-)
+ drivers/ata/libata-acpi.c    | 48 +++++++++++++++-------------
+ drivers/ata/libata-core.c    | 61 ------------------------------------
+ drivers/ata/pata_ixp4xx_cf.c |  6 ++--
+ include/linux/libata.h       | 48 ++++++++++------------------
+ 4 files changed, 45 insertions(+), 118 deletions(-)
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index c5b3d45a7c39..40a92c89e6d7 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -1248,42 +1248,43 @@ static int mv_stop_edma(struct ata_port *ap)
- 	return err;
- }
+diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+index 7a7d6642edcc..7007377880ce 100644
+--- a/drivers/ata/libata-acpi.c
++++ b/drivers/ata/libata-acpi.c
+@@ -650,9 +650,7 @@ static int ata_acpi_run_tf(struct ata_device *dev,
+ 	struct ata_taskfile *pptf = NULL;
+ 	struct ata_taskfile tf, ptf, rtf;
+ 	unsigned int err_mask;
+-	const char *level;
+ 	const char *descr;
+-	char msg[60];
+ 	int rc;
  
--#ifdef ATA_DEBUG
--static void mv_dump_mem(void __iomem *start, unsigned bytes)
-+static void mv_dump_mem(struct device *dev, void __iomem *start, unsigned bytes)
- {
--	int b, w;
-+	int b, w, o;
-+	unsigned char linebuf[38];
+ 	if ((gtf->tf[0] == 0) && (gtf->tf[1] == 0) && (gtf->tf[2] == 0)
+@@ -666,6 +664,10 @@ static int ata_acpi_run_tf(struct ata_device *dev,
+ 		pptf = &ptf;
+ 	}
+ 
++	descr = ata_get_cmd_descript(tf.command);
++	if (!descr)
++		descr = "unknown";
 +
- 	for (b = 0; b < bytes; ) {
--		DPRINTK("%p: ", start + b);
--		for (w = 0; b < bytes && w < 4; w++) {
--			printk("%08x ", readl(start + b));
-+		for (w = 0, o = 0; b < bytes && w < 4; w++) {
-+			o += snprintf(linebuf + o, 38 - o,
-+				      "%08x ", readl(start + b));
- 			b += sizeof(u32);
+ 	if (!ata_acpi_filter_tf(dev, &tf, pptf)) {
+ 		rtf = tf;
+ 		err_mask = ata_exec_internal(dev, &rtf, NULL,
+@@ -673,40 +675,42 @@ static int ata_acpi_run_tf(struct ata_device *dev,
+ 
+ 		switch (err_mask) {
+ 		case 0:
+-			level = KERN_DEBUG;
+-			snprintf(msg, sizeof(msg), "succeeded");
++			ata_dev_dbg(dev,
++				"ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x"
++				"(%s) succeeded\n",
++				tf.command, tf.feature, tf.nsect, tf.lbal,
++				tf.lbam, tf.lbah, tf.device, descr);
+ 			rc = 1;
+ 			break;
+ 
+ 		case AC_ERR_DEV:
+-			level = KERN_INFO;
+-			snprintf(msg, sizeof(msg),
+-				 "rejected by device (Stat=0x%02x Err=0x%02x)",
+-				 rtf.command, rtf.feature);
++			ata_dev_info(dev,
++				"ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x"
++				"(%s) rejected by device (Stat=0x%02x Err=0x%02x)",
++				tf.command, tf.feature, tf.nsect, tf.lbal,
++				tf.lbam, tf.lbah, tf.device, descr,
++				rtf.command, rtf.feature);
+ 			rc = 0;
+ 			break;
+ 
+ 		default:
+-			level = KERN_ERR;
+-			snprintf(msg, sizeof(msg),
+-				 "failed (Emask=0x%x Stat=0x%02x Err=0x%02x)",
+-				 err_mask, rtf.command, rtf.feature);
++			ata_dev_err(dev,
++				"ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x"
++				"(%s) failed (Emask=0x%x Stat=0x%02x Err=0x%02x)",
++				tf.command, tf.feature, tf.nsect, tf.lbal,
++				tf.lbam, tf.lbah, tf.device, descr,
++				err_mask, rtf.command, rtf.feature);
+ 			rc = -EIO;
+ 			break;
  		}
--		printk("\n");
-+		dev_dbg(dev, "%s: %p: %s\n",
-+			__func__, start + b, linebuf);
+ 	} else {
+-		level = KERN_INFO;
+-		snprintf(msg, sizeof(msg), "filtered out");
++		ata_dev_info(dev,
++			"ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x"
++			"(%s) filtered out\n",
++			tf.command, tf.feature, tf.nsect, tf.lbal,
++			tf.lbam, tf.lbah, tf.device, descr);
+ 		rc = 0;
  	}
+-	descr = ata_get_cmd_descript(tf.command);
+-
+-	ata_dev_printk(dev, level,
+-		       "ACPI cmd %02x/%02x:%02x:%02x:%02x:%02x:%02x (%s) %s\n",
+-		       tf.command, tf.feature, tf.nsect, tf.lbal,
+-		       tf.lbam, tf.lbah, tf.device,
+-		       (descr ? descr : "unknown"), msg);
+-
+ 	return rc;
  }
--#endif
--#if defined(ATA_DEBUG) || defined(CONFIG_PCI)
-+
- static void mv_dump_pci_cfg(struct pci_dev *pdev, unsigned bytes)
+ 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index a836f594b095..bd5803a86896 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6510,67 +6510,6 @@ const struct ata_port_info ata_dummy_port_info = {
+ };
+ EXPORT_SYMBOL_GPL(ata_dummy_port_info);
+ 
+-/*
+- * Utility print functions
+- */
+-void ata_port_printk(const struct ata_port *ap, const char *level,
+-		     const char *fmt, ...)
+-{
+-	struct va_format vaf;
+-	va_list args;
+-
+-	va_start(args, fmt);
+-
+-	vaf.fmt = fmt;
+-	vaf.va = &args;
+-
+-	printk("%sata%u: %pV", level, ap->print_id, &vaf);
+-
+-	va_end(args);
+-}
+-EXPORT_SYMBOL(ata_port_printk);
+-
+-void ata_link_printk(const struct ata_link *link, const char *level,
+-		     const char *fmt, ...)
+-{
+-	struct va_format vaf;
+-	va_list args;
+-
+-	va_start(args, fmt);
+-
+-	vaf.fmt = fmt;
+-	vaf.va = &args;
+-
+-	if (sata_pmp_attached(link->ap) || link->ap->slave_link)
+-		printk("%sata%u.%02u: %pV",
+-		       level, link->ap->print_id, link->pmp, &vaf);
+-	else
+-		printk("%sata%u: %pV",
+-		       level, link->ap->print_id, &vaf);
+-
+-	va_end(args);
+-}
+-EXPORT_SYMBOL(ata_link_printk);
+-
+-void ata_dev_printk(const struct ata_device *dev, const char *level,
+-		    const char *fmt, ...)
+-{
+-	struct va_format vaf;
+-	va_list args;
+-
+-	va_start(args, fmt);
+-
+-	vaf.fmt = fmt;
+-	vaf.va = &args;
+-
+-	printk("%sata%u.%02u: %pV",
+-	       level, dev->link->ap->print_id, dev->link->pmp + dev->devno,
+-	       &vaf);
+-
+-	va_end(args);
+-}
+-EXPORT_SYMBOL(ata_dev_printk);
+-
+ void ata_print_version(const struct device *dev, const char *version)
  {
--#ifdef ATA_DEBUG
--	int b, w;
-+	int b, w, o;
- 	u32 dw;
-+	unsigned char linebuf[38];
-+
- 	for (b = 0; b < bytes; ) {
--		DPRINTK("%02x: ", b);
--		for (w = 0; b < bytes && w < 4; w++) {
-+		for (w = 0, o = 0; b < bytes && w < 4; w++) {
- 			(void) pci_read_config_dword(pdev, b, &dw);
--			printk("%08x ", dw);
-+			o += snprintf(linebuf + o, 38 - o,
-+				      "%08x ", dw);
- 			b += sizeof(u32);
- 		}
--		printk("\n");
-+		dev_dbg(&pdev->dev, "%s: %02x: %s\n",
-+			__func__, b, linebuf);
- 	}
--#endif
- }
--#endif
-+
- static void mv_dump_all_regs(void __iomem *mmio_base,
- 			     struct pci_dev *pdev)
+ 	dev_printk(KERN_DEBUG, dev, "version %s\n", version);
+diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
+index 99c63087c8ae..17b557c91e1c 100644
+--- a/drivers/ata/pata_ixp4xx_cf.c
++++ b/drivers/ata/pata_ixp4xx_cf.c
+@@ -114,7 +114,7 @@ static void ixp4xx_set_piomode(struct ata_port *ap, struct ata_device *adev)
  {
--#ifdef ATA_DEBUG
- 	void __iomem *hc_base;
- 	void __iomem *port_base;
- 	int start_port, num_ports, p, start_hc, num_hcs, hc;
-@@ -1291,31 +1292,30 @@ static void mv_dump_all_regs(void __iomem *mmio_base,
- 	start_hc = start_port = 0;
- 	num_ports = 8;		/* should be benign for 4 port devs */
- 	num_hcs = 2;
--	DPRINTK("All registers for port(s) %u-%u:\n", start_port,
--		num_ports > 1 ? num_ports - 1 : start_port);
-+	dev_dbg(&pdev->dev,
-+		"%s: All registers for port(s) %u-%u:\n", __func__,
-+		start_port, num_ports > 1 ? num_ports - 1 : start_port);
+ 	struct ixp4xx_pata *ixpp = ap->host->private_data;
  
--	if (NULL != pdev) {
--		DPRINTK("PCI config space regs:\n");
--		mv_dump_pci_cfg(pdev, 0x68);
--	}
--	DPRINTK("PCI regs:\n");
--	mv_dump_mem(mmio_base+0xc00, 0x3c);
--	mv_dump_mem(mmio_base+0xd00, 0x34);
--	mv_dump_mem(mmio_base+0xf00, 0x4);
--	mv_dump_mem(mmio_base+0x1d00, 0x6c);
-+	dev_dbg(&pdev->dev, "%s: PCI config space regs:\n", __func__);
-+	mv_dump_pci_cfg(pdev, 0x68);
-+
-+	dev_dbg(&pdev->dev, "%s: PCI regs:\n", __func__);
-+	mv_dump_mem(&pdev->dev, mmio_base+0xc00, 0x3c);
-+	mv_dump_mem(&pdev->dev, mmio_base+0xd00, 0x34);
-+	mv_dump_mem(&pdev->dev, mmio_base+0xf00, 0x4);
-+	mv_dump_mem(&pdev->dev, mmio_base+0x1d00, 0x6c);
- 	for (hc = start_hc; hc < start_hc + num_hcs; hc++) {
- 		hc_base = mv_hc_base(mmio_base, hc);
--		DPRINTK("HC regs (HC %i):\n", hc);
--		mv_dump_mem(hc_base, 0x1c);
-+		dev_dbg(&pdev->dev, "%s: HC regs (HC %i):\n", __func__, hc);
-+		mv_dump_mem(&pdev->dev, hc_base, 0x1c);
- 	}
- 	for (p = start_port; p < start_port + num_ports; p++) {
- 		port_base = mv_port_base(mmio_base, p);
--		DPRINTK("EDMA regs (port %i):\n", p);
--		mv_dump_mem(port_base, 0x54);
--		DPRINTK("SATA regs (port %i):\n", p);
--		mv_dump_mem(port_base+0x300, 0x60);
-+		dev_dbg(&pdev->dev, "%s: EDMA regs (port %i):\n", __func__, p);
-+		mv_dump_mem(&pdev->dev, port_base, 0x54);
-+		dev_dbg(&pdev->dev, "%s: SATA regs (port %i):\n", __func__, p);
-+		mv_dump_mem(&pdev->dev, port_base+0x300, 0x60);
- 	}
--#endif
+-	ata_dev_printk(adev, KERN_INFO, "configured for PIO%d 8bit\n",
++	ata_dev_info(adev, "configured for PIO%d 8bit\n",
+ 		       adev->pio_mode - XFER_PIO_0);
+ 	ixp4xx_set_8bit_timing(ixpp, adev->pio_mode);
+ }
+@@ -132,8 +132,8 @@ static unsigned int ixp4xx_mmio_data_xfer(struct ata_queued_cmd *qc,
+ 	struct ixp4xx_pata *ixpp = ap->host->private_data;
+ 	unsigned long flags;
+ 
+-	ata_dev_printk(adev, KERN_DEBUG, "%s %d bytes\n", (rw == READ) ? "READ" : "WRITE",
+-		       buflen);
++	ata_dev_dbg(adev, "%s %d bytes\n", (rw == READ) ? "READ" : "WRITE",
++		    buflen);
+ 	spin_lock_irqsave(ap->lock, flags);
+ 
+ 	/* set the expansion bus in 16bit mode and restore
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 235fdbeb19ea..a807d2d43d70 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1489,51 +1489,38 @@ static inline int sata_srst_pmp(struct ata_link *link)
+ 	return link->pmp;
  }
  
- static unsigned int mv_scr_offset(unsigned int sc_reg_in)
-@@ -2955,7 +2955,7 @@ static int mv_pci_error(struct ata_host *host, void __iomem *mmio)
+-/*
+- * printk helpers
+- */
+-__printf(3, 4)
+-void ata_port_printk(const struct ata_port *ap, const char *level,
+-		     const char *fmt, ...);
+-__printf(3, 4)
+-void ata_link_printk(const struct ata_link *link, const char *level,
+-		     const char *fmt, ...);
+-__printf(3, 4)
+-void ata_dev_printk(const struct ata_device *dev, const char *level,
+-		    const char *fmt, ...);
+-
+ #define ata_port_err(ap, fmt, ...)				\
+-	ata_port_printk(ap, KERN_ERR, fmt, ##__VA_ARGS__)
++	dev_err(&ap->tdev, fmt, ##__VA_ARGS__)
+ #define ata_port_warn(ap, fmt, ...)				\
+-	ata_port_printk(ap, KERN_WARNING, fmt, ##__VA_ARGS__)
++	dev_warn(&ap->tdev, fmt, ##__VA_ARGS__)
+ #define ata_port_notice(ap, fmt, ...)				\
+-	ata_port_printk(ap, KERN_NOTICE, fmt, ##__VA_ARGS__)
++	dev_notice(&ap->tdev, fmt, ##__VA_ARGS__)
+ #define ata_port_info(ap, fmt, ...)				\
+-	ata_port_printk(ap, KERN_INFO, fmt, ##__VA_ARGS__)
++	dev_info(&ap->tdev, fmt, ##__VA_ARGS__)
+ #define ata_port_dbg(ap, fmt, ...)				\
+-	ata_port_printk(ap, KERN_DEBUG, fmt, ##__VA_ARGS__)
++	dev_dbg(&ap->tdev, "%s: " fmt, __func__, ##__VA_ARGS__)
  
- 	dev_err(host->dev, "PCI ERROR; PCI IRQ cause=0x%08x\n", err_cause);
+ #define ata_link_err(link, fmt, ...)				\
+-	ata_link_printk(link, KERN_ERR, fmt, ##__VA_ARGS__)
++	dev_err(&link->tdev, fmt, ##__VA_ARGS__)
+ #define ata_link_warn(link, fmt, ...)				\
+-	ata_link_printk(link, KERN_WARNING, fmt, ##__VA_ARGS__)
++	dev_warn(&link->tdev, fmt, ##__VA_ARGS__)
+ #define ata_link_notice(link, fmt, ...)				\
+-	ata_link_printk(link, KERN_NOTICE, fmt, ##__VA_ARGS__)
++	dev_notice(&link->tdev, fmt, ##__VA_ARGS__)
+ #define ata_link_info(link, fmt, ...)				\
+-	ata_link_printk(link, KERN_INFO, fmt, ##__VA_ARGS__)
++	dev_info(&link->tdev, fmt, ##__VA_ARGS__)
+ #define ata_link_dbg(link, fmt, ...)				\
+-	ata_link_printk(link, KERN_DEBUG, fmt, ##__VA_ARGS__)
++	dev_dbg(&link->tdev, "%s: " fmt, __func__, ##__VA_ARGS__)
  
--	DPRINTK("All regs @ PCI error\n");
-+	dev_dbg(host->dev, "%s: All regs @ PCI error\n", __func__);
- 	mv_dump_all_regs(mmio, to_pci_dev(host->dev));
+ #define ata_dev_err(dev, fmt, ...)				\
+-	ata_dev_printk(dev, KERN_ERR, fmt, ##__VA_ARGS__)
++	dev_err(&dev->tdev, fmt, ##__VA_ARGS__)
+ #define ata_dev_warn(dev, fmt, ...)				\
+-	ata_dev_printk(dev, KERN_WARNING, fmt, ##__VA_ARGS__)
++	dev_warn(&dev->tdev, fmt, ##__VA_ARGS__)
+ #define ata_dev_notice(dev, fmt, ...)				\
+-	ata_dev_printk(dev, KERN_NOTICE, fmt, ##__VA_ARGS__)
++	dev_notice(&dev->tdev, fmt, ##__VA_ARGS__)
+ #define ata_dev_info(dev, fmt, ...)				\
+-	ata_dev_printk(dev, KERN_INFO, fmt, ##__VA_ARGS__)
++	dev_info(&dev->tdev, fmt, ##__VA_ARGS__)
+ #define ata_dev_dbg(dev, fmt, ...)				\
+-	ata_dev_printk(dev, KERN_DEBUG, fmt, ##__VA_ARGS__)
++	dev_dbg(&dev->tdev, "%s: " fmt, __func__, ##__VA_ARGS__)
  
- 	writelfl(0, mmio + hpriv->irq_cause_offset);
+ void ata_print_version(const struct device *dev, const char *version);
+ 
+@@ -2067,11 +2054,8 @@ static inline u8 ata_wait_idle(struct ata_port *ap)
+ {
+ 	u8 status = ata_sff_busy_wait(ap, ATA_BUSY | ATA_DRQ, 1000);
+ 
+-#ifdef ATA_DEBUG
+ 	if (status != 0xff && (status & (ATA_BUSY | ATA_DRQ)))
+-		ata_port_printk(ap, KERN_DEBUG, "abnormal Status 0x%X\n",
+-				status);
+-#endif
++		ata_port_dbg(ap, "abnormal Status 0x%X\n", status);
+ 
+ 	return status;
+ }
 -- 
 2.29.2
 
