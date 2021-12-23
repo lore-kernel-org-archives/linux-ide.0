@@ -2,51 +2,69 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BE05C433FE
-	for <linux-ide@archiver.kernel.org>; Thu, 23 Dec 2021 07:56:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71AC5C433EF
+	for <linux-ide@archiver.kernel.org>; Thu, 23 Dec 2021 09:31:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239305AbhLWH4P (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 23 Dec 2021 02:56:15 -0500
-Received: from mail.BETTERBIZ.PL ([45.86.209.138]:57446 "EHLO
-        mail.betterbiz.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239318AbhLWH4P (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 23 Dec 2021 02:56:15 -0500
-Received: by mail.betterbiz.pl (Postfix, from userid 1001)
-        id 2332E82AA0; Thu, 23 Dec 2021 02:45:53 -0500 (EST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=betterbiz.pl; s=mail;
-        t=1640245608; bh=07NAgW1e0WiNB9zqagiM2BnwZfWBCpNa2E4+ccxBPgw=;
-        h=Date:From:To:Subject:From;
-        b=ANWf50v5kOEjYEGfIOVzaix9XnkkQG4QtjwC6OCrquQKN84KSBBqDdRH9NYoFimQg
-         U+vpq0M+3C3WQfgmP3noJPrKQDYWUmIzBoofTLjKXREXYeCbfcIOQYiftQfBlXVNTl
-         ZTra5iq6CKIBVJXiv9AgiRYBJCnOHuOmJ7mh9gQxp4VGgqixlUl8mtcm3QSNdsr2YN
-         fKZqAejZFa5TM6h6w3IHTPyATlKzENA0y0tJqvZX+YQxDrm/WIY0Uin4XzT/7ABVfS
-         FrcI+MY1l1J97qUZTvq7d6/40ixLi3V6ziWBgOzC6HEEh/NjO44wOwg4FpjndquJiu
-         7rKFy8ZMXh/Ug==
-Received: by mail.betterbiz.pl for <linux-ide@vger.kernel.org>; Thu, 23 Dec 2021 07:45:53 GMT
-Message-ID: <20211223024500-0.1.f.1051.0.x1yrro591c@betterbiz.pl>
-Date:   Thu, 23 Dec 2021 07:45:53 GMT
-From:   "Jakub Daroch" <jakub.daroch@betterbiz.pl>
-To:     <linux-ide@vger.kernel.org>
-Subject: Wycena paneli fotowoltaicznych
-X-Mailer: mail.betterbiz.pl
+        id S235892AbhLWJbX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 23 Dec 2021 04:31:23 -0500
+Received: from mxout02.lancloud.ru ([45.84.86.82]:47054 "EHLO
+        mxout02.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234179AbhLWJbX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 23 Dec 2021 04:31:23 -0500
+Received: from LanCloud
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout02.lancloud.ru 3E44722F2B43
+Received: from LanCloud
+Received: from LanCloud
+Received: from LanCloud
+Message-ID: <d879552f-3085-91e6-77fa-d391b890fb6b@omp.ru>
+Date:   Thu, 23 Dec 2021 12:31:06 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.0
+Subject: Re: [PATCH] ata: libahci_platform: Remove abundant check
+Content-Language: en-US
+To:     Jiasheng Jiang <jiasheng@iscas.ac.cn>, <hdegoede@redhat.com>,
+        <axboe@kernel.dk>, <p.zabel@pengutronix.de>
+CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20211222072446.1096168-1-jiasheng@iscas.ac.cn>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+In-Reply-To: <20211222072446.1096168-1-jiasheng@iscas.ac.cn>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [192.168.11.198]
+X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
+ LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry,
+Hello!
 
-dostrzegam mo=C5=BCliwo=C5=9B=C4=87 wsp=C3=B3=C5=82pracy z Pa=C5=84stwa f=
-irm=C4=85.
+On 22.12.2021 10:24, Jiasheng Jiang wrote:
 
-=C5=9Awiadczymy kompleksow=C4=85 obs=C5=82ug=C4=99 inwestycji w fotowolta=
-ik=C4=99, kt=C3=B3ra obni=C5=BCa koszty energii elektrycznej nawet o 90%.
+> It can be found that platform_get_irq() returns nagative code but not
+> null when fails.
 
-Czy s=C4=85 Pa=C5=84stwo zainteresowani weryfikacj=C4=85 wst=C4=99pnych p=
-ropozycji?
+    s/null/zero/?
 
+> The comment of the platform_get_irq clearly shows that.
 
-Pozdrawiam,
-Jakub Daroch
+    This comment still doesn't correspond to reality -- 0 can be returned 
+(although this would cause a WARN() call)...
+
+> Therefore it should be better to remove the useless check.
+
+    This patch is correct but premature. I have a (not yet merged) patch:
+
+https://marc.info/?l=linux-kernel&m=163623041902285
+
+    It actually disables reporting IRQ0. Until it's merged we have to filter 
+out IRQ0 in the libata drivers as libata treats 0 as an indication of the 
+polling mode...
+
+> Fixes: fd990556f0fa ("ata: move library code from ahci_platform.c to libahci_platform.c")
+> Signed-off-by: Jiasheng Jiang <jiasheng@iscas.ac.cn>
+[...]
+
+MBR, Sergey
