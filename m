@@ -2,22 +2,22 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CE7CC433F5
-	for <linux-ide@archiver.kernel.org>; Fri, 24 Dec 2021 13:13:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17649C433FE
+	for <linux-ide@archiver.kernel.org>; Fri, 24 Dec 2021 13:13:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352812AbhLXNNf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 24 Dec 2021 08:13:35 -0500
-Received: from relmlor2.renesas.com ([210.160.252.172]:45139 "EHLO
-        relmlie6.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1352825AbhLXNN0 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 24 Dec 2021 08:13:26 -0500
+        id S1352936AbhLXNNo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 24 Dec 2021 08:13:44 -0500
+Received: from relmlor1.renesas.com ([210.160.252.171]:11767 "EHLO
+        relmlie5.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1352840AbhLXNN3 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 24 Dec 2021 08:13:29 -0500
 X-IronPort-AV: E=Sophos;i="5.88,232,1635174000"; 
-   d="scan'208";a="105104973"
+   d="scan'208";a="104620443"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 24 Dec 2021 22:13:25 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 24 Dec 2021 22:13:28 +0900
 Received: from localhost.localdomain (unknown [10.226.36.204])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 720FA43A180F;
-        Fri, 24 Dec 2021 22:13:24 +0900 (JST)
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id BB37243A180E;
+        Fri, 24 Dec 2021 22:13:26 +0900 (JST)
 From:   Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>,
@@ -25,9 +25,9 @@ Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>,
         Prabhakar <prabhakar.csengg@gmail.com>,
         Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
         linux-ide@vger.kernel.org
-Subject: [PATCH v3 09/10] ata: pata_platform: Sort the #includes alphabetically
-Date:   Fri, 24 Dec 2021 13:12:58 +0000
-Message-Id: <20211224131300.18198-10-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Subject: [PATCH v3 10/10] ata: pata_platform: Make use of GENMASK() macro
+Date:   Fri, 24 Dec 2021 13:12:59 +0000
+Message-Id: <20211224131300.18198-11-prabhakar.mahadev-lad.rj@bp.renesas.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20211224131300.18198-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
 References: <20211224131300.18198-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
@@ -35,44 +35,34 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Sort the #includes alphabetically.
+Make use of GENMASK() macro instead of open coding.
 
 Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 ---
 v2-->v3
-* Dropped of_address.h
-* Dropped RB tag
+* Included RB tag
 
 v1-->v2
 * New patch
 ---
- drivers/ata/pata_platform.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/ata/pata_platform.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-index 88a9bdc81e68..b37c1028fd54 100644
+index b37c1028fd54..b68bce361c74 100644
 --- a/drivers/ata/pata_platform.c
 +++ b/drivers/ata/pata_platform.c
-@@ -11,14 +11,14 @@
-  * License.  See the file "COPYING" in the main directory of this archive
-  * for more details.
-  */
--#include <linux/kernel.h>
--#include <linux/module.h>
--#include <linux/blkdev.h>
--#include <scsi/scsi_host.h>
- #include <linux/ata.h>
-+#include <linux/ata_platform.h>
-+#include <linux/blkdev.h>
-+#include <linux/kernel.h>
- #include <linux/libata.h>
-+#include <linux/module.h>
- #include <linux/platform_device.h>
--#include <linux/ata_platform.h>
-+#include <scsi/scsi_host.h>
+@@ -253,8 +253,7 @@ static int pata_of_platform_get_pdata(struct platform_device *ofdev,
  
- #define DRV_NAME "pata_platform"
- #define DRV_VERSION "1.2"
+ 	priv->use16bit = of_property_read_bool(dn, "ata-generic,use16bit");
+ 
+-	priv->pio_mask = 1 << pio_mode;
+-	priv->pio_mask |= (1 << pio_mode) - 1;
++	priv->pio_mask = GENMASK(pio_mode, 0);
+ 
+ 	return 0;
+ }
 -- 
 2.17.1
 
