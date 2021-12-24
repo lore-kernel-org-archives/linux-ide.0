@@ -2,113 +2,80 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68664C433F5
-	for <linux-ide@archiver.kernel.org>; Thu, 23 Dec 2021 20:36:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92F77C43217
+	for <linux-ide@archiver.kernel.org>; Fri, 24 Dec 2021 13:13:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350261AbhLWUgw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 23 Dec 2021 15:36:52 -0500
-Received: from mxout02.lancloud.ru ([45.84.86.82]:37608 "EHLO
-        mxout02.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245049AbhLWUgw (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 23 Dec 2021 15:36:52 -0500
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout02.lancloud.ru 818AB2090F74
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-Subject: Re: [PATCH v2 2/4] ata: pata_platform: Merge pata_of_platform into
- pata_platform
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-To:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>
-CC:     <linux-kernel@vger.kernel.org>,
-        Prabhakar <prabhakar.csengg@gmail.com>
-References: <20211221162614.25308-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20211221162614.25308-3-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <dc6c931f-493e-cb94-b62c-cb9b87e393ec@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <d5173a9a-2221-4209-7c34-afdbb7d7e7c5@omp.ru>
-Date:   Thu, 23 Dec 2021 23:36:49 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
-MIME-Version: 1.0
-In-Reply-To: <dc6c931f-493e-cb94-b62c-cb9b87e393ec@omp.ru>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
- LFEX1907.lancloud.ru (fd00:f066::207)
+        id S233233AbhLXNNI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 24 Dec 2021 08:13:08 -0500
+Received: from relmlor1.renesas.com ([210.160.252.171]:58378 "EHLO
+        relmlie5.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1352728AbhLXNNI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 24 Dec 2021 08:13:08 -0500
+X-IronPort-AV: E=Sophos;i="5.88,232,1635174000"; 
+   d="scan'208";a="104620424"
+Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
+  by relmlie5.idc.renesas.com with ESMTP; 24 Dec 2021 22:13:06 +0900
+Received: from localhost.localdomain (unknown [10.226.36.204])
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 2E68443A180E;
+        Fri, 24 Dec 2021 22:13:05 +0900 (JST)
+From:   Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Rob Herring <robh+dt@kernel.org>, linux-kernel@vger.kernel.org,
+        Prabhakar <prabhakar.csengg@gmail.com>,
+        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
+        linux-ide@vger.kernel.org
+Subject: [PATCH v3 01/10] ata: pata_platform: Make use of platform_get_mem_or_io()
+Date:   Fri, 24 Dec 2021 13:12:50 +0000
+Message-Id: <20211224131300.18198-2-prabhakar.mahadev-lad.rj@bp.renesas.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20211224131300.18198-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+References: <20211224131300.18198-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 12/23/21 11:30 PM, Sergey Shtylyov wrote:
+Make use of platform_get_mem_or_io() to simplify the code.
 
-[...]
->> Merge the OF pata_of_platform driver into pata_platform. While doing so
->> drop usage of platform_get_resource() and use platform_get_irq_optional().
-> 
->    Sounds like you need a separate patch for doing that... 
-> 
->> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-[...]
->> diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
->> index cb3134bf88eb..d1f7f4d65316 100644
->> --- a/drivers/ata/pata_platform.c
->> +++ b/drivers/ata/pata_platform.c
-[...]
->> @@ -168,23 +178,81 @@ int __pata_platform_probe(struct device *dev, struct resource *io_res,
-> [...]
->> -static int pata_platform_probe(struct platform_device *pdev)
->> +static int pata_of_platform_get_pdata(struct platform_device *ofdev,
->> +				      struct pata_platform_priv *priv)
->>  {
->> +	struct device_node *dn = ofdev->dev.of_node;
->>  	struct resource *io_res;
->>  	struct resource *ctl_res;
->>  	struct resource *irq_res;
->> +	int pio_mode = 0;
->> +	int irq;
->> +	int ret;
->> +
->> +	io_res = devm_kzalloc(&ofdev->dev, sizeof(*io_res), GFP_KERNEL);
->> +	ctl_res = devm_kzalloc(&ofdev->dev, sizeof(*ctl_res), GFP_KERNEL);
->> +	irq_res = devm_kzalloc(&ofdev->dev, sizeof(*irq_res), GFP_KERNEL);
->> +	if (!io_res || !ctl_res || !irq_res)
->> +		return -ENOMEM;
->> +
->> +	ret = of_address_to_resource(dn, 0, io_res);
-> 
->    Why not switch to platform_mem_or_io() -- either before or after this patch?
-> 
->> +	if (ret) {
->> +		dev_err(&ofdev->dev, "can't get IO address from device tree\n");
->> +		return -EINVAL;
->> +	}
->> +	priv->io_res = io_res;
->> +
->> +	ret = of_address_to_resource(dn, 1, ctl_res);
-> 
->    Ditto.
-> 
->> +	if (ret) {
->> +		dev_err(&ofdev->dev, "can't get CTL address from device tree\n");
->> +		return -EINVAL;
->> +	}
->> +	priv->ctl_res = ctl_res;
->> +
->> +	irq = platform_get_irq_optional(ofdev, 0);
-> 
->    Contrariwise, either keep the old code and update it in pata_of_platform before
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+---
+ drivers/ata/pata_platform.c | 18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
 
-   s/either keep the old code and//. 
+diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
+index 028329428b75..cb3134bf88eb 100644
+--- a/drivers/ata/pata_platform.c
++++ b/drivers/ata/pata_platform.c
+@@ -198,22 +198,16 @@ static int pata_platform_probe(struct platform_device *pdev)
+ 	/*
+ 	 * Get the I/O base first
+ 	 */
+-	io_res = platform_get_resource(pdev, IORESOURCE_IO, 0);
+-	if (io_res == NULL) {
+-		io_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-		if (unlikely(io_res == NULL))
+-			return -EINVAL;
+-	}
++	io_res = platform_get_mem_or_io(pdev, 0);
++	if (unlikely(!io_res))
++		return -EINVAL;
+ 
+ 	/*
+ 	 * Then the CTL base
+ 	 */
+-	ctl_res = platform_get_resource(pdev, IORESOURCE_IO, 1);
+-	if (ctl_res == NULL) {
+-		ctl_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+-		if (unlikely(ctl_res == NULL))
+-			return -EINVAL;
+-	}
++	ctl_res = platform_get_mem_or_io(pdev, 1);
++	if (unlikely(!ctl_res))
++		return -EINVAL;
+ 
+ 	/*
+ 	 * And the IRQ
+-- 
+2.17.1
 
-> this patch or do it after this patch. Otherwise it seems somewhat inconsistent WRT
-> the of_address_to_resource() calls which you don't convert...
-
-[...]
-
-MBR, Sergey
