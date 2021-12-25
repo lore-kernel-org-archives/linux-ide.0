@@ -2,96 +2,107 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FDE2C433F5
-	for <linux-ide@archiver.kernel.org>; Sat, 25 Dec 2021 17:02:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7A6BC433EF
+	for <linux-ide@archiver.kernel.org>; Sat, 25 Dec 2021 17:13:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230129AbhLYRCD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 25 Dec 2021 12:02:03 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54904 "EHLO
+        id S230084AbhLYRNd (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 25 Dec 2021 12:13:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229914AbhLYRCD (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 25 Dec 2021 12:02:03 -0500
-Received: from mail-ed1-x52c.google.com (mail-ed1-x52c.google.com [IPv6:2a00:1450:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C0F55C061401;
-        Sat, 25 Dec 2021 09:02:02 -0800 (PST)
-Received: by mail-ed1-x52c.google.com with SMTP id x15so44635943edv.1;
-        Sat, 25 Dec 2021 09:02:02 -0800 (PST)
+        with ESMTP id S229517AbhLYRNc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 25 Dec 2021 12:13:32 -0500
+Received: from mail-yb1-xb30.google.com (mail-yb1-xb30.google.com [IPv6:2607:f8b0:4864:20::b30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32DE3C061401;
+        Sat, 25 Dec 2021 09:13:32 -0800 (PST)
+Received: by mail-yb1-xb30.google.com with SMTP id 139so140523ybd.3;
+        Sat, 25 Dec 2021 09:13:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=allLbQ90rxouBvcpZIIL+jJIydJg34w7sYljavKuAz0=;
-        b=DFfBC5s44n3NXp3E91x7/nUEN6IDHJU/8wHBeCR0dDrqbCS1HK5/7GXaWohCMMzA4J
-         1cYTFNav5i0mcOri6+8LP3u+qK3tWetD15HVUo0jr4sgHbkPsfzDMHl1aXLdSyx8QIQk
-         IrQbh4afBETKgEqGpb02LKWNUZQFk2OxL1Wep4fjXcHXpNvAFWeAXHtfCBRN9ZFa4Ntg
-         Osn/WH54KmgAmi9yuVr/0iKH1Zu2pHeCHgbQXZun0puPeWV9RnCdhXfyL8xWKDznBAW4
-         pep1f1H6P2qB/YG9kdyIRa4vRcp1NWgg892+E9gvm6glM8wQkWwhRfr88Vd+haDG+kcb
-         NwIQ==
+        bh=NatHlFP0XUBwKDlB+KIyTyC4AsmzmonDRKzzcjxel0c=;
+        b=U14jWEqI8cJS+JIp510rymM8RiUHdW0Rh8kbufPlC9foVHoxOF5Te5FEWs2zdrC2zC
+         QDgkxoezVzDAsipwgonRTUWbcjP7ocLSmNEyP+V/TSPy0huMlAI2Yn7b+D7mpiSitEh0
+         nNVuQZXIRvF6OubMwoghifhvuOU/UsiQbI4RfsJktq/uJcrqCGtO0Qm71M76B1kQv5ma
+         S4etrdKXvUkrQQZ6qcFAIxRNs/5W17j5Hh6AfO8TzhxFG+9mTzYTSrPtkcsMtOEM9Tvv
+         UbaQmnI6n7guxEfeT2ufk90yA9QibWd5x7u134XnswVk7nrFvgAwbHK01AlLWkpDgIRt
+         Basw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=allLbQ90rxouBvcpZIIL+jJIydJg34w7sYljavKuAz0=;
-        b=56YlkqmNxwaZB96BMo0rIVe1RpwGe4nKcDLa21LPGFwDp/GjCWcGS2zbkE1CnW1/tI
-         Ih6pW/rWIk7QJHi+s1hmPZpLdy/a0h7DmQKAnoQBJG3qm7FiGwAfUZWkxqG1Sb2LuDzL
-         PGuAiVSXPyK3n4szwogL2pWl0874cpRQOYnYl2b0MY+v1op1Inhe6rwABv6iSLro4Yld
-         a+jlFu22NeD3gaIg7XWSFERljLFJKtfVeTNplTVoQpcXcxEFhXTfxeb2s8eTR9ybVadR
-         jm5Yk+1ycVS40CyNm+jt1ORsnZWM3UTKNUhns/jsOZjLTpW49ziJtjo7a+OZND6kGr4x
-         e8/w==
-X-Gm-Message-State: AOAM531XRNegP0GhFc8SagjgvAxD3d+UyLBN6TOH+mF1Y6P18LGiEawM
-        /XG9ZA8AvZmcTOxZ3CD/oS+uhP/vkkxb9nD4804=
-X-Google-Smtp-Source: ABdhPJxJ0LYaPiXmh+h6TqfA7IxbUrr8s+xOP/Agw9UN1zl2MdDESBev9O+182+1jNw2MqsNeOAIL+Faib8p6P/ofK0=
-X-Received: by 2002:a05:6402:4301:: with SMTP id m1mr9159028edc.125.1640451721302;
- Sat, 25 Dec 2021 09:02:01 -0800 (PST)
+        bh=NatHlFP0XUBwKDlB+KIyTyC4AsmzmonDRKzzcjxel0c=;
+        b=R+CJRLgnhCe2lz7sdyhfh2ksee4cS5KTwStSaBfYrLb0qmm/25dqteMDSSZQwAI5f8
+         td5volp8M3cT5zAhj4yS4+n17akiqYNperO1nHxAtgpB2mFnk8ON7ahw/hkDfnI9Ddyh
+         0zBqDtFe9crs2NQ0n904PoERD8viHsFIc8kvyFkQu1dPuq3znnRsytbnqv4W5oveFKaC
+         CR2kPdWZcRls+5q19efL4prjil+56/XA1iigwp2j1acBC/Dx/BfXAG4TNJLnN4mIXHW+
+         Hgg2dk9ByJdIsKfPILmJQFKCrenma3hIJfMiexcpy/9tJWlAQ097Z6P3mzNMrDz7cBnn
+         rWYg==
+X-Gm-Message-State: AOAM530cQQGysX6xz6het8B0GpdTdZqVzyp+tR3ftHtb187RD9J9kIMi
+        wTMKsbz0CNTNWdYATnFVs/uKNn/cV7Cc0V73xsA=
+X-Google-Smtp-Source: ABdhPJyHsFZBIBR6XNc3MZMLWHSIZjQJNiOOlK/eZww/0jngzINOecCy3va1AVVwjRFaViIOo2ZIIpHaDcTiVToJzVY=
+X-Received: by 2002:a25:e7cc:: with SMTP id e195mr2933487ybh.251.1640452411495;
+ Sat, 25 Dec 2021 09:13:31 -0800 (PST)
 MIME-Version: 1.0
-References: <20211224131300.18198-1-prabhakar.mahadev-lad.rj@bp.renesas.com> <20211224131300.18198-4-prabhakar.mahadev-lad.rj@bp.renesas.com>
-In-Reply-To: <20211224131300.18198-4-prabhakar.mahadev-lad.rj@bp.renesas.com>
-From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Sat, 25 Dec 2021 19:01:24 +0200
-Message-ID: <CAHp75VdLOuzpjzrwQw71KWNM82-_TwPtYrE7ukrmZoDN3x0gQA@mail.gmail.com>
+References: <20211224131300.18198-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <20211224131300.18198-4-prabhakar.mahadev-lad.rj@bp.renesas.com> <CAHp75VdLOuzpjzrwQw71KWNM82-_TwPtYrE7ukrmZoDN3x0gQA@mail.gmail.com>
+In-Reply-To: <CAHp75VdLOuzpjzrwQw71KWNM82-_TwPtYrE7ukrmZoDN3x0gQA@mail.gmail.com>
+From:   "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+Date:   Sat, 25 Dec 2021 17:13:05 +0000
+Message-ID: <CA+V-a8tovrh-SobwCpPfdNuME-ijMrd9Crstq_wXEe2jpZF-9Q@mail.gmail.com>
 Subject: Re: [PATCH v3 03/10] ata: pata_of_platform: Use platform_get_irq_optional()
  to get the interrupt
-To:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+To:     Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Sergey Shtylyov <s.shtylyov@omp.ru>,
         Rob Herring <robh+dt@kernel.org>,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Prabhakar <prabhakar.csengg@gmail.com>, linux-ide@vger.kernel.org
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sat, Dec 25, 2021 at 3:55 AM Lad Prabhakar
-<prabhakar.mahadev-lad.rj@bp.renesas.com> wrote:
+Hi Andy,
+
+Thank you for the review.
+
+On Sat, Dec 25, 2021 at 5:02 PM Andy Shevchenko
+<andy.shevchenko@gmail.com> wrote:
 >
-> platform_get_resource(pdev, IORESOURCE_IRQ, ..) relies on static
-> allocation of IRQ resources in DT core code, this causes an issue
-> when using hierarchical interrupt domains using "interrupts" property
-> in the node as this bypasses the hierarchical setup and messes up the
-> irq chaining.
+> On Sat, Dec 25, 2021 at 3:55 AM Lad Prabhakar
+> <prabhakar.mahadev-lad.rj@bp.renesas.com> wrote:
+> >
+> > platform_get_resource(pdev, IORESOURCE_IRQ, ..) relies on static
+> > allocation of IRQ resources in DT core code, this causes an issue
+> > when using hierarchical interrupt domains using "interrupts" property
+> > in the node as this bypasses the hierarchical setup and messes up the
+> > irq chaining.
+> >
+> > In preparation for removal of static setup of IRQ resource from DT core
+> > code use platform_get_irq_optional().
 >
-> In preparation for removal of static setup of IRQ resource from DT core
-> code use platform_get_irq_optional().
+> ...
+>
+> > +       irq = platform_get_irq_optional(ofdev, 0);
+> > +       if (irq < 0 && irq != -ENXIO)
+> > +               return irq;
+> > +
+> > +       if (irq > 0) {
+>
+> > +               memset(&irq_res, 0x0, sizeof(struct resource));
+>
+> Why do you need that variable at all?
+>
+Are you referring to the irq_res variable? That's because
+__pata_platform_probe() requires it.
 
-...
+> 0x0 -> 0
+> sizeof(irq_res)
+>
+OK, I will update it.
 
-> +       irq = platform_get_irq_optional(ofdev, 0);
-> +       if (irq < 0 && irq != -ENXIO)
-> +               return irq;
-> +
-> +       if (irq > 0) {
-
-> +               memset(&irq_res, 0x0, sizeof(struct resource));
-
-Why do you need that variable at all?
-
-0x0 -> 0
-sizeof(irq_res)
-
-> +               irq_res.start = irq;
-> +       }
-
--- 
-With Best Regards,
-Andy Shevchenko
+Cheers,
+Prabhakar
