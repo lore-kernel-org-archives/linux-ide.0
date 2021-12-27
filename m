@@ -2,126 +2,54 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFD75C433F5
-	for <linux-ide@archiver.kernel.org>; Sun, 26 Dec 2021 14:22:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 395B6C433EF
+	for <linux-ide@archiver.kernel.org>; Mon, 27 Dec 2021 15:58:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233668AbhLZOWP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 26 Dec 2021 09:22:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46432 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232054AbhLZOWP (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 26 Dec 2021 09:22:15 -0500
-Received: from mail-yb1-xb2d.google.com (mail-yb1-xb2d.google.com [IPv6:2607:f8b0:4864:20::b2d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B601AC06173E;
-        Sun, 26 Dec 2021 06:22:14 -0800 (PST)
-Received: by mail-yb1-xb2d.google.com with SMTP id d1so16972538ybh.6;
-        Sun, 26 Dec 2021 06:22:14 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=R0T+FmunfYm5TZGTDWWtVRE3pwYz4U/mf0D1DGm89Tk=;
-        b=H8TpWRoBvKCJU6ibVTt4ldswgLJeSRE0n4fB7Im1GDEU8ZGyixY+xj3nPPzbYbLk1i
-         RR9D3AYSka7hGknf19We/FmsSjYC0D3cjeetIZs4rOneyBX+Zcd8aVFKcZ+cSqTIwL/P
-         neZlm/KY5Qk4vV00h5+35lJMMy8rQpwFOJOyXn1PNCeNWc9URnNc0Bn7XRSdPDbjbOMI
-         HK060H96XuiICX+XRvfCA96W4mzmLyM1SANdKPIy0OtqTnRSgyKf2SeOQ6Q2mL99KInT
-         6c/SjrAlfR36I/lwBhN5ISS58N0FoLkOGrFkiuUUoqUD3QAWmt94iU1BTwnbDzkwszom
-         3C4g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=R0T+FmunfYm5TZGTDWWtVRE3pwYz4U/mf0D1DGm89Tk=;
-        b=cpYzRQGrAfn+ROWvEgIqGobo0Vs1YRY2Cb7QZKrWKKJ4F0YIJbvjIXPsHPkpva4dLx
-         DPQuI8szcIEjsTork6LidH7Lv5PgLcGsbn//kGMZDH2wUH0OTiM31bU4Ymx9lmiaaqtV
-         rfDq7j72Ojdarqkl1AK/YTBxoSHzY/rj4jRK6rAXOWwogRZsWr5JPK3fqgrVeBrJZ1R+
-         PeM+8fZ8JNhcW1Syp/7CnfvIooS1qtv3WLUT146oooY0JZvd2vjxXv1K3yIqxkgARyy2
-         GnKw3ec0f9pIb8rS16Q4PjTVONgRrw9FoUhGtVVGz5ja+oS8NowGybbzJk/2aPQAxa+g
-         FJ4A==
-X-Gm-Message-State: AOAM530SdypXqbqYeHBn4Mrh7TJW2O0XFblLsFQHu6qtjnTy7B17p10T
-        C79RnVOjxbiJ23RxhxwLrq+M52kb4aRphWhnrx0sIE/0nJJaoA==
-X-Google-Smtp-Source: ABdhPJwlYnB2sMK8KaitUVG21fAqPVml7ydzYaVnhsdxecCJMUDZD3OCASY8zT/4L67regJk040f6KQES6MiWvHBEXg=
-X-Received: by 2002:a25:3b06:: with SMTP id i6mr13168349yba.41.1640528533859;
- Sun, 26 Dec 2021 06:22:13 -0800 (PST)
-MIME-Version: 1.0
-References: <20211224131300.18198-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <20211224131300.18198-3-prabhakar.mahadev-lad.rj@bp.renesas.com>
- <a0a158e2-d77c-e3a4-5858-020674b22d92@omp.ru> <CA+V-a8voiYxB+s2rW9s7OhSsasvVzLO6KscO354+kaQFPO6Zsg@mail.gmail.com>
- <3cab75b6-f8f8-318b-4aca-b7bac484b60b@opensource.wdc.com>
-In-Reply-To: <3cab75b6-f8f8-318b-4aca-b7bac484b60b@opensource.wdc.com>
-From:   "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
-Date:   Sun, 26 Dec 2021 14:21:48 +0000
-Message-ID: <CA+V-a8sTP5=nt2awArP4ub-C-HbB6Jo=LyC3sPw7Ove8jeXNVw@mail.gmail.com>
-Subject: Re: [PATCH v3 02/10] ata: pata_platform: Drop use of unlikely() in pata_platform_probe
+        id S240176AbhL0P6g (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 27 Dec 2021 10:58:36 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:38419 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S240373AbhL0P5w (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 27 Dec 2021 10:57:52 -0500
+Received: from handsomejack.molgen.mpg.de (handsomejack.molgen.mpg.de [141.14.17.248])
+        by mx.molgen.mpg.de (Postfix) with ESMTP id 5894461EA1923;
+        Mon, 27 Dec 2021 16:57:51 +0100 (CET)
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Cc:     Paul Menzel <pmenzel@molgen.mpg.de>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 2/3] ahci: Use macro PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE
+Date:   Mon, 27 Dec 2021 16:57:34 +0100
+Message-Id: <20211227155735.10519-2-pmenzel@molgen.mpg.de>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20211227155735.10519-1-pmenzel@molgen.mpg.de>
+References: <20211227155735.10519-1-pmenzel@molgen.mpg.de>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Damien,
+Use the defined macro from `include/linux/pci_ids.h`.
 
-On Sun, Dec 26, 2021 at 11:56 AM Damien Le Moal
-<damien.lemoal@opensource.wdc.com> wrote:
->
-> On 12/25/21 03:02, Lad, Prabhakar wrote:
-> > Hi Sergey,
-> >
-> > Thank you for the review.
-> >
-> > On Fri, Dec 24, 2021 at 5:54 PM Sergey Shtylyov <s.shtylyov@omp.ru> wrote:
-> >>
-> >> On 12/24/21 4:12 PM, Lad Prabhakar wrote:
-> >>
-> >>> pata_platform_probe() isn't a hotpath, which makes it's questionable to
-> >>> use unlikely(). Therefore let's simply drop it.
-> >>>
-> >>> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-> >>> ---
-> >>> v2-->v3
-> >>> * New patch
-> >>> ---
-> >>>  drivers/ata/pata_platform.c | 4 ++--
-> >>>  1 file changed, 2 insertions(+), 2 deletions(-)
-> >>>
-> >>> diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-> >>> index cb3134bf88eb..29902001e223 100644
-> >>> --- a/drivers/ata/pata_platform.c
-> >>> +++ b/drivers/ata/pata_platform.c
-> >>> @@ -199,14 +199,14 @@ static int pata_platform_probe(struct platform_device *pdev)
-> >>>        * Get the I/O base first
-> >>>        */
-> >>>       io_res = platform_get_mem_or_io(pdev, 0);
-> >>> -     if (unlikely(!io_res))
-> >>> +     if (!io_res)
-> >>>               return -EINVAL;
-> >>>
-> >>>       /*
-> >>>        * Then the CTL base
-> >>>        */
-> >>>       ctl_res = platform_get_mem_or_io(pdev, 1);
-> >>> -     if (unlikely(!ctl_res))
-> >>> +     if (!ctl_res)
-> >>>               return -EINVAL;
-> >>
-> >>    I think you should combine this with patch #1.
-> >>
-> > I'd like to keep the changes separate from patch #1, as it's unrelated.
->
-> But your patch 1 adds the unlikely... So simply do not add it in patch
-> one and this patch is not necessary anymore.
->
-patch #1 just replaces two platform_get_resource() with one
-platform_get_mem_or_io() call, the unlikely() is just indented towards
-the left. But anyway I can merge this into #1.
+Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
+---
+ drivers/ata/ahci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Are you OK with the rest of the patches?
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 1e1167e725a4..6a2432e4adda 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -436,7 +436,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 		.class_mask = 0xffffff,
+ 		board_ahci_al },
+ 	/* AMD */
+-	{ PCI_VDEVICE(AMD, 0x7800), board_ahci }, /* AMD Hudson-2 */
++	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE), board_ahci },
+ 	{ PCI_VDEVICE(AMD, 0x7900), board_ahci }, /* AMD CZ */
+ 	{ PCI_VDEVICE(AMD, 0x7901), board_ahci_mobile }, /* AMD Green Sardine */
+ 	/* AMD is using RAID class only for ahci controllers */
+-- 
+2.30.2
 
-Cheers,
-Prabhakar
