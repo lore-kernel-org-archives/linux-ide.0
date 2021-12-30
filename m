@@ -2,62 +2,62 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D52DC433F5
-	for <linux-ide@archiver.kernel.org>; Thu, 30 Dec 2021 13:35:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BDA7C433EF
+	for <linux-ide@archiver.kernel.org>; Thu, 30 Dec 2021 13:47:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233960AbhL3NfJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 30 Dec 2021 08:35:09 -0500
-Received: from smtp-out1.suse.de ([195.135.220.28]:45880 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232187AbhL3NfJ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 30 Dec 2021 08:35:09 -0500
+        id S235880AbhL3Nrw (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 30 Dec 2021 08:47:52 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:52846 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235821AbhL3Nrv (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 30 Dec 2021 08:47:51 -0500
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 4A3B921114;
-        Thu, 30 Dec 2021 13:35:08 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id AE1E71F37C;
+        Thu, 30 Dec 2021 13:47:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1640871308; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1640872070; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=nNJvjKHb4Y8WpSKSBpjur0q65UAXxFw+5COgWD3TSkQ=;
-        b=ySTCD4dzHT45RWhvm7QKBRXvojUln4DCqNdWMBXkEJoaegCuRFsAR1OzSprt57oEJVjE0u
-        KO/aG0o5Vk5yQ3Wr7Od4TWiGvaispaTGb1LDa5VorvGCPfNWDdgTLq/B6MX3T/2knHsgB1
-        VXuuVECwYuEPBxFi/TNduP7ZF7IfwPg=
+        bh=HK86uqN7T/niRMWbddbxO36UoKIkrcmT1FYaI3FRnfU=;
+        b=CXpL3F14eFHk8L8E+6E7hRH9qNFMbFqAQotwoQKPpwZb2Www4RMe+CHmb8NGivaVVfbHDD
+        aSHL20QWvl4SL+yp0s+K7pVTC31ySfHrUXGzKLDLO+K35SIcS4sgINnlcoAvKxFezY8of4
+        dQmplkTxSsePio1ZWSLuwEIO9eMLUOE=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1640871308;
+        s=susede2_ed25519; t=1640872070;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=nNJvjKHb4Y8WpSKSBpjur0q65UAXxFw+5COgWD3TSkQ=;
-        b=AmFlXTRzy0H4/OaxTx2mk/5o34KXQR4/K1ufxQ1NQqL0YZ7N4xXpSnG7RiWOafbZyYmlwK
-        88yGNI746BKVjjBQ==
+        bh=HK86uqN7T/niRMWbddbxO36UoKIkrcmT1FYaI3FRnfU=;
+        b=QNi0vZHSKsChsjIOb0t4kF2X9kcMROKdHeladmdkdrcHKCrLBSidzS4oIhgGeObx07eFTu
+        4hx8hrrn5CXlrDCQ==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D791713BC5;
-        Thu, 30 Dec 2021 13:35:07 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 92F2513BDA;
+        Thu, 30 Dec 2021 13:47:50 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id 5kS7MIu1zWH5SAAAMHmgww
-        (envelope-from <hare@suse.de>); Thu, 30 Dec 2021 13:35:07 +0000
-Subject: Re: [PATCH v3 2/3] ahci: Use macro PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE
-To:     Paul Menzel <pmenzel@molgen.mpg.de>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20211229161119.1006-1-pmenzel@molgen.mpg.de>
- <20211229161119.1006-2-pmenzel@molgen.mpg.de>
+        id D0h7Ioa4zWFaTAAAMHmgww
+        (envelope-from <hare@suse.de>); Thu, 30 Dec 2021 13:47:50 +0000
+Subject: Re: [PATCHv3 00/68] libata: rework logging, take II
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Damien LeMoal <damien.lemoal@wdc.com>
+Cc:     linux-ide@vger.kernel.org
+References: <20211221072131.46673-1-hare@suse.de>
+ <e22c1fc6-b707-a6f0-74bf-d911adec4a5b@opensource.wdc.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <f16c35bc-43fe-5b06-e867-81a75ffaf675@suse.de>
-Date:   Thu, 30 Dec 2021 14:35:07 +0100
+Message-ID: <08361e45-f5b9-f2c5-7861-e042c6ace044@suse.de>
+Date:   Thu, 30 Dec 2021 14:47:50 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.12.0
 MIME-Version: 1.0
-In-Reply-To: <20211229161119.1006-2-pmenzel@molgen.mpg.de>
+In-Reply-To: <e22c1fc6-b707-a6f0-74bf-d911adec4a5b@opensource.wdc.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -65,34 +65,65 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 12/29/21 5:11 PM, Paul Menzel wrote:
-> Use the defined macro from `include/linux/pci_ids.h`.
+On 12/30/21 6:19 AM, Damien Le Moal wrote:
+> On 12/21/21 16:20, Hannes Reinecke wrote:
+>> Hi all,
+>>
+>> after some prodding from individual persons I've resurrected my
+>> patchset to put libata logging on a even keel, and use structured
+>> logging for everything.
+>> So this patch does away with DPRINTK, ATA_DEBUG or ata_msg_XXX()
+>> calls, and moves everything over to structured logging
+>> (ie the dev_XXX() calls).
+>> Additionally I've added tracepoints to trace command flow,
+>> error handling, host state machine etc.
+>>
+>> So everything is looking far saner now.
+>>
+>> As usual, comments and reviews are welcome.
+>>
+>> I know that the device names suck. Blame Tejun.
 > 
-> Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
-> ---
->   drivers/ata/ahci.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+> I applied this series, temporarily, to the branch for-5.17-logging, with
+> the fixes I commented about.
 > 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 1e1167e725a4..6a2432e4adda 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -436,7 +436,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->   		.class_mask = 0xffffff,
->   		board_ahci_al },
->   	/* AMD */
-> -	{ PCI_VDEVICE(AMD, 0x7800), board_ahci }, /* AMD Hudson-2 */
-> +	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE), board_ahci },
->   	{ PCI_VDEVICE(AMD, 0x7900), board_ahci }, /* AMD CZ */
->   	{ PCI_VDEVICE(AMD, 0x7901), board_ahci_mobile }, /* AMD Green Sardine */
->   	/* AMD is using RAID class only for ahci controllers */
+> After some light testing, seems OK, but need to hammer this a little more.
 > 
-Weelll ... there are defines for AMD Hudson-2 and similar in the pci_ids 
-file, yet these definitions are not used here.
-I'd vote keeping the style for all entries, ie either convert all 
-entries here to use #defines, or stay with the numeral.
+> My main concern is the change in patch 12: using the dev_xxx() macros
+> directly changes the messages from being all prefixed with "ataX.X" to
+> different flavors (devX.X, linkX.X, portX.X, etc). While I do like the
+> code simplification, this makes reading dmesg to track how a device is
+> behaving very hard.
+> 
+And that was exactly what I had been hinting at with my last sentence :-)
 
-But we shouldn't mix them.
+Original sin here is to have completely generic names for ata device 
+objects (link-X? C'mon).
+
+And trying to twiddle with the devnames will land you in the mess we are 
+in now, _and_ you lose the link between device names in sysfs and what's 
+printed in the logging message, making debugging ever so much fun.
+(And I'm not even going into the _very_ slim distinction between port, 
+link, and dev here ...)
+
+> Defining dev_fmt() everywhere the ata_{port,link,dev}_XXX functions are
+> used would solve this, but that is annoying as almost all drivers would
+> need to define that. Looking at the dev_XXX() macros, I do not see an
+> easy solution. Any idea ?
+> 
+I guess the only sane solution would be to have a clean break by 
+introducing a new config variable like ATA_NEW_SYSFS_NAMING.
+Then we could have 'sane' sysfs names like 'ata_port', 'ata_link', and 
+'ata_dev', _and_ would avoid the 'sysfs is ABI and cannot be modified'
+trap.
+
+Plan would be to send a prep patch to partially revert patch 12, so as 
+to re-introduce the original formatting, but keeping the new accessors.
+And then have an additional patch to introduce the new-style sysfs 
+layout, with the new config option. Which clearly would default to 'n' 
+for now.
+
+Hmm?
 
 Cheers,
 
