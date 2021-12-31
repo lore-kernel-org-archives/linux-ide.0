@@ -2,106 +2,231 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AB57C433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 31 Dec 2021 07:08:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1147EC433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 31 Dec 2021 09:45:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229699AbhLaHIO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 31 Dec 2021 02:08:14 -0500
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:43301 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S229636AbhLaHIO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 31 Dec 2021 02:08:14 -0500
-Received: from [192.168.0.3] (ip5f5aea97.dynamic.kabel-deutschland.de [95.90.234.151])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        id S229707AbhLaJpb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 31 Dec 2021 04:45:31 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:51100 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229577AbhLaJpa (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 31 Dec 2021 04:45:30 -0500
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id E7E7B61EA1922;
-        Fri, 31 Dec 2021 08:08:11 +0100 (CET)
-Message-ID: <fbfd865f-c88c-6ee1-6cb9-8194e170cd3a@molgen.mpg.de>
-Date:   Fri, 31 Dec 2021 08:08:11 +0100
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 60BDA21101;
+        Fri, 31 Dec 2021 09:45:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1640943929; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=s9jbWyBQ0NV9MlW7kq9agGuTM9zDKMiwazofHJes3aA=;
+        b=hTOYnBebtTyJBQq3hZGlzvW853eAyKV7iRkYmhRnAgf+BAuJVdZ4r2VzXWkzHRW73GzPyu
+        Th8KQ2YL6SYS1/G7KE38Hkpi7FpgzGBVsGNiGha2wn7n5cd/mCfwaOxwAwk/alq939wPoT
+        tygBcq73ZtCm5BQdiRITV6ZqRoFG/pI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1640943929;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=s9jbWyBQ0NV9MlW7kq9agGuTM9zDKMiwazofHJes3aA=;
+        b=xSMVH2gMkLs9T4KAsTNauZBoWjNB0wfuXt//EVAbxI+f+qKYIbWI9VWiDtl/gTmy3bOasz
+        GAX+OBjclhKi3zCA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 4312313C2F;
+        Fri, 31 Dec 2021 09:45:29 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id 8X75DjnRzmG0DwAAMHmgww
+        (envelope-from <hare@suse.de>); Fri, 31 Dec 2021 09:45:29 +0000
+Subject: Re: [PATCHv3 00/68] libata: rework logging, take II
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Damien LeMoal <damien.lemoal@wdc.com>
+Cc:     linux-ide@vger.kernel.org
+References: <20211221072131.46673-1-hare@suse.de>
+ <e22c1fc6-b707-a6f0-74bf-d911adec4a5b@opensource.wdc.com>
+ <08361e45-f5b9-f2c5-7861-e042c6ace044@suse.de>
+ <b00d657e-50d5-d17d-4f27-677d73e0be00@opensource.wdc.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <f0887300-7886-02c2-d6be-032778beb2ac@suse.de>
+Date:   Fri, 31 Dec 2021 10:45:28 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.1
-Subject: Re: [PATCH v3 3/3] ahci: AMD A85 FCH (Hudson D4): Skip 200 ms
- debounce delay in `sata_link_resume()`
+In-Reply-To: <b00d657e-50d5-d17d-4f27-677d73e0be00@opensource.wdc.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     linux-ide@vger.kernel.org,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Guenter Roeck <groeck@chromium.org>,
-        linux-kernel@vger.kernel.org
-References: <20211229161119.1006-1-pmenzel@molgen.mpg.de>
- <20211229161119.1006-3-pmenzel@molgen.mpg.de>
- <5c333718-eaa5-b41c-e8ea-59d6e01254aa@opensource.wdc.com>
- <19f6cd93-9bd7-60dc-4471-18022bcf456c@molgen.mpg.de>
- <7b64d1c3-f798-d64b-9ee3-9669d98f4e28@opensource.wdc.com>
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <7b64d1c3-f798-d64b-9ee3-9669d98f4e28@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dear Damien,
-
-
-Am 31.12.21 um 01:52 schrieb Damien Le Moal:
-> On 12/30/21 20:08, Paul Menzel wrote:
->>>>    	board_ahci_nomsi,
->>>>    	board_ahci_noncq,
->>>>    	board_ahci_nosntf,
->>>> @@ -141,6 +142,13 @@ static const struct ata_port_info ahci_port_info[] = {
->>>>    		.udma_mask	= ATA_UDMA6,
->>>>    		.port_ops	= &ahci_ops,
->>>>    	},
->>>> +	[board_ahci_nodbdelay] = {
->>>> +		.flags		= AHCI_FLAG_COMMON,
->>>> +		.link_flags	= ATA_LFLAG_NO_DB_DELAY,
->>>> +		.pio_mask	= ATA_PIO4,
->>>> +		.udma_mask	= ATA_UDMA6,
->>>> +		.port_ops	= &ahci_ops,
->>>> +	},
->>>>    	[board_ahci_nomsi] = {
->>>>    		AHCI_HFLAGS	(AHCI_HFLAG_NO_MSI),
->>>>    		.flags		= AHCI_FLAG_COMMON,
->>>> @@ -437,6 +445,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->>>>    		board_ahci_al },
->>>>    	/* AMD */
->>>>    	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE), board_ahci },
->>>> +	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_HUDSON2_SATA_AHCI), board_ahci_nodbdelay },
+On 12/31/21 5:49 AM, Damien Le Moal wrote:
+> On 12/30/21 22:47, Hannes Reinecke wrote:
+>> On 12/30/21 6:19 AM, Damien Le Moal wrote:
+>>> On 12/21/21 16:20, Hannes Reinecke wrote:
+>>>> Hi all,
+>>>>
+>>>> after some prodding from individual persons I've resurrected my
+>>>> patchset to put libata logging on a even keel, and use structured
+>>>> logging for everything.
+>>>> So this patch does away with DPRINTK, ATA_DEBUG or ata_msg_XXX()
+>>>> calls, and moves everything over to structured logging
+>>>> (ie the dev_XXX() calls).
+>>>> Additionally I've added tracepoints to trace command flow,
+>>>> error handling, host state machine etc.
+>>>>
+>>>> So everything is looking far saner now.
+>>>>
+>>>> As usual, comments and reviews are welcome.
+>>>>
+>>>> I know that the device names suck. Blame Tejun.
 >>>
->>> Patch 1 introduces this macro in pci_ids.h, but it is used only here. So
->>> to keep with the current style in this structure, drop the macro (so
->>> drop patch 1).
+>>> I applied this series, temporarily, to the branch for-5.17-logging, with
+>>> the fixes I commented about.
+>>>
+>>> After some light testing, seems OK, but need to hammer this a little more.
+>>>
+>>> My main concern is the change in patch 12: using the dev_xxx() macros
+>>> directly changes the messages from being all prefixed with "ataX.X" to
+>>> different flavors (devX.X, linkX.X, portX.X, etc). While I do like the
+>>> code simplification, this makes reading dmesg to track how a device is
+>>> behaving very hard.
+>>>
+>> And that was exactly what I had been hinting at with my last sentence :-)
 >>
->> I wait for your answer of the second patch, and then I am going to sent v4.
-> 
-> Let's use the numeric value. No macro definition needed.
-
-Alright. I am going to follow the maintainers wishes.
-
->>>>    	{ PCI_VDEVICE(AMD, 0x7900), board_ahci }, /* AMD CZ */
->>>>    	{ PCI_VDEVICE(AMD, 0x7901), board_ahci_mobile }, /* AMD Green Sardine */
->>>>    	/* AMD is using RAID class only for ahci controllers */
+>> Original sin here is to have completely generic names for ata device
+>> objects (link-X? C'mon).
 >>
->> Do you have a AHCI device at hand, where you could also test if
->> everything works fine without the delay?
+>> And trying to twiddle with the devnames will land you in the mess we are
+>> in now, _and_ you lose the link between device names in sysfs and what's
+>> printed in the logging message, making debugging ever so much fun.
+>> (And I'm not even going into the _very_ slim distinction between port,
+>> link, and dev here ...)
+>>
+>>> Defining dev_fmt() everywhere the ata_{port,link,dev}_XXX functions are
+>>> used would solve this, but that is annoying as almost all drivers would
+>>> need to define that. Looking at the dev_XXX() macros, I do not see an
+>>> easy solution. Any idea ?
+>>>
+>> I guess the only sane solution would be to have a clean break by
+>> introducing a new config variable like ATA_NEW_SYSFS_NAMING.
+>> Then we could have 'sane' sysfs names like 'ata_port', 'ata_link', and
+>> 'ata_dev', _and_ would avoid the 'sysfs is ABI and cannot be modified'
+>> trap.
+>>
+>> Plan would be to send a prep patch to partially revert patch 12, so as
+>> to re-introduce the original formatting, but keeping the new accessors.
+>> And then have an additional patch to introduce the new-style sysfs
+>> layout, with the new config option. Which clearly would default to 'n'
+>> for now.
+>>
+>> Hmm?
 > 
-> Unfortunately, I do not have any board with this adapter.
+> For the ata_xxx_printk() functions, what about something simpler like this:
+> 
+> +#define ata_port_printk(level, ap, fmt, ...)                   \
+> +       pr_ ## level ("ata%u: " fmt, (ap)->print_id, ##__VA_ARGS__)
+> 
+>   #define ata_port_err(ap, fmt, ...)                             \
+> -       ata_port_printk(ap, KERN_ERR, fmt, ##__VA_ARGS__)
+> +       ata_port_printk(err, ap, fmt, ##__VA_ARGS__)
+>   #define ata_port_warn(ap, fmt, ...)                            \
+> -       ata_port_printk(ap, KERN_WARNING, fmt, ##__VA_ARGS__)
+> +       ata_port_printk(warn, ap, fmt, ##__VA_ARGS__)
+>   #define ata_port_notice(ap, fmt, ...)                          \
+> -       ata_port_printk(ap, KERN_NOTICE, fmt, ##__VA_ARGS__)
+> +       ata_port_printk(notice, ap, fmt, ##__VA_ARGS__)
+>   #define ata_port_info(ap, fmt, ...)                            \
+> -       ata_port_printk(ap, KERN_INFO, fmt, ##__VA_ARGS__)
+> +       ata_port_printk(info, ap, fmt, ##__VA_ARGS__)
+>   #define ata_port_dbg(ap, fmt, ...)                             \
+> -       ata_port_printk(ap, KERN_DEBUG, fmt, ##__VA_ARGS__)
+> +       ata_port_printk(debug, ap, fmt, ##__VA_ARGS__)
+> +
+> +#define ata_link_printk(level, link, fmt, ...)                 \
+> +do {                                                           \
+> +       if (sata_pmp_attached((link)->ap) ||                    \
+> +           (link)->ap->slave_link)                             \
+> +               pr_ ## level ("ata%u.%02u: " fmt,               \
+> +                             (link)->ap->print_id,             \
+> +                             (link)->pmp,                      \
+> +                             ##__VA_ARGS__);                   \
+> +        else                                                   \
+> +               pr_ ## level ("ata%u: " fmt,                    \
+> +                             (link)->ap->print_id,             \
+> +                             ##__VA_ARGS__);                   \
+> +} while (0)
+> 
+>   #define ata_link_err(link, fmt, ...)                           \
+> -       ata_link_printk(link, KERN_ERR, fmt, ##__VA_ARGS__)
+> +       ata_link_printk(err, link, fmt, ##__VA_ARGS__)
+>   #define ata_link_warn(link, fmt, ...)                          \
+> -       ata_link_printk(link, KERN_WARNING, fmt, ##__VA_ARGS__)
+> +       ata_link_printk(warn, link, fmt, ##__VA_ARGS__)
+>   #define ata_link_notice(link, fmt, ...)                        \
+> -       ata_link_printk(link, KERN_NOTICE, fmt, ##__VA_ARGS__)
+> +       ata_link_printk(notice, link, fmt, ##__VA_ARGS__)
+>   #define ata_link_info(link, fmt, ...)                          \
+> -       ata_link_printk(link, KERN_INFO, fmt, ##__VA_ARGS__)
+> +       ata_link_printk(info, link, fmt, ##__VA_ARGS__)
+>   #define ata_link_dbg(link, fmt, ...)                           \
+> -       ata_link_printk(link, KERN_DEBUG, fmt, ##__VA_ARGS__)
+> +       ata_link_printk(debug, link, fmt, ##__VA_ARGS__)
+> +
+> +#define ata_dev_printk(level, dev, fmt, ...)                   \
+> +        pr_ ## level("ata%u.%02u: " fmt,                       \
+> +               (dev)->link->ap->print_id,                      \
+> +              (dev)->link->pmp + (dev)->devno,                 \
+> +              ##__VA_ARGS__)
+> 
+>   #define ata_dev_err(dev, fmt, ...)                             \
+> -       ata_dev_printk(dev, KERN_ERR, fmt, ##__VA_ARGS__)
+> +       ata_dev_printk(err, dev, fmt, ##__VA_ARGS__)
+>   #define ata_dev_warn(dev, fmt, ...)                            \
+> -       ata_dev_printk(dev, KERN_WARNING, fmt, ##__VA_ARGS__)
+> +       ata_dev_printk(warn, dev, fmt, ##__VA_ARGS__)
+>   #define ata_dev_notice(dev, fmt, ...)                          \
+> -       ata_dev_printk(dev, KERN_NOTICE, fmt, ##__VA_ARGS__)
+> +       ata_dev_printk(notice, dev, fmt, ##__VA_ARGS__)
+>   #define ata_dev_info(dev, fmt, ...)                            \
+> -       ata_dev_printk(dev, KERN_INFO, fmt, ##__VA_ARGS__)
+> +       ata_dev_printk(info, dev, fmt, ##__VA_ARGS__)
+>   #define ata_dev_dbg(dev, fmt, ...)                             \
+> -       ata_dev_printk(dev, KERN_DEBUG, fmt, ##__VA_ARGS__)
+> +       ata_dev_printk(debug, dev, fmt, ##__VA_ARGS__)
+> 
+> And the remaining of the patch is the same. Instead of dev_xxx() this
+> uses pr_xxx() so we have the same dynamic debug feature and we preserve
+> the messages as they were until now.
+> 
+> Thoughts ?
+> 
+Well, yes, that would serve as a 'workaround' to restore the original 
+names in the kernel message log.
 
-Sorry, we misunderstand each other. (I wrote a reply to my own patch [1].)
+But the overall problem remains: device names in the message log do not 
+correspond with the names in sysfs. This makes debugging really hard as 
+one has to figure out how the device names are generated in order to 
+find the correct sysfs entry; and I even do think that we can't 
+distinguish between 'link' and 'device' names in the message log, making 
+things even harder.
 
-I think the delay is not necessary for any modern AHCI controller. It’d 
-be great, if you could test, if it’s also true on the systems you have 
-by just skipping the delay.
+That is something I really like to fix, and get the libata stack in line 
+with driver core standards such that we can use the standard 
+dev_printk() macros.
 
+Cheers, and indeed happy new year,
 
-Kind regards,
-
-Paul
-
-
-[1]: 
-https://lore.kernel.org/linux-ide/20211227162658.11314-2-pmenzel@molgen.mpg.de/T/#m697d2121463a4c946730e6b83940e12d6d7e6700
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
