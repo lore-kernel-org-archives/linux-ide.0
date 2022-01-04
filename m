@@ -2,44 +2,44 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6808AC433EF
-	for <linux-ide@archiver.kernel.org>; Tue,  4 Jan 2022 10:58:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FD27C4332F
+	for <linux-ide@archiver.kernel.org>; Tue,  4 Jan 2022 10:58:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229702AbiADK6r (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 4 Jan 2022 05:58:47 -0500
-Received: from rap-us.hgst.com ([199.255.44.250]:46633 "EHLO
+        id S230097AbiADK6s (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 4 Jan 2022 05:58:48 -0500
+Received: from rap-us.hgst.com ([199.255.44.250]:53808 "EHLO
         usg-ed-osssrv.wdc.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230097AbiADK6q (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jan 2022 05:58:46 -0500
+        with ESMTP id S230319AbiADK6s (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jan 2022 05:58:48 -0500
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JSqNk54V1z1VSkW
-        for <linux-ide@vger.kernel.org>; Tue,  4 Jan 2022 02:58:46 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JSqNl6hqjz1VSkW
+        for <linux-ide@vger.kernel.org>; Tue,  4 Jan 2022 02:58:47 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:subject:to
-        :from; s=dkim; t=1641293926; x=1643885927; bh=oIlYaVkPxQUjn4NCN0
-        AwZIo2HUS6Qq4HYCWHJkcny9A=; b=CkHIzD3D0HtNj8qb+CtKryFQYS5wvFVxNP
-        e3B7JBHCvH/8BtQQrHjEQhZciYBqnbcdBiX0Dpzt0TjqBdt7/2DSQDDXqt1d7jeN
-        2CidAgm7na3nYeUwKHRJr2L+mJwMOmmlkTuPSY9RCHe94HCioYazZwkdL7TaVlJW
-        Co58uST7ZNtDb0vLGz+JzpUyvp6fYJOX2GysME297zJzCTe5QnURPZ4PcjVFMU+9
-        DXbEjmRIaKiHggrHbNdJymRfZ9WTS5PbEDqinLH+/op1UFGVQTZF1k7zDzxk9f3T
-        dabyFtVlQgulQ+LuZavcGNvCDC934NI+i9HW+65ISez009RFDGtQ==
+        :from; s=dkim; t=1641293927; x=1643885928; bh=3hYZDjs/rqX6vqy59X
+        Xgi5huuytYCAxggqNYj8+rm3g=; b=NEx2R6/UZQ5l172jMvYXb5hRfh19mJ/Pzz
+        Sm4W6t90eAdeasCGJHud0sWUw6MAW16TqaRuXIAYWRQVRwOy+YgVmXYQil0brv3Z
+        MPY426Fv47uZcEjoI8Wli+lRc6VdOJOvfksxqgIJAmrFn4Xiskyq+PQyCCp9p3OI
+        o/dQGSPrCPWZYVp2OStJJ0+yBjO4lVWgyXvCsz6XPsPXKWin7OedQtPlVP9LIbBv
+        ZRbPH64qhhatSviwjGALyRfsuxQjB78tKsp+38njk+v0JuNIwW3x2hQSZijW6GFN
+        z7mHvqKRrRDahE0Y1PcDYitbBsLz9YpTXb6OFwFQ4loY6dSFlVsg==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id AhA72z3lITnf for <linux-ide@vger.kernel.org>;
-        Tue,  4 Jan 2022 02:58:46 -0800 (PST)
+        with ESMTP id eVgANHQdmC56 for <linux-ide@vger.kernel.org>;
+        Tue,  4 Jan 2022 02:58:47 -0800 (PST)
 Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JSqNk0byWz1VSkV
-        for <linux-ide@vger.kernel.org>; Tue,  4 Jan 2022 02:58:45 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JSqNl2LfJz1VSkV
+        for <linux-ide@vger.kernel.org>; Tue,  4 Jan 2022 02:58:47 -0800 (PST)
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 To:     linux-ide@vger.kernel.org
-Subject: [PATCH v2 01/22] ata: sata_fsl: add compile test support
-Date:   Tue,  4 Jan 2022 19:58:22 +0900
-Message-Id: <20220104105843.1730172-2-damien.lemoal@opensource.wdc.com>
+Subject: [PATCH v2 03/22] ata: ahci_da850: add compile test support
+Date:   Tue,  4 Jan 2022 19:58:24 +0900
+Message-Id: <20220104105843.1730172-4-damien.lemoal@opensource.wdc.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20220104105843.1730172-1-damien.lemoal@opensource.wdc.com>
 References: <20220104105843.1730172-1-damien.lemoal@opensource.wdc.com>
@@ -49,8 +49,8 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add dependendy on COMPILE_TEST to allow compile tests with configs that
-do not enable FSL_SOC.
+Add Kconfig dependendy on COMPILE_TEST to allow compile tests with
+configs that do not enable ARCH_DAVINCI_DA850.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 ---
@@ -58,18 +58,18 @@ Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 9ebaa3c288dd..80bad7cba631 100644
+index 3bf38a328851..9f1288fd5482 100644
 --- a/drivers/ata/Kconfig
 +++ b/drivers/ata/Kconfig
-@@ -290,7 +290,7 @@ config AHCI_QORIQ
+@@ -173,7 +173,7 @@ config AHCI_BRCM
 =20
- config SATA_FSL
- 	tristate "Freescale 3.0Gbps SATA support"
--	depends on FSL_SOC
-+	depends on FSL_SOC || COMPILE_TEST
+ config AHCI_DA850
+ 	tristate "DaVinci DA850 AHCI SATA support"
+-	depends on ARCH_DAVINCI_DA850
++	depends on ARCH_DAVINCI_DA850 || COMPILE_TEST
  	select SATA_HOST
  	help
- 	  This option enables support for Freescale 3.0Gbps SATA controller.
+ 	  This option enables support for the DaVinci DA850 SoC's
 --=20
 2.31.1
 
