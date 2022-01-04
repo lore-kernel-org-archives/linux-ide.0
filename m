@@ -2,86 +2,87 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86D88C433F5
-	for <linux-ide@archiver.kernel.org>; Tue,  4 Jan 2022 13:07:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E34CC433EF
+	for <linux-ide@archiver.kernel.org>; Tue,  4 Jan 2022 19:42:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232178AbiADNHa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 4 Jan 2022 08:07:30 -0500
-Received: from szxga02-in.huawei.com ([45.249.212.188]:17323 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230512AbiADNHa (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jan 2022 08:07:30 -0500
-Received: from dggpemm500024.china.huawei.com (unknown [172.30.72.55])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4JStD25mZLz9ryJ;
-        Tue,  4 Jan 2022 21:06:26 +0800 (CST)
-Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
- dggpemm500024.china.huawei.com (7.185.36.203) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Tue, 4 Jan 2022 21:07:28 +0800
-Received: from huawei.com (10.175.101.6) by dggpemm500017.china.huawei.com
- (7.185.36.178) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Tue, 4 Jan
- 2022 21:07:27 +0800
-From:   Wenchao Hao <haowenchao@huawei.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     Zhiqiang Liu <liuzhiqiang26@huawei.com>,
-        Wenchao Hao <haowenchao@huawei.com>
-Subject: [PATCH demo] ata_scsi_queuecmd: Make input parameters check more clearly
-Date:   Tue, 4 Jan 2022 21:17:04 -0500
-Message-ID: <20220105021704.1679067-1-haowenchao@huawei.com>
-X-Mailer: git-send-email 2.32.0
+        id S230496AbiADTmb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 4 Jan 2022 14:42:31 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42492 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230468AbiADTma (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jan 2022 14:42:30 -0500
+Received: from mail-yb1-xb36.google.com (mail-yb1-xb36.google.com [IPv6:2607:f8b0:4864:20::b36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A12DDC061761;
+        Tue,  4 Jan 2022 11:42:29 -0800 (PST)
+Received: by mail-yb1-xb36.google.com with SMTP id y130so86716037ybe.8;
+        Tue, 04 Jan 2022 11:42:29 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ncAQv2DljIFRljclnMmZerc5ibGlEn4OCHalSWIpIz0=;
+        b=qGxFkqq0niJN+9BfjqTxTOL7ISmBhLHgksGbQyGGLrvdjq/K4oqZHQIaUp670c5rYp
+         0S9b+TQFw8v0Q20JMb5oFO0wlsZAVPNrZ8WpiRL6/C3EFEFkZawUbS+1FDH1Lktog8+b
+         dJ5mIvU/wEOCmEOdYS3BBhUUyvUGJXBu5TfYAYbM7hdACCPWUnS0xAISSsJwAk6QMmUJ
+         OZVQZ+UUYU5UYrJ4tg/HOYpr+ahDDANFTG331UdY+2K3x6cPAowlSoRVmRo14jCqxvXe
+         1xREBS1ejUsVePrMKeslsQv4tDb+sRHoGxpzuDeD72mFuX9XW3sLhMQ9C4fvLtaRzF3L
+         dsKg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ncAQv2DljIFRljclnMmZerc5ibGlEn4OCHalSWIpIz0=;
+        b=XXRQxuhtSYQvHJ5qYSxN53tYufBm1HS6KPX/dvhSthSC1U8K6Ja8zA0V01pf5N5j7+
+         VCLl8eiyaXlQsNwJQ1gueM7fwuj7sbvpGqf31+UJBXPv6ft/gCnnMsfrVTuIpQTA6wiv
+         Z7aYdZLH76UKMsLABylpY6hqBYYCi6PrCmM5OUHW6IbUCL/5BHh3mLSGqwgDgm2qIbiB
+         Y6ulSAJaGw6g6uN0TUHnWOSOUmvqTOy2E7Y3G1JBiLWqP9KrPTN2LIzNh4s3LNTXFkYS
+         aRX2G2DvRvLAXZCbwkPsZ7HNhHX3cKk1IDRE1rw7XqePki+OitGaK/1RzlMZlBG8MeUO
+         RMig==
+X-Gm-Message-State: AOAM532ZQIlucxaiGlJYF56q4shA9xSuI6XbB1NDPHDl3pJdDuKyKj+c
+        ba0sWxST0CT2QP37I/hfWgXB2NXzzz5EQ2pdjTuJlpNqoJg=
+X-Google-Smtp-Source: ABdhPJyrY43dMscA0Lmdb8zzAF2wEyIUmc4f8XLCz707RSMKzYswtTwMQZK+h2bsD7LikX5NIkCs0N4Jg02ziZcHa0w=
+X-Received: by 2002:a25:7509:: with SMTP id q9mr46108130ybc.315.1641325348914;
+ Tue, 04 Jan 2022 11:42:28 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.101.6]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- dggpemm500017.china.huawei.com (7.185.36.178)
-X-CFilter-Loop: Reflected
+References: <20211224131300.18198-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+ <20211224131300.18198-5-prabhakar.mahadev-lad.rj@bp.renesas.com> <25bf8893-7369-954e-bd5b-f3d592af5b09@omp.ru>
+In-Reply-To: <25bf8893-7369-954e-bd5b-f3d592af5b09@omp.ru>
+From:   "Lad, Prabhakar" <prabhakar.csengg@gmail.com>
+Date:   Tue, 4 Jan 2022 19:42:03 +0000
+Message-ID: <CA+V-a8uEALwWXhsBZB6ct482W6iexuGaguVT5zxJiGQ6nL7hYg@mail.gmail.com>
+Subject: Re: [PATCH v3 04/10] ata: pata_platform: Use platform_get_irq_optional()
+ to get the interrupt
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>
+Cc:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-This is just a clean code. Since each branch of "if" state would check
-scmd->cmd_len, so move the check of scmd->cmd_len out of "if" state to
-simplify the logic of input parameters check.
+Hi Sergey,
 
-The patch do not change origin function logic.
+Thank you for the review.
 
-Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
----
- drivers/ata/libata-scsi.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+On Mon, Dec 27, 2021 at 7:58 PM Sergey Shtylyov <s.shtylyov@omp.ru> wrote:
+>
+> On 12/24/21 4:12 PM, Lad Prabhakar wrote:
+>
+> > To be consistent with pata_of_platform driver use
+> > platform_get_irq_optional() instead of
+> > platform_get_resource(pdev, IORESOURCE_IRQ, 0).
+>
+>    But why can't we be consistent with the unpatched pata_of_platfrom(), and then
+> convert to platform_get_irq_optional() after merging both drivers?
+>    I'd like to avoid patching the driver to be gone if possible...
+>
+Basically to have members of struct pata_platform_priv{} in one shot,
+instead of changing them again and again. btw you are OK with patching
+for 06/10.
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 313e9475507b..1c653b5327db 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -4020,19 +4020,18 @@ void ata_scsi_dump_cdb(struct ata_port *ap, struct scsi_cmnd *cmd)
- int __ata_scsi_queuecmd(struct scsi_cmnd *scmd, struct ata_device *dev)
- {
- 	u8 scsi_op = scmd->cmnd[0];
--	ata_xlat_func_t xlat_func;
-+	ata_xlat_func_t xlat_func = NULL;
- 	int rc = 0;
- 
-+	if (unlikely(!scmd->cmd_len))
-+		goto bad_cdb_len;
-+
- 	if (dev->class == ATA_DEV_ATA || dev->class == ATA_DEV_ZAC) {
--		if (unlikely(!scmd->cmd_len || scmd->cmd_len > dev->cdb_len))
-+		if (unlikely(scmd->cmd_len > dev->cdb_len))
- 			goto bad_cdb_len;
- 
- 		xlat_func = ata_get_xlat_func(dev, scsi_op);
- 	} else {
--		if (unlikely(!scmd->cmd_len))
--			goto bad_cdb_len;
--
--		xlat_func = NULL;
- 		if (likely((scsi_op != ATA_16) || !atapi_passthru16)) {
- 			/* relay SCSI command to ATAPI device */
- 			int len = COMMAND_SIZE(scsi_op);
--- 
-2.32.0
-
+Cheers,
+Prabhakar
