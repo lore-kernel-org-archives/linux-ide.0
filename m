@@ -2,101 +2,98 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 35035C433EF
-	for <linux-ide@archiver.kernel.org>; Tue,  4 Jan 2022 11:25:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3231C433F5
+	for <linux-ide@archiver.kernel.org>; Tue,  4 Jan 2022 11:28:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231163AbiADLZu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 4 Jan 2022 06:25:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39824 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229884AbiADLZu (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jan 2022 06:25:50 -0500
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71329C061761;
-        Tue,  4 Jan 2022 03:25:50 -0800 (PST)
-Received: by mail-pj1-x1034.google.com with SMTP id rj2-20020a17090b3e8200b001b1944bad25so2790787pjb.5;
-        Tue, 04 Jan 2022 03:25:50 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=C7PlsrZmkmw1dwadd6snlv+j19gs+J67k6Ar8dpYo9s=;
-        b=D1/Gg1QeEGmwykg1bz7ati5WfxbzjsbtIFmdpyMW/yWuGR3zQhHfa4NEOloPtOtjWD
-         eXV/vzaxlQDKlSzKG2Y888exOY5+6OVVnklyuVBjb5kvo9Atp+G5ET3iYXshibZfg+AP
-         HvBg6drQRv1iU6jQgV2PBCb5/961Owe+GxWGhcie4zmhANIoyJ+cMDAcht7fmq8g9rSQ
-         GvnbQnnt83tsOXKz+B39CDJCxtPYagmmh+7KYcBxOq1Epri1cbALUivzceVSrAkGCPmk
-         5JesPtJ9Y9eFYkokOu2c0YrH+Z9H5FVZQWKLrqOBYX41i3IsIMvO1zNm7EVBzCA4ugyZ
-         kXzQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=C7PlsrZmkmw1dwadd6snlv+j19gs+J67k6Ar8dpYo9s=;
-        b=gHMN2Dcvku02Ffj/498hvcsNL6yBz/TDA8KGazq+Jefh61l1VTPtY6wmLg9iuL0RFN
-         sX/949TxLf4Rd2wEIAXaZ1fEpTzY/du123dNCTtavVzHEc9lFvOwY6jco9LVsUs5kBY2
-         L6uf2+kT1V0Yjs8VkdJIgNIiXv72flp0weY18Cp96+HLaJ0vLVEyKytFNKJ0CxRSg2js
-         UqLC2x5QCrlr0+MS34LMyHxRPLBwAbo94JovgMN+tpQOzy4NNd9/MbgXu5tqFsE30kh3
-         xtBREeN6H8CRoegB16p3mghOskoNgrKAclhTXrBBAzDGqZAGnDA4gIyHCx3NxsKtgptj
-         P+ew==
-X-Gm-Message-State: AOAM531PP34pvR39A3pKvu3q1KTfyxq8yLgj5JroYZtCVKm1yZArZgrm
-        xEG1VHvFyY3F3LIf3ZCvi78=
-X-Google-Smtp-Source: ABdhPJxoUEMRxA3KH1bowDD9/35VotMFoLpdgp1guXcyEfxBBd0pNwQ3Ugs+HIe4RUaSARO3YQINrA==
-X-Received: by 2002:a17:903:3013:b0:149:5ba0:4f80 with SMTP id o19-20020a170903301300b001495ba04f80mr45675901pla.87.1641295549957;
-        Tue, 04 Jan 2022 03:25:49 -0800 (PST)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id n20sm36936608pjt.40.2022.01.04.03.25.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Jan 2022 03:25:49 -0800 (PST)
-From:   cgel.zte@gmail.com
-X-Google-Original-From: chi.minghao@zte.com.cn
-To:     damien.lemoal@opensource.wdc.com
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Minghao Chi <chi.minghao@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>, CGEL ZTE <cgel.zte@gmail.com>
-Subject: [PATCH] drivers/ata: remove redundant val variable
-Date:   Tue,  4 Jan 2022 11:25:45 +0000
-Message-Id: <20220104112545.601962-1-chi.minghao@zte.com.cn>
-X-Mailer: git-send-email 2.25.1
+        id S232313AbiADL2b (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 4 Jan 2022 06:28:31 -0500
+Received: from smtp-out2.suse.de ([195.135.220.29]:53170 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232254AbiADL21 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jan 2022 06:28:27 -0500
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 0485F1F386;
+        Tue,  4 Jan 2022 11:28:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1641295706; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=a00ye2NTZAaU7LSq8Np+tTVvgWheInIm94irYNHhGI8=;
+        b=iYDDwPr5Xo/x+J4cLw97Iav2ho5C+biTGjBykSVBQYoKH6P3j9VOKic9ZDrzCercUCiHpm
+        Bkqsw0pHxpMsK3RsbcOUB0K8tfBODTJOV1NFcIHuNGMSaL6OzrcDef964bZeav4aVak92x
+        d85s6qhTK0L38MkR1TjCkGGJ72O7guM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1641295706;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=a00ye2NTZAaU7LSq8Np+tTVvgWheInIm94irYNHhGI8=;
+        b=WHYyCiaOEj+628B2U11hL0UxKdmkMcpY7YH96GDEmKow7a7PfnVOAPp7/qj5BEW95bv25P
+        MhRDkbMXiM1iu8Bw==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id E2C0D13ADF;
+        Tue,  4 Jan 2022 11:28:25 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id mTYXN1kv1GEEOgAAMHmgww
+        (envelope-from <hare@suse.de>); Tue, 04 Jan 2022 11:28:25 +0000
+Subject: Re: [PATCH v2 01/22] ata: sata_fsl: add compile test support
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org
+References: <20220104105843.1730172-1-damien.lemoal@opensource.wdc.com>
+ <20220104105843.1730172-2-damien.lemoal@opensource.wdc.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <5f927de0-ec57-a652-80c8-378bfaf4a625@suse.de>
+Date:   Tue, 4 Jan 2022 12:28:25 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
+In-Reply-To: <20220104105843.1730172-2-damien.lemoal@opensource.wdc.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Minghao Chi <chi.minghao@zte.com.cn>
+On 1/4/22 11:58 AM, Damien Le Moal wrote:
+> Add dependendy on COMPILE_TEST to allow compile tests with configs that
+> do not enable FSL_SOC.
+> 
+> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> ---
+>  drivers/ata/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index 9ebaa3c288dd..80bad7cba631 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -290,7 +290,7 @@ config AHCI_QORIQ
+>  
+>  config SATA_FSL
+>  	tristate "Freescale 3.0Gbps SATA support"
+> -	depends on FSL_SOC
+> +	depends on FSL_SOC || COMPILE_TEST
+>  	select SATA_HOST
+>  	help
+>  	  This option enables support for Freescale 3.0Gbps SATA controller.
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Return value from DIV_ROUND_UP() directly instead
-of taking this in another redundant variable.
+Cheers,
 
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Minghao Chi <chi.minghao@zte.com.cn>
-Signed-off-by: CGEL ZTE <cgel.zte@gmail.com>
----
- drivers/ata/pata_octeon_cf.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
-
-diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
-index b5a3f710d76d..70f91800fe9e 100644
---- a/drivers/ata/pata_octeon_cf.c
-+++ b/drivers/ata/pata_octeon_cf.c
-@@ -73,16 +73,12 @@ MODULE_PARM_DESC(enable_dma,
-  */
- static unsigned int ns_to_tim_reg(unsigned int tim_mult, unsigned int nsecs)
- {
--	unsigned int val;
--
- 	/*
- 	 * Compute # of eclock periods to get desired duration in
- 	 * nanoseconds.
- 	 */
--	val = DIV_ROUND_UP(nsecs * (octeon_get_io_clock_rate() / 1000000),
-+	return DIV_ROUND_UP(nsecs * (octeon_get_io_clock_rate() / 1000000),
- 			  1000 * tim_mult);
--
--	return val;
- }
- 
- static void octeon_cf_set_boot_reg_cfg(int cs, unsigned int multiplier)
+Hannes
 -- 
-2.25.1
-
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
