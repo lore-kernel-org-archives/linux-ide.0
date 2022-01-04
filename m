@@ -2,61 +2,61 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 356C5C433F5
-	for <linux-ide@archiver.kernel.org>; Tue,  4 Jan 2022 11:29:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9FE1C433EF
+	for <linux-ide@archiver.kernel.org>; Tue,  4 Jan 2022 11:29:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232278AbiADL3b (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 4 Jan 2022 06:29:31 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:53210 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229964AbiADL3b (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jan 2022 06:29:31 -0500
+        id S232255AbiADL3t (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 4 Jan 2022 06:29:49 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:51862 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229964AbiADL3t (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jan 2022 06:29:49 -0500
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 679EC1F397;
-        Tue,  4 Jan 2022 11:29:30 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 15FBF212BC;
+        Tue,  4 Jan 2022 11:29:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1641295770; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+        t=1641295788; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=mNVxBlTv+x3yHvhnBTmFIR6OvrK9fttiDq6Ty3cJIys=;
-        b=J6RTwc1caabxdgwayLw/OMtfTfbkNLTRzao87Y/2BMsdWb/wBFGnkmFdRKkY6sa3sc1aV7
-        egPzCM5nPcoWUGw0KqMeB1QHrZkEPN8QS2ClGMIavVEJcrl4KODj2+V/QH3XfLALXQx7VK
-        4oM8BPv5BB31TYzYkW8Ospi3SHQhiT4=
+        bh=wJzhjNunFufBOiKszdByLsyEBypBcBM2Np0fHX7pHlY=;
+        b=i7GWX6sdbm/TZtU3uJmpojweMb6flkN+v97xu/tvu3qrz3nNS+9dWE7qgxjpLNjEa1585g
+        XPQwRWq+GDlruJuO0qox2zKIdT/++c6O/Ei54aAT3uvkiQbEEyza7bXQjK3tZyo8szs8Az
+        n7pyoFcmEPL5Y7Yc3/GZFha6gECP3+A=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1641295770;
+        s=susede2_ed25519; t=1641295788;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=mNVxBlTv+x3yHvhnBTmFIR6OvrK9fttiDq6Ty3cJIys=;
-        b=up8d0IdcjMVFgjsZRgGSYRM0WCXVuzy0zHzZ0hComgywTVVeNnJB6FWl6hCWmuBtvayya3
-        +XXAi6KOlLE5/xCQ==
+        bh=wJzhjNunFufBOiKszdByLsyEBypBcBM2Np0fHX7pHlY=;
+        b=awtHizZYc2shuk4H74zQw1IC+4kspPgEbx6m5dsKUnonuR3BqBw6vUkOoJXisxgG+BWyfk
+        kXdfO/6ZFThTTHDQ==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 5CB7813ADF;
-        Tue,  4 Jan 2022 11:29:30 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 01B6413ADF;
+        Tue,  4 Jan 2022 11:29:47 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id NNdQFpov1GFyOgAAMHmgww
-        (envelope-from <hare@suse.de>); Tue, 04 Jan 2022 11:29:30 +0000
-Subject: Re: [PATCH v2 04/22] ata: ahci_dm816: add compile test support
+        id E+2HO6sv1GGMOgAAMHmgww
+        (envelope-from <hare@suse.de>); Tue, 04 Jan 2022 11:29:47 +0000
+Subject: Re: [PATCH v2 05/22] ata: ahci_st: add compile test support
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         linux-ide@vger.kernel.org
 References: <20220104105843.1730172-1-damien.lemoal@opensource.wdc.com>
- <20220104105843.1730172-5-damien.lemoal@opensource.wdc.com>
+ <20220104105843.1730172-6-damien.lemoal@opensource.wdc.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <c3802dc3-4b4d-abd0-8727-4c4a15ada3df@suse.de>
-Date:   Tue, 4 Jan 2022 12:29:30 +0100
+Message-ID: <6706cfb4-c8cd-02ec-5b18-e3fc360efdc5@suse.de>
+Date:   Tue, 4 Jan 2022 12:29:47 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.12.0
 MIME-Version: 1.0
-In-Reply-To: <20220104105843.1730172-5-damien.lemoal@opensource.wdc.com>
+In-Reply-To: <20220104105843.1730172-6-damien.lemoal@opensource.wdc.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -66,7 +66,7 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 On 1/4/22 11:58 AM, Damien Le Moal wrote:
 > Add Kconfig dependendy on COMPILE_TEST to allow compile tests with
-> configs that do not enable ARCH_OMAP2PLUS.
+> configs that do not enable ARCH_STI.
 > 
 > Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 > ---
@@ -74,18 +74,18 @@ On 1/4/22 11:58 AM, Damien Le Moal wrote:
 >  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
 > diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index 9f1288fd5482..e9f919f17d09 100644
+> index e9f919f17d09..83fac101744c 100644
 > --- a/drivers/ata/Kconfig
 > +++ b/drivers/ata/Kconfig
-> @@ -183,7 +183,7 @@ config AHCI_DA850
+> @@ -193,7 +193,7 @@ config AHCI_DM816
 >  
->  config AHCI_DM816
->  	tristate "DaVinci DM816 AHCI SATA support"
-> -	depends on ARCH_OMAP2PLUS
-> +	depends on ARCH_OMAP2PLUS || COMPILE_TEST
+>  config AHCI_ST
+>  	tristate "ST AHCI SATA support"
+> -	depends on ARCH_STI
+> +	depends on ARCH_STI || COMPILE_TEST
 >  	select SATA_HOST
 >  	help
->  	  This option enables support for the DaVinci DM816 SoC's
+>  	  This option enables support for ST AHCI SATA controller.
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
