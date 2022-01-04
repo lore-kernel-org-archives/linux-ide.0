@@ -2,44 +2,44 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3BF9C433EF
-	for <linux-ide@archiver.kernel.org>; Tue,  4 Jan 2022 09:05:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3F7FC43217
+	for <linux-ide@archiver.kernel.org>; Tue,  4 Jan 2022 09:05:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230015AbiADJF3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 4 Jan 2022 04:05:29 -0500
-Received: from rap-us.hgst.com ([199.255.44.250]:52747 "EHLO
+        id S229932AbiADJFa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 4 Jan 2022 04:05:30 -0500
+Received: from rap-us.hgst.com ([199.255.44.250]:15768 "EHLO
         usg-ed-osssrv.wdc.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229945AbiADJFV (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jan 2022 04:05:21 -0500
+        with ESMTP id S229969AbiADJFX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jan 2022 04:05:23 -0500
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JSmss4Mm6z1VSkY
-        for <linux-ide@vger.kernel.org>; Tue,  4 Jan 2022 01:05:21 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JSmsv2mVbz1VSkV
+        for <linux-ide@vger.kernel.org>; Tue,  4 Jan 2022 01:05:23 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:subject:to
-        :from; s=dkim; t=1641287121; x=1643879122; bh=fnXKGNmAu/ePo+VMNr
-        6X/hZ/aPnlP5tuu2LIvpaBymo=; b=rSV7gPPo1Yly03hBbv8qHz2I03RubcIdHX
-        RGh3IdOM4+ErAa2n5r4f9xvNSzYu1oJiPnH3Pk9GJjQWb7ZYKvtKkIb7+tIoenQz
-        1s15ty9VL5lwRAxHMRgDyDjiEYUQn0rOLTxmLkqhWNHn9c4fBsQFzDMj8zR8IQBp
-        22w2kbFppneCskryKrL+Z2EB/nQHeM5xEWdPDTMMx8FCeKnK/sZ4oQ8uiB2ze4aZ
-        R+hyq8CavFXK9NQp6nsvQ/DN7dLlR/qOuhSZeTKi5PEztuzdLEzA8hyVfDhkNyY6
-        J+GTPpnPAQBuaiUekrlIjDiYMjNA3JJRHc9xp+O3ffgE7T7npwtw==
+        :from; s=dkim; t=1641287123; x=1643879124; bh=YkWEdMiYcrun25eWeg
+        XuApHlXtiSAOATwIg1mIVIfFY=; b=nXYGuJDAChQdPiT+8JwNGdPEu21Mi9vdYk
+        No/85CQpVDpE+Q0c4eQoz1kRRYPbiG9SMbXmUQmTFWpgFbnNPS9FoXT/SA+EnUG2
+        UKxReHgikzR1C0cr5vjpyouGkWQEQq+S+ICaGUg1AQ/BAGVBsk0Hx6/0rmp6U0tu
+        foC7RG5ROwQhOm8ZRJ3eYtL6HdukQ1V6Kr5p7KiYUaqGotZDOso4vccbg25tPoPq
+        V36+nKJcDyva9KG0ukOsb367rhbWEXGkVRT8Nj+enk5xDn7tg4L4T7dXVXSorXCJ
+        T1GVpnFlz0ME0fUpZeFW+PSJBx3ftwhuKqUQMtsjSecY/HDGL6lg==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 2Bgk5Ui1XlgJ for <linux-ide@vger.kernel.org>;
-        Tue,  4 Jan 2022 01:05:21 -0800 (PST)
+        with ESMTP id 3GGpC3XbIFdG for <linux-ide@vger.kernel.org>;
+        Tue,  4 Jan 2022 01:05:23 -0800 (PST)
 Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JSmsr6zk6z1VSjC
-        for <linux-ide@vger.kernel.org>; Tue,  4 Jan 2022 01:05:20 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JSmst5X18z1VSkW
+        for <linux-ide@vger.kernel.org>; Tue,  4 Jan 2022 01:05:22 -0800 (PST)
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 To:     linux-ide@vger.kernel.org
-Subject: [PATCH 18/21] ata: pata_samsung_cf: add compile test support
-Date:   Tue,  4 Jan 2022 18:05:05 +0900
-Message-Id: <20220104090508.1592589-19-damien.lemoal@opensource.wdc.com>
+Subject: [PATCH 21/21] ata: ahci_xgene: Fix id array access in xgene_ahci_read_id()
+Date:   Tue,  4 Jan 2022 18:05:08 +0900
+Message-Id: <20220104090508.1592589-22-damien.lemoal@opensource.wdc.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20220104090508.1592589-1-damien.lemoal@opensource.wdc.com>
 References: <20220104090508.1592589-1-damien.lemoal@opensource.wdc.com>
@@ -49,27 +49,44 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add Kconfig dependendy on COMPILE_TEST to allow compile tests with
-configs that do not enable SAMSUNG_DEV_IDE.
+ATA IDENTIFY command returns an array of le16 words. Accessing it as a
+u16 array triggers the following sparse warning:
+
+drivers/ata/ahci_xgene.c:262:33: warning: invalid assignment: &=3D
+drivers/ata/ahci_xgene.c:262:33:    left side has type unsigned short
+drivers/ata/ahci_xgene.c:262:33:    right side has type restricted __le16
+
+Use a local variable to explicitly cast the id array to __le16 to avoid
+this warning.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 ---
- drivers/ata/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ata/ahci_xgene.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 490f0856a271..8af5659a7676 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -1162,7 +1162,7 @@ config PATA_RZ1000
+diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+index 68ec7e9430b2..d5075d0f8cb1 100644
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -239,6 +239,7 @@ static bool xgene_ahci_is_memram_inited(struct xgene_=
+ahci_context *ctx)
+ static unsigned int xgene_ahci_read_id(struct ata_device *dev,
+ 				       struct ata_taskfile *tf, u16 *id)
+ {
++	__le16 *__id =3D (__le16 *)id;
+ 	u32 err_mask;
 =20
- config PATA_SAMSUNG_CF
- 	tristate "Samsung SoC PATA support"
--	depends on SAMSUNG_DEV_IDE
-+	depends on SAMSUNG_DEV_IDE || COMPILE_TEST
- 	select PATA_TIMINGS
- 	help
- 	  This option enables basic support for Samsung's S3C/S5P board
+ 	err_mask =3D ata_do_dev_read_id(dev, tf, id);
+@@ -259,7 +260,7 @@ static unsigned int xgene_ahci_read_id(struct ata_dev=
+ice *dev,
+ 	 *
+ 	 * Clear reserved bit 8 (DEVSLP bit) as we don't support DEVSLP
+ 	 */
+-	id[ATA_ID_FEATURE_SUPP] &=3D cpu_to_le16(~(1 << 8));
++	__id[ATA_ID_FEATURE_SUPP] &=3D cpu_to_le16(~(1 << 8));
+=20
+ 	return 0;
+ }
 --=20
 2.31.1
 
