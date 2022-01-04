@@ -2,73 +2,83 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62AEEC433EF
-	for <linux-ide@archiver.kernel.org>; Tue,  4 Jan 2022 04:57:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 227A4C433F5
+	for <linux-ide@archiver.kernel.org>; Tue,  4 Jan 2022 06:04:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231536AbiADE5w (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 3 Jan 2022 23:57:52 -0500
-Received: from rap-us.hgst.com ([199.255.44.250]:41304 "EHLO
-        usg-ed-osssrv.wdc.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230188AbiADE5v (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jan 2022 23:57:51 -0500
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JSgNH59Lsz1VSkW
-        for <linux-ide@vger.kernel.org>; Mon,  3 Jan 2022 20:57:51 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:mime-version
-        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1641272270;
-         x=1643864271; bh=WfjTSRltEFuogKzS4MZSkPECgRD6er0P4NtA1ezfXYA=; b=
-        MWZk6iooSoH5RTe3CNNYSWSYUyjtx8DDNwrAdliFcWbMz96jG2YSUVh9vUjvGbn2
-        jrSsiKz8JlH7DyqgXn4RqTgwkTTKX6pWUky6Fo5LbrLG3PdnEBwZtAUXgsnl3OKQ
-        BJwuxNctVPFFqSuW4jNOm9nEuFpIa5GlU5qb25fcsNiFlojVloZE6TdmXJJGVcxl
-        v/C73FntDY/jLOitJJWSpBi/6ECQ0cmy+2GOdSKdhQZm6QGAmR4pKIPto5s+2jO+
-        ZlTcTvv55eCzu79ZmkJ4C1+nEoXcoTgh2FGoQ1YdD+kqsmto3u/qVywOROKj11hl
-        9T++POUXLJfLjQsMYOB1EQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id BU76EdJuy9fa for <linux-ide@vger.kernel.org>;
-        Mon,  3 Jan 2022 20:57:50 -0800 (PST)
-Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JSgNG1sKxz1VSjC;
-        Mon,  3 Jan 2022 20:57:50 -0800 (PST)
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-To:     linux-ide@vger.kernel.org
-Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: [PATCH] ata: sata_fsl: add compile test support
-Date:   Tue,  4 Jan 2022 13:57:48 +0900
-Message-Id: <20220104045748.1171439-1-damien.lemoal@opensource.wdc.com>
-X-Mailer: git-send-email 2.31.1
+        id S231743AbiADGEe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 4 Jan 2022 01:04:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51362 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230181AbiADGEc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jan 2022 01:04:32 -0500
+Received: from mail-pg1-x52e.google.com (mail-pg1-x52e.google.com [IPv6:2607:f8b0:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5700CC061761;
+        Mon,  3 Jan 2022 22:04:32 -0800 (PST)
+Received: by mail-pg1-x52e.google.com with SMTP id s1so30328022pga.5;
+        Mon, 03 Jan 2022 22:04:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=DKw/IAK5THDPWlkH1ztOYcj33QLJ56CbVxqT4YIX96w=;
+        b=KYJe7ngf9iWAOKhyp5tCUigi9GiFs7LNYI7KqG95CNk8qBGvl5HoAlT6vcPWZLlkq3
+         o6CGqnNMXk/HuV+TCZNOzzmBkWrcdh7TcqmCwvLYln0bKkkREa9hDUKq6L6rT2ayHktH
+         /syNib+E7xfva9bOOI3sSM5C4MeEM+2XsNGQ1Cs+wcl6tu9jeRaFpCOnG2eRBJsCvza/
+         lder25O2K/XA104fIqFWua6ifha8vz3qFdN3DNzFtaJm1Wum49qxbyzpVk2dRWZs1JBN
+         DLwrkedjL4GP34KnlhBJLuhSfLpVTD6gUuu4DyPjhwmhpuUn7W04ltq9qzHxWIfOdHKj
+         sNyg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=DKw/IAK5THDPWlkH1ztOYcj33QLJ56CbVxqT4YIX96w=;
+        b=JXq2VH9yOQXeuoYcYYY/vcoJRImOrwBb/TZxLGsBLazIulxrq96YBA49H/q0f867NE
+         VWmAdT1WFrijn7VnTVMvMDHAMJ6A/41FdgE0kEHMg02cl3jUNWWOdwqzxa3SOKNiqHAX
+         hbzTPQWV1281Zbk+hOKOdPoJtMh1evtQ8ctaJiSJOYByXqX8je4f2rqg/yDd/Wg1BoPD
+         kcU8HKlkOw7DM5U3dAKVvhhEP0LDIhPg+UBDbvvG9Yez0vkkZDnY3AgDCDQpvzNBUGvV
+         Gkkn8FjeKy9Pxtd85VMH58zrIk+u0eEDcyyvD9CnIS1VA4yiEvdXTJTR/0akGKX/FpDQ
+         DA4g==
+X-Gm-Message-State: AOAM530OYiZId4lXksZaJQvKtBl/32LV6Cz/sUXxgOsnW0i4c3Tu3jWs
+        x9CKVc2GeCQSZr/+o6RhCZfEn0PX1CM=
+X-Google-Smtp-Source: ABdhPJyDo/n5w4VuuoZCxDnPzCYvNggjliTiX+2V3AsWopsWgVedaKy0VGHz2QPnumO4fksx5eCxHw==
+X-Received: by 2002:a05:6a00:2349:b0:4ba:98c6:48f6 with SMTP id j9-20020a056a00234900b004ba98c648f6mr49726664pfj.42.1641276271755;
+        Mon, 03 Jan 2022 22:04:31 -0800 (PST)
+Received: from google.com ([2620:15c:202:201:a7d6:43d7:bbe3:3573])
+        by smtp.gmail.com with ESMTPSA id h5sm34246481pjc.27.2022.01.03.22.04.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 03 Jan 2022 22:04:30 -0800 (PST)
+Date:   Mon, 3 Jan 2022 22:04:28 -0800
+From:   Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To:     Paul Menzel <pmenzel@molgen.mpg.de>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org, Guenter Roeck <groeck@chromium.org>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 3/3] ahci: AMD A85 FCH (Hudson D4): Skip 200 ms
+ debounce delay in `sata_link_resume()`
+Message-ID: <YdPjbGXwa/YEd38G@google.com>
+References: <20211229161119.1006-1-pmenzel@molgen.mpg.de>
+ <20211229161119.1006-3-pmenzel@molgen.mpg.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211229161119.1006-3-pmenzel@molgen.mpg.de>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add dependendy on COMPILE_TEST to allow compile tests with configs that
-do not enable FSL_SOC.
+Hi Paul,
 
-Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
----
- drivers/ata/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Wed, Dec 29, 2021 at 05:11:18PM +0100, Paul Menzel wrote:
+> 
+> Add the two Chromium OS developers Dmitry and Guenter to Cc, as to my
+> knowledge Chromium/Chrome OS also tries to boot very fast, and the Chromium
+> project has some CI infrastructure.
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index f6e943c74001..af6bf1b8902a 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -273,7 +273,7 @@ config AHCI_QORIQ
-=20
- config SATA_FSL
- 	tristate "Freescale 3.0Gbps SATA support"
--	depends on FSL_SOC
-+	depends on FSL_SOC || COMPILE_TEST
- 	select SATA_HOST
- 	help
- 	  This option enables support for Freescale 3.0Gbps SATA controller.
---=20
-2.31.1
+I am not sure if we can be of use here as Chrome OS devices are using
+either eMMC or NVME for storage. I do not recall devices using AHCI,
+maybe some very old ones way past EOL.
 
+Thanks.
+
+-- 
+Dmitry
