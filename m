@@ -2,170 +2,100 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C887C433F5
-	for <linux-ide@archiver.kernel.org>; Tue,  4 Jan 2022 11:34:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A96E5C433F5
+	for <linux-ide@archiver.kernel.org>; Tue,  4 Jan 2022 11:35:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232345AbiADLe1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 4 Jan 2022 06:34:27 -0500
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:59601 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S232340AbiADLe1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 4 Jan 2022 06:34:27 -0500
-Received: from [192.168.0.3] (ip5f5aecde.dynamic.kabel-deutschland.de [95.90.236.222])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        id S232371AbiADLfM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 4 Jan 2022 06:35:12 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:52108 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232372AbiADLfL (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jan 2022 06:35:11 -0500
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id EE73661E5FE02;
-        Tue,  4 Jan 2022 12:34:24 +0100 (CET)
-Message-ID: <66edbfd4-063f-b995-0d15-982d365dd7d7@molgen.mpg.de>
-Date:   Tue, 4 Jan 2022 12:34:24 +0100
+        by smtp-out1.suse.de (Postfix) with ESMTPS id B596121129;
+        Tue,  4 Jan 2022 11:35:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1641296110; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=7an/joI4LaLJSCaW3Sdfsyj/2hsd8Vv+PIdXtmz+IbU=;
+        b=BSppAhSiaqzdYULVsoKKhLBjGoRpePUG9XVMwV4u0Y8l726RprW8MBK9NRhVJWCk8PsPSC
+        7fW/LGePWrPJd1TQfc7/xD7sdFFoQ57hLAyiPaNJMI1ThzRCsIQY51fGVLw70wRzT8x2Jz
+        gVU/MVJ6HislKcMCy7sjwCVAIppanqg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1641296110;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=7an/joI4LaLJSCaW3Sdfsyj/2hsd8Vv+PIdXtmz+IbU=;
+        b=kfDp7LuiE2DvF1+0zRtOKBAAqFvSfPyj00yOGGp238Hz5GlwDpcARI5rcBLiwHJj/rYBz9
+        3z5OXsbcqleyTsBA==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id AB18113AE1;
+        Tue,  4 Jan 2022 11:35:10 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id a8xsKe4w1GEKPQAAMHmgww
+        (envelope-from <hare@suse.de>); Tue, 04 Jan 2022 11:35:10 +0000
+Subject: Re: [PATCH v2 13/22] ata: pata_cs5535: add compile test support
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org
+References: <20220104105843.1730172-1-damien.lemoal@opensource.wdc.com>
+ <20220104105843.1730172-14-damien.lemoal@opensource.wdc.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <fb93163c-0f17-a817-b6ce-f101bc585011@suse.de>
+Date:   Tue, 4 Jan 2022 12:35:10 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.1
-Subject: ata: For what PHY was debounce delay introduced? (was: [PATCH v3 3/3]
- ahci: AMD A85 FCH (Hudson D4): Skip 200 ms debounce delay in
- `sata_link_resume()`)
+In-Reply-To: <20220104105843.1730172-14-damien.lemoal@opensource.wdc.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jeff Garzik <jeff@bloq.com>, Tejun Heo <tj@kernel.org>
-References: <20211229161119.1006-1-pmenzel@molgen.mpg.de>
- <20211229161119.1006-3-pmenzel@molgen.mpg.de>
- <5c333718-eaa5-b41c-e8ea-59d6e01254aa@opensource.wdc.com>
- <19f6cd93-9bd7-60dc-4471-18022bcf456c@molgen.mpg.de>
- <7b64d1c3-f798-d64b-9ee3-9669d98f4e28@opensource.wdc.com>
- <fbfd865f-c88c-6ee1-6cb9-8194e170cd3a@molgen.mpg.de>
- <c6748a52-fc8f-3309-31c2-973a9e69a7e8@opensource.wdc.com>
- <33deca4a-abed-123c-9530-3f15740a3261@molgen.mpg.de>
- <27da2f5c-ca6c-1d64-3d05-5453f11e298f@opensource.wdc.com>
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <27da2f5c-ca6c-1d64-3d05-5453f11e298f@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-[cc: +jeff, +tejun]
-
-Dear Damien,
-
-
-Am 04.01.22 um 10:08 schrieb Damien Le Moal:
-> On 1/4/22 17:49, Paul Menzel wrote:
->> [cc: -dmitry, -guenter]
-
->> Am 04.01.22 um 09:36 schrieb Damien Le Moal:
->>> On 12/31/21 16:08, Paul Menzel wrote:
->>
->>>> Am 31.12.21 um 01:52 schrieb Damien Le Moal:
->>>>> On 12/30/21 20:08, Paul Menzel wrote:
-
-[…]
-
-Jeff, Tejun, in `drivers/ata/libata-sata.c` contains a 200 ms sleep 
-delaying the boot noticeably for optimized setups, where Linux takes 
-less than 500 ms to start:
-
-```
-int sata_link_resume(struct ata_link *link, const unsigned long *params,
-                      unsigned long deadline)
-{
-[…]
-         /*
-          * Writes to SControl sometimes get ignored under certain
-          * controllers (ata_piix SIDPR).  Make sure DET actually is
-          * cleared.
-          */
-         do {
-                 scontrol = (scontrol & 0x0f0) | 0x300;
-                 if ((rc = sata_scr_write(link, SCR_CONTROL, scontrol)))
-                         return rc;
-                 /*
-                  * Some PHYs react badly if SStatus is pounded
-                  * immediately after resuming.  Delay 200ms before
-                  * debouncing.
-                  */
-                 if (!(link->flags & ATA_LFLAG_NO_DB_DELAY))
-                         ata_msleep(link->ap, 200);
-
-                 /* is SControl restored correctly? */
-                 if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
-                         return rc;
-         } while ((scontrol & 0xf0f) != 0x300 && --tries);
-[…]
-}
-```
-
->>> It would indeed be great to have the default as "no delay on resume" and
->>> add the delay only for chipsets that need it. However, it is unclear
->>> which chipset need the delay, right?
->>
->> Yes, it’s unclear for what chipset (PHY?) it was added, as the git
->> history i not available in the repository, and I have not found it yet.
-
-I found the historical git archive [2], and Jeff’s commit 4effb658a0 
-from October 2003 [3] with the commit message
-
-> [libata] Merge Serial ATA core, and drivers for:
+On 1/4/22 11:58 AM, Damien Le Moal wrote:
+> Add Kconfig dependendy on COMPILE_TEST to allow compile tests with
+> configs that do not have X86_32 enabled.
 > 
-> Intel ICH5 (production)
-> ServerWorks / Apple K2 (beta)
-> VIA (beta)
-> Silicon Image 3112 (broken!)
-> Various Promise (alpha/beta)
-
-adds the code below:
-
-```
-void sata_phy_reset(struct ata_port *ap)
-{
-[…]
-	/* wait for phy to become ready, if necessary */
-	do {
-		msleep(200);
-		sstatus = scr_read(ap, SCR_STATUS);
-		if ((sstatus & 0xf) != 1)
-			break;
-	} while (time_before(jiffies, timeout));
-[…]
-}
-```
-
-Later on Tejun refactored the code in commit d7bb4cc75759 ([PATCH] 
-libata-hp-prep: implement sata_phy_debounce()) [4], and clarified the 
-comment.
-
-(Sorry, if I mis-analyzed anything.)
-
-Jeff, Tejun, do you know, what chipsets/PHYs had trouble with being 
-queried right away? Only ata_piix?
-
->>> So I think we are stuck with switching chipsets to "no delay" one by
->>> one by testing. Once the majority of drivers are converted, we can
->>> reverse the default to be "no delay" and mark untested drivers as
->>> needing the delay.
->>
->> For easy testing, a new CLI parameter to skip the delay might be handy.
+> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> ---
+>  drivers/ata/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> You mean a sysfs attribute may be ?
-> I am not sure it would help: on resume, the sysfs attributes would be
-> recreated and get the default value, not a new one.
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index b706a3a64b11..daf57a4e8196 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -654,7 +654,7 @@ config PATA_CS5530
+>  
+>  config PATA_CS5535
+>  	tristate "CS5535 PATA support (Experimental)"
+> -	depends on PCI && X86_32
+> +	depends on PCI && (X86_32 || COMPILE_TEST)
+>  	help
+>  	  This option enables support for the NatSemi/AMD CS5535
+>  	  companion chip used with the Geode processor family.
+> 
+Looks weird, but seems to be de rigeur in ata/Kconfig.
 
-No, I mean a module parameter for `libata` like `ata_probe_timeout`. 
-Then users could test it during boot, and, if there are no issue, tell 
-us the ID.
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
+Cheers,
 
-Kind regards,
-
-Paul
-
-
->>>> [1]: https://lore.kernel.org/linux-ide/20211227162658.11314-2-pmenzel@molgen.mpg.de/T/#m697d2121463a4c946730e6b83940e12d6d7e6700
-[2]: https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/
-[3]: 
-https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/commit/?id=4effb658a0f800e159c29a2d881cac76c326087a
-[4]: 
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d7bb4cc7575929a60b0a718daa1bce87bea9a9cc
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
