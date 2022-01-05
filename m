@@ -2,46 +2,110 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BB62C433F5
-	for <linux-ide@archiver.kernel.org>; Tue,  4 Jan 2022 23:58:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D379FC433EF
+	for <linux-ide@archiver.kernel.org>; Wed,  5 Jan 2022 00:14:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236537AbiADX6P (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 4 Jan 2022 18:58:15 -0500
-Received: from ec2-18-194-206-100.eu-central-1.compute.amazonaws.com ([18.194.206.100]:55126
-        "EHLO ip-172-31-43-30.eu-central-1.compute.internal"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S235661AbiADX6O (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 4 Jan 2022 18:58:14 -0500
-X-Greylist: delayed 392 seconds by postgrey-1.27 at vger.kernel.org; Tue, 04 Jan 2022 18:58:13 EST
-Received: by ip-172-31-43-30.eu-central-1.compute.internal (Postfix, from userid 10001)
-        id 806204E3366; Wed,  5 Jan 2022 00:51:40 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=lightgym.it;
-        s=default; t=1641340300;
-        bh=WOuOslX+PC0yHp8Uim+zj+YyWRoM+4B/QPSWSuCqbl4=; h=To:Subject:From;
-        b=rlMdltX9ucLF6QRxACEu+5/XV4bWnS6P3tp2So6qe5ONNF3vV4RvYukoKrgWD3Ua5
-         NyKXxDo2jAn4mYisqCRSGKkUDi/pXfOWgxfCxVSmlAspllet20sAe16p251x2W9y+P
-         ta2YOqTvPPA7oEqa0UpdQU+R3/MuE81QuyaoUUAY=
-To:     linux-ide@vger.kernel.org
-Subject: Grazie per aver contattato Light Gym!
-Date:   Tue, 4 Jan 2022 23:51:40 +0000
-From:   "info@lightgym.it" <info@lightgym.it>
-Message-ID: <cd96e191a137ea53c915e209b68f466a@lightgym.it>
-X-Mailer: WPMailSMTP/Mailer/mail 1.7.1
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+        id S234233AbiAEAOX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 4 Jan 2022 19:14:23 -0500
+Received: from relmlor2.renesas.com ([210.160.252.172]:1862 "EHLO
+        relmlie6.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S234119AbiAEAOW (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 4 Jan 2022 19:14:22 -0500
+X-IronPort-AV: E=Sophos;i="5.88,262,1635174000"; 
+   d="scan'208";a="106037822"
+Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
+  by relmlie6.idc.renesas.com with ESMTP; 05 Jan 2022 09:14:21 +0900
+Received: from localhost.localdomain (unknown [10.226.36.204])
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 985B74127DB7;
+        Wed,  5 Jan 2022 09:14:19 +0900 (JST)
+From:   Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Rob Herring <robh+dt@kernel.org>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Prabhakar <prabhakar.csengg@gmail.com>,
+        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v4] ata: pata_of_platform: Use platform_get_irq_optional() to get the interrupt
+Date:   Wed,  5 Jan 2022 00:14:10 +0000
+Message-Id: <20220105001410.27916-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Buongiorno ❤️ Andrea want to meet you! Click Here: http://inx.lv/pIaX?9qcls ❤️,
+platform_get_resource(pdev, IORESOURCE_IRQ, ..) relies on static
+allocation of IRQ resources in DT core code, this causes an issue
+when using hierarchical interrupt domains using "interrupts" property
+in the node as this bypasses the hierarchical setup and messes up the
+irq chaining.
 
-grazie per averci scritto, verrai ricontattato quanto prima.
+In preparation for removal of static setup of IRQ resource from DT core
+code use platform_get_irq_optional().
 
+Note this code just sets the start and not the end of IRQ resource as
+__pata_platform_probe() only uses the start member and also we don't
+set the IRQ resource flags as this is handled automatically for DT.
 
-Cordiali Saluti
+Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+---
+Hi All,
 
+This patch is part of series [1]. I'll re-visit merging of pata_of_platform
+into pata_platform at later point. As my primary focus is removal of static
+setup of IRQ resource from DT core code.
 
-Francesco Russo
-Light Gym
+[1] https://patchwork.ozlabs.org/project/linux-ide/list/?series=278349
+
+Cheers,
+Prabhakar
+---
+ drivers/ata/pata_of_platform.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
+index 35aa158fc976..f2e012bc24e8 100644
+--- a/drivers/ata/pata_of_platform.c
++++ b/drivers/ata/pata_of_platform.c
+@@ -25,11 +25,12 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
+ 	struct device_node *dn = ofdev->dev.of_node;
+ 	struct resource io_res;
+ 	struct resource ctl_res;
+-	struct resource *irq_res;
++	struct resource irq_res;
+ 	unsigned int reg_shift = 0;
+ 	int pio_mode = 0;
+ 	int pio_mask;
+ 	bool use16bit;
++	int irq;
+ 
+ 	ret = of_address_to_resource(dn, 0, &io_res);
+ 	if (ret) {
+@@ -45,7 +46,14 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
+ 		return -EINVAL;
+ 	}
+ 
+-	irq_res = platform_get_resource(ofdev, IORESOURCE_IRQ, 0);
++	irq = platform_get_irq_optional(ofdev, 0);
++	if (irq < 0 && irq != -ENXIO)
++		return irq;
++
++	if (irq > 0) {
++		memset(&irq_res, 0, sizeof(irq_res));
++		irq_res.start = irq;
++	}
+ 
+ 	of_property_read_u32(dn, "reg-shift", &reg_shift);
+ 
+@@ -63,7 +71,7 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
+ 	pio_mask = 1 << pio_mode;
+ 	pio_mask |= (1 << pio_mode) - 1;
+ 
+-	return __pata_platform_probe(&ofdev->dev, &io_res, &ctl_res, irq_res,
++	return __pata_platform_probe(&ofdev->dev, &io_res, &ctl_res, irq > 0 ? &irq_res : NULL,
+ 				     reg_shift, pio_mask, &pata_platform_sht,
+ 				     use16bit);
+ }
+-- 
+2.17.1
 
