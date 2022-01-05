@@ -2,116 +2,174 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13B43C433F5
-	for <linux-ide@archiver.kernel.org>; Wed,  5 Jan 2022 07:59:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C149FC433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  5 Jan 2022 08:48:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238263AbiAEH7B (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 5 Jan 2022 02:59:01 -0500
-Received: from rap-us.hgst.com ([199.255.44.250]:21303 "EHLO
-        usg-ed-osssrv.wdc.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229880AbiAEH7A (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 5 Jan 2022 02:59:00 -0500
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JTMLq5Z4Lz1VSkY
-        for <linux-ide@vger.kernel.org>; Tue,  4 Jan 2022 23:58:59 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1641369539; x=1643961540; bh=o0QRKaMlO8RbT7xxKfQwpTtKyFvV3CKIvFo
-        5UW3tv+M=; b=FJ8hpwmKeco9r87oivir3xeoUJmLkmz6BAiUXAhFeldi0bOap17
-        amN//6u922GofBJ+datRoZ5XgbXRAnat+T6IkgTq/gKwPb0WFMrPVDT9ghBL5KmJ
-        qFAdfMstQSknB23qG9JJXSqjoINV0hxtdSpWIfTRuw9LwXChkq3U9Ht3iU3zUrOb
-        AteAnHxxdw/FDCeuQUAT6I87rmI5HGFBClQFyDHaXnQzj92JKik6iEBh2kLq4rgM
-        okh8b7U1DAOMGyLUeAXDAG5CZfcgsYJeIGIXLcJIFzSln1MBwFIj5iiROP0lW7pi
-        3m0BdE9up4pEK+TdmMDlbmWZ0TRZgXkEpWg==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 4tYKAmI-WU_B for <linux-ide@vger.kernel.org>;
-        Tue,  4 Jan 2022 23:58:59 -0800 (PST)
-Received: from [10.225.163.43] (unknown [10.225.163.43])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JTMLp4Smwz1VSkV;
-        Tue,  4 Jan 2022 23:58:58 -0800 (PST)
-Message-ID: <51c33926-ea08-bf96-c6fd-4e031034e0ff@opensource.wdc.com>
-Date:   Wed, 5 Jan 2022 16:58:57 +0900
+        id S232133AbiAEIsd (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 5 Jan 2022 03:48:33 -0500
+Received: from szxga02-in.huawei.com ([45.249.212.188]:29323 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232724AbiAEIsc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 5 Jan 2022 03:48:32 -0500
+Received: from dggpemm500024.china.huawei.com (unknown [172.30.72.55])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4JTNRJ2SdXzbjr6;
+        Wed,  5 Jan 2022 16:47:56 +0800 (CST)
+Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
+ dggpemm500024.china.huawei.com (7.185.36.203) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Wed, 5 Jan 2022 16:48:30 +0800
+Received: from [10.174.178.220] (10.174.178.220) by
+ dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Wed, 5 Jan 2022 16:48:30 +0800
+Subject: Re: [PATCH v2] ata: libata-scsi: Make __ata_scsi_queuecmd()
+ parameters check more clearly
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "damien.lemoal@opensource.wdc.com" <damien.lemoal@opensource.wdc.com>
+CC:     "liuzhiqiang26@huawei.com" <liuzhiqiang26@huawei.com>
+References: <20220105202747.1963919-1-haowenchao@huawei.com>
+ <ff55e8d2037fa1f11812329fb8da39e746abe878.camel@wdc.com>
+From:   Wenchao Hao <haowenchao@huawei.com>
+Message-ID: <bbe9581c-1d8e-a1b2-dd5d-60027946941b@huawei.com>
+Date:   Wed, 5 Jan 2022 16:48:29 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.9.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [RFC PATCH] libata: sysfs naming option
+In-Reply-To: <ff55e8d2037fa1f11812329fb8da39e746abe878.camel@wdc.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
-To:     Hannes Reinecke <hare@suse.de>,
-        Damien LeMoal <damien.lemoal@wdc.com>
-Cc:     linux-ide@vger.kernel.org
-References: <20220103090939.36238-1-hare@suse.de>
- <e48f13f0-f79a-e8a9-d8c2-cf53657d8072@opensource.wdc.com>
- <8cc29e34-2d26-5976-9176-dbeac8d602b3@suse.de>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <8cc29e34-2d26-5976-9176-dbeac8d602b3@suse.de>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/5/22 16:41, Hannes Reinecke wrote:
-> On 1/5/22 07:18, Damien Le Moal wrote:
->> On 1/3/22 18:09, Hannes Reinecke wrote:
->>> This patch adds a config option ATA_SYSFS_NAMING to align the libata
->>> device names in sysfs with those in the kernel message log.
->>> It adds a new dummy bus 'ata', which collects all ata device objects
->>> like ata_port, ata_link, and ata_dev, and adds an 'ata' prefix to the
->>> message log.
->>> For consistency the 'ata_dev' name has been changed from 'ata' to 'dev';
->>> as this induces a sysfs change the config option is disabled per default.
->>>
->>> Patch is relative to the 'for-5.17-logging' branch from Damien.
+On 2022/1/5 15:39, Damien Le Moal wrote:
+> On Wed, 2022-01-05 at 15:27 -0500, Wenchao Hao wrote:
+>> This is just a clean code. Since each branch of "if" state would check
+>> scmd->cmd_len, so move the check of scmd->cmd_len out of "if" state to
+>> simplify input parameters check.
 >>
->> FYI, I queued the logging series in for-5.17, minus this patch.
->> Everything is in for-next too to check that nothing is broken.
+>> And remove redundant init of xlat_func at hand
 >>
->> For this patch, as I commented, I think we can keep a backward
->> compatible naming using sysfs symlinks. But I am not entirely sure if
->> that can work with port-multiplier setups. Let's work on that for the
->> next cycle ?
+>> The patch do not change origin function logic.
 >>
-> Well, I'm not terribly happy about the current port multiplier 
-> implementation, either.
-> Currently they are named 'ataX.Y.0', making them the only ata objects 
-> with three levels. Personally I would take the PATA master/slave thingie 
-> as an example, and just increase the last number (such that we would 
-> have ata1.0, ata1.1, ata1.2 etc).
-> Reasoning here is that PMP is pretty much an SATA thing, and 'slave' 
-> drives is a PATA thing. So they'll never clash.
-
-Sounds sane to me.
-
+>> Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
+>> ---
+>>   drivers/ata/libata-scsi.c | 9 ++++-----
+>>   1 file changed, 4 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index 313e9475507b..ab8a2833dfec 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+>> @@ -4023,16 +4023,15 @@ int __ata_scsi_queuecmd(struct scsi_cmnd *scmd, struct ata_device *dev)
+>>   	ata_xlat_func_t xlat_func;
+>>   	int rc = 0;
+>>   
+>> +	if (unlikely(!scmd->cmd_len))
+>> +		goto bad_cdb_len;
+>> +
+>>   	if (dev->class == ATA_DEV_ATA || dev->class == ATA_DEV_ZAC) {
+>> -		if (unlikely(!scmd->cmd_len || scmd->cmd_len > dev->cdb_len))
+>> +		if (unlikely(scmd->cmd_len > dev->cdb_len))
+>>   			goto bad_cdb_len;
+>>   
+>>   		xlat_func = ata_get_xlat_func(dev, scsi_op);
+>>   	} else {
+>> -		if (unlikely(!scmd->cmd_len))
+>> -			goto bad_cdb_len;
+>> -
+>> -		xlat_func = NULL;
+>>   		if (likely((scsi_op != ATA_16) || !atapi_passthru16)) {
+>>   			/* relay SCSI command to ATAPI device */
+>>   			int len = COMMAND_SIZE(scsi_op);
 > 
-> As for the 'ataX.Y' link; that'll require even more sysfs trickery.
-
-Hmm, as long as we can create sysfs paths that are compatible with the
-old naming scheme (which seem to differ only for the root port object
-name), it may be as simple as calling sysfs_create_link() for the port
-objects ?
-
-> Let's see if I can come up with something.
-> So yeah, let's hold off the patch for now.
+> Did you miss my reply ?
+> This change is OK, but while at it, let's cleanup this function further.
+> I suggested something like this, which includes your changes.
 > 
-> First I need to get a PMP cable to test things out :-)
 
-I do have some in the lab, so I can test. Just need to go to the lab,
-for once :)
+Maybe I misunderstood your previous reply. I think you ask me to change 
+prefix.
 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index a16ef0030667..ed8be585a98f 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -3958,42 +3958,39 @@ int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
+> struct ata_device *dev)
+>   {
+>   	u8 scsi_op = scmd->cmnd[0];
+>   	ata_xlat_func_t xlat_func;
+> -	int rc = 0;
+> +
+> +	if (unlikely(!scmd->cmd_len))
+> +		goto bad_cdb_len;
 > 
-> Cheers,
+>   	if (dev->class == ATA_DEV_ATA || dev->class == ATA_DEV_ZAC) {
+> -		if (unlikely(!scmd->cmd_len || scmd->cmd_len > dev->cdb_len))
+> +		if (unlikely(scmd->cmd_len > dev->cdb_len))
+>   			goto bad_cdb_len;
 > 
-> Hannes
+>   		xlat_func = ata_get_xlat_func(dev, scsi_op);
+> -	} else {
+> -		if (unlikely(!scmd->cmd_len))
+> -			goto bad_cdb_len;
+> +	} else if (scsi_op != ATA_16 || !atapi_passthru16) {
+> +		/* relay SCSI command to ATAPI device */
+> +		int len = COMMAND_SIZE(scsi_op);
+> 
+> -		xlat_func = NULL;
+> -		if (likely((scsi_op != ATA_16) || !atapi_passthru16)) {
+> -			/* relay SCSI command to ATAPI device */
+> -			int len = COMMAND_SIZE(scsi_op);
+> -			if (unlikely(len > scmd->cmd_len ||
+> -				     len > dev->cdb_len ||
+> -				     scmd->cmd_len > ATAPI_CDB_LEN))
+> -				goto bad_cdb_len;
+> +		if (unlikely(len > scmd->cmd_len ||
+> +			     len > dev->cdb_len ||
+> +			     scmd->cmd_len > ATAPI_CDB_LEN))
+> +			goto bad_cdb_len;
+> 
+> -			xlat_func = atapi_xlat;
+> -		} else {
+> -			/* ATA_16 passthru, treat as an ATA command */
+> -			if (unlikely(scmd->cmd_len > 16))
+> -				goto bad_cdb_len;
+> +		xlat_func = atapi_xlat;
+> +	} else {
+> +		/* ATA_16 passthru, treat as an ATA command */
+> +		if (unlikely(scmd->cmd_len > 16))
+> +			goto bad_cdb_len;
+> 
+> -			xlat_func = ata_get_xlat_func(dev, scsi_op);
+> -		}
+> +		xlat_func = ata_get_xlat_func(dev, scsi_op);
+>   	}
+> 
+>   	if (xlat_func)
+> -		rc = ata_scsi_translate(dev, scmd, xlat_func);
+> -	else
+> -		ata_scsi_simulate(dev, scmd);
+> +		return ata_scsi_translate(dev, scmd, xlat_func);
+> 
+> -	return rc;
+> +	ata_scsi_simulate(dev, scmd);
+> +
+> +	return 0;
+> 
+>    bad_cdb_len:
+>   	scmd->result = DID_ERROR << 16;
+> 
+> Do you see any problem with this change ?
+> 
 
-
--- 
-Damien Le Moal
-Western Digital Research
+This change looks good to me. Should I include this change in next 
+patch? Or you would do this by youself?
