@@ -2,118 +2,99 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B39E5C433F5
-	for <linux-ide@archiver.kernel.org>; Wed,  5 Jan 2022 05:18:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B73EFC433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  5 Jan 2022 05:54:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237445AbiAEFSA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 5 Jan 2022 00:18:00 -0500
-Received: from rap-us.hgst.com ([199.255.44.250]:41823 "EHLO
+        id S236247AbiAEFyg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 5 Jan 2022 00:54:36 -0500
+Received: from rap-us.hgst.com ([199.255.44.250]:54041 "EHLO
         usg-ed-osssrv.wdc.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S237443AbiAEFR5 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 5 Jan 2022 00:17:57 -0500
+        with ESMTP id S235987AbiAEFye (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 5 Jan 2022 00:54:34 -0500
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JTHmy6zlVz1VSkb
-        for <linux-ide@vger.kernel.org>; Tue,  4 Jan 2022 21:17:54 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JTJbD6k0qz1VSkZ
+        for <linux-ide@vger.kernel.org>; Tue,  4 Jan 2022 21:54:32 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:mime-version
-        :references:in-reply-to:x-mailer:message-id:date:subject:to
-        :from; s=dkim; t=1641359874; x=1643951875; bh=igD7KXBPcf6kP912Mr
-        9O5BzJG3DkVrdQKO8xH3XkiUo=; b=tnddr5E0lPDhXwcdtJXSck8pPlBYOTSYVQ
-        wi7YDXKQn9eEmuN+bR1jWWzsVxp9DnoCZfflMT26ColBW0HLPdNKzGHEbbQnkn4s
-        kxmIaLoOqCwjCvDE+8QxyPmmjisS7120VxfkMkLoVw9T0KrYl/eMBX2cyI+ZgEC9
-        hLGl0AToU3StYWWLT1oDKXyUE46r8GoBiPuFLOsnd46nBltN+UFo8obcQ2ZVPIM3
-        GswOMal7oP8Wm5rVtqceQD56o/itH2/0xXJY6LGMGLGpEDS1bxJpf1L5p+Q93f32
-        0hdGuMt/z3dAQP9hMzzbx+immVSFQNSBqiHSYq2PEhiv87NP4Mww==
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1641362072; x=1643954073; bh=xuCmyDGhvyJFCsL4s5cvZihbfP6PUKIW5b/
+        jvDxGmjQ=; b=SeKWOguEPu6LeTYieltrzdQbfuBZ0FwOxsBpP9wmNmwqy0fok7B
+        oblMBYBIFyMj0C+0r1xiODdiTLwLzmHkCIrd3svF7qPS0RQCf1VfVwoT3uteo0Ic
+        rfutZgP5oK5TpFaEUxdFZTSOnQUJ1pCCZfM+ER3JuXVoN2PR+SHojjFb8e4Ln6Gz
+        l1k79TB+UePXP1N8U3wKiMAzWyGCoAGYPC3HOK+X1MlJLH7NZN3OEAVj3LBlgsi9
+        3k83NXUHjV/8z/7XCV3unGtTB2z3yt3QZhssWaw9wNxme5GhMxSWeRYx3Kmby0ex
+        0gQQ2dyIQnjvCV6Mued+JsPkr6f2+pWaY/w==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id qLbw3KapOklj for <linux-ide@vger.kernel.org>;
-        Tue,  4 Jan 2022 21:17:54 -0800 (PST)
-Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JTHmy1mCvz1VSkg;
-        Tue,  4 Jan 2022 21:17:54 -0800 (PST)
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-To:     linux-ide@vger.kernel.org
-Cc:     Hannes Reinecke <hare@suse.de>
-Subject: [PATCH v3 20/22] ata: sata_fsl: fix cmdhdr_tbl_entry and prde struct definitions
-Date:   Wed,  5 Jan 2022 14:17:33 +0900
-Message-Id: <20220105051735.1871177-21-damien.lemoal@opensource.wdc.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20220105051735.1871177-1-damien.lemoal@opensource.wdc.com>
-References: <20220105051735.1871177-1-damien.lemoal@opensource.wdc.com>
+        with ESMTP id sYRvg--0nuS8 for <linux-ide@vger.kernel.org>;
+        Tue,  4 Jan 2022 21:54:32 -0800 (PST)
+Received: from [10.225.163.43] (unknown [10.225.163.43])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JTJbC5b3xz1VSkV;
+        Tue,  4 Jan 2022 21:54:31 -0800 (PST)
+Message-ID: <e0dcea41-9be3-1555-90a0-eb977c1ea799@opensource.wdc.com>
+Date:   Wed, 5 Jan 2022 14:54:30 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.0
+Subject: Re: [PATCH] drivers/ata: remove redundant val variable
+Content-Language: en-US
+To:     cgel.zte@gmail.com
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Minghao Chi <chi.minghao@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+References: <20220104112545.601962-1-chi.minghao@zte.com.cn>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20220104112545.601962-1-chi.minghao@zte.com.cn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The fields of the cmdhdr_tbl_entry structure all store __le32 values,
-and so are the dba and ddc_and_ext fields of the prde structure. Define
-these fields using the __le32 type to avoid sparse warnings about
-incorrect type in assignment.
+On 1/4/22 20:25, cgel.zte@gmail.com wrote:
+> From: Minghao Chi <chi.minghao@zte.com.cn>
+> 
+> Return value from DIV_ROUND_UP() directly instead
+> of taking this in another redundant variable.
+> 
+> Reported-by: Zeal Robot <zealci@zte.com.cn>
+> Signed-off-by: Minghao Chi <chi.minghao@zte.com.cn>
+> Signed-off-by: CGEL ZTE <cgel.zte@gmail.com>
+> ---
+>  drivers/ata/pata_octeon_cf.c | 6 +-----
+>  1 file changed, 1 insertion(+), 5 deletions(-)
+> 
+> diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
+> index b5a3f710d76d..70f91800fe9e 100644
+> --- a/drivers/ata/pata_octeon_cf.c
+> +++ b/drivers/ata/pata_octeon_cf.c
+> @@ -73,16 +73,12 @@ MODULE_PARM_DESC(enable_dma,
+>   */
+>  static unsigned int ns_to_tim_reg(unsigned int tim_mult, unsigned int nsecs)
+>  {
+> -	unsigned int val;
+> -
+>  	/*
+>  	 * Compute # of eclock periods to get desired duration in
+>  	 * nanoseconds.
+>  	 */
+> -	val = DIV_ROUND_UP(nsecs * (octeon_get_io_clock_rate() / 1000000),
+> +	return DIV_ROUND_UP(nsecs * (octeon_get_io_clock_rate() / 1000000),
+>  			  1000 * tim_mult);
+> -
+> -	return val;
+>  }
+>  
+>  static void octeon_cf_set_boot_reg_cfg(int cs, unsigned int multiplier)
 
-The debug message in sata_fsl_setup_cmd_hdr_entry() is changed to
-display the correct values of the cmdhdr_tbl_entry fields on big endian
-systems.
+Applied to for-5.17. Thanks.
 
-Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
----
- drivers/ata/sata_fsl.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 101d4dd79f62..da0152116d9f 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -221,10 +221,10 @@ enum {
-  * 4 Dwords per command slot, command header size =3D=3D  64 Dwords.
-  */
- struct cmdhdr_tbl_entry {
--	u32 cda;
--	u32 prde_fis_len;
--	u32 ttl;
--	u32 desc_info;
-+	__le32 cda;
-+	__le32 prde_fis_len;
-+	__le32 ttl;
-+	__le32 desc_info;
- };
-=20
- /*
-@@ -259,9 +259,9 @@ struct command_desc {
-  */
-=20
- struct prde {
--	u32 dba;
-+	__le32 dba;
- 	u8 fill[2 * 4];
--	u32 ddc_and_ext;
-+	__le32 ddc_and_ext;
- };
-=20
- /*
-@@ -426,10 +426,10 @@ static void sata_fsl_setup_cmd_hdr_entry(struct ata=
-_port *ap,
- 	pp->cmdslot[tag].desc_info =3D cpu_to_le32(desc_info | (tag & 0x1F));
-=20
- 	ata_port_dbg(ap, "cda=3D0x%x, prde_fis_len=3D0x%x, ttl=3D0x%x, di=3D0x%=
-x\n",
--		pp->cmdslot[tag].cda,
--		pp->cmdslot[tag].prde_fis_len,
--		pp->cmdslot[tag].ttl, pp->cmdslot[tag].desc_info);
--
-+		     le32_to_cpu(pp->cmdslot[tag].cda),
-+		     le32_to_cpu(pp->cmdslot[tag].prde_fis_len),
-+		     le32_to_cpu(pp->cmdslot[tag].ttl),
-+		     le32_to_cpu(pp->cmdslot[tag].desc_info));
- }
-=20
- static unsigned int sata_fsl_fill_sg(struct ata_queued_cmd *qc, void *cm=
-d_desc,
---=20
-2.31.1
-
+-- 
+Damien Le Moal
+Western Digital Research
