@@ -2,130 +2,80 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F934C433EF
-	for <linux-ide@archiver.kernel.org>; Wed,  5 Jan 2022 11:04:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F557C433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  5 Jan 2022 15:36:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235191AbiAELET (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 5 Jan 2022 06:04:19 -0500
-Received: from szxga03-in.huawei.com ([45.249.212.189]:31141 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235066AbiAELES (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 5 Jan 2022 06:04:18 -0500
-Received: from dggpemm500023.china.huawei.com (unknown [172.30.72.56])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4JTRPd5krbzRhds;
-        Wed,  5 Jan 2022 19:01:41 +0800 (CST)
-Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
- dggpemm500023.china.huawei.com (7.185.36.83) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Wed, 5 Jan 2022 19:04:16 +0800
-Received: from huawei.com (10.175.101.6) by dggpemm500017.china.huawei.com
- (7.185.36.178) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Wed, 5 Jan
- 2022 19:04:16 +0800
-From:   Wenchao Hao <haowenchao@huawei.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     Zhiqiang Liu <liuzhiqiang26@huawei.com>,
-        Wenchao Hao <haowenchao@huawei.com>
-Subject: [PATCH v3] ata: libata-scsi: simplify __ata_scsi_queuecmd()
-Date:   Wed, 5 Jan 2022 19:13:54 -0500
-Message-ID: <20220106001354.2029046-1-haowenchao@huawei.com>
-X-Mailer: git-send-email 2.32.0
+        id S241532AbiAEPgZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 5 Jan 2022 10:36:25 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:45297 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S241518AbiAEPgZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 5 Jan 2022 10:36:25 -0500
+Received: from handsomejack.molgen.mpg.de (handsomejack.molgen.mpg.de [141.14.17.248])
+        by mx.molgen.mpg.de (Postfix) with ESMTP id 9774A61EA192C;
+        Wed,  5 Jan 2022 16:36:22 +0100 (CET)
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Paul Menzel <pmenzel@molgen.mpg.de>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v4 1/2] ahci: Rename flag `ATA_LFLAG_NO_DB_DELAY` to `ATA_LFLAG_NO_DEBOUNCE_DELAY`
+Date:   Wed,  5 Jan 2022 16:36:16 +0100
+Message-Id: <20220105153618.2395-1-pmenzel@molgen.mpg.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.101.6]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggpemm500017.china.huawei.com (7.185.36.178)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-This is just a clean code. Since each branch of "if" state would check
-scmd->cmd_len, so move the check of scmd->cmd_len out of "if" state to
-simplify parameters check.
+The new name is longer, but clearer.
 
-After the check of scmd->cmd_len is out of "if" state, we can remove
-one redundant "if" state.
-
-Remove a redundant variable "rc" by hand.
-
-This patch do not change origin function logic.
-
-Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
+Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
 ---
- drivers/ata/libata-scsi.c | 45 ++++++++++++++++++---------------------
- 1 file changed, 21 insertions(+), 24 deletions(-)
+ drivers/ata/ahci_brcm.c   | 2 +-
+ drivers/ata/libata-sata.c | 2 +-
+ include/linux/libata.h    | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index a16ef0030..ed8be585a 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3958,42 +3958,39 @@ int __ata_scsi_queuecmd(struct scsi_cmnd *scmd, struct ata_device *dev)
- {
- 	u8 scsi_op = scmd->cmnd[0];
- 	ata_xlat_func_t xlat_func;
--	int rc = 0;
-+
-+	if (unlikely(!scmd->cmd_len))
-+		goto bad_cdb_len;
+diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+index 6e9c5ade4c2ea..649815c196ed0 100644
+--- a/drivers/ata/ahci_brcm.c
++++ b/drivers/ata/ahci_brcm.c
+@@ -333,7 +333,7 @@ static struct ata_port_operations ahci_brcm_platform_ops = {
  
- 	if (dev->class == ATA_DEV_ATA || dev->class == ATA_DEV_ZAC) {
--		if (unlikely(!scmd->cmd_len || scmd->cmd_len > dev->cdb_len))
-+		if (unlikely(scmd->cmd_len > dev->cdb_len))
- 			goto bad_cdb_len;
+ static const struct ata_port_info ahci_brcm_port_info = {
+ 	.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NO_DIPM,
+-	.link_flags	= ATA_LFLAG_NO_DB_DELAY,
++	.link_flags	= ATA_LFLAG_NO_DEBOUNCE_DELAY,
+ 	.pio_mask	= ATA_PIO4,
+ 	.udma_mask	= ATA_UDMA6,
+ 	.port_ops	= &ahci_brcm_platform_ops,
+diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+index b9c77885b8726..67b2e7cf3cc4e 100644
+--- a/drivers/ata/libata-sata.c
++++ b/drivers/ata/libata-sata.c
+@@ -317,7 +317,7 @@ int sata_link_resume(struct ata_link *link, const unsigned long *params,
+ 		 * immediately after resuming.  Delay 200ms before
+ 		 * debouncing.
+ 		 */
+-		if (!(link->flags & ATA_LFLAG_NO_DB_DELAY))
++		if (!(link->flags & ATA_LFLAG_NO_DEBOUNCE_DELAY))
+ 			ata_msleep(link->ap, 200);
  
- 		xlat_func = ata_get_xlat_func(dev, scsi_op);
--	} else {
--		if (unlikely(!scmd->cmd_len))
--			goto bad_cdb_len;
-+	} else if (likely((scsi_op != ATA_16) || !atapi_passthru16)) {
-+		/* relay SCSI command to ATAPI device */
-+		int len = COMMAND_SIZE(scsi_op);
+ 		/* is SControl restored correctly? */
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 2a8404b26083c..15802e644962d 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -191,7 +191,7 @@ enum {
+ 	ATA_LFLAG_NO_LPM	= (1 << 8), /* disable LPM on this link */
+ 	ATA_LFLAG_RST_ONCE	= (1 << 9), /* limit recovery to one reset */
+ 	ATA_LFLAG_CHANGED	= (1 << 10), /* LPM state changed on this link */
+-	ATA_LFLAG_NO_DB_DELAY	= (1 << 11), /* no debounce delay on link resume */
++	ATA_LFLAG_NO_DEBOUNCE_DELAY = (1 << 11), /* no debounce delay on link resume */
  
--		xlat_func = NULL;
--		if (likely((scsi_op != ATA_16) || !atapi_passthru16)) {
--			/* relay SCSI command to ATAPI device */
--			int len = COMMAND_SIZE(scsi_op);
--			if (unlikely(len > scmd->cmd_len ||
--				     len > dev->cdb_len ||
--				     scmd->cmd_len > ATAPI_CDB_LEN))
--				goto bad_cdb_len;
-+		if (unlikely(len > scmd->cmd_len ||
-+			     len > dev->cdb_len ||
-+			     scmd->cmd_len > ATAPI_CDB_LEN))
-+			goto bad_cdb_len;
- 
--			xlat_func = atapi_xlat;
--		} else {
--			/* ATA_16 passthru, treat as an ATA command */
--			if (unlikely(scmd->cmd_len > 16))
--				goto bad_cdb_len;
-+		xlat_func = atapi_xlat;
-+	} else {
-+		/* ATA_16 passthru, treat as an ATA command */
-+		if (unlikely(scmd->cmd_len > 16))
-+			goto bad_cdb_len;
- 
--			xlat_func = ata_get_xlat_func(dev, scsi_op);
--		}
-+		xlat_func = ata_get_xlat_func(dev, scsi_op);
- 	}
- 
- 	if (xlat_func)
--		rc = ata_scsi_translate(dev, scmd, xlat_func);
--	else
--		ata_scsi_simulate(dev, scmd);
-+		return ata_scsi_translate(dev, scmd, xlat_func);
- 
--	return rc;
-+	ata_scsi_simulate(dev, scmd);
-+
-+	return 0;
- 
-  bad_cdb_len:
- 	scmd->result = DID_ERROR << 16;
+ 	/* struct ata_port flags */
+ 	ATA_FLAG_SLAVE_POSS	= (1 << 0), /* host supports slave dev */
 -- 
-2.32.0
+2.30.2
 
