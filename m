@@ -2,115 +2,130 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7DEAC433F5
-	for <linux-ide@archiver.kernel.org>; Wed,  5 Jan 2022 09:54:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F934C433EF
+	for <linux-ide@archiver.kernel.org>; Wed,  5 Jan 2022 11:04:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239098AbiAEJyC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 5 Jan 2022 04:54:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35726 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239099AbiAEJyB (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 5 Jan 2022 04:54:01 -0500
-Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40C2CC061761;
-        Wed,  5 Jan 2022 01:54:01 -0800 (PST)
-Received: by mail-ed1-x531.google.com with SMTP id n30so47509448eda.13;
-        Wed, 05 Jan 2022 01:54:01 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=X4GNTeCisLQzSi9OxOY5ormoDr/5CoiqbLTNDynQNJw=;
-        b=XBb1ctMH1k7p7Y4eqegcb7iGQ+VNtzswgcA8KybqEm7OkARMJOlf0BcABOs8C/1M9V
-         CY4UqvhRN37oSK1xeQqjIBEAh+rgE2Re9m0xi1KgjSvBIBr4yvf3Nm45AmwuUOvSoitP
-         b/HR1fdGJr8FsWW7e/uJB6Y+9v1OH6Uz+oJoAD2epxw7Hx5UqXaMN5s9UPC8PWlBEy+a
-         gHEeKc+1lgqvaNGsv++3KHzeXS/po53loPkOqggimooUHszZdIsqWcHhniUIJ97alavK
-         3MVMsL2qAB2zCbIzs2x0AtsKZHbTRBkakbskIOS4bXX9FbdgTsj4cHGwm0CRkI3SqIxy
-         emjA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=X4GNTeCisLQzSi9OxOY5ormoDr/5CoiqbLTNDynQNJw=;
-        b=5rFbXvXFOp/cdYWngevcjIsJwcTeWP1RFxE7vXYZkSx4c97OJHWCJLDDY0wx+FJMQg
-         NkhkTn8xRifCvqzlIDMXzPUHmlqNoFOKDMbTXwp4HkN7F82RMhSqjqTqFPTwXappP788
-         opiR23aL4b4qp2tXOUh3EG4d9OwwK+QvckGNr3RoWpaY62YpMLwNFKEQppMVDEaDTihx
-         FflviL7sC5dILkrQINOTol+9ZL4qE4ZBlv9ZNef3iomS1qEblAACWWEElfmSqqoDI3Nv
-         0ylrTQqvzEkyenavC46Ngtm3hjimsCLD+npLZE7fS4QhTQz8yIhUbqwK5xi7MuwTFNRC
-         bfVw==
-X-Gm-Message-State: AOAM533wg/lrJvfdlfQ1HV2ZB1UOywGitGK5vvUKL7Wnrj4Xp8za/r8D
-        pKQje8lSnf7qH/2/rkHTR/RUzfE0Q6B0osRbXBs54b67A5M=
-X-Google-Smtp-Source: ABdhPJwgJeUDOADi2zIrrz7Da1NhPqDRKfiMU4sYAC+cAKycZRF5EALdm/rVupM9dDJB9PCNRqbSKAA+h3ubA0yaTqE=
-X-Received: by 2002:a05:6402:795:: with SMTP id d21mr17476727edy.270.1641376439894;
- Wed, 05 Jan 2022 01:53:59 -0800 (PST)
+        id S235191AbiAELET (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 5 Jan 2022 06:04:19 -0500
+Received: from szxga03-in.huawei.com ([45.249.212.189]:31141 "EHLO
+        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235066AbiAELES (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 5 Jan 2022 06:04:18 -0500
+Received: from dggpemm500023.china.huawei.com (unknown [172.30.72.56])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4JTRPd5krbzRhds;
+        Wed,  5 Jan 2022 19:01:41 +0800 (CST)
+Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
+ dggpemm500023.china.huawei.com (7.185.36.83) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.20; Wed, 5 Jan 2022 19:04:16 +0800
+Received: from huawei.com (10.175.101.6) by dggpemm500017.china.huawei.com
+ (7.185.36.178) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.20; Wed, 5 Jan
+ 2022 19:04:16 +0800
+From:   Wenchao Hao <haowenchao@huawei.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     Zhiqiang Liu <liuzhiqiang26@huawei.com>,
+        Wenchao Hao <haowenchao@huawei.com>
+Subject: [PATCH v3] ata: libata-scsi: simplify __ata_scsi_queuecmd()
+Date:   Wed, 5 Jan 2022 19:13:54 -0500
+Message-ID: <20220106001354.2029046-1-haowenchao@huawei.com>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-References: <20220105001410.27916-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
-In-Reply-To: <20220105001410.27916-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
-From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Wed, 5 Jan 2022 11:53:23 +0200
-Message-ID: <CAHp75Vd-7-6ZtGeRH=27H=H=SJnO5k-ntiYjpoPVic1G2Y1EaQ@mail.gmail.com>
-Subject: Re: [PATCH v4] ata: pata_of_platform: Use platform_get_irq_optional()
- to get the interrupt
-To:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Prabhakar <prabhakar.csengg@gmail.com>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.101.6]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, Jan 5, 2022 at 2:14 AM Lad Prabhakar
-<prabhakar.mahadev-lad.rj@bp.renesas.com> wrote:
->
-> platform_get_resource(pdev, IORESOURCE_IRQ, ..) relies on static
-> allocation of IRQ resources in DT core code, this causes an issue
-> when using hierarchical interrupt domains using "interrupts" property
-> in the node as this bypasses the hierarchical setup and messes up the
-> irq chaining.
->
-> In preparation for removal of static setup of IRQ resource from DT core
-> code use platform_get_irq_optional().
->
-> Note this code just sets the start and not the end of IRQ resource as
-> __pata_platform_probe() only uses the start member and also we don't
-> set the IRQ resource flags as this is handled automatically for DT.
+This is just a clean code. Since each branch of "if" state would check
+scmd->cmd_len, so move the check of scmd->cmd_len out of "if" state to
+simplify parameters check.
 
-...
+After the check of scmd->cmd_len is out of "if" state, we can remove
+one redundant "if" state.
 
-> +       irq = platform_get_irq_optional(ofdev, 0);
-> +       if (irq < 0 && irq != -ENXIO)
-> +               return irq;
-> +
-> +       if (irq > 0) {
+Remove a redundant variable "rc" by hand.
 
-> +               memset(&irq_res, 0, sizeof(irq_res));
+This patch do not change origin function logic.
 
-To avoid subtle mistakes in the future, I would suggest doing this
-unconditionally.
+Signed-off-by: Wenchao Hao <haowenchao@huawei.com>
+---
+ drivers/ata/libata-scsi.c | 45 ++++++++++++++++++---------------------
+ 1 file changed, 21 insertions(+), 24 deletions(-)
 
-> +               irq_res.start = irq;
-
-This is interesting. For consistency I would assign the end as well.
-
-> +       }
-
-Hence something like
-
-memset(&irq_res, ...);
-
-irq = ...
-if (irq < 0 ...)
-  return irq;
-if (irq > 0) {
-  irq_res.start = irq;
-  irq_res.end = irq;
-}
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index a16ef0030..ed8be585a 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3958,42 +3958,39 @@ int __ata_scsi_queuecmd(struct scsi_cmnd *scmd, struct ata_device *dev)
+ {
+ 	u8 scsi_op = scmd->cmnd[0];
+ 	ata_xlat_func_t xlat_func;
+-	int rc = 0;
++
++	if (unlikely(!scmd->cmd_len))
++		goto bad_cdb_len;
+ 
+ 	if (dev->class == ATA_DEV_ATA || dev->class == ATA_DEV_ZAC) {
+-		if (unlikely(!scmd->cmd_len || scmd->cmd_len > dev->cdb_len))
++		if (unlikely(scmd->cmd_len > dev->cdb_len))
+ 			goto bad_cdb_len;
+ 
+ 		xlat_func = ata_get_xlat_func(dev, scsi_op);
+-	} else {
+-		if (unlikely(!scmd->cmd_len))
+-			goto bad_cdb_len;
++	} else if (likely((scsi_op != ATA_16) || !atapi_passthru16)) {
++		/* relay SCSI command to ATAPI device */
++		int len = COMMAND_SIZE(scsi_op);
+ 
+-		xlat_func = NULL;
+-		if (likely((scsi_op != ATA_16) || !atapi_passthru16)) {
+-			/* relay SCSI command to ATAPI device */
+-			int len = COMMAND_SIZE(scsi_op);
+-			if (unlikely(len > scmd->cmd_len ||
+-				     len > dev->cdb_len ||
+-				     scmd->cmd_len > ATAPI_CDB_LEN))
+-				goto bad_cdb_len;
++		if (unlikely(len > scmd->cmd_len ||
++			     len > dev->cdb_len ||
++			     scmd->cmd_len > ATAPI_CDB_LEN))
++			goto bad_cdb_len;
+ 
+-			xlat_func = atapi_xlat;
+-		} else {
+-			/* ATA_16 passthru, treat as an ATA command */
+-			if (unlikely(scmd->cmd_len > 16))
+-				goto bad_cdb_len;
++		xlat_func = atapi_xlat;
++	} else {
++		/* ATA_16 passthru, treat as an ATA command */
++		if (unlikely(scmd->cmd_len > 16))
++			goto bad_cdb_len;
+ 
+-			xlat_func = ata_get_xlat_func(dev, scsi_op);
+-		}
++		xlat_func = ata_get_xlat_func(dev, scsi_op);
+ 	}
+ 
+ 	if (xlat_func)
+-		rc = ata_scsi_translate(dev, scmd, xlat_func);
+-	else
+-		ata_scsi_simulate(dev, scmd);
++		return ata_scsi_translate(dev, scmd, xlat_func);
+ 
+-	return rc;
++	ata_scsi_simulate(dev, scmd);
++
++	return 0;
+ 
+  bad_cdb_len:
+ 	scmd->result = DID_ERROR << 16;
 -- 
-With Best Regards,
-Andy Shevchenko
+2.32.0
+
