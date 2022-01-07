@@ -2,116 +2,72 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E778FC433FE
-	for <linux-ide@archiver.kernel.org>; Fri,  7 Jan 2022 09:29:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6E00C433EF
+	for <linux-ide@archiver.kernel.org>; Fri,  7 Jan 2022 11:48:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231910AbiAGJ3I convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 7 Jan 2022 04:29:08 -0500
-Received: from eu-smtp-delivery-151.mimecast.com ([185.58.86.151]:36605 "EHLO
-        eu-smtp-delivery-151.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236635AbiAGJ3H (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jan 2022 04:29:07 -0500
-Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- uk-mta-285-vpZ-Wp3BMeGthyvSRQk9FQ-1; Fri, 07 Jan 2022 09:29:00 +0000
-X-MC-Unique: vpZ-Wp3BMeGthyvSRQk9FQ-1
-Received: from AcuMS.Aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) by
- AcuMS.aculab.com (fd9f:af1c:a25b:0:994c:f5c2:35d6:9b65) with Microsoft SMTP
- Server (TLS) id 15.0.1497.26; Fri, 7 Jan 2022 09:28:59 +0000
-Received: from AcuMS.Aculab.com ([fe80::994c:f5c2:35d6:9b65]) by
- AcuMS.aculab.com ([fe80::994c:f5c2:35d6:9b65%12]) with mapi id
- 15.00.1497.026; Fri, 7 Jan 2022 09:28:59 +0000
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     'Jiasheng Jiang' <jiasheng@iscas.ac.cn>,
-        "damien.lemoal@opensource.wdc.com" <damien.lemoal@opensource.wdc.com>,
-        "davem@davemloft.net" <davem@davemloft.net>
-CC:     "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: RE: [PATCH v2] ide: Check for null pointer after calling devm_ioremap
-Thread-Topic: [PATCH v2] ide: Check for null pointer after calling
- devm_ioremap
-Thread-Index: AQHYA6at8pabwhGqwEGRoa3rWHXCDqxXSSww
-Date:   Fri, 7 Jan 2022 09:28:59 +0000
-Message-ID: <1100e723d5bb4551b5275fddc42c0902@AcuMS.aculab.com>
-References: <20220107091151.4057283-1-jiasheng@iscas.ac.cn>
-In-Reply-To: <20220107091151.4057283-1-jiasheng@iscas.ac.cn>
-Accept-Language: en-GB, en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
+        id S1347211AbiAGLsa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 7 Jan 2022 06:48:30 -0500
+Received: from smtp21.cstnet.cn ([159.226.251.21]:39028 "EHLO cstnet.cn"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1347196AbiAGLsa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 7 Jan 2022 06:48:30 -0500
+Received: from localhost.localdomain (unknown [124.16.138.126])
+        by APP-01 (Coremail) with SMTP id qwCowAAnLZ12KNhhNbz4BQ--.12135S2;
+        Fri, 07 Jan 2022 19:48:06 +0800 (CST)
+From:   Jiasheng Jiang <jiasheng@iscas.ac.cn>
+To:     David.Laight@ACULAB.COM, damien.lemoal@opensource.wdc.com,
+        davem@davemloft.net
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        stable@vger.kernel.org, Jiasheng Jiang <jiasheng@iscas.ac.cn>
+Subject: Re: Re: [PATCH v2] ide: Check for null pointer after calling devm_ioremap
+Date:   Fri,  7 Jan 2022 19:47:58 +0800
+Message-Id: <20220107114758.4057401-1-jiasheng@iscas.ac.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Authentication-Results: relay.mimecast.com;
-        auth=pass smtp.auth=C51A453 smtp.mailfrom=david.laight@aculab.com
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: aculab.com
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: qwCowAAnLZ12KNhhNbz4BQ--.12135S2
+X-Coremail-Antispam: 1UD129KBjvdXoW7Gry7AryUAw1xAFWDGr4rXwb_yoW3Jrc_C3
+        93ZanrWrZ0yr17JwsrGw12vrW2yF4rWrZxtrZ8twsxXr9rurnrGryY9wsYva1xW3s2vrn3
+        uFsxZayakw1jkjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUIcSsGvfJTRUUUbc8FF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
+        6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
+        A2z4x0Y4vE2Ix0cI8IcVAFwI0_JFI_Gr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr0_
+        Cr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s
+        1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0
+        cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r4j6F4UMcvjeVCFs4IE7xkEbVWUJVW8Jw
+        ACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lc2xSY4AK67AK6r4kMxAI
+        w28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr
+        4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCIc40Y0x0EwIxG
+        rwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8Jw
+        CI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY
+        6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjfU0PEfUUUUU
+X-Originating-IP: [124.16.138.126]
+X-CM-SenderInfo: pmld2xxhqjqxpvfd2hldfou0/
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Jiasheng Jiang
-> Sent: 07 January 2022 09:12
-> 
-> In linux-stable-5.15.13, this file has been removed and combined
-> to `drivers/ata/pata_platform.c` without this bug.
-> But in the older LTS kernels, like 5.10.90, this bug still exists.
-> As the possible failure of the devres_alloc(), the devm_ioremap() and
-> devm_ioport_map() may return NULL pointer.
-> And then, the 'base' and 'alt_base' are used in plat_ide_setup_ports().
-> Therefore, it should be better to add the check in order to avoid the
-> dereference of the NULL pointer.
-> Actually, it introduced the bug from commit 8cb1f567f4c0
-> ("ide: Platform IDE driver") and we can know from the commit message
-> that it tended to be similar to the `drivers/ata/pata_platform.c`.
-> But actually, even the first time pata_platform was built,
-> commit a20c9e820864 ("[PATCH] ata: Generic platform_device libata driver"),
-> there was no the bug, as there was a check after the ioremap().
-> So possibly the bug was caused by ide itself.
-> 
-> Fixes: 8cb1f567f4c0 ("ide: Platform IDE driver")
-> Cc: stable@vger.kernel.org#5.10.90
-> Signed-off-by: Jiasheng Jiang <jiasheng@iscas.ac.cn>
-> ---
-> Changelog
-> 
-> v1 -> v2
-> 
-> * Change 1. Correct the fixes tag and commit message.
-> ---
->  drivers/ide/ide_platform.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/ide/ide_platform.c b/drivers/ide/ide_platform.c
-> index 91639fd6c276..5500c5afb3ca 100644
-> --- a/drivers/ide/ide_platform.c
-> +++ b/drivers/ide/ide_platform.c
-> @@ -85,6 +85,10 @@ static int plat_ide_probe(struct platform_device *pdev)
->  		alt_base = devm_ioport_map(&pdev->dev,
->  			res_alt->start, resource_size(res_alt));
->  	}
-> +	if (!base || !!alt_base) {
-> +		ret = -ENOMEM;
-> +		goto out;
-> +	}
+On Fri, Jan 07, 2022 at 05:28:59PM +0800, David Laight wrote:
+> That !!alt_base doesn't look right.
+> Without looking at the rest of the code maybe:
+> 	if (!base && !alt_base)
+> may be correct.
 
-That !!alt_base doesn't look right.
-Without looking at the rest of the code maybe:
-	if (!base && !alt_base)
-may be correct.
+Thanks, that's my fault.
+I will correct it.
 
-It also rather makes me wonder about the actual failure return value.
-If devm_ioport_map() returns a 'port number' for inb()/outb() then
-zero is technically a valid value!
+> It also rather makes me wonder about the actual failure return value.
+> If devm_ioport_map() returns a 'port number' for inb()/outb() then
+> zero is technically a valid value!
 
-	David
+That's not right.
+The devm_ioport_map() returns NULL if fails and returns non-NULL
+pointer if success.
+And also we can find in `drivers/ata/pata_platform.c` that it also
+use the same way to check the return value from devm_ioport_map().
 
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
+I will submit a new version to correct my code.
+
+Sincerely thanks,
+Jiang
 
