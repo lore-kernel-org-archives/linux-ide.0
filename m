@@ -2,57 +2,112 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B6BAC433EF
-	for <linux-ide@archiver.kernel.org>; Fri,  7 Jan 2022 06:28:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56DECC433EF
+	for <linux-ide@archiver.kernel.org>; Fri,  7 Jan 2022 06:41:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231839AbiAGG2f (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 7 Jan 2022 01:28:35 -0500
-Received: from smtp25.cstnet.cn ([159.226.251.25]:34960 "EHLO cstnet.cn"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S231816AbiAGG2f (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 7 Jan 2022 01:28:35 -0500
-Received: from localhost.localdomain (unknown [124.16.138.126])
-        by APP-05 (Coremail) with SMTP id zQCowAD32RZ_3ddhP_LGBQ--.10292S2;
-        Fri, 07 Jan 2022 14:28:15 +0800 (CST)
-From:   Jiasheng Jiang <jiasheng@iscas.ac.cn>
-To:     damien.lemoal@opensource.wdc.com, davem@davemloft.net
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jiasheng Jiang <jiasheng@iscas.ac.cn>
-Subject: Re: Re: [PATCH] ide: Check for null pointer after calling devm_ioremap
-Date:   Fri,  7 Jan 2022 14:28:14 +0800
-Message-Id: <20220107062814.3611747-1-jiasheng@iscas.ac.cn>
-X-Mailer: git-send-email 2.25.1
+        id S233286AbiAGGla (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 7 Jan 2022 01:41:30 -0500
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:56465 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233300AbiAGGl1 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jan 2022 01:41:27 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1641537686; x=1673073686;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=iwQYZhPpwMpxea++iPye//jg3r0vrEscM38jEzj1QnI=;
+  b=FTLY5u093fhoG7unfyih2Hq3ezGhA6G4gggbXCymePqGwUMpPaudsfo2
+   vvTwG/BbZETjPPt9BRRPMBBiDfCqudO0tiqpupMLkQREiBRJpmNuvC+Cc
+   V7gYHdx8UBRtsGB9l4bPK0ysnLbmDOmx65XXEJTyRjjGPKS/JLKV6IQ71
+   hlX8ireAYKVp9wRGs69PURffQEIU/z1e3dvlKxXVBMU+ceooqsTDKlySv
+   vtjOnSVHhYS+iUP01ckidN0/OvLovlszCkB2Cv0hmKMVy+BuqfQuOpciN
+   Ee8sGixoXcbtU61ma1DJvdUkxi6dORQd8zNjDxz2UXKE3Kmwy5DkKYCDg
+   g==;
+X-IronPort-AV: E=Sophos;i="5.88,268,1635177600"; 
+   d="scan'208";a="194707190"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 07 Jan 2022 14:41:23 +0800
+IronPort-SDR: hXwXW1HUrqVHmGVvscMP0Utj13eLbZHpWqlrpmCqcFgrzkuBinR6Utcd9mSrHxOPtwZeCETOdk
+ dQITh91mxPoui/+TNHwX9gStdpB0XIxPfpHdC1CUkSYB3yOW1VBkoujZ80Gnxd3kyDv4FoAyPU
+ 9IY72p6PunGqwVZtvQHXbuv2zQ2F0FwyJqWgaEe8lhNSp63R50WDLVzq+4saLOhux+Ic691auz
+ xezHXfbeMnAESSSiJIv4XSYA/qscOwga4ZZ6RT7eYQj2OdW2RdvLwaqtLRZLEadkrHQzgZp/Rh
+ Fk6hj7ofb64auJQtpfaqsoRE
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jan 2022 22:15:12 -0800
+IronPort-SDR: LBJLCxrHN0DkfHqvJIcUMZtPGGAAAcSQh6X4X1V2SUgsO+dgQfquT/30n6UOlxvu0qYSqJJPHD
+ 37KKz9SWToocZvBUsH5qv31kbAwKxOmz4jCwTaEDG78z98wWVZOrtFYNQ/qguZxxWt7INg76KD
+ D7cmijqsSkpAw1fIInumb+cadjnP1lwkdm+cX8tqrpUQry3parOrif3B4wVStlxI8gAA+aOOqX
+ XZEdcdvXHXMF3Z/AoGA010d6hwOSf/zHF9GSZ+Uu+45Uwt1NLozzQbqrjwOFvBWECKxyueitfS
+ JNA=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Jan 2022 22:41:23 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JVYXL2X0Zz1VSkZ
+        for <linux-ide@vger.kernel.org>; Thu,  6 Jan 2022 22:41:22 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1641537681; x=1644129682; bh=iwQYZhPpwMpxea++iPye//jg3r0vrEscM38
+        jEzj1QnI=; b=FXUQSxx/q2w+qVeECbYZ+2vlBPqSBl2kERh4AzX+/o/B2BSFcOI
+        MF9Vwl5c7wBxUXEZMps+cVBND5LdbGxAXwzkFB/scMZBYjEAeSMjiGvKHx7fTvNs
+        RpT2K8bqVL9aQS898USNKwHKBl7SnhOXG/utbJLhLNgyOGZRGS3Viy+13wprSxbf
+        iELxm6n55wqW5sn2kaT1ZLM2B7TJ2C3bK+GY5NVGZ0bYYV/GK9mnmcQJfBp5+FIk
+        7265RomK7Ynqrs1Qnahvd2fV2tO2eYHC5rPom1PEEUfHI+K6/nu5GYAGAfnvaMOF
+        yZlVWq9D7a96025Cl75fRPaZQRGU+Yvg0SA==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id nutG_8FoYWS6 for <linux-ide@vger.kernel.org>;
+        Thu,  6 Jan 2022 22:41:21 -0800 (PST)
+Received: from [10.225.54.48] (unknown [10.225.54.48])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JVYXK27NRz1VSkV;
+        Thu,  6 Jan 2022 22:41:21 -0800 (PST)
+Message-ID: <bcd92fb0-8b2a-99b8-e2d3-80882b904d2a@opensource.wdc.com>
+Date:   Fri, 7 Jan 2022 15:41:19 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: zQCowAD32RZ_3ddhP_LGBQ--.10292S2
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-        VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYY7AC8VAFwI0_Jr0_Gr1l1xkIjI8I6I8E
-        6xAIw20EY4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28Cjx
-        kF64kEwVA0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVW5JVW7JwA2z4x0Y4vE2Ix0cI8I
-        cVCY1x0267AKxVW8JVWxJwA2z4x0Y4vEx4A2jsIE14v26F4UJVW0owA2z4x0Y4vEx4A2js
-        IEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE
-        5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeV
-        CFs4IE7xkEbVWUJVW8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1l
-        c2xSY4AK67AK6r47MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I
-        0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWU
-        AVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcV
-        CY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_WFyUJVCq3wCI42IY6I8E87Iv
-        67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyT
-        uYvjfU8xR6UUUUU
-X-Originating-IP: [124.16.138.126]
-X-CM-SenderInfo: pmld2xxhqjqxpvfd2hldfou0/
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.4.1
+Subject: Re: [PATCH] ide: Check for null pointer after calling devm_ioremap
+Content-Language: en-US
+To:     Jiasheng Jiang <jiasheng@iscas.ac.cn>, davem@davemloft.net
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220107062814.3611747-1-jiasheng@iscas.ac.cn>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital
+In-Reply-To: <20220107062814.3611747-1-jiasheng@iscas.ac.cn>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Jan 07, 2022 at 01:30:35PM +0800, Damien Le Moal wrote:
-> There is no such file... What kernel is this patch against ?
+On 2022/01/07 15:28, Jiasheng Jiang wrote:
+> On Fri, Jan 07, 2022 at 01:30:35PM +0800, Damien Le Moal wrote:
+>> There is no such file... What kernel is this patch against ?
+> 
+> Thanks, this patch is based on linux-stable-5.13.9.
+> And I just notice that in Jun 16 2021, this file was removed.
+> Anyway, this patch can be applied to the previous version, which still
+> has the `drivers/ide/ide_platform.c`.
 
-Thanks, this patch is based on linux-stable-5.13.9.
-And I just notice that in Jun 16 2021, this file was removed.
-Anyway, this patch can be applied to the previous version, which still
-has the `drivers/ide/ide_platform.c`.
+Kernel 5.13 is EOL. No new patches are applied to this kernel. If you need this
+fixed, then please check the latest kernel first and mark the patch for
+backporting (fixes + cc: stable tags) to the latest stable (5.15) and LTS
+kernels (5.15, 5.10 etc).
 
-Sincerely thanks,
-Jiang
 
+> 
+> Sincerely thanks,
+> Jiang
+> 
+
+
+-- 
+Damien Le Moal
+Western Digital Research
