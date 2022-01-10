@@ -2,198 +2,177 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4406C433EF
-	for <linux-ide@archiver.kernel.org>; Mon, 10 Jan 2022 09:36:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DFF1C433F5
+	for <linux-ide@archiver.kernel.org>; Mon, 10 Jan 2022 22:53:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243128AbiAJJgo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 10 Jan 2022 04:36:44 -0500
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:43238 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S243029AbiAJJgH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 10 Jan 2022 04:36:07 -0500
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 20A8SpK3001224;
-        Mon, 10 Jan 2022 09:34:44 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : to : cc : date : in-reply-to : references : content-type :
- mime-version : content-transfer-encoding; s=pp1;
- bh=LTgj9BMo0PeVOTmHS425bgS3Erf/sk7QZhpGDMjgyhM=;
- b=ZeBWbN0MuX3/AcZ5RKWxlntTjtiYf7I8s1BDSqtpXcjWdKYreu00C0yIuS54bslUb+Qr
- i8eYw95JaW/kRkoSt2zAHTinIjB+A7CPiMdtyB681hPeHcfgnzR85uHf321nrRQFc1lp
- la9fqV0TOWpjT+vO0xEhhgF1o49lWVqwByJ8qBn2XaRUDR7r5LiwvirD3oVxz1l/G8aA
- GGCXA11FLJGWT7f5iLejA1BYwhyVqSkuX7XlV9iM6xmQILJKk4eoCpwa9+QQDTpFWY9O
- RafQfotY4ReY1g/9giu+qtTtTZzWY7egugKozzrEpyohVjle6LQRR+kd516WluIEvvXn Gw== 
-Received: from ppma06fra.de.ibm.com (48.49.7a9f.ip4.static.sl-reverse.com [159.122.73.72])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 3dfm1hp8jh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 10 Jan 2022 09:34:44 +0000
-Received: from pps.filterd (ppma06fra.de.ibm.com [127.0.0.1])
-        by ppma06fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 20A9Rlj5003316;
-        Mon, 10 Jan 2022 09:34:41 GMT
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (d06relay12.portsmouth.uk.ibm.com [9.149.109.197])
-        by ppma06fra.de.ibm.com with ESMTP id 3df1vj2baj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 10 Jan 2022 09:34:41 +0000
-Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
-        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 20A9Ydft44106206
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 10 Jan 2022 09:34:39 GMT
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id CCEA2A405B;
-        Mon, 10 Jan 2022 09:34:38 +0000 (GMT)
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id F191AA4065;
-        Mon, 10 Jan 2022 09:34:34 +0000 (GMT)
-Received: from sig-9-145-16-13.uk.ibm.com (unknown [9.145.16.13])
-        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Mon, 10 Jan 2022 09:34:34 +0000 (GMT)
-Message-ID: <822ad0da702f0953b7aae1febd2c4dfcc4707864.camel@linux.ibm.com>
-Subject: Re: [RFC 01/32] Kconfig: introduce and depend on LEGACY_PCI
-From:   Niklas Schnelle <schnelle@linux.ibm.com>
-To:     John Garry <john.garry@huawei.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Hans Verkuil <hverkuil-cisco@xs4all.nl>,
-        Ettore Chimenti <ek5.chimenti@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Arnd Bergmann <arnd@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Nick Hu <nickhu@andestech.com>,
-        Greentime Hu <green.hu@gmail.com>,
-        Vincent Chen <deanbo422@gmail.com>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>, Guo Ren <guoren@kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Ian Abbott <abbotti@mev.co.uk>,
-        H Hartley Sweeten <hsweeten@visionengravers.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Bartosz Golaszewski <brgl@bgdev.pl>,
-        Jean Delvare <jdelvare@suse.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Karsten Keil <isdn@linux-pingi.de>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Michael Grzeschik <m.grzeschik@pengutronix.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Tony Nguyen <anthony.l.nguyen@intel.com>,
-        Kalle Valo <kvalo@kernel.org>, Jouni Malinen <j@w1.fi>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        Mark Brown <broonie@kernel.org>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Teddy Wang <teddy.wang@siliconmotion.com>,
-        Forest Bond <forest@alittletooquiet.net>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        Wim Van Sebroeck <wim@linux-watchdog.org>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>, linux-kernel@vger.kernel.org,
-        linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-riscv@lists.infradead.org, linux-csky@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-gpio@vger.kernel.org,
-        linux-hwmon@vger.kernel.org, linux-i2c@vger.kernel.org,
-        linux-input@vger.kernel.org, netdev@vger.kernel.org,
-        linux-media@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
-        linux-scsi@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-        linux-wireless@vger.kernel.org, megaraidlinux.pdl@broadcom.com,
-        linux-spi@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        linux-serial@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-watchdog@vger.kernel.org
-Date:   Mon, 10 Jan 2022 10:34:34 +0100
-In-Reply-To: <74bf4fde-3972-1c36-ca04-58089da0d82b@huawei.com>
-References: <20220105194748.GA215560@bhelgaas>
-         <74bf4fde-3972-1c36-ca04-58089da0d82b@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5 (3.28.5-18.el8) 
-Mime-Version: 1.0
+        id S1345077AbiAJWxM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 10 Jan 2022 17:53:12 -0500
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:38996 "EHLO
+        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241114AbiAJWxM (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 10 Jan 2022 17:53:12 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1641855192; x=1673391192;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=vCt7YeJ6ihHy34FQA1brq9w4AvGaHog9ruTyBQgPR64=;
+  b=g1/JfnXP5YgJFEsTXzoFfu5NgE32yEqSjGM9GcwBeW5qgWYOL3nJVxRV
+   ZjZxykxCshZlHBzWCrhfS7RbfI8p0Gn64vjyoYGYFV4kl82JPyobBE/9O
+   EWqT7bLnW9/fIRs/1dK/CFC/RuUkFb8bAbMCBZ35W2Cy9Znzv83zsDoX4
+   4Q9w17LkfZ9Re/bLU3fdYcR42SV1kCALQSuONcnS4EpelpMS/E8PCC6Sz
+   eszF9rnNbwreK70/d7idMQHf2L6QFa3qh2SWC28xaFEap3r1XWXp40JCg
+   DJvvevpWbKkjdvif018ArxahDaPLL9vw5/Y5YD2+Jz0IPlVm8tg3jIsgN
+   g==;
+X-IronPort-AV: E=Sophos;i="5.88,278,1635177600"; 
+   d="scan'208";a="191147638"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 11 Jan 2022 06:53:11 +0800
+IronPort-SDR: efBjh3z78zGmMjxxU0xH/he7uwhlps0Bcqu3iJO9I0e8M8+UeAk19dipyiKmboaO6ljvR5Rsvb
+ wtTKjvTtzvwi8EEE2VxCkJVLj/qAE7BFdBw78o2alxCB394+Aa6D/8qc7cGsGXgzXrsR1RAE3R
+ TRY+C0Pdi3cBM1xomszOOJZRuhWQ/oX4n1JZD+0MDZOIWl+rFAEtboSN+z96mBNuJdKF32fiHP
+ jKJ0VKoQY0hQtHIdR4O7a8/sGcLaNJuI5/b+/yL9+AjtC6JGVFt5soi84viM8PI1dHi18QVF/q
+ Fq/YXD6ePKMe1PZcVYhtC25t
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jan 2022 14:25:34 -0800
+IronPort-SDR: 0LQHLgyKZt53P5clP8HbFDLakP2YJqqmUOabETFZF/65Kpyw4fF2PzazvAbfcBxoBCV4DBXFbX
+ 5a5kQcp4lffsjzPiJSEDAxKTXayxDVmEymBz21gam+kupmOTmQJMyxyjXsRGRiPrqbizn7zbEh
+ I0GUaGisJ8kcpgC4784QCLyiWnCFGgV5set9t2YoVfZpQCQgzQkqsIggKsj8AOHUb28c+tp4WA
+ HUnGVSLdGhWERC0sRw2hkqD5MzlDMAY2lvE630ir6Q6BONmv1m0J9R6FMMojuk5jmbCzYgY5dD
+ b5I=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jan 2022 14:53:11 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JXpyG2shYz1VSkX
+        for <linux-ide@vger.kernel.org>; Mon, 10 Jan 2022 14:53:10 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1641855189; x=1644447190; bh=vCt7YeJ6ihHy34FQA1brq9w4AvGaHog9ruT
+        yBQgPR64=; b=d5V/kww1vens9ElvcIjIOEDSaYJUlgc3bShj9AYaoTIyJ20TF96
+        WOJqgP0+bzPDGv/k/5aEmLrZISU7eqPeam03JTJPWIbo5yiqRZB9Yw3/opAO9jxW
+        6nsOaIBArX2XOTZ3aa9uqYhlae9zSpVA4Mt6OzMMxMA9rRKXyULl9aKYKftFMeOS
+        T/L+Q228ELUwEY0Lzrj9LJd/UctAy4L/cDXSMmxe8E4Kjspy4E4KFlnygyTURTgP
+        aucM/nBJvSunncZ2n4YH8TgONtqDOFZGLpWHcMn9Q1HCh81Kbo2VTT8aZuFbgYs6
+        zyA+MgrcwCXQAPG9ELlL3mh46Qj6EHtI41g==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id WOAkprQAPfxa for <linux-ide@vger.kernel.org>;
+        Mon, 10 Jan 2022 14:53:09 -0800 (PST)
+Received: from [10.225.54.48] (unknown [10.225.54.48])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JXpyD4dSdz1VSkV;
+        Mon, 10 Jan 2022 14:53:08 -0800 (PST)
+Message-ID: <c9c63445-3ecc-4a0e-3e70-3b5942e0d5d5@opensource.wdc.com>
+Date:   Tue, 11 Jan 2022 07:53:07 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.4.1
+Subject: Re: [PATCH v5] ata: pata_of_platform: Use platform_get_irq_optional()
+ to get the interrupt
+Content-Language: en-US
+To:     Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+Cc:     Rob Herring <robh+dt@kernel.org>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Prabhakar <prabhakar.csengg@gmail.com>,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220105181721.13087-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital
+In-Reply-To: <20220105181721.13087-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: RBwht8yqbe4Zp6W3roxBtkr5zQL4IA2M
-X-Proofpoint-ORIG-GUID: RBwht8yqbe4Zp6W3roxBtkr5zQL4IA2M
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.11.62.513
- definitions=2022-01-10_04,2022-01-07_01,2021-12-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 bulkscore=0
- impostorscore=0 malwarescore=0 mlxlogscore=999 lowpriorityscore=0
- phishscore=0 adultscore=0 spamscore=0 clxscore=1015 mlxscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2110150000 definitions=main-2201100067
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, 2022-01-06 at 17:41 +0000, John Garry wrote:
-> On 05/01/2022 19:47, Bjorn Helgaas wrote:
-> > > > > >   ok if the PCI maintainers decide otherwise.
-> > > > > I don't really like the "LEGACY_PCI" Kconfig option.  "Legacy" just
-> > > > > means something old and out of favor; it doesn't say*what*  that
-> > > > > something is.
-> > > > > 
-> > > > > I think you're specifically interested in I/O port space usage, and it
-> > > > > seems that you want all PCI drivers that*only*  use I/O port space to
-> > > > > depend on LEGACY_PCI?  Drivers that can use either I/O or memory
-> > > > > space or both would not depend on LEGACY_PCI?  This seems a little
-> > > > > murky and error-prone.
-> > > > I'd like to hear Arnd's opinion on this but you're the PCI maintainer
-> > > > so of course your buy-in would be quite important for such an option.
-> > I'd like to hear Arnd's opinion, too.  If we do add LEGACY_PCI, I
-> > think we need a clear guide for when to use it, e.g., "a PCI driver
-> > that uses inb() must depend on LEGACY_PCI" or whatever it is.
-> > 
-> > I must be missing something because I don't see what we gain from
-> > this.  We have PCI drivers, e.g., megaraid [1], for devices that have
-> > either MEM or I/O BARs.  I think we want to build drivers like that on
-> > any arch that supports PCI.
-> > 
-> > If the arch doesn't support I/O port space, devices that only have I/O
-> > BARs won't work, of course, and hopefully the PCI core and driver can
-> > figure that out and gracefully fail the probe.
-> > 
-> > But that same driver should still work with devices that have MEM
-> > BARs.  If inb() isn't always present, I guess we could litter these
-> > drivers with #ifdefs, but that would be pretty ugly.
-
-I think this is the big question here. If we do go with a compile-time
-solution as requested by Linus we will either get a lot of #ifdeffery,
-coarse driver dependencies or as proposed by Alan Stern for the USB
-#ifdefs might end up turning inb() into a compile-time nop.
-
-The originally proposed change that returned ~0 from inb() and printed
-a warning clearly is the simpler change and sure we could also drop the
-warning. I'm honestly torn, I do agree with Linus that we shouldn't
-have run-time things that we know at compile-time will not work but I
-also dislike all the #ifdeffery a compile-time solution requires. Sadly
-C really doesn't give us any better tools here.
-
-Also I 100% agree with you Bjorn how likely it is to see a device on a
-platform really shouldn't matter. Without going into details, on s390
-we have already beneffited from PCI drivers working with 0 changes to
-support devices we previously didn't have on the platform or
-anticipated we would get in the future. Consequently drivers that could
-work in principle should be built.
-
-> >  
+On 2022/01/06 3:17, Lad Prabhakar wrote:
+> platform_get_resource(pdev, IORESOURCE_IRQ, ..) relies on static
+> allocation of IRQ resources in DT core code, this causes an issue
+> when using hierarchical interrupt domains using "interrupts" property
+> in the node as this bypasses the hierarchical setup and messes up the
+> irq chaining.
 > 
-> There were some ifdefs added to the 8250 drivers in Arnd's original 
-> patch [0], but it does not seem included here.
+> In preparation for removal of static setup of IRQ resource from DT core
+> code use platform_get_irq_optional().
 > 
-> Niklas, what happened to the 8250 and the other driver changes?
+> Note the code does not set the IRQ flags as this is handled automatically
+> for DT.
+> 
+> Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> ---
+> Hi All,
+> 
+> This patch is part of series [1]. I'll re-visit merging of pata_of_platform
+> into pata_platform at later point. As my primary focus is removal of static
+> setup of IRQ resource from DT core code.
+> 
+> [1] https://patchwork.ozlabs.org/project/linux-ide/list/?series=278349
+> 
+> v4->v5
+> * Set end member of IRQ resource
+> * Clear irq_res un-conditionally.
+> 
+> Cheers,
+> Prabhakar
+> ---
+>  drivers/ata/pata_of_platform.c | 15 ++++++++++++---
+>  1 file changed, 12 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
+> index 35aa158fc976..c3a40b717dcd 100644
+> --- a/drivers/ata/pata_of_platform.c
+> +++ b/drivers/ata/pata_of_platform.c
+> @@ -25,11 +25,12 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
+>  	struct device_node *dn = ofdev->dev.of_node;
+>  	struct resource io_res;
+>  	struct resource ctl_res;
+> -	struct resource *irq_res;
+> +	struct resource irq_res;
+>  	unsigned int reg_shift = 0;
+>  	int pio_mode = 0;
+>  	int pio_mask;
+>  	bool use16bit;
+> +	int irq;
+>  
+>  	ret = of_address_to_resource(dn, 0, &io_res);
+>  	if (ret) {
+> @@ -45,7 +46,15 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
+>  		return -EINVAL;
+>  	}
+>  
+> -	irq_res = platform_get_resource(ofdev, IORESOURCE_IRQ, 0);
+> +	memset(&irq_res, 0, sizeof(irq_res));
+> +
+> +	irq = platform_get_irq_optional(ofdev, 0);
+> +	if (irq < 0 && irq != -ENXIO)
+> +		return irq;
+> +	if (irq > 0) {
+> +		irq_res.start = irq;
+> +		irq_res.end = irq;
+> +	}
+>  
+>  	of_property_read_u32(dn, "reg-shift", &reg_shift);
+>  
+> @@ -63,7 +72,7 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
+>  	pio_mask = 1 << pio_mode;
+>  	pio_mask |= (1 << pio_mode) - 1;
+>  
+> -	return __pata_platform_probe(&ofdev->dev, &io_res, &ctl_res, irq_res,
+> +	return __pata_platform_probe(&ofdev->dev, &io_res, &ctl_res, irq > 0 ? &irq_res : NULL,
+>  				     reg_shift, pio_mask, &pata_platform_sht,
+>  				     use16bit);
+>  }
 
-I missed it during the rebase, likely because the changed files compile
-depend on !S390 via config SERIAL_8250 and thus didn't cause any errors
-for my allyesconfig. That !S390 dependency is of course not really what
-we want if the driver can use MEM BARs.
+Andy,
 
+Are you OK with this version ?
 
+-- 
+Damien Le Moal
+Western Digital Research
