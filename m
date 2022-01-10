@@ -2,50 +2,50 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DFF1C433F5
-	for <linux-ide@archiver.kernel.org>; Mon, 10 Jan 2022 22:53:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF4E0C433F5
+	for <linux-ide@archiver.kernel.org>; Mon, 10 Jan 2022 23:58:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345077AbiAJWxM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 10 Jan 2022 17:53:12 -0500
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:38996 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241114AbiAJWxM (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 10 Jan 2022 17:53:12 -0500
+        id S1345779AbiAJX6U (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 10 Jan 2022 18:58:20 -0500
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:56048 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345782AbiAJX6U (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 10 Jan 2022 18:58:20 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1641855192; x=1673391192;
+  t=1641859100; x=1673395100;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=vCt7YeJ6ihHy34FQA1brq9w4AvGaHog9ruTyBQgPR64=;
-  b=g1/JfnXP5YgJFEsTXzoFfu5NgE32yEqSjGM9GcwBeW5qgWYOL3nJVxRV
-   ZjZxykxCshZlHBzWCrhfS7RbfI8p0Gn64vjyoYGYFV4kl82JPyobBE/9O
-   EWqT7bLnW9/fIRs/1dK/CFC/RuUkFb8bAbMCBZ35W2Cy9Znzv83zsDoX4
-   4Q9w17LkfZ9Re/bLU3fdYcR42SV1kCALQSuONcnS4EpelpMS/E8PCC6Sz
-   eszF9rnNbwreK70/d7idMQHf2L6QFa3qh2SWC28xaFEap3r1XWXp40JCg
-   DJvvevpWbKkjdvif018ArxahDaPLL9vw5/Y5YD2+Jz0IPlVm8tg3jIsgN
+  bh=vjU4XCqmIM5l4vO0SUmreGGleE6WeT5PamKl8gATroY=;
+  b=qonbbeOcpp2THiRQLeifCvs13DzN+QoOVvJPLr+iSivpCFuxGJiewwwi
+   dOpQ7xhRb4vCgpQ3u2Nfe/WpUPem3+/OXhNzzI1sTpCXAnABl/mAU0DEw
+   8fZKb7xApyHygobARVE4qsupQJ6ngdffta9Fj96Izbqxlyx4xzIdDPq12
+   fTY8kfWTklSM9WnDM/pJcQLUXgVfEXi/bSH3I7WPsoLwzs7fxR74Q6nyW
+   Nu3laUhsTqyToebfh5hhYZKHnSIyHHm5cGUN3H9Y8amdsxdManq9G809c
+   jvkZ24Wcvuh0pHRYFHrcc+ClwXl8FEdTJiTYkEeyyqD+6Q7sc6QzdCyeK
    g==;
 X-IronPort-AV: E=Sophos;i="5.88,278,1635177600"; 
-   d="scan'208";a="191147638"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Jan 2022 06:53:11 +0800
-IronPort-SDR: efBjh3z78zGmMjxxU0xH/he7uwhlps0Bcqu3iJO9I0e8M8+UeAk19dipyiKmboaO6ljvR5Rsvb
- wtTKjvTtzvwi8EEE2VxCkJVLj/qAE7BFdBw78o2alxCB394+Aa6D/8qc7cGsGXgzXrsR1RAE3R
- TRY+C0Pdi3cBM1xomszOOJZRuhWQ/oX4n1JZD+0MDZOIWl+rFAEtboSN+z96mBNuJdKF32fiHP
- jKJ0VKoQY0hQtHIdR4O7a8/sGcLaNJuI5/b+/yL9+AjtC6JGVFt5soi84viM8PI1dHi18QVF/q
- Fq/YXD6ePKMe1PZcVYhtC25t
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jan 2022 14:25:34 -0800
-IronPort-SDR: 0LQHLgyKZt53P5clP8HbFDLakP2YJqqmUOabETFZF/65Kpyw4fF2PzazvAbfcBxoBCV4DBXFbX
- 5a5kQcp4lffsjzPiJSEDAxKTXayxDVmEymBz21gam+kupmOTmQJMyxyjXsRGRiPrqbizn7zbEh
- I0GUaGisJ8kcpgC4784QCLyiWnCFGgV5set9t2YoVfZpQCQgzQkqsIggKsj8AOHUb28c+tp4WA
- HUnGVSLdGhWERC0sRw2hkqD5MzlDMAY2lvE630ir6Q6BONmv1m0J9R6FMMojuk5jmbCzYgY5dD
- b5I=
+   d="scan'208";a="294186831"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 11 Jan 2022 07:58:19 +0800
+IronPort-SDR: kBg3K1MdehvHBXmXLNC0i0cnjm5Q6wqULQMU5MVr4RsBgMnwkK4ZAmBPAoZTbPKcPiP9JkxV3+
+ rck+l2P2TWynOX/r6CN3lRH3CRwAYsxcNA7cKFp9afL6bSEcBKaGjxsR6agT8SNM4mefzpAJGr
+ +vfjrlvKRNySZGCnxl7wghYk++ph2IukKfOvj8uNP7brNzUhcPY/EWo/BsvzlcSPLUAVID8pdQ
+ CMxqrJK1zIQlXmtWo2PA/I4qzxGQwypbnudaYlPOmYCdMVrE3J+cX2cZ53V5gJpl20e1mz+Du5
+ TiN7kPfCl5bTYq+c9oukZZhi
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jan 2022 15:32:02 -0800
+IronPort-SDR: y/MPtdbXlSgo6h3l3iwqBHfEwO25BJwSsFiQ74yREiYOrHS6heo4CzkJZVKn/V3NzzOoBVmNeb
+ fhEyFO6dQlCKrtc+Ci91XBWF0x3TNDdApUbGD69jUaBFL1q0EnKjTuajFR7Nw6hp2CHpl5efE6
+ s1g/NSyRsPduUvHnDqcl0go6NZEiFbNwunz22u16Sdfz0E6b3JtYEPuezG5sfEfepTBTmP5oAg
+ I7y/+1NGA3NYzZDp1R6P+KAiFdAnmwFSUebRtPZRKpCoKjEwzEe5Jm+ubhbAGsQbgTcTB9R0Rx
+ NtM=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jan 2022 14:53:11 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jan 2022 15:58:20 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JXpyG2shYz1VSkX
-        for <linux-ide@vger.kernel.org>; Mon, 10 Jan 2022 14:53:10 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JXrPQ5QCLz1VSkf
+        for <linux-ide@vger.kernel.org>; Mon, 10 Jan 2022 15:58:18 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -53,26 +53,26 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1641855189; x=1644447190; bh=vCt7YeJ6ihHy34FQA1brq9w4AvGaHog9ruT
-        yBQgPR64=; b=d5V/kww1vens9ElvcIjIOEDSaYJUlgc3bShj9AYaoTIyJ20TF96
-        WOJqgP0+bzPDGv/k/5aEmLrZISU7eqPeam03JTJPWIbo5yiqRZB9Yw3/opAO9jxW
-        6nsOaIBArX2XOTZ3aa9uqYhlae9zSpVA4Mt6OzMMxMA9rRKXyULl9aKYKftFMeOS
-        T/L+Q228ELUwEY0Lzrj9LJd/UctAy4L/cDXSMmxe8E4Kjspy4E4KFlnygyTURTgP
-        aucM/nBJvSunncZ2n4YH8TgONtqDOFZGLpWHcMn9Q1HCh81Kbo2VTT8aZuFbgYs6
-        zyA+MgrcwCXQAPG9ELlL3mh46Qj6EHtI41g==
+        1641859097; x=1644451098; bh=vjU4XCqmIM5l4vO0SUmreGGleE6WeT5PamK
+        l8gATroY=; b=kH+WVED3m4bVWVV+N4ua//W328k5iR1fkSdQzmEsZHC5JMm8G8L
+        Fh14oAWxD3Z183XGW7e+UitwQsh9BLrtYbA9PSngqGR1AV5zuq2JIf8jKNEnWF+Y
+        ekMVGDetiknjQ0iiz1LliXeqssjMt/oa8yxvS4Q28arjjfJq+w1160Tqhq0Pv/LD
+        HHRik67li1rgOEGQLYuLepwALxL7P6y/kTsUjmzF6x3tBICDRYns31ABviSru4Xz
+        easzkHlQTwD7LEiMvpuuZ8puu0nrKMC+vlkhZdvpqtAhDxtA/xLHQNQlMgT63Q0E
+        xTPKI7StjO2LgMwr8VQsZzSgLaQOHObPeuw==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id WOAkprQAPfxa for <linux-ide@vger.kernel.org>;
-        Mon, 10 Jan 2022 14:53:09 -0800 (PST)
-Received: from [10.225.54.48] (unknown [10.225.54.48])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JXpyD4dSdz1VSkV;
-        Mon, 10 Jan 2022 14:53:08 -0800 (PST)
-Message-ID: <c9c63445-3ecc-4a0e-3e70-3b5942e0d5d5@opensource.wdc.com>
-Date:   Tue, 11 Jan 2022 07:53:07 +0900
+        with ESMTP id 6ZoFreTEOIsI for <linux-ide@vger.kernel.org>;
+        Mon, 10 Jan 2022 15:58:17 -0800 (PST)
+Received: from [10.225.163.46] (unknown [10.225.163.46])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JXrPN6g3Bz1VSkV;
+        Mon, 10 Jan 2022 15:58:16 -0800 (PST)
+Message-ID: <4419b25f-dd71-9c14-5de2-4425f9367e29@opensource.wdc.com>
+Date:   Tue, 11 Jan 2022 08:58:15 +0900
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.4.1
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.0
 Subject: Re: [PATCH v5] ata: pata_of_platform: Use platform_get_irq_optional()
  to get the interrupt
 Content-Language: en-US
@@ -83,7 +83,7 @@ Cc:     Rob Herring <robh+dt@kernel.org>,
         linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20220105181721.13087-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital
+Organization: Western Digital Research
 In-Reply-To: <20220105181721.13087-1-prabhakar.mahadev-lad.rj@bp.renesas.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
@@ -91,7 +91,7 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2022/01/06 3:17, Lad Prabhakar wrote:
+On 1/6/22 03:17, Lad Prabhakar wrote:
 > platform_get_resource(pdev, IORESOURCE_IRQ, ..) relies on static
 > allocation of IRQ resources in DT core code, this causes an issue
 > when using hierarchical interrupt domains using "interrupts" property
@@ -120,58 +120,9 @@ On 2022/01/06 3:17, Lad Prabhakar wrote:
 > 
 > Cheers,
 > Prabhakar
-> ---
->  drivers/ata/pata_of_platform.c | 15 ++++++++++++---
->  1 file changed, 12 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
-> index 35aa158fc976..c3a40b717dcd 100644
-> --- a/drivers/ata/pata_of_platform.c
-> +++ b/drivers/ata/pata_of_platform.c
-> @@ -25,11 +25,12 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
->  	struct device_node *dn = ofdev->dev.of_node;
->  	struct resource io_res;
->  	struct resource ctl_res;
-> -	struct resource *irq_res;
-> +	struct resource irq_res;
->  	unsigned int reg_shift = 0;
->  	int pio_mode = 0;
->  	int pio_mask;
->  	bool use16bit;
-> +	int irq;
->  
->  	ret = of_address_to_resource(dn, 0, &io_res);
->  	if (ret) {
-> @@ -45,7 +46,15 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
->  		return -EINVAL;
->  	}
->  
-> -	irq_res = platform_get_resource(ofdev, IORESOURCE_IRQ, 0);
-> +	memset(&irq_res, 0, sizeof(irq_res));
-> +
-> +	irq = platform_get_irq_optional(ofdev, 0);
-> +	if (irq < 0 && irq != -ENXIO)
-> +		return irq;
-> +	if (irq > 0) {
-> +		irq_res.start = irq;
-> +		irq_res.end = irq;
-> +	}
->  
->  	of_property_read_u32(dn, "reg-shift", &reg_shift);
->  
-> @@ -63,7 +72,7 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
->  	pio_mask = 1 << pio_mode;
->  	pio_mask |= (1 << pio_mode) - 1;
->  
-> -	return __pata_platform_probe(&ofdev->dev, &io_res, &ctl_res, irq_res,
-> +	return __pata_platform_probe(&ofdev->dev, &io_res, &ctl_res, irq > 0 ? &irq_res : NULL,
->  				     reg_shift, pio_mask, &pata_platform_sht,
->  				     use16bit);
->  }
 
-Andy,
+Applied to for-5.17. Thanks !
 
-Are you OK with this version ?
 
 -- 
 Damien Le Moal
