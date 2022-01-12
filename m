@@ -2,50 +2,50 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C23AC433FE
-	for <linux-ide@archiver.kernel.org>; Wed, 12 Jan 2022 23:47:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE0F6C433F5
+	for <linux-ide@archiver.kernel.org>; Wed, 12 Jan 2022 23:52:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235613AbiALXrp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 12 Jan 2022 18:47:45 -0500
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:37734 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235597AbiALXro (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 12 Jan 2022 18:47:44 -0500
+        id S236100AbiALXwM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 12 Jan 2022 18:52:12 -0500
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:33252 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235950AbiALXwM (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 12 Jan 2022 18:52:12 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1642031264; x=1673567264;
+  t=1642031531; x=1673567531;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=hOQE8ZtdYX5L5to8BlW+o/DAHL3QOHKjG1kBU1SyvCM=;
-  b=iaXullLUJFhbQHYSQAclFTMJdNiIALzebI5AOqr6VrhJWrUmSBh/Iy86
-   ihUNBUlPG1/U3iwyEKj1TCBE9Vv1o/YaQdiy7q3O8Gee6T/IncJbaFlbf
-   t1JC1GgwmZvM8dxG1HRsjJApPOeiwJjtQKUfT/Wxy1AgwIqlCj7ws4Bwu
-   VKjTF6rsOUWq/Js12cop6owSVF69ULBsE5wIcSzMZEZadAt3rBUaw56nx
-   Fwfh8X2P0WRvaaNIr+2Fg70Z7bfluq1eTNj6xPca72KFRn6+l0aPUcK11
-   ZNc0IA487CsgO7plJD12RJ9pBXpq/zoq3rLrV4ENLtIeSCjsfvpjG4Uus
-   g==;
+  bh=/mqEmsBcJQ9azy/1G+hXvIN0/87aNRTsGuVkMDmO0dE=;
+  b=rJUvt3KkiTdGSb1lgpRpISDY1zutuBpbzuw+CUEXJ/ozdIgIjWPwnPE1
+   Y6Rz9GI6bK0g+HIoLkenoKcHQOEr49gS0TFyOg9ka6pUrc5bjYVHKukx3
+   5kFywlmWggdOBJ4/li07m6UmhmM0fIECCP8ICrGMDf38VTFFWHK9IWmkW
+   aIHX1j6h8UA1BaBIbyEJo/pzUPrnhIPA/HJdpr3e6hu3R1aDnTKiUvfJE
+   EKTmNdQ2MvgPVW4HjhgJwX/CtMyEe5UM4dhymO0JoVYqAkYAcl76tq9GF
+   58XtQTa4+AQ1QhLZOZiYFSKHVPZscxGxQUbqZQj6vbR53rcEqCYiGi9om
+   A==;
 X-IronPort-AV: E=Sophos;i="5.88,284,1635177600"; 
-   d="scan'208";a="189287610"
+   d="scan'208";a="195114696"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 13 Jan 2022 07:47:41 +0800
-IronPort-SDR: pbehstFkQvqJFv4CrN5QNFoFJ/B+fgw601D5rv0jfvIGifyqih/RwtwP5xFZa7YcJVxp6snZ54
- LVwULr0FMHQw1T9pZq8V84rXwGLQUKMnByhVb+7a+BDG99etEWNQdG+Sldo2Xr1RkQCE4Vpi3Z
- WDEQMCbE2sg4DJEFQ6L/V6XyFnN4q1ZSw8rSzD/I0d3ysfmJsnuEUbAgORyFt5ziXAn0JMTzjV
- +iEL1/sk1h2+gu5N9BnKR5KzlOWMdFKHtUePiIf3HbWtATa64CQVhUvDqqRCw923dzSl0FoZai
- Pd1SYffNLM/F/Py/4R7v+Qvt
+  by ob1.hgst.iphmx.com with ESMTP; 13 Jan 2022 07:52:11 +0800
+IronPort-SDR: RYA6VxgeLafYTj2NtAe2IzsgWN5CN8mmafR5oDQfznqvXF4KW3Jkazeos/TQtcknXkbYAY9dHE
+ Du1CaJ0075KDkV4yFhYUePNCIA9dYEinnk05UX0taYCk8+MpX4EcDIbPtq9NFwhKBPQrar/1NY
+ ea8ELl8BrfjN6j26ww8xqR5FeE9Wqx3x1VlDRGt7rC+t0vDcy5Q09nY17y5PavikHEhXNoBi7l
+ iDQtCB8IO6CwASzoi6s9pgDJjxUVzqXY1OOumQt0cxiZpyt3raTvPsVpOybmswo8G491boc+b0
+ mC0gmAgGvP0pqT4LXk5yf/O/
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jan 2022 15:20:03 -0800
-IronPort-SDR: +zrVlZT4e5fr7WmTRPVXuKw6Nk/O9UGoCVG/oPhQ7HkO242VjwwFwGTcxce1DiwvglY4+hzIdW
- NfNfx3OlXSNetyR4tCfg6wxrbsJDIAf6xkYbQfOGDX/YAYuzQNwijcfi7WrsfSWQL4Ee21Biej
- l68nSFMmCAWg0N7phFmjs42gxWaa2pUOkVONy2gQBZdgxuqZj4XYxDXxCvTMiTNx8MlgZvx0sk
- YHOlTW5hZTY3u091VZ7asEQSscZMojVOVvazQfYC+rGcHu5OSL42+BS/k/wfMvPEyPVNRQAlh0
- 5C0=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jan 2022 15:24:33 -0800
+IronPort-SDR: +6cuXaiuJrIXyplTaV9XVtKkC2YuY3yRK1e1RHdKVPXZZjMg1T6SHLqgsAoMYBHEOD1+WLVSBW
+ FxR0oGKW2KMfHKMLDcEbA6/Jdtu2C2PfoMAKHkgYBIHvs55STO6Iy0fg9vjmArTI2/rFw8RbvK
+ A6xCLFW+OcTEjCRMr8hr4G5TGl+Kr07Gmhxt1YNzy0r0ZbRajxzFpSUiTNy/PT9FqDgEUPdORw
+ CRAjznbhqqtdpF5MnaR8p8rY6GWiLuRTY7X+t+7/JDV7LpVkBA+yq3hKqh/0o/RkwuGTuqAYz/
+ Fx4=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jan 2022 15:47:42 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jan 2022 15:52:13 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JZ44F3cFfz1VSkg
-        for <linux-ide@vger.kernel.org>; Wed, 12 Jan 2022 15:47:41 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JZ49R5tBjz1VSkV
+        for <linux-ide@vger.kernel.org>; Wed, 12 Jan 2022 15:52:11 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -53,84 +53,72 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1642031260; x=1644623261; bh=hOQE8ZtdYX5L5to8BlW+o/DAHL3QOHKjG1k
-        BU1SyvCM=; b=bt/g+5PNPAg5XnmCJkvEaQtkGW5MpYYtQI0ncC6dXgYgNM7R2Cx
-        N2Kuq9MDR5I9VzD2NTQ2hhQFTJhZ2VuTRZyKHVGmg6vhmkmeH8KEboEVjocY7iqz
-        IaM/534kcqFh9X7cPOofceRtGFFydeZQfM7dHGkbmMqiY2pkTKUln2lkvvBDgzLc
-        TwvUyiEQ1dLyeYlscLsNYor/KcjbXYLmVP9yXi6V5Tfl+xETePR22AdO9ofcyiB7
-        3AsGVoyf0MF3/m5k5pwABEI5bHrgEMXCDzF63Fu4hXDxGpmMjDhu3SJBdacSeAk+
-        U5vTYwJ1OWou8ee1rtQp+yfKyXvrUe5hbEg==
+        1642031531; x=1644623532; bh=/mqEmsBcJQ9azy/1G+hXvIN0/87aNRTsGuV
+        kMDmO0dE=; b=bX+45SacwqwDbCXir+ULwzJpqD/MzXCjzrM9pB4OstZvmMIxZ6d
+        bDoK4AyMqWQZ78fAt6U/zbtUZUJoN6fWRR6YFWQRA+xl5CRrwQ4pu8HxQaWc1t6u
+        q1cH8l5Wd8sPuaIR1nOy0nueSQS0O+90Xq2uSy95+eYQGJAGHXsXUwoYqL7N3nEz
+        6yfTXRpyfJl4xOTaTZUhaqwkal8tnvasJKfS5mUEMwwylVsd96rE2JxfLtWbSG+A
+        XpLICwUZIBPN4mqdenKBJTn8tzVSnHKB2kgvrjp6b+oXCR39uNub/yfMDSexc7m8
+        cKMcvpL636p3JqX4Xv6QNEz42SZjEU9QrKQ==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id uATLunptAhDb for <linux-ide@vger.kernel.org>;
-        Wed, 12 Jan 2022 15:47:40 -0800 (PST)
+        with ESMTP id ITtx4a5HQYIm for <linux-ide@vger.kernel.org>;
+        Wed, 12 Jan 2022 15:52:11 -0800 (PST)
 Received: from [10.225.163.46] (unknown [10.225.163.46])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JZ44C3GR1z1VSjC;
-        Wed, 12 Jan 2022 15:47:39 -0800 (PST)
-Message-ID: <ec4d9eb0-3999-db52-1eec-bc6351dd4f07@opensource.wdc.com>
-Date:   Thu, 13 Jan 2022 08:47:37 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JZ49Q5nx5z1VSjC;
+        Wed, 12 Jan 2022 15:52:10 -0800 (PST)
+Message-ID: <2d9b4f08-967e-6040-a954-e7bfa7e4dce1@opensource.wdc.com>
+Date:   Thu, 13 Jan 2022 08:52:09 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.4.0
-Subject: Re: [PATCH][RESEND] sata_fsl: Use struct_group() for memcpy() region
+Subject: Re: [PATCH] ata: pata_ali: remove redundant return statement
 Content-Language: en-US
-To:     Kees Cook <keescook@chromium.org>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-References: <20220112220652.3952944-1-keescook@chromium.org>
- <df3eefdc-d8d1-48fa-f5f7-9c2f2382842b@kernel.dk>
- <202201121515.8679164D6@keescook>
+To:     Colin Ian King <colin.i.king@gmail.com>, linux-ide@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220112234741.1232858-1-colin.i.king@gmail.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <202201121515.8679164D6@keescook>
+In-Reply-To: <20220112234741.1232858-1-colin.i.king@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/13/22 08:15, Kees Cook wrote:
-> On Wed, Jan 12, 2022 at 03:23:40PM -0700, Jens Axboe wrote:
->> On 1/12/22 3:06 PM, Kees Cook wrote:
->>> In preparation for FORTIFY_SOURCE performing compile-time and run-time
->>> field bounds checking for memcpy(), memmove(), and memset(), avoid
->>> intentionally writing across neighboring fields.
->>>
->>> Use struct_group() in struct command_desc around members acmd and fill,
->>> so they can be referenced together. This will allow memset(), memcpy(),
->>> and sizeof() to more easily reason about sizes, improve readability,
->>> and avoid future warnings about writing beyond the end of acmd:
->>>
->>> In function 'fortify_memset_chk',
->>>     inlined from 'sata_fsl_qc_prep' at drivers/ata/sata_fsl.c:534:3:
->>> ./include/linux/fortify-string.h:199:4: warning: call to '__write_overflow_field' declared with attribute warning: detected write beyond size of field (1st parameter); maybe use struct_group()? [-Wattribute-warning]
->>>   199 |    __write_overflow_field();
->>>       |    ^~~~~~~~~~~~~~~~~~~~~~~~
->>>
->>> Cc: Jens Axboe <axboe@kernel.dk>
->>> Cc: linux-ide@vger.kernel.org
->>> Signed-off-by: Kees Cook <keescook@chromium.org>
->>> ---
->>> Jens, can you take (or Ack) this? It's a dependency for the FORTIFY_SOURCE
->>> improvements that are close to being finished. :)
->>
->> I don't maintain libata anymore, so Damien is the guy to nudge ;-)
+On 1/13/22 08:47, Colin Ian King wrote:
+> A return statement is unnecessarily complicated, currently value
+> in variable mask is bitwise-masked and the variable is being
+> updated and then returned. Just updating the mask is all that is
+> required as the following statement is a return.
 > 
-> Ah-ha, okay, thanks.
+> Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
+> ---
+>  drivers/ata/pata_ali.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> /me waves "hi" to Damien. :)
+> diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
+> index ab28a6707b94..1b90cda27246 100644
+> --- a/drivers/ata/pata_ali.c
+> +++ b/drivers/ata/pata_ali.c
+> @@ -123,7 +123,7 @@ static unsigned long ali_20_filter(struct ata_device *adev, unsigned long mask)
+>  		mask &= ~(ATA_MASK_MWDMA | ATA_MASK_UDMA);
+>  	ata_id_c_string(adev->id, model_num, ATA_ID_PROD, sizeof(model_num));
+>  	if (strstr(model_num, "WDC"))
+> -		return mask &= ~ATA_MASK_UDMA;
 
-Hi Kees,
+Yeah, not to mention that is really ugly as the return should really
+have been:
 
-This is already queued up in libata tree for-5.17 branch. I have not
-sent my PR to Linus yet as I am letting things soack a little longer in
-for-next (for the various arch compile tests).
+return mask & ~ATA_MASK_UDMA;
 
-Please check that branch to see if all is OK !
+> +		mask &= ~ATA_MASK_UDMA;
+>  	return mask;
+>  }
+>  
 
-Cheers.
-
+Will queue this up.
 
 -- 
 Damien Le Moal
