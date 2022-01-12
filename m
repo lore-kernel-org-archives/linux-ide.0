@@ -2,154 +2,118 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7F5AC433F5
-	for <linux-ide@archiver.kernel.org>; Wed, 12 Jan 2022 09:49:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 563CAC433F5
+	for <linux-ide@archiver.kernel.org>; Wed, 12 Jan 2022 22:06:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349532AbiALJtO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 12 Jan 2022 04:49:14 -0500
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:23039 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349507AbiALJtN (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 12 Jan 2022 04:49:13 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1641980952; x=1673516952;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=JQDGrSW+eyxzTUel+uhuRcG3nVZP4C61sljAPMCmUZQ=;
-  b=eim4uM9fNNoj8l+OmJsZ7M4bRBNNhUKLzS6M653CbmXJZ2WFVZadxR+4
-   QN3xkDgwnJG4zsdEy9kzukT9B3XAbTwksNdAzsuVAzdUWYNoce2NYL+2n
-   ZPRAE5y51HXGUE1Sujd2ZgrcMhdHhLdujlxCdWBTQeVH49nRXSruZdxzI
-   81TnJ3/A/8BWw69x05nXQ82wHF7X+3wvbnK6W+EbminRbYACearGBlYj2
-   J4hk2/PgMp9/RfMN8hzk0jRRwF5ag3zaUJIvaAhB8+fNO0VhtDBlDBLSf
-   e8oNtXPEfm6K5fP3SZxlpcVf8OwdAKpAg/FLEr9u0mMLwNdzq4rb+smaW
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.88,282,1635177600"; 
-   d="scan'208";a="190269247"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 12 Jan 2022 17:49:11 +0800
-IronPort-SDR: fjstvO11/6yVxTNkUtLqlzT1INVYHJGNt3/ZDXQbXq5dp3Np7I9oE7Q0bc5jK/cwEtDDD0NgQ1
- vYH/cp/GM5jPAMASVNXfeWOpA9Zc8fnC0nNAXMChmTeI7No12zTmbPDyJl4dr5ALdEE6fwQfcf
- Um3WFkQ1VXtkZCpoG5V4Xb8+RfcZX4U7vohnALpPooJBpwww8bm9YnA/5N7DwHpWs9T8NYF/2v
- 41Yy+I8aGALsK/UCA5+KvSyqxVsTMJN215DQlMjjSNH1RZS3IPxFK8Uc9ZWsetdG4XmKjmDNex
- 85t8OyLKhlJGGFbtE5/TRFXX
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jan 2022 01:21:35 -0800
-IronPort-SDR: AWUzL4Ip6LPd75VE8PbzIW4psnpYdA6vVYEcMtjpzjaeA6Y0SjSixMAwzvy/VDoiBTjF9pdXSK
- iupzw3737lrfmNVGsycj22jrvC/ZZuSCL/QGoIh0Nvg6hTnEgFyddAwt8byMwBot8pHA7rEvWs
- Bg95bmdM/0UqFELjudSViyCfSZCrtAabbFOkLAnYzNW5O2YspH+nSTA6KJSLTY+S8bxhhM2HoX
- 8Xk1yAOpWb1WTxVAsfh3lJHS/H58cQahc4ee0oKk0X3waowcaVJDMAdOBbLX8ILB52JMaBMLIx
- 7b4=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jan 2022 01:49:14 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JYjSn0gSGz1VSkZ
-        for <linux-ide@vger.kernel.org>; Wed, 12 Jan 2022 01:49:13 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1641980952; x=1644572953; bh=JQDGrSW+eyxzTUel+uhuRcG3nVZP4C61slj
-        APMCmUZQ=; b=IxIt4AgvJtD9i2g/3w07Kbv9WkwW4lfVaZwW2Olx4RVHSCFbIPp
-        E8dTY3Kzin5gnrcSSS3QrOjBtHP0EXNWabhN7OL8l2mHFjctCCSJUG+e7sxz3u2O
-        +n38NKvkUSwCPFCQjDnclanynxKojQHXYr4h1GQGzlFNXp/DFGEKQ6pl6AFSSzi1
-        7k/XY5FmS56Rm/gYdvdwlp1rL0tq6ra6GrXtoThUVUwlnL2OyfclXMMJESlCQxWa
-        5+9UNF867qm14MYXpVAmxkaeRqxboyUXqmw3KWTNbMsy7r7LxajACAQkVH8WWK1i
-        ckVvW1IRpYBK/QllvWddsyO+odKwlCqRHfQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 9KjeVX9kkJsy for <linux-ide@vger.kernel.org>;
-        Wed, 12 Jan 2022 01:49:12 -0800 (PST)
-Received: from [10.225.163.46] (unknown [10.225.163.46])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JYjSm10nQz1VSkV;
-        Wed, 12 Jan 2022 01:49:11 -0800 (PST)
-Message-ID: <77ce7860-4857-a4e4-e7b3-08f56312cf87@opensource.wdc.com>
-Date:   Wed, 12 Jan 2022 18:49:10 +0900
+        id S230361AbiALWG6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 12 Jan 2022 17:06:58 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40850 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230205AbiALWG6 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 12 Jan 2022 17:06:58 -0500
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9035EC061748
+        for <linux-ide@vger.kernel.org>; Wed, 12 Jan 2022 14:06:57 -0800 (PST)
+Received: by mail-pl1-x62c.google.com with SMTP id a7so3745737plh.1
+        for <linux-ide@vger.kernel.org>; Wed, 12 Jan 2022 14:06:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=q/Rw7FotPPkrKYndyOgdWEBeHtrt7+KjvpPJ57SkSzc=;
+        b=M2mZSobf4d4eeVcxQP1Jrxt7Id2BeGFwVA3ITVbXbOhUJdYhdxHFX40oE6DioWGl4O
+         g/l8qcZbSvAtB8cMQpkVOdgLnnUbLiqaj3FU21EKb1oXAbzpD2UFk7Fmktd8w4/GULgX
+         XbH0nixftmqlzHW6zqOjsUdS7n0u0Zuhdedns=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=q/Rw7FotPPkrKYndyOgdWEBeHtrt7+KjvpPJ57SkSzc=;
+        b=Q9DvvO+IRQxbMkY/nB33Kfhwaie6jWwHH3NaQZmyDv9JAWCSPcMPHJSXzn6Qxgn35p
+         W3Zl/ICefqe7HjHk0vHDMLBjktpPC+c4hewOMjo6uVxsTvJnvZ+6ENaUkJ5aHJZeNgRh
+         6YlcWDy+h6mPQWqDZcI8yB1m1V7a5/ZYIZCuS9WdcSLljc6F4L25TJp5DvetC3qPGR9T
+         K33VKu4udyHI9+gWjEg96QXb2l3b2NafrjAiK/B2BMcVCGvGZGnXXU4joK8zrjhXdXV0
+         iYedsZ1tFDn/RZjfnFsPJtib0q3KmFSKWIJRJrc/9luWqgvkzYo+hext71ZLu3ORAuqm
+         QJgg==
+X-Gm-Message-State: AOAM530JqMN0A5FVJALIJq3Tn7sdK/aLXaEPcCgwMo86pNvKpBVFfaCE
+        5wCxCjbzWTQQQ+HtgsDZFiUHBw==
+X-Google-Smtp-Source: ABdhPJxHS1d3NtDu9tsgszKg+aLDICclfZW7VSrDCu8GTyU3Rp0cYM7PBRDsjzh2cNHCIDRJt3t5ZA==
+X-Received: by 2002:a17:90b:4b4d:: with SMTP id mi13mr11421553pjb.48.1642025216967;
+        Wed, 12 Jan 2022 14:06:56 -0800 (PST)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id z3sm570609pjq.32.2022.01.12.14.06.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 12 Jan 2022 14:06:56 -0800 (PST)
+From:   Kees Cook <keescook@chromium.org>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Kees Cook <keescook@chromium.org>, linux-ide@vger.kernel.org,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Subject: [PATCH][RESEND] sata_fsl: Use struct_group() for memcpy() region
+Date:   Wed, 12 Jan 2022 14:06:52 -0800
+Message-Id: <20220112220652.3952944-1-keescook@chromium.org>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.4.0
-Subject: Re: [PATCH v4 1/2] ahci: Rename flag `ATA_LFLAG_NO_DB_DELAY` to
- `ATA_LFLAG_NO_DEBOUNCE_DELAY`
-Content-Language: en-US
-To:     Paul Menzel <pmenzel@molgen.mpg.de>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20220105153618.2395-1-pmenzel@molgen.mpg.de>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220105153618.2395-1-pmenzel@molgen.mpg.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2183; h=from:subject; bh=5p121XAzQa6qN5E6EhVnf7REcLupYKUuIK7FpZN6ZM4=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBh31D8twxgwYJUCIhYXTXOl2rV+4GHrPs7/ZvQKKBy +ARWDKqJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYd9Q/AAKCRCJcvTf3G3AJjzpD/ 0Xo3PYXRnkZQETy6n35GeZuDyC+Ugk2TK/R73XlSmpkKy04rQ8vVL0Xo5tqtyJMN2cHsmx1TWPdLW5 geORAPhsd/9iTzUnJ3AyTHloTYg1EqRG+N/HZt96lfbgo4M9dKO8PitIoiuYB2IlkdWWNXyROeeZvh EEx4vNPTFuG4jWVBCo+3tTf84940m8tTtYJy4iOoBt7Yhl7G9kbovJ7DRuyLzW9jmdFlT7Yx5AnNfr We3OO0gK6HZz/XAs5BKJZo/VvscsvDv4ugVKLILZ82OU/ymjXxWxct5dAZpl2NjdNDfrUvVZo1YETk gJys9zx6eBBpmYuVUCoJJ9WvmOocpIEgygzQrhtMMi5GK15BNF7F04Gi6nK4gjXPaIL5p6FiE0QcTG kqCapgEIJ3NXyKRlkW1tCcs6Fw81MZN6uz7XbL8vQP1H6dlsXQ+u6qRPNpSmi4pqetB49WO8OcI5Np 1d+XGX9T2huW6tKidhAlchxvksyLvWZ8TBZ53eUco115XjZHXbH4th4StPdtCZLPdnrTpSFZYAe9EM w4brwIav9TWKYyiCDIVoFmC5JkG4BDzFWdlc0G/Lr9amltMMlx3jJjA+XeLNuwBW0ctcX9cUNzMJZm l0CWyNvLLkkW6fsyXbdI0xX4TgunorbferXwwKCawdNmUHcoz/yN2wOdjinw==
+X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/6/22 00:36, Paul Menzel wrote:
-> The new name is longer, but clearer.
-> 
-> Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
-> ---
->  drivers/ata/ahci_brcm.c   | 2 +-
->  drivers/ata/libata-sata.c | 2 +-
->  include/linux/libata.h    | 2 +-
->  3 files changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
-> index 6e9c5ade4c2ea..649815c196ed0 100644
-> --- a/drivers/ata/ahci_brcm.c
-> +++ b/drivers/ata/ahci_brcm.c
-> @@ -333,7 +333,7 @@ static struct ata_port_operations ahci_brcm_platform_ops = {
->  
->  static const struct ata_port_info ahci_brcm_port_info = {
->  	.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NO_DIPM,
-> -	.link_flags	= ATA_LFLAG_NO_DB_DELAY,
-> +	.link_flags	= ATA_LFLAG_NO_DEBOUNCE_DELAY,
->  	.pio_mask	= ATA_PIO4,
->  	.udma_mask	= ATA_UDMA6,
->  	.port_ops	= &ahci_brcm_platform_ops,
-> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-> index b9c77885b8726..67b2e7cf3cc4e 100644
-> --- a/drivers/ata/libata-sata.c
-> +++ b/drivers/ata/libata-sata.c
-> @@ -317,7 +317,7 @@ int sata_link_resume(struct ata_link *link, const unsigned long *params,
->  		 * immediately after resuming.  Delay 200ms before
->  		 * debouncing.
->  		 */
-> -		if (!(link->flags & ATA_LFLAG_NO_DB_DELAY))
-> +		if (!(link->flags & ATA_LFLAG_NO_DEBOUNCE_DELAY))
->  			ata_msleep(link->ap, 200);
->  
->  		/* is SControl restored correctly? */
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 2a8404b26083c..15802e644962d 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -191,7 +191,7 @@ enum {
->  	ATA_LFLAG_NO_LPM	= (1 << 8), /* disable LPM on this link */
->  	ATA_LFLAG_RST_ONCE	= (1 << 9), /* limit recovery to one reset */
->  	ATA_LFLAG_CHANGED	= (1 << 10), /* LPM state changed on this link */
-> -	ATA_LFLAG_NO_DB_DELAY	= (1 << 11), /* no debounce delay on link resume */
-> +	ATA_LFLAG_NO_DEBOUNCE_DELAY = (1 << 11), /* no debounce delay on link resume */
->  
->  	/* struct ata_port flags */
->  	ATA_FLAG_SLAVE_POSS	= (1 << 0), /* host supports slave dev */
+In preparation for FORTIFY_SOURCE performing compile-time and run-time
+field bounds checking for memcpy(), memmove(), and memset(), avoid
+intentionally writing across neighboring fields.
 
-I applied both patches to for-5.17 (sorry, I am late, this fell through
-the cracks...).
+Use struct_group() in struct command_desc around members acmd and fill,
+so they can be referenced together. This will allow memset(), memcpy(),
+and sizeof() to more easily reason about sizes, improve readability,
+and avoid future warnings about writing beyond the end of acmd:
 
-I simplified the commit messages though, especially patch 2, since the
-main point of that patch is to introduce support for a new controller
-rather than discussing the debounce delay thingy.
+In function 'fortify_memset_chk',
+    inlined from 'sata_fsl_qc_prep' at drivers/ata/sata_fsl.c:534:3:
+./include/linux/fortify-string.h:199:4: warning: call to '__write_overflow_field' declared with attribute warning: detected write beyond size of field (1st parameter); maybe use struct_group()? [-Wattribute-warning]
+  199 |    __write_overflow_field();
+      |    ^~~~~~~~~~~~~~~~~~~~~~~~
 
-If you are OK with it, I will reuse your well written commit message for
-a patch removing the debounce delay though :) Working on it now, I will
-post something by week end after testing.
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: linux-ide@vger.kernel.org
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+Jens, can you take (or Ack) this? It's a dependency for the FORTIFY_SOURCE
+improvements that are close to being finished. :)
+---
+ drivers/ata/sata_fsl.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index 3b31a4f596d8..c5a2c1e9ed6b 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -246,8 +246,10 @@ enum {
+ struct command_desc {
+ 	u8 cfis[8 * 4];
+ 	u8 sfis[8 * 4];
+-	u8 acmd[4 * 4];
+-	u8 fill[4 * 4];
++	struct_group(cdb,
++		u8 acmd[4 * 4];
++		u8 fill[4 * 4];
++	);
+ 	u32 prdt[SATA_FSL_MAX_PRD_DIRECT * 4];
+ 	u32 prdt_indirect[(SATA_FSL_MAX_PRD - SATA_FSL_MAX_PRD_DIRECT) * 4];
+ };
+@@ -531,8 +533,8 @@ static enum ata_completion_errors sata_fsl_qc_prep(struct ata_queued_cmd *qc)
+ 	/* setup "ACMD - atapi command" in cmd. desc. if this is ATAPI cmd */
+ 	if (ata_is_atapi(qc->tf.protocol)) {
+ 		desc_info |= ATAPI_CMD;
+-		memset((void *)&cd->acmd, 0, 32);
+-		memcpy((void *)&cd->acmd, qc->cdb, qc->dev->cdb_len);
++		memset(&cd->cdb, 0, sizeof(cd->cdb));
++		memcpy(&cd->cdb, qc->cdb, qc->dev->cdb_len);
+ 	}
+ 
+ 	if (qc->flags & ATA_QCFLAG_DMAMAP)
 -- 
-Damien Le Moal
-Western Digital Research
+2.30.2
+
