@@ -2,127 +2,101 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D842C43219
-	for <linux-ide@archiver.kernel.org>; Wed, 19 Jan 2022 15:45:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49FB1C433F5
+	for <linux-ide@archiver.kernel.org>; Wed, 19 Jan 2022 17:57:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355881AbiASPpv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 19 Jan 2022 10:45:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34686 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242199AbiASPps (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jan 2022 10:45:48 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF250C061574;
-        Wed, 19 Jan 2022 07:45:47 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1347436AbiASR5I (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 19 Jan 2022 12:57:08 -0500
+Received: from woodpecker.gentoo.org ([140.211.166.183]:33272 "EHLO
+        smtp.gentoo.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1346442AbiASR5I (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Jan 2022 12:57:08 -0500
+Received: from grubbs.orbis-terrarum.net (localhost [127.0.0.1])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 97A37B81A0D;
-        Wed, 19 Jan 2022 15:45:46 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1238AC004E1;
-        Wed, 19 Jan 2022 15:45:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1642607145;
-        bh=lGvpU5SU2oeO2Gj2gUOdONvIDUBxvoCyLVrP9LdAyK0=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=uFHSCn+eRhus5s0gMFtlk4M/7JhocnfANlW1cVHA0G6W01cpJd8F+h8fndGiFBKZn
-         nCZZCtAQC4k7abNvVhvbVvzHZ7dwbuD74/T+NiX/IT3CWwnmAbzJ0EI/MN3ouRA4NK
-         JcMa2vYnHRlxojVgmRVHQy8kAseKCb6RYvwbbz/tuDQ+FYrQPMEKinDs+/J/QCmOle
-         OH44fC1gV0pSNhO5CC8MUprlf5WJ73QIy9YW2JqYDexDIA+m9Gz2JyKjFMMikgheJ8
-         PhLYlTQI+6mhi8SuY2B8vNy7F68ziMiWUL/NDEe4veZOx2TcwQKBwmk2W+zhD/Bwkn
-         UzTQKF64F/eMw==
-Date:   Wed, 19 Jan 2022 15:45:29 +0000
-From:   Mark Brown <broonie@kernel.org>
-To:     Rob Herring <robh@kernel.org>
-Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Chun-Kuang Hu <chunkuang.hu@kernel.org>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-        Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Georgi Djakov <djakov@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Marc Zyngier <maz@kernel.org>, Joerg Roedel <joro@8bytes.org>,
-        Lee Jones <lee.jones@linaro.org>,
-        Daniel Thompson <daniel.thompson@linaro.org>,
-        Jingoo Han <jingoohan1@gmail.com>, Pavel Machek <pavel@ucw.cz>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Wolfgang Grandegger <wg@grandegger.com>,
-        Marc Kleine-Budde <mkl@pengutronix.de>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Vivien Didelot <vivien.didelot@gmail.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Vladimir Oltean <olteanv@gmail.com>,
-        Kalle Valo <kvalo@kernel.org>,
-        Viresh Kumar <vireshk@kernel.org>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Kevin Hilman <khilman@kernel.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Sebastian Reichel <sre@kernel.org>,
-        Mathieu Poirier <mathieu.poirier@linaro.org>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Zhang Rui <rui.zhang@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        Sudeep Holla <sudeep.holla@arm.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        linux-ide@vger.kernel.org, linux-crypto@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, dmaengine@vger.kernel.org,
-        linux-pm@vger.kernel.org, iommu@lists.linux-foundation.org,
-        linux-leds@vger.kernel.org, linux-media@vger.kernel.org,
-        netdev@vger.kernel.org, linux-can@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-gpio@vger.kernel.org, linux-riscv@lists.infradead.org,
-        linux-remoteproc@vger.kernel.org, alsa-devel@alsa-project.org,
-        linux-usb@vger.kernel.org
-Subject: Re: [PATCH] dt-bindings: Improve phandle-array schemas
-Message-ID: <YegyGbGcwSNo49gY@sirena.org.uk>
-References: <20220119015038.2433585-1-robh@kernel.org>
+        by smtp.gentoo.org (Postfix) with ESMTPS id CC025343196
+        for <linux-ide@vger.kernel.org>; Wed, 19 Jan 2022 17:57:06 +0000 (UTC)
+Received: (qmail 4542 invoked by uid 10000); 19 Jan 2022 17:57:06 -0000
+Date:   Wed, 19 Jan 2022 17:57:06 +0000
+From:   "Robin H. Johnson" <robbat2@gentoo.org>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org
+Cc:     Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: Re: [PATCH 0/2][RFC] Make delay before debouncing configurable
+Message-ID: <robbat2-20220119T172913-356389698Z@orbis-terrarum.net>
+References: <20220113154635.17581-1-pmenzel@molgen.mpg.de>
+ <85153d62-15b6-e055-00aa-74b728bb0195@opensource.wdc.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="czK8d+IES+j+3Pl3"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220119015038.2433585-1-robh@kernel.org>
-X-Cookie: This bag is recyclable.
+In-Reply-To: <85153d62-15b6-e055-00aa-74b728bb0195@opensource.wdc.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
+Hi, not originally in the thread, but I've run into hardware where the
+delay was bumpy before, when I did early porting around SATA PMP code
+(https://dev.gentoo.org/~robbat2/patches/libata-development/ if you want
+to see really old patches from 2006)
 
---czK8d+IES+j+3Pl3
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+This series esp of a code approach that didn't get merged might be
+interesting, that implements hotplug by polling:
+https://dev.gentoo.org/~robbat2/patches/libata-development/2007/00-hp-poll/
 
-On Tue, Jan 18, 2022 at 07:50:38PM -0600, Rob Herring wrote:
-> The 'phandle-array' type is a bit ambiguous. It can be either just an
-> array of phandles or an array of phandles plus args. Many schemas for
-> phandle-array properties aren't clear in the schema which case applies
-> though the description usually describes it.
+On Fri, Jan 14, 2022 at 06:23:26PM +0900, Damien Le Moal wrote:
+> On 1/14/22 00:46, Paul Menzel wrote:
+> > The 200 ms delay before debouncing the PHY was introduced for some buggy
+> > old controllers. To decrease the boot time to come closer do instant
+> > boot, add a parameter so users can override that delay.
+> > 
+> > The current implementation has several drawbacks, and is just a proof of
+> > concept, which some experienced Linux kernel developer can probably
+> > implement in a better way.
+> I do not think that a libata module parameter is not the way to go with
+> this: libata is used by all drivers, so for a system that has multiple
+> adapters, different delays cannot be specified easily.
+I think this is a key thing here; and I like that your patch moves to a
+flag.
 
-Acked-by: Mark Brown <broonie@kernel.org>
+> I am really thinking that the way to go about this is to remove the
+> 200ms delay by default and add it only for drivers that request it with
+> a link flag. That is, ATA_LFLAG_NO_DEBOUNCE_DELAY needs to become
+> ATA_LFLAG_DEBOUNCE_DELAY.
+I agree that removing it by default is right, but I'd like to make one
+additional request here:
+Please add a libata.force= flag that lets users enable/disable the delay
+per adapter/link.
 
---czK8d+IES+j+3Pl3
-Content-Type: application/pgp-signature; name="signature.asc"
+I think this would be valuable to rule out issues where the debounce
+delay is needed on the drive side more than the controller side, esp. in
+cases of poorly implemented port multipliers as Tejun & I found back in
+2006.
 
------BEGIN PGP SIGNATURE-----
+Maybe libata.force=X.Y:no_debounce_delay & libata.force=X.Y:force_debounce_delay
 
-iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmHoMhgACgkQJNaLcl1U
-h9AndQf6AqqY9YG2aSYiiYYVIPZoOOjUX2h6CnkvjYCVewt5gN+SxENXpgaLc0p7
-vUq1Rp5AXTu7uFjL2ebgJ8UZPO5cjNIcj81k5OTqRYCvRBqWrPJpsacwSvuNAIUC
-wrrUMNkFdRa0zaMGhMzVeaIAH9o5nqER6z2qXqGG9ccVbPBok8wg6W1xQCDlmyp8
-wzYMD1gLPXMihGy7mzkZd/BHFVdUjKVmYlGiUNl7GI9MVp6v8wt8BbDP4qng30Yz
-BLjhS3YyPDXdeYumU5Mvht+JzYmhn8Ihggw6dbQf6dO/UjwL+5ApN6em8mMhc0VH
-9cXSuI+tv6I8BrIvDkVLV+hVCpjdBg==
-=GpmZ
------END PGP SIGNATURE-----
+The ata_parse_force_one function as it stands can't handle a parameter
+to the value, so you cannot get libata.force=X.Y:debounce_delay=N
+without also improving ata_parse_force_one.
 
---czK8d+IES+j+3Pl3--
+> The other large delay is the link stability check in
+> sata_link_debounce(). 100ms is added (more for hotplug case) to ensure
+> that the SStatus register DET field provides a stable value. But I
+> cannot find any text in the AHCI and SATA IO specs that mandate such
+> large delay.
+Nice find!
+
+> There are differences between the many HDDs & SSDs I have connected
+> though. There is a lot of scheduling side effects at play, so the gains
+> are variable in my case. A system with a single disk attached should be
+> used for proper evaluation.
+That gets likely single-disk worst/best case, but I'm still worried
+about port multipliers (sadly I don't have the worst-implemented ones
+anymore, I sold them to some Windows users)
+
+-- 
+Robin Hugh Johnson
+Gentoo Linux: Dev, Infra Lead, Foundation Treasurer
+E-Mail   : robbat2@gentoo.org
+GnuPG FP : 11ACBA4F 4778E3F6 E4EDF38E B27B944E 34884E85
+GnuPG FP : 7D0B3CEB E9B85B1F 825BCECF EE05E6F6 A48F6136
