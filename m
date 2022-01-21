@@ -2,109 +2,88 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AB239C433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 21 Jan 2022 08:45:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF007C433F5
+	for <linux-ide@archiver.kernel.org>; Fri, 21 Jan 2022 08:58:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349083AbiAUIo7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 21 Jan 2022 03:44:59 -0500
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:15678 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1379642AbiAUInT (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 21 Jan 2022 03:43:19 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1642754598; x=1674290598;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=mGsCY6kp93h2hKCHyeJMKzpZRBcoPAiiYRKVIrpmDQE=;
-  b=agB1qbSt6DENFaG4oegAu2mztfIVC2U6evwKcTe2f2gnsjJHmMs1OL3o
-   C4ch8mY++XzMkAEB6pGUdwE/8pTmK6JNvVUOGNjlW7O/e26KAB4a8tgUa
-   2b8j6ntqW4VgDMTb/ztGhdV14KT/jPKaATV97AILX6q0rwBFzzBeTbWZh
-   W8rbtzWXa3SF4ei+P/xLttkVi+s4rMO0+iNXx6l1nZSwHPxNpUYuvRg3n
-   pN1MFrLWpm+d+to6pj/u11n9SfXm6SHmCvPi2NhGDBjwiS7qlne/V2tMh
-   u+euTUe7yyb48skmtbxGd/xJ5j3uvY6u6Z7ig/cRWXVXLiZ3fxUtEBzqX
-   w==;
-X-IronPort-AV: E=Sophos;i="5.88,304,1635177600"; 
-   d="scan'208";a="191026946"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 21 Jan 2022 16:43:17 +0800
-IronPort-SDR: k6kAVmaI0d9hTLTVzOM908mDqTMmxH0YS4lBij/Wz4z734sugUvf9cdzz558T8UVsSCkWINSVl
- NiURaJlhWX9fEALK87Aslo4FuRTFZxrjUd7wC5PnsLa9jCzeGhJsECmyJT/3nMcwZHzAVf0r7G
- 9Ez/JJ1CeaWelA9tJ3nxcCxMtfwMjB/4LxOKTKm59XB6T41YzqWSnR5aoqJgQnhpZ0CYk5X32J
- oHQWUv2kQyGsTwCkEWxyssT2e6ic62Papxezd7cJNFG9Rsna0St8fqceIlNDsB8v/PVnf9Nxn0
- 0OxUwiJjDYsw4Xsuvl0YTTSh
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2022 00:16:45 -0800
-IronPort-SDR: zrXzSHkTSg6JvncyPbsFS7IBYgMQDOweDMOJaTEkYyQbgXCMoNeVwDgAcC/79U6AURYlOb432f
- 4dXhscFgrXGZVDxn5fTUieU4ypTq3MAZV2Dr39PL3af46DFead0YxSwNa0qY2TwT5xuTHDCPDR
- LAftjejkpX/rxv1fnkrFTToA/VmpWQTP/XFCDEBb1VDRNKLByHpjX92J5wGutZwXdHAuMuxfKM
- Ymb+fwWOQJtt9hMCxm3PGsiPSUORMftJEcIG36aKLwtyK4VisYmThh2e+OsuyDTkJ9mm/Aq0t7
- ado=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2022 00:43:18 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JgCL85ZYhz1Rwrw
-        for <linux-ide@vger.kernel.org>; Fri, 21 Jan 2022 00:32:32 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:mime-version
-        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1642753952;
-         x=1645345953; bh=mGsCY6kp93h2hKCHyeJMKzpZRBcoPAiiYRKVIrpmDQE=; b=
-        IrvzRAO6C5RcmmqvZEHkeGaAgK7xw9r7Jih9Tgjv2Ine0SRuEVSELaU1AsvmjeNx
-        ODec1isqFAHVg6FxsPBi5DOy0Df39ZQdsWih/rmItAM0pUYh5w1WmTXZJgKuKLNw
-        NAE8qpuU2hLGhN1u0nlXVM3UnwQoX+lUYJsSZT85cftNXKX6fCE7x/yPXlzZZmGu
-        tFMv4EZ8rN9xH4dNMM++wEAaZf2qgPO/MxWzY6zHDVYXBgZ1cyREX0wmpQwJrida
-        yX4KPd4Gh/udPLrO8QvLiSP9zpHIzi6X5lNCdWlaooXr1yNGbeCupzQJPktt9jVB
-        rHXZP/EAXRDauLZPeF6NFQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id KIQkm-fVPYQO for <linux-ide@vger.kernel.org>;
-        Fri, 21 Jan 2022 00:32:32 -0800 (PST)
-Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JgCL74hsjz1RvlN;
-        Fri, 21 Jan 2022 00:32:31 -0800 (PST)
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-To:     linux-ide@vger.kernel.org
-Cc:     Hannes Reinecke <hare@suse.de>, linux-mips@vger.kernel.org
-Subject: [PATCH] ata: pata_octeon_cf: fix call to trace_ata_bmdma_stop()
-Date:   Fri, 21 Jan 2022 17:32:28 +0900
-Message-Id: <20220121083228.969805-1-damien.lemoal@opensource.wdc.com>
-X-Mailer: git-send-email 2.31.1
+        id S1379637AbiAUI6s (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 21 Jan 2022 03:58:48 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54322 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234205AbiAUI6p (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 21 Jan 2022 03:58:45 -0500
+Received: from mail-yb1-xb2c.google.com (mail-yb1-xb2c.google.com [IPv6:2607:f8b0:4864:20::b2c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 79561C061574
+        for <linux-ide@vger.kernel.org>; Fri, 21 Jan 2022 00:58:45 -0800 (PST)
+Received: by mail-yb1-xb2c.google.com with SMTP id p5so25510915ybd.13
+        for <linux-ide@vger.kernel.org>; Fri, 21 Jan 2022 00:58:45 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=5/CAdEqGBk7N/8QQ5A23zI2nrO/utlv2ElHpvb6u4CA=;
+        b=REKUOzbTnrnoKH+nWoApUShHgZjf318EWK9itQNe1JkF4qXv+SGJQbIKI+K3H7D+95
+         bcr2KPcZ5+mPIb6DxeTuv7HF9kN8W9UUcXvjL4p++kLrmkaD1KNf1eEWqFs7PSKC8dEm
+         ME9OL35fUckRg3MVWpk8FylBI+5zGpdZDH3d6rrEzRZCBsJGqGX6DMeqRYiwOOP4Ja/G
+         7wGTaZEhKOLsAWLQD4u0b3GOi+vYHxZgMv8Cev8mA3sgaVtzvmxSN8U5g3ueAb/LMM9f
+         t55rvr2CTMly8LmNPhlTR+npOVIclcOhEtDaxU0kpotd50fmAekkmRn8B7XG0Wr161Cq
+         TIpg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=5/CAdEqGBk7N/8QQ5A23zI2nrO/utlv2ElHpvb6u4CA=;
+        b=y5EVDg0Uzn6QbLO0GjNvaDs4BBx98dD7BCK3A+PRK4yT08wHsMGeK1t0cmNUf8uyTR
+         QYqcT7vcp+EYWGkouz3bfFJw84O/2SzFYM9j4A34C3F5VKP6Pn0+XQBvnKkLepkWqJ1y
+         mca7CiyVwiMoDdwkdiKqKeU4LLMAspaxCdoEAq9d3Dt631hrk4WQacBw0tXERnBq+Z/i
+         EXTDoOxSuNt3nwjFUY/U3eXj/dRWUjOlKBk6xnJO4If1hYzr6COVwhZpQrpzGW3DHpxg
+         OCrvkCd1tT4ti+Z8IZTZLq68hnL6z4Jvc8Auk24gkxlm28Myvva6Ego2bmV12jtR7k3n
+         X15g==
+X-Gm-Message-State: AOAM533R0Tila9wI+Zv669BS1qp5nX4Qz8wpd/wvxlhdW9BwHa9td0Qn
+        bFtwS/a2A5VaB9ELnoThEIhkJ2I+1v/JMcGUWtZNvQ==
+X-Google-Smtp-Source: ABdhPJxGI0tWvbu3C1KPF9nJZim+8Kq1aJ/5f3LrEb7Cs7qRdYvtHbmNg0CYHyFs7ws6XGnbWWn724o1yPYmp+AIMhU=
+X-Received: by 2002:a25:9082:: with SMTP id t2mr4422729ybl.684.1642755524616;
+ Fri, 21 Jan 2022 00:58:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+References: <CA+G9fYtq0wzSeG8YG-a+=KrbdWqHJMXk1hvq0FKeAvj9sZAK2g@mail.gmail.com>
+ <6249735f-e6b7-1331-eb2b-361bb17d6115@opensource.wdc.com>
+In-Reply-To: <6249735f-e6b7-1331-eb2b-361bb17d6115@opensource.wdc.com>
+From:   Naresh Kamboju <naresh.kamboju@linaro.org>
+Date:   Fri, 21 Jan 2022 14:28:33 +0530
+Message-ID: <CA+G9fYu__OOvk-ESXoOqbd-Lk+CmO8CSQ8chEFf3MyeTjKtp9g@mail.gmail.com>
+Subject: Re: [next] mips: cavium_octeon_defconfig: pata_octeon_cf.c:598:23:
+ error: passing argument 1 of 'trace_ata_bmdma_stop' from incompatible pointer type
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        linux-mips@vger.kernel.org,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        regressions@lists.linux.dev, lkft-triage@lists.linaro.org,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Zeal Robot <zealci@zte.com.cn>,
+        Minghao Chi <chi.minghao@zte.com.cn>,
+        CGEL ZTE <cgel.zte@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The first argument of trace_ata_bmdma_stop() must be a pointer to a
-struct ata_port, not to a struct ata_queued_cmd.
+> I just posted a fix. As I do not have the environment to compile test
+> mips, could someone test please ? I will send the fix to Linus asap
+> after confirmation that it is OK.
 
-Reported-by: Linux Kernel Functional Testing <lkft@linaro.org>
-Fixes: d3e140f2b008 ("ata: pata_octeon_cf: Drop pointless VPRINTK() calls=
- and convert the remaining one")
-Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
----
- drivers/ata/pata_octeon_cf.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Please share your patch / patch link. I will test it with tuxmake.
 
-diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
-index 0912846bc1b0..05c2ab375756 100644
---- a/drivers/ata/pata_octeon_cf.c
-+++ b/drivers/ata/pata_octeon_cf.c
-@@ -595,7 +595,7 @@ static unsigned int octeon_cf_dma_finished(struct ata=
-_port *ap,
- 	union cvmx_mio_boot_dma_intx dma_int;
- 	u8 status;
-=20
--	trace_ata_bmdma_stop(qc, &qc->tf, qc->tag);
-+	trace_ata_bmdma_stop(ap, &qc->tf, qc->tag);
-=20
- 	if (ap->hsm_task_state !=3D HSM_ST_LAST)
- 		return 0;
---=20
-2.31.1
+you may also give a try with these easy steps.
 
+# To install tuxmake on your system globally:
+# sudo pip3 install -U tuxmake
+#
+# See https://docs.tuxmake.org/ for complete documentation.
+# Original tuxmake command with fragments listed below.
+
+ tuxmake --runtime podman --target-arch mips --toolchain gcc-10
+--kconfig cavium_octeon_defconfig
+
+- Naresh
