@@ -2,87 +2,123 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98662C433EF
-	for <linux-ide@archiver.kernel.org>; Sun, 23 Jan 2022 22:22:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CE26C433F5
+	for <linux-ide@archiver.kernel.org>; Mon, 24 Jan 2022 16:50:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230156AbiAWWWt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 23 Jan 2022 17:22:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45966 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230019AbiAWWWs (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 23 Jan 2022 17:22:48 -0500
-Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D340C06173B;
-        Sun, 23 Jan 2022 14:22:48 -0800 (PST)
-Received: by mail-wr1-x433.google.com with SMTP id f17so10248050wrx.1;
-        Sun, 23 Jan 2022 14:22:48 -0800 (PST)
+        id S243916AbiAXQut (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 24 Jan 2022 11:50:49 -0500
+Received: from mta-p7.oit.umn.edu ([134.84.196.207]:34214 "EHLO
+        mta-p7.oit.umn.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243835AbiAXQut (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 24 Jan 2022 11:50:49 -0500
+X-Greylist: delayed 316 seconds by postgrey-1.27 at vger.kernel.org; Mon, 24 Jan 2022 11:50:49 EST
+Received: from localhost (unknown [127.0.0.1])
+        by mta-p7.oit.umn.edu (Postfix) with ESMTP id 4JjG7c5XDTz9vBrt
+        for <linux-ide@vger.kernel.org>; Mon, 24 Jan 2022 16:45:32 +0000 (UTC)
+X-Virus-Scanned: amavisd-new at umn.edu
+Received: from mta-p7.oit.umn.edu ([127.0.0.1])
+        by localhost (mta-p7.oit.umn.edu [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 3-D_ourrJyd5 for <linux-ide@vger.kernel.org>;
+        Mon, 24 Jan 2022 10:45:32 -0600 (CST)
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mta-p7.oit.umn.edu (Postfix) with ESMTPS id 4JjG7c3LpMz9vBrr
+        for <linux-ide@vger.kernel.org>; Mon, 24 Jan 2022 10:45:32 -0600 (CST)
+DMARC-Filter: OpenDMARC Filter v1.3.2 mta-p7.oit.umn.edu 4JjG7c3LpMz9vBrr
+DKIM-Filter: OpenDKIM Filter v2.11.0 mta-p7.oit.umn.edu 4JjG7c3LpMz9vBrr
+Received: by mail-pl1-f200.google.com with SMTP id z11-20020a1709027e8b00b0014a642aacc6so3622863pla.10
+        for <linux-ide@vger.kernel.org>; Mon, 24 Jan 2022 08:45:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
+        d=umn.edu; s=google;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=O3v5uwB/XqoZye4bhwmXdGCHA74bTpbhxCtsFP1wkqk=;
-        b=TLbPoRKj0iYZXA9sHWj1ZAF1UOrJZt0V0GvBsNaK/G8dhIB3xqPdjWJqaYL18sxOvt
-         ZymXqzKnDaRL0a0AMgCyNQjoPQtTnIzj0AM1YpzvdwSjLAEhVAcuQWxe9ZguTzP0cUVM
-         ws/OB95oPta6AOv9MwjanVKFbwoBNr0CjlhKMfKaD+aV4mt5HT4LhymbxceBM8tEJKoj
-         h+25vZ1WazqSHZn9Z1u7jYOH2Y7+j7lWmYOo00KD+mwTDr4BdVKTiil/jaq82DBCZHLM
-         Ym5fwM3cxGiOGqvTuxAf2fUqLUcPo4CFt/DiLLHXvtCGO/6M/SvzaBDJuBh6KbEhRuZ0
-         AHXA==
+        bh=djkJvPzkQRLMPwigXx2q/PnzxUoF5zQXKI2ZeQZ9B6s=;
+        b=fOZiKfn07UXaKCOkHaNtClM/MEf7BTq75piNz4qWhO2dhkvJy68A9cl1/+jEOut2YN
+         gvEhq+1z93ib+Z/QOL88narBG7FiUZVlN2ZbG22nXv95XFg2eaw37iwJXHYBH1WD3imF
+         +JeffRTJ0NXXNAB/o+0YmFvtWuptqmmX9W4W/WnREepCUxSh98vU7xJKazuOi8FpFXwP
+         5e/YLd1g25nruFJInu4sqgyCahvJSrE9pULL3PKKsjjOWEQO92itWZ+/m3OkdUtvkdAs
+         nmUjZM+bDJZRRysa2EUeQ6QoVGNUHOY4HDad8G5RWETVjI5Uyz7ZVHzfzrIiYjjFgvFD
+         GTdQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=O3v5uwB/XqoZye4bhwmXdGCHA74bTpbhxCtsFP1wkqk=;
-        b=VsMoJRG1+SVain5dWzXi7xTeY1Yv8NankXsvNu4cQURz1Vxu5RwPmmXgWRNPLnj+UG
-         KVLAwT7WOo4TzZQplGZkV7yYsR5qnKvlL9ZafrzAtxX9JIY9u7JeitoO1I6WnzYrl4Vd
-         aaYC/iKvE/nj7OuiDqX13Yt7Ekn5N3UJGHhu8wbLqSPJ/ENhKjAKkgMypmsx5Q/Xiy6w
-         1JSNDWQh5ZahN2jZFB3njx+WGaqKL5jI1UcVwkPRQwMib8KOzTz8cv0i0Hf/abLZzzTT
-         LoVKt8zV87D8vp56hvWhhby8xPQqyRdQqmVu66a2YsNAsCHabUhgpMpc17XPKafMdcvZ
-         qZCQ==
-X-Gm-Message-State: AOAM532zQdwNZx1sfHabtMxvqWsdZfQuoveFXmI37zVunoo5GnANObJA
-        RrFP48ZpwS0ArOA6gz0Cr/Ml5DbiWbEefw==
-X-Google-Smtp-Source: ABdhPJywRT1dbxGkbq9H2v8AofH1SETZMi3wap5MSHeOEK56EbKWuSMorSIBlrXNsVRIzDEPIUWdEA==
-X-Received: by 2002:adf:9dce:: with SMTP id q14mr10857339wre.193.1642976566975;
-        Sun, 23 Jan 2022 14:22:46 -0800 (PST)
-Received: from localhost (cpc154979-craw9-2-0-cust193.16-3.cable.virginm.net. [80.193.200.194])
-        by smtp.gmail.com with ESMTPSA id h127sm19066369wmh.2.2022.01.23.14.22.46
+        bh=djkJvPzkQRLMPwigXx2q/PnzxUoF5zQXKI2ZeQZ9B6s=;
+        b=dpfFRDAynS18SD/RmwHu1jg582uHtpPhCJTeXmYvPC4TN45ZM3OY7n3Z1L8sUGH1jP
+         nHjWmB45oT8utpHHXJesw7cjXlsRhGTFoNMWejpMgm/5R/VbeS/wbHqo5G1Ojpdyivl7
+         EsYKOKgxtaNo2mJkd9Y9b04PI4JHaQ0TTWHCZ7A0rfjGuKZNy2u0r4UufO8Y8GaM+JbT
+         olkpjME33NsMQec624JZIe9zZ70O81BeMIWzzSWgIEddWSIhWuz1ZCHrMfI4fYUqbzB5
+         LHHaARpJsnw/8bEaCRlI0zyQNX9XosBqzqOmlQp29LgMr453peWGRkmot+D51Bcwen35
+         PYEQ==
+X-Gm-Message-State: AOAM532Ph6M7eNXFsI6dsWCkv3pLJZkWWP3o8v9fVKS0Va/v5D3rQE8X
+        7194b1sG4H5ecDk4sMHyCePzeoH7h0SesE2bqemuQjN8JuMDg8uMxnKlrLT59CSDLsllDdsKcS8
+        oanp8OsJbSClb0hBBg2vaA8lQ
+X-Received: by 2002:a17:902:d4c1:b0:14b:4a0b:79bd with SMTP id o1-20020a170902d4c100b0014b4a0b79bdmr6444147plg.170.1643042731389;
+        Mon, 24 Jan 2022 08:45:31 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwpyQjGPPn2EhhJAhMlokks0xQvRxA7QZE9Ic+dNtUz3PJOX2gO13nba6OZiazWAlZ8Qi83jw==
+X-Received: by 2002:a17:902:d4c1:b0:14b:4a0b:79bd with SMTP id o1-20020a170902d4c100b0014b4a0b79bdmr6444129plg.170.1643042731180;
+        Mon, 24 Jan 2022 08:45:31 -0800 (PST)
+Received: from zqy787-GE5S.lan ([36.4.61.248])
+        by smtp.gmail.com with ESMTPSA id z14sm8151922pfq.3.2022.01.24.08.45.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 23 Jan 2022 14:22:46 -0800 (PST)
-From:   Colin Ian King <colin.i.king@gmail.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-ide@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org
-Subject: [PATCH] ata: pata_pdc202xx_old: make make static read-only array pio_timing const
-Date:   Sun, 23 Jan 2022 22:22:46 +0000
-Message-Id: <20220123222246.5801-1-colin.i.king@gmail.com>
-X-Mailer: git-send-email 2.33.1
+        Mon, 24 Jan 2022 08:45:30 -0800 (PST)
+From:   Zhou Qingyang <zhou1615@umn.edu>
+To:     zhou1615@umn.edu
+Cc:     kjlu@umn.edu, Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Alexander Shiyan <shc_work@mail.ru>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] ata: pata_platform: Fix a NULL pointer dereference in __pata_platform_probe()
+Date:   Tue, 25 Jan 2022 00:45:25 +0800
+Message-Id: <20220124164525.53068-1-zhou1615@umn.edu>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The static array pio_timing is read-only so it make sense to make
-it const.
+In __pata_platform_probe(), devm_kzalloc() is assigned to ap->ops and
+there is a dereference of it right after that, which could introduce a
+NULL pointer dereference bug.
 
-Signed-off-by: Colin Ian King <colin.i.king@gmail.com>
+Fix this by adding a NULL check of ap->ops.
+
+This bug was found by a static analyzer.
+
+Builds with 'make allyesconfig' show no new warnings,
+and our static analyzer no longer warns about this code.
+
+Fixes: f3d5e4f18dba ("ata: pata_of_platform: Allow to use 16-bit wide data transfer")
+Signed-off-by: Zhou Qingyang <zhou1615@umn.edu>
 ---
- drivers/ata/pata_pdc202xx_old.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The analysis employs differential checking to identify inconsistent 
+security operations (e.g., checks or kfrees) between two code paths 
+and confirms that the inconsistent operations are not recovered in the
+current function or the callers, so they constitute bugs. 
 
-diff --git a/drivers/ata/pata_pdc202xx_old.c b/drivers/ata/pata_pdc202xx_old.c
-index b99849095853..f894ff2de0a9 100644
---- a/drivers/ata/pata_pdc202xx_old.c
-+++ b/drivers/ata/pata_pdc202xx_old.c
-@@ -78,7 +78,7 @@ static void pdc202xx_configure_piomode(struct ata_port *ap, struct ata_device *a
- {
- 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
- 	int port = 0x60 + 8 * ap->port_no + 4 * adev->devno;
--	static u16 pio_timing[5] = {
-+	static const u16 pio_timing[5] = {
- 		0x0913, 0x050C , 0x0308, 0x0206, 0x0104
- 	};
- 	u8 r_ap, r_bp;
+Note that, as a bug found by static analysis, it can be a false
+positive or hard to trigger. Multiple researchers have cross-reviewed
+the bug.
+
+ drivers/ata/pata_platform.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
+index 028329428b75..021ef9cbcbc1 100644
+--- a/drivers/ata/pata_platform.c
++++ b/drivers/ata/pata_platform.c
+@@ -128,6 +128,8 @@ int __pata_platform_probe(struct device *dev, struct resource *io_res,
+ 	ap = host->ports[0];
+ 
+ 	ap->ops = devm_kzalloc(dev, sizeof(*ap->ops), GFP_KERNEL);
++	if (ap->ops)
++		return -ENOMEM;
+ 	ap->ops->inherits = &ata_sff_port_ops;
+ 	ap->ops->cable_detect = ata_cable_unknown;
+ 	ap->ops->set_mode = pata_platform_set_mode;
 -- 
-2.33.1
+2.25.1
 
