@@ -2,67 +2,130 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFDA0C433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 28 Jan 2022 09:48:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37EABC433F5
+	for <linux-ide@archiver.kernel.org>; Fri, 28 Jan 2022 09:58:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243665AbiA1Jsm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 28 Jan 2022 04:48:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33642 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238349AbiA1Jsl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 28 Jan 2022 04:48:41 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3931EC061714
-        for <linux-ide@vger.kernel.org>; Fri, 28 Jan 2022 01:48:39 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S235548AbiA1J6t (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 28 Jan 2022 04:58:49 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:41003 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S237775AbiA1J6t (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 28 Jan 2022 04:58:49 -0500
+Received: from [192.168.0.2] (ip5f5aecde.dynamic.kabel-deutschland.de [95.90.236.222])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id F2EA8B824FF
-        for <linux-ide@vger.kernel.org>; Fri, 28 Jan 2022 09:48:37 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id C6302C340E0;
-        Fri, 28 Jan 2022 09:48:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1643363316;
-        bh=CexXTuhNRDof14DRErT69AroACns0tjB1v8FoJOGgP4=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=Mmcaptk+Ng7LQiIMf+rN/Ckt+PCYhn/YP+gXo8e56MTzs5OcxQooTANnxncVnehAd
-         D/1GxFMYiy8HL+T3Xz3skhGwzhJLcVeQ3LSG65H29w26wSiTq6ok7VwVT6abNMVGb6
-         0pOJZe8Vq4ZDesBZ2E092ERvSOIj5r9ng/erveGJoRcHZXaHIcGLW/rC0MNyjFlseq
-         eS0WIWQKTQdxkCD9X1mCkR9Ef7j90XgbZ72kLpjYM0difVy56IGVpqriIlQZrVeM/L
-         VgvS5q3kgyODgOZbf7s8n4O4oQLE0Dpw4mwWKKsmxZZk4kXnm9bz9jvVCZ3l2eGLRh
-         jxWQazNMkwAUg==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id B5067F6079F;
-        Fri, 28 Jan 2022 09:48:36 +0000 (UTC)
-Subject: Re: [GIT PULL] ata fixes for 5.17.0-rc2
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20220128093204.33882-1-damien.lemoal@opensource.wdc.com>
-References: <20220128093204.33882-1-damien.lemoal@opensource.wdc.com>
-X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20220128093204.33882-1-damien.lemoal@opensource.wdc.com>
-X-PR-Tracked-Remote: ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-5.17-rc2
-X-PR-Tracked-Commit-Id: 9b6d90e2085ca2ce72ef9ea78658bf270855e62e
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 145d9b498fc827b79c1260b4caa29a8e59d4c2b9
-Message-Id: <164336331673.26927.42740176834192502.pr-tracker-bot@kernel.org>
-Date:   Fri, 28 Jan 2022 09:48:36 +0000
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 64FCE61EA1923;
+        Fri, 28 Jan 2022 10:58:46 +0100 (CET)
+Message-ID: <d9c4e80e-87ca-9e68-f97d-d2c709e54ff3@molgen.mpg.de>
+Date:   Fri, 28 Jan 2022 10:58:45 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.1
+Subject: Re: [PATCH] ata: ahci: Skip 200 ms debounce delay for Marvell
+ 88SE9235
+Content-Language: en-US
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-ide@vger.kernel.org
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220127233527.445659-1-pmenzel@molgen.mpg.de>
+ <1ef3e995-3f61-ef53-0d5e-03bb41a52624@opensource.wdc.com>
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <1ef3e995-3f61-ef53-0d5e-03bb41a52624@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The pull request you sent on Fri, 28 Jan 2022 18:32:04 +0900:
+Dear Damien,
 
-> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-5.17-rc2
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/145d9b498fc827b79c1260b4caa29a8e59d4c2b9
+Thank you for the quick reply.
 
-Thank you!
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Am 28.01.22 um 00:40 schrieb Damien Le Moal:
+> On 1/28/22 08:35, Paul Menzel wrote:
+>> The 200 ms delay before debouncing the PHY in `sata_link_resume()` is
+>> not needed for the Marvell 88SE9235.
+>>
+>>      $ lspci -nn -s 0021:0e:00.0
+>>      0021:0e:00.0 SATA controller [0106]: Marvell Technology Group Ltd. 88SE9235 PCIe 2.0 x2 4-port SATA 6 Gb/s Controller [1b4b:9235] (rev 11)
+>>
+>> So, remove it. Tested on IBM S822LC with current Linux 5.17-rc1:
+>>
+>> Without this patch (with 200 ms delay):
+>>
+>>      [    3.358158] ata1: SATA max UDMA/133 abar m2048@0x3fe881000000 port 0x3fe881000100 irq 39
+>>      [    3.358175] ata2: SATA max UDMA/133 abar m2048@0x3fe881000000 port 0x3fe881000180 irq 39
+>>      [    3.358191] ata3: SATA max UDMA/133 abar m2048@0x3fe881000000 port 0x3fe881000200 irq 39
+>>      [    3.358207] ata4: SATA max UDMA/133 abar m2048@0x3fe881000000 port 0x3fe881000280 irq 39
+>>      […]
+>>      [    3.677542] ata3: SATA link down (SStatus 0 SControl 300)
+>>      [    3.677719] ata4: SATA link down (SStatus 0 SControl 300)
+>>      [    3.839242] ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+>>      [    3.839828] ata2.00: ATA-10: ST1000NX0313         00LY266 00LY265IBM, BE33, max UDMA/133
+>>      [    3.840029] ata2.00: 1953525168 sectors, multi 0: LBA48 NCQ (depth 32), AA
+>>      [    3.841796] ata2.00: configured for UDMA/133
+>>      [    3.843231] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+>>      [    3.844083] ata1.00: ATA-10: ST1000NX0313         00LY266 00LY265IBM, BE33, max UDMA/133
+>>      [    3.844313] ata1.00: 1953525168 sectors, multi 0: LBA48 NCQ (depth 32), AA
+>>      [    3.846043] ata1.00: configured for UDMA/133
+>>
+>> With patch (no delay):
+>>
+>>      [    3.624259] ata1: SATA max UDMA/133 abar m2048@0x3fe881000000 port 0x3f e881000100 irq 39
+>>      [    3.624436] ata2: SATA max UDMA/133 abar m2048@0x3fe881000000 port 0x3f e881000180 irq 39
+>>      [    3.624452] ata3: SATA max UDMA/133 abar m2048@0x3fe881000000 port 0x3f e881000200 irq 39
+>>      [    3.624468] ata4: SATA max UDMA/133 abar m2048@0x3fe881000000 port 0x3f e881000280 irq 39
+>>      […]
+>>      [    3.731966] ata3: SATA link down (SStatus 0 SControl 300)
+>>      [    3.732069] ata4: SATA link down (SStatus 0 SControl 300)
+>>      [    3.897448] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+>>      [    3.897678] ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+>>      [    3.898140] ata1.00: ATA-10: ST1000NX0313         00LY266 00LY265IBM, BE33, max UDMA/133
+>>      [    3.898175] ata2.00: ATA-10: ST1000NX0313         00LY266 00LY265IBM, BE33, max UDMA/133
+>>      [    3.898287] ata1.00: 1953525168 sectors, multi 0: LBA48 NCQ (depth 32), AA
+>>      [    3.898349] ata2.00: 1953525168 sectors, multi 0: LBA48 NCQ (depth 32), AA
+>>      [    3.900070] ata1.00: configured for UDMA/133
+>>      [    3.900166] ata2.00: configured for UDMA/133
+>>
+>> Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
+>> ---
+>>   drivers/ata/ahci.c | 2 ++
+>>   1 file changed, 2 insertions(+)
+>>
+>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+>> index ab5811ef5a53..edca4e8fd44e 100644
+>> --- a/drivers/ata/ahci.c
+>> +++ b/drivers/ata/ahci.c
+>> @@ -582,6 +582,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+>>   	  .driver_data = board_ahci_yes_fbs },
+>>   	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9230),
+>>   	  .driver_data = board_ahci_yes_fbs },
+>> +	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9235),
+>> +	  .driver_data = board_ahci_no_debounce_delay },
+>>   	{ PCI_DEVICE(PCI_VENDOR_ID_TTI, 0x0642), /* highpoint rocketraid 642L */
+>>   	  .driver_data = board_ahci_yes_fbs },
+>>   	{ PCI_DEVICE(PCI_VENDOR_ID_TTI, 0x0645), /* highpoint rocketraid 644L */
+> 
+> Looks good. But for the commit message, instead of the dmesg copy-paste,
+> could you simply write the gains in terms of shortened scan time ? That
+> would make it easier to understand the benefits of the patch.
+
+I can do:
+
+> Tested on IBM S822LC with current Linux 5.17-rc1, and the 200 ms is
+> gone, and the drives are still detected.
+I would still like to keep the Linux logs, as then it’s clear what I 
+tested with (drives), and what ports were populated.
+
+> Also, there is no need for the lspci output.
+
+In my opinion, it prooves I used the correct PCI vendor and device 
+codes, and also shows the revision number of the device I tested with.
+
+
+Kind regards,
+
+Paul
