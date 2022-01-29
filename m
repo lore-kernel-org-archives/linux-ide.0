@@ -2,152 +2,100 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 452D5C433EF
-	for <linux-ide@archiver.kernel.org>; Sat, 29 Jan 2022 07:06:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33A6FC433F5
+	for <linux-ide@archiver.kernel.org>; Sat, 29 Jan 2022 07:07:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347036AbiA2HGY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 29 Jan 2022 02:06:24 -0500
-Received: from dfw.source.kernel.org ([139.178.84.217]:53786 "EHLO
-        dfw.source.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243344AbiA2HGW (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 29 Jan 2022 02:06:22 -0500
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 31DEC60B65;
-        Sat, 29 Jan 2022 07:06:22 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFA0AC340E5;
-        Sat, 29 Jan 2022 07:06:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1643439981;
-        bh=+9orCdx5OHHhlT7WVp0s9rE5tL8RNTogO1+pon4/4lk=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=PHuxg106g2qBs0R/75fdVcw0HV82kniQZKT8AeS0WpsXntUo5uM59UqwswEZfvzHM
-         0gItCXlqaRMCXkNfA2hf2n4zzkAkAfzyfV6FX9y8O4tvhdDopl/mp0mfgTOKXGhJsD
-         4hI1LzPKaSVENNr/ZccGMXFw19Eyrj/NdYBNsNoc=
-Date:   Sat, 29 Jan 2022 08:06:18 +0100
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        Zhou Qingyang <zhou1615@umn.edu>, kjlu@umn.edu,
-        Alexander Shiyan <shc_work@mail.ru>,
-        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] ata: pata_platform: Fix a NULL pointer dereference in
- __pata_platform_probe()
-Message-ID: <YfTnatj5sNOswqFk@kroah.com>
-References: <20220124164525.53068-1-zhou1615@umn.edu>
- <YfPBb4gHDkr76xPT@kroah.com>
- <3621c7db-0b73-d7eb-f987-45ec59a6c738@opensource.wdc.com>
- <YfQSdJgi4x5hN3Ee@kroah.com>
- <45efc552-999b-c57b-5da1-0818893c031d@opensource.wdc.com>
+        id S1348925AbiA2HHe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 29 Jan 2022 02:07:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40818 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243344AbiA2HHd (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 29 Jan 2022 02:07:33 -0500
+Received: from mail-ej1-x633.google.com (mail-ej1-x633.google.com [IPv6:2a00:1450:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C843FC061714
+        for <linux-ide@vger.kernel.org>; Fri, 28 Jan 2022 23:07:32 -0800 (PST)
+Received: by mail-ej1-x633.google.com with SMTP id s5so23800269ejx.2
+        for <linux-ide@vger.kernel.org>; Fri, 28 Jan 2022 23:07:32 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=l2Ho8dLumCd4fFnXA+EscLp32NM/bpPpYSbd6knxPwE=;
+        b=bGcymcHvryNUyIO4cX68UVaO5+myilq6KtZ30pcO/OFaY3lg06ueq0ye3xyX1PJb0W
+         oP7DKC+Al+hU+QUgUQlzuZiF7VPBdHGsfV7qGwcY4c60Vuy0dVXKLAYo6M7SQUiR+2AQ
+         V7qfI+QL2kSSNPkdp2dRmhdjp21EW+OK5myoE=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=l2Ho8dLumCd4fFnXA+EscLp32NM/bpPpYSbd6knxPwE=;
+        b=yVxA26MZYgMZPDYvxc0BWN1ojVHlyQnMSdn++AQDOVYYdbePGzqG67gSJLjYF+f/xe
+         5I+Lg4Sy6y52JpwSfEqV4rfL5rvN5IY3c9Ivsvl8vsnwA/OWB3NX40UIqj6nmbZmtxMu
+         4rELFKAw4uuAiBv0OPx+DH84LqeUhw1EffrRuLj9ZTYDqSLMyVpWK5fhJuHRakuAtn/U
+         lrxhOFva5SakStlalPMOlHQA4WZ6/DHDw70pCcGajvRJWOoDxTqvEM0oq2iLM2DC40hg
+         tVS5n6FLH+9adUIgrPXeDhcNnT/6XWjs58aIx8iPrIWcWOYgGut9XbdtBkiBbWz75N82
+         9WwA==
+X-Gm-Message-State: AOAM531oyUvVNb26gDRMGsbZPtnceF760eopWfwfLi8DcxJYM11pGpZl
+        7WRyesXqtps08jHRYrOoJhKEo2aMNZGYXzxE
+X-Google-Smtp-Source: ABdhPJwErgaZah1jG1dIU1iIREEADnLNx/+i3ZwhdYx3RzPod9aOzvemSMmhfRX3giH/Ucbbnoa5PQ==
+X-Received: by 2002:a17:906:25cb:: with SMTP id n11mr9642618ejb.419.1643440051199;
+        Fri, 28 Jan 2022 23:07:31 -0800 (PST)
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com. [209.85.221.53])
+        by smtp.gmail.com with ESMTPSA id fn3sm10732306ejc.47.2022.01.28.23.07.30
+        for <linux-ide@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 28 Jan 2022 23:07:30 -0800 (PST)
+Received: by mail-wr1-f53.google.com with SMTP id k18so15022169wrg.11
+        for <linux-ide@vger.kernel.org>; Fri, 28 Jan 2022 23:07:30 -0800 (PST)
+X-Received: by 2002:a5d:6d03:: with SMTP id e3mr9338887wrq.281.1643440050487;
+ Fri, 28 Jan 2022 23:07:30 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <45efc552-999b-c57b-5da1-0818893c031d@opensource.wdc.com>
+References: <20220128121008.46586-1-damien.lemoal@opensource.wdc.com>
+ <CAHk-=wj2uzk6iKhu2qnOOAqaT6pQ99oaY89RvEmAqHS1XP1rvQ@mail.gmail.com> <YfTluSca/ye+lmrn@kroah.com>
+In-Reply-To: <YfTluSca/ye+lmrn@kroah.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Sat, 29 Jan 2022 09:07:14 +0200
+X-Gmail-Original-Message-ID: <CAHk-=wjAajZDJoqy93DVLQ+ZJQ+w1ScCxsnS-ELdL12kqYM_Gg@mail.gmail.com>
+Message-ID: <CAHk-=wjAajZDJoqy93DVLQ+ZJQ+w1ScCxsnS-ELdL12kqYM_Gg@mail.gmail.com>
+Subject: Re: [GIT PULL] Revert ata fix for 5.17-rc2
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sat, Jan 29, 2022 at 09:12:19AM +0900, Damien Le Moal wrote:
-> On 1/29/22 00:57, Greg KH wrote:
-> > On Fri, Jan 28, 2022 at 08:50:04PM +0900, Damien Le Moal wrote:
-> >> On 1/28/22 19:11, Greg KH wrote:
-> >>> On Tue, Jan 25, 2022 at 12:45:25AM +0800, Zhou Qingyang wrote:
-> >>>> In __pata_platform_probe(), devm_kzalloc() is assigned to ap->ops and
-> >>>> there is a dereference of it right after that, which could introduce a
-> >>>> NULL pointer dereference bug.
-> >>>>
-> >>>> Fix this by adding a NULL check of ap->ops.
-> >>>>
-> >>>> This bug was found by a static analyzer.
-> >>>>
-> >>>> Builds with 'make allyesconfig' show no new warnings,
-> >>>> and our static analyzer no longer warns about this code.
-> >>>>
-> >>>> Fixes: f3d5e4f18dba ("ata: pata_of_platform: Allow to use 16-bit wide data transfer")
-> >>>> Signed-off-by: Zhou Qingyang <zhou1615@umn.edu>
-> >>>> ---
-> >>>
-> >>> As stated in the past, please do not make contributions to the Linux
-> >>> kernel until umn.edu has properly resolved its development issues.
-> >>
-> >> Aouch. My apologies. I forgot about this. Thank you for the reminder.
-> >>
-> >>>
-> >>>> The analysis employs differential checking to identify inconsistent 
-> >>>> security operations (e.g., checks or kfrees) between two code paths 
-> >>>> and confirms that the inconsistent operations are not recovered in the
-> >>>> current function or the callers, so they constitute bugs. 
-> >>>>
-> >>>> Note that, as a bug found by static analysis, it can be a false
-> >>>> positive or hard to trigger. Multiple researchers have cross-reviewed
-> >>>> the bug.
-> >>>>
-> >>>>  drivers/ata/pata_platform.c | 2 ++
-> >>>>  1 file changed, 2 insertions(+)
-> >>>>
-> >>>> diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-> >>>> index 028329428b75..021ef9cbcbc1 100644
-> >>>> --- a/drivers/ata/pata_platform.c
-> >>>> +++ b/drivers/ata/pata_platform.c
-> >>>> @@ -128,6 +128,8 @@ int __pata_platform_probe(struct device *dev, struct resource *io_res,
-> >>>>  	ap = host->ports[0];
-> >>>>  
-> >>>>  	ap->ops = devm_kzalloc(dev, sizeof(*ap->ops), GFP_KERNEL);
-> >>>> +	if (ap->ops)
-> >>>> +		return -ENOMEM;
-> >>>
-> >>> This change seems to leak memory.  Damien, please revert it.
-> >>
-> >> I fixed the patch when applying, so there is no leak.
-> > 
-> > Really?  What happened to the memory that ata_host_alloc() created above
-> > this call?  How is that freed?
-> > 
-> >> This is a genuine (potential) bug fix.
-> > 
-> > As I tell others, how can kmalloc() ever fail here, so odd of this being
-> > a real bugfix are so low it's not funny.  So take these types of
-> > cleanups as a last-resort only after you have strongly validated that
-> > they are correct.  The current group of people trying to do these fixes
-> > have a horrible track-record and are getting things wrong way more than
-> > they should be.  And so it is worse having code that "looks" correct vs.
-> > something that is "obviously we need to handle this some day".
-> 
-> I completely agree that this is not fixing any real bug reported in the
-> field. And as you say, an error here is more than unlikely. I accepted
-> the patch only on the ground of code correctness.
-> 
-> > 
-> >> Must I revert ?
-> > 
-> > If it's buggy you should, see my above question about ata_host_alloc(),
-> > is there a cleanup path somewhere that I am missing?
-> 
-> The resources allocated by ata_host_alloc() are attached to the device
-> (devres and drv_data) so they will be freed by ata_devres_release() when
-> the dev is dropped due to the probe error. I think the return that the
-> patch introduces is fine as is.
-> 
-> If I am misunderstanding the devres handling, please let me know.
+On Sat, Jan 29, 2022 at 8:59 AM Greg Kroah-Hartman
+<gregkh@linuxfoundation.org> wrote:
+>
+> It's up to you all, if you think the patch is correct, keep it for now.
 
-Where does the data allocated in ata_host_alloc() on this line:
-	host = kzalloc(sz, GFP_KERNEL);
+In the fixed form (ie with Damien's fix for the wrong test polarity),
+it's certainly not wrong, and matches a lot of our standard patterns -
+including our documentation in
 
-Get attached to a devres structure?
+    Documentation/driver-api/driver-model/design-patterns.rst
 
-It's a kref-managed data structure (see the call to kref_init() a few
-lines down), and the memory will be freed if you release the last
-reference on the kref, but that has nothing to do with devres.
+I did a quick visual grep, and all the cases of
+devm_kzalloc(..GFP_KERNEL) I grepped for did indeed have that "if
+(!..)" error handling pattern for the return value, including other
+cases in the ATA subsystem.
 
-There's also the ports memory attached to the host structure as well,
-that is controlled by the lifetime of the kref, not a devres reference
-that I can see.
+That was very much a "quick visual grep" though, so no guarantees, and
+I stopped looking after it was so obvious. IOW, it was just a
 
-Or am I missing some link somewhere here?
+   git grep -1 devm_kzalloc.*GFP_KERNEL
 
-thanks,
+and then looking at the output and saying "yup, they all seem to do
+that allocation failure test".
 
-greg k-h
+At the same time it's certainly also true that a small devm_kzalloc()
+using GFP_KERNEL should never actually fail, so the patch - while
+looking very correct to me - almost certainly makes no difference in
+practice.
+
+So I think the only problem with the patch is the original (fixed)
+bug, and the source it came from.
+
+              Linus
