@@ -2,114 +2,103 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 244B6C433EF
-	for <linux-ide@archiver.kernel.org>; Mon, 31 Jan 2022 21:05:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A732C433EF
+	for <linux-ide@archiver.kernel.org>; Tue,  1 Feb 2022 07:14:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238696AbiAaVFz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 31 Jan 2022 16:05:55 -0500
-Received: from mxout02.lancloud.ru ([45.84.86.82]:46284 "EHLO
-        mxout02.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231445AbiAaVFy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 31 Jan 2022 16:05:54 -0500
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout02.lancloud.ru E420720C90CA
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: Re: [PATCH] libata: ata_{sff|std}_prereset() always return 0
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>
-References: <d63ddc77-ddc8-d15a-030f-592cece64742@omp.ru>
- <4c79f0c7-a147-f371-5c06-28a0827bbea2@opensource.wdc.com>
-Organization: Open Mobile Platform
-Message-ID: <59ce902d-74a2-aeb3-663e-de5a2bb70625@omp.ru>
-Date:   Tue, 1 Feb 2022 00:05:44 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        id S234606AbiBAHOJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 1 Feb 2022 02:14:09 -0500
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:36961 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S234592AbiBAHOI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 1 Feb 2022 02:14:08 -0500
+Received: from localhost.localdomain (unknown [77.235.169.38])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 6C26961E6478B;
+        Tue,  1 Feb 2022 08:14:04 +0100 (CET)
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Paul Menzel <pmenzel@molgen.mpg.de>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v3] ata: ahci: Skip 200 ms debounce delay for Marvell 88SE9235
+Date:   Tue,  1 Feb 2022 08:12:23 +0100
+Message-Id: <20220201071229.6418-1-pmenzel@molgen.mpg.de>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-In-Reply-To: <4c79f0c7-a147-f371-5c06-28a0827bbea2@opensource.wdc.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
- LFEX1907.lancloud.ru (fd00:f066::207)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/29/22 8:24 AM, Damien Le Moal wrote:
+The 200 ms delay before debouncing the PHY in `sata_link_resume()` is
+not needed for the Marvell 88SE9235.
 
->> ata_std_prereset() always returns 0, hence the check in ata_sff_prereset()
->> is pointless and thus it also can return only 0 (however, we cannot change
->> the prototypes of ata_{sff|std}_prereset() as they implement the driver's
->> prereset() method).
->>
->> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
->> analysis tool.
->>
->> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+    $ lspci -nn -s 0021:0e:00.0
+    0021:0e:00.0 SATA controller [0106]: Marvell Technology Group Ltd. 88SE9235 PCIe 2.0 x2 4-port SATA 6 Gb/s Controller [1b4b:9235] (rev 11)
 
-[...]
->> Index: libata/drivers/ata/libata-sff.c
->> ===================================================================
->> --- libata.orig/drivers/ata/libata-sff.c
->> +++ libata/drivers/ata/libata-sff.c
->> @@ -1708,16 +1708,14 @@ EXPORT_SYMBOL_GPL(ata_sff_thaw);
->>   *	Kernel thread context (may sleep)
->>   *
->>   *	RETURNS:
->> - *	0 on success, -errno otherwise.
->> + *	0 on success.
-> 
-> Well, since the function *always* return 0, I would just say so, since
-> "on success" can of imply that there may be failures.
-> Something like "0, always" would be better I think.
+So, remove it. Tested on IBM S822LC with current Linux 5.17-rc1:
 
-   Agreed.
+Currently, without this patch (with 200 ms delay), device probe for ata1
+takes 485 ms:
 
->>   */
->>  int ata_sff_prereset(struct ata_link *link, unsigned long deadline)
->>  {
->>  	struct ata_eh_context *ehc = &link->eh_context;
->>  	int rc;
->>  
->> -	rc = ata_std_prereset(link, deadline);
->> -	if (rc)
->> -		return rc;
->> +	ata_std_prereset(link, deadline);
-> 
-> I am not a big fan of such change. If ata_std_prereset is changed to
-> actually return an error, the above change would result in a bug...
-> 
-> What about fixing things properly:
-> 1) The ata_std_prereset comment says it: ata_std_prereset should not
-> fail, so let's make it a void function.
+    [    3.358158] ata1: SATA max UDMA/133 abar m2048@0x3fe881000000 port 0x3fe881000100 irq 39
+    [    3.358175] ata2: SATA max UDMA/133 abar m2048@0x3fe881000000 port 0x3fe881000180 irq 39
+    [    3.358191] ata3: SATA max UDMA/133 abar m2048@0x3fe881000000 port 0x3fe881000200 irq 39
+    [    3.358207] ata4: SATA max UDMA/133 abar m2048@0x3fe881000000 port 0x3fe881000280 irq 39
+    […]
+    [    3.677542] ata3: SATA link down (SStatus 0 SControl 300)
+    [    3.677719] ata4: SATA link down (SStatus 0 SControl 300)
+    [    3.839242] ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+    [    3.839828] ata2.00: ATA-10: ST1000NX0313         00LY266 00LY265IBM, BE33, max UDMA/133
+    [    3.840029] ata2.00: 1953525168 sectors, multi 0: LBA48 NCQ (depth 32), AA
+    [    3.841796] ata2.00: configured for UDMA/133
+    [    3.843231] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+    [    3.844083] ata1.00: ATA-10: ST1000NX0313         00LY266 00LY265IBM, BE33, max UDMA/133
+    [    3.844313] ata1.00: 1953525168 sectors, multi 0: LBA48 NCQ (depth 32), AA
+    [    3.846043] ata1.00: configured for UDMA/133
 
-   Hm... we can't, as ata_std_prereset() sometimes directly implement prereset()
-and pmp_prereset() methods and those should return *int*...
+With this patch (no delay) device probe for ata1 takes 273 ms:
 
-> 2) The only direct user of ata_std_prereset as the pmp_prereset port op
-> is libata-pmp.c, so let's just add a static function there that calls
-> ata_std_prereset and return 0.
+    [    3.624259] ata1: SATA max UDMA/133 abar m2048@0x3fe881000000 port 0x3f e881000100 irq 39
+    [    3.624436] ata2: SATA max UDMA/133 abar m2048@0x3fe881000000 port 0x3f e881000180 irq 39
+    [    3.624452] ata3: SATA max UDMA/133 abar m2048@0x3fe881000000 port 0x3f e881000200 irq 39
+    [    3.624468] ata4: SATA max UDMA/133 abar m2048@0x3fe881000000 port 0x3f e881000280 irq 39
+    […]
+    [    3.731966] ata3: SATA link down (SStatus 0 SControl 300)
+    [    3.732069] ata4: SATA link down (SStatus 0 SControl 300)
+    [    3.897448] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+    [    3.897678] ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+    [    3.898140] ata1.00: ATA-10: ST1000NX0313         00LY266 00LY265IBM, BE33, max UDMA/133
+    [    3.898175] ata2.00: ATA-10: ST1000NX0313         00LY266 00LY265IBM, BE33, max UDMA/133
+    [    3.898287] ata1.00: 1953525168 sectors, multi 0: LBA48 NCQ (depth 32), AA
+    [    3.898349] ata2.00: 1953525168 sectors, multi 0: LBA48 NCQ (depth 32), AA
+    [    3.900070] ata1.00: configured for UDMA/133
+    [    3.900166] ata2.00: configured for UDMA/133
 
-   I think you've missed 'ata_base_port_ops' also using ata_std_prereset()...
+Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
+---
+v2: address comments for commit message (but forgot v2 tag)
+v3: resend with v3 tag in subject line/commit message summary
 
-> 3) ata_sff_prereset also always return 0. So ideally, we should also
-> make it void and have a wrapper for the drivers using it as the prereset
-> port op.
+ drivers/ata/ahci.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-   There are no drivers using it as a method -- only libata-sff.c does it,
-others have a wrapper around it.
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index ab5811ef5a53..edca4e8fd44e 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -582,6 +582,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	  .driver_data = board_ahci_yes_fbs },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9230),
+ 	  .driver_data = board_ahci_yes_fbs },
++	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9235),
++	  .driver_data = board_ahci_no_debounce_delay },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TTI, 0x0642), /* highpoint rocketraid 642L */
+ 	  .driver_data = board_ahci_yes_fbs },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TTI, 0x0645), /* highpoint rocketraid 644L */
+-- 
+2.34.1
 
-> But there are more places to change than for ata_std_prereset,
-> so not sure this makes the code cleaner. Worth looking into it though.
-> 
-> Thoughts ?
-
-   I think I'd like to keep my approach...
-
-[...]
-
-MBR, Sergey
