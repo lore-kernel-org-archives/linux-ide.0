@@ -2,98 +2,112 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 238A4C433EF
-	for <linux-ide@archiver.kernel.org>; Tue,  1 Feb 2022 17:36:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AA64C433EF
+	for <linux-ide@archiver.kernel.org>; Tue,  1 Feb 2022 20:04:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241397AbiBARgh (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 1 Feb 2022 12:36:37 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40408 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233776AbiBARgg (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 1 Feb 2022 12:36:36 -0500
-Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D33DFC061714;
-        Tue,  1 Feb 2022 09:36:35 -0800 (PST)
-Received: by mail-lf1-x12f.google.com with SMTP id x23so35530257lfc.0;
-        Tue, 01 Feb 2022 09:36:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=t8XM8YQCdnrLqQjmIyPCS1pWQ5VZ3HXbW2LziRHl1vs=;
-        b=YWvHVpTFLXjM7CMAt/cmK/9psyjeYenHbFmBcQ4eU1F9o5cspuXVcnUtF6Mh9JBr1i
-         0U5EWSgCdkKapxIzP5hSIl/a6gfCzAx8cFd8iau1ziztRiGD1XWVbFQhD7xstUyNz8DN
-         eha73qWqQmSxOPVGQqmGzXUVndUMsVWcvECG31Rw/BSC0+RhO7gPtE00vJAQQayPmnQW
-         rEbboEZn5WEdB5MNQP7ReNtF2yliG1GNpo26i8V5X/7IE1qPnaeGCEyiGtQ6b4EnJfMn
-         qrZskt6pBIQRtf0ycfb0HiSIMfO9lQ+VM0p/wi8bGm9/oswG42Hgklz+aiVT7/81lqQP
-         XDUA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=t8XM8YQCdnrLqQjmIyPCS1pWQ5VZ3HXbW2LziRHl1vs=;
-        b=WNWpYeqaEl+TokG4dBAlZu1zB8D6ncD1WQRh4qyg0mnc60vTbvv4b7RSv0YGAZLRUB
-         TWZi2BzhNTYDT539uw4+sLkQPfKn6krPcIpVz8GFfvq67bl5tgPO6kvRu9Q/25QPT4NX
-         OZefBh/eoXZFW+b+UA/GH+aGSj8LCzc48g0olK7nHky322k4qS/eJ39RGqwPMw5QzbVg
-         1s6AagJDZAi1zFUbPeRGpxmwgJ5s2V7Klg9s2bLZ/dMthX03fn8BwZA48FFnlIocB6nm
-         9flPX5cbij4Kn01YxPiQylN37/IDrSLpcyDCG4cHeUD2PZbGJ3ClAvAteoEwM5wgcm0y
-         pm4g==
-X-Gm-Message-State: AOAM533r9mrVsfnqAoylOoWBR1tINd3b5KSVKLNGe6AKAwCEuzd0F4Lh
-        Fyhb9lvEiN7zSMKR+iHs/D0Qn9HPUTs=
-X-Google-Smtp-Source: ABdhPJy8Ovc8oU3X4U9kL7+78QiRAmLbHyZwiQjIlu9wftg3u56zQFLHxcB0YPyn0Qt2w32Y0kjsmw==
-X-Received: by 2002:a05:6512:2620:: with SMTP id bt32mr19282799lfb.311.1643736993869;
-        Tue, 01 Feb 2022 09:36:33 -0800 (PST)
-Received: from [192.168.1.103] ([178.176.74.140])
-        by smtp.gmail.com with ESMTPSA id q12sm2098831lfc.155.2022.02.01.09.36.32
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 01 Feb 2022 09:36:32 -0800 (PST)
-Subject: Re: [PATCH] dt-bindings: ata: convert ata/cortina,gemini-sata-bridge
- to yaml
+        id S236726AbiBAUEQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 1 Feb 2022 15:04:16 -0500
+Received: from mxout04.lancloud.ru ([45.84.86.114]:33258 "EHLO
+        mxout04.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235475AbiBAUEI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 1 Feb 2022 15:04:08 -0500
+Received: from LanCloud
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout04.lancloud.ru 612D620A8FA5
+Received: from LanCloud
+Received: from LanCloud
+Received: from LanCloud
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Subject: [PATCH] libata: kill ata_acpi_on_suspend()
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Corentin Labbe <clabbe@baylibre.com>
-Cc:     robh+dt@kernel.org, devicetree@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20220129204004.1009571-1-clabbe@baylibre.com>
- <CACRpkdb9R-BwdVzyeaQOjagsQU=2-06VNqKPG9fMa7C93eDC7A@mail.gmail.com>
- <2b0fa854-16e7-3d0b-a04a-971249646fab@opensource.wdc.com>
-From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Message-ID: <bc80cd49-c95e-6b9a-1210-7d3832766b02@gmail.com>
-Date:   Tue, 1 Feb 2022 20:36:31 +0300
+        <linux-ide@vger.kernel.org>
+Organization: Open Mobile Platform
+Message-ID: <6641085e-0459-fb1d-a8f1-c928e15ccc91@omp.ru>
+Date:   Tue, 1 Feb 2022 23:04:05 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.1
 MIME-Version: 1.0
-In-Reply-To: <2b0fa854-16e7-3d0b-a04a-971249646fab@opensource.wdc.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [192.168.11.198]
+X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
+ LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 1/31/22 2:56 AM, Damien Le Moal wrote:
+Since the commit c05e6ff035c1b25d17364a685432 ("libata-acpi: implement
+and use ata_acpi_init_gtm()") ata_acpi_on_suspend() just returns 0, so
+its call from ata_eh_handle_port_suspend() doesn't make sense anymore.
+Remove the function completely, at last...
 
->> Thanks for doing this Corentin!
->>
->> On Sat, Jan 29, 2022 at 9:40 PM Corentin Labbe <clabbe@baylibre.com> wrote:
->>
->>> This patch converts ata/cortina,gemini-sata-bridge binding to yaml
->>>
->>> Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
->>
->> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
->>
->> Knowing that drivers/ata is a bit sparsely maintained I suggest that Rob apply
->> this patch when he feels it looks good.
-> 
-> What do you mean ? I am doing my best here to maintain ata !
-> But I definitely do not have all the hardware supported for testing :)
+Found by Linux Verification Center (linuxtesting.org) with the SVACE static
+analysis tool.
 
-   I can probably help reviewing the PATA drivers if you want, just like Bart Z. did.
-But I don't have much of the PATA hardware (what I have is in my old PCs I haven't
-booted in a long while)...
+Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-[...]
+---
+This patch is against the 'for-next' branch of Damien Le Moal's 'libata.git'
+repo.
 
-MBR, Sergey
+ drivers/ata/libata-acpi.c |   21 ---------------------
+ drivers/ata/libata-eh.c   |    7 +------
+ 2 files changed, 1 insertion(+), 27 deletions(-)
+
+Index: libata/drivers/ata/libata-acpi.c
+===================================================================
+--- libata.orig/drivers/ata/libata-acpi.c
++++ libata/drivers/ata/libata-acpi.c
+@@ -800,27 +800,6 @@ static int ata_acpi_push_id(struct ata_d
+ }
+ 
+ /**
+- * ata_acpi_on_suspend - ATA ACPI hook called on suspend
+- * @ap: target ATA port
+- *
+- * This function is called when @ap is about to be suspended.  All
+- * devices are already put to sleep but the port_suspend() callback
+- * hasn't been executed yet.  Error return from this function aborts
+- * suspend.
+- *
+- * LOCKING:
+- * EH context.
+- *
+- * RETURNS:
+- * 0 on success, -errno on failure.
+- */
+-int ata_acpi_on_suspend(struct ata_port *ap)
+-{
+-	/* nada */
+-	return 0;
+-}
+-
+-/**
+  * ata_acpi_on_resume - ATA ACPI hook called on resume
+  * @ap: target ATA port
+  *
+Index: libata/drivers/ata/libata-eh.c
+===================================================================
+--- libata.orig/drivers/ata/libata-eh.c
++++ libata/drivers/ata/libata-eh.c
+@@ -3902,11 +3902,6 @@ static void ata_eh_handle_port_suspend(s
+ 		}
+ 	}
+ 
+-	/* tell ACPI we're suspending */
+-	rc = ata_acpi_on_suspend(ap);
+-	if (rc)
+-		goto out;
+-
+ 	/* suspend */
+ 	ata_eh_freeze_port(ap);
+ 
+@@ -3914,7 +3909,7 @@ static void ata_eh_handle_port_suspend(s
+ 		rc = ap->ops->port_suspend(ap, ap->pm_mesg);
+ 
+ 	ata_acpi_set_state(ap, ap->pm_mesg);
+- out:
++
+ 	/* update the flags */
+ 	spin_lock_irqsave(ap->lock, flags);
+ 
