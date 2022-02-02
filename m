@@ -2,43 +2,41 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99957C433F5
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Feb 2022 13:09:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBE2BC433EF
+	for <linux-ide@archiver.kernel.org>; Wed,  2 Feb 2022 13:12:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235193AbiBBNJZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 2 Feb 2022 08:09:25 -0500
-Received: from mail.acc.umu.se ([130.239.18.156]:50847 "EHLO mail.acc.umu.se"
+        id S235630AbiBBNM1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 2 Feb 2022 08:12:27 -0500
+Received: from mail.acc.umu.se ([130.239.18.156]:33451 "EHLO mail.acc.umu.se"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229706AbiBBNJY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 2 Feb 2022 08:09:24 -0500
+        id S229706AbiBBNMZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 2 Feb 2022 08:12:25 -0500
 Received: from localhost (localhost.localdomain [127.0.0.1])
-        by amavisd-new (Postfix) with ESMTP id DB96144B90;
-        Wed,  2 Feb 2022 14:09:22 +0100 (CET)
+        by amavisd-new (Postfix) with ESMTP id 783EA44B90;
+        Wed,  2 Feb 2022 14:12:24 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=acc.umu.se; s=mail1;
-        t=1643807362; bh=xl2WoqJCh9hQjHCqarTU8pNCMigoLz5MQJbbFbWS46E=;
+        t=1643807544; bh=QL6UvS/QjjE8M4+dEWR4NS/jhXWfvAVtTJujher8n7I=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=yK9GYzZ5Z61XAkfva2xSUSLnQcAVYRY5KlJr/7iuuH2eR2BiXLQyjQVSJKX+Qbowg
-         uhDAMyFQUSbPx59T3EswJinihYdntzC47PG+tVN5flG5ZVWG+IH6RPlg8kFHQSOPYx
-         Gwp8l6tEJEkNBi2EeJfRDlDTuq67HaY/pxhFYJ+Rv1hN9DrkxYOx7188sybWWSklFs
-         7NO2QOvR++jLgw3yC1ERsczal6It8J0xSYfs+PmaQ4/WutpZFXWsCKMMtzmQApCfIZ
-         qjpSSgzKGZEmUDIvYVq0qEsIzUn3Qg0va0xtbij2kUt8q9xSeMpXlryNImpb3EUlcC
-         CpGvct2YkQphw==
+        b=yx1PzOuebjjeRKigZSCX63giPs4fuy8+MxIdwueYbtXwrvhzR+YEUdREPyIbDB7AF
+         rdm56+coI4ew0Nf3yTpJIkjJvJj8gXMBz25raA6Vu3Hp34mVOI+J1u5er9xQDn5wRe
+         m8DJiYAJo3PLvD0SP2M4FI3n90MFN2Xyyr5/jtz4xk3/TxIBUqI72/PqocBZcUt9t1
+         GfUl1kYwPCcYwHQNTMN945R+5miklmY+6a+AHoYZg13/4fx2b4V1l6yOldl2e4Iacn
+         sSFmEyhOOstbpFGXeErlzEvxUZoNSjgaYHT20Vc+I5xdJ3ytqszXC5HctqvMEIXDFv
+         JakzQVmJiUzkA==
 Received: by mail.acc.umu.se (Postfix, from userid 24471)
-        id 3932E44B92; Wed,  2 Feb 2022 14:09:22 +0100 (CET)
-Date:   Wed, 2 Feb 2022 14:09:21 +0100
+        id 176BF44B92; Wed,  2 Feb 2022 14:12:24 +0100 (CET)
+Date:   Wed, 2 Feb 2022 14:12:23 +0100
 From:   Anton Lundin <glance@acc.umu.se>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     linux-ide@vger.kernel.org
+Cc:     linux-ide@vger.kernel.org, stable@vger.kernel.org
 Subject: Re: [PATCH] libata: Don't issue ATA_LOG_DIRECTORY to SATADOM-ML 3ME
-Message-ID: <20220202130921.GF723116@montezuma.acc.umu.se>
+Message-ID: <20220202131223.GG723116@montezuma.acc.umu.se>
 References: <20220202100536.1909665-1-glance@acc.umu.se>
- <bf9f47f1-08c4-370b-446a-1ae9efdc772a@opensource.wdc.com>
- <20220202122520.GE723116@montezuma.acc.umu.se>
- <b7486a01-2f3f-fc12-82c6-8a6c874793e4@opensource.wdc.com>
+ <68992064-ee43-db10-fdd4-f40a09734ffe@opensource.wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <b7486a01-2f3f-fc12-82c6-8a6c874793e4@opensource.wdc.com>
+In-Reply-To: <68992064-ee43-db10-fdd4-f40a09734ffe@opensource.wdc.com>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
@@ -46,178 +44,57 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 On 02 February, 2022 - Damien Le Moal wrote:
 
-> On 2022/02/02 21:25, Anton Lundin wrote:
-> > On 02 February, 2022 - Damien Le Moal wrote:
+> On 2/2/22 19:05, Anton Lundin wrote:
+> > Back in 06f6c4c6c3e8 ("ata: libata: add missing ata_identify_page_supported() calls")
+> > a read of ATA_LOG_DIRECTORY page was added. This caused the
+> > SATADOM-ML 3ME to lock up.
 > > 
-> >> On 2/2/22 19:05, Anton Lundin wrote:
-> >>> Back in 06f6c4c6c3e8 ("ata: libata: add missing ata_identify_page_supported() calls")
-> >>> a read of ATA_LOG_DIRECTORY page was added. This caused the
-> >>> SATADOM-ML 3ME to lock up.
-> >>>
-> >>> In 636f6e2af4fb ("libata: add horkage for missing Identify Device log")
-> >>> a flag was added to cache if a device supports this or not.
-> >>>
-> >>> This adds a blacklist entry which flags that these devices doesn't
-> >>> support that call and shouldn't be issued that call.
-> >>>
-> >>> Cc: stable@vger.kernel.org # v5.10+
-> >>> Signed-off-by: Anton Lundin <glance@acc.umu.se>
-> >>> Depends-on: 636f6e2af4fb ("libata: add horkage for missing Identify Device log")
-> >>
-> >> I do not think so. See below.
-> >>
-> >>> ---
-> >>>  drivers/ata/libata-core.c | 7 +++++++
-> >>>  1 file changed, 7 insertions(+)
-> >>>
-> >>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> >>> index 87d36b29ca5f..e024af9f33d0 100644
-> >>> --- a/drivers/ata/libata-core.c
-> >>> +++ b/drivers/ata/libata-core.c
-> >>> @@ -4070,6 +4070,13 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
-> >>>  	{ "WDC WD3000JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
-> >>>  	{ "WDC WD3200JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
-> >>>  
-> >>> +	/*
-> >>> +	 * This sata dom goes on a walkabout when it sees the
-> >>> +	 * ATA_LOG_DIRECTORY read request so ensure we don't issue such a
-> >>> +	 * request to these devices.
-> >>> +	 */
-> >>> +	{ "SATADOM-ML 3ME",		NULL,	ATA_HORKAGE_NO_ID_DEV_LOG },
-> >>
-> >> This flag only disables trying to access the identify device log page,
-> >> it does *not* avoid access to the log directory log page in general. The
-> >> log directory will still be consulted for other log pages beside the
-> >> identify device log page, from any function that calls
-> >> ata_log_supported() (e.g. ata_dev_config_ncq_send_recv() and
-> >> ata_dev_config_ncq_non_data())
+> > In 636f6e2af4fb ("libata: add horkage for missing Identify Device log")
+> > a flag was added to cache if a device supports this or not.
 > > 
-> > Non of those code paths are called for this device, probably due to some
-> > other flag disqualifying them.
+> > This adds a blacklist entry which flags that these devices doesn't
+> > support that call and shouldn't be issued that call.
+> > 
+> > Cc: stable@vger.kernel.org # v5.10+
+> > Signed-off-by: Anton Lundin <glance@acc.umu.se>
+> > Depends-on: 636f6e2af4fb ("libata: add horkage for missing Identify Device log")
+> > ---
+> >  drivers/ata/libata-core.c | 7 +++++++
+> >  1 file changed, 7 insertions(+)
+> > 
+> > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> > index 87d36b29ca5f..e024af9f33d0 100644
+> > --- a/drivers/ata/libata-core.c
+> > +++ b/drivers/ata/libata-core.c
+> > @@ -4070,6 +4070,13 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+> >  	{ "WDC WD3000JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
+> >  	{ "WDC WD3200JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
 > >  
-> >> So it will be a lot more solid to define a ATA_HORKAGE_NO_LOG_DIR flag
-> >> and test for it in ata_log_supported(), completely preventing any access
-> >> to the log directory page for this drive type.
-> > 
-> > That was my first thought but then I found ATA_HORKAGE_NO_ID_DEV_LOG
-> > which was in the calling path that actually triggered this issue.
-> > 
-> > But, yes, I totally agree that's a more solid solution preventing this
-> > kind of issue to crop up again.
-> > 
-> >>> +
-> >>>  	/* End Marker */
-> >>>  	{ }
-> >>>  };
-> >>
-> >> Note: if you need this fix sent to linux-stable, add "Cc: stable@..."
-> >> and a Fixes tag.
-> > 
-> > I'd think it's fitting to send it to linux-stable, because it prevents
-> > those DOM's from working in v5.15.5+.
-> > 
-> > Ok. I must have missed that part when I read submitting-patches doc.
-> > 
-> > I'll rework and re-submit the patch.
+> > +	/*
+> > +	 * This sata dom goes on a walkabout when it sees the
+> > +	 * ATA_LOG_DIRECTORY read request so ensure we don't issue such a
+> > +	 * request to these devices.
+> > +	 */
+> > +	{ "SATADOM-ML 3ME",		NULL,	ATA_HORKAGE_NO_ID_DEV_LOG },
+> > +
+> >  	/* End Marker */
+> >  	{ }
+> >  };
 > 
-> I sent you a draft patch. Please try it.
-
-Works like a charm.
-
-> Also, to confirm if the log directory log page is indeed the page that locks up
-> the drive, can you try this command:
+> Can you try the attached patch ?
 > 
-> sg_sat_read_gplog --dma --log=0 --page=0 --readonly
-
-# sg_sat_read_gplog --dma --log=0 --page=0 --readonly /dev/sda
-ATA PASS-THROUGH (16), bad field in cdb
-sg_sat_read_gplog failed: Illegal request
-
-> and
-> 
-> sg_sat_read_gplog --log=0 --page=0 --readonly
-
-# sg_sat_read_gplog --log=0 --page=0 --readonly /dev/sda
- 00     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- 08     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- 10     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- 18     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- 20     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- 28     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- 30     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- 38     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- 40     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- 48     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- 50     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- 58     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- 60     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- 68     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- 70     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- 78     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- 80     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- 88     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- 90     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- 98     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- a0     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- a8     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- b0     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- b8     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- c0     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- c8     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- d0     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- d8     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- e0     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- e8     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- f0     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
- f8     0000 0000 0000 0000 0000 0000 0000 0000     .. .. .. .. .. .. .. .. 
-
-Mind you, this with a patched kernel, if that affects anything.
+> I think it is important to confirm if the lockup on your drive happens
+> due to reads of the log directory log page or due to reads of the
+> identify device log page. The attached patch prevents the former, your
+> patch prevents the latter. If your patch is all that is needed, then it
+> is good, modulo some rephrasing of the commit message and comments.
  
-> Beware that if the log drectory is the problem, this will lockup your drive !
-> If that is OK and works, then please try:
-> 
-> sg_sat_read_gplog --dma --log=48 --page=0 --readonly
+This patch also fixes the issue with these devices. From what I've
+previously concluded is that nothing else requests the log directory log
+page on these devices.
 
-# sg_sat_read_gplog --dma --log=48 --page=0 --readonly /dev/sda
-ATA PASS-THROUGH (16), bad field in cdb
-sg_sat_read_gplog failed: Illegal request
-
-> and
-> 
-> sg_sat_read_gplog --log=48 --page=0 --readonly
-
-sg_sat_read_gplog --log=48 --page=0 --readonly /dev/sda
-ATA PASS-THROUGH (16), bad field in cdb
-sg_sat_read_gplog failed: Illegal request
- 
-> log=48 (0x30) is the identify device log page. log=0 is the log directory log page.
- 
-So, does this means that it might be where in the init of the device the
-directory log page is accessed that causes the device to fault?
-
-A snippet from a failed boot before the patch looks like:
-ata1.00: qc timeout (cmd 0x2f)
-ata1.00: Read log 0x00 page 0x00 failed, Emask 0x4
-ata1.00: ATA Identify Device Log not supported
-ata1.00: failed to set xfermode (err_mask=0x40)
-ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-ata1.00: failed to IDENTIFY (INIT_DEV_PARAMS failed, err_mask=0x80)
-ata1.00: revalidation failed (errno=-5)
-ata1: limiting SATA link speed to 3.0 Gbps
-ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-ata1.00: qc timeout (cmd 0x2f)
-ata1.00: Read log 0x00 page 0x00 failed, Emask 0x4
-ata1.00: ATA Identify Device Log not supported
-ata1.00: failed to set xfermode (err_mask=0x40)
-ata1.00: disabled
-ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-
-
-When I messed around trying to figure out what the fault was I saw a
-couple of different Emask, 0x4, 0x40 and 0x80.
-
-I also blindly played around with adding a ata_msleep(ap, 500); after
-the failed attempt to access the log directory log page, but that didn't
-help.
 
 //Anton
+
+-- 
+Anton Lundin	+46702-161604
