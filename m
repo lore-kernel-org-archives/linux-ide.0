@@ -2,59 +2,78 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19D69C433EF
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Feb 2022 09:49:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AE0CC433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  2 Feb 2022 10:05:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245565AbiBBJtk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 2 Feb 2022 04:49:40 -0500
-Received: from mail.trueanalyze24.com ([149.154.157.156]:56844 "EHLO
-        mail.trueanalyze24.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241189AbiBBJtk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Feb 2022 04:49:40 -0500
-Received: by mail.trueanalyze24.com (Postfix, from userid 1001)
-        id D4CCA43743; Wed,  2 Feb 2022 10:30:26 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=trueanalyze24.com;
-        s=mail; t=1643795375;
-        bh=EGenFkmmv/iHCwB4AbTzX8IXCMu1xRW+9eep7HJGZMM=;
-        h=Date:From:To:Subject:From;
-        b=woLIVhBXDl8JkfCR7fMlVvuCxH2RMiuIEwLI3rEiXONoaqF9UvU7dKVByka+22TIN
-         c34TAKG1hpUaEkpVo5OMM/ny6By1D/eFnWQhJuzKXEb//0EnL3se9aj6YPzxKUp+hh
-         TVExttPxAEgf1jvIPEPTKWIlYEG8qGMd7CnYzGoHc/X4EHosGfcpuFo2ea+zWkGXzd
-         6o4UcF2zFVdzNufjd0gc0pES2b49GGFBBcmd2lgOd9E0xS7kwiEJubxsxf357wz4Kc
-         p+fGTOXmf+iCAOrwHYOz7tZi1QbSGosDjhGxZz0mFa4i4IiXxFp3yA1lr0KQ4ZniNk
-         XT1m9YjVtcOpg==
-Received: by mail.trueanalyze24.com for <linux-ide@vger.kernel.org>; Wed,  2 Feb 2022 09:28:42 GMT
-Message-ID: <20220202084511-0.1.1h.h5nw.0.gnvad9q61d@trueanalyze24.com>
-Date:   Wed,  2 Feb 2022 09:28:42 GMT
-From:   "Mateusz Talaga" <mateusz.talaga@trueanalyze24.com>
-To:     <linux-ide@vger.kernel.org>
-Subject: Prezentacja
-X-Mailer: mail.trueanalyze24.com
+        id S245719AbiBBKFs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 2 Feb 2022 05:05:48 -0500
+Received: from mail.acc.umu.se ([130.239.18.156]:44488 "EHLO mail.acc.umu.se"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S245712AbiBBKFo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 2 Feb 2022 05:05:44 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by amavisd-new (Postfix) with ESMTP id EB3D644B90;
+        Wed,  2 Feb 2022 11:05:41 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=acc.umu.se; s=mail1;
+        t=1643796341; bh=VR855Mb+4xjFEI82EM+qCO2fkELbxbvKwY6+wNTtvuc=;
+        h=From:To:Cc:Subject:Date:From;
+        b=wwkjIrQwvDGw9W5G7teXaD3zTH7hLX43BZOFk6aQ8yLnwtadsYrMUtvT3O9KfnZCx
+         uePqfakNSvlUoEUgUMlCOjVMeZDeSw3TvHXnevLxKXIXXOYAzvJffyDGbSw31i6mMS
+         ZWoCVF8ddq9tPhxMLO4+V+hQUlrkagRkXead/GHKSs8YBalb2/i+uFz2c5javdx3LM
+         7Wukx2zFgczywhCyU18jBubZ2SZqULG4uyJYaODZD5TBp2UyV8xK8DnN5I8X5eoX6E
+         +8t8Y7/U+2wIEBNgO7K/GCnG+Oi2+WTuuna4EePbzkc83F7bENAR+ZEbYSBwcSvGwU
+         WktKmD2fE8UYQ==
+Received: by mail.acc.umu.se (Postfix, from userid 24471)
+        id 78C8544B92; Wed,  2 Feb 2022 11:05:41 +0100 (CET)
+From:   Anton Lundin <glance@acc.umu.se>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org
+Cc:     Anton Lundin <glance@acc.umu.se>, stable@vger.kernel.org
+Subject: [PATCH] libata: Don't issue ATA_LOG_DIRECTORY to SATADOM-ML 3ME
+Date:   Wed,  2 Feb 2022 11:05:36 +0100
+Message-Id: <20220202100536.1909665-1-glance@acc.umu.se>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry!
+Back in 06f6c4c6c3e8 ("ata: libata: add missing ata_identify_page_supported() calls")
+a read of ATA_LOG_DIRECTORY page was added. This caused the
+SATADOM-ML 3ME to lock up.
 
-Czy m=C3=B3g=C5=82bym przedstawi=C4=87 rozwi=C4=85zanie, kt=C3=B3re umo=C5=
-=BCliwia monitoring ka=C5=BCdego auta w czasie rzeczywistym w tym jego po=
-zycj=C4=99, zu=C5=BCycie paliwa i przebieg?
+In 636f6e2af4fb ("libata: add horkage for missing Identify Device log")
+a flag was added to cache if a device supports this or not.
 
-Dodatkowo nasze narz=C4=99dzie minimalizuje koszty utrzymania samochod=C3=
-=B3w, skraca czas przejazd=C3=B3w, a tak=C5=BCe tworzenie planu tras czy =
-dostaw.
+This adds a blacklist entry which flags that these devices doesn't
+support that call and shouldn't be issued that call.
 
-Z naszej wiedzy i do=C5=9Bwiadczenia korzysta ju=C5=BC ponad 49 tys. Klie=
-nt=C3=B3w. Monitorujemy 809 000 pojazd=C3=B3w na ca=C5=82ym =C5=9Bwiecie,=
- co jest nasz=C4=85 najlepsz=C4=85 wizyt=C3=B3wk=C4=85.
+Cc: stable@vger.kernel.org # v5.10+
+Signed-off-by: Anton Lundin <glance@acc.umu.se>
+Depends-on: 636f6e2af4fb ("libata: add horkage for missing Identify Device log")
+---
+ drivers/ata/libata-core.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Bardzo prosz=C4=99 o e-maila zwrotnego, je=C5=9Bli mogliby=C5=9Bmy wsp=C3=
-=B3lnie om=C3=B3wi=C4=87 potencja=C5=82 wykorzystania takiego rozwi=C4=85=
-zania w Pa=C5=84stwa firmie.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 87d36b29ca5f..e024af9f33d0 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4070,6 +4070,13 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "WDC WD3000JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
+ 	{ "WDC WD3200JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
+ 
++	/*
++	 * This sata dom goes on a walkabout when it sees the
++	 * ATA_LOG_DIRECTORY read request so ensure we don't issue such a
++	 * request to these devices.
++	 */
++	{ "SATADOM-ML 3ME",		NULL,	ATA_HORKAGE_NO_ID_DEV_LOG },
++
+ 	/* End Marker */
+ 	{ }
+ };
+-- 
+2.30.2
 
-
-Z powa=C5=BCaniem,
-Mateusz Talaga
