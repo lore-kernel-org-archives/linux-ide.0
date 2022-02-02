@@ -2,50 +2,50 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15E0CC433EF
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Feb 2022 08:08:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27CA2C433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  2 Feb 2022 08:14:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237918AbiBBIIL (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 2 Feb 2022 03:08:11 -0500
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:47605 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239881AbiBBIII (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Feb 2022 03:08:08 -0500
+        id S239705AbiBBIOY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 2 Feb 2022 03:14:24 -0500
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:64022 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231230AbiBBIOX (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Feb 2022 03:14:23 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1643789288; x=1675325288;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=L4c2he6lgl6k+wvhc9k2+V0VddjuZ/Y234PV0+WoJAg=;
-  b=hi37nXO4TJ4eclpmGE20e2Fwk2+1Y+30g8bR/nIXVTx79bdIZp5s2ZrS
-   AS1qtpF6y5ltfUStm5VP7r1nuw8Ag+7cDyx4d4jzpvRCXYwWWuKcswLEq
-   HfVihOWFStjDDBfXTz7B1LBvWFc+1hyetekqu6wyI88UsZcYrIsNOF0Dp
-   YGedIMA+zZjqUPQX8kbaAPyh7d9zqGlxQ3enE/9dbYl171ezd3AQ5R1OK
-   gjtIP3PHAh+YXs4sfqEMKH+rPbQbWKyWnTLlQVp52IVZxg/CBVtqpGITC
-   Hp/U7umV0wXfp3lrWFoZIMJu0ykJwoUA5Y3x2wdSuCNFq78s1276zP1bI
-   w==;
+  t=1643789662; x=1675325662;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=vSETh49OX7xj5hAtW3QKd1iO/5P1xFYjPHj+NFETVXw=;
+  b=jq6CK+WFJFyr0Cd9QzOpOCxCle/9UeaiZOClxBE8Yrt8vATKeCp/NOKm
+   xSfsjeaR3HJoAZ95YajmKisdFONDCr2QQwKPMpUv90A0KvLUT6h8tibU2
+   nLs4qc8/UeX8cBQvLjsZfwZ+KtoJpM7plea9HFTM0kXvs/e38luWbUmyx
+   3vOmcgO99NiiHBxNWfDJsvm3gOsLIvXZsQeIwc+DfEbqenvgeiYVzsZQv
+   xji9tgOAW7iXigh6n4JbKd/J8Htwauhpgm1ClRHW61zb58yxXbPgOHwGw
+   urQY4LjbISta+g4yXY6lqKEW3+wgQPmqFY6dzm1tn2wLV+ixjdJffrvYn
+   A==;
 X-IronPort-AV: E=Sophos;i="5.88,336,1635177600"; 
-   d="scan'208";a="296042205"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 02 Feb 2022 16:08:08 +0800
-IronPort-SDR: SJwqkXeHbERRJt+msPoUcjt+dxvSP9kmIVuV/FL8qsRjt7i5omkYwe8iGsmy7UyszGtoN6WD7p
- nkMkTrz7yPXAZjk/fch+t9gaUCLMTw/ehzKxo6KB4xmBvxSx28aarW9I0SC6fFJsIldKzRSCds
- 7pfX3KN1hbt4LnfCSwRlSCGEpPy199k5x1cp2e78UM/qMHWgk8NdBH8taZ1/7hNNXWLXT+90SX
- LCs8CRir3wzMKcskPr/wdLDfXqyZ2ZQo/ckOxeDAVqZWN8GPiVaGx0ZBkgcVivic2HtFDMVfuD
- VkLCzzU48W7RPY0jXxOM98f4
+   d="scan'208";a="196763867"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 02 Feb 2022 16:14:22 +0800
+IronPort-SDR: g6Y6oTNCXlIwr6Q0eVNCWcPK7c9S7C075sU0dMNuDCFAHNLNsTzGH6SlnLVSjRV6fwEzuQWGUG
+ qjszlYo38FoZ2h5s4+IrDDG7Is2HwmRMXQpg7t2Z3frHPf/V+EqeIcVtmqKHRGHueUcEME1moN
+ upXTDaA/JPN9du2cwYTl2UwpustXyvb1oxEWtcsgeU3SCA8WbYhocZ7UGem1szASK5W/CZkBqu
+ gxla9O+R/xSQ8yH1lpkA7KqmXdPgxhZNw5LGLJlqmzX4h8JUpt1dxYbVo5EZcIS3509+IxpNr1
+ NLPEHiaRW78TsVDuTcVQfTk9
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Feb 2022 23:40:05 -0800
-IronPort-SDR: u7J1yru94p5S5TQn4vo3qIVK6uJl79q3yacbny9nUrlIlF1YWVTEWbKODich2LSdZmuvFn1F60
- SX90H0gIVizELti8znIOg1Ab5dh/oftRSOuHCLxzen/i5jLZBadzNhqANtx7gRgReF2ObmE+g/
- BfmfjNGRlcJ+/Kdk/xu+SdxG6v3PTTnISQE4p0GO2faUUnP3ACQvTMPHrQNJw3GeFmirNAdLQN
- OsXSha8NAdiC3f6C+yZt9tXtCAv2ms27gkPpg7qxwTi4rLVTRpTV6OarDtqKJZo2B4yIuXe+jq
- LS0=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Feb 2022 23:47:32 -0800
+IronPort-SDR: nQnlsKVwIJdaaCVJ5wHwwEZ2yJu7rzLFQHkvXP6s8PaaEhdIxGay/wyc7UdoEHRCIyh1wsIbbh
+ b4ZXCNEtwRV9KyTAO96G80L7imSRU6ht0YuPBg/ZcTfFd+roJiwDtSAuNFjmRND+C8Pk9JMql/
+ b/pVqy9yVCM2twvOs5THgcRODIgDrM2CFFm8dWCs2/p+dqFW+H2BmOJkmosv46z/HVFjHISeAt
+ h+x0pbURVjDW98KZq17xW8ekUUoUT3NfI0zEXjxzAyhHUFcuetTrlE42Bk8OG7r6dqUcvKT8Cm
+ r88=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Feb 2022 00:08:08 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Feb 2022 00:14:23 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JpZDS1p0jz1SHwl
-        for <linux-ide@vger.kernel.org>; Wed,  2 Feb 2022 00:08:08 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JpZMf5r17z1SHwl
+        for <linux-ide@vger.kernel.org>; Wed,  2 Feb 2022 00:14:22 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -53,69 +53,147 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1643789287; x=1646381288; bh=L4c2he6lgl6k+wvhc9k2+V0VddjuZ/Y234P
-        V0+WoJAg=; b=YVvBIibsyoKIpi8uLXg9gr7NmlwBSxu/K/Cw7Ho9QmKjjrGrciC
-        VW+Sy5NeCnuLZqBMihgpZPzTpcN2g5vi+NJuWrZ4O6vvCAlLGRMhDmYKmfQtz0hg
-        FtyUrvMlRSH+J4QbvFQ/W5vBi4fCd8nXIj6ZjrcgoTILCYxBET9gy476hC+6VQIh
-        sxDI4xmnfl6DIZrf8Le91OPM3ozBZbk1cbvfRXxPW1XDbSts4JV/w0xflpAOMQOk
-        9kP+JRXzk/pLm3DHh7CzBv33UYnvqU02hQvf9a+TbX5TeE3cjSkAKPL1M68YjigW
-        kHhU38ePXEItOM1vOI8iZ/vLgZluPz2oefw==
+        1643789662; x=1646381663; bh=vSETh49OX7xj5hAtW3QKd1iO/5P1xFYjPHj
+        +NFETVXw=; b=ACJs15QDEwXJNVvHkp+cgX2gNOuqTvYL6dS9FzHX/8T81b/6RwJ
+        5aWy5y6XeIXTcv+a66FwNOgyAbEG0rJLAKhmfWes+CcV+M/EtjP4BkTMRRLaltKD
+        lUi3xT0Sl/XRRdgADUsrmbSQk5DJjP73MmLCLJHfoO4aHzFJPE+lYMAIBXNsaoLh
+        BazYdVW3lVeByzfdVS0axR4wcK9t7eFWXi6ew4KytzDTG1rWdwOlTs/f0E8atBLY
+        cB7nfhwgbBv12UbOnQYjY/LgVv3nV4Y9j8aJMhkY/jdcakMGcEy6rbKUM8aPM47/
+        319oYvobQVEEAV4YvGgG1zGhKIulhOhSNwA==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id QBoQDazLME0X for <linux-ide@vger.kernel.org>;
-        Wed,  2 Feb 2022 00:08:07 -0800 (PST)
+        with ESMTP id QpLOUnjEEfI1 for <linux-ide@vger.kernel.org>;
+        Wed,  2 Feb 2022 00:14:22 -0800 (PST)
 Received: from [10.225.163.62] (unknown [10.225.163.62])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JpZDR3t7hz1RvlN;
-        Wed,  2 Feb 2022 00:08:07 -0800 (PST)
-Message-ID: <0e44d66e-6981-a243-fffb-54aab28a7d31@opensource.wdc.com>
-Date:   Wed, 2 Feb 2022 17:08:06 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JpZMd6Js8z1RvlN;
+        Wed,  2 Feb 2022 00:14:21 -0800 (PST)
+Message-ID: <3437ffcb-68b5-04e5-acd5-b3857fbf1be7@opensource.wdc.com>
+Date:   Wed, 2 Feb 2022 17:14:20 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.0
-Subject: Re: [PATCH v2] libata: kill ata_acpi_on_suspend()
+Subject: Re: [PATCH v3] ata: ahci: Skip 200 ms debounce delay for Marvell
+ 88SE9235
 Content-Language: en-US
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-References: <75f6ca58-3fac-9919-d7ae-39e7730e045a@omp.ru>
+To:     Paul Menzel <pmenzel@molgen.mpg.de>
+Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220201071229.6418-1-pmenzel@molgen.mpg.de>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <75f6ca58-3fac-9919-d7ae-39e7730e045a@omp.ru>
+In-Reply-To: <20220201071229.6418-1-pmenzel@molgen.mpg.de>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/2/22 05:50, Sergey Shtylyov wrote:
-> Since the commit c05e6ff035c1b25d17364a685432 ("libata-acpi: implement
-> and use ata_acpi_init_gtm()") ata_acpi_on_suspend() just returns 0, so
-> its call from ata_eh_handle_port_suspend() doesn't make sense anymore.
-> Remove the function completely, at last...
-> 
-> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
-> analysis tool.
-> 
-> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-> 
+On 2/1/22 16:12, Paul Menzel wrote:
+> The 200 ms delay before debouncing the PHY in `sata_link_resume()` is
+> not needed for the Marvell 88SE9235.
+>=20
+>     $ lspci -nn -s 0021:0e:00.0
+>     0021:0e:00.0 SATA controller [0106]: Marvell Technology Group Ltd. =
+88SE9235 PCIe 2.0 x2 4-port SATA 6 Gb/s Controller [1b4b:9235] (rev 11)
+>=20
+> So, remove it. Tested on IBM S822LC with current Linux 5.17-rc1:
+>=20
+> Currently, without this patch (with 200 ms delay), device probe for ata=
+1
+> takes 485 ms:
+>=20
+>     [    3.358158] ata1: SATA max UDMA/133 abar m2048@0x3fe881000000 po=
+rt 0x3fe881000100 irq 39
+>     [    3.358175] ata2: SATA max UDMA/133 abar m2048@0x3fe881000000 po=
+rt 0x3fe881000180 irq 39
+>     [    3.358191] ata3: SATA max UDMA/133 abar m2048@0x3fe881000000 po=
+rt 0x3fe881000200 irq 39
+>     [    3.358207] ata4: SATA max UDMA/133 abar m2048@0x3fe881000000 po=
+rt 0x3fe881000280 irq 39
+>     [=E2=80=A6]
+>     [    3.677542] ata3: SATA link down (SStatus 0 SControl 300)
+>     [    3.677719] ata4: SATA link down (SStatus 0 SControl 300)
+>     [    3.839242] ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 30=
+0)
+>     [    3.839828] ata2.00: ATA-10: ST1000NX0313         00LY266 00LY26=
+5IBM, BE33, max UDMA/133
+>     [    3.840029] ata2.00: 1953525168 sectors, multi 0: LBA48 NCQ (dep=
+th 32), AA
+>     [    3.841796] ata2.00: configured for UDMA/133
+>     [    3.843231] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 30=
+0)
+>     [    3.844083] ata1.00: ATA-10: ST1000NX0313         00LY266 00LY26=
+5IBM, BE33, max UDMA/133
+>     [    3.844313] ata1.00: 1953525168 sectors, multi 0: LBA48 NCQ (dep=
+th 32), AA
+>     [    3.846043] ata1.00: configured for UDMA/133
+>=20
+> With this patch (no delay) device probe for ata1 takes 273 ms:
+>=20
+>     [    3.624259] ata1: SATA max UDMA/133 abar m2048@0x3fe881000000 po=
+rt 0x3f e881000100 irq 39
+>     [    3.624436] ata2: SATA max UDMA/133 abar m2048@0x3fe881000000 po=
+rt 0x3f e881000180 irq 39
+>     [    3.624452] ata3: SATA max UDMA/133 abar m2048@0x3fe881000000 po=
+rt 0x3f e881000200 irq 39
+>     [    3.624468] ata4: SATA max UDMA/133 abar m2048@0x3fe881000000 po=
+rt 0x3f e881000280 irq 39
+>     [=E2=80=A6]
+>     [    3.731966] ata3: SATA link down (SStatus 0 SControl 300)
+>     [    3.732069] ata4: SATA link down (SStatus 0 SControl 300)
+>     [    3.897448] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 30=
+0)
+>     [    3.897678] ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 30=
+0)
+>     [    3.898140] ata1.00: ATA-10: ST1000NX0313         00LY266 00LY26=
+5IBM, BE33, max UDMA/133
+>     [    3.898175] ata2.00: ATA-10: ST1000NX0313         00LY266 00LY26=
+5IBM, BE33, max UDMA/133
+>     [    3.898287] ata1.00: 1953525168 sectors, multi 0: LBA48 NCQ (dep=
+th 32), AA
+>     [    3.898349] ata2.00: 1953525168 sectors, multi 0: LBA48 NCQ (dep=
+th 32), AA
+>     [    3.900070] ata1.00: configured for UDMA/133
+>     [    3.900166] ata2.00: configured for UDMA/133
+>=20
+> Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
 > ---
-> This patch is against the 'for-next' branch of Damien Le Moal's 'libata.git'
-> repo.
-> 
-> Changes in version 2:
-> - added the 'drivers/ata/libata.h' file update.
-> 
->  drivers/ata/libata-acpi.c |   21 ---------------------
->  drivers/ata/libata-eh.c   |    7 +------
->  drivers/ata/libata.h      |    2 --
->  3 files changed, 1 insertion(+), 29 deletions(-)
+> v2: address comments for commit message (but forgot v2 tag)
+> v3: resend with v3 tag in subject line/commit message summary
+>=20
+>  drivers/ata/ahci.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>=20
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index ab5811ef5a53..edca4e8fd44e 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -582,6 +582,8 @@ static const struct pci_device_id ahci_pci_tbl[] =3D=
+ {
+>  	  .driver_data =3D board_ahci_yes_fbs },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9230),
+>  	  .driver_data =3D board_ahci_yes_fbs },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9235),
+> +	  .driver_data =3D board_ahci_no_debounce_delay },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_TTI, 0x0642), /* highpoint rocketraid 642L=
+ */
+>  	  .driver_data =3D board_ahci_yes_fbs },
+>  	{ PCI_DEVICE(PCI_VENDOR_ID_TTI, 0x0645), /* highpoint rocketraid 644L=
+ */
 
-Applied to for-5.18 with a small change to the patch title:
+Applied to for-5.18 with commit title and message changes. The title is n=
+ow:
 
-ata: libata-ahci: kill ata_acpi_on_suspend()
+ata: ahci: Add support for Marvell 88SE9235 adapter
+
+Since it is exactly what this patch is doing by adding a PCI ID.
+
+The comments about the 200ms debounce delay not being needed is kept as
+a description of how this new adapter support is defined, using the
+board_ahci_no_debounce_delay board definition.
 
 Thanks !
 
-
--- 
+--=20
 Damien Le Moal
 Western Digital Research
