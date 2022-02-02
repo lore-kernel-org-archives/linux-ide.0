@@ -2,104 +2,59 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A663C433F5
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Feb 2022 09:24:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19D69C433EF
+	for <linux-ide@archiver.kernel.org>; Wed,  2 Feb 2022 09:49:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245271AbiBBJY3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 2 Feb 2022 04:24:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56834 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230315AbiBBJY3 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Feb 2022 04:24:29 -0500
-Received: from mail-lj1-x22e.google.com (mail-lj1-x22e.google.com [IPv6:2a00:1450:4864:20::22e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABB27C061714;
-        Wed,  2 Feb 2022 01:24:28 -0800 (PST)
-Received: by mail-lj1-x22e.google.com with SMTP id t9so27924423lji.12;
-        Wed, 02 Feb 2022 01:24:28 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=k7rKG9vK8KAeckLEPJ3xDWbNcURPWfZL8ylGLwhBET4=;
-        b=c61SCeWHdR4QIvDSi9hI9zd0gXzT4pY/4ivMXBib+r+2LbNMWmk1ahE2KAXI3uZjuG
-         Xli6xPBTF9HogWNEKb+aHgOZhADHUjOKv9dc2ZPVABEU401Z5eJiN8I5Blhk7mjutx3O
-         uxEtnrM4mIpGxf+vKoSQ+ThCT0BbqTidm+/oIyqMawcjq2jTJ/r806kKZRyGxl9VFGfA
-         obWB+heoMYvfZUwwffuqJhvEEDOgjBW5tG1bfeofccq3++M1R0u95DebosvNA6UJ9Bqh
-         hYWRTlwDxcKEkL3MQQKr2ODhdTEomo7pgHHH+xs3ZPzFkOJQ/lzCOKh3XbuxDV2Dc7h3
-         dEaQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=k7rKG9vK8KAeckLEPJ3xDWbNcURPWfZL8ylGLwhBET4=;
-        b=cXdp0daq+8HIvfFn0lh7aqX0RMb+zTwSsWdmG7yD0pARX7piWH8v0J+me7wxp6TMnT
-         FZdYxhOyvcBMwWxfz2syLkmnKO8f6umhBoidjmnMmhEqEgz0OW+ENOImFtbi+ysLTaMw
-         4R+30TWlm4ohHmgMjieN+26Qjgf0+RgWXRJWCCEJJgFhcJ6QYQp1ryoeBHMITwezNfro
-         9B822ZQGGwKJDh44NXEXMYbhBn2B6dFsrooSBJhSPNRciiqpgXOlK4ASDUjjJc3+7tWQ
-         gnhd8DMHlC1Gs3/js8zKttjwFGGsBRRM/1JqeeqiP5bZBBx1GVZGhnYOugMYbeOEmmxQ
-         XVWA==
-X-Gm-Message-State: AOAM532ylguP6X2JclxsmPLkPDJlVRwg9CfnQ/SLzC/WzffRiwjjYmEv
-        3sueQxvMMhaBAwVDJq9YYp7oLI79oRw=
-X-Google-Smtp-Source: ABdhPJzOEn6nF9mbFXLIjyrz5p5pQGIfuN2KJkvLL07omtZP0xzY/qGMmjItUuPscJrKnQydwmWtng==
-X-Received: by 2002:a2e:b988:: with SMTP id p8mr9001583ljp.435.1643793866661;
-        Wed, 02 Feb 2022 01:24:26 -0800 (PST)
-Received: from [192.168.1.103] ([178.176.72.208])
-        by smtp.gmail.com with ESMTPSA id f19sm2424170lfa.52.2022.02.02.01.24.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 02 Feb 2022 01:24:26 -0800 (PST)
-Subject: Re: [PATCH] dt-bindings: ata: convert ata/cortina,gemini-sata-bridge
- to yaml
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Corentin Labbe <clabbe@baylibre.com>
-Cc:     robh+dt@kernel.org, devicetree@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20220129204004.1009571-1-clabbe@baylibre.com>
- <CACRpkdb9R-BwdVzyeaQOjagsQU=2-06VNqKPG9fMa7C93eDC7A@mail.gmail.com>
- <2b0fa854-16e7-3d0b-a04a-971249646fab@opensource.wdc.com>
- <bc80cd49-c95e-6b9a-1210-7d3832766b02@gmail.com>
- <5a1d66d3-d3c2-ab77-f874-c3d6b10a0d2b@opensource.wdc.com>
-From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
-Message-ID: <d16a1be7-d856-f6b7-5a1a-9f09f42195ee@gmail.com>
-Date:   Wed, 2 Feb 2022 12:24:24 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        id S245565AbiBBJtk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 2 Feb 2022 04:49:40 -0500
+Received: from mail.trueanalyze24.com ([149.154.157.156]:56844 "EHLO
+        mail.trueanalyze24.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241189AbiBBJtk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Feb 2022 04:49:40 -0500
+Received: by mail.trueanalyze24.com (Postfix, from userid 1001)
+        id D4CCA43743; Wed,  2 Feb 2022 10:30:26 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=trueanalyze24.com;
+        s=mail; t=1643795375;
+        bh=EGenFkmmv/iHCwB4AbTzX8IXCMu1xRW+9eep7HJGZMM=;
+        h=Date:From:To:Subject:From;
+        b=woLIVhBXDl8JkfCR7fMlVvuCxH2RMiuIEwLI3rEiXONoaqF9UvU7dKVByka+22TIN
+         c34TAKG1hpUaEkpVo5OMM/ny6By1D/eFnWQhJuzKXEb//0EnL3se9aj6YPzxKUp+hh
+         TVExttPxAEgf1jvIPEPTKWIlYEG8qGMd7CnYzGoHc/X4EHosGfcpuFo2ea+zWkGXzd
+         6o4UcF2zFVdzNufjd0gc0pES2b49GGFBBcmd2lgOd9E0xS7kwiEJubxsxf357wz4Kc
+         p+fGTOXmf+iCAOrwHYOz7tZi1QbSGosDjhGxZz0mFa4i4IiXxFp3yA1lr0KQ4ZniNk
+         XT1m9YjVtcOpg==
+Received: by mail.trueanalyze24.com for <linux-ide@vger.kernel.org>; Wed,  2 Feb 2022 09:28:42 GMT
+Message-ID: <20220202084511-0.1.1h.h5nw.0.gnvad9q61d@trueanalyze24.com>
+Date:   Wed,  2 Feb 2022 09:28:42 GMT
+From:   "Mateusz Talaga" <mateusz.talaga@trueanalyze24.com>
+To:     <linux-ide@vger.kernel.org>
+Subject: Prezentacja
+X-Mailer: mail.trueanalyze24.com
 MIME-Version: 1.0
-In-Reply-To: <5a1d66d3-d3c2-ab77-f874-c3d6b10a0d2b@opensource.wdc.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/2/22 1:56 AM, Damien Le Moal wrote:
+Dzie=C5=84 dobry!
 
->>>> Thanks for doing this Corentin!
->>>>
->>>> On Sat, Jan 29, 2022 at 9:40 PM Corentin Labbe <clabbe@baylibre.com> wrote:
->>>>
->>>>> This patch converts ata/cortina,gemini-sata-bridge binding to yaml
->>>>>
->>>>> Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
->>>>
->>>> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
->>>>
->>>> Knowing that drivers/ata is a bit sparsely maintained I suggest that Rob apply
->>>> this patch when he feels it looks good.
->>>
->>> What do you mean ? I am doing my best here to maintain ata !
->>> But I definitely do not have all the hardware supported for testing :)
->>
->>    I can probably help reviewing the PATA drivers if you want, just like Bart Z. did.
->> But I don't have much of the PATA hardware (what I have is in my old PCs I haven't
->> booted in a long while)...
-> 
-> More reviews are always welcome ! Thanks !
+Czy m=C3=B3g=C5=82bym przedstawi=C4=87 rozwi=C4=85zanie, kt=C3=B3re umo=C5=
+=BCliwia monitoring ka=C5=BCdego auta w czasie rzeczywistym w tym jego po=
+zycj=C4=99, zu=C5=BCycie paliwa i przebieg?
 
-   How about me submitting an "official" PATA reviewer entry in MAINTAINERS?
+Dodatkowo nasze narz=C4=99dzie minimalizuje koszty utrzymania samochod=C3=
+=B3w, skraca czas przejazd=C3=B3w, a tak=C5=BCe tworzenie planu tras czy =
+dostaw.
 
-[...]
+Z naszej wiedzy i do=C5=9Bwiadczenia korzysta ju=C5=BC ponad 49 tys. Klie=
+nt=C3=B3w. Monitorujemy 809 000 pojazd=C3=B3w na ca=C5=82ym =C5=9Bwiecie,=
+ co jest nasz=C4=85 najlepsz=C4=85 wizyt=C3=B3wk=C4=85.
 
-MBR, Sergey
+Bardzo prosz=C4=99 o e-maila zwrotnego, je=C5=9Bli mogliby=C5=9Bmy wsp=C3=
+=B3lnie om=C3=B3wi=C4=87 potencja=C5=82 wykorzystania takiego rozwi=C4=85=
+zania w Pa=C5=84stwa firmie.
+
+
+Z powa=C5=BCaniem,
+Mateusz Talaga
