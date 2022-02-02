@@ -2,199 +2,118 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 353CDC433EF
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Feb 2022 12:07:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C5D1C433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  2 Feb 2022 12:25:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230184AbiBBMHX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 2 Feb 2022 07:07:23 -0500
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:12182 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232109AbiBBMHW (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Feb 2022 07:07:22 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1643803642; x=1675339642;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to;
-  bh=cuSCVfW005fsSBEPH88lKXaq75n7sp1cMS4Op/VVQoc=;
-  b=iAPulhsRU9mgIB2VBZAQ2faKvHdz5vgyAgpkeUz8/PfkdPU3o+qb2c9b
-   xwRrdiK50eUUZo7+sSXGzepMhdOOj/gVe+/JqhTXSkb+bTnjzaMHs+4Bf
-   s8N85XOD0etz6GjEBVLgB+qiKdcmebZnW3aYyxaCl3m+XhDe9kCIu9r8F
-   ko5Z5Lbd2qXFYZPG4CjeWaKyCf7sS2tC6Vm++bd9boE0juM5uFUhCF6IO
-   D3x8fVk9DwCfEoExqsYBRwuRuBdTMg4U6y3dNOBKQydByrjWfm0mgAsTY
-   W80LbQwqKl65pw9k5FoD5RBMrhXmGagI9ep4M0ftfEhhppRkkEoUKOFM1
-   A==;
-X-IronPort-AV: E=Sophos;i="5.88,336,1635177600"; 
-   d="scan'208,223";a="303870799"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 02 Feb 2022 20:07:22 +0800
-IronPort-SDR: dBvaJKf7bzcthKEM2FAxnWY1Q7vjnjFBZKD9XLC2Tzv3kMdUqpkXBDNuzL5VAY9Gc5WyE+11eB
- g0b2p5D3P+acCh1diiEP3qi/zHj+8rKWcTWsBTgJ4mTrmN6FT6Pn89AQJ7CarYI3ORslteso/E
- xesAatGk5PQ72m2LayeNaTwjpN6j7DmBXlKdmeyb+6S4XQcpk9RHHOdILBVwfJ+e/GD35SIU4a
- IcAstl9Dm4XgfWEDA4wJuo0gomzxuuHtLX8bDahtwMad3M/g0Pb2HY+HRIT8YQi2W/80B2C3fV
- 2qBPbsHVp9YUnhYx+CYJxa23
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Feb 2022 03:39:18 -0800
-IronPort-SDR: St5Gk9N07+egp2oPEpOStwxQ/ZzIsyuS2NJVOdJV6w5BSWJGAiuACQfjtZT5RQvSnsyR2ad8gn
- ETlyVwt6smL11frYWqzMjbp+IPt90YGgHbzJ6Z/0sDkQU5Pkn32TjKl8Xurt5aNU5YdyORPJRx
- HOEz66urnvEgD47dfczJ0vhQ5QskEpxAGfzl011bLpjOVdT/Q91d4GOCTtIDdnD0rcd4MxmxgA
- vfpobmaUdle1m17Snm5ch8t1OkxmwZmdzC9iy9wql78bEB9qcrvMr8PmoUfOzjtNZqmzQd1e8d
- UfA=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Feb 2022 04:07:22 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JpgXT5QKMz1SHwl
-        for <linux-ide@vger.kernel.org>; Wed,  2 Feb 2022 04:07:21 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=in-reply-to:organization:from:references
-        :to:content-language:subject:user-agent:mime-version:date
-        :message-id:content-type; s=dkim; t=1643803641; x=1646395642;
-         bh=cuSCVfW005fsSBEPH88lKXaq75n7sp1cMS4Op/VVQoc=; b=NLqtPRsmCnPU
-        dm+Y3aO4OSeQZagX+alEV2bVTRPTWSsJaQs1BbNl9sLgFZLV2a1mWH5F+lRCiNtI
-        CRcx37FLkuQoi17W/7ea640IlDjaVfF+o39EBVZn+hiTqY8CgJUKKRobME3Ve7oQ
-        Eww3jcbCs6IBEEWrHtpdWR3PBdCMQzsQI0Iezdvuocl5p2GyLXvGyhizU5GmxedQ
-        MxqggJjCsGaZcsk/2g63XY4s6oMZC9WWwKvR+sWzjbj8ieptVBGkJWtX5d75ke99
-        ovH2jAsVFuWIyoZNSgJAwr0pXyca2k4vcOygulcqlH9cOT4ywSmxSlC/Yip88rw7
-        wBfdMxF4nA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 0aW-GViOfre1 for <linux-ide@vger.kernel.org>;
-        Wed,  2 Feb 2022 04:07:21 -0800 (PST)
-Received: from [10.225.163.62] (unknown [10.225.163.62])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JpgXS5VG2z1RvlN;
-        Wed,  2 Feb 2022 04:07:20 -0800 (PST)
-Content-Type: multipart/mixed; boundary="------------gzEvRNWjyoiv70euu27C7jRA"
-Message-ID: <68992064-ee43-db10-fdd4-f40a09734ffe@opensource.wdc.com>
-Date:   Wed, 2 Feb 2022 21:07:19 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
+        id S245587AbiBBMZX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 2 Feb 2022 07:25:23 -0500
+Received: from mail.acc.umu.se ([130.239.18.156]:44592 "EHLO mail.acc.umu.se"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232638AbiBBMZW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 2 Feb 2022 07:25:22 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+        by amavisd-new (Postfix) with ESMTP id 5974F44B90;
+        Wed,  2 Feb 2022 13:25:21 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=acc.umu.se; s=mail1;
+        t=1643804721; bh=GeZ215mtALRDoHttRHcLxwwcpbW2eVsLQnmWu3W4MQs=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=VmrcB+DzRmWrbS4iGNMxXcQCS+mq5SdWFjylHKxUcoXXpbmNo9jjCxcpCGsZa2NFT
+         D00z/tvbLqW/ptzSJRtwj0yU/aXlJsAjfwMrW86+Q4Nc2CD6XnWt+dTce42PdhdaTk
+         QFSfM8kyP7KmvGDN7EGE40QCTwoRLsXlth2ZQiSmrCOwK93aMrILOB+5FBPeL3Vdit
+         yWL2ov81kNa7NWobhZ53zzQp7pkx4dW5O5VCwiZ0oExBOXUb7fFpS/9aguosQ9wnrA
+         sbtUFXSJ8SReTAeqVYtKNcq1OrSVle7FEiJ6EZQe03w6iTeURrFc5O5mdAf2THXxNj
+         ItzGtDojz7mBQ==
+Received: by mail.acc.umu.se (Postfix, from userid 24471)
+        id D6FCA44B92; Wed,  2 Feb 2022 13:25:20 +0100 (CET)
+Date:   Wed, 2 Feb 2022 13:25:20 +0100
+From:   Anton Lundin <glance@acc.umu.se>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     linux-ide@vger.kernel.org
 Subject: Re: [PATCH] libata: Don't issue ATA_LOG_DIRECTORY to SATADOM-ML 3ME
-Content-Language: en-US
-To:     Anton Lundin <glance@acc.umu.se>, linux-ide@vger.kernel.org
-Cc:     stable@vger.kernel.org
+Message-ID: <20220202122520.GE723116@montezuma.acc.umu.se>
 References: <20220202100536.1909665-1-glance@acc.umu.se>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220202100536.1909665-1-glance@acc.umu.se>
+ <bf9f47f1-08c4-370b-446a-1ae9efdc772a@opensource.wdc.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <bf9f47f1-08c4-370b-446a-1ae9efdc772a@opensource.wdc.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------gzEvRNWjyoiv70euu27C7jRA
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+On 02 February, 2022 - Damien Le Moal wrote:
 
-On 2/2/22 19:05, Anton Lundin wrote:
-> Back in 06f6c4c6c3e8 ("ata: libata: add missing ata_identify_page_supported() calls")
-> a read of ATA_LOG_DIRECTORY page was added. This caused the
-> SATADOM-ML 3ME to lock up.
+> On 2/2/22 19:05, Anton Lundin wrote:
+> > Back in 06f6c4c6c3e8 ("ata: libata: add missing ata_identify_page_supported() calls")
+> > a read of ATA_LOG_DIRECTORY page was added. This caused the
+> > SATADOM-ML 3ME to lock up.
+> > 
+> > In 636f6e2af4fb ("libata: add horkage for missing Identify Device log")
+> > a flag was added to cache if a device supports this or not.
+> > 
+> > This adds a blacklist entry which flags that these devices doesn't
+> > support that call and shouldn't be issued that call.
+> > 
+> > Cc: stable@vger.kernel.org # v5.10+
+> > Signed-off-by: Anton Lundin <glance@acc.umu.se>
+> > Depends-on: 636f6e2af4fb ("libata: add horkage for missing Identify Device log")
 > 
-> In 636f6e2af4fb ("libata: add horkage for missing Identify Device log")
-> a flag was added to cache if a device supports this or not.
+> I do not think so. See below.
 > 
-> This adds a blacklist entry which flags that these devices doesn't
-> support that call and shouldn't be issued that call.
+> > ---
+> >  drivers/ata/libata-core.c | 7 +++++++
+> >  1 file changed, 7 insertions(+)
+> > 
+> > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> > index 87d36b29ca5f..e024af9f33d0 100644
+> > --- a/drivers/ata/libata-core.c
+> > +++ b/drivers/ata/libata-core.c
+> > @@ -4070,6 +4070,13 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+> >  	{ "WDC WD3000JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
+> >  	{ "WDC WD3200JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
+> >  
+> > +	/*
+> > +	 * This sata dom goes on a walkabout when it sees the
+> > +	 * ATA_LOG_DIRECTORY read request so ensure we don't issue such a
+> > +	 * request to these devices.
+> > +	 */
+> > +	{ "SATADOM-ML 3ME",		NULL,	ATA_HORKAGE_NO_ID_DEV_LOG },
 > 
-> Cc: stable@vger.kernel.org # v5.10+
-> Signed-off-by: Anton Lundin <glance@acc.umu.se>
-> Depends-on: 636f6e2af4fb ("libata: add horkage for missing Identify Device log")
-> ---
->  drivers/ata/libata-core.c | 7 +++++++
->  1 file changed, 7 insertions(+)
+> This flag only disables trying to access the identify device log page,
+> it does *not* avoid access to the log directory log page in general. The
+> log directory will still be consulted for other log pages beside the
+> identify device log page, from any function that calls
+> ata_log_supported() (e.g. ata_dev_config_ncq_send_recv() and
+> ata_dev_config_ncq_non_data())
+
+Non of those code paths are called for this device, probably due to some
+other flag disqualifying them.
+ 
+> So it will be a lot more solid to define a ATA_HORKAGE_NO_LOG_DIR flag
+> and test for it in ata_log_supported(), completely preventing any access
+> to the log directory page for this drive type.
+
+That was my first thought but then I found ATA_HORKAGE_NO_ID_DEV_LOG
+which was in the calling path that actually triggered this issue.
+
+But, yes, I totally agree that's a more solid solution preventing this
+kind of issue to crop up again.
+
+> > +
+> >  	/* End Marker */
+> >  	{ }
+> >  };
 > 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 87d36b29ca5f..e024af9f33d0 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4070,6 +4070,13 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
->  	{ "WDC WD3000JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
->  	{ "WDC WD3200JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
->  
-> +	/*
-> +	 * This sata dom goes on a walkabout when it sees the
-> +	 * ATA_LOG_DIRECTORY read request so ensure we don't issue such a
-> +	 * request to these devices.
-> +	 */
-> +	{ "SATADOM-ML 3ME",		NULL,	ATA_HORKAGE_NO_ID_DEV_LOG },
-> +
->  	/* End Marker */
->  	{ }
->  };
+> Note: if you need this fix sent to linux-stable, add "Cc: stable@..."
+> and a Fixes tag.
 
-Can you try the attached patch ?
+I'd think it's fitting to send it to linux-stable, because it prevents
+those DOM's from working in v5.15.5+.
 
-I think it is important to confirm if the lockup on your drive happens
-due to reads of the log directory log page or due to reads of the
-identify device log page. The attached patch prevents the former, your
-patch prevents the latter. If your patch is all that is needed, then it
-is good, modulo some rephrasing of the commit message and comments.
+Ok. I must have missed that part when I read submitting-patches doc.
 
--- 
-Damien Le Moal
-Western Digital Research
---------------gzEvRNWjyoiv70euu27C7jRA
-Content-Type: text/x-patch; charset=UTF-8;
- name="0001-ata-libata-core-Introduce-ATA_HORKAGE_NO_LOG_DIR-hor.patch"
-Content-Disposition: attachment;
- filename*0="0001-ata-libata-core-Introduce-ATA_HORKAGE_NO_LOG_DIR-hor.pa";
- filename*1="tch"
-Content-Transfer-Encoding: base64
+I'll rework and re-submit the patch.
 
-RnJvbSA1NGU1NjZkNDIzM2Q5ZTYyNzM1ZmQ4OTgzN2RiMGY1ZjRkZWE5OWUyIE1vbiBTZXAg
-MTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBBbnRvbiBMdW5kaW4gPGdsYW5jZUBhY2MudW11LnNl
-PgpEYXRlOiBXZWQsIDIgRmViIDIwMjIgMjA6NDc6NDAgKzA5MDAKU3ViamVjdDogW1BBVENI
-XSBhdGE6IGxpYmF0YS1jb3JlOiBJbnRyb2R1Y2UgQVRBX0hPUktBR0VfTk9fTE9HX0RJUiBo
-b3JrYWdlCgowNmY2YzRjNmMzZTggKCJhdGE6IGxpYmF0YTogYWRkIG1pc3NpbmcgYXRhX2lk
-ZW50aWZ5X3BhZ2Vfc3VwcG9ydGVkKCkgY2FsbHMiKQppbnRyb2R1Y2VkIGFkZGl0aW9uYWwg
-Y2FsbHMgdG8gYXRhX2lkZW50aWZ5X3BhZ2Vfc3VwcG9ydGVkKCksIHRodXMgYWxzbwphZGRp
-bmcgaW5kaXJlY3RseSBhY2Nlc3NlcyB0byB0aGUgZGV2aWNlIGxvZyBkaXJlY3RvcnkgbG9n
-IHBhZ2UgdGhyb3VnaAphdGFfbG9nX3N1cHBvcnRlZCgpLiBSZWFkaW5nIHRoaXMgbG9nIHBh
-Z2UgY2F1c2VzIFNBVEFET00tTUwgM01FIGRldmljZXMKdG8gbG9jayB1cC4KCkludHJvZHVj
-ZSB0aGUgaG9ya2FnZSBmbGFnIEFUQV9IT1JLQUdFX05PX0xPR19ESVIgdG8gcHJldmVudCBh
-Y2Nlc3NlcyB0bwp0aGUgbG9nIGRpcmVjdG9yeSBpbiBhdGFfbG9nX3N1cHBvcnRlZCgpIGFu
-ZCBhZGQgYSBibGFja2xpc3QgZW50cnkKd2l0aCB0aGlzIGZsYWcgZm9yICJTQVRBRE9NLU1M
-IDNNRSIgZGV2aWNlcy4KCkZpeGVzOiA2MzZmNmUyYWY0ZmIgKCJsaWJhdGE6IGFkZCBob3Jr
-YWdlIGZvciBtaXNzaW5nIElkZW50aWZ5IERldmljZSBsb2ciKQpDYzogc3RhYmxlQHZnZXIu
-a2VybmVsLm9yZyAjIHY1LjEwKwpTaWduZWQtb2ZmLWJ5OiBBbnRvbiBMdW5kaW4gPGdsYW5j
-ZUBhY2MudW11LnNlPgpTaWduZWQtb2ZmLWJ5OiBEYW1pZW4gTGUgTW9hbCA8ZGFtaWVuLmxl
-bW9hbEBvcGVuc291cmNlLndkYy5jb20+Ci0tLQogZHJpdmVycy9hdGEvbGliYXRhLWNvcmUu
-YyB8IDEwICsrKysrKysrKysKIGluY2x1ZGUvbGludXgvbGliYXRhLmggICAgfCAgMSArCiAy
-IGZpbGVzIGNoYW5nZWQsIDExIGluc2VydGlvbnMoKykKCmRpZmYgLS1naXQgYS9kcml2ZXJz
-L2F0YS9saWJhdGEtY29yZS5jIGIvZHJpdmVycy9hdGEvbGliYXRhLWNvcmUuYwppbmRleCA2
-N2Y4ODAyNzY4MGEuLmUxYjFkZDIxNTI2NyAxMDA2NDQKLS0tIGEvZHJpdmVycy9hdGEvbGli
-YXRhLWNvcmUuYworKysgYi9kcml2ZXJzL2F0YS9saWJhdGEtY29yZS5jCkBAIC0yMDA3LDYg
-KzIwMDcsOSBAQCBzdGF0aWMgYm9vbCBhdGFfbG9nX3N1cHBvcnRlZChzdHJ1Y3QgYXRhX2Rl
-dmljZSAqZGV2LCB1OCBsb2cpCiB7CiAJc3RydWN0IGF0YV9wb3J0ICphcCA9IGRldi0+bGlu
-ay0+YXA7CiAKKwlpZiAoZGV2LT5ob3JrYWdlICYgQVRBX0hPUktBR0VfTk9fTE9HX0RJUikK
-KwkJcmV0dXJuIGZhbHNlOworCiAJaWYgKGF0YV9yZWFkX2xvZ19wYWdlKGRldiwgQVRBX0xP
-R19ESVJFQ1RPUlksIDAsIGFwLT5zZWN0b3JfYnVmLCAxKSkKIAkJcmV0dXJuIGZhbHNlOwog
-CXJldHVybiBnZXRfdW5hbGlnbmVkX2xlMTYoJmFwLT5zZWN0b3JfYnVmW2xvZyAqIDJdKSA/
-IHRydWUgOiBmYWxzZTsKQEAgLTQwNzMsNiArNDA3NiwxMyBAQCBzdGF0aWMgY29uc3Qgc3Ry
-dWN0IGF0YV9ibGFja2xpc3RfZW50cnkgYXRhX2RldmljZV9ibGFja2xpc3QgW10gPSB7CiAJ
-eyAiV0RDIFdEMzAwMEpELSoiLAkJTlVMTCwJQVRBX0hPUktBR0VfV0RfQlJPS0VOX0xQTSB9
-LAogCXsgIldEQyBXRDMyMDBKRC0qIiwJCU5VTEwsCUFUQV9IT1JLQUdFX1dEX0JST0tFTl9M
-UE0gfSwKIAorCS8qCisJICogVGhpcyBzYXRhIGRvbSBkZXZpY2UgZ29lcyBvbiBhIHdhbGth
-Ym91dCB3aGVuIHRoZSBBVEFfTE9HX0RJUkVDVE9SWQorCSAqIGxvZyBwYWdlIGlzIGFjY2Vz
-c2VkLiBFbnN1cmUgd2UgbmV2ZXIgYXNrIGZvciB0aGlzIGxvZyBwYWdlIHdpdGgKKwkgKiB0
-aGVzZSBkZXZpY2VzLgorCSAqLworCXsgIlNBVEFET00tTUwgM01FIiwJCU5VTEwsCUFUQV9I
-T1JLQUdFX05PX0xPR19ESVIgfSwKKwogCS8qIEVuZCBNYXJrZXIgKi8KIAl7IH0KIH07CmRp
-ZmYgLS1naXQgYS9pbmNsdWRlL2xpbnV4L2xpYmF0YS5oIGIvaW5jbHVkZS9saW51eC9saWJh
-dGEuaAppbmRleCA2MDU3NTZmNjQ1YmUuLjdmOTliNGQ3ODgyMiAxMDA2NDQKLS0tIGEvaW5j
-bHVkZS9saW51eC9saWJhdGEuaAorKysgYi9pbmNsdWRlL2xpbnV4L2xpYmF0YS5oCkBAIC0z
-ODAsNiArMzgwLDcgQEAgZW51bSB7CiAJQVRBX0hPUktBR0VfTUFYX1RSSU1fMTI4TSA9ICgx
-IDw8IDI2KSwJLyogTGltaXQgbWF4IHRyaW0gc2l6ZSB0byAxMjhNICovCiAJQVRBX0hPUktB
-R0VfTk9fTkNRX09OX0FUSSA9ICgxIDw8IDI3KSwJLyogRGlzYWJsZSBOQ1Egb24gQVRJIGNo
-aXBzZXQgKi8KIAlBVEFfSE9SS0FHRV9OT19JRF9ERVZfTE9HID0gKDEgPDwgMjgpLAkvKiBJ
-ZGVudGlmeSBkZXZpY2UgbG9nIG1pc3NpbmcgKi8KKwlBVEFfSE9SS0FHRV9OT19MT0dfRElS
-CT0gKDEgPDwgMjkpLAkvKiBEbyBub3QgcmVhZCBsb2cgZGlyZWN0b3J5ICovCiAKIAkgLyog
-RE1BIG1hc2sgZm9yIHVzZXIgRE1BIGNvbnRyb2w6IFVzZXIgdmlzaWJsZSB2YWx1ZXM7IERP
-IE5PVAogCSAgICByZW51bWJlciAqLwotLSAKMi4zNC4xCgo=
 
---------------gzEvRNWjyoiv70euu27C7jRA--
+//Anton
