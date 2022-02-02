@@ -2,50 +2,50 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B78CC433EF
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Feb 2022 10:45:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7388BC433EF
+	for <linux-ide@archiver.kernel.org>; Wed,  2 Feb 2022 10:46:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230092AbiBBKpq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 2 Feb 2022 05:45:46 -0500
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:46454 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230010AbiBBKpp (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Feb 2022 05:45:45 -0500
+        id S235137AbiBBKq3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 2 Feb 2022 05:46:29 -0500
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:11672 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232486AbiBBKq2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Feb 2022 05:46:28 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1643798745; x=1675334745;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=+hI691CCzpU8nCQfgvIumZmpfrm7rMs2+QrL7/e6HrI=;
-  b=WMndBsOVUIDDXWd2iF5B0HKRKcqI7lNcCib7agSyPzWOwF3mEX7uAS/H
-   x9nmyJq/wm8T5VXvzhDjw4rkQBbUZS9pcx2KFEOWdPjMcKQWUUSp+U7xW
-   jy0GANP4RGmIObK2Ebq1fmQ7LJpXo+u1y0XwAn0HWh/CK0leyTpPHNyJD
-   nX6pOIC1OdlvHqRzUkCZPXrGCCvMOh7fVKXqVBKJ2DV+nWCrMH9nX4e7Z
-   ehJUf9UkIB0ib2DpIKMSDAanbji3E+aMBNPFktbS5llNTgzsD9IjKYnsH
-   YY0bKomlgn0r7MKQBsglxCpekkNH2mwi8GeEtV7nOLwOPUn3OPUtpy3jx
-   A==;
+  t=1643798788; x=1675334788;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=6k7tE3M6bpnJHQHnhJCh/DCDGRD7sVYF5zWLizvvIyY=;
+  b=ppXqyuoELjUkwmKfyAhVBrimJjEODCrsU+p4rj7d44DU2JGJH/sd8KCM
+   iNChkDRjOITpVGKnoZ7bEL62F23Rm38b9jCuZEMjgWbrd4mIu637Vdrmf
+   lql/SnIIVGiTKt1TE9VEC6JIaEceszuXErAUcFrMUkh6RE3IdcU2NHDW/
+   URkEge3SQBt7dQrq+cjEesRV6+SsBB84xOd1qYcoG1pwvjzltUJa7hZCD
+   Mx+rVWGfLFYVF2JM5KzCQvqJAhd/Hp3gmdak1MElGqUQHnmjvnM+lhWmZ
+   pViYWTaEjcpMW1jsMDeX3UQhGdREY9+qBGgfk2t5FB8MPzYBVrCB5tF2h
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.88,336,1635177600"; 
-   d="scan'208";a="296050632"
+   d="scan'208";a="303864285"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 02 Feb 2022 18:45:45 +0800
-IronPort-SDR: AqEidfPLMPzr5+an1j8vVDIV1RMLtt0DVQutwRlYhGN9U+D53l27HLNAwRewP3LLMSwG1PER00
- wIGvfXxfc/AJD8ZUVKGbDEqLmQJ65jIOmXI+vBfDwbyvPKz3FqRZDsAUmWcxO4JCbIzX5A9oS8
- FJP4jYI/nDustYS7Rk4d9V1ecwua4g2ViD0+5Fq754xC3wxVCJjImYURSidGifkJrKoL5Flk6N
- s14l9rLnhK4ghOg7Y+t/HBQEwfVByZ5s1/J7IqhbQeH8ZDdZ/pdmWi8+GobYxknqh5UAdRlXxd
- cg5mWrkOf+UYKCkYGBhVZlsv
+  by ob1.hgst.iphmx.com with ESMTP; 02 Feb 2022 18:46:25 +0800
+IronPort-SDR: RrYpmoer0W9CUj/lwIyyY/NDoHyOS9NDlAMDI2AEEU252gfSJByxwTJdijPnteXbuJ5MWzM5tq
+ 3U4hu1wsMK86mlFQWGTWm9ZnjJnWcpiGVydZny4vSzqiOwwlefMCSqSXuhhD1tpnkX6n5lPnz6
+ +y31kl2VeIU+mW+oZMc5gJD32XqFPfA5c9rdMPfgbhRwuuK5WX9k7QiyndtQ0qSYozfM/f6tgA
+ wzSdFQUfMRGI6UU+8ySBeZctrzz1MGrUVqFbnbl4EOWia2BMOLNkW4b/HlHMky/IzaXD3WyVpy
+ 7NiwadwZWUaufiEzaQE/PcNZ
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Feb 2022 02:18:55 -0800
-IronPort-SDR: i97QkeJhPH3bS/pMKKIHxgg9quc4gZwCR8mLw/Vy3KvinxaMZbksmdDkt68UErv5WJ7ksacADL
- jPlCN/Ar09PFs8I4xVpWO6nhurcVcgMXf3Tk+ujw6dSqHL0FCwLZG7UKi1xfkw4knkf8LJ1rfU
- eEw97bolHpDPzl0emefEhy3hsXACJOq1XRjgJdVFj7GBGgtu4gTGLWxT+/yFPSAzYtnGIiLE2m
- PAGWy42btjQK2lMQhXSH1skCKpl77VLpwLMjEe5Glbb2shmYEN4MqINHiRX4js7g1qK/fltisf
- x0w=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Feb 2022 02:19:35 -0800
+IronPort-SDR: azZZw/ArjZIpIVT4ERup/cvgO7oXl1EQPwscw+MPTtW9AgcSFs6CR9EPAtZV8n8QhEdQP6DRw+
+ KjBZ00fEeNqGcH10qoQ68qCr973bkoThf7KpFLrYWvjFZHx44+TgJ0MeEmCwC2K9CGYlDfK7W9
+ We7mxvOgBWeJper+4L+Bu0okVzDNZ1LVof2oCXODp0xmeEG4WdHGhebzrJKXaVgIPs4Cudnyui
+ 0Hq994BfcLW9XDI6Ot9R9mXo4fzQumjfPKWEpoqkVlPKMBGUle3aO3wAVPJXfpZbw1sbEEf0Aj
+ Rwc=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Feb 2022 02:45:46 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Feb 2022 02:46:26 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JpdkK07vTz1Rwrw
-        for <linux-ide@vger.kernel.org>; Wed,  2 Feb 2022 02:45:45 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Jpdl52kBDz1SVny
+        for <linux-ide@vger.kernel.org>; Wed,  2 Feb 2022 02:46:25 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -53,93 +53,83 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1643798744; x=1646390745; bh=+hI691CCzpU8nCQfgvIumZmpfrm7rMs2+Qr
-        L7/e6HrI=; b=uqOQZHHRvQLpF7y7QAqbkP7NpD+jwiPJHpwEm31/FG3oNqVA5bP
-        23LvyWQHyU8v8eMBD8+nZmwW3UgB0fvO5Zv5PACzLjPMrU5Qdob4VUNANZTakcd6
-        MoBnhlCIKkWI6gyy50V/0XSF6gnjFcp5x/iBd3SF5l8bl55jd3HfOG3yfWL1QzX7
-        HGAiy7HruqwMFlbs50v7E/Xy/qyxns+nrhvLxwvC65R5814UwHVUnX1NcjI4Z+UT
-        BYGYB07jS4MuJNXTZaZUoibOzRpCBb29onIOzBXz2E3yBOwDfx1bCVSqjV5jawx3
-        Sq+bKHYq10R7sNS9KC2R31fwMHs976mFfTg==
+        1643798784; x=1646390785; bh=6k7tE3M6bpnJHQHnhJCh/DCDGRD7sVYF5zW
+        LizvvIyY=; b=Xi88hxJNWip64lmBn8x6HoOeVthH818CFRxVaCnDn8mgkRPaZgb
+        GFmn0hAJpD/CUOTOWiCcPI6NVcs+60OBFUkXygG3cGdlPTtDnOueL9C3lJgVhjyC
+        Bx10geEuzaoLMONAjHmOt7H1ba2816Rp5KSaryC6S/zUOs1HyrV0eeuXg9gWZVM4
+        hVuUhL6tqs978ud++ixMb63wir16MeuLVHgyHZ46Y0tmtBEt1z0YAjspJUDf5YlA
+        fdXf7pYV6aZiES5+1jUOtj/nZ5T48vJhrsXo7DStb1sEiv7GLAV4XroURnsut5Je
+        Y1hmmlDYg/ANxWhbqlD9IniYHe7jAJ/2kVQ==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id tYY_E3d7T_O0 for <linux-ide@vger.kernel.org>;
-        Wed,  2 Feb 2022 02:45:44 -0800 (PST)
+        with ESMTP id 7U3FWdOmYvcC for <linux-ide@vger.kernel.org>;
+        Wed,  2 Feb 2022 02:46:24 -0800 (PST)
 Received: from [10.225.163.62] (unknown [10.225.163.62])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JpdkJ0gXxz1RvlN;
-        Wed,  2 Feb 2022 02:45:43 -0800 (PST)
-Message-ID: <bf9f47f1-08c4-370b-446a-1ae9efdc772a@opensource.wdc.com>
-Date:   Wed, 2 Feb 2022 19:45:42 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Jpdl36PLqz1RvlN;
+        Wed,  2 Feb 2022 02:46:23 -0800 (PST)
+Message-ID: <c49abe7a-bc95-a692-29d3-eb37ee6f2e1b@opensource.wdc.com>
+Date:   Wed, 2 Feb 2022 19:46:22 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.0
-Subject: Re: [PATCH] libata: Don't issue ATA_LOG_DIRECTORY to SATADOM-ML 3ME
+Subject: Re: [PATCH] dt-bindings: ata: convert ata/cortina,gemini-sata-bridge
+ to yaml
 Content-Language: en-US
-To:     Anton Lundin <glance@acc.umu.se>, linux-ide@vger.kernel.org
-References: <20220202100536.1909665-1-glance@acc.umu.se>
+To:     Sergei Shtylyov <sergei.shtylyov@gmail.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Corentin Labbe <clabbe@baylibre.com>
+Cc:     robh+dt@kernel.org, devicetree@vger.kernel.org,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220129204004.1009571-1-clabbe@baylibre.com>
+ <CACRpkdb9R-BwdVzyeaQOjagsQU=2-06VNqKPG9fMa7C93eDC7A@mail.gmail.com>
+ <2b0fa854-16e7-3d0b-a04a-971249646fab@opensource.wdc.com>
+ <bc80cd49-c95e-6b9a-1210-7d3832766b02@gmail.com>
+ <5a1d66d3-d3c2-ab77-f874-c3d6b10a0d2b@opensource.wdc.com>
+ <d16a1be7-d856-f6b7-5a1a-9f09f42195ee@gmail.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <20220202100536.1909665-1-glance@acc.umu.se>
+In-Reply-To: <d16a1be7-d856-f6b7-5a1a-9f09f42195ee@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/2/22 19:05, Anton Lundin wrote:
-> Back in 06f6c4c6c3e8 ("ata: libata: add missing ata_identify_page_supported() calls")
-> a read of ATA_LOG_DIRECTORY page was added. This caused the
-> SATADOM-ML 3ME to lock up.
+On 2/2/22 18:24, Sergei Shtylyov wrote:
+> On 2/2/22 1:56 AM, Damien Le Moal wrote:
 > 
-> In 636f6e2af4fb ("libata: add horkage for missing Identify Device log")
-> a flag was added to cache if a device supports this or not.
+>>>>> Thanks for doing this Corentin!
+>>>>>
+>>>>> On Sat, Jan 29, 2022 at 9:40 PM Corentin Labbe <clabbe@baylibre.com> wrote:
+>>>>>
+>>>>>> This patch converts ata/cortina,gemini-sata-bridge binding to yaml
+>>>>>>
+>>>>>> Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
+>>>>>
+>>>>> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+>>>>>
+>>>>> Knowing that drivers/ata is a bit sparsely maintained I suggest that Rob apply
+>>>>> this patch when he feels it looks good.
+>>>>
+>>>> What do you mean ? I am doing my best here to maintain ata !
+>>>> But I definitely do not have all the hardware supported for testing :)
+>>>
+>>>    I can probably help reviewing the PATA drivers if you want, just like Bart Z. did.
+>>> But I don't have much of the PATA hardware (what I have is in my old PCs I haven't
+>>> booted in a long while)...
+>>
+>> More reviews are always welcome ! Thanks !
 > 
-> This adds a blacklist entry which flags that these devices doesn't
-> support that call and shouldn't be issued that call.
+>    How about me submitting an "official" PATA reviewer entry in MAINTAINERS?
+
+Sure. That works for me.
+
 > 
-> Cc: stable@vger.kernel.org # v5.10+
-> Signed-off-by: Anton Lundin <glance@acc.umu.se>
-> Depends-on: 636f6e2af4fb ("libata: add horkage for missing Identify Device log")
-
-I do not think so. See below.
-
-> ---
->  drivers/ata/libata-core.c | 7 +++++++
->  1 file changed, 7 insertions(+)
+> [...]
 > 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 87d36b29ca5f..e024af9f33d0 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4070,6 +4070,13 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
->  	{ "WDC WD3000JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
->  	{ "WDC WD3200JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
->  
-> +	/*
-> +	 * This sata dom goes on a walkabout when it sees the
-> +	 * ATA_LOG_DIRECTORY read request so ensure we don't issue such a
-> +	 * request to these devices.
-> +	 */
-> +	{ "SATADOM-ML 3ME",		NULL,	ATA_HORKAGE_NO_ID_DEV_LOG },
+> MBR, Sergey
 
-This flag only disables trying to access the identify device log page,
-it does *not* avoid access to the log directory log page in general. The
-log directory will still be consulted for other log pages beside the
-identify device log page, from any function that calls
-ata_log_supported() (e.g. ata_dev_config_ncq_send_recv() and
-ata_dev_config_ncq_non_data())
-
-So it will be a lot more solid to define a ATA_HORKAGE_NO_LOG_DIR flag
-and test for it in ata_log_supported(), completely preventing any access
-to the log directory page for this drive type.
-
-> +
->  	/* End Marker */
->  	{ }
->  };
-
-Note: if you need this fix sent to linux-stable, add "Cc: stable@..."
-and a Fixes tag.
 
 -- 
 Damien Le Moal
