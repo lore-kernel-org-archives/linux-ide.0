@@ -2,104 +2,94 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C8DBC433F5
-	for <linux-ide@archiver.kernel.org>; Thu,  3 Feb 2022 00:09:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A8FDC433EF
+	for <linux-ide@archiver.kernel.org>; Thu,  3 Feb 2022 06:47:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242863AbiBCAJV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 2 Feb 2022 19:09:21 -0500
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:1464 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241194AbiBCAJV (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Feb 2022 19:09:21 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1643846961; x=1675382961;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=v1wrIbDp1vvHluaQi8JR+Xb3JVO/xJyyU28VRFr17EQ=;
-  b=DjjpSWDjRyDuU3RGjd/XasR8IK5X8QKVewQQbs/91CzSWfnWTu0Yvgf7
-   h8oJ2jSgefnZieAJM2UuUfZ97fm7NVRC65nf/ZfQQ0DKVIBn7Nx50j5YY
-   E/6UiqR7qsTHbN1pkMbRdHyD1jqWsMs4f2fIDFOpQOy6W4/8/4930PpsN
-   fRO5B+G31TK0GnMfq7J5geuUzf96Gjt0brMwcRcxSAp2ngncSxOpZ64Zz
-   GR1Il6fdm3oLZUG8fBybJHgueyhBmNUh11IOLpNQwpwfKG2KDbjepbsUx
-   tVvrWoMlxs6QC0JtED2qqiHnEUwsGrt6IvDDSmSIsIwKvlI+9uiJ3e+j3
-   g==;
-X-IronPort-AV: E=Sophos;i="5.88,338,1635177600"; 
-   d="scan'208";a="296109495"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 03 Feb 2022 08:09:20 +0800
-IronPort-SDR: Kw8IfRDIQzJ8S/WzfbNoo+k9gsX+3n1YE63hFqnpxmJnAIbirNgDaUKlPf/vQ5kGC4nPVhA69C
- aE5eA/d3e6im2mLOlA6IB/0xqH2dwyYTATfMAcBFG5bSDARL2X2cPIXQqdn5Ww54OLxyNlKZKD
- KzHkal/8QzdQ7kdiyVsnQ5hTvqhHU24NCmED2clrxL5P59iC6QhDqpRfZVmLkkE6Jz/DxhKXca
- l7/Cvi+ewX8Hn+wrouSIg9CgBrO59uDYTORQn6wTukE6KdvCFXR+vmCtV+ikqWyMMbisZ3W1li
- c2xzUyjeC/4JZo9bGkRmACED
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Feb 2022 15:41:16 -0800
-IronPort-SDR: z5wG5q96JLlh3KcGo5w1tsN6oF4Un0YEC6nUXuyTx1M4zYdV7LRzU7/WhLgEDwY+ioSN/fa72Q
- lzrjeYfiRtFptyLHsIIHqUcohhU7nyRnA6jOg+qIsUVDtHtXOv5uTiGPUMhnTNm/3LSm6PgLEZ
- IYYmS9hEowLNaJzgc0Ktqfh9EFRxOqK5Ni0Nff83IWl7wZ8/nAeDSQzis7D+tAXYpnEi1l1OTY
- JvkTcdSge1L7Y7n/2yMuD85vnkp+gM78VgaESfFWy0FlTG392loGteHRBOlhr/nCF+VfEkhn5O
- XWA=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Feb 2022 16:09:20 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JpzYX1cscz1SHwl
-        for <linux-ide@vger.kernel.org>; Wed,  2 Feb 2022 16:09:20 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1643846959; x=1646438960; bh=v1wrIbDp1vvHluaQi8JR+Xb3JVO/xJyyU28
-        VRFr17EQ=; b=pwiyDBZR170zbF4DFGzohI1o4KsJhWGfAlI/SAKiNwUV3ph6wlO
-        ddkFDpgXgVY1feSC5nweXoIIUF7d5n1+AJ+eeO1mF1BMAts8Spj/OlUrLZecx3hh
-        gGpkS9Jwj/bpgKNp1JwQb4D/IprEESrGJZiYmaHc++awcz7Ti/r/RwR+jNPTm29m
-        KuKiY4WyI60IKkbkQ+P9lSn1hpuViUMdL8O2pb7Slnrs3g1NfpLxkQ0cSEUWopKC
-        AcDOZV9nwIBlw8JDXrIRE4kxLEvpMN2vZAkQSpGzgsWjbrzCr3Gh1Ex9p62Bv25j
-        aeB61JPNuSxOb7h1VL/pJJSu12cyqT/aFuA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id ePJCs-rs3d11 for <linux-ide@vger.kernel.org>;
-        Wed,  2 Feb 2022 16:09:19 -0800 (PST)
-Received: from [10.225.163.63] (unknown [10.225.163.63])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JpzYW46Nsz1Rwrw;
-        Wed,  2 Feb 2022 16:09:19 -0800 (PST)
-Message-ID: <ac4137f0-6a9a-fdc0-bf07-4015876dcc7f@opensource.wdc.com>
-Date:   Thu, 3 Feb 2022 09:09:18 +0900
+        id S234826AbiBCGrU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 3 Feb 2022 01:47:20 -0500
+Received: from metis.ext.pengutronix.de ([85.220.165.71]:55865 "EHLO
+        metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231599AbiBCGrT (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 3 Feb 2022 01:47:19 -0500
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1nFVre-0003ZD-0G; Thu, 03 Feb 2022 07:45:06 +0100
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.94.2)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1nFVrD-00EDHi-Iw; Thu, 03 Feb 2022 07:44:38 +0100
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.94.2)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1nFVrB-0057vk-Mb; Thu, 03 Feb 2022 07:44:37 +0100
+Date:   Thu, 3 Feb 2022 07:44:34 +0100
+From:   Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Shawn Guo <shawnguo@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Hans de Goede <hdegoede@redhat.com>,
+        NXP Linux Team <linux-imx@nxp.com>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Viresh Kumar <vireshk@kernel.org>,
+        Fabio Estevam <festevam@gmail.com>,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] libata: make ata_host_suspend() *void*
+Message-ID: <20220203064434.j6b4oozzduxqkahe@pengutronix.de>
+References: <7cb64472-9e37-704a-0b9a-52ed050c1826@omp.ru>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH v3] libata: ata_{sff|std}_prereset() always return 0
-Content-Language: en-US
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-References: <b1d72683-d645-6ebc-bd66-f5dc1bc2ba02@omp.ru>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <b1d72683-d645-6ebc-bd66-f5dc1bc2ba02@omp.ru>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="yy4e5fdl2phug67a"
+Content-Disposition: inline
+In-Reply-To: <7cb64472-9e37-704a-0b9a-52ed050c1826@omp.ru>
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-ide@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/3/22 05:07, Sergey Shtylyov wrote:
-> ata_std_prereset() always returns 0, hence the check in ata_sff_prereset()
-> is pointless and thus it also can return only 0 (however, we cannot change
-> the prototypes of ata_{sff|std}_prereset() as they implement the driver's
-> prereset() method).
-> 
-> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
+
+--yy4e5fdl2phug67a
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Wed, Feb 02, 2022 at 11:58:21PM +0300, Sergey Shtylyov wrote:
+> ata_host_suspend() always returns 0, so the result checks in many drivers
+> look pointless.  Let's make this function return *void* instead of *int*.
+>=20
+> Found by Linux Verification Center (linuxtesting.org) with the SVACE stat=
+ic
 > analysis tool.
-> 
+>=20
 > Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-Applied to for-5.18. Thanks !
+Acked-by: Uwe Kleine-K=F6nig <u.kleine-koenig@pengutronix.de>
 
+Best regards
+Uwe
 
--- 
-Damien Le Moal
-Western Digital Research
+--=20
+Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
+Industrial Linux Solutions                 | https://www.pengutronix.de/ |
+
+--yy4e5fdl2phug67a
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmH7edAACgkQwfwUeK3K
+7AmJMQf9FWZ7f/d6iNsBouQ161pjB9RaXio/tUvgG7dvJ9JFqB846RC05Xvn3fYA
++my25J7yNyM6pXZKXkmVuafViwGqPPZvl7iTj9otUUrNFYGIeFmJc98t8gW2ul4r
+d/KfrhDmVI2WX767ZSocpsldFhDXsCQVp2D3ipEHKIKefRiBkfpmRuYNfLjR1TzF
+OdkzXxKSTxvQiSopNN3z+LgcVbsjmlX5gw3/5xAAvPIQzGGRgb09JA2GNYv8Kb2h
+AA/9grelMYIqJT/EXoi+af1toIdXeIVI/1adh0KizqWQl33zdWPhCUvcDK0VzvsE
+7WjzzUqPckdBdriZhLQvpi8jwx5vvw==
+=VpcW
+-----END PGP SIGNATURE-----
+
+--yy4e5fdl2phug67a--
