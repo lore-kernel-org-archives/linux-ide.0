@@ -2,99 +2,67 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D40BC433F5
-	for <linux-ide@archiver.kernel.org>; Fri,  4 Feb 2022 19:09:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86F42C433F5
+	for <linux-ide@archiver.kernel.org>; Fri,  4 Feb 2022 20:34:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231488AbiBDTJ2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 4 Feb 2022 14:09:28 -0500
-Received: from mxout01.lancloud.ru ([45.84.86.81]:58148 "EHLO
-        mxout01.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231402AbiBDTJX (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 4 Feb 2022 14:09:23 -0500
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout01.lancloud.ru 78C2D2070D77
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: [PATCH v3] pata_artop: use *switch* in artop_init_one()
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>
-Organization: Open Mobile Platform
-Message-ID: <dbb4010a-e466-d7f5-e926-72577a96a22d@omp.ru>
-Date:   Fri, 4 Feb 2022 22:09:20 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
- LFEX1907.lancloud.ru (fd00:f066::207)
+        id S240015AbiBDUe7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 4 Feb 2022 15:34:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49534 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239876AbiBDUes (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 4 Feb 2022 15:34:48 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66B04C061749
+        for <linux-ide@vger.kernel.org>; Fri,  4 Feb 2022 12:34:46 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 25142B838EC
+        for <linux-ide@vger.kernel.org>; Fri,  4 Feb 2022 20:34:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id EE27BC36AE3;
+        Fri,  4 Feb 2022 20:34:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1644006884;
+        bh=v//Hn2yngFhY99U0pLO0YNo13KLyGt5QbORmwVNAIos=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=FO3b85xjNCfz9/gTeV6guODPbLdAx9jCwTIOkPl308s69gj8prb3AF7WiYjSmuPue
+         yoIUZI6g1o/YKjzEAssEu/Iv9lGJtVdSgbp8NcTJRIuewRlBwr7z1Vj1N5r7XmrJCA
+         iWjpHULgFlC3195J75n8kaqMqh97g8+biWfCbTHwNYC18ssntmWdqRCpQS5KhjQiKN
+         yaqeM++inrLZbnFs0xC9hgZAZyMGbjQSSvwf1qhAVM50yJeJfl9VVwCNqWzGDCNYQx
+         W91TEeCZXHaj+Xg47JuOGafgNHr5ZHuLIGXS1D78OJTOW+7GwPf53aaxezotn7NPve
+         Ozi4yAJYNcYkQ==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id DBCB2E6BBD2;
+        Fri,  4 Feb 2022 20:34:43 +0000 (UTC)
+Subject: Re: [GIT PULL] ata fixes for 5.17-rc3
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20220204084141.720789-1-damien.lemoal@opensource.wdc.com>
+References: <20220204084141.720789-1-damien.lemoal@opensource.wdc.com>
+X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20220204084141.720789-1-damien.lemoal@opensource.wdc.com>
+X-PR-Tracked-Remote: ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-5.17-rc3
+X-PR-Tracked-Commit-Id: ac9f0c810684a1b161c18eb4b91ce84cbc13c91d
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 494a2c2b27c5d2a3c4f65a325fe5a0087013c1a4
+Message-Id: <164400688389.31755.4981699166644784299.pr-tracker-bot@kernel.org>
+Date:   Fri, 04 Feb 2022 20:34:43 +0000
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-ide@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-This driver uses a string of the *if* statements where a *switch* statement
-fits better...
+The pull request you sent on Fri,  4 Feb 2022 17:41:41 +0900:
 
-Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-5.17-rc3
 
----
-This patch is against the 'for-next' branch of Damien Le Moal's 'libata.git'
-repo.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/494a2c2b27c5d2a3c4f65a325fe5a0087013c1a4
 
-Changes in version 3:
-- fixed up the patch subject.
+Thank you!
 
-Changes in version 2:
-- updated #define DRV_VERSION.
-
- drivers/ata/pata_artop.c |   24 +++++++++++++++---------
- 1 file changed, 15 insertions(+), 9 deletions(-)
-
-Index: libata/drivers/ata/pata_artop.c
-===================================================================
---- libata.orig/drivers/ata/pata_artop.c
-+++ libata/drivers/ata/pata_artop.c
-@@ -28,7 +28,7 @@
- #include <linux/ata.h>
- 
- #define DRV_NAME	"pata_artop"
--#define DRV_VERSION	"0.4.6"
-+#define DRV_VERSION	"0.4.7"
- 
- /*
-  *	The ARTOP has 33 Mhz and "over clocked" timing tables. Until we
-@@ -394,16 +394,22 @@ static int artop_init_one (struct pci_de
- 	if (rc)
- 		return rc;
- 
--	if (id->driver_data == 0)	/* 6210 variant */
-+	switch (id->driver_data) {
-+	case 0:		/* 6210 variant */
- 		ppi[0] = &info_6210;
--	else if (id->driver_data == 1)	/* 6260 */
-+		break;
-+	case 1:		/* 6260 */
- 		ppi[0] = &info_626x;
--	else if (id->driver_data == 2)	{ /* 6280 or 6280 + fast */
--		unsigned long io = pci_resource_start(pdev, 4);
--
--		ppi[0] = &info_628x;
--		if (inb(io) & 0x10)
--			ppi[0] = &info_628x_fast;
-+		break;
-+	case 2:		/* 6280 or 6280 + fast */
-+		{
-+			unsigned long io = pci_resource_start(pdev, 4);
-+
-+			ppi[0] = &info_628x;
-+			if (inb(io) & 0x10)
-+				ppi[0] = &info_628x_fast;
-+		}
-+		break;
- 	}
- 
- 	BUG_ON(ppi[0] == NULL);
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
