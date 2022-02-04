@@ -2,120 +2,95 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2452C433F5
-	for <linux-ide@archiver.kernel.org>; Fri,  4 Feb 2022 08:41:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C114EC4332F
+	for <linux-ide@archiver.kernel.org>; Fri,  4 Feb 2022 10:53:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237897AbiBDIlr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 4 Feb 2022 03:41:47 -0500
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:19668 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232586AbiBDIlq (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 4 Feb 2022 03:41:46 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1643964106; x=1675500106;
-  h=from:to:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=SsshPJbFkCXqmvDBy15gzHt7tm+C4mrKQo91h7gdPtk=;
-  b=XiE5Dvnb5Xctms7L2jbl1ecp0zzXaXbdrSssudzLYDIyJ8yfE6u18mPS
-   /ChC/8ODKlVSL0ZWswtRMvUG2/3LfrEbEqDtHkonKTSzFJZHj488A0i16
-   vPhsnnqlsFsBSJnj4moFbSrcLxjm/5PTKZILBeYcTJA3QfWcRM9ECDa7m
-   2e9yMx7rCLy4f5VPtjUEOiEbxWRF4GR4T66QxoSgEC7mVLw6c1QK36Mfu
-   KqzrqbNQFCIefgRtwQZudtkkvHmyw58npGGD3wyN8MFyjmgd4U5WcDe7E
-   t7/cgJr2Mt+aa6kBzS618OFA01xqfIf0EwMSeTe3M7iJ3AtI1Dy6lBiFj
-   w==;
-X-IronPort-AV: E=Sophos;i="5.88,342,1635177600"; 
-   d="scan'208";a="193139432"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 04 Feb 2022 16:41:46 +0800
-IronPort-SDR: 1vDvBGp1XWQBcbUdUhXcMHvyPT0rmxhs6I5JrSrlqIE0yrumrDc6oKxkr+B58lN8mif3kvtoyX
- HNQtiTpkEQR9CCnZZXaHpdRbZBxeE00sjnZTTmENar1k5uOAwgy8ESAXyfghpsHtl2FBaSDW4V
- JUsyG/G8PA6m5ikoh1LV4iVTn4Qub2pBvu3ihz1SYdA9t0/Ckwn6KGsafHvoxevoCF8cR5E4Tm
- Z3SeWTFuwT6TIqT0/xhiJ8LB3fQc4teHOATcP2/Dfszqst3TNjDL+Um/RaR7qZTPRvUuweFB68
- yopn7ZaLFLtg843n/3AJKLaJ
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2022 00:13:40 -0800
-IronPort-SDR: dXpzKn0IQz8cu+pcqtmoBWK/9SRkLI3P//fdG3q6QvsHY+GdW+1zj3hZLzpgEeR4LD5m3N3jsb
- 97NDpKMPT3VshmFstTJteFePc4k5pVfTgQsjF50J5iw3cqBohclY+nx/EpniBgwIzIFoYgqpsC
- rjutyGazaIVsAHVruKsP5nbT1jOWBqHI21/S0LLBedeh1Pm7b+n8SWehMMlFIm9pm0936FyzP1
- lLxk/4mghT2oJeBUEodLDzbDwu1CmGymSwC+uR2lYs6CEO1CWKLSeKCo3Ek4qiXCmgqD8ggoLi
- q2A=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Feb 2022 00:41:46 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JqptK50LFz1SVnx
-        for <linux-ide@vger.kernel.org>; Fri,  4 Feb 2022 00:41:45 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:mime-version
-        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1643964105;
-         x=1646556106; bh=SsshPJbFkCXqmvDBy15gzHt7tm+C4mrKQo91h7gdPtk=; b=
-        D3AmnWe+RKgVddwH43RgLPleeEiGx54pvgl3jttuM0thP8jn0NgorSOSWbg0CY3T
-        WIQOIvlWWwdw8XT2ubYnXde47vJU5fA7vCYNskFPsK6XkZGC3I7p2O5DI1CN9uQX
-        brU3h6tod4iTpRq7GOV3m1Npqo3jGrU6EM1Zdl/smQ6vkvRagYM0nX/EGd9Wg8lB
-        iM3Wd59GkygyOgyWMLCWOCpWG+BYgn2+yIpLWjEFg7+RspAuTKwRihUdyOW/zuQc
-        AF9D/13MD/OH/CTQNsq69jiWML1UNGigazeT/Xo1wnM5zCOPwLf0cyVCzwz7tmzi
-        g5dEBVcZ/haRGbD3z2mSKQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id d_LGaCAjqZvw for <linux-ide@vger.kernel.org>;
-        Fri,  4 Feb 2022 00:41:45 -0800 (PST)
-Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JqptJ6VXqz1Rwrw;
-        Fri,  4 Feb 2022 00:41:44 -0800 (PST)
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-To:     Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-ide@vger.kernel.org
-Subject: [GIT PULL] ata fixes for 5.17-rc3
-Date:   Fri,  4 Feb 2022 17:41:41 +0900
-Message-Id: <20220204084141.720789-1-damien.lemoal@opensource.wdc.com>
-X-Mailer: git-send-email 2.34.1
+        id S242614AbiBDKxx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 4 Feb 2022 05:53:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54000 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230164AbiBDKxu (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 4 Feb 2022 05:53:50 -0500
+Received: from mail-lj1-x22b.google.com (mail-lj1-x22b.google.com [IPv6:2a00:1450:4864:20::22b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4FBE0C061714;
+        Fri,  4 Feb 2022 02:53:49 -0800 (PST)
+Received: by mail-lj1-x22b.google.com with SMTP id a25so7896570lji.9;
+        Fri, 04 Feb 2022 02:53:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=MCd5FvTHoJXq79AcAX0dk9oGdW9cYwxE282nBZk47JA=;
+        b=m3enqia+QjfqXIdfC9C0O99EZV+yUD5ggbnRGgMmoBEpJsEBXfFmwjCINqtSbW9kyk
+         1FoMHA2fW9LyYoQPlCPh1weQzaEG+saZ7g0xbKjf7XjqcHNaYGjr27124Tvv6Cvzg9rJ
+         RsVhRv8P61aK17kb6IJv/lu/oTw2iXEvjDj3vAbJUr1k3Q5TFO0VFnAwJWeHCsiC69lh
+         OQpLHm0/c8iw2A5Wb/SHyq3ROPFEKRs3ztdEkAcKynLInJD0FCr4+ixcp6PwnrjJC7uu
+         hPp4P4mySZBINfVms4gxyakPfT0f4OIBIfbxgYK0aIpkdlnQ32DLxnZBn0YR9/feu6MQ
+         eXtw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=MCd5FvTHoJXq79AcAX0dk9oGdW9cYwxE282nBZk47JA=;
+        b=eNAYuEXbq2suogFl7W5+OvkuwMJUVOna+OCamSlZCmGiDA2zv9cNgcwRj9MqXnysxN
+         2YoTd+NTSzK/ivfme3mjIL/uSuiU/1bZb+tMPQUrcCiWNCsVbbqgoWp+u/MJJnzClF7/
+         FoVGQBScI0sLrbvFCsd8rw2V1n/itvaiDstY/URW31mBkU8YLXzZ9YSnpeVGcvRLuhiL
+         a4CKWNoGInIVdOtQyo3JKHjZYbcdkpiN8Bpc2GzsAr3wkT6QGg9pmJc+tWZicNpqSLJO
+         j7ZF9r6TnarYwFv6UUmO0cnk9be2s9W1Av8fYxteus8BtUqcnmbZAk4EuBagO4jEI8G9
+         xCUQ==
+X-Gm-Message-State: AOAM5328IoW9/LecLmpjVY4/V/q1o+Ouk7Gn1QVFYQMjFDGqRVmIFtTO
+        BpUJ9SWGox65GTRaY/dbE5k4WvSKrPk=
+X-Google-Smtp-Source: ABdhPJwNPZVbMWpgWXGqKc9QooQhS/Rp+GFP+v/cpmkXs+b2z6hM/2I3YfyLji+7lqc15elscD3MMg==
+X-Received: by 2002:a05:651c:50f:: with SMTP id o15mr1393279ljp.119.1643972027273;
+        Fri, 04 Feb 2022 02:53:47 -0800 (PST)
+Received: from [192.168.1.103] ([31.173.86.75])
+        by smtp.gmail.com with ESMTPSA id j16sm257976lfp.306.2022.02.04.02.53.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 04 Feb 2022 02:53:46 -0800 (PST)
+Subject: Re: [PATCH resend] dt-bindings: ata: renesas,rcar-sata: Add r8a774e1
+ support
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
+        linux-ide@vger.kernel.org,
+        "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" 
+        <devicetree@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+References: <507cc45f44603afa6a70c05a3956fb7b13b49ed9.1643896347.git.geert+renesas@glider.be>
+ <99ac1fc9-fa12-325c-3b54-eb3cb996a5df@gmail.com>
+ <CAMuHMdXvsUevw8dHTracUHn5Uu4XsbtBssOKss_txH87rtUV7w@mail.gmail.com>
+From:   Sergei Shtylyov <sergei.shtylyov@gmail.com>
+Message-ID: <1cec2ed2-23cb-c838-f25c-f86d7b74d380@gmail.com>
+Date:   Fri, 4 Feb 2022 13:53:45 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <CAMuHMdXvsUevw8dHTracUHn5Uu4XsbtBssOKss_txH87rtUV7w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Linus,
+On 2/4/22 10:32 AM, Geert Uytterhoeven wrote:
 
-The following changes since commit 26291c54e111ff6ba87a164d85d4a4e134b731=
-5c:
+[...]
+>>> From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+>>> Document SATA support for the RZ/G2H SoC, no driver change required.
+>>
+>>    I don't have the RZ/G2H manual, is it available online somewhere?
+> 
+> https://www.renesas.com/eu/en/products/microcontrollers-microprocessors/rz-cortex-a-mpus/rzg-linux-platform/rzg-marketplace/document
+> You do have to register at the website before you can download it.
 
-  Linux 5.17-rc2 (2022-01-30 15:37:07 +0200)
+   Yeah, was able to download, thank you! Looking at the manuals...
 
-are available in the Git repository at:
+> Gr{oetje,eeting}s,
+> 
+>                         Geert
 
-  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata t=
-ags/ata-5.17-rc3
-
-for you to fetch changes up to ac9f0c810684a1b161c18eb4b91ce84cbc13c91d:
-
-  ata: libata-core: Introduce ATA_HORKAGE_NO_LOG_DIR horkage (2022-02-04 =
-16:44:23 +0900)
-
-----------------------------------------------------------------
-ata fixes for 5.17-rc3
-
-* Sergey volunteered to be a reviewer for the Renesas R-Car SATA
-  driver and PATA drivers. Update the MAINTAINERS file accordingly.
-
-* Regression fix: add a horkage flag to prevent accessing the log
-  directory log page with SATADOM-ML 3ME SATA devices as they react
-  badly to reading that log page (from Anton).
-
-----------------------------------------------------------------
-Anton Lundin (1):
-      ata: libata-core: Introduce ATA_HORKAGE_NO_LOG_DIR horkage
-
-Sergey Shtylyov (2):
-      MAINTAINERS: add myself as PATA drivers reviewer
-      MAINTAINERS: add myself as Renesas R-Car SATA driver reviewer
-
- MAINTAINERS               | 14 ++++++++++++++
- drivers/ata/libata-core.c | 10 ++++++++++
- include/linux/libata.h    |  1 +
- 3 files changed, 25 insertions(+)
+MBR, Sergey
