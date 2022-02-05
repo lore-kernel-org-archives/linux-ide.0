@@ -2,91 +2,72 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45BAEC433F5
-	for <linux-ide@archiver.kernel.org>; Sat,  5 Feb 2022 20:34:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEA7EC433F5
+	for <linux-ide@archiver.kernel.org>; Sat,  5 Feb 2022 21:15:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1381048AbiBEUeo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 5 Feb 2022 15:34:44 -0500
-Received: from mxout02.lancloud.ru ([45.84.86.82]:34260 "EHLO
-        mxout02.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232428AbiBEUei (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 5 Feb 2022 15:34:38 -0500
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout02.lancloud.ru 4F28B2072131
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>
-Subject: [PATCH v4 3/3] pata_artop: use *switch* in atp8xx_fixup()
-Date:   Sat, 5 Feb 2022 23:34:34 +0300
-Message-ID: <20220205203434.15339-4-s.shtylyov@omp.ru>
-X-Mailer: git-send-email 2.26.3
-In-Reply-To: <20220205203434.15339-1-s.shtylyov@omp.ru>
-References: <20220205203434.15339-1-s.shtylyov@omp.ru>
+        id S1381463AbiBEVPG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 5 Feb 2022 16:15:06 -0500
+Received: from [194.99.46.237] ([194.99.46.237]:34863 "EHLO
+        slot0.bluewaterleisure.com" rhost-flags-FAIL-FAIL-OK-OK)
+        by vger.kernel.org with ESMTP id S1381435AbiBEVPG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 5 Feb 2022 16:15:06 -0500
+DKIM-Signature: v=1; a=rsa-sha1; c=relaxed/relaxed; s=dkim; d=bluewaterleisure.com;
+ h=Reply-To:From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding; i=ker.mon@bluewaterleisure.com;
+ bh=4tWTvCMiAANa3mgiXtOvSlvoU8A=;
+ b=ASjbyp4x4JNB3qKCPG50FSfiRR2PPEKLyXU4sNU9rOIFsAVJppfs3GNvsPHmMXOPS5LsFyu81SFE
+   cRQ+Q2FRL0TOF2u49HHljpP+8Yqn4Ar8xvPtevv4N08u+4sckdCj2qxqNXnTYzJTxlu+INex7YOg
+   mrZN53n75nEY86qJ4wteVx6wbbhzurx0vQOX7VP4T0yk2fWbY7+Az/XGBQaz26Ye6lBjXiPEspBM
+   souwUkLbROzbTouWIOeXRxfkzVhmhtNas5B25CJSI5M4LxKRk3ZojSRMLh1UKw7/LDyvuZZ2Vi5u
+   YlhiuYWRVkHQnEEZLUtgcRwP1+9zXakWZkPrmw==
+DomainKey-Signature: a=rsa-sha1; c=nofws; q=dns; s=dkim; d=bluewaterleisure.com;
+ b=kSr41Vwaax8nWJwBvWrt0QcrUve9qd9hjpTPIMPo6vWkVtQt2QBuy+Uh4bSC9txMJhcF4xrvXCEv
+   3rBfmQsMEFSmysLtcuq4DYfGywe980v81pVjO9AdvQ3s0hIKdvHOEVpHRlcXvmG88n4ol31H3rrh
+   AiYYFQljY1TYta26AFsde321lrURKZ0tWtBkgBq1jR0SfZLZX8LzRCQvSm2mkkXlsR7LPXhZHFPD
+   bMpEWEYzgzFkf9KjqMP49QoNzG9nC99uoH1d43FBikGIjK6apc2u4kC+U7R45WxlXGcjnDMfBEkj
+   TGys+654SgPdcWjgXwIuimhB25f0LW17DUR27g==;
+Reply-To: tomander231@gmail.com
+From:   "Barrister Mustafa" <ker.mon@bluewaterleisure.com>
+To:     linux-ide@vger.kernel.org
+Subject: Aufmerksamkeit:
+Date:   5 Feb 2022 22:04:23 +0100
+Message-ID: <20220205220423.42B1C2F2AE773DEE@bluewaterleisure.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
- LFEX1907.lancloud.ru (fd00:f066::207)
+Content-Type: text/plain;
+        charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-This driver uses a string of the *if* statements in atp8xx_fixup() where
-a *switch* statement would fit better...
+Lieb linux-ide,
 
-Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
----
-Changes in version 4:
-- new patch.
+Ich bin Barrister Mustafa Ayvaz, hoffe, diese E-Mail findet Sie=20
+gut. Ich bin Anwalt des verstorbenen Herrn Robert, der aufgrund=20
+des Coronavirus sein Leben verlor, kontaktierte er w=C3=A4hrend seiner=20
+Gesch=C3=A4ftsreise in China. Ich kontaktiere Sie, um mit mir=20
+zusammenzuarbeiten, um die =C3=9Cberweisung eines Fonds von vier=20
+Millionen vierhundertzwanzigtausend Dollar zu sichern, verlie=C3=9F=20
+er.
 
- drivers/ata/pata_artop.c | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+Ich habe nach dem n=C3=A4chsten Angeh=C3=B6rigen meines verstorbenen Kunden=
+=20
+gesucht, ohne Erfolg, da ich seinen aktuellen Wohnsitz und seine=20
+Kontaktdaten nicht habe. Als ich suchte, stie=C3=9F ich auf Ihr Profil=20
+mit dem gleichen Nachnamen und am selben Ort mit den N=C3=A4chsten=20
+Angeh=C3=B6rigen. Ich beschloss, dich zu kontaktieren und dich als=20
+Bonafide Next Of Kin zu benutzen.
 
-diff --git a/drivers/ata/pata_artop.c b/drivers/ata/pata_artop.c
-index d8c388da0c70..0aef9941b5b1 100644
---- a/drivers/ata/pata_artop.c
-+++ b/drivers/ata/pata_artop.c
-@@ -28,7 +28,7 @@
- #include <linux/ata.h>
- 
- #define DRV_NAME	"pata_artop"
--#define DRV_VERSION	"0.4.8"
-+#define DRV_VERSION	"0.4.9"
- 
- /*
-  *	The ARTOP has 33 Mhz and "over clocked" timing tables. Until we
-@@ -315,12 +315,15 @@ static struct ata_port_operations artop6260_ops = {
- 
- static void atp8xx_fixup(struct pci_dev *pdev)
- {
--	if (pdev->device == 0x0005)
-+	u8 reg;
-+
-+	switch (pdev->device) {
-+	case 0x0005:
- 		/* BIOS may have left us in UDMA, clear it before libata probe */
- 		pci_write_config_byte(pdev, 0x54, 0);
--	else if (pdev->device == 0x0008 || pdev->device == 0x0009) {
--		u8 reg;
--
-+		break;
-+	case 0x0008:
-+	case 0x0009:
- 		/* Mac systems come up with some registers not set as we
- 		   will need them */
- 
-@@ -338,6 +341,7 @@ static void atp8xx_fixup(struct pci_dev *pdev)
- 		/* Enable IRQ output and burst mode */
- 		pci_read_config_byte(pdev, 0x4a, &reg);
- 		pci_write_config_byte(pdev, 0x4a, (reg & ~0x01) | 0x80);
-+		break;
- 	}
- }
- 
--- 
-2.26.3
+Ich bitte Sie um Ihre Zustimmung, Sie als Next Of Kin meines=20
+verstorbenen Kunden zu pr=C3=A4sentieren, da Sie beide den gleichen=20
+Nachnamen tragen. Die Gelder werden dann an Sie als Beg=C3=BCnstigten=20
+in Ihrem Land =C3=BCberwiesen und im Verh=C3=A4ltnis 60:40 geteilt, das=20
+sind 60% f=C3=BCr mich und 40% f=C3=BCr Sie. F=C3=BCr weitere Details=20
+kontaktieren Sie mich bitte sofort f=C3=BCr weitere Informationen =C3=BCber=
+=20
+diese meine E-Mail. 
 
+Danach sende ich Ihnen die Details, wie die Transaktion beginnen=20
+wird
+
+Gr=C3=BC=C3=9Fe
+Mustafa Ayvaz
