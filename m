@@ -2,80 +2,81 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DC0DC43217
-	for <linux-ide@archiver.kernel.org>; Mon,  7 Feb 2022 06:01:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86BF3C433F5
+	for <linux-ide@archiver.kernel.org>; Mon,  7 Feb 2022 06:01:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230178AbiBGF7O (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 7 Feb 2022 00:59:14 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44016 "EHLO
+        id S244094AbiBGF7P (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 7 Feb 2022 00:59:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351417AbiBGETl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 6 Feb 2022 23:19:41 -0500
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DB63C061A73
-        for <linux-ide@vger.kernel.org>; Sun,  6 Feb 2022 20:19:39 -0800 (PST)
+        with ESMTP id S1350082AbiBGDR0 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 6 Feb 2022 22:17:26 -0500
+X-Greylist: delayed 61 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 06 Feb 2022 19:17:25 PST
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 40019C061A73
+        for <linux-ide@vger.kernel.org>; Sun,  6 Feb 2022 19:17:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1644207577; x=1675743577;
+  t=1644203844; x=1675739844;
   h=from:to:cc:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=ckH44nJb9fQpuS59S/2lcWi1oi/ZU1Nr3wwDyx+cHnk=;
-  b=aK4UYqG3O8xmq7Jq9YquLcmJH+K7rzUeKaJEJ85yYg4bAmQbe/cq80oe
-   l4MCRccHKMWlh4yv1DLmyJBSygtTXwpXJcBQfnJlA+rYhPi/wpRrmmZx3
-   TW9jaFShBWV5zNrM1GxiaPTSh9Ansom0z3A61ugENc3ovy2qNgjwx44Tp
-   Bob88AwWhqYuxRVXQJxqT5Vhb9yvH3EDjM/fpwEo+HVHrXJYoU/eX8Jbd
-   sCqARS0lr532N5KBZ5sefx1z10qc3OaJWpKst8Uho8Frvng6N6S2ESb4B
-   GTcsEmLykHq655gcPh3VsZ2yggtFmPrGGWs1Kv26lnMye0sy3JKRC6vgU
+  bh=aTsgBI4Cz+RJ4Yn3w4NrVXmBgMpWMZItFE5CzDHNkA4=;
+  b=Fq+ZfrJK1it7lY322LfRtRkW915NNBBxJc/eZlulzenP0y11eCnK44ZJ
+   zJoBMReRso7UQB8Dq9X/X3crY9JupmO09T0wENTa08o69udy3+XzfZHvq
+   us8hnms0E+3BkNqxlD8JQgbamfuOnzV8xPpmLe9eEBhmt3pNNLUV9NlZ8
+   c8qexCcEF1BNV3V4QfA47HBtIgpFk3jXJ5T1SLWIUlQ1c56u+TnKjYD0K
+   cchEM7yESiXBYKlNalzDkfMPWBq88Li1zKhf2fszhuWgTklYAC9+1i3SL
+   fdZHoNtsuanEF01eOYqwBjMxvRFktoeiez5e79bqRuQaefGOXUFE5Ekwy
    A==;
 X-IronPort-AV: E=Sophos;i="5.88,348,1635177600"; 
-   d="scan'208";a="192295211"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Feb 2022 12:19:37 +0800
-IronPort-SDR: JegnDhdqJrSw4jiBIIJsZpRgq9gitifdhZ7zC9942V0EFI1GvMCnd04EY52p4pnyal9gN2NxYn
- +x0RIsre3y3OOnTN6YuDUTbVnwo5WNiIQkT9qh4K+WPV4j9cNZumIWeN9ggm2pP1jdyrg4ithi
- HtZ8eip6AUTQkMLj1YEp0SXGCwRDT2aDR5lhnh9dk5PGlHY4m/aVx8C+UCiiIGpAegsVnRWPVD
- Wt3xxjl0s19g+gMq3hBJNOOmOb6eA01AFqCUNDjYo0mvld2q9hyH7DZaR1qxmFkNCIdYiFzJ0a
- n6T/tHXkBASWDL2kw/hBla7c
+   d="scan'208";a="304196381"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 07 Feb 2022 11:16:19 +0800
+IronPort-SDR: wG5Spa0hLsayAnITK/RD99rmK3MYJabRe5UzzIgwblXVKY2L9mLsOr5VT2+C9Ioknyi7O/93KT
+ 5WhikuY8bOlZqpogpdOYR83B/XoLjRM7VNSqxSsauxRIqqK3NVEMoVCfAHEAIBVFUwiGWfiurq
+ 75SFCpg5I5mag/sditfTPkDIB3535kiwjrxRUuZCI4sRAZCf744MI8erxtEXImQDzvz8J3ArHh
+ 5EqRNtzc46Ei2EyIp8OzxTKWuQbsq0P+vREOtLhe7RURFbAgWUirdH31V6W3sdznRqj7qRBpQ3
+ OW8ot167LYXbY/8i8JAXKJas
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Feb 2022 19:51:29 -0800
-IronPort-SDR: m/CuaSRIJuuKyVLtSU1MPJ9UBW8J3A+OHCHvskNKYOwYsDz1cuC+M7VqeNUvz86WHi2jLfpaM1
- uaYkgAk1OblB7Eb2opLdgrlDM/2VAUFOD8s3cZOW428KlykplFbon/cgedgghFySuL6Tpa2lpr
- zKgtyNeZAZf6JSA83tw5fOuCYSZhMoBVCH38v9nPeWb2cOt5K7OnY14796Vmd/vLPzaH9dd8xW
- /HwKBtXNb39sY2c3HdlubRah284el5arbV7tYG0QLn81dsrdgg+2bVIqCnR3743saD3cjv+I++
- mWo=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Feb 2022 18:48:10 -0800
+IronPort-SDR: dA5tgSFgjl7LVrvO2TOCFi1IJf9feP0nbu1xm6c/s85TJrHfmMs7Wn5oYbSZiggGG7TQuREMqx
+ /33sq4xvq1fq28gj5N9UyMQDAO0+x5lOemndD2RAJt3k3djEUWyvnfoCvA7V6sJZBViGGWsdmF
+ vVvyRqaB79UmgbZLm6NgfHCnDaEard521l4THiAVQrEvDyXNDzFQjsZ3z6UY9bxqudF56D5kQ4
+ /DLR0Tn9qg6cMJBju2v6T3gqvpvucYrMnZCy0zXnYwmwoI8Q2bAHVXogFiJy8pdp8hwrerm/XQ
+ 1mo=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Feb 2022 20:19:39 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Feb 2022 19:16:19 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JsXwV3qqPz1SHwl
-        for <linux-ide@vger.kernel.org>; Sun,  6 Feb 2022 20:19:38 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JsWWR1Wzvz1SHwl
+        for <linux-ide@vger.kernel.org>; Sun,  6 Feb 2022 19:16:19 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:mime-version
-        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1644207577;
-         x=1646799578; bh=ckH44nJb9fQpuS59S/2lcWi1oi/ZU1Nr3wwDyx+cHnk=; b=
-        BZxdAmEi3zT1B81yoO/SB/zTRUeqQiVDMV+Yc+DzrY0GsA0z2XTPvdauYWTkKxOy
-        /Kc0zuCUiJTSoFFlh7xuUBzlSWtDTIMPqVnKjDO84ug/bQk3Klho/Z0Vrpw/W9v/
-        5mRcBPW2FzfGY9SVb6LQheYlVSQmHAnc6RM21TVLuiBXsCXEA3a2JBksRd66Vh93
-        cPbZiph1OOhdVzjG2UmyQ+GRXxP3tdu+GcbUW8d1GXZ+5Ti6gUYFfMdr/wqAHD5A
-        3LZ0QeHuwSbaLO2RfbvsWrUXMYLCg9NkQPs8SltPz9z+qcHpEbtceHFr/c4VQ4+P
-        G+teSE4cD+7U5QWC7VLEHw==
+        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1644203778;
+         x=1646795779; bh=aTsgBI4Cz+RJ4Yn3w4NrVXmBgMpWMZItFE5CzDHNkA4=; b=
+        i21gec+Xqsu+MfCIqWH4jPUdE1LMbqLhx+/D3eYQTHA9Xy4J9oKijry7E4OGMBK+
+        NCbYYbLHpoalXvqPNYx2ikU8VRIxAWQCtsnp9o9kr80Yv/gpl4ekhyTd0BPeG1u8
+        mgOfkBYPflFOErEnyNN/cIg2GrR6B33wZHY9vWt6OX9nQYBQ2zp8tSbhuRvTWv0Y
+        EHSpvIbJPiSgrsylig6uEDnc1l7m7tOdU/8fsVapYL/DQfzZbZqI4tkpu16nKlFh
+        WQSQs3CTJ0wG1qPIjKaDXGRJ+PXB3h2lYjTSmcQ2VTskVDYzRpr7fh3hfqqj/zH9
+        yXA9xHn+wli9DUyFuj3+HQ==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id ZPnffDxo-lsc for <linux-ide@vger.kernel.org>;
-        Sun,  6 Feb 2022 20:19:37 -0800 (PST)
+        with ESMTP id R_LIXzd1ZL-Q for <linux-ide@vger.kernel.org>;
+        Sun,  6 Feb 2022 19:16:18 -0800 (PST)
 Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JsXwT0NW1z1Rwrw;
-        Sun,  6 Feb 2022 20:19:36 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JsWWQ1HY6z1Rwrw;
+        Sun,  6 Feb 2022 19:16:17 -0800 (PST)
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 To:     linux-ide@vger.kernel.org
 Cc:     Hannes Reinecke <hare@suse.de>
-Subject: [PATCH v3] ata: libata-core: Fix ata_dev_config_cpr()
-Date:   Mon,  7 Feb 2022 13:19:35 +0900
-Message-Id: <20220207041935.967408-1-damien.lemoal@opensource.wdc.com>
+Subject: [PATCH] ata: libata-core: Fix ata_dev_config_cpr()
+Date:   Mon,  7 Feb 2022 12:16:16 +0900
+Message-Id: <20220207031616.944994-1-damien.lemoal@opensource.wdc.com>
 X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
@@ -97,27 +98,16 @@ avoiding problems in the field with older drives.
 
 Fixes: fe22e1c2f705 ("libata: support concurrent positioning ranges log")
 BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=3D215519
-Cc: stable@vger.kernel.org
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 ---
-Changes from v2:
-* Move the definition of ATA_LOG_CONCURRENT_POSITIONING_RANGES together
-  with other log pages numbers in the "READ_LOG_EXT pages" section in
-  include/linux/ata.h.
-
-Changes from v1:
-* Removed error message in case of ata_read_log_page() error: that
-  function already prints a message in case of failure.
-
- drivers/ata/libata-core.c | 14 ++++++--------
- include/linux/ata.h       |  2 +-
- 2 files changed, 7 insertions(+), 9 deletions(-)
+ drivers/ata/libata-core.c | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index e1b1dd215267..ba9273f80069 100644
+index e1b1dd215267..88125990861e 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -2448,23 +2448,21 @@ static void ata_dev_config_cpr(struct ata_device =
+@@ -2448,25 +2448,26 @@ static void ata_dev_config_cpr(struct ata_device =
 *dev)
  	struct ata_cpr_log *cpr_log =3D NULL;
  	u8 *desc, *buf =3D NULL;
@@ -143,30 +133,18 @@ index e1b1dd215267..ba9273f80069 100644
 -	err_mask =3D ata_read_log_page(dev, ATA_LOG_IDENTIFY_DEVICE,
 -				     ATA_LOG_CONCURRENT_POSITIONING_RANGES,
 -				     buf, buf_len >> 9);
+-	if (err_mask)
 +	err_mask =3D ata_read_log_page(dev, ATA_LOG_CONCURRENT_POSITIONING_RANG=
 ES,
 +				     0, buf, buf_len >> 9);
- 	if (err_mask)
++	if (err_mask) {
++		ata_dev_err(dev,
++			    "Read Concurrent Positioning Ranges log failed\n");
  		goto out;
++	}
 =20
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 199e47e97d64..21292b5bbb55 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -324,12 +324,12 @@ enum {
- 	ATA_LOG_NCQ_NON_DATA	=3D 0x12,
- 	ATA_LOG_NCQ_SEND_RECV	=3D 0x13,
- 	ATA_LOG_IDENTIFY_DEVICE	=3D 0x30,
-+	ATA_LOG_CONCURRENT_POSITIONING_RANGES =3D 0x47,
-=20
- 	/* Identify device log pages: */
- 	ATA_LOG_SECURITY	  =3D 0x06,
- 	ATA_LOG_SATA_SETTINGS	  =3D 0x08,
- 	ATA_LOG_ZONED_INFORMATION =3D 0x09,
--	ATA_LOG_CONCURRENT_POSITIONING_RANGES =3D 0x47,
-=20
- 	/* Identify device SATA settings log:*/
- 	ATA_LOG_DEVSLP_OFFSET	  =3D 0x30,
+ 	nr_cpr =3D buf[0];
+ 	if (!nr_cpr)
 --=20
 2.34.1
 
