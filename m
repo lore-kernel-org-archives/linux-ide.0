@@ -2,62 +2,50 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DC50C433EF
-	for <linux-ide@archiver.kernel.org>; Mon,  7 Feb 2022 20:56:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65DEDC43217
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Feb 2022 02:09:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231251AbiBGU4M (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 7 Feb 2022 15:56:12 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33724 "EHLO
+        id S234109AbiBHCJE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 7 Feb 2022 21:09:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48058 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231250AbiBGU4M (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Feb 2022 15:56:12 -0500
-Received: from mxout03.lancloud.ru (mxout03.lancloud.ru [45.84.86.113])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4E8CC0612A4
-        for <linux-ide@vger.kernel.org>; Mon,  7 Feb 2022 12:56:10 -0800 (PST)
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout03.lancloud.ru 03A58208FC44
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-Subject: Re: [PATCH] pata_hpt3x2n: fix writing to wrong register in
- hpt3x2n_bmdma_stop()
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>
-References: <2ce292b5-d49f-740e-1445-be7375963a58@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <47572144-f0b3-ab14-94ee-6a95a4abd0ac@omp.ru>
-Date:   Mon, 7 Feb 2022 23:56:07 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S1345474AbiBHCFh (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Feb 2022 21:05:37 -0500
+X-Greylist: delayed 400 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 07 Feb 2022 18:05:35 PST
+Received: from nasueidensha.com (nasueidensha.com [1.33.173.111])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 680B0C061355
+        for <linux-ide@vger.kernel.org>; Mon,  7 Feb 2022 18:05:34 -0800 (PST)
+Received: (qmail 5548 invoked by SAV 20220207.008 by uid 35700001); 8 Feb 2022 10:58:54 +0900
+To:     linux-ide@vger.kernel.org
+Subject: =?ISO-2022-JP?B?GyRCIVobKEJQTEMbJEIlaiVXJWwhPCU5JS0lYyVzJVohPCVzIVskKkxkOWckOyQiJGokLCRIJCYkNCQ2JCQkXiQ3JD8hWjN0PDAycTxSMUlFRTxLGyhCIBskQkZhP1wxRDZIPWohWxsoQg==?=
+Date:   Tue, 8 Feb 2022 01:58:54 +0000
+From:   =?ISO-2022-JP?B?GyRCM3Q8MDJxPFIxSUVFPEsbKEIgGyRCRmE/XDFENkg9ahsoQg==?= 
+        <wordpress@nasueidensha.com>
+Message-ID: <5de5f1924a2a4553d6ae7e67d91031e7@nasueidensha.com>
+X-Mailer: PHPMailer 5.2.14 (https://github.com/PHPMailer/PHPMailer)
+X-WPCF7-Content-Type: text/plain
 MIME-Version: 1.0
-In-Reply-To: <2ce292b5-d49f-740e-1445-be7375963a58@omp.ru>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
- LFEX1907.lancloud.ru (fd00:f066::207)
+Content-Type: text/plain; charset=ISO-2022-JP
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/7/22 11:32 PM, Sergey Shtylyov wrote:
+?? Christine is interested in your profile! Click Here: https://clck.ru/atxTN?8zq ?? 様
 
-> The driver's bmdma_stop() method writes to the wrong PCI config register
-> (0x52 intead of 0x54) when trying to clear the state machine on secondary
-> channel -- "luckily", the write falls on a read-only part of the primary
-> channel MISC. control 1 register, so no collateral damage is done...
+この度は株式会社栄電舎 那須営業所へお問い合わせいただき、ありがとうございました。
+３日以内に、弊社担当よりお返事させていただきます。
+いましばらくお待ちいただけますよう、よろしくお願いいたします。
 
-   Sorry, s/1/3/. Could you fix while applying please?
+【お問合せ内容】
 
-> 
-> Alan Cox fixed the HPT37x driver in commit 6929da4427b4 ("[PATCH] hpt37x:
-> Two important bug fixes") but forgot to check the HPT3x2N driver which has
-> the same bug. :-/
-> 
-> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+差出人：　?? Christine is interested in your profile! Click Here: https://clck.ru/atxTN?8zq ?? <linux-ide@vger.kernel.org>
 
-[...]
+会社名：　o8ij6idu
 
-MBR, Sergey
+電話番号：　508595026478
+
+メッセージ本文:　tok9qoo
+
+--
+このメールは 株式会社栄電舎 那須営業所 (http://nasueidensha.com) のお問い合わせフォームから送信されました
+
