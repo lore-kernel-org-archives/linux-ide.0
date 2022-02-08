@@ -2,181 +2,129 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B31FEC433F5
-	for <linux-ide@archiver.kernel.org>; Tue,  8 Feb 2022 06:50:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 371B3C433F5
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Feb 2022 08:07:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347830AbiBHGu2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 8 Feb 2022 01:50:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44872 "EHLO
+        id S1348859AbiBHIHi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 8 Feb 2022 03:07:38 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347842AbiBHGu2 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2022 01:50:28 -0500
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C596C0401F2
-        for <linux-ide@vger.kernel.org>; Mon,  7 Feb 2022 22:50:25 -0800 (PST)
+        with ESMTP id S1348877AbiBHIHf (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2022 03:07:35 -0500
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5BD47C0401EF
+        for <linux-ide@vger.kernel.org>; Tue,  8 Feb 2022 00:07:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1644303025; x=1675839025;
-  h=message-id:date:mime-version:subject:from:to:references:
-   in-reply-to:content-transfer-encoding;
-  bh=MUmIj9HT8Q0qoR8I95VwEicCdFoCMrt7kFRP92JZP0E=;
-  b=MdSPj3RDndto4A4dgYQtqiudDCW34mI/AHYCXRNsueQHvbIQhOJCSIWS
-   s6wYb4jKMjYFCt08q5nm3of2/KmPVYBrY+ljuVTBp/VohuOo0wtjW4jzb
-   Xu5aaWKRRAblLfMb6RrNRMDJQmzN3vx0HZeoHd4D/9uJBQccn+nmhW2cm
-   4fmwowahe9OsyHHqFu6qJ4JFiqDmgkgSDYz/P/skypk0Z91OEcxOxeyeX
-   XCuqeY7X4AtmukoLXsD3LeJjA6kuEPNz14P+gMb8qZ/9qDIyK+fNSEo3m
-   dQdw/hGqwMmfaxjON6JwZlf5CYL57N1xUBIEu7zvKKqCYZr6NlJu4kUb9
+  t=1644307655; x=1675843655;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=xl8JZwiCBa1DAB909hnmWesBMcLW2Z8/Q6Unw3KRTvw=;
+  b=W18Hbnk4LjKR/F8c8RzhjvA2TH4PRVebo3+iPn40uQwRHRQKXyZuePVs
+   Bbfi14RPWdaGY8Rr95D+1owRhh0FkuCpTUNJFzG/VNPGWs3Bv2MSIiaoQ
+   NK36C7El6IsaLQlHaGC7EwkKb7u3ZhlmMqfLRw64x/n0NkgiL+8D97AlD
+   aJhb74WFYeWmrMggmknYK27WqL3GMz07A4zLHh/lbFBrdg27Y9phXDw59
+   4WO+EKO9v3gMTP1bc5s52ljlsk/MsOrgfcq3OAL+//Ii5Pf0uRKhVnj39
+   oIpe79gN+Ct9u7qJYQ3m4/LWUK42qYm1OsrUwB4C20yraE6cI3+V/OJp6
    Q==;
 X-IronPort-AV: E=Sophos;i="5.88,352,1635177600"; 
-   d="scan'208";a="304297307"
+   d="scan'208";a="193381892"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Feb 2022 14:50:25 +0800
-IronPort-SDR: KkbV92TN7PK/+7hMoIZWAiCm7H+/t+xl7RaQDL7lVz0YfCDybDaBsyGXc0v2nhRjbsvZJTPgy4
- Lv7Ue82+wM7Gjx5coDttNplaKuudyLTe6Nfg1rqCtZD0ohBNlpDpjE96EGxn89bAKoO8uelnPw
- GmTC1QGbtZ0fWi9VcitRebDWXKHEb8rYayIDojLv4BnwLnLfyFsXGwHjSuOnNF/dBih9Oq1fiu
- l1aB2XyjwnRXxh3/rzSzbobiogcCSgKayBrlUkoXAsds4mfxRvnhyxaVJsQg3gwnYW6utcCAkk
- xlAVFatv1vGdFenmo2Ymc1Kr
+  by ob1.hgst.iphmx.com with ESMTP; 08 Feb 2022 16:07:34 +0800
+IronPort-SDR: wyf1S22Rnc99J5geZC8TI/eS+c4d1RTV8p9ioK2hKIu7QNPF3qU2jeCNmEHNX198463H90Xcey
+ uZbt4OY+4Efi/Fk5jHDqUyidIbyBRgVPmzGpXpdojHRDqOtFXHkNfKfpXTgqvrRcjGZGAekDNC
+ lvPdyFzxE1YcuyrsY241TJFuhitmyIJ14vYKMMmprSzSCFN1pzyjXCdVHaoZXqC0iI5CjGIfWt
+ CaiSpftGciFa/QC4rtEugIWnbY/Ht8kPMhRfltp1UWhtYhYxogAI7hOismZjFm19zx+BWSm5il
+ /gQGPN62ALmMjnQeBcoc5MuF
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Feb 2022 22:22:15 -0800
-IronPort-SDR: tU6HSTTfEqOGTwitgTqPowVIQ+fMzfhbieMSmzEfEhaUmaEyvr96Lxxx1jY8xRLg3gpdjWKRqa
- 30R7/vbgP2E+Yin608zunoLQbYcMoTNQKeL1BMg1npnz9ZaK42zJpL2O3uYeDes70wKuijXnDx
- 7hD5FDxVKxkWUhSeNA61Q4mkO/kleMXlsvZiLp+Fw69Smf8sJ47pzl/sFAhL1ZyBV4Jx8v2WVk
- LkEdNOWRs3NVZo3J7jIDjp6z9WNja39a9swfxyiMe12WAf49BA2sJiXU4vpxwCXTZTXKCVtGgz
- Qgs=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Feb 2022 23:39:22 -0800
+IronPort-SDR: DlWTAzN1G0bDCDxqp82QuCXF2/F7HgmhoWkvt6+yPeSW1JMlMwIqjl5GiERItrGRkWiOLb2Oac
+ WMyTLEhd2IPvTRmrfNWfPIEqSi2I4yY132hMOS4HIeIMZlIuaXw2x/UwpWhQLaJJirjU5WOJ4H
+ OKIbddnFXQotyWq+A7ntUkthVmLyz5CB4CDAfacYB6q70xtdsTxYVF8NLEZ34u19PTmoCn0hRA
+ 1SyxxEAIotX4VwJZF7ZfnqAKhIC2Te9ojYFRR2dSSCurxBC/Uo8nkEvOdlw8l28SW5SJCqSskX
+ vpY=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Feb 2022 22:50:26 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Feb 2022 00:07:33 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JtDD05mCgz1SVp0
-        for <linux-ide@vger.kernel.org>; Mon,  7 Feb 2022 22:50:24 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JtFx071sNz1SHwl
+        for <linux-ide@vger.kernel.org>; Tue,  8 Feb 2022 00:07:32 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:references:to:from:content-language
+        :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1644303024; x=1646895025; bh=MUmIj9HT8Q0qoR8I95VwEicCdFoCMrt7kFR
-        P92JZP0E=; b=NJikcCFFfOx3pR51028RBaDEsAGeQOzzw4N6xEVvAL9dkXclUdu
-        YgngF67VW+DG3IF1mAzTzHjogHaai55OhSb9yPlT1jiDYClsM3uf4QDPx+Tjs+RA
-        SQA5ilNoln1muFETNDl2NAfnkbvKW4hx7et0NlaVPbFb1QR+yqtkaP0TAFjGmiGo
-        xeO46BuVwRPZDPelgOImkIJNRr9MnS6M8xqIH/6XWfwat3POeI4iup3rijRuxrYT
-        vLEOpPQ1cvFTq1yz7D5B0lH2ZrPZUW+wP7/yYuYiPzjBbnba2lszlpWSG5n29E+9
-        lRemIbZltMNxpQPbAYT6N2u2jLIoj6zXX/A==
+        1644307652; x=1646899653; bh=xl8JZwiCBa1DAB909hnmWesBMcLW2Z8/Q6U
+        nw3KRTvw=; b=VSs914drxwHDoOXI3uw/xQMXAlUQaEghI5YNQ7eRSeOkxI9RZ8t
+        JsLPdhmzaFj/OzMXzLe3riKa/b7/9tbNtM75a7dnSTU6DKWZxPpv5rsLnRPJBB/7
+        AGf38LZRVGFbbNIoU45fX/HTUCYp4TXKhyC7OQ26F8+iLC2Qx6QCm4NyWzAtuJcZ
+        OgCf8qJh5Jw19J25DhEXzlNo+uTp85R3CLKk5uTWsJwpxa40nCUCj1MEUqq4m3K0
+        kByXgZ9P5HgGAK6tawAC4Gs+6FtG6xkhxdQofqVaO5O2YMHDxsJws27Yf4azH5ss
+        fNxLL6QF+Sav/YYA0rsJMS05p0PJz+L000w==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id M_TE0Czeo4fC for <linux-ide@vger.kernel.org>;
-        Mon,  7 Feb 2022 22:50:24 -0800 (PST)
+        with ESMTP id zgmAdt9vRHtd for <linux-ide@vger.kernel.org>;
+        Tue,  8 Feb 2022 00:07:32 -0800 (PST)
 Received: from [10.225.163.67] (unknown [10.225.163.67])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JtDCz1hHjz1Rwrw;
-        Mon,  7 Feb 2022 22:50:23 -0800 (PST)
-Message-ID: <3a8cb80d-0104-934a-3c21-56afcc510634@opensource.wdc.com>
-Date:   Tue, 8 Feb 2022 15:50:21 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JtFx008WGz1Rwrw;
+        Tue,  8 Feb 2022 00:07:31 -0800 (PST)
+Message-ID: <f726e9e1-bdad-ac8a-368b-aae423a00676@opensource.wdc.com>
+Date:   Tue, 8 Feb 2022 17:07:30 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.0
-Subject: Re: [PATCH] ata: sata_fsl: fix sscanf() and sysfs_emit() format
- strings
+Subject: Re: [PATCH] libata: add horkage for M88V29
 Content-Language: en-US
+To:     zboszor@pr.hu, linux-kernel@vger.kernel.org,
+        linux-ide@vger.kernel.org
+Cc:     zboszor@gmail.com
+References: <20220204125750.1771303-1-zboszor@pr.hu>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-To:     linuxppc-dev@lists.ozlabs.org,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>, linux-ide@vger.kernel.org
-References: <20220208064601.237582-1-damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <20220208064601.237582-1-damien.lemoal@opensource.wdc.com>
+In-Reply-To: <20220204125750.1771303-1-zboszor@pr.hu>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/8/22 15:46, Damien Le Moal wrote:
-> Use the %u format for unsigned int parameters handling with sscanf() and
-> sysfs_emit() to avoid compilation warnings. In
-> fsl_sata_rx_watermark_store(), the call to sscanf() to parse a single
-> argument is replaced with a call to kstrtouint().
-> 
-> While at it, also replace the printk(KERN_ERR) calls with dev_err()
-> calls and fix blank lines in fsl_sata_rx_watermark_store().
-> 
-> Reported-by: kernel test robot <lkp@intel.com>
-> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+On 2/4/22 21:57, zboszor@pr.hu wrote:
+> From: Zolt=C3=A1n B=C3=B6sz=C3=B6rm=C3=A9nyi <zboszor@gmail.com>
+>=20
+> This device is a CF card, or possibly an SSD in CF form factor.
+> It supports NCQ and high speed DMA.
+>=20
+> While it also advertises TRIM support, I/O errors are reported
+> when the discard mount option fstrim is used. TRIM also fails
+> when disabling NCQ and not just as an NCQ command.
+>=20
+> TRIM must be disabled for this device.
+>=20
+> Signed-off-by: Zolt=C3=A1n B=C3=B6sz=C3=B6rm=C3=A9nyi <zboszor@gmail.co=
+m>
 > ---
->  drivers/ata/sata_fsl.c | 16 +++++++---------
->  1 file changed, 7 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-> index da0152116d9f..556034a15430 100644
-> --- a/drivers/ata/sata_fsl.c
-> +++ b/drivers/ata/sata_fsl.c
-> @@ -322,7 +322,7 @@ static void fsl_sata_set_irq_coalescing(struct ata_host *host,
->  static ssize_t fsl_sata_intr_coalescing_show(struct device *dev,
->  		struct device_attribute *attr, char *buf)
->  {
-> -	return sysfs_emit(buf, "%d	%d\n",
-> +	return sysfs_emit(buf, "%u	%u\n",
->  			intr_coalescing_count, intr_coalescing_ticks);
->  }
->  
-> @@ -332,10 +332,8 @@ static ssize_t fsl_sata_intr_coalescing_store(struct device *dev,
->  {
->  	unsigned int coalescing_count,	coalescing_ticks;
->  
-> -	if (sscanf(buf, "%d%d",
-> -				&coalescing_count,
-> -				&coalescing_ticks) != 2) {
-> -		printk(KERN_ERR "fsl-sata: wrong parameter format.\n");
-> +	if (sscanf(buf, "%u%u", &coalescing_count, &coalescing_ticks) != 2) {
+>  drivers/ata/libata-core.c | 1 +
+>  1 file changed, 1 insertion(+)
+>=20
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 67f88027680a..4a7f58fcc411 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -4028,6 +4028,7 @@ static const struct ata_blacklist_entry ata_devic=
+e_blacklist [] =3D {
+> =20
+>  	/* devices that don't properly handle TRIM commands */
+>  	{ "SuperSSpeed S238*",		NULL,	ATA_HORKAGE_NOTRIM, },
+> +	{ "M88V29*",			NULL,	ATA_HORKAGE_NOTRIM, },
+> =20
+>  	/*
+>  	 * As defined, the DRAT (Deterministic Read After Trim) and RZAT
 
-PPC folks,
+Applied to for-5.17-fixes. Thanks !
 
-The "%u%u" sscanf() format above seems totally bogus to me. How could 2
-unsigned int without a separating characters be parsed as such ? Surely,
-a separation character is needed, no ?
-
-I cannot find any documentation on what the intr_coalescing sysfs
-attribute format should be... Please have a look.
-
-
-> +		dev_err(dev, "fsl-sata: wrong parameter format.\n");
->  		return -EINVAL;
->  	}
->  
-> @@ -359,7 +357,7 @@ static ssize_t fsl_sata_rx_watermark_show(struct device *dev,
->  	rx_watermark &= 0x1f;
->  	spin_unlock_irqrestore(&host->lock, flags);
->  
-> -	return sysfs_emit(buf, "%d\n", rx_watermark);
-> +	return sysfs_emit(buf, "%u\n", rx_watermark);
->  }
->  
->  static ssize_t fsl_sata_rx_watermark_store(struct device *dev,
-> @@ -373,8 +371,8 @@ static ssize_t fsl_sata_rx_watermark_store(struct device *dev,
->  	void __iomem *csr_base = host_priv->csr_base;
->  	u32 temp;
->  
-> -	if (sscanf(buf, "%d", &rx_watermark) != 1) {
-> -		printk(KERN_ERR "fsl-sata: wrong parameter format.\n");
-> +	if (kstrtouint(buf, 10, &rx_watermark) < 0) {
-> +		dev_err(dev, "fsl-sata: wrong parameter format.\n");
->  		return -EINVAL;
->  	}
->  
-> @@ -382,8 +380,8 @@ static ssize_t fsl_sata_rx_watermark_store(struct device *dev,
->  	temp = ioread32(csr_base + TRANSCFG);
->  	temp &= 0xffffffe0;
->  	iowrite32(temp | rx_watermark, csr_base + TRANSCFG);
-> -
->  	spin_unlock_irqrestore(&host->lock, flags);
-> +
->  	return strlen(buf);
->  }
->  
-
-
--- 
+--=20
 Damien Le Moal
 Western Digital Research
