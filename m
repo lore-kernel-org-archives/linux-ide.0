@@ -2,86 +2,99 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43E10C433FE
-	for <linux-ide@archiver.kernel.org>; Tue,  8 Feb 2022 22:53:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D69C8C433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  9 Feb 2022 20:25:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232035AbiBHWxR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 8 Feb 2022 17:53:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53874 "EHLO
+        id S231178AbiBIUZk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 9 Feb 2022 15:25:40 -0500
+Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:41948 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234579AbiBHWxO (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Feb 2022 17:53:14 -0500
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD155C07D8C0
-        for <linux-ide@vger.kernel.org>; Tue,  8 Feb 2022 14:50:56 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 601A0B81C15
-        for <linux-ide@vger.kernel.org>; Tue,  8 Feb 2022 22:50:55 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPS id E61A1C340ED
-        for <linux-ide@vger.kernel.org>; Tue,  8 Feb 2022 22:50:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1644360653;
-        bh=C18+AeHR60lcJEuuLdk/N5IIc9/+BfJnlUjLmrdzO6E=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=mPo97SGc4ge6b9U2SdeB0VtHg7a+sazrPOMBcxaRcYX+GxKt5YXfNccGfqMRLIGXb
-         oqCR98szz6FzwwhAdisZEUrSobTo/XphW+Oxeea6HRfB35YkqL+ek8oUlJD3py7eGJ
-         z2ZlIkhuGiyWklKhILHQXSxOUaHFDReSCSUJF6vOR5b3IXZvxiAKh8ztcemr5ONdfM
-         /3IiabEvdFAdrG1ZgMIATiyDYtI/OSXbDil8el6g8oJ+alynU2yJ/6XGhhqxN6a7b7
-         DAcsFQtdLmWrEL1YclN0mJ2JadT9ke3DneWtIxrikNdsBMQu5eCRWzI27wRk3IkeNK
-         Gsj8SnJbq55GQ==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-        id C8471C05FD0; Tue,  8 Feb 2022 22:50:53 +0000 (UTC)
-From:   bugzilla-daemon@kernel.org
-To:     linux-ide@vger.kernel.org
-Subject: [Bug 213157] BUG: unable to handle page fault for address: fffbb000,
- Workqueue: ata_sff ata_sff_pio_task
-Date:   Tue, 08 Feb 2022 22:50:53 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo io_ide@kernel-bugs.osdl.org
-X-Bugzilla-Product: IO/Storage
-X-Bugzilla-Component: IDE
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: erhard_f@mailbox.org
-X-Bugzilla-Status: RESOLVED
-X-Bugzilla-Resolution: OBSOLETE
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: io_ide@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_status resolution
-Message-ID: <bug-213157-11633-qkNqPSQJ9V@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-213157-11633@https.bugzilla.kernel.org/>
-References: <bug-213157-11633@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        with ESMTP id S230474AbiBIUZk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 9 Feb 2022 15:25:40 -0500
+Received: from mxout03.lancloud.ru (mxout03.lancloud.ru [45.84.86.113])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56BAFE00E17C
+        for <linux-ide@vger.kernel.org>; Wed,  9 Feb 2022 12:25:40 -0800 (PST)
+Received: from LanCloud
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout03.lancloud.ru 9348220A2D74
+Received: from LanCloud
+Received: from LanCloud
+Received: from LanCloud
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>
+Subject: [PATCH v5 2/2] ata: pata_artop: use *switch* in atp8xx_fixup()
+Date:   Wed, 9 Feb 2022 23:25:35 +0300
+Message-ID: <20220209202535.7679-3-s.shtylyov@omp.ru>
+X-Mailer: git-send-email 2.26.3
+In-Reply-To: <20220209202535.7679-1-s.shtylyov@omp.ru>
+References: <20220209202535.7679-1-s.shtylyov@omp.ru>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [192.168.11.198]
+X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
+ LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D213157
+This driver uses a string of the *if* statements in atp8xx_fixup() where
+a *switch* statement would fit better...
 
-Erhard F. (erhard_f@mailbox.org) changed:
+Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+---
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|---                         |OBSOLETE
+Changes in version 5:
+- fixed up #define DRV_VERSION;
+- added "ata: " prefix to the patch subject.
 
---- Comment #4 from Erhard F. (erhard_f@mailbox.org) ---
-Can't reproduce this on 5.16.x and 5.17-rc3. Which is supposedly a good thi=
-ng..
+Changes in version 4:
+- new patch.
 
-Closing.
+ drivers/ata/pata_artop.c | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
---=20
-You may reply to this email to add a comment.
+diff --git a/drivers/ata/pata_artop.c b/drivers/ata/pata_artop.c
+index 08e88403d0ab..20a8f31a3f57 100644
+--- a/drivers/ata/pata_artop.c
++++ b/drivers/ata/pata_artop.c
+@@ -28,7 +28,7 @@
+ #include <linux/ata.h>
+ 
+ #define DRV_NAME	"pata_artop"
+-#define DRV_VERSION	"0.4.7"
++#define DRV_VERSION	"0.4.8"
+ 
+ /*
+  *	The ARTOP has 33 Mhz and "over clocked" timing tables. Until we
+@@ -315,12 +315,15 @@ static struct ata_port_operations artop6260_ops = {
+ 
+ static void atp8xx_fixup(struct pci_dev *pdev)
+ {
+-	if (pdev->device == 0x0005)
++	u8 reg;
++
++	switch (pdev->device) {
++	case 0x0005:
+ 		/* BIOS may have left us in UDMA, clear it before libata probe */
+ 		pci_write_config_byte(pdev, 0x54, 0);
+-	else if (pdev->device == 0x0008 || pdev->device == 0x0009) {
+-		u8 reg;
+-
++		break;
++	case 0x0008:
++	case 0x0009:
+ 		/* Mac systems come up with some registers not set as we
+ 		   will need them */
+ 
+@@ -338,6 +341,7 @@ static void atp8xx_fixup(struct pci_dev *pdev)
+ 		/* Enable IRQ output and burst mode */
+ 		pci_read_config_byte(pdev, 0x4a, &reg);
+ 		pci_write_config_byte(pdev, 0x4a, (reg & ~0x01) | 0x80);
++		break;
+ 	}
+ }
+ 
+-- 
+2.26.3
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
