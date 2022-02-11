@@ -2,161 +2,121 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CD9EC433F5
-	for <linux-ide@archiver.kernel.org>; Fri, 11 Feb 2022 12:42:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66C37C433F5
+	for <linux-ide@archiver.kernel.org>; Fri, 11 Feb 2022 13:06:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234619AbiBKMm2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 11 Feb 2022 07:42:28 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:45768 "EHLO
+        id S1349169AbiBKNGa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 11 Feb 2022 08:06:30 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:41044 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232672AbiBKMm2 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Feb 2022 07:42:28 -0500
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 381F5EA9
-        for <linux-ide@vger.kernel.org>; Fri, 11 Feb 2022 04:42:27 -0800 (PST)
+        with ESMTP id S1350436AbiBKNG3 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Feb 2022 08:06:29 -0500
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24CC2FD2
+        for <linux-ide@vger.kernel.org>; Fri, 11 Feb 2022 05:06:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1644583347; x=1676119347;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=HIsmyyzxnOL+9tGfKWdV0u2iF9CQusQW1c1Ow4acMmI=;
-  b=oWSt2FvWInbJOWZyx8m6FBfDtbubtPo0kkcTI0fr9s5IQn2sd87iz34p
-   WfR+KGKuIBd7MlH7mZ3rMYUr2LvDoBSg0FKGyru8n92woL4ChdmY+7QBO
-   6r6hvVbnx0aus/QL7GqxIClESanqAcSmBm2jr+tWmYxd5IOsOD1SdD1SZ
-   dhvlyXFK+VsOHcHQiizEF1hBCkeeJGlaYnCNKjRoMKuWE5k/L5LU66sYS
-   hpJx7uG3cXPL/Omly711OuVMt1xNBOuV5w9Mr5K8J1zPANl1Ra1D6fcwI
-   qEHerFfTsoFdHw5lYH0N1KtAgTwzN6I8nqRIaNY18MqB11IjdpyPL/3AR
-   w==;
-X-IronPort-AV: E=Sophos;i="5.88,360,1635177600"; 
-   d="scan'208";a="304599332"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Feb 2022 20:42:26 +0800
-IronPort-SDR: 31cx3a1XY2cjEXjp4gcS2Mc2xxx52Razbmlie6nzmcWOyWxRSg6gfWrFsTghbC/IMK/pXtqyxA
- l52IURaJXsGm9haF5EY4YZ8/KI9Hg1D9OSBzFAUSf+aBRcb0/svtYLe+ADTEzux4GCM7I+5LMj
- bp7yHwX+/hWTCTVLDW6CMrlgOPqdWOnoNnxSh/d5avlCYJrau2kdJleZCzJKLwyAVyDEeyPa+g
- mz9f1GZmeI7Mrq33VR3MEQN6IbtnL3ggaE8FP56/qt5w4pjaGFzJEh7TpNmDycONyrhoKvU0Sy
- BcyaaeXc3QXyXEYH9pNuWtMX
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Feb 2022 04:14:12 -0800
-IronPort-SDR: 5drfSpIw/b74UrwSZx+XiqTZB88WQqjN9AHiAcHQ7FPRyXPHMuPGXDasjGL2kGGPDauPXy+Ihk
- luQgHAajEsCIjNYXaGQuSszJfDe1GAsr7q0C0MrZUbMciiRco9jWxE6xsYTT//rQ4k7IZ0pkHv
- IdgvXCignPRXgjF/JrG/lcd92RaHN3YMXA413aGUeSNriUm3UjkE9Id7VoMhzxszq++As/rgk3
- aJgfo2pb5hRfZDHpS5vb4o9azMSN+hwPq6pmG5wqv35+P9gvgFHAn+ie/sgC2qK5stwUBccabL
- 5dg=
+  t=1644584786; x=1676120786;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=RZCN4KuG/A015qGqAFfSvspjzrmRxb08eNKDuriaUfg=;
+  b=k+ec/aeNG8eGV5+BZAMVngFwe8mP8fx3zimQ5StQBL8PCTIVd5VPRE3/
+   1bP1E91JXzLWr2qA9ZX46nZQEOAI/gaTyeg63tlGSHgbESh5RyQNjceW6
+   +ygW+GAYWTJZ4KAUM7crcAMHpFpu1Gfvgvfpt1WM/Cakokx5N6KxpQomG
+   0JCvIEdnE5FAsGVM+UW24YEMVTtoK3AufuyHSC1o/LZvt8gCgTK1VG4gu
+   dchDwqcwlF1Y9V3dprrPvWsafPqOCXi3PFJbJ3yie0ePxkXGVyvMrUKjx
+   zwUmfYAxHV0tSyxkf8p/ShjgbWIB64EROz14XDbJ434b7Zod7b3s16n4X
+   A==;
+X-IronPort-AV: E=Sophos;i="5.88,361,1635177600"; 
+   d="scan'208";a="296798760"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 11 Feb 2022 21:06:25 +0800
+IronPort-SDR: jhtM5Lgvm9dQL8akg874wYNzsNcOLGMSP3xl0PSG45Oi9ykpsTvzEvb0yncSdhsbHogQIME4e/
+ T6FdFXbA3FiLuM5gevcqdcGg7dUc+dm222AESRgFiKOXx6lsHjvTYyP9nOlWRiLdb9Wqy5li8O
+ FKcNy+c1ops2n38VUIMyDl4Ed/WAvWifpeeLxDrBVtFULHCoPRsbb91Pg+z9N3agtaoRGNXvcc
+ e4InIjPorReNXFxoBZ7i9UwbbsBvziNkn03aliyjt4LOpMfykRWySAZ8y+oWoFe0AxUKHs+ZLD
+ JUd9uLB9AwPoLXXI+0Den+1d
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Feb 2022 04:39:21 -0800
+IronPort-SDR: 28IQoBNbH8idmMOOy3NgiTm3XohGDAWxCLwKmDzLcELpv/YfWjhGxBNKY7KJ6xQ4OBmkO23xeb
+ FRVVtrTehjjZCuL36dbMgvqOG89wLm5Nhi2QA7wEQaJYYaSWwG3nrTtjn5tLcTrf1ljY0gOQG2
+ lxd2j6jrQisdQlzRl17ZA8wgT5mbctNulyzxbCr451HWQDKp5qxZWNzzVWBm/R+WH64RZrrzs6
+ P0wRJ1eWZJJKN87RvYfOOHr2wYh69Dookb4gO8LqZ8ngEntCkEs9CYWTveRPlX7mqIg1M+iWo5
+ QkQ=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Feb 2022 04:42:27 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Feb 2022 05:06:26 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JwCtp0ybcz1SVnx
-        for <linux-ide@vger.kernel.org>; Fri, 11 Feb 2022 04:42:26 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JwDQV26jZz1SVny
+        for <linux-ide@vger.kernel.org>; Fri, 11 Feb 2022 05:06:26 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1644583345; x=1647175346; bh=HIsmyyzxnOL+9tGfKWdV0u2iF9CQusQW1c1
-        Ow4acMmI=; b=NgqVOoHtwDArmRjZbY48Xu4IAbnBTgFUYcBqJ/SlRdrqjamYaD8
-        hGP6mg1BruTMl64bTIFleULFcRZQJ/LDpkqMCOK95Hb9QsSBLzz/xOfqyfWyLman
-        6JF+c6wYVvPoiRwZpDKOxSNhB4f150y4JZdUfboBCikoRD7MD9xpOV69s8CTVnFC
-        cAS1POaWMzybUMRBUVcm0/thTw8vH68AXqjKtDLeOQsfAN636dOiri1AyTC0RTN/
-        VBz8lFYAuYdgVcntthULQ38p+ESk/OIgrFxJ7el868HH7obLkvgbA5YfJdY9cVD+
-        MZAwvcvHs3Tdu2RZKYMG7otDJ1oe91EcB/A==
+        opensource.wdc.com; h=content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1644584785;
+         x=1647176786; bh=RZCN4KuG/A015qGqAFfSvspjzrmRxb08eNKDuriaUfg=; b=
+        X5ec4H8s7HUsiKuG/QmYSeadTjybARL1+BXhAK25orTFzRIdhtsl0Yw7KwMO7PsV
+        3/kgJ7fPMFP4ISRB7RNw1FkL5zJTRDV2p3q15pbHkItlB7pLcWAL88j+ksBLG3p3
+        o1Do1B7xdk6IkGvAMdsYK1fi2vIWCtd7jxChzWPbOnk6ukjplxMWkQQbOSgRUMNx
+        iUyOFN+8pPKOM/mTlcfWCKL45npG2IULT/j5f3A8rigRZVPc4NEzytkJCh92YdYD
+        22fOOnFD6FMsSgLzrsEj89QjlyezhBqvGF87St5I06WXcwW7TJ5YbgLbummGHbEO
+        b9wOSCQSkJjYLod16Hxmyg==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id WbNiodjXkhwN for <linux-ide@vger.kernel.org>;
-        Fri, 11 Feb 2022 04:42:25 -0800 (PST)
-Received: from [10.225.163.67] (unknown [10.225.163.67])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JwCtm3vFWz1Rwrw;
-        Fri, 11 Feb 2022 04:42:24 -0800 (PST)
-Message-ID: <472dc8ad-1fe4-a87f-1301-09b475abd9d0@opensource.wdc.com>
-Date:   Fri, 11 Feb 2022 21:42:23 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: DMA-API: tegra-ahci 70027000.sata: device driver maps memory from
- kernel text or rodata
-Content-Language: en-US
-To:     Corentin Labbe <clabbe.montjoie@gmail.com>,
-        thierry.reding@gmail.com, jonathanh@nvidia.com
-Cc:     linux-ide@vger.kernel.org, linux-tegra@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <YgY+57iPSHo+YXHC@Red>
+        with ESMTP id 4oYrb4rxSQxv for <linux-ide@vger.kernel.org>;
+        Fri, 11 Feb 2022 05:06:25 -0800 (PST)
+Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JwDQT2crXz1Rwrw;
+        Fri, 11 Feb 2022 05:06:25 -0800 (PST)
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <YgY+57iPSHo+YXHC@Red>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-ide@vger.kernel.org
+Cc:     "Justin M . Forbes" <jforbes@fedoraproject.org>
+Subject: [GIT PULL] ata fixes for 5.17-rc4, followup
+Date:   Fri, 11 Feb 2022 22:06:22 +0900
+Message-Id: <20220211130622.965310-1-damien.lemoal@opensource.wdc.com>
+X-Mailer: git-send-email 2.34.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/11/22 19:48, Corentin Labbe wrote:
-> Hello
-> 
-> I boot my tegra-jetson-tk1 with some debug enabled and I got:
-> [   46.232240] WARNING: CPU: 1 PID: 2144 at kernel/dma/debug.c:1073 check_for_illegal_area+0xec/0x180
-> [   46.232255] DMA-API: tegra-ahci 70027000.sata: device driver maps memory from kernel text or rodata [addr=3f4026ed] [len=4096]
-> [   46.232262] Modules linked in:
-> [   46.232271] CPU: 1 PID: 2144 Comm: containerd Not tainted 5.16.9-dirty #8
-> [   46.232277] Hardware name: NVIDIA Tegra SoC (Flattened Device Tree)
-> [   46.232283] [<c0110c24>] (unwind_backtrace) from [<c010b4d4>] (show_stack+0x10/0x14)
-> [   46.232294] [<c010b4d4>] (show_stack) from [<c0ce90b0>] (dump_stack_lvl+0x58/0x70)
-> [   46.232305] [<c0ce90b0>] (dump_stack_lvl) from [<c0124648>] (__warn+0xd0/0x134)
-> [   46.232314] [<c0124648>] (__warn) from [<c0ce2b00>] (warn_slowpath_fmt+0x90/0xb4)
-> [   46.232322] [<c0ce2b00>] (warn_slowpath_fmt) from [<c01cdcd8>] (check_for_illegal_area+0xec/0x180)
-> [   46.232330] [<c01cdcd8>] (check_for_illegal_area) from [<c01cfab4>] (debug_dma_map_sg+0xa4/0x424)
-> [   46.232340] [<c01cfab4>] (debug_dma_map_sg) from [<c01ca4d8>] (__dma_map_sg_attrs+0xc4/0x140)
+Linus,
 
-It seems to be the command buffer that is at a weird address. So it may
-not be the driver but the IO issuer that is doing something wrong.
-The stack shows that this comes from a page fault and there does not
-seem to be any filesystem involved.
+The following changes since commit fda17afc6166e975bec1197bd94cd2a3317bce=
+3f:
 
-What is the reproducer for this ?
+  ata: libata-core: Fix ata_dev_config_cpr() (2022-02-07 22:38:02 +0900)
 
-Note that I do not have such hardware, so I will not be able to do
-anything about this.
+are available in the Git repository at:
 
-> [   46.232349] [<c01ca4d8>] (__dma_map_sg_attrs) from [<c01ca568>] (dma_map_sg_attrs+0x14/0x20)
-> [   46.232357] [<c01ca568>] (dma_map_sg_attrs) from [<c07cc408>] (ata_qc_issue+0x16c/0x414)
-> [   46.232366] [<c07cc408>] (ata_qc_issue) from [<c07d64f4>] (__ata_scsi_queuecmd+0x27c/0x4c4)
-> [   46.232376] [<c07d64f4>] (__ata_scsi_queuecmd) from [<c07d679c>] (ata_scsi_queuecmd+0x60/0x90)
-> [   46.232385] [<c07d679c>] (ata_scsi_queuecmd) from [<c07b36bc>] (scsi_queue_rq+0x440/0xb98)
-> [   46.232397] [<c07b36bc>] (scsi_queue_rq) from [<c05808fc>] (blk_mq_dispatch_rq_list+0x1d0/0x87c)
-> [   46.232406] [<c05808fc>] (blk_mq_dispatch_rq_list) from [<c0586628>] (__blk_mq_do_dispatch_sched+0x14c/0x2dc)
-> [   46.232415] [<c0586628>] (__blk_mq_do_dispatch_sched) from [<c0586b38>] (__blk_mq_sched_dispatch_requests+0x10c/0x168)
-> [   46.232423] [<c0586b38>] (__blk_mq_sched_dispatch_requests) from [<c0586c64>] (blk_mq_sched_dispatch_requests+0x34/0x5c)
-> [   46.232432] [<c0586c64>] (blk_mq_sched_dispatch_requests) from [<c057da8c>] (__blk_mq_run_hw_queue+0x5c/0xcc)
-> [   46.232442] [<c057da8c>] (__blk_mq_run_hw_queue) from [<c057dc9c>] (__blk_mq_delay_run_hw_queue+0x18c/0x1b4)
-> [   46.232451] [<c057dc9c>] (__blk_mq_delay_run_hw_queue) from [<c0586f80>] (blk_mq_sched_insert_requests+0xd0/0x320)
-> [   46.232460] [<c0586f80>] (blk_mq_sched_insert_requests) from [<c0581604>] (blk_mq_flush_plug_list+0x1c4/0x434)
-> [   46.232468] [<c0581604>] (blk_mq_flush_plug_list) from [<c0573d40>] (blk_flush_plug+0xd4/0x114)
-> [   46.232475] [<c0573d40>] (blk_flush_plug) from [<c0573f9c>] (blk_finish_plug+0x1c/0x28)
-> [   46.232482] [<c0573f9c>] (blk_finish_plug) from [<c0285740>] (read_pages+0x190/0x2bc)
-> [   46.232493] [<c0285740>] (read_pages) from [<c0285c1c>] (page_cache_ra_unbounded+0x164/0x230)
-> [   46.232501] [<c0285c1c>] (page_cache_ra_unbounded) from [<c027846c>] (filemap_fault+0x6d4/0xd04)
-> [   46.232509] [<c027846c>] (filemap_fault) from [<c02bacd0>] (__do_fault+0x38/0x104)
-> [   46.232519] [<c02bacd0>] (__do_fault) from [<c02c0920>] (handle_mm_fault+0xaa0/0xea8)
-> [   46.232528] [<c02c0920>] (handle_mm_fault) from [<c011563c>] (do_page_fault+0x15c/0x484)
-> [   46.232537] [<c011563c>] (do_page_fault) from [<c0115b2c>] (do_DataAbort+0x3c/0xb0)
-> [   46.232544] [<c0115b2c>] (do_DataAbort) from [<c0100e98>] (__dabt_usr+0x58/0x60)
-> [   46.232552] Exception stack(0xc6bc9fb0 to 0xc6bc9ff8)
-> [   46.232558] 9fa0:                                     00000001 bea726d8 014d40e0 01911fb8
-> [   46.232563] 9fc0: 00490000 0004cb15 00523858 006f6b68 00000000 b6f0c9c8 b6f0c9c8 bea72724
-> [   46.232569] 9fe0: 00000000 bea72678 b6ee2cbc b6ee41ec 200d0010 ffffffff
-> [   46.232573] irq event stamp: 15628
-> [   46.232577] hardirqs last  enabled at (15627): [<c01dba64>] ktime_get+0x1a4/0x1c8
-> [   46.232585] hardirqs last disabled at (15628): [<c0cfbfb0>] _raw_spin_lock_irqsave+0x68/0x6c
-> [   46.232594] softirqs last  enabled at (15332): [<c01015d8>] __do_softirq+0x328/0x590
-> [   46.232600] softirqs last disabled at (15327): [<c012cda8>] __irq_exit_rcu+0x128/0x1a8
-> [   46.232607] ---[ end trace 8655230c4b3626fb ]---
-> 
-> Regards
+  ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata t=
+ags/ata-5.17-rc4-2
 
+for you to fetch changes up to c8ea23d5fa59f28302d4e3370c75d9c308e64410:
 
--- 
-Damien Le Moal
-Western Digital Research
+  ata: libata-core: Disable TRIM on M88V29 (2022-02-08 17:06:14 +0900)
+
+----------------------------------------------------------------
+ata fixes for 5.17-rc4
+
+A couple of additional fixes for 5.17-rc4:
+
+* Fix compilation warnings in the sata_fsl driver (powerpc), from me.
+
+* Disable TRIM commands on M88V29 devices as these commands are failing
+  despite the device reporting it supports TRIM. From Zoltan.
+
+----------------------------------------------------------------
+Damien Le Moal (1):
+      ata: sata_fsl: fix sscanf() and sysfs_emit() format strings
+
+Zoltan Boszormenyi (1):
+      ata: libata-core: Disable TRIM on M88V29
+
+ drivers/ata/libata-core.c |  1 +
+ drivers/ata/sata_fsl.c    | 16 +++++++---------
+ 2 files changed, 8 insertions(+), 9 deletions(-)
