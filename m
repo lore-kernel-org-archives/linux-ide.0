@@ -2,108 +2,62 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3402DC433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 11 Feb 2022 07:43:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62CB4C433FE
+	for <linux-ide@archiver.kernel.org>; Fri, 11 Feb 2022 08:50:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347746AbiBKHnG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 11 Feb 2022 02:43:06 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:50952 "EHLO
+        id S229462AbiBKIuK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 11 Feb 2022 03:50:10 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:39814 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347759AbiBKHnF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Feb 2022 02:43:05 -0500
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DFF9220
-        for <linux-ide@vger.kernel.org>; Thu, 10 Feb 2022 23:43:05 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1644565383; x=1676101383;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=xV1Xt7qZuIJbKdhiwEYGnwXjYuIyIN/x/fsiGnpmYYw=;
-  b=gR0CMY5xOiGsFv1MY7269WO0VyHR2C3p/fNCQm1UWgGizlARj75eQhMa
-   2VrO+scOjWGgXOE9vYzsmp6RFaEJJ56oKWsNxy3DF/afOL6nmqyqeMapg
-   bD0JydhIjxYSu4Wqd2Bu9JpAEzhul/OrqEmGfvAwkj0mB2tK3ky19GvDV
-   myE5KTPNSEh5nt7s05LZ81Aq17bF/cF3bfkeWiI3JiUllQrbegA4Pxpwt
-   xYuif8KxAOl0e+6cfl9gG3ysQm2sUS34AaqH8NJHN+d4TpTsPL7yMztYK
-   f3bZJOFnBwyzEpzztduDd3YhOgBk1Qv5Om4xReDCdbZvOTgYLuPY9GSO/
-   g==;
-X-IronPort-AV: E=Sophos;i="5.88,359,1635177600"; 
-   d="scan'208";a="192675430"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Feb 2022 15:43:02 +0800
-IronPort-SDR: WfexfDlTgd+LuYPHVBHPc4uQ9M+BUILLqaQoSjCI0mJzU246ukm1V0sfoW4tCYOZLvIJ+MDG0A
- KUG0HhRN5rksbPBE9RaPlfQjbxc0yDv8Oq1gCTVVVSQrJIJAQbGkiX70e3L+03rdDw8U9oYaU0
- fbsMEwQom8xNjWGBDo3uilU3oiyQP/Tptru+zaspUfUDAkhQ0fWgR64SjVm/GfVuKoUWAFuUHi
- QEeJg1FTRDtVCaUytAgAQq0OOlxqsD50kKZknSYtu0i28z5U6w6SUtzvd6/9MQZcbhFGR7TN6Q
- iWSkJKQsBFaO+C4aMW8pe1jz
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2022 23:14:50 -0800
-IronPort-SDR: ByBTKoSQW/O40tnQUAYfwz4AshH0ZOMkw81a08fB+HsqkVR+INS1/2pTN/Pa7kZoKonx5Oy3cb
- fO29thDiE69s/2xh5kd57Rjr7gkHmNEP4PR0GO5guRZdvEDP0X5NPQiUU3Aq6NQdWooPUZFL+w
- q3cJY2T41SfC3gmlHwmBXx6hPbVyQyOE+a3l6BBBM4Jbs65QungEeGfcdMG3hxKWJRue0+9AZt
- PZ0Tt7nU2vBPWuBsX1gb1YyRkjXXtyeMWeDXcCr00q5dWEs6NW/XU+A/a0qT9sGAdzIgdz3zG5
- sHA=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2022 23:43:05 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Jw5FM717wz1SVp0
-        for <linux-ide@vger.kernel.org>; Thu, 10 Feb 2022 23:43:03 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1644565383; x=1647157384; bh=xV1Xt7qZuIJbKdhiwEYGnwXjYuIyIN/x/fs
-        iGnpmYYw=; b=JshSfVVOYE959No6nGQxRVk63PT3RmP6PQaYbL6DMAGcEbn159d
-        J7fyaH3wFhG73FJZng8Cp6a2tocOx8Z8+tHXzJ8yVuW8dNbaY7DlArOW2LLzN5Ba
-        dbQGF08J3JNDzSP+tnvqAwZq05WwsUH/bi/k5bzqxSklFFXoilKZttGp1S62vWE/
-        WVffW6JiKk92wkwsJ7u6IqAPjormbCW/BAcYR86tjoXuPt+EmoS0SvJb9o78SYIW
-        CtaHXBnTEkBurbDsWhNaLIOX08FmNqf1n16YYlbrSvB9RLcLwUmH18iNmQ1qmgPP
-        qhI6xEyGfZKKEObLKgYPeRfqj379FfVaOgQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 3Ba3w02UBYr2 for <linux-ide@vger.kernel.org>;
-        Thu, 10 Feb 2022 23:43:03 -0800 (PST)
-Received: from [10.225.163.67] (unknown [10.225.163.67])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Jw5FL664Gz1SHwl;
-        Thu, 10 Feb 2022 23:43:02 -0800 (PST)
-Message-ID: <ddc1de5f-04b2-19a3-ef95-dad189a66d04@opensource.wdc.com>
-Date:   Fri, 11 Feb 2022 16:43:01 +0900
+        with ESMTP id S1348178AbiBKIuI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Feb 2022 03:50:08 -0500
+X-Greylist: delayed 505 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 11 Feb 2022 00:50:06 PST
+Received: from mail.bizcall.pl (mail.bizcall.pl [192.71.213.112])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2A01102F
+        for <linux-ide@vger.kernel.org>; Fri, 11 Feb 2022 00:50:06 -0800 (PST)
+Received: by mail.bizcall.pl (Postfix, from userid 1001)
+        id 01DAC40CA7; Fri, 11 Feb 2022 09:38:29 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=bizcall.pl; s=mail;
+        t=1644568900; bh=L7rZPDqncV/PGNK3vBL4eFyhOA8rMHMu3jCfxnl4mEc=;
+        h=Date:From:To:Subject:From;
+        b=Jgp+z0LJxpH8GMrpPS2Tpz63eubVGQeaLRKkYoeqr/E0lZORHSKtng1l+TtL+xWYL
+         gBTdZT8dWg6Wu1lRAPwv9SnToKsBp6iszwPg24+WOy3+h8wRR0rCh/lhd9Vz9Bc3gr
+         +Fot3CgdhguQd+iGRNgDHO01kL8Cx43eAkjS3SbmPrgzotrA7Hwdi9+8Ct68wKcj1p
+         tP6yZWYQOyeSkTkc0FcousHKnke2+K0DnZZzsOaQpWVEbFNsLk7ANQWQtBokcW94+I
+         gx6be2wo5UbwZHnqoS/TrUFEB07gJMygYDtlwFTutFF1fiE8pcFHkfHwAmICxpTNz2
+         XWoi5ymRM38DQ==
+Received: by mail.bizcall.pl for <linux-ide@vger.kernel.org>; Fri, 11 Feb 2022 08:36:48 GMT
+Message-ID: <20220211084500-0.1.u.23aq.0.1f28asgieh@bizcall.pl>
+Date:   Fri, 11 Feb 2022 08:36:48 GMT
+From:   "Marek Onufrowicz" <marek.onufrowicz@bizcall.pl>
+To:     <linux-ide@vger.kernel.org>
+Subject: Prezentacja
+X-Mailer: mail.bizcall.pl
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH 5/9] pata_mpc52xx: use GFP_KERNEL
-Content-Language: en-US
-To:     Julia Lawall <Julia.Lawall@inria.fr>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>
-Cc:     kernel-janitors@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20220210204223.104181-1-Julia.Lawall@inria.fr>
- <20220210204223.104181-6-Julia.Lawall@inria.fr>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220210204223.104181-6-Julia.Lawall@inria.fr>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/11/22 05:42, Julia Lawall wrote:
-> Platform_driver probe functions aren't called with locks held
-> and thus don't need GFP_ATOMIC. Use GFP_KERNEL instead.
-> 
-> Problem found with Coccinelle.
-> 
-> Signed-off-by: Julia Lawall <Julia.Lawall@inria.fr>
+Dzie=C5=84 dobry!
 
-Applied to for-5.18. Thanks !
+Czy m=C3=B3g=C5=82bym przedstawi=C4=87 rozwi=C4=85zanie, kt=C3=B3re umo=C5=
+=BCliwia monitoring ka=C5=BCdego auta w czasie rzeczywistym w tym jego po=
+zycj=C4=99, zu=C5=BCycie paliwa i przebieg?
+
+Dodatkowo nasze narz=C4=99dzie minimalizuje koszty utrzymania samochod=C3=
+=B3w, skraca czas przejazd=C3=B3w, a tak=C5=BCe tworzenie planu tras czy =
+dostaw.
+
+Z naszej wiedzy i do=C5=9Bwiadczenia korzysta ju=C5=BC ponad 49 tys. Klie=
+nt=C3=B3w. Monitorujemy 809 000 pojazd=C3=B3w na ca=C5=82ym =C5=9Bwiecie,=
+ co jest nasz=C4=85 najlepsz=C4=85 wizyt=C3=B3wk=C4=85.
+
+Bardzo prosz=C4=99 o e-maila zwrotnego, je=C5=9Bli mogliby=C5=9Bmy wsp=C3=
+=B3lnie om=C3=B3wi=C4=87 potencja=C5=82 wykorzystania takiego rozwi=C4=85=
+zania w Pa=C5=84stwa firmie.
 
 
--- 
-Damien Le Moal
-Western Digital Research
+Pozdrawiam,
+Marek Onufrowicz
