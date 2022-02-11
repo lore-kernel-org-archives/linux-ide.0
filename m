@@ -2,265 +2,161 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6087C433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 11 Feb 2022 12:02:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CD9EC433F5
+	for <linux-ide@archiver.kernel.org>; Fri, 11 Feb 2022 12:42:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349821AbiBKMCI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 11 Feb 2022 07:02:08 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:49586 "EHLO
+        id S234619AbiBKMm2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 11 Feb 2022 07:42:28 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:45768 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349816AbiBKMCH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Feb 2022 07:02:07 -0500
-Received: from mail-wr1-x42a.google.com (mail-wr1-x42a.google.com [IPv6:2a00:1450:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1ADE6F4E
-        for <linux-ide@vger.kernel.org>; Fri, 11 Feb 2022 04:02:06 -0800 (PST)
-Received: by mail-wr1-x42a.google.com with SMTP id u1so1085107wrg.11
-        for <linux-ide@vger.kernel.org>; Fri, 11 Feb 2022 04:02:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre-com.20210112.gappssmtp.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=SKg5fgaSRnMfSUuR5qSVwQe2umofrKLlYtM6bnZW0nM=;
-        b=INTwi1N5tH0s4u9PMfQwQ3Yf+GzW5by2wfp+2ny8x/OOnJaeugXwYoCiXTcxHoSanf
-         wJ+BEzQv2Uzugz8U5r0b7ey/Yzd0kGrLIEiuozg5FIpD8YgXdVs+doS98xhJWo0Mba8Q
-         FYHVj/ZkjVAlt/wFto0stFJNRFIgwAw1MX69IQ36xuc4pFVXgzH31TlotcuwnNiXyYDe
-         onDRKXfOMFgNftjCDnj2764DPwCyFmAtig+DyPsAk0V4FoOPofQ6XXrKxDsv4TpIPxA+
-         CxT05NboeOk/3GZvh5nGKubPEzNayXlXoAIPWR3xn+2SuIlIrP7hiF73cfv91UQ/7guX
-         a3gg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=SKg5fgaSRnMfSUuR5qSVwQe2umofrKLlYtM6bnZW0nM=;
-        b=JXMbQag793AnWlFI94Io8bcw1TD5SfZTNLs4Jx2zmiIl8s7zI4tvNlTxdpeg+8lWhy
-         5y9u2wyLR3gV2mF8OePZIez7JdPgtP4SL4YeysoEGXLAZXb3u32LoYcg1yFTTFc//Rl8
-         zNV58AKRYzVKbPvCmU7WEUPVqe88ZxbJZtsVhHEpRcLDibIDdfFL9g3oDco0EJe2pHGl
-         i7Nuw3j9y70w6FT6/O7D1fn7IqmZszp8xuuN06G65jyVvthcrgA6UoOrOsm3d3ckSy51
-         iuPiW0/AY6T/kOkQWjgvZwFe7DEuj7EUXPulk07ngbVRpYNylGlMTwSJFkFvNrhK2Gfr
-         lifA==
-X-Gm-Message-State: AOAM531t2OBbtZWXnV+ObXJhIOqgisvvB3xNDuXbAHNzQ92ThG+uu+47
-        xNUjhVdyVLZVwOeHl0dWRLRtQQ==
-X-Google-Smtp-Source: ABdhPJxOk8Ft1kaaLr9QNpJwth1RnYfwy/lDSjmAiJXSSNiflQ9niPakqGD4UkyB8S4sPm/so3B1/Q==
-X-Received: by 2002:adf:bbc8:: with SMTP id z8mr1134991wrg.476.1644580924528;
-        Fri, 11 Feb 2022 04:02:04 -0800 (PST)
-Received: from localhost.localdomain (laubervilliers-658-1-213-31.w90-63.abo.wanadoo.fr. [90.63.244.31])
-        by smtp.googlemail.com with ESMTPSA id h10sm14695606wrt.57.2022.02.11.04.02.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Feb 2022 04:02:04 -0800 (PST)
-From:   Corentin Labbe <clabbe@baylibre.com>
-To:     damien.lemoal@opensource.wdc.com,
-        krzysztof.kozlowski@canonical.com, robh+dt@kernel.org
-Cc:     devicetree@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Corentin Labbe <clabbe@baylibre.com>,
-        Linus Walleij <linus.walleij@linaro.org>
-Subject: [PATCH v4] dt-bindings: convert ata/cortina,gemini-sata-bridge to yaml
-Date:   Fri, 11 Feb 2022 12:01:57 +0000
-Message-Id: <20220211120157.3385145-1-clabbe@baylibre.com>
-X-Mailer: git-send-email 2.25.1
+        with ESMTP id S232672AbiBKMm2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Feb 2022 07:42:28 -0500
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 381F5EA9
+        for <linux-ide@vger.kernel.org>; Fri, 11 Feb 2022 04:42:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1644583347; x=1676119347;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=HIsmyyzxnOL+9tGfKWdV0u2iF9CQusQW1c1Ow4acMmI=;
+  b=oWSt2FvWInbJOWZyx8m6FBfDtbubtPo0kkcTI0fr9s5IQn2sd87iz34p
+   WfR+KGKuIBd7MlH7mZ3rMYUr2LvDoBSg0FKGyru8n92woL4ChdmY+7QBO
+   6r6hvVbnx0aus/QL7GqxIClESanqAcSmBm2jr+tWmYxd5IOsOD1SdD1SZ
+   dhvlyXFK+VsOHcHQiizEF1hBCkeeJGlaYnCNKjRoMKuWE5k/L5LU66sYS
+   hpJx7uG3cXPL/Omly711OuVMt1xNBOuV5w9Mr5K8J1zPANl1Ra1D6fcwI
+   qEHerFfTsoFdHw5lYH0N1KtAgTwzN6I8nqRIaNY18MqB11IjdpyPL/3AR
+   w==;
+X-IronPort-AV: E=Sophos;i="5.88,360,1635177600"; 
+   d="scan'208";a="304599332"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 11 Feb 2022 20:42:26 +0800
+IronPort-SDR: 31cx3a1XY2cjEXjp4gcS2Mc2xxx52Razbmlie6nzmcWOyWxRSg6gfWrFsTghbC/IMK/pXtqyxA
+ l52IURaJXsGm9haF5EY4YZ8/KI9Hg1D9OSBzFAUSf+aBRcb0/svtYLe+ADTEzux4GCM7I+5LMj
+ bp7yHwX+/hWTCTVLDW6CMrlgOPqdWOnoNnxSh/d5avlCYJrau2kdJleZCzJKLwyAVyDEeyPa+g
+ mz9f1GZmeI7Mrq33VR3MEQN6IbtnL3ggaE8FP56/qt5w4pjaGFzJEh7TpNmDycONyrhoKvU0Sy
+ BcyaaeXc3QXyXEYH9pNuWtMX
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Feb 2022 04:14:12 -0800
+IronPort-SDR: 5drfSpIw/b74UrwSZx+XiqTZB88WQqjN9AHiAcHQ7FPRyXPHMuPGXDasjGL2kGGPDauPXy+Ihk
+ luQgHAajEsCIjNYXaGQuSszJfDe1GAsr7q0C0MrZUbMciiRco9jWxE6xsYTT//rQ4k7IZ0pkHv
+ IdgvXCignPRXgjF/JrG/lcd92RaHN3YMXA413aGUeSNriUm3UjkE9Id7VoMhzxszq++As/rgk3
+ aJgfo2pb5hRfZDHpS5vb4o9azMSN+hwPq6pmG5wqv35+P9gvgFHAn+ie/sgC2qK5stwUBccabL
+ 5dg=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Feb 2022 04:42:27 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JwCtp0ybcz1SVnx
+        for <linux-ide@vger.kernel.org>; Fri, 11 Feb 2022 04:42:26 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1644583345; x=1647175346; bh=HIsmyyzxnOL+9tGfKWdV0u2iF9CQusQW1c1
+        Ow4acMmI=; b=NgqVOoHtwDArmRjZbY48Xu4IAbnBTgFUYcBqJ/SlRdrqjamYaD8
+        hGP6mg1BruTMl64bTIFleULFcRZQJ/LDpkqMCOK95Hb9QsSBLzz/xOfqyfWyLman
+        6JF+c6wYVvPoiRwZpDKOxSNhB4f150y4JZdUfboBCikoRD7MD9xpOV69s8CTVnFC
+        cAS1POaWMzybUMRBUVcm0/thTw8vH68AXqjKtDLeOQsfAN636dOiri1AyTC0RTN/
+        VBz8lFYAuYdgVcntthULQ38p+ESk/OIgrFxJ7el868HH7obLkvgbA5YfJdY9cVD+
+        MZAwvcvHs3Tdu2RZKYMG7otDJ1oe91EcB/A==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id WbNiodjXkhwN for <linux-ide@vger.kernel.org>;
+        Fri, 11 Feb 2022 04:42:25 -0800 (PST)
+Received: from [10.225.163.67] (unknown [10.225.163.67])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JwCtm3vFWz1Rwrw;
+        Fri, 11 Feb 2022 04:42:24 -0800 (PST)
+Message-ID: <472dc8ad-1fe4-a87f-1301-09b475abd9d0@opensource.wdc.com>
+Date:   Fri, 11 Feb 2022 21:42:23 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: DMA-API: tegra-ahci 70027000.sata: device driver maps memory from
+ kernel text or rodata
+Content-Language: en-US
+To:     Corentin Labbe <clabbe.montjoie@gmail.com>,
+        thierry.reding@gmail.com, jonathanh@nvidia.com
+Cc:     linux-ide@vger.kernel.org, linux-tegra@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <YgY+57iPSHo+YXHC@Red>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <YgY+57iPSHo+YXHC@Red>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-This patch converts ata/cortina,gemini-sata-bridge binding to yaml
+On 2/11/22 19:48, Corentin Labbe wrote:
+> Hello
+> 
+> I boot my tegra-jetson-tk1 with some debug enabled and I got:
+> [   46.232240] WARNING: CPU: 1 PID: 2144 at kernel/dma/debug.c:1073 check_for_illegal_area+0xec/0x180
+> [   46.232255] DMA-API: tegra-ahci 70027000.sata: device driver maps memory from kernel text or rodata [addr=3f4026ed] [len=4096]
+> [   46.232262] Modules linked in:
+> [   46.232271] CPU: 1 PID: 2144 Comm: containerd Not tainted 5.16.9-dirty #8
+> [   46.232277] Hardware name: NVIDIA Tegra SoC (Flattened Device Tree)
+> [   46.232283] [<c0110c24>] (unwind_backtrace) from [<c010b4d4>] (show_stack+0x10/0x14)
+> [   46.232294] [<c010b4d4>] (show_stack) from [<c0ce90b0>] (dump_stack_lvl+0x58/0x70)
+> [   46.232305] [<c0ce90b0>] (dump_stack_lvl) from [<c0124648>] (__warn+0xd0/0x134)
+> [   46.232314] [<c0124648>] (__warn) from [<c0ce2b00>] (warn_slowpath_fmt+0x90/0xb4)
+> [   46.232322] [<c0ce2b00>] (warn_slowpath_fmt) from [<c01cdcd8>] (check_for_illegal_area+0xec/0x180)
+> [   46.232330] [<c01cdcd8>] (check_for_illegal_area) from [<c01cfab4>] (debug_dma_map_sg+0xa4/0x424)
+> [   46.232340] [<c01cfab4>] (debug_dma_map_sg) from [<c01ca4d8>] (__dma_map_sg_attrs+0xc4/0x140)
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
----
-Change since v1:
-- fixed cosmetic nits reported by Damien Le Moal
-Changes since v2:
-- Added blank lines between properties
-- Removed useless quotes and label
-- Re-indented description
-Change since v3:
-- removed MaxItems from syscon
+It seems to be the command buffer that is at a weird address. So it may
+not be the driver but the IO issuer that is doing something wrong.
+The stack shows that this comes from a page fault and there does not
+seem to be any filesystem involved.
 
- .../ata/cortina,gemini-sata-bridge.txt        |  55 ---------
- .../ata/cortina,gemini-sata-bridge.yaml       | 109 ++++++++++++++++++
- 2 files changed, 109 insertions(+), 55 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/ata/cortina,gemini-sata-bridge.txt
- create mode 100644 Documentation/devicetree/bindings/ata/cortina,gemini-sata-bridge.yaml
+What is the reproducer for this ?
 
-diff --git a/Documentation/devicetree/bindings/ata/cortina,gemini-sata-bridge.txt b/Documentation/devicetree/bindings/ata/cortina,gemini-sata-bridge.txt
-deleted file mode 100644
-index 1c3d3cc70051..000000000000
---- a/Documentation/devicetree/bindings/ata/cortina,gemini-sata-bridge.txt
-+++ /dev/null
-@@ -1,55 +0,0 @@
--* Cortina Systems Gemini SATA Bridge
--
--The Gemini SATA bridge in a SoC-internal PATA to SATA bridge that
--takes two Faraday Technology FTIDE010 PATA controllers and bridges
--them in different configurations to two SATA ports.
--
--Required properties:
--- compatible: should be
--  "cortina,gemini-sata-bridge"
--- reg: registers and size for the block
--- resets: phandles to the reset lines for both SATA bridges
--- reset-names: must be "sata0", "sata1"
--- clocks: phandles to the compulsory peripheral clocks
--- clock-names: must be "SATA0_PCLK", "SATA1_PCLK"
--- syscon: a phandle to the global Gemini system controller
--- cortina,gemini-ata-muxmode: tell the desired multiplexing mode for
--  the ATA controller and SATA bridges. Values 0..3:
--  Mode 0: ata0 master <-> sata0
--          ata1 master <-> sata1
--          ata0 slave interface brought out on IDE pads
--  Mode 1: ata0 master <-> sata0
--          ata1 master <-> sata1
--          ata1 slave interface brought out on IDE pads
--  Mode 2: ata1 master <-> sata1
--          ata1 slave  <-> sata0
--          ata0 master and slave interfaces brought out
--               on IDE pads
--  Mode 3: ata0 master <-> sata0
--          ata0 slave  <-> sata1
--          ata1 master and slave interfaces brought out
--               on IDE pads
--
--Optional boolean properties:
--- cortina,gemini-enable-ide-pins: enables the PATA to IDE connection.
--  The muxmode setting decides whether ATA0 or ATA1 is brought out,
--  and whether master, slave or both interfaces get brought out.
--- cortina,gemini-enable-sata-bridge: enables the PATA to SATA bridge
--  inside the Gemnini SoC. The Muxmode decides what PATA blocks will
--  be muxed out and how.
--
--Example:
--
--sata: sata@46000000 {
--	compatible = "cortina,gemini-sata-bridge";
--	reg = <0x46000000 0x100>;
--	resets = <&rcon 26>, <&rcon 27>;
--	reset-names = "sata0", "sata1";
--	clocks = <&gcc GEMINI_CLK_GATE_SATA0>,
--		 <&gcc GEMINI_CLK_GATE_SATA1>;
--	clock-names = "SATA0_PCLK", "SATA1_PCLK";
--	syscon = <&syscon>;
--	cortina,gemini-ata-muxmode = <3>;
--	cortina,gemini-enable-ide-pins;
--	cortina,gemini-enable-sata-bridge;
--};
-diff --git a/Documentation/devicetree/bindings/ata/cortina,gemini-sata-bridge.yaml b/Documentation/devicetree/bindings/ata/cortina,gemini-sata-bridge.yaml
-new file mode 100644
-index 000000000000..21a90975593b
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/cortina,gemini-sata-bridge.yaml
-@@ -0,0 +1,109 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/ata/cortina,gemini-sata-bridge.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Cortina Systems Gemini SATA Bridge
-+
-+maintainers:
-+  - Linus Walleij <linus.walleij@linaro.org>
-+
-+description: |
-+    The Gemini SATA bridge in a SoC-internal PATA to SATA bridge that
-+    takes two Faraday Technology FTIDE010 PATA controllers and bridges
-+    them in different configurations to two SATA ports.
-+
-+properties:
-+  compatible:
-+    const: cortina,gemini-sata-bridge
-+
-+  reg:
-+    maxItems: 1
-+
-+  resets:
-+    minItems: 2
-+    maxItems: 2
-+    description: phandles to the reset lines for both SATA bridges
-+
-+  reset-names:
-+    items:
-+      - const: sata0
-+      - const: sata1
-+
-+  clocks:
-+    minItems: 2
-+    maxItems: 2
-+    description: phandles to the compulsory peripheral clocks
-+
-+  clock-names:
-+    items:
-+      - const: SATA0_PCLK
-+      - const: SATA1_PCLK
-+
-+  syscon:
-+    $ref: /schemas/types.yaml#/definitions/phandle
-+    description: a phandle to the global Gemini system controller
-+
-+  cortina,gemini-ata-muxmode:
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    enum:
-+      - 0
-+      - 1
-+      - 2
-+      - 3
-+    description: |
-+      Tell the desired multiplexing mode for the ATA controller and SATA
-+      bridges.
-+      Mode 0: ata0 master <-> sata0
-+              ata1 master <-> sata1
-+              ata0 slave interface brought out on IDE pads
-+      Mode 1: ata0 master <-> sata0
-+              ata1 master <-> sata1
-+              ata1 slave interface brought out on IDE pads
-+      Mode 2: ata1 master <-> sata1
-+              ata1 slave  <-> sata0
-+              ata0 master and slave interfaces brought out on IDE pads
-+      Mode 3: ata0 master <-> sata0
-+              ata0 slave  <-> sata1
-+              ata1 master and slave interfaces brought out on IDE pads
-+
-+  cortina,gemini-enable-ide-pins:
-+    type: boolean
-+    description: Enables the PATA to IDE connection.
-+      The muxmode setting decides whether ATA0 or ATA1 is brought out,
-+      and whether master, slave or both interfaces get brought out.
-+
-+  cortina,gemini-enable-sata-bridge:
-+    type: boolean
-+    description: Enables the PATA to SATA bridge inside the Gemnini SoC.
-+      The Muxmode decides what PATA blocks will be muxed out and how.
-+
-+required:
-+  - clocks
-+  - clock-names
-+  - cortina,gemini-ata-muxmode
-+  - resets
-+  - reset-names
-+  - compatible
-+  - reg
-+  - syscon
-+
-+additionalProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/clock/cortina,gemini-clock.h>
-+    sata@46000000 {
-+      compatible = "cortina,gemini-sata-bridge";
-+      reg = <0x46000000 0x100>;
-+      resets = <&rcon 26>, <&rcon 27>;
-+      reset-names = "sata0", "sata1";
-+      clocks = <&gcc GEMINI_CLK_GATE_SATA0>,
-+               <&gcc GEMINI_CLK_GATE_SATA1>;
-+      clock-names = "SATA0_PCLK", "SATA1_PCLK";
-+      syscon = <&syscon>;
-+      cortina,gemini-ata-muxmode = <3>;
-+      cortina,gemini-enable-ide-pins;
-+      cortina,gemini-enable-sata-bridge;
-+    };
+Note that I do not have such hardware, so I will not be able to do
+anything about this.
+
+> [   46.232349] [<c01ca4d8>] (__dma_map_sg_attrs) from [<c01ca568>] (dma_map_sg_attrs+0x14/0x20)
+> [   46.232357] [<c01ca568>] (dma_map_sg_attrs) from [<c07cc408>] (ata_qc_issue+0x16c/0x414)
+> [   46.232366] [<c07cc408>] (ata_qc_issue) from [<c07d64f4>] (__ata_scsi_queuecmd+0x27c/0x4c4)
+> [   46.232376] [<c07d64f4>] (__ata_scsi_queuecmd) from [<c07d679c>] (ata_scsi_queuecmd+0x60/0x90)
+> [   46.232385] [<c07d679c>] (ata_scsi_queuecmd) from [<c07b36bc>] (scsi_queue_rq+0x440/0xb98)
+> [   46.232397] [<c07b36bc>] (scsi_queue_rq) from [<c05808fc>] (blk_mq_dispatch_rq_list+0x1d0/0x87c)
+> [   46.232406] [<c05808fc>] (blk_mq_dispatch_rq_list) from [<c0586628>] (__blk_mq_do_dispatch_sched+0x14c/0x2dc)
+> [   46.232415] [<c0586628>] (__blk_mq_do_dispatch_sched) from [<c0586b38>] (__blk_mq_sched_dispatch_requests+0x10c/0x168)
+> [   46.232423] [<c0586b38>] (__blk_mq_sched_dispatch_requests) from [<c0586c64>] (blk_mq_sched_dispatch_requests+0x34/0x5c)
+> [   46.232432] [<c0586c64>] (blk_mq_sched_dispatch_requests) from [<c057da8c>] (__blk_mq_run_hw_queue+0x5c/0xcc)
+> [   46.232442] [<c057da8c>] (__blk_mq_run_hw_queue) from [<c057dc9c>] (__blk_mq_delay_run_hw_queue+0x18c/0x1b4)
+> [   46.232451] [<c057dc9c>] (__blk_mq_delay_run_hw_queue) from [<c0586f80>] (blk_mq_sched_insert_requests+0xd0/0x320)
+> [   46.232460] [<c0586f80>] (blk_mq_sched_insert_requests) from [<c0581604>] (blk_mq_flush_plug_list+0x1c4/0x434)
+> [   46.232468] [<c0581604>] (blk_mq_flush_plug_list) from [<c0573d40>] (blk_flush_plug+0xd4/0x114)
+> [   46.232475] [<c0573d40>] (blk_flush_plug) from [<c0573f9c>] (blk_finish_plug+0x1c/0x28)
+> [   46.232482] [<c0573f9c>] (blk_finish_plug) from [<c0285740>] (read_pages+0x190/0x2bc)
+> [   46.232493] [<c0285740>] (read_pages) from [<c0285c1c>] (page_cache_ra_unbounded+0x164/0x230)
+> [   46.232501] [<c0285c1c>] (page_cache_ra_unbounded) from [<c027846c>] (filemap_fault+0x6d4/0xd04)
+> [   46.232509] [<c027846c>] (filemap_fault) from [<c02bacd0>] (__do_fault+0x38/0x104)
+> [   46.232519] [<c02bacd0>] (__do_fault) from [<c02c0920>] (handle_mm_fault+0xaa0/0xea8)
+> [   46.232528] [<c02c0920>] (handle_mm_fault) from [<c011563c>] (do_page_fault+0x15c/0x484)
+> [   46.232537] [<c011563c>] (do_page_fault) from [<c0115b2c>] (do_DataAbort+0x3c/0xb0)
+> [   46.232544] [<c0115b2c>] (do_DataAbort) from [<c0100e98>] (__dabt_usr+0x58/0x60)
+> [   46.232552] Exception stack(0xc6bc9fb0 to 0xc6bc9ff8)
+> [   46.232558] 9fa0:                                     00000001 bea726d8 014d40e0 01911fb8
+> [   46.232563] 9fc0: 00490000 0004cb15 00523858 006f6b68 00000000 b6f0c9c8 b6f0c9c8 bea72724
+> [   46.232569] 9fe0: 00000000 bea72678 b6ee2cbc b6ee41ec 200d0010 ffffffff
+> [   46.232573] irq event stamp: 15628
+> [   46.232577] hardirqs last  enabled at (15627): [<c01dba64>] ktime_get+0x1a4/0x1c8
+> [   46.232585] hardirqs last disabled at (15628): [<c0cfbfb0>] _raw_spin_lock_irqsave+0x68/0x6c
+> [   46.232594] softirqs last  enabled at (15332): [<c01015d8>] __do_softirq+0x328/0x590
+> [   46.232600] softirqs last disabled at (15327): [<c012cda8>] __irq_exit_rcu+0x128/0x1a8
+> [   46.232607] ---[ end trace 8655230c4b3626fb ]---
+> 
+> Regards
+
+
 -- 
-2.34.1
-
+Damien Le Moal
+Western Digital Research
