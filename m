@@ -2,91 +2,68 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1971C433EF
-	for <linux-ide@archiver.kernel.org>; Mon, 14 Feb 2022 08:07:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99A80C433EF
+	for <linux-ide@archiver.kernel.org>; Mon, 14 Feb 2022 08:37:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230360AbiBNIHv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 14 Feb 2022 03:07:51 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:38634 "EHLO
+        id S242063AbiBNIhY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 14 Feb 2022 03:37:24 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:60924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229908AbiBNIHv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 14 Feb 2022 03:07:51 -0500
-Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D65755F27B;
-        Mon, 14 Feb 2022 00:07:42 -0800 (PST)
-Received: from [192.168.0.2] (ip5f5aebfe.dynamic.kabel-deutschland.de [95.90.235.254])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id A6BA961EA1924;
-        Mon, 14 Feb 2022 09:07:39 +0100 (CET)
-Message-ID: <960946b8-8f73-9f81-735a-64e5cc555a9c@molgen.mpg.de>
-Date:   Mon, 14 Feb 2022 09:07:39 +0100
+        with ESMTP id S231775AbiBNIhY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 14 Feb 2022 03:37:24 -0500
+Received: from mxout03.lancloud.ru (mxout03.lancloud.ru [45.84.86.113])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DD2391
+        for <linux-ide@vger.kernel.org>; Mon, 14 Feb 2022 00:37:14 -0800 (PST)
+Received: from LanCloud
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout03.lancloud.ru 5B56020E782E
+Received: from LanCloud
+Received: from LanCloud
+Received: from LanCloud
+Subject: Re: [PATCH v2 1/2] ata: libata-sff: refactor ata_sff_set_devctl()
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>
+References: <20220213151032.4694-1-s.shtylyov@omp.ru>
+ <20220213151032.4694-2-s.shtylyov@omp.ru>
+ <82f8b8fd-56c8-b6ed-9658-822643e0e0c9@opensource.wdc.com>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <9bd9671f-e990-3ebe-a8d8-a3683ef58eeb@omp.ru>
+Date:   Mon, 14 Feb 2022 11:37:11 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.0
-Subject: Re: [PATCH 1/2] ahci: Add Green Sardine vendor ID as
- board_ahci_mobile
+In-Reply-To: <82f8b8fd-56c8-b6ed-9658-822643e0e0c9@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
-To:     Mario Limonciello <mario.limonciello@amd.com>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Nehal-bakulchandra Shah <Nehal-bakulchandra.Shah@amd.com>
-References: <20211112201539.17377-1-mario.limonciello@amd.com>
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20211112201539.17377-1-mario.limonciello@amd.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [192.168.11.198]
+X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
+ LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dear Mario,
+On 2/14/22 2:25 AM, Damien Le Moal wrote:
 
-
-(For the records, is part of Linux since 5.16-rc2 (commit 1527f69204fe).)
-
-Am 12.11.21 um 21:15 schrieb Mario Limonciello:
-> AMD requires that the SATA controller be configured for devsleep in order
-> for S0i3 entry to work properly.
+>> Commit 41dec29bcb05 ("libata: introduce sff_set_devctl() method") left some
+>> clumsy checks surrounding calls to ata_sff_set_devctl() which Jeff Garzik
+>> suggested to factor out...  and I never followed up. :-(
+>>
+>> At last, refactor ata_sff_set_devctl() to include the repetitive checks and
+>> return a 'bool' result indicating if the device control register exists or
+>> not.
+>>
+>> While at it, further update the 'kernel-doc' comment -- the device control
+>> register has never been a part of the taskfile, despite what Jeff and co.
+>> think! :-)
+>>
+>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 > 
-> commit b1a9585cc396 ("ata: ahci: Enable DEVSLP by default on x86 with
-> SLP_S0") sets up a kernel policy to enable devsleep on Intel mobile
-> platforms that are using s0ix.  Add the PCI ID for the SATA controller in
-> Green Sardine platforms to extend this policy by default for AMD based
-> systems using s0i3 as well.
-> 
-> Cc: Nehal-bakulchandra Shah <Nehal-bakulchandra.Shah@amd.com>
-> BugLink: https://bugzilla.kernel.org/show_bug.cgi?id=214091
-> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
-> ---
->   drivers/ata/ahci.c | 1 +
->   1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index d60f34718b5d..1e1167e725a4 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -438,6 +438,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->   	/* AMD */
->   	{ PCI_VDEVICE(AMD, 0x7800), board_ahci }, /* AMD Hudson-2 */
->   	{ PCI_VDEVICE(AMD, 0x7900), board_ahci }, /* AMD CZ */
-> +	{ PCI_VDEVICE(AMD, 0x7901), board_ahci_mobile }, /* AMD Green Sardine */
+> This patch has "v2"... I do not recall seeing a v1 and the cover letter has no
+> changelog (and no v2 tag)... Is this a new series ?
 
-Aren’t 0x7900 and 0x7901 the same device only in different modes? I 
-wonder, why different boards and different comments are used.
+   That v2 is there by mistake, please ignore it.
 
-Additionally, the device 0x7901 is also present in desktop systems like 
-Dell OptiPlex 5055 and MSI B350 MORTAR. Is `board_ahci_mobile` the right 
-board then? Or should the flag `AHCI_HFLAG_IS_MOBILE` be renamed to 
-avoid confusion?
+[...]
 
->   	/* AMD is using RAID class only for ahci controllers */
->   	{ PCI_VENDOR_ID_AMD, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
->   	  PCI_CLASS_STORAGE_RAID << 8, 0xffffff, board_ahci },
-
-
-Kind regards,
-
-Paul
+MBR, Sergey
