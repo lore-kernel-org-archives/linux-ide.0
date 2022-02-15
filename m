@@ -2,47 +2,47 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19B82C433EF
-	for <linux-ide@archiver.kernel.org>; Tue, 15 Feb 2022 15:31:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDA70C433F5
+	for <linux-ide@archiver.kernel.org>; Tue, 15 Feb 2022 15:33:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240195AbiBOPbk (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 15 Feb 2022 10:31:40 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:49626 "EHLO
+        id S240407AbiBOPeF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 15 Feb 2022 10:34:05 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:41088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240360AbiBOPbS (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Feb 2022 10:31:18 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32EE9C42A2;
-        Tue, 15 Feb 2022 07:29:12 -0800 (PST)
+        with ESMTP id S240572AbiBOPdu (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Feb 2022 10:33:50 -0500
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29BEA12341F;
+        Tue, 15 Feb 2022 07:30:24 -0800 (PST)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BDBE660AC8;
-        Tue, 15 Feb 2022 15:29:11 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80473C340ED;
-        Tue, 15 Feb 2022 15:29:10 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id DA7B6B81AEC;
+        Tue, 15 Feb 2022 15:30:22 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4155C36AE7;
+        Tue, 15 Feb 2022 15:30:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1644938951;
-        bh=myw3QrAMQ7VVVXV9oni2wkVFSEnyKFd6dj17fy2ABdo=;
+        s=k20201202; t=1644939021;
+        bh=SfZ1CUkW7s2hZdj66i08cGu/rpfa6wJU6owD1qYkzGU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ekPf4vi5DpvHSkEsHzFf9VBiwt655MpcytLRf/6JolJWGZl/CNhj0o8OpsdG+X+wH
-         mYEeFV+UTq8jpiM9D/JFYfeLP/GMMuuYTcbqTDjaAsNNzcNssMg0aajgkH1uABmnaW
-         5KT0rO8mLW74QCDBs8vNRU3f77pQm70ibjoPItnNcDMJmzzHITgFKb7/56jhty0YzU
-         +s7j6Hf9i15Hr0kIUW6nEXecTxk0eHILLTwDxtTUFcfi0gV7Sg44E3D1QzmU4h+vXV
-         +5pg3+G07AdltpzvtfIgdee6VxRHC1JV+GQwY/0ipXeXPputapeL/1ODCGhJms8v1Q
-         /NF8rdyBm5DsA==
+        b=ZsJkJKuaTCKMkb5MIX4cd2haW5QCire+IW6S6rhgSlOpAEUG9kguwITNPMfwX6nnE
+         Z0j1HYmlcHtXlztwUqYLBOcTbWjwXbE2bZ4B5RkRINCqogj77uRHqKdMbU4nPh1+Hx
+         /Zsd59qKEUJsFsPwlbri2eWxSOkMnLFUkQj33AAXMB7veAymPv51GfisnyZgIcQHvt
+         OC10mhRTe0fOW7mPVp+rg0JrD9wfAhj9i8JjRAoqKC8IUNX70WjnwkWJNjzpS8oXGf
+         ce3AF3djPrfwau6kWXInc2beeOwLXsRdKNumES1KX107AK8sGRZ6ZO4rIb5WMDEEuB
+         13DaXlDe7bsyg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     =?UTF-8?q?Zolt=C3=A1n=20B=C3=B6sz=C3=B6rm=C3=A9nyi?= 
         <zboszor@gmail.com>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 22/33] ata: libata-core: Disable TRIM on M88V29
-Date:   Tue, 15 Feb 2022 10:28:20 -0500
-Message-Id: <20220215152831.580780-22-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 15/23] ata: libata-core: Disable TRIM on M88V29
+Date:   Tue, 15 Feb 2022 10:29:49 -0500
+Message-Id: <20220215152957.581303-15-sashal@kernel.org>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20220215152831.580780-1-sashal@kernel.org>
-References: <20220215152831.580780-1-sashal@kernel.org>
+In-Reply-To: <20220215152957.581303-1-sashal@kernel.org>
+References: <20220215152957.581303-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
@@ -73,10 +73,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 4d848cfc406fe..24b67d78cb83d 100644
+index 1f54f82d22d61..d2b544bdc7b5e 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -4014,6 +4014,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+@@ -3989,6 +3989,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
  
  	/* devices that don't properly handle TRIM commands */
  	{ "SuperSSpeed S238*",		NULL,	ATA_HORKAGE_NOTRIM, },
