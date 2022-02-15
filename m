@@ -2,59 +2,83 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 573E9C433EF
-	for <linux-ide@archiver.kernel.org>; Mon, 14 Feb 2022 21:13:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E408EC433EF
+	for <linux-ide@archiver.kernel.org>; Tue, 15 Feb 2022 03:19:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229680AbiBNVOE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 14 Feb 2022 16:14:04 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:50904 "EHLO
+        id S233814AbiBODT4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 14 Feb 2022 22:19:56 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:43788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229506AbiBNVOE (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 14 Feb 2022 16:14:04 -0500
-Received: from mxout03.lancloud.ru (mxout03.lancloud.ru [45.84.86.113])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DAB081354B6;
-        Mon, 14 Feb 2022 13:13:55 -0800 (PST)
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout03.lancloud.ru 4A0D2208CD1B
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-Subject: Re: [PATCH] ata: add/use ata_taskfile::{error|status} fields
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <e99172ca-cf0e-5510-60fc-b19dc48658ac@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <49690264-a2b8-b11e-e944-1d2333f73334@omp.ru>
-Date:   Tue, 15 Feb 2022 00:13:53 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S233801AbiBODTy (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 14 Feb 2022 22:19:54 -0500
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CECA52252D;
+        Mon, 14 Feb 2022 19:19:45 -0800 (PST)
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 21F2TqXs014923;
+        Tue, 15 Feb 2022 03:19:30 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2021-07-09;
+ bh=FshK+SY46LCCks86OhomWMc97OEykwuZ1jfaUJeYJCo=;
+ b=p5aq//voQuFsznU3EwJLBgz7gtLt5AjbETpNRfaIw7zZ2tdhVrs7POydyY9S+R3A0pKH
+ DEkFHuEGY4anG+9VMi7gCkjpZQy1l5sQo02lzku/22uZcePrmd8bHu52+jQYLCPtlIrW
+ LLw5fMkc7ag4PVnKuyK0wy543JPcclS97j3xQdGajzts6xd/UD3jrnfzs0ccOk06wSFA
+ PQA+U1OKfcYnd6Q81Kiyfm6P48tRpxqNfuKzdcGra3e1lqZUcQ/72x3eh+AxBC5b9Vbm
+ iXk9hvX9fdbGlHD4u+uYY6n09S+/2NF14j4SUvy/fRLu8unWvDnwV+c3gr+Y9KNllaWa uQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3e64gt6e8j-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 15 Feb 2022 03:19:30 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 21F3HGGH058567;
+        Tue, 15 Feb 2022 03:19:29 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by userp3030.oracle.com with ESMTP id 3e620wpgs6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 15 Feb 2022 03:19:29 +0000
+Received: from userp3030.oracle.com (userp3030.oracle.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 21F3JMPA064243;
+        Tue, 15 Feb 2022 03:19:28 GMT
+Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
+        by userp3030.oracle.com with ESMTP id 3e620wpgqq-5;
+        Tue, 15 Feb 2022 03:19:28 +0000
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     linux-scsi@vger.kernel.org, Julia Lawall <Julia.Lawall@inria.fr>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-mtd@lists.infradead.org, alsa-devel@alsa-project.org,
+        linux-crypto@vger.kernel.org, netdev@vger.kernel.org,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        MPT-FusionLinux.pdl@broadcom.com, kernel-janitors@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+        linux-ide@vger.kernel.org
+Subject: Re: [PATCH 0/9] use GFP_KERNEL
+Date:   Mon, 14 Feb 2022 22:19:17 -0500
+Message-Id: <164489513314.15031.15565838256267303879.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.32.0
+In-Reply-To: <20220210204223.104181-1-Julia.Lawall@inria.fr>
+References: <20220210204223.104181-1-Julia.Lawall@inria.fr>
 MIME-Version: 1.0
-In-Reply-To: <e99172ca-cf0e-5510-60fc-b19dc48658ac@omp.ru>
 Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
- LFEX1907.lancloud.ru (fd00:f066::207)
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-GUID: nDoBGwfRKH754qY0VCkX57qyJcN4xiU4
+X-Proofpoint-ORIG-GUID: nDoBGwfRKH754qY0VCkX57qyJcN4xiU4
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/14/22 11:43 PM, Sergey Shtylyov wrote:
+On Thu, 10 Feb 2022 21:42:14 +0100, Julia Lawall wrote:
 
-> Add the explicit error and status register fields to 'struct ata_taskfile'
-> using the anonymous *union*s ('struct ide_taskfile' had that for ages!) and
-> update the libata taskfile code accordingly. There should be no object code
-> changes resulting from that...
+> Platform_driver and pci_driver probe functions aren't called with
+> locks held and thus don't need GFP_ATOMIC. Use GFP_KERNEL instead.
 > 
-> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+> All changes have been compile-tested.
 > 
-> ---
-> This patch is against the 'for-next' branch of Damien Le Moal's 'libata.git'
-> repo plus just posted 'drivers/ata/libata-scsi.c' patch.
 
-   Oh, and the 2 patch series for 'drivers/ata/libata-sff.c' posted not so long ago...
-There are only some offsets, so should probably apply indeptendently as well... :-)
+Applied to 5.18/scsi-queue, thanks!
 
-MBR, Sergey
+[8/9] mptfusion: use GFP_KERNEL
+      https://git.kernel.org/mkp/scsi/c/f69b0791df1d
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
