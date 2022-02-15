@@ -2,133 +2,147 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DED8C433F5
-	for <linux-ide@archiver.kernel.org>; Tue, 15 Feb 2022 04:54:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20314C433F5
+	for <linux-ide@archiver.kernel.org>; Tue, 15 Feb 2022 07:05:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229498AbiBOEyp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 14 Feb 2022 23:54:45 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:37892 "EHLO
+        id S234700AbiBOHGG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 15 Feb 2022 02:06:06 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:45896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232367AbiBOEyp (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 14 Feb 2022 23:54:45 -0500
-Received: from mga11.intel.com (mga11.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9AF10C5D84;
-        Mon, 14 Feb 2022 20:54:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1644900875; x=1676436875;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=ToPYTSKqgT3dHAF94OVKr+aABefwhPvEIXV8gTUWHE4=;
-  b=OJ5mlsxKVhXToEKmGwx3L2WnzhZbXXTRi6YWelSyddUA76r4a3KGgKXF
-   lFc8Q+5060DwaCVSqiZPONaWV53XyMx6OHQdk9pNzpRuuS0VpBkUmaqQY
-   MFE7K+PqxE9AaJWbzD0iYpN/YYA/FFbhXM+Up17YmfoDLN9nWiT6y1OhU
-   3ucT2aJ/MwWZmM+NS6HhoF7BD66jF6/o43n0fciyibJ8b5ZSPI4KTLSoA
-   kItC/TW9C2gCANf6v7TyqdPDUBwTxZqzkdGNDyn7W11ccwnh7L2bnpQ7v
-   94p8BDB/hBA8d7LthCddVzuFA10JObYJOGUQJQnCs1kBPg31IpgTfGIfw
-   g==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10258"; a="247844134"
-X-IronPort-AV: E=Sophos;i="5.88,369,1635231600"; 
-   d="scan'208";a="247844134"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Feb 2022 20:54:35 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.88,369,1635231600"; 
-   d="scan'208";a="570633505"
-Received: from lkp-server01.sh.intel.com (HELO d95dc2dabeb1) ([10.239.97.150])
-  by orsmga001.jf.intel.com with ESMTP; 14 Feb 2022 20:54:33 -0800
-Received: from kbuild by d95dc2dabeb1 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1nJprF-0009Hr-1g; Tue, 15 Feb 2022 04:54:33 +0000
-Date:   Tue, 15 Feb 2022 12:54:20 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org
-Subject: Re: [PATCH] ata: add/use ata_taskfile::{error|status} fields
-Message-ID: <202202151209.hSVAcH7A-lkp@intel.com>
-References: <e99172ca-cf0e-5510-60fc-b19dc48658ac@omp.ru>
+        with ESMTP id S233408AbiBOHGF (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Feb 2022 02:06:05 -0500
+Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0DC871C94;
+        Mon, 14 Feb 2022 23:05:54 -0800 (PST)
+Received: from [192.168.0.2] (ip5f5aebbd.dynamic.kabel-deutschland.de [95.90.235.189])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 61C1161EA1928;
+        Tue, 15 Feb 2022 08:05:51 +0100 (CET)
+Message-ID: <6c846941-151d-e8a5-3ce8-a392b97186a8@molgen.mpg.de>
+Date:   Tue, 15 Feb 2022 08:05:50 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e99172ca-cf0e-5510-60fc-b19dc48658ac@omp.ru>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.0
+Subject: Re: [PATCH 1/2] ahci: Add Green Sardine vendor ID as
+ board_ahci_mobile
+Content-Language: en-US
+To:     Mario Limonciello <Mario.Limonciello@amd.com>,
+        Hans de Goede <hdegoede@redhat.com>
+Cc:     linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Nehal-bakulchandra Shah <Nehal-bakulchandra.Shah@amd.com>
+References: <20211112201539.17377-1-mario.limonciello@amd.com>
+ <960946b8-8f73-9f81-735a-64e5cc555a9c@molgen.mpg.de>
+ <DM4PR12MB516853204C9D7E7EAAFBC91FE2339@DM4PR12MB5168.namprd12.prod.outlook.com>
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <DM4PR12MB516853204C9D7E7EAAFBC91FE2339@DM4PR12MB5168.namprd12.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Sergey,
-
-I love your patch! Yet something to improve:
-
-[auto build test ERROR on linus/master]
-[also build test ERROR on v5.17-rc4 next-20220214]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
-
-url:    https://github.com/0day-ci/linux/commits/Sergey-Shtylyov/ata-add-use-ata_taskfile-error-status-fields/20220215-044836
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git d567f5db412ed52de0b3b3efca4a451263de6108
-config: i386-buildonly-randconfig-r006-20220214 (https://download.01.org/0day-ci/archive/20220215/202202151209.hSVAcH7A-lkp@intel.com/config)
-compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project 37f422f4ac31c8b8041c6b62065263314282dab6)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/0day-ci/linux/commit/5d89e7cd8ab42fd2cb6f59a7922784b0cce835bf
-        git remote add linux-review https://github.com/0day-ci/linux
-        git fetch --no-tags linux-review Sergey-Shtylyov/ata-add-use-ata_taskfile-error-status-fields/20220215-044836
-        git checkout 5d89e7cd8ab42fd2cb6f59a7922784b0cce835bf
-        # save the config file to linux build tree
-        mkdir build_dir
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=i386 SHELL=/bin/bash drivers/ata/
-
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
-
-All errors (new ones prefixed by >>):
-
->> drivers/ata/sata_vsc.c:203:21: error: use of undeclared identifier 'feature'; did you mean 'return'?
-                   tf->hob_feature = feature >> 8;
-                                     ^~~~~~~
-                                     return
->> drivers/ata/sata_vsc.c:203:21: error: expected expression
-   2 errors generated.
+Dear Mario,
 
 
-vim +203 drivers/ata/sata_vsc.c
+Am 14.02.22 um 17:07 schrieb Limonciello, Mario:
 
-^1da177e4c3f41 drivers/scsi/sata_vsc.c Linus Torvalds  2005-04-16  181  
-^1da177e4c3f41 drivers/scsi/sata_vsc.c Linus Torvalds  2005-04-16  182  
-^1da177e4c3f41 drivers/scsi/sata_vsc.c Linus Torvalds  2005-04-16  183  static void vsc_sata_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
-^1da177e4c3f41 drivers/scsi/sata_vsc.c Linus Torvalds  2005-04-16  184  {
-^1da177e4c3f41 drivers/scsi/sata_vsc.c Linus Torvalds  2005-04-16  185  	struct ata_ioports *ioaddr = &ap->ioaddr;
-5d89e7cd8ab42f drivers/ata/sata_vsc.c  Sergey Shtylyov 2022-02-14  186  	u16 nsect, lbal, lbam, lbah, error;
-^1da177e4c3f41 drivers/scsi/sata_vsc.c Linus Torvalds  2005-04-16  187  
-5d89e7cd8ab42f drivers/ata/sata_vsc.c  Sergey Shtylyov 2022-02-14  188  	tf->status = ata_sff_check_status(ap);
-0d5ff566779f89 drivers/ata/sata_vsc.c  Tejun Heo       2007-02-01  189  	tf->device = readw(ioaddr->device_addr);
-5d89e7cd8ab42f drivers/ata/sata_vsc.c  Sergey Shtylyov 2022-02-14  190  	error = readw(ioaddr->error_addr);
-0d5ff566779f89 drivers/ata/sata_vsc.c  Tejun Heo       2007-02-01  191  	nsect = readw(ioaddr->nsect_addr);
-0d5ff566779f89 drivers/ata/sata_vsc.c  Tejun Heo       2007-02-01  192  	lbal = readw(ioaddr->lbal_addr);
-0d5ff566779f89 drivers/ata/sata_vsc.c  Tejun Heo       2007-02-01  193  	lbam = readw(ioaddr->lbam_addr);
-0d5ff566779f89 drivers/ata/sata_vsc.c  Tejun Heo       2007-02-01  194  	lbah = readw(ioaddr->lbah_addr);
-ac19bff25b6834 drivers/scsi/sata_vsc.c Jeff Garzik     2005-10-29  195  
-5d89e7cd8ab42f drivers/ata/sata_vsc.c  Sergey Shtylyov 2022-02-14  196  	tf->error = error;
-ac19bff25b6834 drivers/scsi/sata_vsc.c Jeff Garzik     2005-10-29  197  	tf->nsect = nsect;
-ac19bff25b6834 drivers/scsi/sata_vsc.c Jeff Garzik     2005-10-29  198  	tf->lbal = lbal;
-ac19bff25b6834 drivers/scsi/sata_vsc.c Jeff Garzik     2005-10-29  199  	tf->lbam = lbam;
-ac19bff25b6834 drivers/scsi/sata_vsc.c Jeff Garzik     2005-10-29  200  	tf->lbah = lbah;
-^1da177e4c3f41 drivers/scsi/sata_vsc.c Linus Torvalds  2005-04-16  201  
-^1da177e4c3f41 drivers/scsi/sata_vsc.c Linus Torvalds  2005-04-16  202  	if (tf->flags & ATA_TFLAG_LBA48) {
-ac19bff25b6834 drivers/scsi/sata_vsc.c Jeff Garzik     2005-10-29 @203  		tf->hob_feature = feature >> 8;
-^1da177e4c3f41 drivers/scsi/sata_vsc.c Linus Torvalds  2005-04-16  204  		tf->hob_nsect = nsect >> 8;
-^1da177e4c3f41 drivers/scsi/sata_vsc.c Linus Torvalds  2005-04-16  205  		tf->hob_lbal = lbal >> 8;
-^1da177e4c3f41 drivers/scsi/sata_vsc.c Linus Torvalds  2005-04-16  206  		tf->hob_lbam = lbam >> 8;
-^1da177e4c3f41 drivers/scsi/sata_vsc.c Linus Torvalds  2005-04-16  207  		tf->hob_lbah = lbah >> 8;
-^1da177e4c3f41 drivers/scsi/sata_vsc.c Linus Torvalds  2005-04-16  208  	}
-^1da177e4c3f41 drivers/scsi/sata_vsc.c Linus Torvalds  2005-04-16  209  }
-^1da177e4c3f41 drivers/scsi/sata_vsc.c Linus Torvalds  2005-04-16  210  
+> +Hans
+> 
+>> (For the records, is part of Linux since 5.16-rc2 (commit 1527f69204fe).)
+>>
+>> Am 12.11.21 um 21:15 schrieb Mario Limonciello:
+>>> AMD requires that the SATA controller be configured for devsleep in order
+>>> for S0i3 entry to work properly.
+>>>
+>>> commit b1a9585cc396 ("ata: ahci: Enable DEVSLP by default on x86 with
+>>> SLP_S0") sets up a kernel policy to enable devsleep on Intel mobile
+>>> platforms that are using s0ix.  Add the PCI ID for the SATA controller in
+>>> Green Sardine platforms to extend this policy by default for AMD based
+>>> systems using s0i3 as well.
+>>>
+>>> Cc: Nehal-bakulchandra Shah <Nehal-bakulchandra.Shah@amd.com>
+>>> BugLink:
+>> https://nam11.safelinks.protection.outlook.com/?url=https%3A%2F%2Fbugz
+>> illa.kernel.org%2Fshow_bug.cgi%3Fid%3D214091&amp;data=04%7C01%7Cm
+>> ario.limonciello%40amd.com%7Ca32a202d437544cd2cbb08d9ef9112c0%7C3d
+>> d8961fe4884e608e11a82d994e183d%7C0%7C0%7C637804228648002522%7CU
+>> nknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI
+>> 6Ik1haWwiLCJXVCI6Mn0%3D%7C3000&amp;sdata=CbfImBnwc8uV1L5QRBuV
+>> PLkP72wpS9yif1UbUwykhNI%3D&amp;reserved=0
 
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+You have to love Microsoft Outlook.
+
+>>> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+>>> ---
+>>>    drivers/ata/ahci.c | 1 +
+>>>    1 file changed, 1 insertion(+)
+>>>
+>>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+>>> index d60f34718b5d..1e1167e725a4 100644
+>>> --- a/drivers/ata/ahci.c
+>>> +++ b/drivers/ata/ahci.c
+>>> @@ -438,6 +438,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+>>>    	/* AMD */
+>>>    	{ PCI_VDEVICE(AMD, 0x7800), board_ahci }, /* AMD Hudson-2 */
+>>>    	{ PCI_VDEVICE(AMD, 0x7900), board_ahci }, /* AMD CZ */
+>>> +	{ PCI_VDEVICE(AMD, 0x7901), board_ahci_mobile }, /* AMD Green Sardine */
+>>
+>> Aren't 0x7900 and 0x7901 the same device only in different modes? I
+>> wonder, why different boards and different comments are used.
+> 
+> No they aren't the same device in different modes.
+> 
+> Reference:
+> https://www.amd.com/en/support/tech-docs/processor-programming-reference-ppr-for-amd-family-19h-model-51h-revision-a1
+> Page 33 has a table.
+
+That table misses 0x7900h. (Where can I find it?) coreboot has 0x7900 
+defined for Cezanne:
+
+     src/include/device/pci_ids.h:#define PCI_DEVICE_ID_AMD_CZ_SATA  0x7900
+     src/soc/amd/stoneyridge/include/soc/pci_devs.h: * SATA_IDE_IDEVID 
+              0x7900
+
+The PCI database too [3]:
+
+> FCH SATA Controller [IDE mode]
+
+
+>> Additionally, the device 0x7901 is also present in desktop systems like
+>> Dell OptiPlex 5055 and MSI B350 MORTAR. Is `board_ahci_mobile` the right
+>> board then? Or should the flag `AHCI_HFLAG_IS_MOBILE` be renamed to
+>> avoid confusion?
+> 
+> Are you having a problem or just want clarity in the enum definition?
+
+It’s more about clarity, and understanding the two different entries.
+
+> This was introduced by Hans in commit ebb82e3c79d2a to set LPM policy properly
+> for a number of mobile devices.
+> 
+> My opinion here is that the policy being for "mobile" devices only is short sighted as power
+> consumption policy on desktops is also relevant as OEMs ship desktops that need to meet
+> various power regulations for those too.
+> 
+> So I would be in the camp for renaming the flags.
+
+Why can’t the LPM policy, if available(?), not be set for `board_ahci` 
+by default, so `board_ahci_mobile` could be removed?
+
+>>>    	/* AMD is using RAID class only for ahci controllers */
+>>>    	{ PCI_VENDOR_ID_AMD, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+>>>    	  PCI_CLASS_STORAGE_RAID << 8, 0xffffff, board_ahci },
+
+
+Kind regards,
+
+Paul
+
+
+[1]: https://review.coreboot.org/10418
+[2]: https://review.coreboot.org/20200
+[3]: https://pci-ids.ucw.cz/read/PC/1022/7900
