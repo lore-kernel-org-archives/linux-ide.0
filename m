@@ -2,147 +2,63 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20314C433F5
-	for <linux-ide@archiver.kernel.org>; Tue, 15 Feb 2022 07:05:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 495CCC433F5
+	for <linux-ide@archiver.kernel.org>; Tue, 15 Feb 2022 11:20:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234700AbiBOHGG (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 15 Feb 2022 02:06:06 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:45896 "EHLO
+        id S237064AbiBOLUx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 15 Feb 2022 06:20:53 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:40288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233408AbiBOHGF (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Feb 2022 02:06:05 -0500
-Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0DC871C94;
-        Mon, 14 Feb 2022 23:05:54 -0800 (PST)
-Received: from [192.168.0.2] (ip5f5aebbd.dynamic.kabel-deutschland.de [95.90.235.189])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 61C1161EA1928;
-        Tue, 15 Feb 2022 08:05:51 +0100 (CET)
-Message-ID: <6c846941-151d-e8a5-3ce8-a392b97186a8@molgen.mpg.de>
-Date:   Tue, 15 Feb 2022 08:05:50 +0100
+        with ESMTP id S237036AbiBOLUq (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Feb 2022 06:20:46 -0500
+Received: from mxout04.lancloud.ru (mxout04.lancloud.ru [45.84.86.114])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 99711107D1A;
+        Tue, 15 Feb 2022 03:20:34 -0800 (PST)
+Received: from LanCloud
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout04.lancloud.ru 3F369210DAD6
+Received: from LanCloud
+Received: from LanCloud
+Received: from LanCloud
+Subject: Re: [PATCH] ata: add/use ata_taskfile::{error|status} fields
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <e99172ca-cf0e-5510-60fc-b19dc48658ac@omp.ru>
+ <49690264-a2b8-b11e-e944-1d2333f73334@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <f3786f07-0892-143c-e457-de6b0e93a5b3@omp.ru>
+Date:   Tue, 15 Feb 2022 14:20:30 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.0
-Subject: Re: [PATCH 1/2] ahci: Add Green Sardine vendor ID as
- board_ahci_mobile
+In-Reply-To: <49690264-a2b8-b11e-e944-1d2333f73334@omp.ru>
+Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
-To:     Mario Limonciello <Mario.Limonciello@amd.com>,
-        Hans de Goede <hdegoede@redhat.com>
-Cc:     linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Nehal-bakulchandra Shah <Nehal-bakulchandra.Shah@amd.com>
-References: <20211112201539.17377-1-mario.limonciello@amd.com>
- <960946b8-8f73-9f81-735a-64e5cc555a9c@molgen.mpg.de>
- <DM4PR12MB516853204C9D7E7EAAFBC91FE2339@DM4PR12MB5168.namprd12.prod.outlook.com>
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <DM4PR12MB516853204C9D7E7EAAFBC91FE2339@DM4PR12MB5168.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [192.168.11.198]
+X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
+ LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dear Mario,
+On 2/15/22 12:13 AM, Sergey Shtylyov wrote:
 
-
-Am 14.02.22 um 17:07 schrieb Limonciello, Mario:
-
-> +Hans
-> 
->> (For the records, is part of Linux since 5.16-rc2 (commit 1527f69204fe).)
+>> Add the explicit error and status register fields to 'struct ata_taskfile'
+>> using the anonymous *union*s ('struct ide_taskfile' had that for ages!) and
+>> update the libata taskfile code accordingly. There should be no object code
+>> changes resulting from that...
 >>
->> Am 12.11.21 um 21:15 schrieb Mario Limonciello:
->>> AMD requires that the SATA controller be configured for devsleep in order
->>> for S0i3 entry to work properly.
->>>
->>> commit b1a9585cc396 ("ata: ahci: Enable DEVSLP by default on x86 with
->>> SLP_S0") sets up a kernel policy to enable devsleep on Intel mobile
->>> platforms that are using s0ix.  Add the PCI ID for the SATA controller in
->>> Green Sardine platforms to extend this policy by default for AMD based
->>> systems using s0i3 as well.
->>>
->>> Cc: Nehal-bakulchandra Shah <Nehal-bakulchandra.Shah@amd.com>
->>> BugLink:
->> https://nam11.safelinks.protection.outlook.com/?url=https%3A%2F%2Fbugz
->> illa.kernel.org%2Fshow_bug.cgi%3Fid%3D214091&amp;data=04%7C01%7Cm
->> ario.limonciello%40amd.com%7Ca32a202d437544cd2cbb08d9ef9112c0%7C3d
->> d8961fe4884e608e11a82d994e183d%7C0%7C0%7C637804228648002522%7CU
->> nknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI
->> 6Ik1haWwiLCJXVCI6Mn0%3D%7C3000&amp;sdata=CbfImBnwc8uV1L5QRBuV
->> PLkP72wpS9yif1UbUwykhNI%3D&amp;reserved=0
-
-You have to love Microsoft Outlook.
-
->>> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
->>> ---
->>>    drivers/ata/ahci.c | 1 +
->>>    1 file changed, 1 insertion(+)
->>>
->>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
->>> index d60f34718b5d..1e1167e725a4 100644
->>> --- a/drivers/ata/ahci.c
->>> +++ b/drivers/ata/ahci.c
->>> @@ -438,6 +438,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->>>    	/* AMD */
->>>    	{ PCI_VDEVICE(AMD, 0x7800), board_ahci }, /* AMD Hudson-2 */
->>>    	{ PCI_VDEVICE(AMD, 0x7900), board_ahci }, /* AMD CZ */
->>> +	{ PCI_VDEVICE(AMD, 0x7901), board_ahci_mobile }, /* AMD Green Sardine */
+>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 >>
->> Aren't 0x7900 and 0x7901 the same device only in different modes? I
->> wonder, why different boards and different comments are used.
+>> ---
+>> This patch is against the 'for-next' branch of Damien Le Moal's 'libata.git'
+>> repo plus just posted 'drivers/ata/libata-scsi.c' patch.
 > 
-> No they aren't the same device in different modes.
-> 
-> Reference:
-> https://www.amd.com/en/support/tech-docs/processor-programming-reference-ppr-for-amd-family-19h-model-51h-revision-a1
-> Page 33 has a table.
+>    Oh, and the 2 patch series for 'drivers/ata/libata-sff.c' posted not so long ago...
+> There are only some offsets, so should probably apply indeptendently as well... :-)
 
-That table misses 0x7900h. (Where can I find it?) coreboot has 0x7900 
-defined for Cezanne:
+   The 0-day robot found a bug in the file I forgot to build check, so scratch this patch.
+I've now fixed the bug and built tested all affected files, and gonna post v2 later today...
 
-     src/include/device/pci_ids.h:#define PCI_DEVICE_ID_AMD_CZ_SATA  0x7900
-     src/soc/amd/stoneyridge/include/soc/pci_devs.h: * SATA_IDE_IDEVID 
-              0x7900
-
-The PCI database too [3]:
-
-> FCH SATA Controller [IDE mode]
-
-
->> Additionally, the device 0x7901 is also present in desktop systems like
->> Dell OptiPlex 5055 and MSI B350 MORTAR. Is `board_ahci_mobile` the right
->> board then? Or should the flag `AHCI_HFLAG_IS_MOBILE` be renamed to
->> avoid confusion?
-> 
-> Are you having a problem or just want clarity in the enum definition?
-
-It’s more about clarity, and understanding the two different entries.
-
-> This was introduced by Hans in commit ebb82e3c79d2a to set LPM policy properly
-> for a number of mobile devices.
-> 
-> My opinion here is that the policy being for "mobile" devices only is short sighted as power
-> consumption policy on desktops is also relevant as OEMs ship desktops that need to meet
-> various power regulations for those too.
-> 
-> So I would be in the camp for renaming the flags.
-
-Why can’t the LPM policy, if available(?), not be set for `board_ahci` 
-by default, so `board_ahci_mobile` could be removed?
-
->>>    	/* AMD is using RAID class only for ahci controllers */
->>>    	{ PCI_VENDOR_ID_AMD, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
->>>    	  PCI_CLASS_STORAGE_RAID << 8, 0xffffff, board_ahci },
-
-
-Kind regards,
-
-Paul
-
-
-[1]: https://review.coreboot.org/10418
-[2]: https://review.coreboot.org/20200
-[3]: https://pci-ids.ucw.cz/read/PC/1022/7900
+MBR, Sergey
