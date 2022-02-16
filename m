@@ -2,102 +2,85 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0299C433EF
-	for <linux-ide@archiver.kernel.org>; Wed, 16 Feb 2022 18:33:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D04B0C433EF
+	for <linux-ide@archiver.kernel.org>; Wed, 16 Feb 2022 21:13:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234331AbiBPSdl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 16 Feb 2022 13:33:41 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:55288 "EHLO
+        id S231319AbiBPVN1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 16 Feb 2022 16:13:27 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:52560 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230474AbiBPSdk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 16 Feb 2022 13:33:40 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5958F14345C;
-        Wed, 16 Feb 2022 10:33:26 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id BB47D616A4;
-        Wed, 16 Feb 2022 18:33:25 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE3B5C340E8;
-        Wed, 16 Feb 2022 18:33:19 +0000 (UTC)
-Date:   Wed, 16 Feb 2022 13:33:18 -0500
-From:   Steven Rostedt <rostedt@goodmis.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Byungchul Park <byungchul.park@lge.com>,
-        linux-ide@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Will Deacon <will@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Joel Fernandes <joel@joelfernandes.org>,
-        Sasha Levin <sashal@kernel.org>,
-        Daniel Vetter <daniel.vetter@ffwll.ch>,
-        Chris Wilson <chris@chris-wilson.co.uk>, duyuyang@gmail.com,
-        johannes.berg@intel.com, Tejun Heo <tj@kernel.org>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        Matthew Wilcox <willy@infradead.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Amir Goldstein <amir73il@gmail.com>,
-        "J. Bruce Fields" <bfields@fieldses.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        kernel-team@lge.com, Linux-MM <linux-mm@kvack.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Michal Hocko <mhocko@kernel.org>,
-        Minchan Kim <minchan@kernel.org>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Vladimir Davydov <vdavydov.dev@gmail.com>, sj@kernel.org,
-        Jerome Glisse <jglisse@redhat.com>,
-        Dennis Zhou <dennis@kernel.org>,
-        Christoph Lameter <cl@linux.com>,
-        Pekka Enberg <penberg@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Vlastimil Babka <vbabka@suse.cz>, ngupta@vflare.org,
-        linux-block <linux-block@vger.kernel.org>,
-        Jens Axboe <axboe@kernel.dk>, paolo.valente@linaro.org,
-        Josef Bacik <josef@toxicpanda.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
-        Jeff Layton <jlayton@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        dri-devel <dri-devel@lists.freedesktop.org>,
-        Dave Airlie <airlied@linux.ie>, rodrigosiqueiramelo@gmail.com,
-        melissa.srw@gmail.com, hamohammed.sa@gmail.com
-Subject: Re: Report in ata_scsi_port_error_handler()
-Message-ID: <20220216133318.204f36ac@gandalf.local.home>
-In-Reply-To: <CAHk-=wgfpfWuNQi2SjXQL1ir6iKCpUdBruJ+kmOQP1frH7Zdig@mail.gmail.com>
-References: <1644984747-26706-1-git-send-email-byungchul.park@lge.com>
-        <1644984964-28300-1-git-send-email-byungchul.park@lge.com>
-        <1644984964-28300-3-git-send-email-byungchul.park@lge.com>
-        <94b1cba2-0e78-bbc0-0321-8be70b2b3be2@opensource.wdc.com>
-        <CAHk-=wgfpfWuNQi2SjXQL1ir6iKCpUdBruJ+kmOQP1frH7Zdig@mail.gmail.com>
-X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+        with ESMTP id S229939AbiBPVN1 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 16 Feb 2022 16:13:27 -0500
+Received: from mxout04.lancloud.ru (mxout04.lancloud.ru [45.84.86.114])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93D122271FE
+        for <linux-ide@vger.kernel.org>; Wed, 16 Feb 2022 13:13:13 -0800 (PST)
+Received: from LanCloud
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout04.lancloud.ru 2497320ACBA3
+Received: from LanCloud
+Received: from LanCloud
+Received: from LanCloud
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Subject: [PATCH] ata: libata-sff: use *switch* statement in
+ ata_sff_dev_classify()
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>
+Organization: Open Mobile Platform
+Message-ID: <b4b1d7c1-b786-358f-154a-ba755a0814fb@omp.ru>
+Date:   Thu, 17 Feb 2022 00:13:11 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [192.168.11.198]
+X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
+ LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, 16 Feb 2022 10:09:14 -0800
-Linus Torvalds <torvalds@linux-foundation.org> wrote:
+In ata_sff_dev_classify(), replace a string of the *if* statements checking
+the device's class with the *switch* statement that fits better here...
 
-> Byungchul, could you fix those two issues? Some of your reports may
-> well be entirely valid, but the hard-to-read hex offsets and the
-> knowledge that at least some of them are confused about how
-> prepare_to_wait -> wait actually works makes the motivation to look at
-> the details much less..
+Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-Hi Byungchul,
+---
+This patch is against the 'for-next' branch of Damien Le Moal's 'libata.git'
+repo.
 
-I'm not sure what your tool is using to attach to the kernel to analyze the
-events (perhaps tracepoints?). But you can have the prepare_to_wait event
-just flag the task is about to wait, and then attach to the schedule
-(sched_switch) event to denote that it actually waited.
+ drivers/ata/libata-sff.c |   14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
 
-Of course have the finish_wait() clear the flag.
-
--- Steve
+Index: libata/drivers/ata/libata-sff.c
+===================================================================
+--- libata.orig/drivers/ata/libata-sff.c
++++ libata/drivers/ata/libata-sff.c
+@@ -1841,8 +1841,8 @@ unsigned int ata_sff_dev_classify(struct
+ 
+ 	/* determine if device is ATA or ATAPI */
+ 	class = ata_port_classify(ap, &tf);
+-
+-	if (class == ATA_DEV_UNKNOWN) {
++	switch (class) {
++	case ATA_DEV_UNKNOWN:
+ 		/* If the device failed diagnostic, it's likely to
+ 		 * have reported incorrect device signature too.
+ 		 * Assume ATA device if the device seems present but
+@@ -1853,10 +1853,12 @@ unsigned int ata_sff_dev_classify(struct
+ 			class = ATA_DEV_ATA;
+ 		else
+ 			class = ATA_DEV_NONE;
+-	} else if ((class == ATA_DEV_ATA) &&
+-		   (ap->ops->sff_check_status(ap) == 0))
+-		class = ATA_DEV_NONE;
+-
++		break;
++	case ATA_DEV_ATA:
++		if (ap->ops->sff_check_status(ap) == 0)
++			class = ATA_DEV_NONE;
++		break;
++	}
+ 	return class;
+ }
+ EXPORT_SYMBOL_GPL(ata_sff_dev_classify);
