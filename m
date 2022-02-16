@@ -2,719 +2,267 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A1EDC433F5
-	for <linux-ide@archiver.kernel.org>; Tue, 15 Feb 2022 18:49:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8C1FC433F5
+	for <linux-ide@archiver.kernel.org>; Wed, 16 Feb 2022 02:57:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241590AbiBOStq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 15 Feb 2022 13:49:46 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:41756 "EHLO
+        id S231874AbiBPC5O (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 15 Feb 2022 21:57:14 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:56546 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233448AbiBOStp (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Feb 2022 13:49:45 -0500
-Received: from mxout02.lancloud.ru (mxout02.lancloud.ru [45.84.86.82])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04A03673EC;
-        Tue, 15 Feb 2022 10:49:30 -0800 (PST)
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout02.lancloud.ru 00FEB207D564
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: [PATCH v2] ata: add/use ata_taskfile::{error|status} fields
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Organization: Open Mobile Platform
-Message-ID: <8ecca7a5-1930-b2c5-d850-17caa4b95644@omp.ru>
-Date:   Tue, 15 Feb 2022 21:49:26 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        with ESMTP id S236393AbiBPC5I (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Feb 2022 21:57:08 -0500
+Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2081.outbound.protection.outlook.com [40.107.236.81])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1D152A70A;
+        Tue, 15 Feb 2022 18:56:54 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=LzTOEli7yHFTvyPfuWTglwZva7A7svDW7x6q/eyGfSTo48jkaZKDKhr0/0WAyxGza6wZS2b1nFCK6TpsGdAxMtgxTqaPEX6QtTWGyAW3FGlAqWcA9f6YRayrhGQpOkoMVeoPstnY4KvkWIaJlTM50vPl5NJYQP+zkB+E8p72w/ikbXk27AE8UIe5rg/nVO5s9OHOzb0cOFzYDbHLEXogqvecNnx/vMSLUmcbgSU60kUzdjtx2za+O3Qs4PYNgDpcWwq9xVm0GZfU991w6sEm1sUe2VEKTBqmnOwVNMBKik2ZPZNMF39Og9t2b82z1AA4OMYyBXSjGk+XQBM6guMxbw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=eeSRx/HOXH/bVtMvCTlbhqOOCSY/Ng8TiLZIgQYJkws=;
+ b=CTwrm+2kHAhkHhfXehpw3hYt2cxQIBKkLY/YASWRZIslyn+6puTWo2d/CUvpREpjHjp2MDXoUCnt2lF3McMS0S0g/qV52D0uKW9DY9+9j6O6g4bxwvpfevc96fL5T7Fj5ZRagBTos9qxtVGA8NImf3gQONn+f+6LQrEpSY/iJn31lpJbOOLNrbghxBs5jBbFTTJjse0EiDCPWm7wJg8jNe92C6Rl5FbGOLzXg6Zv2oteUeIsInSgaS70T5BSUVhq/3mNxfeZ6DdSRVGP/dh1XAYWX4/aCozyKx2dceSEDfp+c9kKE12djL8AwAB4bkT6c+irwz2BvtcQCt4629FRcw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=eeSRx/HOXH/bVtMvCTlbhqOOCSY/Ng8TiLZIgQYJkws=;
+ b=nzAcucHpEtobd8FOHjE3Yw8d80n1G7DMwg7SshMtl+YtEAIgXyG8gdaRRmoeC1iLW5Ulao44N4WBVNibgqBpDo7oQe0n4cuiIraVifgSw3ZyNlBMvf1O1CgxgoSn+fGjYKR3HiwaRGlLiKj5WqKWD5KPlOHI/rOodgX/HZbSm7k=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from BL1PR12MB5157.namprd12.prod.outlook.com (2603:10b6:208:308::15)
+ by BN6PR1201MB0114.namprd12.prod.outlook.com (2603:10b6:405:4d::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4975.11; Wed, 16 Feb
+ 2022 02:56:47 +0000
+Received: from BL1PR12MB5157.namprd12.prod.outlook.com
+ ([fe80::692d:9532:906b:2b08]) by BL1PR12MB5157.namprd12.prod.outlook.com
+ ([fe80::692d:9532:906b:2b08%4]) with mapi id 15.20.4995.014; Wed, 16 Feb 2022
+ 02:56:47 +0000
+Message-ID: <cb4bf44e-1399-277f-807b-1a7f26f80c1c@amd.com>
+Date:   Tue, 15 Feb 2022 20:56:44 -0600
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.0
+Subject: Re: [PATCH 1/2] ahci: Add Green Sardine vendor ID as
+ board_ahci_mobile
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
- LFEX1907.lancloud.ru (fd00:f066::207)
+To:     Paul Menzel <pmenzel@molgen.mpg.de>,
+        Hans de Goede <hdegoede@redhat.com>
+Cc:     linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Nehal-bakulchandra Shah <Nehal-bakulchandra.Shah@amd.com>
+References: <20211112201539.17377-1-mario.limonciello@amd.com>
+ <960946b8-8f73-9f81-735a-64e5cc555a9c@molgen.mpg.de>
+ <DM4PR12MB516853204C9D7E7EAAFBC91FE2339@DM4PR12MB5168.namprd12.prod.outlook.com>
+ <6c846941-151d-e8a5-3ce8-a392b97186a8@molgen.mpg.de>
+From:   "Limonciello, Mario" <mario.limonciello@amd.com>
+In-Reply-To: <6c846941-151d-e8a5-3ce8-a392b97186a8@molgen.mpg.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: CH0P223CA0005.NAMP223.PROD.OUTLOOK.COM
+ (2603:10b6:610:116::16) To BL1PR12MB5157.namprd12.prod.outlook.com
+ (2603:10b6:208:308::15)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 5fa6085a-4d90-43c5-ea0a-08d9f0f7f8c9
+X-MS-TrafficTypeDiagnostic: BN6PR1201MB0114:EE_
+X-Microsoft-Antispam-PRVS: <BN6PR1201MB0114F54C82D30E20A7B0115AE2359@BN6PR1201MB0114.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 4MHMQ44bfJL3yDOYE45fBuWtghql7wPLHRPVrUhavHFLBzp7etj4zYHJz1CDdPK1n89659PYfobeVeDTqmvjFIZJZc2MP2ClqbA2VSZuELArtQP3aPJAsFr2P12H3lDDfXZdJ5GTd2Yj9VsD7yoZx/96Z/f/ko0PiEBWRUMsftOnihMUjq4q+zSpQzv49+/SifoqThvaLKvpA/pDW5ugCSTiUaFDAaEIBV9Hgic4OIwmqzFhNY5/BYYRXTKGjmmnciKGDwXRqh65Ed4ARd8C8a5AmUh28S7LvFwe7qG/NW605bzFYzNYvinm5Rwad5m2AJPGs3I3+y5awRXxH6Wkzx3+opp1MkaB/4bFk7+iyccrE8jxdwDIKfz/uZ0ZyjqDpBjfdDFaomRZ0tDqb+deSZic8JWJT4/C+81nXWdm4H6mVK0pXoouJEQJnuhmABf3+qaqNcfsL5iUtga0JvKY43UAoHBhsRCCNnDzdWmBBzvt6/TJuCvKwdIEyWafz46WljAw6HGysONQeFbPP0E/tG+SPgCeTdXgb19vfAGBpYi1IHu6uf05gqUXd+2iZpwSIjcUM+N8c8bN2Nu3gkcByrAK+bSigEp3/heBupHVX1aLZtlBMgnR0Mc/KkLjvGjCvI5csgAjZS7yhN7grtupNa+ca+CEvLMgo4sQ9vMY34hb/h19nMH9pB2nkilO49poW6iuI4RHR7Ou+lWTDitpbTid8azJpqE+pnZLrc2gsGNCMcPKgkuZx9bD8HnnmujM4bSOQgo54n8SIkZWuF2dHQR+YfeWmWeo03Yic262tfnhDJMt0GSLJdKJwAiwqpEOUZndj77HY5jWt0nMvK6NvF6G1qEvEs/wnAufeRcB7tE=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL1PR12MB5157.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(53546011)(6506007)(2616005)(6512007)(6666004)(966005)(6486002)(38100700002)(508600001)(45080400002)(31696002)(186003)(83380400001)(86362001)(4326008)(8676002)(316002)(31686004)(36756003)(2906002)(8936002)(66946007)(26005)(66476007)(66556008)(54906003)(110136005)(5660300002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?Wm1jZUJheXJKVG1sYWZRQVBwaHJNZDEreVg2eURwOVBPMnE2d0xGWTNSNkpy?=
+ =?utf-8?B?K3dPTEpZR01KVTk0THptM2dPcjV5MHZKSU93ZFBkZXBXd1JORk95VU1jdXU0?=
+ =?utf-8?B?OUdXclN3Tndhejg5b3YrNXhtTS9lOVBMTzk2M09aZERlNWhObFVKUXBZNnFa?=
+ =?utf-8?B?WFRETE9QN0NobmpqZUZsRlRwSmIrUml5K0pxSjY3Y0t1NGttL2pxWUdjQVho?=
+ =?utf-8?B?bG12WFBFbTBoQ3JVR2NtRnhyZzM5c2l6M2NoWWwzUEdtSHV4OWVBYXVxRWsr?=
+ =?utf-8?B?VU5zZmppU0VBWHNseVpKY1k4WE1vMFlMMVdzS0hINTgyYTBZVUN1cVhuOTBK?=
+ =?utf-8?B?MmEvT085cGN6WFkzR1o0L3B0dzFiRmpjV082WVNaL0dBUzc3dU02VVVVVm95?=
+ =?utf-8?B?VUtNdkVJcDRpbkpxZWxlbTA5OUUyNGlIVkg0bzB2OEdUS09qUzB6MldIUnVl?=
+ =?utf-8?B?QUVsK0o5RFlXMXZlclljWElxaElCcm9jSGt0Q1h5YlhMUmVyMS9uV0E0N1c3?=
+ =?utf-8?B?L0hQaUdjbzJyU0xTUU5vdUZOQ0RMd1YxMlRnQTRjVmMyTmNZS1MrS1U1RHY0?=
+ =?utf-8?B?RU1iMGJzMnBpQXExQlgvOEVzekh0SmIvUC9tbGt3K3BXNzlTTWdvWXd6c3Yv?=
+ =?utf-8?B?VG9mZ2F1UG5Rbm5kYzdNQmNEQmpINVFPQ1ZHSFNpSFFGNW9ZRkR6bE52dVdG?=
+ =?utf-8?B?L0M1Z3RDK2RXOFNOMXRwYzRzSS9FbUV6SlBESGFFSFdpaEhSNWxXbWRBbld2?=
+ =?utf-8?B?K1hGak8rdVZ5eWc4dnJVNUlCRFRJY1pROCsvZldVcGRlaGtoZkxIZng3clRj?=
+ =?utf-8?B?aHBkTXowd1htNjc2VXZZRWFSRkVhejNBbURBL3Z0WEdrRDdoSUlqUGJtYkhC?=
+ =?utf-8?B?YktUZXRzaHJrU0ZHUzBSM1ZEeHVsdTZIQWZ6enllYVNBdWNyeVptaGF3cWJt?=
+ =?utf-8?B?Z3prZEhPYm1pcWsvWVh1U3pZdUxBbFRyQ0FCVG1YT05HZVZHa3RvZGRZSDZX?=
+ =?utf-8?B?TGdhTTV5cDZUNEhyVTFLcTZPNnEyZnVDSDJKUUhkMVdWQkNmZnNHTFZNTXkx?=
+ =?utf-8?B?SzQzVXlaakxhb21UNnpMNUdsUjhxVWVydFNPN3FQdjNlMjgxc1NocVViVHhn?=
+ =?utf-8?B?RFVCbW5CRlJ3cjVuUll1MmZxQlkzTG1oWXFTL2htVVNEQldNaUIwam1jRnh2?=
+ =?utf-8?B?ZGxBVmdHUWtETy9jbUtGR3VnNXFjYmVrVkFTMUVobjNwdFFtVGxlcEJWSkhP?=
+ =?utf-8?B?Q3JSOUx5Y1JaN0cvT3BQSHhGU1Ezd2J4WW5wSHRuM1Eyb0h3dC8rdGtQaEdj?=
+ =?utf-8?B?b2VFZEZheXZiUVVDMjlSaGl0ZXhSSU9wVldmQU5yVmFadS92SWQweFlDekQ1?=
+ =?utf-8?B?WW9neVFCZXBEZW4ycFArejZNUzdKWVJXQjNOWmdUbGtXVm4zc1RsT1F2NG0v?=
+ =?utf-8?B?Ym15R0w4cC9tOTlZS1BLWDRrVk9jbmFnRkdKNkpxZlo1QkdOSXRFR0REa3kr?=
+ =?utf-8?B?UUdrNnRSTU9YbGhqc2NOd0xSUWt6UTZwcTdiZnRzQW9NTWNxdU5ZVzJCNWNw?=
+ =?utf-8?B?Q2cwTVR4RU9KS0Y2YmFkT3QrTmFWN21GYkNwVXppWTN3dFFsNUQrekNmUGtC?=
+ =?utf-8?B?bHQ4bkRUQnNlRVlpNUFOb1hTcHhBcjdHbERHckpKemdVRGlkdkU3Y1pGTTFV?=
+ =?utf-8?B?eE41TG9CelA2UkdZcmlLT291S3NrOE1qTG1PRHh2amhlNzY3OEhRbUNJVkxs?=
+ =?utf-8?B?Z1lMbE9CbE03NjdWSjdTNU5zSlhBRlR6eHJ0YzUwQjR1d2swbFNLcUE3dzh4?=
+ =?utf-8?B?OFVkQkJhbHBweFRoOENZbW5ibjlaUWE3RGF3TVQydUhjYjBtVmpuYzJRWUpN?=
+ =?utf-8?B?NW9xVW9uRGdJSFBRNzNxZzVibW9pZk11aGROa09qRVFoZTFEaFIxTFN4YWIy?=
+ =?utf-8?B?VDhqNEtvbGJuR2ZrOUtGNENXRkhOUnJyMzBGY0xuT2dpM0ZCZHV3YjVnTThQ?=
+ =?utf-8?B?cCt0L01Qek1XS28ya2JybkFFTGtRN3EvQ3NhZFdKaVhYbWV5bUFUVHBUNmYr?=
+ =?utf-8?B?NG1JWGZUOEtaN2hpR3ZrdXB3bEZsYUVMTWdPa3FYcUdRS0ppZDhKWWJndlZx?=
+ =?utf-8?B?RENZaHowUjlwZUp1d1dBWDdsNG93ZzRCai85WDJJUjlValF4V0JISEdjdEZJ?=
+ =?utf-8?Q?rajWHzYB3S9JYG0SCtT3VLI=3D?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 5fa6085a-4d90-43c5-ea0a-08d9f0f7f8c9
+X-MS-Exchange-CrossTenant-AuthSource: BL1PR12MB5157.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Feb 2022 02:56:47.4788
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: eqQv8JoIPThmeDunc+dmvhMkTZm0tvr2knzRfzItWpaeN08l2FU9WMmftXnEC8UpP/s0QmQlNVn+XHVvp0KONQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN6PR1201MB0114
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add the explicit error and status register fields to 'struct ata_taskfile'
-using the anonymous *union*s ('struct ide_taskfile' had that for ages!) and
-update the libata taskfile code accordingly. There should be no object code
-changes resulting from that...
+On 2/15/2022 01:05, Paul Menzel wrote:
+> Dear Mario,
+> 
+> 
+> Am 14.02.22 um 17:07 schrieb Limonciello, Mario:
+> 
+>> +Hans
+>>
+>>> (For the records, is part of Linux since 5.16-rc2 (commit 
+>>> 1527f69204fe).)
+>>>
+>>> Am 12.11.21 um 21:15 schrieb Mario Limonciello:
+>>>> AMD requires that the SATA controller be configured for devsleep in 
+>>>> order
+>>>> for S0i3 entry to work properly.
+>>>>
+>>>> commit b1a9585cc396 ("ata: ahci: Enable DEVSLP by default on x86 with
+>>>> SLP_S0") sets up a kernel policy to enable devsleep on Intel mobile
+>>>> platforms that are using s0ix.  Add the PCI ID for the SATA 
+>>>> controller in
+>>>> Green Sardine platforms to extend this policy by default for AMD based
+>>>> systems using s0i3 as well.
+>>>>
+>>>> Cc: Nehal-bakulchandra Shah <Nehal-bakulchandra.Shah@amd.com>
+>>>> BugLink:
+>>> https://nam11.safelinks.protection.outlook.com/?url=https%3A%2F%2Fbugz
+>>> illa.kernel.org%2Fshow_bug.cgi%3Fid%3D214091&amp;data=04%7C01%7Cm
+>>> ario.limonciello%40amd.com%7Ca32a202d437544cd2cbb08d9ef9112c0%7C3d
+>>> d8961fe4884e608e11a82d994e183d%7C0%7C0%7C637804228648002522%7CU
+>>> nknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI
+>>> 6Ik1haWwiLCJXVCI6Mn0%3D%7C3000&amp;sdata=CbfImBnwc8uV1L5QRBuV
+>>> PLkP72wpS9yif1UbUwykhNI%3D&amp;reserved=0
+> 
+> You have to love Microsoft Outlook.
+> 
+>>>> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+>>>> ---
+>>>>    drivers/ata/ahci.c | 1 +
+>>>>    1 file changed, 1 insertion(+)
+>>>>
+>>>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+>>>> index d60f34718b5d..1e1167e725a4 100644
+>>>> --- a/drivers/ata/ahci.c
+>>>> +++ b/drivers/ata/ahci.c
+>>>> @@ -438,6 +438,7 @@ static const struct pci_device_id ahci_pci_tbl[] 
+>>>> = {
+>>>>        /* AMD */
+>>>>        { PCI_VDEVICE(AMD, 0x7800), board_ahci }, /* AMD Hudson-2 */
+>>>>        { PCI_VDEVICE(AMD, 0x7900), board_ahci }, /* AMD CZ */
+>>>> +    { PCI_VDEVICE(AMD, 0x7901), board_ahci_mobile }, /* AMD Green 
+>>>> Sardine */
+>>>
+>>> Aren't 0x7900 and 0x7901 the same device only in different modes? I
+>>> wonder, why different boards and different comments are used.
+>>
+>> No they aren't the same device in different modes.
+>>
+>> Reference:
+>> https://nam11.safelinks.protection.outlook.com/?url=https%3A%2F%2Fwww.amd.com%2Fen%2Fsupport%2Ftech-docs%2Fprocessor-programming-reference-ppr-for-amd-family-19h-model-51h-revision-a1&amp;data=04%7C01%7CMario.Limonciello%40amd.com%7Cf25ec205dd2e46253a2208d9f0519b39%7C3dd8961fe4884e608e11a82d994e183d%7C0%7C0%7C637805055570772355%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000&amp;sdata=POXfSI626inWB7k73CqJF3IMp6y31r%2F%2BugdCXOkvydo%3D&amp;reserved=0 
+>>
+>> Page 33 has a table.
+> 
+> That table misses 0x7900h. (Where can I find it?) coreboot has 0x7900 
+> defined for Cezanne:
+> 
+>      src/include/device/pci_ids.h:#define PCI_DEVICE_ID_AMD_CZ_SATA  0x7900
+>      src/soc/amd/stoneyridge/include/soc/pci_devs.h: * SATA_IDE_IDEVID 
+>               0x7900
+> 
 
-Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+You can see that 0x7900 was introduced in the kernel back in 2013; well 
+in advance of the controller used in Cezanne.
 
----
-This patch is against the 'for-next' branch of Damien Le Moal's 'libata.git'
-repo plus the recently posted patches:
+So I really don't believe that CZ in that context for coreboot means 
+Cezanne.  It's from an earlier product.  I haven't referenced any older 
+documentation to confirm anything but if I were to venture a guess based 
+on those names you pasted it's probably introduced with Carrizo and 
+continues to be used up until Stoney Ridge.
 
-https://lore.kernel.org/all/20220213151032.4694-1-s.shtylyov@omp.ru/
-https://lore.kernel.org/all/7440bd27-b841-c3f0-2b47-4ab3f0ac0c83@omp.ru/
 
-Changes in version 2:
-- fixed the compilation error in 'sata_vsc.c'.
+> The PCI database too [3]:
+> 
+>> FCH SATA Controller [IDE mode]
 
- drivers/ata/acard-ahci.c      |    2 +-
- drivers/ata/ahci.c            |    4 ++--
- drivers/ata/ahci_qoriq.c      |    2 +-
- drivers/ata/ahci_xgene.c      |    2 +-
- drivers/ata/libahci.c         |    4 ++--
- drivers/ata/libata-acpi.c     |    8 ++++----
- drivers/ata/libata-core.c     |   12 ++++++------
- drivers/ata/libata-eh.c       |   42 +++++++++++++++++++++---------------------
- drivers/ata/libata-sata.c     |   10 +++++-----
- drivers/ata/libata-scsi.c     |   22 +++++++++++-----------
- drivers/ata/libata-sff.c      |    6 +++---
- drivers/ata/pata_ep93xx.c     |    4 ++--
- drivers/ata/pata_ns87415.c    |    4 ++--
- drivers/ata/pata_octeon_cf.c  |    4 ++--
- drivers/ata/pata_samsung_cf.c |    2 +-
- drivers/ata/sata_highbank.c   |    2 +-
- drivers/ata/sata_inic162x.c   |   10 +++++-----
- drivers/ata/sata_rcar.c       |    4 ++--
- drivers/ata/sata_svw.c        |   10 +++++-----
- drivers/ata/sata_vsc.c        |   10 +++++-----
- include/linux/libata.h        |   10 ++++++++--
- 21 files changed, 90 insertions(+), 84 deletions(-)
+Just FYI the strings in the PCI database is based on empirical user 
+submissions.  You shouldn't rely upon it to tell you what generations 
+different devices are in.
 
-Index: libata/drivers/ata/acard-ahci.c
-===================================================================
---- libata.orig/drivers/ata/acard-ahci.c
-+++ libata/drivers/ata/acard-ahci.c
-@@ -265,7 +265,7 @@ static bool acard_ahci_qc_fill_rtf(struc
- 	if (qc->tf.protocol == ATA_PROT_PIO && qc->dma_dir == DMA_FROM_DEVICE &&
- 	    !(qc->flags & ATA_QCFLAG_FAILED)) {
- 		ata_tf_from_fis(rx_fis + RX_FIS_PIO_SETUP, &qc->result_tf);
--		qc->result_tf.command = (rx_fis + RX_FIS_PIO_SETUP)[15];
-+		qc->result_tf.status = (rx_fis + RX_FIS_PIO_SETUP)[15];
- 	} else
- 		ata_tf_from_fis(rx_fis + RX_FIS_D2H_REG, &qc->result_tf);
- 
-Index: libata/drivers/ata/ahci.c
-===================================================================
---- libata.orig/drivers/ata/ahci.c
-+++ libata/drivers/ata/ahci.c
-@@ -739,7 +739,7 @@ static int ahci_p5wdh_hardreset(struct a
- 
- 	/* clear D2H reception area to properly wait for D2H FIS */
- 	ata_tf_init(link->device, &tf);
--	tf.command = ATA_BUSY;
-+	tf.status = ATA_BUSY;
- 	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
- 
- 	rc = sata_link_hardreset(link, sata_ehc_deb_timing(&link->eh_context),
-@@ -808,7 +808,7 @@ static int ahci_avn_hardreset(struct ata
- 
- 		/* clear D2H reception area to properly wait for D2H FIS */
- 		ata_tf_init(link->device, &tf);
--		tf.command = ATA_BUSY;
-+		tf.status = ATA_BUSY;
- 		ata_tf_to_fis(&tf, 0, 0, d2h_fis);
- 
- 		rc = sata_link_hardreset(link, timing, deadline, &online,
-Index: libata/drivers/ata/ahci_qoriq.c
-===================================================================
---- libata.orig/drivers/ata/ahci_qoriq.c
-+++ libata/drivers/ata/ahci_qoriq.c
-@@ -123,7 +123,7 @@ static int ahci_qoriq_hardreset(struct a
- 
- 	/* clear D2H reception area to properly wait for D2H FIS */
- 	ata_tf_init(link->device, &tf);
--	tf.command = ATA_BUSY;
-+	tf.status = ATA_BUSY;
- 	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
- 
- 	rc = sata_link_hardreset(link, timing, deadline, &online,
-Index: libata/drivers/ata/ahci_xgene.c
-===================================================================
---- libata.orig/drivers/ata/ahci_xgene.c
-+++ libata/drivers/ata/ahci_xgene.c
-@@ -365,7 +365,7 @@ static int xgene_ahci_do_hardreset(struc
- 	do {
- 		/* clear D2H reception area to properly wait for D2H FIS */
- 		ata_tf_init(link->device, &tf);
--		tf.command = ATA_BUSY;
-+		tf.status = ATA_BUSY;
- 		ata_tf_to_fis(&tf, 0, 0, d2h_fis);
- 		rc = sata_link_hardreset(link, timing, deadline, online,
- 				 ahci_check_ready);
-Index: libata/drivers/ata/libahci.c
-===================================================================
---- libata.orig/drivers/ata/libahci.c
-+++ libata/drivers/ata/libahci.c
-@@ -1561,7 +1561,7 @@ int ahci_do_hardreset(struct ata_link *l
- 
- 	/* clear D2H reception area to properly wait for D2H FIS */
- 	ata_tf_init(link->device, &tf);
--	tf.command = ATA_BUSY;
-+	tf.status = ATA_BUSY;
- 	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
- 
- 	rc = sata_link_hardreset(link, timing, deadline, online,
-@@ -2033,7 +2033,7 @@ static bool ahci_qc_fill_rtf(struct ata_
- 	if (qc->tf.protocol == ATA_PROT_PIO && qc->dma_dir == DMA_FROM_DEVICE &&
- 	    !(qc->flags & ATA_QCFLAG_FAILED)) {
- 		ata_tf_from_fis(rx_fis + RX_FIS_PIO_SETUP, &qc->result_tf);
--		qc->result_tf.command = (rx_fis + RX_FIS_PIO_SETUP)[15];
-+		qc->result_tf.status = (rx_fis + RX_FIS_PIO_SETUP)[15];
- 	} else
- 		ata_tf_from_fis(rx_fis + RX_FIS_D2H_REG, &qc->result_tf);
- 
-Index: libata/drivers/ata/libata-acpi.c
-===================================================================
---- libata.orig/drivers/ata/libata-acpi.c
-+++ libata/drivers/ata/libata-acpi.c
-@@ -546,13 +546,13 @@ static void ata_acpi_gtf_to_tf(struct at
- 
- 	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
- 	tf->protocol = ATA_PROT_NODATA;
--	tf->feature = gtf->tf[0];	/* 0x1f1 */
-+	tf->error   = gtf->tf[0];	/* 0x1f1 */
- 	tf->nsect   = gtf->tf[1];	/* 0x1f2 */
- 	tf->lbal    = gtf->tf[2];	/* 0x1f3 */
- 	tf->lbam    = gtf->tf[3];	/* 0x1f4 */
- 	tf->lbah    = gtf->tf[4];	/* 0x1f5 */
- 	tf->device  = gtf->tf[5];	/* 0x1f6 */
--	tf->command = gtf->tf[6];	/* 0x1f7 */
-+	tf->status  = gtf->tf[6];	/* 0x1f7 */
- }
- 
- static int ata_acpi_filter_tf(struct ata_device *dev,
-@@ -679,7 +679,7 @@ static int ata_acpi_run_tf(struct ata_de
- 				"(%s) rejected by device (Stat=0x%02x Err=0x%02x)",
- 				tf.command, tf.feature, tf.nsect, tf.lbal,
- 				tf.lbam, tf.lbah, tf.device, descr,
--				rtf.command, rtf.feature);
-+				rtf.status, rtf.error);
- 			rc = 0;
- 			break;
- 
-@@ -689,7 +689,7 @@ static int ata_acpi_run_tf(struct ata_de
- 				"(%s) failed (Emask=0x%x Stat=0x%02x Err=0x%02x)",
- 				tf.command, tf.feature, tf.nsect, tf.lbal,
- 				tf.lbam, tf.lbah, tf.device, descr,
--				err_mask, rtf.command, rtf.feature);
-+				err_mask, rtf.status, rtf.error);
- 			rc = -EIO;
- 			break;
- 		}
-Index: libata/drivers/ata/libata-core.c
-===================================================================
---- libata.orig/drivers/ata/libata-core.c
-+++ libata/drivers/ata/libata-core.c
-@@ -1171,7 +1171,7 @@ static int ata_read_native_max_address(s
- 		ata_dev_warn(dev,
- 			     "failed to read native max address (err_mask=0x%x)\n",
- 			     err_mask);
--		if (err_mask == AC_ERR_DEV && (tf.feature & ATA_ABORTED))
-+		if (err_mask == AC_ERR_DEV && (tf.error & ATA_ABORTED))
- 			return -EACCES;
- 		return -EIO;
- 	}
-@@ -1235,7 +1235,7 @@ static int ata_set_max_sectors(struct at
- 			     "failed to set max address (err_mask=0x%x)\n",
- 			     err_mask);
- 		if (err_mask == AC_ERR_DEV &&
--		    (tf.feature & (ATA_ABORTED | ATA_IDNF)))
-+		    (tf.error & (ATA_ABORTED | ATA_IDNF)))
- 			return -EACCES;
- 		return -EIO;
- 	}
-@@ -1584,7 +1584,7 @@ unsigned ata_exec_internal_sg(struct ata
- 
- 	/* perform minimal error analysis */
- 	if (qc->flags & ATA_QCFLAG_FAILED) {
--		if (qc->result_tf.command & (ATA_ERR | ATA_DF))
-+		if (qc->result_tf.status & (ATA_ERR | ATA_DF))
- 			qc->err_mask |= AC_ERR_DEV;
- 
- 		if (!qc->err_mask)
-@@ -1593,7 +1593,7 @@ unsigned ata_exec_internal_sg(struct ata
- 		if (qc->err_mask & ~AC_ERR_OTHER)
- 			qc->err_mask &= ~AC_ERR_OTHER;
- 	} else if (qc->tf.command == ATA_CMD_REQ_SENSE_DATA) {
--		qc->result_tf.command |= ATA_SENSE;
-+		qc->result_tf.status |= ATA_SENSE;
- 	}
- 
- 	/* finish up */
-@@ -1813,7 +1813,7 @@ retry:
- 			return 0;
- 		}
- 
--		if ((err_mask == AC_ERR_DEV) && (tf.feature & ATA_ABORTED)) {
-+		if ((err_mask == AC_ERR_DEV) && (tf.error & ATA_ABORTED)) {
- 			/* Device or controller might have reported
- 			 * the wrong device class.  Give a shot at the
- 			 * other IDENTIFY if the current one is
-@@ -4375,7 +4375,7 @@ static unsigned int ata_dev_init_params(
- 	/* A clean abort indicates an original or just out of spec drive
- 	   and we should continue as we issue the setup based on the
- 	   drive reported working geometry */
--	if (err_mask == AC_ERR_DEV && (tf.feature & ATA_ABORTED))
-+	if (err_mask == AC_ERR_DEV && (tf.error & ATA_ABORTED))
- 		err_mask = 0;
- 
- 	return err_mask;
-Index: libata/drivers/ata/libata-eh.c
-===================================================================
---- libata.orig/drivers/ata/libata-eh.c
-+++ libata/drivers/ata/libata-eh.c
-@@ -1386,7 +1386,7 @@ unsigned int atapi_eh_tur(struct ata_dev
- 
- 	err_mask = ata_exec_internal(dev, &tf, cdb, DMA_NONE, NULL, 0, 0);
- 	if (err_mask == AC_ERR_DEV)
--		*r_sense_key = tf.feature >> 4;
-+		*r_sense_key = tf.error >> 4;
- 	return err_mask;
- }
- 
-@@ -1429,12 +1429,12 @@ static void ata_eh_request_sense(struct
- 
- 	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
- 	/* Ignore err_mask; ATA_ERR might be set */
--	if (tf.command & ATA_SENSE) {
-+	if (tf.status & ATA_SENSE) {
- 		ata_scsi_set_sense(dev, cmd, tf.lbah, tf.lbam, tf.lbal);
- 		qc->flags |= ATA_QCFLAG_SENSE_VALID;
- 	} else {
- 		ata_dev_warn(dev, "request sense failed stat %02x emask %x\n",
--			     tf.command, err_mask);
-+			     tf.status, err_mask);
- 	}
- }
- 
-@@ -1557,7 +1557,7 @@ static unsigned int ata_eh_analyze_tf(st
- 				      const struct ata_taskfile *tf)
- {
- 	unsigned int tmp, action = 0;
--	u8 stat = tf->command, err = tf->feature;
-+	u8 stat = tf->status, err = tf->error;
- 
- 	if ((stat & (ATA_BUSY | ATA_DRQ | ATA_DRDY)) != ATA_DRDY) {
- 		qc->err_mask |= AC_ERR_HSM;
-@@ -1594,7 +1594,7 @@ static unsigned int ata_eh_analyze_tf(st
- 		if (!(qc->ap->pflags & ATA_PFLAG_FROZEN)) {
- 			tmp = atapi_eh_request_sense(qc->dev,
- 						qc->scsicmd->sense_buffer,
--						qc->result_tf.feature >> 4);
-+						qc->result_tf.error >> 4);
- 			if (!tmp)
- 				qc->flags |= ATA_QCFLAG_SENSE_VALID;
- 			else
-@@ -2360,7 +2360,7 @@ static void ata_eh_link_report(struct at
- 			cmd->hob_feature, cmd->hob_nsect,
- 			cmd->hob_lbal, cmd->hob_lbam, cmd->hob_lbah,
- 			cmd->device, qc->tag, data_buf, cdb_buf,
--			res->command, res->feature, res->nsect,
-+			res->status, res->error, res->nsect,
- 			res->lbal, res->lbam, res->lbah,
- 			res->hob_feature, res->hob_nsect,
- 			res->hob_lbal, res->hob_lbam, res->hob_lbah,
-@@ -2368,28 +2368,28 @@ static void ata_eh_link_report(struct at
- 			qc->err_mask & AC_ERR_NCQ ? " <F>" : "");
- 
- #ifdef CONFIG_ATA_VERBOSE_ERROR
--		if (res->command & (ATA_BUSY | ATA_DRDY | ATA_DF | ATA_DRQ |
--				    ATA_SENSE | ATA_ERR)) {
--			if (res->command & ATA_BUSY)
-+		if (res->status & (ATA_BUSY | ATA_DRDY | ATA_DF | ATA_DRQ |
-+				   ATA_SENSE | ATA_ERR)) {
-+			if (res->status & ATA_BUSY)
- 				ata_dev_err(qc->dev, "status: { Busy }\n");
- 			else
- 				ata_dev_err(qc->dev, "status: { %s%s%s%s%s}\n",
--				  res->command & ATA_DRDY ? "DRDY " : "",
--				  res->command & ATA_DF ? "DF " : "",
--				  res->command & ATA_DRQ ? "DRQ " : "",
--				  res->command & ATA_SENSE ? "SENSE " : "",
--				  res->command & ATA_ERR ? "ERR " : "");
-+				  res->status & ATA_DRDY ? "DRDY " : "",
-+				  res->status & ATA_DF ? "DF " : "",
-+				  res->status & ATA_DRQ ? "DRQ " : "",
-+				  res->status & ATA_SENSE ? "SENSE " : "",
-+				  res->status & ATA_ERR ? "ERR " : "");
- 		}
- 
- 		if (cmd->command != ATA_CMD_PACKET &&
--		    (res->feature & (ATA_ICRC | ATA_UNC | ATA_AMNF |
--				     ATA_IDNF | ATA_ABORTED)))
-+		    (res->error & (ATA_ICRC | ATA_UNC | ATA_AMNF | ATA_IDNF |
-+				   ATA_ABORTED)))
- 			ata_dev_err(qc->dev, "error: { %s%s%s%s%s}\n",
--			  res->feature & ATA_ICRC ? "ICRC " : "",
--			  res->feature & ATA_UNC ? "UNC " : "",
--			  res->feature & ATA_AMNF ? "AMNF " : "",
--			  res->feature & ATA_IDNF ? "IDNF " : "",
--			  res->feature & ATA_ABORTED ? "ABRT " : "");
-+				    res->error & ATA_ICRC ? "ICRC " : "",
-+				    res->error & ATA_UNC ? "UNC " : "",
-+				    res->error & ATA_AMNF ? "AMNF " : "",
-+				    res->error & ATA_IDNF ? "IDNF " : "",
-+				    res->error & ATA_ABORTED ? "ABRT " : "");
- #endif
- 	}
- }
-Index: libata/drivers/ata/libata-sata.c
-===================================================================
---- libata.orig/drivers/ata/libata-sata.c
-+++ libata/drivers/ata/libata-sata.c
-@@ -191,8 +191,8 @@ EXPORT_SYMBOL_GPL(ata_tf_to_fis);
- 
- void ata_tf_from_fis(const u8 *fis, struct ata_taskfile *tf)
- {
--	tf->command	= fis[2];	/* status */
--	tf->feature	= fis[3];	/* error */
-+	tf->status	= fis[2];
-+	tf->error	= fis[3];
- 
- 	tf->lbal	= fis[4];
- 	tf->lbam	= fis[5];
-@@ -1406,8 +1406,8 @@ static int ata_eh_read_log_10h(struct at
- 
- 	*tag = buf[0] & 0x1f;
- 
--	tf->command = buf[2];
--	tf->feature = buf[3];
-+	tf->status = buf[2];
-+	tf->error = buf[3];
- 	tf->lbal = buf[4];
- 	tf->lbam = buf[5];
- 	tf->lbah = buf[6];
-@@ -1482,7 +1482,7 @@ void ata_eh_analyze_ncq_error(struct ata
- 	qc->result_tf.flags = ATA_TFLAG_ISADDR | ATA_TFLAG_LBA | ATA_TFLAG_LBA48;
- 	qc->err_mask |= AC_ERR_DEV | AC_ERR_NCQ;
- 	if (dev->class == ATA_DEV_ZAC &&
--	    ((qc->result_tf.command & ATA_SENSE) || qc->result_tf.auxiliary)) {
-+	    ((qc->result_tf.status & ATA_SENSE) || qc->result_tf.auxiliary)) {
- 		char sense_key, asc, ascq;
- 
- 		sense_key = (qc->result_tf.auxiliary >> 16) & 0xff;
-Index: libata/drivers/ata/libata-scsi.c
-===================================================================
---- libata.orig/drivers/ata/libata-scsi.c
-+++ libata/drivers/ata/libata-scsi.c
-@@ -680,7 +680,7 @@ static void ata_qc_set_pc_nbytes(struct
-  */
- static void ata_dump_status(struct ata_port *ap, struct ata_taskfile *tf)
- {
--	u8 stat = tf->command, err = tf->feature;
-+	u8 stat = tf->status, err = tf->error;
- 
- 	if (stat & ATA_BUSY) {
- 		ata_port_warn(ap, "status=0x%02x {Busy} ", stat);
-@@ -871,8 +871,8 @@ static void ata_gen_passthru_sense(struc
- 	 * onto sense key, asc & ascq.
- 	 */
- 	if (qc->err_mask ||
--	    tf->command & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
--		ata_to_sense_error(qc->ap->print_id, tf->command, tf->feature,
-+	    tf->status & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
-+		ata_to_sense_error(qc->ap->print_id, tf->status, tf->error,
- 				   &sense_key, &asc, &ascq, verbose);
- 		ata_scsi_set_sense(qc->dev, cmd, sense_key, asc, ascq);
- 	} else {
-@@ -901,13 +901,13 @@ static void ata_gen_passthru_sense(struc
- 		 * Copy registers into sense buffer.
- 		 */
- 		desc[2] = 0x00;
--		desc[3] = tf->feature;	/* == error reg */
-+		desc[3] = tf->error;
- 		desc[5] = tf->nsect;
- 		desc[7] = tf->lbal;
- 		desc[9] = tf->lbam;
- 		desc[11] = tf->lbah;
- 		desc[12] = tf->device;
--		desc[13] = tf->command; /* == status reg */
-+		desc[13] = tf->status;
- 
- 		/*
- 		 * Fill in Extend bit, and the high order bytes
-@@ -922,8 +922,8 @@ static void ata_gen_passthru_sense(struc
- 		}
- 	} else {
- 		/* Fixed sense format */
--		desc[0] = tf->feature;
--		desc[1] = tf->command; /* status */
-+		desc[0] = tf->error;
-+		desc[1] = tf->status;
- 		desc[2] = tf->device;
- 		desc[3] = tf->nsect;
- 		desc[7] = 0;
-@@ -972,14 +972,14 @@ static void ata_gen_ata_sense(struct ata
- 	 * onto sense key, asc & ascq.
- 	 */
- 	if (qc->err_mask ||
--	    tf->command & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
--		ata_to_sense_error(qc->ap->print_id, tf->command, tf->feature,
-+	    tf->status & (ATA_BUSY | ATA_DF | ATA_ERR | ATA_DRQ)) {
-+		ata_to_sense_error(qc->ap->print_id, tf->status, tf->error,
- 				   &sense_key, &asc, &ascq, verbose);
- 		ata_scsi_set_sense(dev, cmd, sense_key, asc, ascq);
- 	} else {
- 		/* Could not decode error */
- 		ata_dev_warn(dev, "could not decode error status 0x%x err_mask 0x%x\n",
--			     tf->command, qc->err_mask);
-+			     tf->status, qc->err_mask);
- 		ata_scsi_set_sense(dev, cmd, ABORTED_COMMAND, 0, 0);
- 		return;
- 	}
-@@ -2473,7 +2473,7 @@ static void atapi_request_sense(struct a
- 
- 	/* fill these in, for the case where they are -not- overwritten */
- 	cmd->sense_buffer[0] = 0x70;
--	cmd->sense_buffer[2] = qc->tf.feature >> 4;
-+	cmd->sense_buffer[2] = qc->tf.error >> 4;
- 
- 	ata_qc_reinit(qc);
- 
-Index: libata/drivers/ata/libata-sff.c
-===================================================================
---- libata.orig/drivers/ata/libata-sff.c
-+++ libata/drivers/ata/libata-sff.c
-@@ -449,8 +449,8 @@ void ata_sff_tf_read(struct ata_port *ap
- {
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
- 
--	tf->command = ata_sff_check_status(ap);
--	tf->feature = ioread8(ioaddr->error_addr);
-+	tf->status = ata_sff_check_status(ap);
-+	tf->error = ioread8(ioaddr->error_addr);
- 	tf->nsect = ioread8(ioaddr->nsect_addr);
- 	tf->lbal = ioread8(ioaddr->lbal_addr);
- 	tf->lbam = ioread8(ioaddr->lbam_addr);
-@@ -1824,7 +1824,7 @@ unsigned int ata_sff_dev_classify(struct
- 	memset(&tf, 0, sizeof(tf));
- 
- 	ap->ops->sff_tf_read(ap, &tf);
--	err = tf.feature;
-+	err = tf.error;
- 	if (r_err)
- 		*r_err = err;
- 
-Index: libata/drivers/ata/pata_ep93xx.c
-===================================================================
---- libata.orig/drivers/ata/pata_ep93xx.c
-+++ libata/drivers/ata/pata_ep93xx.c
-@@ -416,8 +416,8 @@ static void ep93xx_pata_tf_read(struct a
- {
- 	struct ep93xx_pata_data *drv_data = ap->host->private_data;
- 
--	tf->command = ep93xx_pata_check_status(ap);
--	tf->feature = ep93xx_pata_read_reg(drv_data, IDECTRL_ADDR_FEATURE);
-+	tf->status = ep93xx_pata_check_status(ap);
-+	tf->error = ep93xx_pata_read_reg(drv_data, IDECTRL_ADDR_FEATURE);
- 	tf->nsect = ep93xx_pata_read_reg(drv_data, IDECTRL_ADDR_NSECT);
- 	tf->lbal = ep93xx_pata_read_reg(drv_data, IDECTRL_ADDR_LBAL);
- 	tf->lbam = ep93xx_pata_read_reg(drv_data, IDECTRL_ADDR_LBAM);
-Index: libata/drivers/ata/pata_ns87415.c
-===================================================================
---- libata.orig/drivers/ata/pata_ns87415.c
-+++ libata/drivers/ata/pata_ns87415.c
-@@ -264,8 +264,8 @@ void ns87560_tf_read(struct ata_port *ap
- {
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
- 
--	tf->command = ns87560_check_status(ap);
--	tf->feature = ioread8(ioaddr->error_addr);
-+	tf->status = ns87560_check_status(ap);
-+	tf->error = ioread8(ioaddr->error_addr);
- 	tf->nsect = ioread8(ioaddr->nsect_addr);
- 	tf->lbal = ioread8(ioaddr->lbal_addr);
- 	tf->lbam = ioread8(ioaddr->lbam_addr);
-Index: libata/drivers/ata/pata_octeon_cf.c
-===================================================================
---- libata.orig/drivers/ata/pata_octeon_cf.c
-+++ libata/drivers/ata/pata_octeon_cf.c
-@@ -382,7 +382,7 @@ static void octeon_cf_tf_read16(struct a
- 	void __iomem *base = ap->ioaddr.data_addr;
- 
- 	blob = __raw_readw(base + 0xc);
--	tf->feature = blob >> 8;
-+	tf->error = blob >> 8;
- 
- 	blob = __raw_readw(base + 2);
- 	tf->nsect = blob & 0xff;
-@@ -394,7 +394,7 @@ static void octeon_cf_tf_read16(struct a
- 
- 	blob = __raw_readw(base + 6);
- 	tf->device = blob & 0xff;
--	tf->command = blob >> 8;
-+	tf->status = blob >> 8;
- 
- 	if (tf->flags & ATA_TFLAG_LBA48) {
- 		if (likely(ap->ioaddr.ctl_addr)) {
-Index: libata/drivers/ata/pata_samsung_cf.c
-===================================================================
---- libata.orig/drivers/ata/pata_samsung_cf.c
-+++ libata/drivers/ata/pata_samsung_cf.c
-@@ -213,7 +213,7 @@ static void pata_s3c_tf_read(struct ata_
- {
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
- 
--	tf->feature = ata_inb(ap->host, ioaddr->error_addr);
-+	tf->error = ata_inb(ap->host, ioaddr->error_addr);
- 	tf->nsect = ata_inb(ap->host, ioaddr->nsect_addr);
- 	tf->lbal = ata_inb(ap->host, ioaddr->lbal_addr);
- 	tf->lbam = ata_inb(ap->host, ioaddr->lbam_addr);
-Index: libata/drivers/ata/sata_highbank.c
-===================================================================
---- libata.orig/drivers/ata/sata_highbank.c
-+++ libata/drivers/ata/sata_highbank.c
-@@ -400,7 +400,7 @@ static int ahci_highbank_hardreset(struc
- 
- 	/* clear D2H reception area to properly wait for D2H FIS */
- 	ata_tf_init(link->device, &tf);
--	tf.command = ATA_BUSY;
-+	tf.status = ATA_BUSY;
- 	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
- 
- 	do {
-Index: libata/drivers/ata/sata_inic162x.c
-===================================================================
---- libata.orig/drivers/ata/sata_inic162x.c
-+++ libata/drivers/ata/sata_inic162x.c
-@@ -557,13 +557,13 @@ static void inic_tf_read(struct ata_port
- {
- 	void __iomem *port_base = inic_port_base(ap);
- 
--	tf->feature	= readb(port_base + PORT_TF_FEATURE);
-+	tf->error	= readb(port_base + PORT_TF_FEATURE);
- 	tf->nsect	= readb(port_base + PORT_TF_NSECT);
- 	tf->lbal	= readb(port_base + PORT_TF_LBAL);
- 	tf->lbam	= readb(port_base + PORT_TF_LBAM);
- 	tf->lbah	= readb(port_base + PORT_TF_LBAH);
- 	tf->device	= readb(port_base + PORT_TF_DEVICE);
--	tf->command	= readb(port_base + PORT_TF_COMMAND);
-+	tf->status	= readb(port_base + PORT_TF_COMMAND);
- }
- 
- static bool inic_qc_fill_rtf(struct ata_queued_cmd *qc)
-@@ -580,11 +580,11 @@ static bool inic_qc_fill_rtf(struct ata_
- 	 */
- 	inic_tf_read(qc->ap, &tf);
- 
--	if (!(tf.command & ATA_ERR))
-+	if (!(tf.status & ATA_ERR))
- 		return false;
- 
--	rtf->command = tf.command;
--	rtf->feature = tf.feature;
-+	rtf->status = tf.status;
-+	rtf->error = tf.error;
- 	return true;
- }
- 
-Index: libata/drivers/ata/sata_rcar.c
-===================================================================
---- libata.orig/drivers/ata/sata_rcar.c
-+++ libata/drivers/ata/sata_rcar.c
-@@ -394,8 +394,8 @@ static void sata_rcar_tf_read(struct ata
- {
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
- 
--	tf->command = sata_rcar_check_status(ap);
--	tf->feature = ioread32(ioaddr->error_addr);
-+	tf->status = sata_rcar_check_status(ap);
-+	tf->error = ioread32(ioaddr->error_addr);
- 	tf->nsect = ioread32(ioaddr->nsect_addr);
- 	tf->lbal = ioread32(ioaddr->lbal_addr);
- 	tf->lbam = ioread32(ioaddr->lbam_addr);
-Index: libata/drivers/ata/sata_svw.c
-===================================================================
---- libata.orig/drivers/ata/sata_svw.c
-+++ libata/drivers/ata/sata_svw.c
-@@ -194,24 +194,24 @@ static void k2_sata_tf_load(struct ata_p
- static void k2_sata_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
- {
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
--	u16 nsect, lbal, lbam, lbah, feature;
-+	u16 nsect, lbal, lbam, lbah, error;
- 
--	tf->command = k2_stat_check_status(ap);
-+	tf->status = k2_stat_check_status(ap);
- 	tf->device = readw(ioaddr->device_addr);
--	feature = readw(ioaddr->error_addr);
-+	error = readw(ioaddr->error_addr);
- 	nsect = readw(ioaddr->nsect_addr);
- 	lbal = readw(ioaddr->lbal_addr);
- 	lbam = readw(ioaddr->lbam_addr);
- 	lbah = readw(ioaddr->lbah_addr);
- 
--	tf->feature = feature;
-+	tf->error = error;
- 	tf->nsect = nsect;
- 	tf->lbal = lbal;
- 	tf->lbam = lbam;
- 	tf->lbah = lbah;
- 
- 	if (tf->flags & ATA_TFLAG_LBA48) {
--		tf->hob_feature = feature >> 8;
-+		tf->hob_feature = error >> 8;
- 		tf->hob_nsect = nsect >> 8;
- 		tf->hob_lbal = lbal >> 8;
- 		tf->hob_lbam = lbam >> 8;
-Index: libata/drivers/ata/sata_vsc.c
-===================================================================
---- libata.orig/drivers/ata/sata_vsc.c
-+++ libata/drivers/ata/sata_vsc.c
-@@ -183,24 +183,24 @@ static void vsc_sata_tf_load(struct ata_
- static void vsc_sata_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
- {
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
--	u16 nsect, lbal, lbam, lbah, feature;
-+	u16 nsect, lbal, lbam, lbah, error;
- 
--	tf->command = ata_sff_check_status(ap);
-+	tf->status = ata_sff_check_status(ap);
- 	tf->device = readw(ioaddr->device_addr);
--	feature = readw(ioaddr->error_addr);
-+	error = readw(ioaddr->error_addr);
- 	nsect = readw(ioaddr->nsect_addr);
- 	lbal = readw(ioaddr->lbal_addr);
- 	lbam = readw(ioaddr->lbam_addr);
- 	lbah = readw(ioaddr->lbah_addr);
- 
--	tf->feature = feature;
-+	tf->error = error;
- 	tf->nsect = nsect;
- 	tf->lbal = lbal;
- 	tf->lbam = lbam;
- 	tf->lbah = lbah;
- 
- 	if (tf->flags & ATA_TFLAG_LBA48) {
--		tf->hob_feature = feature >> 8;
-+		tf->hob_feature = error >> 8;
- 		tf->hob_nsect = nsect >> 8;
- 		tf->hob_lbal = lbal >> 8;
- 		tf->hob_lbam = lbam >> 8;
-Index: libata/include/linux/libata.h
-===================================================================
---- libata.orig/include/linux/libata.h
-+++ libata/include/linux/libata.h
-@@ -518,7 +518,10 @@ struct ata_taskfile {
- 	u8			hob_lbam;
- 	u8			hob_lbah;
- 
--	u8			feature;
-+	union {
-+		u8		error;
-+		u8		feature;
-+	};
- 	u8			nsect;
- 	u8			lbal;
- 	u8			lbam;
-@@ -526,7 +529,10 @@ struct ata_taskfile {
- 
- 	u8			device;
- 
--	u8			command;	/* IO operation */
-+	union {
-+		u8		status;
-+		u8		command;
-+	};
- 
- 	u32			auxiliary;	/* auxiliary field */
- 						/* from SATA 3.1 and */
+For example I found recently on some family 19h laptops that they claim 
+to have a family 17h DMIC according to GNOME Settings which stems back 
+to a string that was in the PCI database.
+
+When I encountered this I submitted a correction to make it more 
+generic, but I'm sure there are plenty more like this.
+
+> 
+> 
+>>> Additionally, the device 0x7901 is also present in desktop systems like
+>>> Dell OptiPlex 5055 and MSI B350 MORTAR. Is `board_ahci_mobile` the right
+>>> board then? Or should the flag `AHCI_HFLAG_IS_MOBILE` be renamed to
+>>> avoid confusion?
+>>
+>> Are you having a problem or just want clarity in the enum definition?
+> 
+> It’s more about clarity, and understanding the two different entries.
+> 
+>> This was introduced by Hans in commit ebb82e3c79d2a to set LPM policy 
+>> properly
+>> for a number of mobile devices.
+>>
+>> My opinion here is that the policy being for "mobile" devices only is 
+>> short sighted as power
+>> consumption policy on desktops is also relevant as OEMs ship desktops 
+>> that need to meet
+>> various power regulations for those too.
+>>
+>> So I would be in the camp for renaming the flags.
+> 
+> Why can’t the LPM policy, if available(?), not be set for `board_ahci` 
+> by default, so `board_ahci_mobile` could be removed?
+> 
+>>>>        /* AMD is using RAID class only for ahci controllers */
+>>>>        { PCI_VENDOR_ID_AMD, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+>>>>          PCI_CLASS_STORAGE_RAID << 8, 0xffffff, board_ahci },
+> 
+> 
+> Kind regards,
+> 
+> Paul
+> 
+> 
+> [1]: 
+> https://nam11.safelinks.protection.outlook.com/?url=https%3A%2F%2Freview.coreboot.org%2F10418&amp;data=04%7C01%7CMario.Limonciello%40amd.com%7Cf25ec205dd2e46253a2208d9f0519b39%7C3dd8961fe4884e608e11a82d994e183d%7C0%7C0%7C637805055570772355%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000&amp;sdata=vqX1NjUKE0STzvmKSWtJxhrrdQnH%2BmqAiXGuqNMQAt0%3D&amp;reserved=0 
+> 
+> [2]: 
+> https://nam11.safelinks.protection.outlook.com/?url=https%3A%2F%2Freview.coreboot.org%2F20200&amp;data=04%7C01%7CMario.Limonciello%40amd.com%7Cf25ec205dd2e46253a2208d9f0519b39%7C3dd8961fe4884e608e11a82d994e183d%7C0%7C0%7C637805055570772355%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000&amp;sdata=oz3K76NGXrp41wq%2B5QcPUtJG%2BfqxCGOTVojfYb%2BMIlw%3D&amp;reserved=0 
+> 
+> [3]: 
+> https://nam11.safelinks.protection.outlook.com/?url=https%3A%2F%2Fpci-ids.ucw.cz%2Fread%2FPC%2F1022%2F7900&amp;data=04%7C01%7CMario.Limonciello%40amd.com%7Cf25ec205dd2e46253a2208d9f0519b39%7C3dd8961fe4884e608e11a82d994e183d%7C0%7C0%7C637805055570772355%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C3000&amp;sdata=Y32YS5rIxBXTyNQ8VOuTxBTbfsOipBcIPAvmhBhSz7E%3D&amp;reserved=0 
+> 
+
