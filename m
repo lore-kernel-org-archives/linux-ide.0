@@ -2,25 +2,24 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0612C43219
-	for <linux-ide@archiver.kernel.org>; Wed, 16 Feb 2022 04:17:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C1B4C433EF
+	for <linux-ide@archiver.kernel.org>; Wed, 16 Feb 2022 04:42:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344462AbiBPER2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 15 Feb 2022 23:17:28 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:45788 "EHLO
+        id S1344499AbiBPEm4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 15 Feb 2022 23:42:56 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:43756 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344405AbiBPERQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Feb 2022 23:17:16 -0500
-X-Greylist: delayed 218 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 15 Feb 2022 20:16:10 PST
+        with ESMTP id S1344491AbiBPEmp (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Feb 2022 23:42:45 -0500
 Received: from lgeamrelo11.lge.com (lgeamrelo13.lge.com [156.147.23.53])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5C24F10459E
-        for <linux-ide@vger.kernel.org>; Tue, 15 Feb 2022 20:16:09 -0800 (PST)
-Received: from unknown (HELO lgemrelse7q.lge.com) (156.147.1.151)
-        by 156.147.23.53 with ESMTP; 16 Feb 2022 13:16:09 +0900
-X-Original-SENDERIP: 156.147.1.151
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 667CCF406B
+        for <linux-ide@vger.kernel.org>; Tue, 15 Feb 2022 20:42:32 -0800 (PST)
+Received: from unknown (HELO lgeamrelo01.lge.com) (156.147.1.125)
+        by 156.147.23.53 with ESMTP; 16 Feb 2022 13:12:31 +0900
+X-Original-SENDERIP: 156.147.1.125
 X-Original-MAILFROM: byungchul.park@lge.com
 Received: from unknown (HELO localhost.localdomain) (10.177.244.38)
-        by 156.147.1.151 with ESMTP; 16 Feb 2022 13:16:09 +0900
+        by 156.147.1.125 with ESMTP; 16 Feb 2022 13:12:31 +0900
 X-Original-SENDERIP: 10.177.244.38
 X-Original-MAILFROM: byungchul.park@lge.com
 From:   Byungchul Park <byungchul.park@lge.com>
@@ -46,201 +45,60 @@ Cc:     torvalds@linux-foundation.org, mingo@redhat.com,
         dri-devel@lists.freedesktop.org, airlied@linux.ie,
         rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
         hamohammed.sa@gmail.com
-Subject: Report 3 in ata_scsi_port_error_handler()
-Date:   Wed, 16 Feb 2022 13:16:03 +0900
-Message-Id: <1644984964-28300-2-git-send-email-byungchul.park@lge.com>
+Subject: [REPORT] libata deadlock possibilities by DEPT
+Date:   Wed, 16 Feb 2022 13:12:27 +0900
+Message-Id: <1644984747-26706-1-git-send-email-byungchul.park@lge.com>
 X-Mailer: git-send-email 1.9.1
-In-Reply-To: <1644984964-28300-1-git-send-email-byungchul.park@lge.com>
-References: <1644984747-26706-1-git-send-email-byungchul.park@lge.com>
- <1644984964-28300-1-git-send-email-byungchul.park@lge.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-[    2.051991] ===================================================
-[    2.051991] DEPT: Circular dependency has been detected.
-[    2.051991] 5.17.0-rc1-00014-gcf3441bb2012 #2 Tainted: G        W        
-[    2.051991] ---------------------------------------------------
-[    2.051991] summary
-[    2.051991] ---------------------------------------------------
-[    2.051991] *** DEADLOCK ***
-[    2.051991] 
-[    2.051991] context A
-[    2.051991]     [S] (unknown)(&(&ap->eh_wait_q)->dmap:0)
-[    2.051991]     [W] __mutex_lock_common(&host->eh_mutex:0)
-[    2.051991]     [E] event(&(&ap->eh_wait_q)->dmap:0)
-[    2.051991] 
-[    2.051991] context B
-[    2.051991]     [S] __raw_spin_lock_irqsave(&host->lock:0)
-[    2.051991]     [W] wait(&(&ap->eh_wait_q)->dmap:0)
-[    2.051991]     [E] spin_unlock(&host->lock:0)
-[    2.051991] 
-[    2.051991] context C
-[    2.051991]     [S] __mutex_lock_common(&host->eh_mutex:0)
-[    2.051991]     [W] __raw_spin_lock_irqsave(&host->lock:0)
-[    2.051991]     [E] mutex_unlock(&host->eh_mutex:0)
-[    2.051991] 
-[    2.051991] [S]: start of the event context
-[    2.051991] [W]: the wait blocked
-[    2.051991] [E]: the event not reachable
-[    2.051991] ---------------------------------------------------
-[    2.051991] context A's detail
-[    2.051991] ---------------------------------------------------
-[    2.051991] context A
-[    2.051991]     [S] (unknown)(&(&ap->eh_wait_q)->dmap:0)
-[    2.051991]     [W] __mutex_lock_common(&host->eh_mutex:0)
-[    2.051991]     [E] event(&(&ap->eh_wait_q)->dmap:0)
-[    2.051991] 
-[    2.051991] [S] (unknown)(&(&ap->eh_wait_q)->dmap:0):
-[    2.051991] (N/A)
-[    2.051991] 
-[    2.051991] [W] __mutex_lock_common(&host->eh_mutex:0):
-[    2.051991] [<ffffffff81780ad9>] ata_eh_acquire+0x19/0x40
-[    2.051991] stacktrace:
-[    2.051991]       __mutex_lock+0x52c/0x900
-[    2.051991]       ata_eh_acquire+0x19/0x40
-[    2.051991]       ata_exec_internal_sg+0x41a/0x690
-[    2.051991]       ata_exec_internal+0x4a/0x70
-[    2.051991]       ata_dev_read_id+0x2ce/0x540
-[    2.051991]       ata_dev_reread_id+0x33/0xc0
-[    2.051991]       ata_dev_revalidate+0x41/0x190
-[    2.051991]       ata_do_set_mode+0x61c/0xac0
-[    2.051991]       ata_set_mode+0xfc/0x110
-[    2.051991]       ata_eh_recover+0x1061/0x1360
-[    2.051991]       ata_do_eh+0x3f/0xa0
-[    2.051991]       ata_scsi_port_error_handler+0x432/0x740
-[    2.051991]       ata_scsi_error+0x94/0xc0
-[    2.051991]       scsi_error_handler+0x8d/0x3a0
-[    2.051991]       kthread+0xe3/0x110
-[    2.051991]       ret_from_fork+0x22/0x30
-[    2.051991] 
-[    2.051991] [E] event(&(&ap->eh_wait_q)->dmap:0):
-[    2.051991] [<ffffffff810baa53>] __wake_up_common+0x93/0x1a0
-[    2.051991] stacktrace:
-[    2.051991]       dept_event+0x12b/0x1f0
-[    2.051991]       __wake_up_common+0xb0/0x1a0
-[    2.051991]       __wake_up_common_lock+0x65/0x90
-[    2.051991]       ata_scsi_port_error_handler+0x67a/0x740
-[    2.051991]       ata_scsi_error+0x94/0xc0
-[    2.051991]       scsi_error_handler+0x8d/0x3a0
-[    2.051991]       kthread+0xe3/0x110
-[    2.051991]       ret_from_fork+0x22/0x30
-[    2.051991] ---------------------------------------------------
-[    2.051991] context B's detail
-[    2.051991] ---------------------------------------------------
-[    2.051991] context B
-[    2.051991]     [S] __raw_spin_lock_irqsave(&host->lock:0)
-[    2.051991]     [W] wait(&(&ap->eh_wait_q)->dmap:0)
-[    2.051991]     [E] spin_unlock(&host->lock:0)
-[    2.051991] 
-[    2.051991] [S] __raw_spin_lock_irqsave(&host->lock:0):
-[    2.051991] [<ffffffff8178047c>] ata_port_wait_eh+0x6c/0xc0
-[    2.051991] stacktrace:
-[    2.051991]       _raw_spin_lock_irqsave+0x82/0xa0
-[    2.051991]       ata_port_wait_eh+0x6c/0xc0
-[    2.051991]       ata_port_probe+0x1f/0x30
-[    2.051991]       async_port_probe+0x27/0x50
-[    2.051991]       async_run_entry_fn+0x21/0xa0
-[    2.051991]       process_one_work+0x317/0x640
-[    2.051991]       worker_thread+0x44/0x410
-[    2.051991]       kthread+0xe3/0x110
-[    2.051991]       ret_from_fork+0x22/0x30
-[    2.051991] 
-[    2.051991] [W] wait(&(&ap->eh_wait_q)->dmap:0):
-[    2.051991] [<ffffffff810bb017>] prepare_to_wait+0x47/0xd0
-[    2.051991] stacktrace:
-[    2.051991]       ata_port_wait_eh+0x52/0xc0
-[    2.051991]       ata_port_probe+0x1f/0x30
-[    2.051991]       async_port_probe+0x27/0x50
-[    2.051991]       async_run_entry_fn+0x21/0xa0
-[    2.051991]       process_one_work+0x317/0x640
-[    2.051991]       worker_thread+0x44/0x410
-[    2.051991]       kthread+0xe3/0x110
-[    2.051991]       ret_from_fork+0x22/0x30
-[    2.051991] 
-[    2.051991] [E] spin_unlock(&host->lock:0):
-[    2.051991] [<ffffffff8178046e>] ata_port_wait_eh+0x5e/0xc0
-[    2.051991] stacktrace:
-[    2.051991]       _raw_spin_unlock_irqrestore+0x35/0x80
-[    2.051991]       ata_port_wait_eh+0x5e/0xc0
-[    2.051991]       ata_port_probe+0x1f/0x30
-[    2.051991]       async_port_probe+0x27/0x50
-[    2.051991]       async_run_entry_fn+0x21/0xa0
-[    2.051991]       process_one_work+0x317/0x640
-[    2.051991]       worker_thread+0x44/0x410
-[    2.051991]       kthread+0xe3/0x110
-[    2.051991]       ret_from_fork+0x22/0x30
-[    2.051991] ---------------------------------------------------
-[    2.051991] context C's detail
-[    2.051991] ---------------------------------------------------
-[    2.051991] context C
-[    2.051991]     [S] __mutex_lock_common(&host->eh_mutex:0)
-[    2.051991]     [W] __raw_spin_lock_irqsave(&host->lock:0)
-[    2.051991]     [E] mutex_unlock(&host->eh_mutex:0)
-[    2.051991] 
-[    2.051991] [S] __mutex_lock_common(&host->eh_mutex:0):
-[    2.051991] [<ffffffff81780ad9>] ata_eh_acquire+0x19/0x40
-[    2.051991] stacktrace:
-[    2.051991]       __mutex_lock+0x54d/0x900
-[    2.051991]       ata_eh_acquire+0x19/0x40
-[    2.051991]       ata_scsi_port_error_handler+0x32/0x740
-[    2.051991]       ata_scsi_error+0x94/0xc0
-[    2.051991]       scsi_error_handler+0x8d/0x3a0
-[    2.051991]       kthread+0xe3/0x110
-[    2.051991]       ret_from_fork+0x22/0x30
-[    2.051991] 
-[    2.051991] [W] __raw_spin_lock_irqsave(&host->lock:0):
-[    2.051991] [<ffffffff817853df>] ata_scsi_port_error_handler+0x4f/0x740
-[    2.051991] stacktrace:
-[    2.051991]       _raw_spin_lock_irqsave+0x5f/0xa0
-[    2.051991]       ata_scsi_port_error_handler+0x4f/0x740
-[    2.051991]       ata_scsi_error+0x94/0xc0
-[    2.051991]       scsi_error_handler+0x8d/0x3a0
-[    2.051991]       kthread+0xe3/0x110
-[    2.051991]       ret_from_fork+0x22/0x30
-[    2.051991] 
-[    2.051991] [E] mutex_unlock(&host->eh_mutex:0):
-[    2.051991] [<ffffffff81773cd7>] ata_msleep+0x77/0x80
-[    2.051991] stacktrace:
-[    2.051991]       __mutex_unlock_slowpath+0x49/0x2a0
-[    2.051991]       ata_msleep+0x77/0x80
-[    2.051991]       ata_sff_wait_after_reset+0x27/0x150
-[    2.051991]       ata_sff_softreset+0xc8/0x1a0
-[    2.051991]       ata_eh_reset+0x3dc/0x1390
-[    2.051991]       ata_eh_recover+0x257/0x1360
-[    2.051991]       ata_do_eh+0x3f/0xa0
-[    2.051991]       ata_scsi_port_error_handler+0x432/0x740
-[    2.051991]       ata_scsi_error+0x94/0xc0
-[    2.051991]       scsi_error_handler+0x8d/0x3a0
-[    2.051991]       kthread+0xe3/0x110
-[    2.051991]       ret_from_fork+0x22/0x30
-[    2.051991] ---------------------------------------------------
-[    2.051991] information that might be helpful
-[    2.051991] ---------------------------------------------------
-[    2.051991] CPU: 1 PID: 53 Comm: scsi_eh_1 Tainted: G        W         5.17.0-rc1-00014-gcf3441bb2012 #2
-[    2.051991] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
-[    2.051991] Call Trace:
-[    2.051991]  <TASK>
-[    2.051991]  dump_stack_lvl+0x44/0x57
-[    2.051991]  print_circle+0x384/0x510
-[    2.051991]  ? print_circle+0x510/0x510
-[    2.051991]  cb_check_dl+0x58/0x60
-[    2.051991]  bfs+0xdc/0x1b0
-[    2.051991]  add_dep+0x94/0x120
-[    2.051991]  do_event.isra.22+0x284/0x300
-[    2.051991]  ? __wake_up_common+0x93/0x1a0
-[    2.051991]  dept_event+0x12b/0x1f0
-[    2.051991]  __wake_up_common+0xb0/0x1a0
-[    2.051991]  __wake_up_common_lock+0x65/0x90
-[    2.051991]  ata_scsi_port_error_handler+0x67a/0x740
-[    2.051991]  ? trace_hardirqs_on+0x38/0xe0
-[    2.051991]  ? scsi_eh_get_sense+0x150/0x150
-[    2.051991]  ata_scsi_error+0x94/0xc0
-[    2.051991]  scsi_error_handler+0x8d/0x3a0
-[    2.051991]  ? _raw_spin_unlock_irqrestore+0x63/0x80
-[    2.051991]  ? scsi_eh_get_sense+0x150/0x150
-[    2.051991]  kthread+0xe3/0x110
-[    2.051991]  ? kthread_complete_and_exit+0x20/0x20
-[    2.051991]  ret_from_fork+0x22/0x30
-[    2.051991]  </TASK>
+Hi Damien and libata folks,
+
+I've been developing a tool for detecting deadlock possibilities by
+tracking wait/event rather than lock(?) acquisition order to try to
+cover all synchonization machanisms. It's done on v5.17-rc1 tag.
+
+https://github.com/lgebyungchulpark/linux-dept/commits/dept1.11_on_v5.17-rc1
+
+Benifit:
+
+	0. Works with all lock primitives.
+	1. Works with wait_for_completion()/complete().
+	2. Works with 'wait' on PG_locked.
+	3. Works with 'wait' on PG_writeback.
+	4. Works with swait/wakeup.
+	5. Works with waitqueue.
+	6. Multiple reports are allowed.
+	7. Deduplication control on multiple reports.
+	8. Withstand false positives thanks to 6.
+	9. Easy to tag any wait/event.
+
+Future work:
+
+	0. To make it more stable.
+	1. To separates Dept from Lockdep.
+	2. To improves performance in terms of time and space.
+	3. To use Dept as a dependency engine for Lockdep.
+	4. To add any missing tags of wait/event in the kernel.
+	5. To deduplicate stack trace.
+
+I've got several reports from the tool. Some of them look like false
+alarms caused by Lockdep's fake annotations added for better detection.
+However, some others look like real deadlock possibility. Because of my
+unfamiliarity of the domain, it's hard to confirm if it's a real one.
+I'd like to ask for your opinion on it and it'd be appreciated.
+
+How to interpret the report is:
+
+	1. E(event) in each context cannot be triggered because of the
+	   W(wait) that cannot be woken.
+	2. The stack trace helping find the problematic code is located
+	   in each conext's detail.
+
+Let me add the reports on this email thread.
+
+---
+Thanks,
+Byungchul
 
