@@ -2,592 +2,168 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87866C433FE
-	for <linux-ide@archiver.kernel.org>; Thu, 17 Feb 2022 17:37:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E3BEC4332F
+	for <linux-ide@archiver.kernel.org>; Thu, 17 Feb 2022 19:47:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243833AbiBQRhU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 17 Feb 2022 12:37:20 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:56902 "EHLO
+        id S245418AbiBQTr0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 17 Feb 2022 14:47:26 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:45412 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229953AbiBQRhU (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2022 12:37:20 -0500
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A7EAF6565;
-        Thu, 17 Feb 2022 09:37:04 -0800 (PST)
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 34F3B618D7;
-        Thu, 17 Feb 2022 17:37:04 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1AA24C340E8;
-        Thu, 17 Feb 2022 17:36:57 +0000 (UTC)
-Date:   Thu, 17 Feb 2022 12:36:56 -0500
-From:   Steven Rostedt <rostedt@goodmis.org>
-To:     Byungchul Park <byungchul.park@lge.com>
-Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
+        with ESMTP id S245402AbiBQTrY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2022 14:47:24 -0500
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC6C226549;
+        Thu, 17 Feb 2022 11:47:09 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1645127229; x=1676663229;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=WYl42eI4HYLz25VSfvzg7qJMtNusab7DF8CglpN8QQE=;
+  b=P14ifbhDmv3+7yV1aYSWImV5iz7xj3A8Ef7qCFnKLDcOdxkhSu1clDVn
+   12Eg2dnBHl7Ql3NFL7PoKZlmZT1Niibn+pj1Ldd7WLLczTA8g6jZR8hAW
+   TfoOj40Bpwebpbpyy9t4huttgDheS6I8m1pw+xzjzo5WZqhLqNY9Q+GxC
+   eDB5/5b0qldLOUxmQntVPpe8jdX+GD2k6A2AQoJlvtdYO5IpzzjnUtyW4
+   whFl3UJkaIEqodOnCOe9seNu/UV6SLQmFTlz0nRcZpl/vLOuAtSSdZlIP
+   XpPgNZsaix5MU9JrGMWXoyxMgAWhiL+bKMNQEjaYt6iAENzGvsFUB1OPF
+   Q==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10261"; a="231586439"
+X-IronPort-AV: E=Sophos;i="5.88,376,1635231600"; 
+   d="scan'208";a="231586439"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 11:47:09 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.88,376,1635231600"; 
+   d="scan'208";a="774876619"
+Received: from lkp-server01.sh.intel.com (HELO 6f05bf9e3301) ([10.239.97.150])
+  by fmsmga006.fm.intel.com with ESMTP; 17 Feb 2022 11:47:02 -0800
+Received: from kbuild by 6f05bf9e3301 with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1nKmk1-0000UD-7a; Thu, 17 Feb 2022 19:47:01 +0000
+Date:   Fri, 18 Feb 2022 03:46:26 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Byungchul Park <byungchul.park@lge.com>,
+        torvalds@linux-foundation.org
+Cc:     kbuild-all@lists.01.org, damien.lemoal@opensource.wdc.com,
         linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
         linux-ext4@vger.kernel.org, mingo@redhat.com,
         linux-kernel@vger.kernel.org, peterz@infradead.org,
-        will@kernel.org, tglx@linutronix.de, joel@joelfernandes.org,
-        sashal@kernel.org, daniel.vetter@ffwll.ch,
+        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
+        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
         chris@chris-wilson.co.uk, duyuyang@gmail.com,
         johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
         willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
         bfields@fieldses.org, gregkh@linuxfoundation.org,
         kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
-        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org,
-        vdavydov.dev@gmail.com, sj@kernel.org, jglisse@redhat.com,
-        dennis@kernel.org, cl@linux.com, penberg@kernel.org,
-        rientjes@google.com, vbabka@suse.cz, ngupta@vflare.org,
-        linux-block@vger.kernel.org, axboe@kernel.dk,
-        paolo.valente@linaro.org, josef@toxicpanda.com,
-        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
-        jack@suse.cz, jack@suse.com, jlayton@kernel.org,
-        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
-        dri-devel@lists.freedesktop.org, airlied@linux.ie,
-        rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
-        hamohammed.sa@gmail.com
-Subject: Re: [PATCH 02/16] dept: Implement Dept(Dependency Tracker)
-Message-ID: <20220217123656.389e8783@gandalf.local.home>
-In-Reply-To: <1645095472-26530-3-git-send-email-byungchul.park@lge.com>
-References: <1645095472-26530-1-git-send-email-byungchul.park@lge.com>
-        <1645095472-26530-3-git-send-email-byungchul.park@lge.com>
-X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org
+Subject: Re: [PATCH 07/16] dept: Apply Dept to
+ wait_for_completion()/complete()
+Message-ID: <202202180000.zICbPUhq-lkp@intel.com>
+References: <1645095472-26530-8-git-send-email-byungchul.park@lge.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1645095472-26530-8-git-send-email-byungchul.park@lge.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, 17 Feb 2022 19:57:38 +0900
-Byungchul Park <byungchul.park@lge.com> wrote:
+Hi Byungchul,
 
-> diff --git a/include/linux/dept.h b/include/linux/dept.h
-> new file mode 100644
-> index 0000000..2ac4bca
-> --- /dev/null
-> +++ b/include/linux/dept.h
-> @@ -0,0 +1,480 @@
-> +/* SPDX-License-Identifier: GPL-2.0 */
-> +/*
-> + * DEPT(DEPendency Tracker) - runtime dependency tracker
-> + *
-> + * Started by Byungchul Park <max.byungchul.park@gmail.com>:
-> + *
-> + *  Copyright (c) 2020 LG Electronics, Inc., Byungchul Park
-> + */
-> +
-> +#ifndef __LINUX_DEPT_H
-> +#define __LINUX_DEPT_H
-> +
-> +#ifdef CONFIG_DEPT
-> +
-> +#include <linux/types.h>
-> +
-> +struct task_struct;
-> +
-> +#define DEPT_MAX_STACK_ENTRY		16
-> +#define DEPT_MAX_WAIT_HIST		64
-> +#define DEPT_MAX_ECXT_HELD		48
-> +
-> +#define DEPT_MAX_SUBCLASSES		16
-> +#define DEPT_MAX_SUBCLASSES_EVT		2
-> +#define DEPT_MAX_SUBCLASSES_USR		(DEPT_MAX_SUBCLASSES / DEPT_MAX_SUBCLASSES_EVT)
-> +#define DEPT_MAX_SUBCLASSES_CACHE	2
-> +
-> +#define DEPT_SIRQ			0
-> +#define DEPT_HIRQ			1
-> +#define DEPT_IRQS_NR			2
-> +#define DEPT_SIRQF			(1UL << DEPT_SIRQ)
-> +#define DEPT_HIRQF			(1UL << DEPT_HIRQ)
-> +
-> +struct dept_ecxt;
-> +struct dept_iecxt {
-> +	struct dept_ecxt *ecxt;
-> +	int enirq;
-> +	bool staled; /* for preventing to add a new ecxt */
-> +};
-> +
-> +struct dept_wait;
-> +struct dept_iwait {
-> +	struct dept_wait *wait;
-> +	int irq;
-> +	bool staled; /* for preventing to add a new wait */
-> +	bool touched;
-> +};
+Thank you for the patch! Perhaps something to improve:
 
-Nit. It makes it easier to read (and then review) if structures are spaced
-where their fields are all lined up:
+[auto build test WARNING on tip/sched/core]
+[also build test WARNING on linux/master linus/master v5.17-rc4]
+[cannot apply to tip/locking/core hnaz-mm/master next-20220217]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
-struct dept_iecxt {
-	struct dept_ecxt		*ecxt;
-	int				enirq;
-	bool				staled;
-};
+url:    https://github.com/0day-ci/linux/commits/Byungchul-Park/DEPT-Dependency-Tracker/20220217-190040
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git 3624ba7b5e2acc02b01301ea5fd3534971eb9896
+config: arc-allyesconfig (https://download.01.org/0day-ci/archive/20220218/202202180000.zICbPUhq-lkp@intel.com/config)
+compiler: arceb-elf-gcc (GCC) 11.2.0
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/0day-ci/linux/commit/8ef6cb09cb67a0c5cd7ba4f25f4825d0a5b269b0
+        git remote add linux-review https://github.com/0day-ci/linux
+        git fetch --no-tags linux-review Byungchul-Park/DEPT-Dependency-Tracker/20220217-190040
+        git checkout 8ef6cb09cb67a0c5cd7ba4f25f4825d0a5b269b0
+        # save the config file to linux build tree
+        mkdir build_dir
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=arc SHELL=/bin/bash drivers/scsi/qla2xxx/
 
-struct dept_iwait {
-	struct dept_wait		*wait;
-	int				irq;
-	bool				staled;
-	bool				touched;
-};
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
 
-See, the fields stand out, and is nicer on the eyes. Especially for those
-of us that are getting up in age, and our eyes do not work as well as they
-use to ;-)
+All warnings (new ones prefixed by >>):
 
-> +
-> +struct dept_class {
-> +	union {
-> +		struct llist_node pool_node;
-> +
-> +		/*
-> +		 * reference counter for object management
-> +		 */
-> +		atomic_t ref;
-> +	};
-> +
-> +	/*
-> +	 * unique information about the class
-> +	 */
-> +	const char *name;
-> +	unsigned long key;
-> +	int sub;
-> +
-> +	/*
-> +	 * for BFS
-> +	 */
-> +	unsigned int bfs_gen;
-> +	int bfs_dist;
-> +	struct dept_class *bfs_parent;
-> +
-> +	/*
-> +	 * for hashing this object
-> +	 */
-> +	struct hlist_node hash_node;
-> +
-> +	/*
-> +	 * for linking all classes
-> +	 */
-> +	struct list_head all_node;
-> +
-> +	/*
-> +	 * for associating its dependencies
-> +	 */
-> +	struct list_head dep_head;
-> +	struct list_head dep_rev_head;
-> +
-> +	/*
-> +	 * for tracking IRQ dependencies
-> +	 */
-> +	struct dept_iecxt iecxt[DEPT_IRQS_NR];
-> +	struct dept_iwait iwait[DEPT_IRQS_NR];
-> +};
-> +
+   drivers/scsi/qla2xxx/qla_dfs.c: In function 'qla2x00_dfs_tgt_port_database_show':
+>> drivers/scsi/qla2xxx/qla_dfs.c:227:1: warning: the frame size of 1028 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+     227 | }
+         | ^
 
 
-> diff --git a/kernel/dependency/dept.c b/kernel/dependency/dept.c
-> new file mode 100644
-> index 0000000..4a3ab39
-> --- /dev/null
-> +++ b/kernel/dependency/dept.c
-> @@ -0,0 +1,2585 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * DEPT(DEPendency Tracker) - Runtime dependency tracker
-> + *
-> + * Started by Byungchul Park <max.byungchul.park@gmail.com>:
-> + *
-> + *  Copyright (c) 2020 LG Electronics, Inc., Byungchul Park
-> + *
-> + * DEPT provides a general way to detect deadlock possibility in runtime
-> + * and the interest is not limited to typical lock but to every
-> + * syncronization primitives.
-> + *
-[..]
+vim +227 drivers/scsi/qla2xxx/qla_dfs.c
 
-> + *
-> + *
-> + * ---
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License as published by
-> + * the Free Software Foundation; either version 2 of the License, or
-> + * (at your ootion) any later version.
-> + *
-> + * This program is distributed in the hope that it will be useful, but
-> + * WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-> + * General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, you can access it online at
-> + * http://www.gnu.org/licenses/gpl-2.0.html.
+36c7845282eef01 Quinn Tran       2016-02-04  174  
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  175  static int
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  176  qla2x00_dfs_tgt_port_database_show(struct seq_file *s, void *unused)
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  177  {
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  178  	scsi_qla_host_t *vha = s->private;
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  179  	struct qla_hw_data *ha = vha->hw;
+4e5a05d1ecd92ce Arun Easi        2020-09-03  180  	struct gid_list_info *gid_list;
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  181  	dma_addr_t gid_list_dma;
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  182  	fc_port_t fc_port;
+4e5a05d1ecd92ce Arun Easi        2020-09-03  183  	char *id_iter;
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  184  	int rc, i;
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  185  	uint16_t entries, loop_id;
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  186  
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  187  	seq_printf(s, "%s\n", vha->host_str);
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  188  	gid_list = dma_alloc_coherent(&ha->pdev->dev,
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  189  				      qla2x00_gid_list_size(ha),
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  190  				      &gid_list_dma, GFP_KERNEL);
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  191  	if (!gid_list) {
+83548fe2fcbb78a Quinn Tran       2017-06-02  192  		ql_dbg(ql_dbg_user, vha, 0x7018,
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  193  		       "DMA allocation failed for %u\n",
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  194  		       qla2x00_gid_list_size(ha));
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  195  		return 0;
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  196  	}
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  197  
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  198  	rc = qla24xx_gidlist_wait(vha, gid_list, gid_list_dma,
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  199  				  &entries);
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  200  	if (rc != QLA_SUCCESS)
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  201  		goto out_free_id_list;
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  202  
+4e5a05d1ecd92ce Arun Easi        2020-09-03  203  	id_iter = (char *)gid_list;
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  204  
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  205  	seq_puts(s, "Port Name	Port ID		Loop ID\n");
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  206  
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  207  	for (i = 0; i < entries; i++) {
+4e5a05d1ecd92ce Arun Easi        2020-09-03  208  		struct gid_list_info *gid =
+4e5a05d1ecd92ce Arun Easi        2020-09-03  209  			(struct gid_list_info *)id_iter;
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  210  		loop_id = le16_to_cpu(gid->loop_id);
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  211  		memset(&fc_port, 0, sizeof(fc_port_t));
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  212  
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  213  		fc_port.loop_id = loop_id;
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  214  
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  215  		rc = qla24xx_gpdb_wait(vha, &fc_port, 0);
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  216  		seq_printf(s, "%8phC  %02x%02x%02x  %d\n",
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  217  			   fc_port.port_name, fc_port.d_id.b.domain,
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  218  			   fc_port.d_id.b.area, fc_port.d_id.b.al_pa,
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  219  			   fc_port.loop_id);
+4e5a05d1ecd92ce Arun Easi        2020-09-03  220  		id_iter += ha->gid_list_info_size;
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  221  	}
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  222  out_free_id_list:
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  223  	dma_free_coherent(&ha->pdev->dev, qla2x00_gid_list_size(ha),
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  224  			  gid_list, gid_list_dma);
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  225  
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  226  	return 0;
+c423437e3ff41b8 Himanshu Madhani 2017-03-15 @227  }
+c423437e3ff41b8 Himanshu Madhani 2017-03-15  228  
 
-The SPDX at the top of the file is all that is needed. Please remove this
-boiler plate. We do not use GPL boiler plates in the kernel anymore. The
-SPDX code supersedes that.
-
-> + */
-> +
-> +#include <linux/sched.h>
-> +#include <linux/stacktrace.h>
-> +#include <linux/spinlock.h>
-> +#include <linux/kallsyms.h>
-> +#include <linux/hash.h>
-> +#include <linux/dept.h>
-> +#include <linux/utsname.h>
-> +
-> +static int dept_stop;
-> +static int dept_per_cpu_ready;
-> +
-> +#define DEPT_READY_WARN (!oops_in_progress)
-> +
-> +/*
-> + * Make all operations using DEPT_WARN_ON() fail on oops_in_progress and
-> + * prevent warning message.
-> + */
-> +#define DEPT_WARN_ON_ONCE(c)						\
-> +	({								\
-> +		int __ret = 0;						\
-> +									\
-> +		if (likely(DEPT_READY_WARN))				\
-> +			__ret = WARN_ONCE(c, "DEPT_WARN_ON_ONCE: " #c);	\
-> +		__ret;							\
-> +	})
-> +
-> +#define DEPT_WARN_ONCE(s...)						\
-> +	({								\
-> +		if (likely(DEPT_READY_WARN))				\
-> +			WARN_ONCE(1, "DEPT_WARN_ONCE: " s);		\
-> +	})
-> +
-> +#define DEPT_WARN_ON(c)							\
-> +	({								\
-> +		int __ret = 0;						\
-> +									\
-> +		if (likely(DEPT_READY_WARN))				\
-> +			__ret = WARN(c, "DEPT_WARN_ON: " #c);		\
-> +		__ret;							\
-> +	})
-> +
-> +#define DEPT_WARN(s...)							\
-> +	({								\
-> +		if (likely(DEPT_READY_WARN))				\
-> +			WARN(1, "DEPT_WARN: " s);			\
-> +	})
-> +
-> +#define DEPT_STOP(s...)							\
-> +	({								\
-> +		WRITE_ONCE(dept_stop, 1);				\
-> +		if (likely(DEPT_READY_WARN))				\
-> +			WARN(1, "DEPT_STOP: " s);			\
-> +	})
-> +
-> +static arch_spinlock_t dept_spin = (arch_spinlock_t)__ARCH_SPIN_LOCK_UNLOCKED;
-> +
-> +/*
-> + * DEPT internal engine should be careful in using outside functions
-> + * e.g. printk at reporting since that kind of usage might cause
-> + * untrackable deadlock.
-> + */
-> +static atomic_t dept_outworld = ATOMIC_INIT(0);
-> +
-> +static inline void dept_outworld_enter(void)
-> +{
-> +	atomic_inc(&dept_outworld);
-> +}
-> +
-> +static inline void dept_outworld_exit(void)
-> +{
-> +	atomic_dec(&dept_outworld);
-> +}
-> +
-> +static inline bool dept_outworld_entered(void)
-> +{
-> +	return atomic_read(&dept_outworld);
-> +}
-> +
-> +static inline bool dept_lock(void)
-> +{
-> +	while (!arch_spin_trylock(&dept_spin))
-> +		if (unlikely(dept_outworld_entered()))
-> +			return false;
-> +	return true;
-> +}
-> +
-> +static inline void dept_unlock(void)
-> +{
-> +	arch_spin_unlock(&dept_spin);
-> +}
-> +
-> +/*
-> + * whether to stack-trace on every wait or every ecxt
-> + */
-> +static bool rich_stack = true;
-> +
-> +enum bfs_ret {
-> +	BFS_CONTINUE,
-> +	BFS_CONTINUE_REV,
-> +	BFS_DONE,
-> +	BFS_SKIP,
-> +};
-> +
-> +static inline bool before(unsigned int a, unsigned int b)
-> +{
-> +	return (int)(a - b) < 0;
-> +}
-> +
-> +static inline bool valid_stack(struct dept_stack *s)
-> +{
-> +	return s && s->nr > 0;
-> +}
-> +
-> +static inline bool valid_class(struct dept_class *c)
-> +{
-> +	return c->key;
-> +}
-> +
-> +static inline void inval_class(struct dept_class *c)
-> +{
-> +	c->key = 0UL;
-> +}
-> +
-> +static inline struct dept_ecxt *dep_e(struct dept_dep *d)
-> +{
-> +	return d->ecxt;
-> +}
-> +
-> +static inline struct dept_wait *dep_w(struct dept_dep *d)
-> +{
-> +	return d->wait;
-> +}
-> +
-> +static inline struct dept_class *dep_fc(struct dept_dep *d)
-> +{
-> +	return dep_e(d)->class;
-> +}
-> +
-> +static inline struct dept_class *dep_tc(struct dept_dep *d)
-> +{
-> +	return dep_w(d)->class;
-> +}
-> +
-> +static inline const char *irq_str(int irq)
-> +{
-> +	if (irq == DEPT_SIRQ)
-> +		return "softirq";
-> +	if (irq == DEPT_HIRQ)
-> +		return "hardirq";
-> +	return "(unknown)";
-> +}
-> +
-> +static inline struct dept_task *dept_task(void)
-> +{
-> +	return &current->dept_task;
-> +}
-> +
-> +/*
-> + * Pool
-> + * =====================================================================
-> + * DEPT maintains pools to provide objects in a safe way.
-> + *
-> + *    1) Static pool is used at the beginning of booting time.
-> + *    2) Local pool is tried first before the static pool. Objects that
-> + *       have been freed will be placed.
-> + */
-> +
-> +enum object_t {
-> +#define OBJECT(id, nr) OBJECT_##id,
-> +	#include "dept_object.h"
-> +#undef  OBJECT
-> +	OBJECT_NR,
-> +};
-> +
-> +#define OBJECT(id, nr)							\
-> +static struct dept_##id spool_##id[nr];					\
-> +static DEFINE_PER_CPU(struct llist_head, lpool_##id);
-> +	#include "dept_object.h"
-> +#undef  OBJECT
-> +
-> +static struct dept_pool pool[OBJECT_NR] = {
-> +#define OBJECT(id, nr) {						\
-> +	.name = #id,							\
-> +	.obj_sz = sizeof(struct dept_##id),				\
-> +	.obj_nr = ATOMIC_INIT(nr),					\
-> +	.node_off = offsetof(struct dept_##id, pool_node),		\
-> +	.spool = spool_##id,						\
-> +	.lpool = &lpool_##id, },
-> +	#include "dept_object.h"
-> +#undef  OBJECT
-> +};
-> +
-> +/*
-> + * Can use llist no matter whether CONFIG_ARCH_HAVE_NMI_SAFE_CMPXCHG is
-> + * enabled because DEPT never race with NMI by nesting control.
-
-                         "never races with"
-
-Although, I'm confused by what you mean with "by nesting control".
-
-> + */
-> +static void *from_pool(enum object_t t)
-> +{
-> +	struct dept_pool *p;
-> +	struct llist_head *h;
-> +	struct llist_node *n;
-> +
-> +	/*
-> +	 * llist_del_first() doesn't allow concurrent access e.g.
-> +	 * between process and IRQ context.
-> +	 */
-> +	if (DEPT_WARN_ON(!irqs_disabled()))
-> +		return NULL;
-> +
-> +	p = &pool[t];
-> +
-> +	/*
-> +	 * Try local pool first.
-> +	 */
-> +	if (likely(dept_per_cpu_ready))
-> +		h = this_cpu_ptr(p->lpool);
-> +	else
-> +		h = &p->boot_pool;
-> +
-> +	n = llist_del_first(h);
-> +	if (n)
-> +		return (void *)n - p->node_off;
-> +
-> +	/*
-> +	 * Try static pool.
-> +	 */
-> +	if (atomic_read(&p->obj_nr) > 0) {
-> +		int idx = atomic_dec_return(&p->obj_nr);
-> +		if (idx >= 0)
-> +			return p->spool + (idx * p->obj_sz);
-> +	}
-> +
-> +	DEPT_WARN_ONCE("Pool(%s) is empty.\n", p->name);
-> +	return NULL;
-> +}
-> +
-> +static void to_pool(void *o, enum object_t t)
-> +{
-> +	struct dept_pool *p = &pool[t];
-> +	struct llist_head *h;
-> +
-> +	preempt_disable();
-> +	if (likely(dept_per_cpu_ready))
-> +		h = this_cpu_ptr(p->lpool);
-> +	else
-> +		h = &p->boot_pool;
-> +
-> +	llist_add(o + p->node_off, h);
-> +	preempt_enable();
-> +}
-> +
-> +#define OBJECT(id, nr)							\
-> +static void (*ctor_##id)(struct dept_##id *a);				\
-> +static void (*dtor_##id)(struct dept_##id *a);				\
-> +static inline struct dept_##id *new_##id(void)				\
-> +{									\
-> +	struct dept_##id *a;						\
-> +									\
-> +	a = (struct dept_##id *)from_pool(OBJECT_##id);			\
-> +	if (unlikely(!a))						\
-> +		return NULL;						\
-> +									\
-> +	atomic_set(&a->ref, 1);						\
-> +									\
-> +	if (ctor_##id)							\
-> +		ctor_##id(a);						\
-> +									\
-> +	return a;							\
-> +}									\
-> +									\
-> +static inline struct dept_##id *get_##id(struct dept_##id *a)		\
-> +{									\
-> +	atomic_inc(&a->ref);						\
-> +	return a;							\
-> +}									\
-> +									\
-> +static inline void put_##id(struct dept_##id *a)			\
-> +{									\
-> +	if (!atomic_dec_return(&a->ref)) {				\
-> +		if (dtor_##id)						\
-> +			dtor_##id(a);					\
-> +		to_pool(a, OBJECT_##id);				\
-> +	}								\
-> +}									\
-> +									\
-> +static inline void del_##id(struct dept_##id *a)			\
-> +{									\
-> +	put_##id(a);							\
-> +}									\
-> +									\
-> +static inline bool id##_consumed(struct dept_##id *a)			\
-> +{									\
-> +	return a && atomic_read(&a->ref) > 1;				\
-> +}
-> +#include "dept_object.h"
-> +#undef  OBJECT
-> +
-> +#define SET_CONSTRUCTOR(id, f) \
-> +static void (*ctor_##id)(struct dept_##id *a) = f
-> +
-> +static void initialize_dep(struct dept_dep *d)
-> +{
-> +	INIT_LIST_HEAD(&d->bfs_node);
-> +	INIT_LIST_HEAD(&d->dep_node);
-> +	INIT_LIST_HEAD(&d->dep_rev_node);
-> +}
-> +SET_CONSTRUCTOR(dep, initialize_dep);
-> +
-> +static void initialize_class(struct dept_class *c)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < DEPT_IRQS_NR; i++) {
-> +		struct dept_iecxt *ie = &c->iecxt[i];
-> +		struct dept_iwait *iw = &c->iwait[i];
-> +
-> +		ie->ecxt = NULL;
-> +		ie->enirq = i;
-> +		ie->staled = false;
-> +
-> +		iw->wait = NULL;
-> +		iw->irq = i;
-> +		iw->staled = false;
-> +		iw->touched = false;
-> +	}
-> +	c->bfs_gen = 0U;
-
-Is the U really necessary?
-
-> +
-> +	INIT_LIST_HEAD(&c->all_node);
-> +	INIT_LIST_HEAD(&c->dep_head);
-> +	INIT_LIST_HEAD(&c->dep_rev_head);
-> +}
-> +SET_CONSTRUCTOR(class, initialize_class);
-> +
-> +static void initialize_ecxt(struct dept_ecxt *e)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < DEPT_IRQS_NR; i++) {
-> +		e->enirq_stack[i] = NULL;
-> +		e->enirq_ip[i] = 0UL;
-> +	}
-> +	e->ecxt_ip = 0UL;
-
-Even UL is not necessary. Zero is zero.
-
-> +	e->ecxt_stack = NULL;
-> +	e->enirqf = 0UL;
-> +	e->event_stack = NULL;
-> +}
-> +SET_CONSTRUCTOR(ecxt, initialize_ecxt);
-> +
-
--- Steve
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
