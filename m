@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0329C4332F
-	for <linux-ide@archiver.kernel.org>; Thu, 17 Feb 2022 10:55:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E99F3C433F5
+	for <linux-ide@archiver.kernel.org>; Thu, 17 Feb 2022 10:57:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239387AbiBQKzx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 17 Feb 2022 05:55:53 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:53402 "EHLO
+        id S239423AbiBQK54 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 17 Feb 2022 05:57:56 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:60190 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239409AbiBQKzq (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2022 05:55:46 -0500
-Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D3AC2944C1
-        for <linux-ide@vger.kernel.org>; Thu, 17 Feb 2022 02:55:31 -0800 (PST)
+        with ESMTP id S239427AbiBQK5w (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2022 05:57:52 -0500
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0AE513EB5
+        for <linux-ide@vger.kernel.org>; Thu, 17 Feb 2022 02:57:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1645095331; x=1676631331;
+  t=1645095458; x=1676631458;
   h=message-id:date:mime-version:subject:to:references:from:
    in-reply-to:content-transfer-encoding;
-  bh=JeHUzimhsaVc4RC1yQLd9Fwip79n4POX2phsWDfHGnE=;
-  b=J8bszbMgfaHgm1QJy6WiMtIpSza215L7KXsFPhmeP+TBGw9tu5zuKDWe
-   efZPDtgMBePY4SeDRUT+YtiEP/By7Ir+9m+skxpoK/qvdCDpjsZX2eefN
-   6l/7mV5t9GKsc3ePv8T9/9UaX3o6boL6iHmYUvNfP8/w9I3oTKDohOXym
-   uJc3nSaKLpjZz3tK9MXReUSznIkn3g2mjudZfIo6MgS1O65EAbRVX7Hwv
-   ctfj0WjBdXIeaswSki2RlQtlOxCEJ+bnUBcNxM/8xyXeF5rebQQBDcIU+
-   RkZ5Xo/c3Q2srhCQTaYJJnKhAHFMalHYJ2SiPi1eUnsnGtwP8nniHg37K
-   A==;
+  bh=XDBboTfe1WwcDVd7/8UZb3eQxinMvo+yKo2uDEsbDFo=;
+  b=aKNorDXZ+puLmyKBVQOpazR+c7W2IRUl6CenDWLNiNXwMBezEtxuONCF
+   FsgEb8g3D+7labFpC/L+aM1DFKWxnr6YJ14FKZW4eT2s1doIY7LKCpkrp
+   Q4j3+3+n6cfxllzWs3gJwFnA+q2sUzXxXIuo99ET/pxA8JmJv2tHLo8Cu
+   lU8WSRiEhYh8yMv3XfEMGGBF2e6EaZEP5M5dBqw6JzDLIy0E7gUrEl+AI
+   qmsChcdWk8MUNRzrHbRBqkC0WAl5FM2DcmqahKBB29O32Q9xzqr43Iz2J
+   k7V4z9i3Ez7psn+VRUdGgk/RphF7+/gX+f4dJ5QOdn/1a6yaVeqxG60WR
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.88,375,1635177600"; 
-   d="scan'208";a="305083088"
+   d="scan'208";a="297293696"
 Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 17 Feb 2022 18:55:31 +0800
-IronPort-SDR: OW8vsn3RF3uc1Mqhu4fgYSXmn2lnB6tfEKIHNWg5C0XpS77NYPb1bM0vFzOmT/1OZn5W00Nh3o
- MmLNG8mKi42TgX5JCq4I3xYQlrM0EXktk+biWf+Vc/UfMKqlfR2u/KrMueWVDQaPGMTCrEELZ+
- dajpvQI5dl0VgzbEdEfJW/NsYl9WE8TNbcDOoh7mB4+8ccfgNBCDHqXcHQAnmdkAVm9t6ATs5E
- Z1yr9uccJAmYthrVPUAWvJROKfuNOsXhBn+sKUczU/Y1stvauu5J1AaRc57VHkfviOMSdv8aWd
- aW3/EyTJwslHdW48RUjF03Ss
+  by ob1.hgst.iphmx.com with ESMTP; 17 Feb 2022 18:57:38 +0800
+IronPort-SDR: QSC5i6F7vtZKqyCtV/924b61kvz5YH/1p7lNHOrupHP9aHElSXP8rrmzmlXhApGlLgKoDDyR5H
+ G9gonnZno5gtWSRdAc31uZbQdRgW2J4o1c233CacFRy4VRHp3XC0tp3N3sHOha6c2qF77Q1b73
+ mp/ljlfZwRvTGgiNw0xuGoqil8aVw+kNGHm+DD3Ny1n8Eio/83zCAT9r27srBRLGi7M0RT15Su
+ jxm2B4sHPj38ebM74nCc5BMlNcj7uCuWKleIKc1hFmpC78GFvVrl5VCQYXLPT1SrGAis9OBjxj
+ QO6Rrq8rtwKFWCe8tiyN+TKa
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 02:27:09 -0800
-IronPort-SDR: Rw1YIT8Lqf66sScJ/mTxWjr5BzUVm3E21gKbbhqFSzu8lwkWssnA7/0uxdPWB25LCEHQJ6w3mJ
- qpCGJb4O1LDzibCeApiZZsHhZk1g4qzu8Z5a4Vpx7Ea5jRAW1M82shNpFV3NL8Dcof6KC+7SGv
- zTkueL0eRfsb7juh8vTan8LttngzIOwiRwTvfEdU6dwZy+m0igrqRWq53FBiWZbeF3rk5eVDCL
- Zp5oWUA6eKXkQzdNGw3dRlX1S7Zkoxx8ozJM89UQddVJMn/sLDa1r54V8ry/SlMy+pevSiYIVE
- P9U=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 02:29:16 -0800
+IronPort-SDR: yNpQTx3/2vkMYWnDlK0CoJwY8Zp2qFXRJc7pDAonGKjbK7jAoM4mL+i0mVkMEpjsi/jm8fJqMT
+ 78iYKcOmf8PeycPGFWhH7HUnOwhndIOznBIVvst9OKR7WwGs2APdGH4PdqH93JrnrzJngNuLey
+ 4YuqeK0r8b5IUUR9lwa2LOclU11Ph+/092/TdecsHtZh+5JvPRzkTidZw5WVoMjOUb3bVyIWDW
+ p1fLEfkDbfkZeJ94OJc9PwU6Uig7cQNqBoNs02DWRj0yqU6M25mRNIG8xj2P3Qs5hv1Nq9Ndjv
+ XZE=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 02:55:32 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 02:57:39 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JzsDg0b2lz1SHwl
-        for <linux-ide@vger.kernel.org>; Thu, 17 Feb 2022 02:55:31 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JzsH60XlSz1SHwl
+        for <linux-ide@vger.kernel.org>; Thu, 17 Feb 2022 02:57:38 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,49 +56,47 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1645095330; x=1647687331; bh=JeHUzimhsaVc4RC1yQLd9Fwip79n4POX2ph
-        sWDfHGnE=; b=nfMMCd9NdGAlaYSF6V+dU7hJiPn/1Iclf/JIOFjyJo1t2BLCTre
-        G8jY15FPeykgKtkqUAeNCeDwjR4rJNYmkDVpfRKwmlsD+fHHSf433eu6WbSb+Chx
-        P3zLksG4Y26oVtBBEpwXckJvk3+78FcXRR114ZzzGwkDgN4qo1a25Aae+fzcxDei
-        5y3KjzP5MM9NLWJhxs558U/OpiQ4Od2aokXm8Avbi2nZTIFfKD7R6lyWgoPhme8g
-        rpMNykUZnMuQxwEcbsg8L47OP0WptUOcvrlceRVovCiF7tbdW7QZZtjBWaKJFrzf
-        6Xbhi8gA4crjlnGqL+766MQhigzZBqK5xag==
+        1645095457; x=1647687458; bh=XDBboTfe1WwcDVd7/8UZb3eQxinMvo+yKo2
+        uDEsbDFo=; b=Q+taZF1wxuMfc3W1T2hJE5ocnngClypRwdn9wiau0pCMXIM6s4g
+        vVTLjGp7D6DUwemzeFkAB8MfuP/FIHrS85VsQP0XKgp5ZxBkIkgAgbNy2vRD/sgp
+        8Hfa/N4u2/TTX7y7by/jFBRlIWSt81bMwF7R+jmnQqDCqX6IAyBcDL+dQJnSO89S
+        1ut/hLwK3rB+g01bt3O4uKg2QyShqEAPcp/u+jIgqlBUkTfrX5PPt/4GdKbza+Jt
+        iu9N7+eBKQlCn9hW1YmG16e0pLxRusd35otoBGn/WvFdRv1PUuCrZMKet+Y3FJHX
+        VG6/2IkLV04ZHLl6lecLp8pwzaqnfzsIlHg==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id M9dHHcHxlP-3 for <linux-ide@vger.kernel.org>;
-        Thu, 17 Feb 2022 02:55:30 -0800 (PST)
+        with ESMTP id QiczbtSpLNa9 for <linux-ide@vger.kernel.org>;
+        Thu, 17 Feb 2022 02:57:37 -0800 (PST)
 Received: from [10.225.163.77] (unknown [10.225.163.77])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JzsDf2CqPz1Rwrw;
-        Thu, 17 Feb 2022 02:55:30 -0800 (PST)
-Message-ID: <15a39279-c348-cd7a-879e-64a86bb454ce@opensource.wdc.com>
-Date:   Thu, 17 Feb 2022 19:55:28 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JzsH51yHHz1Rwrw;
+        Thu, 17 Feb 2022 02:57:37 -0800 (PST)
+Message-ID: <101340fd-4215-481b-747b-424f9116111f@opensource.wdc.com>
+Date:   Thu, 17 Feb 2022 19:57:36 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.0
-Subject: Re: [PATCH] ata: libata-sff: use *switch* statement in
- ata_sff_dev_classify()
+Subject: Re: [PATCH] ata: pata_hpt37x: merge mode setting methods
 Content-Language: en-US
 To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-References: <b4b1d7c1-b786-358f-154a-ba755a0814fb@omp.ru>
- <16173ee5-00a8-4bd2-484a-d4c5953b98a9@opensource.wdc.com>
- <d607d22d-fcd3-15e9-d58a-459e0393f805@omp.ru>
+References: <4e5e9ea0-f7ac-025a-f94f-a4f0ee009420@omp.ru>
+ <0303c512-9193-3d4d-3db7-6ecf391948de@opensource.wdc.com>
+ <dbee2241-c540-7f52-1314-9054db292580@omp.ru>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <d607d22d-fcd3-15e9-d58a-459e0393f805@omp.ru>
+In-Reply-To: <dbee2241-c540-7f52-1314-9054db292580@omp.ru>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/17/22 18:29, Sergey Shtylyov wrote:
-> Hello!
+On 2/17/22 18:49, Sergey Shtylyov wrote:
+> On 2/16/22 2:29 PM, Damien Le Moal wrote:
 > 
-> On 2/17/22 3:22 AM, Damien Le Moal wrote:
-> [...]
->>> In ata_sff_dev_classify(), replace a string of the *if* statements checking
->>> the device's class with the *switch* statement that fits better here...
+>>> After commit e0afcf140e6e ("ata: pata_hpt37x: disable fast interrupts in
+>>> prereset() method") HPT370's and HPT372+'s PIO/DMA mode setting functions
+>>> have become identical -- merge them.
 >>>
 >>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 >>>
@@ -106,59 +104,28 @@ On 2/17/22 18:29, Sergey Shtylyov wrote:
 >>> This patch is against the 'for-next' branch of Damien Le Moal's 'libata.git'
 >>> repo.
 >>>
->>>  drivers/ata/libata-sff.c |   14 ++++++++------
->>>  1 file changed, 8 insertions(+), 6 deletions(-)
+>>>  drivers/ata/pata_hpt37x.c |   71 +++++++---------------------------------------
+>>>  1 file changed, 11 insertions(+), 60 deletions(-)
 >>>
->>> Index: libata/drivers/ata/libata-sff.c
+>>> Index: libata/drivers/ata/pata_hpt37x.c
 >>> ===================================================================
->>> --- libata.orig/drivers/ata/libata-sff.c
->>> +++ libata/drivers/ata/libata-sff.c
->>> @@ -1841,8 +1841,8 @@ unsigned int ata_sff_dev_classify(struct
+>>> --- libata.orig/drivers/ata/pata_hpt37x.c
+>>> +++ libata/drivers/ata/pata_hpt37x.c
+> [...]
+>>> @@ -604,8 +556,7 @@ static struct ata_port_operations hpt370
+>>>  };
 >>>  
+>>>  /*
+>>> - *	Configuration for HPT371 and HPT302. Slightly different PIO and DMA
+>>> - *	mode setting functionality.
+>>> + *	Configuration for HPT371 and HPT302.
 >>
->> The err check before the hunk below could use a switch too.
+>> Shouldn't this be HPT372 ?
 > 
->    I have initially converted that one too but finally decided to keep
-> the order of the comparisons intact -- it makes more sense to 1st check
-> dev->devno in the last *if*...
+>    No, HPT372 ops are situated below -- they inherit from these.
 
-Yeah. Not critical. Just tried to use a switch and that does not make
-the code very clear anyway :)
+Yep. Got it (checked the code :)). All good.
 
-> 
->>
->>>  	/* determine if device is ATA or ATAPI */
->>
->> This comment is a bit weird since ATA_DEV_ATAPI is not used. Maybe
-> 
->    Why? A call ata_port_classify() should detect the ATAPI devices,
-> we just don't "post-process" that result...
-> 
->> change that to something like:
->>
->> 	/* Check the device class */
-> 
->    No, I don't agree here. :-)
-
-Matter of taste I guess. I do find that comment useless anyway as the
-code is fairly obvious. Leave it as-is. No problem.
-
-> 
->>
->> Or just drop it... The code is clear enough I think.
->>
->>>  	class = ata_port_classify(ap, &tf);
->>> -
->>> -	if (class == ATA_DEV_UNKNOWN) {
->>> +	switch (class) {
->>> +	case ATA_DEV_UNKNOWN:
->>>  		/* If the device failed diagnostic, it's likely to
->>
->> While at it, please correct the comment style here (start with a "/*"
->> line). There are a ton of these style problems all over, so when
->> touching code around them, let's fix them :)
-> 
->    OK. :-)
 > 
 > [...]
 > 
