@@ -2,24 +2,24 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F417AC4167E
-	for <linux-ide@archiver.kernel.org>; Thu, 17 Feb 2022 10:58:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89E75C3526E
+	for <linux-ide@archiver.kernel.org>; Thu, 17 Feb 2022 10:58:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239460AbiBQK6W (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 17 Feb 2022 05:58:22 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:34882 "EHLO
+        id S239451AbiBQK6V (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 17 Feb 2022 05:58:21 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:34654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239468AbiBQK6U (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2022 05:58:20 -0500
-Received: from lgeamrelo11.lge.com (lgeamrelo12.lge.com [156.147.23.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 10A3A295FF4
+        with ESMTP id S239445AbiBQK6T (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2022 05:58:19 -0500
+Received: from lgeamrelo11.lge.com (lgeamrelo11.lge.com [156.147.23.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 709F5295FC7
         for <linux-ide@vger.kernel.org>; Thu, 17 Feb 2022 02:58:00 -0800 (PST)
 Received: from unknown (HELO lgeamrelo01.lge.com) (156.147.1.125)
-        by 156.147.23.52 with ESMTP; 17 Feb 2022 19:57:59 +0900
+        by 156.147.23.51 with ESMTP; 17 Feb 2022 19:57:58 +0900
 X-Original-SENDERIP: 156.147.1.125
 X-Original-MAILFROM: byungchul.park@lge.com
 Received: from unknown (HELO localhost.localdomain) (10.177.244.38)
-        by 156.147.1.125 with ESMTP; 17 Feb 2022 19:57:59 +0900
+        by 156.147.1.125 with ESMTP; 17 Feb 2022 19:57:58 +0900
 X-Original-SENDERIP: 10.177.244.38
 X-Original-MAILFROM: byungchul.park@lge.com
 From:   Byungchul Park <byungchul.park@lge.com>
@@ -46,9 +46,9 @@ Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
         dri-devel@lists.freedesktop.org, airlied@linux.ie,
         rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
         hamohammed.sa@gmail.com
-Subject: [PATCH 05/16] dept: Apply Dept to mutex families
-Date:   Thu, 17 Feb 2022 19:57:41 +0900
-Message-Id: <1645095472-26530-6-git-send-email-byungchul.park@lge.com>
+Subject: [PATCH 01/16] llist: Move llist_{head,node} definition to types.h
+Date:   Thu, 17 Feb 2022 19:57:37 +0900
+Message-Id: <1645095472-26530-2-git-send-email-byungchul.park@lge.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1645095472-26530-1-git-send-email-byungchul.park@lge.com>
 References: <1645095472-26530-1-git-send-email-byungchul.park@lge.com>
@@ -56,121 +56,54 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Makes Dept able to track dependencies by mutex families.
+llist_head and llist_node can be used by very primitives. For example,
+Dept for tracking dependency uses llist things in its header. To avoid
+header dependency, move those to types.h.
 
 Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 ---
- include/linux/lockdep.h | 18 +++++++++++++++---
- include/linux/mutex.h   | 31 +++++++++++++++++++++++++++++++
- include/linux/rtmutex.h |  7 +++++++
- 3 files changed, 53 insertions(+), 3 deletions(-)
+ include/linux/llist.h | 8 --------
+ include/linux/types.h | 8 ++++++++
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
-index 1da8b95..4c6c2a1 100644
---- a/include/linux/lockdep.h
-+++ b/include/linux/lockdep.h
-@@ -613,9 +613,21 @@ static inline void print_irqtrace_events(struct task_struct *curr)
- #define seqcount_acquire_read(l, s, t, i)	lock_acquire_shared_recursive(l, s, t, NULL, i)
- #define seqcount_release(l, i)			lock_release(l, i)
+diff --git a/include/linux/llist.h b/include/linux/llist.h
+index 85bda2d..99cc3c3 100644
+--- a/include/linux/llist.h
++++ b/include/linux/llist.h
+@@ -53,14 +53,6 @@
+ #include <linux/stddef.h>
+ #include <linux/types.h>
  
--#define mutex_acquire(l, s, t, i)		lock_acquire_exclusive(l, s, t, NULL, i)
--#define mutex_acquire_nest(l, s, t, n, i)	lock_acquire_exclusive(l, s, t, n, i)
--#define mutex_release(l, i)			lock_release(l, i)
-+#define mutex_acquire(l, s, t, i)					\
-+do {									\
-+	lock_acquire_exclusive(l, s, t, NULL, i);			\
-+	dept_mutex_lock(&(l)->dmap, s, t, NULL, "mutex_unlock", i);	\
-+} while (0)
-+#define mutex_acquire_nest(l, s, t, n, i)				\
-+do {									\
-+	lock_acquire_exclusive(l, s, t, n, i);				\
-+	dept_mutex_lock(&(l)->dmap, s, t, (n) ? &(n)->dmap : NULL, "mutex_unlock", i);\
-+} while (0)
-+#define mutex_release(l, i)						\
-+do {									\
-+	lock_release(l, i);						\
-+	dept_mutex_unlock(&(l)->dmap, i);				\
-+} while (0)
+-struct llist_head {
+-	struct llist_node *first;
+-};
+-
+-struct llist_node {
+-	struct llist_node *next;
+-};
+-
+ #define LLIST_HEAD_INIT(name)	{ NULL }
+ #define LLIST_HEAD(name)	struct llist_head name = LLIST_HEAD_INIT(name)
  
- #define rwsem_acquire(l, s, t, i)		lock_acquire_exclusive(l, s, t, NULL, i)
- #define rwsem_acquire_nest(l, s, t, n, i)	lock_acquire_exclusive(l, s, t, n, i)
-diff --git a/include/linux/mutex.h b/include/linux/mutex.h
-index 8f226d4..536ef42 100644
---- a/include/linux/mutex.h
-+++ b/include/linux/mutex.h
-@@ -20,11 +20,18 @@
- #include <linux/osq_lock.h>
- #include <linux/debug_locks.h>
- 
-+#ifdef CONFIG_DEPT
-+# define DMAP_MUTEX_INIT(lockname)	.dmap = { .name = #lockname },
-+#else
-+# define DMAP_MUTEX_INIT(lockname)
-+#endif
-+
- #ifdef CONFIG_DEBUG_LOCK_ALLOC
- # define __DEP_MAP_MUTEX_INITIALIZER(lockname)			\
- 		, .dep_map = {					\
- 			.name = #lockname,			\
- 			.wait_type_inner = LD_WAIT_SLEEP,	\
-+			DMAP_MUTEX_INIT(lockname)		\
- 		}
- #else
- # define __DEP_MAP_MUTEX_INITIALIZER(lockname)
-@@ -75,6 +82,30 @@ struct mutex {
- #endif
+diff --git a/include/linux/types.h b/include/linux/types.h
+index ac825ad..4662d6e 100644
+--- a/include/linux/types.h
++++ b/include/linux/types.h
+@@ -187,6 +187,14 @@ struct hlist_node {
+ 	struct hlist_node *next, **pprev;
  };
  
-+#ifdef CONFIG_DEPT
-+#define dept_mutex_lock(m, ne, t, n, e_fn, ip)				\
-+do {									\
-+	if (t) {							\
-+		dept_ecxt_enter(m, 1UL, ip, __func__, e_fn, ne);	\
-+		dept_ask_event(m);					\
-+	} else if (n) {							\
-+		dept_warn_on(dept_top_map() != (n));			\
-+	} else {							\
-+		dept_wait(m, 1UL, ip, __func__, ne);			\
-+		dept_ecxt_enter(m, 1UL, ip, __func__, e_fn, ne);	\
-+		dept_ask_event(m);					\
-+	}								\
-+} while (0)
-+#define dept_mutex_unlock(m, ip)					\
-+do {									\
-+	dept_event(m, 1UL, ip, __func__);				\
-+	dept_ecxt_exit(m, ip);						\
-+} while (0)
-+#else
-+#define dept_mutex_lock(m, ne, t, n, e_fn, ip)	do { } while (0)
-+#define dept_mutex_unlock(m, ip)		do { } while (0)
-+#endif
++struct llist_head {
++	struct llist_node *first;
++};
 +
- #ifdef CONFIG_DEBUG_MUTEXES
- 
- #define __DEBUG_MUTEX_INITIALIZER(lockname)				\
-diff --git a/include/linux/rtmutex.h b/include/linux/rtmutex.h
-index 7d04988..60cebb0 100644
---- a/include/linux/rtmutex.h
-+++ b/include/linux/rtmutex.h
-@@ -76,11 +76,18 @@ static inline void rt_mutex_debug_task_free(struct task_struct *tsk) { }
- 	__rt_mutex_init(mutex, __func__, &__key); \
- } while (0)
- 
-+#ifdef CONFIG_DEPT
-+#define DMAP_RT_MUTEX_INIT(mutexname)	.dmap = { .name = #mutexname },
-+#else
-+#define DMAP_RT_MUTEX_INIT(mutexname)
-+#endif
++struct llist_node {
++	struct llist_node *next;
++};
 +
- #ifdef CONFIG_DEBUG_LOCK_ALLOC
- #define __DEP_MAP_RT_MUTEX_INITIALIZER(mutexname)	\
- 	.dep_map = {					\
- 		.name = #mutexname,			\
- 		.wait_type_inner = LD_WAIT_SLEEP,	\
-+		DMAP_RT_MUTEX_INIT(mutexname)		\
- 	}
- #else
- #define __DEP_MAP_RT_MUTEX_INITIALIZER(mutexname)
+ struct ustat {
+ 	__kernel_daddr_t	f_tfree;
+ #ifdef CONFIG_ARCH_32BIT_USTAT_F_TINODE
 -- 
 1.9.1
 
