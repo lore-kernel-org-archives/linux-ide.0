@@ -2,92 +2,94 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BE89C433F5
-	for <linux-ide@archiver.kernel.org>; Thu, 17 Feb 2022 16:02:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AD7CC433F5
+	for <linux-ide@archiver.kernel.org>; Thu, 17 Feb 2022 17:00:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236605AbiBQQC6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 17 Feb 2022 11:02:58 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:53614 "EHLO
+        id S241632AbiBQRAb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 17 Feb 2022 12:00:31 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:44886 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231863AbiBQQC5 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2022 11:02:57 -0500
-Received: from mxout04.lancloud.ru (mxout04.lancloud.ru [45.84.86.114])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8F6314EF44
-        for <linux-ide@vger.kernel.org>; Thu, 17 Feb 2022 08:02:41 -0800 (PST)
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout04.lancloud.ru 3D132208A258
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-Subject: Re: [PATCH v2 2/2] ata: libata-sff: refactor ata_sff_altstatus()
-To:     Dan Carpenter <dan.carpenter@oracle.com>, <kbuild@lists.01.org>,
-        "Damien Le Moal" <damien.lemoal@opensource.wdc.com>,
-        <linux-ide@vger.kernel.org>
-CC:     <lkp@intel.com>, <kbuild-all@lists.01.org>
-References: <202202141714.X7UdMJUj-lkp@intel.com>
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-Message-ID: <47901264-813e-0ba5-f593-2022947442c4@omp.ru>
-Date:   Thu, 17 Feb 2022 19:02:39 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        with ESMTP id S242085AbiBQRA2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2022 12:00:28 -0500
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 754511A340B;
+        Thu, 17 Feb 2022 09:00:13 -0800 (PST)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 128226178A;
+        Thu, 17 Feb 2022 17:00:13 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0AA09C340E8;
+        Thu, 17 Feb 2022 17:00:06 +0000 (UTC)
+Date:   Thu, 17 Feb 2022 12:00:05 -0500
+From:   Steven Rostedt <rostedt@goodmis.org>
+To:     "Theodore Ts'o" <tytso@mit.edu>
+Cc:     Byungchul Park <byungchul.park@lge.com>,
+        torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
+        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
+        linux-ext4@vger.kernel.org, mingo@redhat.com,
+        linux-kernel@vger.kernel.org, peterz@infradead.org,
+        will@kernel.org, tglx@linutronix.de, joel@joelfernandes.org,
+        sashal@kernel.org, daniel.vetter@ffwll.ch,
+        chris@chris-wilson.co.uk, duyuyang@gmail.com,
+        johannes.berg@intel.com, tj@kernel.org, willy@infradead.org,
+        david@fromorbit.com, amir73il@gmail.com, bfields@fieldses.org,
+        gregkh@linuxfoundation.org, kernel-team@lge.com,
+        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
+        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
+        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
+        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
+        ngupta@vflare.org, linux-block@vger.kernel.org, axboe@kernel.dk,
+        paolo.valente@linaro.org, josef@toxicpanda.com,
+        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
+        jack@suse.cz, jack@suse.com, jlayton@kernel.org,
+        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
+        dri-devel@lists.freedesktop.org, airlied@linux.ie,
+        rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
+        hamohammed.sa@gmail.com
+Subject: Re: [PATCH 00/16] DEPT(Dependency Tracker)
+Message-ID: <20220217120005.67f5ddf4@gandalf.local.home>
+In-Reply-To: <Yg5u7dzUxL3Vkncg@mit.edu>
+References: <1645095472-26530-1-git-send-email-byungchul.park@lge.com>
+        <Yg5u7dzUxL3Vkncg@mit.edu>
+X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-In-Reply-To: <202202141714.X7UdMJUj-lkp@intel.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
- LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/17/22 3:12 PM, Dan Carpenter wrote:
+On Thu, 17 Feb 2022 10:51:09 -0500
+"Theodore Ts'o" <tytso@mit.edu> wrote:
 
-> url:    https://github.com/0day-ci/linux/commits/Sergey-Shtylyov/Refactor-the-accessors-for-the-ATA-device-control-and-alternate-status-registers/20220213-231119
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git b81b1829e7e39f6cebdf6e4d5484eacbceda8554
-> config: riscv-randconfig-m031-20220213 (https://download.01.org/0day-ci/archive/20220214/202202141714.X7UdMJUj-lkp@intel.com/config)
-> compiler: riscv32-linux-gcc (GCC) 11.2.0
-> 
-> If you fix the issue, kindly add following tag as appropriate
-> Reported-by: kernel test robot <lkp@intel.com>
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> smatch warnings:
-> drivers/ata/libata-sff.c:1652 ata_sff_lost_interrupt() error: uninitialized symbol 'status'.
-> 
-> vim +/status +1652 drivers/ata/libata-sff.c
-> 
-> c96f1732e25362 Alan Cox        2009-03-24  1635  void ata_sff_lost_interrupt(struct ata_port *ap)
-> c96f1732e25362 Alan Cox        2009-03-24  1636  {
-> c96f1732e25362 Alan Cox        2009-03-24  1637  	u8 status;
-> c96f1732e25362 Alan Cox        2009-03-24  1638  	struct ata_queued_cmd *qc;
-> c96f1732e25362 Alan Cox        2009-03-24  1639  
-> c96f1732e25362 Alan Cox        2009-03-24  1640  	/* Only one outstanding command per SFF channel */
-> c96f1732e25362 Alan Cox        2009-03-24  1641  	qc = ata_qc_from_tag(ap, ap->link.active_tag);
-> 3e4ec3443f70fb Tejun Heo       2010-05-10  1642  	/* We cannot lose an interrupt on a non-existent or polled command */
-> 3e4ec3443f70fb Tejun Heo       2010-05-10  1643  	if (!qc || qc->tf.flags & ATA_TFLAG_POLLING)
-> c96f1732e25362 Alan Cox        2009-03-24  1644  		return;
-> c96f1732e25362 Alan Cox        2009-03-24  1645  	/* See if the controller thinks it is still busy - if so the command
-> c96f1732e25362 Alan Cox        2009-03-24  1646  	   isn't a lost IRQ but is still in progress */
-> 57232468aca7de Sergey Shtylyov 2022-02-13  1647  	if (ata_sff_altstatus(ap, &status) && (status & ATA_BUSY))
-> 
-> "status" is not intialized if ata_sff_altstatus() return false.
+> I know that you're trying to help us, but this tool needs to be far
+> better than Lockdep before we should think about merging it.  Even if
+> it finds 5% more potential deadlocks, if it creates 95% more false
+> positive reports --- and the ones it finds are crazy things that
+> rarely actually happen in practice, are the costs worth the benefits?
+> And who is bearing the costs, and who is receiving the benefits?
 
-   Hmm, inaccurate coding on my side, will fix it, thanks!
+I personally believe that there's potential that this can be helpful and we
+will want to merge it.
 
-> c96f1732e25362 Alan Cox        2009-03-24  1648  		return;
-> c96f1732e25362 Alan Cox        2009-03-24  1649  
-> c96f1732e25362 Alan Cox        2009-03-24  1650  	/* There was a command running, we are no longer busy and we have
-> c96f1732e25362 Alan Cox        2009-03-24  1651  	   no interrupt. */
-> a9a79dfec23956 Joe Perches     2011-04-15 @1652  	ata_port_warn(ap, "lost interrupt (Status 0x%x)\n",
-> c96f1732e25362 Alan Cox        2009-03-24  1653  								status);
->                                                                                                                 ^^^^^^
-> Uninitalized.  Also the indenting is unfortunate.
+But, what I believe Ted is trying to say is, if you do not know if the
+report is a bug or not, please do not ask the maintainers to determine it
+for you. This is a good opportunity for you to look to see why your tool
+reported an issue, and learn that subsystem. Look at if this is really a
+bug or not, and investigate why.
 
-   Not my fault but I'll fix this as well... :-)
+The likely/unlikely tracing I do finds issues all over the kernel. But
+before I report anything, I look at the subsystem and determine *why* it's
+reporting what it does. In some cases, it's just a config issue. Where, I
+may submit a patch saying "this is 100% wrong in X config, and we should
+just remove the "unlikely". But I did the due diligence to find out exactly
+what the issue is, and why the tooling reported what it reported.
 
-[...]
+I want to stress that your Dept tooling looks to have the potential of
+being something that will be worth while including. But the false positives
+needs to be down to the rate of lockdep false positives. As Ted said, if
+it's reporting 95% false positives, nobody is going to look at the 5% of
+real bugs that it finds.
 
-MBR, Sergey
+-- Steve
