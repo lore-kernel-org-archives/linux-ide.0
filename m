@@ -2,144 +2,83 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12698C43217
-	for <linux-ide@archiver.kernel.org>; Thu, 17 Feb 2022 19:47:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A16DC433EF
+	for <linux-ide@archiver.kernel.org>; Thu, 17 Feb 2022 23:47:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245423AbiBQTra (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 17 Feb 2022 14:47:30 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:45452 "EHLO
+        id S229487AbiBQXrP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 17 Feb 2022 18:47:15 -0500
+Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:53832 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245403AbiBQTrY (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2022 14:47:24 -0500
-Received: from mga03.intel.com (mga03.intel.com [134.134.136.65])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D4D582654B;
-        Thu, 17 Feb 2022 11:47:09 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1645127229; x=1676663229;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=F3ghFFmf9Z70ke5xUFrYTznu4LR/z5ek87I9Llnq9wE=;
-  b=cKpiHU/2nbX+/oJHEq4DF/FW1yTnm5O2Ke8WaBa6WMQklB8rs7SAtFGp
-   gz2aOrIrl9IoVFISmVC0BZjuHJG0qF8izlyzjF/lB2pxXVS/33HyqCavA
-   CGbFO/a/Ho8+quwvZljO25HLOv7qJsOH0xxpmtZOwvcFrjhZD6ioNskjF
-   1s/qXepB6bHL7+pWO5EOM//snM3f9TPIBqujUmc0GvriP+yXCNGssazSw
-   mU5Ycqvf/q2V+4EC+aHdm93pkexy6iPoUNxBXmy3KGoUjbKrsHIttWK7V
-   yBQnpnBSPZIMZZNETjtKBSv6IfJOGLgmdIOM8MlW5DcszMPuCRLzocj/m
-   Q==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10261"; a="250903382"
-X-IronPort-AV: E=Sophos;i="5.88,376,1635231600"; 
-   d="scan'208";a="250903382"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 11:47:09 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.88,376,1635231600"; 
-   d="scan'208";a="637327206"
-Received: from lkp-server01.sh.intel.com (HELO 6f05bf9e3301) ([10.239.97.150])
-  by orsmga004.jf.intel.com with ESMTP; 17 Feb 2022 11:47:02 -0800
-Received: from kbuild by 6f05bf9e3301 with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1nKmk1-0000UI-9C; Thu, 17 Feb 2022 19:47:01 +0000
-Date:   Fri, 18 Feb 2022 03:46:28 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Byungchul Park <byungchul.park@lge.com>,
-        torvalds@linux-foundation.org
-Cc:     kbuild-all@lists.01.org, damien.lemoal@opensource.wdc.com,
-        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
-        linux-ext4@vger.kernel.org, mingo@redhat.com,
-        linux-kernel@vger.kernel.org, peterz@infradead.org,
-        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
-        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
-        chris@chris-wilson.co.uk, duyuyang@gmail.com,
-        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
-        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
-        bfields@fieldses.org, gregkh@linuxfoundation.org,
-        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
-        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org
-Subject: Re: [PATCH 02/16] dept: Implement Dept(Dependency Tracker)
-Message-ID: <202202180059.SibYSAt1-lkp@intel.com>
-References: <1645095472-26530-3-git-send-email-byungchul.park@lge.com>
+        with ESMTP id S229481AbiBQXrO (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2022 18:47:14 -0500
+Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B4EF3789A0;
+        Thu, 17 Feb 2022 15:46:51 -0800 (PST)
+Received: by mail-pf1-f170.google.com with SMTP id i21so939768pfd.13;
+        Thu, 17 Feb 2022 15:46:51 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=Xm42ne/yx6DvrOIo44WYfwHLPMbmJuqV1Ps8LARJTg0=;
+        b=H+dTq15llSlKJFUTyysK8buzf1UY/R/dWEnAGV6wFiKNm+DAAiNOyh5TX2p0AQSNQO
+         I5nX6mxXvKRNC90vTu0d14ESglyV+7piK1JnAz/0UKg/6WHmPB7dNcnPGBbCbRrLiYNq
+         41rOAkjO3sR+4XPvvxzRqmjxR2DqwE8ds01gZHfr0SbBz5YfPcVuuv4IVoMrXaLU1Yg8
+         CaHmzbUxzH9NYfRLOP9mQoqVieRaZKmZziJD0aL675J2BSGdbOS63UWZz3zUr/zy7jv0
+         aawSGUebyQ1uksnzTx/y+u+aHjJrrN8jtQufrH9Yd+L55JkD8jLIXn+yQUdcQbsbKHMW
+         tpHg==
+X-Gm-Message-State: AOAM531kbpISpdo1nBP1WGgucm0zET+cwt13FwPDdVFqJZFBu4nUUC5e
+        M90dEcN4UMW8R8/kYOtNTQGz2ctFOQ==
+X-Google-Smtp-Source: ABdhPJxD8QKqedbaM8B85/N5a9Ch5XWS/O2G9CW6yZJmUpw5h1tALWl4e6jUtYAj1TZYlIJAspvzqA==
+X-Received: by 2002:a05:6e02:5c8:b0:2be:186c:1684 with SMTP id l8-20020a056e0205c800b002be186c1684mr3579262ils.199.1645140852153;
+        Thu, 17 Feb 2022 15:34:12 -0800 (PST)
+Received: from robh.at.kernel.org ([64.188.179.250])
+        by smtp.gmail.com with ESMTPSA id w19sm3433302iov.16.2022.02.17.15.34.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 17 Feb 2022 15:34:11 -0800 (PST)
+Received: (nullmailer pid 3979773 invoked by uid 1000);
+        Thu, 17 Feb 2022 23:34:09 -0000
+Date:   Thu, 17 Feb 2022 17:34:09 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Corentin Labbe <clabbe@baylibre.com>
+Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        damien.lemoal@opensource.wdc.com, robh+dt@kernel.org,
+        Linus Walleij <linus.walleij@linaro.org>,
+        krzysztof.kozlowski@canonical.com, linux-ide@vger.kernel.org
+Subject: Re: [PATCH v4] dt-bindings: convert ata/cortina,gemini-sata-bridge
+ to yaml
+Message-ID: <Yg7bcTWAnLJPym50@robh.at.kernel.org>
+References: <20220211120157.3385145-1-clabbe@baylibre.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1645095472-26530-3-git-send-email-byungchul.park@lge.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20220211120157.3385145-1-clabbe@baylibre.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Byungchul,
+On Fri, 11 Feb 2022 12:01:57 +0000, Corentin Labbe wrote:
+> This patch converts ata/cortina,gemini-sata-bridge binding to yaml
+> 
+> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+> Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
+> ---
+> Change since v1:
+> - fixed cosmetic nits reported by Damien Le Moal
+> Changes since v2:
+> - Added blank lines between properties
+> - Removed useless quotes and label
+> - Re-indented description
+> Change since v3:
+> - removed MaxItems from syscon
+> 
+>  .../ata/cortina,gemini-sata-bridge.txt        |  55 ---------
+>  .../ata/cortina,gemini-sata-bridge.yaml       | 109 ++++++++++++++++++
+>  2 files changed, 109 insertions(+), 55 deletions(-)
+>  delete mode 100644 Documentation/devicetree/bindings/ata/cortina,gemini-sata-bridge.txt
+>  create mode 100644 Documentation/devicetree/bindings/ata/cortina,gemini-sata-bridge.yaml
+> 
 
-Thank you for the patch! Perhaps something to improve:
-
-[auto build test WARNING on tip/sched/core]
-[also build test WARNING on hnaz-mm/master linux/master linus/master v5.17-rc4]
-[cannot apply to tip/locking/core next-20220217]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
-
-url:    https://github.com/0day-ci/linux/commits/Byungchul-Park/DEPT-Dependency-Tracker/20220217-190040
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git 3624ba7b5e2acc02b01301ea5fd3534971eb9896
-config: xtensa-allyesconfig (https://download.01.org/0day-ci/archive/20220218/202202180059.SibYSAt1-lkp@intel.com/config)
-compiler: xtensa-linux-gcc (GCC) 11.2.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/0day-ci/linux/commit/4d0434b0b917f4374a09f3b75cbcadf148cfa711
-        git remote add linux-review https://github.com/0day-ci/linux
-        git fetch --no-tags linux-review Byungchul-Park/DEPT-Dependency-Tracker/20220217-190040
-        git checkout 4d0434b0b917f4374a09f3b75cbcadf148cfa711
-        # save the config file to linux build tree
-        mkdir build_dir
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=xtensa SHELL=/bin/bash drivers/net/ethernet/sfc/falcon/
-
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
-
-All warnings (new ones prefixed by >>):
-
-   In file included from include/linux/delay.h:23,
-                    from drivers/net/ethernet/sfc/falcon/falcon.c:9:
-   drivers/net/ethernet/sfc/falcon/falcon.c: In function 'falcon_spi_slow_wait':
->> drivers/net/ethernet/sfc/falcon/falcon.c:750:58: warning: '?:' using integer constants in boolean context [-Wint-in-bool-context]
-     750 |                                     TASK_UNINTERRUPTIBLE : TASK_INTERRUPTIBLE);
-   include/linux/sched.h:205:21: note: in definition of macro '__set_current_state'
-     205 |                 if (state_value == TASK_RUNNING)                        \
-         |                     ^~~~~~~~~~~
-
-
-vim +750 drivers/net/ethernet/sfc/falcon/falcon.c
-
-4a5b504d0c582db drivers/net/sfc/falcon.c                 Ben Hutchings 2008-09-01  738  
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  739  static int
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  740  falcon_spi_slow_wait(struct falcon_mtd_partition *part, bool uninterruptible)
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  741  {
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  742  	const struct falcon_spi_device *spi = part->spi;
-5a6681e22c14090 drivers/net/ethernet/sfc/falcon/falcon.c Edward Cree   2016-11-28  743  	struct ef4_nic *efx = part->common.mtd.priv;
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  744  	u8 status;
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  745  	int rc, i;
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  746  
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  747  	/* Wait up to 4s for flash/EEPROM to finish a slow operation. */
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  748  	for (i = 0; i < 40; i++) {
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  749  		__set_current_state(uninterruptible ?
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28 @750  				    TASK_UNINTERRUPTIBLE : TASK_INTERRUPTIBLE);
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  751  		schedule_timeout(HZ / 10);
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  752  		rc = falcon_spi_cmd(efx, spi, SPI_RDSR, -1, NULL,
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  753  				    &status, sizeof(status));
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  754  		if (rc)
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  755  			return rc;
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  756  		if (!(status & SPI_STATUS_NRDY))
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  757  			return 0;
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  758  		if (signal_pending(current))
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  759  			return -EINTR;
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  760  	}
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  761  	pr_err("%s: timed out waiting for %s\n",
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  762  	       part->common.name, part->common.dev_type_name);
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  763  	return -ETIMEDOUT;
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  764  }
-45a3fd55acc8989 drivers/net/ethernet/sfc/falcon.c        Ben Hutchings 2012-11-28  765  
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+Applied, thanks!
