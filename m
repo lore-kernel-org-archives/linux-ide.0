@@ -2,83 +2,116 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A16DC433EF
-	for <linux-ide@archiver.kernel.org>; Thu, 17 Feb 2022 23:47:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECC0FC433EF
+	for <linux-ide@archiver.kernel.org>; Thu, 17 Feb 2022 23:55:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229487AbiBQXrP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 17 Feb 2022 18:47:15 -0500
-Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:53832 "EHLO
+        id S229733AbiBQXzg (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 17 Feb 2022 18:55:36 -0500
+Received: from gmail-smtp-in.l.google.com ([23.128.96.19]:41654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229481AbiBQXrO (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2022 18:47:14 -0500
-Received: from mail-pf1-f170.google.com (mail-pf1-f170.google.com [209.85.210.170])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B4EF3789A0;
-        Thu, 17 Feb 2022 15:46:51 -0800 (PST)
-Received: by mail-pf1-f170.google.com with SMTP id i21so939768pfd.13;
-        Thu, 17 Feb 2022 15:46:51 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=Xm42ne/yx6DvrOIo44WYfwHLPMbmJuqV1Ps8LARJTg0=;
-        b=H+dTq15llSlKJFUTyysK8buzf1UY/R/dWEnAGV6wFiKNm+DAAiNOyh5TX2p0AQSNQO
-         I5nX6mxXvKRNC90vTu0d14ESglyV+7piK1JnAz/0UKg/6WHmPB7dNcnPGBbCbRrLiYNq
-         41rOAkjO3sR+4XPvvxzRqmjxR2DqwE8ds01gZHfr0SbBz5YfPcVuuv4IVoMrXaLU1Yg8
-         CaHmzbUxzH9NYfRLOP9mQoqVieRaZKmZziJD0aL675J2BSGdbOS63UWZz3zUr/zy7jv0
-         aawSGUebyQ1uksnzTx/y+u+aHjJrrN8jtQufrH9Yd+L55JkD8jLIXn+yQUdcQbsbKHMW
-         tpHg==
-X-Gm-Message-State: AOAM531kbpISpdo1nBP1WGgucm0zET+cwt13FwPDdVFqJZFBu4nUUC5e
-        M90dEcN4UMW8R8/kYOtNTQGz2ctFOQ==
-X-Google-Smtp-Source: ABdhPJxD8QKqedbaM8B85/N5a9Ch5XWS/O2G9CW6yZJmUpw5h1tALWl4e6jUtYAj1TZYlIJAspvzqA==
-X-Received: by 2002:a05:6e02:5c8:b0:2be:186c:1684 with SMTP id l8-20020a056e0205c800b002be186c1684mr3579262ils.199.1645140852153;
-        Thu, 17 Feb 2022 15:34:12 -0800 (PST)
-Received: from robh.at.kernel.org ([64.188.179.250])
-        by smtp.gmail.com with ESMTPSA id w19sm3433302iov.16.2022.02.17.15.34.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Feb 2022 15:34:11 -0800 (PST)
-Received: (nullmailer pid 3979773 invoked by uid 1000);
-        Thu, 17 Feb 2022 23:34:09 -0000
-Date:   Thu, 17 Feb 2022 17:34:09 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Corentin Labbe <clabbe@baylibre.com>
-Cc:     devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        damien.lemoal@opensource.wdc.com, robh+dt@kernel.org,
-        Linus Walleij <linus.walleij@linaro.org>,
-        krzysztof.kozlowski@canonical.com, linux-ide@vger.kernel.org
-Subject: Re: [PATCH v4] dt-bindings: convert ata/cortina,gemini-sata-bridge
- to yaml
-Message-ID: <Yg7bcTWAnLJPym50@robh.at.kernel.org>
-References: <20220211120157.3385145-1-clabbe@baylibre.com>
+        with ESMTP id S229498AbiBQXzd (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2022 18:55:33 -0500
+Received: from lgeamrelo11.lge.com (lgeamrelo12.lge.com [156.147.23.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A5BE013F8F
+        for <linux-ide@vger.kernel.org>; Thu, 17 Feb 2022 15:55:12 -0800 (PST)
+Received: from unknown (HELO lgemrelse7q.lge.com) (156.147.1.151)
+        by 156.147.23.52 with ESMTP; 18 Feb 2022 08:55:11 +0900
+X-Original-SENDERIP: 156.147.1.151
+X-Original-MAILFROM: byungchul.park@lge.com
+Received: from unknown (HELO X58A-UD3R) (10.177.244.38)
+        by 156.147.1.151 with ESMTP; 18 Feb 2022 08:55:11 +0900
+X-Original-SENDERIP: 10.177.244.38
+X-Original-MAILFROM: byungchul.park@lge.com
+Date:   Fri, 18 Feb 2022 08:55:04 +0900
+From:   Byungchul Park <byungchul.park@lge.com>
+To:     Steven Rostedt <rostedt@goodmis.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-ide@vger.kernel.org, Ingo Molnar <mingo@redhat.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Will Deacon <will@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Joel Fernandes <joel@joelfernandes.org>,
+        Sasha Levin <sashal@kernel.org>,
+        Daniel Vetter <daniel.vetter@ffwll.ch>,
+        Chris Wilson <chris@chris-wilson.co.uk>, duyuyang@gmail.com,
+        johannes.berg@intel.com, Tejun Heo <tj@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Matthew Wilcox <willy@infradead.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Amir Goldstein <amir73il@gmail.com>,
+        "J. Bruce Fields" <bfields@fieldses.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        kernel-team@lge.com, Linux-MM <linux-mm@kvack.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Michal Hocko <mhocko@kernel.org>,
+        Minchan Kim <minchan@kernel.org>,
+        Johannes Weiner <hannes@cmpxchg.org>,
+        Vladimir Davydov <vdavydov.dev@gmail.com>, sj@kernel.org,
+        Jerome Glisse <jglisse@redhat.com>,
+        Dennis Zhou <dennis@kernel.org>,
+        Christoph Lameter <cl@linux.com>,
+        Pekka Enberg <penberg@kernel.org>,
+        David Rientjes <rientjes@google.com>,
+        Vlastimil Babka <vbabka@suse.cz>, ngupta@vflare.org,
+        linux-block <linux-block@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>, paolo.valente@linaro.org,
+        Josef Bacik <josef@toxicpanda.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.cz>,
+        Jeff Layton <jlayton@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        dri-devel <dri-devel@lists.freedesktop.org>,
+        Dave Airlie <airlied@linux.ie>, rodrigosiqueiramelo@gmail.com,
+        melissa.srw@gmail.com, hamohammed.sa@gmail.com
+Subject: Re: Report in ata_scsi_port_error_handler()
+Message-ID: <20220217235504.GB20620@X58A-UD3R>
+References: <1644984747-26706-1-git-send-email-byungchul.park@lge.com>
+ <1644984964-28300-1-git-send-email-byungchul.park@lge.com>
+ <1644984964-28300-3-git-send-email-byungchul.park@lge.com>
+ <94b1cba2-0e78-bbc0-0321-8be70b2b3be2@opensource.wdc.com>
+ <CAHk-=wgfpfWuNQi2SjXQL1ir6iKCpUdBruJ+kmOQP1frH7Zdig@mail.gmail.com>
+ <20220216133318.204f36ac@gandalf.local.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220211120157.3385145-1-clabbe@baylibre.com>
+In-Reply-To: <20220216133318.204f36ac@gandalf.local.home>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, 11 Feb 2022 12:01:57 +0000, Corentin Labbe wrote:
-> This patch converts ata/cortina,gemini-sata-bridge binding to yaml
+On Wed, Feb 16, 2022 at 01:33:18PM -0500, Steven Rostedt wrote:
+> On Wed, 16 Feb 2022 10:09:14 -0800
+> Linus Torvalds <torvalds@linux-foundation.org> wrote:
 > 
-> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
-> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-> Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> Signed-off-by: Corentin Labbe <clabbe@baylibre.com>
-> ---
-> Change since v1:
-> - fixed cosmetic nits reported by Damien Le Moal
-> Changes since v2:
-> - Added blank lines between properties
-> - Removed useless quotes and label
-> - Re-indented description
-> Change since v3:
-> - removed MaxItems from syscon
+> > Byungchul, could you fix those two issues? Some of your reports may
+> > well be entirely valid, but the hard-to-read hex offsets and the
+> > knowledge that at least some of them are confused about how
+> > prepare_to_wait -> wait actually works makes the motivation to look at
+> > the details much less..
 > 
->  .../ata/cortina,gemini-sata-bridge.txt        |  55 ---------
->  .../ata/cortina,gemini-sata-bridge.yaml       | 109 ++++++++++++++++++
->  2 files changed, 109 insertions(+), 55 deletions(-)
->  delete mode 100644 Documentation/devicetree/bindings/ata/cortina,gemini-sata-bridge.txt
->  create mode 100644 Documentation/devicetree/bindings/ata/cortina,gemini-sata-bridge.yaml
+> Hi Byungchul,
 > 
+> I'm not sure what your tool is using to attach to the kernel to analyze the
+> events (perhaps tracepoints?). But you can have the prepare_to_wait event
+> just flag the task is about to wait, and then attach to the schedule
+> (sched_switch) event to denote that it actually waited.
+> 
+> Of course have the finish_wait() clear the flag.
 
-Applied, thanks!
+(Sorry for late reply, which was because of my email client issue.)
+
+Thank you for the hint. However, unfortunately, I didn't use tracepoint
+for that. However, the key idea is the thing that I should take!
+
+Thanks a lot!
+
+Thanks,
+Byungchul
+
+> 
+> -- Steve
