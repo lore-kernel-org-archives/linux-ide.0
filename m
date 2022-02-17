@@ -2,119 +2,169 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BA2FC43217
-	for <linux-ide@archiver.kernel.org>; Thu, 17 Feb 2022 10:35:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0329C4332F
+	for <linux-ide@archiver.kernel.org>; Thu, 17 Feb 2022 10:55:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239168AbiBQKfx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 17 Feb 2022 05:35:53 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:43024 "EHLO
+        id S239387AbiBQKzx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 17 Feb 2022 05:55:53 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:53402 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237553AbiBQKfw (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2022 05:35:52 -0500
-Received: from lgeamrelo11.lge.com (lgeamrelo13.lge.com [156.147.23.53])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 29ED3280ED5
-        for <linux-ide@vger.kernel.org>; Thu, 17 Feb 2022 02:35:36 -0800 (PST)
-Received: from unknown (HELO lgeamrelo01.lge.com) (156.147.1.125)
-        by 156.147.23.53 with ESMTP; 17 Feb 2022 19:35:34 +0900
-X-Original-SENDERIP: 156.147.1.125
-X-Original-MAILFROM: byungchul.park@lge.com
-Received: from unknown (HELO localhost.localdomain) (10.177.244.38)
-        by 156.147.1.125 with ESMTP; 17 Feb 2022 19:35:34 +0900
-X-Original-SENDERIP: 10.177.244.38
-X-Original-MAILFROM: byungchul.park@lge.com
-From:   Byungchul Park <byungchul.park@lge.com>
-To:     torvalds@linux-foundation.org
-Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
-        adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
-        mingo@redhat.com, linux-kernel@vger.kernel.org,
-        peterz@infradead.org, will@kernel.org, tglx@linutronix.de,
-        rostedt@goodmis.org, joel@joelfernandes.org, sashal@kernel.org,
-        daniel.vetter@ffwll.ch, chris@chris-wilson.co.uk,
-        duyuyang@gmail.com, johannes.berg@intel.com, tj@kernel.org,
-        tytso@mit.edu, willy@infradead.org, david@fromorbit.com,
-        amir73il@gmail.com, bfields@fieldses.org,
-        gregkh@linuxfoundation.org, kernel-team@lge.com,
-        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
-        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
-        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
-        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
-        ngupta@vflare.org, linux-block@vger.kernel.org, axboe@kernel.dk,
-        paolo.valente@linaro.org, josef@toxicpanda.com,
-        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
-        jack@suse.cz, jack@suse.com, jlayton@kernel.org,
-        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
-        dri-devel@lists.freedesktop.org, airlied@linux.ie,
-        rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
-        hamohammed.sa@gmail.com
-Subject: Re: Report in ata_scsi_port_error_handler()
-Date:   Thu, 17 Feb 2022 19:35:28 +0900
-Message-Id: <1645094128-17099-1-git-send-email-byungchul.park@lge.com>
-X-Mailer: git-send-email 1.9.1
-In-Reply-To: <CAHk-=wgfpfWuNQi2SjXQL1ir6iKCpUdBruJ+kmOQP1frH7Zdig@mail.gmail.com>
-References: <CAHk-=wgfpfWuNQi2SjXQL1ir6iKCpUdBruJ+kmOQP1frH7Zdig@mail.gmail.com>
+        with ESMTP id S239409AbiBQKzq (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2022 05:55:46 -0500
+Received: from esa1.hgst.iphmx.com (esa1.hgst.iphmx.com [68.232.141.245])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D3AC2944C1
+        for <linux-ide@vger.kernel.org>; Thu, 17 Feb 2022 02:55:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1645095331; x=1676631331;
+  h=message-id:date:mime-version:subject:to:references:from:
+   in-reply-to:content-transfer-encoding;
+  bh=JeHUzimhsaVc4RC1yQLd9Fwip79n4POX2phsWDfHGnE=;
+  b=J8bszbMgfaHgm1QJy6WiMtIpSza215L7KXsFPhmeP+TBGw9tu5zuKDWe
+   efZPDtgMBePY4SeDRUT+YtiEP/By7Ir+9m+skxpoK/qvdCDpjsZX2eefN
+   6l/7mV5t9GKsc3ePv8T9/9UaX3o6boL6iHmYUvNfP8/w9I3oTKDohOXym
+   uJc3nSaKLpjZz3tK9MXReUSznIkn3g2mjudZfIo6MgS1O65EAbRVX7Hwv
+   ctfj0WjBdXIeaswSki2RlQtlOxCEJ+bnUBcNxM/8xyXeF5rebQQBDcIU+
+   RkZ5Xo/c3Q2srhCQTaYJJnKhAHFMalHYJ2SiPi1eUnsnGtwP8nniHg37K
+   A==;
+X-IronPort-AV: E=Sophos;i="5.88,375,1635177600"; 
+   d="scan'208";a="305083088"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 17 Feb 2022 18:55:31 +0800
+IronPort-SDR: OW8vsn3RF3uc1Mqhu4fgYSXmn2lnB6tfEKIHNWg5C0XpS77NYPb1bM0vFzOmT/1OZn5W00Nh3o
+ MmLNG8mKi42TgX5JCq4I3xYQlrM0EXktk+biWf+Vc/UfMKqlfR2u/KrMueWVDQaPGMTCrEELZ+
+ dajpvQI5dl0VgzbEdEfJW/NsYl9WE8TNbcDOoh7mB4+8ccfgNBCDHqXcHQAnmdkAVm9t6ATs5E
+ Z1yr9uccJAmYthrVPUAWvJROKfuNOsXhBn+sKUczU/Y1stvauu5J1AaRc57VHkfviOMSdv8aWd
+ aW3/EyTJwslHdW48RUjF03Ss
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 02:27:09 -0800
+IronPort-SDR: Rw1YIT8Lqf66sScJ/mTxWjr5BzUVm3E21gKbbhqFSzu8lwkWssnA7/0uxdPWB25LCEHQJ6w3mJ
+ qpCGJb4O1LDzibCeApiZZsHhZk1g4qzu8Z5a4Vpx7Ea5jRAW1M82shNpFV3NL8Dcof6KC+7SGv
+ zTkueL0eRfsb7juh8vTan8LttngzIOwiRwTvfEdU6dwZy+m0igrqRWq53FBiWZbeF3rk5eVDCL
+ Zp5oWUA6eKXkQzdNGw3dRlX1S7Zkoxx8ozJM89UQddVJMn/sLDa1r54V8ry/SlMy+pevSiYIVE
+ P9U=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2022 02:55:32 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4JzsDg0b2lz1SHwl
+        for <linux-ide@vger.kernel.org>; Thu, 17 Feb 2022 02:55:31 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1645095330; x=1647687331; bh=JeHUzimhsaVc4RC1yQLd9Fwip79n4POX2ph
+        sWDfHGnE=; b=nfMMCd9NdGAlaYSF6V+dU7hJiPn/1Iclf/JIOFjyJo1t2BLCTre
+        G8jY15FPeykgKtkqUAeNCeDwjR4rJNYmkDVpfRKwmlsD+fHHSf433eu6WbSb+Chx
+        P3zLksG4Y26oVtBBEpwXckJvk3+78FcXRR114ZzzGwkDgN4qo1a25Aae+fzcxDei
+        5y3KjzP5MM9NLWJhxs558U/OpiQ4Od2aokXm8Avbi2nZTIFfKD7R6lyWgoPhme8g
+        rpMNykUZnMuQxwEcbsg8L47OP0WptUOcvrlceRVovCiF7tbdW7QZZtjBWaKJFrzf
+        6Xbhi8gA4crjlnGqL+766MQhigzZBqK5xag==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id M9dHHcHxlP-3 for <linux-ide@vger.kernel.org>;
+        Thu, 17 Feb 2022 02:55:30 -0800 (PST)
+Received: from [10.225.163.77] (unknown [10.225.163.77])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4JzsDf2CqPz1Rwrw;
+        Thu, 17 Feb 2022 02:55:30 -0800 (PST)
+Message-ID: <15a39279-c348-cd7a-879e-64a86bb454ce@opensource.wdc.com>
+Date:   Thu, 17 Feb 2022 19:55:28 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH] ata: libata-sff: use *switch* statement in
+ ata_sff_dev_classify()
+Content-Language: en-US
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
+References: <b4b1d7c1-b786-358f-154a-ba755a0814fb@omp.ru>
+ <16173ee5-00a8-4bd2-484a-d4c5953b98a9@opensource.wdc.com>
+ <d607d22d-fcd3-15e9-d58a-459e0393f805@omp.ru>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <d607d22d-fcd3-15e9-d58a-459e0393f805@omp.ru>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-<torvalds@linux-foundation.org> wrote:
-> On Tue, Feb 15, 2022 at 10:37 PM Damien Le Moal
-> <damien.lemoal@opensource.wdc.com> wrote:
-> >
-> > On 2/16/22 13:16, Byungchul Park wrote:
-> > > [    2.051040 ] ===================================================
-> > > [    2.051406 ] DEPT: Circular dependency has been detected.
-> > > [    2.051730 ] 5.17.0-rc1-00014-gcf3441bb2012 #2 Tainted: G        W
-> > > [    2.051991 ] ---------------------------------------------------
-> > > [    2.051991 ] summary
-> > > [    2.051991 ] ---------------------------------------------------
-> > > [    2.051991 ] *** DEADLOCK ***
-> > > [    2.051991 ]
-> > > [    2.051991 ] context A
-> > > [    2.051991 ]     [S] (unknown)(&(&ap->eh_wait_q)->dmap:0)
-> > > [    2.051991 ]     [W] __raw_spin_lock_irq(&host->lock:0)
-> > > [    2.051991 ]     [E] event(&(&ap->eh_wait_q)->dmap:0)
-> > > [    2.051991 ]
-> > > [    2.051991 ] context B
-> > > [    2.051991 ]     [S] __raw_spin_lock_irqsave(&host->lock:0)
-> > > [    2.051991 ]     [W] wait(&(&ap->eh_wait_q)->dmap:0)
-> > > [    2.051991 ]     [E] spin_unlock(&host->lock:0)
-> >
-> > Sleeping with a spinlock held would be triggering warnings already, so
-> > these reports seem bogus to me.
+On 2/17/22 18:29, Sergey Shtylyov wrote:
+> Hello!
 > 
-> Yeah, Matthew pointed out the same thing for another use-case, where
-> it looks like DEPT is looking at the state at the wrong point (not at
-> the scheduling point, but at prepare_to_sleep()).
+> On 2/17/22 3:22 AM, Damien Le Moal wrote:
+> [...]
+>>> In ata_sff_dev_classify(), replace a string of the *if* statements checking
+>>> the device's class with the *switch* statement that fits better here...
+>>>
+>>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+>>>
+>>> ---
+>>> This patch is against the 'for-next' branch of Damien Le Moal's 'libata.git'
+>>> repo.
+>>>
+>>>  drivers/ata/libata-sff.c |   14 ++++++++------
+>>>  1 file changed, 8 insertions(+), 6 deletions(-)
+>>>
+>>> Index: libata/drivers/ata/libata-sff.c
+>>> ===================================================================
+>>> --- libata.orig/drivers/ata/libata-sff.c
+>>> +++ libata/drivers/ata/libata-sff.c
+>>> @@ -1841,8 +1841,8 @@ unsigned int ata_sff_dev_classify(struct
+>>>  
+>>
+>> The err check before the hunk below could use a switch too.
 > 
-> This ata_port_wait() is the exact same pattern, ie we have
-> 
->	spin_lock_irqsave(ap->lock, flags);
-> 
->	while (ap->pflags & (ATA_PFLAG_EH_PENDING | ATA_PFLAG_EH_IN_PROGRESS)) {
->		prepare_to_wait(&ap->eh_wait_q, &wait, TASK_UNINTERRUPTIBLE);
->		spin_unlock_irqrestore(ap->lock, flags);
->		schedule();
-> 
-> and DEPT has incorrectly taken it to mean that 'ap->lock' is held
-> during the wait, when it is actually released before actually waiting.
-> 
-> For the spin-locks, this is all very obvious (because they'd have been
-> caught long ago by much simpler debug code), but the same
-> prepare_to_wait -> wait pattern can most definitely happen with
-> sleeping locks too, so they are all slightly suspect.
-> 
-> And yes, the detailed reports are hard to read because the locations
-> are given as "ata_port_wait_eh+0x52/0xc0". Running them through
-> scripts/decode_stacktrace.sh to turn them into filename and line
-> numbers - and also sort out inlining - would help a lot.
-> 
-> Byungchul, could you fix those two issues? Some of your reports may
+>    I have initially converted that one too but finally decided to keep
+> the order of the comparisons intact -- it makes more sense to 1st check
+> dev->devno in the last *if*...
 
-Of couse, that's what I should do. Thanks for your feedback.
+Yeah. Not critical. Just tried to use a switch and that does not make
+the code very clear anyway :)
 
-> well be entirely valid, but the hard-to-read hex offsets and the
-> knowledge that at least some of them are confused about how
-> prepare_to_wait -> wait actually works makes the motivation to look at
-> the details much less..
 > 
-> 	Linus
+>>
+>>>  	/* determine if device is ATA or ATAPI */
+>>
+>> This comment is a bit weird since ATA_DEV_ATAPI is not used. Maybe
+> 
+>    Why? A call ata_port_classify() should detect the ATAPI devices,
+> we just don't "post-process" that result...
+> 
+>> change that to something like:
+>>
+>> 	/* Check the device class */
+> 
+>    No, I don't agree here. :-)
+
+Matter of taste I guess. I do find that comment useless anyway as the
+code is fairly obvious. Leave it as-is. No problem.
+
+> 
+>>
+>> Or just drop it... The code is clear enough I think.
+>>
+>>>  	class = ata_port_classify(ap, &tf);
+>>> -
+>>> -	if (class == ATA_DEV_UNKNOWN) {
+>>> +	switch (class) {
+>>> +	case ATA_DEV_UNKNOWN:
+>>>  		/* If the device failed diagnostic, it's likely to
+>>
+>> While at it, please correct the comment style here (start with a "/*"
+>> line). There are a ton of these style problems all over, so when
+>> touching code around them, let's fix them :)
+> 
+>    OK. :-)
+> 
+> [...]
+> 
+> MBR, Sergey
+
+
+-- 
+Damien Le Moal
+Western Digital Research
