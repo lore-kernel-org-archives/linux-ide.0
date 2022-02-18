@@ -2,163 +2,90 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F22EC433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 18 Feb 2022 06:09:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93AC7C433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 18 Feb 2022 09:35:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231213AbiBRGJ5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 18 Feb 2022 01:09:57 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:52090 "EHLO
+        id S232573AbiBRJfY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 18 Feb 2022 04:35:24 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:54498 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231200AbiBRGJy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2022 01:09:54 -0500
-Received: from lgeamrelo11.lge.com (lgeamrelo11.lge.com [156.147.23.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 49ED9193E8
-        for <linux-ide@vger.kernel.org>; Thu, 17 Feb 2022 22:09:34 -0800 (PST)
-Received: from unknown (HELO lgeamrelo04.lge.com) (156.147.1.127)
-        by 156.147.23.51 with ESMTP; 18 Feb 2022 15:09:33 +0900
-X-Original-SENDERIP: 156.147.1.127
-X-Original-MAILFROM: byungchul.park@lge.com
-Received: from unknown (HELO X58A-UD3R) (10.177.244.38)
-        by 156.147.1.127 with ESMTP; 18 Feb 2022 15:09:33 +0900
-X-Original-SENDERIP: 10.177.244.38
-X-Original-MAILFROM: byungchul.park@lge.com
-Date:   Fri, 18 Feb 2022 15:09:26 +0900
-From:   Byungchul Park <byungchul.park@lge.com>
-To:     Steven Rostedt <rostedt@goodmis.org>
-Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
-        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
-        linux-ext4@vger.kernel.org, mingo@redhat.com,
-        linux-kernel@vger.kernel.org, peterz@infradead.org,
-        will@kernel.org, tglx@linutronix.de, joel@joelfernandes.org,
-        sashal@kernel.org, daniel.vetter@ffwll.ch,
-        chris@chris-wilson.co.uk, duyuyang@gmail.com,
-        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
-        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
-        bfields@fieldses.org, gregkh@linuxfoundation.org,
-        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
-        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org,
-        vdavydov.dev@gmail.com, sj@kernel.org, jglisse@redhat.com,
-        dennis@kernel.org, cl@linux.com, penberg@kernel.org,
-        rientjes@google.com, vbabka@suse.cz, ngupta@vflare.org,
-        linux-block@vger.kernel.org, axboe@kernel.dk,
-        paolo.valente@linaro.org, josef@toxicpanda.com,
-        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
-        jack@suse.cz, jack@suse.com, jlayton@kernel.org,
-        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
-        dri-devel@lists.freedesktop.org, airlied@linux.ie,
-        rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
-        hamohammed.sa@gmail.com
-Subject: Re: [PATCH 02/16] dept: Implement Dept(Dependency Tracker)
-Message-ID: <20220218060926.GA26206@X58A-UD3R>
-References: <1645095472-26530-1-git-send-email-byungchul.park@lge.com>
- <1645095472-26530-3-git-send-email-byungchul.park@lge.com>
- <20220217123656.389e8783@gandalf.local.home>
+        with ESMTP id S232058AbiBRJfY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2022 04:35:24 -0500
+Received: from mxout02.lancloud.ru (mxout02.lancloud.ru [45.84.86.82])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4F725E77B
+        for <linux-ide@vger.kernel.org>; Fri, 18 Feb 2022 01:35:05 -0800 (PST)
+Received: from LanCloud
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout02.lancloud.ru B30A1207D578
+Received: from LanCloud
+Received: from LanCloud
+Received: from LanCloud
+Subject: Re: [PATCH] ata: pata_hpt37x: merge mode setting methods
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>
+References: <4e5e9ea0-f7ac-025a-f94f-a4f0ee009420@omp.ru>
+ <0303c512-9193-3d4d-3db7-6ecf391948de@opensource.wdc.com>
+ <dbee2241-c540-7f52-1314-9054db292580@omp.ru>
+ <101340fd-4215-481b-747b-424f9116111f@opensource.wdc.com>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <b93fa847-9343-66bd-9479-3bd9d278da67@omp.ru>
+Date:   Fri, 18 Feb 2022 12:35:01 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220217123656.389e8783@gandalf.local.home>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+In-Reply-To: <101340fd-4215-481b-747b-424f9116111f@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [192.168.11.198]
+X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
+ LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Feb 17, 2022 at 12:36:56PM -0500, Steven Rostedt wrote:
-> > +struct dept_ecxt;
-> > +struct dept_iecxt {
-> > +	struct dept_ecxt *ecxt;
-> > +	int enirq;
-> > +	bool staled; /* for preventing to add a new ecxt */
-> > +};
-> > +
-> > +struct dept_wait;
-> > +struct dept_iwait {
-> > +	struct dept_wait *wait;
-> > +	int irq;
-> > +	bool staled; /* for preventing to add a new wait */
-> > +	bool touched;
-> > +};
+On 2/17/22 1:57 PM, Damien Le Moal wrote:
+
+>>>> After commit e0afcf140e6e ("ata: pata_hpt37x: disable fast interrupts in
+>>>> prereset() method") HPT370's and HPT372+'s PIO/DMA mode setting functions
+>>>> have become identical -- merge them.
+>>>>
+>>>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+>>>>
+>>>> ---
+>>>> This patch is against the 'for-next' branch of Damien Le Moal's 'libata.git'
+>>>> repo.
+>>>>
+>>>>  drivers/ata/pata_hpt37x.c |   71 +++++++---------------------------------------
+>>>>  1 file changed, 11 insertions(+), 60 deletions(-)
+>>>>
+>>>> Index: libata/drivers/ata/pata_hpt37x.c
+>>>> ===================================================================
+>>>> --- libata.orig/drivers/ata/pata_hpt37x.c
+>>>> +++ libata/drivers/ata/pata_hpt37x.c
+>> [...]
+>>>> @@ -604,8 +556,7 @@ static struct ata_port_operations hpt370
+>>>>  };
+>>>>  
+>>>>  /*
+>>>> - *	Configuration for HPT371 and HPT302. Slightly different PIO and DMA
+>>>> - *	mode setting functionality.
+>>>> + *	Configuration for HPT371 and HPT302.
+>>>
+>>> Shouldn't this be HPT372 ?
+>>
+>>    No, HPT372 ops are situated below -- they inherit from these.
 > 
-> Nit. It makes it easier to read (and then review) if structures are spaced
-> where their fields are all lined up:
-> 
-> struct dept_iecxt {
-> 	struct dept_ecxt		*ecxt;
-> 	int				enirq;
-> 	bool				staled;
-> };
-> 
-> struct dept_iwait {
-> 	struct dept_wait		*wait;
-> 	int				irq;
-> 	bool				staled;
-> 	bool				touched;
-> };
-> 
-> See, the fields stand out, and is nicer on the eyes. Especially for those
-> of us that are getting up in age, and our eyes do not work as well as they
-> use to ;-)
+> Yep. Got it (checked the code :)). All good.
 
-Sure! I will apply this.
+   Not all good, unfortunately. :-/
+   Building with C=1 has shown:
 
-> > + * ---
-> > + * This program is free software; you can redistribute it and/or modify
-> > + * it under the terms of the GNU General Public License as published by
-> > + * the Free Software Foundation; either version 2 of the License, or
-> > + * (at your ootion) any later version.
-> > + *
-> > + * This program is distributed in the hope that it will be useful, but
-> > + * WITHOUT ANY WARRANTY; without even the implied warranty of
-> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-> > + * General Public License for more details.
-> > + *
-> > + * You should have received a copy of the GNU General Public License
-> > + * along with this program; if not, you can access it online at
-> > + * http://www.gnu.org/licenses/gpl-2.0.html.
-> 
-> The SPDX at the top of the file is all that is needed. Please remove this
-> boiler plate. We do not use GPL boiler plates in the kernel anymore. The
-> SPDX code supersedes that.
+drivers/ata/pata_hpt37x.c:453: warning: expecting prototype for hpt370_set_piomode(). Prototype was for hpt37x_set_piomode() instead
+drivers/ata/pata_hpt37x.c:466: warning: expecting prototype for hpt370_set_dmamode(). Prototype was for hpt37x_set_dmamode() instead
 
-Thank you for informing it!
+i.e. I forgot to update the kernel-doc comments... Let me respin it!
 
-> > +/*
-> > + * Can use llist no matter whether CONFIG_ARCH_HAVE_NMI_SAFE_CMPXCHG is
-> > + * enabled because DEPT never race with NMI by nesting control.
-> 
->                          "never races with"
+>> [...]
 
-Good eyes!
-
-> Although, I'm confused by what you mean with "by nesting control".
-
-I should've expressed it more clearly. It meant NMI and other contexts
-never run inside of Dept concurrently in the same CPU by preventing
-reentrance.
-
-> > +static void initialize_class(struct dept_class *c)
-> > +{
-> > +	int i;
-> > +
-> > +	for (i = 0; i < DEPT_IRQS_NR; i++) {
-> > +		struct dept_iecxt *ie = &c->iecxt[i];
-> > +		struct dept_iwait *iw = &c->iwait[i];
-> > +
-> > +		ie->ecxt = NULL;
-> > +		ie->enirq = i;
-> > +		ie->staled = false;
-> > +
-> > +		iw->wait = NULL;
-> > +		iw->irq = i;
-> > +		iw->staled = false;
-> > +		iw->touched = false;
-> > +	}
-> > +	c->bfs_gen = 0U;
-> 
-> Is the U really necessary?
-
-I was just wondering if it's really harmful? I want to leave this if
-it's harmless because U let us guess the data type of ->bfs_gen correctly
-at a glance. Or am I missing some reason why I should fix this?
-
-Thank you very much, Steven.
-
+MBR, Sergey
