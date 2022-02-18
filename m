@@ -2,156 +2,122 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C615C433F5
-	for <linux-ide@archiver.kernel.org>; Fri, 18 Feb 2022 22:59:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC751C433F5
+	for <linux-ide@archiver.kernel.org>; Fri, 18 Feb 2022 23:00:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238749AbiBRW7u (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 18 Feb 2022 17:59:50 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:55716 "EHLO
+        id S240170AbiBRXA2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 18 Feb 2022 18:00:28 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:58564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234945AbiBRW7u (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2022 17:59:50 -0500
+        with ESMTP id S234945AbiBRXA1 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2022 18:00:27 -0500
 Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 978D8275AC4
-        for <linux-ide@vger.kernel.org>; Fri, 18 Feb 2022 14:59:32 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10452275AC4
+        for <linux-ide@vger.kernel.org>; Fri, 18 Feb 2022 15:00:09 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1645225172; x=1676761172;
-  h=message-id:date:mime-version:subject:from:to:cc:
-   references:in-reply-to:content-transfer-encoding;
-  bh=giw2coZIhlHp0U+gNzUs4Tpvy0BSPikLeXbIFc6ZxUY=;
-  b=Q73qAzW5IAfoYbQK3ellSgpcf5kl8e3bqG/InUpwebAKd9VeNZXXHnQF
-   tfcSgW09ilpBhKb+gy5/0HCw+3gqI19NsApRRsPo703BlaiOSUXki1U6R
-   OQnmAOcGnMwJqhkGIcnTDGsXaeGYgjS4oKuoVZuixrANocVC1Nwq1AEHh
-   2KCyoQj9/nTHBTyu8p+9xAwpVeA6MMkupjyxaFi8DUZMfRYt6D7OSkwNy
-   Nbc5kbMhDfyq9gY0v980MTwWsnMvUsjuR79c0bhltPANLJgkmsXX+Cp2g
-   zml8QVyAA49Hll+Ddhwmc+K5WiFy1Ff8Kk8UaVMZRw89qNHQcy7qmm6VJ
-   w==;
+  t=1645225209; x=1676761209;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=QMSh0HXvexLUqySSsxlXkmuJ/9D6RMxO01Fzb8ClAJ4=;
+  b=qTyA9/DD6kLyWOS+ZM7e94wm1Yd3ayWsf7OxIqdoUldSDtXWjEMAGS4+
+   5Fi0ZJq4/uNj+uo5hoKtGqqTxmQrd6n8Xlc9M41uxy4HmVt8Af3xfzidZ
+   CRdDn9ez4DeN2dh2VXi2A4EMwKGqSZQpp/3YiLOVZJBCCck7Z6lTu0x+1
+   hzYZjJlKaP8YpBaz9vxkWCXUrXC3ymDXYpB2eDYD4D54mZtgQ6MUJVf8I
+   wOm3bbUMY6ZlHEzewB08uyO15CxEhz0TbVX9rWAGL1utz467/x+d+En2M
+   4+lXHRvoe4H5bkxuGpWClXgPTWQnkybTlrPJSr5bOoEtOTWIrBi0vgmcZ
+   A==;
 X-IronPort-AV: E=Sophos;i="5.88,380,1635177600"; 
-   d="scan'208";a="194298722"
+   d="scan'208";a="194298740"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 19 Feb 2022 06:59:32 +0800
-IronPort-SDR: nYFE+rPPmUqZDds67Fy0HjQUJhq92UjTE5I5fgQfPHq7+xW3ytkn5vg+RHYk0nRX/WxVoLssew
- bERoEJLIfB2iwUO8dRmNV5enfoOoVA17Ytw5i3a62blLNrT9fyeFE+XacqHInYEafrHw+qgt2E
- 6+GvX9H8+zbVmqRpCqbvmAVIgLym35OzHhuyF25dHxAP39kgKZMb/TN/TPOrGE/PwH76+7ydfr
- t/nWguSf6PEiO4SYzBQ9E0M12F1CNN7KOSwyx7Bnq0exV9hRZL+HhBYtRaGUUofsh519lIGkYH
- LKT43Klyrkf6ZxCpO3psRWCp
+  by ob1.hgst.iphmx.com with ESMTP; 19 Feb 2022 07:00:09 +0800
+IronPort-SDR: N5bcCkxUA2JNUehwtdM3QWAzr/3QeFiFR/xVr/73/s0xG8E3e7Yi01IZp+ICje+Cqm96ESaIz5
+ n0TxmkkSM3rZjsVJ00hIdt1UhGITdfO29/r4o8OaDzigv3glIdbU7/3ZhkDabRHnAu5lR0UwYQ
+ h22MZQr68EMi9f7f+W0e3eOww+VGDCwtJZR/mrhNUzQjleVmNGvMIAwdjqll7uNEDWRKtzqBQX
+ +M5oQTubvi/4uqxnlE8yp9MYRHH/zddieXwRbn3iwTpaYT1lvZGX0GbUnWTEX3BdwcpgcO5GPP
+ YEUorg9+q5bOJieLpWAKxb7i
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2022 14:32:15 -0800
-IronPort-SDR: 6F4RtNNs8hBVbgRUIks2ZpDtWUlPd7nKLrzdKn2PqUv8ziUkeUxogik0C5iRgWv21GYszll7zZ
- KIW6OCqh1PhkNtAbEe9eFRQNXbc+UUdJmm5I/I2IXE2qlNB7JErHX/K1eOiUowVSrkq/ECHzQ3
- Ktqp8Y7Jnf75rZcPkg85vzlQntzXJaRt0RdVVf5IcIfAEHzyvLqB2BP8EMlKqzaY2MisRFchCh
- hOGwmcFilRj3a8NH1u4oAaQJVhZdzunUL03Om4YiJB+kwJOsaI72jvQ4ggynsl65M+fer4lbSS
- E+0=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2022 14:32:52 -0800
+IronPort-SDR: iDIMeSpXW5O5lRuSu3E96x0ARFPH5j9JtcLrJ2wcwv0X7c/ACxjK2uPRwaQ624bYhnr1X7Nwky
+ VQIQ5zl2X7OLflFLgYCb3ryUzUXliZiAkrAZ2HyPmOXQ0LivLV9aC8jqrbL+Zn6w6G52Zv9dl8
+ a8t+AkUhsNDGgd5suY2AC8ZkQusi9wRUHnY88WpB1y8AF70NyyXwVtXySGCHYZE4fL8WY6fbBa
+ O8gTQKknN06Qd6SbCKhCWcDuj7fF6Tz7DneLIzZBMdJh97Qwu4p0JxrDUVllb7tUnLLOKY4uBg
+ rOg=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2022 14:59:33 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2022 15:00:09 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K0nFb6yL6z1SVnx
-        for <linux-ide@vger.kernel.org>; Fri, 18 Feb 2022 14:59:31 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K0nGJ2QJbz1Rwrw
+        for <linux-ide@vger.kernel.org>; Fri, 18 Feb 2022 15:00:08 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:references:to:from:content-language
+        :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1645225171; x=1647817172; bh=giw2coZIhlHp0U+gNzUs4Tpvy0BSPikLeXb
-        IFc6ZxUY=; b=MkAbRNAAIA/C9IqS3VvANvkBc5pnqoh+0AVKFmneFuEGNuzXDjT
-        IxrkZnSPWlvdVKoJDrwgsbyyUUWL8h859perszybdZiUmgCK1re+llUUNC5S3qjL
-        ozkMOHXNmrKzzDuKVO/dSvg1XAhbTpjLuqBaYxdAjD6JurOyHdnWDLRHcvXL9oWW
-        rpHX4/LS5p2jS2j6B37sePPnv6RUa3eWJ3yJR8lWGLWqF2hz6sB4tpatezIG5j4j
-        kM9U+C5eQbAun2NYbx+p9hmWufA1NeoSaRfNAUOMCa2HYGiL0MrJ4GHlRElvh6rV
-        SvVDnwdli+f174EtOnTPiRcLjOX80e0mnfQ==
+        1645225208; x=1647817209; bh=QMSh0HXvexLUqySSsxlXkmuJ/9D6RMxO01F
+        zb8ClAJ4=; b=sRyNwienOKwmEa/OnmbEJUPrvMXi42WO3OEf3OnOaB+Lj/oUYut
+        P+EBEyxJqRbhx53UH29GJ7aXIanEyQfDLDBovLBsouttJnyOb6QssNFeuaUtm7m+
+        EQtPNldvWKcWFOpzsBYkAciJR5eXZkYVb4CAMEK1urekT1VrJSAoAQ2sSmNi34N9
+        EvtydbA5aaapUpYiA6sd1b+j9G/YSpUAr0MrkPPzjLqw3GwBfKg6u2O0NEfy0ud+
+        FnGE5Z9QzsnGeCfqO7xU2YbvzLcqaJizhGKwT0mRwxlKNLCFVT6BgYg1JxxA35or
+        Uwl1dtm3xM/HYO8PQ0gciMq2IMcdlB+QE4g==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id HT0gniJGueDx for <linux-ide@vger.kernel.org>;
-        Fri, 18 Feb 2022 14:59:31 -0800 (PST)
+        with ESMTP id d3TU1aJkQut1 for <linux-ide@vger.kernel.org>;
+        Fri, 18 Feb 2022 15:00:08 -0800 (PST)
 Received: from [10.225.163.78] (unknown [10.225.163.78])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K0nFZ1z10z1Rvlx;
-        Fri, 18 Feb 2022 14:59:30 -0800 (PST)
-Message-ID: <1879d3ba-5778-5147-bd7f-408b1689aabe@opensource.wdc.com>
-Date:   Sat, 19 Feb 2022 07:59:29 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K0nGH47Hrz1Rvlx;
+        Fri, 18 Feb 2022 15:00:07 -0800 (PST)
+Message-ID: <79a7938b-b20f-2967-2372-3a8bdb85b641@opensource.wdc.com>
+Date:   Sat, 19 Feb 2022 08:00:06 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.0
-Subject: Re: [PATCH v2 2/2] ata: libata-sff: refactor ata_sff_altstatus()
+Subject: Re: [PATCH] ata: libata-sff: fix reading uninitialized variable in
+ ata_sff_lost_interrupt()
 Content-Language: en-US
+To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>
+References: <5e02673b-57d2-40b1-ceba-55abfb251089@omp.ru>
+ <1f350282-0b44-755a-f1e7-308fcaa24483@omp.ru>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Dan Carpenter <dan.carpenter@oracle.com>, kbuild@lists.01.org,
-        linux-ide@vger.kernel.org
-Cc:     lkp@intel.com, kbuild-all@lists.01.org
-References: <202202141714.X7UdMJUj-lkp@intel.com>
- <47901264-813e-0ba5-f593-2022947442c4@omp.ru>
- <615bfc9e-46ee-24dd-6dcc-a3d7755209de@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <615bfc9e-46ee-24dd-6dcc-a3d7755209de@opensource.wdc.com>
+In-Reply-To: <1f350282-0b44-755a-f1e7-308fcaa24483@omp.ru>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/19/22 07:58, Damien Le Moal wrote:
-> On 2/18/22 01:02, Sergey Shtylyov wrote:
->> On 2/17/22 3:12 PM, Dan Carpenter wrote:
->>
->>> url:    https://github.com/0day-ci/linux/commits/Sergey-Shtylyov/Refactor-the-accessors-for-the-ATA-device-control-and-alternate-status-registers/20220213-231119
->>> base:   https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git b81b1829e7e39f6cebdf6e4d5484eacbceda8554
->>> config: riscv-randconfig-m031-20220213 (https://download.01.org/0day-ci/archive/20220214/202202141714.X7UdMJUj-lkp@intel.com/config)
->>> compiler: riscv32-linux-gcc (GCC) 11.2.0
->>>
->>> If you fix the issue, kindly add following tag as appropriate
->>> Reported-by: kernel test robot <lkp@intel.com>
->>> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
->>>
->>> smatch warnings:
->>> drivers/ata/libata-sff.c:1652 ata_sff_lost_interrupt() error: uninitialized symbol 'status'.
->>>
->>> vim +/status +1652 drivers/ata/libata-sff.c
->>>
->>> c96f1732e25362 Alan Cox        2009-03-24  1635  void ata_sff_lost_interrupt(struct ata_port *ap)
->>> c96f1732e25362 Alan Cox        2009-03-24  1636  {
->>> c96f1732e25362 Alan Cox        2009-03-24  1637  	u8 status;
->>> c96f1732e25362 Alan Cox        2009-03-24  1638  	struct ata_queued_cmd *qc;
->>> c96f1732e25362 Alan Cox        2009-03-24  1639  
->>> c96f1732e25362 Alan Cox        2009-03-24  1640  	/* Only one outstanding command per SFF channel */
->>> c96f1732e25362 Alan Cox        2009-03-24  1641  	qc = ata_qc_from_tag(ap, ap->link.active_tag);
->>> 3e4ec3443f70fb Tejun Heo       2010-05-10  1642  	/* We cannot lose an interrupt on a non-existent or polled command */
->>> 3e4ec3443f70fb Tejun Heo       2010-05-10  1643  	if (!qc || qc->tf.flags & ATA_TFLAG_POLLING)
->>> c96f1732e25362 Alan Cox        2009-03-24  1644  		return;
->>> c96f1732e25362 Alan Cox        2009-03-24  1645  	/* See if the controller thinks it is still busy - if so the command
->>> c96f1732e25362 Alan Cox        2009-03-24  1646  	   isn't a lost IRQ but is still in progress */
->>> 57232468aca7de Sergey Shtylyov 2022-02-13  1647  	if (ata_sff_altstatus(ap, &status) && (status & ATA_BUSY))
->>>
->>> "status" is not intialized if ata_sff_altstatus() return false.
->>
->>    Hmm, inaccurate coding on my side, will fix it, thanks!
->>
->>> c96f1732e25362 Alan Cox        2009-03-24  1648  		return;
->>> c96f1732e25362 Alan Cox        2009-03-24  1649  
->>> c96f1732e25362 Alan Cox        2009-03-24  1650  	/* There was a command running, we are no longer busy and we have
->>> c96f1732e25362 Alan Cox        2009-03-24  1651  	   no interrupt. */
->>> a9a79dfec23956 Joe Perches     2011-04-15 @1652  	ata_port_warn(ap, "lost interrupt (Status 0x%x)\n",
->>> c96f1732e25362 Alan Cox        2009-03-24  1653  								status);
->>>                                                                                                                 ^^^^^^
->>> Uninitalized.  Also the indenting is unfortunate.
->>
->>    Not my fault but I'll fix this as well... :-)
+On 2/18/22 20:17, Sergey Shtylyov wrote:
+> On 2/18/22 2:05 PM, Sergey Shtylyov wrote:
 > 
-> Did you send a fix ? I did not see anything in my inbox...
+>> Due to my sloppy coding in commit 2c75a451ecb0 ("ata: libata-sff: refactor
+>> ata_sff_altstatus()"), in ata_sff_lost_interrupt() iff the device control
+>> register doesn't exists, ata_port_warn() would print the 'status' variable
+>> which never gets assigned.   Restore the original order of the statements,
+>> wrapping the ata_sff_altstatus() call in WARN_ON_ONCE()...
+>>
+>> While at it, fix crazy indentation in the ata_port_warn() call itself...
+>>
+>> Fixes: 2c75a451ecb0 ("ata: libata-sff: refactor ata_sff_altstatus()")
+>> Reported-by: kernel test robot <lkp@intel.com>
+>> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+>>
+>> ---
+> 
+>    Forgot to mention that it's against the 'for-next' branch of 'libata.git'. :-/
 
-Ignore. Got it :)
+No need to mention it, it always should be :)
 
 > 
->>
->> [...]
->>
->> MBR, Sergey
+> [...]
 > 
-> 
+> MBR, Sergey
 
 
 -- 
