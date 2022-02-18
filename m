@@ -2,45 +2,45 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BCD1C433F5
-	for <linux-ide@archiver.kernel.org>; Fri, 18 Feb 2022 04:19:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F22EC433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 18 Feb 2022 06:09:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229768AbiBRETj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 17 Feb 2022 23:19:39 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:50962 "EHLO
+        id S231213AbiBRGJ5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 18 Feb 2022 01:09:57 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:52090 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229478AbiBRETi (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Feb 2022 23:19:38 -0500
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 31CC718462E;
-        Thu, 17 Feb 2022 20:19:22 -0800 (PST)
-Received: from cwcc.thunk.org (pool-108-7-220-252.bstnma.fios.verizon.net [108.7.220.252])
-        (authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 21I4JFfx022029
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 17 Feb 2022 23:19:16 -0500
-Received: by cwcc.thunk.org (Postfix, from userid 15806)
-        id CB37615C34C8; Thu, 17 Feb 2022 23:19:15 -0500 (EST)
-Date:   Thu, 17 Feb 2022 23:19:15 -0500
-From:   "Theodore Ts'o" <tytso@mit.edu>
+        with ESMTP id S231200AbiBRGJy (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2022 01:09:54 -0500
+Received: from lgeamrelo11.lge.com (lgeamrelo11.lge.com [156.147.23.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 49ED9193E8
+        for <linux-ide@vger.kernel.org>; Thu, 17 Feb 2022 22:09:34 -0800 (PST)
+Received: from unknown (HELO lgeamrelo04.lge.com) (156.147.1.127)
+        by 156.147.23.51 with ESMTP; 18 Feb 2022 15:09:33 +0900
+X-Original-SENDERIP: 156.147.1.127
+X-Original-MAILFROM: byungchul.park@lge.com
+Received: from unknown (HELO X58A-UD3R) (10.177.244.38)
+        by 156.147.1.127 with ESMTP; 18 Feb 2022 15:09:33 +0900
+X-Original-SENDERIP: 10.177.244.38
+X-Original-MAILFROM: byungchul.park@lge.com
+Date:   Fri, 18 Feb 2022 15:09:26 +0900
+From:   Byungchul Park <byungchul.park@lge.com>
 To:     Steven Rostedt <rostedt@goodmis.org>
-Cc:     Byungchul Park <byungchul.park@lge.com>,
-        torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
+Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
         linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
         linux-ext4@vger.kernel.org, mingo@redhat.com,
         linux-kernel@vger.kernel.org, peterz@infradead.org,
         will@kernel.org, tglx@linutronix.de, joel@joelfernandes.org,
         sashal@kernel.org, daniel.vetter@ffwll.ch,
         chris@chris-wilson.co.uk, duyuyang@gmail.com,
-        johannes.berg@intel.com, tj@kernel.org, willy@infradead.org,
-        david@fromorbit.com, amir73il@gmail.com, bfields@fieldses.org,
-        gregkh@linuxfoundation.org, kernel-team@lge.com,
-        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
-        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
-        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
-        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
-        ngupta@vflare.org, linux-block@vger.kernel.org, axboe@kernel.dk,
+        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
+        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
+        bfields@fieldses.org, gregkh@linuxfoundation.org,
+        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
+        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org,
+        vdavydov.dev@gmail.com, sj@kernel.org, jglisse@redhat.com,
+        dennis@kernel.org, cl@linux.com, penberg@kernel.org,
+        rientjes@google.com, vbabka@suse.cz, ngupta@vflare.org,
+        linux-block@vger.kernel.org, axboe@kernel.dk,
         paolo.valente@linaro.org, josef@toxicpanda.com,
         linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
         jack@suse.cz, jack@suse.com, jlayton@kernel.org,
@@ -48,53 +48,117 @@ Cc:     Byungchul Park <byungchul.park@lge.com>,
         dri-devel@lists.freedesktop.org, airlied@linux.ie,
         rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
         hamohammed.sa@gmail.com
-Subject: Re: [PATCH 00/16] DEPT(Dependency Tracker)
-Message-ID: <Yg8eQ/iR5H/AHZIg@mit.edu>
+Subject: Re: [PATCH 02/16] dept: Implement Dept(Dependency Tracker)
+Message-ID: <20220218060926.GA26206@X58A-UD3R>
 References: <1645095472-26530-1-git-send-email-byungchul.park@lge.com>
- <Yg5u7dzUxL3Vkncg@mit.edu>
- <20220217120005.67f5ddf4@gandalf.local.home>
+ <1645095472-26530-3-git-send-email-byungchul.park@lge.com>
+ <20220217123656.389e8783@gandalf.local.home>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20220217120005.67f5ddf4@gandalf.local.home>
+In-Reply-To: <20220217123656.389e8783@gandalf.local.home>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Feb 17, 2022 at 12:00:05PM -0500, Steven Rostedt wrote:
+On Thu, Feb 17, 2022 at 12:36:56PM -0500, Steven Rostedt wrote:
+> > +struct dept_ecxt;
+> > +struct dept_iecxt {
+> > +	struct dept_ecxt *ecxt;
+> > +	int enirq;
+> > +	bool staled; /* for preventing to add a new ecxt */
+> > +};
+> > +
+> > +struct dept_wait;
+> > +struct dept_iwait {
+> > +	struct dept_wait *wait;
+> > +	int irq;
+> > +	bool staled; /* for preventing to add a new wait */
+> > +	bool touched;
+> > +};
 > 
-> I personally believe that there's potential that this can be helpful and we
-> will want to merge it.
+> Nit. It makes it easier to read (and then review) if structures are spaced
+> where their fields are all lined up:
 > 
-> But, what I believe Ted is trying to say is, if you do not know if the
-> report is a bug or not, please do not ask the maintainers to determine it
-> for you. This is a good opportunity for you to look to see why your tool
-> reported an issue, and learn that subsystem. Look at if this is really a
-> bug or not, and investigate why.
+> struct dept_iecxt {
+> 	struct dept_ecxt		*ecxt;
+> 	int				enirq;
+> 	bool				staled;
+> };
+> 
+> struct dept_iwait {
+> 	struct dept_wait		*wait;
+> 	int				irq;
+> 	bool				staled;
+> 	bool				touched;
+> };
+> 
+> See, the fields stand out, and is nicer on the eyes. Especially for those
+> of us that are getting up in age, and our eyes do not work as well as they
+> use to ;-)
 
-I agree there's potential here, or I would have ignored the ext4 "bug
-report".
+Sure! I will apply this.
 
-When we can get rid of the false positives, I think it should be
-merged; I'd just rather it not be merged until after the false
-positives are fixed, since otherwise, someone well-meaning will start
-using it with Syzkaller, and noise that maintainers need to deal with
-(with people requesting reverts of two year old commits, etc) will
-increase by a factor of ten or more.  (With Syzbot reproducers that
-set up random cgroups, IP tunnels with wiregaurd enabled, FUSE stress
-testers, etc., that file system maintainers will be asked to try to
-disentangle.)
+> > + * ---
+> > + * This program is free software; you can redistribute it and/or modify
+> > + * it under the terms of the GNU General Public License as published by
+> > + * the Free Software Foundation; either version 2 of the License, or
+> > + * (at your ootion) any later version.
+> > + *
+> > + * This program is distributed in the hope that it will be useful, but
+> > + * WITHOUT ANY WARRANTY; without even the implied warranty of
+> > + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+> > + * General Public License for more details.
+> > + *
+> > + * You should have received a copy of the GNU General Public License
+> > + * along with this program; if not, you can access it online at
+> > + * http://www.gnu.org/licenses/gpl-2.0.html.
+> 
+> The SPDX at the top of the file is all that is needed. Please remove this
+> boiler plate. We do not use GPL boiler plates in the kernel anymore. The
+> SPDX code supersedes that.
 
-So from a maintainer's perspective, false positives are highly
-negative.  It may be that from some people's POV, one bug found and 20
-false positive might still be "useful".  But if your tool gains a
-reputation of not valuing maintainers' time, it's just going to make
-us (or at least me :-) cranky, and it's going to be very hard to
-recover from perception.  So it's probably better to be very
-conservative and careful in polishing it before asking for it to be
-merged.
+Thank you for informing it!
 
-Cheers,
+> > +/*
+> > + * Can use llist no matter whether CONFIG_ARCH_HAVE_NMI_SAFE_CMPXCHG is
+> > + * enabled because DEPT never race with NMI by nesting control.
+> 
+>                          "never races with"
 
-						- Ted
+Good eyes!
+
+> Although, I'm confused by what you mean with "by nesting control".
+
+I should've expressed it more clearly. It meant NMI and other contexts
+never run inside of Dept concurrently in the same CPU by preventing
+reentrance.
+
+> > +static void initialize_class(struct dept_class *c)
+> > +{
+> > +	int i;
+> > +
+> > +	for (i = 0; i < DEPT_IRQS_NR; i++) {
+> > +		struct dept_iecxt *ie = &c->iecxt[i];
+> > +		struct dept_iwait *iw = &c->iwait[i];
+> > +
+> > +		ie->ecxt = NULL;
+> > +		ie->enirq = i;
+> > +		ie->staled = false;
+> > +
+> > +		iw->wait = NULL;
+> > +		iw->irq = i;
+> > +		iw->staled = false;
+> > +		iw->touched = false;
+> > +	}
+> > +	c->bfs_gen = 0U;
+> 
+> Is the U really necessary?
+
+I was just wondering if it's really harmful? I want to leave this if
+it's harmless because U let us guess the data type of ->bfs_gen correctly
+at a glance. Or am I missing some reason why I should fix this?
+
+Thank you very much, Steven.
 
