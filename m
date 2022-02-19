@@ -2,24 +2,24 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90ED4C3527D
-	for <linux-ide@archiver.kernel.org>; Sat, 19 Feb 2022 10:59:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7DE3C35280
+	for <linux-ide@archiver.kernel.org>; Sat, 19 Feb 2022 10:59:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242209AbiBSK7U (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 19 Feb 2022 05:59:20 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:42200 "EHLO
+        id S242213AbiBSK7V (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 19 Feb 2022 05:59:21 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:42262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242146AbiBSK7M (ORCPT
+        with ESMTP id S242136AbiBSK7M (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Sat, 19 Feb 2022 05:59:12 -0500
 Received: from lgeamrelo11.lge.com (lgeamrelo11.lge.com [156.147.23.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8C2F8674ED
-        for <linux-ide@vger.kernel.org>; Sat, 19 Feb 2022 02:58:46 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4808A69CF3
+        for <linux-ide@vger.kernel.org>; Sat, 19 Feb 2022 02:58:44 -0800 (PST)
 Received: from unknown (HELO lgemrelse7q.lge.com) (156.147.1.151)
-        by 156.147.23.51 with ESMTP; 19 Feb 2022 19:58:45 +0900
+        by 156.147.23.51 with ESMTP; 19 Feb 2022 19:58:43 +0900
 X-Original-SENDERIP: 156.147.1.151
 X-Original-MAILFROM: byungchul.park@lge.com
 Received: from unknown (HELO localhost.localdomain) (10.177.244.38)
-        by 156.147.1.151 with ESMTP; 19 Feb 2022 19:58:45 +0900
+        by 156.147.1.151 with ESMTP; 19 Feb 2022 19:58:43 +0900
 X-Original-SENDERIP: 10.177.244.38
 X-Original-MAILFROM: byungchul.park@lge.com
 From:   Byungchul Park <byungchul.park@lge.com>
@@ -46,9 +46,9 @@ Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
         dri-devel@lists.freedesktop.org, airlied@linux.ie,
         rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
         hamohammed.sa@gmail.com
-Subject: [PATCH v2 17/18] dept: Distinguish each syscall context from another
-Date:   Sat, 19 Feb 2022 19:58:30 +0900
-Message-Id: <1645268311-24222-18-git-send-email-byungchul.park@lge.com>
+Subject: [PATCH v2 11/18] dept: Add proc knobs to show stats and dependency graph
+Date:   Sat, 19 Feb 2022 19:58:24 +0900
+Message-Id: <1645268311-24222-12-git-send-email-byungchul.park@lge.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1645268311-24222-1-git-send-email-byungchul.park@lge.com>
 References: <1645268311-24222-1-git-send-email-byungchul.park@lge.com>
@@ -56,378 +56,248 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-It enters kernel mode on each syscall and each syscall handling should
-be considered independently from the point of view of Dept. Otherwise,
-Dept may wrongly track dependencies across different syscalls.
-
-That might be a real dependency from user mode. However, now that Dept
-just started to work, conservatively let Dept not track dependencies
-across different syscalls.
+It'd be useful to show Dept internal stats and dependency graph on
+runtime via proc for better information. Introduced the knobs.
 
 Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 ---
- include/linux/dept.h     | 39 ++++++++++++++++------------
- kernel/dependency/dept.c | 67 ++++++++++++++++++++++++------------------------
- kernel/entry/common.c    |  3 +++
- 3 files changed, 60 insertions(+), 49 deletions(-)
+ kernel/dependency/Makefile        |  1 +
+ kernel/dependency/dept.c          | 24 ++++------
+ kernel/dependency/dept_internal.h | 26 +++++++++++
+ kernel/dependency/dept_proc.c     | 92 +++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 128 insertions(+), 15 deletions(-)
+ create mode 100644 kernel/dependency/dept_internal.h
+ create mode 100644 kernel/dependency/dept_proc.c
 
-diff --git a/include/linux/dept.h b/include/linux/dept.h
-index e2d4aea..1a1c307 100644
---- a/include/linux/dept.h
-+++ b/include/linux/dept.h
-@@ -25,11 +25,16 @@
- #define DEPT_MAX_SUBCLASSES_USR		(DEPT_MAX_SUBCLASSES / DEPT_MAX_SUBCLASSES_EVT)
- #define DEPT_MAX_SUBCLASSES_CACHE	2
+diff --git a/kernel/dependency/Makefile b/kernel/dependency/Makefile
+index b5cfb8a..92f1654 100644
+--- a/kernel/dependency/Makefile
++++ b/kernel/dependency/Makefile
+@@ -1,3 +1,4 @@
+ # SPDX-License-Identifier: GPL-2.0
  
--#define DEPT_SIRQ			0
--#define DEPT_HIRQ			1
--#define DEPT_IRQS_NR			2
--#define DEPT_SIRQF			(1UL << DEPT_SIRQ)
--#define DEPT_HIRQF			(1UL << DEPT_HIRQ)
-+enum {
-+	DEPT_CXT_SIRQ = 0,
-+	DEPT_CXT_HIRQ,
-+	DEPT_CXT_IRQS_NR,
-+	DEPT_CXT_PROCESS = DEPT_CXT_IRQS_NR,
-+	DEPT_CXTS_NR
-+};
-+
-+#define DEPT_SIRQF			(1UL << DEPT_CXT_SIRQ)
-+#define DEPT_HIRQF			(1UL << DEPT_CXT_HIRQ)
- 
- struct dept_ecxt;
- struct dept_iecxt {
-@@ -95,8 +100,8 @@ struct dept_class {
- 	/*
- 	 * for tracking IRQ dependencies
- 	 */
--	struct dept_iecxt		iecxt[DEPT_IRQS_NR];
--	struct dept_iwait		iwait[DEPT_IRQS_NR];
-+	struct dept_iecxt		iecxt[DEPT_CXT_IRQS_NR];
-+	struct dept_iwait		iwait[DEPT_CXT_IRQS_NR];
- };
- 
- struct dept_stack {
-@@ -150,8 +155,8 @@ struct dept_ecxt {
- 	/*
- 	 * where the IRQ-enabled happened
- 	 */
--	unsigned long			enirq_ip[DEPT_IRQS_NR];
--	struct dept_stack		*enirq_stack[DEPT_IRQS_NR];
-+	unsigned long			enirq_ip[DEPT_CXT_IRQS_NR];
-+	struct dept_stack		*enirq_stack[DEPT_CXT_IRQS_NR];
- 
- 	/*
- 	 * where the event context started
-@@ -194,8 +199,8 @@ struct dept_wait {
- 	/*
- 	 * where the IRQ wait happened
- 	 */
--	unsigned long			irq_ip[DEPT_IRQS_NR];
--	struct dept_stack		*irq_stack[DEPT_IRQS_NR];
-+	unsigned long			irq_ip[DEPT_CXT_IRQS_NR];
-+	struct dept_stack		*irq_stack[DEPT_CXT_IRQS_NR];
- 
- 	/*
- 	 * where the wait happened
-@@ -400,19 +405,19 @@ struct dept_task {
- 	int				wait_hist_pos;
- 
- 	/*
--	 * sequential id to identify each IRQ context
-+	 * sequential id to identify each context
- 	 */
--	unsigned int			irq_id[DEPT_IRQS_NR];
-+	unsigned int			cxt_id[DEPT_CXTS_NR];
- 
- 	/*
- 	 * for tracking IRQ-enabled points with cross-event
- 	 */
--	unsigned int			wgen_enirq[DEPT_IRQS_NR];
-+	unsigned int			wgen_enirq[DEPT_CXT_IRQS_NR];
- 
- 	/*
- 	 * for keeping up-to-date IRQ-enabled points
- 	 */
--	unsigned long			enirq_ip[DEPT_IRQS_NR];
-+	unsigned long			enirq_ip[DEPT_CXT_IRQS_NR];
- 
- 	/*
- 	 * current effective IRQ-enabled flag
-@@ -448,7 +453,7 @@ struct dept_task {
- 	.dept_task.wait_hist = { { .wait = NULL, } },			\
- 	.dept_task.ecxt_held_pos = 0,					\
- 	.dept_task.wait_hist_pos = 0,					\
--	.dept_task.irq_id = { 0 },					\
-+	.dept_task.cxt_id = { 0 },					\
- 	.dept_task.wgen_enirq = { 0 },					\
- 	.dept_task.enirq_ip = { 0 },					\
- 	.dept_task.recursive = 0,					\
-@@ -480,6 +485,7 @@ struct dept_task {
- extern void dept_wait_split_map(struct dept_map_each *me, struct dept_map_common *mc, unsigned long ip, const char *w_fn, int ne);
- extern void dept_event_split_map(struct dept_map_each *me, struct dept_map_common *mc, unsigned long ip, const char *e_fn);
- extern void dept_ask_event_split_map(struct dept_map_each *me, struct dept_map_common *mc);
-+extern void dept_kernel_enter(void);
- 
- /*
-  * for users who want to manage external keys
-@@ -520,6 +526,7 @@ struct dept_task {
- #define dept_wait_split_map(me, mc, ip, w_fn, ne)	do { } while (0)
- #define dept_event_split_map(me, mc, ip, e_fn)		do { } while (0)
- #define dept_ask_event_split_map(me, mc)		do { } while (0)
-+#define dept_kernel_enter()				do { } while (0)
- #define dept_key_init(k)				do { (void)(k); } while (0)
- #define dept_key_destroy(k)				do { (void)(k); } while (0)
- #endif
+ obj-$(CONFIG_DEPT) += dept.o
++obj-$(CONFIG_DEPT) += dept_proc.o
 diff --git a/kernel/dependency/dept.c b/kernel/dependency/dept.c
-index 84409759..c369a8e 100644
+index 69d91ca..0fc200c 100644
 --- a/kernel/dependency/dept.c
 +++ b/kernel/dependency/dept.c
-@@ -212,9 +212,9 @@ static inline struct dept_class *dep_tc(struct dept_dep *d)
+@@ -73,6 +73,7 @@
+ #include <linux/hash.h>
+ #include <linux/dept.h>
+ #include <linux/utsname.h>
++#include "dept_internal.h"
  
- static inline const char *irq_str(int irq)
- {
--	if (irq == DEPT_SIRQ)
-+	if (irq == DEPT_CXT_SIRQ)
- 		return "softirq";
--	if (irq == DEPT_HIRQ)
-+	if (irq == DEPT_CXT_HIRQ)
- 		return "hardirq";
- 	return "(unknown)";
- }
-@@ -374,7 +374,7 @@ static void initialize_class(struct dept_class *c)
- {
- 	int i;
- 
--	for (i = 0; i < DEPT_IRQS_NR; i++) {
-+	for (i = 0; i < DEPT_CXT_IRQS_NR; i++) {
- 		struct dept_iecxt *ie = &c->iecxt[i];
- 		struct dept_iwait *iw = &c->iwait[i];
- 
-@@ -399,7 +399,7 @@ static void initialize_ecxt(struct dept_ecxt *e)
- {
- 	int i;
- 
--	for (i = 0; i < DEPT_IRQS_NR; i++) {
-+	for (i = 0; i < DEPT_CXT_IRQS_NR; i++) {
- 		e->enirq_stack[i] = NULL;
- 		e->enirq_ip[i] = 0UL;
- 	}
-@@ -414,7 +414,7 @@ static void initialize_wait(struct dept_wait *w)
- {
- 	int i;
- 
--	for (i = 0; i < DEPT_IRQS_NR; i++) {
-+	for (i = 0; i < DEPT_CXT_IRQS_NR; i++) {
- 		w->irq_stack[i] = NULL;
- 		w->irq_ip[i] = 0UL;
- 	}
-@@ -453,7 +453,7 @@ static void destroy_ecxt(struct dept_ecxt *e)
- {
- 	int i;
- 
--	for (i = 0; i < DEPT_IRQS_NR; i++)
-+	for (i = 0; i < DEPT_CXT_IRQS_NR; i++)
- 		if (e->enirq_stack[i])
- 			put_stack(e->enirq_stack[i]);
- 	if (e->class)
-@@ -469,7 +469,7 @@ static void destroy_wait(struct dept_wait *w)
- {
- 	int i;
- 
--	for (i = 0; i < DEPT_IRQS_NR; i++)
-+	for (i = 0; i < DEPT_CXT_IRQS_NR; i++)
- 		if (w->irq_stack[i])
- 			put_stack(w->irq_stack[i]);
- 	if (w->class)
-@@ -614,7 +614,7 @@ static void print_diagram(struct dept_dep *d)
- 	const char *c_fn = e->ecxt_fn ?: "(unknown)";
- 
- 	irqf = e->enirqf & w->irqf;
--	for_each_set_bit(irq, &irqf, DEPT_IRQS_NR) {
-+	for_each_set_bit(irq, &irqf, DEPT_CXT_IRQS_NR) {
- 		if (!firstline)
- 			pr_warn("\nor\n\n");
- 		firstline = false;
-@@ -645,7 +645,7 @@ static void print_dep(struct dept_dep *d)
- 	const char *c_fn = e->ecxt_fn ?: "(unknown)";
- 
- 	irqf = e->enirqf & w->irqf;
--	for_each_set_bit(irq, &irqf, DEPT_IRQS_NR) {
-+	for_each_set_bit(irq, &irqf, DEPT_CXT_IRQS_NR) {
- 		pr_warn("%s has been enabled:\n", irq_str(irq));
- 		print_ip_stack(e->enirq_ip[irq], e->enirq_stack[irq]);
- 		pr_warn("\n");
-@@ -871,7 +871,7 @@ static void bfs(struct dept_class *c, bfs_f *cb, void *in, void **out)
+ static int dept_stop;
+ static int dept_per_cpu_ready;
+@@ -233,20 +234,13 @@ static inline struct dept_task *dept_task(void)
+  *       have been freed will be placed.
   */
  
- static inline unsigned long cur_enirqf(void);
--static inline int cur_irq(void);
-+static inline int cur_cxt(void);
- static inline unsigned int cur_ctxt_id(void);
- 
- static inline struct dept_iecxt *iecxt(struct dept_class *c, int irq)
-@@ -1397,7 +1397,7 @@ static void add_dep(struct dept_ecxt *e, struct dept_wait *w)
- 	if (d) {
- 		check_dl_bfs(d);
- 
--		for (i = 0; i < DEPT_IRQS_NR; i++) {
-+		for (i = 0; i < DEPT_CXT_IRQS_NR; i++) {
- 			struct dept_iwait *fiw = iwait(fc, i);
- 			struct dept_iecxt *found_ie;
- 			struct dept_iwait *found_iw;
-@@ -1433,7 +1433,7 @@ static void add_wait(struct dept_class *c, unsigned long ip,
- 	struct dept_task *dt = dept_task();
- 	struct dept_wait *w;
- 	unsigned int wg = 0U;
--	int irq;
-+	int cxt;
- 	int i;
- 
- 	w = new_wait();
-@@ -1445,9 +1445,9 @@ static void add_wait(struct dept_class *c, unsigned long ip,
- 	w->wait_fn = w_fn;
- 	w->wait_stack = get_current_stack();
- 
--	irq = cur_irq();
--	if (irq < DEPT_IRQS_NR)
--		add_iwait(c, irq, w);
-+	cxt = cur_cxt();
-+	if (cxt == DEPT_CXT_HIRQ || cxt == DEPT_CXT_SIRQ)
-+		add_iwait(c, cxt, w);
- 
- 	/*
- 	 * Avoid adding dependency between user aware nested ecxt and
-@@ -1512,7 +1512,7 @@ static void add_ecxt(void *obj, struct dept_class *c, unsigned long ip,
- 	eh->nest = ne;
- 
- 	irqf = cur_enirqf();
--	for_each_set_bit(irq, &irqf, DEPT_IRQS_NR)
-+	for_each_set_bit(irq, &irqf, DEPT_CXT_IRQS_NR)
- 		add_iecxt(c, irq, e, false);
- 
- 	del_ecxt(e);
-@@ -1639,7 +1639,7 @@ static void do_event(void *obj, struct dept_class *c, unsigned int wg,
- 			break;
- 	}
- 
--	for (i = 0; i < DEPT_IRQS_NR; i++) {
-+	for (i = 0; i < DEPT_CXT_IRQS_NR; i++) {
- 		struct dept_ecxt *e;
- 
- 		if (before(dt->wgen_enirq[i], wg))
-@@ -1681,7 +1681,7 @@ static void disconnect_class(struct dept_class *c)
- 		call_rcu(&d->rh, del_dep_rcu);
- 	}
- 
--	for (i = 0; i < DEPT_IRQS_NR; i++) {
-+	for (i = 0; i < DEPT_CXT_IRQS_NR; i++) {
- 		stale_iecxt(iecxt(c, i));
- 		stale_iwait(iwait(c, i));
- 	}
-@@ -1706,27 +1706,21 @@ static inline unsigned long cur_enirqf(void)
- 	return 0UL;
- }
- 
--static inline int cur_irq(void)
-+static inline int cur_cxt(void)
- {
- 	if (lockdep_softirq_context(current))
--		return DEPT_SIRQ;
-+		return DEPT_CXT_SIRQ;
- 	if (lockdep_hardirq_context())
--		return DEPT_HIRQ;
--	return DEPT_IRQS_NR;
-+		return DEPT_CXT_HIRQ;
-+	return DEPT_CXT_PROCESS;
- }
- 
- static inline unsigned int cur_ctxt_id(void)
- {
- 	struct dept_task *dt = dept_task();
--	int irq = cur_irq();
-+	int cxt = cur_cxt();
- 
--	/*
--	 * Normal process context
--	 */
--	if (irq == DEPT_IRQS_NR)
--		return 0U;
+-enum object_t {
+-#define OBJECT(id, nr) OBJECT_##id,
+-	#include "dept_object.h"
+-#undef  OBJECT
+-	OBJECT_NR,
+-};
 -
--	return dt->irq_id[irq] | (1UL << irq);
-+	return dt->cxt_id[cxt] | (1UL << cxt);
- }
+ #define OBJECT(id, nr)							\
+ static struct dept_##id spool_##id[nr];					\
+ static DEFINE_PER_CPU(struct llist_head, lpool_##id);
+ 	#include "dept_object.h"
+ #undef  OBJECT
  
- static void enirq_transition(int irq)
-@@ -1776,7 +1770,7 @@ static void enirq_update(unsigned long ip)
+-static struct dept_pool pool[OBJECT_NR] = {
++struct dept_pool dept_pool[OBJECT_NR] = {
+ #define OBJECT(id, nr) {						\
+ 	.name = #id,							\
+ 	.obj_sz = sizeof(struct dept_##id),				\
+@@ -276,7 +270,7 @@ static void *from_pool(enum object_t t)
+ 	if (DEPT_WARN_ON(!irqs_disabled()))
+ 		return NULL;
+ 
+-	p = &pool[t];
++	p = &dept_pool[t];
+ 
  	/*
- 	 * Do enirq_transition() only on an OFF -> ON transition.
- 	 */
--	for_each_set_bit(irq, &irqf, DEPT_IRQS_NR) {
-+	for_each_set_bit(irq, &irqf, DEPT_CXT_IRQS_NR) {
- 		if (prev & (1UL << irq))
- 			continue;
+ 	 * Try local pool first.
+@@ -306,7 +300,7 @@ static void *from_pool(enum object_t t)
  
-@@ -1879,6 +1873,13 @@ void dept_disable_hardirq(unsigned long ip)
- 	dept_exit(flags);
+ static void to_pool(void *o, enum object_t t)
+ {
+-	struct dept_pool *p = &pool[t];
++	struct dept_pool *p = &dept_pool[t];
+ 	struct llist_head *h;
+ 
+ 	preempt_disable();
+@@ -1984,7 +1978,7 @@ void dept_map_nocheck(struct dept_map *m)
  }
+ EXPORT_SYMBOL_GPL(dept_map_nocheck);
  
-+void dept_kernel_enter(void)
-+{
-+	struct dept_task *dt = dept_task();
+-static LIST_HEAD(classes);
++LIST_HEAD(dept_classes);
+ 
+ static inline bool within(const void *addr, void *start, unsigned long size)
+ {
+@@ -2011,7 +2005,7 @@ void dept_free_range(void *start, unsigned int sz)
+ 	while (unlikely(!dept_lock()))
+ 		cpu_relax();
+ 
+-	list_for_each_entry_safe(c, n, &classes, all_node) {
++	list_for_each_entry_safe(c, n, &dept_classes, all_node) {
+ 		if (!within((void *)c->key, start, sz) &&
+ 		    !within(c->name, start, sz))
+ 			continue;
+@@ -2080,7 +2074,7 @@ static struct dept_class *check_new_class(struct dept_key *local,
+ 	c->sub = sub;
+ 	c->key = (unsigned long)(k->subkeys + sub);
+ 	hash_add_class(c);
+-	list_add(&c->all_node, &classes);
++	list_add(&c->all_node, &dept_classes);
+ unlock:
+ 	dept_unlock();
+ caching:
+@@ -2535,8 +2529,8 @@ static void migrate_per_cpu_pool(void)
+ 		struct llist_head *from;
+ 		struct llist_head *to;
+ 
+-		from = &pool[i].boot_pool;
+-		to = per_cpu_ptr(pool[i].lpool, boot_cpu);
++		from = &dept_pool[i].boot_pool;
++		to = per_cpu_ptr(dept_pool[i].lpool, boot_cpu);
+ 		move_llist(to, from);
+ 	}
+ }
+diff --git a/kernel/dependency/dept_internal.h b/kernel/dependency/dept_internal.h
+new file mode 100644
+index 0000000..007c1ee
+--- /dev/null
++++ b/kernel/dependency/dept_internal.h
+@@ -0,0 +1,26 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Dept(DEPendency Tracker) - runtime dependency tracker internal header
++ *
++ * Started by Byungchul Park <max.byungchul.park@gmail.com>:
++ *
++ *  Copyright (c) 2020 LG Electronics, Inc., Byungchul Park
++ */
 +
-+	dt->cxt_id[DEPT_CXT_PROCESS] += (1UL << DEPT_CXTS_NR);
++#ifndef __DEPT_INTERNAL_H
++#define __DEPT_INTERNAL_H
++
++#ifdef CONFIG_DEPT
++
++enum object_t {
++#define OBJECT(id, nr) OBJECT_##id,
++	#include "dept_object.h"
++#undef  OBJECT
++	OBJECT_NR,
++};
++
++extern struct list_head dept_classes;
++extern struct dept_pool dept_pool[];
++
++#endif
++#endif /* __DEPT_INTERNAL_H */
+diff --git a/kernel/dependency/dept_proc.c b/kernel/dependency/dept_proc.c
+new file mode 100644
+index 0000000..c069354
+--- /dev/null
++++ b/kernel/dependency/dept_proc.c
+@@ -0,0 +1,92 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Procfs knobs for Dept(DEPendency Tracker)
++ *
++ * Started by Byungchul Park <max.byungchul.park@gmail.com>:
++ *
++ *  Copyright (C) 2021 LG Electronics, Inc. , Byungchul Park
++ */
++#include <linux/proc_fs.h>
++#include <linux/seq_file.h>
++#include <linux/dept.h>
++#include "dept_internal.h"
++
++static void *l_next(struct seq_file *m, void *v, loff_t *pos)
++{
++	/*
++	 * XXX: Serialize list traversal if needed. The following might
++	 * give a wrong information on contention.
++	 */
++	return seq_list_next(v, &dept_classes, pos);
 +}
 +
- /*
-  * Ensure it's the outmost softirq context.
-  */
-@@ -1886,7 +1887,7 @@ void dept_softirq_enter(void)
- {
- 	struct dept_task *dt = dept_task();
- 
--	dt->irq_id[DEPT_SIRQ] += (1UL << DEPT_IRQS_NR);
-+	dt->cxt_id[DEPT_CXT_SIRQ] += (1UL << DEPT_CXTS_NR);
- }
- 
- /*
-@@ -1896,7 +1897,7 @@ void dept_hardirq_enter(void)
- {
- 	struct dept_task *dt = dept_task();
- 
--	dt->irq_id[DEPT_HIRQ] += (1UL << DEPT_IRQS_NR);
-+	dt->cxt_id[DEPT_CXT_HIRQ] += (1UL << DEPT_CXTS_NR);
- }
- 
- /*
-diff --git a/kernel/entry/common.c b/kernel/entry/common.c
-index bad7136..1826508 100644
---- a/kernel/entry/common.c
-+++ b/kernel/entry/common.c
-@@ -6,6 +6,7 @@
- #include <linux/livepatch.h>
- #include <linux/audit.h>
- #include <linux/tick.h>
-+#include <linux/dept.h>
- 
- #include "common.h"
- 
-@@ -102,6 +103,7 @@ noinstr long syscall_enter_from_user_mode(struct pt_regs *regs, long syscall)
- 	long ret;
- 
- 	__enter_from_user_mode(regs);
-+	dept_kernel_enter();
- 
- 	instrumentation_begin();
- 	local_irq_enable();
-@@ -114,6 +116,7 @@ noinstr long syscall_enter_from_user_mode(struct pt_regs *regs, long syscall)
- noinstr void syscall_enter_from_user_mode_prepare(struct pt_regs *regs)
- {
- 	__enter_from_user_mode(regs);
-+	dept_kernel_enter();
- 	instrumentation_begin();
- 	local_irq_enable();
- 	instrumentation_end();
++static void *l_start(struct seq_file *m, loff_t *pos)
++{
++	/*
++	 * XXX: Serialize list traversal if needed. The following might
++	 * give a wrong information on contention.
++	 */
++	return seq_list_start_head(&dept_classes, *pos);
++}
++
++static void l_stop(struct seq_file *m, void *v)
++{
++}
++
++static int l_show(struct seq_file *m, void *v)
++{
++	struct dept_class *fc = list_entry(v, struct dept_class, all_node);
++	struct dept_dep *d;
++
++	if (v == &dept_classes) {
++		seq_puts(m, "All classes:\n\n");
++		return 0;
++	}
++
++	seq_printf(m, "[%p] %s\n", (void *)fc->key, fc->name);
++
++	/*
++	 * XXX: Serialize list traversal if needed. The following might
++	 * give a wrong information on contention.
++	 */
++	list_for_each_entry(d, &fc->dep_head, dep_node) {
++		struct dept_class *tc = d->wait->class;
++
++		seq_printf(m, " -> [%p] %s\n", (void *)tc->key, tc->name);
++	}
++	seq_puts(m, "\n");
++
++	return 0;
++}
++
++static const struct seq_operations dept_deps_ops = {
++	.start	= l_start,
++	.next	= l_next,
++	.stop	= l_stop,
++	.show	= l_show,
++};
++
++static int dept_stats_show(struct seq_file *m, void *v)
++{
++	int r;
++
++	seq_puts(m, "Availability in the static pools:\n\n");
++#define OBJECT(id, nr)							\
++	r = atomic_read(&dept_pool[OBJECT_##id].obj_nr);		\
++	if (r < 0)							\
++		r = 0;							\
++	seq_printf(m, "%s\t%d/%d(%d%%)\n", #id, r, nr, (r * 100) / (nr));
++	#include "dept_object.h"
++#undef  OBJECT
++
++	return 0;
++}
++
++static int __init dept_proc_init(void)
++{
++	proc_create_seq("dept_deps", S_IRUSR, NULL, &dept_deps_ops);
++	proc_create_single("dept_stats", S_IRUSR, NULL, dept_stats_show);
++	return 0;
++}
++
++__initcall(dept_proc_init);
 -- 
 1.9.1
 
