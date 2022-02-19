@@ -2,24 +2,24 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAEA1C35294
-	for <linux-ide@archiver.kernel.org>; Sat, 19 Feb 2022 10:59:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4CFDC35280
+	for <linux-ide@archiver.kernel.org>; Sat, 19 Feb 2022 10:59:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242243AbiBSK71 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 19 Feb 2022 05:59:27 -0500
+        id S240809AbiBSK7a (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 19 Feb 2022 05:59:30 -0500
 Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:41900 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242154AbiBSK7M (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 19 Feb 2022 05:59:12 -0500
-Received: from lgeamrelo11.lge.com (lgeamrelo13.lge.com [156.147.23.53])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 44609674F3
-        for <linux-ide@vger.kernel.org>; Sat, 19 Feb 2022 02:58:46 -0800 (PST)
+        with ESMTP id S242087AbiBSK7J (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 19 Feb 2022 05:59:09 -0500
+Received: from lgeamrelo11.lge.com (lgeamrelo11.lge.com [156.147.23.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EAA916949B
+        for <linux-ide@vger.kernel.org>; Sat, 19 Feb 2022 02:58:43 -0800 (PST)
 Received: from unknown (HELO lgemrelse7q.lge.com) (156.147.1.151)
-        by 156.147.23.53 with ESMTP; 19 Feb 2022 19:58:45 +0900
+        by 156.147.23.51 with ESMTP; 19 Feb 2022 19:58:42 +0900
 X-Original-SENDERIP: 156.147.1.151
 X-Original-MAILFROM: byungchul.park@lge.com
 Received: from unknown (HELO localhost.localdomain) (10.177.244.38)
-        by 156.147.1.151 with ESMTP; 19 Feb 2022 19:58:45 +0900
+        by 156.147.1.151 with ESMTP; 19 Feb 2022 19:58:42 +0900
 X-Original-SENDERIP: 10.177.244.38
 X-Original-MAILFROM: byungchul.park@lge.com
 From:   Byungchul Park <byungchul.park@lge.com>
@@ -46,9 +46,9 @@ Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
         dri-devel@lists.freedesktop.org, airlied@linux.ie,
         rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
         hamohammed.sa@gmail.com
-Subject: [PATCH v2 18/18] dept: Distinguish each work from another
-Date:   Sat, 19 Feb 2022 19:58:31 +0900
-Message-Id: <1645268311-24222-19-git-send-email-byungchul.park@lge.com>
+Subject: [PATCH v2 08/18] dept: Apply Dept to wait_for_completion()/complete()
+Date:   Sat, 19 Feb 2022 19:58:21 +0900
+Message-Id: <1645268311-24222-9-git-send-email-byungchul.park@lge.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1645268311-24222-1-git-send-email-byungchul.park@lge.com>
 References: <1645268311-24222-1-git-send-email-byungchul.park@lge.com>
@@ -56,81 +56,137 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Workqueue already provides concurrency control. By that, any wait in a
-work doesn't prevents events in other works with the control enabled.
-Thus, each work would better be considered a different context.
-
-So let Dept assign a different context id to each work.
+Makes Dept able to track dependencies by
+wait_for_completion()/complete().
 
 Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 ---
- include/linux/dept.h     |  2 ++
- kernel/dependency/dept.c | 10 ++++++++++
- kernel/workqueue.c       |  3 +++
- 3 files changed, 15 insertions(+)
+ include/linux/completion.h | 42 ++++++++++++++++++++++++++++++++++++++++--
+ kernel/sched/completion.c  | 12 ++++++++++--
+ 2 files changed, 50 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/dept.h b/include/linux/dept.h
-index 1a1c307..55c5ed5 100644
---- a/include/linux/dept.h
-+++ b/include/linux/dept.h
-@@ -486,6 +486,7 @@ struct dept_task {
- extern void dept_event_split_map(struct dept_map_each *me, struct dept_map_common *mc, unsigned long ip, const char *e_fn);
- extern void dept_ask_event_split_map(struct dept_map_each *me, struct dept_map_common *mc);
- extern void dept_kernel_enter(void);
-+extern void dept_work_enter(void);
+diff --git a/include/linux/completion.h b/include/linux/completion.h
+index 51d9ab0..a1ad5a8 100644
+--- a/include/linux/completion.h
++++ b/include/linux/completion.h
+@@ -26,14 +26,48 @@
+ struct completion {
+ 	unsigned int done;
+ 	struct swait_queue_head wait;
++	struct dept_map dmap;
+ };
  
- /*
-  * for users who want to manage external keys
-@@ -527,6 +528,7 @@ struct dept_task {
- #define dept_event_split_map(me, mc, ip, e_fn)		do { } while (0)
- #define dept_ask_event_split_map(me, mc)		do { } while (0)
- #define dept_kernel_enter()				do { } while (0)
-+#define dept_work_enter()				do { } while (0)
- #define dept_key_init(k)				do { (void)(k); } while (0)
- #define dept_key_destroy(k)				do { (void)(k); } while (0)
- #endif
-diff --git a/kernel/dependency/dept.c b/kernel/dependency/dept.c
-index c369a8e..ee3faa2 100644
---- a/kernel/dependency/dept.c
-+++ b/kernel/dependency/dept.c
-@@ -1873,6 +1873,16 @@ void dept_disable_hardirq(unsigned long ip)
- 	dept_exit(flags);
++#ifdef CONFIG_DEPT
++#define dept_wfc_init(m, k, s, n)		dept_map_init(m, k, s, n)
++#define dept_wfc_reinit(m)			dept_map_reinit(m)
++#define dept_wfc_wait(m, ip)						\
++do {									\
++	dept_ask_event(m);						\
++	dept_wait(m, 1UL, ip, __func__, 0);				\
++} while (0)
++#define dept_wfc_complete(m, ip)		dept_event(m, 1UL, ip, __func__)
++#define dept_wfc_enter(m, ip)			dept_ecxt_enter(m, 1UL, ip, "completion_context_enter", "complete", 0)
++#define dept_wfc_exit(m, ip)			dept_ecxt_exit(m, ip)
++#else
++#define dept_wfc_init(m, k, s, n)		do { (void)(n); (void)(k); } while (0)
++#define dept_wfc_reinit(m)			do { } while (0)
++#define dept_wfc_wait(m, ip)			do { } while (0)
++#define dept_wfc_complete(m, ip)		do { } while (0)
++#define dept_wfc_enter(m, ip)			do { } while (0)
++#define dept_wfc_exit(m, ip)			do { } while (0)
++#endif
++
++#ifdef CONFIG_DEPT
++#define WFC_DEPT_MAP_INIT(work) .dmap = { .name = #work, .skip_cnt = ATOMIC_INIT(0) }
++#else
++#define WFC_DEPT_MAP_INIT(work)
++#endif
++
++#define init_completion(x)					\
++	do {							\
++		static struct dept_key __dkey;			\
++		__init_completion(x, &__dkey, #x);		\
++	} while (0)
++
+ #define init_completion_map(x, m) init_completion(x)
+ static inline void complete_acquire(struct completion *x) {}
+ static inline void complete_release(struct completion *x) {}
+ 
+ #define COMPLETION_INITIALIZER(work) \
+-	{ 0, __SWAIT_QUEUE_HEAD_INITIALIZER((work).wait) }
++	{ 0, __SWAIT_QUEUE_HEAD_INITIALIZER((work).wait), \
++	WFC_DEPT_MAP_INIT(work) }
+ 
+ #define COMPLETION_INITIALIZER_ONSTACK_MAP(work, map) \
+ 	(*({ init_completion_map(&(work), &(map)); &(work); }))
+@@ -81,9 +115,12 @@ static inline void complete_release(struct completion *x) {}
+  * This inline function will initialize a dynamically created completion
+  * structure.
+  */
+-static inline void init_completion(struct completion *x)
++static inline void __init_completion(struct completion *x,
++				     struct dept_key *dkey,
++				     const char *name)
+ {
+ 	x->done = 0;
++	dept_wfc_init(&x->dmap, dkey, 0, name);
+ 	init_swait_queue_head(&x->wait);
  }
  
-+/*
-+ * Assign a different context id to each work.
-+ */
-+void dept_work_enter(void)
-+{
-+	struct dept_task *dt = dept_task();
-+
-+	dt->cxt_id[DEPT_CXT_PROCESS] += (1UL << DEPT_CXTS_NR);
-+}
-+
- void dept_kernel_enter(void)
+@@ -97,6 +134,7 @@ static inline void init_completion(struct completion *x)
+ static inline void reinit_completion(struct completion *x)
  {
- 	struct dept_task *dt = dept_task();
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index 33f1106..f5d762c 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -51,6 +51,7 @@
- #include <linux/sched/isolation.h>
- #include <linux/nmi.h>
- #include <linux/kvm_para.h>
-+#include <linux/dept.h>
+ 	x->done = 0;
++	dept_wfc_reinit(&x->dmap);
+ }
  
- #include "workqueue_internal.h"
+ extern void wait_for_completion(struct completion *);
+diff --git a/kernel/sched/completion.c b/kernel/sched/completion.c
+index a778554..6e31cc0 100644
+--- a/kernel/sched/completion.c
++++ b/kernel/sched/completion.c
+@@ -29,6 +29,7 @@ void complete(struct completion *x)
+ {
+ 	unsigned long flags;
  
-@@ -2217,6 +2218,8 @@ static void process_one_work(struct worker *worker, struct work_struct *work)
++	dept_wfc_complete(&x->dmap, _RET_IP_);
+ 	raw_spin_lock_irqsave(&x->wait.lock, flags);
  
- 	lockdep_copy_map(&lockdep_map, &work->lockdep_map);
- #endif
-+	dept_work_enter();
+ 	if (x->done != UINT_MAX)
+@@ -58,6 +59,7 @@ void complete_all(struct completion *x)
+ {
+ 	unsigned long flags;
+ 
++	dept_wfc_complete(&x->dmap, _RET_IP_);
+ 	lockdep_assert_RT_in_threaded_ctx();
+ 
+ 	raw_spin_lock_irqsave(&x->wait.lock, flags);
+@@ -112,17 +114,23 @@ void complete_all(struct completion *x)
+ }
+ 
+ static long __sched
+-wait_for_common(struct completion *x, long timeout, int state)
++_wait_for_common(struct completion *x, long timeout, int state)
+ {
+ 	return __wait_for_common(x, schedule_timeout, timeout, state);
+ }
+ 
+ static long __sched
+-wait_for_common_io(struct completion *x, long timeout, int state)
++_wait_for_common_io(struct completion *x, long timeout, int state)
+ {
+ 	return __wait_for_common(x, io_schedule_timeout, timeout, state);
+ }
+ 
++#define wait_for_common(x, t, s)					\
++({ dept_wfc_wait(&(x)->dmap, _RET_IP_); _wait_for_common(x, t, s); })
 +
- 	/* ensure we're on the correct CPU */
- 	WARN_ON_ONCE(!(pool->flags & POOL_DISASSOCIATED) &&
- 		     raw_smp_processor_id() != pool->cpu);
++#define wait_for_common_io(x, t, s)					\
++({ dept_wfc_wait(&(x)->dmap, _RET_IP_); _wait_for_common_io(x, t, s); })
++
+ /**
+  * wait_for_completion: - waits for completion of a task
+  * @x:  holds the state of this particular completion
 -- 
 1.9.1
 
