@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDDC6C433EF
-	for <linux-ide@archiver.kernel.org>; Sat, 19 Feb 2022 02:22:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BBF4C433F5
+	for <linux-ide@archiver.kernel.org>; Sat, 19 Feb 2022 02:39:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241085AbiBSCWZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 18 Feb 2022 21:22:25 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:36368 "EHLO
+        id S233813AbiBSCjX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 18 Feb 2022 21:39:23 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:47288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240107AbiBSCWY (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2022 21:22:24 -0500
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E69E91D1790
-        for <linux-ide@vger.kernel.org>; Fri, 18 Feb 2022 18:22:05 -0800 (PST)
+        with ESMTP id S235377AbiBSCjW (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 18 Feb 2022 21:39:22 -0500
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23A196006E
+        for <linux-ide@vger.kernel.org>; Fri, 18 Feb 2022 18:39:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1645237327; x=1676773327;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=GtkkEGiBXNnn7UHzcNwGZPnkLNxr1dF0AlF/z74R0Yo=;
-  b=YLHouuAAq8L+7LtwWkvwNgRpcgAG77pHcUItXCxLBrVjPCGJ+0hK3Xo/
-   iG3voU+y6MzUlfRvEOtfNmKuhM/DFWAO1or4jP304pNVLN6i+jN2y2uaY
-   TDJJr/7ewy9lcUQALEL/VcOrKG5dkYK2yBaqQDzm+6LaIVCicW1iIt2zQ
-   7hBn499d0wS2hrsevkEHE2FLOMWY6i83fLtudNdK03E7D2yyFqwc+uPBL
-   aPYdH0b913NN/NTJa/WcIOMnpORt1+gFtErXxwIAmJliLgrdIjAm9EKkw
-   cfxgVYQ+W+Rm85IT+3gjW8xrN9wko5Os+/b33/EztIAz0pONfUGZcvEm4
-   A==;
+  t=1645238344; x=1676774344;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=UCZs2rs5uTWzcT1ogmZZ6YDignvRFPIuFaawZXjXQLQ=;
+  b=MGaagGkm9LsqLJikekhRGOaNmr1LWjO5g7pNk2r6pJayTgi1K4ECzrVE
+   OqgB9FypLn8ILc9vrrksc+jIHVA77mudWyTPYDPnmwVHoQFDkQzATL8b5
+   7kbLSvSSrdzUWdxtl1LOgqs7i75djZCB64DKTzDy0d+tTZ28tobVPu52S
+   jQhfsDT8T3UG6M+Rr0WG3IA+zt2ELBVEFR6una/3dUPpTgtUAAcr00MgN
+   6rz9/7M1SKuRYxApPBQB9ZIq/KT7dEHfh6TLfz/WJoZvyF8TAj+E55zFT
+   cAmmvEFXnlDc64boHDmkLOx84NsD4aLaIqDyzOFvocvyYU77ijplXcp51
+   w==;
 X-IronPort-AV: E=Sophos;i="5.88,380,1635177600"; 
-   d="scan'208";a="194307603"
+   d="scan'208";a="193330881"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 19 Feb 2022 10:22:06 +0800
-IronPort-SDR: 4y0AghteBvlTp1L30YWNwOMaFK33MkBbwvxTztZRofRW0AgH3yn0Vqvd/ktJFdwQm4mIY9TdIF
- X/ikrm7ukeY1ajTHLCfHZNX25Ik2WJ+U5h7FcGBqa2cXfA5fJMSclHljG77rb4X/C5cnJ5x/7i
- vPCcrCbtcfLqrMIDuMJVmkWc6kiEWCL+szSSuM0GyRxGFi2/vlD+XuD7FB+7oyEhhU6MhYFetX
- G99MLNMfeTcKE8pafsbaB21be6qWOsp6ppngAsxzLHYPK1x/fvnlPxFSYl4WYy/v2bCMqLdEc7
- 9FkMenEoUxux6Mh6jiF9mFg/
+  by ob1.hgst.iphmx.com with ESMTP; 19 Feb 2022 10:39:04 +0800
+IronPort-SDR: F8YZcfudroSUMYAWhCIJyqPNlRpNUVUftwa1TYPIebFNgkCzUVVahoHP8/SpaWBDG8YxLDOE+6
+ V5/JfpX+uvwG72iBiHw2HI1d6yuNZjgejZV1q7sBJBGP8tTZ6VmJGe9BKNyTb0OFMKBJuITcsS
+ yRCYcOR4baSrD3xpIuxDq+CiV7q6AfXaDIgPTBX+mAAJRg5VoSqoesnRgYzSRUEnC5ZNh9Xg1e
+ ln1glrtDUTTOalHTvTjYNsGIGKv3oWbnib8jDQsB0NBQW+uz09fsAixrDsAxSAGLk6C4iZAGAY
+ sWheZ/JjofwXXWG1A38X7pic
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2022 17:53:41 -0800
-IronPort-SDR: xvt+Ds1Yuwm3FUlKQCgh7QxcnDZdY/8J9ZNzwBiFlcB+VRENUw3gSzsVT4i6NpTm6HHKNmtAr+
- N7d9OnoU8k0L2tQ+l8WYFWM/xBQdcF6y+SbgtHIxOD34Tf6jJAqed8M3PnZgqm1sWPYSWzVbn1
- anCIrnTUm9KTmVFHde3FO83RVaeVmyVbesBuTI+xOVZCbtDB5+lCbO62trPd7jx9Aie+th60YW
- ELW8pQ5oE7ALWieNdZOfEc0VN6GPWSjF1itf1j1AK6HuH4Hw0/1h8ZAIti/A1aqA+vXWtBbL9E
- I4k=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2022 18:10:42 -0800
+IronPort-SDR: vK26p8cT5P+R1bO2duiORk29pK1+yoFGC4PzQZ7tIm9JPzKFYKa7bcCS/wafZc05PgUYyBUzXZ
+ 1wskGCI8EW6qb2KhAuHjR2ECUsDYI92IeEugY6n5WO1z8xRoMOZs2C4M6OIhHPRF6gk79EtYDW
+ Ej0a786YyOYYcyggf12JqzXl6DZT80nWKzbh76Cyh/twnQGWHJGFFA/i9c+bbu9mH9M3R1yP7P
+ hhnFdAao+AMaWdJrKBNnWanRqJMfKLv3wighQOrtQBIM2ZWmLQRVqxba3ObB9EidUg+EFg6GZ/
+ tMQ=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2022 18:22:05 -0800
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Feb 2022 18:39:05 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K0slJ5vFlz1Rwrw
-        for <linux-ide@vger.kernel.org>; Fri, 18 Feb 2022 18:22:04 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K0t6w4HJfz1Rwrw
+        for <linux-ide@vger.kernel.org>; Fri, 18 Feb 2022 18:39:04 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,48 +56,60 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1645237324; x=1647829325; bh=GtkkEGiBXNnn7UHzcNwGZPnkLNxr1dF0AlF
-        /z74R0Yo=; b=PuQV373e4Z12CZFxJtb0DvAwn2EujNKZUCE8Eofr+79Vt60dFBs
-        bxWs5HK8ge+Dv0aJGwfbcFrzH0LsyOTBTUA8s5ITi4hWkgbJH32xbyZLcydbQdRW
-        2Tq9aGmcVRAHDUvDi4DH2xA4MYUZUxnmrhfv8ASzRvvPcOCsCAcY/t0ScAmBX9kc
-        7WQTUMC2mZAAmxrwJgi1JPwvAW18iDbkNi4N1RyeiAhmTsMLsLx/CGb8ctLFQUaG
-        t/FivzLnlbmZogo8/SMuPzY1IDyx+v+tf89krWHkxC/KBiVZQJU9eBqFBElCdfpG
-        2dVf9drcISW6CGPfp2pXa7dozpelgVvJd0g==
+        1645238344; x=1647830345; bh=UCZs2rs5uTWzcT1ogmZZ6YDignvRFPIuFaa
+        wZXjXQLQ=; b=CTdsheZf5s5fK77xH5AXcbmU57cMPswj1IlQanpQiaY/NOrKwml
+        hq4cWjrNNH7k/NPBNXicmk42Qd5quYVeNBzSG7JPQHMe81SAJwyP3eRGyN3SZ/gA
+        baXYAkBE5Tc/XVym6lpyjJ8IiIbvDl5z434kG86i+BEtdcmXCKELbeeDivlUq1wn
+        3FDJoIXir3tAVJR6zF0/T0b1RNpzmnTtffNQswIEY39NHOQA1ZdlzmGuhyH5j1z+
+        IgSyJafYABNhiEmNSSDm5HyPBsyiuS2JwC6Eoub6aWJZFGlOCaVULEg95bwJjbCU
+        fE7Rm0PCCywTs2eLYX4Syy8AvzUWYOoABwg==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id DEIaeb_MdNnC for <linux-ide@vger.kernel.org>;
-        Fri, 18 Feb 2022 18:22:04 -0800 (PST)
+        with ESMTP id kYfoatKlwmFs for <linux-ide@vger.kernel.org>;
+        Fri, 18 Feb 2022 18:39:04 -0800 (PST)
 Received: from [10.225.163.78] (unknown [10.225.163.78])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K0slJ1NnSz1Rvlx;
-        Fri, 18 Feb 2022 18:22:04 -0800 (PST)
-Message-ID: <17712956-d47f-30a0-bafa-7351d7c453bc@opensource.wdc.com>
-Date:   Sat, 19 Feb 2022 11:22:03 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K0t6v4McWz1Rvlx;
+        Fri, 18 Feb 2022 18:39:03 -0800 (PST)
+Message-ID: <b6a7f09a-9e15-aac2-b80b-96f12f2df0a1@opensource.wdc.com>
+Date:   Sat, 19 Feb 2022 11:39:02 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.0
-Subject: Re: [PATCH v2] ata: pata_hpt37x: merge transfer mode setting methods
+Subject: Re: [PATCH] ata: libata-sff: fix reading uninitialized variable in
+ ata_sff_lost_interrupt()
 Content-Language: en-US
 To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-References: <e3a09b84-1285-fd2c-689b-26c9c013dc0b@omp.ru>
+Cc:     Dan Carpenter <dan.carpenter@oracle.com>
+References: <5e02673b-57d2-40b1-ceba-55abfb251089@omp.ru>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <e3a09b84-1285-fd2c-689b-26c9c013dc0b@omp.ru>
+In-Reply-To: <5e02673b-57d2-40b1-ceba-55abfb251089@omp.ru>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/18/22 19:06, Sergey Shtylyov wrote:
-> After commit e0afcf140e6e ("ata: pata_hpt37x: disable fast interrupts in
-> prereset() method") HPT370's and HPT372+'s PIO/DMA mode setting functions
-> have become identical -- merge them.
+On 2/18/22 20:05, Sergey Shtylyov wrote:
+> Due to my sloppy coding in commit 2c75a451ecb0 ("ata: libata-sff: refactor
+> ata_sff_altstatus()"), in ata_sff_lost_interrupt() iff the device control
+> register doesn't exists, ata_port_warn() would print the 'status' variable
+> which never gets assigned.   Restore the original order of the statements,
+> wrapping the ata_sff_altstatus() call in WARN_ON_ONCE()...
 > 
+> While at it, fix crazy indentation in the ata_port_warn() call itself...
+> 
+> Fixes: 2c75a451ecb0 ("ata: libata-sff: refactor ata_sff_altstatus()")
+> Reported-by: kernel test robot <lkp@intel.com>
+> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
 > Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-Applied to for-5.18. Thanks !
+I squashed this in the commit being fixed.
 
+Dan,
+
+Thanks for the report !
 
 -- 
 Damien Le Moal
