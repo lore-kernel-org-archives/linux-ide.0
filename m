@@ -2,24 +2,24 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D9F5C433FE
-	for <linux-ide@archiver.kernel.org>; Sat, 19 Feb 2022 10:58:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B938C43219
+	for <linux-ide@archiver.kernel.org>; Sat, 19 Feb 2022 10:58:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232484AbiBSK7H (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 19 Feb 2022 05:59:07 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:41494 "EHLO
+        id S242124AbiBSK7L (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 19 Feb 2022 05:59:11 -0500
+Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:41594 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242057AbiBSK7F (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 19 Feb 2022 05:59:05 -0500
+        with ESMTP id S242037AbiBSK7E (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 19 Feb 2022 05:59:04 -0500
 Received: from lgeamrelo11.lge.com (lgeamrelo12.lge.com [156.147.23.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 328CB692BF
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EE16E692A2
         for <linux-ide@vger.kernel.org>; Sat, 19 Feb 2022 02:58:42 -0800 (PST)
 Received: from unknown (HELO lgemrelse7q.lge.com) (156.147.1.151)
-        by 156.147.23.52 with ESMTP; 19 Feb 2022 19:58:42 +0900
+        by 156.147.23.52 with ESMTP; 19 Feb 2022 19:58:41 +0900
 X-Original-SENDERIP: 156.147.1.151
 X-Original-MAILFROM: byungchul.park@lge.com
 Received: from unknown (HELO localhost.localdomain) (10.177.244.38)
-        by 156.147.1.151 with ESMTP; 19 Feb 2022 19:58:42 +0900
+        by 156.147.1.151 with ESMTP; 19 Feb 2022 19:58:41 +0900
 X-Original-SENDERIP: 10.177.244.38
 X-Original-MAILFROM: byungchul.park@lge.com
 From:   Byungchul Park <byungchul.park@lge.com>
@@ -46,9 +46,9 @@ Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
         dri-devel@lists.freedesktop.org, airlied@linux.ie,
         rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
         hamohammed.sa@gmail.com
-Subject: [PATCH v2 06/18] dept: Apply Dept to mutex families
-Date:   Sat, 19 Feb 2022 19:58:19 +0900
-Message-Id: <1645268311-24222-7-git-send-email-byungchul.park@lge.com>
+Subject: [PATCH v2 05/18] dept: Apply Dept to spinlock
+Date:   Sat, 19 Feb 2022 19:58:18 +0900
+Message-Id: <1645268311-24222-6-git-send-email-byungchul.park@lge.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1645268311-24222-1-git-send-email-byungchul.park@lge.com>
 References: <1645268311-24222-1-git-send-email-byungchul.park@lge.com>
@@ -56,73 +56,54 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Makes Dept able to track dependencies by mutex families.
+Makes Dept able to track dependencies by spinlock.
 
 Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 ---
- include/linux/lockdep.h | 18 +++++++++++++++---
- include/linux/mutex.h   | 33 +++++++++++++++++++++++++++++++++
- include/linux/rtmutex.h |  7 +++++++
- 3 files changed, 55 insertions(+), 3 deletions(-)
+ include/linux/lockdep.h            | 18 +++++++++++++++---
+ include/linux/spinlock.h           | 26 ++++++++++++++++++++++++++
+ include/linux/spinlock_types_raw.h | 13 +++++++++++++
+ 3 files changed, 54 insertions(+), 3 deletions(-)
 
 diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
-index 529ea18..6653a4f 100644
+index c1a56fe..529ea18 100644
 --- a/include/linux/lockdep.h
 +++ b/include/linux/lockdep.h
-@@ -615,9 +615,21 @@ static inline void print_irqtrace_events(struct task_struct *curr)
- #define seqcount_acquire_read(l, s, t, i)	lock_acquire_shared_recursive(l, s, t, NULL, i)
- #define seqcount_release(l, i)			lock_release(l, i)
+@@ -584,9 +584,21 @@ static inline void print_irqtrace_events(struct task_struct *curr)
+ #define lock_acquire_shared(l, s, t, n, i)		lock_acquire(l, s, t, 1, 1, n, i)
+ #define lock_acquire_shared_recursive(l, s, t, n, i)	lock_acquire(l, s, t, 2, 1, n, i)
  
--#define mutex_acquire(l, s, t, i)		lock_acquire_exclusive(l, s, t, NULL, i)
--#define mutex_acquire_nest(l, s, t, n, i)	lock_acquire_exclusive(l, s, t, n, i)
--#define mutex_release(l, i)			lock_release(l, i)
-+#define mutex_acquire(l, s, t, i)					\
+-#define spin_acquire(l, s, t, i)		lock_acquire_exclusive(l, s, t, NULL, i)
+-#define spin_acquire_nest(l, s, t, n, i)	lock_acquire_exclusive(l, s, t, n, i)
+-#define spin_release(l, i)			lock_release(l, i)
++#define spin_acquire(l, s, t, i)					\
 +do {									\
 +	lock_acquire_exclusive(l, s, t, NULL, i);			\
-+	dept_mutex_lock(&(l)->dmap, s, t, NULL, "mutex_unlock", i);	\
++	dept_spin_lock(&(l)->dmap, s, t, NULL, "spin_unlock", i);	\
 +} while (0)
-+#define mutex_acquire_nest(l, s, t, n, i)				\
++#define spin_acquire_nest(l, s, t, n, i)				\
 +do {									\
 +	lock_acquire_exclusive(l, s, t, n, i);				\
-+	dept_mutex_lock(&(l)->dmap, s, t, (n) ? &(n)->dmap : NULL, "mutex_unlock", i);\
++	dept_spin_lock(&(l)->dmap, s, t, (n) ? &(n)->dmap : NULL, "spin_unlock", i); \
 +} while (0)
-+#define mutex_release(l, i)						\
++#define spin_release(l, i)						\
 +do {									\
 +	lock_release(l, i);						\
-+	dept_mutex_unlock(&(l)->dmap, i);				\
++	dept_spin_unlock(&(l)->dmap, i);				\
 +} while (0)
  
- #define rwsem_acquire(l, s, t, i)		lock_acquire_exclusive(l, s, t, NULL, i)
- #define rwsem_acquire_nest(l, s, t, n, i)	lock_acquire_exclusive(l, s, t, n, i)
-diff --git a/include/linux/mutex.h b/include/linux/mutex.h
-index 8f226d4..204f976 100644
---- a/include/linux/mutex.h
-+++ b/include/linux/mutex.h
-@@ -20,11 +20,18 @@
- #include <linux/osq_lock.h>
- #include <linux/debug_locks.h>
- 
-+#ifdef CONFIG_DEPT
-+# define DMAP_MUTEX_INIT(lockname)	.dmap = { .name = #lockname, .skip_cnt = ATOMIC_INIT(0) },
-+#else
-+# define DMAP_MUTEX_INIT(lockname)
-+#endif
-+
- #ifdef CONFIG_DEBUG_LOCK_ALLOC
- # define __DEP_MAP_MUTEX_INITIALIZER(lockname)			\
- 		, .dep_map = {					\
- 			.name = #lockname,			\
- 			.wait_type_inner = LD_WAIT_SLEEP,	\
-+			DMAP_MUTEX_INIT(lockname)		\
- 		}
- #else
- # define __DEP_MAP_MUTEX_INITIALIZER(lockname)
-@@ -75,6 +82,32 @@ struct mutex {
+ #define rwlock_acquire(l, s, t, i)		lock_acquire_exclusive(l, s, t, NULL, i)
+ #define rwlock_acquire_read(l, s, t, i)					\
+diff --git a/include/linux/spinlock.h b/include/linux/spinlock.h
+index 5c0c517..6b5c3f4 100644
+--- a/include/linux/spinlock.h
++++ b/include/linux/spinlock.h
+@@ -95,6 +95,32 @@
+ # include <linux/spinlock_up.h>
  #endif
- };
  
 +#ifdef CONFIG_DEPT
-+#define dept_mutex_lock(m, ne, t, n, e_fn, ip)				\
++#define dept_spin_lock(m, ne, t, n, e_fn, ip)				\
 +do {									\
 +	if (t) {							\
 +		dept_ecxt_enter(m, 1UL, ip, __func__, e_fn, ne);	\
@@ -135,7 +116,7 @@ index 8f226d4..204f976 100644
 +		dept_ask_event(m);					\
 +	}								\
 +} while (0)
-+#define dept_mutex_unlock(m, ip)					\
++#define dept_spin_unlock(m, ip)						\
 +do {									\
 +	if (!dept_unskip_if_skipped(m)) {				\
 +		dept_event(m, 1UL, ip, __func__);			\
@@ -143,36 +124,54 @@ index 8f226d4..204f976 100644
 +	}								\
 +} while (0)
 +#else
-+#define dept_mutex_lock(m, ne, t, n, e_fn, ip)	do { } while (0)
-+#define dept_mutex_unlock(m, ip)		do { } while (0)
++#define dept_spin_lock(m, ne, t, n, e_fn, ip)	do { } while (0)
++#define dept_spin_unlock(m, ip)			do { } while (0)
 +#endif
 +
- #ifdef CONFIG_DEBUG_MUTEXES
+ #ifdef CONFIG_DEBUG_SPINLOCK
+   extern void __raw_spin_lock_init(raw_spinlock_t *lock, const char *name,
+ 				   struct lock_class_key *key, short inner);
+diff --git a/include/linux/spinlock_types_raw.h b/include/linux/spinlock_types_raw.h
+index 91cb36b..279e821 100644
+--- a/include/linux/spinlock_types_raw.h
++++ b/include/linux/spinlock_types_raw.h
+@@ -26,16 +26,28 @@
  
- #define __DEBUG_MUTEX_INITIALIZER(lockname)				\
-diff --git a/include/linux/rtmutex.h b/include/linux/rtmutex.h
-index 7d04988..712d6e6 100644
---- a/include/linux/rtmutex.h
-+++ b/include/linux/rtmutex.h
-@@ -76,11 +76,18 @@ static inline void rt_mutex_debug_task_free(struct task_struct *tsk) { }
- 	__rt_mutex_init(mutex, __func__, &__key); \
- } while (0)
+ #define SPINLOCK_OWNER_INIT	((void *)-1L)
  
 +#ifdef CONFIG_DEPT
-+#define DMAP_RT_MUTEX_INIT(mutexname)	.dmap = { .name = #mutexname, .skip_cnt = ATOMIC_INIT(0) },
++# define RAW_SPIN_DMAP_INIT(lockname)	.dmap = { .name = #lockname, .skip_cnt = ATOMIC_INIT(0) },
++# define SPIN_DMAP_INIT(lockname)	.dmap = { .name = #lockname, .skip_cnt = ATOMIC_INIT(0) },
++# define LOCAL_SPIN_DMAP_INIT(lockname)	.dmap = { .name = #lockname, .skip_cnt = ATOMIC_INIT(0) },
 +#else
-+#define DMAP_RT_MUTEX_INIT(mutexname)
++# define RAW_SPIN_DMAP_INIT(lockname)
++# define SPIN_DMAP_INIT(lockname)
++# define LOCAL_SPIN_DMAP_INIT(lockname)
 +#endif
 +
  #ifdef CONFIG_DEBUG_LOCK_ALLOC
- #define __DEP_MAP_RT_MUTEX_INITIALIZER(mutexname)	\
+ # define RAW_SPIN_DEP_MAP_INIT(lockname)		\
  	.dep_map = {					\
- 		.name = #mutexname,			\
- 		.wait_type_inner = LD_WAIT_SLEEP,	\
-+		DMAP_RT_MUTEX_INIT(mutexname)		\
+ 		.name = #lockname,			\
+ 		.wait_type_inner = LD_WAIT_SPIN,	\
++		RAW_SPIN_DMAP_INIT(lockname)		\
+ 	}
+ # define SPIN_DEP_MAP_INIT(lockname)			\
+ 	.dep_map = {					\
+ 		.name = #lockname,			\
+ 		.wait_type_inner = LD_WAIT_CONFIG,	\
++		SPIN_DMAP_INIT(lockname)		\
+ 	}
+ 
+ # define LOCAL_SPIN_DEP_MAP_INIT(lockname)		\
+@@ -43,6 +55,7 @@
+ 		.name = #lockname,			\
+ 		.wait_type_inner = LD_WAIT_CONFIG,	\
+ 		.lock_type = LD_LOCK_PERCPU,		\
++		LOCAL_SPIN_DMAP_INIT(lockname)		\
  	}
  #else
- #define __DEP_MAP_RT_MUTEX_INITIALIZER(mutexname)
+ # define RAW_SPIN_DEP_MAP_INIT(lockname)
 -- 
 1.9.1
 
