@@ -2,112 +2,50 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4B1CC4321E
-	for <linux-ide@archiver.kernel.org>; Tue, 22 Feb 2022 08:27:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67BCCC433F5
+	for <linux-ide@archiver.kernel.org>; Tue, 22 Feb 2022 08:35:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229799AbiBVI17 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 22 Feb 2022 03:27:59 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36288 "EHLO
+        id S229873AbiBVIfz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 22 Feb 2022 03:35:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229810AbiBVI1t (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 22 Feb 2022 03:27:49 -0500
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 455319BBB3;
-        Tue, 22 Feb 2022 00:27:25 -0800 (PST)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id F1AA31F397;
-        Tue, 22 Feb 2022 08:27:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1645518444; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=dKa9YzG6WdPDW42WrXRDZOX/ZgG302zZsU6kzGjfuRk=;
-        b=Td2+1nGSGsZ5KMAOXZdDV1sjvAKTWie8Ea7gXdjxrT1MQOLxRE4sf1yFUF0ozBZVaxx57G
-        F2w6B+J4F1f3Eg7LYwOH4bUr084LTNnx3qdml8GVzZw7C34nAkA10vZYP/GcPXeYqmArAE
-        wCViF/uK3oZXRCgtuFDkWlfv6CnR2eU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1645518444;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=dKa9YzG6WdPDW42WrXRDZOX/ZgG302zZsU6kzGjfuRk=;
-        b=NGZGyoSgJN2YJMiLD1FSYJmywAnquy44CmumlY0Lj78LVdd0HvqzHfi6xzzURKNLWHg+/L
-        L+QdSHBoxKlpW+CA==
-Received: from quack3.suse.cz (unknown [10.100.200.198])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id DE5A8A3B88;
-        Tue, 22 Feb 2022 08:27:23 +0000 (UTC)
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 9F9B5A0606; Tue, 22 Feb 2022 09:27:23 +0100 (CET)
-Date:   Tue, 22 Feb 2022 09:27:23 +0100
-From:   Jan Kara <jack@suse.cz>
-To:     Byungchul Park <byungchul.park@lge.com>
-Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
-        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
-        linux-ext4@vger.kernel.org, mingo@redhat.com,
-        linux-kernel@vger.kernel.org, peterz@infradead.org,
-        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
-        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
-        chris@chris-wilson.co.uk, duyuyang@gmail.com,
-        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
-        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
-        bfields@fieldses.org, gregkh@linuxfoundation.org,
-        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
-        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org,
-        vdavydov.dev@gmail.com, sj@kernel.org, jglisse@redhat.com,
-        dennis@kernel.org, cl@linux.com, penberg@kernel.org,
-        rientjes@google.com, vbabka@suse.cz, ngupta@vflare.org,
-        linux-block@vger.kernel.org, axboe@kernel.dk,
-        paolo.valente@linaro.org, josef@toxicpanda.com,
-        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
-        jack@suse.cz, jack@suse.com, jlayton@kernel.org,
-        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
-        dri-devel@lists.freedesktop.org, airlied@linux.ie,
-        rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
-        hamohammed.sa@gmail.com
-Subject: Re: Report 1 in ext4 and journal based on v5.17-rc1
-Message-ID: <20220222082723.rddf4typah3wegrc@quack3.lan>
-References: <1645095472-26530-1-git-send-email-byungchul.park@lge.com>
- <1645096204-31670-1-git-send-email-byungchul.park@lge.com>
+        with ESMTP id S229870AbiBVIfy (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 22 Feb 2022 03:35:54 -0500
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78326159281;
+        Tue, 22 Feb 2022 00:35:29 -0800 (PST)
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 0512868AA6; Tue, 22 Feb 2022 09:35:26 +0100 (CET)
+Date:   Tue, 22 Feb 2022 09:35:25 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     Ondrej Zary <linux@zary.sk>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Tim Waugh <tim@cyberelk.net>, linux-block@vger.kernel.org,
+        linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pata_parport: second preview
+Message-ID: <20220222083525.GB5899@lst.de>
+References: <20220220224909.8032-1-linux@zary.sk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1645096204-31670-1-git-send-email-byungchul.park@lge.com>
+In-Reply-To: <20220220224909.8032-1-linux@zary.sk>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu 17-02-22 20:10:03, Byungchul Park wrote:
-> [    7.009608] ===================================================
-> [    7.009613] DEPT: Circular dependency has been detected.
-> [    7.009614] 5.17.0-rc1-00014-g8a599299c0cb-dirty #30 Tainted: G        W
-> [    7.009616] ---------------------------------------------------
-> [    7.009617] summary
-> [    7.009618] ---------------------------------------------------
-> [    7.009618] *** DEADLOCK ***
-> [    7.009618]
-> [    7.009619] context A
-> [    7.009619]     [S] (unknown)(&(bit_wait_table + i)->dmap:0)
-> [    7.009621]     [W] down_write(&ei->i_data_sem:0)
-> [    7.009623]     [E] event(&(bit_wait_table + i)->dmap:0)
-> [    7.009624]
-> [    7.009625] context B
-> [    7.009625]     [S] down_read(&ei->i_data_sem:0)
-> [    7.009626]     [W] wait(&(bit_wait_table + i)->dmap:0)
-> [    7.009627]     [E] up_read(&ei->i_data_sem:0)
-> [    7.009628]
+On Sun, Feb 20, 2022 at 11:49:09PM +0100, Ondrej Zary wrote:
+> Protocol registration could be improved - I don't like protocols[] and
+> protocol numbers, devices should probably be created by protocol name.
+> Also the LPT port base addresses should probably be replaced by port names
+> (like parport0).
+> 
+> The bpck driver seems to need to know if a CD drive is attached (weird) but
+> I doubt that I can get such info from libata.
 
-Looking into this I have noticed that Dept here tracks bitlocks (buffer
-locks in particular) but it apparently treats locks on all buffers as one
-locking class so it conflates lock on superblock buffer with a lock on
-extent tree block buffer. These are wastly different locks with different
-locking constraints. So to avoid false positives in filesystems we will
-need to add annotations to differentiate locks on different buffers (based
-on what the block is used for). Similarly how we e.g. annotate i_rwsem for
-different inodes.
+You can check adev->class == ATA_DEV_ATAPI, there's a bunch of drivers
+that already do that.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+I'll try to take a look at the actual patch once I find a bit of time.
