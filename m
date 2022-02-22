@@ -2,103 +2,112 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E9A6C433EF
-	for <linux-ide@archiver.kernel.org>; Tue, 22 Feb 2022 00:46:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4B1CC4321E
+	for <linux-ide@archiver.kernel.org>; Tue, 22 Feb 2022 08:27:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234071AbiBVAqe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 21 Feb 2022 19:46:34 -0500
-Received: from mxb-00190b01.gslb.pphosted.com ([23.128.96.19]:44136 "EHLO
+        id S229799AbiBVI17 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 22 Feb 2022 03:27:59 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36288 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231537AbiBVAqc (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 21 Feb 2022 19:46:32 -0500
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C8095255BB
-        for <linux-ide@vger.kernel.org>; Mon, 21 Feb 2022 16:46:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1645490769; x=1677026769;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=KMYCoSfwTx/hwmNrvptio3xXkaM5VSayMl0n7BtjPe8=;
-  b=Yo+fCR+UqLJ3a4JdAzCvyxeCoSH4DWBfyumfG+rFtLZbsgYQur3LTCaP
-   7ZyutzpDxGihR1ZWZwhX2E8rMtmgQdlj6UlDKg5GXi2+hyXoOxBagjqTg
-   UTFygKfev6wAQphYZIpbSClpiXt+8fISX2HOZC8PLHag0G9epnSQhCQL5
-   TJum9h6OAuczc0gsHWf1Vq49QuERkpRW/24CqvfcV99OGpph5r5WP3QN8
-   nJB4GALtTFSzOgXjK6BxW3thSfgPCUd63WS6dZxdNfHcGwZnzVP3D/Dlv
-   QoxVBx4pgOLmFVd2Qgv2R3zCqOaH6VEN7IcMKXbgSxOmqY2iwcwY/+mch
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.88,386,1635177600"; 
-   d="scan'208";a="194558654"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 22 Feb 2022 08:46:09 +0800
-IronPort-SDR: scY63NvDmtkQr9Ibm3Kc/FQ7n5RFhqW1E+D6/4sC7zIvgOYAfXs8GbelubwNOMxvZ1XfxJtNl6
- niJRbU3uHtjpj0cfbQwSHnDfua2Ze+JP0z6bOSI2s4D300Dazi6EJGnmtU9vdxDJ4S3c8F1SYu
- +RsV1wGGzXviBB2E+L2PiUc2ZdJ4oFhvE6DlSK8BZtcLCibRfiZ1TJfTCjiubaUUAqca9iJGeR
- 7a3YjR4DpWUtWDVRTH2fGHggV0Fp5qHKEq1t/I6rtfmkmJ+BIPTNdOKNsISEttDIPzOJ4t6FUe
- rd3pttIzlZXge2xxs41Vx49u
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Feb 2022 16:18:47 -0800
-IronPort-SDR: wapus4btivoHK9kLiPLqLGGu+HWncFKfGyCvs7c3gn4I6Dd4uJeGc7KV06dQEvuoMMmmGPq3Q0
- ZvQJpPwOnsGkwQw3+hu4hOK28E8vwZrhgLYttIhGA5R+c3Eok1qfaNXZBQAmFb5mbtEoo/AAzs
- WGVFs5kDTDORYnNNLYZ6hCsd3+ZupCu8MkOE+gnIRJGlMN3Tawlh6UKcAdzQo0dCxMc3S7WsYc
- MArG3mmPIBFL3Ld4oxeVTLczmBpndzhrVjLvtmmReSErU8tx97x3NOHRSSgqcoAgpvbYV74m3y
- fQU=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Feb 2022 16:46:08 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K2gTC5RnCz1Rwrw
-        for <linux-ide@vger.kernel.org>; Mon, 21 Feb 2022 16:46:07 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1645490767; x=1648082768; bh=KMYCoSfwTx/hwmNrvptio3xXkaM5VSayMl0
-        n7BtjPe8=; b=i7LHLCp6c0c3rinyljcCNBxGGf3aEzfcRX/NJZw0KxfkmT2YiyI
-        77IWjgp1EbbvvVEN4FUeQKaR+L4enBDvveGbQowqOM2ITAmYjtBcYfnbXt5/BvBc
-        zBtKkSOILT2E24I1kXAfbdpUdN6JJgTtNgoEgdZXttFZ8FjZcPyaxtPZNr5GBMAW
-        Jjf+FbszfkvNU/nt+EpRyIaPDnCTfWNpneZV+3QaLCAc1FKttjnKCZfexNDqtnW1
-        Ij05npVXk+4gZAsgT/tVKRGyHUG1hLg0pL0tTqd1yghkSbqRCPPFCscQaQyiCzGY
-        WwFZ6T9Do29CezEkvYwNMrfCQ7AfaqckPTQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id toO9trZnfPrv for <linux-ide@vger.kernel.org>;
-        Mon, 21 Feb 2022 16:46:07 -0800 (PST)
-Received: from [10.225.163.81] (unknown [10.225.163.81])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K2gTC0m6Fz1Rvlx;
-        Mon, 21 Feb 2022 16:46:06 -0800 (PST)
-Message-ID: <0168c09c-4c62-673a-01e3-96b82a56dfdd@opensource.wdc.com>
-Date:   Tue, 22 Feb 2022 09:46:05 +0900
+        with ESMTP id S229810AbiBVI1t (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 22 Feb 2022 03:27:49 -0500
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 455319BBB3;
+        Tue, 22 Feb 2022 00:27:25 -0800 (PST)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out2.suse.de (Postfix) with ESMTP id F1AA31F397;
+        Tue, 22 Feb 2022 08:27:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1645518444; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=dKa9YzG6WdPDW42WrXRDZOX/ZgG302zZsU6kzGjfuRk=;
+        b=Td2+1nGSGsZ5KMAOXZdDV1sjvAKTWie8Ea7gXdjxrT1MQOLxRE4sf1yFUF0ozBZVaxx57G
+        F2w6B+J4F1f3Eg7LYwOH4bUr084LTNnx3qdml8GVzZw7C34nAkA10vZYP/GcPXeYqmArAE
+        wCViF/uK3oZXRCgtuFDkWlfv6CnR2eU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1645518444;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=dKa9YzG6WdPDW42WrXRDZOX/ZgG302zZsU6kzGjfuRk=;
+        b=NGZGyoSgJN2YJMiLD1FSYJmywAnquy44CmumlY0Lj78LVdd0HvqzHfi6xzzURKNLWHg+/L
+        L+QdSHBoxKlpW+CA==
+Received: from quack3.suse.cz (unknown [10.100.200.198])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay2.suse.de (Postfix) with ESMTPS id DE5A8A3B88;
+        Tue, 22 Feb 2022 08:27:23 +0000 (UTC)
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 9F9B5A0606; Tue, 22 Feb 2022 09:27:23 +0100 (CET)
+Date:   Tue, 22 Feb 2022 09:27:23 +0100
+From:   Jan Kara <jack@suse.cz>
+To:     Byungchul Park <byungchul.park@lge.com>
+Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
+        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
+        linux-ext4@vger.kernel.org, mingo@redhat.com,
+        linux-kernel@vger.kernel.org, peterz@infradead.org,
+        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
+        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
+        chris@chris-wilson.co.uk, duyuyang@gmail.com,
+        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
+        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
+        bfields@fieldses.org, gregkh@linuxfoundation.org,
+        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
+        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org,
+        vdavydov.dev@gmail.com, sj@kernel.org, jglisse@redhat.com,
+        dennis@kernel.org, cl@linux.com, penberg@kernel.org,
+        rientjes@google.com, vbabka@suse.cz, ngupta@vflare.org,
+        linux-block@vger.kernel.org, axboe@kernel.dk,
+        paolo.valente@linaro.org, josef@toxicpanda.com,
+        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
+        jack@suse.cz, jack@suse.com, jlayton@kernel.org,
+        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
+        dri-devel@lists.freedesktop.org, airlied@linux.ie,
+        rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
+        hamohammed.sa@gmail.com
+Subject: Re: Report 1 in ext4 and journal based on v5.17-rc1
+Message-ID: <20220222082723.rddf4typah3wegrc@quack3.lan>
+References: <1645095472-26530-1-git-send-email-byungchul.park@lge.com>
+ <1645096204-31670-1-git-send-email-byungchul.park@lge.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH] ata: pata_hpt37x: fix PCI clock detection
-Content-Language: en-US
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-References: <02715925-4a0f-30dd-86b8-85786cf6484a@omp.ru>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <02715925-4a0f-30dd-86b8-85786cf6484a@omp.ru>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1645096204-31670-1-git-send-email-byungchul.park@lge.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/20/22 05:04, Sergey Shtylyov wrote:
-> The f_CNT register (at the PCI config. address 0x78) is 16-bit, not 8-bit!
-> The bug was there from the very srart... :-(
-> 
-> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-> Cc: stable@vger.kernel.org
+On Thu 17-02-22 20:10:03, Byungchul Park wrote:
+> [    7.009608] ===================================================
+> [    7.009613] DEPT: Circular dependency has been detected.
+> [    7.009614] 5.17.0-rc1-00014-g8a599299c0cb-dirty #30 Tainted: G        W
+> [    7.009616] ---------------------------------------------------
+> [    7.009617] summary
+> [    7.009618] ---------------------------------------------------
+> [    7.009618] *** DEADLOCK ***
+> [    7.009618]
+> [    7.009619] context A
+> [    7.009619]     [S] (unknown)(&(bit_wait_table + i)->dmap:0)
+> [    7.009621]     [W] down_write(&ei->i_data_sem:0)
+> [    7.009623]     [E] event(&(bit_wait_table + i)->dmap:0)
+> [    7.009624]
+> [    7.009625] context B
+> [    7.009625]     [S] down_read(&ei->i_data_sem:0)
+> [    7.009626]     [W] wait(&(bit_wait_table + i)->dmap:0)
+> [    7.009627]     [E] up_read(&ei->i_data_sem:0)
+> [    7.009628]
 
-Applied to for-5.17-fixes with commit message typo fixed and Fixes tag
-added. Thanks !
+Looking into this I have noticed that Dept here tracks bitlocks (buffer
+locks in particular) but it apparently treats locks on all buffers as one
+locking class so it conflates lock on superblock buffer with a lock on
+extent tree block buffer. These are wastly different locks with different
+locking constraints. So to avoid false positives in filesystems we will
+need to add annotations to differentiate locks on different buffers (based
+on what the block is used for). Similarly how we e.g. annotate i_rwsem for
+different inodes.
 
+								Honza
 -- 
-Damien Le Moal
-Western Digital Research
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
