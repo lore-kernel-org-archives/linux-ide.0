@@ -2,50 +2,69 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67BCCC433F5
-	for <linux-ide@archiver.kernel.org>; Tue, 22 Feb 2022 08:35:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00B94C433EF
+	for <linux-ide@archiver.kernel.org>; Tue, 22 Feb 2022 09:48:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229873AbiBVIfz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 22 Feb 2022 03:35:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42766 "EHLO
+        id S230273AbiBVJsx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 22 Feb 2022 04:48:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229870AbiBVIfy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 22 Feb 2022 03:35:54 -0500
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78326159281;
-        Tue, 22 Feb 2022 00:35:29 -0800 (PST)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 0512868AA6; Tue, 22 Feb 2022 09:35:26 +0100 (CET)
-Date:   Tue, 22 Feb 2022 09:35:25 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Ondrej Zary <linux@zary.sk>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Tim Waugh <tim@cyberelk.net>, linux-block@vger.kernel.org,
-        linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pata_parport: second preview
-Message-ID: <20220222083525.GB5899@lst.de>
-References: <20220220224909.8032-1-linux@zary.sk>
+        with ESMTP id S230221AbiBVJsx (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 22 Feb 2022 04:48:53 -0500
+Received: from mxout04.lancloud.ru (mxout04.lancloud.ru [45.84.86.114])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC2FA98F6C
+        for <linux-ide@vger.kernel.org>; Tue, 22 Feb 2022 01:48:25 -0800 (PST)
+Received: from LanCloud
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout04.lancloud.ru 65CC820DA1EC
+Received: from LanCloud
+Received: from LanCloud
+Received: from LanCloud
+Subject: Re: [PATCH] ata: pata_hpt37x: disable primary channel on HPT371
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>
+References: <e398d6e3-05f2-409f-6818-812f24e325eb@omp.ru>
+ <feb0d6ba-baa2-6482-e6b4-eb5baed2a728@opensource.wdc.com>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <6604b1f6-adcf-96f6-f736-4ade3642f6f7@omp.ru>
+Date:   Tue, 22 Feb 2022 12:48:09 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220220224909.8032-1-linux@zary.sk>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <feb0d6ba-baa2-6482-e6b4-eb5baed2a728@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [192.168.11.198]
+X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
+ LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sun, Feb 20, 2022 at 11:49:09PM +0100, Ondrej Zary wrote:
-> Protocol registration could be improved - I don't like protocols[] and
-> protocol numbers, devices should probably be created by protocol name.
-> Also the LPT port base addresses should probably be replaced by port names
-> (like parport0).
+On 2/22/22 3:37 AM, Damien Le Moal wrote:
+
+>> HPT371 chips physically have only one channel, the secondary one, however
+>> the primary channel registers do exist!  Thus we have to manually disable
+>> the non-existing channel (if the BIOS hasn't done this already).  Alan Cox
+>> has only added such code to the 'pata_hpt3x2n' driver, forgetting about
+>> this one... :-/
 > 
-> The bpck driver seems to need to know if a CD drive is attached (weird) but
-> I doubt that I can get such info from libata.
+> No need to assign blame by name :) Something more neutral like:
+> 
+> "Similarly to the pata_hpt3x2n driver, always disable the primary channel."
 
-You can check adev->class == ATA_DEV_ATAPI, there's a bunch of drivers
-that already do that.
+   Should I now repost?
 
-I'll try to take a look at the actual patch once I find a bit of time.
+> will do. Also, do you have a fixes tag for this one ? Is it again:
+> 
+> Fixes: 669a5db411d8 ("[libata] Add a bunch of PATA drivers.")> ?
+
+   Yes.
+
+>>
+>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+
+[...]
+
+MBR, Sergey
