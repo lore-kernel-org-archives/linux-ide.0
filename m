@@ -2,127 +2,115 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE94BC433EF
-	for <linux-ide@archiver.kernel.org>; Tue, 22 Feb 2022 11:29:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00BAAC433F5
+	for <linux-ide@archiver.kernel.org>; Tue, 22 Feb 2022 19:26:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231702AbiBVLaP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 22 Feb 2022 06:30:15 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53814 "EHLO
+        id S235144AbiBVT00 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 22 Feb 2022 14:26:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230138AbiBVLaO (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 22 Feb 2022 06:30:14 -0500
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94D80128669
-        for <linux-ide@vger.kernel.org>; Tue, 22 Feb 2022 03:29:49 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1645529391; x=1677065391;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=4XJ/A0A4cJL9TX/9ubPmG23L8B6gRo8bAYMfxCZnBQM=;
-  b=STg7h0AlYtnR8wpgSG5/r/0eyxpYUNUn2MCik/T/rwFB/4FHKVU4SkVK
-   m01ks8RZ5teb62Nkhsv3GeiRdEsq/r3s30aY2vL3opugeL+IDJNS4RG/j
-   yw62jyCJkuZNYMop3Fixp1W5fS5vF6Nf8eO9nCCYp3xH2908HCK+ge4Zf
-   M/Jrn8gaAo6etzPQwiwOB/4GmM+WPBjoQ6olhfoMuvcQsYFl7UuyWBCPD
-   9MnMGYBVgUI01X+lqNa0lnRd7BfFGbZUnT4EFDrWisxAtnU127bPhGrvG
-   sBsyxzY0T3BvLJD2nNx2Ig2KkRbFYxLfWDa8TnN0Kjt98+iWOATuXX5Uk
+        with ESMTP id S231186AbiBVT0Z (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 22 Feb 2022 14:26:25 -0500
+Received: from mga01.intel.com (mga01.intel.com [192.55.52.88])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C9BDB674D0;
+        Tue, 22 Feb 2022 11:25:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1645557959; x=1677093959;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=je6pxxUyucOKnuMDKEdXL57fjZykpHI9O7enNl2qahg=;
+  b=dIcq6AAHzVgb5fElyNsE0G6LIO3Kix6CGVD5xqFLx48XHPLcoOSgFLWF
+   4sXAtaZ7HVoEW5AaH97pS9hS6WK3Oewjgvo3wmFSKTxRp0KbolmnGHJIS
+   dWxi6YeOEZFDEJoLkFHwf/sQ8LrSMDt4yDeiU6VAMYl3b1X7cTAKWejY8
+   rqNs/neohk6LpZeSCXU/8QHLZdGzq5Yl0hzMeL/pCnZYRdC0UPvoTOvRY
+   p2ABUbrJjo0/lgJHFV1oot3YZdeF3msMB12CHazQhUBGK4oOpaPV+/FJW
+   CQGaiD9akg3BcxxwaUv/oM+JtDxoQZ/8NFetHzl55GM82hv8t2gJ6BceK
    A==;
-X-IronPort-AV: E=Sophos;i="5.88,387,1635177600"; 
-   d="scan'208";a="194601931"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 22 Feb 2022 19:29:50 +0800
-IronPort-SDR: frDdlxDdsSrSABeY4WhDPPexBk+4JKohN8Kns4uVRHIlshaU4mDFqXgb7wsRfR5iHW3nAC8xN9
- gcF/xSx+BRwbia7ROdrwvkwJS1Kx57LsFAJ8O7Clm8cn6/Jki7Gby/9LkAAv5kWjvd4PAfYj6G
- Vv5Y0XmaaCquM9CXuvk4xl3GVp9zPy/5nuok8Uyu12hcmYYnWoDPRWI9HDJxM7YZ9o2XhofTh7
- xDGa02YRfJpgXQrv7Y/HNtYtrksk5tZs6OTDKhTJG7skJrd70Hz0nTI9GrRlTG7qGfiPH196YJ
- 1OQSD9E1UvmIir44XUMIEiT5
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Feb 2022 03:02:27 -0800
-IronPort-SDR: O9mmk/c6DCVL0eqTg5rkatn6jBm1sODsyQK75XvOJPwHKG2/prRYlJWAN+Ki5Ge871S1j0z8E9
- gcuvhDI8UtZscvXQ8QqKiwlqLFgfWMj7tkjeTUyBPCDmwL7rGpMphYUgo/Uu1R7I2QJGUTHLOV
- Mw+rjOuwfYnJuFWNn1lWe2gG+BsXJZke2NFC7IqnSJjnCImLFYEJei3Oq0L2ffEeVD7R47NIFc
- 5YwAUiuPWH4WbgL6OqrIXKt0sgQwiLoG5aEAbzJUGIeXuLu+o//iotkFRs0NrV8AC8mhD2MAr8
- 4kA=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Feb 2022 03:29:49 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K2xlw5tRcz1SHwl
-        for <linux-ide@vger.kernel.org>; Tue, 22 Feb 2022 03:29:48 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1645529388; x=1648121389; bh=4XJ/A0A4cJL9TX/9ubPmG23L8B6gRo8bAYM
-        fxCZnBQM=; b=FqFGRwBuQ88MtTD1d8KRiXNURyu6klygc4jb585x6R5h0B8eRIt
-        +s8Ky+7ywdyzv/UE8JPcJv8mYZpDnC2GOqQMS8hHj85LlYysi9CK2vSkbFvqg/yJ
-        ABZDW3oaIxidQatCxWbFs2Ew61IixWb8Ch0bIUMxoZXaB++xELfeGNTAauq1n4B4
-        69l9S761Md8qndrPakg77BlvflI2mpaV/wjR+ZjCpMlZzFCah5HG7GfOF3W6BArQ
-        3SumMpl53WqoiPZUlrc/LqnpblxZihMff8cHjhi7wf0aVj1bhRD1T1koELTJu+OE
-        YMqvRukLXl5pRmPLkjCz9t2/TaTzZGqAi3g==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id sc1kRvBj4dYW for <linux-ide@vger.kernel.org>;
-        Tue, 22 Feb 2022 03:29:48 -0800 (PST)
-Received: from [10.225.163.81] (unknown [10.225.163.81])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K2xlw1H9fz1Rvlx;
-        Tue, 22 Feb 2022 03:29:48 -0800 (PST)
-Message-ID: <c6da4641-a811-155c-eb48-3a6c26b0d61c@opensource.wdc.com>
-Date:   Tue, 22 Feb 2022 20:29:47 +0900
+X-IronPort-AV: E=McAfee;i="6200,9189,10266"; a="276400870"
+X-IronPort-AV: E=Sophos;i="5.88,387,1635231600"; 
+   d="scan'208";a="276400870"
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Feb 2022 11:25:59 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.88,387,1635231600"; 
+   d="scan'208";a="606801391"
+Received: from lkp-server01.sh.intel.com (HELO 788b1cd46f0d) ([10.239.97.150])
+  by fmsmga004.fm.intel.com with ESMTP; 22 Feb 2022 11:25:52 -0800
+Received: from kbuild by 788b1cd46f0d with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1nManH-0000XB-LZ; Tue, 22 Feb 2022 19:25:51 +0000
+Date:   Wed, 23 Feb 2022 03:25:44 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Byungchul Park <byungchul.park@lge.com>,
+        torvalds@linux-foundation.org
+Cc:     kbuild-all@lists.01.org, damien.lemoal@opensource.wdc.com,
+        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
+        linux-ext4@vger.kernel.org, mingo@redhat.com,
+        linux-kernel@vger.kernel.org, peterz@infradead.org,
+        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
+        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
+        chris@chris-wilson.co.uk, duyuyang@gmail.com,
+        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
+        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
+        bfields@fieldses.org, gregkh@linuxfoundation.org,
+        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
+        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org
+Subject: Re: [PATCH v2 08/18] dept: Apply Dept to
+ wait_for_completion()/complete()
+Message-ID: <202202230329.dwOppOXY-lkp@intel.com>
+References: <1645268311-24222-9-git-send-email-byungchul.park@lge.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH] ata: pata_hpt37x: disable primary channel on HPT371
-Content-Language: en-US
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-References: <e398d6e3-05f2-409f-6818-812f24e325eb@omp.ru>
- <feb0d6ba-baa2-6482-e6b4-eb5baed2a728@opensource.wdc.com>
- <6604b1f6-adcf-96f6-f736-4ade3642f6f7@omp.ru>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <6604b1f6-adcf-96f6-f736-4ade3642f6f7@omp.ru>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1645268311-24222-9-git-send-email-byungchul.park@lge.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2/22/22 18:48, Sergey Shtylyov wrote:
-> On 2/22/22 3:37 AM, Damien Le Moal wrote:
-> 
->>> HPT371 chips physically have only one channel, the secondary one, however
->>> the primary channel registers do exist!  Thus we have to manually disable
->>> the non-existing channel (if the BIOS hasn't done this already).  Alan Cox
->>> has only added such code to the 'pata_hpt3x2n' driver, forgetting about
->>> this one... :-/
->>
->> No need to assign blame by name :) Something more neutral like:
->>
->> "Similarly to the pata_hpt3x2n driver, always disable the primary channel."
-> 
->    Should I now repost?
+Hi Byungchul,
 
-I will fix it up. No need to resend.
+Thank you for the patch! Perhaps something to improve:
 
-> 
->> will do. Also, do you have a fixes tag for this one ? Is it again:
->>
->> Fixes: 669a5db411d8 ("[libata] Add a bunch of PATA drivers.")> ?
-> 
->    Yes.
-> 
->>>
->>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-> 
-> [...]
-> 
-> MBR, Sergey
+[auto build test WARNING on tip/sched/core]
+[also build test WARNING on linux/master linus/master v5.17-rc5]
+[cannot apply to tip/locking/core hnaz-mm/master next-20220217]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
+url:    https://github.com/0day-ci/linux/commits/Byungchul-Park/DEPT-Dependency-Tracker/20220220-185528
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git ed3b362d54f0038cafc985248350d301af7af686
+reproduce: make htmldocs
 
--- 
-Damien Le Moal
-Western Digital Research
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
+
+All warnings (new ones prefixed by >>):
+
+>> include/linux/completion.h:121: warning: expecting prototype for init_completion(). Prototype was for __init_completion() instead
+
+vim +121 include/linux/completion.h
+
+8b3db9c542e18b7 Ingo Molnar     2006-07-03  110  
+65eb3dc609dec17 Kevin Diggs     2008-08-26  111  /**
+ee2f154a598e96d Randy Dunlap    2010-10-26  112   * init_completion - Initialize a dynamically allocated completion
+c32f74ab2872994 Wolfram Sang    2013-11-14  113   * @x:  pointer to completion structure that is to be initialized
+65eb3dc609dec17 Kevin Diggs     2008-08-26  114   *
+65eb3dc609dec17 Kevin Diggs     2008-08-26  115   * This inline function will initialize a dynamically created completion
+65eb3dc609dec17 Kevin Diggs     2008-08-26  116   * structure.
+65eb3dc609dec17 Kevin Diggs     2008-08-26  117   */
+82b6a46bab5dcb0 Byungchul Park  2022-02-19  118  static inline void __init_completion(struct completion *x,
+82b6a46bab5dcb0 Byungchul Park  2022-02-19  119  				     struct dept_key *dkey,
+82b6a46bab5dcb0 Byungchul Park  2022-02-19  120  				     const char *name)
+^1da177e4c3f415 Linus Torvalds  2005-04-16 @121  {
+^1da177e4c3f415 Linus Torvalds  2005-04-16  122  	x->done = 0;
+82b6a46bab5dcb0 Byungchul Park  2022-02-19  123  	dept_wfc_init(&x->dmap, dkey, 0, name);
+a5c6234e10280b3 Thomas Gleixner 2020-03-21  124  	init_swait_queue_head(&x->wait);
+^1da177e4c3f415 Linus Torvalds  2005-04-16  125  }
+^1da177e4c3f415 Linus Torvalds  2005-04-16  126  
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
