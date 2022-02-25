@@ -2,190 +2,344 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19D80C433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 25 Feb 2022 21:13:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 449F0C433F5
+	for <linux-ide@archiver.kernel.org>; Fri, 25 Feb 2022 21:13:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238063AbiBYVNp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 25 Feb 2022 16:13:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50714 "EHLO
+        id S238142AbiBYVO2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 25 Feb 2022 16:14:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54056 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234504AbiBYVNo (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 25 Feb 2022 16:13:44 -0500
-Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2051.outbound.protection.outlook.com [40.107.236.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 535A9180207;
-        Fri, 25 Feb 2022 13:13:11 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=oVj/M2swKxTr8EHnfcv6ypLlAEknJA3JkJuUYqr6vjDOhwir6rEw0Xcc8/EKcd6yF7F3bydxAXVSy8RsmfF53NCdBwUX25nqT2g2HqHATyD0p7VIMQThTJMSdT4NRL/DukA19rI6VNwNUPY6uvy+PYC++KpHBEUPmUHwU9aeZ500CX+oy2hk5saEg/KOADyPdvlmAfJp5HNYtnPlYxih3hwXqZCwKb8uPmBqUldp3/hFJgyGHZYhJHcIbNsgUdoFiPOfwdIK4SbX4n5vA/OVSItzr4/KFnYiU98moje+OO/tk2/a2WJ5LNtyKeroAGYbqwJFoibJxSvVh7dczSSIbw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=3Dn0Y2Gmzex7D9N5414I09F6JhWTmzRq1p7EmGUzlXk=;
- b=bUQeaRDN2OSk6Z/betQsgcGfC4qYpm7iWSt611afFEWGbU+ve/BGakMRseMjnBp61ZD+HcXeHCQ5Rv54AAdeIzbp5o6B1HII5sD7tiTCm+MxSFhkMVfHGINUDURcTjqkTcrKK7SG+zzJHsnu8jF/mAQHKrQB8rG+X6r6HJEwVzFuVgnAxiFojWcaI5avGokwedhy8Ak7Id528SCSMgOYBggcz8ZJEdgdN88Rlm962CW66FD3Y/wYl0uFDQAY6AKbUR6XUO73uLTRZssk2Wvb/uJU6NHMGXYI32zDpwzIjiEfXzkIyWC5DZbftS5YKYj1s6AW9dVQE94+94POQcEpgg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=3Dn0Y2Gmzex7D9N5414I09F6JhWTmzRq1p7EmGUzlXk=;
- b=Cjerk1/LhYs3HQS2sNCJoRY4d9vjyi0EICSUrFbg3cxHxsX8UzpBlC3IhfFkeSI01MOQ8ZxTO7M18k5GoaMkGKVu+3vnUfXNTBlYIoRQ63fAl/aW584vS7EQHAS12auKDF1lmYYm8aW5/u35Ss59UQv1Tu+AcrdnwuGLMWApt5s=
-Received: from BL1PR12MB5157.namprd12.prod.outlook.com (2603:10b6:208:308::15)
- by DM6PR12MB3820.namprd12.prod.outlook.com (2603:10b6:5:1c2::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5017.24; Fri, 25 Feb
- 2022 21:13:09 +0000
-Received: from BL1PR12MB5157.namprd12.prod.outlook.com
- ([fe80::692d:9532:906b:2b08]) by BL1PR12MB5157.namprd12.prod.outlook.com
- ([fe80::692d:9532:906b:2b08%5]) with mapi id 15.20.5017.024; Fri, 25 Feb 2022
- 21:13:09 +0000
-From:   "Limonciello, Mario" <Mario.Limonciello@amd.com>
-To:     Hans de Goede <hdegoede@redhat.com>,
-        Christoph Hellwig <hch@infradead.org>
-CC:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        with ESMTP id S235839AbiBYVO1 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 25 Feb 2022 16:14:27 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id C2A90182DAF
+        for <linux-ide@vger.kernel.org>; Fri, 25 Feb 2022 13:13:53 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1645823632;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=/yDZp0QIlvOMp3d/09RLCVQWT0E/Mn5hK04vODPthUs=;
+        b=Q5YryNqFDphjJnxD3UgRakLgmS+KRiiiy2zt/O/SjEYqz/wzgvFhY5PA6178q+Rs5Bth3w
+        XNTdZNMmAiLlgFmRov6Xm0tMfwmSYTPFdipm+7uQeofL2iYptVDvVMf9AXoyzOlefdkxZC
+        dx8hyzcVPpX20oAjIN3mO2kUK59l/sY=
+Received: from mail-ej1-f70.google.com (mail-ej1-f70.google.com
+ [209.85.218.70]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ us-mta-389-1dS-pNniMQa_67nedbczig-1; Fri, 25 Feb 2022 16:13:51 -0500
+X-MC-Unique: 1dS-pNniMQa_67nedbczig-1
+Received: by mail-ej1-f70.google.com with SMTP id nb1-20020a1709071c8100b006d03c250b6fso3128778ejc.11
+        for <linux-ide@vger.kernel.org>; Fri, 25 Feb 2022 13:13:51 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=/yDZp0QIlvOMp3d/09RLCVQWT0E/Mn5hK04vODPthUs=;
+        b=Gx5+i/mJ8pxY5mEBkMuzGOfStGAbXvBRvC3SLPPMwUFuhoRAuqwEnE245FWX7Bu7SA
+         3fXRmhIT2i90n4PZql/R95k982dXuUoUjskP+qJJt/QvSqLwrEn7QmAJkWubvJPHMxIC
+         iFkM8ejBF4pbYUXW/61oP/aYogrWW56F/rNQl2TqGu3CU7+ZltxtYjxiYT9hYoi7EfTl
+         NkteUJbBOC4O+JyH8Y1aLeABuy176h1E4jzsMxGAm4zDjgNeLCTJbBPnGdpIV0rvIhl0
+         NUJpZW4kVXqGTgp5eXT7iiQ2n099cIMkkLYvC/4nvk+HYWlpRmIB+U4Ay4YP2sq1VqcA
+         MDzQ==
+X-Gm-Message-State: AOAM5339F/PjL39QAybWEi8y+bcJ/M8bmVX5BJ5O+MlwD/GjJ2euPjSY
+        +uLP1KXQLdezPofNfJ82r7W/gZOFxrJleRhcDk8azOcLtDFa5JKnkiMnJTkLWujtFY+X+sA8xIb
+        bjH+KSyRN1PBINKl+3grZ
+X-Received: by 2002:a17:906:82c4:b0:6b7:e0fc:c9e0 with SMTP id a4-20020a17090682c400b006b7e0fcc9e0mr7889652ejy.555.1645823630128;
+        Fri, 25 Feb 2022 13:13:50 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJySk3r/AcVl9qG9Y4vEvlqAF3q8syx4SgFtm3zj6oTTuXo4fa0nJGlatsJm0Nts8rquOPTPcA==
+X-Received: by 2002:a17:906:82c4:b0:6b7:e0fc:c9e0 with SMTP id a4-20020a17090682c400b006b7e0fcc9e0mr7889635ejy.555.1645823629816;
+        Fri, 25 Feb 2022 13:13:49 -0800 (PST)
+Received: from ?IPV6:2a0e:5700:4:11:334c:7e36:8d57:40cb? ([2a0e:5700:4:11:334c:7e36:8d57:40cb])
+        by smtp.gmail.com with ESMTPSA id la3-20020a170906ad8300b006d0562a1011sm1421495ejb.21.2022.02.25.13.13.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 25 Feb 2022 13:13:49 -0800 (PST)
+Message-ID: <52ed571d-0e46-9eb3-33e4-0221eea2f5d7@redhat.com>
+Date:   Fri, 25 Feb 2022 22:13:48 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.4.0
+Subject: Re: [RFC 1/2] ata: ahci: Drop low power policy board type
+Content-Language: en-US
+To:     Mario Limonciello <mario.limonciello@amd.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
         <linux-ide@vger.kernel.org>,
         open list <linux-kernel@vger.kernel.org>,
-        "pmenzel@molgen.mpg.de" <pmenzel@molgen.mpg.de>
-Subject: RE: [PATCH v2 1/3] ata: ahci: Rename board_ahci_mobile
-Thread-Topic: [PATCH v2 1/3] ata: ahci: Rename board_ahci_mobile
-Thread-Index: AQHYKg7avs0NJxq2CkGM0DSkmy8He6ykbaaAgAAAfcCAAAO3gIAAAD2QgABRMICAAAD4wA==
-Date:   Fri, 25 Feb 2022 21:13:08 +0000
-Message-ID: <BL1PR12MB5157B104CF62D747587A0412E23E9@BL1PR12MB5157.namprd12.prod.outlook.com>
-References: <20220225061113.223920-1-mario.limonciello@amd.com>
- <Yhj9Pdp/sHASmBw4@infradead.org>
- <BL1PR12MB5157D29423AE95EE32F00303E23E9@BL1PR12MB5157.namprd12.prod.outlook.com>
- <e65c4fbb-95d0-5c5a-2b15-414b519d3319@redhat.com>
- <BL1PR12MB5157D6984E5855701A9449E0E23E9@BL1PR12MB5157.namprd12.prod.outlook.com>
- <ee9a51e2-1733-dcd5-7514-0b8d1c1fa430@redhat.com>
-In-Reply-To: <ee9a51e2-1733-dcd5-7514-0b8d1c1fa430@redhat.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_88914ebd-7e6c-4e12-a031-a9906be2db14_Enabled=true;
- MSIP_Label_88914ebd-7e6c-4e12-a031-a9906be2db14_SetDate=2022-02-25T21:13:07Z;
- MSIP_Label_88914ebd-7e6c-4e12-a031-a9906be2db14_Method=Standard;
- MSIP_Label_88914ebd-7e6c-4e12-a031-a9906be2db14_Name=AMD Official Use
- Only-AIP 2.0;
- MSIP_Label_88914ebd-7e6c-4e12-a031-a9906be2db14_SiteId=3dd8961f-e488-4e60-8e11-a82d994e183d;
- MSIP_Label_88914ebd-7e6c-4e12-a031-a9906be2db14_ActionId=6a410321-75a4-44b7-a8e3-cc3b73ef6f46;
- MSIP_Label_88914ebd-7e6c-4e12-a031-a9906be2db14_ContentBits=1
-msip_label_88914ebd-7e6c-4e12-a031-a9906be2db14_enabled: true
-msip_label_88914ebd-7e6c-4e12-a031-a9906be2db14_setdate: 2022-02-25T21:13:07Z
-msip_label_88914ebd-7e6c-4e12-a031-a9906be2db14_method: Standard
-msip_label_88914ebd-7e6c-4e12-a031-a9906be2db14_name: AMD Official Use
- Only-AIP 2.0
-msip_label_88914ebd-7e6c-4e12-a031-a9906be2db14_siteid: 3dd8961f-e488-4e60-8e11-a82d994e183d
-msip_label_88914ebd-7e6c-4e12-a031-a9906be2db14_actionid: 5a667885-5aab-4e14-9612-7b10560083f5
-msip_label_88914ebd-7e6c-4e12-a031-a9906be2db14_contentbits: 0
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 37066f68-a7e5-41be-f8f2-08d9f8a39f9f
-x-ms-traffictypediagnostic: DM6PR12MB3820:EE_
-x-microsoft-antispam-prvs: <DM6PR12MB3820AEBC74EB66B94EFAFC9FE23E9@DM6PR12MB3820.namprd12.prod.outlook.com>
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: R4VAQchLnQ0gG0OPRyfiwusknh553/N6PW9c/z1n7iFdm4f/5exGuiMSdkZ3gxZCs7b+Mixe9mVM3uEHun1vc/SKX54QaghobzpeQ2htwfZNnbtZmKSflrwtsLWjZjl9x59btJEZljChpJLMjRqfUgFkYPbXsBWs+qLEM+CEzmHFNaI4LaOHSiEkzQSPv4SOJBsq/2HpPfdI8d7krl1meL8CO5bQmKom4ov21baGxbINO/BJRWKWb37dD5272ARen05bFNEJaarhejBba8MnIoBmaeWV51kAMz5DDdJ0aFMNtmC94rFvPdqvQIoyxrXHokQs4K7BfwdYYEKbTyL9K2zQHe7Uvk3zzLIkc8n9Fc28aDqJU0eCB0ACqjlfKOCXYnIuacgAGsi6wDQ9898PQpLto7+OxKazoh+2QVbJ+WT9lG6apk8+KXqt0pfcWhRIC7v9XahcU/IKO3wHNxIa78n2iPdBWMvetwl5I0hN+Xci3i+dTu2HHRtNZgLAqX9Z1WJZt25asVNsLjCUBHzpv6t3OpcTFE6YH2b8xErWWYFAmCb8B2y01D4ROZ4FTlhO35Q3NyRvaeyfDrsJTOkTlnOO0qH8tFD8wHLm/PpDy6yXqOywqjkXFGgGsz/XWv3pvRo2XbumcU4VCa/WPZCdPPMRpxnJXIX6KC5SxD7aj1UdDXJwsDbxV3t57kpoTW3U++dosWXSSUE5AeuKl4rONg==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL1PR12MB5157.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(86362001)(5660300002)(9686003)(8936002)(52536014)(6506007)(7696005)(2906002)(110136005)(54906003)(122000001)(316002)(38100700002)(508600001)(64756008)(71200400001)(4326008)(8676002)(66446008)(38070700005)(66556008)(66946007)(76116006)(186003)(33656002)(66476007)(26005)(83380400001)(55016003);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?SnJXSzhCL1pLKzAyS3BFYlJSRUVyczYxQ21nV3U3M1BQbDB5REVvcHZ6UEo2?=
- =?utf-8?B?anpmL25tT1BNRlFnMnM1Zk1UV1NLYTA4bjhXL1RLNVcweloyRlNqYVYrZ3li?=
- =?utf-8?B?bFZ3Y3VhdDRnWnkxM2QyRjVUNk4vRE5Vc1NnVE03TWoxVUYvQVFWdUlhT1Ni?=
- =?utf-8?B?cGlKUGxXaW5PSWgzR1dnQkZTM3liTk5sUndqdFpKeVdKd1RNbmcvMDl3NE9F?=
- =?utf-8?B?OGtsUDdWVG9ET0o1dGxxQjZlV1pCM0UwQ1p1SW05YmRzNFpGdGwxYzQ2M1Jv?=
- =?utf-8?B?aEV0blJEajNLUHZXOHFPV1RQQXJxR2ZFc3MzL0R1Y2FadEdsaTZWU1lqUlVQ?=
- =?utf-8?B?Z3Z2TDNYcW5Gbm80T3hyUmcwTXJleHp5b1NtbDlTZk5JUGQyYjM0QVRXVk1y?=
- =?utf-8?B?SkNEamJITzZObk5GUnRweWxBYUNtT1FYd05DTFQ5b29SWWMydDRKY1ZTaDFX?=
- =?utf-8?B?MGxTN25GTkx0TTdkWmdrUDFmZHRMank0WjlkMWNxRnFnWEdwbHA3QXZKQTBV?=
- =?utf-8?B?SUFwdm96dUFiMXNCMDlYdUFWN1QrOElWK3VqYUYwWm1Vd2U2Y0tUTmtKVkhv?=
- =?utf-8?B?cFdxNTJwVUpQZENncE9RMGhmMFJicU9zTXVlcFR6RnFhNFA3SGdndlBqaEpo?=
- =?utf-8?B?S0lJTi9VTFNzZDlhWHBFcTVOS1N0bVJ3QkVIbkFnWlZ0cHMzcDROb3lkVi9S?=
- =?utf-8?B?dkMwK053N3pGWUU4djdIME5DcWZkcUFyRGUzUnFORG9EYW5TUG9xampFaHBv?=
- =?utf-8?B?WDA1eGxEQkNjVkYyenVwVkdTekxpMjA5M20ranpiM3RRTGJYMzA4ZExxNFZG?=
- =?utf-8?B?RWVuck1UeUEwYVBHc2w1YkExNVZ0UVdmTldBNEVZRUxGbTdlYnJOS0RnYy9K?=
- =?utf-8?B?YXM5ZXF3MWhTNzZUMmYzSHRiM3lMYjB0SUp4RkJPZ0pmdHFhTDBqdlYycG4x?=
- =?utf-8?B?OElabTZqVkYxZHZaYXNFZU1sVFEwN0ZpUFBPZk8rSFpoZ1Z5NUhiTVRoaDQx?=
- =?utf-8?B?YWtvc2FrclU0MXc4R2tUcXV4c0pOa2tqQzd5U09idmNlSXRINWhveWVZY2lh?=
- =?utf-8?B?a2FXMUxVcnJPNW83cTR1VWFYWlNRcmorUE9CSUkxQ0NreXppSFBlK2pxNXlF?=
- =?utf-8?B?VVNhSnJadmNudHBLYjZGU3FLbFB4WWFXbmtyWTI4K29EVG52bUVlbHhTNkdT?=
- =?utf-8?B?U1U4TmZPSlEvUFh3SGZja2ZhTDJBOUdWOTc3K2sxcXBpTEZVaExSSjdXa0Nz?=
- =?utf-8?B?WWM0OS9ORndHSlhTRDMwdGVxNW5QQUQva25kMndmWDJBdzc3YUxHMVBwNE5i?=
- =?utf-8?B?aEFvSkNaa2VyS0ZwUXQ4VnE2cWFCYjVGdlEzTUtqd0trUDhTZWd4ZWo1MU9L?=
- =?utf-8?B?N1o0ZnJBTFZmU1ZXb2RQMTlWYXV2eFN6TUc5ZHVCc3lleWdPSkpiMWlwZzlm?=
- =?utf-8?B?MllYbmdvU1B4MktzM1FraGRTaGZjQ2RxY2d1NFFqNm4zUjMwNndhSGYxSjY2?=
- =?utf-8?B?b1ZmaGFVbmUrVVFYU0FLWDM5NWovaTl2TG13SXRiTUJZRlozYjJod0Rpdlpl?=
- =?utf-8?B?MWR0WWpldG1SRGdiRUppSCtRODJBQld0aUZ2QzVVc2hUMVRVUTJkVEk3UGJr?=
- =?utf-8?B?S0hLRzRrUEkvZnliNklkaTlUeUZxamF4UW9aRXJvTmtwYnpHZU5hUU0vaERu?=
- =?utf-8?B?OG9KalZubmQ5QWpFMFZqTVRDZ2RhRURPOGhBUnlyTVBIRWg0VHl2c29nYzY2?=
- =?utf-8?B?ODdPMmFpTTUxdjdqcVUzWnc4bDlTTXlZSVk5bTVleWhJVENkVmg3YU9SQUhv?=
- =?utf-8?B?REU0OEt3WjlaTGUvZXV1aWNTK3EweG9QWGxRMkJJblhJUVlWTkZ6eGpGWllp?=
- =?utf-8?B?VnNFN2N5VEhkZDVXOWtCc3UvQ2xEMFVHTlU3MTJKM3JwUTBZQW1FN3VsZXF4?=
- =?utf-8?B?eksyUlQ3V0t2RlJnbTFkSWlEZ2FiUjFLTGpTT1phTU43UGptajlVeEYwbWpy?=
- =?utf-8?B?aldwdm5ackJ2UEZ1L3I0SHVWL0p2R2cwQ0tHRmNHQThDYk1mQ2x6QzBYZmph?=
- =?utf-8?B?ZGpMOGVEeU5oMnBIZlRzRTF1SHZSZzlzNFcvNjlCcjFFMk94cXBPVXFFLzJw?=
- =?utf-8?B?OUlsRjZGdHZKTEZXZS9NT2FBUnlkTkR5ZVBTL1d2OWFEZnRJRldCcS9lcTVY?=
- =?utf-8?Q?v5KR6OUX4sVGylCpr4tE38c=3D?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-MIME-Version: 1.0
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BL1PR12MB5157.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 37066f68-a7e5-41be-f8f2-08d9f8a39f9f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Feb 2022 21:13:08.9961
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: yTzNt5JLOyMx9Yy2gcfs+UP0EqX93HBLELX45hqyV68ByzbIYIAAN9ohQ2ErNb56QEIrO21oJShtEHJQCHoBoQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB3820
+        Christoph Hellwig <hch@infradead.org>
+References: <20220225181030.980223-1-mario.limonciello@amd.com>
+From:   Hans de Goede <hdegoede@redhat.com>
+In-Reply-To: <20220225181030.980223-1-mario.limonciello@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-W0FNRCBPZmZpY2lhbCBVc2UgT25seV0NCg0KPiA+Pj4+IE9uIEZyaSwgRmViIDI1LCAyMDIyIGF0
-IDEyOjExOjExQU0gLTA2MDAsIE1hcmlvIExpbW9uY2llbGxvIHdyb3RlOg0KPiA+Pj4+PiBUaGlz
-IGJvYXJkIGRlZmluaXRpb24gd2FzIG9yaWdpbmFsbHkgY3JlYXRlZCBmb3IgbW9iaWxlIGRldmlj
-ZXMgdG8NCj4gPj4+Pj4gZGVzaWduYXRlIGRlZmF1bHQgbGluayBwb3dlciBtYW5hZ21lZW50IHBv
-bGljeSB0byBpbmZsdWVuY2UgcnVudGltZQ0KPiA+Pj4+PiBwb3dlciBjb25zdW1wdGlvbi4NCj4g
-Pj4+Pj4NCj4gPj4+Pj4gQXMgdGhpcyBpcyBpbnRlcmVzdGluZyBmb3IgbW9yZSB0aGFuIGp1c3Qg
-bW9iaWxlIGRlc2lnbnMsIHJlbmFtZSB0aGUNCj4gPj4+Pj4gYm9hcmQgdG8gYGJvYXJkX2FoY2lf
-bG93X3Bvd2VyYCB0byBtYWtlIGl0IGNsZWFyIGl0IGlzIGFib3V0IGRlZmF1bHQNCj4gPj4+Pj4g
-cG9saWN5Lg0KPiA+Pj4+DQo+ID4+Pj4gSXMgdGhlcmUgYW55IGdvb2QgcmVhc29uIHRvIG5vdCBq
-dXN0IGFwcGx5IHRoZSBwb2xpY3kgdG8gYWxsIGRldmljZXMNCj4gPj4+PiBieSBkZWZhdWx0Pw0K
-PiA+Pj4NCj4gPj4+IFRoYXQgc3VyZSB3b3VsZCBtYWtlIHRoaXMgYWxsIGNsZWFuZXIuDQo+ID4+
-Pg0KPiA+Pj4gSSB0aGluayBIYW5zIGtub3dzIG1vcmUgb2YgdGhlIGhpc3RvcnkgaGVyZSB0aGFu
-IGFueW9uZSBlbHNlLiAgSSBoYWQNCj4gPj4+IHByZXN1bWVkIHRoZXJlIHdhcyBzb21lIGRhdGEg
-bG9zcyBzY2VuYXJpb3Mgd2l0aCBzb21lIG9mIHRoZSBvbGRlcg0KPiA+Pj4gY2hpcHNldHMuDQo+
-ID4+DQo+ID4+IFdoZW4gSSBmaXJzdCBpbnRyb2R1Y2VkIHRoaXMgY2hhbmdlIHRoZXJlIHdlcmUg
-cmVwb3J0cyBvZiBjcmFzaGVzIGFuZA0KPiA+PiBkYXRhIGNvcnJ1cHRpb24gY2F1c2VkIGJ5IHNl
-dHRpbmcgdGhlIHBvbGljeSB0byBtaW5fcG93ZXIsIHRoZXNlIHdlcmUNCj4gPj4gdGllZCB0byBz
-b21lIG1vdGhlcmJvYXJkcyBhbmQvb3IgdG8gc29tZSBkcml2ZXMuDQo+ID4+DQo+ID4+IFRoaXMg
-aXMgdGhlIHdob2xlIHJlYXNvbiB3aHkgSSBvbmx5IGVuYWJsZWQgdGhpcyBvbiBhIHN1YnNldCBv
-ZiBhbGwgdGhlDQo+ID4+IEFIQ0kgY2hpcHNldHMuDQo+ID4+DQo+ID4+IEF0IGxlYXN0IG9uIGRl
-dmljZXMgd2l0aCBhIGNoaXBzZXQgd2hpY2ggaXMgY3VycmVudGx5IG1hcmtlZCBhcw0KPiA+PiBt
-b2JpbGUsIHRoZSBtb3RoZXJib2FyZCBzcGVjaWZpYyBpc3N1ZXMgY291bGQgYmUgZml4ZWQgd2l0
-aCBhIEJJT1MNCj4gPj4gdXBkYXRlLiBCdXQgSSBkb3VidCB0aGF0IHNpbWlsYXIgQklPUyBmaXhl
-cyBoYXZlIGFsc28gYmVlbiByb2xsZWQNCj4gPj4gb3V0IHRvIGFsbCBkZXNrdG9wIGJvYXJkcyAo
-YW5kIGhhdmUgYmVlbiBhcHBsaWVkIGJ5IGFsbCB1c2VycyksDQo+ID4+IGFuZCBJIGFsc28gZG9u
-J3Qga25vdyBhYm91dCBvbGRlciBib2FyZHMuDQo+ID4+DQo+ID4+IFNvIGVuYWJsaW5nIHRoaXMg
-b24gYWxsIGNoaXBzZXRzIGlzIGRlZmluaXRlbHkgbm90IHdpdGhvdXQgcmlza3MuDQo+ID4+DQo+
-ID4NCj4gPiBUaGlzIHdhcyBiZWZvcmUgbWluX3Bvd2VyX3dpdGhfcGFydGlhbCBhbmQgbWluX3Bv
-d2VyX3dpdGhfZGlwbQ0KPiA+IHdlcmUgaW50cm9kdWNlZCB0aG91Z2ggcmlnaHQ/DQo+IA0KPiBU
-aGUgaXNzdWVzIHdoZXJlIHNvbWUgbGFwdG9wcyBuZWVkZWQgQklPUyB1cGRhdGVzIHdhcyB3aXRo
-IGZlZG9yYQ0KPiB1c2luZyBtaW5fcG93ZXJfd2l0aF9kaXBtIGFzIGRlZmF1bHQgZm9yIG1vYmls
-ZSBjaGlwc2V0cy4NCj4gDQoNCkRvIHlvdSBrbm93IGlmIHRoZSBkcml2ZXMgYWN0dWFsbHkgc3Vw
-cG9ydGVkIHNsdW1iZXIgYW5kIHBhcnRpYWw/IA0KSSB3b25kZXIgaWYgdGhhdCB3YXMgdGhlIHJl
-YWwgcHJvYmxlbSB0aGF0IHRoZXkgd2VyZSBiZWluZyBzZXQgd2hlbg0KdGhleSBzaG91bGRuJ3Qg
-YmUuDQoNCkkgYWRkZWQgc29tZXRoaW5nIGZvciB0aGlzIGluIDIvMiBpbiB0aGUgUkZDIHNlcmll
-cyB5b3UgY2FuIGxvb2sgYXQuDQoNCj4gPiAgTWF5YmUgYW5vdGhlciB3YXkgdG8gbG9vayBhdCB0
-aGlzDQo+ID4gaXMgdG8gZHJvcCB0aGUgcG9saWN5IG1pbl9wb3dlciwgd2hpY2ggb3ZlcmFsbCBp
-cyBkYW5nZXJvdXMuDQo+IA0KPiBNYXliZSwgc2VlIGFib3ZlLiBJJ20gbm90IGdvaW5nIHRvIGJs
-b2NrIHRoaXMgaWYgcGVvcGxlIHdhbnQNCj4gdG8gZ2l2ZSB0aGlzIGEgdHJ5LCBidXQgaXQgaXMg
-Z29pbmcgdG8gcmVxdWlyZSBzb21lb25lIGtlZXBpbmcNCj4gYSB2ZXJ5IGNsb3NlIGxvb2sgYXQg
-YW55IGlzc3VlcyBwb3BwaW5nIHVwIGFuZCB3ZSBtdXN0IGJlDQo+IHByZXBhcmVkIHRvIHJvbGwt
-YmFjayB0aGUgY2hhbmdlIGlmIG5lY2Vzc2FyeS4NCj4gDQoNClBlciBQYXVsJ3Mgc3VnZ2VzdGlv
-biBJIHNlbnQgb3V0IHYzIG9mIHRoaXMgc2VyaWVzIGFuZCB0aGVuIEkgc2VudA0Kb3V0IGEgc2Vw
-YXJhdGUgUkZDIHNlcmllcyAoeW91J3JlIG9uIENDKS4gIEZvciB0aGlzIHR5cGUgb2YNCnRoaW5n
-IGlmIHknYWxsIHRoaW5rIGl0IG1ha2VzIHNlbnNlIHRvIGRvLg0K
+Hi,
+
+On 2/25/22 19:10, Mario Limonciello wrote:
+> The low power policy board type was introduced to allow systems
+> to get into deep states reliably.  Before it was introduced `min_power`
+> was causing problems for a number of drives.  New power policies
+> `min_power_with_partial` and `med_power_with_dipm` have been introduced
+> which provide a more stable baseline for systems.
+> 
+> Suggested-by: Christoph Hellwig <hch@infradead.org>
+> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+
+As I already said in the other email thread about this:
+
+I'm not going to block this if people want
+to give this a try, but it is going to require someone keeping
+a very close look at any issues popping up and we must be
+prepared to roll-back the change if necessary.
+
+Regards,
+
+Hans
+
+
+
+
+
+> ---
+>  drivers/ata/Kconfig |   2 +-
+>  drivers/ata/ahci.c  | 105 +++++++++++++++++++-------------------------
+>  drivers/ata/ahci.h  |   9 ++--
+>  3 files changed, 50 insertions(+), 66 deletions(-)
+> 
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index cb9e71b4ca4d..3624d56d32b4 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -116,7 +116,7 @@ config SATA_AHCI
+>  	  If unsure, say N.
+>  
+>  config SATA_LPM_POLICY
+> -	int "Default SATA Link Power Management policy for low power chipsets"
+> +	int "Default SATA Link Power Management policy"
+>  	range 0 4
+>  	default 0
+>  	depends on SATA_AHCI
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index ffaad9eaa79d..17d757ad7111 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -50,7 +50,6 @@ enum board_ids {
+>  	/* board IDs by feature in alphabetical order */
+>  	board_ahci,
+>  	board_ahci_ign_iferr,
+> -	board_ahci_low_power,
+>  	board_ahci_no_debounce_delay,
+>  	board_ahci_nomsi,
+>  	board_ahci_noncq,
+> @@ -135,13 +134,6 @@ static const struct ata_port_info ahci_port_info[] = {
+>  		.udma_mask	= ATA_UDMA6,
+>  		.port_ops	= &ahci_ops,
+>  	},
+> -	[board_ahci_low_power] = {
+> -		AHCI_HFLAGS	(AHCI_HFLAG_USE_LPM_POLICY),
+> -		.flags		= AHCI_FLAG_COMMON,
+> -		.pio_mask	= ATA_PIO4,
+> -		.udma_mask	= ATA_UDMA6,
+> -		.port_ops	= &ahci_ops,
+> -	},
+>  	[board_ahci_no_debounce_delay] = {
+>  		.flags		= AHCI_FLAG_COMMON,
+>  		.link_flags	= ATA_LFLAG_NO_DEBOUNCE_DELAY,
+> @@ -275,13 +267,13 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+>  	{ PCI_VDEVICE(INTEL, 0x2924), board_ahci }, /* ICH9 */
+>  	{ PCI_VDEVICE(INTEL, 0x2925), board_ahci }, /* ICH9 */
+>  	{ PCI_VDEVICE(INTEL, 0x2927), board_ahci }, /* ICH9 */
+> -	{ PCI_VDEVICE(INTEL, 0x2929), board_ahci_low_power }, /* ICH9M */
+> -	{ PCI_VDEVICE(INTEL, 0x292a), board_ahci_low_power }, /* ICH9M */
+> -	{ PCI_VDEVICE(INTEL, 0x292b), board_ahci_low_power }, /* ICH9M */
+> -	{ PCI_VDEVICE(INTEL, 0x292c), board_ahci_low_power }, /* ICH9M */
+> -	{ PCI_VDEVICE(INTEL, 0x292f), board_ahci_low_power }, /* ICH9M */
+> +	{ PCI_VDEVICE(INTEL, 0x2929), board_ahci }, /* ICH9M */
+> +	{ PCI_VDEVICE(INTEL, 0x292a), board_ahci }, /* ICH9M */
+> +	{ PCI_VDEVICE(INTEL, 0x292b), board_ahci }, /* ICH9M */
+> +	{ PCI_VDEVICE(INTEL, 0x292c), board_ahci }, /* ICH9M */
+> +	{ PCI_VDEVICE(INTEL, 0x292f), board_ahci }, /* ICH9M */
+>  	{ PCI_VDEVICE(INTEL, 0x294d), board_ahci }, /* ICH9 */
+> -	{ PCI_VDEVICE(INTEL, 0x294e), board_ahci_low_power }, /* ICH9M */
+> +	{ PCI_VDEVICE(INTEL, 0x294e), board_ahci }, /* ICH9M */
+>  	{ PCI_VDEVICE(INTEL, 0x502a), board_ahci }, /* Tolapai */
+>  	{ PCI_VDEVICE(INTEL, 0x502b), board_ahci }, /* Tolapai */
+>  	{ PCI_VDEVICE(INTEL, 0x3a05), board_ahci }, /* ICH10 */
+> @@ -291,9 +283,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+>  	{ PCI_VDEVICE(INTEL, 0x3b23), board_ahci }, /* PCH AHCI */
+>  	{ PCI_VDEVICE(INTEL, 0x3b24), board_ahci }, /* PCH RAID */
+>  	{ PCI_VDEVICE(INTEL, 0x3b25), board_ahci }, /* PCH RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x3b29), board_ahci_low_power }, /* PCH M AHCI */
+> +	{ PCI_VDEVICE(INTEL, 0x3b29), board_ahci }, /* PCH M AHCI */
+>  	{ PCI_VDEVICE(INTEL, 0x3b2b), board_ahci }, /* PCH RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x3b2c), board_ahci_low_power }, /* PCH M RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x3b2c), board_ahci }, /* PCH M RAID */
+>  	{ PCI_VDEVICE(INTEL, 0x3b2f), board_ahci }, /* PCH AHCI */
+>  	{ PCI_VDEVICE(INTEL, 0x19b0), board_ahci_pcs7 }, /* DNV AHCI */
+>  	{ PCI_VDEVICE(INTEL, 0x19b1), board_ahci_pcs7 }, /* DNV AHCI */
+> @@ -316,9 +308,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+>  	{ PCI_VDEVICE(INTEL, 0x19cE), board_ahci_pcs7 }, /* DNV AHCI */
+>  	{ PCI_VDEVICE(INTEL, 0x19cF), board_ahci_pcs7 }, /* DNV AHCI */
+>  	{ PCI_VDEVICE(INTEL, 0x1c02), board_ahci }, /* CPT AHCI */
+> -	{ PCI_VDEVICE(INTEL, 0x1c03), board_ahci_low_power }, /* CPT M AHCI */
+> +	{ PCI_VDEVICE(INTEL, 0x1c03), board_ahci }, /* CPT M AHCI */
+>  	{ PCI_VDEVICE(INTEL, 0x1c04), board_ahci }, /* CPT RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x1c05), board_ahci_low_power }, /* CPT M RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x1c05), board_ahci }, /* CPT M RAID */
+>  	{ PCI_VDEVICE(INTEL, 0x1c06), board_ahci }, /* CPT RAID */
+>  	{ PCI_VDEVICE(INTEL, 0x1c07), board_ahci }, /* CPT RAID */
+>  	{ PCI_VDEVICE(INTEL, 0x1d02), board_ahci }, /* PBG AHCI */
+> @@ -327,29 +319,29 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+>  	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci }, /* PBG/Lewisburg RAID*/
+>  	{ PCI_VDEVICE(INTEL, 0x2323), board_ahci }, /* DH89xxCC AHCI */
+>  	{ PCI_VDEVICE(INTEL, 0x1e02), board_ahci }, /* Panther Point AHCI */
+> -	{ PCI_VDEVICE(INTEL, 0x1e03), board_ahci_low_power }, /* Panther M AHCI */
+> +	{ PCI_VDEVICE(INTEL, 0x1e03), board_ahci }, /* Panther M AHCI */
+>  	{ PCI_VDEVICE(INTEL, 0x1e04), board_ahci }, /* Panther Point RAID */
+>  	{ PCI_VDEVICE(INTEL, 0x1e05), board_ahci }, /* Panther Point RAID */
+>  	{ PCI_VDEVICE(INTEL, 0x1e06), board_ahci }, /* Panther Point RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x1e07), board_ahci_low_power }, /* Panther M RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x1e07), board_ahci }, /* Panther M RAID */
+>  	{ PCI_VDEVICE(INTEL, 0x1e0e), board_ahci }, /* Panther Point RAID */
+>  	{ PCI_VDEVICE(INTEL, 0x8c02), board_ahci }, /* Lynx Point AHCI */
+> -	{ PCI_VDEVICE(INTEL, 0x8c03), board_ahci_low_power }, /* Lynx M AHCI */
+> +	{ PCI_VDEVICE(INTEL, 0x8c03), board_ahci }, /* Lynx M AHCI */
+>  	{ PCI_VDEVICE(INTEL, 0x8c04), board_ahci }, /* Lynx Point RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x8c05), board_ahci_low_power }, /* Lynx M RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x8c05), board_ahci }, /* Lynx M RAID */
+>  	{ PCI_VDEVICE(INTEL, 0x8c06), board_ahci }, /* Lynx Point RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x8c07), board_ahci_low_power }, /* Lynx M RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x8c07), board_ahci }, /* Lynx M RAID */
+>  	{ PCI_VDEVICE(INTEL, 0x8c0e), board_ahci }, /* Lynx Point RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x8c0f), board_ahci_low_power }, /* Lynx M RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x9c02), board_ahci_low_power }, /* Lynx LP AHCI */
+> -	{ PCI_VDEVICE(INTEL, 0x9c03), board_ahci_low_power }, /* Lynx LP AHCI */
+> -	{ PCI_VDEVICE(INTEL, 0x9c04), board_ahci_low_power }, /* Lynx LP RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x9c05), board_ahci_low_power }, /* Lynx LP RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x9c06), board_ahci_low_power }, /* Lynx LP RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x9c07), board_ahci_low_power }, /* Lynx LP RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x9c0e), board_ahci_low_power }, /* Lynx LP RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x9c0f), board_ahci_low_power }, /* Lynx LP RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x9dd3), board_ahci_low_power }, /* Cannon Lake PCH-LP AHCI */
+> +	{ PCI_VDEVICE(INTEL, 0x8c0f), board_ahci }, /* Lynx M RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x9c02), board_ahci }, /* Lynx LP AHCI */
+> +	{ PCI_VDEVICE(INTEL, 0x9c03), board_ahci }, /* Lynx LP AHCI */
+> +	{ PCI_VDEVICE(INTEL, 0x9c04), board_ahci }, /* Lynx LP RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x9c05), board_ahci }, /* Lynx LP RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x9c06), board_ahci }, /* Lynx LP RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x9c07), board_ahci }, /* Lynx LP RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x9c0e), board_ahci }, /* Lynx LP RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x9c0f), board_ahci }, /* Lynx LP RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x9dd3), board_ahci }, /* Cannon Lake PCH-LP AHCI */
+>  	{ PCI_VDEVICE(INTEL, 0x1f22), board_ahci }, /* Avoton AHCI */
+>  	{ PCI_VDEVICE(INTEL, 0x1f23), board_ahci }, /* Avoton AHCI */
+>  	{ PCI_VDEVICE(INTEL, 0x1f24), board_ahci }, /* Avoton RAID */
+> @@ -381,26 +373,26 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+>  	{ PCI_VDEVICE(INTEL, 0x8d66), board_ahci }, /* Wellsburg RAID */
+>  	{ PCI_VDEVICE(INTEL, 0x8d6e), board_ahci }, /* Wellsburg RAID */
+>  	{ PCI_VDEVICE(INTEL, 0x23a3), board_ahci }, /* Coleto Creek AHCI */
+> -	{ PCI_VDEVICE(INTEL, 0x9c83), board_ahci_low_power }, /* Wildcat LP AHCI */
+> -	{ PCI_VDEVICE(INTEL, 0x9c85), board_ahci_low_power }, /* Wildcat LP RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x9c87), board_ahci_low_power }, /* Wildcat LP RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x9c8f), board_ahci_low_power }, /* Wildcat LP RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x9c83), board_ahci }, /* Wildcat LP AHCI */
+> +	{ PCI_VDEVICE(INTEL, 0x9c85), board_ahci }, /* Wildcat LP RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x9c87), board_ahci }, /* Wildcat LP RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x9c8f), board_ahci }, /* Wildcat LP RAID */
+>  	{ PCI_VDEVICE(INTEL, 0x8c82), board_ahci }, /* 9 Series AHCI */
+> -	{ PCI_VDEVICE(INTEL, 0x8c83), board_ahci_low_power }, /* 9 Series M AHCI */
+> +	{ PCI_VDEVICE(INTEL, 0x8c83), board_ahci }, /* 9 Series M AHCI */
+>  	{ PCI_VDEVICE(INTEL, 0x8c84), board_ahci }, /* 9 Series RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x8c85), board_ahci_low_power }, /* 9 Series M RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x8c85), board_ahci }, /* 9 Series M RAID */
+>  	{ PCI_VDEVICE(INTEL, 0x8c86), board_ahci }, /* 9 Series RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x8c87), board_ahci_low_power }, /* 9 Series M RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x8c87), board_ahci }, /* 9 Series M RAID */
+>  	{ PCI_VDEVICE(INTEL, 0x8c8e), board_ahci }, /* 9 Series RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x8c8f), board_ahci_low_power }, /* 9 Series M RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x9d03), board_ahci_low_power }, /* Sunrise LP AHCI */
+> -	{ PCI_VDEVICE(INTEL, 0x9d05), board_ahci_low_power }, /* Sunrise LP RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x9d07), board_ahci_low_power }, /* Sunrise LP RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x8c8f), board_ahci }, /* 9 Series M RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x9d03), board_ahci }, /* Sunrise LP AHCI */
+> +	{ PCI_VDEVICE(INTEL, 0x9d05), board_ahci }, /* Sunrise LP RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x9d07), board_ahci }, /* Sunrise LP RAID */
+>  	{ PCI_VDEVICE(INTEL, 0xa102), board_ahci }, /* Sunrise Point-H AHCI */
+> -	{ PCI_VDEVICE(INTEL, 0xa103), board_ahci_low_power }, /* Sunrise M AHCI */
+> +	{ PCI_VDEVICE(INTEL, 0xa103), board_ahci }, /* Sunrise M AHCI */
+>  	{ PCI_VDEVICE(INTEL, 0xa105), board_ahci }, /* Sunrise Point-H RAID */
+>  	{ PCI_VDEVICE(INTEL, 0xa106), board_ahci }, /* Sunrise Point-H RAID */
+> -	{ PCI_VDEVICE(INTEL, 0xa107), board_ahci_low_power }, /* Sunrise M RAID */
+> +	{ PCI_VDEVICE(INTEL, 0xa107), board_ahci }, /* Sunrise M RAID */
+>  	{ PCI_VDEVICE(INTEL, 0xa10f), board_ahci }, /* Sunrise Point-H RAID */
+>  	{ PCI_VDEVICE(INTEL, 0xa182), board_ahci }, /* Lewisburg AHCI*/
+>  	{ PCI_VDEVICE(INTEL, 0xa186), board_ahci }, /* Lewisburg RAID*/
+> @@ -413,13 +405,13 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+>  	{ PCI_VDEVICE(INTEL, 0xa356), board_ahci }, /* Cannon Lake PCH-H RAID */
+>  	{ PCI_VDEVICE(INTEL, 0x06d7), board_ahci }, /* Comet Lake-H RAID */
+>  	{ PCI_VDEVICE(INTEL, 0xa386), board_ahci }, /* Comet Lake PCH-V RAID */
+> -	{ PCI_VDEVICE(INTEL, 0x0f22), board_ahci_low_power }, /* Bay Trail AHCI */
+> -	{ PCI_VDEVICE(INTEL, 0x0f23), board_ahci_low_power }, /* Bay Trail AHCI */
+> -	{ PCI_VDEVICE(INTEL, 0x22a3), board_ahci_low_power }, /* Cherry Tr. AHCI */
+> -	{ PCI_VDEVICE(INTEL, 0x5ae3), board_ahci_low_power }, /* ApolloLake AHCI */
+> -	{ PCI_VDEVICE(INTEL, 0x34d3), board_ahci_low_power }, /* Ice Lake LP AHCI */
+> -	{ PCI_VDEVICE(INTEL, 0x02d3), board_ahci_low_power }, /* Comet Lake PCH-U AHCI */
+> -	{ PCI_VDEVICE(INTEL, 0x02d7), board_ahci_low_power }, /* Comet Lake PCH RAID */
+> +	{ PCI_VDEVICE(INTEL, 0x0f22), board_ahci }, /* Bay Trail AHCI */
+> +	{ PCI_VDEVICE(INTEL, 0x0f23), board_ahci }, /* Bay Trail AHCI */
+> +	{ PCI_VDEVICE(INTEL, 0x22a3), board_ahci }, /* Cherry Tr. AHCI */
+> +	{ PCI_VDEVICE(INTEL, 0x5ae3), board_ahci }, /* ApolloLake AHCI */
+> +	{ PCI_VDEVICE(INTEL, 0x34d3), board_ahci }, /* Ice Lake LP AHCI */
+> +	{ PCI_VDEVICE(INTEL, 0x02d3), board_ahci }, /* Comet Lake PCH-U AHCI */
+> +	{ PCI_VDEVICE(INTEL, 0x02d7), board_ahci }, /* Comet Lake PCH RAID */
+>  
+>  	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+>  	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+> @@ -447,7 +439,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+>  	{ PCI_VDEVICE(AMD, 0x7800), board_ahci }, /* AMD Hudson-2 */
+>  	{ PCI_VDEVICE(AMD, 0x7801), board_ahci_no_debounce_delay }, /* AMD Hudson-2 (AHCI mode) */
+>  	{ PCI_VDEVICE(AMD, 0x7900), board_ahci }, /* AMD CZ */
+> -	{ PCI_VDEVICE(AMD, 0x7901), board_ahci_low_power }, /* AMD Green Sardine */
+> +	{ PCI_VDEVICE(AMD, 0x7901), board_ahci }, /* AMD Green Sardine */
+>  	/* AMD is using RAID class only for ahci controllers */
+>  	{ PCI_VENDOR_ID_AMD, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+>  	  PCI_CLASS_STORAGE_RAID << 8, 0xffffff, board_ahci },
+> @@ -1594,11 +1586,6 @@ static void ahci_update_initial_lpm_policy(struct ata_port *ap,
+>  {
+>  	int policy = CONFIG_SATA_LPM_POLICY;
+>  
+> -
+> -	/* Ignore processing for chipsets that don't use policy */
+> -	if (!(hpriv->flags & AHCI_HFLAG_USE_LPM_POLICY))
+> -		return;
+> -
+>  	/* user modified policy via module param */
+>  	if (mobile_lpm_policy != -1) {
+>  		policy = mobile_lpm_policy;
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> index 5badbaca05a0..a2ca78e1df5c 100644
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -235,14 +235,11 @@ enum {
+>  	AHCI_HFLAG_YES_ALPM		= (1 << 23), /* force ALPM cap on */
+>  	AHCI_HFLAG_NO_WRITE_TO_RO	= (1 << 24), /* don't write to read
+>  							only registers */
+> -	AHCI_HFLAG_USE_LPM_POLICY	= (1 << 25), /* chipset that should use
+> -							SATA_LPM_POLICY
+> -							as default lpm_policy */
+> -	AHCI_HFLAG_SUSPEND_PHYS		= (1 << 26), /* handle PHYs during
+> +	AHCI_HFLAG_SUSPEND_PHYS		= (1 << 25), /* handle PHYs during
+>  							suspend/resume */
+> -	AHCI_HFLAG_IGN_NOTSUPP_POWER_ON	= (1 << 27), /* ignore -EOPNOTSUPP
+> +	AHCI_HFLAG_IGN_NOTSUPP_POWER_ON	= (1 << 26), /* ignore -EOPNOTSUPP
+>  							from phy_power_on() */
+> -	AHCI_HFLAG_NO_SXS		= (1 << 28), /* SXS not supported */
+> +	AHCI_HFLAG_NO_SXS		= (1 << 27), /* SXS not supported */
+>  
+>  	/* ap->flags bits */
+>  
+
