@@ -2,220 +2,319 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6487CC433EF
-	for <linux-ide@archiver.kernel.org>; Mon, 28 Feb 2022 10:14:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 738F3C433F5
+	for <linux-ide@archiver.kernel.org>; Mon, 28 Feb 2022 12:20:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229548AbiB1KPZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 28 Feb 2022 05:15:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35320 "EHLO
+        id S235214AbiB1MUx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 28 Feb 2022 07:20:53 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234754AbiB1KPY (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Feb 2022 05:15:24 -0500
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB20440909;
-        Mon, 28 Feb 2022 02:14:45 -0800 (PST)
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 7AE93210FE;
-        Mon, 28 Feb 2022 10:14:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
-        t=1646043284; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=1Nl/HRWLf2uRiBoL+p+hRLq5hSZUbfPxUEdyktKl8oE=;
-        b=KULkTYGveo35jseuRrsxacL20e1mMh1AdDlv/Jq3tT845dxlZd8Qmg93vYbQ+tlOB5agtm
-        paXFNSFpvJNvSOWZXYicuh2wJFUpWDt72JlU/CC4mjqTnpU6EleIpc/ectzIpPzGFaoU63
-        xygKjv5c/TGhl0SzFPZbSy4N2oyZmqE=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
-        s=susede2_ed25519; t=1646043284;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=1Nl/HRWLf2uRiBoL+p+hRLq5hSZUbfPxUEdyktKl8oE=;
-        b=5lw2eu8Ef56UGwgcaNsZEtM4WdIrEqLl75Cg1e8EHxo6tVZ/mEycmh+vwP/hkduGrn5Fxz
-        VKNNL/KhIWqAKNBA==
-Received: from quack3.suse.cz (unknown [10.100.224.230])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by relay2.suse.de (Postfix) with ESMTPS id 67A67A3B87;
-        Mon, 28 Feb 2022 10:14:44 +0000 (UTC)
-Received: by quack3.suse.cz (Postfix, from userid 1000)
-        id 21A2BA060A; Mon, 28 Feb 2022 11:14:44 +0100 (CET)
-Date:   Mon, 28 Feb 2022 11:14:44 +0100
-From:   Jan Kara <jack@suse.cz>
-To:     Byungchul Park <byungchul.park@lge.com>
-Cc:     Jan Kara <jack@suse.cz>, torvalds@linux-foundation.org,
-        damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
-        adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
-        mingo@redhat.com, linux-kernel@vger.kernel.org,
-        peterz@infradead.org, will@kernel.org, tglx@linutronix.de,
-        rostedt@goodmis.org, joel@joelfernandes.org, sashal@kernel.org,
-        daniel.vetter@ffwll.ch, chris@chris-wilson.co.uk,
-        duyuyang@gmail.com, johannes.berg@intel.com, tj@kernel.org,
-        tytso@mit.edu, willy@infradead.org, david@fromorbit.com,
-        amir73il@gmail.com, bfields@fieldses.org,
-        gregkh@linuxfoundation.org, kernel-team@lge.com,
-        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
-        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
-        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
-        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
-        ngupta@vflare.org, linux-block@vger.kernel.org, axboe@kernel.dk,
-        paolo.valente@linaro.org, josef@toxicpanda.com,
-        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
-        jack@suse.com, jlayton@kernel.org, dan.j.williams@intel.com,
-        hch@infradead.org, djwong@kernel.org,
-        dri-devel@lists.freedesktop.org, airlied@linux.ie,
-        rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
-        hamohammed.sa@gmail.com
-Subject: Re: Report 2 in ext4 and journal based on v5.17-rc1
-Message-ID: <20220228101444.6frl63dn5vmgycbp@quack3.lan>
-References: <1645095472-26530-1-git-send-email-byungchul.park@lge.com>
- <1645096204-31670-1-git-send-email-byungchul.park@lge.com>
- <1645096204-31670-2-git-send-email-byungchul.park@lge.com>
- <20220221190204.q675gtsb6qhylywa@quack3.lan>
- <20220223003534.GA26277@X58A-UD3R>
- <20220223144859.na2gjgl5efgw5zhn@quack3.lan>
- <20220224011102.GA29726@X58A-UD3R>
- <20220224102239.n7nzyyekuacgpnzg@quack3.lan>
- <20220228092826.GA5201@X58A-UD3R>
+        with ESMTP id S236221AbiB1MUu (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Feb 2022 07:20:50 -0500
+Received: from mout.gmx.net (mout.gmx.net [212.227.17.22])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A53970861;
+        Mon, 28 Feb 2022 04:20:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
+        s=badeba3b8450; t=1646050780;
+        bh=eDnjD3CV02Uc/By04jlSmoifwR/p3yucck7qbvDxUlY=;
+        h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
+        b=B9BCTw46CSs6HdScf5XBawxD261BdUGbcVtvaZsdJDHi2aw34dyIzFwrX9OopqveD
+         I2FtTc+nyZ9E4u5CgcH5n9+D6ghZCxaA62EeLjBh5jeEx35r22YPOwqDwutzAbWIrT
+         /KLD3QdJm0+k9AFS8CXSWx8hQUCYiEv4XnfOeZNc=
+X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
+Received: from [80.245.79.12] ([80.245.79.12]) by web-mail.gmx.net
+ (3c-app-gmx-bs53.server.lan [172.19.170.137]) (via HTTP); Mon, 28 Feb 2022
+ 13:19:40 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220228092826.GA5201@X58A-UD3R>
+Message-ID: <trinity-ac45bde6-392d-4810-8aad-9a06d2bcd85a-1646050780475@3c-app-gmx-bs53>
+From:   Frank Wunderlich <frank-w@public-files.de>
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+Cc:     Frank Wunderlich <linux@fw-web.de>,
+        Rob Herring <robh+dt@kernel.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>,
+        Peter Geis <pgwipeout@gmail.com>,
+        Michael Riesch <michael.riesch@wolfvision.net>,
+        linux-arm-kernel@lists.infradead.org,
+        linux-rockchip@lists.infradead.org,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: Aw: Re: [PATCH v3 1/3] dt-bindings: Convert ahci-platform DT
+ bindings to yaml
+Content-Type: text/plain; charset=UTF-8
+Date:   Mon, 28 Feb 2022 13:19:40 +0100
+Importance: normal
+Sensitivity: Normal
+In-Reply-To: <4c3303f5-7af5-9974-7bea-b7f0d6c7ef53@canonical.com>
+References: <20220227182800.275572-1-linux@fw-web.de>
+ <20220227182800.275572-2-linux@fw-web.de>
+ <4c3303f5-7af5-9974-7bea-b7f0d6c7ef53@canonical.com>
+X-UI-Message-Type: mail
+X-Priority: 3
+X-Provags-ID: V03:K1:WaOTMMs0zzPP9tR16fWXqpWJRLEnDSFpogU6J4ahuEh214gtupGtD2mYIKJcs+tuuRER3
+ hf7ggCrwJWr2C9y1xR0SZQqrW4Abh7eZAk31qY8QgryhDv05RhLHGLKXRCl8ukDxfL5xSNIiBx9A
+ 0LzDqJ4WiJXU6TVd+DB9w31d9fYxLHtsOSbnjZv1jqb38pJAyrLQgmcDFcAb+yF5gHspLU/8tLou
+ 31vNidvi2cMhKejH94AM30KcnwlIBpmI8yAu8mUOvX1sLvLYKG20d4efANu9L4kpunmzmx+lpM7W
+ 1A=
+X-UI-Out-Filterresults: notjunk:1;V03:K0:76GDCbpdFcA=:wpvhXNgTMyp6Ol+GqGncQQ
+ 6fq/Zf0ws8kdPkPT2yLCA9KNFu5GcRg+DNyon0A0F0UzG1d8SHcs2P15344yAAgPuXpZee3vD
+ /REh6YniW6B3jCUbf1po7hCbwiZtOUADjaLU/Wyjt+DmI14IfTO8XZfiuQ7TRi6vdAFaoaSrv
+ cJ69NbpJSENtDCRa9k2naZBoUrKu1OzzRGBCdZ2X+yK/DwD1g9PqyuZJwadLwQWKaspcGgop8
+ ckCLM5Q6E0dorKHzhyGlyYSdVrTCMoOvGJY/fqatDvlL0ETi3VDp/EgFiCMIva3yV+S/PQop9
+ Gn1XQgg7/dzktSDRE6pnpsfkembpCIIj78hYuo4itrncQ4IEa3CiuXu7fzLqXpAyhyV5yKa6g
+ VEnyk4ujidYUrNwN6XoD2hhq+D384cr9gzJLwITNfpFRePOLF6MlFzMNpSljLpPZVfHSzmLBl
+ wWIFCqFuyR41sZeMRFfkjSIhp4rnCKoFYOqZ29+STVq+EIYgPsyA/F7EWuz/ECgWA1+JkOWZH
+ ogg9h7Ap2bmbXBmkXh0zE4QqMioDH2T8A0UTjRn3ZJXYt77LBk9Okjh5ltXLKJC7dZJKKh7/t
+ g7LTPpnSbtBz9OXpNTOSL4DVvTum6FTROLBL4Yu4JERHpkvLi+EpjQQVY3XdTi7MY8A856A04
+ JgNKxhGYlvMsaPrfJodkgrTG6m7o2Uw3f1Fqmxl2mPXc4E3bz9xmhbHUdHTT5uPfG+mmwZ/mU
+ 13t6/8h2B/t/Vx1SJvaL7S4D0CEldIVN98gLMxOnm00wtqxcigkoJ5eF8ts9keS2203Pm6I0c
+ T2Hl80h
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon 28-02-22 18:28:26, Byungchul Park wrote:
-> On Thu, Feb 24, 2022 at 11:22:39AM +0100, Jan Kara wrote:
-> > On Thu 24-02-22 10:11:02, Byungchul Park wrote:
-> > > On Wed, Feb 23, 2022 at 03:48:59PM +0100, Jan Kara wrote:
-> > > > > KJOURNALD2(kthread)	TASK1(ksys_write)	TASK2(ksys_write)
-> > > > > 
-> > > > > wait A
-> > > > > --- stuck
-> > > > > 			wait B
-> > > > > 			--- stuck
-> > > > > 						wait C
-> > > > > 						--- stuck
-> > > > > 
-> > > > > wake up B		wake up C		wake up A
-> > > > > 
-> > > > > where:
-> > > > > A is a wait_queue, j_wait_commit
-> > > > > B is a wait_queue, j_wait_transaction_locked
-> > > > > C is a rwsem, mapping.invalidate_lock
-> > > > 
-> > > > I see. But a situation like this is not necessarily a guarantee of a
-> > > > deadlock, is it? I mean there can be task D that will eventually call say
-> > > > 'wake up B' and unblock everything and this is how things were designed to
-> > > > work? Multiple sources of wakeups are quite common I'd say... What does
-> > > 
-> > > Yes. At the very beginning when I desgined Dept, I was thinking whether
-> > > to support multiple wakeup sources or not for a quite long time.
-> > > Supporting it would be a better option to aovid non-critical reports.
-> > > However, I thought anyway we'd better fix it - not urgent tho - if
-> > > there's any single circle dependency. That's why I decided not to
-> > > support it for now and wanted to gather the kernel guys' opinions. Thing
-> > > is which policy we should go with.
-> > 
-> > I see. So supporting only a single wakeup source is fine for locks I guess.
-> > But for general wait queues or other synchronization mechanisms, I'm afraid
-> > it will lead to quite some false positive reports. Just my 2c.
-> 
-> Thank you for your feedback.
-> 
-> I realized we've been using "false positive" differently. There exist
-> the three types of code in terms of dependency and deadlock. It's worth
-> noting that dependencies are built from between waits and events in Dept.
-> 
-> ---
-> 
-> case 1. Code with an actual circular dependency, but not deadlock.
-> 
->    A circular dependency can be broken by a rescue wakeup source e.g.
->    timeout. It's not a deadlock. If it's okay that the contexts
->    participating in the circular dependency and others waiting for the
->    events in the circle are stuck until it gets broken. Otherwise, say,
->    if it's not meant, then it's anyway problematic.
-> 
->    1-1. What if we judge this code is problematic?
->    1-2. What if we judge this code is good?
-> 
-> case 2. Code with an actual circular dependency, and deadlock.
-> 
->    There's no other wakeup source than those within the circular
->    dependency. Literally deadlock. It's problematic and critical.
-> 
->    2-1. What if we judge this code is problematic?
->    2-2. What if we judge this code is good?
-> 
-> case 3. Code with no actual circular dependency, and not deadlock.
-> 
->    Must be good.
-> 
->    3-1. What if we judge this code is problematic?
->    3-2. What if we judge this code is good?
-> 
-> ---
-> 
-> I call only 3-1 "false positive" circular dependency. And you call 1-1
-> and 3-1 "false positive" deadlock.
-> 
-> I've been wondering if the kernel guys esp. Linus considers code with
-> any circular dependency is problematic or not, even if it won't lead to
-> a deadlock, say, case 1. Even though I designed Dept based on what I
-> believe is right, of course, I'm willing to change the design according
-> to the majority opinion.
-> 
-> However, I would never allow case 1 if I were the owner of the kernel
-> for better stability, even though the code works anyway okay for now.
+Hi Krzysztof,
 
-So yes, I call a report for the situation "There is circular dependency but
-deadlock is not possible." a false positive. And that is because in my
-opinion your definition of circular dependency includes schemes that are
-useful and used in the kernel.
+thanks for first review.
 
-Your example in case 1 is kind of borderline (I personally would consider
-that bug as well) but there are other more valid schemes with multiple
-wakeup sources like:
+> Gesendet: Montag, 28. Februar 2022 um 11:08 Uhr
+> Von: "Krzysztof Kozlowski" <krzysztof.kozlowski@canonical.com>
 
-We have a queue of work to do Q protected by lock L. Consumer process has
-code like:
+> On 27/02/2022 19:27, Frank Wunderlich wrote:
+> > From: Frank Wunderlich <frank-w@public-files.de>
 
-while (1) {
-	lock L
-	prepare_to_wait(work_queued);
-	if (no work) {
-		unlock L
-		sleep
-	} else {
-		unlock L
-		do work
-		wake_up(work_done)
-	}
-}
+> You missed devicetree mailing list (corrupted address).
 
-AFAIU Dept will create dependency here that 'wakeup work_done' is after
-'wait for work_queued'. Producer has code like:
+sorry, devicetree ML was To, but forget the Cc-Header (prepared addresses =
+in coverletter)
 
-while (1) {
-	lock L
-	prepare_to_wait(work_done)
-	if (too much work queued) {
-		unlock L
-		sleep
-	} else {
-		queue work
-		unlock L
-		wake_up(work_queued)
-	}
-}
+> > imho all errors should be fixed in the dts not in the yaml...
 
-And Dept will create dependency here that 'wakeup work_queued' is after
-'wait for work_done'. And thus we have a trivial cycle in the dependencies
-despite the code being perfectly valid and safe.
+> > -- reg               : <registers mapping>
+> > -
+> > -Please note that when using "generic-ahci" you must also specify a So=
+C specific
+> > -compatible:
+> > -	compatible =3D "manufacturer,soc-model-ahci", "generic-ahci";
+...
+> > +properties:
+> > +  compatible:
+> > +    contains:
+> > +      enum:
+> > +        - brcm,iproc-ahci
+> > +        - cavium,octeon-7130-ahci
+> > +        - generic-ahci
+> > +        - hisilicon,hisi-ahci
+> > +        - ibm,476gtr-ahci
+> > +        - marvell,armada-380-ahci
+> > +        - marvell,armada-3700-ahci
+>
+> Order entries alphabetically.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+ok
+
+> > +        - snps,dwc-ahci
+> > +        - snps,spear-ahci
+>
+> You converted the TXT bindings explicitly, but you missed the comment
+> just below the 'reg' about generic-ahci. The generic-ahci never comes al=
+one.
+
+How should this comment be added? description above/below the compatible-p=
+roperty?
+Sorry for dumb questions...this is my first yaml ;)
+
+e.g.
+
+properties:
+  compatible:
+    description:
+      Please note that when using "generic-ahci" you must also specify a S=
+oC specific
+      compatible:
+         compatible =3D "manufacturer,soc-model-ahci", "generic-ahci";
+    contains:
+      enum:
+
+> The snps,dwc-ahci could come, although history shows that Synapsys
+> blocks are commonly re-used and they should have specific compatible.
+> Current users still have single snps,dwc-ahci, so it could be fixed a
+> bit later.
+>
+> On the other hand, I expect to fix all the DTS in the same series where
+> the bindings are corrected.
+
+i don't know the marvell/broadcom-hw so i cannot fix them.
+Just converted the txt to check my rockchip sata nodes and to be more
+future-proof (no more exceptions like the marvell/broadcom)
+
+> > +
+> > +  reg:
+> > +    maxItems: 1
+> > +
+> > +  clocks:
+> > +    minItems: 1
+> > +    maxItems: 3
+>
+> Items should be described. Next or this patch could add also clock-names=
+.
+
+i was told to drop clock-names (same for interrupt-names and reset-names) =
+from dts
+and in txt it was not there so have not added it
+
+https://patchwork.kernel.org/comment/24755956/
+
+> > +
+> > +  interrupts:
+> > +    minItems: 1
+>
+> You mean maxItems?
+
+no, minItems, as interrupts suggests 1+ (same for phys)
+
+> > +
+> > +  ahci-supply:
+> > +    description:
+> > +      regulator for AHCI controller
+> > +
+> > +  dma-coherent:
+> > +    description:
+> > +      Present if dma operations are coherent
+>
+> Skip description, it's obvious. Just 'true'.
+
+ok, took this from the txt
+
+> > +
+> > +  phy-supply:
+> > +    description:
+> > +      regulator for PHY power
+> > +
+> > +  phys:
+> > +    minItems: 1
+>
+> maxItems?
+> > +
+> > +  phy-names:
+> > +    minItems: 1
+>
+> Describe the items.
+>
+> > +
+> > +  ports-implemented:
+> > +    description:
+> > +      Mask that indicates which ports that the HBA supports
+> > +      are available for software to use. Useful if PORTS_IMPL
+> > +      is not programmed by the BIOS, which is true with
+> > +      some embedded SoCs.
+> > +    minItems: 1
+>
+> You need a type and maxItems.
+
+what will be the type of a mask?
+
+> > +
+> > +  resets:
+> > +    minItems: 1
+>
+> maxItems?
+
+if there is a known maximum....
+
+> > +
+> > +  target-supply:
+> > +    description:
+> > +      regulator for SATA target power
+> > +
+> > +required:
+> > +  - compatible
+> > +  - reg
+> > +  - interrupts
+> > +
+> > +patternProperties:
+> > +  "^sata-port@[0-9]+$":
+>
+> You limit number of ports to 10. On purpose? What about 0xa? 0xb?
+
+oh, right, there can be hexadecimal...
+thought this is only true for the main-node (address) and have only seen @=
+0, @1 and @2
+
+> > +    type: object
+> > +    description:
+> > +      Subnode with configuration of the Ports.
+> > +
+> > +    properties:
+> > +      reg:
+> > +        maxItems: 1
+> > +
+> > +      phys:
+> > +        minItems: 1
+>
+> maxItems? Why do you put everywhere minItems? Are several phys really
+> expected?
+
+name suggests that it can be more than 1. i know from usb subsystem (dwc3 =
+usb3) that a device can have more than one phy, and because in the txt the=
+re are no ranges i set everywhere MinItems to 1 with open end as i do not =
+know all possibilities. Anything else will be trial and error...for all pr=
+operties
+
+> > +
+> > +      target-supply:
+> > +        description:
+> > +          regulator for SATA target power
+> > +
+> > +    required:
+> > +      - reg
+> > +
+> > +    anyOf:
+> > +      - required: [ phys ]
+> > +      - required: [ target-supply ]
+> > +
+> > +allOf:
+> > +- $ref: "sata-common.yaml#"
+>
+> This goes before properties.
+>
+> > +
+> > +unevaluatedProperties: false
+> > +
+> > +examples:
+> > +  - |
+> > +        sata@ffe08000 {
+>
+> Wrong indentation. It starts just below |
+
+will fix it
+
+> > +               compatible =3D "snps,spear-ahci";
+> > +               reg =3D <0xffe08000 0x1000>;
+> > +               interrupts =3D <115>;
+> > +        };
+> > +  - |
+> > +        #include <dt-bindings/interrupt-controller/arm-gic.h>
+> > +        #include <dt-bindings/clock/berlin2q.h>
+> > +        sata@f7e90000 {
+> > +                compatible =3D "marvell,berlin2q-achi", "generic-ahci=
+";
+>
+> This clearly won't pass your checks. I don't think you run
+> dt_binding_check. You must test your bindings first.
+
+i had them tested ...needed to add the includes...after that the dt_bindin=
+gs_check was without errors/warnings
+
+these are the commands i used:
+
+ARCH=3Darm64 CROSS_COMPILE=3Daarch64-linux-gnu- make dt_binding_check DT_S=
+CHEMA_FILES=3DDocumentation/devicetree/bindings/ata/ahci-platform.yaml
+ARCH=3Darm64 CROSS_COMPILE=3Daarch64-linux-gnu- make dtbs_check DT_SCHEMA_=
+FILES=3DDocumentation/devicetree/bindings/ata/ahci-platform.yaml
+
+> Best regards,
+> Krzysztof
+
+regards Frank
