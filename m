@@ -2,156 +2,274 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDE48C433EF
-	for <linux-ide@archiver.kernel.org>; Mon, 28 Feb 2022 09:54:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64940C433F5
+	for <linux-ide@archiver.kernel.org>; Mon, 28 Feb 2022 09:57:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229502AbiB1JzI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 28 Feb 2022 04:55:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56374 "EHLO
+        id S234592AbiB1J6I (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 28 Feb 2022 04:58:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234560AbiB1JzG (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Feb 2022 04:55:06 -0500
-Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F1E41C92D
-        for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2022 01:54:28 -0800 (PST)
-Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com [209.85.128.69])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id D15A74031B
-        for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2022 09:54:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1646042066;
-        bh=mna9J1nBg6HOMnow2P6fMcSmE8VXg1IqnH2FURdKmp0=;
-        h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-         In-Reply-To:Content-Type;
-        b=KtI8RzRNkh73o6/0HDmpns4ouVwXYqF7A9kzAsJA1QiE2bSPj7Y0VKSeCj75IycZB
-         NG6oeor85JLhiFihMpktc4XJMXKAZ50uhVUetUGC54mObySw4VNgmHk0vLXwvVPNqd
-         Ug7NWcBBnnSTlWasQegW4QF6heGYPbmtS2B43nJC1bO7aBO5vfnichTF5CRpKgZc/A
-         ds7WXGGmY/rKStYU/uMxaUSKBfcdyeoQy0GC71bNRN+EKPmtN8F2rGgjIg+/g+YqaJ
-         k5svaAfQMnnmxtUY8AqKeVPuhwcMHo0DLcGtfuhgMdHrYKmPPQbgqBRSRta0KNqk3j
-         cah7Qg8HfiD2g==
-Received: by mail-wm1-f69.google.com with SMTP id 7-20020a1c1907000000b003471d9bbe8dso3966451wmz.0
-        for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2022 01:54:26 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=mna9J1nBg6HOMnow2P6fMcSmE8VXg1IqnH2FURdKmp0=;
-        b=1SdQPnuR+qr14EgJdFfi9n0F4mPo+zyqdPpQ77YG1AqJruk9enHvR7Q881UyeDpRBe
-         NCqYjhWIDtiNTcnVyk6OPZchjbCJS8PYNGxm1gUJB3x2vkUertCZnowlU+XY54MmcczA
-         2T3Z4LE6yoibMv0uHrRgviccOkeVi6dndeQ7g5Ik6GFn740fEuDKP47Qdr2GwgUCBGbR
-         TZ4q6oRobfS4rMJeEqF4tvctt+HHSh1E81oWXLhCshGZ7iim9v6AHVzGmssqBrkbIDvp
-         CoXeIzZm19HoVhjo4ykuYthU8XDM/4A61aQcgcnvHbTmRBHdXmSe4GZwBiBaCwJfAGdV
-         hLhw==
-X-Gm-Message-State: AOAM533tQmH17yksaoXxXmS2KThv7JLoGE6ILKika2vRnsbQb4kgeR9s
-        JVnotpO73VqCDBkwD7qFtatH7kqRDVy6zDdMs2U4E/10e2Lklib7xMUltKYJDO5FCVnFytLcoiH
-        04+fFt4u4Iv6FMzXrRoyFKfAXctMAX1m63pf3Aw==
-X-Received: by 2002:a05:6000:162f:b0:1ed:bbef:f7b9 with SMTP id v15-20020a056000162f00b001edbbeff7b9mr15608209wrb.379.1646042064786;
-        Mon, 28 Feb 2022 01:54:24 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJwF4VDklq4C5zzM72nwt08X01T/IfVu/GQ6QrQbbkJljUbB9HduFrRm9IjGHQBgzq6rkjLXyQ==
-X-Received: by 2002:a05:6000:162f:b0:1ed:bbef:f7b9 with SMTP id v15-20020a056000162f00b001edbbeff7b9mr15608187wrb.379.1646042064370;
-        Mon, 28 Feb 2022 01:54:24 -0800 (PST)
-Received: from [192.168.0.133] (xdsl-188-155-181-108.adslplus.ch. [188.155.181.108])
-        by smtp.gmail.com with ESMTPSA id n10-20020a5d598a000000b001efab095615sm4434539wri.29.2022.02.28.01.54.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 28 Feb 2022 01:54:23 -0800 (PST)
-Message-ID: <fc3186ce-f731-a7c1-e958-b0071125b32c@canonical.com>
-Date:   Mon, 28 Feb 2022 10:54:21 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH v3 3/3] arm64: dts: rockchip: Add sata nodes to rk356x
-Content-Language: en-US
-To:     Frank Wunderlich <linux@fw-web.de>,
-        "devicetree @ vger . kernel . org Damien Le Moal" 
-        <damien.lemoal@opensource.wdc.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>,
-        Peter Geis <pgwipeout@gmail.com>,
-        Michael Riesch <michael.riesch@wolfvision.net>,
-        linux-arm-kernel@lists.infradead.org,
-        linux-rockchip@lists.infradead.org
-Cc:     Frank Wunderlich <frank-w@public-files.de>
-References: <20220227182800.275572-1-linux@fw-web.de>
- <20220227182800.275572-4-linux@fw-web.de>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
-In-Reply-To: <20220227182800.275572-4-linux@fw-web.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+        with ESMTP id S234567AbiB1J6D (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Feb 2022 04:58:03 -0500
+Received: from lgeamrelo11.lge.com (lgeamrelo12.lge.com [156.147.23.52])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1A1DFB4C
+        for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2022 01:57:19 -0800 (PST)
+Received: from unknown (HELO lgemrelse6q.lge.com) (156.147.1.121)
+        by 156.147.23.52 with ESMTP; 28 Feb 2022 18:57:18 +0900
+X-Original-SENDERIP: 156.147.1.121
+X-Original-MAILFROM: byungchul.park@lge.com
+Received: from unknown (HELO localhost.localdomain) (10.177.244.38)
+        by 156.147.1.121 with ESMTP; 28 Feb 2022 18:57:18 +0900
+X-Original-SENDERIP: 10.177.244.38
+X-Original-MAILFROM: byungchul.park@lge.com
+From:   Byungchul Park <byungchul.park@lge.com>
+To:     torvalds@linux-foundation.org
+Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
+        adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
+        mingo@redhat.com, linux-kernel@vger.kernel.org,
+        peterz@infradead.org, will@kernel.org, tglx@linutronix.de,
+        rostedt@goodmis.org, joel@joelfernandes.org, sashal@kernel.org,
+        daniel.vetter@ffwll.ch, chris@chris-wilson.co.uk,
+        duyuyang@gmail.com, johannes.berg@intel.com, tj@kernel.org,
+        tytso@mit.edu, willy@infradead.org, david@fromorbit.com,
+        amir73il@gmail.com, bfields@fieldses.org,
+        gregkh@linuxfoundation.org, kernel-team@lge.com,
+        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
+        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
+        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
+        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
+        ngupta@vflare.org, linux-block@vger.kernel.org,
+        paolo.valente@linaro.org, josef@toxicpanda.com,
+        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
+        jack@suse.cz, jack@suse.com, jlayton@kernel.org,
+        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
+        dri-devel@lists.freedesktop.org, airlied@linux.ie,
+        rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
+        hamohammed.sa@gmail.com
+Subject: [PATCH v3 03/21] dept: Embed Dept data in Lockdep
+Date:   Mon, 28 Feb 2022 18:56:42 +0900
+Message-Id: <1646042220-28952-4-git-send-email-byungchul.park@lge.com>
+X-Mailer: git-send-email 1.9.1
+In-Reply-To: <1646042220-28952-1-git-send-email-byungchul.park@lge.com>
+References: <1646042220-28952-1-git-send-email-byungchul.park@lge.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 27/02/2022 19:28, Frank Wunderlich wrote:
-> From: Frank Wunderlich <frank-w@public-files.de>
-> 
-> RK356x supports up to 3 sata controllers which were compatible with the
-> existing snps,dwc-ahci binding.
-> 
-> Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
-> ---
-> changes in v3:
->   - fix combphy error by moving sata0 to rk3568.dtsi
->   - remove clock-names and interrupt-names
-> changes in v2:
->   - added sata0 + 1, but have only tested sata2
-> ---
->  arch/arm64/boot/dts/rockchip/rk3568.dtsi | 14 +++++++++++++
->  arch/arm64/boot/dts/rockchip/rk356x.dtsi | 26 ++++++++++++++++++++++++
->  2 files changed, 40 insertions(+)
-> 
-> diff --git a/arch/arm64/boot/dts/rockchip/rk3568.dtsi b/arch/arm64/boot/dts/rockchip/rk3568.dtsi
-> index 5b0f528d6818..2a2f65899d47 100644
-> --- a/arch/arm64/boot/dts/rockchip/rk3568.dtsi
-> +++ b/arch/arm64/boot/dts/rockchip/rk3568.dtsi
-> @@ -8,6 +8,19 @@
->  / {
->  	compatible = "rockchip,rk3568";
->  
-> +	sata0: sata@fc000000 {
-> +		compatible = "snps,dwc-ahci";
-> +		reg = <0 0xfc000000 0 0x1000>;
-> +		clocks = <&cru ACLK_SATA0>, <&cru CLK_SATA0_PMALIVE>,
-> +			 <&cru CLK_SATA0_RXOOB>;
-> +		interrupts = <GIC_SPI 94 IRQ_TYPE_LEVEL_HIGH>;
-> +		phys = <&combphy0 PHY_TYPE_SATA>;
-> +		phy-names = "sata-phy";
-> +		ports-implemented = <0x1>;
-> +		power-domains = <&power RK3568_PD_PIPE>;
-> +		status = "disabled";
-> +	};
-> +
->  	pipe_phy_grf0: syscon@fdc70000 {
->  		compatible = "rockchip,rk3568-pipe-phy-grf", "syscon";
->  		reg = <0x0 0xfdc70000 0x0 0x1000>;
-> @@ -114,3 +127,4 @@ power-domain@RK3568_PD_PIPE {
->  		#power-domain-cells = <0>;
->  	};
->  };
-> +
+Dept should work independently from Lockdep. However, there's no choise
+but to rely on Lockdep code and its instances for now.
 
-No need for new line here,
+Signed-off-by: Byungchul Park <byungchul.park@lge.com>
+---
+ include/linux/lockdep.h       | 71 ++++++++++++++++++++++++++++++++++++++++---
+ include/linux/lockdep_types.h |  3 ++
+ kernel/locking/lockdep.c      | 12 ++++----
+ 3 files changed, 76 insertions(+), 10 deletions(-)
 
-> diff --git a/arch/arm64/boot/dts/rockchip/rk356x.dtsi b/arch/arm64/boot/dts/rockchip/rk356x.dtsi
-> index 7cdef800cb3c..484c5ace718a 100644
-> --- a/arch/arm64/boot/dts/rockchip/rk356x.dtsi
-> +++ b/arch/arm64/boot/dts/rockchip/rk356x.dtsi
-> @@ -230,6 +230,32 @@ scmi_shmem: sram@0 {
->  		};
->  	};
->  
-> +	sata1: sata@fc400000 {
-> +		compatible = "snps,dwc-ahci";
-> +		reg = <0 0xfc400000 0 0x1000>;
-> +		clocks = <&cru ACLK_SATA1>, <&cru CLK_SATA1_PMALIVE>,
-> +			 <&cru CLK_SATA1_RXOOB>;
+diff --git a/include/linux/lockdep.h b/include/linux/lockdep.h
+index 467b942..c56f6b6 100644
+--- a/include/linux/lockdep.h
++++ b/include/linux/lockdep.h
+@@ -20,6 +20,33 @@
+ extern int prove_locking;
+ extern int lock_stat;
+ 
++#ifdef CONFIG_DEPT
++static inline void dept_after_copy_map(struct dept_map *to,
++				       struct dept_map *from)
++{
++	int i;
++
++	if (from->keys == &from->keys_local)
++		to->keys = &to->keys_local;
++
++	if (!to->keys)
++		return;
++
++	/*
++	 * Since the class cache can be modified concurrently we could observe
++	 * half pointers (64bit arch using 32bit copy insns). Therefore clear
++	 * the caches and take the performance hit.
++	 *
++	 * XXX it doesn't work well with lockdep_set_class_and_subclass(), since
++	 *     that relies on cache abuse.
++	 */
++	for (i = 0; i < DEPT_MAX_SUBCLASSES_CACHE; i++)
++		to->keys->classes[i] = NULL;
++}
++#else
++#define dept_after_copy_map(t, f)	do { } while (0)
++#endif
++
+ #ifdef CONFIG_LOCKDEP
+ 
+ #include <linux/linkage.h>
+@@ -43,6 +70,8 @@ static inline void lockdep_copy_map(struct lockdep_map *to,
+ 	 */
+ 	for (i = 0; i < NR_LOCKDEP_CACHING_CLASSES; i++)
+ 		to->class_cache[i] = NULL;
++
++	dept_after_copy_map(&to->dmap, &from->dmap);
+ }
+ 
+ /*
+@@ -176,8 +205,19 @@ struct held_lock {
+ 	current->lockdep_recursion -= LOCKDEP_OFF;	\
+ } while (0)
+ 
+-extern void lockdep_register_key(struct lock_class_key *key);
+-extern void lockdep_unregister_key(struct lock_class_key *key);
++extern void __lockdep_register_key(struct lock_class_key *key);
++extern void __lockdep_unregister_key(struct lock_class_key *key);
++
++#define lockdep_register_key(k)				\
++do {							\
++	__lockdep_register_key(k);			\
++	dept_key_init(&(k)->dkey);			\
++} while (0)
++#define lockdep_unregister_key(k)			\
++do {							\
++	__lockdep_unregister_key(k);			\
++	dept_key_destroy(&(k)->dkey);			\
++} while (0)
+ 
+ /*
+  * These methods are used by specific locking variants (spinlocks,
+@@ -185,9 +225,18 @@ struct held_lock {
+  * to lockdep:
+  */
+ 
+-extern void lockdep_init_map_type(struct lockdep_map *lock, const char *name,
++extern void __lockdep_init_map_type(struct lockdep_map *lock, const char *name,
+ 	struct lock_class_key *key, int subclass, u8 inner, u8 outer, u8 lock_type);
+ 
++#define lockdep_init_map_type(l, n, k, s, i, o, t)		\
++do {								\
++	__lockdep_init_map_type(l, n, k, s, i, o, t);		\
++	if ((k) == &__lockdep_no_validate__)			\
++		dept_map_nocheck(&(l)->dmap);			\
++	else							\
++		dept_map_init(&(l)->dmap, &(k)->dkey, s, n);	\
++} while (0)
++
+ static inline void
+ lockdep_init_map_waits(struct lockdep_map *lock, const char *name,
+ 		       struct lock_class_key *key, int subclass, u8 inner, u8 outer)
+@@ -431,13 +480,27 @@ enum xhlock_context_t {
+ 	XHLOCK_CTX_NR,
+ };
+ 
++#ifdef CONFIG_DEPT
++/*
++ * TODO: I found the case to use an address of other than a real key as
++ * _key, for instance, in workqueue. So for now, we cannot use the
++ * assignment like '.dmap.keys = &(_key)->dkey' unless it's fixed.
++ */
++#define STATIC_DEPT_MAP_INIT(_name, _key) .dmap = {		\
++	.name = (_name),					\
++	.keys = NULL },
++#else
++#define STATIC_DEPT_MAP_INIT(_name, _key)
++#endif
++
+ #define lockdep_init_map_crosslock(m, n, k, s) do {} while (0)
+ /*
+  * To initialize a lockdep_map statically use this macro.
+  * Note that _name must not be NULL.
+  */
+ #define STATIC_LOCKDEP_MAP_INIT(_name, _key) \
+-	{ .name = (_name), .key = (void *)(_key), }
++	{ .name = (_name), .key = (void *)(_key), \
++	STATIC_DEPT_MAP_INIT(_name, _key) }
+ 
+ static inline void lockdep_invariant_state(bool force) {}
+ static inline void lockdep_free_task(struct task_struct *task) {}
+diff --git a/include/linux/lockdep_types.h b/include/linux/lockdep_types.h
+index d224308..50c8879 100644
+--- a/include/linux/lockdep_types.h
++++ b/include/linux/lockdep_types.h
+@@ -11,6 +11,7 @@
+ #define __LINUX_LOCKDEP_TYPES_H
+ 
+ #include <linux/types.h>
++#include <linux/dept.h>
+ 
+ #define MAX_LOCKDEP_SUBCLASSES		8UL
+ 
+@@ -76,6 +77,7 @@ struct lock_class_key {
+ 		struct hlist_node		hash_entry;
+ 		struct lockdep_subclass_key	subkeys[MAX_LOCKDEP_SUBCLASSES];
+ 	};
++	struct dept_key				dkey;
+ };
+ 
+ extern struct lock_class_key __lockdep_no_validate__;
+@@ -185,6 +187,7 @@ struct lockdep_map {
+ 	int				cpu;
+ 	unsigned long			ip;
+ #endif
++	struct dept_map			dmap;
+ };
+ 
+ struct pin_cookie { unsigned int val; };
+diff --git a/kernel/locking/lockdep.c b/kernel/locking/lockdep.c
+index 4a882f8..a85468d 100644
+--- a/kernel/locking/lockdep.c
++++ b/kernel/locking/lockdep.c
+@@ -1184,7 +1184,7 @@ static inline struct hlist_head *keyhashentry(const struct lock_class_key *key)
+ }
+ 
+ /* Register a dynamically allocated key. */
+-void lockdep_register_key(struct lock_class_key *key)
++void __lockdep_register_key(struct lock_class_key *key)
+ {
+ 	struct hlist_head *hash_head;
+ 	struct lock_class_key *k;
+@@ -1207,7 +1207,7 @@ void lockdep_register_key(struct lock_class_key *key)
+ restore_irqs:
+ 	raw_local_irq_restore(flags);
+ }
+-EXPORT_SYMBOL_GPL(lockdep_register_key);
++EXPORT_SYMBOL_GPL(__lockdep_register_key);
+ 
+ /* Check whether a key has been registered as a dynamic key. */
+ static bool is_dynamic_key(const struct lock_class_key *key)
+@@ -4771,7 +4771,7 @@ static inline int check_wait_context(struct task_struct *curr,
+ /*
+  * Initialize a lock instance's lock-class mapping info:
+  */
+-void lockdep_init_map_type(struct lockdep_map *lock, const char *name,
++void __lockdep_init_map_type(struct lockdep_map *lock, const char *name,
+ 			    struct lock_class_key *key, int subclass,
+ 			    u8 inner, u8 outer, u8 lock_type)
+ {
+@@ -4831,7 +4831,7 @@ void lockdep_init_map_type(struct lockdep_map *lock, const char *name,
+ 		raw_local_irq_restore(flags);
+ 	}
+ }
+-EXPORT_SYMBOL_GPL(lockdep_init_map_type);
++EXPORT_SYMBOL_GPL(__lockdep_init_map_type);
+ 
+ struct lock_class_key __lockdep_no_validate__;
+ EXPORT_SYMBOL_GPL(__lockdep_no_validate__);
+@@ -6291,7 +6291,7 @@ void lockdep_reset_lock(struct lockdep_map *lock)
+ }
+ 
+ /* Unregister a dynamically allocated key. */
+-void lockdep_unregister_key(struct lock_class_key *key)
++void __lockdep_unregister_key(struct lock_class_key *key)
+ {
+ 	struct hlist_head *hash_head = keyhashentry(key);
+ 	struct lock_class_key *k;
+@@ -6326,7 +6326,7 @@ void lockdep_unregister_key(struct lock_class_key *key)
+ 	/* Wait until is_dynamic_key() has finished accessing k->hash_entry. */
+ 	synchronize_rcu();
+ }
+-EXPORT_SYMBOL_GPL(lockdep_unregister_key);
++EXPORT_SYMBOL_GPL(__lockdep_unregister_key);
+ 
+ void __init lockdep_init(void)
+ {
+-- 
+1.9.1
 
-clock-names should be added. Also to bindings.
-
-
-Best regards,
-Krzysztof
