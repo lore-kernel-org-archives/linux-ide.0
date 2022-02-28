@@ -2,68 +2,68 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05A6BC433F5
-	for <linux-ide@archiver.kernel.org>; Mon, 28 Feb 2022 10:08:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54A6BC433EF
+	for <linux-ide@archiver.kernel.org>; Mon, 28 Feb 2022 10:09:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234648AbiB1KJb (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 28 Feb 2022 05:09:31 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45550 "EHLO
+        id S229519AbiB1KK2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 28 Feb 2022 05:10:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232130AbiB1KJa (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Feb 2022 05:09:30 -0500
-Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFE30366B2
-        for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2022 02:08:51 -0800 (PST)
-Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com [209.85.221.70])
+        with ESMTP id S229458AbiB1KK1 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Feb 2022 05:10:27 -0500
+Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E561F38D95
+        for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2022 02:09:48 -0800 (PST)
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com [209.85.221.72])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 658BC3F4B4
-        for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2022 10:08:50 +0000 (UTC)
+        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id A0D8F3FCA7
+        for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2022 10:09:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1646042930;
-        bh=zeytxqj89B4wWgWM9iFuiNH1LQkDtmr7mVHFnE8qblM=;
+        s=20210705; t=1646042987;
+        bh=kIx+raZUijStrCGB7mdJrowRwtVAuHPRA5AhR/2Nd0I=;
         h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
          In-Reply-To:Content-Type;
-        b=UTfzIoJuu3eXF9nUe7gK7DVDz1WMl2yhiKYqtFBAne9PHta8XPQEnGCFYxbFXwW3N
-         nwFgTs2EuonMoHaTFQBVGN5Ij9p9Ax7pMggJfAj8lMrw43/w28xN+SbHjFxeyCfKkK
-         vDtPjuguYJpP2yh02MmvUmlj0C9wG4EQWm9/jKHYxAIVvTPHEjloCMGchqi0or1Hk1
-         nwvGIM6YzNjU4Uqg5YkZfq9v7qADo68WIoVOdWfbHHfsEIEr4GqHDZI5sBbK28YwLV
-         n4Jtw1TPVa4BkS63rICAu80AmyAZxtWDm2kEIX+2PZ+VZ9rj/TGc8Vuj6KIgipLyxH
-         w7pJ19rU+jdRA==
-Received: by mail-wr1-f70.google.com with SMTP id o9-20020adfca09000000b001ea79f7edf8so1858865wrh.16
-        for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2022 02:08:50 -0800 (PST)
+        b=Fpxwv+d1WVw5y3w8tLciDyDxJgARNZFSl0XdrEqXrIJx4NO3ZWZOJnjhXFW4BKu9D
+         GMBauAFJqmUYJVmyXI+BdT2KJ34qumldvA8YgaXf9hjWN/0wWp4vwvlKQzEzeZTgD3
+         USFKvV97pk6+IrHj7JmllpLKxRnuDJ8s8njuNJDIKXVmAaeWxhTV1E3IH0n7ChdYKq
+         8hsWMW8n55FBvL1rABW85qgYX6a8/XQESz6EkSFTurvBQiC8aTo9Mer+ie/WUJsTru
+         7zRdUJpx5TTYwhljEWWsPcaJl+OkYT6uvFP2tBQo7EWAQk2G/u/xcDNNhSZaNRfOaB
+         9PtyB5KgScZag==
+Received: by mail-wr1-f72.google.com with SMTP id c16-20020adfa310000000b001ed9cd8f4c7so1877073wrb.6
+        for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2022 02:09:47 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=zeytxqj89B4wWgWM9iFuiNH1LQkDtmr7mVHFnE8qblM=;
-        b=7kZULJ4zWpYJVsY13BEQ8y6Fwei1ni8mgtnryItOPZ8j1/3mNs+iegx1wXxQxbyjZN
-         15X5vncnSwtt/1/FH+HnHqqd+b+jRoVN5/uGFoQfIZDRJ1q6e8WvfRZjP3STGOoPY85l
-         SW8+X1ZdIcZWn3mQFB1nxH2IFZtUent7rpAUGYIXAKWjdzM9IHQt4nesO81evqr3sbeD
-         Bb7/XIVINQxXp+MofE9DzYziT2rd6kJx7evFCcqxTjUBMHM/OX1UXqc2aqRYOcdx5miW
-         I0uKpeqggUmEa0TCWm1CbYCqeE+YmgrL8IE6AgT4e8YjSqEkQi47r5CbBcn/wVordorq
-         8uUA==
-X-Gm-Message-State: AOAM532bICZA1OBrSz+cPwBI4Tkn8OZo4CyXEIkidm6efrfmiPN2T1+Y
-        ORthB8haNnC5RnxZRi3NSjSBh75Vba0/qN2iEofpSkdjiqGtbuEyl6mUL7kszI85JhP6jowWXcw
-        eyU/r2nZ9UHzXUvHM7nj0Eyj8OJgkYnYTlBGwaQ==
-X-Received: by 2002:a05:600c:19c9:b0:352:d507:9e89 with SMTP id u9-20020a05600c19c900b00352d5079e89mr12512257wmq.92.1646042928829;
-        Mon, 28 Feb 2022 02:08:48 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxDBpSWwelPv9Dy4do6twFWKimpbqcHI9oqyUb42pYM64Ru1t6WTl+2so5CKxbC0zA9NYVF2Q==
-X-Received: by 2002:a05:600c:19c9:b0:352:d507:9e89 with SMTP id u9-20020a05600c19c900b00352d5079e89mr12512225wmq.92.1646042928544;
-        Mon, 28 Feb 2022 02:08:48 -0800 (PST)
+        bh=kIx+raZUijStrCGB7mdJrowRwtVAuHPRA5AhR/2Nd0I=;
+        b=VNxWvythkFppnov5lNRntQVTbkLyR+XUfADIHJAcriZj7yASz9lnUOc6SJvRCoWRZp
+         25jGXT8THW0IGhjgUvIp5IZvzrsx1m1I8pOjLUqAj6qyvF4hSHIrMeN7jkveItUz/wGr
+         ceX+WPzK7L6tjDjIcIIUe10GghE9kZugYkWHtZWM2cBOsz1P7IQmWAM0QyKfDXkjuuVO
+         jVS07k41/KZgbHB3Z1eIZLnmVCMFBYMCtmvFJmvzb9BTIe+YV5ZIDW6WiSjerIoML7Dq
+         lKVDlVsTRhi2f386gjMhtHs1s0D5F+cMjt+724GnL1dceHyFcG1MwZx+6bS/99iwGEUZ
+         dpYQ==
+X-Gm-Message-State: AOAM531yQLa4cIdZF4yYp1SEJIY/vhEazaZmPi3+Fo18YK3y1+oBOH/A
+        PhC+xKuqfxR/38Id2TRO/bQMYfFcY1uiiJuUA4kaZYdDab+0XsuYMuk39rHih4QMrWmbL3Ke6uc
+        DG2cD95QxZ1CydqF5orOWmuu6N+W53B2jIcMLdQ==
+X-Received: by 2002:adf:d081:0:b0:1ef:9378:b7cc with SMTP id y1-20020adfd081000000b001ef9378b7ccmr6526406wrh.407.1646042987421;
+        Mon, 28 Feb 2022 02:09:47 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwt5qm49T+l3aWQPrCdhZj4vQvOAlvEwnYbWhxw24cBValwEqncUUoWR+qNsHkBBdWdo63G6A==
+X-Received: by 2002:adf:d081:0:b0:1ef:9378:b7cc with SMTP id y1-20020adfd081000000b001ef9378b7ccmr6526391wrh.407.1646042987208;
+        Mon, 28 Feb 2022 02:09:47 -0800 (PST)
 Received: from [192.168.0.133] (xdsl-188-155-181-108.adslplus.ch. [188.155.181.108])
-        by smtp.gmail.com with ESMTPSA id s3-20020a5d4ec3000000b001ea95eba44dsm9842149wrv.109.2022.02.28.02.08.46
+        by smtp.gmail.com with ESMTPSA id x2-20020a7bc762000000b00380fd1ba4ebsm22228541wmk.9.2022.02.28.02.09.45
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 28 Feb 2022 02:08:47 -0800 (PST)
-Message-ID: <4c3303f5-7af5-9974-7bea-b7f0d6c7ef53@canonical.com>
-Date:   Mon, 28 Feb 2022 11:08:46 +0100
+        Mon, 28 Feb 2022 02:09:46 -0800 (PST)
+Message-ID: <cbca5f7a-de4f-1559-92fc-45c6d037a6d1@canonical.com>
+Date:   Mon, 28 Feb 2022 11:09:44 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.0
-Subject: Re: [PATCH v3 1/3] dt-bindings: Convert ahci-platform DT bindings to
- yaml
+Subject: Re: [PATCH v3 2/3] dt-bindings: Add power-domains property to
+ ahci-platform
 Content-Language: en-US
 To:     Frank Wunderlich <linux@fw-web.de>,
         "devicetree @ vger . kernel . org Damien Le Moal" 
@@ -75,13 +75,12 @@ To:     Frank Wunderlich <linux@fw-web.de>,
         Peter Geis <pgwipeout@gmail.com>,
         Michael Riesch <michael.riesch@wolfvision.net>,
         linux-arm-kernel@lists.infradead.org,
-        linux-rockchip@lists.infradead.org,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+        linux-rockchip@lists.infradead.org
 Cc:     Frank Wunderlich <frank-w@public-files.de>
 References: <20220227182800.275572-1-linux@fw-web.de>
- <20220227182800.275572-2-linux@fw-web.de>
+ <20220227182800.275572-3-linux@fw-web.de>
 From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
-In-Reply-To: <20220227182800.275572-2-linux@fw-web.de>
+In-Reply-To: <20220227182800.275572-3-linux@fw-web.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -91,331 +90,35 @@ X-Mailing-List: linux-ide@vger.kernel.org
 On 27/02/2022 19:27, Frank Wunderlich wrote:
 > From: Frank Wunderlich <frank-w@public-files.de>
 > 
-> Create a yaml file for dtbs_check from the old txt binding.
+> Some SoC using power-domains property so add it here
+
+Full stop.
+
+Subject: "dt-bindings: ata: ahci-platform: Add power-domains property"
+
 > 
 > Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
 > ---
-> v3:
->   - add conversion to sata-series
->   - fix some errors in dt_binding_check and dtbs_check
->   - move to unevaluated properties = false
-
-You missed devicetree mailing list (corrupted address).
-
-> 
+> changes in v3:
+>   - new patch
 > ---
+>  Documentation/devicetree/bindings/ata/ahci-platform.yaml | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> imho all errors should be fixed in the dts not in the yaml...
-> 
-> errors about the subitem requirement that was defined in txt but not fixed some marvell dts
-> 
-> some dts for Marvell SoC bring error
-> 'phys' is a required property
-> 'target-supply' is a required property
-> 
-> problem is in arch/arm64/boot/dts/marvell/armada-cp11x.dtsi:331
-> here the sata-port@0 is defined, but not overridden with phy/target-supply in any following dts
-> 
-> ====================================================================
-> 
-> arch/arm64/boot/dts/broadcom/northstar2
-> ns2-svk.dt.yaml:
-> ns2-xmc.dt.yaml:
->   ahci@663f2000:
->     $nodename:0: 'ahci@663f2000' does not match '^sata(@.*)?$'
-> 
->     Unevaluated properties are not allowed
->     ('reg-names', '#address-cells', '#size-cells' were unexpected)
-> ---
->  .../devicetree/bindings/ata/ahci-platform.txt |  79 ----------
->  .../bindings/ata/ahci-platform.yaml           | 140 ++++++++++++++++++
->  2 files changed, 140 insertions(+), 79 deletions(-)
->  delete mode 100644 Documentation/devicetree/bindings/ata/ahci-platform.txt
->  create mode 100644 Documentation/devicetree/bindings/ata/ahci-platform.yaml
-> 
-> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-> deleted file mode 100644
-> index 77091a277642..000000000000
-> --- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-> +++ /dev/null
-> @@ -1,79 +0,0 @@
-> -* AHCI SATA Controller
-> -
-> -SATA nodes are defined to describe on-chip Serial ATA controllers.
-> -Each SATA controller should have its own node.
-> -
-> -It is possible, but not required, to represent each port as a sub-node.
-> -It allows to enable each port independently when dealing with multiple
-> -PHYs.
-> -
-> -Required properties:
-> -- compatible        : compatible string, one of:
-> -  - "brcm,iproc-ahci"
-> -  - "hisilicon,hisi-ahci"
-> -  - "cavium,octeon-7130-ahci"
-> -  - "ibm,476gtr-ahci"
-> -  - "marvell,armada-380-ahci"
-> -  - "marvell,armada-3700-ahci"
-> -  - "snps,dwc-ahci"
-> -  - "snps,spear-ahci"
-> -  - "generic-ahci"
-> -- interrupts        : <interrupt mapping for SATA IRQ>
-> -- reg               : <registers mapping>
-> -
-> -Please note that when using "generic-ahci" you must also specify a SoC specific
-> -compatible:
-> -	compatible = "manufacturer,soc-model-ahci", "generic-ahci";
-> -
-> -Optional properties:
-> -- dma-coherent      : Present if dma operations are coherent
-> -- clocks            : a list of phandle + clock specifier pairs
-> -- resets            : a list of phandle + reset specifier pairs
-> -- target-supply     : regulator for SATA target power
-> -- phy-supply        : regulator for PHY power
-> -- phys              : reference to the SATA PHY node
-> -- phy-names         : must be "sata-phy"
-> -- ahci-supply       : regulator for AHCI controller
-> -- ports-implemented : Mask that indicates which ports that the HBA supports
-> -		      are available for software to use. Useful if PORTS_IMPL
-> -		      is not programmed by the BIOS, which is true with
-> -		      some embedded SOC's.
-> -
-> -Required properties when using sub-nodes:
-> -- #address-cells    : number of cells to encode an address
-> -- #size-cells       : number of cells representing the size of an address
-> -
-> -Sub-nodes required properties:
-> -- reg		    : the port number
-> -And at least one of the following properties:
-> -- phys		    : reference to the SATA PHY node
-> -- target-supply     : regulator for SATA target power
-> -
-> -Examples:
-> -        sata@ffe08000 {
-> -		compatible = "snps,spear-ahci";
-> -		reg = <0xffe08000 0x1000>;
-> -		interrupts = <115>;
-> -        };
-> -
-> -With sub-nodes:
-> -	sata@f7e90000 {
-> -		compatible = "marvell,berlin2q-achi", "generic-ahci";
-> -		reg = <0xe90000 0x1000>;
-> -		interrupts = <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
-> -		clocks = <&chip CLKID_SATA>;
-> -		#address-cells = <1>;
-> -		#size-cells = <0>;
-> -
-> -		sata0: sata-port@0 {
-> -			reg = <0>;
-> -			phys = <&sata_phy 0>;
-> -			target-supply = <&reg_sata0>;
-> -		};
-> -
-> -		sata1: sata-port@1 {
-> -			reg = <1>;
-> -			phys = <&sata_phy 1>;
-> -			target-supply = <&reg_sata1>;;
-> -		};
-> -	};
 > diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-> new file mode 100644
-> index 000000000000..cc246b312c59
-> --- /dev/null
+> index cc246b312c59..cc3710fe4fd4 100644
+> --- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
 > +++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-> @@ -0,0 +1,140 @@
-> +# SPDX-License-Identifier: GPL-2.0
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/ata/ahci-platform.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: AHCI SATA Controller
-> +description:
-> +  SATA nodes are defined to describe on-chip Serial ATA controllers.
-> +  Each SATA controller should have its own node.
-> +
-> +  It is possible, but not required, to represent each port as a sub-node.
-> +  It allows to enable each port independently when dealing with multiple
-> +  PHYs.
-> +
-> +maintainers:
-> +  - Hans de Goede <hdegoede@redhat.com>
-> +  - Jens Axboe <axboe@kernel.dk>
-> +
-> +properties:
-> +  compatible:
-> +    contains:
-> +      enum:
-> +        - brcm,iproc-ahci
-> +        - cavium,octeon-7130-ahci
-> +        - generic-ahci
-> +        - hisilicon,hisi-ahci
-> +        - ibm,476gtr-ahci
-> +        - marvell,armada-380-ahci
-> +        - marvell,armada-3700-ahci
-
-Order entries alphabetically.
-
-> +        - snps,dwc-ahci
-> +        - snps,spear-ahci
-
-You converted the TXT bindings explicitly, but you missed the comment
-just below the 'reg' about generic-ahci. The generic-ahci never comes alone.
-
-The snps,dwc-ahci could come, although history shows that Synapsys
-blocks are commonly re-used and they should have specific compatible.
-Current users still have single snps,dwc-ahci, so it could be fixed a
-bit later.
-
-On the other hand, I expect to fix all the DTS in the same series where
-the bindings are corrected.
-
-> +
-> +  reg:
+> @@ -67,6 +67,9 @@ properties:
+>        some embedded SoCs.
+>      minItems: 1
+>  
+> +  power-domains:
 > +    maxItems: 1
 > +
-> +  clocks:
-> +    minItems: 1
-> +    maxItems: 3
-
-Items should be described. Next or this patch could add also clock-names.
-
-> +
-> +  interrupts:
-> +    minItems: 1
-
-You mean maxItems?
-
-> +
-> +  ahci-supply:
-> +    description:
-> +      regulator for AHCI controller
-> +
-> +  dma-coherent:
-> +    description:
-> +      Present if dma operations are coherent
-
-Skip description, it's obvious. Just 'true'.
-
-> +
-> +  phy-supply:
-> +    description:
-> +      regulator for PHY power
-> +
-> +  phys:
-> +    minItems: 1
-
-maxItems?
-> +
-> +  phy-names:
-> +    minItems: 1
-
-Describe the items.
-
-> +
-> +  ports-implemented:
-> +    description:
-> +      Mask that indicates which ports that the HBA supports
-> +      are available for software to use. Useful if PORTS_IMPL
-> +      is not programmed by the BIOS, which is true with
-> +      some embedded SoCs.
-> +    minItems: 1
-
-You need a type and maxItems.
-
-> +
-> +  resets:
-> +    minItems: 1
-
-maxItems?
-
-> +
-> +  target-supply:
-> +    description:
-> +      regulator for SATA target power
-> +
-> +required:
-> +  - compatible
-> +  - reg
-> +  - interrupts
-> +
-> +patternProperties:
-> +  "^sata-port@[0-9]+$":
-
-You limit number of ports to 10. On purpose? What about 0xa? 0xb?
-
-> +    type: object
-> +    description:
-> +      Subnode with configuration of the Ports.
-> +
-> +    properties:
-> +      reg:
-> +        maxItems: 1
-> +
-> +      phys:
-> +        minItems: 1
-
-maxItems? Why do you put everywhere minItems? Are several phys really
-expected?
-
-> +
-> +      target-supply:
-> +        description:
-> +          regulator for SATA target power
-> +
-> +    required:
-> +      - reg
-> +
-> +    anyOf:
-> +      - required: [ phys ]
-> +      - required: [ target-supply ]
-> +
-> +allOf:
-> +- $ref: "sata-common.yaml#"
-
-This goes before properties.
-
-> +
-> +unevaluatedProperties: false
-> +
-> +examples:
-> +  - |
-> +        sata@ffe08000 {
-
-Wrong indentation. It starts just below |
-
-> +               compatible = "snps,spear-ahci";
-> +               reg = <0xffe08000 0x1000>;
-> +               interrupts = <115>;
-> +        };
-> +  - |
-> +        #include <dt-bindings/interrupt-controller/arm-gic.h>
-> +        #include <dt-bindings/clock/berlin2q.h>
-> +        sata@f7e90000 {
-> +                compatible = "marvell,berlin2q-achi", "generic-ahci";
-
-This clearly won't pass your checks. I don't think you run
-dt_binding_check. You must test your bindings first.
-
-> +                reg = <0xe90000 0x1000>;
-> +                interrupts = <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
-> +                clocks = <&chip CLKID_SATA>;
-> +                #address-cells = <1>;
-> +                #size-cells = <0>;
-> +
-> +                sata0: sata-port@0 {
-> +                        reg = <0>;
-> +                        phys = <&sata_phy 0>;
-> +                        target-supply = <&reg_sata0>;
-> +                };
-> +
-> +                sata1: sata-port@1 {
-> +                        reg = <1>;
-> +                        phys = <&sata_phy 1>;
-> +                        target-supply = <&reg_sata1>;
-> +                };
-> +        };
+>    resets:
+>      minItems: 1
+>  
 
 
 Best regards,
