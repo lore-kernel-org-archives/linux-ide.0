@@ -2,24 +2,24 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26457C4167D
-	for <linux-ide@archiver.kernel.org>; Mon, 28 Feb 2022 09:57:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1103C35295
+	for <linux-ide@archiver.kernel.org>; Mon, 28 Feb 2022 09:57:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234719AbiB1J6Z (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 28 Feb 2022 04:58:25 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32962 "EHLO
+        id S234577AbiB1J63 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 28 Feb 2022 04:58:29 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33484 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234664AbiB1J6U (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Feb 2022 04:58:20 -0500
-Received: from lgeamrelo11.lge.com (lgeamrelo12.lge.com [156.147.23.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2469C2981D
-        for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2022 01:57:21 -0800 (PST)
+        with ESMTP id S234703AbiB1J6Y (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Feb 2022 04:58:24 -0500
+Received: from lgeamrelo11.lge.com (lgeamrelo13.lge.com [156.147.23.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 895C62A736
+        for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2022 01:57:26 -0800 (PST)
 Received: from unknown (HELO lgemrelse6q.lge.com) (156.147.1.121)
-        by 156.147.23.52 with ESMTP; 28 Feb 2022 18:57:20 +0900
+        by 156.147.23.53 with ESMTP; 28 Feb 2022 18:57:21 +0900
 X-Original-SENDERIP: 156.147.1.121
 X-Original-MAILFROM: byungchul.park@lge.com
 Received: from unknown (HELO localhost.localdomain) (10.177.244.38)
-        by 156.147.1.121 with ESMTP; 28 Feb 2022 18:57:20 +0900
+        by 156.147.1.121 with ESMTP; 28 Feb 2022 18:57:21 +0900
 X-Original-SENDERIP: 10.177.244.38
 X-Original-MAILFROM: byungchul.park@lge.com
 From:   Byungchul Park <byungchul.park@lge.com>
@@ -46,9 +46,9 @@ Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
         dri-devel@lists.freedesktop.org, airlied@linux.ie,
         rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
         hamohammed.sa@gmail.com
-Subject: [PATCH v3 15/21] dept: Apply SDT to wait(waitqueue)
-Date:   Mon, 28 Feb 2022 18:56:54 +0900
-Message-Id: <1646042220-28952-16-git-send-email-byungchul.park@lge.com>
+Subject: [PATCH v3 20/21] dept: Add nocheck version of init_completion()
+Date:   Mon, 28 Feb 2022 18:56:59 +0900
+Message-Id: <1646042220-28952-21-git-send-email-byungchul.park@lge.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1646042220-28952-1-git-send-email-byungchul.park@lge.com>
 References: <1646042220-28952-1-git-send-email-byungchul.park@lge.com>
@@ -56,123 +56,65 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Makes SDT able to track dependencies by wait(waitqueue).
+For completions who don't want to get tracked by Dept, added
+init_completion_nocheck() to disable Dept on it.
 
 Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 ---
- include/linux/wait.h |  6 +++++-
- kernel/sched/wait.c  | 16 ++++++++++++++++
- 2 files changed, 21 insertions(+), 1 deletion(-)
+ include/linux/completion.h | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/wait.h b/include/linux/wait.h
-index 851e07d..2133998 100644
---- a/include/linux/wait.h
-+++ b/include/linux/wait.h
-@@ -7,6 +7,7 @@
- #include <linux/list.h>
- #include <linux/stddef.h>
- #include <linux/spinlock.h>
-+#include <linux/dept_sdt.h>
- 
- #include <asm/current.h>
- #include <uapi/linux/wait.h>
-@@ -37,6 +38,7 @@ struct wait_queue_entry {
- struct wait_queue_head {
- 	spinlock_t		lock;
- 	struct list_head	head;
-+	struct dept_map		dmap;
+diff --git a/include/linux/completion.h b/include/linux/completion.h
+index a1ad5a8..9bd3bc9 100644
+--- a/include/linux/completion.h
++++ b/include/linux/completion.h
+@@ -30,6 +30,7 @@ struct completion {
  };
- typedef struct wait_queue_head wait_queue_head_t;
  
-@@ -56,7 +58,8 @@ struct wait_queue_head {
+ #ifdef CONFIG_DEPT
++#define dept_wfc_nocheck(m)			dept_map_nocheck(m)
+ #define dept_wfc_init(m, k, s, n)		dept_map_init(m, k, s, n)
+ #define dept_wfc_reinit(m)			dept_map_reinit(m)
+ #define dept_wfc_wait(m, ip)						\
+@@ -41,6 +42,7 @@ struct completion {
+ #define dept_wfc_enter(m, ip)			dept_ecxt_enter(m, 1UL, ip, "completion_context_enter", "complete", 0)
+ #define dept_wfc_exit(m, ip)			dept_ecxt_exit(m, ip)
+ #else
++#define dept_wfc_nocheck(m)			do { } while (0)
+ #define dept_wfc_init(m, k, s, n)		do { (void)(n); (void)(k); } while (0)
+ #define dept_wfc_reinit(m)			do { } while (0)
+ #define dept_wfc_wait(m, ip)			do { } while (0)
+@@ -55,10 +57,11 @@ struct completion {
+ #define WFC_DEPT_MAP_INIT(work)
+ #endif
  
- #define __WAIT_QUEUE_HEAD_INITIALIZER(name) {					\
- 	.lock		= __SPIN_LOCK_UNLOCKED(name.lock),			\
--	.head		= LIST_HEAD_INIT(name.head) }
-+	.head		= LIST_HEAD_INIT(name.head),				\
-+	.dmap		= DEPT_SDT_MAP_INIT(name) }
- 
- #define DECLARE_WAIT_QUEUE_HEAD(name) \
- 	struct wait_queue_head name = __WAIT_QUEUE_HEAD_INITIALIZER(name)
-@@ -67,6 +70,7 @@ struct wait_queue_head {
- 	do {									\
- 		static struct lock_class_key __key;				\
- 										\
-+		sdt_map_init(&(wq_head)->dmap);					\
- 		__init_waitqueue_head((wq_head), #wq_head, &__key);		\
++#define init_completion_nocheck(x) __init_completion(x, NULL, #x, false)
+ #define init_completion(x)					\
+ 	do {							\
+ 		static struct dept_key __dkey;			\
+-		__init_completion(x, &__dkey, #x);		\
++		__init_completion(x, &__dkey, #x, true);	\
  	} while (0)
  
-diff --git a/kernel/sched/wait.c b/kernel/sched/wait.c
-index eca3810..fc5a16a 100644
---- a/kernel/sched/wait.c
-+++ b/kernel/sched/wait.c
-@@ -105,6 +105,7 @@ static int __wake_up_common(struct wait_queue_head *wq_head, unsigned int mode,
- 		if (flags & WQ_FLAG_BOOKMARK)
- 			continue;
- 
-+		sdt_event(&wq_head->dmap);
- 		ret = curr->func(curr, mode, wake_flags, key);
- 		if (ret < 0)
- 			break;
-@@ -268,6 +269,9 @@ void __wake_up_pollfree(struct wait_queue_head *wq_head)
- 		__add_wait_queue(wq_head, wq_entry);
- 	set_current_state(state);
- 	spin_unlock_irqrestore(&wq_head->lock, flags);
-+
-+	if (state & TASK_NORMAL)
-+		sdt_wait_prepare(&wq_head->dmap);
- }
- EXPORT_SYMBOL(prepare_to_wait);
- 
-@@ -286,6 +290,10 @@ void __wake_up_pollfree(struct wait_queue_head *wq_head)
- 	}
- 	set_current_state(state);
- 	spin_unlock_irqrestore(&wq_head->lock, flags);
-+
-+	if (state & TASK_NORMAL)
-+		sdt_wait_prepare(&wq_head->dmap);
-+
- 	return was_empty;
- }
- EXPORT_SYMBOL(prepare_to_wait_exclusive);
-@@ -331,6 +339,9 @@ long prepare_to_wait_event(struct wait_queue_head *wq_head, struct wait_queue_en
- 	}
- 	spin_unlock_irqrestore(&wq_head->lock, flags);
- 
-+	if (!ret && state & TASK_NORMAL)
-+		sdt_wait_prepare(&wq_head->dmap);
-+
- 	return ret;
- }
- EXPORT_SYMBOL(prepare_to_wait_event);
-@@ -352,7 +363,9 @@ int do_wait_intr(wait_queue_head_t *wq, wait_queue_entry_t *wait)
- 		return -ERESTARTSYS;
- 
- 	spin_unlock(&wq->lock);
-+	sdt_wait_prepare(&wq->dmap);
- 	schedule();
-+	sdt_wait_finish();
- 	spin_lock(&wq->lock);
- 
- 	return 0;
-@@ -369,7 +382,9 @@ int do_wait_intr_irq(wait_queue_head_t *wq, wait_queue_entry_t *wait)
- 		return -ERESTARTSYS;
- 
- 	spin_unlock_irq(&wq->lock);
-+	sdt_wait_prepare(&wq->dmap);
- 	schedule();
-+	sdt_wait_finish();
- 	spin_lock_irq(&wq->lock);
- 
- 	return 0;
-@@ -389,6 +404,7 @@ void finish_wait(struct wait_queue_head *wq_head, struct wait_queue_entry *wq_en
+ #define init_completion_map(x, m) init_completion(x)
+@@ -117,10 +120,15 @@ static inline void complete_release(struct completion *x) {}
+  */
+ static inline void __init_completion(struct completion *x,
+ 				     struct dept_key *dkey,
+-				     const char *name)
++				     const char *name, bool check)
  {
- 	unsigned long flags;
+ 	x->done = 0;
+-	dept_wfc_init(&x->dmap, dkey, 0, name);
++
++	if (check)
++		dept_wfc_init(&x->dmap, dkey, 0, name);
++	else
++		dept_wfc_nocheck(&x->dmap);
++
+ 	init_swait_queue_head(&x->wait);
+ }
  
-+	sdt_wait_finish();
- 	__set_current_state(TASK_RUNNING);
- 	/*
- 	 * We can check for list emptiness outside the lock
 -- 
 1.9.1
 
