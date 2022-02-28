@@ -2,175 +2,149 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE0FFC433EF
-	for <linux-ide@archiver.kernel.org>; Mon, 28 Feb 2022 17:06:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BB2DC433F5
+	for <linux-ide@archiver.kernel.org>; Mon, 28 Feb 2022 21:25:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238096AbiB1RGy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 28 Feb 2022 12:06:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43532 "EHLO
+        id S230291AbiB1VZv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 28 Feb 2022 16:25:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235160AbiB1RGy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Feb 2022 12:06:54 -0500
-Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2C0C682D17
-        for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2022 09:06:15 -0800 (PST)
-Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com [209.85.218.69])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id E83233FCA2
-        for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2022 17:06:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1646067973;
-        bh=h4FOiTIqGWppiNVb4WN93SVinniWb4652lod3S4x79M=;
-        h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-         In-Reply-To:Content-Type;
-        b=FbS8ZhkRNbarCOEzZsHhQZHfgf6c6wYkkhvDT37YuKYddk8y3ReiHGDgCrumU7+XI
-         xtEmFKS/QaU7bfPxNahG+IW4IZGmQUa/4R00kcn1TTK/a4YRZ0v5g9uYVA1pX79v5V
-         EkQ4zRhkPs6lAJvf1P41qaKWDaah1SoHJW9DwcxG45SHYmtZrpXqBsgF+f2g2GnUgL
-         cIINKY2aBK1v/fSqRfX7hPc8cPDd5Ui9hV2VbPBSw5P6uEGk9mzD5xPQsxNuG027gP
-         zjg0bVZdopdf5WAxJMUYhCOtYx4R1wFaD+jz1/+rlrPcuK2EzFGD89nT/5hIiTeoZh
-         dXNzKz8f9TIZg==
-Received: by mail-ej1-f69.google.com with SMTP id r18-20020a17090609d200b006a6e943d09eso5476993eje.20
-        for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2022 09:06:13 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=h4FOiTIqGWppiNVb4WN93SVinniWb4652lod3S4x79M=;
-        b=F646xGKqsT18nlKHCJojuj2xOSJxQGa/VA3XU/4Ty7rIQzu6olIKnwz1lXlIsj0GzJ
-         /VX05byPXV+Y8fXHh3W7S8FDTw2WewC2dOoKCRAasq27X+aguAMXB8KMbwVQzJ51rV7g
-         +ohNW1CgllafRX6m8PYhAHEZ5S3DbOTIEM/KEUV5rynScwtbABNuyxjOixCwo+pqpCp9
-         4F6apgcJ3cx93b7Xqjbnabtk+8MvPvdVG+pBKj9igeQHVMcj3bE4wn9ELJkIrk/gnKCA
-         kiLRSnwJjTbB+WrUtmTvHahFPlK7IshKofZIqYFKLvbuyWarIYvTpTO/tA9BDNQGgNUp
-         tTSQ==
-X-Gm-Message-State: AOAM530D7z5SXgY55L3SkfMaSc1UeysPCz0K6geT6Q70wUUa6iX8uT/t
-        8b409icJN9Ms6jnqGJxyy1u9vXAAwu7SpxsFb9BDemqRc/jmrl5SizjYxYxsPZ9fl22kxl3nqY4
-        NLhQOXlUKK36GgTlE6I141XNREoeQsIEgfeM3lA==
-X-Received: by 2002:a17:906:199a:b0:6d1:aa59:2927 with SMTP id g26-20020a170906199a00b006d1aa592927mr15322012ejd.215.1646067973495;
-        Mon, 28 Feb 2022 09:06:13 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxnrW6Z2hgpLyaCXJWZUUQ0z1Tt4gdOb4FulD2fvmZoIPy6sejI1yUTOFOiqsKx5QAi7Ae9Lw==
-X-Received: by 2002:a17:906:199a:b0:6d1:aa59:2927 with SMTP id g26-20020a170906199a00b006d1aa592927mr15321996ejd.215.1646067973232;
-        Mon, 28 Feb 2022 09:06:13 -0800 (PST)
-Received: from [192.168.0.135] (xdsl-188-155-181-108.adslplus.ch. [188.155.181.108])
-        by smtp.gmail.com with ESMTPSA id pj4-20020a170906d78400b006ce88d5ce8dsm4521931ejb.108.2022.02.28.09.06.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 28 Feb 2022 09:06:12 -0800 (PST)
-Message-ID: <22b1de71-a72a-ecb8-44a2-cf055d2a4fc5@canonical.com>
-Date:   Mon, 28 Feb 2022 18:06:12 +0100
+        with ESMTP id S230117AbiB1VZu (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Feb 2022 16:25:50 -0500
+Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA6D71216B3;
+        Mon, 28 Feb 2022 13:25:10 -0800 (PST)
+Received: from cwcc.thunk.org (pool-108-7-220-252.bstnma.fios.verizon.net [108.7.220.252])
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 21SLP4xm006998
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Mon, 28 Feb 2022 16:25:05 -0500
+Received: by cwcc.thunk.org (Postfix, from userid 15806)
+        id 7B5D115C0038; Mon, 28 Feb 2022 16:25:04 -0500 (EST)
+Date:   Mon, 28 Feb 2022 16:25:04 -0500
+From:   "Theodore Ts'o" <tytso@mit.edu>
+To:     Jan Kara <jack@suse.cz>
+Cc:     Byungchul Park <byungchul.park@lge.com>,
+        torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
+        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
+        linux-ext4@vger.kernel.org, mingo@redhat.com,
+        linux-kernel@vger.kernel.org, peterz@infradead.org,
+        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
+        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
+        chris@chris-wilson.co.uk, duyuyang@gmail.com,
+        johannes.berg@intel.com, tj@kernel.org, willy@infradead.org,
+        david@fromorbit.com, amir73il@gmail.com, bfields@fieldses.org,
+        gregkh@linuxfoundation.org, kernel-team@lge.com,
+        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
+        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
+        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
+        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
+        ngupta@vflare.org, linux-block@vger.kernel.org, axboe@kernel.dk,
+        paolo.valente@linaro.org, josef@toxicpanda.com,
+        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
+        jack@suse.com, jlayton@kernel.org, dan.j.williams@intel.com,
+        hch@infradead.org, djwong@kernel.org,
+        dri-devel@lists.freedesktop.org, airlied@linux.ie,
+        rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
+        hamohammed.sa@gmail.com
+Subject: Re: Report 2 in ext4 and journal based on v5.17-rc1
+Message-ID: <Yh09sIsw5vh+qCeU@mit.edu>
+References: <1645095472-26530-1-git-send-email-byungchul.park@lge.com>
+ <1645096204-31670-1-git-send-email-byungchul.park@lge.com>
+ <1645096204-31670-2-git-send-email-byungchul.park@lge.com>
+ <20220221190204.q675gtsb6qhylywa@quack3.lan>
+ <20220223003534.GA26277@X58A-UD3R>
+ <20220223144859.na2gjgl5efgw5zhn@quack3.lan>
+ <20220224011102.GA29726@X58A-UD3R>
+ <20220224102239.n7nzyyekuacgpnzg@quack3.lan>
+ <20220228092826.GA5201@X58A-UD3R>
+ <20220228101444.6frl63dn5vmgycbp@quack3.lan>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: Aw: Re: Re: Re: [PATCH v3 1/3] dt-bindings: Convert ahci-platform
- DT bindings to yaml
-Content-Language: en-US
-To:     Frank Wunderlich <frank-w@public-files.de>
-Cc:     Frank Wunderlich <linux@fw-web.de>,
-        Rob Herring <robh+dt@kernel.org>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>,
-        Peter Geis <pgwipeout@gmail.com>,
-        Michael Riesch <michael.riesch@wolfvision.net>,
-        linux-arm-kernel@lists.infradead.org,
-        linux-rockchip@lists.infradead.org,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-References: <20220227182800.275572-1-linux@fw-web.de>
- <20220227182800.275572-2-linux@fw-web.de>
- <4c3303f5-7af5-9974-7bea-b7f0d6c7ef53@canonical.com>
- <trinity-ac45bde6-392d-4810-8aad-9a06d2bcd85a-1646050780475@3c-app-gmx-bs53>
- <8fbbce9e-4fd9-d420-43ef-953e846d29f1@canonical.com>
- <trinity-f1b6ce3a-6f22-4cf8-bf51-a5e7f007dda7-1646057347735@3c-app-gmx-bs53>
- <ddd09f4f-782f-67e9-ec2f-dd5818ae26c5@canonical.com>
- <trinity-bfe6b2d5-52cd-458d-92b2-66216620a4b3-1646067718759@3c-app-gmx-bs53>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
-In-Reply-To: <trinity-bfe6b2d5-52cd-458d-92b2-66216620a4b3-1646067718759@3c-app-gmx-bs53>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220228101444.6frl63dn5vmgycbp@quack3.lan>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 28/02/2022 18:01, Frank Wunderlich wrote:
-> Hi
-> 
->> Gesendet: Montag, 28. Februar 2022 um 15:35 Uhr
->> Von: "Krzysztof Kozlowski" <krzysztof.kozlowski@canonical.com>
->>>> Gesendet: Montag, 28. Februar 2022 um 13:38 Uhr
->>>> Von: "Krzysztof Kozlowski" <krzysztof.kozlowski@canonical.com>
-> 
->>>> No, this has to be oneOf. See for example
->>>> Documentation/devicetree/bindings/gpio/gpio-vf610.yaml or many other files.
-> 
->>> compatible:
->>>   oneOf:
->>>     - enum:
->>>       - brcm,iproc-ahci
->>>       - cavium,octeon-7130-ahci
->>>       - hisilicon,hisi-ahci
->>>       - ibm,476gtr-ahci
->>>       - marvell,armada-3700-ahci
->>>       - marvell,armada-380-ahci
->>>       - snps,dwc-ahci
->>>       - snps,spear-ahci
->>>     - items:
->>>       - const: generic-ahci
->>>       - enum:
->>>         - brcm,iproc-ahci
->>>         - cavium,octeon-7130-ahci
->>>         - hisilicon,hisi-ahci
->>>         - ibm,476gtr-ahci
->>>         - marvell,armada-3700-ahci
->>>         - marvell,armada-380-ahci
->>>         - snps,dwc-ahci
->>>         - snps,spear-ahci
->>
->> That could be one way, but instead I propose to have only second part
->> (so enum + generic-ahci) for all compatibles mentioned in
->> ahci_platform.c, which do not customize the driver behavior for these
->> compatibles..
-> 
-> tried many ways of defining it, but none passes with the examples. either to short (first example) or too long (second)
-> 
-> as far as i understand the logic it should be similar to this:
-> 
-> properties:
->   compatible:
->     oneOf:
->       - items:
->         - enum:
->           - marvell,berlin2q-achi
+On Mon, Feb 28, 2022 at 11:14:44AM +0100, Jan Kara wrote:
+> > case 1. Code with an actual circular dependency, but not deadlock.
+> > 
+> >    A circular dependency can be broken by a rescue wakeup source e.g.
+> >    timeout. It's not a deadlock. If it's okay that the contexts
+> >    participating in the circular dependency and others waiting for the
+> >    events in the circle are stuck until it gets broken. Otherwise, say,
+> >    if it's not meant, then it's anyway problematic.
+> > 
+> >    1-1. What if we judge this code is problematic?
+> >    1-2. What if we judge this code is good?
+> > 
+> > I've been wondering if the kernel guys esp. Linus considers code with
+> > any circular dependency is problematic or not, even if it won't lead to
+> > a deadlock, say, case 1. Even though I designed Dept based on what I
+> > believe is right, of course, I'm willing to change the design according
+> > to the majority opinion.
+> > 
+> > However, I would never allow case 1 if I were the owner of the kernel
+> > for better stability, even though the code works anyway okay for now.
 
-You need to extend this enum with all the entries I mentioned before.
+Note, I used the example of the timeout as the most obvious way of
+explaining that a deadlock is not possible.  There is also the much
+more complex explanation which Jan was trying to give, which is what
+leads to the circular dependency.  It can happen that when trying to
+start a handle, if either (a) there is not enough space in the journal
+for new handles, or (b) the current transaction is so large that if we
+don't close the transaction and start a new hone, we will end up
+running out of space in the future, and so in that case,
+start_this_handle() will block starting any more handles, and then
+wake up the commit thread.  The commit thread then waits for the
+currently running threads to complete, before it allows new handles to
+start, and then it will complete the commit.  In the case of (a) we
+then need to do a journal checkpoint, which is more work to release
+space in the journal, and only then, can we allow new handles to start.
 
->         - const: generic-ahci
->       - items:
+The botom line is (a) it works, (b) there aren't significant delays,
+and for DEPT to complain that this is somehow wrong and we need to
+completely rearchitect perfectly working code because it doesn't
+confirm to DEPT's idea of what is "correct" is not acceptable.
 
-No items here, directly enum.
+> We have a queue of work to do Q protected by lock L. Consumer process has
+> code like:
+> 
+> while (1) {
+> 	lock L
+> 	prepare_to_wait(work_queued);
+> 	if (no work) {
+> 		unlock L
+> 		sleep
+> 	} else {
+> 		unlock L
+> 		do work
+> 		wake_up(work_done)
+> 	}
+> }
+> 
+> AFAIU Dept will create dependency here that 'wakeup work_done' is after
+> 'wait for work_queued'. Producer has code like:
+> 
+> while (1) {
+> 	lock L
+> 	prepare_to_wait(work_done)
+> 	if (too much work queued) {
+> 		unlock L
+> 		sleep
+> 	} else {
+> 		queue work
+> 		unlock L
+> 		wake_up(work_queued)
+> 	}
+> }
+> 
+> And Dept will create dependency here that 'wakeup work_queued' is after
+> 'wait for work_done'. And thus we have a trivial cycle in the dependencies
+> despite the code being perfectly valid and safe.
 
->         - enum:
->           - brcm,iproc-ahci
->           - cavium,octeon-7130-ahci
->           - hisilicon,hisi-ahci
->           - ibm,476gtr-ahci
->           - marvell,armada-3700-ahci
->           - marvell,armada-380-ahci
->           - snps,dwc-ahci
->           - snps,spear-ahci
-> 
-> this passes the dt-binding_check (examples) for me, but i guess there are many more compatibles defined with the generic.
-> 
-> dtbs_check found some more like
-> 
-> 'brcm,iproc-ahci'
-> 'marvell,armada-8k-ahci'
-> and many more
-> 
-> it looks like these are also checked in the enum, so the yaml itself look correct, but needs some kind of wildcard instead of the "marvell,berlin2q-achi" as second for the generic-ahci compatible
-> 
-> regards Frank
+Cheers,
 
-
-Best regards,
-Krzysztof
+							- Ted
