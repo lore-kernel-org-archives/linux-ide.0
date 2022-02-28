@@ -2,54 +2,63 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 906A9C433F5
-	for <linux-ide@archiver.kernel.org>; Mon, 28 Feb 2022 09:33:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDE48C433EF
+	for <linux-ide@archiver.kernel.org>; Mon, 28 Feb 2022 09:54:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234323AbiB1Jdj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 28 Feb 2022 04:33:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46118 "EHLO
+        id S229502AbiB1JzI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 28 Feb 2022 04:55:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231855AbiB1Jdi (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Feb 2022 04:33:38 -0500
-Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 322E63D4AD;
-        Mon, 28 Feb 2022 01:33:00 -0800 (PST)
-Received: by mail-ej1-x632.google.com with SMTP id r13so23489241ejd.5;
-        Mon, 28 Feb 2022 01:33:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=CLX9p46LTKB/Eq3eNvJoQTNYHBrAzPGjbvot9brS2qA=;
-        b=mSjmrvh595YDAVZMgNjYK7iY9jJsf6ffteY5LNQ7hkjPy8URdKSh/qC0gfCqmJ1my1
-         Qpi25Q25zJe+wBpMWjGFKTVrbWF4JlOaa7Y7EQUzQF2NKs8guyjP5sa73inWcL2rPKgL
-         Z4Mc/DuqqWuniGLKhle7vMI0AJPo+4gPPnauSdIChzhacanwS0ZKPzxodvbMVU2uN65q
-         pvEyoL1aghlRdEgJYh1S6JnW3PpAoxj/hcpIx2oaIspTFDPQuhKgCL5yYcBD2tnTOdyZ
-         NAbWn9L8+oM/g+Bhim9dLNKblHtOvHd5kVm+hHX4E3zlglPs6P2PmGVpDp10Umy20wMP
-         cgrA==
+        with ESMTP id S234560AbiB1JzG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Feb 2022 04:55:06 -0500
+Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F1E41C92D
+        for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2022 01:54:28 -0800 (PST)
+Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com [209.85.128.69])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id D15A74031B
+        for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2022 09:54:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1646042066;
+        bh=mna9J1nBg6HOMnow2P6fMcSmE8VXg1IqnH2FURdKmp0=;
+        h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+         In-Reply-To:Content-Type;
+        b=KtI8RzRNkh73o6/0HDmpns4ouVwXYqF7A9kzAsJA1QiE2bSPj7Y0VKSeCj75IycZB
+         NG6oeor85JLhiFihMpktc4XJMXKAZ50uhVUetUGC54mObySw4VNgmHk0vLXwvVPNqd
+         Ug7NWcBBnnSTlWasQegW4QF6heGYPbmtS2B43nJC1bO7aBO5vfnichTF5CRpKgZc/A
+         ds7WXGGmY/rKStYU/uMxaUSKBfcdyeoQy0GC71bNRN+EKPmtN8F2rGgjIg+/g+YqaJ
+         k5svaAfQMnnmxtUY8AqKeVPuhwcMHo0DLcGtfuhgMdHrYKmPPQbgqBRSRta0KNqk3j
+         cah7Qg8HfiD2g==
+Received: by mail-wm1-f69.google.com with SMTP id 7-20020a1c1907000000b003471d9bbe8dso3966451wmz.0
+        for <linux-ide@vger.kernel.org>; Mon, 28 Feb 2022 01:54:26 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
          :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=CLX9p46LTKB/Eq3eNvJoQTNYHBrAzPGjbvot9brS2qA=;
-        b=sJAy50ELQStQ7LQYNmXh7WI6VILyJpVSUyur+KyVAyA9nXI69u6yvnriRUq4tqmIa9
-         hC0pRMPR/UjDVv4WhfAe5rRbeg9ePfjv4QwEX7OLemSlVOTj7N4umB9LZEaNb9h9YOB6
-         i/SUNyQdnAlLsmOQoQiChKnJwKaPKlWh4UkvaMYy9RkYzJNacITufk+KUwyM+fCckhkb
-         wnDNguM0rvJIGYSz2kmBQ/KbHANlhM5uM8cAfZkkp2c938qrfq8xqt5m+STnzTxBZ95K
-         9XMiNMx4P/ySfCR875pRRm5f1zBzs9avmWSkTO9l27GCCyOxOGOWdqz2sn5FzFfeszGh
-         /xdg==
-X-Gm-Message-State: AOAM530MLMaRBxpqyxS0vWyDroc4GRRs+nIEnslV/uZyI5koXPrmQk+y
-        Ifj/DCK/U0RvlTTcHpHZKPg=
-X-Google-Smtp-Source: ABdhPJyGNPCf5gF83CrzPwGUn65KVEOklQP88mDv1lM7Oxdsd9c3Gvs+2/MhV9t3bc5Qjjfaeyy8Vw==
-X-Received: by 2002:a17:906:6b8e:b0:6ce:9879:ff88 with SMTP id l14-20020a1709066b8e00b006ce9879ff88mr14387553ejr.147.1646040778557;
-        Mon, 28 Feb 2022 01:32:58 -0800 (PST)
-Received: from [192.168.2.1] (81-204-249-205.fixed.kpn.net. [81.204.249.205])
-        by smtp.gmail.com with ESMTPSA id n24-20020a509358000000b00410bedd9eb4sm5932397eda.88.2022.02.28.01.32.57
+        bh=mna9J1nBg6HOMnow2P6fMcSmE8VXg1IqnH2FURdKmp0=;
+        b=1SdQPnuR+qr14EgJdFfi9n0F4mPo+zyqdPpQ77YG1AqJruk9enHvR7Q881UyeDpRBe
+         NCqYjhWIDtiNTcnVyk6OPZchjbCJS8PYNGxm1gUJB3x2vkUertCZnowlU+XY54MmcczA
+         2T3Z4LE6yoibMv0uHrRgviccOkeVi6dndeQ7g5Ik6GFn740fEuDKP47Qdr2GwgUCBGbR
+         TZ4q6oRobfS4rMJeEqF4tvctt+HHSh1E81oWXLhCshGZ7iim9v6AHVzGmssqBrkbIDvp
+         CoXeIzZm19HoVhjo4ykuYthU8XDM/4A61aQcgcnvHbTmRBHdXmSe4GZwBiBaCwJfAGdV
+         hLhw==
+X-Gm-Message-State: AOAM533tQmH17yksaoXxXmS2KThv7JLoGE6ILKika2vRnsbQb4kgeR9s
+        JVnotpO73VqCDBkwD7qFtatH7kqRDVy6zDdMs2U4E/10e2Lklib7xMUltKYJDO5FCVnFytLcoiH
+        04+fFt4u4Iv6FMzXrRoyFKfAXctMAX1m63pf3Aw==
+X-Received: by 2002:a05:6000:162f:b0:1ed:bbef:f7b9 with SMTP id v15-20020a056000162f00b001edbbeff7b9mr15608209wrb.379.1646042064786;
+        Mon, 28 Feb 2022 01:54:24 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwF4VDklq4C5zzM72nwt08X01T/IfVu/GQ6QrQbbkJljUbB9HduFrRm9IjGHQBgzq6rkjLXyQ==
+X-Received: by 2002:a05:6000:162f:b0:1ed:bbef:f7b9 with SMTP id v15-20020a056000162f00b001edbbeff7b9mr15608187wrb.379.1646042064370;
+        Mon, 28 Feb 2022 01:54:24 -0800 (PST)
+Received: from [192.168.0.133] (xdsl-188-155-181-108.adslplus.ch. [188.155.181.108])
+        by smtp.gmail.com with ESMTPSA id n10-20020a5d598a000000b001efab095615sm4434539wri.29.2022.02.28.01.54.22
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 28 Feb 2022 01:32:58 -0800 (PST)
-Message-ID: <14a29a3f-c886-89b0-e453-1e8bee469536@gmail.com>
-Date:   Mon, 28 Feb 2022 10:32:57 +0100
+        Mon, 28 Feb 2022 01:54:23 -0800 (PST)
+Message-ID: <fc3186ce-f731-a7c1-e958-b0071125b32c@canonical.com>
+Date:   Mon, 28 Feb 2022 10:54:21 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.5.0
@@ -59,7 +68,6 @@ To:     Frank Wunderlich <linux@fw-web.de>,
         "devicetree @ vger . kernel . org Damien Le Moal" 
         <damien.lemoal@opensource.wdc.com>,
         Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Hans de Goede <hdegoede@redhat.com>,
         Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>,
@@ -70,7 +78,7 @@ To:     Frank Wunderlich <linux@fw-web.de>,
 Cc:     Frank Wunderlich <frank-w@public-files.de>
 References: <20220227182800.275572-1-linux@fw-web.de>
  <20220227182800.275572-4-linux@fw-web.de>
-From:   Johan Jonker <jbx6244@gmail.com>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 In-Reply-To: <20220227182800.275572-4-linux@fw-web.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
@@ -78,9 +86,7 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Frank,
-
-On 2/27/22 19:28, Frank Wunderlich wrote:
+On 27/02/2022 19:28, Frank Wunderlich wrote:
 > From: Frank Wunderlich <frank-w@public-files.de>
 > 
 > RK356x supports up to 3 sata controllers which were compatible with the
@@ -107,16 +113,7 @@ On 2/27/22 19:28, Frank Wunderlich wrote:
 >  	compatible = "rockchip,rk3568";
 >  
 > +	sata0: sata@fc000000 {
-
 > +		compatible = "snps,dwc-ahci";
-
-		compatible = "rockchip,rk3568-dwc-ahci", "snps,dwc-ahci";
-
-Compatible strings must be SoC orientated.
-By using a fall back string the driver doesn't have to be changed for
-every new SoC.
-Add binding in extra patch.
-
 > +		reg = <0 0xfc000000 0 0x1000>;
 > +		clocks = <&cru ACLK_SATA0>, <&cru CLK_SATA0_PMALIVE>,
 > +			 <&cru CLK_SATA0_RXOOB>;
@@ -136,6 +133,9 @@ Add binding in extra patch.
 >  	};
 >  };
 > +
+
+No need for new line here,
+
 > diff --git a/arch/arm64/boot/dts/rockchip/rk356x.dtsi b/arch/arm64/boot/dts/rockchip/rk356x.dtsi
 > index 7cdef800cb3c..484c5ace718a 100644
 > --- a/arch/arm64/boot/dts/rockchip/rk356x.dtsi
@@ -145,39 +145,13 @@ Add binding in extra patch.
 >  	};
 >  
 > +	sata1: sata@fc400000 {
-
 > +		compatible = "snps,dwc-ahci";
-
-dito
-
 > +		reg = <0 0xfc400000 0 0x1000>;
 > +		clocks = <&cru ACLK_SATA1>, <&cru CLK_SATA1_PMALIVE>,
 > +			 <&cru CLK_SATA1_RXOOB>;
-> +		interrupts = <GIC_SPI 95 IRQ_TYPE_LEVEL_HIGH>;
-> +		phys = <&combphy1 PHY_TYPE_SATA>;
-> +		phy-names = "sata-phy";
-> +		ports-implemented = <0x1>;
-> +		power-domains = <&power RK3568_PD_PIPE>;
-> +		status = "disabled";
-> +	};
-> +
-> +	sata2: sata@fc800000 {
 
-> +		compatible = "snps,dwc-ahci";
+clock-names should be added. Also to bindings.
 
-dito
 
-> +		reg = <0 0xfc800000 0 0x1000>;
-> +		clocks = <&cru ACLK_SATA2>, <&cru CLK_SATA2_PMALIVE>,
-> +			 <&cru CLK_SATA2_RXOOB>;
-> +		interrupts = <GIC_SPI 96 IRQ_TYPE_LEVEL_HIGH>;
-> +		phys = <&combphy2 PHY_TYPE_SATA>;
-> +		phy-names = "sata-phy";
-> +		ports-implemented = <0x1>;
-> +		power-domains = <&power RK3568_PD_PIPE>;
-> +		status = "disabled";
-> +	};
-> +
->  	gic: interrupt-controller@fd400000 {
->  		compatible = "arm,gic-v3";
->  		reg = <0x0 0xfd400000 0 0x10000>, /* GICD */
+Best regards,
+Krzysztof
