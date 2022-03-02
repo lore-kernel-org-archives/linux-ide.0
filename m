@@ -2,393 +2,298 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9151AC433F5
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Mar 2022 11:08:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 270C2C433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  2 Mar 2022 12:11:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234403AbiCBLI4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 2 Mar 2022 06:08:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36328 "EHLO
+        id S240432AbiCBMLz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 2 Mar 2022 07:11:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35534 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230076AbiCBLI4 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2022 06:08:56 -0500
-Received: from michel.telenet-ops.be (michel.telenet-ops.be [IPv6:2a02:1800:110:4::f00:18])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2A952BD2
-        for <linux-ide@vger.kernel.org>; Wed,  2 Mar 2022 03:08:10 -0800 (PST)
-Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed40:8cac:a75c:6aef:8a67])
-        by michel.telenet-ops.be with bizsmtp
-        id 1P822701C36NB4j06P82Ze; Wed, 02 Mar 2022 12:08:08 +0100
-Received: from rox.of.borg ([192.168.97.57])
-        by ramsan.of.borg with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.93)
-        (envelope-from <geert@linux-m68k.org>)
-        id 1nPMiA-002RkT-Vm; Wed, 02 Mar 2022 12:00:02 +0100
-Received: from geert by rox.of.borg with local (Exim 4.93)
-        (envelope-from <geert@linux-m68k.org>)
-        id 1nPKNb-007MlU-37; Wed, 02 Mar 2022 09:30:39 +0100
-From:   Geert Uytterhoeven <geert+renesas@glider.be>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+        with ESMTP id S238422AbiCBMLz (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2022 07:11:55 -0500
+Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DBA56E55C
+        for <linux-ide@vger.kernel.org>; Wed,  2 Mar 2022 04:11:10 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1646223070; x=1677759070;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=vAuQx7BREl0FilyuvYvK+6a4J3lvwM0xT1xhYotLxzk=;
+  b=Lq+u/3a33ntt/5sXbFC8kQk4/LrqmaHthaLT/02KyVCLnUBoXozhIELk
+   ozVZ57vGxGZJR1l5bSLWGphkdiGaFImqhgal6LNmkEfZJabHTPqDAupyp
+   TyDuHjueDqM0jpcGRCgWhHw7niIAhzViUQjBpAAVtJC5UVRT3rqvn1tTN
+   cFtqTiLGiQTkeUQQUMKwniTkAbzOj3/jNjPr4Rn7D3Dp2w1K1QLc4r/aU
+   0IWiA/tBQYUx4MQPTxWBk7OAM5eZmpGra0MzPwXu5uQvTBnlJpBB89FJU
+   HYwgUvbbRVRLTKn2IH23ykvrxdvAh2RmQYdk/kmlFCb9icYQEOEMlKklk
+   A==;
+X-IronPort-AV: E=Sophos;i="5.90,148,1643644800"; 
+   d="scan'208";a="193214764"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 02 Mar 2022 20:11:09 +0800
+IronPort-SDR: iEjauQ6xq9eQ66CMH9ziyEgxESi3FtbKn0diVXadTUlTPgvNNEQPQ0Hum7HXW4s3pfrXDinafr
+ fXyNxDaDyc86U56o9sOYgCrz1erLq4Z6VCQqbeKmUZQINS4xf4wr5g3V2Yk+pxsBE/UKo9gshl
+ FRA9NW4U3ig2P7oUkQZYlw/rwlC4JyiVXbNCVJe2zC9xevMpcmXZ4jXDHtGtRYl5w1SAZCFSOi
+ pBcBFdFRR91q4b8t1tTiaLl/IXXcQoRJoKtSlMtEmLMKbafPbz2U86PFBProI4tLUXAb/PcONv
+ k0AbDSrgFinhpxxRRFHPXkgm
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2022 03:43:35 -0800
+IronPort-SDR: He96CoXGOiIA2dvsjMPf6SsVNtoLGd7LSuLa/4K0J/tShensTOpHrLTvIC7xHXYEMmVW3xcsxp
+ HNL532PmGnG8e0Gp4HJg233Kcr3sRQABR/sqAbanI4jCrqfxjgjth9Ggm6KP6A6j44ZxeNdYTi
+ 8Ow0d9sz0LBm6VB7jfvQMsRD/mYEqAQkqsREVIp9G/hboCbapHmiv6zbZyCr1PV4kk8tfDLobD
+ BkbZ36H7jYhYQD6zihYsbzJ3SoGEZY45YpIwd2fK2UvJf0Xp4t7VDy73674bcfPJr4D3EHaGIb
+ YlI=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2022 04:11:09 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K7tHx38qwz1SVnx
+        for <linux-ide@vger.kernel.org>; Wed,  2 Mar 2022 04:11:09 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1646223067; x=1648815068; bh=vAuQx7BREl0FilyuvYvK+6a4J3lvwM0xT1x
+        hYotLxzk=; b=FchrGdkQOaP7mTK0hZVsmex/bDLSpoPLbWFLyr7bRefKieoKu+t
+        MQISVQPbrcoMS6oPtPoDjVRtq0qdtgCm4DZ6ZlRS92zXR/MlK/AUgy+hQfLqwK2f
+        S/LCzoir7qZAcRSepEfMfPJ8tkxV+/uE1zg9T/I7YkATNKPal5jzqcrX3fmjjOJr
+        Y2VCIOzxgQBdIncuxgFv7HCuus1wejDSZSLcHsSmRwCKtNpWVAm59jA2q06mBAk6
+        z/59gi//O+Phl7L+RopPq8ZCSWPf0d+GbN90dX2aQfaDlCTJdRA6XcQEokcgovJT
+        YrcdQJukmmpYNhoJEj2VNyScWnxPmcXwmrg==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id GBEzj32QPtCW for <linux-ide@vger.kernel.org>;
+        Wed,  2 Mar 2022 04:11:07 -0800 (PST)
+Received: from [10.112.1.94] (c02drav6md6t.wdc.com [10.112.1.94])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K7tHq4cw8z1Rvlx;
+        Wed,  2 Mar 2022 04:11:03 -0800 (PST)
+Message-ID: <2918bfa8-ca14-1395-b8a0-428e250c5a00@opensource.wdc.com>
+Date:   Wed, 2 Mar 2022 14:11:00 +0200
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
+ Gecko/20100101 Thunderbird/91.6.1
+Subject: Re: [PATCH] ata: Drop commas after OF match table sentinels
+Content-Language: en-US
+To:     Geert Uytterhoeven <geert+renesas@glider.be>
 Cc:     Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>,
         Patrice Chotard <patrice.chotard@foss.st.com>,
         Sergey Shtylyov <s.shtylyov@omp.ru>,
         Linus Walleij <linus.walleij@linaro.org>,
         linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org,
-        Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH] ata: Drop commas after OF match table sentinels
-Date:   Wed,  2 Mar 2022 09:30:34 +0100
-Message-Id: <15d4b8e1108c902c4e80c87edfc702a7786de4ba.1646209667.git.geert+renesas@glider.be>
-X-Mailer: git-send-email 2.25.1
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org
+References: <15d4b8e1108c902c4e80c87edfc702a7786de4ba.1646209667.git.geert+renesas@glider.be>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <15d4b8e1108c902c4e80c87edfc702a7786de4ba.1646209667.git.geert+renesas@glider.be>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-It does not make sense to have a comma after a sentinel, as any new
-elements must be added before the sentinel.
+On 2022/03/02 10:30, Geert Uytterhoeven wrote:
+> It does not make sense to have a comma after a sentinel, as any new
+> elements must be added before the sentinel.
+> 
+> Add comments to clarify the purpose of the empty elements.
 
-Add comments to clarify the purpose of the empty elements.
+Some nits below.
 
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
----
- drivers/ata/ahci_brcm.c        | 2 +-
- drivers/ata/ahci_ceva.c        | 2 +-
- drivers/ata/ahci_da850.c       | 2 +-
- drivers/ata/ahci_dm816.c       | 2 +-
- drivers/ata/ahci_imx.c         | 2 +-
- drivers/ata/ahci_mtk.c         | 2 +-
- drivers/ata/ahci_mvebu.c       | 2 +-
- drivers/ata/ahci_octeon.c      | 2 +-
- drivers/ata/ahci_platform.c    | 2 +-
- drivers/ata/ahci_qoriq.c       | 2 +-
- drivers/ata/ahci_st.c          | 2 +-
- drivers/ata/ahci_sunxi.c       | 2 +-
- drivers/ata/ahci_xgene.c       | 2 +-
- drivers/ata/pata_ftide010.c    | 2 +-
- drivers/ata/pata_ixp4xx_cf.c   | 2 +-
- drivers/ata/pata_macio.c       | 2 +-
- drivers/ata/pata_mpc52xx.c     | 2 +-
- drivers/ata/pata_octeon_cf.c   | 2 +-
- drivers/ata/pata_of_platform.c | 2 +-
- drivers/ata/sata_fsl.c         | 2 +-
- drivers/ata/sata_gemini.c      | 2 +-
- drivers/ata/sata_highbank.c    | 2 +-
- drivers/ata/sata_mv.c          | 2 +-
- drivers/ata/sata_rcar.c        | 2 +-
- 24 files changed, 24 insertions(+), 24 deletions(-)
+> 
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> ---
+>  drivers/ata/ahci_brcm.c        | 2 +-
+>  drivers/ata/ahci_ceva.c        | 2 +-
+>  drivers/ata/ahci_da850.c       | 2 +-
+>  drivers/ata/ahci_dm816.c       | 2 +-
+>  drivers/ata/ahci_imx.c         | 2 +-
+>  drivers/ata/ahci_mtk.c         | 2 +-
+>  drivers/ata/ahci_mvebu.c       | 2 +-
+>  drivers/ata/ahci_octeon.c      | 2 +-
+>  drivers/ata/ahci_platform.c    | 2 +-
+>  drivers/ata/ahci_qoriq.c       | 2 +-
+>  drivers/ata/ahci_st.c          | 2 +-
+>  drivers/ata/ahci_sunxi.c       | 2 +-
+>  drivers/ata/ahci_xgene.c       | 2 +-
+>  drivers/ata/pata_ftide010.c    | 2 +-
+>  drivers/ata/pata_ixp4xx_cf.c   | 2 +-
+>  drivers/ata/pata_macio.c       | 2 +-
+>  drivers/ata/pata_mpc52xx.c     | 2 +-
+>  drivers/ata/pata_octeon_cf.c   | 2 +-
+>  drivers/ata/pata_of_platform.c | 2 +-
+>  drivers/ata/sata_fsl.c         | 2 +-
+>  drivers/ata/sata_gemini.c      | 2 +-
+>  drivers/ata/sata_highbank.c    | 2 +-
+>  drivers/ata/sata_mv.c          | 2 +-
+>  drivers/ata/sata_rcar.c        | 2 +-
+>  24 files changed, 24 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
-index 64dd8aa397d5276b..ab8552b1ff2a14ad 100644
---- a/drivers/ata/ahci_brcm.c
-+++ b/drivers/ata/ahci_brcm.c
-@@ -427,7 +427,7 @@ static const struct of_device_id ahci_of_match[] = {
- 	{.compatible = "brcm,bcm63138-ahci", .data = (void *)BRCM_SATA_BCM7445},
- 	{.compatible = "brcm,bcm-nsp-ahci", .data = (void *)BRCM_SATA_NSP},
- 	{.compatible = "brcm,bcm7216-ahci", .data = (void *)BRCM_SATA_BCM7216},
--	{},
-+	{ /* sentinel */ }
- };
- MODULE_DEVICE_TABLE(of, ahci_of_match);
- 
-diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
-index acf59f51b3569d71..cb24ecf36fafe040 100644
---- a/drivers/ata/ahci_ceva.c
-+++ b/drivers/ata/ahci_ceva.c
-@@ -363,7 +363,7 @@ static SIMPLE_DEV_PM_OPS(ahci_ceva_pm_ops, ceva_ahci_suspend, ceva_ahci_resume);
- 
- static const struct of_device_id ceva_ahci_of_match[] = {
- 	{ .compatible = "ceva,ahci-1v84" },
--	{},
-+	{ /* sentinel */ }
- };
- MODULE_DEVICE_TABLE(of, ceva_ahci_of_match);
- 
-diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
-index 0e82766007128e72..052c28e250aa8d96 100644
---- a/drivers/ata/ahci_da850.c
-+++ b/drivers/ata/ahci_da850.c
-@@ -241,7 +241,7 @@ static SIMPLE_DEV_PM_OPS(ahci_da850_pm_ops, ahci_platform_suspend,
- 
- static const struct of_device_id ahci_da850_of_match[] = {
- 	{ .compatible = "ti,da850-ahci", },
--	{ },
-+	{ /* sentinel */ }
- };
- MODULE_DEVICE_TABLE(of, ahci_da850_of_match);
- 
-diff --git a/drivers/ata/ahci_dm816.c b/drivers/ata/ahci_dm816.c
-index 8bec4104167142c5..8a92112dcd59080a 100644
---- a/drivers/ata/ahci_dm816.c
-+++ b/drivers/ata/ahci_dm816.c
-@@ -176,7 +176,7 @@ static SIMPLE_DEV_PM_OPS(ahci_dm816_pm_ops,
- 
- static const struct of_device_id ahci_dm816_of_match[] = {
- 	{ .compatible = "ti,dm816-ahci", },
--	{ },
-+	{ /* sentinel */ }
- };
- MODULE_DEVICE_TABLE(of, ahci_dm816_of_match);
- 
-diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-index 388baf528fa81cab..79aa9f2853129f6e 100644
---- a/drivers/ata/ahci_imx.c
-+++ b/drivers/ata/ahci_imx.c
-@@ -811,7 +811,7 @@ static const struct of_device_id imx_ahci_of_match[] = {
- 	{ .compatible = "fsl,imx6q-ahci", .data = (void *)AHCI_IMX6Q },
- 	{ .compatible = "fsl,imx6qp-ahci", .data = (void *)AHCI_IMX6QP },
- 	{ .compatible = "fsl,imx8qm-ahci", .data = (void *)AHCI_IMX8QM },
--	{},
-+	{ /* sentinel */ }
- };
- MODULE_DEVICE_TABLE(of, imx_ahci_of_match);
- 
-diff --git a/drivers/ata/ahci_mtk.c b/drivers/ata/ahci_mtk.c
-index d9b08ae7c3b22104..1f6c85fde9830ac1 100644
---- a/drivers/ata/ahci_mtk.c
-+++ b/drivers/ata/ahci_mtk.c
-@@ -169,7 +169,7 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_suspend,
- 
- static const struct of_device_id ahci_of_match[] = {
- 	{ .compatible = "mediatek,mtk-ahci", },
--	{},
-+	{ /* sentinel */ }
- };
- MODULE_DEVICE_TABLE(of, ahci_of_match);
- 
-diff --git a/drivers/ata/ahci_mvebu.c b/drivers/ata/ahci_mvebu.c
-index 3ad46d26d9d51790..991413a272e608a2 100644
---- a/drivers/ata/ahci_mvebu.c
-+++ b/drivers/ata/ahci_mvebu.c
-@@ -239,7 +239,7 @@ static const struct of_device_id ahci_mvebu_of_match[] = {
- 		.compatible = "marvell,armada-3700-ahci",
- 		.data = &ahci_mvebu_armada_3700_plat_data,
- 	},
--	{ },
-+	{ /* sentinel */ }
- };
- MODULE_DEVICE_TABLE(of, ahci_mvebu_of_match);
- 
-diff --git a/drivers/ata/ahci_octeon.c b/drivers/ata/ahci_octeon.c
-index 5a44e089c6bb6ae2..b9460b91288f772d 100644
---- a/drivers/ata/ahci_octeon.c
-+++ b/drivers/ata/ahci_octeon.c
-@@ -80,7 +80,7 @@ static int ahci_octeon_remove(struct platform_device *pdev)
- 
- static const struct of_device_id octeon_ahci_match[] = {
- 	{ .compatible = "cavium,octeon-7130-sata-uctl", },
--	{},
-+	{ /* sentinel */ }
- };
- MODULE_DEVICE_TABLE(of, octeon_ahci_match);
- 
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 3aab2e3d57f3373a..28a8de5b48b979c9 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -88,7 +88,7 @@ static const struct of_device_id ahci_of_match[] = {
- 	{ .compatible = "snps,dwc-ahci", },
- 	{ .compatible = "hisilicon,hisi-ahci", },
- 	{ .compatible = "cavium,octeon-7130-ahci", },
--	{},
-+	{ /* sentinel */ }
- };
- MODULE_DEVICE_TABLE(of, ahci_of_match);
- 
-diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
-index bf5b388bd4e0db9b..dd612d7963159118 100644
---- a/drivers/ata/ahci_qoriq.c
-+++ b/drivers/ata/ahci_qoriq.c
-@@ -77,7 +77,7 @@ static const struct of_device_id ahci_qoriq_of_match[] = {
- 	{ .compatible = "fsl,ls1088a-ahci", .data = (void *)AHCI_LS1088A},
- 	{ .compatible = "fsl,ls2088a-ahci", .data = (void *)AHCI_LS2088A},
- 	{ .compatible = "fsl,lx2160a-ahci", .data = (void *)AHCI_LX2160A},
--	{},
-+	{ /* sentinel */ }
- };
- MODULE_DEVICE_TABLE(of, ahci_qoriq_of_match);
- 
-diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
-index c268264c2129c52a..7526653c843b3226 100644
---- a/drivers/ata/ahci_st.c
-+++ b/drivers/ata/ahci_st.c
-@@ -232,7 +232,7 @@ static SIMPLE_DEV_PM_OPS(st_ahci_pm_ops, st_ahci_suspend, st_ahci_resume);
- 
- static const struct of_device_id st_ahci_match[] = {
- 	{ .compatible = "st,ahci", },
--	{},
-+	{ /* sentinel */ }
- };
- MODULE_DEVICE_TABLE(of, st_ahci_match);
- 
-diff --git a/drivers/ata/ahci_sunxi.c b/drivers/ata/ahci_sunxi.c
-index 56b695136977ab72..c7273c1cb0c73b9b 100644
---- a/drivers/ata/ahci_sunxi.c
-+++ b/drivers/ata/ahci_sunxi.c
-@@ -286,7 +286,7 @@ static SIMPLE_DEV_PM_OPS(ahci_sunxi_pm_ops, ahci_platform_suspend,
- static const struct of_device_id ahci_sunxi_of_match[] = {
- 	{ .compatible = "allwinner,sun4i-a10-ahci", },
- 	{ .compatible = "allwinner,sun8i-r40-ahci", },
--	{ },
-+	{ /* sentinel */ }
- };
- MODULE_DEVICE_TABLE(of, ahci_sunxi_of_match);
- 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 8e206379d699f080..d205896f66cfb228 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -726,7 +726,7 @@ MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
- static const struct of_device_id xgene_ahci_of_match[] = {
- 	{.compatible = "apm,xgene-ahci", .data = (void *) XGENE_AHCI_V1},
- 	{.compatible = "apm,xgene-ahci-v2", .data = (void *) XGENE_AHCI_V2},
--	{},
-+	{ /* sentinel */ }
- };
- MODULE_DEVICE_TABLE(of, xgene_ahci_of_match);
- 
-diff --git a/drivers/ata/pata_ftide010.c b/drivers/ata/pata_ftide010.c
-index 34cb104f6b43e5cf..2a92797b5e11a9aa 100644
---- a/drivers/ata/pata_ftide010.c
-+++ b/drivers/ata/pata_ftide010.c
-@@ -557,7 +557,7 @@ static const struct of_device_id pata_ftide010_of_match[] = {
- 	{
- 		.compatible = "faraday,ftide010",
- 	},
--	{},
-+	{ /* sentinel */ }
- };
- 
- static struct platform_driver pata_ftide010_driver = {
-diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
-index 17b557c91e1c78fc..e225913a619d8414 100644
---- a/drivers/ata/pata_ixp4xx_cf.c
-+++ b/drivers/ata/pata_ixp4xx_cf.c
-@@ -293,7 +293,7 @@ static int ixp4xx_pata_probe(struct platform_device *pdev)
- 
- static const struct of_device_id ixp4xx_pata_of_match[] = {
- 	{ .compatible = "intel,ixp4xx-compact-flash", },
--	{ },
-+	{ /* sentinel */ }
- };
- 
- static struct platform_driver ixp4xx_pata_platform_driver = {
-diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-index 16e8aa184a75793f..8cf778723fd6d049 100644
---- a/drivers/ata/pata_macio.c
-+++ b/drivers/ata/pata_macio.c
-@@ -1345,7 +1345,7 @@ static const struct of_device_id pata_macio_match[] =
- 	{
- 	.type		= "ata",
- 	},
--	{},
-+	{ /* sentinel */ }
- };
- MODULE_DEVICE_TABLE(of, pata_macio_match);
- 
-diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
-index f1d352d5f128537a..bc9d9df3b5aced64 100644
---- a/drivers/ata/pata_mpc52xx.c
-+++ b/drivers/ata/pata_mpc52xx.c
-@@ -849,7 +849,7 @@ mpc52xx_ata_resume(struct platform_device *op)
- static const struct of_device_id mpc52xx_ata_of_match[] = {
- 	{ .compatible = "fsl,mpc5200-ata", },
- 	{ .compatible = "mpc5200-ata", },
--	{},
-+	{ /* sentinel */ }
- };
- 
- 
-diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
-index 05c2ab3757568c62..bdaec863171a14cf 100644
---- a/drivers/ata/pata_octeon_cf.c
-+++ b/drivers/ata/pata_octeon_cf.c
-@@ -1009,7 +1009,7 @@ static const struct of_device_id octeon_cf_match[] = {
- 	{
- 		.compatible = "cavium,ebt3000-compact-flash",
- 	},
--	{},
-+	{ /* sentinel */ }
- };
- MODULE_DEVICE_TABLE(of, octeon_cf_match);
- 
-diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
-index c3a40b717dcdcc2a..ac5a633c00a57ac1 100644
---- a/drivers/ata/pata_of_platform.c
-+++ b/drivers/ata/pata_of_platform.c
-@@ -79,7 +79,7 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
- 
- static const struct of_device_id pata_of_platform_match[] = {
- 	{ .compatible = "ata-generic", },
--	{ },
-+	{ /* sentinel */ }
- };
- MODULE_DEVICE_TABLE(of, pata_of_platform_match);
- 
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 556034a15430461f..11867a7eb4691771 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -1583,7 +1583,7 @@ static const struct of_device_id fsl_sata_match[] = {
- 	{
- 		.compatible = "fsl,pq-sata-v2",
- 	},
--	{},
-+	{ /* sentinel */ }
- };
- 
- MODULE_DEVICE_TABLE(of, fsl_sata_match);
-diff --git a/drivers/ata/sata_gemini.c b/drivers/ata/sata_gemini.c
-index 440a63de20d01a07..c7e9efc0025f1a91 100644
---- a/drivers/ata/sata_gemini.c
-+++ b/drivers/ata/sata_gemini.c
-@@ -422,7 +422,7 @@ static const struct of_device_id gemini_sata_of_match[] = {
- 	{
- 		.compatible = "cortina,gemini-sata-bridge",
- 	},
--	{},
-+	{ /* sentinel */ }
- };
- 
- static struct platform_driver gemini_sata_driver = {
-diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
-index b29d3f1d64b03317..cd375e4df9644e33 100644
---- a/drivers/ata/sata_highbank.c
-+++ b/drivers/ata/sata_highbank.c
-@@ -444,7 +444,7 @@ static struct scsi_host_template ahci_highbank_platform_sht = {
- 
- static const struct of_device_id ahci_of_match[] = {
- 	{ .compatible = "calxeda,hb-ahci" },
--	{},
-+	{ /* sentinel */ }
- };
- MODULE_DEVICE_TABLE(of, ahci_of_match);
- 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 53446b997740d5fd..13d92b71e6659cda 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -4277,7 +4277,7 @@ static int mv_platform_resume(struct platform_device *pdev)
- static const struct of_device_id mv_sata_dt_ids[] = {
- 	{ .compatible = "marvell,armada-370-sata", },
- 	{ .compatible = "marvell,orion-sata", },
--	{},
-+	{ /* sentinel */ }
- };
- MODULE_DEVICE_TABLE(of, mv_sata_dt_ids);
- #endif
-diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
-index 3d96b6faa3f0e1c6..1483d3efeb7e220e 100644
---- a/drivers/ata/sata_rcar.c
-+++ b/drivers/ata/sata_rcar.c
-@@ -857,7 +857,7 @@ static const struct of_device_id sata_rcar_match[] = {
- 		.compatible = "renesas,rcar-gen3-sata",
- 		.data = (void *)RCAR_GEN3_SATA
- 	},
--	{ },
-+	{ /* sentinel */ }
- };
- MODULE_DEVICE_TABLE(of, sata_rcar_match);
- 
+[...]
+
+> diff --git a/drivers/ata/pata_ftide010.c b/drivers/ata/pata_ftide010.c
+> index 34cb104f6b43e5cf..2a92797b5e11a9aa 100644
+> --- a/drivers/ata/pata_ftide010.c
+> +++ b/drivers/ata/pata_ftide010.c
+> @@ -557,7 +557,7 @@ static const struct of_device_id pata_ftide010_of_match[] = {
+>  	{
+>  		.compatible = "faraday,ftide010",
+>  	},
+
+While at it, could you rewrap this one to a single line to have a consistent style ?
+
+> -	{},
+> +	{ /* sentinel */ }
+>  };
+>  
+>  static struct platform_driver pata_ftide010_driver = {
+> diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
+> index 17b557c91e1c78fc..e225913a619d8414 100644
+> --- a/drivers/ata/pata_ixp4xx_cf.c
+> +++ b/drivers/ata/pata_ixp4xx_cf.c
+> @@ -293,7 +293,7 @@ static int ixp4xx_pata_probe(struct platform_device *pdev)
+>  
+>  static const struct of_device_id ixp4xx_pata_of_match[] = {
+>  	{ .compatible = "intel,ixp4xx-compact-flash", },
+> -	{ },
+> +	{ /* sentinel */ }
+>  };
+>  
+>  static struct platform_driver ixp4xx_pata_platform_driver = {
+> diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+> index 16e8aa184a75793f..8cf778723fd6d049 100644
+> --- a/drivers/ata/pata_macio.c
+> +++ b/drivers/ata/pata_macio.c
+> @@ -1345,7 +1345,7 @@ static const struct of_device_id pata_macio_match[] =
+>  	{
+>  	.type		= "ata",
+>  	},
+
+Here too.
+
+> -	{},
+> +	{ /* sentinel */ }
+>  };
+>  MODULE_DEVICE_TABLE(of, pata_macio_match);
+>  
+> diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
+> index f1d352d5f128537a..bc9d9df3b5aced64 100644
+> --- a/drivers/ata/pata_mpc52xx.c
+> +++ b/drivers/ata/pata_mpc52xx.c
+> @@ -849,7 +849,7 @@ mpc52xx_ata_resume(struct platform_device *op)
+>  static const struct of_device_id mpc52xx_ata_of_match[] = {
+>  	{ .compatible = "fsl,mpc5200-ata", },
+>  	{ .compatible = "mpc5200-ata", },
+> -	{},
+> +	{ /* sentinel */ }
+>  };
+>  
+>  
+> diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
+> index 05c2ab3757568c62..bdaec863171a14cf 100644
+> --- a/drivers/ata/pata_octeon_cf.c
+> +++ b/drivers/ata/pata_octeon_cf.c
+> @@ -1009,7 +1009,7 @@ static const struct of_device_id octeon_cf_match[] = {
+>  	{
+>  		.compatible = "cavium,ebt3000-compact-flash",
+>  	},
+
+And here as well.
+
+> -	{},
+> +	{ /* sentinel */ }
+>  };
+>  MODULE_DEVICE_TABLE(of, octeon_cf_match);
+>  
+> diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
+> index c3a40b717dcdcc2a..ac5a633c00a57ac1 100644
+> --- a/drivers/ata/pata_of_platform.c
+> +++ b/drivers/ata/pata_of_platform.c
+> @@ -79,7 +79,7 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
+>  
+>  static const struct of_device_id pata_of_platform_match[] = {
+>  	{ .compatible = "ata-generic", },
+> -	{ },
+> +	{ /* sentinel */ }
+>  };
+>  MODULE_DEVICE_TABLE(of, pata_of_platform_match);
+>  
+> diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+> index 556034a15430461f..11867a7eb4691771 100644
+> --- a/drivers/ata/sata_fsl.c
+> +++ b/drivers/ata/sata_fsl.c
+> @@ -1583,7 +1583,7 @@ static const struct of_device_id fsl_sata_match[] = {
+>  	{
+>  		.compatible = "fsl,pq-sata-v2",
+>  	},
+
+Same.
+
+> -	{},
+> +	{ /* sentinel */ }
+>  };
+>  
+>  MODULE_DEVICE_TABLE(of, fsl_sata_match);
+> diff --git a/drivers/ata/sata_gemini.c b/drivers/ata/sata_gemini.c
+> index 440a63de20d01a07..c7e9efc0025f1a91 100644
+> --- a/drivers/ata/sata_gemini.c
+> +++ b/drivers/ata/sata_gemini.c
+> @@ -422,7 +422,7 @@ static const struct of_device_id gemini_sata_of_match[] = {
+>  	{
+>  		.compatible = "cortina,gemini-sata-bridge",
+>  	},
+
+Another...
+
+> -	{},
+> +	{ /* sentinel */ }
+>  };
+>  
+>  static struct platform_driver gemini_sata_driver = {
+> diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
+> index b29d3f1d64b03317..cd375e4df9644e33 100644
+> --- a/drivers/ata/sata_highbank.c
+> +++ b/drivers/ata/sata_highbank.c
+> @@ -444,7 +444,7 @@ static struct scsi_host_template ahci_highbank_platform_sht = {
+>  
+>  static const struct of_device_id ahci_of_match[] = {
+>  	{ .compatible = "calxeda,hb-ahci" },
+> -	{},
+> +	{ /* sentinel */ }
+>  };
+>  MODULE_DEVICE_TABLE(of, ahci_of_match);
+>  
+> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> index 53446b997740d5fd..13d92b71e6659cda 100644
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+> @@ -4277,7 +4277,7 @@ static int mv_platform_resume(struct platform_device *pdev)
+>  static const struct of_device_id mv_sata_dt_ids[] = {
+>  	{ .compatible = "marvell,armada-370-sata", },
+>  	{ .compatible = "marvell,orion-sata", },
+> -	{},
+> +	{ /* sentinel */ }
+>  };
+>  MODULE_DEVICE_TABLE(of, mv_sata_dt_ids);
+>  #endif
+> diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+> index 3d96b6faa3f0e1c6..1483d3efeb7e220e 100644
+> --- a/drivers/ata/sata_rcar.c
+> +++ b/drivers/ata/sata_rcar.c
+> @@ -857,7 +857,7 @@ static const struct of_device_id sata_rcar_match[] = {
+>  		.compatible = "renesas,rcar-gen3-sata",
+>  		.data = (void *)RCAR_GEN3_SATA
+>  	},
+> -	{ },
+> +	{ /* sentinel */ }
+>  };
+>  MODULE_DEVICE_TABLE(of, sata_rcar_match);
+>  
+
+
 -- 
-2.25.1
-
+Damien Le Moal
+Western Digital Research
