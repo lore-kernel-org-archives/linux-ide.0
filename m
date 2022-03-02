@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 270C2C433F5
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Mar 2022 12:11:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80CFAC433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  2 Mar 2022 12:14:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240432AbiCBMLz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 2 Mar 2022 07:11:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35534 "EHLO
+        id S241697AbiCBMPQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 2 Mar 2022 07:15:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46128 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238422AbiCBMLz (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2022 07:11:55 -0500
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DBA56E55C
-        for <linux-ide@vger.kernel.org>; Wed,  2 Mar 2022 04:11:10 -0800 (PST)
+        with ESMTP id S241700AbiCBMPP (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2022 07:15:15 -0500
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F31172E0A2
+        for <linux-ide@vger.kernel.org>; Wed,  2 Mar 2022 04:14:32 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1646223070; x=1677759070;
+  t=1646223272; x=1677759272;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=vAuQx7BREl0FilyuvYvK+6a4J3lvwM0xT1xhYotLxzk=;
-  b=Lq+u/3a33ntt/5sXbFC8kQk4/LrqmaHthaLT/02KyVCLnUBoXozhIELk
-   ozVZ57vGxGZJR1l5bSLWGphkdiGaFImqhgal6LNmkEfZJabHTPqDAupyp
-   TyDuHjueDqM0jpcGRCgWhHw7niIAhzViUQjBpAAVtJC5UVRT3rqvn1tTN
-   cFtqTiLGiQTkeUQQUMKwniTkAbzOj3/jNjPr4Rn7D3Dp2w1K1QLc4r/aU
-   0IWiA/tBQYUx4MQPTxWBk7OAM5eZmpGra0MzPwXu5uQvTBnlJpBB89FJU
-   HYwgUvbbRVRLTKn2IH23ykvrxdvAh2RmQYdk/kmlFCb9icYQEOEMlKklk
-   A==;
+  bh=st7VlNZfsQedcZfoXbBc4FhTRPPMwwLWFLadNwX0BdE=;
+  b=Qe8zMEtX23lGRQaCOhWNOYfBp2rjTvXqQkVlYON5VajmO/L/ICRLXLdG
+   H0WRNFnYjUCZDLsE6IktpXfEAsKoGi71OV8NrX8j42kkwZT2LZKkzt+S8
+   zOVUgnL1MhMJ5Va6WUu5ykZH8W/Ew4tLaisuzQrP254jkLS4O+VJ5ziaf
+   eF3eezAJiZjEMiGzZwjvKlgW08wUCZ8UmwhJb/4YwtM1lZQbUyX5mgO1t
+   5QngVEOH/z7AU7n7KUDnnlP5g1zs74yKL/Uj1zywpX2fjvDbsmd+Kf1A/
+   8QxtiXdtppbpKcFTakQGrNmrlU9MkZ5m32dBcR3/WfABs5ZJ4rhUsi0GX
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.90,148,1643644800"; 
-   d="scan'208";a="193214764"
+   d="scan'208";a="194288545"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 02 Mar 2022 20:11:09 +0800
-IronPort-SDR: iEjauQ6xq9eQ66CMH9ziyEgxESi3FtbKn0diVXadTUlTPgvNNEQPQ0Hum7HXW4s3pfrXDinafr
- fXyNxDaDyc86U56o9sOYgCrz1erLq4Z6VCQqbeKmUZQINS4xf4wr5g3V2Yk+pxsBE/UKo9gshl
- FRA9NW4U3ig2P7oUkQZYlw/rwlC4JyiVXbNCVJe2zC9xevMpcmXZ4jXDHtGtRYl5w1SAZCFSOi
- pBcBFdFRR91q4b8t1tTiaLl/IXXcQoRJoKtSlMtEmLMKbafPbz2U86PFBProI4tLUXAb/PcONv
- k0AbDSrgFinhpxxRRFHPXkgm
+  by ob1.hgst.iphmx.com with ESMTP; 02 Mar 2022 20:14:31 +0800
+IronPort-SDR: jjW3s0l5n0z7TpjrWnXsVZallWN6NdlHfCGv73Gma/7PdfcYGPfTYMhsg9xBn4K7Ug28Go3yXL
+ J0hNPXRb5+9VrnLlrqIVj7404/Nnk7unlySwBX7RG0KL3q/4bkpje01B8UiPekTSZluNWFRpCK
+ t+AUvXHRw/WoZBUPhSqbegGlfHzTJQ7DGwNh8oUsomiQLu2B0PV8VU6wZ7ffLGXEq9JZKSCXlr
+ 42Q6BJVqDNV1UnVnIMd2y1pTQp4oZDeCziKTZ+k+SZFEX1vAfgYTyryzsdXVJjnddUWYerEWf1
+ iVuCk5Oag09Bd6IPuB11aV27
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2022 03:43:35 -0800
-IronPort-SDR: He96CoXGOiIA2dvsjMPf6SsVNtoLGd7LSuLa/4K0J/tShensTOpHrLTvIC7xHXYEMmVW3xcsxp
- HNL532PmGnG8e0Gp4HJg233Kcr3sRQABR/sqAbanI4jCrqfxjgjth9Ggm6KP6A6j44ZxeNdYTi
- 8Ow0d9sz0LBm6VB7jfvQMsRD/mYEqAQkqsREVIp9G/hboCbapHmiv6zbZyCr1PV4kk8tfDLobD
- BkbZ36H7jYhYQD6zihYsbzJ3SoGEZY45YpIwd2fK2UvJf0Xp4t7VDy73674bcfPJr4D3EHaGIb
- YlI=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2022 03:46:57 -0800
+IronPort-SDR: pdSzWQu00NKDTkCkHwmcJ7uSL0Vlu/1VE7917rcMydcloZdUX4nJedwJe6cKG2vCdiK3ULLMni
+ p4v85hqbAZJppFFJVxdKvxSWVKgTUhJDqOnvGb0hjQJbQ7Wt164cilZnnyoAAaOork6sW63G5E
+ HFRko2FUT+/9ck3sLQB8hfr4EYGZqUvNQX0bojWRHHbOeCx+V0VlIm4vblWnpSFWYGzf89DoCu
+ WrPACyUYAgLNpRWHCimZadGzM/tpkuT67cJct5zxOnDY17rpQA4o7LXCRm2X55sXH7QHK4L1j0
+ bAA=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2022 04:11:09 -0800
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2022 04:14:31 -0800
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K7tHx38qwz1SVnx
-        for <linux-ide@vger.kernel.org>; Wed,  2 Mar 2022 04:11:09 -0800 (PST)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K7tMq0t3rz1SVnx
+        for <linux-ide@vger.kernel.org>; Wed,  2 Mar 2022 04:14:31 -0800 (PST)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,242 +56,63 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1646223067; x=1648815068; bh=vAuQx7BREl0FilyuvYvK+6a4J3lvwM0xT1x
-        hYotLxzk=; b=FchrGdkQOaP7mTK0hZVsmex/bDLSpoPLbWFLyr7bRefKieoKu+t
-        MQISVQPbrcoMS6oPtPoDjVRtq0qdtgCm4DZ6ZlRS92zXR/MlK/AUgy+hQfLqwK2f
-        S/LCzoir7qZAcRSepEfMfPJ8tkxV+/uE1zg9T/I7YkATNKPal5jzqcrX3fmjjOJr
-        Y2VCIOzxgQBdIncuxgFv7HCuus1wejDSZSLcHsSmRwCKtNpWVAm59jA2q06mBAk6
-        z/59gi//O+Phl7L+RopPq8ZCSWPf0d+GbN90dX2aQfaDlCTJdRA6XcQEokcgovJT
-        YrcdQJukmmpYNhoJEj2VNyScWnxPmcXwmrg==
+        1646223270; x=1648815271; bh=st7VlNZfsQedcZfoXbBc4FhTRPPMwwLWFLa
+        dNwX0BdE=; b=O/Xqlmd6L9ZYxVWuxfR7//vQFr6cu+V9IZCqSsUSG9mKBN0c+OM
+        1TgcokNV4wTCyoZwGM54aSKvgzQRi3kkt3k24oo5kBBwYp9pQ8DyKTEDC2FQyEyn
+        cQl9CIaWqJ2UA/1asVX3livd2GhNNQPvNeeO5CFbsNS4o71YYi+kMvjIH+dTzqs9
+        2j8/U9vm+t7heVa9v1z877eIlSHyx5XIKCNq5dWukQyTIUFISkKCAbtElji6/fJP
+        X2GBYkPwysF34vjfViFYoVrKo8eeopUG52Ut/u54i+YbHU3cet0lG4q35zqiHbJN
+        2lcby5a4aBon7Nw5M3Xwo9LPs+pIYrzr+tg==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id GBEzj32QPtCW for <linux-ide@vger.kernel.org>;
-        Wed,  2 Mar 2022 04:11:07 -0800 (PST)
+        with ESMTP id p_9fAJjE1N6N for <linux-ide@vger.kernel.org>;
+        Wed,  2 Mar 2022 04:14:30 -0800 (PST)
 Received: from [10.112.1.94] (c02drav6md6t.wdc.com [10.112.1.94])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K7tHq4cw8z1Rvlx;
-        Wed,  2 Mar 2022 04:11:03 -0800 (PST)
-Message-ID: <2918bfa8-ca14-1395-b8a0-428e250c5a00@opensource.wdc.com>
-Date:   Wed, 2 Mar 2022 14:11:00 +0200
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K7tMn1p73z1Rvlx;
+        Wed,  2 Mar 2022 04:14:28 -0800 (PST)
+Message-ID: <3ae1eef4-1617-5202-a893-16a9b49638c3@opensource.wdc.com>
+Date:   Wed, 2 Mar 2022 14:14:26 +0200
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
  Gecko/20100101 Thunderbird/91.6.1
-Subject: Re: [PATCH] ata: Drop commas after OF match table sentinels
+Subject: Re: [PATCH v3 1/3] ata: ahci: Rename board_ahci_mobile
 Content-Language: en-US
-To:     Geert Uytterhoeven <geert+renesas@glider.be>
-Cc:     Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>,
-        Patrice Chotard <patrice.chotard@foss.st.com>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org
-References: <15d4b8e1108c902c4e80c87edfc702a7786de4ba.1646209667.git.geert+renesas@glider.be>
+To:     Mario Limonciello <mario.limonciello@amd.com>
+Cc:     "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        pmenzel@molgen.mpg.de, hdegoede@redhat.com
+References: <20220225172319.846891-1-mario.limonciello@amd.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <15d4b8e1108c902c4e80c87edfc702a7786de4ba.1646209667.git.geert+renesas@glider.be>
+In-Reply-To: <20220225172319.846891-1-mario.limonciello@amd.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2022/03/02 10:30, Geert Uytterhoeven wrote:
-> It does not make sense to have a comma after a sentinel, as any new
-> elements must be added before the sentinel.
+On 2022/02/25 19:23, Mario Limonciello wrote:
+> This board definition was originally created for mobile devices to
+> designate default link power managmeent policy to influence runtime
+> power consumption.
 > 
-> Add comments to clarify the purpose of the empty elements.
-
-Some nits below.
-
+> As this is interesting for more than just mobile designs, rename the
+> board to `board_ahci_low_power` to make it clear it is about default
+> policy.
 > 
-> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+> Reviewed-by: Paul Menzel <pmenzel@molgen.mpg.de>
+> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
 > ---
->  drivers/ata/ahci_brcm.c        | 2 +-
->  drivers/ata/ahci_ceva.c        | 2 +-
->  drivers/ata/ahci_da850.c       | 2 +-
->  drivers/ata/ahci_dm816.c       | 2 +-
->  drivers/ata/ahci_imx.c         | 2 +-
->  drivers/ata/ahci_mtk.c         | 2 +-
->  drivers/ata/ahci_mvebu.c       | 2 +-
->  drivers/ata/ahci_octeon.c      | 2 +-
->  drivers/ata/ahci_platform.c    | 2 +-
->  drivers/ata/ahci_qoriq.c       | 2 +-
->  drivers/ata/ahci_st.c          | 2 +-
->  drivers/ata/ahci_sunxi.c       | 2 +-
->  drivers/ata/ahci_xgene.c       | 2 +-
->  drivers/ata/pata_ftide010.c    | 2 +-
->  drivers/ata/pata_ixp4xx_cf.c   | 2 +-
->  drivers/ata/pata_macio.c       | 2 +-
->  drivers/ata/pata_mpc52xx.c     | 2 +-
->  drivers/ata/pata_octeon_cf.c   | 2 +-
->  drivers/ata/pata_of_platform.c | 2 +-
->  drivers/ata/sata_fsl.c         | 2 +-
->  drivers/ata/sata_gemini.c      | 2 +-
->  drivers/ata/sata_highbank.c    | 2 +-
->  drivers/ata/sata_mv.c          | 2 +-
->  drivers/ata/sata_rcar.c        | 2 +-
->  24 files changed, 24 insertions(+), 24 deletions(-)
+> changes from v2->v3
+>  * Add tags
+>  * Move new board ID name to correct location in the enum
+>  drivers/ata/ahci.c | 96 +++++++++++++++++++++++-----------------------
+>  1 file changed, 48 insertions(+), 48 deletions(-)
 
-[...]
-
-> diff --git a/drivers/ata/pata_ftide010.c b/drivers/ata/pata_ftide010.c
-> index 34cb104f6b43e5cf..2a92797b5e11a9aa 100644
-> --- a/drivers/ata/pata_ftide010.c
-> +++ b/drivers/ata/pata_ftide010.c
-> @@ -557,7 +557,7 @@ static const struct of_device_id pata_ftide010_of_match[] = {
->  	{
->  		.compatible = "faraday,ftide010",
->  	},
-
-While at it, could you rewrap this one to a single line to have a consistent style ?
-
-> -	{},
-> +	{ /* sentinel */ }
->  };
->  
->  static struct platform_driver pata_ftide010_driver = {
-> diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
-> index 17b557c91e1c78fc..e225913a619d8414 100644
-> --- a/drivers/ata/pata_ixp4xx_cf.c
-> +++ b/drivers/ata/pata_ixp4xx_cf.c
-> @@ -293,7 +293,7 @@ static int ixp4xx_pata_probe(struct platform_device *pdev)
->  
->  static const struct of_device_id ixp4xx_pata_of_match[] = {
->  	{ .compatible = "intel,ixp4xx-compact-flash", },
-> -	{ },
-> +	{ /* sentinel */ }
->  };
->  
->  static struct platform_driver ixp4xx_pata_platform_driver = {
-> diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-> index 16e8aa184a75793f..8cf778723fd6d049 100644
-> --- a/drivers/ata/pata_macio.c
-> +++ b/drivers/ata/pata_macio.c
-> @@ -1345,7 +1345,7 @@ static const struct of_device_id pata_macio_match[] =
->  	{
->  	.type		= "ata",
->  	},
-
-Here too.
-
-> -	{},
-> +	{ /* sentinel */ }
->  };
->  MODULE_DEVICE_TABLE(of, pata_macio_match);
->  
-> diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
-> index f1d352d5f128537a..bc9d9df3b5aced64 100644
-> --- a/drivers/ata/pata_mpc52xx.c
-> +++ b/drivers/ata/pata_mpc52xx.c
-> @@ -849,7 +849,7 @@ mpc52xx_ata_resume(struct platform_device *op)
->  static const struct of_device_id mpc52xx_ata_of_match[] = {
->  	{ .compatible = "fsl,mpc5200-ata", },
->  	{ .compatible = "mpc5200-ata", },
-> -	{},
-> +	{ /* sentinel */ }
->  };
->  
->  
-> diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
-> index 05c2ab3757568c62..bdaec863171a14cf 100644
-> --- a/drivers/ata/pata_octeon_cf.c
-> +++ b/drivers/ata/pata_octeon_cf.c
-> @@ -1009,7 +1009,7 @@ static const struct of_device_id octeon_cf_match[] = {
->  	{
->  		.compatible = "cavium,ebt3000-compact-flash",
->  	},
-
-And here as well.
-
-> -	{},
-> +	{ /* sentinel */ }
->  };
->  MODULE_DEVICE_TABLE(of, octeon_cf_match);
->  
-> diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
-> index c3a40b717dcdcc2a..ac5a633c00a57ac1 100644
-> --- a/drivers/ata/pata_of_platform.c
-> +++ b/drivers/ata/pata_of_platform.c
-> @@ -79,7 +79,7 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
->  
->  static const struct of_device_id pata_of_platform_match[] = {
->  	{ .compatible = "ata-generic", },
-> -	{ },
-> +	{ /* sentinel */ }
->  };
->  MODULE_DEVICE_TABLE(of, pata_of_platform_match);
->  
-> diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-> index 556034a15430461f..11867a7eb4691771 100644
-> --- a/drivers/ata/sata_fsl.c
-> +++ b/drivers/ata/sata_fsl.c
-> @@ -1583,7 +1583,7 @@ static const struct of_device_id fsl_sata_match[] = {
->  	{
->  		.compatible = "fsl,pq-sata-v2",
->  	},
-
-Same.
-
-> -	{},
-> +	{ /* sentinel */ }
->  };
->  
->  MODULE_DEVICE_TABLE(of, fsl_sata_match);
-> diff --git a/drivers/ata/sata_gemini.c b/drivers/ata/sata_gemini.c
-> index 440a63de20d01a07..c7e9efc0025f1a91 100644
-> --- a/drivers/ata/sata_gemini.c
-> +++ b/drivers/ata/sata_gemini.c
-> @@ -422,7 +422,7 @@ static const struct of_device_id gemini_sata_of_match[] = {
->  	{
->  		.compatible = "cortina,gemini-sata-bridge",
->  	},
-
-Another...
-
-> -	{},
-> +	{ /* sentinel */ }
->  };
->  
->  static struct platform_driver gemini_sata_driver = {
-> diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
-> index b29d3f1d64b03317..cd375e4df9644e33 100644
-> --- a/drivers/ata/sata_highbank.c
-> +++ b/drivers/ata/sata_highbank.c
-> @@ -444,7 +444,7 @@ static struct scsi_host_template ahci_highbank_platform_sht = {
->  
->  static const struct of_device_id ahci_of_match[] = {
->  	{ .compatible = "calxeda,hb-ahci" },
-> -	{},
-> +	{ /* sentinel */ }
->  };
->  MODULE_DEVICE_TABLE(of, ahci_of_match);
->  
-> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-> index 53446b997740d5fd..13d92b71e6659cda 100644
-> --- a/drivers/ata/sata_mv.c
-> +++ b/drivers/ata/sata_mv.c
-> @@ -4277,7 +4277,7 @@ static int mv_platform_resume(struct platform_device *pdev)
->  static const struct of_device_id mv_sata_dt_ids[] = {
->  	{ .compatible = "marvell,armada-370-sata", },
->  	{ .compatible = "marvell,orion-sata", },
-> -	{},
-> +	{ /* sentinel */ }
->  };
->  MODULE_DEVICE_TABLE(of, mv_sata_dt_ids);
->  #endif
-> diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
-> index 3d96b6faa3f0e1c6..1483d3efeb7e220e 100644
-> --- a/drivers/ata/sata_rcar.c
-> +++ b/drivers/ata/sata_rcar.c
-> @@ -857,7 +857,7 @@ static const struct of_device_id sata_rcar_match[] = {
->  		.compatible = "renesas,rcar-gen3-sata",
->  		.data = (void *)RCAR_GEN3_SATA
->  	},
-> -	{ },
-> +	{ /* sentinel */ }
->  };
->  MODULE_DEVICE_TABLE(of, sata_rcar_match);
->  
+Applied to for-5.18. Thanks !
 
 
 -- 
