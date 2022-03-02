@@ -2,304 +2,408 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59236C433F5
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Mar 2022 04:54:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 163ABC433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  2 Mar 2022 09:46:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239541AbiCBEyi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 1 Mar 2022 23:54:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59080 "EHLO
+        id S231735AbiCBJq4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 2 Mar 2022 04:46:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239495AbiCBEyh (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 1 Mar 2022 23:54:37 -0500
-Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8887BB150C;
-        Tue,  1 Mar 2022 20:53:54 -0800 (PST)
-Received: by mail-pg1-x52d.google.com with SMTP id 27so640373pgk.10;
-        Tue, 01 Mar 2022 20:53:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=nNi4rMqg08CCrpEt9N8/H4Odr1aWwbhtB5E4unm3mVA=;
-        b=aTK+2SIkmj0YCy3LfaTX7xI10dtEgXOhPOlOkEIAcRmYIhXTVrV+4obrF/HAC/E4RP
-         thxxSltqgn80CKK/IsYyTe+37x3HMgPzvwNyTjQHXcxhGEMWPKIfIm8sq7Hcm5uDdlZW
-         8mTvAXX2ZDpyOcW0Ipmbvf/oquLo6sUBSVok+Snsw/1O1aisT3Qr7ci4urU2Ghl4WhsM
-         can3P6KDsKsQMUf3O4fIedCUVMxSpzs8kqfuwYSkgiyEXDcSaVbiXS8DKUbatpkLCnBL
-         0lFlzYMn7OiLjidLwQZAT41PUKCbzY7aFFEFeS+95kobv6MlptrGnaw7GyKYQVJt2Ubb
-         3OGw==
+        with ESMTP id S230283AbiCBJqz (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2022 04:46:55 -0500
+Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2EAC7C7B8
+        for <linux-ide@vger.kernel.org>; Wed,  2 Mar 2022 01:46:12 -0800 (PST)
+Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com [209.85.208.72])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id A9EF33F607
+        for <linux-ide@vger.kernel.org>; Wed,  2 Mar 2022 09:46:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1646214370;
+        bh=lAb27ZgFQOByFHIClEAhJ0N2dL6QzOfjA77CIlXGrDU=;
+        h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+         In-Reply-To:Content-Type;
+        b=B25LnxqX/lcmJNbbqGSPkysCv4EId/i356TC0RntzrEaLkLXtsw1Doa5PwoXxlsSW
+         GuokG2hrE2cGga4JS3tUQF0agPrQzJ8wf4bT/qkNRSkjLHDQ0cueinNTn4V+caRQN5
+         b5iuHDF7A+9+g2k44ka/hbqVOYL4MUt8bQkj8YP8KWc+xEhbuyxsLL/B7D60cKRrGH
+         AurdDVW7Nu94VkG9592+WAS2XE0Lh+NU5bYDki6h0/1N7WRUdH4JKr7c5CC/OuyHlS
+         howBetW4T9o46esgQOwVl80JhlOEM5hYmnO5/XlQlu7FmrQv6AoCQxUXLbJLOEb1sd
+         Q/u33cEHm67bg==
+Received: by mail-ed1-f72.google.com with SMTP id z24-20020a50cd18000000b00414d5314c35so660636edi.21
+        for <linux-ide@vger.kernel.org>; Wed, 02 Mar 2022 01:46:10 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=nNi4rMqg08CCrpEt9N8/H4Odr1aWwbhtB5E4unm3mVA=;
-        b=BVe7jFKdDvXRUk+WfuPYidKbaeMq8H3t8LeB2RyZs1CLVxbJg1q/NIzjriOKXVJfGd
-         ZoP9BdaYW6+icwSCkLB9oY23qdZwqpZq0Qm2ZYzikRKNp3/K0GAkrc+Kze9PLiolUELm
-         pK66ZRDCclNYZ3lGiqLWseJVRBYO7GKkDSSPSXsjtF/uomd2LRaZkUAxtSzQlqSedqve
-         heks4nljBgvcwmX/EBetbLeBoC+lhqZuqQFN48pfi2JvWYkaYdn/HPmlKw1piybn5dyD
-         VwWoQwP3oUt1ufT2mHHo+UN4G/wCVWkOBqZBCQySXzuuQQXet4hW3Oci5zy37fbDkhrm
-         4rMQ==
-X-Gm-Message-State: AOAM532HOAbXJqW8jan0GNx8OMIbjxoZYnTe7g8x8pE5hbiYnkYB64BQ
-        hw9UmVo+laMup5CXadBdDI8=
-X-Google-Smtp-Source: ABdhPJxfU+Zk4/I1aHYGv00DHbooJyvOZzR43S+TPguw15+w148owaMwAlgFuPKmmKJnMgw9jCCjCg==
-X-Received: by 2002:a05:6a00:130e:b0:4cc:3c7d:4dec with SMTP id j14-20020a056a00130e00b004cc3c7d4decmr31361435pfu.32.1646196833916;
-        Tue, 01 Mar 2022 20:53:53 -0800 (PST)
-Received: from ip-172-31-19-208.ap-northeast-1.compute.internal (ec2-18-181-137-102.ap-northeast-1.compute.amazonaws.com. [18.181.137.102])
-        by smtp.gmail.com with ESMTPSA id b1-20020a630c01000000b003758d1a40easm14175994pgl.19.2022.03.01.20.53.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Mar 2022 20:53:53 -0800 (PST)
-Date:   Wed, 2 Mar 2022 04:53:41 +0000
-From:   Hyeonggon Yoo <42.hyeyoo@gmail.com>
-To:     Byungchul Park <byungchul.park@lge.com>
-Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
-        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
-        linux-ext4@vger.kernel.org, mingo@redhat.com,
-        linux-kernel@vger.kernel.org, peterz@infradead.org,
-        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
-        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
-        chris@chris-wilson.co.uk, duyuyang@gmail.com,
-        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
-        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
-        bfields@fieldses.org, gregkh@linuxfoundation.org,
-        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
-        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org,
-        vdavydov.dev@gmail.com, sj@kernel.org, jglisse@redhat.com,
-        dennis@kernel.org, cl@linux.com, penberg@kernel.org,
-        rientjes@google.com, vbabka@suse.cz, ngupta@vflare.org,
-        linux-block@vger.kernel.org, paolo.valente@linaro.org,
-        josef@toxicpanda.com, linux-fsdevel@vger.kernel.org,
-        viro@zeniv.linux.org.uk, jack@suse.cz, jack@suse.com,
-        jlayton@kernel.org, dan.j.williams@intel.com, hch@infradead.org,
-        djwong@kernel.org, dri-devel@lists.freedesktop.org,
-        airlied@linux.ie, rodrigosiqueiramelo@gmail.com,
-        melissa.srw@gmail.com, hamohammed.sa@gmail.com
-Subject: Re: [PATCH v3 00/21] DEPT(Dependency Tracker)
-Message-ID: <Yh74VbNZZt35wHZD@ip-172-31-19-208.ap-northeast-1.compute.internal>
-References: <1646042220-28952-1-git-send-email-byungchul.park@lge.com>
- <Yh70VkRkUfwIjPWv@ip-172-31-19-208.ap-northeast-1.compute.internal>
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=lAb27ZgFQOByFHIClEAhJ0N2dL6QzOfjA77CIlXGrDU=;
+        b=oc2z1MLQO86KTrdHd44xUjffz3b7S+66KK7XfeCMqYKxjysbYC378FuvnyyZEUov83
+         tKA1jNhAy9BX3vTGJ5UlPdeygyRJWLr7QpAnfw2NxYOL+XmEm3TRM3IExyLLTk7GhcSS
+         ECrdoeGPX4N7i/Ed84Avdjyy0I85abprPJ/aAhrV19M8Z3l4aOagO6uDi7dHa7jAz4Rs
+         55bPa42JpYyE0cLqC0468X59Gx2TwgpMFgUpNhC+F0NbmS2S8gMzvtoChuxJG1pgJX6b
+         vHRNwqadwB+ZSYZkq53igoUY3YXKRbkizkOlwNlSJVWF886aCD7GKC64F49rjH/f/oKj
+         GSTQ==
+X-Gm-Message-State: AOAM531M3GeGa2TfhGKjaQ4JWJZU3sy72igphKnGVp8zVO06Ysxn2sla
+        NQ9fMdeLim5ABjFWad4OG1LYZCXWXLnBsrH4nEWIZR9xXwZrupKpsWBtscr9oxC2G4tdPJ6/3T0
+        XnkXKFwMux/So1a+tNpe37HS2lejV7WJsoW5gTw==
+X-Received: by 2002:a17:906:c048:b0:6ce:a6f5:b23a with SMTP id bm8-20020a170906c04800b006cea6f5b23amr21987696ejb.350.1646214370261;
+        Wed, 02 Mar 2022 01:46:10 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJxt3m08y7YEqtS4flqRepTSs5Wr7s6n2g6prN66QvwsvFQSR8vFMHL5ix5LeZez52FJ+02DBA==
+X-Received: by 2002:a17:906:c048:b0:6ce:a6f5:b23a with SMTP id bm8-20020a170906c04800b006cea6f5b23amr21987679ejb.350.1646214369981;
+        Wed, 02 Mar 2022 01:46:09 -0800 (PST)
+Received: from [192.168.0.136] (xdsl-188-155-181-108.adslplus.ch. [188.155.181.108])
+        by smtp.gmail.com with ESMTPSA id v5-20020a056402184500b00412e1a73c7bsm8152603edy.61.2022.03.02.01.46.09
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 02 Mar 2022 01:46:09 -0800 (PST)
+Message-ID: <6dae47c3-6083-782e-ecab-7be3f0bca0e1@canonical.com>
+Date:   Wed, 2 Mar 2022 10:46:08 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <Yh70VkRkUfwIjPWv@ip-172-31-19-208.ap-northeast-1.compute.internal>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH v4 1/5] dt-bindings: Convert ahci-platform DT bindings to
+ yaml
+Content-Language: en-US
+To:     Frank Wunderlich <linux@fw-web.de>, devicetree@vger.kernel.org
+Cc:     Frank Wunderlich <frank-w@public-files.de>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>,
+        Peter Geis <pgwipeout@gmail.com>,
+        Michael Riesch <michael.riesch@wolfvision.net>,
+        linux-arm-kernel@lists.infradead.org,
+        linux-rockchip@lists.infradead.org, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com
+References: <20220301152421.57281-1-linux@fw-web.de>
+ <20220301152421.57281-2-linux@fw-web.de>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+In-Reply-To: <20220301152421.57281-2-linux@fw-web.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, Mar 02, 2022 at 04:36:38AM +0000, Hyeonggon Yoo wrote:
-> On Mon, Feb 28, 2022 at 06:56:39PM +0900, Byungchul Park wrote:
-> > I didn't want to bother you so I was planning to send the next spin
-> > after making more progress. However, PATCH v2 reports too many false
-> > positives because Dept tracked the bit_wait_table[] wrong way - I
-> > apologize for that. So I decided to send PATCH v3 first before going
-> > further for those who want to run Dept for now.
-> > 
-> > There might still be some false positives but not overwhelming.
-> >
+On 01/03/2022 16:24, Frank Wunderlich wrote:
+> From: Frank Wunderlich <frank-w@public-files.de>
 > 
-> Hello Byungchul, I'm running DEPT v3 on my system
-> and I see report below.
+> Create a yaml file for dtbs_check from the old txt binding.
 > 
-> Looking at the kmemleak code and comment, I think
-> kmemleak tried to avoid lockdep recursive warning
-> but detected by DEPT?
->
-
-Forgot to include another warning caused by DEPT.
-
-And comment below might be useful for debugging:
-
-in kmemleak.c:
-  43  * Locks and mutexes are acquired/nested in the following order:
-  44  *
-  45  *   scan_mutex [-> object->lock] -> kmemleak_lock -> other_object->lock (SINGLE_DEPTH_NESTING)
-  46  *
-  47  * No kmemleak_lock and object->lock nesting is allowed outside scan_mutex
-  48  * regions.
-
-===================================================
-DEPT: Circular dependency has been detected.
-5.17.0-rc1+ #1 Tainted: G        W        
----------------------------------------------------
-summary
----------------------------------------------------
-*** DEADLOCK ***
-
-context A
-    [S] __raw_spin_lock_irqsave(&object->lock:0)
-    [W] __raw_spin_lock_irqsave(kmemleak_lock:0)
-    [E] spin_unlock(&object->lock:0)
-
-context B
-    [S] __raw_spin_lock_irqsave(kmemleak_lock:0)
-    [W] _raw_spin_lock_nested(&object->lock:0)
-    [E] spin_unlock(kmemleak_lock:0)
-
-[S]: start of the event context
-[W]: the wait blocked
-[E]: the event not reachable
-
----------------------------------------------------
-context A's detail
----------------------------------------------------
-context A
-    [S] __raw_spin_lock_irqsave(&object->lock:0)
-    [W] __raw_spin_lock_irqsave(kmemleak_lock:0)
-    [E] spin_unlock(&object->lock:0)
-
-[S] __raw_spin_lock_irqsave(&object->lock:0):
-[<ffffffc00810302c>] scan_gray_list+0x84/0x13c
-stacktrace:
-      dept_ecxt_enter+0x88/0xf4
-      _raw_spin_lock_irqsave+0xf0/0x1c4
-      scan_gray_list+0x84/0x13c
-      kmemleak_scan+0x2d8/0x54c
-      kmemleak_scan_thread+0xac/0xd4
-      kthread+0xd4/0xe4
-      ret_from_fork+0x10/0x20
-
-[W] __raw_spin_lock_irqsave(kmemleak_lock:0):
-[<ffffffc008102ebc>] scan_block+0x3c/0x128
-stacktrace:
-      __dept_wait+0x8c/0xa4
-      dept_wait+0x6c/0x88
-      _raw_spin_lock_irqsave+0xb8/0x1c4
-      scan_block+0x3c/0x128
-      scan_gray_list+0xc4/0x13c
-      kmemleak_scan+0x2d8/0x54c
-      kmemleak_scan_thread+0xac/0xd4
-      kthread+0xd4/0xe4
-      ret_from_fork+0x10/0x20
-
-[E] spin_unlock(&object->lock:0):
-[<ffffffc008102ee0>] scan_block+0x60/0x128
-
----------------------------------------------------
-context B's detail
----------------------------------------------------
-context B
-    [S] __raw_spin_lock_irqsave(kmemleak_lock:0)
-    [W] _raw_spin_lock_nested(&object->lock:0)
-    [E] spin_unlock(kmemleak_lock:0)
-
-[S] __raw_spin_lock_irqsave(kmemleak_lock:0):
-[<ffffffc008102ebc>] scan_block+0x3c/0x128
-stacktrace:
-      dept_ecxt_enter+0x88/0xf4
-      _raw_spin_lock_irqsave+0xf0/0x1c4
-      scan_block+0x3c/0x128
-      kmemleak_scan+0x19c/0x54c
-      kmemleak_scan_thread+0xac/0xd4
-      kthread+0xd4/0xe4
-      ret_from_fork+0x10/0x20
-
-[W] _raw_spin_lock_nested(&object->lock:0):
-[<ffffffc008102f34>] scan_block+0xb4/0x128
-stacktrace:
-      dept_wait+0x74/0x88
-      _raw_spin_lock_nested+0xa8/0x1b0
-      scan_block+0xb4/0x128
-      kmemleak_scan+0x19c/0x54c
-      kmemleak_scan_thread+0xac/0xd4
-      kthread+0xd4/0xe4
-      ret_from_fork+0x10/0x20
-[E] spin_unlock(kmemleak_lock:0):
-[<ffffffc008102ee0>] scan_block+0x60/0x128
-stacktrace:
-      dept_event+0x7c/0xfc
-      _raw_spin_unlock_irqrestore+0x8c/0x120
-      scan_block+0x60/0x128
-      kmemleak_scan+0x19c/0x54c
-      kmemleak_scan_thread+0xac/0xd4
-      kthread+0xd4/0xe4
-      ret_from_fork+0x10/0x20
----------------------------------------------------
-information that might be helpful
----------------------------------------------------
-CPU: 1 PID: 38 Comm: kmemleak Tainted: G        W         5.17.0-rc1+ #1
-Hardware name: linux,dummy-virt (DT)
-Call trace:
- dump_backtrace.part.0+0x9c/0xc4
- show_stack+0x14/0x28
- dump_stack_lvl+0x9c/0xcc
- dump_stack+0x14/0x2c
- print_circle+0x2d4/0x438
- cb_check_dl+0x6c/0x70
- bfs+0xc0/0x168
- add_dep+0x88/0x11c
- add_wait+0x2d0/0x2dc
- __dept_wait+0x8c/0xa4
- dept_wait+0x6c/0x88
- _raw_spin_lock_irqsave+0xb8/0x1c4
- scan_block+0x3c/0x128
- scan_gray_list+0xc4/0x13c
- kmemleak_scan+0x2d8/0x54c
- kmemleak_scan_thread+0xac/0xd4
- kthread+0xd4/0xe4
- ret_from_fork+0x10/0x20
-
-> ===================================================
-> DEPT: Circular dependency has been detected.
-> 5.17.0-rc1+ #1 Tainted: G        W
-> ---------------------------------------------------
-> summary
-> ---------------------------------------------------
-> *** AA DEADLOCK ***
+> Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
+> ---
+> v4:
+>   - fix min vs. max
+>   - fix indention of examples
+>   - move up sata-common.yaml
+>   - reorder compatible
+>   - add descriptions/maxitems
+>   - fix compatible-structure
+>   - fix typo in example achi vs. ahci
+>   - add clock-names and reg-names
+>   - fix ns2 errors in separate patch
+> v3:
+>   - add conversion to sata-series
+>   - fix some errors in dt_binding_check and dtbs_check
+>   - move to unevaluated properties = false
 > 
-> context A
->     [S] __raw_spin_lock_irqsave(&object->lock:0)
->     [W] _raw_spin_lock_nested(&object->lock:0)
->     [E] spin_unlock(&object->lock:0)
+> ---
 > 
-> [S]: start of the event context
-> [W]: the wait blocked
-> [E]: the event not reachable
-> ---------------------------------------------------
-> context A's detail
-> ---------------------------------------------------
-> context A
->     [S] __raw_spin_lock_irqsave(&object->lock:0)
->     [W] _raw_spin_lock_nested(&object->lock:0)
->     [E] spin_unlock(&object->lock:0)
+> imho all errors should be fixed in the dts not in the yaml...
 > 
-> [S] __raw_spin_lock_irqsave(&object->lock:0):
-> [<ffffffc00810302c>] scan_gray_list+0x84/0x13c
-> stacktrace:
->       dept_ecxt_enter+0x88/0xf4
->       _raw_spin_lock_irqsave+0xf0/0x1c4
->       scan_gray_list+0x84/0x13c
->       kmemleak_scan+0x2d8/0x54c
->       kmemleak_scan_thread+0xac/0xd4
->       kthread+0xd4/0xe4
->       ret_from_fork+0x10/0x20
+> errors about the subitem requirement that was defined in txt but not fixed some marvell dts
 > 
-> [E] spin_unlock(&object->lock:0):
-> [<ffffffc008102ee0>] scan_block+0x60/0x128
-> ---------------------------------------------------
-> information that might be helpful
-> ---------------------------------------------------
-> CPU: 1 PID: 38 Comm: kmemleak Tainted: G        W         5.17.0-rc1+ #1
-> Hardware name: linux,dummy-virt (DT)
-> Call trace:
->  dump_backtrace.part.0+0x9c/0xc4
->  show_stack+0x14/0x28
->  dump_stack_lvl+0x9c/0xcc
->  dump_stack+0x14/0x2c
->  print_circle+0x2d4/0x438
->  cb_check_dl+0x44/0x70
->  bfs+0x60/0x168
->  add_dep+0x88/0x11c
->  add_wait+0x2d0/0x2dc
->  __dept_wait+0x8c/0xa4
->  dept_wait+0x6c/0x88
->  _raw_spin_lock_nested+0xa8/0x1b0
->  scan_block+0xb4/0x128
->  scan_gray_list+0xc4/0x13c
->  kmemleak_scan+0x2d8/0x54c
->  kmemleak_scan_thread+0xac/0xd4
->  kthread+0xd4/0xe4
->  ret_from_fork+0x10/0x20
->
-[...]
+> some dts for Marvell SoC bring error
+> 'phys' is a required property
+> 'target-supply' is a required property
+> 
+> problem is in arch/arm64/boot/dts/marvell/armada-cp11x.dtsi:331
+> here the sata-port@0 is defined, but not overridden with phy/target-supply in any following dts
+> ---
+>  .../devicetree/bindings/ata/ahci-platform.txt |  79 ---------
+>  .../bindings/ata/ahci-platform.yaml           | 162 ++++++++++++++++++
+>  2 files changed, 162 insertions(+), 79 deletions(-)
+>  delete mode 100644 Documentation/devicetree/bindings/ata/ahci-platform.txt
+>  create mode 100644 Documentation/devicetree/bindings/ata/ahci-platform.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> deleted file mode 100644
+> index 77091a277642..000000000000
+> --- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> +++ /dev/null
+> @@ -1,79 +0,0 @@
+> -* AHCI SATA Controller
+> -
+> -SATA nodes are defined to describe on-chip Serial ATA controllers.
+> -Each SATA controller should have its own node.
+> -
+> -It is possible, but not required, to represent each port as a sub-node.
+> -It allows to enable each port independently when dealing with multiple
+> -PHYs.
+> -
+> -Required properties:
+> -- compatible        : compatible string, one of:
+> -  - "brcm,iproc-ahci"
+> -  - "hisilicon,hisi-ahci"
+> -  - "cavium,octeon-7130-ahci"
+> -  - "ibm,476gtr-ahci"
+> -  - "marvell,armada-380-ahci"
+> -  - "marvell,armada-3700-ahci"
+> -  - "snps,dwc-ahci"
+> -  - "snps,spear-ahci"
+> -  - "generic-ahci"
+> -- interrupts        : <interrupt mapping for SATA IRQ>
+> -- reg               : <registers mapping>
+> -
+> -Please note that when using "generic-ahci" you must also specify a SoC specific
+> -compatible:
+> -	compatible = "manufacturer,soc-model-ahci", "generic-ahci";
+> -
+> -Optional properties:
+> -- dma-coherent      : Present if dma operations are coherent
+> -- clocks            : a list of phandle + clock specifier pairs
+> -- resets            : a list of phandle + reset specifier pairs
+> -- target-supply     : regulator for SATA target power
+> -- phy-supply        : regulator for PHY power
+> -- phys              : reference to the SATA PHY node
+> -- phy-names         : must be "sata-phy"
+> -- ahci-supply       : regulator for AHCI controller
+> -- ports-implemented : Mask that indicates which ports that the HBA supports
+> -		      are available for software to use. Useful if PORTS_IMPL
+> -		      is not programmed by the BIOS, which is true with
+> -		      some embedded SOC's.
+> -
+> -Required properties when using sub-nodes:
+> -- #address-cells    : number of cells to encode an address
+> -- #size-cells       : number of cells representing the size of an address
+> -
+> -Sub-nodes required properties:
+> -- reg		    : the port number
+> -And at least one of the following properties:
+> -- phys		    : reference to the SATA PHY node
+> -- target-supply     : regulator for SATA target power
+> -
+> -Examples:
+> -        sata@ffe08000 {
+> -		compatible = "snps,spear-ahci";
+> -		reg = <0xffe08000 0x1000>;
+> -		interrupts = <115>;
+> -        };
+> -
+> -With sub-nodes:
+> -	sata@f7e90000 {
+> -		compatible = "marvell,berlin2q-achi", "generic-ahci";
+> -		reg = <0xe90000 0x1000>;
+> -		interrupts = <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
+> -		clocks = <&chip CLKID_SATA>;
+> -		#address-cells = <1>;
+> -		#size-cells = <0>;
+> -
+> -		sata0: sata-port@0 {
+> -			reg = <0>;
+> -			phys = <&sata_phy 0>;
+> -			target-supply = <&reg_sata0>;
+> -		};
+> -
+> -		sata1: sata-port@1 {
+> -			reg = <1>;
+> -			phys = <&sata_phy 1>;
+> -			target-supply = <&reg_sata1>;;
+> -		};
+> -	};
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+> new file mode 100644
+> index 000000000000..cf67ddfc6afb
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+> @@ -0,0 +1,162 @@
+> +# SPDX-License-Identifier: GPL-2.0
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/ata/ahci-platform.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: AHCI SATA Controller
+> +description:
+> +  SATA nodes are defined to describe on-chip Serial ATA controllers.
+> +  Each SATA controller should have its own node.
+> +
+> +  It is possible, but not required, to represent each port as a sub-node.
+> +  It allows to enable each port independently when dealing with multiple
+> +  PHYs.
+> +
+> +maintainers:
+> +  - Hans de Goede <hdegoede@redhat.com>
+> +  - Jens Axboe <axboe@kernel.dk>
+> +
+> +allOf:
+> +- $ref: "sata-common.yaml#"
+> +
+> +properties:
+> +  compatible:
+> +    oneOf:
+> +      - items:
+> +        - enum:
+> +          - brcm,iproc-ahci
+> +          - marvell,armada-8k-ahci
+> +          - marvell,berlin2q-ahci
+> +        - const: generic-ahci
+> +      - enum:
+> +        - brcm,iproc-ahci
 
---
-Thank you, You are awesome!
-Hyeonggon :-)
+This one is already earlier in generic-ahci, so you can skip him here.
+
+> +        - cavium,octeon-7130-ahci
+> +        - hisilicon,hisi-ahci
+> +        - ibm,476gtr-ahci
+> +        - marvell,armada-3700-ahci
+> +        - marvell,armada-380-ahci
+> +        - snps,dwc-ahci
+> +        - snps,spear-ahci
+> +
+> +  reg:
+> +    maxItems: 1
+> +
+> +  clocks:
+> +    description:
+> +      Clock IDs array as required by the controller.
+> +    minItems: 1
+> +    maxItems: 3
+> +
+> +  interrupts:
+> +    description:
+> +      specifies the interrupt number for the controller.
+
+Skip description, it's obvious.
+
+> +    maxItems: 1
+> +
+> +  ahci-supply:
+> +    description:
+> +      regulator for AHCI controller
+> +
+> +  clock-names:
+> +    description:
+> +      Names of clocks corresponding to IDs in the clock property.
+> +    minItems: 1
+> +    maxItems: 3
+
+Put the clock-names next to clocks.
+
+> +
+> +  dma-coherent:
+> +    true
+
+New line not needed. "dma-coherent: true"
+
+> +
+> +  phy-supply:
+> +    description:
+> +      regulator for PHY power
+> +
+> +  phys:
+> +    description:
+> +      List of all PHYs on this controller
+> +    maxItems: 1
+> +
+> +  phy-names:
+> +    description:
+> +      Name specifier for the PHYs
+> +    maxItems: 1
+> +
+> +  ports-implemented:
+> +    $ref: '/schemas/types.yaml#/definitions/uint32'
+> +    description:
+> +      Mask that indicates which ports that the HBA supports
+> +      are available for software to use. Useful if PORTS_IMPL
+> +      is not programmed by the BIOS, which is true with
+> +      some embedded SoCs.
+> +    maxItems: 1
+
+maxItems are incorrect here, this is not an array.
+
+> +
+> +  reg-names:
+> +    maxItems: 1
+> +
+> +  resets:
+> +    maxItems: 1
+> +
+> +  target-supply:
+> +    description:
+> +      regulator for SATA target power
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - interrupts
+> +
+> +patternProperties:
+> +  "^sata-port@[0-9a-f]+$":
+> +    type: object
+> +    description:
+> +      Subnode with configuration of the Ports.
+> +
+> +    properties:
+> +      reg:
+> +        maxItems: 1
+> +
+> +      phys:
+> +        minItems: 1
+
+maxItems: 1
+
+> +
+> +      target-supply:
+> +        description:
+> +          regulator for SATA target power
+> +
+> +    required:
+> +      - reg
+> +
+> +    anyOf:
+> +      - required: [ phys ]
+> +      - required: [ target-supply ]
+> +
+> +unevaluatedProperties: false
+> +
+> +examples:
+> +  - |
+> +    sata@ffe08000 {
+> +           compatible = "snps,spear-ahci";
+> +           reg = <0xffe08000 0x1000>;
+> +           interrupts = <115>;
+> +    };
+> +  - |
+> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
+> +    #include <dt-bindings/clock/berlin2q.h>
+> +    sata@f7e90000 {
+> +            compatible = "marvell,berlin2q-ahci", "generic-ahci";
+> +            reg = <0xe90000 0x1000>;
+
+You still have wrong address.
+
+> +            interrupts = <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
+> +            clocks = <&chip CLKID_SATA>;
+> +            #address-cells = <1>;
+> +            #size-cells = <0>;
+> +
+> +            sata0: sata-port@0 {
+> +                    reg = <0>;
+> +                    phys = <&sata_phy 0>;
+> +                    target-supply = <&reg_sata0>;
+> +            };
+> +
+> +            sata1: sata-port@1 {
+> +                    reg = <1>;
+> +                    phys = <&sata_phy 1>;
+> +                    target-supply = <&reg_sata1>;
+> +            };
+> +    };
+
+
+Best regards,
+Krzysztof
