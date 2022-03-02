@@ -2,109 +2,395 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A82EAC433EF
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Mar 2022 12:16:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10D41C433EF
+	for <linux-ide@archiver.kernel.org>; Wed,  2 Mar 2022 18:15:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237242AbiCBMQs (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 2 Mar 2022 07:16:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48926 "EHLO
+        id S237773AbiCBSQS (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 2 Mar 2022 13:16:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45974 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234517AbiCBMQr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2022 07:16:47 -0500
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F1602377CD
-        for <linux-ide@vger.kernel.org>; Wed,  2 Mar 2022 04:16:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1646223365; x=1677759365;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=YkNuTe+8PZ/6/8YrEKTutkyx4YCQhxVnaPNLFEod86I=;
-  b=EpBFWGAc2fVDU4WZibl0cdibCpBr0tT5Bhuj0jq7m94F434G3/vR1Qxo
-   LzFyJlGAxP2giV2CBfY3GMf1hQZ7AjnGK+PuXj1nBuu6osuVZ+Rfy+x/M
-   KDqz8NtkoqXxqf8LUZX+IyML6Yreio8Qxv1Gcd6oW22I001bYf1veUmH3
-   0R68IV3MLI8mD0dqQwCEVu2VKaMRG+PaW/XMPQBoEhWUYo5Q4sKPOQrwF
-   Ea+dZIeBPzcTaI6s6Ooc7MWyao2ZTjoGZIAbUsESKvwRAdLHSSXrMJyEy
-   ObrO1D40KV3YDS7whjOgJ5Ls/ZVcbZ1no1ldFInZoNQTgSVv1FdJ7WYqp
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.90,148,1643644800"; 
-   d="scan'208";a="195256303"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 02 Mar 2022 20:16:04 +0800
-IronPort-SDR: Qy/2DtgrVv/D4d2bXGIJN1SD69gghgzjcwy15i52tAXIRXFlQaylc0acleeZlEg2jVTLlagwTM
- 0F+t8yYwp6jLDzpnkgFxRrcCsTTfbzf3tByhUQS+SMMrArTrfhoNbGqCt2aF0Lf6IK7DUTOs+3
- IroOf4xkPL/43BH1saD9QlCVAc6s+GTI8BXD0UPGSjftDlTPC37X1TT7oW7HimTlbX9TAZmHd4
- G+JFQPSKbdGksVjPr20wcCJ4F6BXVdbi6AnCNj1fQjRSHBwRIehZWwAsDG8cg6GNZh0DNzoMVB
- chrjGDAhZLH4dY1JbcHO1MQU
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2022 03:48:30 -0800
-IronPort-SDR: 32fCHMxYD2hVAvxpp8qEhzQS+cgi0OIma6o1lAqypwVJGLh9tDhVaMAXCutipUR9TMmew9gUj/
- CcmfzIHDDjZwvCW8a8a3j94UrJi/Tolhs9vY0R3M66We2xUWKBcTmXz750Jf1dSjaRKgg3aEJu
- Psikgdfp6pB27GKWU71pB0Ocs3o1H4pTF7Ezyx/zCvPos8IaZIxmA6t9K0FrKB6w1ycOeNre0S
- DDr7iPpWu+8gcU6/B+HCQlIWVs4+NQh53U893pG5OKNriqYYD+T7mmXmfQshMcvaEqH23np4Nt
- UaY=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Mar 2022 04:16:04 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K7tPb4c9lz1Rwrw
-        for <linux-ide@vger.kernel.org>; Wed,  2 Mar 2022 04:16:03 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1646223363; x=1648815364; bh=YkNuTe+8PZ/6/8YrEKTutkyx4YCQhxVnaPN
-        LFEod86I=; b=A18M91TQuun88n3UaDl0mW9s5nh6V0SL6uu7gzt3IdjplJN838q
-        R0LU1kpNHQ3FROzdd+CRR+x9sPvO+sIj55+dCa+OkKf8TO1XNStsZNxjd4uXHEac
-        9uxSk/4M0nIQ8hcRn9tgNgdgzSGrW0I2EE43JZDewjz6Vq/q3xgptLAtCm0C5wFP
-        Lw1VWF2rTN6CDXPnlDf3lRhpglBsH6Tz2fjIwsQhQ1ZLv55EPljR5Za01Uuv1hJE
-        zBJYQV576ryNv42wI51sYcMel7/VQSIT0xqRYg9whnhgq+eZCqi05RDXZAKFqezZ
-        iD8Tp8ndEOSP0gost/O/IADICJi3RJcNehQ==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id SCZPPV7ckZYW for <linux-ide@vger.kernel.org>;
-        Wed,  2 Mar 2022 04:16:03 -0800 (PST)
-Received: from [10.112.1.94] (c02drav6md6t.wdc.com [10.112.1.94])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K7tPY4NgLz1Rvlx;
-        Wed,  2 Mar 2022 04:16:01 -0800 (PST)
-Message-ID: <860a2e7b-22a5-787d-fe9b-c1e75d2728ff@opensource.wdc.com>
-Date:   Wed, 2 Mar 2022 14:15:58 +0200
+        with ESMTP id S244623AbiCBSQE (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2022 13:16:04 -0500
+Received: from mail-oo1-f50.google.com (mail-oo1-f50.google.com [209.85.161.50])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D805D90CF8;
+        Wed,  2 Mar 2022 10:15:09 -0800 (PST)
+Received: by mail-oo1-f50.google.com with SMTP id 189-20020a4a03c6000000b003179d7b30d8so2861804ooi.2;
+        Wed, 02 Mar 2022 10:15:09 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=ks0gmAlG33daWedkPXUHih0YQTB1opxfTb+prp0bXIE=;
+        b=4ITRK+evsyJFi8UqZ/7FGGJhLKjoRcY0rE7BLDAw5HQi1vS64WIbv+YsS/+DfX/UdJ
+         3yNvwrzMev1tbolS5EtMEAGOTk/d9aHphcWeaEt2miNoUuetckP60E/IkXLtXPtqedeo
+         dkbbzERT2I6gIxjdmVY0iM7y/D3IXJVN/51HH2hrRflSt3wSYWT5u8v9UfJyZidCRCUz
+         aqEHP1PUyus0AwPSoseUKrMGRyj7R36e6nEcstHSA9ZeTFpmZpvh22fzOggvs9TEApHU
+         ZQMDyxb7NWhOzxJL+ywwdAQKLu8YluiDRPfKoeIwiu0FAbGQvyQk8lbcutNl9klPvvus
+         pigQ==
+X-Gm-Message-State: AOAM531T6R3mzbujNEyg2HR6I6WvbUYFMsqzun0KZVgXd8zuk4pPnifZ
+        iqzAQ2T070pqaX+YYptCOA==
+X-Google-Smtp-Source: ABdhPJxeVro2HKHKgtuDg/kU64CvT5nDM2QTnx/pYec1wVake8DiOyrYa9kDNre1Qj2+zvVo4xdAxA==
+X-Received: by 2002:a05:6870:7391:b0:d9:ae66:b8df with SMTP id z17-20020a056870739100b000d9ae66b8dfmr599446oam.7.1646244873950;
+        Wed, 02 Mar 2022 10:14:33 -0800 (PST)
+Received: from robh.at.kernel.org (66-90-148-213.dyn.grandenetworks.net. [66.90.148.213])
+        by smtp.gmail.com with ESMTPSA id y15-20020a056870b00f00b000d75f1d9b81sm1839948oae.46.2022.03.02.10.14.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Mar 2022 10:14:32 -0800 (PST)
+Received: (nullmailer pid 3988997 invoked by uid 1000);
+        Wed, 02 Mar 2022 18:14:31 -0000
+Date:   Wed, 2 Mar 2022 12:14:31 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Frank Wunderlich <linux@fw-web.de>
+Cc:     devicetree@vger.kernel.org,
+        Frank Wunderlich <frank-w@public-files.de>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>,
+        Peter Geis <pgwipeout@gmail.com>,
+        Michael Riesch <michael.riesch@wolfvision.net>,
+        linux-arm-kernel@lists.infradead.org,
+        linux-rockchip@lists.infradead.org, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com
+Subject: Re: [PATCH v4 1/5] dt-bindings: Convert ahci-platform DT bindings to
+ yaml
+Message-ID: <Yh+0B+iKx1gJXXCk@robh.at.kernel.org>
+References: <20220301152421.57281-1-linux@fw-web.de>
+ <20220301152421.57281-2-linux@fw-web.de>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.6.1
-Subject: Re: [PATCH v3 1/3] ata: ahci: Rename board_ahci_mobile
-Content-Language: en-US
-To:     Paul Menzel <pmenzel@molgen.mpg.de>,
-        Mario Limonciello <mario.limonciello@amd.com>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Hans de Goede <hdegoede@redhat.com>
-References: <20220225172319.846891-1-mario.limonciello@amd.com>
- <76957c33-cb62-5bf8-bb5d-adf9d6c6ce95@molgen.mpg.de>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <76957c33-cb62-5bf8-bb5d-adf9d6c6ce95@molgen.mpg.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220301152421.57281-2-linux@fw-web.de>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2022/03/01 14:21, Paul Menzel wrote:
-> Dear Damien,
->=20
->=20
-> I have a patch on top of this series. It=E2=80=99d help me, if you coul=
-d add=20
-> them to the libata for-next branch. Thank you in advance.
+On Tue, Mar 01, 2022 at 04:24:17PM +0100, Frank Wunderlich wrote:
+> From: Frank Wunderlich <frank-w@public-files.de>
+> 
+> Create a yaml file for dtbs_check from the old txt binding.
+> 
+> Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
+> ---
+> v4:
+>   - fix min vs. max
+>   - fix indention of examples
+>   - move up sata-common.yaml
+>   - reorder compatible
+>   - add descriptions/maxitems
+>   - fix compatible-structure
+>   - fix typo in example achi vs. ahci
+>   - add clock-names and reg-names
+>   - fix ns2 errors in separate patch
+> v3:
+>   - add conversion to sata-series
+>   - fix some errors in dt_binding_check and dtbs_check
+>   - move to unevaluated properties = false
+> 
+> ---
+> 
+> imho all errors should be fixed in the dts not in the yaml...
+> 
+> errors about the subitem requirement that was defined in txt but not fixed some marvell dts
+> 
+> some dts for Marvell SoC bring error
+> 'phys' is a required property
+> 'target-supply' is a required property
+> 
+> problem is in arch/arm64/boot/dts/marvell/armada-cp11x.dtsi:331
+> here the sata-port@0 is defined, but not overridden with phy/target-supply in any following dts
+> ---
+>  .../devicetree/bindings/ata/ahci-platform.txt |  79 ---------
+>  .../bindings/ata/ahci-platform.yaml           | 162 ++++++++++++++++++
+>  2 files changed, 162 insertions(+), 79 deletions(-)
+>  delete mode 100644 Documentation/devicetree/bindings/ata/ahci-platform.txt
+>  create mode 100644 Documentation/devicetree/bindings/ata/ahci-platform.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> deleted file mode 100644
+> index 77091a277642..000000000000
+> --- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> +++ /dev/null
+> @@ -1,79 +0,0 @@
+> -* AHCI SATA Controller
+> -
+> -SATA nodes are defined to describe on-chip Serial ATA controllers.
+> -Each SATA controller should have its own node.
+> -
+> -It is possible, but not required, to represent each port as a sub-node.
+> -It allows to enable each port independently when dealing with multiple
+> -PHYs.
+> -
+> -Required properties:
+> -- compatible        : compatible string, one of:
+> -  - "brcm,iproc-ahci"
+> -  - "hisilicon,hisi-ahci"
+> -  - "cavium,octeon-7130-ahci"
+> -  - "ibm,476gtr-ahci"
+> -  - "marvell,armada-380-ahci"
+> -  - "marvell,armada-3700-ahci"
+> -  - "snps,dwc-ahci"
+> -  - "snps,spear-ahci"
+> -  - "generic-ahci"
+> -- interrupts        : <interrupt mapping for SATA IRQ>
+> -- reg               : <registers mapping>
+> -
+> -Please note that when using "generic-ahci" you must also specify a SoC specific
+> -compatible:
+> -	compatible = "manufacturer,soc-model-ahci", "generic-ahci";
+> -
+> -Optional properties:
+> -- dma-coherent      : Present if dma operations are coherent
+> -- clocks            : a list of phandle + clock specifier pairs
+> -- resets            : a list of phandle + reset specifier pairs
+> -- target-supply     : regulator for SATA target power
+> -- phy-supply        : regulator for PHY power
+> -- phys              : reference to the SATA PHY node
+> -- phy-names         : must be "sata-phy"
+> -- ahci-supply       : regulator for AHCI controller
+> -- ports-implemented : Mask that indicates which ports that the HBA supports
+> -		      are available for software to use. Useful if PORTS_IMPL
+> -		      is not programmed by the BIOS, which is true with
+> -		      some embedded SOC's.
+> -
+> -Required properties when using sub-nodes:
+> -- #address-cells    : number of cells to encode an address
+> -- #size-cells       : number of cells representing the size of an address
+> -
+> -Sub-nodes required properties:
+> -- reg		    : the port number
+> -And at least one of the following properties:
+> -- phys		    : reference to the SATA PHY node
+> -- target-supply     : regulator for SATA target power
+> -
+> -Examples:
+> -        sata@ffe08000 {
+> -		compatible = "snps,spear-ahci";
+> -		reg = <0xffe08000 0x1000>;
+> -		interrupts = <115>;
+> -        };
+> -
+> -With sub-nodes:
+> -	sata@f7e90000 {
+> -		compatible = "marvell,berlin2q-achi", "generic-ahci";
+> -		reg = <0xe90000 0x1000>;
+> -		interrupts = <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
+> -		clocks = <&chip CLKID_SATA>;
+> -		#address-cells = <1>;
+> -		#size-cells = <0>;
+> -
+> -		sata0: sata-port@0 {
+> -			reg = <0>;
+> -			phys = <&sata_phy 0>;
+> -			target-supply = <&reg_sata0>;
+> -		};
+> -
+> -		sata1: sata-port@1 {
+> -			reg = <1>;
+> -			phys = <&sata_phy 1>;
+> -			target-supply = <&reg_sata1>;;
+> -		};
+> -	};
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+> new file mode 100644
+> index 000000000000..cf67ddfc6afb
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+> @@ -0,0 +1,162 @@
+> +# SPDX-License-Identifier: GPL-2.0
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/ata/ahci-platform.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: AHCI SATA Controller
 
-Done
+blank line.
 
+> +description:
+> +  SATA nodes are defined to describe on-chip Serial ATA controllers.
+> +  Each SATA controller should have its own node.
+> +
+> +  It is possible, but not required, to represent each port as a sub-node.
+> +  It allows to enable each port independently when dealing with multiple
+> +  PHYs.
 
+You need a '|' after 'description' if you want to maintain the 
+paragraphs.
 
---=20
-Damien Le Moal
-Western Digital Research
+> +
+> +maintainers:
+> +  - Hans de Goede <hdegoede@redhat.com>
+> +  - Jens Axboe <axboe@kernel.dk>
+> +
+> +allOf:
+> +- $ref: "sata-common.yaml#"
+> +
+> +properties:
+> +  compatible:
+> +    oneOf:
+> +      - items:
+> +        - enum:
+> +          - brcm,iproc-ahci
+> +          - marvell,armada-8k-ahci
+> +          - marvell,berlin2q-ahci
+> +        - const: generic-ahci
+> +      - enum:
+> +        - brcm,iproc-ahci
+> +        - cavium,octeon-7130-ahci
+> +        - hisilicon,hisi-ahci
+> +        - ibm,476gtr-ahci
+> +        - marvell,armada-3700-ahci
+> +        - marvell,armada-380-ahci
+> +        - snps,dwc-ahci
+> +        - snps,spear-ahci
+
+Install yamllint and run 'make dt_binding_check'. It's going to 
+complain about the indentation.
+
+> +
+> +  reg:
+> +    maxItems: 1
+> +
+> +  clocks:
+> +    description:
+> +      Clock IDs array as required by the controller.
+> +    minItems: 1
+> +    maxItems: 3
+> +
+> +  interrupts:
+> +    description:
+> +      specifies the interrupt number for the controller.
+> +    maxItems: 1
+> +
+> +  ahci-supply:
+> +    description:
+> +      regulator for AHCI controller
+> +
+> +  clock-names:
+
+Group with 'clocks'
+
+> +    description:
+> +      Names of clocks corresponding to IDs in the clock property.
+> +    minItems: 1
+> +    maxItems: 3
+> +
+> +  dma-coherent:
+> +    true
+> +
+> +  phy-supply:
+> +    description:
+> +      regulator for PHY power
+> +
+> +  phys:
+> +    description:
+> +      List of all PHYs on this controller
+> +    maxItems: 1
+> +
+> +  phy-names:
+> +    description:
+> +      Name specifier for the PHYs
+> +    maxItems: 1
+> +
+> +  ports-implemented:
+> +    $ref: '/schemas/types.yaml#/definitions/uint32'
+> +    description:
+> +      Mask that indicates which ports that the HBA supports
+> +      are available for software to use. Useful if PORTS_IMPL
+> +      is not programmed by the BIOS, which is true with
+> +      some embedded SoCs.
+> +    maxItems: 1
+
+A uint32 is only ever 1 item. Drop.
+
+IIRC, isn't the max here 0xff? Add constraints.
+
+> +
+> +  reg-names:
+> +    maxItems: 1
+
+Group with 'reg'.
+
+> +
+> +  resets:
+> +    maxItems: 1
+> +
+> +  target-supply:
+> +    description:
+> +      regulator for SATA target power
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - interrupts
+> +
+> +patternProperties:
+> +  "^sata-port@[0-9a-f]+$":
+> +    type: object
+
+       additionalProperties: false
+
+> +    description:
+> +      Subnode with configuration of the Ports.
+> +
+> +    properties:
+> +      reg:
+> +        maxItems: 1
+> +
+> +      phys:
+> +        minItems: 1
+> +
+> +      target-supply:
+> +        description:
+> +          regulator for SATA target power
+> +
+> +    required:
+> +      - reg
+> +
+> +    anyOf:
+> +      - required: [ phys ]
+> +      - required: [ target-supply ]
+> +
+> +unevaluatedProperties: false
+> +
+> +examples:
+> +  - |
+> +    sata@ffe08000 {
+> +           compatible = "snps,spear-ahci";
+> +           reg = <0xffe08000 0x1000>;
+> +           interrupts = <115>;
+> +    };
+> +  - |
+> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
+> +    #include <dt-bindings/clock/berlin2q.h>
+> +    sata@f7e90000 {
+> +            compatible = "marvell,berlin2q-ahci", "generic-ahci";
+> +            reg = <0xe90000 0x1000>;
+> +            interrupts = <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
+> +            clocks = <&chip CLKID_SATA>;
+> +            #address-cells = <1>;
+> +            #size-cells = <0>;
+> +
+> +            sata0: sata-port@0 {
+> +                    reg = <0>;
+> +                    phys = <&sata_phy 0>;
+> +                    target-supply = <&reg_sata0>;
+> +            };
+> +
+> +            sata1: sata-port@1 {
+> +                    reg = <1>;
+> +                    phys = <&sata_phy 1>;
+> +                    target-supply = <&reg_sata1>;
+> +            };
+> +    };
+> -- 
+> 2.25.1
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
