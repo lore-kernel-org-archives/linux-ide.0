@@ -2,33 +2,70 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3F73C433F5
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Mar 2022 10:32:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02824C433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  2 Mar 2022 11:00:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239035AbiCBKdA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 2 Mar 2022 05:33:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38638 "EHLO
+        id S236562AbiCBLAu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 2 Mar 2022 06:00:50 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46884 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235971AbiCBKc7 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2022 05:32:59 -0500
-Received: from mout.gmx.net (mout.gmx.net [212.227.17.21])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B0A7A652F;
-        Wed,  2 Mar 2022 02:32:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1646217098;
-        bh=4bdmMEQw8spR517oJ7qXxXX+uJRFnQKrfHpGnboGiZ0=;
-        h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=bZEva4y7ths00ttdO/UooBif6ALksHiAnjBWdqeGUJVbz8jQrDvYJuEHvXrvqxfyR
-         YcIgyCblkbuQvqmiJUTfBHI1qLBy21rvqMddhh7LqvFgPlO7NjYE0/N76lRWgmIBr2
-         ixMZNaAS5ZwQxLj3wPmNzQdRrqEjyD385c3tQ2Lk=
-X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
-Received: from [80.245.77.190] ([80.245.77.190]) by web-mail.gmx.net
- (3c-app-gmx-bap21.server.lan [172.19.172.91]) (via HTTP); Wed, 2 Mar 2022
- 11:31:38 +0100
+        with ESMTP id S234663AbiCBLAs (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2022 06:00:48 -0500
+Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C7DA6E540
+        for <linux-ide@vger.kernel.org>; Wed,  2 Mar 2022 03:00:04 -0800 (PST)
+Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com [209.85.208.72])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id 4CACA3F5FA
+        for <linux-ide@vger.kernel.org>; Wed,  2 Mar 2022 11:00:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1646218802;
+        bh=fYiIm7cAYvvcwgs5d23+mNowBlqk+U3OOhYGtWE4nhQ=;
+        h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+         In-Reply-To:Content-Type;
+        b=uqky5bIBiFBBnmiWr/UTe6WPHVXtiKa09uL6Vjc35Gxx8ermCM9u8546ItQBmHPyd
+         BHn+n1uFB2SBSgv8RTmjOKu6sPfspgnCX14E1sCkVqrGS2HK/OgPOOqTBioYBAMNGw
+         Gx+iNxjZfIdb0rqPEJCaSyTR4B59E0A4vPQdzkvVljxnQ1JyMNuwRa1232lNztUP2r
+         rYB6Bg7XhvtVNngjHPaR9hSN+G38/w9GmNqGB25AMv4GbA0VVkcAPzLM3u52DlGp1h
+         l82GzGUiEmnygpcplJGA8diF2FUV4e5PWEvPThAi+rFSlmLG/G7N+cC15auS8CElrq
+         zrh3536Yuyx5g==
+Received: by mail-ed1-f72.google.com with SMTP id m12-20020a056402510c00b00413298c3c42so767041edd.15
+        for <linux-ide@vger.kernel.org>; Wed, 02 Mar 2022 03:00:02 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=fYiIm7cAYvvcwgs5d23+mNowBlqk+U3OOhYGtWE4nhQ=;
+        b=bSxHWxBJhq5nwpDzRv30gqvv3lptfZY8qyNqJvDGujUrmazacICHmKvup9rL1YB9sP
+         jxslngo+nwkNMtDtQKIMfGGrMfUmutUBmv9xkfK5pn0la8p5Qilvjm9fdIknkAS3BGVz
+         NAnjFSlxqOnUp1cx1SEkHBMYoNCsdMkLmJHqI/CHV+WfAzrrtBsuHrraMf19gr3PXMbQ
+         ohngKzYqU1mpjA5R3hyUMC5Fc8/2clq1RcwiNIwRC3vcXtrSFEeaPmVBEiGAQJzYRBDz
+         YE3gBBF0E19E8V+sqH1WKQbKDhk2UOXUnvwZsceq1CAqWCPbL/6Aw8f9KXdRn01t8crP
+         44Mg==
+X-Gm-Message-State: AOAM532Dcqp+0TVGWh+awrq8xgJVAIVzXRAOj83VItcK4Ws1CbmVnlpe
+        sfP91XRPSpjyW3lMAzL8re2gqeZ3LgYKbbQpSyJNtcykDaz3XYdF4n4MA2XQPotjjvQiy58nf9B
+        vzcPapywO8tO20Jq3C6Il9c85RNpOsw2KTgoIsg==
+X-Received: by 2002:a17:906:af79:b0:6cf:6b3f:5b3b with SMTP id os25-20020a170906af7900b006cf6b3f5b3bmr22477709ejb.14.1646218800156;
+        Wed, 02 Mar 2022 03:00:00 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJwERV6fTesKj9iO1fvVCbS8f7t6+HOQi7nNSbBRmJKjBddmSjWjb4ufnflgk2FauT1UX0gr+w==
+X-Received: by 2002:a17:906:af79:b0:6cf:6b3f:5b3b with SMTP id os25-20020a170906af7900b006cf6b3f5b3bmr22477682ejb.14.1646218799941;
+        Wed, 02 Mar 2022 02:59:59 -0800 (PST)
+Received: from [192.168.0.136] (xdsl-188-155-181-108.adslplus.ch. [188.155.181.108])
+        by smtp.gmail.com with ESMTPSA id ey10-20020a1709070b8a00b006d1cb2eb221sm6274372ejc.170.2022.03.02.02.59.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 02 Mar 2022 02:59:59 -0800 (PST)
+Message-ID: <468d1c64-b954-dcdf-6660-74f51e29807c@canonical.com>
+Date:   Wed, 2 Mar 2022 11:59:58 +0100
 MIME-Version: 1.0
-Message-ID: <trinity-80a229fb-42dd-4705-9c55-fe6f3a381a40-1646217098213@3c-app-gmx-bap21>
-From:   Frank Wunderlich <frank-w@public-files.de>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: Aw: Re: [PATCH v4 1/5] dt-bindings: Convert ahci-platform DT
+ bindings to yaml
+Content-Language: en-US
+To:     Frank Wunderlich <frank-w@public-files.de>
 Cc:     Frank Wunderlich <linux@fw-web.de>, devicetree@vger.kernel.org,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Rob Herring <robh+dt@kernel.org>,
@@ -41,157 +78,33 @@ Cc:     Frank Wunderlich <linux@fw-web.de>, devicetree@vger.kernel.org,
         linux-rockchip@lists.infradead.org, Ray Jui <rjui@broadcom.com>,
         Scott Branden <sbranden@broadcom.com>,
         bcm-kernel-feedback-list@broadcom.com
-Subject: Aw: Re: [PATCH v4 1/5] dt-bindings: Convert ahci-platform DT
- bindings to yaml
-Content-Type: text/plain; charset=UTF-8
-Date:   Wed, 2 Mar 2022 11:31:38 +0100
-Importance: normal
-Sensitivity: Normal
-In-Reply-To: <6dae47c3-6083-782e-ecab-7be3f0bca0e1@canonical.com>
 References: <20220301152421.57281-1-linux@fw-web.de>
  <20220301152421.57281-2-linux@fw-web.de>
  <6dae47c3-6083-782e-ecab-7be3f0bca0e1@canonical.com>
-Content-Transfer-Encoding: quoted-printable
-X-UI-Message-Type: mail
-X-Priority: 3
-X-Provags-ID: V03:K1:4Gpe9DnEZg6/2Us5ng4Vs+x+BJ+VcCuxFPt0OY8/cpI1KL2/NW731L08yXZA2/TTVVk6+
- uDr9F1YWWrAbLuR8Q9PYkpsqbOQSINIMeUd4Jjrgsb/AskZtRQRC8/7tE8fCWyFPpxGKkEQr+IDK
- TQdDJN+At+27aKoUuUxKjxTBfyuyYCuR6Afn4+j+9KUCBuYuu+ALvG33VVtjzO+3ltdwL+EZcJKt
- WhQB2bCv0KWTdWvXFZFD0Na2LQoB07OyyTaxmTl+iAFgEPgCi6m5w/NA5dpzbHsuItcmeX+SnezL
- Fw=
-X-UI-Out-Filterresults: notjunk:1;V03:K0:vk4EW4SvWFo=:EpZrOPPl+6CuL2emR4Il5R
- BGbiJ6qZyF4TofkTyyy82OQSw6sHIkaRLVog7OvuuarvArgeogT42vK3ewTSki4nA0o3Y6e7u
- c2rQyEtFpbDmmynGWA79SB6rULKKTfW1rREKEtRRbkl45RPIk5cdUTt3yPEZg1PgBlZ6cC1Zi
- a9Z8zyCSZccjMF8qEq5bGhhe6FXLORRPnphPybhvdR+4uBfsDf43PMptW+7cA7aHU9RcUZxf2
- L9czc6SXo5GxXruLZ0sPiYV0oVXE7lgXHREjYZl2H7VRFGjGA7T/7rE44MWBxCCyz3EKMxcQJ
- iYU0mIsfbDI6aro468K3IE0yIy8zgCbgEaj89mPq11vTGQIv2TQRMXCqUh6JO+HkURxpza6DR
- EaWBo228M78BGsV/8/GMVQpaNGLUGJMuVQXy4O4kn1I5oPI/UleDpcrl4vGFFTzflUdlV7OnH
- 5PqmDWpFVOc9SjrDEdWUiK6NpMqGcQymVjhk9IU3NKF4heVWRVg7M0EFpllim3TxIIjpCZhF/
- mQ2SJQH0lnkcHerWGlofe0xJnnGEP43rjFZwmMwi4k36V7mpb8/gbZevht+ndg5fAHM9NRTbW
- 5dHdOX/R2abeVpDw+16McJfSQ7qoEKIeU+Tb4g0sPjFvnhCsUaXJNLXKXdehoa8WXRJngIbLo
- xO9m4Xzf7ToIscjeIgvux6YUX5JqzTWMxKvWBMsREufhXpKWwI8eGKJ+OHotuhFkyJHJJV9iA
- CjStIoCuT7D1w6FSVK/GB85hqTTUJAyVHF85xGb89/rjb86Gm7kp++JuNPKagdzL1di3D2rjq
- xcz2wmi
+ <trinity-80a229fb-42dd-4705-9c55-fe6f3a381a40-1646217098213@3c-app-gmx-bap21>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+In-Reply-To: <trinity-80a229fb-42dd-4705-9c55-fe6f3a381a40-1646217098213@3c-app-gmx-bap21>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi
+On 02/03/2022 11:31, Frank Wunderlich wrote:
+> 
+>>> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
+>>> +    #include <dt-bindings/clock/berlin2q.h>
+>>> +    sata@f7e90000 {
+>>> +            compatible = "marvell,berlin2q-ahci", "generic-ahci";
+>>> +            reg = <0xe90000 0x1000>;
+>>
+>> You still have wrong address.
+> 
+> only took the example from the txt, but i guess reg should be <0xf7e90000 0x1000>; ?
+> 
 
-> Gesendet: Mittwoch, 02=2E M=C3=A4rz 2022 um 10:46 Uhr
-> Von: "Krzysztof Kozlowski" <krzysztof=2Ekozlowski@canonical=2Ecom>
+Yes.
 
-> On 01/03/2022 16:24, Frank Wunderlich wrote:
-> > From: Frank Wunderlich <frank-w@public-files=2Ede>
 
-> > +properties:
-> > +  compatible:
-> > +    oneOf:
-> > +      - items:
-> > +        - enum:
-> > +          - brcm,iproc-ahci
-> > +          - marvell,armada-8k-ahci
-> > +          - marvell,berlin2q-ahci
-> > +        - const: generic-ahci
-> > +      - enum:
-> > +        - brcm,iproc-ahci
->=20
-> This one is already earlier in generic-ahci, so you can skip him here=2E
-
-OK, i drop it
-
-> > +        - cavium,octeon-7130-ahci
-> > +        - hisilicon,hisi-ahci
-> > +        - ibm,476gtr-ahci
-> > +        - marvell,armada-3700-ahci
-> > +        - marvell,armada-380-ahci
-> > +        - snps,dwc-ahci
-> > +        - snps,spear-ahci
-> > +
-> > +  reg:
-> > +    maxItems: 1
-> > +
-> > +  clocks:
-> > +    description:
-> > +      Clock IDs array as required by the controller=2E
-> > +    minItems: 1
-> > +    maxItems: 3
-> > +
-> > +  interrupts:
-> > +    description:
-> > +      specifies the interrupt number for the controller=2E
->=20
-> Skip description, it's obvious=2E
-
-OK
-
-> > +    maxItems: 1
-> > +
-> > +  ahci-supply:
-> > +    description:
-> > +      regulator for AHCI controller
-> > +
-> > +  clock-names:
-> > +    description:
-> > +      Names of clocks corresponding to IDs in the clock property=2E
-> > +    minItems: 1
-> > +    maxItems: 3
->=20
-> Put the clock-names next to clocks=2E
-
-had moved them down as they are optional, but ok, i move up
-
-> > +
-> > +  dma-coherent:
-> > +    true
->=20
-> New line not needed=2E "dma-coherent: true"
-
-OK
-
-> > +  ports-implemented:
-> > +    $ref: '/schemas/types=2Eyaml#/definitions/uint32'
-> > +    description:
-> > +      Mask that indicates which ports that the HBA supports
-> > +      are available for software to use=2E Useful if PORTS_IMPL
-> > +      is not programmed by the BIOS, which is true with
-> > +      some embedded SoCs=2E
-> > +    maxItems: 1
->=20
-> maxItems are incorrect here, this is not an array=2E
-
-right, i'll change it
-
-> > +patternProperties:
-> > +  "^sata-port@[0-9a-f]+$":
-> > +    type: object
-> > +    description:
-> > +      Subnode with configuration of the Ports=2E
-> > +
-> > +    properties:
-> > +      reg:
-> > +        maxItems: 1
-> > +
-> > +      phys:
-> > +        minItems: 1
->=20
-> maxItems: 1
-
-oh, missed that
-
-> > +    #include <dt-bindings/interrupt-controller/arm-gic=2Eh>
-> > +    #include <dt-bindings/clock/berlin2q=2Eh>
-> > +    sata@f7e90000 {
-> > +            compatible =3D "marvell,berlin2q-ahci", "generic-ahci";
-> > +            reg =3D <0xe90000 0x1000>;
->=20
-> You still have wrong address=2E
-
-only took the example from the txt, but i guess reg should be <0xf7e90000 =
-0x1000>; ?
-
-will also fix all subjects to
-
-"dt-bindings: ata: ahci-platform: =2E=2E=2E"
-
-Thanks
+Best regards,
+Krzysztof
