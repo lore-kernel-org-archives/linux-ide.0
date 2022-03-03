@@ -2,202 +2,149 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 531DAC433EF
-	for <linux-ide@archiver.kernel.org>; Thu,  3 Mar 2022 02:32:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D052C433EF
+	for <linux-ide@archiver.kernel.org>; Thu,  3 Mar 2022 03:51:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231823AbiCCCda (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 2 Mar 2022 21:33:30 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60882 "EHLO
+        id S229520AbiCCDwY (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 2 Mar 2022 22:52:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54692 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231800AbiCCCd3 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2022 21:33:29 -0500
-Received: from outgoing.mit.edu (outgoing-auth-1.mit.edu [18.9.28.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C87AD636C;
-        Wed,  2 Mar 2022 18:32:40 -0800 (PST)
-Received: from cwcc.thunk.org (pool-108-7-220-252.bstnma.fios.verizon.net [108.7.220.252])
-        (authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 2232WZQO020612
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 2 Mar 2022 21:32:36 -0500
-Received: by cwcc.thunk.org (Postfix, from userid 15806)
-        id 7634315C0038; Wed,  2 Mar 2022 21:32:35 -0500 (EST)
-Date:   Wed, 2 Mar 2022 21:32:35 -0500
-From:   "Theodore Ts'o" <tytso@mit.edu>
-To:     Byungchul Park <byungchul.park@lge.com>
-Cc:     Jan Kara <jack@suse.cz>, torvalds@linux-foundation.org,
-        damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
-        adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
-        mingo@redhat.com, linux-kernel@vger.kernel.org,
-        peterz@infradead.org, will@kernel.org, tglx@linutronix.de,
-        rostedt@goodmis.org, joel@joelfernandes.org, sashal@kernel.org,
-        daniel.vetter@ffwll.ch, chris@chris-wilson.co.uk,
-        duyuyang@gmail.com, johannes.berg@intel.com, tj@kernel.org,
-        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
-        bfields@fieldses.org, gregkh@linuxfoundation.org,
-        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
-        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org,
-        vdavydov.dev@gmail.com, sj@kernel.org, jglisse@redhat.com,
-        dennis@kernel.org, cl@linux.com, penberg@kernel.org,
-        rientjes@google.com, vbabka@suse.cz, ngupta@vflare.org,
-        linux-block@vger.kernel.org, axboe@kernel.dk,
-        paolo.valente@linaro.org, josef@toxicpanda.com,
-        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
-        jack@suse.com, jlayton@kernel.org, dan.j.williams@intel.com,
-        hch@infradead.org, djwong@kernel.org,
-        dri-devel@lists.freedesktop.org, airlied@linux.ie,
-        rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
-        hamohammed.sa@gmail.com
-Subject: Re: Report 2 in ext4 and journal based on v5.17-rc1
-Message-ID: <YiAow5gi21zwUT54@mit.edu>
-References: <1645096204-31670-1-git-send-email-byungchul.park@lge.com>
- <1645096204-31670-2-git-send-email-byungchul.park@lge.com>
- <20220221190204.q675gtsb6qhylywa@quack3.lan>
- <20220223003534.GA26277@X58A-UD3R>
- <20220223144859.na2gjgl5efgw5zhn@quack3.lan>
- <20220224011102.GA29726@X58A-UD3R>
- <20220224102239.n7nzyyekuacgpnzg@quack3.lan>
- <20220228092826.GA5201@X58A-UD3R>
- <20220228101444.6frl63dn5vmgycbp@quack3.lan>
- <20220303010033.GB20752@X58A-UD3R>
+        with ESMTP id S229512AbiCCDwY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2022 22:52:24 -0500
+Received: from NAM10-BN7-obe.outbound.protection.outlook.com (mail-bn7nam10on2079.outbound.protection.outlook.com [40.107.92.79])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F44C1405C5;
+        Wed,  2 Mar 2022 19:51:37 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=c5jJouINcKbMoc5MSo7zdp+VK2x+VZKfCVMSNf2ZzbtX6pBdiwza1YDCaETot5aBRBA+1jEx6duRsUkCntDIhc2G+PfUavqA3GqMMjB0HKHr59HbhMD6HNe7PS8ZA/CR24jObE/9b40+N7r3VJ3Y/oKCL4Dad/qv8hb2XcOJR/C7OCLFmUxzWCIqEnASiEKhEHmO8cu6fzP67kxHaXDPpnRYmDFvb5i+pZI22p5uVqE1OLtj6n7NP50cvUH39FP5+YiH44fuDxJQrHtkIVHjtz4G74mZfE9Tjsjwm/54B4BUMq4OCsU/OtFMQLogAg/mcV/hSGnnsLWVvmH5Eaa80g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=sIctQZav3YSIb8sBPetf94C0BXcYO6Sqq6BRdIjJokc=;
+ b=NsQ6QxsqSSENaDLf3fIDHS8WwQsmkAaQBP5xCideIGAXzUZUEbdLBMuiCJBvtkAXV59aTcmoHycsqcMQWfeVOf5kEqnagRDxfEAd9/t/x2gngsxbgYsVTVq+fpVrJxzh86ui12k1Sn0OSCiZQqjCFghnyfZn4oPUPKTzBKy+jS6yHs7T/j+c4cCPGKYpUmrIp/6uh9AhDaJ4Tgpg6NJ8vF6Djn6PXm1J73eLOZdL0/6wPDauuq4SIBDAJ0l0XQRRPs3l+iZ2St7/3uLc8dc6aP8NL5L16Z3oIc2IfNCGWxf+S0Bn+gMrMHk9IlxWZthlHIwhxOmtHCqnTTUStXN6mA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=opensource.wdc.com smtp.mailfrom=amd.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=amd.com; dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=sIctQZav3YSIb8sBPetf94C0BXcYO6Sqq6BRdIjJokc=;
+ b=tUg09tg1H760PXwVZcmU5DAT/mFFZ0pt5hIuPvGvh5qwcWfP8SVK7AdOeopvDwkZrC0J/w4dXYPNrkZQAnLqamJNuuJMXOAgkjg2aDE/FlSzKgx18MFaHQktjeai84526Pu8rtQ/qPvxXxOs8IN09o4EtktOKhU+ppjs78vBRAk=
+Received: from CO2PR04CA0070.namprd04.prod.outlook.com (2603:10b6:102:1::38)
+ by SN1PR12MB2574.namprd12.prod.outlook.com (2603:10b6:802:26::32) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5038.13; Thu, 3 Mar
+ 2022 03:51:34 +0000
+Received: from CO1NAM11FT019.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:102:1:cafe::31) by CO2PR04CA0070.outlook.office365.com
+ (2603:10b6:102:1::38) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5038.14 via Frontend
+ Transport; Thu, 3 Mar 2022 03:51:34 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com;
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ CO1NAM11FT019.mail.protection.outlook.com (10.13.175.57) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.5038.14 via Frontend Transport; Thu, 3 Mar 2022 03:51:33 +0000
+Received: from localhost.localdomain (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.18; Wed, 2 Mar
+ 2022 21:51:31 -0600
+From:   Mario Limonciello <mario.limonciello@amd.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+CC:     "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        <hdegoede@redhat.com>,
+        Mario Limonciello <mario.limonciello@amd.com>
+Subject: [PATCH v2 2/2] ata: ahci: Protect users from setting policies their drives don't support
+Date:   Wed, 2 Mar 2022 21:49:12 -0600
+Message-ID: <20220303034912.3615390-2-mario.limonciello@amd.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20220303034912.3615390-1-mario.limonciello@amd.com>
+References: <20220303034912.3615390-1-mario.limonciello@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220303010033.GB20752@X58A-UD3R>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 30d4301b-cdcd-476c-8f53-08d9fcc91bfe
+X-MS-TrafficTypeDiagnostic: SN1PR12MB2574:EE_
+X-Microsoft-Antispam-PRVS: <SN1PR12MB2574D7091CBF68DBD9DBD220E2049@SN1PR12MB2574.namprd12.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: JEEBXjGcWZe3ewBu5uhxhsus21JMFwWJUZutoCejHq14yF/mphIF1ypoDR5LIQHNVkFxTh5KC7od17D9fs3+RWC2Nt0Anq7MEDzNkZr3VXo8Cy4XwXOXoHU6xQnpnB10OOx6JLKbPZJPaJyHKU8hE12OW5syOs+wTvA5Lb54Txsbitoo9Ewh+Ua8nsLKyHj+1qOxIj9VMnHeyKlI+0CBsVbD8mwvKqTUdZBO13WHZfKoyoJdLSlKfBLWYy5V7WgEJRobJT78u93LYx6Jg2at85U7oj4smx1SpTMR6ZOADZcxovcObTiJgvVz3vKiBK8ONCwINIb69JiExi+a970pKiFkuVaGek4hSo8vAQYOb5hFiyvfqLlDczor9XuV9d4DqU3miiQsX/uZcbu+2jp3PFE9UkkAkwVgqnyA7rq0OpHbv0Ny5LIT2AvHGEvS0LO71pFVQrI4az7vkMMyXx2hgdUPaoe/DkhrgiowmHCegqbfo+CwVy7VmPsxzIPWLfCYTXNUmans7i8XEt6jzebYQDyWFhO4dsfUUou1WG93xJW9kN3XBuB3mqdNC1Dvp/Lch+tMhfkx+nNefqIhVxFAbVqe/gCigKYQkWGrBByYy0yD9L5VK1xzk7qnIIdaXnhJ09GgtXKIxyNpfrGQcpeZiYmExE/vdPbqBzCjoeXs6qNr3Q0EnvjudS4454yFggsbOoI8CDdtB9+sgAewbS7Esg==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(40470700004)(36840700001)(46966006)(4326008)(5660300002)(40460700003)(70206006)(70586007)(47076005)(44832011)(8676002)(336012)(426003)(16526019)(356005)(36756003)(2616005)(81166007)(1076003)(508600001)(8936002)(186003)(26005)(82310400004)(6666004)(2906002)(54906003)(6916009)(86362001)(36860700001)(316002)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Mar 2022 03:51:33.6054
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 30d4301b-cdcd-476c-8f53-08d9fcc91bfe
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: CO1NAM11FT019.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN1PR12MB2574
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Mar 03, 2022 at 10:00:33AM +0900, Byungchul Park wrote:
-> 
-> Unfortunately, it's neither perfect nor safe without another wakeup
-> source - rescue wakeup source.
-> 
->    consumer			producer
-> 
-> 				lock L
-> 				(too much work queued == true)
-> 				unlock L
-> 				--- preempted
->    lock L
->    unlock L
->    do work
->    lock L
->    unlock L
->    do work
->    ...
->    (no work == true)
->    sleep
-> 				--- scheduled in
-> 				sleep
+As the default low power policy applies to more chipsets and drives, it's
+important to make sure that drives actually support the policy that a user
+selected in their kernel configuration.
 
-That's not how things work in ext4.  It's **way** more complicated
-than that.  We have multiple wait channels, one wake up the consumer
-(read: the commit thread), and one which wakes up any processes
-waiting for commit thread to have made forward progress.  We also have
-two spin-lock protected sequence number, one which indicates the
-current commited transaction #, and one indicating the transaction #
-that needs to be committed.
+If the drive doesn't support slumber, don't let the default policies
+dependent upon slumber (`min_power` or `min_power_with_partial`) affect the
+disk.
 
-On the commit thread, it will sleep on j_wait_commit, and when it is
-woken up, it will check to see if there is work to be done
-(j_commit_sequence != j_commit_request), and if so, do the work, and
-then wake up processes waiting on the wait_queue j_wait_done_commit.
-(Again, all of this uses the pattern, "prepare to wait", then check to
-see if we should sleep, if we do need to sleep, unlock j_state_lock,
-then sleep.   So this prevents any races leading to lost wakeups.
+Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+---
+Changes from v1->v2:
+* Move deeper into codepaths
+* Reset to MED_POWER rather than ignore
+ drivers/ata/libata-sata.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-On the start_this_handle() thread, if we current transaction is too
-full, we set j_commit_request to its transaction id to indicate that
-we want the current transaction to be committed, and then we wake up
-the j_wait_commit wait queue and then we enter a loop where do a
-prepare_to_wait in j_wait_done_commit, check to see if
-j_commit_sequence == the transaction id that we want to be completed,
-and if it's not done yet, we unlock the j_state_lock spinlock, and go
-to sleep.  Again, because of the prepare_to_wait, there is no chance
-of a lost wakeup.
+diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+index 071158c0c44c..0dc03888c62b 100644
+--- a/drivers/ata/libata-sata.c
++++ b/drivers/ata/libata-sata.c
+@@ -13,6 +13,7 @@
+ #include <scsi/scsi_device.h>
+ #include <linux/libata.h>
+ 
++#include "ahci.h"
+ #include "libata.h"
+ #include "libata-transport.h"
+ 
+@@ -368,10 +369,20 @@ int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 		      bool spm_wakeup)
+ {
+ 	struct ata_eh_context *ehc = &link->eh_context;
++	struct ata_port *ap = link->ap;
++	struct ahci_host_priv *hpriv;
+ 	bool woken_up = false;
+ 	u32 scontrol;
+ 	int rc;
+ 
++	hpriv = ap->host->private_data;
++	if (policy >= ATA_LPM_MIN_POWER_WITH_PARTIAL &&
++	  !(hpriv->cap & HOST_CAP_SSC)) {
++		dev_warn(ap->host->dev,
++			"This drive doesn't support slumber; restting policy to MED_POWER\n");
++		policy = ATA_LPM_MED_POWER;
++	}
++
+ 	rc = sata_scr_read(link, SCR_CONTROL, &scontrol);
+ 	if (rc)
+ 		return rc;
+-- 
+2.34.1
 
-So there really is no "consumer" and "producer" here.  If you really
-insist on using this model, which really doesn't apply, for one
-thread, it's the consumer with respect to one wait queue, and the
-producer with respect to the *other* wait queue.  For the other
-thread, the consumer and producer roles are reversed.
-
-And of course, this is a highly simplified model, since we also have a
-wait queue used by the commit thread to wait for the number of active
-handles on a particular transaction to go to zero, and
-stop_this_handle() will wake up commit thread via this wait queue when
-the last active handle on a particular transaction is retired.  (And
-yes, that parameter is also protected by a different spin lock which
-is per-transaction).
-
-So it seems to me that a fundamental flaw in DEPT's model is assuming
-that the only waiting paradigm that can be used is consumer/producer,
-and that's simply not true.  The fact that you use the term "lock" is
-also going to lead a misleading line of reasoning, because properly
-speaking, they aren't really locks.  We are simply using wait channels
-to wake up processes as necessary, and then they will check other
-variables to decide whether or not they need to sleep or not, and we
-have an invariant that when these variables change indicating forward
-progress, the associated wait channel will be woken up.
-
-Cheers,
-
-						- Ted
-
-
-P.S.  This model is also highly simplified since there are other
-reasons why the commit thread can be woken up, some which might be via
-a timeout, and some which is via the j_wait_commit wait channel but
-not because j_commit_request has been changed, but because file system
-is being unmounted, or the file system is being frozen in preparation
-of a snapshot, etc.  These are *not* necessary to prevent a deadlock,
-because under normal circumstances the two wake channels are
-sufficient of themselves.  So please don't think of them as "rescue
-wakeup sources"; again, that's highly misleading and the wrong way to
-think of them.
-
-And to make things even more complicated, we have more than 2 wait
-channel --- we have *five*:
-
-	/**
-	 * @j_wait_transaction_locked:
-	 *
-	 * Wait queue for waiting for a locked transaction to start committing,
-	 * or for a barrier lock to be released.
-	 */
-	wait_queue_head_t	j_wait_transaction_locked;
-
-	/**
-	 * @j_wait_done_commit: Wait queue for waiting for commit to complete.
-	 */
-	wait_queue_head_t	j_wait_done_commit;
-
-	/**
-	 * @j_wait_commit: Wait queue to trigger commit.
-	 */
-	wait_queue_head_t	j_wait_commit;
-
-	/**
-	 * @j_wait_updates: Wait queue to wait for updates to complete.
-	 */
-	wait_queue_head_t	j_wait_updates;
-
-	/**
-	 * @j_wait_reserved:
-	 *
-	 * Wait queue to wait for reserved buffer credits to drop.
-	 */
-	wait_queue_head_t	j_wait_reserved;
-
-	/**
-	 * @j_fc_wait:
-	 *
-	 * Wait queue to wait for completion of async fast commits.
-	 */
-	wait_queue_head_t	j_fc_wait;
-
-
-"There are more things in heaven and Earth, Horatio,
- Than are dreamt of in your philosophy."
-      	  	    - William Shakespeare, Hamlet
