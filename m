@@ -2,90 +2,334 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E687C4332F
-	for <linux-ide@archiver.kernel.org>; Wed,  2 Mar 2022 19:22:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BCFEC433EF
+	for <linux-ide@archiver.kernel.org>; Thu,  3 Mar 2022 00:18:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234984AbiCBTXV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 2 Mar 2022 14:23:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58728 "EHLO
+        id S230190AbiCCATW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 2 Mar 2022 19:19:22 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58560 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235115AbiCBTXT (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2022 14:23:19 -0500
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D8EB2BCC;
-        Wed,  2 Mar 2022 11:22:36 -0800 (PST)
-Received: by mail-pj1-x102a.google.com with SMTP id em10-20020a17090b014a00b001bc3071f921so5644113pjb.5;
-        Wed, 02 Mar 2022 11:22:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=e4GTR8GaUHYkyzZntKtPvMACHaO+jIs3XNbO6sJQm48=;
-        b=h5rBD0THGtQxl3P8+fdalmIEcRsx/fi77wxgGlwZxzhpp85g6zGKMvnReB2R/0KApi
-         l1aI3C88GAiJqiCsBkG+ZtAuBdx0tt3VqJZjygi/VkVAfKV0j08DA961K7c3CQRPe5Tl
-         KMk+4JySvAq5V+LO8jhFzy5phCBnwDWOwxWAIMqqGRM3FNr1nfzEUZ8hoI+NPr2x7rXO
-         78GtcdFyOcVD2XEJL0R5aCV/6983WJF18lX1v0oL0PCGhVIxMMycjQA+DHAjbvXwbPnD
-         Nm412ij1baoGvURNcQkhu0qHGAA9unCxHIk9AK0A3sAzyeol1LFFTA4wT4nQU5G62+X5
-         X/BQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=e4GTR8GaUHYkyzZntKtPvMACHaO+jIs3XNbO6sJQm48=;
-        b=BIlDnYziS7CsPwGrGzjFw1871uhEsorYq2mhruerrYVEjXnEtcVnvbuDDhtqCArfC7
-         tMGDTvBCgG/oE3DXBaVV7412rQZBXia0SVb+YX5/PMJipRSBX/qImlov6gHXHwChVXgr
-         UBAZJet6fip7UR2PHn/qOWhAFafbMhUdhh+7YgEk3Y67ytDvWtz0W4ZqJIQJZ81jHC57
-         ELPN5GgVi6gU36S5AiLAWBh1DwbUSFwG1HVZURTTX6TykccOBgoHnGHxIHF7BJmMkxC+
-         8Om6IVTyPql4LAovFwhElQOqGT0vdOFgvzX+LZQLjXFmfAPIdJJd/SllFs2OlIdzaXDf
-         sMig==
-X-Gm-Message-State: AOAM532QC0BIqmEcXrOeyNlKn8YJuW/VkcBzjoXBSjWhZG/JHpkiGoWX
-        pGDho35mdUkNDhyZM6LnpUY=
-X-Google-Smtp-Source: ABdhPJya2BuKC74VQ9qxushY+WD8JX8/Ndgb9h19iixfLdlcy5xscoib53+wVHcJeAnpY31fdMwQ2w==
-X-Received: by 2002:a17:90b:f87:b0:1bc:b82b:69fc with SMTP id ft7-20020a17090b0f8700b001bcb82b69fcmr1357002pjb.236.1646248955678;
-        Wed, 02 Mar 2022 11:22:35 -0800 (PST)
-Received: from [192.168.1.3] (ip72-194-116-95.oc.oc.cox.net. [72.194.116.95])
-        by smtp.gmail.com with ESMTPSA id 142-20020a621894000000b004dfc714b076sm22597207pfy.11.2022.03.02.11.22.34
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 02 Mar 2022 11:22:35 -0800 (PST)
-Message-ID: <f3320bb8-b7eb-95d8-2f8d-9821dcecc198@gmail.com>
-Date:   Wed, 2 Mar 2022 11:22:33 -0800
+        with ESMTP id S230170AbiCCATW (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2022 19:19:22 -0500
+Received: from lgeamrelo11.lge.com (lgeamrelo13.lge.com [156.147.23.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BDA38DFFF
+        for <linux-ide@vger.kernel.org>; Wed,  2 Mar 2022 16:18:35 -0800 (PST)
+Received: from unknown (HELO lgeamrelo02.lge.com) (156.147.1.126)
+        by 156.147.23.53 with ESMTP; 3 Mar 2022 09:18:34 +0900
+X-Original-SENDERIP: 156.147.1.126
+X-Original-MAILFROM: byungchul.park@lge.com
+Received: from unknown (HELO X58A-UD3R) (10.177.244.38)
+        by 156.147.1.126 with ESMTP; 3 Mar 2022 09:18:34 +0900
+X-Original-SENDERIP: 10.177.244.38
+X-Original-MAILFROM: byungchul.park@lge.com
+Date:   Thu, 3 Mar 2022 09:18:13 +0900
+From:   Byungchul Park <byungchul.park@lge.com>
+To:     Hyeonggon Yoo <42.hyeyoo@gmail.com>
+Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
+        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
+        linux-ext4@vger.kernel.org, mingo@redhat.com,
+        linux-kernel@vger.kernel.org, peterz@infradead.org,
+        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
+        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
+        chris@chris-wilson.co.uk, duyuyang@gmail.com,
+        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
+        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
+        bfields@fieldses.org, gregkh@linuxfoundation.org,
+        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
+        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org,
+        vdavydov.dev@gmail.com, sj@kernel.org, jglisse@redhat.com,
+        dennis@kernel.org, cl@linux.com, penberg@kernel.org,
+        rientjes@google.com, vbabka@suse.cz, ngupta@vflare.org,
+        linux-block@vger.kernel.org, paolo.valente@linaro.org,
+        josef@toxicpanda.com, linux-fsdevel@vger.kernel.org,
+        viro@zeniv.linux.org.uk, jack@suse.cz, jack@suse.com,
+        jlayton@kernel.org, dan.j.williams@intel.com, hch@infradead.org,
+        djwong@kernel.org, dri-devel@lists.freedesktop.org,
+        airlied@linux.ie, rodrigosiqueiramelo@gmail.com,
+        melissa.srw@gmail.com, hamohammed.sa@gmail.com
+Subject: Re: [PATCH v3 00/21] DEPT(Dependency Tracker)
+Message-ID: <20220303001812.GA20752@X58A-UD3R>
+References: <1646042220-28952-1-git-send-email-byungchul.park@lge.com>
+ <Yh70VkRkUfwIjPWv@ip-172-31-19-208.ap-northeast-1.compute.internal>
+ <Yh74VbNZZt35wHZD@ip-172-31-19-208.ap-northeast-1.compute.internal>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.0
-Subject: Re: [PATCH] ata: Drop commas after OF match table sentinels
-Content-Language: en-US
-To:     Geert Uytterhoeven <geert+renesas@glider.be>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>,
-        Patrice Chotard <patrice.chotard@foss.st.com>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org
-References: <15d4b8e1108c902c4e80c87edfc702a7786de4ba.1646209667.git.geert+renesas@glider.be>
-From:   Florian Fainelli <f.fainelli@gmail.com>
-In-Reply-To: <15d4b8e1108c902c4e80c87edfc702a7786de4ba.1646209667.git.geert+renesas@glider.be>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Yh74VbNZZt35wHZD@ip-172-31-19-208.ap-northeast-1.compute.internal>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-
-
-On 3/2/2022 12:30 AM, Geert Uytterhoeven wrote:
-> It does not make sense to have a comma after a sentinel, as any new
-> elements must be added before the sentinel.
+On Wed, Mar 02, 2022 at 04:53:41AM +0000, Hyeonggon Yoo wrote:
+> On Wed, Mar 02, 2022 at 04:36:38AM +0000, Hyeonggon Yoo wrote:
+> > On Mon, Feb 28, 2022 at 06:56:39PM +0900, Byungchul Park wrote:
+> > > I didn't want to bother you so I was planning to send the next spin
+> > > after making more progress. However, PATCH v2 reports too many false
+> > > positives because Dept tracked the bit_wait_table[] wrong way - I
+> > > apologize for that. So I decided to send PATCH v3 first before going
+> > > further for those who want to run Dept for now.
+> > > 
+> > > There might still be some false positives but not overwhelming.
+> > >
+> > 
+> > Hello Byungchul, I'm running DEPT v3 on my system
+> > and I see report below.
+> > 
+> > Looking at the kmemleak code and comment, I think
+> > kmemleak tried to avoid lockdep recursive warning
+> > but detected by DEPT?
+> >
 > 
-> Add comments to clarify the purpose of the empty elements.
+> Forgot to include another warning caused by DEPT.
 > 
-> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> And comment below might be useful for debugging:
+> 
+> in kmemleak.c:
+>   43  * Locks and mutexes are acquired/nested in the following order:
+>   44  *
+>   45  *   scan_mutex [-> object->lock] -> kmemleak_lock -> other_object->lock (SINGLE_DEPTH_NESTING)
+>   46  *
+>   47  * No kmemleak_lock and object->lock nesting is allowed outside scan_mutex
+>   48  * regions.
+> 
+> ===================================================
+> DEPT: Circular dependency has been detected.
+> 5.17.0-rc1+ #1 Tainted: G        W        
+> ---------------------------------------------------
+> summary
+> ---------------------------------------------------
+> *** DEADLOCK ***
+> 
+> context A
+>     [S] __raw_spin_lock_irqsave(&object->lock:0)
+>     [W] __raw_spin_lock_irqsave(kmemleak_lock:0)
+>     [E] spin_unlock(&object->lock:0)
+> 
+> context B
+>     [S] __raw_spin_lock_irqsave(kmemleak_lock:0)
+>     [W] _raw_spin_lock_nested(&object->lock:0)
+>     [E] spin_unlock(kmemleak_lock:0)
+> 
+> [S]: start of the event context
+> [W]: the wait blocked
+> [E]: the event not reachable
 
-Acked-by: Florian Fainelli <f.fainelli@gmail.com>
+Hi Hyeonggon,
 
-For:
-> ---
->   drivers/ata/ahci_brcm.c        | 2 +-
--- 
-Florian
+Dept also allows the following scenario when an user guarantees that
+each lock instance is different from another at a different depth:
+
+   lock A0 with depth
+   lock A1 with depth + 1
+   lock A2 with depth + 2
+   lock A3 with depth + 3
+   (and so on)
+   ..
+   unlock A3
+   unlock A2
+   unlock A1
+   unlock A0
+
+However, Dept does not allow the following scenario where another lock
+class cuts in the dependency chain:
+
+   lock A0 with depth
+   lock B
+   lock A1 with depth + 1
+   lock A2 with depth + 2
+   lock A3 with depth + 3
+   (and so on)
+   ..
+   unlock A3
+   unlock A2
+   unlock A1
+   unlock B
+   unlock A0
+
+This scenario is clearly problematic. What do you think is going to
+happen with another context running the following?
+
+   lock A1 with depth
+   lock B
+   lock A2 with depth + 1
+   lock A3 with depth + 2
+   (and so on)
+   ..
+   unlock A3
+   unlock A2
+   unlock B
+   unlock A1
+
+It's a deadlock. That's why Dept reports this case as a problem. Or am I
+missing something?
+
+Thanks,
+Byungchul
+
+> ---------------------------------------------------
+> context A's detail
+> ---------------------------------------------------
+> context A
+>     [S] __raw_spin_lock_irqsave(&object->lock:0)
+>     [W] __raw_spin_lock_irqsave(kmemleak_lock:0)
+>     [E] spin_unlock(&object->lock:0)
+> 
+> [S] __raw_spin_lock_irqsave(&object->lock:0):
+> [<ffffffc00810302c>] scan_gray_list+0x84/0x13c
+> stacktrace:
+>       dept_ecxt_enter+0x88/0xf4
+>       _raw_spin_lock_irqsave+0xf0/0x1c4
+>       scan_gray_list+0x84/0x13c
+>       kmemleak_scan+0x2d8/0x54c
+>       kmemleak_scan_thread+0xac/0xd4
+>       kthread+0xd4/0xe4
+>       ret_from_fork+0x10/0x20
+> 
+> [W] __raw_spin_lock_irqsave(kmemleak_lock:0):
+> [<ffffffc008102ebc>] scan_block+0x3c/0x128
+> stacktrace:
+>       __dept_wait+0x8c/0xa4
+>       dept_wait+0x6c/0x88
+>       _raw_spin_lock_irqsave+0xb8/0x1c4
+>       scan_block+0x3c/0x128
+>       scan_gray_list+0xc4/0x13c
+>       kmemleak_scan+0x2d8/0x54c
+>       kmemleak_scan_thread+0xac/0xd4
+>       kthread+0xd4/0xe4
+>       ret_from_fork+0x10/0x20
+> 
+> [E] spin_unlock(&object->lock:0):
+> [<ffffffc008102ee0>] scan_block+0x60/0x128
+> 
+> ---------------------------------------------------
+> context B's detail
+> ---------------------------------------------------
+> context B
+>     [S] __raw_spin_lock_irqsave(kmemleak_lock:0)
+>     [W] _raw_spin_lock_nested(&object->lock:0)
+>     [E] spin_unlock(kmemleak_lock:0)
+> 
+> [S] __raw_spin_lock_irqsave(kmemleak_lock:0):
+> [<ffffffc008102ebc>] scan_block+0x3c/0x128
+> stacktrace:
+>       dept_ecxt_enter+0x88/0xf4
+>       _raw_spin_lock_irqsave+0xf0/0x1c4
+>       scan_block+0x3c/0x128
+>       kmemleak_scan+0x19c/0x54c
+>       kmemleak_scan_thread+0xac/0xd4
+>       kthread+0xd4/0xe4
+>       ret_from_fork+0x10/0x20
+> 
+> [W] _raw_spin_lock_nested(&object->lock:0):
+> [<ffffffc008102f34>] scan_block+0xb4/0x128
+> stacktrace:
+>       dept_wait+0x74/0x88
+>       _raw_spin_lock_nested+0xa8/0x1b0
+>       scan_block+0xb4/0x128
+>       kmemleak_scan+0x19c/0x54c
+>       kmemleak_scan_thread+0xac/0xd4
+>       kthread+0xd4/0xe4
+>       ret_from_fork+0x10/0x20
+> [E] spin_unlock(kmemleak_lock:0):
+> [<ffffffc008102ee0>] scan_block+0x60/0x128
+> stacktrace:
+>       dept_event+0x7c/0xfc
+>       _raw_spin_unlock_irqrestore+0x8c/0x120
+>       scan_block+0x60/0x128
+>       kmemleak_scan+0x19c/0x54c
+>       kmemleak_scan_thread+0xac/0xd4
+>       kthread+0xd4/0xe4
+>       ret_from_fork+0x10/0x20
+> ---------------------------------------------------
+> information that might be helpful
+> ---------------------------------------------------
+> CPU: 1 PID: 38 Comm: kmemleak Tainted: G        W         5.17.0-rc1+ #1
+> Hardware name: linux,dummy-virt (DT)
+> Call trace:
+>  dump_backtrace.part.0+0x9c/0xc4
+>  show_stack+0x14/0x28
+>  dump_stack_lvl+0x9c/0xcc
+>  dump_stack+0x14/0x2c
+>  print_circle+0x2d4/0x438
+>  cb_check_dl+0x6c/0x70
+>  bfs+0xc0/0x168
+>  add_dep+0x88/0x11c
+>  add_wait+0x2d0/0x2dc
+>  __dept_wait+0x8c/0xa4
+>  dept_wait+0x6c/0x88
+>  _raw_spin_lock_irqsave+0xb8/0x1c4
+>  scan_block+0x3c/0x128
+>  scan_gray_list+0xc4/0x13c
+>  kmemleak_scan+0x2d8/0x54c
+>  kmemleak_scan_thread+0xac/0xd4
+>  kthread+0xd4/0xe4
+>  ret_from_fork+0x10/0x20
+> 
+> > ===================================================
+> > DEPT: Circular dependency has been detected.
+> > 5.17.0-rc1+ #1 Tainted: G        W
+> > ---------------------------------------------------
+> > summary
+> > ---------------------------------------------------
+> > *** AA DEADLOCK ***
+> > 
+> > context A
+> >     [S] __raw_spin_lock_irqsave(&object->lock:0)
+> >     [W] _raw_spin_lock_nested(&object->lock:0)
+> >     [E] spin_unlock(&object->lock:0)
+> > 
+> > [S]: start of the event context
+> > [W]: the wait blocked
+> > [E]: the event not reachable
+> > ---------------------------------------------------
+> > context A's detail
+> > ---------------------------------------------------
+> > context A
+> >     [S] __raw_spin_lock_irqsave(&object->lock:0)
+> >     [W] _raw_spin_lock_nested(&object->lock:0)
+> >     [E] spin_unlock(&object->lock:0)
+> > 
+> > [S] __raw_spin_lock_irqsave(&object->lock:0):
+> > [<ffffffc00810302c>] scan_gray_list+0x84/0x13c
+> > stacktrace:
+> >       dept_ecxt_enter+0x88/0xf4
+> >       _raw_spin_lock_irqsave+0xf0/0x1c4
+> >       scan_gray_list+0x84/0x13c
+> >       kmemleak_scan+0x2d8/0x54c
+> >       kmemleak_scan_thread+0xac/0xd4
+> >       kthread+0xd4/0xe4
+> >       ret_from_fork+0x10/0x20
+> > 
+> > [E] spin_unlock(&object->lock:0):
+> > [<ffffffc008102ee0>] scan_block+0x60/0x128
+> > ---------------------------------------------------
+> > information that might be helpful
+> > ---------------------------------------------------
+> > CPU: 1 PID: 38 Comm: kmemleak Tainted: G        W         5.17.0-rc1+ #1
+> > Hardware name: linux,dummy-virt (DT)
+> > Call trace:
+> >  dump_backtrace.part.0+0x9c/0xc4
+> >  show_stack+0x14/0x28
+> >  dump_stack_lvl+0x9c/0xcc
+> >  dump_stack+0x14/0x2c
+> >  print_circle+0x2d4/0x438
+> >  cb_check_dl+0x44/0x70
+> >  bfs+0x60/0x168
+> >  add_dep+0x88/0x11c
+> >  add_wait+0x2d0/0x2dc
+> >  __dept_wait+0x8c/0xa4
+> >  dept_wait+0x6c/0x88
+> >  _raw_spin_lock_nested+0xa8/0x1b0
+> >  scan_block+0xb4/0x128
+> >  scan_gray_list+0xc4/0x13c
+> >  kmemleak_scan+0x2d8/0x54c
+> >  kmemleak_scan_thread+0xac/0xd4
+> >  kthread+0xd4/0xe4
+> >  ret_from_fork+0x10/0x20
+> >
+> [...]
+> 
+> --
+> Thank you, You are awesome!
+> Hyeonggon :-)
