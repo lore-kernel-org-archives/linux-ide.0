@@ -2,220 +2,390 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3193C433EF
-	for <linux-ide@archiver.kernel.org>; Thu,  3 Mar 2022 07:04:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 602F0C433F5
+	for <linux-ide@archiver.kernel.org>; Thu,  3 Mar 2022 08:03:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229961AbiCCHFi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 3 Mar 2022 02:05:38 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35246 "EHLO
+        id S230469AbiCCIET (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 3 Mar 2022 03:04:19 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37480 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229884AbiCCHFf (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 3 Mar 2022 02:05:35 -0500
-Received: from mout.gmx.net (mout.gmx.net [212.227.15.15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 96CF22D1D3;
-        Wed,  2 Mar 2022 23:04:48 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1646291055;
-        bh=c8B08IuN0ueJ5P1Qw3m4mZcla5OpJNkiL6GjsRpN5GY=;
-        h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=hZaujvICUT5hjdB6Lp+cImer0Md6B745NTlpYuexL6B27u5X4lYSDPsd0hI8v+bIK
-         yPqf87EaL996Qtg2ExqEUipUGTMS+Tw76vJ8zo4oYFxopgkNj2Fln1EDQon3qf1xIg
-         6Kn/358VgBKo66uqDsfkNTDjOzxUjMD3NQx0egj0=
-X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
-Received: from [217.61.154.125] ([217.61.154.125]) by web-mail.gmx.net
- (3c-app-gmx-bs69.server.lan [172.19.170.214]) (via HTTP); Thu, 3 Mar 2022
- 08:04:15 +0100
+        with ESMTP id S229620AbiCCIET (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 3 Mar 2022 03:04:19 -0500
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 273DAF70F9;
+        Thu,  3 Mar 2022 00:03:34 -0800 (PST)
+Received: by mail-pl1-x62d.google.com with SMTP id i1so3845309plr.2;
+        Thu, 03 Mar 2022 00:03:34 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=fUkUxvkn93bgu+PKSnYG+q7lM7WQLXndxGjx5lZ4dBU=;
+        b=lk+pGqkNy5ulOHooO1xdOsUIbcPFxh71/n7f6yoU9rEbLFBiew22l1yVQ/xFuhLZMq
+         TCFHVy5dVSGi+qTzgJJv3Co/u0b3cQ0Xv6eaI4es3lb4UiFH01OO1gL9Mk10SYXpp/G9
+         WY5IeKMjwpwZFU8EVyA9SHg0+fuM6md7AQtR2NTUCbS+5kWOrZXSaQkN+ShsP0sagN1b
+         cXPwTvzhjRDB1e7UnAjTiyecsqm/ACZsA9EhBkbLWu+k0iwqTCNoKK2ir3YyDnq2cpUp
+         X3+nTiOGcIPvHHArnBHbobBKI5+rpH6uMMyAzkhQrBcUdvv+cUf4L1LwoDz8aVGp+yW9
+         y2iQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=fUkUxvkn93bgu+PKSnYG+q7lM7WQLXndxGjx5lZ4dBU=;
+        b=drXPgI0AxudTyWHm/bQGPt0RvO7dnnYb24IRV64wpnDY8HoH5PvU73ZKCAfQRuCGH6
+         3+WKNTwoQCXrv2tMra9lAFbVZc4KKiBcBqU1ccIvBdL5BzQOkKc/xLQjbJ+iO1SZGz4F
+         tdW98SOpmrx69fcdarsrf5DuJ8PTbXu/Ac0UkAdJVvnHy03wO42WC/Cm0yxQXpYr/or9
+         EO/G0BexLOxcLYQTUJbXRtfrMcRpLRgvLTbSv1jvRysIbUnvW6LVpqEEjI4Qgunzg+Te
+         ZD0XqQf9KtLzS6QyzRYSv3vviwzLdlS0GsSf8Axmdi6qrBDb+f+lu8dkEoh+y6td5GSb
+         PVlA==
+X-Gm-Message-State: AOAM533LVSmdV0UrNHCfxOlD2qsY/UjrNQvF60uNAKmv1McYP9hEhFza
+        9V/GnO52YWiN7RXz75a+k2Hseds7iVnDRibt
+X-Google-Smtp-Source: ABdhPJxZK8YWg/B8UVN9sIpJzKrzwM56bvyAj4DWSAO4JGSQ5m6JW9AJg7nXNLycvwdWBm1H2VF8og==
+X-Received: by 2002:a17:90a:560a:b0:1bc:72e7:3c13 with SMTP id r10-20020a17090a560a00b001bc72e73c13mr3966855pjf.246.1646294613533;
+        Thu, 03 Mar 2022 00:03:33 -0800 (PST)
+Received: from ip-172-31-19-208.ap-northeast-1.compute.internal (ec2-18-181-137-102.ap-northeast-1.compute.amazonaws.com. [18.181.137.102])
+        by smtp.gmail.com with ESMTPSA id c15-20020a056a00248f00b004f10a245b83sm1603254pfv.73.2022.03.03.00.03.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 03 Mar 2022 00:03:33 -0800 (PST)
+Date:   Thu, 3 Mar 2022 08:03:21 +0000
+From:   Hyeonggon Yoo <42.hyeyoo@gmail.com>
+To:     Byungchul Park <byungchul.park@lge.com>
+Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
+        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
+        linux-ext4@vger.kernel.org, mingo@redhat.com,
+        linux-kernel@vger.kernel.org, peterz@infradead.org,
+        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
+        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
+        chris@chris-wilson.co.uk, duyuyang@gmail.com,
+        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
+        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
+        bfields@fieldses.org, gregkh@linuxfoundation.org,
+        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
+        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org,
+        vdavydov.dev@gmail.com, sj@kernel.org, jglisse@redhat.com,
+        dennis@kernel.org, cl@linux.com, penberg@kernel.org,
+        rientjes@google.com, vbabka@suse.cz, ngupta@vflare.org,
+        linux-block@vger.kernel.org, paolo.valente@linaro.org,
+        josef@toxicpanda.com, linux-fsdevel@vger.kernel.org,
+        viro@zeniv.linux.org.uk, jack@suse.cz, jack@suse.com,
+        jlayton@kernel.org, dan.j.williams@intel.com, hch@infradead.org,
+        djwong@kernel.org, dri-devel@lists.freedesktop.org,
+        airlied@linux.ie, rodrigosiqueiramelo@gmail.com,
+        melissa.srw@gmail.com, hamohammed.sa@gmail.com
+Subject: Re: [PATCH v3 00/21] DEPT(Dependency Tracker)
+Message-ID: <YiB2SZFzgBEcywgg@ip-172-31-19-208.ap-northeast-1.compute.internal>
+References: <1646042220-28952-1-git-send-email-byungchul.park@lge.com>
+ <Yh70VkRkUfwIjPWv@ip-172-31-19-208.ap-northeast-1.compute.internal>
+ <Yh74VbNZZt35wHZD@ip-172-31-19-208.ap-northeast-1.compute.internal>
+ <20220303001812.GA20752@X58A-UD3R>
 MIME-Version: 1.0
-Message-ID: <trinity-1ca1f3fd-1eeb-4c8d-a7e2-65851eb8002b-1646291055736@3c-app-gmx-bs69>
-From:   Frank Wunderlich <frank-w@public-files.de>
-To:     Rob Herring <robh@kernel.org>
-Cc:     Frank Wunderlich <linux@fw-web.de>, devicetree@vger.kernel.org,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>,
-        Peter Geis <pgwipeout@gmail.com>,
-        Michael Riesch <michael.riesch@wolfvision.net>,
-        linux-arm-kernel@lists.infradead.org,
-        linux-rockchip@lists.infradead.org, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com
-Subject: Aw: Re: [PATCH v4 1/5] dt-bindings: Convert ahci-platform DT
- bindings to yaml
-Content-Type: text/plain; charset=UTF-8
-Date:   Thu, 3 Mar 2022 08:04:15 +0100
-Importance: normal
-Sensitivity: Normal
-In-Reply-To: <Yh+0B+iKx1gJXXCk@robh.at.kernel.org>
-References: <20220301152421.57281-1-linux@fw-web.de>
- <20220301152421.57281-2-linux@fw-web.de>
- <Yh+0B+iKx1gJXXCk@robh.at.kernel.org>
-Content-Transfer-Encoding: quoted-printable
-X-UI-Message-Type: mail
-X-Priority: 3
-X-Provags-ID: V03:K1:/lChWm1rfjWQIQe56yrqiZm3Y/F+aYSHAhSYt2mbFXFdfKYmHyqTFxKsF/VidPyXBtz9B
- 7wR4CfTQ9nqIidZ2bWyS+UF9dqeyvvZE2/0x1FomSQe+j0VjqQk3qexBjQPMLHCDlP2tXLZlBsGa
- QBS9Jwxf2do9zTXbnkzKTXiO4L+/ZoCvP4wZU+z6gweuR97SP+Xko7O52mvTGmt5GwABhf5TKX1S
- sn4TZYtnMs1L8cs9uic5xCqL37CC//+7ptb7BN6pk27+YDUeL8IF7+qKvIYDAwwZsuQX1d1WMIeB
- A4=
-X-UI-Out-Filterresults: notjunk:1;V03:K0:SKDpZk6cLk0=:qnvAElGXZA38EYbbf7iG9I
- x2MFrBDk9KWc9CGfyaQZsF7A7x2AKK7Ouvkzd3x0QffCTeUq8uDrhHyLX7CX3UsTpwCep0Ygi
- jsmF7gcb26NsqP2x9A8io9eRUKcwCyrbR8AKPy9ZtL0o5pYemEyv69QCA+kWjA9auq5AFqcfB
- dIG8rN1+CAnc9A00+X9xI+3s5dJ9u7BCopnbU4pVk1EwO/IrLrB4ZLbJFhjxtf5Ttu8xCASHu
- S1pOTckExZS0q97mVVkvC9T7A29bdqLoMSJ03LUm5acTAA3CvKw9NPn0GqwL8j0LinvOxR69Q
- 3SP9rKd/4SsG3RkItDGFst67vJ/LaDvunXDC9aZC3p8tJlzmXLciVhAn5+xDxSaJafbKYUTQj
- +oUxjVRc/A9aRtLRWpSdr3qeHOkolI4N7oG1tblp/QYIWhsMkY8MCb4lFj73+6O2q7hixksfy
- RdUoDTH3jx9MZSrXZK1J/b1E4mrNBM43EOQ+E/eI5gncyuKCHmYEBU5bqWYllaDetkXfRvtmL
- 9o9+OmDNq9XE1kQSk3YQUFLZ/YBEeB23Uw67FbkfFNzme/7EwHAyhi3E7vzPS39mF4lgAuaCl
- XHvGJnosohw1/HakN7NvEkYiUz/rca4KxwjgFGyBU5vBsptZ+uFi7Xwe5bYLlCT2HpfSPk+DL
- F4IBJ05JDDNSEA5P8greI8EiNEkU9fjYRFzrbrn65CkmRDKd+D6iotTQAw/H/+zUXhPR76Q9q
- KIfhkZ8geKPHcoC91j3ORzXkOg6Uq2hJTG+O522WVVtnggvEutvX8thTE6nxBMcppqyN00bcr
- SqvHZmg
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220303001812.GA20752@X58A-UD3R>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Rob,
+On Thu, Mar 03, 2022 at 09:18:13AM +0900, Byungchul Park wrote:
+> On Wed, Mar 02, 2022 at 04:53:41AM +0000, Hyeonggon Yoo wrote:
+> > On Wed, Mar 02, 2022 at 04:36:38AM +0000, Hyeonggon Yoo wrote:
+> > > On Mon, Feb 28, 2022 at 06:56:39PM +0900, Byungchul Park wrote:
+> > > > I didn't want to bother you so I was planning to send the next spin
+> > > > after making more progress. However, PATCH v2 reports too many false
+> > > > positives because Dept tracked the bit_wait_table[] wrong way - I
+> > > > apologize for that. So I decided to send PATCH v3 first before going
+> > > > further for those who want to run Dept for now.
+> > > > 
+> > > > There might still be some false positives but not overwhelming.
+> > > >
+> > > 
+> > > Hello Byungchul, I'm running DEPT v3 on my system
+> > > and I see report below.
+> > > 
+> > > Looking at the kmemleak code and comment, I think
+> > > kmemleak tried to avoid lockdep recursive warning
+> > > but detected by DEPT?
+> > >
+> > 
+> > Forgot to include another warning caused by DEPT.
+> > 
+> > And comment below might be useful for debugging:
+> > 
+> > in kmemleak.c:
+> >   43  * Locks and mutexes are acquired/nested in the following order:
+> >   44  *
+> >   45  *   scan_mutex [-> object->lock] -> kmemleak_lock -> other_object->lock (SINGLE_DEPTH_NESTING)
+> >   46  *
+> >   47  * No kmemleak_lock and object->lock nesting is allowed outside scan_mutex
+> >   48  * regions.
+> > 
+> > ===================================================
+> > DEPT: Circular dependency has been detected.
+> > 5.17.0-rc1+ #1 Tainted: G        W        
+> > ---------------------------------------------------
+> > summary
+> > ---------------------------------------------------
+> > *** DEADLOCK ***
+> > 
+> > context A
+> >     [S] __raw_spin_lock_irqsave(&object->lock:0)
+> >     [W] __raw_spin_lock_irqsave(kmemleak_lock:0)
+> >     [E] spin_unlock(&object->lock:0)
+> > 
+> > context B
+> >     [S] __raw_spin_lock_irqsave(kmemleak_lock:0)
+> >     [W] _raw_spin_lock_nested(&object->lock:0)
+> >     [E] spin_unlock(kmemleak_lock:0)
+> > 
+> > [S]: start of the event context
+> > [W]: the wait blocked
+> > [E]: the event not reachable
+> 
+> Hi Hyeonggon,
+> 
+> Dept also allows the following scenario when an user guarantees that
+> each lock instance is different from another at a different depth:
+>
+>    lock A0 with depth
+>    lock A1 with depth + 1
+>    lock A2 with depth + 2
+>    lock A3 with depth + 3
+>    (and so on)
+>    ..
+>    unlock A3
+>    unlock A2
+>    unlock A1
+>    unlock A0
+> 
+> However, Dept does not allow the following scenario where another lock
+> class cuts in the dependency chain:
+> 
+>    lock A0 with depth
+>    lock B
+>    lock A1 with depth + 1
+>    lock A2 with depth + 2
+>    lock A3 with depth + 3
+>    (and so on)
+>    ..
+>    unlock A3
+>    unlock A2
+>    unlock A1
+>    unlock B
+>    unlock A0
+> 
+> This scenario is clearly problematic. What do you think is going to
+> happen with another context running the following?
+>
 
-thanks for review,
+First of all, I want to say I'm not expert at locking primitives.
+I may be wrong.
 
-have prepared the changes based on yours and krzysztof comments
+> >   45  *   scan_mutex [-> object->lock] -> kmemleak_lock -> other_object->lock (SINGLE_DEPTH_NESTING)
+> >   46  *
+> >   47  * No kmemleak_lock and object->lock nesting is allowed outside scan_mutex
+> >   48  * regions.
 
-https://github=2Ecom/frank-w/BPI-R2-4=2E14/commits/5=2E17-next-20220225
+lock order in kmemleak is described above.
 
-(just ignore the top 2 commits) i thought i had a size-cells-error, but di=
-d not get them again after reverting this part, seems they are fixed by inc=
-lusion of the sata-common binding
+and DEPT detects two cases as deadlock:
 
-> Gesendet: Mittwoch, 02=2E M=C3=A4rz 2022 um 19:14 Uhr
-> Von: "Rob Herring" <robh@kernel=2Eorg>
-> An: "Frank Wunderlich" <linux@fw-web=2Ede>
+1) object->lock -> other_object->lock
+2) object->lock -> kmemleak_lock, kmemleak_lock -> other_object->lock
 
-> On Tue, Mar 01, 2022 at 04:24:17PM +0100, Frank Wunderlich wrote:
-> > From: Frank Wunderlich <frank-w@public-files=2Ede>
+And in kmemleak case, 1) and 2) is not possible because it must hold
+scan_mutex first.
 
-> > diff --git a/Documentation/devicetree/bindings/ata/ahci-platform=2Eyam=
-l b/Documentation/devicetree/bindings/ata/ahci-platform=2Eyaml
-> > new file mode 100644
-> > index 000000000000=2E=2Ecf67ddfc6afb
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/ata/ahci-platform=2Eyaml
-> > @@ -0,0 +1,162 @@
-> > +# SPDX-License-Identifier: GPL-2=2E0
-> > +%YAML 1=2E2
-> > +---
-> > +$id: http://devicetree=2Eorg/schemas/ata/ahci-platform=2Eyaml#
-> > +$schema: http://devicetree=2Eorg/meta-schemas/core=2Eyaml#
-> > +
-> > +title: AHCI SATA Controller
->=20
-> blank line=2E
+I think the author of kmemleak intended lockdep to treat object->lock
+and other_object->lock as different class, using raw_spin_lock_nested().
 
-done
-=20
-> > +description:
-> > +  SATA nodes are defined to describe on-chip Serial ATA controllers=
-=2E
-> > +  Each SATA controller should have its own node=2E
-> > +
-> > +  It is possible, but not required, to represent each port as a sub-n=
-ode=2E
-> > +  It allows to enable each port independently when dealing with multi=
-ple
-> > +  PHYs=2E
->=20
-> You need a '|' after 'description' if you want to maintain the=20
-> paragraphs=2E
+Am I missing something?
 
-ok added | to all multiline descriptions
+Thanks.
 
-> > +
-> > +maintainers:
-> > +  - Hans de Goede <hdegoede@redhat=2Ecom>
-> > +  - Jens Axboe <axboe@kernel=2Edk>
-> > +
-> > +allOf:
-> > +- $ref: "sata-common=2Eyaml#"
-> > +
-> > +properties:
-> > +  compatible:
-> > +    oneOf:
-> > +      - items:
-> > +        - enum:
-> > +          - brcm,iproc-ahci
-> > +          - marvell,armada-8k-ahci
-> > +          - marvell,berlin2q-ahci
-> > +        - const: generic-ahci
-> > +      - enum:
-> > +        - brcm,iproc-ahci
-> > +        - cavium,octeon-7130-ahci
-> > +        - hisilicon,hisi-ahci
-> > +        - ibm,476gtr-ahci
-> > +        - marvell,armada-3700-ahci
-> > +        - marvell,armada-380-ahci
-> > +        - snps,dwc-ahci
-> > +        - snps,spear-ahci
->=20
-> Install yamllint and run 'make dt_binding_check'=2E It's going to=20
-> complain about the indentation=2E
+>    lock A1 with depth
+>    lock B
+>    lock A2 with depth + 1
+>    lock A3 with depth + 2
+>    (and so on)
+>    ..
+>    unlock A3
+>    unlock A2
+>    unlock B
+>    unlock A1
+> 
+> It's a deadlock. That's why Dept reports this case as a problem. Or am I
+> missing something?
+> 
+> Thanks,
+> Byungchul
+> 
+> > ---------------------------------------------------
+> > context A's detail
+> > ---------------------------------------------------
+> > context A
+> >     [S] __raw_spin_lock_irqsave(&object->lock:0)
+> >     [W] __raw_spin_lock_irqsave(kmemleak_lock:0)
+> >     [E] spin_unlock(&object->lock:0)
+> > 
+> > [S] __raw_spin_lock_irqsave(&object->lock:0):
+> > [<ffffffc00810302c>] scan_gray_list+0x84/0x13c
+> > stacktrace:
+> >       dept_ecxt_enter+0x88/0xf4
+> >       _raw_spin_lock_irqsave+0xf0/0x1c4
+> >       scan_gray_list+0x84/0x13c
+> >       kmemleak_scan+0x2d8/0x54c
+> >       kmemleak_scan_thread+0xac/0xd4
+> >       kthread+0xd4/0xe4
+> >       ret_from_fork+0x10/0x20
+> > 
+> > [W] __raw_spin_lock_irqsave(kmemleak_lock:0):
+> > [<ffffffc008102ebc>] scan_block+0x3c/0x128
+> > stacktrace:
+> >       __dept_wait+0x8c/0xa4
+> >       dept_wait+0x6c/0x88
+> >       _raw_spin_lock_irqsave+0xb8/0x1c4
+> >       scan_block+0x3c/0x128
+> >       scan_gray_list+0xc4/0x13c
+> >       kmemleak_scan+0x2d8/0x54c
+> >       kmemleak_scan_thread+0xac/0xd4
+> >       kthread+0xd4/0xe4
+> >       ret_from_fork+0x10/0x20
+> > 
+> > [E] spin_unlock(&object->lock:0):
+> > [<ffffffc008102ee0>] scan_block+0x60/0x128
+> > 
+> > ---------------------------------------------------
+> > context B's detail
+> > ---------------------------------------------------
+> > context B
+> >     [S] __raw_spin_lock_irqsave(kmemleak_lock:0)
+> >     [W] _raw_spin_lock_nested(&object->lock:0)
+> >     [E] spin_unlock(kmemleak_lock:0)
+> > 
+> > [S] __raw_spin_lock_irqsave(kmemleak_lock:0):
+> > [<ffffffc008102ebc>] scan_block+0x3c/0x128
+> > stacktrace:
+> >       dept_ecxt_enter+0x88/0xf4
+> >       _raw_spin_lock_irqsave+0xf0/0x1c4
+> >       scan_block+0x3c/0x128
+> >       kmemleak_scan+0x19c/0x54c
+> >       kmemleak_scan_thread+0xac/0xd4
+> >       kthread+0xd4/0xe4
+> >       ret_from_fork+0x10/0x20
+> > 
+> > [W] _raw_spin_lock_nested(&object->lock:0):
+> > [<ffffffc008102f34>] scan_block+0xb4/0x128
+> > stacktrace:
+> >       dept_wait+0x74/0x88
+> >       _raw_spin_lock_nested+0xa8/0x1b0
+> >       scan_block+0xb4/0x128
+> >       kmemleak_scan+0x19c/0x54c
+> >       kmemleak_scan_thread+0xac/0xd4
+> >       kthread+0xd4/0xe4
+> >       ret_from_fork+0x10/0x20
+> > [E] spin_unlock(kmemleak_lock:0):
+> > [<ffffffc008102ee0>] scan_block+0x60/0x128
+> > stacktrace:
+> >       dept_event+0x7c/0xfc
+> >       _raw_spin_unlock_irqrestore+0x8c/0x120
+> >       scan_block+0x60/0x128
+> >       kmemleak_scan+0x19c/0x54c
+> >       kmemleak_scan_thread+0xac/0xd4
+> >       kthread+0xd4/0xe4
+> >       ret_from_fork+0x10/0x20
+> > ---------------------------------------------------
+> > information that might be helpful
+> > ---------------------------------------------------
+> > CPU: 1 PID: 38 Comm: kmemleak Tainted: G        W         5.17.0-rc1+ #1
+> > Hardware name: linux,dummy-virt (DT)
+> > Call trace:
+> >  dump_backtrace.part.0+0x9c/0xc4
+> >  show_stack+0x14/0x28
+> >  dump_stack_lvl+0x9c/0xcc
+> >  dump_stack+0x14/0x2c
+> >  print_circle+0x2d4/0x438
+> >  cb_check_dl+0x6c/0x70
+> >  bfs+0xc0/0x168
+> >  add_dep+0x88/0x11c
+> >  add_wait+0x2d0/0x2dc
+> >  __dept_wait+0x8c/0xa4
+> >  dept_wait+0x6c/0x88
+> >  _raw_spin_lock_irqsave+0xb8/0x1c4
+> >  scan_block+0x3c/0x128
+> >  scan_gray_list+0xc4/0x13c
+> >  kmemleak_scan+0x2d8/0x54c
+> >  kmemleak_scan_thread+0xac/0xd4
+> >  kthread+0xd4/0xe4
+> >  ret_from_fork+0x10/0x20
+> > 
+> > > ===================================================
+> > > DEPT: Circular dependency has been detected.
+> > > 5.17.0-rc1+ #1 Tainted: G        W
+> > > ---------------------------------------------------
+> > > summary
+> > > ---------------------------------------------------
+> > > *** AA DEADLOCK ***
+> > > 
+> > > context A
+> > >     [S] __raw_spin_lock_irqsave(&object->lock:0)
+> > >     [W] _raw_spin_lock_nested(&object->lock:0)
+> > >     [E] spin_unlock(&object->lock:0)
+> > > 
+> > > [S]: start of the event context
+> > > [W]: the wait blocked
+> > > [E]: the event not reachable
+> > > ---------------------------------------------------
+> > > context A's detail
+> > > ---------------------------------------------------
+> > > context A
+> > >     [S] __raw_spin_lock_irqsave(&object->lock:0)
+> > >     [W] _raw_spin_lock_nested(&object->lock:0)
+> > >     [E] spin_unlock(&object->lock:0)
+> > > 
+> > > [S] __raw_spin_lock_irqsave(&object->lock:0):
+> > > [<ffffffc00810302c>] scan_gray_list+0x84/0x13c
+> > > stacktrace:
+> > >       dept_ecxt_enter+0x88/0xf4
+> > >       _raw_spin_lock_irqsave+0xf0/0x1c4
+> > >       scan_gray_list+0x84/0x13c
+> > >       kmemleak_scan+0x2d8/0x54c
+> > >       kmemleak_scan_thread+0xac/0xd4
+> > >       kthread+0xd4/0xe4
+> > >       ret_from_fork+0x10/0x20
+> > > 
+> > > [E] spin_unlock(&object->lock:0):
+> > > [<ffffffc008102ee0>] scan_block+0x60/0x128
+> > > ---------------------------------------------------
+> > > information that might be helpful
+> > > ---------------------------------------------------
+> > > CPU: 1 PID: 38 Comm: kmemleak Tainted: G        W         5.17.0-rc1+ #1
+> > > Hardware name: linux,dummy-virt (DT)
+> > > Call trace:
+> > >  dump_backtrace.part.0+0x9c/0xc4
+> > >  show_stack+0x14/0x28
+> > >  dump_stack_lvl+0x9c/0xcc
+> > >  dump_stack+0x14/0x2c
+> > >  print_circle+0x2d4/0x438
+> > >  cb_check_dl+0x44/0x70
+> > >  bfs+0x60/0x168
+> > >  add_dep+0x88/0x11c
+> > >  add_wait+0x2d0/0x2dc
+> > >  __dept_wait+0x8c/0xa4
+> > >  dept_wait+0x6c/0x88
+> > >  _raw_spin_lock_nested+0xa8/0x1b0
+> > >  scan_block+0xb4/0x128
+> > >  scan_gray_list+0xc4/0x13c
+> > >  kmemleak_scan+0x2d8/0x54c
+> > >  kmemleak_scan_thread+0xac/0xd4
+> > >  kthread+0xd4/0xe4
+> > >  ret_from_fork+0x10/0x20
+> > >
+> > [...]
+> > 
+> > --
+> > Thank you, You are awesome!
+> > Hyeonggon :-)
 
-you're right, i had no yamllint installed, so i have not seen these indent=
-ion errors
-
-> > +  ahci-supply:
-> > +    description:
-> > +      regulator for AHCI controller
-> > +
-> > +  clock-names:
->=20
-> Group with 'clocks'
-
-ok, already done in my tree because of krzysztofs comment
-
-> > +  ports-implemented:
-> > +    $ref: '/schemas/types=2Eyaml#/definitions/uint32'
-> > +    description:
-> > +      Mask that indicates which ports that the HBA supports
-> > +      are available for software to use=2E Useful if PORTS_IMPL
-> > +      is not programmed by the BIOS, which is true with
-> > +      some embedded SoCs=2E
-> > +    maxItems: 1
->=20
-> A uint32 is only ever 1 item=2E Drop=2E
->=20
-> IIRC, isn't the max here 0xff? Add constraints=2E
-
-i've found it only set to 0x1 so i have currently set the maximum to 0x1, =
-is this ok?
-If some higher value is needed binding needs to be touched=2E=2E=2E
-
-> > +
-> > +  reg-names:
-> > +    maxItems: 1
->=20
-> Group with 'reg'=2E
-
-ok
-
-> > +patternProperties:
-> > +  "^sata-port@[0-9a-f]+$":
-> > +    type: object
->=20
->        additionalProperties: false
-
-ok added to my tree
-
-and needed to add phy-names because some marvell boards using this
-
-arch/arm64/boot/dts/marvell/armada-8040-mcbin-singleshot=2Edt=2Eyaml: sata=
-@540000: sata-port@1: 'phy-names' does not match any of the regexes: 'pinct=
-rl-[0-9]+'
-
-now i have only the marvell-errors about incomplete sata-port subnode (wit=
-hout phy/target-supply) like i mention in the patch=2E=2E=2Ehow to proceed =
-with this?
-
-regards Frank
-
-
+-- 
+Thank you, You are awesome!
+Hyeonggon :-)
