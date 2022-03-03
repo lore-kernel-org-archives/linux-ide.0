@@ -2,74 +2,437 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 414B0C433FE
-	for <linux-ide@archiver.kernel.org>; Thu,  3 Mar 2022 10:06:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AAACC433FE
+	for <linux-ide@archiver.kernel.org>; Thu,  3 Mar 2022 11:03:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230136AbiCCKHK (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 3 Mar 2022 05:07:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53012 "EHLO
+        id S232613AbiCCLEf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 3 Mar 2022 06:04:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44406 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229833AbiCCKHK (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 3 Mar 2022 05:07:10 -0500
-Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7EC9B1795DE;
-        Thu,  3 Mar 2022 02:06:24 -0800 (PST)
-Received: from handsomejack.molgen.mpg.de (handsomejack.molgen.mpg.de [141.14.17.248])
-        by mx.molgen.mpg.de (Postfix) with ESMTP id 1F11261EA192A;
-        Thu,  3 Mar 2022 11:06:23 +0100 (CET)
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
+        with ESMTP id S232605AbiCCLEa (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 3 Mar 2022 06:04:30 -0500
+Received: from laurent.telenet-ops.be (laurent.telenet-ops.be [IPv6:2a02:1800:110:4::f00:19])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30B64154D09
+        for <linux-ide@vger.kernel.org>; Thu,  3 Mar 2022 03:03:42 -0800 (PST)
+Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed40:8cac:a75c:6aef:8a67])
+        by laurent.telenet-ops.be with bizsmtp
+        id 1n3d2700B36NB4j01n3dxR; Thu, 03 Mar 2022 12:03:40 +0100
+Received: from rox.of.borg ([192.168.97.57])
+        by ramsan.of.borg with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.93)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1nPjBk-002XIk-1J; Thu, 03 Mar 2022 12:00:04 +0100
+Received: from geert by rox.of.borg with local (Exim 4.93)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1nPgwu-0081bP-8i; Thu, 03 Mar 2022 09:36:36 +0100
+From:   Geert Uytterhoeven <geert+renesas@glider.be>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Paul Menzel <pmenzel@molgen.mpg.de>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Mario Limonciello <mario.limonciello@amd.com>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] [RFC] ata: ahci: Skip debounce delay for AMD FCH SATA Controller
-Date:   Thu,  3 Mar 2022 11:04:53 +0100
-Message-Id: <20220303100453.30018-2-pmenzel@molgen.mpg.de>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20220303100453.30018-1-pmenzel@molgen.mpg.de>
-References: <20220303100453.30018-1-pmenzel@molgen.mpg.de>
+Cc:     Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>,
+        Patrice Chotard <patrice.chotard@foss.st.com>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Florian Fainelli <f.fainelli@gmail.com>
+Subject: [PATCH v2] ata: Drop commas after OF match table sentinels
+Date:   Thu,  3 Mar 2022 09:36:35 +0100
+Message-Id: <52970494111d9287cc8355e0f2e3de474361c75f.1646296493.git.geert+renesas@glider.be>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-AMD devices with the FCH SATA Controller 0x1022:0x7901 do not need the
-default debounce delay of 200 ms.
+It does not make sense to have a comma after a sentinel, as any new
+elements must be added before the sentinel.
 
-    07:00.2 SATA controller [0106]: Advanced Micro Devices, Inc. [AMD] FCH SATA Controller [AHCI mode] [1022:7901] (rev 51)
+Add comments to clarify the purpose of the empty elements.
+Rewrap entries to a single line to have a consistent style.
 
-So skip it, by mapping it to the board with no debounce delay.
-
-Tested on the MSI MS-7A37/B350M MORTAR (MS-7A37).
-
-To-do: Add test details and results.
-
-Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
-Cc: Hans de Goede <hdegoede@redhat.com>
-Cc: Mario Limonciello <mario.limonciello@amd.com>
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Acked-by: Florian Fainelli <f.fainelli@gmail.com> [ahci_brcm]
 ---
-I am travelling so could not test this exact patch just yet, but I ran
-something similar for several weeks already. It’d be great, if the
-desktop and AMD folks could also give this a try.
+v2:
+  - Add Reviewed-by, Acked-by,
+  - Rewrap entries as requested by Damien.
+---
+ drivers/ata/ahci_brcm.c        |  2 +-
+ drivers/ata/ahci_ceva.c        |  2 +-
+ drivers/ata/ahci_da850.c       |  2 +-
+ drivers/ata/ahci_dm816.c       |  2 +-
+ drivers/ata/ahci_imx.c         |  2 +-
+ drivers/ata/ahci_mtk.c         |  2 +-
+ drivers/ata/ahci_mvebu.c       |  2 +-
+ drivers/ata/ahci_octeon.c      |  2 +-
+ drivers/ata/ahci_platform.c    |  2 +-
+ drivers/ata/ahci_qoriq.c       |  2 +-
+ drivers/ata/ahci_st.c          |  2 +-
+ drivers/ata/ahci_sunxi.c       |  2 +-
+ drivers/ata/ahci_xgene.c       |  2 +-
+ drivers/ata/pata_ftide010.c    |  6 ++----
+ drivers/ata/pata_ixp4xx_cf.c   |  2 +-
+ drivers/ata/pata_macio.c       | 18 +++++-------------
+ drivers/ata/pata_mpc52xx.c     |  2 +-
+ drivers/ata/pata_octeon_cf.c   |  6 ++----
+ drivers/ata/pata_of_platform.c |  2 +-
+ drivers/ata/sata_fsl.c         | 10 +++-------
+ drivers/ata/sata_gemini.c      |  6 ++----
+ drivers/ata/sata_highbank.c    |  2 +-
+ drivers/ata/sata_mv.c          |  2 +-
+ drivers/ata/sata_rcar.c        |  2 +-
+ 24 files changed, 33 insertions(+), 51 deletions(-)
 
- drivers/ata/ahci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 0fc09b86a559..44b79fe43d13 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -456,7 +456,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(AMD, 0x7800), board_ahci }, /* AMD Hudson-2 */
- 	{ PCI_VDEVICE(AMD, 0x7801), board_ahci_no_debounce_delay }, /* AMD Hudson-2 (AHCI mode) */
- 	{ PCI_VDEVICE(AMD, 0x7900), board_ahci }, /* AMD CZ */
--	{ PCI_VDEVICE(AMD, 0x7901), board_ahci_low_power }, /* AMD Green Sardine */
-+	{ PCI_VDEVICE(AMD, 0x7901), board_ahci_low_power_no_debounce_delay }, /* AMD Green Sardine */
- 	/* AMD is using RAID class only for ahci controllers */
- 	{ PCI_VENDOR_ID_AMD, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
- 	  PCI_CLASS_STORAGE_RAID << 8, 0xffffff, board_ahci },
+diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+index 64dd8aa397d5276b..ab8552b1ff2a14ad 100644
+--- a/drivers/ata/ahci_brcm.c
++++ b/drivers/ata/ahci_brcm.c
+@@ -427,7 +427,7 @@ static const struct of_device_id ahci_of_match[] = {
+ 	{.compatible = "brcm,bcm63138-ahci", .data = (void *)BRCM_SATA_BCM7445},
+ 	{.compatible = "brcm,bcm-nsp-ahci", .data = (void *)BRCM_SATA_NSP},
+ 	{.compatible = "brcm,bcm7216-ahci", .data = (void *)BRCM_SATA_BCM7216},
+-	{},
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
+ 
+diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
+index acf59f51b3569d71..cb24ecf36fafe040 100644
+--- a/drivers/ata/ahci_ceva.c
++++ b/drivers/ata/ahci_ceva.c
+@@ -363,7 +363,7 @@ static SIMPLE_DEV_PM_OPS(ahci_ceva_pm_ops, ceva_ahci_suspend, ceva_ahci_resume);
+ 
+ static const struct of_device_id ceva_ahci_of_match[] = {
+ 	{ .compatible = "ceva,ahci-1v84" },
+-	{},
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, ceva_ahci_of_match);
+ 
+diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
+index 0e82766007128e72..052c28e250aa8d96 100644
+--- a/drivers/ata/ahci_da850.c
++++ b/drivers/ata/ahci_da850.c
+@@ -241,7 +241,7 @@ static SIMPLE_DEV_PM_OPS(ahci_da850_pm_ops, ahci_platform_suspend,
+ 
+ static const struct of_device_id ahci_da850_of_match[] = {
+ 	{ .compatible = "ti,da850-ahci", },
+-	{ },
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, ahci_da850_of_match);
+ 
+diff --git a/drivers/ata/ahci_dm816.c b/drivers/ata/ahci_dm816.c
+index 8bec4104167142c5..8a92112dcd59080a 100644
+--- a/drivers/ata/ahci_dm816.c
++++ b/drivers/ata/ahci_dm816.c
+@@ -176,7 +176,7 @@ static SIMPLE_DEV_PM_OPS(ahci_dm816_pm_ops,
+ 
+ static const struct of_device_id ahci_dm816_of_match[] = {
+ 	{ .compatible = "ti,dm816-ahci", },
+-	{ },
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, ahci_dm816_of_match);
+ 
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index 388baf528fa81cab..79aa9f2853129f6e 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -811,7 +811,7 @@ static const struct of_device_id imx_ahci_of_match[] = {
+ 	{ .compatible = "fsl,imx6q-ahci", .data = (void *)AHCI_IMX6Q },
+ 	{ .compatible = "fsl,imx6qp-ahci", .data = (void *)AHCI_IMX6QP },
+ 	{ .compatible = "fsl,imx8qm-ahci", .data = (void *)AHCI_IMX8QM },
+-	{},
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, imx_ahci_of_match);
+ 
+diff --git a/drivers/ata/ahci_mtk.c b/drivers/ata/ahci_mtk.c
+index d9b08ae7c3b22104..1f6c85fde9830ac1 100644
+--- a/drivers/ata/ahci_mtk.c
++++ b/drivers/ata/ahci_mtk.c
+@@ -169,7 +169,7 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_suspend,
+ 
+ static const struct of_device_id ahci_of_match[] = {
+ 	{ .compatible = "mediatek,mtk-ahci", },
+-	{},
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
+ 
+diff --git a/drivers/ata/ahci_mvebu.c b/drivers/ata/ahci_mvebu.c
+index 3ad46d26d9d51790..991413a272e608a2 100644
+--- a/drivers/ata/ahci_mvebu.c
++++ b/drivers/ata/ahci_mvebu.c
+@@ -239,7 +239,7 @@ static const struct of_device_id ahci_mvebu_of_match[] = {
+ 		.compatible = "marvell,armada-3700-ahci",
+ 		.data = &ahci_mvebu_armada_3700_plat_data,
+ 	},
+-	{ },
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, ahci_mvebu_of_match);
+ 
+diff --git a/drivers/ata/ahci_octeon.c b/drivers/ata/ahci_octeon.c
+index 5a44e089c6bb6ae2..b9460b91288f772d 100644
+--- a/drivers/ata/ahci_octeon.c
++++ b/drivers/ata/ahci_octeon.c
+@@ -80,7 +80,7 @@ static int ahci_octeon_remove(struct platform_device *pdev)
+ 
+ static const struct of_device_id octeon_ahci_match[] = {
+ 	{ .compatible = "cavium,octeon-7130-sata-uctl", },
+-	{},
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, octeon_ahci_match);
+ 
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 3aab2e3d57f3373a..28a8de5b48b979c9 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -88,7 +88,7 @@ static const struct of_device_id ahci_of_match[] = {
+ 	{ .compatible = "snps,dwc-ahci", },
+ 	{ .compatible = "hisilicon,hisi-ahci", },
+ 	{ .compatible = "cavium,octeon-7130-ahci", },
+-	{},
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
+ 
+diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
+index bf5b388bd4e0db9b..dd612d7963159118 100644
+--- a/drivers/ata/ahci_qoriq.c
++++ b/drivers/ata/ahci_qoriq.c
+@@ -77,7 +77,7 @@ static const struct of_device_id ahci_qoriq_of_match[] = {
+ 	{ .compatible = "fsl,ls1088a-ahci", .data = (void *)AHCI_LS1088A},
+ 	{ .compatible = "fsl,ls2088a-ahci", .data = (void *)AHCI_LS2088A},
+ 	{ .compatible = "fsl,lx2160a-ahci", .data = (void *)AHCI_LX2160A},
+-	{},
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, ahci_qoriq_of_match);
+ 
+diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
+index c268264c2129c52a..7526653c843b3226 100644
+--- a/drivers/ata/ahci_st.c
++++ b/drivers/ata/ahci_st.c
+@@ -232,7 +232,7 @@ static SIMPLE_DEV_PM_OPS(st_ahci_pm_ops, st_ahci_suspend, st_ahci_resume);
+ 
+ static const struct of_device_id st_ahci_match[] = {
+ 	{ .compatible = "st,ahci", },
+-	{},
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, st_ahci_match);
+ 
+diff --git a/drivers/ata/ahci_sunxi.c b/drivers/ata/ahci_sunxi.c
+index 56b695136977ab72..c7273c1cb0c73b9b 100644
+--- a/drivers/ata/ahci_sunxi.c
++++ b/drivers/ata/ahci_sunxi.c
+@@ -286,7 +286,7 @@ static SIMPLE_DEV_PM_OPS(ahci_sunxi_pm_ops, ahci_platform_suspend,
+ static const struct of_device_id ahci_sunxi_of_match[] = {
+ 	{ .compatible = "allwinner,sun4i-a10-ahci", },
+ 	{ .compatible = "allwinner,sun8i-r40-ahci", },
+-	{ },
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, ahci_sunxi_of_match);
+ 
+diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+index 8e206379d699f080..d205896f66cfb228 100644
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -726,7 +726,7 @@ MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
+ static const struct of_device_id xgene_ahci_of_match[] = {
+ 	{.compatible = "apm,xgene-ahci", .data = (void *) XGENE_AHCI_V1},
+ 	{.compatible = "apm,xgene-ahci-v2", .data = (void *) XGENE_AHCI_V2},
+-	{},
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, xgene_ahci_of_match);
+ 
+diff --git a/drivers/ata/pata_ftide010.c b/drivers/ata/pata_ftide010.c
+index 34cb104f6b43e5cf..2e35505b683c7649 100644
+--- a/drivers/ata/pata_ftide010.c
++++ b/drivers/ata/pata_ftide010.c
+@@ -554,10 +554,8 @@ static int pata_ftide010_remove(struct platform_device *pdev)
+ }
+ 
+ static const struct of_device_id pata_ftide010_of_match[] = {
+-	{
+-		.compatible = "faraday,ftide010",
+-	},
+-	{},
++	{ .compatible = "faraday,ftide010", },
++	{ /* sentinel */ }
+ };
+ 
+ static struct platform_driver pata_ftide010_driver = {
+diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
+index 17b557c91e1c78fc..e225913a619d8414 100644
+--- a/drivers/ata/pata_ixp4xx_cf.c
++++ b/drivers/ata/pata_ixp4xx_cf.c
+@@ -293,7 +293,7 @@ static int ixp4xx_pata_probe(struct platform_device *pdev)
+ 
+ static const struct of_device_id ixp4xx_pata_of_match[] = {
+ 	{ .compatible = "intel,ixp4xx-compact-flash", },
+-	{ },
++	{ /* sentinel */ }
+ };
+ 
+ static struct platform_driver ixp4xx_pata_platform_driver = {
+diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+index 16e8aa184a75793f..b986908eaebc4977 100644
+--- a/drivers/ata/pata_macio.c
++++ b/drivers/ata/pata_macio.c
+@@ -1333,19 +1333,11 @@ static int pata_macio_pci_resume(struct pci_dev *pdev)
+ 
+ static const struct of_device_id pata_macio_match[] =
+ {
+-	{
+-	.name 		= "IDE",
+-	},
+-	{
+-	.name 		= "ATA",
+-	},
+-	{
+-	.type		= "ide",
+-	},
+-	{
+-	.type		= "ata",
+-	},
+-	{},
++	{ .name = "IDE", },
++	{ .name = "ATA", },
++	{ .type = "ide", },
++	{ .type = "ata", },
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, pata_macio_match);
+ 
+diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
+index f1d352d5f128537a..bc9d9df3b5aced64 100644
+--- a/drivers/ata/pata_mpc52xx.c
++++ b/drivers/ata/pata_mpc52xx.c
+@@ -849,7 +849,7 @@ mpc52xx_ata_resume(struct platform_device *op)
+ static const struct of_device_id mpc52xx_ata_of_match[] = {
+ 	{ .compatible = "fsl,mpc5200-ata", },
+ 	{ .compatible = "mpc5200-ata", },
+-	{},
++	{ /* sentinel */ }
+ };
+ 
+ 
+diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
+index 05c2ab3757568c62..ab264a3a57b0243a 100644
+--- a/drivers/ata/pata_octeon_cf.c
++++ b/drivers/ata/pata_octeon_cf.c
+@@ -1006,10 +1006,8 @@ static void octeon_cf_shutdown(struct device *dev)
+ }
+ 
+ static const struct of_device_id octeon_cf_match[] = {
+-	{
+-		.compatible = "cavium,ebt3000-compact-flash",
+-	},
+-	{},
++	{ .compatible = "cavium,ebt3000-compact-flash", },
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, octeon_cf_match);
+ 
+diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
+index c3a40b717dcdcc2a..ac5a633c00a57ac1 100644
+--- a/drivers/ata/pata_of_platform.c
++++ b/drivers/ata/pata_of_platform.c
+@@ -79,7 +79,7 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
+ 
+ static const struct of_device_id pata_of_platform_match[] = {
+ 	{ .compatible = "ata-generic", },
+-	{ },
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, pata_of_platform_match);
+ 
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index 556034a15430461f..9513f22d64749199 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -1577,13 +1577,9 @@ static int sata_fsl_resume(struct platform_device *op)
+ #endif
+ 
+ static const struct of_device_id fsl_sata_match[] = {
+-	{
+-		.compatible = "fsl,pq-sata",
+-	},
+-	{
+-		.compatible = "fsl,pq-sata-v2",
+-	},
+-	{},
++	{ .compatible = "fsl,pq-sata", },
++	{ .compatible = "fsl,pq-sata-v2", },
++	{ /* sentinel */ }
+ };
+ 
+ MODULE_DEVICE_TABLE(of, fsl_sata_match);
+diff --git a/drivers/ata/sata_gemini.c b/drivers/ata/sata_gemini.c
+index 440a63de20d01a07..00e1c7941d0ea0dd 100644
+--- a/drivers/ata/sata_gemini.c
++++ b/drivers/ata/sata_gemini.c
+@@ -419,10 +419,8 @@ static int gemini_sata_remove(struct platform_device *pdev)
+ }
+ 
+ static const struct of_device_id gemini_sata_of_match[] = {
+-	{
+-		.compatible = "cortina,gemini-sata-bridge",
+-	},
+-	{},
++	{ .compatible = "cortina,gemini-sata-bridge", },
++	{ /* sentinel */ }
+ };
+ 
+ static struct platform_driver gemini_sata_driver = {
+diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
+index b29d3f1d64b03317..cd375e4df9644e33 100644
+--- a/drivers/ata/sata_highbank.c
++++ b/drivers/ata/sata_highbank.c
+@@ -444,7 +444,7 @@ static struct scsi_host_template ahci_highbank_platform_sht = {
+ 
+ static const struct of_device_id ahci_of_match[] = {
+ 	{ .compatible = "calxeda,hb-ahci" },
+-	{},
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
+ 
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 53446b997740d5fd..13d92b71e6659cda 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -4277,7 +4277,7 @@ static int mv_platform_resume(struct platform_device *pdev)
+ static const struct of_device_id mv_sata_dt_ids[] = {
+ 	{ .compatible = "marvell,armada-370-sata", },
+ 	{ .compatible = "marvell,orion-sata", },
+-	{},
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, mv_sata_dt_ids);
+ #endif
+diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+index 3d96b6faa3f0e1c6..1483d3efeb7e220e 100644
+--- a/drivers/ata/sata_rcar.c
++++ b/drivers/ata/sata_rcar.c
+@@ -857,7 +857,7 @@ static const struct of_device_id sata_rcar_match[] = {
+ 		.compatible = "renesas,rcar-gen3-sata",
+ 		.data = (void *)RCAR_GEN3_SATA
+ 	},
+-	{ },
++	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, sata_rcar_match);
+ 
 -- 
-2.30.2
+2.25.1
 
