@@ -2,158 +2,285 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 256C0C433EF
-	for <linux-ide@archiver.kernel.org>; Thu,  3 Mar 2022 09:52:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B726DC433FE
+	for <linux-ide@archiver.kernel.org>; Thu,  3 Mar 2022 09:55:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230480AbiCCJwz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 3 Mar 2022 04:52:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37494 "EHLO
+        id S231744AbiCCJzo (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 3 Mar 2022 04:55:44 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48158 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230101AbiCCJwy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 3 Mar 2022 04:52:54 -0500
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 66426179241
-        for <linux-ide@vger.kernel.org>; Thu,  3 Mar 2022 01:52:08 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1646301127; x=1677837127;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=q8qxz42HaO+JR55NT5n/z+nUeTPKq/2B9ARU+jmiFTI=;
-  b=CobDq3qOJ65Yyxqh4bNrMyVR7InYIvgRK3PJCDqs80JsDyyJs1MHXy8x
-   WTbQoxecYq8OqiqGzrvgpE0MA7vXLLpA1iv/bfLusjGImbd8z35dga1Mn
-   xxAM3AiYVTssk3L7J8tMnmaiTUWrqj28myMylybd3iejexgNElMnQCSio
-   cHtg9maDAIjFCwija8Yuh0Co6SoODJQDAskw6HPLgmoshXqTfjoXsqsme
-   MSO73naF4XKyjiE2iUIQkO1umBjKf2iZBYYA8SP4ls5/FZ68cr9bz/YkF
-   +QuOAedjIVVymW7B2EOnHQZhKDJue4L//DBUIDltET4SaqGfpmoq2/4dY
-   w==;
-X-IronPort-AV: E=Sophos;i="5.90,151,1643644800"; 
-   d="scan'208";a="199215163"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 03 Mar 2022 17:52:06 +0800
-IronPort-SDR: YKNiicB7rFfSt5FSr5OyDJDoO8zufaxw4sMhEi+dVKI0uLq3l2YFwHfPaoCk5f3NIvRZzRv/qc
- 1y6vtkPbljf8tr8L3h70yWeZf90guHsLbrqZqKyRn2foAGesRLZYkRP+zitAJ/Hfbw1abxxzEh
- mVzXyiLG5rUSIn5v1wjoVGqicSlVE3mRfjpYTwNei4CAur2eoHWQbrNKWcxDIJGfh3KdGdHQ5A
- zo5gVzVoJr9Dyi34EOPCb8trdpjk8fJHILKXgmObn+xY4OTgstrgr+VjO4tfb/Y4VaQOTaRG67
- hkl/yoXD0pHWiUklelJ8TfyX
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2022 01:23:30 -0800
-IronPort-SDR: OGHPzKreUR9lp1hCOisxbrRolUIFNzM9tsravAfS3Mlq4stCAO0RTlQBMP6Az8JHfLO8tGMLdG
- uuCwCP63hqD1kQloP4GBnluinwAH2joLmPRPg863r6d/PSKjg/HV8274cIQbiyza5kT5N59uVk
- Tuo+ktsfsfxxXbuHpCCBrtM5jxPYz8MttgARaS5EaHQP1Rh8AEf7+swyNRiA/PTJrVRAREjz5y
- A1vmhGtF5VJGvD9KTD1xNqIjlVJ6ww8EvzTsRFEDZ2uDiYW4E8jiVwYGsCY6k3p3Ofo7HJTGHh
- 5Kk=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Mar 2022 01:52:08 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4K8R9329flz1SVnx
-        for <linux-ide@vger.kernel.org>; Thu,  3 Mar 2022 01:52:07 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1646301126; x=1648893127; bh=q8qxz42HaO+JR55NT5n/z+nUeTPKq/2B9AR
-        U+jmiFTI=; b=V95OPQWNQJcum+7QVTyr3LqR0oYpKPCX0pH0GMuL9NEH5Y37bTf
-        yQ4BPBql5jyCK8tNMqh8nWSM0J9qDzhs9cCZu65O0N3R5biJIA7eq2x2skRlHMFx
-        6xXI4Lnc5IHpdfvw5Tc+ddFTrOE7DVmG2iArozgwq/dSCMaXWF4F+jUFKcFeruZa
-        MRkFiDujZkLJ0cDnB9BnUtFBM1bvQbLy2eXQ597ktlmXPEWEzf3zxSbhjQx9S4E+
-        M/wbvMKdpaMW5vUR0m2kx339uA3Dzd1DtM2MowSt48aHxZbyPNHA0wzppNJkiOe/
-        uYITJcr7NNTqArVrSTscAW4FF21QFGVDVSA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id MRXGKHw_1HWk for <linux-ide@vger.kernel.org>;
-        Thu,  3 Mar 2022 01:52:06 -0800 (PST)
-Received: from [10.225.33.67] (unknown [10.225.33.67])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4K8R914Prlz1Rvlx;
-        Thu,  3 Mar 2022 01:52:05 -0800 (PST)
-Message-ID: <3a8c29c7-515f-6e0e-323c-b2b00a9f9d8c@opensource.wdc.com>
-Date:   Thu, 3 Mar 2022 11:52:02 +0200
+        with ESMTP id S231693AbiCCJzn (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 3 Mar 2022 04:55:43 -0500
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.220.29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 197F015DB21;
+        Thu,  3 Mar 2022 01:54:58 -0800 (PST)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out2.suse.de (Postfix) with ESMTP id C67C71F37E;
+        Thu,  3 Mar 2022 09:54:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.cz; s=susede2_rsa;
+        t=1646301296; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=KiLPRDgQGgCu2x95n4UY9Dv1EwVeQLnpZJzpbHdZ9dI=;
+        b=1mPxOqNUPjUuRYvM1Jpo88uvj7mHeU0BtX8fI9JJJRyDkVeAKsX335KbaBabw8d3WKe9mU
+        HuHiRKWaMepp0G+heG7qzF8nwvdSA7m1dmz7EoPucjPZWYPll95EJxKZn0hqiwT3u8aCta
+        gH+QFjpVR9+bskkk3c37kR52I+BOsWA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.cz;
+        s=susede2_ed25519; t=1646301296;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=KiLPRDgQGgCu2x95n4UY9Dv1EwVeQLnpZJzpbHdZ9dI=;
+        b=eSm/KdUai1TPHgQyeg2sJYQkesKT0CqEB9zHNh7ZllJwzw7iMPjlHqVf2VPb2/UGEWSCsY
+        8Lo2iLDGhVjto/Bw==
+Received: from quack3.suse.cz (unknown [10.163.28.18])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay2.suse.de (Postfix) with ESMTPS id 5EF4CA3B81;
+        Thu,  3 Mar 2022 09:54:52 +0000 (UTC)
+Received: by quack3.suse.cz (Postfix, from userid 1000)
+        id 5F3F6A0604; Thu,  3 Mar 2022 10:54:56 +0100 (CET)
+Date:   Thu, 3 Mar 2022 10:54:56 +0100
+From:   Jan Kara <jack@suse.cz>
+To:     Byungchul Park <byungchul.park@lge.com>
+Cc:     Jan Kara <jack@suse.cz>, torvalds@linux-foundation.org,
+        damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
+        adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
+        mingo@redhat.com, linux-kernel@vger.kernel.org,
+        peterz@infradead.org, will@kernel.org, tglx@linutronix.de,
+        rostedt@goodmis.org, joel@joelfernandes.org, sashal@kernel.org,
+        daniel.vetter@ffwll.ch, chris@chris-wilson.co.uk,
+        duyuyang@gmail.com, johannes.berg@intel.com, tj@kernel.org,
+        tytso@mit.edu, willy@infradead.org, david@fromorbit.com,
+        amir73il@gmail.com, bfields@fieldses.org,
+        gregkh@linuxfoundation.org, kernel-team@lge.com,
+        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
+        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
+        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
+        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
+        ngupta@vflare.org, linux-block@vger.kernel.org, axboe@kernel.dk,
+        paolo.valente@linaro.org, josef@toxicpanda.com,
+        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
+        jack@suse.com, jlayton@kernel.org, dan.j.williams@intel.com,
+        hch@infradead.org, djwong@kernel.org,
+        dri-devel@lists.freedesktop.org, airlied@linux.ie,
+        rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
+        hamohammed.sa@gmail.com
+Subject: Re: Report 2 in ext4 and journal based on v5.17-rc1
+Message-ID: <20220303095456.kym32pxshwryescx@quack3.lan>
+References: <1645096204-31670-1-git-send-email-byungchul.park@lge.com>
+ <1645096204-31670-2-git-send-email-byungchul.park@lge.com>
+ <20220221190204.q675gtsb6qhylywa@quack3.lan>
+ <20220223003534.GA26277@X58A-UD3R>
+ <20220223144859.na2gjgl5efgw5zhn@quack3.lan>
+ <20220224011102.GA29726@X58A-UD3R>
+ <20220224102239.n7nzyyekuacgpnzg@quack3.lan>
+ <20220228092826.GA5201@X58A-UD3R>
+ <20220228101444.6frl63dn5vmgycbp@quack3.lan>
+ <20220303010033.GB20752@X58A-UD3R>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.6.1
-Subject: Re: [PATCH v2 2/2] ata: ahci: Protect users from setting policies
- their drives don't support
-Content-Language: en-US
-To:     Mario Limonciello <mario.limonciello@amd.com>
-Cc:     "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>, hdegoede@redhat.com
-References: <20220303034912.3615390-1-mario.limonciello@amd.com>
- <20220303034912.3615390-2-mario.limonciello@amd.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220303034912.3615390-2-mario.limonciello@amd.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220303010033.GB20752@X58A-UD3R>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2022/03/03 5:49, Mario Limonciello wrote:
-> As the default low power policy applies to more chipsets and drives, it's
-> important to make sure that drives actually support the policy that a user
-> selected in their kernel configuration.
+On Thu 03-03-22 10:00:33, Byungchul Park wrote:
+> On Mon, Feb 28, 2022 at 11:14:44AM +0100, Jan Kara wrote:
+> > On Mon 28-02-22 18:28:26, Byungchul Park wrote:
+> > > case 1. Code with an actual circular dependency, but not deadlock.
+> > > 
+> > >    A circular dependency can be broken by a rescue wakeup source e.g.
+> > >    timeout. It's not a deadlock. If it's okay that the contexts
+> > >    participating in the circular dependency and others waiting for the
+> > >    events in the circle are stuck until it gets broken. Otherwise, say,
+> > >    if it's not meant, then it's anyway problematic.
+> > > 
+> > >    1-1. What if we judge this code is problematic?
+> > >    1-2. What if we judge this code is good?
+> > > 
+> > > case 2. Code with an actual circular dependency, and deadlock.
+> > > 
+> > >    There's no other wakeup source than those within the circular
+> > >    dependency. Literally deadlock. It's problematic and critical.
+> > > 
+> > >    2-1. What if we judge this code is problematic?
+> > >    2-2. What if we judge this code is good?
+> > > 
+> > > case 3. Code with no actual circular dependency, and not deadlock.
+> > > 
+> > >    Must be good.
+> > > 
+> > >    3-1. What if we judge this code is problematic?
+> > >    3-2. What if we judge this code is good?
+> > > 
+> > > ---
+> > > 
+> > > I call only 3-1 "false positive" circular dependency. And you call 1-1
+> > > and 3-1 "false positive" deadlock.
+> > > 
+> > > I've been wondering if the kernel guys esp. Linus considers code with
+> > > any circular dependency is problematic or not, even if it won't lead to
+> > > a deadlock, say, case 1. Even though I designed Dept based on what I
+> > > believe is right, of course, I'm willing to change the design according
+> > > to the majority opinion.
+> > > 
+> > > However, I would never allow case 1 if I were the owner of the kernel
+> > > for better stability, even though the code works anyway okay for now.
+> > 
+> > So yes, I call a report for the situation "There is circular dependency but
+> > deadlock is not possible." a false positive. And that is because in my
+> > opinion your definition of circular dependency includes schemes that are
+> > useful and used in the kernel.
+> > 
+> > Your example in case 1 is kind of borderline (I personally would consider
+> > that bug as well) but there are other more valid schemes with multiple
+> > wakeup sources like:
+> > 
+> > We have a queue of work to do Q protected by lock L. Consumer process has
+> > code like:
+> > 
+> > while (1) {
+> > 	lock L
+> > 	prepare_to_wait(work_queued);
+> > 	if (no work) {
+> > 		unlock L
+> > 		sleep
+> > 	} else {
+> > 		unlock L
+> > 		do work
+> > 		wake_up(work_done)
+> > 	}
+> > }
+> > 
+> > AFAIU Dept will create dependency here that 'wakeup work_done' is after
+> > 'wait for work_queued'. Producer has code like:
 > 
-> If the drive doesn't support slumber, don't let the default policies
-> dependent upon slumber (`min_power` or `min_power_with_partial`) affect the
-> disk.
+> First of all, thank you for this good example.
 > 
-> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
-> ---
-> Changes from v1->v2:
-> * Move deeper into codepaths
-> * Reset to MED_POWER rather than ignore
->  drivers/ata/libata-sata.c | 11 +++++++++++
->  1 file changed, 11 insertions(+)
+> > while (1) {
+> > 	lock L
+> > 	prepare_to_wait(work_done)
+> > 	if (too much work queued) {
+> > 		unlock L
+> > 		sleep
+> > 	} else {
+> > 		queue work
+> > 		unlock L
+> > 		wake_up(work_queued)
+> > 	}
+> > }
+> > 
+> > And Dept will create dependency here that 'wakeup work_queued' is after
+> > 'wait for work_done'. And thus we have a trivial cycle in the dependencies
+> > despite the code being perfectly valid and safe.
 > 
-> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-> index 071158c0c44c..0dc03888c62b 100644
-> --- a/drivers/ata/libata-sata.c
-> +++ b/drivers/ata/libata-sata.c
-> @@ -13,6 +13,7 @@
->  #include <scsi/scsi_device.h>
->  #include <linux/libata.h>
->  
-> +#include "ahci.h"
->  #include "libata.h"
->  #include "libata-transport.h"
->  
-> @@ -368,10 +369,20 @@ int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
->  		      bool spm_wakeup)
->  {
->  	struct ata_eh_context *ehc = &link->eh_context;
-> +	struct ata_port *ap = link->ap;
-> +	struct ahci_host_priv *hpriv;
->  	bool woken_up = false;
->  	u32 scontrol;
->  	int rc;
->  
-> +	hpriv = ap->host->private_data;
-> +	if (policy >= ATA_LPM_MIN_POWER_WITH_PARTIAL &&
-> +	  !(hpriv->cap & HOST_CAP_SSC)) {
+> Unfortunately, it's neither perfect nor safe without another wakeup
+> source - rescue wakeup source.
+> 
+>    consumer			producer
+> 
+> 				lock L
+> 				(too much work queued == true)
+> 				unlock L
+> 				--- preempted
+>    lock L
+>    unlock L
+>    do work
+>    lock L
+>    unlock L
+>    do work
+>    ...
+>    (no work == true)
+>    sleep
+> 				--- scheduled in
+> 				sleep
+> 
+> This code leads a deadlock without another wakeup source, say, not safe.
 
-Weird indentation.
+So the scenario you describe above is indeed possible. But the trick is
+that the wakeup from 'consumer' as is doing work will remove 'producer'
+from the wait queue and change the 'producer' process state to
+'TASK_RUNNING'. So when 'producer' calls sleep (in fact schedule()), the
+scheduler will just treat this as another preemption point and the
+'producer' will immediately or soon continue to run. So indeed we can think
+of this as "another wakeup source" but the source is in the CPU scheduler
+itself. This is the standard way how waitqueues are used in the kernel...
 
-> +		dev_warn(ap->host->dev,
-> +			"This drive doesn't support slumber; restting policy to MED_POWER\n");
+> Lastly, just for your information, I need to explain how Dept works a
+> little more for you not to misunderstand Dept.
+> 
+> Assuming the consumer and producer guarantee not to lead a deadlock like
+> the following, Dept won't report it a problem:
+> 
+>    consumer			producer
+> 
+> 				sleep
+>    wakeup work_done
+> 				queue work
+>    sleep
+> 				wakeup work_queued
+>    do work
+> 				sleep
+>    wakeup work_done
+> 				queue work
+>    sleep
+> 				wakeup work_queued
+>    do work
+> 				sleep
+>    ...				...
+> 
+> Dept does not consider all waits preceeding an event but only waits that
+> might lead a deadlock. In this case, Dept works with each region
+> independently.
+> 
+>    consumer			producer
+> 
+> 				sleep <- initiates region 1
+>    --- region 1 starts
+>    ...				...
+>    --- region 1 ends
+>    wakeup work_done
+>    ...				...
+> 				queue work
+>    ...				...
+>    sleep <- initiates region 2
+> 				--- region 2 starts
+>    ...				...
+> 				--- region 2 ends
+> 				wakeup work_queued
+>    ...				...
+>    do work
+>    ...				...
+> 				sleep <- initiates region 3
+>    --- region 3 starts
+>    ...				...
+>    --- region 3 ends
+>    wakeup work_done
+>    ...				...
+> 				queue work
+>    ...				...
+>    sleep <- initiates region 4
+> 				--- region 4 starts
+>    ...				...
+> 				--- region 4 ends
+> 				wakeup work_queued
+>    ...				...
+>    do work
+>    ...				...
+> 
+> That is, Dept does not build dependencies across different regions. So
+> you don't have to worry about unreasonable false positives that much.
+> 
+> Thoughts?
 
-Typo. I would change this to:
+Thanks for explanation! And what exactly defines the 'regions'? When some
+process goes to sleep on some waitqueue, this defines a start of a region
+at the place where all the other processes are at that moment and wakeup of
+the waitqueue is an end of the region?
 
-"This device does not support slumber; defaulting to MED_POWER policy\n"
-
-> +		policy = ATA_LPM_MED_POWER;
-> +	}
-> +
->  	rc = sata_scr_read(link, SCR_CONTROL, &scontrol);
->  	if (rc)
->  		return rc;
-
-
+								Honza
 -- 
-Damien Le Moal
-Western Digital Research
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
