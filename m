@@ -2,520 +2,176 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D8E2C433EF
-	for <linux-ide@archiver.kernel.org>; Thu,  3 Mar 2022 12:38:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C4CCC433EF
+	for <linux-ide@archiver.kernel.org>; Thu,  3 Mar 2022 13:19:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230352AbiCCMjj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 3 Mar 2022 07:39:39 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53474 "EHLO
+        id S231267AbiCCNTz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 3 Mar 2022 08:19:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46392 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229918AbiCCMji (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 3 Mar 2022 07:39:38 -0500
-Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B126B3CFEB;
-        Thu,  3 Mar 2022 04:38:52 -0800 (PST)
-Received: by mail-pj1-x1031.google.com with SMTP id m11-20020a17090a7f8b00b001beef6143a8so4720943pjl.4;
-        Thu, 03 Mar 2022 04:38:52 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=Xw1t8RJEBLs6nNo618ULi5yqJsMgKqz1ONvJ2a5MT3c=;
-        b=BzrkK1hJiQ+JPPG9UrxzPIeXGct5pIgTB7o+w9LPLZpdlhw7yhoWA1GMh5N61uZfF/
-         PncBXmid0UFMAuiub2OnBJ72eeoETL66hxSZhF+f6FXTMhgAP82GWSXHwZEIimpTW2Qq
-         7c61woZrDZKYd5zhfndnPY5TegWp8YItlyVknSXTgeVSZ+T6iyQLaEJqoglIo/hdtHs4
-         Z8HVrCi7NFr6cs8zHgPcouRaNQ7Lab/z+IYkC5z/RIoeNT2FKku0gTGOQnu+pzm7NStv
-         unipj1p2yZj7cPNJekdxtvWRdtz5+OLkobNPxtRBn30IJ2Tc5sJpjX6tA+yZp7pogBRh
-         YbOA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=Xw1t8RJEBLs6nNo618ULi5yqJsMgKqz1ONvJ2a5MT3c=;
-        b=kYlEVtnkbIYMNQ0yUduLD6xlawP03jWEwdRaEIKfdRHp2a8AMQgCmLiBMcESwB0WQE
-         tI6zSQu6tVMvrPSMEGdlCNhg8+N/T2Zi+ZQ+b3YM53H1blykZvl9GOHfmgq2K34SM5CU
-         Kn/GlWjaZIAhhO877qnXuzthrCiPQbhnvbGq9kAOHG5d/oCkyQgv3FHQ3AH/jZqE6wyX
-         g35adIINLxIaxXsCWuNCLnfnImRrYg4Dgm/kGt6seWKf6m6G2bCT9eRWOaO8JJ7F9aJJ
-         iwck+3ghuUb8sEIS+0A3abEcnBF6/oilT3HsYqRkbj1w3T1klubV0FVNJC8Xdnprnwhj
-         Dcrg==
-X-Gm-Message-State: AOAM530m4ySj81c89NGZwihX3W4LQamYaXDeemaDkniwvEzt/a4lJNpP
-        x9ct5W7o/kbVhhK9vzanzV0=
-X-Google-Smtp-Source: ABdhPJz17qOFmFlBrNJNUqYdHV9n7lTWYbm2jjytljRWsyBIk/kiynuY77vwBHskQjfvfh0lM0uI3g==
-X-Received: by 2002:a17:90a:430d:b0:1bc:f340:8096 with SMTP id q13-20020a17090a430d00b001bcf3408096mr5017886pjg.93.1646311131665;
-        Thu, 03 Mar 2022 04:38:51 -0800 (PST)
-Received: from ip-172-31-19-208.ap-northeast-1.compute.internal (ec2-18-181-137-102.ap-northeast-1.compute.amazonaws.com. [18.181.137.102])
-        by smtp.gmail.com with ESMTPSA id d2-20020a056a0010c200b004f102a13040sm2550047pfu.19.2022.03.03.04.38.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 03 Mar 2022 04:38:51 -0800 (PST)
-Date:   Thu, 3 Mar 2022 12:38:39 +0000
-From:   Hyeonggon Yoo <42.hyeyoo@gmail.com>
-To:     Byungchul Park <byungchul.park@lge.com>
-Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
-        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
-        linux-ext4@vger.kernel.org, mingo@redhat.com,
-        linux-kernel@vger.kernel.org, peterz@infradead.org,
-        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
-        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
-        chris@chris-wilson.co.uk, duyuyang@gmail.com,
-        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
-        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
-        bfields@fieldses.org, gregkh@linuxfoundation.org,
-        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
-        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org,
-        vdavydov.dev@gmail.com, sj@kernel.org, jglisse@redhat.com,
-        dennis@kernel.org, cl@linux.com, penberg@kernel.org,
-        rientjes@google.com, vbabka@suse.cz, ngupta@vflare.org,
-        linux-block@vger.kernel.org, paolo.valente@linaro.org,
-        josef@toxicpanda.com, linux-fsdevel@vger.kernel.org,
-        viro@zeniv.linux.org.uk, jack@suse.cz, jack@suse.com,
-        jlayton@kernel.org, dan.j.williams@intel.com, hch@infradead.org,
-        djwong@kernel.org, dri-devel@lists.freedesktop.org,
-        airlied@linux.ie, rodrigosiqueiramelo@gmail.com,
-        melissa.srw@gmail.com, hamohammed.sa@gmail.com,
-        Catalin Marinas <catalin.marinas@arm.com>
-Subject: Re: [PATCH v3 00/21] DEPT(Dependency Tracker)
-Message-ID: <YiC2z2NDbiYd2nEA@ip-172-31-19-208.ap-northeast-1.compute.internal>
-References: <1646042220-28952-1-git-send-email-byungchul.park@lge.com>
- <Yh70VkRkUfwIjPWv@ip-172-31-19-208.ap-northeast-1.compute.internal>
- <Yh74VbNZZt35wHZD@ip-172-31-19-208.ap-northeast-1.compute.internal>
- <20220303001812.GA20752@X58A-UD3R>
- <YiB2SZFzgBEcywgg@ip-172-31-19-208.ap-northeast-1.compute.internal>
- <20220303094824.GA24977@X58A-UD3R>
+        with ESMTP id S231213AbiCCNTy (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 3 Mar 2022 08:19:54 -0500
+Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2075.outbound.protection.outlook.com [40.107.244.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1B3661516A1;
+        Thu,  3 Mar 2022 05:19:08 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=kpChS0nk0M6QCcgwA+iJTQuUeZONnwRl/22yLVwSxJ3QwaMrlSdizsNUHC1TwrK3iTRHDB4ESona5bYY324OTYwRgjsSagX1ZHPklsP9RepdOfWKdIBasHaIvK6o33TTt2P1jHTtBG6NQdlt09QVwXLMBteWLI25AcSfnuqy/csd8SZuqhF8E/1W5wuroD+h0KfWzCmXOYrr8FkdvyRbqL7ChW6uQXKH/6BvridvAccLbCQ6CHvAmLLgQ3W2wLNhnF0uWYubVBhdjLr7fWKx95jBDOS32mMKiHFrzTdCID37GJE9Bl4VK+Cvb9tF76VImRR08/kkgigI4Nn/b8TyTw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=i5Hg0zHrDDckKpVKvdMskDnxA6YySmM100lMIkgC8ro=;
+ b=KkmnV35H0xKSjEsYwn+QP+XY8434MQnLyFnYVHQFhMlHWKBjahmpTJh+7vrc64C3HIVhGGvdyyrB3tZKoPV5slIplBT5RjA5Egieh1p4DZ3Q/IPt+l+K5/QO3Gf+WBkMogzi6yOQ2Hmp65908H1sgS1B7g9xBg+pfiL/sRyIMCrNqoupvAqyBu9269ZZ8efDGvqU4mSVfAyzsXCjlLe9tm8KOvt+DrCX2er4FWfCCbJk0v8j8p/4MCnpsC6r6ixYCWj0kKnj2RWoFE++x6aVLqncyly35stn92Q/nPhRDkKCUYAfW3o2sOswmn05YmRu4KTdaXIcCtgJ8UOjufBOMQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=i5Hg0zHrDDckKpVKvdMskDnxA6YySmM100lMIkgC8ro=;
+ b=W5IklotcaAk9xKfxOByoBzBRHehISQcEqnARR8ebxicL8r/UgGSHgzW4SpacQnkiZdkMMu8T9HwIynTYniUFUoGGhYGFC+iVx+sTYs5NrHkHCe/9eDZieImfFLo68rWlcl3VzRfgaaJsG9qDzL/YK6Pqo+ijyjIQ6BLEgTjqrH0=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=amd.com;
+Received: from BL1PR12MB5157.namprd12.prod.outlook.com (2603:10b6:208:308::15)
+ by MN2PR12MB3775.namprd12.prod.outlook.com (2603:10b6:208:159::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5017.25; Thu, 3 Mar
+ 2022 13:19:06 +0000
+Received: from BL1PR12MB5157.namprd12.prod.outlook.com
+ ([fe80::692d:9532:906b:2b08]) by BL1PR12MB5157.namprd12.prod.outlook.com
+ ([fe80::692d:9532:906b:2b08%5]) with mapi id 15.20.5038.014; Thu, 3 Mar 2022
+ 13:19:05 +0000
+Message-ID: <edd464f1-916e-191a-3683-45b623604e4b@amd.com>
+Date:   Thu, 3 Mar 2022 07:19:06 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+Subject: Re: [PATCH 2/2] [RFC] ata: ahci: Skip debounce delay for AMD FCH SATA
+ Controller
+Content-Language: en-US
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Paul Menzel <pmenzel@molgen.mpg.de>
+Cc:     Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20220303100453.30018-1-pmenzel@molgen.mpg.de>
+ <20220303100453.30018-2-pmenzel@molgen.mpg.de>
+ <0a7c8ee9-1e09-75a4-3241-883fc8540561@opensource.wdc.com>
+From:   Mario Limonciello <mario.limonciello@amd.com>
+In-Reply-To: <0a7c8ee9-1e09-75a4-3241-883fc8540561@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: SN6PR01CA0026.prod.exchangelabs.com (2603:10b6:805:b6::39)
+ To BL1PR12MB5157.namprd12.prod.outlook.com (2603:10b6:208:308::15)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220303094824.GA24977@X58A-UD3R>
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 13282db8-ac05-413b-6c15-08d9fd18646c
+X-MS-TrafficTypeDiagnostic: MN2PR12MB3775:EE_
+X-Microsoft-Antispam-PRVS: <MN2PR12MB377574652B360A554B2F7947E2049@MN2PR12MB3775.namprd12.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: xoNGLIHJk0lhwP5CT2S7x+zK0Qwi4BFiEYfFh2gtkYeAhHvDmsJ33k+mVlzAw04kt9u+vQVEdKFFFTsi3qEkLGBbkkKhXPMnMB07tSiXJQUOwiPhXZS8v74Te7ZRUMLLSwSscnDTGs9qWR4X10MFILndrBTVpw4j7yDre42J9Qf4pvY2vk+RCgwccWbqwEK8bt7eoWP6cIopVvqS+b7PzwaiayWxN0uzOiO28GJFHfnu5K1iNnye2/uLVufkiNBwkdGyQ2azZlzcj4elvMD9J+VdFXuhPudJxL5DTibLtoyEr5uJ3YbqaGrjKPIVDwH90anFVDQ7DZq+igbuuyw1cXnVN3ZxCRwiV657AtmFdRG2I1oBpib/Uos2J8Th5Q4TIV0l9MYBRbaSaH6J3vedr35FjY917g47/YqC8xGEIjd/XtSDbn1/y/8+6LgKesj50CHM9anQi3QGYzx5P1XFXf2x1Z2sTc8jGRtL0GnyHjyE86mdJDzJHGmnH8tSlJYf+J1T9cFWGwxYX+CDsrtw+RVlTuDQsGZkKJGnfYmRpiTISKgdAe/9pXq5MulkTHVNKRqnm1wGGP0oxmCoqjq3zo8c4AY/3qGeQMDXhFK2by4smqLZziUa4TDWnI4Say0eUSnWIe5xddYbEXG1/VB4GT4TuciYvj0jB8a8eaBKRFXCMYqoQ8h47UdiMRm+XivAiYK0RfDTOszp2LJSPQ7fMmpn1STMIDvp+8bcFo2q8UE=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL1PR12MB5157.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(186003)(4326008)(8676002)(66556008)(66476007)(2906002)(36756003)(5660300002)(8936002)(66946007)(38100700002)(44832011)(2616005)(83380400001)(6512007)(53546011)(6506007)(316002)(110136005)(31696002)(86362001)(6486002)(508600001)(31686004)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?NVZWZUs1dktMMjRyL0xDdVFvcUVmNjA3RVhHRllaTUZkbTNuZWVPWkxRSWNW?=
+ =?utf-8?B?SnJSR0kwaGlBa0xVTkNoWkNiOURFdlVRYTI0UWg3clQ5T3ZaRUlnMmdSZzFH?=
+ =?utf-8?B?MHJFTzVYZHFYTUFBc1h3dWxiUVpWTldpWXU1MUh1YW1EZURmK2ltdm5IRmhl?=
+ =?utf-8?B?eVlzSjZaNnVRM2Erd3ZIRXoyejZHOVZOMDZ4ZStLRTJYbFlndEJVaTg1b0Ny?=
+ =?utf-8?B?TUZLME5rWTRKdUQ2aVJLVDNYL3I4SGc4Q0VPUnhCMG9iUXAvOVR3WmU0bGJB?=
+ =?utf-8?B?QmVpOFh5NzJ3bWUxMkE4MVgveDMzT3c0cllnTmswajVDd1A0ejNmOGc5Rk5I?=
+ =?utf-8?B?V1NhN1QzWXVJbWFyYUlBOHN6RWNTdWhhMk5BdnBCRHBpNUVBZ1RhR0xackhh?=
+ =?utf-8?B?bDQyb1ZWak84NmR2N2trOEIrQkswRFVsWnJIUDF1WnhhU1NRRnpVMFdaUDBZ?=
+ =?utf-8?B?SS9WVHFaQ2pmSDJJcmNZekR1bWNSOHExdUJ0SjdaMW5sL2NyYVNGdlZiME5v?=
+ =?utf-8?B?YktJRUhhRW93RTh0Yy9qeTJnVk01NGRGZDhBODE4QURzNTdKUUZNN3ZubVRN?=
+ =?utf-8?B?dGhmTXVlMGF1b05yckRkU1YyZ25FaWkzejE0cXhlTXkva0VUUlVOcmNhcy9Z?=
+ =?utf-8?B?WHNLanRPclRCUi8rYU83ZkRPMmxnM0Y1b3l5cFZTclRZRU1FdXROUWZHbUpq?=
+ =?utf-8?B?NkpnK3U3YW9YdVNBUXRCRjBjeVlNWFp0WUxldU9uY1FDb2NWMmRmSThicVFh?=
+ =?utf-8?B?YVROR3ZBWFVQQUxYalB2SzVuazM5bnU0dSszdkw2VUNIYWkxUkhVTXpOVXpB?=
+ =?utf-8?B?ek5nVnViWVBDNUFNL2ZEb2hNQXR0czkvckk5U1JQNi80WXNKbDE1anRxMWtU?=
+ =?utf-8?B?VmFGbktuTHlHdEJjbDJtYXhjaktMcXNCbnVUNHR4eDRXVFJrL0RuWXBNRE9O?=
+ =?utf-8?B?azBodGZydktUMUdHU0krVURESG5CTEVIU29RUGEweHNUdS81cC84N2k4dzht?=
+ =?utf-8?B?bG9jMFFXc0Y4RHp1bzVjdHpGL1dMbmVBMGtlSVkrWjZpbjFQR1JEYzZCT1Jq?=
+ =?utf-8?B?NVJGaUhMeXJtZm03cU1VOFo2ay9TYWFQZnNEemdMTnR2UXlmZ1pYQ2JZcVFL?=
+ =?utf-8?B?UVBsQURYZGtDcG9ZV243dG50U0F5NVhEQ3ZiT0VEbkhIeVdHOFhnb3JFVGk4?=
+ =?utf-8?B?WnNONnNreVFCVDk2Y0J5SzJvd1FVeGFaYVltckd0dWtlM2ZIbHhUa2NnRThO?=
+ =?utf-8?B?ZDFmTnJqMTQrdkpvMVVEQkV2WWIzM1NodFVCZGh0Wk9zcklZcXZIT0NNUmNJ?=
+ =?utf-8?B?U0FVTXJLUHNycjVucjhnYnp5ZkhyN1Brek9VQWFZK2srVkFZY2o2RVJ6d3cw?=
+ =?utf-8?B?d0FIR3R1YUJUc1VOUjdQbm8rblUyR2dTOWVUbWFXUnF4L0tVcHpkdXVsZG5t?=
+ =?utf-8?B?SC9BOVFjS0dOWkl3ZUtwaHRNaUpFbUtjUmFnZTFBSjJac1FCcmhHYzJjRTZu?=
+ =?utf-8?B?ZXVhcEdFS1A1dWUwUEdYZzdqY3prRGJRWEVWSTYvc1ZZbnNNZEV2bTR1eENw?=
+ =?utf-8?B?cnM5alQyZGx0MjQ5R2xORW43YVExRmJoMHlvaUFoNGlSL3RKNkZvWEtUbk83?=
+ =?utf-8?B?Wm5xNGxQNHZ4V3dEU1JIek9xQTJKRUpmZytYL1YyaG9UVXpZSjNRYThCTzdy?=
+ =?utf-8?B?WjJSTkRBazh2WCs1TExtbUNzWDB6TjdoYStPd3Z6RkdOSmIwa0p0ZHlsY3Ba?=
+ =?utf-8?B?NXltK2o1a1FHVTJDbTJzejlMYjJTZ1doUnp4aXZUbFhiVzhyWTIvZGtOQnU3?=
+ =?utf-8?B?cStXcWpPSGNrekcra003RnZCelZSQ0NlT2RCWWppd21sN2xDRHZpd2lSTDhC?=
+ =?utf-8?B?ZXRkRk5WcE1KcVFsRkdkdk0zREtqYlI1QzlLbGtYVzc0RVF2OHlFdkhVY3ow?=
+ =?utf-8?B?bnZnUUFTOU15SHhPZEgxUmJPRm1jci8zSXFoaVFwTkdDLzBHNDlaUEw1QW51?=
+ =?utf-8?B?RVI5bGt0emhHYmtqbFZXMVAyVytPaElqellYdXZKVnJkcVBLREJVS2dFTy9n?=
+ =?utf-8?B?MHBHRkIwcUNoQ0FpRlVrc1JYK1lpb0ZnbTNoSjJWaVdKSXNyaEcvenhGK0ty?=
+ =?utf-8?B?cm53ZUYzeWtDSzIvanJ2OThDOVB5THl1ZFNsZnoyQStCUmhWSXVidTVJU3dn?=
+ =?utf-8?B?M2xXQjhsVkxDT2llaGN3TEd1Nnk2UldROXNiODI4aG13TmJOeVFvQmc5QVJh?=
+ =?utf-8?Q?DwBnoIjGfQ0I5vRGk3NzGFe5dJz0BPpZCGJHbcIsp4=3D?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 13282db8-ac05-413b-6c15-08d9fd18646c
+X-MS-Exchange-CrossTenant-AuthSource: BL1PR12MB5157.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Mar 2022 13:19:05.7692
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: C8j0U/xFVhguBY0rMV7/IM/IzKaCx1r9IYfdWY2mY2F34cG6LXFobQtf7YeyJkruAmIQAoIGQFrSlqjyj7t21g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB3775
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Mar 03, 2022 at 06:48:24PM +0900, Byungchul Park wrote:
-> On Thu, Mar 03, 2022 at 08:03:21AM +0000, Hyeonggon Yoo wrote:
-> > On Thu, Mar 03, 2022 at 09:18:13AM +0900, Byungchul Park wrote:
-> > > Hi Hyeonggon,
-> > > 
-> > > Dept also allows the following scenario when an user guarantees that
-> > > each lock instance is different from another at a different depth:
-> > >
-> > >    lock A0 with depth
-> > >    lock A1 with depth + 1
-> > >    lock A2 with depth + 2
-> > >    lock A3 with depth + 3
-> > >    (and so on)
-> > >    ..
-> > >    unlock A3
-> > >    unlock A2
-> > >    unlock A1
-> > >    unlock A0
+On 3/3/22 06:23, Damien Le Moal wrote:
+> On 2022/03/03 12:04, Paul Menzel wrote:
+>> AMD devices with the FCH SATA Controller 0x1022:0x7901 do not need the
+>> default debounce delay of 200 ms.
+>>
+>>      07:00.2 SATA controller [0106]: Advanced Micro Devices, Inc. [AMD] FCH SATA Controller [AHCI mode] [1022:7901] (rev 51)
+>>
+>> So skip it, by mapping it to the board with no debounce delay.
+>>
+>> Tested on the MSI MS-7A37/B350M MORTAR (MS-7A37).
+>>
+>> To-do: Add test details and results.
 > 
+> Please squash this patch together with patch 1. Since you are adding a new board
+> entry definition, it is better to have a user for it in the same patch (this
+> avoids reverts to leave unused code behind). >
+>>
+>> Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
+>> Cc: Hans de Goede <hdegoede@redhat.com>
+>> Cc: Mario Limonciello <mario.limonciello@amd.com>
+>> ---
+>> I am travelling so could not test this exact patch just yet, but I ran
+>> something similar for several weeks already. It’d be great, if the
+>> desktop and AMD folks could also give this a try.
 
-[+Cc kmemleak maintainer]
+As we are trying to drop the low power definition for 5.18, maybe can 
+this wait until 5.19 so we can see if that sticks so this doesn't get 
+caught up in possible reverts?
 
-> Look at this. Dept allows object->lock -> other_object->lock (with a
-> different depth using *_lock_nested()) so won't report it.
->
-
-No, It did.
-
-S: object->lock ( _raw_spin_lock_irqsave)
-W: other_object->lock (_raw_spin_lock_nested)
-
-DEPT reported this as AA deadlock.
-
-===================================================
-DEPT: Circular dependency has been detected.
-5.17.0-rc1+ #1 Tainted: G        W
----------------------------------------------------
-summary
----------------------------------------------------
-*** AA DEADLOCK ***
-
-context A
-    [S] __raw_spin_lock_irqsave(&object->lock:0)
-    [W] _raw_spin_lock_nested(&object->lock:0)
-    [E] spin_unlock(&object->lock:0)
-
-[S]: start of the event context
-[W]: the wait blocked
-[E]: the event not reachable
----------------------------------------------------
-context A's detail
----------------------------------------------------
-context A
-    [S] __raw_spin_lock_irqsave(&object->lock:0)
-    [W] _raw_spin_lock_nested(&object->lock:0)
-    [E] spin_unlock(&object->lock:0)
----------------------------------------------------
-context A's detail
----------------------------------------------------
-context A
-    [S] __raw_spin_lock_irqsave(&object->lock:0)
-    [W] _raw_spin_lock_nested(&object->lock:0)
-    [E] spin_unlock(&object->lock:0)
-
-[S] __raw_spin_lock_irqsave(&object->lock:0):
-[<ffffffc00810302c>] scan_gray_list+0x84/0x13c
-stacktrace:
-      dept_ecxt_enter+0x88/0xf4
-      _raw_spin_lock_irqsave+0xf0/0x1c4
-      scan_gray_list+0x84/0x13c
-      kmemleak_scan+0x2d8/0x54c
-      kmemleak_scan_thread+0xac/0xd4
-      kthread+0xd4/0xe4
-      ret_from_fork+0x10/0x20
-
-[W] _raw_spin_lock_nested(&object->lock:0):
-[<ffffffc008102f34>] scan_block+0xb4/0x128
-stacktrace:
-      __dept_wait+0x8c/0xa4
-      dept_wait+0x6c/0x88
-      _raw_spin_lock_nested+0xa8/0x1b0
-      scan_block+0xb4/0x128
-      scan_gray_list+0xc4/0x13c
-      kmemleak_scan+0x2d8/0x54c
-      kmemleak_scan_thread+0xac/0xd4
-      kthread+0xd4/0xe4
-      ret_from_fork+0x10/0x20
-
-[E] spin_unlock(&object->lock:0):
-[<ffffffc008102ee0>] scan_block+0x60/0x128
----------------------------------------------------
-information that might be helpful
----------------------------------------------------
-CPU: 2 PID: 38 Comm: kmemleak Tainted: G        W         5.17.0-rc1+ #1
-Hardware name: linux,dummy-virt (DT)
-Call trace:
- dump_backtrace.part.0+0x9c/0xc4
- show_stack+0x14/0x28
- dump_stack_lvl+0x9c/0xcc
- dump_stack+0x14/0x2c
- print_circle+0x2d4/0x438
- cb_check_dl+0x44/0x70
- bfs+0x60/0x168
- add_dep+0x88/0x11c
- add_wait+0x2d0/0x2dc
- __dept_wait+0x8c/0xa4
- dept_wait+0x6c/0x88
- _raw_spin_lock_nested+0xa8/0x1b0
- scan_block+0xb4/0x128
- scan_gray_list+0xc4/0x13c
- kmemleak_scan+0x2d8/0x54c
- kmemleak_scan_thread+0xac/0xd4
- kthread+0xd4/0xe4
- ret_from_fork+0x10/0x20
-
-> > > However, Dept does not allow the following scenario where another lock
-> > > class cuts in the dependency chain:
-> > > 
-> > >    lock A0 with depth
-> > >    lock B
-> > >    lock A1 with depth + 1
-> > >    lock A2 with depth + 2
-> > >    lock A3 with depth + 3
-> > >    (and so on)
-> > >    ..
-> > >    unlock A3
-> > >    unlock A2
-> > >    unlock A1
-> > >    unlock B
-> > >    unlock A0
-> > > 
-> > > This scenario is clearly problematic. What do you think is going to
-> > > happen with another context running the following?
-> > >
-> > 
-> > First of all, I want to say I'm not expert at locking primitives.
-> > I may be wrong.
+>>
+>>   drivers/ata/ahci.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+>> index 0fc09b86a559..44b79fe43d13 100644
+>> --- a/drivers/ata/ahci.c
+>> +++ b/drivers/ata/ahci.c
+>> @@ -456,7 +456,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+>>   	{ PCI_VDEVICE(AMD, 0x7800), board_ahci }, /* AMD Hudson-2 */
+>>   	{ PCI_VDEVICE(AMD, 0x7801), board_ahci_no_debounce_delay }, /* AMD Hudson-2 (AHCI mode) */
+>>   	{ PCI_VDEVICE(AMD, 0x7900), board_ahci }, /* AMD CZ */
+>> -	{ PCI_VDEVICE(AMD, 0x7901), board_ahci_low_power }, /* AMD Green Sardine */
+>> +	{ PCI_VDEVICE(AMD, 0x7901), board_ahci_low_power_no_debounce_delay }, /* AMD Green Sardine */
 > 
-> It's okay. Thanks anyway for your feedback.
->
-
-Thanks.
-
-> > > >   45  *   scan_mutex [-> object->lock] -> kmemleak_lock -> other_object->lock (SINGLE_DEPTH_NESTING)
-> > > >   46  *
-> > > >   47  * No kmemleak_lock and object->lock nesting is allowed outside scan_mutex
-> > > >   48  * regions.
-> > 
-> > lock order in kmemleak is described above.
-> > 
-> > and DEPT detects two cases as deadlock:
-> > 
-> > 1) object->lock -> other_object->lock
+> Really long name, but I cannot think of anything better...
 > 
-> It's not a deadlock *IF* two have different depth using *_lock_nested().
-> Dept also allows this case. So Dept wouldn't report it.
->
-> > 2) object->lock -> kmemleak_lock, kmemleak_lock -> other_object->lock
->
-> But this usage is risky. I already explained it in the mail you replied
-> to. I copied it. See the below.
->
-
-I understand why you said this is risky.
-Its lock ordering is not good.
-
-> context A
-> > >    lock A0 with depth
-> > >    lock B
-> > >    lock A1 with depth + 1
-> > >    lock A2 with depth + 2
-> > >    lock A3 with depth + 3
-> > >    (and so on)
-> > >    ..
-> > >    unlock A3
-> > >    unlock A2
-> > >    unlock A1
-> > >    unlock B
-> > >    unlock A0
->
-> ...
->
-> context B
-> > >    lock A1 with depth
-> > >    lock B
-> > >    lock A2 with depth + 1
-> > >    lock A3 with depth + 2
-> > >    (and so on)
-> > >    ..
-> > >    unlock A3
-> > >    unlock A2
-> > >    unlock B
-> > >    unlock A1
+>>   	/* AMD is using RAID class only for ahci controllers */
+>>   	{ PCI_VENDOR_ID_AMD, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+>>   	  PCI_CLASS_STORAGE_RAID << 8, 0xffffff, board_ahci },
 > 
-> where Ax : object->lock, B : kmemleak_lock.
 > 
-> A deadlock might occur if the two contexts run at the same time.
->
-
-But I want to say kmemleak is getting things under control. No two contexts
-can run at same time.
-
-> > And in kmemleak case, 1) and 2) is not possible because it must hold
-> > scan_mutex first.
-> 
-> This is another issue. Let's focus on whether the order is okay for now.
->
-
-Why is it another issue?
-
-> > I think the author of kmemleak intended lockdep to treat object->lock
-> > and other_object->lock as different class, using raw_spin_lock_nested().
-> 
-> Yes. The author meant to assign a different class according to its depth
-> using a Lockdep API. Strictly speaking, those are the same class anyway
-> but we assign a different class to each depth to avoid Lockdep splats
-> *IF* the user guarantees the nesting lock usage is safe, IOW, guarantees
-> each lock instance is different at a different depth.
-
-Then why DEPT reports 1) and 2) as deadlock?
-Does DEPT assign same class unlike Lockdep?
-
-> I was fundamentally asking you... so... is the nesting lock usage safe
-> for real?
-
-I don't get what the point is. I agree it's not a good lock ordering.
-But in kmemleak case, I think kmemleak is getting things under control.
-
--- 
-Thank you, You are awesome!
-Hyeonggon :-)
-
-> I hope you distinguish between the safe case and the risky
-> case when *_lock_nested() is involved. Thoughts?
->
-> Thanks,
-> Byungchul
-> 
-> > Am I missing something?
-> > 
-> > Thanks.
-> > 
-> > >    lock A1 with depth
-> > >    lock B
-> > >    lock A2 with depth + 1
-> > >    lock A3 with depth + 2
-> > >    (and so on)
-> > >    ..
-> > >    unlock A3
-> > >    unlock A2
-> > >    unlock B
-> > >    unlock A1
-> > > 
-> > > It's a deadlock. That's why Dept reports this case as a problem. Or am I
-> > > missing something?
-> > >
-> > > Thanks,
-> > > Byungchul
-> > > 
-> > > > ---------------------------------------------------
-> > > > context A's detail
-> > > > ---------------------------------------------------
-> > > > context A
-> > > >     [S] __raw_spin_lock_irqsave(&object->lock:0)
-> > > >     [W] __raw_spin_lock_irqsave(kmemleak_lock:0)
-> > > >     [E] spin_unlock(&object->lock:0)
-> > > > 
-> > > > [S] __raw_spin_lock_irqsave(&object->lock:0):
-> > > > [<ffffffc00810302c>] scan_gray_list+0x84/0x13c
-> > > > stacktrace:
-> > > >       dept_ecxt_enter+0x88/0xf4
-> > > >       _raw_spin_lock_irqsave+0xf0/0x1c4
-> > > >       scan_gray_list+0x84/0x13c
-> > > >       kmemleak_scan+0x2d8/0x54c
-> > > >       kmemleak_scan_thread+0xac/0xd4
-> > > >       kthread+0xd4/0xe4
-> > > >       ret_from_fork+0x10/0x20
-> > > > 
-> > > > [W] __raw_spin_lock_irqsave(kmemleak_lock:0):
-> > > > [<ffffffc008102ebc>] scan_block+0x3c/0x128
-> > > > stacktrace:
-> > > >       __dept_wait+0x8c/0xa4
-> > > >       dept_wait+0x6c/0x88
-> > > >       _raw_spin_lock_irqsave+0xb8/0x1c4
-> > > >       scan_block+0x3c/0x128
-> > > >       scan_gray_list+0xc4/0x13c
-> > > >       kmemleak_scan+0x2d8/0x54c
-> > > >       kmemleak_scan_thread+0xac/0xd4
-> > > >       kthread+0xd4/0xe4
-> > > >       ret_from_fork+0x10/0x20
-> > > > 
-> > > > [E] spin_unlock(&object->lock:0):
-> > > > [<ffffffc008102ee0>] scan_block+0x60/0x128
-> > > > 
-> > > > ---------------------------------------------------
-> > > > context B's detail
-> > > > ---------------------------------------------------
-> > > > context B
-> > > >     [S] __raw_spin_lock_irqsave(kmemleak_lock:0)
-> > > >     [W] _raw_spin_lock_nested(&object->lock:0)
-> > > >     [E] spin_unlock(kmemleak_lock:0)
-> > > > 
-> > > > [S] __raw_spin_lock_irqsave(kmemleak_lock:0):
-> > > > [<ffffffc008102ebc>] scan_block+0x3c/0x128
-> > > > stacktrace:
-> > > >       dept_ecxt_enter+0x88/0xf4
-> > > >       _raw_spin_lock_irqsave+0xf0/0x1c4
-> > > >       scan_block+0x3c/0x128
-> > > >       kmemleak_scan+0x19c/0x54c
-> > > >       kmemleak_scan_thread+0xac/0xd4
-> > > >       kthread+0xd4/0xe4
-> > > >       ret_from_fork+0x10/0x20
-> > > > 
-> > > > [W] _raw_spin_lock_nested(&object->lock:0):
-> > > > [<ffffffc008102f34>] scan_block+0xb4/0x128
-> > > > stacktrace:
-> > > >       dept_wait+0x74/0x88
-> > > >       _raw_spin_lock_nested+0xa8/0x1b0
-> > > >       scan_block+0xb4/0x128
-> > > >       kmemleak_scan+0x19c/0x54c
-> > > >       kmemleak_scan_thread+0xac/0xd4
-> > > >       kthread+0xd4/0xe4
-> > > >       ret_from_fork+0x10/0x20
-> > > > [E] spin_unlock(kmemleak_lock:0):
-> > > > [<ffffffc008102ee0>] scan_block+0x60/0x128
-> > > > stacktrace:
-> > > >       dept_event+0x7c/0xfc
-> > > >       _raw_spin_unlock_irqrestore+0x8c/0x120
-> > > >       scan_block+0x60/0x128
-> > > >       kmemleak_scan+0x19c/0x54c
-> > > >       kmemleak_scan_thread+0xac/0xd4
-> > > >       kthread+0xd4/0xe4
-> > > >       ret_from_fork+0x10/0x20
-> > > > ---------------------------------------------------
-> > > > information that might be helpful
-> > > > ---------------------------------------------------
-> > > > CPU: 1 PID: 38 Comm: kmemleak Tainted: G        W         5.17.0-rc1+ #1
-> > > > Hardware name: linux,dummy-virt (DT)
-> > > > Call trace:
-> > > >  dump_backtrace.part.0+0x9c/0xc4
-> > > >  show_stack+0x14/0x28
-> > > >  dump_stack_lvl+0x9c/0xcc
-> > > >  dump_stack+0x14/0x2c
-> > > >  print_circle+0x2d4/0x438
-> > > >  cb_check_dl+0x6c/0x70
-> > > >  bfs+0xc0/0x168
-> > > >  add_dep+0x88/0x11c
-> > > >  add_wait+0x2d0/0x2dc
-> > > >  __dept_wait+0x8c/0xa4
-> > > >  dept_wait+0x6c/0x88
-> > > >  _raw_spin_lock_irqsave+0xb8/0x1c4
-> > > >  scan_block+0x3c/0x128
-> > > >  scan_gray_list+0xc4/0x13c
-> > > >  kmemleak_scan+0x2d8/0x54c
-> > > >  kmemleak_scan_thread+0xac/0xd4
-> > > >  kthread+0xd4/0xe4
-> > > >  ret_from_fork+0x10/0x20
-> > > > 
-> > > > > ===================================================
-> > > > > DEPT: Circular dependency has been detected.
-> > > > > 5.17.0-rc1+ #1 Tainted: G        W
-> > > > > ---------------------------------------------------
-> > > > > summary
-> > > > > ---------------------------------------------------
-> > > > > *** AA DEADLOCK ***
-> > > > > 
-> > > > > context A
-> > > > >     [S] __raw_spin_lock_irqsave(&object->lock:0)
-> > > > >     [W] _raw_spin_lock_nested(&object->lock:0)
-> > > > >     [E] spin_unlock(&object->lock:0)
-> > > > > 
-> > > > > [S]: start of the event context
-> > > > > [W]: the wait blocked
-> > > > > [E]: the event not reachable
-> > > > > ---------------------------------------------------
-> > > > > context A's detail
-> > > > > ---------------------------------------------------
-> > > > > context A
-> > > > >     [S] __raw_spin_lock_irqsave(&object->lock:0)
-> > > > >     [W] _raw_spin_lock_nested(&object->lock:0)
-> > > > >     [E] spin_unlock(&object->lock:0)
-> > > > > 
-> > > > > [S] __raw_spin_lock_irqsave(&object->lock:0):
-> > > > > [<ffffffc00810302c>] scan_gray_list+0x84/0x13c
-> > > > > stacktrace:
-> > > > >       dept_ecxt_enter+0x88/0xf4
-> > > > >       _raw_spin_lock_irqsave+0xf0/0x1c4
-> > > > >       scan_gray_list+0x84/0x13c
-> > > > >       kmemleak_scan+0x2d8/0x54c
-> > > > >       kmemleak_scan_thread+0xac/0xd4
-> > > > >       kthread+0xd4/0xe4
-> > > > >       ret_from_fork+0x10/0x20
-> > > > > 
-> > > > > [E] spin_unlock(&object->lock:0):
-> > > > > [<ffffffc008102ee0>] scan_block+0x60/0x128
-> > > > > ---------------------------------------------------
-> > > > > information that might be helpful
-> > > > > ---------------------------------------------------
-> > > > > CPU: 1 PID: 38 Comm: kmemleak Tainted: G        W         5.17.0-rc1+ #1
-> > > > > Hardware name: linux,dummy-virt (DT)
-> > > > > Call trace:
-> > > > >  dump_backtrace.part.0+0x9c/0xc4
-> > > > >  show_stack+0x14/0x28
-> > > > >  dump_stack_lvl+0x9c/0xcc
-> > > > >  dump_stack+0x14/0x2c
-> > > > >  print_circle+0x2d4/0x438
-> > > > >  cb_check_dl+0x44/0x70
-> > > > >  bfs+0x60/0x168
-> > > > >  add_dep+0x88/0x11c
-> > > > >  add_wait+0x2d0/0x2dc
-> > > > >  __dept_wait+0x8c/0xa4
-> > > > >  dept_wait+0x6c/0x88
-> > > > >  _raw_spin_lock_nested+0xa8/0x1b0
-> > > > >  scan_block+0xb4/0x128
-> > > > >  scan_gray_list+0xc4/0x13c
-> > > > >  kmemleak_scan+0x2d8/0x54c
-> > > > >  kmemleak_scan_thread+0xac/0xd4
-> > > > >  kthread+0xd4/0xe4
-> > > > >  ret_from_fork+0x10/0x20
-> > > > >
-> > > > [...]
-> > > > 
-> > > > --
-> > > > Thank you, You are awesome!
-> > > > Hyeonggon :-)
-> > 
-> > -- 
-> > Thank you, You are awesome!
-> > Hyeonggon :-)
 
