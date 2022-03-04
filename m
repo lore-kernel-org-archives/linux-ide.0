@@ -2,24 +2,24 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C82BBC4321E
-	for <linux-ide@archiver.kernel.org>; Fri,  4 Mar 2022 07:08:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BA1EC4167E
+	for <linux-ide@archiver.kernel.org>; Fri,  4 Mar 2022 07:08:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238919AbiCDHJN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 4 Mar 2022 02:09:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39316 "EHLO
+        id S238926AbiCDHJP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 4 Mar 2022 02:09:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39186 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238677AbiCDHIv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 4 Mar 2022 02:08:51 -0500
-Received: from lgeamrelo11.lge.com (lgeamrelo12.lge.com [156.147.23.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F350E192C82
-        for <linux-ide@vger.kernel.org>; Thu,  3 Mar 2022 23:07:12 -0800 (PST)
+        with ESMTP id S238740AbiCDHIu (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 4 Mar 2022 02:08:50 -0500
+Received: from lgeamrelo11.lge.com (lgeamrelo13.lge.com [156.147.23.53])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id CD63F190C34
+        for <linux-ide@vger.kernel.org>; Thu,  3 Mar 2022 23:07:09 -0800 (PST)
 Received: from unknown (HELO lgemrelse6q.lge.com) (156.147.1.121)
-        by 156.147.23.52 with ESMTP; 4 Mar 2022 16:07:09 +0900
+        by 156.147.23.53 with ESMTP; 4 Mar 2022 16:07:08 +0900
 X-Original-SENDERIP: 156.147.1.121
 X-Original-MAILFROM: byungchul.park@lge.com
 Received: from unknown (HELO localhost.localdomain) (10.177.244.38)
-        by 156.147.1.121 with ESMTP; 4 Mar 2022 16:07:09 +0900
+        by 156.147.1.121 with ESMTP; 4 Mar 2022 16:07:08 +0900
 X-Original-SENDERIP: 10.177.244.38
 X-Original-MAILFROM: byungchul.park@lge.com
 From:   Byungchul Park <byungchul.park@lge.com>
@@ -46,9 +46,9 @@ Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
         dri-devel@lists.freedesktop.org, airlied@linux.ie,
         rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
         hamohammed.sa@gmail.com
-Subject: [PATCH v4 21/24] dept: Disable Dept on struct crypto_larval's completion for now
-Date:   Fri,  4 Mar 2022 16:06:40 +0900
-Message-Id: <1646377603-19730-22-git-send-email-byungchul.park@lge.com>
+Subject: [PATCH v4 18/24] dept: Distinguish each work from another
+Date:   Fri,  4 Mar 2022 16:06:37 +0900
+Message-Id: <1646377603-19730-19-git-send-email-byungchul.park@lge.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1646377603-19730-1-git-send-email-byungchul.park@lge.com>
 References: <1646377603-19730-1-git-send-email-byungchul.park@lge.com>
@@ -56,36 +56,81 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-struct crypto_larval's completion is used for multiple purposes e.g.
-waiting for test to complete or waiting for probe to complete.
+Workqueue already provides concurrency control. By that, any wait in a
+work doesn't prevents events in other works with the control enabled.
+Thus, each work would better be considered a different context.
 
-The completion variable needs to be split according to what it's used
-for. Otherwise, Dept cannot distinguish one from another and doesn't
-work properly. Now that it isn't, disable Dept on it.
+So let Dept assign a different context id to each work.
 
 Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 ---
- crypto/api.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ include/linux/dept.h     |  2 ++
+ kernel/dependency/dept.c | 10 ++++++++++
+ kernel/workqueue.c       |  3 +++
+ 3 files changed, 15 insertions(+)
 
-diff --git a/crypto/api.c b/crypto/api.c
-index cf0869d..f501b91 100644
---- a/crypto/api.c
-+++ b/crypto/api.c
-@@ -115,7 +115,12 @@ struct crypto_larval *crypto_larval_alloc(const char *name, u32 type, u32 mask)
- 	larval->alg.cra_destroy = crypto_larval_destroy;
+diff --git a/include/linux/dept.h b/include/linux/dept.h
+index 1a1c307..55c5ed5 100644
+--- a/include/linux/dept.h
++++ b/include/linux/dept.h
+@@ -486,6 +486,7 @@ struct dept_task {
+ extern void dept_event_split_map(struct dept_map_each *me, struct dept_map_common *mc, unsigned long ip, const char *e_fn);
+ extern void dept_ask_event_split_map(struct dept_map_each *me, struct dept_map_common *mc);
+ extern void dept_kernel_enter(void);
++extern void dept_work_enter(void);
  
- 	strlcpy(larval->alg.cra_name, name, CRYPTO_MAX_ALG_NAME);
--	init_completion(&larval->completion);
-+	/*
-+	 * TODO: Split ->completion according to what it's used for e.g.
-+	 * ->test_completion, ->probe_completion and the like, so that
-+	 *  Dept can track its dependency properly.
-+	 */
-+	init_completion_nocheck(&larval->completion);
- 
- 	return larval;
+ /*
+  * for users who want to manage external keys
+@@ -527,6 +528,7 @@ struct dept_task {
+ #define dept_event_split_map(me, mc, ip, e_fn)		do { } while (0)
+ #define dept_ask_event_split_map(me, mc)		do { } while (0)
+ #define dept_kernel_enter()				do { } while (0)
++#define dept_work_enter()				do { } while (0)
+ #define dept_key_init(k)				do { (void)(k); } while (0)
+ #define dept_key_destroy(k)				do { (void)(k); } while (0)
+ #endif
+diff --git a/kernel/dependency/dept.c b/kernel/dependency/dept.c
+index 8f962ae..5d4efc3 100644
+--- a/kernel/dependency/dept.c
++++ b/kernel/dependency/dept.c
+@@ -1873,6 +1873,16 @@ void dept_disable_hardirq(unsigned long ip)
+ 	dept_exit(flags);
  }
+ 
++/*
++ * Assign a different context id to each work.
++ */
++void dept_work_enter(void)
++{
++	struct dept_task *dt = dept_task();
++
++	dt->cxt_id[DEPT_CXT_PROCESS] += (1UL << DEPT_CXTS_NR);
++}
++
+ void dept_kernel_enter(void)
+ {
+ 	struct dept_task *dt = dept_task();
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index 33f1106..f5d762c 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -51,6 +51,7 @@
+ #include <linux/sched/isolation.h>
+ #include <linux/nmi.h>
+ #include <linux/kvm_para.h>
++#include <linux/dept.h>
+ 
+ #include "workqueue_internal.h"
+ 
+@@ -2217,6 +2218,8 @@ static void process_one_work(struct worker *worker, struct work_struct *work)
+ 
+ 	lockdep_copy_map(&lockdep_map, &work->lockdep_map);
+ #endif
++	dept_work_enter();
++
+ 	/* ensure we're on the correct CPU */
+ 	WARN_ON_ONCE(!(pool->flags & POOL_DISASSOCIATED) &&
+ 		     raw_smp_processor_id() != pool->cpu);
 -- 
 1.9.1
 
