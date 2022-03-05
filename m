@@ -2,22 +2,22 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68A92C4167D
-	for <linux-ide@archiver.kernel.org>; Sat,  5 Mar 2022 20:14:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1C7DC4332F
+	for <linux-ide@archiver.kernel.org>; Sat,  5 Mar 2022 20:14:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232432AbiCEUPq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 5 Mar 2022 15:15:46 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51884 "EHLO
+        id S232444AbiCEUPr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 5 Mar 2022 15:15:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232385AbiCEUPm (ORCPT
+        with ESMTP id S232361AbiCEUPm (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Sat, 5 Mar 2022 15:15:42 -0500
 Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 0D4835FF22;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 834155E170;
         Sat,  5 Mar 2022 12:14:46 -0800 (PST)
 Received: from gsql.ggedos.sk (off-20.infotel.telecom.sk [212.5.213.20])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by hosting.gsystem.sk (Postfix) with ESMTPSA id 81C197A069D;
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id 6A7E37A0696;
         Sat,  5 Mar 2022 21:14:41 +0100 (CET)
 From:   Ondrej Zary <linux@zary.sk>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
@@ -25,9 +25,9 @@ Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         Tim Waugh <tim@cyberelk.net>, linux-block@vger.kernel.org,
         linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 15/16] pata_parport: add on20 protocol driver
-Date:   Sat,  5 Mar 2022 21:14:10 +0100
-Message-Id: <20220305201411.501-16-linux@zary.sk>
+Subject: [PATCH 14/16] pata_parport: add ktti protocol driver
+Date:   Sat,  5 Mar 2022 21:14:09 +0100
+Message-Id: <20220305201411.501-15-linux@zary.sk>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20220305201411.501-1-linux@zary.sk>
 References: <20220305201411.501-1-linux@zary.sk>
@@ -37,57 +37,59 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add OnSpec 90c20 protocol driver.
+Add KT PHd protocol driver.
 
 Signed-off-by: Ondrej Zary <linux@zary.sk>
 ---
  drivers/ata/pata_parport/Kconfig  |  11 +++
  drivers/ata/pata_parport/Makefile |   1 +
- drivers/ata/pata_parport/on20.c   | 136 ++++++++++++++++++++++++++++++
- 3 files changed, 148 insertions(+)
- create mode 100644 drivers/ata/pata_parport/on20.c
+ drivers/ata/pata_parport/ktti.c   | 112 ++++++++++++++++++++++++++++++
+ 3 files changed, 124 insertions(+)
+ create mode 100644 drivers/ata/pata_parport/ktti.c
 
 diff --git a/drivers/ata/pata_parport/Kconfig b/drivers/ata/pata_parport/Kconfig
-index 4505a037591a..c18757464b1d 100644
+index 004e5cf708f1..4505a037591a 100644
 --- a/drivers/ata/pata_parport/Kconfig
 +++ b/drivers/ata/pata_parport/Kconfig
-@@ -165,3 +165,14 @@ config PATA_PARPORT_KTTI
- 	  support into your kernel, you may answer Y here to build in the
- 	  protocol driver, otherwise you should answer M to build it as a
- 	  loadable module. The module will be called ktti.
+@@ -154,3 +154,14 @@ config PATA_PARPORT_KBIC
+ 	  kernel, you may answer Y here to build in the protocol driver,
+ 	  otherwise you should answer M to build it as a loadable module. The
+ 	  module will be called kbic.
 +
-+config PATA_PARPORT_ON20
-+	tristate "OnSpec 90c20 protocol"
++config PATA_PARPORT_KTTI
++	tristate "KT PHd protocol"
 +	depends on PATA_PARPORT
 +	help
-+	  This option enables support for the (obsolete) 90c20 parallel port
-+	  IDE protocol from OnSpec (often marketed under the ValuStore brand
-+	  name). If you chose to build PATA_PARPORT support into your kernel, you
-+	  may answer Y here to build in the protocol driver, otherwise you
-+	  should answer M to build it as a loadable module.The module will
-+	  be called on20.
++	  This option enables support for the "PHd" parallel port IDE protocol
++	  from KT Technology. This is a simple (low speed) adapter that is
++	  used in some 2.5" portable hard drives. If you chose to build PATA_PARPORT
++	  support into your kernel, you may answer Y here to build in the
++	  protocol driver, otherwise you should answer M to build it as a
++	  loadable module. The module will be called ktti.
 diff --git a/drivers/ata/pata_parport/Makefile b/drivers/ata/pata_parport/Makefile
-index 0c31cf55c96b..4358d1d946cb 100644
+index e82fded22da3..0c31cf55c96b 100644
 --- a/drivers/ata/pata_parport/Makefile
 +++ b/drivers/ata/pata_parport/Makefile
-@@ -20,3 +20,4 @@ obj-$(CONFIG_PATA_PARPORT_FRIQ)		+= friq.o
+@@ -19,3 +19,4 @@ obj-$(CONFIG_PATA_PARPORT_EPIA)		+= epia.o
+ obj-$(CONFIG_PATA_PARPORT_FRIQ)		+= friq.o
  obj-$(CONFIG_PATA_PARPORT_FRPW)		+= frpw.o
  obj-$(CONFIG_PATA_PARPORT_KBIC)		+= kbic.o
- obj-$(CONFIG_PATA_PARPORT_KTTI)		+= ktti.o
-+obj-$(CONFIG_PATA_PARPORT_ON20)		+= on20.o
-diff --git a/drivers/ata/pata_parport/on20.c b/drivers/ata/pata_parport/on20.c
++obj-$(CONFIG_PATA_PARPORT_KTTI)		+= ktti.o
+diff --git a/drivers/ata/pata_parport/ktti.c b/drivers/ata/pata_parport/ktti.c
 new file mode 100644
-index 000000000000..2c0c6f9841dd
+index 000000000000..4604bbd41b18
 --- /dev/null
-+++ b/drivers/ata/pata_parport/on20.c
-@@ -0,0 +1,136 @@
++++ b/drivers/ata/pata_parport/ktti.c
+@@ -0,0 +1,112 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
-+ *	on20.c	(c) 1996-8  Grant R. Guenther <grant@torque.net>
-+ *			    Under the terms of the GNU General Public License.
++ *	ktti.c	(c) 1998  Grant R. Guenther <grant@torque.net>
++ *			  Under the terms of the GNU General Public License.
 + *
-+ *	on20.c is a low-level protocol driver for the
-+ *	Onspec 90c20 parallel to IDE adapter.
++ *	ktti.c is a low-level protocol driver for the KT Technology
++ *	parallel port adapter.  This adapter is used in the "PHd"
++ *	portable hard-drives.  As far as I can tell, this device
++ *	supports 4-bit mode _only_.
 + */
 +
 +#include <linux/module.h>
@@ -100,123 +102,97 @@ index 000000000000..2c0c6f9841dd
 +
 +#include "pata_parport.h"
 +
-+#define op(f)	do { w2(4); w0(f); w2(5); w2(0xd); w2(5); w2(0xd); w2(5); w2(4); } while (0)
-+#define vl(v)	do { w2(4); w0(v); w2(5); w2(7); w2(5); w2(4); } while (0)
-+
 +#define j44(a, b)	(((a >> 4) & 0x0f) | (b & 0xf0))
 +
 +/* cont = 0 - access the IDE register file
 + * cont = 1 - access the IDE command set
 + */
 +
-+static int on20_read_regr(struct pi_adapter *pi, int cont, int regr)
++static int cont_map[2] = { 0x10, 0x08 };
++
++static void ktti_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
 +{
-+	int h, l, r;
++	int r = regr + cont_map[cont];
 +
-+	r = (regr << 2) + 1 + cont;
++	w0(r); w2(0xb); w2(0xa); w2(3); w2(6);
++	w0(val); w2(3); w0(0); w2(6); w2(0xb);
++}
 +
-+	op(1); vl(r); op(0);
++static int ktti_read_regr(struct pi_adapter *pi, int cont, int regr)
++{
++	int  a, b, r;
 +
-+	switch (pi->mode)  {
-+	case 0:
-+		w2(4); w2(6); l = r1();
-+		w2(4); w2(6); h = r1();
-+		w2(4); w2(6); w2(4); w2(6); w2(4);
-+		return j44(l, h);
-+	case 1:
-+		w2(4); w2(0x26); r = r0();
-+		w2(4); w2(0x26); w2(4);
-+		return r;
++	r = regr + cont_map[cont];
 +
++	w0(r); w2(0xb); w2(0xa); w2(9); w2(0xc); w2(9);
++	a = r1(); w2(0xc);  b = r1(); w2(9); w2(0xc); w2(9);
++	return j44(a, b);
++}
++
++static void ktti_read_block(struct pi_adapter *pi, char *buf, int count)
++{
++	int  k, a, b;
++
++	for (k = 0; k < count / 2; k++) {
++		w0(0x10); w2(0xb); w2(0xa); w2(9); w2(0xc); w2(9);
++		a = r1(); w2(0xc); b = r1(); w2(9);
++		buf[2 * k] = j44(a, b);
++		a = r1(); w2(0xc); b = r1(); w2(9);
++		buf[2 * k + 1] = j44(a, b);
 +	}
-+	return -1;
 +}
 +
-+static void on20_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
++static void ktti_write_block(struct pi_adapter *pi, char *buf, int count)
 +{
-+	int r = (regr << 2) + 1 + cont;
++	int k;
 +
-+	op(1); vl(r);
-+	op(0); vl(val);
-+	op(0); vl(val);
++	for (k = 0; k < count / 2; k++) {
++		w0(0x10); w2(0xb); w2(0xa); w2(3); w2(6);
++		w0(buf[2 * k]); w2(3);
++		w0(buf[2 * k + 1]); w2(6);
++		w2(0xb);
++	}
 +}
 +
-+static void on20_connect(struct pi_adapter *pi)
++static void ktti_connect(struct pi_adapter *pi)
 +{
 +	pi->saved_r0 = r0();
 +	pi->saved_r2 = r2();
-+
-+	w2(4); w0(0); w2(0xc); w2(4); w2(6); w2(4); w2(6); w2(4);
-+	if (pi->mode) {
-+		op(2); vl(8); op(2); vl(9);
-+	} else {
-+		op(2); vl(0); op(2); vl(8);
-+	}
++	w2(0xb); w2(0xa); w0(0); w2(3); w2(6);
 +}
 +
-+static void on20_disconnect(struct pi_adapter *pi)
++static void ktti_disconnect(struct pi_adapter *pi)
 +{
-+	w2(4); w0(7); w2(4); w2(0xc); w2(4);
++	w2(0xb); w2(0xa); w0(0xa0); w2(3); w2(4);
 +	w0(pi->saved_r0);
 +	w2(pi->saved_r2);
 +}
 +
-+static void on20_read_block(struct pi_adapter *pi, char *buf, int count)
++static void ktti_log_adapter(struct pi_adapter *pi, char *scratch, int verbose)
 +{
-+	int k, l, h;
-+
-+	op(1); vl(1); op(0);
-+
-+	for (k = 0; k < count; k++)
-+		if (pi->mode) {
-+			w2(4); w2(0x26); buf[k] = r0();
-+		} else {
-+			w2(6); l = r1(); w2(4);
-+			w2(6); h = r1(); w2(4);
-+			buf[k] = j44(l, h);
-+		}
-+	w2(4);
++	dev_info(&pi->dev, "ktti, KT adapter at 0x%x, delay %d\n",
++		pi->port, pi->delay);
 +}
 +
-+static void on20_write_block(struct pi_adapter *pi, char *buf, int count)
-+{
-+	int k;
-+
-+	op(1); vl(1); op(0);
-+
-+	for (k = 0; k < count; k++) {
-+		w2(5); w0(buf[k]); w2(7);
-+	}
-+	w2(4);
-+}
-+
-+static void on20_log_adapter(struct pi_adapter *pi, char *scratch, int verbose)
-+{
-+	static char * const mode_string[] = { "4-bit", "8-bit" };
-+
-+	dev_info(&pi->dev, "on20, OnSpec 90c20 at 0x%x, mode %d (%s), delay %d\n",
-+		pi->port, pi->mode, mode_string[pi->mode], pi->delay);
-+}
-+
-+static struct pi_protocol on20 = {
++static struct pi_protocol ktti = {
 +	.owner		= THIS_MODULE,
-+	.name		= "on20",
-+	.max_mode	= 2,
++	.name		= "ktti",
++	.max_mode	= 1,
 +	.epp_first	= 2,
 +	.default_delay	= 1,
 +	.max_units	= 1,
-+	.write_regr	= on20_write_regr,
-+	.read_regr	= on20_read_regr,
-+	.write_block	= on20_write_block,
-+	.read_block	= on20_read_block,
-+	.connect	= on20_connect,
-+	.disconnect	= on20_disconnect,
-+	.log_adapter	= on20_log_adapter,
-+	.sht		= { PATA_PARPORT_SHT("pata_parport-on20") },
++	.write_regr	= ktti_write_regr,
++	.read_regr	= ktti_read_regr,
++	.write_block	= ktti_write_block,
++	.read_block	= ktti_read_block,
++	.connect	= ktti_connect,
++	.disconnect	= ktti_disconnect,
++	.log_adapter	= ktti_log_adapter,
++	.sht		= { PATA_PARPORT_SHT("pata_parport-ktti") },
 +};
 +
 +MODULE_LICENSE("GPL");
-+module_pata_parport_driver(on20);
++module_pata_parport_driver(ktti);
 -- 
 Ondrej Zary
 
