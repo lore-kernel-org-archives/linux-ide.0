@@ -2,107 +2,224 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0429C433F5
-	for <linux-ide@archiver.kernel.org>; Sat,  5 Mar 2022 17:43:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE8B1C433F5
+	for <linux-ide@archiver.kernel.org>; Sat,  5 Mar 2022 20:14:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232153AbiCERo1 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 5 Mar 2022 12:44:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58964 "EHLO
+        id S232328AbiCEUPe (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 5 Mar 2022 15:15:34 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229878AbiCERo1 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 5 Mar 2022 12:44:27 -0500
-Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2702620C2CC
-        for <linux-ide@vger.kernel.org>; Sat,  5 Mar 2022 09:43:37 -0800 (PST)
-Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com [209.85.208.72])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        with ESMTP id S232323AbiCEUPd (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 5 Mar 2022 15:15:33 -0500
+Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EF49FDE83;
+        Sat,  5 Mar 2022 12:14:41 -0800 (PST)
+Received: from gsql.ggedos.sk (off-20.infotel.telecom.sk [212.5.213.20])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id DEF6E3F5FE
-        for <linux-ide@vger.kernel.org>; Sat,  5 Mar 2022 17:43:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1646502215;
-        bh=WA79imcrFseqVS1ZTUJxkEP0srNHgX016w3iNaOE7Z8=;
-        h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-         In-Reply-To:Content-Type;
-        b=LfGHIqxxxvMBm4qJ92rDWThMB722hVOwqH/iryWOzzvljsJeKJO9bK+gPygmxeH7Q
-         4H8PfNO2VAdUT93uDCcjBp3bYcJB3efnveJzywJZpnSEcR/ScWyC+enBxNbG3K5xQz
-         3lk7DE27TUka6unmk3e8tF5ESTX0hArQn0bQzgXy3bDxzjVqnrakNUKGiua3P1+4GX
-         xOAaMkxlR95va7VuJv3VKlBjOXqC7P9/D2Kz6HctVqqQjTedJHKFNFytJFva1EbKeL
-         gGbverGEtUM426SFcmnoCHtINKJ5+PBTXB5aVuV2RabaTOS3vCmVUaI0+42c7AwerM
-         JB3PRTogvP7fg==
-Received: by mail-ed1-f72.google.com with SMTP id u28-20020a50d51c000000b004159ffb8f24so5946012edi.4
-        for <linux-ide@vger.kernel.org>; Sat, 05 Mar 2022 09:43:35 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=WA79imcrFseqVS1ZTUJxkEP0srNHgX016w3iNaOE7Z8=;
-        b=JPy+OB29XCbd7oxxcfVcFqdcIzP++UR3dQyEeCbdtiX/kYFaW3NByqWMlS+sduF8yO
-         7GKMM2vbujBBLQnIez4V+lZk7QzeCEEZjpfh0HKkVvteAcrarNv/Tlr5fRfjWHEqtBmU
-         vwPrJfKkb7jFQkMOqKrR33sW1DIg/C6zrHc8Lg717Ven0MxOlhAN6MFqcgyGaQD0UB8M
-         +Fr7rUSNK4nDpyvOl3MaEoLy3H70mNz4lODtdiUkJnSxr3fvIq/nv8LTDV6ugLyFHNK9
-         hKQPGwtW0WpwVYOJjrhCmeqsXO3Wg9HsUFkm5teNrAadChZaMm/vNq0mROmBq7g2ZD7l
-         nqXA==
-X-Gm-Message-State: AOAM530qAp24qJSetHl/e2tK7gJ0tbYDtQwv6xWNVkcIzvT+qEhL54Oj
-        ZOdzTkUNaJ/otDW0zxdIL63iNhOMLcvyDD28wjMyQ6xke6jglcbjpK3f4fmqT/xNyN+73YdVYJU
-        dyjsAc1JdPRe+GS/RmQIIn+iIDNuoLu9mJ1PdYA==
-X-Received: by 2002:a17:906:2ad5:b0:6cf:9cca:d9db with SMTP id m21-20020a1709062ad500b006cf9ccad9dbmr3386006eje.252.1646502215376;
-        Sat, 05 Mar 2022 09:43:35 -0800 (PST)
-X-Google-Smtp-Source: ABdhPJxIoUZqNCcsdZ2Op7qGi5D5yjHkt6TIjLgpzimg5j17lHULbjvbmu/5AWjYb7Q0rRjqNiVaDQ==
-X-Received: by 2002:a17:906:2ad5:b0:6cf:9cca:d9db with SMTP id m21-20020a1709062ad500b006cf9ccad9dbmr3385999eje.252.1646502215198;
-        Sat, 05 Mar 2022 09:43:35 -0800 (PST)
-Received: from [192.168.0.139] (xdsl-188-155-181-108.adslplus.ch. [188.155.181.108])
-        by smtp.gmail.com with ESMTPSA id r29-20020a50c01d000000b00415fb0dc793sm2441837edb.47.2022.03.05.09.43.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 05 Mar 2022 09:43:34 -0800 (PST)
-Message-ID: <8255610f-82a8-80f1-8f63-88c7f944303e@canonical.com>
-Date:   Sat, 5 Mar 2022 18:43:33 +0100
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id 06F317A04E8;
+        Sat,  5 Mar 2022 21:14:40 +0100 (CET)
+From:   Ondrej Zary <linux@zary.sk>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        Tim Waugh <tim@cyberelk.net>, linux-block@vger.kernel.org,
+        linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 02/16] pata_parport: add aten protocol driver
+Date:   Sat,  5 Mar 2022 21:13:57 +0100
+Message-Id: <20220305201411.501-3-linux@zary.sk>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20220305201411.501-1-linux@zary.sk>
+References: <20220305201411.501-1-linux@zary.sk>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH v5 4/5] dt-bindings: ata: ahci-platform: Add
- rk3568-dwc3-ahci compatible
-Content-Language: en-US
-To:     Frank Wunderlich <linux@fw-web.de>, devicetree@vger.kernel.org
-Cc:     Frank Wunderlich <frank-w@public-files.de>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Rob Herring <robh+dt@kernel.org>, Andrew Lunn <andrew@lunn.ch>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Peter Geis <pgwipeout@gmail.com>,
-        Michael Riesch <michael.riesch@wolfvision.net>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-rockchip@lists.infradead.org
-References: <20220305112607.257734-1-linux@fw-web.de>
- <20220305112607.257734-5-linux@fw-web.de>
-From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
-In-Reply-To: <20220305112607.257734-5-linux@fw-web.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 05/03/2022 12:26, Frank Wunderlich wrote:
-> From: Frank Wunderlich <frank-w@public-files.de>
-> 
-> Add SoC specific compatible for rk3568 ahci controller
-> 
-> Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
-> ---
->  Documentation/devicetree/bindings/ata/ahci-platform.yaml | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
+Add ATEN EH-100 protocol driver.
 
+Signed-off-by: Ondrej Zary <linux@zary.sk>
+---
+ drivers/ata/pata_parport/Kconfig  |  11 +++
+ drivers/ata/pata_parport/Makefile |   1 +
+ drivers/ata/pata_parport/aten.c   | 139 ++++++++++++++++++++++++++++++
+ 3 files changed, 151 insertions(+)
+ create mode 100644 drivers/ata/pata_parport/aten.c
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+diff --git a/drivers/ata/pata_parport/Kconfig b/drivers/ata/pata_parport/Kconfig
+index 56dc6b25d5fa..93b0ad65b523 100644
+--- a/drivers/ata/pata_parport/Kconfig
++++ b/drivers/ata/pata_parport/Kconfig
+@@ -8,3 +8,14 @@
+ 
+ comment "Parallel IDE protocol modules"
+ 	depends on PATA_PARPORT
++
++config PATA_PARPORT_ATEN
++	tristate "ATEN EH-100 protocol"
++	depends on PATA_PARPORT
++	help
++	  This option enables support for the ATEN EH-100 parallel port IDE
++	  protocol. This protocol is used in some inexpensive low performance
++	  parallel port kits made in Hong Kong. If you chose to build PATA_PARPORT
++	  support into your kernel, you may answer Y here to build in the
++	  protocol driver, otherwise you should answer M to build it as a
++	  loadable module. The module will be called aten.
+diff --git a/drivers/ata/pata_parport/Makefile b/drivers/ata/pata_parport/Makefile
+index b105e1cb8dc6..7e821b629c58 100644
+--- a/drivers/ata/pata_parport/Makefile
++++ b/drivers/ata/pata_parport/Makefile
+@@ -7,3 +7,4 @@
+ #
+ 
+ obj-$(CONFIG_PATA_PARPORT)		+= pata_parport.o
++obj-$(CONFIG_PATA_PARPORT_ATEN)		+= aten.o
+diff --git a/drivers/ata/pata_parport/aten.c b/drivers/ata/pata_parport/aten.c
+new file mode 100644
+index 000000000000..a811a471e942
+--- /dev/null
++++ b/drivers/ata/pata_parport/aten.c
+@@ -0,0 +1,139 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ *	aten.c  (c) 1997-8  Grant R. Guenther <grant@torque.net>
++ *			    Under the terms of the GNU General Public License.
++ *
++ *	aten.c is a low-level protocol driver for the ATEN EH-100
++ *	parallel port adapter.  The EH-100 supports 4-bit and 8-bit
++ *	modes only.  There is also an EH-132 which supports EPP mode
++ *	transfers.  The EH-132 is not yet supported.
++ */
++
++#include <linux/module.h>
++#include <linux/init.h>
++#include <linux/delay.h>
++#include <linux/kernel.h>
++#include <linux/wait.h>
++#include <linux/types.h>
++#include <linux/io.h>
++
++#include "pata_parport.h"
++
++#define j44(a, b)		((((a >> 4) & 0x0f) | (b & 0xf0)) ^ 0x88)
++
++/* cont = 0 - access the IDE register file
++ * cont = 1 - access the IDE command set
++ */
++
++static int cont_map[2] = { 0x08, 0x20 };
++
++static void aten_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
++{
++	int r = regr + cont_map[cont] + 0x80;
++
++	w0(r); w2(0xe); w2(6); w0(val); w2(7); w2(6); w2(0xc);
++}
++
++static int aten_read_regr(struct pi_adapter *pi, int cont, int regr)
++{
++	int a, b, r;
++
++	r = regr + cont_map[cont] + 0x40;
++
++	switch (pi->mode) {
++	case 0:
++		w0(r); w2(0xe); w2(6);
++		w2(7); w2(6); w2(0);
++		a = r1(); w0(0x10); b = r1(); w2(0xc);
++		return j44(a, b);
++	case 1:
++		r |= 0x10;
++		w0(r); w2(0xe); w2(6); w0(0xff);
++		w2(0x27); w2(0x26); w2(0x20);
++		a = r0();
++		w2(0x26); w2(0xc);
++		return a;
++	}
++	return -1;
++}
++
++static void aten_read_block(struct pi_adapter *pi, char *buf, int count)
++{
++	int  k, a, b, c, d;
++
++	switch (pi->mode) {
++	case 0:
++		w0(0x48); w2(0xe); w2(6);
++		for (k = 0; k < count / 2; k++) {
++			w2(7); w2(6); w2(2);
++			a = r1(); w0(0x58); b = r1();
++			w2(0); d = r1(); w0(0x48); c = r1();
++			buf[2 * k] = j44(c, d);
++			buf[2 * k + 1] = j44(a, b);
++		}
++		w2(0xc);
++		break;
++	case 1:
++		w0(0x58); w2(0xe); w2(6);
++		for (k = 0; k < count / 2; k++) {
++			w2(0x27); w2(0x26); w2(0x22);
++			a = r0(); w2(0x20); b = r0();
++			buf[2 * k] = b; buf[2 * k + 1] = a;
++		}
++		w2(0x26); w2(0xc);
++		break;
++	}
++}
++
++static void aten_write_block(struct pi_adapter *pi, char *buf, int count)
++{
++	int k;
++
++	w0(0x88); w2(0xe); w2(6);
++	for (k = 0; k < count / 2; k++) {
++		w0(buf[2 * k + 1]); w2(0xe); w2(6);
++		w0(buf[2 * k]); w2(7); w2(6);
++	}
++	w2(0xc);
++}
++
++static void aten_connect(struct pi_adapter *pi)
++{
++	pi->saved_r0 = r0();
++	pi->saved_r2 = r2();
++	w2(0xc);
++}
++
++static void aten_disconnect(struct pi_adapter *pi)
++{
++	w0(pi->saved_r0);
++	w2(pi->saved_r2);
++}
++
++static void aten_log_adapter(struct pi_adapter *pi, char *scratch, int verbose)
++{
++	char *mode_string[2] = { "4-bit", "8-bit" };
++
++	dev_info(&pi->dev, "aten, ATEN EH-100 at 0x%x, mode %d (%s), delay %d\n",
++		pi->port, pi->mode, mode_string[pi->mode], pi->delay);
++}
++
++static struct pi_protocol aten = {
++	.owner		= THIS_MODULE,
++	.name		= "aten",
++	.max_mode	= 2,
++	.epp_first	= 2,
++	.default_delay	= 1,
++	.max_units	= 1,
++	.write_regr	= aten_write_regr,
++	.read_regr	= aten_read_regr,
++	.write_block	= aten_write_block,
++	.read_block	= aten_read_block,
++	.connect	= aten_connect,
++	.disconnect	= aten_disconnect,
++	.log_adapter	= aten_log_adapter,
++	.sht		= { PATA_PARPORT_SHT("pata_parport-aten") },
++};
++
++MODULE_LICENSE("GPL");
++module_pata_parport_driver(aten);
+-- 
+Ondrej Zary
 
-
-Best regards,
-Krzysztof
