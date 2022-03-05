@@ -2,181 +2,378 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89255C433F5
-	for <linux-ide@archiver.kernel.org>; Sat,  5 Mar 2022 15:14:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 239E2C433EF
+	for <linux-ide@archiver.kernel.org>; Sat,  5 Mar 2022 17:43:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230119AbiCEPOu (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 5 Mar 2022 10:14:50 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55808 "EHLO
+        id S232134AbiCERoI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 5 Mar 2022 12:44:08 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57422 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229436AbiCEPOu (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 5 Mar 2022 10:14:50 -0500
-Received: from mout-xforward.gmx.net (mout-xforward.gmx.net [82.165.159.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE72B1D0D73;
-        Sat,  5 Mar 2022 07:13:59 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1646493155;
-        bh=m1wvyXcdmqw6SUGsb6WV3jmsFgfj7oNi36tuWjXyAkM=;
-        h=X-UI-Sender-Class:Subject:From:In-Reply-To:Date:Cc:References:To;
-        b=DJN6ASTmsXnmy9508UVvVAWneNbqlhxUUhC1cGGWcsJO5YCylURfI/AZcQX7xZoEf
-         o4V35s3iNdNGuzBK3jl9KBVQlVSgVfu/aPx2k3Z0CNUIO0IDHtJcpSo9fqJKFFdtyE
-         UtOJqK47iuFs7XGmvRmJTnFtEvI8SVNE9k06QOt8=
-X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
-Received: from smtpclient.apple ([98.128.181.196]) by mail.gmx.net (mrgmx105
- [212.227.17.168]) with ESMTPSA (Nemesis) id 1MryTF-1nwDfK1uOD-00nwc9; Sat, 05
- Mar 2022 16:12:35 +0100
-Content-Type: text/plain;
-        charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 15.0 \(3693.60.0.1.1\))
-Subject: Re: Report 2 in ext4 and journal based on v5.17-rc1
-From:   =?utf-8?Q?Reimar_D=C3=B6ffinger?= <Reimar.Doeffinger@gmx.de>
-In-Reply-To: <20220305145534.GB31268@X58A-UD3R>
-Date:   Sat, 5 Mar 2022 16:12:27 +0100
-Cc:     Theodore Ts'o <tytso@mit.edu>, damien.lemoal@opensource.wdc.com,
-        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
-        linux-ext4@vger.kernel.org, torvalds@linux-foundation.org,
-        mingo@redhat.com, linux-kernel@vger.kernel.org,
-        peterz@infradead.org, will@kernel.org, tglx@linutronix.de,
-        rostedt@goodmis.org, joel@joelfernandes.org, sashal@kernel.org,
-        daniel.vetter@ffwll.ch, chris@chris-wilson.co.uk,
-        duyuyang@gmail.com, johannes.berg@intel.com, tj@kernel.org,
-        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
-        bfields@fieldses.org, gregkh@linuxfoundation.org,
-        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
-        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org,
-        vdavydov.dev@gmail.com, sj@kernel.org, jglisse@redhat.com,
-        dennis@kernel.org, cl@linux.com, penberg@kernel.org,
-        rientjes@google.com, vbabka@suse.cz, ngupta@vflare.org,
-        linux-block@vger.kernel.org, paolo.valente@linaro.org,
-        josef@toxicpanda.com, linux-fsdevel@vger.kernel.org,
-        viro@zeniv.linux.org.uk, jack@suse.cz, jack@suse.com,
-        jlayton@kernel.org, dan.j.williams@intel.com, hch@infradead.org,
-        djwong@kernel.org, dri-devel@lists.freedesktop.org,
-        airlied@linux.ie, rodrigosiqueiramelo@gmail.com,
-        melissa.srw@gmail.com, hamohammed.sa@gmail.com
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <56315101-B3A5-4596-947E-5D34A5FFBB37@gmx.de>
-References: <YiAow5gi21zwUT54@mit.edu>
- <1646285013-3934-1-git-send-email-byungchul.park@lge.com>
- <YiDSabde88HJ/aTt@mit.edu> <20220304032002.GD6112@X58A-UD3R>
- <YiLbs9rszWXpHm/P@mit.edu> <20220305145534.GB31268@X58A-UD3R>
-To:     Byungchul Park <byungchul.park@lge.com>
-X-Mailer: Apple Mail (2.3693.60.0.1.1)
-X-Provags-ID: V03:K1:whvk+lhsJ/zxK8CBSH/p6zkUgWk2DoodFfcAiSCDJJDa+Hp52O6
- Nfbhzzi+ktuZGYLtwoW9qfNJSraLEANrCWwT6xWYdnQrtUG7isGY5jyxYDHq4HWVXkcNwht
- L9exf7duZUup6Aj10JBs0SWk28hmicYpdhO/lD+yWMXlJTEBEhIt2rcl05AL/SZCvLbMreY
- BxuBvW4ogWm5Bxp58qVkg==
-X-UI-Out-Filterresults: junk:10;V03:K0:zweSzRTuMLc=:1xDoFGJXHax66F8wkqbjhSe+
- jrZLpaWfX7RdsGmf8c0wJqGXUOnP34+DW7J0BkFSDsySKSvgdL1OmujM86iapxROKsjWBK2at
- AaC7YJVZCyA69Hv3P27MHCgbSK2zzZ4KK2Oe6GrYEmlwpy2FVbSCC/7xeun6zHlkVjuvIiddh
- D4/pwsRjcVcrDUVoJICcsRBTchjbZLhIzt6oU67TpQkTiAEHOXsRgD1jE7K/aARIlal/l2DVl
- xPrJgqJCdEeMD3K9HvWDaPdYPjGsLT+GqqhXDVTE/ZcBhH7gKjsxJ1+6Mx4r/zZIKC+9botr2
- IqYgSgXq5eRA+8vyUQh0uKDBl4f8f86J1pLHhUfqTVAzMUY39gYDS3LotRNJ3MFJABZf/lfjU
- 0cyRUgOdsJ6qqJcIKXfabLzgCot3capLHxR2Y+QRnznXqMxMkuBWP/rfXMs4MV3IkGURCPEoR
- wjCQhSrxHEGzJg0IgcnYcPBWmaLWaoVy2k4UegQ/5MPQzywDfjBbz7bByArBN6HJXmBIwBB9y
- Pnh842Sj+JQ973UNMWaTtagNhqHDCFCUaii/U8GlWHeF0T3tZnXCKT9K+bTK3JEC9wI0mr+N7
- 5c68iMxdADA2W/VhYX6D4ze1a7YULWtNZNMNy3FDWaZyegNOruAYBPRGqiC1ncvx1LUISdbO/
- 8cW5Vg63lSiNWbL7GiPnEdRbk3vOksWKOVO4yhLonUE4f42S4PeEXN8IGr/zcBfEmPt4mImVd
- VWm9zpdNEo757DatvTW65sCdc6d9d4k4HWmXtEImH0pfIKwvELQRKV5KqWKK8AzF0jSCe08yN
- Pi333IVY6GV+LnI6SAxcsz0pac55X8Thf6xgpZKv08yi9/E/8ZPSGr44SrhTn4LnoZTrCkjA9
- +rdNMQQcevr3RF/Clrov3MYdmjcrJdJgY1A5A4/XUa98fnknpSHrjwxR3ZEUQ+U9XNqdW0pqm
- GDTzGpUb3Ha6onL+4oSq75jck6wezug8OqsouYMtWySjuX8G+mKJRihqyBiSNzVlSvOoXp8g/
- 2H4Eb86TLwPlahcEuRGUNI1dWpXZnpZHfWWaVTjpDLy7wPmUwWJY9U6bdxiBhka347RRMDMyY
- OpNYdXIQhCSfFWczlu9AXKQxyo5fAi+eho0to5QLeVlsFKfKAqCn+yg==
+        with ESMTP id S230373AbiCERoG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 5 Mar 2022 12:44:06 -0500
+Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C660200568
+        for <linux-ide@vger.kernel.org>; Sat,  5 Mar 2022 09:43:15 -0800 (PST)
+Received: from mail-ed1-f69.google.com (mail-ed1-f69.google.com [209.85.208.69])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id B59A43F5F9
+        for <linux-ide@vger.kernel.org>; Sat,  5 Mar 2022 17:43:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1646502193;
+        bh=0a7OnLjgpv73TO+6vM+DNDtQMe8kEfSMEHTewavR1aA=;
+        h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+         In-Reply-To:Content-Type;
+        b=nG8XzYGxs91rtn5CMOMD2raqhK9IJMh7OAPh8f9CH0gpAkKstGekpAD/QWoJi5TxJ
+         Ytw6pnDPv33fcWodosj+zJ1dXuP2nR1fHp0falZ2qCcwKgmNawCgBMiEPlrQfw6c3s
+         2fuxTwutNbNUNy5sjVbs+KMtemL14LivCJtZjCPPemnQM6ZntkoAiB6P9TQvFLT4IH
+         Qg1d/P8iyR1QQz5ZClk9HRy5KH0IhyqkH7emV2MfoBN/3kV+ADzhXxzj351l8jVee7
+         Se4ng2xhIW/FYcVAfeNfXyjuPkpdABH855+OfkoLW467YMRglKjnijPP85snUiDEvY
+         7Ursw1kRedYrQ==
+Received: by mail-ed1-f69.google.com with SMTP id l14-20020a056402344e00b0041593c729adso5935743edc.18
+        for <linux-ide@vger.kernel.org>; Sat, 05 Mar 2022 09:43:13 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=0a7OnLjgpv73TO+6vM+DNDtQMe8kEfSMEHTewavR1aA=;
+        b=ZnkjqYnQbu1AGKcWdqGnJh7Ra+Do93Pulhr01eJ5fRVHTduc63rf6X9sAJxH7l3n+o
+         brUG5GAvVWx4lMho6u3THaHYk/My9+yuBA196JH8kJWLciFSDaR3rJsRns4Db54Inb1M
+         UbDfGRrFX5/P5Z6d8aLMs0xOgFYaDn+6HYFCNUvM65H8yO/qkHyyI64I29w1qGq+baRU
+         FbzqABmE2NAh8OeUB8pSwJw9zbTaLAHe5dfyzNB+h3wD53T9GNGH7STz+VzIr72ZMXQj
+         fa+85JVtD9zlKuykRVn/nr1edyGOh5PIYYIi0LHuymoXrFFPvPwAkYg+8Y9emQD732gi
+         7ESA==
+X-Gm-Message-State: AOAM533r1J4nKi5jZ4SPUPrN45sDYk76Ba+TyYdtN1ghAlHNlKZyc7Y4
+        o3XOQG6EKU7qStJzSe9A+LLp+uXHtoPPEc2o1pI7Mq/jiggFT+iUQm+0z/tN26tqh7alOEROE+z
+        yBCnHcHSBg/TODmGrInibIEA+/9BxJlG3GkmXMw==
+X-Received: by 2002:a05:6402:7cb:b0:415:f059:c817 with SMTP id u11-20020a05640207cb00b00415f059c817mr3774027edy.364.1646502193280;
+        Sat, 05 Mar 2022 09:43:13 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJyilZu0PIy6v026/Z6mMVO3WIXIVbNJEb1OM1cHfPlQukRYb1GMyVvq751GLXXwH0172z0i3w==
+X-Received: by 2002:a05:6402:7cb:b0:415:f059:c817 with SMTP id u11-20020a05640207cb00b00415f059c817mr3773999edy.364.1646502193008;
+        Sat, 05 Mar 2022 09:43:13 -0800 (PST)
+Received: from [192.168.0.139] (xdsl-188-155-181-108.adslplus.ch. [188.155.181.108])
+        by smtp.gmail.com with ESMTPSA id lb10-20020a170907784a00b006db0aadcbd1sm426931ejc.219.2022.03.05.09.43.11
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 05 Mar 2022 09:43:12 -0800 (PST)
+Message-ID: <a2839b00-d195-131f-b2a7-d2f030a5bd95@canonical.com>
+Date:   Sat, 5 Mar 2022 18:43:10 +0100
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH v5 1/5] dt-bindings: ata: ahci-platform: Convert DT
+ bindings to yaml
+Content-Language: en-US
+To:     Frank Wunderlich <linux@fw-web.de>, devicetree@vger.kernel.org
+Cc:     Frank Wunderlich <frank-w@public-files.de>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Rob Herring <robh+dt@kernel.org>, Andrew Lunn <andrew@lunn.ch>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Peter Geis <pgwipeout@gmail.com>,
+        Michael Riesch <michael.riesch@wolfvision.net>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-rockchip@lists.infradead.org
+References: <20220305112607.257734-1-linux@fw-web.de>
+ <20220305112607.257734-2-linux@fw-web.de>
+From:   Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+In-Reply-To: <20220305112607.257734-2-linux@fw-web.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi,
-Sorry to butt in as an outsider, but this seems like a shockingly =
-disrespectful discussion for such a wide CC list.
-I don't want to make rules how you discuss things (I very rarely =
-contribute), and I see the value in a frank discussion, but maybe you =
-could continue with a reduced CC list?
-I find it unlikely that I am the only one who could do without this.
+On 05/03/2022 12:26, Frank Wunderlich wrote:
+> From: Frank Wunderlich <frank-w@public-files.de>
+> 
+> Create a yaml file for dtbs_check from the old txt binding.
+> 
+> Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
+> ---
+> 
+> v5:
+>   - change subject
+>   - drop brcm,iproc-ahci from standalone enum
+>   - fix reg address in example 2
+>   - move clocknames next to clocks, regnames to reg
+>   - drop interrupts description
+>   - drop newline from dma-coherent
+>   - drop max-items from ports-implemented
+>   - min2max in child phys
+>   - fix identation for compatible and sata-common
+>   - add additionalProperties=false for subnodes
+>   - pipe for paragraphs and newline after title
+>   - add maximum for ports-implemented (found only 0x1 as its value)
+>   - add phy-names to sata-ports
+> 
+> v4:
+>   - fix min vs. max
+>   - fix indention of examples
+>   - move up sata-common.yaml
+>   - reorder compatible
+>   - add descriptions/maxitems
+>   - fix compatible-structure
+>   - fix typo in example achi vs. ahci
+>   - add clock-names and reg-names
+>   - fix ns2 errors in separate patch
+> v3:
+>   - add conversion to sata-series
+>   - fix some errors in dt_binding_check and dtbs_check
+>   - move to unevaluated properties = false
+> 
+> ---
+>  .../devicetree/bindings/ata/ahci-platform.txt |  79 ---------
+>  .../bindings/ata/ahci-platform.yaml           | 163 ++++++++++++++++++
+>  2 files changed, 163 insertions(+), 79 deletions(-)
+>  delete mode 100644 Documentation/devicetree/bindings/ata/ahci-platform.txt
+>  create mode 100644 Documentation/devicetree/bindings/ata/ahci-platform.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> deleted file mode 100644
+> index 77091a277642..000000000000
+> --- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> +++ /dev/null
+> @@ -1,79 +0,0 @@
+> -* AHCI SATA Controller
+> -
+> -SATA nodes are defined to describe on-chip Serial ATA controllers.
+> -Each SATA controller should have its own node.
+> -
+> -It is possible, but not required, to represent each port as a sub-node.
+> -It allows to enable each port independently when dealing with multiple
+> -PHYs.
+> -
+> -Required properties:
+> -- compatible        : compatible string, one of:
+> -  - "brcm,iproc-ahci"
+> -  - "hisilicon,hisi-ahci"
+> -  - "cavium,octeon-7130-ahci"
+> -  - "ibm,476gtr-ahci"
+> -  - "marvell,armada-380-ahci"
+> -  - "marvell,armada-3700-ahci"
+> -  - "snps,dwc-ahci"
+> -  - "snps,spear-ahci"
+> -  - "generic-ahci"
+> -- interrupts        : <interrupt mapping for SATA IRQ>
+> -- reg               : <registers mapping>
+> -
+> -Please note that when using "generic-ahci" you must also specify a SoC specific
+> -compatible:
+> -	compatible = "manufacturer,soc-model-ahci", "generic-ahci";
+> -
+> -Optional properties:
+> -- dma-coherent      : Present if dma operations are coherent
+> -- clocks            : a list of phandle + clock specifier pairs
+> -- resets            : a list of phandle + reset specifier pairs
+> -- target-supply     : regulator for SATA target power
+> -- phy-supply        : regulator for PHY power
+> -- phys              : reference to the SATA PHY node
+> -- phy-names         : must be "sata-phy"
+> -- ahci-supply       : regulator for AHCI controller
+> -- ports-implemented : Mask that indicates which ports that the HBA supports
+> -		      are available for software to use. Useful if PORTS_IMPL
+> -		      is not programmed by the BIOS, which is true with
+> -		      some embedded SOC's.
+> -
+> -Required properties when using sub-nodes:
+> -- #address-cells    : number of cells to encode an address
+> -- #size-cells       : number of cells representing the size of an address
+> -
+> -Sub-nodes required properties:
+> -- reg		    : the port number
+> -And at least one of the following properties:
+> -- phys		    : reference to the SATA PHY node
+> -- target-supply     : regulator for SATA target power
+> -
+> -Examples:
+> -        sata@ffe08000 {
+> -		compatible = "snps,spear-ahci";
+> -		reg = <0xffe08000 0x1000>;
+> -		interrupts = <115>;
+> -        };
+> -
+> -With sub-nodes:
+> -	sata@f7e90000 {
+> -		compatible = "marvell,berlin2q-achi", "generic-ahci";
+> -		reg = <0xe90000 0x1000>;
+> -		interrupts = <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
+> -		clocks = <&chip CLKID_SATA>;
+> -		#address-cells = <1>;
+> -		#size-cells = <0>;
+> -
+> -		sata0: sata-port@0 {
+> -			reg = <0>;
+> -			phys = <&sata_phy 0>;
+> -			target-supply = <&reg_sata0>;
+> -		};
+> -
+> -		sata1: sata-port@1 {
+> -			reg = <1>;
+> -			phys = <&sata_phy 1>;
+> -			target-supply = <&reg_sata1>;;
+> -		};
+> -	};
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+> new file mode 100644
+> index 000000000000..fae042539824
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
+> @@ -0,0 +1,163 @@
+> +# SPDX-License-Identifier: GPL-2.0
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/ata/ahci-platform.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: AHCI SATA Controller
+> +
+> +description: |
+> +  SATA nodes are defined to describe on-chip Serial ATA controllers.
+> +  Each SATA controller should have its own node.
+> +
+> +  It is possible, but not required, to represent each port as a sub-node.
+> +  It allows to enable each port independently when dealing with multiple
+> +  PHYs.
+> +
+> +maintainers:
+> +  - Hans de Goede <hdegoede@redhat.com>
+> +  - Jens Axboe <axboe@kernel.dk>
+> +
+> +allOf:
+> +  - $ref: "sata-common.yaml#"
+> +
+> +properties:
+> +  compatible:
+> +    oneOf:
+> +      - items:
+> +          - enum:
+> +              - brcm,iproc-ahci
+> +              - marvell,armada-8k-ahci
+> +              - marvell,berlin2q-ahci
+> +          - const: generic-ahci
+> +      - enum:
+> +          - cavium,octeon-7130-ahci
+> +          - hisilicon,hisi-ahci
+> +          - ibm,476gtr-ahci
+> +          - marvell,armada-3700-ahci
+> +          - marvell,armada-380-ahci
+> +          - snps,dwc-ahci
+> +          - snps,spear-ahci
+> +
+> +  reg:
+> +    maxItems: 1
+> +
+> +  reg-names:
+> +    maxItems: 1
+> +
+> +  clocks:
+> +    description:
+> +      Clock IDs array as required by the controller.
+> +    minItems: 1
+> +    maxItems: 3
+> +
+> +  clock-names:
+> +    description:
+> +      Names of clocks corresponding to IDs in the clock property.
+> +    minItems: 1
+> +    maxItems: 3
+> +
+> +  interrupts:
+> +    maxItems: 1
+> +
+> +  ahci-supply:
+> +    description:
+> +      regulator for AHCI controller
+> +
+> +  dma-coherent: true
+> +
+> +  phy-supply:
+> +    description:
+> +      regulator for PHY power
+> +
+> +  phys:
+> +    description:
+> +      List of all PHYs on this controller
+> +    maxItems: 1
+> +
+> +  phy-names:
+> +    description:
+> +      Name specifier for the PHYs
+> +    maxItems: 1
+> +
+> +  ports-implemented:
+> +    $ref: '/schemas/types.yaml#/definitions/uint32'
+> +    description: |
+> +      Mask that indicates which ports that the HBA supports
+> +      are available for software to use. Useful if PORTS_IMPL
+> +      is not programmed by the BIOS, which is true with
+> +      some embedded SoCs.
+> +    maximum: 0x1
+> +
+> +  resets:
+> +    maxItems: 1
+> +
+> +  target-supply:
+> +    description:
+> +      regulator for SATA target power
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - interrupts
+> +
+> +patternProperties:
+> +  "^sata-port@[0-9a-f]+$":
+> +    type: object
+> +    additionalProperties: false
+> +    description:
+> +      Subnode with configuration of the Ports.
+> +
+> +    properties:
+> +      reg:
+> +        maxItems: 1
+> +
+> +      phys:
+> +        maxItems: 1
+> +
+> +      phy-names:
+> +        maxItems: 1
+> +
+> +      target-supply:
+> +        description:
+> +          regulator for SATA target power
+> +
+> +    required:
+> +      - reg
+> +
+> +    anyOf:
+> +      - required: [ phys ]
+> +      - required: [ target-supply ]
+> +
+> +unevaluatedProperties: false
+> +
+> +examples:
+> +  - |
+> +    sata@ffe08000 {
+> +           compatible = "snps,spear-ahci";
+> +           reg = <0xffe08000 0x1000>;
+> +           interrupts = <115>;
+
+Thanks for the changes, all look good except now I noticed that
+indentation of example is unusual. It's not consistent. Starts with four
+space (correct) but then goes to 7 spaces. Please adjust entire example
+to use 4 spaces indentation.
+
+With that:
+
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+
 
 Best regards,
-Reimar D=C3=B6ffinger
-
-> On 5 Mar 2022, at 15:55, Byungchul Park <byungchul.park@lge.com> =
-wrote:
->=20
-> On Fri, Mar 04, 2022 at 10:40:35PM -0500, Theodore Ts'o wrote:
->> On Fri, Mar 04, 2022 at 12:20:02PM +0900, Byungchul Park wrote:
->>>=20
->>> I found a point that the two wait channels don't lead a deadlock in
->>> some cases thanks to Jan Kara. I will fix it so that Dept won't
->>> complain it.
->>=20
->> I sent my last (admittedly cranky) message before you sent this.  I'm
->> glad you finally understood Jan's explanation.  I was trying to tell
->=20
-> Not finally. I've understood him whenever he tried to tell me =
-something.
->=20
->> you the same thing, but apparently I failed to communicate in a
->=20
-> I don't think so. Your point and Jan's point are different. All he has
-> said make sense. But yours does not.
->=20
->> sufficiently clear manner.  In any case, what Jan described is a
->> fundamental part of how wait queues work, and I'm kind of amazed that
->> you were able to implement DEPT without understanding it.  (But maybe
->=20
-> Of course, it was possible because all that Dept has to know for basic
-> work is wait and event. The subtle things like what Jan told me help
-> Dept be better.
->=20
->> that is why some of the DEPT reports were completely incomprehensible
->=20
-> It's because you are blinded to blame at it without understanding how
-> Dept works at all. I will fix those that must be fixed. Don't worry.
->=20
->> to me; I couldn't interpret why in the world DEPT was saying there =
-was
->> a problem.)
->=20
-> I can tell you if you really want to understand why. But I can't if =
-you
-> are like this.
->=20
->> In any case, the thing I would ask is a little humility.  We =
-regularly
->> use lockdep, and we run a huge number of stress tests, throughout =
-each
->> development cycle.
->=20
-> Sure.
->=20
->> So if DEPT is issuing lots of reports about apparently circular
->> dependencies, please try to be open to the thought that the fault is
->=20
-> No one was convinced that Dept doesn't have a fault. I think your
-> worries are too much.
->=20
->> in DEPT, and don't try to argue with maintainers that their code MUST
->> be buggy --- but since you don't understand our code, and DEPT must =
-be
->=20
-> No one argued that their code must be buggy, either. So I don't think
-> you have to worry about what's never happened.
->=20
->> theoretically perfect, that it is up to the Maintainers to prove to
->> you that their code is correct.
->>=20
->> I am going to gently suggest that it is at least as likely, if not
->> more likely, that the failure is in DEPT or your understanding of =
-what
->=20
-> No doubt. I already think so. But it doesn't mean that I have to keep
-> quiet without discussing to imporve Dept. I will keep improving Dept =
-in
-> a reasonable way.
->=20
->> how kernel wait channels and locking works.  After all, why would it
->> be that we haven't found these problems via our other QA practices?
->=20
-> Let's talk more once you understand how Dept works at least 10%. Or I
-> think we cannot talk in a productive way.
->=20
-
+Krzysztof
