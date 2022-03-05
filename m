@@ -2,34 +2,36 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A359C433EF
-	for <linux-ide@archiver.kernel.org>; Sat,  5 Mar 2022 10:08:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C398C433F5
+	for <linux-ide@archiver.kernel.org>; Sat,  5 Mar 2022 10:20:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230115AbiCEKJR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 5 Mar 2022 05:09:17 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55746 "EHLO
+        id S230134AbiCEKUt (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 5 Mar 2022 05:20:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230322AbiCEKJQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 5 Mar 2022 05:09:16 -0500
-Received: from mout.gmx.net (mout.gmx.net [212.227.17.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C4253EF39;
-        Sat,  5 Mar 2022 02:08:24 -0800 (PST)
+        with ESMTP id S231136AbiCEKUs (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 5 Mar 2022 05:20:48 -0500
+Received: from mout.gmx.net (mout.gmx.net [212.227.17.22])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 478B67E5BB;
+        Sat,  5 Mar 2022 02:19:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1646474868;
-        bh=YJqn1NC2PcONovl+FeGlrbZLfeART2llhJv+aFruqL8=;
+        s=badeba3b8450; t=1646475565;
+        bh=hyzDOtV7xvM79xMsBY7kHpNVdMXTGXVQSg16UMzGcDo=;
         h=X-UI-Sender-Class:From:To:Cc:Subject:Date:In-Reply-To:References;
-        b=R4D82yx17Ur9XFddyt1BtT8rQBFwwHNMEkM2Y9Uftfb3Jtx7H7JMo92zGASLZqeW7
-         hMKfVRnjVoTa5o1XQpab6J4m2CCZ37A2s+vClm/7Zw8KfRz2Q3Q9QsvZy7BPZcmMVe
-         +jHMjTYalA0KxDWHnD0svKkQ3mScBfs8jlEA+tEE=
+        b=GYh0sjdwB7nmeHw57MWmGFYU7SbECk06LHZd14Y+5JB6Pz/W42ThKlPE9T0+uDPZH
+         mMasXQdOwWOTtG8bszQMMpX6WIZ2Jiza6hxbUjbU57X1LJo9Ooi4Pd+G4BjrH34gjz
+         puvhARUzf8JYUhuPjrUk5C9lXMa2IuWj+HJlOHlQ=
 X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
 Received: from [80.245.79.220] ([80.245.79.220]) by web-mail.gmx.net
  (3c-app-gmx-bap19.server.lan [172.19.172.89]) (via HTTP); Sat, 5 Mar 2022
- 11:07:48 +0100
+ 11:19:25 +0100
 MIME-Version: 1.0
-Message-ID: <trinity-68e1ed73-5a31-42d1-838e-0a837e686c4a-1646474868401@3c-app-gmx-bap19>
+Message-ID: <trinity-f8b1d1cb-0521-42b2-934d-9f822c86b623-1646475565023@3c-app-gmx-bap19>
 From:   Frank Wunderlich <frank-w@public-files.de>
-To:     Rob Herring <robh@kernel.org>
-Cc:     Frank Wunderlich <linux@fw-web.de>, devicetree@vger.kernel.org,
+To:     Frank Wunderlich <frank-w@public-files.de>,
+        Rob Herring <robh+dt@kernel.org>
+Cc:     Rob Herring <robh@kernel.org>, Frank Wunderlich <linux@fw-web.de>,
+        devicetree@vger.kernel.org,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
         Hans de Goede <hdegoede@redhat.com>,
@@ -49,84 +51,57 @@ Cc:     Frank Wunderlich <linux@fw-web.de>, devicetree@vger.kernel.org,
 Subject: Aw: Re: Re: [PATCH v4 1/5] dt-bindings: Convert ahci-platform DT
  bindings to yaml
 Content-Type: text/plain; charset=UTF-8
-Date:   Sat, 5 Mar 2022 11:07:48 +0100
+Date:   Sat, 5 Mar 2022 11:19:25 +0100
 Importance: normal
 Sensitivity: Normal
-In-Reply-To: <CAL_JsqJMZ1mZ91SYZR03rMkK-ZqFd-tCwV6zOrNu5NmP6V+duA@mail.gmail.com>
+In-Reply-To: <trinity-68e1ed73-5a31-42d1-838e-0a837e686c4a-1646474868401@3c-app-gmx-bap19>
 References: <20220301152421.57281-1-linux@fw-web.de>
  <20220301152421.57281-2-linux@fw-web.de>
  <Yh+0B+iKx1gJXXCk@robh.at.kernel.org>
  <trinity-1ca1f3fd-1eeb-4c8d-a7e2-65851eb8002b-1646291055736@3c-app-gmx-bs69>
  <CAL_JsqJMZ1mZ91SYZR03rMkK-ZqFd-tCwV6zOrNu5NmP6V+duA@mail.gmail.com>
+ <trinity-68e1ed73-5a31-42d1-838e-0a837e686c4a-1646474868401@3c-app-gmx-bap19>
 Content-Transfer-Encoding: quoted-printable
 X-UI-Message-Type: mail
 X-Priority: 3
-X-Provags-ID: V03:K1:/P0vzO+iE3b5I3dbtGgMwtxR9U6OKwczttbAGfwTXkfKWsHrYxxTETEAvFpR6TjrKXlHj
- CbsxUsZvI7LPDJbP5Y62qRUxeM+tT+vL0+BSNLGg3EybiyTLZbjIykCpxvz+Rwnuz2E1yiPspb0j
- t1qM/Cr8NFDw7DJaII5b0gvdZfJpCFNOvCvoJaNqbBKauKdhu5HZOwKwNRe9m2SjU1Y2s8XoKvh/
- vDvOSsM9zY/kHDK0CVOr7/tq8QaQd+1K7Qv5BSaZB6ROwZhCYgXwmYENMCrMzi+y7pRYmJtb0g8E
- c8=
-X-UI-Out-Filterresults: notjunk:1;V03:K0:xhCga6P51Tk=:BhJdX6j65ejZ9fVOAYZOhq
- hN1UYc10YfWYB62IOfbzb/+zGB1PgJ0rofHpQiRaNchSj6/6hdji2p7hD1KnL/zXdNw5+yXYJ
- KdY8nzqsURgJo6MEt81IT3U+tkdjix62yn8Vxsm9WlyKYPb00Pl27IOlQS/sb15AX4CDj4hJp
- v2/sKOk9AOxQZOfHKi9vxOAsE3/MDq6J/x/nvi4o9xVnaq9RgoNMljKr5zxHXhwu9R95MwTiY
- UzEYI4EvolulY/GtOV8nMMD1eSPEYIU7gK98vTcvbprwuBi4XzQsDirtj8LztSJGV9DzJ1Ock
- 5eXjtECIz1zVmirc/BCoxY8q1PQzeZZmHG+xV4ps0Y2IvnzKYn/yxcsLzy1CueZ3FDk4csnv1
- MYGicJaSddUg4g6ePiPsH9VW1tD5O6UkCjsodAaxiG5NTFtOUnP+JQWqs4wymQNUwjclUkpBa
- r2bYyxVA32aZhW0un+F+2sHugUsiNRaXJb/fNzTju0Q+TiAp/grYvcSsruPoByfh2ZdDzGTYx
- aC3BikVbtgJhBkyA1MpOFy/VBrOfzzCC/8K56k+oBBMYx0UkmUSyzFdjftONRSKXxSrZJ3SmY
- VCKqi4Bik8pxvpnHktviqaP/SHMYbnLLwo8KSWROLJtIchrY0w+wLaxV0wURJKPamozPxIGYI
- 74sgQFbMVOt3THPMA+WPQe32icT/X8u1WPSgRkdleA4DdegTmDUTK9uNDQj4lECR6flWJD2cl
- 6BxG0b0Fh+6GuBU+SW+EH8FXXzmzkjFYmQVBMVoJnIvGMbhA81Y2X0paMDYQonqbOAjidUJch
- XugSAYi
+X-Provags-ID: V03:K1:+onrTpI7SK3F02AVIuUdj/i5gRLg5dijgmk6GNPu7j/ZIY+jH4jG068TuUEFfT54eBhg1
+ hC7stUOUeNw2OYtiQmq98Indy7b5pHwERnor55k3iBDXYPfCgXSBz3d/wkD/BARsUQHrRNLaaAkQ
+ o4qXqauAm4DHKy9WWFDmlCoJSM61WRl27GYayl22X3760Uae/RBrsGizW1WJWNbmz4aA1GxSNmlg
+ 0E7fZ7IHgpMg/OZvnq+DpGbJjzfix4NnEzXQnsS/2w/AXgpwacgen1ouN/Q/ejM7xKva0mDpy8QI
+ Xk=
+X-UI-Out-Filterresults: notjunk:1;V03:K0:8v+5/R1XTUI=:9ppDbdAF8VlTCYdVSoceIz
+ aHWpNLOnNS/qVbe7xTr8nI1EKM7S0RafcMZ2IesaJ2a5dZGAFw40OozY+CSCU4VbXkPImOp+l
+ Ou8AasaCIk8iqiUp2u7OGSVAWyN58k9vij6U5JP+Pa79+vczR/2Eu0bEyh9g5Jv5OFUDWfniX
+ /dh3OiECds1g1HFS9A1+MOxTIRCLh8iNANOkkj9FI4luiLljXhmFKSEGE/dKnuMqtHGSzPC3i
+ G7LA1iaq23+DTnhnCwoQ8UvLZePW3IZu+IWZvVjol7/SvP2Qf1C7pfYg3SpEdXQ1awnL8ZzKB
+ cqmrAwwyWA6Td3DcGugxdDdzZvCSts3jga5xKL+9bPsShv3skY2p8Xv6mSuiMEq/wiPku/sej
+ pNc+m2HDlgh7+zn8tw8DBPZOrgu8zKWKsbyD36P3PLTbY+2hQjiSycGXBnqQbvV7rsAc6LV73
+ b1+cLWPgOSTjJVRBKMakXp14L+Gc8CfLayDFUKdTXpsdg2jHjyihfouL63OgKuuJtVjFNrZDE
+ dcIOWduudV+u10eubkLh1KAtmbWKJYQ/aJqjwZ7GtWvPpb03eVcztEc8vSRe3qJjylIiKc3kZ
+ 4OVM7sId5BgEvOayF67vwJmSdaY1Sun/RSsh64Vm4IOgbagOYPuIxNYsdIOfFS2BujfVP0bi0
+ FOUEzJerDykSSiOqIBZbbfzH/PzL13D8yFoMVBJEePCmVCC2hWaZrrtFPOeLKWQATkUJ6+A9T
+ fhIOJKgJHG7H1R0aue/9BpanHCOniFu/tu/X0cd+YtkGaZhDg+IjsAG4Gmc0X9TlCUQ6PtIhR
+ VG8eV9+
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi
+Take a look again of the mentioned calxeda=2E=2E=2E
 
-> Gesendet: Samstag, 05=2E M=C3=A4rz 2022 um 00:37 Uhr
-> Von: "Rob Herring" <robh@kernel=2Eorg>
+it looks like it only uses the compatible "calxeda,hb-ahci" handled by
+drivers/ata/sata_highbank=2Ec and seems not using the ahci-platform=2Ec
 
-> > > > +  ports-implemented:
-> > > > +    $ref: '/schemas/types=2Eyaml#/definitions/uint32'
-> > > > +    description:
-> > > > +      Mask that indicates which ports that the HBA supports
-> > > > +      are available for software to use=2E Useful if PORTS_IMPL
-> > > > +      is not programmed by the BIOS, which is true with
-> > > > +      some embedded SoCs=2E
-> > > > +    maxItems: 1
-> > >
-> > > A uint32 is only ever 1 item=2E Drop=2E
-> > >
-> > > IIRC, isn't the max here 0xff? Add constraints=2E
-> >
-> > i've found it only set to 0x1 so i have currently set the maximum to 0=
-x1, is this ok?
-> > If some higher value is needed binding needs to be touched=2E=2E=2E
->=20
-> There's a spec for it, so no need to look at what's used=2E Calxeda AHCI
-> had 5 ports IIRC=2E
+obj-$(CONFIG_SATA_HIGHBANK)	+=3D sata_highbank=2Eo libahci=2Eo
 
-as far as i understand code in libahci=2Ec line 535+ [1]
-i guess i need to set lower 5 bits to 1 for 5 ports, right? resulting in m=
-ax value 0x1f
-
-> > now i have only the marvell-errors about incomplete sata-port subnode =
-(without phy/target-supply) like i mention in the patch=2E=2E=2Ehow to proc=
-eed with this?
->=20
-> So the child nodes are incomplete? They should be disabled then
-> (status =3D "disabled") and that turns off required properties checks=2E
-
-thanks, have disable the nodes and reenable them where phys/target-supply =
-was added [2]=2E=2E=2E
-
-now the dtbs_check is clean
-
-[1] https://elixir=2Ebootlin=2Ecom/linux/v5=2E17-rc6/source/drivers/ata/li=
-bahci=2Ec#L535
-[2] https://github=2Ecom/frank-w/BPI-R2-4=2E14/commits/5=2E17-next-2022022=
-5
+so imho the maximum 0x1 still should be right
 
 regards Frank
+
+
+> > Gesendet: Samstag, 05=2E M=C3=A4rz 2022 um 00:37 Uhr
+> > Von: "Rob Herring" <robh@kernel=2Eorg>
+>=20
+> > There's a spec for it, so no need to look at what's used=2E Calxeda AH=
+CI
+> > had 5 ports IIRC=2E
+
