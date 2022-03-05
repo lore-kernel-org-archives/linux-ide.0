@@ -2,22 +2,22 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88984C433FE
-	for <linux-ide@archiver.kernel.org>; Sat,  5 Mar 2022 20:15:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7307BC4321E
+	for <linux-ide@archiver.kernel.org>; Sat,  5 Mar 2022 20:15:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232324AbiCEUP6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sat, 5 Mar 2022 15:15:58 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52314 "EHLO
+        id S232375AbiCEUQB (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 5 Mar 2022 15:16:01 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51996 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232362AbiCEUPj (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sat, 5 Mar 2022 15:15:39 -0500
+        with ESMTP id S232344AbiCEUPf (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 5 Mar 2022 15:15:35 -0500
 Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 94BB8240B1;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 94D0B2558F;
         Sat,  5 Mar 2022 12:14:44 -0800 (PST)
 Received: from gsql.ggedos.sk (off-20.infotel.telecom.sk [212.5.213.20])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by hosting.gsystem.sk (Postfix) with ESMTPSA id 868B97A05A6;
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id C1D067A0645;
         Sat,  5 Mar 2022 21:14:40 +0100 (CET)
 From:   Ondrej Zary <linux@zary.sk>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
@@ -25,9 +25,9 @@ Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         Tim Waugh <tim@cyberelk.net>, linux-block@vger.kernel.org,
         linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 06/16] pata_parport: add dstr protocol driver
-Date:   Sat,  5 Mar 2022 21:14:01 +0100
-Message-Id: <20220305201411.501-7-linux@zary.sk>
+Subject: [PATCH 08/16] pata_parport: add fit3 protocol driver
+Date:   Sat,  5 Mar 2022 21:14:03 +0100
+Message-Id: <20220305201411.501-9-linux@zary.sk>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20220305201411.501-1-linux@zary.sk>
 References: <20220305201411.501-1-linux@zary.sk>
@@ -37,56 +37,68 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add DataStor EP-2000 protocol driver.
+Add FIT TD-3000 protocol driver.
 
 Signed-off-by: Ondrej Zary <linux@zary.sk>
 ---
- drivers/ata/pata_parport/Kconfig  |  10 ++
+ drivers/ata/pata_parport/Kconfig  |  12 ++
  drivers/ata/pata_parport/Makefile |   1 +
- drivers/ata/pata_parport/dstr.c   | 226 ++++++++++++++++++++++++++++++
- 3 files changed, 237 insertions(+)
- create mode 100644 drivers/ata/pata_parport/dstr.c
+ drivers/ata/pata_parport/fit3.c   | 195 ++++++++++++++++++++++++++++++
+ 3 files changed, 208 insertions(+)
+ create mode 100644 drivers/ata/pata_parport/fit3.c
 
 diff --git a/drivers/ata/pata_parport/Kconfig b/drivers/ata/pata_parport/Kconfig
-index 3cc3d6ae4d45..67f203dfbdca 100644
+index db8edb288db4..a03c626e4e6c 100644
 --- a/drivers/ata/pata_parport/Kconfig
 +++ b/drivers/ata/pata_parport/Kconfig
-@@ -64,3 +64,13 @@ config PATA_PARPORT_COMM
- 	  into your kernel, you may answer Y here to build in the protocol
- 	  driver, otherwise you should answer M to build it as a loadable
- 	  module. The module will be called comm.
+@@ -85,3 +85,15 @@ config PATA_PARPORT_FIT2
+ 	  you chose to build PATA_PARPORT support into your kernel, you may answer Y
+ 	  here to build in the protocol driver, otherwise you should answer M
+ 	  to build it as a loadable module. The module will be called ktti.
 +
-+config PATA_PARPORT_DSTR
-+	tristate "DataStor EP-2000 protocol"
++config PATA_PARPORT_FIT3
++	tristate "FIT TD-3000 protocol"
 +	depends on PATA_PARPORT
 +	help
-+	  This option enables support for the EP-2000 parallel port IDE
-+	  protocol from DataStor. If you chose to build PATA_PARPORT support
-+	  into your kernel, you may answer Y here to build in the protocol
-+	  driver, otherwise you should answer M to build it as a loadable
-+	  module. The module will be called dstr.
++	  This option enables support for the TD-3000 parallel port IDE
++	  protocol from Fidelity International Technology. This protocol is
++	  used in newer models of their portable disk, CD-ROM and PD/CD
++	  devices. If you chose to build PATA_PARPORT support into your kernel, you
++	  may answer Y here to build in the protocol driver, otherwise you
++	  should answer M to build it as a loadable module. The module will be
++	  called fit3.
 diff --git a/drivers/ata/pata_parport/Makefile b/drivers/ata/pata_parport/Makefile
-index fcb77a855ef6..bf81c4ca32ab 100644
+index 27d854f52ad7..140f6f142eaa 100644
 --- a/drivers/ata/pata_parport/Makefile
 +++ b/drivers/ata/pata_parport/Makefile
-@@ -11,3 +11,4 @@ obj-$(CONFIG_PATA_PARPORT_ATEN)		+= aten.o
- obj-$(CONFIG_PATA_PARPORT_BPCK)		+= bpck.o
- obj-$(CONFIG_PATA_PARPORT_BPCK6)	+= bpck6.o
+@@ -13,3 +13,4 @@ obj-$(CONFIG_PATA_PARPORT_BPCK6)	+= bpck6.o
  obj-$(CONFIG_PATA_PARPORT_COMM)		+= comm.o
-+obj-$(CONFIG_PATA_PARPORT_DSTR)		+= dstr.o
-diff --git a/drivers/ata/pata_parport/dstr.c b/drivers/ata/pata_parport/dstr.c
+ obj-$(CONFIG_PATA_PARPORT_DSTR)		+= dstr.o
+ obj-$(CONFIG_PATA_PARPORT_FIT2)		+= fit2.o
++obj-$(CONFIG_PATA_PARPORT_FIT3)		+= fit3.o
+diff --git a/drivers/ata/pata_parport/fit3.c b/drivers/ata/pata_parport/fit3.c
 new file mode 100644
-index 000000000000..2e1e078fa467
+index 000000000000..7c874dc8b41b
 --- /dev/null
-+++ b/drivers/ata/pata_parport/dstr.c
-@@ -0,0 +1,226 @@
++++ b/drivers/ata/pata_parport/fit3.c
+@@ -0,0 +1,195 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
-+ *	dstr.c    (c) 1997-8  Grant R. Guenther <grant@torque.net>
-+ *			      Under the terms of the GNU General Public License.
++ *	fit3.c	(c) 1998  Grant R. Guenther <grant@torque.net>
++ *			  Under the terms of the GNU General Public License.
 + *
-+ *	dstr.c is a low-level protocol driver for the
-+ *	DataStor EP2000 parallel to IDE adapter chip.
++ *	fit3.c is a low-level protocol driver for newer models
++ *	of the Fidelity International Technology parallel port adapter.
++ *	This adapter is used in their TransDisk 3000 portable
++ *	hard-drives, as well as CD-ROM, PD-CD and other devices.
++ *
++ *	The TD-2000 and certain older devices use a different protocol.
++ *	Try the fit2 protocol module with them.
++ *
++ *	NB:  The FIT adapters do not appear to support the control
++ *	registers.  So, we map ALT_STATUS to STATUS and NO-OP writes
++ *	to the device control register - this means that IDE reset
++ *	will not work on these devices.
 + */
 +
 +#include <linux/module.h>
@@ -99,213 +111,172 @@ index 000000000000..2e1e078fa467
 +
 +#include "pata_parport.h"
 +
-+/* mode codes:  0  nybble reads, 8-bit writes
-+ *		1  8-bit reads and writes
-+ *		2  8-bit EPP mode
-+ *		3  EPP-16
-+ *		4  EPP-32
-+ */
++#define j44(a, b)	(((a >> 3) & 0x0f) | ((b << 1) & 0xf0))
 +
-+#define j44(a, b)  (((a >> 3) & 0x07) | ((~a >> 4) & 0x08) | ((b << 1) & 0x70) | ((~b) & 0x80))
-+
-+#define P1	do { w2(5); w2(0xd); w2(5); w2(4); } while (0)
-+#define P2	do { w2(5); w2(7); w2(5); w2(4); } while (0)
-+#define P3      do { w2(6); w2(4); w2(6); w2(4); } while (0)
++#define w7(byte)	out_p(7, byte)
++#define r7()		(in_p(7) & 0xff)
 +
 +/* cont = 0 - access the IDE register file
 + * cont = 1 - access the IDE command set
 + */
 +
-+static int cont_map[2] = { 0x20, 0x40 };
-+
-+static int dstr_read_regr(struct pi_adapter *pi, int cont, int regr)
++static void fit3_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
 +{
-+	int a, b, r;
-+
-+	r = regr + cont_map[cont];
-+
-+	w0(0x81); P1;
-+	if (pi->mode)
-+		w0(0x11);
-+	else
-+		w0(1);
-+	P2; w0(r); P1;
++	if (cont == 1)
++		return;
 +
 +	switch (pi->mode) {
 +	case 0:
-+		w2(6); a = r1(); w2(4); w2(6); b = r1(); w2(4);
++	case 1:
++		w2(0xc); w0(regr); w2(0x8); w2(0xc);
++		w0(val); w2(0xd);
++		w0(0);   w2(0xc);
++		break;
++	case 2:
++		w2(0xc); w0(regr); w2(0x8); w2(0xc);
++		w4(val); w4(0);
++		w2(0xc);
++		break;
++	}
++}
++
++static int fit3_read_regr(struct pi_adapter *pi, int cont, int regr)
++{
++	int a, b;
++
++	if (cont) {
++		if (regr != 6)
++			return 0xff;
++		regr = 7;
++	}
++
++	switch (pi->mode) {
++	case 0:
++		w2(0xc); w0(regr + 0x10); w2(0x8); w2(0xc);
++		w2(0xd); a = r1();
++		w2(0xf); b = r1();
++		w2(0xc);
 +		return j44(a, b);
 +	case 1:
-+		w0(0); w2(0x26); a = r0(); w2(4);
++		w2(0xc); w0(regr + 0x90); w2(0x8); w2(0xc);
++		w2(0xec); w2(0xee); w2(0xef); a = r0();
++		w2(0xc);
 +		return a;
 +	case 2:
-+	case 3:
-+	case 4:
-+		w2(0x24); a = r4(); w2(4);
++		w2(0xc); w0(regr + 0x90); w2(0x8); w2(0xc);
++		w2(0xec);
++		a = r4(); b = r4();
++		w2(0xc);
 +		return a;
 +	}
 +	return -1;
 +}
 +
-+static void dstr_write_regr(struct pi_adapter *pi, int cont, int regr, int val)
++static void fit3_read_block(struct pi_adapter *pi, char *buf, int count)
 +{
-+	int r = regr + cont_map[cont];
++	int k, a, b, c, d;
 +
-+	w0(0x81); P1;
-+	if (pi->mode >= 2)
-+		w0(0x11);
-+	else
-+		w0(1);
-+	P2; w0(r); P1;
-+
-+	switch (pi->mode)  {
++	switch (pi->mode) {
 +	case 0:
++		w2(0xc); w0(0x10); w2(0x8); w2(0xc);
++		for (k = 0; k < count / 2; k++) {
++			w2(0xd); a = r1();
++			w2(0xf); b = r1();
++			w2(0xc); c = r1();
++			w2(0xe); d = r1();
++			buf[2 * k] = j44(a, b);
++			buf[2 * k + 1] = j44(c, d);
++		}
++		w2(0xc);
++		break;
 +	case 1:
-+		w0(val); w2(5); w2(7); w2(5); w2(4);
++		w2(0xc); w0(0x90); w2(0x8); w2(0xc);
++		w2(0xec); w2(0xee);
++		for (k = 0; k < count / 2; k++) {
++			w2(0xef); a = r0();
++			w2(0xee); b = r0();
++			buf[2 * k] = a;
++			buf[2 * k + 1] = b;
++		}
++		w2(0xec);
++		w2(0xc);
 +		break;
 +	case 2:
-+	case 3:
-+	case 4:
-+		w4(val);
++		w2(0xc); w0(0x90); w2(0x8); w2(0xc);
++		w2(0xec);
++		for (k = 0; k < count; k++)
++			buf[k] = r4();
++		w2(0xc);
 +		break;
 +	}
 +}
 +
-+#define CCP(x)	do { w0(0xff); w2(0xc); w2(4);\
-+		     w0(0xaa); w0(0x55); w0(0); w0(0xff); w0(0x87); w0(0x78);\
-+		     w0(x); w2(5); w2(4);\
-+		} while (0)
++static void fit3_write_block(struct pi_adapter *pi, char *buf, int count)
++{
++	int k;
 +
-+static void dstr_connect(struct pi_adapter *pi)
++	switch (pi->mode) {
++	case 0:
++	case 1:
++		w2(0xc); w0(0); w2(0x8); w2(0xc);
++		for (k = 0; k < count/2; k++) {
++			w0(buf[2 * k]); w2(0xd);
++			w0(buf[2 * k + 1]); w2(0xc);
++		}
++		break;
++	case 2:
++		w2(0xc); w0(0); w2(0x8); w2(0xc);
++		for (k = 0; k < count; k++)
++			w4(buf[k]);
++		w2(0xc);
++		break;
++	}
++}
++
++static void fit3_connect(struct pi_adapter *pi)
 +{
 +	pi->saved_r0 = r0();
 +	pi->saved_r2 = r2();
-+	w2(4); CCP(0xe0); w0(0xff);
++	w2(0xc); w0(0); w2(0xa);
++	if (pi->mode == 2) {
++		w2(0xc); w0(0x9); w2(0x8); w2(0xc);
++	}
 +}
 +
-+static void dstr_disconnect(struct pi_adapter *pi)
++static void fit3_disconnect(struct pi_adapter *pi)
 +{
-+	CCP(0x30);
++	w2(0xc); w0(0xa); w2(0x8); w2(0xc);
 +	w0(pi->saved_r0);
 +	w2(pi->saved_r2);
 +}
 +
-+static void dstr_read_block(struct pi_adapter *pi, char *buf, int count)
++static void fit3_log_adapter(struct pi_adapter *pi, char *scratch, int verbose)
 +{
-+	int k, a, b;
++	static char * const mode_string[] = { "4-bit", "8-bit", "EPP" };
 +
-+	w0(0x81); P1;
-+	if (pi->mode)
-+		w0(0x19);
-+	else
-+		w0(9);
-+	P2; w0(0x82); P1; P3; w0(0x20); P1;
-+
-+	switch (pi->mode) {
-+	case 0:
-+		for (k = 0; k < count; k++) {
-+			w2(6); a = r1(); w2(4);
-+			w2(6); b = r1(); w2(4);
-+			buf[k] = j44(a, b);
-+		}
-+		break;
-+	case 1:
-+		w0(0);
-+		for (k = 0; k < count; k++) {
-+			w2(0x26); buf[k] = r0(); w2(0x24);
-+		}
-+		w2(4);
-+		break;
-+	case 2:
-+		w2(0x24);
-+		for (k = 0; k < count; k++)
-+			buf[k] = r4();
-+		w2(4);
-+		break;
-+	case 3:
-+		w2(0x24);
-+		for (k = 0; k < count / 2; k++)
-+			((u16 *)buf)[k] = r4w();
-+		w2(4);
-+		break;
-+	case 4:
-+		w2(0x24);
-+		for (k = 0; k < count / 4; k++)
-+			((u32 *)buf)[k] = r4l();
-+		w2(4);
-+		break;
-+	}
-+}
-+
-+static void dstr_write_block(struct pi_adapter *pi, char *buf, int count)
-+{
-+	int k;
-+
-+	w0(0x81); P1;
-+	if (pi->mode)
-+		w0(0x19);
-+	else
-+		w0(9);
-+	P2; w0(0x82); P1; P3; w0(0x20); P1;
-+
-+	switch (pi->mode) {
-+	case 0:
-+	case 1:
-+		for (k = 0; k < count; k++) {
-+			w2(5); w0(buf[k]); w2(7);
-+		}
-+		w2(5); w2(4);
-+		break;
-+	case 2:
-+		w2(0xc5);
-+		for (k = 0; k < count; k++)
-+			w4(buf[k]);
-+		w2(0xc4);
-+		break;
-+	case 3:
-+		w2(0xc5);
-+		for (k = 0; k < count / 2; k++)
-+			w4w(((u16 *)buf)[k]);
-+		w2(0xc4);
-+		break;
-+	case 4:
-+		w2(0xc5);
-+		for (k = 0; k < count / 4; k++)
-+			w4l(((u32 *)buf)[k]);
-+		w2(0xc4);
-+		break;
-+	}
-+}
-+
-+
-+static void dstr_log_adapter(struct pi_adapter *pi, char *scratch, int verbose)
-+{
-+	static char * const mode_string[] = {
-+		"4-bit", "8-bit", "EPP-8", "EPP-16", "EPP-32" };
-+
-+	dev_info(&pi->dev, "dstr, DataStor EP2000 at 0x%x, mode %d (%s), delay %d\n",
++	dev_info(&pi->dev, "fit3, FIT 3000 adapter at 0x%x, mode %d (%s), delay %d\n",
 +		pi->port, pi->mode, mode_string[pi->mode], pi->delay);
 +}
 +
-+static struct pi_protocol dstr = {
++static struct pi_protocol fit3 = {
 +	.owner		= THIS_MODULE,
-+	.name		= "dstr",
-+	.max_mode	= 5,
++	.name		= "fit3",
++	.max_mode	= 3,
 +	.epp_first	= 2,
 +	.default_delay	= 1,
 +	.max_units	= 1,
-+	.write_regr	= dstr_write_regr,
-+	.read_regr	= dstr_read_regr,
-+	.write_block	= dstr_write_block,
-+	.read_block	= dstr_read_block,
-+	.connect	= dstr_connect,
-+	.disconnect	= dstr_disconnect,
-+	.log_adapter	= dstr_log_adapter,
-+	.sht		= { PATA_PARPORT_SHT("pata_parport-dstr") },
++	.write_regr	= fit3_write_regr,
++	.read_regr	= fit3_read_regr,
++	.write_block	= fit3_write_block,
++	.read_block	= fit3_read_block,
++	.connect	= fit3_connect,
++	.disconnect	= fit3_disconnect,
++	.log_adapter	= fit3_log_adapter,
++	.sht		= { PATA_PARPORT_SHT("pata_parport-fit3") },
 +};
 +
 +MODULE_LICENSE("GPL");
-+module_pata_parport_driver(dstr);
++module_pata_parport_driver(fit3);
 -- 
 Ondrej Zary
 
