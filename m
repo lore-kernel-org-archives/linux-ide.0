@@ -2,150 +2,118 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2D1AC433EF
-	for <linux-ide@archiver.kernel.org>; Mon,  7 Mar 2022 02:43:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7304AC4332F
+	for <linux-ide@archiver.kernel.org>; Mon,  7 Mar 2022 02:53:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234793AbiCGCot (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 6 Mar 2022 21:44:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52286 "EHLO
+        id S231821AbiCGCy2 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 6 Mar 2022 21:54:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232082AbiCGCos (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 6 Mar 2022 21:44:48 -0500
-Received: from lgeamrelo11.lge.com (lgeamrelo12.lge.com [156.147.23.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DB7CE5F6E
-        for <linux-ide@vger.kernel.org>; Sun,  6 Mar 2022 18:43:53 -0800 (PST)
-Received: from unknown (HELO lgeamrelo04.lge.com) (156.147.1.127)
-        by 156.147.23.52 with ESMTP; 7 Mar 2022 11:43:50 +0900
-X-Original-SENDERIP: 156.147.1.127
-X-Original-MAILFROM: byungchul.park@lge.com
-Received: from unknown (HELO X58A-UD3R) (10.177.244.38)
-        by 156.147.1.127 with ESMTP; 7 Mar 2022 11:43:50 +0900
-X-Original-SENDERIP: 10.177.244.38
-X-Original-MAILFROM: byungchul.park@lge.com
-Date:   Mon, 7 Mar 2022 11:43:25 +0900
-From:   Byungchul Park <byungchul.park@lge.com>
-To:     Joel Fernandes <joel@joelfernandes.org>
-Cc:     Theodore Ts'o <tytso@mit.edu>, damien.lemoal@opensource.wdc.com,
-        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
-        linux-ext4@vger.kernel.org, torvalds@linux-foundation.org,
-        mingo@redhat.com, linux-kernel@vger.kernel.org,
-        peterz@infradead.org, will@kernel.org, tglx@linutronix.de,
-        rostedt@goodmis.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
-        chris@chris-wilson.co.uk, duyuyang@gmail.com,
-        johannes.berg@intel.com, tj@kernel.org, willy@infradead.org,
-        david@fromorbit.com, amir73il@gmail.com, bfields@fieldses.org,
-        gregkh@linuxfoundation.org, kernel-team@lge.com,
-        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
-        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
-        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
-        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
-        ngupta@vflare.org, linux-block@vger.kernel.org,
-        paolo.valente@linaro.org, josef@toxicpanda.com,
-        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
-        jack@suse.cz, jack@suse.com, jlayton@kernel.org,
-        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
-        dri-devel@lists.freedesktop.org, airlied@linux.ie,
-        rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
-        hamohammed.sa@gmail.com, paulmck@kernel.org
-Subject: Re: Report 2 in ext4 and journal based on v5.17-rc1
-Message-ID: <20220307024325.GA6323@X58A-UD3R>
-References: <YiAow5gi21zwUT54@mit.edu>
- <1646285013-3934-1-git-send-email-byungchul.park@lge.com>
- <YiDSabde88HJ/aTt@mit.edu>
- <20220304004237.GB6112@X58A-UD3R>
- <YiLYX0sqmtkTEM5U@mit.edu>
- <20220305141538.GA31268@X58A-UD3R>
- <YiN8M4FwAeW/UAoN@google.com>
+        with ESMTP id S234873AbiCGCy1 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 6 Mar 2022 21:54:27 -0500
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01CD532EE5
+        for <linux-ide@vger.kernel.org>; Sun,  6 Mar 2022 18:53:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1646621614; x=1678157614;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=y62WpaxeS4cVBsbXW5GR5vErFGgAo8U5O+t9Nv2EnCs=;
+  b=K2D5J9ND35NJ4BQGhAg1RuROBxDdupG74Tn6uq2cgJvf9ubSvc/octW5
+   rE5FNtcQwJ/SedqJOMMrl3DaxqDSP/h7jy6fRBHuG1tUl9JAOIe/vKRIv
+   NFzQukq+upmqOOrcxt1YAmUoGTQxPsfst+W+U6csB2+c2pW4T4ZLykuf9
+   cjcVy6zz8HoHXjpT/i7TpM+9tOATKMnmK8/i02yphoj2o0DIp99rYik4h
+   oLuqaMGjzq+5d61YCsEsoSwUb2Lvno53cC0HbGdUmig2Tm/92IaWKIuDf
+   O1XooGNIgV++iYup9EijmkGIO9RR12bx2s7Pn8ngHOQxTLH0Zd/FpnDwI
+   g==;
+X-IronPort-AV: E=Sophos;i="5.90,160,1643644800"; 
+   d="scan'208";a="195583696"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 07 Mar 2022 10:53:33 +0800
+IronPort-SDR: iI1+c9KasxHPBsl0rS5QWNRLF8PEuxowU7STn9oys5RWmD1xbuPKa45ikYWlSYYIQL3Oc1PEfE
+ 09Vql1rnJyftJqgoOyjKyDFDbDt1LXKqfHYh1bqL8zcFxhuZ6cKyrpa+cnhiroPBgI+NjIpycK
+ EYkc0kp1qPVAh2agPw9mgQUcbLVqpkl9D1wFevLCEkfU7OJQB6YKlPDlIHbWOkMjwggijA9pBg
+ z7S2cPFDvMmgrmr+BL3rWYZlmI/QqMQuifKguTjaTjvYAICC4crOfJjJuAE8bk1YEzvl7k/bi2
+ NcsSGwkTmo/iktev8pLRDtOP
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2022 18:24:49 -0800
+IronPort-SDR: glXrSbBRxt0SyXkn4eSYmKF/WFAcQvlTcM/epe34t+jjmHrfrRxsevlMuWfwboTYmeXLhSiSca
+ VgSeDAmnYiGyNMVOOlVwiLTKPVAbGt5ft8adT6xnZaJgrNhEfupJWP7ScT9cwI+AiK4MLFj2v6
+ zUaSvXO022PJ2qcBTYKZ66zOU45oK+jWIHaI3RtxXDPc5or7YsNsAN3hklIUrYBd+30u/Xt7XM
+ AmyDdu92DW0ZbpToCjEJUap3MbaY704q+CsPcPFTYySLaATdpXFslXLwXzdriKaG7IiNVm9P7I
+ Pa4=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Mar 2022 18:53:33 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KBjhC5cZBz1SVp4
+        for <linux-ide@vger.kernel.org>; Sun,  6 Mar 2022 18:53:31 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1646621611; x=1649213612; bh=y62WpaxeS4cVBsbXW5GR5vErFGgAo8U5O+t
+        9Nv2EnCs=; b=oi7rfMfp2K+hCqCRWCTRNVfkMm3GpBZwRoJyg44h48EXC7aBGgn
+        EvnYrIlZW2t/YVgOU1cMowTtK2sRjM3fl1KOqGIb7Gz/FOh3VUdbfY+x7BUlDC5g
+        HUnn8lEgD3oc8e81cXFUEBSJIbW6EUwKalhVr+UC5VLoCRioxxgSNV5LsHqQHyzE
+        vYUxnUP/kh9A0qwXqtrJDACcu+RaOYSQ5HHhjaD35Md48X01xEoPO+XxVeM4BNry
+        JR9ozCE/0F1P14OJIp2Q85UlR4PQmX09G0aQMPcXjfrWge/dOo7VPMwIx3Vt5pMm
+        1LtdS4R5dctPObWUpXu33wrsFQtvKNhW7Cg==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 0kP2QCJMHmaw for <linux-ide@vger.kernel.org>;
+        Sun,  6 Mar 2022 18:53:31 -0800 (PST)
+Received: from [10.225.163.91] (unknown [10.225.163.91])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KBjh93Gnbz1Rvlx;
+        Sun,  6 Mar 2022 18:53:29 -0800 (PST)
+Message-ID: <736a2fae-9bdb-ff44-6340-4e556957cafd@opensource.wdc.com>
+Date:   Mon, 7 Mar 2022 11:53:28 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YiN8M4FwAeW/UAoN@google.com>
-User-Agent: Mutt/1.5.21 (2010-09-15)
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.5.0
+Subject: Re: [PATCH v2] ata: Drop commas after OF match table sentinels
+Content-Language: en-US
+To:     Geert Uytterhoeven <geert+renesas@glider.be>
+Cc:     Hans de Goede <hdegoede@redhat.com>, Jens Axboe <axboe@kernel.dk>,
+        Patrice Chotard <patrice.chotard@foss.st.com>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org,
+        Florian Fainelli <f.fainelli@gmail.com>
+References: <52970494111d9287cc8355e0f2e3de474361c75f.1646296493.git.geert+renesas@glider.be>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <52970494111d9287cc8355e0f2e3de474361c75f.1646296493.git.geert+renesas@glider.be>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sat, Mar 05, 2022 at 03:05:23PM +0000, Joel Fernandes wrote:
-> On Sat, Mar 05, 2022 at 11:15:38PM +0900, Byungchul Park wrote:
-> > Almost all you've been blaming at Dept are totally non-sense. Based on
-> > what you're saying, I'm conviced that you don't understand how Dept
-> > works even 1%. You don't even try to understand it before blame.
-> > 
-> > You don't have to understand and support it. But I can't response to you
-> > if you keep saying silly things that way.
+On 3/3/22 17:36, Geert Uytterhoeven wrote:
+> It does not make sense to have a comma after a sentinel, as any new
+> elements must be added before the sentinel.
 > 
-> Byungchul, other than ext4 have there been any DEPT reports that other
-> subsystem maintainers' agree were valid usecases?
-
-Not yet.
-
-> Regarding false-positives, just to note lockdep is not without its share of
-> false-positives. Just that (as you know), the signal-to-noise ratio should be
-> high for it to be useful. I've put up with lockdep's false positives just
-> because it occasionally saves me from catastrophe.
-
-I love your insight. Agree. A tool would be useful only when it's
-*actually* helpful. I hope Dept would be so.
-
-> > > In any case, if DEPT is going to report these "circular dependencies
-> > > as bugs that MUST be fixed", it's going to be pure noise and I will
-> > > ignore all DEPT reports, and will push back on having Lockdep replaced
-> > 
-> > Dept is going to be improved so that what you are concerning about won't
-> > be reported.
+> Add comments to clarify the purpose of the empty elements.
+> Rewrap entries to a single line to have a consistent style.
 > 
-> Yeah I am looking forward to learning more about it however I was wondering
-> about the following: lockdep can already be used for modeling "resource
-> acquire/release" and "resource wait" semantics that are unrelated to locks,
-> like we do in mm reclaim. I am wondering why we cannot just use those existing
-> lockdep mechanisms for the wait/wake usecases (Assuming that we can agree
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+> Acked-by: Florian Fainelli <f.fainelli@gmail.com> [ahci_brcm]
+> ---
+> v2:
+>   - Add Reviewed-by, Acked-by,
+>   - Rewrap entries as requested by Damien.
 
-1. Lockdep can't work with general waits/events happening across
-   contexts basically. To get over this, manual tagging of
-   acquire/release can be used at each section that we suspect. But
-   unfortunately, we cannot use the method if we cannot simply identify
-   the sections. Furthermore, it's inevitable to miss sections that
-   shouldn't get missed.
+Applied to for^5.18. Thanks !
 
-2. Some cases should be correctly tracked via wait/event model, not
-   acquisition order model. For example, read-lock in rwlock should be
-   defined as a waiter waiting for write-unlock, write-lock in rwlock
-   as a waiter waiting for either read-unlock or write-unlock.
-   Otherwise, if we try to track those cases using acquisition order,
-   it cannot completely work. Don't you think it looks werid?
 
-3. Tracking what we didn't track before means both stronger detection
-   and new emergence of false positives, exactly same as Lockdep at its
-   beginning when it started to track what we hadn't tracked before.
-   Even though the emergence was allowed at that time, now that Locdkep
-   got stable enough, folks would be more strict on new emergences. It's
-   gonna get even worse if valid reports are getting prevented by false
-   positives.
-
-   For that reason, multi reporting functionality is essential. I was
-   thinking to improve Lockdep to allow multi reporting. But it might be
-   needed to change more than developing a new tool from scratch. Plus
-   it might be even more difficult cuz Lockdep already works not badly.
-   So even for Lockdep, I thought the new thing should be developed
-   independently leaving Lockdep as it is.
-
-4. (minor reason) The concept and name of acquisition and release is not
-   for general wait/event. The design and implementation are not,
-   either. I wanted to address the issue as soon as possible before we
-   squeeze out Lockdep to use for general wait/event more and the kernel
-   code gets weird. Of course, it doesn't mean Dept is more stable than
-   Lockdep. However, I can tell Dept works what a dependency tool should
-   do and we need to make the code go right.
-
-> that circular dependencies on related to wait/wake is a bad thing. Or perhaps
-> there's a reason why Peter Zijlstra did not use lockdep for wait/wake
-> dependencies (such as multiple wake sources) considering he wrote a lot of
-> that code.
-> 
-> Keep kicking ass brother, you're doing great.
-
-Thank you! I'll go through this in a right way so as not to disappoint
-you!
-
-Thanks,
-Byungchul
+-- 
+Damien Le Moal
+Western Digital Research
