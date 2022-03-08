@@ -2,134 +2,120 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A0BCC4332F
-	for <linux-ide@archiver.kernel.org>; Mon,  7 Mar 2022 22:06:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC3AFC433EF
+	for <linux-ide@archiver.kernel.org>; Tue,  8 Mar 2022 02:59:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234700AbiCGWG4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 7 Mar 2022 17:06:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34508 "EHLO
+        id S244248AbiCHDAn (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 7 Mar 2022 22:00:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47924 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230076AbiCGWGz (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Mar 2022 17:06:55 -0500
-Received: from mail-ot1-f46.google.com (mail-ot1-f46.google.com [209.85.210.46])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD8398B6FE;
-        Mon,  7 Mar 2022 14:06:00 -0800 (PST)
-Received: by mail-ot1-f46.google.com with SMTP id e25-20020a0568301e5900b005b236d5d74fso2683249otj.0;
-        Mon, 07 Mar 2022 14:06:00 -0800 (PST)
+        with ESMTP id S229681AbiCHDAn (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 7 Mar 2022 22:00:43 -0500
+Received: from mail-qv1-xf36.google.com (mail-qv1-xf36.google.com [IPv6:2607:f8b0:4864:20::f36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2356FD0C;
+        Mon,  7 Mar 2022 18:59:47 -0800 (PST)
+Received: by mail-qv1-xf36.google.com with SMTP id kl20so3989254qvb.10;
+        Mon, 07 Mar 2022 18:59:47 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=scNswzEZv4MR4mtcF8eE5kR5X8n3XY2Kg0/OJ8AWaD4=;
+        b=gzkIwK2tIdhodziZcR7DZaSsv/0AlG9pY0kCg86NC7VcmUv3kzyjDHTNQhYUY1Xpwg
+         IHWZAoLGhb1uAbA4ob/E0kboymL6IFiGZhCnclTFKlWRX4XDaEzuy6FKjJvAp1Hc1xVD
+         MSqe99/R9DpBLTlc5qE6H81fXoc9C688DhVgTZ+ykr5PW7r4d2UitMn+Rbb/C0jXRt+c
+         7pEBLOx0MVJTkXmBcq0wfyJIczaD23aM13e4Do5lRBmRJadd6pJNORnqekS1AuvySXSg
+         kdgSxlcd3CWXVX+/Ay9xjNQWfSadveJ0xr3rqAHK5nnA9hrktMr/7wmrDmJTyGXj3suz
+         Kw2Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=eN8whrQFP0dYkqOwrVQzZHnY72AuM1tzrD2ytbHKbko=;
-        b=XwM7znvFo9IZgXmog0jrq7ch+XnDcJFW7bI2Q3hPRjFYRSIfrDPVIiPHq8Qcks0cUO
-         Xq4Z2T6lhpwI0xcaVNM0QxT8LGf0y9I4pM01dyzIdqknQVBCb8Ju3aty95sytwH3oSy+
-         dWC2xbtPEI3hadyuJccq5h3luwZfpzROFH1Qh9lN+7kbrYqB+vqSB/8qQfFZ0T2vfvW7
-         swdElualzRujtfSYgi3t6tejxNcd6fjmpzaKULkTxQ7SD4PckCF8nuZgl/b/QD0vO8dL
-         Rvb/L37n7hyU8mIEjPoUGhlynTT6MhhZtm/UTwOrUfBWqymGpPv7nIn54Q04fIVg3bFz
-         WPSA==
-X-Gm-Message-State: AOAM533BiSYrxUjBiBBk/AGO10bqxrSXHJ397Fxl8ftBh6Vn0UQ/ar5o
-        alC9YFWS85hXDrlr26k3tw==
-X-Google-Smtp-Source: ABdhPJzaxyPUrJTHCdqLA7RrZr2+t3jQsud03nitRdse3TmUb7Vuh3JuOoIRO1whdI4e1Ug360NpaA==
-X-Received: by 2002:a05:6830:16ca:b0:5af:6a75:c7b1 with SMTP id l10-20020a05683016ca00b005af6a75c7b1mr6716291otr.292.1646690760148;
-        Mon, 07 Mar 2022 14:06:00 -0800 (PST)
-Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
-        by smtp.gmail.com with ESMTPSA id az10-20020a056808164a00b002d9c98e551bsm2320172oib.36.2022.03.07.14.05.58
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=scNswzEZv4MR4mtcF8eE5kR5X8n3XY2Kg0/OJ8AWaD4=;
+        b=j77lduyOsaEWwd+1jLfVbJ1N+MN0QEegRt1/CRBazemJGyZq1qR4No395Oqdii36om
+         pBrCLjla3Tj1JMkQJn0nHZYSPP5ynYOlh52lN0DI4VWiSCcsH5rX7h7qF7jMFs9ZyzWO
+         WCJ1pc8eOs8Coj/DZbEb90RIheCbwnCD5AovvNMoau3HiHeQCUKwT+GTDXdIoPAAv0ec
+         OTma3qSvb2LZNePLDfMjOkd1imJUOdIs2eoqPpPHwq6AY8e10Ca3zqNzdCHAROE46tGF
+         dUQ9E3B5A/AHDQlrOlqBmOTCdX38WFRwKsJ56lHJEL1caG+gDdFGloBWovGSSV5laGA1
+         8Hag==
+X-Gm-Message-State: AOAM5327ORDytR1yeaQZgFgHgAlHxY7hcvmH741ERvtA7TgHB1AQjFpa
+        mE7E7lPYKJxKEHwIui7UT5M=
+X-Google-Smtp-Source: ABdhPJzjoEvxFGjYTBMUa7xKJYsB8Zmme9r7v/iRyyFDdrusnRKfCWkh9grSZ811GL/EiWQSow9vHw==
+X-Received: by 2002:a05:6214:21ef:b0:435:79f1:73a with SMTP id p15-20020a05621421ef00b0043579f1073amr7934663qvj.48.1646708386843;
+        Mon, 07 Mar 2022 18:59:46 -0800 (PST)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id l6-20020ac87246000000b002dcec453e42sm8784730qtp.32.2022.03.07.18.59.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 07 Mar 2022 14:05:59 -0800 (PST)
-Received: (nullmailer pid 3324008 invoked by uid 1000);
-        Mon, 07 Mar 2022 22:05:58 -0000
-Date:   Mon, 7 Mar 2022 16:05:58 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
-Cc:     Frank Wunderlich <frank-w@public-files.de>,
-        Frank Wunderlich <linux@fw-web.de>, devicetree@vger.kernel.org,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Peter Geis <pgwipeout@gmail.com>,
-        Michael Riesch <michael.riesch@wolfvision.net>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-rockchip@lists.infradead.org
-Subject: Re: Aw: Re: Re: [PATCH v5 1/5] dt-bindings: ata: ahci-platform:
- Convert DT bindings to yaml
-Message-ID: <YiaBxlBkpav/7mug@robh.at.kernel.org>
-References: <20220305112607.257734-1-linux@fw-web.de>
- <20220305112607.257734-2-linux@fw-web.de>
- <a2839b00-d195-131f-b2a7-d2f030a5bd95@canonical.com>
- <trinity-9ef9e0d3-e70c-45d9-bdd8-e43d1c89a8c9-1646560070497@3c-app-gmx-bs46>
- <b8553651-3cd0-845c-efbf-d2341d5506b3@canonical.com>
- <trinity-d42352e1-d778-40dd-9464-90a145653f74-1646563315484@3c-app-gmx-bs46>
- <18f4dc19-b8a4-015e-48c8-923326cc7932@canonical.com>
+        Mon, 07 Mar 2022 18:59:46 -0800 (PST)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: chi.minghao@zte.com.cn
+To:     s.shtylyov@omp.ru
+Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Minghao Chi <chi.minghao@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH] ata: Use platform_get_irq() to get the interrupt
+Date:   Tue,  8 Mar 2022 02:59:40 +0000
+Message-Id: <20220308025940.2077329-1-chi.minghao@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <18f4dc19-b8a4-015e-48c8-923326cc7932@canonical.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sun, Mar 06, 2022 at 12:15:39PM +0100, Krzysztof Kozlowski wrote:
-> On 06/03/2022 11:41, Frank Wunderlich wrote:
-> >> Gesendet: Sonntag, 06. März 2022 um 11:27 Uhr
-> >> Von: "Krzysztof Kozlowski" <krzysztof.kozlowski@canonical.com>
-> >>>     add compatibles used together with generic-ahci
-> >>>       - marvell,berlin2-ahci
-> >>
-> >> This is fine, just mention it in commit msg.
-> >>
-> >>>       - qcom,apq8064-ahci
-> >>>       - qcom,ipq806x-ahci
-> >>
-> >> These you need to consult with qcom-sata.txt. This could be a following
-> >> commit which will integrate qcom-sata.txt and remove it.
-> > 
-> > this depends on Robs opinion
-> 
-> Then maybe precise the question for Rob...
+From: Minghao Chi (CGEL ZTE) <chi.minghao@zte.com.cn>
 
-I would leave qcom separate, but the warnings should be fixed. For that 
-you need a custom 'select' schema that lists everything but 
-'generic-ahci'. Adding the berlin compatible looks right.
+platform_get_resource(pdev, IORESOURCE_IRQ, ..) relies on static
+allocation of IRQ resources in DT core code, this causes an issue
+when using hierarchical interrupt domains using "interrupts" property
+in the node as this bypassed the hierarchical setup and messed up the
+irq chaining.
 
-> >> Either you have
-> >> binding document for all devices or you create a common part, like for UFS:
-> >> https://lore.kernel.org/linux-devicetree/20220222145854.358646-1-krzysztof.kozlowski@canonical.com/
-> >> https://github.com/krzk/linux/commits/n/dt-bindings-ufs-v2
-> >>
-> >> The choice depends more or less on complexity of bindings, IOW, how big
-> >> and complicated bindings would be if you combine everything to one YAML.
-> >>
-> >> In the case of UFS, the devices differ - by clocks, resets, phys and
-> >> sometimes supplies. Therefore it easier to have one common shared part
-> >> and several device bindings.
-> >>
-> >> AHCI looks more consistent - except that Qualcomm - so maybe better to
-> >> have one document.
-> >>
-> >>>     increase reg-count to 2 (used in omap5-l4.dtsi)
-> >>>     increase clock-count to 5 (used in qcom-apq8064.dtsi)
-> >>
-> >> This would need allOf+if.
-> > 
-> > if i get ok from rob i add only the berlin-compatible and skip the 
-> > qcom+reg/clock-change in the first applied version. Adding the 
-> > allOf/if (and making it right) will only delay the sata-binding/dts-change.
-> 
-> I don't get what is the problem with delaying this patch for the time
-> needed to make the bindings correct? Especially that alternative is to
-> add bindings document which soon will need to be modified, e.g. split
-> into common part. Is there a particular hurry with these bindings
-> conversion?
+In preparation for removal of static setup of IRQ resource from DT core
+code use platform_get_irq().
 
-Qcom doesn't use sata-port nodes, so I don't think there is anything to 
-share. And if it did, that's already in sata-common.yaml.
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Minghao Chi (CGEL ZTE) <chi.minghao@zte.com.cn>
+---
+ drivers/ata/pata_pxa.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Rob
+diff --git a/drivers/ata/pata_pxa.c b/drivers/ata/pata_pxa.c
+index 41430f79663c..6394ab4cbc1b 100644
+--- a/drivers/ata/pata_pxa.c
++++ b/drivers/ata/pata_pxa.c
+@@ -164,10 +164,10 @@ static int pxa_ata_probe(struct platform_device *pdev)
+ 	struct resource *cmd_res;
+ 	struct resource *ctl_res;
+ 	struct resource *dma_res;
+-	struct resource *irq_res;
+ 	struct pata_pxa_pdata *pdata = dev_get_platdata(&pdev->dev);
+ 	struct dma_slave_config	config;
+ 	int ret = 0;
++	int irq;
+ 
+ 	/*
+ 	 * Resource validation, three resources are needed:
+@@ -205,8 +205,8 @@ static int pxa_ata_probe(struct platform_device *pdev)
+ 	/*
+ 	 * IRQ pin
+ 	 */
+-	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+-	if (unlikely(irq_res == NULL))
++	irq = platform_get_irq(pdev, 0);
++	if (unlikely(irq < 0))
+ 		return -EINVAL;
+ 
+ 	/*
+@@ -287,7 +287,7 @@ static int pxa_ata_probe(struct platform_device *pdev)
+ 	/*
+ 	 * Activate the ATA host
+ 	 */
+-	ret = ata_host_activate(host, irq_res->start, ata_sff_interrupt,
++	ret = ata_host_activate(host, irq, ata_sff_interrupt,
+ 				pdata->irq_flags, &pxa_ata_sht);
+ 	if (ret)
+ 		dma_release_channel(data->dma_chan);
+-- 
+2.25.1
 
