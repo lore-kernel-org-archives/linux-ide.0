@@ -2,189 +2,130 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6F40C433EF
-	for <linux-ide@archiver.kernel.org>; Wed,  9 Mar 2022 07:22:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D389C433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  9 Mar 2022 07:28:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229881AbiCIHXC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 9 Mar 2022 02:23:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37154 "EHLO
+        id S230335AbiCIH3n (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 9 Mar 2022 02:29:43 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229460AbiCIHXC (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 9 Mar 2022 02:23:02 -0500
-Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19B0910A7E5;
-        Tue,  8 Mar 2022 23:22:04 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1646810524; x=1678346524;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=8P15gyfMQXBcZtwt5sBe3cAJYWyxAa9xsRjkNdIfHfs=;
-  b=c4rfCkKtxWbo2cNwGtazxDrff4PLQO3Bd8dSZnzZ15U0A7hK6JaOdK3T
-   lM/OMA3SewgeGxHgAnLKnvFUWIs8F64MgNzs7OG/4mUx/+cPfibUDYGrz
-   oc4oQuPihxkWXArRQIP710+6KzgFyOjaxYftaLTIXpxH82iiNA9YnWKpm
-   6awFm3cP03W8tsLb6VfxR67yip3BSl0uUXk9CJrGfewQPMqAzOEWQZJYG
-   sjleyWoz9tViXjnwGsUysmYd9xpoiC4dngT2oxOEEnzH4GGxpKfXogBIf
-   AOdNJOuLqcTz4OUPLtj5HxlS7991m738MjwNYN2gXRfv8KY4F60roK1SL
-   A==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10280"; a="234860537"
-X-IronPort-AV: E=Sophos;i="5.90,167,1643702400"; 
-   d="scan'208";a="234860537"
-Received: from fmsmga005.fm.intel.com ([10.253.24.32])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2022 23:22:03 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.90,167,1643702400"; 
-   d="scan'208";a="814643883"
-Received: from lkp-server02.sh.intel.com (HELO 89b41b6ae01c) ([10.239.97.151])
-  by fmsmga005.fm.intel.com with ESMTP; 08 Mar 2022 23:21:57 -0800
-Received: from kbuild by 89b41b6ae01c with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1nRqdw-0002pB-R8; Wed, 09 Mar 2022 07:21:56 +0000
-Date:   Wed, 9 Mar 2022 15:21:54 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Byungchul Park <byungchul.park@lge.com>,
-        torvalds@linux-foundation.org
-Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
-        damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
-        adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
-        mingo@redhat.com, linux-kernel@vger.kernel.org, will@kernel.org,
-        tglx@linutronix.de, rostedt@goodmis.org, joel@joelfernandes.org,
-        sashal@kernel.org, daniel.vetter@ffwll.ch,
-        chris@chris-wilson.co.uk, duyuyang@gmail.com,
-        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
-        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
-        bfields@fieldses.org, gregkh@linuxfoundation.org,
-        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
-        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org
-Subject: Re: [PATCH v4 02/24] dept: Implement Dept(Dependency Tracker)
-Message-ID: <202203091550.PnufQ7gO-lkp@intel.com>
-References: <1646377603-19730-3-git-send-email-byungchul.park@lge.com>
+        with ESMTP id S230126AbiCIH3n (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 9 Mar 2022 02:29:43 -0500
+Received: from mail-qt1-x82d.google.com (mail-qt1-x82d.google.com [IPv6:2607:f8b0:4864:20::82d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4D62422B00;
+        Tue,  8 Mar 2022 23:28:42 -0800 (PST)
+Received: by mail-qt1-x82d.google.com with SMTP id a14so1175096qtx.12;
+        Tue, 08 Mar 2022 23:28:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=YZMQi1dTUUmaGTUhCGnhkFEO6/MDe8Ns2I3nt0C9fxY=;
+        b=IcN8kfEhoFTfTkLExogeKr09YGIgSjN8GaI7E0SsYEgK/ytG2966CBacG35NrS1OEN
+         6Xrw3AxLQzPBXY3g5ZgnWnyvi9hlFNGdmm7pIWjfq5KGQS3kOMqR43yfhj8WAtbRPLZq
+         Ef+R19OlhhlbYXEgPcHpTaW3fjE3CZ97ia7Z7VvhHZCdM6VKbbA5MyKmqvvjE2+4x+oz
+         LRH3WsnWZwuto6Xsb8UiMXaYfEkfHgyZ3F98y7XgPy5PUjzp7FYJvFt0dIyW+2aoS+mB
+         3/xerNfNmZlpVjJej1mJoeKsFhFsIsl2VEqLNKzbEB3TGUD17vyZCVSEkq7KCnDpaRIS
+         QLVg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=YZMQi1dTUUmaGTUhCGnhkFEO6/MDe8Ns2I3nt0C9fxY=;
+        b=hjNw92nw7y0UnLzM9JcMvjuaX4k2XNYG8S3HTmN4Q6BL+7FhbCjlHFLDKpZ5DdDoST
+         gbpMACx4/AeHj0+AO3ZL7oui5AMity4qbcPlu7sDbOc4SRgXy4iRRo0wyZs4dujgB3nE
+         AQggEmVnFYtA/z4lk+60A8eiV68PABjE6rMlyRvqqwbKt2L5ZdN2JfRtxYreBwejon5E
+         /ANy9ojciAJPPJu6zJ8A5iFzf2nEA9fycBNB1YAAeB5yFICe5d2OfaYFJ5BNaz+cBusi
+         W/sNkQqJPHw/5ODAAO32vS5nO3czYJ/Zof6coehIrkcDBZ4zENNag+NxXSQ0sPA6gQ21
+         PY8Q==
+X-Gm-Message-State: AOAM531xwnozEMCUB9cBo9yQEAJf+CmP0yiifSHXaiTfQiTVilkBfy4S
+        Zgt0zuSRY3BXCyHOxeap4Hc=
+X-Google-Smtp-Source: ABdhPJx7zYn3y4TZfvvgr95+HBzkzDVg6QSLDEbbhwRqGTMpArbNHEmEi8hH+RIOhnglCdSk9XjrHA==
+X-Received: by 2002:a05:622a:1b8b:b0:2dc:4f1:faf7 with SMTP id bp11-20020a05622a1b8b00b002dc04f1faf7mr16764636qtb.325.1646810921466;
+        Tue, 08 Mar 2022 23:28:41 -0800 (PST)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id a6-20020ae9e806000000b0067ba5a8a2a7sm581301qkg.134.2022.03.08.23.28.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Mar 2022 23:28:40 -0800 (PST)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: chi.minghao@zte.com.cn
+To:     damien.lemoal@opensource.wdc.com
+Cc:     cgel.zte@gmail.com, chi.minghao@zte.com.cn,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        s.shtylyov@omp.ru, zealci@zte.com.cn
+Subject: [PATCH V3] ata: pata_pxa: Use platform_get_irq() to get the interrupt
+Date:   Wed,  9 Mar 2022 07:28:34 +0000
+Message-Id: <20220309072834.2081944-1-chi.minghao@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <d1dfb244-eda3-b5c6-c6bd-c0294a9a4a94@opensource.wdc.com>
+References: <d1dfb244-eda3-b5c6-c6bd-c0294a9a4a94@opensource.wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1646377603-19730-3-git-send-email-byungchul.park@lge.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Byungchul,
+From: Minghao Chi <chi.minghao@zte.com.cn>
 
-Thank you for the patch! Perhaps something to improve:
+platform_get_resource(pdev, IORESOURCE_IRQ, ..) relies on static
+allocation of IRQ resources in DT core code, this causes an issue
+when using hierarchical interrupt domains using "interrupts" property
+in the node as this bypasses the hierarchical setup and messes up the
+irq chaining.
 
-[auto build test WARNING on tip/sched/core]
-[also build test WARNING on linux/master linus/master v5.17-rc7]
-[cannot apply to tip/locking/core hnaz-mm/master next-20220308]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+In preparation for removal of static setup of IRQ resource from DT core
+code use platform_get_irq().
 
-url:    https://github.com/0day-ci/linux/commits/Byungchul-Park/DEPT-Dependency-Tracker/20220304-150943
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git 25795ef6299f07ce3838f3253a9cb34f64efcfae
-config: hexagon-randconfig-r022-20220307 (https://download.01.org/0day-ci/archive/20220309/202203091550.PnufQ7gO-lkp@intel.com/config)
-compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project d271fc04d5b97b12e6b797c6067d3c96a8d7470e)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/0day-ci/linux/commit/387c58f459c6eb2a17a99b6c42ad57512a917d5d
-        git remote add linux-review https://github.com/0day-ci/linux
-        git fetch --no-tags linux-review Byungchul-Park/DEPT-Dependency-Tracker/20220304-150943
-        git checkout 387c58f459c6eb2a17a99b6c42ad57512a917d5d
-        # save the config file to linux build tree
-        mkdir build_dir
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=hexagon SHELL=/bin/bash drivers/target/ kernel/dependency/
+v1->v2:
+    - Use more specific in the subject: ata: pata_pxa:
+    - Switch to returning 'irq'
+v2->v3:
+    - drop the unlikely()
 
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
-
-All warnings (new ones prefixed by >>):
-
->> kernel/dependency/dept.c:2093:6: warning: no previous prototype for function '__dept_wait' [-Wmissing-prototypes]
-   void __dept_wait(struct dept_map *m, unsigned long w_f, unsigned long ip,
-        ^
-   kernel/dependency/dept.c:2093:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
-   void __dept_wait(struct dept_map *m, unsigned long w_f, unsigned long ip,
-   ^
-   static 
-   In file included from kernel/dependency/dept.c:2532:
->> kernel/dependency/dept_hash.h:9:1: warning: format specifies type 'size_t' (aka 'unsigned int') but the argument has type 'unsigned long' [-Wformat]
-   HASH(dep, 12)
-   ^~~~~~~~~~~~~
-   kernel/dependency/dept.c:2531:14: note: expanded from macro 'HASH'
-                  #id, B2KB(sizeof(struct hlist_head) * (1UL << bits)));
-                  ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   include/linux/printk.h:519:34: note: expanded from macro 'pr_info'
-           printk(KERN_INFO pr_fmt(fmt), ##__VA_ARGS__)
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
-   include/linux/printk.h:446:60: note: expanded from macro 'printk'
-   #define printk(fmt, ...) printk_index_wrap(_printk, fmt, ##__VA_ARGS__)
-                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
-   include/linux/printk.h:418:19: note: expanded from macro 'printk_index_wrap'
-                   _p_func(_fmt, ##__VA_ARGS__);                           \
-                           ~~~~    ^~~~~~~~~~~
-   kernel/dependency/dept.c:2497:17: note: expanded from macro 'B2KB'
-   #define B2KB(B) ((B) / 1024)
-                   ^~~~~~~~~~~~
-   In file included from kernel/dependency/dept.c:2532:
-   kernel/dependency/dept_hash.h:10:1: warning: format specifies type 'size_t' (aka 'unsigned int') but the argument has type 'unsigned long' [-Wformat]
-   HASH(class, 12)
-   ^~~~~~~~~~~~~~~
-   kernel/dependency/dept.c:2531:14: note: expanded from macro 'HASH'
-                  #id, B2KB(sizeof(struct hlist_head) * (1UL << bits)));
-                  ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   include/linux/printk.h:519:34: note: expanded from macro 'pr_info'
-           printk(KERN_INFO pr_fmt(fmt), ##__VA_ARGS__)
-           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
-   include/linux/printk.h:446:60: note: expanded from macro 'printk'
-   #define printk(fmt, ...) printk_index_wrap(_printk, fmt, ##__VA_ARGS__)
-                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
-   include/linux/printk.h:418:19: note: expanded from macro 'printk_index_wrap'
-                   _p_func(_fmt, ##__VA_ARGS__);                           \
-                           ~~~~    ^~~~~~~~~~~
-   kernel/dependency/dept.c:2497:17: note: expanded from macro 'B2KB'
-   #define B2KB(B) ((B) / 1024)
-                   ^~~~~~~~~~~~
-   3 warnings generated.
-
-Kconfig warnings: (for reference only)
-   WARNING: unmet direct dependencies detected for FRAME_POINTER
-   Depends on DEBUG_KERNEL && (M68K || UML || SUPERH) || ARCH_WANT_FRAME_POINTERS
-   Selected by
-   - DEPT && DEBUG_KERNEL && LOCK_DEBUGGING_SUPPORT && !MIPS && !PPC && !ARM && !S390 && !MICROBLAZE && !ARC && !X86
-
-
-vim +/__dept_wait +2093 kernel/dependency/dept.c
-
-  2092	
-> 2093	void __dept_wait(struct dept_map *m, unsigned long w_f, unsigned long ip,
-  2094			 const char *w_fn, int ne)
-  2095	{
-  2096		int e;
-  2097	
-  2098		/*
-  2099		 * Be as conservative as possible. In case of mulitple waits for
-  2100		 * a single dept_map, we are going to keep only the last wait's
-  2101		 * wgen for simplicity - keeping all wgens seems overengineering.
-  2102		 *
-  2103		 * Of course, it might cause missing some dependencies that
-  2104		 * would rarely, probabily never, happen but it helps avoid
-  2105		 * false positive report.
-  2106		 */
-  2107		for_each_set_bit(e, &w_f, DEPT_MAX_SUBCLASSES_EVT) {
-  2108			struct dept_class *c;
-  2109			struct dept_key *k;
-  2110	
-  2111			k = m->keys ?: &m->keys_local;
-  2112			c = check_new_class(&m->keys_local, k,
-  2113					    map_sub(m, e), m->name);
-  2114			if (!c)
-  2115				continue;
-  2116	
-  2117			add_wait(c, ip, w_fn, ne);
-  2118		}
-  2119	}
-  2120	
-
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Minghao Chi <chi.minghao@zte.com.cn>
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+ drivers/ata/pata_pxa.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/ata/pata_pxa.c b/drivers/ata/pata_pxa.c
+index 41430f79663c..985f42c4fd70 100644
+--- a/drivers/ata/pata_pxa.c
++++ b/drivers/ata/pata_pxa.c
+@@ -164,10 +164,10 @@ static int pxa_ata_probe(struct platform_device *pdev)
+ 	struct resource *cmd_res;
+ 	struct resource *ctl_res;
+ 	struct resource *dma_res;
+-	struct resource *irq_res;
+ 	struct pata_pxa_pdata *pdata = dev_get_platdata(&pdev->dev);
+ 	struct dma_slave_config	config;
+ 	int ret = 0;
++	int irq;
+ 
+ 	/*
+ 	 * Resource validation, three resources are needed:
+@@ -205,9 +205,9 @@ static int pxa_ata_probe(struct platform_device *pdev)
+ 	/*
+ 	 * IRQ pin
+ 	 */
+-	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+-	if (unlikely(irq_res == NULL))
+-		return -EINVAL;
++	irq = platform_get_irq(pdev, 0);
++	if (irq < 0)
++		return irq;
+ 
+ 	/*
+ 	 * Allocate the host
+@@ -287,7 +287,7 @@ static int pxa_ata_probe(struct platform_device *pdev)
+ 	/*
+ 	 * Activate the ATA host
+ 	 */
+-	ret = ata_host_activate(host, irq_res->start, ata_sff_interrupt,
++	ret = ata_host_activate(host, irq, ata_sff_interrupt,
+ 				pdata->irq_flags, &pxa_ata_sht);
+ 	if (ret)
+ 		dma_release_channel(data->dma_chan);
+-- 
+2.25.1
+
