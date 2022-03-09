@@ -2,161 +2,189 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EC65AC433EF
-	for <linux-ide@archiver.kernel.org>; Wed,  9 Mar 2022 06:24:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6F40C433EF
+	for <linux-ide@archiver.kernel.org>; Wed,  9 Mar 2022 07:22:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229684AbiCIGZr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 9 Mar 2022 01:25:47 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52818 "EHLO
+        id S229881AbiCIHXC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 9 Mar 2022 02:23:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37154 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229598AbiCIGZr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 9 Mar 2022 01:25:47 -0500
-Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 734B412168C
-        for <linux-ide@vger.kernel.org>; Tue,  8 Mar 2022 22:24:47 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1646807087; x=1678343087;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=402p/cC9Q8pxSjYD8AYMP1zGXs05qRwp767H72pcxjQ=;
-  b=C9PEsbyoB9RS9GKf63tczyikUvtFVFCRSZbjLvZ+0LlFL11joDwUvmzZ
-   3IifnbUsRPOIL6+N7iwKYjwBZlyseb7HWHLb9FaMEvdUIr/5jGufeHKUo
-   GvoqKDD/c4wVqjXCqmmR5azadrgAYf506mOa1vgXjVT/zhjIatAmTMroF
-   fMvUOKgdQ+2zwPcZTFEDdkfa+odibjUlkWjFCI72LI3t9lS4Sw3gatwmV
-   KYEi/eDYv6e+P+HQv/9NBKLo6k4PThpRfIGzdsHIU9dyS48P3Ln6zZdon
-   FHAL3fBzBm2g/x99f+4XZV0th2rBPe5A4BEiQytcwz4UvvlSF2WD8qkep
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.90,166,1643644800"; 
-   d="scan'208";a="194835488"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 09 Mar 2022 14:24:47 +0800
-IronPort-SDR: Z8TCPWGx0nz8rDJhibUfJwl5N7XdtbPWbs8d/UV1rzbLHdgRwNcLv7N4P1YLfz5KFTmh0wIUVo
- 8v4O8mTCNToyGihU2n7myD3d589D2cuIV/oQqD61UVcdb5IG7MdKUGNjKEHrMOMw4lELR0mZ9L
- kPg2L0HRjcUqezG/n7sbabGOU0AJ76uVnunlZOeIvAHnngUpUljWN38ou+VhcBcaPv2VAtpcTO
- J9uQBNczmONzZ0xFrJIELLsMp7ULLZkTbKXn+er2c+miQN490A7n0AAwlL4YDB0s6q1cXYecS1
- KCHwIpWz1tfWgbSDzMOOQe7+
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2022 21:56:01 -0800
-IronPort-SDR: hv6UDyLXuBk72kL+K+zIHpECnmcTX8eKi06DqZ/PbwEumQ3sFAllUi4SC91JqMpLnEeMktrkSh
- cLaiT3xjou+Vu3mATvYfHh7mqXsFcGoaKh1LYyTkn8/FLqCJEoauDSi98uhX77RZWcchQGLO44
- RITKlJ0XSlXsUDyj27Fs+chyV4ib2khInN+ezx6FfNzyQSnBeHdDnlqgMFFGRGLxuCPmJ9li3O
- 9OOp7JC7ay1wAfo8tV2a9xZhZXb1x83h6e9VsodWSCthaj8D1+w4ovK2fugAiZGPOpYxEjaZNl
- 7OI=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2022 22:24:46 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KD2H21s8Pz1SVny
-        for <linux-ide@vger.kernel.org>; Tue,  8 Mar 2022 22:24:46 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1646807085; x=1649399086; bh=402p/cC9Q8pxSjYD8AYMP1zGXs05qRwp767
-        H72pcxjQ=; b=GIbZe5xGcclBgP/H4XXqchA/E/u8VrKvMhqFi2IPrY+aHQDCxgF
-        C5DSl7EAttB/zyYmCGWUgRAfwzt6hyAht4Qyub4jWTLgGPryGlS526bSOk14Zu9m
-        2zrLN7w3g6/1IsO3cZv4lAWqkidlc7ljK9+0fA7iu56/JQELqdm0Qqa+P0t0Xt+/
-        BJ6sUnT5Hqhu35E+RJIArqZ7eKBThbZgh48qDk966Bq+z1GUevOcKLUvcg90KkPY
-        0NLYbuIKxhxtYR61uf1LW0Nf9D7c7BSsf9YiG/nlMqyoP0ldXgnEGvz2rNBsZ6p+
-        2uYKRGaJ9K9sa6PL8D+lvV9GFB8qULjCr4g==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id bR5dvLC_rAxo for <linux-ide@vger.kernel.org>;
-        Tue,  8 Mar 2022 22:24:45 -0800 (PST)
-Received: from [10.225.163.91] (unknown [10.225.163.91])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KD2H056grz1Rvlx;
-        Tue,  8 Mar 2022 22:24:44 -0800 (PST)
-Message-ID: <d1dfb244-eda3-b5c6-c6bd-c0294a9a4a94@opensource.wdc.com>
-Date:   Wed, 9 Mar 2022 15:24:43 +0900
+        with ESMTP id S229460AbiCIHXC (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 9 Mar 2022 02:23:02 -0500
+Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 19B0910A7E5;
+        Tue,  8 Mar 2022 23:22:04 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1646810524; x=1678346524;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=8P15gyfMQXBcZtwt5sBe3cAJYWyxAa9xsRjkNdIfHfs=;
+  b=c4rfCkKtxWbo2cNwGtazxDrff4PLQO3Bd8dSZnzZ15U0A7hK6JaOdK3T
+   lM/OMA3SewgeGxHgAnLKnvFUWIs8F64MgNzs7OG/4mUx/+cPfibUDYGrz
+   oc4oQuPihxkWXArRQIP710+6KzgFyOjaxYftaLTIXpxH82iiNA9YnWKpm
+   6awFm3cP03W8tsLb6VfxR67yip3BSl0uUXk9CJrGfewQPMqAzOEWQZJYG
+   sjleyWoz9tViXjnwGsUysmYd9xpoiC4dngT2oxOEEnzH4GGxpKfXogBIf
+   AOdNJOuLqcTz4OUPLtj5HxlS7991m738MjwNYN2gXRfv8KY4F60roK1SL
+   A==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10280"; a="234860537"
+X-IronPort-AV: E=Sophos;i="5.90,167,1643702400"; 
+   d="scan'208";a="234860537"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Mar 2022 23:22:03 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.90,167,1643702400"; 
+   d="scan'208";a="814643883"
+Received: from lkp-server02.sh.intel.com (HELO 89b41b6ae01c) ([10.239.97.151])
+  by fmsmga005.fm.intel.com with ESMTP; 08 Mar 2022 23:21:57 -0800
+Received: from kbuild by 89b41b6ae01c with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1nRqdw-0002pB-R8; Wed, 09 Mar 2022 07:21:56 +0000
+Date:   Wed, 9 Mar 2022 15:21:54 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Byungchul Park <byungchul.park@lge.com>,
+        torvalds@linux-foundation.org
+Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
+        damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
+        adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
+        mingo@redhat.com, linux-kernel@vger.kernel.org, will@kernel.org,
+        tglx@linutronix.de, rostedt@goodmis.org, joel@joelfernandes.org,
+        sashal@kernel.org, daniel.vetter@ffwll.ch,
+        chris@chris-wilson.co.uk, duyuyang@gmail.com,
+        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
+        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
+        bfields@fieldses.org, gregkh@linuxfoundation.org,
+        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
+        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org
+Subject: Re: [PATCH v4 02/24] dept: Implement Dept(Dependency Tracker)
+Message-ID: <202203091550.PnufQ7gO-lkp@intel.com>
+References: <1646377603-19730-3-git-send-email-byungchul.park@lge.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH V2] ata: pata_pxa: Use platform_get_irq() to get the
- interrupt
-Content-Language: en-US
-To:     cgel.zte@gmail.com, s.shtylyov@omp.ru
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Minghao Chi <chi.minghao@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-References: <20220309055038.2081317-1-chi.minghao@zte.com.cn>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220309055038.2081317-1-chi.minghao@zte.com.cn>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1646377603-19730-3-git-send-email-byungchul.park@lge.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 3/9/22 14:50, cgel.zte@gmail.com wrote:
-> From: Minghao Chi <chi.minghao@zte.com.cn>
-> 
-> platform_get_resource(pdev, IORESOURCE_IRQ, ..) relies on static
-> allocation of IRQ resources in DT core code, this causes an issue
-> when using hierarchical interrupt domains using "interrupts" property
-> in the node as this bypasses the hierarchical setup and messes up the
-> irq chaining.
-> 
-> In preparation for removal of static setup of IRQ resource from DT core
-> code use platform_get_irq().
-> 
-> v1->v2:
-> 	- Use more specific in the subject: ata: pata_pxa:
-> 	- Switch to returning 'irq'
-> Reported-by: Zeal Robot <zealci@zte.com.cn>
-> Signed-off-by: Minghao Chi <chi.minghao@zte.com.cn>
-> ---
->  drivers/ata/pata_pxa.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/ata/pata_pxa.c b/drivers/ata/pata_pxa.c
-> index 41430f79663c..340b274d0cad 100644
-> --- a/drivers/ata/pata_pxa.c
-> +++ b/drivers/ata/pata_pxa.c
-> @@ -164,10 +164,10 @@ static int pxa_ata_probe(struct platform_device *pdev)
->  	struct resource *cmd_res;
->  	struct resource *ctl_res;
->  	struct resource *dma_res;
-> -	struct resource *irq_res;
->  	struct pata_pxa_pdata *pdata = dev_get_platdata(&pdev->dev);
->  	struct dma_slave_config	config;
->  	int ret = 0;
-> +	int irq;
->  
->  	/*
->  	 * Resource validation, three resources are needed:
-> @@ -205,9 +205,9 @@ static int pxa_ata_probe(struct platform_device *pdev)
->  	/*
->  	 * IRQ pin
->  	 */
-> -	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
-> -	if (unlikely(irq_res == NULL))
-> -		return -EINVAL;
-> +	irq = platform_get_irq(pdev, 0);
-> +	if (unlikely(irq < 0))
+Hi Byungchul,
 
-Please drop the unlikely() here. Not needed. This is not the hot path.
+Thank you for the patch! Perhaps something to improve:
 
-> +		return irq;
->  
->  	/*
->  	 * Allocate the host
-> @@ -287,7 +287,7 @@ static int pxa_ata_probe(struct platform_device *pdev)
->  	/*
->  	 * Activate the ATA host
->  	 */
-> -	ret = ata_host_activate(host, irq_res->start, ata_sff_interrupt,
-> +	ret = ata_host_activate(host, irq, ata_sff_interrupt,
->  				pdata->irq_flags, &pxa_ata_sht);
->  	if (ret)
->  		dma_release_channel(data->dma_chan);
+[auto build test WARNING on tip/sched/core]
+[also build test WARNING on linux/master linus/master v5.17-rc7]
+[cannot apply to tip/locking/core hnaz-mm/master next-20220308]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
+
+url:    https://github.com/0day-ci/linux/commits/Byungchul-Park/DEPT-Dependency-Tracker/20220304-150943
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git 25795ef6299f07ce3838f3253a9cb34f64efcfae
+config: hexagon-randconfig-r022-20220307 (https://download.01.org/0day-ci/archive/20220309/202203091550.PnufQ7gO-lkp@intel.com/config)
+compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project d271fc04d5b97b12e6b797c6067d3c96a8d7470e)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # https://github.com/0day-ci/linux/commit/387c58f459c6eb2a17a99b6c42ad57512a917d5d
+        git remote add linux-review https://github.com/0day-ci/linux
+        git fetch --no-tags linux-review Byungchul-Park/DEPT-Dependency-Tracker/20220304-150943
+        git checkout 387c58f459c6eb2a17a99b6c42ad57512a917d5d
+        # save the config file to linux build tree
+        mkdir build_dir
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=hexagon SHELL=/bin/bash drivers/target/ kernel/dependency/
+
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
+
+All warnings (new ones prefixed by >>):
+
+>> kernel/dependency/dept.c:2093:6: warning: no previous prototype for function '__dept_wait' [-Wmissing-prototypes]
+   void __dept_wait(struct dept_map *m, unsigned long w_f, unsigned long ip,
+        ^
+   kernel/dependency/dept.c:2093:1: note: declare 'static' if the function is not intended to be used outside of this translation unit
+   void __dept_wait(struct dept_map *m, unsigned long w_f, unsigned long ip,
+   ^
+   static 
+   In file included from kernel/dependency/dept.c:2532:
+>> kernel/dependency/dept_hash.h:9:1: warning: format specifies type 'size_t' (aka 'unsigned int') but the argument has type 'unsigned long' [-Wformat]
+   HASH(dep, 12)
+   ^~~~~~~~~~~~~
+   kernel/dependency/dept.c:2531:14: note: expanded from macro 'HASH'
+                  #id, B2KB(sizeof(struct hlist_head) * (1UL << bits)));
+                  ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/printk.h:519:34: note: expanded from macro 'pr_info'
+           printk(KERN_INFO pr_fmt(fmt), ##__VA_ARGS__)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+   include/linux/printk.h:446:60: note: expanded from macro 'printk'
+   #define printk(fmt, ...) printk_index_wrap(_printk, fmt, ##__VA_ARGS__)
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+   include/linux/printk.h:418:19: note: expanded from macro 'printk_index_wrap'
+                   _p_func(_fmt, ##__VA_ARGS__);                           \
+                           ~~~~    ^~~~~~~~~~~
+   kernel/dependency/dept.c:2497:17: note: expanded from macro 'B2KB'
+   #define B2KB(B) ((B) / 1024)
+                   ^~~~~~~~~~~~
+   In file included from kernel/dependency/dept.c:2532:
+   kernel/dependency/dept_hash.h:10:1: warning: format specifies type 'size_t' (aka 'unsigned int') but the argument has type 'unsigned long' [-Wformat]
+   HASH(class, 12)
+   ^~~~~~~~~~~~~~~
+   kernel/dependency/dept.c:2531:14: note: expanded from macro 'HASH'
+                  #id, B2KB(sizeof(struct hlist_head) * (1UL << bits)));
+                  ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/printk.h:519:34: note: expanded from macro 'pr_info'
+           printk(KERN_INFO pr_fmt(fmt), ##__VA_ARGS__)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+   include/linux/printk.h:446:60: note: expanded from macro 'printk'
+   #define printk(fmt, ...) printk_index_wrap(_printk, fmt, ##__VA_ARGS__)
+                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
+   include/linux/printk.h:418:19: note: expanded from macro 'printk_index_wrap'
+                   _p_func(_fmt, ##__VA_ARGS__);                           \
+                           ~~~~    ^~~~~~~~~~~
+   kernel/dependency/dept.c:2497:17: note: expanded from macro 'B2KB'
+   #define B2KB(B) ((B) / 1024)
+                   ^~~~~~~~~~~~
+   3 warnings generated.
+
+Kconfig warnings: (for reference only)
+   WARNING: unmet direct dependencies detected for FRAME_POINTER
+   Depends on DEBUG_KERNEL && (M68K || UML || SUPERH) || ARCH_WANT_FRAME_POINTERS
+   Selected by
+   - DEPT && DEBUG_KERNEL && LOCK_DEBUGGING_SUPPORT && !MIPS && !PPC && !ARM && !S390 && !MICROBLAZE && !ARC && !X86
 
 
--- 
-Damien Le Moal
-Western Digital Research
+vim +/__dept_wait +2093 kernel/dependency/dept.c
+
+  2092	
+> 2093	void __dept_wait(struct dept_map *m, unsigned long w_f, unsigned long ip,
+  2094			 const char *w_fn, int ne)
+  2095	{
+  2096		int e;
+  2097	
+  2098		/*
+  2099		 * Be as conservative as possible. In case of mulitple waits for
+  2100		 * a single dept_map, we are going to keep only the last wait's
+  2101		 * wgen for simplicity - keeping all wgens seems overengineering.
+  2102		 *
+  2103		 * Of course, it might cause missing some dependencies that
+  2104		 * would rarely, probabily never, happen but it helps avoid
+  2105		 * false positive report.
+  2106		 */
+  2107		for_each_set_bit(e, &w_f, DEPT_MAX_SUBCLASSES_EVT) {
+  2108			struct dept_class *c;
+  2109			struct dept_key *k;
+  2110	
+  2111			k = m->keys ?: &m->keys_local;
+  2112			c = check_new_class(&m->keys_local, k,
+  2113					    map_sub(m, e), m->name);
+  2114			if (!c)
+  2115				continue;
+  2116	
+  2117			add_wait(c, ip, w_fn, ne);
+  2118		}
+  2119	}
+  2120	
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
