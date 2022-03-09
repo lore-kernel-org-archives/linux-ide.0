@@ -2,97 +2,72 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6760C433F5
-	for <linux-ide@archiver.kernel.org>; Wed,  9 Mar 2022 08:45:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55EFBC433F5
+	for <linux-ide@archiver.kernel.org>; Wed,  9 Mar 2022 08:51:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229756AbiCIIqC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 9 Mar 2022 03:46:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55438 "EHLO
+        id S230527AbiCIIw0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 9 Mar 2022 03:52:26 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49470 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229525AbiCIIqB (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 9 Mar 2022 03:46:01 -0500
-Received: from mga02.intel.com (mga02.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CC591617EC;
-        Wed,  9 Mar 2022 00:45:03 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1646815503; x=1678351503;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=nwdrdtIz1xZUJ3NnrUm2mtAL8wyUtGdo/sQn/e6jGLw=;
-  b=BgCd8HJbxykinzx7MuWUiWlMHd3WIx8eiFfsSOcUeB5yRyM77YA9kQSH
-   3SdbXtumQLfaGxJob2q8Ptwt0AGr/xjSSj11gy9TkjTApuQmJGopFERqG
-   iSsGPvh+00Jqj6MKIVlI5nk3sYRMBWtcHzNiv9Ox7Anofx+fSSK117xxq
-   LrIprzFKlrzKzrdAp3SvWvxvYuf1FGknP2COxNNCAtIEQCtr+okZtW3Hd
-   Afvwd/ciDJIBtWlER14li2pFyIJ4W+2iBHuPv/MDzIohPdI5FMRL596cB
-   fniE7eD4XcOo7c/ADDTHjYeTexpmgm8vzrYnYAYxfznwTgwhtP6hO8ja8
-   w==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10280"; a="242367230"
-X-IronPort-AV: E=Sophos;i="5.90,167,1643702400"; 
-   d="scan'208";a="242367230"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2022 00:45:02 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.90,167,1643702400"; 
-   d="scan'208";a="495767951"
-Received: from lkp-server02.sh.intel.com (HELO 89b41b6ae01c) ([10.239.97.151])
-  by orsmga003.jf.intel.com with ESMTP; 09 Mar 2022 00:45:00 -0800
-Received: from kbuild by 89b41b6ae01c with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1nRrwJ-0002wq-Iz; Wed, 09 Mar 2022 08:44:59 +0000
-Date:   Wed, 9 Mar 2022 16:44:06 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Ondrej Zary <linux@zary.sk>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     kbuild-all@lists.01.org, Christoph Hellwig <hch@lst.de>,
-        Jens Axboe <axboe@kernel.dk>, Tim Waugh <tim@cyberelk.net>,
-        linux-block@vger.kernel.org, linux-parport@lists.infradead.org,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 01/16] pata_parport: add core driver (PARIDE replacement)
-Message-ID: <202203091613.dsoQnVk9-lkp@intel.com>
-References: <20220305201411.501-2-linux@zary.sk>
+        with ESMTP id S230520AbiCIIwY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 9 Mar 2022 03:52:24 -0500
+Received: from mxout02.lancloud.ru (mxout02.lancloud.ru [45.84.86.82])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15D17162016;
+        Wed,  9 Mar 2022 00:51:20 -0800 (PST)
+Received: from LanCloud
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout02.lancloud.ru 00A442323C37
+Received: from LanCloud
+Received: from LanCloud
+Received: from LanCloud
+Message-ID: <c3bc54ce-3a13-e0d7-97e6-bd4d553f577c@omp.ru>
+Date:   Wed, 9 Mar 2022 11:51:10 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220305201411.501-2-linux@zary.sk>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Subject: Re: [PATCH V3] ata: pata_pxa: Use platform_get_irq() to get the
+ interrupt
+To:     <cgel.zte@gmail.com>, <damien.lemoal@opensource.wdc.com>
+CC:     <chi.minghao@zte.com.cn>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <zealci@zte.com.cn>
+References: <d1dfb244-eda3-b5c6-c6bd-c0294a9a4a94@opensource.wdc.com>
+ <20220309072834.2081944-1-chi.minghao@zte.com.cn>
+Content-Language: en-US
+Organization: Open Mobile Platform
+In-Reply-To: <20220309072834.2081944-1-chi.minghao@zte.com.cn>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [192.168.11.198]
+X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
+ LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Ondrej,
+On 09.03.2022 10:28, cgel.zte@gmail.com wrote:
 
-Thank you for the patch! Yet something to improve:
+> From: Minghao Chi <chi.minghao@zte.com.cn>
+> 
+> platform_get_resource(pdev, IORESOURCE_IRQ, ..) relies on static
+> allocation of IRQ resources in DT core code, this causes an issue
+> when using hierarchical interrupt domains using "interrupts" property
+> in the node as this bypasses the hierarchical setup and messes up the
+> irq chaining.
+> 
+> In preparation for removal of static setup of IRQ resource from DT core
+> code use platform_get_irq().
+> 
+> v1->v2:
+>      - Use more specific in the subject: ata: pata_pxa:
+>      - Switch to returning 'irq'
+> v2->v3:
+>      - drop the unlikely()
+> 
+> Reported-by: Zeal Robot <zealci@zte.com.cn>
+> Signed-off-by: Minghao Chi <chi.minghao@zte.com.cn>
 
-[auto build test ERROR on hch-configfs/for-next]
-[also build test ERROR on linux/master linus/master v5.17-rc7 next-20220308]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+Reviewed-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-url:    https://github.com/0day-ci/linux/commits/Ondrej-Zary/pata_parport-add-core-driver-PARIDE-replacement/20220307-142912
-base:   git://git.infradead.org/users/hch/configfs.git for-next
-config: ia64-allyesconfig (https://download.01.org/0day-ci/archive/20220309/202203091613.dsoQnVk9-lkp@intel.com/config)
-compiler: ia64-linux-gcc (GCC) 11.2.0
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # https://github.com/0day-ci/linux/commit/05539e2a04721c2710e7d1f6ae49926474bdf918
-        git remote add linux-review https://github.com/0day-ci/linux
-        git fetch --no-tags linux-review Ondrej-Zary/pata_parport-add-core-driver-PARIDE-replacement/20220307-142912
-        git checkout 05539e2a04721c2710e7d1f6ae49926474bdf918
-        # save the config file to linux build tree
-        mkdir build_dir
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-11.2.0 make.cross O=build_dir ARCH=ia64 SHELL=/bin/bash
+[...]
 
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
-
-All errors (new ones prefixed by >>):
-
-   ia64-linux-ld: drivers/block/paride/paride.o: in function `pi_release':
->> (.text+0x600): multiple definition of `pi_release'; drivers/ata/pata_parport/pata_parport.o:(.text+0x36c0): first defined here
-
----
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+MBR, Sergey
