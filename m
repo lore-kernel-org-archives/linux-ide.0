@@ -2,99 +2,160 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CEF6C433FE
-	for <linux-ide@archiver.kernel.org>; Wed,  9 Mar 2022 23:44:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 366A2C433FE
+	for <linux-ide@archiver.kernel.org>; Thu, 10 Mar 2022 01:46:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238185AbiCIXpV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 9 Mar 2022 18:45:21 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41344 "EHLO
+        id S231154AbiCJBrf (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 9 Mar 2022 20:47:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45404 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234529AbiCIXpU (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 9 Mar 2022 18:45:20 -0500
-Received: from mga06.intel.com (mga06.intel.com [134.134.136.31])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 780D6F9F8E;
-        Wed,  9 Mar 2022 15:44:20 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1646869460; x=1678405460;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=rMC+JXijdy5E1AXIX/JZM+A/puBgZ9IUECkOF4wNP8M=;
-  b=WgGgvBPuhQjnGVpMXHqRT1HXJsHBRy3MQq9H3/LJA8CmYuVCOn8zzrV/
-   AtZSe91vFFY1dQzvT22/GWHAgW/L94BOT1wBigvhtYNVHs06f3FTULCxH
-   dddEK+qNgsv5NBvi3KJLfE4Brn20FohiolGuWk1owOk6dktIc0bT2yMRv
-   /0kqG0H/4mplGpw2YK+HKekfFZ5rJ6jRfvltJcTPwsgghnJ3OarAeHWKi
-   yA20hALUbZQmKc1mMBI862GfN/PkGn7i8Il2ArSNM7FJH+SiSB4iJ9g+D
-   HTvae0VNBodgKbCiIf75mMnwkYuMIC83U1yiNyboC67naoIsVhPz0JeST
-   w==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10281"; a="315833917"
-X-IronPort-AV: E=Sophos;i="5.90,169,1643702400"; 
-   d="scan'208";a="315833917"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2022 15:44:19 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.90,169,1643702400"; 
-   d="scan'208";a="596454793"
-Received: from lkp-server02.sh.intel.com (HELO 89b41b6ae01c) ([10.239.97.151])
-  by fmsmga008.fm.intel.com with ESMTP; 09 Mar 2022 15:44:12 -0800
-Received: from kbuild by 89b41b6ae01c with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1nS5yW-0003yN-08; Wed, 09 Mar 2022 23:44:12 +0000
-Date:   Thu, 10 Mar 2022 07:43:54 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Byungchul Park <byungchul.park@lge.com>,
-        torvalds@linux-foundation.org
-Cc:     kbuild-all@lists.01.org, damien.lemoal@opensource.wdc.com,
-        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
-        linux-ext4@vger.kernel.org, mingo@redhat.com,
+        with ESMTP id S238905AbiCJBrd (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 9 Mar 2022 20:47:33 -0500
+Received: from lgeamrelo11.lge.com (lgeamrelo11.lge.com [156.147.23.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 46796FDFB8
+        for <linux-ide@vger.kernel.org>; Wed,  9 Mar 2022 17:46:27 -0800 (PST)
+Received: from unknown (HELO lgemrelse6q.lge.com) (156.147.1.121)
+        by 156.147.23.51 with ESMTP; 10 Mar 2022 10:46:18 +0900
+X-Original-SENDERIP: 156.147.1.121
+X-Original-MAILFROM: byungchul.park@lge.com
+Received: from unknown (HELO X58A-UD3R) (10.177.244.38)
+        by 156.147.1.121 with ESMTP; 10 Mar 2022 10:46:18 +0900
+X-Original-SENDERIP: 10.177.244.38
+X-Original-MAILFROM: byungchul.park@lge.com
+Date:   Thu, 10 Mar 2022 10:45:49 +0900
+From:   Byungchul Park <byungchul.park@lge.com>
+To:     Theodore Ts'o <tytso@mit.edu>
+Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
+        adilger.kernel@dilger.ca, linux-ext4@vger.kernel.org,
+        torvalds@linux-foundation.org, mingo@redhat.com,
         linux-kernel@vger.kernel.org, peterz@infradead.org,
         will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
         joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
         chris@chris-wilson.co.uk, duyuyang@gmail.com,
-        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
-        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
-        bfields@fieldses.org, gregkh@linuxfoundation.org,
-        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
-        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org
-Subject: Re: [PATCH v4 02/24] dept: Implement Dept(Dependency Tracker)
-Message-ID: <202203100728.FT7RsG8e-lkp@intel.com>
-References: <1646377603-19730-3-git-send-email-byungchul.park@lge.com>
+        johannes.berg@intel.com, tj@kernel.org, willy@infradead.org,
+        david@fromorbit.com, amir73il@gmail.com, bfields@fieldses.org,
+        gregkh@linuxfoundation.org, kernel-team@lge.com,
+        linux-mm@kvack.org, akpm@linux-foundation.org, mhocko@kernel.org,
+        minchan@kernel.org, hannes@cmpxchg.org, vdavydov.dev@gmail.com,
+        sj@kernel.org, jglisse@redhat.com, dennis@kernel.org, cl@linux.com,
+        penberg@kernel.org, rientjes@google.com, vbabka@suse.cz,
+        ngupta@vflare.org, linux-block@vger.kernel.org,
+        paolo.valente@linaro.org, josef@toxicpanda.com,
+        linux-fsdevel@vger.kernel.org, viro@zeniv.linux.org.uk,
+        jack@suse.cz, jack@suse.com, jlayton@kernel.org,
+        dan.j.williams@intel.com, hch@infradead.org, djwong@kernel.org,
+        dri-devel@lists.freedesktop.org, airlied@linux.ie,
+        rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
+        hamohammed.sa@gmail.com
+Subject: Re: Report 2 in ext4 and journal based on v5.17-rc1
+Message-ID: <20220310014549.GA24568@X58A-UD3R>
+References: <YiQq6Ou39uzHC0mu@mit.edu>
+ <1646563902-6671-1-git-send-email-byungchul.park@lge.com>
+ <YiTC3j6Igkw7xvIM@mit.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1646377603-19730-3-git-send-email-byungchul.park@lge.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <YiTC3j6Igkw7xvIM@mit.edu>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Byungchul,
+On Sun, Mar 06, 2022 at 09:19:10AM -0500, Theodore Ts'o wrote:
+> On Sun, Mar 06, 2022 at 07:51:42PM +0900, Byungchul Park wrote:
+> > > 
+> > > Users of DEPT must not have to understand how DEPT works in order to
+> > 
+> > Users must not have to understand how Dept works for sure, and haters
+> > must not blame things based on what they guess wrong.
+> 
+> For the record, I don't hate DEPT.  I *fear* that DEPT will result in
+> my getting spammed with a huge number of false posiives once automated
+> testing systems like Syzkaller, zero-day test robot, etcs., get a hold
+> of it once it gets merged and start generating hundreds of automated
+> reports.
 
-Thank you for the patch! Perhaps something to improve:
+Agree. Dept should not be a part of *automated testing system* until it
+finally works as much as Lockdep in terms of false positives. However,
+it's impossible to achieve it by doing it out of the tree.
 
-[auto build test WARNING on tip/sched/core]
-[also build test WARNING on linux/master linus/master v5.17-rc7]
-[cannot apply to tip/locking/core hnaz-mm/master next-20220309]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+Besides automated testing system, Dept works great in the middle of
+developing something that is so complicated in terms of synchronization.
+They don't have to worry about real reports anymore, that should be
+reported, from getting prevented by a false positve.
 
-url:    https://github.com/0day-ci/linux/commits/Byungchul-Park/DEPT-Dependency-Tracker/20220304-150943
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git 25795ef6299f07ce3838f3253a9cb34f64efcfae
-config: i386-randconfig-m031-20220307 (https://download.01.org/0day-ci/archive/20220310/202203100728.FT7RsG8e-lkp@intel.com/config)
-compiler: gcc-9 (Debian 9.3.0-22) 9.3.0
+I will explicitely describe EXPERIMENTAL and "Dept might false-alarm" in
+Kconfig until it's considered a few-false-alarming tool.
 
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
+> > Sure, it should be done manually. I should do it on my own when that
+> > kind of issue arises.
+> 
+> The question here is how often will it need to be done, and how easy
 
-smatch warnings:
-kernel/dependency/dept.c:2519 dept_init() warn: inconsistent indenting
+I guess it's gonna rarely happens. I want to see too.
 
-vim +2519 kernel/dependency/dept.c
+> will it be to "do it manually"?  Suppose we mark all of the DEPT false
 
-  2518	
-> 2519		pr_info("DEPendency Tracker: Copyright (c) 2020 LG Electronics, Inc., Byungchul Park\n");
+Very easy. Equal to or easier than the way we do for lockdep. But the
+interest would be wait/event objects rather than locks.
+
+> positives before it gets merged?  How easy will it be able to suppress
+> future false positives in the future, as the kernel evolves?
+
+Same as - or even better than - what we do for Lockdep.
+
+And we'd better consider those activies as a code-documentation. Not
+only making things just work but organizing code and documenting
+in code, are also very meaningful.
+
+> Perhaps one method is to haved a way to take a particular wait queue,
+> or call to schedule(), or at the level of an entire kernel source
+> file, and opt it out from DEPT analysis?  That way, if DEPT gets
+> merged, and a maintainer starts getting spammed by bogus (or
+
+Once Dept gets stable - hoplefully now that Dept is working very
+conservatively, there might not be as many false positives as you're
+concerning. The situation is in control.
+
+> That way we don't necessarily need to have a debate over how close to
+> zero percent false positives is necessary before DEPT can get merged.
+
+Non-sense. I would agree with you if it was so when Lockdep was merged.
+But I'll try to achieve almost zero false positives, again, it's
+impossible to do it out of tree.
+
+> And we avoid needing to force maintainers to prove that a DEPT report
+
+So... It'd be okay if Dept goes not as a part of automated testing
+system. Right?
+
+> is a false positive, which is from my experience hard to do, since
+> they get accused of being DEPT haters and not understanding DEPT.
+
+Honestly, it's not a problem of that they don't understand other
+domians than what they are familiar with, but another issue. I won't
+mention it.
+
+And it sounds like you'd do nothing unless it turns out to be
+problematic 100%. It's definitely the *easiest* way to maintain
+something because it's the same as not checking its correctness at all.
+
+Even if it's so hard to do, checking if the code is safe for real
+repeatedly, is what it surely should be done. Again, I understand it
+would be freaking hard. But it doesn't mean we should avoid it.
+
+Here, there seems to be two points you'd like to say:
+
+1. Fundamental question. Does Dept track wait and event correctly?
+2. Even if so, can Dept consider all the subtle things in the kernel?
+
+For 1, I'm willing to response to whatever it is. And not only me but we
+can make it perfectly work if the concept and direction is *right*.
+For 2, I need to ask things and try my best to fix those if it exists.
+
+Again. Dept won't be a part of *automated testing system* until it
+finally works as much as Lockdep in terms of false positives. Hopefully
+you are okay with it.
 
 ---
-0-DAY CI Kernel Test Service, Intel Corporation
-https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
+Byungchul
