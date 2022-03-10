@@ -2,121 +2,99 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15AA0C433EF
-	for <linux-ide@archiver.kernel.org>; Thu, 10 Mar 2022 02:21:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06A81C433EF
+	for <linux-ide@archiver.kernel.org>; Thu, 10 Mar 2022 07:44:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236025AbiCJCWm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 9 Mar 2022 21:22:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43540 "EHLO
+        id S240142AbiCJHpr (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 10 Mar 2022 02:45:47 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54500 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235139AbiCJCWl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 9 Mar 2022 21:22:41 -0500
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28A4ED10B2
-        for <linux-ide@vger.kernel.org>; Wed,  9 Mar 2022 18:21:42 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1646878901; x=1678414901;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=WDO4HSWRyY0O08kBCVNY2t+nO+m9kmaqPv0llFc0uSo=;
-  b=hRAfO44+oYq1ig75PDnwI9ReGmirdacZIynSGDN0uGzFjWn60qWH1flT
-   p7Vm9bE9V+MOrrGiLatzTMTCZORC3IOerzRwTwE3tKcR2/RsMY7H2DS+/
-   BVdMmX4X1DCkaE7F9FYOE3NVcdQ+ko5ZVX0XID/69PSpUlpAfuasx21cz
-   ImvwfaDAlwtL9mPNrJkVQo/jDwHQYInSQ3QEHIQQwjrr27/vh6tzK2tJG
-   EmQQVGEYwF0BTYiVbyt4X2tmuraUXWO49422+p0R/LUuQqsf6Ab1+G1uU
-   s33uv+KXU07GDZt6kc6kAfUuNQ2D7XaJ3WaVramud8irDg5xXa5RI6xe7
-   A==;
-X-IronPort-AV: E=Sophos;i="5.90,169,1643644800"; 
-   d="scan'208";a="199753646"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 10 Mar 2022 10:21:40 +0800
-IronPort-SDR: f6dGjbsaO6BKOu1egDfk+Qn2ZmqJj5XZSPc4+5CehnFhkvAqxnN6QymhGJ7lhj0a47l1eRObam
- KITWHrHwvhZRB0mCSY5oZb2LnABybZ5iDtAx26V623aA1G/0iag/0jSE5F/uKo/xTC/1BMYqJe
- kqm8Bh0IaDZKljvBiHX4mPYhL93IpMlZAxvA80qIdpq9OzuTe6EnnXLuhaMfpeCsMcvH5c3n5r
- Byypp9jxlkqMku+pLJ9GJxEasn+kQbWvhqEy2jB/2FXLE+Fr2ShQnE4TDjXUmHxkXFPlgo2zgT
- 0Xpk45sGhT7U8ycfzc3rwB6N
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2022 17:52:54 -0800
-IronPort-SDR: eB+ow4JCODhnT3Efp5amKC5i0UjMFaJ3TKOo+yLR3rTzLDc9+9/8H2KToAfIyMl1hvUmygC5vY
- A2yNC+hvwbPu/zAAnInklcUXF+Tlq/tW95Fs4Ds/YYtNNNFSfRVPBgbxNQvRNDxR+j0Hfbe/qF
- /oThSh7fXw52Br43E48Ff+8+NcYUQCWmjGf1ld+pg28UILXPBf01RTVAn4Hrnj+wjVWozhnycp
- Woo+Ytmpd88HxPmuLpu71CJ21B3B9Lz73PorZsbeZRhw6k6ds11hdtqYsiFzDG5EtLkg0ilC2s
- 6GE=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2022 18:21:41 -0800
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KDXr41Thxz1SHwl
-        for <linux-ide@vger.kernel.org>; Wed,  9 Mar 2022 18:21:40 -0800 (PST)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1646878899; x=1649470900; bh=WDO4HSWRyY0O08kBCVNY2t+nO+m9kmaqPv0
-        llFc0uSo=; b=X+C0kD8tUpUUUKvMksaTwHwMVC5UJiIOQ41BEcRYawnlD//4Et7
-        /pdimEVj6tdYzAfp9CZDgkjcv9kBmbLRF+AXF+7mp96XQG1flzHJ63eZhtKE2NDm
-        wenB48Xr0Ty2Ot0OQl+gG3zLSDLYqgfYnXbY+MuIZGrjMk5fkU6qWUjzxO/Mmti+
-        Jxctgap8RiEX7Q8f6+wdgLUyQ0qWB9Yy8QyFq/EvYg2JagKQSiXCFU+WrsrRcO/E
-        eWAU5TT5Ay3JVG+H3y7tI53I2all+UY7J83L6nb2Zgbju7Qn0IMPVSoZtTXaCcvO
-        I1EkTh9lCMx01Mle8SGOocIZ8wewAlB8a5g==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id YHVzNGzXI9Zg for <linux-ide@vger.kernel.org>;
-        Wed,  9 Mar 2022 18:21:39 -0800 (PST)
-Received: from [10.225.163.91] (unknown [10.225.163.91])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KDXr24HTmz1Rvlx;
-        Wed,  9 Mar 2022 18:21:38 -0800 (PST)
-Message-ID: <268d5589-fb80-b1d8-a513-69530ca2ab9e@opensource.wdc.com>
-Date:   Thu, 10 Mar 2022 11:21:37 +0900
+        with ESMTP id S233468AbiCJHpp (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 10 Mar 2022 02:45:45 -0500
+Received: from mga04.intel.com (mga04.intel.com [192.55.52.120])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0583312E768;
+        Wed,  9 Mar 2022 23:44:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1646898285; x=1678434285;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=3xL76UjnNfk/gbXIveNqyY1Ko5EZonxMtXIoGMndPvQ=;
+  b=m8YhHn5GHnBYe4Ic5O+ac7B9R2oxufMNJ62ghD7SGrbuL+aB6s/WEEY3
+   2ea4k9op/ba60jqRo+s3aAunbibb6k5M5BpTor07h4wWxybP1H1FL2AJb
+   k3HuAhgE7wNqEjyGmaaYHeS7jpwadEJ8tw25eg/00YkGz+5DByzuUj0CU
+   8ix92n2+GgM5kxztc8mQgPc2wjWBpJNQqV0lcP2M76EvFPaLOAhLvcT13
+   9v8+ocGIyW00E1z8a+WMB92NYDSdlV5ajyBcsP4ZbBB0oE2YzFBbP/3HR
+   hvZnPBEUGt4dQowjV9oUsxD5crPFLB3Y8ODfU668AC5ghTrY3b0Ac8NyK
+   w==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10281"; a="254015097"
+X-IronPort-AV: E=Sophos;i="5.90,169,1643702400"; 
+   d="scan'208";a="254015097"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Mar 2022 23:44:44 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.90,169,1643702400"; 
+   d="scan'208";a="642459708"
+Received: from lkp-server02.sh.intel.com (HELO 89b41b6ae01c) ([10.239.97.151])
+  by fmsmga002.fm.intel.com with ESMTP; 09 Mar 2022 23:44:38 -0800
+Received: from kbuild by 89b41b6ae01c with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1nSDTR-0004ZZ-AA; Thu, 10 Mar 2022 07:44:37 +0000
+Date:   Thu, 10 Mar 2022 15:43:43 +0800
+From:   kernel test robot <lkp@intel.com>
+To:     Byungchul Park <byungchul.park@lge.com>,
+        torvalds@linux-foundation.org
+Cc:     kbuild-all@lists.01.org, damien.lemoal@opensource.wdc.com,
+        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
+        linux-ext4@vger.kernel.org, mingo@redhat.com,
+        linux-kernel@vger.kernel.org, peterz@infradead.org,
+        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
+        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
+        chris@chris-wilson.co.uk, duyuyang@gmail.com,
+        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
+        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
+        bfields@fieldses.org, gregkh@linuxfoundation.org,
+        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
+        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org
+Subject: Re: [PATCH v4 11/24] dept: Add proc knobs to show stats and
+ dependency graph
+Message-ID: <202203101515.nznG7vSJ-lkp@intel.com>
+References: <1646377603-19730-12-git-send-email-byungchul.park@lge.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.5.0
-Subject: Re: [PATCH V3] ata: pata_pxa: Use platform_get_irq() to get the
- interrupt
-Content-Language: en-US
-To:     cgel.zte@gmail.com
-Cc:     chi.minghao@zte.com.cn, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, s.shtylyov@omp.ru, zealci@zte.com.cn
-References: <d1dfb244-eda3-b5c6-c6bd-c0294a9a4a94@opensource.wdc.com>
- <20220309072834.2081944-1-chi.minghao@zte.com.cn>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220309072834.2081944-1-chi.minghao@zte.com.cn>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1646377603-19730-12-git-send-email-byungchul.park@lge.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 3/9/22 16:28, cgel.zte@gmail.com wrote:
-> From: Minghao Chi <chi.minghao@zte.com.cn>
-> 
-> platform_get_resource(pdev, IORESOURCE_IRQ, ..) relies on static
-> allocation of IRQ resources in DT core code, this causes an issue
-> when using hierarchical interrupt domains using "interrupts" property
-> in the node as this bypasses the hierarchical setup and messes up the
-> irq chaining.
-> 
-> In preparation for removal of static setup of IRQ resource from DT core
-> code use platform_get_irq().
-> 
-> v1->v2:
->     - Use more specific in the subject: ata: pata_pxa:
->     - Switch to returning 'irq'
-> v2->v3:
->     - drop the unlikely()
-> 
-> Reported-by: Zeal Robot <zealci@zte.com.cn>
-> Signed-off-by: Minghao Chi <chi.minghao@zte.com.cn>
+Hi Byungchul,
 
-Applied to for-5.18 (without commit message fix). Thanks !
+Thank you for the patch! Perhaps something to improve:
 
+[auto build test WARNING on tip/sched/core]
+[also build test WARNING on linux/master linus/master v5.17-rc7]
+[cannot apply to tip/locking/core hnaz-mm/master next-20220309]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
--- 
-Damien Le Moal
-Western Digital Research
+url:    https://github.com/0day-ci/linux/commits/Byungchul-Park/DEPT-Dependency-Tracker/20220304-150943
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git 25795ef6299f07ce3838f3253a9cb34f64efcfae
+config: i386-randconfig-m031-20220307 (https://download.01.org/0day-ci/archive/20220310/202203101515.nznG7vSJ-lkp@intel.com/config)
+compiler: gcc-9 (Debian 9.3.0-22) 9.3.0
+
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
+
+smatch warnings:
+kernel/dependency/dept_object.h:9 dept_stats_show() warn: inconsistent indenting
+
+vim +9 kernel/dependency/dept_object.h
+
+387c58f459c6eb Byungchul Park 2022-03-04 @9  OBJECT(dep, 1024 * 8)
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
