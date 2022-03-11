@@ -2,100 +2,140 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 717DAC433F5
-	for <linux-ide@archiver.kernel.org>; Fri, 11 Mar 2022 18:55:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A103C433FE
+	for <linux-ide@archiver.kernel.org>; Fri, 11 Mar 2022 22:44:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350138AbiCKS42 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 11 Mar 2022 13:56:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60836 "EHLO
+        id S229570AbiCKWpQ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 11 Mar 2022 17:45:16 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49544 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345153AbiCKS41 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Mar 2022 13:56:27 -0500
-Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4086B25E8A;
-        Fri, 11 Mar 2022 10:55:20 -0800 (PST)
-Received: from [192.168.0.2] (chello089173232159.chello.sk [89.173.232.159])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by hosting.gsystem.sk (Postfix) with ESMTPSA id 49C957A025E;
-        Fri, 11 Mar 2022 19:55:19 +0100 (CET)
-From:   Ondrej Zary <linux@zary.sk>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Subject: Re: [PATCH v0] pata_parport: add driver (PARIDE replacement)
-Date:   Fri, 11 Mar 2022 19:55:15 +0100
-User-Agent: KMail/1.9.10
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Tim Waugh <tim@cyberelk.net>, linux-block@vger.kernel.org,
-        linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20220310212812.13944-1-linux@zary.sk> <e41b526d-18d4-ae05-976d-3021e739cd8e@opensource.wdc.com>
-In-Reply-To: <e41b526d-18d4-ae05-976d-3021e739cd8e@opensource.wdc.com>
-X-KMail-QuotePrefix: > 
+        with ESMTP id S229604AbiCKWpJ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Mar 2022 17:45:09 -0500
+Received: from mxout3.routing.net (mxout3.routing.net [IPv6:2a03:2900:1:a::8])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04CD22A2B9D;
+        Fri, 11 Mar 2022 14:20:40 -0800 (PST)
+Received: from mxbox1.masterlogin.de (unknown [192.168.10.88])
+        by mxout3.routing.net (Postfix) with ESMTP id C1C6960F5F;
+        Fri, 11 Mar 2022 21:04:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailerdienst.de;
+        s=20200217; t=1647032663;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=Rtt0wxHubmWpKdU6ekWYzCitwnoj4zI5iwxQKYKbTWk=;
+        b=eQzbJTFc57T/S09xkYoZDHtkcblS/4wW/Gl5PwOT8TmpANImFyi9Jjm7isC1rDJqurSShG
+        y5frICWIR4v3YP2hVYph2WPbq2QazU3BWIi6cKrLiJib3nqjJV4FGgIZAewOeV+GszMwNt
+        gch5CvVsh+eJEJNgEGdc9hBVBtvVhew=
+Received: from localhost.localdomain (fttx-pool-217.61.144.196.bambit.de [217.61.144.196])
+        by mxbox1.masterlogin.de (Postfix) with ESMTPSA id A020640684;
+        Fri, 11 Mar 2022 21:04:22 +0000 (UTC)
+From:   Frank Wunderlich <linux@fw-web.de>
+To:     devicetree@vger.kernel.org
+Cc:     Frank Wunderlich <frank-w@public-files.de>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
+        Viresh Kumar <vireshk@kernel.org>,
+        Shiraz Hashim <shiraz.linux.kernel@gmail.com>, soc@kernel.org,
+        Andrew Lunn <andrew@lunn.ch>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Peter Geis <pgwipeout@gmail.com>,
+        Michael Riesch <michael.riesch@wolfvision.net>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-rockchip@lists.infradead.org
+Subject: [PATCH v6 3/6] ARM: dts: spear13xx: Fix sata node name
+Date:   Fri, 11 Mar 2022 22:03:54 +0100
+Message-Id: <20220311210357.222830-4-linux@fw-web.de>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20220311210357.222830-1-linux@fw-web.de>
+References: <20220311210357.222830-1-linux@fw-web.de>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-Message-Id: <202203111955.15743.linux@zary.sk>
+Content-Transfer-Encoding: 8bit
+X-Mail-ID: 127311bf-9db5-442b-9c8e-516e6731cf9d
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Friday 11 March 2022 00:59:20 Damien Le Moal wrote:
-> On 3/11/22 06:28, Ondrej Zary wrote:
-> > Add pata_parport (PARIDE replacement) core libata driver.
-> > 
-> > The original paride protocol modules are used for now so allow them to
-> > be compiled without old PARIDE core.
-> > 
-> > Signed-off-by: Ondrej Zary <linux@zary.sk>
-> > ---
-> >  drivers/Makefile                   |   2 +-
-> >  drivers/ata/Kconfig                |  22 +
-> >  drivers/ata/Makefile               |   2 +
-> >  drivers/ata/parport/Makefile       |   3 +
-> >  drivers/ata/parport/pata_parport.c | 805 +++++++++++++++++++++++++++++
-> >  drivers/ata/parport/pata_parport.h | 108 ++++
-> >  drivers/block/paride/Kconfig       |  32 +-
-> >  drivers/block/paride/paride.h      |   5 +
-> >  8 files changed, 962 insertions(+), 17 deletions(-)
-> >  create mode 100644 drivers/ata/parport/Makefile
-> >  create mode 100644 drivers/ata/parport/pata_parport.c
-> >  create mode 100644 drivers/ata/parport/pata_parport.h
-> > 
-> > diff --git a/drivers/Makefile b/drivers/Makefile
-> > index a110338c860c..8ec515f3614e 100644
-> > --- a/drivers/Makefile
-> > +++ b/drivers/Makefile
-> > @@ -98,7 +98,7 @@ obj-$(CONFIG_DIO)		+= dio/
-> >  obj-$(CONFIG_SBUS)		+= sbus/
-> >  obj-$(CONFIG_ZORRO)		+= zorro/
-> >  obj-$(CONFIG_ATA_OVER_ETH)	+= block/aoe/
-> > -obj-$(CONFIG_PARIDE) 		+= block/paride/
-> > +obj-y		 		+= block/paride/
-> >  obj-$(CONFIG_TC)		+= tc/
-> >  obj-$(CONFIG_USB_PHY)		+= usb/
-> >  obj-$(CONFIG_USB)		+= usb/
-> > diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> > index e5641e6c52ee..671c27b77a48 100644
-> > --- a/drivers/ata/Kconfig
-> > +++ b/drivers/ata/Kconfig
-> > @@ -1161,6 +1161,28 @@ config PATA_WINBOND_VLB
-> >  	  Support for the Winbond W83759A controller on Vesa Local Bus
-> >  	  systems.
-> >  
-> > +config PATA_PARPORT
-> > +	tristate "Parallel port IDE device support"
-> > +	depends on PARPORT_PC && PARIDE=n
-> 
-> This is very confusing. The change above this one switch paride
-> compilation to be unconditional, regardless of CONFIG_PARIDE value, but
-> here, you have the dependency to PARIDE=n. I do not understand... Please
-> clarify.
+From: Frank Wunderlich <frank-w@public-files.de>
 
-pata_parport will use existing paride protocol modules. So the paride/ directory must be processed to compile the protocol modules (if they're enabled) even if paride is not enabled.
+After converting the binding to yaml the node name does
+not match the standard pattern, change it.
 
-pata_parport and paride are mutually exclusive because the binary protocol modules are incompatible (the struct pi_adapter is different).
+arch/arm/boot/dts/spear1340-evb.dt.yaml: ahci@b1000000:
+$nodename:0: 'ahci@b1000000' does not match '^sata(@.*)?$'
+	From schema: Documentation/devicetree/bindings/ata/ahci-platform.yaml
 
+Fixes: 07658d9a659b ("SPEAr13xx: Add dts and dtsi files")
+Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
+---
+ arch/arm/boot/dts/spear1310.dtsi    | 6 +++---
+ arch/arm/boot/dts/spear1340-evb.dts | 2 +-
+ arch/arm/boot/dts/spear1340.dtsi    | 2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/arch/arm/boot/dts/spear1310.dtsi b/arch/arm/boot/dts/spear1310.dtsi
+index 2f746a9428a7..8702c290ed8a 100644
+--- a/arch/arm/boot/dts/spear1310.dtsi
++++ b/arch/arm/boot/dts/spear1310.dtsi
+@@ -50,7 +50,7 @@ miphy2: miphy@eb808000 {
+ 			status = "disabled";
+ 		};
+ 
+-		ahci0: ahci@b1000000 {
++		ahci0: sata@b1000000 {
+ 			compatible = "snps,spear-ahci";
+ 			reg = <0xb1000000 0x10000>;
+ 			interrupts = <0 68 0x4>;
+@@ -59,7 +59,7 @@ ahci0: ahci@b1000000 {
+ 			status = "disabled";
+ 		};
+ 
+-		ahci1: ahci@b1800000 {
++		ahci1: sata@b1800000 {
+ 			compatible = "snps,spear-ahci";
+ 			reg = <0xb1800000 0x10000>;
+ 			interrupts = <0 69 0x4>;
+@@ -68,7 +68,7 @@ ahci1: ahci@b1800000 {
+ 			status = "disabled";
+ 		};
+ 
+-		ahci2: ahci@b4000000 {
++		ahci2: sata@b4000000 {
+ 			compatible = "snps,spear-ahci";
+ 			reg = <0xb4000000 0x10000>;
+ 			interrupts = <0 70 0x4>;
+diff --git a/arch/arm/boot/dts/spear1340-evb.dts b/arch/arm/boot/dts/spear1340-evb.dts
+index fd194ebeedc9..65c757cd3718 100644
+--- a/arch/arm/boot/dts/spear1340-evb.dts
++++ b/arch/arm/boot/dts/spear1340-evb.dts
+@@ -112,7 +112,7 @@ pcie {
+ 			};
+ 		};
+ 
+-		ahci@b1000000 {
++		sata@b1000000 {
+ 			status = "okay";
+ 		};
+ 
+diff --git a/arch/arm/boot/dts/spear1340.dtsi b/arch/arm/boot/dts/spear1340.dtsi
+index 827e887afbda..f45f3046f1c8 100644
+--- a/arch/arm/boot/dts/spear1340.dtsi
++++ b/arch/arm/boot/dts/spear1340.dtsi
+@@ -33,7 +33,7 @@ miphy0: miphy@eb800000 {
+ 			status = "disabled";
+ 		};
+ 
+-		ahci0: ahci@b1000000 {
++		ahci0: sata@b1000000 {
+ 			compatible = "snps,spear-ahci";
+ 			reg = <0xb1000000 0x10000>;
+ 			interrupts = <0 72 0x4>;
 -- 
-Ondrej Zary
+2.25.1
+
