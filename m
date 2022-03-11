@@ -2,118 +2,100 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A22A8C433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 11 Mar 2022 05:46:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 717DAC433F5
+	for <linux-ide@archiver.kernel.org>; Fri, 11 Mar 2022 18:55:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346490AbiCKFrE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 11 Mar 2022 00:47:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43724 "EHLO
+        id S1350138AbiCKS42 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 11 Mar 2022 13:56:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60836 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345203AbiCKFrD (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Mar 2022 00:47:03 -0500
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E79B1AD391;
-        Thu, 10 Mar 2022 21:45:59 -0800 (PST)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id C6E7E68AFE; Fri, 11 Mar 2022 06:45:55 +0100 (CET)
-Date:   Fri, 11 Mar 2022 06:45:55 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Ondrej Zary <linux@zary.sk>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        with ESMTP id S1345153AbiCKS41 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Mar 2022 13:56:27 -0500
+Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4086B25E8A;
+        Fri, 11 Mar 2022 10:55:20 -0800 (PST)
+Received: from [192.168.0.2] (chello089173232159.chello.sk [89.173.232.159])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id 49C957A025E;
+        Fri, 11 Mar 2022 19:55:19 +0100 (CET)
+From:   Ondrej Zary <linux@zary.sk>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Subject: Re: [PATCH v0] pata_parport: add driver (PARIDE replacement)
+Date:   Fri, 11 Mar 2022 19:55:15 +0100
+User-Agent: KMail/1.9.10
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
         Tim Waugh <tim@cyberelk.net>, linux-block@vger.kernel.org,
         linux-parport@lists.infradead.org, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v0] pata_parport: add driver (PARIDE replacement)
-Message-ID: <20220311054555.GA16362@lst.de>
-References: <20220310212812.13944-1-linux@zary.sk>
+References: <20220310212812.13944-1-linux@zary.sk> <e41b526d-18d4-ae05-976d-3021e739cd8e@opensource.wdc.com>
+In-Reply-To: <e41b526d-18d4-ae05-976d-3021e739cd8e@opensource.wdc.com>
+X-KMail-QuotePrefix: > 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <20220310212812.13944-1-linux@zary.sk>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Message-Id: <202203111955.15743.linux@zary.sk>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Mar 10, 2022 at 10:28:12PM +0100, Ondrej Zary wrote:
-> Add pata_parport (PARIDE replacement) core libata driver.
+On Friday 11 March 2022 00:59:20 Damien Le Moal wrote:
+> On 3/11/22 06:28, Ondrej Zary wrote:
+> > Add pata_parport (PARIDE replacement) core libata driver.
+> > 
+> > The original paride protocol modules are used for now so allow them to
+> > be compiled without old PARIDE core.
+> > 
+> > Signed-off-by: Ondrej Zary <linux@zary.sk>
+> > ---
+> >  drivers/Makefile                   |   2 +-
+> >  drivers/ata/Kconfig                |  22 +
+> >  drivers/ata/Makefile               |   2 +
+> >  drivers/ata/parport/Makefile       |   3 +
+> >  drivers/ata/parport/pata_parport.c | 805 +++++++++++++++++++++++++++++
+> >  drivers/ata/parport/pata_parport.h | 108 ++++
+> >  drivers/block/paride/Kconfig       |  32 +-
+> >  drivers/block/paride/paride.h      |   5 +
+> >  8 files changed, 962 insertions(+), 17 deletions(-)
+> >  create mode 100644 drivers/ata/parport/Makefile
+> >  create mode 100644 drivers/ata/parport/pata_parport.c
+> >  create mode 100644 drivers/ata/parport/pata_parport.h
+> > 
+> > diff --git a/drivers/Makefile b/drivers/Makefile
+> > index a110338c860c..8ec515f3614e 100644
+> > --- a/drivers/Makefile
+> > +++ b/drivers/Makefile
+> > @@ -98,7 +98,7 @@ obj-$(CONFIG_DIO)		+= dio/
+> >  obj-$(CONFIG_SBUS)		+= sbus/
+> >  obj-$(CONFIG_ZORRO)		+= zorro/
+> >  obj-$(CONFIG_ATA_OVER_ETH)	+= block/aoe/
+> > -obj-$(CONFIG_PARIDE) 		+= block/paride/
+> > +obj-y		 		+= block/paride/
+> >  obj-$(CONFIG_TC)		+= tc/
+> >  obj-$(CONFIG_USB_PHY)		+= usb/
+> >  obj-$(CONFIG_USB)		+= usb/
+> > diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> > index e5641e6c52ee..671c27b77a48 100644
+> > --- a/drivers/ata/Kconfig
+> > +++ b/drivers/ata/Kconfig
+> > @@ -1161,6 +1161,28 @@ config PATA_WINBOND_VLB
+> >  	  Support for the Winbond W83759A controller on Vesa Local Bus
+> >  	  systems.
+> >  
+> > +config PATA_PARPORT
+> > +	tristate "Parallel port IDE device support"
+> > +	depends on PARPORT_PC && PARIDE=n
 > 
-> The original paride protocol modules are used for now so allow them to
-> be compiled without old PARIDE core.
+> This is very confusing. The change above this one switch paride
+> compilation to be unconditional, regardless of CONFIG_PARIDE value, but
+> here, you have the dependency to PARIDE=n. I do not understand... Please
+> clarify.
 
-I agree with Damien that this needs a bit more text here.  Explaining
-what kind of hardware this drives, that this will allow to eventually
-drop paride, how it reuesed the low-level drivers, etc.
+pata_parport will use existing paride protocol modules. So the paride/ directory must be processed to compile the protocol modules (if they're enabled) even if paride is not enabled.
 
-> +	  If your parallel port support is in a loadable module, you must build
-> +	  PATA_PARPORT as a module. If you built PATA_PARPORT support into your
-> +	  kernel, you may still build the individual protocol modules
-> +	  as loadable modules.
+pata_parport and paride are mutually exclusive because the binary protocol modules are incompatible (the struct pi_adapter is different).
 
-I'd drop the above.  The dependencies are already enforced by Kconfig
-and we don't really tend to mention this elsewhere.
-
-> +	  Unlike the old PARIDE, there are no high-level drivers needed.
-> +	  The IDE devices behind parallel port adapters are handled by the
-> +	  ATA layer.
-
-I also don't think this is needed.
-
-> index 000000000000..3ea8d824091e
-> --- /dev/null
-> +++ b/drivers/ata/parport/pata_parport.c
-> @@ -0,0 +1,805 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
-
-Please add your copyright statement here.
-
-> +static void pata_parport_tf_load(struct ata_port *ap, const struct ata_taskfile *tf)
-
-Overly long line.
-
-> +			pi->proto->write_regr(pi, 0, ATA_REG_NSECT, tf->hob_nsect);
-> +			pi->proto->write_regr(pi, 0, ATA_REG_LBAL, tf->hob_lbal);
-> +			pi->proto->write_regr(pi, 0, ATA_REG_LBAM, tf->hob_lbam);
-> +			pi->proto->write_regr(pi, 0, ATA_REG_LBAH, tf->hob_lbah);
-
-Same here.
-
-> +static void pata_parport_exec_command(struct ata_port *ap, const struct ata_taskfile *tf)
-
-.. and here.
-
-And a bunch more.
-
-> +static void pata_parport_bus_release(struct device *dev)
-> +{
-> +	/* nothing to do here but required to avoid warning on device removal */
-> +}
-> +
-> +static struct bus_type pata_parport_bus_type = {
-> +	.name = DRV_NAME,
-> +};
-> +
-> +static struct device pata_parport_bus = {
-> +	.init_name = DRV_NAME,
-> +	.release = pata_parport_bus_release,
-> +};
-> +
-> +/* temporary for old paride protocol modules */
-> +static struct scsi_host_template pata_parport_sht = {
-> +	PATA_PARPORT_SHT("pata_parport")
-> +};
-
-Did you look into my suggestion to use struct pardevice.dev instead?
-
-> index ddb9e589da7f..f3bd01a9c9ec 100644
-> --- a/drivers/block/paride/paride.h
-> +++ b/drivers/block/paride/paride.h
-> @@ -1,3 +1,7 @@
-> +#if IS_ENABLED(CONFIG_PATA_PARPORT)
-> +#include "../../ata/parport/pata_parport.h"
-> +
-> +#else
-
-Maybe add a comment here?  Also this is a pretty clear indication
-that pata_parport.h should be in include/linux/ at least for now.
+-- 
+Ondrej Zary
