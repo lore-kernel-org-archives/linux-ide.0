@@ -2,34 +2,34 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91CB1C433F5
-	for <linux-ide@archiver.kernel.org>; Fri, 11 Mar 2022 23:03:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2932DC433FE
+	for <linux-ide@archiver.kernel.org>; Fri, 11 Mar 2022 23:03:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230189AbiCKXET (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S230121AbiCKXET (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Fri, 11 Mar 2022 18:04:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57862 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57860 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230160AbiCKXDs (ORCPT
+        with ESMTP id S230155AbiCKXDs (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Mar 2022 18:03:48 -0500
 Received: from mxout4.routing.net (mxout4.routing.net [IPv6:2a03:2900:1:a::9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A2C964DA;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D997915F087;
         Fri, 11 Mar 2022 15:00:09 -0800 (PST)
 Received: from mxbox1.masterlogin.de (unknown [192.168.10.88])
-        by mxout4.routing.net (Postfix) with ESMTP id C8E3C10094E;
-        Fri, 11 Mar 2022 21:04:24 +0000 (UTC)
+        by mxout4.routing.net (Postfix) with ESMTP id DC59D10095D;
+        Fri, 11 Mar 2022 21:04:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailerdienst.de;
-        s=20200217; t=1647032665;
+        s=20200217; t=1647032666;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=xzUpAU2rIj4MneApxcGOMZkO1oQVZIG7wDHq0O5jdws=;
-        b=ZZb0pptTkqL/70UKGUTNRJHridSGTKhiZir/Aeqv7psFkZ8D30xO2Sj0P+n6uHVE7y3EE7
-        +Vna7IZjIQrbOnFmY9BLo8IoHbO+uO1dFlo63gkal+xXZdtM+QGI9N6evNyRmdolqhHPTd
-        /HXu8+QO0VhYzOjDYEHGzeYHA3nVb2I=
+        bh=oeojDkbixb+3+AqcShTPnuHWz+1GrcPznWJUJt5Sy3k=;
+        b=bzTczSWREjQ3mxzMkT9keqmraAkrZQjXA4WiTGUgMPD4ZBFvK5zojoN1UDx6r6AExcHCwN
+        Zujff9r9blSITJPcBNswR61/U/rzPlBk4bRJjkd8Hx+1EALJMBIsDSSOh784u0Ao51HaE6
+        6K80JUJzQ7LuSRHsHjaYGmOISQJCoHI=
 Received: from localhost.localdomain (fttx-pool-217.61.144.196.bambit.de [217.61.144.196])
-        by mxbox1.masterlogin.de (Postfix) with ESMTPSA id B4DBD402CA;
-        Fri, 11 Mar 2022 21:04:23 +0000 (UTC)
+        by mxbox1.masterlogin.de (Postfix) with ESMTPSA id BB1EC402CA;
+        Fri, 11 Mar 2022 21:04:25 +0000 (UTC)
 From:   Frank Wunderlich <linux@fw-web.de>
 To:     devicetree@vger.kernel.org
 Cc:     Frank Wunderlich <frank-w@public-files.de>,
@@ -49,48 +49,104 @@ Cc:     Frank Wunderlich <frank-w@public-files.de>,
         Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
         linux-rockchip@lists.infradead.org
-Subject: [PATCH v6 4/6] dt-bindings: ata: ahci-platform: Add power-domains property
-Date:   Fri, 11 Mar 2022 22:03:55 +0100
-Message-Id: <20220311210357.222830-5-linux@fw-web.de>
+Subject: [PATCH v6 6/6] arm64: dts: rockchip: Add sata nodes to rk356x
+Date:   Fri, 11 Mar 2022 22:03:57 +0100
+Message-Id: <20220311210357.222830-7-linux@fw-web.de>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20220311210357.222830-1-linux@fw-web.de>
 References: <20220311210357.222830-1-linux@fw-web.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Mail-ID: 6845e91d-5aad-440f-94ee-4fd891871427
+X-Mail-ID: ccc3f7ef-33a7-48f7-8154-2ff8acbe060a
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 From: Frank Wunderlich <frank-w@public-files.de>
 
-Some SoC using power-domains property so add it here
+RK356x supports up to 3 sata controllers which were compatible with the
+existing snps,dwc-ahci binding.
 
 Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
 ---
-changes in v5: added reviewed by
-changes in v4: none
+changes in v4:
+ - drop newline in dts
+ - re-add clock-names
+ -  add soc specific compatible
 changes in v3:
-  - new patch
+  - fix combphy error by moving sata0 to rk3568.dtsi
+  - remove clock-names and interrupt-names
+changes in v2:
+  - added sata0 + 1, but have only tested sata2
 ---
- Documentation/devicetree/bindings/ata/ahci-platform.yaml | 3 +++
- 1 file changed, 3 insertions(+)
+ arch/arm64/boot/dts/rockchip/rk3568.dtsi | 14 ++++++++++++
+ arch/arm64/boot/dts/rockchip/rk356x.dtsi | 28 ++++++++++++++++++++++++
+ 2 files changed, 42 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.yaml b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-index e71bfb04d7f1..a02f6d12773e 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.yaml
-@@ -108,6 +108,9 @@ properties:
-       some embedded SoCs.
-     maximum: 0x1f
+diff --git a/arch/arm64/boot/dts/rockchip/rk3568.dtsi b/arch/arm64/boot/dts/rockchip/rk3568.dtsi
+index 5b0f528d6818..3e07d9f6a2d1 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3568.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3568.dtsi
+@@ -8,6 +8,20 @@
+ / {
+ 	compatible = "rockchip,rk3568";
  
-+  power-domains:
-+    maxItems: 1
++	sata0: sata@fc000000 {
++		compatible = "rockchip,rk3568-dwc-ahci", "snps,dwc-ahci";
++		reg = <0 0xfc000000 0 0x1000>;
++		clocks = <&cru ACLK_SATA0>, <&cru CLK_SATA0_PMALIVE>,
++			 <&cru CLK_SATA0_RXOOB>;
++		clock-names = "sata", "pmalive", "rxoob";
++		interrupts = <GIC_SPI 94 IRQ_TYPE_LEVEL_HIGH>;
++		phys = <&combphy0 PHY_TYPE_SATA>;
++		phy-names = "sata-phy";
++		ports-implemented = <0x1>;
++		power-domains = <&power RK3568_PD_PIPE>;
++		status = "disabled";
++	};
 +
-   resets:
-     maxItems: 1
+ 	pipe_phy_grf0: syscon@fdc70000 {
+ 		compatible = "rockchip,rk3568-pipe-phy-grf", "syscon";
+ 		reg = <0x0 0xfdc70000 0x0 0x1000>;
+diff --git a/arch/arm64/boot/dts/rockchip/rk356x.dtsi b/arch/arm64/boot/dts/rockchip/rk356x.dtsi
+index 7cdef800cb3c..264dd030e703 100644
+--- a/arch/arm64/boot/dts/rockchip/rk356x.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk356x.dtsi
+@@ -230,6 +230,34 @@ scmi_shmem: sram@0 {
+ 		};
+ 	};
  
++	sata1: sata@fc400000 {
++		compatible = "rockchip,rk3568-dwc-ahci", "snps,dwc-ahci";
++		reg = <0 0xfc400000 0 0x1000>;
++		clocks = <&cru ACLK_SATA1>, <&cru CLK_SATA1_PMALIVE>,
++			 <&cru CLK_SATA1_RXOOB>;
++		clock-names = "sata", "pmalive", "rxoob";
++		interrupts = <GIC_SPI 95 IRQ_TYPE_LEVEL_HIGH>;
++		phys = <&combphy1 PHY_TYPE_SATA>;
++		phy-names = "sata-phy";
++		ports-implemented = <0x1>;
++		power-domains = <&power RK3568_PD_PIPE>;
++		status = "disabled";
++	};
++
++	sata2: sata@fc800000 {
++		compatible = "rockchip,rk3568-dwc-ahci", "snps,dwc-ahci";
++		reg = <0 0xfc800000 0 0x1000>;
++		clocks = <&cru ACLK_SATA2>, <&cru CLK_SATA2_PMALIVE>,
++			 <&cru CLK_SATA2_RXOOB>;
++		clock-names = "sata", "pmalive", "rxoob";
++		interrupts = <GIC_SPI 96 IRQ_TYPE_LEVEL_HIGH>;
++		phys = <&combphy2 PHY_TYPE_SATA>;
++		phy-names = "sata-phy";
++		ports-implemented = <0x1>;
++		power-domains = <&power RK3568_PD_PIPE>;
++		status = "disabled";
++	};
++
+ 	gic: interrupt-controller@fd400000 {
+ 		compatible = "arm,gic-v3";
+ 		reg = <0x0 0xfd400000 0 0x10000>, /* GICD */
 -- 
 2.25.1
 
