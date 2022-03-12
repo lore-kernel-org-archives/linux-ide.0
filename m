@@ -2,151 +2,288 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2932DC433FE
-	for <linux-ide@archiver.kernel.org>; Fri, 11 Mar 2022 23:03:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E05E4C4332F
+	for <linux-ide@archiver.kernel.org>; Sat, 12 Mar 2022 01:53:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230121AbiCKXET (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 11 Mar 2022 18:04:19 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57860 "EHLO
+        id S229521AbiCLByp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 11 Mar 2022 20:54:45 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42612 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230155AbiCKXDs (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Mar 2022 18:03:48 -0500
-Received: from mxout4.routing.net (mxout4.routing.net [IPv6:2a03:2900:1:a::9])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D997915F087;
-        Fri, 11 Mar 2022 15:00:09 -0800 (PST)
-Received: from mxbox1.masterlogin.de (unknown [192.168.10.88])
-        by mxout4.routing.net (Postfix) with ESMTP id DC59D10095D;
-        Fri, 11 Mar 2022 21:04:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailerdienst.de;
-        s=20200217; t=1647032666;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=oeojDkbixb+3+AqcShTPnuHWz+1GrcPznWJUJt5Sy3k=;
-        b=bzTczSWREjQ3mxzMkT9keqmraAkrZQjXA4WiTGUgMPD4ZBFvK5zojoN1UDx6r6AExcHCwN
-        Zujff9r9blSITJPcBNswR61/U/rzPlBk4bRJjkd8Hx+1EALJMBIsDSSOh784u0Ao51HaE6
-        6K80JUJzQ7LuSRHsHjaYGmOISQJCoHI=
-Received: from localhost.localdomain (fttx-pool-217.61.144.196.bambit.de [217.61.144.196])
-        by mxbox1.masterlogin.de (Postfix) with ESMTPSA id BB1EC402CA;
-        Fri, 11 Mar 2022 21:04:25 +0000 (UTC)
-From:   Frank Wunderlich <linux@fw-web.de>
-To:     devicetree@vger.kernel.org
-Cc:     Frank Wunderlich <frank-w@public-files.de>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
-        Viresh Kumar <vireshk@kernel.org>,
-        Shiraz Hashim <shiraz.linux.kernel@gmail.com>, soc@kernel.org,
-        Andrew Lunn <andrew@lunn.ch>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Peter Geis <pgwipeout@gmail.com>,
-        Michael Riesch <michael.riesch@wolfvision.net>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-rockchip@lists.infradead.org
-Subject: [PATCH v6 6/6] arm64: dts: rockchip: Add sata nodes to rk356x
-Date:   Fri, 11 Mar 2022 22:03:57 +0100
-Message-Id: <20220311210357.222830-7-linux@fw-web.de>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20220311210357.222830-1-linux@fw-web.de>
-References: <20220311210357.222830-1-linux@fw-web.de>
+        with ESMTP id S229447AbiCLByo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Mar 2022 20:54:44 -0500
+Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78FC2105AB0;
+        Fri, 11 Mar 2022 17:53:40 -0800 (PST)
+Received: by mail-pg1-x52d.google.com with SMTP id q29so7896471pgn.7;
+        Fri, 11 Mar 2022 17:53:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=Ht6HTWzeDDSjzovkz/Dn5LtCoWbKyGL4ZoLDTCpXzFw=;
+        b=lRkZKAti5NwwJX2TYq75LN9EBk9uqoLtaYNaQnZDeu3+Sf/XjTTgejpFa8+Sb73SRY
+         jzpe3Iw1q/hQaseI0Z/mv2D7qYOnI0q3idU0NreqsLflIAoFHQGJQ4/n3+My7FtlBUTn
+         HQakjAM5qhEpfMgDFTr4TE8sKLZZzwf+nfPHAtiBdusOJZ7ktaxvwXBOlBREzNUrQEOH
+         Us2RJX6HG3CaZSlixhiw1LzTjT/P1emF4LjK+ZkzTurrFrIAJOJMG+1+pTtU9Tgch1Kj
+         lsNtFUJzabqwZMuMxVwWjTFNp2V+uve/mPDCMda0UXXoiTyxIL92a8Lr2yQdkSoopMGg
+         UD9Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=Ht6HTWzeDDSjzovkz/Dn5LtCoWbKyGL4ZoLDTCpXzFw=;
+        b=z8vhIUv42sps1RGw29rrgtDeWnrhk/v6Yr0BXSyx5QQuGx95D8Chr+8MlbNkLJ1kW9
+         Q6qRncI1Rl3VbAVewnb4WgnY/EjnRpf1njdnUyM2X1DiW5YcAJaVV5qQbIFHJmZLdYpL
+         9tQiquJhYpUlyvOiZd+mNI6l5siFI0tlAIyidSArxIIsN4TYKS/L1JFSXoxil3HT/WOk
+         pn1mC5bBUO3Z6HTSQv/L8la4PhF7L35eYs1HxGA2gUI2k2i+3Y6P49v7fjTuvR9MH3Vn
+         HHXqDNpvAc/XPeodz9JjcF6c1gQFR2xCovkVJyYppyoGUSMLxfGSL7hh9PSL1NxCXm6r
+         nYdw==
+X-Gm-Message-State: AOAM530+Axif6gjhmG1amLbNLWHJSiCBsxb3W4Smd6xVG20dAv10+tCE
+        3rymQOqDCru0Mf49lxJ7dtQ=
+X-Google-Smtp-Source: ABdhPJzdGk36Vq6Yg4JEbEgfF+GRvGA4uY/jGiPc+8DxmmxqOYymmUob+gZ8lyghyS+C/lIVFYSSXA==
+X-Received: by 2002:a62:1515:0:b0:4f7:83b1:2e34 with SMTP id 21-20020a621515000000b004f783b12e34mr8976716pfv.66.1647050019979;
+        Fri, 11 Mar 2022 17:53:39 -0800 (PST)
+Received: from ip-172-31-19-208.ap-northeast-1.compute.internal (ec2-18-181-137-102.ap-northeast-1.compute.amazonaws.com. [18.181.137.102])
+        by smtp.gmail.com with ESMTPSA id e13-20020a63370d000000b003810782e0cdsm3457862pga.56.2022.03.11.17.53.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 11 Mar 2022 17:53:39 -0800 (PST)
+Date:   Sat, 12 Mar 2022 01:53:26 +0000
+From:   Hyeonggon Yoo <42.hyeyoo@gmail.com>
+To:     Byungchul Park <byungchul.park@lge.com>
+Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
+        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
+        linux-ext4@vger.kernel.org, mingo@redhat.com,
+        linux-kernel@vger.kernel.org, peterz@infradead.org,
+        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
+        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
+        chris@chris-wilson.co.uk, duyuyang@gmail.com,
+        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
+        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
+        bfields@fieldses.org, gregkh@linuxfoundation.org,
+        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
+        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org,
+        vdavydov.dev@gmail.com, sj@kernel.org, jglisse@redhat.com,
+        dennis@kernel.org, cl@linux.com, penberg@kernel.org,
+        rientjes@google.com, vbabka@suse.cz, ngupta@vflare.org,
+        linux-block@vger.kernel.org, paolo.valente@linaro.org,
+        josef@toxicpanda.com, linux-fsdevel@vger.kernel.org,
+        viro@zeniv.linux.org.uk, jack@suse.cz, jack@suse.com,
+        jlayton@kernel.org, dan.j.williams@intel.com, hch@infradead.org,
+        djwong@kernel.org, dri-devel@lists.freedesktop.org,
+        airlied@linux.ie, rodrigosiqueiramelo@gmail.com,
+        melissa.srw@gmail.com, hamohammed.sa@gmail.com
+Subject: Re: [PATCH v4 00/24] DEPT(Dependency Tracker)
+Message-ID: <Yiv9Fn4kcRbXJLmu@ip-172-31-19-208.ap-northeast-1.compute.internal>
+References: <1646377603-19730-1-git-send-email-byungchul.park@lge.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Mail-ID: ccc3f7ef-33a7-48f7-8154-2ff8acbe060a
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1646377603-19730-1-git-send-email-byungchul.park@lge.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Frank Wunderlich <frank-w@public-files.de>
+On Fri, Mar 04, 2022 at 04:06:19PM +0900, Byungchul Park wrote:
+> Hi Linus and folks,
+> 
+> I've been developing a tool for detecting deadlock possibilities by
+> tracking wait/event rather than lock(?) acquisition order to try to
+> cover all synchonization machanisms. It's done on v5.17-rc1 tag.
+> 
+> https://github.com/lgebyungchulpark/linux-dept/commits/dept1.14_on_v5.17-rc1
+>
 
-RK356x supports up to 3 sata controllers which were compatible with the
-existing snps,dwc-ahci binding.
+Small feedback unrelated to thread:
+I'm not sure "Need to expand the ring buffer" is something to call
+WARN(). Is this stack trace useful for something?
+========
 
-Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
----
-changes in v4:
- - drop newline in dts
- - re-add clock-names
- -  add soc specific compatible
-changes in v3:
-  - fix combphy error by moving sata0 to rk3568.dtsi
-  - remove clock-names and interrupt-names
-changes in v2:
-  - added sata0 + 1, but have only tested sata2
----
- arch/arm64/boot/dts/rockchip/rk3568.dtsi | 14 ++++++++++++
- arch/arm64/boot/dts/rockchip/rk356x.dtsi | 28 ++++++++++++++++++++++++
- 2 files changed, 42 insertions(+)
+Hello Byungchul. These are two warnings of DEPT on system.
+Both cases look similar.
 
-diff --git a/arch/arm64/boot/dts/rockchip/rk3568.dtsi b/arch/arm64/boot/dts/rockchip/rk3568.dtsi
-index 5b0f528d6818..3e07d9f6a2d1 100644
---- a/arch/arm64/boot/dts/rockchip/rk3568.dtsi
-+++ b/arch/arm64/boot/dts/rockchip/rk3568.dtsi
-@@ -8,6 +8,20 @@
- / {
- 	compatible = "rockchip,rk3568";
- 
-+	sata0: sata@fc000000 {
-+		compatible = "rockchip,rk3568-dwc-ahci", "snps,dwc-ahci";
-+		reg = <0 0xfc000000 0 0x1000>;
-+		clocks = <&cru ACLK_SATA0>, <&cru CLK_SATA0_PMALIVE>,
-+			 <&cru CLK_SATA0_RXOOB>;
-+		clock-names = "sata", "pmalive", "rxoob";
-+		interrupts = <GIC_SPI 94 IRQ_TYPE_LEVEL_HIGH>;
-+		phys = <&combphy0 PHY_TYPE_SATA>;
-+		phy-names = "sata-phy";
-+		ports-implemented = <0x1>;
-+		power-domains = <&power RK3568_PD_PIPE>;
-+		status = "disabled";
-+	};
-+
- 	pipe_phy_grf0: syscon@fdc70000 {
- 		compatible = "rockchip,rk3568-pipe-phy-grf", "syscon";
- 		reg = <0x0 0xfdc70000 0x0 0x1000>;
-diff --git a/arch/arm64/boot/dts/rockchip/rk356x.dtsi b/arch/arm64/boot/dts/rockchip/rk356x.dtsi
-index 7cdef800cb3c..264dd030e703 100644
---- a/arch/arm64/boot/dts/rockchip/rk356x.dtsi
-+++ b/arch/arm64/boot/dts/rockchip/rk356x.dtsi
-@@ -230,6 +230,34 @@ scmi_shmem: sram@0 {
- 		};
- 	};
- 
-+	sata1: sata@fc400000 {
-+		compatible = "rockchip,rk3568-dwc-ahci", "snps,dwc-ahci";
-+		reg = <0 0xfc400000 0 0x1000>;
-+		clocks = <&cru ACLK_SATA1>, <&cru CLK_SATA1_PMALIVE>,
-+			 <&cru CLK_SATA1_RXOOB>;
-+		clock-names = "sata", "pmalive", "rxoob";
-+		interrupts = <GIC_SPI 95 IRQ_TYPE_LEVEL_HIGH>;
-+		phys = <&combphy1 PHY_TYPE_SATA>;
-+		phy-names = "sata-phy";
-+		ports-implemented = <0x1>;
-+		power-domains = <&power RK3568_PD_PIPE>;
-+		status = "disabled";
-+	};
-+
-+	sata2: sata@fc800000 {
-+		compatible = "rockchip,rk3568-dwc-ahci", "snps,dwc-ahci";
-+		reg = <0 0xfc800000 0 0x1000>;
-+		clocks = <&cru ACLK_SATA2>, <&cru CLK_SATA2_PMALIVE>,
-+			 <&cru CLK_SATA2_RXOOB>;
-+		clock-names = "sata", "pmalive", "rxoob";
-+		interrupts = <GIC_SPI 96 IRQ_TYPE_LEVEL_HIGH>;
-+		phys = <&combphy2 PHY_TYPE_SATA>;
-+		phy-names = "sata-phy";
-+		ports-implemented = <0x1>;
-+		power-domains = <&power RK3568_PD_PIPE>;
-+		status = "disabled";
-+	};
-+
- 	gic: interrupt-controller@fd400000 {
- 		compatible = "arm,gic-v3";
- 		reg = <0x0 0xfd400000 0 0x10000>, /* GICD */
+In what case DEPT says (unknown)?
+I'm not sure we can properly debug this.
+
+===================================================
+DEPT: Circular dependency has been detected.
+5.17.0-rc1+ #3 Tainted: G        W        
+---------------------------------------------------
+summary
+---------------------------------------------------
+*** AA DEADLOCK ***
+
+context A
+    [S] (unknown)(&vfork:0)
+    [W] wait_for_completion_killable(&vfork:0)
+    [E] complete(&vfork:0)
+
+[S]: start of the event context
+[W]: the wait blocked
+[E]: the event not reachable
+---------------------------------------------------
+context A's detail
+---------------------------------------------------
+context A
+    [S] (unknown)(&vfork:0)
+    [W] wait_for_completion_killable(&vfork:0)
+    [E] complete(&vfork:0)
+
+[S] (unknown)(&vfork:0):
+(N/A)
+
+[W] wait_for_completion_killable(&vfork:0):
+[<ffffffc00802204c>] kernel_clone+0x25c/0x2b8
+stacktrace:
+      dept_wait+0x74/0x88
+      wait_for_completion_killable+0x60/0xa0
+      kernel_clone+0x25c/0x2b8
+      __do_sys_clone+0x5c/0x74
+      __arm64_sys_clone+0x18/0x20
+      invoke_syscall.constprop.0+0x78/0xc4
+      do_el0_svc+0x98/0xd0
+      el0_svc+0x44/0xe4
+      el0t_64_sync_handler+0xb0/0x12c
+      el0t_64_sync+0x158/0x15c
+
+[E] complete(&vfork:0):
+[<ffffffc00801f49c>] mm_release+0x7c/0x90
+stacktrace:
+      dept_event+0xe0/0x100
+      complete+0x48/0x98
+      mm_release+0x7c/0x90
+      exit_mm_release+0xc/0x14
+      do_exit+0x1b4/0x81c
+      do_group_exit+0x30/0x9c
+      __wake_up_parent+0x0/0x24
+      invoke_syscall.constprop.0+0x78/0xc4
+      do_el0_svc+0x98/0xd0
+      el0_svc+0x44/0xe4
+      el0t_64_sync_handler+0xb0/0x12c
+      el0t_64_sync+0x158/0x15c
+---------------------------------------------------
+information that might be helpful
+---------------------------------------------------
+CPU: 6 PID: 229 Comm: start-stop-daem Tainted: G        W         5.17.0-rc1+ #3
+Hardware name: linux,dummy-virt (DT)
+Call trace:
+ dump_backtrace.part.0+0x9c/0xc4
+ show_stack+0x14/0x28
+ dump_stack_lvl+0x9c/0xcc
+ dump_stack+0x14/0x2c
+ print_circle+0x2d4/0x438
+ cb_check_dl+0x44/0x70
+ bfs+0x60/0x168
+ add_dep+0x88/0x11c
+ do_event.constprop.0+0x19c/0x2c0
+ dept_event+0xe0/0x100
+ complete+0x48/0x98
+ mm_release+0x7c/0x90
+ exit_mm_release+0xc/0x14
+ do_exit+0x1b4/0x81c
+ do_group_exit+0x30/0x9c
+ __wake_up_parent+0x0/0x24
+ invoke_syscall.constprop.0+0x78/0xc4
+ do_el0_svc+0x98/0xd0
+ el0_svc+0x44/0xe4
+ el0t_64_sync_handler+0xb0/0x12c
+ el0t_64_sync+0x158/0x15c
+
+
+
+
+===================================================
+DEPT: Circular dependency has been detected.
+5.17.0-rc1+ #3 Tainted: G        W        
+---------------------------------------------------
+summary
+---------------------------------------------------
+*** AA DEADLOCK ***
+
+context A
+    [S] (unknown)(&try_completion:0)
+    [W] wait_for_completion_timeout(&try_completion:0)
+    [E] complete(&try_completion:0)
+
+[S]: start of the event context
+[W]: the wait blocked
+[E]: the event not reachable
+---------------------------------------------------
+context A's detail
+---------------------------------------------------
+context A
+    [S] (unknown)(&try_completion:0)
+    [W] wait_for_completion_timeout(&try_completion:0)
+    [E] complete(&try_completion:0)
+
+[S] (unknown)(&try_completion:0):
+(N/A)
+
+[W] wait_for_completion_timeout(&try_completion:0):
+[<ffffffc008166bf4>] kunit_try_catch_run+0xb4/0x160
+stacktrace:
+      dept_wait+0x74/0x88
+      wait_for_completion_timeout+0x64/0xa0
+      kunit_try_catch_run+0xb4/0x160
+      kunit_test_try_catch_successful_try_no_catch+0x3c/0x98
+      kunit_try_run_case+0x9c/0xa0
+      kunit_generic_run_threadfn_adapter+0x1c/0x28
+      kthread+0xd4/0xe4
+      ret_from_fork+0x10/0x20
+
+[E] complete(&try_completion:0):
+[<ffffffc00803dce4>] kthread_complete_and_exit+0x18/0x20
+stacktrace:
+      dept_event+0xe0/0x100
+      complete+0x48/0x98
+      kthread_complete_and_exit+0x18/0x20
+      kunit_try_catch_throw+0x0/0x1c
+      kthread+0xd4/0xe4
+      ret_from_fork+0x10/0x20
+
+---------------------------------------------------
+information that might be helpful
+---------------------------------------------------
+CPU: 15 PID: 132 Comm: kunit_try_catch Tainted: G        W         5.17.0-rc1+ #3
+Hardware name: linux,dummy-virt (DT)
+Call trace:
+ dump_backtrace.part.0+0x9c/0xc4
+ show_stack+0x14/0x28
+ dump_stack_lvl+0x9c/0xcc
+ dump_stack+0x14/0x2c
+ print_circle+0x2d4/0x438
+ cb_check_dl+0x44/0x70
+ bfs+0x60/0x168
+ add_dep+0x88/0x11c
+ do_event.constprop.0+0x19c/0x2c0
+ dept_event+0xe0/0x100
+ complete+0x48/0x98
+ kthread_complete_and_exit+0x18/0x20
+ kunit_try_catch_throw+0x0/0x1c
+ kthread+0xd4/0xe4
+ ret_from_fork+0x10/0x20
+
+
+> Benifit:
+> 
+> 	0. Works with all lock primitives.
+> 	1. Works with wait_for_completion()/complete().
+> 	2. Works with 'wait' on PG_locked.
+> 	3. Works with 'wait' on PG_writeback.
+> 	4. Works with swait/wakeup.
+> 	5. Works with waitqueue.
+> 	6. Multiple reports are allowed.
+> 	7. Deduplication control on multiple reports.
+> 	8. Withstand false positives thanks to 6.
+> 	9. Easy to tag any wait/event.
+> 
+> Future work:
+
+[...]
+
+> -- 
+> 1.9.1
+> 
+
 -- 
-2.25.1
-
+Thank you, You are awesome!
+Hyeonggon :-)
