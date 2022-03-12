@@ -2,288 +2,134 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E05E4C4332F
-	for <linux-ide@archiver.kernel.org>; Sat, 12 Mar 2022 01:53:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 83C6CC433FE
+	for <linux-ide@archiver.kernel.org>; Sat, 12 Mar 2022 03:45:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229521AbiCLByp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 11 Mar 2022 20:54:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42612 "EHLO
+        id S230224AbiCLDqd (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 11 Mar 2022 22:46:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44764 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229447AbiCLByo (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Mar 2022 20:54:44 -0500
-Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 78FC2105AB0;
-        Fri, 11 Mar 2022 17:53:40 -0800 (PST)
-Received: by mail-pg1-x52d.google.com with SMTP id q29so7896471pgn.7;
-        Fri, 11 Mar 2022 17:53:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=Ht6HTWzeDDSjzovkz/Dn5LtCoWbKyGL4ZoLDTCpXzFw=;
-        b=lRkZKAti5NwwJX2TYq75LN9EBk9uqoLtaYNaQnZDeu3+Sf/XjTTgejpFa8+Sb73SRY
-         jzpe3Iw1q/hQaseI0Z/mv2D7qYOnI0q3idU0NreqsLflIAoFHQGJQ4/n3+My7FtlBUTn
-         HQakjAM5qhEpfMgDFTr4TE8sKLZZzwf+nfPHAtiBdusOJZ7ktaxvwXBOlBREzNUrQEOH
-         Us2RJX6HG3CaZSlixhiw1LzTjT/P1emF4LjK+ZkzTurrFrIAJOJMG+1+pTtU9Tgch1Kj
-         lsNtFUJzabqwZMuMxVwWjTFNp2V+uve/mPDCMda0UXXoiTyxIL92a8Lr2yQdkSoopMGg
-         UD9Q==
+        with ESMTP id S230118AbiCLDqc (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 11 Mar 2022 22:46:32 -0500
+Received: from mail-oi1-f169.google.com (mail-oi1-f169.google.com [209.85.167.169])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 844E42357E5;
+        Fri, 11 Mar 2022 19:45:28 -0800 (PST)
+Received: by mail-oi1-f169.google.com with SMTP id o83so4093423oif.0;
+        Fri, 11 Mar 2022 19:45:28 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=Ht6HTWzeDDSjzovkz/Dn5LtCoWbKyGL4ZoLDTCpXzFw=;
-        b=z8vhIUv42sps1RGw29rrgtDeWnrhk/v6Yr0BXSyx5QQuGx95D8Chr+8MlbNkLJ1kW9
-         Q6qRncI1Rl3VbAVewnb4WgnY/EjnRpf1njdnUyM2X1DiW5YcAJaVV5qQbIFHJmZLdYpL
-         9tQiquJhYpUlyvOiZd+mNI6l5siFI0tlAIyidSArxIIsN4TYKS/L1JFSXoxil3HT/WOk
-         pn1mC5bBUO3Z6HTSQv/L8la4PhF7L35eYs1HxGA2gUI2k2i+3Y6P49v7fjTuvR9MH3Vn
-         HHXqDNpvAc/XPeodz9JjcF6c1gQFR2xCovkVJyYppyoGUSMLxfGSL7hh9PSL1NxCXm6r
-         nYdw==
-X-Gm-Message-State: AOAM530+Axif6gjhmG1amLbNLWHJSiCBsxb3W4Smd6xVG20dAv10+tCE
-        3rymQOqDCru0Mf49lxJ7dtQ=
-X-Google-Smtp-Source: ABdhPJzdGk36Vq6Yg4JEbEgfF+GRvGA4uY/jGiPc+8DxmmxqOYymmUob+gZ8lyghyS+C/lIVFYSSXA==
-X-Received: by 2002:a62:1515:0:b0:4f7:83b1:2e34 with SMTP id 21-20020a621515000000b004f783b12e34mr8976716pfv.66.1647050019979;
-        Fri, 11 Mar 2022 17:53:39 -0800 (PST)
-Received: from ip-172-31-19-208.ap-northeast-1.compute.internal (ec2-18-181-137-102.ap-northeast-1.compute.amazonaws.com. [18.181.137.102])
-        by smtp.gmail.com with ESMTPSA id e13-20020a63370d000000b003810782e0cdsm3457862pga.56.2022.03.11.17.53.29
+        bh=BwjHEM1ve6vauVKyKa9ZUyCUyEFXM5iLr7KYRJbKfko=;
+        b=6DUqSopus9/uD7UsQAk2tQEhL0dnin6cKgwWagUwioPqpUpColNJGHc7/DZfzwO5KQ
+         NEBAidU1nF6A4w5Rd5TAHf9gRYfzAWwiDuBowWlAElNeyjmIGvnAeJ2r8nOqw45NDqft
+         aVy4FiDug3z09m1M82RYxlVBemYVKXaac4bT2HfQuvfljli20DMwR/HsoXcdE+Co/ykY
+         tSEiqcazdaFlsdVflugGMj7B1B+BxwEBQNj9i3xjIPKepz58ZOXRF6m0hOgzUkvbJvmA
+         S2ppqril+DqWZrzypqudex4vTkS4NEVCJBWvc6JQerUHLGiW3yOSq0eowiO2GZRtonkn
+         TcjA==
+X-Gm-Message-State: AOAM533C6BDOGWe0m6Lr7ntsPrhysFyVgVnGsWUJw+sGFJYGSCsDU7jE
+        +0ZhUhpZkw3Hw2E/j/G31w==
+X-Google-Smtp-Source: ABdhPJyN4Me6aXpEWsG65Sb5BfWNEBIhIM8S49iH8KYbautApP4UfXutmtJ97KxAWUQ7Amb9REJqQg==
+X-Received: by 2002:aca:34c1:0:b0:2ec:8ee8:90c7 with SMTP id b184-20020aca34c1000000b002ec8ee890c7mr3951666oia.267.1647056727702;
+        Fri, 11 Mar 2022 19:45:27 -0800 (PST)
+Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id 67-20020aca0546000000b002d46e151b9bsm4645324oif.18.2022.03.11.19.45.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 11 Mar 2022 17:53:39 -0800 (PST)
-Date:   Sat, 12 Mar 2022 01:53:26 +0000
-From:   Hyeonggon Yoo <42.hyeyoo@gmail.com>
-To:     Byungchul Park <byungchul.park@lge.com>
-Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
-        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
-        linux-ext4@vger.kernel.org, mingo@redhat.com,
-        linux-kernel@vger.kernel.org, peterz@infradead.org,
-        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
-        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
-        chris@chris-wilson.co.uk, duyuyang@gmail.com,
-        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
-        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
-        bfields@fieldses.org, gregkh@linuxfoundation.org,
-        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
-        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org,
-        vdavydov.dev@gmail.com, sj@kernel.org, jglisse@redhat.com,
-        dennis@kernel.org, cl@linux.com, penberg@kernel.org,
-        rientjes@google.com, vbabka@suse.cz, ngupta@vflare.org,
-        linux-block@vger.kernel.org, paolo.valente@linaro.org,
-        josef@toxicpanda.com, linux-fsdevel@vger.kernel.org,
-        viro@zeniv.linux.org.uk, jack@suse.cz, jack@suse.com,
-        jlayton@kernel.org, dan.j.williams@intel.com, hch@infradead.org,
-        djwong@kernel.org, dri-devel@lists.freedesktop.org,
-        airlied@linux.ie, rodrigosiqueiramelo@gmail.com,
-        melissa.srw@gmail.com, hamohammed.sa@gmail.com
-Subject: Re: [PATCH v4 00/24] DEPT(Dependency Tracker)
-Message-ID: <Yiv9Fn4kcRbXJLmu@ip-172-31-19-208.ap-northeast-1.compute.internal>
-References: <1646377603-19730-1-git-send-email-byungchul.park@lge.com>
+        Fri, 11 Mar 2022 19:45:26 -0800 (PST)
+Received: (nullmailer pid 730303 invoked by uid 1000);
+        Sat, 12 Mar 2022 03:45:25 -0000
+Date:   Fri, 11 Mar 2022 21:45:25 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Frank Wunderlich <linux@fw-web.de>
+Cc:     linux-arm-kernel@lists.infradead.org, soc@kernel.org,
+        Heiko Stuebner <heiko@sntech.de>,
+        Viresh Kumar <vireshk@kernel.org>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Shiraz Hashim <shiraz.linux.kernel@gmail.com>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Frank Wunderlich <frank-w@public-files.de>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Michael Riesch <michael.riesch@wolfvision.net>,
+        linux-ide@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Peter Geis <pgwipeout@gmail.com>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH v6 1/6] dt-bindings: ata: ahci-platform: Convert DT
+ bindings to yaml
+Message-ID: <YiwXVRPJITCOiCoj@robh.at.kernel.org>
+References: <20220311210357.222830-1-linux@fw-web.de>
+ <20220311210357.222830-2-linux@fw-web.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1646377603-19730-1-git-send-email-byungchul.park@lge.com>
+In-Reply-To: <20220311210357.222830-2-linux@fw-web.de>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Fri, Mar 04, 2022 at 04:06:19PM +0900, Byungchul Park wrote:
-> Hi Linus and folks,
+On Fri, 11 Mar 2022 22:03:52 +0100, Frank Wunderlich wrote:
+> From: Frank Wunderlich <frank-w@public-files.de>
 > 
-> I've been developing a tool for detecting deadlock possibilities by
-> tracking wait/event rather than lock(?) acquisition order to try to
-> cover all synchonization machanisms. It's done on v5.17-rc1 tag.
+> Create a yaml file for dtbs_check from the old txt binding.
 > 
-> https://github.com/lgebyungchulpark/linux-dept/commits/dept1.14_on_v5.17-rc1
->
-
-Small feedback unrelated to thread:
-I'm not sure "Need to expand the ring buffer" is something to call
-WARN(). Is this stack trace useful for something?
-========
-
-Hello Byungchul. These are two warnings of DEPT on system.
-Both cases look similar.
-
-In what case DEPT says (unknown)?
-I'm not sure we can properly debug this.
-
-===================================================
-DEPT: Circular dependency has been detected.
-5.17.0-rc1+ #3 Tainted: G        W        
----------------------------------------------------
-summary
----------------------------------------------------
-*** AA DEADLOCK ***
-
-context A
-    [S] (unknown)(&vfork:0)
-    [W] wait_for_completion_killable(&vfork:0)
-    [E] complete(&vfork:0)
-
-[S]: start of the event context
-[W]: the wait blocked
-[E]: the event not reachable
----------------------------------------------------
-context A's detail
----------------------------------------------------
-context A
-    [S] (unknown)(&vfork:0)
-    [W] wait_for_completion_killable(&vfork:0)
-    [E] complete(&vfork:0)
-
-[S] (unknown)(&vfork:0):
-(N/A)
-
-[W] wait_for_completion_killable(&vfork:0):
-[<ffffffc00802204c>] kernel_clone+0x25c/0x2b8
-stacktrace:
-      dept_wait+0x74/0x88
-      wait_for_completion_killable+0x60/0xa0
-      kernel_clone+0x25c/0x2b8
-      __do_sys_clone+0x5c/0x74
-      __arm64_sys_clone+0x18/0x20
-      invoke_syscall.constprop.0+0x78/0xc4
-      do_el0_svc+0x98/0xd0
-      el0_svc+0x44/0xe4
-      el0t_64_sync_handler+0xb0/0x12c
-      el0t_64_sync+0x158/0x15c
-
-[E] complete(&vfork:0):
-[<ffffffc00801f49c>] mm_release+0x7c/0x90
-stacktrace:
-      dept_event+0xe0/0x100
-      complete+0x48/0x98
-      mm_release+0x7c/0x90
-      exit_mm_release+0xc/0x14
-      do_exit+0x1b4/0x81c
-      do_group_exit+0x30/0x9c
-      __wake_up_parent+0x0/0x24
-      invoke_syscall.constprop.0+0x78/0xc4
-      do_el0_svc+0x98/0xd0
-      el0_svc+0x44/0xe4
-      el0t_64_sync_handler+0xb0/0x12c
-      el0t_64_sync+0x158/0x15c
----------------------------------------------------
-information that might be helpful
----------------------------------------------------
-CPU: 6 PID: 229 Comm: start-stop-daem Tainted: G        W         5.17.0-rc1+ #3
-Hardware name: linux,dummy-virt (DT)
-Call trace:
- dump_backtrace.part.0+0x9c/0xc4
- show_stack+0x14/0x28
- dump_stack_lvl+0x9c/0xcc
- dump_stack+0x14/0x2c
- print_circle+0x2d4/0x438
- cb_check_dl+0x44/0x70
- bfs+0x60/0x168
- add_dep+0x88/0x11c
- do_event.constprop.0+0x19c/0x2c0
- dept_event+0xe0/0x100
- complete+0x48/0x98
- mm_release+0x7c/0x90
- exit_mm_release+0xc/0x14
- do_exit+0x1b4/0x81c
- do_group_exit+0x30/0x9c
- __wake_up_parent+0x0/0x24
- invoke_syscall.constprop.0+0x78/0xc4
- do_el0_svc+0x98/0xd0
- el0_svc+0x44/0xe4
- el0t_64_sync_handler+0xb0/0x12c
- el0t_64_sync+0x158/0x15c
-
-
-
-
-===================================================
-DEPT: Circular dependency has been detected.
-5.17.0-rc1+ #3 Tainted: G        W        
----------------------------------------------------
-summary
----------------------------------------------------
-*** AA DEADLOCK ***
-
-context A
-    [S] (unknown)(&try_completion:0)
-    [W] wait_for_completion_timeout(&try_completion:0)
-    [E] complete(&try_completion:0)
-
-[S]: start of the event context
-[W]: the wait blocked
-[E]: the event not reachable
----------------------------------------------------
-context A's detail
----------------------------------------------------
-context A
-    [S] (unknown)(&try_completion:0)
-    [W] wait_for_completion_timeout(&try_completion:0)
-    [E] complete(&try_completion:0)
-
-[S] (unknown)(&try_completion:0):
-(N/A)
-
-[W] wait_for_completion_timeout(&try_completion:0):
-[<ffffffc008166bf4>] kunit_try_catch_run+0xb4/0x160
-stacktrace:
-      dept_wait+0x74/0x88
-      wait_for_completion_timeout+0x64/0xa0
-      kunit_try_catch_run+0xb4/0x160
-      kunit_test_try_catch_successful_try_no_catch+0x3c/0x98
-      kunit_try_run_case+0x9c/0xa0
-      kunit_generic_run_threadfn_adapter+0x1c/0x28
-      kthread+0xd4/0xe4
-      ret_from_fork+0x10/0x20
-
-[E] complete(&try_completion:0):
-[<ffffffc00803dce4>] kthread_complete_and_exit+0x18/0x20
-stacktrace:
-      dept_event+0xe0/0x100
-      complete+0x48/0x98
-      kthread_complete_and_exit+0x18/0x20
-      kunit_try_catch_throw+0x0/0x1c
-      kthread+0xd4/0xe4
-      ret_from_fork+0x10/0x20
-
----------------------------------------------------
-information that might be helpful
----------------------------------------------------
-CPU: 15 PID: 132 Comm: kunit_try_catch Tainted: G        W         5.17.0-rc1+ #3
-Hardware name: linux,dummy-virt (DT)
-Call trace:
- dump_backtrace.part.0+0x9c/0xc4
- show_stack+0x14/0x28
- dump_stack_lvl+0x9c/0xcc
- dump_stack+0x14/0x2c
- print_circle+0x2d4/0x438
- cb_check_dl+0x44/0x70
- bfs+0x60/0x168
- add_dep+0x88/0x11c
- do_event.constprop.0+0x19c/0x2c0
- dept_event+0xe0/0x100
- complete+0x48/0x98
- kthread_complete_and_exit+0x18/0x20
- kunit_try_catch_throw+0x0/0x1c
- kthread+0xd4/0xe4
- ret_from_fork+0x10/0x20
-
-
-> Benifit:
+> Signed-off-by: Frank Wunderlich <frank-w@public-files.de>
+> ---
 > 
-> 	0. Works with all lock primitives.
-> 	1. Works with wait_for_completion()/complete().
-> 	2. Works with 'wait' on PG_locked.
-> 	3. Works with 'wait' on PG_writeback.
-> 	4. Works with swait/wakeup.
-> 	5. Works with waitqueue.
-> 	6. Multiple reports are allowed.
-> 	7. Deduplication control on multiple reports.
-> 	8. Withstand false positives thanks to 6.
-> 	9. Easy to tag any wait/event.
+> v6:
+>   - fix indentation of examples
+>   - add compatible marvell,berlin2-ahci
+>   - change maximum of ports-implemented
+>   - add select to exclude qcom compatibles
+>   - drop marvell,armada-380-ahci
+>     it is not handled in the ahci-platform.c but ahci_mvebu.c
+>     and incompatible due to missing phys/target-supply
 > 
-> Future work:
-
-[...]
-
-> -- 
-> 1.9.1
+> v5:
+>   - change subject
+>   - drop brcm,iproc-ahci from standalone enum
+>   - fix reg address in example 2
+>   - move clocknames next to clocks, regnames to reg
+>   - drop interrupts description
+>   - drop newline from dma-coherent
+>   - drop max-items from ports-implemented
+>   - min2max in child phys
+>   - fix identation for compatible and sata-common
+>   - add additionalProperties=false for subnodes
+>   - pipe for paragraphs and newline after title
+>   - add maximum for ports-implemented (found only 0x1 as its value)
+>   - add phy-names to sata-ports
+> 
+> v4:
+>   - fix min vs. max
+>   - fix indention of examples
+>   - move up sata-common.yaml
+>   - reorder compatible
+>   - add descriptions/maxitems
+>   - fix compatible-structure
+>   - fix typo in example achi vs. ahci
+>   - add clock-names and reg-names
+>   - fix ns2 errors in separate patch
+> v3:
+>   - add conversion to sata-series
+>   - fix some errors in dt_binding_check and dtbs_check
+>   - move to unevaluated properties = false
+> 
+> arch/arm/boot/dts/qcom-apq8064.dtsi had caused errors for clock-count
+> ---
+> 
+> have not added reviewed-by from v5 because i have changed patch too much
+> 
+> ---
+>  .../devicetree/bindings/ata/ahci-platform.txt |  79 --------
+>  .../bindings/ata/ahci-platform.yaml           | 182 ++++++++++++++++++
+>  2 files changed, 182 insertions(+), 79 deletions(-)
+>  delete mode 100644 Documentation/devicetree/bindings/ata/ahci-platform.txt
+>  create mode 100644 Documentation/devicetree/bindings/ata/ahci-platform.yaml
 > 
 
--- 
-Thank you, You are awesome!
-Hyeonggon :-)
+Applied, thanks!
