@@ -2,85 +2,94 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AA90C433F5
-	for <linux-ide@archiver.kernel.org>; Mon, 14 Mar 2022 15:41:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 910E5C433F5
+	for <linux-ide@archiver.kernel.org>; Mon, 14 Mar 2022 20:25:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239463AbiCNPmp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 14 Mar 2022 11:42:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38152 "EHLO
+        id S235356AbiCNU05 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 14 Mar 2022 16:26:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56450 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242645AbiCNPmo (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 14 Mar 2022 11:42:44 -0400
-Received: from mail-io1-f50.google.com (mail-io1-f50.google.com [209.85.166.50])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B3B373DDE6;
-        Mon, 14 Mar 2022 08:41:33 -0700 (PDT)
-Received: by mail-io1-f50.google.com with SMTP id k25so18651159iok.8;
-        Mon, 14 Mar 2022 08:41:33 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=rY4lnGX91BSkoxPaQ5SCRaMmjihX3PZ5V3Bm/1QXiHs=;
-        b=pIap1mXobAw2rz8ZxcNEp9Z/KkzxSXkOoNrA8dW3e4PfN8pnZVO1vHfrrMoXOpXNqR
-         VyaPvcPYJxir8i3XjRH6XLTmovk2/QNuvSMCBzo+MtomXW76ER/9bVufL+I6WQY3uDy3
-         IwPwmkMB7rU/XbljrGbzH/KyxCaFflaBoY72FTaWcYmVs1MtXooloXb4xWLtkJt8WRLo
-         YZK6wFUHmLj7zx+2oB8SpyjvVtVj2HADtSEdt6DZbbpiFCfMgEzBlEWPXvUFvtBUit+T
-         RvQsmTQwM3c9lP9NMihogtfwvXUbAC2yzqOxeBQeTMOXjUU+aqnGk+TBpXxlqdilrn5d
-         KS1g==
-X-Gm-Message-State: AOAM53220aD9DT/+HnIdqaLyFBDKPZPi7cNRxlc4zRYhYsFXzAAptvA7
-        VCpCKqwTIVBFU/HHKAA//Q==
-X-Google-Smtp-Source: ABdhPJytlg8Rd17SG2Xpxxb2QPBALLGcdAVJUaxLHiJr4h8bQywp8afLDDXcpMLP4g+TKe2OqcmrJw==
-X-Received: by 2002:a05:6638:35a0:b0:31a:d42:1dd with SMTP id v32-20020a05663835a000b0031a0d4201ddmr3098236jal.95.1647272492898;
-        Mon, 14 Mar 2022 08:41:32 -0700 (PDT)
-Received: from robh.at.kernel.org ([64.188.179.253])
-        by smtp.gmail.com with ESMTPSA id k15-20020a92c24f000000b002c79ec214f9sm2189432ilo.30.2022.03.14.08.41.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Mar 2022 08:41:32 -0700 (PDT)
-Received: (nullmailer pid 104552 invoked by uid 1000);
-        Mon, 14 Mar 2022 15:41:28 -0000
-Date:   Mon, 14 Mar 2022 09:41:28 -0600
-From:   Rob Herring <robh@kernel.org>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Frank Wunderlich <linux@fw-web.de>, devicetree@vger.kernel.org,
-        Frank Wunderlich <frank-w@public-files.de>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
-        Viresh Kumar <vireshk@kernel.org>,
-        Shiraz Hashim <shiraz.linux.kernel@gmail.com>, soc@kernel.org,
-        Andrew Lunn <andrew@lunn.ch>,
-        Gregory Clement <gregory.clement@bootlin.com>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Heiko Stuebner <heiko@sntech.de>,
-        Peter Geis <pgwipeout@gmail.com>,
-        Michael Riesch <michael.riesch@wolfvision.net>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-rockchip@lists.infradead.org
-Subject: Re: [PATCH v6 0/6] Add sata nodes to rk356x
-Message-ID: <Yi9iKBr7pPUuzg15@robh.at.kernel.org>
-References: <20220311210357.222830-1-linux@fw-web.de>
- <05309a59-85cd-2434-6435-6fd956fa75d6@opensource.wdc.com>
+        with ESMTP id S232959AbiCNU04 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 14 Mar 2022 16:26:56 -0400
+Received: from hosting.gsystem.sk (hosting.gsystem.sk [212.5.213.30])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id E1F383917E;
+        Mon, 14 Mar 2022 13:25:45 -0700 (PDT)
+Received: from [192.168.0.2] (chello089173232159.chello.sk [89.173.232.159])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by hosting.gsystem.sk (Postfix) with ESMTPSA id 88CEF7A00E3;
+        Mon, 14 Mar 2022 21:25:43 +0100 (CET)
+From:   Ondrej Zary <linux@zary.sk>
+To:     Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH] pata_parport: add driver (PARIDE replacement)
+Date:   Mon, 14 Mar 2022 21:25:40 +0100
+User-Agent: KMail/1.9.10
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Christoph Hellwig <hch@lst.de>, Tim Waugh <tim@cyberelk.net>,
+        linux-block@vger.kernel.org, linux-parport@lists.infradead.org,
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20220312144415.20010-1-linux@zary.sk> <202203132015.18183.linux@zary.sk> <5161ed17-5f55-e851-c2e2-5340cc62fa3b@kernel.dk>
+In-Reply-To: <5161ed17-5f55-e851-c2e2-5340cc62fa3b@kernel.dk>
+X-KMail-QuotePrefix: > 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: inline
-In-Reply-To: <05309a59-85cd-2434-6435-6fd956fa75d6@opensource.wdc.com>
+Message-Id: <202203142125.40532.linux@zary.sk>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Sat, Mar 12, 2022 at 05:00:53PM +0900, Damien Le Moal wrote:
-> On 3/12/22 06:03, Frank Wunderlich wrote:
-> > From: Frank Wunderlich <frank-w@public-files.de>
+On Monday 14 March 2022 00:19:30 Jens Axboe wrote:
+> On 3/13/22 1:15 PM, Ondrej Zary wrote:
+> > On Saturday 12 March 2022 15:44:15 Ondrej Zary wrote:
+> >> The pata_parport is a libata-based replacement of the old PARIDE
+> >> subsystem - driver for parallel port IDE devices.
+> >> It uses the original paride low-level protocol drivers but does not
+> >> need the high-level drivers (pd, pcd, pf, pt, pg). The IDE devices
+> >> behind parallel port adapters are handled by the ATA layer.
+> >>
+> >> This will allow paride and its high-level drivers to be removed.
+> >>
+> >> paride and pata_parport are mutually exclusive because the compiled
+> >> protocol drivers are incompatible.
+> >>
+> >> Tested with Imation SuperDisk LS-120 and HP C4381A (both use EPAT
+> >> chip).
+> >>
+> >> Note: EPP-32 mode is buggy in EPAT - and also in all other protocol
+> >> drivers - they don't handle non-multiple-of-4 block transfers
+> >> correctly. This causes problems with LS-120 drive.
+> >> There is also another bug in EPAT: EPP modes don't work unless a 4-bit
+> >> or 8-bit mode is used first (probably some initialization missing?).
+> >> Once the device is initialized, EPP works until power cycle.
+> >>
+> >> So after device power on, you have to:
+> >> echo "parport0 epat 0" >/sys/bus/pata_parport/new_device
+> >> echo pata_parport.0 >/sys/bus/pata_parport/delete_device
+> >> echo "parport0 epat 4" >/sys/bus/pata_parport/new_device
+> >> (autoprobe will initialize correctly as it tries the slowest modes
+> >> first but you'll get the broken EPP-32 mode)
 > > 
-> > This Series converts the binding for ahci-platform to yaml and adds
-> > sata nodes to rockchip rk356x device trees.
+> > Found a bug - the same device can be registered multiple times. Fix
+> > will be in v2. But this revealed a bigger problem: pi_connect can
+> > sleep (uses parport_claim_or_block) and libata does not like that. Any
+> > ideas how to fix this?
 > 
-> Rob,
+> I think you'd need two things here:
 > 
-> I saw you took patches 1, 4 and 5. What about the others ? Are you
-> taking them or should I take them through the ATA tree ?
+> - The blk-mq queue should be registered with BLK_MQ_F_BLOCKING, which
+>   will allow blocking off the queue_rq path.
 
-It's all dts changes, so they should go via the sub-arch trees.
+My knowledge about blk-mq is exactly zero. After grepping the code, I guess that BLK_MQ_F_BLOCKING should be used by the block device drivers - sd and sr?
+ 
+> - You need to look at making libata safe wrt calling ata_qc_issue()
+>   outside the lock. Should probably be fine if you just gate that on
+>   whether or not the queue was setup in blocking mode, as that doesn't
+>   currently exist in libata.
+> 
 
-Rob
+
+-- 
+Ondrej Zary
