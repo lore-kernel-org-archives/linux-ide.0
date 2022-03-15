@@ -2,58 +2,80 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4867FC433F5
-	for <linux-ide@archiver.kernel.org>; Tue, 15 Mar 2022 08:25:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D264C433F5
+	for <linux-ide@archiver.kernel.org>; Tue, 15 Mar 2022 10:48:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345776AbiCOI0N (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 15 Mar 2022 04:26:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43626 "EHLO
+        id S234857AbiCOKt4 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 15 Mar 2022 06:49:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33460 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243406AbiCOI0M (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Mar 2022 04:26:12 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D7323981F;
-        Tue, 15 Mar 2022 01:25:01 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 08FED68AA6; Tue, 15 Mar 2022 09:24:57 +0100 (CET)
-Date:   Tue, 15 Mar 2022 09:24:57 +0100
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Ondrej Zary <linux@zary.sk>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Christoph Hellwig <hch@lst.de>, Tim Waugh <tim@cyberelk.net>,
-        linux-block@vger.kernel.org, linux-parport@lists.infradead.org,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pata_parport: add driver (PARIDE replacement)
-Message-ID: <20220315082457.GB3502@lst.de>
-References: <20220312144415.20010-1-linux@zary.sk> <202203132015.18183.linux@zary.sk> <5161ed17-5f55-e851-c2e2-5340cc62fa3b@kernel.dk> <202203142125.40532.linux@zary.sk> <f8c176d4-74f0-3e4f-446f-2a5f8ace3b28@kernel.dk>
+        with ESMTP id S1347604AbiCOKsA (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Mar 2022 06:48:00 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3240522D6;
+        Tue, 15 Mar 2022 03:45:02 -0700 (PDT)
+Received: from fraeml741-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KHqlb4ryTz6809b;
+        Tue, 15 Mar 2022 18:44:11 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml741-chm.china.huawei.com (10.206.15.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Tue, 15 Mar 2022 11:44:56 +0100
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.21; Tue, 15 Mar 2022 10:44:53 +0000
+From:   John Garry <john.garry@huawei.com>
+To:     <damien.lemoal@opensource.wdc.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <bvanassche@acm.org>,
+        <ming.lei@redhat.com>, <hch@lst.de>, <hare@suse.de>
+CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <martin.wilck@suse.com>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH 0/2] scsi/libata: A potential tagging fix and improvement
+Date:   Tue, 15 Mar 2022 18:39:04 +0800
+Message-ID: <1647340746-17600-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f8c176d4-74f0-3e4f-446f-2a5f8ace3b28@kernel.dk>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, Mar 14, 2022 at 02:29:20PM -0600, Jens Axboe wrote:
-> The controller would set
-> 
-> ->needs_blocking_queue_rq = true;
-> 
-> or something, and we'd default to false. And if that is set, when the
-> blk-mq queue is created, then we'd set BLK_MQ_F_BLOCKING upon creation
-> if that flag is true.
-> 
-> That's the block layer side. Then in libata you'd need to ensure that
-> you check that same setting and invoke ata_qc_issue() appropriately.
-> 
-> Very top level stuff, there might be more things lurking below. But
-> you'll probably find them as you test this stuff...
+Two loosely related patches are included:
 
-FYI, this somewhat mistitled series:
+- Fix for scsi_realloc_sdev_budget_map(). I noticed that the budget token
+  for scsi commands was way in excess of the device queue depth, so I
+  think we need to fix the sbitmap depth. I need to test this more.
 
-https://lore.kernel.org/all/20220308003957.123312-1-michael.christie@oracle.com/
+- libata change to use scsi command budget token for qc tag for SAS host.
+  I marked this as RFC as for SAS hosts I don't see anything which
+  guarantees that the budget size is <= 32 always.
+  For libsas hosts we resize the device depth to 32 in the slave configure
+  callback, but this seems an unreliable approach since not all hosts may
+  call this.
+  In addition, I am worried that even if we resize the device depth
+  properly in the slave config callback, we may still try to alloc qc tag
+  prior to this - in lun scan, for example.
+  So we need a way to guarantee that the device queue depth is <= 32
+  always, which I would be open to suggestions for.
 
-adds BLK_MQ_F_BLOCKING support to the scsi core.  Doing libata
-should be fairly easy and can built ontop of that.
+John Garry (2):
+  scsi: core: Fix sbitmap depth in scsi_realloc_sdev_budget_map()
+  libata: Use scsi cmnd budget token for qc tag for SAS host
+
+ drivers/ata/libata-core.c |  5 +++--
+ drivers/ata/libata-sata.c | 21 ++++-----------------
+ drivers/ata/libata-scsi.c |  2 +-
+ drivers/ata/libata.h      |  4 ++--
+ drivers/scsi/scsi_scan.c  |  5 +++++
+ include/linux/libata.h    |  1 -
+ 6 files changed, 15 insertions(+), 23 deletions(-)
+
+-- 
+2.26.2
+
