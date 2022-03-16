@@ -2,143 +2,281 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A29F6C433F5
-	for <linux-ide@archiver.kernel.org>; Wed, 16 Mar 2022 03:25:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7C57C433F5
+	for <linux-ide@archiver.kernel.org>; Wed, 16 Mar 2022 04:32:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350951AbiCPD0p (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 15 Mar 2022 23:26:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59150 "EHLO
+        id S245539AbiCPEeI (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 16 Mar 2022 00:34:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41156 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244144AbiCPD0o (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Mar 2022 23:26:44 -0400
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7CF35EBEB
-        for <linux-ide@vger.kernel.org>; Tue, 15 Mar 2022 20:25:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1647401129; x=1678937129;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=L+GnZzY8M0I/XRz/k9rzvsh5D6u1YS3DpH4vtLZOaiI=;
-  b=ePTAiPJjbkast1/5y06inDIkMUW0Lq+v4iRISWU2yvINaCL1FVUDn39D
-   TFn7xo3CXTTe4AMdknXC8AiVSBHaSHJO6cA3SYzZqsCiwkWy76bfSNEtU
-   ZDLvw2eWPCcIQr3wXzUN9kN/nlmBGa5qxtZLUdFkxjxaL72o+yOlek0vV
-   58sliHqWst/sLSMljkF+VMj9Njx3rzXrfnzCVDObN3qbj4wZsNWvW5BC0
-   EP55b/bzwl2oRf0MN6g2HFcG7PfOwySZN7f3CHZ7pHGbRdF0klPkQ4Jpa
-   5v0r+bs3VoVSm149p4TCWqjvj2eab3+fHTvPlzCkezzwEljMJcL89JMN4
-   A==;
-X-IronPort-AV: E=Sophos;i="5.90,185,1643644800"; 
-   d="scan'208";a="200308292"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 16 Mar 2022 11:25:29 +0800
-IronPort-SDR: ehOX7JafmJ9EN6zoPqj7aoy2NyNaJek3R1oVshVbM1D8/lvkujRiwbUwlEpOYFPsRzU5rEIpFk
- bOWLll05Y6mofWu0MIzg+P9ebF6VHkMhOLW9VC+He51r7JY5wRxbfkZ9ppq9ceLuGuolHbwCNI
- GTxx5DH/mNYIG74+Mjg9oXO/2ucnlL4IcENPJKDB1AmWV+my8QumkjbTsydOhgJwazT8YUbvLd
- l5W5JvpYCgvn/mfNCJdNcg95oUL6Mx51T2ZBUNyeMQ4NDOhUdKGa/g4tWTEUn7eY/+O08BK3az
- tCX8rVsFC5KLHKybie57lmgB
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Mar 2022 19:57:35 -0700
-IronPort-SDR: +Pn/YG1S/6UXfKL6DLAOxo4zfdjTP5s5ApZVwEd3ytln9fWY8cS7vaVh4RUhjckLfdsJA3nJig
- hJQSLtzE5jI2XjLzCxpsIf8pfvrO9Tw9aZytvID2Mc9QY296EqlGw12x6V1fVq7HEYu6d2o8sJ
- OHWvscJBXnpFdzG7SAqp5FNf8dXdjFJQNDw1uoBU/x7f24dBbR3JfgMkdKGWDsnsRTmD+0OMI2
- hCV3x0grfi2y6QrGfTglFxhwPttJOkR8wn5JT97xyKQdvC3TrkcTjMy2dIn5KXFkyC7OPt4mET
- UDg=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Mar 2022 20:25:31 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KJFyy1D04z1SVp3
-        for <linux-ide@vger.kernel.org>; Tue, 15 Mar 2022 20:25:30 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1647401129; x=1649993130; bh=L+GnZzY8M0I/XRz/k9rzvsh5D6u1YS3DpH4
-        vtLZOaiI=; b=a6NP6rfIbYKzzCdD1KCkb1ko1cxXGtEsXBSKDXag/ihDMR6kKkB
-        9KrODKR34lwODKPtD+QyqndXHqPKD2pVjATqX5Hk7gMdrbX6kkZPoPeQv8QrUFFe
-        m7a/w5hqhz4l84CWpO8qMdSbpJy6wiK/P0PHVGeeot3T+vnW0bcr6QJdHxkUY3kY
-        Q4Zcs8i4CryFHIPwSTENzlOwk9pveuWkfEkii3EUJ3uVQGihT2/PZne7JWQZOodj
-        7hIamjK/t6e9WdUJ5KG5cmdUS1a5ySU0eTSxH6CnGf9eGBTHvGHEWFXMnDegDVhD
-        MVb/yMSTiX7uJAMCexghRZa85mDAS37rCBA==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id CSSEt5emDCF7 for <linux-ide@vger.kernel.org>;
-        Tue, 15 Mar 2022 20:25:29 -0700 (PDT)
-Received: from [10.225.163.101] (unknown [10.225.163.101])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KJFyv5Vlhz1Rvlx;
-        Tue, 15 Mar 2022 20:25:27 -0700 (PDT)
-Message-ID: <b77e681d-d180-7434-1675-1fcb10ef4abf@opensource.wdc.com>
-Date:   Wed, 16 Mar 2022 12:25:26 +0900
+        with ESMTP id S1348253AbiCPEeG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 16 Mar 2022 00:34:06 -0400
+Received: from lgeamrelo11.lge.com (lgeamrelo11.lge.com [156.147.23.51])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 43E2620A
+        for <linux-ide@vger.kernel.org>; Tue, 15 Mar 2022 21:32:50 -0700 (PDT)
+Received: from unknown (HELO lgeamrelo02.lge.com) (156.147.1.126)
+        by 156.147.23.51 with ESMTP; 16 Mar 2022 13:32:48 +0900
+X-Original-SENDERIP: 156.147.1.126
+X-Original-MAILFROM: byungchul.park@lge.com
+Received: from unknown (HELO X58A-UD3R) (10.177.244.38)
+        by 156.147.1.126 with ESMTP; 16 Mar 2022 13:32:48 +0900
+X-Original-SENDERIP: 10.177.244.38
+X-Original-MAILFROM: byungchul.park@lge.com
+Date:   Wed, 16 Mar 2022 13:32:13 +0900
+From:   Byungchul Park <byungchul.park@lge.com>
+To:     Hyeonggon Yoo <42.hyeyoo@gmail.com>
+Cc:     torvalds@linux-foundation.org, damien.lemoal@opensource.wdc.com,
+        linux-ide@vger.kernel.org, adilger.kernel@dilger.ca,
+        linux-ext4@vger.kernel.org, mingo@redhat.com,
+        linux-kernel@vger.kernel.org, peterz@infradead.org,
+        will@kernel.org, tglx@linutronix.de, rostedt@goodmis.org,
+        joel@joelfernandes.org, sashal@kernel.org, daniel.vetter@ffwll.ch,
+        chris@chris-wilson.co.uk, duyuyang@gmail.com,
+        johannes.berg@intel.com, tj@kernel.org, tytso@mit.edu,
+        willy@infradead.org, david@fromorbit.com, amir73il@gmail.com,
+        bfields@fieldses.org, gregkh@linuxfoundation.org,
+        kernel-team@lge.com, linux-mm@kvack.org, akpm@linux-foundation.org,
+        mhocko@kernel.org, minchan@kernel.org, hannes@cmpxchg.org,
+        vdavydov.dev@gmail.com, sj@kernel.org, jglisse@redhat.com,
+        dennis@kernel.org, cl@linux.com, penberg@kernel.org,
+        rientjes@google.com, vbabka@suse.cz, ngupta@vflare.org,
+        linux-block@vger.kernel.org, paolo.valente@linaro.org,
+        josef@toxicpanda.com, linux-fsdevel@vger.kernel.org,
+        viro@zeniv.linux.org.uk, jack@suse.cz, jack@suse.com,
+        jlayton@kernel.org, dan.j.williams@intel.com, hch@infradead.org,
+        djwong@kernel.org, dri-devel@lists.freedesktop.org,
+        airlied@linux.ie, rodrigosiqueiramelo@gmail.com,
+        melissa.srw@gmail.com, hamohammed.sa@gmail.com
+Subject: Re: [PATCH v4 00/24] DEPT(Dependency Tracker)
+Message-ID: <20220316043212.GA5715@X58A-UD3R>
+References: <1646377603-19730-1-git-send-email-byungchul.park@lge.com>
+ <Yiv9Fn4kcRbXJLmu@ip-172-31-19-208.ap-northeast-1.compute.internal>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.2
-Subject: Re: [PATCH 0/2] scsi/libata: A potential tagging fix and improvement
-Content-Language: en-US
-To:     John Garry <john.garry@huawei.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, bvanassche@acm.org,
-        ming.lei@redhat.com, hch@lst.de, hare@suse.de
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, martin.wilck@suse.com
-References: <1647340746-17600-1-git-send-email-john.garry@huawei.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <1647340746-17600-1-git-send-email-john.garry@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <Yiv9Fn4kcRbXJLmu@ip-172-31-19-208.ap-northeast-1.compute.internal>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 3/15/22 19:39, John Garry wrote:
-> Two loosely related patches are included:
+On Sat, Mar 12, 2022 at 01:53:26AM +0000, Hyeonggon Yoo wrote:
+> On Fri, Mar 04, 2022 at 04:06:19PM +0900, Byungchul Park wrote:
+> > Hi Linus and folks,
+> > 
+> > I've been developing a tool for detecting deadlock possibilities by
+> > tracking wait/event rather than lock(?) acquisition order to try to
+> > cover all synchonization machanisms. It's done on v5.17-rc1 tag.
+> > 
+> > https://github.com/lgebyungchulpark/linux-dept/commits/dept1.14_on_v5.17-rc1
+> >
 > 
-> - Fix for scsi_realloc_sdev_budget_map(). I noticed that the budget token
->   for scsi commands was way in excess of the device queue depth, so I
->   think we need to fix the sbitmap depth. I need to test this more.
+> Small feedback unrelated to thread:
+> I'm not sure "Need to expand the ring buffer" is something to call
+> WARN(). Is this stack trace useful for something?
+> ========
 > 
-> - libata change to use scsi command budget token for qc tag for SAS host.
->   I marked this as RFC as for SAS hosts I don't see anything which
->   guarantees that the budget size is <= 32 always.
->   For libsas hosts we resize the device depth to 32 in the slave configure
->   callback, but this seems an unreliable approach since not all hosts may
->   call this.
->   In addition, I am worried that even if we resize the device depth
->   properly in the slave config callback, we may still try to alloc qc tag
->   prior to this - in lun scan, for example.
->   So we need a way to guarantee that the device queue depth is <= 32
->   always, which I would be open to suggestions for.
+> Hello Byungchul. These are two warnings of DEPT on system.
+
+Hi Hyeonggon,
+
+Could you run scripts/decode_stacktrace.sh and share the result instead
+of the raw format below if the reports still appear with PATCH v5? It'd
+be appreciated (:
+
+https://lkml.org/lkml/2022/3/15/1277
+(or https://github.com/lgebyungchulpark/linux-dept/commits/dept1.18_on_v5.17-rc7)
+
+Thank you very much!
+
+--
+Byungchul
+
+> Both cases look similar.
 > 
-> John Garry (2):
->   scsi: core: Fix sbitmap depth in scsi_realloc_sdev_budget_map()
->   libata: Use scsi cmnd budget token for qc tag for SAS host
+> In what case DEPT says (unknown)?
+> I'm not sure we can properly debug this.
 > 
->  drivers/ata/libata-core.c |  5 +++--
->  drivers/ata/libata-sata.c | 21 ++++-----------------
->  drivers/ata/libata-scsi.c |  2 +-
->  drivers/ata/libata.h      |  4 ++--
->  drivers/scsi/scsi_scan.c  |  5 +++++
->  include/linux/libata.h    |  1 -
->  6 files changed, 15 insertions(+), 23 deletions(-)
+> ===================================================
+> DEPT: Circular dependency has been detected.
+> 5.17.0-rc1+ #3 Tainted: G        W        
+> ---------------------------------------------------
+> summary
+> ---------------------------------------------------
+> *** AA DEADLOCK ***
 > 
-
-I tested this and it is working fine for me. This actually solves the QD
-not changing problem I had detected with the pm80xx driver.
-Now, doing this:
-
-# cat /sys/block/sde/device/queue_depth
-32
-# echo 16 > /sys/block/sde/device/queue_depth
-# cat /sys/block/sde/device/queue_depth
-16
-
-is working as expected.
-
-See my comments on patch 2 for getting final ack and tested tags :)
-
--- 
-Damien Le Moal
-Western Digital Research
+> context A
+>     [S] (unknown)(&vfork:0)
+>     [W] wait_for_completion_killable(&vfork:0)
+>     [E] complete(&vfork:0)
+> 
+> [S]: start of the event context
+> [W]: the wait blocked
+> [E]: the event not reachable
+> ---------------------------------------------------
+> context A's detail
+> ---------------------------------------------------
+> context A
+>     [S] (unknown)(&vfork:0)
+>     [W] wait_for_completion_killable(&vfork:0)
+>     [E] complete(&vfork:0)
+> 
+> [S] (unknown)(&vfork:0):
+> (N/A)
+> 
+> [W] wait_for_completion_killable(&vfork:0):
+> [<ffffffc00802204c>] kernel_clone+0x25c/0x2b8
+> stacktrace:
+>       dept_wait+0x74/0x88
+>       wait_for_completion_killable+0x60/0xa0
+>       kernel_clone+0x25c/0x2b8
+>       __do_sys_clone+0x5c/0x74
+>       __arm64_sys_clone+0x18/0x20
+>       invoke_syscall.constprop.0+0x78/0xc4
+>       do_el0_svc+0x98/0xd0
+>       el0_svc+0x44/0xe4
+>       el0t_64_sync_handler+0xb0/0x12c
+>       el0t_64_sync+0x158/0x15c
+> 
+> [E] complete(&vfork:0):
+> [<ffffffc00801f49c>] mm_release+0x7c/0x90
+> stacktrace:
+>       dept_event+0xe0/0x100
+>       complete+0x48/0x98
+>       mm_release+0x7c/0x90
+>       exit_mm_release+0xc/0x14
+>       do_exit+0x1b4/0x81c
+>       do_group_exit+0x30/0x9c
+>       __wake_up_parent+0x0/0x24
+>       invoke_syscall.constprop.0+0x78/0xc4
+>       do_el0_svc+0x98/0xd0
+>       el0_svc+0x44/0xe4
+>       el0t_64_sync_handler+0xb0/0x12c
+>       el0t_64_sync+0x158/0x15c
+> ---------------------------------------------------
+> information that might be helpful
+> ---------------------------------------------------
+> CPU: 6 PID: 229 Comm: start-stop-daem Tainted: G        W         5.17.0-rc1+ #3
+> Hardware name: linux,dummy-virt (DT)
+> Call trace:
+>  dump_backtrace.part.0+0x9c/0xc4
+>  show_stack+0x14/0x28
+>  dump_stack_lvl+0x9c/0xcc
+>  dump_stack+0x14/0x2c
+>  print_circle+0x2d4/0x438
+>  cb_check_dl+0x44/0x70
+>  bfs+0x60/0x168
+>  add_dep+0x88/0x11c
+>  do_event.constprop.0+0x19c/0x2c0
+>  dept_event+0xe0/0x100
+>  complete+0x48/0x98
+>  mm_release+0x7c/0x90
+>  exit_mm_release+0xc/0x14
+>  do_exit+0x1b4/0x81c
+>  do_group_exit+0x30/0x9c
+>  __wake_up_parent+0x0/0x24
+>  invoke_syscall.constprop.0+0x78/0xc4
+>  do_el0_svc+0x98/0xd0
+>  el0_svc+0x44/0xe4
+>  el0t_64_sync_handler+0xb0/0x12c
+>  el0t_64_sync+0x158/0x15c
+> 
+> 
+> 
+> 
+> ===================================================
+> DEPT: Circular dependency has been detected.
+> 5.17.0-rc1+ #3 Tainted: G        W        
+> ---------------------------------------------------
+> summary
+> ---------------------------------------------------
+> *** AA DEADLOCK ***
+> 
+> context A
+>     [S] (unknown)(&try_completion:0)
+>     [W] wait_for_completion_timeout(&try_completion:0)
+>     [E] complete(&try_completion:0)
+> 
+> [S]: start of the event context
+> [W]: the wait blocked
+> [E]: the event not reachable
+> ---------------------------------------------------
+> context A's detail
+> ---------------------------------------------------
+> context A
+>     [S] (unknown)(&try_completion:0)
+>     [W] wait_for_completion_timeout(&try_completion:0)
+>     [E] complete(&try_completion:0)
+> 
+> [S] (unknown)(&try_completion:0):
+> (N/A)
+> 
+> [W] wait_for_completion_timeout(&try_completion:0):
+> [<ffffffc008166bf4>] kunit_try_catch_run+0xb4/0x160
+> stacktrace:
+>       dept_wait+0x74/0x88
+>       wait_for_completion_timeout+0x64/0xa0
+>       kunit_try_catch_run+0xb4/0x160
+>       kunit_test_try_catch_successful_try_no_catch+0x3c/0x98
+>       kunit_try_run_case+0x9c/0xa0
+>       kunit_generic_run_threadfn_adapter+0x1c/0x28
+>       kthread+0xd4/0xe4
+>       ret_from_fork+0x10/0x20
+> 
+> [E] complete(&try_completion:0):
+> [<ffffffc00803dce4>] kthread_complete_and_exit+0x18/0x20
+> stacktrace:
+>       dept_event+0xe0/0x100
+>       complete+0x48/0x98
+>       kthread_complete_and_exit+0x18/0x20
+>       kunit_try_catch_throw+0x0/0x1c
+>       kthread+0xd4/0xe4
+>       ret_from_fork+0x10/0x20
+> 
+> ---------------------------------------------------
+> information that might be helpful
+> ---------------------------------------------------
+> CPU: 15 PID: 132 Comm: kunit_try_catch Tainted: G        W         5.17.0-rc1+ #3
+> Hardware name: linux,dummy-virt (DT)
+> Call trace:
+>  dump_backtrace.part.0+0x9c/0xc4
+>  show_stack+0x14/0x28
+>  dump_stack_lvl+0x9c/0xcc
+>  dump_stack+0x14/0x2c
+>  print_circle+0x2d4/0x438
+>  cb_check_dl+0x44/0x70
+>  bfs+0x60/0x168
+>  add_dep+0x88/0x11c
+>  do_event.constprop.0+0x19c/0x2c0
+>  dept_event+0xe0/0x100
+>  complete+0x48/0x98
+>  kthread_complete_and_exit+0x18/0x20
+>  kunit_try_catch_throw+0x0/0x1c
+>  kthread+0xd4/0xe4
+>  ret_from_fork+0x10/0x20
+> 
+> 
+> > Benifit:
+> > 
+> > 	0. Works with all lock primitives.
+> > 	1. Works with wait_for_completion()/complete().
+> > 	2. Works with 'wait' on PG_locked.
+> > 	3. Works with 'wait' on PG_writeback.
+> > 	4. Works with swait/wakeup.
+> > 	5. Works with waitqueue.
+> > 	6. Multiple reports are allowed.
+> > 	7. Deduplication control on multiple reports.
+> > 	8. Withstand false positives thanks to 6.
+> > 	9. Easy to tag any wait/event.
+> > 
+> > Future work:
+> 
+> [...]
+> 
+> > -- 
+> > 1.9.1
+> > 
+> 
+> -- 
+> Thank you, You are awesome!
+> Hyeonggon :-)
