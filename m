@@ -2,24 +2,24 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB76EC433EF
-	for <linux-ide@archiver.kernel.org>; Wed, 16 Mar 2022 02:28:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE504C433EF
+	for <linux-ide@archiver.kernel.org>; Wed, 16 Mar 2022 02:28:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1353158AbiCPC3Q (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 15 Mar 2022 22:29:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55590 "EHLO
+        id S1353319AbiCPC3r (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 15 Mar 2022 22:29:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55640 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353149AbiCPC2g (ORCPT
+        with ESMTP id S1353164AbiCPC2g (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Mar 2022 22:28:36 -0400
 Received: from lgeamrelo11.lge.com (lgeamrelo11.lge.com [156.147.23.51])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 583763B29F
-        for <linux-ide@vger.kernel.org>; Tue, 15 Mar 2022 19:27:14 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6DB205EDEB
+        for <linux-ide@vger.kernel.org>; Tue, 15 Mar 2022 19:27:12 -0700 (PDT)
 Received: from unknown (HELO lgemrelse7q.lge.com) (156.147.1.151)
-        by 156.147.23.51 with ESMTP; 16 Mar 2022 11:27:12 +0900
+        by 156.147.23.51 with ESMTP; 16 Mar 2022 11:27:11 +0900
 X-Original-SENDERIP: 156.147.1.151
 X-Original-MAILFROM: byungchul.park@lge.com
 Received: from unknown (HELO localhost.localdomain) (10.177.244.38)
-        by 156.147.1.151 with ESMTP; 16 Mar 2022 11:27:12 +0900
+        by 156.147.1.151 with ESMTP; 16 Mar 2022 11:27:11 +0900
 X-Original-SENDERIP: 10.177.244.38
 X-Original-MAILFROM: byungchul.park@lge.com
 From:   Byungchul Park <byungchul.park@lge.com>
@@ -46,9 +46,9 @@ Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
         dri-devel@lists.freedesktop.org, airlied@linux.ie,
         rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
         hamohammed.sa@gmail.com
-Subject: [PATCH RFC v5 20/21] dept: Disable Dept on struct crypto_larval's completion for now
-Date:   Wed, 16 Mar 2022 11:26:32 +0900
-Message-Id: <1647397593-16747-21-git-send-email-byungchul.park@lge.com>
+Subject: [PATCH RFC v5 13/21] dept: Apply SDT to swait
+Date:   Wed, 16 Mar 2022 11:26:25 +0900
+Message-Id: <1647397593-16747-14-git-send-email-byungchul.park@lge.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1647397593-16747-1-git-send-email-byungchul.park@lge.com>
 References: <1647397593-16747-1-git-send-email-byungchul.park@lge.com>
@@ -56,36 +56,105 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-struct crypto_larval's completion is used for multiple purposes e.g.
-waiting for test to complete or waiting for probe to complete.
-
-The completion variable needs to be split according to what it's used
-for. Otherwise, Dept cannot distinguish one from another and doesn't
-work properly. Now that it isn't, disable Dept on it.
+Makes SDT able to track dependencies by swait.
 
 Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 ---
- crypto/api.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ include/linux/swait.h |  4 ++++
+ kernel/sched/swait.c  | 10 ++++++++++
+ 2 files changed, 14 insertions(+)
 
-diff --git a/crypto/api.c b/crypto/api.c
-index 7ddfe94..97ed1d7 100644
---- a/crypto/api.c
-+++ b/crypto/api.c
-@@ -115,7 +115,12 @@ struct crypto_larval *crypto_larval_alloc(const char *name, u32 type, u32 mask)
- 	larval->alg.cra_destroy = crypto_larval_destroy;
+diff --git a/include/linux/swait.h b/include/linux/swait.h
+index 6a8c22b..dbdf2ce 100644
+--- a/include/linux/swait.h
++++ b/include/linux/swait.h
+@@ -6,6 +6,7 @@
+ #include <linux/stddef.h>
+ #include <linux/spinlock.h>
+ #include <linux/wait.h>
++#include <linux/dept_sdt.h>
+ #include <asm/current.h>
  
- 	strlcpy(larval->alg.cra_name, name, CRYPTO_MAX_ALG_NAME);
--	init_completion(&larval->completion);
-+	/*
-+	 * TODO: Split ->completion according to what it's used for e.g.
-+	 * ->test_completion, ->probe_completion and the like, so that
-+	 *  Dept can track its dependency properly.
-+	 */
-+	init_completion_nocheck(&larval->completion);
+ /*
+@@ -43,6 +44,7 @@
+ struct swait_queue_head {
+ 	raw_spinlock_t		lock;
+ 	struct list_head	task_list;
++	struct dept_map		dmap;
+ };
  
- 	return larval;
+ struct swait_queue {
+@@ -61,6 +63,7 @@ struct swait_queue {
+ #define __SWAIT_QUEUE_HEAD_INITIALIZER(name) {				\
+ 	.lock		= __RAW_SPIN_LOCK_UNLOCKED(name.lock),		\
+ 	.task_list	= LIST_HEAD_INIT((name).task_list),		\
++	.dmap		= DEPT_SDT_MAP_INIT(name),			\
  }
+ 
+ #define DECLARE_SWAIT_QUEUE_HEAD(name)					\
+@@ -72,6 +75,7 @@ extern void __init_swait_queue_head(struct swait_queue_head *q, const char *name
+ #define init_swait_queue_head(q)				\
+ 	do {							\
+ 		static struct lock_class_key __key;		\
++		sdt_map_init(&(q)->dmap);			\
+ 		__init_swait_queue_head((q), #q, &__key);	\
+ 	} while (0)
+ 
+diff --git a/kernel/sched/swait.c b/kernel/sched/swait.c
+index e1c655f..4ca7d6e 100644
+--- a/kernel/sched/swait.c
++++ b/kernel/sched/swait.c
+@@ -27,6 +27,7 @@ void swake_up_locked(struct swait_queue_head *q)
+ 		return;
+ 
+ 	curr = list_first_entry(&q->task_list, typeof(*curr), task_list);
++	sdt_event(&q->dmap);
+ 	wake_up_process(curr->task);
+ 	list_del_init(&curr->task_list);
+ }
+@@ -69,6 +70,7 @@ void swake_up_all(struct swait_queue_head *q)
+ 	while (!list_empty(&tmp)) {
+ 		curr = list_first_entry(&tmp, typeof(*curr), task_list);
+ 
++		sdt_event(&q->dmap);
+ 		wake_up_state(curr->task, TASK_NORMAL);
+ 		list_del_init(&curr->task_list);
+ 
+@@ -97,6 +99,9 @@ void prepare_to_swait_exclusive(struct swait_queue_head *q, struct swait_queue *
+ 	__prepare_to_swait(q, wait);
+ 	set_current_state(state);
+ 	raw_spin_unlock_irqrestore(&q->lock, flags);
++
++	if (state & TASK_NORMAL)
++		sdt_wait_prepare(&q->dmap);
+ }
+ EXPORT_SYMBOL(prepare_to_swait_exclusive);
+ 
+@@ -119,12 +124,16 @@ long prepare_to_swait_event(struct swait_queue_head *q, struct swait_queue *wait
+ 	}
+ 	raw_spin_unlock_irqrestore(&q->lock, flags);
+ 
++	if (!ret && state & TASK_NORMAL)
++		sdt_wait_prepare(&q->dmap);
++
+ 	return ret;
+ }
+ EXPORT_SYMBOL(prepare_to_swait_event);
+ 
+ void __finish_swait(struct swait_queue_head *q, struct swait_queue *wait)
+ {
++	sdt_wait_finish();
+ 	__set_current_state(TASK_RUNNING);
+ 	if (!list_empty(&wait->task_list))
+ 		list_del_init(&wait->task_list);
+@@ -134,6 +143,7 @@ void finish_swait(struct swait_queue_head *q, struct swait_queue *wait)
+ {
+ 	unsigned long flags;
+ 
++	sdt_wait_finish();
+ 	__set_current_state(TASK_RUNNING);
+ 
+ 	if (!list_empty_careful(&wait->task_list)) {
 -- 
 1.9.1
 
