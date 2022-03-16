@@ -2,35 +2,36 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD74AC433EF
-	for <linux-ide@archiver.kernel.org>; Wed, 16 Mar 2022 08:15:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCE64C433F5
+	for <linux-ide@archiver.kernel.org>; Wed, 16 Mar 2022 08:23:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354430AbiCPIRA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 16 Mar 2022 04:17:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57120 "EHLO
+        id S1354500AbiCPIYz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 16 Mar 2022 04:24:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245093AbiCPIQ7 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 16 Mar 2022 04:16:59 -0400
+        with ESMTP id S238004AbiCPIYy (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 16 Mar 2022 04:24:54 -0400
 Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1A9263502;
-        Wed, 16 Mar 2022 01:15:45 -0700 (PDT)
-Received: from fraeml709-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KJNMg5S0wz67Zgf;
-        Wed, 16 Mar 2022 16:13:51 +0800 (CST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E2A22DF49;
+        Wed, 16 Mar 2022 01:23:40 -0700 (PDT)
+Received: from fraeml743-chm.china.huawei.com (unknown [172.18.147.207])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KJNYB2MP5z67MkT;
+        Wed, 16 Mar 2022 16:22:06 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml709-chm.china.huawei.com (10.206.15.37) with Microsoft SMTP Server
+ fraeml743-chm.china.huawei.com (10.206.15.224) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Wed, 16 Mar 2022 09:15:43 +0100
+ 15.1.2375.24; Wed, 16 Mar 2022 09:23:38 +0100
 Received: from [10.47.84.96] (10.47.84.96) by lhreml724-chm.china.huawei.com
  (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.21; Wed, 16 Mar
- 2022 08:15:42 +0000
-Message-ID: <1bde0883-bfbb-ea54-82f0-4e53b884b24b@huawei.com>
-Date:   Wed, 16 Mar 2022 08:15:41 +0000
+ 2022 08:23:37 +0000
+Message-ID: <650c667f-ca55-821d-4e0f-29fce69a68fc@huawei.com>
+Date:   Wed, 16 Mar 2022 08:23:34 +0000
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
  Thunderbird/91.6.1
-Subject: Re: [PATCH 0/2] scsi/libata: A potential tagging fix and improvement
+Subject: Re: [PATCH RFC 2/2] libata: Use scsi cmnd budget token for qc tag for
+ SAS host
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
         <bvanassche@acm.org>, <ming.lei@redhat.com>, <hch@lst.de>,
@@ -38,9 +39,10 @@ To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
 CC:     <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>, <martin.wilck@suse.com>
 References: <1647340746-17600-1-git-send-email-john.garry@huawei.com>
- <b77e681d-d180-7434-1675-1fcb10ef4abf@opensource.wdc.com>
+ <1647340746-17600-3-git-send-email-john.garry@huawei.com>
+ <99541f2d-2aea-6bd7-e3b6-21dbc355875d@opensource.wdc.com>
 From:   John Garry <john.garry@huawei.com>
-In-Reply-To: <b77e681d-d180-7434-1675-1fcb10ef4abf@opensource.wdc.com>
+In-Reply-To: <99541f2d-2aea-6bd7-e3b6-21dbc355875d@opensource.wdc.com>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [10.47.84.96]
@@ -51,29 +53,39 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 16/03/2022 03:25, Damien Le Moal wrote:s
-
 Hi Damien,
 
-> I tested this and it is working fine for me. This actually solves the QD
-> not changing problem I had detected with the pm80xx driver.
-> Now, doing this:
+>> -	}
+>> -	return -1;
+>> +	return scmd->budget_token;
+>>   }
+> Since this is now not actually allocating a tag, I would rename this
+> something like ata_sas_get_tag(). Or even better, simply open code this
+> in ata_qc_new_init() since that is the only caller.
+
+ok, I think it might be better to open code in ata_qc_new_init(), as 
+suggested. That should avoid the need for the return -1 call.
+
 > 
-> # cat /sys/block/sde/device/queue_depth
-> 32
-> # echo 16 > /sys/block/sde/device/queue_depth
-> # cat /sys/block/sde/device/queue_depth
-> 16
+>>   
+>>   void ata_sas_free_tag(unsigned int tag, struct ata_port *ap)
+>>   {
+>> -	clear_bit(tag, &ap->sas_tag_allocated);
+>>   }
+> This is called only in ata_qc_free(). With this change, the function is
+> empty, so let's completely remove it.
 > 
 
-Having this working is down to the first patch. So I will resend that 
-patch today separately so that we may look to have it included in 5.18, 
-even though we're so late in the cycle...
+ok
 
-> is working as expected.
-> 
-> See my comments on patch 2 for getting final ack and tested tags:)
+>>   
+>>   /**
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index ed8be585a98f..45d63a2ba3ee 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+>> @@ -640,7 +640,7 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
+>>   {
 
-OK, Thanks,
+Thanks,
 John
-
