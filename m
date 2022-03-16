@@ -2,18 +2,18 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52616C4332F
-	for <linux-ide@archiver.kernel.org>; Wed, 16 Mar 2022 02:28:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6D26C4167B
+	for <linux-ide@archiver.kernel.org>; Wed, 16 Mar 2022 02:28:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235184AbiCPC3u (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 15 Mar 2022 22:29:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56642 "EHLO
+        id S233704AbiCPC3x (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 15 Mar 2022 22:29:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55214 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353233AbiCPC3E (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Mar 2022 22:29:04 -0400
+        with ESMTP id S1353250AbiCPC3N (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Mar 2022 22:29:13 -0400
 Received: from lgeamrelo11.lge.com (lgeamrelo12.lge.com [156.147.23.52])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 9F5B85EDFB
-        for <linux-ide@vger.kernel.org>; Tue, 15 Mar 2022 19:27:12 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id A9FF35F253
+        for <linux-ide@vger.kernel.org>; Tue, 15 Mar 2022 19:27:13 -0700 (PDT)
 Received: from unknown (HELO lgemrelse7q.lge.com) (156.147.1.151)
         by 156.147.23.52 with ESMTP; 16 Mar 2022 11:27:11 +0900
 X-Original-SENDERIP: 156.147.1.151
@@ -46,9 +46,9 @@ Cc:     damien.lemoal@opensource.wdc.com, linux-ide@vger.kernel.org,
         dri-devel@lists.freedesktop.org, airlied@linux.ie,
         rodrigosiqueiramelo@gmail.com, melissa.srw@gmail.com,
         hamohammed.sa@gmail.com
-Subject: [PATCH RFC v5 15/21] locking/lockdep, cpu/hotplus: Use a weaker annotation in AP thread
-Date:   Wed, 16 Mar 2022 11:26:27 +0900
-Message-Id: <1647397593-16747-16-git-send-email-byungchul.park@lge.com>
+Subject: [PATCH RFC v5 17/21] dept: Distinguish each work from another
+Date:   Wed, 16 Mar 2022 11:26:29 +0900
+Message-Id: <1647397593-16747-18-git-send-email-byungchul.park@lge.com>
 X-Mailer: git-send-email 1.9.1
 In-Reply-To: <1647397593-16747-1-git-send-email-byungchul.park@lge.com>
 References: <1647397593-16747-1-git-send-email-byungchul.park@lge.com>
@@ -56,33 +56,81 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-cb92173d1f0 ("locking/lockdep, cpu/hotplug: Annotate AP thread") was
-introduced to make lockdep_assert_cpus_held() work in AP thread.
+Workqueue already provides concurrency control. By that, any wait in a
+work doesn't prevents events in other works with the control enabled.
+Thus, each work would better be considered a different context.
 
-However, the annotation is too strong for that purpose. We don't have to
-use more than try lock annotation for that.
-
-Furthermore, now that Dept was introduced, false positive alarms was
-reported by that. Replaced it with try lock annotation.
+So let Dept assign a different context id to each work.
 
 Signed-off-by: Byungchul Park <byungchul.park@lge.com>
 ---
- kernel/cpu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/dept.h     |  2 ++
+ kernel/dependency/dept.c | 10 ++++++++++
+ kernel/workqueue.c       |  3 +++
+ 3 files changed, 15 insertions(+)
 
-diff --git a/kernel/cpu.c b/kernel/cpu.c
-index 407a256..1f92a42 100644
---- a/kernel/cpu.c
-+++ b/kernel/cpu.c
-@@ -355,7 +355,7 @@ int lockdep_is_cpus_held(void)
+diff --git a/include/linux/dept.h b/include/linux/dept.h
+index 672a762..3d24a52 100644
+--- a/include/linux/dept.h
++++ b/include/linux/dept.h
+@@ -491,6 +491,7 @@ struct dept_task {
+ extern void dept_event_split_map(struct dept_map_each *me, struct dept_map_common *mc, unsigned long ip, const char *e_fn);
+ extern void dept_ask_event_split_map(struct dept_map_each *me, struct dept_map_common *mc);
+ extern void dept_kernel_enter(void);
++extern void dept_work_enter(void);
  
- static void lockdep_acquire_cpus_lock(void)
+ static inline void dept_ecxt_enter_nokeep(struct dept_map *m)
  {
--	rwsem_acquire(&cpu_hotplug_lock.dep_map, 0, 0, _THIS_IP_);
-+	rwsem_acquire(&cpu_hotplug_lock.dep_map, 0, 1, _THIS_IP_);
+@@ -535,6 +536,7 @@ static inline void dept_ecxt_enter_nokeep(struct dept_map *m)
+ #define dept_event_split_map(me, mc, ip, e_fn)		do { } while (0)
+ #define dept_ask_event_split_map(me, mc)		do { } while (0)
+ #define dept_kernel_enter()				do { } while (0)
++#define dept_work_enter()				do { } while (0)
+ #define dept_ecxt_enter_nokeep(m)			do { } while (0)
+ #define dept_key_init(k)				do { (void)(k); } while (0)
+ #define dept_key_destroy(k)				do { (void)(k); } while (0)
+diff --git a/kernel/dependency/dept.c b/kernel/dependency/dept.c
+index 8d8d8eb..10801783 100644
+--- a/kernel/dependency/dept.c
++++ b/kernel/dependency/dept.c
+@@ -1886,6 +1886,16 @@ void dept_disable_hardirq(unsigned long ip)
+ 	dept_exit(flags);
  }
  
- static void lockdep_release_cpus_lock(void)
++/*
++ * Assign a different context id to each work.
++ */
++void dept_work_enter(void)
++{
++	struct dept_task *dt = dept_task();
++
++	dt->cxt_id[DEPT_CXT_PROCESS] += (1UL << DEPT_CXTS_NR);
++}
++
+ void dept_kernel_enter(void)
+ {
+ 	struct dept_task *dt = dept_task();
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index 33f1106..f5d762c 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -51,6 +51,7 @@
+ #include <linux/sched/isolation.h>
+ #include <linux/nmi.h>
+ #include <linux/kvm_para.h>
++#include <linux/dept.h>
+ 
+ #include "workqueue_internal.h"
+ 
+@@ -2217,6 +2218,8 @@ static void process_one_work(struct worker *worker, struct work_struct *work)
+ 
+ 	lockdep_copy_map(&lockdep_map, &work->lockdep_map);
+ #endif
++	dept_work_enter();
++
+ 	/* ensure we're on the correct CPU */
+ 	WARN_ON_ONCE(!(pool->flags & POOL_DISASSOCIATED) &&
+ 		     raw_smp_processor_id() != pool->cpu);
 -- 
 1.9.1
 
