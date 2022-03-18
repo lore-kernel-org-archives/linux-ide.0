@@ -2,125 +2,179 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAC78C433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 18 Mar 2022 09:03:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C87C7C433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 18 Mar 2022 09:34:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230096AbiCRJEi (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 18 Mar 2022 05:04:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33394 "EHLO
+        id S234425AbiCRJfc (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 18 Mar 2022 05:35:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56744 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233059AbiCRJEe (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 18 Mar 2022 05:04:34 -0400
-Received: from mail-ed1-x529.google.com (mail-ed1-x529.google.com [IPv6:2a00:1450:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AB9EF12C6DB
-        for <linux-ide@vger.kernel.org>; Fri, 18 Mar 2022 02:03:15 -0700 (PDT)
-Received: by mail-ed1-x529.google.com with SMTP id y22so9497136eds.2
-        for <linux-ide@vger.kernel.org>; Fri, 18 Mar 2022 02:03:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=wlQhRdLXHs9BYJqJ0EyuEA00GBGtkEUMsK9DObiszlU=;
-        b=GxeGxgwCJT4nbqWB2XqnlMgtCj1001lKcG2KC6xSjBjC0y4hXa3OJqULCtqCy28b4E
-         9JU07rhC95wccf6K+yGPjcNtlLD+YLTmn9ftCRwGeeqUJqo277OiNwYtFbv5AlGGtP5v
-         siUvEaryETfmDL2/vN2fXO/92FwENf0FZhvZoc8pnW9bElVEK8GGjmCSfRotOIb2deYc
-         qabOl/meHX7dvuS8s76djHoaC+JAkgjVIFchUPyXYUz2JCHlsB4jiuFyhyRlZiImV6pO
-         bQRClC8hYeSFr1aieU56tSEVsqzenM/aw/pPvWnKe6i5XFwCpB+05Ec3c1mDpwM3cdEn
-         yneg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=wlQhRdLXHs9BYJqJ0EyuEA00GBGtkEUMsK9DObiszlU=;
-        b=ZD4+ypB9Fm+z7Xsdrgfzax9pkWQutxSKt0Hhxex4GesddQ4+EpUf58obX0KX7jFw7j
-         /CGPZ2GqSQIa3rBQRcsp/S1u0ezm9hebOUELeYjzmV4aGL43UeAc4A8GpDvFLwofwNbd
-         G/GEN/NCA7n1K7/LLb6rihVdm2yvTrnJyr4nLccpikbpvOEdTsKi3Popoq5RTzV+uIWd
-         T3Q+keRFFLewekuZirXDhZcSqvCzV0RYfDabL10NFMgVNzHsgLcy8sx7Jv2Oc/sw8mfk
-         YuMflQ8B0QCLUPZOyj+43zUZg9e1LoxOTZYaiTJA+ogmXGfG/Y1KMaeTqDe6X5uucUu+
-         Twfg==
-X-Gm-Message-State: AOAM531mzSYiF4RGOvbPJGzajRmygi+WBE6SgZTYfIo6FGicCarEWCoK
-        Rhc/uZPlcrf3MQYDbRl2Bvxgvr4EHLM=
-X-Google-Smtp-Source: ABdhPJx4TCvyymQDwcREiCJjz8ruKjz1SkUA+FRNymyZiLpl6uSNQaMKYKBxzJbgMVOegxj5mT1WCg==
-X-Received: by 2002:a05:6402:d05:b0:416:a67f:18ee with SMTP id eb5-20020a0564020d0500b00416a67f18eemr8434036edb.120.1647594194044;
-        Fri, 18 Mar 2022 02:03:14 -0700 (PDT)
-Received: from debian64.daheim (p5b0d7e2a.dip0.t-ipconnect.de. [91.13.126.42])
-        by smtp.gmail.com with ESMTPSA id u9-20020a170906124900b006ce88a505a1sm3602293eja.179.2022.03.18.02.03.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Mar 2022 02:03:13 -0700 (PDT)
-Received: from chuck by debian64.daheim with local (Exim 4.95)
-        (envelope-from <chunkeey@gmail.com>)
-        id 1nV8Vs-0003jD-CL;
-        Fri, 18 Mar 2022 10:03:12 +0100
-From:   Christian Lamparter <chunkeey@gmail.com>
-To:     linux-ide@vger.kernel.org
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 2/2] ata: libata-core: Disable READ LOG DMA EXT for Samsung 840 EVOs
-Date:   Fri, 18 Mar 2022 10:03:12 +0100
-Message-Id: <87d0ecd21aad4760d5889b2183ad0d21a73e55c6.1647594132.git.chunkeey@gmail.com>
-X-Mailer: git-send-email 2.35.1
-In-Reply-To: <ba068938e629eb1a8b423a54405233e685cedb78.1647594132.git.chunkeey@gmail.com>
-References: <ba068938e629eb1a8b423a54405233e685cedb78.1647594132.git.chunkeey@gmail.com>
+        with ESMTP id S234461AbiCRJfa (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 18 Mar 2022 05:35:30 -0400
+Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 777EC9D0D1
+        for <linux-ide@vger.kernel.org>; Fri, 18 Mar 2022 02:34:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1647596050; x=1679132050;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=7d46xlMU7lvJI4zXjUOW03yg1qxd15Ms+gG5FzQwjcE=;
+  b=TeXhcD5Y9H03T6X/e91oTyM50rwJj+1nHSDrKLgi9NxUwG5sfTzATzLf
+   uxhIf2Q53Ue2L7fWq7yGzQMvzSzPqLXdx4uj2ZUUY5vlCEJDCYZi44hP7
+   LQ/w6odB0AGGof4T8/V9vbQ13mvHFFEm1nB+oFTrjuezGRnf6TyqXKghf
+   HIYr8l111Gj8f9Etvpv/cX0nJJLTvWZxael7gMhRYv/1x0OfDBkaQvjm9
+   R3o9PkFJqgInjszBgwxKeAgeDQI/+XnwwJ1gV2PXlgNy5hptaRGWV2SCX
+   iueih2j+m1JYBqnVWtjCkTVb4+cnZ/1n1KLe2uLshGrxZHVcYwfRbjOVI
+   g==;
+X-IronPort-AV: E=Sophos;i="5.90,191,1643644800"; 
+   d="scan'208";a="196622628"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 18 Mar 2022 17:34:09 +0800
+IronPort-SDR: 2irRVZBiZelfhJ0ziuF/8HAql/UQT4oHg8xWX1vUeDxeHVJWPghJjT+aX321bWYkr9XHcX6FAC
+ 6MxvLFaSuOhIK5ZkaGXyFFeb/H77bq7ogiJlrxsYi7RTI1ORVc5wzjx99g+rxIR+WjAelZFsRT
+ yDlXNRXGJM7DXjYHRIUBT0I3DAp8mOZg5F503gJCm5V9by1lMpwlowoCYipuvHhWvBhWqyl2na
+ 0ZgBbaidrers7N9gGRyYCaB3R5QVp/dUXc8KVS5MZDMXHgEfMHxc1HQ69XDt4ui2z9HZYV2NqF
+ uFkHuDeMuedK34CpNeVA3LPU
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Mar 2022 02:06:10 -0700
+IronPort-SDR: hUODSKqdQZYfv5tC0zRWN3P1Ya6+odKR1BwjUcGcV3pVxP0rQyrwmWCsOnKR2uyI5zHhxEX5br
+ l7VpVIETwQZhMNkZs+9a5G8PcUwkkxPd9psB91l/sIk6jOk3u1R5mKxa/Lun3YvGQFUNNHgSeP
+ ZKbaA2c1qT6WVOSZ2kp18qqdjAfn0X7ryqz1iH8AvrcSxLg38RD4rrWJfHnq6xtmCO0Xx2Atqg
+ +4oQihCbgB5duMq/eiBtoAAXZibBG1tX/U4wjosRBjjv6GAb18HGQNZJiV7uxpj+iqdafQ89Hf
+ BHI=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Mar 2022 02:34:09 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KKf3N1kK0z1SVp1
+        for <linux-ide@vger.kernel.org>; Fri, 18 Mar 2022 02:34:08 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1647596047; x=1650188048; bh=7d46xlMU7lvJI4zXjUOW03yg1qxd15Ms+gG
+        5FzQwjcE=; b=cSSUt9c5pvKSunvJsemP8sZdyBz9qU3FFH0u1P3kDv+I/pP7rge
+        puIaZ+BgdJIjvjwABUst9QxAzCkDHYh/pU2m9oRc10b0OjdP52wYzukBrlY3p6QC
+        jG0x84OD6PKgbc0vKeFxPrf7tsjZUvUMJNTV1UTe7BmbxHbUhGPUHLJRlhAk9Jf7
+        iW1gUl/q8cSQRJ/yXapbtpSEf1pZoBhw7ooYqRCkDTBQRQSxAGQRD3lo1FlvYPTU
+        1AlO5u9MHbDsOB8gDv8KSkWe9yiIy9/HY0sB5WOJDU89Y1x52IzCGSD94WqlkC6Y
+        RmLrlIrTDdIySTCVAw+vR7frOx2SlZ/uqTA==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id RMmJIyLZwjbr for <linux-ide@vger.kernel.org>;
+        Fri, 18 Mar 2022 02:34:07 -0700 (PDT)
+Received: from [10.225.163.107] (unknown [10.225.163.107])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KKf3L4kMDz1Rvlx;
+        Fri, 18 Mar 2022 02:34:06 -0700 (PDT)
+Message-ID: <92c30932-3c4c-108e-1a84-26258a3c9d04@opensource.wdc.com>
+Date:   Fri, 18 Mar 2022 18:34:05 +0900
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.2
+Subject: Re: [PATCH v1 1/2] ata: sata_dwc_460ex: Fix crash due to OOB write
+Content-Language: en-US
+To:     Christian Lamparter <chunkeey@gmail.com>, linux-ide@vger.kernel.org
+Cc:     Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+References: <ba068938e629eb1a8b423a54405233e685cedb78.1647594132.git.chunkeey@gmail.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <ba068938e629eb1a8b423a54405233e685cedb78.1647594132.git.chunkeey@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Samsung' 840 EVO with the latest firmware (EXT0DB6Q) locks up with
-the a message: "READ LOG DMA EXT failed, trying PIO" during boot.
+On 3/18/22 18:03, Christian Lamparter wrote:
+> the driver uses libata's "tag" values from in various arrays.
+> Since the mentioned patch bumped the ATA_TAG_INTERNAL to 32,
+> the value of the SATA_DWC_QCMD_MAX needs to be bumped to 33.
+> 
+> Otherwise ATA_TAG_INTERNAL cause a crash like this:
+> 
+> | BUG: Kernel NULL pointer dereference at 0x00000000
+> | Faulting instruction address: 0xc03ed4b8
+> | Oops: Kernel access of bad area, sig: 11 [#1]
+> | BE PAGE_SIZE=4K PowerPC 44x Platform
+> | CPU: 0 PID: 362 Comm: scsi_eh_1 Not tainted 5.4.163 #0
+> | NIP:  c03ed4b8 LR: c03d27e8 CTR: c03ed36c
+> | REGS: cfa59950 TRAP: 0300   Not tainted  (5.4.163)
+> | MSR:  00021000 <CE,ME>  CR: 42000222  XER: 00000000
+> | DEAR: 00000000 ESR: 00000000
+> | GPR00: c03d27e8 cfa59a08 cfa55fe0 00000000 0fa46bc0 [...]
+> | [..]
+> | NIP [c03ed4b8] sata_dwc_qc_issue+0x14c/0x254
+> | LR [c03d27e8] ata_qc_issue+0x1c8/0x2dc
+> | Call Trace:
+> | [cfa59a08] [c003f4e0] __cancel_work_timer+0x124/0x194 (unreliable)
+> | [cfa59a78] [c03d27e8] ata_qc_issue+0x1c8/0x2dc
+> | [cfa59a98] [c03d2b3c] ata_exec_internal_sg+0x240/0x524
+> | [cfa59b08] [c03d2e98] ata_exec_internal+0x78/0xe0
+> | [cfa59b58] [c03d30fc] ata_read_log_page.part.38+0x1dc/0x204
+> | [cfa59bc8] [c03d324c] ata_identify_page_supported+0x68/0x130
+> | [...]
+> 
+> this is because sata_dwc_dma_xfer_complete() NULLs the
+> dma_pending's next neighbour "chan" (a *dma_chan struct) in
+> this '32' case right here (line ~735):
+>> hsdevp->dma_pending[tag] = SATA_DWC_DMA_PENDING_NONE;
+> 
+> Then the next time, a dma gets issued; dma_dwc_xfer_setup() passes
+> the NULL'd hsdevp->chan to the dmaengine_slave_config() which then
+> causes the crash.
+> 
+> Reported-by: ticerex (OpenWrt Forum)
 
-Initially this was discovered because it caused a crash
-with the sata_dwc_460ex controller on a WD MyBook Live DUO [1].
+I would remove this since you have the link to the bug report below.
+Without a real name & email, this does not make much sense.
 
-The reporter "ticerex" which has the unique opportunity that he
-has two Samsung 840 EVO SSD! One with the older firmware "EXT0BB0Q"
-which boots fine. But the newer/latest firmware "EXT0DB6Q" caused
-the headaches.
+> Fixes: 28361c403683c ("libata: add extra internal command")
+> Cc: stable@kernel.org # 4.18+
+> Link: https://forum.openwrt.org/t/my-book-live-duo-reboot-loop/122464
+> Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
+> ---
+> ticerex said when I've asked him about his real name+email for the patches:
+> "Please use my forum nick."
+> <https://forum.openwrt.org/t/my-book-live-duo-reboot-loop/122464/14>
+> (I know checkpatch.pl complains about that. But what can you do?)
+> ---
+>  drivers/ata/sata_dwc_460ex.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+> index bec33d781ae0..061b27584667 100644
+> --- a/drivers/ata/sata_dwc_460ex.c
+> +++ b/drivers/ata/sata_dwc_460ex.c
+> @@ -137,7 +137,7 @@ struct sata_dwc_device {
+>  #endif
+>  };
+>  
+> -#define SATA_DWC_QCMD_MAX	32
+> +#define SATA_DWC_QCMD_MAX	33
 
-This failure is not limited to sata_dwc_460ex, it also happens on
-ahci controllers (Asmedia) as found in this forum unraid thread [2].
-(This was with a "Samsung SSD 840 EVO 120GB" with firmware "EXT0BB6Q")
+This is really ugly, but I do not see a better way to do it simply.
+But at least, let's do something like this to avoid confusion and to show
+that this driver is not doing some black magic with ATA drives:
 
-[1] <https://forum.openwrt.org/t/my-book-live-duo-reboot-loop/122464/11>
-[2] <https://forums.unraid.net/topic/77007-disks-not-showing-up/#comment-711295>
+/*
+ * Allow one extra special slot for commands and DMA management to
+ * account for libata internal commands.
+ */
+#define SATA_DWC_QCMD_MAX	(ATA_MAX_QUEUE + 1)
 
-Cc: <stable@kernel.org> # 5.10+
-Reported-by: ticerex (OpenWrt Forum)
-Link: https://forum.openwrt.org/t/my-book-live-duo-reboot-loop/122464
-Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
----
-"Please use my forum nick."
-<https://forum.openwrt.org/t/my-book-live-duo-reboot-loop/122464/14>
+Thoughts ?
 
-The other patch in this series addresses the drivers crash.
+>  
+>  struct sata_dwc_device_port {
+>  	struct sata_dwc_device	*hsdev;
 
-Note: This "READ LOG DMA EXT failed" also happens on the newer
-Samsung 870 EVOs too:
-<https://bugzilla.kernel.org/show_bug.cgi?id=201693#c29>.
-I guess there needs to be a database maybe based on the firmware
-revision? For now I've settled with the "840 EVO" since I have
-found a old, but updated Samsung 840 EVO 120GB in my spare-parts
-box that I can test with.
----
- drivers/ata/libata-core.c | 3 +++
- 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 0c854aebfe0b..760c0d81d148 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4014,6 +4014,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
- 	{ "Crucial_CT*MX100*",		"MU01",	ATA_HORKAGE_NO_NCQ_TRIM |
- 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
-+	{ "Samsung SSD 840 EVO*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
-+						ATA_HORKAGE_NO_DMA_LOG |
-+						ATA_HORKAGE_ZERO_AFTER_TRIM, },
- 	{ "Samsung SSD 840*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
- 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
- 	{ "Samsung SSD 850*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
 -- 
-2.35.1
-
+Damien Le Moal
+Western Digital Research
