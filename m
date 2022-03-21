@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E112C433EF
-	for <linux-ide@archiver.kernel.org>; Mon, 21 Mar 2022 12:38:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FCEEC433F5
+	for <linux-ide@archiver.kernel.org>; Mon, 21 Mar 2022 12:49:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343611AbiCUMjm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 21 Mar 2022 08:39:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53250 "EHLO
+        id S1347567AbiCUMuZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 21 Mar 2022 08:50:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35416 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234493AbiCUMjl (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 21 Mar 2022 08:39:41 -0400
+        with ESMTP id S1346258AbiCUMuZ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 21 Mar 2022 08:50:25 -0400
 Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 490B1A1A9
-        for <linux-ide@vger.kernel.org>; Mon, 21 Mar 2022 05:38:14 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A556443D0
+        for <linux-ide@vger.kernel.org>; Mon, 21 Mar 2022 05:49:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1647866295; x=1679402295;
+  t=1647866940; x=1679402940;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=OwWqDa6x+ILrFeQjYw0dBR58qwzyArlOswX7trtsVeQ=;
-  b=CHfOcR0KD4+HlPeTcVmhliaKGTZFr+cSwiEBvDXKSaBF7vraLkJKfwlX
-   +5j9TYoSsSBWsmWgV63bF3kXOQEV4402nxa1pwOLLjVrnItVceOmEVIT9
-   QhO4g5J4wWq5Z/y3IOjjj8g27R5yU5qbzgvmtNY3VN5GiSqvKjDLbPnya
-   3z6EatFzZAgtqkV7QJNU6/vRosH+6bdRgP4q2a9JLH2q03ToLQkYxUvWw
-   aZutOZ3MQiKe1Is+5NCR9ns9epadK15azEokm+olkqUU695opIBw3VKrW
-   YmTWYqycRYLN66RFWAV4SZ5H0Ub5GOaEfyoqPQ6ObHvYqz/QAe2p2FSLp
-   Q==;
+  bh=2lAUxg9xZL7YbqLExH1JLC60GtUEJdaPknXpM/pVlus=;
+  b=r8rbFletWqiVf3aClyhOfH9Q6LZKvYKdFY1H3Fg0G9hNIJDjF0GR8wLY
+   d03cb24f5G3wHw+YcsFPv2Cl49MB1L5CAYQnpKSUeWVF5EpbocHs7r9LY
+   d7M3oJGYCaVuaTsX3EMAeh8d0197EApQqUf5T0hfzeW7/70tLo/y/0Xs7
+   XiMRd1Acq4CEIb4MjCj8zrxlDD+dxNQ5FMBSNMZ6+airYsDcod0DNlfvB
+   mOJIC2nBEgzBpwM/pJ0Es4Tu3CIQEK1BFuXHsDZk9GzY7x9lN3mdgpqHB
+   zOHn1dcU0XKaJqsZktT+Jd4k6VTW1nNROnPBVFkmmAYeQhf+d29/aa9VS
+   A==;
 X-IronPort-AV: E=Sophos;i="5.90,198,1643644800"; 
-   d="scan'208";a="300014493"
+   d="scan'208";a="300015013"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 21 Mar 2022 20:38:14 +0800
-IronPort-SDR: 4UjQ1o3UmChgagcqIlc9+ci8HCY9ilJb7wJmLad4T0RkL0C/bTEssgiUqa4ajjfSwNrfjD84Zy
- a9RQZBlwrT315dcFOApoDvpVrQKJTj53QKE4C6Ak+9EukgGOo1P3YEk7Z6phEGO7FoPfyZa9+d
- fDd6Wl9vQNDLgTP7dC77W9yZx5jR0o4ZHQMbsYYh4euFAhM7R+nIIdsa3PFt48ONt7/M2TL6OV
- uwZzBuJXfKvJ5JtfuxmSTC7E0zO3cjUhA629HgTdJmbNSltfy0uXkW3vXZjqQaXQRz4N1ej4IY
- ora/XZZZrf+kXNPzk3nwh703
+  by ob1.hgst.iphmx.com with ESMTP; 21 Mar 2022 20:48:59 +0800
+IronPort-SDR: RDqchNEEO0Bha9pkCKCs0hy2KvvqNGldCKt4sVGqMjfdXaprcbDsVw5Q0E7xsklbOQcqWQIgDh
+ FwqscEEgctFywaO+B7Uw0f06XpgEu2gBHrPcnVh8w6sj8Ue+U/tyadLWA+y8m+GOAkOQ2cTtCc
+ 2xxj7xR9IBGz76NNgYn32BcB4DwXtfP6fZruY1PwyYha3sPPJgDqTSP04kBfAPboluxPpUL7dK
+ +EUIGfVibs+yOsMaZURdmbMqJ3a3d4dAghFtvDSfLIcQQAjQvoGPD/XycvjV/T1fRDYcqSaJ6Q
+ lT0GiO7MSw/QlKtcMjHXp7mR
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2022 05:09:14 -0700
-IronPort-SDR: QNc6tUvgl3UPbQauYMgUr73uQGB0b+206f+M1T16HezDmI/g/h9Qo3JvvEB96vF5dvwN9CBNC0
- TYM5UMLO41o0p2mUajOI1awi+my84oHFvPDv/X/D96EBcrQmnhPV0fOOkvhS7lqYtNGEwlibqY
- P1MBRm/HTUXK0+3BE3UqgzBsbukRC/iAdxiDHoZwL17Nz/RowVUAwj/mjmIkxNCOJj7t5udlkd
- StpW8NdtELELH0iFeNnM2jsmppNlYUzv0bC6lKKEgl2KIdOk7gNHWiXouRzUoQQ1PaDjxuoJw7
- Weg=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2022 05:20:00 -0700
+IronPort-SDR: e9O4iEl3XGzX4G50qCeEvv3Ei29UxHY3jaid2C6DlHqJiLsSz8dvwn4k2HbReNmE2yMflxmIDd
+ 0Ztjn7WQnFrIbW/so3muEZVlZnJV3LV+PKTWEeMJQB3mlXnyybfvjhE8jX9DQT95XhOXDTsnSe
+ kKp6+T7OatId9h6zeg1HOj552e3F+5crmzSwo4Iueo3G+Kuq4JUUpp/FEe/GBTLvtxTHIVYKaO
+ GBqOZik06BVYRlyB0ZyGe5FTKpCUvg+vLBvtKSAV/AdYdtMrH387vNyH1hpsFvzxa16gNnEONx
+ LaM=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2022 05:38:14 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2022 05:49:00 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KMZ0P6ZnPz1SVp1
-        for <linux-ide@vger.kernel.org>; Mon, 21 Mar 2022 05:38:13 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KMZDq3Pldz1Rwrw
+        for <linux-ide@vger.kernel.org>; Mon, 21 Mar 2022 05:48:59 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,69 +56,101 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1647866293; x=1650458294; bh=OwWqDa6x+ILrFeQjYw0dBR58qwzyArlOswX
-        7trtsVeQ=; b=qcSz36A2OwML6KuEFfzZXPJbuorSSQsZRWXHhcosgxrgw0iCgma
-        8bd/1jE81PI2NVzvi8i1Kq6wvfSyNz86FeW/Vrdcc0P7mIoGZR6gQgxen2qEakGR
-        njzHKysafvFCcRS34C0kUp42qEbHVZ+vDy2WPDUdF/WsCshptdQsk6PTjXHKyVNV
-        KwE4UpBF9RVQN4y9uS2e8FymiEbkGUL8Q1NDJYXsHN5WUbuTcNzb9+SZUtnulZGG
-        lUkJQbpr9KJyJW6FFsZfTea8qayRyRny0fO4c8qt914ceaAx8d5EJjceRiNIsQnb
-        JaRp8dQYisFbJHZFEMyzHphk9DRU7cuke1Q==
+        1647866939; x=1650458940; bh=2lAUxg9xZL7YbqLExH1JLC60GtUEJdaPknX
+        pM/pVlus=; b=kplb7Pcr4Zyx7408bpD9PKLa0tF9ITaejeDs3NqJg3AMPAdpJuA
+        2g7bM93ZEAC3sOMq0hbD/t8pmhLgqI72xlwULwywFqAidGCCTER1QF+Wp5nZYZKW
+        ABxhjFlkhoSVg2v26G3maijbYhP7e+61pxX0MVUHkaMb0ov1ixDmVTC4PPW0qhnO
+        cg68KJD6c2IwHmWlzp97s6vgIo8b3M8lLVtrPP+pTJ4mVZ4N93WlU2+KAe8dBgcb
+        E9jmH3VsOZltV5lg/fKQnqb6+dovf4Z0H3RcektUzUbsdBjVk/qcxAHdpQCTiLgM
+        XwKfjR5OEbIQsZLEEPzC2C1IfmsYubbTb8g==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id oSjVl44HI5lB for <linux-ide@vger.kernel.org>;
-        Mon, 21 Mar 2022 05:38:13 -0700 (PDT)
+        with ESMTP id 7gpU4x4CutV8 for <linux-ide@vger.kernel.org>;
+        Mon, 21 Mar 2022 05:48:59 -0700 (PDT)
 Received: from [10.225.54.48] (unknown [10.225.54.48])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KMZ0N3c6Mz1Rvlx;
-        Mon, 21 Mar 2022 05:38:12 -0700 (PDT)
-Message-ID: <9ab4e798-9ee9-5ac7-229f-d42f85a63583@opensource.wdc.com>
-Date:   Mon, 21 Mar 2022 21:38:09 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KMZDp15qpz1Rvlx;
+        Mon, 21 Mar 2022 05:48:57 -0700 (PDT)
+Message-ID: <fc2cc4e2-c45c-84c1-3f14-cd884e07815b@opensource.wdc.com>
+Date:   Mon, 21 Mar 2022 21:48:54 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
  Gecko/20100101 Thunderbird/91.6.2
 Subject: Re: [PATCH v2 2/2] ata: libata-core: Disable READ LOG DMA EXT for
  Samsung 840 EVOs
 Content-Language: en-US
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>
-Cc:     Christian Lamparter <chunkeey@gmail.com>,
-        linux-ide@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        Tejun Heo <tj@kernel.org>
+To:     =?UTF-8?Q?Reimar_D=c3=b6ffinger?= <Reimar.Doeffinger@gmx.de>,
+        Christian Lamparter <chunkeey@gmail.com>
+Cc:     linux-ide@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        Tejun Heo <tj@kernel.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 References: <47b12037459a0df1748dac7440c0f5030e5c3ef4.1647720651.git.chunkeey@gmail.com>
  <fe2ff41a52ce2647fd12f69a0d6eba8e3cf05b06.1647720651.git.chunkeey@gmail.com>
- <468f57ae-47e8-7032-b391-7ddfd6853dbb@omp.ru>
- <YjhWtp+AdcN1ot9t@smile.fi.intel.com>
+ <771F724E-8E00-4CFA-A39E-91EEFADE132E@gmx.de>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <YjhWtp+AdcN1ot9t@smile.fi.intel.com>
+In-Reply-To: <771F724E-8E00-4CFA-A39E-91EEFADE132E@gmx.de>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2022/03/21 19:43, Andy Shevchenko wrote:
-> On Mon, Mar 21, 2022 at 11:00:51AM +0300, Sergey Shtylyov wrote:
->> On 3/19/22 11:11 PM, Christian Lamparter wrote:
-> 
-> ...
-> 
->>> +	{ "Samsung SSD 840 EVO*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
->>> +						ATA_HORKAGE_NO_DMA_LOG |
->>> +						ATA_HORKAGE_ZERO_AFTER_TRIM, },
->>>  	{ "Samsung SSD 840*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
->>>  						ATA_HORKAGE_ZERO_AFTER_TRIM, },
->>
->>   Shouldn't this entry be modified instead?
-> 
-> Wouldn't it modify much more devices with unknown outcome?
-> I would be on the safer side as done by this patch.
-> 
+On 2022/03/20 5:31, Reimar D=C3=B6ffinger wrote:
+>=20
+>=20
+>> On 19 Mar 2022, at 21:11, Christian Lamparter <chunkeey@gmail.com> wro=
+te:
+>>=20
+>> Samsung' 840 EVO with the latest firmware (EXT0DB6Q) locks up with the=
+ a
+>> message: "READ LOG DMA EXT failed, trying PIO" during boot.
+>=20
+> I don't see any info on which kernel this happened with anywhere. Becau=
+se
+> there was a bug that tried to use READ LOG DMA EXT even though DMA was =
+not
+> enabled. That was fixed by a patch from me for 5.16 (and backports). Th=
+e
+> behaviour you describe matches the possible symptoms of that bug. So it=
+ would
+> be good to know we're not blaming the drive for an already fixed bug in=
+ the
+> kernel... (I am still seeing some issues that READ LOG EXT - the non-DM=
+A
+> version - times out with interrupt lost for some device/controller
+> combinations, but at least that "only" adds an extra 15 seconds to the =
+boot.
+> It's still a bit silly because in combination with e.g. IDE controllers=
+ READ
+> LOG provides absolutely no useful functionality as far as I can tell).
 
-Yes, I think so too. A little googling shows that there are "840 xxx", "840 PRO
-xxx" and "840 EVO xxx", at least as product names. Not sure how all these are
-grouped with the actual device reported model.
+Yes, the added 15s is a longer timeout to wait for READ LOG EXT reply on =
+resume.
+Some drives are slow to respond and that was causing drives to disapear o=
+n
+resume. I agree that for old IDE/PATA drive, we could disable READ LOG [D=
+MA[ EXT
+entirely as all the information for the drive can be found in the IDENTIF=
+Y data.
+So no point. All the pata drivers could set the nolog horkage. There are =
+still
+many more recent drives that have weird behavior with read log though. Th=
+is is a
+pain to sort out and can be done only if a bug report is filed.
 
--- 
+I am preparing a series to improve the libata.force boot parameter to all=
+ow
+setting any horkage/link flag to disable things for drives that do not be=
+have
+nicely. That will allow users to tune systems without having to wait for =
+the
+kernel to be patched.
+
+>=20
+> Best regards, Reimar
+
+
+--=20
 Damien Le Moal
 Western Digital Research
