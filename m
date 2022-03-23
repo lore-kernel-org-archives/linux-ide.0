@@ -2,132 +2,131 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09ABEC433F5
-	for <linux-ide@archiver.kernel.org>; Wed, 23 Mar 2022 08:17:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42B6EC433EF
+	for <linux-ide@archiver.kernel.org>; Wed, 23 Mar 2022 08:19:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241534AbiCWIS6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 23 Mar 2022 04:18:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38634 "EHLO
+        id S242573AbiCWIUy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 23 Mar 2022 04:20:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43824 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231238AbiCWIS4 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Mar 2022 04:18:56 -0400
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4106F74DDE
-        for <linux-ide@vger.kernel.org>; Wed, 23 Mar 2022 01:17:27 -0700 (PDT)
+        with ESMTP id S237876AbiCWIUx (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Mar 2022 04:20:53 -0400
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 684AE5E766
+        for <linux-ide@vger.kernel.org>; Wed, 23 Mar 2022 01:19:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1648023447; x=1679559447;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=1VOHkxOX7jnacBrrQM6BUhnOIPPKTvdn6a06lacvAe4=;
-  b=UGhctNEdgTbpHMN+Rr2KhYo+fq5Woc2ErkBxjQF9CvFojpPuvvNodzVi
-   DR/mlbVkezDAGQrh8BJveiRKUSxUK9XYVkmfI2Sfc5J0UZ5I6gYaWcUG4
-   tCL7VAoPT4mNT/GXuw6ar06AdVNQWQTXF9nA+Boe/w2BmN4ZLNBFtk3sG
-   F4rys/FkKZfaH5tTMuyCcjqzJPFVw5RZ/PMHOvTayzCpgliMzPZfk2NTm
-   YXDi2etzHi6WtGIc07cMQ0vSGIvfV/r1EV92kinTXoo/CMe596NYCNbTY
-   dTyFzJ6YFnGme1Qge8q+DtnZNpcVM5JtBPRfWBPN20Hps5ko6Mkh363M2
-   g==;
+  t=1648023561; x=1679559561;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=AJOu2ZAwgFYNeqqJ4JySfEEq1KcnDaKxJ0/Ya3qP1To=;
+  b=HIXKXl7KTd3NaudCBiHJrh4m3LOHokKzpr5vovHaAlZcO0d3xmXdXN2g
+   sboVVqcomEJEVlKlpnUgYLWCE4jh3Y1zU1szGVdjZdZm5gUFlJKnUZ2eT
+   vcxTs82LaTRVv+IOKU3NFPWloUUPUeywFppXwM6SpSVDCdnvkbD1Ykrlj
+   dDqZb4brJCZfwoCC6dDIvnHf0la1DZkEg/A0tb4xjD9B2Qd4pUPYlhGfH
+   Us3ccoQl/ZAQtKDoB+pgMvf1X8b/ANh3Ztocu/PFRQLwIiccxkrAXidaP
+   J5k1W3lXoeeJHfu3711hxJWjj026lFufzTwrSKXd4+KUZRZoUBA99pygY
+   w==;
 X-IronPort-AV: E=Sophos;i="5.90,203,1643644800"; 
-   d="scan'208";a="196969749"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 23 Mar 2022 16:17:27 +0800
-IronPort-SDR: TpB7iBeMGIx5hru18wKREVt2g8GEY872bGV3R0j9dQCGoZF3sXNAO5Asyk1vWE+SjRmjRAyu7t
- PnDKP08V1LhOZQOVFrmZUCIYCQM+9jGQ4OjySTyT6pnbHr7XTKcsXN3snlT7YEzwQDxsqDWvWp
- hEcEif2iOnYcZF1qv4YNKTPr73euU9ZXpiZ0RXnZLu591bgROFccvuxR14/05uvSHrt6hiTyAp
- R6o/AO3cmFS1dbck8r0dmrZ3rhIsXMa771vjnDqeb8sXTrQnrhRLnJHZ9bw1NG3flF10qRnl3e
- mvWUsfZN6eUsXzDyf75x8IhC
+   d="scan'208";a="196047604"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 23 Mar 2022 16:19:21 +0800
+IronPort-SDR: 7iOAC3UTinxAiBSM73gPhgRWDJdFA3OJOc7PkY7uelQVwbvTIlz3kXQ5Dl9d5hHcgAq1Qp+fYB
+ cgcAxtYTSQM9llLBVlwjupDixX2KAuc7DyfCr/MG+8+KQU/enAaZx+LuYbpgss4ezag2gbL/M5
+ qmiqksgJ9qiPDLkAT/DUXHCPTBvtCpZt3U/CzASPFxz7VMcwbwgx/y1Ag215uMowoby8G6nGYZ
+ pZt8p4zx4vKvENOLVZgFStmooWl9ELhz+D9+Al52zeL98AM57wRFAhotQOuWqRPzpMTekRbiR7
+ RRFQV70PnAlfEbttkdznJBqK
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 00:48:24 -0700
-IronPort-SDR: Azw/Vk5BMgYBnoM/MaF24yZxq5QAtBtra/S/cD0rUrhkHHRCe4OiLZ/0c0GsoFV456sorYuTgo
- P3WBkpRCWhU1RlXu2gMZrRwSMIld81cX2f4/Qd2ecZItHYhHjahVnoXw+tdkbK2iB/XPheSf9e
- +EsnCN75Rkq0nF0p1SWVn08tcA1wQlraNt7qy65HbhyHuJAxGIOrSl2NyUqL0+hnd6Zkv4/ENu
- DLlv1X8p8MYv5XfTk7RZwSo4YzXNQwWt04LYvKn4ce4MMvTwRqG+WXPNiuR6h66OzsudydKGP9
- N3k=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 00:51:16 -0700
+IronPort-SDR: Iojw27lIdsXkqDpA/yiiHw/hhuoaBNUt2WRZii992iNm24HJWXrpkXdUs7VVlwm/Fo58nDqWAS
+ EcHa3PvF7tZY44JzE2qdTdmZYKAIj4G4CwWEbSreNIm4tvxn2mbdJIKNPVW8WXjk84Apg1tBfU
+ wavKUPV1PTYwej97T8bEt5BjXlzY2vS5PFb6Rwk1KsaD0gphxLCLeKPxOf3LFrMr5ulziAG6vm
+ KEVcaxV7MvGVZi29Wbcc5dLxbLFGB4uKwEhatxRDpv+xO12X3cU5QLw2pdURGk1bPQTmwULBXN
+ 3bk=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 01:17:26 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 01:19:23 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KNh6Z1h0pz1Rwrw
-        for <linux-ide@vger.kernel.org>; Wed, 23 Mar 2022 01:17:26 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KNh8p3yRCz1SHwl
+        for <linux-ide@vger.kernel.org>; Wed, 23 Mar 2022 01:19:22 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1648023445; x=1650615446; bh=1VOHkxOX7jnacBrrQM6BUhnOIPPKTvdn6a0
-        6lacvAe4=; b=rZakW39Sk8ueSpaoRDiIZ4wSq28XtTF3DaX5KwlddauI4+Zzwbh
-        ZOaJnUmebdbPN7qrpD7+wQY0oWCAJq/L7f13KueMpYgoXUj0007lR6hYtNdBcioB
-        YHrkxX98c0O31gfuaUVQJoFtPKrSMKi4fCb24y+V3N5BcmkwuBpA5O+WsWtQX/mx
-        k/wkrrWOrivwejdT9YfFfFo/2L1onCLqBt6iaBw6Bs23U5fzxn3XuqOIifjtacBd
-        m4/ZfMTPqwplQRiUWp7khi7kT1ctyY4X29aBw9wBK0qr2qQqcuZXBkR0CUamfupZ
-        VXjMrri7Hc3b1UjKJx8smQFCPG6O8qp5JBQ==
+        opensource.wdc.com; h=content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1648023562;
+         x=1650615563; bh=AJOu2ZAwgFYNeqqJ4JySfEEq1KcnDaKxJ0/Ya3qP1To=; b=
+        JqE+/GTJTIcsE9Lppsb2m1sf+1ewQCwilOoO767LgHOZUj6TwpACAuYTL5tBULZU
+        unt4MZvqm10czZEzVyWSSEwhjKTj3OI2tXrsllk2m2wo2DmnaLHxp5hEKIDN+T6+
+        p0YPGA1TIGyV2EuSK4vV+kl90iYr+llTanDNfpTJyvT5RZO+FusBf7nzZY/WPrmk
+        /AttGeUfFqyfEb5Lz95FaFxAxCXMBEdFlLyL1zWGgaMsnJccc0Rvqimu3sDr20uG
+        iEZIOeiIc/Tc6hVIjW+aufoS502l+ESjiiz2Kty6jLZkv9xkPNjbD9xCeeeNQQ+g
+        3tSvRKHvpGgXxw0aVPqc8w==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 8g-Hv2SAoDMo for <linux-ide@vger.kernel.org>;
-        Wed, 23 Mar 2022 01:17:25 -0700 (PDT)
-Received: from [10.225.163.114] (unknown [10.225.163.114])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KNh6Y0Q5gz1Rvlx;
-        Wed, 23 Mar 2022 01:17:24 -0700 (PDT)
-Message-ID: <a030b9b2-d94f-ed62-60bf-cc629da3e944@opensource.wdc.com>
-Date:   Wed, 23 Mar 2022 17:17:23 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.2
-Subject: Re: [PATCH] ata: libata-core: fix "it's" typos
-Content-Language: en-US
-To:     Diego Viola <diego.viola@gmail.com>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        corbet@lwn.net
-References: <20220323054001.17344-1-diego.viola@gmail.com>
- <ac99cc8e-11c2-d96b-9ce1-ce5618b7b378@opensource.wdc.com>
- <CA+ToGPH+FQ-6QM6MWt6Zoe_pTyL6LTn9-=-694f7xLkSVCCr1Q@mail.gmail.com>
- <641a417b-acac-6b0f-c330-b94b6ed97b99@opensource.wdc.com>
- <CA+ToGPEAhWDwFLNHqXvtuumvdLQb=kzme7fdrgBfb4zojVvDNQ@mail.gmail.com>
+        with ESMTP id sRQl3D13eDxI for <linux-ide@vger.kernel.org>;
+        Wed, 23 Mar 2022 01:19:22 -0700 (PDT)
+Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KNh8n5VSPz1Rvlx;
+        Wed, 23 Mar 2022 01:19:21 -0700 (PDT)
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <CA+ToGPEAhWDwFLNHqXvtuumvdLQb=kzme7fdrgBfb4zojVvDNQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+To:     linux-ide@vger.kernel.org
+Cc:     Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: [PATCH 0/4] Remove link debounce delays by default
+Date:   Wed, 23 Mar 2022 17:17:36 +0900
+Message-Id: <20220323081740.540006-1-damien.lemoal@opensource.wdc.com>
+X-Mailer: git-send-email 2.35.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 3/23/22 16:24, Diego Viola wrote:
-> On Wed, Mar 23, 2022 at 2:53 AM Damien Le Moal
-> <damien.lemoal@opensource.wdc.com> wrote:
->>
->> On 3/23/22 14:52, Diego Viola wrote:
->>> On Wed, Mar 23, 2022 at 2:45 AM Damien Le Moal
->>> <damien.lemoal@opensource.wdc.com> wrote:
->>>>
->>>> On 3/23/22 14:40, Diego Viola wrote:
->>>>> Use the contraction "it's" instead of the possessive form "its".
->>>>
->>>> Well, while at it, let's use proper formal written English, so:
->>>> s/it's/it is
->>>> s/isn't/is not
->>>
->>> Fine with me, do you want me to send you another patch with those changes?
->>
->> Yes please.
-> 
-> I sent a v2 patch changing those things you pointed out, however, the
-> whole comment[0] looks informal "But wait.. there's more" and I don't
-> think replacing "it's" with "it is" achieves a lot in this case.
+This series removes the long link debounce delays by default for all
+adapters, except for those known to require these delays
+(e.g. ata_piix).
 
-:)
+The first 2 patches are code cleanup improving the interface of several
+functions handling delays.
 
-Indeed. Do you want it in or can I drop it ?
+Patch 3 removes the long delay in sata_link_resume() and reverses the
+link flag ATA_LFLAG_NO_DEBOUNCE_DELAY to ATA_LFLAG_DEBOUNCE_DELAY for
+adapters to request the delay if needed.
 
-> 
-> [0] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/ata/libata-core.c#n1399
-> 
-> Diego
+Patch 4 improves sata_link_debounce() by shortening the link stability
+test, unless the link has the ATA_LFLAG_DEBOUNCE_DELAY flag set.
 
+This series was tested on a machine with 2 AHCI adapters (Intel and
+Marvell) with a port-multiplier box attached to cover that case too.
 
--- 
-Damien Le Moal
-Western Digital Research
+Comments and lots of testing are welcome !
+
+Damien Le Moal (4):
+  ata: libata-sata: Simplify sata_link_resume() interface
+  ata: libata-sata: Introduce struct sata_deb_timing
+  ata: libata-sata: Remove debounce delay by default
+  ata: libata-sata: Improve sata_link_debounce()
+
+ drivers/ata/ahci.c          |  19 ++----
+ drivers/ata/ahci_brcm.c     |   1 -
+ drivers/ata/ahci_qoriq.c    |   5 +-
+ drivers/ata/ahci_xgene.c    |   3 +-
+ drivers/ata/ata_generic.c   |   1 +
+ drivers/ata/ata_piix.c      |  17 +++++
+ drivers/ata/libahci.c       |   5 +-
+ drivers/ata/libata-core.c   |   8 +--
+ drivers/ata/libata-pmp.c    |   2 +-
+ drivers/ata/libata-sata.c   | 129 +++++++++++++++++++++++++-----------
+ drivers/ata/libata-sff.c    |   6 +-
+ drivers/ata/sata_highbank.c |   4 +-
+ drivers/ata/sata_inic162x.c |   3 +-
+ drivers/ata/sata_mv.c       |   8 +--
+ drivers/ata/sata_nv.c       |   5 +-
+ drivers/ata/sata_sil24.c    |   2 +-
+ include/linux/libata.h      |  44 +++++++-----
+ 17 files changed, 161 insertions(+), 101 deletions(-)
+
+--=20
+2.35.1
+
