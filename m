@@ -2,96 +2,91 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0B1EC433EF
-	for <linux-ide@archiver.kernel.org>; Wed, 23 Mar 2022 06:22:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22D29C433EF
+	for <linux-ide@archiver.kernel.org>; Wed, 23 Mar 2022 06:55:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232056AbiCWGXv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 23 Mar 2022 02:23:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50904 "EHLO
+        id S238805AbiCWG5V (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 23 Mar 2022 02:57:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59332 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229472AbiCWGXv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Mar 2022 02:23:51 -0400
-Received: from mail-oa1-x2b.google.com (mail-oa1-x2b.google.com [IPv6:2001:4860:4864:20::2b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1202C710D6;
-        Tue, 22 Mar 2022 23:22:22 -0700 (PDT)
-Received: by mail-oa1-x2b.google.com with SMTP id 586e51a60fabf-d6ca46da48so721955fac.12;
-        Tue, 22 Mar 2022 23:22:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=grFZwEsQWpWncst5X+cDiG4KOzVxeLA+y9QLQa2rrmQ=;
-        b=I+do0ehq1vQ7xsIvxZ2qrFFOCrx8RKyYGDgwiB33K132241YVdJ9rdtJlpaUM6D6Em
-         lv8Z5Ycm/z0cjZOR6LoCYoCkFMq5QdCC47ECKkhj7KaOaedGBH4/VZ1tk8TFDX6hs2Dq
-         cw347VhHFht8tTwvkCs/rrzDIgvpLKO55PZtHGocmO9EkKJJQ8t2aNG8sR/fABm/sxeb
-         YUDpJK9JweeO31WEWvLKzE+KyTkUt7BJbjHFy06JfTzrpICy7eIUYkHrKsSpJHowste6
-         9sMFomrdOREveqnxVVyMDDZWYdLrMJ1gjG3UA7t3dDGny5xN84joC+6LZCYlz1kpgxAR
-         fm8w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=grFZwEsQWpWncst5X+cDiG4KOzVxeLA+y9QLQa2rrmQ=;
-        b=ujT6zWF7z8r48K6pg5wGqmUuY+vdtYvQC3kZ6mMb0OIbAsQ0AiIKYh55ffNpSOABJP
-         ySOWpTd+tNtXMadoPW7Yid9KjHk/vvfQZAHi6hvZENugFa0qPT8DwDd/6rw7oWGsUjLV
-         LnkbAUSMe/74unMNJj1ksm2vIBJzEm/HkQEuHIVxLNshilAJ+m7dNcV6qeQtLbvdvcPm
-         4pbZGAHTeJ4z5Bu1c4xUbZy/09Igab2AFkBEubw5aNURH8XwwTm0w1RH7M2azIpcWuR/
-         3zwQ+wOICbdd0sXjusLQTRvR2fUKr4lsl8OhUmrLq7kY/+JpKXaA4gi0ucpxoD7++dIY
-         lJ6A==
-X-Gm-Message-State: AOAM530enQD1PSL3hOENqCScOpTui3dU0/Q44bxpyqmtNqctyI6pxVXW
-        Q/wSsNshAQ0AfxhTI5h5/ZP+8lxFxeQ=
-X-Google-Smtp-Source: ABdhPJzKQZaR2GpNXw3rxv0Xx0KJvZWCO17cET/0Wv+JDuiUN/a1dNNcAvDFm1GSHH4EsaPOPSA44g==
-X-Received: by 2002:a05:6870:4617:b0:de:7c85:37e6 with SMTP id z23-20020a056870461700b000de7c8537e6mr60283oao.169.1648016541028;
-        Tue, 22 Mar 2022 23:22:21 -0700 (PDT)
-Received: from localhost.localdomain ([187.39.20.187])
-        by smtp.gmail.com with ESMTPSA id 22-20020a056870111600b000dd9d1d656dsm8405550oaf.2.2022.03.22.23.22.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Mar 2022 23:22:20 -0700 (PDT)
-From:   Diego Viola <diego.viola@gmail.com>
-To:     damien.lemoal@opensource.wdc.com
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        corbet@lwn.net, Diego Viola <diego.viola@gmail.com>
-Subject: [PATCH v2] ata: libata-core: fix "it's" typos
-Date:   Wed, 23 Mar 2022 03:21:50 -0300
-Message-Id: <20220323062150.25229-1-diego.viola@gmail.com>
-X-Mailer: git-send-email 2.35.1
+        with ESMTP id S232801AbiCWG5T (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Mar 2022 02:57:19 -0400
+Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 105D371ED7;
+        Tue, 22 Mar 2022 23:55:50 -0700 (PDT)
+Received: from [192.168.0.3] (ip5f5ae903.dynamic.kabel-deutschland.de [95.90.233.3])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 7991161EA1928;
+        Wed, 23 Mar 2022 07:55:48 +0100 (CET)
+Message-ID: <5fb6af7b-d84f-cbae-7eb1-543f3a7e53e4@molgen.mpg.de>
+Date:   Wed, 23 Mar 2022 07:55:48 +0100
 MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH v2 3/3] ata: ahci: Skip 200 ms debounce delay for AMD 300
+ Series Chipset SATA Controller
+Content-Language: en-US
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Mario Limonciello <Mario.Limonciello@amd.com>
+Cc:     Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org,
+        LKML <linux-kernel@vger.kernel.org>,
+        Nehal-bakulchandra Shah <Nehal-bakulchandra.Shah@amd.com>
+References: <20220321212431.13717-1-pmenzel@molgen.mpg.de>
+ <20220321212431.13717-3-pmenzel@molgen.mpg.de>
+ <BL1PR12MB5157DDFD5E75360F032346D3E2169@BL1PR12MB5157.namprd12.prod.outlook.com>
+ <cc7b4426-f6a6-e6b1-4aaf-0a713ee3d388@opensource.wdc.com>
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <cc7b4426-f6a6-e6b1-4aaf-0a713ee3d388@opensource.wdc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Use "it is" instead of the possessive form "its".
+Dear Damien,
 
-Also, replace "isn't" with "is not" and add a missing comma.
 
-Signed-off-by: Diego Viola <diego.viola@gmail.com>
----
- drivers/ata/libata-core.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Am 23.03.22 um 06:01 schrieb Damien Le Moal:
+> On 3/22/22 06:51, Limonciello, Mario wrote:
+>> [Public]
+>>
+>>> -----Original Message-----
+>>> From: Paul Menzel <pmenzel@molgen.mpg.de>
+>>> Sent: Monday, March 21, 2022 16:25
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 0c854aebfe0b..7d5d0dbcfdc5 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1398,7 +1398,7 @@ unsigned long ata_id_xfermask(const u16 *id)
- 
- 		/* But wait.. there's more. Design your standards by
- 		 * committee and you too can get a free iordy field to
--		 * process. However its the speeds not the modes that
-+		 * process. However, it is the speeds not the modes that
- 		 * are supported... Note drivers using the timing API
- 		 * will get this right anyway
- 		 */
-@@ -5603,7 +5603,7 @@ static void ata_finalize_port_ops(struct ata_port_operations *ops)
-  *	Start and then freeze ports of @host.  Started status is
-  *	recorded in host->flags, so this function can be called
-  *	multiple times.  Ports are guaranteed to get started only
-- *	once.  If host->ops isn't initialized yet, its set to the
-+ *	once.  If host->ops is not initialized yet, it is set to the
-  *	first non-dummy port ops.
-  *
-  *	LOCKING:
--- 
-2.35.1
+[…]
 
+>> I seem to recall that we were talking about trying to drop the debounce delay for
+>> everything, weren't we?
+>>
+>> So perhaps it would be right to add a 4th patch in the series to do just that.  Then
+>> If this turns out to be problematic for anything other than the controllers in the
+>> series that you identified as not problematic then that 4th patch can potentially
+>> be reverted alone?
+> 
+> Not quite everything :) But you are right, let's try to switch the default
+> to no delay. I will be posting patches today for that.
+> 
+> Paul,
+> 
+> With these patches, your patches are not necessary anymore as the AMD
+> chipset falls under the default no-delay.
+
+I am all for improving the situation for all devices, but I am unable to 
+judge the regression potential of changing this, as it affects a lot of 
+devices. I guess it’d would go through the next tree, and hopefully the 
+company QA teams can give it a good spin. I hoped that my patches, as I 
+have tested them, and AMD will hopefully too, could go into the current 
+merge window.
+
+> It would be nice if you can test though.
+
+Of course, I am going to that either way.
+
+
+Kind regards,
+
+Paul
