@@ -2,46 +2,39 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 789F8C433EF
-	for <linux-ide@archiver.kernel.org>; Wed, 23 Mar 2022 08:36:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 279AAC433F5
+	for <linux-ide@archiver.kernel.org>; Wed, 23 Mar 2022 08:43:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233438AbiCWIiU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 23 Mar 2022 04:38:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59548 "EHLO
+        id S233833AbiCWIpP (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 23 Mar 2022 04:45:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45244 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229643AbiCWIiT (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Mar 2022 04:38:19 -0400
+        with ESMTP id S241282AbiCWIpL (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Mar 2022 04:45:11 -0400
 Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D95312639;
-        Wed, 23 Mar 2022 01:36:49 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B60892C647
+        for <linux-ide@vger.kernel.org>; Wed, 23 Mar 2022 01:43:41 -0700 (PDT)
 Received: from [192.168.0.7] (ip5f5ae903.dynamic.kabel-deutschland.de [95.90.233.3])
         (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits))
         (No client certificate requested)
         (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id BC0B461E6478B;
-        Wed, 23 Mar 2022 09:36:47 +0100 (CET)
-Message-ID: <b3e4435d-335c-1aba-1920-c225b46d09e7@molgen.mpg.de>
-Date:   Wed, 23 Mar 2022 09:36:47 +0100
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 39E7D61E6478B;
+        Wed, 23 Mar 2022 09:43:40 +0100 (CET)
+Message-ID: <faf15c10-88f4-b530-ce6f-95209e4d5daf@molgen.mpg.de>
+Date:   Wed, 23 Mar 2022 09:43:39 +0100
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.7.0
-Subject: Re: [PATCH v2 3/3] ata: ahci: Skip 200 ms debounce delay for AMD 300
- Series Chipset SATA Controller
+Subject: Re: [PATCH 0/4] Remove link debounce delays by default
 Content-Language: en-US
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Mario Limonciello <Mario.Limonciello@amd.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-        Nehal-bakulchandra Shah <Nehal-bakulchandra.Shah@amd.com>
-References: <20220321212431.13717-1-pmenzel@molgen.mpg.de>
- <20220321212431.13717-3-pmenzel@molgen.mpg.de>
- <BL1PR12MB5157DDFD5E75360F032346D3E2169@BL1PR12MB5157.namprd12.prod.outlook.com>
- <cc7b4426-f6a6-e6b1-4aaf-0a713ee3d388@opensource.wdc.com>
- <5fb6af7b-d84f-cbae-7eb1-543f3a7e53e4@molgen.mpg.de>
- <d9837420-1cbb-ed5e-7043-985d9eb9d065@opensource.wdc.com>
+References: <20220323081740.540006-1-damien.lemoal@opensource.wdc.com>
+Cc:     linux-ide@vger.kernel.org,
+        Mario Limonciello <mario.limonciello@dell.com>,
+        Hans de Goede <hdegoede@redhat.com>
 From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <d9837420-1cbb-ed5e-7043-985d9eb9d065@opensource.wdc.com>
+In-Reply-To: <20220323081740.540006-1-damien.lemoal@opensource.wdc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -51,66 +44,45 @@ X-Mailing-List: linux-ide@vger.kernel.org
 Dear Damien,
 
 
-Am 23.03.22 um 09:24 schrieb Damien Le Moal:
-> On 3/23/22 15:55, Paul Menzel wrote:
+Thank you for sending these patches.
 
->> Am 23.03.22 um 06:01 schrieb Damien Le Moal:
->>> On 3/22/22 06:51, Limonciello, Mario wrote:
+Am 23.03.22 um 09:17 schrieb Damien Le Moal:
+> This series removes the long link debounce delays by default for all
+> adapters, except for those known to require these delays
+> (e.g. ata_piix).
 
->>>>> -----Original Message-----
->>>>> From: Paul Menzel <pmenzel@molgen.mpg.de>
->>>>> Sent: Monday, March 21, 2022 16:25
->>
->> […]
->>
->>>> I seem to recall that we were talking about trying to drop the debounce delay for
->>>> everything, weren't we?
->>>>
->>>> So perhaps it would be right to add a 4th patch in the series to do just that.  Then
->>>> If this turns out to be problematic for anything other than the controllers in the
->>>> series that you identified as not problematic then that 4th patch can potentially
->>>> be reverted alone?
->>>
->>> Not quite everything :) But you are right, let's try to switch the default
->>> to no delay. I will be posting patches today for that.
->>>
->>> Paul,
->>>
->>> With these patches, your patches are not necessary anymore as the AMD
->>> chipset falls under the default no-delay.
->>
->> I am all for improving the situation for all devices, but I am unable to
->> judge the regression potential of changing this, as it affects a lot of
->> devices. I guess it’d would go through the next tree, and hopefully the
->> company QA teams can give it a good spin. I hoped that my patches, as I
->> have tested them, and AMD will hopefully too, could go into the current
->> merge window.
+Is it know, or just a theory?
+
+> The first 2 patches are code cleanup improving the interface of several
+> functions handling delays.
 > 
-> Yes, correct, the plan is to get the generic series queued as soon as rc1
-> so that it can spend plenty of time in linux-next for people to test. That
-> will hopefully reduce the risk of breaking things in the field. Same for
-> the default LPM change.
-
-But 5.18 or 5.19? If 5.18, sounds good to me, if 5.19, I’d be great if 
-my patches go into 5.18 cycle, as they have been tested, and it would 
-mean the whole change gets tested more widely already.
-
-> With the default removal of the debounce delay, your patches addressing
-> only the AMD adapter are not needed anymore: this adapter will not have a
-> debounce delay unless the ATA_LFLAG_DEBOUNCE_DELAY flag is set.
-
-Yes, I understand.
-
->>> It would be nice if you can test though.
->>
->> Of course, I am going to that either way.
+> Patch 3 removes the long delay in sata_link_resume() and reverses the
+> link flag ATA_LFLAG_NO_DEBOUNCE_DELAY to ATA_LFLAG_DEBOUNCE_DELAY for
+> adapters to request the delay if needed.
 > 
-> Series posted with you on CC. Please test !
+> Patch 4 improves sata_link_debounce() by shortening the link stability
+> test, unless the link has the ATA_LFLAG_DEBOUNCE_DELAY flag set.
+> 
+> This series was tested on a machine with 2 AHCI adapters (Intel and
+> Marvell) with a port-multiplier box attached to cover that case too.
 
-Thank you. I am going to test it in the coming days, and report back.
+It’d be great if you gave an example benchmark.
 
-Maybe more people should be put in Cc (Dell, Lenovo, IBM, x86 subsystem) 
-with a request to test this?
+> Comments and lots of testing are welcome !
+> 
+> Damien Le Moal (4):
+>    ata: libata-sata: Simplify sata_link_resume() interface
+>    ata: libata-sata: Introduce struct sata_deb_timing
+>    ata: libata-sata: Remove debounce delay by default
+>    ata: libata-sata: Improve sata_link_debounce()
+
+[…]
+
+I am wondering how sure we can be, there won’t be any regressions? Not 
+having the boot disk detected is quite a serious issue/regression, and 
+it should be made easy for users to fix that without having to rebuild 
+the Linux kernel. A Linux kernel CLI parameter to enable the delay would 
+be helpful for effected users.
 
 
 Kind regards,
