@@ -2,80 +2,80 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3FD2C433F5
-	for <linux-ide@archiver.kernel.org>; Wed, 23 Mar 2022 08:19:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31723C433EF
+	for <linux-ide@archiver.kernel.org>; Wed, 23 Mar 2022 08:19:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242575AbiCWIUy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 23 Mar 2022 04:20:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43902 "EHLO
+        id S242579AbiCWIVD (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 23 Mar 2022 04:21:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43992 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237876AbiCWIUy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Mar 2022 04:20:54 -0400
+        with ESMTP id S242578AbiCWIUz (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Mar 2022 04:20:55 -0400
 Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6C145EDC1
-        for <linux-ide@vger.kernel.org>; Wed, 23 Mar 2022 01:19:24 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 066AF5F25A
+        for <linux-ide@vger.kernel.org>; Wed, 23 Mar 2022 01:19:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1648023563; x=1679559563;
+  t=1648023564; x=1679559564;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=NkAwXimJP512DU9dLD5JNat71WrXp4shbL048LlbGe4=;
-  b=XplhtUc22xWMXHD94xdt2F8ZPuyer1/dy4W0rg9Om90g/B4eoLn/3Jmx
-   FsWdZ82whYEhmf+FkTiigQAr8KNL7NEuc+OShHMg1reTZ8EEZdX5qSXak
-   wYUmckNmlawYNe1FQuNKbAoCK0nX90QhQZoJ6tkS1hKyViA2vIoy5j6MI
-   DK17ISfIaLnhID4CoxgYcG4+xh0YQfzpRq+6RnfrYhrWL1MSoMs0dyP14
-   pgguUHcVbgcjerdwzzi8xqyOecZTfBU0/ODfYVJsyP/0ut6DmAeLIoQvu
-   Q3QdogoJ7JdV8S/BZQQ0mWGoc66IfJnyju2TngfMvLhMx8/6tGFOptQuc
-   A==;
+  bh=4AsyCi0QtNvalf56cLhMHGivuaVEVYo8oFkCqbF7aLE=;
+  b=JqUnYcBVuhUWhVCh+ldDcA4Ejfzib3XAzFNH6/0Ch/WJlwXHt+Amkwyb
+   bj3nOGHsIxdjI1W6zDuxOVk47nXHMRfnoTnDDwSRgaI3IvW65CbeZwjCP
+   uZ9RktHVpp2hOCfzsrGzv6E5ZLPie1tcJzlScLNReme9LVzqkCbbOIueM
+   k//9oBX7zZh/zVNKWxA+vYumCnxUfqcePAf7+IbIwRHSjcVKA3AT7I0BM
+   S8HKlVAnIjulQ0TUAK7MG71aWTiwBgGBsn7a7eWkaPYAzbtlwWwZJol1B
+   pDBzVkg5UpNppVndrozm1rZjMlpltrZLK0rP9OD2i1EBL7rl6ZvWBVuKW
+   g==;
 X-IronPort-AV: E=Sophos;i="5.90,203,1643644800"; 
-   d="scan'208";a="196047605"
+   d="scan'208";a="196047610"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 23 Mar 2022 16:19:22 +0800
-IronPort-SDR: YZqR+17F1bck9DvijtZBTsrbdzWLyz7aZ5A9NuR7t5wujcL5N/RDrngdT2uhQrcg/hnv4HUQQ8
- DlDhB+inrs7XaKtTUlsVpDxMxwqqQVGmu83gurO1K+75FRMMwXNy47Moson98OOwYCeN38arg1
- +wGWWMZPr63vZg0BrPnmsxx/vY2MUBoc7L89UADzdR2mSGV/svXZJ6qIlFeROZrf+NRWAQgM4g
- lVkN5CPH+QD8KlgTwyJwyN4L2B14FOqraSHbQNC8FN0nheCz6WdNn++MLJ8Mb/CyIci1TH1W8L
- g3dvC1yoUYKyxeCPcJN4YD7U
+  by ob1.hgst.iphmx.com with ESMTP; 23 Mar 2022 16:19:24 +0800
+IronPort-SDR: VlGZU+JJIajKMVIdV0HUO+gYRoq1rzPFKsgPSszjACrgsSzu5MfH3NJ/Xkm8hqPEdc+VSbcRoM
+ kkmGAKGH9QK9q1HIe2O5d9YwJc4UO0hAoawywASIgbH4Ky6mQvSr5hn1s6PGv8qXaEaWkhHI7Z
+ 2Njct5b5ooAty5hgpuIp6eSE8t0L7rQjenIlz6ESGzpv1ZVESjaMDS3gJ1ezzlMyhwwDhCbM5h
+ e9aRyrWxm1SazVX7Dm0gONhtuD5uJosvB1jVFKjoyv8wfAqjrGE180JT8PmIECBCcHOwahMWo3
+ P64IVbPQSF3j5az4T1QeYmIO
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 00:51:17 -0700
-IronPort-SDR: XCRiQoN6EROT+Q9zanR8f0ddv4XfPHTSpqer1+vNxD+cgHhVm8tgBfxQ/91xkSmp0LQvnS6icR
- 0MZZNl4ezdKqlL+aXgs6NjBtUjdVHlEQjaan32EUv9oLerwkd/tVrgbuMF4H2XQ3+COKBiJjQp
- 1AjYx855DPzahV/pYSvmHjaSuLLQGEAbzdGoiVfu/5EoiGkaauYMB3hJyLqQhiGYlDP3Yejhx0
- V7y+p5qQbfkmrMm8WU/EnhMcIP/NxSRjh564GqLJXOvUZyqoz3YOngzQgKR56M8CoQq9XTcBU7
- LW8=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 00:51:19 -0700
+IronPort-SDR: +imk8w8xm9GplaCd1ZNkmmxmnja/r+ttfxDy42q5sqwaUAE33RTv1WskX6/UvomfMIUyeUKeYS
+ 9pD5lwh4s+J3LgAVvm0hSZtXeLmdT7LUFv6Ux6KIvCvwA1sSjpU3cMJxTta8bbLQep6hjSHfuA
+ AyeK0Aic2xGyxl/OpYqwES/gVuszqgIduq/JpBbpriftiqCffiaLZEqH29W+r/CK0YMiN1e4iN
+ HAk83/4Scbo7kh7GwWiJDo/yLk6zYZE0OZq0mccioLAhGCER9txPYl7gbUvxRYAkRSelbyLBtr
+ C6E=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 01:19:23 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 01:19:26 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KNh8q2P1Tz1SVnx
-        for <linux-ide@vger.kernel.org>; Wed, 23 Mar 2022 01:19:23 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KNh8s3zC8z1Rwrw
+        for <linux-ide@vger.kernel.org>; Wed, 23 Mar 2022 01:19:25 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:subject:to
-        :from; s=dkim; t=1648023562; x=1650615563; bh=NkAwXimJP512DU9dLD
-        5JNat71WrXp4shbL048LlbGe4=; b=f+d3njDu5eCZsbml9C6eRBePVThuFU/wbv
-        IVPulRxuKRgII9lX6uPQwRhGwrt1yAfXGtz/eZR1Hn+MN1OYcuwU8sMhK7BxBqYK
-        2kzpNUYfJM/pKFvMxJIAi8SucCXZkY9km6gE6GjD5iVQlG7fmPy09qlvimlvCKDA
-        URyQ0bySEDPHUqhp5CugnQn3HvjG+MyKlSS2vYN4jglOVUdlelxl87o8z3EVnKb/
-        HMD69S9w2/Ud+bgfVHg0WFbXcWCWytkZQIYAoly1BAfKmjB6cCvNtDqSkTEd8CrL
-        GRApTrn+4HXM+9v3/Q0b+9diXpfl2/UMS1c6WYGLVe7DKhHYCiug==
+        :from; s=dkim; t=1648023565; x=1650615566; bh=4AsyCi0QtNvalf56cL
+        hMHGivuaVEVYo8oFkCqbF7aLE=; b=P3hkvll5iWj4MouDz+xbVrTm0V6JuiSDGt
+        vt5AP53NyqxTva1O0IlwfzKWc481ndtg2FM0YlnAYQS+o4eOoQaENANROzN5uHFK
+        sp3wqIrXN6wha7YeGf4EhjffRxhlckXXQervy7pGWDaOIAuC41udXJno+IJGZ2Mn
+        akRf6umUc/2WdscMf/dNVgvxWtfpkWxcsIhqndSDtUMvVen/h2cHd1hDnoYF5gVw
+        edKMNxl2NUD/tSzSHM6NFpMaJx+1BdT/nGP4oNLZgaOMlayBj5lWxIQzRDqjpi+Y
+        1LA04PpP9A3CYb7HHS3FmZ41vY7ESiDSIQGkTWeVjD8ujRW4vZYw==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id lBUqwaZs0eDT for <linux-ide@vger.kernel.org>;
-        Wed, 23 Mar 2022 01:19:22 -0700 (PDT)
+        with ESMTP id TpuiZiazvID1 for <linux-ide@vger.kernel.org>;
+        Wed, 23 Mar 2022 01:19:25 -0700 (PDT)
 Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KNh8p3QGpz1Rwrw;
-        Wed, 23 Mar 2022 01:19:22 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KNh8r5hCjz1Rvlx;
+        Wed, 23 Mar 2022 01:19:24 -0700 (PDT)
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 To:     linux-ide@vger.kernel.org
 Cc:     Paul Menzel <pmenzel@molgen.mpg.de>
-Subject: [PATCH 1/4] ata: libata-sata: Simplify sata_link_resume() interface
-Date:   Wed, 23 Mar 2022 17:17:37 +0900
-Message-Id: <20220323081740.540006-2-damien.lemoal@opensource.wdc.com>
+Subject: [PATCH 4/4] ata: libata-sata: Improve sata_link_debounce()
+Date:   Wed, 23 Mar 2022 17:17:40 +0900
+Message-Id: <20220323081740.540006-5-damien.lemoal@opensource.wdc.com>
 X-Mailer: git-send-email 2.35.1
 In-Reply-To: <20220323081740.540006-1-damien.lemoal@opensource.wdc.com>
 References: <20220323081740.540006-1-damien.lemoal@opensource.wdc.com>
@@ -85,198 +85,72 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-When called directly outside of sata_link_hardreset(), the debounce
-timing array passed to sata_link_resume() is always the array returned
-by sata_ehc_deb_timing() for the target link. Based on this, the
-interface of sata_link_resume() can be simplified by removing the
-params argument. The timing array is infered locally using
-sata_ehc_deb_timing().
+sata_link_debounce() polls the SStatus register DET field to ensure that
+a stable value is provided, to reliably detect device presence and PHY
+readiness. Polling is done for at least timing->duration if there is no
+device detected. For the device detected case, polling last up to
+deadline to ensure that the PHY becomes ready.
 
-To allow sata_link_hardreset() to specify a timing array, the helper
-function __sata_link_resume() is introduced and sata_link_resume()
-implemented using this helper.
+However, the PHY ready state is actually never checked, leading to the
+poll loop duration always reaching the maximum duration.
+
+For adapters that do not require a debounce delay (link flag
+ATA_LFLAG_DEBOUNCE_DELAY no set), add a check to test if DET indicates
+device present *and* PHY ready and bail out of the polling loop if it
+does.
+
+While at it, add comments to clarify the various checks in
+sata_link_debounce() polling loop.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 ---
- drivers/ata/libata-core.c   |  3 +--
- drivers/ata/libata-sata.c   | 42 +++++++++++++++++++++----------------
- drivers/ata/sata_inic162x.c |  3 +--
- drivers/ata/sata_nv.c       |  3 +--
- include/linux/libata.h      |  4 +---
- 5 files changed, 28 insertions(+), 27 deletions(-)
+ drivers/ata/libata-sata.c | 24 ++++++++++++++++++++++--
+ 1 file changed, 22 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index cceedde51126..1bdb6e78f0ed 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3575,7 +3575,6 @@ int ata_std_prereset(struct ata_link *link, unsigne=
-d long deadline)
- {
- 	struct ata_port *ap =3D link->ap;
- 	struct ata_eh_context *ehc =3D &link->eh_context;
--	const unsigned long *timing =3D sata_ehc_deb_timing(ehc);
- 	int rc;
-=20
- 	/* if we're about to do hardreset, nothing more to do */
-@@ -3584,7 +3583,7 @@ int ata_std_prereset(struct ata_link *link, unsigne=
-d long deadline)
-=20
- 	/* if SATA, resume link */
- 	if (ap->flags & ATA_FLAG_SATA) {
--		rc =3D sata_link_resume(link, timing, deadline);
-+		rc =3D sata_link_resume(link, deadline);
- 		/* whine about phy resume failure but proceed */
- 		if (rc && rc !=3D -EOPNOTSUPP)
- 			ata_link_warn(link,
 diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index 044a16daa2d4..86f1475e5bca 100644
+index 87ad03c2e49f..15423723c9dd 100644
 --- a/drivers/ata/libata-sata.c
 +++ b/drivers/ata/libata-sata.c
-@@ -279,22 +279,9 @@ int sata_link_debounce(struct ata_link *link, const =
-unsigned long *params,
- }
- EXPORT_SYMBOL_GPL(sata_link_debounce);
+@@ -276,8 +276,27 @@ int sata_link_debounce(struct ata_link *link,
 =20
--/**
-- *	sata_link_resume - resume SATA link
-- *	@link: ATA link to resume SATA
-- *	@params: timing parameters { interval, duration, timeout } in msec
-- *	@deadline: deadline jiffies for the operation
-- *
-- *	Resume SATA phy @link and debounce it.
-- *
-- *	LOCKING:
-- *	Kernel thread context (may sleep)
-- *
-- *	RETURNS:
-- *	0 on success, -errno on failure.
-- */
--int sata_link_resume(struct ata_link *link, const unsigned long *params,
--		     unsigned long deadline)
-+static int __sata_link_resume(struct ata_link *link,
-+			      const unsigned long *timing,
-+			      unsigned long deadline)
- {
- 	int tries =3D ATA_LINK_RESUME_TRIES;
- 	u32 scontrol, serror;
-@@ -335,7 +322,7 @@ int sata_link_resume(struct ata_link *link, const uns=
-igned long *params,
- 		ata_link_warn(link, "link resume succeeded after %d retries\n",
- 			      ATA_LINK_RESUME_TRIES - tries);
-=20
--	if ((rc =3D sata_link_debounce(link, params, deadline)))
-+	if ((rc =3D sata_link_debounce(link, timing, deadline)))
- 		return rc;
-=20
- 	/* clear SError, some PHYs require this even for SRST to work */
-@@ -344,6 +331,25 @@ int sata_link_resume(struct ata_link *link, const un=
-signed long *params,
-=20
- 	return rc !=3D -EINVAL ? rc : 0;
- }
+ 		/* DET stable? */
+ 		if (cur =3D=3D last) {
++			/*
++			 * If the device presence was detected but PHY
++			 * communication is not yet established, wait until
++			 * deadline.
++			 */
+ 			if (cur =3D=3D 1 && time_before(jiffies, deadline))
+ 				continue;
 +
-+/**
-+ *	sata_link_resume - resume SATA link
-+ *	@link: ATA link to resume SATA
-+ *	@deadline: deadline jiffies for the operation
-+ *
-+ *	Resume SATA phy @link and debounce it.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep)
-+ *
-+ *	RETURNS:
-+ *	0 on success, -errno on failure.
-+ */
-+int sata_link_resume(struct ata_link *link, unsigned long deadline)
-+{
-+	return __sata_link_resume(link,
-+			sata_ehc_deb_timing(&link->eh_context), deadline);
-+}
- EXPORT_SYMBOL_GPL(sata_link_resume);
++			/*
++			 * If PHY is ready and the device is present, and the
++			 * driver did not request debounce delay, bail out early
++			 * assuming that the link is stable.
++			 */
++			if (cur =3D=3D 3 &&
++			    !(link->flags & ATA_LFLAG_DEBOUNCE_DELAY))
++				return 0;
++
++			/*
++			 * If DET value has remained stable for
++			 * timing->duration, bail out.
++			 */
+ 			if (time_after(jiffies,
+ 				ata_deadline(last_jiffies, timing->duration)))
+ 				return 0;
+@@ -288,8 +307,9 @@ int sata_link_debounce(struct ata_link *link,
+ 		last =3D cur;
+ 		last_jiffies =3D jiffies;
 =20
- /**
-@@ -568,7 +574,7 @@ int sata_link_hardreset(struct ata_link *link, const =
-unsigned long *timing,
- 	ata_msleep(link->ap, 1);
-=20
- 	/* bring link back */
--	rc =3D sata_link_resume(link, timing, deadline);
-+	rc =3D __sata_link_resume(link, timing, deadline);
- 	if (rc)
- 		goto out;
- 	/* if link is offline nothing more to do */
-diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
-index 11e518f0111c..8d4d041cc724 100644
---- a/drivers/ata/sata_inic162x.c
-+++ b/drivers/ata/sata_inic162x.c
-@@ -621,7 +621,6 @@ static int inic_hardreset(struct ata_link *link, unsi=
-gned int *class,
- 	struct ata_port *ap =3D link->ap;
- 	void __iomem *port_base =3D inic_port_base(ap);
- 	void __iomem *idma_ctl =3D port_base + PORT_IDMA_CTL;
--	const unsigned long *timing =3D sata_ehc_deb_timing(&link->eh_context);
- 	int rc;
-=20
- 	/* hammer it into sane state */
-@@ -632,7 +631,7 @@ static int inic_hardreset(struct ata_link *link, unsi=
-gned int *class,
- 	ata_msleep(ap, 1);
- 	writew(0, idma_ctl);
-=20
--	rc =3D sata_link_resume(link, timing, deadline);
-+	rc =3D sata_link_resume(link, deadline);
- 	if (rc) {
- 		ata_link_warn(link,
- 			      "failed to resume link after reset (errno=3D%d)\n",
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index 7f14d0d31057..b5f27eac86b1 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -1529,7 +1529,6 @@ static int nv_hardreset(struct ata_link *link, unsi=
-gned int *class,
- 		sata_link_hardreset(link, sata_deb_timing_hotplug, deadline,
- 				    NULL, NULL);
- 	else {
--		const unsigned long *timing =3D sata_ehc_deb_timing(ehc);
- 		int rc;
-=20
- 		if (!(ehc->i.flags & ATA_EHI_QUIET))
-@@ -1537,7 +1536,7 @@ static int nv_hardreset(struct ata_link *link, unsi=
-gned int *class,
- 				      "nv: skipping hardreset on occupied port\n");
-=20
- 		/* make sure the link is online */
--		rc =3D sata_link_resume(link, timing, deadline);
-+		rc =3D sata_link_resume(link, deadline);
- 		/* whine about phy resume failure but proceed */
- 		if (rc && rc !=3D -EOPNOTSUPP)
- 			ata_link_warn(link, "failed to resume link (errno=3D%d)\n",
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 9b1d3d8b1252..e89d612326f6 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1171,8 +1171,7 @@ extern int sata_set_spd(struct ata_link *link);
- extern int sata_link_hardreset(struct ata_link *link,
- 			const unsigned long *timing, unsigned long deadline,
- 			bool *online, int (*check_ready)(struct ata_link *));
--extern int sata_link_resume(struct ata_link *link, const unsigned long *=
-params,
--			    unsigned long deadline);
-+extern int sata_link_resume(struct ata_link *link, unsigned long deadlin=
-e);
- extern void ata_eh_analyze_ncq_error(struct ata_link *link);
- #else
- static inline const unsigned long *
-@@ -1205,7 +1204,6 @@ static inline int sata_link_hardreset(struct ata_li=
-nk *link,
- 	return -EOPNOTSUPP;
- }
- static inline int sata_link_resume(struct ata_link *link,
--				   const unsigned long *params,
- 				   unsigned long deadline)
- {
- 	return -EOPNOTSUPP;
+-		/* Check deadline.  If debouncing failed, return
+-		 * -EPIPE to tell upper layer to lower link speed.
++		/*
++		 * If debouncing has not succeeded before dealine, return
++		 * -EPIPE to tell the upper layer to lower the link speed.
+ 		 */
+ 		if (time_after(jiffies, deadline))
+ 			return -EPIPE;
 --=20
 2.35.1
 
