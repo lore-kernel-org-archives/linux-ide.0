@@ -2,100 +2,93 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 725CFC433EF
-	for <linux-ide@archiver.kernel.org>; Wed, 23 Mar 2022 08:44:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D78BC433EF
+	for <linux-ide@archiver.kernel.org>; Wed, 23 Mar 2022 08:45:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242843AbiCWIqW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 23 Mar 2022 04:46:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50570 "EHLO
+        id S234527AbiCWIqm (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 23 Mar 2022 04:46:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52040 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242829AbiCWIqV (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Mar 2022 04:46:21 -0400
-Received: from mail-wr1-x432.google.com (mail-wr1-x432.google.com [IPv6:2a00:1450:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1468D47059;
-        Wed, 23 Mar 2022 01:44:52 -0700 (PDT)
-Received: by mail-wr1-x432.google.com with SMTP id a1so1011850wrh.10;
-        Wed, 23 Mar 2022 01:44:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=yd8lBIIY+OCTplD9xN7QKranu7nxJgphIEj/QJt7VGE=;
-        b=mWD3roq0Ew81hWemVBov9rSIki2qshuf77Ujov0HM3gDj6ENPwl9wmBUkgLqHiaA2o
-         WF4we9A4BW/CKIXgiXKGuSvKz/8Phlfya+Y2oR+/VKcgPLmVzgdUprx13BARVBHuhMwJ
-         M5ZNZng3Wt3oXzpYL9hGj8crCk2O/0sTa+rtXtzm38/BzOjCDl4AoAmf1wE3sak8EKRs
-         tbmrjSkghAB00MWTYwCo5J193r/mzfYHHxysdNzkKbYtwUcGsjZQxZKFfPhl0F8jb78b
-         QB1McctXmRlncKSxM6cfYHGFSmEfp4SMnQlcxyzOIO4RCLvVwfRpFXRJiIOjikW5doDp
-         fWCQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=yd8lBIIY+OCTplD9xN7QKranu7nxJgphIEj/QJt7VGE=;
-        b=eSFh1zIgsYHHUITkKZWzViNWVKCvu7kzenteOpYae0DOGDQjXkzpkGGIZLGjdOgvpb
-         hjfLDq/687C5oN5af1TBkhDU3kkj32YHM8/3drf0zl2HY9qZvISJa3EaH7Apgh4Vrn0n
-         UNXLDjRIlburkimpDWH7Rjjk2MMAXPso1vlO2N3KW6DFhQCk2MEA7FRPMTEM2nKUXom0
-         MH3vDsc+PuiVa5KWSeAJp4BbE48t/b3sp1vClm3oEhUEcxl8Ke4g+Cy5nl2qAdUPneuG
-         pM72dFpAZZ3IRcRe3xm/XckRuwWtTcF3wNjfeQb8K2DuHh7g3xSlGSsuZWRu4sR/yl0W
-         0z8Q==
-X-Gm-Message-State: AOAM5326NxZwQJISNNAfaNjzxvPNV5i+Py4nySJd3QLt6+jTBUAPn4br
-        sXXJ4SF5+5Yk5RexI8uwO+uw/PsoPwoGQ9o7dquYae1z
-X-Google-Smtp-Source: ABdhPJxmfiJwgx/MX5UAnMBDybjlp3/AQvqQ0U4Svic+w2t38wKkS2h7Cy5Byp7NYYr3I/l3tFLYT6PNcunPSB3fUc8=
-X-Received: by 2002:a05:6000:1184:b0:203:ff46:1d72 with SMTP id
- g4-20020a056000118400b00203ff461d72mr17622682wrx.165.1648025090274; Wed, 23
- Mar 2022 01:44:50 -0700 (PDT)
+        with ESMTP id S240366AbiCWIqk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Mar 2022 04:46:40 -0400
+Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7B0D4B1F2
+        for <linux-ide@vger.kernel.org>; Wed, 23 Mar 2022 01:45:10 -0700 (PDT)
+Received: from [192.168.0.7] (ip5f5ae903.dynamic.kabel-deutschland.de [95.90.233.3])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits))
+        (No client certificate requested)
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 809D861E6478B;
+        Wed, 23 Mar 2022 09:45:09 +0100 (CET)
+Message-ID: <6211e521-0688-c263-91de-07c0fe401814@molgen.mpg.de>
+Date:   Wed, 23 Mar 2022 09:45:09 +0100
 MIME-Version: 1.0
-References: <20220323054001.17344-1-diego.viola@gmail.com> <ac99cc8e-11c2-d96b-9ce1-ce5618b7b378@opensource.wdc.com>
- <CA+ToGPH+FQ-6QM6MWt6Zoe_pTyL6LTn9-=-694f7xLkSVCCr1Q@mail.gmail.com>
- <641a417b-acac-6b0f-c330-b94b6ed97b99@opensource.wdc.com> <CA+ToGPEAhWDwFLNHqXvtuumvdLQb=kzme7fdrgBfb4zojVvDNQ@mail.gmail.com>
- <a030b9b2-d94f-ed62-60bf-cc629da3e944@opensource.wdc.com>
-In-Reply-To: <a030b9b2-d94f-ed62-60bf-cc629da3e944@opensource.wdc.com>
-From:   Diego Viola <diego.viola@gmail.com>
-Date:   Wed, 23 Mar 2022 05:44:39 -0300
-Message-ID: <CA+ToGPGVdwXgWTZFa24PDMkpXrVrpM48WAxR4U6d4D9t-k=nJQ@mail.gmail.com>
-Subject: Re: [PATCH] ata: libata-core: fix "it's" typos
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH 0/4] Remove link debounce delays by default
+Content-Language: en-US
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
-        corbet@lwn.net
-Content-Type: text/plain; charset="UTF-8"
+Cc:     linux-ide@vger.kernel.org,
+        Mario Limonciello <mario.limonciello@amd.com>,
+        Hans de Goede <hdegoede@redhat.com>
+References: <20220323081740.540006-1-damien.lemoal@opensource.wdc.com>
+ <faf15c10-88f4-b530-ce6f-95209e4d5daf@molgen.mpg.de>
+In-Reply-To: <faf15c10-88f4-b530-ce6f-95209e4d5daf@molgen.mpg.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Wed, Mar 23, 2022 at 5:17 AM Damien Le Moal
-<damien.lemoal@opensource.wdc.com> wrote:
->
-> On 3/23/22 16:24, Diego Viola wrote:
-> > On Wed, Mar 23, 2022 at 2:53 AM Damien Le Moal
-> > <damien.lemoal@opensource.wdc.com> wrote:
-> >>
-> >> On 3/23/22 14:52, Diego Viola wrote:
-> >>> On Wed, Mar 23, 2022 at 2:45 AM Damien Le Moal
-> >>> <damien.lemoal@opensource.wdc.com> wrote:
-> >>>>
-> >>>> On 3/23/22 14:40, Diego Viola wrote:
-> >>>>> Use the contraction "it's" instead of the possessive form "its".
-> >>>>
-> >>>> Well, while at it, let's use proper formal written English, so:
-> >>>> s/it's/it is
-> >>>> s/isn't/is not
-> >>>
-> >>> Fine with me, do you want me to send you another patch with those changes?
-> >>
-> >> Yes please.
-> >
-> > I sent a v2 patch changing those things you pointed out, however, the
-> > whole comment[0] looks informal "But wait.. there's more" and I don't
-> > think replacing "it's" with "it is" achieves a lot in this case.
->
-> :)
->
-> Indeed. Do you want it in or can I drop it ?
+[Use Mario’s current address]
 
-Given that the language is mostly informal, I'd rather see the first
-patch applied (if that is OK with you). However, I agree with you that
-it would be nice to see formal language used, I just don't think I'm
-the right person to change all the comments in that file. :(
-
-Thanks,
-Diego
+Am 23.03.22 um 09:43 schrieb Paul Menzel:
+> Dear Damien,
+> 
+> 
+> Thank you for sending these patches.
+> 
+> Am 23.03.22 um 09:17 schrieb Damien Le Moal:
+>> This series removes the long link debounce delays by default for all
+>> adapters, except for those known to require these delays
+>> (e.g. ata_piix).
+> 
+> Is it know, or just a theory?
+> 
+>> The first 2 patches are code cleanup improving the interface of several
+>> functions handling delays.
+>>
+>> Patch 3 removes the long delay in sata_link_resume() and reverses the
+>> link flag ATA_LFLAG_NO_DEBOUNCE_DELAY to ATA_LFLAG_DEBOUNCE_DELAY for
+>> adapters to request the delay if needed.
+>>
+>> Patch 4 improves sata_link_debounce() by shortening the link stability
+>> test, unless the link has the ATA_LFLAG_DEBOUNCE_DELAY flag set.
+>>
+>> This series was tested on a machine with 2 AHCI adapters (Intel and
+>> Marvell) with a port-multiplier box attached to cover that case too.
+> 
+> It’d be great if you gave an example benchmark.
+> 
+>> Comments and lots of testing are welcome !
+>>
+>> Damien Le Moal (4):
+>>    ata: libata-sata: Simplify sata_link_resume() interface
+>>    ata: libata-sata: Introduce struct sata_deb_timing
+>>    ata: libata-sata: Remove debounce delay by default
+>>    ata: libata-sata: Improve sata_link_debounce()
+> 
+> […]
+> 
+> I am wondering how sure we can be, there won’t be any regressions? Not 
+> having the boot disk detected is quite a serious issue/regression, and 
+> it should be made easy for users to fix that without having to rebuild 
+> the Linux kernel. A Linux kernel CLI parameter to enable the delay would 
+> be helpful for effected users.
+> 
+> 
+> Kind regards,
+> 
+> Paul
