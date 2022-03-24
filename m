@@ -2,31 +2,31 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC34BC4167D
-	for <linux-ide@archiver.kernel.org>; Mon, 28 Mar 2022 15:44:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C3C5C433EF
+	for <linux-ide@archiver.kernel.org>; Mon, 28 Mar 2022 15:44:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238756AbiC1Pp6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 28 Mar 2022 11:45:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45200 "EHLO
+        id S239132AbiC1PqT (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 28 Mar 2022 11:46:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46596 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238609AbiC1Ppy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2022 11:45:54 -0400
+        with ESMTP id S239097AbiC1PqK (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2022 11:46:10 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 054E04A3DD;
-        Mon, 28 Mar 2022 08:44:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 855B84B1E3;
+        Mon, 28 Mar 2022 08:44:19 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id A395E1E28DA;
-        Thu, 24 Mar 2022 03:16:42 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru A395E1E28DA
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 5B6651E28D6;
+        Thu, 24 Mar 2022 03:16:39 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 5B6651E28D6
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1648081002;
-        bh=yESOGL8CF+QodUORwSlO0VBu4cxcXE6Ud++7R1zwGIY=;
+        d=baikalelectronics.ru; s=mail; t=1648080999;
+        bh=Yt4t9pz9qqT6PdT2sz7/qmCcR/vnmr7AJW58bmYgtH8=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=M90YekcuouveLxbw53cmrnOrhbPlcTOgVBgnPUiAd58p7sMzDyWXT7VMGhbM956Bi
-         VOk/ZTxyTGD8pneYNuG2AHsj9V9PxQbSzR4gpo0bO9G6dHMC1ZMJfPd1irmu8l6TT+
-         nhQ+IB4hfuy9MmrzbUghS5eb2Cn7M8JLPg3JR5QE=
+        b=qQUp8HeV/ugnWRRULFLZwz07LyntimKlBHmhnCOMJ2kW4qliPOgIeX2dDz0qvoAk8
+         TFLM7X7nZd42g+g48E8JtS3FC9FQDjnRPgmjKYLQuYzh0v8Sr0AyEXzI+9FOibPtAw
+         QQ7Dcz9YpTItY0EAS5sphXMEB+flAiEQ9YvDx98s=
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 03:16:42 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 03:16:39 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
@@ -37,9 +37,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH 15/21] ata: ahci: Introduce firmware-specific caps initialization
-Date:   Thu, 24 Mar 2022 03:16:22 +0300
-Message-ID: <20220324001628.13028-16-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH 11/21] ata: libahci: Extend port-cmd flags set with port capabilities
+Date:   Thu, 24 Mar 2022 03:16:18 +0300
+Message-ID: <20220324001628.13028-12-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -50,273 +50,59 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-There are systems with no BIOS or comprehensive embedded firmware which
-could be able to properly initialize the SATA AHCI controller
-platform-specific capabilities. In that case a good alternative to having
-a clever bootloader is to create a device tree node with the properties
-well describing all the AHCI-related platform specifics. All the settings
-which are normally detected and marked as available in the HBA and its
-ports capabilities fields [1] could be defined in the platform DTB by
-means of a set of the dedicated properties. Such approach perfectly fits
-to the DTB-philosophy - to provide hardware/platform description.
+Currently not all of the Port-specific capabilities listed in the
+PORT_CMD-enumeration. Let's extend that set with the Cold Presence
+Detection and Mechanical Presence Switch attached to the Port flags [1] so
+to closeup the set of the platform-specific port-capabilities flags.  Note
+these flags are supposed to be set by the platform firmware if there is
+one. Alternatively as we are about to do they can be set by means of the
+OF properties.
 
-So here we suggest to extend the SATA AHCI device tree bindings with the
-next set of additional DT boolean properties:
-1) hba-sss - Controller supports Staggered Spin-up.
-2) hba-smps - Mechanical Presence Switch is support by controller.
-3) hba-hpcp - Hot Plug Capable Port.
-4) hba-mpsp - Mechanical Presence Switch Attached to Port.
-5) hba-cpd - Cold Presence Detection.
-6) hba-esp - External SATA Port.
-7) hba-fbscp - FIS-based Switching Capable Port.
-All of these capabilities require to have a corresponding hardware
-configuration. Thus it's ok to have them defined in DTB.
+While at it replace PORT_IRQ_DEV_ILCK with PORT_IRQ_DEV_MPS and fix the
+comment there. In accordance with [2] that IRQ flag is supposed to
+indicate the state of the signal coming from the Mechanical Presence
+Switch.
 
-Even though the driver currently takes into account the state of the ESP
-and FBSCP flags state only, there is nothing wrong with having all them
-supported by the generic AHCI library in order to have a complete OF-based
-platform-capabilities initialization procedure. These properties will be
-parsed in the ahci_platform_get_resources() method and their values will
-be stored in the saved_* fields of the ahci_host_priv structure, which in
-its turn then will be used to restore the H.CAP, H.PI and P#.CMD
-capability fields on device init and after HBA reset.
-
-Please note this modification concerns the HW-init HBA and its ports flags
-only, which are by specification [1] are supposed to be initialized by the
-BIOS/platform firmware/expansion ROM and which are normally declared in
-the one-time-writable-after-reset register fields. Even though these flags
-aren't supposed to be cleared after HBA reset some AHCI instances may
-violate that rule so we still need to perform the fields resetting after
-each reset. Luckily the corresponding functionality has already been
-partly implemented in the framework of the ahci_save_initial_config() and
-ahci_restore_initial_config() methods.
-
-[1] Serial ATA AHCI 1.3.1 Specification, p. 103
+[1] Serial ATA AHCI 1.3.1 Specification, p.27
+[2] Serial ATA AHCI 1.3.1 Specification, p.7
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 ---
- drivers/ata/ahci.h             |  1 +
- drivers/ata/libahci.c          | 51 ++++++++++++++++++++++++++++------
- drivers/ata/libahci_platform.c | 51 ++++++++++++++++++++++++++++++++--
- 3 files changed, 92 insertions(+), 11 deletions(-)
+ drivers/ata/ahci.h | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 0fde57e7457e..35eaa42e9269 100644
+index 0b1d5c24cb8c..04690b4168a3 100644
 --- a/drivers/ata/ahci.h
 +++ b/drivers/ata/ahci.h
-@@ -339,6 +339,7 @@ struct ahci_host_priv {
- 	u32			saved_cap;	/* saved initial cap */
- 	u32			saved_cap2;	/* saved initial cap2 */
- 	u32			saved_port_map;	/* saved initial port_map */
-+	u32			saved_port_cap[AHCI_MAX_PORTS]; /* saved port_cap */
- 	u32 			em_loc; /* enclosure management location */
- 	u32			em_buf_sz;	/* EM buffer size in byte */
- 	u32			em_msg_type;	/* EM message type */
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 43460da06947..9e67c90900d2 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -16,6 +16,7 @@
-  * http://www.intel.com/technology/serialata/pdf/rev1_1.pdf
-  */
+@@ -138,7 +138,7 @@ enum {
+ 	PORT_IRQ_BAD_PMP	= (1 << 23), /* incorrect port multiplier */
  
-+#include <linux/bitops.h>
- #include <linux/kernel.h>
- #include <linux/gfp.h>
- #include <linux/module.h>
-@@ -443,16 +444,28 @@ static ssize_t ahci_show_em_supported(struct device *dev,
- void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
- {
- 	void __iomem *mmio = hpriv->mmio;
--	u32 cap, cap2, vers, port_map;
-+	void __iomem *port_mmio;
-+	unsigned long port_map;
-+	u32 cap, cap2, vers;
- 	int i;
+ 	PORT_IRQ_PHYRDY		= (1 << 22), /* PhyRdy changed */
+-	PORT_IRQ_DEV_ILCK	= (1 << 7), /* device interlock */
++	PORT_IRQ_DMPS		= (1 << 7), /* mechanical presence status */
+ 	PORT_IRQ_CONNECT	= (1 << 6), /* port connect change status */
+ 	PORT_IRQ_SG_DONE	= (1 << 5), /* descriptor processed */
+ 	PORT_IRQ_UNK_FIS	= (1 << 4), /* unknown FIS rx'd */
+@@ -166,6 +166,8 @@ enum {
+ 	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
+ 	PORT_CMD_FBSCP		= (1 << 22), /* FBS Capable Port */
+ 	PORT_CMD_ESP		= (1 << 21), /* External Sata Port */
++	PORT_CMD_CPD		= (1 << 20), /* Cold Presence Detection */
++	PORT_CMD_MPSP		= (1 << 19), /* Mechanical Presence Switch */
+ 	PORT_CMD_HPCP		= (1 << 18), /* HotPlug Capable Port */
+ 	PORT_CMD_PMP		= (1 << 17), /* PMP attached */
+ 	PORT_CMD_LIST_ON	= (1 << 15), /* cmd list DMA engine running */
+@@ -181,6 +183,9 @@ enum {
+ 	PORT_CMD_ICC_PARTIAL	= (0x2 << 28), /* Put i/f in partial state */
+ 	PORT_CMD_ICC_SLUMBER	= (0x6 << 28), /* Put i/f in slumber state */
  
- 	/* make sure AHCI mode is enabled before accessing CAP */
- 	ahci_enable_ahci(mmio);
- 
--	/* Values prefixed with saved_ are written back to host after
--	 * reset.  Values without are used for driver operation.
-+	/*
-+	 * Values prefixed with saved_ are written back to the HBA and ports
-+	 * registers after reset. Values without are used for driver operation.
-+	 */
++	PORT_CMD_CAP		= PORT_CMD_HPCP | PORT_CMD_MPSP |
++				  PORT_CMD_CPD | PORT_CMD_ESP | PORT_CMD_FBSCP,
 +
-+	/*
-+	 * Override HW-init HBA capability fields with platform-specific values.
-+	 * The rest of the HBA capabilities are defined with strictly RO flags
-+	 * and can't be modified in CSR anyway.
- 	 */
--	hpriv->saved_cap = cap = readl(mmio + HOST_CAP);
-+	cap = readl(mmio + HOST_CAP);
-+	if (hpriv->saved_cap)
-+		cap = (cap & ~(HOST_CAP_SSS | HOST_CAP_MPS)) | hpriv->saved_cap;
-+	hpriv->saved_cap = cap;
- 
- 	/* CAP2 register is only defined for AHCI 1.2 and later */
- 	vers = readl(mmio + HOST_VERSION);
-@@ -519,7 +532,7 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
- 	/* Override the HBA ports mapping if the platform needs it */
- 	port_map = readl(mmio + HOST_PORTS_IMPL);
- 	if (hpriv->saved_port_map && port_map != hpriv->saved_port_map) {
--		dev_info(dev, "forcing port_map 0x%x -> 0x%x\n",
-+		dev_info(dev, "forcing port_map 0x%lx -> 0x%x\n",
- 			 port_map, hpriv->saved_port_map);
- 		port_map = hpriv->saved_port_map;
- 	} else {
-@@ -527,7 +540,7 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
- 	}
- 
- 	if (hpriv->mask_port_map) {
--		dev_warn(dev, "masking port_map 0x%x -> 0x%x\n",
-+		dev_warn(dev, "masking port_map 0x%lx -> 0x%lx\n",
- 			port_map,
- 			port_map & hpriv->mask_port_map);
- 		port_map &= hpriv->mask_port_map;
-@@ -546,7 +559,7 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
- 		 */
- 		if (map_ports > ahci_nr_ports(cap)) {
- 			dev_warn(dev,
--				 "implemented port map (0x%x) contains more ports than nr_ports (%u), using nr_ports\n",
-+				 "implemented port map (0x%lx) contains more ports than nr_ports (%u), using nr_ports\n",
- 				 port_map, ahci_nr_ports(cap));
- 			port_map = 0;
- 		}
-@@ -555,12 +568,26 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
- 	/* fabricate port_map from cap.nr_ports for < AHCI 1.3 */
- 	if (!port_map && vers < 0x10300) {
- 		port_map = (1 << ahci_nr_ports(cap)) - 1;
--		dev_warn(dev, "forcing PORTS_IMPL to 0x%x\n", port_map);
-+		dev_warn(dev, "forcing PORTS_IMPL to 0x%lx\n", port_map);
- 
- 		/* write the fixed up value to the PI register */
- 		hpriv->saved_port_map = port_map;
- 	}
- 
-+	/*
-+	 * Preserve the ports capabilities defined by the platform. Note there
-+	 * is no need in storing the rest of the P#.CMD fields since they are
-+	 * volatile.
-+	 */
-+	for_each_set_bit(i, &port_map, AHCI_MAX_PORTS) {
-+		if (hpriv->saved_port_cap[i])
-+			continue;
-+
-+		port_mmio = __ahci_port_base(hpriv, i);
-+		hpriv->saved_port_cap[i] =
-+			readl(port_mmio + PORT_CMD) & PORT_CMD_CAP;
-+	}
-+
- 	/* record values to use during operation */
- 	hpriv->cap = cap;
- 	hpriv->cap2 = cap2;
-@@ -590,13 +617,21 @@ EXPORT_SYMBOL_GPL(ahci_save_initial_config);
- static void ahci_restore_initial_config(struct ata_host *host)
- {
- 	struct ahci_host_priv *hpriv = host->private_data;
-+	unsigned long port_map = hpriv->port_map;
- 	void __iomem *mmio = hpriv->mmio;
-+	void __iomem *port_mmio;
-+	int i;
- 
- 	writel(hpriv->saved_cap, mmio + HOST_CAP);
- 	if (hpriv->saved_cap2)
- 		writel(hpriv->saved_cap2, mmio + HOST_CAP2);
- 	writel(hpriv->saved_port_map, mmio + HOST_PORTS_IMPL);
- 	(void) readl(mmio + HOST_PORTS_IMPL);	/* flush */
-+
-+	for_each_set_bit(i, &port_map, AHCI_MAX_PORTS) {
-+		port_mmio = __ahci_port_base(hpriv, i);
-+		writel(hpriv->saved_port_cap[i], port_mmio + PORT_CMD);
-+	}
- }
- 
- static unsigned ahci_scr_offset(struct ata_port *ap, unsigned int sc_reg)
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index 5cbc2c42164d..493144716c6e 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -23,6 +23,7 @@
- #include <linux/pm_runtime.h>
- #include <linux/of_platform.h>
- #include <linux/reset.h>
-+
- #include "ahci.h"
- 
- static void ahci_host_stop(struct ata_host *host);
-@@ -407,6 +408,44 @@ static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
- 	return rc;
- }
- 
-+static int ahci_platform_get_firmware(struct ahci_host_priv *hpriv,
-+				      struct device *dev)
-+{
-+	struct device_node *child;
-+	u32 port;
-+
-+	of_property_read_u32(dev->of_node,
-+			     "ports-implemented", &hpriv->saved_port_map);
-+
-+	if (of_property_read_bool(dev->of_node, "hba-sss"))
-+		hpriv->saved_cap |= HOST_CAP_SSS;
-+	if (of_property_read_bool(dev->of_node, "hba-smps"))
-+		hpriv->saved_cap |= HOST_CAP_MPS;
-+
-+	for_each_child_of_node(dev->of_node, child) {
-+		if (!of_device_is_available(child))
-+			continue;
-+
-+		if (of_property_read_u32(child, "reg", &port)) {
-+			of_node_put(child);
-+			return -EINVAL;
-+		}
-+
-+		if (of_property_read_bool(child, "hba-hpcp"))
-+			hpriv->saved_port_cap[port] |= PORT_CMD_HPCP;
-+		if (of_property_read_bool(child, "hba-mpsp"))
-+			hpriv->saved_port_cap[port] |= PORT_CMD_MPSP;
-+		if (of_property_read_bool(child, "hba-cpd"))
-+			hpriv->saved_port_cap[port] |= PORT_CMD_CPD;
-+		if (of_property_read_bool(child, "hba-esp"))
-+			hpriv->saved_port_cap[port] |= PORT_CMD_ESP;
-+		if (of_property_read_bool(child, "hba-fbscp"))
-+			hpriv->saved_port_cap[port] |= PORT_CMD_FBSCP;
-+	}
-+
-+	return 0;
-+}
-+
- /**
-  * ahci_platform_get_resources - Get platform resources
-  * @pdev: platform device to get resources for
-@@ -538,9 +577,6 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
- 		goto err_out;
- 	}
- 
--	of_property_read_u32(dev->of_node,
--			     "ports-implemented", &hpriv->saved_port_map);
--
- 	if (child_nodes) {
- 		for_each_child_of_node(dev->of_node, child) {
- 			u32 port;
-@@ -605,6 +641,15 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
- 		if (rc == -EPROBE_DEFER)
- 			goto err_out;
- 	}
-+
-+	/*
-+	 * Retrieve firmware-specific flags which then will be used to set
-+	 * the HW-init fields of HBA and its ports
-+	 */
-+	rc = ahci_platform_get_firmware(hpriv, dev);
-+	if (rc)
-+		goto err_out;
-+
- 	pm_runtime_enable(dev);
- 	pm_runtime_get_sync(dev);
- 	hpriv->got_runtime_pm = true;
+ 	/* PORT_FBS bits */
+ 	PORT_FBS_DWE_OFFSET	= 16, /* FBS device with error offset */
+ 	PORT_FBS_ADO_OFFSET	= 12, /* FBS active dev optimization offset */
 -- 
 2.35.1
 
