@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F923C433FE
-	for <linux-ide@archiver.kernel.org>; Thu, 24 Mar 2022 00:58:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32880C433FE
+	for <linux-ide@archiver.kernel.org>; Thu, 24 Mar 2022 01:11:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346968AbiCXBAM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 23 Mar 2022 21:00:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52042 "EHLO
+        id S1347105AbiCXBMq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 23 Mar 2022 21:12:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57416 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238940AbiCXBAM (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Mar 2022 21:00:12 -0400
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B20E1BE07
-        for <linux-ide@vger.kernel.org>; Wed, 23 Mar 2022 17:58:40 -0700 (PDT)
+        with ESMTP id S1347102AbiCXBMp (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Mar 2022 21:12:45 -0400
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE1C991AF4
+        for <linux-ide@vger.kernel.org>; Wed, 23 Mar 2022 18:11:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1648083520; x=1679619520;
+  t=1648084274; x=1679620274;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=OTBnl5Cs2iyIhyA4xwKnzLy274oypsjBtyCg7TPtK4s=;
-  b=h1/qJpPZrkydQNNmhK+2kkRTwqJD5JydAuVvCVRFeBp2oaDpoBNMh+BO
-   1UHtjoC6g2TnTddpF4B7soF+Ci/uh7fPc5NVaehNEYkqggF7Fy5Tf0JEr
-   JvjFZdozeJ4ZVRv0RqwEALxkrYTmgKuBeRVf4aX0zF3ZdO+wUcfJwJd1f
-   sout0uvH3J96RUa7y4GXpusmVYTxktQ3vCLN74UOWBM9bHKOgkRSSvVQr
-   FGtIHZjtlYTkilA1HF8F/i0Qg3sglCKIvt7bT+agoERAfnmd/sZ4penja
-   SPLE7i4qtquHwEiaStxqVRXVoc4mLFoKP1VSU+Kli+XtYaf8xronQMfLS
+  bh=K/sJ8bKhUciZIRzZUdPxmJL072OHBKzj5AY5uZaH5KY=;
+  b=VdPGkiK2e5nHUCOZe1KkDXwnQE3O2VqMq3750TlNgOveNx2WFov487md
+   JtRALPgTo799FKYexA0l+62PEd+NlENir/FWTZoq8yGxBRdTxovGDPZQt
+   Q2Z697JH2BBbufQEydvYMbZ7tLdAiV616wlDUjCg4XE/hkb6cTh5+zyUS
+   /c0yK7jbIlKod5zUKZAVBpGjwheYJgIRWLPxlR05ZcZfCR7ckZvippMEd
+   6TSWynGu+V8okVVxV5nQYTvn7mW6WrNbuXvMqetDknDUng8go+g+Y0o89
+   xSeqG8UYImkF0bYU43RSKPuYli4LZVNgO3Sx+9TBjKDiYMuEAMykM675M
    g==;
 X-IronPort-AV: E=Sophos;i="5.90,205,1643644800"; 
-   d="scan'208";a="300264250"
-Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 24 Mar 2022 08:58:38 +0800
-IronPort-SDR: rNdCSrQAbP+Re9nmIN6xZ4KV9DH6Z1slLrmJP1iBACn2r4qMBHDHRUxeqfuc2bVakx4wMEhRcj
- tP8CPapVdqUE10TY6NDgo9pHRgDL9T27hFL7t3SPAjajnu9AmlEop8z016eyNXW/oI0bLO+LzR
- LDfWPVvYaJ/r3vsGdy0gj/NcAeO5ywiDnz02kPb1UpcxmW/42sk0twiAXqOPGu4MZwL3t+uCRd
- gCi7mde/A2DTXIH8/1NwsppDGIFKW9k8ao58vXMoDb88k3X+SQgo8EYGZ/YO3s6x2GO+/MqRu4
- yB4NCesV7a2mnqef6y4FQeMM
+   d="scan'208";a="196121334"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 24 Mar 2022 09:11:12 +0800
+IronPort-SDR: vJwqtIeazQyMySyR7Zo3UO9qn8iQYUTI0j2RM1uhwSeI+r1E1LNSWEXUZVrqffDEKFDTDllKMy
+ 2Ruad3NiMSJ1jKNdk94hwnfWDG2fLL8SIyf6J6ngta2W7vlaRUPjnTCdzeYIl6f56a4M+HKDC4
+ 0y+/1UP2wFEtWsWwD2VXdG0hnwnDJyx57MM1bjmyijl7LeRFtts8Wi88U7H/xtWwKgyXbgx4Cb
+ /IiZYuIkZZYfsIzxhqA50IGuhST46opYnnQV/5Nk4o1MdxoZcjiwqQZL8esyKi81zBHtDoSvdM
+ AZKwqaWx2wPkhcZFRZhADeF4
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 17:30:31 -0700
-IronPort-SDR: 2hphGytCiuW+JHtpfQDzlQsqc3dvcltz2PT+3kB2HmX7Qg+xAXXpgI2wPZalorSGgh3DrPrte+
- U6BClPHQv6G7BBMULc8bDT5DEwmjurm/xNKNS3L5h13vi+0f5tsLC0X3TdwgM9p+46BTOmNZSR
- H6yqqPvf0PE6PhuNTpbS4ijRvAY3UsKgCNrpYXlOURVL9XDm35q5WTiUw19rbPruIGHBi6P3GH
- BiXcRipwOs6qQFJGCgOi5frTA0EamHaLdlqhkXrpcO4/Uq8GTCItxg1mIITRKiFAP1iw9V6jUb
- rFs=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 17:43:05 -0700
+IronPort-SDR: 344BFUi3ggyDb9JDUQ427a2WnOXvezvvUBUFqTV76ZprxOU2aGj6L/9Ytd+P3UzowbmV5Y4er3
+ d9FuwloHENcpjocKzh9gHrVJCSRKOo/xrcovNhfqOrF5kkJEtz4998dCDdNSjCQDNc1RWK2tLl
+ M/KdjbtESR3L/pRRpnv90anByLKUSzvs0wzsKVodzM11fL8VpwsnB0foYioY6EjCI4+y/ULstd
+ RDtpBJdlrkwHsBXqVehaU0/I6XCaPyskyDEOPqO9+lVa0e9q8qV654bqXeOdRin+R0MrlMTXIQ
+ q2M=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 17:58:39 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Mar 2022 18:11:13 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KP6Kp22JKz1SVp1
-        for <linux-ide@vger.kernel.org>; Wed, 23 Mar 2022 17:58:38 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KP6cJ4JYzz1SVp0
+        for <linux-ide@vger.kernel.org>; Wed, 23 Mar 2022 18:11:12 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,28 +56,28 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1648083517; x=1650675518; bh=OTBnl5Cs2iyIhyA4xwKnzLy274oypsjBtyC
-        g7TPtK4s=; b=rl0yHPhzOn7IhkdRtQt4dvoLgPKIMRnxDzb4OXrPrqNCcvhNvg1
-        52d7VcIVnG1ujALfEOJmJu8BFwHxDMNyHbqG8seEJicX6SiPCPwAG8cyQ+Eixb4+
-        IHWufkJa3sgVyJnYkNol2+DuYURUEQ2Rh1xoPYO3J8dIYzXk/Pj32frRWRhJaDZ5
-        DdiWPAx83zNCWZfEG8SsFIHLRKBYU4tS7mnOZesdaU5VX1G3CeRubbEHemvXUqjO
-        oWm+7IfrXlvl8RvaC8yXM8Ov8FcR0kJENrtXkKlFbDsGETwUl3JLOYTXLlR30nJx
-        flXuWh26v0gZPpBz+COs1Q0j7QBRdL6RpGA==
+        1648084271; x=1650676272; bh=K/sJ8bKhUciZIRzZUdPxmJL072OHBKzj5AY
+        5uZaH5KY=; b=hsGGWUJ0a5Vaz/7o4Nq+f774W1IerSJsvSoveT/AZB9F/670ZKf
+        +Jsu/5IPj5Cvq7qs5tP2YsWJPg0yAIHr/XW+xNORShkiSMN8UTKXsoObW7LD42uE
+        Gy2+KL3B6dUXNX3ZFNXKkhlaLWtOh0y3gDqV4GNHyQI8W8bdRSQjqJnF03pneiR9
+        3si9L/7jdXscINTi0Po1BPXbalFX6qPrcBbM3iHzjiZmtaCgvZc5jUTFQ+pj2Jn8
+        T7ZsHxk4w/4bImJihAOeAXM2ZlXI2flAfHtSVHupcC4PbFQ0CQgaLeFG/MOfhAUX
+        tQHEA6Fu1MHzwJhgEIy0EUcbzQadp4kIZrA==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id IgOeXm7klToq for <linux-ide@vger.kernel.org>;
-        Wed, 23 Mar 2022 17:58:37 -0700 (PDT)
+        with ESMTP id PHVfoglV8reY for <linux-ide@vger.kernel.org>;
+        Wed, 23 Mar 2022 18:11:11 -0700 (PDT)
 Received: from [10.225.163.114] (unknown [10.225.163.114])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KP6Km0fgGz1Rvlx;
-        Wed, 23 Mar 2022 17:58:35 -0700 (PDT)
-Message-ID: <9128f850-fcc1-811e-b781-b7fbcb2403ba@opensource.wdc.com>
-Date:   Thu, 24 Mar 2022 09:58:34 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KP6cG20Ghz1Rvlx;
+        Wed, 23 Mar 2022 18:11:10 -0700 (PDT)
+Message-ID: <ff109d7a-e308-3ce0-b7aa-0905e101e5fd@opensource.wdc.com>
+Date:   Thu, 24 Mar 2022 10:11:09 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.6.2
-Subject: Re: [PATCH 03/21] ata: libahci_platform: Explicitly set rc on
- devres_alloc failure
+Subject: Re: [PATCH 04/21] ata: libahci_platform: Convert to using handy
+ devm-ioremap methods
 Content-Language: en-US
 To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Hans de Goede <hdegoede@redhat.com>,
@@ -88,10 +88,10 @@ Cc:     Serge Semin <fancer.lancer@gmail.com>,
         Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 References: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
- <20220324001628.13028-4-Sergey.Semin@baikalelectronics.ru>
+ <20220324001628.13028-5-Sergey.Semin@baikalelectronics.ru>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <20220324001628.13028-4-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220324001628.13028-5-Sergey.Semin@baikalelectronics.ru>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
@@ -99,51 +99,64 @@ List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
 On 3/24/22 09:16, Serge Semin wrote:
-> It's better for readability and maintainability to explicitly assign an
-> error number to the variable used then as a return value from the method
-> on the cleanup-on-error path. So adding new code in the method we won't
+> Currently the IOMEM AHCI registers space is mapped by means of the
+> two functions invocation: platform_get_resource() is used to get the very
+> first memory resource and devm_ioremap_resource() is called to remap that
+> resource. Device-managed kernel API provides a handy wrapper to perform
+> the same in single function call: devm_platform_ioremap_resource().
 
-No it is not. On-stack variable initialization is not free. So if
-initializing the variable is not needed, do not do it.
-
-> have to think whether the overridden rc-variable is set afterward in case
-> of an error. Saving one line of code doesn't worth it especially seeing
-> the rest of the ahci_platform_get_resources() function errors handling
-> blocks do explicitly write errno to rc.
+> 
+> While at it seeing many AHCI platform drivers rely on having the AHCI CSR
+> space marked with "ahci" name let's first try to find and remap the CSR
+> IO-mem with that name and only if it fails fallback to getting the very
+> first registers space platform resource.
 > 
 > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 > ---
->  drivers/ata/libahci_platform.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+>  drivers/ata/libahci_platform.c | 10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
 > 
 > diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-> index 18296443ccba..1bd2f1686239 100644
+> index 1bd2f1686239..8eabbb5f208c 100644
 > --- a/drivers/ata/libahci_platform.c
 > +++ b/drivers/ata/libahci_platform.c
-> @@ -389,7 +389,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
->  	struct ahci_host_priv *hpriv;
->  	struct clk *clk;
->  	struct device_node *child;
-> -	int i, enabled_ports = 0, rc = -ENOMEM, child_nodes;
-> +	int i, enabled_ports = 0, rc = 0, child_nodes;
->  	u32 mask_port_map = 0;
->  
->  	if (!devres_open_group(dev, NULL, GFP_KERNEL))
-> @@ -397,8 +397,10 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
->  
->  	hpriv = devres_alloc(ahci_platform_put_resources, sizeof(*hpriv),
->  			     GFP_KERNEL);
-> -	if (!hpriv)
-> +	if (!hpriv) {
-> +		rc = -ENOMEM;
->  		goto err_out;
-> +	}
-
-If you set rc to -ENOMEM here, then the 0 initialization of rc is not needed.
-
+> @@ -404,11 +404,13 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
 >  
 >  	devres_add(dev, hpriv);
 >  
+> -	hpriv->mmio = devm_ioremap_resource(dev,
+> -			      platform_get_resource(pdev, IORESOURCE_MEM, 0));
+> +	hpriv->mmio = devm_platform_ioremap_resource_byname(pdev, "ahci");
+
+See __devm_ioremap_resource(): if there is no resource named "ahci" found,
+then this will print an error message ("invalid resource\n"). That may
+confuse users as this error message was not present before. So you may
+want to change this code to something like this:
+
+/*
+ * If the DT provided an "ahci" named resource, use it. Otherwise,
+ * fallback to using the default first resource for the device node.
+ */
+if (platform_get_resource_byname(pdev, IORESOURCE_MEM, "ahci"))
+	hpriv->mmio = devm_platform_ioremap_resource_byname(pdev, "ahci");
+else
+	hpriv->mmio = devm_platform_ioremap_resource(pdev, 0);
+if (IS_ERR(hpriv->mmio)) {
+	rc = PTR_ERR(hpriv->mmio);
+	goto err_out;
+}
+
+>  	if (IS_ERR(hpriv->mmio)) {
+> -		rc = PTR_ERR(hpriv->mmio);
+> -		goto err_out;
+> +		hpriv->mmio = devm_platform_ioremap_resource(pdev, 0);
+> +		if (IS_ERR(hpriv->mmio)) {
+> +			rc = PTR_ERR(hpriv->mmio);
+> +			goto err_out;
+> +		}
+>  	}
+>  
+>  	for (i = 0; i < AHCI_MAX_CLKS; i++) {
 
 
 -- 
