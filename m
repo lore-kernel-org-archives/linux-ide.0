@@ -2,45 +2,44 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 555C4C43219
-	for <linux-ide@archiver.kernel.org>; Mon, 28 Mar 2022 15:44:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC34BC4167D
+	for <linux-ide@archiver.kernel.org>; Mon, 28 Mar 2022 15:44:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238735AbiC1Pp6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S238756AbiC1Pp6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Mon, 28 Mar 2022 11:45:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45168 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45200 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238595AbiC1Ppy (ORCPT
+        with ESMTP id S238609AbiC1Ppy (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2022 11:45:54 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 056224A3E1;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 054E04A3DD;
         Mon, 28 Mar 2022 08:44:11 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id 384E51E28DE;
-        Thu, 24 Mar 2022 03:16:45 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 384E51E28DE
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id A395E1E28DA;
+        Thu, 24 Mar 2022 03:16:42 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru A395E1E28DA
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1648081005;
-        bh=KrUo+i/9CiTNQNY1Lv9K7N6HJQQfuan8/c6RBDZemY0=;
+        d=baikalelectronics.ru; s=mail; t=1648081002;
+        bh=yESOGL8CF+QodUORwSlO0VBu4cxcXE6Ud++7R1zwGIY=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=JjA8l0IF0wENkQ35sS+hjd0o1EeJ75KbTFWy9fieqH2F/B3VSZY3cZeDt66QOozNi
-         XWk7EyGnV/9VUaWAWrlz609mh+tPIP0OocNAfKCjQi/r/4SPR3lJVCBieHXMBv9oUU
-         G5DTGAdWg+RaLRBapM/C06ayl/5+Nx5AerjanBlc=
+        b=M90YekcuouveLxbw53cmrnOrhbPlcTOgVBgnPUiAd58p7sMzDyWXT7VMGhbM956Bi
+         VOk/ZTxyTGD8pneYNuG2AHsj9V9PxQbSzR4gpo0bO9G6dHMC1ZMJfPd1irmu8l6TT+
+         nhQ+IB4hfuy9MmrzbUghS5eb2Cn7M8JLPg3JR5QE=
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 03:16:44 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 03:16:42 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Rob Herring <robh+dt@kernel.org>
+        Jens Axboe <axboe@kernel.dk>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <devicetree@vger.kernel.org>
-Subject: [PATCH 18/21] dt-bindings: ata: ahci: Add Baikal-T1 AHCI SATA controller DT schema
-Date:   Thu, 24 Mar 2022 03:16:25 +0300
-Message-ID: <20220324001628.13028-19-Sergey.Semin@baikalelectronics.ru>
+        Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: [PATCH 15/21] ata: ahci: Introduce firmware-specific caps initialization
+Date:   Thu, 24 Mar 2022 03:16:22 +0300
+Message-ID: <20220324001628.13028-16-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -51,158 +50,273 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Baikal-T1 AHCI controller is based on the DWC AHCI SATA IP-core v4.10a
-with the next specific settings: two SATA ports, cascaded CSR access based
-on two clock domains (APB and AXI), selectable source of the reference
-clock (though stable work is currently available from the external source
-only), two reset lanes for the application and SATA ports domains. Other
-than that the device is fully compatible with the generic DWC AHCI SATA
-bindings.
+There are systems with no BIOS or comprehensive embedded firmware which
+could be able to properly initialize the SATA AHCI controller
+platform-specific capabilities. In that case a good alternative to having
+a clever bootloader is to create a device tree node with the properties
+well describing all the AHCI-related platform specifics. All the settings
+which are normally detected and marked as available in the HBA and its
+ports capabilities fields [1] could be defined in the platform DTB by
+means of a set of the dedicated properties. Such approach perfectly fits
+to the DTB-philosophy - to provide hardware/platform description.
+
+So here we suggest to extend the SATA AHCI device tree bindings with the
+next set of additional DT boolean properties:
+1) hba-sss - Controller supports Staggered Spin-up.
+2) hba-smps - Mechanical Presence Switch is support by controller.
+3) hba-hpcp - Hot Plug Capable Port.
+4) hba-mpsp - Mechanical Presence Switch Attached to Port.
+5) hba-cpd - Cold Presence Detection.
+6) hba-esp - External SATA Port.
+7) hba-fbscp - FIS-based Switching Capable Port.
+All of these capabilities require to have a corresponding hardware
+configuration. Thus it's ok to have them defined in DTB.
+
+Even though the driver currently takes into account the state of the ESP
+and FBSCP flags state only, there is nothing wrong with having all them
+supported by the generic AHCI library in order to have a complete OF-based
+platform-capabilities initialization procedure. These properties will be
+parsed in the ahci_platform_get_resources() method and their values will
+be stored in the saved_* fields of the ahci_host_priv structure, which in
+its turn then will be used to restore the H.CAP, H.PI and P#.CMD
+capability fields on device init and after HBA reset.
+
+Please note this modification concerns the HW-init HBA and its ports flags
+only, which are by specification [1] are supposed to be initialized by the
+BIOS/platform firmware/expansion ROM and which are normally declared in
+the one-time-writable-after-reset register fields. Even though these flags
+aren't supposed to be cleared after HBA reset some AHCI instances may
+violate that rule so we still need to perform the fields resetting after
+each reset. Luckily the corresponding functionality has already been
+partly implemented in the framework of the ahci_save_initial_config() and
+ahci_restore_initial_config() methods.
+
+[1] Serial ATA AHCI 1.3.1 Specification, p. 103
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 ---
- .../bindings/ata/baikal,bt1-ahci.yaml         | 132 ++++++++++++++++++
- 1 file changed, 132 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
+ drivers/ata/ahci.h             |  1 +
+ drivers/ata/libahci.c          | 51 ++++++++++++++++++++++++++++------
+ drivers/ata/libahci_platform.c | 51 ++++++++++++++++++++++++++++++++--
+ 3 files changed, 92 insertions(+), 11 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml b/Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
-new file mode 100644
-index 000000000000..960d88d97926
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
-@@ -0,0 +1,132 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/ata/baikal,bt1-ahci.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 0fde57e7457e..35eaa42e9269 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -339,6 +339,7 @@ struct ahci_host_priv {
+ 	u32			saved_cap;	/* saved initial cap */
+ 	u32			saved_cap2;	/* saved initial cap2 */
+ 	u32			saved_port_map;	/* saved initial port_map */
++	u32			saved_port_cap[AHCI_MAX_PORTS]; /* saved port_cap */
+ 	u32 			em_loc; /* enclosure management location */
+ 	u32			em_buf_sz;	/* EM buffer size in byte */
+ 	u32			em_msg_type;	/* EM message type */
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 43460da06947..9e67c90900d2 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -16,6 +16,7 @@
+  * http://www.intel.com/technology/serialata/pdf/rev1_1.pdf
+  */
+ 
++#include <linux/bitops.h>
+ #include <linux/kernel.h>
+ #include <linux/gfp.h>
+ #include <linux/module.h>
+@@ -443,16 +444,28 @@ static ssize_t ahci_show_em_supported(struct device *dev,
+ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
+ {
+ 	void __iomem *mmio = hpriv->mmio;
+-	u32 cap, cap2, vers, port_map;
++	void __iomem *port_mmio;
++	unsigned long port_map;
++	u32 cap, cap2, vers;
+ 	int i;
+ 
+ 	/* make sure AHCI mode is enabled before accessing CAP */
+ 	ahci_enable_ahci(mmio);
+ 
+-	/* Values prefixed with saved_ are written back to host after
+-	 * reset.  Values without are used for driver operation.
++	/*
++	 * Values prefixed with saved_ are written back to the HBA and ports
++	 * registers after reset. Values without are used for driver operation.
++	 */
 +
-+title: Baikal-T1 SoC AHCI SATA controller
++	/*
++	 * Override HW-init HBA capability fields with platform-specific values.
++	 * The rest of the HBA capabilities are defined with strictly RO flags
++	 * and can't be modified in CSR anyway.
+ 	 */
+-	hpriv->saved_cap = cap = readl(mmio + HOST_CAP);
++	cap = readl(mmio + HOST_CAP);
++	if (hpriv->saved_cap)
++		cap = (cap & ~(HOST_CAP_SSS | HOST_CAP_MPS)) | hpriv->saved_cap;
++	hpriv->saved_cap = cap;
+ 
+ 	/* CAP2 register is only defined for AHCI 1.2 and later */
+ 	vers = readl(mmio + HOST_VERSION);
+@@ -519,7 +532,7 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
+ 	/* Override the HBA ports mapping if the platform needs it */
+ 	port_map = readl(mmio + HOST_PORTS_IMPL);
+ 	if (hpriv->saved_port_map && port_map != hpriv->saved_port_map) {
+-		dev_info(dev, "forcing port_map 0x%x -> 0x%x\n",
++		dev_info(dev, "forcing port_map 0x%lx -> 0x%x\n",
+ 			 port_map, hpriv->saved_port_map);
+ 		port_map = hpriv->saved_port_map;
+ 	} else {
+@@ -527,7 +540,7 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
+ 	}
+ 
+ 	if (hpriv->mask_port_map) {
+-		dev_warn(dev, "masking port_map 0x%x -> 0x%x\n",
++		dev_warn(dev, "masking port_map 0x%lx -> 0x%lx\n",
+ 			port_map,
+ 			port_map & hpriv->mask_port_map);
+ 		port_map &= hpriv->mask_port_map;
+@@ -546,7 +559,7 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
+ 		 */
+ 		if (map_ports > ahci_nr_ports(cap)) {
+ 			dev_warn(dev,
+-				 "implemented port map (0x%x) contains more ports than nr_ports (%u), using nr_ports\n",
++				 "implemented port map (0x%lx) contains more ports than nr_ports (%u), using nr_ports\n",
+ 				 port_map, ahci_nr_ports(cap));
+ 			port_map = 0;
+ 		}
+@@ -555,12 +568,26 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
+ 	/* fabricate port_map from cap.nr_ports for < AHCI 1.3 */
+ 	if (!port_map && vers < 0x10300) {
+ 		port_map = (1 << ahci_nr_ports(cap)) - 1;
+-		dev_warn(dev, "forcing PORTS_IMPL to 0x%x\n", port_map);
++		dev_warn(dev, "forcing PORTS_IMPL to 0x%lx\n", port_map);
+ 
+ 		/* write the fixed up value to the PI register */
+ 		hpriv->saved_port_map = port_map;
+ 	}
+ 
++	/*
++	 * Preserve the ports capabilities defined by the platform. Note there
++	 * is no need in storing the rest of the P#.CMD fields since they are
++	 * volatile.
++	 */
++	for_each_set_bit(i, &port_map, AHCI_MAX_PORTS) {
++		if (hpriv->saved_port_cap[i])
++			continue;
 +
-+maintainers:
-+  - Serge Semin <fancer.lancer@gmail.com>
++		port_mmio = __ahci_port_base(hpriv, i);
++		hpriv->saved_port_cap[i] =
++			readl(port_mmio + PORT_CMD) & PORT_CMD_CAP;
++	}
 +
-+description: |
-+  AHCI SATA controller embedded into the Baikal-T1 SoC is based on the
-+  DWC AHCI SATA v4.10a IP-core.
+ 	/* record values to use during operation */
+ 	hpriv->cap = cap;
+ 	hpriv->cap2 = cap2;
+@@ -590,13 +617,21 @@ EXPORT_SYMBOL_GPL(ahci_save_initial_config);
+ static void ahci_restore_initial_config(struct ata_host *host)
+ {
+ 	struct ahci_host_priv *hpriv = host->private_data;
++	unsigned long port_map = hpriv->port_map;
+ 	void __iomem *mmio = hpriv->mmio;
++	void __iomem *port_mmio;
++	int i;
+ 
+ 	writel(hpriv->saved_cap, mmio + HOST_CAP);
+ 	if (hpriv->saved_cap2)
+ 		writel(hpriv->saved_cap2, mmio + HOST_CAP2);
+ 	writel(hpriv->saved_port_map, mmio + HOST_PORTS_IMPL);
+ 	(void) readl(mmio + HOST_PORTS_IMPL);	/* flush */
 +
-+allOf:
-+  - $ref: snps,dwc-ahci.yaml#
++	for_each_set_bit(i, &port_map, AHCI_MAX_PORTS) {
++		port_mmio = __ahci_port_base(hpriv, i);
++		writel(hpriv->saved_port_cap[i], port_mmio + PORT_CMD);
++	}
+ }
+ 
+ static unsigned ahci_scr_offset(struct ata_port *ap, unsigned int sc_reg)
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index 5cbc2c42164d..493144716c6e 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -23,6 +23,7 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/of_platform.h>
+ #include <linux/reset.h>
 +
-+properties:
-+  compatible:
-+    contains:
-+      const: baikal,bt1-ahci
+ #include "ahci.h"
+ 
+ static void ahci_host_stop(struct ata_host *host);
+@@ -407,6 +408,44 @@ static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
+ 	return rc;
+ }
+ 
++static int ahci_platform_get_firmware(struct ahci_host_priv *hpriv,
++				      struct device *dev)
++{
++	struct device_node *child;
++	u32 port;
 +
-+  clocks:
-+    items:
-+      - description: Peripheral APB bus clock source
-+      - description: Application AXI BIU clock
-+      - description: Internal SATA Ports reference clock
-+      - description: External SATA Ports reference clock
++	of_property_read_u32(dev->of_node,
++			     "ports-implemented", &hpriv->saved_port_map);
 +
-+  clock-names:
-+    items:
-+      - const: pclk
-+      - const: aclk
-+      - const: ref_int
-+      - const: ref_ext
++	if (of_property_read_bool(dev->of_node, "hba-sss"))
++		hpriv->saved_cap |= HOST_CAP_SSS;
++	if (of_property_read_bool(dev->of_node, "hba-smps"))
++		hpriv->saved_cap |= HOST_CAP_MPS;
 +
-+  resets:
-+    items:
-+      - description: Application AXI BIU domain reset
-+      - description: SATA Ports clock domain reset
++	for_each_child_of_node(dev->of_node, child) {
++		if (!of_device_is_available(child))
++			continue;
 +
-+  reset-names:
-+    items:
-+      - const: arst
-+      - const: ref
++		if (of_property_read_u32(child, "reg", &port)) {
++			of_node_put(child);
++			return -EINVAL;
++		}
 +
-+  syscon:
-+    $ref: /schemas/types.yaml#/definitions/phandle
-+    description:
-+      Phandle reference to the CCU system controller. It is required to
-+      switch between internal and external SATA reference clock sources.
++		if (of_property_read_bool(child, "hba-hpcp"))
++			hpriv->saved_port_cap[port] |= PORT_CMD_HPCP;
++		if (of_property_read_bool(child, "hba-mpsp"))
++			hpriv->saved_port_cap[port] |= PORT_CMD_MPSP;
++		if (of_property_read_bool(child, "hba-cpd"))
++			hpriv->saved_port_cap[port] |= PORT_CMD_CPD;
++		if (of_property_read_bool(child, "hba-esp"))
++			hpriv->saved_port_cap[port] |= PORT_CMD_ESP;
++		if (of_property_read_bool(child, "hba-fbscp"))
++			hpriv->saved_port_cap[port] |= PORT_CMD_FBSCP;
++	}
 +
-+  ports-implemented:
-+    maximum: 0x3
++	return 0;
++}
 +
-+patternProperties:
-+  "^sata-port@[0-9a-e]$":
-+    type: object
+ /**
+  * ahci_platform_get_resources - Get platform resources
+  * @pdev: platform device to get resources for
+@@ -538,9 +577,6 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 		goto err_out;
+ 	}
+ 
+-	of_property_read_u32(dev->of_node,
+-			     "ports-implemented", &hpriv->saved_port_map);
+-
+ 	if (child_nodes) {
+ 		for_each_child_of_node(dev->of_node, child) {
+ 			u32 port;
+@@ -605,6 +641,15 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 		if (rc == -EPROBE_DEFER)
+ 			goto err_out;
+ 	}
 +
-+    properties:
-+      reg:
-+        minimum: 0
-+        maximum: 1
++	/*
++	 * Retrieve firmware-specific flags which then will be used to set
++	 * the HW-init fields of HBA and its ports
++	 */
++	rc = ahci_platform_get_firmware(hpriv, dev);
++	if (rc)
++		goto err_out;
 +
-+      snps,tx-ts-max:
-+        $ref: /schemas/types.yaml#/definitions/uint32
-+        description:
-+          Due to having AXI3 bus interface utilized the maximum Tx DMA
-+          transaction size can't exceed 16 beats (AxLEN[3:0]).
-+        minimum: 1
-+        maximum: 16
-+
-+      snps,rx-ts-max:
-+        $ref: /schemas/types.yaml#/definitions/uint32
-+        description:
-+          Due to having AXI3 bus interface utilized the maximum Rx DMA
-+          transaction size can't exceed 16 beats (AxLEN[3:0]).
-+        minimum: 1
-+        maximum: 16
-+
-+required:
-+  - compatible
-+  - reg
-+  - interrupts
-+  - clocks
-+  - clock-names
-+  - resets
-+  - syscon
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/interrupt-controller/mips-gic.h>
-+    #include <dt-bindings/clock/bt1-ccu.h>
-+    #include <dt-bindings/reset/bt1-ccu.h>
-+
-+    sata@1f050000 {
-+      compatible = "baikal,bt1-ahci", "snps,dwc-ahci";
-+      reg = <0x1f050000 0x2000>;
-+      #address-cells = <1>;
-+      #size-cells = <0>;
-+
-+      interrupts = <GIC_SHARED 64 IRQ_TYPE_LEVEL_HIGH>;
-+
-+      clocks = <&ccu_sys CCU_SYS_APB_CLK>, <&ccu_axi CCU_AXI_SATA_CLK>,
-+               <&ccu_sys CCU_SYS_SATA_REF_CLK>, <&clk_sata>;
-+      clock-names = "pclk", "aclk", "ref_int", "ref_ext";
-+
-+      resets = <&ccu_axi CCU_AXI_SATA_RST>, <&ccu_sys CCU_SYS_SATA_REF_RST>;
-+      reset-names = "arst", "ref";
-+
-+      syscon = <&syscon>;
-+
-+      ports-implemented = <0x3>;
-+
-+      sata-port@0 {
-+        reg = <0>;
-+
-+        snps,tx-ts-max = <4>;
-+        snps,rx-ts-max = <4>;
-+      };
-+
-+      sata-port@1 {
-+        reg = <1>;
-+
-+        snps,tx-ts-max = <4>;
-+        snps,rx-ts-max = <4>;
-+      };
-+    };
-+...
+ 	pm_runtime_enable(dev);
+ 	pm_runtime_get_sync(dev);
+ 	hpriv->got_runtime_pm = true;
 -- 
 2.35.1
 
