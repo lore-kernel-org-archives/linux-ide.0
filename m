@@ -2,31 +2,31 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 437E3C4321E
-	for <linux-ide@archiver.kernel.org>; Mon, 28 Mar 2022 15:44:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E78CC43217
+	for <linux-ide@archiver.kernel.org>; Mon, 28 Mar 2022 15:44:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238840AbiC1PqZ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 28 Mar 2022 11:46:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46516 "EHLO
+        id S239553AbiC1Pq0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 28 Mar 2022 11:46:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46514 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238964AbiC1PqJ (ORCPT
+        with ESMTP id S238991AbiC1PqJ (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2022 11:46:09 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B89C14AE02;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B88544AE01;
         Mon, 28 Mar 2022 08:44:15 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id 2C49F1E28E1;
-        Thu, 24 Mar 2022 03:16:47 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 2C49F1E28E1
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id E41ED1E28D7;
+        Thu, 24 Mar 2022 03:16:40 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru E41ED1E28D7
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1648081007;
-        bh=CmZMxsTO3v7Evhuuaq9r3QHFneOnKQL5Dm48UYqxXi8=;
+        d=baikalelectronics.ru; s=mail; t=1648081000;
+        bh=Z2z5KuUwhitVoXdJ6+N9aXLThmAqUhYE4l35nZdiN4k=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=RFmO2HTV8IzpzqnIgzneSaUmocTms3kT+p6L6ylig0KWEbVkCfqGPaFogQJcOKWvg
-         0WTQRAa98EIELx2ok+u0w5pY7ycP7DlHbCIFdYR8bQoze7wVcdsAAmgERH4vYbV7AK
-         jqHtnDyttlkn9EMRM1nCYgBSDPJuOLoHGR8gNg6s=
+        b=cNa4HSzymddUBxInEp7orqRN+mYhsTRkNnMbpTTKsUUoYcVCwtceKkeiN9K/SBeFo
+         pk8VVhhHEagggCvllekZoGTYn40IvUWvwKLT2w0COnPkkdTsLQKKbXfaQa8PFKJO3Q
+         BPdQ+oCNNdYA4DTkMIpPQCd4xeOJQ8wmduQZnKJ0=
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 03:16:46 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 03:16:40 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
@@ -37,9 +37,9 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH 21/21] MAINTAINERS: Add maintainers for DWC AHCI SATA driver
-Date:   Thu, 24 Mar 2022 03:16:28 +0300
-Message-ID: <20220324001628.13028-22-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH 13/21] ata: libahci: Don't read AHCI version twice in the save-config method
+Date:   Thu, 24 Mar 2022 03:16:20 +0300
+Message-ID: <20220324001628.13028-14-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -50,34 +50,29 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Add myself as a maintainer of the new DWC AHCI SATA driver and
-its DT-bindings schema.
+There is no point in reading the AHCI version all over in the tail of the
+ahci_save_initial_config() method. That register is RO and doesn't change
+its value even after reset. So just reuse the data, which has already been
+read from there earlier in the head of the function.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 ---
- MAINTAINERS | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/ata/libahci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index cd0f68d4a34a..19c9ea0758cc 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10919,6 +10919,15 @@ F:	drivers/ata/ahci_platform.c
- F:	drivers/ata/libahci_platform.c
- F:	include/linux/ahci_platform.h
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 011175e82174..43460da06947 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -564,7 +564,7 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
+ 	/* record values to use during operation */
+ 	hpriv->cap = cap;
+ 	hpriv->cap2 = cap2;
+-	hpriv->version = readl(mmio + HOST_VERSION);
++	hpriv->version = vers;
+ 	hpriv->port_map = port_map;
  
-+LIBATA SATA AHCI SYNOPSYS DWC CONTROLLER DRIVER
-+M:	Serge Semin <fancer.lancer@gmail.com>
-+L:	linux-ide@vger.kernel.org
-+S:	Maintained
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-block.git
-+F:	Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
-+F:	Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
-+F:	drivers/ata/ahci_dwc.c
-+
- LIBATA SATA PROMISE TX2/TX4 CONTROLLER DRIVER
- M:	Mikael Pettersson <mikpelinux@gmail.com>
- L:	linux-ide@vger.kernel.org
+ 	if (!hpriv->start_engine)
 -- 
 2.35.1
 
