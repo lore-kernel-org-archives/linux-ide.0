@@ -2,31 +2,31 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6ED4AC433F5
-	for <linux-ide@archiver.kernel.org>; Mon, 28 Mar 2022 15:46:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 556C6C4332F
+	for <linux-ide@archiver.kernel.org>; Mon, 28 Mar 2022 15:46:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239167AbiC1PsW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 28 Mar 2022 11:48:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46528 "EHLO
+        id S239181AbiC1PsX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 28 Mar 2022 11:48:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46452 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239013AbiC1PqJ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2022 11:46:09 -0400
+        with ESMTP id S239085AbiC1PqK (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2022 11:46:10 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id DE3D04AE2D;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7648D4AE3B;
         Mon, 28 Mar 2022 08:44:18 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id DE5B21E28CB;
-        Thu, 24 Mar 2022 03:16:30 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru DE5B21E28CB
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id D57901E28D4;
+        Thu, 24 Mar 2022 03:16:37 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru D57901E28D4
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1648080991;
-        bh=w+IE4ooxcJV1akjAh6EfL55OnRfVpgZ0hKMlITIwQXk=;
-        h=From:To:CC:Subject:Date:From;
-        b=T6SEYKT0lbnsGV2lcUWvu/lUMP975bdbXHWEpNzyLQh1ZmuYO9Ovg4Th6PQROBBWB
-         nQ0YahRLZMuKJ5F3GTrozZZuQ5A84cGAtiOwiVgAHrPwUfzcIcCgfKC6jt3RjfHs/a
-         rk4KnKZ/JK7uZV6fwQjKSoYppnpnf6Zw755klIw8=
+        d=baikalelectronics.ru; s=mail; t=1648080997;
+        bh=WwPZH0B/nbV8SPoRsnfa0nApSVFo28Gv/7atL+OBCV4=;
+        h=From:To:CC:Subject:Date:In-Reply-To:References:From;
+        b=G6fhluXK/HeWLEpvOSJmMgfNTLbDeIzc4qqbGv6vy2xkZyEj+/2Dffrr0FEDXYsKC
+         PDEtpsoJuXO2GccFVQQA6nrGGy9T9X/gjABOxKX6r9O4gLkI74Kkfnuzn2AaX+HgoD
+         ObNJ+FD5N/7B/iGGVHmue4voGN0WUpaM3dIZ/ihg=
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 03:16:30 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 03:16:37 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
@@ -37,9 +37,11 @@ CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH 00/21] ata: ahci: Add DWC/Baikal-T1 AHCI SATA support
-Date:   Thu, 24 Mar 2022 03:16:07 +0300
-Message-ID: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
+Subject: [PATCH 09/21] ata: libahci_platform: Introduce reset assertion/deassertion methods
+Date:   Thu, 24 Mar 2022 03:16:16 +0300
+Message-ID: <20220324001628.13028-10-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
+References: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
@@ -48,166 +50,168 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-The main goal of this patchset was to add Baikal-T1 AHCI SATA specifics
-support into the kernel AHCI subsystem. On the way of doing that we
-figured out that mainly these specifics are actually DWC AHCI SATA
-controller features, but still there were some Baikal-T1 SoC platform
-peculiarities which we had to take into account. So the patchset
-introduces two AHCI SATA controllers support and one AHCI SATA driver
-with a series of preparation, optimization and cleanup patches.
+Currently the ACHI-platform library supports only the assert and deassert
+reset signals and ignores the platforms with self-deasserting reset lines.
+That prone to having the platforms with self-deasserting reset method
+misbehaviour when it comes to resuming from sleep state after the clocks
+have been fully disabled. For such cases the controller needs to be fully
+reset all over after the reference clocks are enabled and stable,
+otherwise the controller state machine might be in an undetermined state.
 
-Traditionally the series starts with converting the legacy AHCI SATA
-controllers text-based DT-bindings to the DT-schema. The bindings are
-split up into two schemas: one common AHCI SATA controller yaml-file,
-which can be reused by any AHCI-compatible controller utilizing the kernel
-AHCI library functions, and DT-bindings for the generic AHCI SATA devices
-indicated by the "generic-ahci" compatible string and implemented in the
-ahci_platform.c driver. Note before doing that we had to fix the
-sata-common.yaml file SATA port IDs constraint.
+The best solution would be to auto-detect which reset method is supported
+by the particular platform and use it implicitly in the framework of the
+ahci_platform_enable_resources()/ahci_platform_disable_resources()
+methods. Alas it can't be implemented due to the AHCI-platform library
+already supporting the shared reset control lines. As [1] says in such
+case we have to use only one of the next methods:
++ reset_control_assert()/reset_control_deassert();
++ reset_control_reset()/reset_control_rearm().
+If the driver had an exclusive control over the reset lines we could have
+been able to manipulate the lines with no much limitation and just used
+the combination of the methods above to cover all the possible
+reset-control cases. Since the shared reset control has already been
+advertised and couldn't be changed with no risk to breaking the platforms
+relying on it, we have no choice but to make the platform drivers to
+determine which reset methods the platform reset system supports.
 
-Then a series of generic preparations-cleanups goes. First of all it
-concerns the device-managed methods usage in the framework of the CSR
-space remapping and the clocks requesting and enabling. Note since the
-clocks handlers are requested and kept in the generic AHCI library it
-seemed a good idea to add an AHCI-platform generic method to find and get
-a particular clock handler from the pool of the requested ones. It was
-used later in the series in the DWC/Baikal-T1-specific code. Secondly we
-suggested to at least sanity check the number of SATA ports DT-sub-nodes
-before using it further.  Thirdly the ports-implemented DT-property
-parsing was moved from the AHCI platform-driver to the AHCI-library so to
-be used by the non-generic AHCI drivers if required (DT-schema is
-accordingly fixed too). Finally due to having the shared-reset control
-support we had to add a new AHCI-resource getter flag -
-AHCI_PLATFORM_RST_TRIGGER, which indicated using a trigger-like reset
-control. For such platforms the controller reset will be performed by
-means of the reset_control_reset() and reset_control_rearm() methods.
-AHCI-library reset functions encapsulating the way the reset procedure is
-performed have been also added.
+In order to implement both types of reset control support we suggest to
+introduce the new AHCI-platform flag: AHCI_PLATFORM_RST_TRIGGER, which
+when passed to the ahci_platform_get_resources() method together with the
+AHCI_PLATFORM_GET_RESETS flag will indicate that the reset lines are
+self-deasserting thus the reset_control_reset()/reset_control_rearm() will
+be used to control the reset state. Otherwise the
+reset_control_deassert()/reset_control_assert() methods will be utilized.
 
-After that goes a patches series with the platform-specific
-AHCI-capabilities initialization. The suggested functionality will be
-useful for the platforms with no BIOS, comprehensive bootloader/firmware
-installed. In that case the AHCI-related platform-specifics like drive
-staggered spin-up, mechanical presence switch attached or FIS-based
-switching capability usage, etc will be left uninitialized with no generic
-way to be indicated as available if required. We suggested to use the AHCI
-device tree node and its ports sub-nodes for that. AHCI-platform library
-will be responsible fo the corresponding DT-properties parsing and
-pre-initialization of the internal capability registers cache, which will
-be then flashed back to the corresponding CSR after HBA reset. Thus a
-supposed to be firmware-work will be done by means of the AHCI-library and
-the DT-data. A set of the preparations/cleanups required to be done before
-introducing the feature.  First the DT-properties indicating the
-corresponding capability availability were described in the common AHCI
-DT-binding schema. Second we needed to add the enum items with the AHCI
-Port CMD fields, which hadn't been added so far. Thirdly we suggested to
-discard one of the port-map internal storage (force_port_map) in favor of
-re-using another one (save_port_map) in order to simplify the port-map
-initialization interface a bit by getting rid from a redundant variable.
-Finally after discarding the double AHCI-version read procedure and
-changing the __ahci_port_base() method prototype the platform
-firmware-specific caps initialization functionality was introduced.
-
-The main part of the series goes afterwards. A dedicated DWC AHCI SATA
-controller driver was introduced together with the corresponding
-DT-binding schema pre-patch. Note the driver built mode is activated
-synchronously with the generic AHCI-platform driver by default so
-automatically to be integrated into the kernel for the DWC AHCI-based
-platforms which relied on activating the generic AHCI SATA controller
-driver. Aside with the generic resources getting and AHCI-host
-initialization, the driver implements the DWC-specific setups. In
-particular it checks whether the platform capabilities activated by the
-firmware (see the functionality described above) are actually supported by
-the controller. It's done by means of the vendor-specific registers. Then
-it makes sure that the embedded 1ms timer interval, which is used for the
-DevSleep and CCC features, is correctly initialized based on the
-application clock rate.  The last but not least the driver provides a way
-to tune the DMA-interface performance up by setting the Tx/Rx transactions
-maximum size up. The required values are specified by means of the
-"snps,tx-ts-max" and snps,rx-ts-max" DT-properties.
-
-Finally we suggest to extend the DWC AHCI SATA controller driver
-functionality with a way to add the DWC-AHCI-based platform-specific
-quirks. Indeed there are many DWC AHCI-based controllers and just a few of
-them are diverged too much to be handled by a dedicated AHCI-driver. The
-rest of them most likely can work well either with a generic version of
-the driver or require a simple normally platform-specific quirk to get up
-and running. Such platforms can define a platform-data in the DWC AHCI
-driver with a set of the controller-specific flags and initialization
-functions. Those functions will be called at the corresponding stages of
-the device probe/resume/remove procedures so to be performing the platform
-setups/cleanups.
-
-After the denoted above functionality is added we can finally introduce
-the Baikal-T1 AHCI SATA controller support into the DWC AHCI SATA driver.
-The controller is based on the DWC AHCI SATA IP-core v4.10a and can work
-well with the generic DWC AHCI driver. The only peculiarity of it is
-connected with the SATA Ports reference clock source. It can be supplied
-either from the internal SoC PLL or from the chip pads. Currently we have
-to prefer selecting the signal coming from the pads if the corresponding
-clock source is specified because the link doesn't get stably established
-when the internal clock signal is activated. In addition the platform has
-trigger-based reset signals so the corresponding flag must be passed to
-the generic AHCI-resource getter.
+[1] Documentation/driver-api/reset.rst
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Cc: Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>
-Cc: Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: devicetree@vger.kernel.org
+---
+ drivers/ata/ahci.h             |  1 +
+ drivers/ata/libahci_platform.c | 47 ++++++++++++++++++++++++++++++----
+ include/linux/ahci_platform.h  |  5 +++-
+ 3 files changed, 47 insertions(+), 6 deletions(-)
 
-Serge Semin (21):
-  dt-bindings: ata: sata: Extend number of SATA ports
-  dt-bindings: ata: Convert AHCI-bindings to DT schema
-  ata: libahci_platform: Explicitly set rc on devres_alloc failure
-  ata: libahci_platform: Convert to using handy devm-ioremap methods
-  ata: libahci_platform: Convert to using devm bulk clocks API
-  ata: libahci_platform: Add function returning a clock-handle by id
-  ata: libahci_platform: Sanity check the DT child nodes number
-  ata: libahci_platform: Parse ports-implemented property in resources
-    getter
-  ata: libahci_platform: Introduce reset assertion/deassertion methods
-  dt-bindings: ata: ahci: Add platform capability properties
-  ata: libahci: Extend port-cmd flags set with port capabilities
-  ata: libahci: Discard redundant force_port_map parameter
-  ata: libahci: Don't read AHCI version twice in the save-config method
-  ata: ahci: Convert __ahci_port_base to accepting hpriv as arguments
-  ata: ahci: Introduce firmware-specific caps initialization
-  dt-bindings: ata: ahci: Add DWC AHCI SATA controller DT schema
-  ata: ahci: Add DWC AHCI SATA controller support
-  dt-bindings: ata: ahci: Add Baikal-T1 AHCI SATA controller DT schema
-  ata: ahci-dwc: Add platform-specific quirks support
-  ata: ahci-dwc: Add Baikal-T1 AHCI SATA interface support
-  MAINTAINERS: Add maintainers for DWC AHCI SATA driver
-
- .../devicetree/bindings/ata/ahci-common.yaml  | 176 ++++++
- .../devicetree/bindings/ata/ahci-platform.txt |  79 ---
- .../bindings/ata/baikal,bt1-ahci.yaml         | 132 +++++
- .../devicetree/bindings/ata/generic-ahci.yaml |  98 ++++
- .../devicetree/bindings/ata/sata-common.yaml  |   7 +-
- .../bindings/ata/snps,dwc-ahci.yaml           | 121 ++++
- MAINTAINERS                                   |   9 +
- drivers/ata/Kconfig                           |  11 +
- drivers/ata/Makefile                          |   1 +
- drivers/ata/ahci.c                            |   4 +-
- drivers/ata/ahci.h                            |  21 +-
- drivers/ata/ahci_dwc.c                        | 525 ++++++++++++++++++
- drivers/ata/ahci_mtk.c                        |   2 -
- drivers/ata/ahci_platform.c                   |   5 -
- drivers/ata/ahci_st.c                         |   3 -
- drivers/ata/libahci.c                         |  63 ++-
- drivers/ata/libahci_platform.c                | 234 +++++---
- include/linux/ahci_platform.h                 |   8 +-
- 18 files changed, 1321 insertions(+), 178 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ata/ahci-common.yaml
- delete mode 100644 Documentation/devicetree/bindings/ata/ahci-platform.txt
- create mode 100644 Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
- create mode 100644 Documentation/devicetree/bindings/ata/generic-ahci.yaml
- create mode 100644 Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
- create mode 100644 drivers/ata/ahci_dwc.c
-
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 1564c691094a..0b1d5c24cb8c 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -342,6 +342,7 @@ struct ahci_host_priv {
+ 	bool			got_runtime_pm; /* Did we do pm_runtime_get? */
+ 	unsigned int		n_clks;
+ 	struct clk_bulk_data	*clks;		/* Optional */
++	unsigned int		f_rsts;
+ 	struct reset_control	*rsts;		/* Optional */
+ 	struct regulator	**target_pwrs;	/* Optional */
+ 	struct regulator	*ahci_regulator;/* Optional */
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index 5998e735a813..febad33aa43c 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -150,6 +150,41 @@ void ahci_platform_disable_clks(struct ahci_host_priv *hpriv)
+ }
+ EXPORT_SYMBOL_GPL(ahci_platform_disable_clks);
+ 
++/**
++ * ahci_platform_deassert_rsts - Deassert/trigger platform resets
++ * @hpriv: host private area to store config values
++ *
++ * This function desserts or triggers all the reset lanes found for the AHCI
++ * device.
++ *
++ * RETURNS:
++ * 0 on success otherwise a negative error code
++ */
++int ahci_platform_deassert_rsts(struct ahci_host_priv *hpriv)
++{
++	if (hpriv->f_rsts & AHCI_PLATFORM_RST_TRIGGER)
++		return reset_control_reset(hpriv->rsts);
++
++	return reset_control_deassert(hpriv->rsts);
++}
++EXPORT_SYMBOL_GPL(ahci_platform_deassert_rsts);
++
++/**
++ * ahci_platform_assert_rsts - Assert/rearm platform resets
++ * @hpriv: host private area to store config values
++ *
++ * This function asserts or rearms (for self-deasserting resets) all the reset
++ * controls found for the AHCI device.
++ */
++void ahci_platform_assert_rsts(struct ahci_host_priv *hpriv)
++{
++	if (hpriv->f_rsts & AHCI_PLATFORM_RST_TRIGGER)
++		return (void)reset_control_rearm(hpriv->rsts);
++
++	reset_control_assert(hpriv->rsts);
++}
++EXPORT_SYMBOL_GPL(ahci_platform_assert_rsts);
++
+ /**
+  * ahci_platform_enable_regulators - Enable regulators
+  * @hpriv: host private area to store config values
+@@ -247,18 +282,18 @@ int ahci_platform_enable_resources(struct ahci_host_priv *hpriv)
+ 	if (rc)
+ 		goto disable_regulator;
+ 
+-	rc = reset_control_deassert(hpriv->rsts);
++	rc = ahci_platform_deassert_rsts(hpriv);
+ 	if (rc)
+ 		goto disable_clks;
+ 
+ 	rc = ahci_platform_enable_phys(hpriv);
+ 	if (rc)
+-		goto disable_resets;
++		goto disable_rsts;
+ 
+ 	return 0;
+ 
+-disable_resets:
+-	reset_control_assert(hpriv->rsts);
++disable_rsts:
++	ahci_platform_assert_rsts(hpriv);
+ 
+ disable_clks:
+ 	ahci_platform_disable_clks(hpriv);
+@@ -285,7 +320,7 @@ void ahci_platform_disable_resources(struct ahci_host_priv *hpriv)
+ {
+ 	ahci_platform_disable_phys(hpriv);
+ 
+-	reset_control_assert(hpriv->rsts);
++	ahci_platform_assert_rsts(hpriv);
+ 
+ 	ahci_platform_disable_clks(hpriv);
+ 
+@@ -468,6 +503,8 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 			rc = PTR_ERR(hpriv->rsts);
+ 			goto err_out;
+ 		}
++
++		hpriv->f_rsts = flags & AHCI_PLATFORM_RST_TRIGGER;
+ 	}
+ 
+ 	/*
+diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
+index fd964e6a68d6..57d25d30a9fa 100644
+--- a/include/linux/ahci_platform.h
++++ b/include/linux/ahci_platform.h
+@@ -26,6 +26,8 @@ struct clk *
+ ahci_platform_find_clk(struct ahci_host_priv *hpriv, const char *con_id);
+ int ahci_platform_enable_clks(struct ahci_host_priv *hpriv);
+ void ahci_platform_disable_clks(struct ahci_host_priv *hpriv);
++int ahci_platform_deassert_rsts(struct ahci_host_priv *hpriv);
++void ahci_platform_assert_rsts(struct ahci_host_priv *hpriv);
+ int ahci_platform_enable_regulators(struct ahci_host_priv *hpriv);
+ void ahci_platform_disable_regulators(struct ahci_host_priv *hpriv);
+ int ahci_platform_enable_resources(struct ahci_host_priv *hpriv);
+@@ -44,6 +46,7 @@ int ahci_platform_resume_host(struct device *dev);
+ int ahci_platform_suspend(struct device *dev);
+ int ahci_platform_resume(struct device *dev);
+ 
+-#define AHCI_PLATFORM_GET_RESETS	0x01
++#define AHCI_PLATFORM_GET_RESETS	BIT(0)
++#define AHCI_PLATFORM_RST_TRIGGER	BIT(1)
+ 
+ #endif /* _AHCI_PLATFORM_H */
 -- 
 2.35.1
 
