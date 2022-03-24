@@ -2,199 +2,93 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97063C43217
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22DBCC4332F
 	for <linux-ide@archiver.kernel.org>; Mon, 28 Mar 2022 15:44:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238632AbiC1Pp5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S238668AbiC1Pp5 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Mon, 28 Mar 2022 11:45:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45152 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45140 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238589AbiC1Ppx (ORCPT
+        with ESMTP id S238569AbiC1Ppx (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2022 11:45:53 -0400
+X-Greylist: delayed 4200 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 28 Mar 2022 08:44:12 PDT
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EA93F4A3DB;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id BC19F4A3DA;
         Mon, 28 Mar 2022 08:44:11 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id AB3D11E28D5;
-        Thu, 24 Mar 2022 03:16:38 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru AB3D11E28D5
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 3AED81E28CE;
+        Thu, 24 Mar 2022 03:16:33 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 3AED81E28CE
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1648080998;
-        bh=eeErETj9Vnf2vjh0M8zdlhJKpAR+2sPG/Bj/+NDbLw0=;
+        d=baikalelectronics.ru; s=mail; t=1648080993;
+        bh=2mpUwqvt6jhlU4kITXFYLbEPNQX4H7H63PF3OhAFvwY=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=mB3Gpj6H5M4zbvSeQqwTUsLvyafhUBvGkFrsV2AixagL4Ac9RmajNG4XqqS/o1F1P
-         k9ZhlNOooHVLHqSB0hVDy33L9JlBH9YjqIAtzC4AFPdeYpKuO578TYxDFnRWM8qXgH
-         RG64HcVrYzekG+hiMeAlmgDE1nCjBnZF9d1fWleo=
+        b=F98vbiCtXo6l3wibvJtbTxJaphXbQJCdCFuXr6KFLkJsVVRRjWWSBMqgCvtEBqYrY
+         s2TX5/6BfIOdMQDe/BiGQRxb6+wTMaf6SY8raI63WIMHVaI32cy3VJMCjvNVUFi+py
+         IcxDYs5GJSjTX90dzfS6ClJg88Q3wSCi6imxEOfM=
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 03:16:38 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 03:16:33 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>
+        Jens Axboe <axboe@kernel.dk>
 CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <devicetree@vger.kernel.org>
-Subject: [PATCH 10/21] dt-bindings: ata: ahci: Add platform capability properties
-Date:   Thu, 24 Mar 2022 03:16:17 +0300
-Message-ID: <20220324001628.13028-11-Sergey.Semin@baikalelectronics.ru>
+        Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+Subject: [PATCH 03/21] ata: libahci_platform: Explicitly set rc on devres_alloc failure
+Date:   Thu, 24 Mar 2022 03:16:10 +0300
+Message-ID: <20220324001628.13028-4-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-In case if the platform doesn't have BIOS or a comprehensive firmware
-installed then the HBA capability flags will be left uninitialized. As a
-good alternative we can define a set AHCI DT-node properties to describe
-all of HW-init capabilities flags. Luckily there aren't too many of them.
-SSS - Staggered Spin-up support and MPS - Mechanical Presence Switch
-support determine the corresponding feature availability for whole HBA by
-means of the "hba-sss" and "hba-smps" properties.  Each port can have the
-"hba-{hpcp,mpsp,cpd,esp,fbscp}" defined indicatating that the port
-supports the next functionality: HPCP - HotPlug capable port, MPSP -
-Mechanical Presence Switch attached to a port, CPD - Cold Plug detection,
-ESP - External SATA Port (eSATA), FBSCP - FIS-based switching capable
-port.
+It's better for readability and maintainability to explicitly assign an
+error number to the variable used then as a return value from the method
+on the cleanup-on-error path. So adding new code in the method we won't
+have to think whether the overridden rc-variable is set afterward in case
+of an error. Saving one line of code doesn't worth it especially seeing
+the rest of the ahci_platform_get_resources() function errors handling
+blocks do explicitly write errno to rc.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-
 ---
+ drivers/ata/libahci_platform.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Alternatively we could define them as a bitfield, but having a set of
-boolean properties seemed a better idea since in that case we can
-implement a simple inter-dependency rules for them, which can't be done
-should we take the bitfields path.
----
- .../devicetree/bindings/ata/ahci-common.yaml  | 66 +++++++++++++++++++
- .../devicetree/bindings/ata/generic-ahci.yaml |  9 +++
- 2 files changed, 75 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/ata/ahci-common.yaml b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-index 054819930538..1901c55a5468 100644
---- a/Documentation/devicetree/bindings/ata/ahci-common.yaml
-+++ b/Documentation/devicetree/bindings/ata/ahci-common.yaml
-@@ -67,6 +67,19 @@ properties:
-   phy-names:
-     const: sata-phy
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index 18296443ccba..1bd2f1686239 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -389,7 +389,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+ 	struct ahci_host_priv *hpriv;
+ 	struct clk *clk;
+ 	struct device_node *child;
+-	int i, enabled_ports = 0, rc = -ENOMEM, child_nodes;
++	int i, enabled_ports = 0, rc = 0, child_nodes;
+ 	u32 mask_port_map = 0;
  
-+  hba-sss:
-+    type: boolean
-+    description:
-+      Staggered Spin-up Support. Indicates whether the HBA supports the
-+      staggered spin-up on its ports, for use in balancing power spikes.
-+
-+  hba-smps:
-+    type: boolean
-+    description:
-+      Mechanical Presence Switch Support. Indicates whether the HBA supports
-+      mechanical presence switches on its ports for use in hot plug
-+      operations.
-+
-   ports-implemented:
-     $ref: /schemas/types.yaml#/definitions/uint32
-     description:
-@@ -88,6 +101,40 @@ patternProperties:
-         minimum: 0
-         maximum: 31
+ 	if (!devres_open_group(dev, NULL, GFP_KERNEL))
+@@ -397,8 +397,10 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
  
-+      hba-hpcp:
-+        type: boolean
-+        description:
-+          Hot Plug Capable Port. Indicates that this port’s signal and power
-+          connectors are externally accessible via a joint signal and power
-+          connector for blindmate device hot plug. It is mutually exclusive
-+          with the ESP feature.
-+
-+      hba-mpsp:
-+        type: boolean
-+        description:
-+          Mechanical Presence Switch Attached to Port. Indicates whether
-+          the platform an mechanical presence switch attached to this
-+          port.
-+
-+      hba-cpd:
-+        type: boolean
-+        description:
-+          Cold Presence Detection. Indicates whether the platform supports
-+          cold presence detection on this port.
-+
-+      hba-esp:
-+        type: boolean
-+        description:
-+          External SATA Port. Indicates that this port’s signal connector
-+          is externally accessible on a signal only connector (e.g. eSATA
-+          connector).
-+
-+      hba-fbscp:
-+        type: boolean
-+        description:
-+          FIS-based Switching Capable Port. Indicates whether this port
-+          supports Port Multiplier FIS-based switching.
-+
-       phys:
-         description: Individual AHCI SATA port PHY
-         maxItems: 1
-@@ -101,6 +148,25 @@ patternProperties:
-     required:
-       - reg
+ 	hpriv = devres_alloc(ahci_platform_put_resources, sizeof(*hpriv),
+ 			     GFP_KERNEL);
+-	if (!hpriv)
++	if (!hpriv) {
++		rc = -ENOMEM;
+ 		goto err_out;
++	}
  
-+    # eSATA can't be enabled together with the HotPlug capability
-+    oneOf:
-+      - required:
-+          - hba-hpcp
-+      - required:
-+          - hba-esp
-+      - not:
-+          anyOf:
-+            - required:
-+                - hba-hpcp
-+            - required:
-+                - hba-esp
-+
-+    # HotPlug capability must be enabled together with Cold Plug
-+    # Detection and Mechanical Presence Switching.
-+    dependencies:
-+      hba-cpd: ["hba-hpcp"]
-+      hba-mpsp: ["hba-hpcp"]
-+
- required:
-   - reg
-   - interrupts
-diff --git a/Documentation/devicetree/bindings/ata/generic-ahci.yaml b/Documentation/devicetree/bindings/ata/generic-ahci.yaml
-index 957f45c4f488..6c147350b5f9 100644
---- a/Documentation/devicetree/bindings/ata/generic-ahci.yaml
-+++ b/Documentation/devicetree/bindings/ata/generic-ahci.yaml
-@@ -74,14 +74,23 @@ examples:
+ 	devres_add(dev, hpriv);
  
-       interrupts = <GIC_SPI 438 IRQ_TYPE_LEVEL_HIGH>;
- 
-+      hba-smps;
-+
-       sata-port@0 {
-         reg = <0>;
-+
-+        hba-fbscp;
-+        hba-esp;
-         phys = <&sata_phy0>;
-         phy-names = "sata-phy";
-       };
- 
-       sata-port@1 {
-         reg = <1>;
-+
-+        hba-fbscp;
-+        hba-hpcp;
-+        hba-mpsp;
-         phys = <&sata_phy1>;
-         phy-names = "sata-phy";
-       };
 -- 
 2.35.1
 
