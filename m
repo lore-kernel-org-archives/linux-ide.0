@@ -2,44 +2,45 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E33B8C433FE
-	for <linux-ide@archiver.kernel.org>; Mon, 28 Mar 2022 15:44:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB8A2C43217
+	for <linux-ide@archiver.kernel.org>; Mon, 28 Mar 2022 15:44:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239238AbiC1PqW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        id S238979AbiC1PqW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
         Mon, 28 Mar 2022 11:46:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46606 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46626 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239117AbiC1PqK (ORCPT
+        with ESMTP id S239136AbiC1PqK (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2022 11:46:10 -0400
 Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 643AE4B1D9;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id F0AF64B1FB;
         Mon, 28 Mar 2022 08:44:19 -0700 (PDT)
 Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id 581FF1E28D1;
-        Thu, 24 Mar 2022 03:16:35 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 581FF1E28D1
+        by mail.baikalelectronics.ru (Postfix) with ESMTP id 5C42F1E28DB;
+        Thu, 24 Mar 2022 03:16:43 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 5C42F1E28DB
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1648080995;
-        bh=RP5344hK4MoreMUhlLHhHnmvxDb96UG9Vm23YY7ClMI=;
+        d=baikalelectronics.ru; s=mail; t=1648081003;
+        bh=1/peTMhACn/4I9OfiU31IzCtzYGZV9wmtQ/qd/T8cAs=;
         h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=QLs4Es4z+zUl7MX4nf4fgSEiUM1tgPOmNZ+9WTmUPEDkOR3bAQslDo8S0E8CIbMzp
-         vadx3mG38NwXQhQAeB+YlU2VTI5snpetSLMMf0UGG/sU3iWedM2IeDODyppk2Hb1Qp
-         BUFFZP4HXIitjtTLzuoNkgGNkxTri0UkyiEAqrLA=
+        b=k5rFx7t9E87k4MGD2euV4HeB0/QOjmHysVmphhbGXTAp9Ccmt1H2zwYxr8MySlaFn
+         RI5eLOLPWvu6DrOxK+jJI4w0DKbNNFiOCVM4PiM++K9ACQzKuSfBsIOovjZLzLkuHE
+         EUYpBcfscweESdytSNtOAL3LO+lwcsZvNDtx1KgM=
 Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 03:16:35 +0300
+ Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 03:16:43 +0300
 From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>
-CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Jens Axboe <axboe@kernel.dk>,
         Serge Semin <fancer.lancer@gmail.com>,
+        Rob Herring <robh+dt@kernel.org>
+CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH 06/21] ata: libahci_platform: Add function returning a clock-handle by id
-Date:   Thu, 24 Mar 2022 03:16:13 +0300
-Message-ID: <20220324001628.13028-7-Sergey.Semin@baikalelectronics.ru>
+        <linux-ide@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <devicetree@vger.kernel.org>
+Subject: [PATCH 16/21] dt-bindings: ata: ahci: Add DWC AHCI SATA controller DT schema
+Date:   Thu, 24 Mar 2022 03:16:23 +0300
+Message-ID: <20220324001628.13028-17-Sergey.Semin@baikalelectronics.ru>
 In-Reply-To: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
 References: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
 MIME-Version: 1.0
@@ -50,82 +51,153 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Since all the clocks are retrieved by the method
-ahci_platform_get_resources() there is no need for the glue-drivers to be
-looking for some particular of them in the kernel clocks table again.
-Instead we suggest to add a simple method returning a device-specific
-clock with passed connection ID if it is managed to be found. Otherwise
-the function will return NULL. Thus the glue-drivers won't need to either
-manually touching the hpriv->clks array or calling clk_get()-friends. The
-AHCI platform drivers will be able to use the new function right after the
-ahci_platform_get_resources() method invocation and up to the device
-removal.
+Synopsys AHCI SATA controller is mainly compatible with the generic AHCI
+SATA controller except a few peculiarities and the platform environment
+requirements. In particular it can have one or two reference clocks to
+feed up its AXI/AHB interface and SATA PHYs domain and at least one reset
+control for the application clock domain. In addition to that the DMA
+interface of each port can be tuned up to work with the predefined maximum
+data chunk size. Note unlike generic AHCI controller DWC AHCI can't have
+more than 8 ports. All of that is reflected in the new DWC AHCI SATA
+device DT binding.
+
+Note the DWC AHCI SATA controller DT-schema has been created in a way so
+to be reused for the vendor-specific DT-schemas. One of which we are about
+to introduce.
 
 Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 ---
- drivers/ata/libahci_platform.c | 27 +++++++++++++++++++++++++++
- include/linux/ahci_platform.h  |  3 +++
- 2 files changed, 30 insertions(+)
+ .../bindings/ata/snps,dwc-ahci.yaml           | 121 ++++++++++++++++++
+ 1 file changed, 121 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
 
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index d805ddc3a024..4fb9629c03ab 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -94,6 +94,33 @@ void ahci_platform_disable_phys(struct ahci_host_priv *hpriv)
- }
- EXPORT_SYMBOL_GPL(ahci_platform_disable_phys);
- 
-+/**
-+ * ahci_platform_find_clk - Find platform clock
-+ * @hpriv: host private area to store config values
-+ * @con_id: clock connection ID
-+ *
-+ * This function returns point to the clock descriptor of the clock with
-+ * passed ID.
-+ *
-+ * RETURNS:
-+ * Pointer to the clock descriptor on success otherwise NULL
-+ */
-+struct clk *ahci_platform_find_clk(struct ahci_host_priv *hpriv, const char *con_id)
-+{
-+	struct clk *clk = NULL;
-+	int i;
+diff --git a/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml b/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+new file mode 100644
+index 000000000000..b443154b63aa
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
+@@ -0,0 +1,121 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/ata/snps,dwc-ahci.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
-+	for (i = 0; i < hpriv->n_clks; i++) {
-+		if (!strcmp(hpriv->clks[i].id, con_id)) {
-+			clk = hpriv->clks[i].clk;
-+			break;
-+		}
-+	}
++title: Synopsys DWC AHCI SATA controller
 +
-+	return clk;
-+}
-+EXPORT_SYMBOL_GPL(ahci_platform_find_clk);
++maintainers:
++  - Serge Semin <fancer.lancer@gmail.com>
 +
- /**
-  * ahci_platform_enable_clks - Enable platform clocks
-  * @hpriv: host private area to store config values
-diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
-index 49e5383d4222..fd964e6a68d6 100644
---- a/include/linux/ahci_platform.h
-+++ b/include/linux/ahci_platform.h
-@@ -13,6 +13,7 @@
- 
- #include <linux/compiler.h>
- 
-+struct clk;
- struct device;
- struct ata_port_info;
- struct ahci_host_priv;
-@@ -21,6 +22,8 @@ struct scsi_host_template;
- 
- int ahci_platform_enable_phys(struct ahci_host_priv *hpriv);
- void ahci_platform_disable_phys(struct ahci_host_priv *hpriv);
-+struct clk *
-+ahci_platform_find_clk(struct ahci_host_priv *hpriv, const char *con_id);
- int ahci_platform_enable_clks(struct ahci_host_priv *hpriv);
- void ahci_platform_disable_clks(struct ahci_host_priv *hpriv);
- int ahci_platform_enable_regulators(struct ahci_host_priv *hpriv);
++description: |
++  This document defines device tree bindings for the Synopsys DWC
++  implementation of the AHCI SATA controller.
++
++allOf:
++  - $ref: ahci-common.yaml#
++
++properties:
++  compatible:
++    oneOf:
++      - description: Synopsys AHCI SATA-compatible devices
++        contains:
++          const: snps,dwc-ahci
++      - description: SPEAr1340 AHCI SATA device
++        const: snps,spear-ahci
++
++  reg:
++    maxItems: 1
++
++  interrupts:
++    maxItems: 1
++
++  clocks:
++    description:
++      Basic DWC AHCI SATA clock sources like application AXI/AHB BIU clock
++      and embedded PHYs reference clock together with vendor-specific set
++      of clocks.
++    minItems: 1
++    maxItems: 4
++
++  clock-names:
++    contains:
++      anyOf:
++        - description: Application AXI/AHB BIU clock source
++          enum:
++            - aclk
++            - sata
++        - description: SATA Ports reference clock
++          enum:
++            - ref
++            - sata_ref
++
++  resets:
++    description:
++      At least basic core and application clock domains reset is normally
++      supported by the DWC AHCI SATA controller. Some platform specific
++      clocks can be also specified though.
++
++  reset-names:
++    contains:
++      description: Core and application clock domains reset control
++      const: arst
++
++patternProperties:
++  "^sata-port@[0-9a-e]$":
++    type: object
++
++    properties:
++      reg:
++        minimum: 0
++        maximum: 7
++
++      snps,tx-ts-max:
++        $ref: /schemas/types.yaml#/definitions/uint32
++        description: Maximal size of Tx DMA transactions in FIFO words
++        minimum: 1
++        maximum: 1024
++
++      snps,rx-ts-max:
++        $ref: /schemas/types.yaml#/definitions/uint32
++        description: Maximal size of Rx DMA transactions in FIFO words
++        minimum: 1
++        maximum: 1024
++
++required:
++  - compatible
++  - reg
++  - interrupts
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++
++    sata@122f0000 {
++      compatible = "snps,dwc-ahci";
++      reg = <0x122F0000 0x1ff>;
++      #address-cells = <1>;
++      #size-cells = <0>;
++
++      interrupts = <GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>;
++
++      clocks = <&clock1>, <&clock2>;
++      clock-names = "aclk", "ref";
++
++      phys = <&sata_phy>;
++      phy-names = "sata-phy";
++
++      ports-implemented = <0x1>;
++
++      sata-port@0 {
++        reg = <0>;
++
++        hba-fbscp;
++        snps,tx-ts-max = <512>;
++        snps,tx-rs-max = <512>;
++      };
++    };
++...
 -- 
 2.35.1
 
