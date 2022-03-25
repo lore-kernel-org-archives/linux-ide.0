@@ -2,146 +2,157 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85513C433EF
-	for <linux-ide@archiver.kernel.org>; Fri, 25 Mar 2022 09:10:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 697C0C433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 25 Mar 2022 12:56:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354013AbiCYJMA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 25 Mar 2022 05:12:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51476 "EHLO
+        id S1359207AbiCYM6G (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Fri, 25 Mar 2022 08:58:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43938 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229940AbiCYJL5 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 25 Mar 2022 05:11:57 -0400
-Received: from mx1.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB73CCD33F
-        for <linux-ide@vger.kernel.org>; Fri, 25 Mar 2022 02:10:22 -0700 (PDT)
-Received: from [192.168.0.7] (ip5f5aef76.dynamic.kabel-deutschland.de [95.90.239.118])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 8116061E64846;
-        Fri, 25 Mar 2022 10:10:19 +0100 (CET)
-Message-ID: <8933f892-aa56-cd21-8acc-744d9a89f66e@molgen.mpg.de>
-Date:   Fri, 25 Mar 2022 10:10:18 +0100
+        with ESMTP id S1359193AbiCYM6C (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 25 Mar 2022 08:58:02 -0400
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.220.28])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B49CD0AB7
+        for <linux-ide@vger.kernel.org>; Fri, 25 Mar 2022 05:56:28 -0700 (PDT)
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out1.suse.de (Postfix) with ESMTP id 36A2C210DD;
+        Fri, 25 Mar 2022 12:56:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1648212987; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=dB/7/E+6FCLO+u1sKF9JIhE2GGEVw0tzwr3M8g7j/io=;
+        b=VL5p4ZVKS6pIa60YhwFrzKC5g/9aBPbGqm3hUnHghZx8HV638zDjbP+i6Yn54l/g3KUX4l
+        PVc0iUsO4R24hMhp3vGotKu2YLggp6w8OaM4jr+IvMzOt40zyC3S+NcAQBZYcFKxOs4lGx
+        xVIsorlxgme7v2GvoLcB3Kd6G6dSAPQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1648212987;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=dB/7/E+6FCLO+u1sKF9JIhE2GGEVw0tzwr3M8g7j/io=;
+        b=DGpGwtU+mo0H0FSMhByty204VKqhiTsPXxowt6ejIsCvJ/J9878/IUbrq5x0a4t+oCt9Xu
+        8tU8h3FYWu+UcoCw==
+Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
+        by relay2.suse.de (Postfix) with ESMTP id 1614FA3B96;
+        Fri, 25 Mar 2022 12:56:27 +0000 (UTC)
+Received: by adalid.arch.suse.de (Postfix, from userid 16045)
+        id 05EAF519392B; Fri, 25 Mar 2022 13:56:27 +0100 (CET)
+From:   Hannes Reinecke <hare@suse.de>
+To:     Damien LeMoal <damien.lemoal@wdc.com>
+Cc:     linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 2/2] libata: CONFIG_ATA_SYSFS_COMPAT
+Date:   Fri, 25 Mar 2022 13:56:24 +0100
+Message-Id: <20220325125624.99929-3-hare@suse.de>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20220325125624.99929-1-hare@suse.de>
+References: <20220325125624.99929-1-hare@suse.de>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH 4/4] ata: libata-sata: Improve sata_link_debounce()
-Content-Language: en-US
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-References: <20220323081740.540006-1-damien.lemoal@opensource.wdc.com>
- <20220323081740.540006-5-damien.lemoal@opensource.wdc.com>
-Cc:     linux-ide@vger.kernel.org
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-In-Reply-To: <20220323081740.540006-5-damien.lemoal@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dear Damien,
+Add a config option 'ATA_SYSFS_COMPAT' to create a compatibility
+'ata' symlink in the PCI device sysfs directory.
 
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/ata/Kconfig            | 10 +++++++++
+ drivers/ata/libata-transport.c | 41 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 51 insertions(+)
 
-Am 23.03.22 um 09:17 schrieb Damien Le Moal:
-> sata_link_debounce() polls the SStatus register DET field to ensure that
-> a stable value is provided, to reliably detect device presence and PHY
-> readiness. Polling is done for at least timing->duration if there is no
-> device detected. For the device detected case, polling last up to
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index e5641e6c52ee..f27b12ba2ce7 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -51,6 +51,16 @@ config ATA_VERBOSE_ERROR
+ 
+ 	  If unsure, say Y.
+ 
++config ATA_SYSFS_COMPAT
++	bool "Keep original sysfs layout"
++	default y
++	help
++	  This option retains the original sysfs layout by adding an
++	  additional ata_port object with the name of 'ataX' in
++	  to the ATA objects like 'ata_port', 'ata_link', and 'ata_device'.
++
++	  If unsure, say Y.
++
+ config ATA_FORCE
+ 	bool "\"libata.force=\" kernel parameter support" if EXPERT
+ 	default y
+diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
+index e5ed5046b299..29dec89ccc2d 100644
+--- a/drivers/ata/libata-transport.c
++++ b/drivers/ata/libata-transport.c
+@@ -251,6 +251,39 @@ static int ata_tport_match(struct attribute_container *cont,
+ 	return &ata_scsi_transport_template->host_attrs.ac == cont;
+ }
+ 
++#ifdef CONFIG_ATA_SYSFS_COMPAT
++static int ata_tport_compat_link_add(struct ata_port *ap)
++{
++        struct device *dev = &ap->tdev;
++	struct device *parent = dev->parent;
++        char compat_name[64];
++
++	sprintf(compat_name, "ata%d", ap->print_id);
++
++	return sysfs_create_link(&parent->kobj, &dev->kobj, compat_name);
++}
++
++static void ata_tport_compat_link_delete(struct ata_port *ap)
++{
++	struct device *dev = &ap->tdev;
++	struct device *parent = dev->parent;
++	char compat_name[64];
++
++	sprintf(compat_name, "ata%d", ap->print_id);
++	sysfs_remove_link(&parent->kobj, compat_name);
++}
++
++#else
++
++static inline int ata_tport_compat_link_add(struct ata_port *ap)
++{
++	return 0;
++}
++
++static inline void ata_tport_compat_link_delete(struct ata_port *ap) {}
++
++#endif
++
+ /**
+  * ata_tport_delete  --  remove ATA PORT
+  * @ap:	ATA PORT to remove
+@@ -261,6 +294,7 @@ void ata_tport_delete(struct ata_port *ap)
+ {
+ 	struct device *dev = &ap->tdev;
+ 
++	ata_tport_compat_link_delete(ap);
+ 	ata_tlink_delete(&ap->link);
+ 
+ 	transport_remove_device(dev);
+@@ -313,8 +347,15 @@ int ata_tport_add(struct device *parent,
+ 	if (error) {
+ 		goto tport_link_err;
+ 	}
++
++	error = ata_tport_compat_link_add(ap);
++	if (error)
++		goto compat_link_err;
++
+ 	return 0;
+ 
++ compat_link_err:
++	ata_tlink_delete(&ap->link);
+  tport_link_err:
+ 	transport_remove_device(dev);
+ 	device_del(dev);
+-- 
+2.29.2
 
-last*s*
-
-> deadline to ensure that the PHY becomes ready.
-> 
-> However, the PHY ready state is actually never checked, leading to the
-> poll loop duration always reaching the maximum duration.
-> 
-> For adapters that do not require a debounce delay (link flag
-> ATA_LFLAG_DEBOUNCE_DELAY no set), add a check to test if DET indicates
-
-no*t*?
-
-> device present *and* PHY ready and bail out of the polling loop if it
-> does.
-> 
-> While at it, add comments to clarify the various checks in
-> sata_link_debounce() polling loop.
-
-Were you able to verify that the check now terminates the loop on your 
-devices earlier?
-
-Are below the right lines to compare? On the Dell OptiPlex 5055 (AMD FCH 
-SATA Controller [AHCI mode] [1022:7901]) I see:
-
-Before (this very patch)
-
-     [    0.428015] ata1: hard resetting link
-     [    0.696316] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-
-After:
-
-     [    0.428907] ata1: hard resetting link
-     [    0.648092] ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-
-So a decrease of (268 - 219 = 49) ms. Nice.
-
-> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> ---
->   drivers/ata/libata-sata.c | 24 ++++++++++++++++++++++--
->   1 file changed, 22 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-> index 87ad03c2e49f..15423723c9dd 100644
-> --- a/drivers/ata/libata-sata.c
-> +++ b/drivers/ata/libata-sata.c
-> @@ -276,8 +276,27 @@ int sata_link_debounce(struct ata_link *link,
->   
->   		/* DET stable? */
->   		if (cur == last) {
-> +			/*
-> +			 * If the device presence was detected but PHY
-> +			 * communication is not yet established, wait until
-> +			 * deadline.
-> +			 */
->   			if (cur == 1 && time_before(jiffies, deadline))
->   				continue;
-> +
-> +			/*
-> +			 * If PHY is ready and the device is present, and the
-> +			 * driver did not request debounce delay, bail out early
-> +			 * assuming that the link is stable.
-> +			 */
-> +			if (cur == 3 &&
-> +			    !(link->flags & ATA_LFLAG_DEBOUNCE_DELAY))
-> +				return 0;
-> +
-> +			/*
-> +			 * If DET value has remained stable for
-> +			 * timing->duration, bail out.
-> +			 */
->   			if (time_after(jiffies,
->   				ata_deadline(last_jiffies, timing->duration)))
->   				return 0;
-> @@ -288,8 +307,9 @@ int sata_link_debounce(struct ata_link *link,
->   		last = cur;
->   		last_jiffies = jiffies;
->   
-> -		/* Check deadline.  If debouncing failed, return
-> -		 * -EPIPE to tell upper layer to lower link speed.
-> +		/*
-> +		 * If debouncing has not succeeded before dealine, return
-
-dea*d*line
-
-> +		 * -EPIPE to tell the upper layer to lower the link speed.
->   		 */
->   		if (time_after(jiffies, deadline))
->   			return -EPIPE;
-
-One separate for the new check would have been nice, but looks good to 
-me overall.
-
-
-Kind regards,
-
-Paul
