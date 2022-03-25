@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7EB8C433F5
-	for <linux-ide@archiver.kernel.org>; Fri, 25 Mar 2022 01:56:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53E8DC433EF
+	for <linux-ide@archiver.kernel.org>; Fri, 25 Mar 2022 03:01:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354062AbiCYB6K (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 24 Mar 2022 21:58:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50380 "EHLO
+        id S232689AbiCYDDV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 24 Mar 2022 23:03:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45594 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349271AbiCYB6J (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 24 Mar 2022 21:58:09 -0400
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16E209E9D4
-        for <linux-ide@vger.kernel.org>; Thu, 24 Mar 2022 18:56:37 -0700 (PDT)
+        with ESMTP id S1358182AbiCYDDG (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 24 Mar 2022 23:03:06 -0400
+Received: from esa5.hgst.iphmx.com (esa5.hgst.iphmx.com [216.71.153.144])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A99539AE6F
+        for <linux-ide@vger.kernel.org>; Thu, 24 Mar 2022 20:01:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1648173395; x=1679709395;
+  t=1648177291; x=1679713291;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=ybkKAnKKo+UbkJZjb3yXKNlLPRslLGdd7/WxedkE/qg=;
-  b=cWupsQx4MIjxPkGfQwFXA3hhR8QWzpU9EpqbaEQ5Z4emUsswgpGT9G9F
-   zxSo9C814biFz7+0TTv+cWAtS3FnnnDsJEnr2n0FiIg8EvJgoPHq+UCdQ
-   cMTsSzdcqmiQjV5VkLY/mSfq055AG8ITHAydDxC0Q/Ik5DcbQuaV+63YO
-   X16e62VFEBPjygyJD9y0dAWYgTwdA9dCquLKMeEKrr9iH06WPp5R77dmD
-   iyUVelvKOLgnvHcC1yzknSmWSusf2qn0pgJwzYU7v6trbHc8mHS5OoS5v
-   ugCiGgDWrC7185KkqWVk20FM2S3vdwRr+T7nJbHefuslb1WZKZNidLO3i
-   w==;
+  bh=CP3+Xu81tR9zqyhMRVWjzAG/iA0x4tF2KCn0Yf+Ht3Y=;
+  b=ToDqJxCz9QLhNPzR32GOrn7vb6PQ6IH7DeCaZz5u+Z5FoBmi4ewSheOR
+   CX9mVq8mno1W3Q5XDujrtntiXECO3k4gAAjbFBIKRBeEEcF17HBMmui9Y
+   46+RLqb1gp2UsPdg/3DyOP0jMTxqkAPMpomawfRl/rDpPUVUo4o2PE1Fk
+   Y+7lRXsMXdrbHgqb0wwhuIKEHWxo5Vx6MUcrXagxGSemOMpUhSb9M0W55
+   +gY8ebMeJPpOxGr1Jrs/IOlSR9B7G3HSpRJZsw6GFAVbmXyJD+PUVIapc
+   fK9mzpL9Vt9CImYQAH1KIBWu8qAEnAaiFkR7zK66xOOMe8K9tzPAcK0t8
+   A==;
 X-IronPort-AV: E=Sophos;i="5.90,209,1643644800"; 
-   d="scan'208";a="201069547"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Mar 2022 09:56:33 +0800
-IronPort-SDR: xoeDs+a4E0tiZVJHlQo3+HGaTJUh8po33w8fRvo3VVwncQaBySAPPOqON/s8Xsi3AYKBigX73O
- zpdLmDDlcxQhiSGnyp55Y73qGWlrsgy6/MHbVqiWt6nXpqOeS6eDZEzQPtHEAHYtcAt3mB3MJP
- vyUvzffp1fNp5ztcp85k48UBubauzeKDSiijUysTC40YQZ33DA1/rSMK4tk5oX9O6rwmz39MR6
- KhGFw052r5P2IMG4aZplP7szoXd8Sq/nx2xnY2EOt0ZYGOX3X/vYvN0iKVsrn+8ux13Ie+633l
- W1+KbKXEPCQqA/0JFvgpNZiu
+   d="scan'208";a="196233500"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 25 Mar 2022 11:01:27 +0800
+IronPort-SDR: 9OL2mbfvALL3o+QAohox+PyyDiuqONZeIqWwrVTyItbNVVD4xrK8j30LQkru4Mbpzh7p2onCie
+ 0hhmMWRS4saWiSB1eVDfCaRrFo5U3K5uaE/QA6NsfWZkZ+rwZPQZYtnFqCWVZN6KVy8OWrsexU
+ vT9BBhWn3W803jm8PirPtkO2DDDIICb2oV/m9tK9j8QKlvpyBeWRSE0yCSAoazetIBuueUAwoZ
+ aP7esQ5VFm/CDQN+tI9wqzTaITzGB81M/DHSXKdSNE7bGyqCzwMlWoRR2iIi75ArSJ24m9RfsD
+ ppEVPNGN4uuO81GF5gC8UY9Y
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2022 18:27:30 -0700
-IronPort-SDR: Cwx3OEVmedguiYAqjeLmUs6viac2IzYo+ymK+YsEqrX082+mZUDVv28AuqMCC8ORBRvqUvWuhN
- l4YXXDboVjJCJpn9ziDDwS7m4Q11mXhmFnykaU6RhmhPb9qSX9ig80pwZK0DtaJLLGEuriW3tx
- JunfikzHWPtEL7DBfg2NRdRpRtPkXlp6dZhHOG/9jfMZNbpISL4g2ZbggMvg1i01kCeGwo5DRN
- oxGv0VYdqHTB2oRtP14Gy+jacx9YHPROfbCFW18hQMF6a2y/HdMN9Goo1jCj6iXJzLXZDdxisu
- g+c=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2022 19:33:18 -0700
+IronPort-SDR: NdpDN59Py6YB5JItxCQtyOGpkq5RKXzQIXYx7cnt0NtNzaQ1klDqdBxiqbTD4NO6hZ2avgez7z
+ w4aKDeVYJXKHF7/d6yl66yGg2Un/ugfR2h1/AZ/2jmMhYCmXt/LDVXSf0rtdaOQNMyNHlh8G23
+ glDNUn91zkLCDNyfvrA/FfCLyiFJmfZ5NNmrOiIjklLtY2cA/zhrTaUiPcuN9PgvGUZ6F72cjJ
+ 14fVNjWkLXrEiyJXhnY8zOWrMYRf5ty8mIm8Uf9xBEkIyoUZyb5tge4dl2fhNtgzfHTiaQjfTg
+ xIo=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2022 18:56:36 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Mar 2022 20:01:28 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KPlZB482Rz1SVp5
-        for <linux-ide@vger.kernel.org>; Thu, 24 Mar 2022 18:56:34 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KPn1329bNz1SHwl
+        for <linux-ide@vger.kernel.org>; Thu, 24 Mar 2022 20:01:27 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,136 +56,226 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1648173393; x=1650765394; bh=ybkKAnKKo+UbkJZjb3yXKNlLPRslLGdd7/W
-        xedkE/qg=; b=WX0o8cw7UINrQTy6+zs5Ckjx6FC7CdIGGZZundIhvj6Fnyh+KI0
-        UTkK754D4PkLF7ZP9N73KqJMqKta5AD3tr7OyoWpmtpfLGMgZDqDVmFqQlQqAE9b
-        iXjDkGlQnpWjicYNdJxqlEU1HYuzt+Tc1bQaFt+2f4UAPTg4+7usucGaKJvTGlGb
-        sJhW8uxN7EUZ6CPGFgFIC2Ux1+TalLvlOvFPTsYJyJu95ssXnRTDXWEZQebNJIQ8
-        KCxt+rnXtkQsxrG54vfjiJjfQnEKcNSqHvv+v8hXYuUmNrAK5VosrN+f+uKfzxI4
-        unW8XIF6Q9VTIRiJ9EUzQAfopJl9ayTIMnw==
+        1648177286; x=1650769287; bh=CP3+Xu81tR9zqyhMRVWjzAG/iA0x4tF2KCn
+        0Yf+Ht3Y=; b=c5P82c7qK+W5pdENuIFHUsqS72BcHWiT2oETVCmE3CKSPdinmQJ
+        PN94rv5d0k4JB9r+6yx0DRXkqSjX/lO4OWGgwipu+OEFL4fPb1jkD8e89rTXW3gv
+        O+CahBiFBkJfyt2zMIWzF9QWkJijHKiIUCdddI3+AIxZOuGKgeqVKvMk0mX3aTu/
+        jvQXYMv99EZrlVDg83PS6WI55SDsLgVlhHyDVW69eYMXYYqHGQm1sexIqkXEMqcE
+        tn0MocW9grgX8jlRp8lUTrfol0jdMqxnZZNpAQnW5L5WH02INNv1y6QV/gOzYI5L
+        BgXGiP0MebL5b9XOuYkK+PScK0ZgweORPPQ==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id z59ARKdrfQZc for <linux-ide@vger.kernel.org>;
-        Thu, 24 Mar 2022 18:56:33 -0700 (PDT)
-Received: from [10.89.85.67] (c02drav6md6t.dhcp.fujisawa.hgst.com [10.89.85.67])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KPlZ72n0wz1Rvlx;
-        Thu, 24 Mar 2022 18:56:31 -0700 (PDT)
-Message-ID: <f163f982-852f-027f-8d24-e624e45fbbf1@opensource.wdc.com>
-Date:   Fri, 25 Mar 2022 10:56:29 +0900
+        with ESMTP id WXmWvXBl5QQC for <linux-ide@vger.kernel.org>;
+        Thu, 24 Mar 2022 20:01:26 -0700 (PDT)
+Received: from [10.149.53.254] (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KPn1221lKz1Rvlx;
+        Thu, 24 Mar 2022 20:01:26 -0700 (PDT)
+Message-ID: <e1e36f35-deee-1ec5-732b-575a68579610@opensource.wdc.com>
+Date:   Fri, 25 Mar 2022 12:01:24 +0900
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.7.0
-Subject: Re: [PATCH 03/21] ata: libahci_platform: Explicitly set rc on
- devres_alloc failure
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH 2/2] libata: CONFIG_ATA_SYSFS_COMPAT
 Content-Language: en-US
-To:     Serge Semin <fancer.lancer@gmail.com>
-Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-References: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
- <20220324001628.13028-4-Sergey.Semin@baikalelectronics.ru>
- <9128f850-fcc1-811e-b781-b7fbcb2403ba@opensource.wdc.com>
- <20220324213758.vihvh5z2pg3skr6i@mobilestation>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     linux-ide@vger.kernel.org
+References: <20220324123204.61534-1-hare@suse.de>
+ <20220324123204.61534-3-hare@suse.de>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <20220324213758.vihvh5z2pg3skr6i@mobilestation>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20220324123204.61534-3-hare@suse.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 2022/03/25 6:37, Serge Semin wrote:
-> Hello Damien
-> 
-> On Thu, Mar 24, 2022 at 09:58:34AM +0900, Damien Le Moal wrote:
->> On 3/24/22 09:16, Serge Semin wrote:
->>> It's better for readability and maintainability to explicitly assign an
->>> error number to the variable used then as a return value from the method
->>> on the cleanup-on-error path. So adding new code in the method we won't
->>
-> 
->> No it is not. On-stack variable initialization is not free. So if
->> initializing the variable is not needed, do not do it.
-> 
-> This patch isn't about on-stack initialization, but about bringing an
-> order to the error-handling procedure of the
-> ahci_platform_get_resources() method. Explicitly setting the rc variable
-> with an error value closer to the place caused the error much easier
-> to perceive than keeping in mind that the variable has been set with
-> some default value. That turns to be even more justified seeing the
-> rest of the method does it that way.
+On 3/24/22 21:32, Hannes Reinecke wrote:
+> Add a config option 'ATA_SYSFS_COMPAT' to create a compability
 
-I agree with that change. Setting "rc = -ENOMEM" under the "if" checking for
-error is fine.
+s/compability/compatibility
+
+> 'ata' symlink in the PCI device sysfs directory.
+
+I am not yet convinced if this new config option is really necessary... 
+We could create the symlink unconditionally, no ?
+
+In any case, I would like to at least reduce the number of #ifdef. So 
+what about something like this on top of your patch:
+
+diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
+index a66c3480bdcf..fa249638bfb6 100644
+--- a/drivers/ata/libata-transport.c
++++ b/drivers/ata/libata-transport.c
+@@ -251,6 +251,40 @@ static int ata_tport_match(struct 
+attribute_container *cont,
+  	return &ata_scsi_transport_template->host_attrs.ac == cont;
+  }
+
++#ifdef CONFIG_ATA_SYSFS_COMPAT
++
++static int ata_tport_compat_link_add(struct ata_port *ap)
++{
++	struct device *dev = &ap->tdev;
++	struct device *parent = dev->parent;
++	char compat_name[64];
++
++	sprintf(compat_name, "ata%d", ap->print_id);
++
++	return sysfs_create_link(&parent->kobj, &dev->kobj, compat_name);
++}
++
++static void ata_tport_compat_link_delete(struct ata_port *ap)
++{
++	struct device *dev = &ap->tdev;
++	struct device *parent = dev->parent;
++	char compat_name[64];
++
++	sprintf(compat_name, "ata%d", ap->print_id);
++	sysfs_remove_link(&parent->kobj, compat_name);
++}
++
++#else
++
++static inline int ata_tport_compat_link_add(struct ata_port *ap)
++{
++	return 0;
++}
++
++static inline void ata_tport_compat_link_delete(struct ata_port *ap) {}
++
++#endif
++
+  /**
+   * ata_tport_delete  --  remove ATA PORT
+   * @ap:	ATA PORT to remove
+@@ -260,13 +294,8 @@ static int ata_tport_match(struct 
+attribute_container *cont,
+  void ata_tport_delete(struct ata_port *ap)
+  {
+  	struct device *dev = &ap->tdev;
+-#ifdef CONFIG_ATA_SYSFS_COMPAT
+-	struct device *parent = dev->parent;
+-	char compat_name[64];
+
+-	sprintf(compat_name, "ata%d", ap->print_id);
+-	sysfs_remove_link(&parent->kobj, compat_name);
+-#endif
++	ata_tport_compat_link_delete(ap);
+  	ata_tlink_delete(&ap->link);
+
+  	transport_remove_device(dev);
+@@ -290,9 +319,6 @@ int ata_tport_add(struct device *parent,
+  {
+  	int error;
+  	struct device *dev = &ap->tdev;
+-#ifdef CONFIG_ATA_SYSFS_COMPAT
+-	char compat_name[64];
+-#endif
+
+  	device_initialize(dev);
+  	dev->type = &ata_port_type;
+@@ -323,18 +349,14 @@ int ata_tport_add(struct device *parent,
+  		goto tport_link_err;
+  	}
+
+-#ifdef CONFIG_ATA_SYSFS_COMPAT
+-	sprintf(compat_name, "ata%d", ap->print_id);
+-	error = sysfs_create_link(&parent->kobj, &dev->kobj, compat_name);
++	error = ata_tport_compat_link_add(ap);
+  	if (error)
+  		goto compat_link_err;
+-#endif
++
+  	return 0;
+
+-#ifdef CONFIG_ATA_SYSFS_COMPAT
+   compat_link_err:
+  	ata_tlink_delete(&ap->link);
+-#endif
+   tport_link_err:
+  	transport_remove_device(dev);
+  	device_del(dev);
+
+
 
 > 
-> See my next comment regarding the initialization.
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>   drivers/ata/Kconfig            | 10 ++++++++++
+>   drivers/ata/libata-transport.c | 20 ++++++++++++++++++++
+>   2 files changed, 30 insertions(+)
 > 
->>
->>> have to think whether the overridden rc-variable is set afterward in case
->>> of an error. Saving one line of code doesn't worth it especially seeing
->>> the rest of the ahci_platform_get_resources() function errors handling
->>> blocks do explicitly write errno to rc.
->>>
->>> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
->>> ---
->>>  drivers/ata/libahci_platform.c | 6 ++++--
->>>  1 file changed, 4 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
->>> index 18296443ccba..1bd2f1686239 100644
->>> --- a/drivers/ata/libahci_platform.c
->>> +++ b/drivers/ata/libahci_platform.c
->>> @@ -389,7 +389,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
->>>  	struct ahci_host_priv *hpriv;
->>>  	struct clk *clk;
->>>  	struct device_node *child;
->>> -	int i, enabled_ports = 0, rc = -ENOMEM, child_nodes;
->>> +	int i, enabled_ports = 0, rc = 0, child_nodes;
->>>  	u32 mask_port_map = 0;
->>>  
->>>  	if (!devres_open_group(dev, NULL, GFP_KERNEL))
->>> @@ -397,8 +397,10 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
->>>  
->>>  	hpriv = devres_alloc(ahci_platform_put_resources, sizeof(*hpriv),
->>>  			     GFP_KERNEL);
->>> -	if (!hpriv)
->>> +	if (!hpriv) {
->>> +		rc = -ENOMEM;
->>>  		goto err_out;
->>> +	}
->>
-> 
->> If you set rc to -ENOMEM here, then the 0 initialization of rc is not needed.
-> 
-> Normally you are right. But the case of the rc/ret/etc variables is
-> special. I'd stick with having it defaulted to 0 here. Here is why.
-> 
-> When it comes to using the rc/ret/etc variables the maintainability
-> gets to be more important than some small optimization (especially
-> here seeing the ahci_platform_get_resources() is called once per
-> device life-time) because in case of the method alteration these
-> variables very often get to be involved in one way or another. If due
-> to a mistake the rc/ret/etc variable isn't updated in case of an
-> erroneous situation but the method is terminated with the goto-pattern
-> and rc/ret/etc isn't initialized with any default value then we will
-> end up with having a garbage pointer returned. We'd be lucky if it was
-> a null pointer, but in general it can be a reference to some random
-> memory region. In the later case the kernel may experience random
-> crashes with hard-to-find cause of the problem. In the former case the
-> problem would have been tracked right away on the testing stage by
-> getting the system invalid-pointer de-reference crash. That's why
-> defaulting the variable to zero here is still useful.
-
-No it is not. We have code reviews and testing to catch mistakes. If we start
-thinking along these lines, any useless local variable initialization can be
-justified. So let's not go there please.
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index e5641e6c52ee..f27b12ba2ce7 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -51,6 +51,16 @@ config ATA_VERBOSE_ERROR
+>   
+>   	  If unsure, say Y.
+>   
+> +config ATA_SYSFS_COMPAT
+> +	bool "Keep original sysfs layout"
+> +	default y
+> +	help
+> +	  This option retains the original sysfs layout by adding an
+> +	  additional ata_port object with the name of 'ataX' in
+> +	  to the ATA objects like 'ata_port', 'ata_link', and 'ata_device'.
+> +
+> +	  If unsure, say Y.
+> +
+>   config ATA_FORCE
+>   	bool "\"libata.force=\" kernel parameter support" if EXPERT
+>   	default y
+> diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
+> index 555fe6e2293d..a66c3480bdcf 100644
+> --- a/drivers/ata/libata-transport.c
+> +++ b/drivers/ata/libata-transport.c
+> @@ -260,7 +260,13 @@ static int ata_tport_match(struct attribute_container *cont,
+>   void ata_tport_delete(struct ata_port *ap)
+>   {
+>   	struct device *dev = &ap->tdev;
+> +#ifdef CONFIG_ATA_SYSFS_COMPAT
+> +	struct device *parent = dev->parent;
+> +	char compat_name[64];
+>   
+> +	sprintf(compat_name, "ata%d", ap->print_id);
+> +	sysfs_remove_link(&parent->kobj, compat_name);
+> +#endif
+>   	ata_tlink_delete(&ap->link);
+>   
+>   	transport_remove_device(dev);
+> @@ -284,6 +290,9 @@ int ata_tport_add(struct device *parent,
+>   {
+>   	int error;
+>   	struct device *dev = &ap->tdev;
+> +#ifdef CONFIG_ATA_SYSFS_COMPAT
+> +	char compat_name[64];
+> +#endif
+>   
+>   	device_initialize(dev);
+>   	dev->type = &ata_port_type;
+> @@ -313,8 +322,19 @@ int ata_tport_add(struct device *parent,
+>   	if (error) {
+>   		goto tport_link_err;
+>   	}
+> +
+> +#ifdef CONFIG_ATA_SYSFS_COMPAT
+> +	sprintf(compat_name, "ata%d", ap->print_id);
+> +	error = sysfs_create_link(&parent->kobj, &dev->kobj, compat_name);
+> +	if (error)
+> +		goto compat_link_err;
+> +#endif
+>   	return 0;
+>   
+> +#ifdef CONFIG_ATA_SYSFS_COMPAT
+> + compat_link_err:
+> +	ata_tlink_delete(&ap->link);
+> +#endif
+>    tport_link_err:
+>   	transport_remove_device(dev);
+>   	device_del(dev);
 
 
 -- 
