@@ -2,179 +2,160 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ADD4C433EF
-	for <linux-ide@archiver.kernel.org>; Mon, 28 Mar 2022 20:07:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7405C433EF
+	for <linux-ide@archiver.kernel.org>; Mon, 28 Mar 2022 22:36:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344674AbiC1UJC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 28 Mar 2022 16:09:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51300 "EHLO
+        id S229999AbiC1WiV (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 28 Mar 2022 18:38:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57178 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344315AbiC1UHx (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2022 16:07:53 -0400
-Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B88875F27C
-        for <linux-ide@vger.kernel.org>; Mon, 28 Mar 2022 13:06:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1648497972; x=1680033972;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=uORNMvPmP6/EGG6KNMeYZz0EehS8+XAJTLN+nowe+gk=;
-  b=TVGniN8Q7jl489yRSXdv7SIhfxnMJ09dTF++9gRXn1pqAIM7pYoZEgUJ
-   /6U7eHlJXPeXAVrYejU/ggnGT9wAn3dP1PbXRrDI0hClfya0AKvgy9oF7
-   FSJcR3KKvbocDo8/2IyBXkfoKG1iMxfREEKMWyyKUECSCfePo7niojLkz
-   bGEO9ixUJQ2bppRH1zGrqo/T4HnqVV/0ZuHy76vCjtOJouMynW6K4Z2at
-   Ezbu1A6DhMEy75u65FYPhA0qh+t9cGjy/C2Matk9QwSIYlmounNonBUjs
-   eMYoW6cH7vTQE5LfZCxieXmINb++1hWb/Yd/5a+vOHxNTRJH/TFFqvUlK
-   A==;
-X-IronPort-AV: E=Sophos;i="5.90,218,1643644800"; 
-   d="scan'208";a="201320410"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 29 Mar 2022 04:06:10 +0800
-IronPort-SDR: zl4AmbZRt7ebx0hkGdQk6Xf1o1W6ttiaZTkC6ThElEEtAX1qf7j9T0HAj2KGlEPbBbjUWAaoW8
- +JOufwDZi6KhahoNn3wLmExXK545KxB4e+JwnWF2tiaCR5z6fO9xr3/R+Qnkkyud8WgIPeVDlq
- AhinBwP47OZtCPmLsOLJTwF5nW+sQZbgVCvDk4a+IruvJAZ2QfHXHPOE15sNejXylvm/76LErB
- 6vTbuSr8Mwq3duOCivpYprNeGXP50QSzTErEuejsNXl1t9oG+MhADh5D3NT34rB0jhMiaWF2kJ
- NzciiEg1F1uZR1G+o3M1ZDZB
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Mar 2022 12:37:02 -0700
-IronPort-SDR: vM2dn+PMq6dr3d1BKqmaf75qceJCALK15Y5EeZqkPDme54Rbi092stI0rWxTEvfCERB5MK8sfj
- wey1hKMSu7v0jtuRb/9cmEEwFyMpVq0vfb3qDyyITa+LLLFOAMvRFsnZp7GRjk1yO+scFkXrTb
- rNq3YUP/4rhRISdG3BoOm1Yh/ecC7F7Xitl/nUqgHhzMRtu96AYpQ9rXpC1W+6A1A45xRtKg9G
- siYIUPXAMxU8CANMppwHEAihP/b7w/oix8cRWZrJJiO3RMvIlKVWvyCh2PnfZ0hq/1BuKIU4xt
- 6E8=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Mar 2022 13:06:11 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KS3c16hkkz1SVp2
-        for <linux-ide@vger.kernel.org>; Mon, 28 Mar 2022 13:06:09 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1648497966; x=1651089967; bh=uORNMvPmP6/EGG6KNMeYZz0EehS8+XAJTLN
-        +nowe+gk=; b=Hybu7y8DH6ioZErSyJ6RlBbJhAJpuXbAvqdAMfXLkWLsp5DOaX2
-        /mdmXKdqgX+GB51IXQpiFQ8RJ3vAUoR0gPZr5ne5MsxHwrlUvkKoRo+EJeyytb9W
-        v/nH9CPaCgA9n9D2EsPrIzKPPcwEK0k58hxoHCbdKuU5iDlY95b9b95SQS3JY1nM
-        /nMjZR24EzwRjLGdJC5xn02vfb51oan3JVx/HDkKWSGKMpzV3uxAXwn1xSUAQiWO
-        O9SYjSfSYOCPhrxO5d9jjxB428F1UmXK2XIQiA0ugcr9xKV33Fe7VZEhL7FOTCj4
-        MivuogtqZS4DWepss7JAqJb9eYYywpCuqHw==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id AYXrAy5LY5VP for <linux-ide@vger.kernel.org>;
-        Mon, 28 Mar 2022 13:06:06 -0700 (PDT)
-Received: from [10.225.163.121] (unknown [10.225.163.121])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KS3bx2qwMz1Rvlx;
-        Mon, 28 Mar 2022 13:06:05 -0700 (PDT)
-Message-ID: <382eecca-f225-5272-b9d7-134c7baae4ae@opensource.wdc.com>
-Date:   Tue, 29 Mar 2022 05:06:03 +0900
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH 00/21] ata: ahci: Add DWC/Baikal-T1 AHCI SATA support
-Content-Language: en-US
+        with ESMTP id S230032AbiC1WiS (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2022 18:38:18 -0400
+Received: from mga17.intel.com (mga17.intel.com [192.55.52.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 851AB47560;
+        Mon, 28 Mar 2022 15:36:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1648506995; x=1680042995;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=afYqVHwiHVNSeLXUeEU0q+YnDh0ucsP8xpVz/aFfAqM=;
+  b=Bg54M+NwP0JxtedEsdJJfdpXljr+mi8RW5G353Yd2Xb8/m5mGRPLRoIt
+   yk3Fd3Fx+Vf7YbRwvb9IO1IAaCJ7m9dLAcKkafSjLTHURjMftDg7w9vfb
+   fnj18iz/l/KhmMpAjEfP68k8Ps3Q1oCJrQhvHD1WXri7m6pfOqVL9krJ4
+   lCPQoqvb53eXHp2FVnFOP41LgWEC0JrYR0z6X6H+uy4gja5kJ1YxYem+V
+   tgYX/CoVb9PJQik4aWX/FhGAUH+mAYpNnd26WIUQA2NW0YzhpIi2vmjVa
+   8Gl/E+HXHkr2GIsFGhc++BFzQY4YOM3tyP7F1M7hpfS6x3cOldtHeCytE
+   Q==;
+X-IronPort-AV: E=McAfee;i="6200,9189,10300"; a="239711139"
+X-IronPort-AV: E=Sophos;i="5.90,218,1643702400"; 
+   d="scan'208";a="239711139"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Mar 2022 15:36:34 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.90,218,1643702400"; 
+   d="scan'208";a="652411975"
+Received: from lkp-server02.sh.intel.com (HELO 89b41b6ae01c) ([10.239.97.151])
+  by orsmga004.jf.intel.com with ESMTP; 28 Mar 2022 15:36:31 -0700
+Received: from kbuild by 89b41b6ae01c with local (Exim 4.92)
+        (envelope-from <lkp@intel.com>)
+        id 1nYxyQ-0002N8-VQ; Mon, 28 Mar 2022 22:36:30 +0000
+Date:   Tue, 29 Mar 2022 06:36:14 +0800
+From:   kernel test robot <lkp@intel.com>
 To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
         Jens Axboe <axboe@kernel.dk>
-Cc:     Serge Semin <fancer.lancer@gmail.com>,
+Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
+        Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-References: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 05/21] ata: libahci_platform: Convert to using devm bulk
+ clocks API
+Message-ID: <202203290643.0ExdJphD-lkp@intel.com>
+References: <20220324001628.13028-6-Sergey.Semin@baikalelectronics.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20220324001628.13028-6-Sergey.Semin@baikalelectronics.ru>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 3/24/22 09:16, Serge Semin wrote:
-[...]
-> After the denoted above functionality is added we can finally introduce
-> the Baikal-T1 AHCI SATA controller support into the DWC AHCI SATA driver.
-> The controller is based on the DWC AHCI SATA IP-core v4.10a and can work
-> well with the generic DWC AHCI driver. The only peculiarity of it is
-> connected with the SATA Ports reference clock source. It can be supplied
-> either from the internal SoC PLL or from the chip pads. Currently we have
-> to prefer selecting the signal coming from the pads if the corresponding
-> clock source is specified because the link doesn't get stably established
-> when the internal clock signal is activated. In addition the platform has
-> trigger-based reset signals so the corresponding flag must be passed to
-> the generic AHCI-resource getter.
-> 
+Hi Serge,
 
-I am assuming this is "v2" of your patches. Please add this version number
-to your patch titles ("[PATCH v2]") and add a changelog here in the cover
-letter.
+I love your patch! Yet something to improve:
 
-> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> Cc: Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>
-> Cc: Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: linux-ide@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: devicetree@vger.kernel.org
-> 
-> Serge Semin (21):
->   dt-bindings: ata: sata: Extend number of SATA ports
->   dt-bindings: ata: Convert AHCI-bindings to DT schema
->   ata: libahci_platform: Explicitly set rc on devres_alloc failure
->   ata: libahci_platform: Convert to using handy devm-ioremap methods
->   ata: libahci_platform: Convert to using devm bulk clocks API
->   ata: libahci_platform: Add function returning a clock-handle by id
->   ata: libahci_platform: Sanity check the DT child nodes number
->   ata: libahci_platform: Parse ports-implemented property in resources
->     getter
->   ata: libahci_platform: Introduce reset assertion/deassertion methods
->   dt-bindings: ata: ahci: Add platform capability properties
->   ata: libahci: Extend port-cmd flags set with port capabilities
->   ata: libahci: Discard redundant force_port_map parameter
->   ata: libahci: Don't read AHCI version twice in the save-config method
->   ata: ahci: Convert __ahci_port_base to accepting hpriv as arguments
->   ata: ahci: Introduce firmware-specific caps initialization
->   dt-bindings: ata: ahci: Add DWC AHCI SATA controller DT schema
->   ata: ahci: Add DWC AHCI SATA controller support
->   dt-bindings: ata: ahci: Add Baikal-T1 AHCI SATA controller DT schema
->   ata: ahci-dwc: Add platform-specific quirks support
->   ata: ahci-dwc: Add Baikal-T1 AHCI SATA interface support
->   MAINTAINERS: Add maintainers for DWC AHCI SATA driver
-> 
->  .../devicetree/bindings/ata/ahci-common.yaml  | 176 ++++++
->  .../devicetree/bindings/ata/ahci-platform.txt |  79 ---
->  .../bindings/ata/baikal,bt1-ahci.yaml         | 132 +++++
->  .../devicetree/bindings/ata/generic-ahci.yaml |  98 ++++
->  .../devicetree/bindings/ata/sata-common.yaml  |   7 +-
->  .../bindings/ata/snps,dwc-ahci.yaml           | 121 ++++
->  MAINTAINERS                                   |   9 +
->  drivers/ata/Kconfig                           |  11 +
->  drivers/ata/Makefile                          |   1 +
->  drivers/ata/ahci.c                            |   4 +-
->  drivers/ata/ahci.h                            |  21 +-
->  drivers/ata/ahci_dwc.c                        | 525 ++++++++++++++++++
->  drivers/ata/ahci_mtk.c                        |   2 -
->  drivers/ata/ahci_platform.c                   |   5 -
->  drivers/ata/ahci_st.c                         |   3 -
->  drivers/ata/libahci.c                         |  63 ++-
->  drivers/ata/libahci_platform.c                | 234 +++++---
->  include/linux/ahci_platform.h                 |   8 +-
->  18 files changed, 1321 insertions(+), 178 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/ata/ahci-common.yaml
->  delete mode 100644 Documentation/devicetree/bindings/ata/ahci-platform.txt
->  create mode 100644 Documentation/devicetree/bindings/ata/baikal,bt1-ahci.yaml
->  create mode 100644 Documentation/devicetree/bindings/ata/generic-ahci.yaml
->  create mode 100644 Documentation/devicetree/bindings/ata/snps,dwc-ahci.yaml
->  create mode 100644 drivers/ata/ahci_dwc.c
-> 
+[auto build test ERROR on v5.17]
+[also build test ERROR on next-20220328]
+[cannot apply to axboe-block/for-next robh/for-next linus/master]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch]
 
+url:    https://github.com/intel-lab-lkp/linux/commits/Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220328-234809
+base:    f443e374ae131c168a065ea1748feac6b2e76613
+config: arm-buildonly-randconfig-r005-20220327 (https://download.01.org/0day-ci/archive/20220329/202203290643.0ExdJphD-lkp@intel.com/config)
+compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project 0f6d9501cf49ce02937099350d08f20c4af86f3d)
+reproduce (this is a W=1 build):
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # install arm cross compiling tool for clang build
+        # apt-get install binutils-arm-linux-gnueabi
+        # https://github.com/intel-lab-lkp/linux/commit/28cf1dcfb31bfca35af403a8774d0d880923fab3
+        git remote add linux-review https://github.com/intel-lab-lkp/linux
+        git fetch --no-tags linux-review Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220328-234809
+        git checkout 28cf1dcfb31bfca35af403a8774d0d880923fab3
+        # save the config file to linux build tree
+        mkdir build_dir
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=arm SHELL=/bin/bash drivers/ata/
+
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
+
+All errors (new ones prefixed by >>):
+
+>> drivers/ata/ahci_dm816.c:72:6: error: invalid argument type 'struct clk_bulk_data' to unary expression
+           if (!hpriv->clks[1]) {
+               ^~~~~~~~~~~~~~~
+>> drivers/ata/ahci_dm816.c:77:29: error: passing 'struct clk_bulk_data' to parameter of incompatible type 'struct clk *'
+           refclk_rate = clk_get_rate(hpriv->clks[1]);
+                                      ^~~~~~~~~~~~~~
+   include/linux/clk.h:584:40: note: passing argument to parameter 'clk' here
+   unsigned long clk_get_rate(struct clk *clk);
+                                          ^
+   2 errors generated.
+
+
+vim +72 drivers/ata/ahci_dm816.c
+
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   60  
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   61  static int ahci_dm816_phy_init(struct ahci_host_priv *hpriv, struct device *dev)
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   62  {
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   63  	unsigned long refclk_rate;
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   64  	int mpy;
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   65  	u32 val;
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   66  
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   67  	/*
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   68  	 * We should have been supplied two clocks: the functional and
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   69  	 * keep-alive clock and the external reference clock. We need the
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   70  	 * rate of the latter to calculate the correct value of MPY bits.
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   71  	 */
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14  @72  	if (!hpriv->clks[1]) {
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   73  		dev_err(dev, "reference clock not supplied\n");
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   74  		return -EINVAL;
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   75  	}
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   76  
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14  @77  	refclk_rate = clk_get_rate(hpriv->clks[1]);
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   78  	if ((refclk_rate % 100) != 0) {
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   79  		dev_err(dev, "reference clock rate must be divisible by 100\n");
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   80  		return -EINVAL;
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   81  	}
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   82  
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   83  	mpy = ahci_dm816_get_mpy_bits(refclk_rate);
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   84  	if (mpy < 0) {
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   85  		dev_err(dev, "can't calculate the MPY bits value\n");
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   86  		return -EINVAL;
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   87  	}
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   88  
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   89  	/* Enable the PHY and configure the first HBA port. */
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   90  	val = AHCI_DM816_PHY_MPY(mpy) | AHCI_DM816_PHY_LOS(1) |
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   91  	      AHCI_DM816_PHY_RXCDR(4) | AHCI_DM816_PHY_RXEQ(1) |
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   92  	      AHCI_DM816_PHY_TXSWING(3) | AHCI_DM816_PHY_ENPLL(1);
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   93  	writel(val, hpriv->mmio + AHCI_DM816_P0PHYCR_REG);
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   94  
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   95  	/* Configure the second HBA port. */
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   96  	val = AHCI_DM816_PHY_LOS(1) | AHCI_DM816_PHY_RXCDR(4) |
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   97  	      AHCI_DM816_PHY_RXEQ(1) | AHCI_DM816_PHY_TXSWING(3);
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   98  	writel(val, hpriv->mmio + AHCI_DM816_P1PHYCR_REG);
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14   99  
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14  100  	return 0;
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14  101  }
+df46e6a4c06c89 Bartosz Golaszewski 2017-03-14  102  
 
 -- 
-Damien Le Moal
-Western Digital Research
+0-DAY CI Kernel Test Service
+https://01.org/lkp
