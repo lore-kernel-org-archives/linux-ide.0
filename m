@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28479C433F5
-	for <linux-ide@archiver.kernel.org>; Mon, 28 Mar 2022 09:13:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E868C433F5
+	for <linux-ide@archiver.kernel.org>; Mon, 28 Mar 2022 09:44:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239700AbiC1JPU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 28 Mar 2022 05:15:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57130 "EHLO
+        id S239534AbiC1Jpj (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 28 Mar 2022 05:45:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239699AbiC1JPT (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2022 05:15:19 -0400
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D38847650
-        for <linux-ide@vger.kernel.org>; Mon, 28 Mar 2022 02:13:38 -0700 (PDT)
+        with ESMTP id S232052AbiC1Jpi (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2022 05:45:38 -0400
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2A411EC76
+        for <linux-ide@vger.kernel.org>; Mon, 28 Mar 2022 02:43:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1648458818; x=1679994818;
+  t=1648460637; x=1679996637;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=MSADlhf9FypNOi6/37lXJq3c3Nr24VCQabsKjn/k8hA=;
-  b=OCbVezTWGxm4hHgEhPJMhMVLP2oTZHfyiKE+NNFE23tTj62mqPfX/uzP
-   mFM8+OacGLwnD/6u4aPvopLD1tTvcYqbbZdFB+9o6aZAqJ7+FddaQsaSF
-   igjzV3uHDQvB93nSFY2H5JVOHpaGYeTct+Y/U7qzUtWwCW/tjoAHcM13W
-   c6AqJ2S96w6I1uZw3cRilK55u9EWuds5WFQW9ktr7DiArhgC9VCzRSdPT
-   dQcD3riykZNCMIfMiRVTjtzdKfzW9khmcBd7NmF6mVhqH9wy1ZfWV4F8Y
-   klbd5fKVWfI2f7jqBeLGEEWvCbgGrqrQXa8/kQ+Ftb/YDrxerMZrHMI4r
+  bh=4R1u0oMa67AUaqyCL1Ybnb0EqSnlxEykfKbXBCUGAhA=;
+  b=NcfuJbjnjsVvQ3XnDg6Znk6WYyYVHC/ct9mp0V3hL7jhBK5eSJJrXMNk
+   iArW9v7M0wtuWpEnoBMVRRMq66XPNIAb5jU4aqn/zJOkcF90+H/FbBdNV
+   BymWJla+f9NqeJRQR0yu+DHJCD6lrqsdbATO6XIHlGApzo9VbepyDGWyb
+   e8JmthhEJOXteb+me2vjFV+gO7EkB1bGZjEUuo3AjBQeN24eZxEipAW5X
+   SuBHbdF46XK5W5VepUROblfJuECOkDco7VsXZPw2sxzxU7GIuyj18nJSC
+   pTriWY8LRcrORdXHf7acyPgxM3qoM4AHPDX++gxRcYjLtC/HguN7Ti0ku
    Q==;
 X-IronPort-AV: E=Sophos;i="5.90,217,1643644800"; 
-   d="scan'208";a="195321147"
+   d="scan'208";a="300579957"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Mar 2022 17:13:37 +0800
-IronPort-SDR: UZ9tKSkN8oNA0CRn9sKbX1Go04evALZIStzvlWYn3fpOxvz+iva0p8dleGamZ/gBpXrVLB+sJ6
- aMj7YxZsAnRFbCLY5oNiGEDIg2WjkuzKv4XDRw3NJyualk7cHFurBtNauvEpkklOQWvE8hsX/c
- j13w+V16YmbSNUhqgeiTmLLCYAqlnKKH4K8xX0RnWykb/y8cKmwTlIiFTmIdyTf23DCdlMRA+R
- CgVY/8jybKUw5u87uigSkf+qUFU2DX0vpnaJru80HyLE9MIFjcgySLMKmRD3gaSKvAe56UX41v
- gYp0yH0rhvZgqKVq3JNsmdHa
+  by ob1.hgst.iphmx.com with ESMTP; 28 Mar 2022 17:43:56 +0800
+IronPort-SDR: IA1IKKpNPAeevRk1Dh8aPnAn1vfWVFhrxivsYe+PJQAs+BL1rsR1InZtB5Tq3M5M+12Rj4Cb4q
+ tpOl7w6gDImsEsojanaMZKk5+OLHIZz0MWMsWnCC5hJjOsxJ1llVTIuY5tsN0mcvIknFG4PLgr
+ ExdwTak8Uon61TuDBsK+H48nE68Hok6IfrFzuKcuiMmCLcuix5Ip/p3UvsPcwi6h8D8e3d+gES
+ 2lupkUgk0TRZHXPGRZKWIGqdfEJ4igfqCTJRmeBdsGMys7AeByuAYMrM0p1Ur9xdJFCTkGCn3L
+ 7oJ+NX++oeQWCz9KjCqxwblz
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Mar 2022 01:44:30 -0700
-IronPort-SDR: FaQYjSwNnOSinEF3g8BdgZo8W3ogUqEsA0eUT71RIkUo/OcPflsPzvdQa7l6XtZ7EkHImuh6m/
- aGDPtOrsB5TzY9KdCVGEt1fUTy9cYTHXzk7JiIQMrbrFuousm5zatB06xHm/nOYTPdRrC7cWal
- frPA1Wk00OGfY08OkVH/ThERW8JEWCbfpbjfJsZfLSSiGfyudB41QmmhR/F2cYtLAk1yjeyERW
- S7froh3yvcD0miFmWBMRylNYuVjCz2y/vkVurHQPfEpc1OaU2zPjl1h/l4aJxER4GYKQAFrruZ
- 5zg=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Mar 2022 02:14:50 -0700
+IronPort-SDR: NbYlUr609vxq55rxiQzQAsKUg/PryP0Jvzdqaw4lYKJIPOPJ3jyJCy+jdQME0H6qC8Gl3q8Jzf
+ 9bRHozeOd/mfni59qicgVA6i2EvTCFJg3hkq2V0Ug9ckSLxqL6lauzpUGWkPSrVf5kDoEFWH88
+ SPUICFiDizU8cagNIKoTpX+I5JbvpBzSGZsoXrVXaQxzLtSdqYa+VxywfsXOkFd6bbfzjMVmor
+ RX6lJVutlY8EhkP8iQMbTeT5CD4wcR/ZKZeOPssW0XPXHrNUtZG83ldKwuxwLoEoYdFc1SKA5b
+ UvU=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Mar 2022 02:13:38 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 28 Mar 2022 02:43:57 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KRn751VS7z1SHwl
-        for <linux-ide@vger.kernel.org>; Mon, 28 Mar 2022 02:13:37 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KRnp44yZfz1SHwl
+        for <linux-ide@vger.kernel.org>; Mon, 28 Mar 2022 02:43:56 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,23 +56,23 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1648458816; x=1651050817; bh=MSADlhf9FypNOi6/37lXJq3c3Nr24VCQabs
-        Kjn/k8hA=; b=T262hznvenJzETUeSi/SWeECNQslcmiGzglDeKVJd1VFmJ2rfu6
-        1XhRisdch3yt70nBZT2Wmaw50Uc74n98IVEY5u7iN9AzwsGDmWtluJ/22BFrKcL3
-        Qjr0FtyRNUHI7JMxsFvkFOgyX/CRqgXIsLajLDHRGchQ2lIT/UJ6DeiDyp5oquOp
-        hzwKdSzS39vSGwchDe+BEbxB8NJjPNG3tg93Fow9b2bkRUAb2v1H3eJgjbF6JUFf
-        nPHwaSDvqVZ+Ng76XkuZJUqmCVtvcjRWQqzBkds6R4gkQl7bwR6lCl4fgkQ28LmI
-        wqwy5HXnC+ll1SRuoS7Tm1rkubi/GWQqGng==
+        1648460636; x=1651052637; bh=4R1u0oMa67AUaqyCL1Ybnb0EqSnlxEykfKb
+        XBCUGAhA=; b=Y2eC1A/2KwX9ed1fkVth8e80Wuc+2YUIzIVjFUJYs1RDmUTzR6/
+        S11lLh8hwbnFz8ZPp376lGC/lYLKA9FUtJZ+qqNE7gg2HpI+0eVDOuhbiAZfWDFk
+        kCyPDMk5+LCOj3ueHbKK/Y88/8ET1lowh6piXnPfPqtYsW7r1LQZ3zQs7xmtYWiT
+        u91rAppdEX0SufOGm3KBJJs0NrI9slXy+c8ay8Z2cDgY3RXUKF3yTwXEeB9spWtT
+        g3Kexle65P+lDhKpM4j2+9muX4GL/R2Dh33Z1uF/5tYYC8huhZugmkaOP1dvtoKb
+        hChTUlcktqh1zbq/rGohXRtCYtch55td1Ow==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id iL-i1Orv5Gs5 for <linux-ide@vger.kernel.org>;
-        Mon, 28 Mar 2022 02:13:36 -0700 (PDT)
+        with ESMTP id 8RF9_oEsHMSO for <linux-ide@vger.kernel.org>;
+        Mon, 28 Mar 2022 02:43:56 -0700 (PDT)
 Received: from [10.225.163.121] (unknown [10.225.163.121])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KRn742w29z1Rvlx;
-        Mon, 28 Mar 2022 02:13:36 -0700 (PDT)
-Message-ID: <61cd9ee6-86f2-a04a-f831-bb13ab208ecb@opensource.wdc.com>
-Date:   Mon, 28 Mar 2022 18:13:34 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KRnp35y6lz1Rvlx;
+        Mon, 28 Mar 2022 02:43:55 -0700 (PDT)
+Message-ID: <e93d4893-123c-c5df-51cd-5841a2124fc7@opensource.wdc.com>
+Date:   Mon, 28 Mar 2022 18:43:54 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.7.0
@@ -157,78 +157,12 @@ On 3/28/22 16:41, Paul Menzel wrote:
 > To my knowledge this was a regular boot (`systemctl reboot`). So where 
 > did the 50 ms go? ;-)
 
-Not sure. But I do see variations. And I did add meesages around all the
-debouncing in sata_link_resume() to get a better idea of the gains.
+The device also sometimes need time to reach DET == 3 state... This is an
+optimization that reduces the time waited to reach DET == 3. But we still
+wait for it :)
 
-Working on a new version now, so I will be rechecking everything.
-
-> 
-> 
-> Kind regards,
-> 
-> Paul
-> 
-> 
->>>> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
->>>> ---
->>>>    drivers/ata/libata-sata.c | 24 ++++++++++++++++++++++--
->>>>    1 file changed, 22 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
->>>> index 87ad03c2e49f..15423723c9dd 100644
->>>> --- a/drivers/ata/libata-sata.c
->>>> +++ b/drivers/ata/libata-sata.c
->>>> @@ -276,8 +276,27 @@ int sata_link_debounce(struct ata_link *link,
->>>>    
->>>>    		/* DET stable? */
->>>>    		if (cur == last) {
->>>> +			/*
->>>> +			 * If the device presence was detected but PHY
->>>> +			 * communication is not yet established, wait until
->>>> +			 * deadline.
->>>> +			 */
->>>>    			if (cur == 1 && time_before(jiffies, deadline))
->>>>    				continue;
->>>> +
->>>> +			/*
->>>> +			 * If PHY is ready and the device is present, and the
->>>> +			 * driver did not request debounce delay, bail out early
->>>> +			 * assuming that the link is stable.
->>>> +			 */
->>>> +			if (cur == 3 &&
->>>> +			    !(link->flags & ATA_LFLAG_DEBOUNCE_DELAY))
->>>> +				return 0;
->>>> +
->>>> +			/*
->>>> +			 * If DET value has remained stable for
->>>> +			 * timing->duration, bail out.
->>>> +			 */
->>>>    			if (time_after(jiffies,
->>>>    				ata_deadline(last_jiffies, timing->duration)))
->>>>    				return 0;
->>>> @@ -288,8 +307,9 @@ int sata_link_debounce(struct ata_link *link,
->>>>    		last = cur;
->>>>    		last_jiffies = jiffies;
->>>>    
->>>> -		/* Check deadline.  If debouncing failed, return
->>>> -		 * -EPIPE to tell upper layer to lower link speed.
->>>> +		/*
->>>> +		 * If debouncing has not succeeded before dealine, return
->>>
->>> dea*d*line
->>>
->>>> +		 * -EPIPE to tell the upper layer to lower the link speed.
->>>>    		 */
->>>>    		if (time_after(jiffies, deadline))
->>>>    			return -EPIPE;
->>>
->>> One separate for the new check would have been nice, but looks good to
->>> me overall.
->>>
->>>
->>> Kind regards,
->>>
->>> Paul
+On a hot reboot, as the device are already ready, I do see the time
+reduced to one interval (5ms). But for a cold boot, it takes longer sometimes.
 
 
 -- 
