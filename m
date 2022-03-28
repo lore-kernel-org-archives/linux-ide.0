@@ -2,270 +2,110 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E070C433F5
-	for <linux-ide@archiver.kernel.org>; Mon, 28 Mar 2022 15:46:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB9EDC433EF
+	for <linux-ide@archiver.kernel.org>; Mon, 28 Mar 2022 19:32:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238838AbiC1Ps0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 28 Mar 2022 11:48:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46450 "EHLO
+        id S245695AbiC1TeE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 28 Mar 2022 15:34:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53558 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238921AbiC1PqJ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2022 11:46:09 -0400
-Received: from mail.baikalelectronics.ru (mail.baikalelectronics.com [87.245.175.226])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 11BD54A936;
-        Mon, 28 Mar 2022 08:44:14 -0700 (PDT)
-Received: from mail.baikalelectronics.ru (unknown [192.168.51.25])
-        by mail.baikalelectronics.ru (Postfix) with ESMTP id 94CCE1E28D0;
-        Thu, 24 Mar 2022 03:16:34 +0300 (MSK)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mail.baikalelectronics.ru 94CCE1E28D0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baikalelectronics.ru; s=mail; t=1648080994;
-        bh=INqUJafyRz/tz834oln1HVbT/M+UcGelTHph5su7VrM=;
-        h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-        b=BtjG1u/SyVl+6OL8OnxFARrJX0DnapcPvYg9uVeJN1uh6ooZQSdbAODfrnV7TLUkC
-         gL+gJfwj7ZqyLVP38KmSE2kw4JK61JYFqWTEEQ8qZ0vD8yykDekYumKBZiIE9qPhdC
-         uERGA3qXS7meVpdFrb6/kKUeXyr1JBw+K/guWHW0=
-Received: from localhost (192.168.168.10) by mail (192.168.51.25) with
- Microsoft SMTP Server (TLS) id 15.0.1395.4; Thu, 24 Mar 2022 03:16:34 +0300
-From:   Serge Semin <Sergey.Semin@baikalelectronics.ru>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        with ESMTP id S233677AbiC1TeD (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2022 15:34:03 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 050CC5DE4E;
+        Mon, 28 Mar 2022 12:32:22 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 9265B61291;
+        Mon, 28 Mar 2022 19:32:21 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3CFBC340F3;
+        Mon, 28 Mar 2022 19:32:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1648495940;
+        bh=hsj7vpD6VzgwgqTGJwuQLzl4hvMkV3jhPtqSZ0sfeDk=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=SNrCTUVspAbKGzkl/lkX7LEl6vPIPwqohKfQS9j4wkOpVeD4AC+KSvULMyl9G55Jg
+         cvfYgsKOx6Hu8vQjstDuuVmtLUToCxVMBhEA7FrUd5cZIm75Qm+TeRN9RS4aPKnQ8s
+         4VdTQMh25Fzqi23HYRD5azwSQUL4od4FBcYQ/fGPYvBUJXJjbspEqr29SZYyM1f0wB
+         ZVDQ0hnYEbkmvCEmJc0CRniluyzKwTE0RE7mMXVz3f34vh8LVY8Ic7yvjqtJelPsvg
+         1p3dQa/I00QKG5gziprxkUBf0YEhl/dnQRJSI8QDwxDggof97taB5T49zkVWsy22d/
+         cmkv6heGq2EfQ==
+Received: by mail-ej1-f48.google.com with SMTP id o10so30824503ejd.1;
+        Mon, 28 Mar 2022 12:32:20 -0700 (PDT)
+X-Gm-Message-State: AOAM532Vt9SL/rAbaUw2fVxZBHBUACmcNubMghaB6Dncb4XhBzOJ9gN7
+        kaQv/Kdvr6DHo0Xl2T35jEwBempx0RUVYS0vOA==
+X-Google-Smtp-Source: ABdhPJzS6HE1I5dwIXHt3Z8+oNfExeRu/Ld613R99JBEBBtqUIPwWmfatFTRXQVhLFWR4Q056OlfLe821+lCv3qLtzU=
+X-Received: by 2002:a17:906:58ce:b0:6da:b548:1bbb with SMTP id
+ e14-20020a17090658ce00b006dab5481bbbmr29647735ejs.14.1648495939083; Mon, 28
+ Mar 2022 12:32:19 -0700 (PDT)
+MIME-Version: 1.0
+References: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru> <20220324001628.13028-3-Sergey.Semin@baikalelectronics.ru>
+In-Reply-To: <20220324001628.13028-3-Sergey.Semin@baikalelectronics.ru>
+From:   Rob Herring <robh+dt@kernel.org>
+Date:   Mon, 28 Mar 2022 14:32:06 -0500
+X-Gmail-Original-Message-ID: <CAL_JsqKnnVKmCA6he_A-OAgu1xD1bjHBy4_eXf64q2LJ9+L3_g@mail.gmail.com>
+Message-ID: <CAL_JsqKnnVKmCA6he_A-OAgu1xD1bjHBy4_eXf64q2LJ9+L3_g@mail.gmail.com>
+Subject: Re: [PATCH 02/21] dt-bindings: ata: Convert AHCI-bindings to DT schema
+To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>
-CC:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Jens Axboe <axboe@kernel.dk>,
         Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
-Subject: [PATCH 05/21] ata: libahci_platform: Convert to using devm bulk clocks API
-Date:   Thu, 24 Mar 2022 03:16:12 +0300
-Message-ID: <20220324001628.13028-6-Sergey.Semin@baikalelectronics.ru>
-In-Reply-To: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
-References: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        devicetree@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-In order to simplify the clock-related code there is a way to convert the
-current fixed clocks array into using the common bulk clocks kernel API
-with dynamic set of the clock handlers and device-managed clock-resource
-tracking. It's a bit tricky due to the complication coming from the
-requirement to support the platforms (da850, spear13xx) with the
-non-OF-based clock source, but still doable.
+On Wed, Mar 23, 2022 at 7:16 PM Serge Semin
+<Sergey.Semin@baikalelectronics.ru> wrote:
+>
+> Currently the DT bindings of Generic AHCI Controllers are described by
+> means of the legacy text file. Since such format is deprecated in favor of
+> the DT schema. Let's convert the Generic AHCI Controllers bindings file
+> then to the corresponding yaml files. There will be two of them: a DT
+> schema with a set of properties applied to all AHCI-compatible devices,
+> and a DT schema validating an AHCI-controller on a generic platform. So if
+> a controller conforms to the Serial ATA AHCI interface specification with
+> just peculiar platform environment settings like clock sources, PHYs,
+> power regulators or resets, then the generic AHCI bindings should work for
+> it. Otherwise a dedicated DT-schema needs to be created.
+>
+> So a common AHCI SATA controller DT-node is supposed to be equipped with
+> at least compatible, reg and interrupts properties. It can optionally
+> contain clocks, resets, {ahci,target,phy}-supply and phys phandles. In
+> addition the property "ports-implemented" can be specified in order to
+> define the number of implemented SATA ports. An AHCI SATA controller
+> DT-node can also have a set of sub-nodes representing its ports, for each
+> of which an individual power source and PHY phandle can be specified.
+>
+> Note we have omitted the next compatible strings
+> "marvell,armada-380-ahci", "marvell,armada-3700-ahci", "snps,dwc-ahci",
+> "snps,spear-ahci" since the corresponding controllers are handled by the
+> dedicated drivers now, thus are supposed to have their own DT-schema
+> defined. dma-coherent has also been discarded since it's a generic
+> property and is evaluated by the dt-schema parser.
+>
+> Also note that if there is the "reg-names" property specified for a AHCI
+> DT-node then it is supposed to at least have the "ahci" sub-string as an
+> indicator of the AHCI-compatible registers space.
+>
+> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> ---
+>  .../devicetree/bindings/ata/ahci-common.yaml  | 110 ++++++++++++++++++
+>  .../devicetree/bindings/ata/ahci-platform.txt |  79 -------------
+>  .../devicetree/bindings/ata/generic-ahci.yaml |  89 ++++++++++++++
+>  3 files changed, 199 insertions(+), 79 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/ata/ahci-common.yaml
+>  delete mode 100644 Documentation/devicetree/bindings/ata/ahci-platform.txt
+>  create mode 100644 Documentation/devicetree/bindings/ata/generic-ahci.yaml
 
-Before this modification there are two methods have been used to get the
-clocks connected to an AHCI device: clk_get() - to get the very first
-clock in the list and of_clk_get() - to get the rest of them. Basically
-the platforms with non-OF-based clocks definition could specify only a
-single reference clock source. The platforms with OF-hw clocks have been
-luckier and could setup up to AHCI_MAX_CLKS clocks. Such semantic can be
-retained with using devm_clk_bulk_get_all() to retrieve the clocks defined
-via the DT firmware and devm_clk_get_optional() otherwise. In both cases
-using the device-managed version of the methods will cause the automatic
-resources deallocation on the AHCI device removal event. The only
-complicated part in the suggested approach is the explicit allocation and
-initialization of the clk_bulk_data structure instance for the non-OF
-reference clocks. It's required in order to use the Bulk Clocks API for
-the both denoted cases of the clocks definition.
+This has already been converted and is in Linus' tree now for v5.18.
 
-Note aside with the clock-related code reduction and natural
-simplification, there are several bonuses the suggested modification
-provides. First of all the limitation of having no greater than
-AHCI_MAX_CLKS clocks is now removed, since the devm_clk_bulk_get_all()
-method will allocate as many reference clocks data descriptors as there
-are clocks specified for the device. Secondly the clock names are
-auto-detected. So the glue drivers can make sure that the required clocks
-are specified just by checking the clock IDs in the clk_bulk_data array.
-Thirdly using the handy Bulk Clocks kernel API improves the
-clocks-handling code readability. And the last but not least this
-modification implements a true optional clocks support to the
-ahci_platform_get_resources() method. Indeed the previous clocks getting
-procedure just stopped getting the clocks on any errors (aside from
-non-critical -EPROBE_DEFER) in a way so the callee wasn't even informed
-about abnormal loop termination. The new implementation lacks of such
-problem. The ahci_platform_get_resources() will return an error code if
-the corresponding clocks getting method ends execution abnormally.
-
-Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
----
- drivers/ata/ahci.h             |  4 +-
- drivers/ata/libahci_platform.c | 82 +++++++++++++++-------------------
- 2 files changed, 37 insertions(+), 49 deletions(-)
-
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index eeac5482f1d1..1564c691094a 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -38,7 +38,6 @@
- 
- enum {
- 	AHCI_MAX_PORTS		= 32,
--	AHCI_MAX_CLKS		= 5,
- 	AHCI_MAX_SG		= 168, /* hardware max is 64K */
- 	AHCI_DMA_BOUNDARY	= 0xffffffff,
- 	AHCI_MAX_CMDS		= 32,
-@@ -341,7 +340,8 @@ struct ahci_host_priv {
- 	u32			em_msg_type;	/* EM message type */
- 	u32			remapped_nvme;	/* NVMe remapped device count */
- 	bool			got_runtime_pm; /* Did we do pm_runtime_get? */
--	struct clk		*clks[AHCI_MAX_CLKS]; /* Optional */
-+	unsigned int		n_clks;
-+	struct clk_bulk_data	*clks;		/* Optional */
- 	struct reset_control	*rsts;		/* Optional */
- 	struct regulator	**target_pwrs;	/* Optional */
- 	struct regulator	*ahci_regulator;/* Optional */
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index 8eabbb5f208c..d805ddc3a024 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -8,6 +8,7 @@
-  *   Anton Vorontsov <avorontsov@ru.mvista.com>
-  */
- 
-+#include <linux/clk-provider.h>
- #include <linux/clk.h>
- #include <linux/kernel.h>
- #include <linux/gfp.h>
-@@ -97,28 +98,14 @@ EXPORT_SYMBOL_GPL(ahci_platform_disable_phys);
-  * ahci_platform_enable_clks - Enable platform clocks
-  * @hpriv: host private area to store config values
-  *
-- * This function enables all the clks found in hpriv->clks, starting at
-- * index 0. If any clk fails to enable it disables all the clks already
-- * enabled in reverse order, and then returns an error.
-+ * This function enables all the clks found for the AHCI device.
-  *
-  * RETURNS:
-  * 0 on success otherwise a negative error code
-  */
- int ahci_platform_enable_clks(struct ahci_host_priv *hpriv)
- {
--	int c, rc;
--
--	for (c = 0; c < AHCI_MAX_CLKS && hpriv->clks[c]; c++) {
--		rc = clk_prepare_enable(hpriv->clks[c]);
--		if (rc)
--			goto disable_unprepare_clk;
--	}
--	return 0;
--
--disable_unprepare_clk:
--	while (--c >= 0)
--		clk_disable_unprepare(hpriv->clks[c]);
--	return rc;
-+	return clk_bulk_prepare_enable(hpriv->n_clks, hpriv->clks);
- }
- EXPORT_SYMBOL_GPL(ahci_platform_enable_clks);
- 
-@@ -126,16 +113,13 @@ EXPORT_SYMBOL_GPL(ahci_platform_enable_clks);
-  * ahci_platform_disable_clks - Disable platform clocks
-  * @hpriv: host private area to store config values
-  *
-- * This function disables all the clks found in hpriv->clks, in reverse
-- * order of ahci_platform_enable_clks (starting at the end of the array).
-+ * This function disables all the clocks enabled before
-+ * (bulk-clocks-disable function is supposed to do that in reverse
-+ * from the enabling procedure order).
-  */
- void ahci_platform_disable_clks(struct ahci_host_priv *hpriv)
- {
--	int c;
--
--	for (c = AHCI_MAX_CLKS - 1; c >= 0; c--)
--		if (hpriv->clks[c])
--			clk_disable_unprepare(hpriv->clks[c]);
-+	clk_bulk_disable_unprepare(hpriv->n_clks, hpriv->clks);
- }
- EXPORT_SYMBOL_GPL(ahci_platform_disable_clks);
- 
-@@ -292,8 +276,6 @@ static void ahci_platform_put_resources(struct device *dev, void *res)
- 		pm_runtime_disable(dev);
- 	}
- 
--	for (c = 0; c < AHCI_MAX_CLKS && hpriv->clks[c]; c++)
--		clk_put(hpriv->clks[c]);
- 	/*
- 	 * The regulators are tied to child node device and not to the
- 	 * SATA device itself. So we can't use devm for automatically
-@@ -374,8 +356,8 @@ static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
-  * 1) mmio registers (IORESOURCE_MEM 0, mandatory)
-  * 2) regulator for controlling the targets power (optional)
-  *    regulator for controlling the AHCI controller (optional)
-- * 3) 0 - AHCI_MAX_CLKS clocks, as specified in the devs devicetree node,
-- *    or for non devicetree enabled platforms a single clock
-+ * 3) all clocks specified in the devicetree node, or a single
-+ *    clock for non-OF platforms (optional)
-  * 4) resets, if flags has AHCI_PLATFORM_GET_RESETS (optional)
-  * 5) phys (optional)
-  *
-@@ -385,11 +367,10 @@ static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
- struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
- 						   unsigned int flags)
- {
-+	int enabled_ports = 0, rc = 0, child_nodes;
- 	struct device *dev = &pdev->dev;
- 	struct ahci_host_priv *hpriv;
--	struct clk *clk;
- 	struct device_node *child;
--	int i, enabled_ports = 0, rc = 0, child_nodes;
- 	u32 mask_port_map = 0;
- 
- 	if (!devres_open_group(dev, NULL, GFP_KERNEL))
-@@ -413,25 +394,32 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
- 		}
- 	}
- 
--	for (i = 0; i < AHCI_MAX_CLKS; i++) {
--		/*
--		 * For now we must use clk_get(dev, NULL) for the first clock,
--		 * because some platforms (da850, spear13xx) are not yet
--		 * converted to use devicetree for clocks.  For new platforms
--		 * this is equivalent to of_clk_get(dev->of_node, 0).
--		 */
--		if (i == 0)
--			clk = clk_get(dev, NULL);
--		else
--			clk = of_clk_get(dev->of_node, i);
--
--		if (IS_ERR(clk)) {
--			rc = PTR_ERR(clk);
--			if (rc == -EPROBE_DEFER)
--				goto err_out;
--			break;
-+	/*
-+	 * Bulk clock get procedure can fail to find any clock due to running
-+	 * an a non-OF platform or due to the clocks being defined in bypass
-+	 * from the DT firmware (like da850, spear13xx). In that case we
-+	 * fallback to getting a single clock source right from the dev clocks
-+	 * list.
-+	 */
-+	rc = devm_clk_bulk_get_all(dev, &hpriv->clks);
-+	if (rc > 0) {
-+		hpriv->n_clks = rc;
-+	} else if (!rc) {
-+		hpriv->clks = devm_kzalloc(dev, sizeof(*hpriv->clks), GFP_KERNEL);
-+		if (!hpriv->clks) {
-+			rc = -ENOMEM;
-+			goto err_out;
- 		}
--		hpriv->clks[i] = clk;
-+		hpriv->clks->clk = devm_clk_get_optional(dev, NULL);
-+		if (IS_ERR(hpriv->clks->clk)) {
-+			rc = PTR_ERR(hpriv->clks->clk);
-+			goto err_out;
-+		} else if (hpriv->clks->clk) {
-+			hpriv->clks->id = __clk_get_name(hpriv->clks->clk);
-+			hpriv->n_clks = 1;
-+		}
-+	} else {
-+		goto err_out;
- 	}
- 
- 	hpriv->ahci_regulator = devm_regulator_get(dev, "ahci");
--- 
-2.35.1
-
+Rob
