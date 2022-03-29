@@ -2,206 +2,154 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82D10C433EF
-	for <linux-ide@archiver.kernel.org>; Tue, 29 Mar 2022 00:03:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49F56C433EF
+	for <linux-ide@archiver.kernel.org>; Tue, 29 Mar 2022 08:15:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231280AbiC2AFW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 28 Mar 2022 20:05:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48174 "EHLO
+        id S233789AbiC2IRF (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 29 Mar 2022 04:17:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42654 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231268AbiC2AFV (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2022 20:05:21 -0400
-Received: from mga12.intel.com (mga12.intel.com [192.55.52.136])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C11B164D6;
-        Mon, 28 Mar 2022 17:03:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1648512219; x=1680048219;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=jvxH+LmXdr1Kst3BsT8MJwi4xGsrInOrjW2iYPDHDrI=;
-  b=S04sk8JDNBKL2/Ld9PfYNYnpV3JEPbjrKb5E0YhVbzLkT+/lUKFUCfCO
-   AU/h7lHfaZJH9hedeAJefVh0I8cGeZpuN97P/fkIHZgVL9vJeThvBoEw5
-   9k1Ypflsv97jLJvy163fQUD0WYBIVRxtCn5x66eNcwHTG1/yHDP4+8mq0
-   RbFE2SO3dE50DaJY/Xqkz9eC+7YnS0FOfiPd8gMH5EPyhTOyW4V5ypmR6
-   t7Ud7vp3p5TaQ4jPb1EQq0ClXK87OAb7ODe1C3y7K7cXSSyE/7v55sSZt
-   KYZrdAyyoQC677OR1nlWpRYniaTGWs4TAYpueabvXzwXqC8xZQC0nVK1W
-   g==;
-X-IronPort-AV: E=McAfee;i="6200,9189,10300"; a="239059810"
-X-IronPort-AV: E=Sophos;i="5.90,218,1643702400"; 
-   d="scan'208";a="239059810"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Mar 2022 17:03:35 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.90,218,1643702400"; 
-   d="scan'208";a="585377683"
-Received: from lkp-server02.sh.intel.com (HELO 89b41b6ae01c) ([10.239.97.151])
-  by orsmga001.jf.intel.com with ESMTP; 28 Mar 2022 17:03:32 -0700
-Received: from kbuild by 89b41b6ae01c with local (Exim 4.92)
-        (envelope-from <lkp@intel.com>)
-        id 1nYzKd-0002RE-Ig; Tue, 29 Mar 2022 00:03:31 +0000
-Date:   Tue, 29 Mar 2022 08:03:19 +0800
-From:   kernel test robot <lkp@intel.com>
+        with ESMTP id S233146AbiC2IRB (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 29 Mar 2022 04:17:01 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28839A88B4
+        for <linux-ide@vger.kernel.org>; Tue, 29 Mar 2022 01:15:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1648541718; x=1680077718;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=etJNUyFKccNjFEH+loh7MV5WicY1MjAS8jDboHE8eiU=;
+  b=dscpidZMoSzdIFOEwvrPem8ofHOPqvLRe4/f4RhsI6Y2mOUkiBBHZhYD
+   uYNUCcf7F3ik5T8DUvpC2R+wiNDOz/fRsrOJTdjnURaqNxA7NOH/t3Z2I
+   yuJpQfoY/CIM7WH7RMItqCjepv43eeUEhYrC8cqeu4bS4W/36IIYLVBA3
+   BPaoE+KjJJBdVe/moW5TG55rAVZZGiUbSgnpfxiXvcEMGeOeW7eZSc/9l
+   74xPxuQIJ4QgdAFDbPYjuLVuu1XFzYNdzK9xdWE2l8Zu+zqnLiQUuV5Pk
+   sYXfdZA6qYSCu3fQDMV2AY+yg6+m0wZvmPIIjCwN9IlYmvPIQEOGw+OGM
+   A==;
+X-IronPort-AV: E=Sophos;i="5.90,219,1643644800"; 
+   d="scan'208";a="201365599"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 29 Mar 2022 16:15:16 +0800
+IronPort-SDR: 7sZeCR35AMKYCARpCSh5rhKXp1moNTEU4hZchvCiJ03eEwdynrHnkmCkWkOMhT32hTuCDaZ5yS
+ 13O8oiA/kZoc/ZgLlQPFVnBgc3VQgxOqKkhFEzyMuUgS+56pQJAymIfQVK8JDsNT1JvC/gqw9D
+ Wr6DDZkHymtZ8vDMeitABwuepm/J2HjhhhUa1AkRwQTO2i5FoId1pLbLZeC+DNcaAvLFL2KFuh
+ G2CqzJOvQOeEyU7MbgdtkZnTEhfgVUbOYMr7SgHvJ1nJG/93cx6SE409r8CNlROOmoVd5mAWlr
+ jxGn1qXfB/xFL8ZkK9K4vQYo
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Mar 2022 00:46:08 -0700
+IronPort-SDR: rbtlzaUTOYJci80vwdGlzrX3zNwSdNO7yYyxDyTD/DEAqdzTGZji8DZfieq+QL2gSqSdkSRkS3
+ RN9vgLxG5aYVb3DXKjXZzWPaADkuFEuy9tCwdCkjqRedz/YtZ08i2FRhrD4gCyEKzJXhjgqyL5
+ /Bn5SGT+73h1IQbQTo2TFcK2Nq+8OVNoulvA9HvukX7nRwZ98MZc1Ckk+VD/cUc8KthdNBuG/0
+ +/yTethTMGvAQqDt0aDX+ukNf483oqhGpxXv7a16Pq3pIMcyFs6pg4fUiYXtXlS0F3QwB5GRu+
+ 0tU=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 29 Mar 2022 01:15:17 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KSMnJ0Sdwz1SVp3
+        for <linux-ide@vger.kernel.org>; Tue, 29 Mar 2022 01:15:16 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1648541715; x=1651133716; bh=etJNUyFKccNjFEH+loh7MV5WicY1MjAS8jD
+        boHE8eiU=; b=rbTF4xovKjZmjm0Q9kD377CcxZE6a5+bc4Ph0ByS4mv5rAhDmN5
+        IHEmLItD2CD+1CijzpQQVhNlazvLope4j9BC2MAuYntsKzMinyTtjk7jCeYIlO0z
+        TPtwNCWNrTY0YrJ2vI5abkSiUPYUz+JfTS69G3ZAEwDBv29Xmxpbfg41TrAVjy+q
+        ANfyxbz2dAIpnC2DjpqsYLal/ogpkUvrrx4mx6XfiGWFe80w6uHOqFYUumVWPFiD
+        qod4EIjsMk4V456o9VdM3nQWyVYnZSrEsXG+6qNJlcxVq9XgIOWIKt6tTwtPt/YK
+        9WKA7oxaGB426i3X7edoJ0iw/s2WNqnKyUA==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id ae8CogbLWbEu for <linux-ide@vger.kernel.org>;
+        Tue, 29 Mar 2022 01:15:15 -0700 (PDT)
+Received: from [10.225.163.121] (unknown [10.225.163.121])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KSMnF2ytmz1Rvlx;
+        Tue, 29 Mar 2022 01:15:13 -0700 (PDT)
+Message-ID: <92699f07-0efc-e471-d886-c7d6c83f352e@opensource.wdc.com>
+Date:   Tue, 29 Mar 2022 17:15:12 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH 01/21] dt-bindings: ata: sata: Extend number of SATA ports
+Content-Language: en-US
 To:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>
-Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
-        Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>
+Cc:     Serge Semin <fancer.lancer@gmail.com>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH 05/21] ata: libahci_platform: Convert to using devm bulk
- clocks API
-Message-ID: <202203290752.NKWGfglB-lkp@intel.com>
-References: <20220324001628.13028-6-Sergey.Semin@baikalelectronics.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20220324001628.13028-6-Sergey.Semin@baikalelectronics.ru>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org
+References: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
+ <20220324001628.13028-2-Sergey.Semin@baikalelectronics.ru>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20220324001628.13028-2-Sergey.Semin@baikalelectronics.ru>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Hi Serge,
+On 3/24/22 09:16, Serge Semin wrote:
+> The denoted in the description upper limit only concerns the Port
+> Multipliers, but not the actual SATA ports. It's an external device
+> attached to a SATA port in order to access more than one SATA-drive. So
+> when it's attached to a SATA port it just extends the port capability
+> while the number of actual SATA ports stays the same. For instance on AHCI
+> controllers the number of actual ports is determined by the CAP.NP field
+> and the PI (Ports Implemented) register. AFAICS in general the maximum
+> number of SATA ports depends on the particular controller implementation.
+> Generic AHCI controller can't have more than 32 ports (since CAP.NP is of
+> 5 bits wide and PI register is 32-bits size), while DWC AHCI SATA
+> controller can't be configured with more than 8 ports activated. So let's
+> discard the SATA ports reg-property restrictions and just make sure that
+> it consists of a single reg-item.
+> 
+> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> ---
+>  Documentation/devicetree/bindings/ata/sata-common.yaml | 7 +++----
+>  1 file changed, 3 insertions(+), 4 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/sata-common.yaml b/Documentation/devicetree/bindings/ata/sata-common.yaml
+> index 7ac77b1c5850..c619f0ae72fb 100644
+> --- a/Documentation/devicetree/bindings/ata/sata-common.yaml
+> +++ b/Documentation/devicetree/bindings/ata/sata-common.yaml
+> @@ -41,11 +41,10 @@ patternProperties:
+>      properties:
+>        reg:
+>          minimum: 0
+> -        maximum: 14
 
-I love your patch! Yet something to improve:
+Why remove this ? Since AHCI can have up to 32 ports, then change the
+value to 31. As the comment at the top of the file says, this is not
+intended to be a device tree binding spec, but defines properties common
+to most adapters.
 
-[auto build test ERROR on v5.17]
-[also build test ERROR on next-20220328]
-[cannot apply to axboe-block/for-next robh/for-next linus/master]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch]
+>          description:
+> -          The ID number of the drive port SATA can potentially use a port
+> -          multiplier making it possible to connect up to 15 disks to a single
+> -          SATA port.
+> +          The ID number of the SATA port. Aside with being directly used
+> +          each port can have a Port Multiplier attached thus allowing to
+> +          access more than one drive by means of a single channel.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220328-234809
-base:    f443e374ae131c168a065ea1748feac6b2e76613
-config: arm-randconfig-r015-20220327 (https://download.01.org/0day-ci/archive/20220329/202203290752.NKWGfglB-lkp@intel.com/config)
-compiler: clang version 15.0.0 (https://github.com/llvm/llvm-project 0f6d9501cf49ce02937099350d08f20c4af86f3d)
-reproduce (this is a W=1 build):
-        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # install arm cross compiling tool for clang build
-        # apt-get install binutils-arm-linux-gnueabi
-        # https://github.com/intel-lab-lkp/linux/commit/28cf1dcfb31bfca35af403a8774d0d880923fab3
-        git remote add linux-review https://github.com/intel-lab-lkp/linux
-        git fetch --no-tags linux-review Serge-Semin/ata-ahci-Add-DWC-Baikal-T1-AHCI-SATA-support/20220328-234809
-        git checkout 28cf1dcfb31bfca35af403a8774d0d880923fab3
-        # save the config file to linux build tree
-        mkdir build_dir
-        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross W=1 O=build_dir ARCH=arm SHELL=/bin/bash drivers/ata/
+Please add a comma after "Aside with being directly used", otherwise the
+sentence is hard to understand. And replace "channel" with "SATA port" to
+stick with the terms defined here.
 
-If you fix the issue, kindly add following tag as appropriate
-Reported-by: kernel test robot <lkp@intel.com>
+>  
+>  additionalProperties: true
+>  
 
-All errors (new ones prefixed by >>):
-
->> drivers/ata/ahci_da850.c:181:6: error: invalid argument type 'struct clk_bulk_data' to unary expression
-           if (!hpriv->clks[0]) {
-               ^~~~~~~~~~~~~~~
->> drivers/ata/ahci_da850.c:186:18: error: assigning to 'struct clk_bulk_data' from incompatible type 'struct clk *'
-                   hpriv->clks[0] = clk;
-                                  ^ ~~~
-   drivers/ata/ahci_da850.c:194:6: error: invalid argument type 'struct clk_bulk_data' to unary expression
-           if (!hpriv->clks[1]) {
-               ^~~~~~~~~~~~~~~
-   drivers/ata/ahci_da850.c:201:18: error: assigning to 'struct clk_bulk_data' from incompatible type 'struct clk *'
-                   hpriv->clks[1] = clk;
-                                  ^ ~~~
->> drivers/ata/ahci_da850.c:204:46: error: passing 'struct clk_bulk_data' to parameter of incompatible type 'struct clk *'
-           mpy = ahci_da850_calculate_mpy(clk_get_rate(hpriv->clks[1]));
-                                                       ^~~~~~~~~~~~~~
-   include/linux/clk.h:880:54: note: passing argument to parameter 'clk' here
-   static inline unsigned long clk_get_rate(struct clk *clk)
-                                                        ^
-   5 errors generated.
-
-
-vim +181 drivers/ata/ahci_da850.c
-
-018d5ef2048fca Akinobu Mita              2015-01-29  159  
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  160  static int ahci_da850_probe(struct platform_device *pdev)
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  161  {
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  162  	struct device *dev = &pdev->dev;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  163  	struct ahci_host_priv *hpriv;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  164  	void __iomem *pwrdn_reg;
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  165  	struct resource *res;
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  166  	struct clk *clk;
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  167  	u32 mpy;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  168  	int rc;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  169  
-16af2d65842d34 Kunihiko Hayashi          2018-08-22  170  	hpriv = ahci_platform_get_resources(pdev, 0);
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  171  	if (IS_ERR(hpriv))
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  172  		return PTR_ERR(hpriv);
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  173  
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  174  	/*
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  175  	 * Internally ahci_platform_get_resources() calls clk_get(dev, NULL)
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  176  	 * when trying to obtain the functional clock. This SATA controller
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  177  	 * uses two clocks for which we specify two connection ids. If we don't
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  178  	 * have the functional clock at this point - call clk_get() again with
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  179  	 * con_id = "fck".
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  180  	 */
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30 @181  	if (!hpriv->clks[0]) {
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  182  		clk = clk_get(dev, "fck");
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  183  		if (IS_ERR(clk))
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  184  			return PTR_ERR(clk);
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  185  
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30 @186  		hpriv->clks[0] = clk;
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  187  	}
-82dbe1a68fd65a Bartosz Golaszewski       2017-01-30  188  
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  189  	/*
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  190  	 * The second clock used by ahci-da850 is the external REFCLK. If we
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  191  	 * didn't get it from ahci_platform_get_resources(), let's try to
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  192  	 * specify the con_id in clk_get().
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  193  	 */
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  194  	if (!hpriv->clks[1]) {
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  195  		clk = clk_get(dev, "refclk");
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  196  		if (IS_ERR(clk)) {
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  197  			dev_err(dev, "unable to obtain the reference clock");
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  198  			return -ENODEV;
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  199  		}
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  200  
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  201  		hpriv->clks[1] = clk;
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  202  	}
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  203  
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30 @204  	mpy = ahci_da850_calculate_mpy(clk_get_rate(hpriv->clks[1]));
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  205  	if (mpy == 0) {
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  206  		dev_err(dev, "invalid REFCLK multiplier value: 0x%x", mpy);
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  207  		return -EINVAL;
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  208  	}
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  209  
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  210  	rc = ahci_platform_enable_resources(hpriv);
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  211  	if (rc)
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  212  		return rc;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  213  
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  214  	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-c88c094985ad38 Christophe JAILLET        2017-08-16  215  	if (!res) {
-c88c094985ad38 Christophe JAILLET        2017-08-16  216  		rc = -ENODEV;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  217  		goto disable_resources;
-c88c094985ad38 Christophe JAILLET        2017-08-16  218  	}
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  219  
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  220  	pwrdn_reg = devm_ioremap(dev, res->start, resource_size(res));
-c88c094985ad38 Christophe JAILLET        2017-08-16  221  	if (!pwrdn_reg) {
-c88c094985ad38 Christophe JAILLET        2017-08-16  222  		rc = -ENOMEM;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  223  		goto disable_resources;
-c88c094985ad38 Christophe JAILLET        2017-08-16  224  	}
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  225  
-cdf0ead3747200 Bartosz Golaszewski       2017-01-30  226  	da850_sata_init(dev, pwrdn_reg, hpriv->mmio, mpy);
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  227  
-018d5ef2048fca Akinobu Mita              2015-01-29  228  	rc = ahci_platform_init_host(pdev, hpriv, &ahci_da850_port_info,
-018d5ef2048fca Akinobu Mita              2015-01-29  229  				     &ahci_platform_sht);
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  230  	if (rc)
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  231  		goto disable_resources;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  232  
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  233  	return 0;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  234  disable_resources:
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  235  	ahci_platform_disable_resources(hpriv);
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  236  	return rc;
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  237  }
-ae8723f8a9c8e8 Bartlomiej Zolnierkiewicz 2014-03-25  238  
 
 -- 
-0-DAY CI Kernel Test Service
-https://01.org/lkp
+Damien Le Moal
+Western Digital Research
