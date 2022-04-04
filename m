@@ -2,195 +2,132 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C7B8C41535
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EBDFEC35280
 	for <linux-ide@archiver.kernel.org>; Mon,  4 Apr 2022 21:41:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1380674AbiDDVlR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 4 Apr 2022 17:41:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60388 "EHLO
+        id S1383093AbiDDVlW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 4 Apr 2022 17:41:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43506 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1380352AbiDDTly (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 4 Apr 2022 15:41:54 -0400
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2066.outbound.protection.outlook.com [40.107.94.66])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CFBC22B37;
-        Mon,  4 Apr 2022 12:39:57 -0700 (PDT)
+        with ESMTP id S1380403AbiDDUER (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 4 Apr 2022 16:04:17 -0400
+Received: from NAM02-BN1-obe.outbound.protection.outlook.com (mail-bn1nam07on2077.outbound.protection.outlook.com [40.107.212.77])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8802B30F57;
+        Mon,  4 Apr 2022 13:02:19 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=QGhLU4Pu5M/PEdtTyvyhegjH/lQ4rJKP5ddiSURtsqs0uOmbHsFRY+szID2fL5fvUBsq3ZPS3Q65J/2CMz0COhR4D2nL235MeqLRWZgb5Lny3brz1jo06ZelfeQbdv7apAlORnn5CTRgL6n4e6hBCo4Z02iecfWQCPoeyyWupAGLxaG9W63A4HNSenxsKtDe58nENjaky2GvWutY2xsYzqyqS2B7+fAMIP4Pe0zPBuLCvBUQGEcTdBUyO1ZHWyxELKsRL9AZV78vhY4L/A5anPJMZnkoc6qtFsT7PoBGL7e60/fGyhbuxCppKBJKSyhwnEm1FHk1YOwzdUk+eMkfCg==
+ b=aed1xY76nschRfiHriCNKQacMsb/uQ5xwmsxvXID+ixQPAV3U2+GENsR1Wt/PREqu/IKxW+lRhEmJyme6C/TZMNfSMg359QKJdD10akYsaoeUUwqIzNNU3yCmQedCu8sRgqps4b+L1rz5kLhLUpVTbNLrx86fMPH1rxTigeLiIY7HY6AfWESpgVwQx73E6stjEHabtkK4Sc0z/qRdVEGehcbK6/ovkJSKCmIX+4DnxHaHwNbxwFrrq8xdzLsLMDwQP9vNwQEBW3wWWZMHZBIww8NepC2LZnBn7bWIArffV1oeYxfmLn6VGYI8wVU1GtEnWfAj5aGdLMaybVyKZMebQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=at07lX3FxytbILMDH5EKqAxRMij9E92qt+TB6Wku2P0=;
- b=LvhtcjkPxrBJvfBcpnx4rya80+FzGIQP5V9nsDOQ4tHsPg3OYRmhMNvMQhRVccaoQKnZHaRKq/rHxYN358MTLRD4198mPG2rAvy/6K28m64S94mWx3NJ1w6kOmQdQlwwZOlKGxmhz1ZSDLukmqtLWGDqlkuNOMt2nNHzX4/WZJK9tvuHZGQi5Ilk8TJN4UzpCHPPuMc0bipV3qllC4o8vOXrZucEovt0dQQ0+andGAaT/rGF7poSga73mb4skOaHB2FvUuJz+NAvxWtXiuerShJUjvBukuaEnFajQJc66wvojU+35bDPjapzqSCG9cAPdPyT4f1rcfksJ/D5z1BtJw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
+ bh=KvKJUxGCVwCOv/sIfseWhgW89G83DX52GAsINugKg+w=;
+ b=KBM4UhKn2WcHUWDtTmIoaydzDO98RfceTIV7Tffa8pB3sMGN1F72BDb9x0yqqCNumZ5MM+NrGjy1oYoXC+Sk9ki0PDU/8vF3f3koVhAng58I38tfL40G/ur+3x3c2yVzlFsiNPTJBY5XpUhYZosWm+6Rt2B0yt0OTuiQaz9q+pq3veQUnCG4EJ6rvX2Mq2Ahaf5o8NRr0No9IBfhaVvC9GHtTcSfOtUvA8kFVpRTtux9i8WLyku+XKrI9rUJB2ln64NxKmkDSNnoa3k+l4lNSIdt57K4ptjMSc5Qth/OctMihZjlsrUvUp9yVVNDGgpd3Z+lnM+EZeV4agSa4SuHHQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=opensource.wdc.com smtp.mailfrom=amd.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=amd.com; dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=at07lX3FxytbILMDH5EKqAxRMij9E92qt+TB6Wku2P0=;
- b=wmCQALL75esRdr+r9QzjFxchtY2fe1WH1GxbJE4XpdjfHcSKizuT6GECZS0DhWgKDoqBqpDkGUjFzvih5SRPgZjtFJmNY1Q4XXfep7g6+QW0IzW9CsTfcIEuC76meVY4LGt6h/tNqvPWCYwJ5VcKVRE67z0f0ez4lcvLj+rHe/w=
-Received: from BL1PR12MB5157.namprd12.prod.outlook.com (2603:10b6:208:308::15)
- by CY4PR1201MB0023.namprd12.prod.outlook.com (2603:10b6:910:1f::7) with
+ bh=KvKJUxGCVwCOv/sIfseWhgW89G83DX52GAsINugKg+w=;
+ b=N9ZPa2GwhmgkLZcSeVKgtpC7/skIQAJEQM4klcatAWH3j70C8I9GN9y5GU3ErVJ11n3naD3Dea2kK3fuLeB7TbMy3G/701KzIEPnNPVAiYk39oyC97SPV9LKiiGne4R5QG/llO00zvmCHUU6bTnA30SUauTTCRPh5xPR5/H2tRk=
+Received: from DS7PR07CA0023.namprd07.prod.outlook.com (2603:10b6:5:3af::28)
+ by CH0PR12MB5137.namprd12.prod.outlook.com (2603:10b6:610:bc::24) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5123.31; Mon, 4 Apr
- 2022 19:39:54 +0000
-Received: from BL1PR12MB5157.namprd12.prod.outlook.com
- ([fe80::70d6:f6dd:3e14:3c2d]) by BL1PR12MB5157.namprd12.prod.outlook.com
- ([fe80::70d6:f6dd:3e14:3c2d%5]) with mapi id 15.20.5123.031; Mon, 4 Apr 2022
- 19:39:54 +0000
-From:   "Limonciello, Mario" <Mario.Limonciello@amd.com>
+ 2022 20:02:16 +0000
+Received: from DM6NAM11FT068.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:5:3af:cafe::35) by DS7PR07CA0023.outlook.office365.com
+ (2603:10b6:5:3af::28) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.5123.31 via Frontend
+ Transport; Mon, 4 Apr 2022 20:02:16 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com;
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ DM6NAM11FT068.mail.protection.outlook.com (10.13.173.67) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.5123.19 via Frontend Transport; Mon, 4 Apr 2022 20:02:16 +0000
+Received: from AUS-LX-MLIMONCI.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Mon, 4 Apr
+ 2022 15:02:15 -0500
+From:   Mario Limonciello <mario.limonciello@amd.com>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
 CC:     "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
         <linux-ide@vger.kernel.org>,
         open list <linux-kernel@vger.kernel.org>,
-        "hdegoede@redhat.com" <hdegoede@redhat.com>
-Subject: RE: [PATCH v2 2/2] ata: ahci: Protect users from setting policies
- their drives don't support
-Thread-Topic: [PATCH v2 2/2] ata: ahci: Protect users from setting policies
- their drives don't support
-Thread-Index: AQHYLrH7kpm3AkPxAE2eIMYLz1fgLqzfJECAgAE1rIA=
-Date:   Mon, 4 Apr 2022 19:39:54 +0000
-Message-ID: <BL1PR12MB51570E1C17A122179CCB0625E2E59@BL1PR12MB5157.namprd12.prod.outlook.com>
-References: <20220303034912.3615390-1-mario.limonciello@amd.com>
- <20220303034912.3615390-2-mario.limonciello@amd.com>
- <a6a17a22-0cde-9c46-0cd7-127be2cd2792@opensource.wdc.com>
-In-Reply-To: <a6a17a22-0cde-9c46-0cd7-127be2cd2792@opensource.wdc.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_88914ebd-7e6c-4e12-a031-a9906be2db14_Enabled=true;
- MSIP_Label_88914ebd-7e6c-4e12-a031-a9906be2db14_SetDate=2022-04-04T19:39:52Z;
- MSIP_Label_88914ebd-7e6c-4e12-a031-a9906be2db14_Method=Standard;
- MSIP_Label_88914ebd-7e6c-4e12-a031-a9906be2db14_Name=AMD Official Use
- Only-AIP 2.0;
- MSIP_Label_88914ebd-7e6c-4e12-a031-a9906be2db14_SiteId=3dd8961f-e488-4e60-8e11-a82d994e183d;
- MSIP_Label_88914ebd-7e6c-4e12-a031-a9906be2db14_ActionId=fb553fde-5c4a-4d58-acb2-0dc3d52926f3;
- MSIP_Label_88914ebd-7e6c-4e12-a031-a9906be2db14_ContentBits=1
-msip_label_88914ebd-7e6c-4e12-a031-a9906be2db14_enabled: true
-msip_label_88914ebd-7e6c-4e12-a031-a9906be2db14_setdate: 2022-04-04T19:39:52Z
-msip_label_88914ebd-7e6c-4e12-a031-a9906be2db14_method: Standard
-msip_label_88914ebd-7e6c-4e12-a031-a9906be2db14_name: AMD Official Use
- Only-AIP 2.0
-msip_label_88914ebd-7e6c-4e12-a031-a9906be2db14_siteid: 3dd8961f-e488-4e60-8e11-a82d994e183d
-msip_label_88914ebd-7e6c-4e12-a031-a9906be2db14_actionid: 991f7053-713f-44f7-9392-2d20fee1c0f1
-msip_label_88914ebd-7e6c-4e12-a031-a9906be2db14_contentbits: 0
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: e76f68e3-a366-4a9f-c751-08da1672e49d
-x-ms-traffictypediagnostic: CY4PR1201MB0023:EE_
-x-microsoft-antispam-prvs: <CY4PR1201MB00233AA0F1B6C814877C33B4E2E59@CY4PR1201MB0023.namprd12.prod.outlook.com>
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 46Rv12HIdZNppGNP8KawzH8RtqVRCtmptLLQl7d7zHP1A3oWopoTYTUpRdoc9OBAZ71l31tHSQS+O/o4e0A3BmUdk2uBXcHaN24786qKY9OP0lS9rnXZwAMRJIzgeiE3BireWfLik1+0oLqRPJPxC3vCBz2lwMkqLh4UcWdU9Rv9emSwi08QdxVEAabqoNP9PGAjhOqEH/DQuORkjBWFlLJI6A0McKdudDG2oQ+1wP74+b2sxra+43KYUgJAoYIDewUj3QCIoAIBinRfSzDvSnRgANPOSzqP7YUx4cCmUQlh0Horw2UWXaMC0IDGfX2akufn7XfmQe1gaQP/YITczgmlXzgA76XzodPuOQDNWfn/LR4nfoZQ24/J13SZyHO5aeExu2hecXcu6ua7d/ktzOKyIybUxOxbaYakmgYjWCHiJwAbxAjLIyl2IoMUhyecWAGLW3lX1zwyEMgXq46T3XaetHcS8AoV4rVLjnBO/tFQS+VJR1Y/YTsergeW8tfHGPls0JIaghCrO6coNYerGtuXHpHiD/lhM5aiMIktPV0AEXh2u/Taqq6g1BjLUR7z6/BZQBtsFM7OyNYp42XciLeQOO2ZXLBFbFp8dV9AXemj8Nu3RQrL8FJ0aix+zMs75iF6fA+fJ0DllH/mhoRULuOXxhXmPzzjOiAqQnz6CfhFh6K00urNSKdAawLLGy16dlZTF4NLp+hv61+SxZU8xA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL1PR12MB5157.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230001)(4636009)(366004)(508600001)(76116006)(5660300002)(71200400001)(54906003)(6916009)(316002)(86362001)(66946007)(66446008)(4326008)(66556008)(64756008)(8676002)(66476007)(52536014)(8936002)(6506007)(2906002)(7696005)(53546011)(38070700005)(55016003)(83380400001)(186003)(9686003)(122000001)(38100700002)(33656002);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 2
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?NVIzWlJjWk4wOEZlcEpmSFFzSnJJWUJZbVIrVVdjRjlpcXBwWk1mdHpHQWRL?=
- =?utf-8?B?cWk4ZE55UExoNWdzL292KzhNRWRNakpqcFJTSmVScFVZVndJNGt0cHRSdEt4?=
- =?utf-8?B?Z2R3SzgzVkZrZlphSGpOeTM5alJRM3BGUER5MjZndHFUTFpLL0Q0T3U0cHZU?=
- =?utf-8?B?RWNaNEVZKzdUMXBaZEZ5eGU0Q1JPTU5CSVA5WkcxMllDRVFOTnFveldYbDRa?=
- =?utf-8?B?anorSHlkWm9XK05NZDVPMnM0WnNCWGRpOVRTbUVrUVZoZTdsM01BYm9pa1BZ?=
- =?utf-8?B?MXdIanYxM0Z5UnY1V2RGbHEyblVJeGhWWGRRREFwaWpNWDZUdkc0d1lDUXgw?=
- =?utf-8?B?S3Nxa3FUYno4NFJveFYvU0FKRXBwYTJsUjlqalpZQmFOSVNYWVgyYVhlc1Na?=
- =?utf-8?B?UFNlQlRTVGJsdUpPUXUwbU0rSTZ1dzRDWUpxNDcvaFNMZldDWGYxUjZ2ZlJk?=
- =?utf-8?B?NGFrRm1KK1E2N0c3UlZUd0lmeEpjQnJNMi9GL0NPZFJoU0VlUy96TVplQWpi?=
- =?utf-8?B?cEt6RVMzTkgwQks4TUZBVmlkaFUvVDNITWVNb2VBMk4yTnF3ZlRQbWpCS0ls?=
- =?utf-8?B?ODZtTnM4RmJkSjZQUFdtR0RVQnRUdEhmcjZpdit2cERjQWxWRUxlWThmV2RI?=
- =?utf-8?B?ZithcEgwWFh4OEJieFZNOUdyVURuUVo4NFF6UzFndzQ0QldJVkFmRlRsemtH?=
- =?utf-8?B?Ny9kdFhTcjFKcGJwWFp1WjBESmE3STZQZzF5VHZ0SkdJcDBWbU1TQjFDUjQ3?=
- =?utf-8?B?dFZBNUJwMGxrT1N5SW8yMXlRTW9TQ2hOMWwzaUJmTXdTQVNzdHg3TkF2WmNz?=
- =?utf-8?B?K2ljK3dlNFJsUHQyL0tKL2NZdXNtLzFNRlEwdlZabFdjd2tNb1N2T0VQaDlm?=
- =?utf-8?B?NGlkS1pOeDd4M1ZDRW9mWkVmVzJOYUV2VjN5VXV5NjlRUnRXOVlnUU9CSXN5?=
- =?utf-8?B?ZFk2QVRkbXF5ZlFLbFcrdWRhdENrdXV5aFJWNStSNGVqSytEc2V0UDQ4NUNS?=
- =?utf-8?B?RytiTzc5aTg1bjdOTGtjVGhabDRpcjdzRTFPZlE0a3M2YllNbExmZ24xR2RY?=
- =?utf-8?B?TUtFZVlTQUpqa0lZclBVb1ZmakRzcExtOHZvWlRnamtIZ3Q3NUFnQ1o0YkVy?=
- =?utf-8?B?RnZYU3FwRlZLeDNyR29Bb1JoTHkvbXFoVTVjci9KN2lmQ0Fxdnpmdi9tUHZM?=
- =?utf-8?B?MTloVWd0SlR3QkhJazJxdURoQjcvRUZVVU1vaTl4VG1vcnlhQ0hwcEF2OHI3?=
- =?utf-8?B?VlRyY3NNSWUrSWZwZUl3VDRoUEdmUEFjMW5VanNucVQvQzlZRjY0QnBiWFZN?=
- =?utf-8?B?SERZYmljbGR4d0tlNGpxNVhPRmxvU24rbUl5ekt5QWVjaWlIb2s0R1BnTGFH?=
- =?utf-8?B?YjNkYi90SmV4YmZoUUNmUm9QSjdBdkFWWDQzcmlsRURhK3hCZ2lDRXlpNFZV?=
- =?utf-8?B?TlhJTk5tYTF5dHEvMC96dFRyeFNmVnpzUUtqWDk3TUtlbzZHbUxzejRQaVhq?=
- =?utf-8?B?aEk4OHA0NnBPYmZhM01sU29nakMyeGFtWUxFOHk3T2phZG4wKzQ0MG5rQlRh?=
- =?utf-8?B?amNiTjFnSlFFeE9JUHdnRGhGOHNSUzNqQm9PbFBncWM2VFh6RndvVlNmNXR5?=
- =?utf-8?B?QlFRWFFkWEl3ZXJ3eGdSMSs5T1IzWDMrSTFkQk9WSlYzTEcrZWVCRXRCS2lL?=
- =?utf-8?B?WlR0Q0Y0MW5IOCt5Um4vR3pqOWtkTVpLTFZiZFlvOEYrVkNsczdDRjhXdFhE?=
- =?utf-8?B?amk2NVYvQWI4ejROU0hqWHE2bDdRVDlpanZhQTNGbWczaVFtU2FPcHZEdzYy?=
- =?utf-8?B?b2pYSWR5UXdUdGRyMTFCR1RCZ3I2NXlFYkQrWXF3ZWUwSkRrNk1qazV5QTcr?=
- =?utf-8?B?WUEwUEJIclp2UHhRWkJpZnFLcjRLeEZsbXdia2hnVC9RN3Z1aDNvc0RBTDFG?=
- =?utf-8?B?aGkrMmlGTUpzZE9uc2UyWk5zdXkxVmZieHRCSyttMldjNThQRU0vbER3aVVW?=
- =?utf-8?B?WUN1bGJod1dQL2lWbXp2eXh5R0QwMkhBdjhSQUZYUEY3cGZMdE9zcDQ5SFFW?=
- =?utf-8?B?R1h0aldRMmxkcjVEdjYrY0dwUDdTeUo0WFRLQjdkK2dvSlo2S2dVU1hlMVlu?=
- =?utf-8?B?aEpWYWhlL1dhTWFBbE5PQ1RkQkFjb1REclFlWEdxamZnSHI2a3RqeFpLWHQ0?=
- =?utf-8?B?bkN0VlovMWhSN1FkanlHVEpndGxIK1ZrNjlRR1lxbVYyMHc5OHc5ekRaUjdL?=
- =?utf-8?B?OGlMNFRUeFlQTTZLRmliTVpVNDNZTXFKTnA1SWw1emhreU5BNlV5SVJiaDRi?=
- =?utf-8?B?bWxmN1UyZXF6c0taYmppMW1oaVRabXltSGphdlBQYk55dTNKOTY2ZDNmK212?=
- =?utf-8?Q?fhlDdC9QPttM3xfl7ADMBTa9heB53L5bhwLSobgYi9Vgj?=
-x-ms-exchange-antispam-messagedata-1: nnUnfLuAbDRSFA==
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        <hdegoede@redhat.com>,
+        Mario Limonciello <mario.limonciello@amd.com>
+Subject: [PATCH v2 1/2] ata: Kconfig: Update SATA_LPM_POLICY default to "3"
+Date:   Mon, 4 Apr 2022 15:02:01 -0500
+Message-ID: <20220404200202.9388-1-mario.limonciello@amd.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: dba1677e-7ae1-42f2-0f25-08da167604a0
+X-MS-TrafficTypeDiagnostic: CH0PR12MB5137:EE_
+X-Microsoft-Antispam-PRVS: <CH0PR12MB51371CDE56AEC785729FD44AE2E59@CH0PR12MB5137.namprd12.prod.outlook.com>
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: FmN9DVfXttgWzrmFI/3UCIpTntwYdxZE/jBvV630w83y6D7gxDeHbM5h1kjIrA9H31sSFoVEPdK1xOrXONOMXTEJ5WaDgHHxMB92Z3/DyVLPy9Tgt6fGx5IJ3tpw2cp7h1QHUA6N4dmuTzN0NGSgxUANonsO33VOf9wAPLxLJIeuKLTdJkMpx2ox83lDSJsNaDSmDzHPrvowqB6lsqeKUPoHnlVjAd9yhikxnnw2tReq3yXGeMS/Y4XJOo0zlwE3tmwi5zjB2DdsVj+nVf4igDrI2u8Xd4UViH2dSxPewmMY2BQeOSXefGjWQT8H+xw2LXK983M+zxofblXWZ5BHDTqtqLEg2Up7Px/xqClTfsFUNpXutPe49USKmCxt+tTFBfZwGBLMW4G3WrZyV7RzwraPUu3A6wqVn0grwlJJxOWSUplDKzVrU+aYL5aLBtHqnv31QD7HFHD3i6ziuq0f62WRzwgNT9pnbpeCetX0LwK1+IA6HKjGqmekkPspLE1C/8q3cvd9GZFlQy0d5Q8aNesOGB6m3wwhE0lj0lbM32A1iCRaTKeQpdOJYqmKffjrZ1sqynoYJQm7+Pj5fL90ZKscIbuBp9cqGreZmP4o3nCHdhtTOHmWXb3Ut0UrqWBv0PZUYTtXA5icNMZlzsmeEufOS80gG3/AAmGNSmMbx4tcO4H2vZs9jlHfrmvU1Pb4ZoW7FV0rZtpX18mq5RKOBg==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230001)(4636009)(40470700004)(36840700001)(46966006)(4326008)(356005)(40460700003)(8676002)(426003)(336012)(81166007)(70586007)(70206006)(2616005)(8936002)(86362001)(7696005)(316002)(16526019)(82310400004)(15650500001)(2906002)(5660300002)(508600001)(44832011)(1076003)(6916009)(36756003)(54906003)(47076005)(6666004)(83380400001)(26005)(186003)(36860700001)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BL1PR12MB5157.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e76f68e3-a366-4a9f-c751-08da1672e49d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Apr 2022 19:39:54.2412
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Apr 2022 20:02:16.4803
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: Y5zV0T1vBI/lXngPfM1eUisbGaxo3Q+fd1BV0DbLWBZu+ly7ePeFVGAR/mbrPG7U/q2kitW3hX1Yt9hDF00pcQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY4PR1201MB0023
+X-MS-Exchange-CrossTenant-Network-Message-Id: dba1677e-7ae1-42f2-0f25-08da167604a0
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT068.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR12MB5137
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-W0FNRCBPZmZpY2lhbCBVc2UgT25seV0NCg0KDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0t
-LS0NCj4gRnJvbTogRGFtaWVuIExlIE1vYWwgPGRhbWllbi5sZW1vYWxAb3BlbnNvdXJjZS53ZGMu
-Y29tPg0KPiBTZW50OiBTdW5kYXksIEFwcmlsIDMsIDIwMjIgMjA6MTENCj4gVG86IExpbW9uY2ll
-bGxvLCBNYXJpbyA8TWFyaW8uTGltb25jaWVsbG9AYW1kLmNvbT4NCj4gQ2M6IG9wZW4gbGlzdDpM
-SUJBVEEgU1VCU1lTVEVNIChTZXJpYWwgYW5kIFBhcmFsbGVsIEFUQSBkcml2ZXJzKSA8bGludXgt
-DQo+IGlkZUB2Z2VyLmtlcm5lbC5vcmc+OyBvcGVuIGxpc3QgPGxpbnV4LWtlcm5lbEB2Z2VyLmtl
-cm5lbC5vcmc+Ow0KPiBoZGVnb2VkZUByZWRoYXQuY29tDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0gg
-djIgMi8yXSBhdGE6IGFoY2k6IFByb3RlY3QgdXNlcnMgZnJvbSBzZXR0aW5nIHBvbGljaWVzIHRo
-ZWlyDQo+IGRyaXZlcyBkb24ndCBzdXBwb3J0DQo+IA0KPiBPbiAzLzMvMjIgMTI6NDksIE1hcmlv
-IExpbW9uY2llbGxvIHdyb3RlOg0KPiA+IEFzIHRoZSBkZWZhdWx0IGxvdyBwb3dlciBwb2xpY3kg
-YXBwbGllcyB0byBtb3JlIGNoaXBzZXRzIGFuZCBkcml2ZXMsIGl0J3MNCj4gPiBpbXBvcnRhbnQg
-dG8gbWFrZSBzdXJlIHRoYXQgZHJpdmVzIGFjdHVhbGx5IHN1cHBvcnQgdGhlIHBvbGljeSB0aGF0
-IGEgdXNlcg0KPiA+IHNlbGVjdGVkIGluIHRoZWlyIGtlcm5lbCBjb25maWd1cmF0aW9uLg0KPiA+
-DQo+ID4gSWYgdGhlIGRyaXZlIGRvZXNuJ3Qgc3VwcG9ydCBzbHVtYmVyLCBkb24ndCBsZXQgdGhl
-IGRlZmF1bHQgcG9saWNpZXMNCj4gPiBkZXBlbmRlbnQgdXBvbiBzbHVtYmVyIChgbWluX3Bvd2Vy
-YCBvciBgbWluX3Bvd2VyX3dpdGhfcGFydGlhbGApIGFmZmVjdA0KPiB0aGUNCj4gPiBkaXNrLg0K
-PiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogTWFyaW8gTGltb25jaWVsbG8gPG1hcmlvLmxpbW9uY2ll
-bGxvQGFtZC5jb20+DQo+IA0KPiBNYXJpbywNCj4gDQo+IENhbiB5b3UgcmVzZW5kIGEgcmViYXNl
-ZCB2ZXJzaW9uIG9mIHRoaXMsIG9uIHRvcCBvZiBsaWJhdGEgZm9yLTUuMTkgYnJhbmNoID8NCg0K
-DQpPSy4NCg0KPiANCj4gPiAtLS0NCj4gPiBDaGFuZ2VzIGZyb20gdjEtPnYyOg0KPiA+ICogTW92
-ZSBkZWVwZXIgaW50byBjb2RlcGF0aHMNCj4gPiAqIFJlc2V0IHRvIE1FRF9QT1dFUiByYXRoZXIg
-dGhhbiBpZ25vcmUNCj4gPiAgIGRyaXZlcnMvYXRhL2xpYmF0YS1zYXRhLmMgfCAxMSArKysrKysr
-KysrKw0KPiA+ICAgMSBmaWxlIGNoYW5nZWQsIDExIGluc2VydGlvbnMoKykNCj4gPg0KPiA+IGRp
-ZmYgLS1naXQgYS9kcml2ZXJzL2F0YS9saWJhdGEtc2F0YS5jIGIvZHJpdmVycy9hdGEvbGliYXRh
-LXNhdGEuYw0KPiA+IGluZGV4IDA3MTE1OGMwYzQ0Yy4uMGRjMDM4ODhjNjJiIDEwMDY0NA0KPiA+
-IC0tLSBhL2RyaXZlcnMvYXRhL2xpYmF0YS1zYXRhLmMNCj4gPiArKysgYi9kcml2ZXJzL2F0YS9s
-aWJhdGEtc2F0YS5jDQo+ID4gQEAgLTEzLDYgKzEzLDcgQEANCj4gPiAgICNpbmNsdWRlIDxzY3Np
-L3Njc2lfZGV2aWNlLmg+DQo+ID4gICAjaW5jbHVkZSA8bGludXgvbGliYXRhLmg+DQo+ID4NCj4g
-PiArI2luY2x1ZGUgImFoY2kuaCINCj4gPiAgICNpbmNsdWRlICJsaWJhdGEuaCINCj4gPiAgICNp
-bmNsdWRlICJsaWJhdGEtdHJhbnNwb3J0LmgiDQo+ID4NCj4gPiBAQCAtMzY4LDEwICszNjksMjAg
-QEAgaW50IHNhdGFfbGlua19zY3JfbHBtKHN0cnVjdCBhdGFfbGluayAqbGluaywgZW51bQ0KPiBh
-dGFfbHBtX3BvbGljeSBwb2xpY3ksDQo+ID4gICAJCSAgICAgIGJvb2wgc3BtX3dha2V1cCkNCj4g
-PiAgIHsNCj4gPiAgIAlzdHJ1Y3QgYXRhX2VoX2NvbnRleHQgKmVoYyA9ICZsaW5rLT5laF9jb250
-ZXh0Ow0KPiA+ICsJc3RydWN0IGF0YV9wb3J0ICphcCA9IGxpbmstPmFwOw0KPiA+ICsJc3RydWN0
-IGFoY2lfaG9zdF9wcml2ICpocHJpdjsNCj4gPiAgIAlib29sIHdva2VuX3VwID0gZmFsc2U7DQo+
-ID4gICAJdTMyIHNjb250cm9sOw0KPiA+ICAgCWludCByYzsNCj4gPg0KPiA+ICsJaHByaXYgPSBh
-cC0+aG9zdC0+cHJpdmF0ZV9kYXRhOw0KPiA+ICsJaWYgKHBvbGljeSA+PSBBVEFfTFBNX01JTl9Q
-T1dFUl9XSVRIX1BBUlRJQUwgJiYNCj4gPiArCSAgIShocHJpdi0+Y2FwICYgSE9TVF9DQVBfU1ND
-KSkgew0KPiA+ICsJCWRldl93YXJuKGFwLT5ob3N0LT5kZXYsDQo+ID4gKwkJCSJUaGlzIGRyaXZl
-IGRvZXNuJ3Qgc3VwcG9ydCBzbHVtYmVyOyByZXN0dGluZyBwb2xpY3kgdG8NCj4gTUVEX1BPV0VS
-XG4iKTsNCj4gDQo+IFR5cG8gaGVyZTogcy9yZXN0dGluZy9yZXNldHRpbmcuIEFsc28sIHMvZG9l
-c24ndC9kb2VzIG5vdC4NCj4gDQo+ID4gKwkJcG9saWN5ID0gQVRBX0xQTV9NRURfUE9XRVI7DQo+
-IA0KPiBIZXJlLCBzaG91bGRuJ3Qgd2UgdXNlIHRoZSBkZWZhdWx0IHBvbGljeSBkZWZpbmVkIGJ5
-DQo+IENPTkZJR19TQVRBX0xQTV9QT0xJQ1kgPw0KDQpJZiB0aGV5IHNldCBpdCB0b28gYWdncmVz
-c2l2ZWx5IHdlIHN0aWxsIGRvbid0IHdhbnQgdG8gaG9ub3IgaXQgaWYgdGhlIGRyaXZlDQpjYW4n
-dCBkbyBzbHVtYmVyIEkgd291bGQgZXhwZWN0Lg0KDQo+IA0KPiA+ICsJfQ0KPiA+ICsNCj4gPiAg
-IAlyYyA9IHNhdGFfc2NyX3JlYWQobGluaywgU0NSX0NPTlRST0wsICZzY29udHJvbCk7DQo+ID4g
-ICAJaWYgKHJjKQ0KPiA+ICAgCQlyZXR1cm4gcmM7DQo+IA0KPiANCj4gLS0NCj4gRGFtaWVuIExl
-IE1vYWwNCj4gV2VzdGVybiBEaWdpdGFsIFJlc2VhcmNoDQo=
+SATA_LPM_POLICY is a "new" configuration item, but it was renamed from
+SATA_LPM_MOBILE_POLICY in commit 4dd4d3deb502 ("ata: ahci: Rename
+CONFIG_SATA_LPM_MOBILE_POLICY configuration item")
+
+Since the configuration item was renamed it was mentioned that people
+might invisibly lose their chosen defaults for it.  This means it's a
+good time to evaluate whether those defaults make sense still.
+
+Historically this was set to "0" to prevent problems with power management
+on very old drives.  However it's been observed that almost all modern
+Linux distributions either set the policy to "3" in the kernel
+configuration or update it to this via userspace policy changes. Update
+the policy default in the kernel to "3" to match that behavior as well.
+
+Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+---
+v1->v2:
+ * Rebase on 5.18-rc1
+ drivers/ata/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index e5641e6c52ee..3ffe14057ed2 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -118,7 +118,7 @@ config SATA_AHCI
+ config SATA_LPM_POLICY
+ 	int "Default SATA Link Power Management policy for low power chipsets"
+ 	range 0 4
+-	default 0
++	default 3
+ 	depends on SATA_AHCI
+ 	help
+ 	  Select the Default SATA Link Power Management (LPM) policy to use
+-- 
+2.34.1
+
