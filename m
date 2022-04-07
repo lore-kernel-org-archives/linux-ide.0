@@ -2,154 +2,317 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F2E5C433EF
-	for <linux-ide@archiver.kernel.org>; Wed,  6 Apr 2022 22:28:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D970C433F5
+	for <linux-ide@archiver.kernel.org>; Thu,  7 Apr 2022 12:16:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232134AbiDFWaa (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 6 Apr 2022 18:30:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50870 "EHLO
+        id S245111AbiDGMRW (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 7 Apr 2022 08:17:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54894 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229939AbiDFWa3 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 6 Apr 2022 18:30:29 -0400
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 93C9A21D070
-        for <linux-ide@vger.kernel.org>; Wed,  6 Apr 2022 15:28:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1649284111; x=1680820111;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=Yg83I+kC50RMwR1HRe5Jn4Gkhm6UoCyb88aTHqcfQX4=;
-  b=M3FfLAaJCx87mjF3hkxZ2fjmqord/PKP4/wQKe8qSk9Y89BCcYsA/Nbe
-   5M6H/mr/B5GsPa+9CqEevmfLSRnIvXGLGpjlMAsw6jU/BPclRLbeKPWXU
-   8XwGTObbTsIBQxS0sBeuZRa0yCDdiHUIpmYbUNvHOuhebwJUAVDYytr79
-   4TgwUaz6olGC3QD3dCUJFOPVyC3NSabXlJXXxqIUJy+cQitYX9TbGAm4P
-   6AqdN/RNm39kX5BvgKz11vwEAt4WlMQ+By9vAKCnML1RMNMiiPB3/3qAr
-   /SDKZgFJhSBAV/QqAQ88hycklWY/dC6AuGQKegf3vZPDp1rePd9HTvm/k
-   w==;
-X-IronPort-AV: E=Sophos;i="5.90,240,1643644800"; 
-   d="scan'208";a="196154441"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Apr 2022 06:28:30 +0800
-IronPort-SDR: cqqXNOu9oCZeubIx8LiitOK+bjXr/c3M3Y+w/GNhgsaxS/uTvqajTaVG31vpRsoY4n9fFk+u0y
- rXh1Ej3hoL94QCUgrckYWOTuxGac5gyXLCnshC33kaAL1xMsSXGVtm9vI+8uXXZ4PAtjju9ggu
- iVH3tyUIhQOPG/542XulDqrHAvBRa1BGbJ0BLL5AMsTBUGfer4gt28WnGbF6QXDvQrQgqyfQBD
- c2a6JFluDqrL2wdna+HVzLc6vWApxkQaQgpdiBADHjSADWCnpXqfcn/rtKYxFTZks7XILzD5LL
- m1YzOH/LFdhXQbc0yp8R4Ddl
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 06 Apr 2022 14:59:12 -0700
-IronPort-SDR: fQq4ST8J3a1exP5FKJcSVkUUaPPDAKNt/5Hux51H+8FxIssUFLZTAfBOqbF6ep28pnroX7Ag73
- 737aecsHlyIh5ot9pJgKCS1FiV+dQw+vn7lkqa6hXZPgeeXKzVKy8NoHVFPoTJCltdDrj47u7p
- NkCfnScxb8mosT1qij5BXB1EcDnuGepH2TwHVL6LM3WVKXUjLRxcY1z4QPRYDnSFPsmtkYyuDx
- 2so3O9kg0zq0nn8kVTeiqj/ktiuArnq2i4JnTwh9kxDEzSDq+86t5Zi3531ao/IRTra6o+bjZH
- pbg=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 06 Apr 2022 15:28:31 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KYfL648LDz1SHwl
-        for <linux-ide@vger.kernel.org>; Wed,  6 Apr 2022 15:28:30 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-type
-        :in-reply-to:organization:from:references:to:content-language
-        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1649284110; x=1651876111; bh=Yg83I+kC50RMwR1HRe5Jn4Gkhm6UoCyb88a
-        THqcfQX4=; b=oWUbqePfU5rE68CCMr4kKzIzl4+YlyOZ4kJexsSm+d/yBECGtbx
-        ixe84XRmjeI8ggZ2ZFlCOVKJAQLubPELnfJC6cPDRfWFNfDDm8Y1rww2Xz9IME+y
-        Pix8rSLs7yvmPF3hq0o2Chs5GvA+T7GfzlEnChe4sG9mLR7uOd3FfoOMQ555zv+G
-        QE8wmsS9CkJvtx2blYZaKY2quJ6ArSJ2u8z4DRNaMQOWXeLkzDyhXmC0zXkV6N3I
-        JA2WPUdGwFPaT3UkSE0buvgZEKAzxHskUhzy7shzlI4m5qQrzAi8pLY8Zu8bAV5v
-        p/7ivHVBTki9ptKaNEnOVsunkwFN+VfNPIg==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id ZQzgdPm8Kd26 for <linux-ide@vger.kernel.org>;
-        Wed,  6 Apr 2022 15:28:30 -0700 (PDT)
-Received: from [10.225.163.4] (css-nuc-sbp2.ad.shared [10.225.163.4])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KYfL52w07z1Rvlx;
-        Wed,  6 Apr 2022 15:28:28 -0700 (PDT)
-Message-ID: <835cf881-56ce-93b7-3182-ae35eda2691d@opensource.wdc.com>
-Date:   Thu, 7 Apr 2022 07:28:27 +0900
+        with ESMTP id S235119AbiDGMRR (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 7 Apr 2022 08:17:17 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 786EC643B;
+        Thu,  7 Apr 2022 05:15:12 -0700 (PDT)
+Received: from fraeml740-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KZ0dm4rTPz686w8;
+        Thu,  7 Apr 2022 20:13:16 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml740-chm.china.huawei.com (10.206.15.221) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Thu, 7 Apr 2022 14:15:06 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Thu, 7 Apr 2022 13:15:04 +0100
+From:   John Garry <john.garry@huawei.com>
+To:     <damien.lemoal@opensource.wdc.com>, <hch@lst.de>
+CC:     <linux-doc@vger.kernel.org>, <linux-ide@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, John Garry <john.garry@huawei.com>
+Subject: [PATCH v3] libata: Improve ATA queued command allocation
+Date:   Thu, 7 Apr 2022 20:09:25 +0800
+Message-ID: <1649333365-100672-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.7.0
-Subject: Re: [PATCH v2 2/2] ata: ahci: Rename CONFIG_SATA_LPM_POLICY
- configuration item back
-Content-Language: en-US
-To:     "Limonciello, Mario" <Mario.Limonciello@amd.com>
-Cc:     "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
-        <linux-ide@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "hdegoede@redhat.com" <hdegoede@redhat.com>,
-        Christoph Hellwig <hch@infradead.org>
-References: <20220404200202.9388-1-mario.limonciello@amd.com>
- <20220404200202.9388-2-mario.limonciello@amd.com>
- <da15b34f-2f13-6c97-29f1-9f26c8ec5a3d@opensource.wdc.com>
- <BL1PR12MB5157C86CA05C4F64435152DDE2E79@BL1PR12MB5157.namprd12.prod.outlook.com>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital Research
-In-Reply-To: <BL1PR12MB5157C86CA05C4F64435152DDE2E79@BL1PR12MB5157.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 4/7/22 01:59, Limonciello, Mario wrote:
-> [Public]
-> 
-> 
-> 
->> -----Original Message-----
->> From: Damien Le Moal <damien.lemoal@opensource.wdc.com>
->> Sent: Tuesday, April 5, 2022 21:11
->> To: Limonciello, Mario <Mario.Limonciello@amd.com>
->> Cc: open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers) <linux-
->> ide@vger.kernel.org>; open list <linux-kernel@vger.kernel.org>;
->> hdegoede@redhat.com; Christoph Hellwig <hch@infradead.org>
->> Subject: Re: [PATCH v2 2/2] ata: ahci: Rename CONFIG_SATA_LPM_POLICY
->> configuration item back
->>
->> On 4/5/22 05:02, Mario Limonciello wrote:
->>> CONFIG_SATA_LPM_MOBILE_POLICY was renamed to
->> CONFIG_SATA_LPM_POLICY in
->>> commit 4dd4d3deb502 ("ata: ahci: Rename
->> CONFIG_SATA_LPM_MOBILE_POLICY
->>> configuration item").
->>>
->>> This caused some pain as users would invisibly lose configuration policy
->>> defaults when they built the new kernel.  To help alleviate that, switch
->>> back to the old name (even if it's wrong).
->>>
->>> Suggested-by: Christoph Hellwig <hch@infradead.org>
->>> Suggested-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
->>> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
->>
->> I applied this manually as the "default 3" is from the first patch,
->> which is for 5.19. This one is queued in for-5.18-fixes now. Thanks.
-> 
-> Ah I didn't realize you were not going to put default 3 in 5.18, otherwise I would
-> have re-ordered them.  Sorry.
-> 
-> Which branch did you push what you've applied so far to?
-> I checked libata/for-next and libata/for-5.19 and didn't see anything yet.
+Improve ATA queued command allocation as follows:
 
-I pushed the patch to for-5.18-fixes and will send a PR to Linus tomorrow.
-The for-5.19 and for-next branches always are in sync and currently based
-on 5.18-rc1. I will rebase them on rc2 next week to have the name revert
-in and avoid conflicts.
+- For attaining a qc tag for a SAS host we need to allocate a bit in
+  ata_port.sas_tag_allocated bitmap.
 
-> 
-> As most of my patches recently touch the same code want to me make sure
-> any more follow ups work from the right base.
+  However we already have a unique tag per device in range
+  [0, ATA_MAX_QUEUE - 1] in the scsi cmnd budget token, so just use that
+  instead.
 
-Use 5.19 + the name revert patch for your work. That will correspond to
-for-5.19 next week.
+- It is a bit pointless to have ata_qc_new_init() in libata-core.c since it
+  pokes scsi internals, so inline it in ata_scsi_qc_new() (in
+  libata-scsi.c). Also update Doc accordingly.
 
+- Use standard SCSI helpers set_host_byte() and set_status_byte() in
+  ata_scsi_qc_new().
 
+Christoph Hellwig originally contributed the change to inline
+ata_qc_new_init().
+
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+Do not apply on a kernel without "scsi: core: Fix sbitmap depth in
+scsi_realloc_sdev_budget_map()" - hopefully v5.18-rc2 will include it.
+
+Changes since v2 series:
+- combine into a single patch
+- use scsi helpers (Damien)
+- use inclusive brackets for commit message descripton
+
+diff --git a/Documentation/driver-api/libata.rst b/Documentation/driver-api/libata.rst
+index d477e296bda5..311af516a3fd 100644
+--- a/Documentation/driver-api/libata.rst
++++ b/Documentation/driver-api/libata.rst
+@@ -424,12 +424,6 @@ How commands are issued
+ -----------------------
+ 
+ Internal commands
+-    First, qc is allocated and initialized using :c:func:`ata_qc_new_init`.
+-    Although :c:func:`ata_qc_new_init` doesn't implement any wait or retry
+-    mechanism when qc is not available, internal commands are currently
+-    issued only during initialization and error recovery, so no other
+-    command is active and allocation is guaranteed to succeed.
+-
+     Once allocated qc's taskfile is initialized for the command to be
+     executed. qc currently has two mechanisms to notify completion. One
+     is via ``qc->complete_fn()`` callback and the other is completion
+@@ -447,11 +441,6 @@ SCSI commands
+     translated. No qc is involved in processing a simulated scmd. The
+     result is computed right away and the scmd is completed.
+ 
+-    For a translated scmd, :c:func:`ata_qc_new_init` is invoked to allocate a
+-    qc and the scmd is translated into the qc. SCSI midlayer's
+-    completion notification function pointer is stored into
+-    ``qc->scsidone``.
+-
+     ``qc->complete_fn()`` callback is used for completion notification. ATA
+     commands use :c:func:`ata_scsi_qc_complete` while ATAPI commands use
+     :c:func:`atapi_qc_complete`. Both functions end up calling ``qc->scsidone``
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index cceedde51126..5e7d6ccad5da 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4563,42 +4563,6 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
+ #endif /* __BIG_ENDIAN */
+ }
+ 
+-/**
+- *	ata_qc_new_init - Request an available ATA command, and initialize it
+- *	@dev: Device from whom we request an available command structure
+- *	@tag: tag
+- *
+- *	LOCKING:
+- *	None.
+- */
+-
+-struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag)
+-{
+-	struct ata_port *ap = dev->link->ap;
+-	struct ata_queued_cmd *qc;
+-
+-	/* no command while frozen */
+-	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
+-		return NULL;
+-
+-	/* libsas case */
+-	if (ap->flags & ATA_FLAG_SAS_HOST) {
+-		tag = ata_sas_allocate_tag(ap);
+-		if (tag < 0)
+-			return NULL;
+-	}
+-
+-	qc = __ata_qc_from_tag(ap, tag);
+-	qc->tag = qc->hw_tag = tag;
+-	qc->scsicmd = NULL;
+-	qc->ap = ap;
+-	qc->dev = dev;
+-
+-	ata_qc_reinit(qc);
+-
+-	return qc;
+-}
+-
+ /**
+  *	ata_qc_free - free unused ata_queued_cmd
+  *	@qc: Command to complete
+@@ -4611,19 +4575,9 @@ struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag)
+  */
+ void ata_qc_free(struct ata_queued_cmd *qc)
+ {
+-	struct ata_port *ap;
+-	unsigned int tag;
+-
+-	WARN_ON_ONCE(qc == NULL); /* ata_qc_from_tag _might_ return NULL */
+-	ap = qc->ap;
+-
+ 	qc->flags = 0;
+-	tag = qc->tag;
+-	if (ata_tag_valid(tag)) {
++	if (ata_tag_valid(qc->tag))
+ 		qc->tag = ATA_TAG_POISON;
+-		if (ap->flags & ATA_FLAG_SAS_HOST)
+-			ata_sas_free_tag(tag, ap);
+-	}
+ }
+ 
+ void __ata_qc_complete(struct ata_queued_cmd *qc)
+diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+index 044a16daa2d4..7a5fe41aa5ae 100644
+--- a/drivers/ata/libata-sata.c
++++ b/drivers/ata/libata-sata.c
+@@ -1268,31 +1268,6 @@ int ata_sas_queuecmd(struct scsi_cmnd *cmd, struct ata_port *ap)
+ }
+ EXPORT_SYMBOL_GPL(ata_sas_queuecmd);
+ 
+-int ata_sas_allocate_tag(struct ata_port *ap)
+-{
+-	unsigned int max_queue = ap->host->n_tags;
+-	unsigned int i, tag;
+-
+-	for (i = 0, tag = ap->sas_last_tag + 1; i < max_queue; i++, tag++) {
+-		tag = tag < max_queue ? tag : 0;
+-
+-		/* the last tag is reserved for internal command. */
+-		if (ata_tag_internal(tag))
+-			continue;
+-
+-		if (!test_and_set_bit(tag, &ap->sas_tag_allocated)) {
+-			ap->sas_last_tag = tag;
+-			return tag;
+-		}
+-	}
+-	return -1;
+-}
+-
+-void ata_sas_free_tag(unsigned int tag, struct ata_port *ap)
+-{
+-	clear_bit(tag, &ap->sas_tag_allocated);
+-}
+-
+ /**
+  *	sata_async_notification - SATA async notification handler
+  *	@ap: ATA port where async notification is received
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 06c9d90238d9..805bca2db16d 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -638,24 +638,49 @@ EXPORT_SYMBOL_GPL(ata_scsi_ioctl);
+ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
+ 					      struct scsi_cmnd *cmd)
+ {
++	struct ata_port *ap = dev->link->ap;
+ 	struct ata_queued_cmd *qc;
++	int tag;
+ 
+-	qc = ata_qc_new_init(dev, scsi_cmd_to_rq(cmd)->tag);
+-	if (qc) {
+-		qc->scsicmd = cmd;
+-		qc->scsidone = scsi_done;
+-
+-		qc->sg = scsi_sglist(cmd);
+-		qc->n_elem = scsi_sg_count(cmd);
++	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
++		goto fail;
+ 
+-		if (scsi_cmd_to_rq(cmd)->rq_flags & RQF_QUIET)
+-			qc->flags |= ATA_QCFLAG_QUIET;
++	if (ap->flags & ATA_FLAG_SAS_HOST) {
++		/*
++		 * SAS hosts may queue > ATA_MAX_QUEUE commands so use
++		 * unique per-device budget token as a tag.
++		 */
++		if (WARN_ON_ONCE(cmd->budget_token >= ATA_MAX_QUEUE))
++			goto fail;
++		tag = cmd->budget_token;
+ 	} else {
+-		cmd->result = (DID_OK << 16) | SAM_STAT_TASK_SET_FULL;
+-		scsi_done(cmd);
++		tag = scsi_cmd_to_rq(cmd)->tag;
+ 	}
+ 
++	qc = __ata_qc_from_tag(ap, tag);
++	qc->tag = qc->hw_tag = tag;
++	qc->scsicmd = NULL;
++	qc->ap = ap;
++	qc->dev = dev;
++
++	ata_qc_reinit(qc);
++
++	qc->scsicmd = cmd;
++	qc->scsidone = scsi_done;
++
++	qc->sg = scsi_sglist(cmd);
++	qc->n_elem = scsi_sg_count(cmd);
++
++	if (scsi_cmd_to_rq(cmd)->rq_flags & RQF_QUIET)
++		qc->flags |= ATA_QCFLAG_QUIET;
++
+ 	return qc;
++
++fail:
++	set_host_byte(cmd, DID_OK);
++	set_status_byte(cmd, SAM_STAT_TASK_SET_FULL);
++	scsi_done(cmd);
++	return NULL;
+ }
+ 
+ static void ata_qc_set_pc_nbytes(struct ata_queued_cmd *qc)
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index c9c2496d91ea..926a7f41303d 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -44,7 +44,6 @@ static inline void ata_force_cbl(struct ata_port *ap) { }
+ #endif
+ extern u64 ata_tf_to_lba(const struct ata_taskfile *tf);
+ extern u64 ata_tf_to_lba48(const struct ata_taskfile *tf);
+-extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag);
+ extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+ 			   u64 block, u32 n_block, unsigned int tf_flags,
+ 			   unsigned int tag, int class);
+@@ -91,18 +90,6 @@ extern unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
+ 
+ #define to_ata_port(d) container_of(d, struct ata_port, tdev)
+ 
+-/* libata-sata.c */
+-#ifdef CONFIG_SATA_HOST
+-int ata_sas_allocate_tag(struct ata_port *ap);
+-void ata_sas_free_tag(unsigned int tag, struct ata_port *ap);
+-#else
+-static inline int ata_sas_allocate_tag(struct ata_port *ap)
+-{
+-	return -EOPNOTSUPP;
+-}
+-static inline void ata_sas_free_tag(unsigned int tag, struct ata_port *ap) { }
+-#endif
+-
+ /* libata-acpi.c */
+ #ifdef CONFIG_ATA_ACPI
+ extern unsigned int ata_acpi_gtf_filter;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 9b1d3d8b1252..16107122e587 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -820,7 +820,6 @@ struct ata_port {
+ 	unsigned int		cbl;	/* cable type; ATA_CBL_xxx */
+ 
+ 	struct ata_queued_cmd	qcmd[ATA_MAX_QUEUE + 1];
+-	unsigned long		sas_tag_allocated; /* for sas tag allocation only */
+ 	u64			qc_active;
+ 	int			nr_active_links; /* #links with active qcs */
+ 	unsigned int		sas_last_tag;	/* track next tag hw expects */
 -- 
-Damien Le Moal
-Western Digital Research
+2.26.2
+
