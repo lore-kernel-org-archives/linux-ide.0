@@ -2,94 +2,67 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31FDCC433EF
-	for <linux-ide@archiver.kernel.org>; Thu,  7 Apr 2022 14:32:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50563C433F5
+	for <linux-ide@archiver.kernel.org>; Thu,  7 Apr 2022 16:43:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344014AbiDGOeX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 7 Apr 2022 10:34:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49170 "EHLO
+        id S1345778AbiDGQpJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 7 Apr 2022 12:45:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60076 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344006AbiDGOeW (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 7 Apr 2022 10:34:22 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9688D198526;
-        Thu,  7 Apr 2022 07:32:12 -0700 (PDT)
-Received: from fraeml707-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KZ3gw30svz681Z4;
-        Thu,  7 Apr 2022 22:30:20 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml707-chm.china.huawei.com (10.206.15.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Thu, 7 Apr 2022 16:32:10 +0200
-Received: from [10.47.80.129] (10.47.80.129) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Thu, 7 Apr
- 2022 15:32:09 +0100
-Message-ID: <3e1914a8-5f6b-8fcf-7fb3-2d1edb9766e1@huawei.com>
-Date:   Thu, 7 Apr 2022 15:32:07 +0100
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.6.1
-From:   John Garry <john.garry@huawei.com>
-Subject: Re: [PATCH 03/11] libata: Send internal commands through the block
- layer
-To:     Christoph Hellwig <hch@lst.de>
-CC:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
-        <bvanassche@acm.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <ming.lei@redhat.com>,
-        <hare@suse.de>, <chenxiang66@hisilicon.com>,
-        <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <dm-devel@redhat.com>, <beanhuo@micron.com>
-References: <1647945585-197349-1-git-send-email-john.garry@huawei.com>
- <1647945585-197349-4-git-send-email-john.garry@huawei.com>
- <20220322112057.GC29270@lst.de>
-In-Reply-To: <20220322112057.GC29270@lst.de>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.80.129]
-X-ClientProxiedBy: lhreml728-chm.china.huawei.com (10.201.108.79) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+        with ESMTP id S245111AbiDGQpI (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 7 Apr 2022 12:45:08 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A6C141AC734
+        for <linux-ide@vger.kernel.org>; Thu,  7 Apr 2022 09:43:08 -0700 (PDT)
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id 4783C60E09
+        for <linux-ide@vger.kernel.org>; Thu,  7 Apr 2022 16:43:08 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPS id A329FC385A4;
+        Thu,  7 Apr 2022 16:43:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1649349787;
+        bh=udAWzOm7jgi9yJIZUcCpdA1zBQ1uWcBc7gmgm1N/RRM=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=VNrcEWlGkCoPtctmYE0MO1ebDUIwHtRatpDSxtf7HGj8h6a/x8SuVqKb+Gv/pUbu0
+         S6li8FIysjLspVhdvVG2gq3WVj0psLKYvjheW105XnH9Xt5YPqIzveYrPPZXR+w1NA
+         NrwewqsR6ktMbpRN0mQG5ul8PdXHCBXfuZPTysc5fF/bk0dwX6kqVD8LWiw6DP+o/V
+         4OYDWQcQpmK/nRhuJcRlctaGzqUCC5glWcvohbD+mZrCCi1OiXBBQi/irlmr3hpWDv
+         mgC9/ocgWupdpB7n8dTIX4bazJkzdkXI02bC6g9z2fsH8H/OH+KCaQuCvwCvRT4WML
+         BCAvaOsLi9kZA==
+Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
+        by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 8F718E85BCB;
+        Thu,  7 Apr 2022 16:43:07 +0000 (UTC)
+Subject: Re: [GIT PULL] ata fixes for 5.18-rc2
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20220407122856.1170057-1-damien.lemoal@opensource.wdc.com>
+References: <20220407122856.1170057-1-damien.lemoal@opensource.wdc.com>
+X-PR-Tracked-List-Id: <linux-ide.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20220407122856.1170057-1-damien.lemoal@opensource.wdc.com>
+X-PR-Tracked-Remote: ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-5.18-rc2
+X-PR-Tracked-Commit-Id: 55b014159ee7af63770cd7f2b6fe926f6dd99335
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 640b5037da8edfaa98d102183ccfe3af5898f94b
+Message-Id: <164934978758.4180.18384229983659080471.pr-tracker-bot@kernel.org>
+Date:   Thu, 07 Apr 2022 16:43:07 +0000
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-ide@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 22/03/2022 11:20, Christoph Hellwig wrote:
-> On Tue, Mar 22, 2022 at 06:39:37PM +0800, John Garry wrote:
->> When SCSI HBA device drivers are required to process an ATA internal
->> command they still need a tag for the IO. This often requires the driver
->> to set aside a set of tags for these sorts of IOs and manage the tags
->> themselves.
->>
->> If we associate a SCSI command (and request) with an ATA internal command
->> then the tag is already provided, so introduce the change to send ATA
->> internal commands through the block layer with a set of custom blk-mq ops.
->>
->> note: I think that the timeout handling needs to be fixed up.
+The pull request you sent on Thu,  7 Apr 2022 21:28:56 +0900:
 
-Hi Christoph,
+> ssh://git@gitolite.kernel.org/pub/scm/linux/kernel/git/dlemoal/libata tags/ata-5.18-rc2
 
-> Any reason to not just send them through an ATA_16 passthrough CDB and
-> just use all the normal SCSI command handling?
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/640b5037da8edfaa98d102183ccfe3af5898f94b
 
-I had a go at implementing this but I have come up against a few issues:
+Thank you!
 
-- ATA_16 handling translates the passthrough CDB to a ATA TF. However 
-ata_exec_internal_sg() is passed a TF already. So what to do? Change the 
-callers to generate a ATA_16 CDB? I guess not. Otherwise we could put 
-the already-generated TF in the SCSI cmd CDB somehow and use directly.
-
-- We may have no SCSI device (yet) for the target when issuing an 
-internal command, but only the ATA port+dev. So need a method to pass 
-these pointers to ATA_16 handling
-
-- we would need to change ata_scsi_translate(), ata_scsi_pass_thru() and 
-other friends to deal with ATA_TAG_INTERNAL and its peculiarities - 
-today it just deals with regular qc's.
-
-It still does seem a reasonable idea to use ATA_16, but it looks like 
-significant modifications would be required....
-
-Thanks,
-John
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
