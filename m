@@ -2,51 +2,94 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69B99C433F5
-	for <linux-ide@archiver.kernel.org>; Thu,  7 Apr 2022 13:32:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31FDCC433EF
+	for <linux-ide@archiver.kernel.org>; Thu,  7 Apr 2022 14:32:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238089AbiDGNew (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Thu, 7 Apr 2022 09:34:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55258 "EHLO
+        id S1344014AbiDGOeX (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Thu, 7 Apr 2022 10:34:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49170 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343676AbiDGNeq (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 7 Apr 2022 09:34:46 -0400
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6AC9C23ACAF;
-        Thu,  7 Apr 2022 06:32:36 -0700 (PDT)
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 0AF3D68AFE; Thu,  7 Apr 2022 15:32:33 +0200 (CEST)
-Date:   Thu, 7 Apr 2022 15:32:32 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     John Garry <john.garry@huawei.com>
-Cc:     damien.lemoal@opensource.wdc.com, hch@lst.de,
-        linux-doc@vger.kernel.org, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] libata: Improve ATA queued command allocation
-Message-ID: <20220407133232.GA7092@lst.de>
-References: <1649333365-100672-1-git-send-email-john.garry@huawei.com>
+        with ESMTP id S1344006AbiDGOeW (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 7 Apr 2022 10:34:22 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9688D198526;
+        Thu,  7 Apr 2022 07:32:12 -0700 (PDT)
+Received: from fraeml707-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KZ3gw30svz681Z4;
+        Thu,  7 Apr 2022 22:30:20 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml707-chm.china.huawei.com (10.206.15.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2375.24; Thu, 7 Apr 2022 16:32:10 +0200
+Received: from [10.47.80.129] (10.47.80.129) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2375.24; Thu, 7 Apr
+ 2022 15:32:09 +0100
+Message-ID: <3e1914a8-5f6b-8fcf-7fb3-2d1edb9766e1@huawei.com>
+Date:   Thu, 7 Apr 2022 15:32:07 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1649333365-100672-1-git-send-email-john.garry@huawei.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.6.1
+From:   John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 03/11] libata: Send internal commands through the block
+ layer
+To:     Christoph Hellwig <hch@lst.de>
+CC:     <axboe@kernel.dk>, <damien.lemoal@opensource.wdc.com>,
+        <bvanassche@acm.org>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <ming.lei@redhat.com>,
+        <hare@suse.de>, <chenxiang66@hisilicon.com>,
+        <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <dm-devel@redhat.com>, <beanhuo@micron.com>
+References: <1647945585-197349-1-git-send-email-john.garry@huawei.com>
+ <1647945585-197349-4-git-send-email-john.garry@huawei.com>
+ <20220322112057.GC29270@lst.de>
+In-Reply-To: <20220322112057.GC29270@lst.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.80.129]
+X-ClientProxiedBy: lhreml728-chm.china.huawei.com (10.201.108.79) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-> +	qc = __ata_qc_from_tag(ap, tag);
-> +	qc->tag = qc->hw_tag = tag;
-> +	qc->scsicmd = NULL;
-> +	qc->ap = ap;
-> +	qc->dev = dev;
-> +
-> +	ata_qc_reinit(qc);
-> +
-> +	qc->scsicmd = cmd;
+On 22/03/2022 11:20, Christoph Hellwig wrote:
+> On Tue, Mar 22, 2022 at 06:39:37PM +0800, John Garry wrote:
+>> When SCSI HBA device drivers are required to process an ATA internal
+>> command they still need a tag for the IO. This often requires the driver
+>> to set aside a set of tags for these sorts of IOs and manage the tags
+>> themselves.
+>>
+>> If we associate a SCSI command (and request) with an ATA internal command
+>> then the tag is already provided, so introduce the change to send ATA
+>> internal commands through the block layer with a set of custom blk-mq ops.
+>>
+>> note: I think that the timeout handling needs to be fixed up.
 
-My fault, byt we can remove the first qc->scsicmd a nothing looks
-at the field before this real initialization.
+Hi Christoph,
 
-Otherwise looks good:
+> Any reason to not just send them through an ATA_16 passthrough CDB and
+> just use all the normal SCSI command handling?
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I had a go at implementing this but I have come up against a few issues:
+
+- ATA_16 handling translates the passthrough CDB to a ATA TF. However 
+ata_exec_internal_sg() is passed a TF already. So what to do? Change the 
+callers to generate a ATA_16 CDB? I guess not. Otherwise we could put 
+the already-generated TF in the SCSI cmd CDB somehow and use directly.
+
+- We may have no SCSI device (yet) for the target when issuing an 
+internal command, but only the ATA port+dev. So need a method to pass 
+these pointers to ATA_16 handling
+
+- we would need to change ata_scsi_translate(), ata_scsi_pass_thru() and 
+other friends to deal with ATA_TAG_INTERNAL and its peculiarities - 
+today it just deals with regular qc's.
+
+It still does seem a reasonable idea to use ATA_16, but it looks like 
+significant modifications would be required....
+
+Thanks,
+John
