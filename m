@@ -2,321 +2,332 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 847D0C433FE
-	for <linux-ide@archiver.kernel.org>; Fri,  8 Apr 2022 09:12:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D7EEC433FE
+	for <linux-ide@archiver.kernel.org>; Sat,  9 Apr 2022 05:02:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232799AbiDHJOC (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Fri, 8 Apr 2022 05:14:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36604 "EHLO
+        id S240967AbiDIFE3 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sat, 9 Apr 2022 01:04:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48026 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233780AbiDHJNC (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 8 Apr 2022 05:13:02 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A56B2B04C7;
-        Fri,  8 Apr 2022 02:09:52 -0700 (PDT)
-Received: from fraeml704-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4KZXTD349Hz684Y0;
-        Fri,  8 Apr 2022 17:07:44 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml704-chm.china.huawei.com (10.206.15.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2375.24; Fri, 8 Apr 2022 11:09:49 +0200
-Received: from localhost.localdomain (10.69.192.58) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2375.24; Fri, 8 Apr 2022 10:09:47 +0100
-From:   John Garry <john.garry@huawei.com>
-To:     <damien.lemoal@opensource.wdc.com>, <hch@lst.de>
-CC:     <linux-doc@vger.kernel.org>, <linux-ide@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, John Garry <john.garry@huawei.com>
-Subject: [PATCH v4] libata: Improve ATA queued command allocation
-Date:   Fri, 8 Apr 2022 17:04:12 +0800
-Message-ID: <1649408652-217372-1-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
+        with ESMTP id S242547AbiDIFCE (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 9 Apr 2022 01:02:04 -0400
+Received: from mail-lf1-x134.google.com (mail-lf1-x134.google.com [IPv6:2a00:1450:4864:20::134])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0906BB39;
+        Fri,  8 Apr 2022 21:59:57 -0700 (PDT)
+Received: by mail-lf1-x134.google.com with SMTP id b21so18160764lfb.5;
+        Fri, 08 Apr 2022 21:59:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=zVSR57Cc7QE1uggb8Qy0UDFjKrea3UykmqHWvT1DiyY=;
+        b=E3LGWZi8amaw7nhl++phVHvK+pbP2A/KT0gzkMp73wWpmD0qgt2M6oLozmkokX/mn7
+         uANjh2KJQjjru18AzOHnUrRUNYp+6iDZdfWz3nurk2oW91foLcRGLDleKhyZ0wyG/ry1
+         0IAibz60tK0+dHykDpjU7LNPjgWmDYyLw3l4fbttNQVOet/WxdHRXpzuiJ7MIm0XbT0U
+         MDLgxVDCC1c/q9jS/00PVjh0RADo/N5FA5hrcrclCtpFPaPQ/jg6rmbicnrc6Fmezjh7
+         +pDK8140WXosP5Js07Go7J1sTH02Fb2eQDgQJjs4uppo51W2JB6l9NpCtqiheQs/Sam4
+         ksAg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=zVSR57Cc7QE1uggb8Qy0UDFjKrea3UykmqHWvT1DiyY=;
+        b=nxb6ybykwFs0XEtYHQNIC0rLvJCuoFIKJvp10afHuFqdHpd+ns+f9+/t6VH6nj+ad3
+         wsfHV+OutpNRRYREbQ5x9Sz1gUOjLT7e/4OE9srE9ibt8IMh8nxsm1DYRhGLr4t3xcUJ
+         0/001B6JpjRo871xgOdeY2u3n0osu5W3+EFgBzdPImWseLHwnOE9wWODhuOBh+/LbfSZ
+         xFiGvKRg1OoqWMlkTtV7vokLckhr1FLWvOiVmsvsKaZLzHpVf2tLQ3NRj2itUo6o2gI1
+         VyUJliw0jOLSaXnTOx3GHsv4o+2J12dWdML2OcMORWkeXdw1VCrgZzTe9Jdh98YuMHpY
+         3W7Q==
+X-Gm-Message-State: AOAM530RNeTZT5Z4cUYRmofXKyPMRVkln0abmUooB+UbmHkLLpLIYJr4
+        rILhs89Uk/2qVGyERLonk/k=
+X-Google-Smtp-Source: ABdhPJx782kS+jVFQgcJrQHY8TzqoG50hdn9605PvdQiq4hfmTjCeemXIq3OPsPkDHgTvnHA2Q31Ww==
+X-Received: by 2002:a05:6512:304a:b0:44a:c4a4:8e9d with SMTP id b10-20020a056512304a00b0044ac4a48e9dmr14458299lfb.624.1649480395014;
+        Fri, 08 Apr 2022 21:59:55 -0700 (PDT)
+Received: from mobilestation ([95.79.134.149])
+        by smtp.gmail.com with ESMTPSA id w17-20020a194911000000b0046b9191418fsm100214lfa.64.2022.04.08.21.59.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 08 Apr 2022 21:59:54 -0700 (PDT)
+Date:   Sat, 9 Apr 2022 07:59:52 +0300
+From:   Serge Semin <fancer.lancer@gmail.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
+        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
+        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH 05/21] ata: libahci_platform: Convert to using devm bulk
+ clocks API
+Message-ID: <20220409045952.3h4jkzkgziea4ysh@mobilestation>
+References: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
+ <20220324001628.13028-6-Sergey.Semin@baikalelectronics.ru>
+ <603eb020-3f43-c193-b3f6-8ff697f845c8@opensource.wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <603eb020-3f43-c193-b3f6-8ff697f845c8@opensource.wdc.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Improve ATA queued command allocation as follows:
+On Thu, Mar 24, 2022 at 10:29:01AM +0900, Damien Le Moal wrote:
+> On 3/24/22 09:16, Serge Semin wrote:
+> > In order to simplify the clock-related code there is a way to convert the
+> > current fixed clocks array into using the common bulk clocks kernel API
+> > with dynamic set of the clock handlers and device-managed clock-resource
+> > tracking. It's a bit tricky due to the complication coming from the
+> > requirement to support the platforms (da850, spear13xx) with the
+> > non-OF-based clock source, but still doable.
+> > 
+> > Before this modification there are two methods have been used to get the
+> > clocks connected to an AHCI device: clk_get() - to get the very first
+> > clock in the list and of_clk_get() - to get the rest of them. Basically
+> > the platforms with non-OF-based clocks definition could specify only a
+> > single reference clock source. The platforms with OF-hw clocks have been
+> > luckier and could setup up to AHCI_MAX_CLKS clocks. Such semantic can be
+> > retained with using devm_clk_bulk_get_all() to retrieve the clocks defined
+> > via the DT firmware and devm_clk_get_optional() otherwise. In both cases
+> > using the device-managed version of the methods will cause the automatic
+> > resources deallocation on the AHCI device removal event. The only
+> > complicated part in the suggested approach is the explicit allocation and
+> > initialization of the clk_bulk_data structure instance for the non-OF
+> > reference clocks. It's required in order to use the Bulk Clocks API for
+> > the both denoted cases of the clocks definition.
+> > 
+> > Note aside with the clock-related code reduction and natural
+> > simplification, there are several bonuses the suggested modification
+> > provides. First of all the limitation of having no greater than
+> > AHCI_MAX_CLKS clocks is now removed, since the devm_clk_bulk_get_all()
+> > method will allocate as many reference clocks data descriptors as there
+> > are clocks specified for the device. Secondly the clock names are
+> > auto-detected. So the glue drivers can make sure that the required clocks
+> > are specified just by checking the clock IDs in the clk_bulk_data array.
+> > Thirdly using the handy Bulk Clocks kernel API improves the
+> > clocks-handling code readability. And the last but not least this
+> > modification implements a true optional clocks support to the
+> > ahci_platform_get_resources() method. Indeed the previous clocks getting
+> > procedure just stopped getting the clocks on any errors (aside from
+> > non-critical -EPROBE_DEFER) in a way so the callee wasn't even informed
+> > about abnormal loop termination. The new implementation lacks of such
+> > problem. The ahci_platform_get_resources() will return an error code if
+> > the corresponding clocks getting method ends execution abnormally.
+> > 
+> > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> > ---
+> >  drivers/ata/ahci.h             |  4 +-
+> >  drivers/ata/libahci_platform.c | 82 +++++++++++++++-------------------
+> >  2 files changed, 37 insertions(+), 49 deletions(-)
+> > 
+> > diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> > index eeac5482f1d1..1564c691094a 100644
+> > --- a/drivers/ata/ahci.h
+> > +++ b/drivers/ata/ahci.h
+> > @@ -38,7 +38,6 @@
+> >  
+> >  enum {
+> >  	AHCI_MAX_PORTS		= 32,
+> > -	AHCI_MAX_CLKS		= 5,
+> >  	AHCI_MAX_SG		= 168, /* hardware max is 64K */
+> >  	AHCI_DMA_BOUNDARY	= 0xffffffff,
+> >  	AHCI_MAX_CMDS		= 32,
+> > @@ -341,7 +340,8 @@ struct ahci_host_priv {
+> >  	u32			em_msg_type;	/* EM message type */
+> >  	u32			remapped_nvme;	/* NVMe remapped device count */
+> >  	bool			got_runtime_pm; /* Did we do pm_runtime_get? */
+> > -	struct clk		*clks[AHCI_MAX_CLKS]; /* Optional */
+> > +	unsigned int		n_clks;
+> > +	struct clk_bulk_data	*clks;		/* Optional */
+> >  	struct reset_control	*rsts;		/* Optional */
+> >  	struct regulator	**target_pwrs;	/* Optional */
+> >  	struct regulator	*ahci_regulator;/* Optional */
+> > diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> > index 8eabbb5f208c..d805ddc3a024 100644
+> > --- a/drivers/ata/libahci_platform.c
+> > +++ b/drivers/ata/libahci_platform.c
+> > @@ -8,6 +8,7 @@
+> >   *   Anton Vorontsov <avorontsov@ru.mvista.com>
+> >   */
+> >  
+> > +#include <linux/clk-provider.h>
+> >  #include <linux/clk.h>
+> >  #include <linux/kernel.h>
+> >  #include <linux/gfp.h>
+> > @@ -97,28 +98,14 @@ EXPORT_SYMBOL_GPL(ahci_platform_disable_phys);
+> >   * ahci_platform_enable_clks - Enable platform clocks
+> >   * @hpriv: host private area to store config values
+> >   *
+> > - * This function enables all the clks found in hpriv->clks, starting at
+> > - * index 0. If any clk fails to enable it disables all the clks already
+> > - * enabled in reverse order, and then returns an error.
+> > + * This function enables all the clks found for the AHCI device.
+> >   *
+> >   * RETURNS:
+> >   * 0 on success otherwise a negative error code
+> >   */
+> >  int ahci_platform_enable_clks(struct ahci_host_priv *hpriv)
+> >  {
+> > -	int c, rc;
+> > -
+> > -	for (c = 0; c < AHCI_MAX_CLKS && hpriv->clks[c]; c++) {
+> > -		rc = clk_prepare_enable(hpriv->clks[c]);
+> > -		if (rc)
+> > -			goto disable_unprepare_clk;
+> > -	}
+> > -	return 0;
+> > -
+> > -disable_unprepare_clk:
+> > -	while (--c >= 0)
+> > -		clk_disable_unprepare(hpriv->clks[c]);
+> > -	return rc;
+> > +	return clk_bulk_prepare_enable(hpriv->n_clks, hpriv->clks);
+> >  }
+> >  EXPORT_SYMBOL_GPL(ahci_platform_enable_clks);
+> >  
+> > @@ -126,16 +113,13 @@ EXPORT_SYMBOL_GPL(ahci_platform_enable_clks);
+> >   * ahci_platform_disable_clks - Disable platform clocks
+> >   * @hpriv: host private area to store config values
+> >   *
+> > - * This function disables all the clks found in hpriv->clks, in reverse
+> > - * order of ahci_platform_enable_clks (starting at the end of the array).
+> > + * This function disables all the clocks enabled before
+> > + * (bulk-clocks-disable function is supposed to do that in reverse
+> > + * from the enabling procedure order).
+> >   */
+> >  void ahci_platform_disable_clks(struct ahci_host_priv *hpriv)
+> >  {
+> > -	int c;
+> > -
+> > -	for (c = AHCI_MAX_CLKS - 1; c >= 0; c--)
+> > -		if (hpriv->clks[c])
+> > -			clk_disable_unprepare(hpriv->clks[c]);
+> > +	clk_bulk_disable_unprepare(hpriv->n_clks, hpriv->clks);
+> >  }
+> >  EXPORT_SYMBOL_GPL(ahci_platform_disable_clks);
+> >  
+> > @@ -292,8 +276,6 @@ static void ahci_platform_put_resources(struct device *dev, void *res)
+> >  		pm_runtime_disable(dev);
+> >  	}
+> >  
+> > -	for (c = 0; c < AHCI_MAX_CLKS && hpriv->clks[c]; c++)
+> > -		clk_put(hpriv->clks[c]);
+> >  	/*
+> >  	 * The regulators are tied to child node device and not to the
+> >  	 * SATA device itself. So we can't use devm for automatically
+> > @@ -374,8 +356,8 @@ static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
+> >   * 1) mmio registers (IORESOURCE_MEM 0, mandatory)
+> >   * 2) regulator for controlling the targets power (optional)
+> >   *    regulator for controlling the AHCI controller (optional)
+> > - * 3) 0 - AHCI_MAX_CLKS clocks, as specified in the devs devicetree node,
+> > - *    or for non devicetree enabled platforms a single clock
+> > + * 3) all clocks specified in the devicetree node, or a single
+> > + *    clock for non-OF platforms (optional)
+> >   * 4) resets, if flags has AHCI_PLATFORM_GET_RESETS (optional)
+> >   * 5) phys (optional)
+> >   *
+> > @@ -385,11 +367,10 @@ static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
+> >  struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+> >  						   unsigned int flags)
+> >  {
+> > +	int enabled_ports = 0, rc = 0, child_nodes;
+> >  	struct device *dev = &pdev->dev;
+> >  	struct ahci_host_priv *hpriv;
+> > -	struct clk *clk;
+> >  	struct device_node *child;
+> > -	int i, enabled_ports = 0, rc = 0, child_nodes;
+> >  	u32 mask_port_map = 0;
+> >  
+> >  	if (!devres_open_group(dev, NULL, GFP_KERNEL))
+> > @@ -413,25 +394,32 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
+> >  		}
+> >  	}
+> >  
+> > -	for (i = 0; i < AHCI_MAX_CLKS; i++) {
+> > -		/*
+> > -		 * For now we must use clk_get(dev, NULL) for the first clock,
+> > -		 * because some platforms (da850, spear13xx) are not yet
+> > -		 * converted to use devicetree for clocks.  For new platforms
+> > -		 * this is equivalent to of_clk_get(dev->of_node, 0).
+> > -		 */
+> > -		if (i == 0)
+> > -			clk = clk_get(dev, NULL);
+> > -		else
+> > -			clk = of_clk_get(dev->of_node, i);
+> > -
+> > -		if (IS_ERR(clk)) {
+> > -			rc = PTR_ERR(clk);
+> > -			if (rc == -EPROBE_DEFER)
+> > -				goto err_out;
+> > -			break;
+> > +	/*
+> > +	 * Bulk clock get procedure can fail to find any clock due to running
+> > +	 * an a non-OF platform or due to the clocks being defined in bypass
+> > +	 * from the DT firmware (like da850, spear13xx). In that case we
+> > +	 * fallback to getting a single clock source right from the dev clocks
+> > +	 * list.
+> > +	 */
+> > +	rc = devm_clk_bulk_get_all(dev, &hpriv->clks);
+> 
 
-- For attaining a qc tag for a SAS host we need to allocate a bit in
-  ata_port.sas_tag_allocated bitmap.
+> I would move the error check first here to make things more readable:
 
-  However we already have a unique tag per device in range
-  [0, ATA_MAX_QUEUE -1] in the scsi cmnd budget token, so just use that
-  instead.
+Agreed. Good note.
 
-- It is a bit pointless to have ata_qc_new_init() in libata-core.c since it
-  pokes scsi internals, so inline it in ata_scsi_qc_new() (in
-  libata-scsi.c). Also update Doc accordingly.
+> 
+> 	rc = devm_clk_bulk_get_all(dev, &hpriv->clks);
+> 	if (rc < 0)
+> 		goto err_out;
+> 
+> 	if (rc) {
+> 		/* Got clocks in bulk */
+> 		hpriv->n_clks = rc;
+> 	} else {
+> 		/*
+> 		 * No clock bulk found: fallback to manually getting
+> 		 * the optional clock.
+> 		 */
+> 		hpriv->clks = devm_kzalloc(dev, sizeof(*hpriv->clks),
+> 					   GFP_KERNEL);
+> 		...
+> 	}
+> 
+> And it may be cleaner to move this entire code hunk into a helper,
+> something like ahci_platform_get_clks() ?
 
-- Use standard SCSI helpers set_host_byte() and set_status_byte() in
-  ata_scsi_qc_new().
+I'd rather keep the code embedded seeing it won't be used anywhere
+than here and in order to keep the ahci_platform_get_resources()
+function more-or-less coherent.  Otherwise moving just a part of the
+function would be a half-measure since the methods like
+ahci_platform_get_regs(), ahci_platform_get_regulators(), etc could be
+also unpinned.
 
-Christoph Hellwig originally contributed the change to inline
-ata_qc_new_init().
+-Sergey
 
-Signed-off-by: John Garry <john.garry@huawei.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
-Do not apply on a kernel without "scsi: core: Fix sbitmap depth in
-scsi_realloc_sdev_budget_map()" - hopefully v5.18-rc2 will include it.
-
-Changes since v3:
-- Add RB tag (thanks)
-- remove double set of qc->scsicmd (Advised by Christoph)
-
-Changes since v2 series:
-- combine into a single patch
-- use scsi helpers (Damien)
-- use inclusive brackets for commit message description
-
-diff --git a/Documentation/driver-api/libata.rst b/Documentation/driver-api/libata.rst
-index d477e296bda5..311af516a3fd 100644
---- a/Documentation/driver-api/libata.rst
-+++ b/Documentation/driver-api/libata.rst
-@@ -424,12 +424,6 @@ How commands are issued
- -----------------------
- 
- Internal commands
--    First, qc is allocated and initialized using :c:func:`ata_qc_new_init`.
--    Although :c:func:`ata_qc_new_init` doesn't implement any wait or retry
--    mechanism when qc is not available, internal commands are currently
--    issued only during initialization and error recovery, so no other
--    command is active and allocation is guaranteed to succeed.
--
-     Once allocated qc's taskfile is initialized for the command to be
-     executed. qc currently has two mechanisms to notify completion. One
-     is via ``qc->complete_fn()`` callback and the other is completion
-@@ -447,11 +441,6 @@ SCSI commands
-     translated. No qc is involved in processing a simulated scmd. The
-     result is computed right away and the scmd is completed.
- 
--    For a translated scmd, :c:func:`ata_qc_new_init` is invoked to allocate a
--    qc and the scmd is translated into the qc. SCSI midlayer's
--    completion notification function pointer is stored into
--    ``qc->scsidone``.
--
-     ``qc->complete_fn()`` callback is used for completion notification. ATA
-     commands use :c:func:`ata_scsi_qc_complete` while ATAPI commands use
-     :c:func:`atapi_qc_complete`. Both functions end up calling ``qc->scsidone``
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index cceedde51126..5e7d6ccad5da 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4563,42 +4563,6 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
- #endif /* __BIG_ENDIAN */
- }
- 
--/**
-- *	ata_qc_new_init - Request an available ATA command, and initialize it
-- *	@dev: Device from whom we request an available command structure
-- *	@tag: tag
-- *
-- *	LOCKING:
-- *	None.
-- */
--
--struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag)
--{
--	struct ata_port *ap = dev->link->ap;
--	struct ata_queued_cmd *qc;
--
--	/* no command while frozen */
--	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
--		return NULL;
--
--	/* libsas case */
--	if (ap->flags & ATA_FLAG_SAS_HOST) {
--		tag = ata_sas_allocate_tag(ap);
--		if (tag < 0)
--			return NULL;
--	}
--
--	qc = __ata_qc_from_tag(ap, tag);
--	qc->tag = qc->hw_tag = tag;
--	qc->scsicmd = NULL;
--	qc->ap = ap;
--	qc->dev = dev;
--
--	ata_qc_reinit(qc);
--
--	return qc;
--}
--
- /**
-  *	ata_qc_free - free unused ata_queued_cmd
-  *	@qc: Command to complete
-@@ -4611,19 +4575,9 @@ struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag)
-  */
- void ata_qc_free(struct ata_queued_cmd *qc)
- {
--	struct ata_port *ap;
--	unsigned int tag;
--
--	WARN_ON_ONCE(qc == NULL); /* ata_qc_from_tag _might_ return NULL */
--	ap = qc->ap;
--
- 	qc->flags = 0;
--	tag = qc->tag;
--	if (ata_tag_valid(tag)) {
-+	if (ata_tag_valid(qc->tag))
- 		qc->tag = ATA_TAG_POISON;
--		if (ap->flags & ATA_FLAG_SAS_HOST)
--			ata_sas_free_tag(tag, ap);
--	}
- }
- 
- void __ata_qc_complete(struct ata_queued_cmd *qc)
-diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
-index 044a16daa2d4..7a5fe41aa5ae 100644
---- a/drivers/ata/libata-sata.c
-+++ b/drivers/ata/libata-sata.c
-@@ -1268,31 +1268,6 @@ int ata_sas_queuecmd(struct scsi_cmnd *cmd, struct ata_port *ap)
- }
- EXPORT_SYMBOL_GPL(ata_sas_queuecmd);
- 
--int ata_sas_allocate_tag(struct ata_port *ap)
--{
--	unsigned int max_queue = ap->host->n_tags;
--	unsigned int i, tag;
--
--	for (i = 0, tag = ap->sas_last_tag + 1; i < max_queue; i++, tag++) {
--		tag = tag < max_queue ? tag : 0;
--
--		/* the last tag is reserved for internal command. */
--		if (ata_tag_internal(tag))
--			continue;
--
--		if (!test_and_set_bit(tag, &ap->sas_tag_allocated)) {
--			ap->sas_last_tag = tag;
--			return tag;
--		}
--	}
--	return -1;
--}
--
--void ata_sas_free_tag(unsigned int tag, struct ata_port *ap)
--{
--	clear_bit(tag, &ap->sas_tag_allocated);
--}
--
- /**
-  *	sata_async_notification - SATA async notification handler
-  *	@ap: ATA port where async notification is received
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 06c9d90238d9..42cecf95a4e5 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -638,24 +638,48 @@ EXPORT_SYMBOL_GPL(ata_scsi_ioctl);
- static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
- 					      struct scsi_cmnd *cmd)
- {
-+	struct ata_port *ap = dev->link->ap;
- 	struct ata_queued_cmd *qc;
-+	int tag;
- 
--	qc = ata_qc_new_init(dev, scsi_cmd_to_rq(cmd)->tag);
--	if (qc) {
--		qc->scsicmd = cmd;
--		qc->scsidone = scsi_done;
--
--		qc->sg = scsi_sglist(cmd);
--		qc->n_elem = scsi_sg_count(cmd);
-+	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
-+		goto fail;
- 
--		if (scsi_cmd_to_rq(cmd)->rq_flags & RQF_QUIET)
--			qc->flags |= ATA_QCFLAG_QUIET;
-+	if (ap->flags & ATA_FLAG_SAS_HOST) {
-+		/*
-+		 * SAS hosts may queue > ATA_MAX_QUEUE commands so use
-+		 * unique per-device budget token as a tag.
-+		 */
-+		if (WARN_ON_ONCE(cmd->budget_token >= ATA_MAX_QUEUE))
-+			goto fail;
-+		tag = cmd->budget_token;
- 	} else {
--		cmd->result = (DID_OK << 16) | SAM_STAT_TASK_SET_FULL;
--		scsi_done(cmd);
-+		tag = scsi_cmd_to_rq(cmd)->tag;
- 	}
- 
-+	qc = __ata_qc_from_tag(ap, tag);
-+	qc->tag = qc->hw_tag = tag;
-+	qc->ap = ap;
-+	qc->dev = dev;
-+
-+	ata_qc_reinit(qc);
-+
-+	qc->scsicmd = cmd;
-+	qc->scsidone = scsi_done;
-+
-+	qc->sg = scsi_sglist(cmd);
-+	qc->n_elem = scsi_sg_count(cmd);
-+
-+	if (scsi_cmd_to_rq(cmd)->rq_flags & RQF_QUIET)
-+		qc->flags |= ATA_QCFLAG_QUIET;
-+
- 	return qc;
-+
-+fail:
-+	set_host_byte(cmd, DID_OK);
-+	set_status_byte(cmd, SAM_STAT_TASK_SET_FULL);
-+	scsi_done(cmd);
-+	return NULL;
- }
- 
- static void ata_qc_set_pc_nbytes(struct ata_queued_cmd *qc)
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index c9c2496d91ea..926a7f41303d 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -44,7 +44,6 @@ static inline void ata_force_cbl(struct ata_port *ap) { }
- #endif
- extern u64 ata_tf_to_lba(const struct ata_taskfile *tf);
- extern u64 ata_tf_to_lba48(const struct ata_taskfile *tf);
--extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag);
- extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
- 			   u64 block, u32 n_block, unsigned int tf_flags,
- 			   unsigned int tag, int class);
-@@ -91,18 +90,6 @@ extern unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
- 
- #define to_ata_port(d) container_of(d, struct ata_port, tdev)
- 
--/* libata-sata.c */
--#ifdef CONFIG_SATA_HOST
--int ata_sas_allocate_tag(struct ata_port *ap);
--void ata_sas_free_tag(unsigned int tag, struct ata_port *ap);
--#else
--static inline int ata_sas_allocate_tag(struct ata_port *ap)
--{
--	return -EOPNOTSUPP;
--}
--static inline void ata_sas_free_tag(unsigned int tag, struct ata_port *ap) { }
--#endif
--
- /* libata-acpi.c */
- #ifdef CONFIG_ATA_ACPI
- extern unsigned int ata_acpi_gtf_filter;
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 9b1d3d8b1252..16107122e587 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -820,7 +820,6 @@ struct ata_port {
- 	unsigned int		cbl;	/* cable type; ATA_CBL_xxx */
- 
- 	struct ata_queued_cmd	qcmd[ATA_MAX_QUEUE + 1];
--	unsigned long		sas_tag_allocated; /* for sas tag allocation only */
- 	u64			qc_active;
- 	int			nr_active_links; /* #links with active qcs */
- 	unsigned int		sas_last_tag;	/* track next tag hw expects */
--- 
-2.26.2
-
+> 
+> > +	if (rc > 0) {
+> > +		hpriv->n_clks = rc;
+> > +	} else if (!rc) {
+> > +		hpriv->clks = devm_kzalloc(dev, sizeof(*hpriv->clks), GFP_KERNEL);
+> > +		if (!hpriv->clks) {
+> > +			rc = -ENOMEM;
+> > +			goto err_out;
+> >  		}
+> > -		hpriv->clks[i] = clk;
+> > +		hpriv->clks->clk = devm_clk_get_optional(dev, NULL);
+> > +		if (IS_ERR(hpriv->clks->clk)) {
+> > +			rc = PTR_ERR(hpriv->clks->clk);
+> > +			goto err_out;
+> > +		} else if (hpriv->clks->clk) {
+> > +			hpriv->clks->id = __clk_get_name(hpriv->clks->clk);
+> > +			hpriv->n_clks = 1;
+> > +		}
+> > +	} else {
+> > +		goto err_out;
+> >  	}
+> >  
+> >  	hpriv->ahci_regulator = devm_regulator_get(dev, "ahci");
+> 
+> 
+> -- 
+> Damien Le Moal
+> Western Digital Research
