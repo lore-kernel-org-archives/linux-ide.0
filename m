@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D28BAC433F5
-	for <linux-ide@archiver.kernel.org>; Sun, 10 Apr 2022 23:48:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A926C433F5
+	for <linux-ide@archiver.kernel.org>; Sun, 10 Apr 2022 23:53:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229508AbiDJXuM (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Sun, 10 Apr 2022 19:50:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49866 "EHLO
+        id S233946AbiDJXzp (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Sun, 10 Apr 2022 19:55:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39088 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236049AbiDJXuL (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 10 Apr 2022 19:50:11 -0400
+        with ESMTP id S230475AbiDJXzo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 10 Apr 2022 19:55:44 -0400
 Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2603D14083
-        for <linux-ide@vger.kernel.org>; Sun, 10 Apr 2022 16:47:59 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF5541CD
+        for <linux-ide@vger.kernel.org>; Sun, 10 Apr 2022 16:53:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1649634480; x=1681170480;
-  h=message-id:date:mime-version:subject:to:references:from:
-   in-reply-to:content-transfer-encoding;
-  bh=fOe1mfMlHzTu6MBOpDv1gP1kMG1JaKfRhFoDSnAvrrc=;
-  b=qGWf7HQRFqXWABDcdMl4gh+YJtVXo59IdgEjTiBhNwaaXlrjiEJp4jeM
-   Ra/gYue9QMeqT86ZGq/XapwfFIgJfzgrIZ/IVHEEvuKaWStdyW/qoUBMm
-   xG9xjnjdBmHYgQ02qsYZSOhD/jVMg2DXtcSk+MtGySLKfEkIgT3na2KId
-   a1kCd8zXxAtEb0E5aP3cW4TasJh1o8O1v6HdbCQl+A6bfmozrVYDo4a9R
-   QUTpSU1DwAjit4TQXstnhe5jDJTknkFvgebZND6v9GV4dj33F+39LGmX6
-   5/FKqB6XSQDj4fatf/tmAOpP4hAt47PufCNPsV7Vnb2H/61qs/htkY7hv
-   g==;
+  t=1649634814; x=1681170814;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=+DqBwEiVFGUWEIGkaKU1IdGh45+LshzBk947/RGzAzA=;
+  b=IW6+m1ONy91ci1Heq0ugZjMJDss3XaLnRiNtBmtOE6Y7+YtOr9avGSzN
+   ST4ScXaBc7fdKsK2mX0lqgivbMRDWGwoG98AoVAapI0vqXa4Fi/q39O5y
+   jCQleFnXAfexotScQ7hAhSRQUXGYq/gA0kiH59DiZnZZOCX4rmSATEK5G
+   lohRm6fCLJ2ZFm+/ftsthSqXz4DPlEX3QFVC8rcm5KtZ0UgUtTgff+uo6
+   gTAg9VnBtA+y1FxtiZmNp+xTEZJOo6iUmT/bubGjkqpEWUh20Dltth/Qv
+   9dDdihZELT38YAlT3qCgQ11jTU8SrCSFaFffv06U6XzRAE6ywa5uZ1FvQ
+   w==;
 X-IronPort-AV: E=Sophos;i="5.90,250,1643644800"; 
-   d="scan'208";a="198470489"
+   d="scan'208";a="198470634"
 Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Apr 2022 07:47:59 +0800
-IronPort-SDR: aNMm1A4s4DL5mnTtjY8WCEZURN+HHZoEaHw2Vxyn9M8u2/PhYtP7FzRavf3Bu7cn25tQkm7gsc
- wbkSvfdNYW83OBIBsVZpsgFnki1L9rCp0zfepjGiEHDGK0Fa+jk2izEAC/NTpwyEYM4vr1JiJ7
- bD2OT2zdglRJkEW/I3lLKks4DNUuJPvpfw64VDvyf0Bk92XiyLpFxgQ2/8TsTlvW4WChzRKEzW
- XNXMFkTvsSZXOSuQHldE6yhAOGwO9dgGDLhDZ7+0VRiin5ICUbOE10dknHcsp1XQAnlmRg1mBV
- wwIvdeufbkFXKH//KeuMqGOm
+  by ob1.hgst.iphmx.com with ESMTP; 11 Apr 2022 07:53:33 +0800
+IronPort-SDR: +jeoXhdmlagFDps+/5PVO6n/pr9h+IsG8Uw6mxZHxV43C83p/lxzE8SQzvaml/vt0wrnXFghYD
+ 8ctW0FVZsUmPNfGXTPtmxnza8BdBXA7iMv5ai3FcAm3ovNGV9UgrzQYND6/6I4Khs6A9RM8Sla
+ e+4Uw2YDPXNi/IL4nG2kdenYlJ9yFO3m3Vl0a+SpB2EPZ9Ee3dEAb5mZ+Nc/Vqsw0tfdYH8Ce1
+ YkZYQPh7VDTwG+akGPB5MriRqo3fsuQ2MEYIzevm1Det1CyzN3hNOPw3JTeUuRO2I+Qd0PLw9v
+ lflqHDd2fBYxvDOf9wYc1lFe
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 10 Apr 2022 16:18:28 -0700
-IronPort-SDR: 1IQjptfvQH0lOZjBxOXPqiwTRaPENwnRQKsRrB6TAKY89oGAKe+5jiyvl8jT0qOt8Rt8mUXvM8
- d6xQWrfXNYpMjn+RX00+oF+JvESbgnIGwIWryiGRL2kH6gcTsdZC0eByRs4lBIotrmPhMCV7Ia
- eNoSJZE/6He2OiTSsai4Trmcy/SIyN29pR9WaPRRDW/lMrgDozHn9ovvrT9IHWssc5fDjTto2+
- FHS5dPYUvIwEdn/aW8bHIfyHlBqdx0SdZL0u82giqSk87ejO8olmjTKTVR9ibq2n/9Lx5PSIXx
- HQI=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 10 Apr 2022 16:24:01 -0700
+IronPort-SDR: SbrcBmFVwNvarbIKEc6yrvU1+8oD3Q9Fxf+g9FrLF6AvQSWyrBX8Ce17l8ZvHZmcmLrEhrHIPs
+ RUeIwooni2Cudpi1lxOfej9y+s+oDWxoJhCBXZkYDI6dNs3acIQbqXLPTqnG62ISR7evd7Jxbf
+ GFok1Ln3AvlGxLLuHeoRo9ysTttIx6HZ+LE7qs8ZzQHmXlbrHhkRla3q6iFNKOwRUonrDcpPWT
+ nWVg8KLpLEcLq1lsgfTio7YxIH5HUmAARtZOro8mimeSpE98HCML5IMUmjmHf7BT2/jitqfE5T
+ uHg=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 10 Apr 2022 16:47:58 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 10 Apr 2022 16:53:33 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Kc7vx6fS7z1SHwl
-        for <linux-ide@vger.kernel.org>; Sun, 10 Apr 2022 16:47:57 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Kc82N0WG7z1Rwrw
+        for <linux-ide@vger.kernel.org>; Sun, 10 Apr 2022 16:53:32 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,142 +56,69 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1649634477; x=1652226478; bh=fOe1mfMlHzTu6MBOpDv1gP1kMG1JaKfRhFo
-        DSnAvrrc=; b=KQwFb/NNG5YeshXfOM+GfbuUsKWPk/G7VORCOfMQ8X/Ml58na/m
-        jQgpy0taAzw6jn5Q0Y+E+Gg669P2WRFNB2LD19Y6Sk1Efx/rfAB5AOGCILRFxAy7
-        eRon5M95ipoYVDBnMVZUZ2e806Qbf3qLpITWZhbiFH9J0gpZg6EokX0oNVUai2wP
-        DNGNz0Md8t77Gf8va0qNR79G3GaW30+s5tyNwkLmL115Dz7z7uhQif+Um/3S5fae
-        sJIQeSqwwWTCQZkop3jOiZtQWYRym8TYTr1j6Smv3C4ZLSyC0dqjeWcxl0DAtNHx
-        +dxuo+XL+etJcIlxQ3NAgyeljLnGcKMqEWA==
+        1649634811; x=1652226812; bh=+DqBwEiVFGUWEIGkaKU1IdGh45+LshzBk94
+        7/RGzAzA=; b=HUp1Qjhln5j5KowlHmgcmxmREQyKPqpJhnXwbTI4DYkB8tCHTLp
+        3tQdR9aOLKn9IXzMcKdCdOIVrb/kRZI32mdJUfqN7lOXG5NChK4/JLOIGBZZJcTd
+        dIGnmCdUUR2+NbPdEgfhbrRy1/7gZKeaNMCfBE5lUULVOWkLVI3Bglsx59VUNGov
+        b9MzNCNxdHGcRXhjtAdk57JWtd7/nfWBz3EsbF2Norc07owRmGGLyOYJxO8UBlEe
+        HTMlgi+jhhhUFdWOOQe/AM9Z52u7BSW2Jhq9ncsec97Lh1K9ZE2NJ9rhqAPD/5nC
+        rwHB2Hjn76MQOHQrmh8pt+7FpprJzdAnd0A==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id mBXwzrT9L_zh for <linux-ide@vger.kernel.org>;
-        Sun, 10 Apr 2022 16:47:57 -0700 (PDT)
+        with ESMTP id MNfRtuXLbYle for <linux-ide@vger.kernel.org>;
+        Sun, 10 Apr 2022 16:53:31 -0700 (PDT)
 Received: from [10.225.163.8] (unknown [10.225.163.8])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Kc7vx0qlYz1Rvlx;
-        Sun, 10 Apr 2022 16:47:56 -0700 (PDT)
-Message-ID: <1a56a6cc-5062-fd25-4285-aa53b4ad0eba@opensource.wdc.com>
-Date:   Mon, 11 Apr 2022 08:47:55 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Kc82M0fBhz1Rvlx;
+        Sun, 10 Apr 2022 16:53:30 -0700 (PDT)
+Message-ID: <05433153-0424-ab66-1573-993d0490c5bc@opensource.wdc.com>
+Date:   Mon, 11 Apr 2022 08:53:29 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.7.0
-Subject: Re: [PATCH] ata: pata_sil680: fix result type of
- sil680_sel{dev|reg}()
+Subject: Re: [BUG] ata: pata_marvell: Warning when probing the module
 Content-Language: en-US
-To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-References: <9fceaba7-22e0-8cb2-fc69-04c0b8ece7db@omp.ru>
+To:     Zheyu Ma <zheyuma97@gmail.com>, Sergey Shtylyov <s.shtylyov@omp.ru>
+Cc:     linux-ide@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+References: <CAMhUBjkVME8D5KsHvT=uddBsW_Bh6wr7qeXS=UpQD4LgPmHffQ@mail.gmail.com>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <9fceaba7-22e0-8cb2-fc69-04c0b8ece7db@omp.ru>
+In-Reply-To: <CAMhUBjkVME8D5KsHvT=uddBsW_Bh6wr7qeXS=UpQD4LgPmHffQ@mail.gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 4/10/22 05:29, Sergey Shtylyov wrote:
-> sil680_sel{dev|reg}() return a PCI config space address but needlessly
-> use the *unsigned long* type for that,  whereas the PCI config space
-> accessors take *int* for the address parameter.  Switch these functions
-> to returning *int*, updating the local variables at their call sites.
-> Add the empty lines after some declarations, while at it...
+On 4/10/22 15:30, Zheyu Ma wrote:
+> Hello,
 > 
-> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
-> analysis tool.
-> 
-> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
-> 
-> ---
-> This patch is against the 'for-next' branch of Damien Le Moal's 'libata.git'
-> repo.
-> 
->  drivers/ata/pata_sil680.c |   27 +++++++++++++++------------
->  1 file changed, 15 insertions(+), 12 deletions(-)
-> 
-> Index: libata/drivers/ata/pata_sil680.c
-> ===================================================================
-> --- libata.orig/drivers/ata/pata_sil680.c
-> +++ libata/drivers/ata/pata_sil680.c
-> @@ -47,9 +47,10 @@
->   *	criticial.
->   */
->  
-> -static unsigned long sil680_selreg(struct ata_port *ap, int r)
-> +static int sil680_selreg(struct ata_port *ap, int r)
->  {
-> -	unsigned long base = 0xA0 + r;
-> +	int base = 0xA0 + r;
-> +
->  	base += (ap->port_no << 4);
->  	return base;
+> I found a bug in the pata_marvell module.
+> When probing the driver, it seems to trigger the error path and
+> executes the function marvell_cable_detect(), but the
+> 'ap->ioaddr.bmdma_addr' is not initialized, which causes a warning.
 
-The variable "base" is rather useless here... A simple:
+I do not have this hardware so I cannot debug this. Please debug it and
+send a patch. bmdma_addr is normally set in ata_pci_bmdma_init(), but some
+drivers set it manually in their probe functions. No idea about the
+marvell driver, I have not checked it.
 
-	return 0xA0 + r + (ap->port_no << 4);
-
-would work too and is a lot cleaner.
-
->  }
-> @@ -65,9 +66,10 @@ static unsigned long sil680_selreg(struc
->   *	the unit shift.
->   */
->  
-> -static unsigned long sil680_seldev(struct ata_port *ap, struct ata_device *adev, int r)
-> +static int sil680_seldev(struct ata_port *ap, struct ata_device *adev, int r)
->  {
-> -	unsigned long base = 0xA0 + r;
-> +	int base = 0xA0 + r;
-> +
->  	base += (ap->port_no << 4);
->  	base |= adev->devno ? 2 : 0;
->  	return base;
-> @@ -85,8 +87,9 @@ static unsigned long sil680_seldev(struc
->  static int sil680_cable_detect(struct ata_port *ap)
->  {
->  	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-> -	unsigned long addr = sil680_selreg(ap, 0);
-> +	int addr = sil680_selreg(ap, 0);
->  	u8 ata66;
-> +
->  	pci_read_config_byte(pdev, addr, &ata66);
->  	if (ata66 & 1)
->  		return ATA_CBL_PATA80;
-> @@ -113,9 +116,9 @@ static void sil680_set_piomode(struct at
->  		0x328A, 0x2283, 0x1281, 0x10C3, 0x10C1
->  	};
->  
-> -	unsigned long tfaddr = sil680_selreg(ap, 0x02);
-> -	unsigned long addr = sil680_seldev(ap, adev, 0x04);
-> -	unsigned long addr_mask = 0x80 + 4 * ap->port_no;
-> +	int tfaddr = sil680_selreg(ap, 0x02);
-> +	int addr = sil680_seldev(ap, adev, 0x04);
-> +	int addr_mask = 0x80 + 4 * ap->port_no;
->  	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
->  	int pio = adev->pio_mode - XFER_PIO_0;
->  	int lowest_pio = pio;
-> @@ -165,9 +168,9 @@ static void sil680_set_dmamode(struct at
->  	static const u16 dma_table[3] = { 0x2208, 0x10C2, 0x10C1 };
->  
->  	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-> -	unsigned long ma = sil680_seldev(ap, adev, 0x08);
-> -	unsigned long ua = sil680_seldev(ap, adev, 0x0C);
-> -	unsigned long addr_mask = 0x80 + 4 * ap->port_no;
-> +	int ma = sil680_seldev(ap, adev, 0x08);
-> +	int ua = sil680_seldev(ap, adev, 0x0C);
-> +	int addr_mask = 0x80 + 4 * ap->port_no;
->  	int port_shift = adev->devno * 4;
->  	u8 scsc, mode;
->  	u16 multi, ultra;
-> @@ -219,7 +222,7 @@ static void sil680_sff_exec_command(stru
->  static bool sil680_sff_irq_check(struct ata_port *ap)
->  {
->  	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
-> -	unsigned long addr	= sil680_selreg(ap, 1);
-> +	int addr		= sil680_selreg(ap, 1);
->  	u8 val;
->  
->  	pci_read_config_byte(pdev, addr, &val);
+> 
+> The following log can reveal it:
+> 
+> [    3.453943] Bad IO access at port 0x1 (return inb(port))
+> [    3.454430] WARNING: CPU: 7 PID: 291 at lib/iomap.c:44 ioread8+0x4a/0x60
+> [    3.457962] RIP: 0010:ioread8+0x4a/0x60
+> [    3.466362] Call Trace:
+> [    3.466572]  <TASK>
+> [    3.466756]  marvell_cable_detect+0xad/0xf0 [pata_marvell]
+> [    3.467699]  ata_eh_recover+0x3520/0x6cc0
+> [    3.473262]  ata_do_eh+0x49/0x3c0
+> [    3.473906]  ata_scsi_port_error_handler+0xd96/0x1d00
+> [    3.474355]  ata_scsi_error+0x243/0x290
+> [    3.475428]  scsi_error_handler+0x2ff/0xea0
+> [    3.477244]  kthread+0x262/0x2e0
 
 
 -- 
