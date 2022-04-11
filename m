@@ -2,151 +2,147 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CDFAC433F5
-	for <linux-ide@archiver.kernel.org>; Mon, 11 Apr 2022 13:11:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73950C433EF
+	for <linux-ide@archiver.kernel.org>; Mon, 11 Apr 2022 19:25:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345599AbiDKNNR (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 11 Apr 2022 09:13:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56022 "EHLO
+        id S1349585AbiDKT2G (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 11 Apr 2022 15:28:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243841AbiDKNNQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Apr 2022 09:13:16 -0400
-Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2327533A24;
-        Mon, 11 Apr 2022 06:11:02 -0700 (PDT)
-Received: by mail-lf1-x12d.google.com with SMTP id j9so18466223lfe.9;
-        Mon, 11 Apr 2022 06:11:02 -0700 (PDT)
+        with ESMTP id S1349627AbiDKT13 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Apr 2022 15:27:29 -0400
+Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB89F140EB;
+        Mon, 11 Apr 2022 12:25:13 -0700 (PDT)
+Received: by mail-lf1-x12b.google.com with SMTP id o2so6777068lfu.13;
+        Mon, 11 Apr 2022 12:25:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=ZurpZPH9/XvTV+q28AqNPKo8HpQJeOPWU72XXWgoA7I=;
-        b=mdHpR4mlvLLNHx2AIL60gDkyRDKy5lawfs1NMaLHX8JLolamJQ670QeeOLFjBXmM7F
-         oGS5bvQsOYzR/RxeqDPGkgnKHUggGHucVLLYQyLTpJHXwtxrBIepbd8wrnGNfRRcixGz
-         UHgcy25T8emd1g1/h7Woom8k2y05zOO3jUviDiY1/P9wDTVi2PiDNmclre/i3593JLAF
-         1hMhEkQy3FJDGQtlxnR70WhOaNjKr985UoolK6xKjwsWMCU933C6DYnxWwOKMoAAxRFY
-         IWe6cyCdVaWGIHCC9MVJbwGb2FLtXoVdy1YVy/RC/4xVo1sdpmYcCu6fPGWhump+dt+Y
-         LLlg==
+        bh=UOaY0dvj8Jn2enDiXoZlQyItDDBhGi0Z21ViX26p86o=;
+        b=U6kjZXIbUv4b7puIl3hY+AHHqCRrcLP/bQOpqdVlTrqNd5ke6pZelqt6KH5sxiL/xh
+         qYdpdzV97YmJLaUUGeBYO8oYSqUcvVrNr8ZDz/i3aFSQtcXtQngT0zZt/G3zSKBtiNOG
+         UvyCAsu/NwHmTmMjjqyscuZXLFv/sijhPs3bLZGRwATOnoRbfm1TlNykjwd1+7prXJFJ
+         A4mRSnVmKAzM7tRpsCbuaxXyU8iVofSCCoSrlETtaCjAkRE7L8CTaQlQVUsArXR6mUTP
+         aNyfhDFLDdkT9og3qXJ/aDaV2z+FkgfhJDXVyR/tUBUNOS4qC2TCeWXT/f68LaLEcLtA
+         FF9g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=ZurpZPH9/XvTV+q28AqNPKo8HpQJeOPWU72XXWgoA7I=;
-        b=8Q6qpv4d8P0Tf9Ib7EgucmqN+njzjzE5Etpq/nbu8bJa919/JVhWhDNhWiD7yh3z2i
-         ddfODXr10MwFZfmRYyWeEyvYb+bXA77WmtoCddyWhN3UnZ8r4F4zVv5TUi9cZLjMdVQw
-         il1qBgwE+7s5K0xpVklkagQ74Ie4kqNvQR/jg66OU6y0NgclDy1cMh4pHzd3V9d3S6/S
-         ce819+l4saj2icwXwCdHVVfaWAxS3OaujjXWIgfpsIe5AmILnLfh+ubgzsMAKjt60hBx
-         mWw1cGZOixFCEbe4KVNeklXx4IVp0YRU0ag3QMH4+M7tMT3mgNrB3usmHlgaQc4RuVX7
-         ar0A==
-X-Gm-Message-State: AOAM531NKc6V8haW8Yfez1qDvakbzPo58cpazi2v4Vs5ajkWowrf4WtX
-        xKvkHOMomv2CcFtKBINoY1g=
-X-Google-Smtp-Source: ABdhPJzZE4i/TCOQCxwZeUhsIX3TA/RYQPovK58tHRtgSzjaf6SdwCbjKTbbB7guFXEa5oBIRKcdOw==
-X-Received: by 2002:a05:6512:2301:b0:44a:394e:2add with SMTP id o1-20020a056512230100b0044a394e2addmr21439210lfu.177.1649682659878;
-        Mon, 11 Apr 2022 06:10:59 -0700 (PDT)
+        bh=UOaY0dvj8Jn2enDiXoZlQyItDDBhGi0Z21ViX26p86o=;
+        b=5DAxOgoHwQMs7VG+YwOT1U3bXPHchGMYo9ANs8MHXgEGCqP33V+zGC/6XcVLl6Y24h
+         WyiCDQ2O5fvqEdyt2GqIuDAKIRMM25PJcunN4NZBN0XA4mUAnhRhFcL5uND0VQHqmgao
+         4L4tvHvM6ObKzE3J87yiKQ/YGw/ILzYI+o2U/1/IpjNX7DxWYxwWTcG/Xza7ZkaEtDFm
+         06I6E+DqUxndMW08/xw1v/K4pFYEpqfT1SqunEn5YQ8TAZgErVu0t+u5bnzYCWiYfZ1D
+         XrfWmIqiL7w4FszwDnORRDogjIV1bOuWZSF3hzlNpFegclQfBsAiB/GmSL0H8CKrQzKm
+         X7tw==
+X-Gm-Message-State: AOAM532MFOWgGMs/NvObKKnVzGp8NV6NNmmUU3ipEdN3G+p8oObbBJBR
+        jP4N/jYYQ1rdZWXq8rqyF9k=
+X-Google-Smtp-Source: ABdhPJy4eqh2ZkmCD78meCjWFsinmbRWaCH5CMTmE9vvWebzuCAVfufD3H1i2eU8do0lH/TsVTWDnA==
+X-Received: by 2002:ac2:5922:0:b0:46a:2396:f575 with SMTP id v2-20020ac25922000000b0046a2396f575mr13092449lfi.654.1649705111898;
+        Mon, 11 Apr 2022 12:25:11 -0700 (PDT)
 Received: from mobilestation ([95.79.134.149])
-        by smtp.gmail.com with ESMTPSA id c3-20020a2e9d83000000b0024b5382fef9sm982072ljj.71.2022.04.11.06.10.58
+        by smtp.gmail.com with ESMTPSA id u2-20020a2e8542000000b0024b4b8dd24dsm1211010ljj.140.2022.04.11.12.25.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Apr 2022 06:10:59 -0700 (PDT)
-Date:   Mon, 11 Apr 2022 16:10:57 +0300
+        Mon, 11 Apr 2022 12:25:11 -0700 (PDT)
+Date:   Mon, 11 Apr 2022 22:25:09 +0300
 From:   Serge Semin <fancer.lancer@gmail.com>
 To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>,
-        Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
+        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH 07/21] ata: libahci_platform: Sanity check the DT child
- nodes number
-Message-ID: <20220411131057.c62c3jrfcyc55del@mobilestation>
+        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH 01/21] dt-bindings: ata: sata: Extend number of SATA ports
+Message-ID: <20220411192509.odx6vn7kxnfs6mxo@mobilestation>
 References: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
- <20220324001628.13028-8-Sergey.Semin@baikalelectronics.ru>
- <ab7f2a2e-0ca9-ed97-e4ed-bf8ef0ed69a5@opensource.wdc.com>
- <d651ccef-1ba6-3063-66d8-410b5517cc3d@omp.ru>
- <a2597470-8998-92a4-8085-0503974ce237@opensource.wdc.com>
+ <20220324001628.13028-2-Sergey.Semin@baikalelectronics.ru>
+ <92699f07-0efc-e471-d886-c7d6c83f352e@opensource.wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a2597470-8998-92a4-8085-0503974ce237@opensource.wdc.com>
+In-Reply-To: <92699f07-0efc-e471-d886-c7d6c83f352e@opensource.wdc.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Thu, Mar 24, 2022 at 05:13:45PM +0900, Damien Le Moal wrote:
-> On 3/24/22 17:12, Sergey Shtylyov wrote:
-> > On 3/24/22 4:40 AM, Damien Le Moal wrote:
+On Tue, Mar 29, 2022 at 05:15:12PM +0900, Damien Le Moal wrote:
+> On 3/24/22 09:16, Serge Semin wrote:
+> > The denoted in the description upper limit only concerns the Port
+> > Multipliers, but not the actual SATA ports. It's an external device
+> > attached to a SATA port in order to access more than one SATA-drive. So
+> > when it's attached to a SATA port it just extends the port capability
+> > while the number of actual SATA ports stays the same. For instance on AHCI
+> > controllers the number of actual ports is determined by the CAP.NP field
+> > and the PI (Ports Implemented) register. AFAICS in general the maximum
+> > number of SATA ports depends on the particular controller implementation.
+> > Generic AHCI controller can't have more than 32 ports (since CAP.NP is of
+> > 5 bits wide and PI register is 32-bits size), while DWC AHCI SATA
+> > controller can't be configured with more than 8 ports activated. So let's
+> > discard the SATA ports reg-property restrictions and just make sure that
+> > it consists of a single reg-item.
 > > 
-> >>> Having greater than (AHCI_MAX_PORTS = 32) ports detected isn't that
-> >>> critical from the further AHCI-platform initialization point of view since
-> >>> exceeding the ports upper limit will cause allocating more resources than
-> >>> will be used afterwards. But detecting too many child DT-nodes doesn't
-> >>> seem right since it's very unlikely to have it on an ordinary platform. In
-> >>> accordance with the AHCI specification there can't be more than 32 ports
-> >>> implemented at least due to having the CAP.NP field of 4 bits wide and the
-> >>> PI register of dword size. Thus if such situation is found the DTB must
-> >>> have been corrupted and the data read from it shouldn't be reliable. Let's
-> >>> consider that as an erroneous situation and halt further resources
-> >>> allocation.
-> >>>
-> >>> Note it's logically more correct to have the nports set only after the
-> >>> initialization value is checked for being sane. So while at it let's make
-> >>> sure nports is assigned with a correct value.
-> >>>
-> >>> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> >>> ---
-> >>>  drivers/ata/libahci_platform.c | 16 +++++++++++-----
-> >>>  1 file changed, 11 insertions(+), 5 deletions(-)
-> >>>
-> >>> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-> >>> index 4fb9629c03ab..845042295b97 100644
-> >>> --- a/drivers/ata/libahci_platform.c
-> >>> +++ b/drivers/ata/libahci_platform.c
-> >>> @@ -470,15 +470,21 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
-> >>>  		}
-> >>>  	}
-> >>>  
-> >>> -	hpriv->nports = child_nodes = of_get_child_count(dev->of_node);
-> >>> -
-> >>>  	/*
-> >>> -	 * If no sub-node was found, we still need to set nports to
-> >>> -	 * one in order to be able to use the
-> >>> +	 * Too many sub-nodes most likely means having something wrong with
-> >>> +	 * firmware. If no sub-node was found, we still need to set nports
-> >>> +	 * to one in order to be able to use the
-> >>>  	 * ahci_platform_[en|dis]able_[phys|regulators] functions.
-> >>>  	 */
-
-> >>> -	if (!child_nodes)
-> >>> +	child_nodes = of_get_child_count(dev->of_node);
-> >>> +	if (child_nodes > AHCI_MAX_PORTS) {
-> >>> +		rc = -EINVAL;
-> >>> +		goto err_out;
-> >>> +	} else if (!child_nodes) {
-> >>
-> >> No need for "else" after a return.
+> > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+> > ---
+> >  Documentation/devicetree/bindings/ata/sata-common.yaml | 7 +++----
+> >  1 file changed, 3 insertions(+), 4 deletions(-)
 > > 
-> >    You meant *goto*? :-)
+> > diff --git a/Documentation/devicetree/bindings/ata/sata-common.yaml b/Documentation/devicetree/bindings/ata/sata-common.yaml
+> > index 7ac77b1c5850..c619f0ae72fb 100644
+> > --- a/Documentation/devicetree/bindings/ata/sata-common.yaml
+> > +++ b/Documentation/devicetree/bindings/ata/sata-common.yaml
+> > @@ -41,11 +41,10 @@ patternProperties:
+> >      properties:
+> >        reg:
+> >          minimum: 0
+> > -        maximum: 14
 > 
-> Yes :) No need for the else after goto.
 
-Personally I prefer having the chained if-else-if-else-etc statement
-in such cases from readability and maintainability points of view (it
-makes the code reader to more easily perceive that all the variable
-value ranges are covered with no reference to the if-else clause
-statements). But in this particular case dropping the else word lets
-us to convert the afterwards statement into a single line
-+	hpriv->nports = child_nodes ?: 1;
-So why not. I'll drop 'else' from there then.
+> Why remove this ? Since AHCI can have up to 32 ports, then change the
+> value to 31. As the comment at the top of the file says, this is not
+> intended to be a device tree binding spec, but defines properties common
+> to most adapters.
+
+Right, but the schema determines the common !SATA! controllers properties,
+while you are referring to the AHCI-specific limit. As I said in the patch
+log AFAICS in general the SATA controllers may have any number of ports.
+The number is determined by the hardware designers needs only. Thus the
+actual constraints needs to be specified in the controller-specific
+YAML-schema (the one which will $ref to sata-common.yaml).
+
+Though I couldn't find any ATA device driver in the kernel which would
+handle a device with even 32 ports, not to mention a greater number.
+So replacing it with 31 might be reasonable after all. But me failing
+to find any such device doesn't me it can't exist. Thus I've decided to
+drop the upper limit completely.
+
+> 
+> >          description:
+> > -          The ID number of the drive port SATA can potentially use a port
+> > -          multiplier making it possible to connect up to 15 disks to a single
+> > -          SATA port.
+> > +          The ID number of the SATA port. Aside with being directly used
+> > +          each port can have a Port Multiplier attached thus allowing to
+> > +          access more than one drive by means of a single channel.
+> 
+
+> Please add a comma after "Aside with being directly used", otherwise the
+> sentence is hard to understand. And replace "channel" with "SATA port" to
+> stick with the terms defined here.
+
+Ok.
 
 -Sergey
 
 > 
-> > 
-> > [...]
-> > 
-> > MBR, Sergey
+> >  
+> >  additionalProperties: true
+> >  
 > 
 > 
 > -- 
