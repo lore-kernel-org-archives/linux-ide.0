@@ -2,54 +2,84 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9884DC433F5
-	for <linux-ide@archiver.kernel.org>; Mon, 11 Apr 2022 20:52:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6461BC433EF
+	for <linux-ide@archiver.kernel.org>; Mon, 11 Apr 2022 22:49:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230294AbiDKUy0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 11 Apr 2022 16:54:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33670 "EHLO
+        id S244215AbiDKWvN (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 11 Apr 2022 18:51:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33488 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229910AbiDKUyZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Apr 2022 16:54:25 -0400
-Received: from mail-lj1-x22f.google.com (mail-lj1-x22f.google.com [IPv6:2a00:1450:4864:20::22f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C17211BE8D;
-        Mon, 11 Apr 2022 13:52:09 -0700 (PDT)
-Received: by mail-lj1-x22f.google.com with SMTP id 15so6836942ljw.8;
-        Mon, 11 Apr 2022 13:52:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=1fDNATJkyI5vBImHKEeTc9B3VeszzusoRqcTsbo8v2w=;
-        b=NVEVfKnOCjNi23AWnXh1onxSYIibMpJ+cqdIO1cYsPCRrafc2NsdNeZuDTTw5TNPrj
-         f8mDzmYvEn8/phwmDJuMZn92Jb2bTCT518T1eKTH9Az5+3NYdBa6YJLP3LzIgNH0n/No
-         3Yd7BbtVwokdoyk9JCOqseG3ThylUFlWjtyHY/oXRHokXbb1FmNEjmTujhzEBc9kMiCH
-         DlBRyghhPN9L4nNX5fe2dsBjq4haLUoIFalHdFy7QW35CCmp7GU9QjWPt3ApdHL5Cmn6
-         7UWP6C+pvyr0zDL3rWCD+VNkWS8obVEBTLDnDNckZFygNxhX9ehV8eLfLP/Ww6qsWKFH
-         zq5A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=1fDNATJkyI5vBImHKEeTc9B3VeszzusoRqcTsbo8v2w=;
-        b=H4tFZPAxp1jahdlLPJzoniF7Shrjj8dSmD2M7ANdETitFhN3WirWmwZym01PxUl34D
-         b1+Fz9JCFSUq0NEakgaxibjf4mmF2sgoZB+Y7+OdhtcLiM/vF48jdDFTjsjwtP0q6Rt2
-         zRvw7ex4N6rAVrNmdCrdF0pbBTNUTZfpnGYtTPtxQNBizWs1tww6CGygybUXEI6x+a5C
-         geKpH20RrSeBAoQZ4U0O9IIRj3JuejaXfxbafIYmTWlarJuH3XlXCNGCYubo6sGY5jmh
-         q0W5LZBWVk7/p9e2yPvO31ygKiM/7Q+mcWg3Tz31s88EFA4hTs+PzcyLT/BqmtJCB8ib
-         o4bw==
-X-Gm-Message-State: AOAM531zx365Dh4rGN4MyC6VytiT16N0chpuumh2ftx9A/A33fvY3BJg
-        qMu41PTsiimcMpAhSd/UjAE=
-X-Google-Smtp-Source: ABdhPJwi05zNjUUYsFAh87JAKA9CCGS5Ug/w31ak5+m0rvsUbAtfR7XG3vZ3296xWyBe7s2xAf6YnQ==
-X-Received: by 2002:a05:651c:2124:b0:24b:6b4d:870b with SMTP id a36-20020a05651c212400b0024b6b4d870bmr1403208ljq.299.1649710327807;
-        Mon, 11 Apr 2022 13:52:07 -0700 (PDT)
-Received: from mobilestation ([95.79.134.149])
-        by smtp.gmail.com with ESMTPSA id p6-20020a196046000000b00464f80a0389sm1393772lfk.33.2022.04.11.13.52.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Apr 2022 13:52:07 -0700 (PDT)
-Date:   Mon, 11 Apr 2022 23:52:05 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+        with ESMTP id S232900AbiDKWvL (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Apr 2022 18:51:11 -0400
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9F6E2ED73
+        for <linux-ide@vger.kernel.org>; Mon, 11 Apr 2022 15:48:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1649717335; x=1681253335;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=sU/ZOAq3Zhx+cNy7Kisbffx9HGFTvONOYugeUf6D9Wg=;
+  b=YJmDoscMAVwjAPOytVomwA3nGM5R8vLupku0eYvclrNJoRP6TEt/Txrq
+   A8sWsr29pInBp/rvONFIe1XWfjOBEKVtf01UDrxZS+cYShbf6+znskH26
+   6aRezjMO0W923p8nx7TaXISh7QlphFJHjeQjIvjJGnGlhKMKY2q3LP16x
+   hTb6s0YZqYVrVoDk80lzbwPNZpVB4Ijq2wsg9W0joTQMmr1jxAAM4Ll2O
+   DNwDWruAQ6fqiOEk4EY/zDg6+DCHpTj1TlFbnvsp+C2kbWSrFI5AzzauH
+   UQp5DwrLlkU2Cpz23/FOhUaJ5yCMTXfB2sA+aD5TdKpPAWP1EA5vCvf/m
+   g==;
+X-IronPort-AV: E=Sophos;i="5.90,252,1643644800"; 
+   d="scan'208";a="301849852"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 12 Apr 2022 06:48:54 +0800
+IronPort-SDR: L9I2AJFYCYHIQ9n03YkK34lHdiNvgcuxQ98jyzb6ybTJddarkUj55XTmVVWnskOxuMPE8BlTTq
+ v3l6hFtM4cHdQYn95zJdwvLhqec8iRfHfKI/jkE5VIhYfDy3mvIN1qiMkFutvNcB1l/4FUtDfs
+ Q/jQ8DrHfPhxPHfXrfzhAda7r1AA/2n/hS+qpHP6LFwJ2lWrKfWBWVawjrqePAoKdWRhQkUAlj
+ J7JyUNL8SNFZTsYTn1R527u3r7+bzyIGDRB9HlpyZs83PAHwEklb0ajlW10yGj7A7FBXjTf0Ck
+ YOoJ6Z1zMkGnzReII5TPTpv3
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Apr 2022 15:20:11 -0700
+IronPort-SDR: 5L4U16JzyKTxnzh6dRamYbq0w8etzzEXoBWcfTM2w3XhGlfquVDU982vlyqlNv+78fAgKhtfjR
+ TdMyoyrseCUZ69hSCqyJxcQlGVk4S6Hywfji0PDP2Cyr2eDpkhnvpkRUmxmJ0p8SJoG1qvlhl5
+ KmsnhBaAeGJt9n1nkvcpm7IWLBN2oZ9+XEw+fh4Gcw6ZDKYqyTPV6SOOlV7XD2vyz+hNmiiJjs
+ vZzDNoG0slf7M739SWmoqt39PiW7ukCTwt3Q4jJQzb5S9meS2bKOr/lncKKKMumtXngvrxFQW6
+ ais=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 11 Apr 2022 15:48:55 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KckYL1ZTXz1SHwl
+        for <linux-ide@vger.kernel.org>; Mon, 11 Apr 2022 15:48:54 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1649717333; x=1652309334; bh=sU/ZOAq3Zhx+cNy7Kisbffx9HGFTvONOYug
+        eUf6D9Wg=; b=qidKUV31MocT0RrE1UOp/tosJ2pgPBI2P560GwpOnx1onGII2de
+        AtWCsMkU2Nc7TwtY8JIu/OCMJ3cAWmOQmH+fIgAUNbucueZ6VvbLrb010Vh5TP4k
+        BtO91/UuoP9Q43Z2UGZ/tSqGZ7frsRl1ut+CI8mf23geVHoYWVbVQutbDsjR4IuU
+        d3YBFM79XkmwXRCB41+97BckNrhBLo2kjZUO+pqMFndYEZOgaJa9A9uOOSqs3SRa
+        CGt8n1asXGK1w2mdW5dzycc1HDiey8CLDgDiqp1c6PYV3+aOkQV1eLkGT6GPKLQx
+        kS8MkuRJTSMd+UKUeOroDFk0gdKsWeVAu7g==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id oEgv4XRErRmF for <linux-ide@vger.kernel.org>;
+        Mon, 11 Apr 2022 15:48:53 -0700 (PDT)
+Received: from [10.225.163.9] (unknown [10.225.163.9])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KckYH5f7Rz1Rvlx;
+        Mon, 11 Apr 2022 15:48:51 -0700 (PDT)
+Message-ID: <5ae5764f-ca51-9c2d-c13f-cfe855bda45e@opensource.wdc.com>
+Date:   Tue, 12 Apr 2022 07:48:50 +0900
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.7.0
+Subject: Re: [PATCH 12/21] ata: libahci: Discard redundant force_port_map
+ parameter
+Content-Language: en-US
+To:     Serge Semin <fancer.lancer@gmail.com>
 Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Hans de Goede <hdegoede@redhat.com>,
         Jens Axboe <axboe@kernel.dk>,
@@ -57,157 +87,65 @@ Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
         Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
         linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH 12/21] ata: libahci: Discard redundant force_port_map
- parameter
-Message-ID: <20220411205205.p5vnqvscgfb2siej@mobilestation>
 References: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
  <20220324001628.13028-13-Sergey.Semin@baikalelectronics.ru>
  <b06a8382-d5c1-e3a5-8577-692fa82cb3c1@opensource.wdc.com>
  <20220411121151.vm6wmtalbl2lgtgo@mobilestation>
  <bde34952-e244-a1c3-fc33-251d618d2bb4@opensource.wdc.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bde34952-e244-a1c3-fc33-251d618d2bb4@opensource.wdc.com>
+ <20220411205205.p5vnqvscgfb2siej@mobilestation>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <20220411205205.p5vnqvscgfb2siej@mobilestation>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, Apr 11, 2022 at 09:25:03PM +0900, Damien Le Moal wrote:
-> On 4/11/22 21:11, Serge Semin wrote:
-> > On Thu, Mar 24, 2022 at 11:05:58AM +0900, Damien Le Moal wrote:
-> >> On 3/24/22 09:16, Serge Semin wrote:
-> >>> Currently there are four port-map-related fields declared in the
-> >>> ahci_host_priv structure and used to setup the HBA ports mapping. First
-> >>> the ports-mapping is read from the PI register and immediately stored in
-> >>> the saved_port_map field. If forced_port_map is initialized with non-zero
-> >>> value then its value will have greater priority over the value read from
-> >>> PI, thus it will override the saved_port_map field. That value will be then
-> >>> masked by a non-zero mask_port_map field and after some sanity checks it
-> >>> will be stored in the ahci_host_priv.port_map field as a final port
-> >>> mapping.
-> >>>
-> >>> As you can see the logic is a bit too complicated for such a simple task.
-> >>> We can freely get rid from at least one of the fields with no change to
-> >>> the implemented semantic. The force_port_map field can be replaced with
-> >>> taking non-zero saved_port_map value into account. So if saved_port_map is
-> >>> pre-initialized by the glue-driver/platform-specific code then it will
-> >>
-> > 
-> >> glue-driver == LLDD (low level device driver), for the entire series please.
-> > 
-> > Why? It's a normal term and well known amongst developers. I've used it
-> > in a plenty of my patches before and none of them has been questioned in that
-> > part so far.
+On 4/12/22 05:52, Serge Semin wrote:
+> On Mon, Apr 11, 2022 at 09:25:03PM +0900, Damien Le Moal wrote:
+>> On 4/11/22 21:11, Serge Semin wrote:
+>>> On Thu, Mar 24, 2022 at 11:05:58AM +0900, Damien Le Moal wrote:
+>>>> On 3/24/22 09:16, Serge Semin wrote:
+>>>>> Currently there are four port-map-related fields declared in the
+>>>>> ahci_host_priv structure and used to setup the HBA ports mapping. First
+>>>>> the ports-mapping is read from the PI register and immediately stored in
+>>>>> the saved_port_map field. If forced_port_map is initialized with non-zero
+>>>>> value then its value will have greater priority over the value read from
+>>>>> PI, thus it will override the saved_port_map field. That value will be then
+>>>>> masked by a non-zero mask_port_map field and after some sanity checks it
+>>>>> will be stored in the ahci_host_priv.port_map field as a final port
+>>>>> mapping.
+>>>>>
+>>>>> As you can see the logic is a bit too complicated for such a simple task.
+>>>>> We can freely get rid from at least one of the fields with no change to
+>>>>> the implemented semantic. The force_port_map field can be replaced with
+>>>>> taking non-zero saved_port_map value into account. So if saved_port_map is
+>>>>> pre-initialized by the glue-driver/platform-specific code then it will
+>>>>
+>>>
+>>>> glue-driver == LLDD (low level device driver), for the entire series please.
+>>>
+>>> Why? It's a normal term and well known amongst developers. I've used it
+>>> in a plenty of my patches before and none of them has been questioned in that
+>>> part so far.
+>>
 > 
-
-> This term is not used in libata, nor do I remember seeing it used in SCSI
-> or block subsystem either. We always talk about mid-layer (ahci platform)
-> and LLDD (adapter driver).
-
-Great, do we need to learn the subsystem-specific dictionary now
-before submitting the patches for it? =)
-Really, you are asking me to change one term to its synonym just
-because it's mainly unused here. Now you know what it means, the
-others can easily google it and get to learn something new. Win-win.)
-
--Sergey
-
+>> This term is not used in libata, nor do I remember seeing it used in SCSI
+>> or block subsystem either. We always talk about mid-layer (ahci platform)
+>> and LLDD (adapter driver).
 > 
-> > 
-> > -Sergey
-> > 
-> >>
-> >>> have greater priority over the value read from PI register and will be
-> >>> used as actual HBA ports mapping later on. Thus the ports map forcing task
-> >>> will be just transferred from the force_port_map to saved_port_map field.
-> >>>
-> >>> This modification will perfectly fit into the feature of having OF-based
-> >>> initialization of the HW-init HBA CSR fields we are about to introduce in
-> >>> the next commit.
-> >>>
-> >>> Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-> >>> ---
-> >>>  drivers/ata/ahci.c             |  2 +-
-> >>>  drivers/ata/ahci.h             |  1 -
-> >>>  drivers/ata/libahci.c          | 10 ++++++----
-> >>>  drivers/ata/libahci_platform.c |  2 +-
-> >>>  4 files changed, 8 insertions(+), 7 deletions(-)
-> >>>
-> >>> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> >>> index ab5811ef5a53..8ce0d166cc8d 100644
-> >>> --- a/drivers/ata/ahci.c
-> >>> +++ b/drivers/ata/ahci.c
-> >>> @@ -654,7 +654,7 @@ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
-> >>>  {
-> >>>  	if (pdev->vendor == PCI_VENDOR_ID_JMICRON && pdev->device == 0x2361) {
-> >>>  		dev_info(&pdev->dev, "JMB361 has only one port\n");
-> >>> -		hpriv->force_port_map = 1;
-> >>> +		hpriv->saved_port_map = 1;
-> >>>  	}
-> >>>  
-> >>>  	/*
-> >>> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-> >>> index 04690b4168a3..519d148ecaea 100644
-> >>> --- a/drivers/ata/ahci.h
-> >>> +++ b/drivers/ata/ahci.h
-> >>> @@ -329,7 +329,6 @@ struct ahci_port_priv {
-> >>>  struct ahci_host_priv {
-> >>>  	/* Input fields */
-> >>>  	unsigned int		flags;		/* AHCI_HFLAG_* */
-> >>> -	u32			force_port_map;	/* force port map */
-> >>>  	u32			mask_port_map;	/* mask out particular bits */
-> >>>  
-> >>>  	void __iomem *		mmio;		/* bus-independent mem map */
-> >>> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-> >>> index 0ed484e04fd6..011175e82174 100644
-> >>> --- a/drivers/ata/libahci.c
-> >>> +++ b/drivers/ata/libahci.c
-> >>> @@ -453,7 +453,6 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
-> >>>  	 * reset.  Values without are used for driver operation.
-> >>>  	 */
-> >>>  	hpriv->saved_cap = cap = readl(mmio + HOST_CAP);
-> >>> -	hpriv->saved_port_map = port_map = readl(mmio + HOST_PORTS_IMPL);
-> >>>  
-> >>>  	/* CAP2 register is only defined for AHCI 1.2 and later */
-> >>>  	vers = readl(mmio + HOST_VERSION);
-> >>> @@ -517,10 +516,13 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
-> >>>  		cap &= ~HOST_CAP_SXS;
-> >>>  	}
-> >>>  
-> >>> -	if (hpriv->force_port_map && port_map != hpriv->force_port_map) {
-> >>> +	/* Override the HBA ports mapping if the platform needs it */
-> >>> +	port_map = readl(mmio + HOST_PORTS_IMPL);
-> >>> +	if (hpriv->saved_port_map && port_map != hpriv->saved_port_map) {
-> >>>  		dev_info(dev, "forcing port_map 0x%x -> 0x%x\n",
-> >>> -			 port_map, hpriv->force_port_map);
-> >>> -		port_map = hpriv->force_port_map;
-> >>> +			 port_map, hpriv->saved_port_map);
-> >>> +		port_map = hpriv->saved_port_map;
-> >>> +	} else {
-> >>>  		hpriv->saved_port_map = port_map;
-> >>>  	}
-> >>>  
-> >>> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-> >>> index febad33aa43c..5cbc2c42164d 100644
-> >>> --- a/drivers/ata/libahci_platform.c
-> >>> +++ b/drivers/ata/libahci_platform.c
-> >>> @@ -539,7 +539,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
-> >>>  	}
-> >>>  
-> >>>  	of_property_read_u32(dev->of_node,
-> >>> -			     "ports-implemented", &hpriv->force_port_map);
-> >>> +			     "ports-implemented", &hpriv->saved_port_map);
-> >>>  
-> >>>  	if (child_nodes) {
-> >>>  		for_each_child_of_node(dev->of_node, child) {
-> >>
-> >>
-> >> -- 
-> >> Damien Le Moal
-> >> Western Digital Research
-> 
-> 
-> -- 
-> Damien Le Moal
-> Western Digital Research
+> Great, do we need to learn the subsystem-specific dictionary now
+> before submitting the patches for it? =)
+> Really, you are asking me to change one term to its synonym just
+> because it's mainly unused here. Now you know what it means, the
+> others can easily google it and get to learn something new. Win-win.)
+
+I already knew what it meant, but it was unclear if my idea of what you
+meant was actually the same as yours. Sticking with the vocabulary already
+used since *a long time ago* makes life easier for reviewers and avoids
+confusion.
+
+-- 
+Damien Le Moal
+Western Digital Research
