@@ -2,149 +2,130 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73950C433EF
-	for <linux-ide@archiver.kernel.org>; Mon, 11 Apr 2022 19:25:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5A37C433F5
+	for <linux-ide@archiver.kernel.org>; Mon, 11 Apr 2022 19:35:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349585AbiDKT2G (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 11 Apr 2022 15:28:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51766 "EHLO
+        id S1347905AbiDKThO (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 11 Apr 2022 15:37:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40566 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349627AbiDKT13 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Apr 2022 15:27:29 -0400
-Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB89F140EB;
-        Mon, 11 Apr 2022 12:25:13 -0700 (PDT)
-Received: by mail-lf1-x12b.google.com with SMTP id o2so6777068lfu.13;
-        Mon, 11 Apr 2022 12:25:13 -0700 (PDT)
+        with ESMTP id S230134AbiDKThN (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Apr 2022 15:37:13 -0400
+Received: from mail-lj1-x231.google.com (mail-lj1-x231.google.com [IPv6:2a00:1450:4864:20::231])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A2D9D13DF0;
+        Mon, 11 Apr 2022 12:34:57 -0700 (PDT)
+Received: by mail-lj1-x231.google.com with SMTP id q14so21387682ljc.12;
+        Mon, 11 Apr 2022 12:34:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=UOaY0dvj8Jn2enDiXoZlQyItDDBhGi0Z21ViX26p86o=;
-        b=U6kjZXIbUv4b7puIl3hY+AHHqCRrcLP/bQOpqdVlTrqNd5ke6pZelqt6KH5sxiL/xh
-         qYdpdzV97YmJLaUUGeBYO8oYSqUcvVrNr8ZDz/i3aFSQtcXtQngT0zZt/G3zSKBtiNOG
-         UvyCAsu/NwHmTmMjjqyscuZXLFv/sijhPs3bLZGRwATOnoRbfm1TlNykjwd1+7prXJFJ
-         A4mRSnVmKAzM7tRpsCbuaxXyU8iVofSCCoSrlETtaCjAkRE7L8CTaQlQVUsArXR6mUTP
-         aNyfhDFLDdkT9og3qXJ/aDaV2z+FkgfhJDXVyR/tUBUNOS4qC2TCeWXT/f68LaLEcLtA
-         FF9g==
+        bh=XY09aeNDdy27g5n+8mYaLZ8aj3jA8D4AuzY9qvArx2Y=;
+        b=CrlPTJex9uZcReUMpaZU7pxCR8yfOYmc1UesawMhw3OHzLO3nhD4MtyyGqTLRQun92
+         w/oUwekNwIFJksydrkmzxZw8nifCnSw88KZJ45HK0jXwSI6HLS1O89g85wikMFrxz7Ts
+         woa4jo3U3vTRwFbS76kmGntwceTn9Gt/SY44tilQSVVguaZ1bo1oIqcdg7Mnf59c8mht
+         istLkdHCy+HHuMVr+C3KpAVOKu4e3EYr5t/9dxO2aCyeTPkSzFKGJdL4sehHeK/eqdcw
+         EKEKpwcPQAqm0dtBZA56jN+HAIOJc6qlY4PvEBFbm37AOMe3AgWyoxfPAjsLD7ykkJTa
+         V77A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=UOaY0dvj8Jn2enDiXoZlQyItDDBhGi0Z21ViX26p86o=;
-        b=5DAxOgoHwQMs7VG+YwOT1U3bXPHchGMYo9ANs8MHXgEGCqP33V+zGC/6XcVLl6Y24h
-         WyiCDQ2O5fvqEdyt2GqIuDAKIRMM25PJcunN4NZBN0XA4mUAnhRhFcL5uND0VQHqmgao
-         4L4tvHvM6ObKzE3J87yiKQ/YGw/ILzYI+o2U/1/IpjNX7DxWYxwWTcG/Xza7ZkaEtDFm
-         06I6E+DqUxndMW08/xw1v/K4pFYEpqfT1SqunEn5YQ8TAZgErVu0t+u5bnzYCWiYfZ1D
-         XrfWmIqiL7w4FszwDnORRDogjIV1bOuWZSF3hzlNpFegclQfBsAiB/GmSL0H8CKrQzKm
-         X7tw==
-X-Gm-Message-State: AOAM532MFOWgGMs/NvObKKnVzGp8NV6NNmmUU3ipEdN3G+p8oObbBJBR
-        jP4N/jYYQ1rdZWXq8rqyF9k=
-X-Google-Smtp-Source: ABdhPJy4eqh2ZkmCD78meCjWFsinmbRWaCH5CMTmE9vvWebzuCAVfufD3H1i2eU8do0lH/TsVTWDnA==
-X-Received: by 2002:ac2:5922:0:b0:46a:2396:f575 with SMTP id v2-20020ac25922000000b0046a2396f575mr13092449lfi.654.1649705111898;
-        Mon, 11 Apr 2022 12:25:11 -0700 (PDT)
+        bh=XY09aeNDdy27g5n+8mYaLZ8aj3jA8D4AuzY9qvArx2Y=;
+        b=yB4IYJdoeWSBJNzv8B2GwfTsmDMBEPvUdxEwzIvHv9va4io+Vh8H87wZyWFwNqKjpB
+         GosMBtxJGA21FsyDN2Ae+L36H8IM9ahvbRagt59rLtrjQZCxXQy6nmqm48o+k7x/JXvz
+         lwUrJ0aPRJWjX6LcPyuIqpnXBztoEEkoNFIsK2ZF3x4nLajEfeAQ4wOeJlESC0gVzy4V
+         yknbUAfZOcr1pjSWrHLs9le8ib/gfaV73vsFVpvj6CnFmQJTgyOJGVzmGwEjZNgDCOTY
+         ccqqybMEReXweSwAu4yT8pdT10Cv2xMVPxX0LWXJCkAmrUU93DxV3rpifPifwieGcA5C
+         Tt0A==
+X-Gm-Message-State: AOAM531qWBiRtEpPN0i1lChQdP/kxHpLHO/e9HtTRt0bZJWjzm3YBHr6
+        BdxdQKgvtOwgEJ0d2xzTZmE=
+X-Google-Smtp-Source: ABdhPJwJBcYSp3wS5Fc7wegOZL6c9MK/lTd1t4do8unXY4u8Wb3a0eTUmWFglVDnwAbwwcc/qnIDGw==
+X-Received: by 2002:a2e:b94b:0:b0:249:6181:468a with SMTP id 11-20020a2eb94b000000b002496181468amr21543188ljs.113.1649705695909;
+        Mon, 11 Apr 2022 12:34:55 -0700 (PDT)
 Received: from mobilestation ([95.79.134.149])
-        by smtp.gmail.com with ESMTPSA id u2-20020a2e8542000000b0024b4b8dd24dsm1211010ljj.140.2022.04.11.12.25.10
+        by smtp.gmail.com with ESMTPSA id a7-20020a19fc07000000b0046b90a9f0f9sm889004lfi.1.2022.04.11.12.34.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Apr 2022 12:25:11 -0700 (PDT)
-Date:   Mon, 11 Apr 2022 22:25:09 +0300
+        Mon, 11 Apr 2022 12:34:53 -0700 (PDT)
+Date:   Mon, 11 Apr 2022 22:34:52 +0300
 From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+To:     Rob Herring <robh+dt@kernel.org>
 Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>, Rob Herring <robh+dt@kernel.org>,
-        Linus Walleij <linus.walleij@linaro.org>,
+        Jens Axboe <axboe@kernel.dk>,
         Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
         Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" 
+        <linux-ide@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         devicetree@vger.kernel.org
-Subject: Re: [PATCH 01/21] dt-bindings: ata: sata: Extend number of SATA ports
-Message-ID: <20220411192509.odx6vn7kxnfs6mxo@mobilestation>
+Subject: Re: [PATCH 02/21] dt-bindings: ata: Convert AHCI-bindings to DT
+ schema
+Message-ID: <20220411193452.tfs5x2b3ol6dtpwv@mobilestation>
 References: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
- <20220324001628.13028-2-Sergey.Semin@baikalelectronics.ru>
- <92699f07-0efc-e471-d886-c7d6c83f352e@opensource.wdc.com>
+ <20220324001628.13028-3-Sergey.Semin@baikalelectronics.ru>
+ <CAL_JsqKnnVKmCA6he_A-OAgu1xD1bjHBy4_eXf64q2LJ9+L3_g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <92699f07-0efc-e471-d886-c7d6c83f352e@opensource.wdc.com>
+In-Reply-To: <CAL_JsqKnnVKmCA6he_A-OAgu1xD1bjHBy4_eXf64q2LJ9+L3_g@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Mar 29, 2022 at 05:15:12PM +0900, Damien Le Moal wrote:
-> On 3/24/22 09:16, Serge Semin wrote:
-> > The denoted in the description upper limit only concerns the Port
-> > Multipliers, but not the actual SATA ports. It's an external device
-> > attached to a SATA port in order to access more than one SATA-drive. So
-> > when it's attached to a SATA port it just extends the port capability
-> > while the number of actual SATA ports stays the same. For instance on AHCI
-> > controllers the number of actual ports is determined by the CAP.NP field
-> > and the PI (Ports Implemented) register. AFAICS in general the maximum
-> > number of SATA ports depends on the particular controller implementation.
-> > Generic AHCI controller can't have more than 32 ports (since CAP.NP is of
-> > 5 bits wide and PI register is 32-bits size), while DWC AHCI SATA
-> > controller can't be configured with more than 8 ports activated. So let's
-> > discard the SATA ports reg-property restrictions and just make sure that
-> > it consists of a single reg-item.
-> > 
+On Mon, Mar 28, 2022 at 02:32:06PM -0500, Rob Herring wrote:
+> On Wed, Mar 23, 2022 at 7:16 PM Serge Semin
+> <Sergey.Semin@baikalelectronics.ru> wrote:
+> >
+> > Currently the DT bindings of Generic AHCI Controllers are described by
+> > means of the legacy text file. Since such format is deprecated in favor of
+> > the DT schema. Let's convert the Generic AHCI Controllers bindings file
+> > then to the corresponding yaml files. There will be two of them: a DT
+> > schema with a set of properties applied to all AHCI-compatible devices,
+> > and a DT schema validating an AHCI-controller on a generic platform. So if
+> > a controller conforms to the Serial ATA AHCI interface specification with
+> > just peculiar platform environment settings like clock sources, PHYs,
+> > power regulators or resets, then the generic AHCI bindings should work for
+> > it. Otherwise a dedicated DT-schema needs to be created.
+> >
+> > So a common AHCI SATA controller DT-node is supposed to be equipped with
+> > at least compatible, reg and interrupts properties. It can optionally
+> > contain clocks, resets, {ahci,target,phy}-supply and phys phandles. In
+> > addition the property "ports-implemented" can be specified in order to
+> > define the number of implemented SATA ports. An AHCI SATA controller
+> > DT-node can also have a set of sub-nodes representing its ports, for each
+> > of which an individual power source and PHY phandle can be specified.
+> >
+> > Note we have omitted the next compatible strings
+> > "marvell,armada-380-ahci", "marvell,armada-3700-ahci", "snps,dwc-ahci",
+> > "snps,spear-ahci" since the corresponding controllers are handled by the
+> > dedicated drivers now, thus are supposed to have their own DT-schema
+> > defined. dma-coherent has also been discarded since it's a generic
+> > property and is evaluated by the dt-schema parser.
+> >
+> > Also note that if there is the "reg-names" property specified for a AHCI
+> > DT-node then it is supposed to at least have the "ahci" sub-string as an
+> > indicator of the AHCI-compatible registers space.
+> >
 > > Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
 > > ---
-> >  Documentation/devicetree/bindings/ata/sata-common.yaml | 7 +++----
-> >  1 file changed, 3 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/Documentation/devicetree/bindings/ata/sata-common.yaml b/Documentation/devicetree/bindings/ata/sata-common.yaml
-> > index 7ac77b1c5850..c619f0ae72fb 100644
-> > --- a/Documentation/devicetree/bindings/ata/sata-common.yaml
-> > +++ b/Documentation/devicetree/bindings/ata/sata-common.yaml
-> > @@ -41,11 +41,10 @@ patternProperties:
-> >      properties:
-> >        reg:
-> >          minimum: 0
-> > -        maximum: 14
+> >  .../devicetree/bindings/ata/ahci-common.yaml  | 110 ++++++++++++++++++
+> >  .../devicetree/bindings/ata/ahci-platform.txt |  79 -------------
+> >  .../devicetree/bindings/ata/generic-ahci.yaml |  89 ++++++++++++++
+> >  3 files changed, 199 insertions(+), 79 deletions(-)
+> >  create mode 100644 Documentation/devicetree/bindings/ata/ahci-common.yaml
+> >  delete mode 100644 Documentation/devicetree/bindings/ata/ahci-platform.txt
+> >  create mode 100644 Documentation/devicetree/bindings/ata/generic-ahci.yaml
 > 
 
-> Why remove this ? Since AHCI can have up to 32 ports, then change the
-> value to 31. As the comment at the top of the file says, this is not
-> intended to be a device tree binding spec, but defines properties common
-> to most adapters.
+> This has already been converted and is in Linus' tree now for v5.18.
 
-Right, but the schema determines the common !SATA! controllers properties,
-while you are referring to the AHCI-specific limit. As I said in the patch
-log AFAICS in general the SATA controllers may have any number of ports.
-The number is determined by the hardware designers needs only. Thus the
-actual constraints needs to be specified in the controller-specific
-YAML-schema (the one which will $ref to sata-common.yaml).
-
-Though I couldn't find any ATA device driver in the kernel which would
-handle a device with even 32 ports, not to mention a greater number.
-So replacing it with 31 might be reasonable after all. But me failing
-to find any such device doesn't me it can't exist. Thus I've decided to
-drop the upper limit completely.
-
-> 
-> >          description:
-> > -          The ID number of the drive port SATA can potentially use a port
-> > -          multiplier making it possible to connect up to 15 disks to a single
-> > -          SATA port.
-> > +          The ID number of the SATA port. Aside with being directly used
-> > +          each port can have a Port Multiplier attached thus allowing to
-> > +          access more than one drive by means of a single channel.
-> 
-
-> Please add a comma after "Aside with being directly used", otherwise the
-> sentence is hard to understand. And replace "channel" with "SATA port" to
-> stick with the terms defined here.
-
-Ok.
+Too bad.( I'll have to rebase this patch on top of that schema now
+seeing it hasn't been split up into the common and platform-specific
+parts.
 
 -Sergey
 
 > 
-> >  
-> >  additionalProperties: true
-> >  
-> 
-> 
-> -- 
-> Damien Le Moal
-> Western Digital Research
+> Rob
