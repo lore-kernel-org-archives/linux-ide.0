@@ -2,131 +2,95 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1FEAC433F5
-	for <linux-ide@archiver.kernel.org>; Mon, 11 Apr 2022 20:41:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 924FCC433F5
+	for <linux-ide@archiver.kernel.org>; Mon, 11 Apr 2022 20:43:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349880AbiDKUnq (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 11 Apr 2022 16:43:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44314 "EHLO
+        id S233776AbiDKUp0 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 11 Apr 2022 16:45:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45182 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231981AbiDKUni (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Apr 2022 16:43:38 -0400
-Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C67FA1F631;
-        Mon, 11 Apr 2022 13:41:22 -0700 (PDT)
-Received: by mail-lf1-x133.google.com with SMTP id z17so4228322lfj.11;
-        Mon, 11 Apr 2022 13:41:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=1gQ3z+BhhKGcjrgp8oYTkSEsVVH9e6uCruEWyVWuLDk=;
-        b=KGvGoxkAai3YdPCf6J8ylwmmzoKN/4KJ0fd660wNO1E8YuqnJ5u7ixpuchkmZ9jXpo
-         TuOHV5KPjGWbTryqHKpIyTW3Ywrra62lhriWDbnye6Y8ot6qn9SQEQ1LtRu5Hnavs5Wc
-         EPTFfMhFQvdKd0fVQSHP6xeXSbyaDFBKuM0zrdSWucNd+njL/p1/lx03ms/O2CS48owj
-         whtUjO9IVjn65pWFs7Ngrifik3/26Aby1kk/4d3hMtZsV93jH08xvj5talaTy8X7ZVJm
-         0w56oJLN0ei9JeLTHkW02Ee+oo/cSikX9Xcq6jLk56DUVpmuFkAnP3dR1CkOLLpChF4/
-         mPiQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=1gQ3z+BhhKGcjrgp8oYTkSEsVVH9e6uCruEWyVWuLDk=;
-        b=Kazcp0Ts7XAzliGaIiOUnOkXlOqu1yo0rOBPr8JpkfvGhQ9umUtLp5g7qX85gYTf5t
-         wh1GjlaHKLlmppxwFoYGlBKPjcc9yWx+3NTOVCQ1q1oENI6T2L093PgU5FYHs7fXk8+f
-         Wj4o6jyIOm43vID5a++BQEKMa6YSMCIQFJi+oS6JupCHx+75Z7BfJpsJIW7EUky7ArgA
-         wWEy98lMpgJHAa0Hrl6h1VMZbm6w/bbU7jRcXPQy55Oqt8/2YPpGSxwRQuELyXfPg07U
-         2eJ/Mo2q7T9EAvL4JeFWGwwp6Gv6FyyPkzi7TumTauDpaJWyZBW3AtnzpDvYPzlcxg4o
-         4MrA==
-X-Gm-Message-State: AOAM532azmMo5Iij7VZfPpsJlPZ4ChHgAu3v2Sjr1wPbYrc6ki5g0pCO
-        DpIrMmHG2qhUMjfWFBg4MpY=
-X-Google-Smtp-Source: ABdhPJxCT4oSwEFg2z3xchisbOKP8+rLAA/Ix8AGceakbsSbPn+SZIqRgPafN2c5Ev4CIN7AoCn80A==
-X-Received: by 2002:a05:6512:1192:b0:45d:9701:ad1 with SMTP id g18-20020a056512119200b0045d97010ad1mr22964342lfr.391.1649709680960;
-        Mon, 11 Apr 2022 13:41:20 -0700 (PDT)
-Received: from mobilestation ([95.79.134.149])
-        by smtp.gmail.com with ESMTPSA id y14-20020a056512044e00b0046bb2c987d4sm148654lfk.98.2022.04.11.13.41.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 11 Apr 2022 13:41:20 -0700 (PDT)
-Date:   Mon, 11 Apr 2022 23:41:18 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH 17/21] ata: ahci: Add DWC AHCI SATA controller support
-Message-ID: <20220411204118.tfagojpcugz4gksj@mobilestation>
-References: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
- <20220324001628.13028-18-Sergey.Semin@baikalelectronics.ru>
- <2f873143-eb45-e652-063d-615d63055401@opensource.wdc.com>
- <20220411124126.wnfykivcvtllyua6@mobilestation>
- <382133db-7a90-6092-d3cc-3c4f5d851838@opensource.wdc.com>
+        with ESMTP id S231387AbiDKUpZ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Apr 2022 16:45:25 -0400
+Received: from mxout04.lancloud.ru (mxout04.lancloud.ru [45.84.86.114])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8248E0FD
+        for <linux-ide@vger.kernel.org>; Mon, 11 Apr 2022 13:43:08 -0700 (PDT)
+Received: from LanCloud
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout04.lancloud.ru D216020A6018
+Received: from LanCloud
+Received: from LanCloud
+Received: from LanCloud
+Subject: Re: [PATCH] ata: pata_sil680: fix result type of
+ sil680_sel{dev|reg}()
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>
+References: <9fceaba7-22e0-8cb2-fc69-04c0b8ece7db@omp.ru>
+ <1a56a6cc-5062-fd25-4285-aa53b4ad0eba@opensource.wdc.com>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <bfd973a5-87ea-148e-ea88-72881b202761@omp.ru>
+Date:   Mon, 11 Apr 2022 23:42:59 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <382133db-7a90-6092-d3cc-3c4f5d851838@opensource.wdc.com>
+In-Reply-To: <1a56a6cc-5062-fd25-4285-aa53b4ad0eba@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [192.168.11.198]
+X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
+ LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, Apr 11, 2022 at 10:03:27PM +0900, Damien Le Moal wrote:
-> On 4/11/22 21:41, Serge Semin wrote:
-> > I beg your pardon what convention? Is it defined in someplace of the
-> > subsystem docs? If it's not then how should I know about that? These
-> > are the device-specific macro. The static methods below are also
-> > platform-specific and the standard kernel coding style doesn't specify
-> > any rule about that. Moreover the most of the AHCI glue drivers (LLDD
-> > like ahci_mtk.c, ahci_ceva.c, ahci_brcm.c, ahci_st.c, ahci_tegra.c,
-> > ahci_xgene.c, etc) use the same prefixing style as I do here. Finally
-> > the prefix reflects the actual device name "DWC AHCI". So if there is
-> > no subsystem-specific restrictions I normally define the prefix in
-> > that order for the sake of the clarity.
+Hello!
+
+On 4/11/22 2:47 AM, Damien Le Moal wrote:
+
+>> sil680_sel{dev|reg}() return a PCI config space address but needlessly
+>> use the *unsigned long* type for that,  whereas the PCI config space
+>> accessors take *int* for the address parameter.  Switch these functions
+>> to returning *int*, updating the local variables at their call sites.
+>> Add the empty lines after some declarations, while at it...
+>>
+>> Found by Linux Verification Center (linuxtesting.org) with the SVACE static
+>> analysis tool.
+>>
+>> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+>>
+>> ---
+>> This patch is against the 'for-next' branch of Damien Le Moal's 'libata.git'
+>> repo.
+>>
+>>  drivers/ata/pata_sil680.c |   27 +++++++++++++++------------
+>>  1 file changed, 15 insertions(+), 12 deletions(-)
+>>
+>> Index: libata/drivers/ata/pata_sil680.c
+>> ===================================================================
+>> --- libata.orig/drivers/ata/pata_sil680.c
+>> +++ libata/drivers/ata/pata_sil680.c
+>> @@ -47,9 +47,10 @@
+>>   *	criticial.
+>>   */
+>>  
+>> -static unsigned long sil680_selreg(struct ata_port *ap, int r)
+>> +static int sil680_selreg(struct ata_port *ap, int r)
+>>  {
+>> -	unsigned long base = 0xA0 + r;
+>> +	int base = 0xA0 + r;
+>> +
+>>  	base += (ap->port_no << 4);
+>>  	return base;
 > 
-
-> Look at how other ahci drivers have named things. That's the "convention"
-> I am talking about. Most of them name things ahci_xxx_... Same for macros.
-
-Looked. Way not the most of them. Here are the other drivers with the
-naming like I used in this patch:
-ahci_mtk.c, ahci_ceva.c, ahci_brcm.c, ahci_st.c, ahci_tegra.c,
-ahci_xgene.c, ahci_imx.c, etc.
-That's almost half of all the AHCI drivers. Really how could I have
-possibly figure out that there is a convention if so many drivers
-don't have it followed?..
-
+> The variable "base" is rather useless here... A simple:
 > 
-> > 
-> > Note I don't mind to convert the code to being the way you ask, but if
-> > it's really the AHCI-specific codying style convention then it would be
-> > very useful to have it described/advertised in some place in the
-> > kernel so to know about that beforehead for the developers reference.
-> > So do you insist on switching the words order in the names prefix here?
+> 	return 0xA0 + r + (ap->port_no << 4);
 > 
+> would work too and is a lot cleaner.
 
-> It is nice to have code consistency in the naming. That always facilitate
-> grepping the code.
+   Yes, probably... but it's a matter of a separate patch, I think.
+Note that both functions are inlined by gcc.
 
-I am with both my hands for it, but that naming consistency must be
-thoroughly documented in some place of the kernel or at least the
-"convention" must be logically derivable from the existing code. It
-would spare my, the other developers and actually the maintainers
-time. Do you suggest to thoroughly scan each AHCI driver in the
-subsystem to figure it out? Even if I did that the only way to come up
-with an idea that there is a naming convention would be only if I
-expected that there is one, but seeing it's a first time I've met such
-LLDD requirement (really, no kernel subsystem has such naming
-convention applied for the glue-drivers) and almost half of the AHCI
-drivers not following the convention while the other half following it
-just partly. Judging by that, neither me nor many other developer had
-a chance to create an acceptable code from scratch.
+[...]
 
--Sergey
-
-> 
-> 
-> -- 
-> Damien Le Moal
-> Western Digital Research
+MBR, Sergey
