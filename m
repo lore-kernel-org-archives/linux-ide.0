@@ -2,46 +2,46 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11955C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2705CC433F5
 	for <linux-ide@archiver.kernel.org>; Tue, 12 Apr 2022 01:03:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344418AbiDLBFx (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Mon, 11 Apr 2022 21:05:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34764 "EHLO
+        id S235068AbiDLBFy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Mon, 11 Apr 2022 21:05:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34960 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345210AbiDLA63 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Apr 2022 20:58:29 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DF7B631904;
-        Mon, 11 Apr 2022 17:51:15 -0700 (PDT)
+        with ESMTP id S1346878AbiDLA7A (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 11 Apr 2022 20:59:00 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC23936302;
+        Mon, 11 Apr 2022 17:52:03 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id 79ED160B2B;
-        Tue, 12 Apr 2022 00:51:15 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34EF4C385A9;
-        Tue, 12 Apr 2022 00:51:14 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 2B38FB815C8;
+        Tue, 12 Apr 2022 00:52:03 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 25FFDC385A4;
+        Tue, 12 Apr 2022 00:52:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1649724674;
-        bh=CbIPikTS98zell/omv2T4yTylZp9j5m2kHpnBAFAYvg=;
+        s=k20201202; t=1649724721;
+        bh=Ro/CPlPrB2+4gFbWWaN9lTICA1APWeL2RMTpJRBah8s=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=FKkyDoYNS9tVd++wrCow/Sn3CeDR6mnVWzhNLiK/rX4qyRHukaoGBXv9Oh8UNA+hL
-         xcfAYbToNKnlqD5W17rl4jZNOFkjWDcsbg8ReB8+9NQzPspShJce5x3UmfPCBxhcF8
-         kYxjpkEMdeMAocimuS8egxK9sK5XPW8LcOXjUvZ23Dqz88sxvbkWr5knl/DeRUWnzp
-         +GlElYS8ZqB1LVPcHRKDmYqfGAbG0bKClhMe70uWupBR1Dh4vKnWzehmu1LRmdVFlk
-         4EYDtNUvzd8ShtQxPQgyAnaRczJ67A6blCe/i53qwM21A6X1B9ZO4Bps8514G1vJ4a
-         mdQ6QX62XcDQQ==
+        b=tPcJkOq6qhRwZKQR8WzeV3Fv1Ort7BQQV4X5zxvSOpolZ25zlYOTVejpqeE3veyQ2
+         A4z1jfqNQf7NkZ05cm3jYdhmxw6H8M6NZjKTWeWeYwb9H3ZIaIVXFJgFl6kbXX54fy
+         nHmUBsBkveGtIH9v8oPb2nIHcG7NwlELn7KyjOfOTig9xAblsqB/xN4s/3e8plutnQ
+         A1vRZ67JkQ9sm9GEeMrp22mLfjKfs0w07qzFXjZ/7Q0EqmO9EvyArCIY1e2g5ojr4W
+         s4KiOY1EwJLI4CYrKNk0olUkw/AUwAcKby5NB5U7Z1stP9ZnS1qei6xYxUPe9bhDcH
+         VBacfm8QSb27A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Christian Lamparter <chunkeey@gmail.com>,
         Damien Le Moal <damien.lemoal@opensource.wdc.com>,
         Sasha Levin <sashal@kernel.org>, linux-ide@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 10/21] ata: libata-core: Disable READ LOG DMA EXT for Samsung 840 EVOs
-Date:   Mon, 11 Apr 2022 20:50:29 -0400
-Message-Id: <20220412005042.351105-10-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 07/12] ata: libata-core: Disable READ LOG DMA EXT for Samsung 840 EVOs
+Date:   Mon, 11 Apr 2022 20:51:40 -0400
+Message-Id: <20220412005148.351391-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.35.1
-In-Reply-To: <20220412005042.351105-1-sashal@kernel.org>
-References: <20220412005042.351105-1-sashal@kernel.org>
+In-Reply-To: <20220412005148.351391-1-sashal@kernel.org>
+References: <20220412005148.351391-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -74,10 +74,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 3 insertions(+)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index dca1590f295d..af8a1bac9345 100644
+index 33d3728f3622..0c10d9557754 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -4580,6 +4580,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+@@ -4598,6 +4598,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
  						ATA_HORKAGE_ZERO_AFTER_TRIM, },
  	{ "Crucial_CT*MX100*",		"MU01",	ATA_HORKAGE_NO_NCQ_TRIM |
  						ATA_HORKAGE_ZERO_AFTER_TRIM, },
