@@ -2,147 +2,141 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED232C433EF
-	for <linux-ide@archiver.kernel.org>; Tue, 12 Apr 2022 12:56:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F5EEC433F5
+	for <linux-ide@archiver.kernel.org>; Tue, 12 Apr 2022 17:26:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354052AbiDLM51 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 12 Apr 2022 08:57:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54098 "EHLO
+        id S1358088AbiDLR3K (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 12 Apr 2022 13:29:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34190 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355047AbiDLMzp (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 12 Apr 2022 08:55:45 -0400
-Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9F2D32D1E3;
-        Tue, 12 Apr 2022 05:29:35 -0700 (PDT)
-Received: by mail-lf1-x12b.google.com with SMTP id k5so1809458lfg.9;
-        Tue, 12 Apr 2022 05:29:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=SbuOQk5XHCi9O0P6+0FQZ2Hr3E5U7aXIVRnTTuHTV4s=;
-        b=oyUYl76UTgrDCOg633zFKDQ6mGxT/HDKNQmRsE59lXd3UXd4DE3b0AQgUEwy3DM0+S
-         t6kgd9MSgXryHXW3MxRTjLMydT0bzNfu72YkTq3wxCL2AO9gDnC5L9VwO9KpIk+Uwf2Q
-         1N83wdOB3S+IjBWDRuHzglDWQTZKXWoh25FpzLj/7D6jjsAl73Q9DlCZno6nkdjCBg9r
-         sFIdR2Iu2qBY2b1KJ2mEpbA55wMGcuI5J9KFKI9BEqEGBPdnwBzVHHK3aTDRvq+sbb2r
-         pPd3Y0sNYB3iq1FPRzwtt0iYf0N2ylSeyaVdLRkB99w+7C2g287pJRze4+OEVLlvp6VQ
-         ovfg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=SbuOQk5XHCi9O0P6+0FQZ2Hr3E5U7aXIVRnTTuHTV4s=;
-        b=SdLHsN9tahXzhMMq+F8Th+1KVrvfSVl2PCek4OWLekbj5kQ6pPysq04FBzjbp0SvtI
-         zMV1/DMxLuUjpG4gRlp2U8/htEfFzz6xjVAid6HqxzljM22/820O3WsWYCpJClJlxaVM
-         GZbvPtTJEq1E1gFbMlac6hAc0hoq7il93yFKq9K+jLsbnt+0NHkNzA39Ykck+vmyOAOT
-         haXb6JTybPUYzLAzfgNzR9RIelJMBy13xBP4kpPGSSA2ynWtE6RxlBsbflr8CsqehU/8
-         435H9y+6sjv9eGDXpWMmQXDUjcpogFMylLxZ+nG2tjugH857fgcN+AODdqjTOXm/oa+O
-         QZCg==
-X-Gm-Message-State: AOAM531IUMbWQ76qVB4OutUqEb5w1e5EMkfvzbV5EpioCArKY4RZE/C+
-        GBaHiohFC0QsuyDxxDPIFa4=
-X-Google-Smtp-Source: ABdhPJzJf0bk6yLE45h+CmwHLM/NUua6uzkx95kgOF5Wv+rBriHTUagQkv4xRuctyOayDKr2EVoA1Q==
-X-Received: by 2002:a05:6512:318a:b0:44a:4dab:4cd2 with SMTP id i10-20020a056512318a00b0044a4dab4cd2mr25488680lfe.606.1649766573758;
-        Tue, 12 Apr 2022 05:29:33 -0700 (PDT)
-Received: from mobilestation ([95.79.134.149])
-        by smtp.gmail.com with ESMTPSA id f15-20020ac25ccf000000b0046b8d6adbb0sm1191726lfq.225.2022.04.12.05.29.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Apr 2022 05:29:33 -0700 (PDT)
-Date:   Tue, 12 Apr 2022 15:29:31 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Cc:     Serge Semin <Sergey.Semin@baikalelectronics.ru>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>,
-        Pavel Parkhomenko <Pavel.Parkhomenko@baikalelectronics.ru>,
-        Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH 12/21] ata: libahci: Discard redundant force_port_map
- parameter
-Message-ID: <20220412122931.ckjmwopnktpfwbov@mobilestation>
-References: <20220324001628.13028-1-Sergey.Semin@baikalelectronics.ru>
- <20220324001628.13028-13-Sergey.Semin@baikalelectronics.ru>
- <b06a8382-d5c1-e3a5-8577-692fa82cb3c1@opensource.wdc.com>
- <20220411121151.vm6wmtalbl2lgtgo@mobilestation>
- <bde34952-e244-a1c3-fc33-251d618d2bb4@opensource.wdc.com>
- <20220411205205.p5vnqvscgfb2siej@mobilestation>
- <5ae5764f-ca51-9c2d-c13f-cfe855bda45e@opensource.wdc.com>
+        with ESMTP id S235239AbiDLR3K (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 12 Apr 2022 13:29:10 -0400
+Received: from mxout02.lancloud.ru (mxout02.lancloud.ru [45.84.86.82])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C80D752B2A
+        for <linux-ide@vger.kernel.org>; Tue, 12 Apr 2022 10:26:49 -0700 (PDT)
+Received: from LanCloud
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout02.lancloud.ru 74ACC2311C78
+Received: from LanCloud
+Received: from LanCloud
+Received: from LanCloud
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Subject: [PATCH v2] ata: pata_sil680: fix result type of sil680_sel{dev|reg}()
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        <linux-ide@vger.kernel.org>
+Organization: Open Mobile Platform
+Message-ID: <abc9d18a-e0e4-8065-31e9-7936bf0e1e95@omp.ru>
+Date:   Tue, 12 Apr 2022 20:26:46 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5ae5764f-ca51-9c2d-c13f-cfe855bda45e@opensource.wdc.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [192.168.11.198]
+X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
+ LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Tue, Apr 12, 2022 at 07:48:50AM +0900, Damien Le Moal wrote:
-> On 4/12/22 05:52, Serge Semin wrote:
-> > On Mon, Apr 11, 2022 at 09:25:03PM +0900, Damien Le Moal wrote:
-> >> On 4/11/22 21:11, Serge Semin wrote:
-> >>> On Thu, Mar 24, 2022 at 11:05:58AM +0900, Damien Le Moal wrote:
-> >>>> On 3/24/22 09:16, Serge Semin wrote:
-> >>>>> Currently there are four port-map-related fields declared in the
-> >>>>> ahci_host_priv structure and used to setup the HBA ports mapping. First
-> >>>>> the ports-mapping is read from the PI register and immediately stored in
-> >>>>> the saved_port_map field. If forced_port_map is initialized with non-zero
-> >>>>> value then its value will have greater priority over the value read from
-> >>>>> PI, thus it will override the saved_port_map field. That value will be then
-> >>>>> masked by a non-zero mask_port_map field and after some sanity checks it
-> >>>>> will be stored in the ahci_host_priv.port_map field as a final port
-> >>>>> mapping.
-> >>>>>
-> >>>>> As you can see the logic is a bit too complicated for such a simple task.
-> >>>>> We can freely get rid from at least one of the fields with no change to
-> >>>>> the implemented semantic. The force_port_map field can be replaced with
-> >>>>> taking non-zero saved_port_map value into account. So if saved_port_map is
-> >>>>> pre-initialized by the glue-driver/platform-specific code then it will
-> >>>>
-> >>>
-> >>>> glue-driver == LLDD (low level device driver), for the entire series please.
-> >>>
-> >>> Why? It's a normal term and well known amongst developers. I've used it
-> >>> in a plenty of my patches before and none of them has been questioned in that
-> >>> part so far.
-> >>
-> > 
-> >> This term is not used in libata, nor do I remember seeing it used in SCSI
-> >> or block subsystem either. We always talk about mid-layer (ahci platform)
-> >> and LLDD (adapter driver).
-> > 
-> > Great, do we need to learn the subsystem-specific dictionary now
-> > before submitting the patches for it? =)
-> > Really, you are asking me to change one term to its synonym just
-> > because it's mainly unused here. Now you know what it means, the
-> > others can easily google it and get to learn something new. Win-win.)
-> 
+sil680_sel{dev|reg}() return a PCI config space address but needlessly
+use the *unsigned long* type for that,  whereas the PCI config space
+accessors take *int* for the address parameter.  Switch these functions
+to returning *int*, updating the local variables at their call sites.
+Get rid of the 'base' local variables in these functions, while at it...
 
-> I already knew what it meant, but it was unclear if my idea of what you
-> meant was actually the same as yours. Sticking with the vocabulary already
-> used since *a long time ago* makes life easier for reviewers and avoids
-> confusion.
+Found by Linux Verification Center (linuxtesting.org) with the SVACE static
+analysis tool.
 
-I believe there can't be too many possible meaning of that term to
-have much doubts. Especially when we refer to the kernel drivers. One
-more time requesting to settle some implicit subsystem-specific
-conventions, not having them described in some kernel documents seems
-very much wrong. The ahci_ prefixing and the specific vocabulary
-concerns each driver in very many aspects. Seeing there are not a few
-drivers which don't follow those conventions, you give no chance for
-the developers to get their code accepted with no requests to fix the
-corresponding parts. So to speak you need to thoroughly describe these
-and the others conventions in the kernel documentation otherwise
-you'll always end up requesting the same fixes wasting your and
-developers time again and again.
+Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-Really if you had that document available, you could have used as a
-reference and just said something like "please, follow the coding
-style convention described here..." and no question would have raised.
-Meanwhile currently both ahci_-prefix change and using the LLDD term
-seem more like a personal desire to me.
+---
+This patch is against the 'for-next' branch of Damien Le Moal's 'libata.git'
+repo.
 
--Sergey
+Changes in version 2:
+- got rid of the 'base' local variables in sil680_sel{dev|reg}(), updating
+  the patch description accordingly.
 
-> 
-> -- 
-> Damien Le Moal
-> Western Digital Research
+ drivers/ata/pata_sil680.c |   30 +++++++++++++-----------------
+ 1 file changed, 13 insertions(+), 17 deletions(-)
+
+Index: libata/drivers/ata/pata_sil680.c
+===================================================================
+--- libata.orig/drivers/ata/pata_sil680.c
++++ libata/drivers/ata/pata_sil680.c
+@@ -47,11 +47,9 @@
+  *	criticial.
+  */
+ 
+-static unsigned long sil680_selreg(struct ata_port *ap, int r)
++static int sil680_selreg(struct ata_port *ap, int r)
+ {
+-	unsigned long base = 0xA0 + r;
+-	base += (ap->port_no << 4);
+-	return base;
++	return 0xA0 + (ap->port_no << 4) + r;
+ }
+ 
+ /**
+@@ -65,12 +63,9 @@ static unsigned long sil680_selreg(struc
+  *	the unit shift.
+  */
+ 
+-static unsigned long sil680_seldev(struct ata_port *ap, struct ata_device *adev, int r)
++static int sil680_seldev(struct ata_port *ap, struct ata_device *adev, int r)
+ {
+-	unsigned long base = 0xA0 + r;
+-	base += (ap->port_no << 4);
+-	base |= adev->devno ? 2 : 0;
+-	return base;
++	return 0xA0 + (ap->port_no << 4) + r + (adev->devno << 1);
+ }
+ 
+ 
+@@ -85,8 +80,9 @@ static unsigned long sil680_seldev(struc
+ static int sil680_cable_detect(struct ata_port *ap)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	unsigned long addr = sil680_selreg(ap, 0);
++	int addr = sil680_selreg(ap, 0);
+ 	u8 ata66;
++
+ 	pci_read_config_byte(pdev, addr, &ata66);
+ 	if (ata66 & 1)
+ 		return ATA_CBL_PATA80;
+@@ -113,9 +109,9 @@ static void sil680_set_piomode(struct at
+ 		0x328A, 0x2283, 0x1281, 0x10C3, 0x10C1
+ 	};
+ 
+-	unsigned long tfaddr = sil680_selreg(ap, 0x02);
+-	unsigned long addr = sil680_seldev(ap, adev, 0x04);
+-	unsigned long addr_mask = 0x80 + 4 * ap->port_no;
++	int tfaddr = sil680_selreg(ap, 0x02);
++	int addr = sil680_seldev(ap, adev, 0x04);
++	int addr_mask = 0x80 + 4 * ap->port_no;
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+ 	int pio = adev->pio_mode - XFER_PIO_0;
+ 	int lowest_pio = pio;
+@@ -165,9 +161,9 @@ static void sil680_set_dmamode(struct at
+ 	static const u16 dma_table[3] = { 0x2208, 0x10C2, 0x10C1 };
+ 
+ 	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
+-	unsigned long ma = sil680_seldev(ap, adev, 0x08);
+-	unsigned long ua = sil680_seldev(ap, adev, 0x0C);
+-	unsigned long addr_mask = 0x80 + 4 * ap->port_no;
++	int ma = sil680_seldev(ap, adev, 0x08);
++	int ua = sil680_seldev(ap, adev, 0x0C);
++	int addr_mask = 0x80 + 4 * ap->port_no;
+ 	int port_shift = adev->devno * 4;
+ 	u8 scsc, mode;
+ 	u16 multi, ultra;
+@@ -219,7 +215,7 @@ static void sil680_sff_exec_command(stru
+ static bool sil680_sff_irq_check(struct ata_port *ap)
+ {
+ 	struct pci_dev *pdev	= to_pci_dev(ap->host->dev);
+-	unsigned long addr	= sil680_selreg(ap, 1);
++	int addr		= sil680_selreg(ap, 1);
+ 	u8 val;
+ 
+ 	pci_read_config_byte(pdev, addr, &val);
