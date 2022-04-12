@@ -2,94 +2,85 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1800C433EF
-	for <linux-ide@archiver.kernel.org>; Tue, 12 Apr 2022 06:28:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5194CC4321E
+	for <linux-ide@archiver.kernel.org>; Tue, 12 Apr 2022 06:36:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348848AbiDLGbJ (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 12 Apr 2022 02:31:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43084 "EHLO
+        id S1349235AbiDLGia (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 12 Apr 2022 02:38:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51146 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348699AbiDLGbH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 12 Apr 2022 02:31:07 -0400
-Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4AF4335865;
-        Mon, 11 Apr 2022 23:28:51 -0700 (PDT)
-Received: by mail-pf1-x42a.google.com with SMTP id bo5so16637033pfb.4;
-        Mon, 11 Apr 2022 23:28:51 -0700 (PDT)
+        with ESMTP id S1350550AbiDLGiK (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 12 Apr 2022 02:38:10 -0400
+Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9783017E21;
+        Mon, 11 Apr 2022 23:34:51 -0700 (PDT)
+Received: by mail-pg1-x532.google.com with SMTP id z128so16332237pgz.2;
+        Mon, 11 Apr 2022 23:34:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=AWPJQl0O9reNTOqA4s+DVRhGYY/e+TZiRNvFAD49Eq0=;
-        b=kl1Y3+MOsimk1c9G0ZgEIdYDzHXcFBZzXklwvq4vEtXlrTpi12RmuE3IPeBjDW5LXM
-         LxAFmAXUAFLHQy2El+ofs1WDqstq9EaCxNxUb1L1tRg7xZrWSl8/YWJyDDbvn8giBWf6
-         /y8jkanDcX85vyGuNmZaCJySQ64kzcbDV6W3LkxPp0ppiUz5MKTVJx/05B6sOOC/ecSt
-         4lC/04NnRjL1gF62QMp7i7XSv+gpWX7D3nHPMUFmgS/h0TgbDgS+BQ/XlOsS0dFjULci
-         VKFA2QuCCTvzSytAkdjleCQEC4s/b2MYp/UL0IKuabajylGFZKkTfmHtLbnYwMkqzSuQ
-         4iYA==
+        bh=O0xn7fbBcfT9ZD65i3XI8WVPw6/lQKVr1FVvFfZdFfU=;
+        b=ktKo1J5UX6I2KIr8lxRUOoE587v4xaDAo8VO52e3yvPJJoqc5W5+3QHrgIMlLumTqm
+         qSoLi/ZoqlOQ62mMZua6v1ztNiMHuCo5rOVZ5R3GWCVAXmQ0TdJWu1tjEja76btfROew
+         je1yMBOKUXqD17AA+u7+vqLDB1VwzUYN9Hoi/r6wLQYvMS9Vf4M1rUipBzfHjYivCBME
+         f6RW3dQ8+fgjK9/aFuJ99E/Fh2zV+aLbGNMUJfLLV3dZ8pFPiOoarMksILlJnxbFB97l
+         HDqnpGDHt+u5dnWIgxKaQfxRZd6O/u9etDxqR4BrKji7UPGdIv/aPHSdkpiSyZnqiLdC
+         KdjQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=AWPJQl0O9reNTOqA4s+DVRhGYY/e+TZiRNvFAD49Eq0=;
-        b=koNxeqNoe7lo+lhhrpWgYjmri1c3+dnZTvQZYHOXWSWd4ow7SOu1oCD4hKrd01c+YR
-         dp4E5nLTR8j8y2laJJp7S0TpR1miOgD9Q6VcDl8VG6pi/Ylw9GLzEX5h120AwaYnW1JS
-         XBGO2GZOBeamlk5JxPIggMwdGnNqTOvfIsSqVDcKhZp6HMw68vPRDI29AAG87m5+2dLA
-         /03VydwaHVUkJT+DSYu0uPwsxaYFnwgJktu9ictyN2plTubn/IKT1MWfEP6Nv+rhYVoQ
-         6ieQODXa3dLOAUkAdhhjYo27ip3ulfSO9cN5foDHLtYaS03fNhXLFbNDcCN5pglMBkgt
-         ymOQ==
-X-Gm-Message-State: AOAM533to6Ba5tM28CDozy7shqNW64yA2QEE64Xn9AaCQCBlJfVGDYd0
-        uHlK03h1sIh4+dmS00D6eS70ZJXT7s/D8c10SA==
-X-Google-Smtp-Source: ABdhPJwFj1oEy80pxWbYOfZRRfn5FeybU3w4qp6NEf3c4Bnc7sWesUmDssvvU3fu59IukIuD4tc4rBe3c7GQbTYgxHU=
-X-Received: by 2002:a63:610:0:b0:39d:300c:ad9b with SMTP id
- 16-20020a630610000000b0039d300cad9bmr10300635pgg.113.1649744930773; Mon, 11
- Apr 2022 23:28:50 -0700 (PDT)
+        bh=O0xn7fbBcfT9ZD65i3XI8WVPw6/lQKVr1FVvFfZdFfU=;
+        b=J6/6VGtm0HCaaoj20Ld9M0D8TEIksqm5ZrzqD2R4SFnRUOkywTXj4OfQbOfpjPX0bc
+         5TpDjIQbjRj+RjLV3K4hlFtnI+WuCssyIXlbUZoUEdAsFl3mP3wLHtjKxqfMJaVhmc5M
+         pTwyUZPG8/GIJXQyIEgZywRXJ+ubXUJfyPspJ9swEi9zQckFdo9d26A7JPKKge+eMOeq
+         gJaRA6sSfakkJLZRncgAWkGdVi9PUZIisnV+zIlT0mL0KRmMjTGCg7Bfva1bRLIkzfof
+         8Fy+i3pofAWz05jSIQmSe48hhiPv2OfFyeh+TUpUcGwj19KBgi3cD5N6031mMWocU9Sp
+         PkoA==
+X-Gm-Message-State: AOAM53043pgmrrHH+wrfs++5Kcz2MT7fHS6EmDvQ3srAXQ8EAwp7ch3H
+        1MsHCbFzw7VRZaLZIIAxDgcX11GSyFn3YhciEbK4xMW6lTgwu/M=
+X-Google-Smtp-Source: ABdhPJwOC/K9SGVkUC2meA5MdUIXSRC7mUdRZxdon0F+Xn1g35vHqqoyQnulcMAGBDbgykn2BNjeSg8eKKFXiDcpIhs=
+X-Received: by 2002:a05:6a00:18a5:b0:505:c080:a4e0 with SMTP id
+ x37-20020a056a0018a500b00505c080a4e0mr9065116pfh.2.1649745291160; Mon, 11 Apr
+ 2022 23:34:51 -0700 (PDT)
 MIME-Version: 1.0
 References: <CAMhUBjkVME8D5KsHvT=uddBsW_Bh6wr7qeXS=UpQD4LgPmHffQ@mail.gmail.com>
- <05433153-0424-ab66-1573-993d0490c5bc@opensource.wdc.com> <556511649635338@mail.yandex.com>
-In-Reply-To: <556511649635338@mail.yandex.com>
+ <05433153-0424-ab66-1573-993d0490c5bc@opensource.wdc.com>
+In-Reply-To: <05433153-0424-ab66-1573-993d0490c5bc@opensource.wdc.com>
 From:   Zheyu Ma <zheyuma97@gmail.com>
-Date:   Tue, 12 Apr 2022 14:28:39 +0800
-Message-ID: <CAMhUBjn4HJAy2aXv_M9rSJcZZv7ZihyK3rb5bj2NFyFx6W5dUg@mail.gmail.com>
+Date:   Tue, 12 Apr 2022 14:34:40 +0800
+Message-ID: <CAMhUBj=JsiHnnQzrqPKzA=Z2+589Ju_HE0cFKyon58Fk0waeAQ@mail.gmail.com>
 Subject: Re: [BUG] ata: pata_marvell: Warning when probing the module
-To:     Ozgur <ozgur@linux.com>
-Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Sergey Shtylyov <s.shtylyov@omp.ru>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On Mon, Apr 11, 2022 at 8:09 AM Ozgur <ozgur@linux.com> wrote:
->
->
->
-> 11.04.2022, 02:53, "Damien Le Moal" <damien.lemoal@opensource.wdc.com>:
+On Mon, Apr 11, 2022 at 7:53 AM Damien Le Moal
+<damien.lemoal@opensource.wdc.com> wrote:
 >
 > On 4/10/22 15:30, Zheyu Ma wrote:
+> > Hello,
+> >
+> > I found a bug in the pata_marvell module.
+> > When probing the driver, it seems to trigger the error path and
+> > executes the function marvell_cable_detect(), but the
+> > 'ap->ioaddr.bmdma_addr' is not initialized, which causes a warning.
 >
->  Hello,
->
->  I found a bug in the pata_marvell module.
->  When probing the driver, it seems to trigger the error path and
->  executes the function marvell_cable_detect(), but the
->  'ap->ioaddr.bmdma_addr' is not initialized, which causes a warning.
->
->
->
-> Hello,
-> i'm not sure if this is a bug because you get as ap points to a port number.
->
-> (ap->port_no)
->
-> it points to 0x1 port that appears in error message.
+> I do not have this hardware so I cannot debug this. Please debug it and
+> send a patch. bmdma_addr is normally set in ata_pci_bmdma_init(), but some
+> drivers set it manually in their probe functions. No idea about the
+> marvell driver, I have not checked it.
 
-Please correct me if i'm wrong, actually 'ap->port_no' is zero, and
-the 'ap->ioaddr.bmdma_addr' is zero too since it is not initialized.
+To be honest I don't have a good solution to this problem, because
+other drivers don't have similar behavior. The marvell driver doesn't
+even initialize 'bmdma_addr' before calling 'cable_detect'.
 
-> otherwise BUG will work and if it cannot read warning will return.
-> ( BUG(); is macro )
+So a simple idea I have is to check if 'bmdma_addr' is 0 before
+reading it and if so return the error code ATA_CBL_NONE.
 
 Zheyu Ma
