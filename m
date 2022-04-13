@@ -2,53 +2,53 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 154F7C433F5
-	for <linux-ide@archiver.kernel.org>; Wed, 13 Apr 2022 03:47:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3402C433EF
+	for <linux-ide@archiver.kernel.org>; Wed, 13 Apr 2022 03:47:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229914AbiDMDtU (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 12 Apr 2022 23:49:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51214 "EHLO
+        id S229890AbiDMDti (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 12 Apr 2022 23:49:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52014 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229484AbiDMDtT (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 12 Apr 2022 23:49:19 -0400
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E1CAE1B798
-        for <linux-ide@vger.kernel.org>; Tue, 12 Apr 2022 20:46:56 -0700 (PDT)
+        with ESMTP id S232071AbiDMDtg (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 12 Apr 2022 23:49:36 -0400
+Received: from esa3.hgst.iphmx.com (esa3.hgst.iphmx.com [216.71.153.141])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56B86369D0
+        for <linux-ide@vger.kernel.org>; Tue, 12 Apr 2022 20:47:17 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1649821616; x=1681357616;
+  t=1649821635; x=1681357635;
   h=message-id:date:mime-version:subject:to:references:from:
    in-reply-to:content-transfer-encoding;
-  bh=U4pyiGbh5ZGbN9/axQmKhYkqHfExVYqhDSuYXWCl9Fo=;
-  b=I+H0pLZSFSyBz2RUNN12je+UQH0Jxo2iPB0yC63e7qzwNGbuIYxKZalE
-   iREHWdBOB33iSfA7dyzgJkmGPjvVu6UR0TQZupEa7r/K5v0FCJdw5EiPM
-   WPKAfWGh6HUbWstG1V31Vuzt4dvKjNbHeeXoMqVQ5tIZdh4Nz1lHGnT0Q
-   n0papwMtwBBI13s43P5msyNt7baz6UyYYjv5Fg3erjh/X/yCgX8im8OFH
-   muAZwaLZfmnxZWwDcQVVU+HneLNTfibq3nD2JeXms3qVkaRnmE6NRn/BK
-   lNuWS7nsFpjqkmizEyqFy8oEk9V2d8pAWaYhMVeDWhl9dnL9eFzVwmv1K
-   A==;
+  bh=JyG2zc2ltZDGq9Uym+hFRAgHPsi9AvrGXFiwX/uJ374=;
+  b=qpscfLPNyR57RfeMTKn2ytnIxWnHC6yzNVx4fu6C/rP3Urk/+5/X1U8H
+   Wdgs26tJZWH0Vpw2xqqkC/N7+cX3xNxgRw0MT1TnAXfPx7RxjW0rUmn6f
+   TPEB3mVYSWVMTu2YldStxATaedn/RsFUH2Ms4upcSMebzeI0vViLjI1Y3
+   BeXnWpJCI6a+MQg1rnLo77AU3glF6qW/wkz2woKREtPOOf6Q5CLpfSs3r
+   aFpm+pUggTjXgWttgbwexoWG50zQ8YvmFq0XtLvPeKa3Phtsi8ydBju+D
+   uvka2RYWwwyC/Sx2eCZBAFI+javGPnzLKLpYDKCO4g4aO+Arow2aF+VyS
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.90,255,1643644800"; 
-   d="scan'208";a="196654327"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 13 Apr 2022 11:46:56 +0800
-IronPort-SDR: qZWMpBZ5bsPrhrg9nOP4q9CsqueTRkkBAU/FuBfH0sa4M9HwPZ+Z505fwFqhBiaSCqw7Dhk4Kp
- i+2dU2DFJ85xFlGcxHl1/r9EWlAXmGWs3RlHR/+3idY9CDOEXGV9BXlGRm8M3ztXBOfEhTyOBr
- tRbZZZL4ofjiOfcEo4Dzfdbi3NzOYP5FAbJeP7IaWydah/3e7raHTvM67rXsGUPtm8v3eSGKT7
- aTfOAks+f7eZjBGLToLaNjdJHasq8fjwu/prAiDlVC9Vma0QEs+bebR4k/yGTZJmPO0hCAAzqD
- IgzIvX2knHabmPg15sRWcwFb
+   d="scan'208";a="202645485"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 13 Apr 2022 11:47:15 +0800
+IronPort-SDR: H7sFsc0KmZxL6/l/aQjAatRJpl+iiHGJ+W/rR0XY0tGTY0VU+avvOaG7O/D7E9A4beXyW4cjoS
+ pH2ZQCWfHgf00h+cmHgAIpnJyueTtUVaCtuF5DqbvclXLxz8sZTIHcbpPLd3KNYufaiVTDfNQ/
+ x56INma3tQgt2Dn/v7gq1L4kWBwxLVpBB249A3qlzinHRzLStjd4a0LmZ9IW3L7YsIE8950FWR
+ jFbiSNU2xDQx74ItoQhmS52nCGrNgMH8h4HUIe8s4TXTwFH3iYK+iuKHUzcdo/tEYulDQUR1HM
+ Xq+BbnvKpaPas5Lqo9RpgtFH
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 12 Apr 2022 20:18:11 -0700
-IronPort-SDR: SFWvAUDUE0seWfTej6xXT8RHbhNnAZvBb0SPLGS1+tQK/KkF4dZQpdENUyQsZjme3W/NTqd3E2
- ybq79pxDmi1gZ6y59278RI/VtaOdfe3OeDoqmb2DvFNWnyooq7xDMItRtA7+q6W8aUqnVx0vme
- 3Mp5Wsq6jBNc1nqUgUKJvOuBpxXI5fk2Jrpl38GDPPUQt5BxzikMGJyCNJ4s0EbOB02Ud4/kYb
- B0lKObthzPKM0QRVW1AO52WQGwDe/+C1jruaiG+rRASDt6gruKT5EkKNX5zG8UPE3B45Z6YiHw
- ypk=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 12 Apr 2022 20:17:44 -0700
+IronPort-SDR: g2j3mlHyg760wi/DgcZFpuQ5XryImWkFVnYIsRreLOsaqJhSPkniptcLT86JYtTPwK/eVFeuMh
+ 5JEDE8XOhMAt6eF1RxmyKsYOAbeIJqBZC2qXY4VNW/S4LPK/5UIxXMZPjs9XUW8Ri/TOdxxzwx
+ Ppd5zgZ8c1YgfSXEiI4f49/Q6SKs1tXyL4kBd6yex30sSno6p413cAharGOzRiOjxLT1n/utU7
+ Xa0F6yUSblmEp4Lx1i21pJylS2o0NtIQNvlbcVKKmp00/wFrFgx7Fd/VQ6wrmGmLLyCfZ4dopG
+ cJw=
 WDCIronportException: Internal
 Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 12 Apr 2022 20:46:56 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 12 Apr 2022 20:47:17 -0700
 Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KdT6l52KDz1Rwrw
-        for <linux-ide@vger.kernel.org>; Tue, 12 Apr 2022 20:46:55 -0700 (PDT)
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4KdT782l3vz1Rwrw
+        for <linux-ide@vger.kernel.org>; Tue, 12 Apr 2022 20:47:16 -0700 (PDT)
 Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
         reason="pass (just generated, assumed good)"
         header.d=opensource.wdc.com
@@ -56,46 +56,46 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
         opensource.wdc.com; h=content-transfer-encoding:content-type
         :in-reply-to:organization:from:references:to:content-language
         :subject:user-agent:mime-version:date:message-id; s=dkim; t=
-        1649821615; x=1652413616; bh=U4pyiGbh5ZGbN9/axQmKhYkqHfExVYqhDSu
-        YXWCl9Fo=; b=JRogh+SAjuSUNK7qf8hil4MCgulxLBWvA9+ckxtakhiHkBegOCz
-        0O1cuJnASrksH7FRIO+CAfvq6Kk/uk881EXP4986JUb84s/HjfUIPfiUZLyZkeNH
-        JfnYiRcum31MvblMoETtuYj8pwIvTAgtVEXf5MSYj4I8cELZxfFtJokrwsfhYceQ
-        g431MEgEpaBvV5siv0o+qomrW+ZtBr243rDW4b0qnytDTPYys4Y8+NJ2oJ35jHAp
-        +OGMIqHSWnJvkilc4zfyprg5caQg+y/NN0wVTXN3+DLlj5C+ZDIUA+KUBeHWiGUr
-        QgZAaY2us6Js4T6gKcHtYrgHa/Wf/mIul2w==
+        1649821636; x=1652413637; bh=JyG2zc2ltZDGq9Uym+hFRAgHPsi9AvrGXFi
+        wX/uJ374=; b=cCUApjWzFfFRPL3scrksxBBTfYep67EFZT+cZKvlU5RKxLTn/wI
+        PISmM76eMa1EE/GUsxfNn4f5IqGCTEqAUVwJXTC8pJ2GOCowSYybuDrTUoHlA9hr
+        kHb8EP48E7ZzLX21tjU2rEGuCBaUwUeFbte+YUI9Vz/O769Ymz5u2pqxZLLqhyp8
+        k58LdWP/b1KYYgzMHowAj4OjsxsxvmT+bZ1O5QpDeS6vVxRigfYL0diXvKMehqxM
+        +Fnow+VGgLJiekH6dEiYWegTa2RE8EsuQ9KjtnJi8X8m6erbkBTGKMDSv2TdKyAA
+        7QDDJ9Bb1oNJoiGfvo+MsLYs5fVDCATOVpQ==
 X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
 Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
         by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id gs_c8-tZg3-A for <linux-ide@vger.kernel.org>;
-        Tue, 12 Apr 2022 20:46:55 -0700 (PDT)
+        with ESMTP id jIqj_wh_54H4 for <linux-ide@vger.kernel.org>;
+        Tue, 12 Apr 2022 20:47:16 -0700 (PDT)
 Received: from [10.225.163.9] (unknown [10.225.163.9])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KdT6l057nz1Rvlx;
-        Tue, 12 Apr 2022 20:46:54 -0700 (PDT)
-Message-ID: <751fb5b7-dd6f-6d4d-f69f-7e6a8e091fe3@opensource.wdc.com>
-Date:   Wed, 13 Apr 2022 12:46:53 +0900
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4KdT775GwPz1Rvlx;
+        Tue, 12 Apr 2022 20:47:15 -0700 (PDT)
+Message-ID: <14356217-bf85-a89a-b439-111cb86e1710@opensource.wdc.com>
+Date:   Wed, 13 Apr 2022 12:47:14 +0900
 MIME-Version: 1.0
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
  Thunderbird/91.7.0
-Subject: Re: [PATCH v2] ata: pata_sil680: fix result type of
- sil680_sel{dev|reg}()
+Subject: Re: [PATCH v2] ata: pata_via: fix sloppy typing in via_do_set_mode()
 Content-Language: en-US
 To:     Sergey Shtylyov <s.shtylyov@omp.ru>, linux-ide@vger.kernel.org
-References: <abc9d18a-e0e4-8065-31e9-7936bf0e1e95@omp.ru>
+References: <e8d0b22b-9052-7cfc-4088-b407643c4bf8@omp.ru>
 From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
 Organization: Western Digital Research
-In-Reply-To: <abc9d18a-e0e4-8065-31e9-7936bf0e1e95@omp.ru>
+In-Reply-To: <e8d0b22b-9052-7cfc-4088-b407643c4bf8@omp.ru>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-On 4/13/22 02:26, Sergey Shtylyov wrote:
-> sil680_sel{dev|reg}() return a PCI config space address but needlessly
-> use the *unsigned long* type for that,  whereas the PCI config space
-> accessors take *int* for the address parameter.  Switch these functions
-> to returning *int*, updating the local variables at their call sites.
-> Get rid of the 'base' local variables in these functions, while at it...
+On 4/13/22 05:39, Sergey Shtylyov wrote:
+> The local variables 'T' and 'UT' are needlessly declared as *unsigned*
+> *long* -- the corresponding parameters of ata_timing_compute() are both
+> declared as *int*.  While fixing up those declarations, also make the
+> 'via_clock' and 'T' variables *const* as they are never re-assigned
+> after initialization -- the object code should remain the same as gcc
+> previously used copy propagation anyway...
 > 
 > Found by Linux Verification Center (linuxtesting.org) with the SVACE static
 > analysis tool.
