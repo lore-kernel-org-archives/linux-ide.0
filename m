@@ -2,56 +2,102 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E281DC433EF
-	for <linux-ide@archiver.kernel.org>; Wed, 13 Apr 2022 09:42:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41C11C433EF
+	for <linux-ide@archiver.kernel.org>; Thu, 14 Apr 2022 01:07:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234670AbiDMJpE (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Wed, 13 Apr 2022 05:45:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40898 "EHLO
+        id S239356AbiDNBJl (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Wed, 13 Apr 2022 21:09:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41206 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234657AbiDMJpB (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 13 Apr 2022 05:45:01 -0400
-Received: from mail.growthmindset24.pl (mail.growthmindset24.pl [212.237.36.120])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73E9355755
-        for <linux-ide@vger.kernel.org>; Wed, 13 Apr 2022 02:42:41 -0700 (PDT)
-Received: by mail.growthmindset24.pl (Postfix, from userid 1001)
-        id D9F1387FFD; Tue, 12 Apr 2022 08:56:29 +0100 (BST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=growthmindset24.pl;
-        s=mail; t=1649750203;
-        bh=FDuFY3XQoq0gMX1b2gxgT7Py2p4Sxl0PJZYZ4NVaPho=;
-        h=Date:From:To:Subject:From;
-        b=S19P2SyFS78KefX8QX1rSel/dONNZcymNbMWlRY2S8OQNjjDJF42dJc1xIrkDEHuL
-         idafxeZQCmKbKWH5GJOL+uplqo5CmYW+ZMl8j85UUGkHGjO4UlZk29XOSpYI4S7JHY
-         3qjcEdeLbR05WKeLmsmUNJNtiv/T4bS347gI3FwnsWFVnofjPFqbAZMYkIT/wNIRhX
-         oUjNSwE/nDZWGiJOXsYwbhQSH5Xr/1CfvgThqp2lpge5W4/PxE9tz+51Buur6MM42r
-         gzXfdjZ3mHRAl2FuU1uoXQtlwAlgVl6cZxC65C02wlGs1wsOq8RLIkH3vxctaV1eaQ
-         tmXhCtz12rumg==
-Received: by mail.growthmindset24.pl for <linux-ide@vger.kernel.org>; Tue, 12 Apr 2022 07:56:00 GMT
-Message-ID: <20220412073001-0.1.2w.d8cu.0.tib9ay2epz@growthmindset24.pl>
-Date:   Tue, 12 Apr 2022 07:56:00 GMT
-From:   =?UTF-8?Q? "Przemys=C5=82aw_Wr=C3=B3blewski" ?= 
-        <przemyslaw.wroblewski@growthmindset24.pl>
-To:     <linux-ide@vger.kernel.org>
-Subject: Wycena paneli fotowoltaicznych
-X-Mailer: mail.growthmindset24.pl
+        with ESMTP id S239348AbiDNBJk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 13 Apr 2022 21:09:40 -0400
+Received: from mail-oi1-f175.google.com (mail-oi1-f175.google.com [209.85.167.175])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CDE7651E51;
+        Wed, 13 Apr 2022 18:07:17 -0700 (PDT)
+Received: by mail-oi1-f175.google.com with SMTP id z8so3901987oix.3;
+        Wed, 13 Apr 2022 18:07:17 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=R82RD8v5prr4Rd3tq2uqvwCSz+WljHxj6XlBXJR4q0I=;
+        b=q0sj9WYj1RcX3fH2xYq70ju0+/eZJEgNaSjDgZtDtGTSUN8gQPElAZktoKGSnY6CYA
+         d6wp/pA2wMDXEC27LERtDkg5FpoBMcHKe0mL9fk3s1xXvKe8V5mKL2jeSyD+/fvAWdtt
+         JA/dlMqRQxmb4frk4DRYAydQmnajSGOlfhXaXZmK/TJzJmrzMVtcfMiD7oaES14KOxBq
+         fkHnATrpP51tWWIwtCJxg2xJvE9cURvCNVTCmLf9pg2Yh7x93JeRusjHgPrcRGM3zksR
+         818/s9D1ieQzYoTgqneQ7xXwNcMFLdqMs0qgxFFS0r/qjGHfik3fAE2+74dhPPpMvIZL
+         XtXA==
+X-Gm-Message-State: AOAM533J2mE+ZqRMV302DuSRUUd2gCAlLmMSLMx47iJl0vnmuxEestdh
+        lgg727erMS1cCHXikppBHhv5lZGUvA==
+X-Google-Smtp-Source: ABdhPJxJC8sVa21CHJYMxU6uS+2mJLyhydv3zxPuOBKBwslWEpFW7sJZO3uLi4b1xaUDCrYgK54RBQ==
+X-Received: by 2002:a05:6808:1827:b0:2da:5085:2e78 with SMTP id bh39-20020a056808182700b002da50852e78mr661056oib.172.1649898437146;
+        Wed, 13 Apr 2022 18:07:17 -0700 (PDT)
+Received: from robh.at.kernel.org (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id r10-20020a056830448a00b005c9344dac06sm252742otv.19.2022.04.13.18.07.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 13 Apr 2022 18:07:16 -0700 (PDT)
+Received: (nullmailer pid 113330 invoked by uid 1000);
+        Thu, 14 Apr 2022 01:07:15 -0000
+Date:   Wed, 13 Apr 2022 20:07:15 -0500
+From:   Rob Herring <robh@kernel.org>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Cc:     Geert Uytterhoeven <geert+renesas@glider.be>,
+        Sergey Shtylyov <s.shtylyov@omp.ru>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        linux-ide@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
+        devicetree@vger.kernel.org,
+        Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>,
+        Marian-Cristian Rotariu 
+        <marian-cristian.rotariu.rb@bp.renesas.com>
+Subject: Re: [WARNING: UNSCANNABLE EXTRACTION FAILED][PATCH v2] dt-bindings:
+ ata: renesas,rcar-sata: Add r8a774e1 support
+Message-ID: <Yldzw63tIdKhhtA1@robh.at.kernel.org>
+References: <5861565a79a2bdadc07ae84e23e6d96dbb764823.1649680949.git.geert+renesas@glider.be>
+ <4716ac8b-acee-da06-5fa1-34eed07ba4d0@opensource.wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4716ac8b-acee-da06-5fa1-34eed07ba4d0@opensource.wdc.com>
 Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-Dzie=C5=84 dobry,
+On Tue, Apr 12, 2022 at 08:05:42AM +0900, Damien Le Moal wrote:
+> On 4/11/22 21:43, Geert Uytterhoeven wrote:
+> > From: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> > 
+> > Document SATA support for the RZ/G2H SoC, no driver change required.
+> > 
+> > Signed-off-by: Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>
+> > Reviewed-by: Marian-Cristian Rotariu <marian-cristian.rotariu.rb@bp.renesas.com>
+> > Acked-by: Rob Herring <robh@kernel.org>
+> > Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> > Acked-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> > ---
+> > v2:
+> >   - Add Acked-by.
+> > ---
+> >  Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml | 1 +
+> >  1 file changed, 1 insertion(+)
+> > 
+> > diff --git a/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml b/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
+> > index c060c7914cae6573..c4e4a9eab658056d 100644
+> > --- a/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
+> > +++ b/Documentation/devicetree/bindings/ata/renesas,rcar-sata.yaml
+> > @@ -26,6 +26,7 @@ properties:
+> >        - items:
+> >            - enum:
+> >                - renesas,sata-r8a774b1     # RZ/G2N
+> > +              - renesas,sata-r8a774e1     # RZ/G2H
+> >                - renesas,sata-r8a7795      # R-Car H3
+> >                - renesas,sata-r8a77965     # R-Car M3-N
+> >            - const: renesas,rcar-gen3-sata # generic R-Car Gen3 or RZ/G2
+> 
+> Rob,
+> 
+> Will you take this patch or do you want me to queue it ?
 
-dostrzegam mo=C5=BCliwo=C5=9B=C4=87 wsp=C3=B3=C5=82pracy z Pa=C5=84stwa f=
-irm=C4=85.
+Please take it. If I've acked or reviewed it, I'm expecting others to 
+take.
 
-=C5=9Awiadczymy kompleksow=C4=85 obs=C5=82ug=C4=99 inwestycji w fotowolta=
-ik=C4=99, kt=C3=B3ra obni=C5=BCa koszty energii elektrycznej nawet o 90%.
-
-Czy s=C4=85 Pa=C5=84stwo zainteresowani weryfikacj=C4=85 wst=C4=99pnych p=
-ropozycji?
-
-
-Pozdrawiam,
-Przemys=C5=82aw Wr=C3=B3blewski
+Rob
