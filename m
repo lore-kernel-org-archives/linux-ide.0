@@ -2,35 +2,35 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85FB3C4707F
-	for <linux-ide@archiver.kernel.org>; Tue, 19 Apr 2022 16:44:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 350FAC47081
+	for <linux-ide@archiver.kernel.org>; Tue, 19 Apr 2022 16:44:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347950AbiDSQoz (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 19 Apr 2022 12:44:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53888 "EHLO
+        id S1347772AbiDSQpA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 19 Apr 2022 12:45:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54314 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355069AbiDSQnv (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Apr 2022 12:43:51 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46CC223BF4;
-        Tue, 19 Apr 2022 09:41:08 -0700 (PDT)
+        with ESMTP id S1354984AbiDSQoo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Apr 2022 12:44:44 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [139.178.84.217])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 527F423BF4;
+        Tue, 19 Apr 2022 09:42:01 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id E6505B81BBE;
-        Tue, 19 Apr 2022 16:41:06 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63D13C385AB;
-        Tue, 19 Apr 2022 16:40:58 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id E36DF61856;
+        Tue, 19 Apr 2022 16:42:00 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 08A17C385AE;
+        Tue, 19 Apr 2022 16:41:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650386465;
-        bh=U6UXkGiba+IWPQ84YTVH8JdmB9ez+oeADVDoBoSMAeA=;
+        s=k20201202; t=1650386520;
+        bh=vkbNMot1HaZLmF1XKNGCizpp67huD2tFJl0uD4gcruA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Dx+/8hWSqP54Qj1bLqmbcjy7EOlZLK7fehRxrCDudwV6M9Fy7SO9kbeCNChaDPtyq
-         nsffbT6io+sZXH1/7PSZ5lArW4jYfo9IEA5PA3ZHDbrheUIW4wgeNtLX6XxzXMp7NU
-         dcGLlN+W9BezzkCXSsS0Z38Bztbsq5Tl/AIm+XmzC4ZeRrzAQBlu7Gz95MmYpNBKUO
-         +zYF0K/ue6uCvMR2BqEUgUOzd4ohj0vXKRplH8aesj7MKBVuUE0XKQbk8x9Ts6ZZtj
-         bQk4zfxsOkvz3MM9GolbI20rGgZi2As8q/AuQe5U6ARsz3ojSijMOH4RPSyzfZLrvr
-         P0YR74cjlR93A==
+        b=FSCbZpV1Dc9c7lTc/j0AP0FhjBo0afHIiy8rSFm4J/COwse/hlE0MWtRdvFHeiMXM
+         4ksw2hp7kEcEo4tbc46HfPt8ZVavi3JNqVWlbeyRH559HmFG+FH+7d9mnWOqfvDYZM
+         HN+N3F3N13povD3AscGRy7ycI594O9fAs0HfDIxVJbBSXoHKMaeZruEjL1amcbSbrI
+         J9jkxz9AnOTZDgxht0kvzZJsFNe3GuYjqehOo7xje4o0kHt9NgweFyW0d+C0dKADlu
+         BgMJln0qIyDqp4gJ2N6G44SYtjHA+7UbS+mSA0MqYyNc/qyiJmB+yOhR9A6R35UYyb
+         3Yf66fWoNuKNA==
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     robert.jarzmik@free.fr, linux-arm-kernel@lists.infradead.org
 Cc:     Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
@@ -59,9 +59,9 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
         linux-rtc@vger.kernel.org, linux-usb@vger.kernel.org,
         linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         alsa-devel@alsa-project.org
-Subject: [PATCH 17/48] ARM: pxa: corgi: use gpio descriptors for audio
-Date:   Tue, 19 Apr 2022 18:37:39 +0200
-Message-Id: <20220419163810.2118169-18-arnd@kernel.org>
+Subject: [PATCH 24/48] ARM: pxa: mainstone-wm97xx: use gpio lookup table
+Date:   Tue, 19 Apr 2022 18:37:46 +0200
+Message-Id: <20220419163810.2118169-25-arnd@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20220419163810.2118169-1-arnd@kernel.org>
 References: <20220419163810.2118169-1-arnd@kernel.org>
@@ -73,209 +73,210 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-The audio driver should not use a hardwired gpio number
-from the header. Change it to use a lookup table.
+This driver hardcodes gpio numbers without a header file.
+Use lookup tables instead.
 
-Acked-by: Mark Brown <broonie@kernel.org>
-Cc: alsa-devel@alsa-project.org
+Cc: Marek Vasut <marek.vasut@gmail.com>
+Acked-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
 Acked-by: Robert Jarzmik <robert.jarzmik@free.fr>
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Cc: linux-input@vger.kernel.org
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- arch/arm/mach-pxa/corgi.c                    | 22 ++++++++++-
- arch/arm/mach-pxa/{include/mach => }/corgi.h |  2 +-
- arch/arm/mach-pxa/corgi_pm.c                 |  2 +-
- sound/soc/pxa/corgi.c                        | 41 +++++++++++++-------
- 4 files changed, 51 insertions(+), 16 deletions(-)
- rename arch/arm/mach-pxa/{include/mach => }/corgi.h (98%)
+ arch/arm/mach-pxa/mainstone.c                |  9 +++++
+ arch/arm/mach-pxa/palmld.c                   |  9 +++++
+ arch/arm/mach-pxa/palmt5.c                   |  9 +++++
+ arch/arm/mach-pxa/palmtx.c                   |  9 +++++
+ drivers/input/touchscreen/mainstone-wm97xx.c | 35 ++++++++------------
+ 5 files changed, 50 insertions(+), 21 deletions(-)
 
-diff --git a/arch/arm/mach-pxa/corgi.c b/arch/arm/mach-pxa/corgi.c
-index f897762c8b58..c546356d0f02 100644
---- a/arch/arm/mach-pxa/corgi.c
-+++ b/arch/arm/mach-pxa/corgi.c
-@@ -49,7 +49,7 @@
- #include <linux/platform_data/irda-pxaficp.h>
- #include <linux/platform_data/mmc-pxamci.h>
- #include "udc.h"
--#include <mach/corgi.h>
-+#include "corgi.h"
- #include "sharpsl_pm.h"
- 
- #include <asm/mach/sharpsl_param.h>
-@@ -472,6 +472,25 @@ static struct platform_device corgiled_device = {
+diff --git a/arch/arm/mach-pxa/mainstone.c b/arch/arm/mach-pxa/mainstone.c
+index f0072e63b456..599736c93163 100644
+--- a/arch/arm/mach-pxa/mainstone.c
++++ b/arch/arm/mach-pxa/mainstone.c
+@@ -548,6 +548,14 @@ static struct gpiod_lookup_table mainstone_pcmcia_gpio_table = {
  	},
  };
  
-+static struct gpiod_lookup_table corgi_audio_gpio_table = {
-+	.dev_id = "corgi-audio",
++static struct gpiod_lookup_table mainstone_wm97xx_gpio_table = {
++	.dev_id = "wm97xx-touch",
 +	.table = {
-+		GPIO_LOOKUP("sharp-scoop",
-+			    CORGI_GPIO_MUTE_L - CORGI_SCOOP_GPIO_BASE,
-+			    "mute-l", GPIO_ACTIVE_HIGH),
-+		GPIO_LOOKUP("sharp-scoop",
-+			    CORGI_GPIO_MUTE_R - CORGI_SCOOP_GPIO_BASE,
-+			    "mute-r", GPIO_ACTIVE_HIGH),
-+		GPIO_LOOKUP("sharp-scoop",
-+			    CORGI_GPIO_APM_ON - CORGI_SCOOP_GPIO_BASE,
-+			    "apm-on", GPIO_ACTIVE_HIGH),
-+		GPIO_LOOKUP("sharp-scoop",
-+			    CORGI_GPIO_MIC_BIAS - CORGI_SCOOP_GPIO_BASE,
-+			    "mic-bias", GPIO_ACTIVE_HIGH),
++		GPIO_LOOKUP("gpio-pxa", 4, "touch", GPIO_ACTIVE_HIGH),
 +		{ },
 +	},
 +};
 +
- /*
-  * Corgi Audio
-  */
-@@ -744,6 +763,7 @@ static void __init corgi_init(void)
+ static void __init mainstone_init(void)
+ {
+ 	int SW7 = 0;  /* FIXME: get from SCR (Mst doc section 3.2.1.1) */
+@@ -562,6 +570,7 @@ static void __init mainstone_init(void)
+ 		      "mst-pcmcia1", MST_PCMCIA_INPUTS, 0, NULL,
+ 		      NULL, mst_pcmcia1_irqs);
+ 	gpiod_add_lookup_table(&mainstone_pcmcia_gpio_table);
++	gpiod_add_lookup_table(&mainstone_wm97xx_gpio_table);
  
-  	pxa_set_udc_info(&udc_info);
- 	gpiod_add_lookup_table(&corgi_mci_gpio_table);
-+	gpiod_add_lookup_table(&corgi_audio_gpio_table);
- 	pxa_set_mci_info(&corgi_mci_platform_data);
- 	pxa_set_ficp_info(&corgi_ficp_platform_data);
- 	pxa_set_i2c_info(NULL);
-diff --git a/arch/arm/mach-pxa/include/mach/corgi.h b/arch/arm/mach-pxa/corgi.h
-similarity index 98%
-rename from arch/arm/mach-pxa/include/mach/corgi.h
-rename to arch/arm/mach-pxa/corgi.h
-index b565ca7b8cda..fe2fcf6532b9 100644
---- a/arch/arm/mach-pxa/include/mach/corgi.h
-+++ b/arch/arm/mach-pxa/corgi.h
-@@ -9,7 +9,7 @@
- #ifndef __ASM_ARCH_CORGI_H
- #define __ASM_ARCH_CORGI_H  1
+ 	pxa_set_ffuart_info(NULL);
+ 	pxa_set_btuart_info(NULL);
+diff --git a/arch/arm/mach-pxa/palmld.c b/arch/arm/mach-pxa/palmld.c
+index d821606ce0b5..32308c63884e 100644
+--- a/arch/arm/mach-pxa/palmld.c
++++ b/arch/arm/mach-pxa/palmld.c
+@@ -347,6 +347,14 @@ static struct gpiod_lookup_table palmld_mci_gpio_table = {
+ 	},
+ };
  
--#include "irqs.h" /* PXA_NR_BUILTIN_GPIO */
-+#include <mach/irqs.h> /* PXA_NR_BUILTIN_GPIO */
- 
- /*
-  * Corgi (Non Standard) GPIO Definitions
-diff --git a/arch/arm/mach-pxa/corgi_pm.c b/arch/arm/mach-pxa/corgi_pm.c
-index ff1ac9bf37cb..c6ddfc737644 100644
---- a/arch/arm/mach-pxa/corgi_pm.c
-+++ b/arch/arm/mach-pxa/corgi_pm.c
-@@ -20,7 +20,7 @@
- #include <asm/irq.h>
- #include <asm/mach-types.h>
- 
--#include <mach/corgi.h>
-+#include "corgi.h"
- #include <mach/pxa2xx-regs.h>
- #include "sharpsl_pm.h"
- 
-diff --git a/sound/soc/pxa/corgi.c b/sound/soc/pxa/corgi.c
-index 8b83709431cb..4489d2c8b124 100644
---- a/sound/soc/pxa/corgi.c
-+++ b/sound/soc/pxa/corgi.c
-@@ -21,7 +21,6 @@
- #include <sound/soc.h>
- 
- #include <asm/mach-types.h>
--#include <mach/corgi.h>
- #include <linux/platform_data/asoc-pxa.h>
- 
- #include "../codecs/wm8731.h"
-@@ -41,6 +40,9 @@
- static int corgi_jack_func;
- static int corgi_spk_func;
- 
-+static struct gpio_desc *gpiod_mute_l, *gpiod_mute_r,
-+			*gpiod_apm_on, *gpiod_mic_bias;
++static struct gpiod_lookup_table palmld_wm97xx_touch_gpio_table = {
++	.dev_id = "wm97xx-touch",
++	.table = {
++		GPIO_LOOKUP("gpio-pxa", 27, "touch", GPIO_ACTIVE_HIGH),
++		{ },
++	},
++};
 +
- static void corgi_ext_control(struct snd_soc_dapm_context *dapm)
+ static void __init palmld_init(void)
  {
- 	snd_soc_dapm_mutex_lock(dapm);
-@@ -49,8 +51,8 @@ static void corgi_ext_control(struct snd_soc_dapm_context *dapm)
- 	switch (corgi_jack_func) {
- 	case CORGI_HP:
- 		/* set = unmute headphone */
--		gpio_set_value(CORGI_GPIO_MUTE_L, 1);
--		gpio_set_value(CORGI_GPIO_MUTE_R, 1);
-+		gpiod_set_value(gpiod_mute_l, 1);
-+		gpiod_set_value(gpiod_mute_r, 1);
- 		snd_soc_dapm_disable_pin_unlocked(dapm, "Mic Jack");
- 		snd_soc_dapm_disable_pin_unlocked(dapm, "Line Jack");
- 		snd_soc_dapm_enable_pin_unlocked(dapm, "Headphone Jack");
-@@ -58,24 +60,24 @@ static void corgi_ext_control(struct snd_soc_dapm_context *dapm)
- 		break;
- 	case CORGI_MIC:
- 		/* reset = mute headphone */
--		gpio_set_value(CORGI_GPIO_MUTE_L, 0);
--		gpio_set_value(CORGI_GPIO_MUTE_R, 0);
-+		gpiod_set_value(gpiod_mute_l, 0);
-+		gpiod_set_value(gpiod_mute_r, 0);
- 		snd_soc_dapm_enable_pin_unlocked(dapm, "Mic Jack");
- 		snd_soc_dapm_disable_pin_unlocked(dapm, "Line Jack");
- 		snd_soc_dapm_disable_pin_unlocked(dapm, "Headphone Jack");
- 		snd_soc_dapm_disable_pin_unlocked(dapm, "Headset Jack");
- 		break;
- 	case CORGI_LINE:
--		gpio_set_value(CORGI_GPIO_MUTE_L, 0);
--		gpio_set_value(CORGI_GPIO_MUTE_R, 0);
-+		gpiod_set_value(gpiod_mute_l, 0);
-+		gpiod_set_value(gpiod_mute_r, 0);
- 		snd_soc_dapm_disable_pin_unlocked(dapm, "Mic Jack");
- 		snd_soc_dapm_enable_pin_unlocked(dapm, "Line Jack");
- 		snd_soc_dapm_disable_pin_unlocked(dapm, "Headphone Jack");
- 		snd_soc_dapm_disable_pin_unlocked(dapm, "Headset Jack");
- 		break;
- 	case CORGI_HEADSET:
--		gpio_set_value(CORGI_GPIO_MUTE_L, 0);
--		gpio_set_value(CORGI_GPIO_MUTE_R, 1);
-+		gpiod_set_value(gpiod_mute_l, 0);
-+		gpiod_set_value(gpiod_mute_r, 1);
- 		snd_soc_dapm_enable_pin_unlocked(dapm, "Mic Jack");
- 		snd_soc_dapm_disable_pin_unlocked(dapm, "Line Jack");
- 		snd_soc_dapm_disable_pin_unlocked(dapm, "Headphone Jack");
-@@ -108,8 +110,8 @@ static int corgi_startup(struct snd_pcm_substream *substream)
- static void corgi_shutdown(struct snd_pcm_substream *substream)
- {
- 	/* set = unmute headphone */
--	gpio_set_value(CORGI_GPIO_MUTE_L, 1);
--	gpio_set_value(CORGI_GPIO_MUTE_R, 1);
-+	gpiod_set_value(gpiod_mute_l, 1);
-+	gpiod_set_value(gpiod_mute_r, 1);
- }
+ 	pxa2xx_mfp_config(ARRAY_AND_SIZE(palmld_pin_config));
+@@ -355,6 +363,7 @@ static void __init palmld_init(void)
+ 	pxa_set_stuart_info(NULL);
  
- static int corgi_hw_params(struct snd_pcm_substream *substream,
-@@ -199,14 +201,14 @@ static int corgi_set_spk(struct snd_kcontrol *kcontrol,
- static int corgi_amp_event(struct snd_soc_dapm_widget *w,
- 	struct snd_kcontrol *k, int event)
- {
--	gpio_set_value(CORGI_GPIO_APM_ON, SND_SOC_DAPM_EVENT_ON(event));
-+	gpiod_set_value(gpiod_apm_on, SND_SOC_DAPM_EVENT_ON(event));
- 	return 0;
- }
+ 	palm27x_mmc_init(&palmld_mci_gpio_table);
++	gpiod_add_lookup_table(&palmld_wm97xx_touch_gpio_table);
+ 	palm27x_pm_init(PALMLD_STR_BASE);
+ 	palm27x_lcd_init(-1, &palm_320x480_lcd_mode);
+ 	palm27x_irda_init(GPIO_NR_PALMLD_IR_DISABLE);
+diff --git a/arch/arm/mach-pxa/palmt5.c b/arch/arm/mach-pxa/palmt5.c
+index 460a8b1043a5..463b62ec1b01 100644
+--- a/arch/arm/mach-pxa/palmt5.c
++++ b/arch/arm/mach-pxa/palmt5.c
+@@ -190,6 +190,14 @@ static struct gpiod_lookup_table palmt5_mci_gpio_table = {
+ 	},
+ };
  
- static int corgi_mic_event(struct snd_soc_dapm_widget *w,
- 	struct snd_kcontrol *k, int event)
- {
--	gpio_set_value(CORGI_GPIO_MIC_BIAS, SND_SOC_DAPM_EVENT_ON(event));
-+	gpiod_set_value(gpiod_mic_bias, SND_SOC_DAPM_EVENT_ON(event));
- 	return 0;
- }
- 
-@@ -293,6 +295,19 @@ static int corgi_probe(struct platform_device *pdev)
- 
- 	card->dev = &pdev->dev;
- 
-+	gpiod_mute_l = devm_gpiod_get(&pdev->dev, "mute-l", GPIOD_OUT_HIGH);
-+	if (IS_ERR(gpiod_mute_l))
-+		return PTR_ERR(gpiod_mute_l);
-+	gpiod_mute_r = devm_gpiod_get(&pdev->dev, "mute-r", GPIOD_OUT_HIGH);
-+	if (IS_ERR(gpiod_mute_r))
-+		return PTR_ERR(gpiod_mute_r);
-+	gpiod_apm_on = devm_gpiod_get(&pdev->dev, "apm-on", GPIOD_OUT_LOW);
-+	if (IS_ERR(gpiod_apm_on))
-+		return PTR_ERR(gpiod_apm_on);
-+	gpiod_mic_bias = devm_gpiod_get(&pdev->dev, "mic-bias", GPIOD_OUT_LOW);
-+	if (IS_ERR(gpiod_mic_bias))
-+		return PTR_ERR(gpiod_mic_bias);
++static struct gpiod_lookup_table palmt5_wm97xx_touch_gpio_table = {
++	.dev_id = "wm97xx-touch",
++	.table = {
++		GPIO_LOOKUP("gpio-pxa", 27, "touch", GPIO_ACTIVE_HIGH),
++		{ },
++	},
++};
 +
- 	ret = devm_snd_soc_register_card(&pdev->dev, card);
- 	if (ret)
- 		dev_err(&pdev->dev, "snd_soc_register_card() failed: %d\n",
+ static void __init palmt5_init(void)
+ {
+ 	pxa2xx_mfp_config(ARRAY_AND_SIZE(palmt5_pin_config));
+@@ -198,6 +206,7 @@ static void __init palmt5_init(void)
+ 	pxa_set_stuart_info(NULL);
+ 
+ 	palm27x_mmc_init(&palmt5_mci_gpio_table);
++	gpiod_add_lookup_table(&palmt5_wm97xx_touch_gpio_table);
+ 	palm27x_pm_init(PALMT5_STR_BASE);
+ 	palm27x_lcd_init(-1, &palm_320x480_lcd_mode);
+ 	palm27x_udc_init(GPIO_NR_PALMT5_USB_DETECT_N,
+diff --git a/arch/arm/mach-pxa/palmtx.c b/arch/arm/mach-pxa/palmtx.c
+index 86460d6ea721..c0d0762540ab 100644
+--- a/arch/arm/mach-pxa/palmtx.c
++++ b/arch/arm/mach-pxa/palmtx.c
+@@ -345,6 +345,14 @@ static struct gpiod_lookup_table palmtx_mci_gpio_table = {
+ 	},
+ };
+ 
++static struct gpiod_lookup_table palmtx_wm97xx_touch_gpio_table = {
++	.dev_id = "wm97xx-touch",
++	.table = {
++		GPIO_LOOKUP("gpio-pxa", 27, "touch", GPIO_ACTIVE_HIGH),
++		{ },
++	},
++};
++
+ static void __init palmtx_init(void)
+ {
+ 	pxa2xx_mfp_config(ARRAY_AND_SIZE(palmtx_pin_config));
+@@ -353,6 +361,7 @@ static void __init palmtx_init(void)
+ 	pxa_set_stuart_info(NULL);
+ 
+ 	palm27x_mmc_init(&palmtx_mci_gpio_table);
++	gpiod_add_lookup_table(&palmtx_wm97xx_touch_gpio_table);
+ 	palm27x_pm_init(PALMTX_STR_BASE);
+ 	palm27x_lcd_init(-1, &palm_320x480_lcd_mode);
+ 	palm27x_udc_init(GPIO_NR_PALMTX_USB_DETECT_N,
+diff --git a/drivers/input/touchscreen/mainstone-wm97xx.c b/drivers/input/touchscreen/mainstone-wm97xx.c
+index f8564b398eb3..87655105ef3a 100644
+--- a/drivers/input/touchscreen/mainstone-wm97xx.c
++++ b/drivers/input/touchscreen/mainstone-wm97xx.c
+@@ -21,6 +21,7 @@
+ #include <linux/moduleparam.h>
+ #include <linux/kernel.h>
+ #include <linux/delay.h>
++#include <linux/gpio/consumer.h>
+ #include <linux/irq.h>
+ #include <linux/interrupt.h>
+ #include <linux/wm97xx.h>
+@@ -58,7 +59,7 @@ static const struct continuous cinfo[] = {
+ /* continuous speed index */
+ static int sp_idx;
+ static u16 last, tries;
+-static int irq;
++static struct gpio_desc *gpiod_irq;
+ 
+ /*
+  * Pen sampling frequency (Hz) in continuous mode.
+@@ -194,28 +195,21 @@ static int wm97xx_acc_startup(struct wm97xx *wm)
+ 	/* IRQ driven touchscreen is used on Palm hardware */
+ 	if (machine_is_palmt5() || machine_is_palmtx() || machine_is_palmld()) {
+ 		pen_int = 1;
+-		irq = 27;
+ 		/* There is some obscure mutant of WM9712 interbred with WM9713
+ 		 * used on Palm HW */
+ 		wm->variant = WM97xx_WM1613;
+-	} else if (machine_is_mainstone() && pen_int)
+-		irq = 4;
+-
+-	if (irq) {
+-		ret = gpio_request(irq, "Touchscreen IRQ");
+-		if (ret)
+-			goto out;
+-
+-		ret = gpio_direction_input(irq);
+-		if (ret) {
+-			gpio_free(irq);
+-			goto out;
+-		}
++	}
++
++	if (pen_int) {
++		gpiod_irq = gpiod_get(wm->dev, "touch", GPIOD_IN);
++		if (IS_ERR(gpiod_irq))
++			pen_int = 0;
++	}
+ 
+-		wm->pen_irq = gpio_to_irq(irq);
++	if (pen_int) {
++		wm->pen_irq = gpiod_to_irq(gpiod_irq);
+ 		irq_set_irq_type(wm->pen_irq, IRQ_TYPE_EDGE_BOTH);
+-	} else /* pen irq not supported */
+-		pen_int = 0;
++	}
+ 
+ 	/* codec specific irq config */
+ 	if (pen_int) {
+@@ -242,7 +236,6 @@ static int wm97xx_acc_startup(struct wm97xx *wm)
+ 		}
+ 	}
+ 
+-out:
+ 	return ret;
+ }
+ 
+@@ -250,8 +243,8 @@ static void wm97xx_acc_shutdown(struct wm97xx *wm)
+ {
+ 	/* codec specific deconfig */
+ 	if (pen_int) {
+-		if (irq)
+-			gpio_free(irq);
++		if (gpiod_irq)
++			gpiod_put(gpiod_irq);
+ 		wm->pen_irq = 0;
+ 	}
+ }
 -- 
 2.29.2
 
