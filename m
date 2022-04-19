@@ -2,35 +2,35 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00669C388F3
-	for <linux-ide@archiver.kernel.org>; Tue, 19 Apr 2022 16:46:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12DF1C4332F
+	for <linux-ide@archiver.kernel.org>; Tue, 19 Apr 2022 16:46:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245432AbiDSQs7 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 19 Apr 2022 12:48:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55678 "EHLO
+        id S237117AbiDSQtA (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 19 Apr 2022 12:49:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55490 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231271AbiDSQrG (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Apr 2022 12:47:06 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC6C339692;
-        Tue, 19 Apr 2022 09:44:22 -0700 (PDT)
+        with ESMTP id S1355031AbiDSQqZ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Apr 2022 12:46:25 -0400
+Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5D47A3AA66;
+        Tue, 19 Apr 2022 09:43:42 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 98D31B81BB6;
-        Tue, 19 Apr 2022 16:44:21 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21D49C385B6;
-        Tue, 19 Apr 2022 16:44:12 +0000 (UTC)
+        by dfw.source.kernel.org (Postfix) with ESMTPS id DF11B61879;
+        Tue, 19 Apr 2022 16:43:41 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D32AC385A7;
+        Tue, 19 Apr 2022 16:43:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650386660;
-        bh=/6iIOutIe2dthl0F9tUwRrWmTz1Y+vHGyZSNFuNK4W0=;
+        s=k20201202; t=1650386621;
+        bh=/Prqr04i1fpscHVDuVcgCmngsY3hyx249dIBGFreq2Y=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=r9TzRbN2wJ9anV7WP0E3rP1S1Cki++xSivN4dBdyNHhyWwMh/MI+BtyAeqgYlBYXV
-         ItPRfCU6w7MqI+MFhEsR5oorVEigDVDTfLVzE3yCgnLfKVyWW3gfUdTAbpfQ+0xMlv
-         4h+YVQk5XgEEoQXPsOwj0Fou41j1UM7Ct/jvU8LRL/8ndMFQ+B79JydmegZ2DAQ0SW
-         JwbK17hawoV1JcDkXQOweIbtoMS6G5Dy/AtPICtIdIqThqKAcNwIk2Z+V0Gk8YY1UC
-         qolXwRGVZyysQKzmwpm1PVfh5Wsw43vmB7v0Jz+vdy/0bIr6cZp8M8u+LOSFSklyM5
-         I5AkVeQlQC3Hw==
+        b=Y3PA1gNBpWemWTKgXNfQE6gZ2lkQ2OFkd5OEDO01xwY7wK6BGc9IgzXVFUA0bOzmZ
+         IdxCFkit5T5OsWlQE5O+YIuaAvNKouAQPTTolrYkcjfQij7Q0LwfC8hhcM+pUKrArL
+         jV+yRfNhU4PQ+WoL1zX7EbhPcVQ14Zq9MQGKIATzI5hPOS5KUZWHKSLomaqNqAoJ56
+         IDOxvX2ZFZltZq/w38uCesi0fdH8Nymt/I05daQ0ly4mZIZ+Mu5zj4YzGfVJGkUh2W
+         5EvHWtWx1sIW2sQh+QuJzgReXLIELwok/SAnSo1kypQDxD/mQa+4Sz3q3cq7wQQ5sQ
+         /4GyTOFmHOlXQ==
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     robert.jarzmik@free.fr, linux-arm-kernel@lists.infradead.org
 Cc:     Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
@@ -59,9 +59,9 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
         linux-rtc@vger.kernel.org, linux-usb@vger.kernel.org,
         linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
         alsa-devel@alsa-project.org
-Subject: [PATCH 42/48] ARM: mmp: remove tavorevb board support
-Date:   Tue, 19 Apr 2022 18:38:04 +0200
-Message-Id: <20220419163810.2118169-43-arnd@kernel.org>
+Subject: [PATCH 37/48] ARM: pxa: move smemc register access from clk to platform
+Date:   Tue, 19 Apr 2022 18:37:59 +0200
+Message-Id: <20220419163810.2118169-38-arnd@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20220419163810.2118169-1-arnd@kernel.org>
 References: <20220419163810.2118169-1-arnd@kernel.org>
@@ -73,192 +73,350 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-There are two tavorevb boards in the kernel, one using a PXA930 chip in
-mach-pxa, and one using the later PXA910 chip in mach-mmp.  They use the
-same board number, which is generally a bad idea, and in a multiplatform
-kernel, we can end up with funny link errors like this one resulting
-from two boards gettting controlled by the same Kconfig symbol:
+The get_sdram_rows() and get_memclkdiv() helpers need smemc
+register that are separate from the clk registers, move
+them out of the clk driver, and use an extern declaration
+instead.
 
-arch/arm/mach-mmp/tavorevb.o: In function `tavorevb_init':
-tavorevb.c:(.init.text+0x4c): undefined reference to `pxa910_device_uart1'
-tavorevb.c:(.init.text+0x50): undefined reference to `pxa910_device_gpio'
-tavorevb.o:(.arch.info.init+0x54): undefined reference to `pxa910_init_irq'
-tavorevb.o:(.arch.info.init+0x58): undefined reference to `pxa910_timer_init'
-
-The mach-pxa TavorEVB seems much more complete than the mach-mmp one
-that supports only uart, gpio and ethernet. Further, I could find no
-information about the board on the internet aside from references to
-the Linux kernel, so I assume this was never available outside of Marvell
-and can be removed entirely.
-
-There is a third board named TavorEVB in the Kconfig description,
-but this refers to the "TTC_DKB" machine. The two are clearly
-related, so I change the Kconfig description to just list both
-names.
-
-Cc: Lubomir Rintel <lkundrak@v3.sk>
-Reviewed-by: Lubomir Rintel <lkundrak@v3.sk>
+Cc: Michael Turquette <mturquette@baylibre.com>
+Cc: Stephen Boyd <sboyd@kernel.org>
+Cc: linux-clk@vger.kernel.org
+Link: https://lore.kernel.org/lkml/87pnielzo4.fsf@belgarion.home/
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- arch/arm/mach-mmp/Kconfig    |  10 +---
- arch/arm/mach-mmp/Makefile   |   1 -
- arch/arm/mach-mmp/tavorevb.c | 113 -----------------------------------
- 3 files changed, 1 insertion(+), 123 deletions(-)
- delete mode 100644 arch/arm/mach-mmp/tavorevb.c
+ arch/arm/mach-pxa/generic.c   |  6 ++++++
+ arch/arm/mach-pxa/pxa2xx.c    | 25 +++++++++++++++++++++++++
+ arch/arm/mach-pxa/pxa3xx.c    |  4 ++++
+ arch/arm/mach-pxa/smemc.c     |  9 +++++++++
+ drivers/clk/pxa/clk-pxa.c     |  4 +++-
+ drivers/clk/pxa/clk-pxa.h     |  5 +++--
+ drivers/clk/pxa/clk-pxa25x.c  | 30 +++---------------------------
+ drivers/clk/pxa/clk-pxa27x.c  | 31 +++----------------------------
+ drivers/clk/pxa/clk-pxa3xx.c  |  8 +++-----
+ include/linux/soc/pxa/smemc.h |  3 +++
+ 10 files changed, 62 insertions(+), 63 deletions(-)
 
-diff --git a/arch/arm/mach-mmp/Kconfig b/arch/arm/mach-mmp/Kconfig
-index 0dd999212944..92a730a573b9 100644
---- a/arch/arm/mach-mmp/Kconfig
-+++ b/arch/arm/mach-mmp/Kconfig
-@@ -39,16 +39,8 @@ config MACH_AVENGERS_LITE
- 	  Say 'Y' here if you want to support the Marvell PXA168-based
- 	  Avengers Lite Development Board.
+diff --git a/arch/arm/mach-pxa/generic.c b/arch/arm/mach-pxa/generic.c
+index 2c2c82fcf9cb..971d25e95a1a 100644
+--- a/arch/arm/mach-pxa/generic.c
++++ b/arch/arm/mach-pxa/generic.c
+@@ -18,6 +18,7 @@
+ #include <linux/kernel.h>
+ #include <linux/init.h>
+ #include <linux/soc/pxa/cpu.h>
++#include <linux/soc/pxa/smemc.h>
  
--config MACH_TAVOREVB
--	bool "Marvell's PXA910 TavorEVB Development Board"
--	depends on ARCH_MULTI_V5
--	select CPU_PXA910
--	help
--	  Say 'Y' here if you want to support the Marvell PXA910-based
--	  TavorEVB Development Board.
+ #include <asm/mach/map.h>
+ #include <asm/mach-types.h>
+@@ -84,6 +85,11 @@ void pxa_smemc_set_pcmcia_socket(int nr)
+ }
+ EXPORT_SYMBOL_GPL(pxa_smemc_set_pcmcia_socket);
+ 
++void __iomem *pxa_smemc_get_mdrefr(void)
++{
++	return MDREFR;
++}
++
+ /*
+  * Intel PXA2xx internal register mapping.
+  *
+diff --git a/arch/arm/mach-pxa/pxa2xx.c b/arch/arm/mach-pxa/pxa2xx.c
+index ac72acb43e26..f583759ac00d 100644
+--- a/arch/arm/mach-pxa/pxa2xx.c
++++ b/arch/arm/mach-pxa/pxa2xx.c
+@@ -15,6 +15,7 @@
+ #include <mach/pxa2xx-regs.h>
+ #include "mfp-pxa25x.h"
+ #include <mach/reset.h>
++#include <mach/smemc.h>
+ #include <linux/platform_data/irda-pxaficp.h>
+ 
+ void pxa2xx_clear_reset_status(unsigned int mask)
+@@ -50,3 +51,27 @@ void pxa2xx_transceiver_mode(struct device *dev, int mode)
+ 		BUG();
+ }
+ EXPORT_SYMBOL_GPL(pxa2xx_transceiver_mode);
++
++#define MDCNFG_DRAC2(mdcnfg)	(((mdcnfg) >> 21) & 0x3)
++#define MDCNFG_DRAC0(mdcnfg)	(((mdcnfg) >> 5) & 0x3)
++
++int pxa2xx_smemc_get_sdram_rows(void)
++{
++	static int sdram_rows;
++	unsigned int drac2 = 0, drac0 = 0;
++	u32 mdcnfg;
++
++	if (sdram_rows)
++		return sdram_rows;
++
++	mdcnfg = readl_relaxed(MDCNFG);
++
++	if (mdcnfg & (MDCNFG_DE2 | MDCNFG_DE3))
++		drac2 = MDCNFG_DRAC2(mdcnfg);
++
++	if (mdcnfg & (MDCNFG_DE0 | MDCNFG_DE1))
++		drac0 = MDCNFG_DRAC0(mdcnfg);
++
++	sdram_rows = 1 << (11 + max(drac0, drac2));
++	return sdram_rows;
++}
+diff --git a/arch/arm/mach-pxa/pxa3xx.c b/arch/arm/mach-pxa/pxa3xx.c
+index f4657f4edb3b..d486efb79dcd 100644
+--- a/arch/arm/mach-pxa/pxa3xx.c
++++ b/arch/arm/mach-pxa/pxa3xx.c
+@@ -52,6 +52,10 @@ extern void __init pxa_dt_irq_init(int (*fn)(struct irq_data *, unsigned int));
+ #define NDCR_ND_ARB_EN		(1 << 12)
+ #define NDCR_ND_ARB_CNTL	(1 << 19)
+ 
++#define CKEN_BOOT  		11      /* < Boot rom clock enable */
++#define CKEN_TPM   		19      /* < TPM clock enable */
++#define CKEN_HSIO2 		41      /* < HSIO2 clock enable */
++
+ #ifdef CONFIG_PM
+ 
+ #define ISRAM_START	0x5c000000
+diff --git a/arch/arm/mach-pxa/smemc.c b/arch/arm/mach-pxa/smemc.c
+index 47b99549d616..da0eeafdb5a0 100644
+--- a/arch/arm/mach-pxa/smemc.c
++++ b/arch/arm/mach-pxa/smemc.c
+@@ -69,4 +69,13 @@ static int __init smemc_init(void)
+ 	return 0;
+ }
+ subsys_initcall(smemc_init);
++
+ #endif
++
++static const unsigned int df_clkdiv[4] = { 1, 2, 4, 1 };
++unsigned int pxa3xx_smemc_get_memclkdiv(void)
++{
++	unsigned long memclkcfg = __raw_readl(MEMCLKCFG);
++
++	return	df_clkdiv[(memclkcfg >> 16) & 0x3];
++}
+diff --git a/drivers/clk/pxa/clk-pxa.c b/drivers/clk/pxa/clk-pxa.c
+index cfc79f942b07..831180360069 100644
+--- a/drivers/clk/pxa/clk-pxa.c
++++ b/drivers/clk/pxa/clk-pxa.c
+@@ -11,6 +11,7 @@
+ #include <linux/clkdev.h>
+ #include <linux/io.h>
+ #include <linux/of.h>
++#include <linux/soc/pxa/smemc.h>
+ 
+ #include <dt-bindings/clock/pxa-clock.h>
+ #include "clk-pxa.h"
+@@ -150,12 +151,13 @@ void pxa2xx_core_turbo_switch(bool on)
+ }
+ 
+ void pxa2xx_cpll_change(struct pxa2xx_freq *freq,
+-			u32 (*mdrefr_dri)(unsigned int), void __iomem *mdrefr,
++			u32 (*mdrefr_dri)(unsigned int),
+ 			void __iomem *cccr)
+ {
+ 	unsigned int clkcfg = freq->clkcfg;
+ 	unsigned int unused, preset_mdrefr, postset_mdrefr;
+ 	unsigned long flags;
++	void __iomem *mdrefr = pxa_smemc_get_mdrefr();
+ 
+ 	local_irq_save(flags);
+ 
+diff --git a/drivers/clk/pxa/clk-pxa.h b/drivers/clk/pxa/clk-pxa.h
+index 5768e0f728ce..bd688fdb7ecc 100644
+--- a/drivers/clk/pxa/clk-pxa.h
++++ b/drivers/clk/pxa/clk-pxa.h
+@@ -146,12 +146,13 @@ static inline int dummy_clk_set_parent(struct clk_hw *hw, u8 index)
+ 
+ extern void clkdev_pxa_register(int ckid, const char *con_id,
+ 				const char *dev_id, struct clk *clk);
+-extern int clk_pxa_cken_init(const struct desc_clk_cken *clks, int nb_clks);
++extern int clk_pxa_cken_init(const struct desc_clk_cken *clks,
++			     int nb_clks);
+ void clk_pxa_dt_common_init(struct device_node *np);
+ 
+ void pxa2xx_core_turbo_switch(bool on);
+ void pxa2xx_cpll_change(struct pxa2xx_freq *freq,
+-			u32 (*mdrefr_dri)(unsigned int), void __iomem *mdrefr,
++			u32 (*mdrefr_dri)(unsigned int),
+ 			void __iomem *cccr);
+ int pxa2xx_determine_rate(struct clk_rate_request *req,
+ 			  struct pxa2xx_freq *freqs,  int nb_freqs);
+diff --git a/drivers/clk/pxa/clk-pxa25x.c b/drivers/clk/pxa/clk-pxa25x.c
+index d0f957996acb..0837d59d7a67 100644
+--- a/drivers/clk/pxa/clk-pxa25x.c
++++ b/drivers/clk/pxa/clk-pxa25x.c
+@@ -15,7 +15,7 @@
+ #include <linux/io.h>
+ #include <linux/of.h>
+ #include <mach/pxa2xx-regs.h>
+-#include <mach/smemc.h>
++#include <linux/soc/pxa/smemc.h>
+ 
+ #include <dt-bindings/clock/pxa-clock.h>
+ #include "clk-pxa.h"
+@@ -33,9 +33,6 @@ enum {
+ 	 ((T) ? CLKCFG_TURBO : 0))
+ #define PXA25x_CCCR(N2, M, L) (N2 << 7 | M << 5 | L)
+ 
+-#define MDCNFG_DRAC2(mdcnfg)	(((mdcnfg) >> 21) & 0x3)
+-#define MDCNFG_DRAC0(mdcnfg)	(((mdcnfg) >> 5) & 0x3)
 -
- config MACH_TTC_DKB
--	bool "Marvell's PXA910 TavorEVB Development Board"
-+	bool "Marvell's PXA910 TavorEVB/TTC_DKB Development Board"
- 	depends on ARCH_MULTI_V5
- 	select CPU_PXA910
- 	help
-diff --git a/arch/arm/mach-mmp/Makefile b/arch/arm/mach-mmp/Makefile
-index e3758f7e1fe7..81338db77ec7 100644
---- a/arch/arm/mach-mmp/Makefile
-+++ b/arch/arm/mach-mmp/Makefile
-@@ -24,7 +24,6 @@ endif
- obj-$(CONFIG_MACH_ASPENITE)	+= aspenite.o
- obj-$(CONFIG_MACH_ZYLONITE2)	+= aspenite.o
- obj-$(CONFIG_MACH_AVENGERS_LITE)+= avengers_lite.o
--obj-$(CONFIG_MACH_TAVOREVB)	+= tavorevb.o
- obj-$(CONFIG_MACH_TTC_DKB)	+= ttc_dkb.o
- obj-$(CONFIG_MACH_BROWNSTONE)	+= brownstone.o
- obj-$(CONFIG_MACH_FLINT)	+= flint.o
-diff --git a/arch/arm/mach-mmp/tavorevb.c b/arch/arm/mach-mmp/tavorevb.c
-deleted file mode 100644
-index 3261d2322198..000000000000
---- a/arch/arm/mach-mmp/tavorevb.c
-+++ /dev/null
-@@ -1,113 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0-only
--/*
-- *  linux/arch/arm/mach-mmp/tavorevb.c
-- *
-- *  Support for the Marvell PXA910-based TavorEVB Development Platform.
-- */
--#include <linux/gpio.h>
--#include <linux/gpio-pxa.h>
--#include <linux/init.h>
--#include <linux/kernel.h>
--#include <linux/platform_device.h>
--#include <linux/smc91x.h>
--
--#include <asm/mach-types.h>
--#include <asm/mach/arch.h>
--#include "addr-map.h"
--#include "mfp-pxa910.h"
--#include "pxa910.h"
--#include "irqs.h"
--
--#include "common.h"
--
--static unsigned long tavorevb_pin_config[] __initdata = {
--	/* UART2 */
--	GPIO47_UART2_RXD,
--	GPIO48_UART2_TXD,
--
--	/* SMC */
--	SM_nCS0_nCS0,
--	SM_ADV_SM_ADV,
--	SM_SCLK_SM_SCLK,
--	SM_SCLK_SM_SCLK,
--	SM_BE0_SM_BE0,
--	SM_BE1_SM_BE1,
--
--	/* DFI */
--	DF_IO0_ND_IO0,
--	DF_IO1_ND_IO1,
--	DF_IO2_ND_IO2,
--	DF_IO3_ND_IO3,
--	DF_IO4_ND_IO4,
--	DF_IO5_ND_IO5,
--	DF_IO6_ND_IO6,
--	DF_IO7_ND_IO7,
--	DF_IO8_ND_IO8,
--	DF_IO9_ND_IO9,
--	DF_IO10_ND_IO10,
--	DF_IO11_ND_IO11,
--	DF_IO12_ND_IO12,
--	DF_IO13_ND_IO13,
--	DF_IO14_ND_IO14,
--	DF_IO15_ND_IO15,
--	DF_nCS0_SM_nCS2_nCS0,
--	DF_ALE_SM_WEn_ND_ALE,
--	DF_CLE_SM_OEn_ND_CLE,
--	DF_WEn_DF_WEn,
--	DF_REn_DF_REn,
--	DF_RDY0_DF_RDY0,
--};
--
--static struct pxa_gpio_platform_data pxa910_gpio_pdata = {
--	.irq_base	= MMP_GPIO_TO_IRQ(0),
--};
--
--static struct smc91x_platdata tavorevb_smc91x_info = {
--	.flags	= SMC91X_USE_16BIT | SMC91X_NOWAIT,
--};
--
--static struct resource smc91x_resources[] = {
--	[0] = {
--		.start	= SMC_CS1_PHYS_BASE + 0x300,
--		.end	= SMC_CS1_PHYS_BASE + 0xfffff,
--		.flags	= IORESOURCE_MEM,
--	},
--	[1] = {
--		.start	= MMP_GPIO_TO_IRQ(80),
--		.end	= MMP_GPIO_TO_IRQ(80),
--		.flags	= IORESOURCE_IRQ | IORESOURCE_IRQ_HIGHEDGE,
--	}
--};
--
--static struct platform_device smc91x_device = {
--	.name		= "smc91x",
--	.id		= 0,
--	.dev		= {
--		.platform_data = &tavorevb_smc91x_info,
--	},
--	.num_resources	= ARRAY_SIZE(smc91x_resources),
--	.resource	= smc91x_resources,
--};
--
--static void __init tavorevb_init(void)
+ /* Define the refresh period in mSec for the SDRAM and the number of rows */
+ #define SDRAM_TREF	64	/* standard 64ms SDRAM */
+ 
+@@ -57,30 +54,9 @@ static const char * const get_freq_khz[] = {
+ 	"core", "run", "cpll", "memory"
+ };
+ 
+-static int get_sdram_rows(void)
 -{
--	mfp_config(ARRAY_AND_SIZE(tavorevb_pin_config));
+-	static int sdram_rows;
+-	unsigned int drac2 = 0, drac0 = 0;
+-	u32 mdcnfg;
 -
--	/* on-chip devices */
--	pxa910_add_uart(1);
--	platform_device_add_data(&pxa910_device_gpio, &pxa910_gpio_pdata,
--				 sizeof(struct pxa_gpio_platform_data));
--	platform_device_register(&pxa910_device_gpio);
+-	if (sdram_rows)
+-		return sdram_rows;
 -
--	/* off-chip devices */
--	platform_device_register(&smc91x_device);
+-	mdcnfg = readl_relaxed(MDCNFG);
+-
+-	if (mdcnfg & (MDCNFG_DE2 | MDCNFG_DE3))
+-		drac2 = MDCNFG_DRAC2(mdcnfg);
+-
+-	if (mdcnfg & (MDCNFG_DE0 | MDCNFG_DE1))
+-		drac0 = MDCNFG_DRAC0(mdcnfg);
+-
+-	sdram_rows = 1 << (11 + max(drac0, drac2));
+-	return sdram_rows;
 -}
 -
--MACHINE_START(TAVOREVB, "PXA910 Evaluation Board (aka TavorEVB)")
--	.map_io		= mmp_map_io,
--	.nr_irqs	= MMP_NR_IRQS,
--	.init_irq       = pxa910_init_irq,
--	.init_time	= pxa910_timer_init,
--	.init_machine   = tavorevb_init,
--	.restart	= mmp_restart,
--MACHINE_END
+ static u32 mdrefr_dri(unsigned int freq_khz)
+ {
+-	u32 interval = freq_khz * SDRAM_TREF / get_sdram_rows();
++	u32 interval = freq_khz * SDRAM_TREF / pxa2xx_smemc_get_sdram_rows();
+ 
+ 	return interval / 32;
+ }
+@@ -268,7 +244,7 @@ static int clk_pxa25x_cpll_set_rate(struct clk_hw *hw, unsigned long rate,
+ 	if (i >= ARRAY_SIZE(pxa25x_freqs))
+ 		return -EINVAL;
+ 
+-	pxa2xx_cpll_change(&pxa25x_freqs[i], mdrefr_dri, MDREFR, CCCR);
++	pxa2xx_cpll_change(&pxa25x_freqs[i], mdrefr_dri, CCCR);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/clk/pxa/clk-pxa27x.c b/drivers/clk/pxa/clk-pxa27x.c
+index 7b123105b5de..ba3aa63f2447 100644
+--- a/drivers/clk/pxa/clk-pxa27x.c
++++ b/drivers/clk/pxa/clk-pxa27x.c
+@@ -12,8 +12,7 @@
+ #include <linux/clk.h>
+ #include <linux/clkdev.h>
+ #include <linux/of.h>
+-
+-#include <mach/smemc.h>
++#include <linux/soc/pxa/smemc.h>
+ 
+ #include <dt-bindings/clock/pxa-clock.h>
+ #include "clk-pxa.h"
+@@ -50,9 +49,6 @@ enum {
+ 	 ((T)  ? CLKCFG_TURBO : 0))
+ #define PXA27x_CCCR(A, L, N2) (A << 25 | N2 << 7 | L)
+ 
+-#define MDCNFG_DRAC2(mdcnfg)	(((mdcnfg) >> 21) & 0x3)
+-#define MDCNFG_DRAC0(mdcnfg)	(((mdcnfg) >> 5) & 0x3)
+-
+ /* Define the refresh period in mSec for the SDRAM and the number of rows */
+ #define SDRAM_TREF	64	/* standard 64ms SDRAM */
+ 
+@@ -61,30 +57,9 @@ static const char * const get_freq_khz[] = {
+ 	"system_bus"
+ };
+ 
+-static int get_sdram_rows(void)
+-{
+-	static int sdram_rows;
+-	unsigned int drac2 = 0, drac0 = 0;
+-	u32 mdcnfg;
+-
+-	if (sdram_rows)
+-		return sdram_rows;
+-
+-	mdcnfg = readl_relaxed(MDCNFG);
+-
+-	if (mdcnfg & (MDCNFG_DE2 | MDCNFG_DE3))
+-		drac2 = MDCNFG_DRAC2(mdcnfg);
+-
+-	if (mdcnfg & (MDCNFG_DE0 | MDCNFG_DE1))
+-		drac0 = MDCNFG_DRAC0(mdcnfg);
+-
+-	sdram_rows = 1 << (11 + max(drac0, drac2));
+-	return sdram_rows;
+-}
+-
+ static u32 mdrefr_dri(unsigned int freq_khz)
+ {
+-	u32 interval = freq_khz * SDRAM_TREF / get_sdram_rows();
++	u32 interval = freq_khz * SDRAM_TREF / pxa2xx_smemc_get_sdram_rows();
+ 
+ 	return (interval - 31) / 32;
+ }
+@@ -260,7 +235,7 @@ static int clk_pxa27x_cpll_set_rate(struct clk_hw *hw, unsigned long rate,
+ 	if (i >= ARRAY_SIZE(pxa27x_freqs))
+ 		return -EINVAL;
+ 
+-	pxa2xx_cpll_change(&pxa27x_freqs[i], mdrefr_dri, MDREFR, CCCR);
++	pxa2xx_cpll_change(&pxa27x_freqs[i], mdrefr_dri, CCCR);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/clk/pxa/clk-pxa3xx.c b/drivers/clk/pxa/clk-pxa3xx.c
+index 60a0db4f3790..08594fc899e2 100644
+--- a/drivers/clk/pxa/clk-pxa3xx.c
++++ b/drivers/clk/pxa/clk-pxa3xx.c
+@@ -15,7 +15,7 @@
+ #include <linux/clkdev.h>
+ #include <linux/of.h>
+ #include <linux/soc/pxa/cpu.h>
+-#include <mach/smemc.h>
++#include <linux/soc/pxa/smemc.h>
+ #include <linux/clk/pxa.h>
+ #include <mach/pxa3xx-regs.h>
+ 
+@@ -41,8 +41,6 @@ static unsigned char hss_mult[4] = { 8, 12, 16, 24 };
+ 
+ /* crystal frequency to static memory controller multiplier (SMCFS) */
+ static unsigned int smcfs_mult[8] = { 6, 0, 8, 0, 0, 16, };
+-static unsigned int df_clkdiv[4] = { 1, 2, 4, 1 };
+-
+ static const char * const get_freq_khz[] = {
+ 	"core", "ring_osc_60mhz", "run", "cpll", "system_bus"
+ };
+@@ -118,10 +116,10 @@ static unsigned long clk_pxa3xx_smemc_get_rate(struct clk_hw *hw,
+ 					      unsigned long parent_rate)
+ {
+ 	unsigned long acsr = ACSR;
+-	unsigned long memclkcfg = __raw_readl(MEMCLKCFG);
+ 
+ 	return (parent_rate / 48)  * smcfs_mult[(acsr >> 23) & 0x7] /
+-		df_clkdiv[(memclkcfg >> 16) & 0x3];
++		pxa3xx_smemc_get_memclkdiv();
++
+ }
+ PARENTS(clk_pxa3xx_smemc) = { "spll_624mhz" };
+ RATE_RO_OPS(clk_pxa3xx_smemc, "smemc");
+diff --git a/include/linux/soc/pxa/smemc.h b/include/linux/soc/pxa/smemc.h
+index cbf1a2d8af29..f1ffea236c15 100644
+--- a/include/linux/soc/pxa/smemc.h
++++ b/include/linux/soc/pxa/smemc.h
+@@ -6,5 +6,8 @@
+ 
+ void pxa_smemc_set_pcmcia_timing(int sock, u32 mcmem, u32 mcatt, u32 mcio);
+ void pxa_smemc_set_pcmcia_socket(int nr);
++int pxa2xx_smemc_get_sdram_rows(void);
++unsigned int pxa3xx_smemc_get_memclkdiv(void);
++void __iomem *pxa_smemc_get_mdrefr(void);
+ 
+ #endif
 -- 
 2.29.2
 
