@@ -2,35 +2,35 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F83DC4707A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B24F6C48BDF
 	for <linux-ide@archiver.kernel.org>; Tue, 19 Apr 2022 16:46:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355262AbiDSQst (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 19 Apr 2022 12:48:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55564 "EHLO
+        id S244757AbiDSQsv (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 19 Apr 2022 12:48:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56062 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243093AbiDSQqm (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Apr 2022 12:46:42 -0400
-Received: from ams.source.kernel.org (ams.source.kernel.org [IPv6:2604:1380:4601:e00::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A49ED3AA45;
-        Tue, 19 Apr 2022 09:43:59 -0700 (PDT)
+        with ESMTP id S1354759AbiDSQra (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Apr 2022 12:47:30 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A8C69D;
+        Tue, 19 Apr 2022 09:44:46 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by ams.source.kernel.org (Postfix) with ESMTPS id 39FE4B81BEF;
-        Tue, 19 Apr 2022 16:43:58 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EC2BC385A5;
-        Tue, 19 Apr 2022 16:43:49 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 02B1BB81BB6;
+        Tue, 19 Apr 2022 16:44:45 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6062FC385A5;
+        Tue, 19 Apr 2022 16:44:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650386637;
-        bh=qlaYFyobKEQjnzQZM9MNp5qNQqkRYezyfa1kDOn31O4=;
+        s=k20201202; t=1650386683;
+        bh=XdueS6o3x8Genbrjo7SphR5bJ8o+YLBkmS/22/Y/tzI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IfCx1sYsItrvvOhd62OVGq73m59nNboCQp/gH4IxEBVU5zCvpQPCNPA7TuLYFXC6C
-         LwaFif0SpZk4iKNSuUv5XERVH3Itoh7apK3zIBcowiSB/8aMiJR+86E55VqZMRViGM
-         vxBgMMnsawZno/joMpTCd+ep1ROboUpME3CMorprNKBdA5wmg9bbhuyypuFsCjLW8G
-         yE/u4h18EsDdKvT5ABnu1pHVnRKTIiK1fqnwH6cD1Nj0kuQJNcwzeZUE12odIw17Nr
-         I4FoURlNeI1+CxCMlSZX0Yt4E6U9SjEz7W8MiBWwtf7IWB7ooRCN+I7IGpKqWmgJa2
-         GROrW1/+TSmQA==
+        b=YXQtUJB7B4bM52daStJxTBrA8/zErvRHpHn2okco8xXiPRjGGTcMxZ34F9ihe2zZF
+         1BoMvocNKdvX/A7Mn4lmcao9QbvEfofhr0515a2QLJ4e/1ti5g/eDZCmDNi5sdZR/I
+         9XNG+Otrayi6yRijGpRrnLzixoTgFiEZlFFL/2ise5K7ONOzh9kv641LscK+chNQJ7
+         Q9EFuzcxnFtDUtDisGrueMKhbPDgR4AstoPr4QwJ7WiTnp9E3XeIFc84uL5FnW7uoT
+         5DjaGzrz2kHiXzQHJSz/k+R25fFOoMSH+WeElYMHF7zCHXx8w3wvu8Yx03jMnZvboF
+         gxYGbk6+OLuAg==
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     robert.jarzmik@free.fr, linux-arm-kernel@lists.infradead.org
 Cc:     Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
@@ -58,10 +58,10 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
         linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
         linux-rtc@vger.kernel.org, linux-usb@vger.kernel.org,
         linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        alsa-devel@alsa-project.org, Sebastian Reichel <sre@kernel.org>
-Subject: [PATCH 39/48] power: tosa: simplify probe function
-Date:   Tue, 19 Apr 2022 18:38:01 +0200
-Message-Id: <20220419163810.2118169-40-arnd@kernel.org>
+        alsa-devel@alsa-project.org
+Subject: [PATCH 45/48] ARM: PXA: fix multi-cpu build of xsc3
+Date:   Tue, 19 Apr 2022 18:38:07 +0200
+Message-Id: <20220419163810.2118169-46-arnd@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20220419163810.2118169-1-arnd@kernel.org>
 References: <20220419163810.2118169-1-arnd@kernel.org>
@@ -73,96 +73,38 @@ X-Mailing-List: linux-ide@vger.kernel.org
 
 From: Arnd Bergmann <arnd@arndb.de>
 
-We have three power supplies that need similar initialization.
-As a preparation for the gpio lookup table conversion, split
-out the initialization into a separate function.
+On a kernel that includes both ARMv4 and XScale support,
+the copypage function fails to build with invalid
+instructions.
 
-Reviewed-by: Sebastian Reichel <sre@kernel.org>
-Acked-by: Sebastian Reichel <sre@kernel.org>
-Cc: linux-pm@vger.kernel.org
+Since these are only called on an actual XScale processor,
+annotate the assembly with the correct .arch directive.
+
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/power/supply/tosa_battery.c | 50 ++++++++++++++---------------
- 1 file changed, 24 insertions(+), 26 deletions(-)
+ arch/arm/mm/copypage-xsc3.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/power/supply/tosa_battery.c b/drivers/power/supply/tosa_battery.c
-index 32cc31cd4761..b26b0eca33e1 100644
---- a/drivers/power/supply/tosa_battery.c
-+++ b/drivers/power/supply/tosa_battery.c
-@@ -343,12 +343,24 @@ static int tosa_bat_resume(struct platform_device *dev)
- #define tosa_bat_resume NULL
- #endif
+diff --git a/arch/arm/mm/copypage-xsc3.c b/arch/arm/mm/copypage-xsc3.c
+index 6f0909dda2f9..c86e79677ff9 100644
+--- a/arch/arm/mm/copypage-xsc3.c
++++ b/arch/arm/mm/copypage-xsc3.c
+@@ -29,6 +29,7 @@ static void xsc3_mc_copy_user_page(void *kto, const void *kfrom)
+ 	int tmp;
  
-+static int tosa_power_supply_register(struct device *dev,
-+			struct tosa_bat *bat,
-+			const struct power_supply_desc *desc)
-+{
-+	struct power_supply_config cfg = {
-+		.drv_data = bat,
-+	};
-+
-+	mutex_init(&bat->work_lock);
-+	bat->psy = power_supply_register(dev, desc, &cfg);
-+
-+	return PTR_ERR_OR_ZERO(bat->psy);
-+}
-+
-+
- static int tosa_bat_probe(struct platform_device *dev)
+ 	asm volatile ("\
++.arch xscale					\n\
+ 	pld	[%1, #0]			\n\
+ 	pld	[%1, #32]			\n\
+ 1:	pld	[%1, #64]			\n\
+@@ -80,6 +81,7 @@ void xsc3_mc_clear_user_highpage(struct page *page, unsigned long vaddr)
  {
- 	int ret;
--	struct power_supply_config main_psy_cfg = {},
--				   jacket_psy_cfg = {},
--				   bu_psy_cfg = {};
- 
- 	if (!machine_is_tosa())
- 		return -ENODEV;
-@@ -357,36 +369,22 @@ static int tosa_bat_probe(struct platform_device *dev)
- 	if (ret)
- 		return ret;
- 
--	mutex_init(&tosa_bat_main.work_lock);
--	mutex_init(&tosa_bat_jacket.work_lock);
--
- 	INIT_WORK(&bat_work, tosa_bat_work);
- 
--	main_psy_cfg.drv_data = &tosa_bat_main;
--	tosa_bat_main.psy = power_supply_register(&dev->dev,
--						  &tosa_bat_main_desc,
--						  &main_psy_cfg);
--	if (IS_ERR(tosa_bat_main.psy)) {
--		ret = PTR_ERR(tosa_bat_main.psy);
-+	ret = tosa_power_supply_register(&dev->dev, &tosa_bat_main,
-+					 &tosa_bat_main_desc);
-+	if (ret)
- 		goto err_psy_reg_main;
--	}
- 
--	jacket_psy_cfg.drv_data = &tosa_bat_jacket;
--	tosa_bat_jacket.psy = power_supply_register(&dev->dev,
--						    &tosa_bat_jacket_desc,
--						    &jacket_psy_cfg);
--	if (IS_ERR(tosa_bat_jacket.psy)) {
--		ret = PTR_ERR(tosa_bat_jacket.psy);
-+	ret = tosa_power_supply_register(&dev->dev, &tosa_bat_jacket,
-+					 &tosa_bat_jacket_desc);
-+	if (ret)
- 		goto err_psy_reg_jacket;
--	}
- 
--	bu_psy_cfg.drv_data = &tosa_bat_bu;
--	tosa_bat_bu.psy = power_supply_register(&dev->dev, &tosa_bat_bu_desc,
--						&bu_psy_cfg);
--	if (IS_ERR(tosa_bat_bu.psy)) {
--		ret = PTR_ERR(tosa_bat_bu.psy);
-+	ret = tosa_power_supply_register(&dev->dev, &tosa_bat_bu,
-+					 &tosa_bat_bu_desc);
-+	if (ret)
- 		goto err_psy_reg_bu;
--	}
- 
- 	ret = request_irq(gpio_to_irq(TOSA_GPIO_BAT0_CRG),
- 				tosa_bat_gpio_isr,
+ 	void *ptr, *kaddr = kmap_atomic(page);
+ 	asm volatile ("\
++.arch xscale					\n\
+ 	mov	r1, %2				\n\
+ 	mov	r2, #0				\n\
+ 	mov	r3, #0				\n\
 -- 
 2.29.2
 
