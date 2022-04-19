@@ -2,35 +2,35 @@ Return-Path: <linux-ide-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F8D8C352A7
-	for <linux-ide@archiver.kernel.org>; Tue, 19 Apr 2022 16:46:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EEC8C4707E
+	for <linux-ide@archiver.kernel.org>; Tue, 19 Apr 2022 16:46:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355288AbiDSQs6 (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
-        Tue, 19 Apr 2022 12:48:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56658 "EHLO
+        id S1355280AbiDSQsy (ORCPT <rfc822;linux-ide@archiver.kernel.org>);
+        Tue, 19 Apr 2022 12:48:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54976 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1355187AbiDSQrn (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Apr 2022 12:47:43 -0400
-Received: from dfw.source.kernel.org (dfw.source.kernel.org [IPv6:2604:1380:4641:c500::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2614B2617;
-        Tue, 19 Apr 2022 09:45:00 -0700 (PDT)
+        with ESMTP id S1354693AbiDSQpd (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 19 Apr 2022 12:45:33 -0400
+Received: from ams.source.kernel.org (ams.source.kernel.org [145.40.68.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0C0F36152;
+        Tue, 19 Apr 2022 09:42:49 -0700 (PDT)
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by dfw.source.kernel.org (Postfix) with ESMTPS id B729F6187A;
-        Tue, 19 Apr 2022 16:44:59 +0000 (UTC)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEE24C385A5;
-        Tue, 19 Apr 2022 16:44:51 +0000 (UTC)
+        by ams.source.kernel.org (Postfix) with ESMTPS id 59CF9B81BBC;
+        Tue, 19 Apr 2022 16:42:48 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EB59C385AE;
+        Tue, 19 Apr 2022 16:42:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1650386699;
-        bh=TQPO8Eb4DXbuBVjH4snBze/CPXLx8hYfj8F7j3GxU9A=;
+        s=k20201202; t=1650386567;
+        bh=XRVRts6/PmPxgnBeeTopOk8hsXuEnYK24eY44iFBTjY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PkE+S9qLLt/uVvjmX7SVYzOD8H0A2jnCwpUediQL9CiEFuo2XQ7+fzVe5orFR/j+B
-         1Kn0644vK/CRT07rVNiayly/tbCE5RPqmVa3sV7YLFN50VR4KOu5kwLyvCKy7UdWrd
-         PpC3+mfHHUpdHO2H25Am/SucJvYtHlNwTKkTuKmcMj5yZ3LlaeFsGLmcsHCxsrNU/J
-         cXPXnNTaI9aPH1OycStlSzavEF+2HEuf5KBubApJxMqmt5vWDdLpCukXObZY00wvyD
-         QUu8InZhgmCtgAChwTU5DZn/0HRUIttBKkcHuZWOka//Ki7ysvaMnLhCuX+trrjXmv
-         KfputJ5rHCapw==
+        b=SrYcNU0XHeFfz9FFmwRnhtwk5VI3KPUyVVYDZ1vZsf/9ibd4zLruL0iYjAxUyiwgp
+         zmOuXhLr4WTdOB1309oLHotg6wtk/R/duI+zVweeCWm3uDXswBZIZxB7bVKunqu/CC
+         EdMhLyLGmp315u6yW24LoEVof2mtuD5mi09URRw/1IqaKVlqShBeopuwMcloOvibS8
+         PU5fwThkpiXRfLrjJtNm+iH3D7eSCFQGuRvIg5P1RDAEYLIRMmxDeXbThxhNRZi323
+         coE08BVk9QZsh8XR9qGt6reyxhJbZKJAWfaiL1ui30TgqLeVpFNIO7Y6/vA2Fm0la6
+         XCHr2bVGVwWJA==
 From:   Arnd Bergmann <arnd@kernel.org>
 To:     robert.jarzmik@free.fr, linux-arm-kernel@lists.infradead.org
 Cc:     Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
@@ -58,10 +58,10 @@ Cc:     Arnd Bergmann <arnd@arndb.de>, Daniel Mack <daniel@zonque.org>,
         linux-mmc@vger.kernel.org, linux-mtd@lists.infradead.org,
         linux-rtc@vger.kernel.org, linux-usb@vger.kernel.org,
         linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        alsa-devel@alsa-project.org
-Subject: [PATCH 47/48] ARM: pxa: remove support for MTD_XIP
-Date:   Tue, 19 Apr 2022 18:38:09 +0200
-Message-Id: <20220419163810.2118169-48-arnd@kernel.org>
+        alsa-devel@alsa-project.org, Manuel Lauss <manuel.lauss@gmail.com>
+Subject: [PATCH 30/48] Input: wm97xx - get rid of irq_enable method in wm97xx_mach_ops
+Date:   Tue, 19 Apr 2022 18:37:52 +0200
+Message-Id: <20220419163810.2118169-31-arnd@kernel.org>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20220419163810.2118169-1-arnd@kernel.org>
 References: <20220419163810.2118169-1-arnd@kernel.org>
@@ -71,78 +71,107 @@ Precedence: bulk
 List-ID: <linux-ide.vger.kernel.org>
 X-Mailing-List: linux-ide@vger.kernel.org
 
-From: Arnd Bergmann <arnd@arndb.de>
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
 
-Using MTD-XIP does not work on multiplatform kernels because
-it requires SoC specific register accesses to be done from
-low-level flash handling functions in RAM while the rest of the
-kernel sits in flash.
+Now that we are using oneshot threaded IRQ this method is not used anymore.
 
-I found no evidence of anyone still actually using this feature,
-so remove it from PXA to avoid spending a lot of time on
-actually making it work.
-
+Signed-off-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+[arnd: add the db1300 change as well]
+Cc: Manuel Lauss <manuel.lauss@gmail.com>
 Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- arch/arm/Kconfig                         |  1 -
- arch/arm/mach-pxa/include/mach/mtd-xip.h | 36 ------------------------
- 2 files changed, 37 deletions(-)
- delete mode 100644 arch/arm/mach-pxa/include/mach/mtd-xip.h
+ arch/mips/alchemy/devboards/db1300.c         | 9 ---------
+ drivers/input/touchscreen/mainstone-wm97xx.c | 9 ---------
+ drivers/input/touchscreen/zylonite-wm97xx.c  | 9 ---------
+ include/linux/wm97xx.h                       | 3 ---
+ 4 files changed, 30 deletions(-)
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index eef8cbf20045..ace6c08c8ae2 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -413,7 +413,6 @@ config ARCH_DOVE
+diff --git a/arch/mips/alchemy/devboards/db1300.c b/arch/mips/alchemy/devboards/db1300.c
+index cd72eaa1168f..e70e529ddd91 100644
+--- a/arch/mips/alchemy/devboards/db1300.c
++++ b/arch/mips/alchemy/devboards/db1300.c
+@@ -732,16 +732,7 @@ static struct platform_device db1300_lcd_dev = {
+ /**********************************************************************/
  
- config ARCH_PXA
- 	bool "PXA2xx/PXA3xx-based"
--	select ARCH_MTD_XIP
- 	select ARM_CPU_SUSPEND if PM
- 	select AUTO_ZRELADDR
- 	select COMMON_CLK
-diff --git a/arch/arm/mach-pxa/include/mach/mtd-xip.h b/arch/arm/mach-pxa/include/mach/mtd-xip.h
-deleted file mode 100644
-index 4b31bef9e50a..000000000000
---- a/arch/arm/mach-pxa/include/mach/mtd-xip.h
-+++ /dev/null
-@@ -1,36 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0-only */
--/*
-- * MTD primitives for XIP support. Architecture specific functions
-- *
-- * Do not include this file directly. It's included from linux/mtd/xip.h
-- * 
-- * Author:	Nicolas Pitre
-- * Created:	Nov 2, 2004
-- * Copyright:	(C) 2004 MontaVista Software, Inc.
-- */
+ #if IS_ENABLED(CONFIG_TOUCHSCREEN_WM97XX)
+-static void db1300_wm97xx_irqen(struct wm97xx *wm, int enable)
+-{
+-	if (enable)
+-		enable_irq(DB1300_AC97_PEN_INT);
+-	else
+-		disable_irq_nosync(DB1300_AC97_PEN_INT);
+-}
 -
--#ifndef __ARCH_PXA_MTD_XIP_H__
--#define __ARCH_PXA_MTD_XIP_H__
+ static struct wm97xx_mach_ops db1300_wm97xx_ops = {
+-	.irq_enable	= db1300_wm97xx_irqen,
+ 	.irq_gpio	= WM97XX_GPIO_3,
+ };
+ 
+diff --git a/drivers/input/touchscreen/mainstone-wm97xx.c b/drivers/input/touchscreen/mainstone-wm97xx.c
+index 8f6fe68f1f99..c39f49720fe4 100644
+--- a/drivers/input/touchscreen/mainstone-wm97xx.c
++++ b/drivers/input/touchscreen/mainstone-wm97xx.c
+@@ -246,21 +246,12 @@ static void wm97xx_acc_shutdown(struct wm97xx *wm)
+ 	}
+ }
+ 
+-static void wm97xx_irq_enable(struct wm97xx *wm, int enable)
+-{
+-	if (enable)
+-		enable_irq(wm->pen_irq);
+-	else
+-		disable_irq_nosync(wm->pen_irq);
+-}
 -
--#include <mach/regs-ost.h>
+ static struct wm97xx_mach_ops mainstone_mach_ops = {
+ 	.acc_enabled	= 1,
+ 	.acc_pen_up	= wm97xx_acc_pen_up,
+ 	.acc_pen_down	= wm97xx_acc_pen_down,
+ 	.acc_startup	= wm97xx_acc_startup,
+ 	.acc_shutdown	= wm97xx_acc_shutdown,
+-	.irq_enable	= wm97xx_irq_enable,
+ 	.irq_gpio	= WM97XX_GPIO_2,
+ };
+ 
+diff --git a/drivers/input/touchscreen/zylonite-wm97xx.c b/drivers/input/touchscreen/zylonite-wm97xx.c
+index ed7eae638713..a70fe4abe520 100644
+--- a/drivers/input/touchscreen/zylonite-wm97xx.c
++++ b/drivers/input/touchscreen/zylonite-wm97xx.c
+@@ -160,20 +160,11 @@ static int wm97xx_acc_startup(struct wm97xx *wm)
+ 	return 0;
+ }
+ 
+-static void wm97xx_irq_enable(struct wm97xx *wm, int enable)
+-{
+-	if (enable)
+-		enable_irq(wm->pen_irq);
+-	else
+-		disable_irq_nosync(wm->pen_irq);
+-}
 -
--/* restored July 2017, this did not build since 2011! */
+ static struct wm97xx_mach_ops zylonite_mach_ops = {
+ 	.acc_enabled	= 1,
+ 	.acc_pen_up	= wm97xx_acc_pen_up,
+ 	.acc_pen_down	= wm97xx_acc_pen_down,
+ 	.acc_startup	= wm97xx_acc_startup,
+-	.irq_enable	= wm97xx_irq_enable,
+ 	.irq_gpio	= WM97XX_GPIO_2,
+ };
+ 
+diff --git a/include/linux/wm97xx.h b/include/linux/wm97xx.h
+index 85bd8dd3caea..332d2b0f29b9 100644
+--- a/include/linux/wm97xx.h
++++ b/include/linux/wm97xx.h
+@@ -254,9 +254,6 @@ struct wm97xx_mach_ops {
+ 	int (*acc_startup) (struct wm97xx *);
+ 	void (*acc_shutdown) (struct wm97xx *);
+ 
+-	/* interrupt mask control - required for accelerated operation */
+-	void (*irq_enable) (struct wm97xx *, int enable);
 -
--#define ICIP			io_p2v(0x40d00000)
--#define ICMR			io_p2v(0x40d00004)
--#define xip_irqpending()	(readl(ICIP) & readl(ICMR))
--
--/* we sample OSCR and convert desired delta to usec (1/4 ~= 1000000/3686400) */
--#define xip_currtime()		readl(OSCR)
--#define xip_elapsed_since(x)	(signed)((readl(OSCR) - (x)) / 4)
--
--/*
-- * xip_cpu_idle() is used when waiting for a delay equal or larger than
-- * the system timer tick period.  This should put the CPU into idle mode
-- * to save power and to be woken up only when some interrupts are pending.
-- * As above, this should not rely upon standard kernel code.
-- */
--
--#define xip_cpu_idle()  asm volatile ("mcr p14, 0, %0, c7, c0, 0" :: "r" (1))
--
--#endif /* __ARCH_PXA_MTD_XIP_H__ */
+ 	/* GPIO pin used for accelerated operation */
+ 	int irq_gpio;
+ 
 -- 
 2.29.2
 
